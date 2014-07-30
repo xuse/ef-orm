@@ -1,0 +1,699 @@
+http://my.oschina.net/shenxueliang/blog/135865
+001
+package com.concurrent;
+002
+ 
+003
+import java.io.IOException;
+004
+import java.util.ArrayList;
+005
+import java.util.Collections;
+006
+import java.util.List;
+007
+import java.util.concurrent.CountDownLatch;
+008
+import java.util.concurrent.TimeUnit;
+009
+import java.util.concurrent.locks.Condition;
+010
+import java.util.concurrent.locks.Lock;
+011
+ 
+012
+import org.apache.zookeeper.CreateMode;
+013
+import org.apache.zookeeper.KeeperException;
+014
+import org.apache.zookeeper.WatchedEvent;
+015
+import org.apache.zookeeper.Watcher;
+016
+import org.apache.zookeeper.ZooDefs;
+017
+import org.apache.zookeeper.ZooKeeper;
+018
+import org.apache.zookeeper.data.Stat;
+019
+ 
+020
+/**
+021
+    DistributedLock lock = null;
+022
+    try {
+023
+        lock = new DistributedLock("127.0.0.1:2182","test");
+024
+        lock.lock();
+025
+        //do something...
+026
+    } catch (Exception e) {
+027
+        e.printStackTrace();
+028
+    }
+029
+    finally {
+030
+        if(lock != null)
+031
+            lock.unlock();
+032
+    }
+033
+ * @author xueliang
+034
+ *
+035
+ */
+036
+public class DistributedLock implements Lock, Watcher{
+037
+    private ZooKeeper zk;
+038
+    private String root = "/locks";//根
+039
+    private String lockName;//竞争资源的标志
+040
+    private String waitNode;//等待前一个锁
+041
+    private String myZnode;//当前锁
+042
+    private CountDownLatch latch;//计数器
+043
+    private int sessionTimeout = 30000;
+044
+    private List<Exception> exception = new ArrayList<Exception>();
+045
+     
+046
+    /**
+047
+     * 创建分布式锁,使用前请确认config配置的zookeeper服务可用
+048
+     * @param config 127.0.0.1:2181
+049
+     * @param lockName 竞争资源标志,lockName中不能包含单词lock
+050
+     */
+051
+    public DistributedLock(String config, String lockName){
+052
+        this.lockName = lockName;
+053
+        // 创建一个与服务器的连接
+054
+         try {
+055
+            zk = new ZooKeeper(config, sessionTimeout, this);
+056
+            Stat stat = zk.exists(root, false);
+057
+            if(stat == null){
+058
+                // 创建根节点
+059
+                zk.create(root, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE,CreateMode.PERSISTENT);
+060
+            }
+061
+        } catch (IOException e) {
+062
+            exception.add(e);
+063
+        } catch (KeeperException e) {
+064
+            exception.add(e);
+065
+        } catch (InterruptedException e) {
+066
+            exception.add(e);
+067
+        }
+068
+    }
+069
+ 
+070
+    /**
+071
+     * zookeeper节点的监视器
+072
+     */
+073
+    public void process(WatchedEvent event) {
+074
+        if(this.latch != null) { 
+075
+            this.latch.countDown(); 
+076
+        }
+077
+    }
+078
+     
+079
+    public void lock() {
+080
+        if(exception.size() > 0){
+081
+            throw new LockException(exception.get(0));
+082
+        }
+083
+        try {
+084
+            if(this.tryLock()){
+085
+                System.out.println("Thread " + Thread.currentThread().getId() + " " +myZnode + " get lock true");
+086
+                return;
+087
+            }
+088
+            else{
+089
+                waitForLock(waitNode, sessionTimeout);//等待锁
+090
+            }
+091
+        } catch (KeeperException e) {
+092
+            throw new LockException(e);
+093
+        } catch (InterruptedException e) {
+094
+            throw new LockException(e);
+095
+        }
+096
+    }
+097
+ 
+098
+    public boolean tryLock() {
+099
+        try {
+100
+            String splitStr = "_lock_";
+101
+            if(lockName.contains(splitStr))
+102
+                throw new LockException("lockName can not contains \\u000B");
+103
+            //创建临时子节点
+104
+            myZnode = zk.create(root + "/" + lockName + splitStr, new byte[0], ZooDefs.Ids.OPEN_ACL_UNSAFE,CreateMode.EPHEMERAL_SEQUENTIAL);
+105
+            System.out.println(myZnode + " is created ");
+106
+            //取出所有子节点
+107
+            List<String> subNodes = zk.getChildren(root, false);
+108
+            //取出所有lockName的锁
+109
+            List<String> lockObjNodes = new ArrayList<String>();
+110
+            for (String node : subNodes) {
+111
+                String _node = node.split(splitStr)[0];
+112
+                if(_node.equals(lockName)){
+113
+                    lockObjNodes.add(node);
+114
+                }
+115
+            }
+116
+            Collections.sort(lockObjNodes);
+117
+            System.out.println(myZnode + "==" + lockObjNodes.get(0));
+118
+            if(myZnode.equals(root+"/"+lockObjNodes.get(0))){
+119
+                //如果是最小的节点,则表示取得锁
+120
+                return true;
+121
+            }
+122
+            //如果不是最小的节点，找到比自己小1的节点
+123
+            String subMyZnode = myZnode.substring(myZnode.lastIndexOf("/") + 1);
+124
+            waitNode = lockObjNodes.get(Collections.binarySearch(lockObjNodes, subMyZnode) - 1);
+125
+        } catch (KeeperException e) {
+126
+            throw new LockException(e);
+127
+        } catch (InterruptedException e) {
+128
+            throw new LockException(e);
+129
+        }
+130
+        return false;
+131
+    }
+132
+ 
+133
+    public boolean tryLock(long time, TimeUnit unit) {
+134
+        try {
+135
+            if(this.tryLock()){
+136
+                return true;
+137
+            }
+138
+            return waitForLock(waitNode,time);
+139
+        } catch (Exception e) {
+140
+            e.printStackTrace();
+141
+        }
+142
+        return false;
+143
+    }
+144
+ 
+145
+    private boolean waitForLock(String lower, long waitTime) throws InterruptedException, KeeperException {
+146
+        Stat stat = zk.exists(root + "/" + lower,true);
+147
+        //判断比自己小一个数的节点是否存在,如果不存在则无需等待锁,同时注册监听
+148
+        if(stat != null){
+149
+            System.out.println("Thread " + Thread.currentThread().getId() + " waiting for " + root + "/" + lower);
+150
+            this.latch = new CountDownLatch(1);
+151
+            this.latch.await(waitTime, TimeUnit.MILLISECONDS);
+152
+            this.latch = null;
+153
+        }
+154
+        return true;
+155
+    }
+156
+ 
+157
+    public void unlock() {
+158
+        try {
+159
+            System.out.println("unlock " + myZnode);
+160
+            zk.delete(myZnode,-1);
+161
+            myZnode = null;
+162
+            zk.close();
+163
+        } catch (InterruptedException e) {
+164
+            e.printStackTrace();
+165
+        } catch (KeeperException e) {
+166
+            e.printStackTrace();
+167
+        }
+168
+    }
+169
+ 
+170
+    public void lockInterruptibly() throws InterruptedException {
+171
+        this.lock();
+172
+    }
+173
+ 
+174
+    public Condition newCondition() {
+175
+        return null;
+176
+    }
+177
+     
+178
+    public class LockException extends RuntimeException {
+179
+        private static final long serialVersionUID = 1L;
+180
+        public LockException(String e){
+181
+            super(e);
+182
+        }
+183
+        public LockException(Exception e){
+184
+            super(e);
+185
+        }
+186
+    }
+187
+ 
+188
+}
+ 多线程的并发测试要复杂很多，下面是一个使用CountDownLatch实现的并发测试工具，可以简单模拟一些并发场景 
+
+001
+package com.concurrent;
+002
+ 
+003
+import java.util.ArrayList;
+004
+import java.util.Collections;
+005
+import java.util.List;
+006
+import java.util.concurrent.CopyOnWriteArrayList;
+007
+import java.util.concurrent.CountDownLatch;
+008
+import java.util.concurrent.atomic.AtomicInteger;
+009
+ 
+010
+/**
+011
+  ConcurrentTask[] task = new ConcurrentTask[5];
+012
+  for(int i=0;i<task.length;i++){
+013
+       task[i] = new ConcurrentTask(){
+014
+            public void run() {
+015
+                System.out.println("==============");
+016
+                 
+017
+            }};
+018
+  }
+019
+  new ConcurrentTest(task);
+020
+ * @author xueliang
+021
+ *
+022
+ */
+023
+public class ConcurrentTest {
+024
+    private CountDownLatch startSignal = new CountDownLatch(1);//开始阀门
+025
+    private CountDownLatch doneSignal = null;//结束阀门
+026
+    private CopyOnWriteArrayList<Long> list = new CopyOnWriteArrayList<Long>();
+027
+    private AtomicInteger err = new AtomicInteger();//原子递增
+028
+    private ConcurrentTask[] task = null;
+029
+     
+030
+    public ConcurrentTest(ConcurrentTask... task){
+031
+        this.task = task;
+032
+        if(task == null){
+033
+            System.out.println("task can not null");
+034
+            System.exit(1);
+035
+        }
+036
+        doneSignal = new CountDownLatch(task.length);
+037
+        start();
+038
+    }
+039
+    /**
+040
+     * @param args
+041
+     * @throws ClassNotFoundException
+042
+     */
+043
+    private void start(){
+044
+        //创建线程，并将所有线程等待在阀门处
+045
+        createThread();
+046
+        //打开阀门
+047
+        startSignal.countDown();//递减锁存器的计数，如果计数到达零，则释放所有等待的线程
+048
+        try {
+049
+            doneSignal.await();//等待所有线程都执行完毕
+050
+        } catch (InterruptedException e) {
+051
+            e.printStackTrace();
+052
+        }
+053
+        //计算执行时间
+054
+        getExeTime();
+055
+    }
+056
+    /**
+057
+     * 初始化所有线程，并在阀门处等待
+058
+     */
+059
+    private void createThread() {
+060
+        long len = doneSignal.getCount();
+061
+        for (int i = 0; i < len; i++) {
+062
+            final int j = i;
+063
+            new Thread(new Runnable(){
+064
+                public void run() {
+065
+                    try {
+066
+                        startSignal.await();//使当前线程在锁存器倒计数至零之前一直等待
+067
+                        long start = System.currentTimeMillis();
+068
+                        task[j].run();
+069
+                        long end = (System.currentTimeMillis() - start);
+070
+                        list.add(end);
+071
+                    } catch (Exception e) {
+072
+                        err.getAndIncrement();//相当于err++
+073
+                    }
+074
+                    doneSignal.countDown();
+075
+                }
+076
+            }).start();
+077
+        }
+078
+    }
+079
+    /**
+080
+     * 计算平均响应时间
+081
+     */
+082
+    private void getExeTime() {
+083
+        int size = list.size();
+084
+        List<Long> _list = new ArrayList<Long>(size);
+085
+        _list.addAll(list);
+086
+        Collections.sort(_list);
+087
+        long min = _list.get(0);
+088
+        long max = _list.get(size-1);
+089
+        long sum = 0L;
+090
+        for (Long t : _list) {
+091
+            sum += t;
+092
+        }
+093
+        long avg = sum/size;
+094
+        System.out.println("min: " + min);
+095
+        System.out.println("max: " + max);
+096
+        System.out.println("avg: " + avg);
+097
+        System.out.println("err: " + err.get());
+098
+    }
+099
+     
+100
+    public interface ConcurrentTask {
+101
+        void run();
+102
+    }
+103
+ 
+104
+}
+下面使用这个工具来测试一下我们的分布式共享锁 
+
+01
+package com.concurrent;
+02
+ 
+03
+import com.concurrent.ConcurrentTest.ConcurrentTask;
+04
+ 
+05
+public class ZkTest {
+06
+    public static void main(String[] args) {
+07
+        Runnable task1 = new Runnable(){
+08
+            public void run() {
+09
+                DistributedLock lock = null;
+10
+                try {
+11
+                    lock = new DistributedLock("127.0.0.1:2182","test1");
+12
+                    //lock = new DistributedLock("127.0.0.1:2182","test2");
+13
+                    lock.lock();
+14
+                    Thread.sleep(3000);
+15
+                    System.out.println("===Thread " + Thread.currentThread().getId() + " running");
+16
+                } catch (Exception e) {
+17
+                    e.printStackTrace();
+18
+                }
+19
+                finally {
+20
+                    if(lock != null)
+21
+                        lock.unlock();
+22
+                }
+23
+                 
+24
+            }
+25
+             
+26
+        };
+27
+        new Thread(task1).start();
+28
+        try {
+29
+            Thread.sleep(1000);
+30
+        } catch (InterruptedException e1) {
+31
+            e1.printStackTrace();
+32
+        }
+33
+        ConcurrentTask[] tasks = new ConcurrentTask[10];
+34
+        for(int i=0;i<tasks.length;i++){
+35
+            ConcurrentTask task3 = new ConcurrentTask(){
+36
+                public void run() {
+37
+                    DistributedLock lock = null;
+38
+                    try {
+39
+                        lock = new DistributedLock("127.0.0.1:2183","test2");
+40
+                        lock.lock();
+41
+                        System.out.println("Thread " + Thread.currentThread().getId() + " running");
+42
+                    } catch (Exception e) {
+43
+                        e.printStackTrace();
+44
+                    }
+45
+                    finally {
+46
+                        lock.unlock();
+47
+                    }
+48
+                     
+49
+                }
+50
+            };
+51
+            tasks[i] = task3;
+52
+        }
+53
+        new ConcurrentTest(tasks);
+54
+    }
+55
+}

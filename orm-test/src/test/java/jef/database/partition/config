@@ -1,0 +1,12 @@
+{
+appender:'A',
+'key' : [{
+		'field' : 'dateField',
+		'length' : 2,
+		'function' : 'MONTH'
+	}, {
+		'field' : 'attr:dbkey',
+		'length' : 0,
+		'isDbName' : true
+	}]
+}

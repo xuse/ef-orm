@@ -1,0 +1,13 @@
+--分表配置，对dataField（日期型）取month运算，然后补足两位；
+--对dbkey的额外属性进行获取，作为数据库名
+{
+"key" : [{
+		"field" : "dateField",
+		"length" : 2,
+		"function" : "MONTH"
+	}, {
+		"field" : "attr:dbkey",
+		"length" : 0,
+		"isDbName" : true
+	}]
+}

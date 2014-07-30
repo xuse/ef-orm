@@ -1,0 +1,471 @@
+/*
+ * JEF - Copyright 2009-2010 Jiyi (mr.jiyi@gmail.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package jef.database;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import jef.common.log.LogUtil;
+import jef.database.VariableCallback.Like;
+import jef.database.dialect.DatabaseDialect;
+import jef.database.dialect.type.ColumnMappings;
+import jef.database.dialect.type.MappingType;
+import jef.database.jsqlparser.expression.Expression;
+import jef.database.meta.FBIField;
+import jef.database.meta.ITableMetadata;
+import jef.database.meta.TupleField;
+import jef.database.query.JpqlExpression;
+import jef.database.query.LazyQueryBindField;
+import jef.database.query.RefField;
+import jef.database.query.SqlContext;
+import jef.database.query.SqlExpression;
+import jef.tools.ArrayUtils;
+import jef.tools.Assert;
+import jef.tools.StringUtils;
+import jef.tools.collection.CollectionUtil;
+
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
+/**
+ * 描述一个条件对象，一个条件一般是形如 {@code name='John Smith'}这样的表达式。
+ * 一个典型的条件由 左表达式、运算符、右表达式三部分组成
+ * @author Administrator
+ *
+ */
+public class Condition implements Serializable{
+	private static final long serialVersionUID = -864876729368518762L;
+	
+	public static final Condition AllRecordsCondition=new Condition();
+	private static final Class<?>[] VALID_FIELD_TYPE_FOR_CONDITION={FBIField.class,RefField.class};
+	private static final Operator[] NULL_ABLE_VALUE=new Operator[]{Operator.IS_NULL,Operator.IS_NOT_NULL};
+	
+	protected Condition(){}
+	
+	/**
+	 * 字段（也可用于描述一个条件组）
+	 */
+	protected Field field;
+	/**
+	 * 运算符
+	 */
+	protected Operator operator;
+	/**
+	 * 表达式
+	 */
+	protected Object value;
+	
+	
+	/**
+	 * 根据运算构造一个条件
+	 * @param field
+	 * @param oper
+	 * @param value
+	 * @return
+	 */
+	public static Condition get(Field field,Operator oper,Object value){
+		boolean valid=(field instanceof IConditionField) || (field instanceof Enum)|| (field instanceof TupleField);
+		if(!valid){
+			valid=ArrayUtils.contains(VALID_FIELD_TYPE_FOR_CONDITION, field.getClass());
+		}
+		Assert.isTrue(valid,"The field type "+ field.getClass()+" is not a valid field for condition!");
+		Condition c=new Condition();
+		c.field=field;
+		c.operator=oper;
+		c.value=value;
+		return c;
+	}
+	
+	/**
+	 * 条件分为两类 （基本条件/容器条件)
+	 * 根据Field的类型来判断
+	 * 元模型字段，FBIField.class,RefField.class 三种为基本条件
+	 * IConditionField为容器条件
+	 * @return
+	 */
+	public boolean isContainer(){
+		return field instanceof IConditionField;
+	}
+	
+	/**
+	 * 条件运算符
+	 * <li>=  等于</li>
+	 * <li>>  大于</li>
+	 * <li><  小于</li>
+	 * <li>>= 大于等于</li>
+	 * <li><= 小于等于</li>
+	 * <li>!= 不等于</li>
+	 * <li>^= 匹配字符串头</li>
+	 * <li>$= 匹配字符串尾</li>
+	 * <li>*= 匹配字符串任意位置</li>
+	 * <li>in in</li>
+	 * <li>[] BETWEEN</li>
+	 */
+	public enum Operator{
+		EQUALS("="),
+		GREAT(">"),
+		LESS("<"),
+		GREAT_EQUALS(">="),
+		LESS_EQUALS("<="),
+		MATCH_ANY("*="),
+		MATCH_START("^="),
+		MATCH_END("$="),
+		IN("in"),
+		NOT_IN("not in"),
+		NOT_EQUALS("<>"),
+		BETWEEN_L_L("[]"),
+		IS_NULL("=NULL"),
+		IS_NOT_NULL("!=NULL");
+		
+		Operator(String key){
+			this.key=key;
+		}
+		private String key;
+		public String getKey() {
+			return key;
+		}
+		//
+		public static Operator valueOfKey(String key){
+			for(Operator o: Operator.values()){
+				if(o.key.equals(key)){
+					return o;
+				}
+			}
+			if("!=".equals(key)){
+				return Operator.NOT_EQUALS;
+			}
+			return null;
+		}
+	}
+	
+	public Field getField() {
+		return field;
+	}
+	public void setField(Field field) {
+		this.field = field;
+	}
+	public Operator getOperator() {
+		return operator;
+	}
+	public void setOperator(Operator operator) {
+		this.operator = operator;
+	}
+	public Object getValue() {
+		return value;
+	}
+	public void setValue(Object value) {
+		this.value = value;
+	}
+	
+	//产生非绑定变量下的where条件
+	public String toSqlClause(ITableMetadata meta,SqlContext context, SqlProcessor processor,IQueryableEntity instance){
+		if(field==null) {
+			throw new NullPointerException("Condition not complete!");
+		}
+		Field field = this.field;
+		//特殊Field条件
+		if(field instanceof IConditionField){
+			return ((IConditionField)field).toSql(meta,processor,context,instance);
+		}else if(field instanceof RefField){
+			RefField ref=(RefField) field;
+			ITableMetadata refMeta=((RefField) field).getInstanceQuery(context).getMeta();
+			SqlContext    refContext=context.getContextOf(ref.getInstanceQuery(context));
+			//替换上下文，然后继续处理……
+			field=ref.getField();
+			meta=refMeta;
+			context=refContext;
+			instance=ref.getInstanceQuery(context).getInstance();
+		}
+		//Like条件下
+		if(ArrayUtils.contains(Like.LIKE_OPERATORS, operator)){
+			Like like=new Like(field,operator,value);
+			return like.toSql(meta, processor, context, instance);
+		}
+		String columnName;
+		if(field instanceof JpqlExpression){
+			columnName=((JpqlExpression) field).toSqlAndBindAttribs(context, processor);
+		}else{
+			columnName=DbUtils.toColumnName(field,processor.getProfile(),context==null?null:context.getCurrentAliasAndCheck(field));
+		}
+		if(operator==null){
+			return columnName;
+		}
+		//常规Field条件
+		if(operator!=Operator.IS_NULL && value==null){
+			if(operator==Operator.EQUALS){
+				operator=Operator.IS_NULL;
+			}else if(operator==Operator.NOT_EQUALS){
+				operator=Operator.IS_NOT_NULL;
+			}else{
+				throw new NullPointerException("Condition value can not be null: " + field.name()+" "+operator.getKey());	
+			}
+		}
+		
+		MappingType<?> type = null;
+		if(field instanceof Enum || field instanceof TupleField){//计算列的数据类型
+			type=meta.getColumnDef(field);
+			if(type==null) {
+				throw new IllegalArgumentException("There is no proper field in "+meta.getThisType().getName()+" to populate a SQL condition expression:"+field.name());
+			}
+		}
+		return toSql(columnName,operator,value,processor.getProfile(),context,type);
+	}
+	
+	/*
+	 *产生用于批处理的Update语句的Where字句中的sql语句，形如 xx=?   等等 xx is null
+	 *预处理若干复杂的Field类型 
+	 */
+	public String toPrepareSqlClause(
+			List<BindVariableDescription> fields,
+			ITableMetadata meta,
+			SqlContext context,
+			SqlProcessor processor,
+			IQueryableEntity instance) {
+		//特殊Field条件 
+		if(field instanceof IConditionField){
+			return ((IConditionField)field).toPrepareSql(fields,meta,processor,context,instance);
+		}else if(field instanceof LazyQueryBindField){
+			LazyQueryBindField ref=(LazyQueryBindField) field;
+			ITableMetadata refMeta=ref.getInstanceQuery(context).getMeta();
+			SqlContext    refContext=context.getContextOf(ref.getInstanceQuery(context));
+			if(ref instanceof RefField){
+				return toPrepareSqlClause(fields,refMeta,refContext,processor,ref.getInstanceQuery(context).getInstance(),((RefField)ref).getField());	
+			}
+		}
+		return toPrepareSqlClause(fields,meta,context,processor,instance,field); 
+	}
+	
+	/**
+	 * 实际生成条件 
+	 * @return
+	 */
+	private String toPrepareSqlClause(List<BindVariableDescription> fields,
+			ITableMetadata meta, SqlContext context,
+			SqlProcessor processor, IQueryableEntity instance, Field rawField) {
+		//当value为Field的时候……
+		if(value instanceof jef.database.Field && value.getClass().isEnum()){//当value为基本field时
+			value=new RefField((Field)value);
+		}
+		//表达式对象无需绑定变量
+		if((value instanceof Expression)||value instanceof RefField){
+			return toSqlClause(meta,context,processor,instance);
+		}
+		//Like条件下
+		if(ArrayUtils.contains(Like.LIKE_OPERATORS, operator)){
+			Like like=new Like(rawField,operator,value);
+			return like.toPrepareSql(fields, meta, processor, context, instance);
+		}
+		//其他简单条件情况下
+		if(operator==null ||rawField==null){
+			throw new NullPointerException("Condition not complete!");
+		}
+		//修复is null和is not null两种特殊情况
+		if(value==null && ArrayUtils.notContains(NULL_ABLE_VALUE,operator)){
+			if(operator == Operator.EQUALS){
+				operator=Operator.IS_NULL;
+			}else if(operator == Operator.NOT_EQUALS){
+				operator=Operator.IS_NOT_NULL;
+			}else{
+				throw new IllegalArgumentException("The value of condition ["+field+" "+operator.getKey()+" (...)] must not be null!");				
+			}
+		}
+		StringBuilder sb=new StringBuilder();
+		String[] spOpers;
+		String columnName;
+		if(rawField instanceof JpqlExpression){
+			columnName=((JpqlExpression) rawField).toSqlAndBindAttribs(context, processor);
+		}else{
+			columnName=DbUtils.toColumnName(rawField,processor.getProfile(),context==null?null:context.getCurrentAliasAndCheck(rawField));
+		}
+		
+		if(operator==Operator.IS_NULL){
+			sb.append(columnName).append(" is null");
+		}else if (operator==Operator.IS_NOT_NULL){
+			sb.append(columnName).append(" is not null");
+		}else if ((spOpers=getInBetweenOper(operator))!=null){
+			String oper=spOpers[0];
+			String div=spOpers[1];
+			String tailer=spOpers[2];
+			//修改，支持String
+			if(value instanceof CharSequence){
+				String[] value1=StringUtils.split(value.toString(), ',');
+				for(int i=0;i<value1.length;i++){
+					value1[i]=value1[i].trim();
+				}
+				value=value1;
+			}
+			if(CollectionUtil.isArrayOrCollection(value.getClass())){
+				int len=CollectionUtil.length(value);
+				if(operator==Operator.BETWEEN_L_L && len!=2){//无效的BETWEEN操作
+					throw new RuntimeException("The between operator must have 2 params");
+				}
+				if(len==0){
+					if(Operator.IN==operator){//对于空集合的IN条件为永假
+						sb.append("1=2");	
+					}else if(Operator.NOT_IN==operator){//对于空集合的NOT IN条件为永真
+						sb.append("1=1");
+					}
+				}else{
+					sb.append(columnName).append(oper);
+					int n=0;
+					for(Iterator<Object> iter=CollectionUtil.iterable(value).iterator();iter.hasNext();){
+						Object o=iter.next();
+						if(n>0)sb.append(div);
+						if(o instanceof Field){
+							Condition c=get((Field)o,null,null);
+							sb.append(c.toSqlClause(meta, context, processor, instance));
+						}else{
+							sb.append('?');
+							fields.add(new BindVariableDescription(rawField,operator,o));
+						}
+						n++;
+					}
+					sb.append(tailer);
+				}
+			}else{
+				throw new RuntimeException("Error param, the value of in operator must be a array or string :" + value.getClass().getName());				
+			}
+		}else{
+			sb.append(columnName).append(toString(operator)).append("?");	
+			fields.add(new BindVariableDescription(rawField,operator,value));
+		}
+		return sb.toString();
+	}
+
+	private static final String[] IN_OPER=new String[]{" in (",", ",")"};
+	private static final String[] NOT_IN_OPER=new String[]{" not in (",", ",")"};
+	private static final String[] BETWEEN_OPER=new String[]{" between "," and ",""};
+	
+	private static String[] getInBetweenOper(Operator oper){
+		if(oper==Operator.IN){
+			return IN_OPER;
+		}else if(oper==Operator.BETWEEN_L_L){
+			return BETWEEN_OPER;
+		}else if(oper==Operator.NOT_IN){
+			return NOT_IN_OPER;
+		}
+		return null;
+	}
+
+	public static String toSql(String columnName,Operator operator,Object value,DatabaseDialect profile,SqlContext context,MappingType<?> type){
+		if(value instanceof jef.database.Field && value.getClass().isEnum()){//基本field
+			value=new RefField((Field)value);
+		}
+		//生成条件SQL
+		String[] spOpers;
+		StringBuilder sb=new StringBuilder();
+		if(operator==Operator.IS_NULL){
+			sb.append(columnName).append(" is null");
+		}else if(value==Operator.IS_NOT_NULL){
+			sb.append(columnName).append(" is not null");
+		}else if(value instanceof RefField){
+			RefField rf=(RefField) value;
+			String alias=context==null?"":context.getAliasOf(rf.getInstanceQuery(context));
+			if(alias!=null){
+				sb.append(columnName).append(toString(operator)).append(alias);
+				if(alias.length()>0)sb.append('.');
+				sb.append(DbUtils.toColumnName(rf.getField(),profile));
+			}else{
+				LogUtil.show("Not found Table Alias for ref-field:" + rf.toString());
+				sb.append(columnName).append(toString(operator)).append(DbUtils.toColumnName(rf.getField(),profile));	
+			}
+		}else if ((spOpers=getInBetweenOper(operator))!=null){
+			String oper=spOpers[0];
+			String div=spOpers[1];
+			String tailer=spOpers[2];
+			if(value instanceof CharSequence){
+				sb.append(columnName).append(oper).append('\'').append(value.toString()).append('\'').append(tailer);
+			}else{
+				List<String> sqlValues=new ArrayList<String>();
+				Iterator<Object> iter=CollectionUtil.iterable(value).iterator();
+				Assert.notNull(iter,"Error param, the value of in operator must be a array or string :" + value.getClass().getName());
+				for(;iter.hasNext();){
+					Object v=iter.next();
+					sqlValues.add(type.getSqlStr(v, profile));
+				}
+				if(operator==Operator.BETWEEN_L_L && sqlValues.size()!=2){//无效的BETWEEN操作
+					throw new RuntimeException("The between operator must have 2 params");
+				}
+				if(sqlValues.size()==0){//无效果的in操作
+				   sb.append("1=2");
+				}else{
+					sb.append(columnName).append(oper).append(StringUtils.join(sqlValues, div)).append(tailer);	
+				}	
+			}
+		}else if(value instanceof SqlExpression){
+			sb.append(columnName).append(toString(operator)).append(((SqlExpression) value).getText());
+		}else if(value instanceof JpqlExpression){
+			JpqlExpression jpql=(JpqlExpression) value;
+			sb.append(columnName).append(toString(operator)).append(jpql.toSqlAndBindAttribs(context,profile));
+		}else{
+			sb.append(columnName).append(toString(operator)).append(type==null?ColumnMappings.getSqlStr(value,profile):type.getSqlStr(value,profile));
+		}
+		return sb.toString();
+	}
+	
+
+
+	private static String toString(Operator operator) {
+		switch(operator){
+		case BETWEEN_L_L:
+			throw new NullPointerException("Unknown operator: " + operator.toString());
+		case MATCH_ANY:
+			return " like ";
+		case MATCH_END:
+			return " like ";
+		case MATCH_START:
+			return " like ";
+		case IN:
+			return " in ";
+		default:
+			return operator.getKey();
+		}
+	}
+	
+	public String toString(){
+		if(this==AllRecordsCondition){
+			return "[EMPTY]";
+		}
+		StringBuilder sb=new StringBuilder();
+		if(field!=null)
+			sb.append(field.name()).append(' ');
+		sb.append(operator==null?"=":operator.getKey()).append(' ');	
+		sb.append(StringUtils.toString(value));
+		return sb.toString();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if(o==this)return true;
+		if(!(o instanceof Condition)) return false;
+		Condition oo=(Condition)o;
+		EqualsBuilder eb=new EqualsBuilder();
+		eb.append(this.field, oo.field);
+		eb.append(this.operator, oo.operator);
+		eb.append(this.value, oo.value);
+		return eb.isEquals();
+	}
+
+	@Override
+	public int hashCode() {
+		HashCodeBuilder b=new HashCodeBuilder();
+		//modify by mjj,增加value值得变化因子，以达到交换属性值时算出的hashcode不一样
+		//return b.append(field).append(operator).append(value).toHashCode();
+		return b.append(field).append(operator).append(value).toHashCode()*(value==null?3:new HashCodeBuilder().append(value).toHashCode());
+	}
+}

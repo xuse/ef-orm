@@ -1,0 +1,31 @@
+select t1.price_id,
+       (select name
+          from pm_price_event
+         where item_class = 0
+           and sub_type = 2
+           and event_id = t2.item_code) as item_code,
+       account_type,
+       priority,
+       t4.base_val,
+       (select name
+          from sys_measure
+         where sys_measure.measure_id = t3.measure_id) as measure_id,
+       t3.rate_round,
+       t1.description,
+       (select name
+          from sys_policy
+         where sys_policy.policy_id = t2.use_marker_id
+           and use_trigger = 5) as userstatecond,
+       (select name
+          from sys_policy
+         where sys_policy.policy_id = t2.expr_id
+           and use_trigger = 5) as effectcond,
+       (select name
+          from sys_policy
+         where sys_policy.policy_id = t4.formula_id
+           and use_trigger = 5) as expressions
+  from pm_component_prodoffer_price t1
+ inner join pm_recurring_fee_dtl t2 on t1.price_id = t2.price_id
+                                   and T1.PRICE_ID = 3
+  left join pm_rates t3 on t2.rate_id = t3.rate_id
+  left join pm_curve_segments t4 on t3.curve_id = t4.curve_id

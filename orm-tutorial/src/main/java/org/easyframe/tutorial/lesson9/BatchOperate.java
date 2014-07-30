@@ -1,0 +1,142 @@
+package org.easyframe.tutorial.lesson9;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+
+import jef.codegen.EntityEnhancer;
+import jef.database.Batch;
+import jef.database.Condition.Operator;
+import jef.database.DbClient;
+import jef.database.QB;
+import jef.database.query.Func;
+import jef.tools.DateUtils;
+import jef.tools.string.RandomData;
+
+import org.easyframe.tutorial.lesson4.entity.DataDict;
+import org.easyframe.tutorial.lesson4.entity.Person;
+import org.easyframe.tutorial.lesson4.entity.School;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+
+public class BatchOperate extends org.junit.Assert {
+
+	private static DbClient db;
+
+	/**
+	 * 测试数据准备
+	 * 
+	 * @throws SQLException
+	 */
+	@BeforeClass
+	public static void setup() throws SQLException {
+		new EntityEnhancer().enhance("org.easyframe.tutorial");
+		db = new DbClient();
+		db.dropTable(Person.class,School.class,DataDict.class);
+		db.createTable(Person.class,School.class,DataDict.class);
+	}
+
+	/**
+	 * 批量操作接口
+	 * 
+	 * @throws SQLException
+	 */
+	@Test
+	public void testBatchOperates() throws SQLException {
+		List<Person> persons = new ArrayList<Person>();
+		for (int i = 0; i < 5; i++) {
+			Person p = new Person();
+			RandomData.fill(p); // 填充一些随机值
+			persons.add(p);
+		}
+
+		{ // 批量插入
+			db.batchInsert(persons);
+
+			// 批量操作下，从数据库获得的自增键值依然会写回到对象中。
+			for (int i = 0; i < 5; i++) {
+				assertEquals(Integer.valueOf(i + 1), persons.get(i).getId());
+			}
+		}
+		{ // 批量更新(按主键)
+			for (int i = 0; i < 5; i++) {
+				persons.get(i).setGender(i % 2 == 0 ? 'M' : 'F');
+			}
+			db.batchUpdate(persons);
+		}
+		{// 批量更新 (按模板)
+			for (int i = 0; i < 5; i++) {
+				Person p = persons.get(i);
+				p.getQuery().clearQuery();
+				p.getQuery().addCondition(Person.Field.name, p.getName());
+				p.setName("第" + (i + 1) + "人");
+			}
+			db.batchUpdate(persons);
+		}
+
+		{// 按主键批量删除记录
+			db.batchDeleteByPrimaryKey(persons);
+		}
+
+	}
+
+	@Test
+	public void testBatchUpdate() throws SQLException {
+		doInsert(5);
+		Person p1 = new Person();
+		p1.getQuery().addCondition(QB.matchAny(Person.Field.name, "a"));
+		p1.prepareUpdate(Person.Field.created, db.func(Func.current_timestamp));
+
+		Person p2 = QB.create(Person.class).addCondition(QB.matchAny(Person.Field.name, "b")).getInstance();
+
+		Person p3 = QB.create(Person.class).addCondition(QB.matchAny(Person.Field.name, "cc")).getInstance();
+
+		db.batchUpdate(Arrays.asList(p1, p2, p3));
+	}
+
+	@Test
+	public void testBatchUpdate2() throws SQLException {
+		doInsert(5);
+		Person query = new Person();
+		query.getQuery().addCondition(Person.Field.created, Operator.GREAT, DateUtils.getDate(2000, 1, 1));
+		
+		List<Person> persons = db.select(query);
+		for (Person person : persons) {
+			person.setCreated(new Date());
+		}
+		Batch<Person> batch = db.startBatchUpdate(persons.get(0),null);
+		batch.execute(persons);
+		persons = db.select(QB.create(Person.class));
+		batch.execute(persons);
+		
+	}
+	
+
+	private void doInsert(int max) throws SQLException {
+		List<Person> persons = new ArrayList<Person>(max);
+		for (int i = 0; i < max; i++) {
+			Person p = new Person();
+			RandomData.fill(p); // 填充一些随机值
+			persons.add(p);
+		}
+		;
+		db.batchInsert(persons);
+	}
+	
+	@Test
+	public void reuseBatchObject() throws SQLException {
+		Batch<Person> batch=db.startBatchInsert(new Person(), null, false);
+		
+		List<Person> persons = new ArrayList<Person>(5);
+		for (int i = 0; i < 5; i++) {
+			Person p = new Person();
+			RandomData.fill(p); // 填充一些随机值
+			persons.add(p);
+		}
+		batch.execute(persons);
+	}
+
+}

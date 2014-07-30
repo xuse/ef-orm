@@ -1,0 +1,459 @@
+/*
+ * JEF - Copyright 2009-2010 Jiyi (mr.jiyi@gmail.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package jef.database.jpa;
+
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.FlushModeType;
+import javax.persistence.LockModeType;
+import javax.persistence.PersistenceException;
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.metamodel.Metamodel;
+
+import jef.database.DbUtils;
+import jef.database.Field;
+import jef.database.IQueryableEntity;
+import jef.database.PojoWrapper;
+import jef.database.Session;
+import jef.database.meta.ITableMetadata;
+import jef.database.meta.MetaHolder;
+import jef.database.support.SavepointNotSupportedException;
+import jef.database.support.TransactionTimedOutException;
+import jef.tools.reflect.BeanUtils;
+
+/**
+ * JPA接口 EntityManager 的JEF实现类
+ * 
+ * @author Administrator
+ * 
+ */
+@SuppressWarnings("rawtypes")
+public class JefEntityManager implements EntityManager {
+	private boolean close;
+	JefEntityManagerFactory parent;
+	JefEntityTransaction tx;
+	private Map properties;
+	private FlushModeType mode = FlushModeType.AUTO;
+
+	/**
+	 * 构造
+	 * 
+	 * @param parent
+	 * @param properties
+	 */
+	public JefEntityManager(EntityManagerFactory parent, Map properties) {
+		this.parent = (JefEntityManagerFactory) parent;
+		this.properties = properties;
+	}
+
+	public void persist(Object entity) {
+		if(entity instanceof IQueryableEntity){
+			doMerge((IQueryableEntity)entity, false);	
+		}else{
+			ITableMetadata meta=MetaHolder.getMeta(entity.getClass());
+			PojoWrapper wrapper=meta.transfer(entity,false);
+			doMerge(wrapper, false);	
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T merge(T entity) {
+		if(entity instanceof IQueryableEntity){
+			return (T)doMerge((IQueryableEntity)entity, true);
+		}else{
+			ITableMetadata meta=MetaHolder.getMeta(entity.getClass());
+			PojoWrapper wrapper=meta.transfer(entity,false);
+			wrapper=doMerge(wrapper, true);
+			return (T)wrapper.get();
+		}
+	}
+
+	public void remove(Object entity) {
+			try {
+				if(entity instanceof IQueryableEntity){
+					IQueryableEntity data = (IQueryableEntity) entity;
+					getSession().deleteCascade(data);	
+				}else{
+					ITableMetadata meta=MetaHolder.getMeta(entity.getClass());
+					PojoWrapper wrapper=meta.transfer(entity,true);
+					getSession().deleteCascade(wrapper);
+				}					
+			} catch (SQLException e) {
+				throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			}	
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T find(Class<T> entityClass, Object primaryKey) {
+		if(primaryKey==null)return null;
+		try {
+			Object obj = entityClass.newInstance();
+			if(obj instanceof IQueryableEntity){
+				IQueryableEntity data=(IQueryableEntity)obj;
+				DbUtils.setPrimaryKeyValue(data, primaryKey);
+				return (T) getSession().load(data);	
+			}else{
+				ITableMetadata meta=MetaHolder.getMeta(entityClass);
+				PojoWrapper data=meta.transfer(obj,false);
+				DbUtils.setPrimaryKeyValue(data, primaryKey);
+				data=getSession().load(data);
+				return data==null?null:(T)data.get(); 	
+			}
+		} catch (SQLException e) {
+			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+		} catch (InstantiationException e) {
+			throw new RuntimeException(e);
+		} catch (IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * 根据主键和其他属性查找
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
+		try {
+			IQueryableEntity data = (IQueryableEntity) entityClass.newInstance();
+			if (primaryKey != null) {
+				DbUtils.setPrimaryKeyValue(data, primaryKey);
+			} else if (properties != null && properties.size() > 0) {
+				for (String s : properties.keySet()) {
+					Field f = MetaHolder.getMeta(data).getField(s);
+					if (f == null) {
+						System.err.println("No Field named " + s + " in bean " + data.getClass().getName());
+						continue;
+					}
+					data.getQuery().addCondition(f, properties.get(s));
+				}
+			} else {
+				data.getQuery().setAllRecordsCondition();
+			}
+			return (T) getSession().load(data);
+		} catch (SQLException e) {
+			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+		} catch (InstantiationException e) {
+			throw new RuntimeException(e);
+		} catch (IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode) {
+		return find(entityClass, primaryKey);
+	}
+
+	/**
+	 * 根据主键和其他属性查找
+	 */
+	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode, Map<String, Object> properties) {
+		return find(entityClass, primaryKey, properties);
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T getReference(Class<T> entityClass, Object primaryKey) {
+		try {
+			IQueryableEntity data = (IQueryableEntity) entityClass.newInstance();
+			DbUtils.setPrimaryKeyValue(data, primaryKey);
+			List<IQueryableEntity> list = getSession().select(data);
+			if (list.isEmpty())
+				return null;
+			return (T) list.get(0);
+		} catch (SQLException e) {
+			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+		} catch (InstantiationException e) {
+			throw new RuntimeException(e);
+		} catch (IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	public void flush() {
+	}
+
+	public void setFlushMode(FlushModeType flushMode) {
+		this.mode = flushMode;
+	}
+
+	public FlushModeType getFlushMode() {
+		return mode;
+	}
+
+	public void lock(Object entity, LockModeType lockMode) {
+	}
+
+	public void lock(Object entity, LockModeType lockMode, Map<String, Object> properties) {
+	}
+
+	public void refresh(Object entity) {
+		if (entity instanceof IQueryableEntity) {
+			try {
+				IQueryableEntity newObj = this.getSession().load((IQueryableEntity) entity);
+				newObj.stopUpdate();
+				BeanUtils.copyProperties(newObj, entity);
+			} catch (SQLException e) {
+				throw new PersistenceException(e);
+			}
+		}
+	}
+
+	public void refresh(Object entity, Map<String, Object> properties) {
+		if (entity instanceof IQueryableEntity) {
+			try {
+				IQueryableEntity newObj = this.getSession().load((IQueryableEntity) entity);
+				newObj.stopUpdate();
+				BeanUtils.copyProperties(newObj, entity);
+			} catch (SQLException e) {
+				throw new PersistenceException(e);
+			}
+		}
+	}
+
+	public void refresh(Object entity, LockModeType lockMode) {
+		refresh(entity);
+	}
+
+	public void refresh(Object entity, LockModeType lockMode, Map<String, Object> properties) {
+		refresh(entity);
+	}
+
+	public void clear() {
+		getSession().evictAll();
+	}
+
+	public void detach(Object entity) {
+		getSession().evict((IQueryableEntity) entity);
+	}
+
+	public boolean contains(Object entity) {
+		if (entity instanceof IQueryableEntity) {
+			try {
+				IQueryableEntity newObj = this.getSession().load((IQueryableEntity) entity);
+				return newObj != null;
+			} catch (SQLException e) {
+				throw new PersistenceException(e);
+			}
+		}
+		return false;
+	}
+
+	public LockModeType getLockMode(Object entity) {
+		return LockModeType.NONE;
+	}
+
+	@SuppressWarnings("unchecked")
+	public void setProperty(String propertyName, Object value) {
+		properties.put(propertyName, value);
+	}
+
+	@SuppressWarnings("unchecked")
+	public Map<String, Object> getProperties() {
+		return properties;
+	}
+
+	public Query createQuery(String qlString) {
+		return getSession().createQuery(qlString);
+	}
+
+	public <T> TypedQuery<T> createQuery(CriteriaQuery<T> criteriaQuery) {
+		throw new UnsupportedOperationException();
+		// TODO 2013-11 为了提高单元测试覆盖率，暂将这部分分支去除
+		// try {
+		// jef.database.jpa2.criteria.CriteriaQueryImpl<T>
+		// q=(jef.database.jpa2.criteria.CriteriaQueryImpl<T>)criteriaQuery;
+		// return new NativeQuery<T>(new
+		// OperateTarget(getSession(),q.getDbKey()),
+		// q.render(null).getQueryString(), q.getResultType());
+		// } catch (SQLException e) {
+		// throw new PersistenceException(e.getMessage()+" "+e.getSQLState(),e);
+		// }
+	}
+
+	public <T> TypedQuery<T> createQuery(String qlString, Class<T> resultClass) {
+		return getSession().createQuery(qlString, resultClass);
+	}
+
+	public Query createNamedQuery(String name) {
+		return getSession().createNamedQuery(name);
+	}
+
+	public <T> TypedQuery<T> createNamedQuery(String name, Class<T> resultClass) {
+		return getSession().createNamedQuery(name, resultClass);
+	}
+
+	public Query createNativeQuery(String sqlString) {
+		return getSession().createNativeQuery(sqlString);
+	}
+
+	@SuppressWarnings("unchecked")
+	public Query createNativeQuery(String sqlString, Class resultClass) {
+		return getSession().createNativeQuery(sqlString, resultClass);
+	}
+
+	/*
+	 */
+	public Query createNativeQuery(String sqlString, String resultSetMapping) {
+		throw new UnsupportedOperationException();
+	}
+
+	/*
+	 */
+	public void joinTransaction() {
+		if (tx == null || !tx.isActive()) {
+			throw new TransactionTimedOutException("No transaction to join.");
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T unwrap(Class<T> cls) {
+		return (T) getSession();
+	}
+
+	public Object getDelegate() {
+		return getSession();
+	}
+
+	public void close() {
+		if (tx != null && tx.isActive()) {
+			throw new TransactionTimedOutException("Tx was not closed while em closing");
+		}
+		tx = null;
+		close = true;
+		parent = null;
+		// if(LogUtil.debug)LogUtil.debug("[JPA DEBUG]:closing entity manager: "+this+" at "+
+		// Thread.currentThread().getId());
+	}
+
+	public boolean isOpen() {
+		return !close;
+	}
+
+	public EntityManagerFactory getEntityManagerFactory() {
+		return parent;
+	}
+
+	public CriteriaBuilder getCriteriaBuilder() {
+		return parent.getCriteriaBuilder();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see javax.persistence.EntityManager#getMetamodel()
+	 */
+	public Metamodel getMetamodel() {
+		throw new UnsupportedOperationException();
+	}
+
+	/*
+	 * JPA标准接口(non-Javadoc)
+	 * 
+	 * @see javax.persistence.EntityManager#getTransaction()
+	 */
+	public JefEntityTransaction getTransaction() {
+		if (tx == null) {
+			tx = new JefEntityTransaction(this);
+		}
+		return tx;
+	}
+
+	/**
+	 * 设置保存点
+	 * 
+	 * @param savepointName
+	 * @throws SavepointNotSupportedException
+	 */
+	public void setSavepoint(String savepointName) throws SavepointNotSupportedException {
+		if (tx != null) {
+			try {
+				tx.get().setSavepoint(savepointName);
+			} catch (SQLException e) {
+				throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			}
+		}
+	}
+
+	/**
+	 * 回滚到保存点
+	 * 
+	 * @param savepoint
+	 * @throws SavepointNotSupportedException
+	 */
+	public void rollbackToSavepoint(String savepoint) throws SavepointNotSupportedException {
+		if (tx != null) {
+			try {
+				tx.get().rollbackToSavepoint(savepoint);
+			} catch (SQLException e) {
+				throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			}
+		}
+	}
+
+	/**
+	 * 释放保存点
+	 * 
+	 * @param savepoint
+	 */
+	public void releaseSavepoint(String savepoint) {
+		if (tx != null) {
+			tx.get().releaseSavepoint(savepoint);
+		}
+
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T extends IQueryableEntity> T doMerge(T entity, boolean flag) {
+		try {
+			IQueryableEntity data = entity;
+			IQueryableEntity old = null;
+			if (DbUtils.getPrimaryKeyValue(data) != null) {
+				old = getSession().load(data);
+			}
+			if (old == null) {
+				getSession().insertCascade(data);
+				return entity;
+			} else {
+				DbUtils.compareToNewUpdateMap(data, old);
+				getSession().updateCascade(data);
+				return (T) data;
+			}
+		} catch (SQLException e) {
+			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+		}
+	}
+
+	/**
+	 * get the current databa sesession.
+	 * 
+	 * @return
+	 */
+	public Session getSession() {
+		if (close)
+			throw new RuntimeException("the " + this.toString() + " has been closed!");
+		if (tx != null && tx.isActive()) {
+			return tx.get();
+		} else {
+			return parent.getDefault();
+		}
+	}
+}

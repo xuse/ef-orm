@@ -1,0 +1,38 @@
+﻿
+
+读取Sequence initialValue=1000   allocationSize (OK)
+读取Table initialValue=1000   valueColumnName   pkColumnValue table   allocationSize (OK)
+Hilo实现和 DB_AUTOINCREMENT_HILO （OK）
+DB_SEQUENCE_STEP 0和-1的两种不同检测方式(OK)
+全局的SequenceTable表名可定义(OK)
+AutoIncreatmentCallBack大量使用Property优化(OK)
+UUID实现支持removeDash (OK)
+hilo模式下的cacheSize可缩小或干脆为1(OK)
+Table init value的校准等问题(OK)
+PRIMARY KEY的匹配方式(OK)
+filterCondition右侧对多加载时的排序和结果限制问题 (OK)
+当一个对象中指向同个目标的JoinDescrption配置不同时，被当做是相同的关联查询进行处理。(OK)
+AnnotationValueCompare的处理（OK JDK自身已经实现得很好）
+当多对一时，fetch=LAZY现在可以生效
+当filterCondition等辅助描述被区分为多种关联时，
+
+
+
+
+
+
+
+
+JoinKey和JoinExpression重构
+新场景支持，静态表关联到动态表
+重构，关于vsMany和vsOne目前界限正在模糊，需要按照lazy和eager两种方式重新修改。
+
+
+支持统一的to_date函数(待验证Hibernate做法) --PG Oracle支持，MYSQL不明 hibernate是否支持在MySQL上模拟？ 
+filterCondition中出现的表达式中的函数的多数据库问题(待filtercondition重构实现)
+关于filterCondition的出现的表达式认为匹配当前表还是匹配右侧表的问题（默认匹配右侧表）
+实际上多对一时，可以填写仅匹配 左侧表的条件，但是当对多时，则必须是匹配右侧表. (以后逐渐完善)
+
+
+
+
