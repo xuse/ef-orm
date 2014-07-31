@@ -58,6 +58,7 @@ import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ColumnMappings;
 import jef.database.dialect.type.MappingType;
 import jef.database.partition.AbstractDateFunction;
+import jef.database.partition.MapFunction;
 import jef.database.partition.ModulusFunction;
 import jef.database.query.JpqlExpression;
 import jef.database.query.ReferenceType;
@@ -375,7 +376,7 @@ public final class TableMetadata extends MetadataAdapter {
 		return result;
 	}
 
-	@SuppressWarnings({ "deprecation", "rawtypes" })
+	@SuppressWarnings({  "rawtypes" })
 	private static PartitionFunction<?> createFunc(PartitionKey value) {
 		if (value.functionClass() != PartitionFunction.class) {
 			try {
@@ -401,7 +402,11 @@ public final class TableMetadata extends MetadataAdapter {
 		case HH24:
 			return AbstractDateFunction.HH24;
 		case MODULUS:
-			return ModulusFunction.getDefault();
+			if(value.functionConstructorParams().length==0 || StringUtils.isEmpty(value.functionConstructorParams()[0])){
+				return ModulusFunction.getDefault();
+			}else{
+				return new ModulusFunction(value.functionConstructorParams()[0]);
+			}
 		case MONTH:
 			return AbstractDateFunction.MONTH;
 		case YEAR:
@@ -414,6 +419,11 @@ public final class TableMetadata extends MetadataAdapter {
 			return AbstractDateFunction.WEEKDAY;
 		case RAW:
 			return new RawFunc(value.defaultWhenFieldIsNull());
+		case MAP:
+			if(value.functionConstructorParams().length==0){
+				throw new IllegalArgumentException("You must config the 'functionConstructorParams' while using funcuon Map");
+			}
+			return new MapFunction(value.functionConstructorParams()[0]);
 		default:
 			throw new IllegalArgumentException("Unknown KeyFunction:" + value.function());
 		}

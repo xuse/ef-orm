@@ -633,7 +633,7 @@ public class DbClient extends Session {
 		for (Class<?> c : cs) {
 			try {
 				ITableMetadata meta=MetaHolder.getMeta(c); 
-				PartitionResult[] result = DbUtils.toTableNames(meta, connPool.getPartitionSupport(),0);
+				PartitionResult[] result = DbUtils.toTableNames(meta, connPool.getPartitionSupport(),2);
 				n += createTable0(meta, result);
 			} catch (SQLException e) {
 				LogUtil.exception(e);
@@ -655,7 +655,7 @@ public class DbClient extends Session {
 		List<SQLException> errors = new ArrayList<SQLException>();
 		for (ITableMetadata meta : metas) {
 			try {
-				PartitionResult[] result = DbUtils.toTableNames(meta, connPool.getPartitionSupport(),0);
+				PartitionResult[] result = DbUtils.toTableNames(meta, connPool.getPartitionSupport(),2);
 				n += createTable0(meta, result);
 			} catch (SQLException ex) {
 				errors.add(ex);

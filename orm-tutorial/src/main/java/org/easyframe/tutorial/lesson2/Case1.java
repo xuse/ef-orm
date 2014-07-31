@@ -21,14 +21,11 @@ public class Case1 {
 	private static DbClient db;
 
 	@BeforeClass
-	public static void setup() {
+	public static void setup() throws SQLException {
 		new EntityEnhancer().enhance("org.easyframe.tutorial");
 		db = new DbClient();
-	}
-
-	public Case1() throws SQLException {
-		db.dropTable(StudentToLession.class);
-		db.createTable(StudentToLession.class);
+		db.dropTable(Student.class,StudentToLession.class);
+		db.createTable(Student.class,StudentToLession.class);
 	}
 
 	@AfterClass
@@ -50,7 +47,6 @@ public class Case1 {
 	 */
 	@Test
 	public void studentAutoIncreament() throws SQLException {
-		db.createTable(Student.class);
 		Student s = new Student();
 		s.setName("Jhon Smith");
 		s.setGender("M");
@@ -190,8 +186,10 @@ public class Case1 {
 	 */
 	@Test
 	public void testUpdatePrimaryKey() throws SQLException {
+		int id=insert();
+		
 		Student q = new Student();
-		q.setId(1);
+		q.setId(id);
 		q = db.load(q);
 
 		q.getQuery().addCondition(Student.Field.id, q.getId());
@@ -199,6 +197,15 @@ public class Case1 {
 
 		db.update(q); // 将id（主键）修改为100
 		// update STUDENT set ID = 100 where ID= 1
+	}
+
+	private int insert() throws SQLException {
+		Student s = new Student();
+		s.setName("Jhon Smith");
+		s.setGender("M");
+		s.setGrade("2");
+		db.insert(s);
+		return s.getId();
 	}
 
 	/**

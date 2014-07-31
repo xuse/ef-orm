@@ -156,7 +156,7 @@ public class Case1 extends org.junit.Assert {
 	 * 如果不是级联过滤条件的情况下，传入一个别的对象的字段，会在校验时抛出异常。
 	 * @throws SQLException
 	 */
-	@Test(expected=IllegalArgumentException.class)
+	@Test()
 	public void testFilterCondition3() throws SQLException {
 		Query<Catalogy> q = QB.create(Catalogy.class);
 		q.addCondition(QB.eq(Item.Field.id, 1));

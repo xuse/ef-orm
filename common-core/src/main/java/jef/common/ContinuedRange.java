@@ -105,27 +105,27 @@ public abstract class ContinuedRange<T extends Comparable<T>> implements Range<T
 	 * (non-Javadoc)
 	 * @see jef.common.Range#contains(java.lang.Comparable)
 	 */
-	public final boolean contains(T obj) {
+	public boolean contains(T obj) {
 		Assert.notNull(obj);
 		if(this.isBeginIndexInclusive()){
 			if(obj.compareTo(this.getStart())<0){
-				return true;
+				return false;
 			}
 		}else{
 			if(obj.compareTo(this.getStart())<=0){
-				return true;
+				return false;
 			}
 		}
 		if(this.isEndIndexInclusive()){
 			if(obj.compareTo(this.getEnd())>0){
-				return true;
+				return false;
 			}
 		}else{
 			if(obj.compareTo(this.getEnd())>=0){
-				return true;
+				return false;
 			}
 		}
-		return false;
+		return true;
 	}
 
 	/**

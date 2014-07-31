@@ -23,24 +23,31 @@ import java.lang.annotation.Target;
 
 /**
  * 用于配置数据分库分表（分片）的注解
+ * 
  * @author jiyi
- *
+ * 
  */
-@Target({TYPE}) 
+@Target({ TYPE })
 @Retention(RUNTIME)
 public @interface PartitionTable {
 	/**
 	 * 描述原始表名和分区后缀之间的分隔符，默认"_"
 	 */
 	String appender() default "_";
-	
+
 	/**
 	 * 描述多个KEY之间的分隔符，默认""
 	 */
 	String keySeparator() default "";
-	
+
 	/**
 	 * 描述分区的计算字段
 	 */
 	PartitionKey[] key();
+
+	/**
+	 * DB名称的前缀
+	 */
+	String dbPrefix() default "";
+
 }

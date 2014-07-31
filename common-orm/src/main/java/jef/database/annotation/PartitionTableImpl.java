@@ -16,6 +16,7 @@ public class PartitionTableImpl implements PartitionTable {
 	private String appender="_";
 	private String keySeparator="";
 	private PartitionKeyImpl[] key;
+	private String dbPrefix;
 	
 	public Class<? extends Annotation> annotationType() {
 		return PartitionTable.class;
@@ -61,6 +62,10 @@ public class PartitionTableImpl implements PartitionTable {
 		this.key = key;
 	}
 
+	public void setDbPrefix(String dbPrefix) {
+		this.dbPrefix = dbPrefix;
+	}
+
 	@Override
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this);
@@ -83,5 +88,9 @@ public class PartitionTableImpl implements PartitionTable {
 			}
 			return jo;
 		}
+	}
+
+	public String dbPrefix() {
+		return this.dbPrefix;
 	}
 }

@@ -29,6 +29,7 @@ import java.util.regex.Pattern;
 
 import jef.common.StringCacheMap;
 import jef.common.log.LogUtil;
+import jef.common.wrapper.IntRange;
 import jef.tools.ArrayUtils;
 import jef.tools.DateUtils;
 import jef.tools.IOUtils;
@@ -703,12 +704,15 @@ public class JefTest extends Assert {
 	
 	@Test
 	public void getClz3(){//8660
-		Class localc=this.c;
-		long start=System.nanoTime();
-		for(int i=0;i<1000;i++){
-			Class c=localc;
-		}
-		System.out.println(System.nanoTime()-start);
+		IntRange i=new IntRange(1,200);
+		System.out.println(i.contains(Integer.valueOf(-1)));
+		System.out.println(i.contains(Integer.valueOf(0)));
+		System.out.println(i.contains(Integer.valueOf(1)));
+		System.out.println(i.contains(Integer.valueOf(13)));
+		System.out.println(i.contains(Integer.valueOf(199)));
+		System.out.println(i.contains(Integer.valueOf(200)));
+		System.out.println(i.contains(Integer.valueOf(201)));
+		System.out.println(i.contains(Integer.MAX_VALUE));
 	}
 	
 	@Test

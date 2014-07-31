@@ -19,15 +19,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.Reader;
-import java.lang.reflect.Constructor;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.TimeZone;
 
 import jef.common.Configuration.ConfigItem;
@@ -41,7 +38,6 @@ import org.slf4j.LoggerFactory;
 
 public class JefConfiguration {
 	private static String fileName = "jef.properties";
-	private static boolean isPropertiesInit=false;
 	private static Map<String, String> cache = new HashMap<String, String>();
 	private static File file;
 	static org.slf4j.Logger log=LoggerFactory.getLogger(JefConfiguration.class);
@@ -90,58 +86,32 @@ public class JefConfiguration {
 
 	public static String get(ConfigItem itemKey, String defaultValue) {
 		String key = StringUtils.replaceChars(itemKey.toString(), "_$", ".-").toLowerCase();
+		String value=System.getProperty(key);
+		if(value!=null)return value;
 		try {
-			if(!isPropertiesInit){
-				doPropertiesInit();
-			}
-			String value=System.getProperty(key);
-			if(value!=null)return value;
 			if("schema.mapping".equals(key)){
 				value=System.getenv(key);
 				if(value!=null)return value;	
 			}
-			if (!cache.containsKey(key)) {
-				Properties properties = new Properties();
+			if (cache.containsKey(key)) {
+				value=cache.get(key);
+			}else{
 				if(file==null){
 					getFile();
 				}
 				if(file!=DUMMY_FILE){
-					Reader reader=IOUtils.getReader(file, "UTF-8");
-					properties.load(reader);
-					IOUtils.closeQuietly(reader);
-					value = properties.getProperty(key);	
+					Map<String,String> map=IOUtils.loadProperties(IOUtils.getReader(file, "UTF-8"));
+					cache.putAll(map);
+					value = cache.get(key);	
 				}
-				if (value == null)
-					value = defaultValue;
-				cache.put(key, value);
 			}
+			return value == null?defaultValue:value;
 		} catch (IOException e) {
 			LogUtil.exception(e);
 		}
-		return cache.get(key);
+		return defaultValue;
 	}
 
-	@SuppressWarnings("rawtypes")
-	private static void doPropertiesInit() {
-		isPropertiesInit=true;
-		for(Entry<Object,Object> e: System.getProperties().entrySet()){
-			String key=String.valueOf(e.getKey());
-			if(key.startsWith("jef.config.impl.")){
-				String initClass=key.substring("jef.config.impl.".length()).trim();
-				String value=String.valueOf(e.getValue());
-				System.out.println("Found config properties init Class:"+initClass+" arg:"+value);
-				try{
-					Class clz=Class.forName(initClass);
-					@SuppressWarnings("unchecked")
-					Constructor con=clz.getConstructor(String.class);
-					con.newInstance(value);
-				}catch(Throwable t){
-					LogUtil.exception(t);
-				}
-				break;
-			}
-		}
-	}
 
 	private static final File DUMMY_FILE=new File("");
 	

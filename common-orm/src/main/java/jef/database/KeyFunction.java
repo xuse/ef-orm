@@ -23,9 +23,8 @@ package jef.database;
 public enum KeyFunction {
 	
 	/**
-	 * @deprecated 建议用functionClass来实现，目前此方法只支持按10求余。故不推荐使用
+	 * 10求余。参数由functionConstructorParams确定
 	 */
-	@Deprecated
 	MODULUS, //取余
 	
 	/**
@@ -60,5 +59,12 @@ public enum KeyFunction {
 	 * 对任意类型的字段，将其数值转换为String<p>
 	 * <b>默认值</b>
 	 */
-	RAW//不处理
+	RAW,//不处理
+	/**
+	 * 常量映射，如启动参数配置为如下。
+	 * {@code "M:1,F:2,01-20:3,21-41:4,A-Z:12"}
+	 * 表示当值为M时，映射为1，01~20之间映射为3，21-41之间映射为4。 以此类推 
+	 * 
+	 */
+	MAP,
 }

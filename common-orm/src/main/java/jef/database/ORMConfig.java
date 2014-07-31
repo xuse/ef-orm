@@ -41,6 +41,10 @@ public class ORMConfig implements ORMConfigMBean {
 	 * 过滤不存在的分区表
 	 */
 	private boolean filterAbsentTables; 
+	/**
+	 * 按需建表（分区表）
+	 */
+	private boolean partitionCreateTableInneed;
 	
 	/**
 	 * Lob等数据流映射到String时的编码
@@ -183,9 +187,17 @@ public class ORMConfig implements ORMConfigMBean {
 		checkUpdateForNamedQueries=JefConfiguration.getBoolean(DbCfg.DB_NAMED_QUERY_UPDATE, debugMode);
 		checkSqlFunctions=JefConfiguration.getBoolean(DbCfg.DB_CHECK_SQL_FUNCTIONS, true);
 		filterAbsentTables=JefConfiguration.getBoolean(DbCfg.PARTITION_FILTER_ABSENT_TABLES, true);
+		partitionCreateTableInneed=JefConfiguration.getBoolean(DbCfg.PARTITION_FILTER_ABSENT_TABLES, true);
 	}
 	
-	
+	public boolean isPartitionCreateTableInneed() {
+		return partitionCreateTableInneed;
+	}
+
+	public void setPartitionCreateTableInneed(boolean partitionCreateTableInneed) {
+		this.partitionCreateTableInneed = partitionCreateTableInneed;
+	}
+
 	public boolean isFilterAbsentTables() {
 		return filterAbsentTables;
 	}

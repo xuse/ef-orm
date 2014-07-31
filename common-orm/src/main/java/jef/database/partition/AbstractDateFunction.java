@@ -5,9 +5,14 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import jef.database.DbCfg;
 import jef.database.annotation.PartitionFunction;
+import jef.tools.Assert;
 import jef.tools.DateFormats;
 import jef.tools.DateUtils;
+import jef.tools.JefConfiguration;
+import jef.tools.StringUtils;
+
 
 /**
  * 抽象类，一般用于进行分表取特征值的日志处理函数
@@ -15,6 +20,17 @@ import jef.tools.DateUtils;
  *
  */
 public abstract class AbstractDateFunction implements PartitionFunction<Date>{
+	static String span = JefConfiguration.get(DbCfg.PARTITION_DATE_SPAN, "-6,3");
+	
+	protected int before;
+	protected int after;
+	private AbstractDateFunction(){
+		String[] srange=StringUtils.split(span,',');
+		Assert.isTrue(srange.length==2);
+		before=StringUtils.toInt(srange[0], -6);
+		after=StringUtils.toInt(srange[1], 3);
+	}
+	
 	//四位数年
 	public static final AbstractDateFunction YEAR=new AbstractDateFunction(){
 		public String eval(Date value) {
@@ -41,9 +57,9 @@ public abstract class AbstractDateFunction implements PartitionFunction<Date>{
 		List<Date> iterateAll() {
 			Date date1=new Date();
 			Date date2=new Date();
-			DateUtils.addYear(date1, -1);
-			DateUtils.addYear(date2, 9);
-			return innerIterator(date1, date2, true, false);
+			DateUtils.addMonth(date1, before);
+			DateUtils.addMonth(date2, after);
+			return innerIterator(date1, date2, true, true);
 		}
 	};
 	
@@ -69,16 +85,11 @@ public abstract class AbstractDateFunction implements PartitionFunction<Date>{
 			return 4;
 		}
 		@Override
-		List<Date> iterateAll() {//三年内的所有月份
-			int year=DateUtils.getYear(new Date());
-			int month=DateUtils.getMonth(new Date());
-			month=month-6;
-			if(month<1){
-				month+=12;
-				year-=1;
-			}
-			Date date1=DateUtils.getDate(year, month, 1);
-			Date date2 = DateUtils.getDate(year + 3, month, 1);
+		List<Date> iterateAll() {
+			Date date1=new Date();
+			Date date2=new Date();
+			DateUtils.addMonth(date1, before);
+			DateUtils.addMonth(date2, after);
 			return innerIterator(date1, date2, true, true);
 		}
 	};
@@ -195,7 +206,7 @@ public abstract class AbstractDateFunction implements PartitionFunction<Date>{
 			return 2;
 		}
 		@Override
-		List<Date> iterateAll() {//从去年向后数10年
+		List<Date> iterateAll() {
 			Date date1=new Date();
 			date1=DateUtils.dayBegin(date1);
 			Date date2=DateUtils.dayEnd(date1);;
@@ -227,8 +238,8 @@ public abstract class AbstractDateFunction implements PartitionFunction<Date>{
 		List<Date> iterateAll() {//从去年向后数10年
 			Date date1=new Date();
 			Date date2=new Date();
-			DateUtils.addYear(date1, -1);
-			DateUtils.addYear(date2, 9);
+			DateUtils.addMonth(date1, before);
+			DateUtils.addMonth(date2, after);
 			return innerIterator(date1, date2, true, false);
 		}
 	};

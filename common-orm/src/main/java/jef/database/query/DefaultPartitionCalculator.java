@@ -50,63 +50,76 @@ import jef.tools.reflect.NopBeanWrapper;
  */
 public final class DefaultPartitionCalculator implements PartitionCalculator {
 
-	public PartitionResult[] toTableNames(ITableMetadata meta, IQueryableEntity instance, Query<?> q, PartitionSupport processor) {
+	public PartitionResult[] toTableNames(ITableMetadata meta,
+			IQueryableEntity instance, Query<?> q, PartitionSupport processor) {
 		DatabaseDialect profile = processor.getProfile(null);
 		DbTable[] result;
-		boolean doFileter=ORMConfig.getInstance().isFilterAbsentTables();
+		boolean doFileter = ORMConfig.getInstance().isFilterAbsentTables();
 		if (meta.getPartition() != null && instance != null) {// 分区表，并且具备分区条件
-			DbTable[] r = getPartitionTables(meta, BeanWrapper.wrap(instance), q, profile);
+			DbTable[] r = getPartitionTables(meta, BeanWrapper.wrap(instance),
+					q, profile);
 			if (r.length > 0) {
-				result=analyzeRegexpResults(r,processor,meta,profile);
-				return toPartitionResult(result,processor,doFileter,meta);
+				result = analyzeRegexpResults(r, processor, meta, profile);
+				return toPartitionResult(result, processor, doFileter, meta);
 			}
-			result = new DbTable[] { new DbTable(meta.getBindDsName(), profile.getObjectNameIfUppercase(meta.getTableName(true))) };//使用基表
-			return toPartitionResult(result,processor,doFileter,meta);
+			result = new DbTable[] { new DbTable(meta.getBindDsName(),
+					profile.getObjectNameIfUppercase(meta.getTableName(true))) };// 使用基表
+			return toPartitionResult(result, processor, doFileter, meta);
 		}
-		result = new DbTable[] { new DbTable(meta.getBindDsName(), profile.getObjectNameIfUppercase(meta.getTableName(true))) };//使用基表
-		return toPartitionResult(result,processor,false,meta);
+		result = new DbTable[] { new DbTable(meta.getBindDsName(),
+				profile.getObjectNameIfUppercase(meta.getTableName(true))) };// 使用基表
+		return toPartitionResult(result, processor, false, meta);
 	}
 
-
-	
-	public PartitionResult[] toTableNames(ITableMetadata meta, PartitionSupport processor,int opType) {
-		DatabaseDialect profile=processor.getProfile(null);
+	public PartitionResult[] toTableNames(ITableMetadata meta,
+			PartitionSupport processor, int opType) {
+		DatabaseDialect profile = processor.getProfile(null);
 		DbTable[] result;
-		if (opType>0 && meta.getPartition() != null) {// 分区表，并且具备分区条件
-			if(opType>2){ //取数据库存在的表
-				PartitionResult[] results=processor.getSubTableNames(meta);
-				if(opType==3){
+		if (opType > 0 && meta.getPartition() != null) {// 分区表，并且具备分区条件
+			if (opType > 2) { // 取数据库存在的表
+				PartitionResult[] results = processor.getSubTableNames(meta);
+				if (opType == 3) {
 					return removeBaseTable(results);
-				}else{
+				} else {
 					return results;
 				}
-			}else{
-				DbTable[] tempResult=getPartitionTables(meta, NopBeanWrapper.getInstance(), null,profile);
+			} else {
+				DbTable[] tempResult = getPartitionTables(meta,
+						NopBeanWrapper.getInstance(), null, profile);
 				if (tempResult.length > 0) {
-					result=analyzeRegexpResults(tempResult,processor,meta,profile);
-					PartitionResult[] pr= toPartitionResult(result,processor,false,meta);
-					if(opType==2){
-						String tableName=meta.getTableName(true);
-						for(PartitionResult p: pr){
-							List<String> l=new ArrayList<String>(p.getTables());
-							l.add(tableName);
-							p.setTables(l);
+					result = analyzeRegexpResults(tempResult, processor, meta,
+							profile);
+					PartitionResult[] pr = toPartitionResult(result, processor,
+							false, meta);
+					if (opType == 2) {
+						String tableName = profile
+								.getObjectNameIfUppercase(meta
+										.getTableName(true));
+						if (pr.length == 0) {
+							return new PartitionResult[] { new PartitionResult(
+									tableName)
+									.setDatabase(meta.getBindDsName()) };
+						} else {
+							for (PartitionResult p : pr) {
+								List<String> l = new ArrayList<String>(
+										p.getTables());
+								l.add(tableName);
+								p.setTables(l);
+							}
 						}
 					}
 					return pr;
-				}	
+				}
 			}
 		}
-		result = new DbTable[] { new DbTable(meta.getBindDsName(), profile.getObjectNameIfUppercase(meta.getTableName(true))) };//使用基表
-		return toPartitionResult(result,processor,false,meta);
+		result = new DbTable[] { new DbTable(meta.getBindDsName(),
+				profile.getObjectNameIfUppercase(meta.getTableName(true))) };// 使用基表
+		return toPartitionResult(result, processor, false, meta);
 	}
-
 
 	private PartitionResult[] removeBaseTable(PartitionResult[] results) {
 		throw new UnsupportedOperationException();
 	}
-
-
 
 	/*
 	 * (non-Javadoc)
@@ -115,47 +128,62 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 * java.lang.String, jef.database.IQueryableEntity,
 	 * jef.database.query.Query, jef.database.meta.DbmsProfile)
 	 */
-	public PartitionResult toTableName(ITableMetadata meta, IQueryableEntity instance, Query<?> q, PartitionSupport processor) {
-		DatabaseDialect profile=processor.getProfile(null);
+	public PartitionResult toTableName(ITableMetadata meta,
+			IQueryableEntity instance, Query<?> q, PartitionSupport processor) {
+		DatabaseDialect profile = processor.getProfile(null);
 		DbTable result;
 		if (meta.getPartition() != null && instance != null) {// 认为是分区表的场合
-			DbTable[] tbs = getPartitionTables(meta, BeanWrapper.wrap(instance), q, profile);
+			DbTable[] tbs = getPartitionTables(meta,
+					BeanWrapper.wrap(instance), q, profile);
 			if (tbs.length == 0) { // 没有返回的情况，返回基表
-				result = new DbTable(meta.getBindDsName(), profile.getObjectNameIfUppercase(meta.getTableName(true)));
+				result = new DbTable(meta.getBindDsName(),
+						profile.getObjectNameIfUppercase(meta
+								.getTableName(true)));
 			} else if (tbs.length != 1) {
-				throw new IllegalArgumentException("The query is a multiple partation query, is not supported now.");
+				throw new IllegalArgumentException(
+						"The query is a multiple partation query, is not supported now.");
 			} else {
 				result = tbs[0];
 				if (result.isTbRegexp && result.isDbRegexp) {// 正则表达式，意味着由于某个分表维度没有设置，变成宽松匹配。这里无法获得实际存在表推算，因此直接退化为基表
-					result = new DbTable(meta.getBindDsName(), profile.getObjectNameIfUppercase(meta.getTableName(true)));
-				}else if(result.isTbRegexp){
-					result = new DbTable(result.dbName, profile.getObjectNameIfUppercase(meta.getTableName(true)));
-				}else if(result.isDbRegexp){			//数据库名声正则的
+					result = new DbTable(meta.getBindDsName(),
+							profile.getObjectNameIfUppercase(meta
+									.getTableName(true)));
+				} else if (result.isTbRegexp) {
+					result = new DbTable(result.dbName,
+							profile.getObjectNameIfUppercase(meta
+									.getTableName(true)));
+				} else if (result.isDbRegexp) { // 数据库名声正则的
 					result = new DbTable(meta.getBindDsName(), result.table);
 				}
 			}
+			return toSingleTableResult(processor, result, meta);
 		} else { // 非分区表
-			result = new DbTable(meta.getBindDsName(), profile.getObjectNameIfUppercase(meta.getTableName(true)));
+			result = new DbTable(meta.getBindDsName(),
+					profile.getObjectNameIfUppercase(meta.getTableName(true)));
+			return toSingleTableResult(processor, result, null);
 		}
-		return toSingleTableResult(processor,result,meta);
+
 	}
 
-	private PartitionResult toSingleTableResult(PartitionSupport processor, DbTable result,ITableMetadata meta) {
-		PartitionResult pr=new PartitionResult(result.table);
-		if(!ORMConfig.getInstance().isSingleSite()){
+	private PartitionResult toSingleTableResult(PartitionSupport processor,	DbTable result, ITableMetadata meta) {
+		ORMConfig config = ORMConfig.getInstance();
+		PartitionResult pr = new PartitionResult(result.table);
+		if (!config.isSingleSite()) {
 			pr.setDatabase(result.dbName);
 		}
-		try {
-			processor.ensureTableExists(pr.getDatabase(),result.table,meta);
-		} catch (SQLException e) {
-			throw DbUtils.toRuntimeException(e);
+		if (meta != null && config.isPartitionCreateTableInneed()) {
+			try {
+				processor.ensureTableExists(pr.getDatabase(), result.table, meta);
+			} catch (SQLException e) {
+				throw DbUtils.toRuntimeException(e);
+			}
 		}
 		return pr;
 	}
 
-
 	// 笛卡尔积
-	private static List<Map<String, Object>> descartes(List<Map<String, Object>> dList, Object[] arr1, String newField) {
+	private static List<Map<String, Object>> descartes(
+			List<Map<String, Object>> dList, Object[] arr1, String newField) {
 		// 当新增维度的枚举数量为1时，原有的数据结构可以直接使用。
 		if (arr1.length == 1) {
 			for (Map<String, Object> map : dList) {
@@ -176,47 +204,58 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		}
 		return list;
 	}
+
 	/*
 	 * 这个方法会返回长度为0的数组，这一般是由于_dimVectors.size()=0引起的。
 	 * 如果fieldDims>0而_dimVectors=0，说明没有录入足够的维度。而且也不是取模运算维度（因为取模运算维度是能自动补全的）
 	 * 种情况要区别对待，1是应用的操作可能就是针对基表的，2是应当返回全部表供查询。
 	 * 这两种情况在这里是无法判断的，因此上一级的方法要根据这两种情形，加以区分
 	 */
-	private DbTable[] getPartitionTables(ITableMetadata meta, BeanWrapper instance, Query<?> q, DatabaseDialect profile) {
-		Entry<PartitionKey, PartitionFunction<?>>[] keys = meta.getEffectPartitionKeys();
+	private DbTable[] getPartitionTables(ITableMetadata meta,
+			BeanWrapper instance, Query<?> q, DatabaseDialect profile) {
+		Entry<PartitionKey, PartitionFunction<?>>[] keys = meta
+				.getEffectPartitionKeys();
 		// 获取分表向量
-		Map<String, Dimension> fieldDims = getPartitionFieldValues(keys, instance, q);
+		Map<String, Dimension> fieldDims = getPartitionFieldValues(keys,
+				instance, q);
 		// 分表向量的分析与组合.分析即将Range向量拆解为多点向量，组合即取多个向量间的笛卡尔积
-		List<Map<String, Object>> _dimVectors = toDimensionVectors(fieldDims, meta.getMinUnitFuncForEachPartitionKey());
+		List<Map<String, Object>> _dimVectors = toDimensionVectors(fieldDims,
+				meta.getMinUnitFuncForEachPartitionKey());
 
 		String tbBaseName = meta.getTableName(true);
-		tbBaseName=profile.getObjectNameIfUppercase(tbBaseName);
+		tbBaseName = profile.getObjectNameIfUppercase(tbBaseName);
 		PartitionTable pt = meta.getPartition();// 得到分区配置
 		Set<DbTable> _tbNames = new LinkedHashSet<DbTable>();
-	
+
 		for (int x = 0; x < _dimVectors.size(); x++) {
 			boolean isTbRegexp = false;
 			boolean isDbRegexp = false;
 			StringBuilder db = new StringBuilder();
 			StringBuilder sb = new StringBuilder(pt.appender());
-			
-			for (Entry<PartitionKey, PartitionFunction<?>> entry : meta.getEffectPartitionKeys()) {
+
+			for (Entry<PartitionKey, PartitionFunction<?>> entry : meta
+					.getEffectPartitionKeys()) {
 				PartitionKey key = entry.getKey();
 				String field = key.field();
 				Object obj = _dimVectors.get(x).get(field);
 				if (key.isDbName()) {
-					if (appendSuffix(obj, key, entry.getValue(), db, profile,"[a-zA-Z0-9-:]")) {
+					if (appendSuffix(obj, key, entry.getValue(), db, profile,
+							"[a-zA-Z0-9-:]")) {
 						isDbRegexp = true;
 					}
 				} else {
-					if (appendSuffix(obj, key, entry.getValue(), sb, profile,"[a-zA-Z0-9]")) {
+					if (appendSuffix(obj, key, entry.getValue(), sb, profile,
+							"[a-zA-Z0-9]")) {
 						isTbRegexp = true;
 					}
 				}
 			}
-			String siteName=db.length() == 0 ? null : MetaHolder.getMappingSite(db.toString());
-			if(sb.length()==pt.appender().length())sb.setLength(0);
-			DbTable dt = new DbTable(siteName, tbBaseName+sb.toString(), isTbRegexp,isDbRegexp);
+			String siteName = db.length() == 0 ? null : MetaHolder
+					.getMappingSite(db.toString());
+			if (sb.length() == pt.appender().length())
+				sb.setLength(0);
+			DbTable dt = new DbTable(siteName, tbBaseName + sb.toString(),
+					isTbRegexp, isDbRegexp);
 			_tbNames.add(dt);
 		}
 		return _tbNames.toArray(new DbTable[_tbNames.size()]);
@@ -234,10 +273,14 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 *         这样的话就将可能出现的字符串用正则表达式的方式返回上一层，上一层可以根据当前数据库的实际情况来计算出能匹配上这个正则表达式的表名
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private boolean appendSuffix(Object obj, PartitionKey key, PartitionFunction func, StringBuilder sb, DatabaseDialect profile,String regexp) {
+	private boolean appendSuffix(Object obj, PartitionKey key,
+			PartitionFunction func, StringBuilder sb, DatabaseDialect profile,
+			String regexp) {
 		if (obj == null) {
 			if (key.defaultWhenFieldIsNull().length() > 0) {
-				sb.append(profile.getObjectNameIfUppercase(toFixedLength(key.defaultWhenFieldIsNull(), key.filler(), key.length())));
+				sb.append(profile.getObjectNameIfUppercase(toFixedLength(
+						key.defaultWhenFieldIsNull(), key.filler(),
+						key.length())));
 			} else { // 将其转换为正则表示匹配
 				if (isNumberFun(key)) {
 					sb.append("\\d");
@@ -262,7 +305,9 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 * 即当查询中包含的维度之间取笛卡尔积,来确保每种情况下的分表组合都被计算到
 	 * 当查询条件中存在多个维度时，实质上构成了一个n维矢量空间，每个维度上的矢量进行组合，得到所有可能的复合矢量。
 	 */
-	private List<Map<String, Object>> toDimensionVectors(Map<String, Dimension> metaDimension,  Map<String, PartitionFunction<?>> fieldKeyFn) {
+	private List<Map<String, Object>> toDimensionVectors(
+			Map<String, Dimension> metaDimension,
+			Map<String, PartitionFunction<?>> fieldKeyFn) {
 		List<Map<String, Object>> _dimVectors = null;
 		for (Entry<String, Dimension> entry : metaDimension.entrySet()) {
 			String fieldName = entry.getKey();
@@ -272,7 +317,8 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 			try {
 				enums = vObjs.toEnumationValue(fieldKeyFn.get(fieldName));
 			} catch (UnsupportedOperationException e) {
-				LogUtil.error("The field " + fieldName + " is not avaliable to enums.");
+				LogUtil.error("The field " + fieldName
+						+ " is not avaliable to enums.");
 				throw e;
 			}
 			if (_dimVectors == null) {// 建立初始维度
@@ -282,7 +328,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 					tMap.put(fieldName, enums[x]);
 					_dimVectors.add(tMap);
 				}
-			} else {// 叠加维度（	//笛卡尔积
+			} else {// 叠加维度（ //笛卡尔积
 				_dimVectors = descartes(_dimVectors, enums, fieldName);
 			}
 		}
@@ -298,7 +344,9 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static Map<String, Dimension> getPartitionFieldValues(Entry<PartitionKey, PartitionFunction<?>>[] keys, BeanWrapper instance, Query<?> q) {
+	public static Map<String, Dimension> getPartitionFieldValues(
+			Entry<PartitionKey, PartitionFunction<?>>[] keys,
+			BeanWrapper instance, Query<?> q) {
 		Map<String, Dimension> fieldVal = new HashMap<String, Dimension>();
 		for (Entry<PartitionKey, PartitionFunction<?>> key : keys) {
 			String field = key.getKey().field();
@@ -308,19 +356,21 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 			}
 			Dimension obj = null;
 			// 获取分表维度值
-			if(field.startsWith("attr:")){
-				if(q!=null){
-					String name=field.substring(5).trim();
+			if (field.startsWith("attr:")) {
+				if (q != null) {
+					String name = field.substring(5).trim();
 					obj = new RangeDimension((Comparable) q.getAttribute(name));
-				}else{
+				} else {
 					obj = new RangeDimension(null);
 				}
-			}else{
+			} else {
 				if (q != null) {
-					obj = findConditionValuesByName(((QueryImpl<?>) q).conditions, field, false);
+					obj = findConditionValuesByName(
+							((QueryImpl<?>) q).conditions, field, false);
 				}
-				if (obj == null)				// 当相等条件时
-					obj = new RangeDimension((Comparable) instance.getPropertyValue(field));
+				if (obj == null) // 当相等条件时
+					obj = new RangeDimension(
+							(Comparable) instance.getPropertyValue(field));
 			}
 			fieldVal.put(field, obj);
 		}
@@ -334,11 +384,13 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 * @param field
 	 * @return
 	 */
-	public static Dimension findConditionValuesByName(QueryImpl<?> q, String field) {
+	public static Dimension findConditionValuesByName(QueryImpl<?> q,
+			String field) {
 		return findConditionValuesByName(q.conditions, field, false);
 	}
 
-	private static Dimension findConditionValuesByName(Iterable<Condition> conditions, String field, boolean isOr) {
+	private static Dimension findConditionValuesByName(
+			Iterable<Condition> conditions, String field, boolean isOr) {
 		Dimension result = null;
 		for (Condition c : conditions) {
 			if (c == Condition.AllRecordsCondition) {
@@ -364,15 +416,18 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		Field f = c.getField();
 		if (f instanceof IConditionField) {
 			if (f instanceof Not) {
-				Dimension d = findConditionValuesByName(((IConditionField) f).getConditions(), field, false);
+				Dimension d = findConditionValuesByName(
+						((IConditionField) f).getConditions(), field, false);
 				if (d != null)
 					return d.mergeNot();
 			} else if (f instanceof NotExists || f instanceof Exists) {// 不支持，忽略
 				return null;
 			} else if (f instanceof And) {
-				return findConditionValuesByName(((IConditionField) f).getConditions(), field, false);
+				return findConditionValuesByName(
+						((IConditionField) f).getConditions(), field, false);
 			} else if (f instanceof Or) {
-				return findConditionValuesByName(((IConditionField) f).getConditions(), field, true);
+				return findConditionValuesByName(
+						((IConditionField) f).getConditions(), field, true);
 			} else {// 不支持
 				return null;
 			}
@@ -436,15 +491,18 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		Class<?> type = v.getClass();
 		if (type.isArray()) {
 			if (type.getComponentType().isPrimitive()) {
-				return ComplexDimension.create((Comparable[]) ArrayUtils.toObject(v));
+				return ComplexDimension.create((Comparable[]) ArrayUtils
+						.toObject(v));
 			} else {
 				return ComplexDimension.create((Comparable[]) v);
 			}
 		} else if (v instanceof Collection) {
 			Collection cv = (Collection) v;
-			return ComplexDimension.create((Comparable[]) cv.toArray(new Comparable[cv.size()]));
+			return ComplexDimension.create((Comparable[]) cv
+					.toArray(new Comparable[cv.size()]));
 		} else {
-			throw new IllegalArgumentException("Invalid condition value, must be array or collection..");
+			throw new IllegalArgumentException(
+					"Invalid condition value, must be array or collection..");
 		}
 	}
 
@@ -456,45 +514,55 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		}
 		return StringUtils.leftPad(value, length, filler);
 	}
-	private List<String> getMatchedExistDbNames(PartitionSupport processor, String regexp) {
-		Pattern key=StringUtils.isEmpty(regexp)?null:Pattern.compile(regexp);
-		List<String> result=new ArrayList<String>();
-		for(String s:processor.getDdcNames()){
-			if(key==null || key.matcher(s).matches()) {
+
+	private List<String> getMatchedExistDbNames(PartitionSupport processor,
+			String regexp) {
+		Pattern key = StringUtils.isEmpty(regexp) ? null : Pattern
+				.compile(regexp);
+		List<String> result = new ArrayList<String>();
+		for (String s : processor.getDdcNames()) {
+			if (key == null || key.matcher(s).matches()) {
 				result.add(s);
-			};
+			}
+			;
 		}
 		return result;
 	}
-	private DbTable[] analyzeRegexpResults(DbTable[] r,PartitionSupport processor,ITableMetadata meta,DatabaseDialect profile) {
+
+	private DbTable[] analyzeRegexpResults(DbTable[] r,
+			PartitionSupport processor, ITableMetadata meta,
+			DatabaseDialect profile) {
 		List<DbTable> list = new ArrayList<DbTable>();
 		for (DbTable e : r) {
-			//对于返回的每个分表分库结果，计算其分库名的正则表达式
-			List<String> dbs=null;
-			if(e.isDbRegexp){
-				dbs=getMatchedExistDbNames(processor,e.dbName);
-				if(dbs.isEmpty()){
+			// 对于返回的每个分表分库结果，计算其分库名的正则表达式
+			List<String> dbs = null;
+			if (e.isDbRegexp) {
+				dbs = getMatchedExistDbNames(processor, e.dbName);
+				if (dbs.isEmpty()) {
 					dbs.add(null);
 				}
-			}else{
-				dbs=Arrays.asList(e.dbName);
+			} else {
+				dbs = Arrays.asList(e.dbName);
 			}
-			//计算完成，得到每个分表结果的匹配数据库集
-			for(String dbname:dbs){
+			// 计算完成，得到每个分表结果的匹配数据库集
+			for (String dbname : dbs) {
 				if (e.isTbRegexp) {
-					for (String s : getMatchedExistTableNames(processor, Pattern.compile(e.table),dbname, meta)) {
+					for (String s : getMatchedExistTableNames(processor,
+							Pattern.compile(e.table), dbname, meta)) {
 						list.add(new DbTable(dbname, s));
 					}
 				} else {
-					list.add(new DbTable(dbname,e.table));
+					list.add(new DbTable(dbname, e.table));
 				}
 			}
 		}
 		if (list.size() > 0) {
 			return list.toArray(new DbTable[list.size()]);
 		} else {
-			String _tbName = meta.getTableName(true);
-			return new DbTable[] { new DbTable(meta.getBindDsName(), profile.getObjectNameIfUppercase(_tbName)) };
+			// String _tbName = meta.getTableName(true);
+			// return new DbTable[] { new DbTable(meta.getBindDsName(),
+			// profile.getObjectNameIfUppercase(_tbName)) };
+			return new DbTable[0];
 		}
 	}
 
@@ -504,11 +572,13 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 * @param result
 	 * @return
 	 */
-	private PartitionResult[] toPartitionResult(DbTable[] result,PartitionSupport support,boolean filter,ITableMetadata tmeta) {
+	private PartitionResult[] toPartitionResult(DbTable[] result,
+			PartitionSupport support, boolean filter, ITableMetadata tmeta) {
 		Map<String, List<String>> map = new HashMap<String, List<String>>();
 		for (DbTable dt : result) {
-			String dbName=ORMConfig.getInstance().isSingleSite()?"":dt.dbName;
-			if(filter && !support.isExist(dbName,dt.table,tmeta)){
+			String dbName = ORMConfig.getInstance().isSingleSite() ? ""
+					: dt.dbName;
+			if (filter && !support.isExist(dbName, dt.table, tmeta)) {
 				continue;
 			}
 			List<String> list = map.get(dbName);
@@ -530,24 +600,30 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	}
 
 	@SuppressWarnings("unchecked")
-	private Collection<String> getMatchedExistTableNames(PartitionSupport processor, Pattern key, String dbName,ITableMetadata meta) {
+	private Collection<String> getMatchedExistTableNames(
+			PartitionSupport processor, Pattern key, String dbName,
+			ITableMetadata meta) {
 		try {
-			Collection<String> allTbs = processor.getSubTableNames(dbName,meta);
+			Collection<String> allTbs = processor
+					.getSubTableNames(dbName, meta);
 			List<String> result = new ArrayList<String>();
 			for (String s : allTbs) {
 				if (key.matcher(s).matches()) {
 					result.add(s);
 				}
 			}
-			//LogUtil.show("Search [" + key.toString() + "],in " + allTbs.size() + ", found " + result.size());
+			// LogUtil.show("Search [" + key.toString() + "],in " +
+			// allTbs.size() + ", found " + result.size());
 			return result;
 		} catch (SQLException e) {
 			return Collections.EMPTY_LIST;
 		}
 	}
-	
-	@SuppressWarnings("deprecation")
-	private static KeyFunction[] NUM_FUNS = new KeyFunction[] { KeyFunction.DAY, KeyFunction.HH24, KeyFunction.MODULUS, KeyFunction.MONTH, KeyFunction.YEAR, KeyFunction.YEAR_LAST2, KeyFunction.YEAR_MONTH };
+
+	private static KeyFunction[] NUM_FUNS = new KeyFunction[] {
+			KeyFunction.DAY, KeyFunction.HH24, KeyFunction.MODULUS,
+			KeyFunction.MONTH, KeyFunction.YEAR, KeyFunction.YEAR_LAST2,
+			KeyFunction.YEAR_MONTH };
 
 	public static boolean isNumberFun(PartitionKey key) {
 		if (ArrayUtils.contains(NUM_FUNS, key.function())) {
@@ -558,34 +634,36 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * 描述一个分表计算的中间结果
+	 * 
 	 * @author Administrator
-	 *
+	 * 
 	 */
 	static final class DbTable {
-		String dbName;		//db名称(site名)
-		String table;		//表名 (table名)
-		boolean isDbRegexp;	//db名是否为正则表达式
-		boolean isTbRegexp;	//table名是否为正则表达式
+		String dbName; // db名称(site名)
+		String table; // 表名 (table名)
+		boolean isDbRegexp; // db名是否为正则表达式
+		boolean isTbRegexp; // table名是否为正则表达式
 
 		DbTable(String db, String table) {
-			this(db, table, false,false);
+			this(db, table, false, false);
 		}
 
-		DbTable(String db, String table, boolean regexp,boolean dbRegexp) {
+		DbTable(String db, String table, boolean regexp, boolean dbRegexp) {
 			this.dbName = db;
 			this.table = table;
 			this.isTbRegexp = regexp;
-			this.isDbRegexp=dbRegexp;
+			this.isDbRegexp = dbRegexp;
 			if (table == null || table.length() == 0)
 				throw new IllegalArgumentException();
 		}
 
 		@Override
 		public int hashCode() {
-			return dbName == null ? table.hashCode() : dbName.hashCode() + table.hashCode();
+			return dbName == null ? table.hashCode() : dbName.hashCode()
+					+ table.hashCode();
 		}
 
 		@Override

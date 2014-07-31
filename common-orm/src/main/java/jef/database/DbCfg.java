@@ -383,15 +383,15 @@ public enum DbCfg implements ConfigItem {
 	 */
 	DB_CHECK_SQL_FUNCTIONS,
 	/**
-	 * 估算时间宽度
+	 * 当分表维度缺失时，默认时间宽度。是一个表达式，例如 -6,3表示从当天算起时间维度为向前三个月到向后一个月
 	 */
 	PARTITION_DATE_SPAN,
 	/**
-	 * 按需建表
+	 * 按需建表功能开关，默认开
 	 */
 	PARTITION_CREATE_TABLE_INNEED,
 	/**
-	 * 查询、删除、更新操作时过滤掉哪些数据库中不存在的表
+	 * 查询、删除、更新操作时过滤掉哪些数据库中不存在的表。默认开启
 	 */
 	PARTITION_FILTER_ABSENT_TABLES
 }

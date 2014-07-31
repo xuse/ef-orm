@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import javax.servlet.http.Part;
+import javax.persistence.GenerationType;
 
 import jef.database.DbUtils;
 import jef.database.KeyFunction;
@@ -32,7 +32,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class CalculatorTest {
+public class CalculatorTest extends org.junit.Assert{
 	static PartitionTableImpl config = new PartitionTableImpl();
 	private PartitionCalculator calc = new DefaultPartitionCalculator();
 
@@ -92,29 +92,44 @@ public class CalculatorTest {
 			inv.invoke(meta, config);
 			PartitionResult[] result = calc.toTableNames(meta, supportor,2);
 			System.out.println(Arrays.asList(result));
-			System.out.println(meta.getFirstAutoincrementDef().getGenerationType(profile));
+			assertEquals("[TEST_ENTITY_AA,TEST_ENTITY_BB,TEST_ENTITY_CC,TEST_ENTITY]", Arrays.toString(result));
+			assertEquals(GenerationType.TABLE, meta.getFirstAutoincrementDef().getGenerationType(profile));
 		}
 		{
 			((PartitionKeyImpl) config.key()[0]).function = KeyFunction.MODULUS;
 			inv.invoke(meta, config);
-			PartitionResult[] result = calc.toTableNames(meta, supportor,2);
+			PartitionResult[] result = calc.toTableNames(meta, supportor,1);
 			System.out.println(Arrays.asList(result));
-			System.out.println(meta.getFirstAutoincrementDef().getGenerationType(profile));
+			assertEquals("[TEST_ENTITY_0,TEST_ENTITY_1,TEST_ENTITY_2,TEST_ENTITY_3,TEST_ENTITY_4,TEST_ENTITY_5,TEST_ENTITY_6,TEST_ENTITY_7,TEST_ENTITY_8,TEST_ENTITY_9]", Arrays.toString(result));
+			assertEquals(GenerationType.TABLE, meta.getFirstAutoincrementDef().getGenerationType(profile));
 		}
 		{
 			((PartitionKeyImpl) config.key()[0]).function = KeyFunction.MONTH;
 			inv.invoke(meta, config);
 			PartitionResult[] result = calc.toTableNames(meta, supportor,2);
 			System.out.println(Arrays.asList(result));
-			System.out.println(meta.getFirstAutoincrementDef().getGenerationType(profile));
+			assertEquals("[TEST_ENTITY_1,TEST_ENTITY_2,TEST_ENTITY_3,TEST_ENTITY_4,TEST_ENTITY_5,TEST_ENTITY_6,TEST_ENTITY_7,TEST_ENTITY_8,TEST_ENTITY_9,TEST_ENTITY_10,TEST_ENTITY_11,TEST_ENTITY_12,TEST_ENTITY]", Arrays.toString(result));
+			assertEquals(GenerationType.TABLE, meta.getFirstAutoincrementDef().getGenerationType(profile));
 		}
 		{
 			((PartitionKeyImpl) config.key()[0]).function = KeyFunction.YEAR;
 			inv.invoke(meta, config);
 			PartitionResult[] result = calc.toTableNames(meta, supportor,2);
 			System.out.println(Arrays.asList(result));
-			System.out.println(meta.getFirstAutoincrementDef().getGenerationType(profile));
+			assertEquals("[TEST_ENTITY_2014,TEST_ENTITY]",Arrays.toString(result));
+			assertEquals(GenerationType.TABLE, meta.getFirstAutoincrementDef().getGenerationType(profile));
 		}
+		{
+			System.out.println("==============MAP函数=================");
+			((PartitionKeyImpl) config.key()[0]).function = KeyFunction.MAP;
+			((PartitionKeyImpl) config.key()[0]).funcParams=new String[]{"00-24:1,25-49:2,50-74:3,75-99:4"};
+			inv.invoke(meta, config);
+			PartitionResult[] result = calc.toTableNames(meta, supportor,1);
+			System.out.println(Arrays.asList(result));
+			assertEquals("[TEST_ENTITY_1,TEST_ENTITY_2,TEST_ENTITY_3,TEST_ENTITY_4]", Arrays.toString(result));
+			assertEquals(GenerationType.TABLE, meta.getFirstAutoincrementDef().getGenerationType(profile));
+		}
+	
 		{
 			System.out.println("==============双维度下，一个维度无法枚举，因此收缩=================");
 			PartitionKeyImpl[] keys = new PartitionKeyImpl[] { new PartitionKeyImpl("createTime", 1), new PartitionKeyImpl("id", 1) };
@@ -122,6 +137,7 @@ public class CalculatorTest {
 			config.setKey(keys);
 			inv.invoke(meta, config);
 			PartitionResult[] result = calc.toTableNames(meta, supportor,2);
+			assertEquals("[TEST_ENTITY]", Arrays.toString(result));
 			System.out.println(Arrays.asList(result));
 		}
 	}
