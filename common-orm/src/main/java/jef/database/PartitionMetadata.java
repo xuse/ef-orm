@@ -1,8 +1,12 @@
 package jef.database;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
+import jef.common.log.LogUtil;
+import jef.database.annotation.PartitionResult;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.IUserManagedPool;
 import jef.database.innerpool.PartitionSupport;
@@ -31,12 +35,62 @@ public class PartitionMetadata implements PartitionSupport{
 	public Collection<String> getDdcNames() {
 		return parent.getAllDatasourceNames();
 	}
-	public boolean isSingleSite() {
-		return ORMConfig.getInstance().isSingleSite();
-	}
 
 	public DatabaseDialect getProfile(String dbkey) {
 		return parent.getProfile(dbkey);
+	}
+
+	public void ensureTableExists(String db,String table,ITableMetadata tmeta) throws SQLException {
+		DbMetaData meta=parent.getMetadata(db);
+		Collection<String> tables=meta.getSubTableNames(tmeta);
+		if(tables.contains(table.toUpperCase())){
+			return;
+		}
+		if(meta.createTable(tmeta, table)){
+			tables.add(table.toUpperCase());
+		}
+	}
+	
+
+	public boolean isExist(String db, String table,ITableMetadata tmeta) {
+		DbMetaData meta=parent.getMetadata(db);
+		Collection<String> tables;
+		try {
+			tables = meta.getSubTableNames(tmeta);
+			return tables.contains(table.toUpperCase());
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
+	//FIXME 将子表缓存移到这个类来
+	public PartitionResult[] getSubTableNames(ITableMetadata meta) {
+		List<PartitionResult> ps = new ArrayList<PartitionResult>();
+		Collection<String> dbs = getDdcNames();
+		if (dbs.isEmpty()) {
+			try {
+				Collection<String> result = parent.getMetadata(null).getSubTableNames(meta);
+				if (!result.isEmpty()) {
+					PartitionResult p = new PartitionResult(result.toArray(new String[result.size()])).setDatabase(null);
+					ps.add(p);
+				}
+			} catch (SQLException e) {
+				LogUtil.exception(e);
+			}
+		} else {
+			for (String s : dbs) {
+				try {
+					Collection<String> result = parent.getMetadata(s).getSubTableNames(meta);
+					if (!result.isEmpty()) {
+						PartitionResult p = new PartitionResult(result.toArray(new String[result.size()])).setDatabase(s);
+						ps.add(p);
+					}
+				} catch (SQLException e) {
+					LogUtil.exception(e);
+				}
+			}
+		}
+		return ps.toArray(new PartitionResult[ps.size()]);
 	}
 
 }

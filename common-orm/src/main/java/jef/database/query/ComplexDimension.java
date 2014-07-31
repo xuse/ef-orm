@@ -11,6 +11,11 @@ import jef.database.annotation.PartitionFunction;
 
 import org.apache.commons.lang.StringUtils;
 
+/**
+ * 描述一个非连续区间
+ * @author jiyi
+ *
+ */
 public class ComplexDimension implements Dimension {
 	private final List<Dimension> ranges=new ArrayList<Dimension>();
 	

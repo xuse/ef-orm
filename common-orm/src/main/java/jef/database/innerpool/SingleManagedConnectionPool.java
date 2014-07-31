@@ -211,16 +211,8 @@ final class SingleManagedConnectionPool extends AbstractPopulator implements IMa
 	}
 
 	public DatabaseDialect getProfile() {
-		return getMetadata(null).getProfile();
-	}
-
-	public boolean hasRemarkFeature(String dbkey) {
-		if (JefConfiguration.getBoolean(DbCfg.DB_NO_REMARK_CONNECTION, false) || this.min > 5) {
-			return false;
-		}
-		DatabaseDialect profile;
 		if (metadata != null) {
-			profile = metadata.getProfile();
+			return metadata.getProfile();
 		} else {
 			ConnectInfo info = DbUtils.tryAnalyzeInfo(ds, false);
 			if (info == null) {
@@ -233,8 +225,15 @@ final class SingleManagedConnectionPool extends AbstractPopulator implements IMa
 					DbUtils.closeConnection(conn);
 				}
 			}
-			profile = info.getProfile();
+			return info.getProfile();
 		}
+	}
+
+	public boolean hasRemarkFeature(String dbkey) {
+		if (JefConfiguration.getBoolean(DbCfg.DB_NO_REMARK_CONNECTION, false) || this.min > 5) {
+			return false;
+		}
+		DatabaseDialect profile=getProfile();
 		return profile.has(Feature.REMARK_META_FETCH);
 	}
 

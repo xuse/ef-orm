@@ -1,4 +1,30 @@
 ﻿
+dubbo客户端能否指定URL?
+CXF 2.7.10提高了兼容性，但是CXF-Plus的ASM类产生的package-info不兼容
+同维度下的映射关系分表+分库。。。。设计改造 ,虚拟表映射.
+Batch Insert等操作下的极限性能优化。统计并输出因为Sequence而消耗的时间
+对启用表过滤机制后，造成无表输出后的查询返回空结果集场景进行支持和测试
+支持按需建表(OK)
+缩小首次建表范围（OK），引发若干测试错误，采用表过滤机制解决。(OK)
+
+不启用按需建表后，需要保留全范围或大范围建表功能（。。。）
+对NativeQuery支持的分表分库操作
+对分表分库后混合结果集进行支持（聚合、排序）
+
+
+
+
+
+
+
+http://10.22.33.106/index!controlIndex.action
+
+
+因此，学习MySQL Sharding百益而无一害！最早的先驱者估计可以是Google捐赠给开源社区的Hibernate shards了，这是一个Hibernate应用横向分割的分布式数据库解决方案的框架。它可以让一个Hibernate应用比较简单地加入横向分割的数据库分布式功能。另外，还有HiveDB。其底层也是基于Hibernate shards实现，目前版本相对稳定，其亮点是具有类似mysql proxy之类多服务器容错功能，单独服务器发生故障不影响系统正常运行，通过类似ha-jdbc思想实现。最后，不得不提的就是淘宝贡献的TDDL，使用过淘宝的同学应该都深有体会，其可靠性、可用性、稳定性、可扩展性均领跑业界很多同类产品。TDDL最大的两个亮点是动态数据源管理和分库分表。建议抽出游戏时间，向淘宝好好学习，天天向上！ 
+
+
+
+
 
 读取Sequence initialValue=1000   allocationSize (OK)
 读取Table initialValue=1000   valueColumnName   pkColumnValue table   allocationSize (OK)
@@ -13,14 +39,8 @@ PRIMARY KEY的匹配方式(OK)
 filterCondition右侧对多加载时的排序和结果限制问题 (OK)
 当一个对象中指向同个目标的JoinDescrption配置不同时，被当做是相同的关联查询进行处理。(OK)
 AnnotationValueCompare的处理（OK JDK自身已经实现得很好）
-当多对一时，fetch=LAZY现在可以生效
-当filterCondition等辅助描述被区分为多种关联时，
-
-
-
-
-
-
+当多对一时，fetch=LAZY现在可以生效(OK)
+当filterCondition等辅助描述被区分为多种关联时，(OK)
 
 
 JoinKey和JoinExpression重构

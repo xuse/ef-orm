@@ -277,6 +277,9 @@ public final class MultipleResultSet implements IResultSet {
 		if(filters==null){
 			filters=Collections.EMPTY_MAP;
 		}
+		if(results.isEmpty()){
+			return new ResultSetWrapper(null,null,null);
+		}
 		if (results.size() == 1) {
 			R r=results.get(0);
 			ResultSetWrapper rsw = new ResultSetWrapper(r.rs, columns, r.from.getProfile());

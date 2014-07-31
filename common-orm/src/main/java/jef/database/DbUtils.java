@@ -1143,15 +1143,18 @@ public final class DbUtils {
 	/**
 	 * 分表和路由计算，在没有对象实例的情况下计算路由，这个计算将会返回所有可能的表名组合
 	 * 
+	 * 
 	 * @param meta
 	 *            元数据描述
 	 * @param processor
-	 * @param includeBaseTable
-	 *            是否包含基表
+	 * @param operateType 计算表名所用的操作。0基表 1 不含基表  2 分表+基表 3 数据库中的存在表（不含基表） 4所有存在的表
+	 * 影响效果——建表的多寡。
+	 *            
+	 * 
 	 * @return
 	 */
-	public static PartitionResult[] toTableNames(ITableMetadata meta, PartitionSupport processor, boolean includeBaseTable) {
-		return partitionUtil.toTableNames(meta, processor, includeBaseTable);
+	public static PartitionResult[] toTableNames(ITableMetadata meta, PartitionSupport processor, int operateType) {
+		return partitionUtil.toTableNames(meta, processor, operateType);
 	}
 
 	/**

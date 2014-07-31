@@ -279,32 +279,7 @@ public class DbClient extends Session {
 	}
 
 	public PartitionResult[] getSubTableNames(ITableMetadata meta) {
-		List<PartitionResult> ps = new ArrayList<PartitionResult>();
-		Collection<String> dbs = connPool.getAllDatasourceNames();
-		if (dbs.isEmpty()) {
-			try {
-				Collection<String> result = connPool.getMetadata(null).getSubTableNames(meta);
-				if (!result.isEmpty()) {
-					PartitionResult p = new PartitionResult(result.toArray(new String[result.size()])).setDatabase(null);
-					ps.add(p);
-				}
-			} catch (SQLException e) {
-				LogUtil.exception(e);
-			}
-		} else {
-			for (String s : getAllDatasourceNames()) {
-				try {
-					Collection<String> result = connPool.getMetadata(s).getSubTableNames(meta);
-					if (!result.isEmpty()) {
-						PartitionResult p = new PartitionResult(result.toArray(new String[result.size()])).setDatabase(s);
-						ps.add(p);
-					}
-				} catch (SQLException e) {
-					LogUtil.exception(e);
-				}
-			}
-		}
-		return ps.toArray(new PartitionResult[ps.size()]);
+		return connPool.getPartitionSupport().getSubTableNames(meta);
 	}
 
 	@Override
@@ -495,7 +470,7 @@ public class DbClient extends Session {
 	 * @throws SQLException
 	 */
 	public int dropTable(ITableMetadata meta) throws SQLException {
-		PartitionResult[] pr = DbUtils.toTableNames(meta, connPool.getPartitionSupport(),true);
+		PartitionResult[] pr = DbUtils.toTableNames(meta, connPool.getPartitionSupport(),4);
 		return dropTable0(pr, meta);
 	}
 
@@ -658,7 +633,7 @@ public class DbClient extends Session {
 		for (Class<?> c : cs) {
 			try {
 				ITableMetadata meta=MetaHolder.getMeta(c); 
-				PartitionResult[] result = DbUtils.toTableNames(meta, connPool.getPartitionSupport(),true);
+				PartitionResult[] result = DbUtils.toTableNames(meta, connPool.getPartitionSupport(),0);
 				n += createTable0(meta, result);
 			} catch (SQLException e) {
 				LogUtil.exception(e);
@@ -680,7 +655,7 @@ public class DbClient extends Session {
 		List<SQLException> errors = new ArrayList<SQLException>();
 		for (ITableMetadata meta : metas) {
 			try {
-				PartitionResult[] result = DbUtils.toTableNames(meta, connPool.getPartitionSupport(),true);
+				PartitionResult[] result = DbUtils.toTableNames(meta, connPool.getPartitionSupport(),0);
 				n += createTable0(meta, result);
 			} catch (SQLException ex) {
 				errors.add(ex);
@@ -876,7 +851,6 @@ public class DbClient extends Session {
 		int count = 0;
 		for (PartitionResult pr : prs) {
 			DbMetaData metaData = getMetaData(pr.getDatabase());
-
 			try {
 				for (String table : pr.getTables()) {
 					metaData.dropTable(table);
@@ -893,7 +867,10 @@ public class DbClient extends Session {
 			} catch (SQLException e) {
 				errors.add(e);
 			}
+			if(meta!=null)
+				metaData.clearTableMetadataCache(meta);
 		}
+		
 		for (Exception e : errors) {
 			LogUtil.exception(e);
 		}

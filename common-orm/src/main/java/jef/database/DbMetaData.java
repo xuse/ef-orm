@@ -124,10 +124,6 @@ public class DbMetaData extends UserCacheHolder {
 	// 所属shema
 	private String schema;
 
-	/*
-	 * 根据扫描得到的所有表的情况
-	 */
-	private final Map<String, Set<String>> subTableData = new ConcurrentHashMap<String, Set<String>>();
 
 	/**
 	 * 缓存清理的间隔时间<br>
@@ -1084,6 +1080,11 @@ public class DbMetaData extends UserCacheHolder {
 	public DatabaseDialect getProfile() {
 		return info.profile;
 	}
+	
+	/*
+	 * 根据扫描得到的所有表的情况
+	 */
+	private final Map<String, Set<String>> subTableData = new ConcurrentHashMap<String, Set<String>>();
 
 	/**
 	 * 根据基础表,查找目前数据库中已有的分表。 <h3>场景</h3>
@@ -1114,7 +1115,7 @@ public class DbMetaData extends UserCacheHolder {
 	 * 
 	 * @param tableMetadata
 	 *            数据库表的模型
-	 * @return 所有分表的名称。如果这张表没有分表，那么返回空列表。
+	 * @return 所有分表的名称(全大写)。如果这张表没有分表，那么返回空列表。
 	 * 
 	 * @throws SQLException
 	 */
@@ -1161,7 +1162,7 @@ public class DbMetaData extends UserCacheHolder {
 	 *             修改表失败时抛出
 	 * @see MetadataEventListener 变更监听器
 	 */
-	public void refreshTable(ITableMetadata meta, String tablename, MetadataEventListener event) throws SQLException {
+	public void refreshTable(ITableMetadata meta, String tablename, MetadataEventListener event,boolean allowCreateTable) throws SQLException {
 		DatabaseDialect profile = getProfile();
 		tablename = profile.getObjectNameIfUppercase(tablename);
 		boolean supportChangeDelete = profile.notHas(Feature.NOT_SUPPORT_ALTER_DROP_COLUMN);
@@ -1171,12 +1172,14 @@ public class DbMetaData extends UserCacheHolder {
 
 		List<Column> columns = this.getColumns(tablename);
 		if (columns.isEmpty()) {// 表不存在
-			boolean created = false;
-			if (event == null || event.onTableCreate(meta, tablename)) {
-				created = this.createTable(meta, tablename);
-			}
-			if (created && event != null) {
-				event.onTableFinished(meta, tablename);
+			if(allowCreateTable){
+				boolean created = false;
+				if (event == null || event.onTableCreate(meta, tablename)) {
+					created = this.createTable(meta, tablename);
+				}
+				if (created && event != null) {
+					event.onTableFinished(meta, tablename);
+				}	
 			}
 			return;
 		}
@@ -1851,7 +1854,7 @@ public class DbMetaData extends UserCacheHolder {
 	private static final String DROP_CONSTRAINT_SQL = "alter table %1$s drop constraint %2$s";
 
 	/*
-	 * 计算分表 通过基表的名称，查找出分表名
+	 * 计算分表 通过基表的名称，查找出分表名(全部大写)
 	 */
 	private Set<String> calculateSubTables(String tableName, ITableMetadata meta, boolean isDefault) throws SQLException {
 		long start = System.currentTimeMillis();
@@ -1895,7 +1898,7 @@ public class DbMetaData extends UserCacheHolder {
 				String fullTableName = schema == null ? entry.getName() : schema + "." + entry.getName();
 				List<Column> subColumns = getColumns(fullTableName);
 				if (subColumns.size() == columns.size()) {
-					result.add(fullTableName);
+					result.add(fullTableName.toUpperCase());
 				} else {
 					LogUtil.info("The table [" + fullTableName + "] seems like a subtable of [" + tableName + "], but their columns are not match.");
 				}
@@ -2106,5 +2109,9 @@ public class DbMetaData extends UserCacheHolder {
 
 	public PreparedStatement prepareStatement(String selectSql) throws SQLException {
 		return this.getConnection().prepareStatement(selectSql);
+	}
+
+	public boolean clearTableMetadataCache(ITableMetadata meta) {
+		return subTableData.remove(meta)!=null;
 	}
 }

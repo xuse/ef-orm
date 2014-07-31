@@ -381,5 +381,17 @@ public enum DbCfg implements ConfigItem {
 	/**
 	 * 检查SQL语句中的function，默认true，设置为false后，ORM不再检查函数是否可用。
 	 */
-	DB_CHECK_SQL_FUNCTIONS
+	DB_CHECK_SQL_FUNCTIONS,
+	/**
+	 * 估算时间宽度
+	 */
+	PARTITION_DATE_SPAN,
+	/**
+	 * 按需建表
+	 */
+	PARTITION_CREATE_TABLE_INNEED,
+	/**
+	 * 查询、删除、更新操作时过滤掉哪些数据库中不存在的表
+	 */
+	PARTITION_FILTER_ABSENT_TABLES
 }

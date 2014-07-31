@@ -47,12 +47,12 @@ public abstract class AbstractMetaDataService implements IUserManagedPool{
 	
 	public void tableRefresh(ITableMetadata meta,MetadataEventListener event) throws SQLException {
 		Assert.notNull(meta,"The table definition which your want to resresh must not null.");
-		PartitionResult[] results=DbUtils.toTableNames(meta, this.getPartitionSupport(),true);
+		PartitionResult[] results=DbUtils.toTableNames(meta, this.getPartitionSupport(),4);
 		for(PartitionResult result:results){
 			DbMetaData dbmeta=this.getMetadata(result.getDatabase());
 			for(String table:result.getTables()){
 				if(event==null || event.beforeTableRefresh(meta,table)){
-					dbmeta.refreshTable(meta,table,event);
+					dbmeta.refreshTable(meta,table,event,true);
 				}
 			}
 		}

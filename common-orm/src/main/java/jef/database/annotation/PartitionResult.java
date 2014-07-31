@@ -2,6 +2,7 @@ package jef.database.annotation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -44,8 +45,10 @@ public class PartitionResult {
 	/**
 	 * 得到多个数据库表名称，如果带schema则表示 schema.tablename
 	 */
+	@SuppressWarnings("unchecked")
 	public List<String> getTables() {
-		if(tables==null)tables=new ArrayList<String>();
+//		if(tables==null)tables=new ArrayList<String>();
+		if(tables==null)return Collections.EMPTY_LIST;
 		return tables;
 	}
 	public void setTables(List<String> tables) {

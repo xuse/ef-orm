@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 import jef.common.log.LogUtil;
 import jef.database.Condition;
 import jef.database.Condition.Operator;
+import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.IConditionField;
 import jef.database.IConditionField.And;
@@ -26,6 +27,7 @@ import jef.database.IConditionField.NotExists;
 import jef.database.IConditionField.Or;
 import jef.database.IQueryableEntity;
 import jef.database.KeyFunction;
+import jef.database.ORMConfig;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionResult;
@@ -41,106 +43,69 @@ import jef.tools.reflect.BeanWrapper;
 import jef.tools.reflect.NopBeanWrapper;
 
 /**
- * 分表计算器的JEF默认实现，能最大限度的利用JEF的Annotation功能， 对基于Criteria
+ * 分表计算器的EF-ORM默认实现，能最大限度的利用JEF的Annotation功能， 对基于Criteria
  * API的Query进行充分的解析，进而进行分表维度计算。
  * 
  * @author wangyuan 20110730
  */
 public final class DefaultPartitionCalculator implements PartitionCalculator {
-	/**
-	 * 描述一个分表计算的中间结果
-	 * @author Administrator
-	 *
-	 */
-	static final class DbTable {
-		String dbName;		//db名称(site名)
-		String table;		//表名 (table名)
-		boolean isDbRegexp;	//db名是否为正则表达式
-		boolean isTbRegexp;	//table名是否为正则表达式
 
-		DbTable(String db, String table) {
-			this(db, table, false,false);
-		}
-
-		DbTable(String db, String table, boolean regexp,boolean dbRegexp) {
-			this.dbName = db;
-			this.table = table;
-			this.isTbRegexp = regexp;
-			this.isDbRegexp=dbRegexp;
-			if (table == null || table.length() == 0)
-				throw new IllegalArgumentException();
-		}
-
-		@Override
-		public int hashCode() {
-			return dbName == null ? table.hashCode() : dbName.hashCode() + table.hashCode();
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (obj instanceof DbTable) {
-				DbTable rhs = (DbTable) obj;
-				if (!StringUtils.equals(dbName, rhs.dbName))
-					return false;
-				return table.equals(rhs.table);
-			}
-			return false;
-		}
-
-		@Override
-		public String toString() {
-			return String.valueOf(dbName) + "." + table;
-		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see jef.database.query.PartitionCalculator#toTableNames(java.lang.Class,
-	 * java.lang.String, jef.database.IQueryableEntity,
-	 * jef.database.query.Query, jef.database.meta.DbmsProfile)
-	 */
 	public PartitionResult[] toTableNames(ITableMetadata meta, IQueryableEntity instance, Query<?> q, PartitionSupport processor) {
 		DatabaseDialect profile = processor.getProfile(null);
 		DbTable[] result;
+		boolean doFileter=ORMConfig.getInstance().isFilterAbsentTables();
 		if (meta.getPartition() != null && instance != null) {// 分区表，并且具备分区条件
 			DbTable[] r = getPartitionTables(meta, BeanWrapper.wrap(instance), q, profile);
 			if (r.length > 0) {
 				result=analyzeRegexpResults(r,processor,meta,profile);
-				return toPartitionResult(result,processor.isSingleSite());
+				return toPartitionResult(result,processor,doFileter,meta);
 			}
+			result = new DbTable[] { new DbTable(meta.getBindDsName(), profile.getObjectNameIfUppercase(meta.getTableName(true))) };//使用基表
+			return toPartitionResult(result,processor,doFileter,meta);
 		}
 		result = new DbTable[] { new DbTable(meta.getBindDsName(), profile.getObjectNameIfUppercase(meta.getTableName(true))) };//使用基表
-		return toPartitionResult(result,processor.isSingleSite());
+		return toPartitionResult(result,processor,false,meta);
 	}
 
 
-	/*
-	 * @see jef.database.query.PartitionCalculator#toTableNames(jef.database.meta.ITableMetadata, jef.database.innerpool.PartitionSupport)
-	 */
-	public PartitionResult[] toTableNames(ITableMetadata meta, PartitionSupport processor,boolean includeBaseTable) {
+	
+	public PartitionResult[] toTableNames(ITableMetadata meta, PartitionSupport processor,int opType) {
 		DatabaseDialect profile=processor.getProfile(null);
 		DbTable[] result;
-		if (meta.getPartition() != null) {// 分区表，并且具备分区条件
-			DbTable[] tempResult=getPartitionTables(meta, NopBeanWrapper.getInstance(), null,profile);
-			if (tempResult.length > 0) {
-				result=analyzeRegexpResults(tempResult,processor,meta,profile);
-				PartitionResult[] pr= toPartitionResult(result,processor.isSingleSite());
-				if(includeBaseTable){
-					String tableName=meta.getTableName(true);
-					for(PartitionResult p: pr){
-						List<String> l=new ArrayList<String>(p.getTables());
-						l.add(tableName);
-						p.setTables(l);
-					}
+		if (opType>0 && meta.getPartition() != null) {// 分区表，并且具备分区条件
+			if(opType>2){ //取数据库存在的表
+				PartitionResult[] results=processor.getSubTableNames(meta);
+				if(opType==3){
+					return removeBaseTable(results);
+				}else{
+					return results;
 				}
-				return pr;
-							
+			}else{
+				DbTable[] tempResult=getPartitionTables(meta, NopBeanWrapper.getInstance(), null,profile);
+				if (tempResult.length > 0) {
+					result=analyzeRegexpResults(tempResult,processor,meta,profile);
+					PartitionResult[] pr= toPartitionResult(result,processor,false,meta);
+					if(opType==2){
+						String tableName=meta.getTableName(true);
+						for(PartitionResult p: pr){
+							List<String> l=new ArrayList<String>(p.getTables());
+							l.add(tableName);
+							p.setTables(l);
+						}
+					}
+					return pr;
+				}	
 			}
 		}
 		result = new DbTable[] { new DbTable(meta.getBindDsName(), profile.getObjectNameIfUppercase(meta.getTableName(true))) };//使用基表
-		return toPartitionResult(result,processor.isSingleSite());
+		return toPartitionResult(result,processor,false,meta);
 	}
+
+
+	private PartitionResult[] removeBaseTable(PartitionResult[] results) {
+		throw new UnsupportedOperationException();
+	}
+
 
 
 	/*
@@ -155,7 +120,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		DbTable result;
 		if (meta.getPartition() != null && instance != null) {// 认为是分区表的场合
 			DbTable[] tbs = getPartitionTables(meta, BeanWrapper.wrap(instance), q, profile);
-			if (tbs.length == 0) { // 没有返回的情况
+			if (tbs.length == 0) { // 没有返回的情况，返回基表
 				result = new DbTable(meta.getBindDsName(), profile.getObjectNameIfUppercase(meta.getTableName(true)));
 			} else if (tbs.length != 1) {
 				throw new IllegalArgumentException("The query is a multiple partation query, is not supported now.");
@@ -172,8 +137,22 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		} else { // 非分区表
 			result = new DbTable(meta.getBindDsName(), profile.getObjectNameIfUppercase(meta.getTableName(true)));
 		}
-		return new PartitionResult(processor.isSingleSite()?null:result.table).setDatabase(result.dbName);
+		return toSingleTableResult(processor,result,meta);
 	}
+
+	private PartitionResult toSingleTableResult(PartitionSupport processor, DbTable result,ITableMetadata meta) {
+		PartitionResult pr=new PartitionResult(result.table);
+		if(!ORMConfig.getInstance().isSingleSite()){
+			pr.setDatabase(result.dbName);
+		}
+		try {
+			processor.ensureTableExists(pr.getDatabase(),result.table,meta);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+		return pr;
+	}
+
 
 	// 笛卡尔积
 	private static List<Map<String, Object>> descartes(List<Map<String, Object>> dList, Object[] arr1, String newField) {
@@ -214,6 +193,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		tbBaseName=profile.getObjectNameIfUppercase(tbBaseName);
 		PartitionTable pt = meta.getPartition();// 得到分区配置
 		Set<DbTable> _tbNames = new LinkedHashSet<DbTable>();
+	
 		for (int x = 0; x < _dimVectors.size(); x++) {
 			boolean isTbRegexp = false;
 			boolean isDbRegexp = false;
@@ -302,7 +282,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 					tMap.put(fieldName, enums[x]);
 					_dimVectors.add(tMap);
 				}
-			} else {// 叠加维度（乘积）
+			} else {// 叠加维度（	//笛卡尔积
 				_dimVectors = descartes(_dimVectors, enums, fieldName);
 			}
 		}
@@ -524,10 +504,13 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 * @param result
 	 * @return
 	 */
-	private PartitionResult[] toPartitionResult(DbTable[] result,boolean singleDb) {
+	private PartitionResult[] toPartitionResult(DbTable[] result,PartitionSupport support,boolean filter,ITableMetadata tmeta) {
 		Map<String, List<String>> map = new HashMap<String, List<String>>();
 		for (DbTable dt : result) {
-			String dbName=singleDb?"":dt.dbName;
+			String dbName=ORMConfig.getInstance().isSingleSite()?"":dt.dbName;
+			if(filter && !support.isExist(dbName,dt.table,tmeta)){
+				continue;
+			}
 			List<String> list = map.get(dbName);
 			if (list == null) {
 				list = new ArrayList<String>();
@@ -574,5 +557,51 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 			return true;
 		}
 		return false;
+	}
+	
+	/**
+	 * 描述一个分表计算的中间结果
+	 * @author Administrator
+	 *
+	 */
+	static final class DbTable {
+		String dbName;		//db名称(site名)
+		String table;		//表名 (table名)
+		boolean isDbRegexp;	//db名是否为正则表达式
+		boolean isTbRegexp;	//table名是否为正则表达式
+
+		DbTable(String db, String table) {
+			this(db, table, false,false);
+		}
+
+		DbTable(String db, String table, boolean regexp,boolean dbRegexp) {
+			this.dbName = db;
+			this.table = table;
+			this.isTbRegexp = regexp;
+			this.isDbRegexp=dbRegexp;
+			if (table == null || table.length() == 0)
+				throw new IllegalArgumentException();
+		}
+
+		@Override
+		public int hashCode() {
+			return dbName == null ? table.hashCode() : dbName.hashCode() + table.hashCode();
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof DbTable) {
+				DbTable rhs = (DbTable) obj;
+				if (!StringUtils.equals(dbName, rhs.dbName))
+					return false;
+				return table.equals(rhs.table);
+			}
+			return false;
+		}
+
+		@Override
+		public String toString() {
+			return String.valueOf(dbName) + "." + table;
+		}
 	}
 }

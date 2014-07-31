@@ -8,6 +8,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import javax.servlet.http.Part;
+
 import jef.database.DbUtils;
 import jef.database.KeyFunction;
 import jef.database.annotation.PartitionKeyImpl;
@@ -65,12 +67,19 @@ public class CalculatorTest {
 			return Arrays.asList("Database1", "Database2", "Database3", "Database4", "Database5");
 		}
 
-		public boolean isSingleSite() {
-			return false;
-		}
-
 		public DatabaseDialect getProfile(String dbkey) {
 			return DbmsProfile.getProfile("oracle");
+		}
+
+		public void ensureTableExists(String db,String table,ITableMetadata meta) {
+		}
+
+		public PartitionResult[] getSubTableNames(ITableMetadata meta) {
+			return null;
+		}
+
+		public boolean isExist(String dbName, String table, ITableMetadata meta) {
+			return true;
 		}
 	};
 
@@ -81,28 +90,28 @@ public class CalculatorTest {
 			((PartitionKeyImpl) config.key()[0]).function = KeyFunction.RAW;
 			((PartitionKeyImpl) config.key()[0]).defaultWhenFieldIsNull = "AA, BB, CC";
 			inv.invoke(meta, config);
-			PartitionResult[] result = calc.toTableNames(meta, supportor,true);
+			PartitionResult[] result = calc.toTableNames(meta, supportor,2);
 			System.out.println(Arrays.asList(result));
 			System.out.println(meta.getFirstAutoincrementDef().getGenerationType(profile));
 		}
 		{
 			((PartitionKeyImpl) config.key()[0]).function = KeyFunction.MODULUS;
 			inv.invoke(meta, config);
-			PartitionResult[] result = calc.toTableNames(meta, supportor,true);
+			PartitionResult[] result = calc.toTableNames(meta, supportor,2);
 			System.out.println(Arrays.asList(result));
 			System.out.println(meta.getFirstAutoincrementDef().getGenerationType(profile));
 		}
 		{
 			((PartitionKeyImpl) config.key()[0]).function = KeyFunction.MONTH;
 			inv.invoke(meta, config);
-			PartitionResult[] result = calc.toTableNames(meta, supportor,true);
+			PartitionResult[] result = calc.toTableNames(meta, supportor,2);
 			System.out.println(Arrays.asList(result));
 			System.out.println(meta.getFirstAutoincrementDef().getGenerationType(profile));
 		}
 		{
 			((PartitionKeyImpl) config.key()[0]).function = KeyFunction.YEAR;
 			inv.invoke(meta, config);
-			PartitionResult[] result = calc.toTableNames(meta, supportor,true);
+			PartitionResult[] result = calc.toTableNames(meta, supportor,2);
 			System.out.println(Arrays.asList(result));
 			System.out.println(meta.getFirstAutoincrementDef().getGenerationType(profile));
 		}
@@ -112,7 +121,7 @@ public class CalculatorTest {
 			keys[0].function = KeyFunction.MONTH;
 			config.setKey(keys);
 			inv.invoke(meta, config);
-			PartitionResult[] result = calc.toTableNames(meta, supportor,true);
+			PartitionResult[] result = calc.toTableNames(meta, supportor,2);
 			System.out.println(Arrays.asList(result));
 		}
 	}
@@ -136,7 +145,7 @@ public class CalculatorTest {
 	@Test
 	public void testCreaterTable3() {
 		ITableMetadata meta=MetaHolder.getMeta(PartitionEntity.class);
-		PartitionResult[] results = DbUtils.toTableNames(meta,  supportor,true);
+		PartitionResult[] results = DbUtils.toTableNames(meta,  supportor,2);
 		for (PartitionResult r : results) {
 			System.out.println(r);
 		}

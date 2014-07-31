@@ -30,7 +30,6 @@ import java.util.regex.Pattern;
 import jef.common.StringCacheMap;
 import jef.common.log.LogUtil;
 import jef.tools.ArrayUtils;
-import jef.tools.DateFormats;
 import jef.tools.DateUtils;
 import jef.tools.IOUtils;
 import jef.tools.ResourceUtils;
@@ -172,10 +171,19 @@ public class JefTest extends Assert {
 		
 	}
 	
-	
+	@Test
 	public void testSttinh(){
-		
-		
+
+		String[] arrays=new String[]{"1","2","3"};
+		Map<String,String> map=new HashMap<String,String>();
+		for(int i=0;i<arrays.length;i+=2){
+			if(i==arrays.length-1){
+				map.put(arrays[i], null);
+			}else{
+				map.put(arrays[i], arrays[i+1]);
+			}
+		}
+		System.out.println(map);
 	}
 	
 	private static final String AXXX="";

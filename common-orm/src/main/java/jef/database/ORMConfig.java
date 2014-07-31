@@ -38,6 +38,11 @@ public class ORMConfig implements ORMConfigMBean {
 	 */
 	private boolean showStringLength;
 	/**
+	 * 过滤不存在的分区表
+	 */
+	private boolean filterAbsentTables; 
+	
+	/**
 	 * Lob等数据流映射到String时的编码
 	 */
 	private String dbEncoding;
@@ -177,8 +182,18 @@ public class ORMConfig implements ORMConfigMBean {
 		setTxIsolation=JefConfiguration.getBoolean(DbCfg.DB_SET_ISOLATION, true);
 		checkUpdateForNamedQueries=JefConfiguration.getBoolean(DbCfg.DB_NAMED_QUERY_UPDATE, debugMode);
 		checkSqlFunctions=JefConfiguration.getBoolean(DbCfg.DB_CHECK_SQL_FUNCTIONS, true);
+		filterAbsentTables=JefConfiguration.getBoolean(DbCfg.PARTITION_FILTER_ABSENT_TABLES, true);
 	}
 	
+	
+	public boolean isFilterAbsentTables() {
+		return filterAbsentTables;
+	}
+
+	public void setFilterAbsentTables(boolean filterAbsentTables) {
+		this.filterAbsentTables = filterAbsentTables;
+	}
+
 	public boolean isCheckUpdateForNamedQueries() {
 		return checkUpdateForNamedQueries;
 	}
