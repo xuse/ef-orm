@@ -78,7 +78,6 @@ public class DefaultSqlProcessor implements SqlProcessor {
 		}
 	}
 
-
 	/**
 	 * 转换到Where子句
 	 */
@@ -105,22 +104,51 @@ public class DefaultSqlProcessor implements SqlProcessor {
 	/**
 	 * 转换成Update字句
 	 */
-	public String toUpdateClause(IQueryableEntity obj) throws SQLException {
+	@SuppressWarnings("unchecked")
+	public String toUpdateClause(IQueryableEntity obj, boolean dynamic) throws SQLException {
 		DatabaseDialect profile = getProfile();
 		StringBuilder sb = new StringBuilder();
 		ITableMetadata meta = MetaHolder.getMeta(obj);
-		for (Map.Entry<Field, Object> entry : obj.getUpdateValueMap().entrySet()) {
-			Field field = entry.getKey();
-			Object value = entry.getValue();
-			MappingType<?> vType = meta.getColumnDef(field);
-			// String fieldName = field.name();
-			if (sb.length() > 0)
-				sb.append(", ");
-			sb.append(meta.getColumnName(field, profile, true)).append(" = ");
-			if (value == null) {
-				sb.append("null");
-			} else {
-				sb.append(vType.getSqlStr(value, profile));
+		Map<Field, Object> map = obj.getUpdateValueMap();
+		
+		Map.Entry<Field, Object>[] fields;
+		if (dynamic) {
+			fields = map.entrySet().toArray(new Map.Entry[map.size()]);
+			moveLobFieldsToLast(fields, meta);
+
+			// 增加时间戳自动更新的列
+			AbstractTimeMapping<?>[] autoUpdateTime = meta.getUpdateTimeDef();
+			if (autoUpdateTime != null) {
+				for (AbstractTimeMapping<?> tm : autoUpdateTime) {
+					if (!map.containsKey(tm.field())) {
+						Object value = tm.getAutoUpdateValue(profile, obj);
+						if (value != null) {
+							if (sb.length() > 0)
+								sb.append(", ");
+							sb.append(tm.getColumnName(profile, true)).append(" = ");
+							sb.append(tm.getSqlStr(value, profile));
+						}
+					}
+				}
+			}
+		} else {
+			fields = getAllFieldValues(meta, map, BeanWrapper.wrap(obj));
+		}
+		
+		if (dynamic) {
+			// 其他列
+			for (Map.Entry<Field, Object> entry : fields) {
+				Field field = entry.getKey();
+				Object value = entry.getValue();
+				MappingType<?> vType = meta.getColumnDef(field);
+				if (sb.length() > 0)
+					sb.append(", ");
+				sb.append(vType.getColumnName(profile, true)).append(" = ");
+				if (value == null) {
+					sb.append("null");
+				} else {
+					sb.append(vType.getSqlStr(value, profile));
+				}
 			}
 		}
 		return sb.toString();
@@ -183,26 +211,31 @@ public class DefaultSqlProcessor implements SqlProcessor {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public Entry<List<String>, List<Field>> toPrepareUpdateSql(IQueryableEntity obj) {
+	public Entry<List<String>, List<Field>> toPrepareUpdateClause(IQueryableEntity obj, boolean dynamic) {
 		DatabaseDialect profile = getProfile();
 		List<String> cstr = new ArrayList<String>();
 		List<Field> params = new ArrayList<Field>();
 		Map<Field, Object> map = obj.getUpdateValueMap();
 
-		Map.Entry<Field, Object>[] fields = map.entrySet().toArray(new Map.Entry[map.size()]);
+		Map.Entry<Field, Object>[] fields;
 		ITableMetadata meta = MetaHolder.getMeta(obj);
+		if (dynamic) {
+			fields = map.entrySet().toArray(new Map.Entry[map.size()]);
+			moveLobFieldsToLast(fields, meta);
 
-		// 增加时间戳自动更新的列
-		AbstractTimeMapping<?>[] autoUpdateTime = meta.getUpdateTimeDef();
-		if (autoUpdateTime != null) {
-			for (AbstractTimeMapping<?> tm : autoUpdateTime) {
-				if (!map.containsKey(tm.field())) {
-					tm.processAutoUpdate(profile, cstr, params);
+			// 增加时间戳自动更新的列
+			AbstractTimeMapping<?>[] autoUpdateTime = meta.getUpdateTimeDef();
+			if (autoUpdateTime != null) {
+				for (AbstractTimeMapping<?> tm : autoUpdateTime) {
+					if (!map.containsKey(tm.field())) {
+						tm.processAutoUpdate(profile, cstr, params);
+					}
 				}
 			}
+		} else {
+			fields = getAllFieldValues(meta, map, BeanWrapper.wrap(obj));
 		}
 
-		moveLobFieldsToLast(fields, meta);
 		for (Map.Entry<Field, Object> e : fields) {
 			Field field = e.getKey();
 			Object value = e.getValue();
@@ -242,6 +275,31 @@ public class DefaultSqlProcessor implements SqlProcessor {
 		return new Entry<List<String>, List<Field>>(cstr, params);
 	}
 
+	@SuppressWarnings("unchecked")
+	private java.util.Map.Entry<Field, Object>[] getAllFieldValues(ITableMetadata meta, Map<Field, Object> map, BeanWrapper wrapper) {
+		List<Entry<Field, Object>> result = new ArrayList<Entry<Field, Object>>();
+		for (MappingType<?> vType : meta.getMetaFields()) {
+			Field field = vType.field();
+			if (map.containsKey(field)) {
+				result.add(new Entry<Field, Object>(field, map.get(field)));
+			} else {
+				if (meta.getPKField().contains(field))
+					continue;
+
+				if (vType instanceof AbstractTimeMapping<?>) {
+					AbstractTimeMapping<?> times = (AbstractTimeMapping<?>) vType;
+					if (times.isForUpdate()) {
+						Object value = times.getAutoUpdateValue(profile, wrapper.getWrapped());
+						result.add(new Entry<Field, Object>(field, value));
+						continue;
+					}
+				}
+				result.add(new Entry<Field, Object>(field, wrapper.getPropertyValue(field.name())));
+			}
+		}
+		return result.toArray(new Map.Entry[result.size()]);
+	}
+
 	/**
 	 * 更新前，将所有LLOB字段都移动到最后去
 	 * 
@@ -268,24 +326,24 @@ public class DefaultSqlProcessor implements SqlProcessor {
 	public DatabaseDialect getProfile() {
 		return profile;
 	}
-	
+
 	private String innerToWhereClause(JoinElement obj, SqlContext context, boolean removePKUpdate) {
 		if (obj instanceof AbstractJoinImpl) {
 			AbstractJoinImpl join = (AbstractJoinImpl) obj;
 			StringBuilder sb = new StringBuilder();
 			for (Query<?> ele : join.elements()) {
-				String condStr=generateWhereClause0(ele,context.getContextOf(ele),removePKUpdate,ele.getConditions());
-				if (StringUtils.isEmpty(condStr)){
+				String condStr = generateWhereClause0(ele, context.getContextOf(ele), removePKUpdate, ele.getConditions());
+				if (StringUtils.isEmpty(condStr)) {
 					continue;
 				}
-				if (sb.length() > 0){
+				if (sb.length() > 0) {
 					sb.append(" and ");
 				}
 				sb.append(condStr);
 			}
 			for (Map.Entry<Query<?>, List<Condition>> entry : join.getRefConditions().entrySet()) {
-				Query<?> q=entry.getKey();
-				String condStr=generateWhereClause0(q, context.getContextOf(q), false,entry.getValue());
+				Query<?> q = entry.getKey();
+				String condStr = generateWhereClause0(q, context.getContextOf(q), false, entry.getValue());
 				if (StringUtils.isEmpty(condStr)) {
 					continue;
 				}
@@ -296,13 +354,13 @@ public class DefaultSqlProcessor implements SqlProcessor {
 			}
 			return sb.toString();
 		} else if (obj instanceof Query<?>) {
-			return generateWhereClause0((Query<?>) obj, context,removePKUpdate,obj.getConditions());
+			return generateWhereClause0((Query<?>) obj, context, removePKUpdate, obj.getConditions());
 		} else {
 			throw new IllegalArgumentException("Unknown Query class:" + obj.getClass().getName());
 		}
 	}
 
-	private String generateWhereClause0(Query<?> obj, SqlContext context, boolean removePKUpdate,List<Condition> conds) {
+	private String generateWhereClause0(Query<?> obj, SqlContext context, boolean removePKUpdate, List<Condition> conds) {
 		Query<?> q = (Query<?>) obj;
 
 		if (conds.size() == 1 && conds.get(0) == Condition.AllRecordsCondition)
@@ -330,7 +388,6 @@ public class DefaultSqlProcessor implements SqlProcessor {
 		return sb.toString();
 	}
 
-
 	private BindSql innerToPrepareWhereSql(JoinElement query, SqlContext context, boolean removePKUpdate) {
 		if (query instanceof AbstractJoinImpl) {
 			List<BindVariableDescription> params = new ArrayList<BindVariableDescription>();
@@ -350,7 +407,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 				sb.append(result.getSql());
 			}
 			for (Map.Entry<Query<?>, List<Condition>> entry : join.getRefConditions().entrySet()) {
-				Query<?> q=entry.getKey();
+				Query<?> q = entry.getKey();
 				BindSql result = generateWhereCondition(q, context.getContextOf(q), entry.getValue(), false);
 				if (result.getBind() != null) {
 					params.addAll(result.getBind());

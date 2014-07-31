@@ -107,7 +107,7 @@ public class BatchOperate extends org.junit.Assert {
 		for (Person person : persons) {
 			person.setCreated(new Date());
 		}
-		Batch<Person> batch = db.startBatchUpdate(persons.get(0),null);
+		Batch<Person> batch = db.startBatchUpdate(persons.get(0),null,true);
 		batch.execute(persons);
 		persons = db.select(QB.create(Person.class));
 		batch.execute(persons);

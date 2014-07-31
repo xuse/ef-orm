@@ -1653,7 +1653,7 @@ public abstract class Session {
 			bind.setInBatch(true);
 		}
 		ITableMetadata meta = MetaHolder.getMeta(template);
-		Batch.Delete<T> batch = new Batch.Delete<T>((Transaction) this, meta);
+		Batch.Delete<T> batch = new Batch.Delete<T>(this, meta);
 		batch.setWherePart(wherePart);
 		batch.forceTableName = MetaHolder.toSchemaAdjustedName(tableName);
 		batch.parseTime = System.nanoTime() - start;
@@ -1742,12 +1742,12 @@ public abstract class Session {
 	 * @return Batch操作句柄
 	 * @throws SQLException
 	 */
-	public final <T extends IQueryableEntity> Batch<T> startBatchUpdate(T template, String tableName) throws SQLException {
-		if (!template.needUpdate()) {
-			throw new IllegalArgumentException("The input object is not a valid update query Template, since its update value map is empty");
+	public final <T extends IQueryableEntity> Batch<T> startBatchUpdate(T template, String tableName,boolean dynamic) throws SQLException {
+		if (dynamic && !template.needUpdate()) {
+			throw new IllegalArgumentException("The input object is not a valid update query Template, since its update value map is empty, change to ");
 		}
 		long start = System.nanoTime();
-		Entry<List<String>, List<Field>> updatePart = rProcessor.toPrepareUpdateSql((IQueryableEntity) template);
+		Entry<List<String>, List<Field>> updatePart = rProcessor.toPrepareUpdateClause((IQueryableEntity) template,dynamic);
 		// 位于批当中的绑定变量
 		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), null, true);
 		for (BindVariableDescription bind : wherePart.getBind()) {
@@ -1765,27 +1765,35 @@ public abstract class Session {
 	/**
 	 * 批量更新
 	 * 
-	 * @param result
+	 * @param entities  要更新的操作请求
 	 * @throws SQLException
 	 */
-	public final <T extends IQueryableEntity> void batchUpdate(List<T> result) throws SQLException {
-		batchUpdate(result,null);
+	public final <T extends IQueryableEntity> void batchUpdate(List<T> entities) throws SQLException {
+		batchUpdate(entities,null);
 	}
 	
 	/**
 	 * 批量更新
 	 * 
-	 * @param result
+	 * @param entities 要更新的操作请求
+	 * @param group 是否要对操作请求重新分组（数据路由）
 	 * @throws SQLException
 	 */
-	public final <T extends IQueryableEntity> void batchUpdate(List<T> result,Boolean group) throws SQLException {
-		if (result.isEmpty())
+	public final <T extends IQueryableEntity> void batchUpdate(List<T> entities,Boolean group) throws SQLException {
+		if (entities.isEmpty())
 			return;
-		Batch<T> batch = this.startBatchUpdate(result.get(0), null);
+		T template = null;
+		for(int i=0;i<3;i++){
+			template=entities.get(i);
+			if(!template.getUpdateValueMap().isEmpty()){
+				break;
+			}
+		}
+		Batch<T> batch = this.startBatchUpdate(template, null,!template.getUpdateValueMap().isEmpty());
 		if(group!=null){
 			batch.setGroupForPartitionTable(group);
 		}
-		batch.execute(result);
+		batch.execute(entities);
 	}
 
 	/**
@@ -1995,7 +2003,7 @@ public abstract class Session {
 		if (!obj.needUpdate()) {
 			return 0;
 		}
-		Entry<List<String>, List<Field>> setValues = rProcessor.toPrepareUpdateSql((IQueryableEntity) obj);
+		Entry<List<String>, List<Field>> setValues = rProcessor.toPrepareUpdateClause((IQueryableEntity) obj,true);
 		PartitionResult[] tables = DbUtils.toTableNames(obj, myTableName, obj.getQuery(), getPool().getPartitionSupport());
 		int count = 0;
 		for (PartitionResult part : tables) {
@@ -2017,7 +2025,7 @@ public abstract class Session {
 		if (!obj.needUpdate()) {
 			return 0;
 		}
-		String update = rProcessor.toUpdateClause(obj);
+		String update = rProcessor.toUpdateClause(obj,true);
 		int count = 0;
 		for (PartitionResult site : DbUtils.toTableNames(obj, myTableName, obj.getQuery(), getPool().getPartitionSupport())) {
 			count += p.processUpdateNormal(asOperateTarget(site.getDatabase()), obj, start, where, update, site);

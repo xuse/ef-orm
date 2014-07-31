@@ -53,12 +53,12 @@ public interface SqlProcessor{
 	 * @return
 	 * @throws SQLException
 	 */
-	public String toUpdateClause(IQueryableEntity obj) throws SQLException;
+	public String toUpdateClause(IQueryableEntity obj,boolean dynamic) throws SQLException;
 	
 	/**
 	 * 形成update语句 
 	 */
-	public Entry<List<String>, List<Field>> toPrepareUpdateSql(IQueryableEntity obj);
+	public Entry<List<String>, List<Field>> toPrepareUpdateClause(IQueryableEntity obj,boolean dynamic);
 	
 	/**
 	 *  收集结果数据中的数据，用需要的容器包装并返回
