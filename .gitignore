@@ -1,5 +1,6 @@
 *.class
 db/
+db2/
 target/
 
 # Mobile Tools for Java (J2ME)
