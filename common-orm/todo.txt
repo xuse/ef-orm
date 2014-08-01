@@ -1,7 +1,12 @@
 ﻿
-dubbo客户端能否指定URL?
-CXF 2.7.10提高了兼容性，但是CXF-Plus的ASM类产生的package-info不兼容
+dubbo客户端能否指定URL? (Fixed)
+CXF 2.7.10提高了兼容性，但是CXF-Plus的ASM类产生的package-info不兼容 (无法重现，修订CXF-PLUS中的引用，怀疑还是和包冲突有关，修订，暂时算OK)
+
+
+
 同维度下的映射关系分表+分库。。。。设计改造 ,虚拟表映射.
+
+
 Batch Insert等操作下的极限性能优化。统计并输出因为Sequence而消耗的时间
 对启用表过滤机制后，造成无表输出后的查询返回空结果集场景进行支持和测试
 支持按需建表(OK)

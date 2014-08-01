@@ -16,6 +16,7 @@ import jef.common.pool.PoolStatus;
 import jef.database.cache.TransactionCache;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IPool;
+import jef.database.innerpool.PartitionSupport;
 import jef.database.meta.AbstractRefField;
 import jef.database.meta.Feature;
 import jef.database.meta.Reference;
@@ -75,6 +76,10 @@ public class DebugUtil {
 		}
 	}
 	
+	public static PartitionSupport getPartitionSupport(Session db){
+		return db.getPool().getPartitionSupport();
+		
+	}
 	public static PoolStatus getPoolStatus(DbClient db){
 		return db.getPool().getStatus();
 	}

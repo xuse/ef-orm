@@ -81,7 +81,13 @@ public final class TableMetadata extends MetadataAdapter {
 
 	// ///////////////分表配置信息//////////////////////
 	private PartitionTable partition;// 分表策略
+	
+	//记录在每个字段上的函数，用来进行分表估算的时的采样
+	//FIXME 分库规则和分表规则可以分开
+	//FIXME 复合采样规则现在不支持，可考虑支持
 	private Map<String, PartitionFunction<?>> partitionFuncs;
+	
+	
 	private Entry<PartitionKey, PartitionFunction<?>>[] effectPartitionKeys;
 
 	private List<Field> pkFields;// 记录主键列
@@ -151,7 +157,7 @@ public final class TableMetadata extends MetadataAdapter {
 						fieldKeyFn.put(field, func);
 					}
 				} else {
-					throw new IllegalArgumentException("You have metioned two different partition funcion on one field, and can not merge them.");
+					throw new IllegalArgumentException("You have metioned two different partition funcion on one field ["+field+"], and can not merge them.");
 				}
 			} else {
 				fieldKeyFn.put(field, func);
