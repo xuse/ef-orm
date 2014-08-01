@@ -154,7 +154,7 @@ public abstract class AutoIncrementMapping<T> extends ATypeMapping<T> {
 	private boolean isTableOnMultipleDataSources() {
 		boolean multiDb=false;
 		if(meta.getEffectPartitionKeys()!=null){
-			for(Entry<PartitionKey,PartitionFunction<?>> pk:meta.getEffectPartitionKeys()){
+			for(@SuppressWarnings("rawtypes") Entry<PartitionKey,PartitionFunction> pk:meta.getEffectPartitionKeys()){
 				if(pk.getKey().isDbName()){
 					multiDb=true;
 					break;

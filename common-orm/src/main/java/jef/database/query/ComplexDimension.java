@@ -61,16 +61,16 @@ public class ComplexDimension implements Dimension {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public Object[] toEnumationValue(PartitionFunction<?> function) {
+	public Collection<?> toEnumationValue(Collection<PartitionFunction> function) {
 		Collection set=new TreeSet();
 		for(Dimension d: ranges){
-			Object[] objs=d.toEnumationValue(function);
-			if(objs.length==2 && (objs[0]==null || objs[1]==null)){//出现正负无穷的枚举就不处理
-				break;
-			}
+			Collection<?> objs=d.toEnumationValue(function);
+//			if(objs.length==2 && (objs[0]==null || objs[1]==null)){//出现正负无穷的枚举就不处理
+//				break;
+//			}
 			set.addAll(Arrays.asList(objs));	
 		}
-		return set.toArray();
+		return set;
 	}
 	
 

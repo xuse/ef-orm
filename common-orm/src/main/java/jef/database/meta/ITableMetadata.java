@@ -19,6 +19,8 @@ import jef.database.dialect.type.AbstractTimeMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.MappingType;
 
+import com.google.common.collect.Multimap;
+
 /**
  * 表的元模型
  * 
@@ -215,7 +217,8 @@ public interface  ITableMetadata {
 	 * 
 	 * @return 当前生效的分区策略
 	 */
-	public Entry<PartitionKey,PartitionFunction<?>>[] getEffectPartitionKeys();
+	@SuppressWarnings("rawtypes")
+	public Entry<PartitionKey,PartitionFunction>[] getEffectPartitionKeys();
 	
 	/**
 	 * 获得每个字段上，最小单位的分表函数。
@@ -225,7 +228,8 @@ public interface  ITableMetadata {
 	 * 此时在计算枚举时按月计算即可。前一个条件可以忽略。  
 	 * @return 最小单位的分表函数
 	 */
-	public Map<String, PartitionFunction<?>> getMinUnitFuncForEachPartitionKey();
+	@SuppressWarnings("rawtypes")
+	public Multimap<String, PartitionFunction> getMinUnitFuncForEachPartitionKey();
 	
 	/////////////////////////////// 其他行为 //////////////////////////////
 	

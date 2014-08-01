@@ -121,7 +121,7 @@ public class CalculatorTest extends org.junit.Assert{
 		}
 		{
 			System.out.println("==============MAP函数=================");
-			((PartitionKeyImpl) config.key()[0]).function = KeyFunction.MAP;
+			((PartitionKeyImpl) config.key()[0]).function = KeyFunction.MAPPING;
 			((PartitionKeyImpl) config.key()[0]).funcParams=new String[]{"00-24:1,25-49:2,50-74:3,75-99:4"};
 			inv.invoke(meta, config);
 			PartitionResult[] result = calc.toTableNames(meta, supportor,1);

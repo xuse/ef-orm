@@ -1,7 +1,10 @@
 package jef.database.query;
 
+import java.util.Collection;
 import java.util.Date;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeSet;
 
 import jef.database.annotation.PartitionFunction;
 import jef.tools.DateUtils;
@@ -291,13 +294,20 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 		return result;
 	}
 
-	@SuppressWarnings("unchecked")
 	/**
 	 * 将范围值转化为枚举值
 	 */
-	public Object[] toEnumationValue(PartitionFunction func) {
+	@SuppressWarnings("unchecked")
+	public Collection<?> toEnumationValue(Collection<PartitionFunction> funcs) {
 		Object sObj = min;
 		Object eObj = max;
-		return func.iterator(sObj,eObj,isLeftCloseSpan,isRightCloseSpan).toArray();
+		if(funcs.size()==1){
+			return funcs.iterator().next().iterator(sObj, eObj, isLeftCloseSpan, isRightCloseSpan);
+		}
+		Set<?> set=new TreeSet();
+		for(PartitionFunction func:funcs){
+			set.addAll(func.iterator(sObj,eObj,isLeftCloseSpan,isRightCloseSpan));
+		}
+		return set;
 	}
 }

@@ -34,6 +34,8 @@ import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanUtils;
 
+import com.google.common.collect.Multimap;
+
 
 /**
  * 支持动态表。
@@ -571,11 +573,13 @@ public class TupleMetadata extends MetadataAdapter{
 		return null;
 	}
 
-	public Entry<PartitionKey, PartitionFunction<?>>[] getEffectPartitionKeys() {
+	@SuppressWarnings("rawtypes")
+	public Entry<PartitionKey, PartitionFunction>[] getEffectPartitionKeys() {
 		return null;
 	}
 
-	public Map<String, PartitionFunction<?>> getMinUnitFuncForEachPartitionKey() {
+	@SuppressWarnings("rawtypes")
+	public Multimap<String, PartitionFunction> getMinUnitFuncForEachPartitionKey() {
 		return null;
 	}
 

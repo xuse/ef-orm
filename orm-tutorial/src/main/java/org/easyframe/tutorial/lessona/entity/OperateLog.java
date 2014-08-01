@@ -14,7 +14,8 @@ import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
 
 @Entity
-@PartitionTable(key = { @PartitionKey(field = "created", function = KeyFunction.YEAR_MONTH) })
+@PartitionTable(key = {
+		@PartitionKey(field = "created", function = KeyFunction.YEAR_MONTH_DAY) })
 public class OperateLog extends DataObject {
 
     @Id

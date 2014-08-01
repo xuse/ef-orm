@@ -1154,7 +1154,12 @@ public final class DbUtils {
 	 * @return
 	 */
 	public static PartitionResult[] toTableNames(ITableMetadata meta, PartitionSupport processor, int operateType) {
-		return partitionUtil.toTableNames(meta, processor, operateType);
+//		long start=System.nanoTime();
+//		try{
+			return partitionUtil.toTableNames(meta, processor, operateType);
+//		}finally{
+//			System.out.println((System.nanoTime()-start)/1000+"us");
+//		}
 	}
 
 	/**

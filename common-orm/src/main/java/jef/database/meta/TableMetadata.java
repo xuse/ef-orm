@@ -70,6 +70,9 @@ import jef.tools.reflect.UnsafeUtils;
 
 import org.apache.commons.lang.ObjectUtils;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
 public final class TableMetadata extends MetadataAdapter {
 
 	/**
@@ -85,10 +88,10 @@ public final class TableMetadata extends MetadataAdapter {
 	//记录在每个字段上的函数，用来进行分表估算的时的采样
 	//FIXME 分库规则和分表规则可以分开
 	//FIXME 复合采样规则现在不支持，可考虑支持
-	private Map<String, PartitionFunction<?>> partitionFuncs;
+	private Multimap<String, PartitionFunction> partitionFuncs;
 	
 	
-	private Entry<PartitionKey, PartitionFunction<?>>[] effectPartitionKeys;
+	private Entry<PartitionKey, PartitionFunction>[] effectPartitionKeys;
 
 	private List<Field> pkFields;// 记录主键列
 
@@ -143,25 +146,29 @@ public final class TableMetadata extends MetadataAdapter {
 		}
 		this.partition = t;
 		// 开始计算在同一个字段上的最小的分表参数单元
-		Map<String, PartitionFunction<?>> fieldKeyFn = new HashMap<String, PartitionFunction<?>>();
-		for (Entry<PartitionKey, PartitionFunction<?>> entry : getEffectPartitionKeys()) {
+		@SuppressWarnings("rawtypes")
+		Multimap<String, PartitionFunction> fieldKeyFn = ArrayListMultimap.create();
+		for (Entry<PartitionKey, PartitionFunction> entry : getEffectPartitionKeys()) {
 			PartitionKey key = entry.getKey();
 			String field = key.field();
-			PartitionFunction<?> old = fieldKeyFn.get(field);
-			PartitionFunction<?> func = entry.getValue();
-			if (old != null) {
-				if (old instanceof AbstractDateFunction && func instanceof AbstractDateFunction) {
-					int oldLevel = ((AbstractDateFunction) old).getTimeLevel();
-					int level = ((AbstractDateFunction) func).getTimeLevel();// 取最小的时间单位
-					if (level < oldLevel) {
-						fieldKeyFn.put(field, func);
+			if(entry.getValue() instanceof AbstractDateFunction){
+				Collection<PartitionFunction> olds=fieldKeyFn.get(field);
+				if(olds!=null){
+					for(PartitionFunction<?> old:olds){
+						if (old instanceof AbstractDateFunction){
+							int oldLevel = ((AbstractDateFunction) old).getTimeLevel();
+							int level = ((AbstractDateFunction) entry.getValue()).getTimeLevel();// 取最小的时间单位
+							if (level < oldLevel) {
+								fieldKeyFn.remove(field, old);
+								break;//可以合并
+							}else{
+								continue;//无需合并
+							}
+						}
 					}
-				} else {
-					throw new IllegalArgumentException("You have metioned two different partition funcion on one field ["+field+"], and can not merge them.");
 				}
-			} else {
-				fieldKeyFn.put(field, func);
 			}
+			fieldKeyFn.put(field, entry.getValue());
 		}
 		partitionFuncs = fieldKeyFn;
 	}
@@ -369,15 +376,17 @@ public final class TableMetadata extends MetadataAdapter {
 	 * 
 	 * @return
 	 */
-	public Entry<PartitionKey, PartitionFunction<?>>[] getEffectPartitionKeys() {
+	@SuppressWarnings("rawtypes")
+	public Entry<PartitionKey, PartitionFunction>[] getEffectPartitionKeys() {
 		return effectPartitionKeys;
 	}
 
-	private Entry<PartitionKey, PartitionFunction<?>>[] withFunction(PartitionKey[] key) {
+	@SuppressWarnings("rawtypes")
+	private Entry<PartitionKey, PartitionFunction>[] withFunction(PartitionKey[] key) {
 		@SuppressWarnings("unchecked")
-		Entry<PartitionKey, PartitionFunction<?>>[] result = new Entry[key.length];
+		Entry<PartitionKey, PartitionFunction>[] result = new Entry[key.length];
 		for (int i = 0; i < key.length; i++) {
-			result[i] = new Entry<PartitionKey, PartitionFunction<?>>(key[i], createFunc(key[i]));
+			result[i] = new Entry<PartitionKey, PartitionFunction>(key[i], createFunc(key[i]));
 		}
 		return result;
 	}
@@ -421,11 +430,13 @@ public final class TableMetadata extends MetadataAdapter {
 			return AbstractDateFunction.YEAR_LAST2;
 		case YEAR_MONTH:
 			return AbstractDateFunction.YEAR_MONTH;
+		case YEAR_MONTH_DAY:
+			return AbstractDateFunction.YEAR_MONTH_DAY;
 		case WEEKDAY:
 			return AbstractDateFunction.WEEKDAY;
 		case RAW:
 			return new RawFunc(value.defaultWhenFieldIsNull());
-		case MAP:
+		case MAPPING:
 			if(value.functionConstructorParams().length==0){
 				throw new IllegalArgumentException("You must config the 'functionConstructorParams' while using funcuon Map");
 			}
@@ -455,8 +466,12 @@ public final class TableMetadata extends MetadataAdapter {
 		}
 
 		public List<Object> iterator(Object min, Object max, boolean left, boolean right) {
-			if (min == null && max == null && nullValue != null) {
-				return Arrays.asList((Object[]) nullValue);
+			if (min == null && max == null) {
+				 if(nullValue != null){
+					 return Arrays.asList((Object[]) nullValue);
+				 }else{
+					 return Collections.EMPTY_LIST;
+				 }
 			} else if (ObjectUtils.equals(min, max)) {
 				return Arrays.asList(min);
 			} else {
@@ -465,7 +480,8 @@ public final class TableMetadata extends MetadataAdapter {
 		}
 	};
 
-	public Map<String, PartitionFunction<?>> getMinUnitFuncForEachPartitionKey() {
+	@SuppressWarnings("rawtypes")
+	public Multimap<String, PartitionFunction> getMinUnitFuncForEachPartitionKey() {
 		return partitionFuncs;
 	}
 

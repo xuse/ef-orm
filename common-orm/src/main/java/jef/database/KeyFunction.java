@@ -36,6 +36,10 @@ public enum KeyFunction {
 	 */
 	YEAR_MONTH,//年+月
 	/**
+	 * 对指定的日期型字段，获取yyyyMM格式年月
+	 */
+	YEAR_MONTH_DAY,//年月日  yyyyMMdd
+	/**
 	 * 对指定的日期型字段，获取MM格式月份
 	 */
 	MONTH,  //月
@@ -66,5 +70,5 @@ public enum KeyFunction {
 	 * 表示当值为M时，映射为1，01~20之间映射为3，21-41之间映射为4。 以此类推 
 	 * 
 	 */
-	MAP,
+	MAPPING,
 }

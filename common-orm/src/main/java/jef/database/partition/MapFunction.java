@@ -1,6 +1,8 @@
 package jef.database.partition;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import jef.common.ContinuedRange;
@@ -10,9 +12,11 @@ import org.apache.commons.lang.StringUtils;
 
 public class MapFunction implements PartitionFunction<String>{
 	private final List<StringRange> ranges = new ArrayList<StringRange>();
+	private String defaultTarget="";
+	
+	
 	private List<String> allValues=new ArrayList<String>();
 	public MapFunction(String expression){
-		StringRange all = null;
 		for(String s:StringUtils.split(expression,",")){
 			int index=s.lastIndexOf(':');
 			if(index<1){
@@ -21,7 +25,7 @@ public class MapFunction implements PartitionFunction<String>{
 			String value=s.substring(index+1);
 			s=s.substring(0,index);
 			if("*".equals(s)){
-				all=new All().setTarget(value);
+				defaultTarget=value;
 			}else{
 				index=s.lastIndexOf('-');
 				if(index>0){ //如果第一位就是-，认为是负号，不算分隔符
@@ -31,9 +35,11 @@ public class MapFunction implements PartitionFunction<String>{
 				}	
 			}
 		}
-		if(all!=null){
-			ranges.add(all);
-		}
+		Collections.sort(ranges,new Comparator<StringRange>() {//必须按小到大排序
+			public int compare(StringRange o1, StringRange o2) {
+				return o1.getStart().compareTo(o2.getStart());
+			}
+		});
 		for(StringRange range:ranges){
 			allValues.add(range.getStart());	
 		}
@@ -45,11 +51,39 @@ public class MapFunction implements PartitionFunction<String>{
 				return range.target;
 			}
 		}
-		return "";
+		return defaultTarget;
 	}
-
+	//TODO 这个方法要单元测试一下
 	public List<String> iterator(String min, String max, boolean left,	boolean right) {
-		return allValues;
+		if(min==null && max==null){
+			return allValues;
+		}
+		List<String> result=new ArrayList<String>();
+		boolean open=false;
+		if(min==null){
+			open=true;
+		}
+		for(StringRange range:ranges){
+			if(open){
+				if(range.contains(max)){
+					result.add(max);
+					open=false;
+					break;
+				}else{
+					result.add(range.start);
+				}
+			}else{
+				if(range.contains(min)){
+					open=true;
+					result.add(min);
+					if(range.contains(max)){
+						open=false;
+						break;
+					}
+				}
+			}
+		}
+		return result;
 	}
 	@SuppressWarnings("serial")
 	private static class StringRange extends ContinuedRange<String>{
@@ -101,16 +135,16 @@ public class MapFunction implements PartitionFunction<String>{
 			return start.equals(obj);
 		}
 	}
-	@SuppressWarnings("serial")
-	private  static final class All extends StringRange{
-		public All(String s) {
-			super(s,s);
-		}
-		public All() {
-			super("*","*");
-		}
-		public boolean contains(String obj) {
-			return true;
-		}
-	}
+//	@SuppressWarnings("serial")
+//	private  static final class All extends StringRange{
+//		public All(String s) {
+//			super(s,s);
+//		}
+//		public All() {
+//			super("*","*");
+//		}
+//		public boolean contains(String obj) {
+//			return true;
+//		}
+//	}
 }

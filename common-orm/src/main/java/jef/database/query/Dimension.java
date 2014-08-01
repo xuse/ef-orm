@@ -1,5 +1,7 @@
 package jef.database.query;
 
+import java.util.Collection;
+
 import jef.database.annotation.PartitionFunction;
 
 
@@ -13,7 +15,7 @@ import jef.database.annotation.PartitionFunction;
  * @author Administrator
  *
  */
-public interface Dimension {
+public interface Dimension{
 	/**
 	 * 区间是否有效
 	 * @return
@@ -41,5 +43,5 @@ public interface Dimension {
 	 * @param function
 	 * @return
 	 */
-	Object[] toEnumationValue(PartitionFunction<?> function);
+	Collection<?> toEnumationValue(@SuppressWarnings("rawtypes") Collection<PartitionFunction> function);
 }

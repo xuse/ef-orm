@@ -1869,7 +1869,7 @@ public class DbMetaData extends UserCacheHolder {
 			StringBuilder suffixRegexp = new StringBuilder(tableNameWithoutSchema);
 			suffixRegexp.append(pt.appender());
 			int n = 0;
-			for (Entry<PartitionKey, PartitionFunction<?>> entry : meta.getEffectPartitionKeys()) {
+			for (@SuppressWarnings("rawtypes") Entry<PartitionKey, PartitionFunction> entry : meta.getEffectPartitionKeys()) {
 				PartitionKey key = entry.getKey();
 				if (key.isDbName())
 					continue;

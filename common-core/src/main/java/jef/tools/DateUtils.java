@@ -257,7 +257,7 @@ public abstract class DateUtils {
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(date);
 		calendar.set(Calendar.DATE, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));//设置为当月的最后一天
-		org.apache.commons.lang.time.DateUtils.truncate(calendar, Calendar.DATE);//去除时分秒
+		calendar=org.apache.commons.lang.time.DateUtils.truncate(calendar, Calendar.DATE);//去除时分秒
 		Date d=calendar.getTime();
 		d.setTime(d.getTime()+MILLISECONDS_IN_DAY-1);							//调整到当天的最后1毫秒
 		return d;
@@ -268,13 +268,13 @@ public abstract class DateUtils {
 	 * @param date
 	 * @return 当月的最后一天
 	 */
-	public final Date lastDayOfMonth(Date date){
+	public static final Date lastDayOfMonth(Date date){
 		if (date == null)
 			return null;
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(date);
 		calendar.set(Calendar.DATE, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));//设置为当月的最后一天
-		org.apache.commons.lang.time.DateUtils.truncate(calendar, Calendar.DATE);//去除时分秒
+		calendar=org.apache.commons.lang.time.DateUtils.truncate(calendar, Calendar.DATE);//去除时分秒
 		return calendar.getTime();
 	}
 

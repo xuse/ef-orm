@@ -1,6 +1,6 @@
 package jef.database.annotation;
 
-import java.util.List;
+import java.util.Collection;
 
 /**
  * 描述一个分表字段的处理逻辑。
@@ -46,5 +46,5 @@ public interface PartitionFunction<T> {
 	 * @param right
 	 * @return
 	 */
-	List<T> iterator(T min,T max,boolean left,boolean right);
+	Collection<T> iterator(T min,T max,boolean left,boolean right);
 }

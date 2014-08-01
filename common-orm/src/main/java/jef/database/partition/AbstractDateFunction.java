@@ -94,6 +94,38 @@ public abstract class AbstractDateFunction implements PartitionFunction<Date>{
 		}
 	};
 	
+	public static final AbstractDateFunction YEAR_MONTH_DAY=new AbstractDateFunction(){
+		public String eval(Date value) {
+			return DateUtils.format(value, DateFormats.DATE_SHORT);
+		}
+		public List<Date> innerIterator(Date sDate,Date eDate,boolean leftInclude,boolean rightInclude) {
+			List<Date> ret=new ArrayList<Date>();
+			Calendar gval = Calendar.getInstance();
+			gval.setTime(sDate);
+			long endSec=eDate.getTime();
+			if(!rightInclude)endSec--;
+			DateUtils.truncate(gval,  Calendar.DATE);
+			long date=gval.getTimeInMillis();
+			while (date <= endSec) {
+				ret.add(new Date(date));
+				date=date+86400000L;//直接加一天的毫秒数.直接计算性能最好，之所以+1月要借助Calendar对象是因为加一个月太复杂了。
+			}
+			return ret;
+		}
+		@Override
+		public int getTimeLevel() {
+			return 3;
+		}
+		@Override
+		List<Date> iterateAll() {
+			Date date1=new Date();
+			Date date2=new Date();
+			DateUtils.addDay(date1, before);
+			DateUtils.addDay(date2, after);
+			return innerIterator(date1, date2, true, true);
+		}
+	};
+	
 	public static final AbstractDateFunction MONTH=new AbstractDateFunction(){
 		public String eval(Date value) {
 			return String.valueOf(DateUtils.getMonth(value));
@@ -146,8 +178,9 @@ public abstract class AbstractDateFunction implements PartitionFunction<Date>{
 		}
 		@Override
 		List<Date> iterateAll() {
-			Date date1=DateUtils.getDate(1970, 1, 1);
-			Date date2=DateUtils.getDate(1970, 1, 31);
+			Date tmp=new Date();
+			Date date1=DateUtils.monthBegin(tmp);
+			Date date2=DateUtils.lastDayOfMonth(tmp);
 			return innerIterator(date1, date2, true, true);
 		}
 	};
@@ -256,7 +289,10 @@ public abstract class AbstractDateFunction implements PartitionFunction<Date>{
 	}
 	
 	
-	//得到时间段的范围：年5/月4/日3/小时2.这是为了当用户在一个字段上设置了多个分表维度时，取最小的单位来度量值的分布情况
+	/**
+	 * 得到时间段的范围：年5/月4/日3/小时2.这是为了当用户在一个字段上设置了多个分表维度时，取最小的单位来度量值的分布情况
+	 * @return
+	 */
 	abstract public int getTimeLevel();
 	abstract List<Date> iterateAll();
 	abstract protected List<Date> innerIterator(Date sDate,Date eDate,boolean leftInclude,boolean rightInclude);
