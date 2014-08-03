@@ -25,6 +25,7 @@ import java.util.List;
 import jef.codegen.EnhanceTaskASM;
 import jef.common.log.LogUtil;
 import jef.tools.IOUtils;
+import jef.tools.StringUtils;
 import jef.tools.reflect.UnsafeUtils;
 
 import org.slf4j.LoggerFactory;
@@ -107,6 +108,9 @@ public class JefClassLoader extends URLClassLoader {
 	}
 
 	private static URL[] filterTest(URL[] urls) {
+		if(StringUtils.isNotEmpty(System.getProperty("include.test"))){
+			return urls;
+		}
 		List<URL> result=new ArrayList<URL>();
 		for(URL u:urls){
 			String s=u.toString();
