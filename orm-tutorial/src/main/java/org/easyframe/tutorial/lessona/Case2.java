@@ -1,8 +1,9 @@
 package org.easyframe.tutorial.lessona;
 
 import java.sql.SQLException;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.sql.DataSource;
@@ -155,24 +156,45 @@ public class Case2 extends org.junit.Assert{
 	
 	@Test
 	public void testCustomerBatch() throws SQLException{
-		//插入
+		List<Customer> list=new ArrayList<Customer>();
+		//批量插入
 		Customer c=new Customer();
 		c.setLastName("Hession");
 		c.setFirstName("Obama");
 		c.setDOB(DateUtils.getDate(1904, 3, 4));
 		c.setDOD(DateUtils.getDate(1991, 7, 12));
 		c.setEmail("obama@hotmail.com");
+		list.add(c);
 		
-		Customer c2=new Customer();
-		c2.setLastName("Joe");
-		c2.setFirstName("Lei");
-		c2.setDOB(DateUtils.getDate(1981, 3, 4));
-		c2.setEmail("joe@hotmail.com");
-		c2.setCreateDate(DateUtils.getDate(2013, 5, 1));
+		c=new Customer();
+		c.setLastName("Joe");
+		c.setFirstName("Lei");
+		c.setDOB(DateUtils.getDate(1981, 3, 4));
+		c.setEmail("joe@hotmail.com");
+		c.setCreateDate(DateUtils.getDate(2013, 5, 1));
+		list.add(c);
 		
+		c=new Customer();
+		c.setCustomerNo(4);
+		c.setLastName("Yang");
+		c.setFirstName("Fei");
+		c.setDOB(DateUtils.getDate(1976, 12, 15));
+		c.setEmail("fei@hotmail.com");
+		c.setCreateDate(DateUtils.getDate(2013, 5, 1));
+		list.add(c);
 		
-		db.batchInsert(Arrays.asList(c,c2));
+		db.batchInsert(list);
 		
+		//批量更新
+		list=db.select(QB.create(Customer.class));
+		assertEquals(3, list.size()); //FIXME 因为两人是在旧的数据区域，因此不会被查找。。。
+		for(int i=0;i<list.size();i++){
+			list.get(i).setEmail("mail"+i+"@hotmail.com");
+		}
+		db.batchUpdate(list);
+		
+		//批量删除
+		db.batchDelete(list);
 		
 	}
 }

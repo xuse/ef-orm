@@ -132,8 +132,10 @@ public class QuerySqlResult implements IQuerySqlResult {
 		selectPart.append(sb,delayProcessGroupClause);
 		sb.append(" from ");
 		sb.append(tableDef);
-		sb.append(ORMConfig.getInstance().wrap);
-		sb.append(wherePart);
+		if(wherePart.length()>0){
+			sb.append(ORMConfig.getInstance().wrap);
+			sb.append(wherePart);	
+		}
 		if(!delayProcessGroupClause)sb.append(grouphavingPart);
 		return sb.toString();
 	}
@@ -150,10 +152,8 @@ public class QuerySqlResult implements IQuerySqlResult {
 			for (int i = 0; i < site.tableSize(); i++) {
 				String tableName = site.getTables().get(i);
 				sb.append(getSql(tableName.concat(" t"),moreTable && StringUtils.isNotEmpty(grouphavingPart)));//为多表、并且有groupby时需要特殊处理
-				if (site.tableSize() > 1)
-					sb.append("\n");
 				if (site.tableSize() > 1 && i < site.tableSize() - 1) {
-					sb.append(" union all \n");
+					sb.append("\n union all \n");
 				}
 			}
 
