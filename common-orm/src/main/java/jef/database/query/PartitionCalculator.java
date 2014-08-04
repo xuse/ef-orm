@@ -3,7 +3,7 @@ package jef.database.query;
 import jef.database.IQueryableEntity;
 import jef.database.annotation.PartitionResult;
 import jef.database.innerpool.PartitionSupport;
-import jef.database.meta.ITableMetadata;
+import jef.database.meta.MetadataAdapter;
 
 /**
  * 分表规则计算器
@@ -23,7 +23,7 @@ public interface PartitionCalculator {
 	 * @return 分表计算结果
 	 * @see PartitionResult
 	 */
-	PartitionResult[] toTableNames(ITableMetadata meta, IQueryableEntity instance, Query<?> q, PartitionSupport context);
+	PartitionResult[] toTableNames(MetadataAdapter meta, IQueryableEntity instance, Query<?> q, PartitionSupport context);
 	
 
 	/**
@@ -36,7 +36,7 @@ public interface PartitionCalculator {
 	 * @param operateType 。0基表 1 分表，不含基表  2 分表+基表 3 数据库中的存在表（不含基表） 4所有存在的表
 	 * @return 分表计算结果
 	 */
-	PartitionResult[] toTableNames(ITableMetadata meta, PartitionSupport context,int operateType);
+	PartitionResult[] toTableNames(MetadataAdapter meta, PartitionSupport context,int operateType);
 	
 	/**
 	 * 计算Query对应的表名，要求落在一个固定存在的表上。
@@ -49,5 +49,5 @@ public interface PartitionCalculator {
 	 * @return 计算结果
 	 * @see PartitionResult
 	 */
-	PartitionResult toTableName(ITableMetadata meta, IQueryableEntity instance, Query<?> q,PartitionSupport context);
+	PartitionResult toTableName(MetadataAdapter meta, IQueryableEntity instance, Query<?> q,PartitionSupport context);
 }

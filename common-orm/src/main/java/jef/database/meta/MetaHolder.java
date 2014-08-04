@@ -109,7 +109,7 @@ public final class MetaHolder {
 	static Map<String, String> SITE_MAPPING;
 
 	// 元数据池
-	static final Map<Class<?>, ITableMetadata> pool = new java.util.IdentityHashMap<Class<?>, ITableMetadata>(32);
+	static final Map<Class<?>, MetadataAdapter> pool = new java.util.IdentityHashMap<Class<?>, MetadataAdapter>(32);
 	// 动态表元数据池
 	static final Map<String, TupleMetadata> dynPool = new java.util.HashMap<String, TupleMetadata>(32);
 	// 反向查找表
@@ -305,7 +305,7 @@ public final class MetaHolder {
 	/**
 	 * 获取所有已经缓存的静态表模型
 	 */
-	public static Collection<ITableMetadata> getCachedModels() {
+	public static Collection<MetadataAdapter> getCachedModels() {
 		return pool.values();
 	}
 
@@ -315,12 +315,12 @@ public final class MetaHolder {
 	 * @param clz
 	 * @return
 	 */
-	public static final ITableMetadata getMeta(Class<?> clz) {
+	public static final MetadataAdapter getMeta(Class<?> clz) {
 		Assert.notNull(clz);
 		if (clz == VarObject.class) {
 			throw new IllegalArgumentException("A VarObject class does not indicted to any table metadata.");
 		}
-		ITableMetadata m = pool.get(clz);
+		MetadataAdapter m = pool.get(clz);
 		return m == null ? initData(clz) : m;
 	}
 
@@ -330,9 +330,9 @@ public final class MetaHolder {
 	 * @param d
 	 * @return
 	 */
-	public final static ITableMetadata getMeta(Object d) {
+	public final static MetadataAdapter getMeta(Object d) {
 		if (d instanceof VarMeta) {
-			return ((VarMeta) d).meta();
+			return (MetadataAdapter)((VarMeta) d).meta();
 		}
 		return getMeta(d.getClass());
 	}
@@ -350,9 +350,9 @@ public final class MetaHolder {
 	 * @param clz
 	 * @return
 	 */
-	private synchronized static ITableMetadata initData(Class<?> clz) {
+	private synchronized static MetadataAdapter initData(Class<?> clz) {
 		{
-			ITableMetadata m1 = pool.get(clz);
+			MetadataAdapter m1 = pool.get(clz);
 			if (m1 != null)
 				return m1; // 双重检查锁定
 		}
@@ -363,7 +363,7 @@ public final class MetaHolder {
 		}
 	}
 
-	private static ITableMetadata initPojo(Class<?> clz) {
+	private static MetadataAdapter initPojo(Class<?> clz) {
 		AnnotationProvider annos = config.getAnnotations(clz);
 		TableMetadata meta = new TableMetadata(PojoWrapper.class, clz, annos);
 		List<java.lang.reflect.Field> unprocessedField = new ArrayList<java.lang.reflect.Field>();
@@ -382,7 +382,7 @@ public final class MetaHolder {
 		return meta;
 	}
 
-	private static ITableMetadata initEntity(Class<? extends IQueryableEntity> clz) {
+	private static MetadataAdapter initEntity(Class<? extends IQueryableEntity> clz) {
 		AnnotationProvider annos = config.getAnnotations(clz);
 		{
 			// Entity e = annos.getAnnotation(Entity.class);

@@ -70,6 +70,7 @@ import jef.database.meta.ITableMetadata;
 import jef.database.meta.JoinKey;
 import jef.database.meta.JoinPath;
 import jef.database.meta.MetaHolder;
+import jef.database.meta.MetadataAdapter;
 import jef.database.meta.Reference;
 import jef.database.meta.TupleField;
 import jef.database.query.AbstractEntityMappingProvider;
@@ -858,13 +859,13 @@ public final class DbUtils {
 	 * @param field
 	 * @return
 	 */
-	public static ITableMetadata getTableMeta(Field field) {
+	public static MetadataAdapter getTableMeta(Field field) {
 		Assert.notNull(field);
 		if (field instanceof TupleField) {
-			return ((TupleField) field).getMeta();
+			return (MetadataAdapter) ((TupleField) field).getMeta();
 		}
 		if (field instanceof LazyQueryBindField) {
-			return ((LazyQueryBindField) field).getMeta();
+			return (MetadataAdapter)((LazyQueryBindField) field).getMeta();
 		}
 		if (field instanceof Enum) {
 			Class<?> c = field.getClass().getDeclaringClass();
@@ -1134,7 +1135,7 @@ public final class DbUtils {
 	 * @return
 	 */
 	public static PartitionResult[] toTableNames(IQueryableEntity obj, String customName, Query<?> q, PartitionSupport processor) {
-		ITableMetadata meta = obj == null ? q.getMeta() : MetaHolder.getMeta(obj);
+		MetadataAdapter meta = obj == null ? (MetadataAdapter)q.getMeta() : MetaHolder.getMeta(obj);
 		if (StringUtils.isNotEmpty(customName))
 			return new PartitionResult[] { new PartitionResult(customName).setDatabase(meta.getBindDsName()) };
 		return partitionUtil.toTableNames(meta, obj, q, processor);
@@ -1156,7 +1157,7 @@ public final class DbUtils {
 	public static PartitionResult[] toTableNames(ITableMetadata meta, PartitionSupport processor, int operateType) {
 //		long start=System.nanoTime();
 //		try{
-			return partitionUtil.toTableNames(meta, processor, operateType);
+			return partitionUtil.toTableNames((MetadataAdapter)meta, processor, operateType);
 //		}finally{
 //			System.out.println((System.nanoTime()-start)/1000+"us");
 //		}
@@ -1172,7 +1173,7 @@ public final class DbUtils {
 	 * @return
 	 */
 	public static PartitionResult toTableName(IQueryableEntity obj, String customName, Query<?> q, PartitionSupport profile) {
-		ITableMetadata meta = obj == null ? q.getMeta() : MetaHolder.getMeta(obj);
+		MetadataAdapter meta = obj == null ? (MetadataAdapter)q.getMeta() : MetaHolder.getMeta(obj);
 		if (StringUtils.isNotEmpty(customName))
 			return new PartitionResult(customName).setDatabase(meta.getBindDsName());
 		PartitionResult result = partitionUtil.toTableName(meta, obj, q, profile);

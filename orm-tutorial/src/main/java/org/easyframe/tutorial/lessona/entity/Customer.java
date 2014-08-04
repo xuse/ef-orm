@@ -11,11 +11,11 @@ import jef.database.annotation.PartitionTable;
 import jef.database.partition.ModulusFunction;
 
 @Entity
-@PartitionTable(key = {
-		@PartitionKey(field = "createDate",function=KeyFunction.YEAR_MONTH),
-		@PartitionKey(field = "customerNo",functionClass=ModulusFunction.class,
-				  functionConstructorParams="3",isDbName=true,filler='D',length=2)
-})
+@PartitionTable(key = {@PartitionKey(field = "createDate",function=KeyFunction.YEAR_MONTH),
+@PartitionKey(field = "customerNo",functionClass=ModulusFunction.class,
+				  functionConstructorParams="3",filler='D',length=2,isDbName=true)
+}
+)
 public class Customer extends DataObject {
 
 	/**

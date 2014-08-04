@@ -76,6 +76,9 @@ public class Case1 extends org.junit.Assert {
 	@Test
 	public void testPartition3() {
 		PartitionSupport s = DebugUtil.getPartitionSupport(db);
+		
+		LogUtil.show(DbUtils.toTableNames(MetaHolder.getMeta(Device.class), s, 2));
+		
 		ORMConfig.getInstance().setFilterAbsentTables(false);
 		Device c = new Device();
 		// LogUtil.show(

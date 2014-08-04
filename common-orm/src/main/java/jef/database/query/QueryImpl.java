@@ -38,6 +38,7 @@ import jef.database.meta.AbstractRefField;
 import jef.database.meta.EntityType;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
+import jef.database.meta.MetadataAdapter;
 import jef.database.meta.Reference;
 import jef.database.meta.TupleField;
 import jef.database.wrapper.Transformer;
@@ -56,7 +57,7 @@ final class QueryImpl<T extends IQueryableEntity> implements Query<T>, Serializa
 	transient T instance;
 	//类型
 	@Transient
-	transient ITableMetadata type;
+	transient MetadataAdapter type;
 	
 	/**
 	 * 结果转换器
@@ -183,7 +184,7 @@ final class QueryImpl<T extends IQueryableEntity> implements Query<T>, Serializa
 	}
 	
 	public Query<T> addExtendQuery(Class<?> emptyQuery) {
-		ITableMetadata meta=MetaHolder.getMeta(emptyQuery);
+		MetadataAdapter meta=MetaHolder.getMeta(emptyQuery);
 		if(meta.getType()==EntityType.POJO){
 			throw new IllegalArgumentException();
 		}
@@ -430,7 +431,7 @@ final class QueryImpl<T extends IQueryableEntity> implements Query<T>, Serializa
 		return attribute;
 	}
 
-	public ITableMetadata getMeta() {
+	public MetadataAdapter getMeta() {
 		return type;
 	}
 	

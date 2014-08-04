@@ -4,6 +4,7 @@ import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.QueryAlias;
 import jef.database.meta.ITableMetadata;
+import jef.database.meta.MetadataAdapter;
 import jef.database.meta.Reference;
 import jef.database.meta.TupleField;
 import jef.tools.Assert;
@@ -83,7 +84,7 @@ public class RefField implements Field,LazyQueryBindField{
 				return instance;	
 			}
 		}
-		ITableMetadata type=DbUtils.getTableMeta(getField());
+		MetadataAdapter type=DbUtils.getTableMeta(getField());
 		if(context!=null){
 			QueryAlias al=context.findQuery(type,this.ref);
 			if(al!=null){

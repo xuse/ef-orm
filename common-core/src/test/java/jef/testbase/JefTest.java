@@ -296,8 +296,8 @@ public class JefTest extends Assert {
 	
 	@Test
 	public void testUrl() throws Exception{
-		URL u=new URL("file:///void");
-		new File(u.toURI());
+		String s="%E5%A5%BD";
+		System.out.println(StringUtils.urlDecode(s));
 		
 	}
 

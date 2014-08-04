@@ -14,6 +14,7 @@ import jef.database.cache.KeyDimension;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.MappingType;
+import jef.database.query.DbTable;
 import jef.database.query.JpqlExpression;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
@@ -117,5 +118,17 @@ public abstract class MetadataAdapter implements ITableMetadata {
 
 	public KeyDimension getPkDimension() {
 		return null;
+	}
+	private DbTable cachedTable;
+	private DatabaseDialect bindProfile;
+	
+	public DbTable getBaseTable(DatabaseDialect profile){
+		if(bindProfile!=profile){
+			synchronized (this) {
+				bindProfile=profile;
+				cachedTable=new DbTable(bindDsName, profile.getObjectNameIfUppercase(getTableName(true)),false,false);	
+			}
+		}
+		return cachedTable; 
 	}
 }
