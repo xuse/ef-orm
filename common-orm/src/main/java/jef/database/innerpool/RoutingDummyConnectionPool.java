@@ -138,7 +138,7 @@ class RoutingDummyConnectionPool extends AbstractPopulator implements IRoutingCo
 
 	private String wrapNullKey(String dbkey) {
 		if(dbkey!=null){
-			return dbkey;
+			return dbkey.toLowerCase();
 		}
 		Entry<String,DataSource> e=datasource.getDefaultDatasource();
 		if(e!=null){
@@ -149,9 +149,10 @@ class RoutingDummyConnectionPool extends AbstractPopulator implements IRoutingCo
 	}
 	
 	private synchronized DbMetaData createMetadata(String key) {
+		DataSource ds=datasource.getDataSource(key);//必须放在双重检查锁定逻辑的外面，否则会因为回调对象的存在而造成元数据对象初始化两遍。。。
+		
 		DbMetaData meta=metadatas.get(key);
 		if(meta==null){
-			DataSource ds=datasource.getDataSource(key);
 			MetadataConnectionPool pool=new MetadataConnectionPool(key,ds,this);
 			meta=new DbMetaData(pool,this,key);
 			metadatas.put(key, meta);

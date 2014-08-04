@@ -60,6 +60,7 @@ final class RoutingConnection implements ReentrantConnection{
 		if(autoCommit==flag){
 			return;
 		}
+		this.autoCommit=flag;
 		for(Connection conn:connections.values()){
 			if(conn.getAutoCommit()!=flag){
 				conn.setAutoCommit(flag);

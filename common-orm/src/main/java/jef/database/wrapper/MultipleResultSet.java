@@ -203,8 +203,6 @@ public final class MultipleResultSet implements IResultSet {
 	 */
 	public void close() throws SQLException {
 		List<SQLException> ex = new ArrayList<SQLException>();
-		if (results == null)
-			return;
 		for (R rsx : results) {
 			rsx.close();
 		}

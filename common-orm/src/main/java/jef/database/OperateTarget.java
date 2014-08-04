@@ -263,8 +263,7 @@ public class OperateTarget implements SqlTemplate {
 		} finally {
 			if (debugMode)
 				LogUtil.show(sb);
-			if (st != null)
-				st.close();
+			DbUtils.close(st);
 			releaseConnection();
 		}
 		LogUtil.show(StringUtils.concat("Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms) |", getTransactionId()));
@@ -273,7 +272,7 @@ public class OperateTarget implements SqlTemplate {
 	}
 
 	// objs不能为null
-	final <T> T innerSelectBySql(String sql, ResultSetTransformer<T> rst, int maxReturn,int fetchSize, List<Object> objs) throws SQLException {
+	final <T> T innerSelectBySql(String sql, ResultSetTransformer<T> rst, int maxReturn,int fetchSize, List<?> objs) throws SQLException {
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		StringBuilder sb = null;

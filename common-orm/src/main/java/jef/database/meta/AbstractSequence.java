@@ -132,7 +132,7 @@ public abstract class AbstractSequence implements Sequence {
 	protected long caclStartValue(DbMetaData meta, String schema, String table, String column, int initValue, long max) throws SQLException {
 		long start = JefConfiguration.getInt(DbCfg.AUTO_SEQUENCE_OFFSET, -1);// 自动校准
 		if (start == -1) {
-			long calc = (StringUtils.isNotBlank(table) && StringUtils.isNotBlank(column)) ? meta.getSequenceStartValue(schema, table, column, null) : initValue;
+			long calc = (StringUtils.isNotBlank(table) && StringUtils.isNotBlank(column)) ? meta.getSequenceStartValue(schema, table, column) : initValue;
 			if (calc < max) {
 				start = calc;
 			}
@@ -146,7 +146,7 @@ public abstract class AbstractSequence implements Sequence {
 		if (StringUtils.isBlank(table) || StringUtils.isBlank(column)) {
 			throw new SQLException();
 		}
-		long maxInTable = session.getMetaData(dbKey).getSequenceStartValue(null, table, column, null) - 1;
+		long maxInTable = session.getMetaData(dbKey).getSequenceStartValue(null, table, column) - 1;
 		long next = this.next();
 		pushBack(next);
 		return maxInTable < next;

@@ -1356,7 +1356,8 @@ public abstract class Session {
 		}
 
 		long parse = System.currentTimeMillis();
-		if (sql.getTables() == null) {// 没有分表结果，采用当前连接的默认表名操作
+		//sql.getTables() == null || 
+		if (sql.getTables().length==0) {// 没有分表结果，采用当前连接的默认表名操作
 			OperateTarget trans = wrapThisWithEmptyKey(rs, option.holdResult); // 如果是结果集持有的，那么必须在事务中
 			selectp.processSelect(trans, sql, queryObj, rs, option);
 		} else {

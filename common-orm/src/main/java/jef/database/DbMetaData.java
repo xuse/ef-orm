@@ -154,6 +154,7 @@ public class DbMetaData extends UserCacheHolder {
 	 *            当前元数据所属的数据源名称
 	 */
 	public DbMetaData(IPool<Connection> conn, MetadataService parent, String dbkey) {
+		LogUtil.info("Create metadata of [{}]",dbkey);
 		this.interval = JefConfiguration.getInt(DbCfg.DB_PARTITION_REFRESH, 3600) * 1000;
 		this.dbkey = dbkey;
 		this.nextExpireTime = System.currentTimeMillis() + interval;
@@ -277,8 +278,9 @@ public class DbMetaData extends UserCacheHolder {
 		Connection conn = getConnection();
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		DatabaseDialect trans = info.profile;
-		ResultSet rs = databaseMetaData.getTables(trans.getCatlog(schema), trans.getSchema(schema), matchName, new String[] { type.name() });
+		ResultSet rs =null;
 		try {
+			rs = databaseMetaData.getTables(trans.getCatlog(schema), trans.getSchema(schema), matchName, new String[] { type.name() });
 			List<TableInfo> result = new ArrayList<TableInfo>();
 			while (rs.next()) {
 				TableInfo info = new TableInfo();
@@ -294,7 +296,7 @@ public class DbMetaData extends UserCacheHolder {
 			}
 			return result;
 		} finally {
-			rs.close();
+			DbUtils.close(rs);
 			releaseConnection(conn);
 		}
 	}
@@ -455,10 +457,10 @@ public class DbMetaData extends UserCacheHolder {
 			schema = tableName.substring(0, n);
 			tableName = tableName.substring(n + 1);
 		}
-
-		ResultSet rs = databaseMetaData.getColumns(null, schema, tableName, "%");
+		ResultSet rs = null;
 		List<Column> list = new ArrayList<Column>();
 		try {
+			rs = databaseMetaData.getColumns(null, schema, tableName, "%");
 			while (rs.next()) {
 				Column column = new Column();
 				/*
@@ -526,7 +528,7 @@ public class DbMetaData extends UserCacheHolder {
 			}
 			return map.values();
 		} finally {
-			rs.close();
+			DbUtils.close(rs);
 			releaseConnection(conn);
 		}
 	}
@@ -553,8 +555,9 @@ public class DbMetaData extends UserCacheHolder {
 	public String getDatabaseVersion() throws SQLException {
 		Connection conn = getConnection();
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
+		String version=databaseMetaData.getDatabaseProductVersion();
 		releaseConnection(conn);
-		return databaseMetaData.getDatabaseProductVersion();
+		return version;
 	}
 
 	/**
@@ -638,9 +641,9 @@ public class DbMetaData extends UserCacheHolder {
 		tableName = MetaHolder.toSchemaAdjustedName(tableName);
 		tableName = info.profile.getObjectNameIfUppercase(tableName);
 		Connection conn = getConnection();
+		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = null;
 		try {
-			DatabaseMetaData databaseMetaData = conn.getMetaData();
 			rs = databaseMetaData.getPrimaryKeys(null, schema, tableName);
 			PrimaryKey pk = null;
 			List<String> pkColumns = new ArrayList<String>();
@@ -883,13 +886,13 @@ public class DbMetaData extends UserCacheHolder {
 	 * @return 计算得到的Sequence起始值，使用该起始值一般不会造成sequence和数据表中的已有记录冲突。
 	 * @throws SQLException
 	 */
-	public long getSequenceStartValue(String schema, String tableName, String sequenceColumnName, Statement stReuse) throws SQLException {
+	public long getSequenceStartValue(String schema, String tableName, String sequenceColumnName) throws SQLException {
 		if (!existTable(tableName)) {
 			return 1;
 		}
 		String getMaxValueSql = createGetMaxSequenceColumnValueStatement(schema, tableName, sequenceColumnName);
 		Connection conn = getConnection();
-		Statement st = stReuse;
+		Statement st = null;
 		ResultSet rs = null;
 		try {
 			if (st == null) {
@@ -900,19 +903,17 @@ public class DbMetaData extends UserCacheHolder {
 			}
 			rs = st.executeQuery(getMaxValueSql);
 			long maxValue = 0;
-			while (rs.next()) {
+			if (rs.next()) {
 				maxValue = rs.getLong(1);
 			}
-			return maxValue + 1;
+			return maxValue;
 		} catch (SQLException e) {
 			DebugUtil.setSqlState(e, getMaxValueSql);
 			throw e;
 		} finally {
 			DbUtils.close(rs);
-			if (stReuse == null) {
-				st.close();
-				releaseConnection(conn);
-			}
+			DbUtils.close(st);
+			releaseConnection(conn);
 		}
 	}
 
@@ -1044,10 +1045,16 @@ public class DbMetaData extends UserCacheHolder {
 		if (tableTypes == null) {
 			List<String> type = new ArrayList<String>();
 			Connection conn = getConnection();
-			ResultSet rs = conn.getMetaData().getTableTypes();
-			while (rs.next()) {
-				type.add(rs.getString(1));
+			ResultSet rs = null;
+			try{
+				rs=conn.getMetaData().getTableTypes();
+				while (rs.next()) {
+					type.add(rs.getString(1));
+				}	
+			}finally{
+				DbUtils.close(rs);
 			}
+			
 			this.tableTypes = type.toArray(new String[type.size()]);
 		}
 		return tableTypes;
@@ -1267,8 +1274,7 @@ public class DbMetaData extends UserCacheHolder {
 				n++;
 			}
 		} finally {
-			if (st != null)
-				st.close();
+			DbUtils.close(st);
 			this.releaseConnection(conn);
 		}
 		if (event != null) {
@@ -1309,7 +1315,7 @@ public class DbMetaData extends UserCacheHolder {
 				}
 			}
 		} finally {
-			st.close();
+			DbUtils.close(st);
 			releaseConnection(conn);
 		}
 	}
@@ -1372,9 +1378,7 @@ public class DbMetaData extends UserCacheHolder {
 			DebugUtil.setSqlState(e, tablename);
 			throw e;
 		} finally {
-
-			if (st != null)
-				st.close();
+			DbUtils.close(st);
 			this.releaseConnection(conn);
 		}
 		return true;
@@ -1406,14 +1410,14 @@ public class DbMetaData extends UserCacheHolder {
 		}
 		String sequenceSql = StringUtils.concat("create sequence ", sequenceName, " minvalue 1 maxvalue ", String.valueOf(max), " start with ", String.valueOf(start), " increment by 1");
 		Connection conn = getConnection();
-		Statement st = conn.createStatement();
 		if (ORMConfig.getInstance().isDebugMode()) {
 			LogUtil.show(sequenceSql + "|" + getTransactionId());
 		}
+		Statement st = conn.createStatement();
 		try {
 			st.execute(sequenceSql);
 		} finally {
-			st.close();
+			DbUtils.close(st);
 			releaseConnection(conn);
 		}
 
@@ -1468,7 +1472,7 @@ public class DbMetaData extends UserCacheHolder {
 		} catch (IOException e) {
 			LogUtil.exception(e);
 		} finally {
-			st.close();
+			DbUtils.close(st);
 			releaseConnection(conn);
 		}
 	}
@@ -1508,8 +1512,7 @@ public class DbMetaData extends UserCacheHolder {
 		} finally {
 			if (debug)
 				LogUtil.show(sb);
-			if (st != null)
-				st.close();
+			DbUtils.close(st);
 			releaseConnection(conn);
 		}
 		if (debug)
@@ -1555,10 +1558,10 @@ public class DbMetaData extends UserCacheHolder {
 			DebugUtil.setSqlState(e, sql);
 			throw e;
 		} finally {
-			if (debug)
-				LogUtil.show(sb);
 			DbUtils.close(rs);
 			DbUtils.close(st);
+			if (debug)
+				LogUtil.show(sb);
 			releaseConnection(conn);
 		}
 	}
@@ -1763,6 +1766,7 @@ public class DbMetaData extends UserCacheHolder {
 				dropAllForeignKey(table);
 			}
 			executeSql(sql, null);
+			nextExpireTime=0;
 			return true;
 		}
 		return false;
@@ -1933,8 +1937,8 @@ public class DbMetaData extends UserCacheHolder {
 		}
 
 		Connection conn = getConnection();
-		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		DatabaseDialect trans = info.profile;
+		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = databaseMetaData.getTables(trans.getCatlog(schema), trans.getSchema(schema), objectName, new String[] { type.name() });
 		try {
 			return rs.next();
@@ -2038,10 +2042,17 @@ public class DbMetaData extends UserCacheHolder {
 	}
 
 	private Connection getConnection() throws SQLException {
-		return conn.poll();
+		StackTraceElement[] e=new Throwable().getStackTrace();
+		System.out.println("!!!!!");
+		System.out.println(e[1]);
+		System.out.println(e[2]);
+		Connection conns=conn.poll();
+		System.out.println(conns);
+		return conns;
 	}
 
 	private void releaseConnection(Connection con) {
+		System.out.println("-----"+con);
 		conn.offer(con);
 	}
 
@@ -2109,10 +2120,6 @@ public class DbMetaData extends UserCacheHolder {
 	}
 
 	private final static Transformer FK_TRANSFORMER = new Transformer(ForeignKey.class);
-
-	public PreparedStatement prepareStatement(String selectSql) throws SQLException {
-		return this.getConnection().prepareStatement(selectSql);
-	}
 
 	public boolean clearTableMetadataCache(ITableMetadata meta) {
 		return subTableData.remove(meta)!=null;
