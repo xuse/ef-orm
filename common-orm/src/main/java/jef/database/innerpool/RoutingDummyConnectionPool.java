@@ -138,7 +138,7 @@ class RoutingDummyConnectionPool extends AbstractPopulator implements IRoutingCo
 
 	private String wrapNullKey(String dbkey) {
 		if(dbkey!=null){
-			return dbkey.toLowerCase();
+			return dbkey;
 		}
 		Entry<String,DataSource> e=datasource.getDefaultDatasource();
 		if(e!=null){

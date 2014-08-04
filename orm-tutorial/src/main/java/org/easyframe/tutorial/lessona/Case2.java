@@ -117,13 +117,13 @@ public class Case2 extends org.junit.Assert{
 		c.setEmail("obama@hotmail.com");
 		db.insert(c);
 		/*
-		 * 这个案例中，customerNo和created这两个字段都没赋值，但是记录却成功的插入了。
+		 * 这个案例中，用作分库分表的customerNo和created这两个字段都没赋值，但是记录却成功的插入了。
 		 * 因为customerNo是自增值，created是系统自动维护的当前时间值。系统自动维护了这两个字段，从而使得分库分表的路由条件充分了。
-		 * 此外，注意自增值的生成方式变化了。在本例中，使用一张TABLE来实现自增值。因为分库分表后，表的自增值已经无法保证唯一了。
+		 * 此外，注意自增值的生成方式变化了。在本例中，使用TABLE来实现自增值。因为分库分表后，表的自增值已经无法保证唯一了,
 		 * 而Derby不支持Sequence，所以采用TABLE方式生成自增值。(DERBY实际上支持，但兼容性有些问题，故关闭了)
 		 */
 		
-		System.out.println("====演示按需建表====");
+		System.out.println("====将会按需建表====");
 		Customer c2=new Customer();
 		c2.setLastName("Joe");
 		c2.setFirstName("Lei");

@@ -154,7 +154,6 @@ public class DbMetaData extends UserCacheHolder {
 	 *            当前元数据所属的数据源名称
 	 */
 	public DbMetaData(IPool<Connection> conn, MetadataService parent, String dbkey) {
-		LogUtil.info("Create metadata of [{}]",dbkey);
 		this.interval = JefConfiguration.getInt(DbCfg.DB_PARTITION_REFRESH, 3600) * 1000;
 		this.dbkey = dbkey;
 		this.nextExpireTime = System.currentTimeMillis() + interval;
@@ -2042,17 +2041,10 @@ public class DbMetaData extends UserCacheHolder {
 	}
 
 	private Connection getConnection() throws SQLException {
-		StackTraceElement[] e=new Throwable().getStackTrace();
-		System.out.println("!!!!!");
-		System.out.println(e[1]);
-		System.out.println(e[2]);
-		Connection conns=conn.poll();
-		System.out.println(conns);
-		return conns;
+		return conn.poll();
 	}
 
 	private void releaseConnection(Connection con) {
-		System.out.println("-----"+con);
 		conn.offer(con);
 	}
 
