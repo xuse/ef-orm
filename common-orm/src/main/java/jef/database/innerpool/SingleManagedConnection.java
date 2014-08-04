@@ -115,7 +115,6 @@ public final class SingleManagedConnection extends AbstractJDBCConnection implem
 	 */
 	public Object popUsedByObject() {
 		if (--count > 0) {
-			// System.out.println("不是真正的归还"+used+"还有"+count+"次使用.");
 			return null;
 		} else {
 			Object o = used;

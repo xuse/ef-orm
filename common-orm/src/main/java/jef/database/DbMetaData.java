@@ -1859,7 +1859,10 @@ public class DbMetaData extends UserCacheHolder {
 	private Set<String> calculateSubTables(String tableName, ITableMetadata meta, boolean isDefault) throws SQLException {
 		long start = System.currentTimeMillis();
 		List<Column> columns = getColumns(tableName);
-
+		int baseColumnCount=columns.size();
+		if(baseColumnCount==0){
+			baseColumnCount=meta.getMetaFields().size();
+		}
 		List<TableInfo> tables = getDatabaseObject(ObjectType.TABLE, this.schema, tableName, Operator.MATCH_START);
 		String tableNameWithoutSchema = StringUtils.substringAfterIfExist(tableName, ".");
 		// 正则表达式计算
@@ -1897,10 +1900,10 @@ public class DbMetaData extends UserCacheHolder {
 			if (suffix.matcher(entry.getName()).matches()) {
 				String fullTableName = schema == null ? entry.getName() : schema + "." + entry.getName();
 				List<Column> subColumns = getColumns(fullTableName);
-				if (subColumns.size() == columns.size()) {
+				if (subColumns.size() == baseColumnCount) {
 					result.add(fullTableName.toUpperCase());
 				} else {
-					LogUtil.info("The table [" + fullTableName + "] seems like a subtable of [" + tableName + "], but their columns are not match.");
+					LogUtil.info("The table [" + fullTableName + "]("+subColumns.size()+") seems like a subtable of [" + tableName + "], but their columns are not match.\n"+subColumns);
 				}
 			}
 		}

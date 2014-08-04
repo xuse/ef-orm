@@ -125,7 +125,7 @@ final class SingleConnection implements CheckableConnection,ReentrantConnection{
 	
 	public Object popUsedByObject() {
 		if(--count>0){ 
-			log.debug("不是真正的归还{}还有{}次使用.",used,count);
+//			log.debug("not return connection {} counter:{}.",used,count);
 			return null;
 		}else{
 			Object o=used;

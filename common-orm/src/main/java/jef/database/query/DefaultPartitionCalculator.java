@@ -40,8 +40,11 @@ import jef.database.meta.MetadataAdapter;
 import jef.database.partition.ModulusFunction;
 import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
+import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.BeanWrapper;
 import jef.tools.reflect.NopBeanWrapper;
+
+import org.apache.commons.lang.ObjectUtils;
 
 import com.google.common.collect.Multimap;
 
@@ -116,7 +119,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 			if (tbs.isEmpty()) { // 没有返回的情况，返回基表
 				result = meta.getBaseTable(profile);
 			} else if (tbs.size() != 1) {
-				throw new IllegalArgumentException("The query is a multiple partation query, is not supported now.");
+				throw new IllegalArgumentException("Can not determine which database or table to operate.(one table only)."+tbs);
 			} else {
 				result = tbs.iterator().next();
 				if (result.isTbRegexp && result.isDbRegexp) {// 正则表达式，意味着由于某个分表维度没有设置，变成宽松匹配。这里无法获得实际存在表推算，因此直接退化为基表
@@ -182,6 +185,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	private Set<DbTable> getPartitionTables(ITableMetadata meta, BeanWrapper instance, Query<?> q, DatabaseDialect profile) {
 		@SuppressWarnings("rawtypes")
 		Entry<PartitionKey, PartitionFunction>[] keys = meta.getEffectPartitionKeys();
+		
 		// 获取分表向量
 		Map<String, Dimension> fieldDims = getPartitionFieldValues(keys, instance, q);
 		// 分表向量的分析与组合.分析即将Range向量拆解为多点向量，组合即取多个向量间的笛卡尔积
@@ -195,7 +199,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		for (int x = 0; x < _dimVectors.size(); x++) {
 			boolean isTbRegexp = false;
 			boolean isDbRegexp = false;
-			StringBuilder db = new StringBuilder();
+			StringBuilder db = new StringBuilder(meta.getPartition().dbPrefix());
 			StringBuilder sb = new StringBuilder(pt.appender());
 
 			for (@SuppressWarnings("rawtypes")
@@ -319,8 +323,25 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 				if (q != null) {
 					obj = findConditionValuesByName(((QueryImpl<?>) q).conditions, field, false);
 				}
-				if (obj == null) // 当相等条件时
-					obj = new RangeDimension((Comparable) instance.getPropertyValue(field));
+				if (obj == null){
+					Object term=instance.getPropertyValue(field);
+					// 当相等条件时
+					if(term!=null){
+						Class<?> clz=instance.getPropertyRawType(field);
+						if(clz.isPrimitive()){//如果是缺省值，当做null处理。
+							if(ObjectUtils.equals(term, BeanUtils.defaultValueOfPrimitive(clz))){//如果是和原生值一样
+								IQueryableEntity qq=(IQueryableEntity)instance.getWrapped();
+								ITableMetadata meta=MetaHolder.getMeta(qq);
+								Field fld=meta.getField(field);
+								if(!(qq).isUsed(fld)){
+									term=null;
+								}
+							}
+						}	
+					}
+					obj = new RangeDimension((Comparable) term);
+					
+				}
 			}
 			fieldVal.put(field, obj);
 		}

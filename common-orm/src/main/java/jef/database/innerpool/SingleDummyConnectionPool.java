@@ -84,7 +84,7 @@ final class SingleDummyConnectionPool extends AbstractPopulator implements IUser
 			// 处理内部的记录数据
 			Object o = conn.popUsedByObject();
 			if (o == null)
-				return;// 不是真正的归还
+				return;// 不是真正归还
 			IConnection conn1 = map.remove(o);
 			conn.closePhysical();
 			if (conn1 != conn) {

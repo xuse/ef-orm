@@ -442,18 +442,6 @@ public abstract class Session {
 	}
 
 	/**
-	 * A synonym of {@link #updateCascade}
-	 * 
-	 * @param obj 更新请求的Entity对象
-	 * @return 更新的记录数
-	 * @throws SQLException
-	 * @deprecated please use {@link #updateCascade(IQueryableEntity)}
-	 */
-	public int updateWithRef(IQueryableEntity obj) throws SQLException {
-		return updateCascade(obj);
-	}
-
-	/**
 	 * 支持关联表的删除 如果和其他表具有关联的关系，那么插入时会自动维护其他表中的数据，这些操作包括了Delete操作
 	 * 
 	 * @param obj 删除请求的Entity对象
@@ -482,35 +470,12 @@ public abstract class Session {
 	}
 
 	/**
-	 * A synonym of {@link #deleteCascade}
-	 * 
-	 * @param obj 删除请求的Entity对象
-	 * @return 影响的记录数
-	 * @throws SQLException
-	 * @deprecated use {@link #deleteCascade(IQueryableEntity)}.
-	 */
-	public int deleteWithRef(IQueryableEntity obj) throws SQLException {
-		return deleteCascade(obj);
-	}
-
-	/**
 	 * 支持关联表的插入 如果和其他表具有1VS1、1VSN的关系，那么插入时会自动维护其他表中的数据。这些操作包括了Insert或者update.
 	 * 
 	 * @param obj 插入的对象
 	 * @throws SQLException
 	 */
 	public void insertCascade(IQueryableEntity obj) throws SQLException {
-		insertCascade(obj, ORMConfig.getInstance().isDynamicInsert());
-	}
-
-	/**
-	 * A synonym of {@link #insertCascade}
-	 * 
-	 * @param obj 插入的对象
-	 * @throws SQLException
-	 * @deprecated please use {@link #insertCascade(IQueryableEntity)}
-	 */
-	public void insertWithRef(IQueryableEntity obj) throws SQLException {
 		insertCascade(obj, ORMConfig.getInstance().isDynamicInsert());
 	}
 
@@ -603,6 +568,35 @@ public abstract class Session {
 		getListener().afterInsert(obj, this);
 	}
 
+
+	/**
+	 * 删除对象
+	 * @param clz  类型
+	 * @param keys  主键的值。
+	 * @return
+	 * @throws SQLException
+	 */
+	public <T> int delete(Class<T> entityClass, Serializable... keys) throws SQLException {
+		try {
+			Object obj = entityClass.newInstance();
+			if(obj instanceof IQueryableEntity){
+				IQueryableEntity data=(IQueryableEntity)obj;
+				DbUtils.setPrimaryKeyValue(data, keys);
+				return delete(data);	
+			}else{
+				ITableMetadata meta=MetaHolder.getMeta(entityClass);
+				PojoWrapper data=meta.transfer(obj,false);
+				DbUtils.setPrimaryKeyValue(data, keys);
+				return delete(data); 	
+			}
+		} catch (InstantiationException e) {
+			throw new RuntimeException(e);
+		} catch (IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	
 	/**
 	 * 删除对象
 	 * 
@@ -1151,7 +1145,7 @@ public abstract class Session {
 	/**
 	 * 按主键获取一条记录
 	 * @param clz  类型
-	 * @param keys  主键的值。单主键 
+	 * @param keys  主键的值。 
 	 * @return
 	 * @throws SQLException
 	 */
