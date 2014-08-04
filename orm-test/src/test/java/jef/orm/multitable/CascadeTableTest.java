@@ -325,7 +325,7 @@ public class CascadeTableTest extends MultiTableTestBase {
 		p.setName("张三");
 		p.setSchool(new School("浙江大学"));
 		p.setAge(22);
-		db.insertWithRef(p);
+		db.insertCascade(p);
 		System.out.println(p.getId());
 
 		Person query = new Person();
@@ -350,7 +350,7 @@ public class CascadeTableTest extends MultiTableTestBase {
 		p.setSchoolId(0);
 		p.setSchool(new School("华南大学"));
 		p.setAge(123);
-		db.updateWithRef(p);
+		db.updateCascade(p);
 		System.out.println("=========== testRefUpdate End ==========");
 	}
 

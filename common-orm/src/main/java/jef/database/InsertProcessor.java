@@ -71,7 +71,6 @@ abstract class InsertProcessor {
 				Object value = wrapper.getPropertyValue(entry.fieldName());
 				entry.processInsert(value,result,cStr,vStr,dynamic,obj);
 			}
-			result.setTableNames(DbUtils.toTableName(obj, tableName, obj.hasQuery() ? obj.getQuery() : null, db.getPool().getPartitionSupport()));
 			result.setColumnsPart(StringUtils.join(cStr, ','));
 			result.setValuesPart(StringUtils.join(vStr, ','));
 			if(profile.has(Feature.SELECT_ROW_NUM)){
@@ -90,10 +89,8 @@ abstract class InsertProcessor {
 					st.executeUpdate(sqls.getSql());
 				} else {
 					AutoIncreatmentCallBack cb = sqls.getCallback();
-					List<? extends IQueryableEntity> array = Arrays.asList(obj);
-					cb.callBefore(array, db.getSession());
 					cb.executeUpdate(st, sqls.getSql());
-					cb.callAfter(array);
+					cb.callAfter(Arrays.asList(obj));
 				}
 			} catch (SQLException e) {
 				p.processError(e, ArrayUtils.toString(sqls.getTableNames(), true), db);
@@ -111,7 +108,6 @@ abstract class InsertProcessor {
 				LogUtil.show(StringUtils.concat("Insert:1\tTime cost([ParseSQL]:", String.valueOf( parse - start), "ms, [DbAccess]:", String.valueOf(dbAccess- parse), "ms) |", db.getTransactionId()));	
 			}
 		}
-		
 	}
 	static final class PreparedImpl extends InsertProcessor{
 		PreparedImpl(DbClient parentDbClient, DbOperateProcessor p, SqlProcessor rProcessor) {
@@ -133,9 +129,6 @@ abstract class InsertProcessor {
 			if(profile.has(Feature.SELECT_ROW_NUM) && !batch){
 				result.setCallback(new OracleRowidKeyCallback(result.getCallback()));
 			}
-			if(!batch){//batch在commit时会重新获取表名，所以现在无需计算
-				result.setTableNames(DbUtils.toTableName(obj, tableName, obj.hasQuery() ? obj.getQuery() : null, db.getPool().getPartitionSupport()));
-			}
 			result.setColumnsPart(StringUtils.join(cStr, ','));
 			result.setValuesPart(StringUtils.join(vStr, ','));
 			return result;
@@ -149,7 +142,6 @@ abstract class InsertProcessor {
 				sb = new StringBuilder(sqls.getSql().length()).append(sqls.getSql()).append("|").append(db.getTransactionId());
 			}
 			PreparedStatement psmt = null;
-			List<? extends IQueryableEntity> array = Arrays.asList(obj);
 			try {
 				AutoIncreatmentCallBack callback = sqls.getCallback();
 				if (callback == null) {
@@ -157,13 +149,12 @@ abstract class InsertProcessor {
 				} else {
 					String dbName = debug ? db.getTransactionId() : null;
 					psmt = callback.doPrepareStatement(db, sqls.getSql(), dbName);
-					callback.callBefore(array, db.getSession());
 				}
 				BindVariableContext context = new BindVariableContext(psmt,db, sb);
 				BindVariableTool.setVariables(obj.getQuery(), SqlType.INSERT, sqls.getFields(), null, context);
 				psmt.execute();
 				if (callback != null) {
-					callback.callAfter(array);
+					callback.callAfter(Arrays.asList(obj));
 				}
 			} catch (SQLException e) {
 				p.processError(e, ArrayUtils.toString(sqls.getTableNames(), true), db);

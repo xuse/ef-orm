@@ -2,7 +2,11 @@ package org.easyframe.tutorial.lessona.entity;
 
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 
 import jef.database.DataObject;
 import jef.database.KeyFunction;
@@ -11,24 +15,28 @@ import jef.database.annotation.PartitionTable;
 import jef.database.partition.ModulusFunction;
 
 @Entity
-@PartitionTable(key = {@PartitionKey(field = "createDate",function=KeyFunction.YEAR_MONTH),
-@PartitionKey(field = "customerNo",functionClass=ModulusFunction.class,
+@PartitionTable(key = {
+		@PartitionKey(field = "createDate",function=KeyFunction.YEAR_MONTH),
+		@PartitionKey(field = "customerNo",functionClass=ModulusFunction.class,
 				  functionConstructorParams="3",filler='D',length=2,isDbName=true)
-}
-)
+})
 public class Customer extends DataObject {
 
 	/**
 	 * 客户端编号
 	 */
+	@Id
+	@GeneratedValue(strategy=GenerationType.AUTO)
     private int customerNo;
     /**
      * 出生日期
      */
+	@Column(columnDefinition="date")
     private Date DOB;
     /**
      * 死亡日期
      */
+    @Column(columnDefinition="date")
     private Date DOD;
     /**
      * 名
@@ -45,6 +53,7 @@ public class Customer extends DataObject {
     /**
      * 记录创建日期
      */
+    @GeneratedValue(generator="created-sys")
     private Date createDate;
 
     public enum Field implements jef.database.Field {

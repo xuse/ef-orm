@@ -160,9 +160,13 @@ public final class SequenceManager {
 		if (StringUtils.isEmpty(table) || StringUtils.isEmpty(key)) {
 			throw new IllegalArgumentException();
 		}
-		String sql = "delete from " + table + " where T=?";
-		int i = sqlTemplate.executeSql(sql, key);
-		return i > 0;
+		if(sqlTemplate.getMetaData().exists(ObjectType.TABLE, table)){
+			String sql = "delete from " + table + " where T=?";
+			int i = sqlTemplate.executeSql(sql, key);
+			return i > 0;	
+		}
+		return false;
+		
 	}
 
 	private Sequence wrapForHilo(AbstractSequence s, HiloGeneration hilo) {
@@ -334,14 +338,14 @@ public final class SequenceManager {
 
 			this.rawTable = rawTable;
 			this.rawColumn = rawColumn;
-			this.initValue = config.initialValue();
+			this.initValue = config==null?0:config.initialValue();
 
 			this.valueStep = JefConfiguration.getInt(DbCfg.SEQUENCE_BATCH_SIZE, 20);
 			if (valueStep < 1)
 				valueStep = 20;
 
 			this.update = "UPDATE " + table + " SET V=? WHERE V=? AND T='" + key + "'";
-			this.select = "SELECT V FROM " + table + "WHERE T='" + key + "'";
+			this.select = "SELECT V FROM " + table + " WHERE T='" + key + "'";
 		}
 
 		@Override

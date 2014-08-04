@@ -50,25 +50,36 @@ public class BeanUtils {
 	 * @return
 	 */
 	public static Object defaultValueOfPrimitive(Class<?> javaClass) {
-		if (javaClass == Integer.TYPE) {
-			return 0;
-		} else if (javaClass == Short.TYPE) {
-			return (short) 0;
-		} else if (javaClass == Long.TYPE) {
-			return 0L;
-		} else if (javaClass == Float.TYPE) {
-			return 0f;
-		} else if (javaClass == Double.TYPE) {
-			return 0d;
-		} else if (javaClass == Byte.TYPE) {
-			return Integer.valueOf(0).byteValue();
-		} else if (javaClass == Character.TYPE) {
-			return (char) 0;
-		} else if (javaClass == Boolean.TYPE) {
-			return Boolean.FALSE;
-		} else {
-			throw new IllegalArgumentException(javaClass + " is not Primitive Type.");
+//		int  226
+//		short  215
+//		long  221
+//		boolean  222
+//		float  219
+//		double  228
+//		char  201
+//		byte  237	
+		if(javaClass.isPrimitive()){
+			String s=javaClass.getName();	
+			switch(s.charAt(1)+s.charAt(2)){
+			case 226:
+				return 0;
+			case 215:
+				return Short.valueOf((short)0);
+			case 221:
+				return 0L;
+			case 222:
+				return Boolean.FALSE;
+			case 219:
+				return 0f;
+			case 228:
+				return 0d;
+			case 201:
+				return (char)0;
+			case 237:
+				return Byte.valueOf((byte)0);
+			}
 		}
+		throw new IllegalArgumentException(javaClass + " is not Primitive Type.");
 	}
 
 	/**

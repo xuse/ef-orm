@@ -559,6 +559,11 @@ public abstract class Session {
 
 		long start = System.currentTimeMillis();
 		InsertSqlResult sqls = insertp.toInsertSql(obj, myTableName, dynamic, false);
+		if(sqls.getCallback()!=null){
+			sqls.getCallback().callBefore(Arrays.asList(obj));
+		}
+		sqls.setTableNames(DbUtils.toTableName(obj, myTableName, obj.hasQuery() ? obj.getQuery() : null, getPool().getPartitionSupport()));
+		
 		long parse = System.currentTimeMillis();
 		String dbKey = sqls.getTableNames().getDatabase();
 		insertp.processInsert(asOperateTarget(dbKey), obj, sqls, start, parse);

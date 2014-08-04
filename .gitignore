@@ -1,19 +1,19 @@
 *.class
 db/
 db2/
+db3/
 target/
 
 # Mobile Tools for Java (J2ME)
-.mtj.tmp/
 .settings
 .project
 .classpath
-
+*.gz
+*.last
+*.123
 
 # Package Files #
 *.jar
-*.war
-*.ear
 *.log
 test.db
 

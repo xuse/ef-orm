@@ -13,7 +13,7 @@ import jef.database.annotation.PartitionTable;
 @PartitionTable(key ={
 		@PartitionKey(field = "indexcode",function=KeyFunction.RAW,length=2),
 		@PartitionKey(field = "indexcode",function=KeyFunction.MAPPING,
-			functionConstructorParams="10-20:DB01,21-32:DB02,33-76:DB03,*:",isDbName=true)
+			functionConstructorParams="10-20:datasource1,21-32:datasource2,33-76:datasource3,*:",isDbName=true)
 }
 )
 public class Device extends DataObject {

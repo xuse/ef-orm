@@ -695,13 +695,23 @@ public class JefTest extends Assert {
 	
 	@Test
 	public void getClz2(){//12225 9300//
-		long start=System.nanoTime();
-		for(int i=0;i<1000;i++){
-			Class c=this.c;
-		}
-		System.out.println(System.nanoTime()-start);
+		
+		dol(Integer.TYPE);
+		dol(Short.TYPE);
+		dol(Long.TYPE);
+		dol(Boolean.TYPE);
+		dol(Float.TYPE);
+		dol(Double.TYPE);
+		dol(Character.TYPE);
+		dol(Byte.TYPE);
 	}
 	
+	private void dol(Class<?> type) {
+		String name=type.getName();
+		int x=name.charAt(1)+name.charAt(2);
+		System.out.println(type.getName()+"  "+x);
+		
+	}
 	@Test
 	public void getClz3(){//8660
 		IntRange i=new IntRange(1,200);

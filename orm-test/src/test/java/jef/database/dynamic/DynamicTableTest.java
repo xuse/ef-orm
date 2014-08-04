@@ -429,7 +429,7 @@ public class DynamicTableTest extends org.junit.Assert {
 			VarObject group=GroupTable.newInstance();
 			group.set("name", "My Group 1");
 			group.set("services", Arrays.asList(meta.newInstance().set("name", "service1"),meta.newInstance().set("name", "service2")));
-			db.insertWithRef(group);
+			db.insertCascade(group);
 			id=(Integer)group.get("id");
 			System.out.println("新插入的group对象id为:"+id);
 			
@@ -468,7 +468,7 @@ public class DynamicTableTest extends org.junit.Assert {
 			/*
 			 * 这个操作会对应4个SQL操作，分别用来更新父表、更新子表、删除子表记录、插入子表记录
 			 */
-			db.updateWithRef(group); //
+			db.updateCascade(group); //
 			
 			//检查数据
 			group=db.load(GroupTable.newInstance().set("id", id));
@@ -491,7 +491,7 @@ public class DynamicTableTest extends org.junit.Assert {
 			/**
 			 * 级联删除，这个操作将删除子表中相关的2条记录。然后再删除父表中的记录
 			 */
-			db.deleteWithRef(GroupTable.newInstance().set("id", id));
+			db.deleteCascade(GroupTable.newInstance().set("id", id));
 			//检查数据
 			VarObject group=db.load(GroupTable.newInstance().set("id", id));
 			assertNull(group);

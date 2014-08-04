@@ -32,17 +32,13 @@ import jef.tools.reflect.Property;
  *
  */
 public interface AutoIncreatmentCallBack{
-	void callBefore(List<? extends IQueryableEntity> data, Session db) throws SQLException;
+	void callBefore(List<? extends IQueryableEntity> data) throws SQLException;
 	
 	void callAfter(List<? extends IQueryableEntity> data)throws SQLException;
 	
 	PreparedStatement doPrepareStatement(OperateTarget conn,String sql,String dbName) throws SQLException;
 	
 	int executeUpdate(Statement st,String sql) throws SQLException;
-
-	
-
-	
 	
 	/**
 	 * 自生成主键处理策略：
@@ -82,7 +78,7 @@ public interface AutoIncreatmentCallBack{
 		public int executeUpdate(Statement st, String sql) throws SQLException {
 			return st.executeUpdate(sql);
 		}
-		public void callBefore(List<? extends IQueryableEntity> data, Session dbName) throws SQLException {
+		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
 		}
 	}
 
@@ -124,7 +120,7 @@ public interface AutoIncreatmentCallBack{
 			this.st=st;
 			return st.executeUpdate(sql);
 		}
-		public void callBefore(List<? extends IQueryableEntity> data, Session dbName) throws SQLException {
+		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
 		}
 	}
 
@@ -143,7 +139,7 @@ public interface AutoIncreatmentCallBack{
 			this.holder = holder;
 		}
 
-		public void callBefore(List<? extends IQueryableEntity> data,Session db) throws SQLException {
+		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
 			for (IQueryableEntity o : data) {
 				long key=-1;
 				key = holder.next();
@@ -178,7 +174,7 @@ public interface AutoIncreatmentCallBack{
 			this.removeDash=b;
 		}
 		
-		public void callBefore(List<? extends IQueryableEntity> data, Session dbName) throws SQLException {
+		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
 			for (IQueryableEntity o : data) {
 				String key = UUID.randomUUID().toString();
 				if(removeDash)key=StringUtils.remove(key, '-');
@@ -231,8 +227,8 @@ public interface AutoIncreatmentCallBack{
 			this.st=st;
 			return st.executeUpdate(sql,1);
 		}
-		public void callBefore(List<? extends IQueryableEntity> data, Session dbName) throws SQLException {
-			if(parent!=null)parent.callBefore(data, dbName);
+		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
+			if(parent!=null)parent.callBefore(data);
 		}
 	}
 
@@ -297,7 +293,7 @@ public interface AutoIncreatmentCallBack{
 			this.st=st;
 			return st.executeUpdate(sql,columnName);
 		}
-		public void callBefore(List<? extends IQueryableEntity> data, Session dbName) throws SQLException {
+		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
 		}
 	}
 	

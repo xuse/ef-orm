@@ -182,6 +182,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 		String tablename=null;
 		try {
 			if (this.groupForPartitionTable && forceTableName == null) {// 需要分组
+				callVeryBefore(objs);
 				Map<String, List<T>> data = doGroup(objs);
 				for (Map.Entry<String, List<T>> entry : data.entrySet()) {
 					long start = System.currentTimeMillis();
@@ -202,6 +203,8 @@ public abstract class Batch<T extends IQueryableEntity> {
 				long start = System.currentTimeMillis();
 				T obj = objs.get(0);
 				String site=null;
+				
+				callVeryBefore(objs);
 				if(forceTableName!=null){
 					tablename=forceTableName;
 				}else{
@@ -221,6 +224,8 @@ public abstract class Batch<T extends IQueryableEntity> {
 		}
 		return executeResult;
 	}
+
+	protected abstract void callVeryBefore(List<T> objs) throws SQLException;
 
 	protected long innerCommit(List<T> objs, String site, String tablename, String dbName) throws SQLException {
 		String sql = toSql(tablename);
@@ -270,7 +275,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 	 * 提交每批数据，返回本次数据库完成后的时间
 	 */
 	protected long doCommit(PreparedStatement psmt, OperateTarget db, List<T> listValue) throws SQLException {
-		callEventListenerBefore(listValue, db);
+		callEventListenerBefore(listValue);
 		processJdbcParams(psmt, listValue, db);
 		int[] result=psmt.executeBatch();
 		int total=0;
@@ -287,7 +292,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 		return dbAccess;
 	}
 
-	protected abstract void callEventListenerBefore(List<T> listValue, OperateTarget db) throws SQLException;
+	protected abstract void callEventListenerBefore(List<T> listValue) throws SQLException;
 
 	protected abstract void processJdbcParams(PreparedStatement psmt, List<T> listValue, OperateTarget db) throws SQLException;
 
@@ -320,7 +325,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 		}
 
 		@Override
-		protected void callEventListenerBefore(List<T> listValue, OperateTarget db) throws SQLException {
+		protected void callEventListenerBefore(List<T> listValue) throws SQLException {
 			Session parent = this.parent;
 			DbOperatorListener listener=parent.getListener();
 			for (T t : listValue) {
@@ -329,9 +334,6 @@ public abstract class Batch<T extends IQueryableEntity> {
 				}catch(Exception e){
 					LogUtil.exception(e);
 				}
-			}
-			if (insertPart.getCallback() != null) {
-				insertPart.getCallback().callBefore(listValue, db.getSession());
 			}
 		}
 
@@ -389,6 +391,13 @@ public abstract class Batch<T extends IQueryableEntity> {
 				p.close();
 			}
 		}
+
+		@Override
+		protected void callVeryBefore(List<T> objs) throws SQLException {
+			if (insertPart.getCallback() != null) {
+				insertPart.getCallback().callBefore(objs);
+			}
+		}
 	}
 
 	static final class Update<T extends IQueryableEntity> extends Batch<T> {
@@ -412,7 +421,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 		}
 
 		@Override
-		protected void callEventListenerBefore(List<T> listValue, OperateTarget db) {
+		protected void callEventListenerBefore(List<T> listValue) {
 			Session parent = this.parent;
 			DbOperatorListener listener=parent.getListener();
 			for (T t : listValue) {
@@ -469,6 +478,10 @@ public abstract class Batch<T extends IQueryableEntity> {
 			}
 
 		}
+
+		@Override
+		protected void callVeryBefore(List<T> objs) throws SQLException {
+		}
 	}
 
 	static final class Delete<T extends IQueryableEntity> extends Batch<T> {
@@ -487,7 +500,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 		}
 
 		@Override
-		protected void callEventListenerBefore(List<T> listValue, OperateTarget db) {
+		protected void callEventListenerBefore(List<T> listValue) {
 			Session parent = this.parent;
 			DbOperatorListener listener=parent.getListener();
 			for (T t : listValue) {
@@ -536,6 +549,10 @@ public abstract class Batch<T extends IQueryableEntity> {
 
 			}
 
+		}
+
+		@Override
+		protected void callVeryBefore(List<T> objs) throws SQLException {
 		}
 	}
 }
