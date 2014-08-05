@@ -5,7 +5,7 @@ import jef.database.cache.CacheKeyProvider;
 
 
 public interface IQuerySqlResult extends SqlResult,CacheKeyProvider{
-	BindSql getSql();
+	BindSql getSql(PartitionResult site);
 	PartitionResult[] getTables();
 	OrderResult getOrderbyPart();
 	SelectResult getSelectPart() ;

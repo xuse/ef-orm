@@ -2,11 +2,13 @@ package jef.database.partition;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
 import jef.database.DbCfg;
 import jef.database.annotation.PartitionFunction;
+import jef.database.query.RegexpDimension;
 import jef.tools.Assert;
 import jef.tools.DateFormats;
 import jef.tools.DateUtils;
@@ -31,6 +33,15 @@ public abstract class AbstractDateFunction implements PartitionFunction<Date>{
 		after=StringUtils.toInt(srange[1], 3);
 	}
 	
+	public boolean acceptRegexp() {
+		return false;
+	}
+
+	public Collection<Date> iterator(RegexpDimension regexp) {
+		throw new UnsupportedOperationException();
+	}
+
+
 	//四位数年
 	public static final AbstractDateFunction YEAR=new AbstractDateFunction(){
 		public String eval(Date value) {

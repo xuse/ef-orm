@@ -2,6 +2,8 @@ package jef.database.annotation;
 
 import java.util.Collection;
 
+import jef.database.query.RegexpDimension;
+
 /**
  * 描述一个分表字段的处理逻辑。
  * 例如：表 BILL结构如下：(
@@ -47,4 +49,17 @@ public interface PartitionFunction<T> {
 	 * @return
 	 */
 	Collection<T> iterator(T min,T max,boolean left,boolean right);
+	
+	/**
+	 * 是否支持传入正则
+	 * @return
+	 */
+	boolean acceptRegexp();
+	
+	/**
+	 * 按正则枚举
+	 * @param regexp
+	 * @return
+	 */
+	Collection<T> iterator(RegexpDimension regexp);
 }

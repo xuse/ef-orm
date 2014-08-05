@@ -171,7 +171,7 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 					cq=DbUtils.toReferenceJoinQuery(qq, null);
 				}
 			}
-			BindSql qresult=processor.toQuerySql(cq, null,null,false).getSql();
+			BindSql qresult=processor.toQuerySql(cq, null,null,false).getSql(null);
 			if(withBuck && !isCount){
 				sqls[i]="("+qresult.getSql()+")";	
 			}else{

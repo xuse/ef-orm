@@ -62,15 +62,14 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		boolean doFileter = ORMConfig.getInstance().isFilterAbsentTables();
 		if (meta.getPartition() != null && instance != null) {// 分区表，并且具备分区条件
 			Set<DbTable> r = getPartitionTables(meta, BeanWrapper.wrap(instance), q, profile);
-			if (!r.isEmpty()) {
+			if (r.isEmpty()) {
+				return processor.getSubTableNames(meta); //返回一切可能
+			}else{
 				result = analyzeRegexpResults(r, processor, meta, profile);
 				return toPartitionResult(result, processor, doFileter, meta);
 			}
-			result = Arrays.asList(meta.getBaseTable(profile));// 使用基表
-			return toPartitionResult(result, processor, doFileter, meta);
 		}
-		result = Arrays.asList(meta.getBaseTable(profile));// 使用基表
-		return toPartitionResult(result, processor, false, meta);
+		return meta.getBaseTable(profile).toPartitionResults();
 	}
 
 	public PartitionResult[] toTableNames(MetadataAdapter meta, PartitionSupport processor, int opType) {
@@ -96,8 +95,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 				}
 			}
 		}
-		result = Arrays.asList(meta.getBaseTable(profile));// 使用基表
-		return toPartitionResult(result, processor, false, meta);
+		return meta.getBaseTable(profile).toPartitionResults();
 	}
 
 	private PartitionResult[] removeBaseTable(PartitionResult[] results) {
@@ -117,7 +115,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		if (meta.getPartition() != null && instance != null) {// 认为是分区表的场合
 			Set<DbTable> tbs = getPartitionTables(meta, BeanWrapper.wrap(instance), q, profile);
 			if (tbs.isEmpty()) { // 没有返回的情况，返回基表
-				result = meta.getBaseTable(profile);
+				return meta.getBaseTable(profile).toPartitionResult();
 			} else if (tbs.size() != 1) {
 				throw new IllegalArgumentException("Can not determine which database or table to operate.(one table only)."+tbs);
 			} else {
@@ -188,7 +186,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		
 		// 获取分表向量
 		Map<String, Dimension> fieldDims = getPartitionFieldValues(keys, instance, q);
-		// 分表向量的分析与组合.分析即将Range向量拆解为多点向量，组合即取多个向量间的笛卡尔积
+		// 分表向量的分析与组合.分析即将Range向量拆解为多点向量，组合即取多个向量间的笛卡尔积.(俗称维度展开并交叉)
 		List<Map<String, Object>> _dimVectors = toDimensionVectors(fieldDims, meta.getMinUnitFuncForEachPartitionKey());
 
 		String tbBaseName = meta.getTableName(true);
@@ -255,6 +253,31 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 				}
 				return true;
 			}
+		} else if(obj instanceof RegexpDimension){
+			String baseExp=((RegexpDimension) obj).getBaseExp();
+			//<0 无穷 ==0刚好 >0不足
+			int leftLen=-1;
+			if(key.length()>0){
+				leftLen=key.length()-baseExp.length();
+				if(leftLen<0){
+					baseExp = baseExp.substring(0,key.length());
+					leftLen=0;//刚好
+				}
+			}
+			sb.append(baseExp);
+			if(leftLen!=0){
+				if (isNumberFun(key)) {
+					sb.append("\\d");
+				} else {
+					sb.append(regexp);
+				}
+				if (leftLen > 0) {
+					sb.append("{" + leftLen + "}");
+				} else {
+					sb.append("+");
+				}	
+			}
+			return true;
 		} else {
 			String value = func.eval(obj);
 			sb.append(toFixedLength(value, key.filler(), key.length()));
@@ -263,6 +286,9 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	}
 
 	/*
+	 * 完成以下两步运算——
+	 * 1 维度展开
+	 * 2 维度交叉
 	 * 计算一切可能的分表组合 即当查询中包含的维度之间取笛卡尔积,来确保每种情况下的分表组合都被计算到
 	 * 当查询条件中存在多个维度时，实质上构成了一个n维矢量空间，每个维度上的矢量进行组合，得到所有可能的复合矢量。
 	 */
@@ -304,8 +330,8 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static Map<String, Dimension> getPartitionFieldValues(Entry<PartitionKey, PartitionFunction>[] keys, BeanWrapper instance, Query<?> q) {
 		Map<String, Dimension> fieldVal = new HashMap<String, Dimension>();
-		for (Entry<PartitionKey, PartitionFunction> key : keys) {
-			String field = key.getKey().field();
+		for (Entry<PartitionKey, PartitionFunction> entry : keys) {
+			String field = entry.getKey().field();
 			// 如果存在一个field多个key function,只读取一次field值
 			if (fieldVal.containsKey(field)) {
 				continue;
@@ -434,6 +460,8 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 			return new RangeDimension(null, (Comparable) v, false, false);
 		case LESS_EQUALS:
 			return new RangeDimension(null, (Comparable) v);
+		case MATCH_START:
+			return new RegexpDimension(String.valueOf(v));
 		case NOT_EQUALS: {
 			Dimension d = new RangeDimension((Comparable) v);
 			;
@@ -532,8 +560,9 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 */
 	private PartitionResult[] toPartitionResult(List<DbTable> result, PartitionSupport support, boolean filter, ITableMetadata tmeta) {
 		Map<String, List<String>> map = new HashMap<String, List<String>>();
+		boolean singleSite= ORMConfig.getInstance().isSingleSite();
 		for (DbTable dt : result) {
-			String dbName = ORMConfig.getInstance().isSingleSite() ? "" : dt.dbName;
+			String dbName = singleSite? "" : dt.dbName;
 			if (filter && !support.isExist(dbName, dt.table, tmeta)) {
 				continue;
 			}

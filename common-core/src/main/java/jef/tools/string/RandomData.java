@@ -224,9 +224,9 @@ public class RandomData {
 
 	// 生成随机的日期
 	public static Date randomDate(Date startDate, Date endDate) {
-		long start = startDate.getTime();
-		long end = endDate.getTime();
-		return new Date(randomLong(start, end));
+		long start = startDate.getTime()/1000;
+		long end = endDate.getTime()/1000;
+		return new Date(randomLong(start, end)*1000);
 	}
 
 	// 生成随机的整数
@@ -236,7 +236,9 @@ public class RandomData {
 
 	public static long randomLong(long start, long end) {
 		int i = (int) (end - start);
-		if (i < 0)
+		if(start+i!=end){
+			i=Integer.MAX_VALUE;
+		}else if (i < 0)
 			i = -i;
 		return start + rnd.nextInt(i);
 	}

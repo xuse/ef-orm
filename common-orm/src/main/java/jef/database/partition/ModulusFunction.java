@@ -2,8 +2,10 @@ package jef.database.partition;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+import jef.database.query.RegexpDimension;
 import jef.tools.StringUtils;
 
 /**
@@ -71,5 +73,11 @@ public class ModulusFunction extends AbstractNumberFunction{
 			DEFAULT=new ModulusFunction(10);
 		}
 		return DEFAULT;
+	}
+	public boolean acceptRegexp() {
+		return false;
+	}
+	public Collection<Number> iterator(RegexpDimension regexp) {
+		throw new UnsupportedOperationException();
 	}
 }

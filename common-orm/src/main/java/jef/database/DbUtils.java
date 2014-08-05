@@ -1138,7 +1138,11 @@ public final class DbUtils {
 		MetadataAdapter meta = obj == null ? (MetadataAdapter)q.getMeta() : MetaHolder.getMeta(obj);
 		if (StringUtils.isNotEmpty(customName))
 			return new PartitionResult[] { new PartitionResult(customName).setDatabase(meta.getBindDsName()) };
-		return partitionUtil.toTableNames(meta, obj, q, processor);
+		PartitionResult[] result=partitionUtil.toTableNames(meta, obj, q, processor);
+		if(ORMConfig.getInstance().isDebugMode()){
+			LogUtil.show("Partitions:"+Arrays.toString(result));
+		}
+		return result;
 	}
 
 	/**

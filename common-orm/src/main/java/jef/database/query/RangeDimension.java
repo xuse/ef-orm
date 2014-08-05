@@ -306,7 +306,10 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 		}
 		Set<?> set=new TreeSet();
 		for(PartitionFunction func:funcs){
-			set.addAll(func.iterator(sObj,eObj,isLeftCloseSpan,isRightCloseSpan));
+			Collection add=func.iterator(sObj,eObj,isLeftCloseSpan,isRightCloseSpan);
+			//当有多个维度组合时且任何一个维护无法得出结论时，实际上实际上是无法判断哪个维护是最密枚举，而将稀疏枚举向上传递可能造成误报和漏报.此时当做无法枚举处理。
+			if(add.isEmpty())return add;
+			set.addAll(add);
 		}
 		return set;
 	}

@@ -1359,7 +1359,7 @@ public abstract class Session {
 		//sql.getTables() == null || 
 		if (sql.getTables().length==0) {// 没有分表结果，采用当前连接的默认表名操作
 			OperateTarget trans = wrapThisWithEmptyKey(rs, option.holdResult); // 如果是结果集持有的，那么必须在事务中
-			selectp.processSelect(trans, sql, queryObj, rs, option);
+			selectp.processSelect(trans, sql, null,queryObj, rs, option);
 		} else {
 			if (!queryObj.getOrderBy().isEmpty()) {// 最复杂的情况，多数据库下的排序
 				rs.setOrderDesc(sql.getOrderbyPart().getAsSelect());
@@ -1367,7 +1367,7 @@ public abstract class Session {
 			}
 			for (PartitionResult site : sql.getTables()) {
 				String dbKey = site.getDatabase();
-				selectp.processSelect(asOperateTarget(dbKey), sql, queryObj, rs, option);
+				selectp.processSelect(asOperateTarget(dbKey), sql,site, queryObj, rs, option);
 			}
 		}
 		long dbselect = System.currentTimeMillis(); // 查询完成时间
@@ -2050,14 +2050,14 @@ public abstract class Session {
 		long parse = System.currentTimeMillis();
 		if (sql.getTables() == null) {// 没有分表结果，采用当前连接的默认表名操作
 			OperateTarget trans = wrapThisWithEmptyKey(rs, true);
-			selectp.processSelect(trans, sql, queryObj, rs, option);
+			selectp.processSelect(trans, sql,null, queryObj, rs, option);
 		} else {
 			if (!queryObj.getOrderBy().isEmpty()) {
 				rs.setOrderDesc(sql.getOrderbyPart().getAsSelect());
 				rs.setSelectDesc(sql.getSelectPart().getEntries());
 			}
 			for (PartitionResult site : sql.getTables()) {
-				selectp.processSelect(asOperateTarget(site.getDatabase()), sql, queryObj, rs, option);
+				selectp.processSelect(asOperateTarget(site.getDatabase()), sql,site, queryObj, rs, option);
 			}
 		}
 		long dbselect = System.currentTimeMillis();

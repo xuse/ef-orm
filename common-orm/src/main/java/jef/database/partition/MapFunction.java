@@ -1,12 +1,14 @@
 package jef.database.partition;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
 import jef.common.ContinuedRange;
 import jef.database.annotation.PartitionFunction;
+import jef.database.query.RegexpDimension;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -62,11 +64,12 @@ public class MapFunction implements PartitionFunction<String>{
 		boolean open=false;
 		if(min==null){
 			open=true;
+		}else{
+			result.add(min);
 		}
 		for(StringRange range:ranges){
 			if(open){
 				if(range.contains(max)){
-					result.add(max);
 					open=false;
 					break;
 				}else{
@@ -75,13 +78,15 @@ public class MapFunction implements PartitionFunction<String>{
 			}else{
 				if(range.contains(min)){
 					open=true;
-					result.add(min);
 					if(range.contains(max)){
 						open=false;
 						break;
 					}
 				}
 			}
+		}
+		if(max!=null && !max.equals(min)){
+			result.add(max);
 		}
 		return result;
 	}
@@ -147,4 +152,11 @@ public class MapFunction implements PartitionFunction<String>{
 //			return true;
 //		}
 //	}
+	public boolean acceptRegexp() {
+		return false;
+	}
+
+	public Collection<String> iterator(RegexpDimension regexp) {
+		throw new UnsupportedOperationException();
+	}
 }

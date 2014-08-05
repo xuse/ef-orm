@@ -1,5 +1,6 @@
 package jef.database.query;
 
+import jef.database.annotation.PartitionResult;
 import jef.tools.StringUtils;
 
 /**
@@ -13,7 +14,7 @@ public class DbTable {
 	String table; // 表名 (table名)
 	boolean isDbRegexp; // db名是否为正则表达式
 	boolean isTbRegexp; // table名是否为正则表达式
-
+	
 	public DbTable(String db, String table) {
 		this(db, table, false, false);
 	}
@@ -46,5 +47,11 @@ public class DbTable {
 	@Override
 	public String toString() {
 		return StringUtils.toString(dbName) + "." + table;
+	}
+	PartitionResult toPartitionResult(){
+		return new PartitionResult(table).setDatabase(dbName);
+	}
+	PartitionResult[] toPartitionResults(){
+		return new PartitionResult[]{new PartitionResult(table).setDatabase(dbName)};
 	}
 }

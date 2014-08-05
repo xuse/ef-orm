@@ -41,9 +41,9 @@ public class QuerySqlResultSimple implements IQuerySqlResult {
 	}
 	@Override
 	public String toString() {
-		return getSql().getSql();
+		return getSql(null).getSql();
 	}
-	public BindSql getSql() {
+	public BindSql getSql(PartitionResult site) {
 		return new BindSql(withPage(body.concat(orderbyPart.getSql())),bind);
 	}
 	private DatabaseDialect profile;

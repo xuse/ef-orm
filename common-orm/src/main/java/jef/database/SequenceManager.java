@@ -311,7 +311,8 @@ public final class SequenceManager {
 		static {
 			seqtable = new TupleMetadata(publicTableName);
 			seqtable.addColumn("V", new ColumnType.Int(12));
-			seqtable.addColumn("T", new ColumnType.Varchar(64));
+			seqtable.addColumn("T","T", new ColumnType.Varchar(64),true);
+			
 		}
 		private String table;
 		private String key;

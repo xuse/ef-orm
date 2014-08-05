@@ -118,7 +118,7 @@ public class QuerySqlResult implements IQuerySqlResult {
 
 	@Override
 	public String toString() {
-		return String.valueOf(getSql());
+		return String.valueOf(getSql(null));
 	}
 
 	/*
@@ -140,49 +140,51 @@ public class QuerySqlResult implements IQuerySqlResult {
 		return sb.toString();
 	}
 
-	public BindSql getSql() {
+	public BindSql getSql(PartitionResult site) {
 		if (tableDefinition != null) {
 			return new BindSql(withPage(getSql(tableDefinition,false).concat(orderbyPart.getSql()),false), bind);
 		}
-
-		for (PartitionResult site : tables) {
-			StringBuilder sb = new StringBuilder(200);
-			List<BindVariableDescription> bind = this.bind;
-			boolean moreTable=site.tableSize()>1;
-			for (int i = 0; i < site.tableSize(); i++) {
-				String tableName = site.getTables().get(i);
-				sb.append(getSql(tableName.concat(" t"),moreTable && StringUtils.isNotEmpty(grouphavingPart)));//为多表、并且有groupby时需要特殊处理
-				if (site.tableSize() > 1 && i < site.tableSize() - 1) {
-					sb.append("\n union all \n");
-				}
+		if(site==null){
+			if(tables.length==0){
+				throw new IllegalArgumentException("The partition result does not return any result!");
 			}
-
-			// 不带group by、having、order by从句的情况下，无需再union一层，
-			// 否则，对查询列指定别名时会产生异常。
-			if (moreTable &&
-					(StringUtils.isNotEmpty(grouphavingPart) ||
-							StringUtils.isNotEmpty(orderbyPart.getSql()))) {
-				StringBuilder sb2 = new StringBuilder();
-				selectPart.append(sb2);
-				
-				sb2.append(" from (").append(sb).append(") t");
-				sb2.append(ORMConfig.getInstance().wrap);
-				sb2.append(grouphavingPart);
-				sb = sb2;
-			}
-
-			if (moreTable) {
-				// 当复杂情况下，绑定变量也要翻倍
-				bind = new ArrayList<BindVariableDescription>();
-				for (int i = 0; i < site.tableSize(); i++) {
-					bind.addAll(this.bind);
-				}
-			}
-			
-			sb.append(orderbyPart.getSql());
-			return new BindSql(withPage(sb.toString(),moreTable), bind);
+			site=this.tables[0];
 		}
-		throw new IllegalArgumentException("The partition result does not return any result!");
+		StringBuilder sb = new StringBuilder(200);
+		List<BindVariableDescription> bind = this.bind;
+		boolean moreTable=site.tableSize()>1;
+		for (int i = 0; i < site.tableSize(); i++) {
+			String tableName = site.getTables().get(i);
+			sb.append(getSql(tableName.concat(" t"),moreTable && StringUtils.isNotEmpty(grouphavingPart)));//为多表、并且有groupby时需要特殊处理
+			if (site.tableSize() > 1 && i < site.tableSize() - 1) {
+				sb.append("\n union all \n");
+			}
+		}
+
+		// 不带group by、having、order by从句的情况下，无需再union一层，
+		// 否则，对查询列指定别名时会产生异常。
+		if (moreTable &&
+				(StringUtils.isNotEmpty(grouphavingPart) ||
+						StringUtils.isNotEmpty(orderbyPart.getSql()))) {
+			StringBuilder sb2 = new StringBuilder();
+			selectPart.append(sb2);
+
+			sb2.append(" from (").append(sb).append(") t");
+			sb2.append(ORMConfig.getInstance().wrap);
+			sb2.append(grouphavingPart);
+			sb = sb2;
+		}
+
+		if (moreTable) {
+			// 当复杂情况下，绑定变量也要翻倍
+			bind = new ArrayList<BindVariableDescription>();
+			for (int i = 0; i < site.tableSize(); i++) {
+				bind.addAll(this.bind);
+			}
+		}
+
+		sb.append(orderbyPart.getSql());
+		return new BindSql(withPage(sb.toString(),moreTable), bind);
 	}
 
 	private String withPage(String sql,boolean union) {

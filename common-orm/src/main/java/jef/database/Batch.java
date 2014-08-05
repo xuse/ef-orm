@@ -177,7 +177,6 @@ public abstract class Batch<T extends IQueryableEntity> {
 		if (objs.isEmpty()) {
 			return 0;
 		}
-		String dbName = parent.getTransactionId(null);
 		boolean debugMode = ORMConfig.getInstance().isDebugMode();
 		String tablename=null;
 		try {
@@ -193,9 +192,10 @@ public abstract class Batch<T extends IQueryableEntity> {
 						site = tablename.substring(0, offset);
 						tablename = tablename.substring(offset + 1);
 					}
+					String dbName = parent.getTransactionId(site);
 					long dbAccess = innerCommit(entry.getValue(), site, tablename, dbName);
 					if (debugMode) {
-						LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed:", String.valueOf(entry.getValue().size()),"/on ",String.valueOf(executeResult), " record(s)\t Time cost([ParseSQL]:", String.valueOf(parseTime / 1000), "us, [DbAccess]:", String.valueOf(dbAccess - start), "ms) |",
+						LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed:", String.valueOf(entry.getValue().size()),"/on ",String.valueOf(executeResult), " record(s) on ["+entry.getKey()+"]\t Time cost([ParseSQL]:", String.valueOf(parseTime / 1000), "us, [DbAccess]:", String.valueOf(dbAccess - start), "ms) |",
 								dbName));
 					}
 				}
@@ -212,6 +212,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 					site=forcrSite!=null?forcrSite:pr.getDatabase();
 					tablename=pr.getAsOneTable();
 				}
+				String dbName = parent.getTransactionId(null);
 				long dbAccess = innerCommit(objs, site, tablename, dbName);
 				if (debugMode) {
 					LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed:", String.valueOf(objs.size()),"/on ",String.valueOf(executeResult), " record(s)\t Time cost([ParseSQL]:", String.valueOf(parseTime / 1000), "us, [DbAccess]:", String.valueOf(dbAccess - start), "ms) |",

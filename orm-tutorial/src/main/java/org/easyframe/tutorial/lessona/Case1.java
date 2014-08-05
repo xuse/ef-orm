@@ -29,10 +29,7 @@ public class Case1 extends org.junit.Assert {
 	@BeforeClass
 	public static void setup() throws SQLException {
 		new EntityEnhancer().enhance("org.easyframe.tutorial.lessona");
-		long start = System.currentTimeMillis();
 		db = new DbClient();
-		// System.out.println(System.currentTimeMillis()-start);
-		db.createTable(OperateLog.class);
 	}
 
 	// 问题1，一次性创建了3年的表，太多。 如果是按天分表岂不是一次性创建几百张表啊？(测试)
@@ -92,9 +89,14 @@ public class Case1 extends org.junit.Assert {
 		c.setCreateDate(new Date());
 		LogUtil.show(toTableName(c, s));
 		System.out.println("================");
-		c.setIndexcode("670011");
+		c.setIndexcode("835592");
 		c.setCreateDate(new Date());
 		LogUtil.show(toTableName(c, s));
+		
+		
+		
+		System.out.println("================");
+		LogUtil.show(toTableName(new Device(), s));
 	}
 
 	private PartitionResult[] toTableName(DataObject c, PartitionSupport s) {

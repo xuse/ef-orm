@@ -62,6 +62,7 @@ import jef.database.partition.MapFunction;
 import jef.database.partition.ModulusFunction;
 import jef.database.query.JpqlExpression;
 import jef.database.query.ReferenceType;
+import jef.database.query.RegexpDimension;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
@@ -477,6 +478,14 @@ public final class TableMetadata extends MetadataAdapter {
 			} else {
 				return Arrays.asList(min, max);
 			}
+		}
+
+		public boolean acceptRegexp() {
+			return true;
+		}
+
+		public Collection<Object> iterator(RegexpDimension regexp) {
+			return Arrays.<Object>asList(regexp);
 		}
 	};
 

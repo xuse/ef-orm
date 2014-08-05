@@ -47,7 +47,7 @@ public abstract class SelectProcessor {
 	 */
 	public abstract CountSqlResult toCountSql(ConditionQuery obj, String tableName) throws SQLException;
 
-	abstract void processSelect(OperateTarget db, IQuerySqlResult sql, ConditionQuery queryObj, MultipleResultSet rs, QueryOption option) throws SQLException;
+	abstract void processSelect(OperateTarget db, IQuerySqlResult sql, PartitionResult site,ConditionQuery queryObj, MultipleResultSet rs, QueryOption option) throws SQLException;
 
 	abstract int processCount(OperateTarget db, List<BindSql> bindSqls) throws SQLException;
 
@@ -183,7 +183,7 @@ public abstract class SelectProcessor {
 			return sb;
 		}
 
-		public void processSelect(OperateTarget db, IQuerySqlResult sql, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
+		public void processSelect(OperateTarget db, IQuerySqlResult sql,PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
 			Statement st = null;
 			ResultSet rs = null;
 
@@ -202,7 +202,7 @@ public abstract class SelectProcessor {
 			try {
 				st = db.createStatement(rsType, concurType);
 				option.setSizeFor(st);
-				rs = st.executeQuery(sql.toString());
+				rs = st.executeQuery(sql.getSql(site).toString());
 				rs2.add(rs, st, db);
 				// 提前将连接归还连接池，用于接下来的查询，但是标记这个连接上还有未完成的查询结果集，因此不允许关闭这个连接。
 			} catch (SQLException e) {
@@ -345,7 +345,7 @@ public abstract class SelectProcessor {
 			return sb;
 		}
 
-		public void processSelect(OperateTarget db, IQuerySqlResult sqlResult, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
+		public void processSelect(OperateTarget db, IQuerySqlResult sqlResult,PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
 			// 计算查询结果集参数
 			int rsType;
 			int concurType;
@@ -360,7 +360,7 @@ public abstract class SelectProcessor {
 				rsType = ResultSet.TYPE_FORWARD_ONLY;
 				concurType = ResultSet.CONCUR_READ_ONLY;
 			}
-			BindSql sql = sqlResult.getSql();
+			BindSql sql = sqlResult.getSql(site);
 			StringBuilder sb = null;
 			PreparedStatement psmt = null;
 			ResultSet rs = null;
@@ -478,7 +478,7 @@ public abstract class SelectProcessor {
 				String sql = bsql.getSql();
 				ResultSet rs = null;
 				StringBuilder sb = new StringBuilder(sql.length() + 150).append(sql).append(" | ").append(db.getTransactionId());
-				int currentTotal = 0;
+				int currentCount = 0;
 				try {
 					psmt = db.prepareStatement(sql);
 
@@ -486,9 +486,10 @@ public abstract class SelectProcessor {
 					BindVariableContext context = new BindVariableContext(psmt, db, sb);
 					BindVariableTool.setVariables(null, SqlType.SELECT, null, bsql.getBind(), context);
 					rs = psmt.executeQuery();
-					rs.next();
-					currentTotal = rs.getInt(1);
-					total += currentTotal;
+					if(rs.next()){
+						currentCount = rs.getInt(1);	
+						total += currentCount;	
+					}
 				} catch (SQLException e) {
 					p.processError(e, sql, db);
 					throw e;
