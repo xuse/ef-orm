@@ -27,6 +27,7 @@ import org.easyframe.tutorial.lessona.entity.Customer;
 import org.easyframe.tutorial.lessona.entity.Device;
 import org.easyframe.tutorial.lessona.entity.OperateLog;
 import org.easyframe.tutorial.lessona.entity.Person2;
+import org.easyframe.tutorial.lessona.entity.Customer.Field;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -80,6 +81,19 @@ public class Case2 extends org.junit.Assert{
 			
 			System.err.println("======= 建表操作完成，对于分区表只创建了可以预测到的若干表，实际操作中需要用到的表会自动按需创建=========");
 		}
+	}
+	
+	/**
+	 * 当分表结果计算后，发现没有需要查询的表的时候，会直接返回
+	 * @throws SQLException
+	 */
+	@Test
+	public void testNoMatchTables() throws SQLException{
+		Query<Device> d=QB.create(Device.class);
+		d.addCondition(Device.Field.indexcode,"9999999");
+		db.select(d);
+		
+		db.select(d);
 	}
 	
 	/**
@@ -265,18 +279,9 @@ public class Case2 extends org.junit.Assert{
 			for(String[] ss:strs){
 				System.out.println(Arrays.toString(ss));
 			}
-			
 		}
-		
-		
-		
-		
 	}
 	
-	@Test
-	public void test111() throws SQLException{
-		System.out.println("当前总数是:"+db.count(QB.create(Device.class)));
-	}
 
 	/*
 	 * 生成一些随机的数据 

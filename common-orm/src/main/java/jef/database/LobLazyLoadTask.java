@@ -7,6 +7,7 @@ import java.util.Collection;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.MappingType;
+import jef.database.query.SqlContext;
 import jef.database.wrapper.ResultSetImpl;
 import jef.tools.reflect.BeanWrapper;
 
@@ -27,7 +28,7 @@ public final class LobLazyLoadTask implements LazyLoadTask {
 
 	public void process(Session db, Object o) throws SQLException {
 		IQueryableEntity obj = (IQueryableEntity) o;
-		String sql = "select " + columnname + " from " + tableName + db.rProcessor.toWhereClause(obj.getQuery(), null, false);
+		String sql = "select " + columnname + " from " + tableName + db.rProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), false);
 		ResultSet rs = db.getResultSet(sql, 10);
 		if (rs.next()) {
 			Object value = mType.getProperObject(new ResultSetImpl(rs, profile), 1);

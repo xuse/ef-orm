@@ -1063,6 +1063,22 @@ public abstract class DateUtils {
 	}
 	
 	/**
+	 * 返回今天
+	 * @return
+	 */
+	public static java.sql.Date sqlToday(){
+		return new java.sql.Date(org.apache.commons.lang.time.DateUtils.truncate(new Date(), Calendar.DATE).getTime());
+	}
+	
+	/**
+	 * 返回现在
+	 * @return
+	 */
+	public static java.sql.Timestamp sqlNow(){
+		return new java.sql.Timestamp(System.currentTimeMillis());
+	}
+	
+	/**
 	 * 返回现在时间
 	 * @return the current date time.
 	 */

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import jef.common.log.LogUtil;
 import jef.database.BindVariableDescription;
 import jef.database.DbUtils;
 import jef.database.IQueryableEntity;
@@ -23,6 +22,7 @@ import jef.database.jsqlparser.statement.truncate.Truncate;
 import jef.database.jsqlparser.statement.update.Update;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
+import jef.database.query.SqlContext;
 import jef.database.wrapper.BindSql;
 import jef.database.wrapper.IQuerySqlResult;
 
@@ -57,7 +57,7 @@ public final class CacheImpl implements TransactionCache{
 		IQueryableEntity data=meta.newInstance();
 		DbUtils.setPrimaryKeyValue(data, primaryKey);
 		
-		BindSql sql=sqlP.toPrepareWhereSql(data.getQuery(), null, false);
+		BindSql sql=sqlP.toPrepareWhereSql(data.getQuery(), new SqlContext(null,data.getQuery()), false);
 		DimCache dc=tableCache.get(new KeyDimension(sql.getSql(),null));
 		if(dc==null)return false;
 		return dc.load(toParamList(sql.getBind()))!=null;
@@ -80,7 +80,7 @@ public final class CacheImpl implements TransactionCache{
 		IQueryableEntity data=meta.newInstance();
 		DbUtils.setPrimaryKeyValue(data, primaryKey);
 		
-		BindSql sql=sqlP.toPrepareWhereSql(data.getQuery(), null, false);
+		BindSql sql=sqlP.toPrepareWhereSql(data.getQuery(), new SqlContext(null, data.getQuery()), false);
 	
 		DimCache dc=tableCache.get(new KeyDimension(sql.getSql(),null));
 		if(dc==null)return;
@@ -173,7 +173,8 @@ public final class CacheImpl implements TransactionCache{
 		
 		CacheKey pkCache=null;
 		if(!meta.getPKField().isEmpty()){
-			BindSql sql=sqlP.toPrepareWhereSql(obj.getQuery(), null, false);
+			//FIXME getPkDimenision
+			BindSql sql=sqlP.toPrepareWhereSql(obj.getQuery(),  new SqlContext(null, obj.getQuery()), false);
 			obj.clearQuery();
 			KeyDimension dim=new KeyDimension(sql.getSql(),null);
 			pkCache = new SqlCacheKey(table, dim, toParamList(sql.getBind()));
@@ -195,7 +196,7 @@ public final class CacheImpl implements TransactionCache{
 			evict(ir.getCacheKey());
 			return;
 		}
-		BindSql sql=sqlP.toPrepareWhereSql(obj.getQuery(), null, false);
+		BindSql sql=sqlP.toPrepareWhereSql(obj.getQuery(),  new SqlContext(null, obj.getQuery()), false);
 		obj.clearQuery();
 		DimCache dc=tableCache.get(new KeyDimension(sql.getSql(),null));
 		if(dc==null)return;

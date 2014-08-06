@@ -20,6 +20,7 @@ import jef.database.PagingIterator;
 import jef.database.QB;
 import jef.database.Sequence;
 import jef.database.Transaction;
+import jef.database.meta.FBIField;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.Func;
@@ -297,17 +298,40 @@ public class SimpleTableTest extends org.junit.Assert {
 	@Test
 	public void testUpdate() throws SQLException {
 		long lastId = insert3Records();
-
-		TestEntity t1 = new TestEntity();
-		t1.setLongField(lastId - 2);
-		t1 = db.load(t1);
-		t1.setField2(null);
-		t1.prepareUpdate(TestEntity.Field.dateField, db.func(Func.current_timestamp));
-		t1.setBinaryData("人间".getBytes());
-		int i = db.update(t1);
-		assertEquals(1, i);
+		{
+			TestEntity t1 = new TestEntity();
+			t1.setLongField(lastId - 2);
+			t1 = db.load(t1);
+			t1.setField2(null);
+			t1.prepareUpdate(TestEntity.Field.dateField, db.func(Func.current_timestamp));
+			t1.setBinaryData("人间".getBytes());
+			int i = db.update(t1);
+			assertEquals(1, i);	
+		}
 	}
 
+	@Test
+	@IgnoreOn("sqlite")  //SQLite由于当前时区的问题，该案例不过
+	public void testUpdate2() throws SQLException {
+		db.delete(QB.create(TestEntity.class));
+		long lastId = insert3Records();
+		//增加案例，支持
+		{
+			TestEntity t1 = new TestEntity();//>>>
+			t1.getQuery().addCondition(new FBIField("date(createTime)"), DateUtils.sqlToday());
+			t1.setField2("uuuuuuuuuuuuuu");
+			int i=db.update(t1);
+			assertEquals(3, i);
+			
+		}
+		{
+			//这个案例测试时要注意，在Oracle中，即便传入java.sql.Date对象，Oracle仍然会将其当作date类型（带时分秒进行判断）
+			TestEntity t1 = new TestEntity();
+			t1.getQuery().addCondition(new FBIField("date(createTime)"), DateUtils.sqlToday());
+			int i=db.delete(t1);
+			assertEquals(3, i);
+		}
+	 }
 	/**
 	 * 测试遍历模式的查询
 	 * 
@@ -498,6 +522,7 @@ public class SimpleTableTest extends org.junit.Assert {
 	}
 
 	private long insert3Records() throws SQLException {
+		ORMConfig.getInstance().setDebugMode(false);
 		TestEntity t1 = RandomData.newInstance(TestEntity.class);
 		t1.setLongField(1);
 		db.insert(t1);
@@ -507,6 +532,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		TestEntity t3 = RandomData.newInstance(TestEntity.class);
 		t1.setLongField(3);
 		db.insert(t3);
+		ORMConfig.getInstance().setDebugMode(true);
 		return t3.getLongField();
 	}
 

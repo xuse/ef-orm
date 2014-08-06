@@ -108,9 +108,9 @@ public class QuerySqlResult implements IQuerySqlResult {
 		this.rawClass=rawClass;
 	}
 
-//	public boolean isUnion() {
-//		return isUnion;
-//	}
+	public boolean isGroupHaving() {
+		return StringUtils.isNotEmpty(grouphavingPart);
+	}
 //
 //	public void setUnion(boolean isUnion) {
 //		this.isUnion = isUnion;

@@ -154,7 +154,8 @@ public class HsqlDbMemDialect extends DbmsProfile {
 		registerNative(new StandardSQLFunction("right"));
 		registerNative(new StandardSQLFunction("overlay"));
 		
-		registerNative(Func.date);
+//		registerNative(Func.date);
+		registerCompatible(Func.date, new TemplateFunction("time", "cast(%s as date)"));
 		registerNative(Func.time);
 		registerNative(Func.datediff);
 		registerNative(Func.cast);

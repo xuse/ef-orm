@@ -161,8 +161,10 @@ final class BindVariableTool {
 		Object value = getWhereVariable(conds, variableDesc,obj);
 		try{
 			value=context.setValueInPsmt(count, value, variableDesc.getColumnType());
-		}catch(ClassCastException e){
-			throw new SQLException("The query param type error, field="+variableDesc.getField().name()+"("+variableDesc.getColumnType().getClass().getSimpleName()+"):"+e.getMessage());
+		}catch(Exception e){
+			String field=variableDesc.getField().name();
+			MappingType<?> colType= variableDesc.getColumnType();
+			throw new SQLException("The query param type error, field="+field+" type="+(colType==null?"":colType.getClass().getSimpleName())+"\n"+e.getClass().getName()+":"+e.getMessage());
 		}
 		context.log(count,  variableDesc.getField().name(), value);
 		return value;

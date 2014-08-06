@@ -5,10 +5,12 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Date;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.MappingType;
 import jef.database.support.LogFormat;
+import jef.tools.DateUtils;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 
@@ -103,6 +105,9 @@ final class BindVariableContext {
 	@SuppressWarnings({ "rawtypes" })
 	public Object setValueInPsmt(int count, Object value, MappingType cType) throws SQLException {
 		if(cType==null){
+			if(value.getClass()==java.util.Date.class){
+				value=db.toTimestampSqlParam((Date)value);
+			}
 			psmt.setObject(count,value);
 		}else{
 			value = cType.set(psmt, value, count, db);	

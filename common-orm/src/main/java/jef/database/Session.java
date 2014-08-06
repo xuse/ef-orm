@@ -55,6 +55,7 @@ import jef.database.query.Join;
 import jef.database.query.JoinElement;
 import jef.database.query.Query;
 import jef.database.query.Selects;
+import jef.database.query.SqlContext;
 import jef.database.query.SqlExpression;
 import jef.database.query.TypedQuery;
 import jef.database.support.DbOperatorListener;
@@ -618,7 +619,7 @@ public abstract class Session {
 		getListener().beforeDelete(obj, this);
 		int count = 0;
 		if (getProfile().has(Feature.NO_BIND_FOR_DELETE)) {// 非绑定删除
-			String where = rProcessor.toWhereClause(obj.getQuery(), null, false);
+			String where = rProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), false);
 			for (PartitionResult site : sites) {
 				count += p.processDeleteNormal(asOperateTarget(site.getDatabase()), obj, site, start, where);
 			}
@@ -626,7 +627,7 @@ public abstract class Session {
 				getCache().onDelete(myTableName == null ? obj.getClass().getName() : myTableName, where, null);
 			}
 		} else {
-			BindSql where = rProcessor.toPrepareWhereSql(obj.getQuery(), null, false);
+			BindSql where = rProcessor.toPrepareWhereSql(obj.getQuery(), new SqlContext(null,obj.getQuery()), false);
 			for (PartitionResult site : sites) {
 				count += p.processDeletePrepared(asOperateTarget(site.getDatabase()), obj, site, start, where);
 			}
@@ -1356,8 +1357,9 @@ public abstract class Session {
 		}
 
 		long parse = System.currentTimeMillis();
+		//为null时，无需分表，为空时，分表结果无
 		//sql.getTables() == null || 
-		if (sql.getTables().length==0) {// 没有分表结果，采用当前连接的默认表名操作
+		if (sql.getTables()==null) {// 没有分表结果，采用当前连接的默认表名操作
 			OperateTarget trans = wrapThisWithEmptyKey(rs, option.holdResult); // 如果是结果集持有的，那么必须在事务中
 			selectp.processSelect(trans, sql, null,queryObj, rs, option);
 		} else {
@@ -1365,6 +1367,7 @@ public abstract class Session {
 				rs.setOrderDesc(sql.getOrderbyPart().getAsSelect());
 				rs.setSelectDesc(sql.getSelectPart().getEntries());
 			}
+//			todosql.isGroupHaVING && sql.getTables()
 			for (PartitionResult site : sql.getTables()) {
 				String dbKey = site.getDatabase();
 				selectp.processSelect(asOperateTarget(dbKey), sql,site, queryObj, rs, option);
@@ -1624,7 +1627,7 @@ public abstract class Session {
 		} catch (Exception e) {
 			throw new SQLException(e.getMessage());
 		}
-		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), null, false);
+		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), new SqlContext(null,template.getQuery()), false);
 		for (BindVariableDescription bind : wherePart.getBind()) {
 			bind.setInBatch(true);
 		}
@@ -1648,7 +1651,7 @@ public abstract class Session {
 	public final <T extends IQueryableEntity> Batch<T> startBatchDelete(T template, String tableName) throws SQLException {
 		// 位于批当中的绑定变量
 		long start = System.nanoTime();
-		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), null, false);
+		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(),new SqlContext(null, template.getQuery()), false);
 		for (BindVariableDescription bind : wherePart.getBind()) {
 			bind.setInBatch(true);
 		}
@@ -1749,7 +1752,7 @@ public abstract class Session {
 		long start = System.nanoTime();
 		Entry<List<String>, List<Field>> updatePart = rProcessor.toPrepareUpdateClause((IQueryableEntity) template,dynamic);
 		// 位于批当中的绑定变量
-		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), null, true);
+		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), new SqlContext(null, template.getQuery()), true);
 		for (BindVariableDescription bind : wherePart.getBind()) {
 			bind.setInBatch(true);
 		}
@@ -1999,7 +2002,8 @@ public abstract class Session {
 	 */
 	final protected int innerUpdatePrepared(IQueryableEntity obj, String myTableName) throws SQLException {
 		long start = System.currentTimeMillis();
-		BindSql whereValues = rProcessor.toPrepareWhereSql(obj.getQuery(), null, true);
+		Query<?> q=obj.getQuery();
+		BindSql whereValues = rProcessor.toPrepareWhereSql(q, new SqlContext(null,q), true);
 		if (!obj.needUpdate()) {
 			return 0;
 		}
@@ -2021,7 +2025,7 @@ public abstract class Session {
 	final protected int innerUpdateNormal(IQueryableEntity obj, String myTableName) throws SQLException {
 		long start = System.currentTimeMillis();
 
-		String where = rProcessor.toWhereClause(obj.getQuery(), null, true);
+		String where = rProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), true);
 		if (!obj.needUpdate()) {
 			return 0;
 		}
