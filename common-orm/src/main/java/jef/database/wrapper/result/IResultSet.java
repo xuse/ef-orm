@@ -12,7 +12,7 @@ import java.util.Map;
 import jef.database.Condition;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Reference;
-import jef.database.wrapper.ColumnMeta;
+import jef.database.wrapper.populator.ColumnMeta;
 
 /**
  * 这个类是JDBC ResultSet的封装，大部分方法都和JDBC ResultSet一致

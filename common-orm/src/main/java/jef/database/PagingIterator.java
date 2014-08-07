@@ -24,7 +24,7 @@ import javax.persistence.PersistenceException;
 
 import jef.common.wrapper.IntRange;
 import jef.common.wrapper.Page;
-import jef.database.wrapper.Transformer;
+import jef.database.wrapper.populator.Transformer;
 import jef.tools.PageInfo;
 
 /**

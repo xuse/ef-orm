@@ -1,4 +1,4 @@
-package jef.database.wrapper;
+package jef.database.wrapper.clause;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -6,7 +6,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class CountSqlResult implements SqlResult{
+
+public class CountClause implements SqlResult{
 	private Map<String,List<BindSql>> sqls=new LinkedHashMap<String,List<BindSql>>();
 	
 	public void addSql(String dbName,String... sql){

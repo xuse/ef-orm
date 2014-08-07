@@ -1,6 +1,7 @@
-package jef.database.wrapper;
+package jef.database.wrapper.clause;
 
 import java.util.List;
+
 
 public class DdlResult implements SqlResult{
 	private List<String> sqls;

@@ -23,8 +23,8 @@ import jef.database.Condition;
 import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Reference;
-import jef.database.wrapper.ColumnDescription;
-import jef.database.wrapper.ColumnMeta;
+import jef.database.wrapper.populator.ColumnDescription;
+import jef.database.wrapper.populator.ColumnMeta;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 

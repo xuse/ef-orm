@@ -14,7 +14,7 @@ import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.expression.Expression;
 import jef.database.meta.ITableMetadata;
-import jef.database.wrapper.ColumnDescription;
+import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.result.IResultSet;
 import jef.tools.DateUtils;
 

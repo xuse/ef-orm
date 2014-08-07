@@ -42,7 +42,7 @@ import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
-import jef.database.wrapper.AbstractPopulator;
+import jef.database.wrapper.populator.AbstractPopulator;
 import jef.tools.Assert;
 import jef.tools.JefConfiguration;
 

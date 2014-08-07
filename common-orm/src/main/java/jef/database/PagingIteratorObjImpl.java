@@ -13,8 +13,8 @@ import jef.database.meta.Reference;
 import jef.database.query.ConditionQuery;
 import jef.database.query.JoinElement;
 import jef.database.query.Query;
-import jef.database.wrapper.BindSql;
-import jef.database.wrapper.CountSqlResult;
+import jef.database.wrapper.clause.BindSql;
+import jef.database.wrapper.clause.CountClause;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.PageInfo;
@@ -79,7 +79,7 @@ final public class PagingIteratorObjImpl<T> extends PagingIterator<T>{
 
 	private int getTotal(ConditionQuery j,String tableName) throws SQLException {
 		int total=0;
-		CountSqlResult countResult=db.selectp.toCountSql(j,tableName);
+		CountClause countResult=db.selectp.toCountSql(j,tableName);
 		for(Map.Entry<String,List<BindSql>> s:countResult.getSqls().entrySet()){
 			String dbKey = s.getKey();
 			int current = db.selectp.processCount(db.asOperateTarget(dbKey),s.getValue());

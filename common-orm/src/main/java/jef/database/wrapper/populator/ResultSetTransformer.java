@@ -1,4 +1,4 @@
-package jef.database.wrapper;
+package jef.database.wrapper.populator;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

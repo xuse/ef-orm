@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jef.database.wrapper;
+package jef.database.wrapper.clause;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +24,7 @@ import jef.database.Session;
 import jef.database.annotation.PartitionResult;
 import jef.database.dialect.DatabaseDialect;
 
-public class InsertSqlResult{
+public class InsertSqlClause{
 	private String columnsPart;
 	private String valuesPart;
 	private PartitionResult tableNames;
@@ -39,10 +39,10 @@ public class InsertSqlResult{
 	 * true:在插入完成后，调用Callback来获取数据库生成的主键
 	 * false:在插入完成前，就调用Callback在提前生成主键
 	 */
-	public InsertSqlResult(){
+	public InsertSqlClause(){
 		fields=null;
 	}
-	public InsertSqlResult(boolean isBatch){
+	public InsertSqlClause(boolean isBatch){
 		fields=new ArrayList<Field>();
 		forBatch=isBatch;
 	}

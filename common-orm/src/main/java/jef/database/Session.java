@@ -59,13 +59,13 @@ import jef.database.query.SqlContext;
 import jef.database.query.SqlExpression;
 import jef.database.query.TypedQuery;
 import jef.database.support.DbOperatorListener;
-import jef.database.wrapper.BindSql;
-import jef.database.wrapper.CountSqlResult;
-import jef.database.wrapper.IQuerySqlResult;
-import jef.database.wrapper.InsertSqlResult;
 import jef.database.wrapper.ResultIterator;
-import jef.database.wrapper.ResultSetTransformer;
-import jef.database.wrapper.Transformer;
+import jef.database.wrapper.clause.BindSql;
+import jef.database.wrapper.clause.CountClause;
+import jef.database.wrapper.clause.IQueryClause;
+import jef.database.wrapper.clause.InsertSqlClause;
+import jef.database.wrapper.populator.ResultSetTransformer;
+import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.result.IResultSet;
 import jef.database.wrapper.result.MultipleResultSet;
 import jef.database.wrapper.result.ResultSetWrapper;
@@ -559,7 +559,7 @@ public abstract class Session {
 		myTableName = MetaHolder.toSchemaAdjustedName(myTableName);
 
 		long start = System.currentTimeMillis();
-		InsertSqlResult sqls = insertp.toInsertSql(obj, myTableName, dynamic, false);
+		InsertSqlClause sqls = insertp.toInsertSql(obj, myTableName, dynamic, false);
 		if(sqls.getCallback()!=null){
 			sqls.getCallback().callBefore(Arrays.asList(obj));
 		}
@@ -1312,27 +1312,47 @@ public abstract class Session {
 		JoinElement q = DbUtils.toReferenceJoinQuery(queryObj, null);
 		return innerSelect(q, range, queryObj.getFilterCondition(), option);
 	}
+	
 
-	/*
-	 * 查询的最终实现，可以传入各种复杂查询格式，但如果是Query<?>。那么必须事先解析，此方法不做SQL解析，
-	 * 因此可以输入一些目前暂时还不支持解析的SQL语句。
-	 * 
-	 * @param <T> 返回拼装格式泛型参数
-	 * 
-	 * @param resultClz 返回拼装格式
-	 * 
-	 * @param queryObj 查询请求
-	 * 
-	 * @param range 分页范围
-	 * 
-	 * @param filters 子查询过滤条件
-	 * 
-	 * @param maxResult 限制返回结果最大条数，以平衡性能
-	 * 
-	 * @return
-	 * 
-	 * @throws SQLException
-	 */
+	@SuppressWarnings("unchecked")
+	final <T> ResultIterator<T> innerIteratedSelect(ConditionQuery queryObj, IntRange range, QueryOption option) throws SQLException {
+		if (range != null && range.size() <= 0) {
+			return new ResultIterator.Impl<T>(new ArrayList<T>().iterator(), null);
+		}
+
+		long start = System.currentTimeMillis();// 开始时间
+		IQueryClause sql = selectp.toQuerySql(queryObj, range, option.tableName,true);
+		if(sql.isEmpty())
+			return new ResultIterator.Impl<T>(new ArrayList<T>().iterator(), null);
+		
+
+		ResultIterator<T> result;
+		MultipleResultSet rs = new MultipleResultSet(false, ORMConfig.getInstance().isDebugMode());
+		long parse = System.currentTimeMillis();
+		if (sql.getTables() == null) {// 没有分表结果，采用当前连接的默认表名操作
+			OperateTarget trans = wrapThisWithEmptyKey(rs, true);
+			selectp.processSelect(trans, sql,null, queryObj, rs, option);
+		} else {
+			if(sql.isMultiDatabase()){
+				if (sql.getOrderbyPart().isNotEmpty()){
+					rs.setOrderDesc(sql.getOrderbyPart().getAsSelect());
+					rs.setSelectDesc(sql.getSelectPart().getEntries());
+				}
+				if(sql.getGrouphavingPart().isNotEmpty()){
+					rs.setRegroupByAction(sql.getGrouphavingPart().parseSelectFunction());
+				}
+			}
+			for (PartitionResult site : sql.getTables()) {
+				selectp.processSelect(asOperateTarget(site.getDatabase()), sql,site, queryObj, rs, option);
+			}
+		}
+		long dbselect = System.currentTimeMillis();
+		LogUtil.show(StringUtils.concat("Result: Iterator", "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms) |", getTransactionId(null)));
+		EntityMappingProvider mapping = DbUtils.getMappingProvider(queryObj);
+		result = new ResultIterator.Impl<T>(iterateResultSet(rs, mapping, queryObj.getResultTransformer()), rs);
+		return result;
+	}
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	final List innerSelect(ConditionQuery queryObj, IntRange range, Map<Reference, List<Condition>> filters, QueryOption option) throws SQLException {
 		boolean debugMode=ORMConfig.getInstance().isDebugMode();
@@ -1341,39 +1361,34 @@ public abstract class Session {
 				LogUtil.show("Query has limit to no range. return empty list. " + range);
 			return Collections.EMPTY_LIST;
 		}
-		Assert.notNull(option);
 
 		long start = System.currentTimeMillis();// 开始时间
-		MultipleResultSet rs = new MultipleResultSet(option.cacheResultset && !option.holdResult, debugMode);// 只有当非读写模式并且开启结果缓存才缓存结果集
-
-		// 生成 SQL语句
-		IQuerySqlResult sql = selectp.toQuerySql(queryObj, range, option.tableName,true);
-		if(sql.isEmpty()){
+		// 生成 SQL
+		IQueryClause sql = selectp.toQuerySql(queryObj, range, option.tableName,true);
+		if(sql.isEmpty())
 			return Collections.EMPTY_LIST;
-		}
-		{
-			List result = getCache().load(sql.getCacheKey());
-			if (result != null) {
-				// LogUtil.show("一级缓存命中"+sql.getCacheKey());
-				return result;
-			}
-		}
-
+		//缓存命中
+		List cachedResult = getCache().load(sql.getCacheKey());
+		if (cachedResult != null)
+			return cachedResult;
+		
+		MultipleResultSet rs = new MultipleResultSet(option.cacheResultset && !option.holdResult, debugMode);// 只有当非读写模式并且开启结果缓存才缓存结果集
 		long parse = System.currentTimeMillis();
-		//为null时，无需分表，为空时，分表结果无
-		//sql.getTables() == null || 
 		if (sql.getTables()==null) {// 没有分表结果，采用当前连接的默认表名操作
 			OperateTarget trans = wrapThisWithEmptyKey(rs, option.holdResult); // 如果是结果集持有的，那么必须在事务中
 			selectp.processSelect(trans, sql, null,queryObj, rs, option);
 		} else {
-			if (!queryObj.getOrderBy().isEmpty()) {// 最复杂的情况，多数据库下的排序
-				rs.setOrderDesc(sql.getOrderbyPart().getAsSelect());
-				rs.setSelectDesc(sql.getSelectPart().getEntries());
+			if(sql.isMultiDatabase()){// 最复杂的情况，多数据库下的排序
+				if (sql.getOrderbyPart().isNotEmpty()) {
+					rs.setOrderDesc(sql.getOrderbyPart().getAsSelect());
+					rs.setSelectDesc(sql.getSelectPart().getEntries());
+				}
+				if(sql.getGrouphavingPart().isNotEmpty()){
+					rs.setRegroupByAction(sql.getGrouphavingPart().parseSelectFunction());
+				}
 			}
-//			todosql.isGroupHaVING && sql.getTables()
 			for (PartitionResult site : sql.getTables()) {
-				String dbKey = site.getDatabase();
-				selectp.processSelect(asOperateTarget(dbKey), sql,site, queryObj, rs, option);
+				selectp.processSelect(asOperateTarget(site.getDatabase()), sql,site, queryObj, rs, option);
 			}
 		}
 		long dbselect = System.currentTimeMillis(); // 查询完成时间
@@ -1559,7 +1574,7 @@ public abstract class Session {
 		Assert.notNull(obj);
 		myTableName = MetaHolder.toSchemaAdjustedName(myTableName);
 		@SuppressWarnings("deprecation")
-		CountSqlResult sqls = selectp.toCountSql(obj, myTableName);
+		CountClause sqls = selectp.toCountSql(obj, myTableName);
 
 		parse = System.currentTimeMillis();
 		int total = 0;
@@ -1730,7 +1745,7 @@ public abstract class Session {
 		long start = System.nanoTime();
 		ITableMetadata meta = MetaHolder.getMeta(template);
 		Batch.Insert<T> b = new Batch.Insert<T>(this, meta);
-		InsertSqlResult insertPart = batchinsertp.toInsertSql((IQueryableEntity) template, tableName, dynamic, true);
+		InsertSqlClause insertPart = batchinsertp.toInsertSql((IQueryableEntity) template, tableName, dynamic, true);
 		b.setInsertPart(insertPart);
 		b.forceTableName = MetaHolder.toSchemaAdjustedName(tableName);
 		b.parseTime = System.nanoTime() - start;
@@ -1969,7 +1984,6 @@ public abstract class Session {
 	private final OperateTarget wrapThisWithEmptyKey(MultipleResultSet rs, boolean mustTx) throws SQLException {
 		if (mustTx && this instanceof DbClient) {// 如果不是在事务中，那么就用一个内嵌事务将其包裹住，作用是在resultSet的生命周期内，该连接不会被归还。并且也预防了基于线程的连接模型中，该连接被本线程的其他SQL操作再次取用然后释放回池
 			Transaction tx = new Transaction((DbClient) this, TransactionFlag.ResultHolder,true);
-			rs.setSpecialTx(tx);
 			return new OperateTarget(tx, null);
 		} else {
 			return new OperateTarget(this, null);
@@ -2043,34 +2057,4 @@ public abstract class Session {
 		return count;
 	}
 
-	@SuppressWarnings("unchecked")
-	final <T> ResultIterator<T> innerIteratedSelect(ConditionQuery queryObj, IntRange range, QueryOption option) throws SQLException {
-		if (range != null && range.size() <= 0) {
-			return new ResultIterator.Impl<T>(new ArrayList<T>().iterator(), null);
-		}
-
-		long start = System.currentTimeMillis();// 开始时间
-
-		ResultIterator<T> result;
-		MultipleResultSet rs = new MultipleResultSet(false, ORMConfig.getInstance().isDebugMode());
-		IQuerySqlResult sql = selectp.toQuerySql(queryObj, range, option.tableName,true);
-		long parse = System.currentTimeMillis();
-		if (sql.getTables() == null) {// 没有分表结果，采用当前连接的默认表名操作
-			OperateTarget trans = wrapThisWithEmptyKey(rs, true);
-			selectp.processSelect(trans, sql,null, queryObj, rs, option);
-		} else {
-			if (!queryObj.getOrderBy().isEmpty()) {
-				rs.setOrderDesc(sql.getOrderbyPart().getAsSelect());
-				rs.setSelectDesc(sql.getSelectPart().getEntries());
-			}
-			for (PartitionResult site : sql.getTables()) {
-				selectp.processSelect(asOperateTarget(site.getDatabase()), sql,site, queryObj, rs, option);
-			}
-		}
-		long dbselect = System.currentTimeMillis();
-		LogUtil.show(StringUtils.concat("Result: Iterator", "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms) |", getTransactionId(null)));
-		EntityMappingProvider mapping = DbUtils.getMappingProvider(queryObj);
-		result = new ResultIterator.Impl<T>(iterateResultSet(rs, mapping, queryObj.getResultTransformer()), rs);
-		return result;
-	}
 }

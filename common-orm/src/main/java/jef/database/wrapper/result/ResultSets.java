@@ -11,7 +11,7 @@ import java.util.List;
 
 import jef.common.log.LogUtil;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.wrapper.ColumnDescription;
+import jef.database.wrapper.populator.ColumnDescription;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 

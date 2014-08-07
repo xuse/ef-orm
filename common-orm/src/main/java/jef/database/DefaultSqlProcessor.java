@@ -51,7 +51,7 @@ import jef.database.query.ParameterProvider.MapProvider;
 import jef.database.query.Query;
 import jef.database.query.SqlContext;
 import jef.database.query.SqlExpression;
-import jef.database.wrapper.BindSql;
+import jef.database.wrapper.clause.BindSql;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
 

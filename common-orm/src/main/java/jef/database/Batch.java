@@ -29,8 +29,8 @@ import jef.database.annotation.PartitionResult;
 import jef.database.cache.TransactionCache;
 import jef.database.meta.ITableMetadata;
 import jef.database.support.DbOperatorListener;
-import jef.database.wrapper.BindSql;
-import jef.database.wrapper.InsertSqlResult;
+import jef.database.wrapper.clause.BindSql;
+import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.StringUtils;
 
 /**
@@ -312,7 +312,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 		/**
 		 * SQL片段,Insert部分(INSERT语句使用)
 		 */
-		private InsertSqlResult insertPart;
+		private InsertSqlClause insertPart;
 
 		Insert(Session parent,  ITableMetadata meta) throws SQLException {
 			super(parent, meta);
@@ -322,7 +322,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			return insertPart.getSql(tablename);
 		}
 
-		public void setInsertPart(InsertSqlResult insertPart) {
+		public void setInsertPart(InsertSqlClause insertPart) {
 			this.insertPart = insertPart;
 		}
 

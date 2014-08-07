@@ -1,4 +1,4 @@
-package jef.database.wrapper;
+package jef.database.wrapper.clause;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -9,7 +9,7 @@ import jef.http.client.support.CommentEntry;
 
 import org.apache.commons.lang.StringUtils;
 
-public class SelectResult {
+public class SelectPart {
 	private boolean distinct;
 	private final List<CommentEntry> entries=new ArrayList<CommentEntry>();
 

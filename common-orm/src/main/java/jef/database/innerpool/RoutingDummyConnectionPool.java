@@ -20,7 +20,7 @@ import jef.database.DebugUtil;
 import jef.database.datasource.IRoutingDataSource;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Feature;
-import jef.database.wrapper.AbstractPopulator;
+import jef.database.wrapper.populator.AbstractPopulator;
 import jef.tools.JefConfiguration;
 
 import com.google.common.collect.MapMaker;

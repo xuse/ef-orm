@@ -1,4 +1,4 @@
-package jef.database.wrapper;
+package jef.database.wrapper.clause;
 
 import java.util.List;
 
@@ -8,9 +8,9 @@ import jef.database.annotation.PartitionResult;
 import jef.database.cache.CacheKey;
 import jef.database.dialect.DatabaseDialect;
 
-public class QuerySqlResultSimple implements IQuerySqlResult {
+public class QueryClauseSqlImpl implements IQueryClause {
 	private String body;
-	private OrderResult orderbyPart;
+	private OrderClause orderbyPart;
 	private List<BindVariableDescription> bind;
 	private IntRange pageRange;
 	private boolean isUnion;
@@ -27,10 +27,10 @@ public class QuerySqlResultSimple implements IQuerySqlResult {
 	public void setBody(String body) {
 		this.body = body;
 	}
-	public OrderResult getOrderbyPart() {
+	public OrderClause getOrderbyPart() {
 		return orderbyPart;
 	}
-	public void setOrderbyPart(OrderResult orderbyPart) {
+	public void setOrderbyPart(OrderClause orderbyPart) {
 		this.orderbyPart = orderbyPart;
 	}
 	public List<BindVariableDescription> getBind() {
@@ -47,7 +47,7 @@ public class QuerySqlResultSimple implements IQuerySqlResult {
 		return new BindSql(withPage(body.concat(orderbyPart.getSql())),bind);
 	}
 	private DatabaseDialect profile;
-	public QuerySqlResultSimple(DatabaseDialect profile,boolean isUnion){
+	public QueryClauseSqlImpl(DatabaseDialect profile,boolean isUnion){
 		this.profile=profile;
 		this.isUnion=isUnion;
 	}
@@ -62,7 +62,7 @@ public class QuerySqlResultSimple implements IQuerySqlResult {
 	public PartitionResult[] getTables() {
 		return null;
 	}
-	public SelectResult getSelectPart() {
+	public SelectPart getSelectPart() {
 		return null;
 	}
 	public CacheKey getCacheKey() {
@@ -73,5 +73,11 @@ public class QuerySqlResultSimple implements IQuerySqlResult {
 	}
 	public boolean isEmpty() {
 		return false;
+	}
+	public boolean isMultiDatabase() {
+		return false;
+	}
+	public GroupClause getGrouphavingPart() {
+		return GroupClause.EMPTY;
 	}
 }

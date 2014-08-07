@@ -23,7 +23,7 @@ import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.meta.AbstractSequence;
 import jef.database.meta.Feature;
 import jef.database.meta.TupleMetadata;
-import jef.database.wrapper.ResultSetTransformer;
+import jef.database.wrapper.populator.ResultSetTransformer;
 import jef.tools.Assert;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;

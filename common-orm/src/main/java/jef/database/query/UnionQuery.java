@@ -13,12 +13,12 @@ import jef.database.SelectProcessor;
 import jef.database.meta.FBIField;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
-import jef.database.wrapper.BindSql;
-import jef.database.wrapper.CountSqlResult;
-import jef.database.wrapper.IQuerySqlResult;
-import jef.database.wrapper.QuerySqlResult;
-import jef.database.wrapper.QuerySqlResultSimple;
-import jef.database.wrapper.Transformer;
+import jef.database.wrapper.clause.BindSql;
+import jef.database.wrapper.clause.CountClause;
+import jef.database.wrapper.clause.IQueryClause;
+import jef.database.wrapper.clause.QueryClause;
+import jef.database.wrapper.clause.QueryClauseSqlImpl;
+import jef.database.wrapper.populator.Transformer;
 import jef.tools.StringUtils;
 
 /**
@@ -113,8 +113,8 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 	public int size(){
 		return querys.size();
 	}
-	public CountSqlResult toCountSql(SelectProcessor processor) throws SQLException {
-		CountSqlResult count=new CountSqlResult();
+	public CountClause toCountSql(SelectProcessor processor) throws SQLException {
+		CountClause count=new CountClause();
 		if(isAll){//union all是可以优化的，union是没有办法的
 			for(int i=0;i<size();i++){
 				ConditionQuery cq=querys.get(i);
@@ -124,7 +124,7 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 						cq=DbUtils.toReferenceJoinQuery(qq, null);
 					}
 				}
-				CountSqlResult result1=processor.toCountSql(cq, null);
+				CountClause result1=processor.toCountSql(cq, null);
 				for(Map.Entry<String,List<BindSql>> dbAndSql:result1.getSqls().entrySet()){
 					count.addSql(dbAndSql.getKey(),dbAndSql.getValue());	
 				}
@@ -136,8 +136,8 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 		return count;
 	}
 	
-	public CountSqlResult toPrepareCountSql(SelectProcessor processor,SqlContext context) throws SQLException {
-		CountSqlResult count=new CountSqlResult();
+	public CountClause toPrepareCountSql(SelectProcessor processor,SqlContext context) throws SQLException {
+		CountClause count=new CountClause();
 		if(isAll){//union all是可以优化的，union是没有办法的
 			for(int i=0;i<size();i++){//拆成很多个count单句，每个单句进行count
 				ConditionQuery cq=querys.get(i);
@@ -147,7 +147,7 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 						cq=DbUtils.toReferenceJoinQuery(qq, null);
 					}
 				}
-				CountSqlResult cr=processor.toCountSql(cq,null);
+				CountClause cr=processor.toCountSql(cq,null);
 				for(Map.Entry<String,List<BindSql>> dbAndSql:cr.getSqls().entrySet()){
 					count.addSql(dbAndSql.getKey(),dbAndSql.getValue());
 				}
@@ -176,7 +176,7 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 					cq=DbUtils.toReferenceJoinQuery(qq, null);
 				}
 			}
-			IQuerySqlResult sql=processor.toQuerySql(cq, null,null,false);
+			IQueryClause sql=processor.toQuerySql(cq, null,null,false);
 			if(sql.isEmpty()){
 				continue;
 			}
@@ -196,11 +196,11 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 		return new BindSql(sql,binds);
 	}
 	
-	public IQuerySqlResult toPrepareQuerySql(SelectProcessor processor, SqlContext context) {
+	public IQueryClause toPrepareQuerySql(SelectProcessor processor, SqlContext context) {
 		BindSql sql = toPrepareQuerySql0(processor, context,false);
-		if(sql==null)return QuerySqlResult.EMPTY;
+		if(sql==null)return QueryClause.EMPTY;
 		
-		QuerySqlResultSimple result = new QuerySqlResultSimple(processor.getProfile(), true);
+		QueryClauseSqlImpl result = new QueryClauseSqlImpl(processor.getProfile(), true);
 		result.setBody(sql.getSql());
 		result.setBind(sql.getBind());
 		return result;
@@ -218,7 +218,7 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 					cq=DbUtils.toReferenceJoinQuery(qq, null);
 				}
 			}
-			IQuerySqlResult sql=processor.toQuerySql(cq, null,null,false);
+			IQueryClause sql=processor.toQuerySql(cq, null,null,false);
 			if(withBuck){
 				sqls[i]="("+sql.toString()+")";	
 			}else{

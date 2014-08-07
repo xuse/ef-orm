@@ -1,4 +1,4 @@
-package jef.database.wrapper;
+package jef.database.wrapper.clause;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,25 +20,25 @@ import jef.tools.StringUtils;
  * @author Administrator
  * 
  */
-public class QuerySqlResult implements IQuerySqlResult {
+public class QueryClause implements IQueryClause {
 	/*
 	 * 这两部分总是只有一个有值 当单表查询时支持分表，所以是PartitionResult 当多表关联时，目前不支持分表，所以是string
 	 */
 	private String tableDefinition;
 	private PartitionResult[] tables;
 	
-	public static final QuerySqlResult EMPTY=new QuerySqlResult(new PartitionResult[0]);
+	public static final QueryClause EMPTY=new QueryClause(new PartitionResult[0]);
 	
 //	//是否为union
 //	private boolean isUnion = false;
 	//Select部分
-	private SelectResult selectPart;
+	private SelectPart selectPart;
 	//Where
 	private String wherePart;
 	//groupBy
-	private String grouphavingPart;
+	private GroupClause grouphavingPart;
 	//排序
-	private OrderResult orderbyPart = OrderResult.DEFAULT;
+	private OrderClause orderbyPart = OrderClause.DEFAULT;
 	//绑定变量
 	private List<BindVariableDescription> bind;
 	//范围
@@ -46,10 +46,10 @@ public class QuerySqlResult implements IQuerySqlResult {
 
 	private DatabaseDialect profile;
 	
-	public QuerySqlResult(DatabaseDialect profile){
+	public QueryClause(DatabaseDialect profile){
 		this.profile=profile;
 	}
-	private QuerySqlResult(PartitionResult[] partitionResults) {
+	private QueryClause(PartitionResult[] partitionResults) {
 		this.tables=partitionResults;
 	}
 	public IntRange getPageRange() {
@@ -60,27 +60,27 @@ public class QuerySqlResult implements IQuerySqlResult {
 		this.pageRange = pageRange;
 	}
 
-	public OrderResult getOrderbyPart() {
+	public OrderClause getOrderbyPart() {
 		return orderbyPart;
 	}
 
-	public void setOrderbyPart(OrderResult orderbyPart) {
+	public void setOrderbyPart(OrderClause orderbyPart) {
 		this.orderbyPart = orderbyPart;
 	}
 
-	public String getGrouphavingPart() {
+	public GroupClause getGrouphavingPart() {
 		return grouphavingPart;
 	}
 
-	public void setGrouphavingPart(String grouphavingPart) {
+	public void setGrouphavingPart(GroupClause grouphavingPart) {
 		this.grouphavingPart = grouphavingPart;
 	}
 
-	public SelectResult getSelectPart() {
+	public SelectPart getSelectPart() {
 		return selectPart;
 	}
 
-	public void setSelectPart(SelectResult selectPart) {
+	public void setSelectPart(SelectPart selectPart) {
 		this.selectPart = selectPart;
 	}
 
@@ -209,9 +209,12 @@ public class QuerySqlResult implements IQuerySqlResult {
 		return key;
 	}
 	public boolean isGroupBy() {
-		return this.grouphavingPart!=null && grouphavingPart.length()>0;
+		return this.grouphavingPart!=null && !grouphavingPart.isNotEmpty();
 	}
 	public boolean isEmpty() {
 		return this.tables!=null && tables.length==0;
+	}
+	public boolean isMultiDatabase() {
+		return this.tables!=null && tables.length>1;
 	}
 }

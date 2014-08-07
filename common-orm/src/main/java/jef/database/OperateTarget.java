@@ -28,9 +28,10 @@ import jef.database.meta.ITableMetadata;
 import jef.database.query.EntityMappingProvider;
 import jef.database.query.SqlExpression;
 import jef.database.wrapper.ResultIterator;
-import jef.database.wrapper.ResultSetTransformer;
-import jef.database.wrapper.Transformer;
+import jef.database.wrapper.populator.ResultSetTransformer;
+import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.result.IResultSet;
+import jef.database.wrapper.result.ResultSetHolder;
 import jef.database.wrapper.result.ResultSetImpl;
 import jef.database.wrapper.result.ResultSetWrapper;
 import jef.tools.MathUtils;
@@ -154,9 +155,13 @@ public class OperateTarget implements SqlTemplate {
 		return false;
 	}
 
-	public void commitAndClose() throws SQLException {
+	public void commitAndClose(){
 		if (session instanceof Transaction) {
-			((Transaction) session).commit();// 可能有对结果集的修改，要提交
+			try {
+				((Transaction) session).commit();
+			} catch (SQLException e) {
+				throw DbUtils.toRuntimeException(e);
+			}
 		}
 	}
 
@@ -341,8 +346,8 @@ public class OperateTarget implements SqlTemplate {
 				st.setFetchSize(globalFetchSize);
 			rs = st.executeQuery();
 			dbAccess = System.currentTimeMillis();
-			ResultSetWrapper resultset = new ResultSetWrapper(rs, getProfile());
-			resultset.setHandler(new ResultSetReleaseHandler(this,st));
+			
+			ResultSetWrapper resultset = new ResultSetWrapper(new ResultSetHolder(this,st,rs));
 			iter = new ResultIterator.Impl(session.iterateResultSet(resultset, null, rst), resultset);
 		} catch (SQLException e) {
 			p.processError(e, sql, this);

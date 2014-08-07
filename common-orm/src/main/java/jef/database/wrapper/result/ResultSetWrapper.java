@@ -15,45 +15,39 @@
  */
 package jef.database.wrapper.result;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import jef.database.OperateTarget;
-import jef.database.ResultSetReleaseHandler;
-import jef.database.dialect.DatabaseDialect;
-import jef.database.wrapper.ColumnMeta;
+import jef.database.wrapper.populator.ColumnMeta;
+import jef.tools.Assert;
 
 
 public class ResultSetWrapper extends ResultSetImpl{
+	private ResultSetHolder holder;
 	
-	private ResultSetReleaseHandler handler;
-	
-	ResultSetWrapper(ResultSet rs,ColumnMeta columns,DatabaseDialect dialect) {
-		super(rs,columns,dialect);
+	ResultSetWrapper(){
+		super(null,null,null);
 	}
 	
-	public ResultSetWrapper(ResultSet rs, DatabaseDialect dialect) {
-		super(rs,dialect);
+	public ResultSetWrapper(ResultSetHolder holder) {
+		super(holder.rs,holder.db.getProfile());
+		this.holder=holder;
 	}
 	
-
-	public ResultSetReleaseHandler getHandler() {
-		return handler;
+	public ResultSetWrapper(ResultSetHolder holder,ColumnMeta columns) {
+		super(holder.rs,columns,holder.db.getProfile());
+		this.holder=holder;
 	}
-
-	public void setHandler(ResultSetReleaseHandler handler) {
-		this.handler = handler;
-	}
-
+	
 	public void close() throws SQLException {
-		super.close();
-		if(handler!=null){
-			handler.release();
+		if(holder!=null){
+			holder.close(true);
+			holder=null;
 		}
 	}
 
 	public OperateTarget getTarget() {
-		if(handler==null)return null;
-		return handler.getDb();
+		Assert.notNull(holder);
+		return holder.db;
 	}
 }

@@ -1181,9 +1181,7 @@ public final class DbUtils {
 		if (StringUtils.isNotEmpty(customName))
 			return new PartitionResult(customName).setDatabase(meta.getBindDsName());
 		PartitionResult result = partitionUtil.toTableName(meta, obj, q, profile);
-		if (result == null) {
-			LogUtil.error("partition result is null:" + ToStringBuilder.reflectionToString(obj));
-		}
+		Assert.notNull(result);
 		return result;
 	}
 

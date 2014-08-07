@@ -1,4 +1,4 @@
-package jef.database.wrapper;
+package jef.database.wrapper.populator;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,7 +14,7 @@ import jef.database.VarObject;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.SqlContext;
-import jef.database.wrapper.Mappers.BeanMapper;
+import jef.database.wrapper.populator.Mappers.BeanMapper;
 import jef.script.javascript.Var;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;

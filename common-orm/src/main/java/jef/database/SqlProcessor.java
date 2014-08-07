@@ -23,7 +23,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.query.JoinElement;
 import jef.database.query.SqlContext;
-import jef.database.wrapper.BindSql;
+import jef.database.wrapper.clause.BindSql;
 
 public interface SqlProcessor{
 	

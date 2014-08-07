@@ -3,8 +3,8 @@ package jef.database.query;
 import java.sql.SQLException;
 
 import jef.database.SelectProcessor;
-import jef.database.wrapper.CountSqlResult;
-import jef.database.wrapper.IQuerySqlResult;
+import jef.database.wrapper.clause.CountClause;
+import jef.database.wrapper.clause.IQueryClause;
 
 public interface ComplexQuery extends ConditionQuery{
 	/**
@@ -20,7 +20,7 @@ public interface ComplexQuery extends ConditionQuery{
 	 * @param context
 	 * @return
 	 */
-	IQuerySqlResult toPrepareQuerySql(SelectProcessor processor, SqlContext context);
+	IQueryClause toPrepareQuerySql(SelectProcessor processor, SqlContext context);
 
 	/**
 	 * 转换为count语句（无绑定）
@@ -28,7 +28,7 @@ public interface ComplexQuery extends ConditionQuery{
 	 * @return
 	 * @throws SQLException
 	 */
-	CountSqlResult toCountSql(SelectProcessor processor) throws SQLException ;
+	CountClause toCountSql(SelectProcessor processor) throws SQLException ;
 	
 	/**
 	 * 转换为count语句（绑定变量）
@@ -37,7 +37,7 @@ public interface ComplexQuery extends ConditionQuery{
 	 * @return
 	 * @throws SQLException
 	 */
-	CountSqlResult toPrepareCountSql(SelectProcessor processor,SqlContext context) throws SQLException ;
+	CountClause toPrepareCountSql(SelectProcessor processor,SqlContext context) throws SQLException ;
 	
 	/**
 	 * 准备上下文

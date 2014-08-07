@@ -34,7 +34,7 @@ import jef.database.test.DatabaseInit;
 import jef.database.test.IgnoreOn;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
 import jef.database.wrapper.ResultIterator;
-import jef.database.wrapper.Transformer;
+import jef.database.wrapper.populator.Transformer;
 import jef.orm.multitable.model.Person;
 import jef.orm.onetable.model.CaAsset;
 import jef.orm.onetable.model.TestEntity;

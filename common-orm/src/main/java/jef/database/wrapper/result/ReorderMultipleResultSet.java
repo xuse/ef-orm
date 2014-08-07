@@ -1,25 +1,15 @@
 package jef.database.wrapper.result;
 
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.Date;
 import java.sql.ResultSet;
-import java.sql.RowId;
 import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import jef.common.Entry;
 import jef.common.log.LogUtil;
-import jef.database.Condition;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.meta.Reference;
-import jef.database.wrapper.ColumnDescription;
-import jef.database.wrapper.ColumnMeta;
-import jef.database.wrapper.result.MultipleResultSet.R;
+import jef.database.wrapper.populator.ColumnDescription;
+import jef.database.wrapper.populator.ColumnMeta;
 import jef.http.client.support.CommentEntry;
 import jef.tools.StringUtils;
 
@@ -31,8 +21,7 @@ import org.apache.commons.lang.ArrayUtils;
  * @author Administrator
  * 
  */
-final class ReorderMultipleResultSet implements IResultSet {
-	IResultSet parent;
+final class ReorderMultipleResultSet extends AbstractResultSet {
 	private ColumnMeta columns;
 
 	private int[] orderFields;
@@ -40,17 +29,17 @@ final class ReorderMultipleResultSet implements IResultSet {
 
 	private final List<ResultSet> gettingResults = new ArrayList<ResultSet>();
 	private DatabaseDialect[] profiles;
-	private List<R> allResults;
+	private List<ResultSetHolder> allResults;
 	private int currentIndex = -1;// 当前选中ResultSet;
 
-	public ReorderMultipleResultSet(List<R> r, List<Entry<String, Boolean>> orderAsSelect, List<CommentEntry> selectItems, ColumnMeta columns) {
+	public ReorderMultipleResultSet(List<ResultSetHolder> r, List<Entry<String, Boolean>> orderAsSelect, List<CommentEntry> selectItems, ColumnMeta columns) {
 		allResults=r;
 		{
 			int len = r.size();
 			profiles = new DatabaseDialect[len];
 			for (int i = 0; i < len; i++) {
-				R re=r.get(i);
-				profiles[i] = re.from.getProfile();
+				ResultSetHolder re=r.get(i);
+				profiles[i] = re.db.getProfile();
 				this.gettingResults.add(re.rs);
 			}
 		}
@@ -103,15 +92,6 @@ final class ReorderMultipleResultSet implements IResultSet {
 		return columns;
 	}
 
-	private Map<Reference, List<Condition>> filters;
-	
-	public Map<Reference, List<Condition>> getFilters() {
-		return filters;
-	}
-
-	public void setFilters(Map<Reference, List<Condition>> filters) {
-		this.filters = filters;
-	}
 	public boolean next() {
 		if (currentIndex == -2)
 			throw new IllegalStateException();
@@ -163,19 +143,14 @@ final class ReorderMultipleResultSet implements IResultSet {
 				value = value2;
 			}
 		}
-		// System.out.println("->" +
-		// results.indexOf(gettingResults.get(currentIndex)));
+		// System.out.println("->" + results.indexOf(gettingResults.get(currentIndex)));
 	}
 
 	/*
 	 * 如果value2要排在value1前面，则返回true
-	 * 
 	 * @param value
-	 * 
 	 * @param value2
-	 * 
 	 * @return
-	 * 
 	 * @throws SQLException
 	 */
 	// 总是取最小的数值
@@ -195,26 +170,6 @@ final class ReorderMultipleResultSet implements IResultSet {
 		return false;// all equals
 	}
 
-	public void moveToInsertRow() throws SQLException {
-		gettingResults.get(currentIndex).moveToInsertRow();
-	}
-
-	public void deleteRow() throws SQLException {
-		gettingResults.get(currentIndex).deleteRow();
-	}
-
-	public void updateRow() throws SQLException {
-		gettingResults.get(currentIndex).updateRow();
-	}
-
-	public void updateNull(String columnName) throws SQLException {
-		gettingResults.get(currentIndex).updateNull(columnName);
-	}
-
-	public void updateObject(String columnName, Object value) throws SQLException {
-		gettingResults.get(currentIndex).updateObject(columnName, value);
-	}
-
 	public void beforeFirst() throws SQLException {
 		for (int i = 0; i < allResults.size(); i++) {
 			ResultSet rs = allResults.get(i).rs;
@@ -225,7 +180,7 @@ final class ReorderMultipleResultSet implements IResultSet {
 		//
 		currentIndex = -1;
 		gettingResults.clear();
-		for(R r:allResults){
+		for(ResultSetHolder r:allResults){
 			gettingResults.add(r.rs);
 		}
 	}
@@ -236,15 +191,11 @@ final class ReorderMultipleResultSet implements IResultSet {
 	}
 
 	public void afterLast() throws SQLException {
-		for (R rs : allResults) {
+		for (ResultSetHolder rs : allResults) {
 			rs.rs.afterLast();
 		}
 		gettingResults.clear();
 		currentIndex = -2;
-	}
-
-	public void insertRow() throws SQLException {
-		gettingResults.get(currentIndex).insertRow();
 	}
 
 	public DatabaseDialect getProfile() {
@@ -274,116 +225,17 @@ final class ReorderMultipleResultSet implements IResultSet {
 	 * @throws SQLException
 	 */
 	public void close() throws SQLException {
-		if (parent != null) {
-			parent.close();
-			parent = null;
-			this.gettingResults.clear();
-			this.profiles = null;
-			this.columns = null;
+		for (ResultSetHolder rsx : allResults) {
+			rsx.close(true);
 		}
+		allResults.clear();
+		gettingResults.clear();
+		profiles = null;
+		columns = null;
 	}
 
-	public Object getObject(int columnIndex) throws SQLException {
-		return gettingResults.get(currentIndex).getObject(columnIndex);
-	}
-
-	public Object getObject(String columnName) throws SQLException {
-		return gettingResults.get(currentIndex).getObject(columnName);
-	}
-
-	public boolean getBoolean(int i) throws SQLException {
-		return gettingResults.get(currentIndex).getBoolean(i);
-	}
-
-	public double getDouble(int i) throws SQLException {
-		return gettingResults.get(currentIndex).getDouble(i);
-	}
-
-	public float getFloat(int i) throws SQLException {
-		return gettingResults.get(currentIndex).getFloat(i);
-	}
-
-	public long getLong(int i) throws SQLException {
-		return gettingResults.get(currentIndex).getLong(i);
-	}
-
-	public int getInt(int i) throws SQLException {
-		return gettingResults.get(currentIndex).getInt(i);
-	}
-
-	public String getString(int i) throws SQLException {
-		return gettingResults.get(currentIndex).getString(i);
-	}
-
-	public Timestamp getTimestamp(int i) throws SQLException {
-		return gettingResults.get(currentIndex).getTimestamp(i);
-	}
-
-	public Time getTime(int i) throws SQLException {
-		return gettingResults.get(currentIndex).getTime(i);
-	}
-
-	public Date getDate(int i) throws SQLException {
-		return gettingResults.get(currentIndex).getDate(i);
-	}
-
-	public RowId getRowId(int columnIndex) throws SQLException {
-		return gettingResults.get(currentIndex).getRowId(columnIndex);
-	}
-
-	public Clob getClob(int columnIndex) throws SQLException {
-		return gettingResults.get(currentIndex).getClob(columnIndex);
-	}
-
-	public Blob getBlob(int columnIndex) throws SQLException {
-		return gettingResults.get(currentIndex).getBlob(columnIndex);
-	}
-
-	public boolean getBoolean(String columnName) throws SQLException {
-		return gettingResults.get(currentIndex).getBoolean(columnName);
-	}
-
-	public double getDouble(String columnName) throws SQLException {
-		return gettingResults.get(currentIndex).getDouble(columnName);
-	}
-
-	public float getFloat(String columnName) throws SQLException {
-		return gettingResults.get(currentIndex).getFloat(columnName);
-	}
-
-	public long getLong(String columnName) throws SQLException {
-		return gettingResults.get(currentIndex).getLong(columnName);
-	}
-
-	public int getInt(String columnName) throws SQLException {
-		return gettingResults.get(currentIndex).getInt(columnName);
-	}
-
-	public Clob getClob(String columnName) throws SQLException {
-		return gettingResults.get(currentIndex).getClob(columnName);
-	}
-
-	public Blob getBlob(String columnName) throws SQLException {
-		return gettingResults.get(currentIndex).getBlob(columnName);
-	}
-
-	public String getString(String columnName) throws SQLException {
-		return gettingResults.get(currentIndex).getString(columnName);
-	}
-
-	public Timestamp getTimestamp(String columnName) throws SQLException {
-		return gettingResults.get(currentIndex).getTimestamp(columnName);
-	}
-
-	public Time getTime(String columnName) throws SQLException {
-		return gettingResults.get(currentIndex).getTime(columnName);
-	}
-
-	public Date getDate(String columnName) throws SQLException {
-		return gettingResults.get(currentIndex).getDate(columnName);
-	}
-
-	public byte[] getBytes(int columnIndex) throws SQLException {
-		return gettingResults.get(currentIndex).getBytes(columnIndex);
+	@Override
+	protected ResultSet get() {
+		return gettingResults.get(currentIndex);
 	}
 }

@@ -13,7 +13,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.expression.Expression;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
-import jef.database.wrapper.InsertSqlResult;
+import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.reflect.BeanUtils;
 
 public abstract class ATypeMapping<T> implements MappingType<T>{
@@ -141,7 +141,7 @@ public abstract class ATypeMapping<T> implements MappingType<T>{
 	protected abstract String getSqlExpression(Object value,DatabaseDialect profile);
 	
 	         
-	public void processInsert(Object value, InsertSqlResult result, List<String> cStr, List<String> vStr,boolean smart,IQueryableEntity obj)throws SQLException {
+	public void processInsert(Object value, InsertSqlClause result, List<String> cStr, List<String> vStr,boolean smart,IQueryableEntity obj)throws SQLException {
 		String columnName=getColumnName(result.profile, true);
 		if (value==null){
 			if(result.profile.has(Feature.NOT_SUPPORT_KEYWORD_DEFAULT)) {// 必须使用默认的方法(即不插入)来描述缺省值
@@ -158,7 +158,7 @@ public abstract class ATypeMapping<T> implements MappingType<T>{
 		vStr.add(getSqlStr(value,result.profile));
 	}
 	
-	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlResult result, boolean dynamic)throws SQLException{
+	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean dynamic)throws SQLException{
 		if (dynamic && !obj.isUsed(field)) {
 			return;
 		}

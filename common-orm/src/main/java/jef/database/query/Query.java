@@ -151,8 +151,8 @@ public interface Query<T extends IQueryableEntity> extends TypedQuery<T>,JoinEle
 	 * .getResultTransformer().setLoadVsOne(false);
 	 * </pre></code>
 	 * @param cascade 是否要级联查询
-	 * @see jef.database.wrapper.Transformer#setLoadVsMany(boolean)
-	 * @see jef.database.wrapper.Transformer#setLoadVsOne(boolean)
+	 * @see jef.database.wrapper.populator.Transformer#setLoadVsMany(boolean)
+	 * @see jef.database.wrapper.populator.Transformer#setLoadVsOne(boolean)
 	 */
 	public void setCascade(boolean cascade);
 }

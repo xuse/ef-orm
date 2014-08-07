@@ -15,7 +15,7 @@ import jef.database.dialect.type.MappingType;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-import jef.database.wrapper.InsertSqlResult;
+import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
@@ -34,7 +34,7 @@ abstract class InsertProcessor {
 	 * @return
 	 * @throws SQLException
 	 */
-	abstract InsertSqlResult toInsertSql(IQueryableEntity obj, String tableName,boolean dynamic,boolean batch)throws SQLException;
+	abstract InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName,boolean dynamic,boolean batch)throws SQLException;
 
 	/**
 	 * process insert operate
@@ -45,7 +45,7 @@ abstract class InsertProcessor {
 	 * @param parse
 	 * @throws SQLException
 	 */
-	abstract void processInsert(OperateTarget db, IQueryableEntity obj, InsertSqlResult sqls, long start, long parse) throws SQLException;
+	abstract void processInsert(OperateTarget db, IQueryableEntity obj, InsertSqlClause sqls, long start, long parse) throws SQLException;
 	InsertProcessor(DbClient parentDbClient, DbOperateProcessor p, SqlProcessor rProcessor) {
 		this.db=parentDbClient;
 		this.p=p;
@@ -58,12 +58,12 @@ abstract class InsertProcessor {
 		}
 
 		@Override
-		InsertSqlResult toInsertSql(IQueryableEntity obj, String tableName, boolean dynamic, boolean batch) throws SQLException {
+		InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName, boolean dynamic, boolean batch) throws SQLException {
 			DatabaseDialect profile = parent.getProfile();
 			List<String> cStr = new ArrayList<String>();// 字段列表
 			List<String> vStr = new ArrayList<String>();// 值列表
 			ITableMetadata meta = MetaHolder.getMeta(obj);
-			InsertSqlResult result = new InsertSqlResult();
+			InsertSqlClause result = new InsertSqlClause();
 			result.parent=db;
 			result.profile=profile;
 			for (MappingType<?> entry : meta.getMetaFields()) {
@@ -80,7 +80,7 @@ abstract class InsertProcessor {
 		}
 
 		@Override
-		void processInsert(OperateTarget db, IQueryableEntity obj, InsertSqlResult sqls, long start, long parse) throws SQLException {
+		void processInsert(OperateTarget db, IQueryableEntity obj, InsertSqlClause sqls, long start, long parse) throws SQLException {
 			Statement st = null;
 			boolean debug=ORMConfig.getInstance().isDebugMode();
 			try {
@@ -115,12 +115,12 @@ abstract class InsertProcessor {
 		}
 
 		@Override
-		InsertSqlResult toInsertSql(IQueryableEntity obj, String tableName, boolean dynamic, boolean batch) throws SQLException {
+		InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName, boolean dynamic, boolean batch) throws SQLException {
 			DatabaseDialect profile = parent.getProfile();
 			List<String> cStr = new ArrayList<String>();// 字段列表
 			List<String> vStr = new ArrayList<String>();// 值列表
 			ITableMetadata meta = MetaHolder.getMeta(obj);
-			InsertSqlResult result = new InsertSqlResult(batch);
+			InsertSqlClause result = new InsertSqlClause(batch);
 			result.parent=db;
 			result.profile=profile;
 			for (MappingType<?> entry : meta.getMetaFields()) {
@@ -135,7 +135,7 @@ abstract class InsertProcessor {
 		}
 
 		@Override
-		void processInsert(OperateTarget db, IQueryableEntity obj, InsertSqlResult sqls, long start, long parse) throws SQLException {
+		void processInsert(OperateTarget db, IQueryableEntity obj, InsertSqlClause sqls, long start, long parse) throws SQLException {
 			boolean debug=ORMConfig.getInstance().isDebugMode();
 			StringBuilder sb = null;
 			if (debug) {
