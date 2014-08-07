@@ -25,9 +25,12 @@
 
 package jef.rowset;
 
-import java.io.*;
-import java.util.*;
-import java.lang.*;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.Enumeration;
+import java.util.Locale;
+import java.util.PropertyResourceBundle;
+import java.util.ResourceBundle;
 
 /**
  * This class is used to help in localization of resources,
@@ -116,13 +119,16 @@ public class JdbcRowSetResourceBundle implements Serializable {
      *
      * @throws IOException if unable to find the RowSetResourceBundle.properties
      */
-    public static JdbcRowSetResourceBundle getJdbcRowSetResourceBundle()
-    throws IOException {
+    public static JdbcRowSetResourceBundle getJdbcRowSetResourceBundle(){
 
          if(jpResBundle == null){
              synchronized(JdbcRowSetResourceBundle.class) {
                 if(jpResBundle == null){
-                    jpResBundle = new JdbcRowSetResourceBundle();
+                	try{
+                		jpResBundle = new JdbcRowSetResourceBundle();
+                	}catch(IOException e){
+                		throw new RuntimeException(e);
+                	}
                 } //end if
              } //end synchronized block
          } //end if

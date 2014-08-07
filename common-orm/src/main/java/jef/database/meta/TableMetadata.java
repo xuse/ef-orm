@@ -466,7 +466,7 @@ public final class TableMetadata extends MetadataAdapter {
 				 if(nullValue != null){
 					 return Arrays.asList((Object[]) nullValue);
 				 }else{
-					 return EMPTY_REGEXP;
+					 return Collections.EMPTY_LIST;
 				 }
 			} else if (ObjectUtils.equals(min, max)) {
 				return Arrays.asList(min);
@@ -483,7 +483,7 @@ public final class TableMetadata extends MetadataAdapter {
 			return Arrays.<Object>asList(regexp);
 		}
 	};
-	private static final List<Object> EMPTY_REGEXP=Arrays.<Object>asList(new RegexpDimension(""));
+
 
 	public Multimap<String, PartitionFunction> getMinUnitFuncForEachPartitionKey() {
 		return partitionFuncs;

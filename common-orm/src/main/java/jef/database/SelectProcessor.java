@@ -118,9 +118,6 @@ public abstract class SelectProcessor {
 		for (ISelectItemProvider rp : context.getReference()) {// 每个rp就是一张表
 			rs.addAll(rp.getSelectColumns(getProfile(), groupMode, context));
 		}
-		if(groupMode){
-			group.setSelect(rs);
-		}
 		if (!groupMode && getProfile().has(Feature.SELECT_ROW_NUM) && context.size() == 1) {
 			ISelectItemProvider ip = context.getReference().get(0);
 			if (ip.isAllTableColumns()) {

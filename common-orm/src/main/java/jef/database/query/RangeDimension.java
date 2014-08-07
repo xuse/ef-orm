@@ -1,7 +1,9 @@
 package jef.database.query;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
@@ -294,6 +296,7 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 		return result;
 	}
 
+	public static final List<Object> EMPTY_REGEXP=Arrays.<Object>asList(new RegexpDimension(""));
 	/**
 	 * 将范围值转化为枚举值
 	 */
@@ -302,7 +305,9 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 		Object sObj = min;
 		Object eObj = max;
 		if(funcs.size()==1){
-			return funcs.iterator().next().iterator(sObj, eObj, isLeftCloseSpan, isRightCloseSpan);
+			Collection<?> result=funcs.iterator().next().iterator(sObj, eObj, isLeftCloseSpan, isRightCloseSpan);
+			if(result.isEmpty())return EMPTY_REGEXP;
+			return result;
 		}
 		Set<?> set=new TreeSet();
 		for(PartitionFunction func:funcs){
@@ -310,6 +315,7 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 			//当有多个维度组合时且任何一个维护无法得出结论时，实际上实际上是无法判断哪个维护是最密枚举，而将稀疏枚举向上传递可能造成误报和漏报.此时当做无法枚举处理。
 			if(add.isEmpty())return add;
 			set.addAll(add);
+			
 		}
 		return set;
 	}

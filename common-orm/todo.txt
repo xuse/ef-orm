@@ -43,7 +43,7 @@ TDDL最大的两个亮点是动态数据源管理和分库分表。建议抽出�
 
 
 
-
+支持SQLServer 2008
 
 读取Sequence initialValue=1000   allocationSize (OK)
 读取Table initialValue=1000   valueColumnName   pkColumnValue table   allocationSize (OK)

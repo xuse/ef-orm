@@ -68,11 +68,7 @@ public class InsertRow extends BaseRow implements Serializable, Cloneable {
         origVals = new Object[numCols];
         colsInserted = new BitSet(numCols);
         cols = numCols;
-        try {
-           resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
-        } catch(IOException ioe) {
-            throw new RuntimeException(ioe);
-        }
+        resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
     }
 
 /**

@@ -1,11 +1,11 @@
 package jef.database.wrapper.clause;
 
 
-public class GroupByEle {
+public class InMemoryGroupBy {
 	private int index;
 	private GroupFunctionType type;
 	private String alias;
-	public GroupByEle(int i, GroupFunctionType type, String alias) {
+	public InMemoryGroupBy(int i, GroupFunctionType type, String alias) {
 		this.index=i;
 		this.type=type;
 		this.alias=alias;

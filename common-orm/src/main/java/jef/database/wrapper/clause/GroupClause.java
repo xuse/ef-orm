@@ -1,3 +1,18 @@
+/*
+ * JEF - Copyright 2009-2010 Jiyi (mr.jiyi@gmail.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package jef.database.wrapper.clause;
 
 import java.util.ArrayList;
@@ -6,11 +21,9 @@ import java.util.List;
 import jef.http.client.support.CommentEntry;
 import jef.tools.StringUtils;
 
-public class GroupClause implements SqlResult{
+public class GroupClause implements SqlClause{
 	private final List<String> groups = new ArrayList<String>();
 	private final List<String> having = new ArrayList<String>();
-	private SelectPart select;
-	
 	
 	public static final GroupClause EMPTY=new GroupClause();
 	public GroupClause(){
@@ -46,11 +59,6 @@ public class GroupClause implements SqlResult{
 	}
 
 
-	
-	public void setSelect(SelectPart rs) {
-		this.select=rs; //仅赋值不解析
-	}
-
 	/*
 	 * 当确定需要内存分组时，需要解析Select部分的函数，从而得到合适的内存分组计算规则
 	 * 每个查询字段信息包括
@@ -59,8 +67,8 @@ public class GroupClause implements SqlResult{
 	 * 
 	 * 计算列—— 函数，别名
 	 */
-	public List<GroupByEle> parseSelectFunction() {
-		List<GroupByEle> result=new ArrayList<GroupByEle>();
+	public List<InMemoryGroupBy> parseSelectFunction(SelectPart select) {
+		List<InMemoryGroupBy> result=new ArrayList<InMemoryGroupBy>();
 		for(int i=0;i<select.getEntries().size();i++){
 			CommentEntry e=select.getEntries().get(i);
 			String sql=e.getKey();
@@ -68,7 +76,6 @@ public class GroupClause implements SqlResult{
 			GroupFunctionType type;
 			if(groups.contains(sql)){
 				type=GroupFunctionType.GROUP;
-				continue;
 			}else{
 				String exp=sql.toUpperCase();
 				if(exp.startsWith("AVG(")){
@@ -87,11 +94,8 @@ public class GroupClause implements SqlResult{
 					type=GroupFunctionType.NORMAL;
 				}	
 			}
-			result.add(new GroupByEle(i,type,alias));
+			result.add(new InMemoryGroupBy(i,type,alias));
 		}
 		return result;
 	}
-
-	
-
 }

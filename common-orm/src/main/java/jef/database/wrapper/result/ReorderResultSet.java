@@ -1,3 +1,18 @@
+/*
+ * JEF - Copyright 2009-2010 Jiyi (mr.jiyi@gmail.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package jef.database.wrapper.result;
 
 import java.sql.ResultSet;
@@ -5,35 +20,33 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import jef.common.Entry;
 import jef.common.log.LogUtil;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.wrapper.populator.ColumnDescription;
+import jef.database.wrapper.clause.InMemoryOrderBy;
 import jef.database.wrapper.populator.ColumnMeta;
-import jef.http.client.support.CommentEntry;
-import jef.tools.StringUtils;
 
 import org.apache.commons.lang.ArrayUtils;
 
 /**
- * 在使用next方法的时候，进行按顺序获取的结果集
+ * The is a resort implementation for results with Low Memory consume.
  * 
- * @author Administrator
+ * @author Jiyi
  * 
  */
-final class ReorderMultipleResultSet extends AbstractResultSet {
+final class ReorderResultSet extends AbstractResultSet {
 	private ColumnMeta columns;
 
 	private int[] orderFields;
 	private boolean[] orderAsc;
-
 	private final List<ResultSet> gettingResults = new ArrayList<ResultSet>();
 	private DatabaseDialect[] profiles;
 	private List<ResultSetHolder> allResults;
 	private int currentIndex = -1;// 当前选中ResultSet;
 
-	public ReorderMultipleResultSet(List<ResultSetHolder> r, List<Entry<String, Boolean>> orderAsSelect, List<CommentEntry> selectItems, ColumnMeta columns) {
+	public ReorderResultSet(List<ResultSetHolder> r,InMemoryOrderBy order, ColumnMeta columns) {
 		allResults=r;
+		this.orderFields=order.getOrderFields();
+		this.orderAsc=order.getOrderAsc();
 		{
 			int len = r.size();
 			profiles = new DatabaseDialect[len];
@@ -44,46 +57,11 @@ final class ReorderMultipleResultSet extends AbstractResultSet {
 			}
 		}
 		this.columns = columns;
-		parseOrder(orderAsSelect, selectItems);
 	}
 
-	private void parseOrder(List<Entry<String, Boolean>> orderAsSelect, List<CommentEntry> selectItems) {
-		// String[] orders=new String[orderAsSelect.size()];
-		int[] orders = new int[orderAsSelect.size()];
-		boolean[] orderAsc = new boolean[orderAsSelect.size()];
 
-		for (int i = 0; i < orderAsSelect.size(); i++) {
-			Entry<String, Boolean> order = orderAsSelect.get(i);
-			String alias = findAlias(order.getKey(), selectItems);
-			if (alias == null) {
-				throw new IllegalArgumentException("The order field " + order.getKey() + " does not selected in SQL!");
-			}
-			// 可能为null
-			ColumnDescription selectedColumn = columns.getByFullName(alias);
-			if (selectedColumn == null) {
-				throw new IllegalArgumentException("The order field " + alias + " does not found in this Query!");
-			}
-			orders[i] = selectedColumn.getN();//
-			orderAsc[i] = order.getValue();
-		}
-		this.orderFields = orders;
-		this.orderAsc = orderAsc;
-	}
 
-	private String findAlias(String key, List<CommentEntry> selectItems) {
-		String alias = null;
-		for (CommentEntry c : selectItems) {
-			if (key.equals(c.getKey())) {
-				alias = c.getValue();
-				break;
-			}
-		}
-		if (alias == null) {
-			alias = StringUtils.substringAfterIfExist(key, ".");
-		}
-		return alias;
-	}
-
+	
 	public int size() {
 		return allResults.size();
 	}

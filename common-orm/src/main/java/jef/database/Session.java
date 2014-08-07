@@ -1333,17 +1333,16 @@ public abstract class Session {
 			OperateTarget trans = wrapThisWithEmptyKey(rs, true);
 			selectp.processSelect(trans, sql,null, queryObj, rs, option);
 		} else {
-			if(sql.isMultiDatabase()){
-				if (sql.getOrderbyPart().isNotEmpty()){
-					rs.setOrderDesc(sql.getOrderbyPart().getAsSelect());
-					rs.setSelectDesc(sql.getSelectPart().getEntries());
-				}
-				if(sql.getGrouphavingPart().isNotEmpty()){
-					rs.setRegroupByAction(sql.getGrouphavingPart().parseSelectFunction());
-				}
-			}
 			for (PartitionResult site : sql.getTables()) {
 				selectp.processSelect(asOperateTarget(site.getDatabase()), sql,site, queryObj, rs, option);
+			}
+			if(sql.isMultiDatabase()){
+				if (sql.getOrderbyPart().isNotEmpty()){
+					rs.setInMemoryOrder(sql.getOrderbyPart().parseAsSelectOrder(sql.getSelectPart(),rs.getColumns()));
+				}
+				if(sql.getGrouphavingPart().isNotEmpty()){
+					rs.setInMemoryGroups(sql.getGrouphavingPart().parseSelectFunction(sql.getSelectPart()));
+				}
 			}
 		}
 		long dbselect = System.currentTimeMillis();
@@ -1378,17 +1377,16 @@ public abstract class Session {
 			OperateTarget trans = wrapThisWithEmptyKey(rs, option.holdResult); // 如果是结果集持有的，那么必须在事务中
 			selectp.processSelect(trans, sql, null,queryObj, rs, option);
 		} else {
-			if(sql.isMultiDatabase()){// 最复杂的情况，多数据库下的排序
-				if (sql.getOrderbyPart().isNotEmpty()) {
-					rs.setOrderDesc(sql.getOrderbyPart().getAsSelect());
-					rs.setSelectDesc(sql.getSelectPart().getEntries());
-				}
-				if(sql.getGrouphavingPart().isNotEmpty()){
-					rs.setRegroupByAction(sql.getGrouphavingPart().parseSelectFunction());
-				}
-			}
 			for (PartitionResult site : sql.getTables()) {
 				selectp.processSelect(asOperateTarget(site.getDatabase()), sql,site, queryObj, rs, option);
+			}
+			if(sql.isMultiDatabase()){// 最复杂的情况，多数据库下的排序
+				if (sql.getOrderbyPart().isNotEmpty()) {
+					rs.setInMemoryOrder(sql.getOrderbyPart().parseAsSelectOrder(sql.getSelectPart(),rs.getColumns()));
+				}
+				if(sql.getGrouphavingPart().isNotEmpty()){
+					rs.setInMemoryGroups(sql.getGrouphavingPart().parseSelectFunction(sql.getSelectPart()));
+				}
 			}
 		}
 		long dbselect = System.currentTimeMillis(); // 查询完成时间

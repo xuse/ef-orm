@@ -15,20 +15,17 @@
  */
 package jef.database.wrapper.clause;
 
-import jef.common.wrapper.IntRange;
-import jef.database.annotation.PartitionResult;
-import jef.database.cache.CacheKeyProvider;
+import java.util.List;
 
 
-public interface IQueryClause extends SqlClause,CacheKeyProvider{
-	BindSql getSql(PartitionResult site);
-	PartitionResult[] getTables();
-	OrderClause getOrderbyPart();
-	SelectPart getSelectPart() ;
-	boolean isGroupBy();
-	boolean isEmpty();
-	void setOrderbyPart(OrderClause orderClause);
-	void setPageRange(IntRange range);
-	boolean isMultiDatabase();
-	GroupClause getGrouphavingPart(); 
+public class DdlClause implements SqlClause{
+	private List<String> sqls;
+
+	public List<String> getSqls() {
+		return sqls;
+	}
+
+	public void setSqls(List<String> sqls) {
+		this.sqls = sqls;
+	}
 }

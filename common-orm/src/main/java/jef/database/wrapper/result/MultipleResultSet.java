@@ -1,3 +1,18 @@
+/*
+ * JEF - Copyright 2009-2010 Jiyi (mr.jiyi@gmail.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package jef.database.wrapper.result;
 
 import java.sql.ResultSet;
@@ -11,17 +26,17 @@ import java.util.Map;
 
 import javax.sql.rowset.CachedRowSet;
 
-import jef.common.Entry;
 import jef.common.log.LogUtil;
 import jef.database.Condition;
+import jef.database.DbUtils;
 import jef.database.OperateTarget;
 import jef.database.Session.PopulateStrategy;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Reference;
-import jef.database.wrapper.clause.GroupByEle;
+import jef.database.wrapper.clause.InMemoryGroupBy;
+import jef.database.wrapper.clause.InMemoryOrderBy;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
-import jef.http.client.support.CommentEntry;
 import jef.tools.ArrayUtils;
 
 /**
@@ -34,9 +49,10 @@ public final class MultipleResultSet extends AbstractResultSet{
 	
 	private int current = -1;
 	//重新排序部分
-	private List<Entry<String, Boolean>> orderAsSelect;
-	//查询部分
-	private List<CommentEntry> selectItems;
+	private InMemoryOrderBy inMemoryOrder;
+	//重新分组处理逻辑
+	private List<InMemoryGroupBy> inMemoryGroups;
+
 	//所有列的元数据记录
 	private ColumnMeta columns;
 
@@ -207,8 +223,21 @@ public final class MultipleResultSet extends AbstractResultSet{
 			rsw.setFilters(filters);
 			return rsw;
 		}
-		if (orderAsSelect != null && !ArrayUtils.fastContains(args, PopulateStrategy.NO_RESORT)) {
-			ReorderMultipleResultSet rw = new ReorderMultipleResultSet(results, orderAsSelect, selectItems, columns);
+		if(inMemoryGroups!=null){
+			InMemoryProcessResultSet rw=new InMemoryProcessResultSet(results,columns);
+			rw.setInMemoryGroups(inMemoryGroups);
+			rw.setInMemoryOrder(inMemoryOrder);
+			rw.filters=filters;
+			try {
+				rw.process();
+			} catch (SQLException e) {
+				throw DbUtils.toRuntimeException(e);
+			}
+			return rw;
+		}
+		//当仅有重排序要求时，可以使用ReorderResultSet简化计算。降低内存开销
+		if (inMemoryOrder != null && !ArrayUtils.fastContains(args, PopulateStrategy.NO_RESORT)) {
+			ReorderResultSet rw = new ReorderResultSet(results, inMemoryOrder,columns);
 			rw.filters=filters;
 			return rw;
 		}
@@ -216,13 +245,6 @@ public final class MultipleResultSet extends AbstractResultSet{
 		return this;
 	}
 
-	public void setOrderDesc(List<Entry<String, Boolean>> asSelect) {
-		this.orderAsSelect = asSelect;
-	}
-
-	public void setSelectDesc(List<CommentEntry> entries) {
-		this.selectItems = entries;
-	}
 
 	public DatabaseDialect getProfile() {
 		return results.get(current).db.getProfile();
@@ -233,8 +255,11 @@ public final class MultipleResultSet extends AbstractResultSet{
 		return results.get(current).rs;
 	}
 
-	public void setRegroupByAction(List<GroupByEle> parseSelectFunction) {
-		// TODO Auto-generated method stub
-		
+	public void setInMemoryOrder(InMemoryOrderBy inMemoryOrder) {
+		this.inMemoryOrder = inMemoryOrder;
+	}
+
+	public void setInMemoryGroups(List<InMemoryGroupBy> inMemoryGroups) {
+		this.inMemoryGroups = inMemoryGroups;
 	}
 }

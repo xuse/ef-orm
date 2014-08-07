@@ -15,20 +15,28 @@
  */
 package jef.database.wrapper.clause;
 
-import jef.common.wrapper.IntRange;
-import jef.database.annotation.PartitionResult;
-import jef.database.cache.CacheKeyProvider;
+public class InMemoryOrderBy {
+	private int[] orderFields;
+	private boolean[] orderAsc;
 
+	public InMemoryOrderBy(int[] orders, boolean[] orderAsc2) {
+		this.orderFields = orders;
+		this.orderAsc = orderAsc2;
+	}
 
-public interface IQueryClause extends SqlClause,CacheKeyProvider{
-	BindSql getSql(PartitionResult site);
-	PartitionResult[] getTables();
-	OrderClause getOrderbyPart();
-	SelectPart getSelectPart() ;
-	boolean isGroupBy();
-	boolean isEmpty();
-	void setOrderbyPart(OrderClause orderClause);
-	void setPageRange(IntRange range);
-	boolean isMultiDatabase();
-	GroupClause getGrouphavingPart(); 
+	public int[] getOrderFields() {
+		return orderFields;
+	}
+
+	public void setOrderFields(int[] orderFields) {
+		this.orderFields = orderFields;
+	}
+
+	public boolean[] getOrderAsc() {
+		return orderAsc;
+	}
+
+	public void setOrderAsc(boolean[] orderAsc) {
+		this.orderAsc = orderAsc;
+	}
 }
