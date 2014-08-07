@@ -196,7 +196,7 @@ public class SelectsImpl extends AbstractEntityMappingProvider implements Select
 	}
 
 	/**
-	 * 
+	 * 创建查询表达式，支持方言改写。
 	 * {@inheritDoc}
 	 * <p>
 	 * 如果在表达式中需要引用第一个表的别名，使用$1,$2...以此类推

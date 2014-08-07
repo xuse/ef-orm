@@ -9,6 +9,11 @@ import jef.database.dialect.type.MappingType;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 
+/**
+ * 原生查询表达式，无需解析和改写
+ * @author jiyi
+ *
+ */
 public class SelectExpression extends SingleColumnSelect {
 	private String alias;
 

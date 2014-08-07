@@ -9,7 +9,11 @@ import jef.database.jsqlparser.ColumnAliasApplier;
 import jef.database.jsqlparser.SqlFunctionlocalization;
 import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.parser.ParseException;
-
+/**
+ * 支持方言改写的表达式，需要解析
+ * @author jiyi
+ *
+ */
 final class SelectExpression2 extends SelectExpression {
 	private Map<DatabaseDialect,Expression> localExpressions=new IdentityHashMap<DatabaseDialect,Expression>();
 	private Expression defaultEx;
