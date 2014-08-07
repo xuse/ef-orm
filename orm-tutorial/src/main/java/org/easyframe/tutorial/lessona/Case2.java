@@ -20,6 +20,7 @@ import jef.database.datasource.RoutingDataSource;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.query.Query;
 import jef.database.query.Selects;
+import jef.database.query.SqlExpression;
 import jef.tools.DateUtils;
 import jef.tools.string.RandomData;
 
@@ -27,7 +28,6 @@ import org.easyframe.tutorial.lessona.entity.Customer;
 import org.easyframe.tutorial.lessona.entity.Device;
 import org.easyframe.tutorial.lessona.entity.OperateLog;
 import org.easyframe.tutorial.lessona.entity.Person2;
-import org.easyframe.tutorial.lessona.entity.Customer.Field;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -274,6 +274,8 @@ public class Case2 extends org.junit.Assert{
 			Selects select=QB.selectFrom(query);
 			select.column(Device.Field.type).group();
 			select.column(Device.Field.indexcode).count().as("ct");
+			
+			query.orderByAsc(new SqlExpression("ct"));
 			List<String[]> strs=db.selectAs(query,String[].class);
 			//不通过,需要人工对结果集进行聚合……
 			for(String[] ss:strs){

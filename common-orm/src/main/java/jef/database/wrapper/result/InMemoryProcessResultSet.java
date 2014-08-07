@@ -17,13 +17,12 @@ package jef.database.wrapper.result;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.List;
 
 import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.wrapper.clause.InMemoryGroupBy;
-import jef.database.wrapper.clause.InMemoryOrderBy;
+import jef.database.wrapper.clause.InMemoryProcessor;
 import jef.database.wrapper.populator.ColumnMeta;
 import jef.rowset.CachedRowSetImpl;
 
@@ -34,8 +33,7 @@ public class InMemoryProcessResultSet extends AbstractResultSet{
 	private List<ResultSetHolder> results;
 	
 	//动作
-	private List<InMemoryGroupBy> inMemoryGroupBy;
-	private InMemoryOrderBy inMemoryOrderBy;
+	private final List<InMemoryProcessor> processors=new ArrayList<InMemoryProcessor>(4);
 	
 	public InMemoryProcessResultSet(List<ResultSetHolder> results, ColumnMeta columns) {
 		this.results=results;
@@ -50,36 +48,20 @@ public class InMemoryProcessResultSet extends AbstractResultSet{
 			sh.close(true);
 		}
 		results.clear();
-		if(inMemoryGroupBy!=null){
-			groupBy(cache,inMemoryGroupBy);
+		for(InMemoryProcessor processor:processors){
+			processor.process(cache.getRvh());
 		}
-		if(inMemoryOrderBy!=null){
-			orderBy(cache,inMemoryOrderBy);
-		}
+		cache.refresh();
+	}
+	/**
+	 * 添加一个内存记录处理器
+	 * @param processor 处理器
+	 */
+	public void addProcessor(InMemoryProcessor processor){
+		if(processor==null)return;
+		this.processors.add(processor);
 	}
 	
-	private void orderBy(CachedRowSetImpl cache, InMemoryOrderBy inMemoryOrderBy) {
-		
-		
-		
-		
-	}
-	static class C implements Comparator<Object>{
-		private InMemoryOrderBy imo;
-
-		public int compare(Object o1, Object o2) {
-			// TODO Auto-generated method stub
-			return 0;
-		}
-		
-	}
-	private void groupBy(CachedRowSetImpl cache, List<InMemoryGroupBy> inMemoryGroupBy) {
-		
-		
-		
-		
-	}
-
 	public ColumnMeta getColumns() {
 		return columns;
 	}
@@ -123,14 +105,5 @@ public class InMemoryProcessResultSet extends AbstractResultSet{
 	@Override
 	protected ResultSet get() {
 		return cache;
-	}
-	
-	public void setInMemoryGroups(List<InMemoryGroupBy> inMemoryGroups) {
-		this.inMemoryGroupBy=inMemoryGroups;
-	}
-
-
-	public void setInMemoryOrder(InMemoryOrderBy inMemoryOrder) {
-		this.inMemoryOrderBy=inMemoryOrder;
 	}
 }

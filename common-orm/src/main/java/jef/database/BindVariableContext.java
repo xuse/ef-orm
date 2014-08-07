@@ -10,7 +10,6 @@ import java.util.Date;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.MappingType;
 import jef.database.support.LogFormat;
-import jef.tools.DateUtils;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 

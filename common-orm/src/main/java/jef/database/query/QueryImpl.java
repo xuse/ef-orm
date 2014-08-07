@@ -96,7 +96,7 @@ final class QueryImpl<T extends IQueryableEntity> implements Query<T>, Serializa
 
 	public void addOrderBy(boolean flag, Field... orderbys) {
 		for (Field f : orderbys) {
-			if (!(f instanceof RefField)) {
+			if (!(f instanceof RefField) && !(f instanceof SqlExpression)) {
 				ITableMetadata cls = DbUtils.getTableMeta(f);
 				if(!cls.isAssignableFrom(this.type)){
 					throw new IllegalArgumentException("the field ["+f.name()+"]which belongs to " + cls.getName() + " is not current type:" + getType().getName());

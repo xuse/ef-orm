@@ -22,8 +22,8 @@ import jef.http.client.support.CommentEntry;
 import jef.tools.StringUtils;
 
 public class GroupClause implements SqlClause{
-	private final List<String> groups = new ArrayList<String>();
-	private final List<String> having = new ArrayList<String>();
+	private final List<String> groups = new ArrayList<String>(4);
+	private final List<String> having = new ArrayList<String>(4);
 	
 	public static final GroupClause EMPTY=new GroupClause();
 	public GroupClause(){
@@ -67,16 +67,17 @@ public class GroupClause implements SqlClause{
 	 * 
 	 * 计算列—— 函数，别名
 	 */
-	public List<InMemoryGroupBy> parseSelectFunction(SelectPart select) {
-		List<InMemoryGroupBy> result=new ArrayList<InMemoryGroupBy>();
+	public InMemoryGroupBy parseSelectFunction(SelectPart select) {
+		List<GroupByItem> keys=new ArrayList<GroupByItem>();
+		List<GroupByItem> values=new ArrayList<GroupByItem>();
 		for(int i=0;i<select.getEntries().size();i++){
 			CommentEntry e=select.getEntries().get(i);
 			String sql=e.getKey();
 			String alias=e.getValue();
-			GroupFunctionType type;
 			if(groups.contains(sql)){
-				type=GroupFunctionType.GROUP;
+				keys.add(new GroupByItem(i,GroupFunctionType.GROUP,alias));
 			}else{
+				GroupFunctionType type;
 				String exp=sql.toUpperCase();
 				if(exp.startsWith("AVG(")){
 					type=GroupFunctionType.AVG;
@@ -93,9 +94,9 @@ public class GroupClause implements SqlClause{
 				}else{
 					type=GroupFunctionType.NORMAL;
 				}	
+				values.add(new GroupByItem(i,type,alias));
 			}
-			result.add(new InMemoryGroupBy(i,type,alias));
 		}
-		return result;
+		return new InMemoryGroupBy(keys,values);
 	}
 }

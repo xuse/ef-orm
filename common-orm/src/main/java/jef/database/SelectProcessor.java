@@ -147,15 +147,15 @@ public abstract class SelectProcessor {
 				if(order)
 					sb.setOrderbyPart(toOrderClause(obj, context));
 			} else if (obj instanceof Join) {
-				Join query = (Join) obj;
-				SqlContext context = query.prepare();
-				GroupClause groupClause = toGroupAndHavingClause(query, context);
+				Join join = (Join) obj;
+				SqlContext context = join.prepare();
+				GroupClause groupClause = toGroupAndHavingClause(join, context);
 				sb.setGrouphavingPart(groupClause);
 				sb.setSelectPart(toSelectSql(context, groupClause));
-				sb.setTableDefinition(query.toTableDefinitionSql(parent, context));
-				sb.setWherePart(parent.toWhereClause(query, context, false));
+				sb.setTableDefinition(join.toTableDefinitionSql(parent, context));
+				sb.setWherePart(parent.toWhereClause(join, context, false));
 				if(order)
-					sb.setOrderbyPart(toOrderClause(query, context));
+					sb.setOrderbyPart(toOrderClause(join, context));
 			} else if (obj instanceof ComplexQuery) {
 				ComplexQuery cq = (ComplexQuery) obj;
 				SqlContext context = cq.prepare();
@@ -292,31 +292,30 @@ public abstract class SelectProcessor {
 		public IQueryClause toQuerySql(ConditionQuery obj, IntRange range, String myTableName,boolean order) {
 			QueryClause sb = new QueryClause(getProfile());
 			if (obj instanceof Query<?>) {
-				Query<?> q = (Query<?>) obj;
-				SqlContext context = q.prepare();
-				GroupClause groupClause = toGroupAndHavingClause(q, context);
-				BindSql whereResult = parent.toPrepareWhereSql(q, context, false);
+				Query<?> query = (Query<?>) obj;
+				SqlContext context = query.prepare();
+				GroupClause groupClause = toGroupAndHavingClause(query, context);
+				BindSql whereResult = parent.toPrepareWhereSql(query, context, false);
 
 				sb.setSelectPart(toSelectSql(context, groupClause));
 				sb.setGrouphavingPart(groupClause);
-				sb.setTables(DbUtils.toTableNames(q.getInstance(), myTableName, q, db.getPool().getPartitionSupport()), q.getMeta().getName());
+				sb.setTables(DbUtils.toTableNames(query.getInstance(), myTableName, query, db.getPool().getPartitionSupport()), query.getMeta().getName());
 				sb.setWherePart(whereResult.getSql());
 				sb.setBind(whereResult.getBind());
 				if(order)
 					sb.setOrderbyPart(toOrderClause(obj, context));
 			} else if (obj instanceof Join) {
-				Join q = (Join) obj;
-				SqlContext context = q.prepare();
-				GroupClause groupClause = toGroupAndHavingClause(q, context);
+				Join join = (Join) obj;
+				SqlContext context = join.prepare();
+				GroupClause groupClause = toGroupAndHavingClause(join, context);
 
 				sb.setSelectPart(toSelectSql(context, groupClause));
-				sb.setTableDefinition(q.toTableDefinitionSql(parent, context));
-				BindSql whereResult = parent.toPrepareWhereSql(q, context, false);
+				sb.setTableDefinition(join.toTableDefinitionSql(parent, context));
+				BindSql whereResult = parent.toPrepareWhereSql(join, context, false);
 				sb.setWherePart(whereResult.getSql());
 				sb.setBind(whereResult.getBind());
-				sb.setGrouphavingPart(toGroupAndHavingClause(q, context));
 				if(order)
-					sb.setOrderbyPart(toOrderClause(q, context));
+					sb.setOrderbyPart(toOrderClause(join, context));
 			} else if (obj instanceof ComplexQuery) {
 				ComplexQuery cq = (ComplexQuery) obj;
 				SqlContext context = cq.prepare();

@@ -31,12 +31,10 @@ import org.easyframe.fastjson.util.ASMUtils;
 
 public class EnhanceTaskASM {
 	private File root;
-	private File[] roots;
 
 	public EnhanceTaskASM(File root, File[] roots) {
 		super();
 		this.root = root;
-		this.roots = roots;
 	}
 
 	public EnhanceTaskASM() {
@@ -90,6 +88,8 @@ public class EnhanceTaskASM {
 	}
 
 	private static class EnhancedException extends RuntimeException {
+		private static final long serialVersionUID = 1L;
+
 		@Override
 		public synchronized Throwable fillInStackTrace() {
 			return this;

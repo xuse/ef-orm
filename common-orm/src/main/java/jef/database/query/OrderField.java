@@ -100,6 +100,8 @@ public final class OrderField implements Serializable{
 		}else if(field instanceof FBIField){
 			FBIField fbi=(FBIField)field;
 			columnName = StringUtils.upperCase(fbi.toSqlAndBindAttribs(context, processor));
+		}else if(field instanceof SqlExpression){
+			columnName = field.name();
 		}else{
 			throw new IllegalArgumentException("The field type " + field.getClass().getName() +" is invalid!");
 		}

@@ -51,7 +51,7 @@ public final class MultipleResultSet extends AbstractResultSet{
 	//重新排序部分
 	private InMemoryOrderBy inMemoryOrder;
 	//重新分组处理逻辑
-	private List<InMemoryGroupBy> inMemoryGroups;
+	private InMemoryGroupBy inMemoryGroups;
 
 	//所有列的元数据记录
 	private ColumnMeta columns;
@@ -225,9 +225,9 @@ public final class MultipleResultSet extends AbstractResultSet{
 		}
 		if(inMemoryGroups!=null){
 			InMemoryProcessResultSet rw=new InMemoryProcessResultSet(results,columns);
-			rw.setInMemoryGroups(inMemoryGroups);
-			rw.setInMemoryOrder(inMemoryOrder);
 			rw.filters=filters;
+			rw.addProcessor(inMemoryGroups);
+			rw.addProcessor(inMemoryOrder);
 			try {
 				rw.process();
 			} catch (SQLException e) {
@@ -259,7 +259,7 @@ public final class MultipleResultSet extends AbstractResultSet{
 		this.inMemoryOrder = inMemoryOrder;
 	}
 
-	public void setInMemoryGroups(List<InMemoryGroupBy> inMemoryGroups) {
+	public void setInMemoryGroups(InMemoryGroupBy inMemoryGroups) {
 		this.inMemoryGroups = inMemoryGroups;
 	}
 }

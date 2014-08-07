@@ -61,7 +61,6 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -83,7 +82,6 @@ import javax.sql.rowset.spi.SyncProvider;
 import javax.sql.rowset.spi.SyncProviderException;
 
 import jef.rowset.internal.BaseRow;
-import jef.rowset.internal.InsertRow;
 import jef.rowset.internal.Row;
 
 /**
@@ -144,27 +142,6 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	private int cursorPos;
 
 	/**
-	 * The current postion of the cursor in this <code>CachedRowSetImpl</code>
-	 * object not counting rows that have been deleted, if any.
-	 * <P>
-	 * For example, suppose that the cursor is on the last row of a rowset that
-	 * started with five rows and subsequently had the second and third rows
-	 * deleted. The <code>absolutePos</code> would be <code>3</code>, whereas
-	 * the <code>cursorPos</code> would be <code>5</code>.
-	 * 
-	 * @serial
-	 */
-	private int absolutePos;
-
-	/**
-	 * The number of deleted rows currently in this
-	 * <code>CachedRowSetImpl</code> object.
-	 * 
-	 * @serial
-	 */
-	private int numDeleted;
-
-	/**
 	 * The total number of rows currently in this <code>CachedRowSetImpl</code>
 	 * object.
 	 * 
@@ -173,54 +150,12 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	private int numRows;
 
 	/**
-	 * A special row used for constructing a new row. A new row is constructed
-	 * by using <code>ResultSet.updateXXX</code> methods to insert column values
-	 * into the insert row.
-	 * 
-	 * @serial
-	 */
-	private InsertRow insertRow;
-
-	/**
-	 * A <code>boolean</code> indicating whether the cursor is currently on the
-	 * insert row.
-	 * 
-	 * @serial
-	 */
-	private boolean onInsertRow;
-
-	/**
-	 * The field that temporarily holds the last position of the cursor before
-	 * it moved to the insert row, thus preserving the number of the current row
-	 * to which the cursor may return.
-	 * 
-	 * @serial
-	 */
-	private int currentRow;
-
-	/**
 	 * A <code>boolean</code> indicating whether the last value returned was an
 	 * SQL <code>NULL</code>.
 	 * 
 	 * @serial
 	 */
 	private boolean lastValueNull;
-
-	/**
-	 * A <code>SQLWarning</code> which logs on the warnings
-	 */
-	private SQLWarning sqlwarn;
-
-	/**
-	 * A <code>RowSetWarning</code> which logs on the warnings
-	 */
-	private RowSetWarning rowsetWarning;
-
-	/**
-	 * The integer value indicating how many times the populate function has
-	 * been called.
-	 */
-	private int populatecallcount;
 
 
 	/**
@@ -240,14 +175,6 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 		initContainer();
 		initProperties();
 
-		// insert row setup
-		onInsertRow = false;
-		insertRow = null;
-
-		// set the warninings
-		sqlwarn = new SQLWarning();
-		rowsetWarning = new RowSetWarning();
-
 	}
 
 	/**
@@ -257,9 +184,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 */
 	private void initContainer() {
 		cursorPos = 0;
-		absolutePos = 0;
 		numRows = 0;
-		numDeleted = 0;
 	}
 
 	/**
@@ -303,31 +228,11 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	// Reading and writing data
 	// ---------------------------------------------------------------------
 
-	/**
-	 * Populates this <code>CachedRowSetImpl</code> object with data from the
-	 * given <code>ResultSet</code> object. This method is an alternative to the
-	 * method <code>execute</code> for filling the rowset with data. The method
-	 * <code>populate</code> does not require that the properties needed by the
-	 * method <code>execute</code>, such as the <code>command</code> property,
-	 * be set. This is true because the method <code>populate</code> is given
-	 * the <code>ResultSet</code> object from which to get data and thus does
-	 * not need to use the properties required for setting up a connection and
-	 * executing this <code>CachedRowSetImpl</code> object's command.
-	 * <P>
-	 * After populating this rowset with data, the method <code>populate</code>
-	 * sets the rowset's metadata and then sends a
-	 * <code>RowSetChangedEvent</code> object to all registered listeners prior
-	 * to returning.
-	 * 
-	 * @param data
-	 *            the <code>ResultSet</code> object containing the data to be
-	 *            read into this <code>CachedRowSetImpl</code> object
-	 * @throws SQLException
-	 *             if an error occurs; or the max row setting is violated while
-	 *             populating the RowSet
-	 * @see #execute
-	 */
-
+	public void refresh() throws SQLException {
+		numRows = rvh.size();;
+		// Also rowsFetched should be equal to rvh.size()
+		notifyRowSetChanged();
+	}
 	public void populate(ResultSet data) throws SQLException {
 		Map<String, Class<?>> map = getTypeMap();
 		if (data == null) {
@@ -341,7 +246,6 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 		// release the meta-data so that aren't tempted to use it.
 		int numCols = RowSetMD.getColumnCount();
 		Row currentRow = null;
-		populatecallcount++;
 		while (data.next()) {
 			currentRow = new Row(numCols);
 			for (int i = 1; i <= numCols; i++) {
@@ -602,68 +506,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 *             rowset, before the first row, or after the last row
 	 */
 	public boolean next() throws SQLException {
-		/*
-		 * make sure things look sane. The cursor must be positioned in the
-		 * rowset or before first (0) or after last (numRows + 1)
-		 */
-		if (cursorPos < 0 || cursorPos >= numRows + 1) {
-			throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidcp").toString());
-		}
-		// now move and notify
-		boolean ret = this.internalNext();
-		notifyCursorMoved();
-
-		return ret;
-	}
-
-	/**
-	 * Moves this <code>CachedRowSetImpl</code> object's cursor to the next row
-	 * and returns <code>true</code> if the cursor is still in the rowset;
-	 * returns <code>false</code> if the cursor has moved to the position after
-	 * the last row.
-	 * <P>
-	 * This method handles the cases where the cursor moves to a row that has
-	 * been deleted. If this rowset shows deleted rows and the cursor moves to a
-	 * row that has been deleted, this method moves the cursor to the next row
-	 * until the cursor is on a row that has not been deleted.
-	 * <P>
-	 * The method <code>internalNext</code> is called by methods such as
-	 * <code>next</code>, <code>absolute</code>, and <code>relative</code>, and,
-	 * as its name implies, is only called internally.
-	 * <p>
-	 * This is a implementation only method and is not required as a standard
-	 * implementation of the <code>CachedRowSet</code> interface.
-	 * 
-	 * @return <code>true</code> if the cursor is on a valid row in this rowset;
-	 *         <code>false</code> if it is after the last row
-	 * @throws SQLException
-	 *             if an error occurs
-	 */
-	protected boolean internalNext() throws SQLException {
-		boolean ret = false;
-
-		do {
-			if (cursorPos < numRows) {
-				++cursorPos;
-				ret = true;
-			} else if (cursorPos == numRows) {
-				// increment to after last
-				++cursorPos;
-				ret = false;
-				break;
-			}
-		} while ((getShowDeleted() == false) && (rowDeleted() == true));
-
-		/*
-		 * each call to internalNext may increment cursorPos multiple times
-		 * however, the absolutePos only increments once per call.
-		 */
-		if (ret == true)
-			absolutePos++;
-		else
-			absolutePos = 0;
-
-		return ret;
+		return cursorPos++ < numRows;
 	}
 
 	/**
@@ -678,9 +521,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 		// close all data structures holding
 		// the disconnected rowset
 		cursorPos = 0;
-		absolutePos = 0;
 		numRows = 0;
-		numDeleted = 0;
 
 		// clear the vector of it's present contents
 		rvh.clear();
@@ -798,11 +639,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 *         <code>CachedRowSetImpl</code> objects's cursor is positioned
 	 */
 	protected BaseRow getCurrentRow() {
-		if (onInsertRow == true) {
-			return (BaseRow) insertRow;
-		} else {
-			return (BaseRow) (rvh.get(cursorPos - 1));
-		}
+		return (BaseRow) (rvh.get(cursorPos - 1));
 	}
 
 	/**
@@ -815,9 +652,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 *             if the cursor is positioned on the insert row
 	 */
 	protected void removeCurrentRow() {
-		((Row) getCurrentRow()).setDeleted();
-		rvh.remove(cursorPos);
-		--numRows;
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -2030,7 +1865,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 * @return the first SQLWarning or null
 	 */
 	public SQLWarning getWarnings() {
-		return sqlwarn;
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -2040,7 +1875,6 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 * <code>CachedRowSetImpl</code> object.
 	 */
 	public void clearWarnings() {
-		sqlwarn = null;
 	}
 
 	/**
@@ -2451,17 +2285,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 *             if an error occurs
 	 */
 	public boolean isFirst() throws SQLException {
-		// this becomes nasty because of deletes.
-		int saveCursorPos = cursorPos;
-		int saveAbsoluteCursorPos = absolutePos;
-		internalFirst();
-		if (cursorPos == saveCursorPos) {
-			return true;
-		} else {
-			cursorPos = saveCursorPos;
-			absolutePos = saveAbsoluteCursorPos;
-			return false;
-		}
+		return cursorPos == 1;
 	}
 
 	/**
@@ -2478,20 +2302,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 *             if an error occurs
 	 */
 	public boolean isLast() throws SQLException {
-		int saveCursorPos = cursorPos;
-		int saveAbsoluteCursorPos = absolutePos;
-		boolean saveShowDeleted = getShowDeleted();
-		setShowDeleted(true);
-		internalLast();
-		if (cursorPos == saveCursorPos) {
-			setShowDeleted(saveShowDeleted);
-			return true;
-		} else {
-			setShowDeleted(saveShowDeleted);
-			cursorPos = saveCursorPos;
-			absolutePos = saveAbsoluteCursorPos;
-			return false;
-		}
+		return cursorPos==numRows;
 	}
 
 	/**
@@ -2504,12 +2315,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 *             <code>ResultSet.TYPE_FORWARD_ONLY</code>
 	 */
 	public void beforeFirst() throws SQLException {
-		if (getType() == ResultSet.TYPE_FORWARD_ONLY) {
-			throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.beforefirst").toString());
-		}
-		cursorPos = 0;
-		absolutePos = 0;
-		notifyCursorMoved();
+		cursorPos=0;
 	}
 
 	/**
@@ -2521,11 +2327,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 *             if an error occurs
 	 */
 	public void afterLast() throws SQLException {
-		if (numRows > 0) {
-			cursorPos = numRows + 1;
-			absolutePos = 0;
-			notifyCursorMoved();
-		}
+		cursorPos=numRows+1;
 	}
 
 	/**
@@ -2541,52 +2343,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 *             <code>ResultSet.TYPE_FORWARD_ONLY</code>
 	 */
 	public boolean first() throws SQLException {
-		if (getType() == ResultSet.TYPE_FORWARD_ONLY) {
-			throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.first").toString());
-		}
-
-		// move and notify
-		boolean ret = this.internalFirst();
-		notifyCursorMoved();
-
-		return ret;
-	}
-
-	/**
-	 * Moves this <code>CachedRowSetImpl</code> object's cursor to the first row
-	 * and returns <code>true</code> if the operation is successful.
-	 * <P>
-	 * This method is called internally by the methods <code>first</code>,
-	 * <code>isFirst</code>, and <code>absolute</code>. It in turn calls the
-	 * method <code>internalNext</code> in order to handle the case where the
-	 * first row is a deleted row that is not visible.
-	 * <p>
-	 * This is a implementation only method and is not required as a standard
-	 * implementation of the <code>CachedRowSet</code> interface.
-	 * 
-	 * @return <code>true</code> if the cursor moved to the first row;
-	 *         <code>false</code> otherwise
-	 * @throws SQLException
-	 *             if an error occurs
-	 */
-	protected boolean internalFirst() throws SQLException {
-		boolean ret = false;
-
-		if (numRows > 0) {
-			cursorPos = 1;
-			if ((getShowDeleted() == false) && (rowDeleted() == true)) {
-				ret = internalNext();
-			} else {
-				ret = true;
-			}
-		}
-
-		if (ret == true)
-			absolutePos = 1;
-		else
-			absolutePos = 0;
-
-		return ret;
+		return numRows>0 && (cursorPos=1)==1;
 	}
 
 	/**
@@ -2602,51 +2359,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 *             <code>ResultSet.TYPE_FORWARD_ONLY</code>
 	 */
 	public boolean last() throws SQLException {
-		if (getType() == ResultSet.TYPE_FORWARD_ONLY) {
-			throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.last").toString());
-		}
-
-		// move and notify
-		boolean ret = this.internalLast();
-		notifyCursorMoved();
-
-		return ret;
-	}
-
-	/**
-	 * Moves this <code>CachedRowSetImpl</code> object's cursor to the last row
-	 * and returns <code>true</code> if the operation is successful.
-	 * <P>
-	 * This method is called internally by the method <code>last</code> when
-	 * rows have been deleted and the deletions are not visible. The method
-	 * <code>internalLast</code> handles the case where the last row is a
-	 * deleted row that is not visible by in turn calling the method
-	 * <code>internalPrevious</code>.
-	 * <p>
-	 * This is a implementation only method and is not required as a standard
-	 * implementation of the <code>CachedRowSet</code> interface.
-	 * 
-	 * @return <code>true</code> if the cursor moved to the last row;
-	 *         <code>false</code> otherwise
-	 * @throws SQLException
-	 *             if an error occurs
-	 */
-	protected boolean internalLast() throws SQLException {
-		boolean ret = false;
-
-		if (numRows > 0) {
-			cursorPos = numRows;
-			if ((getShowDeleted() == false) && (rowDeleted() == true)) {
-				ret = internalPrevious();
-			} else {
-				ret = true;
-			}
-		}
-		if (ret == true)
-			absolutePos = numRows - numDeleted;
-		else
-			absolutePos = 0;
-		return ret;
+		return numRows>0 && (cursorPos=numRows)==numRows;
 	}
 
 	/**
@@ -2661,14 +2374,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 *             empty
 	 */
 	public int getRow() throws SQLException {
-		// are we on a valid row? Valid rows are between first and last
-		if (numRows > 0 && cursorPos > 0 && cursorPos < (numRows + 1) && (getShowDeleted() == false && rowDeleted() == false)) {
-			return absolutePos;
-		} else if (getShowDeleted() == true) {
-			return cursorPos;
-		} else {
-			return 0;
-		}
+		return cursorPos;
 	}
 
 	/**
@@ -2728,48 +2434,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 *             this rowset is <code>ResultSet.TYPE_FORWARD_ONLY</code>
 	 */
 	public boolean absolute(int row) throws SQLException {
-		if (row == 0 || getType() == ResultSet.TYPE_FORWARD_ONLY) {
-			throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.absolute").toString());
-		}
-
-		if (row > 0) { // we are moving foward
-			if (row > numRows) {
-				// fell off the end
-				afterLast();
-				return false;
-			} else {
-				if (absolutePos <= 0)
-					internalFirst();
-			}
-		} else { // we are moving backward
-			if (cursorPos + row < 0) {
-				// fell off the front
-				beforeFirst();
-				return false;
-			} else {
-				if (absolutePos >= 0)
-					internalLast();
-			}
-		}
-
-		// Now move towards the absolute row that we're looking for
-		while (absolutePos != row) {
-			if (absolutePos < row) {
-				if (!internalNext())
-					break;
-			} else {
-				if (!internalPrevious())
-					break;
-			}
-		}
-
-		notifyCursorMoved();
-
-		if (isAfterLast() || isBeforeFirst()) {
-			return false;
-		} else {
-			return true;
-		}
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -2834,42 +2499,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 *             rowset is type <code>ResultSet.TYPE_FORWARD_ONLY</code>
 	 */
 	public boolean relative(int rows) throws SQLException {
-		if (numRows == 0 || isBeforeFirst() || isAfterLast() || getType() == ResultSet.TYPE_FORWARD_ONLY) {
-			throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.relative").toString());
-		}
-
-		if (rows == 0) {
-			return true;
-		}
-
-		if (rows > 0) { // we are moving forward
-			if (cursorPos + rows > numRows) {
-				// fell off the end
-				afterLast();
-			} else {
-				for (int i = 0; i < rows; i++) {
-					if (!internalNext())
-						break;
-				}
-			}
-		} else { // we are moving backward
-			if (cursorPos + rows < 0) {
-				// fell off the front
-				beforeFirst();
-			} else {
-				for (int i = rows; i < 0; i++) {
-					if (!internalPrevious())
-						break;
-				}
-			}
-		}
-		notifyCursorMoved();
-
-		if (isAfterLast() || isBeforeFirst()) {
-			return false;
-		} else {
-			return true;
-		}
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -2968,16 +2598,6 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 				break;
 			}
 		} while ((getShowDeleted() == false) && (rowDeleted() == true));
-
-		/*
-		 * Each call to internalPrevious may move the cursor over multiple rows,
-		 * the absolute postion moves one one row
-		 */
-		if (ret == true)
-			--absolutePos;
-		else
-			absolutePos = 0;
-
 		return ret;
 	}
 
@@ -3000,12 +2620,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 * @see DatabaseMetaData#updatesAreDetected
 	 */
 	public boolean rowUpdated() throws SQLException {
-		// make sure the cursor is on a valid row
-		checkCursor();
-		if (onInsertRow == true) {
-			throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidop").toString());
-		}
-		return (((Row) getCurrentRow()).getUpdated());
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -3025,12 +2640,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 * @see DatabaseMetaData#updatesAreDetected
 	 */
 	public boolean columnUpdated(int idx) throws SQLException {
-		// make sure the cursor is on a valid row
-		checkCursor();
-		if (onInsertRow == true) {
-			throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidop").toString());
-		}
-		return (((Row) getCurrentRow()).getColUpdated(idx - 1));
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -3065,12 +2675,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 * @see DatabaseMetaData#insertsAreDetected
 	 */
 	public boolean rowInserted() throws SQLException {
-		// make sure the cursor is on a valid row
-		checkCursor();
-		if (onInsertRow == true) {
-			throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidop").toString());
-		}
-		return (((Row) getCurrentRow()).getInserted());
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -3087,13 +2692,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 * @see DatabaseMetaData#deletesAreDetected
 	 */
 	public boolean rowDeleted() throws SQLException {
-		// make sure the cursor is on a valid row
-
-		if (isAfterLast() == true || isBeforeFirst() == true || onInsertRow == true) {
-
-			throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidcp").toString());
-		}
-		return (((Row) getCurrentRow()).getDeleted());
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -4733,38 +4332,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 *             <code>ResultSet.CONCUR_READ_ONLY</code>
 	 */
 	public void insertRow() throws SQLException {
-		int pos;
-
-		if (onInsertRow == false || insertRow.isCompleteRow(RowSetMD) == false) {
-			throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.failedins").toString());
-		}
-		// Added the setting of parameters that are passed
-		// to setXXX methods after an empty CRS Object is
-		// created through RowSetMetaData object
-		Object[] toInsert = getParams();
-
-		for (int i = 0; i < toInsert.length; i++) {
-			insertRow.setColumnObject(i + 1, toInsert[i]);
-		}
-
-		Row insRow = new Row(RowSetMD.getColumnCount(), insertRow.getOrigRow());
-		insRow.setInserted();
-		/*
-		 * The new row is inserted into the RowSet immediately following the
-		 * current row.
-		 * 
-		 * If we are afterlast then the rows are inserted at the end.
-		 */
-		if (currentRow >= numRows || currentRow < 0) {
-			pos = numRows;
-		} else {
-			pos = currentRow;
-		}
-
-		rvh.add(pos, insRow);
-		++numRows;
-		// notify the listeners that the row changed.
-		notifyRowChanged();
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -4782,15 +4350,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 *             <code>ResultSet.CONCUR_READ_ONLY</code>
 	 */
 	public void updateRow() throws SQLException {
-		// make sure we aren't on the insert row
-		if (onInsertRow == true) {
-			throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.updateins").toString());
-		}
-
-		((Row) getCurrentRow()).setUpdated();
-
-		// notify the listeners that the row changed.
-		notifyRowChanged();
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -4810,14 +4370,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 *             rowset is <code>ResultSet.CONCUR_READ_ONLY</code>
 	 */
 	public void deleteRow() throws SQLException {
-		// make sure the cursor is on a valid row
-		checkCursor();
-
-		((Row) getCurrentRow()).setDeleted();
-		++numDeleted;
-
-		// notify the listeners that the row changed.
-		notifyRowChanged();
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -4833,16 +4386,6 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	public void refreshRow() throws SQLException {
 		// make sure we are on a row
 		checkCursor();
-
-		// don't want this to happen...
-		if (onInsertRow == true) {
-			throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidcp").toString());
-		}
-
-		Row currentRow = (Row) getCurrentRow();
-		// just undo any changes made to this row.
-		currentRow.clearUpdated();
-
 	}
 
 	/**
@@ -4859,19 +4402,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 *             after the last row
 	 */
 	public void cancelRowUpdates() throws SQLException {
-		// make sure we are on a row
-		checkCursor();
-
-		// don't want this to happen...
-		if (onInsertRow == true) {
-			throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidcp").toString());
-		}
-
-		Row currentRow = (Row) getCurrentRow();
-		if (currentRow.getUpdated() == true) {
-			currentRow.clearUpdated();
-			notifyRowChanged();
-		}
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -4901,26 +4432,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 *             <code>ResultSet.CONCUR_READ_ONLY</code>
 	 */
 	public void moveToInsertRow() throws SQLException {
-		if (getConcurrency() == ResultSet.CONCUR_READ_ONLY) {
-			throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.movetoins").toString());
-		}
-		if (insertRow == null) {
-			if (RowSetMD == null)
-				throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.movetoins1").toString());
-			int numCols = RowSetMD.getColumnCount();
-			if (numCols > 0) {
-				insertRow = new InsertRow(numCols);
-			} else {
-				throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.movetoins2").toString());
-			}
-		}
-		onInsertRow = true;
-		// %%% setCurrentRow called in BaseRow
-
-		currentRow = cursorPos;
-		cursorPos = -1;
-
-		insertRow.initInsertRow();
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -4935,12 +4447,6 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 *             if an error occurs
 	 */
 	public void moveToCurrentRow() throws SQLException {
-		if (onInsertRow == false) {
-			return;
-		} else {
-			cursorPos = currentRow;
-			onInsertRow = false;
-		}
 	}
 
 	/**
@@ -5600,23 +5106,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 *             if an error occurs produce the <code>ResultSet</code> object
 	 */
 	public ResultSet getOriginal() throws SQLException {
-		CachedRowSetImpl crs = new CachedRowSetImpl();
-		crs.RowSetMD = RowSetMD;
-		crs.numRows = numRows;
-		crs.cursorPos = 0;
-
-		// make sure we don't get someone playing with these
-		// %%% is this now necessary ???
-		// crs.setReader(null);
-		// crs.setWriter(null);
-		int colCount = RowSetMD.getColumnCount();
-		Row orig;
-
-		for (Iterator i = rvh.iterator(); i.hasNext();) {
-			orig = new Row(colCount, ((Row) i.next()).getOrigRow());
-			crs.rvh.add(orig);
-		}
-		return (ResultSet) crs;
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -5631,22 +5121,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 * @see #setOriginalRow
 	 */
 	public ResultSet getOriginalRow() throws SQLException {
-		CachedRowSetImpl crs = new CachedRowSetImpl();
-		crs.RowSetMD = RowSetMD;
-		crs.numRows = 1;
-		crs.cursorPos = 0;
-
-		// make sure we don't get someone playing with these
-		// %%% is this now necessary ???
-		// crs.setReader(null);
-		// crs.setWriter(null);
-
-		Row orig = new Row(RowSetMD.getColumnCount(), getCurrentRow().getOrigRow());
-
-		crs.rvh.add(orig);
-
-		return (ResultSet) crs;
-
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -5657,61 +5132,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 * @see #getOriginalRow
 	 */
 	public void setOriginalRow() throws SQLException {
-		if (onInsertRow == true) {
-			throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidop").toString());
-		}
-
-		Row row = (Row) getCurrentRow();
-		makeRowOriginal(row);
-
-		// this can happen if deleted rows are being shown
-		if (row.getDeleted() == true) {
-			removeCurrentRow();
-			--numRows;
-		}
-	}
-
-	/**
-	 * Makes the given row of this rowset the original row by clearing any
-	 * settings that mark the row as having been inserted, deleted, or updated.
-	 * This method is called internally by the methods
-	 * <code>setOriginalRow</code> and <code>setOriginal</code>.
-	 * 
-	 * @param row
-	 *            the row to be made the original row
-	 */
-	private void makeRowOriginal(Row row) {
-		if (row.getInserted() == true) {
-			row.clearInserted();
-		}
-
-		if (row.getUpdated() == true) {
-			row.moveCurrentToOrig();
-		}
-	}
-
-	/**
-	 * Marks all rows in this rowset as being original rows. Any updates made to
-	 * the rows become the original values for the rowset. Calls to the method
-	 * <code>setOriginal</code> connot be reversed.
-	 * 
-	 * @throws SQLException
-	 *             if an error occurs
-	 */
-	public void setOriginal() throws SQLException {
-		for (Iterator i = rvh.iterator(); i.hasNext();) {
-			Row row = (Row) i.next();
-			makeRowOriginal(row);
-			// remove deleted rows from the collection.
-			if (row.getDeleted() == true) {
-				i.remove();
-				--numRows;
-			}
-		}
-		numDeleted = 0;
-
-		// notify any listeners that the rowset has changed
-		notifyRowSetChanged();
+		throw new UnsupportedOperationException();
 	}
 
 	/**
@@ -6130,11 +5551,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 * 
 	 */
 	public RowSetWarning getRowSetWarnings() {
-		try {
-			notifyCursorMoved();
-		} catch (SQLException e) {
-		} // mask exception
-		return rowsetWarning;
+		return null;
 	}
 
 	/**
@@ -6445,30 +5862,6 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 			RowSetEvent event_temp = new RowSetEvent(this);
 			event = event_temp;
 			notifyRowSetChanged();
-		}
-	}
-
-	/**
-	 * Sets the status for the row on which the cursor is positioned. The
-	 * insertFlag is used to mention the toggle status for this row
-	 * 
-	 * @param insertFlag
-	 *            if it is true - marks this row as inserted if it is false -
-	 *            marks it as not a newly inserted row
-	 * @throws SQLException
-	 *             if an error occurs while doing this operation
-	 */
-	public void setRowInserted(boolean insertFlag) throws SQLException {
-
-		checkCursor();
-
-		if (onInsertRow == true)
-			throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.invalidop").toString());
-
-		if (insertFlag) {
-			((Row) getCurrentRow()).setInserted();
-		} else {
-			((Row) getCurrentRow()).clearInserted();
 		}
 	}
 
@@ -9314,6 +8707,4 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	public List<Row> getRvh() {
 		return rvh;
 	}
-	
-	
 }

@@ -25,8 +25,7 @@
 
 package jef.rowset.internal;
 
-import java.sql.*;
-import java.io.*;
+import java.sql.SQLException;
 
 /**
  * The abstract base class from which the classes <code>Row</code>
@@ -48,26 +47,7 @@ import java.io.*;
  * the conditions under which an exception is thrown or the bounds for
  * index parameters.
  */
-public abstract class BaseRow implements Serializable, Cloneable {
-
-/**
- * The array containing the original values for this <code>BaseRow</code>
- * object.
- * @serial
- */
-    protected Object[] origVals;
-
-/**
- * Retrieves the values that this row contained immediately
- * prior to its last modification.
- *
- * @return an array of <code>Object</code> values containing this row's
- * original values
- */
-    public Object[] getOrigRow() {
-        return origVals;
-    }
-
+public interface BaseRow extends Cloneable {
 /**
  * Retrieves the array element at the given index, which is
  * the original value of column number <i>idx</i> in this row.

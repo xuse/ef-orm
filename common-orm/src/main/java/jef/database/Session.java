@@ -2017,8 +2017,8 @@ public abstract class Session {
 	 */
 	final protected int innerUpdatePrepared(IQueryableEntity obj, String myTableName) throws SQLException {
 		long start = System.currentTimeMillis();
-		Query<?> q=obj.getQuery();
-		BindSql whereValues = rProcessor.toPrepareWhereSql(q, new SqlContext(null,q), true);
+		Query<?> query=obj.getQuery();
+		BindSql whereValues = rProcessor.toPrepareWhereSql(query, new SqlContext(null,query), true);
 		if (!obj.needUpdate()) {
 			return 0;
 		}
