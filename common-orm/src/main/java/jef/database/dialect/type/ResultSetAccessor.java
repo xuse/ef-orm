@@ -2,7 +2,7 @@ package jef.database.dialect.type;
 
 import java.sql.SQLException;
 
-import jef.database.wrapper.IResultSet;
+import jef.database.wrapper.result.IResultSet;
 
 /**
  * ResultSet访问者 用于描述某个字段的值从结果集中的获取办法

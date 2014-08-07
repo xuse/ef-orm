@@ -1,4 +1,4 @@
-package jef.database.wrapper;
+package jef.database.wrapper.result;
 
 import java.sql.Blob;
 import java.sql.Clob;
@@ -27,6 +27,8 @@ import jef.database.Session.PopulateStrategy;
 import jef.database.Transaction;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Reference;
+import jef.database.wrapper.ColumnDescription;
+import jef.database.wrapper.ColumnMeta;
 import jef.http.client.support.CommentEntry;
 import jef.tools.ArrayUtils;
 

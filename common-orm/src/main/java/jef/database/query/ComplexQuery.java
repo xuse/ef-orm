@@ -3,8 +3,8 @@ package jef.database.query;
 import java.sql.SQLException;
 
 import jef.database.SelectProcessor;
-import jef.database.wrapper.BindSql;
 import jef.database.wrapper.CountSqlResult;
+import jef.database.wrapper.IQuerySqlResult;
 
 public interface ComplexQuery extends ConditionQuery{
 	/**
@@ -20,7 +20,7 @@ public interface ComplexQuery extends ConditionQuery{
 	 * @param context
 	 * @return
 	 */
-	BindSql toPrepareQuerySql(SelectProcessor processor, SqlContext context);
+	IQuerySqlResult toPrepareQuerySql(SelectProcessor processor, SqlContext context);
 
 	/**
 	 * 转换为count语句（无绑定）

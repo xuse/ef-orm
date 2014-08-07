@@ -16,7 +16,7 @@ public class PartitionTableImpl implements PartitionTable {
 	private String appender="_";
 	private String keySeparator="";
 	private PartitionKeyImpl[] key;
-	private String dbPrefix;
+	private String dbPrefix="";
 	
 	public Class<? extends Annotation> annotationType() {
 		return PartitionTable.class;

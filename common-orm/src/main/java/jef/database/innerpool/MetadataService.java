@@ -14,8 +14,8 @@ import jef.database.meta.DdlGenerator;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.EntityMappingProvider;
 import jef.database.support.MetadataEventListener;
-import jef.database.wrapper.IResultSet;
 import jef.database.wrapper.Transformer;
+import jef.database.wrapper.result.IResultSet;
 
 public interface MetadataService {
 	public static final Class<?>[] SIMPLE_CLASSES = new Class<?>[] { String.class, Integer.class, Long.class, Float.class, Double.class, Boolean.class, Date.class ,Object.class};

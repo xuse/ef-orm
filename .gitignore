@@ -11,6 +11,7 @@ target/
 *.gz
 *.last
 *.123
+*.iml
 
 # Package Files #
 *.jar

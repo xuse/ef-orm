@@ -137,7 +137,7 @@ final class SequenceNativeImpl extends AbstractSequence {
 		long start = caclStartValue(meta, schema, table, column, initValue, max);
 		try {
 
-			meta.createSequence(schema, sequence, start, max);
+			meta.createSequence(schema, sequence, start+1, max);
 			exists = true;
 		} catch (SQLException e) {
 			LogUtil.error("Sequence [{}.{}] create error on database {}", schema, sequence, meta);

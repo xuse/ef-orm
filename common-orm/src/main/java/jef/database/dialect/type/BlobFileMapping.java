@@ -9,7 +9,7 @@ import java.sql.SQLException;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Feature;
-import jef.database.wrapper.IResultSet;
+import jef.database.wrapper.result.IResultSet;
 import jef.tools.IOUtils;
 
 public class BlobFileMapping extends ATypeMapping<File>{

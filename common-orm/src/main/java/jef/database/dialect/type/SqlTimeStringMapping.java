@@ -6,7 +6,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 
 import jef.database.dialect.DatabaseDialect;
-import jef.database.wrapper.IResultSet;
+import jef.database.wrapper.result.IResultSet;
 import jef.tools.DateFormats;
 
 public class SqlTimeStringMapping extends ATypeMapping<String>{

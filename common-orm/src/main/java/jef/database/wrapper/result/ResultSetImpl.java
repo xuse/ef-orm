@@ -1,4 +1,4 @@
-package jef.database.wrapper;
+package jef.database.wrapper.result;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -23,6 +23,8 @@ import jef.database.Condition;
 import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Reference;
+import jef.database.wrapper.ColumnDescription;
+import jef.database.wrapper.ColumnMeta;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 

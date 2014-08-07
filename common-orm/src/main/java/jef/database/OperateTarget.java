@@ -27,12 +27,12 @@ import jef.database.meta.DbProperty;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.EntityMappingProvider;
 import jef.database.query.SqlExpression;
-import jef.database.wrapper.IResultSet;
 import jef.database.wrapper.ResultIterator;
-import jef.database.wrapper.ResultSetImpl;
 import jef.database.wrapper.ResultSetTransformer;
-import jef.database.wrapper.ResultSetWrapper;
 import jef.database.wrapper.Transformer;
+import jef.database.wrapper.result.IResultSet;
+import jef.database.wrapper.result.ResultSetImpl;
+import jef.database.wrapper.result.ResultSetWrapper;
 import jef.tools.MathUtils;
 import jef.tools.StringUtils;
 

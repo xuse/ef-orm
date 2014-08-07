@@ -67,7 +67,7 @@ final class SingleManagedConnectionPool extends AbstractPopulator implements IMa
 	 * 本来是使用usedConnections.size()来计算目前使用中的连接数的, 但是发现Google map在数量统计时不太靠谱,只好自行记录使用
 	 */
 	private final AtomicInteger used = new AtomicInteger();
-	final Map<Object, IManagedConnection> usedConnections = new MapMaker().concurrencyLevel(12).weakKeys().makeMap();
+	final Map<Object, ReentrantConnection> usedConnections = new MapMaker().concurrencyLevel(12).weakKeys().makeMap();
 	
 	/**
 	 * 空闲连接数
@@ -116,10 +116,10 @@ final class SingleManagedConnectionPool extends AbstractPopulator implements IMa
 	}
 
 
-	public IManagedConnection poll(Object transaction) throws SQLException {
+	public ReentrantConnection poll(Object transaction) throws SQLException {
 		pollCount.incrementAndGet();
 		try {
-			IManagedConnection conn = usedConnections.get(transaction);
+			ReentrantConnection conn = usedConnections.get(transaction);
 			if (conn == null) {
 				if (used.get()< max && freeConns.isEmpty()) {// 尝试用新连接
 					used.getAndIncrement(); //提前计数
@@ -139,13 +139,22 @@ final class SingleManagedConnectionPool extends AbstractPopulator implements IMa
 			} else {
 				conn.addUsedByObject();
 			}
+//			log(transaction,conn,"get");
 			return conn;
 		} catch (InterruptedException e) {
 			throw new SQLException(e);
 		}
 	}
+	
+	@SuppressWarnings("unused")
+	private void log(Object transaction, ReentrantConnection conn,String action) {
+		StackTraceElement[] eles=new Throwable().getStackTrace();
+		System.out.println(action+" "+conn);
+		System.out.println(eles[4]);
+		System.out.println(eles[5]);
+	}
 
-	public IManagedConnection poll() throws SQLException {
+	public ReentrantConnection poll() throws SQLException {
 		return poll(Thread.currentThread());
 	}
 
@@ -153,10 +162,12 @@ final class SingleManagedConnectionPool extends AbstractPopulator implements IMa
 		offerCount.incrementAndGet();
 		if (conn != null) {
 			Object o = conn.popUsedByObject();
+//			log(o,conn,"return");
+			
 			if (o == null){
 				return;// 不是真正的归还
 			}
-			IManagedConnection conn1 = usedConnections.remove(o);
+			ReentrantConnection conn1 = usedConnections.remove(o);
 			boolean success = freeConns.offer((IManagedConnection) conn);
 			if (!success) {
 				conn.closePhysical();

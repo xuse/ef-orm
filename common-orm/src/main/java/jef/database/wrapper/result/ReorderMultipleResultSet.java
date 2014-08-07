@@ -1,4 +1,4 @@
-package jef.database.wrapper;
+package jef.database.wrapper.result;
 
 import java.sql.Blob;
 import java.sql.Clob;
@@ -17,7 +17,9 @@ import jef.common.log.LogUtil;
 import jef.database.Condition;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Reference;
-import jef.database.wrapper.MultipleResultSet.R;
+import jef.database.wrapper.ColumnDescription;
+import jef.database.wrapper.ColumnMeta;
+import jef.database.wrapper.result.MultipleResultSet.R;
 import jef.http.client.support.CommentEntry;
 import jef.tools.StringUtils;
 

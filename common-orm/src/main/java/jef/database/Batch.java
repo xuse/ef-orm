@@ -238,6 +238,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			return doCommit(p, db, objs);
 		} finally {
 			p.close();
+			db.releaseConnection();
 		}
 	}
 	
@@ -390,6 +391,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 				return dbAccess;
 			} finally {
 				p.close();
+				db.releaseConnection();
 			}
 		}
 

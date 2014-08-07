@@ -1,8 +1,8 @@
-package jef.database.innerpool;
+package jef.database.wrapper;
 
 import java.sql.SQLException;
 
-import jef.database.wrapper.IResultSet;
+import jef.database.wrapper.result.IResultSet;
 import jef.tools.reflect.BeanWrapper;
 
 /**

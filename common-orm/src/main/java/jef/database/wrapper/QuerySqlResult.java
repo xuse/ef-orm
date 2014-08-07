@@ -27,6 +27,8 @@ public class QuerySqlResult implements IQuerySqlResult {
 	private String tableDefinition;
 	private PartitionResult[] tables;
 	
+	public static final QuerySqlResult EMPTY=new QuerySqlResult(new PartitionResult[0]);
+	
 //	//是否为union
 //	private boolean isUnion = false;
 	//Select部分
@@ -46,6 +48,9 @@ public class QuerySqlResult implements IQuerySqlResult {
 	
 	public QuerySqlResult(DatabaseDialect profile){
 		this.profile=profile;
+	}
+	private QuerySqlResult(PartitionResult[] partitionResults) {
+		this.tables=partitionResults;
 	}
 	public IntRange getPageRange() {
 		return pageRange;
@@ -202,5 +207,11 @@ public class QuerySqlResult implements IQuerySqlResult {
 		CacheKey key=new SqlCacheKey(table,new KeyDimension(wherePart,orderbyPart.getSql()),CacheImpl.toParamList(this.bind));
 		this.cacheKey=key;
 		return key;
+	}
+	public boolean isGroupBy() {
+		return this.grouphavingPart!=null && grouphavingPart.length()>0;
+	}
+	public boolean isEmpty() {
+		return this.tables!=null && tables.length==0;
 	}
 }

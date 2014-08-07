@@ -10,6 +10,7 @@ import jef.database.LazyLoadProcessor;
 import jef.database.dialect.type.ColumnMappings;
 import jef.database.innerpool.InstancePopulator;
 import jef.database.meta.ITableMetadata;
+import jef.database.wrapper.result.IResultSet;
 import jef.tools.reflect.BeanWrapper;
 
 public final class ObjectPopulator implements InstancePopulator{

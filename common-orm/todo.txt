@@ -23,20 +23,19 @@ CXF 2.7.10提高了兼容性，但是CXF-Plus的ASM类产生的package-info不�
 分库分表测试案例添加。(进行中)
 1 分库分表聚合等支持、对分表分库后混合结果集进行支持（聚合、排序）
 2 基于SQL分析的分库分表、对NativeQuery支持的分表分库操作
-
-
-诡
-
 Batch Insert等操作下的极限性能优化。(不返回值、性能分析等手段)、此外对于Batch可能需要统计并输出因为Sequence而消耗的时间
 
 对照TDDL分库分表优势体现
-
-
-
 http://10.22.33.106/index!controlIndex.action
 
 HSQLDB的函数对DATE还不支持。HSQLDB中还有很多函数没有写到方言中去（待完成 http://hsqldb.org/doc/2.0/guide/builtinfunctions-chapt.html） 
-因此，学习MySQL Sharding百益而无一害！最早的先驱者估计可以是Google捐赠给开源社区的Hibernate shards了，这是一个Hibernate应用横向分割的分布式数据库解决方案的框架。
+
+
+MySQL Sharding
+Hibernate Shards
+TDDL
+
+
 它可以让一个Hibernate应用比较简单地加入横向分割的数据库分布式功能。另外，还有HiveDB。其底层也是基于Hibernate shards实现，目前版本相对稳定，
 其亮点是具有类似mysql proxy之类多服务器容错功能，单独服务器发生故障不影响系统正常运行，通过类似ha-jdbc思想实现。
 最后，不得不提的就是淘宝贡献的TDDL，使用过淘宝的同学应该都深有体会，其可靠性、可用性、稳定性、可扩展性均领跑业界很多同类产品。

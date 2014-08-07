@@ -2,7 +2,7 @@ package jef.database.dialect.type;
 
 import java.sql.SQLException;
 
-import jef.database.wrapper.IResultSet;
+import jef.database.wrapper.result.IResultSet;
 
 final class ResultRawAccessor implements ResultSetAccessor{
 

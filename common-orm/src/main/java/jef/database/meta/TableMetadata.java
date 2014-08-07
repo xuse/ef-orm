@@ -74,6 +74,7 @@ import org.apache.commons.lang.ObjectUtils;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
+@SuppressWarnings("rawtypes")
 public final class TableMetadata extends MetadataAdapter {
 
 	/**
@@ -87,8 +88,6 @@ public final class TableMetadata extends MetadataAdapter {
 	private PartitionTable partition;// 分表策略
 	
 	//记录在每个字段上的函数，用来进行分表估算的时的采样
-	//FIXME 分库规则和分表规则可以分开
-	//FIXME 复合采样规则现在不支持，可考虑支持
 	private Multimap<String, PartitionFunction> partitionFuncs;
 	
 	
@@ -147,7 +146,6 @@ public final class TableMetadata extends MetadataAdapter {
 		}
 		this.partition = t;
 		// 开始计算在同一个字段上的最小的分表参数单元
-		@SuppressWarnings("rawtypes")
 		Multimap<String, PartitionFunction> fieldKeyFn = ArrayListMultimap.create();
 		for (Entry<PartitionKey, PartitionFunction> entry : getEffectPartitionKeys()) {
 			PartitionKey key = entry.getKey();
@@ -377,12 +375,10 @@ public final class TableMetadata extends MetadataAdapter {
 	 * 
 	 * @return
 	 */
-	@SuppressWarnings("rawtypes")
 	public Entry<PartitionKey, PartitionFunction>[] getEffectPartitionKeys() {
 		return effectPartitionKeys;
 	}
 
-	@SuppressWarnings("rawtypes")
 	private Entry<PartitionKey, PartitionFunction>[] withFunction(PartitionKey[] key) {
 		@SuppressWarnings("unchecked")
 		Entry<PartitionKey, PartitionFunction>[] result = new Entry[key.length];
@@ -392,7 +388,6 @@ public final class TableMetadata extends MetadataAdapter {
 		return result;
 	}
 
-	@SuppressWarnings({  "rawtypes" })
 	private static PartitionFunction<?> createFunc(PartitionKey value) {
 		if (value.functionClass() != PartitionFunction.class) {
 			try {
@@ -471,7 +466,7 @@ public final class TableMetadata extends MetadataAdapter {
 				 if(nullValue != null){
 					 return Arrays.asList((Object[]) nullValue);
 				 }else{
-					 return Collections.EMPTY_LIST;
+					 return EMPTY_REGEXP;
 				 }
 			} else if (ObjectUtils.equals(min, max)) {
 				return Arrays.asList(min);
@@ -488,8 +483,8 @@ public final class TableMetadata extends MetadataAdapter {
 			return Arrays.<Object>asList(regexp);
 		}
 	};
+	private static final List<Object> EMPTY_REGEXP=Arrays.<Object>asList(new RegexpDimension(""));
 
-	@SuppressWarnings("rawtypes")
 	public Multimap<String, PartitionFunction> getMinUnitFuncForEachPartitionKey() {
 		return partitionFuncs;
 	}
@@ -842,9 +837,7 @@ public final class TableMetadata extends MetadataAdapter {
 		return this.containerType==PojoWrapper.class?EntityType.POJO:EntityType.NATIVE;
 	}
 	
-	@SuppressWarnings("rawtypes")
 	private List<Class> parents;
-	@SuppressWarnings("rawtypes")
 	public void addParent(Class<?> processingClz) {
 		if(parents==null){
 			parents=new ArrayList<Class>(3);
@@ -852,7 +845,6 @@ public final class TableMetadata extends MetadataAdapter {
 		parents.add(processingClz);
 		
 	}
-	@SuppressWarnings("rawtypes")
 	public boolean containsMeta(ITableMetadata meta) {
 		if(meta==this)return true;
 		if(parents==null)return false;

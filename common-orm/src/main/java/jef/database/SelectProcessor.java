@@ -28,11 +28,11 @@ import jef.database.query.SqlContext;
 import jef.database.wrapper.BindSql;
 import jef.database.wrapper.CountSqlResult;
 import jef.database.wrapper.IQuerySqlResult;
-import jef.database.wrapper.MultipleResultSet;
 import jef.database.wrapper.OrderResult;
 import jef.database.wrapper.QuerySqlResult;
 import jef.database.wrapper.QuerySqlResultSimple;
 import jef.database.wrapper.SelectResult;
+import jef.database.wrapper.result.MultipleResultSet;
 import jef.http.client.support.CommentEntry;
 import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
@@ -329,10 +329,7 @@ public abstract class SelectProcessor {
 			} else if (obj instanceof ComplexQuery) {
 				ComplexQuery cq = (ComplexQuery) obj;
 				SqlContext context = cq.prepare();
-				BindSql sql = cq.toPrepareQuerySql(this, context);
-				QuerySqlResultSimple result = new QuerySqlResultSimple(getProfile(), true);
-				result.setBody(sql.getSql());
-				result.setBind(sql.getBind());
+				IQuerySqlResult result = cq.toPrepareQuerySql(this, context);
 				if(order){
 					result.setOrderbyPart(toOrderClause(cq, context));
 				}

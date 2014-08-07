@@ -62,14 +62,14 @@ import jef.database.support.DbOperatorListener;
 import jef.database.wrapper.BindSql;
 import jef.database.wrapper.CountSqlResult;
 import jef.database.wrapper.IQuerySqlResult;
-import jef.database.wrapper.IResultSet;
 import jef.database.wrapper.InsertSqlResult;
-import jef.database.wrapper.MultipleResultSet;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.ResultSetTransformer;
-import jef.database.wrapper.ResultSetWrapper;
-import jef.database.wrapper.ResultSets;
 import jef.database.wrapper.Transformer;
+import jef.database.wrapper.result.IResultSet;
+import jef.database.wrapper.result.MultipleResultSet;
+import jef.database.wrapper.result.ResultSetWrapper;
+import jef.database.wrapper.result.ResultSets;
 import jef.script.javascript.Var;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
@@ -1348,6 +1348,9 @@ public abstract class Session {
 
 		// 生成 SQL语句
 		IQuerySqlResult sql = selectp.toQuerySql(queryObj, range, option.tableName,true);
+		if(sql.isEmpty()){
+			return Collections.EMPTY_LIST;
+		}
 		{
 			List result = getCache().load(sql.getCacheKey());
 			if (result != null) {

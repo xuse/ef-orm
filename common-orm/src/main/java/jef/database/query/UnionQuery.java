@@ -16,6 +16,8 @@ import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.BindSql;
 import jef.database.wrapper.CountSqlResult;
 import jef.database.wrapper.IQuerySqlResult;
+import jef.database.wrapper.QuerySqlResult;
+import jef.database.wrapper.QuerySqlResultSimple;
 import jef.database.wrapper.Transformer;
 import jef.tools.StringUtils;
 
@@ -152,6 +154,9 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 			}
 		}else{//union，无法优化只能直接查询,最简单粗暴
 			BindSql sql=toPrepareQuerySql0(processor,context,true);
+			if(sql==null){
+				return count;
+			}
 			sql.setSql(DefaultSqlProcessor.wrapCount(sql.getSql()));
 			count.addSql(null,sql);
 		}
@@ -160,7 +165,7 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 
 	private BindSql toPrepareQuerySql0(SelectProcessor processor, SqlContext context,boolean isCount) {
 		List<BindVariableDescription> binds=new ArrayList<BindVariableDescription>();
-		String[] sqls=new String[size()];
+		List<String> sqls=new ArrayList<String>(size());
 		boolean withBuck=processor.getProfile().has(Feature.UNION_WITH_BUCK);
 				
 		for(int i=0;i<size();i++){
@@ -171,21 +176,34 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 					cq=DbUtils.toReferenceJoinQuery(qq, null);
 				}
 			}
-			BindSql qresult=processor.toQuerySql(cq, null,null,false).getSql(null);
+			IQuerySqlResult sql=processor.toQuerySql(cq, null,null,false);
+			if(sql.isEmpty()){
+				continue;
+			}
+			BindSql qresult=sql.getSql(null);
 			if(withBuck && !isCount){
-				sqls[i]="("+qresult.getSql()+")";	
+				sqls.add("("+qresult.getSql()+")");
 			}else{
-				sqls[i]=qresult.getSql();
+				sqls.add(qresult.getSql());
 			}
 			binds.addAll(qresult.getBind());
+		}
+		if(sqls.isEmpty()){
+			return null;
 		}
 		String union=isAll?"\n union all\n":"\n union\n";
 		String sql=StringUtils.join(sqls,union);//QuerySqlResult.toString()已经能自动转换为SQL语句
 		return new BindSql(sql,binds);
 	}
 	
-	public BindSql toPrepareQuerySql(SelectProcessor processor, SqlContext context) {
-		return toPrepareQuerySql0(processor,context,false);
+	public IQuerySqlResult toPrepareQuerySql(SelectProcessor processor, SqlContext context) {
+		BindSql sql = toPrepareQuerySql0(processor, context,false);
+		if(sql==null)return QuerySqlResult.EMPTY;
+		
+		QuerySqlResultSimple result = new QuerySqlResultSimple(processor.getProfile(), true);
+		result.setBody(sql.getSql());
+		result.setBind(sql.getBind());
+		return result;
 	}
 
 	public String toQuerySql(SelectProcessor processor) {

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jef.database.wrapper;
+package jef.database.wrapper.result;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,6 +21,7 @@ import java.sql.SQLException;
 import jef.database.OperateTarget;
 import jef.database.ResultSetReleaseHandler;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.wrapper.ColumnMeta;
 
 
 public class ResultSetWrapper extends ResultSetImpl{

@@ -1,7 +1,6 @@
 package jef.database.query;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -68,7 +67,7 @@ public class ComplexDimension implements Dimension {
 //			if(objs.length==2 && (objs[0]==null || objs[1]==null)){//出现正负无穷的枚举就不处理
 //				break;
 //			}
-			set.addAll(Arrays.asList(objs));	
+			set.addAll(objs);	
 		}
 		return set;
 	}

@@ -6,7 +6,7 @@ import java.sql.Time;
 import java.util.Date;
 
 import jef.database.dialect.DatabaseDialect;
-import jef.database.wrapper.IResultSet;
+import jef.database.wrapper.result.IResultSet;
 
 public class SqlTimeDateMapping extends ATypeMapping<Date>{
 

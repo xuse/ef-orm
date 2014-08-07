@@ -8,7 +8,7 @@ import java.util.Date;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.query.Func;
-import jef.database.wrapper.IResultSet;
+import jef.database.wrapper.result.IResultSet;
 import jef.tools.DateFormats;
 
 /**

@@ -68,4 +68,10 @@ public class QuerySqlResultSimple implements IQuerySqlResult {
 	public CacheKey getCacheKey() {
 		return null;
 	}
+	public boolean isGroupBy() {
+		return false;
+	}
+	public boolean isEmpty() {
+		return false;
+	}
 }

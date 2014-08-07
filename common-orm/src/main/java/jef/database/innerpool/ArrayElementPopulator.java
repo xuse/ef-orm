@@ -4,7 +4,8 @@ import java.lang.reflect.Array;
 import java.sql.SQLException;
 
 import jef.database.IQueryableEntity;
-import jef.database.wrapper.IResultSet;
+import jef.database.wrapper.IPopulator;
+import jef.database.wrapper.result.IResultSet;
 import jef.tools.reflect.BeanWrapper;
 
 public class ArrayElementPopulator implements IPopulator{

@@ -11,7 +11,8 @@ import jef.database.dialect.type.MappingType;
 import jef.database.meta.IReferenceColumn;
 import jef.database.wrapper.ColumnDescription;
 import jef.database.wrapper.ColumnMeta;
-import jef.database.wrapper.IResultSet;
+import jef.database.wrapper.IPopulator;
+import jef.database.wrapper.result.IResultSet;
 import jef.tools.Assert;
 import jef.tools.reflect.BeanWrapper;
 

@@ -64,10 +64,10 @@ import jef.database.meta.MetaHolder;
 import jef.database.meta.PrimaryKey;
 import jef.database.query.DefaultPartitionCalculator;
 import jef.database.support.MetadataEventListener;
-import jef.database.wrapper.ResultSetImpl;
 import jef.database.wrapper.ResultSetTransformer;
-import jef.database.wrapper.ResultSets;
 import jef.database.wrapper.Transformer;
+import jef.database.wrapper.result.ResultSetImpl;
+import jef.database.wrapper.result.ResultSets;
 import jef.http.client.support.CommentEntry;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
@@ -1403,11 +1403,13 @@ public class DbMetaData extends UserCacheHolder {
 			return;
 		if (max == null)
 			max = 9999999999L;
-
+		long min=1;
+		if(min>start)min=start;
+		
 		if (schema != null) {
 			sequenceName = schema + "." + sequenceName;
 		}
-		String sequenceSql = StringUtils.concat("create sequence ", sequenceName, " minvalue 1 maxvalue ", String.valueOf(max), " start with ", String.valueOf(start), " increment by 1");
+		String sequenceSql = StringUtils.concat("create sequence ", sequenceName, " minvalue "+min+" maxvalue ", String.valueOf(max), " start with ", String.valueOf(start), " increment by 1");
 		Connection conn = getConnection();
 		if (ORMConfig.getInstance().isDebugMode()) {
 			LogUtil.show(sequenceSql + "|" + getTransactionId());

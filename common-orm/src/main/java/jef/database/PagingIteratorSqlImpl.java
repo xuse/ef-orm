@@ -9,8 +9,8 @@ import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.Session.PopulateStrategy;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.wrapper.ResultSetImpl;
 import jef.database.wrapper.Transformer;
+import jef.database.wrapper.result.ResultSetImpl;
 import jef.tools.Assert;
 import jef.tools.PageInfo;
 

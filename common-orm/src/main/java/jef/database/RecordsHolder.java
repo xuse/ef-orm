@@ -18,7 +18,7 @@ import jef.database.jsqlparser.expression.Expression;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.TupleField;
-import jef.database.wrapper.ResultSetWrapper;
+import jef.database.wrapper.result.ResultSetWrapper;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;

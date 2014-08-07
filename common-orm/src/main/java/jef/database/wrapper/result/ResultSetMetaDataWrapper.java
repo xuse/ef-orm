@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jef.database.wrapper;
+package jef.database.wrapper.result;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 

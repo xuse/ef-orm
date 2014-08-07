@@ -6,7 +6,7 @@ import java.sql.SQLException;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.query.Func;
-import jef.database.wrapper.IResultSet;
+import jef.database.wrapper.result.IResultSet;
 
 /**
  * DATE <-> java.sql.Date

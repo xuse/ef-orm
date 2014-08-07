@@ -8,7 +8,7 @@ import java.sql.SQLException;
 
 import jef.database.ORMConfig;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.wrapper.IResultSet;
+import jef.database.wrapper.result.IResultSet;
 import jef.tools.IOUtils;
 
 public class BlobStringMapping extends ATypeMapping<String>{
