@@ -1,4 +1,5 @@
 /*
+
  * Copyright (c) 2003, 2006, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
@@ -23,7 +24,7 @@
  * questions.
  */
 
-package jef.rowset;
+package jef.database.rowset;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -81,8 +82,8 @@ import javax.sql.rowset.serial.SerialStruct;
 import javax.sql.rowset.spi.SyncProvider;
 import javax.sql.rowset.spi.SyncProviderException;
 
-import jef.rowset.internal.BaseRow;
-import jef.rowset.internal.Row;
+import jef.database.ORMConfig;
+
 
 /**
  * The standard implementation of the <code>CachedRowSet</code> interface.
@@ -238,16 +239,20 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 		if (data == null) {
 			throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.populate").toString());
 		}
-
 		if(RowSetMD==null){
 			RowSetMD = new RowSetMetaDataImpl();
 			initMetaData(RowSetMD, data.getMetaData());	
 		}
-		// release the meta-data so that aren't tempted to use it.
+		
 		int numCols = RowSetMD.getColumnCount();
-		Row currentRow = null;
+		int count=rvh.size();
+		int max=ORMConfig.getInstance().getPartitionInMemoryMaxRows();
+		if(max==0)max=Integer.MAX_VALUE;
 		while (data.next()) {
-			currentRow = new Row(numCols);
+			if(++count>max){
+				throw new SQLException("The Inmemory operate reaches it max limit of "+ max);
+			}
+			Row currentRow = new Row(numCols);
 			for (int i = 1; i <= numCols; i++) {
 				Object obj;
 				if (map == null) {
@@ -279,7 +284,6 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 		}
 
 		numRows = rvh.size();;
-		// Also rowsFetched should be equal to rvh.size()
 		notifyRowSetChanged();
 
 	}
@@ -638,8 +642,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 * @return the <code>Row</code> object on which this
 	 *         <code>CachedRowSetImpl</code> objects's cursor is positioned
 	 */
-	protected BaseRow getCurrentRow() {
-		return (BaseRow) (rvh.get(cursorPos - 1));
+	protected Row getCurrentRow() {
+		return (Row) (rvh.get(cursorPos - 1));
 	}
 
 	/**
@@ -3061,7 +3065,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 		// make sure the cursor is on a valid row
 		checkCursor();
 
-		BaseRow row = getCurrentRow();
+		Row row = getCurrentRow();
 		row.setColumnObject(columnIndex, null);
 
 	}
@@ -5554,65 +5558,6 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 		return null;
 	}
 
-	/**
-	 * The function tries to isolate the tablename when only setCommand is set
-	 * and not setTablename is called provided there is only one table name in
-	 * the query else just leaves the setting of table name as such. If
-	 * setTablename is set later it will over ride this table name value so
-	 * retrieved.
-	 * 
-	 * @return the tablename if only one table in query else return ""
-	 */
-	private String buildTableName(String command) throws SQLException {
-
-		// If we have a query from one table,
-		// we set the table name implicitly
-		// else user has to explicitly set the table name.
-
-		int indexFrom, indexComma;
-		String strTablename = "";
-		command = command.trim();
-
-		// Query can be a select, insert or update
-
-		if (command.toLowerCase().startsWith("select")) {
-			// look for "from" keyword, after that look for a
-			// comma after from. If comma is there don't set
-			// table name else isolate table name.
-
-			indexFrom = command.toLowerCase().indexOf("from");
-			indexComma = command.indexOf(",", indexFrom);
-
-			if (indexComma == -1) {
-				// implies only one table
-				strTablename = (command.substring(indexFrom + "from".length(), command.length())).trim();
-
-				String tabName = strTablename;
-
-				int idxWhere = tabName.toLowerCase().indexOf("where");
-
-				/**
-				 * Adding the addtional check for conditions following the table
-				 * name. If a condition is found truncate it.
-				 **/
-
-				if (idxWhere != -1) {
-					tabName = tabName.substring(0, idxWhere).trim();
-				}
-
-				strTablename = tabName;
-
-			} else {
-				// strTablename="";
-			}
-
-		} else if (command.toLowerCase().startsWith("insert")) {
-			// strTablename="";
-		} else if (command.toLowerCase().startsWith("update")) {
-			// strTablename="";
-		}
-		return strTablename;
-	}
 
 	/**
 	 * Unsets the designated parameter to the given int array. This was set

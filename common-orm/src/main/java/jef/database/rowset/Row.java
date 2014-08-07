@@ -23,7 +23,7 @@
  * questions.
  */
 
-package jef.rowset.internal;
+package jef.database.rowset;
 
 import java.sql.SQLException;
 
@@ -41,7 +41,7 @@ import java.sql.SQLException;
  * <code>setColumnUpdated</code> refers to the index into the rowset's internal
  * bitset (the first bit is <code>0</code>).
  */
-public class Row implements BaseRow {
+public class Row {
 
 	/**
 	 * An array containing the current column values for this <code>Row</code>
@@ -50,7 +50,6 @@ public class Row implements BaseRow {
 	 * @serial
 	 */
 	private Object[] currentVals;
-
 
 	/**
 	 * Creates a new <code>Row</code> object with the given number of columns.
@@ -121,9 +120,11 @@ public class Row implements BaseRow {
 	public Object getColumnObject(int columnIndex) {
 		return (currentVals[columnIndex - 1]); // maps to array!!
 	}
+
 	public Object getArrayObject(int columnIndex) {
 		return (currentVals[columnIndex]); // maps to array!!
 	}
+
 	public void setArrayObject(int idx, Object val) {
 		currentVals[idx] = val;
 	}

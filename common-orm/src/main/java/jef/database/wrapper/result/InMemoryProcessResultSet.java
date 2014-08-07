@@ -22,9 +22,9 @@ import java.util.List;
 
 import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.rowset.CachedRowSetImpl;
 import jef.database.wrapper.clause.InMemoryProcessor;
 import jef.database.wrapper.populator.ColumnMeta;
-import jef.rowset.CachedRowSetImpl;
 
 public class InMemoryProcessResultSet extends AbstractResultSet{
 	private CachedRowSetImpl cache;

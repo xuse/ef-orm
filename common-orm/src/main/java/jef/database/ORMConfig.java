@@ -47,6 +47,11 @@ public class ORMConfig implements ORMConfigMBean {
 	private boolean partitionCreateTableInneed;
 	
 	/**
+	 * 内存排序和聚合等计算的最大支持结果数
+	 */
+	private int partitionInMemoryMaxRows;
+	
+	/**
 	 * Lob等数据流映射到String时的编码
 	 */
 	private String dbEncoding;
@@ -188,6 +193,7 @@ public class ORMConfig implements ORMConfigMBean {
 		checkSqlFunctions=JefConfiguration.getBoolean(DbCfg.DB_CHECK_SQL_FUNCTIONS, true);
 		filterAbsentTables=JefConfiguration.getBoolean(DbCfg.PARTITION_FILTER_ABSENT_TABLES, true);
 		partitionCreateTableInneed=JefConfiguration.getBoolean(DbCfg.PARTITION_FILTER_ABSENT_TABLES, true);
+		partitionInMemoryMaxRows=JefConfiguration.getInt(DbCfg.PARTITION_INMEMORY_MAXROWS, 0);
 	}
 	
 	public boolean isPartitionCreateTableInneed() {
@@ -490,6 +496,14 @@ public class ORMConfig implements ORMConfigMBean {
 			return "-";	
 		}
 		return metaFacade.getDefaultMeta().getPattern();
+	}
+
+	public int getPartitionInMemoryMaxRows() {
+		return partitionInMemoryMaxRows;
+	}
+
+	public void setPartitionInMemoryMaxRows(int partitionInMemoryMaxRows) {
+		this.partitionInMemoryMaxRows = partitionInMemoryMaxRows;
 	}
 
 	public void setMetadataResourcePattern(String pattern) {

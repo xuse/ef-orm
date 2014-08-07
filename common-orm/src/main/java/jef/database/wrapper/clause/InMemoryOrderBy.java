@@ -19,7 +19,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import jef.rowset.internal.Row;
+import jef.database.rowset.Row;
 
 public class InMemoryOrderBy implements InMemoryProcessor {
 	private int[] orderFields;

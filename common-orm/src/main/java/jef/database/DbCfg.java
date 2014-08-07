@@ -387,6 +387,12 @@ public enum DbCfg implements ConfigItem {
 	 */
 	PARTITION_DATE_SPAN,
 	/**
+	 * 当分库操作时，不得不进行内存排序和聚合计算时，限制最大操作的行数，防止内存溢出。
+	 * 一旦达到最大行数，该次操作将抛出异常。
+	 * 默认0，表示不限制。
+	 */
+	PARTITION_INMEMORY_MAXROWS,
+	/**
 	 * 按需建表功能开关，默认开
 	 */
 	PARTITION_CREATE_TABLE_INNEED,

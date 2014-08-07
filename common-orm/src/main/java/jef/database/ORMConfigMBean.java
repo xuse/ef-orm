@@ -116,25 +116,36 @@ public interface ORMConfigMBean {
 	boolean isDisableGeneratedKeyOnBatch();
 
 	void setDisableGeneratedKeyOnBatch(boolean disableGeneratedKeyOnBatch);
-	
+
 	int getLoadedEntityCount();
-	
+
 	void clearMetadatas();
-	
+
 	String getSchemaMapping();
-	
+
 	void setSchemaMapping(String data);
-	
+
 	String getSiteMapping();
-	
+
 	void setSiteMapping(String data);
-	
+
 	String getMetadataResourcePattern();
-	
+
 	void setMetadataResourcePattern(String pattern);
-	
+
 	boolean isCheckUpdateForNamedQueries();
-	
+
 	void setCheckUpdateForNamedQueries(boolean checkUpdateForNamedQueries);
-	
+
+	int getPartitionInMemoryMaxRows();
+
+	void setPartitionInMemoryMaxRows(int partitionInMemoryMaxRows);
+
+	boolean isSetTxIsolation();
+
+	void setSetTxIsolation(boolean setTxIsolation);
+
+	boolean isCheckSqlFunctions();
+
+	void setCheckSqlFunctions(boolean checkSqlFunctions);
 }

@@ -23,7 +23,7 @@
  * questions.
  */
 
-package jef.rowset;
+package jef.database.rowset;
 
 import java.io.IOException;
 import java.io.Serializable;

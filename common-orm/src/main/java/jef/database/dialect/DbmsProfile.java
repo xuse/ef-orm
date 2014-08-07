@@ -40,7 +40,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.PersistenceException;
 import javax.sql.rowset.CachedRowSet;
 
 import jef.common.BigDataBuffer;
@@ -61,7 +60,6 @@ import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
-import jef.database.jsqlparser.parser.ParseException;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.meta.FunctionMapping;
@@ -654,7 +652,7 @@ public abstract class DbmsProfile implements DatabaseDialect {
 	}
 
 	public CachedRowSet newCacheRowSetInstance() throws SQLException {
-		return new jef.rowset.CachedRowSetImpl();
+		return new jef.database.rowset.CachedRowSetImpl();
 	}
 
 	/**

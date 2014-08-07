@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jef.rowset.internal.Row;
+import jef.database.rowset.Row;
 
 import org.apache.commons.lang.ObjectUtils;
 
