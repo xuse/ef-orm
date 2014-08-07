@@ -11,7 +11,7 @@ import jef.database.meta.MetaHolder;
 import jef.database.meta.Reference;
 import jef.database.query.ConditionQuery;
 import jef.database.query.JoinElement;
-import jef.database.wrapper.MultipleResultSet;
+import jef.database.wrapper.result.MultipleResultSet;
 
 public final class QueryOption implements Cloneable {
 	public static final QueryOption DEFAULT=new QueryOption();

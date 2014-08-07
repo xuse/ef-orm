@@ -10,7 +10,7 @@ import jef.common.Entry;
 import jef.common.log.LogUtil;
 import jef.database.BindVariableTool.SqlType;
 import jef.database.annotation.PartitionResult;
-import jef.database.wrapper.BindSql;
+import jef.database.wrapper.clause.BindSql;
 import jef.tools.StringUtils;
 
 public final class DbOperateProcessor {

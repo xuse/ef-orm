@@ -25,7 +25,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-import jef.database.wrapper.InsertSqlResult;
+import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.StringUtils;
 import jef.tools.reflect.Property;
 
@@ -195,7 +195,7 @@ public abstract class AutoIncrementMapping<T> extends ATypeMapping<T> {
 	}
 
 	@Override
-	public void processInsert(Object value, InsertSqlResult result, List<String> cStr, List<String> vStr, boolean smart, IQueryableEntity obj) throws SQLException {
+	public void processInsert(Object value, InsertSqlClause result, List<String> cStr, List<String> vStr, boolean smart, IQueryableEntity obj) throws SQLException {
 		DatabaseDialect profile = result.profile;
 		Field field = this.field;
 		
@@ -227,7 +227,7 @@ public abstract class AutoIncrementMapping<T> extends ATypeMapping<T> {
 	}
 
 	@Override
-	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlResult result, boolean smart) throws SQLException {
+	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean smart) throws SQLException {
 		DatabaseDialect profile = result.profile;
 		Field field = this.field;
 		

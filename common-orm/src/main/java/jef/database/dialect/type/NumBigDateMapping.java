@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import java.util.Date;
 
 import jef.database.dialect.DatabaseDialect;
-import jef.database.wrapper.IResultSet;
+import jef.database.wrapper.result.IResultSet;
 
 public class NumBigDateMapping extends ATypeMapping<Date>{
 

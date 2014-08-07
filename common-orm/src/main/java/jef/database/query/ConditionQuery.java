@@ -3,7 +3,7 @@ package jef.database.query;
 import java.util.Collection;
 
 import jef.database.Field;
-import jef.database.wrapper.Transformer;
+import jef.database.wrapper.populator.Transformer;
 
 /**
  * 所有查询的接口

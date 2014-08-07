@@ -69,6 +69,6 @@ public class PoolService {
 	 * @param offerCount
 	 */
 	static void logPoolStatic(String name, long pollCount, long offerCount) {
-		log.info("The connection pool{} poll-count:{} offer-count:{}", name, pollCount, offerCount);
+		log.info("The connection {} poll-count:{} offer-count:{}", name, pollCount, offerCount);
 	}
 }

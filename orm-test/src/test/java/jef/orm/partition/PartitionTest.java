@@ -9,6 +9,7 @@ import java.util.List;
 import jef.common.log.LogUtil;
 import jef.database.Condition.Operator;
 import jef.database.DbClient;
+import jef.database.ORMConfig;
 import jef.database.PagingIterator;
 import jef.database.QB;
 import jef.database.Session.PopulateStrategy;
@@ -391,6 +392,7 @@ public class PartitionTest extends org.junit.Assert {
 	 */
 	@Test
 	public void testSelectUsingAlias() throws SQLException {
+		ORMConfig.getInstance().setFilterAbsentTables(false);
 		System.out.println("===================== testSelectUsingAlias =======================");
 		testPartitionBatchInsert(); // prepare data
 

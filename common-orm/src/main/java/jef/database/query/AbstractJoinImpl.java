@@ -11,7 +11,7 @@ import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.QueryAlias;
 import jef.database.meta.ITableMetadata;
-import jef.database.wrapper.Transformer;
+import jef.database.wrapper.populator.Transformer;
 
 public abstract class AbstractJoinImpl implements Join{
 	//额外的数据属性

@@ -11,6 +11,7 @@ import jef.database.meta.MetaHolder;
 import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
 import jef.database.test.DatabaseInit;
+import jef.database.test.IgnoreOn;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
 import jef.orm.onetable.model.TestEntity;
 import jef.tools.ThreadUtils;

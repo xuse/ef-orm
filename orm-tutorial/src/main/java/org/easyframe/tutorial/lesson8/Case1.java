@@ -19,10 +19,10 @@ import jef.database.Session.PopulateStrategy;
 import jef.database.query.Join;
 import jef.database.query.Query;
 import jef.database.query.Selects;
-import jef.database.wrapper.IResultSet;
-import jef.database.wrapper.Mapper;
-import jef.database.wrapper.Mappers;
-import jef.database.wrapper.Transformer;
+import jef.database.wrapper.populator.Mapper;
+import jef.database.wrapper.populator.Mappers;
+import jef.database.wrapper.populator.Transformer;
+import jef.database.wrapper.result.IResultSet;
 import jef.tools.DateUtils;
 
 import org.apache.commons.lang.builder.ToStringBuilder;

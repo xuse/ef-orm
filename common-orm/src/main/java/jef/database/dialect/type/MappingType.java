@@ -9,7 +9,7 @@ import jef.database.IQueryableEntity;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.ITableMetadata;
-import jef.database.wrapper.InsertSqlResult;
+import jef.database.wrapper.clause.InsertSqlClause;
 
 /**
  * 描述一个数据库列 映射到java字段上的模型信息
@@ -139,7 +139,7 @@ public interface MappingType<T> extends ResultSetAccessor {
 	 *            被插入数据库的对象
 	 * @throws SQLException
 	 */
-	void processInsert(Object value, InsertSqlResult result, List<String> cStr, List<String> vStr, boolean dynamic, IQueryableEntity obj) throws SQLException;
+	void processInsert(Object value, InsertSqlClause result, List<String> cStr, List<String> vStr, boolean dynamic, IQueryableEntity obj) throws SQLException;
 
 	/**
 	 * (框架使用)当执行插入时(绑定变量)，该字段的处理拼到InsertSqlResult对象上去，形成SQL语句的逻辑
@@ -157,7 +157,7 @@ public interface MappingType<T> extends ResultSetAccessor {
 	 *            是否dynamic模式插入，dynamic模式下没有设置过的字段不出现在SQL语句中，从而可以使用数据库中的默认值
 	 * @throws SQLException
 	 */
-	void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlResult result, boolean dynamic) throws SQLException;
+	void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean dynamic) throws SQLException;
 
 	/**
 	 * 该字段是否为LOB字段

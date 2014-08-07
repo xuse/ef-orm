@@ -4,7 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import jef.database.dialect.DatabaseDialect;
-import jef.database.wrapper.IResultSet;
+import jef.database.wrapper.result.IResultSet;
 
 public class NumFloatDoubleMapping extends ATypeMapping<Double>{
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {

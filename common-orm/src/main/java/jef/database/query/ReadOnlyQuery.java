@@ -15,7 +15,7 @@ import jef.database.IConditionField;
 import jef.database.IQueryableEntity;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.Reference;
-import jef.database.wrapper.Transformer;
+import jef.database.wrapper.populator.Transformer;
 
 /**
  * 不可更改的Query对象实现，用于内部处理

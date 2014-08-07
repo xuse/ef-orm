@@ -4,7 +4,7 @@ import java.sql.SQLException;
 
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.wrapper.IResultSet;
+import jef.database.wrapper.result.IResultSet;
 
 public final class ResultCastAccessor implements ResultSetAccessor{
 	private Class<?> targetClass;

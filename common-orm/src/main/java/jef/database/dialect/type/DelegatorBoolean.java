@@ -5,7 +5,7 @@ import java.sql.SQLException;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Feature;
-import jef.database.wrapper.IResultSet;
+import jef.database.wrapper.result.IResultSet;
 
 
 public final class DelegatorBoolean extends ATypeMapping<Boolean>{

@@ -79,7 +79,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 			if (opType > 2) { // 取数据库存在的表
 				PartitionResult[] results = processor.getSubTableNames(meta);
 				if (opType == 3) {
-					return removeBaseTable(results);
+					return removeBaseTable(results,meta.getBaseTable(profile));
 				} else {
 					return results;
 				}
@@ -98,8 +98,9 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		return meta.getBaseTable(profile).toPartitionResults();
 	}
 
-	private PartitionResult[] removeBaseTable(PartitionResult[] results) {
-		throw new UnsupportedOperationException();
+	private PartitionResult[] removeBaseTable(PartitionResult[] results,DbTable base) {
+		return results;
+//		throw new UnsupportedOperationException();
 	}
 
 	/*
@@ -545,9 +546,6 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		if (list.size() > 0) {
 			return list;
 		} else {
-			// String _tbName = meta.getTableName(true);
-			// return new DbTable[] { new DbTable(meta.getBindDsName(),
-			// profile.getObjectNameIfUppercase(_tbName)) };
 			return Collections.emptyList();
 		}
 	}
@@ -594,8 +592,6 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 					result.add(s);
 				}
 			}
-			// LogUtil.show("Search [" + key.toString() + "],in " +
-			// allTbs.size() + ", found " + result.size());
 			return result;
 		} catch (SQLException e) {
 			return Collections.EMPTY_LIST;

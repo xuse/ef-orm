@@ -9,11 +9,11 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import jef.common.BigDataBuffer;
-import jef.database.ORMConfig;
 import jef.database.DbCfg;
+import jef.database.ORMConfig;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Feature;
-import jef.database.wrapper.IResultSet;
+import jef.database.wrapper.result.IResultSet;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 

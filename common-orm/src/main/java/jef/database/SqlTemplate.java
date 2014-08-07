@@ -10,7 +10,7 @@ import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.SqlExpression;
 import jef.database.wrapper.ResultIterator;
-import jef.database.wrapper.Transformer;
+import jef.database.wrapper.populator.Transformer;
 
 /**
  * SQL操作工具类，这个对象指向单个特定的数据源。并且可以在这个数据源上执行各种SQL / JPQL/存储过程 相关的操作

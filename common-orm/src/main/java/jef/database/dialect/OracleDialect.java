@@ -66,7 +66,7 @@ import jef.database.query.function.TemplateFunction;
 import jef.database.query.function.TransformFunction;
 import jef.database.query.function.VarArgsSQLFunction;
 import jef.database.support.RDBMS;
-import jef.database.wrapper.ResultSetTransformer;
+import jef.database.wrapper.populator.ResultSetTransformer;
 import jef.jre5support.ProcessUtil;
 import jef.tools.DateFormats;
 import jef.tools.DateUtils;

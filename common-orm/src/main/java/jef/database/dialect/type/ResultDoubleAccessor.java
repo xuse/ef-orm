@@ -3,7 +3,7 @@ package jef.database.dialect.type;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import jef.database.wrapper.IResultSet;
+import jef.database.wrapper.result.IResultSet;
 
 public final class ResultDoubleAccessor implements ResultSetAccessor {
 	

@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.Iterator;
 
 import jef.common.log.LogUtil;
+import jef.database.wrapper.result.IResultSet;
 
 /**
  * 用于辅助用户遍历数据库查询结果集的遍历器

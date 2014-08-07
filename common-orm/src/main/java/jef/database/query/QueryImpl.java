@@ -41,7 +41,7 @@ import jef.database.meta.MetaHolder;
 import jef.database.meta.MetadataAdapter;
 import jef.database.meta.Reference;
 import jef.database.meta.TupleField;
-import jef.database.wrapper.Transformer;
+import jef.database.wrapper.populator.Transformer;
 import jef.tools.Assert;
 
 import org.apache.commons.lang.builder.EqualsBuilder;

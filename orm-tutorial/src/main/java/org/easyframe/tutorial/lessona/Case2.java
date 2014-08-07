@@ -261,8 +261,8 @@ public class Case2 extends org.junit.Assert{
 			LogUtil.show(results);
 			
 			System.out.println("=====查询indexcode含0的记录，并按创建日期排序，每页8条，显示第二页=====");
-			//更麻烦一点——[跨库查询]并且并且[排序]还要[分页]——每页8条，从第二页开始显示
-			Page<Device> page=db.pageSelect(query, Device.class,8).setOffset(8).getPageData();
+			//更麻烦一点——[跨库查询]并且并且[排序]还要[分页]——每页10条，从第二页开始显示
+			Page<Device> page=db.pageSelect(query, Device.class,10).setOffset(10).getPageData();
 			System.out.println("总数:"+page.getTotalCount()+" 每页:"+page.getPageSize());
 			LogUtil.show(page.getList());
 		}

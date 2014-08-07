@@ -13,7 +13,7 @@ import jef.database.NativeQuery;
 import jef.database.ORMConfig;
 import jef.database.SqlTemplate;
 import jef.database.query.Func;
-import jef.database.wrapper.Transformer;
+import jef.database.wrapper.populator.Transformer;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.easyframe.tutorial.lesson2.entity.Student;

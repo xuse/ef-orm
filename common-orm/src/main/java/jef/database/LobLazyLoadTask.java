@@ -8,7 +8,7 @@ import java.util.Collection;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.MappingType;
 import jef.database.query.SqlContext;
-import jef.database.wrapper.ResultSetImpl;
+import jef.database.wrapper.result.ResultSetImpl;
 import jef.tools.reflect.BeanWrapper;
 
 public final class LobLazyLoadTask implements LazyLoadTask {

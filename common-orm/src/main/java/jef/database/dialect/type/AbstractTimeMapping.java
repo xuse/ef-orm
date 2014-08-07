@@ -14,7 +14,7 @@ import jef.database.meta.EntityType;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.BindVariableField;
 import jef.database.query.SqlExpression;
-import jef.database.wrapper.InsertSqlResult;
+import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.Assert;
 import jef.tools.reflect.Property;
 
@@ -39,7 +39,7 @@ public abstract class AbstractTimeMapping<T> extends ATypeMapping<T> {
 	}
 
 	@Override
-	public void processInsert(Object value, InsertSqlResult result, List<String> cStr, List<String> vStr, boolean smart, IQueryableEntity obj) throws SQLException {
+	public void processInsert(Object value, InsertSqlClause result, List<String> cStr, List<String> vStr, boolean smart, IQueryableEntity obj) throws SQLException {
 		if (!obj.isUsed(field) && generated>0) {
 			if (isJavaSysdate()) {
 				value=getCurrentValue();
@@ -54,7 +54,7 @@ public abstract class AbstractTimeMapping<T> extends ATypeMapping<T> {
 	}
 
 	@Override
-	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlResult result, boolean smart) throws SQLException {
+	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean smart) throws SQLException {
 		if (!obj.isUsed(field)  && generated>0) {
 			if (isJavaSysdate()) {
 				accessor.set(obj, getCurrentValue());

@@ -3,7 +3,7 @@ package jef.database.dialect.type;
 import java.io.UnsupportedEncodingException;
 import java.sql.SQLException;
 
-import jef.database.wrapper.IResultSet;
+import jef.database.wrapper.result.IResultSet;
 
 final  class ResultRowidAccessor implements ResultSetAccessor{
 	public Object getProperObject(IResultSet rs,int n) throws SQLException {

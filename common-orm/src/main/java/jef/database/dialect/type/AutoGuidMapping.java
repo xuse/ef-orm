@@ -15,7 +15,7 @@ import jef.database.dialect.ColumnType;
 import jef.database.dialect.ColumnType.GUID;
 import jef.database.meta.EntityType;
 import jef.database.meta.ITableMetadata;
-import jef.database.wrapper.InsertSqlResult;
+import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.Property;
@@ -40,7 +40,7 @@ public class AutoGuidMapping extends VarcharStringMapping {
 	}
 
 	@Override
-	public void processInsert(Object value, InsertSqlResult result, List<String> cStr, List<String> vStr, boolean smart, IQueryableEntity obj) throws SQLException {
+	public void processInsert(Object value, InsertSqlClause result, List<String> cStr, List<String> vStr, boolean smart, IQueryableEntity obj) throws SQLException {
 		Field field = this.field;
 		String columnName = meta.getColumnName(field, result.profile, true);
 		String key;
@@ -57,7 +57,7 @@ public class AutoGuidMapping extends VarcharStringMapping {
 	}
 
 	@Override
-	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlResult result, boolean smart) {
+	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean smart) {
 		Field field = this.field;
 		String columnName = meta.getColumnName(field, result.profile, true);
 

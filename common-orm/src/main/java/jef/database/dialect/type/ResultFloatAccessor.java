@@ -4,7 +4,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import jef.accelerator.asm.Type;
-import jef.database.wrapper.IResultSet;
+import jef.database.wrapper.result.IResultSet;
 
 public class ResultFloatAccessor implements ResultSetAccessor {
 
