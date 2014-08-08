@@ -28,7 +28,7 @@ import jef.database.query.SqlContext;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.CountClause;
 import jef.database.wrapper.clause.GroupClause;
-import jef.database.wrapper.clause.IQueryClause;
+import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.clause.OrderClause;
 import jef.database.wrapper.clause.QueryClauseImpl;
 import jef.database.wrapper.clause.QueryClauseSqlImpl;
@@ -39,7 +39,7 @@ import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
 
 public abstract class SelectProcessor {
-	public abstract IQueryClause toQuerySql(ConditionQuery obj, IntRange range, String myTableName,boolean withOrder);
+	public abstract QueryClause toQuerySql(ConditionQuery obj, IntRange range, String myTableName,boolean withOrder);
 
 	/**
 	 * 形成count的语句 可以返回多个count语句，意味着要执行上述全部语句，然后累加
@@ -48,7 +48,7 @@ public abstract class SelectProcessor {
 	 */
 	public abstract CountClause toCountSql(ConditionQuery obj, String tableName) throws SQLException;
 
-	abstract void processSelect(OperateTarget db, IQueryClause sql, PartitionResult site,ConditionQuery queryObj, MultipleResultSet rs, QueryOption option) throws SQLException;
+	abstract void processSelect(OperateTarget db, QueryClause sql, PartitionResult site,ConditionQuery queryObj, MultipleResultSet rs, QueryOption option) throws SQLException;
 
 	abstract int processCount(OperateTarget db, List<BindSql> bindSqls) throws SQLException;
 
@@ -134,7 +134,7 @@ public abstract class SelectProcessor {
 		}
 
 		// 非递归，直接外部调用
-		public IQueryClause toQuerySql(ConditionQuery obj, IntRange range, String myTableName,boolean order) {
+		public QueryClause toQuerySql(ConditionQuery obj, IntRange range, String myTableName,boolean order) {
 			QueryClauseImpl sb = new QueryClauseImpl(parent.getProfile());
 			if (obj instanceof Query<?>) {
 				Query<?> query = (Query<?>) obj;
@@ -174,7 +174,7 @@ public abstract class SelectProcessor {
 			return sb;
 		}
 
-		public void processSelect(OperateTarget db, IQueryClause sql,PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
+		public void processSelect(OperateTarget db, QueryClause sql,PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
 			Statement st = null;
 			ResultSet rs = null;
 
@@ -289,7 +289,7 @@ public abstract class SelectProcessor {
 			super(db, p, parent);
 		}
 
-		public IQueryClause toQuerySql(ConditionQuery obj, IntRange range, String myTableName,boolean order) {
+		public QueryClause toQuerySql(ConditionQuery obj, IntRange range, String myTableName,boolean order) {
 			QueryClauseImpl sb = new QueryClauseImpl(getProfile());
 			if (obj instanceof Query<?>) {
 				Query<?> query = (Query<?>) obj;
@@ -320,7 +320,7 @@ public abstract class SelectProcessor {
 			} else if (obj instanceof ComplexQuery) {
 				ComplexQuery cq = (ComplexQuery) obj;
 				SqlContext context = cq.prepare();
-				IQueryClause result = cq.toPrepareQuerySql(this, context);
+				QueryClause result = cq.toPrepareQuerySql(this, context);
 				if(order){
 					result.setOrderbyPart(toOrderClause(cq, context));
 				}
@@ -333,7 +333,7 @@ public abstract class SelectProcessor {
 			return sb;
 		}
 
-		public void processSelect(OperateTarget db, IQueryClause sqlResult,PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
+		public void processSelect(OperateTarget db, QueryClause sqlResult,PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
 			// 计算查询结果集参数
 			int rsType;
 			int concurType;

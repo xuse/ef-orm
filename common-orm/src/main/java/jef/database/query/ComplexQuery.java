@@ -4,7 +4,7 @@ import java.sql.SQLException;
 
 import jef.database.SelectProcessor;
 import jef.database.wrapper.clause.CountClause;
-import jef.database.wrapper.clause.IQueryClause;
+import jef.database.wrapper.clause.QueryClause;
 
 public interface ComplexQuery extends ConditionQuery{
 	/**
@@ -20,7 +20,7 @@ public interface ComplexQuery extends ConditionQuery{
 	 * @param context
 	 * @return
 	 */
-	IQueryClause toPrepareQuerySql(SelectProcessor processor, SqlContext context);
+	QueryClause toPrepareQuerySql(SelectProcessor processor, SqlContext context);
 
 	/**
 	 * 转换为count语句（无绑定）

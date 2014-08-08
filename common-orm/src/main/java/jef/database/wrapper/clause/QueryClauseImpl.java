@@ -34,7 +34,7 @@ import jef.database.dialect.DatabaseDialect;
  * @author Administrator
  * 
  */
-public class QueryClauseImpl implements IQueryClause {
+public class QueryClauseImpl implements QueryClause {
 	/*
 	 * 这两部分总是只有一个有值 当单表查询时支持分表，所以是PartitionResult 当多表关联时，目前不支持分表，所以是string
 	 */
@@ -223,5 +223,8 @@ public class QueryClauseImpl implements IQueryClause {
 	}
 	public boolean isMultiDatabase() {
 		return this.tables!=null && tables.length>1;
+	}
+	public boolean isDistinct() {
+		return selectPart.isDistinct();
 	}
 }

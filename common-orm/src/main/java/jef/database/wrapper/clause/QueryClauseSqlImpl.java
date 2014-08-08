@@ -23,7 +23,7 @@ import jef.database.annotation.PartitionResult;
 import jef.database.cache.CacheKey;
 import jef.database.dialect.DatabaseDialect;
 
-public class QueryClauseSqlImpl implements IQueryClause {
+public class QueryClauseSqlImpl implements QueryClause {
 	private String body;
 	private OrderClause orderbyPart;
 	private List<BindVariableDescription> bind;
@@ -94,5 +94,8 @@ public class QueryClauseSqlImpl implements IQueryClause {
 	}
 	public GroupClause getGrouphavingPart() {
 		return GroupClause.DEFAULT;
+	}
+	public boolean isDistinct() {
+		return false;
 	}
 }

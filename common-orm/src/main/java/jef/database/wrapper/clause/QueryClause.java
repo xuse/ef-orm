@@ -20,7 +20,7 @@ import jef.database.annotation.PartitionResult;
 import jef.database.cache.CacheKeyProvider;
 
 
-public interface IQueryClause extends SqlClause,CacheKeyProvider{
+public interface QueryClause extends SqlClause,CacheKeyProvider{
 	BindSql getSql(PartitionResult site);
 	PartitionResult[] getTables();
 	OrderClause getOrderbyPart();
@@ -30,5 +30,6 @@ public interface IQueryClause extends SqlClause,CacheKeyProvider{
 	void setOrderbyPart(OrderClause orderClause);
 	void setPageRange(IntRange range);
 	boolean isMultiDatabase();
-	GroupClause getGrouphavingPart(); 
+	GroupClause getGrouphavingPart();
+	boolean isDistinct(); 
 }

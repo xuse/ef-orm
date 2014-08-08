@@ -301,18 +301,16 @@ public class Case2 extends org.junit.Assert{
 			//分库分表后的难点之三——Distinct操作
 			Query<Device> query=QB.create(Device.class);
 			Selects select=QB.selectFrom(query);
-//			select.column(Device.Field.indexcode);
-//			select.column(Device.Field.createDate);
-//			select.column(Device.Field.name);
+			select.column(Device.Field.type);
 			select.setDistinct(true);
 //			query.orderByDesc(new SqlExpression("ct")); 
 			
 			List<Device> results=db.select(query);
 			for(Device ss:results){
-				System.out.println(ss);
+				System.out.println(ss.getName()+" "+ss.getType());
 			}
 			assertTrue(results.size()>0);
-			assertNotNull(results.get(0).getIndexcode());
+			assertNotNull(results.get(0).getType());
 		}
 	}
 	
