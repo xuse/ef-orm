@@ -35,7 +35,7 @@ public class OrderByElement implements SqlAppendable{
         asc = b;
     }
 
-    public void accept(OrderByVisitor orderByVisitor) {
+    public void accept(SelectVisitor orderByVisitor) {
         orderByVisitor.visit(this);
     }
 

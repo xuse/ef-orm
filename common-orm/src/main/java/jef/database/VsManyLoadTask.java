@@ -9,6 +9,7 @@ import java.util.Map;
 
 import jef.common.log.LogUtil;
 import jef.database.annotation.JoinDescription;
+import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.OrderByElement;
 import jef.database.meta.AbstractRefField;
 import jef.database.meta.ISelectProvider;
@@ -64,8 +65,8 @@ final class VsManyLoadTask implements LazyLoadTask {
 
 			orders = new ArrayList<OrderField>();
 			if (StringUtils.isNotEmpty(desc.orderBy())) {
-				List<OrderByElement> elements = DbUtils.parseOrderBy(desc.orderBy());
-				for (OrderByElement ele : elements) {
+				OrderBy order = DbUtils.parseOrderBy(desc.orderBy());
+				for (OrderByElement ele : order.getOrderByElements()) {
 					Field field = targetTableMeta.findField(ele.getExpression().toString());
 					if (field != null) {
 						orders.add(new OrderField(field, ele.isAsc()));

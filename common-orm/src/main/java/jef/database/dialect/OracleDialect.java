@@ -186,6 +186,15 @@ public class OracleDialect extends DbmsProfile {
 		registerNative(new StandardSQLFunction("add_months"));
 		registerNative(new StandardSQLFunction("months_between"));
 		registerNative(new StandardSQLFunction("next_day"));
+		registerNative(new StandardSQLFunction("rollup"));
+		registerNative(new StandardSQLFunction("cube"));
+//		Oracle的GROUP BY语句除了最基本的语法外，还支持ROLLUP和CUBE语句。如果是ROLLUP(A, B, C)的话，首先会对(A、B、C)进行GROUP BY，然后对(A、B)进行GROUP BY，然后是(A)进行GROUP BY，
+//		最后对全表进行GROUP BY操作。如果是GROUP BY CUBE(A, B, C)，则首先会对(A、B、C)进行GROUP BY，然后依次是(A、B)，(A、C)，(A)，(B、C)，(B)，(C)，最后对全表进行GROUP BY操作。
+		
+// 用GROUP BY GROUPING SETS来代替GROUP BY CUBE。你可以应用来指定你感兴趣的总数组合。因为它不必计算它不需要集合（也不会产生太多结果），所以对SQL引擎来说更为高效。 
+//其格式为： 
+//		GROUP BY GROUPING SETS ((list), (list) ... ) 
+
 		
 		registerCompatible(Func.current_date, new NoArgSQLFunction("trunc(sysdate)", false));
 		

@@ -1,5 +1,6 @@
 package jef.database.jsqlparser;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
@@ -22,6 +23,7 @@ import jef.database.jsqlparser.statement.Statement;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.tools.IOUtils;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -106,9 +108,11 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	@Test
 	public void testParse2() throws ParseException {
 		String sql = "select :column<sql> from root where id1 in (:id<int>)  and the_id=:id2 and name like :name and id3=:id3 and id4=:id4 order by :orderBy<sql>";
+		System.out.println(sql);
 		JpqlParser parser = new JpqlParser(new StringReader(sql));
 		Select select = parser.Select();
 		System.out.println(select);
+//		deparseOrderBy(orderBy);
 	}
 
 	@Test
@@ -236,12 +240,15 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 
 	@Test
 	public void aaa7() throws ParseException, SQLException {
-
 		String sql = "DELETE FROM DBM2.dbm_warn_log WHERE warn_time < subdate(now(), :DAYS)   AND NOT EXISTS (select 1 from DBM2.dbm_warn_dealed where log_id = DBM2.dbm_warn_log.log_id)";
+		StSqlParser parser = new StSqlParser(new StringReader(sql));
+		Expression exp = parser.WhereClause();
+		System.out.println(exp);
+		
 		DbClient db = new DbClient();
-		NativeQuery<?> q = db.createNativeQuery(sql);
-		q.setParameter("DAYS", "aa");
-		System.out.println(q);
+//		NativeQuery<?> q = db.createNativeQuery(sql);
+//		q.setParameter("DAYS", "aa");
+//		System.out.println(q);
 	}
 
 	@Test
@@ -284,6 +291,35 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 		String sql="select int(year(current_date)/100)+1 as aa from dual";
 		jef.database.jsqlparser.statement.select.Select select = DbUtils.parseSelect(sql);
 		System.out.println(select);
+	}
+	
+	@Test
+	public void testComplexSql() throws SQLException, ParseException, IOException {
+		StringBuilder sb=new StringBuilder();
+		BufferedReader reader=IOUtils.getReader(this.getClass().getResource("complex-sqls.txt"), "UTF-8"); 
+		String line;
+		while((line=reader.readLine())!=null){
+			sb.append(line);
+			if(line.endsWith(";")){
+				sb.setLength(sb.length()-1);
+				String sql=sb.toString();
+				sb.setLength(0);
+				if(StringUtils.isNotBlank(sql)){
+					System.out.println("[RAW  ]"+sql);
+					StSqlParser parser = new StSqlParser(new StringReader(sql));
+					Statement st=parser.Statement();
+					System.out.print("[PARSE]");
+					System.out.println(st);
+				}
+			}
+		}
+		if(sb.length()>0){
+			String sql=sb.toString();
+			System.out.println("processing:"+sql);
+			StSqlParser parser = new StSqlParser(new StringReader(sql));
+			Statement st=parser.Statement();
+			System.out.println(st);
+		}
 	}
 
 }

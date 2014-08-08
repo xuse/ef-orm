@@ -20,4 +20,8 @@ public interface SelectVisitor {
     public void visit(PlainSelect plainSelect);
 
     public void visit(Union union);
+    
+    public void visit(OrderByElement orderBy);
+    
+    public void visit(OrderBy orderBy);
 }

@@ -1,0 +1,8 @@
+select earnmonth, area, sum(personincome)  
+from earnings  
+group by cube(earnmonth,area)  
+order by earnmonth,area NULLS  last;
+
+select earnmonth, area, sum(personincome)  
+from earnings  
+group by rollup(earnmonth,area);

@@ -22,7 +22,7 @@ public class SelectToCountWrapper extends PlainSelect{
 		
 		SubSelect from=new SubSelect();
 		Union newUnion=new Union(union);
-		newUnion.setOrderByElements(null);
+		newUnion.setOrderBy(null);
 		from.setSelectBody(newUnion);
 		this.fromItem=from;
 	}

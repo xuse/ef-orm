@@ -96,6 +96,7 @@ import jef.database.jsqlparser.statement.select.SubJoin;
 import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.OrderByElement;
 import jef.database.jsqlparser.statement.select.PlainSelect;
+import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.statement.select.SelectBody;
 import jef.database.jsqlparser.statement.select.SelectExpressionItem;
@@ -193,6 +194,8 @@ TOKEN: /* SQL Keywords. prefixed with K_ to avoid name clashes */
 |   <K_PRIOR:"PRIOR">
 |   <K_START:"START">
 |   <K_INTERVAL:"INTERVAL">
+|   <K_NULLS:"NULLS">
+|   <K_LAST:"LAST">
 }
 
 
@@ -508,7 +511,7 @@ PlainSelect PlainSelect():
 	List joins = null;
 	List distinctOn = null;
 	Expression where = null;
-	List orderByElements;
+	OrderBy orderByElements;
 	List groupByColumnReferences = null;
 	StartWithExpression startWith = null;
 	Expression having = null;
@@ -542,7 +545,7 @@ PlainSelect PlainSelect():
     [ groupByColumnReferences=GroupByColumnReferences() { plainSelect.setGroupByColumnReferences(groupByColumnReferences); }]
     [ having=Having() { plainSelect.setHaving(having); }]
 	[ startWith = StartWith() {plainSelect.setStartWith(startWith);} ]
-	[ 	orderByElements = OrderByElements()	{ 		 plainSelect.setOrderByElements(orderByElements);	}   ]
+	[ 	orderByElements = OrderByElements()	{ 		 plainSelect.setOrderBy(orderByElements);	}   ]
     [ 	limit = Limit() { plainSelect.setLimit(limit);	} ]
 	
 	{ 
@@ -559,7 +562,7 @@ PlainSelect PlainSelect():
 Union Union():
 { 
 	Union union = new Union(); 
-	List orderByElements = null;
+	OrderBy orderByElements = null;
 	Limit limit = null;
 	PlainSelect select = null;
 	ArrayList selects = new ArrayList();
@@ -575,7 +578,7 @@ this is not 100% right, since multiple UNION could have different ALL/DISTINCT c
 				<K_UNION> [ <K_ALL> { union.setAll(true); } | <K_DISTINCT> 	{ union.setDistinct(true); } ]
 			"(" select=PlainSelect() {selects.add(select);} ")"
 			(	<K_UNION> [ <K_ALL> | <K_DISTINCT> ] "(" select=PlainSelect() {selects.add(select);} ")" )*
-			[orderByElements=OrderByElements() {union.setOrderByElements(orderByElements);} ]
+			[orderByElements=OrderByElements() {union.setOrderBy(orderByElements);} ]
 			[limit=Limit() {union.setLimit(limit);} ]
 		)
 		| 	
@@ -828,16 +831,18 @@ Expression Having():
 	}
 }
 
-List OrderByElements():
+OrderBy OrderByElements():
 { 
-	List orderByList = new ArrayList();
-	OrderByElement orderByElement = null;
+	OrderBy orderBy = null;
+	OrderByElement orderByElement;
 }
 {
-    <K_ORDER> <K_BY> orderByElement=OrderByElement() { orderByList.add(orderByElement); }
-        ("," orderByElement=OrderByElement() { orderByList.add(orderByElement); } )*
+    <K_ORDER> <K_BY> orderByElement=OrderByElement() { orderBy=new OrderBy();
+        orderBy.add(orderByElement); }
+        ("," orderByElement=OrderByElement() { orderBy.add(orderByElement); } )*
+        [<K_NULLS> <K_LAST> {orderBy.setNullsLast(true);} ]
     {
-    	return orderByList; 	
+    	return orderBy; 	
     }
 }
 

@@ -6,6 +6,7 @@ import jef.database.query.SqlContext;
 import jef.tools.StringUtils;
 
 public class ColumnAliasApplier extends VisitorAdapter{
+	@SuppressWarnings("unused")
 	private DatabaseDialect profile;
 	private SqlContext context;
 	

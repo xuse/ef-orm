@@ -74,8 +74,8 @@ import jef.database.jsqlparser.statement.select.AllColumns;
 import jef.database.jsqlparser.statement.select.AllTableColumns;
 import jef.database.jsqlparser.statement.select.FromItemVisitor;
 import jef.database.jsqlparser.statement.select.Join;
+import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.OrderByElement;
-import jef.database.jsqlparser.statement.select.OrderByVisitor;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.statement.select.SelectExpressionItem;
@@ -89,7 +89,7 @@ import jef.database.jsqlparser.statement.select.Union;
 import jef.database.jsqlparser.statement.truncate.Truncate;
 import jef.database.jsqlparser.statement.update.Update;
 
-public class VisitorAdapter implements SelectVisitor, FromItemVisitor, ExpressionVisitor, ItemsListVisitor, StatementVisitor, SelectItemVisitor,OrderByVisitor {
+public class VisitorAdapter implements SelectVisitor, FromItemVisitor, ExpressionVisitor, ItemsListVisitor, StatementVisitor, SelectItemVisitor {
 
     public void visit(PlainSelect plainSelect) {
         plainSelect.getFromItem().accept(this);
@@ -116,11 +116,16 @@ public class VisitorAdapter implements SelectVisitor, FromItemVisitor, Expressio
         
         if(plainSelect.getHaving()!=null) plainSelect.getHaving().accept(this);
         
-        if (plainSelect.getOrderByElements() != null) {
-        	for(OrderByElement e:plainSelect.getOrderByElements()){
-        		e.accept(this);
-        	}
+        if (plainSelect.getOrderBy() != null) {
+        	plainSelect.getOrderBy().accept(this);
         }
+    }
+    
+    public void visit(OrderBy orderBy){
+    	for(OrderByElement o: orderBy.getOrderByElements()){
+			 o.accept(this);
+		 }
+    	
     }
 
     public void visit(Union union) {

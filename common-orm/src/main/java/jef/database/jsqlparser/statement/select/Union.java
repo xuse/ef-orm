@@ -24,7 +24,7 @@ public class Union implements SelectBody {
 
     private List<PlainSelect> plainSelects;
 
-    private List<OrderByElement> orderByElements;
+    private OrderBy orderBy;
 
     private Limit limit;
 
@@ -40,7 +40,7 @@ public class Union implements SelectBody {
     	this.plainSelects=union.plainSelects;
     	this.distinct=union.distinct;
     	this.all=union.all;
-    	this.orderByElements=union.orderByElements;
+    	this.orderBy=union.orderBy;
     	this.limit=union.limit;
     }
 
@@ -48,9 +48,7 @@ public class Union implements SelectBody {
         selectVisitor.visit(this);
     }
 
-    public List<OrderByElement> getOrderByElements() {
-        return orderByElements;
-    }
+   
 
     /**
 	 * the list of {@link PlainSelect}s in this UNION
@@ -60,9 +58,6 @@ public class Union implements SelectBody {
         return plainSelects;
     }
 
-    public void setOrderByElements(List<OrderByElement> orderByElements) {
-        this.orderByElements = orderByElements;
-    }
 
     public void setPlainSelects(List<PlainSelect> list) {
         plainSelects = list;
@@ -123,10 +118,20 @@ public class Union implements SelectBody {
         		plainSelects.get(i).appendTo(sb);
         	}
         }
-        PlainSelect.getFormatedList(sb,orderByElements, "ORDER BY",false);
+        if(orderBy!=null){
+        	orderBy.appendTo(sb);
+        }
         if(limit != null){
         	sb.append(limit.toString());
         }
         return sb;
+	}
+
+	public OrderBy getOrderBy() {
+		return orderBy;
+	}
+
+	public void setOrderBy(OrderBy orderBy) {
+		this.orderBy = orderBy;
 	}
 }

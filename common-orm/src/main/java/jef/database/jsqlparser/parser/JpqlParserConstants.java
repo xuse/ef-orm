@@ -141,25 +141,29 @@ public interface JpqlParserConstants {
   /** RegularExpression Id. */
   int K_SQL = 69;
   /** RegularExpression Id. */
-  int S_DOUBLE = 70;
+  int K_NULLS = 70;
   /** RegularExpression Id. */
-  int S_INTEGER = 71;
+  int K_LAST = 71;
   /** RegularExpression Id. */
-  int DIGIT = 72;
+  int S_DOUBLE = 72;
   /** RegularExpression Id. */
-  int LINE_COMMENT = 73;
+  int S_INTEGER = 73;
   /** RegularExpression Id. */
-  int MULTI_LINE_COMMENT = 74;
+  int DIGIT = 74;
   /** RegularExpression Id. */
-  int S_IDENTIFIER = 75;
+  int LINE_COMMENT = 75;
   /** RegularExpression Id. */
-  int LETTER = 76;
+  int MULTI_LINE_COMMENT = 76;
   /** RegularExpression Id. */
-  int SPECIAL_CHARS = 77;
+  int S_IDENTIFIER = 77;
   /** RegularExpression Id. */
-  int S_CHAR_LITERAL = 78;
+  int LETTER = 78;
   /** RegularExpression Id. */
-  int S_QUOTED_IDENTIFIER = 79;
+  int SPECIAL_CHARS = 79;
+  /** RegularExpression Id. */
+  int S_CHAR_LITERAL = 80;
+  /** RegularExpression Id. */
+  int S_QUOTED_IDENTIFIER = 81;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -236,6 +240,8 @@ public interface JpqlParserConstants {
     "\"START\"",
     "\"INTERVAL\"",
     "\"SQL\"",
+    "\"NULLS\"",
+    "\"LAST\"",
     "<S_DOUBLE>",
     "<S_INTEGER>",
     "<DIGIT>",

@@ -67,6 +67,7 @@ import jef.database.jsqlparser.statement.select.SubJoin;
 import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.OrderByElement;
 import jef.database.jsqlparser.statement.select.PlainSelect;
+import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.statement.select.SelectBody;
 import jef.database.jsqlparser.statement.select.SelectExpressionItem;
@@ -89,7 +90,7 @@ public class StSqlParser implements StSqlParserConstants {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_WITH:
     case K_SELECT:
-    case 82:
+    case 84:
       stm = Select();
       break;
     case K_UPDATE:
@@ -119,8 +120,8 @@ public class StSqlParser implements StSqlParserConstants {
       throw new ParseException();
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 79:
-      jj_consume_token(79);
+    case 81:
+      jj_consume_token(81);
       break;
     default:
       jj_la1[1] = jj_gen;
@@ -143,22 +144,22 @@ public class StSqlParser implements StSqlParserConstants {
     table = TableWithAlias();
     jj_consume_token(K_SET);
     tableColumn = Column();
-    jj_consume_token(80);
+    jj_consume_token(82);
     value = SimpleExpression();
                                                                 columns.add(tableColumn); expList.add(value);
     label_1:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 81:
+      case 83:
         ;
         break;
       default:
         jj_la1[2] = jj_gen;
         break label_1;
       }
-      jj_consume_token(81);
+      jj_consume_token(83);
       tableColumn = Column();
-      jj_consume_token(80);
+      jj_consume_token(82);
       value = SimpleExpression();
                                                                             columns.add(tableColumn); expList.add(value);
     }
@@ -202,22 +203,22 @@ public class StSqlParser implements StSqlParserConstants {
     case K_SET:
       jj_consume_token(K_SET);
       tableColumn = Column();
-      jj_consume_token(80);
+      jj_consume_token(82);
       value = SimpleExpression();
                                                                                 columns.add(tableColumn); expList.add(value);
       label_2:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 81:
+        case 83:
           ;
           break;
         default:
           jj_la1[5] = jj_gen;
           break label_2;
         }
-        jj_consume_token(81);
+        jj_consume_token(83);
         tableColumn = Column();
-        jj_consume_token(80);
+        jj_consume_token(82);
         value = SimpleExpression();
                                                                                    columns.add(tableColumn); expList.add(value);
       }
@@ -225,54 +226,54 @@ public class StSqlParser implements StSqlParserConstants {
       break;
     case K_SELECT:
     case K_VALUES:
-    case 82:
+    case 84:
       if (jj_2_1(2)) {
-        jj_consume_token(82);
+        jj_consume_token(84);
         tableColumn = Column();
                                                               columns.add(tableColumn);
         label_3:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 81:
+          case 83:
             ;
             break;
           default:
             jj_la1[6] = jj_gen;
             break label_3;
           }
-          jj_consume_token(81);
+          jj_consume_token(83);
           tableColumn = Column();
                                                                                                                       columns.add(tableColumn);
         }
-        jj_consume_token(83);
+        jj_consume_token(85);
       } else {
         ;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_VALUES:
         jj_consume_token(K_VALUES);
-        jj_consume_token(82);
+        jj_consume_token(84);
         exp = PrimaryExpression();
                                                                           expList.add(exp);
         label_4:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 81:
+          case 83:
             ;
             break;
           default:
             jj_la1[7] = jj_gen;
             break label_4;
           }
-          jj_consume_token(81);
+          jj_consume_token(83);
           exp = PrimaryExpression();
                                                                                 expList.add(exp);
         }
-        jj_consume_token(83);
+        jj_consume_token(85);
                                                                                                              itemsList = new ExpressionList(expList);
         break;
       case K_SELECT:
-      case 82:
+      case 84:
                                           replace.setUseValues(false);
         itemsList = SubSelect();
         break;
@@ -314,62 +315,62 @@ public class StSqlParser implements StSqlParserConstants {
     }
     table = Table();
     if (jj_2_2(2)) {
-      jj_consume_token(82);
+      jj_consume_token(84);
       tableColumn = Column();
                                               columns.add(tableColumn);
       label_5:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 81:
+        case 83:
           ;
           break;
         default:
           jj_la1[11] = jj_gen;
           break label_5;
         }
-        jj_consume_token(81);
+        jj_consume_token(83);
         tableColumn = Column();
                                                                                                       columns.add(tableColumn);
       }
-      jj_consume_token(83);
+      jj_consume_token(85);
     } else {
       ;
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_VALUES:
       jj_consume_token(K_VALUES);
-      jj_consume_token(82);
+      jj_consume_token(84);
       exp = SimpleExpression();
                                                          primaryExpList.add(exp);
       label_6:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 81:
+        case 83:
           ;
           break;
         default:
           jj_la1[12] = jj_gen;
           break label_6;
         }
-        jj_consume_token(81);
+        jj_consume_token(83);
         exp = SimpleExpression();
                                                                primaryExpList.add(exp);
       }
-      jj_consume_token(83);
+      jj_consume_token(85);
                                                                                                    itemsList = new ExpressionList(primaryExpList);
       break;
     case K_SELECT:
-    case 82:
+    case 84:
       if (jj_2_3(2)) {
-        jj_consume_token(82);
+        jj_consume_token(84);
       } else {
         ;
       }
                           insert.setUseValues(false);
       itemsList = SubSelect();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 83:
-        jj_consume_token(83);
+      case 85:
+        jj_consume_token(85);
         break;
       default:
         jj_la1[13] = jj_gen;
@@ -438,12 +439,12 @@ public class StSqlParser implements StSqlParserConstants {
         String name3 = null;
     name1 = RelObjectName();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 84:
-      jj_consume_token(84);
+    case 86:
+      jj_consume_token(86);
       name2 = RelObjectName();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 84:
-        jj_consume_token(84);
+      case 86:
+        jj_consume_token(86);
         name3 = RelObjectName();
         break;
       default:
@@ -472,12 +473,12 @@ public class StSqlParser implements StSqlParserConstants {
         String name3 = null;
     name1 = RelObjectName();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 84:
-      jj_consume_token(84);
+    case 86:
+      jj_consume_token(86);
       name2 = RelObjectName();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 84:
-        jj_consume_token(84);
+      case 86:
+        jj_consume_token(86);
         name3 = RelObjectName();
         break;
       default:
@@ -543,11 +544,11 @@ public class StSqlParser implements StSqlParserConstants {
         String name3 = null;
     if (jj_2_4(3)) {
       name1 = RelObjectName();
-      jj_consume_token(84);
+      jj_consume_token(86);
       name2 = RelObjectName();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 85:
-        jj_consume_token(85);
+      case 87:
+        jj_consume_token(87);
         name3 = RelObjectName();
         break;
       default:
@@ -561,8 +562,8 @@ public class StSqlParser implements StSqlParserConstants {
       case S_QUOTED_IDENTIFIER:
         name1 = RelObjectName();
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 85:
-          jj_consume_token(85);
+        case 87:
+          jj_consume_token(87);
           name3 = RelObjectName();
           break;
         default:
@@ -627,7 +628,7 @@ public class StSqlParser implements StSqlParserConstants {
         List joins = null;
         List distinctOn = null;
         Expression where = null;
-        List orderByElements;
+        OrderBy orderByElements;
         List groupByColumnReferences = null;
         StartWithExpression startWith = null;
         Expression having = null;
@@ -647,10 +648,10 @@ public class StSqlParser implements StSqlParserConstants {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case K_ON:
           jj_consume_token(K_ON);
-          jj_consume_token(82);
+          jj_consume_token(84);
           distinctOn = SelectItemsList();
                                                                            plainSelect.getDistinct().setOnSelectItems(distinctOn);
-          jj_consume_token(83);
+          jj_consume_token(85);
           break;
         default:
           jj_la1[29] = jj_gen;
@@ -727,7 +728,7 @@ public class StSqlParser implements StSqlParserConstants {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_ORDER:
       orderByElements = OrderByElements();
-                                                                         plainSelect.setOrderByElements(orderByElements);
+                                                                         plainSelect.setOrderBy(orderByElements);
       break;
     default:
       jj_la1[38] = jj_gen;
@@ -753,16 +754,16 @@ public class StSqlParser implements StSqlParserConstants {
 
   final public Union Union() throws ParseException {
         Union union = new Union();
-        List orderByElements = null;
+        OrderBy orderByElements = null;
         Limit limit = null;
         PlainSelect select = null;
         ArrayList selects = new ArrayList();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 82:
-      jj_consume_token(82);
+    case 84:
+      jj_consume_token(84);
       select = PlainSelect();
                                                   selects.add(select);
-      jj_consume_token(83);
+      jj_consume_token(85);
       jj_consume_token(K_UNION);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_ALL:
@@ -786,10 +787,10 @@ public class StSqlParser implements StSqlParserConstants {
         jj_la1[41] = jj_gen;
         ;
       }
-      jj_consume_token(82);
+      jj_consume_token(84);
       select = PlainSelect();
                                                   selects.add(select);
-      jj_consume_token(83);
+      jj_consume_token(85);
       label_7:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -821,15 +822,15 @@ public class StSqlParser implements StSqlParserConstants {
           jj_la1[44] = jj_gen;
           ;
         }
-        jj_consume_token(82);
+        jj_consume_token(84);
         select = PlainSelect();
                                                                                                selects.add(select);
-        jj_consume_token(83);
+        jj_consume_token(85);
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_ORDER:
         orderByElements = OrderByElements();
-                                                            union.setOrderByElements(orderByElements);
+                                                            union.setOrderBy(orderByElements);
         break;
       default:
         jj_la1[45] = jj_gen;
@@ -928,14 +929,14 @@ public class StSqlParser implements StSqlParserConstants {
     label_9:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 81:
+      case 83:
         ;
         break;
       default:
         jj_la1[53] = jj_gen;
         break label_9;
       }
-      jj_consume_token(81);
+      jj_consume_token(83);
       with = WithItem();
                                                                                      withItemsList.add(with);
     }
@@ -951,10 +952,10 @@ public class StSqlParser implements StSqlParserConstants {
     name = RelObjectName();
                                 with.setName(name);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 82:
-      jj_consume_token(82);
+    case 84:
+      jj_consume_token(84);
       selectItems = SelectItemsList();
-      jj_consume_token(83);
+      jj_consume_token(85);
                                                    with.setWithItemList(selectItems);
       break;
     default:
@@ -962,10 +963,10 @@ public class StSqlParser implements StSqlParserConstants {
       ;
     }
     jj_consume_token(K_AS);
-    jj_consume_token(82);
+    jj_consume_token(84);
     selectBody = SelectBody();
                                          with.setSelectBody(selectBody);
-    jj_consume_token(83);
+    jj_consume_token(85);
            {if (true) return with;}
     throw new Error("Missing return statement in function");
   }
@@ -978,14 +979,14 @@ public class StSqlParser implements StSqlParserConstants {
     label_10:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 81:
+      case 83:
         ;
         break;
       default:
         jj_la1[55] = jj_gen;
         break label_10;
       }
-      jj_consume_token(81);
+      jj_consume_token(83);
       selectItem = SelectItem();
                                                                                                 selectItemsList.add(selectItem);
     }
@@ -1003,8 +1004,8 @@ public class StSqlParser implements StSqlParserConstants {
         Expression expression = null;
         SubSelect subSelect = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 86:
-      jj_consume_token(86);
+    case 88:
+      jj_consume_token(88);
            selectItem = new AllColumns();
       break;
     default:
@@ -1022,14 +1023,14 @@ public class StSqlParser implements StSqlParserConstants {
         case S_IDENTIFIER:
         case S_CHAR_LITERAL:
         case S_QUOTED_IDENTIFIER:
-        case 82:
-        case 87:
-        case 98:
-        case 99:
-        case 103:
+        case 84:
+        case 89:
+        case 100:
+        case 101:
         case 105:
-        case 106:
         case 107:
+        case 108:
+        case 109:
           expression = SimpleExpression();
                                          selectExpressionItem = new SelectExpressionItem(); selectExpressionItem.setExpression(expression);
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -1059,8 +1060,8 @@ public class StSqlParser implements StSqlParserConstants {
   final public AllTableColumns AllTableColumns() throws ParseException {
         Table table = null;
     table = Table();
-    jj_consume_token(84);
     jj_consume_token(86);
+    jj_consume_token(88);
                 {if (true) return new AllTableColumns(table);}
     throw new Error("Missing return statement in function");
   }
@@ -1086,14 +1087,14 @@ public class StSqlParser implements StSqlParserConstants {
     label_11:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 81:
+      case 83:
         ;
         break;
       default:
         jj_la1[60] = jj_gen;
         break label_11;
       }
-      jj_consume_token(81);
+      jj_consume_token(83);
       Table();
     }
   }
@@ -1102,14 +1103,14 @@ public class StSqlParser implements StSqlParserConstants {
         FromItem fromItem = null;
         String alias = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 82:
-      jj_consume_token(82);
+    case 84:
+      jj_consume_token(84);
       if (jj_2_7(2147483647)) {
         fromItem = SubJoin();
       } else {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case K_SELECT:
-        case 82:
+        case 84:
           fromItem = SubSelect();
           break;
         default:
@@ -1118,7 +1119,7 @@ public class StSqlParser implements StSqlParserConstants {
           throw new ParseException();
         }
       }
-      jj_consume_token(83);
+      jj_consume_token(85);
       break;
     case S_IDENTIFIER:
     case S_QUOTED_IDENTIFIER:
@@ -1169,7 +1170,7 @@ public class StSqlParser implements StSqlParserConstants {
       case K_OUTER:
       case K_RIGHT:
       case K_NATURAL:
-      case 81:
+      case 83:
         ;
         break;
       default:
@@ -1247,8 +1248,8 @@ public class StSqlParser implements StSqlParserConstants {
     case K_JOIN:
       jj_consume_token(K_JOIN);
       break;
-    case 81:
-      jj_consume_token(81);
+    case 83:
+      jj_consume_token(83);
                                join.setSimple(true);
       break;
     default:
@@ -1268,24 +1269,24 @@ public class StSqlParser implements StSqlParserConstants {
         break;
       case K_USING:
         jj_consume_token(K_USING);
-        jj_consume_token(82);
+        jj_consume_token(84);
         tableColumn = Column();
                                                        columns = new ArrayList(); columns.add(tableColumn);
         label_13:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 81:
+          case 83:
             ;
             break;
           default:
             jj_la1[70] = jj_gen;
             break label_13;
           }
-          jj_consume_token(81);
+          jj_consume_token(83);
           tableColumn = Column();
                                                             columns.add(tableColumn);
         }
-        jj_consume_token(83);
+        jj_consume_token(85);
                     join.setUsingColumns(columns);
         break;
       default:
@@ -1321,14 +1322,14 @@ public class StSqlParser implements StSqlParserConstants {
     label_14:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 81:
+      case 83:
         ;
         break;
       default:
         jj_la1[73] = jj_gen;
         break label_14;
       }
-      jj_consume_token(81);
+      jj_consume_token(83);
       columnReference = SimpleExpression();
                                               columnReferences.add(columnReference);
     }
@@ -1366,28 +1367,39 @@ public class StSqlParser implements StSqlParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public List OrderByElements() throws ParseException {
-        List orderByList = new ArrayList();
-        OrderByElement orderByElement = null;
+  final public OrderBy OrderByElements() throws ParseException {
+        OrderBy orderBy = null;
+        OrderByElement orderByElement;
     jj_consume_token(K_ORDER);
     jj_consume_token(K_BY);
     orderByElement = OrderByElement();
-                                                       orderByList.add(orderByElement);
+                                                       orderBy=new OrderBy();
+        orderBy.add(orderByElement);
     label_15:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 81:
+      case 83:
         ;
         break;
       default:
         jj_la1[75] = jj_gen;
         break label_15;
       }
-      jj_consume_token(81);
+      jj_consume_token(83);
       orderByElement = OrderByElement();
-                                               orderByList.add(orderByElement);
+                                               orderBy.add(orderByElement);
     }
-        {if (true) return orderByList;}
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case K_NULLS:
+      jj_consume_token(K_NULLS);
+      jj_consume_token(K_LAST);
+                             orderBy.setNullsLast(true);
+      break;
+    default:
+      jj_la1[76] = jj_gen;
+      ;
+    }
+        {if (true) return orderBy;}
     throw new Error("Missing return statement in function");
   }
 
@@ -1408,13 +1420,13 @@ public class StSqlParser implements StSqlParserConstants {
                            orderByElement.setAsc(false);
         break;
       default:
-        jj_la1[76] = jj_gen;
+        jj_la1[77] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
       break;
     default:
-      jj_la1[77] = jj_gen;
+      jj_la1[78] = jj_gen;
       ;
     }
         orderByElement.setExpression(columnReference);
@@ -1433,27 +1445,27 @@ public class StSqlParser implements StSqlParserConstants {
         token = jj_consume_token(S_INTEGER);
                                                                     limit.setOffset(Long.parseLong(token.image));
         break;
-      case 87:
-        jj_consume_token(87);
+      case 89:
+        jj_consume_token(89);
                                                       limit.setOffsetJdbcParameter(new JdbcParameter());
         break;
       default:
-        jj_la1[78] = jj_gen;
+        jj_la1[79] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
-      jj_consume_token(81);
+      jj_consume_token(83);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case S_INTEGER:
         token = jj_consume_token(S_INTEGER);
                                                     limit.setRowCount(Long.parseLong(token.image));
         break;
-      case 87:
-        jj_consume_token(87);
+      case 89:
+        jj_consume_token(89);
                                                                                                               limit.setRowCountJdbcParameter(new JdbcParameter());
         break;
       default:
-        jj_la1[79] = jj_gen;
+        jj_la1[80] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1466,12 +1478,12 @@ public class StSqlParser implements StSqlParserConstants {
           token = jj_consume_token(S_INTEGER);
                                                       limit.setOffset(Long.parseLong(token.image));
           break;
-        case 87:
-          jj_consume_token(87);
+        case 89:
+          jj_consume_token(89);
                                                                                                               limit.setOffsetJdbcParameter(new JdbcParameter());
           break;
         default:
-          jj_la1[80] = jj_gen;
+          jj_la1[81] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -1483,8 +1495,8 @@ public class StSqlParser implements StSqlParserConstants {
           token = jj_consume_token(S_INTEGER);
                                                             limit.setRowCount(Long.parseLong(token.image));
           break;
-        case 87:
-          jj_consume_token(87);
+        case 89:
+          jj_consume_token(89);
                                               limit.setRowCountJdbcParameter(new JdbcParameter());
           break;
         case K_ALL:
@@ -1492,7 +1504,7 @@ public class StSqlParser implements StSqlParserConstants {
                                                   limit.setLimitAll(true);
           break;
         default:
-          jj_la1[81] = jj_gen;
+          jj_la1[82] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -1504,23 +1516,23 @@ public class StSqlParser implements StSqlParserConstants {
             token = jj_consume_token(S_INTEGER);
                                                               limit.setOffset(Long.parseLong(token.image));
             break;
-          case 87:
-            jj_consume_token(87);
+          case 89:
+            jj_consume_token(89);
                                                                                                                       limit.setOffsetJdbcParameter(new JdbcParameter());
             break;
           default:
-            jj_la1[82] = jj_gen;
+            jj_la1[83] = jj_gen;
             jj_consume_token(-1);
             throw new ParseException();
           }
           break;
         default:
-          jj_la1[83] = jj_gen;
+          jj_la1[84] = jj_gen;
           ;
         }
         break;
       default:
-        jj_la1[84] = jj_gen;
+        jj_la1[85] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1538,12 +1550,12 @@ public class StSqlParser implements StSqlParserConstants {
       token = jj_consume_token(S_INTEGER);
                                     top.setRowCount(Long.parseLong(token.image));
       break;
-    case 87:
-      jj_consume_token(87);
+    case 89:
+      jj_consume_token(89);
                       top.setRowCountJdbcParameter(true);
       break;
     default:
-      jj_la1[85] = jj_gen;
+      jj_la1[86] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -1557,14 +1569,14 @@ public class StSqlParser implements StSqlParserConstants {
       retval = OrExpression();
     } else {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 82:
-        jj_consume_token(82);
+      case 84:
+        jj_consume_token(84);
         retval = Expression();
-        jj_consume_token(83);
+        jj_consume_token(85);
                                              retval = new Parenthesis(retval);
         break;
       default:
-        jj_la1[86] = jj_gen;
+        jj_la1[87] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1601,23 +1613,23 @@ public class StSqlParser implements StSqlParserConstants {
     } else {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_NOT:
-      case 82:
+      case 84:
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case K_NOT:
           jj_consume_token(K_NOT);
                         not = true;
           break;
         default:
-          jj_la1[87] = jj_gen;
+          jj_la1[88] = jj_gen;
           ;
         }
-        jj_consume_token(82);
+        jj_consume_token(84);
         left = OrExpression();
-        jj_consume_token(83);
+        jj_consume_token(85);
                                          left = new Parenthesis(left); if (not) { ((Parenthesis)left).setNot(); not = false; }
         break;
       default:
-        jj_la1[88] = jj_gen;
+        jj_la1[89] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1636,23 +1648,23 @@ public class StSqlParser implements StSqlParserConstants {
       } else {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case K_NOT:
-        case 82:
+        case 84:
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
           case K_NOT:
             jj_consume_token(K_NOT);
                                 not = true;
             break;
           default:
-            jj_la1[89] = jj_gen;
+            jj_la1[90] = jj_gen;
             ;
           }
-          jj_consume_token(82);
+          jj_consume_token(84);
           right = OrExpression();
-          jj_consume_token(83);
+          jj_consume_token(85);
                                                   right = new Parenthesis(right); if (not) { ((Parenthesis)right).setNot(); not = false; }
           break;
         default:
-          jj_la1[90] = jj_gen;
+          jj_la1[91] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -1684,18 +1696,18 @@ public class StSqlParser implements StSqlParserConstants {
       case S_IDENTIFIER:
       case S_CHAR_LITERAL:
       case S_QUOTED_IDENTIFIER:
-      case 82:
-      case 87:
-      case 98:
-      case 99:
-      case 103:
+      case 84:
+      case 89:
+      case 100:
+      case 101:
       case 105:
-      case 106:
       case 107:
+      case 108:
+      case 109:
         result = RegularCondition();
         break;
       default:
-        jj_la1[91] = jj_gen;
+        jj_la1[92] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1716,7 +1728,7 @@ public class StSqlParser implements StSqlParserConstants {
                   prior=jef.database.jsqlparser.expression.BinaryExpression.Prior.LEFT;
       break;
     default:
-      jj_la1[92] = jj_gen;
+      jj_la1[93] = jj_gen;
       ;
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -1725,54 +1737,54 @@ public class StSqlParser implements StSqlParserConstants {
                 not = true;
       break;
     default:
-      jj_la1[93] = jj_gen;
+      jj_la1[94] = jj_gen;
       ;
     }
     leftExpression = ComparisonItem();
                                           result = leftExpression;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 88:
-      jj_consume_token(88);
-              result = new GreaterThan();
-      break;
-    case 89:
-      jj_consume_token(89);
-                result = new MinorThan();
-      break;
-    case 80:
-      jj_consume_token(80);
-                result = new EqualsTo();
-      break;
     case 90:
       jj_consume_token(90);
-                 result = new GreaterThanEquals();
+              result = new GreaterThan();
       break;
     case 91:
       jj_consume_token(91);
-                 result = new MinorThanEquals();
+                result = new MinorThan();
+      break;
+    case 82:
+      jj_consume_token(82);
+                result = new EqualsTo();
       break;
     case 92:
+      jj_consume_token(92);
+                 result = new GreaterThanEquals();
+      break;
     case 93:
+      jj_consume_token(93);
+                 result = new MinorThanEquals();
+      break;
+    case 94:
+    case 95:
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 92:
-        jj_consume_token(92);
+      case 94:
+        jj_consume_token(94);
         break;
-      case 93:
-        jj_consume_token(93);
+      case 95:
+        jj_consume_token(95);
         break;
       default:
-        jj_la1[94] = jj_gen;
+        jj_la1[95] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
                           result = new NotEqualsTo();
       break;
-    case 94:
-      jj_consume_token(94);
+    case 96:
+      jj_consume_token(96);
                  result = new Matches();
       break;
     default:
-      jj_la1[95] = jj_gen;
+      jj_la1[96] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -1782,7 +1794,7 @@ public class StSqlParser implements StSqlParserConstants {
                      prior=jef.database.jsqlparser.expression.BinaryExpression.Prior.RIGHT;
       break;
     default:
-      jj_la1[96] = jj_gen;
+      jj_la1[97] = jj_gen;
       ;
     }
     rightExpression = ComparisonItem();
@@ -1817,18 +1829,18 @@ public class StSqlParser implements StSqlParserConstants {
       case S_IDENTIFIER:
       case S_CHAR_LITERAL:
       case S_QUOTED_IDENTIFIER:
-      case 82:
-      case 87:
-      case 98:
-      case 99:
-      case 103:
+      case 84:
+      case 89:
+      case 100:
+      case 101:
       case 105:
-      case 106:
       case 107:
+      case 108:
+      case 109:
         result = LikeExpression();
         break;
       default:
-        jj_la1[97] = jj_gen;
+        jj_la1[98] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1848,11 +1860,11 @@ public class StSqlParser implements StSqlParserConstants {
                result.setNot(true);
       break;
     default:
-      jj_la1[98] = jj_gen;
+      jj_la1[99] = jj_gen;
       ;
     }
     jj_consume_token(K_IN);
-    jj_consume_token(82);
+    jj_consume_token(84);
     if (jj_2_19(2147483647)) {
       itemsList = SubSelect();
     } else {
@@ -1866,23 +1878,23 @@ public class StSqlParser implements StSqlParserConstants {
       case S_IDENTIFIER:
       case S_CHAR_LITERAL:
       case S_QUOTED_IDENTIFIER:
-      case 82:
-      case 87:
-      case 98:
-      case 99:
-      case 103:
+      case 84:
+      case 89:
+      case 100:
+      case 101:
       case 105:
-      case 106:
       case 107:
+      case 108:
+      case 109:
         itemsList = SimpleExpressionList();
         break;
       default:
-        jj_la1[99] = jj_gen;
+        jj_la1[100] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
     }
-    jj_consume_token(83);
+    jj_consume_token(85);
                 result.setLeftExpression(leftExpression);
                 result.setItemsList(itemsList);
                 {if (true) return result;}
@@ -1901,7 +1913,7 @@ public class StSqlParser implements StSqlParserConstants {
                        result.setNot(true);
       break;
     default:
-      jj_la1[100] = jj_gen;
+      jj_la1[101] = jj_gen;
       ;
     }
     jj_consume_token(K_BETWEEN);
@@ -1926,7 +1938,7 @@ public class StSqlParser implements StSqlParserConstants {
                result.setNot(true);
       break;
     default:
-      jj_la1[101] = jj_gen;
+      jj_la1[102] = jj_gen;
       ;
     }
     jj_consume_token(K_LIKE);
@@ -1938,7 +1950,7 @@ public class StSqlParser implements StSqlParserConstants {
                                          result.setEscape((new StringValue(token.image)).getValue());
       break;
     default:
-      jj_la1[102] = jj_gen;
+      jj_la1[103] = jj_gen;
       ;
     }
                 result.setLeftExpression(leftExpression);
@@ -1958,7 +1970,7 @@ public class StSqlParser implements StSqlParserConstants {
                       result.setNot(true);
       break;
     default:
-      jj_la1[103] = jj_gen;
+      jj_la1[104] = jj_gen;
       ;
     }
     jj_consume_token(K_NULL);
@@ -1976,7 +1988,7 @@ public class StSqlParser implements StSqlParserConstants {
                result.setNot(true);
       break;
     default:
-      jj_la1[104] = jj_gen;
+      jj_la1[105] = jj_gen;
       ;
     }
     jj_consume_token(K_EXISTS);
@@ -1995,14 +2007,14 @@ public class StSqlParser implements StSqlParserConstants {
     label_18:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 81:
+      case 83:
         ;
         break;
       default:
-        jj_la1[105] = jj_gen;
+        jj_la1[106] = jj_gen;
         break label_18;
       }
-      jj_consume_token(81);
+      jj_consume_token(83);
       expr = Expression();
                                                                           expressions.add(expr);
     }
@@ -2029,18 +2041,18 @@ public class StSqlParser implements StSqlParserConstants {
                                         expressions.add(expr); retval.setBetween(" from ");
       break;
     default:
-      jj_la1[107] = jj_gen;
+      jj_la1[108] = jj_gen;
       label_19:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 81:
+        case 83:
           ;
           break;
         default:
-          jj_la1[106] = jj_gen;
+          jj_la1[107] = jj_gen;
           break label_19;
         }
-        jj_consume_token(81);
+        jj_consume_token(83);
         expr = SimpleExpression();
                                     expressions.add(expr);
       }
@@ -2069,18 +2081,18 @@ public class StSqlParser implements StSqlParserConstants {
     case S_IDENTIFIER:
     case S_CHAR_LITERAL:
     case S_QUOTED_IDENTIFIER:
-    case 82:
-    case 87:
-    case 98:
-    case 99:
-    case 103:
+    case 84:
+    case 89:
+    case 100:
+    case 101:
     case 105:
-    case 106:
     case 107:
+    case 108:
+    case 109:
       retval = SimpleExpression();
       break;
     default:
-      jj_la1[108] = jj_gen;
+      jj_la1[109] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -2092,9 +2104,9 @@ public class StSqlParser implements StSqlParserConstants {
         AllComparisonExpression retval = null;
         SubSelect subselect = null;
     jj_consume_token(K_ALL);
-    jj_consume_token(82);
+    jj_consume_token(84);
     subselect = SubSelect();
-    jj_consume_token(83);
+    jj_consume_token(85);
                                          retval = new AllComparisonExpression(subselect);
       {if (true) return retval;}
     throw new Error("Missing return statement in function");
@@ -2111,13 +2123,13 @@ public class StSqlParser implements StSqlParserConstants {
       jj_consume_token(K_SOME);
       break;
     default:
-      jj_la1[109] = jj_gen;
+      jj_la1[110] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
-    jj_consume_token(82);
+    jj_consume_token(84);
     subselect = SubSelect();
-    jj_consume_token(83);
+    jj_consume_token(85);
                                                       retval = new AnyComparisonExpression(subselect);
       {if (true) return retval;}
     throw new Error("Missing return statement in function");
@@ -2129,14 +2141,14 @@ public class StSqlParser implements StSqlParserConstants {
       retval = BitwiseAndOr();
     } else {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 82:
-        jj_consume_token(82);
+      case 84:
+        jj_consume_token(84);
         retval = BitwiseAndOr();
-        jj_consume_token(83);
+        jj_consume_token(85);
                                                retval = new Parenthesis(retval);
         break;
       default:
-        jj_la1[110] = jj_gen;
+        jj_la1[111] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -2154,14 +2166,14 @@ public class StSqlParser implements StSqlParserConstants {
     label_20:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 95:
+      case 97:
         ;
         break;
       default:
-        jj_la1[111] = jj_gen;
+        jj_la1[112] = jj_gen;
         break label_20;
       }
-      jj_consume_token(95);
+      jj_consume_token(97);
       rightExpression = AdditiveExpression();
                         Concat binExp = new Concat();
                         binExp.setLeftExpression(leftExpression);
@@ -2187,16 +2199,16 @@ public class StSqlParser implements StSqlParserConstants {
         break label_21;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 96:
-        jj_consume_token(96);
+      case 98:
+        jj_consume_token(98);
                                               result = new BitwiseOr();
         break;
-      case 97:
-        jj_consume_token(97);
+      case 99:
+        jj_consume_token(99);
                                               result = new BitwiseAnd();
         break;
       default:
-        jj_la1[112] = jj_gen;
+        jj_la1[113] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -2224,16 +2236,16 @@ public class StSqlParser implements StSqlParserConstants {
         break label_22;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 98:
-        jj_consume_token(98);
+      case 100:
+        jj_consume_token(100);
                             result = new Addition();
         break;
-      case 99:
-        jj_consume_token(99);
+      case 101:
+        jj_consume_token(101);
                                                                         result = new Subtraction();
         break;
       default:
-        jj_la1[113] = jj_gen;
+        jj_la1[114] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -2257,14 +2269,14 @@ public class StSqlParser implements StSqlParserConstants {
       leftExpression = BitwiseXor();
     } else {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 82:
-        jj_consume_token(82);
+      case 84:
+        jj_consume_token(84);
         leftExpression = AdditiveExpression();
-        jj_consume_token(83);
+        jj_consume_token(85);
                                                          leftExpression = new Parenthesis(leftExpression);
         break;
       default:
-        jj_la1[114] = jj_gen;
+        jj_la1[115] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -2278,20 +2290,20 @@ public class StSqlParser implements StSqlParserConstants {
         break label_23;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 86:
-        jj_consume_token(86);
+      case 88:
+        jj_consume_token(88);
                             result = new Multiplication();
         break;
-      case 100:
-        jj_consume_token(100);
+      case 102:
+        jj_consume_token(102);
                                                                         result = new Division();
         break;
-      case 101:
-        jj_consume_token(101);
+      case 103:
+        jj_consume_token(103);
                                                                         result= new Mod();
         break;
       default:
-        jj_la1[115] = jj_gen;
+        jj_la1[116] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -2299,14 +2311,14 @@ public class StSqlParser implements StSqlParserConstants {
         rightExpression = BitwiseXor();
       } else {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 82:
-          jj_consume_token(82);
+        case 84:
+          jj_consume_token(84);
           rightExpression = AdditiveExpression();
-          jj_consume_token(83);
+          jj_consume_token(85);
                                                                                                   rightExpression = new Parenthesis(rightExpression);
           break;
         default:
-          jj_la1[116] = jj_gen;
+          jj_la1[117] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -2329,14 +2341,14 @@ public class StSqlParser implements StSqlParserConstants {
     label_24:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 102:
+      case 104:
         ;
         break;
       default:
-        jj_la1[117] = jj_gen;
+        jj_la1[118] = jj_gen;
         break label_24;
       }
-      jj_consume_token(102);
+      jj_consume_token(104);
       rightExpression = PrimaryExpression();
                         BitwiseXor binExp = new BitwiseXor();
                         binExp.setLeftExpression(leftExpression);
@@ -2365,20 +2377,20 @@ public class StSqlParser implements StSqlParserConstants {
     case S_INTEGER:
     case S_IDENTIFIER:
     case S_QUOTED_IDENTIFIER:
-    case 82:
-    case 87:
-    case 98:
-    case 99:
-    case 103:
+    case 84:
+    case 89:
+    case 100:
+    case 101:
     case 105:
-    case 106:
     case 107:
+    case 108:
+    case 109:
       value = PrimaryExpression();
       unit = jj_consume_token(S_IDENTIFIER);
                 {if (true) return new Interval(value,unit.image);}
       break;
     default:
-      jj_la1[118] = jj_gen;
+      jj_la1[119] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -2401,131 +2413,131 @@ public class StSqlParser implements StSqlParserConstants {
     case K_CASE:
       retval = CaseWhenExpression();
       break;
-    case 87:
-      jj_consume_token(87);
+    case 89:
+      jj_consume_token(89);
                 retval = new JdbcParameter();
       break;
     default:
-      jj_la1[131] = jj_gen;
+      jj_la1[132] = jj_gen;
       if (jj_2_26(2147483647)) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 98:
-        case 99:
+        case 100:
+        case 101:
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 98:
-            jj_consume_token(98);
+          case 100:
+            jj_consume_token(100);
             break;
-          case 99:
-            jj_consume_token(99);
+          case 101:
+            jj_consume_token(101);
                                                            isInverse = true;
             break;
           default:
-            jj_la1[119] = jj_gen;
+            jj_la1[120] = jj_gen;
             jj_consume_token(-1);
             throw new ParseException();
           }
           break;
         default:
-          jj_la1[120] = jj_gen;
+          jj_la1[121] = jj_gen;
           ;
         }
         retval = Function();
       } else if (jj_2_27(2147483647)) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 98:
-        case 99:
+        case 100:
+        case 101:
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 98:
-            jj_consume_token(98);
+          case 100:
+            jj_consume_token(100);
             break;
-          case 99:
-            jj_consume_token(99);
+          case 101:
+            jj_consume_token(101);
                                                                     tmp = "-";
             break;
           default:
-            jj_la1[121] = jj_gen;
+            jj_la1[122] = jj_gen;
             jj_consume_token(-1);
             throw new ParseException();
           }
           break;
         default:
-          jj_la1[122] = jj_gen;
+          jj_la1[123] = jj_gen;
           ;
         }
         token = jj_consume_token(S_DOUBLE);
                                                                                                       retval = new DoubleValue(tmp+token.image);
       } else if (jj_2_28(2147483647)) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 98:
-        case 99:
+        case 100:
+        case 101:
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 98:
-            jj_consume_token(98);
+          case 100:
+            jj_consume_token(100);
             break;
-          case 99:
-            jj_consume_token(99);
+          case 101:
+            jj_consume_token(101);
                                                                             tmp = "-";
             break;
           default:
-            jj_la1[123] = jj_gen;
+            jj_la1[124] = jj_gen;
             jj_consume_token(-1);
             throw new ParseException();
           }
           break;
         default:
-          jj_la1[124] = jj_gen;
+          jj_la1[125] = jj_gen;
           ;
         }
         token = jj_consume_token(S_INTEGER);
                                                                                                                retval = new LongValue(tmp+token.image);
       } else if (jj_2_29(2)) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 98:
-        case 99:
+        case 100:
+        case 101:
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 98:
-            jj_consume_token(98);
+          case 100:
+            jj_consume_token(100);
             break;
-          case 99:
-            jj_consume_token(99);
+          case 101:
+            jj_consume_token(101);
                                       isInverse = true;
             break;
           default:
-            jj_la1[125] = jj_gen;
+            jj_la1[126] = jj_gen;
             jj_consume_token(-1);
             throw new ParseException();
           }
           break;
         default:
-          jj_la1[126] = jj_gen;
+          jj_la1[127] = jj_gen;
           ;
         }
         retval = ColumnOrFunc();
       } else if (jj_2_30(2)) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 98:
-        case 99:
+        case 100:
+        case 101:
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 98:
-            jj_consume_token(98);
+          case 100:
+            jj_consume_token(100);
             break;
-          case 99:
-            jj_consume_token(99);
+          case 101:
+            jj_consume_token(101);
                                      isInverse = true;
             break;
           default:
-            jj_la1[127] = jj_gen;
+            jj_la1[128] = jj_gen;
             jj_consume_token(-1);
             throw new ParseException();
           }
           break;
         default:
-          jj_la1[128] = jj_gen;
+          jj_la1[129] = jj_gen;
           ;
         }
-        jj_consume_token(82);
+        jj_consume_token(84);
         retval = PrimaryExpression();
-        jj_consume_token(83);
+        jj_consume_token(85);
                                                                                                retval = new Parenthesis(retval);
       } else {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -2533,54 +2545,54 @@ public class StSqlParser implements StSqlParserConstants {
           token = jj_consume_token(S_CHAR_LITERAL);
                                    retval = new StringValue(token.image);
           break;
-        case 82:
-        case 98:
-        case 99:
+        case 84:
+        case 100:
+        case 101:
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 98:
-          case 99:
+          case 100:
+          case 101:
             switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-            case 98:
-              jj_consume_token(98);
+            case 100:
+              jj_consume_token(100);
               break;
-            case 99:
-              jj_consume_token(99);
+            case 101:
+              jj_consume_token(101);
                         isInverse = true;
               break;
             default:
-              jj_la1[129] = jj_gen;
+              jj_la1[130] = jj_gen;
               jj_consume_token(-1);
               throw new ParseException();
             }
             break;
           default:
-            jj_la1[130] = jj_gen;
+            jj_la1[131] = jj_gen;
             ;
           }
-          jj_consume_token(82);
+          jj_consume_token(84);
           retval = SubSelect();
-          jj_consume_token(83);
-          break;
-        case 103:
-          jj_consume_token(103);
-          token = jj_consume_token(S_CHAR_LITERAL);
-          jj_consume_token(104);
-                                                  retval = new DateValue(token.image);
+          jj_consume_token(85);
           break;
         case 105:
           jj_consume_token(105);
           token = jj_consume_token(S_CHAR_LITERAL);
-          jj_consume_token(104);
+          jj_consume_token(106);
+                                                  retval = new DateValue(token.image);
+          break;
+        case 107:
+          jj_consume_token(107);
+          token = jj_consume_token(S_CHAR_LITERAL);
+          jj_consume_token(106);
                                                   retval = new TimeValue(token.image);
           break;
-        case 106:
-          jj_consume_token(106);
+        case 108:
+          jj_consume_token(108);
           token = jj_consume_token(S_CHAR_LITERAL);
-          jj_consume_token(104);
+          jj_consume_token(106);
                                                    retval = new TimestampValue(token.image);
           break;
         default:
-          jj_la1[132] = jj_gen;
+          jj_la1[133] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -2611,7 +2623,7 @@ public class StSqlParser implements StSqlParserConstants {
           ;
           break;
         default:
-          jj_la1[133] = jj_gen;
+          jj_la1[134] = jj_gen;
           break label_25;
         }
       }
@@ -2621,7 +2633,7 @@ public class StSqlParser implements StSqlParserConstants {
         elseExp = PrimaryExpression();
         break;
       default:
-        jj_la1[134] = jj_gen;
+        jj_la1[135] = jj_gen;
         ;
       }
       break;
@@ -2634,14 +2646,14 @@ public class StSqlParser implements StSqlParserConstants {
     case S_IDENTIFIER:
     case S_CHAR_LITERAL:
     case S_QUOTED_IDENTIFIER:
-    case 82:
-    case 87:
-    case 98:
-    case 99:
-    case 103:
+    case 84:
+    case 89:
+    case 100:
+    case 101:
     case 105:
-    case 106:
     case 107:
+    case 108:
+    case 109:
       switchExp = PrimaryExpression();
       label_26:
       while (true) {
@@ -2650,7 +2662,7 @@ public class StSqlParser implements StSqlParserConstants {
           ;
           break;
         default:
-          jj_la1[135] = jj_gen;
+          jj_la1[136] = jj_gen;
           break label_26;
         }
         clause = WhenThenValue();
@@ -2662,12 +2674,12 @@ public class StSqlParser implements StSqlParserConstants {
         elseExp = PrimaryExpression();
         break;
       default:
-        jj_la1[136] = jj_gen;
+        jj_la1[137] = jj_gen;
         ;
       }
       break;
     default:
-      jj_la1[137] = jj_gen;
+      jj_la1[138] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -2713,12 +2725,12 @@ public class StSqlParser implements StSqlParserConstants {
         String tmp = null;
         ExpressionList expressionList = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 107:
-      jj_consume_token(107);
+    case 109:
+      jj_consume_token(109);
                  retval.setEscaped(true);
       break;
     default:
-      jj_la1[138] = jj_gen;
+      jj_la1[139] = jj_gen;
       ;
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -2731,31 +2743,31 @@ public class StSqlParser implements StSqlParserConstants {
                           funcName = "REPLACE";
       break;
     default:
-      jj_la1[139] = jj_gen;
+      jj_la1[140] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 84:
-      jj_consume_token(84);
+    case 86:
+      jj_consume_token(86);
       tmp = RelObjectName();
                                   funcName+= "." + tmp;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 84:
-        jj_consume_token(84);
+      case 86:
+        jj_consume_token(86);
         tmp = RelObjectName();
                                                                                      funcName+= "." + tmp;
         break;
       default:
-        jj_la1[140] = jj_gen;
+        jj_la1[141] = jj_gen;
         ;
       }
       break;
     default:
-      jj_la1[141] = jj_gen;
+      jj_la1[142] = jj_gen;
       ;
     }
-    jj_consume_token(82);
+    jj_consume_token(84);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_ALL:
     case K_NULL:
@@ -2768,15 +2780,15 @@ public class StSqlParser implements StSqlParserConstants {
     case S_IDENTIFIER:
     case S_CHAR_LITERAL:
     case S_QUOTED_IDENTIFIER:
-    case 82:
-    case 86:
-    case 87:
-    case 98:
-    case 99:
-    case 103:
+    case 84:
+    case 88:
+    case 89:
+    case 100:
+    case 101:
     case 105:
-    case 106:
     case 107:
+    case 108:
+    case 109:
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_ALL:
       case K_DISTINCT:
@@ -2790,13 +2802,13 @@ public class StSqlParser implements StSqlParserConstants {
                                                                   retval.setAllColumns(true);
           break;
         default:
-          jj_la1[142] = jj_gen;
+          jj_la1[143] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
         break;
       default:
-        jj_la1[143] = jj_gen;
+        jj_la1[144] = jj_gen;
         ;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -2809,37 +2821,37 @@ public class StSqlParser implements StSqlParserConstants {
       case S_IDENTIFIER:
       case S_CHAR_LITERAL:
       case S_QUOTED_IDENTIFIER:
-      case 82:
-      case 87:
-      case 98:
-      case 99:
-      case 103:
+      case 84:
+      case 89:
+      case 100:
+      case 101:
       case 105:
-      case 106:
       case 107:
+      case 108:
+      case 109:
         expressionList = SimpleExpressionList();
         break;
-      case 86:
-        jj_consume_token(86);
+      case 88:
+        jj_consume_token(88);
                                                                                                                                                 retval.setAllColumns(true);
         break;
       default:
-        jj_la1[144] = jj_gen;
+        jj_la1[145] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
       break;
     default:
-      jj_la1[145] = jj_gen;
+      jj_la1[146] = jj_gen;
       ;
     }
-    jj_consume_token(83);
+    jj_consume_token(85);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 104:
-      jj_consume_token(104);
+    case 106:
+      jj_consume_token(106);
       break;
     default:
-      jj_la1[146] = jj_gen;
+      jj_la1[147] = jj_gen;
       ;
     }
             retval.setParameters(expressionList);
@@ -2884,12 +2896,12 @@ public class StSqlParser implements StSqlParserConstants {
       case S_INTEGER:
       case S_IDENTIFIER:
       case S_CHAR_LITERAL:
-      case 80:
       case 82:
+      case 84:
         ;
         break;
       default:
-        jj_la1[147] = jj_gen;
+        jj_la1[148] = jj_gen;
         break label_27;
       }
       CreateParameter();
@@ -2897,8 +2909,8 @@ public class StSqlParser implements StSqlParserConstants {
     jj_consume_token(K_TABLE);
     table = Table();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 82:
-      jj_consume_token(82);
+    case 84:
+      jj_consume_token(84);
       columnName = jj_consume_token(S_IDENTIFIER);
       colDataType = ColDataType();
                         columnSpecs = new ArrayList();
@@ -2912,12 +2924,12 @@ public class StSqlParser implements StSqlParserConstants {
         case S_INTEGER:
         case S_IDENTIFIER:
         case S_CHAR_LITERAL:
-        case 80:
         case 82:
+        case 84:
           ;
           break;
         default:
-          jj_la1[148] = jj_gen;
+          jj_la1[149] = jj_gen;
           break label_28;
         }
         parameter = CreateParameter();
@@ -2932,14 +2944,14 @@ public class StSqlParser implements StSqlParserConstants {
       label_29:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 81:
+        case 83:
           ;
           break;
         default:
-          jj_la1[149] = jj_gen;
+          jj_la1[150] = jj_gen;
           break label_29;
         }
-        jj_consume_token(81);
+        jj_consume_token(83);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case K_INDEX:
           tk = jj_consume_token(K_INDEX);
@@ -2973,12 +2985,12 @@ public class StSqlParser implements StSqlParserConstants {
             case S_INTEGER:
             case S_IDENTIFIER:
             case S_CHAR_LITERAL:
-            case 80:
             case 82:
+            case 84:
               ;
               break;
             default:
-              jj_la1[150] = jj_gen;
+              jj_la1[151] = jj_gen;
               break label_30;
             }
             parameter = CreateParameter();
@@ -2992,12 +3004,12 @@ public class StSqlParser implements StSqlParserConstants {
                                                 columnDefinitions.add(coldef);
           break;
         default:
-          jj_la1[151] = jj_gen;
+          jj_la1[152] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
       }
-      jj_consume_token(83);
+      jj_consume_token(85);
       label_31:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -3008,12 +3020,12 @@ public class StSqlParser implements StSqlParserConstants {
         case S_INTEGER:
         case S_IDENTIFIER:
         case S_CHAR_LITERAL:
-        case 80:
         case 82:
+        case 84:
           ;
           break;
         default:
-          jj_la1[152] = jj_gen;
+          jj_la1[153] = jj_gen;
           break label_31;
         }
         parameter = CreateParameter();
@@ -3021,7 +3033,7 @@ public class StSqlParser implements StSqlParserConstants {
       }
       break;
     default:
-      jj_la1[153] = jj_gen;
+      jj_la1[154] = jj_gen;
       ;
     }
                 createTable.setTable(table);
@@ -3042,7 +3054,7 @@ public class StSqlParser implements StSqlParserConstants {
     tk = jj_consume_token(S_IDENTIFIER);
                               colDataType.setDataType(tk.image);
     if (jj_2_31(2)) {
-      jj_consume_token(82);
+      jj_consume_token(84);
       label_32:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -3051,7 +3063,7 @@ public class StSqlParser implements StSqlParserConstants {
           ;
           break;
         default:
-          jj_la1[154] = jj_gen;
+          jj_la1[155] = jj_gen;
           break label_32;
         }
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -3062,22 +3074,22 @@ public class StSqlParser implements StSqlParserConstants {
           tk = jj_consume_token(S_CHAR_LITERAL);
           break;
         default:
-          jj_la1[155] = jj_gen;
+          jj_la1[156] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
                                                                      argumentsStringList.add(tk.image);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 81:
-          jj_consume_token(81);
+        case 83:
+          jj_consume_token(83);
 
           break;
         default:
-          jj_la1[156] = jj_gen;
+          jj_la1[157] = jj_gen;
           ;
         }
       }
-      jj_consume_token(83);
+      jj_consume_token(85);
     } else {
       ;
     }
@@ -3119,15 +3131,15 @@ public class StSqlParser implements StSqlParserConstants {
       tk = jj_consume_token(S_DOUBLE);
                                         retval = tk.image;
       break;
-    case 80:
-      jj_consume_token(80);
+    case 82:
+      jj_consume_token(82);
                               retval = "=";
       break;
-    case 82:
+    case 84:
       retval = AList();
       break;
     default:
-      jj_la1[157] = jj_gen;
+      jj_la1[158] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -3138,7 +3150,7 @@ public class StSqlParser implements StSqlParserConstants {
   final public String AList() throws ParseException {
         StringBuffer retval = new StringBuffer("(");
         Token tk = null;
-    jj_consume_token(82);
+    jj_consume_token(84);
     label_33:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -3149,7 +3161,7 @@ public class StSqlParser implements StSqlParserConstants {
         ;
         break;
       default:
-        jj_la1[158] = jj_gen;
+        jj_la1[159] = jj_gen;
         break label_33;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -3166,22 +3178,22 @@ public class StSqlParser implements StSqlParserConstants {
         tk = jj_consume_token(S_IDENTIFIER);
         break;
       default:
-        jj_la1[159] = jj_gen;
+        jj_la1[160] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
                                                                                         retval.append(tk.image);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 81:
-        jj_consume_token(81);
+      case 83:
+        jj_consume_token(83);
                                                                                                                          retval.append(",");
         break;
       default:
-        jj_la1[160] = jj_gen;
+        jj_la1[161] = jj_gen;
         ;
       }
     }
-    jj_consume_token(83);
+    jj_consume_token(85);
                 retval.append(")");
                 {if (true) return retval.toString();}
     throw new Error("Missing return statement in function");
@@ -3190,24 +3202,24 @@ public class StSqlParser implements StSqlParserConstants {
   final public List ColumnsNamesList() throws ParseException {
         List retval = new ArrayList();
         Token tk = null;
-    jj_consume_token(82);
+    jj_consume_token(84);
     tk = jj_consume_token(S_IDENTIFIER);
                                     retval.add(tk.image);
     label_34:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 81:
+      case 83:
         ;
         break;
       default:
-        jj_la1[161] = jj_gen;
+        jj_la1[162] = jj_gen;
         break label_34;
       }
-      jj_consume_token(81);
+      jj_consume_token(83);
       tk = jj_consume_token(S_IDENTIFIER);
                                           retval.add(tk.image);
     }
-    jj_consume_token(83);
+    jj_consume_token(85);
                 {if (true) return retval;}
     throw new Error("Missing return statement in function");
   }
@@ -3228,7 +3240,7 @@ public class StSqlParser implements StSqlParserConstants {
       tk = jj_consume_token(K_INDEX);
       break;
     default:
-      jj_la1[162] = jj_gen;
+      jj_la1[163] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -3242,7 +3254,7 @@ public class StSqlParser implements StSqlParserConstants {
         ;
         break;
       default:
-        jj_la1[163] = jj_gen;
+        jj_la1[164] = jj_gen;
         break label_35;
       }
       tk = jj_consume_token(S_IDENTIFIER);
@@ -3482,37 +3494,6 @@ public class StSqlParser implements StSqlParserConstants {
     finally { jj_save(30, xla); }
   }
 
-  private boolean jj_3R_130() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_179()) {
-    jj_scanpos = xsp;
-    if (jj_3R_180()) {
-    jj_scanpos = xsp;
-    if (jj_3R_181()) {
-    jj_scanpos = xsp;
-    if (jj_3R_182()) return true;
-    }
-    }
-    }
-    return false;
-  }
-
-  private boolean jj_3R_206() {
-    if (jj_scan_token(K_DISTINCT)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_146() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_206()) {
-    jj_scanpos = xsp;
-    if (jj_3R_207()) return true;
-    }
-    return false;
-  }
-
   private boolean jj_3R_77() {
     Token xsp;
     xsp = jj_scanpos;
@@ -3527,23 +3508,6 @@ public class StSqlParser implements StSqlParserConstants {
     if (jj_3R_76()) return true;
     xsp = jj_scanpos;
     if (jj_3R_133()) jj_scanpos = xsp;
-    return false;
-  }
-
-  private boolean jj_3R_101() {
-    if (jj_scan_token(K_REPLACE)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_103() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_146()) jj_scanpos = xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_147()) {
-    jj_scanpos = xsp;
-    if (jj_3R_148()) return true;
-    }
     return false;
   }
 
@@ -3567,7 +3531,7 @@ public class StSqlParser implements StSqlParserConstants {
   }
 
   private boolean jj_3R_102() {
-    if (jj_scan_token(84)) return true;
+    if (jj_scan_token(86)) return true;
     if (jj_3R_37()) return true;
     Token xsp;
     xsp = jj_scanpos;
@@ -3576,12 +3540,12 @@ public class StSqlParser implements StSqlParserConstants {
   }
 
   private boolean jj_3_3() {
-    if (jj_scan_token(82)) return true;
+    if (jj_scan_token(84)) return true;
     return false;
   }
 
   private boolean jj_3R_99() {
-    if (jj_scan_token(107)) return true;
+    if (jj_scan_token(109)) return true;
     return false;
   }
 
@@ -3601,12 +3565,12 @@ public class StSqlParser implements StSqlParserConstants {
     }
     xsp = jj_scanpos;
     if (jj_3R_102()) jj_scanpos = xsp;
-    if (jj_scan_token(82)) return true;
+    if (jj_scan_token(84)) return true;
     xsp = jj_scanpos;
     if (jj_3R_103()) jj_scanpos = xsp;
-    if (jj_scan_token(83)) return true;
+    if (jj_scan_token(85)) return true;
     xsp = jj_scanpos;
-    if (jj_scan_token(104)) jj_scanpos = xsp;
+    if (jj_scan_token(106)) jj_scanpos = xsp;
     return false;
   }
 
@@ -3630,6 +3594,11 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
+  private boolean jj_3R_89() {
+    if (jj_3R_50()) return true;
+    return false;
+  }
+
   private boolean jj_3R_159() {
     Token xsp;
     while (true) {
@@ -3644,22 +3613,17 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_89() {
-    if (jj_3R_50()) return true;
-    return false;
-  }
-
-  private boolean jj_3_2() {
-    if (jj_scan_token(82)) return true;
-    if (jj_3R_36()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_271() {
+  private boolean jj_3R_272() {
     if (jj_scan_token(K_WHEN)) return true;
     if (jj_3R_71()) return true;
     if (jj_scan_token(K_THEN)) return true;
     if (jj_3R_87()) return true;
+    return false;
+  }
+
+  private boolean jj_3_2() {
+    if (jj_scan_token(84)) return true;
+    if (jj_3R_36()) return true;
     return false;
   }
 
@@ -3686,6 +3650,11 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
+  private boolean jj_3R_201() {
+    if (jj_scan_token(K_NOT)) return true;
+    return false;
+  }
+
   private boolean jj_3R_176() {
     if (jj_3R_40()) return true;
     return false;
@@ -3697,8 +3666,16 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_201() {
-    if (jj_scan_token(K_NOT)) return true;
+  private boolean jj_3R_271() {
+    if (jj_scan_token(K_WHEN)) return true;
+    if (jj_3R_227()) return true;
+    if (jj_scan_token(K_THEN)) return true;
+    if (jj_3R_87()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_210() {
+    if (jj_scan_token(101)) return true;
     return false;
   }
 
@@ -3707,16 +3684,8 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_270() {
-    if (jj_scan_token(K_WHEN)) return true;
-    if (jj_3R_226()) return true;
-    if (jj_scan_token(K_THEN)) return true;
-    if (jj_3R_87()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_210() {
-    if (jj_scan_token(99)) return true;
+  private boolean jj_3R_91() {
+    if (jj_scan_token(K_NOT)) return true;
     return false;
   }
 
@@ -3725,36 +3694,31 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_91() {
-    if (jj_scan_token(K_NOT)) return true;
-    return false;
-  }
-
   private boolean jj_3R_153() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(98)) {
+    if (jj_scan_token(100)) {
     jj_scanpos = xsp;
     if (jj_3R_210()) return true;
     }
     return false;
   }
 
-  private boolean jj_3_1() {
-    if (jj_scan_token(82)) return true;
-    if (jj_3R_36()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_236() {
+  private boolean jj_3R_237() {
     if (jj_3R_71()) return true;
     Token xsp;
     while (true) {
       xsp = jj_scanpos;
-      if (jj_3R_262()) { jj_scanpos = xsp; break; }
+      if (jj_3R_263()) { jj_scanpos = xsp; break; }
     }
     xsp = jj_scanpos;
-    if (jj_3R_263()) jj_scanpos = xsp;
+    if (jj_3R_264()) jj_scanpos = xsp;
+    return false;
+  }
+
+  private boolean jj_3_1() {
+    if (jj_scan_token(84)) return true;
+    if (jj_3R_36()) return true;
     return false;
   }
 
@@ -3770,58 +3734,70 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
+  private boolean jj_3R_209() {
+    if (jj_scan_token(101)) return true;
+    return false;
+  }
+
   private boolean jj_3R_127() {
-    if (jj_scan_token(82)) return true;
+    if (jj_scan_token(84)) return true;
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_176()) {
     jj_scanpos = xsp;
     if (jj_3R_177()) return true;
     }
-    if (jj_scan_token(83)) return true;
+    if (jj_scan_token(85)) return true;
     return false;
   }
 
-  private boolean jj_3R_209() {
-    if (jj_scan_token(99)) return true;
+  private boolean jj_3R_264() {
+    if (jj_scan_token(K_ELSE)) return true;
+    if (jj_3R_71()) return true;
     return false;
   }
 
   private boolean jj_3R_263() {
-    if (jj_scan_token(K_ELSE)) return true;
-    if (jj_3R_71()) return true;
+    if (jj_3R_272()) return true;
     return false;
   }
 
   private boolean jj_3R_262() {
-    if (jj_3R_271()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_243() {
-    if (jj_scan_token(81)) return true;
-    if (jj_3R_75()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_261() {
     if (jj_scan_token(K_ELSE)) return true;
     if (jj_3R_71()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_244() {
+    if (jj_scan_token(83)) return true;
+    if (jj_3R_75()) return true;
     return false;
   }
 
   private boolean jj_3R_152() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(98)) {
+    if (jj_scan_token(100)) {
     jj_scanpos = xsp;
     if (jj_3R_209()) return true;
     }
     return false;
   }
 
-  private boolean jj_3R_260() {
-    if (jj_3R_270()) return true;
+  private boolean jj_3R_261() {
+    if (jj_3R_271()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_236() {
+    Token xsp;
+    if (jj_3R_261()) return true;
+    while (true) {
+      xsp = jj_scanpos;
+      if (jj_3R_261()) { jj_scanpos = xsp; break; }
+    }
+    xsp = jj_scanpos;
+    if (jj_3R_262()) jj_scanpos = xsp;
     return false;
   }
 
@@ -3837,25 +3813,13 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_235() {
-    Token xsp;
-    if (jj_3R_260()) return true;
-    while (true) {
-      xsp = jj_scanpos;
-      if (jj_3R_260()) { jj_scanpos = xsp; break; }
-    }
-    xsp = jj_scanpos;
-    if (jj_3R_261()) jj_scanpos = xsp;
-    return false;
-  }
-
   private boolean jj_3R_208() {
-    if (jj_scan_token(99)) return true;
+    if (jj_scan_token(101)) return true;
     return false;
   }
 
   private boolean jj_3R_215() {
-    if (jj_scan_token(81)) return true;
+    if (jj_scan_token(83)) return true;
     if (jj_3R_214()) return true;
     return false;
   }
@@ -3864,9 +3828,9 @@ public class StSqlParser implements StSqlParserConstants {
     if (jj_scan_token(K_CASE)) return true;
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_235()) {
+    if (jj_3R_236()) {
     jj_scanpos = xsp;
-    if (jj_3R_236()) return true;
+    if (jj_3R_237()) return true;
     }
     if (jj_scan_token(K_END)) return true;
     return false;
@@ -3878,13 +3842,13 @@ public class StSqlParser implements StSqlParserConstants {
     xsp = jj_scanpos;
     if (jj_3R_88()) jj_scanpos = xsp;
     if (jj_scan_token(K_IN)) return true;
-    if (jj_scan_token(82)) return true;
+    if (jj_scan_token(84)) return true;
     xsp = jj_scanpos;
     if (jj_3R_89()) {
     jj_scanpos = xsp;
     if (jj_3R_90()) return true;
     }
-    if (jj_scan_token(83)) return true;
+    if (jj_scan_token(85)) return true;
     return false;
   }
 
@@ -3896,7 +3860,7 @@ public class StSqlParser implements StSqlParserConstants {
   private boolean jj_3R_151() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(98)) {
+    if (jj_scan_token(100)) {
     jj_scanpos = xsp;
     if (jj_3R_208()) return true;
     }
@@ -3929,8 +3893,18 @@ public class StSqlParser implements StSqlParserConstants {
     Token xsp;
     while (true) {
       xsp = jj_scanpos;
-      if (jj_3R_243()) { jj_scanpos = xsp; break; }
+      if (jj_3R_244()) { jj_scanpos = xsp; break; }
     }
+    return false;
+  }
+
+  private boolean jj_3R_86() {
+    if (jj_3R_138()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_106() {
+    if (jj_scan_token(101)) return true;
     return false;
   }
 
@@ -3942,23 +3916,13 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_86() {
-    if (jj_3R_138()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_106() {
-    if (jj_scan_token(99)) return true;
-    return false;
-  }
-
   private boolean jj_3R_85() {
     if (jj_3R_49()) return true;
     return false;
   }
 
   private boolean jj_3R_104() {
-    if (jj_scan_token(99)) return true;
+    if (jj_scan_token(101)) return true;
     return false;
   }
 
@@ -3972,15 +3936,15 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_265() {
-    if (jj_3R_178()) return true;
+  private boolean jj_3R_118() {
+    if (jj_scan_token(108)) return true;
+    if (jj_scan_token(S_CHAR_LITERAL)) return true;
+    if (jj_scan_token(106)) return true;
     return false;
   }
 
-  private boolean jj_3R_118() {
-    if (jj_scan_token(106)) return true;
-    if (jj_scan_token(S_CHAR_LITERAL)) return true;
-    if (jj_scan_token(104)) return true;
+  private boolean jj_3R_266() {
+    if (jj_3R_178()) return true;
     return false;
   }
 
@@ -3992,7 +3956,7 @@ public class StSqlParser implements StSqlParserConstants {
   private boolean jj_3R_70() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(98)) {
+    if (jj_scan_token(100)) {
     jj_scanpos = xsp;
     if (jj_3R_106()) return true;
     }
@@ -4021,7 +3985,7 @@ public class StSqlParser implements StSqlParserConstants {
   private boolean jj_3R_68() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(98)) {
+    if (jj_scan_token(100)) {
     jj_scanpos = xsp;
     if (jj_3R_104()) return true;
     }
@@ -4029,63 +3993,58 @@ public class StSqlParser implements StSqlParserConstants {
   }
 
   private boolean jj_3R_117() {
-    if (jj_scan_token(105)) return true;
+    if (jj_scan_token(107)) return true;
     if (jj_scan_token(S_CHAR_LITERAL)) return true;
-    if (jj_scan_token(104)) return true;
+    if (jj_scan_token(106)) return true;
     return false;
   }
 
   private boolean jj_3R_211() {
-    if (jj_scan_token(99)) return true;
+    if (jj_scan_token(101)) return true;
     return false;
   }
 
   private boolean jj_3R_116() {
-    if (jj_scan_token(103)) return true;
+    if (jj_scan_token(105)) return true;
     if (jj_scan_token(S_CHAR_LITERAL)) return true;
-    if (jj_scan_token(104)) return true;
+    if (jj_scan_token(106)) return true;
     return false;
   }
 
   private boolean jj_3R_67() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(98)) {
+    if (jj_scan_token(100)) {
     jj_scanpos = xsp;
-    if (jj_scan_token(99)) return true;
+    if (jj_scan_token(101)) return true;
     }
-    return false;
-  }
-
-  private boolean jj_3R_39() {
-    if (jj_3R_75()) return true;
-    if (jj_scan_token(84)) return true;
-    if (jj_scan_token(86)) return true;
     return false;
   }
 
   private boolean jj_3R_66() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(98)) {
+    if (jj_scan_token(100)) {
     jj_scanpos = xsp;
-    if (jj_scan_token(99)) return true;
+    if (jj_scan_token(101)) return true;
     }
+    return false;
+  }
+
+  private boolean jj_3R_39() {
+    if (jj_3R_75()) return true;
+    if (jj_scan_token(86)) return true;
+    if (jj_scan_token(88)) return true;
     return false;
   }
 
   private boolean jj_3R_154() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(98)) {
+    if (jj_scan_token(100)) {
     jj_scanpos = xsp;
     if (jj_3R_211()) return true;
     }
-    return false;
-  }
-
-  private boolean jj_3_6() {
-    if (jj_3R_39()) return true;
     return false;
   }
 
@@ -4097,12 +4056,17 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
+  private boolean jj_3_6() {
+    if (jj_3R_39()) return true;
+    return false;
+  }
+
   private boolean jj_3R_64() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(98)) {
+    if (jj_scan_token(100)) {
     jj_scanpos = xsp;
-    if (jj_scan_token(99)) return true;
+    if (jj_scan_token(101)) return true;
     }
     return false;
   }
@@ -4119,9 +4083,9 @@ public class StSqlParser implements StSqlParserConstants {
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_154()) jj_scanpos = xsp;
-    if (jj_scan_token(82)) return true;
+    if (jj_scan_token(84)) return true;
     if (jj_3R_50()) return true;
-    if (jj_scan_token(83)) return true;
+    if (jj_scan_token(85)) return true;
     return false;
   }
 
@@ -4138,26 +4102,18 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_172() {
-    if (jj_scan_token(K_DISTINCT)) return true;
-    return false;
-  }
-
   private boolean jj_3_30() {
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_70()) jj_scanpos = xsp;
-    if (jj_scan_token(82)) return true;
+    if (jj_scan_token(84)) return true;
     if (jj_3R_71()) return true;
-    if (jj_scan_token(83)) return true;
+    if (jj_scan_token(85)) return true;
     return false;
   }
 
-  private boolean jj_3R_242() {
-    if (jj_3R_87()) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_265()) jj_scanpos = xsp;
+  private boolean jj_3R_172() {
+    if (jj_scan_token(K_DISTINCT)) return true;
     return false;
   }
 
@@ -4169,8 +4125,11 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_241() {
-    if (jj_3R_39()) return true;
+  private boolean jj_3R_243() {
+    if (jj_3R_87()) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_266()) jj_scanpos = xsp;
     return false;
   }
 
@@ -4192,8 +4151,13 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
+  private boolean jj_3R_242() {
+    if (jj_3R_39()) return true;
+    return false;
+  }
+
   private boolean jj_3R_199() {
-    if (jj_scan_token(94)) return true;
+    if (jj_scan_token(96)) return true;
     return false;
   }
 
@@ -4208,15 +4172,15 @@ public class StSqlParser implements StSqlParserConstants {
   private boolean jj_3R_198() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(92)) {
+    if (jj_scan_token(94)) {
     jj_scanpos = xsp;
-    if (jj_scan_token(93)) return true;
+    if (jj_scan_token(95)) return true;
     }
     return false;
   }
 
   private boolean jj_3R_197() {
-    if (jj_scan_token(91)) return true;
+    if (jj_scan_token(93)) return true;
     return false;
   }
 
@@ -4228,13 +4192,33 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_240() {
-    if (jj_scan_token(86)) return true;
+  private boolean jj_3R_196() {
+    if (jj_scan_token(92)) return true;
     return false;
   }
 
-  private boolean jj_3R_196() {
-    if (jj_scan_token(90)) return true;
+  private boolean jj_3R_195() {
+    if (jj_scan_token(82)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_108() {
+    if (jj_3R_149()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_110() {
+    if (jj_scan_token(89)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_241() {
+    if (jj_scan_token(88)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_194() {
+    if (jj_scan_token(91)) return true;
     return false;
   }
 
@@ -4246,38 +4230,18 @@ public class StSqlParser implements StSqlParserConstants {
   private boolean jj_3R_214() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_240()) {
-    jj_scanpos = xsp;
     if (jj_3R_241()) {
     jj_scanpos = xsp;
-    if (jj_3R_242()) return true;
+    if (jj_3R_242()) {
+    jj_scanpos = xsp;
+    if (jj_3R_243()) return true;
     }
     }
-    return false;
-  }
-
-  private boolean jj_3R_195() {
-    if (jj_scan_token(80)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_108() {
-    if (jj_3R_149()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_110() {
-    if (jj_scan_token(87)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_194() {
-    if (jj_scan_token(89)) return true;
     return false;
   }
 
   private boolean jj_3R_193() {
-    if (jj_scan_token(88)) return true;
+    if (jj_scan_token(90)) return true;
     return false;
   }
 
@@ -4380,6 +4344,11 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
+  private boolean jj_3R_61() {
+    if (jj_scan_token(103)) return true;
+    return false;
+  }
+
   private boolean jj_3R_157() {
     if (jj_3R_214()) return true;
     Token xsp;
@@ -4390,18 +4359,18 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_61() {
-    if (jj_scan_token(101)) return true;
-    return false;
-  }
-
   private boolean jj_3R_81() {
     if (jj_3R_137()) return true;
     return false;
   }
 
   private boolean jj_3R_60() {
-    if (jj_scan_token(100)) return true;
+    if (jj_scan_token(102)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_80() {
+    if (jj_3R_45()) return true;
     return false;
   }
 
@@ -4415,8 +4384,13 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_80() {
-    if (jj_3R_45()) return true;
+  private boolean jj_3R_44() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_80()) {
+    jj_scanpos = xsp;
+    if (jj_3R_81()) return true;
+    }
     return false;
   }
 
@@ -4435,22 +4409,12 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_44() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_80()) {
-    jj_scanpos = xsp;
-    if (jj_3R_81()) return true;
-    }
+  private boolean jj_3R_269() {
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
-  private boolean jj_3R_268() {
-    if (jj_scan_token(87)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_234() {
+  private boolean jj_3R_235() {
     if (jj_3R_71()) return true;
     if (jj_scan_token(S_IDENTIFIER)) return true;
     return false;
@@ -4461,30 +4425,35 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_228() {
+  private boolean jj_3R_229() {
     if (jj_scan_token(K_NOT)) return true;
     return false;
   }
 
   private boolean jj_3R_63() {
-    if (jj_scan_token(82)) return true;
+    if (jj_scan_token(84)) return true;
     if (jj_3R_95()) return true;
-    if (jj_scan_token(83)) return true;
+    if (jj_scan_token(85)) return true;
     return false;
   }
 
   private boolean jj_3R_189() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_228()) jj_scanpos = xsp;
-    if (jj_scan_token(82)) return true;
+    if (jj_3R_229()) jj_scanpos = xsp;
+    if (jj_scan_token(84)) return true;
     if (jj_3R_43()) return true;
-    if (jj_scan_token(83)) return true;
+    if (jj_scan_token(85)) return true;
     return false;
   }
 
   private boolean jj_3_12() {
     if (jj_scan_token(K_AND)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_234() {
+    if (jj_scan_token(S_CHAR_LITERAL)) return true;
     return false;
   }
 
@@ -4498,13 +4467,19 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_233() {
-    if (jj_scan_token(S_CHAR_LITERAL)) return true;
+  private boolean jj_3R_166() {
+    if (jj_scan_token(K_ALL)) return true;
     return false;
   }
 
-  private boolean jj_3R_166() {
-    if (jj_scan_token(K_ALL)) return true;
+  private boolean jj_3R_149() {
+    if (jj_scan_token(K_INTERVAL)) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_234()) {
+    jj_scanpos = xsp;
+    if (jj_3R_235()) return true;
+    }
     return false;
   }
 
@@ -4524,17 +4499,6 @@ public class StSqlParser implements StSqlParserConstants {
     xsp = jj_scanpos;
     if (jj_3R_173()) jj_scanpos = xsp;
     if (jj_3R_119()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_149() {
-    if (jj_scan_token(K_INTERVAL)) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_233()) {
-    jj_scanpos = xsp;
-    if (jj_3R_234()) return true;
-    }
     return false;
   }
 
@@ -4564,9 +4528,9 @@ public class StSqlParser implements StSqlParserConstants {
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_168()) jj_scanpos = xsp;
-    if (jj_scan_token(82)) return true;
+    if (jj_scan_token(84)) return true;
     if (jj_3R_119()) return true;
-    if (jj_scan_token(83)) return true;
+    if (jj_scan_token(85)) return true;
     return false;
   }
 
@@ -4575,8 +4539,8 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_250() {
-    if (jj_scan_token(87)) return true;
+  private boolean jj_3R_251() {
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
@@ -4590,24 +4554,24 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_122() {
-    if (jj_3R_169()) return true;
-    return false;
-  }
-
   private boolean jj_3R_135() {
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_187()) jj_scanpos = xsp;
-    if (jj_scan_token(82)) return true;
+    if (jj_scan_token(84)) return true;
     if (jj_3R_43()) return true;
-    if (jj_scan_token(83)) return true;
+    if (jj_scan_token(85)) return true;
     return false;
   }
 
   private boolean jj_3R_98() {
-    if (jj_scan_token(102)) return true;
+    if (jj_scan_token(104)) return true;
     if (jj_3R_71()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_122() {
+    if (jj_3R_169()) return true;
     return false;
   }
 
@@ -4616,8 +4580,13 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_248() {
-    if (jj_scan_token(87)) return true;
+  private boolean jj_3R_249() {
+    if (jj_scan_token(89)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_56() {
+    if (jj_scan_token(101)) return true;
     return false;
   }
 
@@ -4632,11 +4601,6 @@ public class StSqlParser implements StSqlParserConstants {
       xsp = jj_scanpos;
       if (jj_3R_125()) { jj_scanpos = xsp; break; }
     }
-    return false;
-  }
-
-  private boolean jj_3R_56() {
-    if (jj_scan_token(99)) return true;
     return false;
   }
 
@@ -4669,17 +4633,22 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
+  private boolean jj_3_10() {
+    if (jj_scan_token(K_OR)) return true;
+    return false;
+  }
+
   private boolean jj_3R_73() {
-    if (jj_scan_token(82)) return true;
+    if (jj_scan_token(84)) return true;
     if (jj_3R_119()) return true;
-    if (jj_scan_token(83)) return true;
+    if (jj_scan_token(85)) return true;
     if (jj_scan_token(K_UNION)) return true;
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_120()) jj_scanpos = xsp;
-    if (jj_scan_token(82)) return true;
+    if (jj_scan_token(84)) return true;
     if (jj_3R_119()) return true;
-    if (jj_scan_token(83)) return true;
+    if (jj_scan_token(85)) return true;
     while (true) {
       xsp = jj_scanpos;
       if (jj_3R_121()) { jj_scanpos = xsp; break; }
@@ -4691,13 +4660,14 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3_10() {
-    if (jj_scan_token(K_OR)) return true;
+  private boolean jj_3R_59() {
+    if (jj_scan_token(88)) return true;
     return false;
   }
 
-  private boolean jj_3R_59() {
-    if (jj_scan_token(86)) return true;
+  private boolean jj_3R_79() {
+    if (jj_scan_token(K_OR)) return true;
+    if (jj_3R_78()) return true;
     return false;
   }
 
@@ -4708,12 +4678,6 @@ public class StSqlParser implements StSqlParserConstants {
     jj_scanpos = xsp;
     if (jj_3R_74()) return true;
     }
-    return false;
-  }
-
-  private boolean jj_3R_79() {
-    if (jj_scan_token(K_OR)) return true;
-    if (jj_3R_78()) return true;
     return false;
   }
 
@@ -4741,9 +4705,9 @@ public class StSqlParser implements StSqlParserConstants {
   }
 
   private boolean jj_3R_97() {
-    if (jj_scan_token(82)) return true;
+    if (jj_scan_token(84)) return true;
     if (jj_3R_95()) return true;
-    if (jj_scan_token(83)) return true;
+    if (jj_scan_token(85)) return true;
     return false;
   }
 
@@ -4757,20 +4721,15 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_256() {
-    if (jj_scan_token(82)) return true;
-    if (jj_3R_226()) return true;
-    if (jj_scan_token(83)) return true;
+  private boolean jj_3R_257() {
+    if (jj_scan_token(84)) return true;
+    if (jj_3R_227()) return true;
+    if (jj_scan_token(85)) return true;
     return false;
   }
 
   private boolean jj_3R_96() {
     if (jj_3R_58()) return true;
-    return false;
-  }
-
-  private boolean jj_3_9() {
-    if (jj_3R_43()) return true;
     return false;
   }
 
@@ -4788,20 +4747,25 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
+  private boolean jj_3_9() {
+    if (jj_3R_43()) return true;
+    return false;
+  }
+
   private boolean jj_3R_164() {
     if (jj_3R_169()) return true;
     return false;
   }
 
-  private boolean jj_3R_237() {
+  private boolean jj_3R_238() {
     if (jj_scan_token(K_ON)) return true;
-    if (jj_scan_token(82)) return true;
+    if (jj_scan_token(84)) return true;
     if (jj_3R_157()) return true;
-    if (jj_scan_token(83)) return true;
+    if (jj_scan_token(85)) return true;
     return false;
   }
 
-  private boolean jj_3R_267() {
+  private boolean jj_3R_268() {
     if (jj_scan_token(S_INTEGER)) return true;
     return false;
   }
@@ -4809,15 +4773,25 @@ public class StSqlParser implements StSqlParserConstants {
   private boolean jj_3R_72() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(70)) {
+    if (jj_scan_token(72)) {
     jj_scanpos = xsp;
-    if (jj_scan_token(77)) return true;
+    if (jj_scan_token(79)) return true;
     }
     return false;
   }
 
-  private boolean jj_3R_255() {
+  private boolean jj_3R_256() {
     if (jj_3R_43()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_227() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_256()) {
+    jj_scanpos = xsp;
+    if (jj_3R_257()) return true;
+    }
     return false;
   }
 
@@ -4831,28 +4805,39 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_226() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_255()) {
-    jj_scanpos = xsp;
-    if (jj_3R_256()) return true;
-    }
+  private boolean jj_3R_55() {
+    if (jj_scan_token(100)) return true;
     return false;
   }
 
-  private boolean jj_3R_55() {
-    if (jj_scan_token(98)) return true;
+  private boolean jj_3R_254() {
+    if (jj_scan_token(K_ALL)) return true;
     return false;
   }
 
   private boolean jj_3R_253() {
-    if (jj_scan_token(K_ALL)) return true;
+    if (jj_scan_token(89)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_240() {
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
   private boolean jj_3R_162() {
     if (jj_3R_220()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_255() {
+    if (jj_scan_token(K_OFFSET)) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_268()) {
+    jj_scanpos = xsp;
+    if (jj_3R_269()) return true;
+    }
     return false;
   }
 
@@ -4862,12 +4847,12 @@ public class StSqlParser implements StSqlParserConstants {
   }
 
   private boolean jj_3R_252() {
-    if (jj_scan_token(87)) return true;
+    if (jj_scan_token(S_INTEGER)) return true;
     return false;
   }
 
   private boolean jj_3R_239() {
-    if (jj_scan_token(87)) return true;
+    if (jj_scan_token(S_INTEGER)) return true;
     return false;
   }
 
@@ -4876,34 +4861,13 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_254() {
-    if (jj_scan_token(K_OFFSET)) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_267()) {
-    jj_scanpos = xsp;
-    if (jj_3R_268()) return true;
-    }
-    return false;
-  }
-
-  private boolean jj_3R_251() {
-    if (jj_scan_token(S_INTEGER)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_238() {
-    if (jj_scan_token(S_INTEGER)) return true;
-    return false;
-  }
-
   private boolean jj_3R_53() {
-    if (jj_scan_token(97)) return true;
+    if (jj_scan_token(99)) return true;
     return false;
   }
 
   private boolean jj_3R_52() {
-    if (jj_scan_token(96)) return true;
+    if (jj_scan_token(98)) return true;
     return false;
   }
 
@@ -4916,17 +4880,12 @@ public class StSqlParser implements StSqlParserConstants {
     if (jj_scan_token(K_DISTINCT)) return true;
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_237()) jj_scanpos = xsp;
-    return false;
-  }
-
-  private boolean jj_3R_156() {
-    if (jj_3R_213()) return true;
+    if (jj_3R_238()) jj_scanpos = xsp;
     return false;
   }
 
   private boolean jj_3R_42() {
-    if (jj_scan_token(87)) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
@@ -4941,35 +4900,40 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
+  private boolean jj_3R_156() {
+    if (jj_3R_213()) return true;
+    return false;
+  }
+
   private boolean jj_3R_41() {
     if (jj_scan_token(S_INTEGER)) return true;
     return false;
   }
 
   private boolean jj_3_31() {
-    if (jj_scan_token(82)) return true;
+    if (jj_scan_token(84)) return true;
     Token xsp;
     while (true) {
       xsp = jj_scanpos;
       if (jj_3R_72()) { jj_scanpos = xsp; break; }
     }
-    if (jj_scan_token(83)) return true;
+    if (jj_scan_token(85)) return true;
     return false;
   }
 
-  private boolean jj_3R_225() {
+  private boolean jj_3R_226() {
     if (jj_scan_token(K_LIMIT)) return true;
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_251()) {
-    jj_scanpos = xsp;
     if (jj_3R_252()) {
     jj_scanpos = xsp;
-    if (jj_3R_253()) return true;
+    if (jj_3R_253()) {
+    jj_scanpos = xsp;
+    if (jj_3R_254()) return true;
     }
     }
     xsp = jj_scanpos;
-    if (jj_3R_254()) jj_scanpos = xsp;
+    if (jj_3R_255()) jj_scanpos = xsp;
     return false;
   }
 
@@ -4977,14 +4941,14 @@ public class StSqlParser implements StSqlParserConstants {
     if (jj_scan_token(K_TOP)) return true;
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_238()) {
+    if (jj_3R_239()) {
     jj_scanpos = xsp;
-    if (jj_3R_239()) return true;
+    if (jj_3R_240()) return true;
     }
     return false;
   }
 
-  private boolean jj_3R_249() {
+  private boolean jj_3R_250() {
     if (jj_scan_token(S_INTEGER)) return true;
     return false;
   }
@@ -5009,24 +4973,24 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_174() {
-    if (jj_scan_token(85)) return true;
-    if (jj_3R_37()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_247() {
+  private boolean jj_3R_248() {
     if (jj_scan_token(S_INTEGER)) return true;
     return false;
   }
 
-  private boolean jj_3R_224() {
+  private boolean jj_3R_174() {
+    if (jj_scan_token(87)) return true;
+    if (jj_3R_37()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_225() {
     if (jj_scan_token(K_OFFSET)) return true;
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_249()) {
+    if (jj_3R_250()) {
     jj_scanpos = xsp;
-    if (jj_3R_250()) return true;
+    if (jj_3R_251()) return true;
     }
     return false;
   }
@@ -5064,16 +5028,6 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_142() {
-    if (jj_3R_38()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_143() {
-    if (jj_3R_119()) return true;
-    return false;
-  }
-
   private boolean jj_3_21() {
     Token xsp;
     xsp = jj_scanpos;
@@ -5085,6 +5039,16 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
+  private boolean jj_3R_142() {
+    if (jj_3R_38()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_143() {
+    if (jj_3R_119()) return true;
+    return false;
+  }
+
   private boolean jj_3_8() {
     if (jj_scan_token(K_LIMIT)) return true;
     Token xsp;
@@ -5093,17 +5057,17 @@ public class StSqlParser implements StSqlParserConstants {
     jj_scanpos = xsp;
     if (jj_3R_42()) return true;
     }
-    if (jj_scan_token(81)) return true;
+    if (jj_scan_token(83)) return true;
     xsp = jj_scanpos;
-    if (jj_3R_247()) {
+    if (jj_3R_248()) {
     jj_scanpos = xsp;
-    if (jj_3R_248()) return true;
+    if (jj_3R_249()) return true;
     }
     return false;
   }
 
   private boolean jj_3R_148() {
-    if (jj_scan_token(86)) return true;
+    if (jj_scan_token(88)) return true;
     return false;
   }
 
@@ -5118,7 +5082,7 @@ public class StSqlParser implements StSqlParserConstants {
   }
 
   private boolean jj_3R_175() {
-    if (jj_scan_token(85)) return true;
+    if (jj_scan_token(87)) return true;
     if (jj_3R_37()) return true;
     return false;
   }
@@ -5138,35 +5102,27 @@ public class StSqlParser implements StSqlParserConstants {
     xsp = jj_scanpos;
     if (jj_3_8()) {
     jj_scanpos = xsp;
-    if (jj_3R_224()) {
+    if (jj_3R_225()) {
     jj_scanpos = xsp;
-    if (jj_3R_225()) return true;
+    if (jj_3R_226()) return true;
     }
     }
     return false;
   }
 
   private boolean jj_3R_144() {
-    if (jj_scan_token(95)) return true;
+    if (jj_scan_token(97)) return true;
     if (jj_3R_95()) return true;
     return false;
   }
 
-  private boolean jj_3R_266() {
+  private boolean jj_3R_267() {
     if (jj_scan_token(K_DESC)) return true;
     return false;
   }
 
   private boolean jj_3_20() {
     if (jj_3R_51()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_126() {
-    if (jj_3R_37()) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_175()) jj_scanpos = xsp;
     return false;
   }
 
@@ -5180,16 +5136,24 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_264() {
-    if (jj_scan_token(84)) return true;
+  private boolean jj_3R_126() {
     if (jj_3R_37()) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_175()) jj_scanpos = xsp;
     return false;
   }
 
   private boolean jj_3R_140() {
-    if (jj_scan_token(82)) return true;
+    if (jj_scan_token(84)) return true;
     if (jj_3R_51()) return true;
-    if (jj_scan_token(83)) return true;
+    if (jj_scan_token(85)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_265() {
+    if (jj_scan_token(86)) return true;
+    if (jj_3R_37()) return true;
     return false;
   }
 
@@ -5197,16 +5161,16 @@ public class StSqlParser implements StSqlParserConstants {
     if (jj_3R_87()) return true;
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_246()) jj_scanpos = xsp;
+    if (jj_3R_247()) jj_scanpos = xsp;
     return false;
   }
 
-  private boolean jj_3R_246() {
+  private boolean jj_3R_247() {
     Token xsp;
     xsp = jj_scanpos;
     if (jj_scan_token(17)) {
     jj_scanpos = xsp;
-    if (jj_3R_266()) return true;
+    if (jj_3R_267()) return true;
     }
     return false;
   }
@@ -5218,7 +5182,7 @@ public class StSqlParser implements StSqlParserConstants {
 
   private boolean jj_3_4() {
     if (jj_3R_37()) return true;
-    if (jj_scan_token(84)) return true;
+    if (jj_scan_token(86)) return true;
     if (jj_3R_37()) return true;
     Token xsp;
     xsp = jj_scanpos;
@@ -5236,14 +5200,20 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_223() {
-    if (jj_scan_token(81)) return true;
-    if (jj_3R_222()) return true;
+  private boolean jj_3R_224() {
+    if (jj_scan_token(K_NULLS)) return true;
+    if (jj_scan_token(K_LAST)) return true;
     return false;
   }
 
   private boolean jj_3R_147() {
     if (jj_3R_141()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_223() {
+    if (jj_scan_token(83)) return true;
+    if (jj_3R_222()) return true;
     return false;
   }
 
@@ -5266,84 +5236,96 @@ public class StSqlParser implements StSqlParserConstants {
       xsp = jj_scanpos;
       if (jj_3R_223()) { jj_scanpos = xsp; break; }
     }
+    xsp = jj_scanpos;
+    if (jj_3R_224()) jj_scanpos = xsp;
     return false;
   }
 
-  private boolean jj_3R_269() {
-    if (jj_scan_token(84)) return true;
+  private boolean jj_3R_270() {
+    if (jj_scan_token(86)) return true;
     if (jj_3R_37()) return true;
     return false;
   }
 
   private boolean jj_3R_105() {
-    if (jj_scan_token(84)) return true;
+    if (jj_scan_token(86)) return true;
     if (jj_3R_37()) return true;
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_264()) jj_scanpos = xsp;
+    if (jj_3R_265()) jj_scanpos = xsp;
     return false;
   }
 
-  private boolean jj_3R_259() {
+  private boolean jj_3R_260() {
     Token xsp;
     xsp = jj_scanpos;
     if (jj_scan_token(14)) {
     jj_scanpos = xsp;
     if (jj_scan_token(33)) return true;
     }
-    if (jj_scan_token(82)) return true;
+    if (jj_scan_token(84)) return true;
     if (jj_3R_50()) return true;
-    if (jj_scan_token(83)) return true;
+    if (jj_scan_token(85)) return true;
     return false;
   }
 
   private boolean jj_3R_220() {
     if (jj_scan_token(K_HAVING)) return true;
-    if (jj_3R_226()) return true;
+    if (jj_3R_227()) return true;
     return false;
   }
 
   private boolean jj_3R_37() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(74)) {
+    if (jj_scan_token(76)) {
     jj_scanpos = xsp;
-    if (jj_scan_token(78)) return true;
+    if (jj_scan_token(80)) return true;
     }
     return false;
   }
 
-  private boolean jj_3R_258() {
+  private boolean jj_3R_259() {
     if (jj_scan_token(K_ALL)) return true;
-    if (jj_scan_token(82)) return true;
+    if (jj_scan_token(84)) return true;
     if (jj_3R_50()) return true;
-    if (jj_scan_token(83)) return true;
+    if (jj_scan_token(85)) return true;
     return false;
   }
 
-  private boolean jj_3R_245() {
+  private boolean jj_3R_246() {
     if (jj_scan_token(K_CONNECT)) return true;
     if (jj_scan_token(K_BY)) return true;
-    if (jj_3R_226()) return true;
+    if (jj_3R_227()) return true;
     return false;
   }
 
   private boolean jj_3R_221() {
     if (jj_scan_token(K_START)) return true;
     if (jj_scan_token(K_WITH)) return true;
-    if (jj_3R_226()) return true;
+    if (jj_3R_227()) return true;
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_245()) jj_scanpos = xsp;
+    if (jj_3R_246()) jj_scanpos = xsp;
     return false;
   }
 
-  private boolean jj_3R_257() {
-    if (jj_scan_token(84)) return true;
+  private boolean jj_3R_232() {
+    if (jj_3R_87()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_258() {
+    if (jj_scan_token(86)) return true;
     if (jj_3R_37()) return true;
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_3R_269()) jj_scanpos = xsp;
+    if (jj_3R_270()) jj_scanpos = xsp;
+    return false;
+  }
+
+  private boolean jj_3R_231() {
+    if (jj_3R_260()) return true;
     return false;
   }
 
@@ -5355,8 +5337,9 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_231() {
-    if (jj_3R_87()) return true;
+  private boolean jj_3R_145() {
+    if (jj_scan_token(86)) return true;
+    if (jj_3R_37()) return true;
     return false;
   }
 
@@ -5365,30 +5348,32 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_145() {
-    if (jj_scan_token(84)) return true;
-    if (jj_3R_37()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_229() {
-    if (jj_3R_258()) return true;
-    return false;
-  }
-
   private boolean jj_3R_207() {
     if (jj_scan_token(K_ALL)) return true;
     return false;
   }
 
-  private boolean jj_3R_244() {
-    if (jj_scan_token(81)) return true;
+  private boolean jj_3R_245() {
+    if (jj_scan_token(83)) return true;
     if (jj_3R_87()) return true;
     return false;
   }
 
-  private boolean jj_3R_227() {
-    if (jj_scan_token(81)) return true;
+  private boolean jj_3R_192() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_230()) {
+    jj_scanpos = xsp;
+    if (jj_3R_231()) {
+    jj_scanpos = xsp;
+    if (jj_3R_232()) return true;
+    }
+    }
+    return false;
+  }
+
+  private boolean jj_3R_228() {
+    if (jj_scan_token(83)) return true;
     if (jj_3R_36()) return true;
     return false;
   }
@@ -5400,26 +5385,13 @@ public class StSqlParser implements StSqlParserConstants {
     Token xsp;
     while (true) {
       xsp = jj_scanpos;
-      if (jj_3R_244()) { jj_scanpos = xsp; break; }
+      if (jj_3R_245()) { jj_scanpos = xsp; break; }
     }
     return false;
   }
 
-  private boolean jj_3R_192() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_229()) {
-    jj_scanpos = xsp;
-    if (jj_3R_230()) {
-    jj_scanpos = xsp;
-    if (jj_3R_231()) return true;
-    }
-    }
-    return false;
-  }
-
-  private boolean jj_3R_232() {
-    if (jj_scan_token(81)) return true;
+  private boolean jj_3R_233() {
+    if (jj_scan_token(83)) return true;
     if (jj_3R_87()) return true;
     return false;
   }
@@ -5428,14 +5400,8 @@ public class StSqlParser implements StSqlParserConstants {
     Token xsp;
     while (true) {
       xsp = jj_scanpos;
-      if (jj_3R_232()) { jj_scanpos = xsp; break; }
+      if (jj_3R_233()) { jj_scanpos = xsp; break; }
     }
-    return false;
-  }
-
-  private boolean jj_3R_218() {
-    if (jj_scan_token(K_WHERE)) return true;
-    if (jj_3R_226()) return true;
     return false;
   }
 
@@ -5445,8 +5411,9 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_132() {
-    if (jj_scan_token(81)) return true;
+  private boolean jj_3R_218() {
+    if (jj_scan_token(K_WHERE)) return true;
+    if (jj_3R_227()) return true;
     return false;
   }
 
@@ -5456,11 +5423,8 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_36() {
-    if (jj_3R_37()) return true;
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_257()) jj_scanpos = xsp;
+  private boolean jj_3R_132() {
+    if (jj_scan_token(83)) return true;
     return false;
   }
 
@@ -5478,27 +5442,35 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_186() {
-    if (jj_scan_token(K_USING)) return true;
-    if (jj_scan_token(82)) return true;
-    if (jj_3R_36()) return true;
-    Token xsp;
-    while (true) {
-      xsp = jj_scanpos;
-      if (jj_3R_227()) { jj_scanpos = xsp; break; }
-    }
-    if (jj_scan_token(83)) return true;
-    return false;
-  }
-
   private boolean jj_3R_90() {
     if (jj_3R_141()) return true;
     return false;
   }
 
+  private boolean jj_3R_36() {
+    if (jj_3R_37()) return true;
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_258()) jj_scanpos = xsp;
+    return false;
+  }
+
+  private boolean jj_3R_186() {
+    if (jj_scan_token(K_USING)) return true;
+    if (jj_scan_token(84)) return true;
+    if (jj_3R_36()) return true;
+    Token xsp;
+    while (true) {
+      xsp = jj_scanpos;
+      if (jj_3R_228()) { jj_scanpos = xsp; break; }
+    }
+    if (jj_scan_token(85)) return true;
+    return false;
+  }
+
   private boolean jj_3R_185() {
     if (jj_scan_token(K_ON)) return true;
-    if (jj_3R_226()) return true;
+    if (jj_3R_227()) return true;
     return false;
   }
 
@@ -5527,6 +5499,11 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
+  private boolean jj_3R_50() {
+    if (jj_3R_94()) return true;
+    return false;
+  }
+
   private boolean jj_3R_181() {
     if (jj_scan_token(K_FULL)) return true;
     return false;
@@ -5547,13 +5524,56 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_50() {
-    if (jj_3R_94()) return true;
+  private boolean jj_3R_179() {
+    if (jj_scan_token(K_LEFT)) return true;
     return false;
   }
 
-  private boolean jj_3R_179() {
-    if (jj_scan_token(K_LEFT)) return true;
+  private boolean jj_3R_206() {
+    if (jj_scan_token(K_DISTINCT)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_130() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_179()) {
+    jj_scanpos = xsp;
+    if (jj_3R_180()) {
+    jj_scanpos = xsp;
+    if (jj_3R_181()) {
+    jj_scanpos = xsp;
+    if (jj_3R_182()) return true;
+    }
+    }
+    }
+    return false;
+  }
+
+  private boolean jj_3R_146() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_206()) {
+    jj_scanpos = xsp;
+    if (jj_3R_207()) return true;
+    }
+    return false;
+  }
+
+  private boolean jj_3R_101() {
+    if (jj_scan_token(K_REPLACE)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_103() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_146()) jj_scanpos = xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_147()) {
+    jj_scanpos = xsp;
+    if (jj_3R_148()) return true;
+    }
     return false;
   }
 
@@ -5568,7 +5588,7 @@ public class StSqlParser implements StSqlParserConstants {
   private Token jj_scanpos, jj_lastpos;
   private int jj_la;
   private int jj_gen;
-  final private int[] jj_la1 = new int[164];
+  final private int[] jj_la1 = new int[165];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static private int[] jj_la1_2;
@@ -5580,16 +5600,16 @@ public class StSqlParser implements StSqlParserConstants {
       jj_la1_init_3();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x1000000,0x0,0x0,0x0,0x200000,0x0,0x0,0x0,0x0,0x10000,0x200000,0x0,0x0,0x0,0x0,0x20,0x8000020,0x0,0x0,0x0,0x0,0x0,0x0,0x20,0x0,0x0,0x0,0x0,0x0,0x800,0x1000,0x1000,0x40000,0x200000,0x0,0x0,0x0,0x0,0x0,0x0,0x1000,0x1000,0x0,0x1000,0x1000,0x0,0x0,0x1000,0x1000,0x0,0x1000,0x1000,0x0,0x0,0x0,0x0,0x20,0x0,0x20400000,0x20,0x0,0x0,0x0,0x20,0x6000000,0x4000000,0x4000000,0x0,0x0,0x2000000,0x0,0x800,0x800,0x0,0x0,0x0,0x120000,0x120000,0x0,0x0,0x0,0x1000,0x0,0x0,0x0,0x0,0x0,0x8000,0x8000,0x8000,0x8000,0x2040d000,0x0,0x8000,0x0,0x0,0x0,0x20400000,0x8000,0x20400000,0x8000,0x8000,0x0,0x8000,0x8000,0x0,0x0,0x8000020,0x20405000,0x4000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x20400000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x20400000,0x0,0x40000000,0x0,0x40000000,0x0,0x60400000,0x0,0x0,0x0,0x0,0x1000,0x1000,0x20400000,0x20401000,0x0,0x408000,0x408000,0x0,0x408000,0x0,0x408000,0x0,0x0,0x0,0x0,0x408000,0x0,0x0,0x0,0x0,0x0,0x0,};
+      jj_la1_0 = new int[] {0x1000000,0x0,0x0,0x0,0x200000,0x0,0x0,0x0,0x0,0x10000,0x200000,0x0,0x0,0x0,0x0,0x20,0x8000020,0x0,0x0,0x0,0x0,0x0,0x0,0x20,0x0,0x0,0x0,0x0,0x0,0x800,0x1000,0x1000,0x40000,0x200000,0x0,0x0,0x0,0x0,0x0,0x0,0x1000,0x1000,0x0,0x1000,0x1000,0x0,0x0,0x1000,0x1000,0x0,0x1000,0x1000,0x0,0x0,0x0,0x0,0x20,0x0,0x20400000,0x20,0x0,0x0,0x0,0x20,0x6000000,0x4000000,0x4000000,0x0,0x0,0x2000000,0x0,0x800,0x800,0x0,0x0,0x0,0x0,0x120000,0x120000,0x0,0x0,0x0,0x1000,0x0,0x0,0x0,0x0,0x0,0x8000,0x8000,0x8000,0x8000,0x2040d000,0x0,0x8000,0x0,0x0,0x0,0x20400000,0x8000,0x20400000,0x8000,0x8000,0x0,0x8000,0x8000,0x0,0x0,0x8000020,0x20405000,0x4000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x20400000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x20400000,0x0,0x40000000,0x0,0x40000000,0x0,0x60400000,0x0,0x0,0x0,0x0,0x1000,0x1000,0x20400000,0x20401000,0x0,0x408000,0x408000,0x0,0x408000,0x0,0x408000,0x0,0x0,0x0,0x0,0x408000,0x0,0x0,0x0,0x0,0x0,0x0,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0x50c70008,0x0,0x0,0x20,0x0,0x0,0x0,0x0,0x1040000,0x1040000,0x0,0x0,0x0,0x0,0x1040000,0x0,0x0,0x20,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x8,0x40000,0x0,0x80000000,0x80000000,0x0,0x0,0x20,0x100,0x200000,0x0,0x4000,0x81000,0x80000000,0x80000000,0x80,0x80000000,0x80000000,0x4000,0x81000,0x80000000,0x80000000,0x80,0x80000000,0x80000000,0x40000,0x0,0x0,0x0,0x0,0x0,0x10000000,0x0,0x0,0x40000,0x0,0x0,0x800a804,0x8008004,0x8008004,0x2800,0x2800,0x0,0x0,0x40,0x40,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x80000,0x81000,0x0,0x0,0x0,0x0,0x0,0x0,0x10000002,0x0,0x0,0x0,0x0,0x0,0x10000000,0x0,0x10000000,0x0,0x0,0x2000000,0x0,0x0,0x0,0x0,0x0,0x10000002,0x2,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x10000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x1,0x10000000,0x0,0x10000000,0x0,0x0,0x80000000,0x80000000,0x10000000,0x90000000,0x0,0x4000000,0x4000000,0x0,0x4000000,0x4000400,0x4000000,0x0,0x0,0x0,0x0,0x4000000,0x0,0x0,0x0,0x0,0x410,0x0,};
+      jj_la1_1 = new int[] {0x50c70008,0x0,0x0,0x20,0x0,0x0,0x0,0x0,0x1040000,0x1040000,0x0,0x0,0x0,0x0,0x1040000,0x0,0x0,0x20,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x8,0x40000,0x0,0x80000000,0x80000000,0x0,0x0,0x20,0x100,0x200000,0x0,0x4000,0x81000,0x80000000,0x80000000,0x80,0x80000000,0x80000000,0x4000,0x81000,0x80000000,0x80000000,0x80,0x80000000,0x80000000,0x40000,0x0,0x0,0x0,0x0,0x0,0x10000000,0x0,0x0,0x40000,0x0,0x0,0x800a804,0x8008004,0x8008004,0x2800,0x2800,0x0,0x0,0x40,0x40,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x80000,0x81000,0x0,0x0,0x0,0x0,0x0,0x0,0x10000002,0x0,0x0,0x0,0x0,0x0,0x10000000,0x0,0x10000000,0x0,0x0,0x2000000,0x0,0x0,0x0,0x0,0x0,0x10000002,0x2,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x10000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x1,0x0,0x1,0x10000000,0x0,0x10000000,0x0,0x0,0x80000000,0x80000000,0x10000000,0x90000000,0x0,0x4000000,0x4000000,0x0,0x4000000,0x4000400,0x4000000,0x0,0x0,0x0,0x0,0x4000000,0x0,0x0,0x0,0x0,0x410,0x0,};
    }
    private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x40000,0x8000,0x20000,0x0,0x0,0x20000,0x20000,0x20000,0x40000,0x40000,0x0,0x20000,0x20000,0x80000,0x40000,0x4400,0x4400,0x0,0x100000,0x100000,0x100000,0x100000,0x4400,0x4400,0x200000,0x200000,0x4400,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x8,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x40000,0x20000,0x40000,0x20000,0x4400,0x400000,0x846470,0x0,0x20000,0x40000,0x44400,0x4400,0x20000,0x0,0x0,0x0,0x0,0x20000,0x20000,0x0,0x0,0x20000,0x2,0x20000,0x0,0x0,0x800040,0x800040,0x800040,0x800040,0x800040,0x0,0x0,0x800040,0x40000,0x0,0x40000,0x0,0x40000,0x846474,0x4,0x0,0x30000000,0x7f010000,0x4,0x846470,0x0,0x846470,0x0,0x0,0x0,0x0,0x0,0x20000,0x20000,0x0,0x846470,0x0,0x40000,0x80000000,0x0,0x0,0x40000,0x400000,0x40000,0x0,0x846470,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x800010,0x42000,0x0,0x0,0x0,0x0,0x846470,0x0,0x4400,0x100000,0x100000,0x0,0x0,0xc46470,0xc46470,0x0,0x52460,0x52460,0x20000,0x52460,0x400,0x52460,0x40000,0x2040,0x2040,0x20000,0x52460,0x2460,0x2460,0x20000,0x20000,0x400,0x400,};
+      jj_la1_2 = new int[] {0x100000,0x20000,0x80000,0x0,0x0,0x80000,0x80000,0x80000,0x100000,0x100000,0x0,0x80000,0x80000,0x200000,0x100000,0x11000,0x11000,0x0,0x400000,0x400000,0x400000,0x400000,0x11000,0x11000,0x800000,0x800000,0x11000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x8,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x100000,0x80000,0x100000,0x80000,0x11000,0x1000000,0x2119190,0x0,0x80000,0x100000,0x111000,0x11000,0x80000,0x0,0x0,0x0,0x0,0x80000,0x80000,0x0,0x0,0x80000,0x2,0x80000,0x20,0x0,0x0,0x2000100,0x2000100,0x2000100,0x2000100,0x2000100,0x0,0x0,0x2000100,0x100000,0x0,0x100000,0x0,0x100000,0x2119194,0x4,0x0,0xc0000000,0xfc040000,0x4,0x2119190,0x0,0x2119190,0x0,0x0,0x0,0x0,0x0,0x80000,0x80000,0x0,0x2119190,0x0,0x100000,0x0,0x0,0x0,0x100000,0x1000000,0x100000,0x0,0x2119190,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x2000010,0x108000,0x0,0x0,0x0,0x0,0x2119190,0x0,0x11000,0x400000,0x400000,0x0,0x0,0x3119190,0x3119190,0x0,0x149180,0x149180,0x80000,0x149180,0x1000,0x149180,0x100000,0x8100,0x8100,0x80000,0x149180,0x9180,0x9180,0x80000,0x80000,0x1000,0x1000,};
    }
    private static void jj_la1_init_3() {
-      jj_la1_3 = new int[] {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xe8c,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xe8c,0x0,0x0,0x0,0x0,0x0,0xe8c,0x0,0xe8c,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0xe8c,0x0,0x0,0x0,0x3,0xc,0x0,0x30,0x0,0x40,0xe8c,0xc,0xc,0xc,0xc,0xc,0xc,0xc,0xc,0xc,0xc,0xc,0xc,0x0,0x68c,0x0,0x0,0x0,0x0,0xe8c,0x800,0x0,0x0,0x0,0x0,0x0,0xe8c,0xe8c,0x100,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
+      jj_la1_3 = new int[] {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x3a30,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x3a30,0x0,0x0,0x0,0x1,0x0,0x3a30,0x0,0x3a30,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x3a30,0x0,0x0,0x2,0xc,0x30,0x0,0xc0,0x0,0x100,0x3a30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x30,0x0,0x1a30,0x0,0x0,0x0,0x0,0x3a30,0x2000,0x0,0x0,0x0,0x0,0x0,0x3a30,0x3a30,0x400,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
    }
   final private JJCalls[] jj_2_rtns = new JJCalls[31];
   private boolean jj_rescan = false;
@@ -5606,7 +5626,7 @@ public class StSqlParser implements StSqlParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 164; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 165; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -5621,7 +5641,7 @@ public class StSqlParser implements StSqlParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 164; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 165; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -5632,7 +5652,7 @@ public class StSqlParser implements StSqlParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 164; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 165; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -5643,7 +5663,7 @@ public class StSqlParser implements StSqlParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 164; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 165; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -5653,7 +5673,7 @@ public class StSqlParser implements StSqlParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 164; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 165; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -5663,7 +5683,7 @@ public class StSqlParser implements StSqlParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 164; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 165; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -5775,12 +5795,12 @@ public class StSqlParser implements StSqlParserConstants {
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[108];
+    boolean[] la1tokens = new boolean[110];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 164; i++) {
+    for (int i = 0; i < 165; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -5798,7 +5818,7 @@ public class StSqlParser implements StSqlParserConstants {
         }
       }
     }
-    for (int i = 0; i < 108; i++) {
+    for (int i = 0; i < 110; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

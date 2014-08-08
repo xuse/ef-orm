@@ -377,11 +377,11 @@ public class SelectTest extends TestCase {
 		String statement = "select * from tab1 where a > 34 group by tab1.b order by tab1.a DESC,tab1.b ASC";
 		String statementToString = "select * from tab1 where a > 34 group by tab1.b order by tab1.a DESC,tab1.b";
 		PlainSelect plainSelect = (PlainSelect) ((Select) jef.database.DbUtils.parseStatement(statement)).getSelectBody();
-		assertEquals(2, plainSelect.getOrderByElements().size());
-		assertEquals("tab1.a", ((Column) ((OrderByElement) plainSelect.getOrderByElements().get(0)).getExpression()).getWholeColumnName());
-		assertEquals("b", ((Column) ((OrderByElement) plainSelect.getOrderByElements().get(1)).getExpression()).getColumnName());
-		assertTrue(((OrderByElement) plainSelect.getOrderByElements().get(1)).isAsc());
-		assertFalse(((OrderByElement) plainSelect.getOrderByElements().get(0)).isAsc());
+		assertEquals(2, plainSelect.getOrderBy().getOrderByElements().size());
+		assertEquals("tab1.a", ((Column) ((OrderByElement) plainSelect.getOrderBy().getOrderByElements().get(0)).getExpression()).getWholeColumnName());
+		assertEquals("b", ((Column) ((OrderByElement) plainSelect.getOrderBy().getOrderByElements().get(1)).getExpression()).getColumnName());
+		assertTrue(((OrderByElement) plainSelect.getOrderBy().getOrderByElements().get(1)).isAsc());
+		assertFalse(((OrderByElement) plainSelect.getOrderBy().getOrderByElements().get(0)).isAsc());
 		assertEquals(statementToString, ""+plainSelect);
 		
 		ExpressionDeParser expressionDeParser = new ExpressionDeParser();
@@ -394,9 +394,9 @@ public class SelectTest extends TestCase {
 		
 		statement = "select * from tab1 where a > 34 group by tab1.b order by tab1.a,2";
 		plainSelect = (PlainSelect) ((Select) jef.database.DbUtils.parseStatement(statement)).getSelectBody();
-		assertEquals(2, plainSelect.getOrderByElements().size());
-		assertEquals("a", ((Column) ((OrderByElement) plainSelect.getOrderByElements().get(0)).getExpression()).getColumnName());
-		assertEquals(2, ((LongValue) ((OrderByElement) plainSelect.getOrderByElements().get(1)).getExpression()).getValue());
+		assertEquals(2, plainSelect.getOrderBy().getOrderByElements().size());
+		assertEquals("a", ((Column) ((OrderByElement) plainSelect.getOrderBy().getOrderByElements().get(0)).getExpression()).getColumnName());
+		assertEquals(2, ((LongValue) ((OrderByElement) plainSelect.getOrderBy().getOrderByElements().get(1)).getExpression()).getValue());
 		assertEquals(statement, ""+plainSelect);
 	}
 

@@ -16,7 +16,6 @@
 package jef.database.jsqlparser.util.deparser;
 
 import java.util.Iterator;
-import java.util.List;
 
 import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.ExpressionVisitor;
@@ -29,8 +28,8 @@ import jef.database.jsqlparser.statement.select.FromItem;
 import jef.database.jsqlparser.statement.select.FromItemVisitor;
 import jef.database.jsqlparser.statement.select.Join;
 import jef.database.jsqlparser.statement.select.Limit;
+import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.OrderByElement;
-import jef.database.jsqlparser.statement.select.OrderByVisitor;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.statement.select.SelectExpressionItem;
 import jef.database.jsqlparser.statement.select.SelectItem;
@@ -45,7 +44,7 @@ import jef.database.jsqlparser.statement.select.Union;
  * A class to de-parse (that is, tranform from JSqlParser hierarchy into a string)
  * a {@link jef.database.jsqlparser.statement.select.Select}
  */
-public class SelectDeParser implements SelectVisitor, OrderByVisitor, SelectItemVisitor, FromItemVisitor {
+public class SelectDeParser implements SelectVisitor,SelectItemVisitor, FromItemVisitor {
 
     protected StringBuffer buffer;
 
@@ -118,8 +117,8 @@ public class SelectDeParser implements SelectVisitor, OrderByVisitor, SelectItem
             buffer.append(" having ");
             plainSelect.getHaving().accept(expressionVisitor);
         }
-        if (plainSelect.getOrderByElements() != null) {
-            deparseOrderBy(plainSelect.getOrderByElements());
+        if (plainSelect.getOrderBy() != null) {
+        	plainSelect.getOrderBy().accept(this);
         }
         if (plainSelect.getLimit() != null) {
             deparseLimit(plainSelect.getLimit());
@@ -136,8 +135,8 @@ public class SelectDeParser implements SelectVisitor, OrderByVisitor, SelectItem
                 buffer.append(" UNION ");
             }
         }
-        if (union.getOrderByElements() != null) {
-            deparseOrderBy(union.getOrderByElements());
+        if (union.getOrderBy() != null) {
+        	union.getOrderBy().accept(this);
         }
         if (union.getLimit() != null) {
             deparseLimit(union.getLimit());
@@ -182,16 +181,16 @@ public class SelectDeParser implements SelectVisitor, OrderByVisitor, SelectItem
         }
     }
 
-    public void deparseOrderBy(List<OrderByElement> orderByElements) {
-        buffer.append(" order by ");
-        for (Iterator<OrderByElement> iter = orderByElements.iterator(); iter.hasNext(); ) {
-            OrderByElement orderByElement = (OrderByElement) iter.next();
-            orderByElement.accept(this);
-            if (iter.hasNext()) {
-                buffer.append(",");
-            }
-        }
-    }
+//    public void deparseOrderBy(OrderBy orderby) {
+//        buffer.append(" order by ");
+//        for (Iterator<OrderByElement> iter = orderby.getOrderByElements().iterator(); iter.hasNext(); ) {
+//            OrderByElement orderByElement = (OrderByElement) iter.next();
+//            orderByElement.accept(this);
+//            if (iter.hasNext()) {
+//                buffer.append(",");
+//            }
+//        }
+//    }
 
     public void deparseLimit(Limit limit) {
         buffer.append(" LIMIT ");
@@ -260,5 +259,11 @@ public class SelectDeParser implements SelectVisitor, OrderByVisitor, SelectItem
 
 	public void visit(JpqlParameter tableClip) {
 		buffer.append(tableClip.toString());
+	}
+
+	public void visit(OrderBy orderBy) {
+		for(OrderByElement ele:orderBy.getOrderByElements()){
+			ele.accept(this);
+		}
 	}
 }

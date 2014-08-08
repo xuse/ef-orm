@@ -61,7 +61,7 @@ import jef.database.jsqlparser.parser.StSqlParser;
 import jef.database.jsqlparser.parser.TokenMgrError;
 import jef.database.jsqlparser.statement.create.table.ColumnDefinition;
 import jef.database.jsqlparser.statement.create.table.CreateTable;
-import jef.database.jsqlparser.statement.select.OrderByElement;
+import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.statement.select.SelectItem;
 import jef.database.meta.AbstractRefField;
@@ -100,7 +100,6 @@ import jef.tools.security.cplus.TripleDES;
 import jef.tools.string.CharUtils;
 
 import org.apache.commons.lang.ObjectUtils;
-import org.apache.commons.lang.builder.ToStringBuilder;
 
 public final class DbUtils {
 
@@ -342,8 +341,7 @@ public final class DbUtils {
 	 * @return
 	 * @throws ParseException
 	 */
-	@SuppressWarnings("unchecked")
-	public static List<OrderByElement> parseOrderBy(String sql) {
+	public static OrderBy parseOrderBy(String sql) {
 		StSqlParser parser = new StSqlParser(new StringReader("ORDER BY " + sql));
 		try {
 			return parser.OrderByElements();

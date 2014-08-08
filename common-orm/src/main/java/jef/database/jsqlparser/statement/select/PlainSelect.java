@@ -43,7 +43,7 @@ public class PlainSelect implements SelectBody {
 
     protected List<Expression> groupByColumnReferences;
 
-    protected List<OrderByElement> orderByElements;
+    protected OrderBy orderBy;
 
     protected Expression having;
 
@@ -121,16 +121,13 @@ public class PlainSelect implements SelectBody {
     public void accept(SelectVisitor selectVisitor) {
         selectVisitor.visit(this);
     }
-
-    public List<OrderByElement> getOrderByElements() {
-        return orderByElements;
-    }
-
-    public void setOrderByElements(List<OrderByElement> orderByElements) {
-        this.orderByElements = orderByElements;
-    }
-
-    public Limit getLimit() {
+    public OrderBy getOrderBy() {
+		return orderBy;
+	}
+	public void setOrderBy(OrderBy orderBy) {
+		this.orderBy = orderBy;
+	}
+	public Limit getLimit() {
         return limit;
     }
 
@@ -210,7 +207,9 @@ public class PlainSelect implements SelectBody {
         if(having!=null){
         	having.appendTo(sb.append(" having "));
         }
-        getFormatedList(sb,orderByElements, "order by",false);
+        if(orderBy!=null){
+        	orderBy.appendTo(sb);
+        }
         if(limit != null){
         	limit.appendTo(sb);
         }

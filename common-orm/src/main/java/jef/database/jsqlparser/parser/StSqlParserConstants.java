@@ -139,25 +139,29 @@ public interface StSqlParserConstants {
   /** RegularExpression Id. */
   int K_INTERVAL = 68;
   /** RegularExpression Id. */
-  int S_DOUBLE = 69;
+  int K_NULLS = 69;
   /** RegularExpression Id. */
-  int S_INTEGER = 70;
+  int K_LAST = 70;
   /** RegularExpression Id. */
-  int DIGIT = 71;
+  int S_DOUBLE = 71;
   /** RegularExpression Id. */
-  int LINE_COMMENT = 72;
+  int S_INTEGER = 72;
   /** RegularExpression Id. */
-  int MULTI_LINE_COMMENT = 73;
+  int DIGIT = 73;
   /** RegularExpression Id. */
-  int S_IDENTIFIER = 74;
+  int LINE_COMMENT = 74;
   /** RegularExpression Id. */
-  int LETTER = 75;
+  int MULTI_LINE_COMMENT = 75;
   /** RegularExpression Id. */
-  int SPECIAL_CHARS = 76;
+  int S_IDENTIFIER = 76;
   /** RegularExpression Id. */
-  int S_CHAR_LITERAL = 77;
+  int LETTER = 77;
   /** RegularExpression Id. */
-  int S_QUOTED_IDENTIFIER = 78;
+  int SPECIAL_CHARS = 78;
+  /** RegularExpression Id. */
+  int S_CHAR_LITERAL = 79;
+  /** RegularExpression Id. */
+  int S_QUOTED_IDENTIFIER = 80;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -233,6 +237,8 @@ public interface StSqlParserConstants {
     "\"PRIOR\"",
     "\"START\"",
     "\"INTERVAL\"",
+    "\"NULLS\"",
+    "\"LAST\"",
     "<S_DOUBLE>",
     "<S_INTEGER>",
     "<DIGIT>",
