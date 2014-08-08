@@ -95,73 +95,77 @@ public interface StSqlParserConstants {
   /** RegularExpression Id. */
   int K_ORDER = 46;
   /** RegularExpression Id. */
-  int K_RIGHT = 47;
+  int K_PARTITION = 47;
   /** RegularExpression Id. */
-  int K_DELETE = 48;
+  int K_RIGHT = 48;
   /** RegularExpression Id. */
-  int K_CREATE = 49;
+  int K_DELETE = 49;
   /** RegularExpression Id. */
-  int K_SELECT = 50;
+  int K_CREATE = 50;
   /** RegularExpression Id. */
-  int K_OFFSET = 51;
+  int K_SELECT = 51;
   /** RegularExpression Id. */
-  int K_EXISTS = 52;
+  int K_OFFSET = 52;
   /** RegularExpression Id. */
-  int K_HAVING = 53;
+  int K_EXISTS = 53;
   /** RegularExpression Id. */
-  int K_INSERT = 54;
+  int K_HAVING = 54;
   /** RegularExpression Id. */
-  int K_UPDATE = 55;
+  int K_INSERT = 55;
   /** RegularExpression Id. */
-  int K_VALUES = 56;
+  int K_UPDATE = 56;
   /** RegularExpression Id. */
-  int K_ESCAPE = 57;
+  int K_VALUES = 57;
   /** RegularExpression Id. */
-  int K_PRIMARY = 58;
+  int K_ESCAPE = 58;
   /** RegularExpression Id. */
-  int K_NATURAL = 59;
+  int K_PRIMARY = 59;
   /** RegularExpression Id. */
-  int K_REPLACE = 60;
+  int K_NATURAL = 60;
   /** RegularExpression Id. */
-  int K_BETWEEN = 61;
+  int K_REPLACE = 61;
   /** RegularExpression Id. */
-  int K_TRUNCATE = 62;
+  int K_BETWEEN = 62;
   /** RegularExpression Id. */
-  int K_DISTINCT = 63;
+  int K_TRUNCATE = 63;
   /** RegularExpression Id. */
-  int K_INTERSECT = 64;
+  int K_DISTINCT = 64;
   /** RegularExpression Id. */
-  int K_CONNECT = 65;
+  int K_INTERSECT = 65;
   /** RegularExpression Id. */
-  int K_PRIOR = 66;
+  int K_CONNECT = 66;
   /** RegularExpression Id. */
-  int K_START = 67;
+  int K_PRIOR = 67;
   /** RegularExpression Id. */
-  int K_INTERVAL = 68;
+  int K_START = 68;
   /** RegularExpression Id. */
-  int K_NULLS = 69;
+  int K_INTERVAL = 69;
   /** RegularExpression Id. */
-  int K_LAST = 70;
+  int K_NULLS = 70;
   /** RegularExpression Id. */
-  int S_DOUBLE = 71;
+  int K_LAST = 71;
   /** RegularExpression Id. */
-  int S_INTEGER = 72;
+  int K_OVER = 72;
   /** RegularExpression Id. */
-  int DIGIT = 73;
+  int S_DOUBLE = 73;
   /** RegularExpression Id. */
-  int LINE_COMMENT = 74;
+  int S_INTEGER = 74;
   /** RegularExpression Id. */
-  int MULTI_LINE_COMMENT = 75;
+  int DIGIT = 75;
   /** RegularExpression Id. */
-  int S_IDENTIFIER = 76;
+  int LINE_COMMENT = 76;
   /** RegularExpression Id. */
-  int LETTER = 77;
+  int MULTI_LINE_COMMENT = 77;
   /** RegularExpression Id. */
-  int SPECIAL_CHARS = 78;
+  int S_IDENTIFIER = 78;
   /** RegularExpression Id. */
-  int S_CHAR_LITERAL = 79;
+  int LETTER = 79;
   /** RegularExpression Id. */
-  int S_QUOTED_IDENTIFIER = 80;
+  int SPECIAL_CHARS = 80;
+  /** RegularExpression Id. */
+  int S_CHAR_LITERAL = 81;
+  /** RegularExpression Id. */
+  int S_QUOTED_IDENTIFIER = 82;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -215,6 +219,7 @@ public interface StSqlParserConstants {
     "\"LIMIT\"",
     "\"OUTER\"",
     "\"ORDER\"",
+    "\"PARTITION\"",
     "\"RIGHT\"",
     "\"DELETE\"",
     "\"CREATE\"",
@@ -239,6 +244,7 @@ public interface StSqlParserConstants {
     "\"INTERVAL\"",
     "\"NULLS\"",
     "\"LAST\"",
+    "\"OVER\"",
     "<S_DOUBLE>",
     "<S_INTEGER>",
     "<DIGIT>",

@@ -6,3 +6,85 @@ order by earnmonth,area NULLS  last;
 select earnmonth, area, sum(personincome)  
 from earnings  
 group by rollup(earnmonth,area);
+/* sum是统计求和的函数。
+group by 是分组函数，按照earnmonth和area先后次序分组。
+以上三例都是先按照earnmonth分组，在earnmonth内部再按area分组，并在area组内统计personincome总合。
+group by 后面什么也不接就是直接分组。
+group by 后面接 rollup 是在纯粹的 group by 分组上再加上对earnmonth的汇总统计。
+group by 后面接 cube 是对earnmonth汇总统计基础上对area再统计。
+另外那个 nulls last 是把空值放在最后。 
+
+rollup和cube区别：
+如果是ROLLUP(A, B, C)的话，GROUP BY顺序
+(A、B、C)
+(A、B)
+(A)
+最后对全表进行GROUP BY操作。
+
+如果是GROUP BY CUBE(A, B, C)，GROUP BY顺序
+(A、B、C)
+(A、B)
+(A、C)
+(A)，
+(B、C)
+(B)
+(C)，
+最后对全表进行GROUP BY操作。*/
+
+select decode(grouping(earnmonth),1,'所有月份',earnmonth) month,  
+       decode(grouping(area),1,'全部地区',area) area, sum(personincome) amount  
+from earnings  
+group by cube(earnmonth,area)  
+order by earnmonth,area nulls last;
+/* 在以上例子中，是用rollup和cube函数都会对结果集产生null，这时候可用grouping函数来确认
+该记录是由哪个字段得出来的
+grouping函数用法，带一个参数，参数为字段名，结果是根据该字段得出来的就返回1，反之返回0 */
+
+select earnmonth ,area ,sname , personincome ,   
+       rank() over (partition by earnmonth,area order by personincome desc) PAIMING 
+from earnings;  
+
+---- 复杂SQL测试 -----
+select t1.price_id,
+       (select name
+          from pm_price_event
+         where item_class = 0
+           and sub_type = 2
+           and event_id = t2.item_code) as item_code,
+       account_type,
+       priority,
+       t4.base_val,
+       (select name
+          from sys_measure
+         where sys_measure.measure_id = t3.measure_id) as measure_id,
+       t3.rate_round,
+       t1.description,
+       (select name
+          from sys_policy
+         where sys_policy.policy_id = t2.use_marker_id
+           and use_trigger = 5) as userstatecond,
+       (select name
+          from sys_policy
+         where sys_policy.policy_id = t2.expr_id
+           and use_trigger = 5) as effectcond,
+       (select name
+          from sys_policy
+         where sys_policy.policy_id = t4.formula_id
+           and use_trigger = 5) as expressions
+  from pm_component_prodoffer_price t1
+ inner join pm_recurring_fee_dtl t2 on t1.price_id = t2.price_id
+                                   and T1.PRICE_ID = 3
+  left join pm_rates t3 on t2.rate_id = t3.rate_id
+  left join pm_curve_segments t4 on t3.curve_id = t4.curve_id;
+  
+  
+----- MS-SQL中，支持判断记录是否存在后插入或更新 --
+/*
+if not exists (select 1 from t where id = 1)
+    insert into t(id, update_time) values(1, getdate())
+else
+   update t set update_time = getdate() where id = 1;
+*/
+
+---- MYSQL中，支持replace into 和上述语法有异曲同工之妙--
+replace into t(id, update_time) values(1, now());

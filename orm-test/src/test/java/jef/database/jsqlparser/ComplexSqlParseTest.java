@@ -8,9 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import jef.database.DbClient;
 import jef.database.DbUtils;
-import jef.database.NativeQuery;
 import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.JpqlParameter;
@@ -241,11 +239,10 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	@Test
 	public void aaa7() throws ParseException, SQLException {
 		String sql = "DELETE FROM DBM2.dbm_warn_log WHERE warn_time < subdate(now(), :DAYS)   AND NOT EXISTS (select 1 from DBM2.dbm_warn_dealed where log_id = DBM2.dbm_warn_log.log_id)";
-		StSqlParser parser = new StSqlParser(new StringReader(sql));
-		Expression exp = parser.WhereClause();
-		System.out.println(exp);
+		Statement st=DbUtils.parseStatement(sql);
+		System.out.println(st);
 		
-		DbClient db = new DbClient();
+//		DbClient db = new DbClient();
 //		NativeQuery<?> q = db.createNativeQuery(sql);
 //		q.setParameter("DAYS", "aa");
 //		System.out.println(q);
@@ -298,17 +295,33 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 		StringBuilder sb=new StringBuilder();
 		BufferedReader reader=IOUtils.getReader(this.getClass().getResource("complex-sqls.txt"), "UTF-8"); 
 		String line;
+		boolean comment=false;
 		while((line=reader.readLine())!=null){
+			if(comment){
+				if(line.endsWith("*/")){
+					comment=false;
+				}
+				System.out.println(line);
+				continue;
+			}
+			if(line.startsWith("/*")){
+				comment=true;
+				System.out.println(line);
+				continue;
+			}
+			if(line.length()==0 || line.startsWith("--") )continue;
+			if(sb.length()>0)sb.append('\n');
 			sb.append(line);
-			if(line.endsWith(";")){
+			if(endsWith(line,';')){
 				sb.setLength(sb.length()-1);
 				String sql=sb.toString();
 				sb.setLength(0);
 				if(StringUtils.isNotBlank(sql)){
-					System.out.println("[RAW  ]"+sql);
+					System.out.println("===================== [RAW]  ==================");
+					System.out.println(sql);
 					StSqlParser parser = new StSqlParser(new StringReader(sql));
 					Statement st=parser.Statement();
-					System.out.print("[PARSE]");
+					System.out.println("-------------------- [PARSE] ------------------");
 					System.out.println(st);
 				}
 			}
@@ -317,9 +330,21 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 			String sql=sb.toString();
 			System.out.println("processing:"+sql);
 			StSqlParser parser = new StSqlParser(new StringReader(sql));
+//			JpqlParser parser = new JpqlParser(new StringReader(sql));
 			Statement st=parser.Statement();
 			System.out.println(st);
 		}
+	}
+
+	private boolean endsWith(String line, char key) {
+		if(line.length()==0)return false;
+		int len=line.length();
+		for(int i=1;i<=len;i++){
+			char c=line.charAt(len-i);
+			if(c==' ')continue;
+			return c==key;
+		}
+		return false;
 	}
 
 }

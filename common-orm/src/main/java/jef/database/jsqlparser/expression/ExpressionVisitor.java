@@ -129,4 +129,6 @@ public interface ExpressionVisitor {
 	public void visit(StartWithExpression startWithExpression);
 
 	public void visit(Mod mod);
+
+	public void visit(Over over);
 }

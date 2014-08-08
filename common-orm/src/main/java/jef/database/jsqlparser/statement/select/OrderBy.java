@@ -9,8 +9,6 @@ public class OrderBy implements SqlAppendable {
 	protected final List<OrderByElement> orderByElements = new ArrayList<OrderByElement>();
 	private boolean nullsLast;
 
-	// List orderByList = new ArrayList();
-
 	public List<OrderByElement> getOrderByElements() {
 		return orderByElements;
 	}
@@ -20,7 +18,11 @@ public class OrderBy implements SqlAppendable {
 	}
 
 	public void appendTo(StringBuilder sb) {
-		PlainSelect.getFormatedList(sb, orderByElements, "order by", false);
+		PlainSelect.getFormatedList(sb, orderByElements, " order by", false);
+		if(nullsLast){
+			sb.append(" NULLS LAST");
+			
+		}
 	}
 
 	public boolean isNullsLast() {

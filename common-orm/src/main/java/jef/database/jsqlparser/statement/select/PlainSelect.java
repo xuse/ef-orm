@@ -203,7 +203,7 @@ public class PlainSelect implements SelectBody {
         	startWith.appendTo(sb);
         }
         
-        getFormatedList(sb,groupByColumnReferences, "group by",false);
+        getFormatedList(sb,groupByColumnReferences, " group by",false);
         if(having!=null){
         	having.appendTo(sb.append(" having "));
         }
@@ -238,7 +238,6 @@ public class PlainSelect implements SelectBody {
 
     public static void getFormatedList(StringBuilder sb,List<? extends SqlAppendable> list, String expression,boolean useBrackets) {
     	if(list==null || list.isEmpty())return;
-    	sb.append(' ');
     	if(expression!=null){
     		sb.append(expression).append(' ');
     	}

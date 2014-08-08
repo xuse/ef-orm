@@ -38,6 +38,7 @@ import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.DoubleValue;
 import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Function;
+import jef.database.jsqlparser.expression.Over;
 import jef.database.jsqlparser.expression.InverseExpression;
 import jef.database.jsqlparser.expression.JpqlParameter;
 import jef.database.jsqlparser.expression.LongValue;
@@ -174,6 +175,7 @@ TOKEN: /* SQL Keywords. prefixed with K_ to avoid name clashes */
 |   <K_LIMIT:"LIMIT">
 |   <K_OUTER:"OUTER">
 |   <K_ORDER:"ORDER">
+|   <K_PARTITION:"PARTITION">
 |   <K_RIGHT:"RIGHT">
 |   <K_DELETE:"DELETE">
 |   <K_CREATE:"CREATE">
@@ -199,6 +201,7 @@ TOKEN: /* SQL Keywords. prefixed with K_ to avoid name clashes */
 |   <K_SQL:"SQL">
 |   <K_NULLS:"NULLS">
 |   <K_LAST:"LAST">
+|   <K_OVER:"OVER">
 }
 
 
@@ -1575,7 +1578,8 @@ Function Function():
 	Function retval = new Function();
 	String funcName = null;
 	String tmp = null;
-	ExpressionList expressionList = null;  
+	ExpressionList expressionList = null;
+	Over over=null;
 }
 {
 	["{fn" { retval.setEscaped(true); } ]
@@ -1588,6 +1592,7 @@ Function Function():
     "(" [ [<K_DISTINCT> { retval.setDistinct(true); } | <K_ALL> { retval.setAllColumns(true); }] (expressionList=SimpleExpressionList() | "*" { retval.setAllColumns(true); }) ] ")"
     
     ["}"]
+    [over=Over()  { retval.setOver(over); } ]
     { 
 	    retval.setParameters(expressionList);
 	    retval.setName(funcName);
@@ -1595,7 +1600,30 @@ Function Function():
     }
 }
 
-
+Over Over():
+{
+ Column name;
+ Over over;
+ List list;
+ OrderBy order=null;
+}
+{<K_OVER> "("
+{
+  over=new Over();
+  list=new ArrayList();
+}
+ [
+    <K_PARTITION> <K_BY> name=Column()
+  { list.add(name); over.setPartition(list); }
+ ("," name=Column(){list.add(name);})*
+ ]
+ [ order=OrderByElements()
+  {over.setOrderBy(order); }]
+  ")"
+	{
+      return over;
+	}
+}
 
 SubSelect SubSelect():
 {

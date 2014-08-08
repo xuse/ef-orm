@@ -196,7 +196,7 @@ public class Join {
 				sb.append(" ON ");
 				onExpression.appendTo(sb);
 			}
-			PlainSelect.getFormatedList(sb,usingColumns, "USING", true);
+			PlainSelect.getFormatedList(sb,usingColumns, " using", true);
 		}
 		return sb;
 	}

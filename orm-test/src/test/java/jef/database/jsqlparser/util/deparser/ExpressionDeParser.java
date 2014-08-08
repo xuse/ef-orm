@@ -33,6 +33,7 @@ import jef.database.jsqlparser.expression.JdbcParameter;
 import jef.database.jsqlparser.expression.JpqlParameter;
 import jef.database.jsqlparser.expression.LongValue;
 import jef.database.jsqlparser.expression.NullValue;
+import jef.database.jsqlparser.expression.Over;
 import jef.database.jsqlparser.expression.Parenthesis;
 import jef.database.jsqlparser.expression.StringValue;
 import jef.database.jsqlparser.expression.TimeValue;
@@ -376,6 +377,17 @@ public class ExpressionDeParser implements ExpressionVisitor, ItemsListVisitor {
 		Expression connectBy=startWithExpression.getConnectExpression();
 		if(start!=null)start.accept(this);
 		if(connectBy!=null)connectBy.accept(this);
+	}
+
+	public void visit(Over over) {
+		if(over.getPartition()!=null){
+			for(Expression exp: over.getPartition()){
+				exp.accept(this);
+			}
+		}
+		if(over.getOrderBy()!=null){
+//			over.getOrderBy().accept(this);
+		}
 	}
 
 

@@ -36,7 +36,16 @@ public class Function implements Expression {
 
 	private boolean isEscaped = false;
 
+	private Over over;
+	
 	public Function() {
+	}
+	
+	public Over getOver() {
+		return over;
+	}
+	public void setOver(Over over) {
+		this.over = over;
 	}
 
 	public Function(String name, Expression... params) {
@@ -133,23 +142,6 @@ public class Function implements Expression {
 		StringBuilder sb=new StringBuilder(64);
 		appendTo(sb);
 		return sb.toString();
-//		if (rewrite != null) {
-//			return rewrite.toString();
-//		}
-//		String params = "";
-//		if (allColumns) {
-//			params = "(*)";
-//		} else if (parameters != null) {
-//			params = parameters.toString();
-//			if (isDistinct()) {
-//				params = StringUtils.replaceOnce(params, "(", "(DISTINCT ");
-//			}
-//		}
-//		String ans = name + params;
-//		if (isEscaped) {
-//			ans = "{fn " + ans + "}";
-//		}
-//		return ans;
 	}
 
 	public void appendTo(StringBuilder sb) {
@@ -163,21 +155,26 @@ public class Function implements Expression {
 		sb.append(name);
 		if(allColumns){
 			sb.append("(*)");
-		}else if(parameters!=null){
-			String sep=parameters.getBetween();
+		}else if(parameters!=null || over!=null){
 			sb.append(isDistinct()?"(DISTINCT ":"(");
-			Iterator<Expression> iter=parameters.getExpressions().iterator();
-			if(iter.hasNext()){
-				iter.next().appendTo(sb);
-			}
-			while(iter.hasNext()){
-				sb.append(sep);
-				iter.next().appendTo(sb);
+			if(parameters!=null){
+				Iterator<Expression> iter=parameters.getExpressions().iterator();
+				if(iter.hasNext()){
+					iter.next().appendTo(sb);
+				}
+				String sep=parameters.getBetween();
+				while(iter.hasNext()){
+					sb.append(sep);
+					iter.next().appendTo(sb);
+				}	
 			}
 			sb.append(')');
 		}
 		if (isEscaped) {
 			sb.append('}');
+		}
+		if(over!=null){
+			over.appendTo(sb);
 		}
 	}
 }
