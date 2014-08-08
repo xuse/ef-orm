@@ -5,8 +5,10 @@ import java.util.Collections;
 import java.util.List;
 
 import jef.database.DbUtils;
+import jef.database.Field;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.MappingType;
+import jef.database.meta.AliasProvider;
 import jef.database.meta.IReferenceAllTable;
 import jef.database.meta.IReferenceColumn;
 import jef.database.meta.ISelectProvider;
@@ -72,14 +74,21 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 		}
 		return referenceObj.getProjection()==ISelectProvider.PROJECTION_NORMAL;
 	}
-
+	
+	
+	private static final AliasProvider EMPTY=new AliasProvider(){
+		public String getSelectedAliasOf(Field f, DatabaseDialect profile, String schema) {
+			return null;
+		}
+	};
 	/**
 	 *生成查询语句时使用
 	 */
 	public CommentEntry[] getSelectColumns(DatabaseDialect profile,boolean groupMode,SqlContext context) {
 		List<CommentEntry> result=new ArrayList<CommentEntry>();
 		List<IReferenceColumn> assignedFields=this.getReferenceCol();
-	
+		AliasProvider aliasProvider=context.isMultiTable()? AliasProvider.DEFAULT: EMPTY;
+		
 		//所有配置为空，采取默认值
 		if(assignedFields.isEmpty() && referenceObj==null){
 			if(!groupMode){//group模式下全部无效
@@ -87,7 +96,7 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 				for (MappingType<?> f : meta.getMetaFields()) {
 					CommentEntry entry=new CommentEntry();
 					entry.setKey(schema.concat(".").concat(f.getColumnName(profile, true)));
-					entry.setValue(DbUtils.getDefaultColumnAlias(f.field(), profile, schema));	
+					entry.setValue(aliasProvider.getSelectedAliasOf(f.field(), profile, schema));	
 					result.add(entry);
 				}	
 			}

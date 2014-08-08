@@ -49,9 +49,17 @@ public class InMemoryProcessResultSet extends AbstractResultSet{
 		}
 		results.clear();
 		for(InMemoryProcessor processor:processors){
-			processor.process(cache.getRvh());
+			processor.process(cache);
 		}
 		cache.refresh();
+	}
+	/**
+	 * 添加内存记录处理器
+	 * @param processor 处理器
+	 */
+	public void addProcessor(List<InMemoryProcessor> processor){
+		if(processor.isEmpty())return;
+		this.processors.addAll(processor);
 	}
 	/**
 	 * 添加一个内存记录处理器
@@ -61,6 +69,7 @@ public class InMemoryProcessResultSet extends AbstractResultSet{
 		if(processor==null)return;
 		this.processors.add(processor);
 	}
+	
 	
 	public ColumnMeta getColumns() {
 		return columns;

@@ -48,11 +48,11 @@ import jef.database.innerpool.FieldPopulator;
 import jef.database.innerpool.MultiplePopulator;
 import jef.database.innerpool.NestedObjectPopulator;
 import jef.database.meta.AbstractRefField;
+import jef.database.meta.AliasProvider;
 import jef.database.meta.EntityType;
 import jef.database.meta.Feature;
 import jef.database.meta.IReferenceAllTable;
 import jef.database.meta.IReferenceColumn;
-import jef.database.meta.ISelectProvider;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.Reference;
@@ -481,7 +481,7 @@ public abstract class AbstractPopulator extends AbstractMetaDataService {
 		private List<ObjectPopulator> directPopulator;
 		private List<IPopulator> extendPopulator;
 
-		private IReferenceAllTable defaultField;
+		private AliasProvider defaultField;
 		private ColumnMeta columnNames;
 		private Session session;
 
@@ -521,9 +521,7 @@ public abstract class AbstractPopulator extends AbstractMetaDataService {
 					Entry<String[], ISelectItemProvider[]> desc = context.getPopulationDesc();
 					schemas = desc.getKey();
 					subObjects = desc.getValue();
-					if (context.getReference().size() > 1) {
-						defaultField = ISelectProvider.DefaultColumnAliasProvider;
-					}
+					defaultField=context.isMultiTable()?AliasProvider.DEFAULT:null;
 				} else {
 					schemas = new String[] { "" };// 当引用查询时的基础表Schema
 				}
@@ -658,12 +656,9 @@ public abstract class AbstractPopulator extends AbstractMetaDataService {
 	 * columns 数据库列
 	 * meta
 	 */
-	private static ObjectPopulator fill(BeanAccessor ba, String schema, IReferenceAllTable fullRef, IResultSet rs, ColumnMeta columns, ITableMetadata meta, boolean skipColumn) {
+	private static ObjectPopulator fill(BeanAccessor ba, String schema, AliasProvider fullRef, IResultSet rs, ColumnMeta columns, ITableMetadata meta, boolean skipColumn) {
 		Map<String, ColumnDescription> data = new HashMap<String, ColumnDescription>();
 		DatabaseDialect profile = rs.getProfile();
-		if (meta == null) {
-			throw new IllegalArgumentException("the " + ba.getType() + " is not subclass of DataObject.");
-		}
 		// 这里要按照列名来拼装，不是默认全拼装
 		for (MappingType<?> ft : meta.getMetaFields()) {
 			String columnName;

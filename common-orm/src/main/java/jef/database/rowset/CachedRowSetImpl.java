@@ -107,7 +107,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 * 
 	 * @serial
 	 */
-	private final List<Row> rvh = new ArrayList<Row>(100);
+	private List<Row> rvh = new ArrayList<Row>(100);
 	/**
 	 * The current postion of the cursor in this <code>CachedRowSetImpl</code>
 	 * object.
@@ -8625,5 +8625,9 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 
 	public List<Row> getRvh() {
 		return rvh;
+	}
+
+	public void setRvh(List<Row> rvh) {
+		this.rvh = rvh;
 	}
 }

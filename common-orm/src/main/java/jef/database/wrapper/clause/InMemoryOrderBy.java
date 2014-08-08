@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import jef.database.rowset.CachedRowSetImpl;
 import jef.database.rowset.Row;
 
 public class InMemoryOrderBy implements InMemoryProcessor {
@@ -46,7 +47,8 @@ public class InMemoryOrderBy implements InMemoryProcessor {
 		this.orderAsc = orderAsc;
 	}
 
-	public void process(List<Row> rows) {
+	public void process(CachedRowSetImpl rowset) {
+		List<Row> rows=rowset.getRvh();
 		Collections.sort(rows, new Comparator<Row>() {
 			public int compare(Row o1, Row o2) {
 				for (int i = 0; i < orderFields.length; i++) {

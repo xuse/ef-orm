@@ -26,6 +26,7 @@
 package jef.database.rowset;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 
 /**
  * A class that keeps track of a row's values. A <code>Row</code> object
@@ -127,5 +128,20 @@ public class Row {
 
 	public void setArrayObject(int idx, Object val) {
 		currentVals[idx] = val;
+	}
+
+	@Override
+	public int hashCode() {
+		return Arrays.hashCode(currentVals);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if(obj instanceof Row){
+			return Arrays.equals(this.currentVals, ((Row)obj).currentVals);	
+		}else{
+			return false;
+		}
+		
 	}
 }

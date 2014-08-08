@@ -25,7 +25,7 @@ public class GroupClause implements SqlClause{
 	private final List<String> groups = new ArrayList<String>(4);
 	private final List<String> having = new ArrayList<String>(4);
 	
-	public static final GroupClause EMPTY=new GroupClause();
+	public static final GroupClause DEFAULT=new GroupClause();
 	public GroupClause(){
 	}
 

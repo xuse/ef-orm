@@ -18,7 +18,7 @@ import jef.database.dialect.type.MappingType;
 import jef.database.dialect.type.ResultSetAccessor;
 import jef.database.innerpool.ArrayElementPopulator;
 import jef.database.innerpool.NestedObjectPopulator;
-import jef.database.meta.ISelectProvider;
+import jef.database.meta.AliasProvider;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.support.RDBMS;
@@ -321,7 +321,7 @@ public final class Mappers {
 					if (schema == null) {
 						columnName = skipColumnAnnotation ? f.name().toUpperCase() : meta.getColumnName(f, UPPER_COLUMNS, false);
 					} else {
-						columnName = ISelectProvider.DefaultColumnAliasProvider.getSelectedAliasOf(f, UPPER_COLUMNS, schema);
+						columnName = AliasProvider.DEFAULT.getSelectedAliasOf(f, UPPER_COLUMNS, schema);
 					}	
 				}
 				if (columnName != null) {

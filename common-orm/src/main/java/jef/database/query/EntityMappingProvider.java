@@ -22,4 +22,10 @@ public interface EntityMappingProvider extends Serializable{
 	 * @return
 	 */
 	Entry<String[],ISelectItemProvider[]> getPopulationDesc();
+	
+	/**
+	 * 是否为多表查询
+	 * @return
+	 */
+	public boolean isMultiTable();
 }

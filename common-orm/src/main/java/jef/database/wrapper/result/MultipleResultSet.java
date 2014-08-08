@@ -33,8 +33,10 @@ import jef.database.OperateTarget;
 import jef.database.Session.PopulateStrategy;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Reference;
+import jef.database.wrapper.clause.InMemoryDistinct;
 import jef.database.wrapper.clause.InMemoryGroupBy;
 import jef.database.wrapper.clause.InMemoryOrderBy;
+import jef.database.wrapper.clause.InMemoryProcessor;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
 import jef.tools.ArrayUtils;
@@ -51,7 +53,7 @@ public final class MultipleResultSet extends AbstractResultSet{
 	//重新排序部分
 	private InMemoryOrderBy inMemoryOrder;
 	//重新分组处理逻辑
-	private InMemoryGroupBy inMemoryGroups;
+	private List<InMemoryProcessor> mustInMemoryProcessor;
 
 	//所有列的元数据记录
 	private ColumnMeta columns;
@@ -223,10 +225,10 @@ public final class MultipleResultSet extends AbstractResultSet{
 			rsw.setFilters(filters);
 			return rsw;
 		}
-		if(inMemoryGroups!=null){
+		if(mustInMemoryProcessor!=null){
 			InMemoryProcessResultSet rw=new InMemoryProcessResultSet(results,columns);
 			rw.filters=filters;
-			rw.addProcessor(inMemoryGroups);
+			rw.addProcessor(mustInMemoryProcessor);
 			rw.addProcessor(inMemoryOrder);
 			try {
 				rw.process();
@@ -260,6 +262,17 @@ public final class MultipleResultSet extends AbstractResultSet{
 	}
 
 	public void setInMemoryGroups(InMemoryGroupBy inMemoryGroups) {
-		this.inMemoryGroups = inMemoryGroups;
+		addToInMemprocessor(inMemoryGroups);
+	}
+
+	private void addToInMemprocessor(InMemoryProcessor process) {
+		if(this.mustInMemoryProcessor==null){
+			mustInMemoryProcessor=new ArrayList<InMemoryProcessor>(4);
+		}
+		mustInMemoryProcessor.add(process);
+	}
+
+	public void setInMemoryDistinct(InMemoryDistinct instance) {
+		addToInMemprocessor(instance);
 	}
 }

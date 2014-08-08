@@ -24,7 +24,7 @@ import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.SqlContext;
 import jef.database.wrapper.clause.BindSql;
-import jef.database.wrapper.clause.IQueryClause;
+import jef.database.wrapper.clause.QueryClause;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -192,7 +192,7 @@ public final class CacheImpl implements TransactionCache{
 		if(tableCache==null || tableCache.isEmpty())return;
 		
 		if(obj.hasQuery()){
-			IQueryClause ir=	selectp.toQuerySql(obj.getQuery(), null, null,false);
+			QueryClause ir=	selectp.toQuerySql(obj.getQuery(), null, null,false);
 			evict(ir.getCacheKey());
 			return;
 		}

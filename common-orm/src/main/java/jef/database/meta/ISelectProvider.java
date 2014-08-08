@@ -1,8 +1,5 @@
 package jef.database.meta;
 
-import jef.database.DbUtils;
-import jef.database.Field;
-import jef.database.dialect.DatabaseDialect;
 
 /**
  * 用于描述查询中一个选择/装配的定义
@@ -43,30 +40,4 @@ public interface ISelectProvider {
 	int getProjection();
 	
 	boolean isSingleColumn();
-	
-	public static final IReferenceAllTable DefaultColumnAliasProvider=new IReferenceAllTable(){
-		public ITableMetadata getFullModeTargetType() {
-			throw new UnsupportedOperationException();
-		}
-		public String getName() {
-			throw new UnsupportedOperationException();
-		}
-		public String getSelectedAliasOf(Field f, DatabaseDialect profile, String schema) {
-			return DbUtils.getDefaultColumnAlias(f, profile, schema);
-		}
-		public String simpleModeSql(String tableAlias) {
-			return null;
-		}
-		public int getProjection() {
-			return 0;
-		}
-
-		public boolean isSingleColumn() {
-			return false;
-		}
-		public boolean isLazyLob() {
-			throw new UnsupportedOperationException();
-		}
-		
-	};
 }

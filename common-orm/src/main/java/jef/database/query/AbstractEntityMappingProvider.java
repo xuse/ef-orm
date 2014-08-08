@@ -93,4 +93,8 @@ public abstract class AbstractEntityMappingProvider{
 	public boolean isDistinct() {
 		return distinct;
 	}
+	
+	public boolean isMultiTable(){
+		return getReference().size()>1;
+	}
 }

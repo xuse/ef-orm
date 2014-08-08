@@ -62,8 +62,9 @@ import jef.database.support.DbOperatorListener;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.CountClause;
-import jef.database.wrapper.clause.IQueryClause;
+import jef.database.wrapper.clause.InMemoryDistinct;
 import jef.database.wrapper.clause.InsertSqlClause;
+import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.populator.ResultSetTransformer;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.result.IResultSet;
@@ -1321,7 +1322,7 @@ public abstract class Session {
 		}
 
 		long start = System.currentTimeMillis();// 开始时间
-		IQueryClause sql = selectp.toQuerySql(queryObj, range, option.tableName,true);
+		QueryClause sql = selectp.toQuerySql(queryObj, range, option.tableName,true);
 		if(sql.isEmpty())
 			return new ResultIterator.Impl<T>(new ArrayList<T>().iterator(), null);
 		
@@ -1363,7 +1364,7 @@ public abstract class Session {
 
 		long start = System.currentTimeMillis();// 开始时间
 		// 生成 SQL
-		IQueryClause sql = selectp.toQuerySql(queryObj, range, option.tableName,true);
+		QueryClause sql = selectp.toQuerySql(queryObj, range, option.tableName,true);
 		if(sql.isEmpty())
 			return Collections.EMPTY_LIST;
 		//缓存命中
@@ -1386,6 +1387,9 @@ public abstract class Session {
 				}
 				if(sql.getGrouphavingPart().isNotEmpty()){
 					rs.setInMemoryGroups(sql.getGrouphavingPart().parseSelectFunction(sql.getSelectPart()));
+				}
+				if(sql.isDistinct()){
+					rs.setInMemoryDistinct(InMemoryDistinct.instance);
 				}
 			}
 		}
