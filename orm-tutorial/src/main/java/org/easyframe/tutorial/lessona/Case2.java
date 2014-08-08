@@ -10,8 +10,6 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import jef.codegen.EntityEnhancer;
-import jef.common.log.LogUtil;
-import jef.common.wrapper.Page;
 import jef.database.DbClient;
 import jef.database.ORMConfig;
 import jef.database.QB;
@@ -20,7 +18,6 @@ import jef.database.datasource.RoutingDataSource;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.query.Query;
 import jef.database.query.Selects;
-import jef.database.query.SqlExpression;
 import jef.tools.DateUtils;
 import jef.tools.string.RandomData;
 
@@ -28,6 +25,7 @@ import org.easyframe.tutorial.lessona.entity.Customer;
 import org.easyframe.tutorial.lessona.entity.Device;
 import org.easyframe.tutorial.lessona.entity.OperateLog;
 import org.easyframe.tutorial.lessona.entity.Person2;
+import org.easyframe.tutorial.lessona.entity.Customer.Field;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -242,45 +240,79 @@ public class Case2 extends org.junit.Assert{
 		db.batchInsert(list);
 		System.err.println("=====插入50条记录完成=====");
 		System.out.println("当前总数是:"+db.count(QB.create(Device.class)));
+//		{
+//			Query<Device> query=QB.create(Device.class);
+//			query.addCondition(QB.matchStart(Device.Field.indexcode, "4"));
+//			
+//
+//			List<Device> results=db.select(query);
+//			System.out.println("=====查询indexCode 4开头的记录完成=====");
+//			LogUtil.show(results);	
+//		}
+//		{
+//			System.out.println("=====查询indexcode含0的记录，并按创建日期排序=====");
+//			//分库分表后的难点之一——跨库查询并且并且排序
+//			Query<Device> query=QB.create(Device.class);
+//			query.addCondition(QB.matchAny(Device.Field.indexcode, "0"));//显然这个查询意味着要调动好几个数据库上的好几张表
+//			query.orderByDesc(Device.Field.createDate);  //更麻烦的是，要对这些数据按日期进行排序。
+//			List<Device> results=db.select(query);
+//			for(Device ss:results){
+//				System.out.println(ss);
+//			}
+//			
+//			System.out.println("=====查询indexcode含0的记录，并按创建日期排序，每页8条，显示第二页=====");
+//			//更麻烦一点——[跨库查询]并且并且[排序]还要[分页]——每页10条，从第二页开始显示
+//			Page<Device> page=db.pageSelect(query, Device.class,10).setOffset(10).getPageData();
+//			System.out.println("总数:"+page.getTotalCount()+" 每页:"+page.getPageSize());
+//			LogUtil.show(page.getList());
+//		}
+//		{
+//			
+//			System.out.println("=====跨数据库 聚合查询=====");
+//			//分库分表后的难点之二——聚合查询
+//			Query<Device> query=QB.create(Device.class);
+//			Selects select=QB.selectFrom(query);
+//			select.column(Device.Field.type).group();
+//			select.column(Device.Field.indexcode).count().as("ct");
+//			List<String[]> strs=db.selectAs(query,String[].class);
+//			for(String[] ss:strs){
+//				System.out.println(Arrays.toString(ss));
+//			}
+//		}
+//		{
+//			System.out.println("=====跨数据库 聚合+重新排序 查询=====");
+//			//分库分表后的难点之二——聚合查询+再加上排序
+//			Query<Device> query=QB.create(Device.class);
+//			Selects select=QB.selectFrom(query);
+//			select.column(Device.Field.type).group();
+//			select.column(Device.Field.indexcode).count().as("ct");
+//			query.orderByDesc(new SqlExpression("ct")); //除了聚合以外，再添加聚合后排序
+//			
+//			List<String[]> strs=db.selectAs(query,String[].class);
+//			for(String[] ss:strs){
+//				System.out.println(Arrays.toString(ss));
+//			}
+//		
+//		}
+		
 		{
-			Query<Device> query=QB.create(Device.class);
-			query.addCondition(QB.matchStart(Device.Field.indexcode, "4"));
 			
-
-			List<Device> results=db.select(query);
-			System.out.println("=====查询indexCode 4开头的记录完成=====");
-			LogUtil.show(results);	
-		}
-		{
-			System.out.println("=====查询indexcode含0的记录，并按创建日期排序=====");
-			//分库分表后的难点之一——跨库查询并且并且排序
-			Query<Device> query=QB.create(Device.class);
-			query.addCondition(QB.matchAny(Device.Field.indexcode, "0"));//显然这个查询意味着要调动好几个数据库上的好几张表
-			query.orderByDesc(Device.Field.createDate);  //更麻烦的是，要对这些数据按日期进行排序。
-			List<Device> results=db.select(query);
-			LogUtil.show(results);
-			
-			System.out.println("=====查询indexcode含0的记录，并按创建日期排序，每页8条，显示第二页=====");
-			//更麻烦一点——[跨库查询]并且并且[排序]还要[分页]——每页10条，从第二页开始显示
-			Page<Device> page=db.pageSelect(query, Device.class,10).setOffset(10).getPageData();
-			System.out.println("总数:"+page.getTotalCount()+" 每页:"+page.getPageSize());
-			LogUtil.show(page.getList());
-		}
-		{
-			
-			System.out.println("=====开始聚合查询=====");
-			//分库分表后的难点之二——聚合查询
+			System.out.println("=====跨数据库 Distinct 查询=====");
+			//分库分表后的难点之三——Distinct操作
 			Query<Device> query=QB.create(Device.class);
 			Selects select=QB.selectFrom(query);
-			select.column(Device.Field.type).group();
-			select.column(Device.Field.indexcode).count().as("ct");
+//			select.column(Device.Field.indexcode);
+//			select.column(Device.Field.createDate);
+//			select.column(Device.Field.name);
+			select.setDistinct(true);
+//			query.orderByDesc(new SqlExpression("ct")); 
 			
-			query.orderByAsc(new SqlExpression("ct"));
-			List<String[]> strs=db.selectAs(query,String[].class);
-			//不通过,需要人工对结果集进行聚合……
-			for(String[] ss:strs){
-				System.out.println(Arrays.toString(ss));
+			List<Device> results=db.select(query);
+			for(Device ss:results){
+				System.out.println(ss);
 			}
+			assertTrue(results.size()>0);
+			assertNotNull(results.get(0).getIndexcode());
 		}
 	}
 	

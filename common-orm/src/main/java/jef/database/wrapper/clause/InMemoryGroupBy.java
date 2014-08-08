@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jef.database.rowset.CachedRowSetImpl;
 import jef.database.rowset.Row;
 
 import org.apache.commons.lang.ObjectUtils;
@@ -24,9 +25,10 @@ public class InMemoryGroupBy implements InMemoryProcessor {
 		;
 	}
 
-	public void process(List<Row> rows) throws SQLException {
+	public void process(CachedRowSetImpl rowset) throws SQLException {
 		int keyLen = keys.length;
-		Map<Collection<?>, Row> map = new HashMap<Collection<?>, Row>();
+		List<Row> rows=rowset.getRvh();
+		List<Row> newRows = new ArrayList<Row>(rows.size()/2+1);
 		Map<Collection<?>, RowTask> mapTask = new HashMap<Collection<?>, RowTask>();
 		for (Row row : rows) {
 			Object[] keyValue = new Object[keyLen];
@@ -36,7 +38,7 @@ public class InMemoryGroupBy implements InMemoryProcessor {
 			List<Object> keyObj = Arrays.asList(keyValue);
 			RowTask exist = mapTask.get(keyObj);
 			if (exist == null) {
-				map.put(keyObj, row);
+				newRows.add(row);
 				mapTask.put(keyObj, new RowTask(row));
 			} else {
 				exist.merge(row);
@@ -46,8 +48,7 @@ public class InMemoryGroupBy implements InMemoryProcessor {
 			task.run();
 		}
 		mapTask.clear();
-		rows.clear();
-		rows.addAll(map.values());
+		rowset.setRvh(newRows);
 	}
 
 	class RowTask {

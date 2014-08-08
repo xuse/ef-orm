@@ -49,7 +49,7 @@ public class InMemoryProcessResultSet extends AbstractResultSet{
 		}
 		results.clear();
 		for(InMemoryProcessor processor:processors){
-			processor.process(cache.getRvh());
+			processor.process(cache);
 		}
 		cache.refresh();
 	}

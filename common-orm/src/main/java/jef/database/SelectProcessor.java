@@ -30,7 +30,7 @@ import jef.database.wrapper.clause.CountClause;
 import jef.database.wrapper.clause.GroupClause;
 import jef.database.wrapper.clause.IQueryClause;
 import jef.database.wrapper.clause.OrderClause;
-import jef.database.wrapper.clause.QueryClause;
+import jef.database.wrapper.clause.QueryClauseImpl;
 import jef.database.wrapper.clause.QueryClauseSqlImpl;
 import jef.database.wrapper.clause.SelectPart;
 import jef.database.wrapper.result.MultipleResultSet;
@@ -135,7 +135,7 @@ public abstract class SelectProcessor {
 
 		// 非递归，直接外部调用
 		public IQueryClause toQuerySql(ConditionQuery obj, IntRange range, String myTableName,boolean order) {
-			QueryClause sb = new QueryClause(parent.getProfile());
+			QueryClauseImpl sb = new QueryClauseImpl(parent.getProfile());
 			if (obj instanceof Query<?>) {
 				Query<?> query = (Query<?>) obj;
 				SqlContext context = query.prepare();
@@ -290,7 +290,7 @@ public abstract class SelectProcessor {
 		}
 
 		public IQueryClause toQuerySql(ConditionQuery obj, IntRange range, String myTableName,boolean order) {
-			QueryClause sb = new QueryClause(getProfile());
+			QueryClauseImpl sb = new QueryClauseImpl(getProfile());
 			if (obj instanceof Query<?>) {
 				Query<?> query = (Query<?>) obj;
 				SqlContext context = query.prepare();
@@ -314,6 +314,7 @@ public abstract class SelectProcessor {
 				BindSql whereResult = parent.toPrepareWhereSql(join, context, false);
 				sb.setWherePart(whereResult.getSql());
 				sb.setBind(whereResult.getBind());
+				sb.setGrouphavingPart(groupClause);
 				if(order)
 					sb.setOrderbyPart(toOrderClause(join, context));
 			} else if (obj instanceof ComplexQuery) {

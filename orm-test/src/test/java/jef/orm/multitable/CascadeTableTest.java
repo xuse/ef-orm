@@ -25,6 +25,7 @@ import jef.database.query.Selects;
 import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
 import jef.database.test.DatabaseInit;
+import jef.database.test.IgnoreOn;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
 import jef.orm.multitable.model.Person;
 import jef.orm.multitable.model.School;
@@ -260,6 +261,7 @@ public class CascadeTableTest extends MultiTableTestBase {
 	 * @throws SQLException
 	 */
 	@Test
+	@IgnoreOn(allButExcept="hsqldb")
 	public void testConditionInOneObj() throws SQLException {
 		System.out.println("=========== testConditionInOneObj Begin ==========");
 		long count=db.getSqlTemplate(null).countBySql("select count(*) from person_table where age>16 and schoolId=2");

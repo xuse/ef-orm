@@ -16,7 +16,7 @@ import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.CountClause;
 import jef.database.wrapper.clause.IQueryClause;
-import jef.database.wrapper.clause.QueryClause;
+import jef.database.wrapper.clause.QueryClauseImpl;
 import jef.database.wrapper.clause.QueryClauseSqlImpl;
 import jef.database.wrapper.populator.Transformer;
 import jef.tools.StringUtils;
@@ -198,7 +198,7 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 	
 	public IQueryClause toPrepareQuerySql(SelectProcessor processor, SqlContext context) {
 		BindSql sql = toPrepareQuerySql0(processor, context,false);
-		if(sql==null)return QueryClause.EMPTY;
+		if(sql==null)return QueryClauseImpl.EMPTY;
 		
 		QueryClauseSqlImpl result = new QueryClauseSqlImpl(processor.getProfile(), true);
 		result.setBody(sql.getSql());

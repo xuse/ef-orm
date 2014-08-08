@@ -93,6 +93,6 @@ public class QueryClauseSqlImpl implements IQueryClause {
 		return false;
 	}
 	public GroupClause getGrouphavingPart() {
-		return GroupClause.EMPTY;
+		return GroupClause.DEFAULT;
 	}
 }

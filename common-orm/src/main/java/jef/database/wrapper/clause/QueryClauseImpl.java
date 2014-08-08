@@ -27,7 +27,6 @@ import jef.database.cache.CacheKey;
 import jef.database.cache.KeyDimension;
 import jef.database.cache.SqlCacheKey;
 import jef.database.dialect.DatabaseDialect;
-import jef.tools.StringUtils;
 
 /**
  * 必要Part五部分， 4+1
@@ -35,14 +34,14 @@ import jef.tools.StringUtils;
  * @author Administrator
  * 
  */
-public class QueryClause implements IQueryClause {
+public class QueryClauseImpl implements IQueryClause {
 	/*
 	 * 这两部分总是只有一个有值 当单表查询时支持分表，所以是PartitionResult 当多表关联时，目前不支持分表，所以是string
 	 */
 	private String tableDefinition;
 	private PartitionResult[] tables;
 	
-	public static final QueryClause EMPTY=new QueryClause(new PartitionResult[0]);
+	public static final QueryClauseImpl EMPTY=new QueryClauseImpl(new PartitionResult[0]);
 	
 //	//是否为union
 //	private boolean isUnion = false;
@@ -51,7 +50,7 @@ public class QueryClause implements IQueryClause {
 	//Where
 	private String wherePart;
 	//groupBy
-	private GroupClause grouphavingPart;
+	private GroupClause grouphavingPart;//=GroupClause.DEFAULT
 	//排序
 	private OrderClause orderbyPart = OrderClause.DEFAULT;
 	//绑定变量
@@ -61,10 +60,10 @@ public class QueryClause implements IQueryClause {
 
 	private DatabaseDialect profile;
 	
-	public QueryClause(DatabaseDialect profile){
+	public QueryClauseImpl(DatabaseDialect profile){
 		this.profile=profile;
 	}
-	private QueryClause(PartitionResult[] partitionResults) {
+	private QueryClauseImpl(PartitionResult[] partitionResults) {
 		this.tables=partitionResults;
 	}
 	public IntRange getPageRange() {
@@ -128,14 +127,6 @@ public class QueryClause implements IQueryClause {
 		this.rawClass=rawClass;
 	}
 
-	public boolean isGroupHaving() {
-		return StringUtils.isNotEmpty(grouphavingPart);
-	}
-//
-//	public void setUnion(boolean isUnion) {
-//		this.isUnion = isUnion;
-//	}
-
 	@Override
 	public String toString() {
 		return String.valueOf(getSql(null));
@@ -174,18 +165,19 @@ public class QueryClause implements IQueryClause {
 		List<BindVariableDescription> bind = this.bind;
 		boolean moreTable=site.tableSize()>1;
 		for (int i = 0; i < site.tableSize(); i++) {
-			String tableName = site.getTables().get(i);
-			sb.append(getSql(tableName.concat(" t"),moreTable && StringUtils.isNotEmpty(grouphavingPart)));//为多表、并且有groupby时需要特殊处理
-			if (site.tableSize() > 1 && i < site.tableSize() - 1) {
+			if (i>0) {
 				sb.append("\n union all \n");
 			}
+			String tableName = site.getTables().get(i);
+			sb.append(getSql(tableName.concat(" t"),moreTable && grouphavingPart.isNotEmpty()));//为多表、并且有groupby时需要特殊处理
+			
 		}
 
 		// 不带group by、having、order by从句的情况下，无需再union一层，
 		// 否则，对查询列指定别名时会产生异常。
 		if (moreTable &&
-				(StringUtils.isNotEmpty(grouphavingPart) ||
-						StringUtils.isNotEmpty(orderbyPart.getSql()))) {
+				(grouphavingPart.isNotEmpty() ||
+						orderbyPart.isNotEmpty())) {
 			StringBuilder sb2 = new StringBuilder();
 			selectPart.append(sb2);
 

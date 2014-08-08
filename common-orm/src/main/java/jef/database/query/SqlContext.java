@@ -23,8 +23,6 @@ public class SqlContext extends AbstractEntityMappingProvider  implements Entity
 	Map<String,Object> attribute;
 	SelectsImpl selectsImpl;
 	
-	
-	
 	@Override
 	public boolean isDistinct() {
 		if(selectsImpl!=null)return selectsImpl.distinct;
