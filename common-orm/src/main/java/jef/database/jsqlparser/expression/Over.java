@@ -7,13 +7,19 @@ import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 
 /**
- * 分析函数的 over后面的部分
+ * 分析函数的 over后面的部分(开窗函数)
  * @author jiyi
  *
  */
 public class Over implements SqlAppendable{
-	private OrderBy orderBy;
+	/**
+	 * 分区表达式
+	 */
 	private List<Expression> partition;
+	/**
+	 * 排序表达式
+	 */
+	private OrderBy orderBy;
 	
 	public void appendTo(StringBuilder sb) {
 		sb.append(" over(");
@@ -25,7 +31,6 @@ public class Over implements SqlAppendable{
 		}
 		sb.append(')');
 	}
-
 
 	public OrderBy getOrderBy() {
 		return orderBy;
@@ -46,5 +51,4 @@ public class Over implements SqlAppendable{
 	public void accept(ExpressionVisitor visitorAdapter) {
 		visitorAdapter.visit(this);
 	}
-
 }

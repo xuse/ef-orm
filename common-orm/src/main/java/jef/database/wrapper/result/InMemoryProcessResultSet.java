@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jef.database.DbUtils;
+import jef.database.ORMConfig;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.rowset.CachedRowSetImpl;
 import jef.database.wrapper.clause.InMemoryProcessor;
@@ -42,7 +43,7 @@ public class InMemoryProcessResultSet extends AbstractResultSet{
 	}
 
 	public void process() throws SQLException {
-		cache=new CachedRowSetImpl();
+		cache=new CachedRowSetImpl(ORMConfig.getInstance().getPartitionInMemoryMaxRows());
 		for(ResultSetHolder sh:results){
 			cache.populate(sh.rs);
 			sh.close(true);

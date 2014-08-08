@@ -37,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Vector;
 
 import javax.sql.RowSet;
@@ -55,8 +54,6 @@ import javax.sql.rowset.serial.SerialRef;
 import javax.sql.rowset.serial.SerialStruct;
 import javax.sql.rowset.spi.SyncProvider;
 import javax.sql.rowset.spi.SyncProviderException;
-
-import jef.database.ORMConfig;
 
 
 /**
@@ -142,6 +139,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	 * The Vector that will hold the Match Column names.
 	 */
 	private List strMatchColumns;
+	
+	private int maxCapacity;
 
 	protected transient JdbcRowSetResourceBundle resBundle;
 
@@ -149,9 +148,14 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 		resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
 		initContainer();
 		initProperties();
-
 	}
 
+	public CachedRowSetImpl(int maxCapacity) throws SQLException {
+		resBundle = JdbcRowSetResourceBundle.getJdbcRowSetResourceBundle();
+		initContainer();
+		initProperties();
+		this.maxCapacity=maxCapacity;
+	}
 	/**
 	 * Sets the <code>rvh</code> field to a new <code>Vector</code> object with
 	 * a capacity of 100 and sets the <code>cursorPos</code> and
@@ -209,7 +213,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 		notifyRowSetChanged();
 	}
 	public void populate(ResultSet data) throws SQLException {
-		Map<String, Class<?>> map = getTypeMap();
+//		Map<String, Class<?>> map = getTypeMap();
 		if (data == null) {
 			throw new SQLException(resBundle.handleGetObject("cachedrowsetimpl.populate").toString());
 		}
@@ -220,8 +224,9 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 		
 		int numCols = RowSetMD.getColumnCount();
 		int count=rvh.size();
-		int max=ORMConfig.getInstance().getPartitionInMemoryMaxRows();
+		int max=maxCapacity;
 		if(max==0)max=Integer.MAX_VALUE;
+		
 		while (data.next()) {
 			if(++count>max){
 				throw new SQLException("The Inmemory operate reaches it max limit of "+ max);
@@ -229,28 +234,24 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 			Row currentRow = new Row(numCols);
 			for (int i = 1; i <= numCols; i++) {
 				Object obj;
-				if (map == null) {
-					try {
-						obj = data.getObject(i);
-					} catch (SQLException e) {
-						// PG has bug on handle type MONEY, it attempts to
-						// convert money to double, even if it is a string with
-						// currency unit.
-						obj = data.getString(i);
-					}
-				} else {
-					obj = data.getObject(i, map);
+				try {
+					obj = data.getObject(i);
+				} catch (SQLException e) {
+					// PG has bug on handle type MONEY, it attempts to
+					// convert money to double, even if it is a string with
+					// currency unit.
+					obj = data.getString(i);
 				}
 				if (obj instanceof Struct) {
-					obj = new SerialStruct((Struct) obj, map);
+					obj = new SerialStruct((Struct) obj, null);
 				} else if (obj instanceof SQLData) {
-					obj = new SerialStruct((SQLData) obj, map);
+					obj = new SerialStruct((SQLData) obj, null);
 				} else if (obj instanceof Blob) {
 					obj = new SerialBlob((Blob) obj);
 				} else if (obj instanceof Clob) {
 					obj = new SerialClob((Clob) obj);
 				} else if (obj instanceof java.sql.Array) {
-					obj = new SerialArray((java.sql.Array) obj, map);
+					obj = new SerialArray((java.sql.Array) obj, null);
 				}
 				((Row) currentRow).initColumnObject(i, obj);
 			}

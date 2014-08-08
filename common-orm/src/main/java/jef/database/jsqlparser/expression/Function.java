@@ -36,14 +36,25 @@ public class Function implements Expression {
 
 	private boolean isEscaped = false;
 
+	/**
+	 * 当函数为分析函数时使用的开窗函数。
+	 */
 	private Over over;
 	
 	public Function() {
 	}
 	
+	/**
+	 * 开窗函数
+	 * @return 开窗函数
+	 */
 	public Over getOver() {
 		return over;
 	}
+	/**
+	 * 设置开窗函数
+	 * @param over 开窗函数
+	 */
 	public void setOver(Over over) {
 		this.over = over;
 	}
