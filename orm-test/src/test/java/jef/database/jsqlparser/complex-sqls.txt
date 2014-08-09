@@ -124,3 +124,31 @@ else
 
 ---- MYSQL中，支持replace into 和上述语法有异曲同工之妙--
 replace into t(id, update_time) values(1, now());
+
+SELECT TOP 10 id FROM table1 ORDER BY id;
+
+--SQLServer分页方法，每页10条。第五页即跳过40条记录 (2000以上)
+SELECT TOP 10 *
+FROM table1
+WHERE id NOT IN
+          (
+          SELECT TOP 40 id FROM table1 ORDER BY id
+          )
+ORDER BY id;
+
+--分页方法2 （2000以上）
+SELECT TOP 10 *
+FROM table1
+WHERE id > (
+          SELECT ISNULL(MAX(id),0) 
+          FROM 
+                (
+                SELECT TOP 40 id FROM table1 ORDER BY id
+                ) A
+          )
+ORDER BY id;
+
+--分页方法3 (2005以上)
+SELECT TOP 10 * FROM 
+ (SELECT ROW_NUMBER() OVER (ORDER BY id) AS __ROW_NUM,* FROM table1) A
+WHERE __ROW_NUM > 40

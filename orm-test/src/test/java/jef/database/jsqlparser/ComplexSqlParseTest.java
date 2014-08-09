@@ -296,6 +296,7 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 		BufferedReader reader=IOUtils.getReader(this.getClass().getResource("complex-sqls.txt"), "UTF-8"); 
 		String line;
 		boolean comment=false;
+		int total = 0;
 		while((line=reader.readLine())!=null){
 			if(comment){
 				if(line.endsWith("*/")){
@@ -317,25 +318,140 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 				String sql=sb.toString();
 				sb.setLength(0);
 				if(StringUtils.isNotBlank(sql)){
-					System.out.println("===================== [RAW]  ==================");
-					System.out.println(sql);
-					StSqlParser parser = new StSqlParser(new StringReader(sql));
-					Statement st=parser.Statement();
-					System.out.println("-------------------- [PARSE] ------------------");
-					System.out.println(st);
+					parseTest(sql);
+					total++;
 				}
 			}
 		}
 		if(sb.length()>0){
-			String sql=sb.toString();
-			System.out.println("processing:"+sql);
-			StSqlParser parser = new StSqlParser(new StringReader(sql));
-//			JpqlParser parser = new JpqlParser(new StringReader(sql));
-			Statement st=parser.Statement();
-			System.out.println(st);
+			parseTest(sb.toString());
+			total++;
 		}
+		System.out.println("测试完成，共计解析了"+total+"句SQL语句");
 	}
 
+	@Test
+	public void testComplexSqlPerformances() throws SQLException, ParseException, IOException {
+		StringBuilder sb=new StringBuilder();
+		BufferedReader reader=IOUtils.getReader(this.getClass().getResource("complex-sqls.txt"), "UTF-8"); 
+		String line;
+		boolean comment=false;
+		List<Long> cost=new ArrayList<Long>();//记录每句SQL的解析时间
+		while((line=reader.readLine())!=null){
+			if(comment){
+				if(line.endsWith("*/")){
+					comment=false;
+				}
+				continue;
+			}
+			if(line.startsWith("/*")){
+				comment=true;
+				continue;
+			}
+			if(line.length()==0 || line.startsWith("--") )continue;
+			if(sb.length()>0)sb.append('\n');
+			sb.append(line);
+			if(endsWith(line,';')){
+				sb.setLength(sb.length()-1);
+				String sql=sb.toString();
+				sb.setLength(0);
+				if(StringUtils.isNotBlank(sql)){
+					cost.add(countParseStSql(sql));
+				}
+			}
+		}
+		if(sb.length()>0){
+			cost.add(countParseStSql(sb.toString()));
+		}
+
+		long total=0;
+		for(long l: cost){
+			total+=l;
+		}
+		System.out.println("测试完成，共计解析了"+cost.size()+"句SQL语句，总耗时"+total/1000+"us，各句耗时分别为——");
+		for(long l: cost){
+			System.out.println(l/1000+"us");
+		}
+	}
+	
+	@Test
+	public void testComplexSqlPerformances2() throws SQLException, ParseException, IOException {
+		StringBuilder sb=new StringBuilder();
+		BufferedReader reader=IOUtils.getReader(this.getClass().getResource("complex-sqls.txt"), "UTF-8"); 
+		String line;
+		boolean comment=false;
+		List<Long> cost=new ArrayList<Long>();//记录每句SQL的解析时间
+		while((line=reader.readLine())!=null){
+			if(comment){
+				if(line.endsWith("*/")){
+					comment=false;
+				}
+				continue;
+			}
+			if(line.startsWith("/*")){
+				comment=true;
+				continue;
+			}
+			if(line.length()==0 || line.startsWith("--") )continue;
+			if(sb.length()>0)sb.append('\n');
+			sb.append(line);
+			if(endsWith(line,';')){
+				sb.setLength(sb.length()-1);
+				String sql=sb.toString();
+				sb.setLength(0);
+				if(StringUtils.isNotBlank(sql)){
+					cost.add(countParseJpql(sql));
+				}
+			}
+		}
+		if(sb.length()>0){
+			cost.add(countParseStSql(sb.toString()));
+		}
+
+		long total=0;
+		for(long l: cost){
+			total+=l;
+		}
+		System.out.println("测试完成，共计解析了"+cost.size()+"句SQL语句，总耗时"+total/1000+"us，各句耗时分别为——");
+		for(long l: cost){
+			System.out.println(l/1000+"us");
+		}
+	}
+	
+	private void parseTest(String sql) throws ParseException {
+		System.out.println("===================== [RAW]  ==================");
+		System.out.println(sql);
+		System.out.println("-------------------- [PARSE] ------------------");
+		StSqlParser parser = new StSqlParser(new StringReader(sql));
+		Statement st=parser.Statement();
+		System.out.println(st);
+	}
+	
+	/**
+	 * 返回用标准解析器解析的耗时（纳秒）
+	 * @param sql
+	 * @return
+	 * @throws ParseException
+	 */
+	private long countParseStSql(String sql) throws ParseException {
+		long start=System.nanoTime();
+		new StSqlParser(new StringReader(sql)).Statement();
+		return System.nanoTime()-start;
+	}
+
+	/**
+	 * 返回用JPQL解析器解析的耗时（纳秒）
+	 * @param sql
+	 * @return
+	 * @throws ParseException
+	 */
+	private long countParseJpql(String sql) throws ParseException {
+		long start=System.nanoTime();
+		new JpqlParser(new StringReader(sql)).Statement();
+		return System.nanoTime()-start;
+	}
+
+	
 	private boolean endsWith(String line, char key) {
 		if(line.length()==0)return false;
 		int len=line.length();
