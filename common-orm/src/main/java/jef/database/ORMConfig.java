@@ -157,8 +157,6 @@ public class ORMConfig implements ORMConfigMBean {
 	public String wrap ="";
 	public String wrapt="";
 	
-	private boolean disableGeneratedKeyOnBatch;
-	
 	private boolean checkSqlFunctions;
 
 	private void init() {
@@ -187,7 +185,6 @@ public class ORMConfig implements ORMConfigMBean {
 		cacheDebug = System.getProperty("cache.debug")!=null;
 		setFormatSQL(JefConfiguration.getBoolean(DbCfg.DB_FORMAT_SQL,true));
 		heartBeatSleep=JefConfiguration.getLong(DbCfg.DB_HEARTBEAT, 120000);
-		disableGeneratedKeyOnBatch=JefConfiguration.getBoolean(DbCfg.DISABLE_GENERATED_KEY_ON_BATCH, false);
 		setTxIsolation=JefConfiguration.getBoolean(DbCfg.DB_SET_ISOLATION, true);
 		checkUpdateForNamedQueries=JefConfiguration.getBoolean(DbCfg.DB_NAMED_QUERY_UPDATE, debugMode);
 		checkSqlFunctions=JefConfiguration.getBoolean(DbCfg.DB_CHECK_SQL_FUNCTIONS, true);
@@ -450,15 +447,6 @@ public class ORMConfig implements ORMConfigMBean {
 	public String getHostIp() {
 		return ProcessUtil.getLocalIp();
 	}
-
-	public boolean isDisableGeneratedKeyOnBatch() {
-		return disableGeneratedKeyOnBatch;
-	}
-
-	public void setDisableGeneratedKeyOnBatch(boolean disableGeneratedKeyOnBatch) {
-		this.disableGeneratedKeyOnBatch = disableGeneratedKeyOnBatch;
-	}
-
 	public int getLoadedEntityCount() {
 		return metaFacade.getLoadedEntityCount();
 	}

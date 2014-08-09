@@ -28,6 +28,7 @@ import jef.database.BindVariableTool.SqlType;
 import jef.database.annotation.PartitionResult;
 import jef.database.cache.TransactionCache;
 import jef.database.meta.ITableMetadata;
+import jef.database.meta.MetaHolder;
 import jef.database.support.DbOperatorListener;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.InsertSqlClause;
@@ -62,6 +63,11 @@ public abstract class Batch<T extends IQueryableEntity> {
 	private boolean groupForPartitionTable;
 	
 	private int executeResult;
+	/**
+	 * 极限模式，极限模式下，会使用数据库本地特性来尽可能加速操作。
+	 * 极限模式下，禁用数据回写功能。
+	 */
+	protected boolean extreme;
 	
 	/**
 	 * 固定使用的表名<br>
@@ -75,6 +81,10 @@ public abstract class Batch<T extends IQueryableEntity> {
 	String forcrSite;
 
 	long parseTime;
+
+	public boolean isExtreme() {
+		return extreme;
+	}
 
 	/**
 	 * 构造
@@ -126,7 +136,9 @@ public abstract class Batch<T extends IQueryableEntity> {
 	 * @param forceTableName
 	 */
 	public void setForceTableName(String forceTableName) {
-		this.forceTableName = forceTableName;
+		if(forceTableName!=null){
+			this.forceTableName = MetaHolder.toSchemaAdjustedName(forceTableName);
+		}
 	}
 
 	/**
@@ -380,10 +392,13 @@ public abstract class Batch<T extends IQueryableEntity> {
 		}
 
 		protected long innerCommit(List<T> objs, String site, String tablename, String dbName) throws SQLException {
+			OperateTarget db = parent.asOperateTarget(site);
+			if(extreme){
+				db.getProfile().toExtremeInsert(insertPart);
+			}
 			String sql = toSql(tablename);
 			if (ORMConfig.getInstance().isDebugMode())
 				LogUtil.show(sql + " | " + dbName);
-			OperateTarget db = parent.asOperateTarget(site);
 			AutoIncreatmentCallBack callback = insertPart.getCallback();
 			PreparedStatement p = callback == null ? db.prepareStatement(sql) : callback.doPrepareStatement(db, sql, dbName);
 			try {

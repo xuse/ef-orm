@@ -27,13 +27,14 @@ import jef.database.dialect.DatabaseDialect;
 public class InsertSqlClause{
 	private String columnsPart;
 	private String valuesPart;
-	private PartitionResult tableNames;
+	private PartitionResult table;
 	private AutoIncreatmentCallBack callback;
 	final List<Field> fields;
-	
+	private String insert="insert into ";
+	private String tailer="";
 	public Session parent;
 	public DatabaseDialect  profile;
-	private boolean forBatch;
+	private boolean extreme;
 	/**
 	 * 描述应该在何时调用Callback.
 	 * true:在插入完成后，调用Callback来获取数据库生成的主键
@@ -42,22 +43,27 @@ public class InsertSqlClause{
 	public InsertSqlClause(){
 		fields=null;
 	}
-	public InsertSqlClause(boolean isBatch){
+	public InsertSqlClause(boolean extreme){
 		fields=new ArrayList<Field>();
-		forBatch=isBatch;
+		this.extreme=extreme;
 	}
 
+	/**
+	 * 传入表名并返回SQL
+	 * @param tablename
+	 * @return
+	 */
 	public String getSql(String tablename) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("insert into ").append(tablename);
+		StringBuilder sb = new StringBuilder(fields.size()*8+32);
+		sb.append(insert).append(tablename);
 		sb.append("(").append(columnsPart).append(") values(");
 		sb.append(valuesPart).append(")");
+		sb.append(tailer);
 		return sb.toString();
 	}
 	
 	public String getSql() {
-		String tableName=tableNames.getAsOneTable();
-		return getSql(tableName);
+		return getSql(table.getAsOneTable());
 	}
 	public String getColumnsPart() {
 		return columnsPart;
@@ -71,11 +77,11 @@ public class InsertSqlClause{
 	public void setValuesPart(String valuesPart) {
 		this.valuesPart = valuesPart;
 	}
-	public PartitionResult getTableNames() {
-		return tableNames;
+	public PartitionResult getTable() {
+		return table;
 	}
 	public void setTableNames(PartitionResult tableName) {
-		this.tableNames = tableName;
+		this.table = tableName;
 	}
 	public AutoIncreatmentCallBack getCallback() {
 		return callback;
@@ -83,7 +89,6 @@ public class InsertSqlClause{
 	public void setCallback(AutoIncreatmentCallBack callback) {
 		this.callback = callback;
 	}
-	
 	public void addField(Field field) {
 		fields.add(field);
 	}
@@ -93,7 +98,19 @@ public class InsertSqlClause{
 	public boolean isForPrepare(){
 		return fields!=null;
 	}
-	public boolean isForBatch() {
-		return forBatch;
+	public boolean isExtreme() {
+		return extreme;
+	}
+	public String getInsert() {
+		return insert;
+	}
+	public void setInsert(String insert) {
+		this.insert = insert;
+	}
+	public String getTailer() {
+		return tailer;
+	}
+	public void setTailer(String tailer) {
+		this.tailer = tailer;
 	}
 }

@@ -30,11 +30,11 @@ abstract class InsertProcessor {
 	 * @param obj
 	 * @param tableName
 	 * @param dynamic
-	 * @param batch
+	 * @param extreme
 	 * @return
 	 * @throws SQLException
 	 */
-	abstract InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName,boolean dynamic,boolean batch)throws SQLException;
+	abstract InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName,boolean dynamic,boolean extreme)throws SQLException;
 
 	/**
 	 * process insert operate
@@ -58,7 +58,7 @@ abstract class InsertProcessor {
 		}
 
 		@Override
-		InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName, boolean dynamic, boolean batch) throws SQLException {
+		InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName, boolean dynamic, boolean extreme) throws SQLException {
 			DatabaseDialect profile = parent.getProfile();
 			List<String> cStr = new ArrayList<String>();// 字段列表
 			List<String> vStr = new ArrayList<String>();// 值列表
@@ -93,7 +93,7 @@ abstract class InsertProcessor {
 					cb.callAfter(Arrays.asList(obj));
 				}
 			} catch (SQLException e) {
-				p.processError(e, ArrayUtils.toString(sqls.getTableNames(), true), db);
+				p.processError(e, ArrayUtils.toString(sqls.getTable(), true), db);
 				throw e;
 			} finally {
 				if (debug)
@@ -115,18 +115,18 @@ abstract class InsertProcessor {
 		}
 
 		@Override
-		InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName, boolean dynamic, boolean batch) throws SQLException {
+		InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName, boolean dynamic, boolean extreme) throws SQLException {
 			DatabaseDialect profile = parent.getProfile();
 			List<String> cStr = new ArrayList<String>();// 字段列表
 			List<String> vStr = new ArrayList<String>();// 值列表
 			ITableMetadata meta = MetaHolder.getMeta(obj);
-			InsertSqlClause result = new InsertSqlClause(batch);
+			InsertSqlClause result = new InsertSqlClause(extreme);
 			result.parent=db;
 			result.profile=profile;
 			for (MappingType<?> entry : meta.getMetaFields()) {
 				entry.processPreparedInsert(obj, cStr, vStr, result, dynamic);
 			}
-			if(profile.has(Feature.SELECT_ROW_NUM) && !batch){
+			if(profile.has(Feature.SELECT_ROW_NUM) && !extreme){
 				result.setCallback(new OracleRowidKeyCallback(result.getCallback()));
 			}
 			result.setColumnsPart(StringUtils.join(cStr, ','));
@@ -157,7 +157,7 @@ abstract class InsertProcessor {
 					callback.callAfter(Arrays.asList(obj));
 				}
 			} catch (SQLException e) {
-				p.processError(e, ArrayUtils.toString(sqls.getTableNames(), true), db);
+				p.processError(e, ArrayUtils.toString(sqls.getTable(), true), db);
 				throw e;
 			} finally {
 				if (debug)

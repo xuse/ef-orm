@@ -27,10 +27,10 @@ import javax.sql.rowset.CachedRowSet;
 
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
-import jef.database.ORMConfig;
 import jef.database.ConnectInfo;
 import jef.database.DbCfg;
 import jef.database.DebugUtil;
+import jef.database.ORMConfig;
 import jef.database.OperateTarget;
 import jef.database.datasource.DataSourceInfo;
 import jef.database.datasource.SimpleDataSource;
@@ -66,6 +66,7 @@ import jef.database.query.function.TemplateFunction;
 import jef.database.query.function.TransformFunction;
 import jef.database.query.function.VarArgsSQLFunction;
 import jef.database.support.RDBMS;
+import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.populator.ResultSetTransformer;
 import jef.jre5support.ProcessUtil;
 import jef.tools.DateFormats;
@@ -583,5 +584,11 @@ public class OracleDialect extends DbmsProfile {
 		for(String s:keys){
 			this.keywords.add(s.toUpperCase());
 		}
+	}
+
+	@Override
+	public void toExtremeInsert(InsertSqlClause sql) {
+		sql.setInsert("insert /*+ APPEND*/ into ");
+		sql.setTailer(" NOLOGGING");
 	}
 }

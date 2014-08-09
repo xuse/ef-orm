@@ -36,6 +36,7 @@ import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.meta.FunctionMapping;
 import jef.database.support.RDBMS;
+import jef.database.wrapper.clause.InsertSqlClause;
 
 
 /**
@@ -355,4 +356,10 @@ public interface DatabaseDialect {
 	 * @param asOperateTarget
 	 */
 	void init(OperateTarget asOperateTarget);
+	
+	/**
+	 * 将插入语句转化为最快操作的语句
+	 * @param sql
+	 */
+	void toExtremeInsert(InsertSqlClause sql);
 }

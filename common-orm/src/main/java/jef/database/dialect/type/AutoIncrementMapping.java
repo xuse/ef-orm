@@ -217,7 +217,7 @@ public abstract class AutoIncrementMapping<T> extends ATypeMapping<T> {
 				result.setCallback(autoGenerateCall);
 			}
 		} else {
-			String dbKey = result.getTableNames() == null ? null : result.getTableNames().getDatabase();
+			String dbKey = result.getTable() == null ? null : result.getTable().getDatabase();
 			OperateTarget db = new OperateTarget(result.parent, dbKey);
 			Sequence seq = db.getSequence(this);
 			result.setCallback(autoGenerateCall);
@@ -242,7 +242,7 @@ public abstract class AutoIncrementMapping<T> extends ATypeMapping<T> {
 		}
 		
 		//是否需要返回自增值
-		boolean returnKeys=!(ORMConfig.getInstance().isDisableGeneratedKeyOnBatch() && result.isForBatch());
+		boolean returnKeys=!result.isExtreme();
 		if (gType == GenerationType.IDENTITY) {
 			if (supportKeywordDefault) {
 				cStr.add(cachedEscapeColumnName);
@@ -252,7 +252,7 @@ public abstract class AutoIncrementMapping<T> extends ATypeMapping<T> {
 				result.setCallback(autoGenerateCall);
 			}
 		} else {
-			String dbKey = result.getTableNames() == null ? null : result.getTableNames().getDatabase();
+			String dbKey = result.getTable() == null ? null : result.getTable().getDatabase();
 			OperateTarget db = new OperateTarget(result.parent, dbKey);
 			Sequence sh = db.getSequence(this);
 			if(!returnKeys && sh.isRawNative()){//可以用简略方式操作

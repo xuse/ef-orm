@@ -128,7 +128,7 @@ public class BatchOperate extends org.junit.Assert {
 	
 	@Test
 	public void reuseBatchObject() throws SQLException {
-		Batch<Person> batch=db.startBatchInsert(new Person(), null, false);
+		Batch<Person> batch=db.startBatchInsert(new Person(),  false);
 		
 		List<Person> persons = new ArrayList<Person>(5);
 		for (int i = 0; i < 5; i++) {

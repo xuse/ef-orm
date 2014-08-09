@@ -37,7 +37,14 @@ HSQLDB的函数对DATE还不支持。HSQLDB中还有很多函数没有写到方�
 MySQL Sharding
 Hibernate Shards
 TDDL
-
+   if not exists (select 1 from t where id = 1)
+      insert into t(id, update_time) values(1, getdate())
+   else
+      update t set update_time = getdate() where id = 1
+那么 MySQL 中如何实现这样的逻辑呢？别着急！MySQL 中有更简单的方法： replace into
+replace into t(id, update_time) values(1, now());
+或
+replace into t(id, update_time) select 1, now();
 
 它可以让一个Hibernate应用比较简单地加入横向分割的数据库分布式功能。另外，还有HiveDB。其底层也是基于Hibernate shards实现，目前版本相对稳定，
 其亮点是具有类似mysql proxy之类多服务器容错功能，单独服务器发生故障不影响系统正常运行，通过类似ha-jdbc思想实现。

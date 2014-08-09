@@ -68,6 +68,7 @@ import jef.database.query.Scientific;
 import jef.database.query.SqlExpression;
 import jef.database.query.function.SQLFunction;
 import jef.database.query.function.StandardSQLFunction;
+import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.DateFormats;
@@ -875,4 +876,8 @@ public abstract class DbmsProfile implements DatabaseDialect {
 			throw ex;
 		}
 	}
+
+	public void toExtremeInsert(InsertSqlClause sql) {
+	}
+	
 }

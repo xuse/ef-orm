@@ -322,7 +322,7 @@ public enum DbCfg implements ConfigItem {
 	 * 
 	 * 默认空白
 	 */
-	DB_PUBLIC_SEQUENCE_TABLE,
+	DB_GLOBAL_SEQUENCE_TABLE,
 	
 	////////////////////其他数据库相关设置////////////////////////
 	/**
@@ -367,12 +367,6 @@ public enum DbCfg implements ConfigItem {
 	 * @deprecated 现尚不稳定，请勿使用
 	 */
 	DB_LOB_LAZY_LOAD,
-	
-	/**
-	 * 当批处理模式下，不用返回自增主键的值，可以简化逻辑，并且改善大数据量下数据插入的性能
-	 */
-	DISABLE_GENERATED_KEY_ON_BATCH,
-	
 	/**
 	 * 用来定义数据库和方言类的映射关系的配置文件。
 	 * 默认使用 META-INF/dialect-mapping.properties

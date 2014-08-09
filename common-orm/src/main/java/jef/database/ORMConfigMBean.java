@@ -113,10 +113,6 @@ public interface ORMConfigMBean {
 
 	String getServerName();
 
-	boolean isDisableGeneratedKeyOnBatch();
-
-	void setDisableGeneratedKeyOnBatch(boolean disableGeneratedKeyOnBatch);
-
 	int getLoadedEntityCount();
 
 	void clearMetadatas();

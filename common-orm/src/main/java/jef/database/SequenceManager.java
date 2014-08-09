@@ -137,7 +137,7 @@ public final class SequenceManager {
 		if (type == GenerationType.SEQUENCE) {
 			meta.getMetaData().dropSequence(name);
 		} else if (type == GenerationType.TABLE) {
-			String pname = JefConfiguration.get(DbCfg.DB_PUBLIC_SEQUENCE_TABLE);
+			String pname = JefConfiguration.get(DbCfg.DB_GLOBAL_SEQUENCE_TABLE);
 			if (StringUtils.isEmpty(pname)) {
 				meta.getMetaData().dropTable(name);
 			} else {
@@ -183,7 +183,7 @@ public final class SequenceManager {
 	}
 
 	private Sequence createTable(String name, OperateTarget client, int length, String tableName, String columnName, TableGenerator config) {
-		String pname = JefConfiguration.get(DbCfg.DB_PUBLIC_SEQUENCE_TABLE);
+		String pname = JefConfiguration.get(DbCfg.DB_GLOBAL_SEQUENCE_TABLE);
 		if (StringUtils.isEmpty(pname)) {
 			return new SeqTableImpl(client, name, config, tableName, columnName,this);
 		} else {
@@ -306,7 +306,7 @@ public final class SequenceManager {
 	 * 第二种SQL实现，所有Sequence公用一张表
 	 */
 	private static final class AdvSeqTableImpl extends AbstractSequence {
-		static String publicTableName = JefConfiguration.get(DbCfg.DB_PUBLIC_SEQUENCE_TABLE, "JEF_SEQUENCES");
+		static String publicTableName = JefConfiguration.get(DbCfg.DB_GLOBAL_SEQUENCE_TABLE, "JEF_SEQUENCES");
 		static TupleMetadata seqtable;
 		static {
 			seqtable = new TupleMetadata(publicTableName);

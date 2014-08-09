@@ -567,8 +567,7 @@ public abstract class Session {
 		sqls.setTableNames(DbUtils.toTableName(obj, myTableName, obj.hasQuery() ? obj.getQuery() : null, getPool().getPartitionSupport()));
 		
 		long parse = System.currentTimeMillis();
-		String dbKey = sqls.getTableNames().getDatabase();
-		insertp.processInsert(asOperateTarget(dbKey), obj, sqls, start, parse);
+		insertp.processInsert(asOperateTarget(sqls.getTable().getDatabase()), obj, sqls, start, parse);
 
 		obj.clearUpdate();
 		getCache().onInsert(obj);
@@ -1705,7 +1704,22 @@ public abstract class Session {
 	public final <T extends IQueryableEntity> void batchInsert(List<T> entities,Boolean group) throws SQLException {
 		if (entities.isEmpty())
 			return;
-		Batch<T> batch = startBatchInsert(entities.get(0), null, ORMConfig.getInstance().isDynamicInsert());
+		Batch<T> batch = startBatchInsert(entities.get(0), null, ORMConfig.getInstance().isDynamicInsert(),false);
+		if(group!=null)
+			batch.setGroupForPartitionTable(group);
+		batch.execute(entities);
+	}
+	
+	/**
+	 * 极限模式下的批量操作
+	 * @param entities
+	 * @param group
+	 * @throws SQLException
+	 */
+	public final <T extends IQueryableEntity> void extremeInsert(List<T> entities,Boolean group) throws SQLException {
+		if (entities.isEmpty())
+			return;
+		Batch<T> batch = startBatchInsert(entities.get(0), null, false,true);
 		if(group!=null)
 			batch.setGroupForPartitionTable(group);
 		batch.execute(entities);
@@ -1721,7 +1735,7 @@ public abstract class Session {
 	public final <T extends IQueryableEntity> void batchInsertDynamic(List<T> entities,Boolean group) throws SQLException {
 		if (entities.isEmpty())
 			return;
-		Batch<T> batch = startBatchInsert(entities.get(0), null, true);
+		Batch<T> batch = startBatchInsert(entities.get(0), null, true,false);
 		if(group!=null)
 			batch.setGroupForPartitionTable(group);
 		batch.execute(entities);
@@ -1742,14 +1756,18 @@ public abstract class Session {
 	 * @return Batch操作句柄
 	 * @throws SQLException
 	 */
-	public final <T extends IQueryableEntity> Batch<T> startBatchInsert(T template, String tableName, boolean dynamic) throws SQLException {
-		
+	public final <T extends IQueryableEntity> Batch<T> startBatchInsert(T template, boolean dynamic) throws SQLException {
+		return startBatchInsert(template,null,dynamic,false);
+	}
+	
+	public <T extends IQueryableEntity> Batch<T> startBatchInsert(T template, String tableName, boolean dynamic,boolean extreme) throws SQLException {
 		long start = System.nanoTime();
 		ITableMetadata meta = MetaHolder.getMeta(template);
 		Batch.Insert<T> b = new Batch.Insert<T>(this, meta);
-		InsertSqlClause insertPart = batchinsertp.toInsertSql((IQueryableEntity) template, tableName, dynamic, true);
+		InsertSqlClause insertPart = batchinsertp.toInsertSql((IQueryableEntity) template, tableName, dynamic, extreme);
 		b.setInsertPart(insertPart);
-		b.forceTableName = MetaHolder.toSchemaAdjustedName(tableName);
+		b.setForceTableName(tableName);
+		b.extreme=extreme;
 		b.parseTime = System.nanoTime() - start;
 		return b;
 	}
