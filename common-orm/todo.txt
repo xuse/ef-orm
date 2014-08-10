@@ -20,6 +20,10 @@ CXF 2.7.10提高了兼容性，但是CXF-Plus的ASM类产生的package-info不�
 
 
 ================ 待解决的问题  ===================
+重构，将拼装从连接池上剥离；将分表计算的缓存从metadata上剥离，将池检查逻辑内建到连接池上。
+关于连接池检查时的checkSQL支持问题
+关于使用连接池心跳功能来维护DbMetadata中的DbTimeDelta。
+关于使用NativeQuery2来支持一种带SQL解析和数据路由功能的ResultSet。。。。（还是采用TDDL方案在DataSource上封装）
 基于SQL分析的分库分表、对NativeQuery支持的分表分库操作
 为大部分测试案例增加断言
 —Batch Insert等操作下的极限性能模式。(不返回值、性能分析等手段)、此外对于Batch可能需要统计并输出因为Sequence而消耗的时间，Oracle下的实现特殊优化 hint, no logging

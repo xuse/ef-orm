@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -134,6 +135,12 @@ public class DbMetaData extends UserCacheHolder {
 	 * 下次缓存过期时间
 	 */
 	private long nextExpireTime;
+	
+	/**
+	 * 根据扫描得到的所有表的情况
+	 */
+	private final Map<String, Set<String>> subTableData = new ConcurrentHashMap<String, Set<String>>();
+	
 	// 运行时缓存
 	private String[] tableTypes;
 	/**
@@ -142,6 +149,8 @@ public class DbMetaData extends UserCacheHolder {
 	private Boolean supportsSavepoints;
 
 	private int jdbcVersion;
+	
+	private long dbTimeDelta;
 
 	/**
 	 * 构造
@@ -201,7 +210,21 @@ public class DbMetaData extends UserCacheHolder {
 	public List<TableInfo> getTables() throws SQLException {
 		return getDatabaseObject(ObjectType.TABLE, this.schema, null, null);
 	}
+	
 
+	public void setDbTimeDelta(long dbTimeDelta) {
+		this.dbTimeDelta = dbTimeDelta;
+	}
+
+	/**
+	 * 得到当前数据库的时间，这一运算不是通过到数据库查询而得，而是和数据库每次心跳时都会刷新当前系统时间和数据库时间的差值，从而得到数据库时间。
+	 * 当数据库心跳正时，这一方式可以较为轻量的得到系统时间。
+	 * @return 当前数据库时间
+	 */
+	public Date getCurrentTime(){
+		return new Date(System.currentTimeMillis()+dbTimeDelta);
+		
+	}
 	/**
 	 * 查询数据库中的视图
 	 * 
@@ -1086,11 +1109,6 @@ public class DbMetaData extends UserCacheHolder {
 	public DatabaseDialect getProfile() {
 		return info.profile;
 	}
-	
-	/*
-	 * 根据扫描得到的所有表的情况
-	 */
-	private final Map<String, Set<String>> subTableData = new ConcurrentHashMap<String, Set<String>>();
 
 	/**
 	 * 根据基础表,查找目前数据库中已有的分表。 <h3>场景</h3>
