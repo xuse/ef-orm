@@ -32,7 +32,7 @@ import jef.database.jsqlparser.statement.select.SubSelect;
  */
 public class ReplaceDeParser implements ItemsListVisitor {
 
-    protected StringBuffer buffer;
+    protected StringBuilder buffer;
 
     protected ExpressionVisitor expressionVisitor;
 
@@ -49,17 +49,17 @@ public class ReplaceDeParser implements ItemsListVisitor {
 	 * StringBuffer (buffer parameter) as this object in order to work
 	 * @param buffer the buffer that will be filled with the select
 	 */
-    public ReplaceDeParser(ExpressionVisitor expressionVisitor, SelectVisitor selectVisitor, StringBuffer buffer) {
+    public ReplaceDeParser(ExpressionVisitor expressionVisitor, SelectVisitor selectVisitor, StringBuilder buffer) {
         this.buffer = buffer;
         this.expressionVisitor = expressionVisitor;
         this.selectVisitor = selectVisitor;
     }
 
-    public StringBuffer getBuffer() {
+    public StringBuilder getBuffer() {
         return buffer;
     }
 
-    public void setBuffer(StringBuffer buffer) {
+    public void setBuffer(StringBuilder buffer) {
         this.buffer = buffer;
     }
 

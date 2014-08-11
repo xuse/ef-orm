@@ -24,7 +24,7 @@ import jef.database.jsqlparser.statement.delete.Delete;
  */
 public class DeleteDeParser {
 
-    protected StringBuffer buffer;
+    protected StringBuilder buffer;
 
     protected ExpressionVisitor expressionVisitor;
 
@@ -36,16 +36,16 @@ public class DeleteDeParser {
 	 * StringBuffer (buffer parameter) as this object in order to work
 	 * @param buffer the buffer that will be filled with the select
 	 */
-    public DeleteDeParser(ExpressionVisitor expressionVisitor, StringBuffer buffer) {
+    public DeleteDeParser(ExpressionVisitor expressionVisitor, StringBuilder buffer) {
         this.buffer = buffer;
         this.expressionVisitor = expressionVisitor;
     }
 
-    public StringBuffer getBuffer() {
+    public StringBuilder getBuffer() {
         return buffer;
     }
 
-    public void setBuffer(StringBuffer buffer) {
+    public void setBuffer(StringBuilder buffer) {
         this.buffer = buffer;
     }
 

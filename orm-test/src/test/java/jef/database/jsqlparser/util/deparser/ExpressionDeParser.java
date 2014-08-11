@@ -75,7 +75,7 @@ import jef.database.jsqlparser.statement.select.SubSelect;
  */
 public class ExpressionDeParser implements ExpressionVisitor, ItemsListVisitor {
 
-    protected StringBuffer buffer;
+    protected StringBuilder buffer;
 
     protected SelectVisitor selectVisitor;
 
@@ -97,16 +97,16 @@ public class ExpressionDeParser implements ExpressionVisitor, ItemsListVisitor {
      * </pre>
      * @param buffer the buffer that will be filled with the expression
      */
-    public ExpressionDeParser(SelectVisitor selectVisitor, StringBuffer buffer) {
+    public ExpressionDeParser(SelectVisitor selectVisitor, StringBuilder buffer) {
         this.selectVisitor = selectVisitor;
         this.buffer = buffer;
     }
 
-    public StringBuffer getBuffer() {
+    public StringBuilder getBuffer() {
         return buffer;
     }
 
-    public void setBuffer(StringBuffer buffer) {
+    public void setBuffer(StringBuilder buffer) {
         this.buffer = buffer;
     }
 

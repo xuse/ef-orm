@@ -80,11 +80,15 @@ public abstract class MetadataConnectionPool extends UserCacheHolder implements 
 
 	protected abstract boolean hasRemarkFeature();
 
-	protected abstract void processCheck(Connection conn2);
+	protected abstract boolean processCheck(Connection conn2);
 	
 	public void doCheck() {
 		if(conn!=null){
-			processCheck(conn);
+			Connection con=this.conn;
+			if(!processCheck(con)){
+				this.conn=null;
+				DbUtils.closeConnection(con);
+			}
 		}
 	}
 }

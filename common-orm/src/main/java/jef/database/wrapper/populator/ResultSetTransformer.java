@@ -17,6 +17,7 @@ package jef.database.wrapper.populator;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Date;
 
 import javax.sql.rowset.CachedRowSet;
 
@@ -47,6 +48,17 @@ public interface ResultSetTransformer<T> {
 		public Integer transformer(ResultSet rs, DatabaseDialect db) throws SQLException {
 			if (rs.next()) {
 				return rs.getInt(1);
+			} else {
+				throw new SQLException("Result incorrect.count result must not be empty.");
+			}
+		}
+	};
+	
+	public static final ResultSetTransformer<Date> GET_FIRST_TIMESTAMP = new ResultSetTransformer<Date>() {
+		public Date transformer(ResultSet rs, DatabaseDialect db) throws SQLException {
+			if (rs.next()) {
+				java.sql.Timestamp ts=rs.getTimestamp(1);
+				return new java.util.Date(ts.getTime());
 			} else {
 				throw new SQLException("Result incorrect.count result must not be empty.");
 			}

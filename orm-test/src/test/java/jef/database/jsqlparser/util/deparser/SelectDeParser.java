@@ -46,7 +46,7 @@ import jef.database.jsqlparser.statement.select.Union;
  */
 public class SelectDeParser implements SelectVisitor,SelectItemVisitor, FromItemVisitor {
 
-    protected StringBuffer buffer;
+    protected StringBuilder buffer;
 
     protected ExpressionVisitor expressionVisitor;
 
@@ -58,7 +58,7 @@ public class SelectDeParser implements SelectVisitor,SelectItemVisitor, FromItem
 	 * StringBuffer (buffer parameter) as this object in order to work
 	 * @param buffer the buffer that will be filled with the select
 	 */
-    public SelectDeParser(ExpressionVisitor expressionVisitor, StringBuffer buffer) {
+    public SelectDeParser(ExpressionVisitor expressionVisitor, StringBuilder buffer) {
         this.buffer = buffer;
         this.expressionVisitor = expressionVisitor;
     }
@@ -208,11 +208,11 @@ public class SelectDeParser implements SelectVisitor,SelectItemVisitor, FromItem
         }
     }
 
-    public StringBuffer getBuffer() {
+    public StringBuilder getBuffer() {
         return buffer;
     }
 
-    public void setBuffer(StringBuffer buffer) {
+    public void setBuffer(StringBuilder buffer) {
         this.buffer = buffer;
     }
 
@@ -262,8 +262,13 @@ public class SelectDeParser implements SelectVisitor,SelectItemVisitor, FromItem
 	}
 
 	public void visit(OrderBy orderBy) {
-		for(OrderByElement ele:orderBy.getOrderByElements()){
+		buffer.append(" order by ");
+		
+		for(int i=0;i<orderBy.getOrderByElements().size();i++){
+			if(i>0)buffer.append(',');
+			OrderByElement ele=orderBy.getOrderByElements().get(i);
 			ele.accept(this);
+			
 		}
 	}
 }

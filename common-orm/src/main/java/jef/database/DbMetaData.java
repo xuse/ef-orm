@@ -33,6 +33,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,6 +57,7 @@ import jef.database.innerpool.MetadataService;
 import jef.database.meta.Column;
 import jef.database.meta.ColumnChange;
 import jef.database.meta.ColumnModification;
+import jef.database.meta.DbProperty;
 import jef.database.meta.DdlGenerator;
 import jef.database.meta.Feature;
 import jef.database.meta.ForeignKey;
@@ -65,6 +67,7 @@ import jef.database.meta.Index;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.PrimaryKey;
 import jef.database.query.DefaultPartitionCalculator;
+import jef.database.query.Func;
 import jef.database.support.MetadataEventListener;
 import jef.database.wrapper.populator.ResultPopulatorImpl;
 import jef.database.wrapper.populator.ResultSetTransformer;
@@ -73,6 +76,8 @@ import jef.database.wrapper.result.ResultSetImpl;
 import jef.database.wrapper.result.ResultSets;
 import jef.http.client.support.CommentEntry;
 import jef.tools.Assert;
+import jef.tools.DateUtils;
+import jef.tools.DateUtils.TimeUnit;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
@@ -2164,13 +2169,35 @@ public class DbMetaData extends MetadataConnectionPool {
 
 	@Override
 	protected String getTestSQL() {
-		// TODO Auto-generated method stub
-		return null;
+		if(info==null){
+			return null;
+		}
+		return info.profile.getProperty(DbProperty.CHECK_SQL);
 	}
 
 	@Override
-	protected void processCheck(Connection conn2) {
-		// TODO Auto-generated method stub
-		
+	protected boolean processCheck(Connection conn) {
+		DatabaseDialect dialect=getProfile();
+		String func=dialect.getFunction(Func.current_timestamp);
+		String template=dialect.getProperty(DbProperty.SELECT_EXPRESSION);
+		String sql;
+		if(template==null){
+			sql="SELECT "+func;
+		}else{
+			sql=String.format(template, func);
+		}
+		try {
+			long current=System.currentTimeMillis();
+			Date date=this.selectBySql(sql, ResultSetTransformer.GET_FIRST_TIMESTAMP, 1, Collections.EMPTY_LIST);
+			current=(System.currentTimeMillis()+current)/2;//取两次操作的平均值，排除数据库查询误差
+			long delta=date.getTime()-System.currentTimeMillis();
+			if(Math.abs(delta)>60000){ //如果时间差大于1分钟则警告
+				LogUtil.warn("Database time checked. It is far different from local machine: "+ DateUtils.formatTimePeriod(delta, TimeUnit.DAY, Locale.US));
+			}
+			this.dbTimeDelta=delta;
+			return true;
+		} catch (SQLException e) {
+			return false;
+		}
 	}
 }

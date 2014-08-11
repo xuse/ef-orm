@@ -287,29 +287,29 @@ public class SelectTest extends TestCase {
 		assertEquals(statement+whereToString, ""+plainSelect);
 
 		ExpressionDeParser expressionDeParser = new ExpressionDeParser();
-		StringBuffer stringBuffer = new StringBuffer();
-		expressionDeParser.setBuffer(stringBuffer);
+		StringBuilder StringBuilder = new StringBuilder();
+		expressionDeParser.setBuffer(StringBuilder);
 		plainSelect.getWhere().accept(expressionDeParser);
-		assertEquals(whereToString, stringBuffer.toString());
+		assertEquals(whereToString, StringBuilder.toString());
 
 		whereToString = "(7 * s + 9 / 3) NOT BETWEEN 3 AND ?1";
 		plainSelect = (PlainSelect) ((Select) jef.database.DbUtils.parseStatement(statement + whereToString)).getSelectBody();
 
-		stringBuffer = new StringBuffer();
-		expressionDeParser.setBuffer(stringBuffer);
+		StringBuilder = new StringBuilder();
+		expressionDeParser.setBuffer(StringBuilder);
 		plainSelect.getWhere().accept(expressionDeParser);
 
-		assertEquals(whereToString, stringBuffer.toString());
+		assertEquals(whereToString, StringBuilder.toString());
 		assertEquals(statement+whereToString, ""+plainSelect);
 
 		whereToString = "a / b NOT IN (?1,'s''adf',234.2)";
 		plainSelect = (PlainSelect) ((Select) jef.database.DbUtils.parseStatement(statement + whereToString)).getSelectBody();
 
-		stringBuffer = new StringBuffer();
-		expressionDeParser.setBuffer(stringBuffer);
+		StringBuilder = new StringBuilder();
+		expressionDeParser.setBuffer(StringBuilder);
 		plainSelect.getWhere().accept(expressionDeParser);
 
-		assertEquals(whereToString, stringBuffer.toString());
+		assertEquals(whereToString, StringBuilder.toString());
 		assertEquals(statement+whereToString, ""+plainSelect);
 
 		whereToString = "NOT 0 = 0";
@@ -319,11 +319,11 @@ public class SelectTest extends TestCase {
 		whereToString = "NOT (0 = 0)";
 		plainSelect = (PlainSelect) ((Select) jef.database.DbUtils.parseStatement(statement + whereToString)).getSelectBody();
 
-		stringBuffer = new StringBuffer();
-		expressionDeParser.setBuffer(stringBuffer);
+		StringBuilder = new StringBuilder();
+		expressionDeParser.setBuffer(StringBuilder);
 		plainSelect.getWhere().accept(expressionDeParser);
 
-		assertEquals(where, stringBuffer.toString());
+		assertEquals(where, StringBuilder.toString());
 		assertEquals(statement+whereToString, ""+plainSelect);
 	}
 
@@ -363,12 +363,12 @@ public class SelectTest extends TestCase {
 
 		PlainSelect plainSelect =	(PlainSelect) ((Select) parsed).getSelectBody();
 		ExpressionDeParser expressionDeParser = new ExpressionDeParser();
-		StringBuffer stringBuffer = new StringBuffer();
-		expressionDeParser.setBuffer(stringBuffer);
-		SelectDeParser deParser = new SelectDeParser(expressionDeParser, stringBuffer);
+		StringBuilder StringBuilder = new StringBuilder();
+		expressionDeParser.setBuffer(StringBuilder);
+		SelectDeParser deParser = new SelectDeParser(expressionDeParser, StringBuilder);
 		expressionDeParser.setSelectVisitor(deParser);
 		plainSelect.getWhere().accept(expressionDeParser);
-		assertEquals(where, stringBuffer.toString());
+		assertEquals(where, StringBuilder.toString());
 
 	}
 
@@ -385,12 +385,12 @@ public class SelectTest extends TestCase {
 		assertEquals(statementToString, ""+plainSelect);
 		
 		ExpressionDeParser expressionDeParser = new ExpressionDeParser();
-		StringBuffer stringBuffer = new StringBuffer();
-		SelectDeParser deParser = new SelectDeParser(expressionDeParser, stringBuffer);
+		StringBuilder StringBuilder = new StringBuilder();
+		SelectDeParser deParser = new SelectDeParser(expressionDeParser, StringBuilder);
 		expressionDeParser.setSelectVisitor(deParser);
-		expressionDeParser.setBuffer(stringBuffer);
+		expressionDeParser.setBuffer(StringBuilder);
 		plainSelect.accept(deParser);
-		assertEquals(statement, stringBuffer.toString());
+		assertEquals(statement, StringBuilder.toString());
 		
 		statement = "select * from tab1 where a > 34 group by tab1.b order by tab1.a,2";
 		plainSelect = (PlainSelect) ((Select) jef.database.DbUtils.parseStatement(statement)).getSelectBody();
@@ -558,21 +558,21 @@ public class SelectTest extends TestCase {
 							+"from ANTIQUEOWNERS a, ANTIQUES b "
 							+"where b.BUYERID = a.OWNERID AND b.ITEM = 'Chair'";
 		Statement parsed = jef.database.DbUtils.parseStatement(statement);
-		StatementDeParser deParser=new StatementDeParser(new StringBuffer());
+		StatementDeParser deParser=new StatementDeParser(new StringBuilder());
 		parsed.accept(deParser);
 		
 		assertEquals(statement, deParser.getBuffer().toString());
 		
 		statement = "select count(DISTINCT f + 4) from a";
 		parsed = jef.database.DbUtils.parseStatement(statement);
-		deParser=new StatementDeParser(new StringBuffer());
+		deParser=new StatementDeParser(new StringBuilder());
 		parsed.accept(deParser);
 		assertEquals(statement, parsed.toString());
 		assertEquals(statement, deParser.getBuffer().toString());
 
 		statement = "select count(DISTINCT f,g,h) from a";
 		parsed = jef.database.DbUtils.parseStatement(statement);
-		deParser=new StatementDeParser(new StringBuffer());
+		deParser=new StatementDeParser(new StringBuilder());
 		parsed.accept(deParser);
 		assertEquals(statement, parsed.toString());
 		assertEquals(statement, deParser.getBuffer().toString());
@@ -583,7 +583,7 @@ public class SelectTest extends TestCase {
 							+"from `ANTIQUEOWNERS` a, ANTIQUES b "
 							+"where b.BUYERID = a.OWNERID AND b.ITEM = 'Chair'";
 		Statement parsed = jef.database.DbUtils.parseStatement(statement);
-		StatementDeParser deParser=new StatementDeParser(new StringBuffer());
+		StatementDeParser deParser=new StatementDeParser(new StringBuilder());
 		parsed.accept(deParser);
 		
 		assertEquals(statement, parsed.toString());
@@ -593,7 +593,7 @@ public class SelectTest extends TestCase {
 	public void testConcat() throws ParseException {
 		String statement = "select a || b || c + 4 from t";
 		Statement parsed = jef.database.DbUtils.parseStatement(statement);
-		StatementDeParser deParser=new StatementDeParser(new StringBuffer());
+		StatementDeParser deParser=new StatementDeParser(new StringBuilder());
 		parsed.accept(deParser);
 		
 		assertEquals(statement, parsed.toString());
@@ -603,7 +603,7 @@ public class SelectTest extends TestCase {
 	public void testMatches() throws ParseException {
 		String statement = "select * from team where team.search_column @@ to_tsquery('new & york & yankees')";
 		Statement parsed = jef.database.DbUtils.parseStatement(statement);
-		StatementDeParser deParser=new StatementDeParser(new StringBuffer());
+		StatementDeParser deParser=new StatementDeParser(new StringBuilder());
 		parsed.accept(deParser);
 		
 		assertEquals(statement, parsed.toString());
@@ -616,7 +616,7 @@ public class SelectTest extends TestCase {
 		" from table1 " +
 		"group by col1,col2,col1 + col2";
 		Statement parsed = jef.database.DbUtils.parseStatement(statement);
-		StatementDeParser deParser=new StatementDeParser(new StringBuffer());
+		StatementDeParser deParser=new StatementDeParser(new StringBuilder());
 		parsed.accept(deParser);
 		
 		assertEquals(statement, parsed.toString());
@@ -628,7 +628,7 @@ public class SelectTest extends TestCase {
 		"select col1 & 32,col2 ^ col1,col1 | col2" +
 		" from table1";
 		Statement parsed = jef.database.DbUtils.parseStatement(statement);
-		StatementDeParser deParser=new StatementDeParser(new StringBuffer());
+		StatementDeParser deParser=new StatementDeParser(new StringBuilder());
 		parsed.accept(deParser);
 		
 		assertEquals(statement, parsed.toString());

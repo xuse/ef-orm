@@ -27,12 +27,12 @@ import jef.database.jsqlparser.statement.create.table.Index;
  */
 public class CreateTableDeParser {
 
-    protected StringBuffer buffer;
+    protected StringBuilder buffer;
 
     /**
 	 * @param buffer the buffer that will be filled with the select
 	 */
-    public CreateTableDeParser(StringBuffer buffer) {
+    public CreateTableDeParser(StringBuilder buffer) {
         this.buffer = buffer;
     }
 
@@ -77,11 +77,11 @@ public class CreateTableDeParser {
         }
     }
 
-    public StringBuffer getBuffer() {
+    public StringBuilder getBuffer() {
         return buffer;
     }
 
-    public void setBuffer(StringBuffer buffer) {
+    public void setBuffer(StringBuilder buffer) {
         this.buffer = buffer;
     }
 }

@@ -21,7 +21,6 @@ public class OrderBy implements SqlAppendable {
 		PlainSelect.getFormatedList(sb, orderByElements, " order by", false);
 		if(nullsLast){
 			sb.append(" NULLS LAST");
-			
 		}
 	}
 
