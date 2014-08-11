@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jef.database.jsqlparser.statement.SqlAppendable;
-import jef.database.jsqlparser.visitor.SelectVisitor;
+import jef.database.jsqlparser.visitor.SelectItemVisitor;
 
 public class OrderBy implements SqlAppendable {
 	
@@ -38,7 +38,7 @@ public class OrderBy implements SqlAppendable {
 		this.nullsLast = nullsLast;
 	}
 
-	public void accept(SelectVisitor orderByVisitor) {
+	public void accept(SelectItemVisitor orderByVisitor) {
 		orderByVisitor.visit(this);
 	 }
 

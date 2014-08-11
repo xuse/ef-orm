@@ -48,6 +48,7 @@ import jef.database.jsqlparser.expression.operators.conditional.OrExpression;
 import jef.database.jsqlparser.expression.operators.relational.Between;
 import jef.database.jsqlparser.expression.operators.relational.EqualsTo;
 import jef.database.jsqlparser.expression.operators.relational.ExistsExpression;
+import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
 import jef.database.jsqlparser.expression.operators.relational.GreaterThan;
 import jef.database.jsqlparser.expression.operators.relational.GreaterThanEquals;
 import jef.database.jsqlparser.expression.operators.relational.InExpression;
@@ -149,4 +150,6 @@ public interface ExpressionVisitor {
 	public void visit(Mod mod);
 
 	public void visit(Over over);
+
+	public void visit(ExpressionList expressionList);
 }

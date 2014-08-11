@@ -20,6 +20,7 @@ import java.util.Iterator;
 import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.JpqlParameter;
 import jef.database.jsqlparser.expression.Table;
+import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
 import jef.database.jsqlparser.statement.select.AllColumns;
 import jef.database.jsqlparser.statement.select.AllTableColumns;
 import jef.database.jsqlparser.statement.select.Join;
@@ -35,7 +36,6 @@ import jef.database.jsqlparser.statement.select.Union;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 import jef.database.jsqlparser.visitor.FromItem;
-import jef.database.jsqlparser.visitor.FromItemVisitor;
 import jef.database.jsqlparser.visitor.SelectItem;
 import jef.database.jsqlparser.visitor.SelectItemVisitor;
 import jef.database.jsqlparser.visitor.SelectVisitor;
@@ -44,7 +44,7 @@ import jef.database.jsqlparser.visitor.SelectVisitor;
  * A class to de-parse (that is, tranform from JSqlParser hierarchy into a string)
  * a {@link jef.database.jsqlparser.statement.select.Select}
  */
-public class SelectDeParser implements SelectVisitor,SelectItemVisitor, FromItemVisitor {
+public class SelectDeParser implements SelectVisitor,SelectItemVisitor{
 
     protected StringBuilder buffer;
 
@@ -270,5 +270,10 @@ public class SelectDeParser implements SelectVisitor,SelectItemVisitor, FromItem
 			ele.accept(this);
 			
 		}
+	}
+
+	public void visit(ExpressionList expressionList) {
+		
+		
 	}
 }

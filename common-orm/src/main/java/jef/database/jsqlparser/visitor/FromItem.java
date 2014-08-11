@@ -23,7 +23,7 @@ import jef.database.jsqlparser.statement.SqlAppendable;
  */
 public interface FromItem extends SqlAppendable{
 
-    public void accept(FromItemVisitor fromItemVisitor);
+    public void accept(SelectItemVisitor fromItemVisitor);
 
     public String getAlias();
 

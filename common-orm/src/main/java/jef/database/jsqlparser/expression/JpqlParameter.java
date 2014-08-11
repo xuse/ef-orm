@@ -20,7 +20,7 @@ import javax.persistence.Parameter;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 import jef.database.jsqlparser.visitor.FromItem;
-import jef.database.jsqlparser.visitor.FromItemVisitor;
+import jef.database.jsqlparser.visitor.SelectItemVisitor;
 import jef.tools.StringUtils;
 
 /**
@@ -28,6 +28,7 @@ import jef.tools.StringUtils;
  * 
  * @see JpqlDataType
  */
+@SuppressWarnings("rawtypes")
 public class JpqlParameter implements Expression,FromItem,Parameter {
 	/**
 	 * 参数名称， 对于 :name 类型的
@@ -135,7 +136,7 @@ public class JpqlParameter implements Expression,FromItem,Parameter {
 		return index;
 	}
 
-	public void accept(FromItemVisitor fromItemVisitor) {
+	public void accept(SelectItemVisitor fromItemVisitor) {
 		fromItemVisitor.visit(this);
 	}
 	private String tableAlias;

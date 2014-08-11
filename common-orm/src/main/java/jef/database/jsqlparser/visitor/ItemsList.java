@@ -21,6 +21,5 @@ import jef.database.jsqlparser.statement.SqlAppendable;
  * Values of an "INSERT" statement (for example a SELECT or a list of expressions)
  */
 public interface ItemsList extends SqlAppendable{
-
-    public void accept(ItemsListVisitor itemsListVisitor);
+	public void accept(ExpressionVisitor expressionDeParser);
 }

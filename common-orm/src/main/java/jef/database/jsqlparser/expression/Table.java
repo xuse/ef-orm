@@ -16,7 +16,7 @@
 package jef.database.jsqlparser.expression;
 
 import jef.database.jsqlparser.visitor.FromItem;
-import jef.database.jsqlparser.visitor.FromItemVisitor;
+import jef.database.jsqlparser.visitor.SelectItemVisitor;
 import jef.tools.StringUtils;
 
 /**
@@ -78,7 +78,7 @@ public class Table implements FromItem {
         }
     }
 
-    public void accept(FromItemVisitor fromItemVisitor) {
+    public void accept(SelectItemVisitor fromItemVisitor) {
         fromItemVisitor.visit(this);
     }
 

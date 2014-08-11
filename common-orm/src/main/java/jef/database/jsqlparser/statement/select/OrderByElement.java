@@ -17,7 +17,7 @@ package jef.database.jsqlparser.statement.select;
 
 import jef.database.jsqlparser.statement.SqlAppendable;
 import jef.database.jsqlparser.visitor.Expression;
-import jef.database.jsqlparser.visitor.SelectVisitor;
+import jef.database.jsqlparser.visitor.SelectItemVisitor;
 
 /**
  * An element (column reference) in an "ORDER BY" clause.
@@ -36,7 +36,7 @@ public class OrderByElement implements SqlAppendable{
         asc = b;
     }
 
-    public void accept(SelectVisitor orderByVisitor) {
+    public void accept(SelectItemVisitor orderByVisitor) {
         orderByVisitor.visit(this);
     }
 

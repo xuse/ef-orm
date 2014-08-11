@@ -82,7 +82,7 @@ import jef.database.jsqlparser.statement.select.Union;
 import jef.database.jsqlparser.statement.truncate.Truncate;
 import jef.database.jsqlparser.statement.update.Update;
 
-public class VisitorAdapter implements SelectVisitor, FromItemVisitor, ExpressionVisitor, ItemsListVisitor, StatementVisitor, SelectItemVisitor {
+public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, StatementVisitor, SelectItemVisitor {
 
     public void visit(PlainSelect plainSelect) {
         plainSelect.getFromItem().accept(this);

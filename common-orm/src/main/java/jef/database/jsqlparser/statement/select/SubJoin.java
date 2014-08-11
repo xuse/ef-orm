@@ -16,7 +16,7 @@
 package jef.database.jsqlparser.statement.select;
 
 import jef.database.jsqlparser.visitor.FromItem;
-import jef.database.jsqlparser.visitor.FromItemVisitor;
+import jef.database.jsqlparser.visitor.SelectItemVisitor;
 
 /**
  * A table created by "(tab1 join tab2)".
@@ -29,7 +29,7 @@ public class SubJoin implements FromItem {
 
     private String alias;
 
-    public void accept(FromItemVisitor fromItemVisitor) {
+    public void accept(SelectItemVisitor fromItemVisitor) {
         fromItemVisitor.visit(this);
     }
 

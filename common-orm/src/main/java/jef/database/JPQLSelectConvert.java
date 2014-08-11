@@ -8,14 +8,20 @@ import jef.common.log.LogUtil;
 import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.JpqlParameter;
 import jef.database.jsqlparser.expression.Table;
+import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
 import jef.database.jsqlparser.parser.JpqlParser;
 import jef.database.jsqlparser.parser.ParseException;
+import jef.database.jsqlparser.statement.select.AllColumns;
+import jef.database.jsqlparser.statement.select.AllTableColumns;
+import jef.database.jsqlparser.statement.select.OrderBy;
+import jef.database.jsqlparser.statement.select.OrderByElement;
 import jef.database.jsqlparser.statement.select.PlainSelect;
+import jef.database.jsqlparser.statement.select.SelectExpressionItem;
 import jef.database.jsqlparser.statement.select.SubJoin;
 import jef.database.jsqlparser.statement.select.SubSelect;
 import jef.database.jsqlparser.visitor.FromItem;
-import jef.database.jsqlparser.visitor.FromItemVisitor;
 import jef.database.jsqlparser.visitor.SelectItem;
+import jef.database.jsqlparser.visitor.SelectItemVisitor;
 import jef.database.jsqlparser.visitor.VisitorAdapter;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
@@ -37,7 +43,7 @@ public class JPQLSelectConvert extends VisitorAdapter {
 	}
 	static Map<String ,Class<?>> cache=new HashMap<String,Class<?>>();
 
-	private FromItemVisitor fromCollector = new FromItemVisitor() {
+	private SelectItemVisitor fromCollector = new SelectItemVisitor() {
 		private Class<?> parseSimpleName(String simpleEntityName) {
 			String key=simpleEntityName.toLowerCase();
 			Class<?> clz=cache.get(key);
@@ -95,6 +101,24 @@ public class JPQLSelectConvert extends VisitorAdapter {
 			} catch (ParseException e) {
 				LogUtil.exception(e);
 			}
+		}
+
+		public void visit(AllColumns allColumns) {
+		}
+
+		public void visit(AllTableColumns allTableColumns) {
+		}
+
+		public void visit(SelectExpressionItem selectExpressionItem) {
+		}
+
+		public void visit(OrderByElement orderBy) {
+		}
+
+		public void visit(OrderBy orderBy) {
+		}
+
+		public void visit(ExpressionList expressionList) {
 		}
 	};
 

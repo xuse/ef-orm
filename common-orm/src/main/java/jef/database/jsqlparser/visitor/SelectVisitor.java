@@ -15,8 +15,6 @@
  */
 package jef.database.jsqlparser.visitor;
 
-import jef.database.jsqlparser.statement.select.OrderBy;
-import jef.database.jsqlparser.statement.select.OrderByElement;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.statement.select.Union;
 
@@ -25,8 +23,4 @@ public interface SelectVisitor {
     public void visit(PlainSelect plainSelect);
 
     public void visit(Union union);
-    
-    public void visit(OrderByElement orderBy);
-    
-    public void visit(OrderBy orderBy);
 }

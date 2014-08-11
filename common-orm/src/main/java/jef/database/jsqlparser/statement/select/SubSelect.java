@@ -18,21 +18,20 @@ package jef.database.jsqlparser.statement.select;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 import jef.database.jsqlparser.visitor.FromItem;
-import jef.database.jsqlparser.visitor.FromItemVisitor;
 import jef.database.jsqlparser.visitor.ItemsList;
-import jef.database.jsqlparser.visitor.ItemsListVisitor;
 import jef.database.jsqlparser.visitor.SelectBody;
+import jef.database.jsqlparser.visitor.SelectItemVisitor;
 
 /**
  * A subselect followed by an optional alias.
  */
-public class SubSelect implements FromItem, Expression, ItemsList {
+public class SubSelect implements FromItem, Expression,ItemsList{
 
     private SelectBody selectBody;
 
     private String alias;
 
-    public void accept(FromItemVisitor fromItemVisitor) {
+    public void accept(SelectItemVisitor fromItemVisitor) {
         fromItemVisitor.visit(this);
     }
 
@@ -54,10 +53,6 @@ public class SubSelect implements FromItem, Expression, ItemsList {
 
     public void setAlias(String string) {
         alias = string;
-    }
-
-    public void accept(ItemsListVisitor itemsListVisitor) {
-        itemsListVisitor.visit(this);
     }
 
     public String toString() {

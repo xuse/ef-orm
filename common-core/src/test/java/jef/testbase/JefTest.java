@@ -11,12 +11,15 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -609,8 +612,19 @@ public class JefTest extends Assert {
 
 	@Test
 	public void test() throws UnsupportedEncodingException {
-		System.out.println(System.getProperty("java.vm.vendor"));
-
+//		Deque d=new ArrayDeque<String>();
+		Deque d=new LinkedList<String>();
+		String a="asd";
+		long start=System.currentTimeMillis();
+		for(int i=0;i<100000;i++){
+			d.push(a);
+		}
+		System.out.println(System.currentTimeMillis()-start);
+		start=System.currentTimeMillis();
+		for(int i=0;i<100000;i++){
+			d.pop();
+		}
+		System.out.println(System.currentTimeMillis()-start);
 	}
 	
 	@Test

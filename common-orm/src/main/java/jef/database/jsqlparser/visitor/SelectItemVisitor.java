@@ -15,9 +15,16 @@
  */
 package jef.database.jsqlparser.visitor;
 
+import jef.database.jsqlparser.expression.JpqlParameter;
+import jef.database.jsqlparser.expression.Table;
+import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
 import jef.database.jsqlparser.statement.select.AllColumns;
 import jef.database.jsqlparser.statement.select.AllTableColumns;
+import jef.database.jsqlparser.statement.select.OrderBy;
+import jef.database.jsqlparser.statement.select.OrderByElement;
 import jef.database.jsqlparser.statement.select.SelectExpressionItem;
+import jef.database.jsqlparser.statement.select.SubJoin;
+import jef.database.jsqlparser.statement.select.SubSelect;
 
 public interface SelectItemVisitor {
 
@@ -26,4 +33,17 @@ public interface SelectItemVisitor {
     public void visit(AllTableColumns allTableColumns);
 
     public void visit(SelectExpressionItem selectExpressionItem);
+    
+    public void visit(Table tableName);
+
+    public void visit(SubSelect subSelect);
+
+    public void visit(SubJoin subjoin);
+    
+    public void visit(JpqlParameter tableClip);
+    
+    public void visit(OrderByElement orderBy);
+    
+    public void visit(OrderBy orderBy);
+
 }

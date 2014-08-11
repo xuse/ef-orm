@@ -23,14 +23,13 @@ import jef.database.jsqlparser.statement.replace.Replace;
 import jef.database.jsqlparser.statement.select.SubSelect;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
-import jef.database.jsqlparser.visitor.ItemsListVisitor;
 import jef.database.jsqlparser.visitor.SelectVisitor;
 
 /**
  * A class to de-parse (that is, tranform from JSqlParser hierarchy into a string)
  * a {@link jef.database.jsqlparser.statement.replace.Replace}
  */
-public class ReplaceDeParser implements ItemsListVisitor {
+public class ReplaceDeParser  {
 
     protected StringBuilder buffer;
 

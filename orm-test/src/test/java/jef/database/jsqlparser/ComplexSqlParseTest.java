@@ -127,6 +127,7 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	public void aaa() throws ParseException {
 		// String sql =
 		// "select t.rowid from (select :col from person_table where age>:ss1<string> and name=?1<int> and nvl(aa,translate(fastbean,'abc123','ccccc'))||schoolId||'tomo'||schoolId  =:name2 order by :orderBy) t";
+		
 		String sql = "select t.* from rm_camera_info t where t.treenodeindexcode=? and t.typecode=?";
 		Select st = DbUtils.parseNativeSelect(sql);
 		System.out.println(sql);

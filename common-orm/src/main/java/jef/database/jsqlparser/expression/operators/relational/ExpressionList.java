@@ -22,13 +22,13 @@ import jef.database.jsqlparser.expression.Child;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
 import jef.database.jsqlparser.visitor.ItemsList;
-import jef.database.jsqlparser.visitor.ItemsListVisitor;
 
 /**
  * A list of expressions, as in SELECT A FROM TAB WHERE B IN (expr1,expr2,expr3)
  */
-public class ExpressionList implements ItemsList {
+public class ExpressionList implements ItemsList{
 
 	private Function parent;
     private List<Expression> expressions;
@@ -86,10 +86,6 @@ public class ExpressionList implements ItemsList {
         }
     }
 
-    public void accept(ItemsListVisitor itemsListVisitor) {
-        itemsListVisitor.visit(this);
-    }
-
     public String toString() {
     	StringBuilder sb=new StringBuilder();
         PlainSelect.getStringList(sb,expressions, between, true);
@@ -98,5 +94,9 @@ public class ExpressionList implements ItemsList {
 
 	public void appendTo(StringBuilder sb) {
 		PlainSelect.getStringList(sb,expressions, between, true);
+	}
+
+	public void accept(ExpressionVisitor itemsListVisitor) {
+		itemsListVisitor.visit(this);
 	}
 }

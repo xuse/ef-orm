@@ -23,14 +23,13 @@ import jef.database.jsqlparser.statement.insert.Insert;
 import jef.database.jsqlparser.statement.select.SubSelect;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
-import jef.database.jsqlparser.visitor.ItemsListVisitor;
 import jef.database.jsqlparser.visitor.SelectVisitor;
 
 /**
  * A class to de-parse (that is, tranform from JSqlParser hierarchy into a string)
  * an {@link jef.database.jsqlparser.statement.insert.Insert}
  */
-public class InsertDeParser implements ItemsListVisitor {
+public class InsertDeParser {
 
     protected StringBuilder buffer;
 
@@ -77,7 +76,7 @@ public class InsertDeParser implements ItemsListVisitor {
             }
             buffer.append(")");
         }
-        insert.getItemsList().accept(this);
+        insert.getItemsList().accept(expressionVisitor);
     }
 
     public void visit(ExpressionList expressionList) {

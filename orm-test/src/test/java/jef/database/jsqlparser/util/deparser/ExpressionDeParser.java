@@ -66,14 +66,13 @@ import jef.database.jsqlparser.statement.select.StartWithExpression;
 import jef.database.jsqlparser.statement.select.SubSelect;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
-import jef.database.jsqlparser.visitor.ItemsListVisitor;
 import jef.database.jsqlparser.visitor.SelectVisitor;
 
 /**
  * A class to de-parse (that is, tranform from JSqlParser hierarchy into a string)
  * an {@link jef.database.jsqlparser.visitor.Expression}
  */
-public class ExpressionDeParser implements ExpressionVisitor, ItemsListVisitor {
+public class ExpressionDeParser implements ExpressionVisitor {
 
     protected StringBuilder buffer;
 

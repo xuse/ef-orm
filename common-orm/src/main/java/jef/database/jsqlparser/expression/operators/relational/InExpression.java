@@ -21,7 +21,6 @@ import jef.database.jsqlparser.visitor.Ignorable;
 import jef.database.jsqlparser.visitor.ItemsList;
 
 public class InExpression implements Expression,Ignorable {
-
     private Expression leftExpression;
   //变量绑定值是否为空
     private ThreadLocal<Boolean> isEmpty = new ThreadLocal<Boolean>();
