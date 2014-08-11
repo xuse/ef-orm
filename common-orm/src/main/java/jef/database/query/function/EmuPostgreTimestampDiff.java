@@ -59,13 +59,13 @@ public class EmuPostgreTimestampDiff extends BaseArgumentSqlFunction{
 			subtraction=new Function("date_part",new StringValue("epoch",false),subtraction);//转为秒数
 			subtraction=new Function("trunc",subtraction);									//截断
 		}else if("month".equals(unit)){
-			//FIXME 
+			//FIXME Support timestamp diff month on PostgreSQL
 			throw new UnsupportedOperationException("Since there's no function to convert interval to months, this function can't be supported untill we create a procedure in database");
 			//用存储过程是能支持的，先不做
 //			subtraction=new Function("age",arg2,arg1);
 //			subtraction=new Function("date_part",new StringValue("month",false),subtraction);//
 		}else if("quarter".equals(unit)){
-			//FIXME 
+			//FIXME  Support timestamp diff quarter on PostgreSQL
 			//用存储过程是能支持的，先不做
 			throw new UnsupportedOperationException("Since there's no function to convert interval to months, this function can't be supported untill we create a procedure in database");
 //			subtraction=new Function("age",arg2,arg1);

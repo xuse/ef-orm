@@ -38,11 +38,8 @@ import jef.common.pool.PoolStatus;
 import jef.database.ConnectInfo;
 import jef.database.DbCfg;
 import jef.database.DbMetaData;
-import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
-import jef.database.wrapper.populator.AbstractPopulator;
 import jef.tools.Assert;
 import jef.tools.JefConfiguration;
 
@@ -58,10 +55,16 @@ import com.google.common.collect.MapMaker;
  * <li>3、定时检查连接有效性</li>
  * </ul>
  */
-final class SingleManagedConnectionPool extends AbstractPopulator implements IManagedConnectionPool,DataSource {
+final class SingleManagedConnectionPool extends AbstractMetaDataService implements IManagedConnectionPool,DataSource,CheckablePool {
 	private DataSource ds;
 	private int max;
 	private int min;
+	private final DbMetaData metadata;
+
+
+	//TODO there's nowhrere to set this value;
+	private String testSQL;
+	
 	
 	/**
 	 * 本来是使用usedConnections.size()来计算目前使用中的连接数的, 但是发现Google map在数量统计时不太靠谱,只好自行记录使用
@@ -87,7 +90,7 @@ final class SingleManagedConnectionPool extends AbstractPopulator implements IMa
 		this.ds = ds;
 		this.min = min;
 		this.max = max;
-		this.metaConn = new MetadataConnectionPool(null, ds, this);
+		this.metadata = new DbMetaData(ds, this, null);
 		freeConns = new LinkedBlockingQueue<IManagedConnection>(max);
 		PoolReleaseThread.getInstance().addPool(this);
 		PoolCheckThread.getInstance().addPool(this);
@@ -187,8 +190,8 @@ final class SingleManagedConnectionPool extends AbstractPopulator implements IMa
 		closeConnectionTillMin();
 		PoolReleaseThread.getInstance().removePool(this);
 		PoolService.logPoolStatic(getClass().getSimpleName(), pollCount.get(), offerCount.get());
-		if (metaConn != null) {
-			metaConn.close();
+		if (metadata != null) {
+			metadata.close();
 		}
 	}
 
@@ -200,16 +203,12 @@ final class SingleManagedConnectionPool extends AbstractPopulator implements IMa
 				conn.closePhysical();
 			}
 		}
-		metaConn.closeConnectionTillMin();
+		metadata.closeConnectionTillMin();
 	}
 
-	private DbMetaData metadata;
-	private MetadataConnectionPool metaConn;
+	
 
 	public DbMetaData getMetadata(String dbkey) {
-		if (metadata == null) {
-			metadata = new DbMetaData(metaConn, this, null);
-		}
 		return metadata;
 	}
 
@@ -222,22 +221,8 @@ final class SingleManagedConnectionPool extends AbstractPopulator implements IMa
 	}
 
 	public DatabaseDialect getProfile() {
-		if (metadata != null) {
-			return metadata.getProfile();
-		} else {
-			ConnectInfo info = DbUtils.tryAnalyzeInfo(ds, false);
-			if (info == null) {
-				Connection conn = null;
-				try {
-					conn = ds.getConnection();
-					info = DbUtils.tryAnalyzeInfo(conn);
-				} catch (SQLException e) {
-				} finally {
-					DbUtils.closeConnection(conn);
-				}
-			}
-			return info.getProfile();
-		}
+		return metadata.getProfile();
+		
 	}
 
 	public boolean hasRemarkFeature(String dbkey) {
@@ -303,24 +288,7 @@ final class SingleManagedConnectionPool extends AbstractPopulator implements IMa
 		if (LogUtil.isDebugEnabled()) {
 			LogUtil.debug("Disconnected connection found, notify Checker thread.");
 		}
-		PoolCheckThread.getInstance().doCheck(this);
-	}
-
-	public Iterable<? extends CheckableConnection> getConnectionsToCheck() {
-		return freeConns;
-	}
-
-	private String testSQL;
-	
-	public String getTestSQL() {
-		if(testSQL==null){
-			testSQL=this.getProfile().getProperty(DbProperty.CHECK_SQL);
-		}
-		return testSQL;
-	}
-
-	public void setTestSQL(String string) {
-		this.testSQL=string;
+		this.doCheck();
 	}
 
 	public boolean isRouting() {
@@ -329,5 +297,11 @@ final class SingleManagedConnectionPool extends AbstractPopulator implements IMa
 
 	public boolean isDummy() {
 		return false;
+	}
+
+	public synchronized void doCheck() {
+		int total=freeConns.size();
+		int invalid=PoolService.doCheck(this.testSQL, freeConns.iterator());
+		LogUtil.info("Checked [{}]. total:{},  invalid:{}", this, total, invalid);
 	}
 }

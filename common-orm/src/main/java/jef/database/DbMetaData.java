@@ -39,6 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 import javax.persistence.PersistenceException;
+import javax.sql.DataSource;
 
 import jef.common.Entry;
 import jef.common.SimpleMap;
@@ -50,7 +51,7 @@ import jef.database.annotation.PartitionTable;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.MappingType;
-import jef.database.innerpool.IPool;
+import jef.database.innerpool.MetadataConnectionPool;
 import jef.database.innerpool.MetadataService;
 import jef.database.meta.Column;
 import jef.database.meta.ColumnChange;
@@ -65,6 +66,7 @@ import jef.database.meta.MetaHolder;
 import jef.database.meta.PrimaryKey;
 import jef.database.query.DefaultPartitionCalculator;
 import jef.database.support.MetadataEventListener;
+import jef.database.wrapper.populator.ResultPopulatorImpl;
 import jef.database.wrapper.populator.ResultSetTransformer;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.result.ResultSetImpl;
@@ -117,12 +119,15 @@ import org.apache.commons.lang.ArrayUtils;
  * @author Jiyi
  * 
  */
-public class DbMetaData extends UserCacheHolder {
+public class DbMetaData extends MetadataConnectionPool {
 	private MetadataService parent;
-	private IPool<Connection> conn;
+	
 	private String dbkey;
+	
 	private ConnectInfo info;
-	// 所属shema
+	/**
+	 * 所属shema
+	 */
 	private String schema;
 
 
@@ -155,26 +160,30 @@ public class DbMetaData extends UserCacheHolder {
 	/**
 	 * 构造
 	 * 
-	 * @param conn
-	 *            元数据专用连接池
+	 * @param ds
+	 *            数据连接
 	 * @param parent
 	 *            元数据服务
 	 * @param dbkey
 	 *            当前元数据所属的数据源名称
 	 */
-	public DbMetaData(IPool<Connection> conn, MetadataService parent, String dbkey) {
+	public DbMetaData(DataSource ds, MetadataService parent, String dbkey) {
+		super(ds);
 		this.interval = JefConfiguration.getInt(DbCfg.DB_PARTITION_REFRESH, 3600) * 1000;
 		this.dbkey = dbkey;
 		this.nextExpireTime = System.currentTimeMillis() + interval;
 		this.parent = parent;
-		this.conn = conn;
 
-		info = DbUtils.tryAnalyzeInfo(conn.getDatasource(), false);
+		info = DbUtils.tryAnalyzeInfo(ds, false);
 		try {
 			if (info == null) {
-				Connection con = conn.poll();
-				con.setAutoCommit(true);
-				info = DbUtils.tryAnalyzeInfo(con);
+				Connection con = getConnection();
+				try{
+					con.setAutoCommit(true);
+					info = DbUtils.tryAnalyzeInfo(con);	
+				}finally{
+					releaseConnection(con);
+				}
 			}
 			DatabaseDialect profile = info.profile;
 			Assert.notNull(profile);
@@ -707,7 +716,7 @@ public class DbMetaData extends UserCacheHolder {
 		ResultSet rs = null;
 		try {
 			rs = databaseMetaData.getImportedKeys(null, schema, tableName);
-			List<ForeignKey> fks = parent.toPlainJavaObject(new ResultSetImpl(rs, this.getProfile()), FK_TRANSFORMER);
+			List<ForeignKey> fks = ResultPopulatorImpl.instance.toPlainJavaObject(new ResultSetImpl(rs, this.getProfile()), FK_TRANSFORMER);
 			return fks.toArray(new ForeignKey[fks.size()]);
 		} finally {
 			DbUtils.close(rs);
@@ -730,7 +739,7 @@ public class DbMetaData extends UserCacheHolder {
 		ResultSet rs = null;
 		try {
 			rs = databaseMetaData.getExportedKeys(null, schema, tableName);
-			List<ForeignKey> fks = parent.toPlainJavaObject(new ResultSetImpl(rs, getProfile()), FK_TRANSFORMER);
+			List<ForeignKey> fks = ResultPopulatorImpl.instance.toPlainJavaObject(new ResultSetImpl(rs, getProfile()), FK_TRANSFORMER);
 			return fks.toArray(new ForeignKey[fks.size()]);
 		} catch (RuntimeException e) {
 			// JDBC驱动会抛出不当的错误。
@@ -2061,11 +2070,11 @@ public class DbMetaData extends UserCacheHolder {
 	}
 
 	private Connection getConnection() throws SQLException {
-		return conn.poll();
+		return super.poll();
 	}
 
 	private void releaseConnection(Connection con) {
-		conn.offer(con);
+		super.offer(con);
 	}
 
 	private void dropConstraint0(String tablename, String constraintName, Statement st) throws SQLException {
@@ -2105,15 +2114,6 @@ public class DbMetaData extends UserCacheHolder {
 	}
 
 	/*
-	 * 获取连接持有者
-	 * 
-	 * @return
-	 */
-	IPool<Connection> getConnectionHolder() {
-		return conn;
-	}
-
-	/*
 	 * 创建得到表中使用序列值的字段的最大值的SQL语句
 	 * 
 	 * @param schema schema名称
@@ -2135,5 +2135,42 @@ public class DbMetaData extends UserCacheHolder {
 
 	public boolean clearTableMetadataCache(ITableMetadata meta) {
 		return subTableData.remove(meta)!=null;
+	}
+
+	protected boolean hasRemarkFeature() {
+		if (JefConfiguration.getBoolean(DbCfg.DB_NO_REMARK_CONNECTION, false)) {
+			return false;
+		}
+		DatabaseDialect profile;
+		if(this.info==null){
+			ConnectInfo info = DbUtils.tryAnalyzeInfo(ds, false);
+			if (info == null) {
+				Connection conn = null;
+				try {
+					conn = ds.getConnection();
+					info = DbUtils.tryAnalyzeInfo(conn);
+				} catch (SQLException e) {
+					return false;
+				} finally {
+					DbUtils.closeConnection(conn);
+				}
+			}
+			profile=info.getProfile();
+		}else{
+			profile=info.getProfile();
+		}
+		return profile.has(Feature.REMARK_META_FETCH);
+	}
+
+	@Override
+	protected String getTestSQL() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected void processCheck(Connection conn2) {
+		// TODO Auto-generated method stub
+		
 	}
 }

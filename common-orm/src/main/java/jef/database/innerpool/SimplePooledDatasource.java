@@ -3,7 +3,6 @@ package jef.database.innerpool;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -16,12 +15,14 @@ import javax.sql.DataSource;
 import javax.sql.PooledConnection;
 import javax.sql.StatementEventListener;
 
+import jef.common.log.LogUtil;
 import jef.common.pool.PoolStatus;
 import jef.database.DbCfg;
 import jef.database.DbUtils;
 import jef.database.datasource.AbstractDataSource;
 import jef.database.datasource.DataSourceInfo;
 import jef.database.datasource.SimpleDataSource;
+import jef.database.innerpool.PoolService.CheckableConnection;
 import jef.tools.JefConfiguration;
 
 /**
@@ -327,17 +328,6 @@ public final class SimplePooledDatasource extends AbstractDataSource implements 
 		}
 	}
 
-	public Iterable<? extends CheckableConnection> getConnectionsToCheck() {
-		return new Iterable<WrapperConnection>(){
-			public Iterator<WrapperConnection> iterator() {
-				if(freeConns==null){
-					return new I(Collections.<Connection>emptyList().iterator());
-				}
-				return new I(freeConns.iterator());
-			}
-		};
-	}
-
 	public String getTestSQL() {
 		return testSQL;
 	}
@@ -362,5 +352,13 @@ public final class SimplePooledDatasource extends AbstractDataSource implements 
 
 		public void remove() {
 		}
+	}
+
+	public void doCheck() {
+		if(freeConns==null)return;
+		int total=freeConns.size();
+		Iterator<WrapperConnection> iter=new I(freeConns.iterator());
+		int invalid=PoolService.doCheck(this.testSQL, iter);
+		LogUtil.info("Checked [{}]. total:{},  invalid:{}", this, total, invalid);
 	}
 }

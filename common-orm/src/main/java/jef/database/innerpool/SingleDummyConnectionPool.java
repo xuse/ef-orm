@@ -1,11 +1,10 @@
 package jef.database.innerpool;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.persistence.PersistenceException;
 import javax.sql.DataSource;
@@ -13,13 +12,8 @@ import javax.sql.DataSource;
 import jef.common.Callback;
 import jef.common.pool.PoolStatus;
 import jef.database.ConnectInfo;
-import jef.database.DbCfg;
 import jef.database.DbMetaData;
-import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.meta.Feature;
-import jef.database.wrapper.populator.AbstractPopulator;
-import jef.tools.JefConfiguration;
 
 import com.google.common.collect.MapMaker;
 
@@ -30,15 +24,17 @@ import com.google.common.collect.MapMaker;
  * @author jiyi
  * 
  */
-final class SingleDummyConnectionPool extends AbstractPopulator implements IUserManagedPool {
+final class SingleDummyConnectionPool extends AbstractMetaDataService implements IUserManagedPool {
 	private DataSource ds;
 	final Map<Object, ReentrantConnection> map = new MapMaker().concurrencyLevel(12).weakKeys().makeMap();
-	private final AtomicInteger pollCount = new AtomicInteger();
-	private final AtomicInteger offerCount = new AtomicInteger();
-
+	private final AtomicLong pollCount = new AtomicLong();
+	private final AtomicLong offerCount = new AtomicLong();
+	private final DbMetaData metadata;
+	
+	
 	public SingleDummyConnectionPool(DataSource ds) {
 		this.ds = ds;
-		this.metaConn = new MetadataConnectionPool(null, ds, this);
+		this.metadata = new DbMetaData(ds, this,null);
 		PoolReleaseThread.getInstance().addPool(this);
 	}
 
@@ -98,52 +94,19 @@ final class SingleDummyConnectionPool extends AbstractPopulator implements IUser
 	}
 
 	public void closeConnectionTillMin() {
-		// 本来就没有池，自然无需大小控制
-
-		// 元数据也要尽量少用连接
-		metaConn.closeConnectionTillMin();
+		metadata.closeConnectionTillMin();
 	}
 
-	private DbMetaData metadata;
-	private MetadataConnectionPool metaConn;
-
 	public DbMetaData getMetadata(String dbkey) {
-		if (metadata == null) {
-			metadata = new DbMetaData(metaConn, this, null);
-		}
 		return metadata;
 	}
 
 	public DatabaseDialect getProfile(String dbkey) {
-		return getMetadata(dbkey).getProfile();
+		return metadata.getProfile();
 	}
 
 	public ConnectInfo getInfo(String dbkey) {
 		return getMetadata(dbkey).getInfo();
-	}
-
-	public boolean hasRemarkFeature(String dbkey) {
-		if (JefConfiguration.getBoolean(DbCfg.DB_NO_REMARK_CONNECTION, false)) {
-			return false;
-		}
-		DatabaseDialect profile;
-		if (metadata != null) {
-			profile = metadata.getProfile();
-		} else {
-			ConnectInfo info = DbUtils.tryAnalyzeInfo(ds, false);
-			if (info == null) {
-				Connection conn = null;
-				try {
-					conn = ds.getConnection();
-					info = DbUtils.tryAnalyzeInfo(conn);
-				} catch (SQLException e) {
-				} finally {
-					DbUtils.closeConnection(conn);
-				}
-			}
-			profile = info.getProfile();
-		}
-		return profile.has(Feature.REMARK_META_FETCH);
 	}
 
 	public void registeDbInitCallback(Callback<String, SQLException> callback) {

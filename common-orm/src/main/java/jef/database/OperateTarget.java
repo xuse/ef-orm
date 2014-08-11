@@ -28,6 +28,7 @@ import jef.database.meta.ITableMetadata;
 import jef.database.query.EntityMappingProvider;
 import jef.database.query.SqlExpression;
 import jef.database.wrapper.ResultIterator;
+import jef.database.wrapper.populator.ResultPopulatorImpl;
 import jef.database.wrapper.populator.ResultSetTransformer;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.result.IResultSet;
@@ -503,7 +504,7 @@ public class OperateTarget implements SqlTemplate {
 
 		public List<Map<String, Object>> transformer(ResultSet rs, DatabaseDialect db) throws SQLException {
 			dbAccess = System.currentTimeMillis();
-			return session.getPool().toVar(new ResultSetImpl(rs, db), Transformer.VAR);
+			return ResultPopulatorImpl.instance.toVar(new ResultSetImpl(rs, db), Transformer.VAR);
 		}
 	}
 

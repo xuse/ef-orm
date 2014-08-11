@@ -7,7 +7,7 @@ import jef.database.dialect.DatabaseDialect;
  * @author jiyi
  *
  */
-public interface IManagedConnectionPool extends IUserManagedPool,CheckablePool{
+public interface IManagedConnectionPool extends IUserManagedPool{
 	/**
 	 * 得到数据库方言，这是为了自我检测和重连而设计的接口
 	 * 
