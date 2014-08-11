@@ -17,6 +17,9 @@ package jef.database.jsqlparser.expression;
 
 import java.sql.Date;
 
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
+
 /**
  * A Date in the form {d 'yyyy-mm-dd'}
  */

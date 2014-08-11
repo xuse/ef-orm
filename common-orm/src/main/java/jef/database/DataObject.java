@@ -10,7 +10,7 @@ import java.util.TreeMap;
 
 import javax.persistence.PersistenceException;
 
-import jef.database.jsqlparser.expression.Expression;
+import jef.database.jsqlparser.visitor.Expression;
 import jef.database.query.Query;
 import jef.database.query.QueryBuilder;
 import jef.tools.reflect.BeanWrapper;

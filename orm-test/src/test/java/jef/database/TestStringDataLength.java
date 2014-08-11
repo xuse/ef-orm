@@ -5,8 +5,8 @@ import java.sql.SQLException;
 import java.util.Date;
 
 import jef.database.dialect.ColumnType;
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.parser.ParseException;
+import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.TupleMetadata;
 import jef.database.query.Func;
 import jef.database.test.DataSource;

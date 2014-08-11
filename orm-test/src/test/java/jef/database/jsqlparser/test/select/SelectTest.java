@@ -1,10 +1,12 @@
 package jef.database.jsqlparser.test.select;
 
 import jef.database.jsqlparser.expression.BinaryExpression;
+import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.DoubleValue;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.LongValue;
 import jef.database.jsqlparser.expression.StringValue;
+import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.expression.TimeValue;
 import jef.database.jsqlparser.expression.TimestampValue;
 import jef.database.jsqlparser.expression.operators.arithmetic.Multiplication;
@@ -13,9 +15,6 @@ import jef.database.jsqlparser.expression.operators.relational.GreaterThan;
 import jef.database.jsqlparser.expression.operators.relational.InExpression;
 import jef.database.jsqlparser.expression.operators.relational.LikeExpression;
 import jef.database.jsqlparser.parser.ParseException;
-import jef.database.jsqlparser.schema.Column;
-import jef.database.jsqlparser.schema.Table;
-import jef.database.jsqlparser.statement.Statement;
 import jef.database.jsqlparser.statement.select.AllTableColumns;
 import jef.database.jsqlparser.statement.select.Join;
 import jef.database.jsqlparser.statement.select.OrderByElement;
@@ -26,6 +25,7 @@ import jef.database.jsqlparser.statement.select.Union;
 import jef.database.jsqlparser.util.deparser.ExpressionDeParser;
 import jef.database.jsqlparser.util.deparser.SelectDeParser;
 import jef.database.jsqlparser.util.deparser.StatementDeParser;
+import jef.database.jsqlparser.visitor.Statement;
 import junit.framework.TestCase;
 
 import org.junit.Test;

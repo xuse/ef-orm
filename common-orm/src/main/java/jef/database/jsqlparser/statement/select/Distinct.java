@@ -17,10 +17,13 @@ package jef.database.jsqlparser.statement.select;
 
 import java.util.List;
 
+import jef.database.jsqlparser.statement.SqlAppendable;
+import jef.database.jsqlparser.visitor.SelectItem;
+
 /**
  * A DISTINCT [ON (expression, ...)] clause
  */
-public class Distinct {
+public class Distinct implements SqlAppendable{
 
     private List<SelectItem> onSelectItems;
 
@@ -36,16 +39,17 @@ public class Distinct {
         onSelectItems = list;
     }
 
-    public StringBuilder appendTo(StringBuilder sb){
+    public void appendTo(StringBuilder sb){
     	sb.append("DISTINCT");
     	if (onSelectItems != null && onSelectItems.size() > 0) {
         	sb.append(" ON ");
             PlainSelect.getStringList(sb,onSelectItems,",",true);
         }
-    	return sb;
     }
     
     public String toString() {
-    	return appendTo(new StringBuilder(64)).toString();
+    	StringBuilder sb=new StringBuilder(64);
+    	appendTo(sb);
+    	return 	sb.toString();
     }
 }

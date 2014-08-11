@@ -2,7 +2,6 @@ package jef.database.query.function;
 
 import java.util.List;
 
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.LongValue;
 import jef.database.jsqlparser.expression.Parenthesis;
@@ -10,6 +9,7 @@ import jef.database.jsqlparser.expression.StringValue;
 import jef.database.jsqlparser.expression.operators.arithmetic.Division;
 import jef.database.jsqlparser.expression.operators.arithmetic.Multiplication;
 import jef.database.jsqlparser.expression.operators.arithmetic.Subtraction;
+import jef.database.jsqlparser.visitor.Expression;
 
 /**
  * Oracle驱动并没有实现JDBC函数 timestampadd和timestampdiff，因此需要人工模拟。

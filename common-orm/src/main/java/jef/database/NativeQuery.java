@@ -41,15 +41,16 @@ import jef.database.Session.PopulateStrategy;
 import jef.database.dialect.type.ResultSetAccessor;
 import jef.database.jsqlparser.expression.JpqlDataType;
 import jef.database.jsqlparser.expression.JpqlParameter;
-import jef.database.jsqlparser.statement.Statement;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.statement.select.Union;
+import jef.database.jsqlparser.visitor.Statement;
 import jef.database.query.ParameterProvider;
 import jef.database.query.QueryHints;
 import jef.database.query.SqlExpression;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.Mapper;
+import jef.database.wrapper.populator.ResultSetTransformer;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.result.IResultSet;
 import jef.tools.Assert;
@@ -190,7 +191,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	private FlushModeType flushType = null;
 	private final Map<String,Object> hint = new HashMap<String,Object>();
 	private int fetchSize = 0;
-	
+	private boolean sqlRouting;
 	
 	
 	
@@ -229,8 +230,15 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	public long getResultCount() {
 		try {
 			Entry<Statement, List<Object>> parse = config.getCountSqlAndParams(db, this);
-			long r = db.countBySql(parse.getKey().toString(), parse.getValue().toArray());
-			return r;
+			String sql=parse.getKey().toString();
+			List<?> params=parse.getValue();
+			long start = System.currentTimeMillis();
+			Long num = db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, 1,0, params);
+			if (ORMConfig.getInstance().isDebugMode()) {
+				long dbAccess = System.currentTimeMillis();
+				LogUtil.show(StringUtils.concat("Count:", String.valueOf(num), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |",db.getTransactionId()));
+			}
+			return num;
 		} catch (SQLException e) {
 			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}

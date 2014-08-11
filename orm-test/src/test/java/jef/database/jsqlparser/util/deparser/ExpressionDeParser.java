@@ -22,10 +22,9 @@ import jef.database.jsqlparser.expression.AllComparisonExpression;
 import jef.database.jsqlparser.expression.AnyComparisonExpression;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.CaseExpression;
+import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.DateValue;
 import jef.database.jsqlparser.expression.DoubleValue;
-import jef.database.jsqlparser.expression.Expression;
-import jef.database.jsqlparser.expression.ExpressionVisitor;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
 import jef.database.jsqlparser.expression.InverseExpression;
@@ -58,20 +57,21 @@ import jef.database.jsqlparser.expression.operators.relational.GreaterThan;
 import jef.database.jsqlparser.expression.operators.relational.GreaterThanEquals;
 import jef.database.jsqlparser.expression.operators.relational.InExpression;
 import jef.database.jsqlparser.expression.operators.relational.IsNullExpression;
-import jef.database.jsqlparser.expression.operators.relational.ItemsListVisitor;
 import jef.database.jsqlparser.expression.operators.relational.LikeExpression;
 import jef.database.jsqlparser.expression.operators.relational.Matches;
 import jef.database.jsqlparser.expression.operators.relational.MinorThan;
 import jef.database.jsqlparser.expression.operators.relational.MinorThanEquals;
 import jef.database.jsqlparser.expression.operators.relational.NotEqualsTo;
-import jef.database.jsqlparser.schema.Column;
-import jef.database.jsqlparser.statement.select.SelectVisitor;
 import jef.database.jsqlparser.statement.select.StartWithExpression;
 import jef.database.jsqlparser.statement.select.SubSelect;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.ItemsListVisitor;
+import jef.database.jsqlparser.visitor.SelectVisitor;
 
 /**
  * A class to de-parse (that is, tranform from JSqlParser hierarchy into a string)
- * an {@link jef.database.jsqlparser.expression.Expression}
+ * an {@link jef.database.jsqlparser.visitor.Expression}
  */
 public class ExpressionDeParser implements ExpressionVisitor, ItemsListVisitor {
 

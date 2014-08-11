@@ -17,13 +17,13 @@ package jef.database.jsqlparser.statement.insert;
 
 import java.util.List;
 
-import jef.database.jsqlparser.expression.operators.relational.ItemsList;
+import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.parser.Token;
-import jef.database.jsqlparser.schema.Column;
-import jef.database.jsqlparser.statement.Statement;
-import jef.database.jsqlparser.statement.StatementVisitor;
-import jef.database.jsqlparser.statement.select.FromItem;
 import jef.database.jsqlparser.statement.select.PlainSelect;
+import jef.database.jsqlparser.visitor.FromItem;
+import jef.database.jsqlparser.visitor.ItemsList;
+import jef.database.jsqlparser.visitor.Statement;
+import jef.database.jsqlparser.visitor.StatementVisitor;
 
 /**
  * The insert statement.
@@ -61,7 +61,7 @@ public class Insert implements Statement {
 
     /**
 	 * Get the columns (found in "INSERT INTO (col1,col2..) [...]" )
-	 * @return a list of {@link jef.database.jsqlparser.schema.Column}
+	 * @return a list of {@link jef.database.jsqlparser.expression.Column}
 	 */
     public List<Column> getColumns() {
         return columns;

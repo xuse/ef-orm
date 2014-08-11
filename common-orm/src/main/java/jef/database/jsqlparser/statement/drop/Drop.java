@@ -17,8 +17,8 @@ package jef.database.jsqlparser.statement.drop;
 
 import java.util.List;
 
-import jef.database.jsqlparser.statement.Statement;
-import jef.database.jsqlparser.statement.StatementVisitor;
+import jef.database.jsqlparser.visitor.Statement;
+import jef.database.jsqlparser.visitor.StatementVisitor;
 import jef.tools.StringUtils;
 
 public class Drop implements Statement {

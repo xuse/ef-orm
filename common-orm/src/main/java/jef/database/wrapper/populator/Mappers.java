@@ -18,6 +18,7 @@ import jef.database.dialect.type.MappingType;
 import jef.database.dialect.type.ResultSetAccessor;
 import jef.database.innerpool.ArrayElementPopulator;
 import jef.database.innerpool.NestedObjectPopulator;
+import jef.database.jsqlparser.statement.select.Select;
 import jef.database.meta.AliasProvider;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
@@ -383,6 +384,11 @@ public final class Mappers {
 		}
 
 		public void addKeyword(String... keys) {
+		}
+
+		public Select toPageSQL(Select select, IntRange range) {
+			// TODO Auto-generated method stub
+			return null;
 		}
 	};
 }

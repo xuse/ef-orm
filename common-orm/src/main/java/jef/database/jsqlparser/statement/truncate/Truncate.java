@@ -15,9 +15,9 @@
  */
 package jef.database.jsqlparser.statement.truncate;
 
-import jef.database.jsqlparser.schema.Table;
-import jef.database.jsqlparser.statement.Statement;
-import jef.database.jsqlparser.statement.StatementVisitor;
+import jef.database.jsqlparser.expression.Table;
+import jef.database.jsqlparser.visitor.Statement;
+import jef.database.jsqlparser.visitor.StatementVisitor;
 
 /**
  * A TRUNCATE TABLE statement

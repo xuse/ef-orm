@@ -28,9 +28,9 @@ import java.util.List;
 
 import javax.persistence.PersistenceException;
 
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
+import jef.database.jsqlparser.visitor.Expression;
 
 import org.apache.commons.lang.ArrayUtils;
 

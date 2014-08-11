@@ -2,9 +2,9 @@ package jef.database.query.function;
 
 import java.util.List;
 
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Interval;
 import jef.database.jsqlparser.expression.operators.arithmetic.Subtraction;
+import jef.database.jsqlparser.visitor.Expression;
 
 public class EmuPostgresSubDate extends BaseArgumentSqlFunction{
 	public String getName() {

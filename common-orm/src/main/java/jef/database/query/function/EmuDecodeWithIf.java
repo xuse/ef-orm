@@ -3,10 +3,10 @@ package jef.database.query.function;
 import java.util.LinkedList;
 import java.util.List;
 
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.NullValue;
 import jef.database.jsqlparser.expression.operators.relational.EqualsTo;
+import jef.database.jsqlparser.visitor.Expression;
 
 /**
  * 用 if(expr1, expr2, expr3)的样式来模拟Oracle的decode函数。

@@ -17,8 +17,10 @@ package jef.database.jsqlparser.expression;
 
 import javax.persistence.Parameter;
 
-import jef.database.jsqlparser.statement.select.FromItem;
-import jef.database.jsqlparser.statement.select.FromItemVisitor;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.FromItem;
+import jef.database.jsqlparser.visitor.FromItemVisitor;
 import jef.tools.StringUtils;
 
 /**

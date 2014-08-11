@@ -17,8 +17,7 @@ package jef.database.jsqlparser.util.deparser;
 
 import java.util.Iterator;
 
-import jef.database.jsqlparser.statement.StatementVisitor;
-import jef.database.jsqlparser.statement.create.table.CreateTable;
+import jef.database.jsqlparser.statement.create.CreateTable;
 import jef.database.jsqlparser.statement.delete.Delete;
 import jef.database.jsqlparser.statement.drop.Drop;
 import jef.database.jsqlparser.statement.insert.Insert;
@@ -27,6 +26,7 @@ import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.statement.select.WithItem;
 import jef.database.jsqlparser.statement.truncate.Truncate;
 import jef.database.jsqlparser.statement.update.Update;
+import jef.database.jsqlparser.visitor.StatementVisitor;
 
 public class StatementDeParser implements StatementVisitor {
 

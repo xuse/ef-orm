@@ -15,8 +15,8 @@
  */
 package jef.database.jsqlparser.util.deparser;
 
-import jef.database.jsqlparser.expression.ExpressionVisitor;
 import jef.database.jsqlparser.statement.delete.Delete;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 /**
  * A class to de-parse (that is, tranform from JSqlParser hierarchy into a string)

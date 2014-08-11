@@ -19,9 +19,11 @@ import java.util.Arrays;
 import java.util.List;
 
 import jef.database.jsqlparser.expression.Child;
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.statement.select.PlainSelect;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ItemsList;
+import jef.database.jsqlparser.visitor.ItemsListVisitor;
 
 /**
  * A list of expressions, as in SELECT A FROM TAB WHERE B IN (expr1,expr2,expr3)

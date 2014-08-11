@@ -18,6 +18,8 @@ package jef.database.jsqlparser.expression;
 import java.util.List;
 
 import jef.database.jsqlparser.statement.select.PlainSelect;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 /**
  * CASE/WHEN expression.

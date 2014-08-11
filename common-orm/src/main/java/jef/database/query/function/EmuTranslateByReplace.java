@@ -2,9 +2,9 @@ package jef.database.query.function;
 
 import java.util.List;
 
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.StringValue;
+import jef.database.jsqlparser.visitor.Expression;
 
 public class EmuTranslateByReplace extends BaseArgumentSqlFunction{
 	public String getName() {

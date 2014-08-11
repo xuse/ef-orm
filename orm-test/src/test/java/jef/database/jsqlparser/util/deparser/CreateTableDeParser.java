@@ -17,9 +17,9 @@ package jef.database.jsqlparser.util.deparser;
 
 import java.util.Iterator;
 
-import jef.database.jsqlparser.statement.create.table.ColumnDefinition;
-import jef.database.jsqlparser.statement.create.table.CreateTable;
-import jef.database.jsqlparser.statement.create.table.Index;
+import jef.database.jsqlparser.statement.create.ColumnDefinition;
+import jef.database.jsqlparser.statement.create.CreateTable;
+import jef.database.jsqlparser.statement.create.Index;
 
 /**
  * A class to de-parse (that is, tranform from JSqlParser hierarchy into a string)

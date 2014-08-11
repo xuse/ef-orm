@@ -27,12 +27,12 @@ import jef.database.SqlProcessor;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.SqlFunctionlocalization;
 import jef.database.jsqlparser.UndoableVisitor;
-import jef.database.jsqlparser.VisitorAdapter;
-import jef.database.jsqlparser.expression.Expression;
-import jef.database.jsqlparser.expression.ExpressionVisitor;
+import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.JpqlParameter;
 import jef.database.jsqlparser.parser.ParseException;
-import jef.database.jsqlparser.schema.Column;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.VisitorAdapter;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 

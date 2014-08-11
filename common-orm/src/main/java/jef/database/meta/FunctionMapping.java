@@ -4,8 +4,8 @@ import java.util.Collections;
 import java.util.List;
 
 import jef.database.DbFunction;
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Function;
+import jef.database.jsqlparser.visitor.Expression;
 import jef.database.query.function.NoArgSQLFunction;
 import jef.database.query.function.SQLFunction;
 import jef.tools.ArrayUtils;

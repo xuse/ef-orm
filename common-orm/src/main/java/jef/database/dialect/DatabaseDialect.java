@@ -32,6 +32,7 @@ import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
+import jef.database.jsqlparser.statement.select.Select;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.meta.FunctionMapping;
@@ -171,6 +172,14 @@ public interface DatabaseDialect {
 	 * @return
 	 */
 	String toPageSQL(String sql,IntRange range,boolean isUnion);
+	
+	/**
+	 * 将SQL转换为分页的语句
+	 * @param select
+	 * @param range
+	 * @return
+	 */
+//	Select toPageSQL(Select select,IntRange range);
 	
 	/**
 	 * Oracle会将所有未加引号的数据库对象名称都按照大写对象名来处理，MySQL则对表名一律转小写，列名则保留原来的大小写。

@@ -57,9 +57,9 @@ import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.type.ATypeMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.jsqlparser.expression.BinaryExpression;
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
+import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.meta.FunctionMapping;
@@ -879,5 +879,6 @@ public abstract class DbmsProfile implements DatabaseDialect {
 
 	public void toExtremeInsert(InsertSqlClause sql) {
 	}
+	
 	
 }

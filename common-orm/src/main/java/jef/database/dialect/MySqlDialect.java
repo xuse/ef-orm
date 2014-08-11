@@ -20,9 +20,9 @@ import java.util.Arrays;
 
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
-import jef.database.ORMConfig;
 import jef.database.ConnectInfo;
 import jef.database.DbUtils;
+import jef.database.ORMConfig;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.ColumnType.Blob;
 import jef.database.dialect.ColumnType.Clob;
@@ -33,6 +33,7 @@ import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
 import jef.database.jsqlparser.parser.ParseException;
+import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.statement.select.Union;
 import jef.database.meta.Column;
@@ -49,7 +50,6 @@ import jef.database.query.function.StandardSQLFunction;
 import jef.database.query.function.TemplateFunction;
 import jef.database.support.RDBMS;
 import jef.tools.ArrayUtils;
-import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtil;
 import jef.tools.string.JefStringReader;
@@ -456,23 +456,24 @@ ALTER TABLE users ADD id INT UNSIGNED NOT NULL AUTO_INCREMENT,
 		} catch (ParseException e) {
 			LogUtil.exception("SqlParse Error:",e);
 		}
-		int s=range.getLeastValue() - 1;
-		if(s<0)s=0;
-		String start = String.valueOf(s);
-		String next = String.valueOf(range.getGreatestValue() - range.getLeastValue() + 1);
-		String limit = StringUtils.replaceEach(MYSQL_PAGE, new String[] { "%start%", "%next%" }, new String[] { start, next });
+		String limit = StringUtils.replaceEach(MYSQL_PAGE, new String[] { "%start%", "%next%" }, range.toStartLimit());
 		return isUnion ?
 				StringUtils.concat("select * from (", sql, ") tb__", limit) : sql.concat(limit);
+	}
+
+	public Select toPageSQL(Select select, IntRange range) {
+		int[] span=range.toStartLimitSpan();
+		Limit limit=new Limit();
+		limit.setOffset(span[0]);
+		limit.setRowCount(span[1]);
+		select.getSelectBody().setLimit(limit);
+		return select;
 	}
 	
 
 	@Override
 	public String toPageSQL(String sql, IntRange range,boolean isUnion) {
-		int s=range.getLeastValue() - 1;
-		if(s<0)s=0;
-		String start = String.valueOf(s);
-		String next = String.valueOf(range.getGreatestValue() - range.getLeastValue() + 1);
-		String limit = StringUtils.replaceEach(MYSQL_PAGE, new String[] { "%start%", "%next%" }, new String[] { start, next });
+		String limit = StringUtils.replaceEach(MYSQL_PAGE, new String[] { "%start%", "%next%" }, range.toStartLimit());
 		return isUnion ?
 				StringUtils.concat("select * from (", sql, ") tb__", limit) : sql.concat(limit);
 	}

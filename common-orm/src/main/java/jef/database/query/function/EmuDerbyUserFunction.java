@@ -3,8 +3,8 @@ package jef.database.query.function;
 import java.util.ArrayList;
 import java.util.List;
 
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Function;
+import jef.database.jsqlparser.visitor.Expression;
 
 /**
  * 可以直接将apache commons-lang中的一个函数定义为replace存储过程

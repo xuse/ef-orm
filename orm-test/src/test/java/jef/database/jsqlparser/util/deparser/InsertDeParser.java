@@ -17,14 +17,14 @@ package jef.database.jsqlparser.util.deparser;
 
 import java.util.Iterator;
 
-import jef.database.jsqlparser.expression.Expression;
-import jef.database.jsqlparser.expression.ExpressionVisitor;
+import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
-import jef.database.jsqlparser.expression.operators.relational.ItemsListVisitor;
-import jef.database.jsqlparser.schema.Column;
 import jef.database.jsqlparser.statement.insert.Insert;
-import jef.database.jsqlparser.statement.select.SelectVisitor;
 import jef.database.jsqlparser.statement.select.SubSelect;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.ItemsListVisitor;
+import jef.database.jsqlparser.visitor.SelectVisitor;
 
 /**
  * A class to de-parse (that is, tranform from JSqlParser hierarchy into a string)
@@ -42,7 +42,7 @@ public class InsertDeParser implements ItemsListVisitor {
     }
 
     /**
-	 * @param expressionVisitor a {@link ExpressionVisitor} to de-parse {@link jef.database.jsqlparser.expression.Expression}s. It has to share the same<br>
+	 * @param expressionVisitor a {@link ExpressionVisitor} to de-parse {@link jef.database.jsqlparser.visitor.Expression}s. It has to share the same<br>
 	 * StringBuffer (buffer parameter) as this object in order to work
 	 * @param selectVisitor a {@link SelectVisitor} to de-parse {@link jef.database.jsqlparser.statement.select.Select}s.
 	 * It has to share the same<br>

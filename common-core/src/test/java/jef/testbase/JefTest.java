@@ -37,6 +37,7 @@ import jef.tools.ResourceUtils;
 import jef.tools.StringUtils;
 import jef.tools.TextFileCallback;
 import jef.tools.ThreadUtils;
+import jef.tools.reflect.CloneUtils;
 import jef.tools.resource.ResourceLoader;
 import jef.tools.string.RandomData;
 import jef.tools.support.NumberText;
@@ -204,6 +205,16 @@ public class JefTest extends Assert {
 	
 	
 	public void saveDocumentAsFile(Document doc,String filepath) throws IOException{
+		
+	}
+	
+	@Test
+	public void cloneTest() throws CloneNotSupportedException{
+		Parent p=new Parent();
+		
+		Parent clone=(Parent) CloneUtils.clone(p);
+		System.out.println(p);
+		System.out.println(clone);
 		
 	}
 	
@@ -686,11 +697,8 @@ public class JefTest extends Assert {
 	private Class c=String.class;
 	@Test
 	public void getClz1(){
-		long start=System.nanoTime();
-		for(int i=0;i<1000;i++){
-			Class c=String.class;
-		}
-		System.out.println(System.nanoTime()-start);
+		//str.replaceAll("\\sas[^,]+(,?)", "$1");
+		System.out.println("select ff as asa, dfsfd as asd, sfsdf as dfsdf form ddsa".replaceAll("(select\\s?)\\D+\\sas[^,]+(,?)", "$1"));
 	}
 	
 	@Test

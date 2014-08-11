@@ -15,6 +15,9 @@
  */
 package jef.database.jsqlparser.expression;
 
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
+
 /**
  * Every number without a point or an exponential format is a LongValue
  */

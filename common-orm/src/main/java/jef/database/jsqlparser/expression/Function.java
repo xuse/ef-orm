@@ -19,6 +19,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 /**
  * A function as MAX,COUNT...

@@ -17,6 +17,9 @@ package jef.database.jsqlparser.expression;
 
 import java.sql.Timestamp;
 
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
+
 /**
  * A Timestamp in the form {ts 'yyyy-mm-dd hh:mm:ss.f . . .'}
  */

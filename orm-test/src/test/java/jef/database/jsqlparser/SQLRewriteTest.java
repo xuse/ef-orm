@@ -7,8 +7,8 @@ import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.DbmsProfile;
 import jef.database.jsqlparser.parser.ParseException;
-import jef.database.jsqlparser.statement.Statement;
 import jef.database.jsqlparser.statement.select.Select;
+import jef.database.jsqlparser.visitor.Statement;
 
 import org.apache.commons.lang.StringUtils;
 import org.junit.Test;

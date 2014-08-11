@@ -1,7 +1,8 @@
 package jef.database.jsqlparser;
 
 import jef.database.dialect.DatabaseDialect;
-import jef.database.jsqlparser.schema.Column;
+import jef.database.jsqlparser.expression.Column;
+import jef.database.jsqlparser.visitor.VisitorAdapter;
 import jef.database.query.SqlContext;
 import jef.tools.StringUtils;
 

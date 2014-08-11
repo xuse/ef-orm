@@ -14,7 +14,7 @@ import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.AutoIntMapping;
 import jef.database.dialect.type.AutoLongMapping;
 import jef.database.dialect.type.MappingType;
-import jef.database.jsqlparser.expression.Expression;
+import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.TupleField;

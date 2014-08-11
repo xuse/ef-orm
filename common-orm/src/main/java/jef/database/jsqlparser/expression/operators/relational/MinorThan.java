@@ -16,7 +16,7 @@
 package jef.database.jsqlparser.expression.operators.relational;
 
 import jef.database.jsqlparser.expression.BinaryExpression;
-import jef.database.jsqlparser.expression.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 public class MinorThan extends BinaryExpression {
 

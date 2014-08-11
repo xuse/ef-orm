@@ -18,9 +18,8 @@ import jef.database.annotation.EasyEntity;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.SelectToCountWrapper;
 import jef.database.jsqlparser.SqlFunctionlocalization;
-import jef.database.jsqlparser.VisitorAdapter;
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.JpqlParameter;
+import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.expression.operators.relational.EqualsTo;
 import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
 import jef.database.jsqlparser.expression.operators.relational.GreaterThan;
@@ -31,12 +30,13 @@ import jef.database.jsqlparser.expression.operators.relational.MinorThan;
 import jef.database.jsqlparser.expression.operators.relational.MinorThanEquals;
 import jef.database.jsqlparser.expression.operators.relational.NotEqualsTo;
 import jef.database.jsqlparser.parser.ParseException;
-import jef.database.jsqlparser.schema.Table;
-import jef.database.jsqlparser.statement.Statement;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.statement.select.Select;
-import jef.database.jsqlparser.statement.select.SelectBody;
 import jef.database.jsqlparser.statement.select.Union;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.SelectBody;
+import jef.database.jsqlparser.visitor.Statement;
+import jef.database.jsqlparser.visitor.VisitorAdapter;
 import jef.database.meta.MetaHolder;
 import jef.database.query.ParameterProvider;
 import jef.database.query.ParameterProvider.MapProvider;
@@ -158,7 +158,7 @@ public class NamedQueryConfig extends jef.database.DataObject {
 				}
 				
 				@Override
-				public void visit(jef.database.jsqlparser.schema.Column c) {
+				public void visit(jef.database.jsqlparser.expression.Column c) {
 					String schema = c.getSchema();
 					if(schema!=null){
 						String newSchema = MetaHolder.getMappingSchema(schema);

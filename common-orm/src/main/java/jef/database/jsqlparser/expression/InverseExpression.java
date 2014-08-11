@@ -15,6 +15,9 @@
  */
 package jef.database.jsqlparser.expression;
 
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
+
 /**
  * It represents a "-" before an expression 
  */

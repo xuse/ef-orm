@@ -1,5 +1,8 @@
 package jef.database.jsqlparser.expression;
 
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
+
 /**
  * 支持用标准的String.format语法进行修饰的表达式。
  * 

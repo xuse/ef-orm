@@ -2017,7 +2017,7 @@ public abstract class Session {
 	protected void checkCacheUpdate(String sql, List list) {
 		if (getCache().isDummy())
 			return;
-		jef.database.jsqlparser.statement.Statement st = null;
+		jef.database.jsqlparser.visitor.Statement st = null;
 		StSqlParser parser = new StSqlParser(new StringReader(sql));
 		try {
 			st = parser.Statement();

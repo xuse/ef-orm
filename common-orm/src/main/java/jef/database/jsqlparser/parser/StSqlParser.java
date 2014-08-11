@@ -6,7 +6,6 @@ import java.util.List;
 
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.DoubleValue;
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Over;
 import jef.database.jsqlparser.expression.InverseExpression;
@@ -40,21 +39,19 @@ import jef.database.jsqlparser.expression.operators.relational.GreaterThan;
 import jef.database.jsqlparser.expression.operators.relational.GreaterThanEquals;
 import jef.database.jsqlparser.expression.operators.relational.InExpression;
 import jef.database.jsqlparser.expression.operators.relational.IsNullExpression;
-import jef.database.jsqlparser.expression.operators.relational.ItemsList;
 import jef.database.jsqlparser.expression.operators.relational.LikeExpression;
 import jef.database.jsqlparser.expression.operators.relational.ExistsExpression;
 import jef.database.jsqlparser.expression.operators.relational.Matches;
 import jef.database.jsqlparser.expression.operators.relational.MinorThan;
 import jef.database.jsqlparser.expression.operators.relational.MinorThanEquals;
 import jef.database.jsqlparser.expression.operators.relational.NotEqualsTo;
+import jef.database.jsqlparser.expression.Column;
+import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.statement.select.StartWithExpression;
-import jef.database.jsqlparser.schema.Column;
-import jef.database.jsqlparser.schema.Table;
-import jef.database.jsqlparser.statement.Statement;
-import jef.database.jsqlparser.statement.create.table.ColDataType;
-import jef.database.jsqlparser.statement.create.table.ColumnDefinition;
-import jef.database.jsqlparser.statement.create.table.CreateTable;
-import jef.database.jsqlparser.statement.create.table.Index;
+import jef.database.jsqlparser.statement.create.ColDataType;
+import jef.database.jsqlparser.statement.create.ColumnDefinition;
+import jef.database.jsqlparser.statement.create.CreateTable;
+import jef.database.jsqlparser.statement.create.Index;
 import jef.database.jsqlparser.statement.delete.Delete;
 import jef.database.jsqlparser.statement.drop.Drop;
 import jef.database.jsqlparser.statement.insert.Insert;
@@ -62,7 +59,6 @@ import jef.database.jsqlparser.statement.replace.Replace;
 import jef.database.jsqlparser.statement.select.AllColumns;
 import jef.database.jsqlparser.statement.select.AllTableColumns;
 import jef.database.jsqlparser.statement.select.Distinct;
-import jef.database.jsqlparser.statement.select.FromItem;
 import jef.database.jsqlparser.statement.select.Join;
 import jef.database.jsqlparser.statement.select.SubJoin;
 import jef.database.jsqlparser.statement.select.Limit;
@@ -70,15 +66,19 @@ import jef.database.jsqlparser.statement.select.OrderByElement;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.Select;
-import jef.database.jsqlparser.statement.select.SelectBody;
 import jef.database.jsqlparser.statement.select.SelectExpressionItem;
-import jef.database.jsqlparser.statement.select.SelectItem;
 import jef.database.jsqlparser.statement.select.SubSelect;
 import jef.database.jsqlparser.statement.select.Top;
 import jef.database.jsqlparser.statement.select.Union;
 import jef.database.jsqlparser.statement.select.WithItem;
 import jef.database.jsqlparser.statement.truncate.Truncate;
 import jef.database.jsqlparser.statement.update.Update;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.FromItem;
+import jef.database.jsqlparser.visitor.ItemsList;
+import jef.database.jsqlparser.visitor.SelectBody;
+import jef.database.jsqlparser.visitor.SelectItem;
+import jef.database.jsqlparser.visitor.Statement;
 import jef.database.jsqlparser.expression.Interval;
 import jef.database.jsqlparser.expression.Child;
 /**
@@ -5544,6 +5544,11 @@ public class StSqlParser implements StSqlParserConstants {
     return false;
   }
 
+  private boolean jj_3R_184() {
+    if (jj_scan_token(K_FULL)) return true;
+    return false;
+  }
+
   private boolean jj_3R_151() {
     if (jj_scan_token(K_OVER)) return true;
     if (jj_scan_token(86)) return true;
@@ -5553,11 +5558,6 @@ public class StSqlParser implements StSqlParserConstants {
     xsp = jj_scanpos;
     if (jj_3R_212()) jj_scanpos = xsp;
     if (jj_scan_token(87)) return true;
-    return false;
-  }
-
-  private boolean jj_3R_184() {
-    if (jj_scan_token(K_FULL)) return true;
     return false;
   }
 

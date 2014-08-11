@@ -17,6 +17,9 @@ package jef.database.jsqlparser.statement.select;
 
 import java.util.List;
 
+import jef.database.jsqlparser.visitor.SelectBody;
+import jef.database.jsqlparser.visitor.SelectVisitor;
+
 /**
  * A UNION statement
  */
@@ -95,10 +98,11 @@ public class Union implements SelectBody {
 
     public String toString() {
         StringBuilder sb = new StringBuilder(256);
-        return appendTo(sb).toString();
+        appendTo(sb);
+        return sb.toString();
     }
 
-	public StringBuilder appendTo(StringBuilder sb) {
+	public void appendTo(StringBuilder sb) {
         String allDistinct="";
         if (isAll()) {
             allDistinct = "ALL ";
@@ -113,7 +117,8 @@ public class Union implements SelectBody {
         		sb.append("\n UNION ").append(allDistinct);
         	}
         	if(hasParentis){
-        		plainSelects.get(i).appendTo(sb.append('(')).append(')');
+        		plainSelects.get(i).appendTo(sb.append('('));
+        		sb.append(')');
         	}else{
         		plainSelects.get(i).appendTo(sb);
         	}
@@ -124,7 +129,6 @@ public class Union implements SelectBody {
         if(limit != null){
         	sb.append(limit.toString());
         }
-        return sb;
 	}
 
 	public OrderBy getOrderBy() {

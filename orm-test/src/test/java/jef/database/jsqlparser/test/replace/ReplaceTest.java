@@ -2,12 +2,12 @@ package jef.database.jsqlparser.test.replace;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertTrue;
+import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.JpqlParameter;
 import jef.database.jsqlparser.expression.LongValue;
 import jef.database.jsqlparser.expression.StringValue;
 import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
 import jef.database.jsqlparser.parser.ParseException;
-import jef.database.jsqlparser.schema.Column;
 import jef.database.jsqlparser.statement.replace.Replace;
 import jef.database.jsqlparser.statement.select.SubSelect;
 

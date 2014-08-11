@@ -17,10 +17,14 @@ package jef.database.jsqlparser.statement.select;
 
 import java.util.List;
 
+import jef.database.jsqlparser.statement.SqlAppendable;
+import jef.database.jsqlparser.visitor.SelectBody;
+import jef.database.jsqlparser.visitor.SelectItem;
+
 /**
  * One of the parts of a "WITH" clause of a "SELECT" statement  
  */
-public class WithItem {
+public class WithItem implements SqlAppendable{
 
     private String name;
 
@@ -65,14 +69,19 @@ public class WithItem {
     }
 
     public String toString() {
-    	StringBuilder sb=new StringBuilder(name);
+    	StringBuilder sb=new StringBuilder(80);
+    	appendTo(sb);
+        return sb.toString();
+    }
+
+	public void appendTo(StringBuilder sb) {
+		sb.append(name);
     	if(withItemList != null){
     		sb.append(' ');
     		PlainSelect.getStringList(sb,withItemList, ",", true); 
     	}
     	sb.append(" AS (");
-    	sb.append(selectBody.toString());
-    	sb.append(")");
-        return sb.toString();
-    }
+    	selectBody.appendTo(sb);
+    	sb.append(')');
+	}
 }

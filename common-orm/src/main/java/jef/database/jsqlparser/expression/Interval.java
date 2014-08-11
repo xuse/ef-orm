@@ -1,5 +1,7 @@
 package jef.database.jsqlparser.expression;
 
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
 import jef.database.query.SqlExpression;
 
 import org.apache.commons.lang.ArrayUtils;

@@ -1,7 +1,7 @@
 package jef.database.jsqlparser.test.delete;
 
+import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.parser.ParseException;
-import jef.database.jsqlparser.schema.Table;
 import jef.database.jsqlparser.statement.delete.Delete;
 import junit.framework.TestCase;
 

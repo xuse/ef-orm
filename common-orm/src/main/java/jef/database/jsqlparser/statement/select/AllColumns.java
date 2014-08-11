@@ -15,6 +15,9 @@
  */
 package jef.database.jsqlparser.statement.select;
 
+import jef.database.jsqlparser.visitor.SelectItem;
+import jef.database.jsqlparser.visitor.SelectItemVisitor;
+
 /**
  * All the columns (as in "SELECT * FROM ...")
  */

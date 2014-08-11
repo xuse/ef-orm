@@ -17,13 +17,13 @@ package jef.database.jsqlparser.statement.replace;
 
 import java.util.List;
 
-import jef.database.jsqlparser.expression.Expression;
-import jef.database.jsqlparser.expression.operators.relational.ItemsList;
-import jef.database.jsqlparser.schema.Column;
-import jef.database.jsqlparser.schema.Table;
-import jef.database.jsqlparser.statement.Statement;
-import jef.database.jsqlparser.statement.StatementVisitor;
+import jef.database.jsqlparser.expression.Column;
+import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.statement.select.PlainSelect;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ItemsList;
+import jef.database.jsqlparser.visitor.Statement;
+import jef.database.jsqlparser.visitor.StatementVisitor;
 
 /**
  * The replace statement.
@@ -53,8 +53,8 @@ public class Replace implements Statement {
     }
 
     /**
-	 * A list of {@link jef.database.jsqlparser.schema.Column}s either from a "REPLACE mytab (col1, col2) [...]" or a "REPLACE mytab SET col1=exp1, col2=exp2". 
-	 * @return a list of {@link jef.database.jsqlparser.schema.Column}s
+	 * A list of {@link jef.database.jsqlparser.expression.Column}s either from a "REPLACE mytab (col1, col2) [...]" or a "REPLACE mytab SET col1=exp1, col2=exp2". 
+	 * @return a list of {@link jef.database.jsqlparser.expression.Column}s
 	 */
     public List<Column> getColumns() {
         return columns;
@@ -77,7 +77,7 @@ public class Replace implements Statement {
     }
 
     /**
-	 * A list of {@link jef.database.jsqlparser.expression.Expression}s (from a "REPLACE mytab SET col1=exp1, col2=exp2"). <br>
+	 * A list of {@link jef.database.jsqlparser.visitor.Expression}s (from a "REPLACE mytab SET col1=exp1, col2=exp2"). <br>
 	 * it is null in case of a "REPLACE mytab (col1, col2) [...]"  
 	 */
     public List<Expression> getExpressions() {

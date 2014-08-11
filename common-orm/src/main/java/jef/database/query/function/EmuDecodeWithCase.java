@@ -5,8 +5,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import jef.database.jsqlparser.expression.CaseExpression;
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.WhenClause;
+import jef.database.jsqlparser.visitor.Expression;
 
 
 /**

@@ -17,7 +17,7 @@ package jef.database.meta;
 
 import jef.database.Field;
 import jef.database.IQueryableEntity;
-import jef.database.jsqlparser.expression.Expression;
+import jef.database.jsqlparser.visitor.Expression;
 import jef.database.query.JpqlExpression;
 import jef.database.query.Query;
 

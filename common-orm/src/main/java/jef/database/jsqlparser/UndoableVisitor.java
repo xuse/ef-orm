@@ -2,6 +2,7 @@ package jef.database.jsqlparser;
 
 import jef.common.Entry;
 import jef.common.SimpleMap;
+import jef.database.jsqlparser.visitor.VisitorAdapter;
 
 public abstract class UndoableVisitor<K,V> extends VisitorAdapter{
 	private SimpleMap<K,V> rollback=new SimpleMap<K,V>();

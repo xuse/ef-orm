@@ -1,7 +1,7 @@
 package jef.database.jsqlparser.test.simpleparsing;
 
 import jef.database.jsqlparser.parser.ParseException;
-import jef.database.jsqlparser.statement.Statement;
+import jef.database.jsqlparser.visitor.Statement;
 
 import org.junit.Test;
 

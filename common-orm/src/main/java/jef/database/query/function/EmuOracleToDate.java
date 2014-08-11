@@ -2,9 +2,9 @@ package jef.database.query.function;
 
 import java.util.List;
 
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.StringValue;
+import jef.database.jsqlparser.visitor.Expression;
 
 /**
  * 大多数数据库都可以直接将标准格式的字符串当作日期时间处理（隐式转换），Oracle需要用to_date模拟

@@ -26,7 +26,7 @@ package jef.database.query.function;
 import java.util.List;
 
 import jef.common.JefException;
-import jef.database.jsqlparser.expression.Expression;
+import jef.database.jsqlparser.visitor.Expression;
 
 /**
  * SQL函数的渲染器

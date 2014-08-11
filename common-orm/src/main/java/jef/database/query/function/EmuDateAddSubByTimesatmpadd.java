@@ -2,11 +2,11 @@ package jef.database.query.function;
 
 import java.util.List;
 
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
 import jef.database.jsqlparser.expression.InverseExpression;
 import jef.database.jsqlparser.expression.StringValue;
+import jef.database.jsqlparser.visitor.Expression;
 import jef.database.query.Func;
 import jef.database.support.SQL_TSI;
 

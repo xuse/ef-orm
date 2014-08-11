@@ -15,7 +15,7 @@ public class TablesNamesFinderTest {
 	@Test
 	public void testGetTableList() throws Exception {
 		String sql = "select * from MY_TABLE0 where col1 like 'aaa%' union all SELECT * FROM MY_TABLE1, MY_TABLE2, (SELECT * FROM MY_TABLE3) LEFT OUTER JOIN MY_TABLE4 " + " WHERE ID = (SELECT MAX(ID) FROM MY_TABLE5) AND ID2 IN (SELECT * FROM MY_TABLE6)";
-		jef.database.jsqlparser.statement.Statement statement = DbUtils.parseStatement(sql);
+		jef.database.jsqlparser.visitor.Statement statement = DbUtils.parseStatement(sql);
 		// now you should use a class that implements StatementVisitor to decide
 		// what to do
 		// based on the kind of the statement, that is SELECT or INSERT etc. but

@@ -101,4 +101,21 @@ public class IntRange extends ContinuedRange<Integer> implements Iterable<Intege
 	public int size() {
 		return end-start+1;
 	}
+	
+	public String[] toStartLimit(){
+		int s=start - 1;
+		if(s<0)s=0;
+		return new String[]{String.valueOf(s),String.valueOf(end-s)};
+	}
+	
+	/**
+	 * 转换为SQL语句中的start和limit
+	 * @return
+	 */
+	public int[] toStartLimitSpan(){
+		int s=start - 1;
+		if(s<0)s=0;
+		return new int[]{s,end-s};
+	}
+	
 }

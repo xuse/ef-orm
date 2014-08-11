@@ -1,12 +1,12 @@
 package jef.database.jsqlparser.test.update;
 
+import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.JpqlParameter;
 import jef.database.jsqlparser.expression.LongValue;
 import jef.database.jsqlparser.expression.StringValue;
+import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.expression.operators.relational.GreaterThanEquals;
 import jef.database.jsqlparser.parser.ParseException;
-import jef.database.jsqlparser.schema.Column;
-import jef.database.jsqlparser.schema.Table;
 import jef.database.jsqlparser.statement.update.Update;
 import junit.framework.TestCase;
 

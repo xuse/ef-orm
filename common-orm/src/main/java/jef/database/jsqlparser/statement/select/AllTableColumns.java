@@ -15,7 +15,9 @@
  */
 package jef.database.jsqlparser.statement.select;
 
-import jef.database.jsqlparser.schema.Table;
+import jef.database.jsqlparser.expression.Table;
+import jef.database.jsqlparser.visitor.SelectItem;
+import jef.database.jsqlparser.visitor.SelectItemVisitor;
 
 public class AllTableColumns implements SelectItem {
 

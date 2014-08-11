@@ -15,10 +15,12 @@
  */
 package jef.database.jsqlparser.statement.select;
 
+import jef.database.jsqlparser.statement.SqlAppendable;
+
 /**
  * A top clause in the form [TOP row_count] 
  */
-public class Top {
+public class Top implements SqlAppendable{
 
     private long rowCount;
 
@@ -41,12 +43,13 @@ public class Top {
     }
 
     public String toString() {
-        return appendTo(new StringBuilder()).toString();
+    	StringBuilder sb=new StringBuilder();
+        appendTo(sb);
+        return sb.toString();
     }
     
-    public StringBuilder appendTo(StringBuilder sb) {
+    public void appendTo(StringBuilder sb) {
     	sb.append("TOP ");
     	sb.append(rowCountJdbcParameter?"?":String.valueOf(rowCount));
-    	return sb;
     }
 }

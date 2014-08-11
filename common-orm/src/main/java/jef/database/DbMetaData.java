@@ -2069,6 +2069,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	}
 
 	private String getTransactionId() {
+		if(info==null)return super.toString();
 		StringBuilder sb = new StringBuilder();
 		sb.append('[').append(info.profile.getName()).append(':').append(getDbName()).append('@').append(Thread.currentThread().getId()).append(']');
 		return sb.toString();

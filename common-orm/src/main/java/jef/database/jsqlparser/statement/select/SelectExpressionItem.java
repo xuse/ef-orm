@@ -15,7 +15,9 @@
  */
 package jef.database.jsqlparser.statement.select;
 
-import jef.database.jsqlparser.expression.Expression;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.SelectItem;
+import jef.database.jsqlparser.visitor.SelectItemVisitor;
 
 /**
  * An expression as in "SELECT expr1 AS EXPR"

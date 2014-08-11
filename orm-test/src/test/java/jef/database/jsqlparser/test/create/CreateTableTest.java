@@ -2,9 +2,9 @@ package jef.database.jsqlparser.test.create;
 
 import static junit.framework.Assert.assertEquals;
 import jef.database.jsqlparser.parser.ParseException;
-import jef.database.jsqlparser.statement.create.table.ColumnDefinition;
-import jef.database.jsqlparser.statement.create.table.CreateTable;
-import jef.database.jsqlparser.statement.create.table.Index;
+import jef.database.jsqlparser.statement.create.ColumnDefinition;
+import jef.database.jsqlparser.statement.create.CreateTable;
+import jef.database.jsqlparser.statement.create.Index;
 
 import org.junit.Test;
 public class CreateTableTest {

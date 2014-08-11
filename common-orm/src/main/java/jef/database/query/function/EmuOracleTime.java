@@ -2,10 +2,10 @@ package jef.database.query.function;
 
 import java.util.List;
 
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Parenthesis;
 import jef.database.jsqlparser.expression.operators.arithmetic.Subtraction;
+import jef.database.jsqlparser.visitor.Expression;
 
 /**
  * 截取oracle纯time

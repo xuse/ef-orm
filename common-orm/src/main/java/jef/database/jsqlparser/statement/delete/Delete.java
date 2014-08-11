@@ -15,11 +15,11 @@
  */
 package jef.database.jsqlparser.statement.delete;
 
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.parser.Token;
-import jef.database.jsqlparser.statement.Statement;
-import jef.database.jsqlparser.statement.StatementVisitor;
-import jef.database.jsqlparser.statement.select.FromItem;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.FromItem;
+import jef.database.jsqlparser.visitor.Statement;
+import jef.database.jsqlparser.visitor.StatementVisitor;
 
 public class Delete implements Statement {
 

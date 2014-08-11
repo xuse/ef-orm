@@ -11,9 +11,9 @@ import javax.management.ReflectionException;
 
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
+import jef.accelerator.cglib.beans.BeanCopier;
 import jef.common.log.LogUtil;
 import jef.tools.reflect.BeanWrapper;
-import net.sf.cglib.beans.BeanCopier;
 
 import org.junit.Test;
 
@@ -58,7 +58,7 @@ public class PerformanceTest {
 
 		{// 案例0：CGLib  （原生）
 			PromotionPO po = new PromotionPO();
-			net.sf.cglib.beans.BeanCopier bc = net.sf.cglib.beans.BeanCopier.create(PromotionPO.class, PromotionPO.class, false);
+			jef.accelerator.cglib.beans.BeanCopier bc = jef.accelerator.cglib.beans.BeanCopier.create(PromotionPO.class, PromotionPO.class, false);
 			long startTime = System.currentTimeMillis();
 			for (int i = 0; i < LOOP_NUMBER; i++) {
 				bc.copy(source, po, null);
@@ -71,7 +71,7 @@ public class PerformanceTest {
 			PromotionPO po = new PromotionPO();
 			long startTime = System.currentTimeMillis();
 			for (int i = 0; i < LOOP_NUMBER; i++) {
-				org.apache.commons.beanutils.PropertyUtils.copyProperties(po, source);
+//				org.apache.commons.beanutils.PropertyUtils.copyProperties(po, source);
 			}
 			long endTime = System.currentTimeMillis();
 			cost.put("Apache PropertyUtils", endTime - startTime);// (Apache
@@ -171,14 +171,14 @@ public class PerformanceTest {
 		{// 案例1：Apache commons
 			PromotionPO po = new PromotionPO();
 			long startTime = System.currentTimeMillis();
-			for (int i = 0; i < LOOP_NUMBER; i++) {
-				org.apache.commons.beanutils.PropertyUtils.getProperty(po, "code");
-				org.apache.commons.beanutils.PropertyUtils.getProperty(po, "ID");
-				org.apache.commons.beanutils.PropertyUtils.getProperty(po, "field1");
-				org.apache.commons.beanutils.PropertyUtils.setProperty(po, "code", "code123456789");
-				org.apache.commons.beanutils.PropertyUtils.setProperty(po, "ID", 100L);
-				org.apache.commons.beanutils.PropertyUtils.setProperty(po, "field1", "field1123456789");
-			}
+//			for (int i = 0; i < LOOP_NUMBER; i++) {
+//				org.apache.commons.beanutils.PropertyUtils.getProperty(po, "code");
+//				org.apache.commons.beanutils.PropertyUtils.getProperty(po, "ID");
+//				org.apache.commons.beanutils.PropertyUtils.getProperty(po, "field1");
+//				org.apache.commons.beanutils.PropertyUtils.setProperty(po, "code", "code123456789");
+//				org.apache.commons.beanutils.PropertyUtils.setProperty(po, "ID", 100L);
+//				org.apache.commons.beanutils.PropertyUtils.setProperty(po, "field1", "field1123456789");
+//			}
 			long endTime = System.currentTimeMillis();
 			commonsCopyPropertiesTime = endTime - startTime;
 		}

@@ -25,7 +25,7 @@ import jef.database.VariableCallback.Like;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMappings;
 import jef.database.dialect.type.MappingType;
-import jef.database.jsqlparser.expression.Expression;
+import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.FBIField;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.TupleField;

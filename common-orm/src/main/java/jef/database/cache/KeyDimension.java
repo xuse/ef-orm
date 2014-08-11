@@ -4,12 +4,12 @@ import java.io.StringReader;
 
 import javax.persistence.PersistenceException;
 
-import jef.database.jsqlparser.VisitorAdapter;
-import jef.database.jsqlparser.expression.Expression;
+import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.parser.StSqlParser;
 import jef.database.jsqlparser.parser.TokenMgrError;
-import jef.database.jsqlparser.schema.Column;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.VisitorAdapter;
 import jef.tools.StringUtils;
 
 public class KeyDimension {

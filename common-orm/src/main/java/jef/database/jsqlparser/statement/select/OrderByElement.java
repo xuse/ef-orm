@@ -15,8 +15,9 @@
  */
 package jef.database.jsqlparser.statement.select;
 
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.statement.SqlAppendable;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.SelectVisitor;
 
 /**
  * An element (column reference) in an "ORDER BY" clause.

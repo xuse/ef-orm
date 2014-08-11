@@ -16,6 +16,8 @@
 package jef.database.jsqlparser.expression;
 
 import jef.database.jsqlparser.statement.select.SubSelect;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 //SQL Server才有的关键字
 public class AnyComparisonExpression implements Expression {

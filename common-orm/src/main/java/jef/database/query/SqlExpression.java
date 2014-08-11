@@ -23,8 +23,8 @@ import jef.database.Condition;
 import jef.database.IConditionField;
 import jef.database.IQueryableEntity;
 import jef.database.SqlProcessor;
-import jef.database.jsqlparser.expression.Expression;
-import jef.database.jsqlparser.expression.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
 import jef.database.meta.ITableMetadata;
 
 public class SqlExpression implements Expression,IConditionField{

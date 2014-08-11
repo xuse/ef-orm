@@ -2,7 +2,6 @@ package jef.database.query.function;
 
 import java.util.List;
 
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
 import jef.database.jsqlparser.expression.LongValue;
@@ -11,6 +10,7 @@ import jef.database.jsqlparser.expression.StringValue;
 import jef.database.jsqlparser.expression.operators.arithmetic.Addition;
 import jef.database.jsqlparser.expression.operators.arithmetic.Division;
 import jef.database.jsqlparser.expression.operators.arithmetic.Multiplication;
+import jef.database.jsqlparser.visitor.Expression;
 
 /**
  * 在oracle上模拟dateadd函数

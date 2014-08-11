@@ -15,9 +15,10 @@
  */
 package jef.database.jsqlparser.expression.operators.relational;
 
-import jef.database.jsqlparser.expression.Expression;
-import jef.database.jsqlparser.expression.ExpressionVisitor;
-import jef.database.jsqlparser.expression.Ignorable;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.Ignorable;
+import jef.database.jsqlparser.visitor.ItemsList;
 
 public class InExpression implements Expression,Ignorable {
 

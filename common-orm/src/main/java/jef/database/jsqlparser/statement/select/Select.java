@@ -18,10 +18,12 @@ package jef.database.jsqlparser.statement.select;
 import java.util.Iterator;
 import java.util.List;
 
-import jef.database.jsqlparser.statement.Statement;
-import jef.database.jsqlparser.statement.StatementVisitor;
+import jef.database.jsqlparser.statement.SqlAppendable;
+import jef.database.jsqlparser.visitor.SelectBody;
+import jef.database.jsqlparser.visitor.Statement;
+import jef.database.jsqlparser.visitor.StatementVisitor;
 
-public class Select implements Statement {
+public class Select implements Statement,SqlAppendable,Cloneable {
 
     private SelectBody selectBody;
 
@@ -40,17 +42,8 @@ public class Select implements Statement {
     }
 
     public String toString() {
-        StringBuffer retval = new StringBuffer();
-        if (withItemsList != null && !withItemsList.isEmpty()) {
-            retval.append("WITH ");
-            for (Iterator<WithItem> iter = withItemsList.iterator(); iter.hasNext(); ) {
-                WithItem withItem = iter.next();
-                retval.append(withItem);
-                if (iter.hasNext()) retval.append(",");
-                retval.append(" ");
-            }
-        }
-        retval.append(selectBody);
+        StringBuilder retval = new StringBuilder();
+        appendTo(retval);
         return retval.toString();
     }
 
@@ -61,4 +54,18 @@ public class Select implements Statement {
     public void setWithItemsList(List<WithItem> withItemsList) {
         this.withItemsList = withItemsList;
     }
+
+	public void appendTo(StringBuilder sb) {
+        if (withItemsList != null && !withItemsList.isEmpty()) {
+            sb.append("WITH ");
+            for (Iterator<WithItem> iter = withItemsList.iterator(); iter.hasNext(); ) {
+                WithItem withItem = iter.next();
+                withItem.appendTo(sb);
+                if (iter.hasNext()) sb.append(",");
+                sb.append(" ");
+            }
+        }
+        selectBody.appendTo(sb);
+	}
+	
 }

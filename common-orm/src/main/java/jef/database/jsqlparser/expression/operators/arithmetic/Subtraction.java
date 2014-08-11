@@ -16,8 +16,8 @@
 package jef.database.jsqlparser.expression.operators.arithmetic;
 
 import jef.database.jsqlparser.expression.BinaryExpression;
-import jef.database.jsqlparser.expression.Expression;
-import jef.database.jsqlparser.expression.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 public class Subtraction extends BinaryExpression {
 	public Subtraction(){

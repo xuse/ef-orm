@@ -3,9 +3,9 @@ package jef.database.query.function;
 import java.util.List;
 
 import jef.database.dialect.DatabaseDialect;
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.StringValue;
+import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.FunctionMapping;
 import jef.database.query.Func;
 import jef.database.support.SQL_TSI;

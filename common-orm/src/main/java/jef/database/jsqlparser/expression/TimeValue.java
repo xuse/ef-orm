@@ -17,6 +17,9 @@ package jef.database.jsqlparser.expression;
 
 import java.sql.Time;
 
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
+
 /**
  * A Time in the form {t 'hh:mm:ss'}
  */

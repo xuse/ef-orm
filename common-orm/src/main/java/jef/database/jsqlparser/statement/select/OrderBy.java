@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jef.database.jsqlparser.statement.SqlAppendable;
+import jef.database.jsqlparser.visitor.SelectVisitor;
 
 public class OrderBy implements SqlAppendable {
 	protected final List<OrderByElement> orderByElements = new ArrayList<OrderByElement>();
@@ -35,4 +36,11 @@ public class OrderBy implements SqlAppendable {
 	public void accept(SelectVisitor orderByVisitor) {
 		orderByVisitor.visit(this);
 	 }
+
+	@Override
+	public String toString() {
+		StringBuilder sb=new StringBuilder();
+		appendTo(sb);
+		return sb.toString();
+	}
 }

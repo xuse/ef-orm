@@ -66,7 +66,7 @@ public class Backup<T> {
 		for(FieldEx f: fs){
 			try {
 				if(deepCopy){
-					fields.put(f.getJavaField(), CloneUtils.clone(f.get(obj),CloneUtils.DEEP_COPY));
+					fields.put(f.getJavaField(), CloneUtils.clone(f.get(obj)));
 				}else{
 					fields.put(f.getJavaField(), f.get(obj));
 				}

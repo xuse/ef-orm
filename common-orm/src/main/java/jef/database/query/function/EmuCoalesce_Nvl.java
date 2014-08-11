@@ -25,8 +25,8 @@ package jef.database.query.function;
 
 import java.util.List;
 
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Function;
+import jef.database.jsqlparser.visitor.Expression;
 
 /**
  * Emulation of <tt>coalesce()</tt> on Oracle, using multiple <tt>nvl()</tt> calls

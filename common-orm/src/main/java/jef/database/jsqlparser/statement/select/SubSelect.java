@@ -15,10 +15,13 @@
  */
 package jef.database.jsqlparser.statement.select;
 
-import jef.database.jsqlparser.expression.Expression;
-import jef.database.jsqlparser.expression.ExpressionVisitor;
-import jef.database.jsqlparser.expression.operators.relational.ItemsList;
-import jef.database.jsqlparser.expression.operators.relational.ItemsListVisitor;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.FromItem;
+import jef.database.jsqlparser.visitor.FromItemVisitor;
+import jef.database.jsqlparser.visitor.ItemsList;
+import jef.database.jsqlparser.visitor.ItemsListVisitor;
+import jef.database.jsqlparser.visitor.SelectBody;
 
 /**
  * A subselect followed by an optional alias.

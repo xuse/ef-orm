@@ -54,16 +54,16 @@ import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.MappingType;
 import jef.database.innerpool.PartitionSupport;
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.parser.JpqlParser;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.parser.StSqlParser;
 import jef.database.jsqlparser.parser.TokenMgrError;
-import jef.database.jsqlparser.statement.create.table.ColumnDefinition;
-import jef.database.jsqlparser.statement.create.table.CreateTable;
+import jef.database.jsqlparser.statement.create.ColumnDefinition;
+import jef.database.jsqlparser.statement.create.CreateTable;
 import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.Select;
-import jef.database.jsqlparser.statement.select.SelectItem;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.SelectItem;
 import jef.database.meta.AbstractRefField;
 import jef.database.meta.DbProperty;
 import jef.database.meta.ITableMetadata;
@@ -369,7 +369,7 @@ public final class DbUtils {
 	 * @return
 	 * @throws ParseException
 	 */
-	public static jef.database.jsqlparser.statement.Statement parseStatement(String sql) throws ParseException {
+	public static jef.database.jsqlparser.visitor.Statement parseStatement(String sql) throws ParseException {
 		JpqlParser parser = new JpqlParser(new StringReader(sql));
 		try {
 			return parser.Statement();

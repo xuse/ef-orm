@@ -17,13 +17,15 @@ package jef.database.jsqlparser.statement.select;
 
 import java.util.List;
 
-import jef.database.jsqlparser.expression.Expression;
-import jef.database.jsqlparser.schema.Column;
+import jef.database.jsqlparser.expression.Column;
+import jef.database.jsqlparser.statement.SqlAppendable;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.FromItem;
 
 /**
  * A join clause
  */
-public class Join {
+public class Join implements SqlAppendable{
 
 	private boolean outer = false;
 
@@ -159,7 +161,7 @@ public class Join {
 	}
 
 	/**
-	 * Returns the "USING" list of {@link jef.database.jsqlparser.schema.Column}
+	 * Returns the "USING" list of {@link jef.database.jsqlparser.expression.Column}
 	 * s (if any)
 	 */
 	public List<Column> getUsingColumns() {
@@ -171,10 +173,12 @@ public class Join {
 	}
 
 	public String toString() {
-		return appendTo(new StringBuilder()).toString();
+		StringBuilder sb=new StringBuilder();
+		appendTo(sb);
+		return sb.toString();
 	}
 	
-	public StringBuilder appendTo(StringBuilder sb){
+	public void appendTo(StringBuilder sb){
 		if(this.simple){
 			rightItem.appendTo(sb);
 		}else{
@@ -198,7 +202,6 @@ public class Join {
 			}
 			PlainSelect.getFormatedList(sb,usingColumns, " using", true);
 		}
-		return sb;
 	}
 	
 }

@@ -15,6 +15,9 @@
  */
 package jef.database.jsqlparser.statement.select;
 
+import jef.database.jsqlparser.visitor.FromItem;
+import jef.database.jsqlparser.visitor.FromItemVisitor;
+
 /**
  * A table created by "(tab1 join tab2)".
  */
@@ -65,14 +68,16 @@ public class SubJoin implements FromItem {
 		sb.append('(');
 		left.appendTo(sb);
 		sb.append(' ');
-		return join.appendTo(sb).append(')').toString();
+		join.appendTo(sb);
+		return sb.append(')').toString();
 	}
 
 	public void appendTo(StringBuilder sb) {
 		sb.append('(');
 		left.appendTo(sb);
 		sb.append(' ');
-		join.appendTo(sb).append(')');
+		join.appendTo(sb);
+		sb.append(')');
 		if(alias!=null){
 			sb.append(' ').append(alias);
 		}

@@ -7,8 +7,8 @@ import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.ColumnAliasApplier;
 import jef.database.jsqlparser.SqlFunctionlocalization;
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.parser.ParseException;
+import jef.database.jsqlparser.visitor.Expression;
 /**
  * 支持方言改写的表达式，需要解析
  * @author jiyi

@@ -1,6 +1,8 @@
 package jef.database.jsqlparser.statement;
 
-public interface SqlAppendable {
+import jef.tools.reflect.DeepCloneable;
+
+public interface SqlAppendable extends DeepCloneable {
 	   
     /**
      * 新增的方法，为了代替原来的toString()方法的低效率

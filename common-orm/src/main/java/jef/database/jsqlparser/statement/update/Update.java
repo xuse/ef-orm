@@ -17,12 +17,12 @@ package jef.database.jsqlparser.statement.update;
 
 import java.util.List;
 
-import jef.database.jsqlparser.expression.Expression;
+import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.parser.Token;
-import jef.database.jsqlparser.schema.Column;
-import jef.database.jsqlparser.statement.Statement;
-import jef.database.jsqlparser.statement.StatementVisitor;
-import jef.database.jsqlparser.statement.select.FromItem;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.FromItem;
+import jef.database.jsqlparser.visitor.Statement;
+import jef.database.jsqlparser.visitor.StatementVisitor;
 
 /**
  * The update statement.
@@ -68,8 +68,8 @@ public class Update implements Statement {
     }
 
     /**
-	 * The {@link jef.database.jsqlparser.schema.Column}s in this update (as col1 and col2 in UPDATE col1='a', col2='b')
-	 * @return a list of {@link jef.database.jsqlparser.schema.Column}s
+	 * The {@link jef.database.jsqlparser.expression.Column}s in this update (as col1 and col2 in UPDATE col1='a', col2='b')
+	 * @return a list of {@link jef.database.jsqlparser.expression.Column}s
 	 */
     public List<Column> getColumns() {
         return columns;

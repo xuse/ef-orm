@@ -22,7 +22,7 @@ import jef.database.innerpool.ReentrantConnection;
 import jef.database.jsqlparser.SqlFunctionlocalization;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.parser.StSqlParser;
-import jef.database.jsqlparser.statement.select.SelectItem;
+import jef.database.jsqlparser.visitor.SelectItem;
 import jef.database.meta.DbProperty;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.EntityMappingProvider;
@@ -238,6 +238,7 @@ public class OperateTarget implements SqlTemplate {
 		}
 	}
 
+	//FIXME sqlRouting..,boolean sqlRouting
 	final int innerExecuteSql(String sql, List<Object> ps) throws SQLException {
 		Object[] params = ps.toArray();
 		DbOperateProcessor p = session.p;
@@ -277,7 +278,7 @@ public class OperateTarget implements SqlTemplate {
 		return total;
 	}
 
-	// objs不能为null
+	// FIXME sqlRouting 
 	final <T> T innerSelectBySql(String sql, ResultSetTransformer<T> rst, int maxReturn,int fetchSize, List<?> objs) throws SQLException {
 		PreparedStatement st = null;
 		ResultSet rs = null;

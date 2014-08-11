@@ -3,9 +3,9 @@ package jef.database.jsqlparser.test.tablesfinder;
 import java.util.ArrayList;
 import java.util.List;
 
-import jef.database.jsqlparser.VisitorAdapter;
-import jef.database.jsqlparser.schema.Table;
+import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.statement.select.Select;
+import jef.database.jsqlparser.visitor.VisitorAdapter;
 
 public class TablesNamesFinder extends VisitorAdapter {
 	private List<String> tables;

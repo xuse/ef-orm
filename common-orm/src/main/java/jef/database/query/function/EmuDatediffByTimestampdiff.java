@@ -2,8 +2,8 @@ package jef.database.query.function;
 
 import java.util.List;
 
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.Function;
+import jef.database.jsqlparser.visitor.Expression;
 import jef.database.support.SQL_TSI;
 
 /**

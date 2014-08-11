@@ -5,6 +5,8 @@ import java.util.List;
 import jef.database.jsqlparser.statement.SqlAppendable;
 import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.PlainSelect;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 /**
  * 分析函数的 over后面的部分(开窗函数)
@@ -51,4 +53,14 @@ public class Over implements SqlAppendable{
 	public void accept(ExpressionVisitor visitorAdapter) {
 		visitorAdapter.visit(this);
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder sb=new StringBuilder();
+		appendTo(sb);
+		return sb.toString();
+	}
+	
+	
+	
 }

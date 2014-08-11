@@ -1,7 +1,7 @@
 package jef.database.jsqlparser.test.select;
 
 import jef.database.DbUtils;
-import jef.database.jsqlparser.statement.Statement;
+import jef.database.jsqlparser.visitor.Statement;
 
 public class MemoryTest {
 

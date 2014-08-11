@@ -15,10 +15,10 @@
  */
 package jef.database.jsqlparser.util.deparser;
 
-import jef.database.jsqlparser.expression.Expression;
-import jef.database.jsqlparser.expression.ExpressionVisitor;
-import jef.database.jsqlparser.schema.Column;
+import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.statement.update.Update;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 /**
  * A class to de-parse (that is, tranform from JSqlParser hierarchy into a string)

@@ -6,9 +6,9 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.statement.select.SelectExpressionItem;
-import jef.database.jsqlparser.statement.select.SelectItem;
 import jef.database.jsqlparser.statement.select.SubSelect;
 import jef.database.jsqlparser.statement.select.Union;
+import jef.database.jsqlparser.visitor.SelectItem;
 
 public class SelectToCountWrapper extends PlainSelect{
 	public SelectToCountWrapper(Union union){

@@ -15,13 +15,14 @@
  */
 package jef.database.jsqlparser.statement.select;
 
-import jef.database.jsqlparser.expression.Expression;
+import jef.database.jsqlparser.statement.SqlAppendable;
+import jef.database.jsqlparser.visitor.Expression;
 
 /**
  * A limit clause in the form [LIMIT {[offset,] row_count) | (row_count | ALL)
  * OFFSET offset}]
  */
-public class Limit {
+public class Limit implements SqlAppendable {
 
 	private long offset;
 
@@ -82,10 +83,11 @@ public class Limit {
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		return appendTo(sb).toString();
+		sb.append(sb);
+		return sb.toString();
 	}
 
-	public StringBuilder appendTo(StringBuilder sb) {
+	public void appendTo(StringBuilder sb) {
 		if (rowCount > 0 || rowCountJdbcParameter != null) {
 			sb.append(" LIMIT ");
 			if (rowCountJdbcParameter == null) {
@@ -102,7 +104,6 @@ public class Limit {
 				offsetJdbcParameter.appendTo(sb);
 			}
 		}
-		return sb;
 	}
 
 }

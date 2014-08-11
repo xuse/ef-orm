@@ -17,28 +17,28 @@ package jef.database.jsqlparser.util.deparser;
 
 import java.util.Iterator;
 
-import jef.database.jsqlparser.expression.Expression;
-import jef.database.jsqlparser.expression.ExpressionVisitor;
+import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.JpqlParameter;
-import jef.database.jsqlparser.schema.Column;
-import jef.database.jsqlparser.schema.Table;
+import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.statement.select.AllColumns;
 import jef.database.jsqlparser.statement.select.AllTableColumns;
-import jef.database.jsqlparser.statement.select.FromItem;
-import jef.database.jsqlparser.statement.select.FromItemVisitor;
 import jef.database.jsqlparser.statement.select.Join;
 import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.OrderByElement;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.statement.select.SelectExpressionItem;
-import jef.database.jsqlparser.statement.select.SelectItem;
-import jef.database.jsqlparser.statement.select.SelectItemVisitor;
-import jef.database.jsqlparser.statement.select.SelectVisitor;
 import jef.database.jsqlparser.statement.select.SubJoin;
 import jef.database.jsqlparser.statement.select.SubSelect;
 import jef.database.jsqlparser.statement.select.Top;
 import jef.database.jsqlparser.statement.select.Union;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.FromItem;
+import jef.database.jsqlparser.visitor.FromItemVisitor;
+import jef.database.jsqlparser.visitor.SelectItem;
+import jef.database.jsqlparser.visitor.SelectItemVisitor;
+import jef.database.jsqlparser.visitor.SelectVisitor;
 
 /**
  * A class to de-parse (that is, tranform from JSqlParser hierarchy into a string)

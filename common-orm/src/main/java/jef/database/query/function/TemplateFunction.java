@@ -2,8 +2,8 @@ package jef.database.query.function;
 
 import java.util.List;
 
-import jef.database.jsqlparser.expression.Expression;
 import jef.database.jsqlparser.expression.TemplateExpression;
+import jef.database.jsqlparser.visitor.Expression;
 
 /**
  * 支持用模板来表示函数的改写

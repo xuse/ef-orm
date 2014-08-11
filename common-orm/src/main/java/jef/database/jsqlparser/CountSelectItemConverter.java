@@ -5,8 +5,8 @@ import java.util.List;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.statement.select.Distinct;
 import jef.database.jsqlparser.statement.select.SelectExpressionItem;
-import jef.database.jsqlparser.statement.select.SelectItem;
-import jef.database.jsqlparser.statement.select.SelectItemVisitor;
+import jef.database.jsqlparser.visitor.SelectItem;
+import jef.database.jsqlparser.visitor.SelectItemVisitor;
 import jef.database.meta.Feature;
 
 /**
