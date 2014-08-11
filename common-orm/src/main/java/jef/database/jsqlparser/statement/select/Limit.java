@@ -83,7 +83,7 @@ public class Limit implements SqlAppendable {
 
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(sb);
+		appendTo(sb);
 		return sb.toString();
 	}
 

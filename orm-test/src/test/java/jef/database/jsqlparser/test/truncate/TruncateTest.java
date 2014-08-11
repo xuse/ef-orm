@@ -13,7 +13,7 @@ public class TruncateTest extends TestCase {
 		String statement = "TRUncATE TABLE myschema.mytab";
 		Truncate truncate = (Truncate) jef.database.DbUtils.parseStatement(statement);
 		assertEquals("myschema", truncate.getTable().getSchemaName());
-		assertEquals("myschema.mytab", truncate.getTable().getWholeTableName());
+		assertEquals("myschema.mytab", truncate.getTable().toWholeName());
 		assertEquals(statement.toUpperCase(), truncate.toString().toUpperCase());	
 		
 		statement = "TRUncATE   TABLE    mytab";

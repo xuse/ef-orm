@@ -63,7 +63,7 @@ public class SubJoin implements FromItem {
         return sb.toString();
     }
 
-	public String getWholeTableName() {
+	public String toWholeName() {
 		StringBuilder sb=new StringBuilder();
 		sb.append('(');
 		left.appendTo(sb);

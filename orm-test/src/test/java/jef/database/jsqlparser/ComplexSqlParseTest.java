@@ -21,6 +21,7 @@ import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.jsqlparser.visitor.VisitorAdapter;
 import jef.tools.IOUtils;
+import jef.tools.reflect.CloneUtils;
 
 import org.apache.commons.lang.StringUtils;
 import org.junit.Ignore;
@@ -334,45 +335,49 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	@Test
 	public void testComplexSqlPerformances() throws SQLException, ParseException, IOException {
 		StringBuilder sb=new StringBuilder();
-		BufferedReader reader=IOUtils.getReader(this.getClass().getResource("complex-sqls.txt"), "UTF-8"); 
-		String line;
-		boolean comment=false;
-		List<Long> cost=new ArrayList<Long>();//记录每句SQL的解析时间
-		while((line=reader.readLine())!=null){
-			if(comment){
-				if(line.endsWith("*/")){
-					comment=false;
+		for(int i=0;i<5;i++){
+			BufferedReader reader=IOUtils.getReader(this.getClass().getResource("complex-sqls.txt"), "UTF-8"); 
+			String line;
+			boolean comment=false;
+			List<Long> cost=new ArrayList<Long>();//记录每句SQL的解析时间
+			while((line=reader.readLine())!=null){
+				if(comment){
+					if(line.endsWith("*/")){
+						comment=false;
+					}
+					continue;
 				}
-				continue;
-			}
-			if(line.startsWith("/*")){
-				comment=true;
-				continue;
-			}
-			if(line.length()==0 || line.startsWith("--") )continue;
-			if(sb.length()>0)sb.append('\n');
-			sb.append(line);
-			if(endsWith(line,';')){
-				sb.setLength(sb.length()-1);
-				String sql=sb.toString();
-				sb.setLength(0);
-				if(StringUtils.isNotBlank(sql)){
-					cost.add(countParseStSql(sql));
+				if(line.startsWith("/*")){
+					comment=true;
+					continue;
+				}
+				if(line.length()==0 || line.startsWith("--") )continue;
+				if(sb.length()>0)sb.append('\n');
+				sb.append(line);
+				if(endsWith(line,';')){
+					sb.setLength(sb.length()-1);
+					String sql=sb.toString();
+					sb.setLength(0);
+					if(StringUtils.isNotBlank(sql)){
+						cost.add(countParseStSql(sql));
+					}
 				}
 			}
-		}
-		if(sb.length()>0){
-			cost.add(countParseStSql(sb.toString()));
-		}
+			if(sb.length()>0){
+				cost.add(countParseStSql(sb.toString()));
+			}
 
-		long total=0;
-		for(long l: cost){
-			total+=l;
+			long total=0;
+			for(long l: cost){
+				total+=l;
+			}
+			System.out.println("测试完成，共计解析了"+cost.size()+"句SQL语句，总耗时"+total/1000+"us，各句耗时分别为——");
+			for(long l: cost){
+				System.out.println(l/1000+"us");
+			}
+			sb.setLength(0);
 		}
-		System.out.println("测试完成，共计解析了"+cost.size()+"句SQL语句，总耗时"+total/1000+"us，各句耗时分别为——");
-		for(long l: cost){
-			System.out.println(l/1000+"us");
-		}
+		
 	}
 	
 	@Test
@@ -436,8 +441,13 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	 */
 	private long countParseStSql(String sql) throws ParseException {
 		long start=System.nanoTime();
-		new StSqlParser(new StringReader(sql)).Statement();
-		return System.nanoTime()-start;
+		Statement st=new StSqlParser(new StringReader(sql)).Statement();
+		long cost= System.nanoTime()-start;
+//		start=System.nanoTime();
+		Statement st1= (Statement) CloneUtils.clone(st);
+//		assertEquals(st.toString(),st1.toString());
+//		System.out.println("拷贝耗时"+(System.nanoTime()-start)/1000+"us");
+		return cost;
 	}
 
 	/**

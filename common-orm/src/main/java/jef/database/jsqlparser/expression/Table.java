@@ -67,7 +67,7 @@ public class Table implements FromItem {
         alias = string;
     }
 
-    public String getWholeTableName() {
+    public String toWholeName() {
         if (name == null) {
             return null;
         }

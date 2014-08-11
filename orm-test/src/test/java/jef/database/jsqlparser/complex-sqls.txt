@@ -151,4 +151,7 @@ ORDER BY id;
 --分页方法3 (2005以上)
 SELECT TOP 10 * FROM 
  (SELECT ROW_NUMBER() OVER (ORDER BY id) AS __ROW_NUM,* FROM table1) A
-WHERE __ROW_NUM > 40
+WHERE __ROW_NUM > 40;
+
+with AA as (select id, name, code, type from A where id > 1000),BB as (select type, pid from B),CC as (select p_name, pid from C)
+select AA.id, AA.name, AA.code, BB.type, C.p_name from AA, BB, CC where AA.id = BB.id and CC.pid = BB.pid;

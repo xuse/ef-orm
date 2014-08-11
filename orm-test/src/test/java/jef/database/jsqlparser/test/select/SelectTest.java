@@ -115,14 +115,14 @@ public class SelectTest extends TestCase {
 		assertEquals("mycol", ((Column) ((SelectExpressionItem) plainSelect.getSelectItems().get(1)).getExpression()).getColumnName());
 		assertEquals("tab", ((AllTableColumns) plainSelect.getSelectItems().get(2)).getTable().getName());
 		assertEquals("schema", ((AllTableColumns) plainSelect.getSelectItems().get(3)).getTable().getSchemaName());
-		assertEquals("schema.tab", ((AllTableColumns) plainSelect.getSelectItems().get(3)).getTable().getWholeTableName());
+		assertEquals("schema.tab", ((AllTableColumns) plainSelect.getSelectItems().get(3)).getTable().toWholeName());
 		assertEquals(
 			"mytab.mycol2",
 			((Column) ((SelectExpressionItem) plainSelect.getSelectItems().get(4)).getExpression()).getWholeColumnName());
 		assertEquals(
 			"mytab.mycol",
 			((Column) ((SelectExpressionItem) plainSelect.getSelectItems().get(5)).getExpression()).getWholeColumnName());
-		assertEquals("mytab", ((AllTableColumns) plainSelect.getSelectItems().get(6)).getTable().getWholeTableName());
+		assertEquals("mytab", ((AllTableColumns) plainSelect.getSelectItems().get(6)).getTable().toWholeName());
 		assertEquals(statement, ""+plainSelect);
 
 		statement = "select myid AS MYID,(select MAX(ID) AS myid2 from mytable2) AS myalias from mytable where mytable.col = 9";
@@ -189,7 +189,7 @@ public class SelectTest extends TestCase {
 		String statement = "select * from tab1 LEFT outer JOIN tab2 ON tab1.id = tab2.id";
 		PlainSelect plainSelect = (PlainSelect) ((Select) jef.database.DbUtils.parseStatement(statement)).getSelectBody();
 		assertEquals(1, plainSelect.getJoins().size());
-		assertEquals("tab2", ((Table) ((Join) plainSelect.getJoins().get(0)).getRightItem()).getWholeTableName());
+		assertEquals("tab2", ((Table) ((Join) plainSelect.getJoins().get(0)).getRightItem()).toWholeName());
 		assertEquals(
 			"tab1.id",
 			((Column) ((EqualsTo) ((Join) plainSelect.getJoins().get(0)).getOnExpression()).getLeftExpression()).getWholeColumnName());
@@ -199,14 +199,14 @@ public class SelectTest extends TestCase {
 		statement = "select * from tab1 LEFT outer JOIN tab2 ON tab1.id = tab2.id INNER JOIN tab3";
 		plainSelect = (PlainSelect) ((Select) jef.database.DbUtils.parseStatement(statement)).getSelectBody();
 		assertEquals(2, plainSelect.getJoins().size());
-		assertEquals("tab3", ((Table) ((Join) plainSelect.getJoins().get(1)).getRightItem()).getWholeTableName());
+		assertEquals("tab3", ((Table) ((Join) plainSelect.getJoins().get(1)).getRightItem()).toWholeName());
 		assertFalse(((Join) plainSelect.getJoins().get(1)).isOuter());
 		assertEquals(statement.toUpperCase(), plainSelect.toString().toUpperCase());
 
 		statement = "select * from tab1 LEFT outer JOIN tab2 ON tab1.id = tab2.id JOIN tab3";
 		plainSelect = (PlainSelect) ((Select) jef.database.DbUtils.parseStatement(statement)).getSelectBody();
 		assertEquals(2, plainSelect.getJoins().size());
-		assertEquals("tab3", ((Table) ((Join) plainSelect.getJoins().get(1)).getRightItem()).getWholeTableName());
+		assertEquals("tab3", ((Table) ((Join) plainSelect.getJoins().get(1)).getRightItem()).toWholeName());
 		assertFalse(((Join) plainSelect.getJoins().get(1)).isOuter());
 		
 		// implicit INNER 
@@ -221,7 +221,7 @@ public class SelectTest extends TestCase {
 		statement = "select * from tab1 INNER JOIN tab2 USING (id,id2)";
 		plainSelect = (PlainSelect) ((Select) jef.database.DbUtils.parseStatement(statement)).getSelectBody();
 		assertEquals(1, plainSelect.getJoins().size());
-		assertEquals("tab2", ((Table) ((Join) plainSelect.getJoins().get(0)).getRightItem()).getWholeTableName());
+		assertEquals("tab2", ((Table) ((Join) plainSelect.getJoins().get(0)).getRightItem()).toWholeName());
 		assertFalse(((Join) plainSelect.getJoins().get(0)).isOuter());
 		assertEquals(2, ((Join) plainSelect.getJoins().get(0)).getUsingColumns().size());
 		assertEquals("id2", ((Column) ((Join) plainSelect.getJoins().get(0)).getUsingColumns().get(1)).getWholeColumnName());

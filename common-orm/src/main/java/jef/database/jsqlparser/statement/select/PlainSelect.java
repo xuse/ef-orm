@@ -58,7 +58,7 @@ public class PlainSelect implements SelectBody {
 	protected StartWithExpression startWith;
 	private String hint;
 
-	public Expression getStartWith() {
+	public StartWithExpression getStartWith() {
 		return startWith;
 	}
 
@@ -66,6 +66,14 @@ public class PlainSelect implements SelectBody {
 		if (t != null && t.specialToken != null) {
 			this.hint = t.specialToken.image;
 		}
+	}
+
+	public String getHint() {
+		return hint;
+	}
+
+	public void setHint(String hint) {
+		this.hint = hint;
 	}
 
 	public void setStartWith(StartWithExpression startWith) {

@@ -29,5 +29,5 @@ public interface FromItem extends SqlAppendable{
 
     public void setAlias(String alias);
    //返回表明定義不含Alias的部分 
-    public String getWholeTableName();
+    public String toWholeName();
 }

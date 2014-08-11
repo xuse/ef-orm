@@ -52,7 +52,7 @@ public class UpdateDeParser {
     }
 
     public void deParse(Update update) {
-        buffer.append("UPDATE " + update.getTable().getWholeTableName() + " SET ");
+        buffer.append("UPDATE " + update.getTable().toWholeName() + " SET ");
         for (int i = 0; i < update.getColumns().size(); i++) {
             Column column = (Column) update.getColumns().get(i);
             buffer.append(column.getWholeColumnName() + "=");

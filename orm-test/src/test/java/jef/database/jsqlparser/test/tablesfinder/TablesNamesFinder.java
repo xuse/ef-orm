@@ -16,7 +16,7 @@ public class TablesNamesFinder extends VisitorAdapter {
 		return tables;
 	}
 	public void visit(Table tableName) {
-		String tableWholeName = tableName.getWholeTableName();
+		String tableWholeName = tableName.toWholeName();
 		tables.add(tableWholeName);
 	}
 }

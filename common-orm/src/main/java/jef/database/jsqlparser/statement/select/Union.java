@@ -127,7 +127,7 @@ public class Union implements SelectBody {
         	orderBy.appendTo(sb);
         }
         if(limit != null){
-        	sb.append(limit.toString());
+        	limit.appendTo(sb);
         }
 	}
 

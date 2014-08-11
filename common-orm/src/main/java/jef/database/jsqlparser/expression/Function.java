@@ -116,9 +116,8 @@ public class Function implements Expression {
 		return distinct;
 	}
 
-	public Function setDistinct(boolean b) {
-		distinct = b;
-		return this;
+	public void setDistinct(boolean distinct) {
+		this.distinct = distinct;
 	}
 
 	/**

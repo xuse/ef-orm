@@ -26,7 +26,14 @@ import jef.database.jsqlparser.visitor.Ignorable;
  */
 public abstract class BinaryExpression implements Expression,Ignorable {
 	public Expression rewrite;
-	
+	protected Expression leftExpression;
+
+	protected Expression rightExpression;
+
+    private boolean not = false;
+    
+    private Prior prior; 
+    
 	public enum Prior{
 		LEFT,RIGHT
 	}
@@ -53,13 +60,6 @@ public abstract class BinaryExpression implements Expression,Ignorable {
 		this.prior = prior;
 	}
 
-	protected Expression leftExpression;
-
-	protected Expression rightExpression;
-
-    private boolean not = false;
-    
-    private Prior prior; 
     
     //变量绑定值是否为空
     private ThreadLocal<Boolean> isEmpty = new ThreadLocal<Boolean>(); 
@@ -111,7 +111,7 @@ public abstract class BinaryExpression implements Expression,Ignorable {
     }
 
     public String toString() {
-    	StringBuilder sb=new StringBuilder();
+    	StringBuilder sb=new StringBuilder(64);
     	appendTo(sb);
     	return sb.toString();
     }
@@ -142,18 +142,21 @@ public abstract class BinaryExpression implements Expression,Ignorable {
     	if(_leftExpression!=null){
     		_leftExpression.appendTo(sb);
     		sb.append(' ');
-    	}
-    	if(_leftExpression!=null && _rightExpression!=null){
-    		sb.append(getStringExpression());
-    		if(prior==Prior.RIGHT){
-        		sb.append(" PRIOR");
+    		if(_rightExpression!=null){
+        		sb.append(getStringExpression());
+        		if(prior==Prior.RIGHT){
+            		sb.append(" PRIOR");
+            	}
         	}
     	}
-    	
     	if(_rightExpression!=null){
     		sb.append(' ');
     		_rightExpression.appendTo(sb);
     	}
+	}
+
+	public void setNot(boolean not) {
+		this.not = not;
 	}
 
 	static boolean isEmptyExpress(Expression e) {

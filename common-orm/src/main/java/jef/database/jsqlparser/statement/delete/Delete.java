@@ -75,10 +75,10 @@ public class Delete implements Statement {
     		sb.append(alias).append(' ');
     	}
     	sb.append("from ");
-    	sb.append(table.toString());
+    	table.appendTo(sb);
     	if(where !=null){
     		sb.append(" where ");
-    		sb.append(where);
+    		where.appendTo(sb);
     	}
         return sb.toString();
     }

@@ -74,7 +74,7 @@ public class SubSelect implements FromItem, Expression, ItemsList {
 			sb.append(' ').append(alias);
 	}
 
-	public String getWholeTableName() {
+	public String toWholeName() {
 		StringBuilder sb=new StringBuilder();
 		sb.append('(');
 		selectBody.appendTo(sb);

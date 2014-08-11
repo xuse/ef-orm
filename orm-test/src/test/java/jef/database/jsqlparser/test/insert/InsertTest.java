@@ -39,7 +39,7 @@ public class InsertTest extends TestCase {
 
 		 statement = "insert into myschema.mytable values (?1,?2,2.3)";
 		 insert = (Insert) jef.database.DbUtils.parseStatement(statement);
-		assertEquals("myschema.mytable", insert.getTable().getWholeTableName());
+		assertEquals("myschema.mytable", insert.getTable().toWholeName());
 		assertEquals(3, ((ExpressionList) insert.getItemsList()).getExpressions().size());
 		assertTrue (((ExpressionList) insert.getItemsList()).getExpressions().get(0) instanceof JpqlParameter);
 		assertEquals(2.3, ((DoubleValue) ((ExpressionList) insert.getItemsList()).getExpressions().get(2)).getValue(), 0.0);

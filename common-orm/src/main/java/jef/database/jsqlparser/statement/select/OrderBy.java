@@ -7,7 +7,8 @@ import jef.database.jsqlparser.statement.SqlAppendable;
 import jef.database.jsqlparser.visitor.SelectVisitor;
 
 public class OrderBy implements SqlAppendable {
-	protected final List<OrderByElement> orderByElements = new ArrayList<OrderByElement>();
+	
+	protected List<OrderByElement> orderByElements = new ArrayList<OrderByElement>();
 	private boolean nullsLast;
 
 	public List<OrderByElement> getOrderByElements() {
@@ -23,6 +24,10 @@ public class OrderBy implements SqlAppendable {
 		if(nullsLast){
 			sb.append(" NULLS LAST");
 		}
+	}
+
+	public void setOrderByElements(List<OrderByElement> orderByElements) {
+		this.orderByElements = orderByElements;
 	}
 
 	public boolean isNullsLast() {

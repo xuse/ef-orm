@@ -26,7 +26,10 @@ public class LongValue implements Expression {
     private long value;
 
     private String stringValue;
-
+    
+    public LongValue(){
+    }
+    
     public LongValue(String value) {
         if (value.charAt(0) == '+') {
             value = value.substring(1);
@@ -56,7 +59,11 @@ public class LongValue implements Expression {
         return stringValue;
     }
 
-    public String toString() {
+    public void setStringValue(String stringValue) {
+		this.stringValue = stringValue;
+	}
+
+	public String toString() {
         return stringValue;
     }
 

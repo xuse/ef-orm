@@ -124,7 +124,13 @@ abstract public class BeanCopier {
 			{
 				CodeEmitter e = ce.begin_method(Constants.ACC_PUBLIC, COPY, null);
 				PropertyDescriptor[] getters = ReflectUtils.getBeanGetters(source);
-				PropertyDescriptor[] setters = ReflectUtils.getBeanGetters(target);
+				PropertyDescriptor[] setters = ReflectUtils.getBeanSetters(target);
+				if(getters.length!=setters.length){
+					System.out.println(source+"  "+getters.length+"  "+setters.length);
+					for(PropertyDescriptor s:setters){
+						System.out.println(s.getDisplayName());
+					}
+				}
 
 				Map<String, PropertyDescriptor> names = new HashMap<String, PropertyDescriptor>();
 				for (int i = 0; i < getters.length; i++) {

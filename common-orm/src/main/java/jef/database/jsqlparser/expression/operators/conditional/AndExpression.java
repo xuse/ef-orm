@@ -21,6 +21,9 @@ import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 public class AndExpression extends BinaryExpression {
 
+	public AndExpression(){
+	}
+	
     public AndExpression(Expression leftExpression, Expression rightExpression) {
         setLeftExpression(leftExpression);
         setRightExpression(rightExpression);

@@ -157,7 +157,7 @@ public class SelectDeParser implements SelectVisitor,SelectItemVisitor, FromItem
     }
 
     public void visit(AllTableColumns allTableColumns) {
-        buffer.append(allTableColumns.getTable().getWholeTableName() + ".*");
+        buffer.append(allTableColumns.getTable().toWholeName() + ".*");
     }
 
     public void visit(SelectExpressionItem selectExpressionItem) {
@@ -174,7 +174,7 @@ public class SelectDeParser implements SelectVisitor,SelectItemVisitor, FromItem
     }
 
     public void visit(Table tableName) {
-        buffer.append(tableName.getWholeTableName());
+        buffer.append(tableName.toWholeName());
         String alias = tableName.getAlias();
         if (alias != null && alias.length()>0) {
             buffer.append(" " + alias);

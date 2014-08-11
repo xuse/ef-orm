@@ -37,7 +37,7 @@ public class CreateTableDeParser {
     }
 
     public void deParse(CreateTable createTable) {
-        buffer.append("CREATE TABLE " + createTable.getTable().getWholeTableName());
+        buffer.append("CREATE TABLE " + createTable.getTable().toWholeName());
         if (createTable.getColumnDefinitions() != null) {
             buffer.append(" { ");
             for (Iterator<ColumnDefinition> iter = createTable.getColumnDefinitions().iterator(); iter.hasNext(); ) {

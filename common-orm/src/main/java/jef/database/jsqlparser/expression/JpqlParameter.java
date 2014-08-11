@@ -148,7 +148,7 @@ public class JpqlParameter implements Expression,FromItem,Parameter {
 		this.tableAlias=alias;
 	}
 
-	public String getWholeTableName() {
+	public String toWholeName() {
 		return getReslovedString();
 	}
 

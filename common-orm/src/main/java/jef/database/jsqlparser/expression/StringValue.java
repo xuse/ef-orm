@@ -25,6 +25,10 @@ public class StringValue implements Expression {
 
     private String value = "";
 
+    public StringValue(){
+    }
+    
+    
     public StringValue(String escapedValue) {
         this(escapedValue,true);
     }

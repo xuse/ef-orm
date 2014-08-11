@@ -64,7 +64,7 @@ public class ReplaceDeParser implements ItemsListVisitor {
     }
 
     public void deParse(Replace replace) {
-        buffer.append("REPLACE " + replace.getTable().getWholeTableName());
+        buffer.append("REPLACE " + replace.getTable().toWholeName());
         if (replace.getItemsList() != null) {
             if (replace.getColumns() != null) {
                 buffer.append(" (");
