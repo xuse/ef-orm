@@ -6,22 +6,17 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.sql.DataSource;
 
 import jef.common.Callback;
 import jef.common.pool.PoolStatus;
 import jef.database.ConnectInfo;
-import jef.database.DbCfg;
 import jef.database.DbMetaData;
 import jef.database.DbUtils;
-import jef.database.DebugUtil;
 import jef.database.datasource.IRoutingDataSource;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.meta.Feature;
-import jef.database.wrapper.populator.AbstractPopulator;
-import jef.tools.JefConfiguration;
 
 import com.google.common.collect.MapMaker;
 
@@ -33,11 +28,11 @@ import com.google.common.collect.MapMaker;
  * @author jiyi
  *
  */
-class RoutingDummyConnectionPool extends AbstractPopulator implements IRoutingConnectionPool{
+class RoutingDummyConnectionPool extends AbstractMetaDataService implements IRoutingConnectionPool{
 	protected IRoutingDataSource datasource;
 	final Map<Object, ReentrantConnection> usedConnection=new MapMaker().concurrencyLevel(12).weakKeys().makeMap();
-	private final AtomicInteger pollCount=new AtomicInteger();
-	private final AtomicInteger offerCount=new AtomicInteger();
+	private final AtomicLong pollCount=new AtomicLong();
+	private final AtomicLong offerCount=new AtomicLong();
 	private final Map<String,DbMetaData> metadatas=new HashMap<String,DbMetaData>(8,0.5f);
 	
 	RoutingDummyConnectionPool(IRoutingDataSource ds){
@@ -81,9 +76,8 @@ class RoutingDummyConnectionPool extends AbstractPopulator implements IRoutingCo
 			conn.closePhysical();	
 		}
 		usedConnection.clear();
-		
 		for(DbMetaData meta:metadatas.values()){
-			DebugUtil.getHolder(meta).close();
+			meta.close();
 		}
 		PoolService.logPoolStatic(getClass().getSimpleName(),pollCount.get(), offerCount.get());
 	}
@@ -123,7 +117,7 @@ class RoutingDummyConnectionPool extends AbstractPopulator implements IRoutingCo
 
 	public void closeConnectionTillMin() {
 		for(DbMetaData meta:metadatas.values()){
-			DebugUtil.getHolder(meta).closeConnectionTillMin();
+			meta.closeConnectionTillMin();
 		}
 		//无需任何功能
 	}
@@ -153,8 +147,7 @@ class RoutingDummyConnectionPool extends AbstractPopulator implements IRoutingCo
 		
 		DbMetaData meta=metadatas.get(key);
 		if(meta==null){
-			MetadataConnectionPool pool=new MetadataConnectionPool(key,ds,this);
-			meta=new DbMetaData(pool,this,key);
+			meta=new DbMetaData(ds,this,key);
 			metadatas.put(key, meta);
 		}
 		return meta;
@@ -168,38 +161,10 @@ class RoutingDummyConnectionPool extends AbstractPopulator implements IRoutingCo
 		return getMetadata(dbkey).getInfo();
 	}
 
-	//这个方法是给内部用的，认为key都是规范的。
-	public boolean hasRemarkFeature(String dbkey) {
-		if(JefConfiguration.getBoolean(DbCfg.DB_NO_REMARK_CONNECTION, false)){
-			return false;
-		}
-		DatabaseDialect profile;
-		DbMetaData metadata=metadatas.get(dbkey);
-		if(metadata!=null){
-			profile=metadata.getProfile();
-		}else{
-			DataSource ds=this.datasource.getDataSource(dbkey);
-			ConnectInfo info=DbUtils.tryAnalyzeInfo(ds, false);
-			if(info==null){
-				Connection conn=null;
-				try{
-					conn=ds.getConnection();
-					info=DbUtils.tryAnalyzeInfo(conn);
-				}catch(SQLException e){
-				}finally{
-					DbUtils.closeConnection(conn);
-				}
-			}	
-			profile=info.getProfile();
-		}
-		return profile.has(Feature.REMARK_META_FETCH);
-	}
 
 	public boolean isRouting() {
 		return true;
 	}
-
-	
 
 	public void registeDbInitCallback(Callback<String, SQLException> callback) {
 		this.datasource.setCallback(callback);

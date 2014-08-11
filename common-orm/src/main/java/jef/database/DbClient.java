@@ -51,6 +51,8 @@ import jef.database.support.DbOperatorListener;
 import jef.database.support.DefaultDbOperListener;
 import jef.database.support.MetadataEventListener;
 import jef.database.support.MultiDbOperatorListener;
+import jef.database.wrapper.populator.ResultPopulatorImpl;
+import jef.database.wrapper.populator.ResultSetPopulator;
 import jef.tools.Assert;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;

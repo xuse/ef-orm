@@ -2,7 +2,6 @@ package jef.database.innerpool;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -10,24 +9,21 @@ import javax.sql.DataSource;
 
 import jef.common.pool.PoolStatus;
 import jef.database.DbUtils;
+import jef.database.UserCacheHolder;
 import jef.database.datasource.SimpleDataSource;
 
 /**
- * 这个池是专门为了持有metadata所有的连接而设计的
+ * 
  * @author jiyi
  *
  */
-final class MetadataConnectionPool implements IPool<Connection>,CheckablePool{
-	private DataSource ds;
+public abstract class MetadataConnectionPool extends UserCacheHolder implements IPool<Connection>,CheckablePool{
+	protected DataSource ds;
 	private Connection conn;
 	private final AtomicInteger using=new AtomicInteger();
-	private MetadataService parent;
-	private String dbKey;
 
-	MetadataConnectionPool(String dbkey,DataSource s,MetadataService service){
-		this.dbKey=dbkey;
+	protected MetadataConnectionPool(DataSource s){
 		this.ds=s;
-		this.parent=service;
 		PoolCheckThread.getInstance().addPool(this);
 	}
 	
@@ -44,7 +40,7 @@ final class MetadataConnectionPool implements IPool<Connection>,CheckablePool{
 	}
 	
 	private synchronized Connection createConnection() throws SQLException {
-		if((ds instanceof SimpleDataSource)&&parent.hasRemarkFeature(dbKey)){
+		if((ds instanceof SimpleDataSource)&& hasRemarkFeature()){
 			Properties props = new Properties();
 			props.put("remarksReporting", "true");
 			return ((SimpleDataSource) ds).getConnectionFromDriver(props);
@@ -52,6 +48,7 @@ final class MetadataConnectionPool implements IPool<Connection>,CheckablePool{
 			return ds.getConnection();
 		}
 	}
+
 
 	public PoolStatus getStatus() {
 		return new PoolStatus(1, 0, conn==null?0:1, using.get(), 0);
@@ -78,18 +75,16 @@ final class MetadataConnectionPool implements IPool<Connection>,CheckablePool{
 		}
 		ds=null;
 	}
-
-	public Iterable<? extends CheckableConnection> getConnectionsToCheck() {
-		return Collections.singletonList(new SingleConnection(conn,this));
-	}
-
-	private String testSQL;
 	
-	public String getTestSQL() {
-		return testSQL;
-	}
+	protected abstract String getTestSQL();
 
-	public void setTestSQL(String string) {
-		this.testSQL=string;
+	protected abstract boolean hasRemarkFeature();
+
+	protected abstract void processCheck(Connection conn2);
+	
+	public void doCheck() {
+		if(conn!=null){
+			processCheck(conn);
+		}
 	}
 }

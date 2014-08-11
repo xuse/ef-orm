@@ -1,5 +1,7 @@
 package jef.database.innerpool;
 
+import jef.database.innerpool.PoolService.CheckableConnection;
+
 
 /**
  * 受管理的连接

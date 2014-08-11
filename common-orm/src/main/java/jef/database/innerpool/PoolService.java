@@ -1,7 +1,11 @@
 package jef.database.innerpool;
 
+import java.sql.SQLException;
+import java.util.Iterator;
+
 import javax.sql.DataSource;
 
+import jef.common.log.LogUtil;
 import jef.database.DbCfg;
 import jef.database.datasource.DataSources;
 import jef.database.datasource.IRoutingDataSource;
@@ -70,5 +74,78 @@ public class PoolService {
 	 */
 	static void logPoolStatic(String name, long pollCount, long offerCount) {
 		log.info("The connection {} poll-count:{} offer-count:{}", name, pollCount, offerCount);
+	}
+	
+//	synchronized (pool) {
+//	LogUtil.info("Checked [{}]. total:{},  invalid:{}", pool, total, invalid);
+//}
+	
+	/**
+	 * 描述连接可被检查的行为特性
+	 * @author jiyi
+	 *
+	 */
+	static interface CheckableConnection extends IConnection{
+		/**
+		 * 标记当前连接失效，在业务发生错误时，或者在检查线程检查出问题时，都可能使用此方法来标记连接失效。
+		 */
+		public void setInvalid();
+		/**
+		 * 执行检查，不能抛出任何异常
+		 * @param 测试用SQL
+		 * @return
+		 */
+		public boolean checkValid(String testSql)throws SQLException;
+		
+		/**
+		 * 执行检查，原先是isValid方法，但是该方法与JDBC4同名方法一致，如果一个类同时实现了两个接口。javac在编译时会出现委派不确定错误，因此更名为checkValid
+		 * @param timeout
+		 * @return
+		 */
+		public boolean checkValid(int timeout)throws SQLException;
+	}
+
+	
+	/**
+	 * 立刻检查
+	 * 
+	 * @param pool
+	 * @return 无效的连接数. -1表示连接池无法进行检测
+	 */
+	public static int doCheck(String testSql,Iterator<? extends CheckableConnection> connectionsToCheck) {
+		int invalid = 0;
+		boolean useJDbcValidation = false;
+		if (StringUtils.isBlank(testSql) || "jdbc4".equals(testSql)) {
+			useJDbcValidation = true;
+		}else if("false".equalsIgnoreCase(testSql) || "disable".equalsIgnoreCase(testSql)){
+			return 0;
+		}
+		for (;connectionsToCheck.hasNext();) {
+			CheckableConnection conn = connectionsToCheck.next();
+			if (conn.isUsed()) {// 仅对空闲连接进行检查
+				continue;
+			}
+			boolean flag = false;
+			try {
+				if (useJDbcValidation) {
+					try{
+						flag = conn.checkValid(5);
+					}catch(AbstractMethodError e){ //JDBC未实现此方法
+						LogUtil.exception(e);
+						LogUtil.warn("The Connection Check was disabled since the JDBC Driver doesn't support 'isValid(I)Z'");
+						return -1;
+					}
+				} else {
+					flag = conn.checkValid(testSql);
+				}
+			} catch (SQLException e) {
+				LogUtil.exception(e);
+			}
+			if (!flag) {
+				conn.setInvalid();
+				invalid++;
+			}
+		}
+		return invalid;
 	}
 }

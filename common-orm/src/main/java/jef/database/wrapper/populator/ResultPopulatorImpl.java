@@ -43,7 +43,6 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMappings;
 import jef.database.dialect.type.MappingType;
 import jef.database.dialect.type.ResultSetAccessor;
-import jef.database.innerpool.AbstractMetaDataService;
 import jef.database.innerpool.FieldPopulator;
 import jef.database.innerpool.MultiplePopulator;
 import jef.database.innerpool.NestedObjectPopulator;
@@ -67,7 +66,10 @@ import jef.tools.reflect.ArrayWrapper;
 import jef.tools.reflect.BeanWrapper;
 import jef.tools.reflect.UnsafeUtils;
 
-public abstract class AbstractPopulator extends AbstractMetaDataService {
+public class ResultPopulatorImpl implements ResultSetPopulator{
+	
+	public static final ResultSetPopulator instance=new ResultPopulatorImpl();
+	
 	public <T> Iterator<T> iteratorSimple(IResultSet rs, Class<T> clz) {
 		return new SimpleRsIterator<T>(rs, clz);
 	}

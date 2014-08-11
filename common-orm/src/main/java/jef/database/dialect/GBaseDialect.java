@@ -19,7 +19,7 @@ import jef.tools.collection.CollectionUtil;
 /**
  * GBase的dialect
  * <p>
- * FIXME
+ * TODO Gbase方言待测试
  * <ul>
  * <li>1) 数据插入后自增列的值获取；</li>
  * <li>2) 批量删除时，异常：can't lock file</li>

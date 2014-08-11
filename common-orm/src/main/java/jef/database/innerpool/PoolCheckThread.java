@@ -1,13 +1,10 @@
 package jef.database.innerpool;
 
-import java.sql.SQLException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import jef.common.log.LogUtil;
 import jef.database.ORMConfig;
 import jef.tools.ThreadUtils;
 
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,62 +55,16 @@ final class PoolCheckThread extends Thread {
 					alive=false;
 				}else if(sleep>0){
 					for (CheckablePool pool : pools) {
-						doCheck(pool);
+						pool.doCheck();
 					}	
 				}else{
-					sleep=60000; //禁用空闲检测功能，一分钟后再次检查是否启用
+					sleep=12000; //禁用空闲检测功能，2分钟后再次检查是否启用
 				}
 				ThreadUtils.doSleep(sleep);
 			}
 			log.info("Thread {} was terminated.", getName());
 		} catch (Exception e) {
 			log.error("", e);
-		}
-	}
-
-	/**
-	 * 立刻检查
-	 * 
-	 * @param pool
-	 */
-	public void doCheck(CheckablePool pool) {
-		int total = 0;
-		int invalid = 0;
-		String testSql = pool.getTestSQL();
-		boolean useJDbcValidation = false;
-		if (StringUtils.isBlank(testSql) || "jdbc4".equals(testSql)) {
-			useJDbcValidation = true;
-		}else if("false".equalsIgnoreCase(testSql) || "disable".equalsIgnoreCase(testSql)){
-			return;
-		}
-		synchronized (pool) {
-			for (CheckableConnection conn : pool.getConnectionsToCheck()) {
-				total++;
-				if (!conn.isUsed()) {// 仅对空闲连接进行检查
-					boolean flag = false;
-					try {
-						if (useJDbcValidation) {
-							try{
-								flag = conn.checkValid(5);
-							}catch(AbstractMethodError e){ //JDBC未实现此方法
-								LogUtil.exception(e);
-								LogUtil.warn("The Connection Check was disabled since the JDBC Driver doesn't support 'isValid(I)Z'");
-								pool.setTestSQL("false");
-								return;
-							}
-						} else {
-							flag = conn.checkValid(testSql);
-						}
-					} catch (SQLException e) {
-						LogUtil.exception(e);
-					}
-					if (!flag) {
-						conn.setInvalid();
-						invalid++;
-					}
-				}
-			}
-			LogUtil.info("Checked [{}]. total:{},  invalid:{}", pool, total, invalid);
 		}
 	}
 }

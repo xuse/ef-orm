@@ -65,6 +65,7 @@ import jef.database.wrapper.clause.CountClause;
 import jef.database.wrapper.clause.InMemoryDistinct;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.QueryClause;
+import jef.database.wrapper.populator.ResultPopulatorImpl;
 import jef.database.wrapper.populator.ResultSetTransformer;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.result.IResultSet;
@@ -1948,22 +1949,22 @@ public abstract class Session {
 	Iterator iterateResultSet(IResultSet rs, EntityMappingProvider mapping, Transformer transformers) throws SQLException {
 		Class returnClz = transformers.getResultClazz();
 		if (ArrayUtils.contains(MetadataService.SIMPLE_CLASSES, returnClz)) {
-			return getPool().iteratorSimple(rs, returnClz);
+			return ResultPopulatorImpl.instance.iteratorSimple(rs, returnClz);
 		}
 		if (Object[].class == returnClz) {
-			return getPool().iteratorMultipie(rs, mapping, transformers);
+			return ResultPopulatorImpl.instance.iteratorMultipie(rs, mapping, transformers);
 		}
 		if (returnClz == Var.class || returnClz == Map.class) {
-			return getPool().iteratorMap(rs, transformers);
+			return ResultPopulatorImpl.instance.iteratorMap(rs, transformers);
 		}
 		if (transformers.isVarObject()) {
-			return getPool().iteratorNormal(this, rs, mapping, transformers);
+			return ResultPopulatorImpl.instance.iteratorNormal(this, rs, mapping, transformers);
 		}
 		boolean plain = ArrayUtils.contains(transformers.getStrategy(), PopulateStrategy.PLAIN_MODE) || (mapping == null && !IQueryableEntity.class.isAssignableFrom(returnClz));
 		if (plain) {
-			return getPool().iteratorPlain(rs, transformers);
+			return ResultPopulatorImpl.instance.iteratorPlain(rs, transformers);
 		}
-		return getPool().iteratorNormal(this, rs, mapping, transformers);
+		return ResultPopulatorImpl.instance.iteratorNormal(this, rs, mapping, transformers);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1979,25 +1980,25 @@ public abstract class Session {
 		}
 		//基础类型返回
 		if (ArrayUtils.fastContains(MetadataService.SIMPLE_CLASSES, returnClz)) {
-			return getPool().toSimpleObjects(rsw, returnClz);
+			return ResultPopulatorImpl.instance.toSimpleObjects(rsw, returnClz);
 		}
 		//数组返回——模式1：每张表映射成一个元素 模式2：每列映射成一个元素  模式3：自定义Mapper
 		if(returnClz.isArray()){
-			return (List<T>) getPool().toDataObjectMap(rsw, mapping, transformers);
+			return (List<T>) ResultPopulatorImpl.instance.toDataObjectMap(rsw, mapping, transformers);
 		}
 		//Map返回。
 		if (returnClz == Var.class || returnClz == Map.class) {
-			return (List<T>) getPool().toVar(rsw, transformers);
+			return (List<T>) ResultPopulatorImpl.instance.toVar(rsw, transformers);
 		}
 		//动态表返回
 		if (transformers.isVarObject()) {
-			return (List<T>) getPool().toJavaObject(this, rsw, mapping, transformers);
+			return (List<T>) ResultPopulatorImpl.instance.toJavaObject(this, rsw, mapping, transformers);
 		}
 		boolean plain = transformers.hasStrategy(PopulateStrategy.PLAIN_MODE) || (mapping == null && !IQueryableEntity.class.isAssignableFrom(returnClz));
 		if (plain) {
-			return (List<T>) getPool().toPlainJavaObject(rsw, transformers);
+			return (List<T>) ResultPopulatorImpl.instance.toPlainJavaObject(rsw, transformers);
 		}
-		return (List<T>) getPool().toJavaObject(this, rsw, mapping, transformers);
+		return (List<T>) ResultPopulatorImpl.instance.toJavaObject(this, rsw, mapping, transformers);
 	}
 
 	// 包装当前AbsDbClient,包装为缺省的操作对象即无dbkey.

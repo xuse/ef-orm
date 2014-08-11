@@ -1,6 +1,5 @@
 package jef.database;
 
-import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,7 +14,6 @@ import jef.common.log.LogUtil;
 import jef.common.pool.PoolStatus;
 import jef.database.cache.TransactionCache;
 import jef.database.innerpool.IConnection;
-import jef.database.innerpool.IPool;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.meta.AbstractRefField;
 import jef.database.meta.Feature;
@@ -189,10 +187,6 @@ public class DebugUtil {
 	
 	public static LazyLoadTask getLazyTaskMarker(Map.Entry<Reference, List<AbstractRefField>> entry, Map<Reference,List<Condition>> filters, Session session) {
 		return new VsManyLoadTask(entry, filters);
-	}
-	
-	public static IPool<Connection> getHolder(DbMetaData meta){
-		return meta.getConnectionHolder();
 	}
 	
 	public static TransactionCache getCache(Session session){

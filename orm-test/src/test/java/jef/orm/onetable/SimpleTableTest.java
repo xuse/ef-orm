@@ -712,7 +712,6 @@ public class SimpleTableTest extends org.junit.Assert {
 		t.batchInsert(batch1);// 批提交
 		assertEquals(4, t.selectAll(CaAsset.class).size());// 从事务中查询到已插入的四条数据。
 
-		// FIXME
 		// assertEquals(0,db.selectAll(CaAsset.class).size());//从事务外查询不到这四条数据(Oracle事务是隔离的，这里直接返回0。但是在derby上测试，由于表被锁，这里的查询无法返回结果，死锁)。
 
 		t.rollback();// 回滚
