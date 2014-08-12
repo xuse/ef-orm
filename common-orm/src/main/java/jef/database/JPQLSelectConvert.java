@@ -8,11 +8,11 @@ import jef.common.log.LogUtil;
 import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.JpqlParameter;
 import jef.database.jsqlparser.expression.Table;
-import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
 import jef.database.jsqlparser.parser.JpqlParser;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.select.AllColumns;
 import jef.database.jsqlparser.statement.select.AllTableColumns;
+import jef.database.jsqlparser.statement.select.Join;
 import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.OrderByElement;
 import jef.database.jsqlparser.statement.select.PlainSelect;
@@ -86,7 +86,8 @@ public class JPQLSelectConvert extends VisitorAdapter {
 		}
 
 		public void visit(SubJoin subjoin) {
-			System.out.println(subjoin);
+			subjoin.getLeft().accept(this);
+			subjoin.getJoin().accept(this);
 		}
 
 		public void visit(JpqlParameter tableClip) {
@@ -118,7 +119,8 @@ public class JPQLSelectConvert extends VisitorAdapter {
 		public void visit(OrderBy orderBy) {
 		}
 
-		public void visit(ExpressionList expressionList) {
+		public void visit(Join join) {
+			join.getRightItem().accept(this);
 		}
 	};
 

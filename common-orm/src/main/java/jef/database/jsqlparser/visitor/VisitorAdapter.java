@@ -15,6 +15,8 @@
  */
 package jef.database.jsqlparser.visitor;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Iterator;
 
 import jef.database.jsqlparser.expression.AllComparisonExpression;
@@ -83,331 +85,443 @@ import jef.database.jsqlparser.statement.truncate.Truncate;
 import jef.database.jsqlparser.statement.update.Update;
 
 public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, StatementVisitor, SelectItemVisitor {
+	protected final Deque<Object> visitPath = new ArrayDeque<Object>();
 
-    public void visit(PlainSelect plainSelect) {
-        plainSelect.getFromItem().accept(this);
-        for (SelectItem s : plainSelect.getSelectItems()) {
-            s.accept(this);
-        }
-        if (plainSelect.getJoins() != null) {
-            for (Iterator<Join> joinsIt = plainSelect.getJoins().iterator(); joinsIt.hasNext(); ) {
-                Join join = (Join) joinsIt.next();
-                join.getRightItem().accept(this);
-                if(join.getOnExpression()!=null){
-                	join.getOnExpression().accept(this);	
-                }
-                if(join.getUsingColumns()!=null){
-                	for(Column c:join.getUsingColumns()){
-                    	c.accept(this);
-                    }	
-                }
-            }
-        }
-        if (plainSelect.getWhere() != null) plainSelect.getWhere().accept(this);
-        
-        if (plainSelect.getStartWith()!= null) plainSelect.getStartWith().accept(this);
-        
-        if(plainSelect.getHaving()!=null) plainSelect.getHaving().accept(this);
-        
-        if (plainSelect.getOrderBy() != null) {
-        	plainSelect.getOrderBy().accept(this);
-        }
-    }
-    
-    public void visit(OrderBy orderBy){
-    	for(OrderByElement o: orderBy.getOrderByElements()){
-			 o.accept(this);
-		 }
-    	
-    }
+	public void visit(PlainSelect plainSelect) {
+		visitPath.push(plainSelect);
+		plainSelect.getFromItem().accept(this);
+		for (SelectItem s : plainSelect.getSelectItems()) {
+			s.accept(this);
+		}
+		if (plainSelect.getJoins() != null) {
+			for (Iterator<Join> joinsIt = plainSelect.getJoins().iterator(); joinsIt.hasNext();) {
+				Join join = (Join) joinsIt.next();
+				join.accept(this);
+			}
+		}
+		if (plainSelect.getWhere() != null)
+			plainSelect.getWhere().accept(this);
 
-    public void visit(Union union) {
-        for (Iterator<PlainSelect> iter = union.getPlainSelects().iterator(); iter.hasNext(); ) {
-            PlainSelect plainSelect = iter.next();
-            visit(plainSelect);
-        }
-    }
+		if (plainSelect.getStartWith() != null)
+			plainSelect.getStartWith().accept(this);
 
-    public void visit(SubSelect subSelect) {
-        subSelect.getSelectBody().accept(this);
-    }
+		if (plainSelect.getHaving() != null)
+			plainSelect.getHaving().accept(this);
 
-    public void visit(Addition addition) {
-        visitBinaryExpression(addition);
-    }
-
-    public void visit(AndExpression andExpression) {
-        visitBinaryExpression(andExpression);
-    }
-
-    public void visit(Between between) {
-        between.getLeftExpression().accept(this);
-        between.getBetweenExpressionStart().accept(this);
-        between.getBetweenExpressionEnd().accept(this);
-    }
-
-    public void visit(Division division) {
-        visitBinaryExpression(division);
-    }
-
-    public void visit(Mod mod) {
-		visitBinaryExpression(mod);
+		if (plainSelect.getOrderBy() != null) {
+			plainSelect.getOrderBy().accept(this);
+		}
+		visitPath.pop();
 	}
 
-    public void visit(DoubleValue doubleValue) {
-    }
+	public void visit(OrderBy orderBy) {
+		visitPath.push(orderBy);
+		for (OrderByElement o : orderBy.getOrderByElements()) {
+			o.accept(this);
+		}
+		visitPath.pop();
+	}
 
-    public void visit(EqualsTo equalsTo) {
-        visitBinaryExpression(equalsTo);
-    }
+	public void visit(Union union) {
+		visitPath.push(union);
+		for (Iterator<PlainSelect> iter = union.getPlainSelects().iterator(); iter.hasNext();) {
+			PlainSelect plainSelect = iter.next();
+			visit(plainSelect);
+		}
+		visitPath.pop();
+	}
 
-    public void visit(Function function) {
-    	if(function.getParameters()!=null)
-    		function.getParameters().accept(this);
-    	if(function.getOver()!=null){
-    		function.getOver().accept(this);
-    	}
-    }
+	public void visit(SubSelect subSelect) {
+		visitPath.push(subSelect);
+		subSelect.getSelectBody().accept(this);
+		visitPath.pop();
+	}
 
-    public void visit(GreaterThan greaterThan) {
-        visitBinaryExpression(greaterThan);
-    }
+	public void visit(Addition addition) {
+		visitPath.push(addition);
+		visitBinaryExpression(addition);
+		visitPath.pop();
+	}
 
-    public void visit(GreaterThanEquals greaterThanEquals) {
-        visitBinaryExpression(greaterThanEquals);
-    }
+	public void visit(AndExpression andExpression) {
+		visitPath.push(andExpression);
+		visitBinaryExpression(andExpression);
+		visitPath.pop();
+	}
 
-    public void visit(InExpression inExpression) {
-        inExpression.getLeftExpression().accept(this);
-        inExpression.getItemsList().accept(this);
-    }
+	public void visit(Between between) {
+		visitPath.push(between);
+		between.getLeftExpression().accept(this);
+		between.getBetweenExpressionStart().accept(this);
+		between.getBetweenExpressionEnd().accept(this);
+		visitPath.pop();
+	}
 
-    public void visit(InverseExpression inverseExpression) {
-        inverseExpression.getExpression().accept(this);
-    }
+	public void visit(Division division) {
+		visitPath.push(division);
+		visitBinaryExpression(division);
+		visitPath.pop();
+	}
 
-    public void visit(IsNullExpression isNullExpression) {
-    }
+	public void visit(Mod mod) {
+		visitPath.push(mod);
+		visitBinaryExpression(mod);
+		visitPath.pop();
+	}
 
-    public void visit(LikeExpression likeExpression) {
-        visitBinaryExpression(likeExpression);
-    }
+	public void visit(DoubleValue doubleValue) {
+	}
 
-    public void visit(ExistsExpression existsExpression) {
-        existsExpression.getRightExpression().accept(this);
-    }
+	public void visit(EqualsTo equalsTo) {
+		visitPath.push(equalsTo);
+		visitBinaryExpression(equalsTo);
+		visitPath.pop();
+	}
 
-    public void visit(LongValue longValue) {
-    }
+	public void visit(Function function) {
+		visitPath.push(function);
+		if (function.getParameters() != null)
+			function.getParameters().accept(this);
+		if (function.getOver() != null) {
+			function.getOver().accept(this);
+		}
+		visitPath.pop();
+	}
 
-    public void visit(MinorThan minorThan) {
-        visitBinaryExpression(minorThan);
-    }
+	public void visit(GreaterThan greaterThan) {
+		visitPath.push(greaterThan);
+		visitBinaryExpression(greaterThan);
+		visitPath.pop();
+	}
 
-    public void visit(MinorThanEquals minorThanEquals) {
-        visitBinaryExpression(minorThanEquals);
-    }
+	public void visit(GreaterThanEquals greaterThanEquals) {
+		visitPath.push(greaterThanEquals);
+		visitBinaryExpression(greaterThanEquals);
+		visitPath.pop();
+	}
 
-    public void visit(Multiplication multiplication) {
-        visitBinaryExpression(multiplication);
-    }
+	public void visit(InExpression inExpression) {
+		visitPath.push(inExpression);
+		inExpression.getLeftExpression().accept(this);
+		inExpression.getItemsList().accept(this);
+		visitPath.pop();
+	}
 
-    public void visit(NotEqualsTo notEqualsTo) {
-        visitBinaryExpression(notEqualsTo);
-    }
+	public void visit(InverseExpression inverseExpression) {
+		visitPath.push(inverseExpression);
+		inverseExpression.getExpression().accept(this);
+		visitPath.pop();
 
-    public void visit(NullValue nullValue) {
-    }
+	}
 
-    public void visit(OrExpression orExpression) {
-        visitBinaryExpression(orExpression);
-    }
+	public void visit(IsNullExpression isNullExpression) {
+		visitPath.push(isNullExpression);
+		isNullExpression.getLeftExpression().accept(this);
+		visitPath.pop();
+	}
 
-    public void visit(Parenthesis parenthesis) {
-        parenthesis.getExpression().accept(this);
-    }
+	public void visit(LikeExpression likeExpression) {
+		visitPath.push(likeExpression);
+		visitBinaryExpression(likeExpression);
+		visitPath.pop();
+	}
 
-    public void visit(StringValue stringValue) {
-    }
+	public void visit(ExistsExpression existsExpression) {
+		visitPath.push(existsExpression);
+		existsExpression.getRightExpression().accept(this);
+		visitPath.pop();
+	}
 
-    public void visit(Subtraction subtraction) {
-        visitBinaryExpression(subtraction);
-    }
+	public void visit(LongValue longValue) {
+	}
 
-    private void visitBinaryExpression(BinaryExpression binaryExpression) {
-        binaryExpression.getLeftExpression().accept(this);
-        binaryExpression.getRightExpression().accept(this);
-    }
+	public void visit(MinorThan minorThan) {
+		visitPath.push(minorThan);
+		visitBinaryExpression(minorThan);
+		visitPath.pop();
+	}
 
-    public void visit(ExpressionList expressionList) {
-        for (Iterator<Expression> iter = expressionList.getExpressions().iterator(); iter.hasNext(); ) {
-            Expression expression = (Expression) iter.next();
-            expression.accept(this);
-        }
-    }
+	public void visit(MinorThanEquals minorThanEquals) {
+		visitPath.push(minorThanEquals);
+		visitBinaryExpression(minorThanEquals);
+		visitPath.pop();
+	}
 
-    public void visit(JdbcParameter jdbcParameter) {
-    }
-    
-    public void visit(DateValue dateValue) {
-    }
+	public void visit(Multiplication multiplication) {
+		visitPath.push(multiplication);
+		visitBinaryExpression(multiplication);
+		visitPath.pop();
+	}
 
-    public void visit(TimestampValue timestampValue) {
-    }
+	public void visit(NotEqualsTo notEqualsTo) {
+		visitPath.push(notEqualsTo);
+		visitBinaryExpression(notEqualsTo);
+		visitPath.pop();
+	}
 
-    public void visit(TimeValue timeValue) {
-    }
+	public void visit(NullValue nullValue) {
+	}
 
-    public void visit(CaseExpression caseExpression) {
-    	if(caseExpression.getSwitchExpression()!=null){
-        	caseExpression.getSwitchExpression().accept(this);	
-        }
-    	if(caseExpression.getWhenClauses()!=null){
-    		for(WhenClause when: caseExpression.getWhenClauses()){
-    			when.accept(this);
-    		}
-    	}
-    	if(caseExpression.getElseExpression()!=null){
-    		caseExpression.getElseExpression().accept(this);
-    	}
-    }
+	public void visit(OrExpression orExpression) {
+		visitPath.push(orExpression);
+		visitBinaryExpression(orExpression);
+		visitPath.pop();
+	}
 
-    public void visit(WhenClause whenClause) {
-    	whenClause.getWhenExpression().accept(this);
-        whenClause.getThenExpression().accept(this);
-    }
+	public void visit(Parenthesis parenthesis) {
+		parenthesis.getExpression().accept(this);
+	}
 
-    public void visit(AllComparisonExpression allComparisonExpression) {
-        allComparisonExpression.GetSubSelect().getSelectBody().accept(this);
-    }
+	public void visit(StringValue stringValue) {
+	}
 
-    public void visit(AnyComparisonExpression anyComparisonExpression) {
-        anyComparisonExpression.GetSubSelect().getSelectBody().accept(this);
-    }
+	public void visit(Subtraction subtraction) {
+		visitPath.push(subtraction);
+		visitBinaryExpression(subtraction);
+		visitPath.pop();
+	}
 
-    public void visit(SubJoin subjoin) {
-        subjoin.getLeft().accept(this);
-        subjoin.getJoin().getRightItem().accept(this);
-    }
+	private void visitBinaryExpression(BinaryExpression binaryExpression) {
+		binaryExpression.getLeftExpression().accept(this);
+		binaryExpression.getRightExpression().accept(this);
+	}
 
-    public void visit(Concat concat) {
-        visitBinaryExpression(concat);
-    }
+	public void visit(ExpressionList expressionList) {
+		visitPath.push(expressionList);
+		for (Iterator<Expression> iter = expressionList.getExpressions().iterator(); iter.hasNext();) {
+			Expression expression = iter.next();
+			expression.accept(this);
+		}
+		visitPath.pop();
+	}
 
-    public void visit(Matches matches) {
-        visitBinaryExpression(matches);
-    }
+	public void visit(JdbcParameter jdbcParameter) {
+	}
 
-    public void visit(BitwiseAnd bitwiseAnd) {
-        visitBinaryExpression(bitwiseAnd);
-    }
+	public void visit(DateValue dateValue) {
+	}
 
-    public void visit(BitwiseOr bitwiseOr) {
-        visitBinaryExpression(bitwiseOr);
-    }
+	public void visit(TimestampValue timestampValue) {
+	}
 
-    public void visit(BitwiseXor bitwiseXor) {
-        visitBinaryExpression(bitwiseXor);
-    }
+	public void visit(TimeValue timeValue) {
+	}
 
-    public void visit(Column tableColumn) {
-    }
+	public void visit(CaseExpression caseExpression) {
+		visitPath.push(caseExpression);
+		if (caseExpression.getSwitchExpression() != null) {
+			caseExpression.getSwitchExpression().accept(this);
+		}
+		if (caseExpression.getWhenClauses() != null) {
+			for (WhenClause when : caseExpression.getWhenClauses()) {
+				when.accept(this);
+			}
+		}
+		if (caseExpression.getElseExpression() != null) {
+			caseExpression.getElseExpression().accept(this);
+		}
+		visitPath.pop();
+	}
 
-    public void visit(Table tableName) {
-    }
+	public void visit(WhenClause whenClause) {
+		visitPath.push(whenClause);
+		whenClause.getWhenExpression().accept(this);
+		whenClause.getThenExpression().accept(this);
+		visitPath.pop();
+	}
 
-    public void visit(Select select) {
-        if (select.getSelectBody() != null) select.getSelectBody().accept(this);
-    }
+	public void visit(AllComparisonExpression allComparisonExpression) {
+		visitPath.push(allComparisonExpression);
+		allComparisonExpression.GetSubSelect().getSelectBody().accept(this);
+		visitPath.pop();
+	}
 
-    public void visit(Delete delete) {
-        delete.getTable().accept(this);
-        if(delete.getWhere()!=null){
-        	delete.getWhere().accept(this);	
-        }
-    }
+	public void visit(AnyComparisonExpression anyComparisonExpression) {
+		visitPath.push(anyComparisonExpression);
+		anyComparisonExpression.GetSubSelect().accept((ExpressionVisitor) this);
+		visitPath.pop();
+	}
 
-    public void visit(Update update) {
-        update.getTable().accept(this);
-        for (Column c : update.getColumns()) {
-            visit(c);
-        }
-        for (Expression ex : update.getExpressions()) {
-            ex.accept(this);
-        }
-        if(update.getWhere()!=null){
-        	update.getWhere().accept(this);	
-        }
-    }
+	public void visit(SubJoin subjoin) {
+		visitPath.push(subjoin);
+		subjoin.getLeft().accept(this);
+		subjoin.getJoin().accept(this);
+		visitPath.pop();
+	}
 
-    public void visit(Insert insert) {
-    	if(insert.getColumns()!=null){
-    		for (Column c : insert.getColumns()) {
-                visit(c);
-            }	
-    	}
-        insert.getTable().accept(this);
-        insert.getItemsList().accept(this);
-    }
+	public void visit(Concat concat) {
+		visitPath.push(concat);
+		visitBinaryExpression(concat);
+		visitPath.pop();
+	}
 
-    public void visit(Replace replace) {
-        for (Column c : replace.getColumns()) {
-            visit(c);
-        }
-        for (Expression ex : replace.getExpressions()) {
-            ex.accept(this);
-        }
-        replace.getTable().accept(this);
-        replace.getItemsList().accept(this);
-    }
+	public void visit(Matches matches) {
+		visitPath.push(matches);
+		visitBinaryExpression(matches);
+		visitPath.pop();
+	}
 
-    public void visit(Drop drop) {
-    }
+	public void visit(BitwiseAnd bitwiseAnd) {
+		visitPath.push(bitwiseAnd);
+		visitBinaryExpression(bitwiseAnd);
+		visitPath.pop();
+	}
 
-    public void visit(Truncate truncate) {
-        truncate.getTable().accept(this);
-    }
+	public void visit(BitwiseOr bitwiseOr) {
+		visitPath.push(bitwiseOr);
+		visitBinaryExpression(bitwiseOr);
+		visitPath.pop();
+	}
 
-    public void visit(CreateTable createTable) {
-        createTable.getTable().accept(this);
-    }
+	public void visit(BitwiseXor bitwiseXor) {
+		visitPath.push(bitwiseXor);
+		visitBinaryExpression(bitwiseXor);
+		visitPath.pop();
 
-    public void visit(AllColumns allColumns) {
-    }
+	}
 
-    public void visit(AllTableColumns allTableColumns) {
-    }
+	public void visit(Column tableColumn) {
+	}
 
-    public void visit(SelectExpressionItem selectExpressionItem) {
-        selectExpressionItem.getExpression().accept(this);
-    }
+	public void visit(Table tableName) {
+	}
+
+	public void visit(Select select) {
+		visitPath.push(select);
+		if (select.getSelectBody() != null)
+			select.getSelectBody().accept(this);
+		visitPath.pop();
+	}
+
+	public void visit(Delete delete) {
+		visitPath.push(delete);
+		delete.getTable().accept(this);
+		if (delete.getWhere() != null) {
+			delete.getWhere().accept(this);
+		}
+		visitPath.pop();
+	}
+
+	public void visit(Update update) {
+		visitPath.push(update);
+		update.getTable().accept(this);
+		for (Column c : update.getColumns()) {
+			visit(c);
+		}
+		for (Expression ex : update.getExpressions()) {
+			ex.accept(this);
+		}
+		if (update.getWhere() != null) {
+			update.getWhere().accept(this);
+		}
+		visitPath.pop();
+	}
+
+	public void visit(Insert insert) {
+		visitPath.push(insert);
+		if (insert.getColumns() != null) {
+			for (Column c : insert.getColumns()) {
+				visit(c);
+			}
+		}
+		insert.getTable().accept(this);
+		insert.getItemsList().accept(this);
+		visitPath.pop();
+	}
+
+	public void visit(Replace replace) {
+		visitPath.push(replace);
+
+		for (Column c : replace.getColumns()) {
+			visit(c);
+		}
+		for (Expression ex : replace.getExpressions()) {
+			ex.accept(this);
+		}
+		replace.getTable().accept(this);
+		replace.getItemsList().accept(this);
+		visitPath.pop();
+	}
+
+	public void visit(Drop drop) {
+	}
+
+	public void visit(Truncate truncate) {
+		visitPath.push(truncate);
+		truncate.getTable().accept(this);
+		visitPath.pop();
+	}
+
+	public void visit(CreateTable createTable) {
+		visitPath.push(createTable);
+		createTable.getTable().accept(this);
+		visitPath.pop();
+	}
+
+	public void visit(AllColumns allColumns) {
+	}
+
+	public void visit(AllTableColumns allTableColumns) {
+	}
+
+	public void visit(SelectExpressionItem selectExpressionItem) {
+		visitPath.push(selectExpressionItem);
+		selectExpressionItem.getExpression().accept(this);
+		visitPath.pop();
+	}
 
 	public void visit(JpqlParameter parameter) {
 	}
-	
+
 	public void visit(OrderByElement orderBy) {
+		visitPath.push(orderBy);
 		orderBy.getExpression().accept(this);
+		visitPath.pop();
 	}
 
 	public void visit(Interval interval) {
-		interval.getValue().accept(this);
+		visitPath.push(interval);
+		if(interval.getValue()!=null){
+			interval.getValue().accept(this);
+		}
+		visitPath.pop();
 	}
 
 	public void visit(StartWithExpression startWithExpression) {
-		Expression start=startWithExpression.getStartExpression();
-		Expression connectBy=startWithExpression.getConnectExpression();
-		if(start!=null)start.accept(this);
-		if(connectBy!=null)connectBy.accept(this);
+		visitPath.push(startWithExpression);
+		Expression start = startWithExpression.getStartExpression();
+		Expression connectBy = startWithExpression.getConnectExpression();
+		if (start != null)
+			start.accept(this);
+		if (connectBy != null)
+			connectBy.accept(this);
+		visitPath.pop();
 	}
 
 	public void visit(Over over) {
-		if(over.getPartition()!=null){
-			for(Expression exp: over.getPartition()){
+		visitPath.push(over);
+		if (over.getPartition() != null) {
+			for (Expression exp : over.getPartition()) {
 				exp.accept(this);
 			}
 		}
-		if(over.getOrderBy()!=null){
+		if (over.getOrderBy() != null) {
 			over.getOrderBy().accept(this);
 		}
+		visitPath.pop();
+	}
+
+	public void visit(Join join) {
+		visitPath.push(join);
+		join.getRightItem().accept(this);
+		if (join.getOnExpression() != null) {
+			join.getOnExpression().accept(this);
+		}
+		if (join.getUsingColumns() != null) {
+			for (Column c : join.getUsingColumns()) {
+				c.accept(this);
+			}
+		}
+		visitPath.pop();
 	}
 }

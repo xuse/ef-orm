@@ -174,8 +174,9 @@ public class MySqlDialect extends DbmsProfile {
 		registerNative(Func.current_date, new NoArgSQLFunction("current_date", false), "curdate");
 		registerNative(Func.current_time,new NoArgSQLFunction("current_time", false), "curtime");
 
-		registerNative(Func.current_timestamp,new NoArgSQLFunction("current_timestamp", false), "now", "sysdate");
+		registerNative(Func.current_timestamp,new NoArgSQLFunction("current_timestamp", false));
 		registerAlias(Func.now, "current_timestamp");
+		registerAlias("sysdate", "current_timestamp");
 
 		registerNative(Func.date);
 

@@ -67,8 +67,10 @@ public class SQLRewriteTest extends org.junit.Assert {
 	public void testDateTimeOper2() throws ParseException{
 		String[] sqls={
 				"select year(now())||'ABC' from dual",
-				"select current_timestamp from datetable where A < adddate(now(), interval 5 hour)",
-				"select now() from datetable where B < subdate(sysdate(),  interval 5 minute)"
+				"select current_timestamp from foo where modified < adddate(now(), interval 5 hour)",
+				"select sysdate() from foo where modified < subdate(sysdate(),  interval 5 minute)",
+				"select now() + interval '2 years' from dual",
+				"select now() + interval '2 months' from dual",
 		};
 		rewrite(sqls);
 	}

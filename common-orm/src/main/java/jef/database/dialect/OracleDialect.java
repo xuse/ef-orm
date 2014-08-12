@@ -523,6 +523,9 @@ public class OracleDialect extends DbmsProfile {
 
 	@Override
 	public void processIntervalExpression(BinaryExpression parent, Interval interval) {
+		if(interval.isPostgreMode()){
+			interval.toMySqlMode();
+		}
 		String unit=interval.getUnit().toLowerCase();
 		interval.toMySqlMode();
 		Expression value=interval.getValue();
@@ -540,21 +543,21 @@ public class OracleDialect extends DbmsProfile {
 			value=new Division(value,new LongValue(86400));
 			value=new Parenthesis(value);
 			replace(parent,interval,value);
-		}else if("month".equals(value)){
+		}else if("month".equals(unit)){
 			if(parent.getLeftExpression()==interval){
 				parent.swap();//交换到右边
 			}
-			Function func=new Function("add_months",parent.getLeftExpression(),parent.getRightExpression());
+			Function func=new Function("add_months",parent.getLeftExpression(),interval.getValue());
 			parent.rewrite=func;
-		}else if("year".equals(value)){
+		}else if("year".equals(unit)){
 			if(parent.getLeftExpression()==interval){
 				parent.swap();//交换到右边
 			}
-			Expression right=new Multiplication(parent.getRightExpression(),new LongValue(12));
+			Expression right=new Multiplication(interval.getValue(),new LongValue(12));
 			Function func=new Function("add_months",parent.getLeftExpression(),right);
 			parent.rewrite=func;
 		}else{
-			throw new UnsupportedOperationException("The Oracle Dialect can't handle datetime unit "+unit+" for now.");
+			throw new UnsupportedOperationException("The Oracle Dialect can't handle datetime unit ["+unit+"] for now.");
 		}
 	}
 

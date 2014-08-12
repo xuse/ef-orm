@@ -21,6 +21,7 @@ import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.statement.SqlAppendable;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.FromItem;
+import jef.database.jsqlparser.visitor.SelectItemVisitor;
 
 /**
  * A join clause
@@ -204,4 +205,7 @@ public class Join implements SqlAppendable{
 		}
 	}
 	
+	public void accept(SelectItemVisitor visitor){
+		visitor.visit(this);
+	}
 }

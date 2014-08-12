@@ -78,7 +78,6 @@ import jef.database.jsqlparser.statement.select.WithItem;
 import jef.database.jsqlparser.statement.truncate.Truncate;
 import jef.database.jsqlparser.statement.update.Update;
 import jef.database.jsqlparser.expression.Interval;
-import jef.database.jsqlparser.expression.Child;
 
 /** Token Manager. */
 public class JpqlParserTokenManager implements JpqlParserConstants

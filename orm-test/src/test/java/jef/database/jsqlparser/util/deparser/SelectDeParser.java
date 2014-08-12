@@ -96,7 +96,7 @@ public class SelectDeParser implements SelectVisitor,SelectItemVisitor{
         if (plainSelect.getJoins() != null) {
             for (Iterator<Join> iter = plainSelect.getJoins().iterator(); iter.hasNext(); ) {
                 Join join = iter.next();
-                deparseJoin(join);
+                join.accept(this);
             }
         }
         if (plainSelect.getWhere() != null) {
@@ -225,14 +225,34 @@ public class SelectDeParser implements SelectVisitor,SelectItemVisitor{
     }
 
     public void visit(SubJoin subjoin) {
-        buffer.append("(");
+        buffer.append('(');
         subjoin.getLeft().accept(this);
-        buffer.append(" ");
-        deparseJoin(subjoin.getJoin());
-        buffer.append(")");
+        buffer.append(' ');
+        subjoin.getJoin().accept(this);
+        buffer.append(')');
     }
 
-    public void deparseJoin(Join join) {
+	public void visit(JpqlParameter tableClip) {
+		buffer.append(tableClip.toString());
+	}
+
+	public void visit(OrderBy orderBy) {
+		buffer.append(" order by ");
+		
+		for(int i=0;i<orderBy.getOrderByElements().size();i++){
+			if(i>0)buffer.append(',');
+			OrderByElement ele=orderBy.getOrderByElements().get(i);
+			ele.accept(this);
+			
+		}
+	}
+
+	public void visit(ExpressionList expressionList) {
+		
+		
+	}
+
+	public void visit(Join join) {
         if (join.isSimple()) buffer.append(", "); else {
             if (join.isRight()) buffer.append("RIGHT "); else if (join.isNatural()) buffer.append("NATURAL "); else if (join.isFull()) buffer.append("FULL "); else if (join.isLeft()) buffer.append("LEFT ");
             if (join.isOuter()) buffer.append("OUTER "); else if (join.isInner()) buffer.append("INNER ");
@@ -255,25 +275,5 @@ public class SelectDeParser implements SelectVisitor,SelectItemVisitor{
             }
             buffer.append(")");
         }
-    }
-
-	public void visit(JpqlParameter tableClip) {
-		buffer.append(tableClip.toString());
-	}
-
-	public void visit(OrderBy orderBy) {
-		buffer.append(" order by ");
-		
-		for(int i=0;i<orderBy.getOrderByElements().size();i++){
-			if(i>0)buffer.append(',');
-			OrderByElement ele=orderBy.getOrderByElements().get(i);
-			ele.accept(this);
-			
-		}
-	}
-
-	public void visit(ExpressionList expressionList) {
-		
-		
 	}
 }

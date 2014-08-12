@@ -18,7 +18,6 @@ package jef.database.jsqlparser.expression.operators.relational;
 import java.util.Arrays;
 import java.util.List;
 
-import jef.database.jsqlparser.expression.Child;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.visitor.Expression;
@@ -77,13 +76,6 @@ public class ExpressionList implements ItemsList{
 
     public void setExpressions(List<Expression> list) {
         expressions = list;
-        if(list!=null){
-        	for(Expression e:list){
-            	if(e instanceof Child){
-            		((Child) e).setParent(this);
-            	}
-            }	
-        }
     }
 
     public String toString() {

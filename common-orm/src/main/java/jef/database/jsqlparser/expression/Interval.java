@@ -1,5 +1,8 @@
 package jef.database.jsqlparser.expression;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 import jef.database.query.SqlExpression;
@@ -12,13 +15,39 @@ import org.apache.commons.lang.StringUtils;
  * @author jiyi
  *
  */
-public class Interval implements Expression,Child  {
-	private Object parent; //可能是ExpressionList，也可能是Addition 或者 Subtraction等运算
+public class Interval implements Expression{
 	private String unit;
 	private Expression value;
-	private static final String[] MYSQL_ALL_DATEUNIT={"MICROSECOND","SECOND","MINUTE","HOUR","DAY","WEEK","MONTH","QUARTER","YEAR","SECOND_MICROSECOND", 
-		"MINUTE_MICROSECOND","MINUTE_SECOND","HOUR_MICROSECOND","HOUR_SECOND","HOUR_MINUTE","DAY_MICROSECOND","DAY_SECOND","DAY_MINUTE","DAY_HOUR","YEAR_MONTH"};
+	private static final String[] MYSQL_ALL_DATEUNIT={"microsecond",
+		"second","minute","hour","day","week","month","quarter","year",
+		"second_microsecond", 
+		"minute_microsecond",
+		"minute_second",
+		"hour_microsecond",
+		"hour_second",
+		"hour_minute",
+		"day_microsecond",
+		"day_second",
+		"day_minute",
+		"day_hour",
+		"year_month"};
 		
+	private static final Map<String,String> alias=new HashMap<String,String>();
+	
+	static{
+		alias.put("years", "year");
+		alias.put("months", "month");
+		alias.put("weeks", "week");
+		alias.put("days", "day");
+		alias.put("hours", "hour");
+		alias.put("minutes", "minute");
+		alias.put("seconds", "second");
+		alias.put("y", "year");
+		alias.put("m", "month");
+		alias.put("d", "day");
+		alias.put("one", "1");
+	}
+	
 	public Interval(){}
 	
 	/**
@@ -30,7 +59,7 @@ public class Interval implements Expression,Child  {
 	}
 	
 	public boolean isMySQLMode(){
-		return ArrayUtils.contains(MYSQL_ALL_DATEUNIT, unit.toUpperCase());
+		return ArrayUtils.contains(MYSQL_ALL_DATEUNIT, unit.toLowerCase());
 	}
 	
 	public boolean toMySqlMode(){
@@ -39,7 +68,9 @@ public class Interval implements Expression,Child  {
 			int space=unit.indexOf(' ');
 			if(space>-1){
 				value=new SqlExpression(unit.substring(0,space));
-				unit=unit.substring(space+1);
+				String u=unit.substring(space+1);
+				String fixed=alias.get(u.toLowerCase());
+				unit=fixed==null?u:fixed;
 			}
 			return true;
 		}else{
@@ -72,14 +103,6 @@ public class Interval implements Expression,Child  {
 		expressionVisitor.visit(this);
 	}
 	
-	public Object getParent() {
-		return parent;
-	}
-
-	public void setParent(Object parent) {
-		this.parent = parent;
-	}
-
 	@Override
 	public String toString() {
 		StringBuilder sb=new StringBuilder(64);
