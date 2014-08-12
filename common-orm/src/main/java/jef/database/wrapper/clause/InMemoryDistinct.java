@@ -23,5 +23,6 @@ public class InMemoryDistinct implements InMemoryProcessor{
 		rows.setRvh(null);//先释放掉
 		List<Row> result=Arrays.asList(newRows.toArray(new Row[newRows.size()]));
 		rows.setRvh(result);
+		rows.refresh();
 	}
 }

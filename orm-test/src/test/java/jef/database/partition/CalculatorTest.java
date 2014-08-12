@@ -11,7 +11,6 @@ import java.util.List;
 import javax.persistence.GenerationType;
 
 import jef.database.DbUtils;
-import jef.database.KeyFunction;
 import jef.database.annotation.PartitionKeyImpl;
 import jef.database.annotation.PartitionResult;
 import jef.database.annotation.PartitionTable;
@@ -25,6 +24,7 @@ import jef.database.meta.TableMetadata;
 import jef.database.meta.TupleMetadata;
 import jef.database.query.DefaultPartitionCalculator;
 import jef.database.query.PartitionCalculator;
+import jef.database.routing.function.KeyFunction;
 import jef.orm.onetable.model.TestEntity;
 import jef.orm.partition.PartitionEntity;
 

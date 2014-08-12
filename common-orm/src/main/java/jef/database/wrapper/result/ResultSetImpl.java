@@ -16,6 +16,8 @@
 package jef.database.wrapper.result;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.io.Writer;
 import java.sql.Blob;
 import java.sql.Clob;
@@ -24,6 +26,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.RowId;
 import java.sql.SQLException;
+import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
@@ -389,4 +392,90 @@ public class ResultSetImpl implements IResultSet {
 	}
 
 
+	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
+		return rs.getObject(columnIndex, type);
+	}
+
+
+	public InputStream getBinaryStream(int columnIndex) throws SQLException {
+		return rs.getBinaryStream(columnIndex);
+	}
+
+
+	@SuppressWarnings("deprecation")
+	public InputStream getUnicodeStream(int columnIndex) throws SQLException {
+		return rs.getUnicodeStream(columnIndex);
+	}
+
+
+	public InputStream getAsciiStream(int columnIndex) throws SQLException {
+		return rs.getAsciiStream(columnIndex);
+	}
+
+
+	public short getShort(int columnIndex) throws SQLException {
+		return rs.getShort(columnIndex);
+	}
+
+
+	public byte getByte(int columnIndex) throws SQLException {
+		return rs.getByte(columnIndex);
+	}
+
+
+	public void updateClob(int columnIndex, Reader reader) throws SQLException {
+		rs.updateClob(columnIndex, reader);
+	}
+
+
+
+	public void updateBlob(int columnIndex, InputStream inputStream) throws SQLException {
+		rs.updateBlob(columnIndex, inputStream);
+	}
+
+
+	public void updateNull(int columnIndex) throws SQLException {
+		rs.updateNull(columnIndex);
+	}
+
+
+	public void updateClob(String columnLabel, Reader reader, long length) throws SQLException {
+		rs.updateClob(columnLabel, reader, length);
+	}
+
+
+	public void updateClob(int columnIndex, Reader reader, long length) throws SQLException {
+		rs.updateClob(columnIndex, reader, length);
+	}
+
+
+	public void updateBlob(String columnLabel, InputStream inputStream, long length) throws SQLException {
+		rs.updateBlob(columnLabel, inputStream,length);
+	}
+
+
+	public void updateSQLXML(String columnLabel, SQLXML xmlObject) throws SQLException {
+		rs.updateSQLXML(columnLabel, xmlObject);
+		
+	}
+
+
+	public void updateSQLXML(int columnIndex, SQLXML xmlObject) throws SQLException {
+		rs.updateSQLXML(columnIndex, xmlObject);
+	}
+
+
+	public SQLXML getSQLXML(int columnIndex) throws SQLException {
+		return rs.getSQLXML(columnIndex);
+	}
+
+
+	public void updateBlob(int columnIndex, InputStream inputStream, long length) throws SQLException {
+		rs.updateBlob(columnIndex, inputStream, length);
+	}
+
+
+	public void updateObject(int columnIndex, Object x) throws SQLException {
+		rs.updateObject(columnIndex, x);
+	}
 }

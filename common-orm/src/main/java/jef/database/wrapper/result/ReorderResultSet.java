@@ -216,4 +216,8 @@ final class ReorderResultSet extends AbstractResultSet {
 	protected ResultSet get() {
 		return gettingResults.get(currentIndex);
 	}
+
+	public boolean isClosed() throws SQLException {
+		return columns==null;
+	}
 }

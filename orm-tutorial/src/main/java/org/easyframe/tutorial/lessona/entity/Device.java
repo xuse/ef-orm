@@ -6,9 +6,9 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import jef.database.DataObject;
-import jef.database.KeyFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
+import jef.database.routing.function.KeyFunction;
 import jef.tools.DateFormats;
 
 @Entity

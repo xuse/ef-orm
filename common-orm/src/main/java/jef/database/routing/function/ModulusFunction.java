@@ -1,4 +1,4 @@
-package jef.database.partition;
+package jef.database.routing.function;
 
 import java.math.BigInteger;
 import java.util.ArrayList;

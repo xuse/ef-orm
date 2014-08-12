@@ -275,4 +275,8 @@ public final class MultipleResultSet extends AbstractResultSet{
 	public void setInMemoryDistinct(InMemoryDistinct instance) {
 		addToInMemprocessor(instance);
 	}
+
+	public boolean isClosed() throws SQLException {
+		return results.isEmpty();
+	}
 }

@@ -2,7 +2,7 @@ package jef.database.annotation;
 
 import java.lang.annotation.Annotation;
 
-import jef.database.KeyFunction;
+import jef.database.routing.function.KeyFunction;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;

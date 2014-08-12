@@ -116,4 +116,8 @@ public class InMemoryProcessResultSet extends AbstractResultSet{
 	protected ResultSet get() {
 		return cache;
 	}
+
+	public boolean isClosed() throws SQLException {
+		return cache.isClosed();
+	}
 }

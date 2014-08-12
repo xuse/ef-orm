@@ -49,6 +49,7 @@ public class InMemoryGroupBy implements InMemoryProcessor {
 		}
 		mapTask.clear();
 		rowset.setRvh(newRows);
+		rowset.refresh();
 	}
 
 	class RowTask {

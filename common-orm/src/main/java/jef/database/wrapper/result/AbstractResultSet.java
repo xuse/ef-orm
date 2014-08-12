@@ -15,12 +15,15 @@
  */
 package jef.database.wrapper.result;
 
+import java.io.InputStream;
+import java.io.Reader;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.RowId;
 import java.sql.SQLException;
+import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.List;
@@ -29,13 +32,11 @@ import java.util.Map;
 import jef.database.Condition;
 import jef.database.meta.Reference;
 
-public abstract class AbstractResultSet implements IResultSet{
-	//级联过滤条件
+public abstract class AbstractResultSet implements IResultSet {
+	// 级联过滤条件
 	protected Map<Reference, List<Condition>> filters;
-	
-	
+
 	protected abstract ResultSet get();
-	
 
 	public Object getObject(String columnName) throws SQLException {
 		return get().getObject(columnName);
@@ -132,6 +133,7 @@ public abstract class AbstractResultSet implements IResultSet{
 	public byte[] getBytes(int columnIndex) throws SQLException {
 		return get().getBytes(columnIndex);
 	}
+
 	public RowId getRowId(int columnIndex) throws SQLException {
 		return get().getRowId(columnIndex);
 	}
@@ -163,8 +165,78 @@ public abstract class AbstractResultSet implements IResultSet{
 	public void updateObject(String columnName, Object value) throws SQLException {
 		get().updateObject(columnName, value);
 	}
-	
+
 	public Map<Reference, List<Condition>> getFilters() {
 		return filters;
+	}
+
+	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
+		return get().getObject(columnIndex, type);
+	}
+
+	public InputStream getBinaryStream(int columnIndex) throws SQLException {
+		return get().getBinaryStream(columnIndex);
+	}
+
+	@SuppressWarnings("deprecation")
+	public InputStream getUnicodeStream(int columnIndex) throws SQLException {
+		return get().getUnicodeStream(columnIndex);
+	}
+
+	public InputStream getAsciiStream(int columnIndex) throws SQLException {
+		return get().getAsciiStream(columnIndex);
+	}
+
+	public short getShort(int columnIndex) throws SQLException {
+		return get().getShort(columnIndex);
+	}
+
+	public byte getByte(int columnIndex) throws SQLException {
+		return get().getByte(columnIndex);
+	}
+
+	public void updateClob(int columnIndex, Reader reader) throws SQLException {
+		get().updateClob(columnIndex, reader);
+	}
+
+	public void updateBlob(int columnIndex, InputStream inputStream) throws SQLException {
+		get().updateBlob(columnIndex, inputStream);
+	}
+
+	public void updateNull(int columnIndex) throws SQLException {
+		get().updateNull(columnIndex);
+	}
+
+	public void updateClob(String columnLabel, Reader reader, long length) throws SQLException {
+		get().updateClob(columnLabel, reader, length);
+	}
+
+	public void updateClob(int columnIndex, Reader reader, long length) throws SQLException {
+		get().updateClob(columnIndex, reader, length);
+	}
+
+	public void updateBlob(String columnLabel, InputStream inputStream, long length) throws SQLException {
+		get().updateBlob(columnLabel, inputStream, length);
+	}
+
+	public void updateSQLXML(String columnLabel, SQLXML xmlObject) throws SQLException {
+		get().updateSQLXML(columnLabel, xmlObject);
+
+	}
+
+	public void updateSQLXML(int columnIndex, SQLXML xmlObject) throws SQLException {
+		get().updateSQLXML(columnIndex, xmlObject);
+	}
+
+	public SQLXML getSQLXML(int columnIndex) throws SQLException {
+		return get().getSQLXML(columnIndex);
+	}
+
+	public void updateBlob(int columnIndex, InputStream inputStream, long length) throws SQLException {
+		get().updateBlob(columnIndex, inputStream, length);
+	}
+
+	public void updateObject(int columnIndex, Object x) throws SQLException {
+		get().updateObject(columnIndex, x);
 	}
 }

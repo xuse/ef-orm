@@ -21,7 +21,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import jef.database.KeyFunction;
+import jef.database.routing.function.KeyFunction;
 
 @Target(TYPE) 
 @Retention(RUNTIME)

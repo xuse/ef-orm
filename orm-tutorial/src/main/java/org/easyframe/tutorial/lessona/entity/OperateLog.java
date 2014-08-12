@@ -9,9 +9,9 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 import jef.database.DataObject;
-import jef.database.KeyFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
+import jef.database.routing.function.KeyFunction;
 
 @Entity
 @PartitionTable(key = {

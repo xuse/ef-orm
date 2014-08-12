@@ -10,7 +10,7 @@ import javax.persistence.Id;
 
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
-import jef.database.partition.ModulusFunction;
+import jef.database.routing.function.ModulusFunction;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 

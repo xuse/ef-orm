@@ -124,8 +124,7 @@ public class HsqlDbMemTest extends org.junit.Assert {
 	@Test
 	public void testResultSet() throws SQLException{
 		memoryOccupied(10);
-		PreparedStatement pstmt = getDefaultTarget().prepareStatement("select field_1,field_2 from test_entity",ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE);
-		ResultSet rs=pstmt.executeQuery();
+		ResultSet rs=db.getResultSet("select field_1,field_2 from test_entity", 0);
 		int n=0;
 		while(rs.next()){
 			System.out.println(rs.getObject(1));

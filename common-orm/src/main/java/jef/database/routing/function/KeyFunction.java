@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jef.database;
+package jef.database.routing.function;
 
 /**
  * 描述一个对指定类型的函数操作，用来将不同的值转化为分表时的表名后缀
