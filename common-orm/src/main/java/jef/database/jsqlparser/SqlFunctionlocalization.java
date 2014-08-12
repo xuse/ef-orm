@@ -155,13 +155,16 @@ public class SqlFunctionlocalization extends VisitorAdapter{
 	@Override
 	public void visit(Interval interval) {
 		super.visit(interval);
-		Object parent=visitPath.getFirst();
+		Object parent=visitPath.pop();
 		if(parent instanceof BinaryExpression){
 			profile.processIntervalExpression((BinaryExpression)parent,interval);
 		}else if(parent instanceof ExpressionList){
-			Function func=((ExpressionList) parent).getParent();
-			profile.processIntervalExpression(func,interval);
+			Object func=visitPath.getFirst();
+			if(func instanceof Function){
+				profile.processIntervalExpression((Function)func,interval);
+			}
 		}
+		visitPath.push(parent);
 	}
 	
 	

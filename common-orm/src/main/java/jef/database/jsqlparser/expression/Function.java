@@ -64,13 +64,13 @@ public class Function implements Expression {
 	public Function(String name, Expression... params) {
 		this.name = name;
 		if (params.length > 0) {
-			this.parameters = new ExpressionList(params).setParent(this);
+			this.parameters = new ExpressionList(params);
 		}
 	}
 
 	public Function(String name, List<Expression> arguments) {
 		this.name = name;
-		this.parameters = new ExpressionList(arguments).setParent(this);
+		this.parameters = new ExpressionList(arguments);
 	}
 
 	public void accept(ExpressionVisitor expressionVisitor) {
@@ -132,9 +132,6 @@ public class Function implements Expression {
 
 	public void setParameters(ExpressionList list) {
 		parameters = list;
-		if (list != null) {
-			list.setParent(this);
-		}
 	}
 
 	/**

@@ -25,29 +25,24 @@ import java.util.concurrent.ConcurrentMap;
 
 import jef.accelerator.cglib.beans.BeanCopier;
 import jef.accelerator.cglib.core.Converter;
+import jef.common.SimpleMap;
 
 /**
- * 深拷贝工具，基于反射，可以对任何对象实施Clone.
+ * 深拷贝工具，基于CG-Lib，可以对任何对象实施Clone.是目前已知的最高效的Java实现
  * @author Administrator
  *
  */
 public class CloneUtils {
-	private static ConcurrentMap<Class<?>, Cloner> beanCopiers = new ConcurrentHashMap<Class<?>, Cloner>();
+	private static ConcurrentMap<Class<?>, Cloner> BEAN_CLONERS = new ConcurrentHashMap<Class<?>, Cloner>();
 	
 	static{
-		beanCopiers.put(ArrayList.class, new Cloner._ArrayList());
-		beanCopiers.put(HashSet.class, new Cloner._HashSet());
-		beanCopiers.put(Arrays.asList().getClass(), new Cloner._ArrayList());
-		beanCopiers.put(HashMap.class, new Cloner._HashMap());
+		BEAN_CLONERS.put(ArrayList.class, new Cloner._ArrayList());
+		BEAN_CLONERS.put(HashSet.class, new Cloner._HashSet());
+		BEAN_CLONERS.put(Arrays.asList().getClass(), new Cloner._ArrayList());
+		BEAN_CLONERS.put(HashMap.class, new Cloner._HashMap());
+		BEAN_CLONERS.put(SimpleMap.class, new Cloner._HashMap());
 	}
-	
-	static Cloner getCloner(Class<?> clz) {
-		Cloner cloner=beanCopiers.get(clz);
-		if(cloner!=null)return cloner;
-		cloner=new BeanCloner(BeanCopier.create(clz, clz, true));
-		beanCopiers.putIfAbsent(clz, cloner);
-		return cloner;
-	}
+
 	
 	
 	public static Object clone(Object obj) {
@@ -69,7 +64,7 @@ public class CloneUtils {
 			return CloneUtils.clone(bean);
 		}
 		Class<?> clz=bean.getClass();
-		Cloner cl=beanCopiers.get(bean.getClass());
+		Cloner cl=BEAN_CLONERS.get(bean.getClass());
 		if(cl!=null){
 			return cl.clone(bean);
 		}
@@ -126,6 +121,14 @@ public class CloneUtils {
 //		}
 //		return result;
 //	}
+	
+	private static Cloner getCloner(Class<?> clz) {
+		Cloner cloner=BEAN_CLONERS.get(clz);
+		if(cloner!=null)return cloner;
+		cloner=new BeanCloner(BeanCopier.create(clz, clz, true));
+		BEAN_CLONERS.putIfAbsent(clz, cloner);
+		return cloner;
+	}
 
 	private static Object cloneArray(Object obj) {
 		int len = Array.getLength(obj);

@@ -444,10 +444,10 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 		long start=System.nanoTime();
 		Statement st=new StSqlParser(new StringReader(sql)).Statement();
 		long cost= System.nanoTime()-start;
-//		start=System.nanoTime();
+		start=System.nanoTime();
 		Statement st1= (Statement) CloneUtils.clone(st);
-//		assertEquals(st.toString(),st1.toString());
-//		System.out.println("拷贝耗时"+(System.nanoTime()-start)/1000+"us");
+		assertEquals(st.toString(),st1.toString());
+		System.out.println("拷贝耗时"+(System.nanoTime()-start)/1000+"us");
 		return cost;
 	}
 
