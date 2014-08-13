@@ -48,11 +48,9 @@ import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.support.DbOperatorListener;
+import jef.database.support.DbOperatorListenerContainer;
 import jef.database.support.DefaultDbOperListener;
 import jef.database.support.MetadataEventListener;
-import jef.database.support.MultiDbOperatorListener;
-import jef.database.wrapper.populator.ResultPopulatorImpl;
-import jef.database.wrapper.populator.ResultSetPopulator;
 import jef.tools.Assert;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
@@ -222,10 +220,10 @@ public class DbClient extends Session {
 		DbOperatorListener old = getListener();
 		if (old == DefaultDbOperListener.getInstance()) {
 			this.listener = lis;
-		} else if (old instanceof MultiDbOperatorListener) {
-			((MultiDbOperatorListener) old).add(lis);
+		} else if (old instanceof DbOperatorListenerContainer) {
+			((DbOperatorListenerContainer) old).add(lis);
 		} else {
-			this.listener = new MultiDbOperatorListener(old, lis);
+			this.listener = new DbOperatorListenerContainer(old, lis);
 		}
 	}
 

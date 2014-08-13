@@ -14,6 +14,7 @@ import jef.database.meta.TableMetadata;
 import jef.database.wrapper.ResultIterator;
 import jef.tools.Assert;
 
+@SuppressWarnings("serial")
 public final class PojoWrapper extends DataObject implements Map<String, Object>, VarMeta {
 	private TableMetadata meta;
 	private Set<String> names;

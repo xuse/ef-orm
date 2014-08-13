@@ -1,5 +1,6 @@
 package jef.database;
 
+import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -300,7 +301,7 @@ public class NamedQueryConfig extends jef.database.DataObject {
 				param.setResolved(((SqlExpression) value).getText());
 			} else if (value != null) {
 				if (value.getClass().isArray()) {
-					int size = ArrayUtils.length(value);
+					int size = Array.getLength(value);
 					param.setResolved(size);
 					if (value.getClass().getComponentType().isPrimitive()) {
 						value = ArrayUtils.toObject(value);

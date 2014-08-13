@@ -8,10 +8,10 @@ import jef.database.Session;
 import jef.database.IQueryableEntity;
 import jef.database.Transaction;
 
-public final class MultiDbOperatorListener implements DbOperatorListener{
+public final class DbOperatorListenerContainer implements DbOperatorListener{
 	private List<DbOperatorListener> listeners=new ArrayList<DbOperatorListener>();
 	
-	public MultiDbOperatorListener(DbOperatorListener... listeners){
+	public DbOperatorListenerContainer(DbOperatorListener... listeners){
 		this.listeners.addAll(Arrays.asList(listeners));
 	}
 	
