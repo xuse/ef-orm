@@ -135,27 +135,27 @@ public abstract class SelectProcessor {
 
 		// 非递归，直接外部调用
 		public QueryClause toQuerySql(ConditionQuery obj, IntRange range, String myTableName,boolean order) {
-			QueryClauseImpl sb = new QueryClauseImpl(parent.getProfile());
+			QueryClauseImpl clause = new QueryClauseImpl(parent.getProfile());
 			if (obj instanceof Query<?>) {
 				Query<?> query = (Query<?>) obj;
 				SqlContext context = query.prepare();
 				GroupClause groupClause = toGroupAndHavingClause(query, context);
-				sb.setGrouphavingPart(groupClause);
-				sb.setSelectPart(toSelectSql(context, groupClause));
-				sb.setTables(DbUtils.toTableNames(query.getInstance(), myTableName, query, db.getPool().getPartitionSupport()), query.getMeta().getName());
-				sb.setWherePart(parent.toWhereClause(query, context, false));
+				clause.setGrouphavingPart(groupClause);
+				clause.setSelectPart(toSelectSql(context, groupClause));
+				clause.setTables(DbUtils.toTableNames(query.getInstance(), myTableName, query, db.getPool().getPartitionSupport()), query.getMeta().getName());
+				clause.setWherePart(parent.toWhereClause(query, context, false));
 				if(order)
-					sb.setOrderbyPart(toOrderClause(obj, context));
+					clause.setOrderbyPart(toOrderClause(obj, context));
 			} else if (obj instanceof Join) {
 				Join join = (Join) obj;
 				SqlContext context = join.prepare();
 				GroupClause groupClause = toGroupAndHavingClause(join, context);
-				sb.setGrouphavingPart(groupClause);
-				sb.setSelectPart(toSelectSql(context, groupClause));
-				sb.setTableDefinition(join.toTableDefinitionSql(parent, context));
-				sb.setWherePart(parent.toWhereClause(join, context, false));
+				clause.setGrouphavingPart(groupClause);
+				clause.setSelectPart(toSelectSql(context, groupClause));
+				clause.setTableDefinition(join.toTableDefinitionSql(parent, context));
+				clause.setWherePart(parent.toWhereClause(join, context, false));
 				if(order)
-					sb.setOrderbyPart(toOrderClause(join, context));
+					clause.setOrderbyPart(toOrderClause(join, context));
 			} else if (obj instanceof ComplexQuery) {
 				ComplexQuery cq = (ComplexQuery) obj;
 				SqlContext context = cq.prepare();
@@ -170,8 +170,8 @@ public abstract class SelectProcessor {
 			} else {
 				throw new IllegalArgumentException();
 			}
-			sb.setPageRange(range);
-			return sb;
+			clause.setPageRange(range);
+			return clause;
 		}
 
 		public void processSelect(OperateTarget db, QueryClause sql,PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {

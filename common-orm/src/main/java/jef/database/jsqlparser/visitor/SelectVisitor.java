@@ -17,10 +17,13 @@ package jef.database.jsqlparser.visitor;
 
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.statement.select.Union;
+import jef.database.jsqlparser.statement.select.WithItem;
 
 public interface SelectVisitor {
 
     public void visit(PlainSelect plainSelect);
 
     public void visit(Union union);
+    
+    public void visit(WithItem with);
 }

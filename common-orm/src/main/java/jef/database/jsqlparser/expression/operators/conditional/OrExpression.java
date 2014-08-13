@@ -26,10 +26,11 @@ public class OrExpression extends BinaryExpression {
         setRightExpression(rightExpression);
     }
 
-    public void accept(ExpressionVisitor expressionVisitor) {
-        expressionVisitor.visit(this);
-    }
-
+	@Override
+	protected void acceptExp(ExpressionVisitor expressionVisitor) {
+		expressionVisitor.visit(this);
+	}
+	
     public String getStringExpression() {
         return "OR";
     }

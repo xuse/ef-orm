@@ -38,6 +38,7 @@ import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.OperateTarget.SqlTransformer;
 import jef.database.Session.PopulateStrategy;
+import jef.database.annotation.PartitionResult;
 import jef.database.dialect.type.ResultSetAccessor;
 import jef.database.jsqlparser.expression.JpqlDataType;
 import jef.database.jsqlparser.expression.JpqlParameter;
@@ -47,6 +48,8 @@ import jef.database.jsqlparser.visitor.Statement;
 import jef.database.query.ParameterProvider;
 import jef.database.query.QueryHints;
 import jef.database.query.SqlExpression;
+import jef.database.routing.jdbc.ExecutionPlan;
+import jef.database.routing.jdbc.SqlAnalyzer;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.Mapper;
@@ -191,10 +194,26 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	private FlushModeType flushType = null;
 	private final Map<String,Object> hint = new HashMap<String,Object>();
 	private int fetchSize = 0;
-	private boolean sqlRouting;
+	private boolean routing;
 	
-	
-	
+	/**
+	 * 是否启用ＳＱＬ语句路由功能
+	 * @return ＳＱＬ语句路由
+	 */
+	public boolean isRouting() {
+		return routing;
+	}
+
+
+	/**
+	 * 设置是否启用ＳＱＬ语句路由功能
+	 * @param routing  ＳＱＬ语句路由
+	 */
+	public void setRouting(boolean routing) {
+		this.routing = routing;
+	}
+
+
 	/**
 	 * 从SQL语句加上返回类型构造
 	 * 
@@ -230,15 +249,27 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	public long getResultCount() {
 		try {
 			Entry<Statement, List<Object>> parse = config.getCountSqlAndParams(db, this);
-			String sql=parse.getKey().toString();
-			List<?> params=parse.getValue();
-			long start = System.currentTimeMillis();
-			Long num = db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, 1,0, params);
-			if (ORMConfig.getInstance().isDebugMode()) {
-				long dbAccess = System.currentTimeMillis();
-				LogUtil.show(StringUtils.concat("Count:", String.valueOf(num), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |",db.getTransactionId()));
+			ExecutionPlan plan=null;
+			if(routing){
+				plan=SqlAnalyzer.getExecutionPlan(parse.getKey(),parse.getValue(),db);
 			}
-			return num;
+			if(plan==null){
+				String sql=parse.getKey().toString();
+				List<?> params=parse.getValue();
+				long start = System.currentTimeMillis();
+				Long num = db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, 1,0, params);
+				if (ORMConfig.getInstance().isDebugMode()) {
+					long dbAccess = System.currentTimeMillis();
+					LogUtil.show(StringUtils.concat("Count:", String.valueOf(num), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |",db.getTransactionId()));
+				}
+				return num;	
+			}else{
+				long total=0;
+				for(PartitionResult site: plan.getSites()){
+					total+=plan.processCount(site,db.getSession());
+				}
+				return total;
+			}
 		} catch (SQLException e) {
 			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}
@@ -276,17 +307,41 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			Entry<Statement, List<Object>> parse = config.getSqlAndParams(db, this);
 			Statement sql=parse.getKey();
 			String s=sql.toString();
-			if (range != null) {
-				if(sql instanceof Select){
-					boolean isUnion=((Select) sql).getSelectBody() instanceof Union;
-					s=db.getProfile().toPageSQL(s, range,isUnion);
+			
+			ExecutionPlan plan=null;
+			if(routing){
+				plan=SqlAnalyzer.getExecutionPlan(sql,parse.getValue(),db);
+			}
+			if(plan==null){//普通查询
+				if (range != null) 
+					s=toPageSql(sql,s);
+				return db.innerIteratorBySql(s,resultTransformer, 0,fetchSize,parse.getValue());	
+			}else{//分表分库查询
+				if(plan.isMultiDatabase()){//多库
+					return plan.getIteratorResult(range,db.new SqlTransformer<X>(resultTransformer),0,fetchSize);
+				}else{ //单库多表，基于Union的查询. 可以使用数据库分页
+					Map.Entry<String,List<Object>> result=plan.getSql(plan.getSites()[0]);
+					s=result.getKey();
+					if (range != null) {
+						s=toPageSql(sql,s);
+					}
+					return db.innerIteratorBySql(s,resultTransformer, 0,fetchSize,result.getValue());
 				}
 			}
-			return db.innerIteratorBySql(s,resultTransformer, 0,fetchSize,parse.getValue());
 		} catch (SQLException e) {
 			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}
 	}
+
+	private String toPageSql(Statement sql, String s) {
+		if(sql instanceof Select){
+			boolean isUnion=((Select) sql).getSelectBody() instanceof Union;
+			s=db.getProfile().toPageSQL(s, range,isUnion);
+		}
+		return s;
+	}
+
+
 
 	/**
 	 * 执行查询语句，返回结果
@@ -305,15 +360,33 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		long start = System.currentTimeMillis();
 		Entry<Statement, List<Object>> parse = config.getSqlAndParams(db, this);
 		Statement sql=parse.getKey();
+		ExecutionPlan plan=null;
+		if(routing){
+			plan=SqlAnalyzer.getExecutionPlan(sql,parse.getValue(),db);
+		}
 		String s=sql.toString();
-		if (range != null) {
-			if(sql instanceof Select){
-				boolean isUnion=((Select) sql).getSelectBody() instanceof Union;
-				s=db.getProfile().toPageSQL(s, range,isUnion);
+		SqlTransformer<X> rst = db.new SqlTransformer<X>(resultTransformer);
+		List<X> list;
+		if(plan==null){//普通查询
+			if (range != null) {
+				s=toPageSql(sql, s);
+			}
+			list = db.innerSelectBySql(s, rst, max,fetchSize, parse.getValue());			
+		}else{//分表分库查询
+			if(plan.isMultiDatabase()){//多库
+				return plan.getListResult(range,rst,max,fetchSize);
+			}else{ //单库多表，基于Union的查询. 可以使用数据库分页
+				Map.Entry<String,List<Object>> result=plan.getSql(plan.getSites()[0]);
+				s=result.getKey();
+				if (range != null) {
+					s=toPageSql(sql,s);
+				}
+				list = db.innerSelectBySql(s, rst, max,fetchSize, result.getValue());		
 			}
 		}
-		SqlTransformer<X> rst = db.new SqlTransformer<X>(resultTransformer);
-		List<X> list = db.innerSelectBySql(s, rst, max,fetchSize, parse.getValue());
+		
+		
+		
 		if (ORMConfig.getInstance().isDebugMode()) {
 			long dbAccess = rst.dbAccess;
 			LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(list.size()), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbAccess), "ms) |", db.getTransactionId()));
@@ -373,7 +446,20 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	public int executeUpdate() {
 		try {
 			Entry<Statement, List<Object>> parse = config.getSqlAndParams(db, this);
-			return db.innerExecuteSql(parse.getKey().toString(), parse.getValue());
+			Statement sql=parse.getKey();
+			ExecutionPlan plan=null;
+			if(routing){
+				plan=SqlAnalyzer.getExecutionPlan(sql,parse.getValue(),db);
+			}
+			if(plan==null){
+				return db.innerExecuteSql(parse.getKey().toString(), parse.getValue());	
+			}else{
+				int total=0;
+				for(PartitionResult site:plan.getSites()){
+					total+=plan.processUpdate(site,db.getSession());
+				}
+				return total;
+			}
 		} catch (SQLException e) {
 			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}

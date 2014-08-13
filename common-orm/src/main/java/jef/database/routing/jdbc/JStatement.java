@@ -5,6 +5,6 @@ import java.sql.Statement;
 /**
  * @author JIYI
  */
-public interface JStatement extends Statement,DataChannel{
+public interface JStatement extends Statement{
 	
 }

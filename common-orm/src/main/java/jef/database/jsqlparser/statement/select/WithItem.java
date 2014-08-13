@@ -20,6 +20,7 @@ import java.util.List;
 import jef.database.jsqlparser.statement.SqlAppendable;
 import jef.database.jsqlparser.visitor.SelectBody;
 import jef.database.jsqlparser.visitor.SelectItem;
+import jef.database.jsqlparser.visitor.SelectVisitor;
 
 /**
  * One of the parts of a "WITH" clause of a "SELECT" statement  
@@ -83,5 +84,9 @@ public class WithItem implements SqlAppendable{
     	sb.append(" AS (");
     	selectBody.appendTo(sb);
     	sb.append(')');
+	}
+	
+	public void accept(SelectVisitor visitor){
+		visitor.visit(this);
 	}
 }

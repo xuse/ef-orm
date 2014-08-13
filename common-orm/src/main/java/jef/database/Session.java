@@ -63,6 +63,7 @@ import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.CountClause;
 import jef.database.wrapper.clause.InMemoryDistinct;
+import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.populator.ResultPopulatorImpl;
@@ -1390,6 +1391,9 @@ public abstract class Session {
 				}
 				if(sql.isDistinct()){
 					rs.setInMemoryDistinct(InMemoryDistinct.instance);
+				}
+				if(range!=null){
+					rs.setInMemoryPage(new InMemoryPaging(range));
 				}
 			}
 		}

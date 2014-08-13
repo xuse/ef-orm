@@ -40,32 +40,34 @@ public class QueryClauseImpl implements QueryClause {
 	 */
 	private String tableDefinition;
 	private PartitionResult[] tables;
-	
-	public static final QueryClauseImpl EMPTY=new QueryClauseImpl(new PartitionResult[0]);
-	
-//	//是否为union
-//	private boolean isUnion = false;
-	//Select部分
+
+	public static final QueryClauseImpl EMPTY = new QueryClauseImpl(new PartitionResult[0]);
+
+	// //是否为union
+	// private boolean isUnion = false;
+	// Select部分
 	private SelectPart selectPart;
-	//Where
+	// Where
 	private String wherePart;
-	//groupBy
-	private GroupClause grouphavingPart;//=GroupClause.DEFAULT
-	//排序
+	// groupBy
+	private GroupClause grouphavingPart;// =GroupClause.DEFAULT
+	// 排序
 	private OrderClause orderbyPart = OrderClause.DEFAULT;
-	//绑定变量
+	// 绑定变量
 	private List<BindVariableDescription> bind;
-	//范围
+	// 范围
 	private IntRange pageRange;
 
 	private DatabaseDialect profile;
-	
-	public QueryClauseImpl(DatabaseDialect profile){
-		this.profile=profile;
+
+	public QueryClauseImpl(DatabaseDialect profile) {
+		this.profile = profile;
 	}
+
 	private QueryClauseImpl(PartitionResult[] partitionResults) {
-		this.tables=partitionResults;
+		this.tables = partitionResults;
 	}
+
 	public IntRange getPageRange() {
 		return pageRange;
 	}
@@ -122,9 +124,9 @@ public class QueryClauseImpl implements QueryClause {
 		return tables;
 	}
 
-	public void setTables(PartitionResult[] tables,String rawClass) {
+	public void setTables(PartitionResult[] tables, String rawClass) {
 		this.tables = tables;
-		this.rawClass=rawClass;
+		this.rawClass = rawClass;
 	}
 
 	@Override
@@ -135,49 +137,50 @@ public class QueryClauseImpl implements QueryClause {
 	/*
 	 * 
 	 * @param tableDef
+	 * 
 	 * @param delayProcessGroupClause 说明是在union字句中，需要确保是先把unionall 再groupby
+	 * 
 	 * @return
 	 */
-	private String getSql(String tableDef,boolean delayProcessGroupClause) {
+	private String getSql(String tableDef, boolean delayProcessGroupClause) {
 		StringBuilder sb = new StringBuilder(200);
-		selectPart.append(sb,delayProcessGroupClause);
+		selectPart.append(sb, delayProcessGroupClause);
 		sb.append(" from ");
 		sb.append(tableDef);
-		if(wherePart.length()>0){
+		if (wherePart.length() > 0) {
 			sb.append(ORMConfig.getInstance().wrap);
-			sb.append(wherePart);	
+			sb.append(wherePart);
 		}
-		if(!delayProcessGroupClause)sb.append(grouphavingPart);
+		if (!delayProcessGroupClause)
+			sb.append(grouphavingPart);
 		return sb.toString();
 	}
 
 	public BindSql getSql(PartitionResult site) {
 		if (tableDefinition != null) {
-			return new BindSql(withPage(getSql(tableDefinition,false).concat(orderbyPart.getSql()),false), bind);
+			return new BindSql(withPage(getSql(tableDefinition, false).concat(orderbyPart.getSql()), false), bind);
 		}
-		if(site==null){
-			if(tables.length==0){
+		if (site == null) {
+			if (tables.length == 0) {
 				throw new IllegalArgumentException("The partition result does not return any result!");
 			}
-			site=this.tables[0];
+			site = this.tables[0];
 		}
 		StringBuilder sb = new StringBuilder(200);
 		List<BindVariableDescription> bind = this.bind;
-		boolean moreTable=site.tableSize()>1;
+		boolean moreTable = site.tableSize() > 1;
 		for (int i = 0; i < site.tableSize(); i++) {
-			if (i>0) {
+			if (i > 0) {
 				sb.append("\n union all \n");
 			}
 			String tableName = site.getTables().get(i);
-			sb.append(getSql(tableName.concat(" t"),moreTable && grouphavingPart.isNotEmpty()));//为多表、并且有groupby时需要特殊处理
-			
+			sb.append(getSql(tableName.concat(" t"), moreTable && grouphavingPart.isNotEmpty()));// 为多表、并且有groupby时需要特殊处理
+
 		}
 
 		// 不带group by、having、order by从句的情况下，无需再union一层，
 		// 否则，对查询列指定别名时会产生异常。
-		if (moreTable &&
-				(grouphavingPart.isNotEmpty() ||
-						orderbyPart.isNotEmpty())) {
+		if (moreTable && (grouphavingPart.isNotEmpty() || orderbyPart.isNotEmpty())) {
 			StringBuilder sb2 = new StringBuilder();
 			selectPart.append(sb2);
 
@@ -196,34 +199,40 @@ public class QueryClauseImpl implements QueryClause {
 		}
 
 		sb.append(orderbyPart.getSql());
-		return new BindSql(withPage(sb.toString(),moreTable), bind);
+		return new BindSql(withPage(sb.toString(), moreTable), bind);
 	}
 
-	private String withPage(String sql,boolean union) {
-		if (pageRange != null) {
-			return profile.toPageSQL(sql, pageRange,union);
+	private String withPage(String sql, boolean union) {
+		if (pageRange != null && !isMultiDatabase()) {
+			return profile.toPageSQL(sql, pageRange, union);
 		}
 		return sql;
 	}
-	
+
 	private CacheKey cacheKey;
 	private String rawClass;
+
 	public CacheKey getCacheKey() {
-		if(cacheKey!=null)return cacheKey;
-		String table=rawClass==null?tableDefinition:rawClass;
-		CacheKey key=new SqlCacheKey(table,new KeyDimension(wherePart,orderbyPart.getSql()),CacheImpl.toParamList(this.bind));
-		this.cacheKey=key;
+		if (cacheKey != null)
+			return cacheKey;
+		String table = rawClass == null ? tableDefinition : rawClass;
+		CacheKey key = new SqlCacheKey(table, new KeyDimension(wherePart, orderbyPart.getSql()), CacheImpl.toParamList(this.bind));
+		this.cacheKey = key;
 		return key;
 	}
+
 	public boolean isGroupBy() {
-		return this.grouphavingPart!=null && !grouphavingPart.isNotEmpty();
+		return this.grouphavingPart != null && !grouphavingPart.isNotEmpty();
 	}
+
 	public boolean isEmpty() {
-		return this.tables!=null && tables.length==0;
+		return this.tables != null && tables.length == 0;
 	}
+
 	public boolean isMultiDatabase() {
-		return this.tables!=null && tables.length>1;
+		return this.tables != null && tables.length > 1;
 	}
+
 	public boolean isDistinct() {
 		return selectPart.isDistinct();
 	}

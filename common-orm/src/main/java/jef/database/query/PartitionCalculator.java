@@ -1,8 +1,11 @@
 package jef.database.query;
 
+import java.util.List;
+
 import jef.database.IQueryableEntity;
 import jef.database.annotation.PartitionResult;
 import jef.database.innerpool.PartitionSupport;
+import jef.database.jsqlparser.visitor.Statement;
 import jef.database.meta.MetadataAdapter;
 
 /**
@@ -50,4 +53,25 @@ public interface PartitionCalculator {
 	 * @see PartitionResult
 	 */
 	PartitionResult toTableName(MetadataAdapter meta, IQueryableEntity instance, Query<?> q,PartitionSupport context);
+	
+	/**
+	 * 支持 SQL 语句分库分表计算
+	 * @param meta
+	 * @param st
+	 * @param params
+	 * @param context
+	 * @return
+	 */
+	PartitionResult[] getTables(MetadataAdapter meta,Statement st,List<Object> params,PartitionSupport context);
+	
+	/**
+	 * 支持 SQL 语句分库分表计算
+	 * @param meta
+	 * @param st
+	 * @param params
+	 * @param context
+	 * @return
+	 */
+	PartitionResult getTable(MetadataAdapter meta,Statement st,List<Object> params,PartitionSupport context);
+	
 }

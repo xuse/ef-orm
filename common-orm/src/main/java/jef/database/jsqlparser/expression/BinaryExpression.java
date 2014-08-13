@@ -16,6 +16,7 @@
 package jef.database.jsqlparser.expression;
 
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionVisitor;
 import jef.database.jsqlparser.visitor.Ignorable;
 
 
@@ -77,6 +78,17 @@ public abstract class BinaryExpression implements Expression,Ignorable {
     	}
 		return leftIsEmpty && rightIsEmpty;
 	}
+    
+    
+    public void checkEmpty(){
+    	if(this.rightExpression instanceof JpqlParameter){
+    		if(((JpqlParameter)rightExpression).resolvedCount()==-1){
+    			setEmpty(Boolean.TRUE);
+    			return;
+    		}
+    	}
+		setEmpty(null);	
+    }
 
 	public void setEmpty(Boolean isEmpty) {
 		this.isEmpty.set(isEmpty);
@@ -110,7 +122,17 @@ public abstract class BinaryExpression implements Expression,Ignorable {
         return not;
     }
 
-    public String toString() {
+    public void accept(ExpressionVisitor expressionVisitor) {
+		if(rewrite==null){
+			acceptExp(expressionVisitor);
+		}else{
+			rewrite.accept(expressionVisitor);
+		}
+	}
+
+	protected abstract void acceptExp(ExpressionVisitor expressionVisitor);
+
+	public String toString() {
     	StringBuilder sb=new StringBuilder(64);
     	appendTo(sb);
     	return sb.toString();
@@ -154,6 +176,8 @@ public abstract class BinaryExpression implements Expression,Ignorable {
     		_rightExpression.appendTo(sb);
     	}
 	}
+    
+    
 
 	public void setNot(boolean not) {
 		this.not = not;
