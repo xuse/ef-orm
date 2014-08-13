@@ -20,13 +20,10 @@ import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 public class Concat extends BinaryExpression {
 	
-    public void accept(ExpressionVisitor expressionVisitor) {
-    	if(rewrite==null){
-    		expressionVisitor.visit(this);
-    	}else{
-    		rewrite.accept(expressionVisitor);
-    	}
-    }
+	@Override
+	protected void acceptExp(ExpressionVisitor expressionVisitor) {
+		expressionVisitor.visit(this);
+	}
 
     public String getStringExpression() {
         return "||";

@@ -283,12 +283,11 @@ public class NamedQueryConfig extends jef.database.DataObject {
 			this.params=params;
 		}
 
-		// 计算绑定变量
+		// 进行绑定变量匹配
 		@Override
 		public void visit(JpqlParameter param) {
 			Object value = null;
 			boolean contains;
-			param.setResolved(0);
 			if (param.isIndexParam()) {
 				value = prov.getIndexedParam(param.getIndex());
 				contains = prov.containsParam(param.getIndex());
@@ -302,37 +301,35 @@ public class NamedQueryConfig extends jef.database.DataObject {
 			} else if (value != null) {
 				if (value.getClass().isArray()) {
 					int size = Array.getLength(value);
-					param.setResolved(size);
 					if (value.getClass().getComponentType().isPrimitive()) {
 						value = ArrayUtils.toObject(value);
 					}
 					for (Object v : (Object[]) value) {
 						params.add(v);
 					}
+					param.setResolved(size);
 				} else if (value instanceof Collection) {
 					int size = ((Collection<?>) value).size();
-					param.setResolved(size);
 					for (Object v : (Collection<?>) value) {
 						params.add(v);
 					}
+					param.setResolved(size);
 				} else {
 					params.add(value);
+					param.setResolved(0);
 				}
-			} else {
-				if (contains)
-					params.add(value);
+			} else if (contains){
+				params.add(value);
+				param.setResolved(0);
+			}else{
+				param.setNotUsed();
 			}
 		}
 
 		@Override
 		public void visit(NotEqualsTo notEqualsTo) {
 			super.visit(notEqualsTo);
-			notEqualsTo.setEmpty(null);
-			if (notEqualsTo.getRightExpression() instanceof JpqlParameter) {
-				if (!prov.containsParam(((JpqlParameter) notEqualsTo.getRightExpression()).getKey())) {
-					notEqualsTo.setEmpty(Boolean.TRUE);
-				}
-			}
+			notEqualsTo.checkEmpty();
 		}
 
 		@Override
@@ -344,7 +341,7 @@ public class NamedQueryConfig extends jef.database.DataObject {
 				List<Expression> list=list0.getExpressions();
 				if(list.size()==1 && (list.get(0) instanceof JpqlParameter)){
 					JpqlParameter p=(JpqlParameter) list.get(0);
-					if(!prov.containsParam(p.getKey())){
+					if(p.resolvedCount()==-1){
 						inExpression.setEmpty(Boolean.TRUE);
 					}
 				}
@@ -354,67 +351,37 @@ public class NamedQueryConfig extends jef.database.DataObject {
 		@Override
 		public void visit(EqualsTo equalsTo) {
 			super.visit(equalsTo);
-			equalsTo.setEmpty(null);
-			if (equalsTo.getRightExpression() instanceof JpqlParameter) {
-				if (!prov.containsParam(((JpqlParameter) equalsTo.getRightExpression()).getKey())) {
-					equalsTo.setEmpty(Boolean.TRUE);
-				}
-			}
+			equalsTo.checkEmpty();
 		}
 
 		@Override
 		public void visit(MinorThan minorThan) {
 			super.visit(minorThan);
-			minorThan.setEmpty(null);
-			if (minorThan.getRightExpression() instanceof JpqlParameter) {
-				if (!prov.containsParam(((JpqlParameter) minorThan.getRightExpression()).getKey())) {
-					minorThan.setEmpty(Boolean.TRUE);
-				}
-			}
+			minorThan.checkEmpty();
 		}
 
 		@Override
 		public void visit(MinorThanEquals minorThanEquals) {
 			super.visit(minorThanEquals);
-			minorThanEquals.setEmpty(null);
-			if (minorThanEquals.getRightExpression() instanceof JpqlParameter) {
-				if (!prov.containsParam(((JpqlParameter) minorThanEquals.getRightExpression()).getKey())) {
-					minorThanEquals.setEmpty(Boolean.TRUE);
-				}
-			}
+			minorThanEquals.checkEmpty();
 		}
 
 		@Override
 		public void visit(GreaterThan greaterThan) {
 			super.visit(greaterThan);
-			greaterThan.setEmpty(null);
-			if (greaterThan.getRightExpression() instanceof JpqlParameter) {
-				if (!prov.containsParam(((JpqlParameter) greaterThan.getRightExpression()).getKey())) {
-					greaterThan.setEmpty(Boolean.TRUE);
-				}
-			}
+			greaterThan.checkEmpty();
 		}
 
 		@Override
 		public void visit(GreaterThanEquals greaterThanEquals) {
 			super.visit(greaterThanEquals);
-			greaterThanEquals.setEmpty(null);
-			if (greaterThanEquals.getRightExpression() instanceof JpqlParameter) {
-				if (!prov.containsParam(((JpqlParameter) greaterThanEquals.getRightExpression()).getKey())) {
-					greaterThanEquals.setEmpty(Boolean.TRUE);
-				}
-			}
+			greaterThanEquals.checkEmpty();
 		}
 
 		@Override
 		public void visit(LikeExpression likeExpression) {
 			super.visit(likeExpression);
-			likeExpression.setEmpty(null);
-			if (likeExpression.getRightExpression() instanceof JpqlParameter) {
-				if (!prov.containsParam(((JpqlParameter) likeExpression.getRightExpression()).getKey())) {
-					likeExpression.setEmpty(Boolean.TRUE);
-				}
-			}
+			likeExpression.checkEmpty();
 		}
 	}
 	

@@ -33,6 +33,7 @@ import jef.database.jsqlparser.statement.select.SubJoin;
 import jef.database.jsqlparser.statement.select.SubSelect;
 import jef.database.jsqlparser.statement.select.Top;
 import jef.database.jsqlparser.statement.select.Union;
+import jef.database.jsqlparser.statement.select.WithItem;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 import jef.database.jsqlparser.visitor.FromItem;
@@ -275,5 +276,9 @@ public class SelectDeParser implements SelectVisitor,SelectItemVisitor{
             }
             buffer.append(")");
         }
+	}
+
+	public void visit(WithItem with) {
+		with.accept(this);
 	}
 }

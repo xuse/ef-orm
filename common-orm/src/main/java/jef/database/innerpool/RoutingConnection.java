@@ -26,10 +26,11 @@ import java.util.concurrent.Executor;
 import javax.sql.DataSource;
 
 import jef.database.DbUtils;
+import jef.database.routing.jdbc.ExecutionPlan;
 import jef.database.routing.jdbc.JPreparedStatement;
-import jef.database.routing.jdbc.JPreparedStatementImp;
+import jef.database.routing.jdbc.JPreparedStatementImpl;
 import jef.database.routing.jdbc.JStatement;
-import jef.database.routing.jdbc.JStatementImp;
+import jef.database.routing.jdbc.JStatementImpl;
 import jef.tools.StringUtils;
 
 /**
@@ -234,11 +235,11 @@ final class RoutingConnection implements ReentrantConnection, Connection {
 		return getConnection().prepareStatement(sql, resultSetType, resultSetConcurrency);
 	}
 
-	public JStatement createRoutingStatement(int resultsetType, int resultSetConcurrency){
-		return new JStatementImp(this,resultsetType,resultSetConcurrency);
+	public JStatement createRoutingStatement(int resultsetType, int resultSetConcurrency,ExecutionPlan plan){
+		return new JStatementImpl(this,resultsetType,resultSetConcurrency,plan);
 	}
-	public JPreparedStatement prepareRoutingStatement(String sql, int resultsetType, int resultSetConcurrency){
-		return new JPreparedStatementImp(sql,this,resultsetType,resultSetConcurrency);
+	public JPreparedStatement prepareRoutingStatement(String sql, int resultsetType, int resultSetConcurrency,ExecutionPlan plan){
+		return new JPreparedStatementImpl(sql,this,resultsetType,resultSetConcurrency,plan);
 	}
 
 	public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException {

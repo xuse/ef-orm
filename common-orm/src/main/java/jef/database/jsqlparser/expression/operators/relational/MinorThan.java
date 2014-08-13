@@ -20,9 +20,10 @@ import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 public class MinorThan extends BinaryExpression {
 
-    public void accept(ExpressionVisitor expressionVisitor) {
-        expressionVisitor.visit(this);
-    }
+	@Override
+	protected void acceptExp(ExpressionVisitor expressionVisitor) {
+		expressionVisitor.visit(this);
+	}
 
     public String getStringExpression() {
         return "<";

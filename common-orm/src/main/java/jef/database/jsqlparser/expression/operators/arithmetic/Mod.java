@@ -18,13 +18,10 @@ public class Mod  extends BinaryExpression {
 		this.setRightExpression(right);
 	}
 	
-    public void accept(ExpressionVisitor expressionVisitor) {
-    	if(rewrite==null){
-    		expressionVisitor.visit(this);
-    	}else{
-    		rewrite.accept(expressionVisitor);
-    	}
-    }
+	@Override
+	protected void acceptExp(ExpressionVisitor expressionVisitor) {
+		expressionVisitor.visit(this);
+	}
 
     public String getStringExpression() {
         return "%";

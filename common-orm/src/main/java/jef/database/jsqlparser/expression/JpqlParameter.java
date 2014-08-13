@@ -44,7 +44,7 @@ public class JpqlParameter implements Expression,FromItem,Parameter {
 	 */
 	private JpqlDataType type;
 	
-	private ThreadLocal<Object> resolved = new ThreadLocal<Object>(); //-1未解析 0已解析 >0数组参数，需要对应多次绑定
+	private ThreadLocal<Object> resolved = new ThreadLocal<Object>(); //-1未解析 0已解析单参数 >0数组参数，需要对应多次绑定 String SQL片段
 
 	public String getName() {
 		return name;
@@ -65,6 +65,19 @@ public class JpqlParameter implements Expression,FromItem,Parameter {
 	public int getIndex() {
 		return index;
 	}
+
+	/**
+	 * -2 SQL片段 -1未解析 0单参数 >0数组参数
+	 * @return
+	 */
+	public int resolvedCount(){
+		Object obj=resolved.get();
+		if(obj==null)return -1;
+		if(obj instanceof String){
+			return -2;
+		}
+		return (Integer)obj;
+	}
 	
 	public Object getResolved() {
 		return resolved.get();
@@ -72,8 +85,11 @@ public class JpqlParameter implements Expression,FromItem,Parameter {
 	public void setResolved(String text) {
 		resolved.set(text);
 	}
-	public void setResolved(Integer resolved) {
+	public void setResolved(int resolved) {
 		this.resolved.set(resolved);
+	}
+	public void setNotUsed(){
+		this.resolved.set(null);
 	}
 	
 	public JpqlParameter(String str, boolean isNumber,String type) {
@@ -111,7 +127,7 @@ public class JpqlParameter implements Expression,FromItem,Parameter {
 
 	private String getReslovedString() {
 		Object obj=resolved.get();
-		if(obj!=null && obj instanceof String){
+		if(obj instanceof String){
 			return (String)obj;
 		}
 		Integer value=(Integer)obj;

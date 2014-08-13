@@ -9,6 +9,11 @@ import java.util.Set;
 import jef.database.rowset.CachedRowSetImpl;
 import jef.database.rowset.Row;
 
+/**
+ * 在内存中实现结果集去重
+ * @author jiyi
+ *
+ */
 public class InMemoryDistinct implements InMemoryProcessor{
 	public static InMemoryDistinct instance=new InMemoryDistinct();
 	

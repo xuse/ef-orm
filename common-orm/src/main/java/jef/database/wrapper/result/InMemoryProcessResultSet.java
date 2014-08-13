@@ -24,6 +24,7 @@ import jef.database.DbUtils;
 import jef.database.ORMConfig;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.rowset.CachedRowSetImpl;
+import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.clause.InMemoryProcessor;
 import jef.database.wrapper.populator.ColumnMeta;
 
@@ -44,13 +45,21 @@ public class InMemoryProcessResultSet extends AbstractResultSet{
 
 	public void process() throws SQLException {
 		cache=new CachedRowSetImpl(ORMConfig.getInstance().getPartitionInMemoryMaxRows());
+		InMemoryProcessor paging=null;
 		for(ResultSetHolder sh:results){
 			cache.populate(sh.rs);
 			sh.close(true);
 		}
 		results.clear();
 		for(InMemoryProcessor processor:processors){
+			if(processor instanceof InMemoryPaging){
+				paging=processor;
+				continue;
+			}
 			processor.process(cache);
+		}
+		if(paging!=null){
+			paging.process(cache);
 		}
 		cache.refresh();
 	}

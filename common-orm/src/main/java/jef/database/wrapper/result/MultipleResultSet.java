@@ -36,6 +36,7 @@ import jef.database.meta.Reference;
 import jef.database.wrapper.clause.InMemoryDistinct;
 import jef.database.wrapper.clause.InMemoryGroupBy;
 import jef.database.wrapper.clause.InMemoryOrderBy;
+import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.clause.InMemoryProcessor;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
@@ -229,7 +230,7 @@ public final class MultipleResultSet extends AbstractResultSet{
 			InMemoryProcessResultSet rw=new InMemoryProcessResultSet(results,columns);
 			rw.filters=filters;
 			rw.addProcessor(mustInMemoryProcessor);
-			rw.addProcessor(inMemoryOrder);
+			rw.addProcessor(inMemoryOrder);//如果需要处理,排序是第一位的.
 			try {
 				rw.process();
 			} catch (SQLException e) {
@@ -257,6 +258,10 @@ public final class MultipleResultSet extends AbstractResultSet{
 		return results.get(current).rs;
 	}
 
+	public void setInMemoryPage(InMemoryPaging inMemoryPaging) {
+		addToInMemprocessor(inMemoryPaging);
+	}
+	
 	public void setInMemoryOrder(InMemoryOrderBy inMemoryOrder) {
 		this.inMemoryOrder = inMemoryOrder;
 	}

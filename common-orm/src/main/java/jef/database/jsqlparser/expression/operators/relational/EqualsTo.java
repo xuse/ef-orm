@@ -26,9 +26,10 @@ public class EqualsTo extends BinaryExpression {
 		this.leftExpression=left;
 		this.rightExpression=right;
 	}
-    public void accept(ExpressionVisitor expressionVisitor) {
-        expressionVisitor.visit(this);
-    }
+	@Override
+	protected void acceptExp(ExpressionVisitor expressionVisitor) {
+		expressionVisitor.visit(this);
+	}
 
     public String getStringExpression() {
         return "=";

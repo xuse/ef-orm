@@ -6,6 +6,6 @@ import java.sql.PreparedStatement;
 /**
  * @author Jiyi
  */
-public interface JPreparedStatement extends DataChannel,PreparedStatement {
+public interface JPreparedStatement extends PreparedStatement {
 	
 }

@@ -486,7 +486,7 @@ public class OperateTarget implements SqlTemplate {
 		return session.getNoTransactionSession().getMetaData(dbkey);
 	}
 	
-	final class SqlTransformer<T> implements ResultSetTransformer<List<T>> {
+	public class SqlTransformer<T> implements ResultSetTransformer<List<T>> {
 		final Transformer t;
 		long dbAccess;
 
@@ -497,6 +497,10 @@ public class OperateTarget implements SqlTemplate {
 		public List<T> transformer(ResultSet rs, DatabaseDialect db) throws SQLException {
 			dbAccess = System.currentTimeMillis();
 			return populateResultSet(new ResultSetImpl(rs, db), null, t);
+		}
+		
+		public Session getSession(){
+			return OperateTarget.this.session;
 		}
 	}
 

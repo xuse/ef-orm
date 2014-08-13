@@ -1,5 +1,6 @@
 package jef.database.query;
 
+import java.beans.Expression;
 import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ import jef.database.annotation.PartitionResult;
 import jef.database.annotation.PartitionTable;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.PartitionSupport;
+import jef.database.jsqlparser.visitor.Statement;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.MetadataAdapter;
@@ -61,7 +63,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		List<DbTable> result;
 		boolean doFileter = ORMConfig.getInstance().isFilterAbsentTables();
 		if (meta.getPartition() != null && instance != null) {// 分区表，并且具备分区条件
-			Set<DbTable> r = getPartitionTables(meta, BeanWrapper.wrap(instance), q, profile);
+			Set<DbTable> r = getPartitionTables(meta, getPartitionFieldValues(meta,BeanWrapper.wrap(instance), q), profile);
 			if (r.isEmpty()) {
 				return processor.getSubTableNames(meta); //返回一切可能
 			}else{
@@ -84,7 +86,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 					return results;
 				}
 			} else {
-				Set<DbTable> tempResult = getPartitionTables(meta, NopBeanWrapper.getInstance(), null, profile);
+				Set<DbTable> tempResult = getPartitionTables(meta, getPartitionFieldValues(meta, NopBeanWrapper.getInstance(), null), profile);
 				if (!tempResult.isEmpty()) {
 					if (opType==2) {
 						DbTable table=meta.getBaseTable(profile);
@@ -114,7 +116,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		DatabaseDialect profile = processor.getProfile(null);
 		DbTable result;
 		if (meta.getPartition() != null && instance != null) {// 认为是分区表的场合
-			Set<DbTable> tbs = getPartitionTables(meta, BeanWrapper.wrap(instance), q, profile);
+			Set<DbTable> tbs = getPartitionTables(meta, getPartitionFieldValues(meta, BeanWrapper.wrap(instance), q), profile);
 			if (tbs.isEmpty()) { // 没有返回的情况，返回基表
 				return meta.getBaseTable(profile).toPartitionResult();
 			} else if (tbs.size() != 1) {
@@ -181,12 +183,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 * 种情况要区别对待，1是应用的操作可能就是针对基表的，2是应当返回全部表供查询。
 	 * 这两种情况在这里是无法判断的，因此上一级的方法要根据这两种情形，加以区分
 	 */
-	private Set<DbTable> getPartitionTables(ITableMetadata meta, BeanWrapper instance, Query<?> q, DatabaseDialect profile) {
-		@SuppressWarnings("rawtypes")
-		Entry<PartitionKey, PartitionFunction>[] keys = meta.getEffectPartitionKeys();
-		
-		// 获取分表向量
-		Map<String, Dimension> fieldDims = getPartitionFieldValues(keys, instance, q);
+	private Set<DbTable> getPartitionTables(ITableMetadata meta, Map<String, Dimension> fieldDims, DatabaseDialect profile) {
 		// 分表向量的分析与组合.分析即将Range向量拆解为多点向量，组合即取多个向量间的笛卡尔积.(俗称维度展开并交叉)
 		List<Map<String, Object>> _dimVectors = toDimensionVectors(fieldDims, meta.getMinUnitFuncForEachPartitionKey());
 
@@ -329,7 +326,9 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static Map<String, Dimension> getPartitionFieldValues(Entry<PartitionKey, PartitionFunction>[] keys, BeanWrapper instance, Query<?> q) {
+	private static Map<String, Dimension> getPartitionFieldValues(ITableMetadata meta, BeanWrapper instance, Query<?> q) {
+		Entry<PartitionKey, PartitionFunction>[] keys=meta.getEffectPartitionKeys();
+		// 获取分表向量
 		Map<String, Dimension> fieldVal = new HashMap<String, Dimension>();
 		for (Entry<PartitionKey, PartitionFunction> entry : keys) {
 			String field = entry.getKey().field();
@@ -358,7 +357,6 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 						if(clz.isPrimitive()){//如果是缺省值，当做null处理。
 							if(ObjectUtils.equals(term, BeanUtils.defaultValueOfPrimitive(clz))){//如果是和原生值一样
 								IQueryableEntity qq=(IQueryableEntity)instance.getWrapped();
-								ITableMetadata meta=MetaHolder.getMeta(qq);
 								Field fld=meta.getField(field);
 								if(!(qq).isUsed(fld)){
 									term=null;
@@ -374,6 +372,54 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		}
 		return fieldVal;
 	}
+	
+	private static Map<String, Dimension> getPartitionFieldValues(ITableMetadata meta, Expression where, List<?> params) {
+		Entry<PartitionKey, PartitionFunction>[] keys=meta.getEffectPartitionKeys();
+		// 获取分表向量
+		Map<String, Dimension> fieldVal = new HashMap<String, Dimension>();
+//		for (Entry<PartitionKey, PartitionFunction> entry : keys) {
+//			String field = entry.getKey().field();
+//			// 如果存在一个field多个key function,只读取一次field值
+//			if (fieldVal.containsKey(field)) {
+//				continue;
+//			}
+//			Dimension obj = null;
+//			// 获取分表维度值
+//			if (field.startsWith("attr:")) {
+//				if (q != null) {
+//					String name = field.substring(5).trim();
+//					obj = new RangeDimension((Comparable) q.getAttribute(name));
+//				} else {
+//					obj = new RangeDimension(null);
+//				}
+//			} else {
+//				if (q != null) {
+//					obj = findConditionValuesByName(((QueryImpl<?>) q).conditions, field, false);
+//				}
+//				if (obj == null){
+//					Object term=instance.getPropertyValue(field);
+//					// 当相等条件时
+//					if(term!=null){
+//						Class<?> clz=instance.getPropertyRawType(field);
+//						if(clz.isPrimitive()){//如果是缺省值，当做null处理。
+//							if(ObjectUtils.equals(term, BeanUtils.defaultValueOfPrimitive(clz))){//如果是和原生值一样
+//								IQueryableEntity qq=(IQueryableEntity)instance.getWrapped();
+//								Field fld=meta.getField(field);
+//								if(!(qq).isUsed(fld)){
+//									term=null;
+//								}
+//							}
+//						}	
+//					}
+//					obj = new RangeDimension((Comparable) term);
+//					
+//				}
+//			}
+//			fieldVal.put(field, obj);
+//		}
+		return fieldVal;
+	}
+		
 
 	/**
 	 * 根据一个分表字段名称查找属于该字段的维度
@@ -608,6 +654,16 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 			return true;
 		}
 		return false;
+	}
+
+	public PartitionResult[] getTables(MetadataAdapter meta, Statement st, List<Object> params, PartitionSupport context) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public PartitionResult getTable(MetadataAdapter meta, Statement st, List<Object> params, PartitionSupport context) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

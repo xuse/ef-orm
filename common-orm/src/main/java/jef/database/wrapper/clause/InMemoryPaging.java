@@ -4,9 +4,15 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import jef.common.wrapper.IntRange;
 import jef.database.rowset.CachedRowSetImpl;
 import jef.database.rowset.Row;
 
+/**
+ * 在内存中实现结果集分页
+ * @author jiyi
+ *
+ */
 public class InMemoryPaging implements InMemoryProcessor{
 	private int start;
 	private int end;
@@ -16,6 +22,12 @@ public class InMemoryPaging implements InMemoryProcessor{
 		this.end=end;
 	}
 	
+	public InMemoryPaging(IntRange range) {
+		int[] data=range.toStartLimitSpan();
+		this.start=data[0];
+		this.end=data[1]+start;
+	}
+
 	public void process(CachedRowSetImpl rows) throws SQLException {
 		if(end<=start){
 			rows.setRvh(new ArrayList<Row>());

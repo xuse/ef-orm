@@ -81,6 +81,7 @@ import jef.database.jsqlparser.statement.select.StartWithExpression;
 import jef.database.jsqlparser.statement.select.SubJoin;
 import jef.database.jsqlparser.statement.select.SubSelect;
 import jef.database.jsqlparser.statement.select.Union;
+import jef.database.jsqlparser.statement.select.WithItem;
 import jef.database.jsqlparser.statement.truncate.Truncate;
 import jef.database.jsqlparser.statement.update.Update;
 
@@ -388,6 +389,11 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 
 	public void visit(Select select) {
 		visitPath.push(select);
+		if(select.getWithItemsList()!=null){
+			for(WithItem with: select.getWithItemsList()){
+				with.accept(this);
+			}
+		}
 		if (select.getSelectBody() != null)
 			select.getSelectBody().accept(this);
 		visitPath.pop();
@@ -523,5 +529,16 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 			}
 		}
 		visitPath.pop();
+	}
+
+	public void visit(WithItem with) {
+		if(with.getWithItemList()!=null){
+			for(SelectItem item:with.getWithItemList()){
+				item.accept(this);
+			}
+		}
+		if(with.getSelectBody()!=null){
+			with.getSelectBody().accept(this);
+		}
 	}
 }
