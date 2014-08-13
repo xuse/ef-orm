@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import javax.persistence.PersistenceException;
+import javax.xml.bind.annotation.XmlTransient;
 
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.query.Query;
@@ -25,6 +26,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
  *
  */
 @SuppressWarnings("serial")
+@XmlTransient
 public abstract class DataObject implements IQueryableEntity {
 	private transient Map<Field, Object> updateValueMap;
 	protected transient Query<?> query;

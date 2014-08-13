@@ -29,6 +29,12 @@ CXF 2.7.10提高了兼容性，但是CXF-Plus的ASM类产生的package-info不�
 1 考虑用线程变量来传递已经解析好的分表条件.
 2 经过对SQL分析器的重构现在彻底解决了词法树的Clone问题。现在可以实现对词法树的安全改写了。
 
+验证DataObject/VarObject作为Json序列化（REST）和WebService（JAXB）发布时的字段问题。
+(测试结果，JAXB下会出现整个DataObject都是瞬态的，可以完全被忽略)
+(java序列化，因为DataObject中字段是临时的，故 会被忽略。)
+(JSON序列化反序列化)
+
+验证Druid解析器是否支持MYSQL的一些写法问题(支持良好)
 
 关于连接池检查时的checkSQL支持问题...
 使用基于差值的数据库时间来代替当前系统时间进行自动维护。（基于差值的数据库时间已经完成了）

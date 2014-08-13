@@ -15,9 +15,16 @@ import jef.accelerator.asm.ClassReader;
 import jef.accelerator.asm.ClassVisitor;
 import jef.accelerator.asm.ClassWriter;
 import jef.database.DataObject;
+import jef.database.VarObject;
+import jef.database.dialect.ColumnType;
 import jef.database.meta.MetaHolder;
+import jef.database.meta.TupleMetadata;
+import jef.json.JsonUtil;
+import jef.orm.onetable.model.TestEntity;
+import jef.tools.DateFormats;
 import jef.tools.IOUtils;
 import jef.tools.reflect.BeanWrapper;
+import jef.tools.string.RandomData;
 
 import org.junit.Test;
 public class EntityEnhancerTest {
@@ -232,5 +239,30 @@ public class EntityEnhancerTest {
 		}
 		
 		
+	}
+	
+	/**
+	 * 测试动态Entity和静态Entity的 bean被序列化时的表现
+	 */
+	@Test
+	public void testDataObjectAsJson(){
+		TestEntity t1=RandomData.newInstance(TestEntity.class);
+		t1.prepareUpdate(TestEntity.Field.boolField, "false");
+		t1.setBinaryData(null);
+		t1.setTt1(null);
+		t1.setTt2(null);
+		t1.setTt3(null);
+		String s=JsonUtil.toJson(t1, DateFormats.DATE_TIME_CS.get());
+		System.out.println(s);
+		TupleMetadata GroupTable = new TupleMetadata("URM_GROUP");
+		GroupTable.addColumn("id", new ColumnType.AutoIncrement(8));
+		GroupTable.addColumn("serviceId", new ColumnType.Int(8));
+		GroupTable.addColumn("name", new ColumnType.Varchar(100));
+		VarObject var=new VarObject(GroupTable);
+		var.set("id", 123);
+		var.set("serviceId",456);
+		var.set("name","addfvdf");
+		s=JsonUtil.toJson(var, DateFormats.DATE_TIME_CS.get());
+		System.out.println(s);
 	}
 }

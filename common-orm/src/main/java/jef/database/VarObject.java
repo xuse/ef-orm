@@ -7,11 +7,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
 import jef.database.annotation.EasyEntity;
 import jef.database.meta.ITableMetadata;
-import jef.database.meta.TupleMetadata;
+import jef.database.support.VarObjAdapter;
 import jef.tools.Assert;
 
+@XmlJavaTypeAdapter(VarObjAdapter.class)
 @EasyEntity(checkEnhanced = false, refresh = false)
 public final class VarObject extends DataObject implements Map<String, Object>,VarMeta {
 	private static final long serialVersionUID = 3915258646897359358L;
@@ -23,12 +26,15 @@ public final class VarObject extends DataObject implements Map<String, Object>,V
 		return meta;
 	}
 
+	protected VarObject(){
+	}
+	
 	public VarObject(ITableMetadata meta) {
 		Assert.notNull(meta);
 		this.meta = meta;
 	}
 
-	public VarObject(TupleMetadata meta, boolean recordField) {
+	public VarObject(ITableMetadata meta, boolean recordField) {
 		this.meta = meta;
 		this._recordUpdate = false;
 	}
