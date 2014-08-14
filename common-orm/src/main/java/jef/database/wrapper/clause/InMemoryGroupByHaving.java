@@ -7,22 +7,24 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import jef.database.rowset.CachedRowSetImpl;
 import jef.database.rowset.Row;
+import jef.tools.StringUtils;
 
 import org.apache.commons.lang.ObjectUtils;
 
 public class InMemoryGroupByHaving implements InMemoryProcessor {
 	GroupByItem[] keys;
 	GroupByItem[] values;
+	private List<HavingEle> having;
 
 	public InMemoryGroupByHaving(List<GroupByItem> keys, List<GroupByItem> values) {
 		this.keys = keys.toArray(new GroupByItem[keys.size()]);
 		this.values = values.toArray(new GroupByItem[values.size()]);
-		;
 	}
 
 	public void process(CachedRowSetImpl rowset) throws SQLException {
@@ -48,8 +50,72 @@ public class InMemoryGroupByHaving implements InMemoryProcessor {
 			task.run();
 		}
 		mapTask.clear();
+		if(having!=null && !having.isEmpty()){
+			doHaving(newRows);
+		}
 		rowset.setRvh(newRows);
 		rowset.refresh();
+	}
+
+	private void doHaving(List<Row> newRows) {
+		for(Iterator<Row> iter=newRows.iterator();iter.hasNext();){
+			Row row=iter.next();
+			if(!checkRow(row)){
+				iter.remove();
+			}
+		}
+	}
+
+	private boolean checkRow(Row row) {
+		for(HavingEle ele:having){
+			if(!check(ele,row)){
+				return false;
+			}
+		}
+		return true;
+	}
+
+	@SuppressWarnings("rawtypes")
+	private boolean check(HavingEle ele, Row row) {
+		Object obj=row.getArrayObject(ele.getIndex());
+		switch(ele.havingCondOperator){
+		case EQUALS:
+			return ObjectUtils.equals(obj, ele.havingCondValue);
+		case GREAT:
+			return ObjectUtils.compare((Comparable)obj, (Comparable)ele.havingCondValue)>0;
+		case GREAT_EQUALS:
+			return ObjectUtils.compare((Comparable)obj, (Comparable)ele.havingCondValue)>=0;
+		case IS_NOT_NULL:
+			return obj!=null;
+		case IS_NULL:
+			return obj==null;
+		case LESS:
+			return ObjectUtils.compare((Comparable)obj, (Comparable)ele.havingCondValue)<0; 
+		case LESS_EQUALS:
+			return ObjectUtils.compare((Comparable)obj, (Comparable)ele.havingCondValue)<=0;
+		case MATCH_ANY:{
+			String s1=StringUtils.toString(obj);
+			String s2=String.valueOf(ele.havingCondValue);
+			return s1.contains(s2);
+		}
+		case MATCH_END:{
+			String s1=StringUtils.toString(obj);
+			String s2=String.valueOf(ele.havingCondValue);
+			return s1.endsWith(s2);
+		}
+		case MATCH_START:{
+			String s1=StringUtils.toString(obj);
+			String s2=String.valueOf(ele.havingCondValue);
+			return s1.startsWith(s2);
+		}
+		case NOT_EQUALS:
+			return !ObjectUtils.equals(obj, ele.havingCondValue);
+		case NOT_IN:
+		case IN:
+		case BETWEEN_L_L:
+		default:
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	class RowTask {
@@ -195,6 +261,15 @@ public class InMemoryGroupByHaving implements InMemoryProcessor {
 			d+=num.doubleValue();
 		}
 		return d;
+	}
+
+
+	public void setHaving(List<HavingEle> having2) {
+		this.having=having2;
+	}
+
+	public String getName() {
+		return "group,having";
 	}
 
 	

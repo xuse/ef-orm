@@ -186,7 +186,7 @@ public class QueryClauseImpl implements QueryClause {
 
 			sb2.append(" from (").append(sb).append(") t");
 			sb2.append(ORMConfig.getInstance().wrap);
-			sb2.append(grouphavingPart);
+			sb2.append(grouphavingPart.getSql(false));
 			sb = sb2;
 		}
 

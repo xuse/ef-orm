@@ -6,4 +6,6 @@ import jef.database.rowset.CachedRowSetImpl;
 
 public interface InMemoryProcessor {
 	void process(CachedRowSetImpl rows)throws SQLException;
+
+	String getName();
 }

@@ -30,4 +30,8 @@ public class InMemoryDistinct implements InMemoryProcessor{
 		rows.setRvh(result);
 		rows.refresh();
 	}
+
+	public String getName() {
+		return "distinct";
+	}
 }

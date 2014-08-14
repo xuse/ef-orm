@@ -45,5 +45,9 @@ public class InMemoryPaging implements InMemoryProcessor{
 		rows.refresh();
 	}
 
+	public String getName() {
+		return "paging";
+	}
+
 	
 }

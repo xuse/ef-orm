@@ -11,6 +11,7 @@ import jef.database.Field;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.MappingType;
 import jef.database.meta.ITableMetadata;
+import jef.database.wrapper.clause.HavingEle;
 
 public final class SelectColumn extends SingleColumnSelect{
 	private String populateTo;//拼装路径，默认应该和alias一致
@@ -27,8 +28,14 @@ public final class SelectColumn extends SingleColumnSelect{
 	/**
 	 * 转换为Having子句
 	 */
-	public String toHavingClause(DatabaseDialect profile,String tableAlias,SqlContext context){
-		return Condition.toSql(innerGetColumn(profile, tableAlias), havingCondOperator, havingCondValue, profile, null, null);
+	public HavingEle toHavingClause(DatabaseDialect profile,String tableAlias,SqlContext context){
+		HavingEle h=new HavingEle();
+		String column=innerGetColumn(profile, tableAlias);
+		h.column=column;
+		h.sql=Condition.toSql(column, havingCondOperator, havingCondValue, profile, null, null);
+		h.havingCondOperator=this.havingCondOperator;
+		h.havingCondValue=this.havingCondValue;
+		return h;
 	}
 	
 	/**

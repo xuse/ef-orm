@@ -5,6 +5,7 @@ import jef.database.Condition.Operator;
 import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.MappingType;
+import jef.database.wrapper.clause.HavingEle;
 
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
@@ -65,9 +66,14 @@ public class SelectExpression extends SingleColumnSelect {
 	}
 
 	@Override
-	public String toHavingClause(DatabaseDialect profile, String tableAlias,SqlContext context) {
+	public HavingEle toHavingClause(DatabaseDialect profile, String tableAlias,SqlContext context) {
 		String sql = "(" + getSelectItem(profile,tableAlias,context) + ")";
-		return Condition.toSql(sql, havingCondOperator, havingCondValue, profile, null, null);
+		HavingEle h=new HavingEle();
+		h.column=sql;
+		h.sql=Condition.toSql(sql, havingCondOperator, havingCondValue, profile, null, null);
+		h.havingCondOperator=this.havingCondOperator;
+		h.havingCondValue=this.havingCondValue;
+		return h;
 	}
 
 	/**

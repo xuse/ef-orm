@@ -36,6 +36,10 @@ public class InMemoryStartWithConnectBy implements InMemoryProcessor{
 		private Object key;
 		private Row row;
 	}
+
+	public String getName() {
+		return "connect by";
+	}
 	
 	
 

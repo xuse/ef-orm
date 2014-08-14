@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import jef.common.log.LogUtil;
 import jef.database.DbUtils;
 import jef.database.ORMConfig;
 import jef.database.dialect.DatabaseDialect;
@@ -44,13 +45,16 @@ public class InMemoryProcessResultSet extends AbstractResultSet{
 	}
 
 	public void process() throws SQLException {
+		boolean debug=ORMConfig.getInstance().isDebugMode();
 		cache=new CachedRowSetImpl(ORMConfig.getInstance().getPartitionInMemoryMaxRows());
 		InMemoryProcessor paging=null;
+		long start=System.currentTimeMillis();
 		for(ResultSetHolder sh:results){
 			cache.populate(sh.rs);
 			sh.close(true);
 		}
 		results.clear();
+		long loaded=System.currentTimeMillis();
 		for(InMemoryProcessor processor:processors){
 			if(processor instanceof InMemoryPaging){
 				paging=processor;
@@ -60,6 +64,18 @@ public class InMemoryProcessResultSet extends AbstractResultSet{
 		}
 		if(paging!=null){
 			paging.process(cache);
+		}
+		long end=System.currentTimeMillis();
+		if(debug){
+			StringBuilder sb=new StringBuilder("InMemory processed [LOAD:" );
+			sb.append(loaded-start).append("ms] [");
+			for(InMemoryProcessor p:processors){
+				sb.append(p.getName());
+				sb.append('/');
+			}
+			sb.setLength(sb.length()-1);
+			sb.append(':').append(end-loaded).append("ms]");
+			LogUtil.show(sb.toString());
 		}
 		cache.refresh();
 	}

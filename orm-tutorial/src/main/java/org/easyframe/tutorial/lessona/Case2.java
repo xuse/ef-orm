@@ -13,6 +13,7 @@ import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.common.wrapper.Page;
+import jef.database.Condition.Operator;
 import jef.database.DbClient;
 import jef.database.NativeQuery;
 import jef.database.ORMConfig;
@@ -296,9 +297,7 @@ public class Case2 extends org.junit.Assert {
 			for (String[] ss : strs) {
 				System.out.println(Arrays.toString(ss));
 			}
-
 		}
-
 		{
 
 			System.out.println("=====跨数据库 Distinct 查询=====");
@@ -327,6 +326,21 @@ public class Case2 extends org.junit.Assert {
 			}
 			assertTrue(results.size() > 0);
 			assertNotNull(results.get(0).getType());
+		}
+		{
+			System.out.println("=====跨数据库 聚合+Having +重新排序+分页=====");
+			// 分库分表后的难点组合——groupBy Having 排序 分页一起上吧！
+			Query<Device> query = QB.create(Device.class);
+			Selects select = QB.selectFrom(query);
+			select.column(Device.Field.type).group();
+			select.column(Device.Field.indexcode).count().as("ct").having(Operator.LESS_EQUALS, 6);
+			query.orderByDesc(new SqlExpression("ct")); // 除了聚合以外，再添加聚合后排序
+
+			List<String[]> strs = db.selectAs(query, String[].class);
+			for (String[] ss : strs) {
+				System.out.println(Arrays.toString(ss));
+			}
+
 		}
 	}
 

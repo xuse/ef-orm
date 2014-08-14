@@ -16,14 +16,16 @@
 package jef.database.wrapper.clause;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jef.http.client.support.CommentEntry;
 import jef.tools.StringUtils;
 
 public class GroupClause implements SqlClause{
 	private final List<String> groups = new ArrayList<String>(4);
-	private final List<String> having = new ArrayList<String>(4);
+	private final List<HavingEle> having = new ArrayList<HavingEle>(4);
 	
 	public static final GroupClause DEFAULT=new GroupClause();
 	public GroupClause(){
@@ -33,7 +35,7 @@ public class GroupClause implements SqlClause{
 		groups.add(selectItem);
 	}
 
-	public void addHaving(String havingClause) {
+	public void addHaving(HavingEle havingClause) {
 		having.add(havingClause);
 	}
 
@@ -43,6 +45,10 @@ public class GroupClause implements SqlClause{
 
 	@Override
 	public String toString() {
+		return getSql(true);
+	}
+	
+	public String getSql(boolean b) {
 		if(groups.isEmpty()&& having.isEmpty()){
 			return "";
 		}
@@ -51,7 +57,7 @@ public class GroupClause implements SqlClause{
 			sb.append(" group by ");
 			sb.append(StringUtils.join(groups, ','));
 		}
-		if (!having.isEmpty()) {
+		if (b && !having.isEmpty()) {
 			sb.append(" having ");
 			sb.append(StringUtils.join(having, " and "));
 		}
@@ -68,8 +74,10 @@ public class GroupClause implements SqlClause{
 	 * 计算列—— 函数，别名
 	 */
 	public InMemoryGroupByHaving parseSelectFunction(SelectPart select) {
-		List<GroupByItem> keys=new ArrayList<GroupByItem>();
-		List<GroupByItem> values=new ArrayList<GroupByItem>();
+		List<GroupByItem> keys=new ArrayList<GroupByItem>(4);
+		List<GroupByItem> values=new ArrayList<GroupByItem>(4);
+		List<HavingEle> he=new ArrayList<HavingEle>(3);
+		Map<String,HavingEle> havings=prepareHavingIndex();
 		for(int i=0;i<select.getEntries().size();i++){
 			CommentEntry e=select.getEntries().get(i);
 			String sql=e.getKey();
@@ -96,7 +104,26 @@ public class GroupClause implements SqlClause{
 				}	
 				values.add(new GroupByItem(i,type,alias));
 			}
+			HavingEle h=havings.remove(sql);
+			if(h!=null){
+				h.setIndex(i);
+				he.add(h);
+			}
 		}
-		return new InMemoryGroupByHaving(keys,values);
+		InMemoryGroupByHaving process=new InMemoryGroupByHaving(keys,values);
+		if(!he.isEmpty()){
+			process.setHaving(he);
+		}
+		return process;
 	}
+
+	private Map<String, HavingEle> prepareHavingIndex() {
+		Map<String, HavingEle> map=new HashMap<String,HavingEle>(4);
+		for(HavingEle h:having){
+			map.put(h.column, h);
+		}
+		return map;
+	}
+
+
 }
