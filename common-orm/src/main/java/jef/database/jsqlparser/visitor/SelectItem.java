@@ -24,4 +24,12 @@ import jef.database.jsqlparser.statement.SqlAppendable;
 public interface SelectItem extends SqlAppendable{
 
     public void accept(SelectItemVisitor selectItemVisitor);
+    
+    /**
+     * 返回查询表达式。如果是AllTable * /t.*等格式则返回null
+     * @return
+     */
+    public Expression getExpression();
+
+	public String getAlias();
 }

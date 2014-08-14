@@ -16,9 +16,11 @@
 package jef.database.jsqlparser.expression.operators.relational;
 
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.Notable;
 
-public class ExistsExpression implements Expression {
+public class ExistsExpression implements Expression,Notable {
 
     private Expression rightExpression;
 
@@ -54,5 +56,9 @@ public class ExistsExpression implements Expression {
 		if(not)sb.append("NOT ");
 		sb.append("EXISTS ");
 		rightExpression.appendTo(sb);
+	}
+
+	public ExpressionType getType() {
+		return ExpressionType.complex;
 	}
 }

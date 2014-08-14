@@ -16,6 +16,7 @@
 package jef.database.jsqlparser.statement.select;
 
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 import jef.database.jsqlparser.visitor.FromItem;
 import jef.database.jsqlparser.visitor.ItemsList;
@@ -75,5 +76,9 @@ public class SubSelect implements FromItem, Expression,ItemsList{
 		selectBody.appendTo(sb);
 		sb.append(')');
 		return sb.toString();
+	}
+
+	public ExpressionType getType() {
+		return ExpressionType.complex;
 	}
 }

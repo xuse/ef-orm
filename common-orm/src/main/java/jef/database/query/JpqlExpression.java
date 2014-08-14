@@ -31,6 +31,7 @@ import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.JpqlParameter;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 import jef.database.jsqlparser.visitor.VisitorAdapter;
 import jef.database.meta.ITableMetadata;
@@ -235,5 +236,9 @@ public class JpqlExpression implements Expression,LazyQueryBindField {
 
 	public void setBind(Query<?> query) {
 		this.instance=query;
+	}
+
+	public ExpressionType getType() {
+		return ExpressionType.complex;
 	}
 }

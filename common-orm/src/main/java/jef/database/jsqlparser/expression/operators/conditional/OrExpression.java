@@ -17,6 +17,7 @@ package jef.database.jsqlparser.expression.operators.conditional;
 
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 public class OrExpression extends BinaryExpression {
@@ -34,4 +35,8 @@ public class OrExpression extends BinaryExpression {
     public String getStringExpression() {
         return "OR";
     }
+    
+    public ExpressionType getType0() {
+		return ExpressionType.or;
+	}
 }

@@ -30,7 +30,17 @@ public class Table implements FromItem {
 
     private String alias;
 
+    private final ThreadLocal<String> replace=new ThreadLocal<String>();
+    
     public Table() {
+    }
+    
+    public void setReplace(String value){
+    	replace.set(value);
+    }
+    
+    public void removeReplace(){
+    	replace.remove();
     }
 
     public Table(String schemaName, String name) {
@@ -95,10 +105,16 @@ public class Table implements FromItem {
 
 	public void appendTo(StringBuilder sb) {
 		if(name==null)return;
-		if(schemaName!=null){
-			sb.append(schemaName).append('.');
+		String replace=this.replace.get();
+		if(replace!=null){
+			sb.append(replace);
+		}else{
+			if(schemaName!=null){
+				sb.append(schemaName).append('.');
+			}
+			sb.append(name);	
 		}
-		sb.append(name);
+		
 		if(alias!=null){
 			sb.append(' ').append(alias);
 		}

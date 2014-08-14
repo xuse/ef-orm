@@ -25,7 +25,7 @@ public class ReplaceTest {
 		assertEquals("col3", ((Column) replace.getColumns().get(2)).getColumnName());
 		assertEquals("as", ((StringValue)replace.getExpressions().get(0)).getValue());
 		assertTrue(replace.getExpressions().get(1) instanceof JpqlParameter);
-		assertEquals(565, ((LongValue)replace.getExpressions().get(2)).getValue());
+		assertEquals(565, ((LongValue)replace.getExpressions().get(2)).getValue().longValue());
 		assertEquals(statement, ""+replace);
 
 	}
@@ -40,7 +40,7 @@ public class ReplaceTest {
 		assertEquals("col3", ((Column) replace.getColumns().get(2)).getColumnName());
 		assertEquals("as", ((StringValue) ((ExpressionList)replace.getItemsList()).getExpressions().get(0)).getValue());
 		assertTrue(((ExpressionList)replace.getItemsList()).getExpressions().get(1) instanceof JpqlParameter);
-		assertEquals(565, ((LongValue) ((ExpressionList)replace.getItemsList()).getExpressions().get(2)).getValue());
+		assertEquals(565, ((LongValue) ((ExpressionList)replace.getItemsList()).getExpressions().get(2)).getValue().longValue());
 		assertEquals(statement, ""+replace);
 	}
 

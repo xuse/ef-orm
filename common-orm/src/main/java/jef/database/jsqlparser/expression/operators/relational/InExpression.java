@@ -16,14 +16,16 @@
 package jef.database.jsqlparser.expression.operators.relational;
 
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 import jef.database.jsqlparser.visitor.Ignorable;
 import jef.database.jsqlparser.visitor.ItemsList;
+import jef.database.jsqlparser.visitor.Notable;
 
-public class InExpression implements Expression,Ignorable {
+public class InExpression implements Expression,Ignorable,Notable {
     private Expression leftExpression;
   //变量绑定值是否为空
-    private ThreadLocal<Boolean> isEmpty = new ThreadLocal<Boolean>();
+    private final ThreadLocal<Boolean> isEmpty = new ThreadLocal<Boolean>();
     
     public boolean isEmpty() {
     	Boolean e=isEmpty.get();
@@ -86,5 +88,9 @@ public class InExpression implements Expression,Ignorable {
 		if(not)sb.append("NOT ");
 		sb.append("IN ");
 		itemsList.appendTo(sb);
+	}
+
+	public ExpressionType getType() {
+		return ExpressionType.in;
 	}
 }

@@ -627,7 +627,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 * 
 	 */
 	private Object processValue(JpqlParameter p, Object value) {
-		JpqlDataType type = p.getType();
+		JpqlDataType type = p.getDataType();
 		if (value instanceof String) {
 			if (type != null) {
 				value = toProperType(type, (String) value);
@@ -667,8 +667,8 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 				throw new IllegalArgumentException("the parameter [" + name + "] doesn't exist in the named query.");
 			}
 			Object v = value;
-			if (p.getType() != null) {
-				v = toProperType(p.getType(), value);
+			if (p.getDataType() != null) {
+				v = toProperType(p.getDataType(), value);
 			}
 			this.nameParams.put(name, v);
 		}
@@ -689,8 +689,8 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 				throw new IllegalArgumentException("the parameter [" + name + "] doesn't exist in the named query.");
 			}
 			Object v = value;
-			if (p.getType() != null) {
-				v = toProperType(p.getType(), value);
+			if (p.getDataType() != null) {
+				v = toProperType(p.getDataType(), value);
 			}
 			this.nameParams.put(name, v);
 		}
@@ -710,8 +710,8 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			throw new IllegalArgumentException("the parameter [" + position + "] doesn't exist in the named query.");
 		}
 		Object v = value;
-		if (p.getType() != null) {
-			v = toProperType(p.getType(), value);
+		if (p.getDataType() != null) {
+			v = toProperType(p.getDataType(), value);
 		}
 		nameParams.put(Integer.valueOf(position), v);
 		return this;
@@ -730,8 +730,8 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			throw new IllegalArgumentException("the parameter [" + position + "] doesn't exist in the named query.");
 		}
 		Object v = value;
-		if (p.getType() != null) {
-			v = toProperType(p.getType(), value);
+		if (p.getDataType() != null) {
+			v = toProperType(p.getDataType(), value);
 		}
 		nameParams.put(Integer.valueOf(position), v);
 		return this;

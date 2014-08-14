@@ -34,7 +34,7 @@ public class InsertTest extends TestCase {
 		assertEquals(3, ((ExpressionList) insert.getItemsList()).getExpressions().size());
 		assertTrue (((ExpressionList) insert.getItemsList()).getExpressions().get(0) instanceof JpqlParameter);
 		assertEquals("sadfsd", ((StringValue) ((ExpressionList) insert.getItemsList()).getExpressions().get(1)).getValue());
-		assertEquals(234, ((LongValue) ((ExpressionList) insert.getItemsList()).getExpressions().get(2)).getValue());
+		assertEquals(234, ((LongValue) ((ExpressionList) insert.getItemsList()).getExpressions().get(2)).getValue().longValue());
 		assertEquals(statement, ""+insert);
 
 		 statement = "insert into myschema.mytable values (?1,?2,2.3)";

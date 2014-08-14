@@ -16,9 +16,11 @@
 package jef.database.jsqlparser.expression.operators.relational;
 
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.Notable;
 
-public class IsNullExpression implements Expression {
+public class IsNullExpression implements Expression,Notable {
 
     private Expression leftExpression;
 
@@ -57,5 +59,9 @@ public class IsNullExpression implements Expression {
 			sb.append("NOT ");
 		sb.append("NULL");
 		
+	}
+
+	public ExpressionType getType() {
+		return ExpressionType.isnull;
 	}
 }

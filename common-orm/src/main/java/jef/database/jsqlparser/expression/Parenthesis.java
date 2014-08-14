@@ -16,12 +16,14 @@
 package jef.database.jsqlparser.expression;
 
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.Notable;
 
 /**
  * It represents an expression like "(" expression ")"
  */
-public class Parenthesis implements Expression {
+public class Parenthesis implements Expression,Notable {
 
     private Expression expression;
 
@@ -66,5 +68,13 @@ public class Parenthesis implements Expression {
 		sb.append('(');
 		expression.appendTo(sb);
 		sb.append(')');
+	}
+	
+	public ExpressionType getType() {
+		return ExpressionType.parenthesis;
+	}
+
+	public void setNot(boolean not) {
+		this.not=not;
 	}
 }

@@ -18,5 +18,6 @@ package jef.database.jsqlparser.visitor;
 import jef.database.jsqlparser.statement.SqlAppendable;
 
 public interface Expression extends SqlAppendable{
-    public void accept(ExpressionVisitor expressionVisitor);
+    void accept(ExpressionVisitor expressionVisitor);
+    ExpressionType getType();
 }

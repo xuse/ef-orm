@@ -16,21 +16,12 @@
 package jef.database.jsqlparser.expression.operators.relational;
 
 import jef.database.jsqlparser.expression.BinaryExpression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 public class LikeExpression extends BinaryExpression {
-
-    private boolean not = false;
-
     private String escape = null;
 
-    public boolean isNot() {
-        return not;
-    }
-
-    public void setNot(boolean b) {
-        not = b;
-    }
 
 	@Override
 	protected void acceptExp(ExpressionVisitor expressionVisitor) {
@@ -38,7 +29,7 @@ public class LikeExpression extends BinaryExpression {
 	}
 
     public String getStringExpression() {
-        return ((not) ? "NOT " : "") + "LIKE";
+        return (isNot() ? "NOT " : "") + "LIKE";
     }
 
     @Override
@@ -57,4 +48,8 @@ public class LikeExpression extends BinaryExpression {
     public void setEscape(String escape) {
         this.escape = escape;
     }
+
+	public ExpressionType getType0() {
+		return ExpressionType.like;
+	}
 }

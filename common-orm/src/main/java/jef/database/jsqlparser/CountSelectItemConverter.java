@@ -5,6 +5,7 @@ import java.util.List;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.statement.select.Distinct;
 import jef.database.jsqlparser.statement.select.SelectExpressionItem;
+import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.SelectItem;
 import jef.database.jsqlparser.visitor.SelectItemVisitor;
 import jef.database.meta.Feature;
@@ -12,6 +13,7 @@ import jef.database.meta.Feature;
 /**
  * 负责将转换为count中的查询项
  * @author Administrator
+ * @deprecated 容易出问题
  *
  */
 public class CountSelectItemConverter implements SelectItem {
@@ -71,5 +73,13 @@ public class CountSelectItemConverter implements SelectItem {
 			sb.append("*");
 		}
 		sb.append(")");
+	}
+
+	public Expression getExpression() {
+		throw new UnsupportedOperationException();
+	}
+
+	public String getAlias() {
+		throw new UnsupportedOperationException();
 	}
 }

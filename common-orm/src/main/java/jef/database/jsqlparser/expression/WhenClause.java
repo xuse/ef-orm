@@ -16,6 +16,7 @@
 package jef.database.jsqlparser.expression;
 
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 /**
@@ -74,5 +75,9 @@ public class WhenClause implements Expression {
 		whenExpression.appendTo(sb);
 		sb.append(" THEN ");
 		thenExpression.appendTo(sb);
+	}
+	
+	public ExpressionType getType() {
+		return ExpressionType.complex;
 	}
 }

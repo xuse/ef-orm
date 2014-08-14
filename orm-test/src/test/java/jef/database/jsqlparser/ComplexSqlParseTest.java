@@ -43,6 +43,11 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 		Statement re = jef.database.DbUtils.parseStatement(source);
 	}
 
+	@Test
+	public void main2() throws ParseException {
+		Select ex=DbUtils.parseSelect("select * from D where not 1=2");
+		System.out.println(ex);
+	}
 	/**
 	 * 测试解析器能否解析srart with 的查询
 	 * 

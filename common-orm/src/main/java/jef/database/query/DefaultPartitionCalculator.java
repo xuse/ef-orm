@@ -1,6 +1,5 @@
 package jef.database.query;
 
-import java.beans.Expression;
 import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -34,7 +33,6 @@ import jef.database.annotation.PartitionResult;
 import jef.database.annotation.PartitionTable;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.PartitionSupport;
-import jef.database.jsqlparser.visitor.Statement;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.MetadataAdapter;
@@ -64,6 +62,22 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		boolean doFileter = ORMConfig.getInstance().isFilterAbsentTables();
 		if (meta.getPartition() != null && instance != null) {// 分区表，并且具备分区条件
 			Set<DbTable> r = getPartitionTables(meta, getPartitionFieldValues(meta,BeanWrapper.wrap(instance), q), profile);
+			if (r.isEmpty()) {
+				return processor.getSubTableNames(meta); //返回一切可能
+			}else{
+				result = analyzeRegexpResults(r, processor, meta, profile);
+				return toPartitionResult(result, processor, doFileter, meta);
+			}
+		}
+		return meta.getBaseTable(profile).toPartitionResults();
+	}
+	
+	public PartitionResult[] toTableNames(MetadataAdapter meta, Map<String,Dimension> val, PartitionSupport processor) {
+		DatabaseDialect profile = processor.getProfile(null);
+		List<DbTable> result;
+		boolean doFileter = ORMConfig.getInstance().isFilterAbsentTables();
+		if (meta.getPartition() != null && val != null) {// 分区表，并且具备分区条件
+			Set<DbTable> r = getPartitionTables(meta, val, profile);
 			if (r.isEmpty()) {
 				return processor.getSubTableNames(meta); //返回一切可能
 			}else{
@@ -117,6 +131,33 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		DbTable result;
 		if (meta.getPartition() != null && instance != null) {// 认为是分区表的场合
 			Set<DbTable> tbs = getPartitionTables(meta, getPartitionFieldValues(meta, BeanWrapper.wrap(instance), q), profile);
+			if (tbs.isEmpty()) { // 没有返回的情况，返回基表
+				return meta.getBaseTable(profile).toPartitionResult();
+			} else if (tbs.size() != 1) {
+				throw new IllegalArgumentException("Can not determine which database or table to operate.(one table only)."+tbs);
+			} else {
+				result = tbs.iterator().next();
+				if (result.isTbRegexp && result.isDbRegexp) {// 正则表达式，意味着由于某个分表维度没有设置，变成宽松匹配。这里无法获得实际存在表推算，因此直接退化为基表
+					result = meta.getBaseTable(profile);
+				} else if (result.isTbRegexp) {
+					result = new DbTable(result.dbName, profile.getObjectNameIfUppercase(meta.getTableName(true)));
+				} else if (result.isDbRegexp) { // 数据库名声正则的
+					result = new DbTable(meta.getBindDsName(), result.table);
+				}
+			}
+			return toSingleTableResult(processor, result, meta);
+		} else { // 非分区表
+			result = meta.getBaseTable(profile);
+			return toSingleTableResult(processor, result, null);
+		}
+
+	}
+	
+	public PartitionResult toTableName(MetadataAdapter meta, Map<String,Dimension> val,PartitionSupport processor) {
+		DatabaseDialect profile = processor.getProfile(null);
+		DbTable result;
+		if (meta.getPartition() != null && val != null) {// 认为是分区表的场合
+			Set<DbTable> tbs = getPartitionTables(meta, val, profile);
 			if (tbs.isEmpty()) { // 没有返回的情况，返回基表
 				return meta.getBaseTable(profile).toPartitionResult();
 			} else if (tbs.size() != 1) {
@@ -326,7 +367,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private static Map<String, Dimension> getPartitionFieldValues(ITableMetadata meta, BeanWrapper instance, Query<?> q) {
+	public static Map<String, Dimension> getPartitionFieldValues(ITableMetadata meta, BeanWrapper instance, Query<?> q) {
 		Entry<PartitionKey, PartitionFunction>[] keys=meta.getEffectPartitionKeys();
 		// 获取分表向量
 		Map<String, Dimension> fieldVal = new HashMap<String, Dimension>();
@@ -373,53 +414,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		return fieldVal;
 	}
 	
-	private static Map<String, Dimension> getPartitionFieldValues(ITableMetadata meta, Expression where, List<?> params) {
-		Entry<PartitionKey, PartitionFunction>[] keys=meta.getEffectPartitionKeys();
-		// 获取分表向量
-		Map<String, Dimension> fieldVal = new HashMap<String, Dimension>();
-//		for (Entry<PartitionKey, PartitionFunction> entry : keys) {
-//			String field = entry.getKey().field();
-//			// 如果存在一个field多个key function,只读取一次field值
-//			if (fieldVal.containsKey(field)) {
-//				continue;
-//			}
-//			Dimension obj = null;
-//			// 获取分表维度值
-//			if (field.startsWith("attr:")) {
-//				if (q != null) {
-//					String name = field.substring(5).trim();
-//					obj = new RangeDimension((Comparable) q.getAttribute(name));
-//				} else {
-//					obj = new RangeDimension(null);
-//				}
-//			} else {
-//				if (q != null) {
-//					obj = findConditionValuesByName(((QueryImpl<?>) q).conditions, field, false);
-//				}
-//				if (obj == null){
-//					Object term=instance.getPropertyValue(field);
-//					// 当相等条件时
-//					if(term!=null){
-//						Class<?> clz=instance.getPropertyRawType(field);
-//						if(clz.isPrimitive()){//如果是缺省值，当做null处理。
-//							if(ObjectUtils.equals(term, BeanUtils.defaultValueOfPrimitive(clz))){//如果是和原生值一样
-//								IQueryableEntity qq=(IQueryableEntity)instance.getWrapped();
-//								Field fld=meta.getField(field);
-//								if(!(qq).isUsed(fld)){
-//									term=null;
-//								}
-//							}
-//						}	
-//					}
-//					obj = new RangeDimension((Comparable) term);
-//					
-//				}
-//			}
-//			fieldVal.put(field, obj);
-//		}
-		return fieldVal;
-	}
-		
+
 
 	/**
 	 * 根据一个分表字段名称查找属于该字段的维度
@@ -655,15 +650,4 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		}
 		return false;
 	}
-
-	public PartitionResult[] getTables(MetadataAdapter meta, Statement st, List<Object> params, PartitionSupport context) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public PartitionResult getTable(MetadataAdapter meta, Statement st, List<Object> params, PartitionSupport context) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 }

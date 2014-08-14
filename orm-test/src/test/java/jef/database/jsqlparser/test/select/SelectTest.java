@@ -337,8 +337,8 @@ public class SelectTest extends TestCase {
 		statement = "select * from tab1 where a > 34 group by 2,3";
 		plainSelect = (PlainSelect) ((Select) jef.database.DbUtils.parseStatement(statement)).getSelectBody();
 		assertEquals(2, plainSelect.getGroupByColumnReferences().size());
-		assertEquals(2, ((LongValue) plainSelect.getGroupByColumnReferences().get(0)).getValue());
-		assertEquals(3, ((LongValue) plainSelect.getGroupByColumnReferences().get(1)).getValue());
+		assertEquals(2, ((LongValue) plainSelect.getGroupByColumnReferences().get(0)).getValue().longValue());
+		assertEquals(3, ((LongValue) plainSelect.getGroupByColumnReferences().get(1)).getValue().longValue());
 		assertEquals(statement, ""+plainSelect);
 	}
 
@@ -396,7 +396,7 @@ public class SelectTest extends TestCase {
 		plainSelect = (PlainSelect) ((Select) jef.database.DbUtils.parseStatement(statement)).getSelectBody();
 		assertEquals(2, plainSelect.getOrderBy().getOrderByElements().size());
 		assertEquals("a", ((Column) ((OrderByElement) plainSelect.getOrderBy().getOrderByElements().get(0)).getExpression()).getColumnName());
-		assertEquals(2, ((LongValue) ((OrderByElement) plainSelect.getOrderBy().getOrderByElements().get(1)).getExpression()).getValue());
+		assertEquals(2, ((LongValue) ((OrderByElement) plainSelect.getOrderBy().getOrderByElements().get(1)).getExpression()).getValue().longValue());
 		assertEquals(statement, ""+plainSelect);
 	}
 

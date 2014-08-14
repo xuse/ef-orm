@@ -19,6 +19,7 @@ import java.util.List;
 
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 /**
@@ -126,5 +127,9 @@ public class CaseExpression implements Expression {
     		sb.append(' ');
     	}
     	sb.append("END");
+	}
+
+	public ExpressionType getType() {
+		return ExpressionType.complex;
 	}
 }

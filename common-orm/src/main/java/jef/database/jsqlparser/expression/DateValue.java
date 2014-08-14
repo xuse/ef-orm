@@ -15,15 +15,18 @@
  */
 package jef.database.jsqlparser.expression;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.SqlValue;
 
 /**
  * A Date in the form {d 'yyyy-mm-dd'}
  */
-public class DateValue implements Expression {
+public class DateValue implements Expression,SqlValue {
 
     private Date value;
     private String str;
@@ -53,4 +56,14 @@ public class DateValue implements Expression {
 	public void appendTo(StringBuilder sb) {
 		sb.append("{d ").append(str).append('}');
 	}
+
+	public ExpressionType getType() {
+		return ExpressionType.value;
+	}
+
+	public Object formatNumber(BigDecimal negate) {
+		throw new UnsupportedOperationException();
+	}
+	
+	
 }

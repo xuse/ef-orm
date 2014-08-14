@@ -24,6 +24,7 @@ import jef.database.IConditionField;
 import jef.database.IQueryableEntity;
 import jef.database.SqlProcessor;
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 import jef.database.meta.ITableMetadata;
 
@@ -58,5 +59,8 @@ public class SqlExpression implements Expression,IConditionField{
 	}
 	public void appendTo(StringBuilder sb) {
 		sb.append(text);
+	}
+	public ExpressionType getType() {
+		return ExpressionType.complex;
 	}
 }

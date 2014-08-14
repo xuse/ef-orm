@@ -6,6 +6,7 @@ import jef.database.jsqlparser.statement.SqlAppendable;
 import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 /**
@@ -61,6 +62,9 @@ public class Over implements SqlAppendable{
 		return sb.toString();
 	}
 	
+	public ExpressionType getType() {
+		return ExpressionType.complex;
+	}
 	
 	
 }

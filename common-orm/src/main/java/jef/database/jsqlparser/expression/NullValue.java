@@ -15,13 +15,17 @@
  */
 package jef.database.jsqlparser.expression;
 
+import java.math.BigDecimal;
+
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.SqlValue;
 
 /**
  *  A "NULL" in a sql statement
  */
-public class NullValue implements Expression {
+public class NullValue implements Expression ,SqlValue{
 	static NullValue instance=new NullValue();
 	
 	private NullValue(){};
@@ -40,5 +44,17 @@ public class NullValue implements Expression {
 
 	public void appendTo(StringBuilder sb) {
 		sb.append("NULL");
+	}
+	
+	public ExpressionType getType() {
+		return ExpressionType.value;
+	}
+
+	public Object getValue() {
+		return null;
+	}
+
+	public Object formatNumber(BigDecimal negate) {
+		throw new UnsupportedOperationException();
 	}
 }

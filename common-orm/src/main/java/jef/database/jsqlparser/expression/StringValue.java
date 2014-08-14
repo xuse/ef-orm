@@ -15,13 +15,17 @@
  */
 package jef.database.jsqlparser.expression;
 
+import java.math.BigDecimal;
+
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.SqlValue;
 
 /**
  * A string as in 'example_string'
  */
-public class StringValue implements Expression {
+public class StringValue implements Expression,SqlValue {
 
     private String value = "";
 
@@ -44,7 +48,10 @@ public class StringValue implements Expression {
     		this.value=value;
     	}
     }
-
+    
+    /**
+     * 注意得到得到的Value是SQL转义后的value
+     */
     public String getValue() {
         return value;
     }
@@ -75,5 +82,15 @@ public class StringValue implements Expression {
 
 	public void appendTo(StringBuilder sb) {
 		sb.append('\'').append(value).append('\'');
+	}
+
+
+	public ExpressionType getType() {
+		return ExpressionType.value;
+	}
+
+
+	public Object formatNumber(BigDecimal negate) {
+		throw new UnsupportedOperationException();
 	}
 }

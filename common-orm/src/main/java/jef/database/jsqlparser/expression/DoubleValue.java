@@ -15,13 +15,17 @@
  */
 package jef.database.jsqlparser.expression;
 
+import java.math.BigDecimal;
+
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.SqlValue;
 
 /**
  * Every number with a point or a exponential format is a DoubleValue
  */
-public class DoubleValue implements Expression {
+public class DoubleValue implements Expression ,SqlValue{
 
     private double value;
 
@@ -39,7 +43,7 @@ public class DoubleValue implements Expression {
         expressionVisitor.visit(this);
     }
 
-    public double getValue() {
+    public Double getValue() {
         return value;
     }
 
@@ -53,6 +57,12 @@ public class DoubleValue implements Expression {
 
 	public void appendTo(StringBuilder sb) {
 		sb.append(stringValue);
-		
+	}
+	public ExpressionType getType() {
+		return ExpressionType.value;
+	}
+
+	public Object formatNumber(BigDecimal negate) {
+		return negate.doubleValue();
 	}
 }

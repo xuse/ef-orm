@@ -34,6 +34,10 @@ public class ExpressionList implements ItemsList{
 	public ExpressionList() {
     }
 
+	/**
+	 * 获得多个参数之间的分隔符
+	 * @return
+	 */
     public String getBetween() {
 		return between;
 	}

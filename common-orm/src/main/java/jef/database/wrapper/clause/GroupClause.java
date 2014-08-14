@@ -67,7 +67,7 @@ public class GroupClause implements SqlClause{
 	 * 
 	 * 计算列—— 函数，别名
 	 */
-	public InMemoryGroupBy parseSelectFunction(SelectPart select) {
+	public InMemoryGroupByHaving parseSelectFunction(SelectPart select) {
 		List<GroupByItem> keys=new ArrayList<GroupByItem>();
 		List<GroupByItem> values=new ArrayList<GroupByItem>();
 		for(int i=0;i<select.getEntries().size();i++){
@@ -97,6 +97,6 @@ public class GroupClause implements SqlClause{
 				values.add(new GroupByItem(i,type,alias));
 			}
 		}
-		return new InMemoryGroupBy(keys,values);
+		return new InMemoryGroupByHaving(keys,values);
 	}
 }

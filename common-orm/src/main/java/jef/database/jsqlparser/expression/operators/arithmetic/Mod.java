@@ -2,6 +2,7 @@ package jef.database.jsqlparser.expression.operators.arithmetic;
 
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 /**
@@ -26,4 +27,8 @@ public class Mod  extends BinaryExpression {
     public String getStringExpression() {
         return "%";
     }
+    
+	public ExpressionType getType0() {
+		return ExpressionType.arithmetic;
+	}
 }

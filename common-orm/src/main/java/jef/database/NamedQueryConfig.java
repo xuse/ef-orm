@@ -21,6 +21,7 @@ import jef.database.jsqlparser.SelectToCountWrapper;
 import jef.database.jsqlparser.SqlFunctionlocalization;
 import jef.database.jsqlparser.expression.JpqlParameter;
 import jef.database.jsqlparser.expression.Table;
+import jef.database.jsqlparser.expression.operators.relational.Between;
 import jef.database.jsqlparser.expression.operators.relational.EqualsTo;
 import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
 import jef.database.jsqlparser.expression.operators.relational.GreaterThan;
@@ -346,6 +347,26 @@ public class NamedQueryConfig extends jef.database.DataObject {
 					}
 				}
 			}
+		}
+		
+		@Override
+		public void visit(Between between) {
+			super.visit(between);
+			if(between.getBetweenExpressionStart() instanceof JpqlParameter){
+				JpqlParameter p=(JpqlParameter)between.getBetweenExpressionStart();
+				if(p.resolvedCount()==-1){
+					between.setEmpty(Boolean.TRUE);
+					return;
+				}
+			}
+			if(between.getBetweenExpressionEnd() instanceof JpqlParameter){
+				JpqlParameter p=(JpqlParameter)between.getBetweenExpressionEnd();
+				if(p.resolvedCount()==-1){
+					between.setEmpty(Boolean.TRUE);
+					return;
+				}
+			}
+			between.setEmpty(Boolean.FALSE);
 		}
 
 		@Override

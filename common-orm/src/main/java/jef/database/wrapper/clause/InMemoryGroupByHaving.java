@@ -15,11 +15,11 @@ import jef.database.rowset.Row;
 
 import org.apache.commons.lang.ObjectUtils;
 
-public class InMemoryGroupBy implements InMemoryProcessor {
+public class InMemoryGroupByHaving implements InMemoryProcessor {
 	GroupByItem[] keys;
 	GroupByItem[] values;
 
-	public InMemoryGroupBy(List<GroupByItem> keys, List<GroupByItem> values) {
+	public InMemoryGroupByHaving(List<GroupByItem> keys, List<GroupByItem> values) {
 		this.keys = keys.toArray(new GroupByItem[keys.size()]);
 		this.values = values.toArray(new GroupByItem[values.size()]);
 		;
