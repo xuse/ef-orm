@@ -18,6 +18,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IManagedConnection;
+import jef.database.innerpool.PartitionSupport;
 import jef.database.innerpool.ReentrantConnection;
 import jef.database.jsqlparser.SqlFunctionlocalization;
 import jef.database.jsqlparser.parser.ParseException;
@@ -550,5 +551,9 @@ public class OperateTarget implements SqlTemplate {
 
 	private boolean isJpaTx() {
 		return session instanceof Transaction;
+	}
+	
+	public PartitionSupport getPartitionSupport(){
+		return session.getPool().getPartitionSupport();
 	}
 }

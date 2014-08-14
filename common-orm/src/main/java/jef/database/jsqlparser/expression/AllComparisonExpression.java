@@ -17,6 +17,7 @@ package jef.database.jsqlparser.expression;
 
 import jef.database.jsqlparser.statement.select.SubSelect;
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 public class AllComparisonExpression implements Expression {
@@ -46,5 +47,9 @@ public class AllComparisonExpression implements Expression {
 		StringBuilder sb=new StringBuilder(256);
 		appendTo(sb);
 		return sb.toString();
+	}
+
+	public ExpressionType getType() {
+		return ExpressionType.complex;
 	}
 }

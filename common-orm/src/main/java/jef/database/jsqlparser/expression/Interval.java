@@ -1,10 +1,13 @@
 package jef.database.jsqlparser.expression;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.SqlValue;
 import jef.database.query.SqlExpression;
 
 import org.apache.commons.lang.ArrayUtils;
@@ -15,7 +18,7 @@ import org.apache.commons.lang.StringUtils;
  * @author jiyi
  *
  */
-public class Interval implements Expression{
+public class Interval implements Expression,SqlValue{
 	private String unit;
 	private Expression value;
 	private static final String[] MYSQL_ALL_DATEUNIT={"microsecond",
@@ -155,5 +158,13 @@ YEAR_MONTH 'YEARS-MONTHS'
 	 */
 	public long toMills(){
 		return 0;
+	}
+
+	public ExpressionType getType() {
+		return ExpressionType.value;
+	}
+
+	public Object formatNumber(BigDecimal negate) {
+		return negate.longValue();
 	}
 }

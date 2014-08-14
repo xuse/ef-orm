@@ -25,7 +25,7 @@ public class UpdateTest extends TestCase {
 		assertEquals("col3", ((Column) update.getColumns().get(2)).getColumnName());
 		assertEquals("as", ((StringValue) update.getExpressions().get(0)).getValue());
 		assertTrue(update.getExpressions().get(1) instanceof JpqlParameter);
-		assertEquals(565, ((LongValue) update.getExpressions().get(2)).getValue());
+		assertEquals(565, ((LongValue) update.getExpressions().get(2)).getValue().longValue());
 
 		assertTrue(update.getWhere() instanceof GreaterThanEquals);
 	}

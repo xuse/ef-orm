@@ -16,6 +16,7 @@
 package jef.database.jsqlparser.statement.select;
 
 import jef.database.jsqlparser.expression.Table;
+import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.SelectItem;
 import jef.database.jsqlparser.visitor.SelectItemVisitor;
 
@@ -48,5 +49,13 @@ public class AllTableColumns implements SelectItem {
 
 	public void appendTo(StringBuilder sb) {
 		sb.append(table).append(".*");
+	}
+
+	public Expression getExpression() {
+		return null;
+	}
+
+	public String getAlias() {
+		return null;
 	}
 }

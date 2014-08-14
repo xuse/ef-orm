@@ -34,7 +34,7 @@ import jef.database.Session.PopulateStrategy;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Reference;
 import jef.database.wrapper.clause.InMemoryDistinct;
-import jef.database.wrapper.clause.InMemoryGroupBy;
+import jef.database.wrapper.clause.InMemoryGroupByHaving;
 import jef.database.wrapper.clause.InMemoryOrderBy;
 import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.clause.InMemoryProcessor;
@@ -266,7 +266,7 @@ public final class MultipleResultSet extends AbstractResultSet{
 		this.inMemoryOrder = inMemoryOrder;
 	}
 
-	public void setInMemoryGroups(InMemoryGroupBy inMemoryGroups) {
+	public void setInMemoryGroups(InMemoryGroupByHaving inMemoryGroups) {
 		addToInMemprocessor(inMemoryGroups);
 	}
 

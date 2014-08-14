@@ -239,6 +239,53 @@ public class PlainSelect implements SelectBody {
 			limit.appendTo(sb);
 		}
 	}
+	
+	public void appendToWithoutGroupHaving(StringBuilder sb) {
+		sb.append("select ");
+		if (hint != null) {
+			sb.append(hint).append(' ');
+		}
+		if (distinct != null) {
+			distinct.appendTo(sb);
+			sb.append(' ');
+		}
+		if (top != null) {
+			top.appendTo(sb);
+			sb.append(' ');
+		}
+		getStringList(sb, selectItems, ",", false);
+		sb.append(" from ");
+		fromItem.appendTo(sb);// append(fromItem.toString());
+		if (joins != null) {
+			Iterator<Join> it = joins.iterator();
+			while (it.hasNext()) {
+				Join join = (Join) it.next();
+				if (join.isSimple()) {
+					join.appendTo(sb.append(", "));
+				} else {
+					join.appendTo(sb.append(' '));
+				}
+			}
+		}
+		if ((where != null)) {
+			appendWhere(sb, where);
+		}
+		if (startWith != null) {
+			startWith.appendTo(sb);
+		}
+
+		getFormatedList(sb, groupByColumnReferences, " group by", false);
+		if (having != null) {
+			having.appendTo(sb.append(" having "));
+		}
+		if (orderBy != null) {
+			orderBy.appendTo(sb);
+		}
+		if (limit != null) {
+			limit.appendTo(sb);
+		}
+	}
+
 
 	private void appendWhere(StringBuilder sb, Expression where) {
 		if (where instanceof Ignorable) {

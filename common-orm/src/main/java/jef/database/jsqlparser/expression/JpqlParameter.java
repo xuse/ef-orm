@@ -18,6 +18,7 @@ package jef.database.jsqlparser.expression;
 import javax.persistence.Parameter;
 
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 import jef.database.jsqlparser.visitor.FromItem;
 import jef.database.jsqlparser.visitor.SelectItemVisitor;
@@ -50,7 +51,7 @@ public class JpqlParameter implements Expression,FromItem,Parameter {
 		return name;
 	}
 
-	public JpqlDataType getType() {
+	public JpqlDataType getDataType() {
 		return type;
 	}
 
@@ -200,5 +201,9 @@ public class JpqlParameter implements Expression,FromItem,Parameter {
 			return Short.class;
 		}
 		return Object.class;
+	}
+	
+	public ExpressionType getType() {
+		return ExpressionType.param;
 	}
 }

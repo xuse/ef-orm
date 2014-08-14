@@ -15,11 +15,43 @@
  */
 package jef.database.wrapper.clause;
 
+/**
+ * 描述Select中各个字段的分组特性
+ * @author jiyi
+ *
+ */
 public enum GroupFunctionType {
-	MIN,MAX,COUNT,AVG,SUM,ARRAY_TO_LIST,
+	/**
+	 * 分组统计——平均值
+	 * 这是唯一一个无法后来计算的内存分组函数
+	 */
+	AVG,
+	/**
+	 * 分组统计，总计值
+	 */
+	SUM,
+	/**
+	 * 分组统计最小值
+	 */
+	MIN,
+	/**
+	 * 分组统计——最大值
+	 */
+	MAX,
+	/**
+	 * 分组统计——计数
+	 */
+	COUNT,
+	/**
+	 * 分组统计——数组组合
+	 */
+	ARRAY_TO_LIST,
 	/**
 	 * 非以上的任何一种情况 
 	 */
 	NORMAL,
+	/**
+	 * 分组字段
+	 */
 	GROUP,
 }

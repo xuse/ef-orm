@@ -357,7 +357,7 @@ public final class Mappers {
 	/*
 	 * 内部使用，用于将列名一律转为大写
 	 */
-	private static DatabaseDialect UPPER_COLUMNS = new DbmsProfile() {
+	public static DatabaseDialect UPPER_COLUMNS = new DbmsProfile() {
 		public RDBMS getName() {
 			return null;
 		}

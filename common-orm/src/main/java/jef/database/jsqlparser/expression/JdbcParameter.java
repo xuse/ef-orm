@@ -16,6 +16,7 @@
 package jef.database.jsqlparser.expression;
 
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 /**
@@ -33,5 +34,9 @@ public class JdbcParameter implements Expression {
 
 	public void appendTo(StringBuilder sb) {
 		sb.append('?');
+	}
+
+	public ExpressionType getType() {
+		return ExpressionType.param;
 	}
 }

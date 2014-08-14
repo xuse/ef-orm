@@ -16,6 +16,7 @@
 package jef.database.jsqlparser.expression;
 
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 
@@ -105,4 +106,8 @@ public class Column implements Expression {
     	}
     	return new Column(null,columnName);
     }
+
+	public ExpressionType getType() {
+		return ExpressionType.column;
+	}
 }

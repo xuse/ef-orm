@@ -17,6 +17,7 @@ package jef.database.jsqlparser.expression.operators.conditional;
 
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 public class AndExpression extends BinaryExpression {
@@ -37,4 +38,8 @@ public class AndExpression extends BinaryExpression {
     public String getStringExpression() {
         return "AND";
     }
+    
+	public ExpressionType getType0() {
+		return ExpressionType.and;
+	}
 }

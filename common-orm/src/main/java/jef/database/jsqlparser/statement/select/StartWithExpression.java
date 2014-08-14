@@ -1,6 +1,7 @@
 package jef.database.jsqlparser.statement.select;
 
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 public class StartWithExpression implements Expression{
@@ -47,6 +48,10 @@ public class StartWithExpression implements Expression{
 
 	public void setConnectExpression(Expression connectExpression) {
 		this.connectExpression = connectExpression;
+	}
+
+	public ExpressionType getType() {
+		return ExpressionType.complex;
 	}
 
 }

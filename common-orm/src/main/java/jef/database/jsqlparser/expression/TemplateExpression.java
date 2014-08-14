@@ -1,6 +1,7 @@
 package jef.database.jsqlparser.expression;
 
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 /**
@@ -37,5 +38,9 @@ public class TemplateExpression implements Expression{
 
 	public void appendTo(StringBuilder sb) {
 		sb.append(String.format(template, (Object[])exprs));
+	}
+	
+	public ExpressionType getType() {
+		return ExpressionType.complex;
 	}
 }

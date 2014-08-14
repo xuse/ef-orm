@@ -331,8 +331,11 @@ public class Case2 extends org.junit.Assert {
 	}
 
 	@Test
-	public void testNativeQuery(){
-		String sql="select * from Device where indexcode >'4' and indexcode<'5' ";
+	public void testNativeQuery() throws SQLException{
+		List<Device> list = generateDevice(50);
+		ORMConfig.getInstance().setMaxBatchLog(2);
+		db.batchInsert(list);
+		String sql="select * from Device where indexcode in ('4111121','533333') ";
 		NativeQuery<Device> query=db.createNativeQuery(sql,Device.class);
 		query.setRouting(true);
 		List<Device> devices=query.getResultList();

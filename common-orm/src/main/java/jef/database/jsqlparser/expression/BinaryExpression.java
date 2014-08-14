@@ -16,8 +16,10 @@
 package jef.database.jsqlparser.expression;
 
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 import jef.database.jsqlparser.visitor.Ignorable;
+import jef.database.jsqlparser.visitor.Notable;
 
 
 
@@ -25,7 +27,7 @@ import jef.database.jsqlparser.visitor.Ignorable;
  * A basic class for binary expressions, that is expressions having a left member and a right member
  * which are in turn expressions. 
  */
-public abstract class BinaryExpression implements Expression,Ignorable {
+public abstract class BinaryExpression implements Expression,Ignorable,Notable {
 	public Expression rewrite;
 	protected Expression leftExpression;
 
@@ -63,7 +65,7 @@ public abstract class BinaryExpression implements Expression,Ignorable {
 
     
     //变量绑定值是否为空
-    private ThreadLocal<Boolean> isEmpty = new ThreadLocal<Boolean>(); 
+    private final ThreadLocal<Boolean> isEmpty = new ThreadLocal<Boolean>(); 
 
     public boolean isEmpty() {
     	Boolean b=isEmpty.get();
@@ -129,6 +131,23 @@ public abstract class BinaryExpression implements Expression,Ignorable {
 			rewrite.accept(expressionVisitor);
 		}
 	}
+    
+    public final ExpressionType getType() {
+    	if(rewrite==null){
+			return getType0();
+		}else{
+			return rewrite.getType();
+		}
+	}
+	
+
+	/**
+	 * 获得运算符
+	 * @return
+	 */
+	public abstract String getStringExpression();
+
+	protected abstract ExpressionType getType0() ;
 
 	protected abstract void acceptExp(ExpressionVisitor expressionVisitor);
 
@@ -192,6 +211,4 @@ public abstract class BinaryExpression implements Expression,Ignorable {
 		}
 		return false;
 	}
-
-	public abstract String getStringExpression();
 }

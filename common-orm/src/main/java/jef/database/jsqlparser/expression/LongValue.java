@@ -15,13 +15,17 @@
  */
 package jef.database.jsqlparser.expression;
 
+import java.math.BigDecimal;
+
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.SqlValue;
 
 /**
  * Every number without a point or an exponential format is a LongValue
  */
-public class LongValue implements Expression {
+public class LongValue implements Expression,SqlValue {
 
     private long value;
 
@@ -47,7 +51,7 @@ public class LongValue implements Expression {
         expressionVisitor.visit(this);
     }
 
-    public long getValue() {
+    public Long getValue() {
         return value;
     }
 
@@ -71,5 +75,13 @@ public class LongValue implements Expression {
 
 	public void appendTo(StringBuilder sb) {
 		sb.append(stringValue);
+	}
+	
+	public ExpressionType getType() {
+		return ExpressionType.value;
+	}
+
+	public Object formatNumber(BigDecimal negate) {
+		return negate.longValue();
 	}
 }

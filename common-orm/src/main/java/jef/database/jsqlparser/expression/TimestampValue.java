@@ -15,15 +15,18 @@
  */
 package jef.database.jsqlparser.expression;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.SqlValue;
 
 /**
  * A Timestamp in the form {ts 'yyyy-mm-dd hh:mm:ss.f . . .'}
  */
-public class TimestampValue implements Expression {
+public class TimestampValue implements Expression,SqlValue {
 
     private Timestamp value;
 
@@ -49,5 +52,13 @@ public class TimestampValue implements Expression {
 
 	public void appendTo(StringBuilder sb) {
 		sb.append("{ts '").append(value).append("'}");
+	}
+	
+	public ExpressionType getType() {
+		return ExpressionType.value;
+	}
+
+	public Object formatNumber(BigDecimal negate) {
+		throw new UnsupportedOperationException();
 	}
 }

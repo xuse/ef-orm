@@ -41,6 +41,7 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 	// 是否左开区间
 	private boolean isRightCloseSpan = true;
 
+	
 	/**
 	 * 默认构造，左右闭区间
 	 * 
@@ -58,14 +59,44 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 	 * @param min
 	 * @param max
 	 */
-	public static <T extends Comparable<T>> RangeDimension<T> createLC(T min, T max) {
-		return new RangeDimension<T>(min, max, true, false);
+	@SuppressWarnings("unchecked")
+	public static <T extends Comparable<T>> RangeDimension<T> createLC(Object min, Object max) {
+		return new RangeDimension<T>((T)min, (T)max, true, false);
 	}
 
-	public static <T extends Comparable<T>> RangeDimension<T> createCL(T min, T max) {
-		return new RangeDimension<T>(min, max, false, true);
+	/**
+	 * 创建一个左开右闭区间
+	 * @param min
+	 * @param max
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T extends Comparable<T>> RangeDimension<T> createCL(Object min, Object max) {
+		return new RangeDimension<T>((T)min, (T)max, false, true);
 	}
 
+	/**
+	 * 创建一个开区间
+	 * @param min
+	 * @param max
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T extends Comparable<T>> RangeDimension<T> createCC(Object min, Object max) {
+		return new RangeDimension<T>((T)min, (T)max, false, false);
+	}
+	
+	/**
+	 * 创建一个闭区间
+	 * @param min
+	 * @param max
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T extends Comparable<T>> RangeDimension<T> create(Object min, Object max) {
+		return new RangeDimension<T>((T)min, (T)max);
+	}
+	
 	/**
 	 * 构造，可以指定区间开启
 	 * 

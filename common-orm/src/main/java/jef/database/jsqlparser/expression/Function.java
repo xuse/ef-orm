@@ -20,6 +20,7 @@ import java.util.List;
 
 import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 
 /**
@@ -185,5 +186,9 @@ public class Function implements Expression {
 		if(over!=null){
 			over.appendTo(sb);
 		}
+	}
+
+	public ExpressionType getType() {
+		return ExpressionType.function;
 	}
 }

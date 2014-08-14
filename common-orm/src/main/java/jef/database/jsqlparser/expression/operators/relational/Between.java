@@ -16,12 +16,15 @@
 package jef.database.jsqlparser.expression.operators.relational;
 
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.Ignorable;
+import jef.database.jsqlparser.visitor.Notable;
 
 /**
  * A "BETWEEN" expr1 expr2 statement
  */
-public class Between implements Expression {
+public class Between implements Expression,Ignorable,Notable {
 
     private Expression leftExpression;
 
@@ -81,5 +84,20 @@ public class Between implements Expression {
 		betweenExpressionStart.appendTo(sb);
 		sb.append(" AND ");
 		betweenExpressionEnd.appendTo(sb);
+	}
+	  //变量绑定值是否为空
+    private final ThreadLocal<Boolean> isEmpty = new ThreadLocal<Boolean>();
+    
+    public boolean isEmpty() {
+    	Boolean e=isEmpty.get();
+		return e!=null && e;
+	}
+
+    public void setEmpty(Boolean isEmpty) {
+		this.isEmpty.set(isEmpty);
+	}
+
+	public ExpressionType getType() {
+		return ExpressionType.between;
 	}
 }
