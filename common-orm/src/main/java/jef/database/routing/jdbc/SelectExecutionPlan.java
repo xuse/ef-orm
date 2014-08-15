@@ -1,5 +1,6 @@
 package jef.database.routing.jdbc;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -8,24 +9,33 @@ import java.util.Set;
 import jef.common.PairSO;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
+import jef.database.ORMConfig;
 import jef.database.OperateTarget.SqlTransformer;
 import jef.database.Session;
 import jef.database.annotation.PartitionResult;
 import jef.database.jsqlparser.expression.Table;
+import jef.database.jsqlparser.statement.select.Distinct;
 import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.SelectItem;
-import jef.database.jsqlparser.visitor.Statement;
-import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.clause.GroupByItem;
 import jef.database.wrapper.clause.GroupFunctionType;
+import jef.database.wrapper.clause.InMemoryDistinct;
 import jef.database.wrapper.clause.InMemoryGroupByHaving;
-import jef.database.wrapper.clause.InMemoryOrderBy;
-import jef.database.wrapper.clause.InMemoryProcessor;
+import jef.database.wrapper.populator.ColumnMeta;
+import jef.database.wrapper.populator.Transformer;
+import jef.database.wrapper.result.IResultSet;
+import jef.database.wrapper.result.MultipleResultSet;
+import jef.tools.Assert;
 
+/**
+ * 路由查询执行计划
+ * @author jiyi
+ *
+ */
 public class SelectExecutionPlan implements ExecutionPlan {
 	/**
 	 * 路由结果
@@ -36,127 +46,115 @@ public class SelectExecutionPlan implements ExecutionPlan {
 	 */
 	private StatementContext<PlainSelect> context;
 	
-	/////////////////////策略部分////////////////////
-	//内存重新排序
-	private InMemoryOrderBy inMemoryOrder;
-	//内存处理运算
-	private List<InMemoryProcessor> mustInMemoryProcessor;
+	
+	/*  
+	 * 动作和路由结果的关系
+	//SQL操作(查询前)        
+	//表名改写          条件：全部
+	 //noGroup——SQL尾部以及Select部分中的聚合函数去除           条件:多表(不区分)
+	//noHaving——位于延迟的SQL尾部                              条件:多库()  ——union部分
+	//Order——位于子查询的尾部                                  条件：多表(不区分) 
+	//limit延迟                                                 条件：单库多表                           
+	//limit去除                                                 条件：多库
+	
+	//内存操作(查询后)
+	//内存分页          条件：多库
+	//内存排序：        条件：多库
+	//内存排重          条件：多库
+	//内存分组          条件：多库 
+	 */
 
 	
-	//解析结果，分组函数替换句柄
-	//（当出现一个库有多表时，如果发现是group语句，那么——
-	//方法1 改写成先union再重新groupBy的逻辑）
-	//方法2 改写成完全去除group的方式，然后内存group()
-	//方法3 
 
 	public SelectExecutionPlan(PartitionResult[] results, StatementContext<PlainSelect> context) {
 		LogUtil.show(results);
 		this.sites = results;
 		this.context=context;
-		init();
 	}
 
-	//目前支持五种内存处理算法。
-	//初始化,根据结果解析,是否需要内存分页\内存排序\内存分组\内存去重\内存递归过滤
-	//此外，多表下的group操作需要支持select函数改写和SQL语句重新生成Deparser定制。
-	private void init() {
-		PlainSelect st=context.statement;
-		List<Expression> groupBy=st.getGroupByColumnReferences();
-		
-		
-		
-		
-		
-		
-		Expression having=st.getHaving();
-		
-		OrderBy order=st.getOrderBy();//排序
-		
-		Limit limit=st.getLimit();//天然分页
-		
-	}	
-	
+
 
 	/*
 	 * 得到一个数据库上操作的SQL语句
+	//表名改写          条件：全部
+	 //noGroup延迟——SQL尾部以及Select部分中的聚合函数去除 条件:多表(不区分)
+	//延迟Group消除——  当多库时(?) 延迟Group不添加
+	//延迟noHaving消除——位于延迟的SQL尾部                              条件:多库()  ——union部分
+	 * 
+	//Order——位于子查询的尾部                                  条件：多表(不区分) 
+	//limit延迟                                                 条件：单库多表                           
+	//limit去除                                                 条件：多库
 	 */
 	public PairSO<List<Object>> getSql(PartitionResult site) {
 		List<String> tables=site.getTables();
-		boolean moreTable=tables.size()>1;
+		boolean moreTable=tables.size()>1; //是否为多表
+		boolean moreDatabase=isMultiDatabase();//是否为多库
 		
-		
-//		
-//		
-//		if(moreTable){
-//			return new PairSO<List<Object>>(getSql(tables.get(0)),params);
-//		}else if(tables.size()>1){
-//			StringBuilder sb = new StringBuilder(200);
-//			for (int i = 0; i < tables.size(); i++) {
-//				if (i > 0) {
-//					sb.append("\n union all \n");
-//				}
-//				String tableName = site.getTables().get(i);
-//				st.getOrderBy();
-//				st.getGroupByColumnReferences();
-//				st.getHaving();
-//				sb.append(getSql(tableName.concat(" t"), grouphavingPart.isNotEmpty()));// 为多表、并且有groupby时需要特殊处理
-//			}
-//			
-//		}
-//		
-//		
-//		
-//		
-//		for (int i = 0; i < site.tableSize(); i++) {
-//			if (i > 0) {
-//				sb.append("\n union all \n");
-//			}
-//			String tableName = site.getTables().get(i);
-//			sb.append(getSql(tableName.concat(" t"), moreTable && grouphavingPart.isNotEmpty()));// 为多表、并且有groupby时需要特殊处理
-//
-//		}
-//
-//		// 不带group by、having、order by从句的情况下，无需再union一层，
-//		// 否则，对查询列指定别名时会产生异常。
-//		if (moreTable && (grouphavingPart.isNotEmpty() || orderbyPart.isNotEmpty())) {
-//			StringBuilder sb2 = new StringBuilder();
-//			selectPart.append(sb2);
-//
-//			sb2.append(" from (").append(sb).append(") t");
-//			sb2.append(ORMConfig.getInstance().wrap);
-//			sb2.append(grouphavingPart);
-//			sb = sb2;
-//		}
-//
-//		if (moreTable) {
-//			// 当复杂情况下，绑定变量也要翻倍
-//			bind = new ArrayList<BindVariableDescription>();
-//			for (int i = 0; i < site.tableSize(); i++) {
-//				bind.addAll(this.bind);
-//			}
-//		}
-//
-//		sb.append(orderbyPart.getSql());
-//		return new BindSql(withPage(sb.toString(), moreTable), bind);
-		return null;
+		PlainSelect st=context.statement;
+		if(moreTable){
+			StringBuilder sb = new StringBuilder(200);
+			for (int i = 0; i < tables.size(); i++) {
+				if (i > 0) {
+					sb.append("\n union all \n");
+				}
+				String tableName = site.getTables().get(i);
+				appendSql(sb, tableName, true,true, true, true, true);  //union子查询
+			}
+			//绑定变量参数翻倍
+			List<Object> params=SqlAnalyzer.repeat(context.params, tables.size());
+			
+			//聚合操作用Union外嵌查询实现
+			if(hasAnyGroupDistinctOrderLimit()){
+				StringBuilder sb2 = new StringBuilder();
+				st.appendSelect(sb2, false);
+				sb2.append(" from (").append(sb).append(") t");
+				sb2.append(ORMConfig.getInstance().wrap);
+				st.appendGroupHavingOrderLimit(sb2, moreDatabase, false, moreDatabase);
+				sb = sb2;
+			}
+			return  new PairSO<List<Object>>(sb.toString(),params);
+		}else{
+			String table=site.getTables().get(0);
+			StringBuilder sb=new StringBuilder();
+			//单表情况下
+			if(moreDatabase){//多库单表
+				appendSql(sb, table, false, false, false, true, false);
+			}else{
+				appendSql(sb, table, false, false, false, false, false);
+			}
+			return new PairSO<List<Object>>(sb.toString(),context.params);
+		}
 	}
 
-	private String getSql(String name,boolean delayProcessGroupClause) {
+	/*
+	 * 有没有Group/Having/Distinct/Order/Limit等会引起查询复杂的东西？
+	 */
+	private boolean hasAnyGroupDistinctOrderLimit() {
+		PlainSelect st=context.statement;
+		if(st.getDistinct()!=null){
+			return true;
+		}
+		if(st.getLimit()!=null){
+			return true;
+		}
+		if(st.getGroupByColumnReferences()!=null && !st.getGroupByColumnReferences().isEmpty()){
+			return true;
+		}
+		if(st.getOrderBy() !=null && !st.getOrderBy().getOrderByElements().isEmpty()){
+			return true;
+		}
+		return false;
+	}
+
+	private void appendSql(StringBuilder sb,String table,boolean noGroup,boolean noHaving,boolean noOrder,boolean noLimit,boolean noDistinct) {
 		for (Table tb : context.modifications) {
-			tb.setReplace(name);
+			tb.setReplace(table);
 		}
-		if(delayProcessGroupClause){//在select部分中清除group函数。同时去除结尾的groupBy部分
-			for(SelectItem select:context.statement.getSelectItems()){
-//				select.accept(new )
-//				select function
-			}
-		}
-		String sql = context.statement.toString();
+		context.statement.appendTo(sb, noGroup,noHaving, noOrder, noLimit, noDistinct);
 		//清理现场
 		for (Table tb : context.modifications) {
 			tb.removeReplace();
 		}
-		return sql;
 	}
 
 
@@ -165,18 +163,44 @@ public class SelectExecutionPlan implements ExecutionPlan {
 		return sites;
 	}
 
-	public static ExecutionPlan get(ITableMetadata meta, Statement sql, List<Object> params) {// 如果路由结果唯一，则返回null即可
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	public <X> ResultIterator<X> getIteratorResult(IntRange range, SqlTransformer<X> resultTransformer, int i, int fetchSize) {
 		return null;
 	}
 
-	public <X> List<X> getListResult(IntRange range, SqlTransformer<X> rst, int max, int fetchSize) {
-		return null;
+	//多库查询下，进行内存中的后处理
+	//内存操作(查询后)
+	//内存分页          条件：多库
+	//内存排序：        条件：多库
+	//内存排重          条件：多库
+	//内存分组          条件：多库 
+	public <X> List<X> getListResult(IntRange range,Transformer rst,MultipleResultSet rs) throws SQLException {
+		Assert.isTrue(isMultiDatabase());
+		ColumnMeta meta=rs.getColumns();
+		parepareInMemoryProcess(meta,range,rs);
+		IResultSet rsw=rs.toSimple(null,rst.getStrategy());
+		return context.db.populateResultSet(rsw, null, rst);
 	}
+	
+
+	/**
+	 * 根据查询结果，对照查询语句分析，是否需要内存操作
+	 * @return  return true if need In Memory Process.
+	 */
+	private void parepareInMemoryProcess(ColumnMeta meta,IntRange range,MultipleResultSet rs) {
+		PlainSelect st=context.statement;
+		if(st.getGroupByColumnReferences()!=null && !st.getGroupByColumnReferences().isEmpty()){
+			rs.setInMemoryGroups(processGroupBy(meta));
+		}
+		if(st.getDistinct()!=null){
+			rs.setInMemoryDistinct(processDistinct(st.getDistinct(),meta));
+		}
+		if(st.getOrderBy()!=null){
+			processOrder(st.getOrderBy(),meta);
+		}
+		if(st.getLimit()!=null){
+			processPage(st.getLimit(),meta,range);
+		}
+	}	
 
 	public long processCount(PartitionResult site, Session session) {
 		return 0;
@@ -185,13 +209,17 @@ public class SelectExecutionPlan implements ExecutionPlan {
 	public int processUpdate(PartitionResult site, Session session) {
 		return 0;
 	}
+	private InMemoryGroupByHaving processGroupBy(ColumnMeta meta) {
+		PlainSelect select=context.statement;
+		return generateGroupHavingProcess(select.getSelectItems(), select.getGroupByColumnReferences(), meta);
+	}
 	
 	/**
 	 * 只有当确定select语句中使用了groupBy后才走入当前分支，解析出当前的内存分组任务
 	 * @param selects
 	 * @return
 	 */
-	public InMemoryGroupByHaving generateGroupHavingProcess(List<SelectItem> selects,List<Expression> groupExps) {
+	private InMemoryGroupByHaving generateGroupHavingProcess(List<SelectItem> selects,List<Expression> groupExps,ColumnMeta meta) {
 		List<GroupByItem> keys=new ArrayList<GroupByItem>();
 		List<GroupByItem> values=new ArrayList<GroupByItem>();
 		//解析出SQL修改句柄，当延迟操作group时，必然要将原先的分组函数去除，配合将groupBy去除
@@ -224,8 +252,8 @@ public class SelectExecutionPlan implements ExecutionPlan {
 					type=GroupFunctionType.MIN;
 				}else if(exp.startsWith("MAX(")){
 					type=GroupFunctionType.MAX;
-				}else if(exp.startsWith("ARRAY_TO_LIST(")){	
-					type=GroupFunctionType.ARRAY_TO_LIST;
+				}else if(exp.startsWith("ARRAY_TO_STRING(")){	
+					type=GroupFunctionType.ARRAY_TO_STRING;
 				}else{
 					type=GroupFunctionType.NORMAL;
 				}	
@@ -235,14 +263,6 @@ public class SelectExecutionPlan implements ExecutionPlan {
 		return new InMemoryGroupByHaving(keys,values);
 	}
 	
-
-
-	private void addToInMemprocessor(InMemoryProcessor process) {
-		if (this.mustInMemoryProcessor == null) {
-			mustInMemoryProcessor = new ArrayList<InMemoryProcessor>(4);
-		}
-		mustInMemoryProcessor.add(process);
-	}
 	
 	/**
 	 * 是否为多库查询。
@@ -260,5 +280,25 @@ public class SelectExecutionPlan implements ExecutionPlan {
 	public boolean isSingleTable() {
 		return sites.length == 1 && sites[0].getTables().size() == 1;
 	}
+	
+	//多库Distinct
+	private InMemoryDistinct processDistinct(Distinct distinct,ColumnMeta meta){
+		return InMemoryDistinct.instance;
+	}
+
+	//多库排序
+	private void processOrder(OrderBy orderBy,ColumnMeta meta) {
+		List<SelectItem> selects=context.statement.getSelectItems();
+		
+		
+		//inMemoryOrder
+		
+	}
+
+	private void processPage(Limit limit,ColumnMeta meta,IntRange range) {
+		// TODO Auto-generated method stub
+		
+	}
+
 
 }

@@ -24,10 +24,6 @@ public class OrderClause {
 		return asSelect;
 	}
 
-	public void setAsSelect(List<Entry<String, Boolean>> asSelect) {
-		this.asSelect = asSelect;
-	}
-
 	public String getSql() {
 		return sql;
 	}

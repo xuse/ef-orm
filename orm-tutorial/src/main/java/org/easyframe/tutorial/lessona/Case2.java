@@ -349,7 +349,7 @@ public class Case2 extends org.junit.Assert {
 		List<Device> list = generateDevice(50);
 		ORMConfig.getInstance().setMaxBatchLog(2);
 		db.batchInsert(list);
-		String sql="select * from Device where indexcode in ('4111121','533333') ";
+		String sql="select * from Device where indexcode like '4%' or indexcode like '5%' ";
 		NativeQuery<Device> query=db.createNativeQuery(sql,Device.class);
 		query.setRouting(true);
 		List<Device> devices=query.getResultList();

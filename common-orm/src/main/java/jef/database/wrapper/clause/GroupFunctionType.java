@@ -45,7 +45,7 @@ public enum GroupFunctionType {
 	/**
 	 * 分组统计——数组组合
 	 */
-	ARRAY_TO_LIST,
+	ARRAY_TO_STRING,
 	/**
 	 * 非以上的任何一种情况 
 	 */
@@ -54,4 +54,14 @@ public enum GroupFunctionType {
 	 * 分组字段
 	 */
 	GROUP,
+	
+	
+	GROUPING,
+	BINARY_CHECKSUM,  
+	CHECKSUM_AGG,  
+	CHECKSUM,  
+	STDEV,
+	STDEVP,
+	VAR,
+	VARP,
 }

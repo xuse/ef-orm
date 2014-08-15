@@ -570,4 +570,15 @@ public class SqlAnalyzer {
 		}
 		return m;
 	}
+	
+	public static <T> List<T> repeat(List<T> source,int count){
+		if(count==1){
+			return source;
+		}
+		List<T> result=new ArrayList<T>(source.size()*count);
+		for(int i=0;i<count;i++){
+			result.addAll(source);
+		}
+		return result;
+	}
 }

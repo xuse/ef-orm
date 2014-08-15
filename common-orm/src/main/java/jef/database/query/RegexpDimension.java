@@ -9,7 +9,7 @@ import java.util.Set;
 import jef.database.annotation.PartitionFunction;
 import jef.tools.string.CharUtils;
 
-public class RegexpDimension implements Dimension{
+public class RegexpDimension implements Dimension,Comparable<Object>{
 	private String baseExp;
 	
 	
@@ -26,7 +26,8 @@ public class RegexpDimension implements Dimension{
 	}
 
 	public Dimension mergeOr(Dimension d) {
-		throw new UnsupportedOperationException();
+		ComplexDimension com=new ComplexDimension(this);
+		return com.mergeOr(d);
 	}
 
 	public Dimension mergeNot() {
@@ -59,5 +60,14 @@ public class RegexpDimension implements Dimension{
 
 	public String getBaseExp() {
 		return baseExp;
+	}
+
+	public int compareTo(Object o) {
+		if(o instanceof RegexpDimension){
+			return this.baseExp.compareTo(((RegexpDimension) o).baseExp);
+		}else if(o instanceof String){
+			return this.baseExp.compareTo((String)o);
+		}
+		return 1;
 	}
 }

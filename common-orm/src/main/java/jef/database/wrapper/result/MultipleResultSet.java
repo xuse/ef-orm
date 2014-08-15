@@ -274,7 +274,8 @@ public final class MultipleResultSet extends AbstractResultSet{
 		if(this.mustInMemoryProcessor==null){
 			mustInMemoryProcessor=new ArrayList<InMemoryProcessor>(4);
 		}
-		mustInMemoryProcessor.add(process);
+		if(process!=null)
+			mustInMemoryProcessor.add(process);
 	}
 
 	public void setInMemoryDistinct(InMemoryDistinct instance) {
@@ -283,5 +284,8 @@ public final class MultipleResultSet extends AbstractResultSet{
 
 	public boolean isClosed() throws SQLException {
 		return results.isEmpty();
+	}
+	public boolean isDebug(){
+		return debug;
 	}
 }

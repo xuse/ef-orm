@@ -15,13 +15,16 @@
  */
 package jef.database.jsqlparser.expression;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.wrapper.clause.GroupFunctionType;
 
 /**
  * A function as MAX,COUNT...
@@ -134,6 +137,22 @@ public class Function implements Expression {
 	public void setParameters(ExpressionList list) {
 		parameters = list;
 	}
+	
+	/**
+	 * 是否为Oracle/MS-SQL分析函数
+	 * @return
+	 */
+	public boolean isStatics(){
+		return this.over!=null;
+	}
+	
+	/**
+	 * 获得参数个数
+	 * @return
+	 */
+	public int getParamCount(){
+		return parameters==null?0:parameters.size();
+	}
 
 	/**
 	 * Return true if it's in the form "{fn function_body() }"
@@ -190,5 +209,25 @@ public class Function implements Expression {
 
 	public ExpressionType getType() {
 		return ExpressionType.function;
+	}
+	
+	static Map<String,GroupFunctionType> mapping=new HashMap<String,GroupFunctionType>();
+	static{
+		mapping.put("avg", GroupFunctionType.AVG);
+		mapping.put("count", GroupFunctionType.COUNT);
+		mapping.put("max", GroupFunctionType.MAX);
+		mapping.put("min", GroupFunctionType.MIN);
+		mapping.put("sum", GroupFunctionType.SUM);
+		mapping.put("checksum", GroupFunctionType.CHECKSUM);
+		mapping.put("checksum_agg", GroupFunctionType.CHECKSUM_AGG);
+		mapping.put("countbig", GroupFunctionType.COUNT);
+	}
+	
+	/**
+	 * 获得聚合函数类型
+	 * @return 如果是统计聚合函数，返回聚合函数类型，否则返回null
+	 */
+	public GroupFunctionType getGroupFunctionType(){
+		return mapping.get(this.name.toLowerCase());
 	}
 }

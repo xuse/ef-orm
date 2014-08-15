@@ -15,6 +15,8 @@
  */
 package jef.database.jsqlparser.statement.select;
 
+import jef.database.jsqlparser.expression.Function;
+import jef.database.jsqlparser.visitor.DeParserAdapter;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.SelectItem;
 import jef.database.jsqlparser.visitor.SelectItemVisitor;
@@ -59,5 +61,19 @@ public class SelectExpressionItem implements SelectItem {
 		if(alias!=null){
 			sb.append(" AS ").append(alias);
 		}
+	}
+
+	public void appendTo(StringBuilder sb, boolean noGroupFunc) {
+		DeParserAdapter dep=new DeParserAdapter(sb){
+			@Override
+			public void visit(Function function) {
+				if(function.getParamCount()==1 && function.getGroupFunctionType()!=null){
+					function.getParameters().getExpressions().get(0).accept(this);
+				}else{
+					super.visit(function);
+				}
+			}
+		};
+		this.accept(dep);
 	}
 }

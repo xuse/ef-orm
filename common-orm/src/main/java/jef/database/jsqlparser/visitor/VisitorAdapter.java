@@ -86,6 +86,13 @@ import jef.database.jsqlparser.statement.select.WithItem;
 import jef.database.jsqlparser.statement.truncate.Truncate;
 import jef.database.jsqlparser.statement.update.Update;
 
+/**
+ * 通用的访问者，该访问者将遍历AST上的每一个元素。
+ * 并可以通过visitPath(一个先进后出的Deque)来访问到根节点的路径。
+ * 
+ * @author jiyi
+ *
+ */
 public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, StatementVisitor, SelectItemVisitor {
 	protected final Deque<Object> visitPath = new ArrayDeque<Object>();
 

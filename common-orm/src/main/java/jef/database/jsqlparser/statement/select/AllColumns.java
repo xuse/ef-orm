@@ -43,4 +43,8 @@ public class AllColumns implements SelectItem {
 	public String getAlias() {
 		return null;
 	}
+
+	public void appendTo(StringBuilder sb, boolean noGroupFunc) {
+		sb.append('*');
+	}
 }

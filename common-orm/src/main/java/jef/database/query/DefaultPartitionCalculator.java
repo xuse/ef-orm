@@ -273,6 +273,11 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 * @return true/false 即当前匹配是否为一个正则表达式
 	 *         什么情况下会返回正则表达式？就是当维度值obj为null的情况下，无法根据维度值来计算表名后缀。
 	 *         这样的话就将可能出现的字符串用正则表达式的方式返回上一层，上一层可以根据当前数据库的实际情况来计算出能匹配上这个正则表达式的表名
+	 *         
+	 *         
+	 *         
+	 *         
+	 *         
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private boolean appendSuffix(Object obj, PartitionKey key, PartitionFunction func, StringBuilder sb, DatabaseDialect profile, String regexp) {
@@ -295,7 +300,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		} else if(obj instanceof RegexpDimension){
 			String baseExp=((RegexpDimension) obj).getBaseExp();
 			//<0 无穷 ==0刚好 >0不足
-			int leftLen=-1;
+			int leftLen=-1; //剩余可变长度
 			if(key.length()>0){
 				leftLen=key.length()-baseExp.length();
 				if(leftLen<0){

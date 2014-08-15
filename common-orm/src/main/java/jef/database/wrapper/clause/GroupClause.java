@@ -48,7 +48,7 @@ public class GroupClause implements SqlClause{
 		return getSql(true);
 	}
 	
-	public String getSql(boolean b) {
+	public String getSql(boolean withHaving) {
 		if(groups.isEmpty()&& having.isEmpty()){
 			return "";
 		}
@@ -57,7 +57,7 @@ public class GroupClause implements SqlClause{
 			sb.append(" group by ");
 			sb.append(StringUtils.join(groups, ','));
 		}
-		if (b && !having.isEmpty()) {
+		if (withHaving && !having.isEmpty()) {
 			sb.append(" having ");
 			sb.append(StringUtils.join(having, " and "));
 		}
@@ -97,8 +97,8 @@ public class GroupClause implements SqlClause{
 					type=GroupFunctionType.MIN;
 				}else if(exp.startsWith("MAX(")){
 					type=GroupFunctionType.MAX;
-				}else if(exp.startsWith("ARRAY_TO_LIST(")){	
-					type=GroupFunctionType.ARRAY_TO_LIST;
+				}else if(exp.startsWith("ARRAY_TO_STRING(")){	
+					type=GroupFunctionType.ARRAY_TO_STRING;
 				}else{
 					type=GroupFunctionType.NORMAL;
 				}	

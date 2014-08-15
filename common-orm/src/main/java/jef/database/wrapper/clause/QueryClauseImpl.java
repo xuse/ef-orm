@@ -15,7 +15,6 @@
  */
 package jef.database.wrapper.clause;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import jef.common.wrapper.IntRange;
@@ -27,6 +26,7 @@ import jef.database.cache.CacheKey;
 import jef.database.cache.KeyDimension;
 import jef.database.cache.SqlCacheKey;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.routing.jdbc.SqlAnalyzer;
 
 /**
  * 必要Part五部分， 4+1
@@ -174,7 +174,7 @@ public class QueryClauseImpl implements QueryClause {
 				sb.append("\n union all \n");
 			}
 			String tableName = site.getTables().get(i);
-			sb.append(getSql(tableName.concat(" t"), moreTable && grouphavingPart.isNotEmpty()));// 为多表、并且有groupby时需要特殊处理
+			sb.append(getSql(tableName.concat(" t"), moreTable));// 为多表、并且有groupby时需要特殊处理
 
 		}
 
@@ -192,10 +192,7 @@ public class QueryClauseImpl implements QueryClause {
 
 		if (moreTable) {
 			// 当复杂情况下，绑定变量也要翻倍
-			bind = new ArrayList<BindVariableDescription>();
-			for (int i = 0; i < site.tableSize(); i++) {
-				bind.addAll(this.bind);
-			}
+			bind = SqlAnalyzer.repeat(this.bind,  site.tableSize());
 		}
 
 		sb.append(orderbyPart.getSql());

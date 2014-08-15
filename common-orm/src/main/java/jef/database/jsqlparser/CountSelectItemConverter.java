@@ -82,4 +82,9 @@ public class CountSelectItemConverter implements SelectItem {
 	public String getAlias() {
 		throw new UnsupportedOperationException();
 	}
+
+	public void appendTo(StringBuilder sb, boolean noGroupFunc) {
+		throw new UnsupportedOperationException();
+		
+	}
 }

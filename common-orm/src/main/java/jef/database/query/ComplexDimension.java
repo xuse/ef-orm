@@ -29,7 +29,7 @@ public class ComplexDimension implements Dimension {
 		return result;
 	}
 	
-	public ComplexDimension(RangeDimension<?> dimensions){
+	public ComplexDimension(Dimension dimensions){
 		ranges.add(dimensions);
 	}
 	

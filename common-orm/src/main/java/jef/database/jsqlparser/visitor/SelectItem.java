@@ -32,4 +32,6 @@ public interface SelectItem extends SqlAppendable{
     public Expression getExpression();
 
 	public String getAlias();
+	
+	public void appendTo(StringBuilder sb,boolean noGroupFunc);
 }

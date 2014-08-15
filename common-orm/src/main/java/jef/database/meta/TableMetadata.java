@@ -480,7 +480,7 @@ public final class TableMetadata extends MetadataAdapter {
 		}
 
 		public Collection<Object> iterator(RegexpDimension regexp) {
-			return Arrays.<Object>asList(regexp);
+			return Arrays.<Object>asList(regexp.getBaseExp());
 		}
 	};
 

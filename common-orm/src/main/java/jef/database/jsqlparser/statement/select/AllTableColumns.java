@@ -58,4 +58,8 @@ public class AllTableColumns implements SelectItem {
 	public String getAlias() {
 		return null;
 	}
+
+	public void appendTo(StringBuilder sb, boolean noGroupFunc) {
+		appendTo(sb);
+	}
 }

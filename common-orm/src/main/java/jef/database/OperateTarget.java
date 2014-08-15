@@ -556,4 +556,11 @@ public class OperateTarget implements SqlTemplate {
 	public PartitionSupport getPartitionSupport(){
 		return session.getPool().getPartitionSupport();
 	}
+
+	public OperateTarget getTarget(String database) {
+		if(StringUtils.equals(dbkey,database)){
+			return this;
+		}
+		return session.asOperateTarget(database);
+	}
 }

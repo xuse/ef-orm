@@ -135,7 +135,7 @@ public class InMemoryGroupByHaving implements InMemoryProcessor {
 			for (GroupByItem g : values) {
 				int index = g.getIndex();
 				switch (g.getType()) {
-				case ARRAY_TO_LIST:
+				case ARRAY_TO_STRING:
 					baseRow.setArrayObject(index, arrayToString(rows, index));
 					break;
 				case AVG:

@@ -15,6 +15,8 @@
  */
 package jef.database;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -58,126 +60,191 @@ import jef.database.wrapper.populator.Mapper;
 import jef.database.wrapper.populator.ResultSetTransformer;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.result.IResultSet;
+import jef.database.wrapper.result.MultipleResultSet;
 import jef.tools.Assert;
 import jef.tools.DateUtils;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
 
 /**
- * JEF的NativeQuery实现(对应JPA的TypedQuery)。
- * <h2>概览</h2>
+ * JEF的NativeQuery实现(对应JPA的TypedQuery)。 <h2>概览</h2>
  * 让用户能根据临时拼凑的或者预先写好的SQL语句进行数据库查询，查询结果将被转换为用户需要的类型。<br>
  * NativeQuery支持哪些功能？
  * <ul>
- * 	<li>支持绑定变量，允许在SQL中用占位符来描述变量。</li>
- *  <li>一个NativeQuery可携带不同的绑定变量参数值，反复使用</li>
- *  <li>可以指定{@code fetch-size} ,  {@code max-result} 等参数，进行性能调优</li>
- *  <li>可以自定义查询结果到返回对象之间的映射关系，根据自定义映射转换结果</li>
- * 	<li>支持{@code E-SQL}，即对传统SQL进行解析和改写以支持一些高级功能，参见下文《什么是E-SQL》节</li>
+ * <li>支持绑定变量，允许在SQL中用占位符来描述变量。</li>
+ * <li>一个NativeQuery可携带不同的绑定变量参数值，反复使用</li>
+ * <li>可以指定{@code fetch-size} , {@code max-result} 等参数，进行性能调优</li>
+ * <li>可以自定义查询结果到返回对象之间的映射关系，根据自定义映射转换结果</li>
+ * <li>支持{@code E-SQL}，即对传统SQL进行解析和改写以支持一些高级功能，参见下文《什么是E-SQL》节</li>
  * </ul>
  * <h2>什么是E-SQL</h2>
  * EF-ORM会对用户输入的SQL进行解析，改写，从而使得SQL语句的使用更加方便，EF-ORM将不同数据库DBMS下的SQL语句写法进行了兼容处理。
  * 并且提供给上层统一的SQL写法，为此我们将其称为 E-SQL (Enhanced SQL). E-SQL可以让用户使用以下特性：
  * <ul>
- * 	<li>Schema重定向</li>
- *  <li>数据库方言——语法格式整理</li>
- *  <li>数据库方言——函数转换</li>
- *  <li>增强的绑定变量占位符表示功能</li>
- *  <li>绑定变量占位符中可以指定变量数据类型</li>
- *  <li>动态SQL语句——表达式忽略</li>
+ * <li>Schema重定向</li>
+ * <li>数据库方言——语法格式整理</li>
+ * <li>数据库方言——函数转换</li>
+ * <li>增强的绑定变量占位符表示功能</li>
+ * <li>绑定变量占位符中可以指定变量数据类型</li>
+ * <li>动态SQL语句——表达式忽略</li>
  * </ul>
- *  
- * <h3>示例</h3>
- * 面我们逐一举例这些特性
- * <h4>Schema重定向</h4>
- * 在Oracle,PG等数据库下，我们可以跨Schema操作。Oracle数据库会为每个用户启用独立Schema，例如USERA用户下和USERB用户下都有一张名为TT的表。
- * 我们可以在一个SQL语句中访问两个用户下的表，<pre><tt>select * from usera.tt union all select * from userb.tt </tt></pre>
- * 但是这样就带来一个问题，在某些场合，实际部署的数据库用户是未定的，在编程时开发人员无法确定今后系统将会以什么用户部署。因此EF-ORM设计了Schema重定向功能。<br>
- * 在开发时，用户根据设计中的虚拟用户名编写代码，而在实际部署时，可以配置文件jef.properties指定虚拟schema对应到部署中的实际schema上。<br>
- * 例如，上面的SQL语句，如果在jef.properties中配置
- * <pre><tt>schema.mapping=USERA:ZHANG, USERB:WANG</tt></pre>
- * 那么SQL语句在实际执行时，就变为
- * <pre><tt>select * from zhang.tt union all select * from wang.tt //实际被执行的SQL</tt></pre>用schema重定向功能，可以解决开发和部署的 schema耦合问题，为测试、部署等带来更大的灵活性。
  * 
- *<h4>数据库方言——语法格式整理</h4>
- * 根据不同的数据库语法，EF-ORM会在执行SQL语句前根据本地方言对SQL进行修改，以适应当前数据库的需要。<br>
- * <strong>例1：</strong><pre><tt>select t.id||t.name as u from t</tt></pre>在本例中{@code ||}表示字符串相连，这在大部分数据库上执行都没有问题，但是如果在MySQL上执行就不行了，MySQL中{@code ||}表示或关系，不表示字符串相加。
- * 因此，EF-ORM在MySQL上执行上述E-SQL语句时，实际在数据库上执行的语句变为<br><pre><tt> select concat(t.id, t.name) as u from t</tt></pre><br>
- * 这保证了SQL语句按大多数人的习惯在MYSQL上正常使用。<p>
- * <strong>例2：</strong><pre><tt>select count(*) total from t</tt></pre>
- * 这句SQL语句在Oracle上是能正常运行的，但是在postgresql上就不行了。因为postgresql要求每个列的别名前都有as关键字。对于这种情况EF-ORM会自动为这样的SQL语句加上缺少的as关键字，从而保证SQL语句在Postgres上也能正常执行。
- * <pre><tt>select count(*) as total from t</tt></pre>
+ * <h3>示例</h3> 面我们逐一举例这些特性 <h4>Schema重定向</h4>
+ * 在Oracle,PG等数据库下，我们可以跨Schema操作。Oracle数据库会为每个用户启用独立Schema，
+ * 例如USERA用户下和USERB用户下都有一张名为TT的表。 我们可以在一个SQL语句中访问两个用户下的表，
+ * 
+ * <pre>
+ * <tt>select * from usera.tt union all select * from userb.tt </tt>
+ * </pre>
+ * 
+ * 但是这样就带来一个问题，在某些场合，实际部署的数据库用户是未定的，在编程时开发人员无法确定今后系统将会以什么用户部署。因此EF-
+ * ORM设计了Schema重定向功能。<br>
+ * 在开发时，用户根据设计中的虚拟用户名编写代码，而在实际部署时，可以配置文件jef.properties指定虚拟schema对应到部署中的实际schema上
+ * 。<br>
+ * 例如，上面的SQL语句，如果在jef.properties中配置
+ * 
+ * <pre>
+ * <tt>schema.mapping=USERA:ZHANG, USERB:WANG</tt>
+ * </pre>
+ * 
+ * 那么SQL语句在实际执行时，就变为
+ * 
+ * <pre>
+ * <tt>select * from zhang.tt union all select * from wang.tt //实际被执行的SQL</tt>
+ * </pre>
+ * 
+ * 用schema重定向功能，可以解决开发和部署的 schema耦合问题，为测试、部署等带来更大的灵活性。
+ * 
+ * <h4>数据库方言——语法格式整理</h4> 根据不同的数据库语法，EF-ORM会在执行SQL语句前根据本地方言对SQL进行修改，以适应当前数据库的需要。<br>
+ * <strong>例1：</strong>
+ * 
+ * <pre>
+ * <tt>select t.id||t.name as u from t</tt>
+ * </pre>
+ * 
+ * 在本例中{@code ||}表示字符串相连，这在大部分数据库上执行都没有问题，但是如果在MySQL上执行就不行了，MySQL中{@code ||}
+ * 表示或关系，不表示字符串相加。 因此，EF-ORM在MySQL上执行上述E-SQL语句时，实际在数据库上执行的语句变为<br>
+ * 
+ * <pre>
+ * <tt> select concat(t.id, t.name) as u from t</tt>
+ * </pre>
+ * 
+ * <br>
+ * 这保证了SQL语句按大多数人的习惯在MYSQL上正常使用。
  * <p>
- *  这些功能提高了SQL语句的兼容性，能对用户屏蔽数据库方言的差异，避免操作者因为使用了SQL而遇到数据库难以迁移的情况。
+ * <strong>例2：</strong>
+ * 
+ * <pre>
+ * <tt>select count(*) total from t</tt>
+ * </pre>
+ * 
+ * 这句SQL语句在Oracle上是能正常运行的，但是在postgresql上就不行了。因为postgresql要求每个列的别名前都有as关键字。
+ * 对于这种情况EF-ORM会自动为这样的SQL语句加上缺少的as关键字，从而保证SQL语句在Postgres上也能正常执行。
+ * 
+ * <pre>
+ * <tt>select count(*) as total from t</tt>
+ * </pre>
  * <p>
- *  注意：并不是所有情况都能实现自动改写SQL，比如有些Oracle的使用者喜欢用+号来表示外连接，写成  {@code select t1.*,t2.* from t1,t2 where t1.id=t2.id(+) } 这样，但在其他数据库上不支持。
- *  目前EF-ORM还<strong>不支持</strong>将这种SQL语句改写为其他数据库支持的语法(今后可能会支持)。 因此如果要编写能跨数据库的SQL语句，还是要使用‘OUTER JOIN’这样标准的SQL语法。<p>
- *
- *<h4>数据库方言——函数转换</h4>
+ * 这些功能提高了SQL语句的兼容性，能对用户屏蔽数据库方言的差异，避免操作者因为使用了SQL而遇到数据库难以迁移的情况。
+ * <p>
+ * 注意：并不是所有情况都能实现自动改写SQL，比如有些Oracle的使用者喜欢用+号来表示外连接，写成
+ * {@code select t1.*,t2.* from t1,t2 where t1.id=t2.id(+) } 这样，但在其他数据库上不支持。
+ * 目前EF-ORM还<strong>不支持</strong>将这种SQL语句改写为其他数据库支持的语法(今后可能会支持)。
+ * 因此如果要编写能跨数据库的SQL语句，还是要使用‘OUTER JOIN’这样标准的SQL语法。
+ * <p>
+ * 
+ * <h4>数据库方言——函数转换</h4>
  * EF-ORM能够自动识别SQL语句中的函数，并将其转换为在当前数据库上能够使用的函数。<br>
- * <strong>例1：</strong><pre><tt>select replace(person_name,'张','王') person_name,decode(nvl(gender,'M'),'M','男','女') gender from t_person</tt></pre>
- * 这个语句如果在postgresql上执行，就会发现问题，因为postgres不支持nvl和decode函数。
- * 但实际上，框架会将这句SQL修改为
- * <pre><tt>select replace(person_name, '张', '王') AS person_name,
-       CASE
-         WHEN coalesce(gender, 'M') = 'M' 
-         THEN '男'
-         ELSE '女'
-       END AS gender
-  from t_person</tt></pre>从而在Postgresql上实现相同的功能。
- *<h4>绑定变量改进</h4>
+ * <strong>例1：</strong>
+ * 
+ * <pre>
+ * <tt>select replace(person_name,'张','王') person_name,decode(nvl(gender,'M'),'M','男','女') gender from t_person</tt>
+ * </pre>
+ * 
+ * 这个语句如果在postgresql上执行，就会发现问题，因为postgres不支持nvl和decode函数。 但实际上，框架会将这句SQL修改为
+ * 
+ * <pre>
+ * <tt>select replace(person_name, '张', '王') AS person_name,
+ *        CASE
+ *          WHEN coalesce(gender, 'M') = 'M' 
+ *          THEN '男'
+ *          ELSE '女'
+ *        END AS gender
+ *   from t_person</tt>
+ * </pre>
+ * 
+ * 从而在Postgresql上实现相同的功能。
+ * <h4>绑定变量改进</h4>
  * E-SQL中表示参数变量有两种方式 :
- * <ul><li>:param-name　　(:id :name，用名称表示参数)</li> 
- * <li>?param-index　(如 ?1 ?2，用序号表示参数)。 </li>
+ * <ul>
+ * <li>:param-name　　(:id :name，用名称表示参数)</li>
+ * <li>?param-index　(如 ?1 ?2，用序号表示参数)。</li>
  * 上述绑定变量占位符是和JPA规范完全一致的。<br>
  * 
  * E-SQL中，绑定变量可以声明其参数类型，也可以不声明。比如<br>
- *<pre><tt>select count(*) from Person_table where id in (:ids<int>)</tt></pre>
- *也可以写作
- *<pre><tt>select count(*) from Person_table where id in (:ids)</tt></pre>
- *类型成名不区分大小写。如果不声明类型，那么传入的参数如果为List&lt;String&gt;，那么数据库是否能正常执行这个SQL语句取决于JDBC驱动能否支持。（因为数据库里的id字段是number类型而传入了string）。<p><br>
+ * 
+ * <pre>
+ * <tt>select count(*) from Person_table where id in (:ids<int>)</tt>
+ * </pre>
+ * 
+ * 也可以写作
+ * 
+ * <pre>
+ * <tt>select count(*) from Person_table where id in (:ids)</tt>
+ * </pre>
+ * 
+ * 类型成名不区分大小写。如果不声明类型，那么传入的参数如果为List&lt;String&gt;，
+ * 那么数据库是否能正常执行这个SQL语句取决于JDBC驱动能否支持。（因为数据库里的id字段是number类型而传入了string）。
+ * <p>
+ * <br>
  * {@linkplain jef.database.jsqlparser.expression.JpqlDataType 各种支持的参数类型和作用}<br>
- *
- *
- *<h4>动态SQL语句——表达式忽略</h4>
- *  EF-ORM可以根据未传入的参数，动态的省略某些SQL片段。这个特性往往用于某些参数不传场合下的动态条件，避免写大量的SQL。有点类似于IBatis的动态SQL功能。
- * 我们先来看一个例子
-	<pre><code>//SQL语句中写了四个查询条件
-String sql="select * from t_person where id=:id " +
-		"and person_name like :person_name&lt;$string$&gt; " +
-		"and currentSchoolId=:schoolId " +
-		"and gender=:gender";
-NativeQuery&lt;Person&gt; query=db.createNativeQuery(sql,Person.class);
-{
-	System.out.println("== 按ID查询 ==");
-	query.setParameter("id", 1);
-	Person p=query.getSingleResult();  //只传入ID时，其他三个条件消失
-	System.out.println(p.getId());
-	System.out.println(p);	
-}
-{
-	System.out.println("== 由于参数'ID'并未清除，所以变为 ID + NAME查询 ==");
-	query.setParameter("person_name", "张"); //传入ID和NAME时，其他两个条件消失
-	System.out.println(query.getResultList());
-}
-{
-	System.out.println("== 参数清除后，只传入NAME，按NAME查询 ==");
-	query.clearParameters();
-	query.setParameter("person_name", "张"); //只传入NAME时，其他三个条件消失
-	System.out.println(query.getResultList());
-}
-{
-	System.out.println("== 按NAME+GENDER查询 ==");
-	query.setParameter("gender", "F");  //传入GENDER和NAME时，其他两个条件消失
-System.out.println(query.getResultList());
-}
-{
-	query.clearParameters();    //一个条件都不传入时，整个where子句全部消失
-	System.out.println(query.getResultList());
-}</code></pre>
+ * 
+ * 
+ * <h4>动态SQL语句——表达式忽略</h4>
+ * EF-ORM可以根据未传入的参数，动态的省略某些SQL片段。这个特性往往用于某些参数不传场合下的动态条件，避免写大量的SQL。
+ * 有点类似于IBatis的动态SQL功能。 我们先来看一个例子
+ * 
+ * <pre>
+ * <code>//SQL语句中写了四个查询条件
+ * String sql="select * from t_person where id=:id " +
+ * 		"and person_name like :person_name&lt;$string$&gt; " +
+ * 		"and currentSchoolId=:schoolId " +
+ * 		"and gender=:gender";
+ * NativeQuery&lt;Person&gt; query=db.createNativeQuery(sql,Person.class);
+ * {
+ * 	System.out.println("== 按ID查询 ==");
+ * 	query.setParameter("id", 1);
+ * 	Person p=query.getSingleResult();  //只传入ID时，其他三个条件消失
+ * 	System.out.println(p.getId());
+ * 	System.out.println(p);	
+ * }
+ * {
+ * 	System.out.println("== 由于参数'ID'并未清除，所以变为 ID + NAME查询 ==");
+ * 	query.setParameter("person_name", "张"); //传入ID和NAME时，其他两个条件消失
+ * 	System.out.println(query.getResultList());
+ * }
+ * {
+ * 	System.out.println("== 参数清除后，只传入NAME，按NAME查询 ==");
+ * 	query.clearParameters();
+ * 	query.setParameter("person_name", "张"); //只传入NAME时，其他三个条件消失
+ * 	System.out.println(query.getResultList());
+ * }
+ * {
+ * 	System.out.println("== 按NAME+GENDER查询 ==");
+ * 	query.setParameter("gender", "F");  //传入GENDER和NAME时，其他两个条件消失
+ * System.out.println(query.getResultList());
+ * }
+ * {
+ * 	query.clearParameters();    //一个条件都不传入时，整个where子句全部消失
+ * 	System.out.println(query.getResultList());
+ * }</code>
+ * </pre>
+ * 
  * 上面列举了五种场合，每种场合都没有完整的传递四个WHERE条件。
- * 这种常见需求一般发生在按条件查询中，比较典型的一个例子是用户Web界面上的搜索工具栏，当用户输入条件时，按条件搜索。当用户未输入条件时，该字段不作为搜索条件。使用动态SQL功能后，一个固定的SQL语句就能满足整个视图的所有查询场景，极大的简化了视图查询的业务操作。
-
+ * 这种常见需求一般发生在按条件查询中，比较典型的一个例子是用户Web界面上的搜索工具栏，当用户输入条件时
+ * ，按条件搜索。当用户未输入条件时，该字段不作为搜索条件
+ * 。使用动态SQL功能后，一个固定的SQL语句就能满足整个视图的所有查询场景，极大的简化了视图查询的业务操作。
+ * 
  * @author Administrator
  * @param <X>
  *            返回结果的参数类型
@@ -194,27 +261,28 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 
 	private LockModeType lock = null;
 	private FlushModeType flushType = null;
-	private final Map<String,Object> hint = new HashMap<String,Object>();
+	private final Map<String, Object> hint = new HashMap<String, Object>();
 	private int fetchSize = 0;
 	private boolean routing;
-	
+
 	/**
 	 * 是否启用ＳＱＬ语句路由功能
+	 * 
 	 * @return ＳＱＬ语句路由
 	 */
 	public boolean isRouting() {
 		return routing;
 	}
 
-
 	/**
 	 * 设置是否启用ＳＱＬ语句路由功能
-	 * @param routing  ＳＱＬ语句路由
+	 * 
+	 * @param routing
+	 *            ＳＱＬ语句路由
 	 */
 	public void setRouting(boolean routing) {
 		this.routing = routing;
 	}
-
 
 	/**
 	 * 从SQL语句加上返回类型构造
@@ -223,22 +291,21 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 * @param sql
 	 * @param resultClass
 	 */
-	NativeQuery(OperateTarget db, String sql, Transformer t){
+	NativeQuery(OperateTarget db, String sql, Transformer t) {
 		if (StringUtils.isEmpty(sql)) {
 			throw new IllegalArgumentException("Please don't input an empty SQL.");
 		}
-		
+
 		this.db = db;
 		this.resultTransformer = t;
 		this.config = new NamedQueryConfig("", sql, null, 0);
 		resultTransformer.addStrategy(PopulateStrategy.PLAIN_MODE);
 	}
 
-	
-	NativeQuery(OperateTarget db, NamedQueryConfig config,Transformer t){
+	NativeQuery(OperateTarget db, NamedQueryConfig config, Transformer t) {
 		this.db = db;
 		this.resultTransformer = t;
-		this.config =config;
+		this.config = config;
 		resultTransformer.addStrategy(PopulateStrategy.PLAIN_MODE);
 	}
 
@@ -251,24 +318,24 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	public long getResultCount() {
 		try {
 			Entry<Statement, List<Object>> parse = config.getCountSqlAndParams(db, this);
-			SelectExecutionPlan plan=null;
-			if(routing){
-				plan=(SelectExecutionPlan)SqlAnalyzer.getExecutionPlan(parse.getKey(),parse.getValue(),db);
+			SelectExecutionPlan plan = null;
+			if (routing) {
+				plan = (SelectExecutionPlan) SqlAnalyzer.getExecutionPlan(parse.getKey(), parse.getValue(), db);
 			}
-			if(plan==null){
-				String sql=parse.getKey().toString();
-				List<?> params=parse.getValue();
+			if (plan == null) {
+				String sql = parse.getKey().toString();
+				List<?> params = parse.getValue();
 				long start = System.currentTimeMillis();
-				Long num = db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, 1,0, params);
+				Long num = db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, 1, 0, params);
 				if (ORMConfig.getInstance().isDebugMode()) {
 					long dbAccess = System.currentTimeMillis();
-					LogUtil.show(StringUtils.concat("Count:", String.valueOf(num), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |",db.getTransactionId()));
+					LogUtil.show(StringUtils.concat("Count:", String.valueOf(num), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", db.getTransactionId()));
 				}
-				return num;	
-			}else{
-				long total=0;
-				for(PartitionResult site: plan.getSites()){
-					total+=plan.processCount(site,db.getSession());
+				return num;
+			} else {
+				long total = 0;
+				for (PartitionResult site : plan.getSites()) {
+					total += plan.processCount(site, db.getSession());
 				}
 				return total;
 			}
@@ -276,7 +343,6 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}
 	}
-
 
 	/**
 	 * 返回fetchSize
@@ -307,27 +373,27 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	public ResultIterator<X> getResultIterator() {
 		try {
 			Entry<Statement, List<Object>> parse = config.getSqlAndParams(db, this);
-			Statement sql=parse.getKey();
-			String s=sql.toString();
-			
-			SelectExecutionPlan plan=null;
-			if(routing){
-				plan=(SelectExecutionPlan)SqlAnalyzer.getExecutionPlan(sql,parse.getValue(),db);
+			Statement sql = parse.getKey();
+			String s = sql.toString();
+
+			SelectExecutionPlan plan = null;
+			if (routing) {
+				plan = (SelectExecutionPlan) SqlAnalyzer.getExecutionPlan(sql, parse.getValue(), db);
 			}
-			if(plan==null){//普通查询
-				if (range != null) 
-					s=toPageSql(sql,s);
-				return db.innerIteratorBySql(s,resultTransformer, 0,fetchSize,parse.getValue());	
-			}else{//分表分库查询
-				if(plan.isMultiDatabase()){//多库
-					return plan.getIteratorResult(range,db.new SqlTransformer<X>(resultTransformer),0,fetchSize);
-				}else{ //单库多表，基于Union的查询. 可以使用数据库分页
-					PairSO<List<Object>> result=plan.getSql(plan.getSites()[0]);
-					s=result.first;
+			if (plan == null) {// 普通查询
+				if (range != null)
+					s = toPageSql(sql, s);
+				return db.innerIteratorBySql(s, resultTransformer, 0, fetchSize, parse.getValue());
+			} else {// 分表分库查询
+				if (plan.isMultiDatabase()) {// 多库
+					return plan.getIteratorResult(range, db.new SqlTransformer<X>(resultTransformer), 0, fetchSize);
+				} else { // 单库多表，基于Union的查询. 可以使用数据库分页
+					PairSO<List<Object>> result = plan.getSql(plan.getSites()[0]);
+					s = result.first;
 					if (range != null) {
-						s=toPageSql(sql,s);
+						s = toPageSql(sql, s);
 					}
-					return db.innerIteratorBySql(s,resultTransformer, 0,fetchSize,result.second);
+					return db.innerIteratorBySql(s, resultTransformer, 0, fetchSize, result.second);
 				}
 			}
 		} catch (SQLException e) {
@@ -336,14 +402,12 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	}
 
 	private String toPageSql(Statement sql, String s) {
-		if(sql instanceof Select){
-			boolean isUnion=((Select) sql).getSelectBody() instanceof Union;
-			s=db.getProfile().toPageSQL(s, range,isUnion);
+		if (sql instanceof Select) {
+			boolean isUnion = ((Select) sql).getSelectBody() instanceof Union;
+			s = db.getProfile().toPageSQL(s, range, isUnion);
 		}
 		return s;
 	}
-
-
 
 	/**
 	 * 执行查询语句，返回结果
@@ -352,48 +416,81 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 */
 	public List<X> getResultList() {
 		try {
-			return doQuery(0,fetchSize);
+			return doQuery(0, fetchSize);
 		} catch (SQLException e) {
 			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}
 	}
 
-	private List<X> doQuery(int max,int fetchSize) throws SQLException {
+	private List<X> doQuery(int max, int fetchSize) throws SQLException {
 		long start = System.currentTimeMillis();
 		Entry<Statement, List<Object>> parse = config.getSqlAndParams(db, this);
-		Statement sql=parse.getKey();
-		SelectExecutionPlan plan=null;
-		if(routing){
-			plan=(SelectExecutionPlan)SqlAnalyzer.getExecutionPlan(sql,parse.getValue(),db);
+		Statement sql = parse.getKey();
+		SelectExecutionPlan plan = null;
+		if (routing) {
+			plan =SqlAnalyzer.getSelectExecutionPlan((Select)sql, parse.getValue(), db);
 		}
-		String s=sql.toString();
+		String s = sql.toString();
 		SqlTransformer<X> rst = db.new SqlTransformer<X>(resultTransformer);
 		List<X> list;
-		if(plan==null){//普通查询
+		if (plan == null) {// 普通查询
 			if (range != null) {
-				s=toPageSql(sql, s);
+				s = toPageSql(sql, s);
 			}
-			list = db.innerSelectBySql(s, rst, max,fetchSize, parse.getValue());			
-		}else{//分表分库查询
-			if(plan.isMultiDatabase()){//多库
-				return plan.getListResult(range,rst,max,fetchSize);
-			}else{ //单库多表，基于Union的查询. 可以使用数据库分页
-				PairSO<List<Object>> result=plan.getSql(plan.getSites()[0]);
-				s=result.first;
-				if (range != null) {
-					s=toPageSql(sql,s);
+			list = db.innerSelectBySql(s, rst, max, fetchSize, parse.getValue());
+		} else {// 分表分库查询
+			if (plan.isMultiDatabase()) {// 多库
+				ORMConfig config = ORMConfig.getInstance();
+				boolean debug = config.debugMode;
+				MultipleResultSet mrs = new MultipleResultSet(config.isCacheResultset(), debug);
+				for (PartitionResult site : plan.getSites()) {
+					processQuery(db.getTarget(site.getDatabase()), plan.getSql(site), max,mrs);
 				}
-				list = db.innerSelectBySql(s, rst, max,fetchSize, result.second);		
+				return plan.getListResult(range, resultTransformer, mrs);
+				//TODO 这里没有记录操作时间
+			} else { // 单库多表，基于Union的查询. 可以使用数据库分页
+				PartitionResult pr=plan.getSites()[0];
+				PairSO<List<Object>> result = plan.getSql(pr);
+				s = result.first;
+				if (range != null) {
+					s = toPageSql(sql, s);
+				}
+				list = db.getTarget(pr.getDatabase()).innerSelectBySql(s, rst, max, fetchSize, result.second);
 			}
 		}
-		
-		
-		
+
 		if (ORMConfig.getInstance().isDebugMode()) {
 			long dbAccess = rst.dbAccess;
 			LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(list.size()), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbAccess), "ms) |", db.getTransactionId()));
 		}
 		return list;
+	}
+
+	private void processQuery(OperateTarget db, PairSO<List<Object>> sql, int max,MultipleResultSet mrs) throws SQLException {
+		StringBuilder sb = null;
+		PreparedStatement psmt = null;
+		ResultSet rs = null;
+		if (mrs.isDebug())
+			sb = new StringBuilder(sql.first.length() + 150).append(sql.first).append(" | ").append(db.getTransactionId());
+		try {
+			psmt = db.prepareStatement(sql.first, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			BindVariableContext context = new BindVariableContext(psmt, db, sb);
+			BindVariableTool.setVariables(context, sql.second);
+			if(fetchSize>0){
+				psmt.setFetchSize(fetchSize);
+			}
+			if(max>0){
+				psmt.setMaxRows(max);
+			}
+			rs = psmt.executeQuery();
+			mrs.add(rs, psmt, db);
+		} finally {
+			if (mrs.isDebug())
+				LogUtil.show(sb);
+			DbUtils.close(rs);
+			DbUtils.close(psmt);
+			db.releaseConnection();
+		}
 	}
 
 	/**
@@ -412,31 +509,33 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 */
 	public X getSingleResult() {
 		try {
-			List<X> list = doQuery(2,0);
+			List<X> list = doQuery(2, 0);
 			if (list.isEmpty())
 				return null;
 			return list.get(0);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " [SQL:" + e.getSQLState()+"]", e);
+			throw new PersistenceException(e.getMessage() + " [SQL:" + e.getSQLState() + "]", e);
 		}
 	}
-	
+
 	/**
 	 * 当确认返回结果只有一条时，使用此方法得到结果。 如果查询条数>1，会抛出异常
+	 * 
 	 * @return 查询结果
-	 * @throws NoSuchElementException 如果查询结果超过1条，抛出
+	 * @throws NoSuchElementException
+	 *             如果查询结果超过1条，抛出
 	 */
-	public X getSingleOnlyResult() throws NoSuchElementException{
+	public X getSingleOnlyResult() throws NoSuchElementException {
 		try {
-			List<X> list = doQuery(2,0);
+			List<X> list = doQuery(2, 0);
 			if (list.isEmpty())
 				return null;
-			if(list.size()>1){
+			if (list.size() > 1) {
 				throw new NoSuchElementException("Too many results found.");
 			}
 			return list.get(0);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " [SQL:" + e.getSQLState()+"]", e);
+			throw new PersistenceException(e.getMessage() + " [SQL:" + e.getSQLState() + "]", e);
 		}
 	}
 
@@ -448,17 +547,17 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	public int executeUpdate() {
 		try {
 			Entry<Statement, List<Object>> parse = config.getSqlAndParams(db, this);
-			Statement sql=parse.getKey();
-			ExecutionPlan plan=null;
-			if(routing){
-				plan=SqlAnalyzer.getExecutionPlan(sql,parse.getValue(),db);
+			Statement sql = parse.getKey();
+			ExecutionPlan plan = null;
+			if (routing) {
+				plan = SqlAnalyzer.getExecutionPlan(sql, parse.getValue(), db);
 			}
-			if(plan==null){
-				return db.innerExecuteSql(parse.getKey().toString(), parse.getValue());	
-			}else{
-				int total=0;
-				for(PartitionResult site:plan.getSites()){
-					total+=plan.processUpdate(site,db.getSession());
+			if (plan == null) {
+				return db.innerExecuteSql(parse.getKey().toString(), parse.getValue());
+			} else {
+				int total = 0;
+				for (PartitionResult site : plan.getSites()) {
+					total += plan.processUpdate(site, db.getSession());
 				}
 				return total;
 			}
@@ -529,14 +628,13 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		return range.getStart() - 1;
 	}
 
-
 	public NativeQuery<X> setHint(String hintName, Object value) {
 		hint.put(hintName, value);
-		if(QueryHints.START_LIMIT.equals(hintName)){
-			int[] startLimit=StringUtils.toIntArray(String.valueOf(value), ',');
-			int start=startLimit[0]+1;
-			setRange(new IntRange(start, start+startLimit[1]-1));
-		}else if(QueryHints.FETCH_SIZE.equals(hintName)){
+		if (QueryHints.START_LIMIT.equals(hintName)) {
+			int[] startLimit = StringUtils.toIntArray(String.valueOf(value), ',');
+			int start = startLimit[0] + 1;
+			setRange(new IntRange(start, start + startLimit[1] - 1));
+		} else if (QueryHints.FETCH_SIZE.equals(hintName)) {
 			this.setFetchSize(StringUtils.toInt(String.valueOf(value), 0));
 		}
 		return this;
@@ -826,40 +924,40 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	}
 
 	public Set<Parameter<?>> getParameters() {
-		Set<Parameter<?>> result=new HashSet<Parameter<?>>();
-		for(JpqlParameter jp:config.getParams(this.db).values()){
+		Set<Parameter<?>> result = new HashSet<Parameter<?>>();
+		for (JpqlParameter jp : config.getParams(this.db).values()) {
 			result.add(jp);
 		}
 		return result;
 	}
 
 	public Parameter<?> getParameter(String name) {
-		JpqlParameter param= config.getParams(db).get(name);
-		if(param==null){
+		JpqlParameter param = config.getParams(db).get(name);
+		if (param == null) {
 			throw new NoSuchElementException(name);
 		}
 		return param;
 	}
 
 	public <X> Parameter<X> getParameter(String name, Class<X> type) {
-		JpqlParameter param= config.getParams(db).get(name);
-		if(param==null || param.getParameterType()!=type){
+		JpqlParameter param = config.getParams(db).get(name);
+		if (param == null || param.getParameterType() != type) {
 			throw new NoSuchElementException(name);
 		}
 		return param;
 	}
 
 	public Parameter<?> getParameter(int position) {
-		JpqlParameter param= config.getParams(db).get(position);
-		if(param==null){
+		JpqlParameter param = config.getParams(db).get(position);
+		if (param == null) {
 			throw new NoSuchElementException(String.valueOf(position));
 		}
 		return param;
 	}
 
 	public <X> Parameter<X> getParameter(int position, Class<X> type) {
-		JpqlParameter param= config.getParams(db).get(position);
-		if(param==null || param.getParameterType()!=type){
+		JpqlParameter param = config.getParams(db).get(position);
+		if (param == null || param.getParameterType() != type) {
 			throw new NoSuchElementException(String.valueOf(position));
 		}
 		return param;
@@ -980,12 +1078,10 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	}
 
 	/**
-	 * 设置一个字段的列值转换器。
-	 * 当查询返回对象是Var/VarObject/Map等不确定类型的容器时，字段的值将使用JDBC驱动默认返回的对象类型。<br>
-	 * 这种情况下，可能不能准确预期返回的数据类型。（比如数值在某些数据库上是Integer,某些数据库上是BigDecimal，Boolean类型的返回结果就更为不确定了。）<br>
-	 * 使用这个接口可以明确指定特定列返回的数据类型。
-	 * <h3>举例</h3>
-	 * <code><pre>
+	 * 设置一个字段的列值转换器。 当查询返回对象是Var/VarObject/Map等不确定类型的容器时，字段的值将使用JDBC驱动默认返回的对象类型。<br>
+	 * 这种情况下，可能不能准确预期返回的数据类型。（比如数值在某些数据库上是Integer,某些数据库上是BigDecimal，
+	 * Boolean类型的返回结果就更为不确定了。）<br>
+	 * 使用这个接口可以明确指定特定列返回的数据类型。 <h3>举例</h3> <code><pre>
 	 * NativeQuery<Var> query=db.createNativeQuery("select 1 as bool_column from dual",Var.class);
 	 * 
 	 * //指定列bool_column以Boolean格式读取。如果不指定，那么该列值将被转换为Integer.
@@ -997,13 +1093,14 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 * @param name
 	 * @param accessor
 	 */
-	public void setColumnAccessor(String name,ResultSetAccessor accessor) {
+	public void setColumnAccessor(String name, ResultSetAccessor accessor) {
 		resultTransformer.ignoreColumn(name);
-		resultTransformer.addMapper(new DefaultMapperAccessorAdapter(name,accessor));
+		resultTransformer.addMapper(new DefaultMapperAccessorAdapter(name, accessor));
 	}
 
 	/**
 	 * 获得结果集的转换配置
+	 * 
 	 * @return
 	 */
 	public Transformer getResultTransformer() {
@@ -1024,6 +1121,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			this.accessor = accessor;
 			this.name = name;
 		}
+
 		public void process(BeanWrapper wrapper, IResultSet rs) throws SQLException {
 			wrapper.setPropertyValue(name, accessor.getProperObject(rs, n));
 		}
@@ -1031,7 +1129,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		protected void transform(Object wrapped, IResultSet rs) {
 		}
 
-		public void prepare(Map<String,ColumnDescription> nameIndex) {
+		public void prepare(Map<String, ColumnDescription> nameIndex) {
 			ColumnDescription columnDesc = nameIndex.get(name.toUpperCase());
 			Assert.notNull(columnDesc);
 			this.n = columnDesc.getN();
@@ -1039,24 +1137,25 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	}
 
 	/**
-	 * 清除之前设置过的所有参数。
-	 * 此方法当一个NativeQuery被重复使用时十分有用。
+	 * 清除之前设置过的所有参数。 此方法当一个NativeQuery被重复使用时十分有用。
 	 */
 	public void clearParameters() {
 		nameParams.clear();
 		hint.clear();
 	}
-	
+
 	/**
 	 * 清除指定的参数
+	 * 
 	 * @param name
 	 */
 	public void clearParameter(String name) {
 		nameParams.remove(name);
 	}
-	
+
 	/**
 	 * 清除指定的参数
+	 * 
 	 * @param index
 	 */
 	public void clearParameter(int index) {
@@ -1065,11 +1164,12 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 
 	/**
 	 * 得到所有的参数名称
+	 * 
 	 * @return
 	 */
-	public List<String> getParameterNames(){
-		List<String> result=new ArrayList<String>();
-		for(Object o:config.getParams(db).keySet()){
+	public List<String> getParameterNames() {
+		List<String> result = new ArrayList<String>();
+		for (Object o : config.getParams(db).keySet()) {
 			result.add(String.valueOf(o));
 		}
 		return result;

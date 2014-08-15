@@ -194,6 +194,123 @@ public class PlainSelect implements SelectBody {
 		groupByColumnReferences = list;
 	}
 
+	/**
+	 * 将Select部分内容添加到目标中
+	 * 
+	 * @param sb
+	 * @param noDistinct
+	 */
+	public void appendSelect(StringBuilder sb, boolean noDistinct) {
+		sb.append("select ");
+		if (!noDistinct && hint != null) {
+			sb.append(hint).append(' ');
+		}
+		if (!noDistinct && distinct != null) {
+			distinct.appendTo(sb);
+			sb.append(' ');
+		}
+		if (!noDistinct && top != null) {
+			top.appendTo(sb);
+			sb.append(' ');
+		}
+
+		if (!selectItems.isEmpty()) {
+			Iterator<SelectItem> iterator = selectItems.iterator();
+			iterator.next().appendTo(sb);
+			while (iterator.hasNext()) {
+				iterator.next().appendTo(sb.append(','));
+			}
+		}
+	}
+
+	/**
+	 * 将gourp having order limit等部分添加到字符串
+	 * @param sb
+	 * @param noHaving
+	 * @param noOrder
+	 * @param noLimit
+	 */
+	public void appendGroupHavingOrderLimit(StringBuilder sb, boolean noHaving,boolean noOrder,boolean noLimit) {
+		getFormatedList(sb, groupByColumnReferences, " group by", false);
+		if (!noHaving && having != null) {
+			having.appendTo(sb.append(" having "));
+		}
+		if (!noOrder && orderBy != null) {
+			orderBy.appendTo(sb);
+		}
+		if (!noLimit && limit != null) {
+			limit.appendTo(sb);
+		}
+	}
+
+	/**
+	 * 根据参数对传出的语句做一定的调整
+	 * 
+	 * @param sb
+	 * @param noGroupHaving
+	 *            取消group by和having
+	 * @param noOrder
+	 *            取消排序
+	 * @param noLimits
+	 *            取消limit
+	 * @param noDistinct
+	 *            取消distinct
+	 */
+	public void appendTo(StringBuilder sb, boolean noGroup, boolean noHaving, boolean noOrder, boolean noLimit, boolean noDistinct) {
+		sb.append("select ");
+		if (!noDistinct && hint != null) {
+			sb.append(hint).append(' ');
+		}
+		if (!noDistinct && distinct != null) {
+			distinct.appendTo(sb);
+			sb.append(' ');
+		}
+		if (!noDistinct && top != null) {
+			top.appendTo(sb);
+			sb.append(' ');
+		}
+
+		if (!selectItems.isEmpty()) {
+			Iterator<SelectItem> iterator = selectItems.iterator();
+			iterator.next().appendTo(sb, noGroup);
+			while (iterator.hasNext()) {
+				iterator.next().appendTo(sb.append(','), noGroup);
+			}
+		}
+
+		sb.append(" from ");
+		fromItem.appendTo(sb);// append(fromItem.toString());
+		if (joins != null) {
+			Iterator<Join> it = joins.iterator();
+			while (it.hasNext()) {
+				Join join = (Join) it.next();
+				if (join.isSimple()) {
+					join.appendTo(sb.append(", "));
+				} else {
+					join.appendTo(sb.append(' '));
+				}
+			}
+		}
+		if ((where != null)) {
+			appendWhere(sb, where);
+		}
+		if (startWith != null) {
+			startWith.appendTo(sb);
+		}
+		if (!noGroup) {
+			getFormatedList(sb, groupByColumnReferences, " group by", false);
+			if (!noHaving && having != null) {
+				having.appendTo(sb.append(" having "));
+			}
+		}
+		if (!noOrder && orderBy != null) {
+			orderBy.appendTo(sb);
+		}
+		if (!noLimit && limit != null) {
+			limit.appendTo(sb);
+		}
+	}
+
 	public void appendTo(StringBuilder sb) {
 		sb.append("select ");
 		if (hint != null) {
@@ -239,7 +356,7 @@ public class PlainSelect implements SelectBody {
 			limit.appendTo(sb);
 		}
 	}
-	
+
 	public void appendToWithoutGroupHaving(StringBuilder sb) {
 		sb.append("select ");
 		if (hint != null) {
@@ -285,7 +402,6 @@ public class PlainSelect implements SelectBody {
 			limit.appendTo(sb);
 		}
 	}
-
 
 	private void appendWhere(StringBuilder sb, Expression where) {
 		if (where instanceof Ignorable) {
