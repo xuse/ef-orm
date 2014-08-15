@@ -1,15 +1,15 @@
 package jef.database.routing.jdbc;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
+import jef.common.Pair;
 import jef.common.PairSO;
 import jef.database.DbUtils;
 import jef.database.Field;
@@ -22,7 +22,6 @@ import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.JdbcParameter;
 import jef.database.jsqlparser.expression.JpqlParameter;
 import jef.database.jsqlparser.expression.Parenthesis;
-import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.expression.operators.conditional.AndExpression;
 import jef.database.jsqlparser.expression.operators.conditional.OrExpression;
 import jef.database.jsqlparser.expression.operators.relational.Between;
@@ -46,7 +45,6 @@ import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.FromItem;
 import jef.database.jsqlparser.visitor.Notable;
 import jef.database.jsqlparser.visitor.SelectBody;
-import jef.database.jsqlparser.visitor.SelectItem;
 import jef.database.jsqlparser.visitor.SqlValue;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.jsqlparser.visitor.VisitorAdapter;
@@ -56,16 +54,36 @@ import jef.database.query.ComplexDimension;
 import jef.database.query.Dimension;
 import jef.database.query.RangeDimension;
 import jef.database.query.RegexpDimension;
-import jef.database.wrapper.clause.GroupByItem;
-import jef.database.wrapper.clause.GroupFunctionType;
-import jef.database.wrapper.clause.InMemoryGroupByHaving;
 import jef.database.wrapper.populator.Mappers;
 
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 
+/**
+ * 基于SQL语句的分库分表解析。主要逻辑部分
+ * @author jiyi
+ *
+ */
 public class SqlAnalyzer {
-
+	public static SelectExecutionPlan getSelectExecutionPlan(Select sql, List<Object> value, OperateTarget db) {
+		TableMetaCollector collector = new TableMetaCollector();
+		sql.accept(collector);
+		if(collector.get()==null)return null;
+		MetadataAdapter meta=collector.get();
+		if (meta == null || meta.getPartition() == null) {
+			return null;
+		}
+		Map<Expression, Object> params = reverse(sql, value); // 参数对应关系还原
+		Select select = (Select) sql;
+		SelectBody body = select.getSelectBody();
+		if (body instanceof PlainSelect) {
+			StatementContext<PlainSelect> context=new StatementContext<PlainSelect>((PlainSelect) body,meta,params,value,db,collector.getModificationPoints());
+			return getPlainSelectExePlan(context);
+		} else {//已经是Union语句的暂不支持
+			throw new UnsupportedOperationException();
+		}
+		
+	}
 	public static ExecutionPlan getExecutionPlan(Statement sql, List<Object> value, OperateTarget db) {
 		TableMetaCollector collector = new TableMetaCollector();
 		sql.accept(collector);
@@ -77,20 +95,16 @@ public class SqlAnalyzer {
 		Map<Expression, Object> params = reverse(sql, value); // 参数对应关系还原
 
 		if (sql instanceof Insert) {
-			return getExePlan(meta, (Insert) sql, params,db,collector.getModificationPoints());
+			StatementContext<Insert> context=new StatementContext<Insert>((Insert) sql,meta,params,value,db,collector.getModificationPoints());
+			return getInsertExePlan(context);
 		} else if (sql instanceof Update) {
-			return getExePlan(meta, (Update) sql, params,db,collector.getModificationPoints());
+			StatementContext<Update> context=new StatementContext<Update>((Update) sql,meta,params,value,db,collector.getModificationPoints());
+			return getUpdateExePlan(context);
 		} else if (sql instanceof Delete) {
-			return getExePlan(meta, (Delete) sql, params,db,collector.getModificationPoints());
-		} else {
-			Select select = (Select) sql;
-			SelectBody body = select.getSelectBody();
-			if (body instanceof PlainSelect) {
-				return getExePlan(meta, (PlainSelect) body, params,db,collector.getModificationPoints());
-			} else {
-				throw new UnsupportedOperationException();
-			}
+			StatementContext<Delete> context=new StatementContext<Delete>((Delete) sql,meta,params,value,db,collector.getModificationPoints());
+			return getDeleteExePlan(context);
 		}
+		return null;
 	}
 
 	// 将顺序的参数重新变为和JpqlParameter对应的map
@@ -115,44 +129,139 @@ public class SqlAnalyzer {
 				params.put(parameter, array);
 			}
 		}
-
 		@Override
 		public void visit(JdbcParameter jdbcParameter) {
 			params.put(jdbcParameter, rawParams.next());
 		}
-
 		public Map<Expression, Object> getParams() {
 			return params;
 		}
 	}
 
+	/*
+	 * 将已经顺序排列好的参数和解析后的AST中的参数对象一一对应。
+	 */
 	private static Map<Expression, Object> reverse(Statement sql, List<Object> value) {
 		ParamReverser p = new ParamReverser(value);
 		sql.accept(p);
 		return p.params;
 	}
 
-	private static ExecutionPlan getExePlan(ITableMetadata meta, Delete sql, Map<Expression, Object> value,OperateTarget db,List<Table> tables) {
-		throw new UnsupportedOperationException();
-	}
-
-	private static ExecutionPlan getExePlan(ITableMetadata meta, Update sql, Map<Expression, Object> value,OperateTarget db,List<Table> tables) {
-		throw new UnsupportedOperationException();
-	}
-
-	private static ExecutionPlan getExePlan(ITableMetadata meta, Insert sql, Map<Expression, Object> value,OperateTarget db,List<Table> tables) {
-		throw new UnsupportedOperationException();
-	}
-
-	// 获得分库分表的执行计划
-	private static ExecutionPlan getExePlan(MetadataAdapter meta, PlainSelect sql, Map<Expression, Object> value,OperateTarget db,List<Table> tables) {
-		DimensionCollector collector = new DimensionCollector(meta, value);
-		Map<String, Dimension> val = getPartitionCondition(sql, collector);
-		PartitionResult[] results=DbUtils.partitionUtil.toTableNames(meta, val, db.getPartitionSupport());
-		SelectExecutionPlan ex=new SelectExecutionPlan(results,tables,sql);
+	/*
+	 * 为Delete生成执行计划
+	 */
+	private static ExecutionPlan getDeleteExePlan(StatementContext<Delete> context) {
+		DimensionCollector collector = new DimensionCollector(context.meta, context.paramsMap);
+		Map<String, Dimension> val = getPartitionCondition(context.statement, collector);
+		PartitionResult[] results=DbUtils.partitionUtil.toTableNames(context.meta, val, context.db.getPartitionSupport());
+		DeleteExecutionPlan ex=new DeleteExecutionPlan(results,context);
 		return ex;
 	}
 
+
+	/*
+	 * 为Update生成执行计划
+	 */
+	private static ExecutionPlan getUpdateExePlan(StatementContext<Update> context) {
+		DimensionCollector collector = new DimensionCollector(context.meta, context.paramsMap);
+		Map<String, Dimension> val = getPartitionCondition(context.statement, collector);
+		PartitionResult[] results=DbUtils.partitionUtil.toTableNames(context.meta, val, context.db.getPartitionSupport());
+		UpdateExecutionPlan ex=new UpdateExecutionPlan(results,context);
+		return ex;
+	}
+
+	/*
+	 * 为Select生成执行计划
+	 */
+	private static SelectExecutionPlan getPlainSelectExePlan(StatementContext<PlainSelect> context) {
+		DimensionCollector collector = new DimensionCollector(context.meta, context.paramsMap);
+		Map<String, Dimension> val = getPartitionCondition(context.statement, collector);
+		PartitionResult[] results=DbUtils.partitionUtil.toTableNames(context.meta, val, context.db.getPartitionSupport());
+		SelectExecutionPlan ex=new SelectExecutionPlan(results,context);
+		return ex;
+	}
+	
+	
+	/*
+	 * 为Insert生成执行计划
+	 */
+	private static ExecutionPlan getInsertExePlan(StatementContext<Insert> context) {
+		DimensionCollector collector = new DimensionCollector(context.meta, context.paramsMap);
+		Map<String, Dimension> val = getPartitionCondition(context.statement, collector);
+		PartitionResult[] results=DbUtils.partitionUtil.toTableNames(context.meta, val, context.db.getPartitionSupport());
+		InsertExecutionPlan ex=new InsertExecutionPlan(results,context);
+		return ex;
+	}
+
+	/*
+	 * 收集路由维度，从Insert语句
+	 */
+	private static Map<String, Dimension> getPartitionCondition(Insert statement, DimensionCollector collector) {
+		List<Column> cols=statement.getColumns();
+		if(cols==null){
+			throw new UnsupportedOperationException("the SQL must assign column names.");
+		}
+		if(statement.getItemsList() instanceof SubSelect){
+			throw new UnsupportedOperationException("Can not support a subselect");
+		}
+		ExpressionList exp=(ExpressionList)statement.getItemsList();
+		Map<String,Dimension> result=new HashMap<String,Dimension>();
+		for(int i=0;i<exp.size();i++){
+			Column c=cols.get(i);
+			String field=collector.getPartitionField(c);
+			if(field==null)continue;
+			Object obj=collector.getAsValue(exp.get(i));
+			if(obj==ObjectUtils.NULL){
+				continue;
+			}
+			result.put(field, RangeDimension.create(obj, obj));
+		}
+		return result;
+	}
+
+
+	/*
+	 * 收集路由维度（从Delete语句）
+	 */
+	private static Map<String, Dimension> getPartitionCondition(Delete statement, DimensionCollector collector) {
+		if (statement.getWhere() != null) {
+			return collector.parse(statement.getWhere());	
+		}else{
+			return Collections.emptyMap();
+		}
+	}
+	
+	/*
+	 * 收集路由维度 (从Update语句)
+	 * @param statement
+	 * @param collector
+	 * @return
+	 */
+	private static Map<String, Dimension> getPartitionCondition(Update sql, DimensionCollector collector) {
+		Map<String,Dimension> result;
+		if (sql.getWhere() != null) {
+			result=collector.parse(sql.getWhere());	
+		}else{
+			result=Collections.emptyMap();
+		}
+		for(Pair<Column,Expression> set:sql.getSets()){
+			String field=collector.getPartitionField(set.first);
+			if(field==null)continue;
+			if(result.get(field)!=null){
+				continue;
+			}
+			Object value=collector.getAsValue(set.second);
+			if(ObjectUtils.NULL!=value){
+				result.put(field, RangeDimension.create(value, value));
+			}
+		}
+		return result;
+	}
+	
+	
+	/*
+	 * 递归实现——收集路由维度 
+	 */
 	private static Map<String, Dimension> getPartitionCondition(PlainSelect sql,DimensionCollector context) {
 		Map<String,Dimension> result;
 		if (sql.getWhere() != null) {
@@ -168,6 +277,9 @@ public class SqlAnalyzer {
 		return result;
 	}
 
+	/*
+	 * 递归实现——收集路由维度 
+	 */
 	private static Map<String, Dimension> getPartitionCondition(SelectBody selectBody, DimensionCollector context) {
 		if (selectBody instanceof PlainSelect) {
 			return getPartitionCondition((PlainSelect) selectBody, context);
@@ -179,24 +291,24 @@ public class SqlAnalyzer {
 
 	@SuppressWarnings("rawtypes")
 	static class DimensionCollector {
-		private Map.Entry<PartitionKey, PartitionFunction>[] keys;
 		private Map<Expression, Object> params;
-		private final Map<String, PartitionKey> columnToPartitionKey = new HashMap<String, PartitionKey>();
+		private final Map<String, String> columnToPartitionKey = new HashMap<String, String>();
 
 		DimensionCollector(ITableMetadata meta, Map<Expression, Object> params) {
-			keys = meta.getEffectPartitionKeys();
 			this.params = params;
-			for (Map.Entry<PartitionKey, PartitionFunction> key : keys) {
+			for (Map.Entry<PartitionKey, PartitionFunction> key : meta.getEffectPartitionKeys()) {
 				String field = key.getKey().field();
 				Field fld = meta.getField(field);
 				if (fld == null) {
 					throw new IllegalArgumentException("The partition field [" + field + "] is not a database column.");
 				}
 				String columnName = meta.getColumnName(fld, Mappers.UPPER_COLUMNS, false);
-				columnToPartitionKey.put(columnName, key.getKey());
+				columnToPartitionKey.put(columnName, key.getKey().field());
 			}
 		}
 
+		
+		
 		public Map<String, Dimension> parse(Expression exp) {
 			PairSO<Dimension> dim = null;
 			switch (exp.getType()) {
@@ -281,16 +393,17 @@ public class SqlAnalyzer {
 					Object v = getAsValue(ex);
 					if (v == ObjectUtils.NULL)
 						return null;// in条件中有任意一个无法解析的表达式，则整个维度条件无效。
-					values.add(v);
+					if(v instanceof Object[]){
+						values.addAll(Arrays.asList((Object[])v));
+					}else{
+						values.add(v);
+					}
 				}
 			}
-			Dimension d = getAsPointsDimension(values);
+			Dimension d = ComplexDimension.create((Comparable[]) values.toArray(new Comparable[values.size()]));
 			return new PairSO<Dimension>(field, d);
 		}
 
-		private static Dimension getAsPointsDimension(List<Object> cv) {
-			return ComplexDimension.create((Comparable[]) cv.toArray(new Comparable[cv.size()]));
-		}
 
 		private PairSO<Dimension> process(EqualsTo exp) {
 			PairSO<Object> v = getFromBinaryOperate(exp);
@@ -396,6 +509,17 @@ public class SqlAnalyzer {
 			return null;
 		}
 
+
+		private String getPartitionField(Column column) {
+			if (column == null)
+				return null;
+			String key = columnToPartitionKey.get(StringUtils.upperCase(column.getColumnName()));
+			if (key == null)
+				return null;
+			return key;
+		}
+		
+
 		/**
 		 * 返回ObjectUtils.null表示是无效条件
 		 * 
@@ -407,19 +531,10 @@ public class SqlAnalyzer {
 				SqlValue value = (SqlValue) exp;
 				return value.getValue();
 			} else if (exp.getType() == ExpressionType.param) {
-				Object value = this.params.get(exp);
+				Object value = params.get(exp);
 				return value;
 			}
 			return ObjectUtils.NULL;
-		}
-
-		private String getPartitionField(Column column) {
-			if (column == null)
-				return null;
-			PartitionKey key = columnToPartitionKey.get(StringUtils.upperCase(column.getColumnName()));
-			if (key == null)
-				return null;
-			return key.field();
 		}
 	}
 
@@ -454,54 +569,5 @@ public class SqlAnalyzer {
 			}
 		}
 		return m;
-	}
-
-	/**
-	 * 只有当确定select语句中使用了groupBy后才走入当前分支，解析出当前的内存分组任务
-	 * @param selects
-	 * @return
-	 */
-	public InMemoryGroupByHaving parseSelectFunction(List<SelectItem> selects,List<Expression> groupExps) {
-		List<GroupByItem> keys=new ArrayList<GroupByItem>();
-		List<GroupByItem> values=new ArrayList<GroupByItem>();
-		//解析出SQL修改句柄，当延迟操作group时，必然要将原先的分组函数去除，配合将groupBy去除
-		
-		Set<String> groups=new HashSet<String>();
-		for(Expression exp: groupExps){
-			groups.add(exp.toString().toUpperCase());
-		}
-		for(int i=0;i<selects.size();i++){
-			SelectItem e=selects.get(i);
-			Expression ex=e.getExpression();
-			String alias=e.getAlias();
-			if(ex==null)
-				continue;//基本上是不可能的，在group的语句中
-			
-			//TODO 先用简单粗暴的方式做出来再说，性能什么的再说了……
-			String sql=ex.toString().toUpperCase();
-			if(groups.contains(sql)){
-				keys.add(new GroupByItem(i,GroupFunctionType.GROUP,alias));
-			}else{
-				GroupFunctionType type;
-				String exp=sql.toUpperCase();
-				if(exp.startsWith("AVG(")){
-					type=GroupFunctionType.AVG;
-				}else if(exp.startsWith("COUNT(")){
-					type=GroupFunctionType.COUNT;
-				}else if(exp.startsWith("SUM(")){
-					type=GroupFunctionType.SUM;
-				}else if(exp.startsWith("MIN(")){
-					type=GroupFunctionType.MIN;
-				}else if(exp.startsWith("MAX(")){
-					type=GroupFunctionType.MAX;
-				}else if(exp.startsWith("ARRAY_TO_LIST(")){	
-					type=GroupFunctionType.ARRAY_TO_LIST;
-				}else{
-					type=GroupFunctionType.NORMAL;
-				}	
-				values.add(new GroupByItem(i,type,alias));
-			}
-		}
-		return new InMemoryGroupByHaving(keys,values);
 	}
 }

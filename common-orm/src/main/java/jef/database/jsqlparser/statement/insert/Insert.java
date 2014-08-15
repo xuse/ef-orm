@@ -39,6 +39,9 @@ public class Insert implements Statement {
 
     private boolean useValues = true;
 
+    /**
+     * Oracle Hint
+     */
     private String hint;
     
     public void accept(StatementVisitor statementVisitor) {
@@ -98,7 +101,8 @@ public class Insert implements Statement {
         	sb.append(hint).append(' ');
         }
         sb.append("into ");
-        sb.append(table).append(' ');
+        table.appendTo(sb);
+        sb.append(' ');
         if(columns != null){
         	PlainSelect.getStringList(sb,columns, ",", true);
         	sb.append(' ');

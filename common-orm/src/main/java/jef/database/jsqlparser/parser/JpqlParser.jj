@@ -266,21 +266,17 @@ Update Update():
 	FromItem table = null;
 	Expression where = null;
 	Column tableColumn = null;
-	List expList = new ArrayList(); 
-	List columns = new ArrayList(); 
 	Expression value = null;
 	Token tk=null;
 }
 {
     tk=<K_UPDATE> table=TableWithAlias()
-    <K_SET> tableColumn=Column() "=" value=SimpleExpression() { columns.add(tableColumn); expList.add(value); }
-		  ("," tableColumn=Column() "=" value=SimpleExpression()  { columns.add(tableColumn); expList.add(value); } )*
+    <K_SET> tableColumn=Column() "=" value=SimpleExpression() { update.addSet(tableColumn, value); }
+		  ("," tableColumn=Column() "=" value=SimpleExpression()  { update.addSet(tableColumn,value); } )*
 
    [ where=WhereClause() { update.setWhere(where); } ]
    {
      	update.setHint(tk.next);
-   		update.setColumns(columns);
-   		update.setExpressions(expList);
    		update.setTable(table);
 		return update;
    }

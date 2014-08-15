@@ -34,6 +34,7 @@ import javax.persistence.PersistenceException;
 import javax.persistence.TemporalType;
 
 import jef.common.Entry;
+import jef.common.PairSO;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.OperateTarget.SqlTransformer;
@@ -49,6 +50,7 @@ import jef.database.query.ParameterProvider;
 import jef.database.query.QueryHints;
 import jef.database.query.SqlExpression;
 import jef.database.routing.jdbc.ExecutionPlan;
+import jef.database.routing.jdbc.SelectExecutionPlan;
 import jef.database.routing.jdbc.SqlAnalyzer;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.populator.ColumnDescription;
@@ -249,9 +251,9 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	public long getResultCount() {
 		try {
 			Entry<Statement, List<Object>> parse = config.getCountSqlAndParams(db, this);
-			ExecutionPlan plan=null;
+			SelectExecutionPlan plan=null;
 			if(routing){
-				plan=SqlAnalyzer.getExecutionPlan(parse.getKey(),parse.getValue(),db);
+				plan=(SelectExecutionPlan)SqlAnalyzer.getExecutionPlan(parse.getKey(),parse.getValue(),db);
 			}
 			if(plan==null){
 				String sql=parse.getKey().toString();
@@ -308,9 +310,9 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			Statement sql=parse.getKey();
 			String s=sql.toString();
 			
-			ExecutionPlan plan=null;
+			SelectExecutionPlan plan=null;
 			if(routing){
-				plan=SqlAnalyzer.getExecutionPlan(sql,parse.getValue(),db);
+				plan=(SelectExecutionPlan)SqlAnalyzer.getExecutionPlan(sql,parse.getValue(),db);
 			}
 			if(plan==null){//普通查询
 				if (range != null) 
@@ -320,12 +322,12 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 				if(plan.isMultiDatabase()){//多库
 					return plan.getIteratorResult(range,db.new SqlTransformer<X>(resultTransformer),0,fetchSize);
 				}else{ //单库多表，基于Union的查询. 可以使用数据库分页
-					Map.Entry<String,List<Object>> result=plan.getSql(plan.getSites()[0]);
-					s=result.getKey();
+					PairSO<List<Object>> result=plan.getSql(plan.getSites()[0]);
+					s=result.first;
 					if (range != null) {
 						s=toPageSql(sql,s);
 					}
-					return db.innerIteratorBySql(s,resultTransformer, 0,fetchSize,result.getValue());
+					return db.innerIteratorBySql(s,resultTransformer, 0,fetchSize,result.second);
 				}
 			}
 		} catch (SQLException e) {
@@ -360,9 +362,9 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		long start = System.currentTimeMillis();
 		Entry<Statement, List<Object>> parse = config.getSqlAndParams(db, this);
 		Statement sql=parse.getKey();
-		ExecutionPlan plan=null;
+		SelectExecutionPlan plan=null;
 		if(routing){
-			plan=SqlAnalyzer.getExecutionPlan(sql,parse.getValue(),db);
+			plan=(SelectExecutionPlan)SqlAnalyzer.getExecutionPlan(sql,parse.getValue(),db);
 		}
 		String s=sql.toString();
 		SqlTransformer<X> rst = db.new SqlTransformer<X>(resultTransformer);
@@ -376,12 +378,12 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			if(plan.isMultiDatabase()){//多库
 				return plan.getListResult(range,rst,max,fetchSize);
 			}else{ //单库多表，基于Union的查询. 可以使用数据库分页
-				Map.Entry<String,List<Object>> result=plan.getSql(plan.getSites()[0]);
-				s=result.getKey();
+				PairSO<List<Object>> result=plan.getSql(plan.getSites()[0]);
+				s=result.first;
 				if (range != null) {
 					s=toPageSql(sql,s);
 				}
-				list = db.innerSelectBySql(s, rst, max,fetchSize, result.getValue());		
+				list = db.innerSelectBySql(s, rst, max,fetchSize, result.second);		
 			}
 		}
 		

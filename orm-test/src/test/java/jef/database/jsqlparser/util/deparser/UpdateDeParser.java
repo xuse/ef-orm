@@ -15,6 +15,7 @@
  */
 package jef.database.jsqlparser.util.deparser;
 
+import jef.common.Pair;
 import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.statement.update.Update;
 import jef.database.jsqlparser.visitor.Expression;
@@ -53,12 +54,14 @@ public class UpdateDeParser {
 
     public void deParse(Update update) {
         buffer.append("UPDATE " + update.getTable().toWholeName() + " SET ");
-        for (int i = 0; i < update.getColumns().size(); i++) {
-            Column column = (Column) update.getColumns().get(i);
+        int size=update.getSets().size();
+        for (int i = 0; i < size; i++) {
+        	Pair<Column,Expression> pair=update.getSets().get(i);
+            Column column = pair.first;
             buffer.append(column.getWholeColumnName() + "=");
-            Expression expression = (Expression) update.getExpressions().get(i);
+            Expression expression = pair.second;
             expression.accept(expressionVisitor);
-            if (i < update.getColumns().size() - 1) {
+            if (i < size - 1) {
                 buffer.append(", ");
             }
         }

@@ -138,8 +138,6 @@ public class JpqlParser implements JpqlParserConstants {
         FromItem table = null;
         Expression where = null;
         Column tableColumn = null;
-        List expList = new ArrayList();
-        List columns = new ArrayList();
         Expression value = null;
         Token tk=null;
     tk = jj_consume_token(K_UPDATE);
@@ -148,7 +146,7 @@ public class JpqlParser implements JpqlParserConstants {
     tableColumn = Column();
     jj_consume_token(85);
     value = SimpleExpression();
-                                                                columns.add(tableColumn); expList.add(value);
+                                                                update.addSet(tableColumn, value);
     label_1:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -163,7 +161,7 @@ public class JpqlParser implements JpqlParserConstants {
       tableColumn = Column();
       jj_consume_token(85);
       value = SimpleExpression();
-                                                                            columns.add(tableColumn); expList.add(value);
+                                                                            update.addSet(tableColumn,value);
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_WHERE:
@@ -175,8 +173,6 @@ public class JpqlParser implements JpqlParserConstants {
       ;
     }
         update.setHint(tk.next);
-                update.setColumns(columns);
-                update.setExpressions(expList);
                 update.setTable(table);
                 {if (true) return update;}
     throw new Error("Missing return statement in function");

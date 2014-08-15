@@ -66,6 +66,9 @@ public class ExpressionList implements ItemsList{
 	public List<Expression> getExpressions() {
         return expressions;
     }
+	public Expression get(int i) {
+		return expressions.get(i);
+	}
 
     public void setExpressions(List<Expression> list) {
         expressions = list;

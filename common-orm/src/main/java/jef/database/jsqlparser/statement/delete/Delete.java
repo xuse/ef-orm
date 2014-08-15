@@ -18,6 +18,7 @@ package jef.database.jsqlparser.statement.delete;
 import jef.database.jsqlparser.parser.Token;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.FromItem;
+import jef.database.jsqlparser.visitor.Ignorable;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.jsqlparser.visitor.StatementVisitor;
 
@@ -77,9 +78,23 @@ public class Delete implements Statement {
     	sb.append("from ");
     	table.appendTo(sb);
     	if(where !=null){
-    		sb.append(" where ");
-    		where.appendTo(sb);
+    		appendWhere(sb, where);
     	}
         return sb.toString();
     }
+    
+    private void appendWhere(StringBuilder sb, Expression where) {
+		if (where instanceof Ignorable) {
+			if (((Ignorable) where).isEmpty()) {
+				return;
+			}
+		}
+		sb.append(" where ");
+		int len = sb.length();
+		where.appendTo(sb);
+		// 防止动态条件均为生效后多余的where关键字引起SQL错误
+		if (sb.length() - len < 2) {
+			sb.setLength(len - 7);
+		}
+	}
 }

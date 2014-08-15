@@ -19,13 +19,13 @@ public class UpdateTest extends TestCase {
 		String statement = "UPDATE mytable set col1='as', col2=?1, col3=565 Where o >= 3";
 		Update update = (Update) jef.database.DbUtils.parseStatement(statement);
 		assertEquals("mytable", ((Table)update.getTable()).getName());
-		assertEquals(3, update.getColumns().size());
-		assertEquals("col1", ((Column) update.getColumns().get(0)).getColumnName());
-		assertEquals("col2", ((Column) update.getColumns().get(1)).getColumnName());
-		assertEquals("col3", ((Column) update.getColumns().get(2)).getColumnName());
-		assertEquals("as", ((StringValue) update.getExpressions().get(0)).getValue());
-		assertTrue(update.getExpressions().get(1) instanceof JpqlParameter);
-		assertEquals(565, ((LongValue) update.getExpressions().get(2)).getValue().longValue());
+		assertEquals(3, update.getSets().size());
+		assertEquals("col1", update.getSet(0).first.getColumnName());
+		assertEquals("col2", update.getSet(1).first.getColumnName());
+		assertEquals("col3", update.getSet(2).first.getColumnName());
+		assertEquals("as", ((StringValue) update.getSet(0).second).getValue());
+		assertTrue(update.getSet(1).second instanceof JpqlParameter);
+		assertEquals(565, ((LongValue) update.getSet(2).second).getValue().longValue());
 
 		assertTrue(update.getWhere() instanceof GreaterThanEquals);
 	}

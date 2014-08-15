@@ -15,12 +15,15 @@
  */
 package jef.database.jsqlparser.statement.update;
 
+import java.util.Iterator;
 import java.util.List;
 
+import jef.common.Pair;
 import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.parser.Token;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.FromItem;
+import jef.database.jsqlparser.visitor.Ignorable;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.jsqlparser.visitor.StatementVisitor;
 
@@ -36,9 +39,7 @@ public class Update implements Statement {
 
     private Expression where;
 
-    private List<Column> columns;
-
-    private List<Expression> expressions;
+    private List<Pair<Column,Expression>> sets;
 
     private String hint;
     public void setHint(Token t){
@@ -67,45 +68,69 @@ public class Update implements Statement {
         where = expression;
     }
 
-    /**
-	 * The {@link jef.database.jsqlparser.expression.Column}s in this update (as col1 and col2 in UPDATE col1='a', col2='b')
-	 * @return a list of {@link jef.database.jsqlparser.expression.Column}s
-	 */
-    public List<Column> getColumns() {
-        return columns;
-    }
-
-    /**
-	 * The {@link Expression}s in this update (as 'a' and 'b' in UPDATE col1='a', col2='b')
-	 * @return a list of {@link Expression}s
-	 */
-    public List<Expression> getExpressions() {
-        return expressions;
-    }
-
-    public void setColumns(List<Column> list) {
-        columns = list;
-    }
-
-    public void setExpressions(List<Expression> list) {
-        expressions = list;
-    }
+    public List<Pair<Column, Expression>> getSets() {
+		return sets;
+	}
     
-    public String toString() {
-        StringBuilder sql = new StringBuilder("update ");
-        if(hint!=null){
-        	sql.append(hint).append(' ');
-        }
-        sql.append(table).append(" set ");
-        int i=0;
-        for(Column col: columns){
-        	if(i>0){
-        		sql.append(',');
-        	}
-        	sql.append(col).append(" = ").append(expressions.get(i++));
-        }
-        if(where!=null)
-        	sql.append(" where ").append(where);
-        return sql.toString();
+    public Pair<Column, Expression> getSet(int i) {
+    	return sets.get(i);
     }
+
+	public void setSets(List<Pair<Column, Expression>> sets) {
+		this.sets = sets;
+	}
+
+	public String getHint() {
+		return hint;
+	}
+
+	public void setHint(String hint) {
+		this.hint = hint;
+	}
+	public void addSet(Column c, Expression exp){
+		this.sets.add(new Pair<Column,Expression>(c,exp));
+	}
+
+	public String toString() {
+        StringBuilder sb = new StringBuilder("update ");
+        if(hint!=null){
+        	sb.append(hint).append(' ');
+        }
+        sb.append(table).append(" set ");
+        
+        
+        Iterator<Pair<Column,Expression>> iter=sets.iterator();
+        if(iter.hasNext()){
+        	Pair<Column,Expression> pair=iter.next();
+        	pair.first.appendTo(sb);
+        	sb.append(" = ");
+        	pair.second.appendTo(sb);
+        }
+        while(iter.hasNext()){
+        	Pair<Column,Expression> pair=iter.next();
+        	sb.append(',');
+        	pair.first.appendTo(sb);
+        	sb.append(" = ");
+        	pair.second.appendTo(sb);
+        }
+        if(where!=null){
+        	appendWhere(sb,where);
+        }
+        return sb.toString();
+    }
+	
+	private void appendWhere(StringBuilder sb, Expression where) {
+		if (where instanceof Ignorable) {
+			if (((Ignorable) where).isEmpty()) {
+				return;
+			}
+		}
+		sb.append(" where ");
+		int len = sb.length();
+		where.appendTo(sb);
+		// 防止动态条件均为生效后多余的where关键字引起SQL错误
+		if (sb.length() - len < 2) {
+			sb.setLength(len - 7);
+		}
+	}
 }

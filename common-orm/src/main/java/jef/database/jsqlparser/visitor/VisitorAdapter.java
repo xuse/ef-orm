@@ -19,6 +19,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
 
+import jef.common.Pair;
 import jef.database.jsqlparser.expression.AllComparisonExpression;
 import jef.database.jsqlparser.expression.AnyComparisonExpression;
 import jef.database.jsqlparser.expression.BinaryExpression;
@@ -411,11 +412,9 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 	public void visit(Update update) {
 		visitPath.push(update);
 		update.getTable().accept(this);
-		for (Column c : update.getColumns()) {
-			visit(c);
-		}
-		for (Expression ex : update.getExpressions()) {
-			ex.accept(this);
+		for (Pair<Column,Expression> pair : update.getSets()) {
+			pair.first.accept(this);
+			pair.second.accept(this);
 		}
 		if (update.getWhere() != null) {
 			update.getWhere().accept(this);
