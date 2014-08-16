@@ -26,52 +26,57 @@ import jef.database.jsqlparser.visitor.SelectItemVisitor;
  */
 public class SelectExpressionItem implements SelectItem {
 
-    private Expression expression;
+	private Expression expression;
 
-    private String alias;
+	private String alias;
 
-    public String getAlias() {
-        return alias;
-    }
+	public String getAlias() {
+		return alias;
+	}
 
-    public Expression getExpression() {
-        return expression;
-    }
+	public Expression getExpression() {
+		return expression;
+	}
 
-    public void setAlias(String string) {
-        alias = string;
-    }
+	public void setAlias(String string) {
+		alias = string;
+	}
 
-    public void setExpression(Expression expression) {
-        this.expression = expression;
-    }
+	public void setExpression(Expression expression) {
+		this.expression = expression;
+	}
 
-    public void accept(SelectItemVisitor selectItemVisitor) {
-        selectItemVisitor.visit(this);
-    }
+	public void accept(SelectItemVisitor selectItemVisitor) {
+		selectItemVisitor.visit(this);
+	}
 
-    public String toString() {
-    	StringBuilder sb=new StringBuilder();
-    	appendTo(sb);
-        return sb.toString();
-    }
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		appendTo(sb);
+		return sb.toString();
+	}
 
 	public void appendTo(StringBuilder sb) {
 		expression.appendTo(sb);
-		if(alias!=null){
+		if (alias != null) {
 			sb.append(" AS ").append(alias);
 		}
 	}
 
 	public void appendTo(StringBuilder sb, boolean noGroupFunc) {
-		DeParserAdapter dep=new DeParserAdapter(sb){
+		DeParserAdapter dep = new DeParserAdapter(sb) {
 			@Override
 			public void visit(Function function) {
-				if(function.getParamCount()==1 && function.getGroupFunctionType()!=null){
-					function.getParameters().getExpressions().get(0).accept(this);
-				}else{
-					super.visit(function);
+				if (function.getGroupFunctionType() != null) {
+					if (function.getParamCount() == 1) {
+						function.getParameters().getExpressions().get(0).accept(this);
+						return;
+					} else if (function.isAllColumns()) {
+						sb.append("*");
+						return;
+					}
 				}
+				super.visit(function);
 			}
 		};
 		this.accept(dep);

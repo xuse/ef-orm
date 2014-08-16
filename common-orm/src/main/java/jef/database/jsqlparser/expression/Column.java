@@ -24,22 +24,21 @@ import jef.database.jsqlparser.visitor.ExpressionVisitor;
  * A column. It can have the table name it belongs to. 
  */
 public class Column implements Expression {
+	private String schema;
+	private String tableAlias;
     private String columnName = "";
-
-    private String alias;
-    private String schema;
 
     public Column() {
     }
 
     public Column(String alias, String columnName) {
-        this.alias=alias;
+        this.tableAlias=alias;
         this.columnName = columnName;
     }
     
     public Column(String schema,String name, String columnName) {
     	this.schema=schema;
-    	this.alias=name;
+    	this.tableAlias=name;
         this.columnName = columnName;
     }
     
@@ -57,7 +56,7 @@ public class Column implements Expression {
 	}
 
 	public String getTableAlias() {
-        return alias;
+        return tableAlias;
     }
 
     public void setColumnName(String string) {
@@ -65,7 +64,7 @@ public class Column implements Expression {
     }
 
     public void setTableAlias(String table) {
-        this.alias = table;
+        this.tableAlias = table;
     }
 
     /**
@@ -81,22 +80,22 @@ public class Column implements Expression {
     }
 
     public String toString() {
-    	if(alias==null || alias.length()==0){
+    	if(tableAlias==null || tableAlias.length()==0){
     		return columnName;
     	}else if(schema!=null){
-    		return new StringBuilder(schema.length()+alias.length()+columnName.length()+2).append(schema).append('.').append(alias).append('.').append(columnName).toString();
+    		return new StringBuilder(schema.length()+tableAlias.length()+columnName.length()+2).append(schema).append('.').append(tableAlias).append('.').append(columnName).toString();
     	}else{
-    		return new StringBuilder(alias.length()+columnName.length()+1).append(alias).append('.').append(columnName).toString();
+    		return new StringBuilder(tableAlias.length()+columnName.length()+1).append(tableAlias).append('.').append(columnName).toString();
     	}
     }
     
 	public void appendTo(StringBuilder sb) {
-		if(alias==null || alias.length()==0){
+		if(tableAlias==null || tableAlias.length()==0){
     		sb.append(columnName);
     	}else if(schema!=null){
-    		sb.append(schema).append('.').append(alias).append('.').append(columnName);
+    		sb.append(schema).append('.').append(tableAlias).append('.').append(columnName);
     	}else{
-    		sb.append(alias).append('.').append(columnName);
+    		sb.append(tableAlias).append('.').append(columnName);
     	}
 	}
     

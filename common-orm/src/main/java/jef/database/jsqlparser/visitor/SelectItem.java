@@ -31,7 +31,10 @@ public interface SelectItem extends SqlAppendable{
      */
     public Expression getExpression();
 
-	public String getAlias();
-	
+	/**
+	 * 拼入对象
+	 * @param sb
+	 * @param noGroupFunc
+	 */
 	public void appendTo(StringBuilder sb,boolean noGroupFunc);
 }

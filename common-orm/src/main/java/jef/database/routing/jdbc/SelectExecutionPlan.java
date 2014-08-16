@@ -107,7 +107,7 @@ public class SelectExecutionPlan implements ExecutionPlan {
 			if(hasAnyGroupDistinctOrderLimit()){
 				StringBuilder sb2 = new StringBuilder();
 				st.appendSelect(sb2, false);
-				sb2.append(" from (").append(sb).append(") t");
+				sb2.append(" from \n(").append(sb).append(") t");
 				sb2.append(ORMConfig.getInstance().wrap);
 				st.appendGroupHavingOrderLimit(sb2, moreDatabase, false, moreDatabase);
 				sb = sb2;
@@ -222,6 +222,9 @@ public class SelectExecutionPlan implements ExecutionPlan {
 	private InMemoryGroupByHaving generateGroupHavingProcess(List<SelectItem> selects,List<Expression> groupExps,ColumnMeta meta) {
 		List<GroupByItem> keys=new ArrayList<GroupByItem>();
 		List<GroupByItem> values=new ArrayList<GroupByItem>();
+		
+		
+		
 		//解析出SQL修改句柄，当延迟操作group时，必然要将原先的分组函数去除，配合将groupBy去除
 		
 		Set<String> groups=new HashSet<String>();
