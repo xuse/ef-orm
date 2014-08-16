@@ -15,6 +15,7 @@
  */
 package jef.database.jsqlparser.statement.update;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -39,7 +40,7 @@ public class Update implements Statement {
 
     private Expression where;
 
-    private List<Pair<Column,Expression>> sets;
+    private final List<Pair<Column,Expression>> sets=new ArrayList<Pair<Column,Expression>>();
 
     private String hint;
     public void setHint(Token t){
@@ -76,9 +77,9 @@ public class Update implements Statement {
     	return sets.get(i);
     }
 
-	public void setSets(List<Pair<Column, Expression>> sets) {
-		this.sets = sets;
-	}
+//	public void setSets(List<Pair<Column, Expression>> sets) {
+//		this.sets = sets;
+//	}
 
 	public String getHint() {
 		return hint;

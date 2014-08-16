@@ -35,7 +35,7 @@ final class PagingIteratorSqlImpl<T> extends PagingIterator<T>{
 	}
 	
 	/*
-	 * 从SQL语句构造
+	 * 从SQL语句构造，不支持绑定变量的
 	 */
 	PagingIteratorSqlImpl(String sql, int pageSize, Transformer resultSample, OperateTarget db) {
 		Assert.notNull(resultSample);

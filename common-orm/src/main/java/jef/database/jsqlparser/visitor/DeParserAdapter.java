@@ -396,6 +396,57 @@ public class DeParserAdapter implements SelectVisitor, ExpressionVisitor, Statem
 
 	public void visit(PlainSelect plainSelect) {
 		sb.append("select ");
+		writeSelectItems(plainSelect);
+		writeFromAndWhere(plainSelect);
+		writeGroupByAndHaving(plainSelect);
+		writeOrderAndLimit(plainSelect);
+	}
+
+	protected void writeFromAndWhere(PlainSelect plainSelect) {
+		sb.append(" ");
+		if (plainSelect.getFromItem() != null) {
+			sb.append("from ");
+			plainSelect.getFromItem().accept(this);
+		}
+		if (plainSelect.getJoins() != null) {
+			for (Iterator<Join> iter = plainSelect.getJoins().iterator(); iter.hasNext();) {
+				Join join = iter.next();
+				join.accept(this);
+			}
+		}
+		if (plainSelect.getWhere() != null) {
+			sb.append(" where ");
+			plainSelect.getWhere().accept(this);
+		}
+	}
+
+	protected void writeOrderAndLimit(PlainSelect plainSelect) {
+		if (plainSelect.getOrderBy() != null) {
+			plainSelect.getOrderBy().accept(this);
+		}
+		if (plainSelect.getLimit() != null) {
+			deparseLimit(plainSelect.getLimit());
+		}
+	}
+
+	protected void writeGroupByAndHaving(PlainSelect plainSelect) {
+		if (plainSelect.getGroupByColumnReferences() != null) {
+			sb.append(" group by ");
+			for (Iterator<Expression> iter = plainSelect.getGroupByColumnReferences().iterator(); iter.hasNext();) {
+				Expression columnReference = iter.next();
+				columnReference.accept(this);
+				if (iter.hasNext()) {
+					sb.append(",");
+				}
+			}
+		}
+		if (plainSelect.getHaving() != null) {
+			sb.append(" having ");
+			plainSelect.getHaving().accept(this);
+		}
+	}
+
+	protected void writeSelectItems(PlainSelect plainSelect) {
 		Top top = plainSelect.getTop();
 		if (top != null)
 			top.toString();
@@ -419,41 +470,6 @@ public class DeParserAdapter implements SelectVisitor, ExpressionVisitor, Statem
 			if (iter.hasNext()) {
 				sb.append(",");
 			}
-		}
-		sb.append(" ");
-		if (plainSelect.getFromItem() != null) {
-			sb.append("from ");
-			plainSelect.getFromItem().accept(this);
-		}
-		if (plainSelect.getJoins() != null) {
-			for (Iterator<Join> iter = plainSelect.getJoins().iterator(); iter.hasNext();) {
-				Join join = iter.next();
-				join.accept(this);
-			}
-		}
-		if (plainSelect.getWhere() != null) {
-			sb.append(" where ");
-			plainSelect.getWhere().accept(this);
-		}
-		if (plainSelect.getGroupByColumnReferences() != null) {
-			sb.append(" group by ");
-			for (Iterator<Expression> iter = plainSelect.getGroupByColumnReferences().iterator(); iter.hasNext();) {
-				Expression columnReference = iter.next();
-				columnReference.accept(this);
-				if (iter.hasNext()) {
-					sb.append(",");
-				}
-			}
-		}
-		if (plainSelect.getHaving() != null) {
-			sb.append(" having ");
-			plainSelect.getHaving().accept(this);
-		}
-		if (plainSelect.getOrderBy() != null) {
-			plainSelect.getOrderBy().accept(this);
-		}
-		if (plainSelect.getLimit() != null) {
-			deparseLimit(plainSelect.getLimit());
 		}
 	}
 
@@ -754,4 +770,11 @@ public class DeParserAdapter implements SelectVisitor, ExpressionVisitor, Statem
     	with.getSelectBody().accept(this);
     	sb.append(')');
 	}
+
+	@Override
+	public String toString() {
+		return sb.toString();
+	}
+	
+	
 }

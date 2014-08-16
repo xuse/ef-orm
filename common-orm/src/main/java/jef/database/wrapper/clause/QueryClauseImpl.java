@@ -174,7 +174,8 @@ public class QueryClauseImpl implements QueryClause {
 				sb.append("\n union all \n");
 			}
 			String tableName = site.getTables().get(i);
-			sb.append(getSql(tableName.concat(" t"), moreTable));// 为多表、并且有groupby时需要特殊处理
+			sb.append(getSql(tableName.concat(" t"), moreTable  && grouphavingPart.isNotEmpty()));// 为多表、并且有groupby时需要特殊处理.grouphavingPart.isNotEmpty()不能省略。
+			//如果省略掉，则多表union时造成所有内部表的字段均未使用别名。此时外部又没有套一层将列转为别名，最终效果是别名无效。
 
 		}
 

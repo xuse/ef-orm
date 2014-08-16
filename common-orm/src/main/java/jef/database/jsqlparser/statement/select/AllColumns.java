@@ -15,6 +15,7 @@
  */
 package jef.database.jsqlparser.statement.select;
 
+import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.SelectItem;
 import jef.database.jsqlparser.visitor.SelectItemVisitor;
@@ -46,5 +47,17 @@ public class AllColumns implements SelectItem {
 
 	public void appendTo(StringBuilder sb, boolean noGroupFunc) {
 		sb.append('*');
+	}
+
+	public SelectExpressionItem getAsSelectExpression() {
+		throw new IllegalStateException();
+	}
+
+	public Table getTableOfAllColumns() {
+		return null;
+	}
+
+	public boolean isAllColumns() {
+		return true;
 	}
 }

@@ -18,6 +18,7 @@ import jef.database.jsqlparser.statement.select.Distinct;
 import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.PlainSelect;
+import jef.database.jsqlparser.statement.select.SelectExpressionItem;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.SelectItem;
 import jef.database.wrapper.ResultIterator;
@@ -223,8 +224,6 @@ public class SelectExecutionPlan implements ExecutionPlan {
 		List<GroupByItem> keys=new ArrayList<GroupByItem>();
 		List<GroupByItem> values=new ArrayList<GroupByItem>();
 		
-		
-		
 		//解析出SQL修改句柄，当延迟操作group时，必然要将原先的分组函数去除，配合将groupBy去除
 		
 		Set<String> groups=new HashSet<String>();
@@ -233,13 +232,12 @@ public class SelectExecutionPlan implements ExecutionPlan {
 		}
 		for(int i=0;i<selects.size();i++){
 			SelectItem e=selects.get(i);
-			Expression ex=e.getExpression();
-			String alias=e.getAlias();
-			if(ex==null)
-				continue;//基本上是不可能的，在group的语句中
-			
+			if(e.isAllColumns())
+				continue;
+			SelectExpressionItem item=e.getAsSelectExpression();
+			String alias=item.getAlias();
 			//TODO 先用简单粗暴的方式做出来再说，性能什么的再说了……
-			String sql=ex.toString().toUpperCase();
+			String sql=item.getExpression().toString().toUpperCase();
 			if(groups.contains(sql)){
 				keys.add(new GroupByItem(i,GroupFunctionType.GROUP,alias));
 			}else{

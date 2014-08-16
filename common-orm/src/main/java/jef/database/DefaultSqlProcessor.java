@@ -32,13 +32,13 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AbstractTimeMapping;
 import jef.database.dialect.type.MappingType;
 import jef.database.innerpool.PartitionSupport;
-import jef.database.jsqlparser.CountSelectItemConverter;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.statement.select.Union;
+import jef.database.jsqlparser.visitor.DeParserAdapter;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.SelectBody;
-import jef.database.jsqlparser.visitor.SelectItem;
+import jef.database.jsqlparser.visitor.ToCountDeParser;
 import jef.database.meta.FBIField;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
@@ -110,7 +110,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 		StringBuilder sb = new StringBuilder();
 		ITableMetadata meta = MetaHolder.getMeta(obj);
 		Map<Field, Object> map = obj.getUpdateValueMap();
-		
+
 		Map.Entry<Field, Object>[] fields;
 		if (dynamic) {
 			fields = map.entrySet().toArray(new Map.Entry[map.size()]);
@@ -134,7 +134,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 		} else {
 			fields = getAllFieldValues(meta, map, BeanWrapper.wrap(obj));
 		}
-		
+
 		if (dynamic) {
 			// 其他列
 			for (Map.Entry<Field, Object> entry : fields) {
@@ -187,18 +187,17 @@ public class DefaultSqlProcessor implements SqlProcessor {
 	}
 
 	public String toCountSql(String sql) throws SQLException {
-		try {// 重新解析
+		// 重新解析
+		try {
 			SelectBody select = DbUtils.parseNativeSelect(sql).getSelectBody();
-			if (select instanceof Union) {// 对于union是没有好的办法来count的……，union
-											// all则可以多次查询后累加
+			if (select instanceof Union) {
+				// 对于union是没有好的办法来count的……，union all则可以多次查询后累加
 				return wrapCount(sql);
-			} else {
-				PlainSelect plain = (PlainSelect) select;
-				SelectItem convert = new CountSelectItemConverter(plain.getSelectItems(), plain.getDistinct(), getProfile());
-				plain.setDistinct(null);
-				plain.setSelectItems(Arrays.asList(convert));
-				return plain.toString();
 			}
+			PlainSelect plain = (PlainSelect) select;
+			DeParserAdapter deparse = new ToCountDeParser(profile);
+			plain.accept(deparse);
+			return deparse.getBuffer().toString();
 		} catch (ParseException e) {
 			throw new SQLException("Parser error:" + sql);
 		}

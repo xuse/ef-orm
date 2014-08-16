@@ -16,6 +16,7 @@
 package jef.database.jsqlparser.statement.select;
 
 import jef.database.jsqlparser.expression.Function;
+import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.visitor.DeParserAdapter;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.SelectItem;
@@ -80,5 +81,17 @@ public class SelectExpressionItem implements SelectItem {
 			}
 		};
 		this.accept(dep);
+	}
+
+	public SelectExpressionItem getAsSelectExpression() {
+		return this;
+	}
+
+	public Table getTableOfAllColumns() {
+		throw new IllegalStateException();
+	}
+
+	public boolean isAllColumns() {
+		return false;
 	}
 }

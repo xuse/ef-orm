@@ -15,7 +15,9 @@
  */
 package jef.database.jsqlparser.visitor;
 
+import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.statement.SqlAppendable;
+import jef.database.jsqlparser.statement.select.SelectExpressionItem;
 
 /**
  * Anything between "SELECT" and "FROM"<BR>
@@ -26,10 +28,17 @@ public interface SelectItem extends SqlAppendable{
     public void accept(SelectItemVisitor selectItemVisitor);
     
     /**
-     * 返回查询表达式。如果是AllTable * /t.*等格式则返回null
+     * 返回查询表达式。如果是AllColumn * /t.*等格式则抛出异常，因此在调用此方法之前要先按isAllColumns进行判断
      * @return
      */
-    public Expression getExpression();
+    public SelectExpressionItem getAsSelectExpression();
+    
+    
+    /**
+     * 如果是AllColumn类型 * /t.*返回其所属表。如果是Expression类型会抛出异常
+     * @return
+     */
+    public Table getTableOfAllColumns();
 
 	/**
 	 * 拼入对象
@@ -37,4 +46,12 @@ public interface SelectItem extends SqlAppendable{
 	 * @param noGroupFunc
 	 */
 	public void appendTo(StringBuilder sb,boolean noGroupFunc);
+	
+	/**
+	 * 是否为 t.*, *等格式的
+	 * @return
+	 */
+	public boolean isAllColumns();
+	
+	
 }

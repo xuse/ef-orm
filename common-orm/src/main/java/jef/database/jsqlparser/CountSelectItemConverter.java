@@ -3,6 +3,7 @@ package jef.database.jsqlparser;
 import java.util.List;
 
 import jef.database.dialect.DatabaseDialect;
+import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.statement.select.Distinct;
 import jef.database.jsqlparser.statement.select.SelectExpressionItem;
 import jef.database.jsqlparser.visitor.Expression;
@@ -86,5 +87,17 @@ public class CountSelectItemConverter implements SelectItem {
 	public void appendTo(StringBuilder sb, boolean noGroupFunc) {
 		throw new UnsupportedOperationException();
 		
+	}
+
+	public SelectExpressionItem getAsSelectExpression() {
+		throw new UnsupportedOperationException();
+	}
+
+	public Table getTableOfAllColumns() {
+		return null;
+	}
+
+	public boolean isAllColumns() {
+		return false;
 	}
 }
