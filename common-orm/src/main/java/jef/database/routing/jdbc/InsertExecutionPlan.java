@@ -1,27 +1,26 @@
 package jef.database.routing.jdbc;
 
-import jef.database.Session;
+import jef.database.OperateTarget;
 import jef.database.annotation.PartitionResult;
 import jef.database.jsqlparser.statement.insert.Insert;
 
-public class InsertExecutionPlan implements ExecutionPlan{
-
+public class InsertExecutionPlan extends AbstractExecutionPlan{
+	
+	private StatementContext<Insert> context;
+	
 	public InsertExecutionPlan(PartitionResult[] results, StatementContext<Insert> context) {
-		// TODO Auto-generated constructor stub
+		super(results);
+		this.context=context;
 	}
 
-	public boolean isMultiDatabase() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	public PartitionResult[] getSites() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public int processUpdate(PartitionResult site, Session session) {
-		// TODO Auto-generated method stub
+	
+	//Insert操作是最简单的因为表名肯定只有一个
+	public int processUpdate(PartitionResult site, OperateTarget session) {
+		String table=site.getAsOneTable();
+		session=session.getTarget(site.getDatabase());
+		
+				
+		
 		return 0;
 	}
 

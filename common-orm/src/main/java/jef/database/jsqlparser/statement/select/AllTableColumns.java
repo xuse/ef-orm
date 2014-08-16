@@ -50,10 +50,6 @@ public class AllTableColumns implements SelectItem {
 		sb.append(table).append(".*");
 	}
 
-	public void appendTo(StringBuilder sb, boolean noGroupFunc) {
-		appendTo(sb);
-	}
-
 	public SelectExpressionItem getAsSelectExpression() {
 		throw new IllegalStateException();
 	}
@@ -64,5 +60,9 @@ public class AllTableColumns implements SelectItem {
 
 	public Table getTableOfAllColumns() {
 		return table;
+	}
+
+	public String getStringWithoutGroupFuncAndAlias() {
+		 return table + ".*";
 	}
 }

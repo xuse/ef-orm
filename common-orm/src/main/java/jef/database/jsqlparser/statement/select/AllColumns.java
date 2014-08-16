@@ -45,9 +45,6 @@ public class AllColumns implements SelectItem {
 		return null;
 	}
 
-	public void appendTo(StringBuilder sb, boolean noGroupFunc) {
-		sb.append('*');
-	}
 
 	public SelectExpressionItem getAsSelectExpression() {
 		throw new IllegalStateException();
@@ -59,5 +56,9 @@ public class AllColumns implements SelectItem {
 
 	public boolean isAllColumns() {
 		return true;
+	}
+
+	public String getStringWithoutGroupFuncAndAlias() {
+		 return "*";
 	}
 }

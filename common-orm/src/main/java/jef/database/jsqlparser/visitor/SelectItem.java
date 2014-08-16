@@ -45,7 +45,7 @@ public interface SelectItem extends SqlAppendable{
 	 * @param sb
 	 * @param noGroupFunc
 	 */
-	public void appendTo(StringBuilder sb,boolean noGroupFunc);
+	public String getStringWithoutGroupFuncAndAlias();
 	
 	/**
 	 * 是否为 t.*, *等格式的

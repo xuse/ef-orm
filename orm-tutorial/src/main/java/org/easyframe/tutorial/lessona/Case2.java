@@ -349,18 +349,66 @@ public class Case2 extends org.junit.Assert {
 		List<Device> list = generateDevice(50);
 		ORMConfig.getInstance().setMaxBatchLog(2);
 		db.batchInsert(list);
-		//问题1 不同的函数拆解后会产生重复列。同时 *会和其他所有列重复
-		//问题2 系统union后产生的表名t会和用户自己定义的表名重合
-		//问题3 如果系统自动union产生表名随机，但是由于select项目沿用内部的语句，因此关于表名的alias会不匹配
+		
+		//SQL语句增
+		NativeQuery nq=db.createNativeQuery("insert into DeVice(indexcode,name,type,createDate) values(:code, :name, :type, sysdate)");
+		nq.setRouting(true);
+		nq.setParameter("code", "122346");
+		nq.setParameter("name", "测试插入数据");
+		nq.setParameter("type", "办公用品");
+		nq.executeUpdate();
+		
+		nq.setParameter("code", "7822346");
+		nq.setParameter("name", "非官方的得到");
+		nq.setParameter("type", "大家电");
+		nq.executeUpdate();
+		
+		nq.setParameter("code", "452346");
+		nq.setParameter("name", "萨菲是方式飞");
+		nq.setParameter("type", "日用品");
+		nq.executeUpdate();
+		
+		//删改查
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		//问题1 不同的函数拆解后会产生重复列。同时 *会和其他所有列重复 (OK)
+		//问题2 系统union后产生的表名t会和用户自己定义的表名重合  (似乎没什么问题，设计为固定重合)
+		//问题3 如果系统自动union产生表名随机，但是由于select项目沿用内部的语句，因此关于表名的alias会不匹配(OK、固定重合)
+		
 		//问题4, 在slect项中使用 t.*时，其table的name是t，而不是alias.
 		//注意SQL中 count(*)会统计所有行，而count(column）会跳过column值为null的行，两者并不总是等效
-		String sql="select type,t.*,count(t.indexcode),max(indexcode) from Device t where indexcode like '4%' or indexcode like '5%' group by type ";
-		NativeQuery<Device> query=db.createNativeQuery(sql,Device.class);
+		String sql="select type,count(tx.indexcode) as count,max(indexcode) max_id from Device tx where indexcode like '4%' or indexcode like '1123%' or indexcode like '6%' group by type ";
+		NativeQuery<Map> query=db.createNativeQuery(sql,Map.class);
 		query.setRouting(true);
-		List<Device> devices=query.getResultList();
-		for (Device ss : devices) {
+		List<Map> devices=query.getResultList();
+		for (Map ss : devices) {
 			System.out.println(ss);
 		}
+		
+		System.out.println(query.getResultCount());
+		System.out.println(query.getResultIterator());
+		
 		
 	}
 	

@@ -65,6 +65,14 @@ import org.apache.commons.lang.StringUtils;
  *
  */
 public class SqlAnalyzer {
+	
+	/**
+	 * 获得select语句的执行计划
+	 * @param sql AST of select
+	 * @param value 绑定变量值
+	 * @param db  数据库Session
+	 * @return
+	 */
 	public static SelectExecutionPlan getSelectExecutionPlan(Select sql, List<Object> value, OperateTarget db) {
 		TableMetaCollector collector = new TableMetaCollector();
 		sql.accept(collector);
@@ -84,6 +92,13 @@ public class SqlAnalyzer {
 		}
 		
 	}
+	/**
+	 * 获得其他操作语句（Insert，Delete，Update语句的执行计划）
+	 * @param sql    AST of /Update/Delete/Insert
+	 * @param value  绑定变量值
+	 * @param db     数据库Session
+	 * @return
+	 */
 	public static ExecutionPlan getExecutionPlan(Statement sql, List<Object> value, OperateTarget db) {
 		TableMetaCollector collector = new TableMetaCollector();
 		sql.accept(collector);
@@ -107,7 +122,9 @@ public class SqlAnalyzer {
 		return null;
 	}
 
-	// 将顺序的参数重新变为和JpqlParameter对应的map
+	/*
+	 * 将顺序的参数重新变为和JpqlParameter对应的map
+	 */
 	static class ParamReverser extends VisitorAdapter {
 		ParamReverser(List<Object> raw) {
 			this.rawParams = raw.iterator();

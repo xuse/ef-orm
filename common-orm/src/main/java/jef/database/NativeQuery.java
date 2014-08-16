@@ -446,7 +446,11 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 				for (PartitionResult site : plan.getSites()) {
 					processQuery(db.getTarget(site.getDatabase()), plan.getSql(site), max,mrs);
 				}
-				return plan.getListResult(range, resultTransformer, mrs);
+				try{
+					return plan.getListResult(range, resultTransformer, mrs);
+				}finally{
+					mrs.close();
+				}
 				//TODO 这里没有记录操作时间
 			} else { // 单库多表，基于Union的查询. 可以使用数据库分页
 				PartitionResult pr=plan.getSites()[0];
@@ -487,9 +491,6 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		} finally {
 			if (mrs.isDebug())
 				LogUtil.show(sb);
-			DbUtils.close(rs);
-			DbUtils.close(psmt);
-			db.releaseConnection();
 		}
 	}
 
@@ -557,7 +558,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			} else {
 				int total = 0;
 				for (PartitionResult site : plan.getSites()) {
-					total += plan.processUpdate(site, db.getSession());
+					total += plan.processUpdate(site, db);
 				}
 				return total;
 			}

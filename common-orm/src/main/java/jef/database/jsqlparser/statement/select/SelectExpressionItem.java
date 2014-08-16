@@ -64,8 +64,22 @@ public class SelectExpressionItem implements SelectItem {
 		}
 	}
 
-	public void appendTo(StringBuilder sb, boolean noGroupFunc) {
-		DeParserAdapter dep = new DeParserAdapter(sb) {
+	
+
+	public SelectExpressionItem getAsSelectExpression() {
+		return this;
+	}
+
+	public Table getTableOfAllColumns() {
+		throw new IllegalStateException();
+	}
+
+	public boolean isAllColumns() {
+		return false;
+	}
+
+	public String getStringWithoutGroupFuncAndAlias() {
+		DeParserAdapter dep = new DeParserAdapter() {
 			@Override
 			public void visit(Function function) {
 				if (function.getGroupFunctionType() != null) {
@@ -80,18 +94,7 @@ public class SelectExpressionItem implements SelectItem {
 				super.visit(function);
 			}
 		};
-		this.accept(dep);
-	}
-
-	public SelectExpressionItem getAsSelectExpression() {
-		return this;
-	}
-
-	public Table getTableOfAllColumns() {
-		throw new IllegalStateException();
-	}
-
-	public boolean isAllColumns() {
-		return false;
+		this.expression.accept(dep);
+		return dep.toString();
 	}
 }

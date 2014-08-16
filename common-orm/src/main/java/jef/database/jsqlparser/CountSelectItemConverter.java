@@ -6,7 +6,6 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.statement.select.Distinct;
 import jef.database.jsqlparser.statement.select.SelectExpressionItem;
-import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.SelectItem;
 import jef.database.jsqlparser.visitor.SelectItemVisitor;
 import jef.database.meta.Feature;
@@ -76,19 +75,6 @@ public class CountSelectItemConverter implements SelectItem {
 		sb.append(")");
 	}
 
-	public Expression getExpression() {
-		throw new UnsupportedOperationException();
-	}
-
-	public String getAlias() {
-		throw new UnsupportedOperationException();
-	}
-
-	public void appendTo(StringBuilder sb, boolean noGroupFunc) {
-		throw new UnsupportedOperationException();
-		
-	}
-
 	public SelectExpressionItem getAsSelectExpression() {
 		throw new UnsupportedOperationException();
 	}
@@ -99,5 +85,9 @@ public class CountSelectItemConverter implements SelectItem {
 
 	public boolean isAllColumns() {
 		return false;
+	}
+
+	public String getStringWithoutGroupFuncAndAlias() {
+		throw new UnsupportedOperationException();
 	}
 }

@@ -16,7 +16,7 @@ public interface CacheKey extends Serializable{
 	 */
 	String getTable();
 	/**
-	 * 记录影响维度
+	 * 记录影响维度，即一个n维向量空间
 	 * @return
 	 */
 	KeyDimension getDimension();

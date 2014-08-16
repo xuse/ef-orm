@@ -15,8 +15,11 @@
  */
 package jef.database.jsqlparser.statement.select;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.parser.Token;
@@ -27,6 +30,7 @@ import jef.database.jsqlparser.visitor.Ignorable;
 import jef.database.jsqlparser.visitor.SelectBody;
 import jef.database.jsqlparser.visitor.SelectItem;
 import jef.database.jsqlparser.visitor.SelectVisitor;
+import jef.tools.StringUtils;
 
 /**
  * The core of a "SELECT" statement (no UNION, no ORDER BY)
@@ -242,6 +246,27 @@ public class PlainSelect implements SelectBody {
 			limit.appendTo(sb);
 		}
 	}
+	
+	private void appendSelectItemsWitoutGroupAndAlias(Iterator<SelectItem> items,StringBuilder sb){
+		Set<String> alreadyField=new HashSet<String>();
+		List<String> columns=new ArrayList<String>();
+		for(;items.hasNext();){
+			SelectItem i=items.next();
+			String s=i.getStringWithoutGroupFuncAndAlias();
+			int point=s.indexOf('.');
+			String key=point==-1?s:s.substring(point+1);
+			if("*".equals(key)){
+				columns.clear();
+				columns.add(s);
+				break;
+			}
+			if(!alreadyField.contains(key)){
+				alreadyField.add(key);
+				columns.add(s);
+			}
+		}
+		StringUtils.joinTo(columns, ",", sb);
+	}
 
 	/**
 	 * 根据参数对传出的语句做一定的调整
@@ -272,9 +297,13 @@ public class PlainSelect implements SelectBody {
 
 		if (!selectItems.isEmpty()) {
 			Iterator<SelectItem> iterator = selectItems.iterator();
-			iterator.next().appendTo(sb, noGroup);
-			while (iterator.hasNext()) {
-				iterator.next().appendTo(sb.append(','), noGroup);
+			if(noGroup){
+				appendSelectItemsWitoutGroupAndAlias(iterator,sb);
+			}else{
+				iterator.next().appendTo(sb);
+				while (iterator.hasNext()) {
+					iterator.next().appendTo(sb.append(','));
+				}	
 			}
 		}
 

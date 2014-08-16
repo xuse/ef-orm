@@ -1,26 +1,18 @@
 package jef.database.routing.jdbc;
 
-import jef.database.Session;
+import jef.database.OperateTarget;
 import jef.database.annotation.PartitionResult;
 import jef.database.jsqlparser.statement.delete.Delete;
 
-public class DeleteExecutionPlan implements ExecutionPlan{
+public class DeleteExecutionPlan extends AbstractExecutionPlan{
+	private StatementContext<Delete> context;
 
 	public DeleteExecutionPlan(PartitionResult[] results, StatementContext<Delete> context) {
-		// TODO Auto-generated constructor stub
+		super(results);
+		this.context=context;
 	}
 
-	public boolean isMultiDatabase() {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	public PartitionResult[] getSites() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public int processUpdate(PartitionResult site, Session session) {
+	public int processUpdate(PartitionResult site, OperateTarget session) {
 		// TODO Auto-generated method stub
 		return 0;
 	}
