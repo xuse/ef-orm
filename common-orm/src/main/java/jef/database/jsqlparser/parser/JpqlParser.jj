@@ -1495,7 +1495,12 @@ JpqlParameter CaseJPQLParameter():
     }
     |":"
 	(
-	  name=<S_IDENTIFIER>
+    /*
+	为了容错，当Jpql参数名称为start over last with这些词时，因为优先匹配的关系，不认为是S_IDENTIFIER，造成解析出错。
+	因此将这四个常见的可能特殊处理。
+	*/
+	  name=<S_IDENTIFIER>|name=<K_START>|name=<K_OVER>|name=<K_LAST> |name=<K_WITH >
+	  
       [LOOKAHEAD(2) "<" (type=<S_IDENTIFIER>|type=<K_SQL>) ">"
       {
         typeStr=type.image;

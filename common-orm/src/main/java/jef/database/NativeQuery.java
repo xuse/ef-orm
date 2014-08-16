@@ -335,7 +335,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			} else {
 				long total = 0;
 				for (PartitionResult site : plan.getSites()) {
-					total += plan.processCount(site, db.getSession());
+					total += plan.processCount(site, db);
 				}
 				return total;
 			}

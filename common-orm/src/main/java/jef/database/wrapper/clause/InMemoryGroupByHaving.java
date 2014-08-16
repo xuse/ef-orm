@@ -269,7 +269,7 @@ public class InMemoryGroupByHaving implements InMemoryProcessor {
 	}
 
 	public String getName() {
-		return "group,having";
+		return "GROUP/HAVING";
 	}
 
 	

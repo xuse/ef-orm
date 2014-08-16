@@ -9,6 +9,7 @@ import java.util.Set;
 import jef.common.PairSO;
 import jef.common.wrapper.IntRange;
 import jef.database.ORMConfig;
+import jef.database.OperateTarget;
 import jef.database.OperateTarget.SqlTransformer;
 import jef.database.Session;
 import jef.database.annotation.PartitionResult;
@@ -251,11 +252,11 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 		
 	}
 
-	public long processCount(PartitionResult site, Session session) {
+	public long processCount(PartitionResult site, OperateTarget session) {
 		return 0;
 	}
 
-	public int processUpdate(PartitionResult site, Session session) {
+	public int processUpdate(PartitionResult site, OperateTarget session) {
 		throw new UnsupportedOperationException("Can not perform executeUpdate on a Select SQL.");
 	}
 	

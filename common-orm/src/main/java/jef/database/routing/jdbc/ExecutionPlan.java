@@ -1,5 +1,7 @@
 package jef.database.routing.jdbc;
 
+import java.sql.SQLException;
+
 import jef.database.OperateTarget;
 import jef.database.annotation.PartitionResult;
 
@@ -23,6 +25,6 @@ public interface ExecutionPlan {
 	 * @param session
 	 * @return
 	 */
-	int processUpdate(PartitionResult site, OperateTarget session);
+	int processUpdate(PartitionResult site, OperateTarget session) throws SQLException;
 
 }

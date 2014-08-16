@@ -239,8 +239,7 @@ public class OperateTarget implements SqlTemplate {
 		}
 	}
 
-	//FIXME sqlRouting..,boolean sqlRouting
-	final int innerExecuteSql(String sql, List<Object> ps) throws SQLException {
+	public final int innerExecuteSql(String sql, List<Object> ps) throws SQLException {
 		Object[] params = ps.toArray();
 		DbOperateProcessor p = session.p;
 

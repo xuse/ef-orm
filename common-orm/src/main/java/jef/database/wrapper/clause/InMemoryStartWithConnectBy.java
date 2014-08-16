@@ -38,7 +38,7 @@ public class InMemoryStartWithConnectBy implements InMemoryProcessor{
 	}
 
 	public String getName() {
-		return "connect by";
+		return "CONNECT_BY";
 	}
 	
 	

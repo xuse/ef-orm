@@ -46,7 +46,7 @@ public class InMemoryPaging implements InMemoryProcessor{
 	}
 
 	public String getName() {
-		return "paging";
+		return "PAGING";
 	}
 
 	

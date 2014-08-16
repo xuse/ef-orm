@@ -27,6 +27,10 @@ import org.apache.commons.lang.StringUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.alibaba.druid.sql.ast.SQLStatement;
+import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
+import com.alibaba.druid.sql.dialect.oracle.parser.OracleStatementParser;
+
 public class ComplexSqlParseTest extends org.junit.Assert {
 	@Test
 	@Ignore
@@ -45,9 +49,10 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 
 	@Test
 	public void main2() throws ParseException {
-		Select ex=DbUtils.parseSelect("select * from D where not 1=2");
+		Select ex = DbUtils.parseSelect("select * from D where not 1=2");
 		System.out.println(ex);
 	}
+
 	/**
 	 * 测试解析器能否解析srart with 的查询
 	 * 
@@ -117,7 +122,7 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 		JpqlParser parser = new JpqlParser(new StringReader(sql));
 		Select select = parser.Select();
 		System.out.println(select);
-//		deparseOrderBy(orderBy);
+		// deparseOrderBy(orderBy);
 	}
 
 	@Test
@@ -132,7 +137,7 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	public void aaa() throws ParseException {
 		// String sql =
 		// "select t.rowid from (select :col from person_table where age>:ss1<string> and name=?1<int> and nvl(aa,translate(fastbean,'abc123','ccccc'))||schoolId||'tomo'||schoolId  =:name2 order by :orderBy) t";
-		
+
 		String sql = "select t.* from rm_camera_info t where t.treenodeindexcode=? and t.typecode=?";
 		Select st = DbUtils.parseNativeSelect(sql);
 		System.out.println(sql);
@@ -247,13 +252,13 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	@Test
 	public void aaa7() throws ParseException, SQLException {
 		String sql = "DELETE FROM DBM2.dbm_warn_log WHERE warn_time < subdate(now(), :DAYS)   AND NOT EXISTS (select 1 from DBM2.dbm_warn_dealed where log_id = DBM2.dbm_warn_log.log_id)";
-		Statement st=DbUtils.parseStatement(sql);
+		Statement st = DbUtils.parseStatement(sql);
 		System.out.println(st);
-		
-//		DbClient db = new DbClient();
-//		NativeQuery<?> q = db.createNativeQuery(sql);
-//		q.setParameter("DAYS", "aa");
-//		System.out.println(q);
+
+		// DbClient db = new DbClient();
+		// NativeQuery<?> q = db.createNativeQuery(sql);
+		// q.setParameter("DAYS", "aa");
+		// System.out.println(q);
 	}
 
 	@Test
@@ -293,189 +298,251 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 
 	@Test
 	public void testExpression() throws SQLException, ParseException {
-		String sql="select int(year(current_date)/100)+1 as aa from dual";
+		String sql = "select int(year(current_date)/100)+1 as aa from dual";
 		jef.database.jsqlparser.statement.select.Select select = DbUtils.parseSelect(sql);
 		System.out.println(select);
 	}
-	
+
 	@Test
 	public void testComplexSql() throws SQLException, ParseException, IOException {
-		StringBuilder sb=new StringBuilder();
-		BufferedReader reader=IOUtils.getReader(this.getClass().getResource("complex-sqls.txt"), "UTF-8"); 
+		doParseFile("complex-sqls.txt", 0);
+	}
+
+	@Test
+	public void testComplexSqlDruidOracle() throws SQLException, ParseException, IOException {
+		doParseFile("complex-sqls-oracle.txt", 0);
+	}
+
+	@Test
+	public void testComplexSqlDruidMySQL() throws SQLException, ParseException, IOException {
+		doParseFile("complex-sqls-mysql.txt", 0);
+	}
+
+	@Test
+	public void testComplexE_Sql() throws SQLException, ParseException, IOException {
+		doParseFile("complex-e-sqls.txt", 1);
+	}
+
+	private void doParseFile(String filename, int eSql) throws ParseException, IOException {
+		StringBuilder sb = new StringBuilder();
+		BufferedReader reader = IOUtils.getReader(this.getClass().getResource(filename), "UTF-8");
 		String line;
-		boolean comment=false;
+		boolean comment = false;
 		int total = 0;
-		while((line=reader.readLine())!=null){
-			if(comment){
-				if(line.endsWith("*/")){
-					comment=false;
+		while ((line = reader.readLine()) != null) {
+			if (comment) {
+				if (line.endsWith("*/")) {
+					comment = false;
 				}
 				System.out.println(line);
 				continue;
 			}
-			if(line.startsWith("/*")){
-				comment=true;
+			if (line.startsWith("/*")) {
+				comment = true;
 				System.out.println(line);
 				continue;
 			}
-			if(line.length()==0 || line.startsWith("--") )continue;
-			if(sb.length()>0)sb.append('\n');
+			if (line.length() == 0 || line.startsWith("--"))
+				continue;
+			if (sb.length() > 0)
+				sb.append('\n');
 			sb.append(line);
-			if(endsWith(line,';')){
-				sb.setLength(sb.length()-1);
-				String sql=sb.toString();
+			if (endsWith(line, ';')) {
+				sb.setLength(sb.length() - 1);
+				String sql = sb.toString();
 				sb.setLength(0);
-				if(StringUtils.isNotBlank(sql)){
-					parseTest(sql);
+				if (StringUtils.isNotBlank(sql)) {
+					parseTest(sql, eSql);
 					total++;
 				}
 			}
 		}
-		if(sb.length()>0){
-			parseTest(sb.toString());
+		if (sb.length() > 0) {
+			parseTest(sb.toString(), eSql);
 			total++;
 		}
-		System.out.println("测试完成，共计解析了"+total+"句SQL语句");
+		System.out.println("测试完成，共计解析了" + total + "句SQL语句");
 	}
 
 	@Test
 	public void testComplexSqlPerformances() throws SQLException, ParseException, IOException {
-		StringBuilder sb=new StringBuilder();
-		for(int i=0;i<5;i++){
-			BufferedReader reader=IOUtils.getReader(this.getClass().getResource("complex-sqls.txt"), "UTF-8"); 
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < 5; i++) {
+			BufferedReader reader = IOUtils.getReader(this.getClass().getResource("complex-sqls.txt"), "UTF-8");
 			String line;
-			boolean comment=false;
-			List<Long> cost=new ArrayList<Long>();//记录每句SQL的解析时间
-			while((line=reader.readLine())!=null){
-				if(comment){
-					if(line.endsWith("*/")){
-						comment=false;
+			boolean comment = false;
+			List<Long> cost = new ArrayList<Long>();// 记录每句SQL的解析时间
+			while ((line = reader.readLine()) != null) {
+				if (comment) {
+					if (line.endsWith("*/")) {
+						comment = false;
 					}
 					continue;
 				}
-				if(line.startsWith("/*")){
-					comment=true;
+				if (line.startsWith("/*")) {
+					comment = true;
 					continue;
 				}
-				if(line.length()==0 || line.startsWith("--") )continue;
-				if(sb.length()>0)sb.append('\n');
+				if (line.length() == 0 || line.startsWith("--"))
+					continue;
+				if (sb.length() > 0)
+					sb.append('\n');
 				sb.append(line);
-				if(endsWith(line,';')){
-					sb.setLength(sb.length()-1);
-					String sql=sb.toString();
+				if (endsWith(line, ';')) {
+					sb.setLength(sb.length() - 1);
+					String sql = sb.toString();
 					sb.setLength(0);
-					if(StringUtils.isNotBlank(sql)){
+					if (StringUtils.isNotBlank(sql)) {
 						cost.add(countParseStSql(sql));
 					}
 				}
 			}
-			if(sb.length()>0){
+			if (sb.length() > 0) {
 				cost.add(countParseStSql(sb.toString()));
 			}
 
-			long total=0;
-			for(long l: cost){
-				total+=l;
+			long total = 0;
+			for (long l : cost) {
+				total += l;
 			}
-			System.out.println("测试完成，共计解析了"+cost.size()+"句SQL语句，总耗时"+total/1000+"us，各句耗时分别为——");
-			for(long l: cost){
-				System.out.println(l/1000+"us");
+			System.out.println("测试完成，共计解析了" + cost.size() + "句SQL语句，总耗时" + total / 1000 + "us，各句耗时分别为——");
+			for (long l : cost) {
+				System.out.println(l / 1000 + "us");
 			}
 			sb.setLength(0);
 		}
-		
+
 	}
-	
+
 	@Test
 	public void testComplexSqlPerformances2() throws SQLException, ParseException, IOException {
-		StringBuilder sb=new StringBuilder();
-		BufferedReader reader=IOUtils.getReader(this.getClass().getResource("complex-sqls.txt"), "UTF-8"); 
-		String line;
-		boolean comment=false;
-		List<Long> cost=new ArrayList<Long>();//记录每句SQL的解析时间
-		while((line=reader.readLine())!=null){
-			if(comment){
-				if(line.endsWith("*/")){
-					comment=false;
-				}
-				continue;
-			}
-			if(line.startsWith("/*")){
-				comment=true;
-				continue;
-			}
-			if(line.length()==0 || line.startsWith("--") )continue;
-			if(sb.length()>0)sb.append('\n');
-			sb.append(line);
-			if(endsWith(line,';')){
-				sb.setLength(sb.length()-1);
-				String sql=sb.toString();
-				sb.setLength(0);
-				if(StringUtils.isNotBlank(sql)){
-					cost.add(countParseJpql(sql));
-				}
-			}
-		}
-		if(sb.length()>0){
-			cost.add(countParseStSql(sb.toString()));
-		}
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < 5; i++) {
 
-		long total=0;
-		for(long l: cost){
-			total+=l;
-		}
-		System.out.println("测试完成，共计解析了"+cost.size()+"句SQL语句，总耗时"+total/1000+"us，各句耗时分别为——");
-		for(long l: cost){
-			System.out.println(l/1000+"us");
+			BufferedReader reader = IOUtils.getReader(this.getClass().getResource("complex-e-sqls.txt"), "UTF-8");
+			String line;
+			boolean comment = false;
+			List<Long> cost = new ArrayList<Long>();// 记录每句SQL的解析时间
+			while ((line = reader.readLine()) != null) {
+				if (comment) {
+					if (line.endsWith("*/")) {
+						comment = false;
+					}
+					continue;
+				}
+				if (line.startsWith("/*")) {
+					comment = true;
+					continue;
+				}
+				if (line.length() == 0 || line.startsWith("--"))
+					continue;
+				if (sb.length() > 0)
+					sb.append('\n');
+				sb.append(line);
+				if (endsWith(line, ';')) {
+					sb.setLength(sb.length() - 1);
+					String sql = sb.toString();
+					sb.setLength(0);
+					try {
+						if (StringUtils.isNotBlank(sql)) {
+							cost.add(countParseJpql(sql));
+						}
+					} catch (Exception e) {
+						System.out.println(sql);
+					}
+
+				}
+			}
+			if (sb.length() > 0) {
+				cost.add(countParseStSql(sb.toString()));
+			}
+
+			long total = 0;
+			for (long l : cost) {
+				total += l;
+			}
+			System.out.println("测试完成，共计解析了" + cost.size() + "句SQL语句，总耗时" + total / 1000 + "us，各句耗时分别为——");
+			for (long l : cost) {
+				System.out.println(l / 1000 + "us");
+			}
 		}
 	}
-	
-	private void parseTest(String sql) throws ParseException {
+
+	// 0 StSQL 1 Jpql 2 Druid Oracle 3 Druid MySQL
+	private void parseTest(String sql, int type) throws ParseException {
 		System.out.println("===================== [RAW]  ==================");
 		System.out.println(sql);
 		System.out.println("-------------------- [PARSE] ------------------");
-		StSqlParser parser = new StSqlParser(new StringReader(sql));
-		Statement st=parser.Statement();
+		Object st;
+		switch (type) {
+		case 0: {
+			StSqlParser parser = new StSqlParser(new StringReader(sql));
+			st = parser.Statement();
+			break;
+		}
+		case 1: {
+			JpqlParser parser = new JpqlParser(new StringReader(sql));
+			st = parser.Statement();
+			break;
+		}
+		case 2: {
+			OracleStatementParser parser = new OracleStatementParser(sql);
+			List<SQLStatement> statementList = parser.parseStatementList();
+			st = statementList.get(0);
+			break;
+		}
+		case 3: {
+			MySqlStatementParser parser = new MySqlStatementParser(sql);
+			List<SQLStatement> statementList = parser.parseStatementList();
+			st = statementList.get(0);
+			break;
+		}
+		default:
+			throw new IllegalArgumentException();
+		}
 		System.out.println(st);
 	}
-	
+
 	/**
 	 * 返回用标准解析器解析的耗时（纳秒）
+	 * 
 	 * @param sql
 	 * @return
 	 * @throws ParseException
 	 */
 	private long countParseStSql(String sql) throws ParseException {
-		long start=System.nanoTime();
-		Statement st=new StSqlParser(new StringReader(sql)).Statement();
-		long cost= System.nanoTime()-start;
-		start=System.nanoTime();
-		Statement st1= (Statement) CloneUtils.clone(st);
-		assertEquals(st.toString(),st1.toString());
-		System.out.println("拷贝耗时"+(System.nanoTime()-start)/1000+"us");
+		long start = System.nanoTime();
+		Statement st = new StSqlParser(new StringReader(sql)).Statement();
+		long cost = System.nanoTime() - start;
+		start = System.nanoTime();
+		Statement st1 = (Statement) CloneUtils.clone(st);
+		assertEquals(st.toString(), st1.toString());
+		System.out.println("拷贝耗时" + (System.nanoTime() - start) / 1000 + "us");
 		return cost;
 	}
 
 	/**
 	 * 返回用JPQL解析器解析的耗时（纳秒）
+	 * 
 	 * @param sql
 	 * @return
 	 * @throws ParseException
 	 */
 	private long countParseJpql(String sql) throws ParseException {
-		long start=System.nanoTime();
+		long start = System.nanoTime();
 		new JpqlParser(new StringReader(sql)).Statement();
-		return System.nanoTime()-start;
+		return System.nanoTime() - start;
 	}
 
-	
 	private boolean endsWith(String line, char key) {
-		if(line.length()==0)return false;
-		int len=line.length();
-		for(int i=1;i<=len;i++){
-			char c=line.charAt(len-i);
-			if(c==' ')continue;
-			return c==key;
+		if (line.length() == 0)
+			return false;
+		int len = line.length();
+		for (int i = 1; i <= len; i++) {
+			char c = line.charAt(len - i);
+			if (c == ' ')
+				continue;
+			return c == key;
 		}
 		return false;
 	}

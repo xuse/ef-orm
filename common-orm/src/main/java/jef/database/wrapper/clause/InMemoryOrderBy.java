@@ -77,6 +77,6 @@ public class InMemoryOrderBy implements InMemoryProcessor {
 	}
 
 	public String getName() {
-		return "order by";
+		return "ORDER_BY";
 	}
 }

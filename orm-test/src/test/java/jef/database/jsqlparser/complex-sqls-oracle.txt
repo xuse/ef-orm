@@ -157,6 +157,5 @@ with AA as (select id, name, code, type from A where id > 1000),BB as (select ty
 select AA.id, AA.name, AA.code, BB.type, C.p_name from AA, BB, CC where AA.id = BB.id and CC.pid = BB.pid;
 
 
-
 update DeVice xx set xx.name='ID:'||indexcode,
-createDate=sysdate where indexcode between ? and ?;
+createDate=sysdate where indexcode between 1 and 2;

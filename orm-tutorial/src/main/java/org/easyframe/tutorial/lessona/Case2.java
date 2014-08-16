@@ -349,26 +349,41 @@ public class Case2 extends org.junit.Assert {
 		List<Device> list = generateDevice(50);
 		ORMConfig.getInstance().setMaxBatchLog(2);
 		db.batchInsert(list);
+		{//SQL语句增
+			NativeQuery nq=db.createNativeQuery("insert into DeVice(indexcode,name,type,createDate) values(:code, :name, :type, sysdate)");
+			nq.setRouting(true);
+			nq.setParameter("code", "122346");
+			nq.setParameter("name", "测试插入数据");
+			nq.setParameter("type", "办公用品");
+			nq.executeUpdate();
+			
+			nq.setParameter("code", "7822346");
+			nq.setParameter("name", "非官方的得到");
+			nq.setParameter("type", "大家电");
+			nq.executeUpdate();
+			
+			nq.setParameter("code", "452346");
+			nq.setParameter("name", "萨菲是方式飞");
+			nq.setParameter("type", "日用品");
+			nq.executeUpdate();			
+		}
+		{//SQL语句改
+			
+			NativeQuery nq=db.createNativeQuery("update DeVice xx set xx.name='ID:'||indexcode,\ncreateDate=sysdate where indexcode between :s1 and :s2");
+			nq.setRouting(true);
+			nq.setParameter("s1", "1000");
+			nq.setParameter("s2", "6000");
+			nq.executeUpdate();
+		}
+		//改
 		
-		//SQL语句增
-		NativeQuery nq=db.createNativeQuery("insert into DeVice(indexcode,name,type,createDate) values(:code, :name, :type, sysdate)");
-		nq.setRouting(true);
-		nq.setParameter("code", "122346");
-		nq.setParameter("name", "测试插入数据");
-		nq.setParameter("type", "办公用品");
-		nq.executeUpdate();
 		
-		nq.setParameter("code", "7822346");
-		nq.setParameter("name", "非官方的得到");
-		nq.setParameter("type", "大家电");
-		nq.executeUpdate();
 		
-		nq.setParameter("code", "452346");
-		nq.setParameter("name", "萨菲是方式飞");
-		nq.setParameter("type", "日用品");
-		nq.executeUpdate();
 		
-		//删改查
+		
+		//删
+		
+		//查
 		
 		
 		

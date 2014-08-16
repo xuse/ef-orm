@@ -32,6 +32,6 @@ public class InMemoryDistinct implements InMemoryProcessor{
 	}
 
 	public String getName() {
-		return "distinct";
+		return "DISTINCT";
 	}
 }
