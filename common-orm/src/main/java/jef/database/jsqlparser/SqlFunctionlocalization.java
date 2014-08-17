@@ -31,6 +31,7 @@ public class SqlFunctionlocalization extends VisitorAdapter{
 	private DatabaseDialect profile;
 	private OperateTarget db;
 	private boolean check;
+	private StartWithExpression removedEx;
 	
 	public SqlFunctionlocalization(DatabaseDialect profile,OperateTarget db){
 		this.profile=profile;
@@ -99,8 +100,13 @@ public class SqlFunctionlocalization extends VisitorAdapter{
 	public void visit(StartWithExpression startWithExpression) {
 		if(profile.notHas(Feature.SUPPORT_CONNECT_BY)){
 			if(ORMConfig.getInstance().isAllowRemoveStartWith()){
-				String removed=startWithExpression.toString();
-				LogUtil.warn("["+removed+"] was removed from your SQL since current db doesn't support it.");
+				if(super.visitPath.size()==1){
+					//将递归条件保留下来，从而后续支持内存中 递归过滤
+					removedEx=new StartWithExpression(startWithExpression.getStartExpression(),startWithExpression.getConnectExpression());
+				}else{
+					String removed=startWithExpression.toString();
+					LogUtil.warn("["+removed+"] was removed from your SQL since current db doesn't support it.");
+				}
 				startWithExpression.setStartExpression(null);
 				startWithExpression.setConnectExpression(null);
 			}else{
