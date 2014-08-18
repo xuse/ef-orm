@@ -700,6 +700,29 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 			return a;
 		}
 	}
+	
+	/**
+	 * 将字符串格式化为固定大小
+	 * @param number
+	 * @param length
+	 * @return
+	 */
+	public static String toFixLengthString(String text, int length,boolean padOnLeft, char padChar) {
+		if(text.length()==length){
+			return text;
+		}else if(text.length()>length){
+			return text.substring(0,length);
+		}
+		StringBuilder sb=new StringBuilder(length);
+		if(padOnLeft){
+			repeat(sb,padChar, length-text.length());
+		}
+		sb.append(text);
+		if(!padOnLeft){
+			repeat(sb,padChar, length-text.length());
+		}
+		return sb.toString();
+	}
 
 	/**
 	 * 取字符串右侧的部分

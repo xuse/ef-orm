@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.GenerationType;
@@ -18,6 +19,7 @@ import jef.database.annotation.PartitionTableImpl;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.DbmsProfile;
 import jef.database.innerpool.PartitionSupport;
+import jef.database.jsqlparser.parser.ParseException;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.TableMetadata;
@@ -25,9 +27,11 @@ import jef.database.meta.TupleMetadata;
 import jef.database.query.DefaultPartitionCalculator;
 import jef.database.query.PartitionCalculator;
 import jef.database.routing.function.KeyFunction;
+import jef.database.routing.jdbc.SqlAnalyzer;
 import jef.orm.onetable.model.TestEntity;
 import jef.orm.partition.PartitionEntity;
 
+import org.easyframe.tutorial.lessona.entity.Device;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -172,5 +176,15 @@ public class CalculatorTest extends org.junit.Assert{
 		MetaHolder.getCachedModels().clear();
 	}
 
+	@Test
+	public void testSql1() throws ParseException{
+		MetaHolder.initMetadata(Device.class, null,null);
+		String sql="Delete from DEVICE where indexcode > '100000' AND indexcode < '500000'";
+		PartitionResult[] results=SqlAnalyzer.getPartitionResultOfSQL(DbUtils.parseStatement(sql), Collections.EMPTY_LIST, supportor);
+		System.out.println("------------------------------------------");
+		for (PartitionResult r : results) {
+			System.out.println(r.getDatabase()+"||"+r.getTables());
+		}
+	}
 
 }

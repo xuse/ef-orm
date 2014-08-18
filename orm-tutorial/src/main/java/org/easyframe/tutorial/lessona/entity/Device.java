@@ -15,7 +15,7 @@ import jef.tools.DateFormats;
 @PartitionTable(key ={
 		@PartitionKey(field = "indexcode",function=KeyFunction.RAW,length=1),
 		@PartitionKey(field = "indexcode",function=KeyFunction.MAPPING,
-			functionConstructorParams="10-19:datasource1,20-39:datasource2,40-79:datasource3,*:",isDbName=true)
+			functionConstructorParams="1-19:datasource1,2-39:datasource2,4-79:datasource3,*:",isDbName=true)
 }
 )
 public class Device extends DataObject {

@@ -185,8 +185,8 @@ public final class MetaHolder {
 	/**
 	 * 根据数据库的表情况，初始化动态表的模型 初始化完成后会缓存起来，下次获取可以直接用{@link #getMeta(String)}得到
 	 * 
-	 * @param session
-	 * @param tableName
+	 * @param session 数据库访问句柄 Session.
+	 * @param tableName 表名
 	 * @return
 	 */
 	public static TupleMetadata initMetadata(Session session, String tableName) throws SQLException {
@@ -196,8 +196,8 @@ public final class MetaHolder {
 	/**
 	 * 根据数据库的表情况，初始化动态表的模型 初始化完成后会缓存起来，下次获取可以直接用{@link #getMeta(String)}得到
 	 * 
-	 * @param session
-	 * @param tableName
+	 * @param session  数据库访问句柄 Session.
+	 * @param tableName 表名
 	 * @param convertColumnNames
 	 *            是否将数据库的列名转换为 java 习惯。 <br/>
 	 *            eg. CREATE_TIME -> createTime

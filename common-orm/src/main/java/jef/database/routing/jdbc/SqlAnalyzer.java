@@ -17,6 +17,7 @@ import jef.database.OperateTarget;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionResult;
+import jef.database.innerpool.PartitionSupport;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.JdbcParameter;
@@ -174,6 +175,38 @@ public class SqlAnalyzer {
 		DeleteExecutionPlan ex=new DeleteExecutionPlan(results,context);
 		return ex;
 	}
+	
+	public static PartitionResult[] getPartitionResultOfSQL(Statement sql,List<Object> values,PartitionSupport support){
+		TableMetaCollector collector = new TableMetaCollector();
+		sql.accept(collector);
+		if(collector.get()==null){
+			throw new IllegalArgumentException("The SQL is a known partition table.");
+		}
+		MetadataAdapter meta=collector.get();
+		if (meta == null || meta.getPartition() == null) {
+			return null;
+		}
+		Map<Expression, Object> params = reverse(sql, values); // 参数对应关系还原
+		Map<String, Dimension> val=null;
+		if (sql instanceof Select) {
+			Select select = (Select) sql;
+			DimensionCollector dims = new DimensionCollector(meta, params);
+			val = getPartitionCondition(select.getSelectBody(), dims);
+		} else if(sql instanceof Insert){//已经是Union语句的暂不支持
+			DimensionCollector dims = new DimensionCollector(meta, params);
+			val = getPartitionCondition((Insert)sql, dims);
+		} else if(sql instanceof Delete){//已经是Union语句的暂不支持
+			DimensionCollector dims = new DimensionCollector(meta, params);
+			val = getPartitionCondition((Delete)sql, dims);
+		} else if(sql instanceof Update){//已经是Union语句的暂不支持
+			DimensionCollector dims = new DimensionCollector(meta, params);
+			val = getPartitionCondition((Update)sql, dims);
+		}else{
+			throw new UnsupportedOperationException(sql.getClass().toString());
+		}
+		return DbUtils.partitionUtil.toTableNames(meta, val, support);
+	}
+	
 
 
 	/*
