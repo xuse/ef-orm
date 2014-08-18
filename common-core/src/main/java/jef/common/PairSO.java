@@ -10,6 +10,9 @@ public class PairSO<T> {
 	public String first;
 	public T second;
 
+	public PairSO() {
+	}
+	
 	public PairSO(String f, T s) {
 		first = f;
 		second = s;
@@ -36,5 +39,21 @@ public class PairSO<T> {
 		@SuppressWarnings("unchecked")
 		PairSO<V> r = (PairSO<V>) this;
 		return r;
+	}
+
+	public String getFirst() {
+		return first;
+	}
+
+	public void setFirst(String first) {
+		this.first = first;
+	}
+
+	public T getSecond() {
+		return second;
+	}
+
+	public void setSecond(T second) {
+		this.second = second;
 	}
 }

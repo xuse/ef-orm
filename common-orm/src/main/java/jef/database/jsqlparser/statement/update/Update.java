@@ -40,10 +40,15 @@ public class Update implements Statement {
 
     private Expression where;
 
-    private final List<Pair<Column,Expression>> sets=new ArrayList<Pair<Column,Expression>>();
+    private List<Pair<Column,Expression>> sets=new ArrayList<Pair<Column,Expression>>();;
 
     private String hint;
-    public void setHint(Token t){
+    
+    public void setSets(List<Pair<Column, Expression>> sets) {
+		this.sets = sets;
+	}
+
+	public void setHint(Token t){
     	if(t!=null && t.specialToken!=null){
     		this.hint=t.specialToken.image;	
     	}
@@ -76,10 +81,6 @@ public class Update implements Statement {
     public Pair<Column, Expression> getSet(int i) {
     	return sets.get(i);
     }
-
-//	public void setSets(List<Pair<Column, Expression>> sets) {
-//		this.sets = sets;
-//	}
 
 	public String getHint() {
 		return hint;
