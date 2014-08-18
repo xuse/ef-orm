@@ -103,6 +103,9 @@ public class Table implements FromItem {
         return sb.toString();
     }
 
+    /*
+     * 在slect项中使用 t.*时，其table的name是t，而不是alias.(non-Javadoc)
+     */
 	public void appendTo(StringBuilder sb) {
 		if(name==null)return;
 		String replace=this.replace.get();

@@ -17,6 +17,7 @@ package jef.database.jsqlparser.statement.create;
 
 import java.util.List;
 
+import jef.database.jsqlparser.Util;
 import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.visitor.Statement;
@@ -88,10 +89,10 @@ public class CreateTable implements Statement {
     public String toString() {
         StringBuilder sb=new StringBuilder().append("CREATE TABLE ");
         sb.append(table).append(" (");
-        PlainSelect.getStringList(sb,columnDefinitions, ",", false);
+        Util.getStringList(sb,columnDefinitions, ",", false);
         if (indexes != null && indexes.size() > 0) {
         	sb.append(", ");
-            PlainSelect.getStringList(sb,indexes,",",false);
+        	Util.getStringList(sb,indexes,",",false);
         }
         sb.append(") ");
         StringUtils.joinTo(tableOptionsStrings, " ", sb);

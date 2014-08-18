@@ -45,9 +45,10 @@ public class AllTableColumns implements SelectItem {
     public String toString() {
         return table + ".*";
     }
-
+    //在slect项中使用 t.*时，其table的name是t，而不是alias.
 	public void appendTo(StringBuilder sb) {
-		sb.append(table).append(".*");
+		table.appendTo(sb);
+		sb.append(".*");
 	}
 
 	public SelectExpressionItem getAsSelectExpression() {

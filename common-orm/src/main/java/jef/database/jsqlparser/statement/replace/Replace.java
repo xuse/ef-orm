@@ -17,6 +17,7 @@ package jef.database.jsqlparser.statement.replace;
 
 import java.util.List;
 
+import jef.database.jsqlparser.Util;
 import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.statement.select.PlainSelect;
@@ -109,7 +110,7 @@ public class Replace implements Statement {
             }
         } else if (columns != null) {
         	sb.append(' ');
-            PlainSelect.getStringList(sb,columns, ",", true);
+        	Util.getStringList(sb,columns, ",", true);
         }
         if (itemsList != null) {
             if (useValues) {

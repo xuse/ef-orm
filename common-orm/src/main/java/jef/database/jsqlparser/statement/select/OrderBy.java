@@ -3,6 +3,7 @@ package jef.database.jsqlparser.statement.select;
 import java.util.ArrayList;
 import java.util.List;
 
+import jef.database.jsqlparser.Util;
 import jef.database.jsqlparser.statement.SqlAppendable;
 import jef.database.jsqlparser.visitor.SelectItemVisitor;
 
@@ -20,7 +21,7 @@ public class OrderBy implements SqlAppendable {
 	}
 
 	public void appendTo(StringBuilder sb) {
-		PlainSelect.getFormatedList(sb, orderByElements, " order by", false);
+		Util.getFormatedList(sb, orderByElements, " order by", false);
 		if(nullsLast){
 			sb.append(" NULLS LAST");
 		}

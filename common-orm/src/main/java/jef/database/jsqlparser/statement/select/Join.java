@@ -17,6 +17,7 @@ package jef.database.jsqlparser.statement.select;
 
 import java.util.List;
 
+import jef.database.jsqlparser.Util;
 import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.statement.SqlAppendable;
 import jef.database.jsqlparser.visitor.Expression;
@@ -201,7 +202,7 @@ public class Join implements SqlAppendable{
 				sb.append(" ON ");
 				onExpression.appendTo(sb);
 			}
-			PlainSelect.getFormatedList(sb,usingColumns, " using", true);
+			Util.getFormatedList(sb,usingColumns, " using", true);
 		}
 	}
 	

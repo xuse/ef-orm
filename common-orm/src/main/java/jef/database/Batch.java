@@ -194,6 +194,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 		try {
 			if (this.groupForPartitionTable && forceTableName == null) {// 需要分组
 				callVeryBefore(objs);
+				int total=0;
 				Map<String, List<T>> data = doGroup(objs);
 				for (Map.Entry<String, List<T>> entry : data.entrySet()) {
 					long start = System.currentTimeMillis();
@@ -206,10 +207,14 @@ public abstract class Batch<T extends IQueryableEntity> {
 					}
 					String dbName = parent.getTransactionId(site);
 					long dbAccess = innerCommit(entry.getValue(), site, tablename, dbName);
+					total+=executeResult;
 					if (debugMode) {
 						LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed:", String.valueOf(entry.getValue().size()),"/on ",String.valueOf(executeResult), " record(s) on ["+entry.getKey()+"]\t Time cost([ParseSQL]:", String.valueOf(parseTime / 1000), "us, [DbAccess]:", String.valueOf(dbAccess - start), "ms) |",
 								dbName));
 					}
+				}
+				if(debugMode){
+					LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed:", String.valueOf(objs.size()),"/on ",String.valueOf(total), " record(s) and ",String.valueOf(data.size())," tables. |  @",String.valueOf(Thread.currentThread().getId())));
 				}
 			} else {// 不分组
 				long start = System.currentTimeMillis();
@@ -227,7 +232,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 				String dbName = parent.getTransactionId(null);
 				long dbAccess = innerCommit(objs, site, tablename, dbName);
 				if (debugMode) {
-					LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed:", String.valueOf(objs.size()),"/on ",String.valueOf(executeResult), " record(s)\t Time cost([ParseSQL]:", String.valueOf(parseTime / 1000), "us, [DbAccess]:", String.valueOf(dbAccess - start), "ms) |",
+					LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed total:", String.valueOf(objs.size()),"/on ",String.valueOf(executeResult), " record(s)\t Time cost([ParseSQL]:", String.valueOf(parseTime / 1000), "us, [DbAccess]:", String.valueOf(dbAccess - start), "ms) |",
 							dbName));
 				}
 			}

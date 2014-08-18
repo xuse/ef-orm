@@ -24,6 +24,11 @@ CXF 2.7.10提高了兼容性，但是CXF-Plus的ASM类产生的package-info不�
 关于使用连接池心跳功能来维护DbMetadata中的DbTimeDelta。(OK)
 
 ================ 待解决的问题  ===================
+
+start with connect by的内存计算方案
+ 当使用基于String的Between条件时，路由结果偏少。indexcode BETWEEN ? AND ?
+ count还未支持 iterator还未支持
+ 要支持多表时，使用distinct后进行count时，在内存中先distinct后再count
 关于使用NativeQuery2来支持一种带SQL解析和数据路由功能的ResultSet。。。。（还是采用TDDL方案在DataSource上封装）
 基于SQL分析的分库分表、对NativeQuery支持的分表分库操作
 1 考虑用线程变量来传递已经解析好的分表条件.
@@ -35,7 +40,7 @@ CXF 2.7.10提高了兼容性，但是CXF-Plus的ASM类产生的package-info不�
 (JSON序列化反序列化)
 
 验证Druid解析器是否支持MYSQL的一些写法问题(支持良好)
-
+由于Java cc分析器当中的K_START等token优先级大于S_IDENTIFIER，造成jpql参数中不能支持start等名称，
 关于连接池检查时的checkSQL支持问题...
 使用基于差值的数据库时间来代替当前系统时间进行自动维护。（基于差值的数据库时间已经完成了）
 为大部分测试案例增加断言

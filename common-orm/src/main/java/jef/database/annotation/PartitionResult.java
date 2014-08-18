@@ -1,6 +1,5 @@
 package jef.database.annotation;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -47,7 +46,6 @@ public class PartitionResult {
 	 */
 	@SuppressWarnings("unchecked")
 	public List<String> getTables() {
-//		if(tables==null)tables=new ArrayList<String>();
 		if(tables==null)return Collections.EMPTY_LIST;
 		return tables;
 	}
@@ -65,6 +63,10 @@ public class PartitionResult {
 		return database==null?StringUtils.join(tables,","):database+":"+StringUtils.join(tables,",");
 	}
 
+	/**
+	 * 如果确认表只有一张，得到表名。
+	 * @return 表名。抛出异常IllegalArgumentException如果表不止一张。
+	 */
 	public String getAsOneTable() {
 		int n=tables.size();
 		if(n>1){
@@ -75,6 +77,10 @@ public class PartitionResult {
 		return tables.get(0);
 	}
 
+	/**
+	 * 获得表的数量
+	 * @return
+	 */
 	public int tableSize() {
 		return tables.size();
 	}

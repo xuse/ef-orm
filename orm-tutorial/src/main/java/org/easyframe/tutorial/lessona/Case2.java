@@ -24,6 +24,7 @@ import jef.database.datasource.SimpleDataSource;
 import jef.database.query.Query;
 import jef.database.query.Selects;
 import jef.database.query.SqlExpression;
+import jef.database.wrapper.ResultIterator;
 import jef.tools.DateUtils;
 import jef.tools.string.RandomData;
 
@@ -369,60 +370,64 @@ public class Case2 extends org.junit.Assert {
 		}
 		{//SQL语句改
 			
-			NativeQuery nq=db.createNativeQuery("update DeVice xx set xx.name='ID:'||indexcode,\ncreateDate=sysdate where indexcode between :s1 and :s2");
+			NativeQuery nq=db.createNativeQuery("update DeVice xx set xx.name='ID:'||indexcode,createDate=sysdate where indexcode between :s1 and :s2");
 			nq.setRouting(true);
 			nq.setParameter("s1", "1000");
 			nq.setParameter("s2", "6000");
 			nq.executeUpdate();
 		}
-		//改
 		
-		
-		
-		
-		
-		//删
-		
+		{//改2
+			NativeQuery nq=db.createNativeQuery("update Device set createDate=sysdate, name=:name where indexcode in (:codes)");
+			nq.setRouting(true);
+			nq.setParameter("name", "Updated value");
+			nq.setParameter("codes", new String[]{"6000123","567232","110000"});
+			nq.executeUpdate();
+		}
+		//删1
+		{
+			NativeQuery nq=db.createNativeQuery("delete Device where indexcode in (:codes)");
+			nq.setRouting(true);
+			nq.setParameter("codes", new String[]{"6000123","567232","110000"});
+			nq.executeUpdate();
+		}
+		//删2
+		{
+			NativeQuery nq=db.createNativeQuery("delete Device where indexcode >'100000' and indexcode<'500000'");
+			nq.setRouting(true);
+			nq.executeUpdate();
+		}
 		//查
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		//问题1 不同的函数拆解后会产生重复列。同时 *会和其他所有列重复 (OK)
-		//问题2 系统union后产生的表名t会和用户自己定义的表名重合  (似乎没什么问题，设计为固定重合)
-		//问题3 如果系统自动union产生表名随机，但是由于select项目沿用内部的语句，因此关于表名的alias会不匹配(OK、固定重合)
-		
-		//问题4, 在slect项中使用 t.*时，其table的name是t，而不是alias.
-		//注意SQL中 count(*)会统计所有行，而count(column）会跳过column值为null的行，两者并不总是等效
-		String sql="select type,count(tx.indexcode) as count,max(indexcode) max_id from Device tx where indexcode like '4%' or indexcode like '1123%' or indexcode like '6%' group by type ";
-		NativeQuery<Map> query=db.createNativeQuery(sql,Map.class);
-		query.setRouting(true);
-		List<Map> devices=query.getResultList();
-		for (Map ss : devices) {
-			System.out.println(ss);
+		{
+			System.out.println("查询——分组查询");
+			String sql="select type,count(*) as count,max(indexcode) max_id from Device tx where indexcode like '4%' or indexcode like '1123%' or indexcode like '6%' group by type ";
+			NativeQuery<Map> query=db.createNativeQuery(sql,Map.class);
+			query.setRouting(true);
+			//FIXME 错误，对于Group语句，分库计数后的总数不等于单库合并下的总数
+			System.out.println("查询总数Count:"+ query.getResultCount());
+			
+			List<Map> devices=query.getResultList();
+			for (Map ss : devices) {
+				System.out.println(ss);
+			}
+		}
+		{
+			System.out.println("查询——明细查询");
+			String sql="select t.* from device t where createDate is not null and (t.indexcode like '3%' or t.indexcode in (:codes)) order by createDate";
+			NativeQuery<Device> query=db.createNativeQuery(sql,Device.class);
+			query.setRouting(true);
+			
+			System.out.println("查询总数Count:"+ query.getResultCount());
+			ResultIterator<Device> devices=query.getResultIterator();
+			for (;devices.hasNext();) {
+				System.out.println(devices.next());
+			}
+			devices.close();
 		}
 		
-		System.out.println(query.getResultCount());
-		System.out.println(query.getResultIterator());
+
+		
+		
 		
 		
 	}

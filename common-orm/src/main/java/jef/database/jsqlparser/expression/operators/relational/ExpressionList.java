@@ -18,6 +18,7 @@ package jef.database.jsqlparser.expression.operators.relational;
 import java.util.Arrays;
 import java.util.List;
 
+import jef.database.jsqlparser.Util;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
@@ -76,12 +77,12 @@ public class ExpressionList implements ItemsList{
 
     public String toString() {
     	StringBuilder sb=new StringBuilder();
-        PlainSelect.getStringList(sb,expressions, between, true);
+    	Util.getStringList(sb,expressions, between, true);
         return sb.toString();
     }
 
 	public void appendTo(StringBuilder sb) {
-		PlainSelect.getStringList(sb,expressions, between, true);
+		Util.getStringList(sb,expressions, between, true);
 	}
 
 	public void accept(ExpressionVisitor itemsListVisitor) {

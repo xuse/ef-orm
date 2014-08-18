@@ -17,6 +17,7 @@ package jef.database.jsqlparser.statement.select;
 
 import java.util.List;
 
+import jef.database.jsqlparser.Util;
 import jef.database.jsqlparser.statement.SqlAppendable;
 import jef.database.jsqlparser.visitor.SelectBody;
 import jef.database.jsqlparser.visitor.SelectItem;
@@ -79,7 +80,7 @@ public class WithItem implements SqlAppendable{
 		sb.append(name);
     	if(withItemList != null){
     		sb.append(' ');
-    		PlainSelect.getStringList(sb,withItemList, ",", true); 
+    		Util.getStringList(sb,withItemList, ",", true); 
     	}
     	sb.append(" AS (");
     	selectBody.appendTo(sb);

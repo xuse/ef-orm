@@ -17,6 +17,7 @@ package jef.database.jsqlparser.statement.insert;
 
 import java.util.List;
 
+import jef.database.jsqlparser.Util;
 import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.parser.Token;
 import jef.database.jsqlparser.statement.select.PlainSelect;
@@ -104,7 +105,7 @@ public class Insert implements Statement {
         table.appendTo(sb);
         sb.append(' ');
         if(columns != null){
-        	PlainSelect.getStringList(sb,columns, ",", true);
+        	Util.getStringList(sb,columns, ",", true);
         	sb.append(' ');
         }
         if (useValues) {

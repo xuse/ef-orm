@@ -40,6 +40,8 @@ public enum GroupFunctionType {
 	MAX,
 	/**
 	 * 分组统计——计数
+	 * 	1、count的用法count(*)  count(id) count(distinct *)。但是没有count(t.*)这样的用法。
+	 *  2、count(*)是按行计数，而count(expr)时，凡是表达式为null的行不计入总数。因此 count(*)和count(column)效果是不同的，这点请注意。
 	 */
 	COUNT,
 	/**
@@ -55,7 +57,7 @@ public enum GroupFunctionType {
 	 */
 	GROUP,
 	
-	
+	/////////////////较为冷僻的聚合函数，目前尚未支持//////////////////////
 	GROUPING,
 	BINARY_CHECKSUM,  
 	CHECKSUM_AGG,  

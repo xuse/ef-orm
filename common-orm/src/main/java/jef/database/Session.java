@@ -1350,7 +1350,9 @@ public abstract class Session {
 		long dbselect = System.currentTimeMillis();
 		LogUtil.show(StringUtils.concat("Result: Iterator", "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms) |", getTransactionId(null)));
 		EntityMappingProvider mapping = DbUtils.getMappingProvider(queryObj);
-		result = new ResultIterator.Impl<T>(iterateResultSet(rs, mapping, queryObj.getResultTransformer()), rs);
+		Transformer transformer= queryObj.getResultTransformer();
+		IResultSet irs=rs.toSimple(null, transformer.getStrategy());
+		result = new ResultIterator.Impl<T>(iterateResultSet(irs, mapping,transformer), irs);
 		return result;
 	}
 

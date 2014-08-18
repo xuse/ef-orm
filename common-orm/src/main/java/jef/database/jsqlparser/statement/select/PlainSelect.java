@@ -21,9 +21,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import jef.database.jsqlparser.Util;
 import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.parser.Token;
-import jef.database.jsqlparser.statement.SqlAppendable;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.FromItem;
 import jef.database.jsqlparser.visitor.Ignorable;
@@ -60,7 +60,30 @@ public class PlainSelect implements SelectBody {
 	protected Top top;
 
 	protected StartWithExpression startWith;
+	
 	private String hint;
+
+	public PlainSelect() {
+		
+	}
+	/**
+	 * @param select
+	 */
+	public PlainSelect(PlainSelect select) {
+		this.distinct=select.distinct;
+		this.fromItem=select.fromItem;
+		this.groupByColumnReferences=select.groupByColumnReferences;
+		this.having=select.having;
+		this.hint=select.hint;
+		this.into=select.into;
+		this.joins=select.joins;
+		this.limit=select.limit;
+		this.orderBy=select.orderBy;
+		this.selectItems=select.selectItems;
+		this.startWith=select.startWith;
+		this.top=select.top;
+		this.where=select.where;
+	}
 
 	public StartWithExpression getStartWith() {
 		return startWith;
@@ -235,7 +258,7 @@ public class PlainSelect implements SelectBody {
 	 * @param noLimit
 	 */
 	public void appendGroupHavingOrderLimit(StringBuilder sb, boolean noHaving,boolean noOrder,boolean noLimit) {
-		getFormatedList(sb, groupByColumnReferences, " group by", false);
+		Util.getFormatedList(sb, groupByColumnReferences, " group by", false);
 		if (!noHaving && having != null) {
 			having.appendTo(sb.append(" having "));
 		}
@@ -327,7 +350,7 @@ public class PlainSelect implements SelectBody {
 			startWith.appendTo(sb);
 		}
 		if (!noGroup) {
-			getFormatedList(sb, groupByColumnReferences, " group by", false);
+			Util.getFormatedList(sb, groupByColumnReferences, " group by", false);
 			if (!noHaving && having != null) {
 				having.appendTo(sb.append(" having "));
 			}
@@ -353,7 +376,7 @@ public class PlainSelect implements SelectBody {
 			top.appendTo(sb);
 			sb.append(' ');
 		}
-		getStringList(sb, selectItems, ",", false);
+		Util.getStringList(sb, selectItems, ",", false);
 		sb.append(" from ");
 		fromItem.appendTo(sb);// append(fromItem.toString());
 		if (joins != null) {
@@ -374,7 +397,7 @@ public class PlainSelect implements SelectBody {
 			startWith.appendTo(sb);
 		}
 
-		getFormatedList(sb, groupByColumnReferences, " group by", false);
+		Util.getFormatedList(sb, groupByColumnReferences, " group by", false);
 		if (having != null) {
 			having.appendTo(sb.append(" having "));
 		}
@@ -408,36 +431,7 @@ public class PlainSelect implements SelectBody {
 		return sb.toString();
 	}
 
-	public static void getFormatedList(StringBuilder sb, List<? extends SqlAppendable> list, String expression, boolean useBrackets) {
-		if (list == null || list.isEmpty())
-			return;
-		if (expression != null) {
-			sb.append(expression).append(' ');
-		}
-		getStringList(sb, list, ",", useBrackets);
-	}
-
-	public static void getStringList(StringBuilder sb, List<? extends SqlAppendable> list, String comma, boolean useBrackets) {
-		if (list != null) {
-			if (useBrackets) {
-				sb.append('(');
-				if (!list.isEmpty()) {
-					Iterator<? extends SqlAppendable> iterator = list.iterator();
-					iterator.next().appendTo(sb);
-					while (iterator.hasNext()) {
-						iterator.next().appendTo(sb.append(comma));
-					}
-				}
-				sb.append(')');
-			} else {
-				if (!list.isEmpty()) {
-					Iterator<? extends SqlAppendable> iterator = list.iterator();
-					iterator.next().appendTo(sb);
-					while (iterator.hasNext()) {
-						iterator.next().appendTo(sb.append(comma));
-					}
-				}
-			}
-		}
+	public boolean isGroupBy() {
+		return groupByColumnReferences!=null;
 	}
 }

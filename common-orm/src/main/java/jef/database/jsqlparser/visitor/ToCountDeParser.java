@@ -62,25 +62,28 @@ public class ToCountDeParser extends DeParserAdapter{
 		}
 		visitPath.push(plainSelect);
 		sb.append("select ");
-		rewriteSelectItem(plainSelect);
+		rewriteSelectItem(sb,plainSelect,profile);
 		writeFromAndWhere(plainSelect);
 		writeGroupByAndHaving(plainSelect);
 		// writeOrderAndLimit(plainSelect);
 		visitPath.pop();
 	}
 
-	private void rewriteSelectItem(PlainSelect plainSelect) {
+	public static void rewriteSelectItem(StringBuilder sb,PlainSelect plainSelect,DatabaseDialect profile) {
 		sb.append("count(");
 		Distinct dis = plainSelect.getDistinct();
 		if (dis == null) {
 			sb.append('*');
 		} else {
-			rewriteDistinctCount(dis, plainSelect.getSelectItems());
+			rewriteDistinctCount(sb,dis, plainSelect.getSelectItems(),profile);
 		}
 		sb.append(")");
 	}
 
-	private void rewriteDistinctCount(Distinct dis, List<SelectItem> items) {
+	/*
+	 * 从"count("后面的部分开始写起
+	 */
+	private static void rewriteDistinctCount(StringBuilder sb,Distinct dis, List<SelectItem> items,DatabaseDialect profile) {
 		sb.append(dis.toString()).append(' ');
 		String concatStart = "concat(";
 		String concat = ",";
@@ -101,7 +104,7 @@ public class ToCountDeParser extends DeParserAdapter{
 				sb.append(v.toString());
 			} else {
 				SelectExpressionItem item = v.getAsSelectExpression();
-				item.getExpression().accept(this);
+				item.getExpression().appendTo(sb);
 			}
 			n++;
 		}

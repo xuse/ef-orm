@@ -24,11 +24,10 @@ public class InsertExecutionPlan extends AbstractExecutionPlan {
 			t.setReplace(table);
 		}
 		session.innerExecuteSql(context.statement.toString(), context.params);
-		
 		for (Table t : context.modifications) {
 			t.removeReplace();
 		}
-		return 0;
+		return 1;
 	}
 
 }

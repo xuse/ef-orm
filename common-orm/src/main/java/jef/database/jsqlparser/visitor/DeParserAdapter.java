@@ -4,6 +4,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import jef.common.Pair;
+import jef.database.jsqlparser.Util;
 import jef.database.jsqlparser.expression.AllComparisonExpression;
 import jef.database.jsqlparser.expression.AnyComparisonExpression;
 import jef.database.jsqlparser.expression.BinaryExpression;
@@ -764,7 +765,7 @@ public class DeParserAdapter implements SelectVisitor, ExpressionVisitor, Statem
 		sb.append(with.getName());
     	if(with.getWithItemList() != null){
     		sb.append(' ');
-    		PlainSelect.getStringList(sb,with.getWithItemList(), ",", true); 
+    		Util.getStringList(sb,with.getWithItemList(), ",", true); 
     	}
     	sb.append(" AS (");
     	with.getSelectBody().accept(this);

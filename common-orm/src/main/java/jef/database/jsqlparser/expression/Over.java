@@ -2,6 +2,7 @@ package jef.database.jsqlparser.expression;
 
 import java.util.List;
 
+import jef.database.jsqlparser.Util;
 import jef.database.jsqlparser.statement.SqlAppendable;
 import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.PlainSelect;
@@ -27,7 +28,7 @@ public class Over implements SqlAppendable{
 	public void appendTo(StringBuilder sb) {
 		sb.append(" over(");
 		if(partition!=null && !partition.isEmpty()){
-			PlainSelect.getFormatedList(sb, partition, "partition by", false);
+			Util.getFormatedList(sb, partition, "partition by", false);
 		}
 		if(orderBy!=null){
 			orderBy.appendTo(sb);

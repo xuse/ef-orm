@@ -17,6 +17,7 @@ package jef.database.jsqlparser.expression;
 
 import java.util.List;
 
+import jef.database.jsqlparser.Util;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionType;
@@ -119,7 +120,7 @@ public class CaseExpression implements Expression {
     		switchExpression.appendTo(sb);
     		sb.append(' ');
     	}
-    	PlainSelect.getStringList(sb,whenClauses, " ", false);
+    	Util.getStringList(sb,whenClauses, " ", false);
     	sb.append(' ');
     	if(elseExpression != null) {
     		sb.append("ELSE ");

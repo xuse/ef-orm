@@ -11,8 +11,8 @@ import jef.common.wrapper.IntRange;
 import jef.database.ORMConfig;
 import jef.database.OperateTarget;
 import jef.database.OperateTarget.SqlTransformer;
-import jef.database.Session;
 import jef.database.annotation.PartitionResult;
+import jef.database.jsqlparser.SelectToCountWrapper;
 import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.statement.select.Distinct;
 import jef.database.jsqlparser.statement.select.Limit;
@@ -21,6 +21,7 @@ import jef.database.jsqlparser.statement.select.OrderByElement;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.statement.select.SelectExpressionItem;
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.SelectBody;
 import jef.database.jsqlparser.visitor.SelectItem;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.clause.GroupByItem;
@@ -31,6 +32,7 @@ import jef.database.wrapper.clause.InMemoryOrderBy;
 import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
+import jef.database.wrapper.populator.ResultSetTransformer;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.result.IResultSet;
 import jef.database.wrapper.result.MultipleResultSet;
@@ -83,7 +85,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 	//limit延迟                                                 条件：单库多表                           
 	//limit去除                                                 条件：多库
 	 */
-	public PairSO<List<Object>> getSql(PartitionResult site) {
+	public PairSO<List<Object>> getSql(PartitionResult site,boolean noOrder) {
 		List<String> tables=site.getTables();
 		boolean moreTable=tables.size()>1; //是否为多表
 		boolean moreDatabase=isMultiDatabase();//是否为多库
@@ -108,7 +110,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 				st.appendSelect(sb2, false);
 				sb2.append(" from \n(").append(sb).append(") ").append(tableAlias);
 				sb2.append(ORMConfig.getInstance().wrap);
-				st.appendGroupHavingOrderLimit(sb2, moreDatabase, false, moreDatabase);
+				st.appendGroupHavingOrderLimit(sb2, moreDatabase, noOrder, moreDatabase);
 				sb = sb2;
 			}
 			return  new PairSO<List<Object>>(sb.toString(),params);
@@ -156,9 +158,6 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 		}
 	}
 
-	public <X> ResultIterator<X> getIteratorResult(IntRange range, SqlTransformer<X> resultTransformer, int i, int fetchSize) {
-		return null;
-	}
 
 	//多库查询下，进行内存中的后处理
 	//内存操作(查询后)
@@ -166,10 +165,8 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 	//内存排序：        条件：多库
 	//内存排重          条件：多库
 	//内存分组          条件：多库 
-	public <X> List<X> getListResult(IntRange range,Transformer rst,MultipleResultSet rs) throws SQLException {
+	public <X> List<X> getListResult(Transformer rst,MultipleResultSet rs) throws SQLException {
 		Assert.isTrue(isMultiDatabase());
-		ColumnMeta meta=rs.getColumns();
-		parepareInMemoryProcess(meta,range,rs);
 		IResultSet rsw=rs.toSimple(null,rst.getStrategy());
 		return context.db.populateResultSet(rsw, null, rst);
 	}
@@ -179,8 +176,9 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 	 * 根据查询结果，对照查询语句分析，是否需要内存操作
 	 * @return  return true if need In Memory Process.
 	 */
-	private void parepareInMemoryProcess(ColumnMeta meta,IntRange range,MultipleResultSet rs) {
+	public void parepareInMemoryProcess(IntRange range,MultipleResultSet rs) {
 		PlainSelect st=context.statement;
+		ColumnMeta meta=rs.getColumns();
 		if(st.getGroupByColumnReferences()!=null && !st.getGroupByColumnReferences().isEmpty()){
 			rs.setInMemoryGroups(processGroupBy(meta));
 		}
@@ -188,11 +186,14 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 			rs.setInMemoryDistinct(processDistinct(st.getDistinct(),meta));
 		}
 		if(st.getOrderBy()!=null){
-			processOrder(st.getSelectItems(),st.getOrderBy(),meta);
+			rs.setInMemoryOrder(processOrder(st.getSelectItems(),st.getOrderBy(),meta));
 		}
-		//FIXME Limit只是Page的一种
-		if(st.getLimit()!=null){
-			processPage(st.getLimit(),meta,range);
+		if(range!=null){
+			int[] ints=range.toStartLimitSpan();
+			rs.setInMemoryPage(processPage(meta,ints[0],ints[1]));
+		}else if(st.getLimit()!=null){
+			Limit limit=st.getLimit();
+			rs.setInMemoryPage(processPage(meta,(int)limit.getOffset(),(int)limit.getRowCount()));
 		}
 	}	
 	
@@ -245,15 +246,43 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 		return alias;
 	}
 
-	private InMemoryPaging processPage(Limit limit,ColumnMeta meta,IntRange range) {
-		int start=(int)limit.getOffset();
-		int rows=(int)limit.getRowCount();
+	private InMemoryPaging processPage(ColumnMeta meta,int start,int rows) {
 		return new InMemoryPaging(start, start+rows);
 		
 	}
 
-	public long processCount(PartitionResult site, OperateTarget session) {
-		return 0;
+	public long getCount(PartitionResult site, OperateTarget session) throws SQLException {
+		OperateTarget db=session.getTarget(site.getDatabase());
+		long count=0;
+		for(String table: site.getTables()){
+			String sql=getSql(table);
+			count+=db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, 1, 0, context.params);
+		}
+		return count;
+	}
+
+	private String getSql(String table) {
+		for(Table t: context.modifications){
+			t.setReplace(table);
+		}
+		String s=context.statement.toString();
+		for(Table t: context.modifications){
+			t.removeReplace();
+		}
+		return s;
+	}
+	
+
+	public <X> ResultIterator<X> getIteratorResult(IntRange range, SqlTransformer<X> resultTransformer, int i, int fetchSize) {
+		
+		
+		
+		
+		
+		
+		
+		
+		return null;
 	}
 
 	public int processUpdate(PartitionResult site, OperateTarget session) {
@@ -287,7 +316,6 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 				continue;
 			SelectExpressionItem item=e.getAsSelectExpression();
 			String alias=item.getAlias();
-			//TODO 先用简单粗暴的方式做出来再说，性能什么的再说了……
 			String sql=item.getExpression().toString().toUpperCase();
 			if(groups.contains(sql)){
 				keys.add(new GroupByItem(i,GroupFunctionType.GROUP,alias));
@@ -322,5 +350,23 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 	 */
 	public boolean isSingleTable() {
 		return sites.length == 1 && sites[0].getTables().size() == 1;
+	}
+
+
+	/**
+	 * 多库下的分组查询，由于分组操作依赖最后的内存计算，因此不得不将所有结果都查出后才能计算得到总数
+	 * @return 如果不得不查出全部结果才能得到总数，返回true
+	 */
+	public boolean mustGetAllResultsToCount() {
+		if(isMultiDatabase()){
+			PlainSelect select=context.statement;
+			if(select instanceof SelectToCountWrapper){
+				SelectBody sb=((SelectToCountWrapper) select).getInnerSelectBody();
+				if(sb instanceof PlainSelect){
+					return ((PlainSelect) sb).isGroupBy();
+				}
+			}
+		}
+		return false;
 	}
 }

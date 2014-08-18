@@ -279,7 +279,7 @@ public class OperateTarget implements SqlTemplate {
 	}
 
 	// FIXME sqlRouting 
-	final <T> T innerSelectBySql(String sql, ResultSetTransformer<T> rst, int maxReturn,int fetchSize, List<?> objs) throws SQLException {
+	public final <T> T innerSelectBySql(String sql, ResultSetTransformer<T> rst, int maxReturn,int fetchSize, List<?> objs) throws SQLException {
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		StringBuilder sb = null;

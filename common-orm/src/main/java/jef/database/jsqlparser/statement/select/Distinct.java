@@ -17,6 +17,7 @@ package jef.database.jsqlparser.statement.select;
 
 import java.util.List;
 
+import jef.database.jsqlparser.Util;
 import jef.database.jsqlparser.statement.SqlAppendable;
 import jef.database.jsqlparser.visitor.SelectItem;
 
@@ -43,7 +44,7 @@ public class Distinct implements SqlAppendable{
     	sb.append("DISTINCT");
     	if (onSelectItems != null && onSelectItems.size() > 0) {
         	sb.append(" ON ");
-            PlainSelect.getStringList(sb,onSelectItems,",",true);
+        	Util.getStringList(sb,onSelectItems,",",true);
         }
     }
     
