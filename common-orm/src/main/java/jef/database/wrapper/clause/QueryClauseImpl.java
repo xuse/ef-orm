@@ -144,7 +144,11 @@ public class QueryClauseImpl implements QueryClause {
 	 */
 	private String getSql(String tableDef, boolean delayProcessGroupClause) {
 		StringBuilder sb = new StringBuilder(200);
-		selectPart.append(sb, delayProcessGroupClause);
+		if(delayProcessGroupClause){
+			selectPart.appendNoGroupFunc(sb);
+		}else{
+			selectPart.append(sb);
+		}
 		sb.append(" from ");
 		sb.append(tableDef);
 		if (wherePart.length() > 0) {

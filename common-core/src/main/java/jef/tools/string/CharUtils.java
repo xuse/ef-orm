@@ -50,11 +50,11 @@ public final class CharUtils extends org.apache.commons.lang.CharUtils {
 	/**
 	 * 常量：所有数字字符
 	 */
-	public static final char[] NUMBERS = "1234567890".toCharArray();
+	public static final char[] NUMBERS = "0123456789".toCharArray();
 	/**
 	 * 常量：十六进制数字字符
 	 */
-	public static final char[] HEX_NUMBERS = "1234567890ABCDEFabcdef".toCharArray();
+	public static final char[] HEX_NUMBERS = "0123456789ABCDEFabcdef".toCharArray();
 	/**
 	 * 常量：所有大写字母
 	 */
@@ -74,7 +74,7 @@ public final class CharUtils extends org.apache.commons.lang.CharUtils {
 	/**
 	 * 常量：字母，数字和下划线
 	 */
-	public static final char[] ALPHA_NUM_UNDERLINE = "ABCDEFGHIJKLMNOPQRSTNVWXYZabcdefghijklmnopqrstuvwxyz1234567890_".toCharArray();
+	public static final char[] ALPHA_NUM_UNDERLINE = "0123456789ABCDEFGHIJKLMNOPQRSTNVWXYZabcdefghijklmnopqrstuvwxyz_".toCharArray();
 	/**
 	 * 常量：允许在URL中出现的字符，包含字母数字下划线和其他常用符号
 	 */

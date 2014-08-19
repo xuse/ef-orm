@@ -8,6 +8,7 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import jef.common.Pair;
 import jef.common.PairSO;
@@ -171,6 +172,7 @@ public class SqlAnalyzer {
 	private static ExecutionPlan getDeleteExePlan(StatementContext<Delete> context) {
 		DimensionCollector collector = new DimensionCollector(context.meta, context.paramsMap);
 		Map<String, Dimension> val = getPartitionCondition(context.statement, collector);
+		val=fill(val,collector);
 		PartitionResult[] results=DbUtils.partitionUtil.toTableNames(context.meta, val, context.db.getPartitionSupport());
 		DeleteExecutionPlan ex=new DeleteExecutionPlan(results,context);
 		return ex;
@@ -215,6 +217,7 @@ public class SqlAnalyzer {
 	private static ExecutionPlan getUpdateExePlan(StatementContext<Update> context) {
 		DimensionCollector collector = new DimensionCollector(context.meta, context.paramsMap);
 		Map<String, Dimension> val = getPartitionCondition(context.statement, collector);
+		val=fill(val,collector);
 		PartitionResult[] results=DbUtils.partitionUtil.toTableNames(context.meta, val, context.db.getPartitionSupport());
 		UpdateExecutionPlan ex=new UpdateExecutionPlan(results,context);
 		return ex;
@@ -226,11 +229,25 @@ public class SqlAnalyzer {
 	private static SelectExecutionPlan getPlainSelectExePlan(StatementContext<PlainSelect> context) {
 		DimensionCollector collector = new DimensionCollector(context.meta, context.paramsMap);
 		Map<String, Dimension> val = getPartitionCondition(context.statement, collector);
+		val=fill(val,collector);
 		PartitionResult[] results=DbUtils.partitionUtil.toTableNames(context.meta, val, context.db.getPartitionSupport());
 		SelectExecutionPlan ex=new SelectExecutionPlan(results,context);
 		return ex;
 	}
 	
+	
+	private static Map<String, Dimension> fill(Map<String, Dimension> result,DimensionCollector collector) {
+		Set<String> keys=collector.meta.getMinUnitFuncForEachPartitionKey().keySet();
+		if(result.size()<keys.size()){
+			result=new HashMap<String,Dimension>(result);
+			for(String s: keys){
+				if(!result.containsKey(s)){
+					result.put(s, RangeDimension.EMPTY_RANGE);
+				}
+			}
+		}
+		return result;
+	}
 	
 	/*
 	 * 为Insert生成执行计划
@@ -238,6 +255,7 @@ public class SqlAnalyzer {
 	private static ExecutionPlan getInsertExePlan(StatementContext<Insert> context) {
 		DimensionCollector collector = new DimensionCollector(context.meta, context.paramsMap);
 		Map<String, Dimension> val = getPartitionCondition(context.statement, collector);
+		val=fill(val,collector);
 		PartitionResult[] results=DbUtils.partitionUtil.toTableNames(context.meta, val, context.db.getPartitionSupport());
 		InsertExecutionPlan ex=new InsertExecutionPlan(results,context);
 		return ex;
@@ -343,9 +361,11 @@ public class SqlAnalyzer {
 	static class DimensionCollector {
 		private Map<Expression, Object> params;
 		private final Map<String, String> columnToPartitionKey = new HashMap<String, String>();
+		private ITableMetadata meta;
 
 		DimensionCollector(ITableMetadata meta, Map<Expression, Object> params) {
 			this.params = params;
+			this.meta=meta;
 			for (Map.Entry<PartitionKey, PartitionFunction> key : meta.getEffectPartitionKeys()) {
 				String field = key.getKey().field();
 				Field fld = meta.getField(field);

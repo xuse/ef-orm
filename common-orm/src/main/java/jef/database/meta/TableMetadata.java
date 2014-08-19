@@ -59,19 +59,15 @@ import jef.database.dialect.type.ColumnMappings;
 import jef.database.dialect.type.MappingType;
 import jef.database.query.JpqlExpression;
 import jef.database.query.ReferenceType;
-import jef.database.query.RegexpDimension;
 import jef.database.routing.function.AbstractDateFunction;
 import jef.database.routing.function.MapFunction;
 import jef.database.routing.function.ModulusFunction;
+import jef.database.routing.function.RawFunc;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.UnsafeUtils;
-import jef.tools.string.CharUtils;
-import jef.tools.string.StringIterator;
-
-import org.apache.commons.lang.ObjectUtils;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -438,126 +434,17 @@ public final class TableMetadata extends MetadataAdapter {
 			if(value.functionConstructorParams().length==0){
 				throw new IllegalArgumentException("You must config the 'functionConstructorParams' while using funcuon Map");
 			}
-			return new MapFunction(value.functionConstructorParams()[0]);
+			int num=0;
+			if(value.functionConstructorParams().length>1){
+				num=StringUtils.toInt(value.functionConstructorParams()[1],0);
+			}
+			return new MapFunction(value.functionConstructorParams()[0],num);
 		default:
 			throw new IllegalArgumentException("Unknown KeyFunction:" + value.function());
 		}
 	}
 
-	/**
-	 * 描述针对分表的维度，不是一个可度量的维度，而是直接将这个字符串拼到表名中
-	 */
-	static final class RawFunc implements PartitionFunction<Object> {
-		private String[] nullValue;
-		private int maxLen;
-
-		public RawFunc(String defaultWhenFieldIsNull,int maxLen) {
-			if (defaultWhenFieldIsNull.length() > 0) {
-				this.nullValue = StringUtils.split(defaultWhenFieldIsNull, ',');
-				for (int i = 0; i < nullValue.length; i++) {
-					nullValue[i] = nullValue[i].trim();
-				}
-			}
-			if(maxLen>0)
-				this.maxLen=maxLen;
-		}
-
-		public String eval(Object value) {
-			return String.valueOf(value);
-		}
-
-		public List<Object> iterator(Object min, Object max, boolean left, boolean right) {
-			if (min == null && max == null) {
-				 if(nullValue != null){
-					 return Arrays.asList((Object[]) nullValue);
-				 }else{
-					 return Collections.EMPTY_LIST;
-				 }
-			} else if (ObjectUtils.equals(min, max)) {
-				return Arrays.asList(min);
-			} else {
-				//范围丢失
-				
-				if(min instanceof Integer && max instanceof Integer){
-					return iteratorInt((Integer)min,(Integer)max);
-				}else if(min instanceof Long && max instanceof Long){
-					return iteratorLong((Long)min,(Long)max);
-				}else if(min instanceof String){
-					return iteratorString((String)min,(String)max);
-				}else{
-					return Arrays.asList(min, max);
-				}
-			}
-		}
-
-		private List<Object> iteratorLong(long min, long max) {
-			List<Object> result=new ArrayList<Object>();
-			if(max<min){
-				return Collections.EMPTY_LIST; 
-			}
-			long step=1;
-			if((max-min)>1000){
-				step=(max-min)/100;
-			}
-			long i=min;
-			for(;i<max;i+=step){
-				result.add(i);
-			}
-			if(i<max){
-				result.add(max);
-			}
-			return result;
-		}
-
-
-		private List<Object> iteratorInt(int min, int max) {
-			List<Object> result=new ArrayList<Object>();
-			if(max<min){
-				return Collections.EMPTY_LIST; 
-			}
-			int step=1;
-			if((max-min)>1000){
-				step=(max-min)/100;
-			}
-			int i=min;
-			for(;i<max;i+=step){
-				result.add(i);
-			}
-			if(i<max){
-				result.add(max);
-			}
-			return result;
-		}
-		
-		private List<Object> iteratorString(String min, String max) {
-			StringIterator st=new StringIterator(min, max,maxLen,"0123456789".toCharArray());
-			List<Object> result=new ArrayList<Object>();
-			while(st.hasNext()){
-				result.add(st.next());
-			}
-			return result;
-		}
-		
-
-		public boolean acceptRegexp() {
-			return true;
-		}
-
-		public Collection<Object> iterator(RegexpDimension regexp) {
-			if(maxLen>0 && regexp.getBaseExp().length()>=maxLen){
-				return Arrays.<Object>asList(regexp.getBaseExp());
-			}else{
-				String baseExp=regexp.getBaseExp();
-				Collection<Object> list=new ArrayList<Object>(100);
-				for(char c: CharUtils.ALPHA_NUM_UNDERLINE){
-					list.add(baseExp+c);
-				}
-				return list;
-			}
-			
-		}
-	};
-
+	
 
 	public Multimap<String, PartitionFunction> getMinUnitFuncForEachPartitionKey() {
 		return partitionFuncs;
@@ -611,11 +498,7 @@ public final class TableMetadata extends MetadataAdapter {
 				throw new UnsupportedOperationException();
 			}
 			if (name == null){
-//				if(DbUtils.getTableMeta(fld)!=this){
-//					throw new IllegalArgumentException(fld+" is not a property of "+this.getName());
-//				}
 				name = profile.getColumnNameIncase(fld.name());
-				//FIXME 容错处理似无必要.
 			}
 		}
 		// 进行关键字判断和处理

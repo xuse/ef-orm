@@ -328,6 +328,10 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 	}
 
 	public static final List<Object> EMPTY_REGEXP=Arrays.<Object>asList(new RegexpDimension(""));
+	
+	@SuppressWarnings("unchecked")
+	public static final RangeDimension<?> EMPTY_RANGE=new RangeDimension(null);
+	
 	/**
 	 * 将范围值转化为枚举值
 	 */

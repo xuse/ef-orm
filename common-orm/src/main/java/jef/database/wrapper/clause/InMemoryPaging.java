@@ -29,7 +29,7 @@ public class InMemoryPaging implements InMemoryProcessor{
 	}
 
 	public void process(CachedRowSetImpl rows) throws SQLException {
-		if(end<=start){
+		if(end<=start || start>=rows.size()){
 			rows.setRvh(new ArrayList<Row>());
 			rows.refresh();
 		}

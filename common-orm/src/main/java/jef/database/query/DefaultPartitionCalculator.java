@@ -389,7 +389,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 					String name = field.substring(5).trim();
 					obj = new RangeDimension((Comparable) q.getAttribute(name));
 				} else {
-					obj = new RangeDimension(null);
+					obj = RangeDimension.EMPTY_RANGE;
 				}
 			} else {
 				if (q != null) {
@@ -608,6 +608,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		for (DbTable dt : result) {
 			String dbName = singleSite? "" : dt.dbName;
 			if (filter && !support.isExist(dbName, dt.table, tmeta)) {
+				System.out.println("过滤掉"+dt);
 				continue;
 			}
 			List<String> list = map.get(dbName);

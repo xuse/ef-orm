@@ -15,10 +15,11 @@ import org.apache.commons.lang.StringUtils;
 public class MapFunction implements PartitionFunction<String>{
 	private final List<StringRange> ranges = new ArrayList<StringRange>();
 	private String defaultTarget="";
-	
-	
+	private int maxLen;
 	private List<String> allValues=new ArrayList<String>();
-	public MapFunction(String expression){
+	
+	public MapFunction(String expression,int digit){
+		this.maxLen=digit>0?digit:20;
 		for(String s:StringUtils.split(expression,",")){
 			int index=s.lastIndexOf(':');
 			if(index<1){
@@ -48,6 +49,9 @@ public class MapFunction implements PartitionFunction<String>{
 	}
 
 	public String eval(String value) {
+		if(value.length()>maxLen){
+			value=value.substring(0,maxLen);
+		}
 		for(StringRange range:ranges){
 			if(range.contains(value)){
 				return range.target;
@@ -140,18 +144,6 @@ public class MapFunction implements PartitionFunction<String>{
 			return start.equals(obj);
 		}
 	}
-//	@SuppressWarnings("serial")
-//	private  static final class All extends StringRange{
-//		public All(String s) {
-//			super(s,s);
-//		}
-//		public All() {
-//			super("*","*");
-//		}
-//		public boolean contains(String obj) {
-//			return true;
-//		}
-//	}
 	public boolean acceptRegexp() {
 		return false;
 	}

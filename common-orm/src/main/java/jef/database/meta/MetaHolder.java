@@ -76,6 +76,7 @@ import jef.database.jsqlparser.statement.create.ColumnDefinition;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.query.ReadOnlyQuery;
 import jef.database.query.SqlExpression;
+import jef.database.support.EntityNotEnhancedException;
 import jef.database.support.QuerableEntityScanner;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
@@ -487,7 +488,7 @@ public final class MetaHolder {
 			}
 		}, ClassReader.SKIP_CODE);
 		if (!checkd.get()) {
-			throw new RuntimeException("the Class " + type.getName() + " load by " + type.getClassLoader() + " has not been enhanced!");
+			throw new EntityNotEnhancedException(type.getName());
 		}
 		// System.out.println("You may not executing project with the default Jetty Console. this may disable the dynamic enhance feature. please make sure you have enhaced the entity staticly.");
 	}

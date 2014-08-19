@@ -386,10 +386,14 @@ public abstract class SelectProcessor {
 				CountClause cq = new CountClause();
 				PartitionResult[] sites = DbUtils.toTableNames(query.getInstance(), tableName, query, db.getPool().getPartitionSupport());
 				SqlContext context = query.prepare();
-				if (context.isDistinct() && sites.length > 1) {// 多数据库下还要Distinct，没办法了
-					throw new UnsupportedOperationException("Access multi-databases with distinct operator is unsupported.");
-				}
 				GroupClause groupClause = toGroupAndHavingClause(query, context);
+				if (sites.length > 1) {// 多数据库下还要Distinct，没办法了
+					if(context.isDistinct()){
+						throw new UnsupportedOperationException("Access multi-databases count with distinct operator is unsupported.");
+					}else if(groupClause.isNotEmpty()){
+						throw new UnsupportedOperationException("Access multi-databases count with group by operator is unsupported.");
+					}
+				}
 				BindSql result = parent.toPrepareWhereSql(query, context, false);
 				if (context.isDistinct()) {
 					String countStr = toSelectCountSql(context.getSelectsImpl(), context, groupClause.isNotEmpty());

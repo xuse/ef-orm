@@ -44,8 +44,8 @@ public interface PartitionFunction<T> {
 	 * 实现的时候要注意min和max都有可能为null，从而表示无边界
 	 * @param min
 	 * @param max
-	 * @param left
-	 * @param right
+	 * @param left  左闭区间
+	 * @param right 右闭区间
 	 * @return
 	 */
 	Collection<T> iterator(T min,T max,boolean left,boolean right);
@@ -53,6 +53,7 @@ public interface PartitionFunction<T> {
 	/**
 	 * 是否支持传入正则
 	 * @return
+	 * @deprecated
 	 */
 	boolean acceptRegexp();
 	
@@ -60,6 +61,7 @@ public interface PartitionFunction<T> {
 	 * 按正则枚举
 	 * @param regexp
 	 * @return
+	 * @deprecated
 	 */
 	Collection<T> iterator(RegexpDimension regexp);
 }
