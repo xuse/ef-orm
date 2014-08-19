@@ -18,6 +18,7 @@ import jef.database.query.SqlExpression;
 
 public class SelectToCountWrapper extends PlainSelect{
 	private SubSelect inner;
+	private boolean isDistinct;
 	
 	public SelectToCountWrapper(Union union){
 		//将Select部分重写为新的Count Function
@@ -39,6 +40,7 @@ public class SelectToCountWrapper extends PlainSelect{
 	}
 	
 	public SelectToCountWrapper(PlainSelect select,DatabaseDialect profile){
+		isDistinct=select.getDistinct()!=null;
 		if(select.isGroupBy()){
 			Function count=new Function();
 			count.setName("count");
@@ -91,5 +93,9 @@ public class SelectToCountWrapper extends PlainSelect{
 			return inner.getSelectBody();
 		}
 		return null;
+	}
+
+	public boolean isDistinct() {
+		return isDistinct;
 	}
 }

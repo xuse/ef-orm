@@ -24,7 +24,6 @@ import jef.database.datasource.SimpleDataSource;
 import jef.database.query.Query;
 import jef.database.query.Selects;
 import jef.database.query.SqlExpression;
-import jef.database.wrapper.ResultIterator;
 import jef.tools.DateUtils;
 import jef.tools.string.RandomData;
 
@@ -331,6 +330,8 @@ public class Case2 extends org.junit.Assert {
 			Selects select = QB.selectFrom(query);
 			select.column(Device.Field.type);
 			select.setDistinct(true);
+			System.err.println(db.count(query));
+			
 			
 			List<Device> results = db.select(query);
 			for (Device ss : results) {
@@ -399,147 +400,163 @@ public class Case2 extends org.junit.Assert {
 		ORMConfig.getInstance().setDebugMode(true);
 		System.err.println("=====数据准备：插入50条记录完成=====");
 		
+//		/**
+//		 * 使用SQL语句插入记录，根据传入的indexcode分布到不同数据库上
+//		 */
+//		{
+//			NativeQuery nq=db.createNativeQuery("insert into DeVice(indexcode,name,type,createDate) values(:indexcode, :name, :type, sysdate)");
+//			nq.setRouting(true);
+//			nq.setParameter("indexcode", "122346");
+//			nq.setParameter("name", "测试插入数据");
+//			nq.setParameter("type", "办公用品");
+//			nq.executeUpdate();
+//			
+//			nq.setParameter("indexcode", "7822346");
+//			nq.setParameter("name", "非官方的得到");
+//			nq.setParameter("type", "大家电");
+//			nq.executeUpdate();
+//			
+//			nq.setParameter("indexcode", "452346");
+//			nq.setParameter("name", "萨菲是方式飞");
+//			nq.setParameter("type", "日用品");
+//			nq.executeUpdate();			
+//		}
+//		/**
+//		 * 使用SQL语句更新记录，使用Between条件，这意味着indexcode在1000xxx到6000xxx段之间的所有表会参与更新操作。
+//		 */
+//		{
+//			System.out.println("===Between条件中携带的路由条件,正确操作表: 1,2,3,4,5,6");
+//			NativeQuery nq=db.createNativeQuery("update DeVice xx set xx.name='ID:'||indexcode,createDate=sysdate where indexcode between :s1 and :s2");
+//			nq.setRouting(true);
+//			nq.setParameter("s1", "1000");
+//			nq.setParameter("s2", "6000");
+//			nq.executeUpdate();
+//		}
+//		
+//		/**
+//		 * 使用SQL语句更新记录，使用In条件，这将精确定位到这些记录所在的表上。
+//		 */
+//		{
+//			System.out.println("===用IN条件更新==");
+//			NativeQuery nq=db.createNativeQuery("update Device set createDate=sysdate, name=:name where indexcode in (:codes)");
+//			nq.setRouting(true);
+//			nq.setParameter("name", "Updated value");
+//			nq.setParameter("codes", new String[]{"6000123","567232",list.get(0).getIndexcode(),list.get(1).getIndexcode(),list.get(2).getIndexcode()});
+//			nq.executeUpdate();
+//		}
+//		/**
+//		 * 使用SQL语句更新记录。由于where条件中没有任何用来缩小记录范围的条件，因此所有的表上都将执行更新操作
+//		 */
+//		{
+//			System.out.println("===正确操作表： 2==");
+//			NativeQuery nq=db.createNativeQuery("update Device set createDate=sysdate where type='办公用品' or indexcode='2002345'");
+//			nq.setRouting(true);
+//			nq.executeUpdate();
+//		}
+//		
+//		
+//		/**
+//		 * 删除记录。根据indexcode可以准确定位到三张表上。
+//		 */
+//		{
+//			System.out.println("===正确操作表： 1,6,5==");
+//			NativeQuery nq=db.createNativeQuery("delete Device where indexcode in (:codes)");
+//			nq.setRouting(true);
+//			nq.setParameter("codes", new String[]{"6000123","567232","110000"});
+//			nq.executeUpdate();
+//		}
+//		/**
+//		 * 删除记录，indexCode上的大于和小于条件以及OR关系勾勒出了这次查询的表,将会是DEVICE_2,DEVICE_3,DEVICE_4、DEVICE_7、DEVICE_8。(5张表)
+//		 */
+//		{
+//			System.out.println("===正确操作表： 2,3,4,5,7,8==");
+//			NativeQuery nq=db.createNativeQuery("delete Device where indexcode >'200000' and indexcode<'5' or indexcode >'700000' and indexcode <'8'");
+//			nq.setRouting(true);
+//			nq.executeUpdate();
+//		}
+//		
+//		/**
+//		 * 查询，所有表，跨库排序
+//		 */
+//		{
+//			System.out.println("查询，所有表，跨库排序");
+//			String sql="select t.* from device t where createDate is not null order by createDate";
+//			NativeQuery<Device> query=db.createNativeQuery(sql,Device.class);
+//			query.setRouting(true);
+//			long total=query.getResultCount();
+//			System.out.println("预计查询结果总数Count:"+ total);
+//			List<Device> devices=query.getResultList();
+//			assertEquals(total, devices.size());
+//			int n=0;
+//			for(Device d: devices){
+//				System.out.println(d);
+//				if(n++>10)break;
+//			}
+//		}
+//		/**
+//		 * 查询两个条件时，
+//		 */
+//		{
+//			System.out.println("======查询，Like条件，后一个条件无参数被省略，正确操作表 3==");
+//			String sql="select t.* from device t where createDate is not null and (t.indexcode like '3%' or t.indexcode in (:codes)) order by createDate";
+//			NativeQuery<Device> query=db.createNativeQuery(sql,Device.class);
+//			query.setRouting(true);
+//			long total=query.getResultCount();
+//			System.out.println("预期查询总数Count:"+ total);
+//			int count=0;
+//			//使用迭代器方式查询
+//			ResultIterator<Device> devices=query.getResultIterator();
+//			for (;devices.hasNext();) {
+//				System.out.println(devices.next());
+//				count++;
+//			}
+//			devices.close();
+//			assertEquals(count, total);
+//			
+//			query.setParameter("codes", new String[]{"123456","8823478","98765"});
+//			System.out.println("======查询，Like条件 OR IN条件，正确操作表:1,3,8,9==");
+//			total=query.getResultCount();
+//			System.out.println("预期查询总数Count:"+ total);
+//			List<Device> rst=query.getResultList();
+//			assertEquals(total, rst.size());
+//			int n=0;
+//			for(Device d: rst){
+//				System.out.println(d);
+//				if(n++>10)break;
+//			}
+//		}
+//		
+//		/**
+//		 * 查询记录、如果SQL语句中带有Group条件...
+//		 * 跨库条件下的Group实现尤为复杂
+//		 */
+//		{
+//			System.out.println("查询——分组查询，正确操作表：4,1,6");
+//			String sql="select type,count(*) as count,max(indexcode) max_id from Device tx where indexcode like '4%' or indexcode like '1123%' or indexcode like '6%' group by type ";
+//			NativeQuery<Map> query=db.createNativeQuery(sql,Map.class);
+//			query.setRouting(true);
+//			//
+//			System.out.println("预期查询总数Count:"+ query.getResultCount());
+//			List<Map> devices=query.getResultList();
+//			for (Map ss : devices) {
+//				System.out.println(ss);
+//			}
+//		}
+		
 		/**
-		 * 使用SQL语句插入记录，根据传入的indexcode分布到不同数据库上
+		 * 查询
 		 */
 		{
-			NativeQuery nq=db.createNativeQuery("insert into DeVice(indexcode,name,type,createDate) values(:indexcode, :name, :type, sysdate)");
-			nq.setRouting(true);
-			nq.setParameter("indexcode", "122346");
-			nq.setParameter("name", "测试插入数据");
-			nq.setParameter("type", "办公用品");
-			nq.executeUpdate();
 			
-			nq.setParameter("indexcode", "7822346");
-			nq.setParameter("name", "非官方的得到");
-			nq.setParameter("type", "大家电");
-			nq.executeUpdate();
-			
-			nq.setParameter("indexcode", "452346");
-			nq.setParameter("name", "萨菲是方式飞");
-			nq.setParameter("type", "日用品");
-			nq.executeUpdate();			
-		}
-		/**
-		 * 使用SQL语句更新记录，使用Between条件，这意味着indexcode在1000xxx到6000xxx段之间的所有表会参与更新操作。
-		 */
-		{
-			System.out.println("===Between条件中携带的路由条件,正确操作表: 1,2,3,4,5,6");
-			NativeQuery nq=db.createNativeQuery("update DeVice xx set xx.name='ID:'||indexcode,createDate=sysdate where indexcode between :s1 and :s2");
-			nq.setRouting(true);
-			nq.setParameter("s1", "1000");
-			nq.setParameter("s2", "6000");
-			nq.executeUpdate();
-		}
-		
-		/**
-		 * 使用SQL语句更新记录，使用In条件，这将精确定位到这些记录所在的表上。
-		 */
-		{
-			System.out.println("===用IN条件更新==");
-			NativeQuery nq=db.createNativeQuery("update Device set createDate=sysdate, name=:name where indexcode in (:codes)");
-			nq.setRouting(true);
-			nq.setParameter("name", "Updated value");
-			nq.setParameter("codes", new String[]{"6000123","567232",list.get(0).getIndexcode(),list.get(1).getIndexcode(),list.get(2).getIndexcode()});
-			nq.executeUpdate();
-		}
-		/**
-		 * 使用SQL语句更新记录。由于where条件中没有任何用来缩小记录范围的条件，因此所有的表上都将执行更新操作
-		 */
-		{
-			System.out.println("===正确操作表： 2==");
-			NativeQuery nq=db.createNativeQuery("update Device set createDate=sysdate where type='办公用品' or indexcode='2002345'");
-			nq.setRouting(true);
-			nq.executeUpdate();
-		}
-		
-		
-		/**
-		 * 删除记录。根据indexcode可以准确定位到三张表上。
-		 */
-		{
-			System.out.println("===正确操作表： 1,6,5==");
-			NativeQuery nq=db.createNativeQuery("delete Device where indexcode in (:codes)");
-			nq.setRouting(true);
-			nq.setParameter("codes", new String[]{"6000123","567232","110000"});
-			nq.executeUpdate();
-		}
-		/**
-		 * 删除记录，indexCode上的大于和小于条件以及OR关系勾勒出了这次查询的表,将会是DEVICE_2,DEVICE_3,DEVICE_4、DEVICE_7、DEVICE_8。(5张表)
-		 */
-		{
-			System.out.println("===正确操作表： 2,3,4,5,7,8==");
-			NativeQuery nq=db.createNativeQuery("delete Device where indexcode >'200000' and indexcode<'5' or indexcode >'700000' and indexcode <'8'");
-			nq.setRouting(true);
-			nq.executeUpdate();
-		}
-		
-		/**
-		 * 查询，所有表，跨库排序
-		 */
-		{
-			System.out.println("查询，所有表，跨库排序");
-			String sql="select t.* from device t where createDate is not null order by createDate";
-			NativeQuery<Device> query=db.createNativeQuery(sql,Device.class);
+			String sql="select distinct type from device";
+			NativeQuery<String> query=db.createNativeQuery(sql,String.class);
 			query.setRouting(true);
-			long total=query.getResultCount();
-			System.out.println("预计查询结果总数Count:"+ total);
-			List<Device> devices=query.getResultList();
-			assertEquals(total, devices.size());
-			int n=0;
-			for(Device d: devices){
-				System.out.println(d);
-				if(n++>10)break;
-			}
-		}
-		/**
-		 * 查询两个条件时，
-		 */
-		{
-			System.out.println("======查询，Like条件，后一个条件无参数被省略，正确操作表 3==");
-			String sql="select t.* from device t where createDate is not null and (t.indexcode like '3%' or t.indexcode in (:codes)) order by createDate";
-			NativeQuery<Device> query=db.createNativeQuery(sql,Device.class);
-			query.setRouting(true);
-			long total=query.getResultCount();
-			System.out.println("预期查询总数Count:"+ total);
-			int count=0;
-			//使用迭代器方式查询
-			ResultIterator<Device> devices=query.getResultIterator();
-			for (;devices.hasNext();) {
-				System.out.println(devices.next());
-				count++;
-			}
-			devices.close();
-			assertEquals(count, total);
-			
-			query.setParameter("codes", new String[]{"123456","8823478","98765"});
-			System.out.println("======查询，Like条件 OR IN条件，正确操作表:1,3,8,9==");
-			total=query.getResultCount();
-			System.out.println("预期查询总数Count:"+ total);
-			List<Device> rst=query.getResultList();
-			assertEquals(total, rst.size());
-			int n=0;
-			for(Device d: rst){
-				System.out.println(d);
-				if(n++>10)break;
-			}
-		}
-		
-		/**
-		 * 查询记录、如果SQL语句中带有Group条件...
-		 * 跨库条件下的Group实现尤为复杂
-		 */
-		{
-			System.out.println("查询——分组查询，正确操作表：4,1,6");
-			String sql="select type,count(*) as count,max(indexcode) max_id from Device tx where indexcode like '4%' or indexcode like '1123%' or indexcode like '6%' group by type ";
-			NativeQuery<Map> query=db.createNativeQuery(sql,Map.class);
-			query.setRouting(true);
-			//
 			System.out.println("预期查询总数Count:"+ query.getResultCount());
-			List<Map> devices=query.getResultList();
-			for (Map ss : devices) {
+			List<String> devices=query.getResultList();
+			for (String ss : devices) {
 				System.out.println(ss);
 			}
+			
 		}
 	}
 	

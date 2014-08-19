@@ -38,6 +38,7 @@ import jef.database.meta.MetaHolder;
 import jef.database.meta.MetadataAdapter;
 import jef.database.routing.function.KeyFunction;
 import jef.database.routing.function.ModulusFunction;
+import jef.database.support.MultipleDatabaseOperateException;
 import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanUtils;
@@ -88,6 +89,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		return meta.getBaseTable(profile).toPartitionResults();
 	}
 
+	//0基表 1 不含基表  2 分表+基表 3 数据库中的存在表（不含基表） 4所有存在的表
 	public PartitionResult[] toTableNames(MetadataAdapter meta, PartitionSupport processor, int opType) {
 		DatabaseDialect profile = processor.getProfile(null);
 		List<DbTable> result;
@@ -95,9 +97,9 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 			if (opType > 2) { // 取数据库存在的表
 				PartitionResult[] results = processor.getSubTableNames(meta);
 				if (opType == 3) {
-					return removeBaseTable(results,meta.getBaseTable(profile));
-				} else {
 					return results;
+				} else {
+					return ArrayUtils.addElement(results, meta.getBaseTable(profile).toPartitionResult());
 				}
 			} else {
 				Set<DbTable> tempResult = getPartitionTables(meta, getPartitionFieldValues(meta, NopBeanWrapper.getInstance(), null), profile);
@@ -112,11 +114,6 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 			}
 		}
 		return meta.getBaseTable(profile).toPartitionResults();
-	}
-
-	private PartitionResult[] removeBaseTable(PartitionResult[] results,DbTable base) {
-		return results;
-//		throw new UnsupportedOperationException();
 	}
 
 	/*
@@ -134,7 +131,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 			if (tbs.isEmpty()) { // 没有返回的情况，返回基表
 				return meta.getBaseTable(profile).toPartitionResult();
 			} else if (tbs.size() != 1) {
-				throw new IllegalArgumentException("Can not determine which database or table to operate.(one table only)."+tbs);
+				throw new MultipleDatabaseOperateException("Can not determine which database or table to operate.(one table only)."+tbs);
 			} else {
 				result = tbs.iterator().next();
 				if (result.isTbRegexp && result.isDbRegexp) {// 正则表达式，意味着由于某个分表维度没有设置，变成宽松匹配。这里无法获得实际存在表推算，因此直接退化为基表
@@ -161,7 +158,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 			if (tbs.isEmpty()) { // 没有返回的情况，返回基表
 				return meta.getBaseTable(profile).toPartitionResult();
 			} else if (tbs.size() != 1) {
-				throw new IllegalArgumentException("Can not determine which database or table to operate.(one table only)."+tbs);
+				throw new MultipleDatabaseOperateException("Can not determine which database or table to operate.(one table only)."+tbs);
 			} else {
 				result = tbs.iterator().next();
 				if (result.isTbRegexp && result.isDbRegexp) {// 正则表达式，意味着由于某个分表维度没有设置，变成宽松匹配。这里无法获得实际存在表推算，因此直接退化为基表

@@ -24,6 +24,7 @@ import javax.persistence.PersistenceException;
 
 import jef.common.wrapper.IntRange;
 import jef.common.wrapper.Page;
+import jef.database.support.MultipleDatabaseOperateException;
 import jef.database.wrapper.populator.Transformer;
 import jef.tools.PageInfo;
 
@@ -286,7 +287,7 @@ public abstract class PagingIterator<T> implements Iterator<List<T>> {
 			throw DbUtils.toRuntimeException(e);
 		}
 		if (isMultiDb && page.getTotal() > 50000) {
-			throw new UnsupportedOperationException("Your data is located in multiple databases and the result count [" + page.getTotal() + "] exceed max limit. The operate is disabled to protect the memory occupy of JVM.");
+			throw new MultipleDatabaseOperateException("Data is located in multiple databases and the result count [" + page.getTotal() + "] exceed max limit.");
 		}
 	}
 

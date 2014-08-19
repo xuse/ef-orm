@@ -108,7 +108,12 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 			if(hasAnyGroupDistinctOrderLimit()){
 				StringBuilder sb2 = new StringBuilder();
 				st.appendSelect(sb2, false);
-				sb2.append(" from \n(").append(sb).append(") ").append(tableAlias);
+				sb2.append(" from \n(").append(sb).append(") ");
+				if(tableAlias!=null){
+					sb2.append(tableAlias);
+				}else{
+					sb2.append("t");
+				}
 				sb2.append(ORMConfig.getInstance().wrap);
 				st.appendGroupHavingOrderLimit(sb2, moreDatabase, noOrder, moreDatabase);
 				sb = sb2;
@@ -361,9 +366,14 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 		if(isMultiDatabase()){
 			PlainSelect select=context.statement;
 			if(select instanceof SelectToCountWrapper){
-				SelectBody sb=((SelectToCountWrapper) select).getInnerSelectBody();
+				SelectToCountWrapper wrapper=(SelectToCountWrapper)select;
+				if(wrapper.isDistinct()){
+					return true;
+				}
+				SelectBody sb=(wrapper.getInnerSelectBody());
 				if(sb instanceof PlainSelect){
-					return ((PlainSelect) sb).isGroupBy();
+					PlainSelect ps=(PlainSelect) sb;
+					return ps.isGroupBy();
 				}
 			}
 		}

@@ -25,11 +25,12 @@ import jef.database.query.Query;
 import jef.database.query.SelectsImpl;
 import jef.database.query.SingleColumnSelect;
 import jef.database.query.SqlContext;
+import jef.database.support.MultipleDatabaseOperateException;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.CountClause;
 import jef.database.wrapper.clause.GroupClause;
-import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.clause.OrderClause;
+import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.clause.QueryClauseImpl;
 import jef.database.wrapper.clause.QueryClauseSqlImpl;
 import jef.database.wrapper.clause.SelectPart;
@@ -389,9 +390,9 @@ public abstract class SelectProcessor {
 				GroupClause groupClause = toGroupAndHavingClause(query, context);
 				if (sites.length > 1) {// 多数据库下还要Distinct，没办法了
 					if(context.isDistinct()){
-						throw new UnsupportedOperationException("Access multi-databases count with distinct operator is unsupported.");
+						throw new MultipleDatabaseOperateException("Not Supported, Count with 'distinct'");
 					}else if(groupClause.isNotEmpty()){
-						throw new UnsupportedOperationException("Access multi-databases count with group by operator is unsupported.");
+						throw new MultipleDatabaseOperateException("Not Supported, Count with 'group'");
 					}
 				}
 				BindSql result = parent.toPrepareWhereSql(query, context, false);
