@@ -42,6 +42,7 @@ import org.junit.Test;
  * @author jiyi
  * 
  */
+@SuppressWarnings("rawtypes")
 public class Case2 extends org.junit.Assert {
 	private static DbClient db;
 	private static boolean doinit = true;
@@ -405,7 +406,7 @@ public class Case2 extends org.junit.Assert {
 		 * 使用SQL语句插入记录，根据传入的indexcode分布到不同数据库上
 		 */
 		{
-			NativeQuery nq=db.createNativeQuery("insert into DeVice(indexcode,name,type,createDate) values(:indexcode, :name, :type, sysdate)").routing();
+			NativeQuery nq=db.createNativeQuery("insert into DeVice(indexcode,name,type,createDate) values(:indexcode, :name, :type, sysdate)").withRouting();;
 			nq.setParameter("indexcode", "122346");
 			nq.setParameter("name", "测试插入数据");
 			nq.setParameter("type", "办公用品");
@@ -426,7 +427,7 @@ public class Case2 extends org.junit.Assert {
 		 */
 		{
 			System.out.println("===Between条件中携带的路由条件,正确操作表: 1,2,3,4,5,6");
-			NativeQuery nq=db.createNativeQuery("update DeVice xx set xx.name='ID:'||indexcode,createDate=sysdate where indexcode between :s1 and :s2").routing();
+			NativeQuery nq=db.createNativeQuery("update DeVice xx set xx.name='ID:'||indexcode,createDate=sysdate where indexcode between :s1 and :s2").withRouting();;
 			nq.setParameter("s1", "1000");
 			nq.setParameter("s2", "6000");
 			nq.executeUpdate();
@@ -437,7 +438,7 @@ public class Case2 extends org.junit.Assert {
 		 */
 		{
 			System.out.println("===用IN条件更新==");
-			NativeQuery nq=db.createNativeQuery("update Device set createDate=sysdate, name=:name where indexcode in (:codes)").routing();
+			NativeQuery nq=db.createNativeQuery("update Device set createDate=sysdate, name=:name where indexcode in (:codes)").withRouting();;
 			nq.setParameter("name", "Updated value");
 			nq.setParameter("codes", new String[]{"6000123","567232",list.get(0).getIndexcode(),list.get(1).getIndexcode(),list.get(2).getIndexcode()});
 			nq.executeUpdate();
@@ -447,7 +448,7 @@ public class Case2 extends org.junit.Assert {
 		 */
 		{
 			System.out.println("===正确操作表： 2==");
-			NativeQuery nq=db.createNativeQuery("update Device set createDate=sysdate where type='办公用品' or indexcode='2002345'").routing();
+			NativeQuery nq=db.createNativeQuery("update Device set createDate=sysdate where type='办公用品' or indexcode='2002345'").withRouting();;
 			nq.executeUpdate();
 		}
 		
@@ -457,7 +458,7 @@ public class Case2 extends org.junit.Assert {
 		 */
 		{
 			System.out.println("===正确操作表： 1,6,5==");
-			NativeQuery nq=db.createNativeQuery("delete Device where indexcode in (:codes)").routing();
+			NativeQuery nq=db.createNativeQuery("delete Device where indexcode in (:codes)").withRouting();;
 			nq.setParameter("codes", new String[]{"6000123","567232","110000"});
 			nq.executeUpdate();
 		}
@@ -466,7 +467,7 @@ public class Case2 extends org.junit.Assert {
 		 */
 		{
 			System.out.println("===正确操作表： 2,3,4,5,7,8==");
-			NativeQuery nq=db.createNativeQuery("delete Device where indexcode >'200000' and indexcode<'5' or indexcode >'700000' and indexcode <'8'").routing();
+			NativeQuery nq=db.createNativeQuery("delete Device where indexcode >'200000' and indexcode<'5' or indexcode >'700000' and indexcode <'8'").withRouting();;
 			nq.executeUpdate();
 		}
 		
@@ -476,7 +477,7 @@ public class Case2 extends org.junit.Assert {
 		{
 			System.out.println("查询，所有表，跨库排序");
 			String sql="select t.* from device t where createDate is not null order by createDate";
-			NativeQuery<Device> query=db.createNativeQuery(sql,Device.class).routing();
+			NativeQuery<Device> query=db.createNativeQuery(sql,Device.class).withRouting();;
 			long total=query.getResultCount();
 			System.out.println("预计查询结果总数Count:"+ total);
 			List<Device> devices=query.getResultList();
@@ -493,7 +494,7 @@ public class Case2 extends org.junit.Assert {
 		{
 			System.out.println("======查询，Like条件，后一个条件无参数被省略，正确操作表 3==");
 			String sql="select t.* from device t where createDate is not null and (t.indexcode like '3%' or t.indexcode in (:codes)) order by createDate";
-			NativeQuery<Device> query=db.createNativeQuery(sql,Device.class).routing();
+			NativeQuery<Device> query=db.createNativeQuery(sql,Device.class).withRouting();;
 			long total=query.getResultCount();
 			System.out.println("预期查询总数Count:"+ total);
 			int count=0;
@@ -526,7 +527,7 @@ public class Case2 extends org.junit.Assert {
 		{
 			System.out.println("查询——分组查询，正确操作表：4,1,6");
 			String sql="select type,count(*) as count,max(indexcode) max_id from Device tx where indexcode like '4%' or indexcode like '1123%' or indexcode like '6%' group by type ";
-			NativeQuery<Map> query=db.createNativeQuery(sql,Map.class).routing();
+			NativeQuery<Map> query=db.createNativeQuery(sql,Map.class).withRouting();;
 			System.out.println("预期查询总数Count:"+ query.getResultCount());
 			List<Map> devices=query.getResultList();
 			for (Map ss : devices) {
@@ -540,7 +541,7 @@ public class Case2 extends org.junit.Assert {
 		{
 			
 			String sql="select distinct type from device";
-			NativeQuery<String> query=db.createNativeQuery(sql,String.class).routing();
+			NativeQuery<String> query=db.createNativeQuery(sql,String.class).withRouting();;
 			long total=query.getResultCount();
 			System.out.println("预期查询总数Count:"+ total);
 			List<String> devices=query.getResultList();

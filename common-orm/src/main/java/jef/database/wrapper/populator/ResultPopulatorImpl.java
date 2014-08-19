@@ -79,7 +79,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 	}
 
 	public Iterator<Object[]> iteratorMultipie(IResultSet rs, EntityMappingProvider context,Transformer transformer) {
-		return new MultipieRsIterator(rs, context,transformer);
+		return new MultipleRsIterator(rs, context,transformer);
 	}
 
 	public <T> Iterator<T> iteratorPlain(IResultSet rs, Transformer transformers) {
@@ -136,7 +136,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 	 */
 	public List<Object[]> toDataObjectMap(IResultSet rs, EntityMappingProvider context,Transformer transformer) {
 		List<Object[]> list = new ArrayList<Object[]>();
-		for (Iterator<Object[]> iter = new MultipieRsIterator(rs, context,transformer); iter.hasNext();) {
+		for (Iterator<Object[]> iter = new MultipleRsIterator(rs, context,transformer); iter.hasNext();) {
 			list.add(iter.next());
 		}
 		return list;
@@ -369,13 +369,13 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 		}
 	}
 
-	final static class MultipieRsIterator implements Iterator<Object[]> {
+	final static class MultipleRsIterator implements Iterator<Object[]> {
 		private IResultSet rs;
 		private int size;
 		private List<Mapper<?>> populators;
 		private Class<?> componentType;
 
-		public MultipieRsIterator(IResultSet rs, EntityMappingProvider context,Transformer transformer) {
+		public MultipleRsIterator(IResultSet rs, EntityMappingProvider context,Transformer transformer) {
 			this.componentType=transformer.getResultClazz().getComponentType();
 			Assert.isFalse(componentType.isPrimitive(),"Please use the complex type of "+componentType);
 			this.rs = rs;

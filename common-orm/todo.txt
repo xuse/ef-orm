@@ -44,6 +44,7 @@ CXF 2.7.10提高了兼容性，但是CXF-Plus的ASM类产生的package-info不�
 当使用基于String的Between条件时，路由结果偏少。indexcode BETWEEN ? AND ? (OK)
 基于SQL分析的分库分表、对NativeQuery支持的分表分库操作(OK) 
 由于Java cc分析器当中的K_START等token优先级大于S_IDENTIFIER，造成jpql参数中不能支持start等名称，(OK)
+要支持多表时，使用distinct后进行count时，在内存中先distinct后再count (Criteria不支持，NativeQuery OK)
 
 ==========文档补充============
 ——关于序列化反序列化支持问题
@@ -75,15 +76,17 @@ TDDL最大的两个亮点是动态数据源管理和分库分表。建议抽出�
 
 ================ 待解决的问题  ===================
 start with connect by的内存计算方案
-要支持多表时，使用distinct后进行count时，在内存中先distinct后再count
- 
+
 Batch Insert等操作下的极限性能模式。(不返回值、性能分析等手段)、此外对于Batch可能需要统计并输出因为Sequence而消耗的时间，Oracle下的实现特殊优化 hint, no logging
 ——极限模式下：启用该数据库本身的特殊优化操作——no logging /*+APPEND */ 等。极限模式下不回写自增值等。 (部分完成，待测试)
 将分表计算的缓存从metadata上剥离
+
 MSSQL Server方言支持
+
 为大部分测试案例增加断言
 支持SQLServer 2008
-javacpp和JNA对比研究
+
+javacpp和JNA对比研究，使用JNA重新封rar解压库
 
 将对NativeQuery支持的分库分表功能直接封装为DataSource，从而实现按JDBC驱动的分库分表功能。 考虑用线程变量来传递已经解析好的分表条件.(暂缓)
 关于连接池检查时的checkSQL支持问题...(暂缓)
