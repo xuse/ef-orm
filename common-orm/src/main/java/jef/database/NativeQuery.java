@@ -280,8 +280,18 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 * @param routing
 	 *            ＳＱＬ语句路由
 	 */
-	public void setRouting(boolean routing) {
+	public NativeQuery<X> setRouting(boolean routing) {
 		this.routing = routing;
+		return this;
+	}
+	
+	/**
+	 * 设置启用ＳＱＬ语句路由功能
+	 * @return 当前NativeQuery本身
+	 */
+	public NativeQuery<X> routing(){
+		this.routing = true;
+		return this;
 	}
 
 	/**
