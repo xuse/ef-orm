@@ -123,7 +123,7 @@ public class NamedQueryConfig extends jef.database.DataObject {
 
 	private boolean fromDb = false;
 
-	private final Map<DatabaseDialect, DialectCase> datas = new IdentityHashMap<DatabaseDialect, DialectCase>();;
+	private Map<DatabaseDialect, DialectCase> datas = new IdentityHashMap<DatabaseDialect, DialectCase>();;
 
 	public boolean isFromDb() {
 		return fromDb;
@@ -256,6 +256,10 @@ public class NamedQueryConfig extends jef.database.DataObject {
 
 	private DialectCase getDialectCase(OperateTarget db) throws SQLException {
 		DatabaseDialect profile = db.getProfile();
+		if(datas==null){
+			//当使用testNamedQueryConfigedInDb案例时，由于使用Unsafe方式构造对象，故构造器方法未运行造成datas为null;
+			 datas= new IdentityHashMap<DatabaseDialect, DialectCase>();
+		}
 		DialectCase dc = datas.get(profile);
 		if (dc == null) {
 			synchronized (datas) {
