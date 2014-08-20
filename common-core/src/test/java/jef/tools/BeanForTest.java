@@ -2,14 +2,14 @@ package jef.tools;
 
 import java.util.Date;
 
-public class Person {
+public class BeanForTest {
 	private int id;
 	private String name;
 	private Date birthDay;
 	private int age;
 	private Date date;
 	private byte[] array;
-	private Person person;
+	private BeanForTest person;
 
 	private String comment;
 	private String alias;
@@ -18,11 +18,11 @@ public class Person {
 	private float height;
 	private String fest;
 	
-	public Person getPerson() {
+	public BeanForTest getPerson() {
 		return person;
 	}
 
-	public void setPerson(Person person) {
+	public void setPerson(BeanForTest person) {
 		this.person = person;
 	}
 

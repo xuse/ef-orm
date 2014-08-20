@@ -23,9 +23,15 @@ import javax.sql.rowset.CachedRowSet;
 
 import jef.database.dialect.DatabaseDialect;
 
+/**
+ * 直接对JDBC结果集进行操作的转换器
+ * @author jiyi
+ *
+ * @param <T>
+ */
 public interface ResultSetTransformer<T> {
 	T transformer(ResultSet rs, DatabaseDialect profile) throws SQLException;
-
+	
 	public static final ResultSetTransformer<CachedRowSet> CACHED_RESULTSET = new ResultSetTransformer<CachedRowSet>() {
 		public CachedRowSet transformer(ResultSet rs, DatabaseDialect db) throws SQLException {
 			CachedRowSet cache = db.newCacheRowSetInstance();

@@ -35,11 +35,10 @@ import javax.persistence.Parameter;
 import javax.persistence.PersistenceException;
 import javax.persistence.TemporalType;
 
-import jef.common.Entry;
 import jef.common.PairSO;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
-import jef.database.OperateTarget.SqlTransformer;
+import jef.database.OperateTarget.TransformerAdapter;
 import jef.database.Session.PopulateStrategy;
 import jef.database.annotation.PartitionResult;
 import jef.database.dialect.type.ResultSetAccessor;
@@ -54,6 +53,7 @@ import jef.database.query.SqlExpression;
 import jef.database.routing.jdbc.ExecutionPlan;
 import jef.database.routing.jdbc.SelectExecutionPlan;
 import jef.database.routing.jdbc.SqlAnalyzer;
+import jef.database.routing.jdbc.SqlExecutionParam;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.Mapper;
@@ -327,17 +327,16 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 */
 	public long getResultCount() {
 		try {
-			Entry<Statement, List<Object>> parse = config.getCountSqlAndParams(db, this);
+			SqlExecutionParam parse = config.getCountSqlAndParams(db, this);
 			SelectExecutionPlan plan = null;
 			if (routing) {
-				plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select)parse.getKey(), parse.getValue(), db);
+				plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select)parse.st, parse.params, db);
 			}
 			boolean debug=ORMConfig.getInstance().debugMode;
 			if (plan == null) {
-				String sql = parse.getKey().toString();
-				List<?> params = parse.getValue();
+				String sql = parse.st.toString();
 				long start = System.currentTimeMillis();
-				Long num = db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, 1, 0, params);
+				Long num = db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, 1, 0, parse.params);
 				if (debug) {
 					long dbAccess = System.currentTimeMillis();
 					LogUtil.show(StringUtils.concat("Count:", String.valueOf(num), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", db.getTransactionId()));
@@ -389,8 +388,8 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 */
 	public ResultIterator<X> getResultIterator() {
 		try {
-			Entry<Statement, List<Object>> parse = config.getSqlAndParams(db, this);
-			Statement sql = parse.getKey();
+			SqlExecutionParam parse = config.getSqlAndParams(db, this);
+			Statement sql = parse.st;
 			String s = sql.toString();
 			
 			ORMConfig config = ORMConfig.getInstance();
@@ -398,12 +397,12 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			
 			SelectExecutionPlan plan = null;
 			if (routing) {
-				plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select)sql, parse.getValue(), db);
+				plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select)sql, parse.params, db);
 			}
 			if (plan == null) {// 普通查询
 				if (range != null)
 					s = toPageSql(sql, s);
-				return db.innerIteratorBySql(s, resultTransformer, 0, fetchSize, parse.getValue());
+				return db.innerIteratorBySql(s, resultTransformer, 0, fetchSize, parse.params);
 			} else {// 分表分库查询
 				if (plan.isMultiDatabase()) {// 多库
 					MultipleResultSet mrs = new MultipleResultSet(config.isCacheResultset(), debug);
@@ -453,20 +452,22 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 
 	private List<X> doQuery(int max, int fetchSize,boolean noOrder) throws SQLException {
 		long start = System.currentTimeMillis();
-		Entry<Statement, List<Object>> parse = config.getSqlAndParams(db, this);
-		Statement sql = parse.getKey();
+		SqlExecutionParam parse = config.getSqlAndParams(db, this);
+		Statement sql = parse.st;
 		SelectExecutionPlan plan = null;
 		if (routing) {
-			plan =SqlAnalyzer.getSelectExecutionPlan((Select)sql, parse.getValue(), db);
+			plan =SqlAnalyzer.getSelectExecutionPlan((Select)sql, parse.params, db);
 		}
 		String s = sql.toString();
-		SqlTransformer<X> rst = db.new SqlTransformer<X>(resultTransformer);
+		TransformerAdapter<X> rst = db.new TransformerAdapter<X>(resultTransformer);
+		rst.setOthers(parse);
 		List<X> list;
 		if (plan == null) {// 普通查询
 			if (range != null) {
 				s = toPageSql(sql, s);
 			}
-			list = db.innerSelectBySql(s, rst, max, fetchSize, parse.getValue());
+			rst.setDb(this.db);
+			list = db.innerSelectBySql(s, rst, max, fetchSize, parse.params);
 		} else {// 分表分库查询
 			if (plan.isMultiDatabase()) {// 多库
 				ORMConfig config = ORMConfig.getInstance();
@@ -475,16 +476,19 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 				for (PartitionResult site : plan.getSites()) {
 					processQuery(db.getTarget(site.getDatabase()), plan.getSql(site,noOrder), max,mrs);
 				}
+				rst.dbAccess=System.currentTimeMillis();
 				try{
 					plan.parepareInMemoryProcess(range,mrs);
 					if(noOrder){ //去除内存排序
 						mrs.setInMemoryOrder(null);
 					}
-					return plan.getListResult(resultTransformer, mrs);
+					mrs.setInMemoryConnectBy(parse.parseStartWith(mrs.getColumns()));
+					IResultSet rsw=mrs.toSimple(null,resultTransformer.getStrategy());
+					list = db.populateResultSet(rsw, null, resultTransformer);
 				}finally{
 					mrs.close();
 				}
-				//TODO 这里没有记录操作时间，真的吗》》
+				
 			} else { // 单库多表，基于Union的查询. 可以使用数据库分页
 				PartitionResult pr=plan.getSites()[0];
 				PairSO<List<Object>> result = plan.getSql(pr,false);
@@ -492,7 +496,9 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 				if (range != null) {
 					s = toPageSql(sql, s);
 				}
-				list = db.getTarget(pr.getDatabase()).innerSelectBySql(s, rst, max, fetchSize, result.second);
+				OperateTarget db=this.db.getTarget(pr.getDatabase());
+				rst.setDb(db);
+				list = db.innerSelectBySql(s, rst, max, fetchSize, result.second);
 			}
 		}
 
@@ -583,14 +589,14 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 */
 	public int executeUpdate() {
 		try {
-			Entry<Statement, List<Object>> parse = config.getSqlAndParams(db, this);
-			Statement sql = parse.getKey();
+			SqlExecutionParam parse = config.getSqlAndParams(db, this);
+			Statement sql = parse.st;
 			ExecutionPlan plan = null;
 			if (routing) {
-				plan = SqlAnalyzer.getExecutionPlan(sql, parse.getValue(), db);
+				plan = SqlAnalyzer.getExecutionPlan(sql, parse.params, db);
 			}
 			if (plan == null) {
-				return db.innerExecuteSql(parse.getKey().toString(), parse.getValue());
+				return db.innerExecuteSql(parse.st.toString(), parse.params);
 			} else {
 				long start=System.currentTimeMillis();
 				int total = 0;

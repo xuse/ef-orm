@@ -8,7 +8,7 @@ import junit.framework.TestCase;
 public class TestUnsafeSupport extends TestCase {
 
 	private static sun.misc.Unsafe unsafe;
-	private static Person person;
+	private static BeanForTest person;
 
 	long ageOffset;
 	long nameOffset;
@@ -24,11 +24,11 @@ public class TestUnsafeSupport extends TestCase {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
-		person = new Person();
-		dateOffset = unsafe.objectFieldOffset(Person.class.getDeclaredField("date"));
-		ageOffset = unsafe.objectFieldOffset(Person.class.getDeclaredField("age"));
-		nameOffset = unsafe.objectFieldOffset(Person.class.getDeclaredField("name"));
-		arrayOffset = unsafe.objectFieldOffset(Person.class.getDeclaredField("array"));
+		person = new BeanForTest();
+		dateOffset = unsafe.objectFieldOffset(BeanForTest.class.getDeclaredField("date"));
+		ageOffset = unsafe.objectFieldOffset(BeanForTest.class.getDeclaredField("age"));
+		nameOffset = unsafe.objectFieldOffset(BeanForTest.class.getDeclaredField("name"));
+		arrayOffset = unsafe.objectFieldOffset(BeanForTest.class.getDeclaredField("array"));
 	}
 
 	/**
@@ -36,7 +36,7 @@ public class TestUnsafeSupport extends TestCase {
 	 */
 	public void testOrdinaryReflection() {
 		try {
-			Class<?> personClazz = Person.class;
+			Class<?> personClazz = BeanForTest.class;
 			Field __ageField = personClazz.getDeclaredField("age");
 			assertEquals(0, __ageField.getInt(person));
 

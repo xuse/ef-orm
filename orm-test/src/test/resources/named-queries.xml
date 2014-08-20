@@ -35,32 +35,43 @@
 		<![CDATA[
 		create table sys_resource(
 		   id   int,
-		   resource_id int,
-		   parent_id   int
+		   parent_id   int,
+		   name varchar(500)
 		)
 		]]>
 	</query>
-	<query name = "testOracleTree#oracle" type="sql">
+	<query name = "testOracleTree" type="sql">
 		<![CDATA[
-				select rs.*,f.name
+				select rs.*,f.name as fname
   				from sys_resource rs
   				left join Foo f on rs.id=f.id
   				where rs.id!=3
- 				START WITH rs.resource_id IN (:value)
-				CONNECT BY PRIOR rs.resource_id = rs.parent_id
+ 				START WITH rs.id IN (:value)
+				CONNECT BY PRIOR rs.id = rs.parent_id
+		]]>
+	</query>
+	
+	<query name = "testOracleTree#oracle" type="sql">
+		<![CDATA[
+				select rs.*,f.name as fname
+  				from sys_resource rs
+  				left join Foo f on rs.id=f.id
+  				where rs.id!=3
+ 				START WITH rs.id IN (:value)
+				CONNECT BY PRIOR rs.id = rs.parent_id
 		]]>
 	</query>
 	<query name = "testOracleTree#mysql" type="sql">
 		<![CDATA[
-				select rs.*,f.name
+				select rs.*,f.name as fname
   				from sys_resource rs
   				left join Foo f on rs.id=f.id
-  				where rs.id!=3 and rs.parent_id in (:value)
+  				where rs.id!=3 and rs.id in (:value)
 		]]>
 	</query>
 	<query name = "testOracleTree#postgresql" type="sql">
 		<![CDATA[
-				select rs.*,f.name
+				select rs.*,f.name as fname
   				from sys_resource rs
   				left join Foo f on rs.id=f.id
   				where rs.id!=3 and rs.parent_id in (:value)

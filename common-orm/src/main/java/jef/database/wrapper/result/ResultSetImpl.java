@@ -95,7 +95,7 @@ public class ResultSetImpl implements IResultSet {
 			//对于Oracle getCOlumnName和getColumnLabel是一样的（非标准JDBC实现），MySQL正确地实现了JDBC的要求，getLabel得到别名，getColumnName得到表的列名
 			String name=meta.getColumnLabel(i);  
 			int type=meta.getColumnType(i);
-			columnList.add(new ColumnDescription(i,type,name)); 
+			columnList.add(new ColumnDescription(i,type,name,meta.getTableName(i),meta.getSchemaName(i)));
 		}
 		this.columns = new ColumnMeta(columnList);
 	}

@@ -110,9 +110,18 @@ public class InMemoryGroupByHaving implements InMemoryProcessor {
 		}
 		case NOT_EQUALS:
 			return !ObjectUtils.equals(obj, ele.havingCondValue);
-		case NOT_IN:
-		case IN:
-		case BETWEEN_L_L:
+		case NOT_IN:{
+			List<Object> values=(List<Object>)ele.havingCondValue;
+			return !values.contains(obj);
+		}
+		case IN:{
+			List<Object> values=(List<Object>)ele.havingCondValue;
+			return values.contains(obj);
+		}
+		case BETWEEN_L_L:{
+			List<Object> values=(List<Object>)ele.havingCondValue;
+			return ObjectUtils.compare((Comparable)obj, (Comparable)values.get(0))>=0 && ObjectUtils.compare((Comparable)obj, (Comparable)values.get(1))<=0;
+		}
 		default:
 			throw new UnsupportedOperationException();
 		}

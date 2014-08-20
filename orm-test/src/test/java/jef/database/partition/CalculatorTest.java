@@ -7,7 +7,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.GenerationType;
@@ -34,7 +33,6 @@ import jef.database.support.MultipleDatabaseOperateException;
 import jef.orm.onetable.model.TestEntity;
 import jef.orm.partition.PartitionEntity;
 
-import org.easyframe.tutorial.lessona.entity.Device;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -191,65 +189,62 @@ public class CalculatorTest extends org.junit.Assert{
 		MetaHolder.getCachedModels().clear();
 	}
 
-	@Test
-	public void testSql1() throws ParseException{
-		MetaHolder.initMetadata(Device.class, null,null);
-		String sql="Delete from DEVICE where indexcode > '100000' AND indexcode < '500000'";
-		PartitionResult[] results=SqlAnalyzer.getPartitionResultOfSQL(DbUtils.parseStatement(sql), Collections.EMPTY_LIST, supportor);
-		System.out.println("------------------------------------------");
-		for (PartitionResult r : results) {
-			System.out.println(r.getDatabase()+"||"+r.getTables());
-		}
-	}
-	
-	@Test
-	public void testSql2() throws ParseException{
-		MetaHolder.initMetadata(Device.class, null,null);
-		String sql="update DEVICE xx set xx.name = 'ID:' || indexcode,createDate = current_timestamp where indexcode BETWEEN '1000' AND '6000'";
-		PartitionResult[] results=SqlAnalyzer.getPartitionResultOfSQL(DbUtils.parseStatement(sql), Collections.EMPTY_LIST, supportor);
-		System.out.println("------------------------------------------");
-		for (PartitionResult r : results) {
-			System.out.println(r.getDatabase()+"||"+r.getTables());
-		}
-	}
-	
-	@Test
-	public void testSql3() throws ParseException{
-		MetaHolder.initMetadata(Device.class, null,null);
-		String sql="delete Device where (indexcode >'200000' and indexcode<'5') or (indexcode >'700000' and indexcode <'8')";
-		PartitionResult[] results=SqlAnalyzer.getPartitionResultOfSQL(DbUtils.parseStatement(sql), Collections.EMPTY_LIST, supportor);
-		System.out.println("------------------------------------------");
-		for (PartitionResult r : results) {
-			System.out.println(r.getDatabase()+"||"+r.getTables());
-		}
-//		{indexcode=(700000,8) || (200000,5)}
-//		MapFunction maps=new MapFunction("1-1:datasource1,2-49999:datasource2,5-899999:datasource3,*:",1);
-//		RangeDimension<String> r=RangeDimension.createCC("700000", "8");
-//		 Collection<?> objs=r.toEnumationValue(Collections.<PartitionFunction>singletonList(maps));
-//		for(Object o: objs){
-//			System.out.println(maps.eval(String.valueOf(o)));
+//	@Test
+//	public void testSql1() throws ParseException{
+//		MetaHolder.initMetadata(Device.class, null,null);
+//		String sql="Delete from DEVICE where indexcode > '100000' AND indexcode < '500000'";
+//		PartitionResult[] results=SqlAnalyzer.getPartitionResultOfSQL(DbUtils.parseStatement(sql), Collections.EMPTY_LIST, supportor);
+//		System.out.println("------------------------------------------");
+//		for (PartitionResult r : results) {
+//			System.out.println(r.getDatabase()+"||"+r.getTables());
 //		}
-	}
-
-	@Test
-	public void testSqlx() throws ParseException{
-//		@PartitionKey(field = "indexcode",function=KeyFunction.RAW,length=1),
-//		@PartitionKey(field = "indexcode",function=KeyFunction.MAPPING,
-//			functionConstructorParams="1-1:datasource1,2-49999:datasource2,5-899999:datasource3,*:",isDbName=true)
-		MetaHolder.initMetadata(Device.class, null,null);
-		String sql="delete Device where indexcode=?";
-		test(sql,"199999"); //1-1不能适应
-		test(sql,"2");      //
-		test(sql,"20");
-		test(sql,"20000");
-		test(sql,"2000001");
-		test(sql,"21");
-		test(sql,"201");
-		test(sql,"299999");
-		test(sql,"3");
-		test(sql,"300000");
-		
-	}
+//	}
+//	
+//	@Test
+//	public void testSql2() throws ParseException{
+//		MetaHolder.initMetadata(Device.class, null,null);
+//		String sql="update DEVICE xx set xx.name = 'ID:' || indexcode,createDate = current_timestamp where indexcode BETWEEN '1000' AND '6000'";
+//		PartitionResult[] results=SqlAnalyzer.getPartitionResultOfSQL(DbUtils.parseStatement(sql), Collections.EMPTY_LIST, supportor);
+//		System.out.println("------------------------------------------");
+//		for (PartitionResult r : results) {
+//			System.out.println(r.getDatabase()+"||"+r.getTables());
+//		}
+//	}
+//	
+//	@Test
+//	public void testSql3() throws ParseException{
+//		MetaHolder.initMetadata(Device.class, null,null);
+//		String sql="delete Device where (indexcode >'200000' and indexcode<'5') or (indexcode >'700000' and indexcode <'8')";
+//		PartitionResult[] results=SqlAnalyzer.getPartitionResultOfSQL(DbUtils.parseStatement(sql), Collections.EMPTY_LIST, supportor);
+//		System.out.println("------------------------------------------");
+//		for (PartitionResult r : results) {
+//			System.out.println(r.getDatabase()+"||"+r.getTables());
+//		}
+////		{indexcode=(700000,8) || (200000,5)}
+////		MapFunction maps=new MapFunction("1-1:datasource1,2-49999:datasource2,5-899999:datasource3,*:",1);
+////		RangeDimension<String> r=RangeDimension.createCC("700000", "8");
+////		 Collection<?> objs=r.toEnumationValue(Collections.<PartitionFunction>singletonList(maps));
+////		for(Object o: objs){
+////			System.out.println(maps.eval(String.valueOf(o)));
+////		}
+//	}
+//
+//	@Test
+//	public void testSqlx() throws ParseException{
+//		MetaHolder.initMetadata(Device.class, null,null);
+//		String sql="delete Device where indexcode=?";
+//		test(sql,"199999"); //1-1不能适应
+//		test(sql,"2");      //
+//		test(sql,"20");
+//		test(sql,"20000");
+//		test(sql,"2000001");
+//		test(sql,"21");
+//		test(sql,"201");
+//		test(sql,"299999");
+//		test(sql,"3");
+//		test(sql,"300000");
+//		
+//	}
 
 	private void test(String sql, Object... string) throws ParseException {
 		StSqlParser parser=new StSqlParser(new StringReader(sql)); 

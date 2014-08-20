@@ -32,9 +32,9 @@ public class Case1 extends org.junit.Assert {
 		db = new DbClient();
 	}
 
-	// 问题1，一次性创建了3年的表，太多。 如果是按天分表岂不是一次性创建几百张表啊？(测试)
-	// 问题2，不能按需建表(已经支持！) (Pass)
-	// 支持特性2，分表后，不能采用自增主键，Derby又不支持Sequence，因此会自动切换为Table模式自增。 (Pass)
+	// 问题1，一次性创建了3年的表，太多。 如果是按天分表岂不是一次性创建几百张表啊？(测试,按需建表下实际建表不多,OK)
+	// 问题2，按需建表(已经支持！) (Pass OK)
+	// 支持特性2，分表后，不能采用自增主键，Derby又不支持Sequence，因此会自动切换为Table模式自增。 (Pass OK)
 	@Test
 	public void createTest() throws SQLException {
 		OperateLog log = new OperateLog();

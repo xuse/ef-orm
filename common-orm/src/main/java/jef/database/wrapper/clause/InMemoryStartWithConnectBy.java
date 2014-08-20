@@ -1,11 +1,22 @@
 package jef.database.wrapper.clause;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
+import jef.database.Condition.Operator;
 import jef.database.rowset.CachedRowSetImpl;
 import jef.database.rowset.Row;
-import jef.http.client.support.CommentEntry;
+import jef.tools.StringUtils;
+
+import org.apache.commons.lang.ObjectUtils;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 /**
  * 在内存中实现结果集的递归查询
@@ -18,23 +29,109 @@ import jef.http.client.support.CommentEntry;
  * TODO implement it
  */
 public class InMemoryStartWithConnectBy implements InMemoryProcessor{
-	private Object startWith;
 	
-	//可以设置多个连接字段.格式如
-	// 子节点上的父节点属性  = 父节点上的ID
-	//  parentid=id
-	//  type=type
-	private List<CommentEntry> connectBy;
+	//要连接的当前ID
+	public int connectPrior;
+	//要连接的父ID
+	public int connectParent;
 	
+	public int startWithColumn;
+	public Operator startWithOperator;
+	public Object startWithValue;
 	
 	public void process(CachedRowSetImpl rows) throws SQLException {
-		
-		
+		Set<Row> result=new LinkedHashSet<Row>();
+		Multimap<Object,Row> index=index(rows.getRvh(),result);
+		List<Row> newComing=Arrays.asList(result.toArray(new Row[result.size()]));
+		while(!newComing.isEmpty()){ //找不到新的孩子就结束循环
+			newComing=appendResults(result,newComing,index);	
+		}
+		if(result.isEmpty()){
+			rows.getRvh().clear();
+			rows.refresh();
+		}else{
+			rows.setRvh(Arrays.asList(result.toArray(new Row[result.size()])));
+			rows.refresh();
+		}
 	}
 	
-	static class RowNode{
-		private Object key;
-		private Row row;
+	private List<Row> appendResults(Set<Row> result, List<Row> toScan,Multimap<Object,Row> index) {
+		List<Row> newComing=new ArrayList<Row>();
+		for(Row row:toScan){
+			Collection<Row> children=index.get(row.getColumnObject(connectPrior));
+			for(Row child:children){
+				if(result.add(child)){
+					newComing.add(child);
+				}
+			}
+		}
+		return newComing;
+	}
+
+	//根据父ID索引
+	private Multimap<Object, Row> index(List<Row> rvh,Set<Row> result) {
+		Multimap<Object, Row> index=ArrayListMultimap.create();
+		for(Row row:rvh){
+			index.put(row.getColumnObject(connectParent), row);
+			if(matchStart(row)){
+				result.add(row);
+			}
+		}
+		return index;	
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private boolean matchStart(Row row) {
+		Object obj=row.getColumnObject(startWithColumn);
+		switch(startWithOperator){
+		case EQUALS:
+			return ObjectUtils.equals(obj, startWithValue);
+		case GREAT:
+			return ObjectUtils.compare((Comparable)obj, (Comparable)startWithValue)>0;
+		case GREAT_EQUALS:
+			return ObjectUtils.compare((Comparable)obj, (Comparable)startWithValue)>=0;
+		case IS_NOT_NULL:
+			return obj!=null;
+		case IS_NULL:
+			return obj==null;
+		case LESS:
+			return ObjectUtils.compare((Comparable)obj, (Comparable)startWithValue)<0; 
+		case LESS_EQUALS:
+			return ObjectUtils.compare((Comparable)obj, (Comparable)startWithValue)<=0;
+		case MATCH_ANY:{
+			//当startWithOperator是基于SQL时，要注意其实现
+			String s1=StringUtils.toString(obj);
+			String s2=String.valueOf(startWithValue);
+			s2=StringUtils.replaceChars(s2, "%_", "*?");
+			return StringUtils.matches(s1, s2, false);
+		}
+		case MATCH_END:{
+			String s1=StringUtils.toString(obj);
+			String s2=String.valueOf(startWithValue);
+			return s1.endsWith(s2);
+		}
+		case MATCH_START:{
+			String s1=StringUtils.toString(obj);
+			String s2=String.valueOf(startWithValue);
+			return s1.startsWith(s2);
+		}
+		case NOT_EQUALS:
+			return !ObjectUtils.equals(obj, startWithValue);
+		case NOT_IN:{
+			List<Object> values=(List<Object>)startWithValue;
+			return !values.contains(obj);
+		}
+		case IN:{
+			List<Object> values=(List<Object>)startWithValue;
+			return values.contains(obj);
+		}
+		case BETWEEN_L_L:{
+			List<Object> values=(List<Object>)startWithValue;
+			return ObjectUtils.compare((Comparable)obj, (Comparable)values.get(0))>=0 && ObjectUtils.compare((Comparable)obj, (Comparable)values.get(1))<=0;
+		}
+		default:
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	public String getName() {

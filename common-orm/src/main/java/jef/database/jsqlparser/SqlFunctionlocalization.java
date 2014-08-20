@@ -31,7 +31,7 @@ public class SqlFunctionlocalization extends VisitorAdapter{
 	private DatabaseDialect profile;
 	private OperateTarget db;
 	private boolean check;
-	private StartWithExpression removedEx;
+	private StartWithExpression removedStartWith;
 	
 	public SqlFunctionlocalization(DatabaseDialect profile,OperateTarget db){
 		this.profile=profile;
@@ -50,6 +50,10 @@ public class SqlFunctionlocalization extends VisitorAdapter{
 			func.setParameters(new ExpressionList(el));
 			concat.rewrite=func;	
 		}
+	}
+
+	public StartWithExpression getRemovedStartWith() {
+		return removedStartWith;
 	}
 
 	@Override
@@ -100,9 +104,9 @@ public class SqlFunctionlocalization extends VisitorAdapter{
 	public void visit(StartWithExpression startWithExpression) {
 		if(profile.notHas(Feature.SUPPORT_CONNECT_BY)){
 			if(ORMConfig.getInstance().isAllowRemoveStartWith()){
-				if(super.visitPath.size()==1){
+				if(super.visitPath.size()<=2){ //距离statement最大为2
 					//将递归条件保留下来，从而后续支持内存中 递归过滤
-					removedEx=new StartWithExpression(startWithExpression.getStartExpression(),startWithExpression.getConnectExpression());
+					removedStartWith=new StartWithExpression(startWithExpression.getStartExpression(),startWithExpression.getConnectExpression());
 				}else{
 					String removed=startWithExpression.toString();
 					LogUtil.warn("["+removed+"] was removed from your SQL since current db doesn't support it.");

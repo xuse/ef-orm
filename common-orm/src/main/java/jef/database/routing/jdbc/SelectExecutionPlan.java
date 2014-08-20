@@ -10,7 +10,6 @@ import jef.common.PairSO;
 import jef.common.wrapper.IntRange;
 import jef.database.ORMConfig;
 import jef.database.OperateTarget;
-import jef.database.OperateTarget.SqlTransformer;
 import jef.database.annotation.PartitionResult;
 import jef.database.jsqlparser.SelectToCountWrapper;
 import jef.database.jsqlparser.expression.Table;
@@ -23,7 +22,6 @@ import jef.database.jsqlparser.statement.select.SelectExpressionItem;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.SelectBody;
 import jef.database.jsqlparser.visitor.SelectItem;
-import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.clause.GroupByItem;
 import jef.database.wrapper.clause.GroupFunctionType;
 import jef.database.wrapper.clause.InMemoryDistinct;
@@ -33,10 +31,7 @@ import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
 import jef.database.wrapper.populator.ResultSetTransformer;
-import jef.database.wrapper.populator.Transformer;
-import jef.database.wrapper.result.IResultSet;
 import jef.database.wrapper.result.MultipleResultSet;
-import jef.tools.Assert;
 import jef.tools.StringUtils;
 
 /**
@@ -74,7 +69,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 
 
 
-	/*
+	/*p
 	 * 得到一个数据库上操作的SQL语句
 	//表名改写          条件：全部
 	 //noGroup延迟——SQL尾部以及Select部分中的聚合函数去除 条件:多表(不区分)
@@ -163,19 +158,6 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 		}
 	}
 
-
-	//多库查询下，进行内存中的后处理
-	//内存操作(查询后)
-	//内存分页          条件：多库
-	//内存排序：        条件：多库
-	//内存排重          条件：多库
-	//内存分组          条件：多库 
-	public <X> List<X> getListResult(Transformer rst,MultipleResultSet rs) throws SQLException {
-		Assert.isTrue(isMultiDatabase());
-		IResultSet rsw=rs.toSimple(null,rst.getStrategy());
-		return context.db.populateResultSet(rsw, null, rst);
-	}
-	
 
 	/**
 	 * 根据查询结果，对照查询语句分析，是否需要内存操作
@@ -276,19 +258,6 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 		}
 		return s;
 	}
-	
-
-	public <X> ResultIterator<X> getIteratorResult(IntRange range, SqlTransformer<X> resultTransformer, int i, int fetchSize) {
-		
-		
-		
-		
-		
-		
-		
-		
-		return null;
-	}
 
 	public int processUpdate(PartitionResult site, OperateTarget session) {
 		throw new UnsupportedOperationException("Can not perform executeUpdate on a Select SQL.");
@@ -345,6 +314,9 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 				values.add(new GroupByItem(i,type,alias));
 			}
 		}
+		
+		//解析出having
+		
 		return new InMemoryGroupByHaving(keys,values);
 	}
 	

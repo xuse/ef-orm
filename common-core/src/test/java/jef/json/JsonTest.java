@@ -10,7 +10,7 @@ import java.util.Map;
 
 import jef.tools.DateFormats;
 import jef.tools.Foo;
-import jef.tools.Person;
+import jef.tools.BeanForTest;
 import jef.tools.ResourceUtils;
 import jef.tools.XMLUtils;
 import jef.tools.reflect.GenericUtils;
@@ -77,7 +77,7 @@ public class JsonTest extends org.junit.Assert{
 		Map<String,Object> map=new HashMap<String,Object>();
 		map.put("aaa", "aa");
 		map.put("bbb", 123);
-		Person foo=new Person();
+		BeanForTest foo=new BeanForTest();
 		foo.setAge(12);
 		foo.setName("彰善瘅恶");
 		map.put("ccc", foo);
@@ -151,7 +151,7 @@ public class JsonTest extends org.junit.Assert{
 	//测试案例3：支持Annotaion禁用字段输出:Dataobject输出
 	@Test
 	public void testDate(){
-		Person person=new Person();
+		BeanForTest person=new BeanForTest();
 		person.setBirthDay(new Date(1394776313506L));
 		
 		
@@ -222,22 +222,22 @@ public class JsonTest extends org.junit.Assert{
 	
 	@Test
 	public void testJ1() throws Exception {
-		Person p = RandomData.newInstance(Person.class);
+		BeanForTest p = RandomData.newInstance(BeanForTest.class);
 		String z = toJson(p);
 		System.out.println(z);
 		System.out.println(JSON.toJSONString(p));
 	}
 
 	private String toJson(Object obj) throws Exception {
-		System.out.println(ConfigManager.get("custom1").hasType(Person.class));
+		System.out.println(ConfigManager.get("custom1").hasType(BeanForTest.class));
 		JSONSerializer serializer = new JSONSerializer(ConfigManager.get("custom1"));
 		try {
 //			serializer.config(SerializerFeature.PrettyFormat, true);
 			SerializeConfig config=serializer.getMapping();
-			ObjectSerializer se=config.createASMSerializer(Person.class,ImmutableMap.of("id","the_id","name","name_person"));
-			config.put(Person.class,se);
+			ObjectSerializer se=config.createASMSerializer(BeanForTest.class,ImmutableMap.of("id","the_id","name","name_person"));
+			config.put(BeanForTest.class,se);
 			serializer.write(obj);
-			System.out.println(ConfigManager.get("custom1").hasType(Person.class));
+			System.out.println(ConfigManager.get("custom1").hasType(BeanForTest.class));
 			return serializer.toString();
 		} finally {
 			serializer.close();
@@ -245,7 +245,7 @@ public class JsonTest extends org.junit.Assert{
 	}
 	@Test
 	public void test222() {
-		Person p = RandomData.newInstance(Person.class);
+		BeanForTest p = RandomData.newInstance(BeanForTest.class);
 		JSON.toJSONString(p);
 		JSON.toJSONString(p);
 		JSON.toJSONString(p);

@@ -165,13 +165,14 @@ final class NamedQueryHolder {
 			return;
 		Map<String, NQEntry> result = new ConcurrentHashMap<String, NQEntry>();
 		boolean debugMode = ORMConfig.getInstance().isDebugMode();
+		String filename=JefConfiguration.get(DbCfg.NAMED_QUERY_RESOURCE_NAME, "named-queries.xml");
 		try {
 			// Load from files
-			for (URL queryFile : ArrayUtils.toIterable(this.getClass().getClassLoader().getResources("named-queries.xml"))) {
+			for (URL queryFile : ArrayUtils.toIterable(this.getClass().getClassLoader().getResources(filename))) {
 				if (queryFile == null)
 					continue;
 				if (debugMode) {
-					LogUtil.show("loading named queries in file <" + queryFile.toString() + ">");
+					LogUtil.show("loading named queries from file <" + queryFile.toString() + ">");
 				}
 				File file = IOUtils.urlToFile(queryFile);
 				loadFile(result, file);

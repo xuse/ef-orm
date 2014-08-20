@@ -160,7 +160,7 @@ public class SqlAnalyzer {
 	/*
 	 * 将已经顺序排列好的参数和解析后的AST中的参数对象一一对应。
 	 */
-	private static Map<Expression, Object> reverse(Statement sql, List<Object> value) {
+	public static Map<Expression, Object> reverse(Statement sql, List<Object> value) {
 		ParamReverser p = new ParamReverser(value);
 		sql.accept(p);
 		return p.params;

@@ -16,7 +16,7 @@ import org.junit.Test;
 public class BeanWrapperTest {
 	@Test
 	public void test1() {
-		Person t = new Person();
+		BeanForTest t = new BeanForTest();
 		BeanWrapper wr = BeanWrapper.wrap(t);
 		System.out.println(wr.getPropertyNames());
 		System.out.println(wr.isProperty("cSessionId"));
@@ -38,12 +38,12 @@ public class BeanWrapperTest {
 	
 	@Test
 	public void testAsdsad() throws IOException, ClassNotFoundException{
-		checkField(Person.class,"cSessionId");
-		checkField(Person.class,"i");
-		checkField(Person.class,"iB");
-		checkField(Person.class,"iC");
-		checkField(Person.class,"isBoolean");
-		checkField(Person.class,"iSBoolean");
+		checkField(BeanForTest.class,"cSessionId");
+		checkField(BeanForTest.class,"i");
+		checkField(BeanForTest.class,"iB");
+		checkField(BeanForTest.class,"iC");
+		checkField(BeanForTest.class,"isBoolean");
+		checkField(BeanForTest.class,"iSBoolean");
 		
 		
 //	    String m = "2、95开头靓号，呼出显号，对方可以打回，即使不在线亦可设置呼转手机，不错过任何重要电话，不暴露真实身份。\r\n3、应用内完全免费发送文字消息、语音对讲。\r\n4、建议WIFI 或 3G 环境下使用以获得最佳通话体验";
@@ -60,8 +60,8 @@ public class BeanWrapperTest {
 
 	}
 
-	private void checkField(Class<Person> class1, String field) {
-		FieldEx ex=BeanUtils.getField(Person.class, field);
+	private void checkField(Class<BeanForTest> class1, String field) {
+		FieldEx ex=BeanUtils.getField(BeanForTest.class, field);
 		MethodEx m1=BeanUtils.getGetter(ex);
 		MethodEx m2=BeanUtils.getSetter(ex);
 		Assert.notNull(m1);
@@ -80,7 +80,7 @@ public class BeanWrapperTest {
 		bw.setPropertyValue("ab1", null);
 		System.out.println(bw.getPropertyValue("ab1"));
 		
-		bw=BeanWrapper.wrap(new Person());
+		bw=BeanWrapper.wrap(new BeanForTest());
 		bw.setPropertyValue("id", null);
 		System.out.println(bw.getPropertyValue("id"));
 	}

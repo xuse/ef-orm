@@ -21,15 +21,19 @@ import jef.database.DbMetaData.ObjectType;
 import jef.database.NamedQueryConfig;
 import jef.database.NativeCall;
 import jef.database.NativeQuery;
+import jef.database.ORMConfig;
 import jef.database.PagingIterator;
 import jef.database.QB;
 import jef.database.RecordHolder;
 import jef.database.RecordsHolder;
 import jef.database.SqlTemplate;
 import jef.database.Transaction;
+import jef.database.VarObject;
 import jef.database.jmx.JefFacade;
 import jef.database.meta.FBIField;
 import jef.database.meta.Feature;
+import jef.database.meta.MetaHolder;
+import jef.database.meta.TupleMetadata;
 import jef.database.query.Func;
 import jef.database.query.Join;
 import jef.database.query.OutParam;
@@ -82,6 +86,7 @@ public class NativeQueryTest extends org.junit.Assert {
 
 	@DatabaseInit
 	public void setUp() throws SQLException {
+		boolean debug = JefFacade.getOrmConfig().isDebugMode();
 		try {
 			// LogUtil.show(db.getMetaData(null).getSQLKeywords());
 			dropTable();
@@ -90,6 +95,7 @@ public class NativeQueryTest extends org.junit.Assert {
 		} catch (Exception e) {
 			LogUtil.exception(e);
 		}
+		JefFacade.getOrmConfig().setDebugMode(debug);
 	}
 
 	/**
@@ -98,9 +104,6 @@ public class NativeQueryTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	private void prepareData() throws SQLException {
-		boolean debug = JefFacade.getOrmConfig().isDebugMode();
-		JefFacade.getOrmConfig().setDebugMode(false);
-
 		{
 			Root[] root = RandomData.newArrayInstance(Root.class, 5);
 			int x = 0;
@@ -155,15 +158,11 @@ public class NativeQueryTest extends org.junit.Assert {
 			}
 			db.batchInsert(Arrays.asList(children));
 		}
-		JefFacade.getOrmConfig().setDebugMode(debug);
-
 	}
 
 	private void createtable() throws SQLException {
-		db.createTable(Root.class);
-		db.createTable(Parent.class);
-		db.createTable(Child.class);
-		db.createTable(Leaf.class);
+		db.createTable(Root.class,Foo.class);
+		db.createTable(Parent.class,Child.class,Leaf.class);
 		db.createTable(EnumationTable.class);
 
 		db.createTable(TreeTable.class);
@@ -180,10 +179,7 @@ public class NativeQueryTest extends org.junit.Assert {
 	}
 
 	private void dropTable() throws SQLException {
-		db.dropTable(Root.class);
-		db.dropTable(Parent.class);
-		db.dropTable(Child.class);
-		db.dropTable(Leaf.class);
+		db.dropTable(Root.class,Parent.class,Child.class,Leaf.class);
 		db.dropTable(EnumationTable.class);
 		db.dropTable(TreeTable.class);
 	}
@@ -955,15 +951,51 @@ public class NativeQueryTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	@IgnoreOn({ "derby", "hsqldb", "sqlite" })
+	@IgnoreOn(allButExcept="hsqldb")
 	public void testStartWith() throws Exception {
 		try {
+//			db.dropTable("sys_resource");
 			if (!db.existTable("sys_resource")) {
 				db.createNamedQuery("testOracleTree_create").executeUpdate();
+				TupleMetadata tuple=MetaHolder.initMetadata(db, "sys_resource");
+				VarObject map=tuple.newInstance();
+				map.set("id", 1);
+				map.set("parentId", 0);
+				map.set("name", "Root");
+				db.insert(map);
+				
+				map=tuple.newInstance();
+				map.set("id", 2);
+				map.set("parentId", 1);
+				map.set("name", "A22");
+				db.insert(map);
+				
+				map=tuple.newInstance();
+				map.set("id", 4);
+				map.set("parentId", 2);
+				map.set("name", "A444");
+				db.insert(map);
+				
+				map=tuple.newInstance();
+				map.set("id", 5);
+				map.set("parentId", 1);
+				map.set("name", "A555");
+				db.insert(map);
+				
+				map=tuple.newInstance();
+				map.set("id", 6);
+				map.set("parentId", 2);
+				map.set("name", "A33");
+				db.insert(map);
 			}
+			
+			ORMConfig.getInstance().setAllowRemoveStartWith(true);
 			NativeQuery<Map> q = db.createNamedQuery("testOracleTree", Map.class);
-			q.setParameter("value", 1);
-			q.getSingleResult();
+			q.setParameter("value",2);
+			for(Map ss:q.getResultList()){
+				System.out.println(ss);
+				
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw e;

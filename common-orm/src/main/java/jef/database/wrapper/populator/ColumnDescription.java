@@ -27,11 +27,15 @@ public class ColumnDescription{
 	private String name;
 	private String simpleName;
 	private ResultSetAccessor accessor;
+	private String dbSchema;
+	private String table;
 	
-	public ColumnDescription(int n,int type,String name){
+	public ColumnDescription(int n,int type,String name,String table,String dbSchema){
 		this.n=n;
 		this.type=type;
 		this.name=name;
+		this.table=table;
+		this.dbSchema=dbSchema;
 	}
 
 	public int getN() {
@@ -52,6 +56,14 @@ public class ColumnDescription{
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public String getDbSchema() {
+		return dbSchema;
+	}
+
+	public String getTable() {
+		return table;
 	}
 
 	/**

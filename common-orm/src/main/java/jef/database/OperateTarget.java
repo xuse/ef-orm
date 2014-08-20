@@ -28,11 +28,12 @@ import jef.database.meta.DbProperty;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.EntityMappingProvider;
 import jef.database.query.SqlExpression;
+import jef.database.routing.jdbc.SqlExecutionParam;
 import jef.database.wrapper.ResultIterator;
-import jef.database.wrapper.populator.ResultPopulatorImpl;
 import jef.database.wrapper.populator.ResultSetTransformer;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.result.IResultSet;
+import jef.database.wrapper.result.MultipleResultSet;
 import jef.database.wrapper.result.ResultSetHolder;
 import jef.database.wrapper.result.ResultSetImpl;
 import jef.database.wrapper.result.ResultSetWrapper;
@@ -451,7 +452,7 @@ public class OperateTarget implements SqlTemplate {
 			sql = getProfile().toPageSQL(sql, range);
 		}
 		long start = System.currentTimeMillis();
-		SqlTransformer<T> sqlTransformer = new SqlTransformer<T>(transformer);
+		TransformerAdapter<T> sqlTransformer = new TransformerAdapter<T>(transformer);
 		List<T> list = innerSelectBySql(sql, sqlTransformer, 0, 0,Arrays.asList(params));
 		if (ORMConfig.getInstance().isDebugMode()) {
 			long dbAccess = sqlTransformer.dbAccess;
@@ -462,7 +463,7 @@ public class OperateTarget implements SqlTemplate {
 
 
 	public final <T> T loadBySql(String sql,Class<T> t,Object... params) throws SQLException {
-		SqlTransformer<T> rst=new SqlTransformer<T>(new Transformer(t));
+		TransformerAdapter<T> rst=new TransformerAdapter<T>(new Transformer(t));
 		long start = System.currentTimeMillis();
 		List<T> result= innerSelectBySql(sql,rst,2, 0,Arrays.asList(params));
 		if (ORMConfig.getInstance().isDebugMode()) {
@@ -486,32 +487,61 @@ public class OperateTarget implements SqlTemplate {
 		return session.getNoTransactionSession().getMetaData(dbkey);
 	}
 	
-	public class SqlTransformer<T> implements ResultSetTransformer<List<T>> {
+	/**
+	 * 在这里支持内存混合处理
+	 * @author jiyi
+	 *
+	 * @param <T>
+	 */
+	public class TransformerAdapter<T> implements ResultSetTransformer<List<T>> {
 		final Transformer t;
 		long dbAccess;
+		private SqlExecutionParam others;
+		private OperateTarget db;
 
-		SqlTransformer(Transformer t) {
+		TransformerAdapter(Transformer t) {
 			this.t = t;
 		}
 
-		public List<T> transformer(ResultSet rs, DatabaseDialect db) throws SQLException {
+		public List<T> transformer(ResultSet rs, DatabaseDialect profile) throws SQLException {
 			dbAccess = System.currentTimeMillis();
-			return populateResultSet(new ResultSetImpl(rs, db), null, t);
+			IResultSet irs;
+			if(others!=null && others.removedStartWith!=null){
+				MultipleResultSet mrs=new MultipleResultSet(false,ORMConfig.getInstance().debugMode);
+				mrs.add(rs, null, this.db);
+				mrs.setInMemoryConnectBy(others.parseStartWith(mrs.getColumns()));
+				irs=mrs.toSimple(null, t.getStrategy());
+			}else{
+				irs=new ResultSetImpl(rs, profile);
+			}
+			return populateResultSet(irs, null, t);
 		}
 		
+		public SqlExecutionParam getOthers() {
+			return others;
+		}
+
+		public void setOthers(SqlExecutionParam others) {
+			this.others = others;
+		}
+
 		public Session getSession(){
 			return OperateTarget.this.session;
 		}
-	}
 
-	final class SqlMapTransformer implements ResultSetTransformer<List<Map<String, Object>>> {
-		long dbAccess;
-
-		public List<Map<String, Object>> transformer(ResultSet rs, DatabaseDialect db) throws SQLException {
-			dbAccess = System.currentTimeMillis();
-			return ResultPopulatorImpl.instance.toVar(new ResultSetImpl(rs, db), Transformer.VAR);
+		public void setDb(OperateTarget db) {
+			this.db=db;
 		}
 	}
+
+//	final class SqlMapTransformer implements ResultSetTransformer<List<Map<String, Object>>> {
+//		long dbAccess;
+//
+//		public List<Map<String, Object>> transformer(ResultSet rs, DatabaseDialect db) throws SQLException {
+//			dbAccess = System.currentTimeMillis();
+//			return ResultPopulatorImpl.instance.toVar(new ResultSetImpl(rs, db), Transformer.VAR);
+//		}
+//	}
 
 	public <T> T getExpressionValue(DbFunction func, Class<T> clz,Object... params) throws SQLException {
 		SqlExpression ex=func(func, params);

@@ -38,6 +38,7 @@ import jef.database.wrapper.clause.InMemoryGroupByHaving;
 import jef.database.wrapper.clause.InMemoryOrderBy;
 import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.clause.InMemoryProcessor;
+import jef.database.wrapper.clause.InMemoryStartWithConnectBy;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
 import jef.tools.ArrayUtils;
@@ -85,7 +86,7 @@ public final class MultipleResultSet extends AbstractResultSet{
 			String name = meta.getColumnLabel(i); // 对于Oracle
 													// getCOlumnName和getColumnLabel是一样的（非标准JDBC实现），MySQL正确地实现了JDBC的要求，getLabel得到别名，getColumnName得到表的列名
 			int type = meta.getColumnType(i);
-			columnList.add(new ColumnDescription(i, type, name));
+			columnList.add(new ColumnDescription(i, type, name,meta.getTableName(i),meta.getSchemaName(i)));
 		}
 		this.columns = new ColumnMeta(columnList);
 	}
@@ -221,11 +222,6 @@ public final class MultipleResultSet extends AbstractResultSet{
 		if(results.isEmpty()){
 			return new ResultSetWrapper();
 		}
-		if (results.size() == 1) {
-			ResultSetWrapper rsw = new ResultSetWrapper(results.get(0), columns);
-			rsw.setFilters(filters);
-			return rsw;
-		}
 		if(mustInMemoryProcessor!=null){
 			InMemoryProcessResultSet rw=new InMemoryProcessResultSet(results,columns);
 			rw.filters=filters;
@@ -237,6 +233,11 @@ public final class MultipleResultSet extends AbstractResultSet{
 				throw DbUtils.toRuntimeException(e);
 			}
 			return rw;
+		}
+		if (results.size() == 1) {
+			ResultSetWrapper rsw = new ResultSetWrapper(results.get(0), columns);
+			rsw.setFilters(filters);
+			return rsw;
 		}
 		//当仅有重排序要求时，可以使用ReorderResultSet简化计算。降低内存开销
 		if (inMemoryOrder != null && !ArrayUtils.fastContains(args, PopulateStrategy.NO_RESORT)) {
@@ -287,5 +288,9 @@ public final class MultipleResultSet extends AbstractResultSet{
 	}
 	public boolean isDebug(){
 		return debug;
+	}
+
+	public void setInMemoryConnectBy(InMemoryStartWithConnectBy parseStartWith) {
+		addToInMemprocessor(parseStartWith);
 	}
 }

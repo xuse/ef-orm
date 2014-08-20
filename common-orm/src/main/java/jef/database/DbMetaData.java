@@ -212,7 +212,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @return 表的信息
 	 */
 	public List<TableInfo> getTable(String name) throws SQLException {
-		return getDatabaseObject(ObjectType.TABLE, this.schema, name, null);
+		return getDatabaseObject(ObjectType.TABLE, this.schema,getProfile().getObjectNameIfUppercase(name), null);
 	}
 
 	/**
@@ -247,7 +247,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @return 视图信息
 	 */
 	public List<TableInfo> getView(String name) throws SQLException {
-		return getDatabaseObject(ObjectType.VIEW, this.schema, name, null);
+		return getDatabaseObject(ObjectType.VIEW, this.schema, getProfile().getObjectNameIfUppercase(name), null);
 	}
 
 	/**
@@ -268,7 +268,8 @@ public class DbMetaData extends MetadataConnectionPool {
 	 */
 	public List<CommentEntry> getSequence(String name) throws SQLException {
 		List<CommentEntry> result = new ArrayList<CommentEntry>();
-		for (TableInfo table : getDatabaseObject(ObjectType.SEQUENCE, this.schema, name, null)) {
+		
+		for (TableInfo table : getDatabaseObject(ObjectType.SEQUENCE, this.schema, getProfile().getObjectNameIfUppercase(name), null)) {
 			CommentEntry e = new CommentEntry();
 			e.setKey(table.getName());
 			e.setValue(table.getRemarks());
@@ -1615,9 +1616,9 @@ public class DbMetaData extends MetadataConnectionPool {
 		@Override
 		public String toString() {
 			StringBuilder sb = new StringBuilder();
-			// if(StringUtils.isNotEmpty(schema)){
-			// sb.append(schema).append('.');
-			// }
+			 if(StringUtils.isNotEmpty(schema)){
+			 sb.append(schema).append('.');
+			 }
 			sb.append(name);
 			if (StringUtils.isNotEmpty(remarks)) {
 				sb.append(':').append(remarks);

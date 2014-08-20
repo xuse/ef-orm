@@ -37,6 +37,9 @@ final class NQEntry{
 		}
 		if(this.dialect==null)
 			return config;//注意将通用的dialect要放在链表的第一位
+		/*
+		 * 当没有专用SQL，也没有通用的SQL的时候，抛出异常
+		 */
 		throw new IllegalArgumentException("Can not found NamedQuery ["+config.getName()+"] for "+type+".");
 	}
 	

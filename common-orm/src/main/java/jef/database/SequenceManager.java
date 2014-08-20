@@ -399,7 +399,9 @@ public final class SequenceManager {
 			return false;
 		}
 	}
-
+	/**
+	 * 从结果中获得单个LONG值
+	 */
 	private static final ResultSetTransformer<Long> GET_LONG_OR_TABLE_NOT_EXIST = new ResultSetTransformer<Long>() {
 		public Long transformer(ResultSet rs, DatabaseDialect db) throws SQLException {
 			if (rs.next()) {

@@ -76,13 +76,11 @@ TDDL最大的两个亮点是动态数据源管理和分库分表。建议抽出�
 
 ================ 待解决的问题  ===================
 start with connect by的内存计算方案
-
-Batch Insert等操作下的极限性能模式。(不返回值、性能分析等手段)、此外对于Batch可能需要统计并输出因为Sequence而消耗的时间，Oracle下的实现特殊优化 hint, no logging
+Batch的极限模式。(不返回值、性能分析等手段)、此外对于Batch可能需要统计并输出因为Sequence而消耗的时间，Oracle下的实现特殊优化 hint, no logging
 ——极限模式下：启用该数据库本身的特殊优化操作——no logging /*+APPEND */ 等。极限模式下不回写自增值等。 (部分完成，待测试)
+
 将分表计算的缓存从metadata上剥离
-
 MSSQL Server方言支持
-
 为大部分测试案例增加断言
 支持SQLServer 2008
 
