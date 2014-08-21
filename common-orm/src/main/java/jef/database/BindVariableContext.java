@@ -50,9 +50,9 @@ final class BindVariableContext {
 		return logMessage;
 	}
 	
-	public void log(int count,String fieldName,Object value){
+	public void log(int count,Object fieldName,Object value){
 		if (logMessage != null) {
-			formatter.log(logMessage, count, fieldName, value);
+			formatter.log(logMessage, count, String.valueOf(fieldName), value);
 		}
 	}
 	

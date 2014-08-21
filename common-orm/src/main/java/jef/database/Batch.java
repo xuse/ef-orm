@@ -24,9 +24,9 @@ import java.util.Map;
 
 import jef.common.Entry;
 import jef.common.log.LogUtil;
-import jef.database.BindVariableTool.SqlType;
 import jef.database.annotation.PartitionResult;
 import jef.database.cache.TransactionCache;
+import jef.database.dialect.type.MappingType;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.support.DbOperatorListener;
@@ -325,6 +325,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 	 */
 	protected abstract String toSql(String tablename);
 
+	
 	static final class Insert<T extends IQueryableEntity> extends Batch<T> {
 		/**
 		 * SQL片段,Insert部分(INSERT语句使用)
@@ -376,14 +377,13 @@ public abstract class Batch<T extends IQueryableEntity> {
 
 		@Override
 		protected void processJdbcParams(PreparedStatement psmt, List<T> listValue, OperateTarget db) throws SQLException {
-			List<Field> writeFields = insertPart.getFields();
+			List<MappingType<?>> writeFields = insertPart.getFields();
 			int len = listValue.size();
-			boolean debug = ORMConfig.getInstance().isDebugMode();
-			SqlType type = SqlType.INSERT;
+			boolean debug = ORMConfig.getInstance().isDebugMode() && !extreme;
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
 				BindVariableContext context = new BindVariableContext(psmt, db, debug ? new StringBuilder(512).append("Batch Parameters: ").append(i + 1).append('/').append(len) : null);
-				BindVariableTool.setVariables(t.getQuery(), type, writeFields, null, context);
+				BindVariableTool.setInsertVariables(t, writeFields, context);
 				psmt.addBatch();
 				if (debug) {
 					LogUtil.info(context.getLogMessage());
@@ -476,15 +476,14 @@ public abstract class Batch<T extends IQueryableEntity> {
 			List<Field> writeFields = updatePart.getValue();
 			List<BindVariableDescription> bindVar = wherePart.getBind();
 			int len = listValue.size();
-			SqlType type = SqlType.UPDATE;
-			boolean debug = ORMConfig.getInstance().isDebugMode();
+			boolean debug = ORMConfig.getInstance().isDebugMode() && !extreme;
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
 //				if (t.getQuery().getConditions().isEmpty()) {
 //					DbUtils.fillConditionFromField(t, t.getQuery(), true, pkMpode);
 //				}
 				BindVariableContext context = new BindVariableContext(psmt, db, debug ? new StringBuilder(512).append("Batch Parameters: ").append(i + 1).append('/').append(len) : null);
-				List<Object> whereBind = BindVariableTool.setVariables(t.getQuery(), type, writeFields, bindVar, context);
+				List<Object> whereBind = BindVariableTool.setVariables(t.getQuery(), writeFields, bindVar, context);
 				psmt.addBatch();
 				parent.getCache().onUpdate(forceTableName==null?meta.getName():forceTableName, wherePart.getSql(), whereBind);
 				
@@ -548,7 +547,6 @@ public abstract class Batch<T extends IQueryableEntity> {
 		protected void processJdbcParams(PreparedStatement psmt, List<T> listValue, OperateTarget db) throws SQLException {
 			List<BindVariableDescription> bindVar = wherePart.getBind();
 			int len = listValue.size();
-			SqlType type = SqlType.UPDATE;
 			boolean debug = ORMConfig.getInstance().isDebugMode();
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
@@ -556,7 +554,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 					DbUtils.fillConditionFromField(t, t.getQuery(), true, pkMpode);
 				}
 				BindVariableContext context = new BindVariableContext(psmt, db, debug ? new StringBuilder(512).append("Batch Parameters: ").append(i + 1).append('/').append(len) : null);
-				List<Object> whereBind = BindVariableTool.setVariables(t.getQuery(), type, null, bindVar, context);
+				List<Object> whereBind = BindVariableTool.setVariables(t.getQuery(), null, bindVar, context);
 				parent.getCache().onDelete(forceTableName==null?meta.getName():forceTableName, wherePart.getSql(), whereBind);
 				
 				psmt.addBatch();

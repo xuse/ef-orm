@@ -5,16 +5,21 @@ import java.lang.reflect.Type;
 import java.sql.SQLException;
 import java.util.List;
 
+import jef.accelerator.bean.BeanAccessor;
+import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.meta.EntityType;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.clause.InsertSqlClause;
+import jef.tools.Assert;
 import jef.tools.reflect.BeanUtils;
+import jef.tools.reflect.Property;
 
 public abstract class ATypeMapping<T> implements MappingType<T>{
 	/**
@@ -30,6 +35,7 @@ public abstract class ATypeMapping<T> implements MappingType<T>{
 	private boolean pk;
 	protected transient String cachedEscapeColumnName;
 	protected transient DatabaseDialect bindedProfile;
+	protected Property fieldAccessor;
 	
 	@SuppressWarnings("unchecked")
 	public ATypeMapping(){
@@ -47,13 +53,18 @@ public abstract class ATypeMapping<T> implements MappingType<T>{
 		return pk;
 	}
 
-
 	public void init(Field field,String columnName,ColumnType type,ITableMetadata meta){
 		this.field=field;
 		this.fieldName=field.name();
 		this.rawColumnName=columnName;
 		this.meta=meta;
 		this.ctype=type;
+		
+		BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(meta.getContainerType());
+		if(meta.getType()!=EntityType.TUPLE){
+			Assert.isTrue(meta.getAllFieldNames().contains(field.name()));
+		}
+		fieldAccessor =ba.getProperty(field.name());
 	}
 	
 	public String fieldName(){
@@ -165,7 +176,7 @@ public abstract class ATypeMapping<T> implements MappingType<T>{
 		String columnName=getColumnName(result.profile, true);
 		cStr.add(columnName);
 		vStr.add("?");
-		result.addField(field);		
+		result.addField(this);		
 	}
 	
 	public boolean isLob() {
@@ -174,6 +185,16 @@ public abstract class ATypeMapping<T> implements MappingType<T>{
 
 	public boolean applyFor(int type) {
 		return type==getSqlType();
+	}
+	
+	public Property getFieldAccessor(){
+		return fieldAccessor;
+		
+	}
+
+	@Override
+	public String toString() {
+		return this.fieldName;
 	}
 	
 }

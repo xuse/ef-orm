@@ -10,7 +10,6 @@ import java.util.List;
 import jef.common.Entry;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
-import jef.database.BindVariableTool.SqlType;
 import jef.database.annotation.PartitionResult;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Feature;
@@ -358,7 +357,7 @@ public abstract class SelectProcessor {
 			try {
 				psmt = db.prepareStatement(sql.getSql(), rsType, concurType);
 				BindVariableContext context = new BindVariableContext(psmt, db, sb);
-				BindVariableTool.setVariables(queryObj, SqlType.SELECT, null, sql.getBind(), context);
+				BindVariableTool.setVariables(queryObj,null, sql.getBind(), context);
 				option.setSizeFor(psmt);
 				rs = psmt.executeQuery();
 				rs2.add(rs, psmt, db);
@@ -477,7 +476,7 @@ public abstract class SelectProcessor {
 
 					psmt.setQueryTimeout(ORMConfig.getInstance().getSelectTimeout());
 					BindVariableContext context = new BindVariableContext(psmt, db, sb);
-					BindVariableTool.setVariables(null, SqlType.SELECT, null, bsql.getBind(), context);
+					BindVariableTool.setVariables(null, null, bsql.getBind(), context);
 					rs = psmt.executeQuery();
 					if(rs.next()){
 						currentCount = rs.getInt(1);	

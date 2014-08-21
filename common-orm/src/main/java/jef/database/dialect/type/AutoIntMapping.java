@@ -4,27 +4,18 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import jef.accelerator.bean.AbstractFastProperty;
-import jef.accelerator.bean.BeanAccessor;
-import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.database.Field;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.meta.EntityType;
 import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.result.IResultSet;
-import jef.tools.Assert;
 import jef.tools.reflect.Property;
 
 public final class AutoIntMapping extends AutoIncrementMapping<Integer> {
 	@Override
 	public void init(Field field, String columnName, ColumnType type, ITableMetadata meta) {
 		super.init(field, columnName, type, meta);
-		// 初始化访问器
-		BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(meta.getContainerType());
-		if(meta.getType()!=EntityType.TUPLE){
-			Assert.isTrue(meta.getAllFieldNames().contains(field.name()));
-		}
-		accessor = new J2IProperty(ba.getProperty(field.name()));
+		accessor = new J2IProperty(super.fieldAccessor);
 	}
 
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
