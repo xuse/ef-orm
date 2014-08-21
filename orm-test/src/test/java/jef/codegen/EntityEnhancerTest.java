@@ -265,4 +265,10 @@ public class EntityEnhancerTest {
 		s=JsonUtil.toJson(var, DateFormats.DATE_TIME_CS.get());
 		System.out.println(s);
 	}
+	
+	@Test
+	public void test123(){
+		EntityEnhancer e=new EntityEnhancer();
+		e.enhance("com.hikvision");
+	}
 }

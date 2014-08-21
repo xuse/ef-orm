@@ -56,7 +56,7 @@ public class HsqlDbMemDialect extends DbmsProfile {
 		features.add(Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD);
 		features.add(Feature.SUPPORT_SEQUENCE);
 		
-		if (JefConfiguration.getBoolean(DbCfg.DB_ENABLE_ROWID, true)) {
+		if (JefConfiguration.getBoolean(DbCfg.DB_ENABLE_ROWID, false)) {
 			features.add(Feature.SELECT_ROW_NUM);
 		}
 		
