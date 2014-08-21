@@ -442,13 +442,13 @@ final class RoutingConnection implements ReentrantConnection, Connection {
 	public void setSchema(String schema) throws SQLException {
 	}
 
-	public String getSchema() throws SQLException {
-		return getConnection().getSchema();
-	}
-
-	public void abort(Executor executor) throws SQLException {
-		getConnection().abort(executor);
-	}
+//	public String getSchema() throws SQLException {
+//		return getConnection().getSchema();
+//	}
+//
+//	public void abort(Executor executor) throws SQLException {
+//		getConnection().abort(executor);
+//	}
 
 	public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
 	}

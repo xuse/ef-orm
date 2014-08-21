@@ -171,7 +171,7 @@ public abstract class AbstractResultSet implements IResultSet {
 	}
 
 	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
-		return get().getObject(columnIndex, type);
+		return (T) get().getObject(columnIndex);
 	}
 
 	public InputStream getBinaryStream(int columnIndex) throws SQLException {

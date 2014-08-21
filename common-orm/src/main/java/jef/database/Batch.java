@@ -364,15 +364,26 @@ public abstract class Batch<T extends IQueryableEntity> {
 			}
 			TransactionCache cache=parent.getCache();
 			DbOperatorListener listener=parent.getListener();
-			for (T t : listValue) {
-				try{
-					cache.onInsert(t);
-					listener.afterInsert(t, parent);
-				}catch(Exception e){
-					LogUtil.exception(e);
+			if(extreme){
+				for (T t : listValue) {
+					try{
+						listener.afterInsert(t, parent);
+					}catch(Exception e){
+						LogUtil.exception(e);
+					}
 				}
-				t.clearUpdate();
+			}else{
+				for (T t : listValue) {
+					try{
+						cache.onInsert(t);
+						listener.afterInsert(t, parent);
+					}catch(Exception e){
+						LogUtil.exception(e);
+					}
+					t.clearUpdate();
+				}	
 			}
+			
 		}
 
 		@Override
@@ -456,11 +467,18 @@ public abstract class Batch<T extends IQueryableEntity> {
 		protected void callEventListenerAfter(List<T> listValue) {
 			Session parent=this.parent;
 			DbOperatorListener listener=parent.getListener();
-			for (T t : listValue) {
-				t.applyUpdate();
-				listener.afterUpdate(t, 1, parent);
-				t.clearUpdate();
+			if(extreme){
+				for (T t : listValue) {
+					t.clearUpdate();
+					listener.afterUpdate(t, 1, parent);
+				}
+			}else{
+				for (T t : listValue) {
+					t.applyUpdate();
+					listener.afterUpdate(t, 1, parent);
+				}	
 			}
+			
 		}
 
 		public void setUpdatePart(Entry<List<String>, List<Field>> updatePart) {
@@ -479,9 +497,6 @@ public abstract class Batch<T extends IQueryableEntity> {
 			boolean debug = ORMConfig.getInstance().isDebugMode() && !extreme;
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
-//				if (t.getQuery().getConditions().isEmpty()) {
-//					DbUtils.fillConditionFromField(t, t.getQuery(), true, pkMpode);
-//				}
 				BindVariableContext context = new BindVariableContext(psmt, db, debug ? new StringBuilder(512).append("Batch Parameters: ").append(i + 1).append('/').append(len) : null);
 				List<Object> whereBind = BindVariableTool.setVariables(t.getQuery(), writeFields, bindVar, context);
 				psmt.addBatch();
