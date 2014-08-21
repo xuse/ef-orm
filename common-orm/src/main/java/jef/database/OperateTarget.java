@@ -452,7 +452,7 @@ public class OperateTarget implements SqlTemplate {
 			sql = getProfile().toPageSQL(sql, range);
 		}
 		long start = System.currentTimeMillis();
-		TransformerAdapter<T> sqlTransformer = new TransformerAdapter<T>(transformer);
+		TransformerAdapter<T> sqlTransformer = new TransformerAdapter<T>(transformer,this);
 		List<T> list = innerSelectBySql(sql, sqlTransformer, 0, 0,Arrays.asList(params));
 		if (ORMConfig.getInstance().isDebugMode()) {
 			long dbAccess = sqlTransformer.dbAccess;
@@ -463,7 +463,7 @@ public class OperateTarget implements SqlTemplate {
 
 
 	public final <T> T loadBySql(String sql,Class<T> t,Object... params) throws SQLException {
-		TransformerAdapter<T> rst=new TransformerAdapter<T>(new Transformer(t));
+		TransformerAdapter<T> rst=new TransformerAdapter<T>(new Transformer(t),this);
 		long start = System.currentTimeMillis();
 		List<T> result= innerSelectBySql(sql,rst,2, 0,Arrays.asList(params));
 		if (ORMConfig.getInstance().isDebugMode()) {
@@ -493,14 +493,15 @@ public class OperateTarget implements SqlTemplate {
 	 *
 	 * @param <T>
 	 */
-	public class TransformerAdapter<T> implements ResultSetTransformer<List<T>> {
+	public static class TransformerAdapter<T> implements ResultSetTransformer<List<T>> {
 		final Transformer t;
 		long dbAccess;
 		private SqlExecutionParam others;
 		private OperateTarget db;
 
-		TransformerAdapter(Transformer t) {
+		TransformerAdapter(Transformer t,OperateTarget db) {
 			this.t = t;
+			this.db=db;
 		}
 
 		public List<T> transformer(ResultSet rs, DatabaseDialect profile) throws SQLException {
@@ -514,7 +515,7 @@ public class OperateTarget implements SqlTemplate {
 			}else{
 				irs=new ResultSetImpl(rs, profile);
 			}
-			return populateResultSet(irs, null, t);
+			return db.populateResultSet(irs, null, t);
 		}
 		
 		public SqlExecutionParam getOthers() {
@@ -526,11 +527,7 @@ public class OperateTarget implements SqlTemplate {
 		}
 
 		public Session getSession(){
-			return OperateTarget.this.session;
-		}
-
-		public void setDb(OperateTarget db) {
-			this.db=db;
+			return db.session;
 		}
 	}
 

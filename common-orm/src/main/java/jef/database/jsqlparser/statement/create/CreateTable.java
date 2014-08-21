@@ -19,7 +19,7 @@ import java.util.List;
 
 import jef.database.jsqlparser.Util;
 import jef.database.jsqlparser.expression.Table;
-import jef.database.jsqlparser.statement.select.PlainSelect;
+import jef.database.jsqlparser.statement.select.SubSelect;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.jsqlparser.visitor.StatementVisitor;
 import jef.tools.StringUtils;
@@ -36,12 +36,22 @@ public class CreateTable implements Statement {
     private List<ColumnDefinition> columnDefinitions;
 
     private List<Index> indexes;
+    
+    private SubSelect as;
 
     public void accept(StatementVisitor statementVisitor) {
         statementVisitor.visit(this);
     }
 
-    /**
+    public SubSelect getAs() {
+		return as;
+	}
+
+	public void setAs(SubSelect as) {
+		this.as = as;
+	}
+
+	/**
      * The name of the table to be created
      */
     public Table getTable() {
@@ -88,14 +98,19 @@ public class CreateTable implements Statement {
 
     public String toString() {
         StringBuilder sb=new StringBuilder().append("CREATE TABLE ");
-        sb.append(table).append(" (");
-        Util.getStringList(sb,columnDefinitions, ",", false);
-        if (indexes != null && indexes.size() > 0) {
-        	sb.append(", ");
-        	Util.getStringList(sb,indexes,",",false);
+        if(as!=null){
+        	sb.append("AS ");
+        	as.appendTo(sb);
+        }else{
+        	sb.append(table).append(" (");
+            Util.getStringList(sb,columnDefinitions, ",", false);
+            if (indexes != null && indexes.size() > 0) {
+            	sb.append(", ");
+            	Util.getStringList(sb,indexes,",",false);
+            }
+            sb.append(") ");
+            StringUtils.joinTo(tableOptionsStrings, " ", sb);	
         }
-        sb.append(") ");
-        StringUtils.joinTo(tableOptionsStrings, " ", sb);
         return sb.toString();
     }
 }

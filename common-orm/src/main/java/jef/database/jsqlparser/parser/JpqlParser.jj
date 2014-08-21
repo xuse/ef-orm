@@ -270,7 +270,7 @@ Update Update():
 	Token tk=null;
 }
 {
-    tk=<K_UPDATE> table=TableWithAlias()
+    tk=<K_UPDATE> table=FromItem()
     <K_SET> tableColumn=Column() "=" value=SimpleExpression() { update.addSet(tableColumn, value); }
 		  ("," tableColumn=Column() "=" value=SimpleExpression()  { update.addSet(tableColumn,value); } )*
 
@@ -1652,6 +1652,7 @@ CreateTable CreateTable():
 	List colNames = null;
 	Index index = null;
 	String parameter = null;
+	SubSelect subselect=null;
 }
 {
 	<K_CREATE> 
@@ -1660,8 +1661,7 @@ CreateTable CreateTable():
 	(CreateParameter())*
 
 	<K_TABLE> table=Table() 
-	[
-		"("
+	(		"("
 		
 		columnName=<S_IDENTIFIER>
 		colDataType = ColDataType()
@@ -1679,8 +1679,7 @@ CreateTable CreateTable():
 				coldef.setColumnSpecStrings(columnSpecs);
 			columnDefinitions.add(coldef);
 		}
-		
-		(
+		((
 			","
 			
 			(
@@ -1732,11 +1731,7 @@ CreateTable CreateTable():
 		
 		")"
 		( 	parameter=CreateParameter() { tableOptions.add(parameter); } )*
-	
-	]
-	
-	
-	{
+{
 		createTable.setTable(table);
 		if (indexes.size() > 0)
 			createTable.setIndexes(indexes);
@@ -1745,8 +1740,15 @@ CreateTable CreateTable():
 		if (columnDefinitions.size() > 0)
 			createTable.setColumnDefinitions(columnDefinitions);
 		return createTable;
-	}
+	}	
+	)
 	
+	| 
+	< K_AS > subselect=SubSelect()
+	{
+	  createTable.setAs(subselect);
+		return createTable;
+	})
 }
 
 ColDataType ColDataType():

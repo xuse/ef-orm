@@ -1,7 +1,7 @@
 select earnmonth, area, sum(personincome)  
 from earnings  
 group by cube(earnmonth,area)  
-order by earnmonth,area NULLS  last;
+order by earnmonth,area;
 
 select earnmonth, area, sum(personincome)  
 from earnings  
@@ -35,23 +35,17 @@ select decode(grouping(earnmonth),1,'所有月份',earnmonth) month,
        decode(grouping(area),1,'全部地区',area) area, sum(personincome) amount  
 from earnings  
 group by cube(earnmonth,area)  
-order by earnmonth,area nulls last;
+order by earnmonth,area;
 /* 在以上例子中，是用rollup和cube函数都会对结果集产生null，这时候可用grouping函数来确认
 该记录是由哪个字段得出来的
 grouping函数用法，带一个参数，参数为字段名，结果是根据该字段得出来的就返回1，反之返回0 */
 
+/*
 select earnmonth ,area ,sname , personincome ,   
        rank() over (partition by earnmonth,area order by personincome desc) PAIMING 
 from earnings;
+*/
 
---dense_rank()和rank的区别是，rank在并列名次时，每个并列记录要占一个名次，这样名次会跳跃。dense_rank时名次不会跳跃
-select earnmonth mon,area,sname people, personincome income,   
-       dense_rank() over (partition by earnmonth,area order by personincome desc) the_rank 
-from earnings;
-
-select earnmonth,area,sname, personincome income,   
-       row_number() over (partition by earnmonth,area order by personincome desc) rank
-from earnings;
 /*
 通过(5)(6)(7)发现rank,dense_rank,row_number的区别：
 结果集中如果出现两个相同的数据，那么rank会进行跳跃式的排名，
@@ -65,20 +59,6 @@ select distinct earnmonth, area,
        avg(personincome) over(partition by earnmonth,area) avg_value,  
        sum(personincome) over(partition by earnmonth,area) total  
 from earnings;
-
-select earn_month ,sname ,  
-       lag(decode(nvl(personincome,0),0,'没赚','赚了'),1,0) over(partition by sname order by earnmonth) last_month,  
-       lead(decode(nvl(personincome,0),0,'没赚','赚了'),1,0) over(partition by sname order by earnmonth) next_month  
-from earnings;
-/*说明：Lag和Lead函数可以在一次查询中取出某个字段的前N行和后N行的数据（可以是其他字段的数据，比如根据字段甲查询上一行或下两行的字段乙），
-原来没有分析函数的时候采用子查询方法，但是比较麻烦，惭愧，我用子查询有的还查不出来呢。
-语法如下：
-lag(value_expression [,offset] [,default]) over ([query_partition_clase] order_by_clause)；
-lead(value_expression [,offset] [,default]) over ([query_partition_clase] order_by_clause)；
-其中：
-value_expression：可以是一个字段或一个内建函数。
-offset是正整数，默认为1，指往前或往后几点记录．因组内第一个条记录没有之前的行，最后一行没有之后的行，
-default就是用于处理这样的信息，默认为空。*/
 
 ---- 复杂SQL测试 -----
 select t1.price_id,
@@ -125,39 +105,13 @@ else
 ---- MYSQL中，支持replace into 和上述语法有异曲同工之妙--
 replace into t(id, update_time) values(1, now());
 
-SELECT TOP 10 id FROM table1 ORDER BY id;
 
---SQLServer分页方法，每页10条。第五页即跳过40条记录 (2000以上)
-SELECT TOP 10 *
-FROM table1
-WHERE id NOT IN
-          (
-          SELECT TOP 40 id FROM table1 ORDER BY id
-          )
-ORDER BY id;
-
---分页方法2 （2000以上）
-SELECT TOP 10 *
-FROM table1
-WHERE id > (
-          SELECT ISNULL(MAX(id),0) 
-          FROM 
-                (
-                SELECT TOP 40 id FROM table1 ORDER BY id
-                ) A
-          )
-ORDER BY id;
-
---分页方法3 (2005以上)
-SELECT TOP 10 * FROM 
- (SELECT ROW_NUMBER() OVER (ORDER BY id) AS __ROW_NUM,* FROM table1) A
-WHERE __ROW_NUM > 40;
-
+/*
 with AA as (select id, name, code, type from A where id > 1000),BB as (select type, pid from B),CC as (select p_name, pid from C)
 select AA.id, AA.name, AA.code, BB.type, C.p_name from AA, BB, CC where AA.id = BB.id and CC.pid = BB.pid;
-
+*/
 
 
 update DeVice set name='ID:'||indexcode,
 createDate=sysdate 
-where (xx.indexcode11 between ? and ?)
+where (xx.indexcode11 between :ss and :ewfe)

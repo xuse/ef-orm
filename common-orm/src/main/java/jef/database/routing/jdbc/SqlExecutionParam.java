@@ -32,45 +32,32 @@ import jef.database.wrapper.populator.ColumnMeta;
 import jef.tools.StringUtils;
 
 public class SqlExecutionParam {
-	public SqlExecutionParam(Statement st2, List<Object> params2,ParameterProvider rawParams) {
-		this.st = st2;
-		this.params = params2;
-		this.rawParams=rawParams;
-	}
-
-	public Statement st;
+	public Statement statement;
 	public List<Object> params;
 	public StartWithExpression removedStartWith;
 	private ParameterProvider rawParams;
 
+	
+	public SqlExecutionParam(Statement st2, List<Object> params2,ParameterProvider rawParams) {
+		this.statement = st2;
+		this.params = params2;
+		this.rawParams=rawParams;
+	}
+
+	
 	public InMemoryStartWithConnectBy parseStartWith(ColumnMeta columns) {
-		if (st instanceof Select) {
-			return parse((Select) st, columns);
+		if (statement instanceof Select) {
+			return parse((Select) statement, columns);
 		}
 		throw new UnsupportedOperationException();
 	}
 
-	private InMemoryStartWithConnectBy parse(Select st2, ColumnMeta columns) {
-		if (st2.getSelectBody() instanceof PlainSelect) {
-			return parse((PlainSelect) st2.getSelectBody(), columns);
+	private InMemoryStartWithConnectBy parse(Select st, ColumnMeta columns) {
+		if (st.getSelectBody() instanceof PlainSelect) {
+			return parse((PlainSelect) st.getSelectBody(), columns);
 
 		}
 		throw new UnsupportedOperationException();
-	}
-
-	static class TableCollector extends VisitorAdapter {
-		Map<String, String> tableAlias;
-
-		TableCollector(Map<String, String> map) {
-			tableAlias = map;
-		}
-
-		@Override
-		public void visit(Table table) {
-			if (StringUtils.isNotEmpty(table.getAlias())) {
-				tableAlias.put(StringUtils.upperCase(table.getAlias()), StringUtils.upperCase(table.getName()));
-			}
-		}
 	}
 
 	private InMemoryStartWithConnectBy parse(PlainSelect selectBody, ColumnMeta columns) {
@@ -242,5 +229,19 @@ public class SqlExecutionParam {
 		}
 		return StringUtils.equalsIgnoreCase(columnName, cd.getName());
 	}
+	
+	static class TableCollector extends VisitorAdapter {
+		Map<String, String> tableAlias;
 
+		TableCollector(Map<String, String> map) {
+			tableAlias = map;
+		}
+
+		@Override
+		public void visit(Table table) {
+			if (StringUtils.isNotEmpty(table.getAlias())) {
+				tableAlias.put(StringUtils.upperCase(table.getAlias()), StringUtils.upperCase(table.getName()));
+			}
+		}
+	}
 }
