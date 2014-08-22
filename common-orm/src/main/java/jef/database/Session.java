@@ -1718,12 +1718,27 @@ public abstract class Session {
 	}
 	
 	/**
-	 * 极限模式下的批量操作
+	 * 极限模式下的批量插入操作
 	 * @param entities
 	 * @param group
 	 * @throws SQLException
 	 */
 	public final <T extends IQueryableEntity> void extremeInsert(List<T> entities,Boolean group) throws SQLException {
+		if (entities.isEmpty())
+			return;
+		Batch<T> batch = startBatchInsert(entities.get(0), null, false,true);
+		if(group!=null)
+			batch.setGroupForPartitionTable(group);
+		batch.execute(entities);
+	}
+	
+	/**
+	 * 极限模式下的批量更新操作
+	 * @param entities
+	 * @param group
+	 * @throws SQLException
+	 */
+	public final <T extends IQueryableEntity> void extremeUpdate(List<T> entities,Boolean group) throws SQLException {
 		if (entities.isEmpty())
 			return;
 		Batch<T> batch = startBatchInsert(entities.get(0), null, false,true);

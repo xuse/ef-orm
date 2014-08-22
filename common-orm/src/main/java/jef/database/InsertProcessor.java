@@ -151,7 +151,7 @@ abstract class InsertProcessor {
 					psmt = callback.doPrepareStatement(db, sqls.getSql(), dbName);
 				}
 				BindVariableContext context = new BindVariableContext(psmt,db, sb);
-				BindVariableTool.setVariables(obj.getQuery(), SqlType.INSERT, sqls.getFields(), null, context);
+				BindVariableTool.setInsertVariables(obj, sqls.getFields(), context);
 				psmt.execute();
 				if (callback != null) {
 					callback.callAfter(Arrays.asList(obj));

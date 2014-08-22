@@ -393,7 +393,7 @@ public class ResultSetImpl implements IResultSet {
 
 
 	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
-		return rs.getObject(columnIndex, type);
+		return (T) rs.getObject(columnIndex);
 	}
 
 

@@ -69,7 +69,7 @@ public class AutoGuidMapping extends VarcharStringMapping {
 		}
 		cStr.add(columnName);
 		vStr.add("?");
-		result.addField(field);
+		result.addField(this);
 
 	}
 }

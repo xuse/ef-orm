@@ -60,8 +60,8 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 	 * @param max
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T extends Comparable<T>> RangeDimension<T> createLC(Object min, Object max) {
-		return new RangeDimension<T>((T)min, (T)max, true, false);
+	public static RangeDimension createLC(Object min, Object max) {
+		return new RangeDimension((Comparable<?>)min, (Comparable<?>)max, true, false);
 	}
 
 	/**
@@ -71,8 +71,8 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T extends Comparable<T>> RangeDimension<T> createCL(Object min, Object max) {
-		return new RangeDimension<T>((T)min, (T)max, false, true);
+	public static RangeDimension createCL(Object min, Object max) {
+		return new RangeDimension((Comparable<?>)min, (Comparable<?>)max, false, true);
 	}
 
 	/**
@@ -82,8 +82,8 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T extends Comparable<T>> RangeDimension<T> createCC(Object min, Object max) {
-		return new RangeDimension<T>((T)min, (T)max, false, false);
+	public static RangeDimension createCC(Object min, Object max) {
+		return new RangeDimension((Comparable<?>)min, (Comparable<?>)max, false, false);
 	}
 	
 	/**
@@ -93,8 +93,8 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T extends Comparable<T>> RangeDimension<T> create(Object min, Object max) {
-		return new RangeDimension<T>((T)min, (T)max);
+	public static RangeDimension create(Object min, Object max) {
+		return new RangeDimension((Comparable<?>)min, (Comparable<?>)max);
 	}
 	
 	/**

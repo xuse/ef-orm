@@ -237,7 +237,7 @@ public abstract class AutoIncrementMapping<T> extends ATypeMapping<T> {
 		if (obj.isUsed(field)&& ORMConfig.getInstance().isManualSequence()  && isAssignedSequence(accessor.get(obj))) {
 			cStr.add(cachedEscapeColumnName);
 			vStr.add("?");
-			result.addField(field);
+			result.addField(this);
 			return;
 		}
 		
@@ -262,7 +262,7 @@ public abstract class AutoIncrementMapping<T> extends ATypeMapping<T> {
 				result.setCallback(new SequenceGenerateCallback(accessor, sh));
 				cStr.add(cachedEscapeColumnName);
 				vStr.add("?");
-				result.addField(field);
+				result.addField(this);
 			}
 		}
 	}

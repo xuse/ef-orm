@@ -282,7 +282,7 @@ public class SqlAnalyzer {
 			if(obj==ObjectUtils.NULL){
 				continue;
 			}
-			result.put(field, RangeDimension.create(obj, obj));
+			result.put(field, (Dimension)RangeDimension.create(obj, obj));
 		}
 		return result;
 	}
@@ -478,7 +478,7 @@ public class SqlAnalyzer {
 		private PairSO<Dimension> process(EqualsTo exp) {
 			PairSO<Object> v = getFromBinaryOperate(exp);
 			if (v != null) {
-				return v.<Dimension> replaceSecond(RangeDimension.create(v.second, v.second));
+				return v.<Dimension>replaceSecond(RangeDimension.create(v.second, v.second));
 			}
 			return null;
 		}

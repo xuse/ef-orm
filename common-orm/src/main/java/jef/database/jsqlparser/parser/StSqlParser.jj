@@ -260,14 +260,14 @@ Statement Statement() :
 Update Update():
 { 
 	Update update = new Update(); 
-	Table table = null;
+	FromItem table = null;
 	Expression where = null;
 	Column tableColumn = null;
 	Expression value = null;
 	
 }
 {
-    <K_UPDATE> table=TableWithAlias()
+    <K_UPDATE> table=FromItem()
     <K_SET> tableColumn=Column() "=" value=SimpleExpression() { update.addSet(tableColumn,value); }
 		  ("," tableColumn=Column() "=" value=SimpleExpression()  { update.addSet(tableColumn,value); } )*
 
@@ -1572,6 +1572,7 @@ CreateTable CreateTable():
 	List colNames = null;
 	Index index = null;
 	String parameter = null;
+	SubSelect subselect=null;
 }
 {
 	<K_CREATE> 
@@ -1580,10 +1581,8 @@ CreateTable CreateTable():
 	(CreateParameter())*
 
 	<K_TABLE> table=Table() 
-	[
-		"("
-		
-		columnName=<S_IDENTIFIER>
+	(
+	  (		"("	columnName=<S_IDENTIFIER>
 		colDataType = ColDataType()
 		{
 			columnSpecs = new ArrayList();
@@ -1653,9 +1652,6 @@ CreateTable CreateTable():
 		")"
 		( 	parameter=CreateParameter() { tableOptions.add(parameter); } )*
 	
-	]
-	
-	
 	{
 		createTable.setTable(table);
 		if (indexes.size() > 0)
@@ -1665,7 +1661,13 @@ CreateTable CreateTable():
 		if (columnDefinitions.size() > 0)
 			createTable.setColumnDefinitions(columnDefinitions);
 		return createTable;
-	}
+	})
+	|<K_AS> subselect=SubSelect()
+	{
+	  createTable.setAs(subselect);
+		return createTable;
+	}	
+	)
 	
 }
 

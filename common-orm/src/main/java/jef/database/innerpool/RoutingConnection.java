@@ -26,11 +26,6 @@ import java.util.concurrent.Executor;
 import javax.sql.DataSource;
 
 import jef.database.DbUtils;
-import jef.database.routing.jdbc.ExecutionPlan;
-import jef.database.routing.jdbc.JPreparedStatement;
-import jef.database.routing.jdbc.JPreparedStatementImpl;
-import jef.database.routing.jdbc.JStatement;
-import jef.database.routing.jdbc.JStatementImpl;
 import jef.tools.StringUtils;
 
 /**
@@ -233,13 +228,6 @@ final class RoutingConnection implements ReentrantConnection, Connection {
 
 	public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException {
 		return getConnection().prepareStatement(sql, resultSetType, resultSetConcurrency);
-	}
-
-	public JStatement createRoutingStatement(int resultsetType, int resultSetConcurrency,ExecutionPlan plan){
-		return new JStatementImpl(this,resultsetType,resultSetConcurrency,plan);
-	}
-	public JPreparedStatement prepareRoutingStatement(String sql, int resultsetType, int resultSetConcurrency,ExecutionPlan plan){
-		return new JPreparedStatementImpl(sql,this,resultsetType,resultSetConcurrency,plan);
 	}
 
 	public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException {
@@ -454,13 +442,13 @@ final class RoutingConnection implements ReentrantConnection, Connection {
 	public void setSchema(String schema) throws SQLException {
 	}
 
-	public String getSchema() throws SQLException {
-		return getConnection().getSchema();
-	}
-
-	public void abort(Executor executor) throws SQLException {
-		getConnection().abort(executor);
-	}
+//	public String getSchema() throws SQLException {
+//		return getConnection().getSchema();
+//	}
+//
+//	public void abort(Executor executor) throws SQLException {
+//		getConnection().abort(executor);
+//	}
 
 	public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
 	}

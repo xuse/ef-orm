@@ -29,7 +29,9 @@ import org.junit.Test;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
+import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlOutputVisitor;
 import com.alibaba.druid.sql.dialect.oracle.parser.OracleStatementParser;
+import com.alibaba.druid.sql.dialect.oracle.visitor.OracleOutputVisitor;
 
 public class ComplexSqlParseTest extends org.junit.Assert {
 	@Test
@@ -310,12 +312,12 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 
 	@Test
 	public void testComplexSqlDruidOracle() throws SQLException, ParseException, IOException {
-		doParseFile("complex-sqls-oracle.txt", 0);
+		doParseFile("complex-sqls-oracle.txt", 2);
 	}
 
 	@Test
 	public void testComplexSqlDruidMySQL() throws SQLException, ParseException, IOException {
-		doParseFile("complex-sqls-mysql.txt", 0);
+		doParseFile("complex-sqls-mysql.txt", 3);
 	}
 
 	@Test
@@ -478,29 +480,38 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 		case 0: {
 			StSqlParser parser = new StSqlParser(new StringReader(sql));
 			st = parser.Statement();
+			System.out.println(st);
 			break;
 		}
 		case 1: {
 			JpqlParser parser = new JpqlParser(new StringReader(sql));
 			st = parser.Statement();
+			System.out.println(st);
 			break;
 		}
 		case 2: {
 			OracleStatementParser parser = new OracleStatementParser(sql);
 			List<SQLStatement> statementList = parser.parseStatementList();
-			st = statementList.get(0);
+			StringBuilder out = new StringBuilder();
+		    OracleOutputVisitor visitor = new OracleOutputVisitor(out);
+		    statementList.get(0).accept(visitor);
+		    System.out.println(out);
 			break;
 		}
 		case 3: {
 			MySqlStatementParser parser = new MySqlStatementParser(sql);
 			List<SQLStatement> statementList = parser.parseStatementList();
 			st = statementList.get(0);
+			StringBuilder out = new StringBuilder();
+			MySqlOutputVisitor visitor = new MySqlOutputVisitor(out);
+		    statementList.get(0).accept(visitor);
+		    System.out.println(out);
 			break;
 		}
 		default:
 			throw new IllegalArgumentException();
 		}
-		System.out.println(st);
+
 	}
 
 	/**

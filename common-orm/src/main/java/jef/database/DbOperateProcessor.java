@@ -34,7 +34,7 @@ public final class DbOperateProcessor {
 					psmt.setQueryTimeout(deleteTimeout);
 				}
 				BindVariableContext context = new BindVariableContext(psmt,db, sb);
-				BindVariableTool.setVariables(obj.getQuery(), SqlType.DELETE, null, where.getBind(), context);
+				BindVariableTool.setVariables(obj.getQuery(), null, where.getBind(), context);
 				psmt.execute();
 				count += psmt.getUpdateCount();
 			} catch (SQLException e) {
@@ -119,7 +119,7 @@ public final class DbOperateProcessor {
 					psmt.setQueryTimeout(updateTimeout);
 				}
 				BindVariableContext context = new BindVariableContext(psmt,db, sb);
-				BindVariableTool.setVariables(obj.getQuery(), SqlType.UPDATE, setValues.getValue(), whereValues.getBind(), context);
+				BindVariableTool.setVariables(obj.getQuery(), setValues.getValue(), whereValues.getBind(), context);
 				psmt.execute();
 				int currentUpdateCount = psmt.getUpdateCount();
 				result += currentUpdateCount;

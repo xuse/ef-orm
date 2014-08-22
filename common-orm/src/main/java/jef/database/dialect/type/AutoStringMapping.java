@@ -20,11 +20,7 @@ public final class AutoStringMapping extends AutoIncrementMapping<String> {
 	@Override
 	public void init(Field field, String columnName, ColumnType type, ITableMetadata meta) {
 		super.init(field, columnName, type, meta);
-		BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(meta.getContainerType());
-		if(meta.getType()!=EntityType.TUPLE){
-			Assert.isTrue(ba.getPropertyNames().contains(field.name()));
-		}
-		accessor = new J2SProperty(ba.getProperty(field.name()));
+		accessor = new J2SProperty(fieldAccessor);
 	}
 
 

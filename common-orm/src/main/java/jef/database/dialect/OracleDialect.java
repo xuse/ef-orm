@@ -94,7 +94,7 @@ public class OracleDialect extends DbmsProfile {
 				Feature.SUPPORT_SEQUENCE));
 
 		super.loadKeywords("oracle_keywords.properties");
-		if (JefConfiguration.getBoolean(DbCfg.DB_ENABLE_ROWID, true)) {
+		if (JefConfiguration.getBoolean(DbCfg.DB_ENABLE_ROWID, false)) {
 			features.add(Feature.SELECT_ROW_NUM);
 		}
 		setProperty(DbProperty.ADD_COLUMN, "ADD");
@@ -591,7 +591,7 @@ public class OracleDialect extends DbmsProfile {
 
 	@Override
 	public void toExtremeInsert(InsertSqlClause sql) {
-		sql.setInsert("insert /*+ APPEND*/ into ");
-		sql.setTailer(" NOLOGGING");
+//		alter table xxx nologging
+		sql.setInsert("insert /*+ APPEND */ into ");
 	}
 }

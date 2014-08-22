@@ -10,6 +10,7 @@ import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.clause.InsertSqlClause;
+import jef.tools.reflect.Property;
 
 /**
  * 描述一个数据库列 映射到java字段上的模型信息
@@ -180,5 +181,6 @@ public interface MappingType<T> extends ResultSetAccessor {
 	 */
 	void init(Field field, String columnName, ColumnType type, ITableMetadata meta);
 	
-	public void setPk(boolean b);
+	void setPk(boolean b);
+	public Property getFieldAccessor();
 }

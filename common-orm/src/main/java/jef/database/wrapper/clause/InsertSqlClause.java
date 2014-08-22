@@ -19,17 +19,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jef.database.AutoIncreatmentCallBack;
-import jef.database.Field;
 import jef.database.Session;
 import jef.database.annotation.PartitionResult;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.dialect.type.MappingType;
 
 public class InsertSqlClause{
 	private String columnsPart;
 	private String valuesPart;
 	private PartitionResult table;
 	private AutoIncreatmentCallBack callback;
-	final List<Field> fields;
+	final List<MappingType<?>> fields;
 	private String insert="insert into ";
 	private String tailer="";
 	public Session parent;
@@ -44,7 +44,7 @@ public class InsertSqlClause{
 		fields=null;
 	}
 	public InsertSqlClause(boolean extreme){
-		fields=new ArrayList<Field>();
+		fields=new ArrayList<MappingType<?>>();
 		this.extreme=extreme;
 	}
 
@@ -89,10 +89,10 @@ public class InsertSqlClause{
 	public void setCallback(AutoIncreatmentCallBack callback) {
 		this.callback = callback;
 	}
-	public void addField(Field field) {
+	public void addField(MappingType<?> field) {
 		fields.add(field);
 	}
-	public List<Field> getFields() {
+	public List<MappingType<?>> getFields() {
 		return fields;
 	}
 	public boolean isForPrepare(){
