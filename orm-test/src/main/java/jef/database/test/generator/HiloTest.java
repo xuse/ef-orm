@@ -8,7 +8,7 @@ import jef.database.SequenceHiloGenerator;
 
 import org.junit.Test;
 
-public class HiloTest {
+public class HiloTest extends org.junit.Assert{
 	private static Sequence s = new Sequence() {
 		private AtomicInteger i = new AtomicInteger();
 
@@ -44,9 +44,11 @@ public class HiloTest {
 	@Test
 	public void testHilo() {
 		SequenceHiloGenerator hilo = new SequenceHiloGenerator(s, 3);
+		long max=0;
 		for(int i=0;i<200;i++){
-			System.out.println(hilo.next());
+			max=hilo.next();
 		}
+		assertEquals(199, max);
 	}
 
 }
