@@ -11,7 +11,6 @@ import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -718,14 +717,17 @@ public class JefTest extends Assert {
 	@Test
 	public void getClz2(){//12225 9300//
 		
-		dol(Integer.TYPE);
-		dol(Short.TYPE);
-		dol(Long.TYPE);
-		dol(Boolean.TYPE);
-		dol(Float.TYPE);
-		dol(Double.TYPE);
-		dol(Character.TYPE);
-		dol(Byte.TYPE);
+//		dol(Integer.TYPE);
+//		dol(Short.TYPE);
+//		dol(Long.TYPE);
+//		dol(Boolean.TYPE);
+//		dol(Float.TYPE);
+//		dol(Double.TYPE);
+//		dol(Character.TYPE);
+//		dol(Byte.TYPE);
+		
+		Date d=new Date(1408521286*1000L);
+		System.out.println(d);
 	}
 	
 	private void dol(Class<?> type) {

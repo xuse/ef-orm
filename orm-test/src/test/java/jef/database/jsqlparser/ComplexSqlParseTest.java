@@ -93,6 +93,18 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 			System.out.println((System.nanoTime() - start) / 1000);
 		}
 	}
+	
+	@Test(expected=ParseException.class)
+	public void parseJpqlParams() throws ParseException{
+		String sql="select * from t where id=:top";
+		JpqlParser parser = new JpqlParser(new StringReader(sql));
+		parser.Statement();
+		
+		sql="update t set name=:desc";
+		parser = new JpqlParser(new StringReader(sql));
+		parser.Statement();
+		
+	}
 
 	/**
 	 * 解析右侧的SQL表达式

@@ -21,6 +21,7 @@ import java.util.List;
 
 import jef.common.Pair;
 import jef.database.jsqlparser.expression.Column;
+import jef.database.jsqlparser.expression.JpqlParameter;
 import jef.database.jsqlparser.parser.Token;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.FromItem;
@@ -100,20 +101,18 @@ public class Update implements Statement {
         }
         sb.append(table).append(" set ");
         
-        
+        int n=0;
         Iterator<Pair<Column,Expression>> iter=sets.iterator();
-        if(iter.hasNext()){
-        	Pair<Column,Expression> pair=iter.next();
-        	pair.first.appendTo(sb);
-        	sb.append(" = ");
-        	pair.second.appendTo(sb);
-        }
         while(iter.hasNext()){
         	Pair<Column,Expression> pair=iter.next();
-        	sb.append(',');
-        	pair.first.appendTo(sb);
-        	sb.append(" = ");
-        	pair.second.appendTo(sb);
+        	if(!isEmpty(pair)){
+        		if(n>0)
+            		sb.append(',');
+            	pair.first.appendTo(sb);
+            	sb.append(" = ");
+            	pair.second.appendTo(sb);
+            	n++;	
+        	}
         }
         if(where!=null){
         	appendWhere(sb,where);
@@ -121,6 +120,14 @@ public class Update implements Statement {
         return sb.toString();
     }
 	
+	private boolean isEmpty(Pair<Column, Expression> pair) {
+		Expression ex=pair.second;
+		if(ex instanceof JpqlParameter){
+			return ((JpqlParameter) ex).getResolved()==null;
+		}
+		return false;
+	}
+
 	private void appendWhere(StringBuilder sb, Expression where) {
 		if (where instanceof Ignorable) {
 			if (((Ignorable) where).isEmpty()) {

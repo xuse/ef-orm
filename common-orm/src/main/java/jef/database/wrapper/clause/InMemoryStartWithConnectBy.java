@@ -83,6 +83,12 @@ public class InMemoryStartWithConnectBy implements InMemoryProcessor{
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private boolean matchStart(Row row) {
 		Object obj=row.getColumnObject(startWithColumn);
+		if(obj instanceof Integer){
+			obj=Long.valueOf(((Integer) obj).longValue());
+		}
+		if(obj instanceof Float){
+			obj=Double.valueOf(((Float) obj).doubleValue());
+		}
 		switch(startWithOperator){
 		case EQUALS:
 			return ObjectUtils.equals(obj, startWithValue);
