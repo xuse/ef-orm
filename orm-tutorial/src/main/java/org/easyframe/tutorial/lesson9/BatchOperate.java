@@ -126,6 +126,18 @@ public class BatchOperate extends org.junit.Assert {
 		db.batchInsert(persons);
 	}
 	
+
+	private void doExtremeInsert(int max) throws SQLException {
+		List<Person> persons = new ArrayList<Person>(max);
+		for (int i = 0; i < max; i++) {
+			Person p = new Person();
+			RandomData.fill(p); // 填充一些随机值
+			persons.add(p);
+		}
+		;
+		db.extremeInsert(persons,false);
+	}
+	
 	@Test
 	public void reuseBatchObject() throws SQLException {
 		Batch<Person> batch=db.startBatchInsert(new Person(),  false);
