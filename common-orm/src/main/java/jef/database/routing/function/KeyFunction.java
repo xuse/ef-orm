@@ -36,7 +36,7 @@ public enum KeyFunction {
 	 */
 	YEAR_MONTH,//年+月
 	/**
-	 * 对指定的日期型字段，获取yyyyMM格式年月
+	 * 对指定的日期型字段，获取yyyyMMdd格式年月
 	 */
 	YEAR_MONTH_DAY,//年月日  yyyyMMdd
 	/**
