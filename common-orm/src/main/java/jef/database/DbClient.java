@@ -77,6 +77,11 @@ public class DbClient extends Session {
 	private SequenceManager sequenceManager;
 
 	/**
+	 * 连接池和metadata服务
+	 */
+	private IUserManagedPool connPool;
+	
+	/**
 	 * 启动一个事务。
 	 * 
 	 * <h3>Example</h3>
@@ -155,30 +160,6 @@ public class DbClient extends Session {
 	 */
 	public DbClient() {
 		this(getDefaultDataSource(), JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50));
-	}
-	
-	/**
-	 * 获取缺省的DataSource配置
-	 * @return
-	 */
-	private static SimpleDataSource getDefaultDataSource() {
-		String dbPath = JefConfiguration.get(DbCfg.DB_FILEPATH, "");
-		String dbType = JefConfiguration.get(DbCfg.DB_TYPE, "derby");
-		int port = JefConfiguration.getInt(DbCfg.DB_PORT, 0);
-		String host = JefConfiguration.get(DbCfg.DB_HOST, "");
-		String dbName = JefConfiguration.get(DbCfg.DB_NAME);
-		DbmsProfile features = DbmsProfile.getProfile(dbType);
-		if (features == null) {
-			throw new RuntimeException("The DBMS: " + dbType + "not support yet.");
-		}
-		dbPath=dbPath.replace('\\', '/');
-		if(dbPath.length()>0 && !dbPath.endsWith("/")){
-			dbPath+="/";
-		}
-		String url = features.generateUrl(host, port, dbPath + dbName);
-		String user=JefConfiguration.get(DbCfg.DB_USER);
-		String password=JefConfiguration.get(DbCfg.DB_PASSWORD);
-		return DbUtils.createSimpleDataSource(url,user,password);
 	}
 
 	/*
@@ -278,6 +259,11 @@ public class DbClient extends Session {
 		return this;
 	}
 
+	/**
+	 * 得到指定表的所有分表
+	 * @param meta 表元模型
+	 * @return 从数据库扫描得到的分表
+	 */
 	public PartitionResult[] getSubTableNames(ITableMetadata meta) {
 		return connPool.getPartitionSupport().getSubTableNames(meta);
 	}
@@ -285,12 +271,6 @@ public class DbClient extends Session {
 	@Override
 	public void commit() throws SQLException {
 	}
-
-	public boolean dropSequence(String seqName) throws SQLException {
-		return this.getMetaData(null).dropSequence(seqName);
-	}
-
-	private IUserManagedPool connPool;
 
 	public boolean isOpen() {
 		return connPool != null;
@@ -736,12 +716,6 @@ public class DbClient extends Session {
 		return connPool;
 	}
 
-	private void ensureOpen() {
-		if(connPool==null){
-			throw new IllegalStateException("The database client was closed.");
-		}
-	}
-	
 	@Override
 	public Collection<String> getAllDatasourceNames() {
 		ensureOpen();
@@ -880,6 +854,33 @@ public class DbClient extends Session {
 		return count;
 	}
 
+	private void ensureOpen() {
+		if(connPool==null){
+			throw new IllegalStateException("The database client was closed.");
+		}
+	}	
 	
-	
+	/**
+	 * 获取缺省的DataSource配置
+	 * @return
+	 */
+	private static SimpleDataSource getDefaultDataSource() {
+		String dbPath = JefConfiguration.get(DbCfg.DB_FILEPATH, "");
+		String dbType = JefConfiguration.get(DbCfg.DB_TYPE, "derby");
+		int port = JefConfiguration.getInt(DbCfg.DB_PORT, 0);
+		String host = JefConfiguration.get(DbCfg.DB_HOST, "");
+		String dbName = JefConfiguration.get(DbCfg.DB_NAME);
+		DbmsProfile features = DbmsProfile.getProfile(dbType);
+		if (features == null) {
+			throw new RuntimeException("The DBMS: " + dbType + "not support yet.");
+		}
+		dbPath=dbPath.replace('\\', '/');
+		if(dbPath.length()>0 && !dbPath.endsWith("/")){
+			dbPath+="/";
+		}
+		String url = features.generateUrl(host, port, dbPath + dbName);
+		String user=JefConfiguration.get(DbCfg.DB_USER);
+		String password=JefConfiguration.get(DbCfg.DB_PASSWORD);
+		return DbUtils.createSimpleDataSource(url,user,password);
+	}
 }

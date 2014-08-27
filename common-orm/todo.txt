@@ -39,6 +39,9 @@ start with connect by的内存计算方案(OK,NativeQuery支持)
 级联操作时两个字段不一致时的update/insert问题(从目前测试看来，API逻辑是正确的。是否检查...)(OK)
 完善JEF的JMX监控(OK)
 update语句中的set语句现在也可以根据表达式省略。(OK)
+Batch的极限模式。(不返回值、性能分析等手段)、此外对于Batch可能需要统计并输出因为Sequence而消耗的时间（--），Oracle下的实现特殊优化 hint, no logging
+——极限模式下：启用该数据库本身的特殊优化操作——no logging /*+APPEND */ 等。极限模式下不回写自增值等。 (OK,测试数据已收集)
+仿照MyBatis，将包扫描和session初始化都用一个Bean来构造(OK)
 
 ============== 基本上解决的问题 ==============
 CXF 2.7.10提高了兼容性，但是CXF-Plus的ASM类产生的package-info不兼容 (无法重现，修订CXF-PLUS中的引用，怀疑还是和包冲突有关，修订，暂时算OK)
@@ -56,7 +59,7 @@ CXF 2.7.10提高了兼容性，但是CXF-Plus的ASM类产生的package-info不�
 
 更新文档中的站点
 
-对照TDDL分库分表优势体现 http://10.22.33.106/index!controlIndex.action
+对照TDDL分库分表优势体现 
 
 MySQL Sharding 
 Hibernate Shards
@@ -74,16 +77,41 @@ replace into t(id, update_time) select 1, now();
 其亮点是具有类似mysql proxy之类多服务器容错功能，单独服务器发生故障不影响系统正常运行，通过类似ha-jdbc思想实现。
 最后，不得不提的就是淘宝贡献的TDDL，使用过淘宝的同学应该都深有体会，其可靠性、可用性、稳定性、可扩展性均领跑业界很多同类产品。
 
-Batch的极限模式。(不返回值、性能分析等手段)、此外对于Batch可能需要统计并输出因为Sequence而消耗的时间（--），Oracle下的实现特殊优化 hint, no logging
-——极限模式下：启用该数据库本身的特殊优化操作——no logging /*+APPEND */ 等。极限模式下不回写自增值等。 (OK,测试数据已收集)
+
+
+
+==============特性展示===============
+特点一
+1、Query与Entity的统一，一体两面的事物。 更少的类，更灵活的用法。
+2、Query不仅仅是代表查询条件，而是一个完整SQL操作的描述。
+3、由Query为核心构成的 Criteria API，解决了xQL和Criteria青黄不接的问题。
+
+特点二，将SQL的使用发挥到极致，解决SQL跨库问题
+3、
+
+特点三，追求性能极致
+
+特点四，分库分表
+
+特点五，
+
+
+特点六、解决一切跨DBMS的移植问题
+1、DML操作、自增值处理与返回、查询
+2、DDL操作 特点三，不仅仅提供DML封装，也提供DDL的封装和跨库操作
+3、SQL语法与函数
+
+
+特点七，没有短板
+
+
 
 
 ================ 待解决的问题  ===================
-将分表计算的缓存从metadata上剥离
+@DataSource方式标注的表现在还不能通过SQL路由。
 MSSQL Server方言支持
 为大部分测试案例增加断言
-仿照MyBatis，将包扫描和session初始化都用一个Bean来构造
-与MyBatis对比性能
+与MyBatis对比性能(未全部完成，查询性能未比较)
 支持多语言的错误信息和异常。
 javacpp和JNA对比研究，使用JNA重新封rar解压库
 

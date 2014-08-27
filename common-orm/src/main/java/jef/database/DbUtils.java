@@ -596,19 +596,6 @@ public final class DbUtils {
 	}
 
 	/**
-	 * 根据字段获得数据库列名
-	 * 
-	 * @param fld
-	 *            字段对象
-	 * @param customName
-	 *            数据库方言
-	 * @return
-	 */
-	public static String toColumnName(Field field, DatabaseDialect profile) {
-		return toColumnName(field, profile, null);
-	}
-
-	/**
 	 * 将field转换为列名（包含表的别名）
 	 * 
 	 * @param field

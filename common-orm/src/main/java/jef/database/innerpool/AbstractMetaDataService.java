@@ -1,15 +1,11 @@
 package jef.database.innerpool;
 
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 
 import jef.database.DbMetaData;
 import jef.database.DbUtils;
 import jef.database.PartitionMetadata;
 import jef.database.annotation.PartitionResult;
-import jef.database.meta.DdlGenerator;
-import jef.database.meta.DdlGeneratorImpl;
 import jef.database.meta.ITableMetadata;
 import jef.database.support.MetadataEventListener;
 import jef.tools.Assert;
@@ -21,25 +17,7 @@ import jef.tools.Assert;
  *
  */
 public abstract class AbstractMetaDataService implements IUserManagedPool{
-	PartitionMetadata pm=new PartitionMetadata(this);
-	private final Map<String,DdlGenerator>      ddls=new HashMap<String,DdlGenerator>();
-	
-	public DdlGenerator getDdlGenerator(String dbkey) {
-		DdlGenerator ddl= ddls.get(dbkey);
-		if(ddl==null){
-			return createDdlGenerator(dbkey);
-		}
-		return ddl;
-	}
-
-	private synchronized DdlGenerator createDdlGenerator(String dbkey) {
-		DdlGenerator ddl= ddls.get(dbkey);
-		if(ddl==null){
-			ddl=new DdlGeneratorImpl(this, getProfile(dbkey));			
-			ddls.put(dbkey, ddl);
-		}
-		return ddl;
-	}
+	private PartitionMetadata pm=new PartitionMetadata(this);
 
 	public PartitionSupport getPartitionSupport() {
 		return pm;

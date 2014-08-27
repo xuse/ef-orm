@@ -5,9 +5,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Queue;
 
-import jef.database.DbCfg;
-import jef.database.DbClient;
-import jef.database.Sequence;
 import jef.database.DbMetaData.ObjectType;
 import jef.database.innerpool.ReentrantConnection;
 import jef.database.support.RDBMS;
@@ -123,7 +120,7 @@ public class SequenceKeyHolderTest {
 
 	private void recreateSequence() throws SQLException {
 		if (db.asOperateTarget(null).getMetaData().existsInSchema(ObjectType.SEQUENCE, SCHEMA, SEQ_NAME)) {
-			db.dropSequence(SEQ_NAME);
+			db.getMetaData(null).dropSequence(SEQ_NAME);
 		}
 
 		SEQ_CREATE_SQL = "create sequence " + SEQ_NAME + " minvalue 1 maxvalue 999999 start with " + SEQ_START + " increment by " + SEQ_STEP + " cache 200";

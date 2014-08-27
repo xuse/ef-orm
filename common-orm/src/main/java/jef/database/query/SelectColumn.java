@@ -207,7 +207,7 @@ public final class SelectColumn extends SingleColumnSelect{
 	
 	private String innerGetColumn(DatabaseDialect profile,String tableAlias){
 		//因为第一次操作列名改为额大写，造成第二次Parse出错
-		columnSimpleName=DbUtils.toColumnName(targetField, profile);//不带别名的列名
+		columnSimpleName=DbUtils.toColumnName(targetField, profile,null);//不带别名的列名
 		
 		String name= DbUtils.toColumnName(targetField, profile,tableAlias);
 		int key=projection & 0xFF;

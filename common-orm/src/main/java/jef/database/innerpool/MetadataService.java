@@ -6,7 +6,6 @@ import java.util.Date;
 import jef.database.ConnectInfo;
 import jef.database.DbMetaData;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.meta.DdlGenerator;
 import jef.database.meta.ITableMetadata;
 import jef.database.support.MetadataEventListener;
 
@@ -31,12 +30,6 @@ public interface MetadataService {
 	 * @return
 	 */
 	ConnectInfo getInfo(String dbkey);
-
-	/**
-	 * get the SQL generator..
-	 * @return
-	 */
-	DdlGenerator getDdlGenerator(String dbkey);
 	
 	/**
 	 * 

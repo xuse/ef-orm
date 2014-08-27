@@ -52,11 +52,10 @@
 		<property name="dataSourceLookup" ref="dataSourceLookup" />
 	</bean>
 	<!-- Session工厂 -->
-	<bean id="entityManagerFactory" class="jef.database.jpa.JefEntityManagerFactory" destroy-method="close">
-		<constructor-arg>
-			<ref bean="routingDS"/>
-		</constructor-arg>
+	<bean id="entityManagerFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean">
+		<property name="dataSource" ref="routingDS" />
 	</bean>
+	
 	<!-- 事务管理器 -->
 	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager" lazy-init="true">
 		<property name="entityManagerFactory" ref="entityManagerFactory" />

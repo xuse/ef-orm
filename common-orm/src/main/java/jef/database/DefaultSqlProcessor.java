@@ -265,7 +265,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 					je.setBind(obj.getQuery());
 				cstr.add(columnName + " = " + je.toSqlAndBindAttribs(null, this));
 			} else if (value instanceof jef.database.Field) {// FBI Field不可能在此
-				cstr.add(columnName + " = " + DbUtils.toColumnName((Field) value, profile));
+				cstr.add(columnName + " = " + DbUtils.toColumnName((Field) value, profile,null));
 			} else {
 				cstr.add(columnName + " = ?");
 				params.add(field);

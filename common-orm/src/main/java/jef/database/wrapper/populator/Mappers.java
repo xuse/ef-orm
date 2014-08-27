@@ -18,7 +18,6 @@ import jef.database.dialect.type.MappingType;
 import jef.database.dialect.type.ResultSetAccessor;
 import jef.database.innerpool.ArrayElementPopulator;
 import jef.database.innerpool.NestedObjectPopulator;
-import jef.database.jsqlparser.statement.select.Select;
 import jef.database.meta.AliasProvider;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
@@ -281,6 +280,7 @@ public final class Mappers {
 		private String schema;
 		private boolean skipColumnAnnotation;
 		private IPopulator populator;
+		@SuppressWarnings("unchecked")
 		private Map<String,String> customMap=Collections.EMPTY_MAP; //指定对象属性 -> 数据库列定制 (字段属性全大写。数据库列全大写)
 
 		/**
@@ -381,14 +381,6 @@ public final class Mappers {
 		@Override
 		public String getColumnNameIncase(String name) {
 			return name == null ? null : name.toUpperCase();
-		}
-
-		public void addKeyword(String... keys) {
-		}
-
-		public Select toPageSQL(Select select, IntRange range) {
-			// TODO Auto-generated method stub
-			return null;
 		}
 	};
 }

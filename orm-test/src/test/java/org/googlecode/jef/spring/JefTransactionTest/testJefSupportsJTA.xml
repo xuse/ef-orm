@@ -108,12 +108,9 @@
 		<property class="jef.database.datasource.SpringBeansDataSourceLookup"　/>
 	</bean>
 	<!-- DAL配置,目前只支持单个数据源的配置 -->
-	<bean id="entityManagerFactory" class="jef.database.jpa.JefEntityManagerFactory" destroy-method="close">
-		<constructor-arg>
-			<ref bean="dataSource"/>
-		</constructor-arg>
+	<bean id="entityManagerFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
 	</bean>
-
 
 	<bean id="biz" class="ailk.easyframe.testp.jta.dao.Bizimpl">
 		<property name="productDao" ref="productDao" />

@@ -20,10 +20,11 @@
 	<bean id="dataSource" class="jef.database.datasource.SimpleDataSource"
 		p:url="${db.url}"  />
 
-	<bean id="entityManagerFactory" class="jef.database.jpa.JefEntityManagerFactory" destroy-method="close">
-		<constructor-arg>
-			<ref bean="dataSource" />
-		</constructor-arg>
+	<bean id="entityManagerFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="enhancePackages" value="org.easyframe.tutorial" />
+		<property name="scanPackages" value="org.easyframe.tutorial" />
+		<property name="registeNonMappingTableAsDynamic" value="true"></property>
 	</bean>
 
 	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" />

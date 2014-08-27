@@ -102,8 +102,8 @@ public interface IUserManagedPool extends IPool<ReentrantConnection>,MetadataSer
 	 * 获取一个连接，如果连接池已经为指定的事务分配过连接，那么还是返回这个连接。
 	 * 注意：这个版本开始，连接池不再负责设置AutoCommit的状态
 	 * 
-	 * @param transaction
-	 * @return
+	 * @param transaction 事务对象
+	 * @return Connection
 	 * @throws SQLException
 	 */
 	ReentrantConnection poll(Object transaction) throws SQLException;
@@ -124,19 +124,19 @@ public interface IUserManagedPool extends IPool<ReentrantConnection>,MetadataSer
 	
 	/**
 	 * 是否为路由池
-	 * @return
+	 * @return 如果是路由的连接池返回true，反之
 	 */
 	boolean isRouting();
 	
 	/**
 	 * 是否为假连接池
-	 * @return
+	 * @return 如果为非缓存的连接池实现，返回true,反之
 	 */
 	boolean isDummy();
 	
 	/**
 	 * 可以注册一个回调函数，当数据库在首次初始化的时候执行
-	 * @param callback
+	 * @param callback 回调函数
 	 */
 	void registeDbInitCallback(Callback<String, SQLException> callback);
 }

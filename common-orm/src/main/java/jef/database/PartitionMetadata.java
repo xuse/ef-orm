@@ -19,9 +19,6 @@ import jef.database.meta.ITableMetadata;
  * 
  */
 public class PartitionMetadata implements PartitionSupport{
-	/**
-	 * 所属的数据库
-	 */
 	private IUserManagedPool parent;
 	
 	public PartitionMetadata(IUserManagedPool parent){

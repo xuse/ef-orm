@@ -59,6 +59,7 @@ import jef.database.meta.ColumnChange;
 import jef.database.meta.ColumnModification;
 import jef.database.meta.DbProperty;
 import jef.database.meta.DdlGenerator;
+import jef.database.meta.DdlGeneratorImpl;
 import jef.database.meta.Feature;
 import jef.database.meta.ForeignKey;
 import jef.database.meta.Function;
@@ -125,8 +126,6 @@ import org.apache.commons.lang.ArrayUtils;
  * 
  */
 public class DbMetaData extends MetadataConnectionPool {
-	private MetadataService parent;
-	
 	private String dbkey;
 	
 	private ConnectInfo info;
@@ -140,16 +139,16 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * 缓存清理的间隔时间<br>
 	 * 考虑到在生产环境中，一些原本没创建的表可能会动态创建，因此考虑间隔一定时间清除缓存。
 	 */
-	private int interval;
+	private int subtableInterval;
 	/**
 	 * 下次缓存过期时间
 	 */
-	private long nextExpireTime;
+	private long subtableCacheExpireTime;
 	
 	/**
 	 * 根据扫描得到的所有表的情况
 	 */
-	private final Map<String, Set<String>> subTableData = new ConcurrentHashMap<String, Set<String>>();
+	private final Map<String, Set<String>> subtableCache = new ConcurrentHashMap<String, Set<String>>();
 	
 	// 运行时缓存
 	private String[] tableTypes;
@@ -162,6 +161,8 @@ public class DbMetaData extends MetadataConnectionPool {
 	
 	private long dbTimeDelta;
 
+	private DdlGenerator ddlGenerator;
+	
 	/**
 	 * 构造
 	 * 
@@ -174,10 +175,9 @@ public class DbMetaData extends MetadataConnectionPool {
 	 */
 	public DbMetaData(DataSource ds, MetadataService parent, String dbkey) {
 		super(ds);
-		this.interval = JefConfiguration.getInt(DbCfg.DB_PARTITION_REFRESH, 3600) * 1000;
+		this.subtableInterval = JefConfiguration.getInt(DbCfg.DB_PARTITION_REFRESH, 3600) * 1000;
 		this.dbkey = dbkey;
-		this.nextExpireTime = System.currentTimeMillis() + interval;
-		this.parent = parent;
+		this.subtableCacheExpireTime = System.currentTimeMillis() + subtableInterval;
 
 		info = DbUtils.tryAnalyzeInfo(ds, false);
 		try {
@@ -199,6 +199,7 @@ public class DbMetaData extends MetadataConnectionPool {
 			}
 			if (this.schema == null)
 				schema = profile.getDefaultSchema();
+			this.ddlGenerator=new DdlGeneratorImpl(profile);
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
 		}
@@ -1161,24 +1162,23 @@ public class DbMetaData extends MetadataConnectionPool {
 	public Collection<String> getSubTableNames(ITableMetadata tableMetadata) throws SQLException {
 		Assert.notNull(tableMetadata);
 		boolean isDefault = DbUtils.partitionUtil instanceof DefaultPartitionCalculator;
-		if (isDefault) {// 如果是JEF默认的分表计算器，那么可以优化计算，直接跳出
-			if (tableMetadata.getPartition() == null)
-				return Collections.emptySet();
+		if (isDefault && tableMetadata.getPartition() == null) {// 如果是JEF默认的分表计算器，那么可以优化计算，直接跳出
+			return Collections.emptySet();
 		}
 
 		String tableName = getProfile().getObjectNameIfUppercase(tableMetadata.getTableName(true));
 		Set<String> result = null;
 		// 缓存有效性判断
-		if (System.currentTimeMillis() > nextExpireTime) {
-			subTableData.clear();
-			nextExpireTime = System.currentTimeMillis() + interval;
+		if (System.currentTimeMillis() > subtableCacheExpireTime) {
+			subtableCache.clear();
+			subtableCacheExpireTime = System.currentTimeMillis() + subtableInterval;
 		} else {
-			result = subTableData.get(tableName);
+			result = subtableCache.get(tableName);
 		}
 		// 缓存中得不到，到数据库中计算
 		if (result == null) {
 			result = calculateSubTables(tableName, tableMetadata, isDefault);
-			subTableData.put(tableName, result);
+			subtableCache.put(tableName, result);
 		}
 		return result;
 	}
@@ -1266,8 +1266,7 @@ public class DbMetaData extends MetadataConnectionPool {
 			return;
 		}
 
-		DdlGenerator ddl = parent.getDdlGenerator(dbkey);
-		List<String> altertables = ddl.toTableModifyClause(meta, tablename, insert, changed, delete);
+		List<String> altertables = ddlGenerator.toTableModifyClause(meta, tablename, insert, changed, delete);
 		boolean debug = ORMConfig.getInstance().isDebugMode();
 		Connection conn = null;
 		Statement st = null;
@@ -1377,13 +1376,12 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @see {@link ITableMetadata}
 	 */
 	public boolean createTable(ITableMetadata meta, String tablename) throws SQLException {
-		DdlGenerator ddl = parent.getDdlGenerator(dbkey);
 		if (tablename == null) {
 			tablename = meta.getTableName(true);
 		}
 		if (existTable(tablename))
 			return false;
-		String[] sqls = ddl.toTableCreateClause(meta, tablename);
+		String[] sqls = ddlGenerator.toTableCreateClause(meta, tablename);
 		String sql = "create table " + tablename + "(\n" + sqls[0] + "\n)";
 		if (sqls[2] != null) {
 			sql += sqls[2];
@@ -1398,7 +1396,7 @@ public class DbMetaData extends MetadataConnectionPool {
 				createSequence(null, sqls[1], 1, StringUtils.toLong(sqls[3], Long.MAX_VALUE));
 			}
 			// create indexes
-			List<String> idx = ddl.toIndexClause(meta, tablename);
+			List<String> idx = ddlGenerator.toIndexClause(meta, tablename);
 			for (String idxSql : idx) {
 				try {
 					execute(st, idxSql);
@@ -1800,7 +1798,7 @@ public class DbMetaData extends MetadataConnectionPool {
 				dropAllForeignKey(table);
 			}
 			executeSql(sql, null);
-			nextExpireTime=0;
+			subtableCacheExpireTime=0;
 			return true;
 		}
 		return false;
@@ -1930,7 +1928,7 @@ public class DbMetaData extends MetadataConnectionPool {
 			}
 			suffix = Pattern.compile(suffixRegexp.toString());
 		} else {
-			suffix = Pattern.compile(tableNameWithoutSchema.concat("(_?[0-9]{1,4})+"));
+			suffix = Pattern.compile(tableNameWithoutSchema.concat("(_?[0-9_]{1,4})+"));
 		}
 		Set<String> result = new HashSet<String>();
 		String schema = meta.getSchema();
@@ -2141,7 +2139,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	private final static Transformer FK_TRANSFORMER = new Transformer(ForeignKey.class);
 
 	public boolean clearTableMetadataCache(ITableMetadata meta) {
-		return subTableData.remove(meta)!=null;
+		return subtableCache.remove(meta)!=null;
 	}
 
 	protected boolean hasRemarkFeature() {

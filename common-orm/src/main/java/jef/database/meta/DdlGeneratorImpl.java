@@ -16,20 +16,17 @@ import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.MappingType;
-import jef.database.innerpool.IUserManagedPool;
 import jef.database.support.RDBMS;
 import jef.tools.StringUtils;
 import jef.tools.string.RandomData;
 
 public class DdlGeneratorImpl implements DdlGenerator {
-	IUserManagedPool parent;
 	private DatabaseDialect profile;
 	private final String BRUKETS_LEFT;
 	private final String BRUKETS_RIGHT;
 	private boolean commandForEach;
 
-	public DdlGeneratorImpl(IUserManagedPool parent, DatabaseDialect profile) {
-		this.parent = parent;
+	public DdlGeneratorImpl(DatabaseDialect profile) {
 		this.profile = profile;
 		commandForEach = profile.has(Feature.ALTER_FOR_EACH_COLUMN);
 		if (profile.has(Feature.BRUKETS_FOR_ALTER_TABLE)) {

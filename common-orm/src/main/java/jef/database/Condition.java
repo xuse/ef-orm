@@ -379,10 +379,10 @@ public class Condition implements Serializable{
 			if(alias!=null){
 				sb.append(columnName).append(toString(operator)).append(alias);
 				if(alias.length()>0)sb.append('.');
-				sb.append(DbUtils.toColumnName(rf.getField(),profile));
+				sb.append(DbUtils.toColumnName(rf.getField(),profile,null));
 			}else{
 				LogUtil.show("Not found Table Alias for ref-field:" + rf.toString());
-				sb.append(columnName).append(toString(operator)).append(DbUtils.toColumnName(rf.getField(),profile));	
+				sb.append(columnName).append(toString(operator)).append(DbUtils.toColumnName(rf.getField(),profile,null));	
 			}
 		}else if ((spOpers=getInBetweenOper(operator))!=null){
 			String oper=spOpers[0];
