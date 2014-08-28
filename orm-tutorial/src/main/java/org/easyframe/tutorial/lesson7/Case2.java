@@ -1,7 +1,6 @@
 package org.easyframe.tutorial.lesson7;
 
 import java.sql.SQLException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +8,7 @@ import java.util.Map;
 import javax.persistence.PersistenceException;
 import javax.sql.DataSource;
 
+import jef.codegen.EntityEnhancer;
 import jef.database.DbClient;
 import jef.database.ORMConfig;
 import jef.database.SqlTemplate;
@@ -17,7 +17,7 @@ import jef.database.datasource.RoutingDataSource;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.MetadataAdapter;
-import jef.database.query.Func;
+import junit.framework.Assert;
 
 import org.easyframe.tutorial.lesson4.entity.Person;
 import org.junit.BeforeClass;
@@ -34,6 +34,7 @@ public class Case2 {
 	 */
 	@BeforeClass
 	public static void setup() throws SQLException{
+		new EntityEnhancer().enhance("org.easyframe.tutorial");
 		//准备多个数据源
 		Map<String,DataSource> datasources=new HashMap<String,DataSource>();
 		datasources.put("datasource1", new SimpleDataSource("jdbc:derby:./db;create=true",null,null));
@@ -53,6 +54,7 @@ public class Case2 {
 		
 		Person p=new Person();
 		p.setName("张三");
+		p.setGender('F');
 		db.insert(p);
 		ORMConfig.getInstance().setDebugMode(true);
 	}
@@ -72,16 +74,16 @@ public class Case2 {
 		try{
 			List<Person> p2=db.createNamedQuery("getUserById-not-bind-ds",Person.class).setParameter("name", "张三").getResultList();	
 		}catch(RuntimeException e){
-			e.printStackTrace();
 			throw e;
 		}
 	}
 	
 	@Test
 	public void testSqlTemplate() throws SQLException{
+		System.out.println("============================");
 		//获得在datasource2上执行SQL操作的句柄
 		SqlTemplate t=db.getSqlTemplate("datasource2");
 		List<Person> person=t.selectBySql("select * from t_person where gender=?", Person.class, "F");
-		System.out.println(person);
+		Assert.assertEquals(1, person.size());
 	}
 }

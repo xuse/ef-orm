@@ -265,6 +265,7 @@ public class Case2 extends org.junit.Assert {
 	 */
 	@Test
 	public void testCustomerBatch() throws SQLException {
+		db.truncate(Customer.class);
 		List<Customer> list = new ArrayList<Customer>();
 		// 批量插入
 		Customer c = new Customer();
@@ -405,7 +406,6 @@ public class Case2 extends org.junit.Assert {
 			Selects select = QB.selectFrom(query);
 			select.column(Device.Field.type);
 			select.setDistinct(true);
-			System.err.println(db.count(query));
 			
 			
 			List<Device> results = db.select(query);

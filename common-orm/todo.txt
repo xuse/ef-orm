@@ -79,8 +79,6 @@ CXF 2.7.10提高了兼容性，但是CXF-Plus的ASM类产生的package-info不�
 3、SQL语法与函数
 
 
-特点七，没有短板
-
 
 
 

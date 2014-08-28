@@ -65,6 +65,7 @@ public abstract class MetadataAdapter implements ITableMetadata {
 
 	public void setBindDsName(String bindDsName) {
 		this.bindDsName = MetaHolder.getMappingSite(bindDsName);
+		this.bindProfile=null;
 	}
 	
 	public List<MappingType<?>> getMetaFields() {

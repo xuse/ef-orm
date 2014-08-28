@@ -508,7 +508,9 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 				if (noOrder) { // 去除内存排序
 					mrs.setInMemoryOrder(null);
 				}
-				mrs.setInMemoryConnectBy(parse.parseStartWith(mrs.getColumns()));
+				if(parse.removedStartWith!=null){
+					mrs.setInMemoryConnectBy(parse.parseStartWith(mrs.getColumns()));
+				}
 				IResultSet rsw = mrs.toSimple(null, resultTransformer.getStrategy());
 				list = db.populateResultSet(rsw, null, resultTransformer);
 			} finally {
