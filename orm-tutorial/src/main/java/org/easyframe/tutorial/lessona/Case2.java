@@ -26,6 +26,7 @@ import jef.database.query.Selects;
 import jef.database.query.SqlExpression;
 import jef.database.wrapper.ResultIterator;
 import jef.tools.DateUtils;
+import jef.tools.ThreadUtils;
 import jef.tools.string.RandomData;
 
 import org.easyframe.tutorial.lessona.entity.Customer;
@@ -89,6 +90,44 @@ public class Case2 extends org.junit.Assert {
 			System.err.println("======= 建表操作完成，对于分区表只创建了可以预测到的若干表，实际操作中需要用到的表会自动按需创建=========");
 		}
 	}
+	
+	@Test
+	public void ddlTest() throws SQLException{
+		Customer customer=new Customer();
+		customer.setCustomerNo(1234);
+		customer.setCreateDate(DateUtils.getDate(2016,12,10));
+		db.createTable(customer);
+		db.dropTable(customer);
+		
+		
+		Device d=new Device();
+		d.setIndexcode("123456");
+		db.createTable(d);
+		db.dropTable(d);
+	}
+	
+	/**
+	 * 当分表结果计算后，对比数据库中实际存在的表。不存在的表不会参与查询。
+	 * 
+	 * @throws SQLException
+	 */
+	@Test
+	public void testTableFilter() throws SQLException {
+		Device d=new Device();
+		d.setIndexcode("665565");
+		db.createTable(d);
+		ThreadUtils.doSleep(1000);
+		System.out.println("第一次查询，表Device_6存在，故会查询此表");
+		Query<Device> query = QB.create(Device.class);
+		List<Device> device=db.select(query);
+		
+		db.dropTable(d);
+		ThreadUtils.doSleep(500);
+		System.out.println("第二次查询，由于表Device_6被删除，因此不会查此表");
+		device=db.select(query);
+		
+	}
+	
 
 	/**
 	 * 当分表结果计算后，发现没有需要查询的表的时候，会直接返回
@@ -134,11 +173,33 @@ public class Case2 extends org.junit.Assert {
 		assertEquals(0, db.count(QB.create(Person2.class)));
 		
 		System.out.println("=============== In Native Query ============");
-		String sql="select * from person2";
-		NativeQuery<Person2> query=db.createNativeQuery(sql, Person2.class).withRouting();
-		query.getResultCount();
-		
-		query.getResultList();
+		{
+			String sql="insert into person2(name,data_desc,created,modified) values(:name,:data,sysdate,sysdate)";
+			NativeQuery query=db.createNativeQuery(sql, Person2.class).withRouting();	
+			query.setParameter("name", "测试111");
+			query.setParameter("data", "备注信息");
+			query.executeUpdate();
+		}
+		{
+			String sql="select * from person2";
+			NativeQuery<Person2> query=db.createNativeQuery(sql, Person2.class).withRouting();
+			query.getResultCount();
+			
+			query.getResultList();	
+		}
+		{
+			String sql="update person2 set name=:name where id=:id";
+			NativeQuery query=db.createNativeQuery(sql).withRouting();
+			query.setParameter("id", 1);
+			query.setParameter("name", "测试222");
+			query.executeUpdate();
+		}
+		{
+			String sql="delete person2  where id=:id";
+			NativeQuery query=db.createNativeQuery(sql).withRouting();
+			query.setParameter("id", 2);
+			query.executeUpdate();
+		}
 	}
 
 	/**
@@ -176,14 +237,19 @@ public class Case2 extends org.junit.Assert {
 		 * 这张表虽然现在不存在，但是EF-ORM会在需要用到时，自动创建这张表。
 		 */
 
+		// 路由维度充分时的查询
+		System.out.println("当分表条件充分时，只需要查一张表即可...");
+		Customer loaded1 = db.load(c);
+		
 		// 查询。
+		System.out.println("当分表条件不完整时，需要查询同一个库上的好几张表。");
 		Customer loaded = db.load(Customer.class, c.getCustomerNo());
 
 		// 更新
 		loaded.setLastName("King");
 		assertEquals(1, db.update(loaded));
 
-		// 查询数量
+		// 查询数量，由于有没分库分表条件，意味着要查询所有库上，一定时间范围内的所有表
 		assertEquals(1, db.count(QB.create(Customer.class)));
 
 		// 删除

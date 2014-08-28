@@ -42,6 +42,7 @@ update语句中的set语句现在也可以根据表达式省略。(OK)
 Batch的极限模式。(不返回值、性能分析等手段)、此外对于Batch可能需要统计并输出因为Sequence而消耗的时间（--），Oracle下的实现特殊优化 hint, no logging
 ——极限模式下：启用该数据库本身的特殊优化操作——no logging /*+APPEND */ 等。极限模式下不回写自增值等。 (OK,测试数据已收集)
 仿照MyBatis，将包扫描和session初始化都用一个Bean来构造(OK)
+@DataSource方式标注的表现在还不能通过SQL路由。(OK)
 
 ============== 基本上解决的问题 ==============
 CXF 2.7.10提高了兼容性，但是CXF-Plus的ASM类产生的package-info不兼容 (无法重现，修订CXF-PLUS中的引用，怀疑还是和包冲突有关，修订，暂时算OK)
@@ -53,33 +54,9 @@ CXF 2.7.10提高了兼容性，但是CXF-Plus的ASM类产生的package-info不�
 要支持多表时，使用distinct后进行count时，在内存中先distinct后再count (Criteria不支持，NativeQuery OK)
 
 ==========文档补充============
-——关于序列化反序列化支持问题
-——关于TDDL对比
-
-
 更新文档中的站点
 
 对照TDDL分库分表优势体现 
-
-MySQL Sharding 
-Hibernate Shards
-TDDL
-   if not exists (select 1 from t where id = 1)
-      insert into t(id, update_time) values(1, getdate())
-   else
-      update t set update_time = getdate() where id = 1
-那么 MySQL 中如何实现这样的逻辑呢？别着急！MySQL 中有更简单的方法： replace into
-replace into t(id, update_time) values(1, now());
-或
-replace into t(id, update_time) select 1, now();
-
-它可以让一个Hibernate应用比较简单地加入横向分割的数据库分布式功能。另外，还有HiveDB。其底层也是基于Hibernate shards实现，目前版本相对稳定，
-其亮点是具有类似mysql proxy之类多服务器容错功能，单独服务器发生故障不影响系统正常运行，通过类似ha-jdbc思想实现。
-最后，不得不提的就是淘宝贡献的TDDL，使用过淘宝的同学应该都深有体会，其可靠性、可用性、稳定性、可扩展性均领跑业界很多同类产品。
-
-
-
-
 ==============特性展示===============
 特点一
 1、Query与Entity的统一，一体两面的事物。 更少的类，更灵活的用法。
@@ -108,7 +85,8 @@ replace into t(id, update_time) select 1, now();
 
 
 ================ 待解决的问题  ===================
-@DataSource方式标注的表现在还不能通过SQL路由。
+NativeQuery中，不支持按需建表。
+
 MSSQL Server方言支持
 为大部分测试案例增加断言
 与MyBatis对比性能(未全部完成，查询性能未比较)

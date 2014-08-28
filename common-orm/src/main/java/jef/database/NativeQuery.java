@@ -487,7 +487,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			list = db.innerSelectBySql(s, rst, max, fetchSize, parse.params);
 			dbAccess=rst.dbAccess;
 		} else if(plan.isChangeDatasource()!=null){
-			OperateTarget db=this.db.getTarget(plan.isChangeDatasource());
+			this.db=this.db.getTarget(plan.isChangeDatasource());
 			if (range != null) {
 				s = toPageSql(sql, s);
 			}

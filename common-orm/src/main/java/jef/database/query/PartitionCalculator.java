@@ -25,7 +25,7 @@ public interface PartitionCalculator {
 	 * @return 分表计算结果
 	 * @see PartitionResult
 	 */
-	PartitionResult[] toTableNames(MetadataAdapter meta, IQueryableEntity instance, Query<?> q, PartitionSupport context);
+	PartitionResult[] toTableNames(MetadataAdapter meta, IQueryableEntity instance, Query<?> q, PartitionSupport context,boolean filter);
 	
 	/**
 	 * 根据从SQL中分析得到的维度矢量进行路由计算
@@ -34,7 +34,7 @@ public interface PartitionCalculator {
 	 * @param processor
 	 * @return
 	 */
-	PartitionResult[] toTableNames(MetadataAdapter meta, Map<String,Dimension> val, PartitionSupport processor); 
+	PartitionResult[] toTableNames(MetadataAdapter meta, Map<String,Dimension> val, PartitionSupport processor,boolean filter); 
 	
 	/**
 	 * 根据从SQL中分析得到的维度矢量进行路由计算

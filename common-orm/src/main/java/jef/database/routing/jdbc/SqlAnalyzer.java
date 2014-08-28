@@ -14,6 +14,7 @@ import jef.common.Pair;
 import jef.common.PairSO;
 import jef.database.DbUtils;
 import jef.database.Field;
+import jef.database.ORMConfig;
 import jef.database.OperateTarget;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
@@ -186,7 +187,7 @@ public class SqlAnalyzer {
 		DimensionCollector collector = new DimensionCollector(context.meta, context.paramsMap);
 		Map<String, Dimension> val = getPartitionCondition(context.statement, collector);
 		val=fill(val,collector);
-		PartitionResult[] results=DbUtils.partitionUtil.toTableNames(context.meta, val, context.db.getPartitionSupport());
+		PartitionResult[] results=DbUtils.partitionUtil.toTableNames(context.meta, val, context.db.getPartitionSupport(),ORMConfig.getInstance().isFilterAbsentTables());
 		DeleteExecutionPlan ex=new DeleteExecutionPlan(results,context);
 		return ex;
 	}
@@ -219,7 +220,7 @@ public class SqlAnalyzer {
 		}else{
 			throw new UnsupportedOperationException(sql.getClass().toString());
 		}
-		return DbUtils.partitionUtil.toTableNames(meta, val, support);
+		return DbUtils.partitionUtil.toTableNames(meta, val, support,ORMConfig.getInstance().isFilterAbsentTables());
 	}
 	
 
@@ -231,7 +232,7 @@ public class SqlAnalyzer {
 		DimensionCollector collector = new DimensionCollector(context.meta, context.paramsMap);
 		Map<String, Dimension> val = getPartitionCondition(context.statement, collector);
 		val=fill(val,collector);
-		PartitionResult[] results=DbUtils.partitionUtil.toTableNames(context.meta, val, context.db.getPartitionSupport());
+		PartitionResult[] results=DbUtils.partitionUtil.toTableNames(context.meta, val, context.db.getPartitionSupport(),ORMConfig.getInstance().isFilterAbsentTables());
 		UpdateExecutionPlan ex=new UpdateExecutionPlan(results,context);
 		return ex;
 	}
@@ -243,7 +244,7 @@ public class SqlAnalyzer {
 		DimensionCollector collector = new DimensionCollector(context.meta, context.paramsMap);
 		Map<String, Dimension> val = getPartitionCondition(context.statement, collector);
 		val=fill(val,collector);
-		PartitionResult[] results=DbUtils.partitionUtil.toTableNames(context.meta, val, context.db.getPartitionSupport());
+		PartitionResult[] results=DbUtils.partitionUtil.toTableNames(context.meta, val, context.db.getPartitionSupport(),ORMConfig.getInstance().isFilterAbsentTables());
 		SelectExecutionPlan ex=new SelectExecutionPlan(results,context);
 		return ex;
 	}
@@ -269,8 +270,8 @@ public class SqlAnalyzer {
 		DimensionCollector collector = new DimensionCollector(context.meta, context.paramsMap);
 		Map<String, Dimension> val = getPartitionCondition(context.statement, collector);
 		val=fill(val,collector);
-		PartitionResult[] results=DbUtils.partitionUtil.toTableNames(context.meta, val, context.db.getPartitionSupport());
-		InsertExecutionPlan ex=new InsertExecutionPlan(results,context);
+		PartitionResult results=DbUtils.partitionUtil.toTableName(context.meta, val, context.db.getPartitionSupport());
+		InsertExecutionPlan ex=new InsertExecutionPlan(new PartitionResult[]{results},context);
 		return ex;
 	}
 

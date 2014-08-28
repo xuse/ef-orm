@@ -57,10 +57,9 @@ import com.google.common.collect.Multimap;
  */
 public final class DefaultPartitionCalculator implements PartitionCalculator {
 
-	public PartitionResult[] toTableNames(MetadataAdapter meta, IQueryableEntity instance, Query<?> q, PartitionSupport processor) {
+	public PartitionResult[] toTableNames(MetadataAdapter meta, IQueryableEntity instance, Query<?> q, PartitionSupport processor,boolean doFileter) {
 		DatabaseDialect profile = processor.getProfile(null);
 		List<DbTable> result;
-		boolean doFileter = ORMConfig.getInstance().isFilterAbsentTables();
 		if (meta.getPartition() != null && instance != null) {// 分区表，并且具备分区条件
 			Set<DbTable> r = getPartitionTables(meta, getPartitionFieldValues(meta,BeanWrapper.wrap(instance), q), profile);
 			if (r.isEmpty()) {
@@ -73,10 +72,9 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		return meta.getBaseTable(profile).toPartitionResults();
 	}
 	
-	public PartitionResult[] toTableNames(MetadataAdapter meta, Map<String,Dimension> val, PartitionSupport processor) {
+	public PartitionResult[] toTableNames(MetadataAdapter meta, Map<String,Dimension> val, PartitionSupport processor,boolean doFileter) {
 		DatabaseDialect profile = processor.getProfile(null);
 		List<DbTable> result;
-		boolean doFileter = ORMConfig.getInstance().isFilterAbsentTables();
 		if (meta.getPartition() != null && val != null) {// 分区表，并且具备分区条件
 			Set<DbTable> r = getPartitionTables(meta, val, profile);
 			if (r.isEmpty()) {
@@ -605,7 +603,6 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		for (DbTable dt : result) {
 			String dbName = singleSite? "" : dt.dbName;
 			if (filter && !support.isExist(dbName, dt.table, tmeta)) {
-				System.out.println("过滤掉"+dt);
 				continue;
 			}
 			List<String> list = map.get(dbName);

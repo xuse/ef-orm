@@ -18,6 +18,7 @@ package jef.database;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -47,6 +48,7 @@ import jef.database.jmx.JefFacade;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
+import jef.database.meta.MetadataAdapter;
 import jef.database.support.DbOperatorListener;
 import jef.database.support.DbOperatorListenerContainer;
 import jef.database.support.DefaultDbOperListener;
@@ -596,8 +598,12 @@ public class DbClient extends Session {
 	 * @throws SQLException
 	 */
 	public boolean createTable(IQueryableEntity obj) throws SQLException {
-		PartitionResult[] route = DbUtils.toTableNames(obj, null, null, connPool.getPartitionSupport());
-		return createTable0(MetaHolder.getMeta(obj), route) > 0;
+		MetadataAdapter meta = MetaHolder.getMeta(obj);
+		PartitionResult[] result=DbUtils.partitionUtil.toTableNames(meta, obj, obj.getQuery(), connPool.getPartitionSupport(),false);
+		if(ORMConfig.getInstance().isDebugMode()){
+			LogUtil.show("Partitions:"+Arrays.toString(result));
+		}
+		return createTable0(meta, result) > 0;
 	}
 
 	/**
