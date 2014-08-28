@@ -80,8 +80,15 @@ public class SqlAnalyzer {
 		sql.accept(collector);
 		if(collector.get()==null)return null;
 		MetadataAdapter meta=collector.get();
-		if (meta == null || meta.getPartition() == null) {
+		if (meta == null) {
 			return null;
+		}
+		if(meta.getPartition() == null){
+			if(meta.getBindDsName()!=null && !meta.getBindDsName().equals(db.getDbkey())){
+				return new SelectExecutionPlan(meta.getBindDsName());
+			}else{
+				return null;
+			}
 		}
 		Map<Expression, Object> params = reverse(sql, value); // 参数对应关系还原
 		Select select = (Select) sql;
@@ -106,11 +113,17 @@ public class SqlAnalyzer {
 		sql.accept(collector);
 		if(collector.get()==null)return null;
 		MetadataAdapter meta=collector.get();
-		if (meta == null || meta.getPartition() == null) {
+		if (meta == null) {
 			return null;
 		}
+		if(meta.getPartition() == null){
+			if(meta.getBindDsName()!=null && !meta.getBindDsName().equals(db.getDbkey())){
+				return new SelectExecutionPlan(meta.getBindDsName());
+			}else{
+				return null;
+			}
+		}
 		Map<Expression, Object> params = reverse(sql, value); // 参数对应关系还原
-
 		if (sql instanceof Insert) {
 			StatementContext<Insert> context=new StatementContext<Insert>((Insert) sql,meta,params,value,db,collector.getModificationPoints());
 			return getInsertExePlan(context);

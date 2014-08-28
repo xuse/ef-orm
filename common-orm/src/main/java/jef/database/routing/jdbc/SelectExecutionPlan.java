@@ -67,6 +67,10 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 		this.context=context;
 	}
 
+	public SelectExecutionPlan(String bindDsName) {
+		super(bindDsName);
+	}
+
 
 
 	/*p

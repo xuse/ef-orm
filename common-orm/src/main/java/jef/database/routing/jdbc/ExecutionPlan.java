@@ -27,4 +27,9 @@ public interface ExecutionPlan {
 	 */
 	int processUpdate(PartitionResult site, OperateTarget session) throws SQLException;
 
+	/**
+	 * 非分库分表，仅切换数据源即可
+	 * @return
+	 */
+	String isChangeDatasource();
 }

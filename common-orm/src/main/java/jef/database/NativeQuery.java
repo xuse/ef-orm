@@ -343,6 +343,16 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 					LogUtil.show(StringUtils.concat("Count:", String.valueOf(num), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", db.getTransactionId()));
 				}
 				return num;
+			}else if(plan.isChangeDatasource()!=null){
+				OperateTarget db=this.db.getTarget(plan.isChangeDatasource());
+				String sql = parse.statement.toString();
+				long start = System.currentTimeMillis();
+				Long num = db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, 1, 0, parse.params);
+				if (debug) {
+					long dbAccess = System.currentTimeMillis();
+					LogUtil.show(StringUtils.concat("Count:", String.valueOf(num), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", db.getTransactionId()));
+				}
+				return num;
 			} else if (plan.mustGetAllResultsToCount()) {// 很麻烦的场景——由于分库后启用了group聚合，造成必须先将结果集在内存中混合后才能得到正确的count数……
 				int count = doQuery(0, fetchSize, true).size(); // 全量查询，去除排序。排序是不必要的
 				LogUtil.warn(StringUtils.concat("The count value was get from InMemory grouping arithmetic, since the 'group by' on multiple databases. |  @", String.valueOf(Thread.currentThread().getId())));
@@ -401,6 +411,11 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 				plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select) sql, parse.params, db);
 			}
 			if (plan == null) {// 普通查询
+				if (range != null)
+					s = toPageSql(sql, s);
+				return db.innerIteratorBySql(s, resultTransformer, 0, fetchSize, parse.params);
+			} else if(plan.isChangeDatasource()!=null){// 分表分库查询
+				OperateTarget db=this.db.getTarget(plan.isChangeDatasource());
 				if (range != null)
 					s = toPageSql(sql, s);
 				return db.innerIteratorBySql(s, resultTransformer, 0, fetchSize, parse.params);
@@ -467,7 +482,16 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			if (range != null) {
 				s = toPageSql(sql, s);
 			}
-			TransformerAdapter<X> rst = new TransformerAdapter<X>(resultTransformer,this.db);
+			TransformerAdapter<X> rst = new TransformerAdapter<X>(resultTransformer,db);
+			rst.setOthers(parse);
+			list = db.innerSelectBySql(s, rst, max, fetchSize, parse.params);
+			dbAccess=rst.dbAccess;
+		} else if(plan.isChangeDatasource()!=null){
+			OperateTarget db=this.db.getTarget(plan.isChangeDatasource());
+			if (range != null) {
+				s = toPageSql(sql, s);
+			}
+			TransformerAdapter<X> rst = new TransformerAdapter<X>(resultTransformer,db);
 			rst.setOthers(parse);
 			list = db.innerSelectBySql(s, rst, max, fetchSize, parse.params);
 			dbAccess=rst.dbAccess;
@@ -598,6 +622,8 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			}
 			if (plan == null) {
 				return db.innerExecuteSql(parse.statement.toString(), parse.params);
+			} else if(plan.isChangeDatasource()!=null){
+				return db.getTarget(plan.isChangeDatasource()).innerExecuteSql(parse.statement.toString(), parse.params);
 			} else {
 				long start = System.currentTimeMillis();
 				int total = 0;

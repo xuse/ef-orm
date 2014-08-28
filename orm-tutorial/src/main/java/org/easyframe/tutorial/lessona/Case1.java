@@ -30,30 +30,45 @@ public class Case1 extends org.junit.Assert {
 	public static void setup() throws SQLException {
 		new EntityEnhancer().enhance("org.easyframe.tutorial.lessona");
 		db = new DbClient();
+		db.dropTable("OPERATELOG_20100302");
 	}
 
-	// 问题1，一次性创建了3年的表，太多。 如果是按天分表岂不是一次性创建几百张表啊？(测试,按需建表下实际建表不多,OK)
-	// 问题2，按需建表(已经支持！) (Pass OK)
-	// 支持特性2，分表后，不能采用自增主键，Derby又不支持Sequence，因此会自动切换为Table模式自增。 (Pass OK)
+	/**
+	 * 测试在分库后的表中插入一条记录
+	 * @throws SQLException
+	 */
 	@Test
 	public void createTest() throws SQLException {
 		OperateLog log = new OperateLog();
 		log.setCreated(DateUtils.getDate(2010, 3, 2));
 		log.setMessage("测试！！");
 		db.insert(log);
-
 	}
 
+	/**
+	 * 分表结果计算器的计算测试
+	 */
 	@Test
 	public void testPartition() {
 		ITableMetadata meta = MetaHolder.getMeta(Customer.class);
-		LogUtil.show(DbUtils.toTableNames(meta, DebugUtil.getPartitionSupport(db), 2));
+		PartitionResult[] result=DbUtils.toTableNames(meta, DebugUtil.getPartitionSupport(db), 1);
+		assertEquals(3,result.length);
+		assertEquals(3,result[0].tableSize());
+		assertEquals(3,result[1].tableSize());
+		assertEquals(3,result[2].tableSize());
+		
 		System.out.println("================");
 		meta = MetaHolder.getMeta(OperateLog.class);
-		LogUtil.show(DbUtils.toTableNames(meta, DebugUtil.getPartitionSupport(db), 2));
+		result=DbUtils.toTableNames(meta, DebugUtil.getPartitionSupport(db), 2);
+		assertEquals(1,result.length);
+		assertEquals(4,result[0].tableSize());
+		
+		
 		System.out.println("================");
 		meta = MetaHolder.getMeta(Device.class);
-		LogUtil.show(DbUtils.toTableNames(meta, DebugUtil.getPartitionSupport(db), 2));
+		result=DbUtils.toTableNames(meta, DebugUtil.getPartitionSupport(db), 2);
+		assertEquals(1,result.length);
+		assertEquals(1,result[0].tableSize());
 	}
 
 	@Test
@@ -92,8 +107,6 @@ public class Case1 extends org.junit.Assert {
 		c.setIndexcode("835592");
 		c.setCreateDate(new Date());
 		LogUtil.show(toTableName(c, s));
-		
-		
 		
 		System.out.println("================");
 		LogUtil.show(toTableName(new Device(), s));

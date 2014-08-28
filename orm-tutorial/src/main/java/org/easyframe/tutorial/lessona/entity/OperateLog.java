@@ -20,7 +20,7 @@ import jef.database.routing.function.KeyFunction;
 		@PartitionKey(
 				field = "created",      //条件字段名
 				function = KeyFunction.YEAR_MONTH_DAY //对该字段执行函数取得yyyyMMdd,并作为表名后缀
-				) 
+		) 
 	})
 public class OperateLog extends DataObject {
 

@@ -10,34 +10,32 @@ import javax.persistence.Id;
 
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
-import jef.database.routing.function.ModulusFunction;
+import jef.database.routing.function.KeyFunction;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 @PartitionTable(key = {
-		@PartitionKey(field = "intField", length = 2,functionClass=ModulusFunction.class,functionConstructorParams={"3"}) ,
-						@PartitionKey(field="attr:dbkey",isDbName=true)
-		})
+		@PartitionKey(field = "intField", length = 2, function = KeyFunction.MODULUS, functionConstructorParams = { "3" }), 
+		@PartitionKey(field = "attr:dbkey", isDbName = true) })
 @Entity
 public class PartitionEntity extends jef.database.DataObject {
 	private static final long serialVersionUID = 1L;
 
 	@Id
-	@GeneratedValue(strategy=GenerationType.SEQUENCE)
+	@GeneratedValue(strategy = GenerationType.SEQUENCE)
 	private int id;
-	
-	@Column(name="DATE_FIELD")
+
+	@Column(name = "DATE_FIELD")
 	private Date dateField;
-	
-	@Column(name="INT_FIELD")
+
+	@Column(name = "INT_FIELD")
 	private int intField;
 
-    private String name;
-    
-    @Column(name="LONG_FIELD")
-    private long longField;
+	private String name;
 
-   
+	@Column(name = "LONG_FIELD")
+	private long longField;
+
 	public int getIntField() {
 		return intField;
 	}
@@ -63,14 +61,14 @@ public class PartitionEntity extends jef.database.DataObject {
 	}
 
 	public String getName() {
-        return name;
-    }
+		return name;
+	}
 
-    public void setName(String name) {
-        this.name = name;
-    }
+	public void setName(String name) {
+		this.name = name;
+	}
 
-    public Date getDateField() {
+	public Date getDateField() {
 		return dateField;
 	}
 
@@ -79,13 +77,12 @@ public class PartitionEntity extends jef.database.DataObject {
 	}
 
 	public enum Field implements jef.database.Field {
-		id,dateField, name,intField,longField
-    }
+		id, dateField, name, intField, longField
+	}
 
 	@Override
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this);
 	}
-	
-	
+
 }

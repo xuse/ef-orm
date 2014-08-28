@@ -132,6 +132,13 @@ public class Case2 extends org.junit.Assert {
 		assertEquals(1, db.delete(loaded));
 		// 删除后
 		assertEquals(0, db.count(QB.create(Person2.class)));
+		
+		System.out.println("=============== In Native Query ============");
+		String sql="select * from person2";
+		NativeQuery<Person2> query=db.createNativeQuery(sql, Person2.class).withRouting();
+		query.getResultCount();
+		
+		query.getResultList();
 	}
 
 	/**
