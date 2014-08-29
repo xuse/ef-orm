@@ -32,7 +32,6 @@ import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
-import jef.database.jsqlparser.statement.select.Select;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.meta.FunctionMapping;

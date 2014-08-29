@@ -53,9 +53,15 @@ public class ForeignKey {
 	@Column(name="UPDATE_RULE")
 	private int updateRule;
 	
-	
+	/**
+	 * 外键名称
+	 */
 	@Column(name="FK_NAME")
 	private String name;
+	
+	/**
+	 * 主键名称
+	 */
 	@Column(name="PK_NAME")
 	private String pkName;//??
 	
@@ -138,6 +144,7 @@ public class ForeignKey {
 	public void setReferenceSchema(String referenceSchema) {
 		this.referenceSchema = referenceSchema;
 	}
+	
 	@Override
 	public String toString() {
 		StringBuilder sb=new StringBuilder();

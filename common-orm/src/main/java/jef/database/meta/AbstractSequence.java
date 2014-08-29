@@ -32,11 +32,9 @@ public abstract class AbstractSequence implements Sequence {
 	protected DbClient session;
 	private final AtomicInteger tryInitCount=new AtomicInteger();
 	private volatile boolean initSuccess;
-	private SequenceManager parent;
 
 	protected AbstractSequence(OperateTarget target,SequenceManager parent) {
 		cacheSize = JefConfiguration.getInt(DbCfg.SEQUENCE_BATCH_SIZE, 50);
-		this.parent=parent;
 		if (cacheSize < 1)
 			cacheSize = 1;
 		if (target != null) {

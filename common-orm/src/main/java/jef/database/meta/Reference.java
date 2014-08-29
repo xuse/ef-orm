@@ -82,7 +82,9 @@ public class Reference{
 	}
 	/**
 	 * 空构造
+	 * 必须有。会通过反射调用
 	 */
+	@SuppressWarnings("unused")
 	private Reference(){};
 	/**
 	 * 返回引用类型

@@ -31,14 +31,18 @@ import jef.database.query.Query;
 public class FBIField extends JpqlExpression implements Field{
 	private static final long serialVersionUID = -3274832755965207227L;
 	/**
-	 * 
-	 * @param str
-	 * @param query
+	 * 构造
+	 * @param str 表达式
+	 * @param query 绑定表实例
 	 */
 	public FBIField(String str,Query<?> query){
 		super(str,query);
 	}
 	
+	/**
+	 * 构造
+	 * @param str 表达式
+	 */
 	public FBIField(String str){
 		super(str);
 	}

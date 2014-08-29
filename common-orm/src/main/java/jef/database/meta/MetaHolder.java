@@ -96,6 +96,7 @@ import com.google.common.collect.ArrayListMultimap;
  * @author jiyi
  * 
  */
+@SuppressWarnings("deprecation")
 public final class MetaHolder {
 	private MetaHolder() {
 	}
@@ -448,7 +449,6 @@ public final class MetaHolder {
 	 * 
 	 * @param type
 	 */
-	@SuppressWarnings("deprecation")
 	private static void assertEnhanced(Class<? extends IQueryableEntity> type, EasyEntity ee, AnnotationProvider annos) {
 		if (annos.getAnnotation(NoForceEnhance.class) != null) {
 			return;

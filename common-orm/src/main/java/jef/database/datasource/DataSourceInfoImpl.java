@@ -11,6 +11,7 @@ import jef.database.DataObject;
 import jef.database.annotation.EasyEntity;
 
 
+@SuppressWarnings("serial")
 @Entity
 @EasyEntity(checkEnhanced=false)
 @Table(name="DATASOURCE_CONFIG")

@@ -30,6 +30,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
+/**
+ * 默认的元模型加载工具
+ * @author jiyi
+ *
+ */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class DefaultMetaLoader implements MetadataConfiguration {
 

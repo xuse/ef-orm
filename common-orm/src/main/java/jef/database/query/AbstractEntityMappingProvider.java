@@ -14,7 +14,6 @@ import jef.database.meta.ITableMetadata;
 import jef.database.meta.Reference;
 
 public abstract class AbstractEntityMappingProvider{
-	private static final long serialVersionUID = 1L;
 	protected List<QueryAlias> queries;// 对于连接的Query.从驱动表向后依次递增
 	protected boolean distinct = false;
 

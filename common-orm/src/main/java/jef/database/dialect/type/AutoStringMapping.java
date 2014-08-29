@@ -4,15 +4,11 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import jef.accelerator.bean.AbstractFastProperty;
-import jef.accelerator.bean.BeanAccessor;
-import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.database.Field;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.meta.EntityType;
 import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.result.IResultSet;
-import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.Property;
 

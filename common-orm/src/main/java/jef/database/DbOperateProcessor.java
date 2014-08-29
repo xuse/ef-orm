@@ -8,15 +8,16 @@ import java.util.List;
 
 import jef.common.Entry;
 import jef.common.log.LogUtil;
-import jef.database.BindVariableTool.SqlType;
 import jef.database.annotation.PartitionResult;
 import jef.database.wrapper.clause.BindSql;
 import jef.tools.StringUtils;
 
+/**
+ * 基本数据库操作
+ * @author jiyi
+ *
+ */
 public final class DbOperateProcessor {
-
-
-
 	int processDeletePrepared(OperateTarget db, IQueryableEntity obj, PartitionResult site, long start, BindSql where) throws SQLException {
 		int count = 0;
 		long parse = System.currentTimeMillis();
@@ -57,13 +58,16 @@ public final class DbOperateProcessor {
 	}
 
 	/*
-	 * 注意，这个方法执行期间会调用连接，因此必须在这个方法执行完后才能释放连接
+	 * 处理SQL执行错误
+	 * <strong>注意，这个方法执行期间会调用连接，因此必须在这个方法执行完后才能释放连接</strong>
 	 * @param e
 	 * @param tablename
 	 * @param conn
 	 */
 	protected void processError(SQLException e, String tablename, OperateTarget conn) {
-		conn.notifyDisconnect(e);
+		if(conn.getProfile().isIOError(e)){
+			conn.notifyDisconnect(e);
+		}
 		DebugUtil.setSqlState(e, tablename);
 	}
 

@@ -174,7 +174,7 @@ public abstract class SelectProcessor {
 			return clause;
 		}
 
-		public void processSelect(OperateTarget db, QueryClause sql,PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
+		void processSelect(OperateTarget db, QueryClause sql,PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
 			Statement st = null;
 			ResultSet rs = null;
 
@@ -333,7 +333,7 @@ public abstract class SelectProcessor {
 			return sb;
 		}
 
-		public void processSelect(OperateTarget db, QueryClause sqlResult,PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
+		void processSelect(OperateTarget db, QueryClause sqlResult,PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
 			// 计算查询结果集参数
 			int rsType;
 			int concurType;

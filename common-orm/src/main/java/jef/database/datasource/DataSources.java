@@ -70,7 +70,7 @@ public class DataSources {
 	}
 
 	private static boolean isAssiableFrom(Class<? extends DataSource> iface, String s) {
-		Class clz=iface;
+		Class<?> clz=iface;
 		while(clz!=Object.class && clz!=null){
 			if(s.equals(clz.getName())){
 				return true;

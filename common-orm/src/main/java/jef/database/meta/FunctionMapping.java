@@ -97,6 +97,7 @@ public class FunctionMapping {
 		}
 	}
 	
+	@SuppressWarnings("unchecked")
 	public void rewrite(Function function) {
 		if(getMatch()==FunctionMapping.MATCH_NAME_CHANGE){
 			function.setName(getFunction().getName());//替换name

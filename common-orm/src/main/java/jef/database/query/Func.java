@@ -261,7 +261,5 @@ public enum Func implements DbFunction{
 	str,
 	//JPA规定的通用函数，第一个参数作为数据库的函数名，后面的参数作为数据库函数的参数
 	//FUNC
-	;
-	private int maxArg;
-	private int minArg;
+
 }
