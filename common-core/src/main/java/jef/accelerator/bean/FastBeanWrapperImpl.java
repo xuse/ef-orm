@@ -7,7 +7,6 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import jef.tools.Assert;
 import jef.tools.reflect.BeanAccessorMapImpl;
 import jef.tools.reflect.BeanWrapper;
 import jef.tools.reflect.Property;

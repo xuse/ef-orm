@@ -19,13 +19,12 @@ import jef.tools.reflect.Property;
 public abstract class BeanAccessor {
 	/**
 	 * 得到bean的全部属性
-	 * @return
+	 * @return 全部属性名
 	 */
 	public abstract Collection<String> getPropertyNames();
 	/**
 	 * 得到bean的某个属性类型
-	 * @param bean
-	 * @param name
+	 * @param name 属性名
 	 * @return
 	 * @throws NoSuchElementException 如果该属性不存在，抛出NoSuchElementException。
 	 */
@@ -33,7 +32,7 @@ public abstract class BeanAccessor {
 	
 	/**
 	 * 得到bean的属性的泛型类型
-	 * @param name
+	 * @param name 属性名
 	 * @return
 	 * @throws NoSuchElementException 如果该属性不存在，抛出NoSuchElementException。
 	 */
