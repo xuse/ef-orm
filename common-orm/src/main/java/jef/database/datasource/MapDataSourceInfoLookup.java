@@ -7,6 +7,12 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
+/**
+ * 默认的DataSourceInfoLookup实现之一。
+ * 所有的数据源信息都被存放在Map中。
+ * @author jiyi
+ *
+ */
 public class MapDataSourceInfoLookup implements DataSourceInfoLookup{
 	private Map<String,DataSourceInfo> datasources;
 	private PasswordDecryptor passwordDecryptor=PasswordDecryptor.DUMMY;

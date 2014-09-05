@@ -270,10 +270,10 @@ public class Case1 extends org.junit.Assert {
 	 */
 	@Test
 	public void testSlelectSimpleValueArray() throws SQLException {
-		NativeQuery<Object[]> objs = db.createNativeQuery("select 'Asa' as  a ,'B' as b,1+1 as c, current_timestamp as D from student", Object[].class);
-		Object[] result = objs.getSingleResult();
+		NativeQuery<Object[]> query = db.createNativeQuery("select 'Asa' as  a ,'B' as b,1+1 as c, current_timestamp as D from student", Object[].class);
+		Object[] result = query.getSingleResult();
 		assertTrue(result[1].getClass() == String.class);
-		assertTrue(result[2].getClass() == Integer.class);
+		assertTrue(Number.class.isAssignableFrom(result[2].getClass()));
 		assertTrue(result[3].getClass() == Timestamp.class);
 	}
 

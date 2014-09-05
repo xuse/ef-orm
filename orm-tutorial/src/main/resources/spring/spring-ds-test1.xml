@@ -14,28 +14,10 @@
 	 http://www.springframework.org/schema/tx 
 	 http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
 
-	<context:property-placeholder location="classpath:jef.properties" />
-
-	<bean id="dataSource" class="jef.database.datasource.SimpleDataSource"
-		p:url="${db.url}"  />
-
-	<bean id="entityManagerFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean">
-		<property name="dataSource" ref="dataSource" />
-		<property name="enhancePackages" value="org.easyframe.tutorial" />
-		<property name="scanPackages" value="org.easyframe.tutorial" />
-		<property name="registeNonMappingTableAsDynamic" value="true"></property>
+	<bean id="ref1" class="jef.database.datasource.PropertiesDataSourceLookup" p:location="my_datasources.properties">
 	</bean>
 
-	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" />
-	<aop:aspectj-autoproxy />
-
-	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
-		<property name="entityManagerFactory" ref="entityManagerFactory" />
-		<property name="jpaDialect">
-			<bean class="org.easyframe.enterprise.spring.JefJpaDialect" />
-		</property>
+	<bean id="routingDS" class="jef.database.datasource.RoutingDataSource">
+		<property name="dataSourceLookup" ref="ref1" />
 	</bean>
-	
-	<bean id="commonDao" class="org.easyframe.enterprise.spring.CommonDaoImpl" />
-	
 </beans> 

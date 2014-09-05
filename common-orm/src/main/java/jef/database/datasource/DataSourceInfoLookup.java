@@ -31,7 +31,7 @@ import java.util.NoSuchElementException;
  * @see URLJsonDataSourceInfoLookup
  * @see DbDataSourceLookup
  * @see MapDataSourceInfoLookup
- * @see PropertiesDataSourceInfoLookup
+ * @see PropertyDataSourceInfoLookup
  * @see JndiDatasourceLookup
  * @see jef.database.datasource.SpringBeansDataSourceInfoLookup
  */
@@ -53,8 +53,10 @@ public interface DataSourceInfoLookup {
 	void setPasswordDecryptor(PasswordDecryptor passwordDecryptor);
 	
 	/**
-	 * 当不指定ds名称时，返回一个Key。
-	 * 例如当Spring或者数据库中只配置了一个DataSource时，默认就返回该Ds，并不是所有的Lookup都能实现这一功能，如果不能实现，那么就返回null
+	 * 返回缺省的数据源名称<br>
+	 * 例如当Spring或者数据库中只配置了一个DataSource时，默认就返回该Ds。
+	 * 或者如果用户配置了缺省数据源名称时，返回用户配置的名称。<br>
+	 * 如果无法判断哪一个是缺省数据源，那么就返回null
 	 * @return
 	 */
 	String getDefaultKey();

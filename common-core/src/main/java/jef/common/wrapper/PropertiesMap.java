@@ -6,6 +6,11 @@ import java.util.Set;
 
 import jef.common.AbstractMap;
 
+/**
+ * 将Properties封装成普通的Map
+ * @author jiyi
+ *
+ */
 public class PropertiesMap extends AbstractMap<String, String> implements Map<String, String>{
 	private Properties prop;
 	

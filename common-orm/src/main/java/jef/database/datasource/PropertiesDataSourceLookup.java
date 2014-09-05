@@ -87,8 +87,8 @@ public class PropertiesDataSourceLookup implements DataSourceLookup{
 	 * 路径不能以/开头，jef会查找所有classpath下的该名称的资源文件来查找数据库配置
 	 * @param localtion
 	 */
-	public void setLocaltion(String localtion) {
-		inner.setLocaltion(localtion);
+	public void setLocation(String localtion) {
+		inner.setLocation(localtion);
 	}
 
 	/**
@@ -116,8 +116,7 @@ public class PropertiesDataSourceLookup implements DataSourceLookup{
 		this.defaultKey = defaultKey;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Collection<String> getAvailableKeys() {
-		return Collections.EMPTY_LIST;
+		return inner.getAvailableKeys();
 	}
 }

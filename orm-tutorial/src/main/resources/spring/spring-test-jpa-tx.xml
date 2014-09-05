@@ -17,7 +17,13 @@
 	<context:property-placeholder location="classpath:jef.properties" />
 
 	<bean id="dataSource" class="jef.database.datasource.SimpleDataSource"
-		p:url="${db.url}"  />
+		p:url="jdbc:derby:./db;create=true" />
+
+	<bean id="dataSource2" class="jef.database.datasource.SimpleDataSource"
+		p:url="jdbc:derby:./db1;create=true" />
+
+	<bean id="dataSource3" class="jef.database.datasource.SimpleDataSource"
+		p:url="jdbc:derby:./db2;create=true" />
 
 	<bean id="entityManagerFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean">
 		<property name="dataSource" ref="dataSource" />
@@ -26,7 +32,8 @@
 		<property name="registeNonMappingTableAsDynamic" value="true"></property>
 	</bean>
 
-	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" />
+	<tx:annotation-driven transaction-manager="transactionManager"
+		proxy-target-class="true" />
 	<aop:aspectj-autoproxy />
 
 	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
@@ -35,7 +42,7 @@
 			<bean class="org.easyframe.enterprise.spring.JefJpaDialect" />
 		</property>
 	</bean>
-	
+
 	<bean id="commonDao" class="org.easyframe.enterprise.spring.CommonDaoImpl" />
-	
+
 </beans> 

@@ -7,7 +7,8 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 /**
- * 通过实现注入的Map来提供DataSource
+ * 默认的DataSourceInfoLookup实现之一。
+ * 所有的数据源信息都被存放在Map中。
  * @author jiyi
  *
  */

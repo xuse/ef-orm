@@ -22,6 +22,11 @@ import org.easyframe.tutorial.lessona.entity.OperateLog;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+/**
+ * 分库分表相关演示案例。
+ * @author jiyi
+ *
+ */
 public class Case1 extends org.junit.Assert {
 
 	static DbClient db;

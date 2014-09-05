@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import jef.common.log.LogUtil;
 import jef.common.wrapper.PropertiesMap;
@@ -24,28 +25,51 @@ public class PropertiesDataSourceInfoLookup implements DataSourceInfoLookup{
 	private String keyOfUser=".user";
 	private String keyOfPassword=".password";
 	private String keyOfDriver=".driver";
-	private String localtion;
+	private String location;
 	private boolean needLogonInfo=true;
 	private PasswordDecryptor passwordDecryptor=PasswordDecryptor.DUMMY;
 	private String defaultKey;
 	
+	private Map<String,DataSourceInfo> cache;
+	
 	public DataSourceInfo getDataSourceInfo(String dataSourceName) {
-		DataSourceInfo dsi=tryGet(new PropertiesMap(System.getProperties()),dataSourceName);
-		if(dsi!=null)return dsi;
-		if(StringUtils.isNotEmpty(localtion!=null)){
-			try {
-				Enumeration<URL> resources=this.getClass().getClassLoader().getResources(localtion);
-				for(;resources.hasMoreElements();){
-					Map<String,String> properties=IOUtils.loadProperties(resources.nextElement());
-					dsi=tryGet(properties,dataSourceName);
-					if(dsi!=null)
-						break;
+		if(cache==null){
+			init(new PropertiesMap(System.getProperties()));
+			if(StringUtils.isNotEmpty(location!=null)){
+				try {
+					Enumeration<URL> resources=this.getClass().getClassLoader().getResources(location);
+					for(;resources.hasMoreElements();){
+						Map<String,String> properties=IOUtils.loadProperties(resources.nextElement());
+						init(properties);						
+					}
+				} catch (IOException e) {
+					LogUtil.exception(e);
 				}
-			} catch (IOException e) {
-				LogUtil.exception(e);
 			}
 		}
+		DataSourceInfo dsi=cache.get(dataSourceName.toUpperCase());
+//			tryGet(new PropertiesMap(System.getProperties()),dataSourceName);
+//		if(dsi!=null)return dsi;
+//		if(StringUtils.isNotEmpty(location!=null)){
+//			try {
+//				Enumeration<URL> resources=this.getClass().getClassLoader().getResources(location);
+//				for(;resources.hasMoreElements();){
+//					Map<String,String> properties=IOUtils.loadProperties(resources.nextElement());
+//					dsi=tryGet(properties,dataSourceName);
+//					if(dsi!=null)
+//						break;
+//				}
+//			} catch (IOException e) {
+//				LogUtil.exception(e);
+//			}
+//		}
 		return dsi;
+	}
+
+	private void init(Map<String,String> map) {
+		for(Entry<String,String> e: map.entrySet()){
+			
+		}
 	}
 
 	private DataSourceInfo tryGet(Map<String,String> p,String dataSourceName) {
@@ -135,8 +159,8 @@ public class PropertiesDataSourceInfoLookup implements DataSourceInfoLookup{
 	 * 路径不能以/开头，jef会查找所有classpath下的该名称的资源文件来查找数据库配置
 	 * @param localtion
 	 */
-	public void setLocaltion(String localtion) {
-		this.localtion = localtion;
+	public void setLocation(String localtion) {
+		this.location = localtion;
 	}
 
 	/**

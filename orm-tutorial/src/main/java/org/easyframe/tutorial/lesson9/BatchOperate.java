@@ -46,6 +46,8 @@ public class BatchOperate extends org.junit.Assert {
 	 */
 	@Test
 	public void testBatchOperates() throws SQLException {
+		System.out.println("testBatchOperates==");
+		db.truncate(Person.class);
 		List<Person> persons = new ArrayList<Person>();
 		for (int i = 0; i < 5; i++) {
 			Person p = new Person();
@@ -143,6 +145,14 @@ public class BatchOperate extends org.junit.Assert {
 		Batch<Person> batch=db.startBatchInsert(new Person(),  false);
 		
 		List<Person> persons = new ArrayList<Person>(5);
+		for (int i = 0; i < 5; i++) {
+			Person p = new Person();
+			RandomData.fill(p); // 填充一些随机值
+			persons.add(p);
+		}
+		batch.execute(persons);
+		//再来5个
+		persons = new ArrayList<Person>(5);
 		for (int i = 0; i < 5; i++) {
 			Person p = new Person();
 			RandomData.fill(p); // 填充一些随机值

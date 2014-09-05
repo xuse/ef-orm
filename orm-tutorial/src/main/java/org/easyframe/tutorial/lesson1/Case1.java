@@ -22,8 +22,8 @@ public class Case1 {
 		CommonDao dao=new CommonDaoImpl();
 		 //模拟Spring自动注入
 		BeanUtils.setFieldValue(dao, "entityManagerFactory", emf);
-		
 		//创建表
+		dao.getNoTransactionSession().dropTable(Foo.class);
 		dao.getNoTransactionSession().createTable(Foo.class); 
 		
 		
