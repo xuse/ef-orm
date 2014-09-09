@@ -1,7 +1,6 @@
 package jef.database.datasource;
 
 import java.util.Collection;
-import java.util.Collections;
 
 import javax.sql.DataSource;
 

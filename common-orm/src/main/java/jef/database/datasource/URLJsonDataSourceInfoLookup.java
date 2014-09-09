@@ -20,6 +20,7 @@ public class URLJsonDataSourceInfoLookup extends AbstractJsonDataSourceInfoLooku
 			try {
 				return new URL(location);
 			} catch (MalformedURLException e) {
+				e.printStackTrace();
 				throw new IllegalArgumentException(location);
 			}
 		}

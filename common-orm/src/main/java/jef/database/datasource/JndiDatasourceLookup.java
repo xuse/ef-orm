@@ -1,9 +1,12 @@
 package jef.database.datasource;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 
 import javax.naming.InitialContext;
+import javax.naming.NameClassPair;
+import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
@@ -22,13 +25,14 @@ public class JndiDatasourceLookup implements DataSourceLookup,DataSourceInfoLook
 	private InitialContext ctx;
 	private PasswordDecryptor passwordDecryptor;
 	private String defaultKey;
+	private String namePrifix="";
 	
 	public DataSource getDataSource(String dataSourceName) {
 		if(ctx==null){
 			init();
 		}
 		try {
-			DataSource ds = (DataSource) ctx.lookup(dataSourceName);
+			DataSource ds = (DataSource) ctx.lookup(namePrifix+dataSourceName);
 			DataSourceWrapper dw=DataSources.wrapFor(ds);
 			if(dw==null){
 				return ds;//包装失败
@@ -47,7 +51,7 @@ public class JndiDatasourceLookup implements DataSourceLookup,DataSourceInfoLook
 			init();
 		}
 		try {
-			Object ds = ctx.lookup(dataSourceName);
+			Object ds = ctx.lookup(namePrifix+dataSourceName);
 			if(ds instanceof DataSourceInfo){
 				return decrypt((DataSourceInfo) ds);
 			}
@@ -65,9 +69,11 @@ public class JndiDatasourceLookup implements DataSourceLookup,DataSourceInfoLook
 
 
 	private DataSourceInfo decrypt(DataSourceInfo dsi) {
-		String newpass=passwordDecryptor.decrypt(dsi.getPassword());
-		if(!StringUtils.equals(dsi.getPassword(), newpass)){
-			dsi.setPassword(newpass);
+		if(passwordDecryptor!=null){
+			String newpass=passwordDecryptor.decrypt(dsi.getPassword());
+			if(!StringUtils.equals(dsi.getPassword(), newpass)){
+				dsi.setPassword(newpass);
+			}	
 		}
 		return dsi;
 	}
@@ -94,8 +100,48 @@ public class JndiDatasourceLookup implements DataSourceLookup,DataSourceInfoLook
 	public String getDefaultKey() {
 		return defaultKey;
 	}
-	@SuppressWarnings("unchecked")
+	
 	public Collection<String> getAvailableKeys() {
-		return Collections.EMPTY_LIST;
+		if(ctx==null){
+			init();
+		}
+		List<String> all=new ArrayList<String>();
+		try {
+			NamingEnumeration<NameClassPair> o=ctx.list("");
+			for(;o.hasMore();){
+				NameClassPair e=o.next();
+				if(isDataSource(e.getClassName())){
+					all.add(e.getName());
+				}
+			}
+		} catch (NamingException e) {
+			e.printStackTrace();
+		}
+		return all;
+	}
+
+
+	private boolean isDataSource(String className) {
+		Class<?> c;
+		try {
+			c=Class.forName(className);
+		} catch (ClassNotFoundException e) {
+			return false;
+		}
+		if(c==RoutingDataSource.class){
+			return false;
+		}
+		return DataSource.class.isAssignableFrom(c);
+	}
+
+
+	public String getNamePrifix() {
+		return namePrifix;
+	}
+
+
+	public void setNamePrifix(String namePrifix) {
+		if(namePrifix!=null)
+			this.namePrifix = namePrifix;
 	}
 }

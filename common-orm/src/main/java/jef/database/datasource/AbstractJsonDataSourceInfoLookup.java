@@ -24,11 +24,10 @@ public abstract class AbstractJsonDataSourceInfoLookup implements DataSourceInfo
 	private String userFieldName="username";
 	private String passwordFieldName="password";
 	private String driverFieldName="driverClassName";
-	private boolean needLogonInfo=true;
 	protected boolean ignoreCase=false;
 	private PasswordDecryptor passwordDecryptor=PasswordDecryptor.DUMMY;
 	
-	protected Map<String,JSONObject> cache=new HashMap<String,JSONObject>();
+	protected Map<String,JSONObject> cache;
 	protected abstract URL getResource();
 	
 	public DataSourceInfo getDataSourceInfo(String dataSourceName) {
@@ -65,9 +64,7 @@ public abstract class AbstractJsonDataSourceInfoLookup implements DataSourceInfo
 		String user=data.getString(userFieldName);
 		String password=data.getString(passwordFieldName);
 		String driverClass=data.getString(driverFieldName);
-		if(needLogonInfo && (StringUtils.isEmpty(user)|| StringUtils.isEmpty(password))){
-			return null;
-		}
+	
 		DataSourceInfoImpl impl=new DataSourceInfoImpl(url);
 		impl.setDriverClass(driverClass);
 		impl.setUser(user);
@@ -91,7 +88,7 @@ public abstract class AbstractJsonDataSourceInfoLookup implements DataSourceInfo
 			objs=new JSONArray();
 			objs.add(JsonUtil.toJsonObject(data));
 		}else if(data.startsWith("[")){
-			JsonUtil.toJsonArray(data);
+			objs=JsonUtil.toJsonArray(data);
 		}
 		if(objs==null)
 			return result;
@@ -168,12 +165,5 @@ public abstract class AbstractJsonDataSourceInfoLookup implements DataSourceInfo
 	 */
 	public void setDriverFieldName(String driverFieldName) {
 		this.driverFieldName = driverFieldName;
-	}
-	/**
-	 * 如果没有配置user或者password的数据源就忽略
-	 * @param needLogonInfo true if ignore datasource without user & password
-	 */
-	public void setNeedLogonInfo(boolean needLogonInfo) {
-		this.needLogonInfo = needLogonInfo;
 	}
 }

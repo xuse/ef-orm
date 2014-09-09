@@ -75,13 +75,6 @@ public class URLJsonDataSourceLookup implements DataSourceLookup {
 		inner.setDriverFieldName(driverFieldName);
 	}
 	/**
-	 * 如果没有配置user或者password的数据源就忽略
-	 * @param needLogonInfo true if ignore datasource without user & password
-	 */
-	public void setNeedLogonInfo(boolean needLogonInfo) {
-		inner.setNeedLogonInfo(needLogonInfo);
-	}
-	/**
 	 * 设置数据库密码解密回调类。很多时候，我们配置的数据库密码都是加密后的，这种场合下我们可以实现PasswordDecryptor接口，
 	 * 并将其设置到DataSourceLookup中，每当发现新的数据源，就可以对其中的用户口令解密.
 	 * @param passwordDecryptor
@@ -101,4 +94,21 @@ public class URLJsonDataSourceLookup implements DataSourceLookup {
 	public Collection<String> getAvailableKeys() {
 		return inner.getAvailableKeys();
 	}
+	
+	public void setIgnoreCase(boolean ignoreCase) {
+		inner.setIgnoreCase(ignoreCase);
+	}
+	
+	public boolean getIgnoreCase(){
+		return inner.ignoreCase;
+	}
+	
+	public String getLocation() {
+		return inner.getLocation();
+	}
+
+	public void setLocation(String localtion) {
+		inner.setLocation(localtion);
+	}
+
 }

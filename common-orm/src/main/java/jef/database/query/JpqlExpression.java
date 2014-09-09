@@ -233,6 +233,11 @@ public class JpqlExpression implements Expression,LazyQueryBindField {
 			return false;
 		return true;
 	}
+	
+	public JpqlExpression bind(Query<?> query){
+		this.instance=query;
+		return this;
+	}
 
 	public void setBind(Query<?> query) {
 		this.instance=query;

@@ -1124,9 +1124,9 @@ public final class DbUtils {
 		if (StringUtils.isNotEmpty(customName))
 			return new PartitionResult[] { new PartitionResult(customName).setDatabase(meta.getBindDsName()) };
 		PartitionResult[] result=partitionUtil.toTableNames(meta, obj, q, processor,ORMConfig.getInstance().isFilterAbsentTables());
-		if(ORMConfig.getInstance().isDebugMode()){
-			LogUtil.show("Partitions:"+Arrays.toString(result));
-		}
+//		if(ORMConfig.getInstance().isDebugMode()){
+//			LogUtil.show("Partitions:"+Arrays.toString(result));
+//		}
 		return result;
 	}
 

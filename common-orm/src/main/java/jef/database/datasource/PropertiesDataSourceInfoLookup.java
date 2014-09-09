@@ -3,8 +3,8 @@ package jef.database.datasource;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -33,11 +33,20 @@ public class PropertiesDataSourceInfoLookup implements DataSourceInfoLookup{
 	private Map<String,DataSourceInfo> cache;
 	
 	public DataSourceInfo getDataSourceInfo(String dataSourceName) {
+		checkInit();
+		DataSourceInfo dsi=cache.get(dataSourceName.toUpperCase());
+		return dsi;
+	}
+
+	private void checkInit() {
 		if(cache==null){
 			init(new PropertiesMap(System.getProperties()));
 			if(StringUtils.isNotEmpty(location!=null)){
 				try {
 					Enumeration<URL> resources=this.getClass().getClassLoader().getResources(location);
+					if(!resources.hasMoreElements()){
+						LogUtil.error("No properties file [{}] found.",location);
+					}
 					for(;resources.hasMoreElements();){
 						Map<String,String> properties=IOUtils.loadProperties(resources.nextElement());
 						init(properties);						
@@ -47,28 +56,25 @@ public class PropertiesDataSourceInfoLookup implements DataSourceInfoLookup{
 				}
 			}
 		}
-		DataSourceInfo dsi=cache.get(dataSourceName.toUpperCase());
-//			tryGet(new PropertiesMap(System.getProperties()),dataSourceName);
-//		if(dsi!=null)return dsi;
-//		if(StringUtils.isNotEmpty(location!=null)){
-//			try {
-//				Enumeration<URL> resources=this.getClass().getClassLoader().getResources(location);
-//				for(;resources.hasMoreElements();){
-//					Map<String,String> properties=IOUtils.loadProperties(resources.nextElement());
-//					dsi=tryGet(properties,dataSourceName);
-//					if(dsi!=null)
-//						break;
-//				}
-//			} catch (IOException e) {
-//				LogUtil.exception(e);
-//			}
-//		}
-		return dsi;
 	}
 
-	private void init(Map<String,String> map) {
-		for(Entry<String,String> e: map.entrySet()){
-			
+	private synchronized void init(Map<String,String> props) {
+		Map<String,DataSourceInfo> map;
+		if(cache==null){
+			map=new HashMap<String,DataSourceInfo>();
+			cache=map;
+		}else{
+			map=cache;
+		}
+		for(Entry<String,String> e: props.entrySet()){
+			if(e.getKey().endsWith(keyOfUrl) && e.getKey().startsWith(keyOfPrefix)){
+				int len=e.getKey().length();
+				String dsName=e.getKey().substring(keyOfPrefix.length(),len-keyOfPrefix.length()-keyOfUrl.length());
+				DataSourceInfo ds=tryGet(props, dsName);
+				if(ds!=null){
+					map.put(dsName.toUpperCase(), ds);
+				}
+			}
 		}
 	}
 
@@ -183,8 +189,8 @@ public class PropertiesDataSourceInfoLookup implements DataSourceInfoLookup{
 		this.defaultKey = defaultKey;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Collection<String> getAvailableKeys() {
-		return Collections.EMPTY_LIST;
+		checkInit();
+		return cache.keySet();
 	}
 }

@@ -127,11 +127,11 @@ public class Case1 {
 	@Test
 	public void testSelect_LikeAndEtc() throws SQLException {
 		Student s = new Student();
-		s.getQuery().addCondition(Student.Field.name, Operator.MATCH_ANY, "Jhon");
-		s.getQuery().addCondition(Student.Field.id, Operator.LESS, 100);
-		s.getQuery().orderByDesc(Student.Field.grade);
+		s.getQuery()
+			.addCondition(Student.Field.name, Operator.MATCH_ANY, "Jhon")
+			.addCondition(Student.Field.id, Operator.LESS, 100)
+			.orderByDesc(Student.Field.grade);
 		List<Student> sts = db.select(s);
-
 		Assert.assertEquals(sts.size(), db.count(s.getQuery()));
 	}
 

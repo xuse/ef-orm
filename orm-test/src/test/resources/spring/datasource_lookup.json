@@ -1,0 +1,37 @@
+[
+    {
+        "id": "ds1",
+        "url": "jdbc:mysql://localhost:3306/test",
+        "username": "root",
+        "password": "123456",
+        "driverClassName": "org.gjt.mm.mysql.Driver"
+    },
+    {
+        "id": "ds2",
+        "url": "jdbc:mysql://localhost:3306/test",
+        "username": "root",
+        "password": "123456",
+        "driverClassName": "org.gjt.mm.mysql.Driver"
+    },
+    {
+        "id": "ds3",
+        "url": "jdbc:mysql://localhost:3306/test",
+        "username": "root",
+        "password": "123456",
+        "driverClassName": "org.gjt.mm.mysql.Driver"
+    },
+    {
+        "id": "ds4",
+        "url": "jdbc:mysql://localhost:3306/test",
+        "username": "root",
+        "password": "123456",
+        "driverClassName": "org.gjt.mm.mysql.Driver"
+    },
+    {
+        "id": "ds5",
+        "url": "jdbc:mysql://localhost:3306/test",
+        "username": "root",
+        "password": "123456",
+        "driverClassName": "org.gjt.mm.mysql.Driver"
+    }
+]

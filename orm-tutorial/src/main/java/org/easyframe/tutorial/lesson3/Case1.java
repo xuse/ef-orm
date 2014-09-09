@@ -144,7 +144,7 @@ public class Case1 extends org.junit.Assert {
 		st.getQuery().clearQuery(); //清除上一个查询条件
 		{
 			//案例二: 查出出生日期最晚的学生
-			st.getQuery().addCondition(Student.Field.dateOfBirth, new JpqlExpression("(select max(dateOfBirth) from student)",st.getQuery()));
+			st.getQuery().addCondition(Student.Field.dateOfBirth, new JpqlExpression("(select max(dateOfBirth) from student)").bind(st.getQuery()));
 			List<Student> students=db.select(st);
 			assertEquals(db.count(st.getQuery()), students.size());	
 		}
