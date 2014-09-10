@@ -28,14 +28,14 @@ import com.google.common.collect.MapMaker;
  * @author jiyi
  *
  */
-class RoutingDummyConnectionPool extends AbstractMetaDataService implements IRoutingConnectionPool{
+public class RoutingDummyConnectionPool extends AbstractMetaDataService implements IRoutingConnectionPool{
 	protected IRoutingDataSource datasource;
 	final Map<Object, ReentrantConnection> usedConnection=new MapMaker().concurrencyLevel(12).weakKeys().makeMap();
 	private final AtomicLong pollCount=new AtomicLong();
 	private final AtomicLong offerCount=new AtomicLong();
 	private final Map<String,DbMetaData> metadatas=new HashMap<String,DbMetaData>(8,0.5f);
 	
-	RoutingDummyConnectionPool(IRoutingDataSource ds){
+	public RoutingDummyConnectionPool(IRoutingDataSource ds){
 		this.datasource=ds;
 	}
 	

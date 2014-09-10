@@ -84,7 +84,7 @@ public final class SingleManagedConnection extends AbstractJDBCConnection implem
 	 * @see jef.database.innerpool.IConnection#setSavepoints(java.lang.String)
 	 */
 	public Savepoints setSavepoints(String savepointName) throws SQLException {
-		return new Savepoints(conn, conn.setSavepoint(savepointName));
+		return new Savepoints(savepointName,conn);
 	}
 
 	

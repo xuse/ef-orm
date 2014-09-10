@@ -116,7 +116,7 @@ final class SingleConnection implements CheckableConnection,ReentrantConnection{
 	}
 
 	public Savepoints setSavepoints(String savepointName) throws SQLException {
-		return new Savepoints(conn,conn.setSavepoint(savepointName));
+		return new Savepoints(savepointName,conn);
 	}
 	
 	public void setUsedByObject(Object user) {

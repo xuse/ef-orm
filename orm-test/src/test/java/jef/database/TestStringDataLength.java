@@ -133,7 +133,7 @@ public class TestStringDataLength extends org.junit.Assert {
 		}
 
 		System.out.println("===" + session.getExpressionValue(Func.current_timestamp, Object.class));
-		session.commit();
+		session.commit(true);
 	}
 	
 	@Test

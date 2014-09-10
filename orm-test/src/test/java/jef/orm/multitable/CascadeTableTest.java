@@ -132,7 +132,6 @@ public class CascadeTableTest extends MultiTableTestBase {
 			LogUtil.show(result.get(0));
 		}
 		System.out.println("===========result==============");
-		db.commit();
 	}
 
 	@Test
@@ -518,7 +517,7 @@ public class CascadeTableTest extends MultiTableTestBase {
 		select.column(Person.Field.age).min().as("minAge");
 		select.column(Person.Field.age).max().as("maxAge").having(Operator.GREAT, 0);
 		List<Map> map = db.selectAs(t1, Map.class);
-		db.rollback();
+		db.rollback(true);
 		LogUtil.show(map);
 	}
 	
@@ -540,7 +539,7 @@ public class CascadeTableTest extends MultiTableTestBase {
 		p.setSchoolId(3);
 		System.out.println(s);
 		db.insert(p);
-		db.rollback();
+		db.rollback(true);
 	}
 	@Test
 	public void testInsertCascade() throws SQLException{
@@ -559,7 +558,7 @@ public class CascadeTableTest extends MultiTableTestBase {
 		p.setSchoolId(3);
 		db.insertCascade(p);
 		System.out.println(p.getSchoolId());
-		db.rollback();
+		db.rollback(true);
 	}
 	@Test
 	public void testUpdateNormal() throws SQLException{
@@ -577,7 +576,7 @@ public class CascadeTableTest extends MultiTableTestBase {
 		p.setSchool(s);
 		
 		db.update(p);
-		db.rollback();
+		db.rollback(true);
 	}
 	@Test
 	public void testUpdateCascade() throws SQLException{
@@ -596,7 +595,7 @@ public class CascadeTableTest extends MultiTableTestBase {
 		
 		db.updateCascade(p);
 		System.out.println(p);
-		db.rollback();
+		db.rollback(true);
 	}
 	@Test
 	public void testDeleteNormal() throws SQLException{
@@ -604,7 +603,7 @@ public class CascadeTableTest extends MultiTableTestBase {
 		Person p=new Person();
 		p.setId(1);
 		db.delete(p);
-		db.rollback();
+		db.rollback(true);
 	}
 	@Test
 	public void testDeleteCascade() throws SQLException{
@@ -613,6 +612,6 @@ public class CascadeTableTest extends MultiTableTestBase {
 		p.setId(3);
 		System.out.println(p.getScores());
 		db.deleteCascade(p);
-		db.rollback();
+		db.rollback(true);
 	}
 }

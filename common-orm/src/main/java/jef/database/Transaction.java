@@ -16,9 +16,10 @@
 package jef.database;
 
 import java.sql.SQLException;
+import java.sql.Savepoint;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+
+import javax.persistence.PersistenceException;
 
 import jef.common.log.LogUtil;
 import jef.database.cache.CacheDummy;
@@ -43,34 +44,29 @@ import org.slf4j.LoggerFactory;
  * 事务状态下的数据库连接封装。
  * 
  * @author jiyi
- *
+ * 
  */
 public class Transaction extends Session implements TransactionStatus {
-	
-	private static Logger log=LoggerFactory.getLogger(Transaction.class);
-	
-	
-//	private static final String COMMIT_LOG = "[JPA DEBUG]:Transaction %s commited.[%sms]";
-//	private static final String ROLLBACK_LOG = "[JPA DEBUG]:Transaction %s rollback.[%sms]";
-//	private static final String ROLLBACK_ONLY_LOG = "[JPA WARN]:Transaction %s has been marked as rollback-only,so will rollback the transaction.";
-//	private static final String CONN_MERGE_LOG = "[CONN MERGE]:Merge '%s' connection with the existing '%s' connection.%s";
-//	private static final String GET_CONN_LOG = "[JPA DEBUG]:Transaction %s getConnection count: %s";
-	
+	private static Logger log = LoggerFactory.getLogger(Transaction.class);
+
 	/**
 	 * Use the default timeout of the underlying transaction system, or none if
 	 * timeouts are not supported.
 	 */
 	final static int TIMEOUT_DEFAULT = -1;
-
+	/**
+	 * 使用数据库的默认事务隔离级别。
+	 */
 	final static int ISOLATION_DEFAULT = -1;
-	
+
 	/**
 	 * ORM中部分操作会在非事务场景下进行，而JEF本身的一些内部操作则必须保证在事务环境下执行。（如级联操作、批操作）
 	 * 为此JEF会在内部创建一个事务对象。这类内部的食物对象当操作完成后即提交并关闭。对用户透明。
+	 * 
 	 * @author jiyi
-	 *
+	 * 
 	 */
-	enum TransactionFlag{
+	enum TransactionFlag {
 		/**
 		 * 因为操作悲观锁模式,为了阻止连接被释放（例如线程重入），因此使用一个事务来独占连接。
 		 */
@@ -80,18 +76,14 @@ public class Transaction extends Session implements TransactionStatus {
 		 */
 		Cascade,
 	}
-	
 
-	//所有的savePoints
-	private Map<String, Savepoints> savepoints;
-	private String parentName;//当关闭后parent即为null，此时需要使用该变量显示日志
+	private String parentName;// 当关闭后parent即为null，此时需要使用该变量显示日志
 	private DbClient parent;
 	private volatile ReentrantConnection conn;
-	
-	
 	private TransactionCache cache;
 	private boolean rollbackOnly = false;
-	
+	private boolean dirty;
+
 	/**
 	 * jef在执行以下两类操作时，会强制要求在一个事务中执行： <li>Batch 批操作</li> <li>Cascade 级联操作</li>
 	 * jef会检查要执行的操作是否已经在一个事务上执行，如果此时用户没有开启事务。
@@ -101,164 +93,187 @@ public class Transaction extends Session implements TransactionStatus {
 	TransactionFlag innerFlag;
 
 	/**
-	 * 事务超时截止时间,目前未生效
+	 * 事务超时截止时间
 	 */
 	private Long deadline;
+	/**
+	 * 当前事务隔离级别
+	 */
 	private int isolationLevel = ISOLATION_DEFAULT;
+	/**
+	 * 当前事务只读
+	 */
 	private boolean readOnly;
+	/**
+	 * 当前事务为自动提交状态
+	 */
+	private boolean autoCommit;
 
 	/**
 	 * 构造事务
-	 * @param parent DbClient
-	 * @param flag 隐含事务标记，传入null表示为普通事务，其他为隐含事务，具体参见{@link TransactionFlag}
-	 * @param readOnly 只读事务
+	 * 
+	 * @param parent
+	 *            DbClient
+	 * @param flag
+	 *            隐含事务标记，传入null表示为普通事务，其他为隐含事务，具体参见{@link TransactionFlag}
+	 * @param readOnly
+	 *            只读事务
 	 * @throws SQLException
 	 * @see TransactionFlag
 	 */
-	Transaction(DbClient parent, TransactionFlag flag,boolean readOnly){
-		this(parent,0,-1,readOnly,false);
+	Transaction(DbClient parent, TransactionFlag flag, boolean readOnly) {
+		this(parent, 0, -1, readOnly, false);
 		this.innerFlag = flag;
+	}
+
+	public boolean isAutoCommit() {
+		return autoCommit;
+	}
+
+	public void setAutoCommit(boolean autoCommit) throws SQLException {
+		if (autoCommit == this.autoCommit) {
+			return;
+		}
+		this.autoCommit = autoCommit;
+		if (conn != null) {
+			this.conn.setAutoCommit(autoCommit);
+		}
 	}
 
 	/**
 	 * 构造事务
-	 * @param parent DbClient 
-	 * @param timeout 事务超时时间
-	 * @param isolationLevel 事务隔离级别
-	 * @param readOnly    只读事务
-	 * @param noCache     取消一级缓存
+	 * 
+	 * @param parent
+	 *            DbClient
+	 * @param timeout
+	 *            事务超时时间
+	 * @param isolationLevel
+	 *            事务隔离级别
+	 * @param readOnly
+	 *            只读事务
+	 * @param noCache
+	 *            取消一级缓存
 	 */
-	Transaction(DbClient parent, int timeout, int isolationLevel, boolean readOnly,boolean noCache) {
+	Transaction(DbClient parent, int timeout, int isolationLevel, boolean readOnly, boolean noCache) {
 		super();
 		this.parent = parent;
-		this.isolationLevel=isolationLevel;
-		this.readOnly=readOnly;
-		
+		this.isolationLevel = isolationLevel;
+		this.readOnly = readOnly;
+
 		rProcessor = parent.rProcessor;
-		selectp=parent.selectp;
+		selectp = parent.selectp;
 		p = parent.p;
-		insertp=parent.insertp;
-		batchinsertp=parent.batchinsertp;
-		if(noCache){
-			cache=CacheDummy.getInstance();
-		}else{
-			cache=ORMConfig.getInstance().isCacheLevel1()?new CacheImpl(rProcessor,selectp):CacheDummy.getInstance();
+		insertp = parent.insertp;
+		batchinsertp = parent.batchinsertp;
+		if (noCache) {
+			cache = CacheDummy.getInstance();
+		} else {
+			cache = ORMConfig.getInstance().isCacheLevel1() ? new CacheImpl(rProcessor, selectp) : CacheDummy.getInstance();
 		}
-		
 		getListener().newTransaction(this);
-		if(timeout>0){
-			this.deadline=System.currentTimeMillis()+timeout*1000;
+		if (timeout > 0) {
+			this.deadline = System.currentTimeMillis() + timeout * 1000;
 		}
 	}
 
 	protected ReentrantConnection getConnection() throws SQLException {
 		ensureOpen();
-		if(deadline!=null){
+		if (deadline != null) {
 			checkTimeToLiveInMillis();
 		}
-		if(conn==null){
-			conn = parent.getPool().poll(this);
-			conn.setAutoCommit(false);
-			if(readOnly){
+		if (conn == null) {
+			ReentrantConnection conn = parent.getPool().poll(this);
+			conn.setAutoCommit(autoCommit);
+			if (readOnly) {
 				conn.setReadOnly(true);
 			}
-			if(isolationLevel>=0 && ORMConfig.getInstance().isSetTxIsolation()){
-				conn.setTransactionIsolation(isolationLevel);	
+			if (isolationLevel >= 0 && ORMConfig.getInstance().isSetTxIsolation()) {
+				conn.setTransactionIsolation(isolationLevel);
 			}
+			this.conn = conn;
 		}
+		dirty=true;
 		return conn;
+	}
+
+	/**
+	 * 提交当前事务中的操作
+	 * 
+	 * 仅提交，不会关闭事务和释放连接
+	 */
+	public void commit(){
+		commit(false);
 	}
 	
 	/**
 	 * 回滚当前事务中的所有操作
 	 * 
-	 * @throws SQLException
+	 * 仅回滚，不会关闭事务和释放连接
 	 */
-	public void rollback() throws SQLException {
-		//如果已经关闭什么也不作
-		if(parent==null)return;
-		try{
-			doRollBack();
-		}finally{
-			doClose();
+	public void rollback(){
+		rollback(false);
+	}
+
+	/**
+	 * 提交当前事务
+	 * @param close If true, close the transaction after commit; 
+	 */
+	public void commit(boolean close){
+		// 如果已经关闭什么也不作
+		if (parent == null)
+			return;
+		try {
+			if(dirty && !autoCommit){
+				if (rollbackOnly) {
+					log.warn("[JPA WARN]:Transaction {} has been marked as rollback-only,so will rollback the transaction.", this);
+					doRollback();
+				} else {
+					doCommit();
+				}	
+			}
+		} catch (SQLException e) {
+			throw new PersistenceException(e.getSQLState(), e);
+		} finally {
+			if(close)
+				doClose();
 		}
 	}
 
 
-	private void doRollBack() throws SQLException {
-		if (conn != null) {
-			getListener().beforeRollback(this);
-			long start = System.currentTimeMillis();
-			conn.rollback();
-			if(ORMConfig.getInstance().isDebugMode())
-				log.info("[JPA DEBUG]:Transaction {} rollback. cost {}ms.",this, (System.currentTimeMillis() - start)); 
-			getListener().postRollback(this);
-		}
-	}
-
-
-	private void doCommit() throws SQLException {
-		if(conn!=null){
-			getListener().beforeCommit(this);
-			long start = System.currentTimeMillis();
-			conn.commit();
-			if(ORMConfig.getInstance().isDebugMode())
-				log.info("[JPA DEBUG]:Transaction {} commited. cost {}ms.",this,System.currentTimeMillis() - start);
-			getListener().postCommit(this);
+	/**
+	 * 回滚当前事务中的所有操作
+	 * @param close If true, close the transaction after rollback;
+	 */
+	public void rollback(boolean close){
+		// 如果已经关闭什么也不作
+		if (parent == null)
+			return;
+		try {
+			if(dirty && !autoCommit){
+				doRollback();
+			}
+		} catch (SQLException e) {
+			throw new PersistenceException(e.getSQLState(), e);
+		} finally {
+			if(close)
+				doClose();
 		}
 	}
 	
-	/**
-	 * 提交当前事务中的操作
-	 * 
-	 * @throws SQLException
-	 */
-	public void commit() throws SQLException {
-		//如果已经关闭什么也不作
-		if(parent==null)return;
-		try{
-			if (rollbackOnly) {
-				log.warn("[JPA WARN]:Transaction {} has been marked as rollback-only,so will rollback the transaction.",this);
-				doRollBack();
-			}else{
-				doCommit();
-			}			
-		}finally{
-			doClose();
-		}
-	}			
-
-	private void ensureOpen() {
-		if (parent == null) {
-			throw new IllegalStateException("Current transaction is closed!|" + getTransactionId(null));
-		}
+	public void setReadonly(boolean flag) {
+		if (this.readOnly == flag)
+			return;
+		readOnly = flag;
+		if (conn != null)
+			try {
+				conn.setReadOnly(flag);
+			} catch (SQLException e) {
+				LogUtil.exception(e);
+			}
 	}
 
-	/**
-	 * 关闭事务，连接释放回连接池
-	 */
-	private void doClose() {
-		if (parent == null)
-			return;
-
-		if (conn != null) {
-			if(readOnly){
-				try {
-					conn.setReadOnly(false);
-				} catch (SQLException e) {
-					LogUtil.exception(e);
-				}
-			}
-			parent.getPool().offer(conn);
-			conn = null;
-		}
-		parentName = parent.getDbName(null);
-		try {
-			getListener().tracsactionClose(this);
-		} catch (Throwable t) {
-			log.error("",t);
-		}
-		parent = null;
+	public boolean isReadonly() {
+		return this.readOnly;
 	}
 
 	@Override
@@ -278,9 +293,9 @@ public class Transaction extends Session implements TransactionStatus {
 	public boolean isRollbackOnly() {
 		return rollbackOnly;
 	}
-	
-	public boolean isOpen(){
-		return parent!=null;
+
+	public boolean isOpen() {
+		return parent != null;
 	}
 
 	/**
@@ -289,12 +304,12 @@ public class Transaction extends Session implements TransactionStatus {
 	 * @param rollbackOnly
 	 */
 	public void setRollbackOnly(boolean rollbackOnly) {
-		log.debug("Transaction {} was marked as rollback only",this);
+		log.debug("Transaction {} was marked as rollback only", this);
 		this.rollbackOnly = rollbackOnly;
 	}
 
 	@Override
-	public <T> NativeQuery<T> createNamedQuery(String name, Class<T> resultWrapper){
+	public <T> NativeQuery<T> createNamedQuery(String name, Class<T> resultWrapper) {
 		if (parent.namedQueries == null)
 			parent.initNQ();
 		NQEntry nc = parent.namedQueries.get(name);
@@ -302,10 +317,9 @@ public class Transaction extends Session implements TransactionStatus {
 			return null;
 		return asOperateTarget(MetaHolder.getMappingSite(nc.getTag())).createNativeQuery(nc, resultWrapper);
 	}
-	
 
 	@Override
-	public <T> NativeQuery<T> createNamedQuery(String name, ITableMetadata resultMeta){
+	public <T> NativeQuery<T> createNamedQuery(String name, ITableMetadata resultMeta) {
 		if (parent.namedQueries == null)
 			parent.initNQ();
 		NQEntry nc = parent.namedQueries.get(name);
@@ -324,7 +338,6 @@ public class Transaction extends Session implements TransactionStatus {
 		return parent.getListener();
 	}
 
-
 	@Override
 	protected String getTransactionId(String dbkey) {
 		StringBuilder sb = new StringBuilder();
@@ -334,7 +347,7 @@ public class Transaction extends Session implements TransactionStatus {
 			sb.append('[').append(innerFlag.name());
 		}
 		sb.append(StringUtils.toFixLengthString(this.hashCode(), 8)).append('@');
-		sb.append(parent != null ? parent.getDbName(null): parentName);
+		sb.append(parent != null ? parent.getDbName(null) : parentName);
 		sb.append('@').append(Thread.currentThread().getId()).append(']');
 		return sb.toString();
 	}
@@ -350,41 +363,42 @@ public class Transaction extends Session implements TransactionStatus {
 
 	/**
 	 * 设置恢复点
+	 * 
 	 * @param savepointName
 	 * @throws SQLException
 	 * @throws SavepointNotSupportedException
 	 */
-	public void setSavepoint(String savepointName) throws SQLException, SavepointNotSupportedException {
-		//Oracle SavePoint必须用字母开头，不能用数字开头
+	public Savepoint setSavepoint(String savepointName) throws SQLException, SavepointNotSupportedException {
+		// Oracle SavePoint必须用字母开头，不能用数字开头
 		if (!parent.asOperateTarget(null).getMetaData().supportsSavepoints())
 			throw new SavepointNotSupportedException("Savepoints are not supported by your JDBC driver.");
-		//XA模式下不支持savepoint;
-		Savepoints sp=getConnection().setSavepoints(savepointName);//如果不支持SP，返回null
-		if(sp==null){
+		// XA模式下不支持savepoint;
+		Savepoints sp = getConnection().setSavepoints(savepointName);// 如果不支持SP，返回null
+		if (sp == null) {
 			throw new SavepointNotSupportedException("Savepoints are not supported.");
-		}else{
-			if (savepoints == null) {
-				savepoints = new HashMap<String, Savepoints>();
-			}
-			savepoints.put(savepointName, sp);
+		}
+		return sp;
+	}
+	
+
+	public Savepoint setSavepoint() throws SQLException, SavepointNotSupportedException {
+		if (!parent.asOperateTarget(null).getMetaData().supportsSavepoints())
+			throw new SavepointNotSupportedException("Savepoints are not supported by your JDBC driver.");
+		return getConnection().setSavepoints(null);// 如果不支持SP，返回null
+	}
+
+	public void rollbackToSavepoint(Savepoint savepoint) throws SQLException, SavepointNotSupportedException {
+		if (savepoint instanceof Savepoints) {
+			((Savepoints) savepoint).rollbackSavepoints();
 		}
 	}
 
-	public void rollbackToSavepoint(String savepointName) throws SQLException, SavepointNotSupportedException {
-		//Oracle SavePoint必须用字母开头，不能用数字开头
-		Savepoints savepoint = savepoints.get(savepointName);
-		if (savepoint != null)
-			savepoint.rollbackSavepoints();
-	}
-
-	public void releaseSavepoint(String savepointName) {
-		//Oracle SavePoint必须用字母开头，不能用数字开头
-		Savepoints savepoint = savepoints.get(savepointName);
-		if (savepoint != null) {
+	public void releaseSavepoint(Savepoint savepoint) {
+		if (savepoint instanceof Savepoints) {
 			try {
-				savepoint.releaseSavepoints();
+				((Savepoints) savepoint).releaseSavepoints();
 			} catch (SQLException e) {
-				log.error("",e);
+				log.error("", e);
 			}
 		}
 	}
@@ -405,7 +419,7 @@ public class Transaction extends Session implements TransactionStatus {
 	 */
 	public void setTimeout(int timeout) {
 		if (timeout > TIMEOUT_DEFAULT) {
-			setTimeoutInSeconds(timeout);
+			this.deadline = System.currentTimeMillis() + timeout * 1000;
 		}
 	}
 
@@ -416,31 +430,11 @@ public class Transaction extends Session implements TransactionStatus {
 		return (this.deadline != null);
 	}
 
-	private void checkTimeToLiveInMillis() throws TransactionTimedOutException {
-		long timeToLive = this.deadline - System.currentTimeMillis();
-		boolean deadlineReached=timeToLive <= 0;
-		if (deadlineReached) {
-			setRollbackOnly(true);
-			throw new TransactionTimedOutException("Transaction timed out: deadline was " + this.deadline);
-		}
-	}
-
-	/**
-	 * Set the timeout for this object in seconds.
-	 * 
-	 * @param seconds
-	 *            number of seconds until expiration
-	 */
-	private void setTimeoutInSeconds(int seconds) {
-		this.deadline = System.currentTimeMillis() + seconds * 1000;
-	}
-
-
 	@Override
 	protected OperateTarget asOperateTarget(String dbKey) {
 		if (StringUtils.isEmpty(dbKey))
-			return new OperateTarget(this,null);
-		return new OperateTarget(this,dbKey);
+			return new OperateTarget(this, null);
+		return new OperateTarget(this, dbKey);
 	}
 
 	@Override
@@ -451,7 +445,7 @@ public class Transaction extends Session implements TransactionStatus {
 
 	@Override
 	protected String getDbName(String dbKey) {
-		return parent==null?this.parentName:parent.getDbName(dbKey);
+		return parent == null ? this.parentName : parent.getDbName(dbKey);
 	}
 
 	@Override
@@ -476,11 +470,73 @@ public class Transaction extends Session implements TransactionStatus {
 	public void close() {
 		cache.evictAll();
 		if (parent != null) {
-			try {
+			if(dirty && !autoCommit){
 				rollback();
-			} catch (SQLException e) {
-				e.printStackTrace();
 			}
+			doClose();
+		}
+	}
+
+	private void doRollback() throws SQLException {
+		if (conn != null) {
+			getListener().beforeRollback(this);
+			long start = System.currentTimeMillis();
+			conn.rollback();
+			dirty=false;
+			if (ORMConfig.getInstance().isDebugMode())
+				log.info("[JPA DEBUG]:Transaction {} rollback. cost {}ms.", this, (System.currentTimeMillis() - start));
+			getListener().postRollback(this);
+		}
+	}
+
+	private void doCommit() throws SQLException {
+		if (conn != null) {
+			getListener().beforeCommit(this);
+			long start = System.currentTimeMillis();
+			conn.commit();
+			dirty=false;
+			if (ORMConfig.getInstance().isDebugMode())
+				log.info("[JPA DEBUG]:Transaction {} commited. cost {}ms.", this, System.currentTimeMillis() - start);
+			getListener().postCommit(this);
+		}
+	}
+
+	private void doClose() {
+		if (parent == null)
+			return;
+
+		if (conn != null) {
+			if (readOnly) {
+				try {
+					conn.setReadOnly(false);
+				} catch (SQLException e) {
+					LogUtil.exception(e);
+				}
+			}
+			parent.getPool().offer(conn);
+			conn = null;
+		}
+		parentName = parent.getDbName(null);
+		try {
+			getListener().tracsactionClose(this);
+		} catch (Throwable t) {
+			log.error("", t);
+		}
+		parent = null;
+	}
+	
+	private void ensureOpen() {
+		if (parent == null) {
+			throw new IllegalStateException("Current transaction is closed!|" + getTransactionId(null));
+		}
+	}
+	
+	private void checkTimeToLiveInMillis() throws TransactionTimedOutException {
+		long timeToLive = this.deadline - System.currentTimeMillis();
+		boolean deadlineReached = timeToLive <= 0;
+		if (deadlineReached) {
+			setRollbackOnly(true);
+			throw new TransactionTimedOutException("Transaction timed out: deadline was " + this.deadline);
 		}
 	}
 }

@@ -9,6 +9,7 @@ import jef.database.DebugUtil;
 import jef.database.NativeQuery;
 import jef.database.QB;
 import jef.database.Session;
+import jef.database.Transaction;
 import jef.database.cache.TransactionCache;
 import jef.database.jmx.JefFacade;
 import jef.database.query.Query;
@@ -49,7 +50,7 @@ public class CacheTest extends org.junit.Assert{
 	
 	@Test
 	public void case1() throws SQLException{
-		Session session=db.startTransaction();
+		Transaction session=db.startTransaction();
 		CaAsset ca=RandomData.newInstance(jef.orm.onetable.model.CaAsset.class);
 		session.insert(ca);
 		TransactionCache cache=DebugUtil.getCache(session);
@@ -131,8 +132,7 @@ public class CacheTest extends org.junit.Assert{
 			session.load(ca2);
 			assertEquals(miss+1,cache.getMissCount());//验证失效
 		}
-		session.commit();
-		
+		session.commit(true);
 	}
 	
 }

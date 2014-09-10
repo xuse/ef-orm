@@ -39,15 +39,17 @@ final class RoutingConnection implements ReentrantConnection, Connection {
 	private boolean autoCommit;
 	private boolean readOnly;
 	private int isolation = -1;
-
+	private int savePointId=0;
 	private IRoutingConnectionPool parent;
-	private Map<String, Connection> connections = new HashMap<String, Connection>();
+	private Map<String, Connection> connections = new HashMap<String, Connection>(4);
 	private String key;
 
 	public RoutingConnection(IRoutingConnectionPool parent) {
 		this.parent = parent;
 	}
-
+	/**
+	 * 归还到父池中
+	 */
 	public void closePhysical() {
 		if (parent != null) {
 			IRoutingConnectionPool parent = this.parent;
@@ -159,7 +161,7 @@ final class RoutingConnection implements ReentrantConnection, Connection {
 	public Savepoints setSavepoints(String savepointName) throws SQLException {
 		ensureOpen();
 		List<SQLException> errors = new ArrayList<SQLException>();
-		Savepoints sp = new Savepoints();
+		Savepoints sp = new Savepoints(savepointName);
 		for (Connection conn : connections.values()) {
 			try {
 				Savepoint s = conn.setSavepoint(savepointName);
@@ -296,8 +298,11 @@ final class RoutingConnection implements ReentrantConnection, Connection {
 		}
 	}
 
+	/**
+	 * 归还到父池中
+	 */
 	public void close() throws SQLException {
-		closePhysical();
+		parent.offer(this);
 	}
 
 	public <T> T unwrap(Class<T> iface) throws SQLException {
@@ -359,20 +364,60 @@ final class RoutingConnection implements ReentrantConnection, Connection {
 		return getConnection().getHoldability();
 	}
 
+	
 	public Savepoint setSavepoint() throws SQLException {
-		throw new UnsupportedOperationException();
+		ensureOpen();
+		List<SQLException> errors = new ArrayList<SQLException>();
+		Savepoints sp = new Savepoints(++savePointId);
+		for (Connection conn : connections.values()) {
+			try {
+				Savepoint s = conn.setSavepoint();
+				sp.add(conn, s);
+			} catch (SQLException e) {
+				errors.add(e);
+			}
+		}
+		if (!errors.isEmpty()) {
+			throw DbUtils.wrapExceptions(errors);
+		}
+		return sp;
 	}
 
 	public Savepoint setSavepoint(String name) throws SQLException {
-		throw new UnsupportedOperationException();
+		if(name==null){
+			return setSavepoint();
+		}
+		ensureOpen();
+		List<SQLException> errors = new ArrayList<SQLException>();
+		Savepoints sp = new Savepoints(name);
+		for (Connection conn : connections.values()) {
+			try {
+				Savepoint s = conn.setSavepoint();
+				sp.add(conn, s);
+			} catch (SQLException e) {
+				errors.add(e);
+			}
+		}
+		if (!errors.isEmpty()) {
+			throw DbUtils.wrapExceptions(errors);
+		}
+		return sp;
 	}
 
 	public void rollback(Savepoint savepoint) throws SQLException {
-		throw new UnsupportedOperationException();
+		if(savepoint instanceof Savepoints){
+			((Savepoints)savepoint).rollbackSavepoints();
+		}else{
+			throw new SQLException(savepoint+" is not a valid savepoint!");
+		}
 	}
 
 	public void releaseSavepoint(Savepoint savepoint) throws SQLException {
-		throw new UnsupportedOperationException();
+		if(savepoint instanceof Savepoints){
+			((Savepoints)savepoint).rollbackSavepoints();
+		}else{
+			throw new SQLException(savepoint+" is not a valid savepoint!");
+		}
 	}
 
 	public Statement createStatement(int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {

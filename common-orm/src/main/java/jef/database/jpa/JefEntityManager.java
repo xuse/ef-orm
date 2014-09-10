@@ -16,6 +16,7 @@
 package jef.database.jpa;
 
 import java.sql.SQLException;
+import java.sql.Savepoint;
 import java.util.List;
 import java.util.Map;
 
@@ -383,14 +384,15 @@ public class JefEntityManager implements EntityManager {
 	 * @param savepointName
 	 * @throws SavepointNotSupportedException
 	 */
-	public void setSavepoint(String savepointName) throws SavepointNotSupportedException {
+	public Savepoint setSavepoint(String savepointName) throws SavepointNotSupportedException {
 		if (tx != null) {
 			try {
-				tx.get().setSavepoint(savepointName);
+				return tx.get().setSavepoint(savepointName);
 			} catch (SQLException e) {
 				throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 			}
 		}
+		return null;
 	}
 
 	/**
@@ -399,7 +401,7 @@ public class JefEntityManager implements EntityManager {
 	 * @param savepoint
 	 * @throws SavepointNotSupportedException
 	 */
-	public void rollbackToSavepoint(String savepoint) throws SavepointNotSupportedException {
+	public void rollbackToSavepoint(Savepoint savepoint) throws SavepointNotSupportedException {
 		if (tx != null) {
 			try {
 				tx.get().rollbackToSavepoint(savepoint);
@@ -414,7 +416,7 @@ public class JefEntityManager implements EntityManager {
 	 * 
 	 * @param savepoint
 	 */
-	public void releaseSavepoint(String savepoint) {
+	public void releaseSavepoint(Savepoint savepoint) {
 		if (tx != null) {
 			tx.get().releaseSavepoint(savepoint);
 		}

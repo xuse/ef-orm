@@ -15,6 +15,7 @@ import jef.common.pool.PoolStatus;
 import jef.database.cache.TransactionCache;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.PartitionSupport;
+import jef.database.innerpool.ReentrantConnection;
 import jef.database.meta.AbstractRefField;
 import jef.database.meta.Feature;
 import jef.database.meta.Reference;
@@ -90,6 +91,9 @@ public class DebugUtil {
 		return ((OperateTarget)db).getRawConnection();
 	}
 
+	public static ReentrantConnection getIConnection(Session db) throws SQLException {
+		return db.getConnection();
+	}
 	public static IConnection getPooledConnection(DbClient db) {
 		try {
 			return db.getPool().poll();

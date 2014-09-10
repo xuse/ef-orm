@@ -431,13 +431,13 @@ public abstract class Session {
 			Transaction trans = new Transaction((DbClient) this, TransactionFlag.Cascade, false);
 			try {
 				int i = CascadeUtil.updateWithRefInTransaction(obj, trans);
-				trans.commit();
+				trans.commit(true);
 				return i;
 			} catch (SQLException e) {
-				trans.rollback();
+				trans.rollback(true);
 				throw e;
 			} catch (RuntimeException e) {
-				trans.rollback();
+				trans.rollback(true);
 				throw e;
 			}
 		} else {
@@ -459,13 +459,13 @@ public abstract class Session {
 			Transaction trans = new Transaction((DbClient) this, TransactionFlag.Cascade,false);
 			try {
 				int i = CascadeUtil.deleteWithRefInTransaction(obj, trans);
-				trans.commit();
+				trans.commit(true);
 				return i;
 			} catch (SQLException e) {
-				trans.rollback();
+				trans.rollback(true);
 				throw e;
 			} catch (RuntimeException e) {
-				trans.rollback();
+				trans.rollback(true);
 				throw e;
 			}
 		} else {
@@ -498,13 +498,13 @@ public abstract class Session {
 			Transaction trans = new Transaction((DbClient) this, TransactionFlag.Cascade,false);
 			try {
 				CascadeUtil.insertWithRefInTransaction(obj, trans, dynamic);
-				trans.commit();
+				trans.commit(true);
 			} catch (SQLException e) {
 				LogUtil.exception(e);
-				trans.rollback();
+				trans.rollback(true);
 				throw e;
 			} catch (RuntimeException e) {
-				trans.rollback();
+				trans.rollback(true);
 				throw e;
 			}
 		} else {
@@ -1901,13 +1901,6 @@ public abstract class Session {
 	public <T> T getExpressionValue(DbFunction func, Class<T> clz,Object... params) throws SQLException {
 		return asOperateTarget(null).getExpressionValue(func,clz,params);
 	}
-
-	/**
-	 * 提交session（事务）中没有提交的更改
-	 * 
-	 * @throws SQLException
-	 */
-	public abstract void commit() throws SQLException;
 
 	/**
 	 * 得到DbClient对象，该对象上能够执行更多的DDL指令。

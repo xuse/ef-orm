@@ -13,6 +13,7 @@ import jef.database.dialect.DbmsProfile;
 import jef.tools.StringUtils;
 
 /**
+ * EF-ORM中简单的Datasource实现。
  * 只有SimpleDataSource才支持带properties参数的getConnection()方法。从而获得Oracle的列注释
  * 
  * @author Administrator

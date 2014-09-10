@@ -270,10 +270,6 @@ public class DbClient extends Session {
 		return connPool.getPartitionSupport().getSubTableNames(meta);
 	}
 
-	@Override
-	public void commit() throws SQLException {
-	}
-
 	public boolean isOpen() {
 		return connPool != null;
 	}

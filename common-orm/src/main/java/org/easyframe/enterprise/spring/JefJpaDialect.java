@@ -1,6 +1,7 @@
 package org.easyframe.enterprise.spring;
 
 import java.sql.SQLException;
+import java.sql.Savepoint;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
@@ -63,21 +64,25 @@ public class JefJpaDialect extends DefaultJpaDialect {
 			this.savepointCounter++;
 			String savepointName = ConnectionHolder.SAVEPOINT_NAME_PREFIX + this.savepointCounter;
 			try {
-				this.entityManager.setSavepoint(savepointName);
+				Savepoint sp=this.entityManager.setSavepoint(savepointName);
+				return sp;
 			} catch (SavepointNotSupportedException e) {
 				throw new NestedTransactionNotSupportedException("Cannot create a nested transaction because savepoints are not supported.");
 			} catch (Throwable ex) {
 				throw new CannotCreateTransactionException("Could not create JDBC savepoint", ex);
 			}
-			return savepointName;
 		}
 
 		public void rollbackToSavepoint(Object savepoint) throws TransactionException {
-			this.entityManager.rollbackToSavepoint((String) savepoint);
+			if(savepoint!=null){
+				this.entityManager.rollbackToSavepoint((Savepoint) savepoint);
+			}
 		}
 
 		public void releaseSavepoint(Object savepoint) throws TransactionException {
-			this.entityManager.releaseSavepoint((String) savepoint);
+			if(savepoint!=null){
+				this.entityManager.releaseSavepoint((Savepoint) savepoint);
+			}
 		}
 	}
 

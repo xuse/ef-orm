@@ -104,7 +104,7 @@ public class CascadeModel2Test extends org.junit.Assert{
 			}
 			assertEquals(8, n);
 		}
-		db.rollback();
+		db.rollback(true);
 	}
 
 	/**
@@ -123,7 +123,7 @@ public class CascadeModel2Test extends org.junit.Assert{
 		assertEquals(count2-n, db.count(QB.create(Parent.class)));
 		assertEquals(count3-2*n, db.count(QB.create(Child.class)));
 		assertEquals(count4-4*n, db.count(QB.create(Leaf.class)));
-		db.rollback();
+		db.rollback(true);
 	}
 
 	private int doDelete(Session db) throws SQLException {

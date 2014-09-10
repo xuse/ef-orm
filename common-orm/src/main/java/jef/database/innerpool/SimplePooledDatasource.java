@@ -218,7 +218,7 @@ public final class SimplePooledDatasource extends AbstractDataSource implements 
 		}
 
 		public Savepoints setSavepoints(String savepointName) throws SQLException {
-			return new Savepoints(conn,conn.setSavepoint(savepointName));
+			return new Savepoints(savepointName,conn);
 		}
 		public void ensureOpen() throws SQLException {
 		}

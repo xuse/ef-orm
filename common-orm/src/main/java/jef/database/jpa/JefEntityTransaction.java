@@ -15,11 +15,8 @@
  */
 package jef.database.jpa;
 
-import java.sql.SQLException;
-
 import javax.persistence.EntityTransaction;
 
-import jef.common.log.LogUtil;
 import jef.database.Transaction;
 import jef.tools.Assert;
 
@@ -64,21 +61,13 @@ public class JefEntityTransaction implements EntityTransaction {
 
 	public void commit() {
 		if (trans != null) {
-			try {
-				trans.commit();
-			} catch (SQLException e) {// 若是发生其他异常可能会导致事务退栈不正确，因为有可能不会去执行close方法
-				LogUtil.exception(e);
-			}
+			trans.commit(true);
 		}
 	}
 
 	public void rollback() {
 		if (trans != null) {
-			try {
-				trans.rollback();
-			} catch (SQLException e) {
-				LogUtil.exception(e);
-			}
+			trans.rollback(true);
 		}
 	}
 

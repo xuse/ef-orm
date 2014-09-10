@@ -20,6 +20,8 @@ public interface IConnection{
 	 * (物理上)关闭连接
 	 * 
 	 * 但连接本身如果是个连接池实现，那么其实就相当于归还
+	 * 
+	 * 仅能在父池offer中调用，不允许其他地方调用
 	 */
 	void closePhysical();
 

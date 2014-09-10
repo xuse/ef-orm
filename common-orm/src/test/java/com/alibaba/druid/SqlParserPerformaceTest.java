@@ -1,3 +1,4 @@
+package com.alibaba.druid;
 import org.junit.Test;
 
 import com.alibaba.druid.sql.ast.statement.SQLSelectStatement;

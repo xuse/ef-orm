@@ -160,15 +160,11 @@ public class OperateTarget implements SqlTemplate {
 
 	public void commitAndClose(){
 		if (session instanceof Transaction) {
-			try {
-				((Transaction) session).commit();
-			} catch (SQLException e) {
-				throw DbUtils.toRuntimeException(e);
-			}
+			((Transaction) session).commit(true);
 		}
 	}
 
-	IConnection getRawConnection() {
+	ReentrantConnection getRawConnection() {
 		return getConnection(dbkey);
 	}
 	

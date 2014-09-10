@@ -91,7 +91,7 @@ public class Case1 extends org.junit.Assert {
 		System.out.println("设置为null，调用级联update，@OneToMany下会删除子表记录");
 
 		tx.updateCascade(c);
-		tx.commit();
+		tx.commit(true);
 	}
 	
 	/**
@@ -110,7 +110,7 @@ public class Case1 extends org.junit.Assert {
 		System.out.println("设置为null，调用级联update，@ManyToMany下不会删除子表记录");
 		// ManyToMany用来描述弱关联。因此级联操作会插入/更新传入的数据，但不会删除级联数据。
 		tx.updateCascade(s1); 
-		tx.rollback();
+		tx.rollback(true);
 	}
 	
 	
