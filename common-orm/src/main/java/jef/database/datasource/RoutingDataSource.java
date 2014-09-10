@@ -17,6 +17,10 @@ import jef.tools.Assert;
 
 /**
  * 支持路由的数据源，JEF要实现多数据源配置和XA，需要使用此类来作为初始化的datasource
+ * 
+ * 
+ * 
+ * 
  * @Date 2012-9-6
  */
 public class RoutingDataSource extends AbstractDataSource implements IRoutingDataSource{

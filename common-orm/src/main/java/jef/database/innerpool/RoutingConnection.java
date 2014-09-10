@@ -174,7 +174,7 @@ final class RoutingConnection implements ReentrantConnection, Connection {
 		return sp;
 	}
 
-	Connection getConnection() throws SQLException {
+	private Connection getConnection() throws SQLException {
 		if (key == null) {
 			if (defaultKey == null) {
 				Entry<String, DataSource> ds = parent.getRoutingDataSource().getDefaultDatasource();

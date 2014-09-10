@@ -17,6 +17,11 @@ import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.util.Assert;
 
+/**
+ * 供Spring上下文中初始化EF-ORM Session Factory使用
+ * @author jiyi
+ *
+ */
 public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>, InitializingBean {
 	private DataSource dataSource;
 	/**
@@ -124,6 +129,10 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 		return dataSource;
 	}
 
+	/**
+	 * 设置数据源
+	 * @param dataSource 数据源
+	 */
 	public void setDataSource(DataSource dataSource) {
 		this.dataSource = dataSource;
 	}
@@ -132,6 +141,10 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 		return scanPackages;
 	}
 
+	/**
+	 * 设置要扫描的包
+	 * @return 要扫描的包，逗号分隔
+	 */	
 	public void setScanPackages(String scanPackages) {
 		this.scanPackages = scanPackages;
 	}
@@ -140,6 +153,10 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 		return alterTable;
 	}
 
+	/**
+	 * 扫描到实体后，是否修改数据库中与实体定义不同的表
+	 * @param alterTable 'true' , EF-ORM will alter tables in database.
+	 */
 	public void setAlterTable(boolean alterTable) {
 		this.alterTable = alterTable;
 	}
@@ -147,7 +164,11 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 	public boolean isCreateTable() {
 		return createTable;
 	}
-
+	
+	/**
+	 * 扫描到实体后，是否在数据库中创建不存在的表
+	 * @param createTable true将会创建表
+	 */
 	public void setCreateTable(boolean createTable) {
 		this.createTable = createTable;
 	}
@@ -156,6 +177,10 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 		return allowDropColumn;
 	}
 
+	/**
+	 * 扫描到实体后，在Alter数据表时，是否允许删除列。
+	 * @param allowDropColumn true允许删除列
+	 */
 	public void setAllowDropColumn(boolean allowDropColumn) {
 		this.allowDropColumn = allowDropColumn;
 	}
@@ -164,6 +189,11 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 		return enhancePackages;
 	}
 
+	/**
+	 * 是否检查并增强实体。
+	 * 注意，增强实体仅对目录中的class文件生效，对jar包中的class无效。
+	 * @param enhancePackages 要扫描的包 
+	 */
 	public void setEnhancePackages(String enhancePackages) {
 		this.enhancePackages = enhancePackages;
 	}
@@ -172,6 +202,10 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 		return dynamicTables;
 	}
 
+	/**
+	 * 扫描数据库中存在的表作为动态表模型
+	 * @param dynamicTables 表名，逗号分隔
+	 */
 	public void setDynamicTables(String dynamicTables) {
 		this.dynamicTables = dynamicTables;
 	}
@@ -180,6 +214,10 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 		return registeNonMappingTableAsDynamic;
 	}
 
+	/**
+	 * 扫描数据库中当前schema下的所有表，如果尚未有实体与该表对应，那么就将该表作为动态表建模。
+	 * @param registeNonMappingTableAsDynamic
+	 */
 	public void setRegisteNonMappingTableAsDynamic(boolean registeNonMappingTableAsDynamic) {
 		this.registeNonMappingTableAsDynamic = registeNonMappingTableAsDynamic;
 	}

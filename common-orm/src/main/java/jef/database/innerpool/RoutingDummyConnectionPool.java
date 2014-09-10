@@ -83,7 +83,7 @@ class RoutingDummyConnectionPool extends AbstractMetaDataService implements IRou
 	}
 
 	public DataSource getDatasource() {
-		return datasource;
+		throw new UnsupportedOperationException();
 	}
 
 	public PoolStatus getStatus() {

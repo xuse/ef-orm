@@ -12,16 +12,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.orm.jpa.EntityManagerFactoryUtils;
 
 /**
- * Repo
+ * 所有DAO的基类
  * @author jiyi
  *
  */
-@SuppressWarnings("restriction")
 public class BaseDao {
 	@Autowired
 	private EntityManagerFactory entityManagerFactory;
 	
-	@SuppressWarnings("restriction")
 	@PostConstruct
 	public void init(){
 		Assert.notNull(entityManagerFactory);

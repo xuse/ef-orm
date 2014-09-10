@@ -24,7 +24,7 @@ import jef.tools.Assert;
  * @author jiyi
  *
  */
-public final class RoutingManagedConnectionPool extends RoutingDummyConnectionPool implements DataSource{
+public final class RoutingManagedConnectionPool extends RoutingDummyConnectionPool {
 	private int min;
 	private int max;
 	private boolean autoPool;
@@ -118,13 +118,7 @@ public final class RoutingManagedConnectionPool extends RoutingDummyConnectionPo
 		return false;
 	}
 
-	public Connection getConnection() throws SQLException {
-		return ((RoutingConnection)poll(Thread.currentThread())).getConnection();
-	}
-
-	public Connection getConnection(String username, String password) throws SQLException {
-		return ((RoutingConnection)poll(Thread.currentThread())).getConnection();
-	}
+	
 
 	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
 		return null;

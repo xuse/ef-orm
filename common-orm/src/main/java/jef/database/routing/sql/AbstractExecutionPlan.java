@@ -1,4 +1,4 @@
-package jef.database.routing.jdbc;
+package jef.database.routing.sql;
 
 import jef.database.annotation.PartitionResult;
 

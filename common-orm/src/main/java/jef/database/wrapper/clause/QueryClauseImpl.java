@@ -26,7 +26,7 @@ import jef.database.cache.CacheKey;
 import jef.database.cache.KeyDimension;
 import jef.database.cache.SqlCacheKey;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.routing.jdbc.SqlAnalyzer;
+import jef.database.routing.sql.SqlAnalyzer;
 
 /**
  * 必要Part五部分， 4+1

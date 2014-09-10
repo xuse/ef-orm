@@ -1,4 +1,4 @@
-package jef.database.routing.jdbc;
+package jef.database.routing.sql;
 
 import java.util.ArrayList;
 import java.util.List;

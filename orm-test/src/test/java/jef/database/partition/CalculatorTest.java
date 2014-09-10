@@ -28,7 +28,7 @@ import jef.database.meta.TupleMetadata;
 import jef.database.query.DefaultPartitionCalculator;
 import jef.database.query.PartitionCalculator;
 import jef.database.routing.function.KeyFunction;
-import jef.database.routing.jdbc.SqlAnalyzer;
+import jef.database.routing.sql.SqlAnalyzer;
 import jef.database.support.MultipleDatabaseOperateException;
 import jef.orm.onetable.model.TestEntity;
 import jef.orm.partition.PartitionEntity;

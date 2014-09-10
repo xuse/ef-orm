@@ -42,7 +42,7 @@ import jef.database.meta.MetaHolder;
 import jef.database.query.ParameterProvider;
 import jef.database.query.ParameterProvider.MapProvider;
 import jef.database.query.SqlExpression;
-import jef.database.routing.jdbc.SqlExecutionParam;
+import jef.database.routing.sql.SqlExecutionParam;
 import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
 

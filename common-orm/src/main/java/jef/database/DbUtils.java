@@ -49,6 +49,7 @@ import jef.database.annotation.PartitionResult;
 import jef.database.datasource.DataSourceInfo;
 import jef.database.datasource.DataSourceWrapper;
 import jef.database.datasource.DataSources;
+import jef.database.datasource.IRoutingDataSource;
 import jef.database.datasource.RoutingDataSource;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.DatabaseDialect;
@@ -172,8 +173,8 @@ public final class DbUtils {
 			return info;// 理想情况
 		}
 		// 比较糟糕的情况，尝试通过试连接数据库来获得URL等信息
-		if (ds instanceof RoutingDataSource) {//
-			RoutingDataSource rds = (RoutingDataSource) ds;
+		if (ds instanceof IRoutingDataSource) {//
+			IRoutingDataSource rds = (IRoutingDataSource) ds;
 			Entry<String, DataSource> e = rds.getDefaultDatasource();
 			if (e == null) {// 更见鬼了，没法获得缺省的DataSource。
 				Collection<String> names = rds.getDataSourceNames();

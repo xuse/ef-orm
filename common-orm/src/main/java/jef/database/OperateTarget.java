@@ -28,7 +28,7 @@ import jef.database.meta.DbProperty;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.EntityMappingProvider;
 import jef.database.query.SqlExpression;
-import jef.database.routing.jdbc.SqlExecutionParam;
+import jef.database.routing.sql.SqlExecutionParam;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.populator.ResultSetTransformer;
 import jef.database.wrapper.populator.Transformer;

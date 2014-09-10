@@ -13,7 +13,7 @@ import jef.common.Callback;
  * @author jiyi
  *
  */
-public interface IRoutingDataSource extends DataSource{
+public interface IRoutingDataSource{
 	/**
 	 * 询问目前是否只有一个datasource
 	 * @return
