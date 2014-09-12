@@ -11,8 +11,10 @@ import javax.sql.DataSource;
 import jef.codegen.EntityEnhancer;
 import jef.database.datasource.MapDataSourceLookup;
 import jef.database.datasource.SimpleDataSource;
+import jef.database.meta.MetaHolder;
 import jef.database.routing.jdbc.JDataSource;
 
+import org.easyframe.tutorial.lessona.entity.Device;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -28,6 +30,7 @@ public class RoutingJdbcTest {
 	@BeforeClass
 	public static void setup() throws SQLException {
 		new EntityEnhancer().enhance("org.easyframe.tutorial.lessona");
+		MetaHolder.getMeta(Device.class);
 		// 准备多个数据源
 		Map<String, DataSource> datasources = new HashMap<String, DataSource>();
 		// 创建三个数据库。。。
@@ -44,7 +47,7 @@ public class RoutingJdbcTest {
 	public void test1() throws SQLException{
 		Connection conn=ds.getConnection();
 		Statement st=conn.createStatement();
-		boolean flag=st.execute("insert into DeVice(indexcode,name,type,createDate) values('123456', '测试', '办公用品', sysdate)");
+		boolean flag=st.execute("insert into DeVice(indexcode,name,type,createDate) values('123456', '测试', '办公用品', current_timestamp)");
 		System.out.println(flag+"  "+st.getUpdateCount());
 		
 		

@@ -295,4 +295,8 @@ public class JConnection implements Connection {
 	public int getHoldability() throws SQLException {
 		return conn().getHoldability();
 	}
+	
+	public Transaction get(){
+		return this.currentSession;
+	}
 }

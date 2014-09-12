@@ -24,13 +24,13 @@ public class PoolService {
 	 * 
 	 * @param ds
 	 * @param profile
-	 * @param max
+	 * @param max 当Max==0时等同于Nopool
 	 * @return
 	 */
 	public static IUserManagedPool getPool(DataSource ds, int max) {
 		String noPoolStr = JefConfiguration.get(DbCfg.DB_NO_POOL, "auto");
-		boolean auto = "auto".equalsIgnoreCase(noPoolStr);
-		boolean noPool = StringUtils.toBoolean(noPoolStr, false);
+		boolean auto = "auto".equalsIgnoreCase(noPoolStr) && max>0;
+		boolean noPool = StringUtils.toBoolean(noPoolStr, false) || max==0;
 
 		int min = JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL, 3);
 		if (ds instanceof IRoutingDataSource) {

@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.alibaba.druid.proxy.jdbc.JdbcParameter;
+
 import jef.database.Condition.Operator;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.BinaryExpression.Prior;
@@ -166,7 +168,7 @@ public class SqlExecutionParam {
 		if (exp.getType() == ExpressionType.value) {
 			SqlValue value = (SqlValue) exp;
 			return value.getValue();
-		} else if (exp.getType() == ExpressionType.param) {
+		} else if (exp instanceof JpqlParameter) {
 			JpqlParameter jp=(JpqlParameter)exp;
 			Object value;
 			if(jp.getName()==null){
@@ -175,6 +177,8 @@ public class SqlExecutionParam {
 				value=rawParams.getNamedParam(jp.getName());
 			}
 			return value;
+		} else if (exp instanceof JdbcParameter) {
+			throw new UnsupportedOperationException();
 		}
 		throw new UnsupportedOperationException(exp.toString());
 	}

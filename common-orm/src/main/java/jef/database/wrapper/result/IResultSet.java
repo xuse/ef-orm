@@ -148,6 +148,10 @@ public interface IResultSet {
 
 	void insertRow()throws SQLException;
 
+	/**
+	 * 这个方法会关闭ResultSet对象、Statement对象、以及释放连接
+	 * @throws SQLException
+	 */
 	void close()throws SQLException;
 
 	DatabaseDialect getProfile();

@@ -25,6 +25,10 @@ import java.util.Map;
 public class JdbcResultSetAdapter implements ResultSet{
 	private IResultSet rs;
 
+	public JdbcResultSetAdapter(IResultSet rs){
+		this.rs=rs;
+		
+	}
 	public RowId getRowId(int columnIndex) throws SQLException {
 		return rs.getRowId(columnIndex);
 	}

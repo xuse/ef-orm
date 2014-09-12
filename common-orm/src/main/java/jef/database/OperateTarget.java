@@ -314,6 +314,49 @@ public class OperateTarget implements SqlTemplate {
 		}
 	}
 	
+	/**
+	 * 获得原生的ResultSet，需要外部关闭，否则会泄露
+	 * @param sql
+	 * @param maxReturn
+	 * @param fetchSize
+	 * @param objs
+	 * @return
+	 * @throws SQLException
+	 */
+	public final IResultSet getRawResultSet(String sql, int maxReturn,int fetchSize, List<?> objs) throws SQLException {
+		PreparedStatement st = null;
+		StringBuilder sb = null;
+		DbOperateProcessor p = session.p;
+		ORMConfig config=ORMConfig.getInstance();
+		boolean debugMode=config.isDebugMode();
+		try {
+			if (debugMode)
+				sb = new StringBuilder(sql.length() + 30 + objs.size() * 20).append(sql).append(" | ").append(this.getTransactionId());
+			st = prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			BindVariableContext context = new BindVariableContext(st, this, sb);
+			BindVariableTool.setVariables(context, objs);
+
+			
+			st.setQueryTimeout(config.getSelectTimeout());
+			if (maxReturn <= 0)
+				maxReturn = config.getGlobalMaxResults();
+			if (maxReturn > 0)
+				st.setMaxRows(maxReturn);
+			if(fetchSize<=0)
+				fetchSize=config.getGlobalFetchSize();
+			if (fetchSize > 0)
+				st.setFetchSize(fetchSize);
+			ResultSet rawRs = st.executeQuery();
+			return new ResultSetWrapper(new ResultSetHolder(this,st,rawRs));
+		} catch (SQLException e) {
+			p.processError(e, sql, this);
+			throw e;
+		} finally {
+			if (debugMode)
+				LogUtil.show(sb);
+		}
+	}
+	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	final <T> ResultIterator<T> innerIteratorBySql(String sql, Transformer rst, int maxReturn, int fetchSize, List<Object> objs) throws SQLException {
 		long start=System.currentTimeMillis();
