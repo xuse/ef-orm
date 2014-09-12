@@ -34,7 +34,6 @@ import jef.database.wrapper.populator.ResultSetTransformer;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.result.IResultSet;
 import jef.database.wrapper.result.MultipleResultSet;
-import jef.database.wrapper.result.ResultSetHolder;
 import jef.database.wrapper.result.ResultSetImpl;
 import jef.database.wrapper.result.ResultSetWrapper;
 import jef.tools.MathUtils;
@@ -137,12 +136,20 @@ public class OperateTarget implements SqlTemplate {
 		return profile.wrap(getConnection(dbkey).prepareStatement(sql, columnNames),isJpaTx());
 	}
 
-	public PreparedStatement prepareStatement(String sql, int i) throws SQLException {
-		return profile.wrap(getConnection(dbkey).prepareStatement(sql, i),isJpaTx());
+	public PreparedStatement prepareStatement(String sql, int generateKeys) throws SQLException {
+		return profile.wrap(getConnection(dbkey).prepareStatement(sql, generateKeys),isJpaTx());
+	}
+	
+	public PreparedStatement prepareStatement(String sql, int[] columnIndexs) throws SQLException {
+		return profile.wrap(getConnection(dbkey).prepareStatement(sql, columnIndexs),isJpaTx());
 	}
 
 	PreparedStatement prepareStatement(String sql, int rsType, int concurType) throws SQLException {
 		return profile.wrap(getConnection(dbkey).prepareStatement(sql, rsType, concurType),isJpaTx());
+	}
+	
+	PreparedStatement prepareStatement(String sql, int rsType, int concurType, int hold) throws SQLException {
+		return profile.wrap(getConnection(dbkey).prepareStatement(sql, rsType, concurType, hold),isJpaTx());
 	}
 
 	public CallableStatement prepareCall(String sql) throws SQLException {
@@ -347,7 +354,7 @@ public class OperateTarget implements SqlTemplate {
 			if (fetchSize > 0)
 				st.setFetchSize(fetchSize);
 			ResultSet rawRs = st.executeQuery();
-			return new ResultSetWrapper(new ResultSetHolder(this,st,rawRs));
+			return new ResultSetWrapper(this,st,rawRs);
 		} catch (SQLException e) {
 			p.processError(e, sql, this);
 			throw e;
@@ -389,7 +396,7 @@ public class OperateTarget implements SqlTemplate {
 			rs = st.executeQuery();
 			dbAccess = System.currentTimeMillis();
 			
-			ResultSetWrapper resultset = new ResultSetWrapper(new ResultSetHolder(this,st,rs));
+			ResultSetWrapper resultset = new ResultSetWrapper(this,st,rs);
 			iter = new ResultIterator.Impl(session.iterateResultSet(resultset, null, rst), resultset);
 		} catch (SQLException e) {
 			p.processError(e, sql, this);

@@ -178,4 +178,14 @@ final class SingleConnection implements CheckableConnection,ReentrantConnection{
 	public void setTransactionIsolation(int level) throws SQLException{
 		conn.setTransactionIsolation(level);
 	}
+
+	@Override
+	public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
+		return conn.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
+	}
+
+	@Override
+	public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException {
+		return conn.prepareStatement(sql, columnIndexes);
+	}
 }

@@ -61,7 +61,9 @@ public interface IConnection{
 	Statement createStatement(int resultSetType, int resultSetConcurrency) throws SQLException;
 	PreparedStatement prepareStatement(String sql, int i) throws SQLException;;
 	PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency) throws SQLException;
+	PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency,int resultSetHolder) throws SQLException;
 	PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException;
+	PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException;
 	Statement createStatement() throws SQLException;
 	PreparedStatement prepareStatement(String sql) throws SQLException;
 	CallableStatement prepareCall(String sql) throws SQLException;

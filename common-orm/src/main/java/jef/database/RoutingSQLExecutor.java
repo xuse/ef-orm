@@ -6,8 +6,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.PersistenceException;
-
 import jef.common.PairSO;
 import jef.common.log.LogUtil;
 import jef.database.annotation.PartitionResult;
@@ -16,44 +14,23 @@ import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.query.ParameterProvider;
 import jef.database.query.SqlExpression;
+import jef.database.routing.jdbc.SQLExecutor;
 import jef.database.routing.sql.ExecutionPlan;
 import jef.database.routing.sql.SelectExecutionPlan;
 import jef.database.routing.sql.SqlAnalyzer;
 import jef.database.routing.sql.SqlExecutionParam;
 import jef.database.wrapper.result.IResultSet;
+import jef.database.wrapper.result.JdbcResultSetAdapter;
 import jef.database.wrapper.result.MultipleResultSet;
 import jef.tools.DateUtils;
 import jef.tools.StringUtils;
 
-public class JQuery implements ParameterProvider{
+public class RoutingSQLExecutor implements ParameterProvider, SQLExecutor {
 	private OperateTarget db;
 	private int fetchSize = ORMConfig.getInstance().getGlobalFetchSize();
-	private int maxResult=0;
+	private int maxResult = 0;
 	private Statement st;
 	private final List<Object> nameParams = new ArrayList<Object>();// 按名参数
-	
-	private boolean routing=true;
-
-	/**
-	 * 是否启用ＳＱＬ语句路由功能
-	 * 
-	 * @return ＳＱＬ语句路由
-	 */
-	public boolean isRouting() {
-		return routing;
-	}
-
-	/**
-	 * 设置是否启用ＳＱＬ语句路由功能
-	 * 
-	 * @param routing
-	 *            ＳＱＬ语句路由
-	 */
-	public JQuery setRouting(boolean routing) {
-		this.routing = routing;
-		return this;
-	}
-
 
 	/**
 	 * 从SQL语句加上返回类型构造
@@ -62,13 +39,13 @@ public class JQuery implements ParameterProvider{
 	 * @param sql
 	 * @param resultClass
 	 */
-	public JQuery(Transaction db, Statement sql) {
+	public RoutingSQLExecutor(Transaction db, Statement sql) {
 		if (StringUtils.isEmpty(sql)) {
 			throw new IllegalArgumentException("Please don't input an empty SQL.");
 		}
 
 		this.db = db.asOperateTarget(null);
-		this.st=sql;
+		this.st = sql;
 	}
 
 	/**
@@ -94,49 +71,43 @@ public class JQuery implements ParameterProvider{
 	 * 以迭代器模式返回查询结果
 	 * 
 	 * @return
+	 * @throws SQLException 
 	 */
-	public IResultSet getResultISet() {
-		try {
-			SqlExecutionParam parse = getSqlAndParams(db, this);
-			Statement sql = parse.statement;
-			String s = sql.toString();
+	public ResultSet getResultSet() throws SQLException {
+		SqlExecutionParam parse = getSqlAndParams(db, this);
+		Statement sql = parse.statement;
+		String s = sql.toString();
 
-			ORMConfig config = ORMConfig.getInstance();
-			boolean debug = config.debugMode;
+		ORMConfig config = ORMConfig.getInstance();
+		boolean debug = config.debugMode;
 
-			SelectExecutionPlan plan = null;
-			if (routing) {
-				plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select) sql, parse.params, db);
-			}
-			if (plan == null) {// 普通查询
-				return db.getRawResultSet(s, maxResult, fetchSize, parse.params);
-			} else if (plan.isChangeDatasource() != null) {//垂直拆分查询
-				OperateTarget db = this.db.getTarget(plan.isChangeDatasource());
-				return db.getRawResultSet(s, maxResult, fetchSize, parse.params);
-			} else {// 分表分库查询
-				if (plan.isMultiDatabase()) {// 多库
-					MultipleResultSet mrs = new MultipleResultSet(config.isCacheResultset(), debug);
-					for (PartitionResult site : plan.getSites()) {
-						processQuery(db.getTarget(site.getDatabase()), plan.getSql(site, false), 0, mrs);
-					}
-					plan.parepareInMemoryProcess(null, mrs);
-					IResultSet irs = mrs.toSimple(null);
-					return irs;
-				} else { // 单库多表，基于Union的查询. 可以使用数据库分页
-					PartitionResult site = plan.getSites()[0];
-					PairSO<List<Object>> result = plan.getSql(plan.getSites()[0], false);
-					s = result.first;
-					return db.getTarget(site.getDatabase()).getRawResultSet(s, maxResult, fetchSize, result.second);
+		SelectExecutionPlan plan = null;
+		plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select) sql, parse.params, db);
+		if (plan == null) {// 普通查询
+			return new JdbcResultSetAdapter(db.getRawResultSet(s, maxResult, fetchSize, parse.params));
+		} else if (plan.isChangeDatasource() != null) {// 垂直拆分查询
+			OperateTarget db = this.db.getTarget(plan.isChangeDatasource());
+			return new JdbcResultSetAdapter(db.getRawResultSet(s, maxResult, fetchSize, parse.params));
+		} else {// 分表分库查询
+			if (plan.isMultiDatabase()) {// 多库
+				MultipleResultSet mrs = new MultipleResultSet(config.isCacheResultset(), debug);
+				for (PartitionResult site : plan.getSites()) {
+					processQuery(db.getTarget(site.getDatabase()), plan.getSql(site, false), 0, mrs);
 				}
+				plan.parepareInMemoryProcess(null, mrs);
+				IResultSet irs = mrs.toSimple(null);
+				return new JdbcResultSetAdapter(irs);
+			} else { // 单库多表，基于Union的查询. 可以使用数据库分页
+				PartitionResult site = plan.getSites()[0];
+				PairSO<List<Object>> result = plan.getSql(plan.getSites()[0], false);
+				s = result.first;
+				return new JdbcResultSetAdapter(db.getTarget(site.getDatabase()).getRawResultSet(s, maxResult, fetchSize, result.second));
 			}
-		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}
 	}
 
-
-	private SqlExecutionParam getSqlAndParams(OperateTarget db2, JQuery jQuery) {
-		return new SqlExecutionParam(st,nameParams,this);
+	private SqlExecutionParam getSqlAndParams(OperateTarget db2, RoutingSQLExecutor jQuery) {
+		return new SqlExecutionParam(st, nameParams, this);
 	}
 
 	/*
@@ -166,46 +137,37 @@ public class JQuery implements ParameterProvider{
 		}
 	}
 
-
 	/**
 	 * 对于各种DDL、insert、update、delete等语句，不需要返回结果的，调用此方法来执行
 	 * 
 	 * @return 返回影响到的记录条数（针对update\delete）语句
 	 */
-	public int executeUpdate() {
-		try {
-			SqlExecutionParam parse = getSqlAndParams(db, this);
-			Statement sql = parse.statement;
-			ExecutionPlan plan = null;
-			if (routing) {
-				plan = SqlAnalyzer.getExecutionPlan(sql, parse.params, db);
+	public int executeUpdate() throws SQLException {
+		SqlExecutionParam parse = getSqlAndParams(db, this);
+		Statement sql = parse.statement;
+		ExecutionPlan plan = SqlAnalyzer.getExecutionPlan(sql, parse.params, db);
+		if (plan == null) {
+			return db.innerExecuteSql(parse.statement.toString(), parse.params);
+		} else if (plan.isChangeDatasource() != null) {
+			return db.getTarget(plan.isChangeDatasource()).innerExecuteSql(parse.statement.toString(), parse.params);
+		} else {
+			long start = System.currentTimeMillis();
+			int total = 0;
+			for (PartitionResult site : plan.getSites()) {
+				total += plan.processUpdate(site, db);
 			}
-			if (plan == null) {
-				return db.innerExecuteSql(parse.statement.toString(), parse.params);
-			} else if (plan.isChangeDatasource() != null) {
-				return db.getTarget(plan.isChangeDatasource()).innerExecuteSql(parse.statement.toString(), parse.params);
-			} else {
-				long start = System.currentTimeMillis();
-				int total = 0;
-				for (PartitionResult site : plan.getSites()) {
-					total += plan.processUpdate(site, db);
-				}
-				if (plan.isMultiDatabase() && ORMConfig.getInstance().debugMode) {
-					LogUtil.show(StringUtils.concat("Total Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(System.currentTimeMillis() - start), "ms) |  @", String.valueOf(Thread.currentThread().getId())));
-				}
-				return total;
+			if (plan.isMultiDatabase() && ORMConfig.getInstance().debugMode) {
+				LogUtil.show(StringUtils.concat("Total Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(System.currentTimeMillis() - start), "ms) |  @", String.valueOf(Thread.currentThread().getId())));
 			}
-		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			return total;
 		}
 	}
 
 	/**
 	 * 限制返回的最大结果数
 	 */
-	public JQuery setMaxResults(int maxResult) {
-		this.maxResult=maxResult;
-		return this;
+	public void setMaxResults(int maxResult) {
+		this.maxResult = maxResult;
 	}
 
 	/**
@@ -214,7 +176,6 @@ public class JQuery implements ParameterProvider{
 	public int getMaxResults() {
 		return maxResult;
 	}
-
 
 	/*
 	 * 将参数按照命名查询中的类型提示转换为合适的类型
@@ -231,6 +192,7 @@ public class JQuery implements ParameterProvider{
 		}
 		return result;
 	}
+
 	private Object toProperType(JpqlDataType type, String value) {
 		switch (type) {
 		case DATE:
@@ -269,7 +231,6 @@ public class JQuery implements ParameterProvider{
 	public Object getParameterValue(int position) {
 		return nameParams.get(position);
 	}
-
 
 	/**
 	 * 对于以序号排列的参数，获取其第index个参数的值
@@ -312,14 +273,14 @@ public class JQuery implements ParameterProvider{
 
 	@Override
 	public Object getNamedParam(String name) {
-		Integer index=Integer.valueOf(name);
+		Integer index = Integer.valueOf(name);
 		return this.nameParams.get(index);
 	}
 
 	@Override
 	public boolean containsParam(Object key) {
-		if(key instanceof Integer){
-			return nameParams.size()>(Integer)key;
+		if (key instanceof Integer) {
+			return nameParams.size() > (Integer) key;
 		}
 		return false;
 	}
@@ -327,5 +288,21 @@ public class JQuery implements ParameterProvider{
 	public void setParams(List<Object> params) {
 		nameParams.clear();
 		nameParams.addAll(params);
+	}
+
+	@Override
+	public void setResultSetType(int resultSetType) {
+	}
+
+	@Override
+	public void setResultSetConcurrency(int resultSetConcurrency) {
+	}
+
+	@Override
+	public void setResultSetHoldability(int resultSetHoldability) {
+	}
+
+	@Override
+	public void setQueryTimeout(int queryTimeout) {
 	}
 }

@@ -49,7 +49,7 @@ public class RoutingJdbcTest {
 		Statement st=conn.createStatement();
 		boolean flag=st.execute("insert into DeVice(indexcode,name,type,createDate) values('123456', '测试', '办公用品', current_timestamp)");
 		System.out.println(flag+"  "+st.getUpdateCount());
-		
+		st.close();
 		
 		
 	}

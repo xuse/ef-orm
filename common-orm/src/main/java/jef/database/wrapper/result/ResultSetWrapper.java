@@ -15,7 +15,9 @@
  */
 package jef.database.wrapper.result;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 import jef.database.OperateTarget;
 import jef.database.wrapper.populator.ColumnMeta;
@@ -27,6 +29,11 @@ public class ResultSetWrapper extends ResultSetImpl{
 	
 	ResultSetWrapper(){
 		super(null,null,null);
+	}
+	
+	public ResultSetWrapper(OperateTarget tx,Statement st,ResultSet rs) {
+		super(rs,tx.getProfile());
+		this.holder=new ResultSetHolder(tx,st,rs);
 	}
 	
 	public ResultSetWrapper(ResultSetHolder holder) {

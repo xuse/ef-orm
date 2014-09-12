@@ -97,7 +97,7 @@ public class JPreparedStatement extends JStatement implements java.sql.PreparedS
 	public ResultSet executeQuery() throws SQLException {
 		SqlType sqlType = SqlTypeParser.getSqlType(originalSQL);
 		//return executeQueryInternal(originalSQL, parameterSettings, sqlType, this);
-		return currentResultSet;
+		return resultSet;
 	}
 
 	public int executeUpdate() throws SQLException {

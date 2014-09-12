@@ -34,6 +34,9 @@ import jef.database.wrapper.populator.ColumnMeta;
 
 /**
  * 这个类是JDBC ResultSet的封装，大部分方法都和JDBC ResultSet一致
+ * 
+ * 下一步重构，将其继承ResultSet，进一步简化代码
+ * 
  * @author jiyi
  *
  */
