@@ -1,9 +1,8 @@
 package jef.database.routing.jdbc;
 
 /**
- * 参数上下文。
- * 
- * @author shenxun
+ * 单个参数上下文
+ * TODO 目前的实现尚不是最高效的
  *
  */
 public class ParameterContext {

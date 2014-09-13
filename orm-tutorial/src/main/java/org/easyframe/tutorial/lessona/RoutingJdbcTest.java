@@ -1,6 +1,7 @@
 package org.easyframe.tutorial.lessona;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
@@ -11,10 +12,13 @@ import javax.sql.DataSource;
 import jef.codegen.EntityEnhancer;
 import jef.database.datasource.MapDataSourceLookup;
 import jef.database.datasource.SimpleDataSource;
+import jef.database.dialect.DbmsProfile;
 import jef.database.meta.MetaHolder;
 import jef.database.routing.jdbc.JDataSource;
+import jef.database.wrapper.result.ResultSets;
 
 import org.easyframe.tutorial.lessona.entity.Device;
+import org.easyframe.tutorial.lessona.entity.Person2;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -31,6 +35,8 @@ public class RoutingJdbcTest {
 	public static void setup() throws SQLException {
 		new EntityEnhancer().enhance("org.easyframe.tutorial.lessona");
 		MetaHolder.getMeta(Device.class);
+		MetaHolder.getMeta(Person2.class);
+		
 		// 准备多个数据源
 		Map<String, DataSource> datasources = new HashMap<String, DataSource>();
 		// 创建三个数据库。。。
@@ -50,8 +56,18 @@ public class RoutingJdbcTest {
 		boolean flag=st.execute("insert into DeVice(indexcode,name,type,createDate) values('123456', '测试', '办公用品', current_timestamp)");
 		System.out.println(flag+"  "+st.getUpdateCount());
 		st.close();
-		
-		
 	}
 
+	
+	@Test
+	public void test2() throws SQLException{
+		Connection conn=ds.getConnection();
+		Statement st=conn.createStatement();
+		boolean flag=st.execute("insert into person2(DATA_DESC,NAME,created) values('123456', '测试',current_timestamp)",1);
+		ResultSet rs=st.getGeneratedKeys();
+		ResultSets.showResult(rs, 0, DbmsProfile.getProfile("oracle"));
+		System.out.println(flag+"  "+st.getUpdateCount());
+		st.close();
+	}
+	
 }

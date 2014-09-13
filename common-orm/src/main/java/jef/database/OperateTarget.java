@@ -28,6 +28,7 @@ import jef.database.meta.DbProperty;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.EntityMappingProvider;
 import jef.database.query.SqlExpression;
+import jef.database.routing.jdbc.UpdateReturn;
 import jef.database.routing.sql.SqlExecutionParam;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.populator.ResultSetTransformer;
@@ -243,6 +244,62 @@ public class OperateTarget implements SqlTemplate {
 		}
 	}
 
+	public final UpdateReturn innerExecuteUpdate(String sql, List<Object> ps, int generatedKeys,int[] generatedIndex,String[] generatedColumn) throws SQLException {
+		Object[] params = ps.toArray();
+		DbOperateProcessor p = session.p;
+
+		session.getListener().beforeSqlExecute(sql, params);
+		boolean debugMode=ORMConfig.getInstance().isDebugMode();
+		long start = System.currentTimeMillis();
+		PreparedStatement st = null;
+		UpdateReturn result;
+		long dbAccess;
+		int total;
+		StringBuilder sb = null;
+		if (debugMode)
+			sb = new StringBuilder(sql).append("\t|").append(this.getTransactionId());
+		boolean withGeneratedKeys=false;
+		try {
+			if(generatedColumn!=null){
+				st=prepareStatement(sql,generatedColumn);
+				withGeneratedKeys=true;
+			}else if(generatedIndex!=null){
+				st=prepareStatement(sql,generatedIndex);
+				withGeneratedKeys=true;
+			}else if(generatedKeys==Statement.RETURN_GENERATED_KEYS){
+				st=prepareStatement(sql,generatedKeys);
+				withGeneratedKeys=true;
+			}else{
+				st=prepareStatement(sql);
+			}
+			st.setQueryTimeout(ORMConfig.getInstance().getUpdateTimeout());
+			if (!ps.isEmpty()) {
+				BindVariableContext context = new BindVariableContext(st, this, sb);
+				BindVariableTool.setVariables(context, ps);
+			}
+			total=st.executeUpdate();
+			result = new UpdateReturn(total);
+			dbAccess = System.currentTimeMillis();
+			if(withGeneratedKeys){
+				result.cacheGeneratedKeys(st.getGeneratedKeys());
+			}
+			if (total > 0) {
+				session.checkCacheUpdate(sql, ps);
+			}
+		} catch (SQLException e) {
+			p.processError(e, sql, this);
+			throw e;
+		} finally {
+			if (debugMode)
+				LogUtil.show(sb);
+			DbUtils.close(st);
+			releaseConnection();
+		}
+		LogUtil.show(StringUtils.concat("Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms) |", getTransactionId()));
+		session.getListener().afterSqlExecuted(sql, total, params);
+		return result;
+	}
+	
 	public final int innerExecuteSql(String sql, List<Object> ps) throws SQLException {
 		Object[] params = ps.toArray();
 		DbOperateProcessor p = session.p;

@@ -30,27 +30,6 @@ public enum ParameterMethod {
 	setTime1, setTime2, setTimestamp1, setTimestamp2, setURL, setUnicodeStream; //
 
 	/**
-	 * @param methodAndArgsList的每一个元素(eachElementInList)是一个Object数组。每个数组包含两个元素：
-	 * eachElementInList[0]:ParameterMethod
-	 * eachElementInList[1]:ps.setXXX()的参数列表，组成见setParameter
-	 */
-	public static void setParameters(PreparedStatement stmt, List<Object[]> methodAndArgsList) throws SQLException {
-		for (Object[] methodAndArgs : methodAndArgsList) {
-			ParameterMethod pm = (ParameterMethod) methodAndArgs[0];
-			Object[] args = (Object[]) methodAndArgs[1];
-			pm.setParameter(stmt, args);
-		}
-	}
-
-	public static void setParameters(PreparedStatement stmt, Map<Integer,ParameterContext> parameterSettings) throws SQLException {
-		if (null != parameterSettings) {
-			for (ParameterContext context : parameterSettings.values()) {
-				context.getParameterMethod().setParameter(stmt, context.getArgs());
-			}
-		}
-	}
-
-	/**
 	 * args[0]: index
 	 * args[1..n] 参数
 	 * @throws SQLException 

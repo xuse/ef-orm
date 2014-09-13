@@ -41,6 +41,9 @@ public class ResultSets {
 	 * @param limit 限制
 	 */
 	public static void showResult(ResultSet rs, int limit, DatabaseDialect profile) {
+		if(rs==null){
+			return;
+		}
 		showResult(rs, limit, true, profile);
 	}
 
