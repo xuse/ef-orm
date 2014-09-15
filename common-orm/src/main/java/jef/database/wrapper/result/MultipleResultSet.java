@@ -137,7 +137,7 @@ public final class MultipleResultSet extends AbstractResultSet{
 		current = -1;
 	}
 
-	public void first() throws SQLException {
+	public boolean first() throws SQLException {
 		results.get(0).rs.first();
 		for (int i = 1; i < results.size(); i++) {
 			ResultSetHolder rs = results.get(i);
@@ -146,6 +146,7 @@ public final class MultipleResultSet extends AbstractResultSet{
 			}
 		}
 		current = 0;
+		return true;
 	}
 
 	public void afterLast() throws SQLException {

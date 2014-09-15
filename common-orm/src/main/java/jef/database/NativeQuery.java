@@ -400,23 +400,23 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 */
 	public ResultIterator<X> getResultIterator() {
 		try {
-			SqlExecutionParam parse = config.getSqlAndParams(db, this);
-			String rawSQL = parse.statement.toString();
+			SqlExecutionParam sqlContext = config.getSqlAndParams(db, this);
+			String rawSQL = sqlContext.statement.toString();
 
 			ORMConfig config = ORMConfig.getInstance();
 			boolean debug = config.debugMode;
 
 			SelectExecutionPlan plan = null;
 			if (routing) {
-				plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select) parse.statement, parse.getParamsMap(),parse.params, db);
+				plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select) sqlContext.statement, sqlContext.getParamsMap(),sqlContext.params, db);
 			}
 			if (plan == null) {// 普通查询
-				rawSQL = toPageSql(parse, rawSQL);
-				return db.innerIteratorBySql(rawSQL, resultTransformer, 0, fetchSize, parse.params);
+				rawSQL = toPageSql(sqlContext, rawSQL);
+				return db.innerIteratorBySql(rawSQL, resultTransformer, 0, fetchSize, sqlContext.params);
 			} else if (plan.isChangeDatasource() != null) {// 分表分库查询
 				OperateTarget db = this.db.getTarget(plan.isChangeDatasource());
-				rawSQL = toPageSql(parse, rawSQL);
-				return db.innerIteratorBySql(rawSQL, resultTransformer, 0, fetchSize, parse.params);
+				rawSQL = toPageSql(sqlContext, rawSQL);
+				return db.innerIteratorBySql(rawSQL, resultTransformer, 0, fetchSize, sqlContext.params);
 			} else {// 分表分库查询
 				if (plan.isMultiDatabase()) {// 多库
 					MultipleResultSet mrs = new MultipleResultSet(config.isCacheResultset(), debug);
@@ -432,7 +432,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 					PartitionResult site = plan.getSites()[0];
 					PairSO<List<Object>> result = plan.getSql(plan.getSites()[0], false);
 					rawSQL = result.first;
-					rawSQL = toPageSql(parse, rawSQL);
+					rawSQL = toPageSql(sqlContext, rawSQL);
 					return db.getTarget(site.getDatabase()).innerIteratorBySql(rawSQL, resultTransformer, 0, fetchSize, result.second);
 				}
 			}
@@ -441,21 +441,21 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		}
 	}
 
-	private String toPageSql(SqlExecutionParam result, String rawSQL) {
-		if (range == null && result.delays.limit == null) {
+	private String toPageSql(SqlExecutionParam context, String rawSQL) {
+		if (range == null && context.delays.limit == null) {
 			return rawSQL;
 		}
-		Statement sql = result.statement;
+		Statement sql = context.statement;
 		if (sql instanceof Select) {
 			if (range != null) {
 				boolean isUnion = ((Select) sql).getSelectBody() instanceof Union;
 				return db.getProfile().toPageSQL(rawSQL, range, isUnion);
-			}else if (result.delays.limit!= null) {
-				Limit limit = result.delays.limit;
+			}else if (context.delays.limit!= null) {
+				Limit limit = context.delays.limit;
 				int offset = 0;
 				int rowcount = 0;
 				if (limit.getOffsetJdbcParameter() != null) {
-					Object obj=result.getParamsMap().get(limit.getOffsetJdbcParameter());
+					Object obj=context.getParamsMap().get(limit.getOffsetJdbcParameter());
 					if(obj instanceof Number){
 						offset = ((Number) obj).intValue();
 					}
@@ -463,7 +463,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 					offset = (int)limit.getOffset();
 				}
 				if (limit.getRowCountJdbcParameter() != null) {
-					Object obj=result.getParamsMap().get(limit.getRowCountJdbcParameter());
+					Object obj=context.getParamsMap().get(limit.getRowCountJdbcParameter());
 					if(obj instanceof Number){
 						rowcount = ((Number) obj).intValue();						
 					}
@@ -472,7 +472,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 					rowcount = (int)limit.getRowCount();
 				}
 				if(offset>0 || rowcount>0){
-					result.delays.limit=null;//清除	
+					context.delays.limit=null;//清除	
 					IntRange range=new IntRange(offset+1, offset+rowcount);
 					boolean isUnion = ((Select) sql).getSelectBody() instanceof Union;
 					return db.getProfile().toPageSQL(rawSQL, range, isUnion);
@@ -497,27 +497,27 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 
 	private List<X> doQuery(int max, int fetchSize, boolean noOrder) throws SQLException {
 		long start = System.currentTimeMillis();
-		SqlExecutionParam parse = config.getSqlAndParams(db, this);
+		SqlExecutionParam sqlContext = config.getSqlAndParams(db, this);
 		SelectExecutionPlan plan = null;
 		if (routing) {
-			plan = SqlAnalyzer.getSelectExecutionPlan((Select) parse.statement, parse.getParamsMap(),parse.params, db);
+			plan = SqlAnalyzer.getSelectExecutionPlan((Select) sqlContext.statement, sqlContext.getParamsMap(),sqlContext.params, db);
 		}
-		String rawSQL = parse.statement.toString();
+		String rawSQL = sqlContext.statement.toString();
 
 		long dbAccess;
 		List<X> list;
 		if (plan == null) {// 普通查询
-			rawSQL = toPageSql(parse, rawSQL);
+			rawSQL = toPageSql(sqlContext, rawSQL);
 			TransformerAdapter<X> rst = new TransformerAdapter<X>(resultTransformer, db);
-			rst.setOthers(parse);
-			list = db.innerSelectBySql(rawSQL, rst, max, fetchSize, parse.params);
+			rst.setOthers(sqlContext);
+			list = db.innerSelectBySql(rawSQL, rst, max, fetchSize, sqlContext.params,sqlContext.delays);
 			dbAccess = rst.dbAccess;
 		} else if (plan.isChangeDatasource() != null) {
 			this.db = this.db.getTarget(plan.isChangeDatasource());
-			rawSQL = toPageSql(parse, rawSQL);
+			rawSQL = toPageSql(sqlContext, rawSQL);
 			TransformerAdapter<X> rst = new TransformerAdapter<X>(resultTransformer, db);
-			rst.setOthers(parse);
-			list = db.innerSelectBySql(rawSQL, rst, max, fetchSize, parse.params);
+			rst.setOthers(sqlContext);
+			list = db.innerSelectBySql(rawSQL, rst, max, fetchSize, sqlContext.params);
 			dbAccess = rst.dbAccess;
 		} else if (plan.isMultiDatabase()) {// 多库
 			ORMConfig config = ORMConfig.getInstance();
@@ -532,9 +532,9 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 				if (noOrder) { // 去除内存排序
 					mrs.setInMemoryOrder(null);
 				}
-				if (parse.delays.isValid()) {
-					mrs.setInMemoryConnectBy(parse.parseStartWith(mrs.getColumns()));
-					mrs.setInMemoryPage(parse.parseLimit(mrs.getColumns()));
+				if (sqlContext.delays.isValid()) {
+					mrs.setInMemoryConnectBy(sqlContext.parseStartWith(mrs.getColumns()));
+					mrs.setInMemoryPage(sqlContext.parseLimit(mrs.getColumns()));
 				}
 				IResultSet rsw = mrs.toSimple(null, resultTransformer.getStrategy());
 				list = db.populateResultSet(rsw, null, resultTransformer);
@@ -546,10 +546,10 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			PartitionResult pr = plan.getSites()[0];
 			PairSO<List<Object>> result = plan.getSql(pr, false);
 			rawSQL = result.first;
-			rawSQL = toPageSql(parse, rawSQL);
+			rawSQL = toPageSql(sqlContext, rawSQL);
 			OperateTarget db = this.db.getTarget(pr.getDatabase());
 			TransformerAdapter<X> rst = new TransformerAdapter<X>(resultTransformer, db);
-			rst.setOthers(parse);
+			rst.setOthers(sqlContext);
 			list = db.innerSelectBySql(rawSQL, rst, max, fetchSize, result.second);
 			dbAccess = rst.dbAccess;
 		}

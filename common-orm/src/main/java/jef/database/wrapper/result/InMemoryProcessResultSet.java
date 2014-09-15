@@ -114,8 +114,8 @@ public class InMemoryProcessResultSet extends AbstractResultSet{
 		cache.beforeFirst();
 	}
 
-	public void first() throws SQLException {
-		cache.first();
+	public boolean first() throws SQLException {
+		return cache.first();
 	}
 
 	public boolean previous() throws SQLException {
@@ -150,5 +150,25 @@ public class InMemoryProcessResultSet extends AbstractResultSet{
 	@Override
 	public ResultSetMetaData getMetaData() throws SQLException {
 		return columns.getMeta();
+	}
+
+	@Override
+	public boolean isFirst() throws SQLException {
+		return cache.isFirst();
+	}
+
+	@Override
+	public boolean isLast() throws SQLException {
+		return cache.isLast();
+	}
+
+	@Override
+	public boolean last() throws SQLException {
+		return cache.last();
+	}
+
+	@Override
+	public void moveToCurrentRow() throws SQLException {
+		cache.moveToCurrentRow();
 	}
 }

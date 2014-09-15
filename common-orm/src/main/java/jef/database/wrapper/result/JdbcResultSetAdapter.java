@@ -22,6 +22,7 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
 
+@Deprecated
 public class JdbcResultSetAdapter implements ResultSet{
 	private IResultSet rs;
 
@@ -790,13 +791,4 @@ public class JdbcResultSetAdapter implements ResultSet{
 	public void updateNClob(String columnLabel, Reader reader) throws SQLException {
 		throw new UnsupportedOperationException();
 	}
-
-	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
-		return rs.getObject(columnIndex,type);
-	}
-
-	public <T> T getObject(String columnLabel, Class<T> type) throws SQLException {
-		throw new UnsupportedOperationException();
-	}
-	
 }

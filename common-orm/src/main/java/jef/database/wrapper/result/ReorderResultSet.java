@@ -164,9 +164,9 @@ final class ReorderResultSet extends AbstractResultSet {
 		}
 	}
 
-	public void first() throws SQLException {
+	public boolean first() throws SQLException {
 		beforeFirst();
-		next();
+		return next();
 	}
 
 	public void afterLast() throws SQLException {

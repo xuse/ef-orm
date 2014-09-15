@@ -267,4 +267,10 @@ public class SqlExecutionParam {
 		
 		return null;
 	}
+
+
+	public boolean isLazyValid() {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }

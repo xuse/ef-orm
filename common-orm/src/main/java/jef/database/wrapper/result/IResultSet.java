@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.RowId;
 import java.sql.SQLException;
@@ -41,16 +42,12 @@ import jef.database.wrapper.populator.ColumnMeta;
  * @author jiyi
  *
  */
-public interface IResultSet {
-	ColumnMeta getColumns();
-
+public interface IResultSet extends ResultSet{
 	boolean next();
 
 	Object getObject(String columnName)throws SQLException;
 	
 	Object getObject(int columnIndex)throws SQLException;
-	
-	<T> T getObject(int columnIndex, Class<T> type) throws SQLException;
 
 	boolean getBoolean(String columnName)throws SQLException;
 	
@@ -144,7 +141,7 @@ public interface IResultSet {
 
 	void beforeFirst()throws SQLException;
 
-	void first()throws SQLException;
+	boolean first()throws SQLException;
 
 	boolean previous()throws SQLException;
 
@@ -158,15 +155,16 @@ public interface IResultSet {
 	 */
 	void close()throws SQLException;
 
-	DatabaseDialect getProfile();
 	
 	RowId getRowId(int columnIndex) throws SQLException;
 	
-	Map<Reference, List<Condition>> getFilters();
-
 	ResultSetMetaData getMetaData()throws SQLException ;
 
 	Reader getCharacterStream(int columnIndex)throws SQLException ;
 
 	Reader getCharacterStream(String columnLabel)throws SQLException ;
+	
+	Map<Reference, List<Condition>> getFilters();
+	DatabaseDialect getProfile();
+	ColumnMeta getColumns();
 }

@@ -340,7 +340,7 @@ public class OperateTarget implements SqlTemplate {
 	}
 
 	// FIXME sqlRouting 
-	public final <T> T innerSelectBySql(String sql, ResultSetTransformer<T> rst, int maxReturn,int fetchSize, List<?> objs) throws SQLException {
+	public final <T> T innerSelectBySql(String sql, ResultSetTransformer<T> rst, int maxReturn,int fetchSize, List<?> objs,SqlExecutionParam lazy) throws SQLException {
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		StringBuilder sb = null;
@@ -365,6 +365,7 @@ public class OperateTarget implements SqlTemplate {
 			if (fetchSize > 0)
 				st.setFetchSize(fetchSize);
 			rs = st.executeQuery();
+			rs = processLazy(rs,lazy);
 			return rst.transformer(rs, getProfile());
 		} catch (SQLException e) {
 			p.processError(e, sql, this);
@@ -378,6 +379,18 @@ public class OperateTarget implements SqlTemplate {
 		}
 	}
 	
+	private ResultSet processLazy(ResultSet rs, SqlExecutionParam delays,OperateTarget db) {
+		if(delays!=null && delays.isLazyValid()){
+			MultipleResultSet mrs=new MultipleResultSet(false,ORMConfig.getInstance().debugMode);
+			mrs.add(rs, null, db);
+			mrs.setInMemoryConnectBy(delays.parseStartWith(mrs.getColumns()));
+			mrs.setInMemoryPage(delays.parseLimit(mrs.getColumns()));
+			return mrs.toSimple(null);
+		}else{
+			return rs;
+		}
+	}
+
 	/**
 	 * 获得原生的ResultSet，需要外部关闭，否则会泄露
 	 * @param sql
@@ -599,7 +612,6 @@ public class OperateTarget implements SqlTemplate {
 	public static class TransformerAdapter<T> implements ResultSetTransformer<List<T>> {
 		final Transformer t;
 		long dbAccess;
-		private SqlExecutionParam others;
 		private OperateTarget db;
 
 		TransformerAdapter(Transformer t,OperateTarget db) {
@@ -609,40 +621,13 @@ public class OperateTarget implements SqlTemplate {
 
 		public List<T> transformer(ResultSet rs, DatabaseDialect profile) throws SQLException {
 			dbAccess = System.currentTimeMillis();
-			IResultSet irs;
-			if(others!=null && others.delays.isValid()){
-				MultipleResultSet mrs=new MultipleResultSet(false,ORMConfig.getInstance().debugMode);
-				mrs.add(rs, null, this.db);
-				mrs.setInMemoryConnectBy(others.parseStartWith(mrs.getColumns()));
-				mrs.setInMemoryPage(others.parseLimit(mrs.getColumns()));
-				irs=mrs.toSimple(null, t.getStrategy());
-			}else{
-				irs=new ResultSetImpl(rs, profile);
-			}
+			IResultSet irs=new ResultSetImpl(rs, profile);
 			return db.populateResultSet(irs, null, t);
 		}
-		
-		public SqlExecutionParam getOthers() {
-			return others;
-		}
-
-		public void setOthers(SqlExecutionParam others) {
-			this.others = others;
-		}
-
 		public Session getSession(){
 			return db.session;
 		}
 	}
-
-//	final class SqlMapTransformer implements ResultSetTransformer<List<Map<String, Object>>> {
-//		long dbAccess;
-//
-//		public List<Map<String, Object>> transformer(ResultSet rs, DatabaseDialect db) throws SQLException {
-//			dbAccess = System.currentTimeMillis();
-//			return ResultPopulatorImpl.instance.toVar(new ResultSetImpl(rs, db), Transformer.VAR);
-//		}
-//	}
 
 	public <T> T getExpressionValue(DbFunction func, Class<T> clz,Object... params) throws SQLException {
 		SqlExpression ex=func(func, params);
