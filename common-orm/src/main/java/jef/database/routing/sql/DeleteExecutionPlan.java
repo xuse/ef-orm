@@ -27,7 +27,7 @@ public class DeleteExecutionPlan extends AbstractExecutionPlan{
 		return count;
 	}
 
-	private String getSql(String table) {
+	public String getSql(String table) {
 		for(Table t: context.modifications){
 			t.setReplace(table);
 		}
@@ -37,5 +37,7 @@ public class DeleteExecutionPlan extends AbstractExecutionPlan{
 		}
 		return s;
 	}
+
+
 
 }

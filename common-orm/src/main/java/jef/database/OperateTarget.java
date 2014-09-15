@@ -149,7 +149,7 @@ public class OperateTarget implements SqlTemplate {
 		return profile.wrap(getConnection(dbkey).prepareStatement(sql, rsType, concurType),isJpaTx());
 	}
 	
-	PreparedStatement prepareStatement(String sql, int rsType, int concurType, int hold) throws SQLException {
+	public PreparedStatement prepareStatement(String sql, int rsType, int concurType, int hold) throws SQLException {
 		return profile.wrap(getConnection(dbkey).prepareStatement(sql, rsType, concurType, hold),isJpaTx());
 	}
 

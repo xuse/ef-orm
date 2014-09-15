@@ -140,7 +140,6 @@ public final class IntList {
    /**
     * 将内容转换为数组 
     * @return
-    * @deprecated In most times, use {@link #getArrayUnsafe} is more effective.
     */
     public int[] toArray(){
     	int[] array=new int[size];
@@ -204,8 +203,7 @@ public final class IntList {
     	ensureCapacity(size + 1);  // Increments modCount!!
     	list[size++]=e;
     }
-
-
+    
 
     // Bulk Modification Operations
 
@@ -258,6 +256,16 @@ public final class IntList {
     	System.arraycopy(in, 0, list, index, in.length);
     	size+=in.length;
     }
+    
+    /**
+     * 将所有数组元素加入对象
+     * @param in
+     */
+    public void addAll(int[] in){
+    	addAll(size,in);
+    }
+
+
 
     /**
      * Removes from this list all of its elements that are contained in the

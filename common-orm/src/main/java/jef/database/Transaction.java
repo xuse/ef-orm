@@ -130,14 +130,19 @@ public class Transaction extends Session implements TransactionStatus {
 		return autoCommit;
 	}
 
-	public void setAutoCommit(boolean autoCommit) throws SQLException {
+	public Transaction setAutoCommit(boolean autoCommit) {
 		if (autoCommit == this.autoCommit) {
-			return;
+			return this;
 		}
 		this.autoCommit = autoCommit;
 		if (conn != null) {
-			this.conn.setAutoCommit(autoCommit);
+			try {
+				this.conn.setAutoCommit(autoCommit);
+			} catch (SQLException e) {
+				throw new PersistenceException(e);
+			}
 		}
+		return this;
 	}
 
 	/**
@@ -347,7 +352,7 @@ public class Transaction extends Session implements TransactionStatus {
 			sb.append('[').append(innerFlag.name());
 		}
 		sb.append(StringUtils.toFixLengthString(this.hashCode(), 8)).append('@');
-		sb.append(parent != null ? parent.getDbName(null) : parentName);
+		sb.append(parent != null ? parent.getDbName(dbkey) : parentName);
 		sb.append('@').append(Thread.currentThread().getId()).append(']');
 		return sb.toString();
 	}

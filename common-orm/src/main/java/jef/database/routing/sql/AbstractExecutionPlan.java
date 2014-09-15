@@ -3,7 +3,7 @@ package jef.database.routing.sql;
 import jef.database.annotation.PartitionResult;
 
 public abstract class AbstractExecutionPlan implements ExecutionPlan{
-	PartitionResult[] sites;
+	private PartitionResult[] sites;
 	private String changeDataSource;
 	
 	protected AbstractExecutionPlan(PartitionResult[] sites){
@@ -16,6 +16,12 @@ public abstract class AbstractExecutionPlan implements ExecutionPlan{
 
 	public boolean isMultiDatabase() {
 		return sites.length>1;
+	}
+	
+	@Override
+	public boolean isSimple() {
+		if(sites==null) return true;
+		return sites.length==1 && sites[0].tableSize()==1;
 	}
 
 	public PartitionResult[] getSites() {

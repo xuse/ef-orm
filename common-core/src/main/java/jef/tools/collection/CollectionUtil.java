@@ -89,6 +89,19 @@ public class CollectionUtil {
 
 	}
 	
+	public static <T> void setElement(List<T> list,int index,T value){
+		if(index==list.size()){
+			list.add(value);
+		}else if(index>list.size()){
+			for(int i=list.size();i<index;i++){
+				list.add(null);
+			}
+			list.add(value);
+		}else{
+			list.set(index, value);
+		}
+	}
+	
 	
 	/**
 	 * 将一个可遍历的对象中的某个property取出，组成所需要的list.
@@ -116,7 +129,7 @@ public class CollectionUtil {
 	 * @param function
 	 * @return
 	 */
-	public static <T,A> List<T> getValueInCollection(Collection<A> collection,Function<A,T> function){
+	public static <T,A> List<T> extract(Collection<A> collection,Function<A,T> function){
 		List<T> result=new ArrayList<T>();
 		if(collection!=null){
 			for(A a:collection){

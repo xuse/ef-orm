@@ -1,5 +1,8 @@
 package jef.database.routing.jdbc;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
 /**
  * 单个参数上下文
  * TODO 目前的实现尚不是最高效的
@@ -52,5 +55,13 @@ public class ParameterContext {
 		buffer.append(")");
 
 		return buffer.toString();
+	}
+	
+	public void apply(PreparedStatement st) throws SQLException{
+		parameterMethod.setParameter(st, args);
+	}
+
+	public Object getValue() {
+		return args[1];
 	}
 }

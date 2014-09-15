@@ -10,12 +10,11 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import jef.codegen.EntityEnhancer;
+import jef.database.DbUtils;
 import jef.database.datasource.MapDataSourceLookup;
 import jef.database.datasource.SimpleDataSource;
-import jef.database.dialect.DbmsProfile;
 import jef.database.meta.MetaHolder;
 import jef.database.routing.jdbc.JDataSource;
-import jef.database.wrapper.result.ResultSets;
 
 import org.easyframe.tutorial.lessona.entity.Device;
 import org.easyframe.tutorial.lessona.entity.Person2;
@@ -65,9 +64,20 @@ public class RoutingJdbcTest {
 		Statement st=conn.createStatement();
 		boolean flag=st.execute("insert into person2(DATA_DESC,NAME,created) values('123456', '测试',current_timestamp)",1);
 		ResultSet rs=st.getGeneratedKeys();
-		ResultSets.showResult(rs, 0, DbmsProfile.getProfile("oracle"));
+		rs.next();
+		System.out.println("自增主键返回:"+rs.getInt(1));
+		DbUtils.close(rs);
 		System.out.println(flag+"  "+st.getUpdateCount());
 		st.close();
 	}
 	
+	@Test
+	public void test3() throws SQLException{
+		Connection conn=ds.getConnection();
+		Statement st=conn.createStatement();
+		boolean flag=st.execute("insert into person2(DATA_DESC,NAME,created) values('123456', '测试',current_timestamp)",1);
+		ResultSet rs=st.getGeneratedKeys();
+		System.out.println(flag+"  "+st.getUpdateCount());
+		st.close();
+	}
 }

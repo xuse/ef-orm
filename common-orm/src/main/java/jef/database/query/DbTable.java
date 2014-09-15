@@ -27,6 +27,16 @@ public class DbTable {
 		if (table == null || table.length() == 0)
 			throw new IllegalArgumentException();
 	}
+	
+	
+
+	public String getDbName() {
+		return dbName;
+	}
+
+	public String getTable() {
+		return table;
+	}
 
 	@Override
 	public int hashCode() {
@@ -48,10 +58,10 @@ public class DbTable {
 	public String toString() {
 		return StringUtils.toString(dbName) + "." + table;
 	}
-	PartitionResult toPartitionResult(){
+	public PartitionResult toPartitionResult(){
 		return new PartitionResult(table).setDatabase(dbName);
 	}
-	PartitionResult[] toPartitionResults(){
+	public PartitionResult[] toPartitionResults(){
 		return new PartitionResult[]{new PartitionResult(table).setDatabase(dbName)};
 	}
 }

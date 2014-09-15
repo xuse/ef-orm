@@ -252,7 +252,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 		return count;
 	}
 
-	private String getSql(String table) {
+	public String getSql(String table) {
 		for(Table t: context.modifications){
 			t.setReplace(table);
 		}
@@ -324,16 +324,6 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 		return new InMemoryGroupByHaving(keys,values);
 	}
 	
-	/**
-	 * 是否为简单查询——路由结果指向单数据库的单表。这意味着所有的内存处理和SQL改写都不用做了。
-	 * （除了表名改写以外）
-	 * @return
-	 */
-	public boolean isSingleTable() {
-		return sites.length == 1 && sites[0].getTables().size() == 1;
-	}
-
-
 	/**
 	 * 多库下的分组查询，由于分组操作依赖最后的内存计算，因此不得不将所有结果都查出后才能计算得到总数
 	 * @return 如果不得不查出全部结果才能得到总数，返回true

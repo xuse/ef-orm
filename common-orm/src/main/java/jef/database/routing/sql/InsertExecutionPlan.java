@@ -18,16 +18,22 @@ public class InsertExecutionPlan extends AbstractExecutionPlan {
 
 	// Insert操作是最简单的因为表名肯定只有一个
 	public int processUpdate(PartitionResult site, OperateTarget session) throws SQLException {
-		String table = site.getAsOneTable();
 		session = session.getTarget(site.getDatabase());
+		String s=getSql(site.getAsOneTable());
+		session.innerExecuteSql(s, context.params);
+		return 1;
+	}
+
+	@Override
+	public String getSql(String table) {
 		for (Table t : context.modifications) {
 			t.setReplace(table);
 		}
-		session.innerExecuteSql(context.statement.toString(), context.params);
+		String s=context.statement.toString();
 		for (Table t : context.modifications) {
 			t.removeReplace();
 		}
-		return 1;
+		return s;
 	}
 
 }

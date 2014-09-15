@@ -25,7 +25,7 @@ import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.MetadataAdapter;
 
-final class TableMetaCollector extends Holder<MetadataAdapter> implements StatementVisitor {
+public final class TableMetaCollector extends Holder<MetadataAdapter> implements StatementVisitor {
 	private boolean breakProcess;
 	private final List<Table> modificationPoints=new ArrayList<Table>();
 

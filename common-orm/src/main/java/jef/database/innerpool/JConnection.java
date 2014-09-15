@@ -38,7 +38,7 @@ public class JConnection implements Connection {
 
 	public JConnection(DbClient db) {
 		this.db = db;
-		this.currentSession = db.startTransaction();
+		this.currentSession = db.startTransaction().setAutoCommit(true);
 	}
 
 	@Override

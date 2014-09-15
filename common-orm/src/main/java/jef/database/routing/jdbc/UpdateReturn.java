@@ -2,7 +2,6 @@ package jef.database.routing.jdbc;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
 
 import jef.database.DbUtils;
 import jef.database.rowset.CachedRowSetImpl;
@@ -13,17 +12,16 @@ import jef.database.rowset.CachedRowSetImpl;
  */
 public class UpdateReturn {
 	private int affectedRows;
-	private List<SQLException> exceptions;
-	private ResultSet generatedKeys;
-	private int[] batchResult;
+	protected CachedRowSetImpl generatedKeys;
+
+	public boolean isBatch(){
+		return false;
+	}
 
 	public UpdateReturn(int count) {
 		this.affectedRows = count;
 	}
 
-	public UpdateReturn(int[] batchCount) {
-		this.batchResult = batchCount;
-	}
 
 	public int getAffectedRows() {
 		return affectedRows;
@@ -33,15 +31,8 @@ public class UpdateReturn {
 		this.affectedRows = affectedRows;
 	}
 
-	public List<SQLException> getExceptions() {
-		return exceptions;
-	}
-
-	public void setExceptions(List<SQLException> exceptions) {
-		this.exceptions = exceptions;
-	}
-
 	public void close() {
+		DbUtils.close(generatedKeys);
 	}
 
 	public void cacheGeneratedKeys(ResultSet resultSet) throws SQLException {
@@ -55,9 +46,5 @@ public class UpdateReturn {
 
 	public ResultSet getGeneratedKeys() {
 		return generatedKeys;
-	}
-
-	public int[] getBatchResult() {
-		return batchResult;
 	}
 }

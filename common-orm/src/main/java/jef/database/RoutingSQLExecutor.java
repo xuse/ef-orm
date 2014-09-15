@@ -9,30 +9,33 @@ import java.util.List;
 import jef.common.PairSO;
 import jef.common.log.LogUtil;
 import jef.database.annotation.PartitionResult;
-import jef.database.jsqlparser.expression.JpqlDataType;
+import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.visitor.Statement;
-import jef.database.query.SqlExpression;
+import jef.database.meta.MetadataAdapter;
+import jef.database.query.DbTable;
+import jef.database.query.ParameterProvider;
+import jef.database.routing.jdbc.BatchReturn;
 import jef.database.routing.jdbc.ParameterContext;
-import jef.database.routing.jdbc.ParamsContextProvider;
 import jef.database.routing.jdbc.SQLExecutor;
 import jef.database.routing.jdbc.UpdateReturn;
 import jef.database.routing.sql.ExecutionPlan;
 import jef.database.routing.sql.SelectExecutionPlan;
 import jef.database.routing.sql.SqlAnalyzer;
 import jef.database.routing.sql.SqlExecutionParam;
+import jef.database.routing.sql.TableMetaCollector;
 import jef.database.wrapper.result.IResultSet;
 import jef.database.wrapper.result.JdbcResultSetAdapter;
 import jef.database.wrapper.result.MultipleResultSet;
-import jef.tools.DateUtils;
 import jef.tools.StringUtils;
+
+import com.google.common.collect.Multimap;
 
 public class RoutingSQLExecutor implements  SQLExecutor {
 	private OperateTarget db;
 	private int fetchSize = ORMConfig.getInstance().getGlobalFetchSize();
 	private int maxResult = 0;
 	private Statement st;
-	private final ParamsContextProvider nameParams = new ParamsContextProvider();// 按名参数
 	
 	/**
 	 * 从SQL语句加上返回类型构造
@@ -75,8 +78,8 @@ public class RoutingSQLExecutor implements  SQLExecutor {
 	 * @return
 	 * @throws SQLException 
 	 */
-	public ResultSet getResultSet() throws SQLException {
-		SqlExecutionParam parse = getSqlAndParams(db, this);
+	public ResultSet getResultSet(int type, int concurrency, int holder,List<ParameterContext> params) throws SQLException {
+		SqlExecutionParam parse = getSqlAndParams(db, this,params);
 		Statement sql = parse.statement;
 		String s = sql.toString();
 
@@ -108,8 +111,9 @@ public class RoutingSQLExecutor implements  SQLExecutor {
 		}
 	}
 
-	private SqlExecutionParam getSqlAndParams(OperateTarget db2, RoutingSQLExecutor jQuery) {
-		return new SqlExecutionParam(st, nameParams.asValues(), nameParams);
+	private SqlExecutionParam getSqlAndParams(OperateTarget db2, RoutingSQLExecutor jQuery,List<ParameterContext> params) {
+		ContextProvider cp=new ContextProvider(params);
+		return new SqlExecutionParam(st,SqlAnalyzer.asValue(params),cp);
 	}
 
 	/*
@@ -138,14 +142,40 @@ public class RoutingSQLExecutor implements  SQLExecutor {
 				LogUtil.show(sb);
 		}
 	}
+	
+	static class ContextProvider implements ParameterProvider{
+		private List<ParameterContext> params;
+		public ContextProvider(List<ParameterContext> params){
+			this.params=params;
+		}
+		@Override
+		public Object getNamedParam(String name) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Object getIndexedParam(int index) {
+			return params.get(index).getValue();
+		}
+
+		@Override
+		public boolean containsParam(Object key) {
+			if(key instanceof Integer){
+				return ((Integer)key)<params.size();
+			}else{
+				throw new UnsupportedOperationException();
+			}
+		}
+	}
+	
 
 	/**
 	 * 对于各种DDL、insert、update、delete等语句，不需要返回结果的，调用此方法来执行
 	 * 
 	 * @return 返回影响到的记录条数（针对update\delete）语句
 	 */
-	public UpdateReturn executeUpdate(int generateKeys,int[] returnIndex,String[] returnColumns) throws SQLException {
-		SqlExecutionParam parse = getSqlAndParams(db, this);
+	public UpdateReturn executeUpdate(int generateKeys,int[] returnIndex,String[] returnColumns,List<ParameterContext> params) throws SQLException {
+		SqlExecutionParam parse = getSqlAndParams(db, this,params);
 		Statement sql = parse.statement;
 		ExecutionPlan plan = SqlAnalyzer.getExecutionPlan(sql, parse.params, db);
 		if (plan == null) {
@@ -179,53 +209,6 @@ public class RoutingSQLExecutor implements  SQLExecutor {
 		return maxResult;
 	}
 
-	/*
-	 * 将参数按照命名查询中的类型提示转换为合适的类型
-	 */
-	private Object toProperType(JpqlDataType type, String[] value) {
-		// 如果是动态SQL片段类型，则将数组转换成1个String值。
-		if (JpqlDataType.SQL.equals(type)) {
-			return new SqlExpression(StringUtils.join(value));
-		}
-
-		Object[] result = new Object[value.length];
-		for (int i = 0; i < value.length; i++) {
-			result[i] = toProperType(type, value[i]);
-		}
-		return result;
-	}
-
-	private Object toProperType(JpqlDataType type, String value) {
-		switch (type) {
-		case DATE:
-			return DateUtils.toSqlDate(DateUtils.autoParse(value));
-		case BOOLEAN:
-			return StringUtils.toBoolean(value, null);
-		case DOUBLE:
-			return StringUtils.toDouble(value, 0.0);
-		case FLOAT:
-			return StringUtils.toFloat(value, 0.0f);
-		case INT:
-			return StringUtils.toInt(value, 0);
-		case LONG:
-			return StringUtils.toLong(value, 0L);
-		case SHORT:
-			return (short) StringUtils.toInt(value, 0);
-		case TIMESTAMP:
-			return DateUtils.toSqlTimeStamp(DateUtils.autoParse(value));
-		case SQL:
-			return new SqlExpression(value);
-		case $STRING:
-			return "%".concat(value);
-		case STRING$:
-			return value.concat("%");
-		case $STRING$:
-			StringBuilder sb = new StringBuilder(value.length() + 2);
-			return sb.append('%').append(value).append('%').toString();
-		default:
-			return value;
-		}
-	}
 
 	/**
 	 * 得到查询所在的dbclient对象
@@ -241,51 +224,92 @@ public class RoutingSQLExecutor implements  SQLExecutor {
 		return this.st.toString();
 	}
 
-	/**
-	 * 清除之前设置过的所有参数。 此方法当一个NativeQuery被重复使用时十分有用。
-	 */
-	public void clearParameters() {
-		nameParams.clear();
-	}
-
-	/**
-	 * 清除指定的参数
-	 * 
-	 * @param index
-	 */
-	public void clearParameter(int index) {
-		nameParams.remove(index);
-	}
-
-
-
-	public void setParams(Collection<ParameterContext> params) {
-		nameParams.set(params);
-	}
-	
-
-
-
-
-	@Override
-	public void setResultSetType(int resultSetType) {
-	}
-
-	@Override
-	public void setResultSetConcurrency(int resultSetConcurrency) {
-	}
-
-	@Override
-	public void setResultSetHoldability(int resultSetHoldability) {
-	}
-
 	@Override
 	public void setQueryTimeout(int queryTimeout) {
 	}
 
+	//Batch的约束，每个语句必是单库单表查询
 	@Override
-	public UpdateReturn executeBatch(int autoGeneratedKeys, int[] columnIndexes, String[] columnNames, List<Collection<ParameterContext>> params) {
-		// TODO Auto-generated method stub
-		return null;
+	public BatchReturn executeBatch(int autoGeneratedKeys, int[] columnIndexes, String[] columnNames, List<List<ParameterContext>> params) throws SQLException {
+		TableMetaCollector collector = SqlAnalyzer.getTableMeta(st);
+		if(collector.get()==null){//无需路由
+			return processBatch(null,null,params,collector,autoGeneratedKeys,columnIndexes,columnNames);
+		}
+		//先按路由结果分组
+		MetadataAdapter meta=collector.get();
+		if(meta.getPartition() == null){
+			if(meta.getBindDsName()!=null){
+				DbTable dbTable=meta.getBaseTable(db.getProfile());
+				return processBatch(dbTable.getDbName(),null,params,collector,autoGeneratedKeys,columnIndexes,columnNames);
+			}else{
+				return processBatch(null,null,params,collector,autoGeneratedKeys,columnIndexes,columnNames);	
+			}
+		}
+		//分库分表
+		Multimap<String,List<ParameterContext>> result=SqlAnalyzer.doGroup(meta,params,this.st,this.db);
+		BatchReturn ur=new BatchReturn();
+		for(String s: result.keySet()){
+			int index=s.indexOf('-');
+			String db=s.substring(0,index);
+			String table=s.substring(index+1);
+			BatchReturn u=processBatch(db,table,params,collector,autoGeneratedKeys,columnIndexes,columnNames);
+			ur.merge(u.getBatchResult(),u.getGeneratedKeys());
+		}
+		return ur;
 	}
+	
+
+
+	private BatchReturn processBatch(String database, String table,Collection<List<ParameterContext>> params,TableMetaCollector collector,int autoGeneratedKeys, int[] columnIndexes, String[] columnNames) throws SQLException {
+		OperateTarget db;
+		if(database!=null && !database.equals(this.db.getDbkey())){
+			db=this.db.getTarget(database);
+		}else{
+			db=this.db;
+		}
+		String sql=getSql(table,collector);
+		PreparedStatement st=null;
+		boolean withGeneratedKeys=false;
+		try{
+			if(autoGeneratedKeys!=java.sql.Statement.NO_GENERATED_KEYS){
+				st=db.prepareStatement(sql,autoGeneratedKeys);
+				withGeneratedKeys=true;
+			}else if(columnIndexes!=null){
+				st=db.prepareStatement(sql,columnIndexes);
+				withGeneratedKeys=true;
+			}else if(columnNames!=null){
+				st=db.prepareStatement(sql,columnNames);
+				withGeneratedKeys=true;
+			}else{
+				st=db.prepareStatement(sql);
+			}
+			for(List<ParameterContext> record:params){
+				for(ParameterContext context:record){
+					context.apply(st);
+				}
+				st.addBatch();
+			}
+			BatchReturn result= new BatchReturn(st.executeBatch());
+			if(withGeneratedKeys){
+				result.cacheGeneratedKeys(st.getGeneratedKeys());
+			}
+			return result;	
+		}finally{
+			DbUtils.close(st);
+		}
+		
+	}
+
+	private String getSql(String table,TableMetaCollector collector) {
+		if(table==null)return this.st.toString();
+		for (Table t : collector.getModificationPoints()) {
+			t.setReplace(table);
+		}
+		String s=this.st.toString();
+		for (Table t : collector.getModificationPoints()) {
+			t.removeReplace();
+		}
+		return s;
+	}
+
 }

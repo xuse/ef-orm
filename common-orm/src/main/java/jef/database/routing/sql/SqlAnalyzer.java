@@ -54,13 +54,18 @@ import jef.database.jsqlparser.visitor.VisitorAdapter;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetadataAdapter;
 import jef.database.query.ComplexDimension;
+import jef.database.query.DbTable;
 import jef.database.query.Dimension;
 import jef.database.query.RangeDimension;
 import jef.database.query.RegexpDimension;
+import jef.database.routing.jdbc.ParameterContext;
 import jef.database.wrapper.populator.Mappers;
 
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 /**
  * 基于SQL语句的分库分表解析。主要逻辑部分
@@ -100,8 +105,43 @@ public class SqlAnalyzer {
 		} else {//已经是Union语句的暂不支持
 			throw new UnsupportedOperationException();
 		}
-		
 	}
+	
+	public static List<Object> asValue(List<ParameterContext> params) {
+		List<Object> values=new ArrayList<Object>(params.size());
+		for(ParameterContext context:params){
+			values.add(context.getValue());
+		}
+		return values;
+	}
+	
+	
+	public static TableMetaCollector getTableMeta(Statement st){
+		TableMetaCollector collector = new TableMetaCollector();
+		st.accept(collector);
+		return collector;
+	}
+	
+	/**
+	 * 按每组参数计算路由结果，并按路由结果对Batch中的参数进行分组
+	 * @param params
+	 * @param st
+	 * @param db
+	 * @return
+	 */
+	public static Multimap<String, List<ParameterContext>> doGroup(MetadataAdapter meta,List<List<ParameterContext>> params,Statement st,OperateTarget db) {
+		Multimap<String,List<ParameterContext>> result=ArrayListMultimap.create();
+		for(List<ParameterContext> param:params){
+			List<Object> values=asValue(param);
+			Map<Expression, Object> paramMap = reverse(st, values); // 参数对应关系还原
+			PartitionResult routing=getPartitionResult(st,meta,paramMap,db.getPartitionSupport());
+			String key=routing.getDatabase()+"-"+routing.getAsOneTable();
+			result.put(key, param);
+		}
+		return result;
+	}
+	
+	
 	/**
 	 * 获得其他操作语句（Insert，Delete，Update语句的执行计划）
 	 * @param sql    AST of /Update/Delete/Insert
@@ -112,7 +152,6 @@ public class SqlAnalyzer {
 	public static ExecutionPlan getExecutionPlan(Statement sql, List<Object> value, OperateTarget db) {
 		TableMetaCollector collector = new TableMetaCollector();
 		sql.accept(collector);
-		if(collector.get()==null)return null;
 		MetadataAdapter meta=collector.get();
 		if (meta == null) {
 			return null;
@@ -261,6 +300,22 @@ public class SqlAnalyzer {
 			}
 		}
 		return result;
+	}
+	
+	public static PartitionResult getPartitionResult(Statement st,MetadataAdapter meta,Map<Expression, Object> paramsMap,PartitionSupport support){
+		DimensionCollector collector = new DimensionCollector(meta, paramsMap);
+		Map<String, Dimension> val ;
+		if(st instanceof Insert){
+			val= getPartitionCondition((Insert)st, collector);
+		}else if(st instanceof Update){
+			val= getPartitionCondition((Update)st, collector);
+		}else if(st instanceof Delete){
+			val= getPartitionCondition((Delete)st, collector);
+		}else{
+			throw new UnsupportedOperationException(st.getClass().getSimpleName());
+		}
+		val=fill(val,collector);
+		return DbUtils.partitionUtil.toTableName(meta, val, support);
 	}
 	
 	/*
