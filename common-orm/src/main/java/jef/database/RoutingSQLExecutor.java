@@ -87,7 +87,7 @@ public class RoutingSQLExecutor implements  SQLExecutor {
 		boolean debug = config.debugMode;
 
 		SelectExecutionPlan plan = null;
-		plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select) sql, parse.params, db);
+		plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select) sql, parse.getParamsMap(),parse.params, db);
 		if (plan == null) {// 普通查询
 			return new JdbcResultSetAdapter(db.getRawResultSet(s, maxResult, fetchSize, parse.params));
 		} else if (plan.isChangeDatasource() != null) {// 垂直拆分查询
@@ -102,6 +102,8 @@ public class RoutingSQLExecutor implements  SQLExecutor {
 				plan.parepareInMemoryProcess(null, mrs);
 				IResultSet irs = mrs.toSimple(null);
 				return new JdbcResultSetAdapter(irs);
+			}else if(plan.isEmpty()){//无法出结果，但是如果不查ResultSetMetadata无法生成.
+				return new JdbcResultSetAdapter(db.getRawResultSet(s, maxResult, fetchSize, parse.params)); 
 			} else { // 单库多表，基于Union的查询. 可以使用数据库分页
 				PartitionResult site = plan.getSites()[0];
 				PairSO<List<Object>> result = plan.getSql(plan.getSites()[0], false);
@@ -177,7 +179,8 @@ public class RoutingSQLExecutor implements  SQLExecutor {
 	public UpdateReturn executeUpdate(int generateKeys,int[] returnIndex,String[] returnColumns,List<ParameterContext> params) throws SQLException {
 		SqlExecutionParam parse = getSqlAndParams(db, this,params);
 		Statement sql = parse.statement;
-		ExecutionPlan plan = SqlAnalyzer.getExecutionPlan(sql, parse.params, db);
+		
+		ExecutionPlan plan = SqlAnalyzer.getExecutionPlan(sql,parse.getParamsMap(), parse.params, db);
 		if (plan == null) {
 			return db.innerExecuteUpdate(parse.statement.toString(), parse.params,generateKeys,returnIndex,returnColumns);
 		} else if (plan.isChangeDatasource() != null) {

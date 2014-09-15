@@ -182,7 +182,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 		if(range!=null){
 			int[] ints=range.toStartLimitSpan();
 			rs.setInMemoryPage(processPage(meta,ints[0],ints[1]));
-		}else if(st.getLimit()!=null){
+		}else if(st.getLimit()!=null){//此处容错产生效果
 			Limit limit=st.getLimit();
 			rs.setInMemoryPage(processPage(meta,(int)limit.getOffset(),(int)limit.getRowCount()));
 		}

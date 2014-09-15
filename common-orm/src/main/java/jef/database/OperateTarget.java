@@ -610,10 +610,11 @@ public class OperateTarget implements SqlTemplate {
 		public List<T> transformer(ResultSet rs, DatabaseDialect profile) throws SQLException {
 			dbAccess = System.currentTimeMillis();
 			IResultSet irs;
-			if(others!=null && others.removedStartWith!=null){
+			if(others!=null && others.delays.isValid()){
 				MultipleResultSet mrs=new MultipleResultSet(false,ORMConfig.getInstance().debugMode);
 				mrs.add(rs, null, this.db);
 				mrs.setInMemoryConnectBy(others.parseStartWith(mrs.getColumns()));
+				mrs.setInMemoryPage(others.parseLimit(mrs.getColumns()));
 				irs=mrs.toSimple(null, t.getStrategy());
 			}else{
 				irs=new ResultSetImpl(rs, profile);

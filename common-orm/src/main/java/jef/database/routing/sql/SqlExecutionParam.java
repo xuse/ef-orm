@@ -6,9 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.alibaba.druid.proxy.jdbc.JdbcParameter;
-
 import jef.database.Condition.Operator;
+import jef.database.jsqlparser.RemovedDelayProcess;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.BinaryExpression.Prior;
 import jef.database.jsqlparser.expression.Column;
@@ -28,25 +27,36 @@ import jef.database.jsqlparser.visitor.SqlValue;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.jsqlparser.visitor.VisitorAdapter;
 import jef.database.query.ParameterProvider;
+import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.clause.InMemoryStartWithConnectBy;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
 import jef.tools.StringUtils;
 
+import com.alibaba.druid.proxy.jdbc.JdbcParameter;
+
 public class SqlExecutionParam {
 	public Statement statement;
 	public List<Object> params;
-	public StartWithExpression removedStartWith;
 	private ParameterProvider rawParams;
+	private Map<Expression, Object> paramsMap;
+	//后处理
+	public RemovedDelayProcess delays;
 
 	
 	public SqlExecutionParam(Statement st2, List<Object> params2,ParameterProvider rawParams) {
 		this.statement = st2;
 		this.params = params2;
 		this.rawParams=rawParams;
+		paramsMap = SqlAnalyzer.reverse(st2, params2); // 参数对应关系还原
 	}
 
 	
+	public Map<Expression, Object> getParamsMap() {
+		return paramsMap;
+	}
+
+
 	public InMemoryStartWithConnectBy parseStartWith(ColumnMeta columns) {
 		if (statement instanceof Select) {
 			return parse((Select) statement, columns);
@@ -63,14 +73,18 @@ public class SqlExecutionParam {
 	}
 
 	private InMemoryStartWithConnectBy parse(PlainSelect selectBody, ColumnMeta columns) {
+		StartWithExpression startWith=delays.startWith;
+		if(startWith==null){
+			return null;
+		}
 		// 1 收集别名和表名的关系
 		Map<String, String> maps = new HashMap<String, String>();
 		selectBody.accept(new TableCollector(maps)); // 收集为大写别名 和 大写表名
 		// 2解析
 		InMemoryStartWithConnectBy result = new InMemoryStartWithConnectBy();
 
-		parseStartWith(removedStartWith.getStartExpression(), result, maps,columns);
-		parseConnectBy(getAsEqualsTo(removedStartWith.getConnectExpression()), result, maps, columns);
+		parseStartWith(startWith.getStartExpression(), result, maps,columns);
+		parseConnectBy(getAsEqualsTo(startWith.getConnectExpression()), result, maps, columns);
 		return result;
 	}
 
@@ -247,5 +261,10 @@ public class SqlExecutionParam {
 				tableAlias.put(StringUtils.upperCase(table.getAlias()), StringUtils.upperCase(table.getName()));
 			}
 		}
+	}
+
+	public InMemoryPaging parseLimit(ColumnMeta columns) {
+		
+		return null;
 	}
 }

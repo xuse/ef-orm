@@ -109,7 +109,7 @@ public class MySqlDialect extends DbmsProfile {
 	public MySqlDialect() {
 		// 在MYSQL中 ||是逻辑运算符
 		features = CollectionUtil.identityHashSet();
-		features.addAll(Arrays.asList(Feature.DBNAME_AS_SCHEMA, Feature.INDEX_LENGTH_LIMIT, Feature.ALTER_FOR_EACH_COLUMN,Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD));
+		features.addAll(Arrays.asList(Feature.DBNAME_AS_SCHEMA, Feature.INDEX_LENGTH_LIMIT, Feature.ALTER_FOR_EACH_COLUMN,Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD,Feature.SUPPORT_LIMIT));
 		setProperty(DbProperty.ADD_COLUMN, "ADD");
 		setProperty(DbProperty.MODIFY_COLUMN, "MODIFY");
 		setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");

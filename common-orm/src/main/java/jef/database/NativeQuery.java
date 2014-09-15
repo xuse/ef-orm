@@ -44,6 +44,7 @@ import jef.database.annotation.PartitionResult;
 import jef.database.dialect.type.ResultSetAccessor;
 import jef.database.jsqlparser.expression.JpqlDataType;
 import jef.database.jsqlparser.expression.JpqlParameter;
+import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.statement.select.Union;
 import jef.database.jsqlparser.visitor.Statement;
@@ -331,7 +332,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			SqlExecutionParam parse = config.getCountSqlAndParams(db, this);
 			SelectExecutionPlan plan = null;
 			if (routing) {
-				plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select) parse.statement, parse.params, db);
+				plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select) parse.statement,parse.getParamsMap(), parse.params, db);
 			}
 			boolean debug = ORMConfig.getInstance().debugMode;
 			if (plan == null) {
@@ -343,8 +344,8 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 					LogUtil.show(StringUtils.concat("Count:", String.valueOf(num), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", db.getTransactionId()));
 				}
 				return num;
-			}else if(plan.isChangeDatasource()!=null){
-				OperateTarget db=this.db.getTarget(plan.isChangeDatasource());
+			} else if (plan.isChangeDatasource() != null) {
+				OperateTarget db = this.db.getTarget(plan.isChangeDatasource());
 				String sql = parse.statement.toString();
 				long start = System.currentTimeMillis();
 				Long num = db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, 1, 0, parse.params);
@@ -400,25 +401,22 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	public ResultIterator<X> getResultIterator() {
 		try {
 			SqlExecutionParam parse = config.getSqlAndParams(db, this);
-			Statement sql = parse.statement;
-			String s = sql.toString();
+			String rawSQL = parse.statement.toString();
 
 			ORMConfig config = ORMConfig.getInstance();
 			boolean debug = config.debugMode;
 
 			SelectExecutionPlan plan = null;
 			if (routing) {
-				plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select) sql, parse.params, db);
+				plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select) parse.statement, parse.getParamsMap(),parse.params, db);
 			}
 			if (plan == null) {// 普通查询
-				if (range != null)
-					s = toPageSql(sql, s);
-				return db.innerIteratorBySql(s, resultTransformer, 0, fetchSize, parse.params);
-			} else if(plan.isChangeDatasource()!=null){// 分表分库查询
-				OperateTarget db=this.db.getTarget(plan.isChangeDatasource());
-				if (range != null)
-					s = toPageSql(sql, s);
-				return db.innerIteratorBySql(s, resultTransformer, 0, fetchSize, parse.params);
+				rawSQL = toPageSql(parse, rawSQL);
+				return db.innerIteratorBySql(rawSQL, resultTransformer, 0, fetchSize, parse.params);
+			} else if (plan.isChangeDatasource() != null) {// 分表分库查询
+				OperateTarget db = this.db.getTarget(plan.isChangeDatasource());
+				rawSQL = toPageSql(parse, rawSQL);
+				return db.innerIteratorBySql(rawSQL, resultTransformer, 0, fetchSize, parse.params);
 			} else {// 分表分库查询
 				if (plan.isMultiDatabase()) {// 多库
 					MultipleResultSet mrs = new MultipleResultSet(config.isCacheResultset(), debug);
@@ -433,11 +431,9 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 				} else { // 单库多表，基于Union的查询. 可以使用数据库分页
 					PartitionResult site = plan.getSites()[0];
 					PairSO<List<Object>> result = plan.getSql(plan.getSites()[0], false);
-					s = result.first;
-					if (range != null) {
-						s = toPageSql(sql, s);
-					}
-					return db.getTarget(site.getDatabase()).innerIteratorBySql(s, resultTransformer, 0, fetchSize, result.second);
+					rawSQL = result.first;
+					rawSQL = toPageSql(parse, rawSQL);
+					return db.getTarget(site.getDatabase()).innerIteratorBySql(rawSQL, resultTransformer, 0, fetchSize, result.second);
 				}
 			}
 		} catch (SQLException e) {
@@ -445,12 +441,45 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		}
 	}
 
-	private String toPageSql(Statement sql, String s) {
-		if (sql instanceof Select) {
-			boolean isUnion = ((Select) sql).getSelectBody() instanceof Union;
-			s = db.getProfile().toPageSQL(s, range, isUnion);
+	private String toPageSql(SqlExecutionParam result, String rawSQL) {
+		if (range == null && result.delays.limit == null) {
+			return rawSQL;
 		}
-		return s;
+		Statement sql = result.statement;
+		if (sql instanceof Select) {
+			if (range != null) {
+				boolean isUnion = ((Select) sql).getSelectBody() instanceof Union;
+				return db.getProfile().toPageSQL(rawSQL, range, isUnion);
+			}else if (result.delays.limit!= null) {
+				Limit limit = result.delays.limit;
+				int offset = 0;
+				int rowcount = 0;
+				if (limit.getOffsetJdbcParameter() != null) {
+					Object obj=result.getParamsMap().get(limit.getOffsetJdbcParameter());
+					if(obj instanceof Number){
+						offset = ((Number) obj).intValue();
+					}
+				} else {
+					offset = (int)limit.getOffset();
+				}
+				if (limit.getRowCountJdbcParameter() != null) {
+					Object obj=result.getParamsMap().get(limit.getRowCountJdbcParameter());
+					if(obj instanceof Number){
+						rowcount = ((Number) obj).intValue();						
+					}
+
+				} else {
+					rowcount = (int)limit.getRowCount();
+				}
+				if(offset>0 || rowcount>0){
+					result.delays.limit=null;//清除	
+					IntRange range=new IntRange(offset+1, offset+rowcount);
+					boolean isUnion = ((Select) sql).getSelectBody() instanceof Union;
+					return db.getProfile().toPageSQL(rawSQL, range, isUnion);
+				}
+			}
+		}
+		return rawSQL;
 	}
 
 	/**
@@ -469,32 +498,27 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	private List<X> doQuery(int max, int fetchSize, boolean noOrder) throws SQLException {
 		long start = System.currentTimeMillis();
 		SqlExecutionParam parse = config.getSqlAndParams(db, this);
-		Statement sql = parse.statement;
 		SelectExecutionPlan plan = null;
 		if (routing) {
-			plan = SqlAnalyzer.getSelectExecutionPlan((Select) sql, parse.params, db);
+			plan = SqlAnalyzer.getSelectExecutionPlan((Select) parse.statement, parse.getParamsMap(),parse.params, db);
 		}
-		String s = sql.toString();
-		
+		String rawSQL = parse.statement.toString();
+
 		long dbAccess;
 		List<X> list;
 		if (plan == null) {// 普通查询
-			if (range != null) {
-				s = toPageSql(sql, s);
-			}
-			TransformerAdapter<X> rst = new TransformerAdapter<X>(resultTransformer,db);
+			rawSQL = toPageSql(parse, rawSQL);
+			TransformerAdapter<X> rst = new TransformerAdapter<X>(resultTransformer, db);
 			rst.setOthers(parse);
-			list = db.innerSelectBySql(s, rst, max, fetchSize, parse.params);
-			dbAccess=rst.dbAccess;
-		} else if(plan.isChangeDatasource()!=null){
-			this.db=this.db.getTarget(plan.isChangeDatasource());
-			if (range != null) {
-				s = toPageSql(sql, s);
-			}
-			TransformerAdapter<X> rst = new TransformerAdapter<X>(resultTransformer,db);
+			list = db.innerSelectBySql(rawSQL, rst, max, fetchSize, parse.params);
+			dbAccess = rst.dbAccess;
+		} else if (plan.isChangeDatasource() != null) {
+			this.db = this.db.getTarget(plan.isChangeDatasource());
+			rawSQL = toPageSql(parse, rawSQL);
+			TransformerAdapter<X> rst = new TransformerAdapter<X>(resultTransformer, db);
 			rst.setOthers(parse);
-			list = db.innerSelectBySql(s, rst, max, fetchSize, parse.params);
-			dbAccess=rst.dbAccess;
+			list = db.innerSelectBySql(rawSQL, rst, max, fetchSize, parse.params);
+			dbAccess = rst.dbAccess;
 		} else if (plan.isMultiDatabase()) {// 多库
 			ORMConfig config = ORMConfig.getInstance();
 			boolean debug = config.debugMode;
@@ -508,8 +532,9 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 				if (noOrder) { // 去除内存排序
 					mrs.setInMemoryOrder(null);
 				}
-				if(parse.removedStartWith!=null){
+				if (parse.delays.isValid()) {
 					mrs.setInMemoryConnectBy(parse.parseStartWith(mrs.getColumns()));
+					mrs.setInMemoryPage(parse.parseLimit(mrs.getColumns()));
 				}
 				IResultSet rsw = mrs.toSimple(null, resultTransformer.getStrategy());
 				list = db.populateResultSet(rsw, null, resultTransformer);
@@ -520,15 +545,13 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		} else { // 单库多表，基于Union的查询. 可以使用数据库分页
 			PartitionResult pr = plan.getSites()[0];
 			PairSO<List<Object>> result = plan.getSql(pr, false);
-			s = result.first;
-			if (range != null) {
-				s = toPageSql(sql, s);
-			}
+			rawSQL = result.first;
+			rawSQL = toPageSql(parse, rawSQL);
 			OperateTarget db = this.db.getTarget(pr.getDatabase());
-			TransformerAdapter<X> rst = new TransformerAdapter<X>(resultTransformer,db);
+			TransformerAdapter<X> rst = new TransformerAdapter<X>(resultTransformer, db);
 			rst.setOthers(parse);
-			list = db.innerSelectBySql(s, rst, max, fetchSize, result.second);
-			dbAccess=rst.dbAccess;
+			list = db.innerSelectBySql(rawSQL, rst, max, fetchSize, result.second);
+			dbAccess = rst.dbAccess;
 		}
 		if (ORMConfig.getInstance().isDebugMode()) {
 			LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(list.size()), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbAccess), "ms) |", db.getTransactionId()));
@@ -620,11 +643,11 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			Statement sql = parse.statement;
 			ExecutionPlan plan = null;
 			if (routing) {
-				plan = SqlAnalyzer.getExecutionPlan(sql, parse.params, db);
+				plan = SqlAnalyzer.getExecutionPlan(sql,parse.getParamsMap(), parse.params, db);
 			}
 			if (plan == null) {
 				return db.innerExecuteSql(parse.statement.toString(), parse.params);
-			} else if(plan.isChangeDatasource()!=null){
+			} else if (plan.isChangeDatasource() != null) {
 				return db.getTarget(plan.isChangeDatasource()).innerExecuteSql(parse.statement.toString(), parse.params);
 			} else {
 				long start = System.currentTimeMillis();

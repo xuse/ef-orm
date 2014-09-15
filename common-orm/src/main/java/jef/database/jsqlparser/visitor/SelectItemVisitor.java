@@ -20,6 +20,7 @@ import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.statement.select.AllColumns;
 import jef.database.jsqlparser.statement.select.AllTableColumns;
 import jef.database.jsqlparser.statement.select.Join;
+import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.OrderByElement;
 import jef.database.jsqlparser.statement.select.SelectExpressionItem;
@@ -48,4 +49,5 @@ public interface SelectItemVisitor {
     
     public void visit(Join join);
 
+	public void visit(Limit limit);
 }

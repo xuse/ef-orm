@@ -200,6 +200,17 @@ public class Case2 extends org.junit.Assert {
 			query.setParameter("id", 2);
 			query.executeUpdate();
 		}
+		{
+			String sql="select * from person2 order by id limit 1,3";
+			NativeQuery query=db.createNativeQuery(sql).withRouting();
+			query.getResultList();
+		}
+		{
+			String sql="select * from person2 order by id limit 3 offset 1";
+			NativeQuery query=db.createNativeQuery(sql).withRouting();
+			query.getResultList();
+		}
+		
 	}
 
 	/**

@@ -15,6 +15,7 @@ import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
 import jef.database.jsqlparser.expression.operators.arithmetic.Concat;
 import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
+import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.StartWithExpression;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.VisitorAdapter;
@@ -32,7 +33,7 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 	private DatabaseDialect profile;
 	private OperateTarget db;
 	private boolean check;
-	private StartWithExpression removedStartWith;
+	private RemovedDelayProcess delays=new RemovedDelayProcess();
 
 	public SqlFunctionlocalization(DatabaseDialect profile, OperateTarget db) {
 		this.profile = profile;
@@ -53,8 +54,8 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 		}
 	}
 
-	public StartWithExpression getRemovedStartWith() {
-		return removedStartWith;
+	public RemovedDelayProcess getDelayProcess() {
+		return delays;
 	}
 
 	@Override
@@ -106,7 +107,7 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 	public void visit(StartWithExpression startWithExpression) {
 		if (profile.notHas(Feature.SUPPORT_CONNECT_BY)) {
 			if (super.visitPath.size() <= 2) { // 距离statement最大为2 将递归条件保留下来，从而后续支持内存中 递归过滤
-				removedStartWith = new StartWithExpression(startWithExpression.getStartExpression(), startWithExpression.getConnectExpression());
+				delays.startWith = new StartWithExpression(startWithExpression.getStartExpression(), startWithExpression.getConnectExpression());
 			} else {
 				if (ORMConfig.getInstance().isAllowRemoveStartWith()) {
 					String removed = startWithExpression.toString();
@@ -122,6 +123,17 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 		super.visit(startWithExpression);
 	}
 
+	@Override
+	public void visit(Limit limit) {
+		if (profile.notHas(Feature.SUPPORT_LIMIT)) {
+			if (super.visitPath.size() <= 2) { // 距离statement最大为2 将递归条件保留下来，从而后续支持内存中 递归过滤
+				delays.limit=new Limit(limit);
+				limit.clear();
+			}
+		}
+		super.visit(limit);
+	}
+	
 	public static void ensureUserFunction(FunctionMapping mapping, OperateTarget db) throws SQLException {
 		DbMetaData meta = db.getMetaData();
 		boolean flag = true;

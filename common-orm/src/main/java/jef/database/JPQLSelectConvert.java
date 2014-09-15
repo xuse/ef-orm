@@ -13,6 +13,7 @@ import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.select.AllColumns;
 import jef.database.jsqlparser.statement.select.AllTableColumns;
 import jef.database.jsqlparser.statement.select.Join;
+import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.OrderByElement;
 import jef.database.jsqlparser.statement.select.PlainSelect;
@@ -121,6 +122,10 @@ public class JPQLSelectConvert extends VisitorAdapter {
 
 		public void visit(Join join) {
 			join.getRightItem().accept(this);
+		}
+
+		@Override
+		public void visit(Limit limit) {
 		}
 	};
 

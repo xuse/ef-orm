@@ -54,7 +54,6 @@ import jef.database.jsqlparser.visitor.VisitorAdapter;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetadataAdapter;
 import jef.database.query.ComplexDimension;
-import jef.database.query.DbTable;
 import jef.database.query.Dimension;
 import jef.database.query.RangeDimension;
 import jef.database.query.RegexpDimension;
@@ -81,7 +80,7 @@ public class SqlAnalyzer {
 	 * @param db  数据库Session
 	 * @return
 	 */
-	public static SelectExecutionPlan getSelectExecutionPlan(Select sql, List<Object> value, OperateTarget db) {
+	public static SelectExecutionPlan getSelectExecutionPlan(Select sql,Map<Expression, Object>  params, List<Object> value, OperateTarget db) {
 		TableMetaCollector collector = new TableMetaCollector();
 		sql.accept(collector);
 		if(collector.get()==null)return null;
@@ -96,7 +95,6 @@ public class SqlAnalyzer {
 				return null;
 			}
 		}
-		Map<Expression, Object> params = reverse(sql, value); // 参数对应关系还原
 		Select select = (Select) sql;
 		SelectBody body = select.getSelectBody();
 		if (body instanceof PlainSelect) {
@@ -149,7 +147,7 @@ public class SqlAnalyzer {
 	 * @param db     数据库Session
 	 * @return
 	 */
-	public static ExecutionPlan getExecutionPlan(Statement sql, List<Object> value, OperateTarget db) {
+	public static ExecutionPlan getExecutionPlan(Statement sql,Map<Expression,Object> params, List<Object> value, OperateTarget db) {
 		TableMetaCollector collector = new TableMetaCollector();
 		sql.accept(collector);
 		MetadataAdapter meta=collector.get();
@@ -163,7 +161,6 @@ public class SqlAnalyzer {
 				return null;
 			}
 		}
-		Map<Expression, Object> params = reverse(sql, value); // 参数对应关系还原
 		if (sql instanceof Insert) {
 			StatementContext<Insert> context=new StatementContext<Insert>((Insert) sql,meta,params,value,db,collector.getModificationPoints());
 			return getInsertExePlan(context);

@@ -426,9 +426,11 @@ public class DeParserAdapter implements SelectVisitor, ExpressionVisitor, Statem
 			plainSelect.getOrderBy().accept(this);
 		}
 		if (plainSelect.getLimit() != null) {
-			deparseLimit(plainSelect.getLimit());
+			plainSelect.getLimit().accept(this);
 		}
 	}
+	
+	
 
 	protected void writeGroupByAndHaving(PlainSelect plainSelect) {
 		if (plainSelect.getGroupByColumnReferences() != null) {
@@ -488,7 +490,7 @@ public class DeParserAdapter implements SelectVisitor, ExpressionVisitor, Statem
 			union.getOrderBy().accept(this);
 		}
 		if (union.getLimit() != null) {
-			deparseLimit(union.getLimit());
+			union.getLimit().accept(this);
 		}
 	}
 
@@ -524,22 +526,6 @@ public class DeParserAdapter implements SelectVisitor, ExpressionVisitor, Statem
 		String alias = tableName.getAlias();
 		if (alias != null && alias.length() > 0) {
 			sb.append(" " + alias);
-		}
-	}
-
-	public void deparseLimit(Limit limit) {
-		sb.append(" LIMIT ");
-		if (limit.isRowCountJdbcParameter()) {
-			sb.append("?");
-		} else if (limit.getRowCount() != 0) {
-			sb.append(limit.getRowCount());
-		} else {
-			sb.append("18446744073709551615");
-		}
-		if (limit.getOffsetJdbcParameter() != null) {
-			sb.append(" OFFSET ?");
-		} else if (limit.getOffset() != 0) {
-			sb.append(" OFFSET " + limit.getOffset());
 		}
 	}
 
@@ -776,6 +762,21 @@ public class DeParserAdapter implements SelectVisitor, ExpressionVisitor, Statem
 	public String toString() {
 		return sb.toString();
 	}
-	
-	
+
+	@Override
+	public void visit(Limit limit) {
+		sb.append(" LIMIT ");
+		if (limit.isRowCountJdbcParameter()) {
+			sb.append("?");
+		} else if (limit.getRowCount() != 0) {
+			sb.append(limit.getRowCount());
+		} else {
+			sb.append("18446744073709551615");
+		}
+		if (limit.getOffsetJdbcParameter() != null) {
+			sb.append(" OFFSET ?");
+		} else if (limit.getOffset() != 0) {
+			sb.append(" OFFSET " + limit.getOffset());
+		}
+	}
 }

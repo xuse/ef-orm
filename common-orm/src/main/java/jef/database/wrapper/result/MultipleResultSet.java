@@ -277,11 +277,12 @@ public final class MultipleResultSet extends AbstractResultSet{
 	}
 
 	private void addToInMemprocessor(InMemoryProcessor process) {
-		if(this.mustInMemoryProcessor==null){
-			mustInMemoryProcessor=new ArrayList<InMemoryProcessor>(4);
-		}
-		if(process!=null)
+		if(process!=null){
+			if(this.mustInMemoryProcessor==null){
+				mustInMemoryProcessor=new ArrayList<InMemoryProcessor>(4);
+			}
 			mustInMemoryProcessor.add(process);
+		}
 	}
 
 	public void setInMemoryDistinct(InMemoryDistinct instance) {

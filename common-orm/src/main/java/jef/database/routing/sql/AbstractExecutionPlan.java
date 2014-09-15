@@ -24,6 +24,10 @@ public abstract class AbstractExecutionPlan implements ExecutionPlan{
 		return sites.length==1 && sites[0].tableSize()==1;
 	}
 
+	public boolean isEmpty() {
+		return sites==null ||  sites.length==0;
+	}
+
 	public PartitionResult[] getSites() {
 		return sites;
 	}

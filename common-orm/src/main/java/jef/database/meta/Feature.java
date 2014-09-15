@@ -124,6 +124,10 @@ public enum Feature {
 	 */
 	SUPPORT_SEQUENCE,
 	/**
+	 * 支持Limit限定结果
+	 */
+	SUPPORT_LIMIT,
+	/**
 	 * 不支持Truncate语句
 	 */
 	NOT_SUPPORT_TRUNCATE,

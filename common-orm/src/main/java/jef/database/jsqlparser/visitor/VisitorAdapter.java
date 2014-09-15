@@ -73,6 +73,7 @@ import jef.database.jsqlparser.statement.replace.Replace;
 import jef.database.jsqlparser.statement.select.AllColumns;
 import jef.database.jsqlparser.statement.select.AllTableColumns;
 import jef.database.jsqlparser.statement.select.Join;
+import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.OrderByElement;
 import jef.database.jsqlparser.statement.select.PlainSelect;
@@ -119,6 +120,9 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 
 		if (plainSelect.getOrderBy() != null) {
 			plainSelect.getOrderBy().accept(this);
+		}
+		if(plainSelect.getLimit()!=null){
+			plainSelect.getLimit().accept(this);
 		}
 		visitPath.pop();
 	}
@@ -545,6 +549,16 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 		}
 		if(with.getSelectBody()!=null){
 			with.getSelectBody().accept(this);
+		}
+	}
+
+	@Override
+	public void visit(Limit limit) {
+		if(limit.getOffsetJdbcParameter()!=null){
+			limit.accept(this);
+		}
+		if(limit.getRowCountJdbcParameter()!=null){
+			limit.accept(this);
 		}
 	}
 }

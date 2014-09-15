@@ -17,6 +17,7 @@ package jef.database.jsqlparser.statement.select;
 
 import jef.database.jsqlparser.statement.SqlAppendable;
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.SelectItemVisitor;
 
 /**
  * A limit clause in the form [LIMIT {[offset,] row_count) | (row_count | ALL)
@@ -33,6 +34,21 @@ public class Limit implements SqlAppendable {
 	private Expression offsetJdbcParameter;
 
 	private boolean limitAll;
+
+	public Limit() {
+	}
+	
+	/**
+	 * Clone constructor
+	 * @param limit
+	 */
+	public Limit(Limit limit) {
+		this.offset=limit.offset;
+		this.limitAll=limit.limitAll;
+		this.offsetJdbcParameter=limit.offsetJdbcParameter;
+		this.rowCount=limit.rowCount;
+		this.rowCountJdbcParameter=limit.rowCountJdbcParameter;
+	}
 
 	public boolean isRowCountJdbcParameter() {
 		return rowCountJdbcParameter != null;
@@ -104,6 +120,17 @@ public class Limit implements SqlAppendable {
 				offsetJdbcParameter.appendTo(sb);
 			}
 		}
+	}
+
+	public void accept(SelectItemVisitor visitorAdapter) {
+		visitorAdapter.visit(this);
+	}
+	
+	public void clear(){
+		rowCount=0;
+		rowCountJdbcParameter=null;
+		offset=0;
+		offsetJdbcParameter=null;
 	}
 
 }
