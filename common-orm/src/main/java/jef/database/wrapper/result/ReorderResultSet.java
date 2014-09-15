@@ -16,6 +16,7 @@
 package jef.database.wrapper.result;
 
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -220,4 +221,14 @@ final class ReorderResultSet extends AbstractResultSet {
 	public boolean isClosed() throws SQLException {
 		return columns==null;
 	}
+
+
+
+
+	@Override
+	public ResultSetMetaData getMetaData() throws SQLException {
+		return columns.getMeta();
+	}
+
+
 }

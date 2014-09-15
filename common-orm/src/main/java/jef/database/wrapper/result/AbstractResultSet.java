@@ -239,4 +239,14 @@ public abstract class AbstractResultSet implements IResultSet {
 	public void updateObject(int columnIndex, Object x) throws SQLException {
 		get().updateObject(columnIndex, x);
 	}
+
+	@Override
+	public Reader getCharacterStream(int columnIndex) throws SQLException {
+		return get().getCharacterStream(columnIndex);
+	}
+
+	@Override
+	public Reader getCharacterStream(String columnLabel) throws SQLException {
+		return get().getCharacterStream(columnLabel);
+	}
 }

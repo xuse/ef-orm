@@ -78,7 +78,12 @@ public final class MultipleResultSet extends AbstractResultSet{
 	public ColumnMeta getColumns() {
 		return columns;
 	}
-
+	
+	@Override
+	public ResultSetMetaData getMetaData() throws SQLException {
+		return columns.getMeta();
+	}
+	
 	private void initMetadata(ResultSet wrapped) throws SQLException {
 		ResultSetMetaData meta = wrapped.getMetaData();
 		List<ColumnDescription> columnList = new ArrayList<ColumnDescription>();
@@ -88,7 +93,7 @@ public final class MultipleResultSet extends AbstractResultSet{
 			int type = meta.getColumnType(i);
 			columnList.add(new ColumnDescription(i, type, name,meta.getTableName(i),meta.getSchemaName(i)));
 		}
-		this.columns = new ColumnMeta(columnList);
+		this.columns = new ColumnMeta(columnList,meta);
 	}
 
 

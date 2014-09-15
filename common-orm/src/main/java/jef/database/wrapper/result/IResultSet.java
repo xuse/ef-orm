@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.sql.Blob;
 import java.sql.Clob;
+import java.sql.ResultSetMetaData;
 import java.sql.RowId;
 import java.sql.SQLException;
 import java.sql.SQLXML;
@@ -162,4 +163,10 @@ public interface IResultSet {
 	RowId getRowId(int columnIndex) throws SQLException;
 	
 	Map<Reference, List<Condition>> getFilters();
+
+	ResultSetMetaData getMetaData()throws SQLException ;
+
+	Reader getCharacterStream(int columnIndex)throws SQLException ;
+
+	Reader getCharacterStream(String columnLabel)throws SQLException ;
 }

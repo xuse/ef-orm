@@ -97,7 +97,7 @@ public class ResultSetImpl implements IResultSet {
 			int type=meta.getColumnType(i);
 			columnList.add(new ColumnDescription(i,type,name,meta.getTableName(i),meta.getSchemaName(i)));
 		}
-		this.columns = new ColumnMeta(columnList);
+		this.columns = new ColumnMeta(columnList,meta);
 	}
 
 	public ColumnMeta getColumns(){
@@ -477,5 +477,23 @@ public class ResultSetImpl implements IResultSet {
 
 	public void updateObject(int columnIndex, Object x) throws SQLException {
 		rs.updateObject(columnIndex, x);
+	}
+
+
+	@Override
+	public ResultSetMetaData getMetaData() throws SQLException {
+		return columns.getMeta();
+	}
+
+
+	@Override
+	public Reader getCharacterStream(int columnIndex) throws SQLException {
+		return rs.getCharacterStream(columnIndex);
+	}
+
+
+	@Override
+	public Reader getCharacterStream(String columnLabel) throws SQLException {
+		return rs.getCharacterStream(columnLabel);
 	}
 }

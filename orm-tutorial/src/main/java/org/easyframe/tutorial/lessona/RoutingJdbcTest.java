@@ -10,6 +10,7 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import jef.codegen.EntityEnhancer;
+import jef.common.log.LogUtil;
 import jef.database.DbUtils;
 import jef.database.datasource.MapDataSourceLookup;
 import jef.database.datasource.SimpleDataSource;
@@ -75,9 +76,12 @@ public class RoutingJdbcTest {
 	public void test3() throws SQLException{
 		Connection conn=ds.getConnection();
 		Statement st=conn.createStatement();
-		boolean flag=st.execute("insert into person2(DATA_DESC,NAME,created) values('123456', '测试',current_timestamp)",1);
-		ResultSet rs=st.getGeneratedKeys();
-		System.out.println(flag+"  "+st.getUpdateCount());
-		st.close();
+		boolean flag=st.execute("select * from device");
+		if(flag){
+			ResultSet rs=st.getResultSet();
+			LogUtil.show(rs);
+			DbUtils.close(rs);
+		}
+		DbUtils.close(st);
 	}
 }

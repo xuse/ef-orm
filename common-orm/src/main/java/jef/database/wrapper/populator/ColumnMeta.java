@@ -15,6 +15,7 @@
  */
 package jef.database.wrapper.populator;
 
+import java.sql.ResultSetMetaData;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,13 +36,16 @@ public class ColumnMeta{
 	 */
 	private Map<String,ColumnDescription[]> schemaIndex;
 	
+	private ResultSetMetaData meta;
+	
 	/**
 	 *构造
 	 * <p>Title: </p>
 	 * <p>Description:</p>
 	 * @param columnNames
 	 */
-	public ColumnMeta(List<ColumnDescription> columnList) {
+	public ColumnMeta(List<ColumnDescription> columnList,ResultSetMetaData meta) {
+		this.meta=meta;
 		this.columns=columnList.toArray(new ColumnDescription[columnList.size()]);
 		initName();
 	}
@@ -100,30 +104,7 @@ public class ColumnMeta{
 	public ColumnDescription[] getColumns(String schema){
 		return schemaIndex.get(schema);
 	}
-//	/**
-//	 * 在所有的字段中查找SimpleName符合的
-//	 * 
-//	 * 2014/1 这个接口忽略大小写
-//	 * @param fieldName
-//	 * @return
-//	 */
-//	@Deprecated
-//	public ColumnDescription findBySimpleName(String fieldName){
-//		ColumnDescription[] columnsWithoutSchema=schemaIndex.get("");
-//		if(columnsWithoutSchema!=null && columnsWithoutSchema.length>0){
-//			 return nameIndex.get(fieldName.toUpperCase());
-//		}else{
-//			for(String key:schemaIndex.keySet()){
-//				for(ColumnDescription value:schemaIndex.get(key)){
-//					if(fieldName.equals(value.getSimpleName())){
-//						return value;
-//					}
-//				}
-//			}	
-//			return null;
-//		}
-//	}
-	
+
 	public ColumnDescription getByFullName(String fieldName){
 		return this.nameIndex.get(fieldName.toUpperCase());
 	}
@@ -157,5 +138,9 @@ public class ColumnMeta{
 
 	public int length() {
 		return columns.length;
+	}
+
+	public ResultSetMetaData getMeta() {
+		return meta;
 	}
 }

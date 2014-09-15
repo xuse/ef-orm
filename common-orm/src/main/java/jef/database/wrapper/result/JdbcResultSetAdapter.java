@@ -259,7 +259,7 @@ public class JdbcResultSetAdapter implements ResultSet{
 	}
 
 	public ResultSetMetaData getMetaData() throws SQLException {
-		throw new UnsupportedOperationException();
+		return rs.getMetaData();
 	}
 
 	public Object getObject(int columnIndex) throws SQLException {
@@ -271,11 +271,11 @@ public class JdbcResultSetAdapter implements ResultSet{
 	}
 
 	public Reader getCharacterStream(int columnIndex) throws SQLException {
-		throw new UnsupportedOperationException();
+		return rs.getCharacterStream(columnIndex);
 	}
 
 	public Reader getCharacterStream(String columnLabel) throws SQLException {
-		throw new UnsupportedOperationException();
+		return rs.getCharacterStream(columnLabel);
 	}
 
 	public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
