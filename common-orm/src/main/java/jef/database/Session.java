@@ -1470,7 +1470,7 @@ public abstract class Session {
 	 * @throws SQLException
 	 */
 	public final ResultSet getResultSet(String sql, int maxReturn, Object... params) throws SQLException {
-		return asOperateTarget(null).innerSelectBySql(sql, ResultSetTransformer.CACHED_RESULTSET, maxReturn, 0, Arrays.asList(params));
+		return asOperateTarget(null).innerSelectBySql(sql, ResultSetTransformer.CACHED_RESULTSET, maxReturn, 0, Arrays.asList(params),null);
 	}
 
 	/**

@@ -122,7 +122,7 @@ public class SelectDeParser implements SelectVisitor,SelectItemVisitor{
         	plainSelect.getOrderBy().accept(this);
         }
         if (plainSelect.getLimit() != null) {
-            deparseLimit(plainSelect.getLimit());
+        	plainSelect.getLimit().accept(this);
         }
     }
 
@@ -140,7 +140,7 @@ public class SelectDeParser implements SelectVisitor,SelectItemVisitor{
         	union.getOrderBy().accept(this);
         }
         if (union.getLimit() != null) {
-            deparseLimit(union.getLimit());
+        	union.getLimit().accept(this);
         }
     }
 
@@ -182,33 +182,6 @@ public class SelectDeParser implements SelectVisitor,SelectItemVisitor{
         }
     }
 
-//    public void deparseOrderBy(OrderBy orderby) {
-//        buffer.append(" order by ");
-//        for (Iterator<OrderByElement> iter = orderby.getOrderByElements().iterator(); iter.hasNext(); ) {
-//            OrderByElement orderByElement = (OrderByElement) iter.next();
-//            orderByElement.accept(this);
-//            if (iter.hasNext()) {
-//                buffer.append(",");
-//            }
-//        }
-//    }
-
-    public void deparseLimit(Limit limit) {
-        buffer.append(" LIMIT ");
-        if (limit.isRowCountJdbcParameter()) {
-            buffer.append("?");
-        } else if (limit.getRowCount() != 0) {
-            buffer.append(limit.getRowCount());
-        } else {
-            buffer.append("18446744073709551615");
-        }
-        if (limit.getOffsetJdbcParameter()!=null) {
-            buffer.append(" OFFSET ?");
-        } else if (limit.getOffset() != 0) {
-            buffer.append(" OFFSET " + limit.getOffset());
-        }
-    }
-
     public StringBuilder getBuffer() {
         return buffer;
     }
@@ -239,7 +212,6 @@ public class SelectDeParser implements SelectVisitor,SelectItemVisitor{
 
 	public void visit(OrderBy orderBy) {
 		buffer.append(" order by ");
-		
 		for(int i=0;i<orderBy.getOrderByElements().size();i++){
 			if(i>0)buffer.append(',');
 			OrderByElement ele=orderBy.getOrderByElements().get(i);
@@ -280,5 +252,22 @@ public class SelectDeParser implements SelectVisitor,SelectItemVisitor{
 
 	public void visit(WithItem with) {
 		with.accept(this);
+	}
+
+	@Override
+	public void visit(Limit limit) {
+		buffer.append(" LIMIT ");
+        if (limit.isRowCountJdbcParameter()) {
+            buffer.append("?");
+        } else if (limit.getRowCount() != 0) {
+            buffer.append(limit.getRowCount());
+        } else {
+            buffer.append("18446744073709551615");
+        }
+        if (limit.getOffsetJdbcParameter()!=null) {
+            buffer.append(" OFFSET ?");
+        } else if (limit.getOffset() != 0) {
+            buffer.append(" OFFSET " + limit.getOffset());
+        }
 	}
 }

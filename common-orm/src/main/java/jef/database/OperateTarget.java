@@ -365,7 +365,7 @@ public class OperateTarget implements SqlTemplate {
 			if (fetchSize > 0)
 				st.setFetchSize(fetchSize);
 			rs = st.executeQuery();
-			rs = processLazy(rs,lazy);
+//			rs = processLazy(rs,lazy);
 			return rst.transformer(rs, getProfile());
 		} catch (SQLException e) {
 			p.processError(e, sql, this);
@@ -545,7 +545,7 @@ public class OperateTarget implements SqlTemplate {
 	
 	public long countBySql(String countSql, Object... params) throws SQLException {
 		long start = System.currentTimeMillis();
-		Long num = innerSelectBySql(countSql, ResultSetTransformer.GET_FIRST_LONG, 1,0, Arrays.asList(params));
+		Long num = innerSelectBySql(countSql, ResultSetTransformer.GET_FIRST_LONG, 1,0, Arrays.asList(params),null);
 		if (ORMConfig.getInstance().isDebugMode()) {
 			long dbAccess = System.currentTimeMillis();
 			LogUtil.show(StringUtils.concat("Count:", String.valueOf(num), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", getTransactionId()));
@@ -569,7 +569,7 @@ public class OperateTarget implements SqlTemplate {
 		}
 		long start = System.currentTimeMillis();
 		TransformerAdapter<T> sqlTransformer = new TransformerAdapter<T>(transformer,this);
-		List<T> list = innerSelectBySql(sql, sqlTransformer, 0, 0,Arrays.asList(params));
+		List<T> list = innerSelectBySql(sql, sqlTransformer, 0, 0,Arrays.asList(params),null);
 		if (ORMConfig.getInstance().isDebugMode()) {
 			long dbAccess = sqlTransformer.dbAccess;
 			LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(list.size()), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbAccess), "ms) |", getTransactionId()));
@@ -581,7 +581,7 @@ public class OperateTarget implements SqlTemplate {
 	public final <T> T loadBySql(String sql,Class<T> t,Object... params) throws SQLException {
 		TransformerAdapter<T> rst=new TransformerAdapter<T>(new Transformer(t),this);
 		long start = System.currentTimeMillis();
-		List<T> result= innerSelectBySql(sql,rst,2, 0,Arrays.asList(params));
+		List<T> result= innerSelectBySql(sql,rst,2, 0,Arrays.asList(params),null);
 		if (ORMConfig.getInstance().isDebugMode()) {
 			long dbAccess = rst.dbAccess;
 			LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(result.size()), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbAccess), "ms) |", getTransactionId()));

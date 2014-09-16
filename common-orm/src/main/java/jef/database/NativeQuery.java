@@ -338,7 +338,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			if (plan == null) {
 				String sql = parse.statement.toString();
 				long start = System.currentTimeMillis();
-				Long num = db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, 1, 0, parse.params);
+				Long num = db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, 1, 0, parse.params,parse);
 				if (debug) {
 					long dbAccess = System.currentTimeMillis();
 					LogUtil.show(StringUtils.concat("Count:", String.valueOf(num), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", db.getTransactionId()));
@@ -348,7 +348,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 				OperateTarget db = this.db.getTarget(plan.isChangeDatasource());
 				String sql = parse.statement.toString();
 				long start = System.currentTimeMillis();
-				Long num = db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, 1, 0, parse.params);
+				Long num = db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, 1, 0, parse.params,parse);
 				if (debug) {
 					long dbAccess = System.currentTimeMillis();
 					LogUtil.show(StringUtils.concat("Count:", String.valueOf(num), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", db.getTransactionId()));
@@ -509,15 +509,13 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		if (plan == null) {// 普通查询
 			rawSQL = toPageSql(sqlContext, rawSQL);
 			TransformerAdapter<X> rst = new TransformerAdapter<X>(resultTransformer, db);
-			rst.setOthers(sqlContext);
-			list = db.innerSelectBySql(rawSQL, rst, max, fetchSize, sqlContext.params,sqlContext.delays);
+			list = db.innerSelectBySql(rawSQL, rst, max, fetchSize, sqlContext.params,sqlContext);
 			dbAccess = rst.dbAccess;
 		} else if (plan.isChangeDatasource() != null) {
 			this.db = this.db.getTarget(plan.isChangeDatasource());
 			rawSQL = toPageSql(sqlContext, rawSQL);
 			TransformerAdapter<X> rst = new TransformerAdapter<X>(resultTransformer, db);
-			rst.setOthers(sqlContext);
-			list = db.innerSelectBySql(rawSQL, rst, max, fetchSize, sqlContext.params);
+			list = db.innerSelectBySql(rawSQL, rst, max, fetchSize, sqlContext.params,sqlContext);
 			dbAccess = rst.dbAccess;
 		} else if (plan.isMultiDatabase()) {// 多库
 			ORMConfig config = ORMConfig.getInstance();
@@ -549,8 +547,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			rawSQL = toPageSql(sqlContext, rawSQL);
 			OperateTarget db = this.db.getTarget(pr.getDatabase());
 			TransformerAdapter<X> rst = new TransformerAdapter<X>(resultTransformer, db);
-			rst.setOthers(sqlContext);
-			list = db.innerSelectBySql(rawSQL, rst, max, fetchSize, result.second);
+			list = db.innerSelectBySql(rawSQL, rst, max, fetchSize, result.second,sqlContext);
 			dbAccess = rst.dbAccess;
 		}
 		if (ORMConfig.getInstance().isDebugMode()) {

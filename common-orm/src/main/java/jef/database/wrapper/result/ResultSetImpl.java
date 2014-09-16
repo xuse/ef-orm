@@ -375,8 +375,8 @@ public class ResultSetImpl implements IResultSet {
 		rs.beforeFirst();
 	}
 
-	public void first() throws SQLException {
-		rs.first();
+	public boolean first() throws SQLException {
+		return rs.first();
 	}
 
 	public boolean previous() throws SQLException {
@@ -397,11 +397,6 @@ public class ResultSetImpl implements IResultSet {
 
 	public ResultSet get() {
 		return rs;
-	}
-
-
-	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
-		return (T) rs.getObject(columnIndex);
 	}
 
 
@@ -511,7 +506,7 @@ public class ResultSetImpl implements IResultSet {
 		return rs.wasNull();
 	}
 
-
+	@SuppressWarnings("deprecation")
 	@Override
 	public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
 		return rs.getBigDecimal(columnIndex,scale);
@@ -529,7 +524,7 @@ public class ResultSetImpl implements IResultSet {
 		return rs.getShort(columnLabel);
 	}
 
-
+	@SuppressWarnings("deprecation")
 	@Override
 	public BigDecimal getBigDecimal(String columnLabel, int scale) throws SQLException {
 		return rs.getBigDecimal(columnLabel,scale);
@@ -538,882 +533,761 @@ public class ResultSetImpl implements IResultSet {
 
 	@Override
 	public byte[] getBytes(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getBytes(columnLabel);
 	}
 
 
 	@Override
 	public InputStream getAsciiStream(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getAsciiStream(columnLabel);
 	}
 
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public InputStream getUnicodeStream(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getUnicodeStream(columnLabel);
 	}
 
 
 	@Override
 	public InputStream getBinaryStream(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getBinaryStream(columnLabel);
 	}
 
 
 	@Override
 	public SQLWarning getWarnings() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getWarnings();
 	}
 
 
 	@Override
 	public void clearWarnings() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.clearWarnings();
 	}
 
 
 	@Override
 	public String getCursorName() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getCursorName();
 	}
 
 
 	@Override
 	public int findColumn(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		return rs.findColumn(columnLabel);
 	}
 
 
 	@Override
 	public BigDecimal getBigDecimal(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getBigDecimal(columnIndex);
 	}
 
 
 	@Override
 	public BigDecimal getBigDecimal(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getBigDecimal(columnLabel);
 	}
 
 
 	@Override
 	public boolean isBeforeFirst() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		return rs.isBeforeFirst();
 	}
 
 
 	@Override
 	public boolean isAfterLast() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		return rs.isAfterLast();
 	}
 
 
 	@Override
 	public boolean isFirst() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		return rs.isFirst();
 	}
 
 
 	@Override
 	public boolean isLast() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		return rs.isLast();
 	}
 
 
 	@Override
 	public boolean last() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		return rs.last();
 	}
 
 
 	@Override
 	public int getRow() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		return rs.getRow();
 	}
 
 
 	@Override
 	public boolean absolute(int row) throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		return rs.absolute(row);
 	}
 
 
 	@Override
 	public boolean relative(int rows) throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		return rs.relative(rows);
 	}
 
 
 	@Override
 	public void setFetchDirection(int direction) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.setFetchDirection(direction);
 	}
 
 
 	@Override
 	public int getFetchDirection() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		return rs.getFetchDirection();
 	}
 
 
 	@Override
 	public void setFetchSize(int rows) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.setFetchSize(rows);
 	}
 
 
 	@Override
 	public int getFetchSize() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		return rs.getFetchSize();
 	}
 
 
 	@Override
 	public int getType() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		return rs.getType();
 	}
 
 
 	@Override
 	public int getConcurrency() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		return rs.getConcurrency();
 	}
 
 
 	@Override
 	public boolean rowUpdated() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		return rs.rowUpdated();
 	}
 
 
 	@Override
 	public boolean rowInserted() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		return rs.rowInserted();
 	}
 
 
 	@Override
 	public boolean rowDeleted() throws SQLException {
-		// TODO Auto-generated method stub
-		return false;
+		return rs.rowDeleted();
 	}
 
 
 	@Override
 	public void updateBoolean(int columnIndex, boolean x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateBoolean(columnIndex, x);
 	}
 
 
 	@Override
 	public void updateByte(int columnIndex, byte x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateByte(columnIndex, x);
 	}
 
 
 	@Override
 	public void updateShort(int columnIndex, short x) throws SQLException {
-		// TODO Auto-generated method stub
+		rs.updateShort(columnIndex, x);
 		
 	}
 
 
 	@Override
 	public void updateInt(int columnIndex, int x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateInt(columnIndex, x);
 	}
 
 
 	@Override
 	public void updateLong(int columnIndex, long x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateLong(columnIndex, x);
 	}
 
 
 	@Override
 	public void updateFloat(int columnIndex, float x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateFloat(columnIndex, x);
 	}
 
 
 	@Override
 	public void updateDouble(int columnIndex, double x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateDouble(columnIndex, x);
 	}
 
 
 	@Override
 	public void updateBigDecimal(int columnIndex, BigDecimal x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateBigDecimal(columnIndex, x);
 	}
 
 
 	@Override
 	public void updateString(int columnIndex, String x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateString(columnIndex, x);
 	}
 
 
 	@Override
 	public void updateBytes(int columnIndex, byte[] x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateBytes(columnIndex, x);
 	}
 
 
 	@Override
 	public void updateDate(int columnIndex, Date x) throws SQLException {
-		// TODO Auto-generated method stub
+		rs.updateDate(columnIndex, x);
 		
 	}
 
 
 	@Override
 	public void updateTime(int columnIndex, Time x) throws SQLException {
-		// TODO Auto-generated method stub
+		rs.updateTime(columnIndex, x);
 		
 	}
 
 
 	@Override
 	public void updateTimestamp(int columnIndex, Timestamp x) throws SQLException {
-		// TODO Auto-generated method stub
+		rs.updateTimestamp(columnIndex, x);
 		
 	}
 
 
 	@Override
 	public void updateAsciiStream(int columnIndex, InputStream x, int length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateAsciiStream(columnIndex, x);
 	}
 
 
 	@Override
 	public void updateBinaryStream(int columnIndex, InputStream x, int length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateAsciiStream(columnIndex, x);
 	}
 
 
 	@Override
 	public void updateCharacterStream(int columnIndex, Reader x, int length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateCharacterStream(columnIndex, x);
 	}
 
 
 	@Override
 	public void updateObject(int columnIndex, Object x, int scaleOrLength) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateObject(columnIndex, x);
 	}
 
 
 	@Override
 	public void updateBoolean(String columnLabel, boolean x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateBoolean(columnLabel, x);
 	}
 
 
 	@Override
 	public void updateByte(String columnLabel, byte x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateByte(columnLabel, x);
 	}
 
 
 	@Override
 	public void updateShort(String columnLabel, short x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateShort(columnLabel, x);
 	}
 
 
 	@Override
 	public void updateInt(String columnLabel, int x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateInt(columnLabel, x);
 	}
 
 
 	@Override
 	public void updateLong(String columnLabel, long x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateLong(columnLabel, x);
 	}
 
 
 	@Override
 	public void updateFloat(String columnLabel, float x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateFloat(columnLabel, x);
 	}
 
 
 	@Override
 	public void updateDouble(String columnLabel, double x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateDouble(columnLabel, x);
 	}
 
 
 	@Override
 	public void updateBigDecimal(String columnLabel, BigDecimal x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateBigDecimal(columnLabel, x);
 	}
 
 
 	@Override
 	public void updateString(String columnLabel, String x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateString(columnLabel, x);
 	}
 
 
 	@Override
 	public void updateBytes(String columnLabel, byte[] x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateBytes(columnLabel, x);
 	}
 
 
 	@Override
 	public void updateDate(String columnLabel, Date x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateDate(columnLabel, x);
 	}
 
 
 	@Override
 	public void updateTime(String columnLabel, Time x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateTime(columnLabel, x);
 	}
 
 
 	@Override
 	public void updateTimestamp(String columnLabel, Timestamp x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateTimestamp(columnLabel, x);
 	}
 
 
 	@Override
 	public void updateAsciiStream(String columnLabel, InputStream x, int length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateAsciiStream(columnLabel, x,length);
 	}
 
 
 	@Override
 	public void updateBinaryStream(String columnLabel, InputStream x, int length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateBinaryStream(columnLabel, x,length);
 	}
 
 
 	@Override
 	public void updateCharacterStream(String columnLabel, Reader reader, int length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateCharacterStream(columnLabel,reader,length);
 	}
 
 
 	@Override
 	public void updateObject(String columnLabel, Object x, int scaleOrLength) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateObject(columnLabel, x,scaleOrLength);
 	}
 
 
 	@Override
 	public void refreshRow() throws SQLException {
-		// TODO Auto-generated method stub
+		rs.refreshRow();
 		
 	}
 
-
 	@Override
 	public void cancelRowUpdates() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.cancelRowUpdates();
 	}
 
 
 	@Override
 	public void moveToCurrentRow() throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.moveToCurrentRow();
 	}
 
 
 	@Override
 	public Statement getStatement() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getStatement();
 	}
 
 
 	@Override
 	public Object getObject(int columnIndex, Map<String, Class<?>> map) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getObject(columnIndex, map);
 	}
 
 
 	@Override
 	public Ref getRef(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getRef(columnIndex);
 	}
 
 
 	@Override
 	public Array getArray(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getArray(columnIndex);
 	}
 
 
 	@Override
 	public Object getObject(String columnLabel, Map<String, Class<?>> map) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getObject(columnLabel,map);
 	}
 
 
 	@Override
 	public Ref getRef(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getRef(columnLabel);
 	}
 
 
 	@Override
 	public Array getArray(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getArray(columnLabel);
 	}
 
 
 	@Override
 	public Date getDate(int columnIndex, Calendar cal) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getDate(columnIndex,cal);
 	}
 
 
 	@Override
 	public Date getDate(String columnLabel, Calendar cal) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getDate(columnLabel,cal);
 	}
 
 
 	@Override
 	public Time getTime(int columnIndex, Calendar cal) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getTime(columnIndex,cal);
 	}
 
 
 	@Override
 	public Time getTime(String columnLabel, Calendar cal) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getTime(columnLabel,cal);
 	}
 
 
 	@Override
 	public Timestamp getTimestamp(int columnIndex, Calendar cal) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getTimestamp(columnIndex,cal);
 	}
 
 
 	@Override
 	public Timestamp getTimestamp(String columnLabel, Calendar cal) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getTimestamp(columnLabel,cal);
 	}
 
 
 	@Override
 	public URL getURL(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getURL(columnIndex);
 	}
 
 
 	@Override
 	public URL getURL(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getURL(columnLabel);
 	}
 
 
 	@Override
 	public void updateRef(int columnIndex, Ref x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateRef(columnIndex,x);
 	}
 
 
 	@Override
 	public void updateRef(String columnLabel, Ref x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateRef(columnLabel,x);
 	}
 
 
 	@Override
 	public void updateBlob(int columnIndex, Blob x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateBlob(columnIndex,x);
 	}
 
 
 	@Override
 	public void updateBlob(String columnLabel, Blob x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateBlob(columnLabel,x);
 	}
 
 
 	@Override
 	public void updateClob(int columnIndex, Clob x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateClob(columnIndex,x);
 	}
 
 
 	@Override
 	public void updateClob(String columnLabel, Clob x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateClob(columnLabel,x);
 	}
 
 
 	@Override
 	public void updateArray(int columnIndex, Array x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateArray(columnIndex,x);
 	}
 
 
 	@Override
 	public void updateArray(String columnLabel, Array x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateArray(columnLabel,x);
 	}
 
 
 	@Override
 	public RowId getRowId(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getRowId(columnLabel);
 	}
 
 
 	@Override
 	public void updateRowId(int columnIndex, RowId x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateRowId(columnIndex,x);
 	}
 
 
 	@Override
 	public void updateRowId(String columnLabel, RowId x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateRowId(columnLabel,x);
 	}
-
 
 	@Override
 	public int getHoldability() throws SQLException {
-		// TODO Auto-generated method stub
-		return 0;
+		return rs.getHoldability();
 	}
 
 
 	@Override
 	public void updateNString(int columnIndex, String nString) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateNString(columnIndex, nString);
 	}
 
 
 	@Override
 	public void updateNString(String columnLabel, String nString) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateNString(columnLabel, nString);
 	}
 
 
 	@Override
 	public void updateNClob(int columnIndex, NClob nClob) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateNClob(columnIndex, nClob);
 	}
 
 
 	@Override
 	public void updateNClob(String columnLabel, NClob nClob) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateNClob(columnLabel, nClob);
 	}
 
 
 	@Override
 	public NClob getNClob(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getNClob(columnIndex);
 	}
 
 
 	@Override
 	public NClob getNClob(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getNClob(columnLabel);
 	}
 
 
 	@Override
 	public SQLXML getSQLXML(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getSQLXML(columnLabel);
 	}
 
 
 	@Override
 	public String getNString(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getNString(columnIndex);
 	}
 
 
 	@Override
 	public String getNString(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getNString(columnLabel);
 	}
 
 
 	@Override
 	public Reader getNCharacterStream(int columnIndex) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getNCharacterStream(columnIndex);
 	}
 
 
 	@Override
 	public Reader getNCharacterStream(String columnLabel) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs.getNCharacterStream(columnLabel);
 	}
 
 
 	@Override
 	public void updateNCharacterStream(int columnIndex, Reader x, long length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateNCharacterStream(columnIndex, x, length);
 	}
 
 
 	@Override
 	public void updateNCharacterStream(String columnLabel, Reader reader, long length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateNCharacterStream(columnLabel, reader,length);
 	}
 
 
 	@Override
 	public void updateAsciiStream(int columnIndex, InputStream x, long length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateAsciiStream(columnIndex, x, length);
 	}
 
 
 	@Override
 	public void updateBinaryStream(int columnIndex, InputStream x, long length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateBinaryStream(columnIndex, x, length);
 	}
 
 
 	@Override
 	public void updateCharacterStream(int columnIndex, Reader x, long length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateCharacterStream(columnIndex, x, length);
 	}
 
 
 	@Override
 	public void updateAsciiStream(String columnLabel, InputStream x, long length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateAsciiStream(columnLabel, x, length);
 	}
 
 
 	@Override
 	public void updateBinaryStream(String columnLabel, InputStream x, long length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateBinaryStream(columnLabel, x, length);
 	}
 
 
 	@Override
 	public void updateCharacterStream(String columnLabel, Reader reader, long length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateCharacterStream(columnLabel, reader, length);
 	}
 
 
 	@Override
 	public void updateNClob(int columnIndex, Reader reader, long length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateNClob(columnIndex, reader, length);
 	}
 
 
 	@Override
 	public void updateNClob(String columnLabel, Reader reader, long length) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateNClob(columnLabel, reader, length);
 	}
 
 
 	@Override
 	public void updateNCharacterStream(int columnIndex, Reader x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateNClob(columnIndex, x);
 	}
 
 
 	@Override
 	public void updateNCharacterStream(String columnLabel, Reader reader) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateNCharacterStream(columnLabel, reader);
 	}
 
 
 	@Override
 	public void updateAsciiStream(int columnIndex, InputStream x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateAsciiStream(columnIndex, x);
 	}
 
 
 	@Override
 	public void updateBinaryStream(int columnIndex, InputStream x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateBinaryStream(columnIndex, x);
 	}
 
 
 	@Override
 	public void updateCharacterStream(int columnIndex, Reader x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateCharacterStream(columnIndex, x);
 	}
 
 
 	@Override
 	public void updateAsciiStream(String columnLabel, InputStream x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateAsciiStream(columnLabel, x);
 	}
 
 
 	@Override
 	public void updateBinaryStream(String columnLabel, InputStream x) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateBinaryStream(columnLabel, x);
 	}
 
 
 	@Override
 	public void updateCharacterStream(String columnLabel, Reader reader) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateCharacterStream(columnLabel, reader);
 	}
 
 
 	@Override
 	public void updateBlob(String columnLabel, InputStream inputStream) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateBlob(columnLabel, inputStream);
 	}
 
 
 	@Override
 	public void updateClob(String columnLabel, Reader reader) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateClob(columnLabel, reader);
 	}
 
 
 	@Override
 	public void updateNClob(int columnIndex, Reader reader) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateNClob(columnIndex, reader);
 	}
 
 
 	@Override
 	public void updateNClob(String columnLabel, Reader reader) throws SQLException {
-		// TODO Auto-generated method stub
-		
+		rs.updateNClob(columnLabel, reader);
 	}
 
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T unwrap(Class<T> iface) throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return (T)this;
 	}
 
 
 	@Override
 	public boolean isWrapperFor(Class<?> iface) throws SQLException {
-		// TODO Auto-generated method stub
 		return false;
 	}
 }
