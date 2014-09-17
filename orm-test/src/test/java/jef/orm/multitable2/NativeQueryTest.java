@@ -86,16 +86,14 @@ public class NativeQueryTest extends org.junit.Assert {
 
 	@DatabaseInit
 	public void setUp() throws SQLException {
-		boolean debug = JefFacade.getOrmConfig().isDebugMode();
 		try {
-			// LogUtil.show(db.getMetaData(null).getSQLKeywords());
 			dropTable();
 			createtable();
 			prepareData();
 		} catch (Exception e) {
 			LogUtil.exception(e);
 		}
-		JefFacade.getOrmConfig().setDebugMode(debug);
+		JefFacade.getOrmConfig().setDebugMode(true);
 	}
 
 	/**

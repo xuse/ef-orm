@@ -29,20 +29,20 @@ public class InMemoryPaging implements InMemoryProcessor{
 	}
 
 	public void process(CachedRowSetImpl rows) throws SQLException {
-		if(end<=start || start>=rows.size()){
-			rows.setRvh(new ArrayList<Row>());
-			rows.refresh();
-		}
 		List<Row> list=rows.getRvh();
-		if(start==0 && end>=list.size()){
+		if(start==0 && end>=list.size()){//不需要截取的场合
 			return;
 		}
 		int end=this.end;
-		if(end>list.size()){
+		if(end>list.size()){ //防止溢出
 			end=list.size();
 		}
-		rows.setRvh(rows.getRvh().subList(start, end));
-		rows.refresh();
+		if(end<=start || start>=rows.size()){//防止空结果
+			rows.setRvh(new ArrayList<Row>());
+		}else{
+			rows.setRvh(list.subList(start, end));
+		}
+		rows.refresh();	
 	}
 
 	public String getName() {

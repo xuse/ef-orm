@@ -338,6 +338,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 				plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select) parse.statement,parse.getParamsMap(), parse.params, db);
 			}
 			boolean debug = ORMConfig.getInstance().debugMode;
+			parse.clearLimit();
 			if (plan == null) {
 				String sql = parse.statement.toString();
 				long start = System.currentTimeMillis();

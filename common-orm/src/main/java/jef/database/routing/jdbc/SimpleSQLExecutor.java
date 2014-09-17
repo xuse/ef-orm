@@ -8,7 +8,6 @@ import java.util.Collection;
 import java.util.List;
 
 import jef.database.OperateTarget;
-import jef.database.wrapper.result.JdbcResultSetAdapter;
 import jef.database.wrapper.result.ResultSetWrapper;
 
 public class SimpleSQLExecutor implements SQLExecutor {
@@ -76,7 +75,7 @@ public class SimpleSQLExecutor implements SQLExecutor {
 				context.apply(st);
 			}
 			ResultSet rs=st.executeQuery();
-			return new JdbcResultSetAdapter(new ResultSetWrapper(db,st,rs));	
+			return new ResultSetWrapper(db,st,rs);	
 		}finally{
 			st.close();
 		}

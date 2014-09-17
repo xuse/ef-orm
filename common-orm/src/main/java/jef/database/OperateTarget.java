@@ -388,7 +388,7 @@ public class OperateTarget implements SqlTemplate {
 	 * @return
 	 * @throws SQLException
 	 */
-	public final IResultSet getRawResultSet(String sql, int maxReturn,int fetchSize, List<?> objs) throws SQLException {
+	public final IResultSet getRawResultSet(String sql, int maxReturn,int fetchSize, List<?> objs,InMemoryOperateContext inmem) throws SQLException {
 		PreparedStatement st = null;
 		StringBuilder sb = null;
 		DbOperateProcessor p = session.p;
@@ -400,7 +400,6 @@ public class OperateTarget implements SqlTemplate {
 			st = prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 			BindVariableContext context = new BindVariableContext(st, this, sb);
 			BindVariableTool.setVariables(context, objs);
-
 			
 			st.setQueryTimeout(config.getSelectTimeout());
 			if (maxReturn <= 0)
@@ -412,7 +411,11 @@ public class OperateTarget implements SqlTemplate {
 			if (fetchSize > 0)
 				st.setFetchSize(fetchSize);
 			ResultSet rawRs = st.executeQuery();
-			return new ResultSetWrapper(this,st,rawRs);
+			if(inmem.hasInMemoryOperate()){
+				return MultipleResultSet.toInMemoryProcessorResultSet(inmem, new ResultSetHolder(this,st,rawRs));
+			}else{
+				return new ResultSetWrapper(this,st,rawRs);
+			}
 		} catch (SQLException e) {
 			p.processError(e, sql, this);
 			throw e;

@@ -14,6 +14,7 @@ import jef.database.NativeQuery;
 import jef.database.ORMConfig;
 import jef.database.SqlTemplate;
 import jef.database.query.Func;
+import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.populator.Transformer;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -25,7 +26,6 @@ import org.easyframe.tutorial.lesson7.entity.NodeTable;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-
 public class Case1 extends org.junit.Assert {
 	private static DbClient db;
 
@@ -34,7 +34,7 @@ public class Case1 extends org.junit.Assert {
 		new EntityEnhancer().enhance("org.easyframe.tutorial");
 		db = new DbClient();
 		ORMConfig.getInstance().setDebugMode(false);
-		db.dropTable(NodeTable.class,Person.class, Item.class, Student.class, School.class);
+		db.dropTable(NodeTable.class, Person.class, Item.class, Student.class, School.class);
 		db.createTable(Person.class, Item.class, Student.class, School.class);
 		db.createTable(NodeTable.class);
 		Person p = new Person();
@@ -221,27 +221,27 @@ public class Case1 extends org.junit.Assert {
 	 */
 	@Test
 	public void testStartWithConnectBy() throws SQLException {
-		//准备一些数据
+		// 准备一些数据
 		db.truncate(NodeTable.class);
-		List<NodeTable> data=new ArrayList<NodeTable>();
-		data.add(new NodeTable(1,0,"-Root"));
-		data.add(new NodeTable(2,1,"水果"));
-		data.add(new NodeTable(5,2," 西瓜"));
-		data.add(new NodeTable(10,2," 葡萄"));		
-		data.add(new NodeTable(4,2," 苹果"));
-		data.add(new NodeTable(8,4,"  青涩的苹果"));
-		data.add(new NodeTable(12,4,"  我的小苹果"));
+		List<NodeTable> data = new ArrayList<NodeTable>();
+		data.add(new NodeTable(1, 0, "-Root"));
+		data.add(new NodeTable(2, 1, "水果"));
+		data.add(new NodeTable(5, 2, " 西瓜"));
+		data.add(new NodeTable(10, 2, " 葡萄"));
+		data.add(new NodeTable(4, 2, " 苹果"));
+		data.add(new NodeTable(8, 4, "  青涩的苹果"));
+		data.add(new NodeTable(12, 4, "  我的小苹果"));
 
-		data.add(new NodeTable(3,1,"家电"));
-		data.add(new NodeTable(6,3," 电视机"));
-		data.add(new NodeTable(7,3," 洗衣机"));
-		data.add(new NodeTable(11,6,"  彩色电视机"));
+		data.add(new NodeTable(3, 1, "家电"));
+		data.add(new NodeTable(6, 3, " 电视机"));
+		data.add(new NodeTable(7, 3, " 洗衣机"));
+		data.add(new NodeTable(11, 6, "  彩色电视机"));
 		db.batchInsert(data);
-		
+
 		String sql = "select * from nodetable t START WITH t.id IN (4,6) CONNECT BY PRIOR t.id = t.pid";
 		NativeQuery<NodeTable> query = db.createNativeQuery(sql, NodeTable.class);
-		List<NodeTable> result=query.getResultList();
-		for(NodeTable p:result){
+		List<NodeTable> result = query.getResultList();
+		for (NodeTable p : result) {
 			System.out.println(p);
 		}
 	}
@@ -451,4 +451,50 @@ public class Case1 extends org.junit.Assert {
 		System.out.println("当前时间为:" + dbTime);
 	}
 
+	/**
+	 * 补充测试，支持limit关键字改写为当前数据库的分页
+	 */
+	@Test
+	public void testLimitKeyword() throws SQLException {
+		String sql = "select id, person_name,gender from t_person limit 2 offset 1";
+		{
+			NativeQuery<Person> query=db.createNativeQuery(sql, Person.class);
+			List<Person> result = query.getResultList();
+			System.out.println("COUNT:"+query.getResultCount());
+			//FIXME limit非本地数据库支持时，被移除造成结果不正确
+			//FIXME limit为本地数据库支持时，和count共同使用，结果肯定不对。
+			//assertEquals(2, query.getResultCount());
+			
+			System.out.println(result);
+			assertEquals(2, result.size());
+			ResultIterator<Person> it = db.createNativeQuery(sql, Person.class).getResultIterator();
+			for (; it.hasNext();) {
+				System.out.println(it.next());
+			}
+			it.close();
+
+		}
+		{
+			System.out.println("=========== Normal");
+			NativeQuery<Person> query = db.createNativeQuery("select id, person_name,gender from t_person", Person.class);
+			//FIXME 设置的Range对于getResultCount()无效。（或许这样才是对的。写入API-DOC即可。）
+			query.setRange(new IntRange(1, 2));
+			System.out.println("COUNT:"+query.getResultCount());
+		}
+		{
+			
+			//案例3，当limit和range同时指定后，range使用数据库分页，limit被SQL上移除，但会补做一次内存分页。(需要用NativeQuery测试)
+			System.out.println("=========== add range 1,2");
+			NativeQuery<Person> query = db.createNativeQuery(sql, Person.class);
+			query.setRange(new IntRange(2, 5));
+			//FIXME COUNT不对，前面已经说过了——
+			//count不会受RANGE影响
+			//当本地数据库不支持limit时，受limit影响
+			//当本地数据库支持limit时，影响不对
+			System.out.println("COUNT:"+query.getResultCount());
+			//FIXME 未进行二次过滤，只进行了一次过滤
+			System.out.println(query.getResultList());
+		}
+
+	}
 }

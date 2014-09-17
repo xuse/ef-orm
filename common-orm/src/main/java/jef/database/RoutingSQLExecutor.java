@@ -9,6 +9,8 @@ import java.util.List;
 import jef.common.PairSO;
 import jef.common.log.LogUtil;
 import jef.database.annotation.PartitionResult;
+import jef.database.jsqlparser.RemovedDelayProcess;
+import jef.database.jsqlparser.SqlFunctionlocalization;
 import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.visitor.Statement;
@@ -25,7 +27,6 @@ import jef.database.routing.sql.SqlAnalyzer;
 import jef.database.routing.sql.SqlExecutionParam;
 import jef.database.routing.sql.TableMetaCollector;
 import jef.database.wrapper.result.IResultSet;
-import jef.database.wrapper.result.JdbcResultSetAdapter;
 import jef.database.wrapper.result.MultipleResultSet;
 import jef.tools.StringUtils;
 
@@ -36,6 +37,7 @@ public class RoutingSQLExecutor implements  SQLExecutor {
 	private int fetchSize = ORMConfig.getInstance().getGlobalFetchSize();
 	private int maxResult = 0;
 	private Statement st;
+	private SqlFunctionlocalization l;
 	
 	/**
 	 * 从SQL语句加上返回类型构造
@@ -51,6 +53,8 @@ public class RoutingSQLExecutor implements  SQLExecutor {
 
 		this.db = db.asOperateTarget(null);
 		this.st = sql;
+		l=new SqlFunctionlocalization(db.getProfile(),this.db);
+		sql.accept(l);
 	}
 
 	/**
@@ -89,10 +93,10 @@ public class RoutingSQLExecutor implements  SQLExecutor {
 		SelectExecutionPlan plan = null;
 		plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select) sql, parse.getParamsMap(),parse.params, db);
 		if (plan == null) {// 普通查询
-			return new JdbcResultSetAdapter(db.getRawResultSet(s, maxResult, fetchSize, parse.params));
+			return db.getRawResultSet(s, maxResult, fetchSize, parse.params,parse);
 		} else if (plan.isChangeDatasource() != null) {// 垂直拆分查询
 			OperateTarget db = this.db.getTarget(plan.isChangeDatasource());
-			return new JdbcResultSetAdapter(db.getRawResultSet(s, maxResult, fetchSize, parse.params));
+			return db.getRawResultSet(s, maxResult, fetchSize, parse.params,parse);
 		} else {// 分表分库查询
 			if (plan.isMultiDatabase()) {// 多库
 				MultipleResultSet mrs = new MultipleResultSet(config.isCacheResultset(), debug);
@@ -100,22 +104,30 @@ public class RoutingSQLExecutor implements  SQLExecutor {
 					processQuery(db.getTarget(site.getDatabase()), plan.getSql(site, false), 0, mrs);
 				}
 				plan.parepareInMemoryProcess(null, mrs);
+				if(parse.hasInMemoryOperate()){
+					parse.parepareInMemoryProcess(null, mrs);
+				}
 				IResultSet irs = mrs.toSimple(null);
-				return new JdbcResultSetAdapter(irs);
+				
+				return irs;
 			}else if(plan.isEmpty()){//无法出结果，但是如果不查ResultSetMetadata无法生成.
-				return new JdbcResultSetAdapter(db.getRawResultSet(s, maxResult, fetchSize, parse.params)); 
+				return db.getRawResultSet(s, maxResult, fetchSize, parse.params,parse); 
 			} else { // 单库多表，基于Union的查询. 可以使用数据库分页
 				PartitionResult site = plan.getSites()[0];
 				PairSO<List<Object>> result = plan.getSql(plan.getSites()[0], false);
 				s = result.first;
-				return new JdbcResultSetAdapter(db.getTarget(site.getDatabase()).getRawResultSet(s, maxResult, fetchSize, result.second));
+				return db.getTarget(site.getDatabase()).getRawResultSet(s, maxResult, fetchSize, result.second,parse);
 			}
 		}
 	}
 
 	private SqlExecutionParam getSqlAndParams(OperateTarget db2, RoutingSQLExecutor jQuery,List<ParameterContext> params) {
 		ContextProvider cp=new ContextProvider(params);
-		return new SqlExecutionParam(st,SqlAnalyzer.asValue(params),cp);
+		SqlExecutionParam sp=new SqlExecutionParam(st,SqlAnalyzer.asValue(params),cp);
+		if(l.delayLimit!=null || l.delayStartWith!=null){
+			sp.setInMemoryClause(new RemovedDelayProcess(l.delayLimit, l.delayStartWith));	
+		}
+		 return sp;
 	}
 
 	/*

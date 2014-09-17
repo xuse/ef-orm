@@ -75,12 +75,23 @@ public class RoutingJdbcTest {
 	@Test
 	public void test3() throws SQLException{
 		executeQuery("select * from device");
-		//补充测试无Device表的场合
+		//补充案例。测试无Device表的场合
 		
-//		当使用多表查询后，由于变为内存分页，此时支持用limit来分页，反倒不支持用数据库原生方式分页，怎么办？
-//		如果查询后指向单表，此时SQL错误。。。。
-//		考虑，传入SQL一律使用limit进行分页，应用时处理
+//在使用JDataSource时，因为要实现分库后的分页功能，所以必须从SQL语句中解析出分页参数。
+//而不同数据库的分页语句写法变化非常大，（如ORacle，SQLSErver）,因此考虑让传入的SQL语句统一使用LIMIT关键字来描述分页信息。
+//但是用户并不关心传入的SQL语句对应的场合是分库的还是单表的。而所有传入的分页语句都使用Limit。
+//因此对于那些不支持LIMIT关键字的数据库（derby），我们希望NativeQuery和JDataSource都能正确处理Limit关键字。(OK)
+
+		
+		//案例1，此案例必须使用内存分页，正确（OK）
+
 		executeQuery("select * from device order by indexcode limit 12,3");
+		
+		//案例2，使用limit后，如果是单表，那么将改为数据库分页。(OK)
+		executeQuery("select * from Person2");
+		executeQuery("select * from Person2 order by name limit 2,12");
+		
+		
 	}
 
 
