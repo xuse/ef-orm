@@ -589,8 +589,7 @@ public class OperateTarget implements SqlTemplate {
 		@SuppressWarnings("unchecked")
 		@Override
 		public ResultIterator<T> transformer(IResultSet rs) throws SQLException {
-			ResultSetWrapper resultset = (ResultSetWrapper)rs;
-			return new ResultIterator.Impl<T>(db.session.iterateResultSet(resultset, null, transformers), resultset);
+			return new ResultIterator.Impl<T>(db.session.iterateResultSet(rs, null, transformers), rs);
 		}
 
 		@Override

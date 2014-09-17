@@ -131,6 +131,7 @@ public class CascadeTableTest extends MultiTableTestBase {
 			List<Person> result = db.select(t1.getInstance());
 			LogUtil.show(result.get(0));
 		}
+		db.close();
 		System.out.println("===========result==============");
 	}
 
