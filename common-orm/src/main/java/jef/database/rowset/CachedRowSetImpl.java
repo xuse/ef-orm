@@ -208,8 +208,7 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 	// ---------------------------------------------------------------------
 
 	public void refresh() throws SQLException {
-		numRows = rvh.size();;
-		// Also rowsFetched should be equal to rvh.size()
+		numRows = rvh==null?0:rvh.size();;
 		notifyRowSetChanged();
 	}
 	public void populate(ResultSet data) throws SQLException {
@@ -501,12 +500,8 @@ public class CachedRowSetImpl extends BaseRowSet implements RowSet, CachedRowSet
 		// the disconnected rowset
 		cursorPos = 0;
 		numRows = 0;
-
 		// clear the vector of it's present contents
-		rvh.clear();
-
-		// this will make it eligible for gc
-		// rvh = null;
+		rvh=null;
 	}
 
 	/**
