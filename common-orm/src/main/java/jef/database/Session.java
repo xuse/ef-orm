@@ -66,8 +66,8 @@ import jef.database.wrapper.clause.InMemoryDistinct;
 import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.QueryClause;
+import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.database.wrapper.populator.ResultPopulatorImpl;
-import jef.database.wrapper.populator.ResultSetTransformer;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.result.IResultSet;
 import jef.database.wrapper.result.MultipleResultSet;
@@ -1469,8 +1469,8 @@ public abstract class Session {
 	 * @return 缓存的结果集，所有结果将被缓存在内存中，不会持续占用连接，也不会接收数据库中的数据变化
 	 * @throws SQLException
 	 */
-	public final ResultSet getResultSet(String sql, int maxReturn, Object... params) throws SQLException {
-		return asOperateTarget(null).innerSelectBySql(sql, ResultSetTransformer.CACHED_RESULTSET, maxReturn, 0, Arrays.asList(params),null);
+	public final ResultSet getResultSet(String sql, int maxRows, Object... params) throws SQLException {
+		return asOperateTarget(null).innerSelectBySql(sql, AbstractResultSetTransformer.cacheResultSet(maxRows, 0), Arrays.asList(params),null);
 	}
 
 	/**

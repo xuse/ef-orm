@@ -33,7 +33,9 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 	private DatabaseDialect profile;
 	private OperateTarget db;
 	private boolean check;
-	private RemovedDelayProcess delays=new RemovedDelayProcess();
+	
+	public StartWithExpression delayStartWith;
+	public Limit               delayLimit;
 
 	public SqlFunctionlocalization(DatabaseDialect profile, OperateTarget db) {
 		this.profile = profile;
@@ -52,10 +54,6 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 			func.setParameters(new ExpressionList(el));
 			concat.rewrite = func;
 		}
-	}
-
-	public RemovedDelayProcess getDelayProcess() {
-		return delays;
 	}
 
 	@Override
@@ -107,7 +105,7 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 	public void visit(StartWithExpression startWithExpression) {
 		if (profile.notHas(Feature.SUPPORT_CONNECT_BY)) {
 			if (super.visitPath.size() <= 2) { // 距离statement最大为2 将递归条件保留下来，从而后续支持内存中 递归过滤
-				delays.startWith = new StartWithExpression(startWithExpression.getStartExpression(), startWithExpression.getConnectExpression());
+				delayStartWith = new StartWithExpression(startWithExpression.getStartExpression(), startWithExpression.getConnectExpression());
 			} else {
 				if (ORMConfig.getInstance().isAllowRemoveStartWith()) {
 					String removed = startWithExpression.toString();
@@ -127,7 +125,7 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 	public void visit(Limit limit) {
 		if (profile.notHas(Feature.SUPPORT_LIMIT)) {
 			if (super.visitPath.size() <= 2) { // 距离statement最大为2 将递归条件保留下来，从而后续支持内存中 递归过滤
-				delays.limit=new Limit(limit);
+				delayLimit=new Limit(limit);
 				limit.clear();
 			}
 		}

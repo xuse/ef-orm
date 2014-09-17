@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jef.common.wrapper.IntRange;
 import jef.database.Condition.Operator;
 import jef.database.jsqlparser.RemovedDelayProcess;
 import jef.database.jsqlparser.expression.BinaryExpression;
@@ -18,6 +19,7 @@ import jef.database.jsqlparser.expression.operators.relational.Between;
 import jef.database.jsqlparser.expression.operators.relational.EqualsTo;
 import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
 import jef.database.jsqlparser.expression.operators.relational.InExpression;
+import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.statement.select.StartWithExpression;
@@ -31,33 +33,39 @@ import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.clause.InMemoryStartWithConnectBy;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
+import jef.database.wrapper.result.MultipleResultSet;
 import jef.tools.StringUtils;
 
 import com.alibaba.druid.proxy.jdbc.JdbcParameter;
 
-public class SqlExecutionParam {
+public class SqlExecutionParam implements InMemoryOperateContext {
 	public Statement statement;
 	public List<Object> params;
 	private ParameterProvider rawParams;
 	private Map<Expression, Object> paramsMap;
-	//后处理
-	public RemovedDelayProcess delays;
+	// 后处理
+	private RemovedDelayProcess delays;
 
-	
-	public SqlExecutionParam(Statement st2, List<Object> params2,ParameterProvider rawParams) {
-		this.statement = st2;
-		this.params = params2;
-		this.rawParams=rawParams;
-		paramsMap = SqlAnalyzer.reverse(st2, params2); // 参数对应关系还原
+	/**
+	 * @param st
+	 *            SQL Statement
+	 * @param params
+	 *            参数
+	 * @param rawParams
+	 *            参数
+	 */
+	public SqlExecutionParam(Statement st, List<Object> params, ParameterProvider rawParams) {
+		this.statement = st;
+		this.params = params;
+		this.rawParams = rawParams;
+		paramsMap = SqlAnalyzer.reverse(st, params); // 参数对应关系还原
 	}
 
-	
 	public Map<Expression, Object> getParamsMap() {
 		return paramsMap;
 	}
 
-
-	public InMemoryStartWithConnectBy parseStartWith(ColumnMeta columns) {
+	private InMemoryStartWithConnectBy parseStartWith(ColumnMeta columns) {
 		if (statement instanceof Select) {
 			return parse((Select) statement, columns);
 		}
@@ -73,8 +81,8 @@ public class SqlExecutionParam {
 	}
 
 	private InMemoryStartWithConnectBy parse(PlainSelect selectBody, ColumnMeta columns) {
-		StartWithExpression startWith=delays.startWith;
-		if(startWith==null){
+		StartWithExpression startWith = delays.startWith;
+		if (startWith == null) {
 			return null;
 		}
 		// 1 收集别名和表名的关系
@@ -83,7 +91,7 @@ public class SqlExecutionParam {
 		// 2解析
 		InMemoryStartWithConnectBy result = new InMemoryStartWithConnectBy();
 
-		parseStartWith(startWith.getStartExpression(), result, maps,columns);
+		parseStartWith(startWith.getStartExpression(), result, maps, columns);
 		parseConnectBy(getAsEqualsTo(startWith.getConnectExpression()), result, maps, columns);
 		return result;
 	}
@@ -98,30 +106,30 @@ public class SqlExecutionParam {
 		throw new UnsupportedOperationException(ex.toString());
 	}
 
-	private void parseStartWith(Expression startExpression, InMemoryStartWithConnectBy result, Map<String, String> maps,ColumnMeta columns) {
+	private void parseStartWith(Expression startExpression, InMemoryStartWithConnectBy result, Map<String, String> maps, ColumnMeta columns) {
 		int leftColumn;
 		Operator op;
 		Object value;
 		switch (startExpression.getType()) {
 		case eq:
 			op = Operator.EQUALS;
-			leftColumn=getColumnId(((BinaryExpression) startExpression).getLeftExpression(),columns,maps);
+			leftColumn = getColumnId(((BinaryExpression) startExpression).getLeftExpression(), columns, maps);
 			value = getAsValue(((BinaryExpression) startExpression).getRightExpression());
 			break;
 		case ge:
 			op = Operator.GREAT_EQUALS;
-			leftColumn=getColumnId(((BinaryExpression) startExpression).getLeftExpression(),columns,maps);
+			leftColumn = getColumnId(((BinaryExpression) startExpression).getLeftExpression(), columns, maps);
 			value = getAsValue(((BinaryExpression) startExpression).getRightExpression());
 			break;
 		case gt:
 			op = Operator.GREAT;
-			leftColumn=getColumnId(((BinaryExpression) startExpression).getLeftExpression(),columns,maps);
+			leftColumn = getColumnId(((BinaryExpression) startExpression).getLeftExpression(), columns, maps);
 			value = getAsValue(((BinaryExpression) startExpression).getRightExpression());
 			break;
 		case in:
 			op = Operator.IN;
 			InExpression in = (InExpression) startExpression;
-			leftColumn=getColumnId(in.getLeftExpression(),columns,maps);
+			leftColumn = getColumnId(in.getLeftExpression(), columns, maps);
 			if (in.getItemsList() instanceof ExpressionList) {
 				List<Object> values = new ArrayList<Object>();
 				for (Expression ex : ((ExpressionList) in.getItemsList()).getExpressions()) {
@@ -132,48 +140,48 @@ public class SqlExecutionParam {
 						values.add(v);
 					}
 				}
-				value=values;
+				value = values;
 			} else {
 				throw new UnsupportedOperationException(in.getItemsList().toString());
 			}
 			break;
 		case lt:
 			op = Operator.LESS;
-			leftColumn=getColumnId(((BinaryExpression) startExpression).getLeftExpression(),columns,maps);
+			leftColumn = getColumnId(((BinaryExpression) startExpression).getLeftExpression(), columns, maps);
 			value = getAsValue(((BinaryExpression) startExpression).getRightExpression());
 			break;
 		case le:
 			op = Operator.LESS_EQUALS;
-			leftColumn=getColumnId(((BinaryExpression) startExpression).getLeftExpression(),columns,maps);
+			leftColumn = getColumnId(((BinaryExpression) startExpression).getLeftExpression(), columns, maps);
 			value = getAsValue(((BinaryExpression) startExpression).getRightExpression());
 			break;
 		case like:
 			op = Operator.MATCH_ANY;
-			leftColumn=getColumnId(((BinaryExpression) startExpression).getLeftExpression(),columns,maps);
+			leftColumn = getColumnId(((BinaryExpression) startExpression).getLeftExpression(), columns, maps);
 			value = getAsValue(((BinaryExpression) startExpression).getRightExpression());
 			break;
 		case ne:
 			op = Operator.NOT_EQUALS;
-			leftColumn=getColumnId(((BinaryExpression) startExpression).getLeftExpression(),columns,maps);
+			leftColumn = getColumnId(((BinaryExpression) startExpression).getLeftExpression(), columns, maps);
 			value = getAsValue(((BinaryExpression) startExpression).getRightExpression());
 			break;
 		case between:
 			op = Operator.BETWEEN_L_L;
 			Between be = (Between) startExpression;
-			leftColumn=getColumnId(be.getLeftExpression(),columns,maps);
-			value =Arrays.asList(getAsValue(be.getBetweenExpressionStart()), getAsValue(be.getBetweenExpressionEnd()));
+			leftColumn = getColumnId(be.getLeftExpression(), columns, maps);
+			value = Arrays.asList(getAsValue(be.getBetweenExpressionStart()), getAsValue(be.getBetweenExpressionEnd()));
 			break;
 		default:
 			throw new UnsupportedOperationException();
 		}
-		result.startWithColumn=leftColumn;
-		result.startWithOperator=op;
-		result.startWithValue=value;
+		result.startWithColumn = leftColumn;
+		result.startWithOperator = op;
+		result.startWithValue = value;
 	}
 
-	private int getColumnId(Expression leftExpression,ColumnMeta columns,Map<String,String> maps) {
-		if(leftExpression instanceof Column){
-			return getColumn(columns, (Column)leftExpression, maps);
+	private int getColumnId(Expression leftExpression, ColumnMeta columns, Map<String, String> maps) {
+		if (leftExpression instanceof Column) {
+			return getColumn(columns, (Column) leftExpression, maps);
 		}
 		throw new UnsupportedOperationException(leftExpression.toString());
 	}
@@ -183,12 +191,12 @@ public class SqlExecutionParam {
 			SqlValue value = (SqlValue) exp;
 			return value.getValue();
 		} else if (exp instanceof JpqlParameter) {
-			JpqlParameter jp=(JpqlParameter)exp;
+			JpqlParameter jp = (JpqlParameter) exp;
 			Object value;
-			if(jp.getName()==null){
-				value= rawParams.getIndexedParam(jp.getIndex());	
-			}else{
-				value=rawParams.getNamedParam(jp.getName());
+			if (jp.getName() == null) {
+				value = rawParams.getIndexedParam(jp.getIndex());
+			} else {
+				value = rawParams.getNamedParam(jp.getName());
 			}
 			return value;
 		} else if (exp instanceof JdbcParameter) {
@@ -212,8 +220,8 @@ public class SqlExecutionParam {
 		if (parent instanceof Column && current instanceof Column) {
 			Column c1 = (Column) current;
 			Column c2 = (Column) parent;
-			int n1=getColumn(columns,c1,maps);
-			int n2=getColumn(columns,c2,maps);
+			int n1 = getColumn(columns, c1, maps);
+			int n2 = getColumn(columns, c2, maps);
 			if (n1 > 0 && n2 > 0) {
 				result.connectPrior = n1;
 				result.connectParent = n2;
@@ -225,7 +233,7 @@ public class SqlExecutionParam {
 
 	}
 
-	private int getColumn(ColumnMeta columns, Column c1,Map<String,String> maps) {
+	private int getColumn(ColumnMeta columns, Column c1, Map<String, String> maps) {
 		String table1 = null;
 		if (StringUtils.isNotEmpty(c1.getTableAlias())) {
 			table1 = maps.get(StringUtils.upperCase(c1.getTableAlias()));
@@ -240,14 +248,14 @@ public class SqlExecutionParam {
 	}
 
 	private boolean match(String table1, String columnName, ColumnDescription cd) {
-		if(table1!=null){
-			if(!StringUtils.equalsIgnoreCase(table1, cd.getTable())){
+		if (table1 != null) {
+			if (!StringUtils.equalsIgnoreCase(table1, cd.getTable())) {
 				return false;
 			}
 		}
 		return StringUtils.equalsIgnoreCase(columnName, cd.getName());
 	}
-	
+
 	static class TableCollector extends VisitorAdapter {
 		Map<String, String> tableAlias;
 
@@ -263,14 +271,67 @@ public class SqlExecutionParam {
 		}
 	}
 
-	public InMemoryPaging parseLimit(ColumnMeta columns) {
-		
-		return null;
+	public InMemoryPaging parseLimit(Limit limit,ColumnMeta columns) {
+		int offset = 0;
+		int rowcount = 0;
+		if (limit.getOffsetJdbcParameter() != null) {
+			Object obj=getParamsMap().get(limit.getOffsetJdbcParameter());
+			if(obj instanceof Number){
+				offset = ((Number) obj).intValue();
+			}
+		} else {
+			offset = (int)limit.getOffset();
+		}
+		if (limit.getRowCountJdbcParameter() != null) {
+			Object obj=getParamsMap().get(limit.getRowCountJdbcParameter());
+			if(obj instanceof Number){
+				rowcount = ((Number) obj).intValue();						
+			}
+
+		} else {
+			rowcount = (int)limit.getRowCount();
+		}
+		if(offset>0 || rowcount>0){
+			return new InMemoryPaging(offset, offset+rowcount);
+		}else{
+			return null;
+		}
 	}
 
+	@Override
+	public boolean hasInMemoryOperate() {
+		return delays!=null && delays.isValid();
+	}
 
-	public boolean isLazyValid() {
-		// TODO Auto-generated method stub
-		return false;
+	@Override
+	public void parepareInMemoryProcess(IntRange range, MultipleResultSet mrs) {
+		if (delays == null) {
+			return;
+		}
+		if(delays.startWith!=null){
+			mrs.setInMemoryConnectBy(parseStartWith(mrs.getColumns()));
+		}
+		if(delays.limit!=null){
+			mrs.setInMemoryPage(parseLimit(delays.limit,mrs.getColumns()));
+		}
+	}
+
+	/**
+	 * 设置可能需要内存计算的任务
+	 * 
+	 * @param delays
+	 */
+	public void setInMemoryClause(RemovedDelayProcess delays) {
+		this.delays = delays;
+	}
+
+	public Limit getLimit() {
+		return delays == null ? null : delays.limit;
+	}
+
+	public void clearLimit() {
+		if (delays != null) {
+			delays.limit = null;
+		}
 	}
 }

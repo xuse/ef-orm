@@ -1,6 +1,5 @@
 package jef.database;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,7 +22,9 @@ import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.meta.AbstractSequence;
 import jef.database.meta.Feature;
 import jef.database.meta.TupleMetadata;
+import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.database.wrapper.populator.ResultSetTransformer;
+import jef.database.wrapper.result.IResultSet;
 import jef.tools.Assert;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
@@ -402,8 +403,8 @@ public final class SequenceManager {
 	/**
 	 * 从结果中获得单个LONG值
 	 */
-	private static final ResultSetTransformer<Long> GET_LONG_OR_TABLE_NOT_EXIST = new ResultSetTransformer<Long>() {
-		public Long transformer(ResultSet rs, DatabaseDialect db) throws SQLException {
+	private static final ResultSetTransformer<Long> GET_LONG_OR_TABLE_NOT_EXIST = new AbstractResultSetTransformer<Long>() {
+		public Long transformer(IResultSet rs) throws SQLException {
 			if (rs.next()) {
 				return rs.getLong(1);
 			} else {

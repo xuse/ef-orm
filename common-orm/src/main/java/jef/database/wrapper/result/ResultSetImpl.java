@@ -42,6 +42,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.PersistenceException;
 import javax.sql.rowset.CachedRowSet;
 
 import jef.common.log.LogUtil;
@@ -54,20 +55,21 @@ import jef.database.wrapper.populator.ColumnMeta;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 
+/**
+ * IResultSet的最简实现
+ * @author jiyi
+ *
+ */
 public class ResultSetImpl implements IResultSet {
 	protected ResultSet rs;
 	protected DatabaseDialect profile;
 	private ColumnMeta columns;
 	private int total = -1; // -1表示尚未取得
-
+	private Map<Reference, List<Condition>> filters;
+	
 	public ResultSetImpl(ResultSet rs, DatabaseDialect profile) {
 		this.rs = rs;
 		this.profile = profile;
-		try {
-			initMetadata();
-		} catch (SQLException e) {
-			LogUtil.exception(e);
-		}
 	}
 	
 	
@@ -79,7 +81,6 @@ public class ResultSetImpl implements IResultSet {
 		}
 	}
 	
-	private Map<Reference, List<Condition>> filters;
 	
 	public Map<Reference, List<Condition>> getFilters() {
 		return filters;
@@ -95,20 +96,14 @@ public class ResultSetImpl implements IResultSet {
 		this.columns=columns;
 	}
 
-	// 获取结果集元数据
-	private void initMetadata() throws SQLException {
-		ResultSetMetaData meta = rs.getMetaData();
-		List<ColumnDescription> columnList = new ArrayList<ColumnDescription>();
-		for (int i = 1; i <= meta.getColumnCount(); i++) {
-			//对于Oracle getCOlumnName和getColumnLabel是一样的（非标准JDBC实现），MySQL正确地实现了JDBC的要求，getLabel得到别名，getColumnName得到表的列名
-			String name=meta.getColumnLabel(i);  
-			int type=meta.getColumnType(i);
-			columnList.add(new ColumnDescription(i,type,name,meta.getTableName(i),meta.getSchemaName(i)));
-		}
-		this.columns = new ColumnMeta(columnList,meta);
-	}
-
 	public ColumnMeta getColumns(){
+		if(columns==null){
+			try {
+				this.columns = new ColumnMeta(getMetaData());
+			} catch (SQLException e) {
+				throw new PersistenceException(e);
+			}
+		}
 		return columns;
 	}
 	
@@ -155,7 +150,7 @@ public class ResultSetImpl implements IResultSet {
 				count++;
 				if (count <= maxReturn || maxReturn == 0) {
 					List<Object> row = new ArrayList<Object>();
-					for(ColumnDescription c: columns.getColumns()){
+					for(ColumnDescription c: getColumns().getColumns()){
 						switch(c.getType()){
 						case Types.LONGNVARCHAR:
 						case Types.LONGVARCHAR:
@@ -481,11 +476,10 @@ public class ResultSetImpl implements IResultSet {
 	public void updateObject(int columnIndex, Object x) throws SQLException {
 		rs.updateObject(columnIndex, x);
 	}
-
-
+	
 	@Override
 	public ResultSetMetaData getMetaData() throws SQLException {
-		return columns.getMeta();
+		return rs.getMetaData();
 	}
 
 

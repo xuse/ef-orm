@@ -1585,7 +1585,7 @@ public class DbMetaData extends MetadataConnectionPool {
 			if (maxReturn > 0)
 				st.setMaxRows(maxReturn);
 			rs = st.executeQuery();
-			return rst.transformer(rs, profile);
+			return rst.transformer(new ResultSetImpl(rs,profile));
 		} catch (SQLException e) {
 			DebugUtil.setSqlState(e, sql);
 			throw e;

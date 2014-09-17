@@ -15,55 +15,62 @@
  */
 package jef.database.wrapper.populator;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Date;
 
-import javax.sql.rowset.CachedRowSet;
-
-import jef.database.dialect.DatabaseDialect;
+import jef.database.wrapper.result.IResultSet;
 
 /**
  * 直接对JDBC结果集进行操作的转换器
+ * 
  * @author jiyi
- *
+ * 
  * @param <T>
  */
 public interface ResultSetTransformer<T> {
-	T transformer(ResultSet rs, DatabaseDialect profile) throws SQLException;
-	
-	public static final ResultSetTransformer<CachedRowSet> CACHED_RESULTSET = new ResultSetTransformer<CachedRowSet>() {
-		public CachedRowSet transformer(ResultSet rs, DatabaseDialect db) throws SQLException {
-			CachedRowSet cache = db.newCacheRowSetInstance();
-			cache.populate(rs);
-			return cache;
-		}
-	};
+	T transformer(IResultSet rs) throws SQLException;
 
-	public static final ResultSetTransformer<Long> GET_FIRST_LONG = new ResultSetTransformer<Long>() {
-		public Long transformer(ResultSet rs, DatabaseDialect db) throws SQLException {
+	int getMaxRows();
+
+	int getFetchSize();
+
+	int getQueryTimeout();
+
+	ResultSetTransformer<T> setMaxRows(int maxRows);
+
+	ResultSetTransformer<T> setFetchSize(int fetchSize);
+
+	ResultSetTransformer<T> setQueryTimeout(int timeout);
+
+	void apply(Statement st) throws SQLException;
+
+	boolean autoClose();
+
+	public static final ResultSetTransformer<Long> GET_FIRST_LONG = new AbstractResultSetTransformer<Long>() {
+		public Long transformer(IResultSet rs) throws SQLException {
 			if (rs.next()) {
 				return rs.getLong(1);
 			} else {
 				throw new SQLException("Result incorrect.count result must not be empty.");
 			}
 		}
-	};
-	
-	public static final ResultSetTransformer<Integer> GET_FIRST_INT = new ResultSetTransformer<Integer>() {
-		public Integer transformer(ResultSet rs, DatabaseDialect db) throws SQLException {
+	}.setMaxRows(1);
+
+	public static final ResultSetTransformer<Integer> GET_FIRST_INT = new AbstractResultSetTransformer<Integer>() {
+		public Integer transformer(IResultSet rs) throws SQLException {
 			if (rs.next()) {
 				return rs.getInt(1);
 			} else {
 				throw new SQLException("Result incorrect.count result must not be empty.");
 			}
 		}
-	};
-	
-	public static final ResultSetTransformer<Date> GET_FIRST_TIMESTAMP = new ResultSetTransformer<Date>() {
-		public Date transformer(ResultSet rs, DatabaseDialect db) throws SQLException {
+	}.setMaxRows(1);
+
+	public static final ResultSetTransformer<Date> GET_FIRST_TIMESTAMP = new AbstractResultSetTransformer<Date>() {
+		public Date transformer(IResultSet rs) throws SQLException {
 			if (rs.next()) {
-				java.sql.Timestamp ts=rs.getTimestamp(1);
+				java.sql.Timestamp ts = rs.getTimestamp(1);
 				return new java.util.Date(ts.getTime());
 			} else {
 				throw new SQLException("Result incorrect.count result must not be empty.");

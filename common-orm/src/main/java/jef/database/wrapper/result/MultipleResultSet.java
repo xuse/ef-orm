@@ -33,6 +33,7 @@ import jef.database.OperateTarget;
 import jef.database.Session.PopulateStrategy;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Reference;
+import jef.database.routing.sql.InMemoryOperateContext;
 import jef.database.wrapper.clause.InMemoryDistinct;
 import jef.database.wrapper.clause.InMemoryGroupByHaving;
 import jef.database.wrapper.clause.InMemoryOrderBy;
@@ -86,17 +87,17 @@ public final class MultipleResultSet extends AbstractResultSet{
 	
 	private void initMetadata(ResultSet wrapped) throws SQLException {
 		ResultSetMetaData meta = wrapped.getMetaData();
-		List<ColumnDescription> columnList = new ArrayList<ColumnDescription>();
-		for (int i = 1; i <= meta.getColumnCount(); i++) {
-			String name = meta.getColumnLabel(i); // 对于Oracle
-													// getCOlumnName和getColumnLabel是一样的（非标准JDBC实现），MySQL正确地实现了JDBC的要求，getLabel得到别名，getColumnName得到表的列名
-			int type = meta.getColumnType(i);
-			columnList.add(new ColumnDescription(i, type, name,meta.getTableName(i),meta.getSchemaName(i)));
-		}
-		this.columns = new ColumnMeta(columnList,meta);
+		this.columns = new ColumnMeta(meta);
 	}
 
-
+	public static IResultSet toInMemoryProcessorResultSet(InMemoryOperateContext context,ResultSetHolder... rs){
+		MultipleResultSet mrs=new MultipleResultSet(false,false);
+		for(ResultSetHolder rsh:rs){
+			mrs.add(rsh);
+		}
+		context.parepareInMemoryProcess(null, mrs);
+		return mrs.toSimple(null);
+	}
 
 	public boolean next() {
 		try {
@@ -156,6 +157,27 @@ public final class MultipleResultSet extends AbstractResultSet{
 		current = results.size();
 	}
 	
+	public void add(ResultSetHolder rsh) {
+		if (columns == null) {
+			try {
+				initMetadata(rsh.rs);
+			} catch (SQLException e) {
+				throw new IllegalStateException(e);
+			}
+		}
+		results.add(rsh);
+		if (cache) {
+			try{
+				rsh.rs = tryCache(rsh.rs, rsh.db.getProfile());
+				rsh.close(false);
+				return;
+			}catch(SQLException e){
+				//缓存失败
+				LogUtil.exception(e);
+			}
+		}
+	}
+	
 	/**
 	 * 添加一个
 	 * 
@@ -170,20 +192,19 @@ public final class MultipleResultSet extends AbstractResultSet{
 				throw new IllegalStateException(e);
 			}
 		}
-		ResultSetHolder r = new ResultSetHolder(tx,statement,rs);
-		results.add(r);
+		ResultSetHolder rsh = new ResultSetHolder(tx,statement,rs);
+		results.add(rsh);
 		if (cache) {
 			try{
-				r.rs = tryCache(rs, tx.getProfile());
-				r.close(false);
+				rsh.rs = tryCache(rs, tx.getProfile());
+				rsh.close(false);
 				return;
 			}catch(SQLException e){
 				//缓存失败
 				LogUtil.exception(e);
 			}
 		}
-		r.rs = rs;
-		
+//		rsh.rs = rs;
 	}
 
 	private ResultSet tryCache(ResultSet set, DatabaseDialect profile) throws SQLException {

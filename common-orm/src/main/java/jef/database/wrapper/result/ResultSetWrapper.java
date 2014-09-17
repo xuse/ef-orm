@@ -23,7 +23,11 @@ import jef.database.OperateTarget;
 import jef.database.wrapper.populator.ColumnMeta;
 import jef.tools.Assert;
 
-
+/**
+ * IResultSet的最简实现相似。但CLose的时候能够将Statement和对应的数据库连接一起释放。
+ * @author jiyi
+ *
+ */
 public class ResultSetWrapper extends ResultSetImpl{
 	private ResultSetHolder holder;
 	

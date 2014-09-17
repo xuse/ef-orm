@@ -32,7 +32,6 @@ import jef.database.jsqlparser.expression.operators.relational.MinorThan;
 import jef.database.jsqlparser.expression.operators.relational.MinorThanEquals;
 import jef.database.jsqlparser.expression.operators.relational.NotEqualsTo;
 import jef.database.jsqlparser.parser.ParseException;
-import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.statement.select.Union;
 import jef.database.jsqlparser.visitor.Expression;
@@ -134,12 +133,11 @@ public class NamedQueryConfig extends jef.database.DataObject {
 		this.fromDb = fromDb;
 	}
 
-	static class DialectCase {
+	private static class DialectCase {
 		Statement statement;
 		jef.database.jsqlparser.statement.select.Select count;
 		Map<Object, JpqlParameter> params;
 		RemovedDelayProcess delays;
-		Limit topLimit;
 	}
 
 	/*
@@ -194,9 +192,11 @@ public class NamedQueryConfig extends jef.database.DataObject {
 				st.accept(new JPQLSelectConvert(db.getProcessor()));
 
 			DialectCase result = new DialectCase();
-			result.delays=localization.getDelayProcess();
 			result.statement = st;
 			result.params = params;
+			if(localization.delayLimit!=null || localization.delayStartWith!=null){
+				result.delays=new RemovedDelayProcess(localization.delayLimit,localization.delayStartWith);
+			}
 			return result;
 		} catch (ParseException e) {
 			String message = e.getMessage();
@@ -251,7 +251,7 @@ public class NamedQueryConfig extends jef.database.DataObject {
 	public SqlExecutionParam getSqlAndParams(OperateTarget db, ParameterProvider prov) throws SQLException {
 		DialectCase dc = getDialectCase(db);
 		SqlExecutionParam result= applyParam(dc.statement, prov);
-		result.delays=dc.delays;
+		result.setInMemoryClause(dc.delays);
 		return result;
 	}
 
@@ -303,7 +303,7 @@ public class NamedQueryConfig extends jef.database.DataObject {
 			}
 		}
 		SqlExecutionParam result= applyParam(dc.count, prov);
-		result.delays=dc.delays;
+		result.setInMemoryClause(dc.delays);
 		return result;
 	}
 

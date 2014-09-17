@@ -247,7 +247,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 		long count=0;
 		for(String table: site.getTables()){
 			String sql=getSql(table);
-			count+=db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, 1, 0, context.params,null);
+			count+=db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, context.params,null);
 		}
 		return count;
 	}

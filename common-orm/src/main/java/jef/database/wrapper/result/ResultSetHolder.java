@@ -35,6 +35,10 @@ public final class ResultSetHolder {
 		this.rs=rs;
 	}
 	
+	/**
+	 * 
+	 * @param closeResultSet 是否关闭ResultSet
+	 */
 	public void close(boolean closeResultSet) {
 		if(closeResultSet && rs!=null){
 			DbUtils.close(rs);
