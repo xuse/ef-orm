@@ -1,5 +1,7 @@
 package jef.database.dialect.type;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.sql.SQLException;
@@ -44,6 +46,12 @@ public abstract class ATypeMapping<T> implements MappingType<T>{
 			Type[] p = ((ParameterizedType) type).getActualTypeArguments();
 			if(p[0] instanceof Class){
 				this.clz = (Class<T>) p[0];
+			}else if(p[0] instanceof GenericArrayType){
+				GenericArrayType at=(GenericArrayType)p[0];
+				Type compType=at.getGenericComponentType();
+				if(compType instanceof Class){
+					this.clz=(Class<T>) Array.newInstance((Class)compType, 0).getClass();
+				}
 			}
 			this.primitiveClz=BeanUtils.toPrimitiveClass(this.clz);
 		}
