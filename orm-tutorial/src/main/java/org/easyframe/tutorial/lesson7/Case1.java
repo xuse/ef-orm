@@ -12,10 +12,13 @@ import jef.common.wrapper.Page;
 import jef.database.DbClient;
 import jef.database.NativeQuery;
 import jef.database.ORMConfig;
+import jef.database.Session;
 import jef.database.SqlTemplate;
+import jef.database.Transaction;
 import jef.database.query.Func;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.populator.Transformer;
+import jef.tools.string.RandomData;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.easyframe.tutorial.lesson2.entity.Student;
@@ -456,45 +459,60 @@ public class Case1 extends org.junit.Assert {
 	 */
 	@Test
 	public void testLimitKeyword() throws SQLException {
-		String sql = "select id, person_name,gender from t_person limit 2 offset 1";
+		Transaction db=this.db.startTransaction();
+		insertMore(10,db);
+		String sql = "select id, person_name,gender from t_person order by person_name limit 8 offset 4"; 
 		{
 			NativeQuery<Person> query=db.createNativeQuery(sql, Person.class);
-			List<Person> result = query.getResultList();
-			System.out.println("COUNT:"+query.getResultCount());
-			//FIXME limit非本地数据库支持时，被移除造成结果不正确
-			//FIXME limit为本地数据库支持时，和count共同使用，结果肯定不对。
-			//assertEquals(2, query.getResultCount());
-			
-			System.out.println(result);
-			assertEquals(2, result.size());
+			assertEquals(8, query.getResultCount());
+			assertEquals(8, query.getResultList().size());
 			ResultIterator<Person> it = db.createNativeQuery(sql, Person.class).getResultIterator();
+			int count=0;
 			for (; it.hasNext();) {
-				System.out.println(it.next());
+				it.next();
+				count++;
 			}
 			it.close();
-
+			assertEquals(8, count);
 		}
 		{
 			System.out.println("=========== Normal");
-			NativeQuery<Person> query = db.createNativeQuery("select id, person_name,gender from t_person", Person.class);
-			//FIXME 设置的Range对于getResultCount()无效。（或许这样才是对的。写入API-DOC即可。）
-			query.setRange(new IntRange(1, 2));
-			System.out.println("COUNT:"+query.getResultCount());
+			NativeQuery<Person> query = db.createNativeQuery("select id, person_name,gender from t_person order by person_name", Person.class);
+			query.setRange(new IntRange(6, 10));
+			assertEquals(13, query.getResultCount());
+			List<Person> list=query.getResultList();
+			assertEquals(5, list.size());
+			//特性：Range设定不会影响getResultSet()方法, API文档已修订
+			
 		}
 		{
 			
 			//案例3，当limit和range同时指定后，range使用数据库分页，limit被SQL上移除，但会补做一次内存分页。(需要用NativeQuery测试)
 			System.out.println("=========== add range 1,2");
+			System.out.println(sql);
 			NativeQuery<Person> query = db.createNativeQuery(sql, Person.class);
-			query.setRange(new IntRange(2, 5));
-			//FIXME COUNT不对，前面已经说过了——
-			//count不会受RANGE影响
-			//当本地数据库不支持limit时，受limit影响
-			//当本地数据库支持limit时，影响不对
-			System.out.println("COUNT:"+query.getResultCount());
-			//FIXME 未进行二次过滤，只进行了一次过滤
-			System.out.println(query.getResultList());
+			assertEquals(8, query.getResultCount());
+			System.out.println("Range set");
+			query.setRange(new IntRange(3, 3));
+			assertEquals(8, query.getResultCount());	//设置Range，不影响结果
+			
+			
+			System.out.println("进行了双重过滤，原先的SQL语句过滤了前4条，这里又过滤了两条，相当于过滤了7条。");
+			assertEquals(1, query.getResultList().size());
 		}
+		db.rollback();
+	}
 
+	private void insertMore(int max,Session session) throws SQLException {
+		List<Person> ps=new ArrayList<Person>();
+		for(int i=0;i<max;i++){
+			Person p = new Person();
+			p.setGender('M');
+			p.setCurrentSchoolId(1);
+			p.setCreated(new Date());
+			p.setName(RandomData.randomChineseName());	
+			ps.add(p);
+		}
+		session.batchInsert(ps);
 	}
 }
