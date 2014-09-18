@@ -6,6 +6,7 @@ import java.util.List;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.expression.Function;
+import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.statement.select.SelectExpressionItem;
 import jef.database.jsqlparser.statement.select.SubSelect;
@@ -19,6 +20,7 @@ import jef.database.query.SqlExpression;
 public class SelectToCountWrapper extends PlainSelect{
 	private SubSelect inner;
 	private boolean isDistinct;
+	private Limit removedLimit;
 	
 	public SelectToCountWrapper(Union union){
 		//将Select部分重写为新的Count Function
@@ -75,7 +77,7 @@ public class SelectToCountWrapper extends PlainSelect{
 			this.where=select.getWhere();
 			this.groupByColumnReferences=select.getGroupByColumnReferences();
 			this.having=select.getHaving();
-			this.limit=select.getLimit();
+			removedLimit=select.getLimit();
 			//this.orderByElements=select.getOrderByElements(); //Order不要	
 		}
 	}
@@ -97,5 +99,9 @@ public class SelectToCountWrapper extends PlainSelect{
 
 	public boolean isDistinct() {
 		return isDistinct;
+	}
+
+	public Limit getRemovedLimit() {
+		return removedLimit;
 	}
 }

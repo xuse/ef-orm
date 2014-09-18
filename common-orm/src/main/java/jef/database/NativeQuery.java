@@ -48,6 +48,7 @@ import jef.database.jsqlparser.expression.JpqlParameter;
 import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.statement.select.Union;
+import jef.database.jsqlparser.visitor.SelectBody;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.query.ParameterProvider;
 import jef.database.query.QueryHints;
@@ -56,7 +57,7 @@ import jef.database.routing.sql.ExecutionPlan;
 import jef.database.routing.sql.InMemoryOperateProvider;
 import jef.database.routing.sql.SelectExecutionPlan;
 import jef.database.routing.sql.SqlAnalyzer;
-import jef.database.routing.sql.SqlExecutionParam;
+import jef.database.routing.sql.SqlAndParameter;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.database.wrapper.populator.ColumnDescription;
@@ -326,48 +327,64 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 
 	/**
 	 * 获取结果数量<br />
-	 * 注意:该方法不是将语句执行后获得全部返回结果，而是尝试将sql语句重写为count语句，然后查询出结果
+	 * 
+	 * <h3>注意</h3> 该方法不是将语句执行后获得全部返回结果，而是尝试将sql语句重写为count语句，然后查询出结果。<br/>
+	 * 因此，count返回的数值不受结果集限制的影响。<br />
+	 * 如果通过{@link #setMaxResults(int)}或者{@link #setFirstResult(int)}或者
+	 * {@link #setRange(IntRange)}设置结果集限制，将不会对COUNT结果产生影响。
 	 * 
 	 * @return count结果
+	 * @see #setFirstResult(int)
+	 * @see #setMaxResults(int)
+	 * @see #setRange(IntRange)
 	 */
 	public long getResultCount() {
 		try {
-			SqlExecutionParam parse = config.getCountSqlAndParams(db, this);
+			SqlAndParameter paramHolder = config.getCountSqlAndParams(db, this);
 			SelectExecutionPlan plan = null;
 			if (routing) {
-				plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select) parse.statement,parse.getParamsMap(), parse.params, db);
+				plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select) paramHolder.statement, paramHolder.getParamsMap(), paramHolder.params, db);
 			}
 			boolean debug = ORMConfig.getInstance().debugMode;
-			parse.clearLimit();
+			long maxSize = paramHolder.getLimitSpan(); // 查询分页条件，count结果不可能大于分页的最大结果
+			paramHolder.setNewLimit(null);
 			if (plan == null) {
-				String sql = parse.statement.toString();
+				// 无路由场合
+				String sql = paramHolder.statement.toString();
 				long start = System.currentTimeMillis();
-				Long num = db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, parse.params,parse);
+				long total = db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, paramHolder.params, paramHolder);
+				total = (maxSize > 0 && maxSize < total) ? maxSize : total;
 				if (debug) {
 					long dbAccess = System.currentTimeMillis();
-					LogUtil.show(StringUtils.concat("Count:", String.valueOf(num), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", db.getTransactionId()));
+					LogUtil.show(StringUtils.concat("Count:", String.valueOf(total), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", db.getTransactionId()));
 				}
-				return num;
+				return total;
 			} else if (plan.isChangeDatasource() != null) {
+				// 路由变更数据源场合
 				OperateTarget db = this.db.getTarget(plan.isChangeDatasource());
-				String sql = parse.statement.toString();
+				String sql = paramHolder.statement.toString();
 				long start = System.currentTimeMillis();
-				Long num = db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, parse.params,parse);
+				long total = db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, paramHolder.params, paramHolder);
+				total = (maxSize > 0 && maxSize < total) ? maxSize : total;
+				;
 				if (debug) {
 					long dbAccess = System.currentTimeMillis();
-					LogUtil.show(StringUtils.concat("Count:", String.valueOf(num), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", db.getTransactionId()));
+					LogUtil.show(StringUtils.concat("Count:", String.valueOf(total), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", db.getTransactionId()));
 				}
-				return num;
-			} else if (plan.mustGetAllResultsToCount()) {// 很麻烦的场景——由于分库后启用了group聚合，造成必须先将结果集在内存中混合后才能得到正确的count数……
-				long count = doQuery(AbstractResultSetTransformer.countResultSet(fetchSize), true); // 全量查询，去除排序。排序是不必要的
-//				LogUtil.warn(StringUtils.concat("The count value was get from InMemory grouping arithmetic, since the 'group by' on multiple databases. |  @", String.valueOf(Thread.currentThread().getId())));
-				return count;
+				return total;
+			} else if (plan.mustGetAllResultsToCount()) {
+				// 路由，并且必须遍历结果集场合
+				// 很麻烦的场景——由于分库后启用了group聚合，造成必须先将结果集在内存中混合后才能得到正确的count数……
+				long total = doQuery(AbstractResultSetTransformer.countResultSet(fetchSize), true); // 全量查询，去除排序。排序是不必要的
+				return (maxSize > 0 && maxSize < total) ? maxSize : total;
 			} else {
+				// 多库多表查询场合
 				long total = 0;
 				long start = System.currentTimeMillis();
 				for (PartitionResult site : plan.getSites()) {
 					total += plan.getCount(site, db);
 				}
+				total = (maxSize > 0 && maxSize < total) ? maxSize : total;
 				LogUtil.show(StringUtils.concat("Count:", String.valueOf(total), "\t [DbAccess]:", String.valueOf(System.currentTimeMillis() - start), "ms) |  @", String.valueOf(Thread.currentThread().getId())));
 				return total;
 			}
@@ -403,7 +420,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 * @return
 	 */
 	public ResultIterator<X> getResultIterator() {
-		TransformerIteratrAdapter<X> r=new TransformerIteratrAdapter<X>(resultTransformer,this.db);
+		TransformerIteratrAdapter<X> r = new TransformerIteratrAdapter<X>(resultTransformer, this.db);
 		r.setFetchSize(fetchSize);
 		try {
 			return doQuery(r, false);
@@ -412,42 +429,53 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		}
 	}
 
-	private String toPageSql(SqlExecutionParam context, String rawSQL) {
+	private String toPageSql(SqlAndParameter context, String rawSQL) {
 		if (range == null && context.getLimit() == null) {
 			return rawSQL;
 		}
 		Statement sql = context.statement;
-		if (sql instanceof Select) {
-			if (range != null) {
+		if (!(sql instanceof Select))
+			return rawSQL;
+
+		if (context.getLimit() != null) {
+			Limit limit = context.getLimit();
+			int offset = 0;
+			int rowcount = 0;
+			if (limit.getOffsetJdbcParameter() != null) {
+				Object obj = context.getParamsMap().get(limit.getOffsetJdbcParameter());
+				if (obj instanceof Number) {
+					offset = ((Number) obj).intValue();
+				}
+			} else {
+				offset = (int) limit.getOffset();
+			}
+			if (limit.getRowCountJdbcParameter() != null) {
+				Object obj = context.getParamsMap().get(limit.getRowCountJdbcParameter());
+				if (obj instanceof Number) {
+					rowcount = ((Number) obj).intValue();
+				}
+
+			} else {
+				rowcount = (int) limit.getRowCount();
+			}
+			if (offset > 0 || rowcount > 0) {
+				// 优先解析并执行SQL中指定的分页上的操作
+				//Range如果null，相当于清空limit，Range如果非null，相当于变为后过滤
+				context.setNewLimit(range);
+				
+				IntRange range = new IntRange(offset + 1, offset + rowcount);
 				boolean isUnion = ((Select) sql).getSelectBody() instanceof Union;
 				return db.getProfile().toPageSQL(rawSQL, range, isUnion);
-			}else if (context.getLimit()!= null) {
-				Limit limit = context.getLimit();
-				int offset = 0;
-				int rowcount = 0;
-				if (limit.getOffsetJdbcParameter() != null) {
-					Object obj=context.getParamsMap().get(limit.getOffsetJdbcParameter());
-					if(obj instanceof Number){
-						offset = ((Number) obj).intValue();
-					}
-				} else {
-					offset = (int)limit.getOffset();
-				}
-				if (limit.getRowCountJdbcParameter() != null) {
-					Object obj=context.getParamsMap().get(limit.getRowCountJdbcParameter());
-					if(obj instanceof Number){
-						rowcount = ((Number) obj).intValue();						
-					}
+			}
+		}
 
-				} else {
-					rowcount = (int)limit.getRowCount();
-				}
-				if(offset>0 || rowcount>0){
-					context.clearLimit();
-					IntRange range=new IntRange(offset+1, offset+rowcount);
-					boolean isUnion = ((Select) sql).getSelectBody() instanceof Union;
-					return db.getProfile().toPageSQL(rawSQL, range, isUnion);
-				}
+		if (range != null) {// 再执行后设置的结果限制操作
+			SelectBody sb=((Select) sql).getSelectBody();
+			if(sb.getLimit()!=null){//如果SQL中已经有限制的情况下，Range变为后过滤。 
+				context.setNewLimit(range);
+			}else{
+				boolean isUnion = sb instanceof Union;
+				return db.getProfile().toPageSQL(rawSQL, range, isUnion);	
 			}
 		}
 		return rawSQL;
@@ -468,47 +496,56 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		}
 	}
 
-	private <T> T doQuery(ResultSetTransformer<T> rst, boolean noOrder) throws SQLException {
+	/**
+	 * 真正的执行查询
+	 * 
+	 * @param rst
+	 *            结果集转换器，查询参数
+	 * @param forCount
+	 *            如果是count场合，那么返回true。count场合可以去除排序并执行一些SQL变化以优化查询速度。
+	 * @return 返回结果
+	 * @throws SQLException
+	 */
+	private <T> T doQuery(ResultSetTransformer<T> rst, boolean forCount) throws SQLException {
 		long start = System.currentTimeMillis();
-		SqlExecutionParam sqlContext = config.getSqlAndParams(db, this);
+		SqlAndParameter sqlContext = config.getSqlAndParams(db, this);
 		SelectExecutionPlan plan = null;
 		if (routing) {
-			plan = SqlAnalyzer.getSelectExecutionPlan((Select) sqlContext.statement, sqlContext.getParamsMap(),sqlContext.params, db);
+			plan = SqlAnalyzer.getSelectExecutionPlan((Select) sqlContext.statement, sqlContext.getParamsMap(), sqlContext.params, db);
 		}
 		String rawSQL = sqlContext.statement.toString();
 		T result;
 		if (plan == null) {// 普通查询
 			rawSQL = toPageSql(sqlContext, rawSQL);
-			result = db.innerSelectBySql(rawSQL, rst,sqlContext.params,sqlContext);
+			result = db.innerSelectBySql(rawSQL, rst, sqlContext.params, sqlContext);
 		} else if (plan.isChangeDatasource() != null) {
 			this.db = this.db.getTarget(plan.isChangeDatasource());
 			rawSQL = toPageSql(sqlContext, rawSQL);
-		
-			result = db.innerSelectBySql(rawSQL, rst, sqlContext.params,sqlContext);
+
+			result = db.innerSelectBySql(rawSQL, rst, sqlContext.params, sqlContext);
 		} else if (plan.isMultiDatabase()) {// 多库
-			return executeMultiQuery(plan,noOrder,rst,sqlContext);
+			return executeMultiQuery(plan, forCount, rst, sqlContext);
 		} else { // 单库多表，基于Union的查询. 可以使用数据库分页
 			PartitionResult pr = plan.getSites()[0];
 			PairSO<List<Object>> sql = plan.getSql(pr, false);
 			rawSQL = sql.first;
 			rawSQL = toPageSql(sqlContext, rawSQL);
 			OperateTarget db = this.db.getTarget(pr.getDatabase());
-			result = db.innerSelectBySql(rawSQL, rst, sql.second,sqlContext);
+			result = db.innerSelectBySql(rawSQL, rst, sql.second, sqlContext);
 		}
 		if (ORMConfig.getInstance().isDebugMode()) {
-			if(rst.autoClose()){//普通方式
-				long dbAccess=((TransformerAdapter<?>)rst).dbAccess;
-				List<?> l=(List<?>)result;
-				LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(l.size()), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbAccess), "ms) |", db.getTransactionId()));	
-			}else{//Iterate方式
+			if (rst.autoClose()) {// 普通方式
+				long dbAccess = ((TransformerAdapter<?>) rst).dbAccess;
+				List<?> l = (List<?>) result;
+				LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(l.size()), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbAccess), "ms) |", db.getTransactionId()));
+			} else {// Iterate方式
 				LogUtil.show(StringUtils.concat("Result Iterator:", "\t Time cost([DbAccess]:", String.valueOf(System.currentTimeMillis() - start), "ms  |", db.getTransactionId()));
 			}
 		}
 		return result;
 	}
-	
 
-	private <T> T executeMultiQuery(SelectExecutionPlan plan,boolean noOrder,ResultSetTransformer<T> rst,InMemoryOperateProvider sqlContext) throws SQLException {
+	private <T> T executeMultiQuery(SelectExecutionPlan plan, boolean noOrder, ResultSetTransformer<T> rst, InMemoryOperateProvider sqlContext) throws SQLException {
 		ORMConfig config = ORMConfig.getInstance();
 		boolean debug = config.debugMode;
 		MultipleResultSet mrs = new MultipleResultSet(config.isCacheResultset(), debug);
@@ -517,9 +554,9 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		}
 		IResultSet rsw = null;
 		try {
-			//这里可能有问题，在非limit的多库上运行时，
-			//limit已经被虚化，并且作为追加任务处理。
-			//此时虚化的Limit会产生何种影响
+			// 这里可能有问题，在非limit的多库上运行时，
+			// limit已经被虚化，并且作为追加任务处理。
+			// 此时虚化的Limit会产生何种影响
 			plan.parepareInMemoryProcess(range, mrs);
 			if (noOrder) { // 去除内存排序
 				mrs.setInMemoryOrder(null);
@@ -527,11 +564,11 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			if (sqlContext.hasInMemoryOperate()) {
 				sqlContext.parepareInMemoryProcess(null, mrs);
 			}
-			
+
 			rsw = mrs.toSimple(null, resultTransformer.getStrategy());
 			return rst.transformer(rsw);
 		} finally {
-			if(rst.autoClose() && rsw!=null)
+			if (rst.autoClose() && rsw != null)
 				rsw.close();
 		}
 	}
@@ -564,9 +601,18 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	}
 
 	/**
-	 * 设置查询结果的条数限制，即分页 包含了setMaxResult和setFirstResult的功能
+	 * 设置查询结果的条数限制，即分页 包含了{@link #setMaxResults(int)}和
+	 * {@link #setFirstResult(int)}的功能<br>
+	 * 这一设置会影响 {@link #getResultList()} {@link #getResultIterator()} 的结果。 <br>
+	 * 这一设置不影响 {@link #getResultCount()}的结果
 	 * 
 	 * @param range
+	 *            结果集范围。一个含头含尾的区间。
+	 * @return this
+	 * @see IntRange
+	 * @see #getResultList()
+	 * @see #getResultIterator()
+	 * @see #getResultCount()
 	 */
 	public void setRange(IntRange range) {
 		this.range = range;
@@ -618,11 +664,11 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 */
 	public int executeUpdate() {
 		try {
-			SqlExecutionParam parse = config.getSqlAndParams(db, this);
+			SqlAndParameter parse = config.getSqlAndParams(db, this);
 			Statement sql = parse.statement;
 			ExecutionPlan plan = null;
 			if (routing) {
-				plan = SqlAnalyzer.getExecutionPlan(sql,parse.getParamsMap(), parse.params, db);
+				plan = SqlAnalyzer.getExecutionPlan(sql, parse.getParamsMap(), parse.params, db);
 			}
 			if (plan == null) {
 				return db.innerExecuteSql(parse.statement.toString(), parse.params);
@@ -645,7 +691,16 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	}
 
 	/**
-	 * 限制返回的最大结果数
+	 * 限制返回的最大结果数<br>
+	 * 这一设置会影响 {@link #getResultList()} {@link #getResultIterator()} 的结果。 <br>
+	 * 这一设置不影响 {@link #getResultCount()}的结果
+	 * 
+	 * @param maxResult
+	 *            最多返回的结果条数
+	 * @return this
+	 * @see #getResultList()
+	 * @see #getResultIterator()
+	 * @see #getResultCount()
 	 */
 	public NativeQuery<X> setMaxResults(int maxResult) {
 		if (range == null) {
@@ -686,7 +741,16 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	}
 
 	/**
-	 * 设置结果的开始偏移（即分页时要跳过的记录数）。从0开始。
+	 * 设置结果的开始偏移（即分页时要跳过的记录数）。从0开始。<br>
+	 * 这一设置会影响 {@link #getResultList()} {@link #getResultIterator()} 的结果。 <br>
+	 * 这一设置不影响 {@link #getResultCount()}的结果
+	 * 
+	 * @param startPosition
+	 *            offset of the result.
+	 * @return this (The nativeQuery)
+	 * @see #getResultIterator()
+	 * @see #getResultList()
+	 * @see #getResultCount()
 	 */
 	public NativeQuery<X> setFirstResult(int startPosition) {
 		if (range == null) {

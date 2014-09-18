@@ -28,7 +28,7 @@ import jef.database.routing.sql.ExecutionPlan;
 import jef.database.routing.sql.InMemoryOperateProvider;
 import jef.database.routing.sql.SelectExecutionPlan;
 import jef.database.routing.sql.SqlAnalyzer;
-import jef.database.routing.sql.SqlExecutionParam;
+import jef.database.routing.sql.SqlAndParameter;
 import jef.database.routing.sql.TableMetaCollector;
 import jef.database.wrapper.result.IResultSet;
 import jef.database.wrapper.result.MultipleResultSet;
@@ -87,7 +87,7 @@ public class RoutingSQLExecutor implements SQLExecutor {
 	 * @throws SQLException
 	 */
 	public ResultSet getResultSet(int type, int concurrency, int holder, List<ParameterContext> params) throws SQLException {
-		SqlExecutionParam parse = getSqlAndParams(db, this, params);
+		SqlAndParameter parse = getSqlAndParams(db, this, params);
 		Statement sql = parse.statement;
 
 		SelectExecutionPlan plan = null;
@@ -128,7 +128,7 @@ public class RoutingSQLExecutor implements SQLExecutor {
 	 * @param rawSQL 
 	 * @return
 	 */
-	private String processPage(SqlExecutionParam parse, Statement sql,String rawSQL) {
+	private String processPage(SqlAndParameter parse, Statement sql,String rawSQL) {
 		if(parse.getLimit()!=null){
 			Limit limit = parse.getLimit();
 			int offset = 0;
@@ -151,7 +151,7 @@ public class RoutingSQLExecutor implements SQLExecutor {
 				rowcount = (int)limit.getRowCount();
 			}
 			if(offset>0 || rowcount>0){
-				parse.clearLimit();
+				parse.setNewLimit(null);
 				IntRange range=new IntRange(offset+1, offset+rowcount);
 				boolean isUnion = sql==null?true:(((Select) sql).getSelectBody() instanceof Union);
 				return db.getProfile().toPageSQL(rawSQL, range, isUnion);
@@ -175,9 +175,9 @@ public class RoutingSQLExecutor implements SQLExecutor {
 		return irs;
 	}
 
-	private SqlExecutionParam getSqlAndParams(OperateTarget db2, RoutingSQLExecutor jQuery, List<ParameterContext> params) {
+	private SqlAndParameter getSqlAndParams(OperateTarget db2, RoutingSQLExecutor jQuery, List<ParameterContext> params) {
 		ContextProvider cp = new ContextProvider(params);
-		SqlExecutionParam sp = new SqlExecutionParam(st, SqlAnalyzer.asValue(params), cp);
+		SqlAndParameter sp = new SqlAndParameter(st, SqlAnalyzer.asValue(params), cp);
 		if (l.delayLimit != null || l.delayStartWith != null) {
 			sp.setInMemoryClause(new RemovedDelayProcess(l.delayLimit, l.delayStartWith));
 		}
@@ -244,7 +244,7 @@ public class RoutingSQLExecutor implements SQLExecutor {
 	 * @return 返回影响到的记录条数（针对update\delete）语句
 	 */
 	public UpdateReturn executeUpdate(int generateKeys, int[] returnIndex, String[] returnColumns, List<ParameterContext> params) throws SQLException {
-		SqlExecutionParam parse = getSqlAndParams(db, this, params);
+		SqlAndParameter parse = getSqlAndParams(db, this, params);
 		Statement sql = parse.statement;
 
 		ExecutionPlan plan = SqlAnalyzer.getExecutionPlan(sql, parse.getParamsMap(), parse.params, db);

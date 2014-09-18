@@ -38,13 +38,14 @@ import jef.tools.StringUtils;
 
 import com.alibaba.druid.proxy.jdbc.JdbcParameter;
 
-public class SqlExecutionParam implements InMemoryOperateProvider {
+public class SqlAndParameter implements InMemoryOperateProvider {
 	public Statement statement;
 	public List<Object> params;
 	private ParameterProvider rawParams;
 	private Map<Expression, Object> paramsMap;
 	// 后处理
-	private RemovedDelayProcess delays;
+	private StartWithExpression startWith;
+	private Limit limit;
 
 	/**
 	 * @param st
@@ -54,7 +55,7 @@ public class SqlExecutionParam implements InMemoryOperateProvider {
 	 * @param rawParams
 	 *            参数
 	 */
-	public SqlExecutionParam(Statement st, List<Object> params, ParameterProvider rawParams) {
+	public SqlAndParameter(Statement st, List<Object> params, ParameterProvider rawParams) {
 		this.statement = st;
 		this.params = params;
 		this.rawParams = rawParams;
@@ -81,7 +82,6 @@ public class SqlExecutionParam implements InMemoryOperateProvider {
 	}
 
 	private InMemoryStartWithConnectBy parse(PlainSelect selectBody, ColumnMeta columns) {
-		StartWithExpression startWith = delays.startWith;
 		if (startWith == null) {
 			return null;
 		}
@@ -271,7 +271,7 @@ public class SqlExecutionParam implements InMemoryOperateProvider {
 		}
 	}
 
-	public InMemoryPaging parseLimit(Limit limit,ColumnMeta columns) {
+	private int[] getLimitLength(Limit limit) {
 		int offset = 0;
 		int rowcount = 0;
 		if (limit.getOffsetJdbcParameter() != null) {
@@ -291,6 +291,14 @@ public class SqlExecutionParam implements InMemoryOperateProvider {
 		} else {
 			rowcount = (int)limit.getRowCount();
 		}
+		return new int[]{offset,rowcount};
+	}
+	
+	
+	public InMemoryPaging parseLimit(Limit limit,ColumnMeta columns) {
+		int[] value=getLimitLength(limit);
+		int offset=value[0];
+		int rowcount=value[1];
 		if(offset>0 || rowcount>0){
 			return new InMemoryPaging(offset, offset+rowcount);
 		}else{
@@ -298,21 +306,27 @@ public class SqlExecutionParam implements InMemoryOperateProvider {
 		}
 	}
 
+
+	public long getLimitSpan() {
+		if(limit!=null){
+			int[] values=getLimitLength(limit);
+			return values[1];
+		}
+		return 0;
+	}
+	
 	@Override
 	public boolean hasInMemoryOperate() {
-		return delays!=null && delays.isValid();
+		return startWith!=null || limit!=null;
 	}
 
 	@Override
 	public void parepareInMemoryProcess(IntRange range, MultipleResultSet mrs) {
-		if (delays == null) {
-			return;
-		}
-		if(delays.startWith!=null){
+		if(startWith!=null){
 			mrs.setInMemoryConnectBy(parseStartWith(mrs.getColumns()));
 		}
-		if(delays.limit!=null){
-			mrs.setInMemoryPage(parseLimit(delays.limit,mrs.getColumns()));
+		if(limit!=null){
+			mrs.setInMemoryPage(parseLimit(limit,mrs.getColumns()));
 		}
 	}
 
@@ -322,16 +336,29 @@ public class SqlExecutionParam implements InMemoryOperateProvider {
 	 * @param delays
 	 */
 	public void setInMemoryClause(RemovedDelayProcess delays) {
-		this.delays = delays;
+		if(delays!=null){
+			this.startWith = delays.startWith;
+			this.limit=delays.limit;
+		}
 	}
 
 	public Limit getLimit() {
-		return delays == null ? null : delays.limit;
+		return limit;
 	}
 
-	public void clearLimit() {
-		if (delays != null) {
-			delays.limit = null;
+	public void setNewLimit(IntRange range) {
+		if(range==null){
+			limit=null;
+		}else{
+			int[] values=range.toStartLimitSpan();
+			Limit limit=new Limit();
+			limit.setOffset(values[0]);
+			limit.setRowCount(values[1]);
+			this.limit=limit;
 		}
+	}
+
+	public void setLimit(Limit countLimit) {
+		this.limit=countLimit;
 	}
 }

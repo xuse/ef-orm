@@ -32,6 +32,7 @@ import jef.database.jsqlparser.expression.operators.relational.MinorThan;
 import jef.database.jsqlparser.expression.operators.relational.MinorThanEquals;
 import jef.database.jsqlparser.expression.operators.relational.NotEqualsTo;
 import jef.database.jsqlparser.parser.ParseException;
+import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.statement.select.Union;
 import jef.database.jsqlparser.visitor.Expression;
@@ -42,7 +43,7 @@ import jef.database.meta.MetaHolder;
 import jef.database.query.ParameterProvider;
 import jef.database.query.ParameterProvider.MapProvider;
 import jef.database.query.SqlExpression;
-import jef.database.routing.sql.SqlExecutionParam;
+import jef.database.routing.sql.SqlAndParameter;
 import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
 
@@ -138,6 +139,7 @@ public class NamedQueryConfig extends jef.database.DataObject {
 		jef.database.jsqlparser.statement.select.Select count;
 		Map<Object, JpqlParameter> params;
 		RemovedDelayProcess delays;
+		public Limit countLimit;
 	}
 
 	/*
@@ -248,9 +250,9 @@ public class NamedQueryConfig extends jef.database.DataObject {
 	 * @return 要执行的语句和绑定变量列表
 	 * @throws SQLException
 	 */
-	public SqlExecutionParam getSqlAndParams(OperateTarget db, ParameterProvider prov) throws SQLException {
+	public SqlAndParameter getSqlAndParams(OperateTarget db, ParameterProvider prov) throws SQLException {
 		DialectCase dc = getDialectCase(db);
-		SqlExecutionParam result= applyParam(dc.statement, prov);
+		SqlAndParameter result= applyParam(dc.statement, prov);
 		result.setInMemoryClause(dc.delays);
 		return result;
 	}
@@ -281,7 +283,7 @@ public class NamedQueryConfig extends jef.database.DataObject {
 	 * @return
 	 * @throws SQLException
 	 */
-	public SqlExecutionParam getCountSqlAndParams(OperateTarget db, ParameterProvider prov) throws SQLException {
+	public SqlAndParameter getCountSqlAndParams(OperateTarget db, ParameterProvider prov) throws SQLException {
 		DialectCase dc = getDialectCase(db);
 		if (dc.count == null) {
 			if (dc.statement instanceof jef.database.jsqlparser.statement.select.Select) {
@@ -298,12 +300,14 @@ public class NamedQueryConfig extends jef.database.DataObject {
 				jef.database.jsqlparser.statement.select.Select ctst = new jef.database.jsqlparser.statement.select.Select();
 				ctst.setSelectBody(body);
 				dc.count = ctst;
+				dc.countLimit=body.getRemovedLimit();
 			} else {
 				throw new IllegalArgumentException();
 			}
 		}
-		SqlExecutionParam result= applyParam(dc.count, prov);
+		SqlAndParameter result= applyParam(dc.count, prov);
 		result.setInMemoryClause(dc.delays);
+		result.setLimit(dc.countLimit);
 		return result;
 	}
 
@@ -454,10 +458,10 @@ public class NamedQueryConfig extends jef.database.DataObject {
 	/*
 	 * 返回应用参数后的查询
 	 */
-	public static SqlExecutionParam applyParam(Statement st, final ParameterProvider prov) {
+	public static SqlAndParameter applyParam(Statement st, final ParameterProvider prov) {
 		final List<Object> params = new ArrayList<Object>();
 		st.accept(new ParamApplier(prov, params));
-		return new SqlExecutionParam(st, params,prov);
+		return new SqlAndParameter(st, params,prov);
 	}
 
 	public String getName() {

@@ -54,7 +54,9 @@ CXF 2.7.10提高了兼容性，但是CXF-Plus的ASM类产生的package-info不�
 由于Java cc分析器当中的K_START等token优先级大于S_IDENTIFIER，造成jpql参数中不能支持start等名称，(OK)
 要支持多表时，使用distinct后进行count时，在内存中先distinct后再count (Criteria不支持，NativeQuery OK)
 将对NativeQuery支持的分库分表功能直接封装为DataSource，从而实现按JDBC驱动的分库分表功能。(OK)
-
+org.easyframe.tutorial.lesson7.Case1.testLimitKeyword()中关于NAtiveQuery的count问题。(OK)
+在NativeQuery中传入limit语句所引发了一系列问题。(OK)
+对于自带分页的SQL语句的解析和支持(OK，统一携带limit关键字)
 
 ==========文档补充============
 更新文档中的站点
@@ -92,9 +94,7 @@ reivew和修订文档
 
 
 ================ 待解决的问题  ===================
-org.easyframe.tutorial.lesson7.Case1.testLimitKeyword()中关于NAtiveQuery的count问题。
 
-对于自带分页的SQL语句的解析和支持
 按主键查询逻辑优化
 
  考虑用线程变量来传递已经解析好的分表条件.(暂缓，待下一轮重构后实现)
