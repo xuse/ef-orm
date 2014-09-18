@@ -39,4 +39,8 @@ public class JDataSource extends AbstractDataSource{
 	protected Class<? extends DataSource> getWrappedClass() {
 		return null;
 	}
+	
+	public DbClient getDbClient(){
+		return db;
+	}
 }

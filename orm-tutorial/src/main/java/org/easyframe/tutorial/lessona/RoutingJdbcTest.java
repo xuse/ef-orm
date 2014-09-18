@@ -4,7 +4,9 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.sql.DataSource;
@@ -12,10 +14,13 @@ import javax.sql.DataSource;
 import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.database.DbUtils;
+import jef.database.ORMConfig;
 import jef.database.datasource.MapDataSourceLookup;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.meta.MetaHolder;
 import jef.database.routing.jdbc.JDataSource;
+import jef.tools.DateUtils;
+import jef.tools.string.RandomData;
 
 import org.easyframe.tutorial.lessona.entity.Device;
 import org.easyframe.tutorial.lessona.entity.Person2;
@@ -74,25 +79,46 @@ public class RoutingJdbcTest {
 	
 	@Test
 	public void test3() throws SQLException{
-//		executeQuery("select * from device");
-		//补充案例。测试无Device表的场合
-		
-//在使用JDataSource时，因为要实现分库后的分页功能，所以必须从SQL语句中解析出分页参数。
-//而不同数据库的分页语句写法变化非常大，（如ORacle，SQLSErver）,因此考虑让传入的SQL语句统一使用LIMIT关键字来描述分页信息。
-//但是用户并不关心传入的SQL语句对应的场合是分库的还是单表的。而所有传入的分页语句都使用Limit。
-//因此对于那些不支持LIMIT关键字的数据库（derby），我们希望NativeQuery和JDataSource都能正确处理Limit关键字。(OK)
+		{
+			//案例0，路由查全部
+			((JDataSource)ds).getDbClient().createTable(Device.class);
+			prepareData();
+			executeQuery("select * from device");	
+		}
+		{
+			//案例1，检查是否使用正确的分页规则
+			System.out.println("多库多表（查全部）——使用内存分页");
+			executeQuery("select * from device order by indexcode limit 12,3");
+			System.out.println("单库单表——使用数据库分页");
+			executeQuery("select * from device where indexcode <= '1' order by indexcode limit 12,3");
+			System.out.println("单库多表——使用数据库分页");
+			executeQuery("select * from device where indexcode >= '2' and indexcode<='4' order by indexcode limit 12,3");
+			System.out.println("多库多表——使用内存分页");
+			executeQuery("select * from device where indexcode < '4' order by indexcode limit 12,3");
+			System.out.println("多库单表——使用内存分页");
+			executeQuery("select * from device where indexcode <= '2' order by indexcode limit 12,3");	
+		}
+		{
+			//案例2，垂直拆分场景
+			System.out.println("垂直分库查询");
+			executeQuery("select * from Person2");
+			System.out.println("垂直分库——使用数据库分页");
+			executeQuery("select * from Person2 order by name limit 2,12");			
+		}
+		{
+			//补充案例0。测试无Device表的场合
+			((JDataSource)ds).getDbClient().dropTable(Device.class);
+			((JDataSource)ds).getDbClient().createTable(Device.class);
+			executeQuery("select * from device");	
+		}
+	}
 
-		
-		//案例1，此案例必须使用内存分页，正确（OK）
 
-//		executeQuery("select * from device order by indexcode limit 12,3");
-		executeQuery("select * from device where indexcode >= '2' and indexcode<='4' order by indexcode limit 12,3");
-		
-		//案例2，使用limit后，如果是单表，那么将改为数据库分页。(OK)
-//		executeQuery("select * from Person2");
-//		executeQuery("select * from Person2 order by name limit 2,12");
-		
-		
+	private void prepareData() throws SQLException {
+		List<Device> list = generateDevice(50);
+		ORMConfig.getInstance().setDebugMode(false);
+		((JDataSource)ds).getDbClient().batchInsert(list);
+		ORMConfig.getInstance().setDebugMode(true);
 	}
 
 
@@ -106,5 +132,19 @@ public class RoutingJdbcTest {
 			DbUtils.close(rs);
 		}
 		DbUtils.close(st);
+	}
+	
+	/*
+	 * 生成一些随机的数据
+	 */
+	private List<Device> generateDevice(int i) {
+		List<Device> result = Arrays.asList(RandomData.newArrayInstance(Device.class, i));
+		String[] types = { "耗材", "大家电", "办公用品", "日用品", "电脑配件", "图书" };
+		for (Device device : result) {
+			device.setIndexcode(String.valueOf(RandomData.randomInteger(100000, 990000)));
+			device.setCreateDate(RandomData.randomDate(DateUtils.getDate(2000, 1, 1), DateUtils.getDate(2014, 12, 31)));
+			device.setType(types[RandomData.randomInteger(0, 6)]);
+		}
+		return result;
 	}
 }
