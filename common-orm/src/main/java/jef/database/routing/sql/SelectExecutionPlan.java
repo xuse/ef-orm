@@ -39,13 +39,11 @@ import jef.tools.StringUtils;
  * @author jiyi
  *
  */
-public class SelectExecutionPlan extends AbstractExecutionPlan {
+public class SelectExecutionPlan extends AbstractExecutionPlan implements InMemoryOperateProvider{
 	/**
 	 * 输入的SQL上下文
 	 */
 	private StatementContext<PlainSelect> context;
-	
-	
 	/*  
 	 * Select的路由处理是最复杂的——
 	//SQL操作(查询前)        
@@ -70,8 +68,6 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 	public SelectExecutionPlan(String bindDsName) {
 		super(bindDsName);
 	}
-
-
 
 	/*p
 	 * 得到一个数据库上操作的SQL语句
@@ -131,42 +127,27 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 		}
 	}
 
-	/*
-	 * 有没有Group/Having/Distinct/Order/Limit等会引起查询复杂的东西？
-	 */
-	private boolean hasAnyGroupDistinctOrderLimit() {
-		PlainSelect st=context.statement;
-		if(st.getDistinct()!=null){
-			return true;
-		}
-		if(st.getLimit()!=null){
-			return true;
-		}
-		if(st.getGroupByColumnReferences()!=null && !st.getGroupByColumnReferences().isEmpty()){
-			return true;
-		}
-		if(st.getOrderBy() !=null && !st.getOrderBy().getOrderByElements().isEmpty()){
-			return true;
+
+	@Override
+	public boolean hasInMemoryOperate() {
+		if(isMultiDatabase()){
+			PlainSelect st=context.statement;
+			if(st.getGroupByColumnReferences()!=null && !st.getGroupByColumnReferences().isEmpty()){
+				return true;
+			}
+			if(st.getDistinct()!=null){
+				return true;
+			}
+			if(st.getOrderBy()!=null){
+				return true;
+			}
+			if(st.getLimit()!=null && st.getLimit().isValid()){
+				return true;
+			}	
 		}
 		return false;
 	}
-
-	private void appendSql(StringBuilder sb,String table,boolean noGroup,boolean noHaving,boolean noOrder,boolean noLimit,boolean noDistinct) {
-		for (Table tb : context.modifications) {
-			tb.setReplace(table);
-		}
-		context.statement.appendTo(sb, noGroup,noHaving, noOrder, noLimit, noDistinct);
-		//清理现场
-		for (Table tb : context.modifications) {
-			tb.removeReplace();
-		}
-	}
-
-
-	/**
-	 * 根据查询结果，对照查询语句分析，是否需要内存操作
-	 * @return  return true if need In Memory Process.
-	 */
+	
 	public void parepareInMemoryProcess(IntRange range,MultipleResultSet rs) {
 		PlainSelect st=context.statement;
 		ColumnMeta meta=rs.getColumns();
@@ -182,7 +163,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 		if(range!=null){
 			int[] ints=range.toStartLimitSpan();
 			rs.setInMemoryPage(processPage(meta,ints[0],ints[1]));
-		}else if(st.getLimit()!=null){//此处容错产生效果
+		}else if(st.getLimit()!=null && st.getLimit().isValid()){//此处容错产生效果
 			Limit limit=st.getLimit();
 			rs.setInMemoryPage(processPage(meta,(int)limit.getOffset(),(int)limit.getRowCount()));
 		}
@@ -241,7 +222,13 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 		return new InMemoryPaging(start, start+rows);
 		
 	}
-
+	/**
+	 * 为NativeQuery场景提供getCount()的实现
+	 * @param site
+	 * @param session
+	 * @return
+	 * @throws SQLException
+	 */
 	public long getCount(PartitionResult site, OperateTarget session) throws SQLException {
 		OperateTarget db=session.getTarget(site.getDatabase());
 		long count=0;
@@ -322,6 +309,37 @@ public class SelectExecutionPlan extends AbstractExecutionPlan {
 		//解析出having
 		
 		return new InMemoryGroupByHaving(keys,values);
+	}
+	
+	/*
+	 * 有没有Group/Having/Distinct/Order/Limit等会引起查询复杂的东西？
+	 */
+	private boolean hasAnyGroupDistinctOrderLimit() {
+		PlainSelect st=context.statement;
+		if(st.getDistinct()!=null){
+			return true;
+		}
+		if(st.getLimit()!=null){
+			return true;
+		}
+		if(st.getGroupByColumnReferences()!=null && !st.getGroupByColumnReferences().isEmpty()){
+			return true;
+		}
+		if(st.getOrderBy() !=null && !st.getOrderBy().getOrderByElements().isEmpty()){
+			return true;
+		}
+		return false;
+	}
+
+	private void appendSql(StringBuilder sb,String table,boolean noGroup,boolean noHaving,boolean noOrder,boolean noLimit,boolean noDistinct) {
+		for (Table tb : context.modifications) {
+			tb.setReplace(table);
+		}
+		context.statement.appendTo(sb, noGroup,noHaving, noOrder, noLimit, noDistinct);
+		//清理现场
+		for (Table tb : context.modifications) {
+			tb.removeReplace();
+		}
 	}
 	
 	/**

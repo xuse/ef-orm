@@ -2,6 +2,8 @@ package jef.tools.string;
 
 import java.util.Iterator;
 
+import jef.tools.StringUtils;
+
 import org.apache.commons.lang.ArrayUtils;
 
 /**
@@ -43,8 +45,18 @@ public class StringIterator implements Iterator<String> {
 	public StringIterator(String start, String end, int maxLen, char[] TABLE,boolean includeStart,boolean includeEnd) {
 		this.current = new AnyNumeral(maxLen, TABLE);
 		this.endValue= new AnyNumeral(maxLen, TABLE);
-		current.setValue(start);
-		endValue.setValue(end);
+		if(start==null){
+			current.setValue(String.valueOf(TABLE[0]));
+//			includeStart=true;
+		}else{
+			current.setValue(start);
+		}
+		if(end==null){
+			endValue.setValue(StringUtils.repeat(TABLE[TABLE.length-1], maxLen));
+			includeEnd=true;
+		}else{
+			endValue.setValue(end);
+		}
 		if(includeStart)
 			current.decreament();
 		if(!includeEnd)

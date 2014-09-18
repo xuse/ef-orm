@@ -37,6 +37,11 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 	public StartWithExpression delayStartWith;
 	public Limit               delayLimit;
 
+	/**
+	 * 构造
+	 * @param profile 数据库简要表
+	 * @param db      用于进行UserFunction检查，如果传入null则不进行检查
+	 */
 	public SqlFunctionlocalization(DatabaseDialect profile, OperateTarget db) {
 		this.profile = profile;
 		this.db = db;

@@ -29,7 +29,7 @@ import jef.database.meta.ITableMetadata;
 import jef.database.query.EntityMappingProvider;
 import jef.database.query.SqlExpression;
 import jef.database.routing.jdbc.UpdateReturn;
-import jef.database.routing.sql.InMemoryOperateContext;
+import jef.database.routing.sql.InMemoryOperateProvider;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.database.wrapper.populator.ResultSetTransformer;
@@ -341,7 +341,7 @@ public class OperateTarget implements SqlTemplate {
 		return total;
 	}
 
-	public final <T> T innerSelectBySql(String sql, ResultSetTransformer<T> rst, List<?> objs,InMemoryOperateContext lazy) throws SQLException {
+	public final <T> T innerSelectBySql(String sql, ResultSetTransformer<T> rst, List<?> objs,InMemoryOperateProvider lazy) throws SQLException {
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		StringBuilder sb = null;
@@ -388,7 +388,7 @@ public class OperateTarget implements SqlTemplate {
 	 * @return
 	 * @throws SQLException
 	 */
-	public final IResultSet getRawResultSet(String sql, int maxReturn,int fetchSize, List<?> objs,InMemoryOperateContext inmem) throws SQLException {
+	public final IResultSet getRawResultSet(String sql, int maxReturn,int fetchSize, List<?> objs,InMemoryOperateProvider inmem) throws SQLException {
 		PreparedStatement st = null;
 		StringBuilder sb = null;
 		DbOperateProcessor p = session.p;
@@ -411,10 +411,11 @@ public class OperateTarget implements SqlTemplate {
 			if (fetchSize > 0)
 				st.setFetchSize(fetchSize);
 			ResultSet rawRs = st.executeQuery();
+			ResultSetHolder rsh=new ResultSetHolder(this,st,rawRs);
 			if(inmem.hasInMemoryOperate()){
-				return MultipleResultSet.toInMemoryProcessorResultSet(inmem, new ResultSetHolder(this,st,rawRs));
+				return MultipleResultSet.toInMemoryProcessorResultSet(inmem,rsh );
 			}else{
-				return new ResultSetWrapper(this,st,rawRs);
+				return new ResultSetWrapper(rsh);
 			}
 		} catch (SQLException e) {
 			p.processError(e, sql, this);
@@ -544,7 +545,7 @@ public class OperateTarget implements SqlTemplate {
 		return this.innerSelectBySql(sql, t, Arrays.asList(objs), null);
 	}
 	
-	final <T> ResultIterator<T> iteratorBySql(String sql, Transformer transformers, int maxReturn, int fetchSize,InMemoryOperateContext lazy ,Object... objs) throws SQLException {
+	final <T> ResultIterator<T> iteratorBySql(String sql, Transformer transformers, int maxReturn, int fetchSize,InMemoryOperateProvider lazy ,Object... objs) throws SQLException {
 		TransformerIteratrAdapter<T> t=new TransformerIteratrAdapter<T>(transformers,this);
 		t.setMaxRows(maxReturn);
 		t.setFetchSize(fetchSize);

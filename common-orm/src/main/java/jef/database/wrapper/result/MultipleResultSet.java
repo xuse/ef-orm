@@ -33,7 +33,7 @@ import jef.database.OperateTarget;
 import jef.database.Session.PopulateStrategy;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Reference;
-import jef.database.routing.sql.InMemoryOperateContext;
+import jef.database.routing.sql.InMemoryOperateProvider;
 import jef.database.wrapper.clause.InMemoryDistinct;
 import jef.database.wrapper.clause.InMemoryGroupByHaving;
 import jef.database.wrapper.clause.InMemoryOrderBy;
@@ -90,7 +90,7 @@ public final class MultipleResultSet extends AbstractResultSet{
 		this.columns = new ColumnMeta(meta);
 	}
 
-	public static IResultSet toInMemoryProcessorResultSet(InMemoryOperateContext context,ResultSetHolder... rs){
+	public static IResultSet toInMemoryProcessorResultSet(InMemoryOperateProvider context,ResultSetHolder... rs){
 		MultipleResultSet mrs=new MultipleResultSet(false,false);
 		for(ResultSetHolder rsh:rs){
 			mrs.add(rsh);

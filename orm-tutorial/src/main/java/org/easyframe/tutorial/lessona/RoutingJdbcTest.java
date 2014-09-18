@@ -74,7 +74,7 @@ public class RoutingJdbcTest {
 	
 	@Test
 	public void test3() throws SQLException{
-		executeQuery("select * from device");
+//		executeQuery("select * from device");
 		//补充案例。测试无Device表的场合
 		
 //在使用JDataSource时，因为要实现分库后的分页功能，所以必须从SQL语句中解析出分页参数。
@@ -85,11 +85,12 @@ public class RoutingJdbcTest {
 		
 		//案例1，此案例必须使用内存分页，正确（OK）
 
-		executeQuery("select * from device order by indexcode limit 12,3");
+//		executeQuery("select * from device order by indexcode limit 12,3");
+		executeQuery("select * from device where indexcode >= '2' and indexcode<='4' order by indexcode limit 12,3");
 		
 		//案例2，使用limit后，如果是单表，那么将改为数据库分页。(OK)
-		executeQuery("select * from Person2");
-		executeQuery("select * from Person2 order by name limit 2,12");
+//		executeQuery("select * from Person2");
+//		executeQuery("select * from Person2 order by name limit 2,12");
 		
 		
 	}

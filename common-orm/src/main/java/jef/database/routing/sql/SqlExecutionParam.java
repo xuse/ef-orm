@@ -38,7 +38,7 @@ import jef.tools.StringUtils;
 
 import com.alibaba.druid.proxy.jdbc.JdbcParameter;
 
-public class SqlExecutionParam implements InMemoryOperateContext {
+public class SqlExecutionParam implements InMemoryOperateProvider {
 	public Statement statement;
 	public List<Object> params;
 	private ParameterProvider rawParams;

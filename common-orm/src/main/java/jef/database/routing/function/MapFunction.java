@@ -68,7 +68,7 @@ public class MapFunction implements PartitionFunction<String>{
 		boolean open=false;
 		if(min==null){
 			open=true;
-		}else{
+		}else if(left){
 			result.add(min);
 		}
 		for(StringRange range:ranges){
@@ -89,7 +89,7 @@ public class MapFunction implements PartitionFunction<String>{
 				}
 			}
 		}
-		if(max!=null && !max.equals(min)){
+		if(max!=null && !max.equals(min) && right){
 			result.add(max);
 		}
 		return result;

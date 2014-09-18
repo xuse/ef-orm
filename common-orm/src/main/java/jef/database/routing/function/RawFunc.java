@@ -50,11 +50,11 @@ public final class RawFunc implements PartitionFunction<Object>{
 		} else {
 			// 范围丢失
 
-			if (min instanceof Integer && max instanceof Integer) {
+			if ((min instanceof Integer) && (max instanceof Integer)){
 				return iteratorInt((Integer) min, (Integer) max,left,right);
-			} else if (min instanceof Long && max instanceof Long) {
+			} else if ((min instanceof Long) && (max instanceof Long)) {
 				return iteratorLong((Long) min, (Long) max,left,right);
-			} else if (min instanceof String) {
+			} else if (min instanceof String || max instanceof String) {
 				return iteratorString((String) min, (String) max,left,right);
 			} else {
 				return Arrays.asList(min, max);

@@ -133,4 +133,8 @@ public class Limit implements SqlAppendable {
 		offsetJdbcParameter=null;
 	}
 
+	public boolean isValid() {
+		return rowCount!=0 || rowCountJdbcParameter!=null;
+	}
+
 }

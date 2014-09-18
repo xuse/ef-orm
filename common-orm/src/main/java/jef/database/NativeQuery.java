@@ -53,7 +53,7 @@ import jef.database.query.ParameterProvider;
 import jef.database.query.QueryHints;
 import jef.database.query.SqlExpression;
 import jef.database.routing.sql.ExecutionPlan;
-import jef.database.routing.sql.InMemoryOperateContext;
+import jef.database.routing.sql.InMemoryOperateProvider;
 import jef.database.routing.sql.SelectExecutionPlan;
 import jef.database.routing.sql.SqlAnalyzer;
 import jef.database.routing.sql.SqlExecutionParam;
@@ -508,7 +508,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	}
 	
 
-	private <T> T executeMultiQuery(SelectExecutionPlan plan,boolean noOrder,ResultSetTransformer<T> rst,InMemoryOperateContext sqlContext) throws SQLException {
+	private <T> T executeMultiQuery(SelectExecutionPlan plan,boolean noOrder,ResultSetTransformer<T> rst,InMemoryOperateProvider sqlContext) throws SQLException {
 		ORMConfig config = ORMConfig.getInstance();
 		boolean debug = config.debugMode;
 		MultipleResultSet mrs = new MultipleResultSet(config.isCacheResultset(), debug);
@@ -517,6 +517,9 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		}
 		IResultSet rsw = null;
 		try {
+			//这里可能有问题，在非limit的多库上运行时，
+			//limit已经被虚化，并且作为追加任务处理。
+			//此时虚化的Limit会产生何种影响
 			plan.parepareInMemoryProcess(range, mrs);
 			if (noOrder) { // 去除内存排序
 				mrs.setInMemoryOrder(null);
