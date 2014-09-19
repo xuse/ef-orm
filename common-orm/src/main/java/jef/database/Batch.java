@@ -225,7 +225,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 				if(forceTableName!=null){
 					tablename=forceTableName;
 				}else{
-					PartitionResult pr= DbUtils.toTableName(obj, null, obj.getQuery(), parent.getPool().getPartitionSupport());
+					PartitionResult pr= DbUtils.toTableName(obj, null, obj.getQuery(), parent.getPartitionSupport());
 					site=forcrSite!=null?forcrSite:pr.getDatabase();
 					tablename=pr.getAsOneTable();
 				}
@@ -269,7 +269,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 	private Map<String, List<T>> doGroup(List<T> objs) {
 		Map<String, List<T>> result = new HashMap<String, List<T>>();
 		for (T obj : objs) {
-			PartitionResult partitionResult = DbUtils.toTableName(obj, null, obj.getQuery(), parent.getPool().getPartitionSupport());
+			PartitionResult partitionResult = DbUtils.toTableName(obj, null, obj.getQuery(), parent.getPartitionSupport());
 			String tablename = null;
 			if(this.forcrSite!=null){
 				partitionResult.setDatabase(forcrSite);

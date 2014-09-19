@@ -28,7 +28,7 @@ import com.google.common.collect.MapMaker;
  * @author jiyi
  *
  */
-public class RoutingDummyConnectionPool extends AbstractMetaDataService implements IRoutingConnectionPool{
+public class RoutingDummyConnectionPool implements IRoutingConnectionPool,IUserManagedPool{
 	protected IRoutingDataSource datasource;
 	final Map<Object, ReentrantConnection> usedConnection=new MapMaker().concurrencyLevel(12).weakKeys().makeMap();
 	private final AtomicLong pollCount=new AtomicLong();

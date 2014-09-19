@@ -24,7 +24,7 @@ import com.google.common.collect.MapMaker;
  * @author jiyi
  * 
  */
-final class SingleDummyConnectionPool extends AbstractMetaDataService implements IUserManagedPool {
+final class SingleDummyConnectionPool implements IUserManagedPool {
 	private DataSource ds;
 	final Map<Object, ReentrantConnection> map = new MapMaker().concurrencyLevel(12).weakKeys().makeMap();
 	private final AtomicLong pollCount = new AtomicLong();

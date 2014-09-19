@@ -16,6 +16,7 @@ import jef.database.DbClientFactory;
 import jef.database.cache.CacheDummy;
 import jef.database.jmx.JefFacade;
 
+import org.easyframe.enterprise.spring.TransactionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,6 +113,10 @@ public class JefEntityManagerFactory implements EntityManagerFactory {
 
 	public DbClient getDefault() {
 		return db;
+	}
+
+	public void setTxType(TransactionType txType) {
+		db.setTxType(txType);
 	}
 
 //	/**

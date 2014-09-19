@@ -27,6 +27,7 @@ import jef.database.cache.CacheImpl;
 import jef.database.cache.TransactionCache;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.IUserManagedPool;
+import jef.database.innerpool.PartitionSupport;
 import jef.database.innerpool.ReentrantConnection;
 import jef.database.innerpool.Savepoints;
 import jef.database.meta.ITableMetadata;
@@ -543,5 +544,10 @@ public class Transaction extends Session implements TransactionStatus {
 			setRollbackOnly(true);
 			throw new TransactionTimedOutException("Transaction timed out: deadline was " + this.deadline);
 		}
+	}
+
+	@Override
+	public PartitionSupport getPartitionSupport() {
+		return parent.getPartitionSupport();
 	}
 }

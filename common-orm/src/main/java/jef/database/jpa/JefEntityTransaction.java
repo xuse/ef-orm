@@ -17,7 +17,7 @@ package jef.database.jpa;
 
 import javax.persistence.EntityTransaction;
 
-import jef.database.Transaction;
+import jef.database.TransactionStatus;
 import jef.tools.Assert;
 
 import org.slf4j.Logger;
@@ -31,12 +31,17 @@ import org.slf4j.LoggerFactory;
  * 
  */
 public class JefEntityTransaction implements EntityTransaction {
-	private Transaction trans;
+	private TransactionStatus trans;
 	private JefEntityManager parent = null;
 	private static Logger log = LoggerFactory.getLogger(JefEntityTransaction.class);
 
 	public JefEntityTransaction(JefEntityManager parent) {
 		this.parent = parent;
+	}
+
+	public JefEntityTransaction(JefEntityManager parent, TransactionStatus session) {
+		this.parent = parent;
+		this.trans=session;
 	}
 
 	public void begin() {
@@ -95,7 +100,7 @@ public class JefEntityTransaction implements EntityTransaction {
 		}
 	}
 
-	public Transaction get() {
+	public TransactionStatus get() {
 		return trans;
 	}
 }

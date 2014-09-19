@@ -76,7 +76,7 @@ public class DebugUtil {
 	}
 	
 	public static PartitionSupport getPartitionSupport(Session db){
-		return db.getPool().getPartitionSupport();
+		return db.getPartitionSupport();
 		
 	}
 	public static PoolStatus getPoolStatus(DbClient db){

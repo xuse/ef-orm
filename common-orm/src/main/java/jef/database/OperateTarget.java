@@ -86,7 +86,7 @@ public class OperateTarget implements SqlTemplate {
 	public OperateTarget(Session tx, String key) {
 		this.session = tx;
 		this.dbkey = key;
-		this.profile=session.getPool().getProfile(key);
+		this.profile=session.getProfile(key);
 	}
 
 	public SqlProcessor getProcessor() {
@@ -642,7 +642,7 @@ public class OperateTarget implements SqlTemplate {
 	}
 	
 	public PartitionSupport getPartitionSupport(){
-		return session.getPool().getPartitionSupport();
+		return session.getPartitionSupport();
 	}
 
 	public OperateTarget getTarget(String database) {

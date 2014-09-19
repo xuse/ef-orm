@@ -55,7 +55,7 @@ import com.google.common.collect.MapMaker;
  * <li>3、定时检查连接有效性</li>
  * </ul>
  */
-final class SingleManagedConnectionPool extends AbstractMetaDataService implements IManagedConnectionPool,DataSource,CheckablePool {
+final class SingleManagedConnectionPool implements IManagedConnectionPool,DataSource,CheckablePool {
 	private DataSource ds;
 	private int max;
 	private int min;

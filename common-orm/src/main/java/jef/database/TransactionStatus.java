@@ -15,9 +15,19 @@
  */
 package jef.database;
 
+import java.sql.SQLException;
+import java.sql.Savepoint;
+
+
 
 public interface TransactionStatus {
-//	public void commit() throws SQLException;
-//	public void rollback() throws SQLException;
+	public void commit(boolean flag);
+	public void rollback(boolean flag);
+	public void setRollbackOnly(boolean b);
+	public boolean isRollbackOnly();
+	public boolean isOpen();
+	public Savepoint setSavepoint(String savepointName) throws SQLException;
+	public void rollbackToSavepoint(Savepoint savepoint) throws SQLException;
+	public void releaseSavepoint(Savepoint savepoint) ;
 
 }

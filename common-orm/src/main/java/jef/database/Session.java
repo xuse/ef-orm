@@ -40,6 +40,7 @@ import jef.database.cache.TransactionCache;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.IUserManagedPool;
 import jef.database.innerpool.MetadataService;
+import jef.database.innerpool.PartitionSupport;
 import jef.database.innerpool.ReentrantConnection;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.parser.StSqlParser;
@@ -290,7 +291,7 @@ public abstract class Session {
 	 * @see PartitionResult
 	 */
 	public PartitionResult[] getPartitionResults(IQueryableEntity entity) {
-		return DbUtils.toTableNames(entity, null, entity.getQuery(), getPool().getPartitionSupport());
+		return DbUtils.toTableNames(entity, null, entity.getQuery(), getPartitionSupport());
 	}
 
 	/**
@@ -566,7 +567,7 @@ public abstract class Session {
 		if(sqls.getCallback()!=null){
 			sqls.getCallback().callBefore(Arrays.asList(obj));
 		}
-		sqls.setTableNames(DbUtils.toTableName(obj, myTableName, obj.hasQuery() ? obj.getQuery() : null, getPool().getPartitionSupport()));
+		sqls.setTableNames(DbUtils.toTableName(obj, myTableName, obj.hasQuery() ? obj.getQuery() : null, getPartitionSupport()));
 		
 		long parse = System.currentTimeMillis();
 		insertp.processInsert(asOperateTarget(sqls.getTable().getDatabase()), obj, sqls, start, parse);
@@ -616,7 +617,7 @@ public abstract class Session {
 		long start = System.currentTimeMillis();
 		String myTableName = (String) obj.getQuery().getAttribute(Query.CUSTOM_TABLE_NAME);
 		myTableName = MetaHolder.toSchemaAdjustedName(StringUtils.trimToNull(myTableName));
-		PartitionResult[] sites = DbUtils.toTableNames(obj, myTableName, obj.getQuery(), getPool().getPartitionSupport());
+		PartitionResult[] sites = DbUtils.toTableNames(obj, myTableName, obj.getQuery(), getPartitionSupport());
 		
 		getListener().beforeDelete(obj, this);
 		int count = 0;
@@ -2060,7 +2061,7 @@ public abstract class Session {
 			return 0;
 		}
 		Entry<List<String>, List<Field>> setValues = rProcessor.toPrepareUpdateClause((IQueryableEntity) obj,true);
-		PartitionResult[] tables = DbUtils.toTableNames(obj, myTableName, obj.getQuery(), getPool().getPartitionSupport());
+		PartitionResult[] tables = DbUtils.toTableNames(obj, myTableName, obj.getQuery(), getPartitionSupport());
 		int count = 0;
 		for (PartitionResult part : tables) {
 			count += p.processUpdatePrepared(asOperateTarget(part.getDatabase()), obj, setValues, whereValues, part, start);
@@ -2083,7 +2084,7 @@ public abstract class Session {
 		}
 		String update = rProcessor.toUpdateClause(obj,true);
 		int count = 0;
-		for (PartitionResult site : DbUtils.toTableNames(obj, myTableName, obj.getQuery(), getPool().getPartitionSupport())) {
+		for (PartitionResult site : DbUtils.toTableNames(obj, myTableName, obj.getQuery(), getPartitionSupport())) {
 			count += p.processUpdateNormal(asOperateTarget(site.getDatabase()), obj, start, where, update, site);
 		}
 		if (count > 0) {
@@ -2092,4 +2093,5 @@ public abstract class Session {
 		return count;
 	}
 
+	abstract PartitionSupport getPartitionSupport();
 }

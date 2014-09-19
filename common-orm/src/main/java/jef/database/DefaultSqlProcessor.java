@@ -455,6 +455,6 @@ public class DefaultSqlProcessor implements SqlProcessor {
 	}
 
 	public PartitionSupport getPartitionSupport() {
-		return parent.getPool().getPartitionSupport();
+		return parent.getPartitionSupport();
 	}
 }

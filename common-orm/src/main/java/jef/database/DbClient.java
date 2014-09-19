@@ -41,6 +41,7 @@ import jef.database.dialect.DbmsProfile;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.innerpool.IPool;
 import jef.database.innerpool.IUserManagedPool;
+import jef.database.innerpool.PartitionSupport;
 import jef.database.innerpool.PoolService;
 import jef.database.innerpool.ReentrantConnection;
 import jef.database.innerpool.RoutingManagedConnectionPool;
@@ -57,6 +58,8 @@ import jef.tools.Assert;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanUtils;
+
+import org.easyframe.enterprise.spring.TransactionType;
 
 /**
  * 数据库操作句柄
@@ -77,11 +80,22 @@ public class DbClient extends Session {
 	 * Sequence管理器
 	 */
 	private SequenceManager sequenceManager;
+	
+	/**
+	 * 事务支持类型
+	 */
+	private TransactionType txType;
 
 	/**
 	 * 连接池和metadata服务
 	 */
 	private IUserManagedPool connPool;
+	
+	/**
+	 * 构造当前对象的DataSource
+	 * 也可能是RoutingDataSource
+	 */
+	private DataSource ds;
 	
 	/**
 	 * 启动一个事务。
@@ -142,7 +156,6 @@ public class DbClient extends Session {
 	public DbClient(DataSource datasource) {
 		this(datasource, JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50));
 	}
-
 	/**
 	 * 使用DataSource构造DbClient
 	 * @param datasource 数据源信息
@@ -267,7 +280,7 @@ public class DbClient extends Session {
 	 * @return 从数据库扫描得到的分表
 	 */
 	public PartitionResult[] getSubTableNames(ITableMetadata meta) {
-		return connPool.getPartitionSupport().getSubTableNames(meta);
+		return getPartitionSupport().getSubTableNames(meta);
 	}
 
 	public boolean isOpen() {
@@ -291,6 +304,7 @@ public class DbClient extends Session {
 	 */
 	protected void init(DataSource ds, int max) throws SQLException {
 		DbUtils.tryAnalyzeInfo(ds, true);// 尝试解析并处理连接参数。
+		this.ds=ds;
 		this.connPool = PoolService.getPool(ds, max);
 		Assert.notNull(connPool);
 		if (ORMConfig.getInstance().isDebugMode())
@@ -318,7 +332,7 @@ public class DbClient extends Session {
 			insertp = batchinsertp;
 		}
 		this.sequenceManager = new SequenceManager(this);
-
+		this.pm = new PartitionMetadata(connPool);
 		// 配置好的初始化选项
 		String str = JefConfiguration.get(DbCfg.DB_INIT_STATIC);
 		if (StringUtils.isNotBlank(str)) {
@@ -425,7 +439,7 @@ public class DbClient extends Session {
 	 * @throws SQLException
 	 */
 	public Collection<String> existTable(IQueryableEntity obj) throws SQLException {
-		PartitionResult[] result = DbUtils.toTableNames(obj, null, null, connPool.getPartitionSupport());
+		PartitionResult[] result = DbUtils.toTableNames(obj, null, null, getPartitionSupport());
 		List<String> s = new ArrayList<String>();
 		for (PartitionResult pr : result) {
 			DbMetaData meta = getMetaData(pr.getDatabase());
@@ -448,7 +462,7 @@ public class DbClient extends Session {
 	 * @throws SQLException
 	 */
 	public int dropTable(ITableMetadata meta) throws SQLException {
-		PartitionResult[] pr = DbUtils.toTableNames(meta, connPool.getPartitionSupport(),4);
+		PartitionResult[] pr = DbUtils.toTableNames(meta, getPartitionSupport(),4);
 		return dropTable0(pr, meta);
 	}
 
@@ -476,7 +490,7 @@ public class DbClient extends Session {
 	 * @throws SQLException
 	 */
 	public int dropTable(IQueryableEntity obj) throws SQLException {
-		PartitionResult[] pr = DbUtils.toTableNames(obj, null, obj.getQuery(), connPool.getPartitionSupport());
+		PartitionResult[] pr = DbUtils.toTableNames(obj, null, obj.getQuery(), getPartitionSupport());
 		ITableMetadata meta = MetaHolder.getMeta(obj);
 		return dropTable0(pr, meta);
 	}
@@ -546,7 +560,7 @@ public class DbClient extends Session {
 	 */
 	public void truncate(ITableMetadata meta) throws SQLException {
 		PartitionResult[] route;
-		route = DbUtils.toTableNames(meta.newInstance(), null, null, connPool.getPartitionSupport());
+		route = DbUtils.toTableNames(meta.newInstance(), null, null, getPartitionSupport());
 		truncate(meta, route);
 	}
 
@@ -595,7 +609,7 @@ public class DbClient extends Session {
 	 */
 	public boolean createTable(IQueryableEntity obj) throws SQLException {
 		MetadataAdapter meta = MetaHolder.getMeta(obj);
-		PartitionResult[] result=DbUtils.partitionUtil.toTableNames(meta, obj, obj.getQuery(), connPool.getPartitionSupport(),false);
+		PartitionResult[] result=DbUtils.partitionUtil.toTableNames(meta, obj, obj.getQuery(), getPartitionSupport(),false);
 		if(ORMConfig.getInstance().isDebugMode()){
 			LogUtil.show("Partitions:"+Arrays.toString(result));
 		}
@@ -615,7 +629,7 @@ public class DbClient extends Session {
 		for (Class<?> c : cs) {
 			try {
 				ITableMetadata meta=MetaHolder.getMeta(c); 
-				PartitionResult[] result = DbUtils.toTableNames(meta, connPool.getPartitionSupport(),2);
+				PartitionResult[] result = DbUtils.toTableNames(meta, getPartitionSupport(),2);
 				n += createTable0(meta, result);
 			} catch (SQLException e) {
 				LogUtil.exception(e);
@@ -637,7 +651,7 @@ public class DbClient extends Session {
 		List<SQLException> errors = new ArrayList<SQLException>();
 		for (ITableMetadata meta : metas) {
 			try {
-				PartitionResult[] result = DbUtils.toTableNames(meta, connPool.getPartitionSupport(),2);
+				PartitionResult[] result = DbUtils.toTableNames(meta, getPartitionSupport(),2);
 				n += createTable0(meta, result);
 			} catch (SQLException ex) {
 				errors.add(ex);
@@ -677,9 +691,18 @@ public class DbClient extends Session {
 	 * @throws SQLException
 	 * @see MetadataEventListener
 	 */
-	public void refreshTable(ITableMetadata meta, MetadataEventListener listener) throws SQLException {
+	public void refreshTable(ITableMetadata meta, MetadataEventListener event) throws SQLException {
+		Assert.notNull(meta,"The table definition which your want to resresh must not null.");
 		ensureOpen();
-		this.connPool.tableRefresh(meta, listener);
+		PartitionResult[] results=DbUtils.toTableNames(meta, this.getPartitionSupport(),4);
+		for(PartitionResult result:results){
+			DbMetaData dbmeta=getPool().getMetadata(result.getDatabase());
+			for(String table:result.getTables()){
+				if(event==null || event.beforeTableRefresh(meta,table)){
+					dbmeta.refreshTable(meta,table,event,true);
+				}
+			}
+		}
 	}
 
 
@@ -862,6 +885,20 @@ public class DbClient extends Session {
 		}
 	}	
 	
+	
+	public TransactionType getTxType() {
+		return txType;
+	}
+
+
+	public void setTxType(TransactionType txType) {
+		this.txType = txType;
+	}
+
+	public DataSource getDataSource(){
+		return ds;
+	}
+	
 	/**
 	 * 获取缺省的DataSource配置
 	 * @return
@@ -884,5 +921,13 @@ public class DbClient extends Session {
 		String user=JefConfiguration.get(DbCfg.DB_USER);
 		String password=JefConfiguration.get(DbCfg.DB_PASSWORD);
 		return DbUtils.createSimpleDataSource(url,user,password);
+	}
+
+
+	private PartitionMetadata pm;
+
+	@Override
+	PartitionSupport getPartitionSupport() {
+		return pm;
 	}
 }

@@ -47,6 +47,7 @@ import jef.tools.support.NumberText;
 import jef.tools.support.TimeIterable;
 import junit.framework.Assert;
 
+import org.easyframe.fastjson.JSON;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.w3c.dom.Document;
@@ -766,6 +767,11 @@ public class JefTest extends Assert {
 		System.out.println(i.contains(Integer.MAX_VALUE));
 	}
 	
+	@Test
+	public void testJSON(){
+		System.out.println(JSON.parseObject(""));
+		
+	}
 	@Test
 	public void testIterator(){
 		Date start=new Date();

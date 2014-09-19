@@ -142,7 +142,7 @@ public abstract class SelectProcessor {
 				GroupClause groupClause = toGroupAndHavingClause(query, context);
 				clause.setGrouphavingPart(groupClause);
 				clause.setSelectPart(toSelectSql(context, groupClause));
-				clause.setTables(DbUtils.toTableNames(query.getInstance(), myTableName, query, db.getPool().getPartitionSupport()), query.getMeta().getName());
+				clause.setTables(DbUtils.toTableNames(query.getInstance(), myTableName, query, db.getPartitionSupport()), query.getMeta().getName());
 				clause.setWherePart(parent.toWhereClause(query, context, false));
 				if(order)
 					clause.setOrderbyPart(toOrderClause(obj, context));
@@ -219,7 +219,7 @@ public abstract class SelectProcessor {
 			CountClause result = new CountClause();
 			if (obj instanceof Query<?>) {
 				Query<?> query = (Query<?>) obj;
-				PartitionResult[] tables = DbUtils.toTableNames(query.getInstance(), customTableName, query, db.getPool().getPartitionSupport());
+				PartitionResult[] tables = DbUtils.toTableNames(query.getInstance(), customTableName, query, db.getPartitionSupport());
 				SqlContext context = query.prepare();
 				for (PartitionResult site : tables) {
 					List<String> tablenames = site.getTables();
@@ -299,7 +299,7 @@ public abstract class SelectProcessor {
 
 				sb.setSelectPart(toSelectSql(context, groupClause));
 				sb.setGrouphavingPart(groupClause);
-				sb.setTables(DbUtils.toTableNames(query.getInstance(), myTableName, query, db.getPool().getPartitionSupport()), query.getMeta().getName());
+				sb.setTables(DbUtils.toTableNames(query.getInstance(), myTableName, query, db.getPartitionSupport()), query.getMeta().getName());
 				sb.setWherePart(whereResult.getSql());
 				sb.setBind(whereResult.getBind());
 				if(order)
@@ -384,7 +384,7 @@ public abstract class SelectProcessor {
 			if (obj instanceof Query<?>) {
 				Query<?> query = (Query<?>) obj;
 				CountClause cq = new CountClause();
-				PartitionResult[] sites = DbUtils.toTableNames(query.getInstance(), tableName, query, db.getPool().getPartitionSupport());
+				PartitionResult[] sites = DbUtils.toTableNames(query.getInstance(), tableName, query, db.getPartitionSupport());
 				SqlContext context = query.prepare();
 				GroupClause groupClause = toGroupAndHavingClause(query, context);
 				if (sites.length > 1) {// 多数据库下还要Distinct，没办法了

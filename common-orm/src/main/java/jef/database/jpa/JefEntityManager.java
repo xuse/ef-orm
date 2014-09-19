@@ -36,6 +36,7 @@ import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.PojoWrapper;
 import jef.database.Session;
+import jef.database.TransactionStatus;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.support.SavepointNotSupportedException;
@@ -65,6 +66,13 @@ public class JefEntityManager implements EntityManager {
 	public JefEntityManager(EntityManagerFactory parent, Map properties) {
 		this.parent = (JefEntityManagerFactory) parent;
 		this.properties = properties;
+	}
+	
+	public JefEntityManager(EntityManagerFactory parent, Map properties,TransactionStatus session) {
+		this.parent=(JefEntityManagerFactory) parent;
+		this.properties=properties;
+		this.tx=new JefEntityTransaction(this,session);
+		
 	}
 
 	public void persist(Object entity) {
@@ -453,7 +461,7 @@ public class JefEntityManager implements EntityManager {
 		if (close)
 			throw new RuntimeException("the " + this.toString() + " has been closed!");
 		if (tx != null && tx.isActive()) {
-			return tx.get();
+			return (Session)tx.get();
 		} else {
 			return parent.getDefault();
 		}
