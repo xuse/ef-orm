@@ -52,7 +52,8 @@ public class PoolReleaseThread extends Thread{
 	
 	@Override
 	public void run() {
-		long sleep=JefConfiguration.getLong(DbCfg.DB_CONNECTION_LIVE,60000); 
+		long sleep=JefConfiguration.getLong(DbCfg.DB_CONNECTION_LIVE,60000);
+		ThreadUtils.doSleep(sleep);
 		try{
 			while(alive){
 				doWork();

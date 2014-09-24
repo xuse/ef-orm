@@ -25,14 +25,12 @@ public class JefEntityManagerFactory implements EntityManagerFactory {
 	 * EMF名称
 	 */
 	private String name;
-	
-//	private CriteriaBuilderImpl cbuilder=new CriteriaBuilderImpl(this);
 
-	
+	// private CriteriaBuilderImpl cbuilder=new CriteriaBuilderImpl(this);
+
 	private DbClient db;
-	private boolean XA;
-	private  Map<String, Object>  properties;
-	private static Logger log=LoggerFactory.getLogger(JefEntityManagerFactory.class);
+	private Map<String, Object> properties;
+	private static Logger log = LoggerFactory.getLogger(JefEntityManagerFactory.class);
 
 	public EntityManager createEntityManager() {
 		return createEntityManager(null);
@@ -40,8 +38,8 @@ public class JefEntityManagerFactory implements EntityManagerFactory {
 
 	@SuppressWarnings("rawtypes")
 	public EntityManager createEntityManager(Map map) {
-		EntityManager result = new JefEntityManager(this,map);
-		log.trace("[JPA DEBUG]:creating EntityManager:{} at {}" ,result,Thread.currentThread());
+		EntityManager result = new JefEntityManager(this, map);
+		log.trace("[JPA DEBUG]:creating EntityManager:{} at {}", result, Thread.currentThread());
 		return result;
 	}
 
@@ -50,9 +48,9 @@ public class JefEntityManagerFactory implements EntityManagerFactory {
 	}
 
 	public CriteriaBuilder getCriteriaBuilder() {
-		//TODO 2013-11 为了提高单元测试覆盖率，暂将这部分分支去除
-		throw new UnsupportedOperationException(); 
-//		return cbuilder;
+		// TODO 2013-11 为了提高单元测试覆盖率，暂将这部分分支去除
+		throw new UnsupportedOperationException();
+		// return cbuilder;
 	}
 
 	public Cache getCache() {
@@ -64,7 +62,7 @@ public class JefEntityManagerFactory implements EntityManagerFactory {
 	}
 
 	public void close() {
-		log.debug("[JPA DEBUG]:close.{}",this);
+		log.debug("[JPA DEBUG]:close.{}", this);
 		if (db.isOpen()) {
 			db.close();
 		}
@@ -76,7 +74,7 @@ public class JefEntityManagerFactory implements EntityManagerFactory {
 
 	public boolean isOpen() {
 		boolean flag = db.isOpen();
-			log.debug("[JPA DEBUG]:isOpen - {}", flag);
+		log.debug("[JPA DEBUG]:isOpen - {}", flag);
 		return flag;
 	}
 
@@ -94,97 +92,90 @@ public class JefEntityManagerFactory implements EntityManagerFactory {
 	}
 
 	public JefEntityManagerFactory(DataSource ds) {
-		this(ds, false);
+		this(ds, null);
 	}
 
-	public JefEntityManagerFactory(DataSource ds, boolean isXA) {
+	public JefEntityManagerFactory(DataSource dataSource, TransactionType txType) {
 		try {
-			this.db = DbClientFactory.getDbClient(ds, isXA);
-			this.XA = isXA;
+			this.db = DbClientFactory.getDbClient(dataSource, txType);
 			JefFacade.registeEmf(db, this);
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	public boolean isXA() {
-		return XA;
-	}
-
 	public DbClient getDefault() {
 		return db;
 	}
 
-	public void setTxType(TransactionType txType) {
-		db.setTxType(txType);
-	}
-
-//	/**
-//	 * 返回当前线程的JPA Session，如果不在事务中返回null
-//	 * JPA Session是在JEF Transaction对象上的进一步封装，内部可能包含多个独立的JEF Transaction
-//	 * 
-//	 * @return
-//	 */
-//	public JefEntityTransaction getTransaction() {
-//		return transactions.get();
-//	}
-//	
-//	/**
-//	 * 获得当前线程的事务Session，如果不在事务中返回null
-//	 * @return
-//	 */
-//	public Transaction getTransactionSession() {
-//		JefEntityTransaction jefTransaction=transactions.get();
-//		return jefTransaction==null?null:jefTransaction.get();
-//	}
-//	
-//	/**
-//	 * 获得当前线程的Session，如果在事务中返回事务，如果不在事务中返回公用的非事务Session
-//	 * @return
-//	 */
-//	public AbstractDbClient getSession(){
-//		JefEntityTransaction transaction=transactions.get();
-//		if(transaction==null){
-//			return getDefault();
-//		}else{
-//			return transaction.get();
-//		}
-//	}
-//	
-//
-//	//开始新事务,采用默认超时和隔离级别
-//	public void beginTransaction(){
-//		this.createEntityManager().getTransaction().begin();
-//	}
-//	
-//	//开始新事务并设置超时和隔离级别
-//	public void beginTransaction(int timeout,int isolationLevel){
-//		//if(involveTransaction){
-//		this.createEntityManager().getTransaction().begin();
-//		//获取线程当前事务
-//		Transaction transaction = transactions.get().get();
-//		transaction.setTimeout(timeout);
-//		transaction.setIsolationLevel(isolationLevel);
-//		//}
-//	}
-//	
-////	//清除当前事务信息
-//	public void closeTransaction(JefEntityManager jefEntityManager){
-//		JefEntityTransaction transaction=transactions.get();
-//		if(transaction!=null){
-//			if(!transaction.isAllClosed()){
-//				//这个情况应该不会发生的，这里测试一下，所以抛出异常
-//				throw new IllegalStateException("The EM can not be closed since:"+ transaction.toString() +" is not closed.");
-////				return;
-//			}
-//			transactions.set(null);
-//		}
-//	}
-//
-//	public JefEntityTransaction createTransaction(JefEntityManager jefEntityManager) {
-//		JefEntityTransaction trans=new JefEntityTransaction(jefEntityManager);
-//		transactions.set(trans);
-//		return trans;
-//	}
-//	
+	// /**
+	// * 返回当前线程的JPA Session，如果不在事务中返回null
+	// * JPA Session是在JEF Transaction对象上的进一步封装，内部可能包含多个独立的JEF Transaction
+	// *
+	// * @return
+	// */
+	// public JefEntityTransaction getTransaction() {
+	// return transactions.get();
+	// }
+	//
+	// /**
+	// * 获得当前线程的事务Session，如果不在事务中返回null
+	// * @return
+	// */
+	// public Transaction getTransactionSession() {
+	// JefEntityTransaction jefTransaction=transactions.get();
+	// return jefTransaction==null?null:jefTransaction.get();
+	// }
+	//
+	// /**
+	// * 获得当前线程的Session，如果在事务中返回事务，如果不在事务中返回公用的非事务Session
+	// * @return
+	// */
+	// public AbstractDbClient getSession(){
+	// JefEntityTransaction transaction=transactions.get();
+	// if(transaction==null){
+	// return getDefault();
+	// }else{
+	// return transaction.get();
+	// }
+	// }
+	//
+	//
+	// //开始新事务,采用默认超时和隔离级别
+	// public void beginTransaction(){
+	// this.createEntityManager().getTransaction().begin();
+	// }
+	//
+	// //开始新事务并设置超时和隔离级别
+	// public void beginTransaction(int timeout,int isolationLevel){
+	// //if(involveTransaction){
+	// this.createEntityManager().getTransaction().begin();
+	// //获取线程当前事务
+	// Transaction transaction = transactions.get().get();
+	// transaction.setTimeout(timeout);
+	// transaction.setIsolationLevel(isolationLevel);
+	// //}
+	// }
+	//
+	// // //清除当前事务信息
+	// public void closeTransaction(JefEntityManager jefEntityManager){
+	// JefEntityTransaction transaction=transactions.get();
+	// if(transaction!=null){
+	// if(!transaction.isAllClosed()){
+	// //这个情况应该不会发生的，这里测试一下，所以抛出异常
+	// throw new IllegalStateException("The EM can not be closed since:"+
+	// transaction.toString() +" is not closed.");
+	// // return;
+	// }
+	// transactions.set(null);
+	// }
+	// }
+	//
+	// public JefEntityTransaction createTransaction(JefEntityManager
+	// jefEntityManager) {
+	// JefEntityTransaction trans=new JefEntityTransaction(jefEntityManager);
+	// transactions.set(trans);
+	// return trans;
+	// }
+	//
 }

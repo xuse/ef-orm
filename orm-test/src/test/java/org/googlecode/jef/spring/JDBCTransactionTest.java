@@ -50,7 +50,7 @@ public class JDBCTransactionTest extends SpringTestBase{
 
 	private void checkTable(BasicDataSource basicDataSource) throws SQLException {
 		DataSourceWrapper dsw=DataSources.wrapFor(basicDataSource);
-		DbClient db=new DbClient(dsw,2);
+		DbClient db=new DbClient(dsw,2,null);
 		TupleMetadata table=new TupleMetadata("t_user");
 		table.addColumn("user", new ColumnType.Varchar(64));
 		table.addColumn("password", new ColumnType.Varchar(64));

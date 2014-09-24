@@ -84,7 +84,7 @@ public class DbClient extends Session {
 	/**
 	 * 事务支持类型
 	 */
-	private TransactionType txType;
+	private TransactionType txType=TransactionType.JPA;
 
 	/**
 	 * 连接池和metadata服务
@@ -145,7 +145,7 @@ public class DbClient extends Session {
 	 * @
 	 */
 	public DbClient(String url, String user, String password, int max) {
-		this(DbUtils.createSimpleDataSource(url, user, password), max);
+		this(DbUtils.createSimpleDataSource(url, user, password), max,null);
 	}
 
 	/**
@@ -154,15 +154,17 @@ public class DbClient extends Session {
 	 * 如果datasource已经是一个连接池，那么不会再启动内嵌的连接池，否则会使用内建的连接池
 	 */
 	public DbClient(DataSource datasource) {
-		this(datasource, JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50));
+		this(datasource, JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50),null);
 	}
 	/**
 	 * 使用DataSource构造DbClient
 	 * @param datasource 数据源信息
 	 * @param max  内建连接池的最大值，如果DataSource已经是一个连接池，那么内建连接池不会启动，此参数无效。
 	 */
-	public DbClient(DataSource datasource, int max) {
+	public DbClient(DataSource datasource, int max,TransactionType txType) {
 		try {
+			if(txType!=null)
+				this.txType=txType;
 			init(datasource, max);
 			JefFacade.registeEmf(this, null);
 		} catch (SQLException e) {
@@ -174,7 +176,7 @@ public class DbClient extends Session {
 	 * 构造，会使用jef.properties中配置的信息来连接数据库。
 	 */
 	public DbClient() {
-		this(getDefaultDataSource(), JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50));
+		this(getDefaultDataSource(), JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50),null);
 	}
 
 	/*
@@ -305,6 +307,9 @@ public class DbClient extends Session {
 	protected void init(DataSource ds, int max) throws SQLException {
 		DbUtils.tryAnalyzeInfo(ds, true);// 尝试解析并处理连接参数。
 		this.ds=ds;
+		if(txType==TransactionType.DATASOURCE){
+			max=0;
+		}
 		this.connPool = PoolService.getPool(ds, max);
 		Assert.notNull(connPool);
 		if (ORMConfig.getInstance().isDebugMode())
@@ -888,11 +893,6 @@ public class DbClient extends Session {
 	
 	public TransactionType getTxType() {
 		return txType;
-	}
-
-
-	public void setTxType(TransactionType txType) {
-		this.txType = txType;
 	}
 
 	public DataSource getDataSource(){

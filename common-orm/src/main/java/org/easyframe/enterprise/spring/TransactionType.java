@@ -12,6 +12,6 @@ package org.easyframe.enterprise.spring;
  */
 public enum TransactionType {
 	JPA,
-	DATASORUCE,
+	DATASOURCE,
 	MANAGED,
 }

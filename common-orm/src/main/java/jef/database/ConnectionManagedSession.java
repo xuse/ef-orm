@@ -25,7 +25,7 @@ import jef.tools.StringUtils;
 
 public class ConnectionManagedSession extends Session implements TransactionStatus{
 	private DbClient parent;
-	private ReentrantConnection conn;
+	private Conn conn;
 	private String parentName;// 当关闭后parent即为null，此时需要使用该变量显示日志
 	
 	public ConnectionManagedSession(DbClient parent,Connection connection) {
@@ -163,6 +163,11 @@ public class ConnectionManagedSession extends Session implements TransactionStat
 		@Override
 		public Object popUsedByObject() {
 			return null;
+		}
+
+		@Override
+		public String toString() {
+			return conn.toString();
 		}
 	}
 

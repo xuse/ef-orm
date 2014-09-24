@@ -55,12 +55,22 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 	 */
 	private boolean allowDropColumn;
 	
-	private JefEntityManagerFactory instance;
 	
 	/**
 	 * 事务支持类型
 	 */
 	private TransactionType txType;
+	
+	private JefEntityManagerFactory instance;
+
+
+	public String getTxType() {
+		return txType==null?null:txType.name();
+	}
+
+	public void setTxType(String txType) {
+		this.txType =TransactionType.valueOf(StringUtils.upperCase(txType));
+	}
 
 	public void afterPropertiesSet() throws Exception {
 		Assert.notNull(dataSource);
@@ -71,9 +81,7 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 		if(enhancePackages!=null){
 			new EntityEnhancer().enhance(StringUtils.split(enhancePackages,","));
 		}
-		JefEntityManagerFactory sf=new JefEntityManagerFactory(dataSource);
-		if(txType!=null)
-			sf.setTxType(txType);
+		JefEntityManagerFactory sf=new JefEntityManagerFactory(dataSource,txType);
 		if(scanPackages!=null){
 			QuerableEntityScanner qe=new QuerableEntityScanner();
 			qe.setImplClasses(DataObject.class);
@@ -122,6 +130,12 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 
 	public JefEntityManagerFactory getObject() throws Exception {
 		return instance;
+	}
+	
+	public void close(){
+		if(instance!=null){
+			instance.close();
+		}
 	}
 
 	public Class<?> getObjectType() {

@@ -23,6 +23,8 @@ import javax.sql.DataSource;
 import jef.database.dialect.DbmsProfile;
 import jef.tools.JefConfiguration;
 
+import org.easyframe.enterprise.spring.TransactionType;
+
 /**
  * 提供了创建DbClient的若干工厂方法
  * 
@@ -111,7 +113,7 @@ public class DbClientFactory {
 	 * @throws SQLException
 	 */
 	public static DbClient getDbClient(DataSource ds) throws SQLException {
-		return getDbClient(ds, false);
+		return getDbClient(ds, null);
 	}
 
 	/**
@@ -122,7 +124,7 @@ public class DbClientFactory {
 	 * @throws SQLException
 	 */
 	public static DbClient getDbClient(String jdbcUrl, String user, String password) throws SQLException {
-		return getDbClient(DbUtils.createSimpleDataSource(jdbcUrl, user, password), false);
+		return getDbClient(DbUtils.createSimpleDataSource(jdbcUrl, user, password), null);
 	}
 
 	/**
@@ -132,8 +134,7 @@ public class DbClientFactory {
 	 * @return
 	 * @throws SQLException
 	 */
-	public static DbClient getDbClient(DataSource ds, boolean isXA) throws SQLException {
-		DbClient db = new DbClient(ds);
-		return db;
+	public static DbClient getDbClient(DataSource ds, TransactionType isXA) throws SQLException {
+		return new DbClient(ds,JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50),isXA);
 	}
 }

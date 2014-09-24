@@ -29,7 +29,7 @@ public class BaseDao {
 	@PostConstruct
 	public void init(){
 		Assert.notNull(entityManagerFactory);
-		Assert.notNull(jefEmf);
+		jefEmf=(JefEntityManagerFactory)entityManagerFactory;
 	}
 	
 	/**
@@ -46,7 +46,7 @@ public class BaseDao {
 				em=entityManagerFactory.createEntityManager(null);
 			}	
 			break;
-		case DATASORUCE:
+		case DATASOURCE:
 			ConnectionHolder conn=(ConnectionHolder)TransactionSynchronizationManager.getResource(jefEmf.getDefault().getDataSource());
 			if(conn==null){//基于数据源的Spring事务
 				em=entityManagerFactory.createEntityManager(null);
@@ -54,6 +54,7 @@ public class BaseDao {
 				ConnectionManagedSession session=new ConnectionManagedSession(jefEmf.getDefault(),conn.getConnection());
 				em= new JefEntityManager(entityManagerFactory,null,session);
 			}
+			break;
 		default:
 			throw new UnsupportedOperationException(tx.name());
 		}
@@ -82,6 +83,5 @@ public class BaseDao {
 
 	public void setEntityManagerFactory(EntityManagerFactory entityManagerFactory) {
 		this.entityManagerFactory = entityManagerFactory;
-		this.jefEmf=(JefEntityManagerFactory)entityManagerFactory;
 	}
 }
