@@ -32,7 +32,7 @@ import jef.database.routing.jdbc.UpdateReturn;
 import jef.database.routing.sql.InMemoryOperateProvider;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.populator.AbstractResultSetTransformer;
-import jef.database.wrapper.populator.ResultSetTransformer;
+import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.result.IResultSet;
 import jef.database.wrapper.result.MultipleResultSet;
@@ -341,7 +341,7 @@ public class OperateTarget implements SqlTemplate {
 		return total;
 	}
 
-	public final <T> T innerSelectBySql(String sql, ResultSetTransformer<T> rst, List<?> objs,InMemoryOperateProvider lazy) throws SQLException {
+	public final <T> T innerSelectBySql(String sql, ResultSetExtractor<T> rst, List<?> objs,InMemoryOperateProvider lazy) throws SQLException {
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		StringBuilder sb = null;
@@ -487,7 +487,7 @@ public class OperateTarget implements SqlTemplate {
 	
 	public long countBySql(String countSql, Object... params) throws SQLException {
 		long start = System.currentTimeMillis();
-		Long num = innerSelectBySql(countSql, ResultSetTransformer.GET_FIRST_LONG, Arrays.asList(params),null);
+		Long num = innerSelectBySql(countSql, ResultSetExtractor.GET_FIRST_LONG, Arrays.asList(params),null);
 		if (ORMConfig.getInstance().isDebugMode()) {
 			long dbAccess = System.currentTimeMillis();
 			LogUtil.show(StringUtils.concat("Count:", String.valueOf(num), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", getTransactionId()));

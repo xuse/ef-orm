@@ -62,7 +62,7 @@ import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.Mapper;
-import jef.database.wrapper.populator.ResultSetTransformer;
+import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.result.IResultSet;
 import jef.database.wrapper.result.MultipleResultSet;
@@ -352,7 +352,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 				// 无路由场合
 				String sql = paramHolder.statement.toString();
 				long start = System.currentTimeMillis();
-				long total = db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, paramHolder.params, paramHolder);
+				long total = db.innerSelectBySql(sql, ResultSetExtractor.GET_FIRST_LONG, paramHolder.params, paramHolder);
 				total = (maxSize > 0 && maxSize < total) ? maxSize : total;
 				if (debug) {
 					long dbAccess = System.currentTimeMillis();
@@ -364,7 +364,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 				OperateTarget db = this.db.getTarget(plan.isChangeDatasource());
 				String sql = paramHolder.statement.toString();
 				long start = System.currentTimeMillis();
-				long total = db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, paramHolder.params, paramHolder);
+				long total = db.innerSelectBySql(sql, ResultSetExtractor.GET_FIRST_LONG, paramHolder.params, paramHolder);
 				total = (maxSize > 0 && maxSize < total) ? maxSize : total;
 				;
 				if (debug) {
@@ -506,7 +506,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 * @return 返回结果
 	 * @throws SQLException
 	 */
-	private <T> T doQuery(ResultSetTransformer<T> rst, boolean forCount) throws SQLException {
+	private <T> T doQuery(ResultSetExtractor<T> rst, boolean forCount) throws SQLException {
 		long start = System.currentTimeMillis();
 		SqlAndParameter sqlContext = config.getSqlAndParams(db, this);
 		SelectExecutionPlan plan = null;
@@ -545,7 +545,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		return result;
 	}
 
-	private <T> T executeMultiQuery(SelectExecutionPlan plan, boolean noOrder, ResultSetTransformer<T> rst, InMemoryOperateProvider sqlContext) throws SQLException {
+	private <T> T executeMultiQuery(SelectExecutionPlan plan, boolean noOrder, ResultSetExtractor<T> rst, InMemoryOperateProvider sqlContext) throws SQLException {
 		ORMConfig config = ORMConfig.getInstance();
 		boolean debug = config.debugMode;
 		MultipleResultSet mrs = new MultipleResultSet(config.isCacheResultset(), debug);

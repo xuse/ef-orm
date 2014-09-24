@@ -8,7 +8,7 @@ import javax.sql.rowset.CachedRowSet;
 import jef.database.ORMConfig;
 import jef.database.wrapper.result.IResultSet;
 
-public abstract class AbstractResultSetTransformer<T> implements ResultSetTransformer<T> {
+public abstract class AbstractResultSetTransformer<T> implements ResultSetExtractor<T> {
 	private int fetchSize;
 	private int queryTimeout;
 	private int maxRows;
@@ -87,14 +87,14 @@ public abstract class AbstractResultSetTransformer<T> implements ResultSetTransf
 	
 	private static final CacheAction DEFAULT=new CacheAction();
 	
-	public static ResultSetTransformer<CachedRowSet> cacheResultSet(int maxRows,int fetchSize){
+	public static ResultSetExtractor<CachedRowSet> cacheResultSet(int maxRows,int fetchSize){
 		if(maxRows==0 && fetchSize==0){
 			return DEFAULT; 
 		}
 		 return new CacheAction().setFetchSize(fetchSize).setMaxRows(maxRows);
 	}
 	
-	public static ResultSetTransformer<Long> countResultSet(int fetchSize){
+	public static ResultSetExtractor<Long> countResultSet(int fetchSize){
 		 return new CountAction().setFetchSize(fetchSize);
 	}
 }

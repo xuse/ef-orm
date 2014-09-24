@@ -107,10 +107,9 @@ public class CaseUpdate {
 		int updated;
 		do {
 			UserBalance ub = db.load(UserBalance.class, 1);// 第一步,先查出用户账上有多少钱
-			double oldAmount=ub.getAmout();
-			ub.setAmout(ub.getAmout() - 50);// 扣款50元
 			ub.getQuery().addCondition(UserBalance.Field.id, ub.getId());
-			ub.getQuery().addCondition(UserBalance.Field.amout, oldAmount);
+			ub.getQuery().addCondition(UserBalance.Field.amout, ub.getAmout());
+			ub.setAmout(ub.getAmout() - 50);// 扣款50元
 			updated = db.update(ub);
 		} while (updated == 0);
 	}

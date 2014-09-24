@@ -71,7 +71,7 @@ import jef.database.query.DefaultPartitionCalculator;
 import jef.database.query.Func;
 import jef.database.support.MetadataEventListener;
 import jef.database.wrapper.populator.ResultPopulatorImpl;
-import jef.database.wrapper.populator.ResultSetTransformer;
+import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.result.ResultSetImpl;
 import jef.database.wrapper.result.ResultSets;
@@ -1566,7 +1566,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @return 转换后的结果集
 	 * @throws SQLException
 	 */
-	public final <T> T selectBySql(String sql, ResultSetTransformer<T> rst, int maxReturn, List<?> objs) throws SQLException {
+	public final <T> T selectBySql(String sql, ResultSetExtractor<T> rst, int maxReturn, List<?> objs) throws SQLException {
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		StringBuilder sb = null;
@@ -2188,7 +2188,7 @@ public class DbMetaData extends MetadataConnectionPool {
 		}
 		try {
 			long current=System.currentTimeMillis();
-			Date date=this.selectBySql(sql, ResultSetTransformer.GET_FIRST_TIMESTAMP, 1, Collections.EMPTY_LIST);
+			Date date=this.selectBySql(sql, ResultSetExtractor.GET_FIRST_TIMESTAMP, 1, Collections.EMPTY_LIST);
 			current=(System.currentTimeMillis()+current)/2;//取两次操作的平均值，排除数据库查询误差
 			long delta=date.getTime()-System.currentTimeMillis();
 			if(Math.abs(delta)>60000){ //如果时间差大于1分钟则警告

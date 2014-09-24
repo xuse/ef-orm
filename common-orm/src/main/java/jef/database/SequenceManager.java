@@ -23,7 +23,7 @@ import jef.database.meta.AbstractSequence;
 import jef.database.meta.Feature;
 import jef.database.meta.TupleMetadata;
 import jef.database.wrapper.populator.AbstractResultSetTransformer;
-import jef.database.wrapper.populator.ResultSetTransformer;
+import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.result.IResultSet;
 import jef.tools.Assert;
 import jef.tools.JefConfiguration;
@@ -403,7 +403,7 @@ public final class SequenceManager {
 	/**
 	 * 从结果中获得单个LONG值
 	 */
-	private static final ResultSetTransformer<Long> GET_LONG_OR_TABLE_NOT_EXIST = new AbstractResultSetTransformer<Long>() {
+	private static final ResultSetExtractor<Long> GET_LONG_OR_TABLE_NOT_EXIST = new AbstractResultSetTransformer<Long>() {
 		public Long transformer(IResultSet rs) throws SQLException {
 			if (rs.next()) {
 				return rs.getLong(1);

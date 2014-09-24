@@ -67,7 +67,7 @@ import jef.database.query.function.TransformFunction;
 import jef.database.query.function.VarArgsSQLFunction;
 import jef.database.support.RDBMS;
 import jef.database.wrapper.clause.InsertSqlClause;
-import jef.database.wrapper.populator.ResultSetTransformer;
+import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.jre5support.ProcessUtil;
 import jef.tools.DateFormats;
 import jef.tools.DateUtils;
@@ -423,7 +423,7 @@ public class OracleDialect extends DbmsProfile {
 		schema=StringUtils.isBlank(schema) ? "%" : schema.toUpperCase();
 		seqName=seqName.toUpperCase();
 		try {
-			int value=conn.getMetaData().selectBySql(sql, ResultSetTransformer.GET_FIRST_INT, 1, Arrays.asList(schema,seqName));
+			int value=conn.getMetaData().selectBySql(sql, ResultSetExtractor.GET_FIRST_INT, 1, Arrays.asList(schema,seqName));
 			LogUtil.info("Tring to access ALL_SEQUENCE to get the increament of sequence [" + seqName+"], the step="+value);
 			return value;
 		} catch (SQLException e) {

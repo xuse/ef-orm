@@ -30,7 +30,7 @@ import jef.database.wrapper.clause.InMemoryOrderBy;
 import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
-import jef.database.wrapper.populator.ResultSetTransformer;
+import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.result.MultipleResultSet;
 import jef.tools.StringUtils;
 
@@ -234,7 +234,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements InMemo
 		long count=0;
 		for(String table: site.getTables()){
 			String sql=getSql(table);
-			count+=db.innerSelectBySql(sql, ResultSetTransformer.GET_FIRST_LONG, context.params,null);
+			count+=db.innerSelectBySql(sql, ResultSetExtractor.GET_FIRST_LONG, context.params,null);
 		}
 		return count;
 	}

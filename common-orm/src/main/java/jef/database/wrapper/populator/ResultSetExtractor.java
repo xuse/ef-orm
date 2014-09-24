@@ -28,7 +28,7 @@ import jef.database.wrapper.result.IResultSet;
  * 
  * @param <T>
  */
-public interface ResultSetTransformer<T> {
+public interface ResultSetExtractor<T> {
 	T transformer(IResultSet rs) throws SQLException;
 
 	int getMaxRows();
@@ -37,17 +37,17 @@ public interface ResultSetTransformer<T> {
 
 	int getQueryTimeout();
 
-	ResultSetTransformer<T> setMaxRows(int maxRows);
+	ResultSetExtractor<T> setMaxRows(int maxRows);
 
-	ResultSetTransformer<T> setFetchSize(int fetchSize);
+	ResultSetExtractor<T> setFetchSize(int fetchSize);
 
-	ResultSetTransformer<T> setQueryTimeout(int timeout);
+	ResultSetExtractor<T> setQueryTimeout(int timeout);
 
 	void apply(Statement st) throws SQLException;
 
 	boolean autoClose();
 
-	public static final ResultSetTransformer<Long> GET_FIRST_LONG = new AbstractResultSetTransformer<Long>() {
+	public static final ResultSetExtractor<Long> GET_FIRST_LONG = new AbstractResultSetTransformer<Long>() {
 		public Long transformer(IResultSet rs) throws SQLException {
 			if (rs.next()) {
 				return rs.getLong(1);
@@ -57,7 +57,7 @@ public interface ResultSetTransformer<T> {
 		}
 	}.setMaxRows(1);
 
-	public static final ResultSetTransformer<Integer> GET_FIRST_INT = new AbstractResultSetTransformer<Integer>() {
+	public static final ResultSetExtractor<Integer> GET_FIRST_INT = new AbstractResultSetTransformer<Integer>() {
 		public Integer transformer(IResultSet rs) throws SQLException {
 			if (rs.next()) {
 				return rs.getInt(1);
@@ -67,7 +67,7 @@ public interface ResultSetTransformer<T> {
 		}
 	}.setMaxRows(1);
 
-	public static final ResultSetTransformer<Date> GET_FIRST_TIMESTAMP = new AbstractResultSetTransformer<Date>() {
+	public static final ResultSetExtractor<Date> GET_FIRST_TIMESTAMP = new AbstractResultSetTransformer<Date>() {
 		public Date transformer(IResultSet rs) throws SQLException {
 			if (rs.next()) {
 				java.sql.Timestamp ts = rs.getTimestamp(1);
