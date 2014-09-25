@@ -51,6 +51,7 @@ final class RoutingConnection implements ReentrantConnection, Connection {
 	 * 归还到父池中
 	 */
 	public void closePhysical() {
+		savePointId=0;
 		if (parent != null) {
 			IRoutingConnectionPool parent = this.parent;
 			for (Entry<String, Connection> entry : connections.entrySet()) {
@@ -158,24 +159,6 @@ final class RoutingConnection implements ReentrantConnection, Connection {
 		}
 	}
 
-	public Savepoints setSavepoints(String savepointName) throws SQLException {
-		ensureOpen();
-		List<SQLException> errors = new ArrayList<SQLException>();
-		Savepoints sp = new Savepoints(savepointName);
-		for (Connection conn : connections.values()) {
-			try {
-				Savepoint s = conn.setSavepoint(savepointName);
-				sp.add(conn, s);
-			} catch (SQLException e) {
-				errors.add(e);
-			}
-		}
-		if (!errors.isEmpty()) {
-			throw DbUtils.wrapExceptions(errors);
-		}
-		return sp;
-	}
-
 	private Connection getConnection() throws SQLException {
 		if (key == null) {
 			if (defaultKey == null) {
@@ -274,10 +257,10 @@ final class RoutingConnection implements ReentrantConnection, Connection {
 	public void addUsedByObject() {
 		count++;
 	}
-
-	public boolean isUsed() {
-		return count > 0;
-	}
+//
+//	public boolean isUsed() {
+//		return count > 0;
+//	}
 
 	public void notifyDisconnect() {
 	}
@@ -301,7 +284,7 @@ final class RoutingConnection implements ReentrantConnection, Connection {
 	/**
 	 * 归还到父池中
 	 */
-	public void close() throws SQLException {
+	public void close(){
 		parent.offer(this);
 	}
 
@@ -406,7 +389,7 @@ final class RoutingConnection implements ReentrantConnection, Connection {
 
 	public void rollback(Savepoint savepoint) throws SQLException {
 		if(savepoint instanceof Savepoints){
-			((Savepoints)savepoint).rollbackSavepoints();
+			((Savepoints)savepoint).doRollback();
 		}else{
 			throw new SQLException(savepoint+" is not a valid savepoint!");
 		}
@@ -414,7 +397,7 @@ final class RoutingConnection implements ReentrantConnection, Connection {
 
 	public void releaseSavepoint(Savepoint savepoint) throws SQLException {
 		if(savepoint instanceof Savepoints){
-			((Savepoints)savepoint).rollbackSavepoints();
+			((Savepoints)savepoint).doRelease();
 		}else{
 			throw new SQLException(savepoint+" is not a valid savepoint!");
 		}
@@ -486,14 +469,6 @@ final class RoutingConnection implements ReentrantConnection, Connection {
 
 	public void setSchema(String schema) throws SQLException {
 	}
-
-//	public String getSchema() throws SQLException {
-//		return getConnection().getSchema();
-//	}
-//
-//	public void abort(Executor executor) throws SQLException {
-//		getConnection().abort(executor);
-//	}
 
 	public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
 	}

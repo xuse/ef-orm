@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import java.util.Queue;
 
 import jef.database.DbMetaData.ObjectType;
-import jef.database.innerpool.ReentrantConnection;
+import jef.database.innerpool.IConnection;
 import jef.database.support.RDBMS;
 import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
@@ -157,7 +157,7 @@ public class SequenceKeyHolderTest {
 	}
 
 	private long getNextSequenceValueFromDb() throws SQLException {
-		ReentrantConnection conn = db.getConnection();
+		IConnection conn = db.getConnection();
 		System.out.println(SCHEMA);
 		if(SCHEMA==null){
 			SEQ_NEXVAL_SQL = "select " +SEQ_NAME + ".nextval from dual";			

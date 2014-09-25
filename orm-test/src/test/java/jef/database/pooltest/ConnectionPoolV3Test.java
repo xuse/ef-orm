@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import javax.sql.DataSource;
 
 import jef.database.DbUtils;
+import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
 import jef.database.innerpool.PoolService;
 import jef.database.innerpool.ReentrantConnection;
@@ -49,7 +50,7 @@ public class ConnectionPoolV3Test {
 	}
 	private final AtomicInteger count=new AtomicInteger(0);
 	static class DoThread extends Thread{
-		private IUserManagedPool pool;
+		private IUserManagedPool<IConnection> pool;
 		private int id;
 		private long start;
 		private ConnectionPoolV3Test v3;
@@ -63,8 +64,8 @@ public class ConnectionPoolV3Test {
 		public void run() {
 			for(int i=0;i<LOOPS;i++){
 				try {
-					ReentrantConnection conn=pool.poll();
-					pool.offer(conn);
+					IConnection conn=pool.poll();
+					conn.close();
 				} catch (SQLException e) {
 					e.printStackTrace();
 					System.out.println("thread has exception:"+id);

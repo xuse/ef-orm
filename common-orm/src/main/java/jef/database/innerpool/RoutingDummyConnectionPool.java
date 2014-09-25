@@ -28,9 +28,9 @@ import com.google.common.collect.MapMaker;
  * @author jiyi
  *
  */
-public class RoutingDummyConnectionPool implements IRoutingConnectionPool,IUserManagedPool{
+public class RoutingDummyConnectionPool implements IRoutingConnectionPool{
 	protected IRoutingDataSource datasource;
-	final Map<Object, ReentrantConnection> usedConnection=new MapMaker().concurrencyLevel(12).weakKeys().makeMap();
+	final Map<Object, RoutingConnection> usedConnection=new MapMaker().concurrencyLevel(12).weakKeys().makeMap();
 	private final AtomicLong pollCount=new AtomicLong();
 	private final AtomicLong offerCount=new AtomicLong();
 	private final Map<String,DbMetaData> metadatas=new HashMap<String,DbMetaData>(8,0.5f);
@@ -39,9 +39,9 @@ public class RoutingDummyConnectionPool implements IRoutingConnectionPool,IUserM
 		this.datasource=ds;
 	}
 	
-	public ReentrantConnection poll(Object transaction) throws SQLException {
+	public RoutingConnection getConnection(Object transaction) throws SQLException {
 		pollCount.incrementAndGet();
-		ReentrantConnection conn=usedConnection.get(transaction);
+		RoutingConnection conn=usedConnection.get(transaction);
 		if(conn==null){
 			conn=new RoutingConnection(this);
 			conn.ensureOpen();//对于Routing连接来说，监测是否有效是没有意义的
@@ -53,11 +53,11 @@ public class RoutingDummyConnectionPool implements IRoutingConnectionPool,IUserM
 		return conn;
 	}
 
-	public ReentrantConnection poll() throws SQLException {
-		return poll(Thread.currentThread());
+	public RoutingConnection poll() throws SQLException {
+		return getConnection(Thread.currentThread());
 	}
 	
-	public void offer(ReentrantConnection conn){
+	public void offer(RoutingConnection conn){
 		offerCount.incrementAndGet();
 		if(conn!=null){
 			//处理内部的记录数据

@@ -17,9 +17,8 @@ import jef.database.Transaction.TransactionFlag;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.innerpool.IConnection;
-import jef.database.innerpool.IManagedConnection;
+import jef.database.innerpool.IManagedConnectionPool;
 import jef.database.innerpool.PartitionSupport;
-import jef.database.innerpool.ReentrantConnection;
 import jef.database.jsqlparser.SqlFunctionlocalization;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.parser.StSqlParser;
@@ -56,7 +55,7 @@ public class OperateTarget implements SqlTemplate {
 	private Session session;
 	private String dbkey;
 	private DatabaseDialect profile;
-	private ReentrantConnection conn;
+	private IConnection conn;
 
 	public String getDbkey() {
 		return dbkey;
@@ -116,10 +115,13 @@ public class OperateTarget implements SqlTemplate {
 
 	public void notifyDisconnect(SQLException e) {
 		IConnection conn = getConnection(dbkey);
-		if (conn instanceof IManagedConnection) {
-			if (getProfile().isIOError(e)) {
-				((IManagedConnection) conn).notifyDisconnect();
-			}
+		if (getProfile().isIOError(e)) {
+			LogUtil.warn("IO error on connection detected. closing current connection to refersh a new db connection.");
+			conn.closePhysical();
+			if(session.getPool() instanceof IManagedConnectionPool){
+				((IManagedConnectionPool)session.getPool()).notifyDbDisconnect();
+			}	
+			
 		}
 	}
 
@@ -162,7 +164,7 @@ public class OperateTarget implements SqlTemplate {
 	public boolean isResultSetHolderTransaction() {
 		if (session instanceof Transaction) {
 			Transaction trans = (Transaction) session;
-			return TransactionFlag.ResultHolder == trans.innerFlag;
+			return TransactionFlag.ResultHolder == trans.getTransactionFlag();
 		}
 		return false;
 	}
@@ -173,7 +175,7 @@ public class OperateTarget implements SqlTemplate {
 		}
 	}
 
-	ReentrantConnection getRawConnection() {
+	IConnection getRawConnection() {
 		return getConnection(dbkey);
 	}
 
@@ -181,7 +183,7 @@ public class OperateTarget implements SqlTemplate {
 		return session.populateResultSet(rsw, mapping, transformer);
 	}
 	
-	private ReentrantConnection getConnection(String dbkey2) {
+	private IConnection getConnection(String dbkey2) {
 		if (conn == null) {
 			try {
 				conn = session.getConnection();

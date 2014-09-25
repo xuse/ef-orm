@@ -89,7 +89,7 @@ public class Conn603MixThread extends AbstractTestConnection{
 	
 	class MyThread extends Thread {
 
-		private IUserManagedPool pool;
+		private IUserManagedPool<IConnection> pool;
 		private int index;
 		private boolean isRelease = true;
 		private AtomicInteger count;
@@ -117,7 +117,7 @@ public class Conn603MixThread extends AbstractTestConnection{
 				for(int i=0;i<100;i++){
 					//获取连接
 //					pool.getConnection(index);
-					ReentrantConnection conn=pool.poll();
+					IConnection conn=pool.poll();
 					
 					//进行休眠
 					int t=rd.nextInt(50)+1000;
@@ -126,7 +126,7 @@ public class Conn603MixThread extends AbstractTestConnection{
 					//查询表并且释放连接
 					consultTable();
 					if (isRelease) {
-						pool.offer(conn);
+						conn.close();
 					}
 					Thread.sleep(1*1000);
 					if(i%10==0){

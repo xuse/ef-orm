@@ -312,6 +312,12 @@ public class XMLUtils {
 		}
 	}
 
+	/*
+	 *创建解析器工场 
+	 * @param ignorComments 忽略注释
+	 * @param namespaceAware 识别命名空间
+	 * @return
+	 */
 	private static DocumentBuilderFactory createDocumentBuilderFactory(boolean ignorComments, boolean namespaceAware) {
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 		dbf.setIgnoringElementContentWhitespace(true);
@@ -326,7 +332,7 @@ public class XMLUtils {
 			dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
 			dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
 		} catch (ParserConfigurationException e) {
-			LogUtil.warn("Your xerces implemention is too old that does not support 'load-dtd-grammar' & 'load-external-dtd' feature.");
+			LogUtil.warn("Your xerces implemention is too old that does not support 'load-dtd-grammar' and 'load-external-dtd' feature.");
 		}
 		return dbf;
 	}

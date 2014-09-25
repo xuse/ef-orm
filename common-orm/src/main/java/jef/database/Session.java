@@ -38,10 +38,10 @@ import jef.database.annotation.PartitionResult;
 import jef.database.cache.CacheImpl;
 import jef.database.cache.TransactionCache;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
 import jef.database.innerpool.MetadataService;
 import jef.database.innerpool.PartitionSupport;
-import jef.database.innerpool.ReentrantConnection;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.parser.StSqlParser;
 import jef.database.meta.AbstractRefField;
@@ -131,12 +131,12 @@ public abstract class Session {
 	/*
 	 * 内部使用 得到数据库连接
 	 */
-	abstract ReentrantConnection getConnection() throws SQLException;
+	abstract IConnection getConnection() throws SQLException;
 
 	/*
 	 * 内部使用 释放（当前线程）连接
 	 */
-	abstract void releaseConnection(ReentrantConnection conn);
+	abstract void releaseConnection(IConnection conn);
 
 	/*
 	 * 内部使用 得到数据库名
@@ -429,7 +429,7 @@ public abstract class Session {
 		if (this instanceof Transaction) {
 			return CascadeUtil.updateWithRefInTransaction(obj, (Transaction) this);
 		} else if (this instanceof DbClient) {
-			Transaction trans = new Transaction((DbClient) this, TransactionFlag.Cascade, false);
+			Transaction trans = new TransactionImpl((DbClient) this, TransactionFlag.Cascade, false);
 			try {
 				int i = CascadeUtil.updateWithRefInTransaction(obj, trans);
 				trans.commit(true);
@@ -457,7 +457,7 @@ public abstract class Session {
 		if (this instanceof Transaction) {
 			return CascadeUtil.deleteWithRefInTransaction(obj, (Transaction) this);
 		} else if (this instanceof DbClient) {
-			Transaction trans = new Transaction((DbClient) this, TransactionFlag.Cascade,false);
+			Transaction trans = new TransactionImpl((DbClient) this, TransactionFlag.Cascade,false);
 			try {
 				int i = CascadeUtil.deleteWithRefInTransaction(obj, trans);
 				trans.commit(true);
@@ -496,7 +496,7 @@ public abstract class Session {
 		if (this instanceof Transaction) {
 			CascadeUtil.insertWithRefInTransaction(obj, (Transaction) this, dynamic);
 		} else if (this instanceof DbClient) {
-			Transaction trans = new Transaction((DbClient) this, TransactionFlag.Cascade,false);
+			Transaction trans = new TransactionImpl((DbClient) this, TransactionFlag.Cascade,false);
 			try {
 				CascadeUtil.insertWithRefInTransaction(obj, trans, dynamic);
 				trans.commit(true);
@@ -2019,7 +2019,7 @@ public abstract class Session {
 	// 包装当前AbsDbClient,包装为缺省的操作对象即无dbkey.
 	private final OperateTarget wrapThisWithEmptyKey(MultipleResultSet rs, boolean mustTx) throws SQLException {
 		if (mustTx && this instanceof DbClient) {// 如果不是在事务中，那么就用一个内嵌事务将其包裹住，作用是在resultSet的生命周期内，该连接不会被归还。并且也预防了基于线程的连接模型中，该连接被本线程的其他SQL操作再次取用然后释放回池
-			Transaction tx = new Transaction((DbClient) this, TransactionFlag.ResultHolder,true);
+			Transaction tx = new TransactionImpl((DbClient) this, TransactionFlag.ResultHolder,true);
 			return new OperateTarget(tx, null);
 		} else {
 			return new OperateTarget(this, null);

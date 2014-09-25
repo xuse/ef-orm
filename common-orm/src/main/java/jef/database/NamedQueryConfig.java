@@ -300,7 +300,11 @@ public class NamedQueryConfig extends jef.database.DataObject {
 				jef.database.jsqlparser.statement.select.Select ctst = new jef.database.jsqlparser.statement.select.Select();
 				ctst.setSelectBody(body);
 				dc.count = ctst;
-				dc.countLimit=body.getRemovedLimit();
+				if(dc.delays!=null && dc.delays.limit!=null){
+					dc.countLimit=dc.delays.limit;
+				}else{
+					dc.countLimit=body.getRemovedLimit();
+				}
 			} else {
 				throw new IllegalArgumentException();
 			}

@@ -8,24 +8,50 @@ import java.util.Map;
 
 import jef.codegen.EntityEnhancer;
 import jef.database.Condition.Operator;
+import jef.database.DbCfg;
 import jef.database.DbClient;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.ORMConfig;
+import jef.database.datasource.SimpleDataSource;
+import jef.database.dialect.DbmsProfile;
 import jef.database.query.Func;
 import jef.database.query.JpqlExpression;
+import jef.database.test.jdbc.DebugDataSource;
+import jef.tools.JefConfiguration;
 import jef.tools.string.RandomData;
 
 import org.easyframe.tutorial.lesson2.entity.Student;
 import org.easyframe.tutorial.lesson2.entity.UserBalance;
+import org.junit.AfterClass;
 import org.junit.Test;
 
 public class CaseUpdate {
-	DbClient db;
+	static DbClient db;
+
+	private static SimpleDataSource getDefaultDataSource() {
+		String dbPath = JefConfiguration.get(DbCfg.DB_FILEPATH, "");
+		String dbType = JefConfiguration.get(DbCfg.DB_TYPE, "derby");
+		int port = JefConfiguration.getInt(DbCfg.DB_PORT, 0);
+		String host = JefConfiguration.get(DbCfg.DB_HOST, "");
+		String dbName = JefConfiguration.get(DbCfg.DB_NAME);
+		DbmsProfile features = DbmsProfile.getProfile(dbType);
+		if (features == null) {
+			throw new RuntimeException("The DBMS: " + dbType + "not support yet.");
+		}
+		dbPath=dbPath.replace('\\', '/');
+		if(dbPath.length()>0 && !dbPath.endsWith("/")){
+			dbPath+="/";
+		}
+		String url = features.generateUrl(host, port, dbPath + dbName);
+		String user=JefConfiguration.get(DbCfg.DB_USER);
+		String password=JefConfiguration.get(DbCfg.DB_PASSWORD);
+		return DbUtils.createSimpleDataSource(url,user,password);
+	}
 
 	public CaseUpdate() throws SQLException {
 		new EntityEnhancer().enhance("org.easyframe.tutorial");
-		db = new DbClient();
+		db = new DbClient(new DebugDataSource(getDefaultDataSource()));
 		// 准备数据时关闭调试，减少控制台信息
 		ORMConfig.getInstance().setDebugMode(false);
 		db.dropTable(Student.class, UserBalance.class);
@@ -215,5 +241,9 @@ public class CaseUpdate {
 			data.add(st);
 		}
 		db.batchInsert(data);
+	}
+	@AfterClass
+	public static void close(){
+		db.close();
 	}
 }

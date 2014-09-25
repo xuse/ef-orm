@@ -501,6 +501,7 @@ public class Case1 extends org.junit.Assert {
 			assertEquals(1, query.getResultList().size());
 		}
 		db.rollback();
+		db.close();
 	}
 
 	private void insertMore(int max,Session session) throws SQLException {

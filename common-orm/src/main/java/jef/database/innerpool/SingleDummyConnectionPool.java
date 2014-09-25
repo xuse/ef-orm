@@ -24,9 +24,9 @@ import com.google.common.collect.MapMaker;
  * @author jiyi
  * 
  */
-final class SingleDummyConnectionPool implements IUserManagedPool {
+final class SingleDummyConnectionPool implements IUserManagedPool<SingleConnection> {
 	private DataSource ds;
-	final Map<Object, ReentrantConnection> map = new MapMaker().concurrencyLevel(12).weakKeys().makeMap();
+	final Map<Object, SingleConnection> map = new MapMaker().concurrencyLevel(12).weakKeys().makeMap();
 	private final AtomicLong pollCount = new AtomicLong();
 	private final AtomicLong offerCount = new AtomicLong();
 	private final DbMetaData metadata;
@@ -38,13 +38,13 @@ final class SingleDummyConnectionPool implements IUserManagedPool {
 		PoolReleaseThread.getInstance().addPool(this);
 	}
 
-	public ReentrantConnection poll() throws SQLException {
-		return poll(Thread.currentThread());
+	public SingleConnection poll() throws SQLException {
+		return getConnection(Thread.currentThread());
 	}
 
-	public ReentrantConnection poll(Object transaction) throws SQLException {
+	public SingleConnection getConnection(Object transaction) throws SQLException {
 		pollCount.incrementAndGet();
-		ReentrantConnection conn = map.get(transaction);
+		SingleConnection conn = map.get(transaction);
 		if (conn == null) {
 			conn = new SingleConnection(ds.getConnection(), this);
 			map.put(transaction, conn);
@@ -76,7 +76,7 @@ final class SingleDummyConnectionPool implements IUserManagedPool {
 		return new PoolStatus(0, 0, size, size, 0);
 	}
 
-	public void offer(ReentrantConnection conn) {
+	public void offer(SingleConnection conn) {
 		offerCount.incrementAndGet();
 		if (conn != null) {
 			// 处理内部的记录数据

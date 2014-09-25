@@ -174,15 +174,15 @@ public final class SimplePooledDatasource extends AbstractDataSource implements 
 
 	// /////////////////////////JDBC的连接池实现(不可重入)/////////////////////////////////
 	public Connection getConnection() throws SQLException {
-		return new WrapperConnection(poll());
+		return new PooledImpl(poll());
 	}
 
 	public Connection getConnection(String username, String password) throws SQLException {
 		return (Connection) getPooledConnection(username, password);
 	}
 
-	final class WrapperConnection extends AbstractJDBCConnection implements PooledConnection,CheckableConnection {
-		WrapperConnection(Connection conn) {
+	private final class PooledImpl extends AbstractJDBCConnection implements PooledConnection,CheckableConnection {
+		PooledImpl(Connection conn) {
 			this.conn = conn;
 		}
 
@@ -205,22 +205,8 @@ public final class SimplePooledDatasource extends AbstractDataSource implements 
 
 		public void removeStatementEventListener(StatementEventListener listener) {
 		}
-
-		public void closePhysical() {
-			DbUtils.closeConnection(conn);
-		}
-
-		public void setKey(String key) {
-		}
-
 		public boolean isUsed() {
 			return false;
-		}
-
-		public Savepoints setSavepoints(String savepointName) throws SQLException {
-			return new Savepoints(savepointName,conn);
-		}
-		public void ensureOpen() throws SQLException {
 		}
 		public void setInvalid() {
 			DbUtils.closeConnection(conn);
@@ -236,7 +222,6 @@ public final class SimplePooledDatasource extends AbstractDataSource implements 
 				DbUtils.close(st);
 			}
 		}
-		
 		public boolean checkValid(int timeout) throws SQLException {
 			if(conn==null)return true;
 			return conn.isValid(timeout);
@@ -244,7 +229,7 @@ public final class SimplePooledDatasource extends AbstractDataSource implements 
 	}
 
 	public PooledConnection getPooledConnection() throws SQLException {
-		return new WrapperConnection(poll());
+		return new PooledImpl(poll());
 	}
 
 	public PooledConnection getPooledConnection(String username, String password) throws SQLException {
@@ -260,7 +245,7 @@ public final class SimplePooledDatasource extends AbstractDataSource implements 
 				conn = ensureOpen(conn);
 			}
 			used.incrementAndGet();
-			return new WrapperConnection(conn);
+			return new PooledImpl(conn);
 		} catch (InterruptedException e) {
 			throw new SQLException(e);
 		}
@@ -336,7 +321,7 @@ public final class SimplePooledDatasource extends AbstractDataSource implements 
 		this.testSQL=string;
 	}
 
-	private class I implements Iterator<WrapperConnection>{
+	private class I implements Iterator<PooledImpl>{
 		private Iterator<Connection> raw;
 		I(Iterator<Connection> iterator) {
 			this.raw=iterator;
@@ -346,8 +331,8 @@ public final class SimplePooledDatasource extends AbstractDataSource implements 
 			return raw.hasNext();
 		}
 
-		public WrapperConnection next() {
-			return new WrapperConnection(raw.next());
+		public PooledImpl next() {
+			return new PooledImpl(raw.next());
 		}
 
 		public void remove() {
@@ -357,7 +342,7 @@ public final class SimplePooledDatasource extends AbstractDataSource implements 
 	public void doCheck() {
 		if(freeConns==null)return;
 		int total=freeConns.size();
-		Iterator<WrapperConnection> iter=new I(freeConns.iterator());
+		Iterator<PooledImpl> iter=new I(freeConns.iterator());
 		int invalid=PoolService.doCheck(this.testSQL, iter);
 		LogUtil.info("Checked [{}]. total:{},  invalid:{}", this, total, invalid);
 	}

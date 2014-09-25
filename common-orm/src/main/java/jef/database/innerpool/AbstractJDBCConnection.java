@@ -23,9 +23,7 @@ import jef.common.log.LogUtil;
 
 public abstract class AbstractJDBCConnection implements Connection{
 	protected Connection conn;
-	
-	// 以下是为了实现JDBC规范的 Connection********************************
-	// JDBC实现
+
 	public PreparedStatement prepareStatement(String sql) throws SQLException {
 		return conn.prepareStatement(sql);
 	}
@@ -58,7 +56,6 @@ public abstract class AbstractJDBCConnection implements Connection{
 		return conn.prepareCall(sql);
 	}
 	
-
 	// 以下是为了实现JDBC规范的 Connection中其他方法，ORM本身不使用********************************
 	public <T> T unwrap(Class<T> iface) throws SQLException {
 		return conn.unwrap(iface);
@@ -220,12 +217,10 @@ public abstract class AbstractJDBCConnection implements Connection{
 			return false;
 		}
 	}
-	public void setAutoCommit(boolean b) throws SQLException {
-		if (conn.getAutoCommit() != b) {
-			conn.setAutoCommit(b);
-		}
-	}
 	
+	public void setAutoCommit(boolean b) throws SQLException {
+		conn.setAutoCommit(b);
+	}
 
 	public void setSchema(String schema) throws SQLException {
 	}

@@ -276,6 +276,7 @@ public class Case2 extends org.junit.Assert {
 	 */
 	@Test
 	public void testCustomerBatch() throws SQLException {
+		System.out.println("testCustomerBatch");
 		db.truncate(Customer.class);
 		List<Customer> list = new ArrayList<Customer>();
 		// 批量插入

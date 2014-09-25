@@ -97,7 +97,7 @@ import jef.common.Callback;
  * 因此我们参考实现是B2实现。除了事务不提交不回滚之外，其他和B2一样。（事务的提交回滚一切由Spring和JTA控制器完成.）
  * @author jiyi
  */
-public interface IUserManagedPool extends IPool<ReentrantConnection>,MetadataService{
+public interface IUserManagedPool<T extends IConnection> extends IPool<T>,MetadataService{
 	/**
 	 * 获取一个连接，如果连接池已经为指定的事务分配过连接，那么还是返回这个连接。
 	 * 注意：这个版本开始，连接池不再负责设置AutoCommit的状态
@@ -106,14 +106,7 @@ public interface IUserManagedPool extends IPool<ReentrantConnection>,MetadataSer
 	 * @return Connection
 	 * @throws SQLException
 	 */
-	ReentrantConnection poll(Object transaction) throws SQLException;
-
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 * 在这里的实现定义和父类不同，是以当前线程为连接使用者的获取。这意味着同个线程中抓取多次都是同一个连接
-	 */
-	ReentrantConnection poll() throws SQLException;
+	IConnection getConnection(Object transaction) throws SQLException;
 	
 	/**
 	 * 返回全部的datasource名称。

@@ -6,8 +6,8 @@ import java.util.List;
 
 import jef.database.DbClient;
 import jef.database.jpa.JefEntityManagerFactory;
-import jef.tools.reflect.BeanUtils;
 
+import org.easyframe.enterprise.spring.BaseDao;
 import org.easyframe.enterprise.spring.CommonDao;
 import org.easyframe.enterprise.spring.CommonDaoImpl;
 import org.easyframe.tutorial.lesson1.entity.Foo;
@@ -20,8 +20,8 @@ public class Case1 {
 		DbClient db=new DbClient();
 		JefEntityManagerFactory emf=new JefEntityManagerFactory(db);
 		CommonDao dao=new CommonDaoImpl();
-		 //模拟Spring自动注入
-		BeanUtils.setFieldValue(dao, "entityManagerFactory", emf);
+		//模拟Spring自动注入
+		((BaseDao)dao).setEntityManagerFactory(emf);
 		//创建表
 		dao.getNoTransactionSession().dropTable(Foo.class);
 		dao.getNoTransactionSession().createTable(Foo.class); 

@@ -10,6 +10,15 @@ import jef.database.datasource.AbstractDataSource;
 public class DebugDataSource extends AbstractDataSource{
 	private DataSource ds;
 
+	public DebugDataSource(DataSource ds) {
+		this.ds=ds;
+	}
+	
+	
+	public DebugDataSource() {
+		super();
+	}
+
 	@Override
 	public Connection getConnection() throws SQLException {
 		Connection conn=ds.getConnection();
@@ -19,8 +28,8 @@ public class DebugDataSource extends AbstractDataSource{
 
 	public static void printStack(String message) {
 		StackTraceElement[] stacks=new Throwable().getStackTrace();
-		System.out.println("==== "+message +" ====");
-		System.out.println(stacks[2]+"\n"+stacks[3]);
+		System.out.println(">>==== "+message +" ====");
+		System.out.println(">>"+stacks[2]+"\n>>"+stacks[3]);
 	}
 
 	@Override

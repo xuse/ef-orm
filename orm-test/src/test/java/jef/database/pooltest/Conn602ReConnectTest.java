@@ -3,8 +3,8 @@ package jef.database.pooltest;
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
-import jef.database.innerpool.ReentrantConnection;
 import jef.tools.ThreadUtils;
 import junit.framework.Assert;
 
@@ -79,7 +79,7 @@ public class Conn602ReConnectTest extends AbstractTestConnection{
 
 	class MyThread extends Thread {
 
-		private IUserManagedPool pool;
+		private IUserManagedPool<IConnection> pool;
 		private int index;
 		private boolean isRelease = true;
 		AtomicInteger countThread = new AtomicInteger(0);
@@ -108,11 +108,11 @@ public class Conn602ReConnectTest extends AbstractTestConnection{
 			// TODO Auto-generated method stub
 			try {
 				//获取连接
-				ReentrantConnection conn=pool.poll();
+				IConnection conn=pool.poll();
 				Thread.sleep(4*1000);
 				if (isRelease) {
 					//释放连接
-					pool.offer(conn);
+					conn.close();
 				}
 			} catch (SQLException e) {
 				// TODO Auto-generated catch blockx

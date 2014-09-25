@@ -8,8 +8,9 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import jef.database.DbUtils;
+import jef.tools.Assert;
 
-public final class Savepoints implements Savepoint{
+final class Savepoints implements Savepoint{
 	private final List<Entry<Connection,Savepoint>> list=new ArrayList<Entry<Connection,Savepoint>>(5);
 	private String name;
 	private int id=-1;
@@ -26,43 +27,15 @@ public final class Savepoints implements Savepoint{
 	 * @param name
 	 */
 	public Savepoints(String name) {
+		Assert.notNull(name);
 		this.name=name;
-	}
-	
-	/**
-	 * 构造单连接带名称
-	 * @param name 恢复点名，可为null
-	 * @param conn
-	 * @throws SQLException
-	 */
-	public Savepoints(String name,Connection conn) throws SQLException {
-		this.name=name;
-		Savepoint setSavepoint;
-		if(name==null){
-			setSavepoint=conn.setSavepoint();
-			this.id=setSavepoint.getSavepointId();
-		}else{
-			setSavepoint=conn.setSavepoint(name);
-		}
-		list.add(new jef.common.Entry<Connection,Savepoint>(conn,setSavepoint));
-	}
-	
-	/**
-	 * 构造，单连接不带名称
-	 * @param conn
-	 * @throws SQLException
-	 */
-	public Savepoints(Connection conn) throws SQLException {
-		Savepoint setSavepoint=conn.setSavepoint(name);
-		this.id=setSavepoint.getSavepointId();
-		list.add(new jef.common.Entry<Connection,Savepoint>(conn,setSavepoint));
 	}
 
 	public void add(Connection conn,Savepoint point){
 		list.add(new jef.common.Entry<Connection,Savepoint>(conn,point));
 	}
 	
-	public void releaseSavepoints()throws SQLException{
+	public void doRelease()throws SQLException{
 		List<SQLException> error=new ArrayList<SQLException>(list.size());
 		for(Entry<Connection,Savepoint> e:list){
 			try{
@@ -76,7 +49,7 @@ public final class Savepoints implements Savepoint{
 		}
 	}
 	
-	public void rollbackSavepoints()throws SQLException{
+	public void doRollback()throws SQLException{
 		List<SQLException> error=new ArrayList<SQLException>(list.size());
 		for(Entry<Connection,Savepoint> e:list){
 			try{

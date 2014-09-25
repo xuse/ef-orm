@@ -55,7 +55,7 @@ public class DebugConnection implements Connection {
 	}
 
 	public void commit() throws SQLException {
-		System.out.println("commit");
+		System.out.println(">>commit");
 		conn.commit();
 	}
 
@@ -141,22 +141,22 @@ public class DebugConnection implements Connection {
 	}
 
 	public Savepoint setSavepoint() throws SQLException {
-		System.out.println("setSavepoint ");
+		System.out.println(">>setSavepoint ");
 		return conn.setSavepoint();
 	}
 
 	public Savepoint setSavepoint(String name) throws SQLException {
-		System.out.println("setSavepoint "+name);
+		System.out.println(">>setSavepoint "+name);
 		return conn.setSavepoint(name);
 	}
 
 	public void rollback(Savepoint savepoint) throws SQLException {
-		System.out.println("rollback savepoint "+savepoint);
+		System.out.println(">>rollback savepoint "+savepoint);
 		conn.rollback(savepoint);
 	}
 
 	public void releaseSavepoint(Savepoint savepoint) throws SQLException {
-		System.out.println("releaseSavepoint "+savepoint);
+		System.out.println(">>releaseSavepoint "+savepoint);
 		conn.releaseSavepoint(savepoint);
 	}
 
@@ -221,7 +221,7 @@ public class DebugConnection implements Connection {
 	}
 
 	public void rollback() throws SQLException {
-		System.out.println("rollback");
+		System.out.println(">>rollback");
 		conn.rollback();
 	}
 
@@ -238,7 +238,7 @@ public class DebugConnection implements Connection {
 	}
 
 	public void setAutoCommit(boolean b) throws SQLException {
-		System.out.println("setAutoCommit "+b);
+		System.out.println(">>setAutoCommit "+b);
 		conn.setAutoCommit(b);
 	}
 

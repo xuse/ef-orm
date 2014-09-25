@@ -85,7 +85,7 @@ public class PoolService {
 	 * @author jiyi
 	 *
 	 */
-	static interface CheckableConnection extends IConnection{
+	static interface CheckableConnection{
 		/**
 		 * 标记当前连接失效，在业务发生错误时，或者在检查线程检查出问题时，都可能使用此方法来标记连接失效。
 		 */
@@ -103,6 +103,13 @@ public class PoolService {
 		 * @return
 		 */
 		public boolean checkValid(int timeout)throws SQLException;
+		
+
+		/**
+		 * 是否被占用，即占用计数器是否>0
+		 * @return
+		 */
+		boolean isUsed();
 	}
 
 	

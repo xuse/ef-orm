@@ -4,7 +4,7 @@ import javax.annotation.PostConstruct;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
-import jef.database.ConnectionManagedSession;
+import jef.database.ManagedTransactionImpl;
 import jef.database.Session;
 import jef.database.jpa.JefEntityManager;
 import jef.database.jpa.JefEntityManagerFactory;
@@ -29,7 +29,9 @@ public class BaseDao {
 	@PostConstruct
 	public void init(){
 		Assert.notNull(entityManagerFactory);
-		jefEmf=(JefEntityManagerFactory)entityManagerFactory;
+		if(jefEmf==null){
+			jefEmf=(JefEntityManagerFactory)entityManagerFactory;
+		}
 	}
 	
 	/**
@@ -51,7 +53,7 @@ public class BaseDao {
 			if(conn==null){//基于数据源的Spring事务
 				em=entityManagerFactory.createEntityManager(null);
 			}else{
-				ConnectionManagedSession session=new ConnectionManagedSession(jefEmf.getDefault(),conn.getConnection());
+				ManagedTransactionImpl session=new ManagedTransactionImpl(jefEmf.getDefault(),conn.getConnection());
 				em= new JefEntityManager(entityManagerFactory,null,session);
 			}
 			break;
@@ -83,5 +85,6 @@ public class BaseDao {
 
 	public void setEntityManagerFactory(EntityManagerFactory entityManagerFactory) {
 		this.entityManagerFactory = entityManagerFactory;
+		this.jefEmf=(JefEntityManagerFactory)entityManagerFactory;
 	}
 }

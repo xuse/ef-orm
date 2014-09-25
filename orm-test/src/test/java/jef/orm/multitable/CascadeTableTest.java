@@ -261,7 +261,6 @@ public class CascadeTableTest extends MultiTableTestBase {
 	 * @throws SQLException
 	 */
 	@Test
-	@IgnoreOn(allButExcept="hsqldb")
 	public void testConditionInOneObj() throws SQLException {
 		System.out.println("=========== testConditionInOneObj Begin ==========");
 		long count=db.getSqlTemplate(null).countBySql("select count(*) from person_table where age>16 and schoolId=2");

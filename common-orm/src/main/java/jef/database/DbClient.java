@@ -39,11 +39,11 @@ import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.DbmsProfile;
 import jef.database.dialect.type.AutoIncrementMapping;
+import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IPool;
 import jef.database.innerpool.IUserManagedPool;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.innerpool.PoolService;
-import jef.database.innerpool.ReentrantConnection;
 import jef.database.innerpool.RoutingManagedConnectionPool;
 import jef.database.jmx.JefFacade;
 import jef.database.meta.Feature;
@@ -89,7 +89,7 @@ public class DbClient extends Session {
 	/**
 	 * 连接池和metadata服务
 	 */
-	private IUserManagedPool connPool;
+	private IUserManagedPool<? extends IConnection> connPool;
 	
 	/**
 	 * 构造当前对象的DataSource
@@ -116,7 +116,7 @@ public class DbClient extends Session {
 	 * @see Transaction
 	 */
 	public Transaction startTransaction(){
-		return new Transaction(this, null,false);
+		return new TransactionImpl(this, null,false);
 	}
 	
 
@@ -133,7 +133,7 @@ public class DbClient extends Session {
 	 * @return Transaction对象
 	 */
 	public Transaction startTransaction(int timeout, int isolationLevel, boolean readOnly) {
-		return new Transaction(this, timeout,isolationLevel,readOnly,false);
+		return new TransactionImpl(this, timeout,isolationLevel,readOnly,false);
 	}
 
 	/**
@@ -814,15 +814,15 @@ public class DbClient extends Session {
 		}
 	}
 	
-	protected ReentrantConnection getConnection() throws SQLException {
+	protected IConnection getConnection() throws SQLException {
 		ensureOpen();
-		ReentrantConnection conn = connPool.poll();
+		IConnection conn = connPool.poll();
 		conn.setAutoCommit(true);
 		return conn;
 	}
 
-	protected void releaseConnection(ReentrantConnection conn) {
-		connPool.offer(conn);
+	protected void releaseConnection(IConnection conn) {
+		conn.close();
 	}
 
 	protected String getDbName(String dbKey) {

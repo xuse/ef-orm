@@ -55,7 +55,7 @@ import com.google.common.collect.MapMaker;
  * <li>3、定时检查连接有效性</li>
  * </ul>
  */
-final class SingleManagedConnectionPool implements IManagedConnectionPool,DataSource,CheckablePool {
+final class SingleManagedConnectionPool implements IManagedConnectionPool<SingleConnection>,DataSource,CheckablePool {
 	private DataSource ds;
 	private int max;
 	private int min;
@@ -70,12 +70,12 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool,DataSo
 	 * 本来是使用usedConnections.size()来计算目前使用中的连接数的, 但是发现Google map在数量统计时不太靠谱,只好自行记录使用
 	 */
 	private final AtomicInteger used = new AtomicInteger();
-	final Map<Object, ReentrantConnection> usedConnections = new MapMaker().concurrencyLevel(12).weakKeys().makeMap();
+	final Map<Object, SingleConnection> usedConnections = new MapMaker().concurrencyLevel(12).weakKeys().makeMap();
 	
 	/**
 	 * 空闲连接数
 	 */
-	private final BlockingQueue<IManagedConnection> freeConns;
+	private final BlockingQueue<SingleConnection> freeConns;
 	
 	
 	//统计信息，统计拿取和设置的全不知
@@ -91,7 +91,7 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool,DataSo
 		this.min = min;
 		this.max = max;
 		this.metadata = new DbMetaData(ds, this, null);
-		freeConns = new LinkedBlockingQueue<IManagedConnection>(max);
+		freeConns = new LinkedBlockingQueue<SingleConnection>(max);
 		PoolReleaseThread.getInstance().addPool(this);
 		PoolCheckThread.getInstance().addPool(this);
 	}
@@ -119,14 +119,14 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool,DataSo
 	}
 
 
-	public ReentrantConnection poll(Object transaction) throws SQLException {
+	public SingleConnection getConnection(Object transaction) throws SQLException {
 		pollCount.incrementAndGet();
 		try {
-			ReentrantConnection conn = usedConnections.get(transaction);
+			SingleConnection conn = usedConnections.get(transaction);
 			if (conn == null) {
 				if (used.get()< max && freeConns.isEmpty()) {// 尝试用新连接
 					used.getAndIncrement(); //提前计数
-					conn = new SingleManagedConnection(ds.getConnection(), this);
+					conn = new SingleConnection(ds.getConnection(), this);
 					conn.setUsedByObject(transaction);
 				} else {
 					used.getAndIncrement(); //提前计数，并发下为了严格阻止连接池超出上限，必须这样做
@@ -157,11 +157,11 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool,DataSo
 		System.out.println(eles[5]);
 	}
 
-	public ReentrantConnection poll() throws SQLException {
-		return poll(Thread.currentThread());
+	public SingleConnection poll() throws SQLException {
+		return getConnection(Thread.currentThread());
 	}
 
-	public void offer(ReentrantConnection conn) {
+	public void offer(SingleConnection conn) {
 		offerCount.incrementAndGet();
 		if (conn != null) {
 			Object o = conn.popUsedByObject();
@@ -171,7 +171,7 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool,DataSo
 				return;// 不是真正的归还
 			}
 			ReentrantConnection conn1 = usedConnections.remove(o);
-			boolean success = freeConns.offer((IManagedConnection) conn);
+			boolean success = freeConns.offer(conn);
 			if (!success) {
 				conn.closePhysical();
 			}
@@ -197,7 +197,7 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool,DataSo
 
 	public void closeConnectionTillMin() {
 		if (freeConns.size() > min) {
-			IManagedConnection conn;
+			ReentrantConnection conn;
 			// 注意下面两个条件顺序必须确保poll操作在后，因为poll操作会变更集合的Size
 			while (freeConns.size() > min && (conn = freeConns.poll()) != null) {
 				conn.closePhysical();
@@ -273,11 +273,11 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool,DataSo
 	}
 
 	public Connection getConnection() throws SQLException {
-		return (SingleManagedConnection) poll(Thread.currentThread());
+		return getConnection(Thread.currentThread());
 	}
 
 	public Connection getConnection(String username, String password) throws SQLException {
-		return (SingleManagedConnection) poll(Thread.currentThread());
+		return getConnection(Thread.currentThread());
 	}
 
 	public Logger getParentLogger() throws SQLFeatureNotSupportedException {

@@ -426,9 +426,12 @@ public class JefEntityManager implements EntityManager {
 	 */
 	public void releaseSavepoint(Savepoint savepoint) {
 		if (tx != null) {
-			tx.get().releaseSavepoint(savepoint);
+			try {
+				tx.get().releaseSavepoint(savepoint);
+			} catch (SQLException e) {
+				throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			}
 		}
-
 	}
 
 	@SuppressWarnings("unchecked")

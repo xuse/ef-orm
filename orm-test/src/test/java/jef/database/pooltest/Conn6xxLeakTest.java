@@ -3,8 +3,8 @@ package jef.database.pooltest;
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
-import jef.database.innerpool.ReentrantConnection;
 import jef.tools.ThreadUtils;
 
 import org.junit.Before;
@@ -63,7 +63,7 @@ public class Conn6xxLeakTest extends AbstractTestConnection{
 
 	class MyThread extends Thread {
 
-		private IUserManagedPool pool;
+		private IUserManagedPool<IConnection> pool;
 		private int index;
 		private Conn6xxLeakTest connLeakTest;
 		private boolean isRelease = true;
@@ -91,10 +91,10 @@ public class Conn6xxLeakTest extends AbstractTestConnection{
 		public void run() {
 			// TODO Auto-generated method stub
 			try {
-				ReentrantConnection conn=pool.poll();
+				IConnection conn=pool.poll();
 				Thread.sleep(20*1000);
 				if (isRelease) {
-					pool.offer(conn);
+					conn.close();
 				}
 			} catch (Exception e) {
 				// TODO Auto-generated catch blockx

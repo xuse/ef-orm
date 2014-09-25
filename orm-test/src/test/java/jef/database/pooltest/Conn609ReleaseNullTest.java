@@ -3,8 +3,8 @@ package jef.database.pooltest;
 
 import java.sql.SQLException;
 
+import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
-import jef.database.innerpool.ReentrantConnection;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -77,7 +77,7 @@ public class Conn609ReleaseNullTest extends AbstractTestConnection{
 	
 	class MyThread extends Thread {
 
-		private IUserManagedPool pool;
+		private IUserManagedPool<IConnection> pool;
 
 		public MyThread() {
 			// TODO Auto-generated constructor stub
@@ -91,10 +91,10 @@ public class Conn609ReleaseNullTest extends AbstractTestConnection{
 		public void run() {
 			// TODO Auto-generated method stub
 			try {
-				ReentrantConnection conn=pool.poll();
+				IConnection conn=pool.poll();
 				//休眠等待断开
 				Thread.sleep(10*1000);
-				pool.offer(conn);
+				conn.close();
 			} catch (Exception e) {
 				// TODO Auto-generated catch blockx
 				e.printStackTrace();

@@ -2,14 +2,15 @@ package jef.database.innerpool;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.sql.DataSource;
 
 import jef.common.pool.PoolStatus;
 import jef.database.DbUtils;
-import jef.database.UserCacheHolder;
 import jef.database.datasource.SimpleDataSource;
 
 /**
@@ -17,7 +18,8 @@ import jef.database.datasource.SimpleDataSource;
  * @author jiyi
  *
  */
-public abstract class MetadataConnectionPool extends UserCacheHolder implements IPool<Connection>,CheckablePool{
+public abstract class MetadataConnectionPool implements IPool<Connection>,CheckablePool{
+	public final Set<String> checkedFunctions=new HashSet<String>();
 	protected DataSource ds;
 	private Connection conn;
 	private final AtomicInteger using=new AtomicInteger();

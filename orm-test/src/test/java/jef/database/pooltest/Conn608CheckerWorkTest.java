@@ -72,7 +72,7 @@ public class Conn608CheckerWorkTest extends AbstractTestConnection{
 	
 	class MyThread extends Thread {
 
-		private IUserManagedPool pool;
+		private IUserManagedPool<IConnection> pool;
 
 		public MyThread() {
 			// TODO Auto-generated constructor stub

@@ -1,5 +1,6 @@
 package jef.database.pooltest;
 
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -80,7 +81,7 @@ public class Conn601ExceedMax extends AbstractTestConnection{
 
 	class MyThread extends Thread {
 
-		private IUserManagedPool pool;
+		private IUserManagedPool<IConnection> pool;
 		private int index;
 		private boolean isRelease = true;
 		AtomicInteger countThread = new AtomicInteger(0);
@@ -90,7 +91,7 @@ public class Conn601ExceedMax extends AbstractTestConnection{
 			// TODO Auto-generated constructor stub
 		}
 
-		public MyThread(IUserManagedPool pool,int index,AtomicInteger countThread
+		public MyThread(IUserManagedPool<IConnection> pool,int index,AtomicInteger countThread
 				) {
 			// TODO Auto-generated constructor stub
 			this.pool = pool;
@@ -98,7 +99,7 @@ public class Conn601ExceedMax extends AbstractTestConnection{
 			this.countThread=countThread;
 		}
 
-		public MyThread(IUserManagedPool pool,int index,AtomicInteger countThread, boolean isRelease) {
+		public MyThread(IUserManagedPool<IConnection> pool,int index,AtomicInteger countThread, boolean isRelease) {
 			// TODO Auto-generated constructor stub
 			this(pool,index,countThread);
 			this.isRelease = isRelease;
@@ -108,10 +109,10 @@ public class Conn601ExceedMax extends AbstractTestConnection{
 		public void run() {
 			// TODO Auto-generated method stub
 			try {
-				ReentrantConnection conn=pool.poll();
+				IConnection conn=pool.poll();
 				Thread.sleep(20*1000);
 				if (isRelease) {
-					pool.offer(conn);
+					conn.close();
 				}
 			} catch (SQLException e) {
 				// TODO Auto-generated catch blockx
