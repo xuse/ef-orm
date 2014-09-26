@@ -79,7 +79,7 @@ public class Conn602ReConnectTest extends AbstractTestConnection{
 
 	class MyThread extends Thread {
 
-		private IUserManagedPool<IConnection> pool;
+		private IUserManagedPool pool;
 		private int index;
 		private boolean isRelease = true;
 		AtomicInteger countThread = new AtomicInteger(0);

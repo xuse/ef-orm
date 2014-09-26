@@ -6,7 +6,7 @@ package jef.database.innerpool;
  * @author jiyi
  *
  */
-public interface IManagedConnectionPool<T extends IConnection> extends IUserManagedPool<T>{
+public interface IManagedConnectionPool extends IUserManagedPool{
 	/**
 	 * 当部分连接使用中发现问题时，可以通过这个接口来提示连接失效
 	 */

@@ -50,7 +50,7 @@ public class ConnectionPoolV3Test {
 	}
 	private final AtomicInteger count=new AtomicInteger(0);
 	static class DoThread extends Thread{
-		private IUserManagedPool<IConnection> pool;
+		private IUserManagedPool pool;
 		private int id;
 		private long start;
 		private ConnectionPoolV3Test v3;

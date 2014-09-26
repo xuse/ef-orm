@@ -5,8 +5,11 @@ import java.io.IOException;
 import jef.common.log.LogUtil;
 
 import org.junit.Test;
+import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
 public class XMLUtilsTest {
@@ -40,6 +43,39 @@ public class XMLUtilsTest {
 		String s="<o><name>jiyi</name><gender>123</gender></o>";
 		Document doc=XMLUtils.loadDocumentByString(s);
 		XMLUtils.printNode(doc, System.out);
-		
+	}
+	
+	@Test
+	public void testCommentParse() throws Exception{
+		Document doc=XMLUtils.loadDocument(this.getClass().getResource("/db-beans.xml").openStream(),null,false,false);
+		Element ele=doc.getDocumentElement();
+		readComments(ele);
+		XMLUtils.printNode(doc, System.out);
+	}
+
+
+	private void readComments(Node parent) {
+		NodeList nl=parent.getChildNodes();
+		for(int i=0;i<nl.getLength();i++){
+			Node node=nl.item(i);
+			int type=node.getNodeType();
+			if(type==Node.ATTRIBUTE_NODE ||type==Node.CDATA_SECTION_NODE ||type==Node.TEXT_NODE){
+				continue;
+			}
+			if(type!=Node.COMMENT_NODE){
+				readComments(node);
+			}else{
+				processComment((Comment)node);
+			}
+		}
+	}
+
+
+	private void processComment(Comment node) {
+		String text=node.getNodeValue();
+		int index=text.indexOf("password");
+		if(index>-1){
+			node.setNodeValue(text.substring(0,index+10)+"密码隐藏>");
+		}
 	}
 }

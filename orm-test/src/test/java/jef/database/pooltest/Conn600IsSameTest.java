@@ -39,7 +39,7 @@ public class Conn600IsSameTest extends AbstractTestConnection{
 //	@Test
 	@Ignore
 	public void  testIsSame()throws SQLException{
-		IUserManagedPool<IConnection> pool=super.getPool();
+		IUserManagedPool pool=super.getPool();
 		//获取刚开始的连接
 		IConnection preInPool=pool.poll();
 		String table=ConnDBConfigUtil.getStringValue("table.name","DEPT");

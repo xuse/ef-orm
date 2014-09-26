@@ -41,7 +41,7 @@ public class Conn607TimeOutTest extends AbstractTestConnection{
 //	@Test
 	@Ignore
 	public void testPoolV2() throws InterruptedException{
-		IUserManagedPool<IConnection> pool=super.getPool();
+		IUserManagedPool pool=super.getPool();
 
 		consultTable(pool);
 		Thread.sleep(4*60*1000);
@@ -56,7 +56,7 @@ public class Conn607TimeOutTest extends AbstractTestConnection{
 		}
 	}
 	
-	private void  consultTable(IUserManagedPool<IConnection> pool){
+	private void  consultTable(IUserManagedPool pool){
 		try{
 			String sql="select count(*) from DEPT";
 			IConnection conn=pool.poll();

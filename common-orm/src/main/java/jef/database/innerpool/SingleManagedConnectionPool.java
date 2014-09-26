@@ -55,35 +55,31 @@ import com.google.common.collect.MapMaker;
  * <li>3、定时检查连接有效性</li>
  * </ul>
  */
-final class SingleManagedConnectionPool implements IManagedConnectionPool<SingleConnection>,DataSource,CheckablePool {
+final class SingleManagedConnectionPool implements IManagedConnectionPool, DataSource, CheckablePool {
 	private DataSource ds;
 	private int max;
 	private int min;
 	private final DbMetaData metadata;
 
-
-	//TODO there's nowhrere to set this value;
+	// TODO there's nowhrere to set this value;
 	private String testSQL;
-	
-	
+
 	/**
-	 * 本来是使用usedConnections.size()来计算目前使用中的连接数的, 但是发现Google map在数量统计时不太靠谱,只好自行记录使用
+	 * 本来是使用usedConnections.size()来计算目前使用中的连接数的, 但是发现Google
+	 * map在数量统计时不太靠谱,只好自行记录使用
 	 */
 	private final AtomicInteger used = new AtomicInteger();
-	final Map<Object, SingleConnection> usedConnections = new MapMaker().concurrencyLevel(12).weakKeys().makeMap();
-	
+	final Map<Object, ReentrantConnection> usedConnections = new MapMaker().concurrencyLevel(12).weakKeys().makeMap();
+
 	/**
 	 * 空闲连接数
 	 */
-	private final BlockingQueue<SingleConnection> freeConns;
-	
-	
-	//统计信息，统计拿取和设置的全不知
+	private final BlockingQueue<ReentrantConnection> freeConns;
+
+	// 统计信息，统计拿取和设置的全不知
 	private final AtomicLong pollCount = new AtomicLong();
 	private final AtomicLong offerCount = new AtomicLong();
 
-	
-	
 	SingleManagedConnectionPool(DataSource ds, int min, int max) {
 		if (min > max)
 			min = max;
@@ -91,7 +87,7 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool<Single
 		this.min = min;
 		this.max = max;
 		this.metadata = new DbMetaData(ds, this, null);
-		freeConns = new LinkedBlockingQueue<SingleConnection>(max);
+		freeConns = new LinkedBlockingQueue<ReentrantConnection>(max);
 		PoolReleaseThread.getInstance().addPool(this);
 		PoolCheckThread.getInstance().addPool(this);
 	}
@@ -118,18 +114,17 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool<Single
 		return Collections.EMPTY_SET;
 	}
 
-
-	public SingleConnection getConnection(Object transaction) throws SQLException {
+	public ReentrantConnection getConnection(Object transaction) throws SQLException {
 		pollCount.incrementAndGet();
 		try {
-			SingleConnection conn = usedConnections.get(transaction);
+			ReentrantConnection conn = usedConnections.get(transaction);
 			if (conn == null) {
-				if (used.get()< max && freeConns.isEmpty()) {// 尝试用新连接
-					used.getAndIncrement(); //提前计数
+				if (used.get() < max && freeConns.isEmpty()) {// 尝试用新连接
+					used.getAndIncrement(); // 提前计数
 					conn = new SingleConnection(ds.getConnection(), this);
 					conn.setUsedByObject(transaction);
 				} else {
-					used.getAndIncrement(); //提前计数，并发下为了严格阻止连接池超出上限，必须这样做
+					used.getAndIncrement(); // 提前计数，并发下为了严格阻止连接池超出上限，必须这样做
 					conn = freeConns.poll(5000000000L, TimeUnit.NANOSECONDS);// 5秒
 					if (conn == null) {
 						used.decrementAndGet();
@@ -142,32 +137,32 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool<Single
 			} else {
 				conn.addUsedByObject();
 			}
-//			log(transaction,conn,"get");
+			// log(transaction,conn,"get");
 			return conn;
 		} catch (InterruptedException e) {
 			throw new SQLException(e);
 		}
 	}
-	
+
 	@SuppressWarnings("unused")
-	private void log(Object transaction, ReentrantConnection conn,String action) {
-		StackTraceElement[] eles=new Throwable().getStackTrace();
-		System.out.println(action+" "+conn);
+	private void log(Object transaction, ReentrantConnection conn, String action) {
+		StackTraceElement[] eles = new Throwable().getStackTrace();
+		System.out.println(action + " " + conn);
 		System.out.println(eles[4]);
 		System.out.println(eles[5]);
 	}
 
-	public SingleConnection poll() throws SQLException {
+	public ReentrantConnection poll() throws SQLException {
 		return getConnection(Thread.currentThread());
 	}
 
-	public void offer(SingleConnection conn) {
+	public void offer(ReentrantConnection conn) {
 		offerCount.incrementAndGet();
 		if (conn != null) {
 			Object o = conn.popUsedByObject();
-//			log(o,conn,"return");
-			
-			if (o == null){
+			// log(o,conn,"return");
+
+			if (o == null) {
 				return;// 不是真正的归还
 			}
 			ReentrantConnection conn1 = usedConnections.remove(o);
@@ -175,12 +170,12 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool<Single
 			if (!success) {
 				conn.closePhysical();
 			}
-			//归还成功，才减低连接池大小
+			// 归还成功，才减低连接池大小
 			used.decrementAndGet();
 			if (conn1 != conn) {
 				throw new IllegalStateException("The connection returned not match." + conn + "\t" + conn1);
 			}
-			
+
 		}
 	}
 
@@ -206,8 +201,6 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool<Single
 		metadata.closeConnectionTillMin();
 	}
 
-	
-
 	public DbMetaData getMetadata(String dbkey) {
 		return metadata;
 	}
@@ -222,14 +215,14 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool<Single
 
 	public DatabaseDialect getProfile() {
 		return metadata.getProfile();
-		
+
 	}
 
 	public boolean hasRemarkFeature(String dbkey) {
 		if (JefConfiguration.getBoolean(DbCfg.DB_NO_REMARK_CONNECTION, false) || this.min > 5) {
 			return false;
 		}
-		DatabaseDialect profile=getProfile();
+		DatabaseDialect profile = getProfile();
 		return profile.has(Feature.REMARK_META_FETCH);
 	}
 
@@ -283,7 +276,7 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool<Single
 	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
 		return null;
 	}
-	
+
 	public void notifyDbDisconnect() {
 		if (LogUtil.isDebugEnabled()) {
 			LogUtil.debug("Disconnected connection found, notify Checker thread.");
@@ -300,8 +293,8 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool<Single
 	}
 
 	public synchronized void doCheck() {
-		int total=freeConns.size();
-		int invalid=PoolService.doCheck(this.testSQL, freeConns.iterator());
+		int total = freeConns.size();
+		int invalid = PoolService.doCheck(this.testSQL, freeConns.iterator());
 		LogUtil.info("Checked [{}]. total:{},  invalid:{}", this, total, invalid);
 	}
 }

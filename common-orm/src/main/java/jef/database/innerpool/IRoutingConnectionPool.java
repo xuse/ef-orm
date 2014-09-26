@@ -10,7 +10,7 @@ import jef.database.datasource.IRoutingDataSource;
  * @author jiyi
  *
  */
-public interface IRoutingConnectionPool extends IUserManagedPool<RoutingConnection>{
+public interface IRoutingConnectionPool extends IUserManagedPool{
 	/**
 	 * 得到路由数据源，这是由多个实际数据源组成的一个容器
 	 * @return

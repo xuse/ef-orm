@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
-import jef.database.innerpool.ReentrantConnection;
 import jef.tools.ThreadUtils;
 import junit.framework.Assert;
 
@@ -89,7 +88,7 @@ public class Conn603MixThread extends AbstractTestConnection{
 	
 	class MyThread extends Thread {
 
-		private IUserManagedPool<IConnection> pool;
+		private IUserManagedPool pool;
 		private int index;
 		private boolean isRelease = true;
 		private AtomicInteger count;

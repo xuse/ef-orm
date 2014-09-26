@@ -77,7 +77,7 @@ public class Conn609ReleaseNullTest extends AbstractTestConnection{
 	
 	class MyThread extends Thread {
 
-		private IUserManagedPool<IConnection> pool;
+		private IUserManagedPool pool;
 
 		public MyThread() {
 			// TODO Auto-generated constructor stub

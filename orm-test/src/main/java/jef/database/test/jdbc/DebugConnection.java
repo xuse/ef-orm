@@ -22,18 +22,14 @@ import java.util.concurrent.Executor;
 import jef.common.log.LogUtil;
 
 public class DebugConnection implements Connection {
+	private DebugDataSource parent;
+	private Connection conn;
 	
-	
-	
-	public DebugConnection(Connection conn) {
+	public DebugConnection(Connection conn,DebugDataSource parent) {
 		super();
 		this.conn = conn;
 	}
 
-	private Connection conn;
-	
-	// 以下是为了实现JDBC规范的 Connection********************************
-	// JDBC实现
 	public PreparedStatement prepareStatement(String sql) throws SQLException {
 		return conn.prepareStatement(sql);
 	}
@@ -141,21 +137,23 @@ public class DebugConnection implements Connection {
 	}
 
 	public Savepoint setSavepoint() throws SQLException {
-		System.out.println(">>setSavepoint ");
-		return conn.setSavepoint();
+		Savepoint sp=conn.setSavepoint();
+		parent.event(OperType.create_savepoint, sp);
+		return sp;
 	}
 
 	public Savepoint setSavepoint(String name) throws SQLException {
-		System.out.println(">>setSavepoint "+name);
+		parent.event(OperType.rollback_savepoint, name);
 		return conn.setSavepoint(name);
 	}
 
 	public void rollback(Savepoint savepoint) throws SQLException {
-		System.out.println(">>rollback savepoint "+savepoint);
+		parent.event(OperType.rollback_savepoint, savepoint);
 		conn.rollback(savepoint);
 	}
 
 	public void releaseSavepoint(Savepoint savepoint) throws SQLException {
+		parent.event(OperType.release_savepoint, savepoint);
 		System.out.println(">>releaseSavepoint "+savepoint);
 		conn.releaseSavepoint(savepoint);
 	}
@@ -261,7 +259,11 @@ public class DebugConnection implements Connection {
 
 	@Override
 	public void close() throws SQLException {
-		DebugDataSource.printStack("Close "+conn);
 		conn.close();
+		parent.event(OperType.close_connection, conn);
+	}
+	
+	public void event(OperType type,Object message) {
+		parent.event(type, message);
 	}
 }

@@ -16,12 +16,12 @@ import org.slf4j.LoggerFactory;
  * @author jiyi
  * 
  */
-final class SingleConnection extends AbstractJDBCConnection implements CheckableConnection,ReentrantConnection{
+final class SingleConnection extends AbstractJDBCConnection implements ReentrantConnection{
 	private static Logger log = LoggerFactory.getLogger(SingleConnection.class);
 	/**
 	 * Belongs to the connection pool.
 	 */
-	private IPool<SingleConnection> parent;
+	private IPool<ReentrantConnection> parent;
 	/**
 	 * The connection was locked by the object.
 	 */
@@ -38,7 +38,7 @@ final class SingleConnection extends AbstractJDBCConnection implements Checkable
 	 * @param parent
 	 * @throws SQLException
 	 */
-	SingleConnection(Connection connection, IPool<SingleConnection> parent) {
+	SingleConnection(Connection connection, IPool<ReentrantConnection> parent) {
 		this.conn = connection;
 		this.parent = parent;
 	}

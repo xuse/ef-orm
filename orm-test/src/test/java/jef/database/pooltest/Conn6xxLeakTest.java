@@ -63,7 +63,7 @@ public class Conn6xxLeakTest extends AbstractTestConnection{
 
 	class MyThread extends Thread {
 
-		private IUserManagedPool<IConnection> pool;
+		private IUserManagedPool pool;
 		private int index;
 		private Conn6xxLeakTest connLeakTest;
 		private boolean isRelease = true;

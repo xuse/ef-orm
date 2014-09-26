@@ -8,7 +8,6 @@ import jef.common.log.LogUtil;
 import jef.database.cache.CacheDummy;
 import jef.database.cache.CacheImpl;
 import jef.database.innerpool.IConnection;
-import jef.database.innerpool.ReentrantConnection;
 import jef.database.support.TransactionTimedOutException;
 
 import org.omg.CORBA.SystemException;

@@ -19,7 +19,7 @@ import junit.framework.Assert;
 public class AbstractTestConnection {
 	
 	private DataSource ds=null;
-	private IUserManagedPool<IConnection> pool=null;
+	private IUserManagedPool pool=null;
 
 	//连接数据源
 	public void prepare(String url,String uname,String pwd,int POOL_SIZE) throws SQLException{

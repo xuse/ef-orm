@@ -91,22 +91,22 @@ public class PoolService {
 		 */
 		public void setInvalid();
 		/**
-		 * 执行检查，不能抛出任何异常
+		 * 执行检查
 		 * @param 测试用SQL
-		 * @return
+		 * @return true表示连接正常，false或者抛出异常表示连接不可用
 		 */
 		public boolean checkValid(String testSql)throws SQLException;
 		
 		/**
 		 * 执行检查，原先是isValid方法，但是该方法与JDBC4同名方法一致，如果一个类同时实现了两个接口。javac在编译时会出现委派不确定错误，因此更名为checkValid
 		 * @param timeout
-		 * @return
+		 * @return  true表示连接正常，false或者抛出异常表示连接不可用
 		 */
 		public boolean checkValid(int timeout)throws SQLException;
 		
 
 		/**
-		 * 是否被占用，即占用计数器是否>0
+		 * 是否被占用
 		 * @return
 		 */
 		boolean isUsed();

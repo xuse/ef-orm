@@ -89,7 +89,7 @@ public class DbClient extends Session {
 	/**
 	 * 连接池和metadata服务
 	 */
-	private IUserManagedPool<? extends IConnection> connPool;
+	private IUserManagedPool connPool;
 	
 	/**
 	 * 构造当前对象的DataSource

@@ -1,12 +1,10 @@
 package jef.database.pooltest;
 
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
-import jef.database.innerpool.ReentrantConnection;
 import jef.tools.ThreadUtils;
 import junit.framework.Assert;
 
@@ -81,7 +79,7 @@ public class Conn601ExceedMax extends AbstractTestConnection{
 
 	class MyThread extends Thread {
 
-		private IUserManagedPool<IConnection> pool;
+		private IUserManagedPool pool;
 		private int index;
 		private boolean isRelease = true;
 		AtomicInteger countThread = new AtomicInteger(0);
@@ -91,7 +89,7 @@ public class Conn601ExceedMax extends AbstractTestConnection{
 			// TODO Auto-generated constructor stub
 		}
 
-		public MyThread(IUserManagedPool<IConnection> pool,int index,AtomicInteger countThread
+		public MyThread(IUserManagedPool pool,int index,AtomicInteger countThread
 				) {
 			// TODO Auto-generated constructor stub
 			this.pool = pool;
@@ -99,7 +97,7 @@ public class Conn601ExceedMax extends AbstractTestConnection{
 			this.countThread=countThread;
 		}
 
-		public MyThread(IUserManagedPool<IConnection> pool,int index,AtomicInteger countThread, boolean isRelease) {
+		public MyThread(IUserManagedPool pool,int index,AtomicInteger countThread, boolean isRelease) {
 			// TODO Auto-generated constructor stub
 			this(pool,index,countThread);
 			this.isRelease = isRelease;

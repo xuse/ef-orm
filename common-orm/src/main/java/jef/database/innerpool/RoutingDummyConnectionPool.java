@@ -57,7 +57,7 @@ public class RoutingDummyConnectionPool implements IRoutingConnectionPool{
 		return getConnection(Thread.currentThread());
 	}
 	
-	public void offer(RoutingConnection conn){
+	public void offer(ReentrantConnection conn){
 		offerCount.incrementAndGet();
 		if(conn!=null){
 			//处理内部的记录数据

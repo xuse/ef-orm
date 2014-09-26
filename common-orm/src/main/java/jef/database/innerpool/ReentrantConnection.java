@@ -1,11 +1,13 @@
 package jef.database.innerpool;
 
+import jef.database.innerpool.PoolService.CheckableConnection;
+
 /**
  * 描述连接可被一个对象多次重入使用的特性
  * @author jiyi
  *
  */
-public interface ReentrantConnection extends IConnection{
+public interface ReentrantConnection extends IConnection,CheckableConnection{
 	/**
 	 * 设置表示连接被user对象所使用。
 	 * 占用计数器+1

@@ -34,7 +34,7 @@ import jef.tools.StringUtils;
  * @author jiyi
  * 
  */
-final class RoutingConnection implements ReentrantConnection, Connection {
+final class RoutingConnection implements ReentrantConnection{
 	private String defaultKey = null;
 	private boolean autoCommit;
 	private boolean readOnly;
@@ -475,5 +475,20 @@ final class RoutingConnection implements ReentrantConnection, Connection {
 
 	public int getNetworkTimeout() throws SQLException {
 		return 0;
+	}
+	@Override
+	public void setInvalid() {
+	}
+	@Override
+	public boolean checkValid(String testSql) throws SQLException {
+		return true;
+	}
+	@Override
+	public boolean checkValid(int timeout) throws SQLException {
+		return true;
+	}
+	@Override
+	public boolean isUsed() {
+		return count > 0;
 	}
 }

@@ -15,7 +15,7 @@ import jef.common.Callback;
  *  该连接池没有按照J2EE规范使用DataSource PooledConnection等实现，但JEF-ORM可以选择不启用连接池。此时可以通过外部配置的方式用DataSource来实现一个第三方的连接池。详见下面的列表。
  * </pre>
  * 
- * 以下情况下，您需要禁用嵌入式连接池，启用第三方连接池
+ * 以下情况下，需要禁用嵌入式连接池，启用第三方连接池
  * <li>1、希望使用使用了c3p0等外部连接池的</li>
  * <li>2、使用了Oracle驱动内建的连接池，来实现类似于RAC FCF等自动切换功能的。</li>
  * <li>3、使用了XA来实现分布式事务的，由于XA连接本身就是连接池，也需要禁用内嵌池</li>
@@ -97,7 +97,7 @@ import jef.common.Callback;
  * 因此我们参考实现是B2实现。除了事务不提交不回滚之外，其他和B2一样。（事务的提交回滚一切由Spring和JTA控制器完成.）
  * @author jiyi
  */
-public interface IUserManagedPool<T extends IConnection> extends IPool<T>,MetadataService{
+public interface IUserManagedPool extends IPool<ReentrantConnection>,MetadataService{
 	/**
 	 * 获取一个连接，如果连接池已经为指定的事务分配过连接，那么还是返回这个连接。
 	 * 注意：这个版本开始，连接池不再负责设置AutoCommit的状态
@@ -132,4 +132,6 @@ public interface IUserManagedPool<T extends IConnection> extends IPool<T>,Metada
 	 * @param callback 回调函数
 	 */
 	void registeDbInitCallback(Callback<String, SQLException> callback);
+	
+	
 }

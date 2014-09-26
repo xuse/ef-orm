@@ -24,7 +24,7 @@ import com.google.common.collect.MapMaker;
  * @author jiyi
  * 
  */
-final class SingleDummyConnectionPool implements IUserManagedPool<SingleConnection> {
+final class SingleDummyConnectionPool implements IUserManagedPool{
 	private DataSource ds;
 	final Map<Object, SingleConnection> map = new MapMaker().concurrencyLevel(12).weakKeys().makeMap();
 	private final AtomicLong pollCount = new AtomicLong();
@@ -76,7 +76,7 @@ final class SingleDummyConnectionPool implements IUserManagedPool<SingleConnecti
 		return new PoolStatus(0, 0, size, size, 0);
 	}
 
-	public void offer(SingleConnection conn) {
+	public void offer(ReentrantConnection conn) {
 		offerCount.incrementAndGet();
 		if (conn != null) {
 			// 处理内部的记录数据

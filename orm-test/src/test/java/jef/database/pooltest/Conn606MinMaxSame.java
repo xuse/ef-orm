@@ -65,7 +65,7 @@ public class Conn606MinMaxSame {
 		log.info("The current size of MAX is "+maxSize);
 		log.info("Oracle 测试用户："+dbUser);
 		DataSource ds = DbUtils.createSimpleDataSource(dbUrl, dbUser, dbPasswd);
-		final IUserManagedPool<IConnection> pool = PoolService.getPool(ds, maxSize);
+		final IUserManagedPool pool = PoolService.getPool(ds, maxSize);
 		// pool.
 		for (int i = 0; i < 15; i++) {
 			new MyThread(pool).start();
@@ -87,7 +87,7 @@ public class Conn606MinMaxSame {
 
 
 	static class MyThread extends Thread {
-		private IUserManagedPool<IConnection> pool;
+		private IUserManagedPool pool;
 
 		public MyThread(IUserManagedPool cPool) {
 			this.pool = cPool;
