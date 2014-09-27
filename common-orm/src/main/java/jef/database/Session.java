@@ -81,6 +81,8 @@ import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+
 /**
  * 描述一个事务（或无事务）的数据库操作句柄。
  * <p>
@@ -426,8 +428,8 @@ public abstract class Session {
 	 * @see {@link #update(IQueryableEntity)}
 	 */
 	public int updateCascade(IQueryableEntity obj) throws SQLException {
-		if (this instanceof Transaction) {
-			return CascadeUtil.updateWithRefInTransaction(obj, (Transaction) this);
+		if ((this instanceof Transaction) || getTxType()!=TransactionMode.JPA) {
+			return CascadeUtil.updateWithRefInTransaction(obj, this);
 		} else if (this instanceof DbClient) {
 			Transaction trans = new TransactionImpl((DbClient) this, TransactionFlag.Cascade, false);
 			try {
@@ -454,8 +456,8 @@ public abstract class Session {
 	 * @throws SQLException
 	 */
 	public int deleteCascade(IQueryableEntity obj) throws SQLException {
-		if (this instanceof Transaction) {
-			return CascadeUtil.deleteWithRefInTransaction(obj, (Transaction) this);
+		if ((this instanceof Transaction) || getTxType()!=TransactionMode.JPA) {
+			return CascadeUtil.deleteWithRefInTransaction(obj, this);
 		} else if (this instanceof DbClient) {
 			Transaction trans = new TransactionImpl((DbClient) this, TransactionFlag.Cascade,false);
 			try {
@@ -473,6 +475,8 @@ public abstract class Session {
 			throw new IllegalArgumentException("unknown DbClient");
 		}
 	}
+	
+	protected abstract TransactionMode getTxType();
 
 	/**
 	 * 支持关联表的插入 如果和其他表具有1VS1、1VSN的关系，那么插入时会自动维护其他表中的数据。这些操作包括了Insert或者update.
@@ -493,8 +497,8 @@ public abstract class Session {
 	 * @throws SQLException
 	 */
 	public void insertCascade(IQueryableEntity obj, boolean dynamic) throws SQLException {
-		if (this instanceof Transaction) {
-			CascadeUtil.insertWithRefInTransaction(obj, (Transaction) this, dynamic);
+		if ((this instanceof Transaction) || getTxType()!=TransactionMode.JPA) {
+			CascadeUtil.insertWithRefInTransaction(obj, this, dynamic);
 		} else if (this instanceof DbClient) {
 			Transaction trans = new TransactionImpl((DbClient) this, TransactionFlag.Cascade,false);
 			try {

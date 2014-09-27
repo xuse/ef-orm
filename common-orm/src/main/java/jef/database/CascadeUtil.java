@@ -34,12 +34,12 @@ final class CascadeUtil {
 	protected static final CascadeType[] DELETE_WITH = new CascadeType[] { CascadeType.ALL, CascadeType.REMOVE };
 	protected static final CascadeType[] SELECT_WITH = new CascadeType[] { CascadeType.ALL, CascadeType.REFRESH };
 
-	static int deleteWithRefInTransaction(IQueryableEntity source, Transaction trans) throws SQLException {
+	static int deleteWithRefInTransaction(IQueryableEntity source, Session trans) throws SQLException {
 		return deleteCascadeByQuery(source, trans, true, true);
 	}
 
 	// 删除单个对象或请求和其所有级联引用
-	private static int deleteCascadeByQuery(IQueryableEntity source, Transaction trans, boolean doSelect, boolean delSubFirst) throws SQLException {
+	private static int deleteCascadeByQuery(IQueryableEntity source, Session trans, boolean doSelect, boolean delSubFirst) throws SQLException {
 		ITableMetadata meta = MetaHolder.getMeta(source);
 		List<Reference> delrefs = new ArrayList<Reference>();
 		for (AbstractRefField f : meta.getRefFieldsByName().values()) {
@@ -76,7 +76,7 @@ final class CascadeUtil {
 		}
 	}
 
-	private static int deleteChildren(List<IQueryableEntity> objs, Transaction trans, List<Reference> refs) throws SQLException {
+	private static int deleteChildren(List<IQueryableEntity> objs, Session trans, List<Reference> refs) throws SQLException {
 		int count = 0;
 		for (IQueryableEntity obj : objs) {
 			for (Reference ref : refs) {
@@ -92,7 +92,7 @@ final class CascadeUtil {
 	/*
 	 * smartMode: 智能模式，当开启后自动忽略掉那些没有set过的property
 	 */
-	static void insertWithRefInTransaction(IQueryableEntity obj, Transaction trans, boolean smartMode) throws SQLException {
+	static void insertWithRefInTransaction(IQueryableEntity obj, Session trans, boolean smartMode) throws SQLException {
 		// 在维护端操作之前
 		BeanWrapper bean = BeanWrapper.wrap(obj);
 		ITableMetadata meta = MetaHolder.getMeta(obj);
@@ -131,7 +131,7 @@ final class CascadeUtil {
 		}
 	}
 
-	static int updateWithRefInTransaction(IQueryableEntity obj, Transaction trans) throws SQLException {
+	static int updateWithRefInTransaction(IQueryableEntity obj, Session trans) throws SQLException {
 		Collection<AbstractRefField> refs = MetaHolder.getMeta(obj).getRefFieldsByName().values();
 		int result = 0;
 		// 在维护端操作之前
@@ -191,7 +191,7 @@ final class CascadeUtil {
 	 * 
 	 * @throws SQLException
 	 */
-	private static void doInsertRef1(Transaction trans, Object value, BeanWrapper bean, Reference ref, boolean reverse) throws SQLException {
+	private static void doInsertRef1(Session trans, Object value, BeanWrapper bean, Reference ref, boolean reverse) throws SQLException {
 		IQueryableEntity d = cast(value, ref.getTargetType());
 		BeanWrapper bwSub = BeanWrapper.wrap(d);
 		JoinPath jp = ref.toJoinPath();
@@ -226,7 +226,7 @@ final class CascadeUtil {
 	 * @param reverse
 	 * @throws SQLException
 	 */
-	private static void doInsertRefN(Transaction trans, Object value, BeanWrapper bean, Reference ref) throws SQLException {
+	private static void doInsertRefN(Session trans, Object value, BeanWrapper bean, Reference ref) throws SQLException {
 		Map<String, Object> map = new HashMap<String, Object>();
 		for (JoinKey jk : ref.toJoinPath().getJoinKeys()) {
 			if (bean.isReadableProperty(jk.getLeft().name())) {
@@ -248,7 +248,7 @@ final class CascadeUtil {
 		}
 	}
 
-	private static int doDeleteRef(Transaction trans, BeanWrapper bean, Reference ref) throws SQLException {
+	private static int doDeleteRef(Session trans, BeanWrapper bean, Reference ref) throws SQLException {
 		IQueryableEntity rObj = ref.getTargetType().instance();
 		for (JoinKey r : ref.toJoinPath().getJoinKeys()) {
 			rObj.getQuery().addCondition(r.getRightAsField(), bean.getPropertyValue(r.getLeft().name()));
@@ -256,7 +256,7 @@ final class CascadeUtil {
 		return deleteCascadeByQuery(rObj, trans, true, false);
 	}
 
-	private static Map<List<?>, IQueryableEntity> doSelectRef(Transaction trans, BeanWrapper bean, Reference ref) throws SQLException {
+	private static Map<List<?>, IQueryableEntity> doSelectRef(Session trans, BeanWrapper bean, Reference ref) throws SQLException {
 		Map<List<?>, IQueryableEntity> result = new HashMap<List<?>, IQueryableEntity>();
 		IQueryableEntity rObj = ref.getTargetType().instance();
 		for (JoinKey r : ref.toJoinPath().getJoinKeys()) {
@@ -272,7 +272,7 @@ final class CascadeUtil {
 	}
 
 	// 维护更新操作的子表
-	private static void doUpdateRef1(Transaction trans, Object value, BeanWrapper bean, Reference ref, boolean doDelete) throws SQLException {
+	private static void doUpdateRef1(Session trans, Object value, BeanWrapper bean, Reference ref, boolean doDelete) throws SQLException {
 		if (value == null) {
 			if (doDelete) {
 				doDeleteRef(trans, bean, ref);
@@ -292,7 +292,7 @@ final class CascadeUtil {
 		}
 	}
 
-	private static void doUpdateRefN(Transaction trans, Object value, BeanWrapper bean, Reference ref, boolean doDeletion) throws SQLException {
+	private static void doUpdateRefN(Session trans, Object value, BeanWrapper bean, Reference ref, boolean doDeletion) throws SQLException {
 		// 2011-12-22:refactor logic, avoid to use delete-insert algorithm.
 		// 2014-5-1: add rule, if refByMany then no deletion
 
@@ -346,7 +346,7 @@ final class CascadeUtil {
 	}
 
 	// 按主键去检查每条字表记录，有的就更新，没有的就插入
-	private static void checkAndInsert(Transaction trans, IQueryableEntity d, boolean doUpdate) throws SQLException {
+	private static void checkAndInsert(Session trans, IQueryableEntity d, boolean doUpdate) throws SQLException {
 		if (d == null)
 			return;
 		if (DbUtils.getPrimaryKeyValue(d) != null) {

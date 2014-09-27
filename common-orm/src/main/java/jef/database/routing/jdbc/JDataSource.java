@@ -11,7 +11,7 @@ import jef.database.datasource.DataSourceLookup;
 import jef.database.datasource.RoutingDataSource;
 import jef.database.innerpool.JConnection;
 
-import org.easyframe.enterprise.spring.TransactionType;
+import org.easyframe.enterprise.spring.TransactionMode;
 
 /**
  * 将EF-ORM封装为一个标准的JDBC DataSource。
@@ -56,7 +56,7 @@ public class JDataSource extends AbstractDataSource{
 	 * @param lookup
 	 */
 	public JDataSource(DataSourceLookup lookup){
-		this.db=new DbClient(new RoutingDataSource(lookup),0,TransactionType.DATASOURCE);
+		this.db=new DbClient(new RoutingDataSource(lookup),0,TransactionMode.JDBC);
 	}
 	
 	@Override

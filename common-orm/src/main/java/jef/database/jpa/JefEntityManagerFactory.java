@@ -16,7 +16,7 @@ import jef.database.DbClientFactory;
 import jef.database.cache.CacheDummy;
 import jef.database.jmx.JefFacade;
 
-import org.easyframe.enterprise.spring.TransactionType;
+import org.easyframe.enterprise.spring.TransactionMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,7 +95,7 @@ public class JefEntityManagerFactory implements EntityManagerFactory {
 		this(ds, null);
 	}
 
-	public JefEntityManagerFactory(DataSource dataSource, TransactionType txType) {
+	public JefEntityManagerFactory(DataSource dataSource, TransactionMode txType) {
 		try {
 			this.db = DbClientFactory.getDbClient(dataSource, txType);
 			JefFacade.registeEmf(db, this);

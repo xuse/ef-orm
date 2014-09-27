@@ -78,7 +78,7 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 	/**
 	 * 事务支持类型
 	 */
-	private TransactionType txType;
+	private TransactionMode txType;
 	
 	private JefEntityManagerFactory instance;
 
@@ -88,7 +88,7 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 	}
 
 	public void setTxType(String txType) {
-		this.txType =TransactionType.valueOf(StringUtils.upperCase(txType));
+		this.txType =TransactionMode.valueOf(StringUtils.upperCase(txType));
 	}
 
 	public void afterPropertiesSet() throws Exception {

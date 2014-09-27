@@ -10,7 +10,7 @@ import jef.database.cache.CacheImpl;
 import jef.database.innerpool.IConnection;
 import jef.database.support.TransactionTimedOutException;
 
-import org.easyframe.enterprise.spring.TransactionType;
+import org.easyframe.enterprise.spring.TransactionMode;
 import org.omg.CORBA.SystemException;
 
 public class TransactionImpl extends Transaction {
@@ -202,7 +202,7 @@ public class TransactionImpl extends Transaction {
 	}
 
 	private void doRollback() throws SQLException {
-		if (conn != null && parent.getTxType()!=TransactionType.JTA) {
+		if (conn != null && parent.getTxType() != TransactionMode.JTA) {
 			getListener().beforeRollback(this);
 			long start = System.currentTimeMillis();
 			conn.rollback();
@@ -214,7 +214,7 @@ public class TransactionImpl extends Transaction {
 	}
 
 	private void doCommit() throws SQLException {
-		if (conn != null && parent.getTxType()!=TransactionType.JTA) {
+		if (conn != null && parent.getTxType() != TransactionMode.JTA) {
 			getListener().beforeCommit(this);
 			long start = System.currentTimeMillis();
 			conn.commit();
@@ -230,12 +230,15 @@ public class TransactionImpl extends Transaction {
 			return;
 
 		if (conn != null) {
-			if (readOnly) {
-				try {
+			try {
+				if (readOnly) {
 					conn.setReadOnly(false);
-				} catch (SQLException e) {
-					LogUtil.exception(e);
 				}
+				if (!autoCommit) {
+					conn.setAutoCommit(true);
+				}
+			} catch (SQLException e) {
+				LogUtil.exception(e);
 			}
 			conn.close();
 			conn = null;
@@ -261,7 +264,9 @@ public class TransactionImpl extends Transaction {
 	}
 
 	protected IConnection getConnection() throws SQLException {
-		ensureOpen();
+		if (parent == null) {
+			throw new IllegalStateException("Current transaction is closed!|" + getTransactionId(null));
+		}
 		if (deadline != null) {
 			checkTimeToLiveInMillis();
 		}
@@ -307,7 +312,7 @@ public class TransactionImpl extends Transaction {
 	public boolean hasTimeout() {
 		return (this.deadline != null);
 	}
-	
+
 	public int getIsolationLevel() {
 		return isolationLevel;
 	}
@@ -316,9 +321,13 @@ public class TransactionImpl extends Transaction {
 		this.isolationLevel = isolationLevel;
 	}
 
-
 	@Override
 	public TransactionFlag getTransactionFlag() {
 		return innerFlag;
+	}
+
+	@Override
+	protected TransactionMode getTxType() {
+		return parent.getTxType();
 	}
 }

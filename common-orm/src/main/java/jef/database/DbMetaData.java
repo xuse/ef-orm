@@ -184,7 +184,6 @@ public class DbMetaData extends MetadataConnectionPool {
 			if (info == null) {
 				Connection con = getConnection();
 				try{
-					con.setAutoCommit(true);
 					info = DbUtils.tryAnalyzeInfo(con);	
 				}finally{
 					releaseConnection(con);

@@ -5,6 +5,8 @@ import java.sql.SQLException;
 
 import javax.persistence.PersistenceException;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+
 import jef.database.cache.CacheDummy;
 import jef.database.innerpool.AbstractJDBCConnection;
 import jef.database.innerpool.IConnection;
@@ -127,6 +129,11 @@ public class ManagedTransactionImpl extends Transaction{
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
 		}
+	}
+
+	@Override
+	protected TransactionMode getTxType() {
+		return parent.getTxType();
 	}
 	
 }

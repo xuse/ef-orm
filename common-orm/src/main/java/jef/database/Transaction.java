@@ -200,7 +200,7 @@ public abstract class Transaction extends Session implements TransactionStatus {
 		return parent.getProfile(key);
 	}
 
-	protected void ensureOpen() {
+	private void ensureOpen() {
 		if (parent == null) {
 			throw new IllegalStateException("Current transaction is closed!|" + getTransactionId(null));
 		}

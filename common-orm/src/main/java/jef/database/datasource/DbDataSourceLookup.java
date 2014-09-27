@@ -151,13 +151,7 @@ public class DbDataSourceLookup implements DataSourceInfoLookup, DataSourceLooku
 		} finally {
 			DbUtils.close(rs);
 			DbUtils.close(st);
-			if (conn != null) {
-				try {
-					conn.close();
-				} catch (SQLException e) {
-					LogUtil.exception(e);
-				}
-			}
+			DbUtils.closeConnection(conn);
 		}
 		return dsi;
 	}

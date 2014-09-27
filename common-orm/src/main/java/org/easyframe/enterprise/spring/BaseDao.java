@@ -39,7 +39,7 @@ public class BaseDao {
 	 * @return
 	 */
 	protected final EntityManager getEntityManager(){
-		TransactionType tx=jefEmf.getDefault().getTxType();
+		TransactionMode tx=jefEmf.getDefault().getTxType();
 		EntityManager em;
 		switch (tx) {
 		case JPA:
@@ -49,7 +49,7 @@ public class BaseDao {
 				em=entityManagerFactory.createEntityManager(null);
 			}	
 			break;
-		case DATASOURCE:
+		case JDBC:
 			ConnectionHolder conn=(ConnectionHolder)TransactionSynchronizationManager.getResource(jefEmf.getDefault().getDataSource());
 			if(conn==null){//基于数据源的Spring事务
 				em=entityManagerFactory.createEntityManager(null);

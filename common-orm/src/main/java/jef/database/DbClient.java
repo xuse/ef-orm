@@ -59,7 +59,7 @@ import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanUtils;
 
-import org.easyframe.enterprise.spring.TransactionType;
+import org.easyframe.enterprise.spring.TransactionMode;
 
 /**
  * 数据库操作句柄
@@ -84,7 +84,7 @@ public class DbClient extends Session {
 	/**
 	 * 事务支持类型
 	 */
-	private TransactionType txType=TransactionType.JPA;
+	private TransactionMode txType=TransactionMode.JPA;
 
 	/**
 	 * 连接池和metadata服务
@@ -161,7 +161,7 @@ public class DbClient extends Session {
 	 * @param datasource 数据源信息
 	 * @param max  内建连接池的最大值，如果DataSource已经是一个连接池，那么内建连接池不会启动，此参数无效。
 	 */
-	public DbClient(DataSource datasource, int max,TransactionType txType) {
+	public DbClient(DataSource datasource, int max,TransactionMode txType) {
 		try {
 			if(txType!=null)
 				this.txType=txType;
@@ -307,7 +307,7 @@ public class DbClient extends Session {
 	protected void init(DataSource ds, int max) throws SQLException {
 		DbUtils.tryAnalyzeInfo(ds, true);// 尝试解析并处理连接参数。
 		this.ds=ds;
-		if(txType==TransactionType.DATASOURCE || txType==TransactionType.JTA){
+		if(txType==TransactionMode.JDBC || txType==TransactionMode.JTA){
 			max=0;
 		}
 		this.connPool = PoolService.getPool(ds, max);
@@ -817,7 +817,9 @@ public class DbClient extends Session {
 	protected IConnection getConnection() throws SQLException {
 		ensureOpen();
 		IConnection conn = connPool.poll();
-		conn.setAutoCommit(true);
+		if(!conn.getAutoCommit()){
+			conn.setAutoCommit(true);
+		}
 		return conn;
 	}
 
@@ -891,7 +893,7 @@ public class DbClient extends Session {
 	}	
 	
 	
-	public TransactionType getTxType() {
+	public TransactionMode getTxType() {
 		return txType;
 	}
 
