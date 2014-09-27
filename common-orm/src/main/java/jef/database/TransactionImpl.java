@@ -10,6 +10,7 @@ import jef.database.cache.CacheImpl;
 import jef.database.innerpool.IConnection;
 import jef.database.support.TransactionTimedOutException;
 
+import org.easyframe.enterprise.spring.TransactionType;
 import org.omg.CORBA.SystemException;
 
 public class TransactionImpl extends Transaction {
@@ -201,7 +202,7 @@ public class TransactionImpl extends Transaction {
 	}
 
 	private void doRollback() throws SQLException {
-		if (conn != null) {
+		if (conn != null && parent.getTxType()!=TransactionType.JTA) {
 			getListener().beforeRollback(this);
 			long start = System.currentTimeMillis();
 			conn.rollback();
@@ -213,7 +214,7 @@ public class TransactionImpl extends Transaction {
 	}
 
 	private void doCommit() throws SQLException {
-		if (conn != null) {
+		if (conn != null && parent.getTxType()!=TransactionType.JTA) {
 			getListener().beforeCommit(this);
 			long start = System.currentTimeMillis();
 			conn.commit();

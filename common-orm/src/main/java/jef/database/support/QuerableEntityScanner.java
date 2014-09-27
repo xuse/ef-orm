@@ -150,6 +150,28 @@ public class QuerableEntityScanner {
 			return null;
 		}
 	}
+	
+	
+	
+	public boolean registeEntity(String name){
+		ClassLoader cl=Thread.currentThread().getContextClassLoader();
+		if(cl==null){
+			cl=this.getClass().getClassLoader();
+		}
+		try{
+			Class<?> c=cl.loadClass(name);
+			if(IQueryableEntity.class.isAssignableFrom(c)){
+				registeEntity(c);
+			}else{
+				MetaHolder.getMeta(c);
+				LogUtil.info("POJO entity registered.{}",c.getName());
+			}
+			return true;
+		}catch(Exception e){
+			LogUtil.exception(e);
+			return false;
+		}
+	}
 
 	private void registeEntity(Class<?> c) {
 		try {

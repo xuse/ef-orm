@@ -307,7 +307,7 @@ public class DbClient extends Session {
 	protected void init(DataSource ds, int max) throws SQLException {
 		DbUtils.tryAnalyzeInfo(ds, true);// 尝试解析并处理连接参数。
 		this.ds=ds;
-		if(txType==TransactionType.DATASOURCE){
+		if(txType==TransactionType.DATASOURCE || txType==TransactionType.JTA){
 			max=0;
 		}
 		this.connPool = PoolService.getPool(ds, max);

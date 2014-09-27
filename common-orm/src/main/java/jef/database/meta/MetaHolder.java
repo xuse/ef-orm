@@ -368,6 +368,9 @@ public final class MetaHolder {
 	private static MetadataAdapter initPojo(Class<?> clz) {
 		AnnotationProvider annos = config.getAnnotations(clz);
 		TableMetadata meta = new TableMetadata(PojoWrapper.class, clz, annos);
+		
+		
+		
 		List<java.lang.reflect.Field> unprocessedField = new ArrayList<java.lang.reflect.Field>();
 
 		MeteModelFields metaFields = new MeteModelFields(clz, meta);

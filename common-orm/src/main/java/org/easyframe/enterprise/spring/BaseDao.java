@@ -43,6 +43,7 @@ public class BaseDao {
 		EntityManager em;
 		switch (tx) {
 		case JPA:
+		case JTA:
 			em=EntityManagerFactoryUtils.doGetTransactionalEntityManager(entityManagerFactory,null);
 			if(em==null){ //当无事务时。Spring返回null
 				em=entityManagerFactory.createEntityManager(null);

@@ -1,6 +1,7 @@
 package org.easyframe.enterprise.spring;
 
 import java.sql.SQLException;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
@@ -8,6 +9,8 @@ import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.database.DataObject;
 import jef.database.DbClient;
+import jef.database.datasource.MapDataSourceLookup;
+import jef.database.datasource.RoutingDataSource;
 import jef.database.jpa.JefEntityManagerFactory;
 import jef.database.meta.MetaHolder;
 import jef.database.support.QuerableEntityScanner;
@@ -23,6 +26,17 @@ import org.springframework.util.Assert;
  *
  */
 public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>, InitializingBean {
+	/**
+	 * 多数据源时的配置
+	 */
+	private Map<String,DataSource> dataSources;
+	/**
+	 * 多数据源时的缺省数据源名称
+	 */
+	private String defaultDatasource;
+	/**
+	 * 单数据源的配置
+	 */
 	private DataSource dataSource;
 	/**
 	 * 指定对以下包内的实体做一次增强扫描
@@ -31,7 +45,12 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 	/**
 	 * 指定扫描若干包，逗号分隔
 	 */
-	private String scanPackages;
+	private String[] packagesToScan;
+	/**
+	 * 已知的若干注解实体类
+	 */
+	private String[] annotatedClasses;
+	
 	/**
 	 * 指定扫描若干表作为动态表，逗号分隔
 	 */
@@ -73,26 +92,47 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 	}
 
 	public void afterPropertiesSet() throws Exception {
-		Assert.notNull(dataSource);
+		if(dataSource==null && dataSources==null){
+			throw new IllegalArgumentException("No datasource found.");
+		}
 		instance=buildSessionFactory();
 	}
 
 	private JefEntityManagerFactory buildSessionFactory() {
 		if(enhancePackages!=null){
 			new EntityEnhancer().enhance(StringUtils.split(enhancePackages,","));
+		}else if(packagesToScan!=null){
+			new EntityEnhancer().enhance(packagesToScan);
 		}
-		JefEntityManagerFactory sf=new JefEntityManagerFactory(dataSource,txType);
-		if(scanPackages!=null){
+		if(dataSource!=null && dataSources!=null){
+			throw new IllegalArgumentException("You must config either 'datasource' or 'datasources' but not both.");
+		}
+		JefEntityManagerFactory sf;
+		if(dataSource!=null){
+			sf=new JefEntityManagerFactory(dataSource,txType);
+		}else{
+			RoutingDataSource rs=new RoutingDataSource(new MapDataSourceLookup(dataSources));
+			sf=new JefEntityManagerFactory(rs,txType);
+		}
+		if(packagesToScan!=null || annotatedClasses!=null){
 			QuerableEntityScanner qe=new QuerableEntityScanner();
 			qe.setImplClasses(DataObject.class);
-			LogUtil.info("Starting scan easyframe entity from package: "+ scanPackages);
-			qe.setPackageNames(scanPackages);
-			
 			qe.setAllowDropColumn(allowDropColumn);
 			qe.setAlterTable(alterTable);
 			qe.setCreateTable(createTable);
 			qe.setEntityManagerFactory(sf);
-			qe.doScan();
+			if(annotatedClasses!=null){
+				for(String s:annotatedClasses){
+					if(!qe.registeEntity(StringUtils.trim(s))){
+						throw new IllegalArgumentException("Register entity class ["+s+"] error.");
+					}
+				}
+			}
+			if(packagesToScan!=null){
+				qe.setPackageNames(StringUtils.join(packagesToScan,','));
+				LogUtil.info("Starting scan easyframe entity from package: "+ packagesToScan);
+				qe.doScan();	
+			}
 		}
 		if(dynamicTables!=null){
 			DbClient client=sf.getDefault();
@@ -158,16 +198,12 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 		this.dataSource = dataSource;
 	}
 
-	public String getScanPackages() {
-		return scanPackages;
-	}
-
 	/**
 	 * 设置要扫描的包
 	 * @return 要扫描的包，逗号分隔
 	 */	
-	public void setScanPackages(String scanPackages) {
-		this.scanPackages = scanPackages;
+	public void setPackagesToScan(String[] scanPackages) {
+		this.packagesToScan = scanPackages;
 	}
 
 	public boolean isAlterTable() {
@@ -235,11 +271,39 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 		return registeNonMappingTableAsDynamic;
 	}
 
+	public String[] getAnnotatedClasses() {
+		return annotatedClasses;
+	}
+
+	public void setAnnotatedClasses(String[] annotatedClasses) {
+		this.annotatedClasses = annotatedClasses;
+	}
+
+	public String[] getPackagesToScan() {
+		return packagesToScan;
+	}
+
 	/**
 	 * 扫描数据库中当前schema下的所有表，如果尚未有实体与该表对应，那么就将该表作为动态表建模。
 	 * @param registeNonMappingTableAsDynamic
 	 */
 	public void setRegisteNonMappingTableAsDynamic(boolean registeNonMappingTableAsDynamic) {
 		this.registeNonMappingTableAsDynamic = registeNonMappingTableAsDynamic;
+	}
+	
+	public Map<String, DataSource> getDataSources() {
+		return dataSources;
+	}
+	
+	public String getDefaultDatasource() {
+		return defaultDatasource;
+	}
+
+	public void setDefaultDatasource(String defaultDatasource) {
+		this.defaultDatasource = defaultDatasource;
+	}
+
+	public void setDataSources(Map<String, DataSource> datasources) {
+		this.dataSources = datasources;
 	}
 }

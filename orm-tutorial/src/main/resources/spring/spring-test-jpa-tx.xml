@@ -27,8 +27,7 @@
 
 	<bean id="entityManagerFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean">
 		<property name="dataSource" ref="dataSource" />
-		<property name="enhancePackages" value="org.easyframe.tutorial" />
-		<property name="scanPackages" value="org.easyframe.tutorial" />
+		<property name="packagesToScan" value="org.easyframe.tutorial" />
 		<property name="registeNonMappingTableAsDynamic" value="true"></property>
 	</bean>
 
