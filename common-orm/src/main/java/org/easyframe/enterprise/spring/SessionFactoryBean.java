@@ -18,7 +18,6 @@ import jef.database.support.QuerableEntityScanner;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.util.Assert;
 
 /**
  * 供Spring上下文中初始化EF-ORM Session Factory使用
@@ -78,17 +77,18 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 	/**
 	 * 事务支持类型
 	 */
-	private TransactionMode txType;
-	
+	private TransactionMode transactionMode;
+	/**
+	 * 对象实例
+	 */
 	private JefEntityManagerFactory instance;
 
-
-	public String getTxType() {
-		return txType==null?null:txType.name();
+	public String getTransactionMode() {
+		return transactionMode==null?null:transactionMode.name();
 	}
 
-	public void setTxType(String txType) {
-		this.txType =TransactionMode.valueOf(StringUtils.upperCase(txType));
+	public void setTransactionMode(String txType) {
+		this.transactionMode =TransactionMode.valueOf(StringUtils.upperCase(txType));
 	}
 
 	public void afterPropertiesSet() throws Exception {
@@ -109,10 +109,10 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 		}
 		JefEntityManagerFactory sf;
 		if(dataSource!=null){
-			sf=new JefEntityManagerFactory(dataSource,txType);
+			sf=new JefEntityManagerFactory(dataSource,transactionMode);
 		}else{
 			RoutingDataSource rs=new RoutingDataSource(new MapDataSourceLookup(dataSources));
-			sf=new JefEntityManagerFactory(rs,txType);
+			sf=new JefEntityManagerFactory(rs,transactionMode);
 		}
 		if(packagesToScan!=null || annotatedClasses!=null){
 			QuerableEntityScanner qe=new QuerableEntityScanner();
