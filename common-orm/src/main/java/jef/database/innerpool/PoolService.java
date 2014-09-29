@@ -13,6 +13,7 @@ import jef.database.datasource.SimpleDataSource;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 
+import org.easyframe.enterprise.spring.TransactionMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,18 +28,24 @@ public class PoolService {
 	 * @param max 当Max==0时等同于Nopool
 	 * @return
 	 */
-	public static IUserManagedPool getPool(DataSource ds, int max) {
+	public static IUserManagedPool getPool(DataSource ds, int max,TransactionMode txMode) {
 		String noPoolStr = JefConfiguration.get(DbCfg.DB_NO_POOL, "auto");
+		if(txMode==TransactionMode.JDBC || txMode==TransactionMode.JTA){
+			max=0;
+		}
 		boolean auto = "auto".equalsIgnoreCase(noPoolStr) && max>0;
 		boolean noPool = StringUtils.toBoolean(noPoolStr, false) || max==0;
-
 		int min = JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL, 3);
+		
+		
+		IUserManagedPool result;
+		
 		if (ds instanceof IRoutingDataSource) {
 			IRoutingDataSource rds = (IRoutingDataSource) ds;
 			if (auto && !noPool) {
-				return new RoutingManagedConnectionPool(rds, max, min, auto);
+				result= new RoutingManagedConnectionPool(rds, max, min, auto);
 			} else {
-				return new RoutingDummyConnectionPool(rds);
+				result= new RoutingDummyConnectionPool(rds);
 			}
 		} else {
 			if (auto) {
@@ -50,11 +57,12 @@ public class PoolService {
 				}
 			}
 			if (noPool) {
-				return new SingleDummyConnectionPool(ds);
+				result= new SingleDummyConnectionPool(ds);
 			} else {
-				return new SingleManagedConnectionPool(ds, min, max);
+				result= new SingleManagedConnectionPool(ds, min, max);
 			}
 		}
+		return result.setTransactionMode(txMode);
 	}
 
 	public static DataSource getPooledDatasource(String url, String driverClass, String user, String password, int min, int max) {

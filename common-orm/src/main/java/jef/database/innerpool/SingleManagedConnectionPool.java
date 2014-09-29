@@ -43,6 +43,8 @@ import jef.database.meta.Feature;
 import jef.tools.Assert;
 import jef.tools.JefConfiguration;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+
 import com.google.common.collect.MapMaker;
 
 /**
@@ -296,5 +298,18 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool, DataS
 
 	public boolean isMultipleRdbms() {
 		return false;
+	}
+
+	private TransactionMode txMode;
+	
+	@Override
+	public IUserManagedPool setTransactionMode(TransactionMode txMode) {
+		this.txMode=txMode;
+		return this;
+	}
+
+	@Override
+	public TransactionMode getTransactionMode() {
+		return txMode;
 	}
 }

@@ -13,6 +13,7 @@ import jef.database.innerpool.IUserManagedPool;
 import jef.database.innerpool.PoolService;
 import jef.tools.JefConfiguration;
 
+import org.easyframe.enterprise.spring.TransactionMode;
 import org.junit.Ignore;
 import org.slf4j.LoggerFactory;
 
@@ -65,7 +66,7 @@ public class Conn606MinMaxSame {
 		log.info("The current size of MAX is "+maxSize);
 		log.info("Oracle 测试用户："+dbUser);
 		DataSource ds = DbUtils.createSimpleDataSource(dbUrl, dbUser, dbPasswd);
-		final IUserManagedPool pool = PoolService.getPool(ds, maxSize);
+		final IUserManagedPool pool = PoolService.getPool(ds, maxSize,TransactionMode.JPA);
 		// pool.
 		for (int i = 0; i < 15; i++) {
 			new MyThread(pool).start();

@@ -307,10 +307,7 @@ public class DbClient extends Session {
 	protected void init(DataSource ds, int max) throws SQLException {
 		DbUtils.tryAnalyzeInfo(ds, true);// 尝试解析并处理连接参数。
 		this.ds=ds;
-		if(txType==TransactionMode.JDBC || txType==TransactionMode.JTA){
-			max=0;
-		}
-		this.connPool = PoolService.getPool(ds, max);
+		this.connPool = PoolService.getPool(ds, max,txType);
 		Assert.notNull(connPool);
 		if (ORMConfig.getInstance().isDebugMode())
 			LogUtil.info("Init DB Connection:" + connPool.getInfo(null));

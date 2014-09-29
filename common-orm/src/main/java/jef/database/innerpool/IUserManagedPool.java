@@ -5,6 +5,8 @@ import java.util.Collection;
 
 import jef.common.Callback;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+
 /**
  * <strong>什么是IUserManagedPool</strong>
  * <p>
@@ -138,4 +140,8 @@ public interface IUserManagedPool extends IPool<ReentrantConnection>,MetadataSer
 	 * @return
 	 */
 //	boolean isMultipleRdbms();
+	
+	IUserManagedPool setTransactionMode(TransactionMode txMode);
+	
+	TransactionMode getTransactionMode();
 }

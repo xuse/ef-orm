@@ -18,6 +18,8 @@ import jef.database.DbUtils;
 import jef.database.datasource.IRoutingDataSource;
 import jef.database.dialect.DatabaseDialect;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+
 import com.google.common.collect.MapMaker;
 
 /**
@@ -166,5 +168,17 @@ public class RoutingDummyConnectionPool implements IRoutingConnectionPool{
 
 	public boolean isDummy() {
 		return true;
+	}
+
+	private TransactionMode txMode;
+	@Override
+	public IUserManagedPool setTransactionMode(TransactionMode txMode) {
+		this.txMode=txMode;
+		return this;
+	}
+
+	@Override
+	public TransactionMode getTransactionMode() {
+		return txMode;
 	}
 }

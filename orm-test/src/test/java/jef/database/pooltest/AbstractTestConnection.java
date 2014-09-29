@@ -6,6 +6,8 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+
 import jef.database.DbUtils;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
@@ -24,7 +26,7 @@ public class AbstractTestConnection {
 	//连接数据源
 	public void prepare(String url,String uname,String pwd,int POOL_SIZE) throws SQLException{
 		ds = DbUtils.createSimpleDataSource(url, uname, pwd);
-		pool = PoolService.getPool(ds, POOL_SIZE);
+		pool = PoolService.getPool(ds, POOL_SIZE,TransactionMode.JPA);
 		System.out.println(pool.toString());
 	}
 	

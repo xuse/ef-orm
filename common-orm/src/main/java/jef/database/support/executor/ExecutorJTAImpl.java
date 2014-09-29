@@ -217,16 +217,16 @@ public class ExecutorJTAImpl implements Runnable, StatementExecutor {
 	}
 
 	@Override
-	public ResultSet executeQuery(String sql, Object... objs) throws SQLException {
+	public ResultSet executeQuery(String sql, Object... params) throws SQLException {
 		PreparedStatement ps = conn.prepareStatement(sql);
-		for (int i = 0; i < objs.length; i++) {
-			ps.setObject(i + 1, objs[i]);
+		for (int i = 0; i < params.length; i++) {
+			ps.setObject(i + 1, params[i]);
 		}
 		ResultSet rs = ps.executeQuery();
 		return new ResultSetWrapper(null, ps, rs);
 	}
 
-	public int executeUpdate(String sql, Object... objs) throws SQLException {
+	public int executeUpdate(String sql, Object... params) throws SQLException {
 		boolean debug = ORMConfig.getInstance().isDebugMode();
 		StringBuilder sb = null;
 		if (debug)
@@ -235,9 +235,9 @@ public class ExecutorJTAImpl implements Runnable, StatementExecutor {
 		PreparedStatement ps = null;
 		try {
 			ps = conn.prepareStatement(sql);
-			if (objs.length > 0) {
+			if (params.length > 0) {
 				BindVariableContext context = new BindVariableContext(ps, profile, sb);
-				BindVariableTool.setVariables(context, Arrays.asList(objs));
+				BindVariableTool.setVariables(context, Arrays.asList(params));
 			}
 		} finally {
 			if (debug) {

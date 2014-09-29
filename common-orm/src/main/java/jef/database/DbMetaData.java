@@ -70,6 +70,7 @@ import jef.database.meta.PrimaryKey;
 import jef.database.meta.TableInfo;
 import jef.database.query.DefaultPartitionCalculator;
 import jef.database.support.MetadataEventListener;
+import jef.database.support.executor.ExecutorImpl;
 import jef.database.support.executor.ExecutorJTAImpl;
 import jef.database.support.executor.StatementExecutor;
 import jef.database.wrapper.populator.ResultPopulatorImpl;
@@ -84,6 +85,7 @@ import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.easyframe.enterprise.spring.TransactionMode;
 
 /*
  *  ====Oracle约束===== 约束包括： 主键、外键（引用）、唯一约束、检查约束
@@ -1449,7 +1451,11 @@ public class DbMetaData{
 	 * executor.close(); }
 	 */
 	private StatementExecutor createExecutor() {
-		return new ExecutorJTAImpl(parent, dbkey, getTransactionId());
+		if(parent.getTransactionMode()==TransactionMode.JTA){
+			return new ExecutorJTAImpl(parent, dbkey, getTransactionId());
+		}else{
+			return new ExecutorImpl(parent,dbkey,getTransactionId());
+		}
 	}
 
 	/**

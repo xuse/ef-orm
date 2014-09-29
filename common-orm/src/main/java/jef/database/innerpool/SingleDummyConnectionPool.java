@@ -15,6 +15,8 @@ import jef.database.ConnectInfo;
 import jef.database.DbMetaData;
 import jef.database.dialect.DatabaseDialect;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+
 import com.google.common.collect.MapMaker;
 
 /**
@@ -124,5 +126,17 @@ final class SingleDummyConnectionPool implements IUserManagedPool{
 
 	public boolean isDummy() {
 		return true;
+	}
+	
+	private TransactionMode txMode;
+	@Override
+	public IUserManagedPool setTransactionMode(TransactionMode txMode) {
+		this.txMode=txMode;
+		return this;
+	}
+
+	@Override
+	public TransactionMode getTransactionMode() {
+		return txMode;
 	}
 }

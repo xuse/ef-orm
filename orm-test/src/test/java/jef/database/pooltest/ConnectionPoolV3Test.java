@@ -11,6 +11,7 @@ import jef.database.innerpool.IUserManagedPool;
 import jef.database.innerpool.PoolService;
 import jef.tools.ThreadUtils;
 
+import org.easyframe.enterprise.spring.TransactionMode;
 import org.junit.Test;
 /**
  * 测试连接池性能
@@ -25,7 +26,7 @@ public class ConnectionPoolV3Test {
 	@Test
 	public void testPoolV2() throws SQLException{
 		DataSource ds=DbUtils.createSimpleDataSource("jdbc:derby:./db", "", "");
-		final IUserManagedPool pool=PoolService.getPool(ds, 20);
+		final IUserManagedPool pool=PoolService.getPool(ds, 20,TransactionMode.JPA);
 		doTest(pool);
 	}
 
