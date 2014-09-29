@@ -634,28 +634,33 @@ public abstract class Session {
 		String myTableName = (String) obj.getQuery().getAttribute(Query.CUSTOM_TABLE_NAME);
 		myTableName = MetaHolder.toSchemaAdjustedName(StringUtils.trimToNull(myTableName));
 		PartitionResult[] sites = DbUtils.toTableNames(obj, myTableName, obj.getQuery(), getPartitionSupport());
-		
-		getListener().beforeDelete(obj, this);
-		int count = 0;
-		if (getProfile().has(Feature.NO_BIND_FOR_DELETE)) {// 非绑定删除
-			String where = rProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), false);
-			for (PartitionResult site : sites) {
-				count += p.processDeleteNormal(asOperateTarget(site.getDatabase()), obj, site, start, where);
+		if(sites!=null && sites.length>0){
+			DatabaseDialect profile=this.getProfile(sites[0].getDatabase());
+			getListener().beforeDelete(obj, this);
+			int count = 0;
+			if (profile.has(Feature.NO_BIND_FOR_DELETE)) {// 非绑定删除
+				String where = rProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), false,profile);
+				for (PartitionResult site : sites) {
+					count += p.processDeleteNormal(asOperateTarget(site.getDatabase()), obj, site, start, where);
+				}
+				if (count > 0) {
+					getCache().onDelete(myTableName == null ? obj.getClass().getName() : myTableName, where, null);
+				}
+			} else {
+				BindSql where = rProcessor.toPrepareWhereSql(obj.getQuery(), new SqlContext(null,obj.getQuery()), false,profile);
+				for (PartitionResult site : sites) {
+					count += p.processDeletePrepared(asOperateTarget(site.getDatabase()), obj, site, start, where);
+				}
+				if (count > 0) {
+					getCache().onDelete(myTableName == null ? obj.getClass().getName() : myTableName, where.getSql(), CacheImpl.toParamList(where.getBind()));
+				}
 			}
-			if (count > 0) {
-				getCache().onDelete(myTableName == null ? obj.getClass().getName() : myTableName, where, null);
-			}
-		} else {
-			BindSql where = rProcessor.toPrepareWhereSql(obj.getQuery(), new SqlContext(null,obj.getQuery()), false);
-			for (PartitionResult site : sites) {
-				count += p.processDeletePrepared(asOperateTarget(site.getDatabase()), obj, site, start, where);
-			}
-			if (count > 0) {
-				getCache().onDelete(myTableName == null ? obj.getClass().getName() : myTableName, where.getSql(), CacheImpl.toParamList(where.getBind()));
-			}
+			getListener().afterDelete(obj, count,this);	
+			return count;
+		}else{
+			return 0;
 		}
-		getListener().afterDelete(obj, count,this);
-		return count;
+		
 		
 	}
 
@@ -1670,7 +1675,7 @@ public abstract class Session {
 		} catch (Exception e) {
 			throw new SQLException(e.getMessage());
 		}
-		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), new SqlContext(null,template.getQuery()), false);
+		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), new SqlContext(null,template.getQuery()), false,null);
 		for (BindVariableDescription bind : wherePart.getBind()) {
 			bind.setInBatch(true);
 		}
@@ -1694,7 +1699,7 @@ public abstract class Session {
 	public final <T extends IQueryableEntity> Batch<T> startBatchDelete(T template, String tableName) throws SQLException {
 		// 位于批当中的绑定变量
 		long start = System.nanoTime();
-		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(),new SqlContext(null, template.getQuery()), false);
+		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(),new SqlContext(null, template.getQuery()), false,null);
 		for (BindVariableDescription bind : wherePart.getBind()) {
 			bind.setInBatch(true);
 		}
@@ -1827,9 +1832,9 @@ public abstract class Session {
 			throw new IllegalArgumentException("The input object is not a valid update query Template, since its update value map is empty, change to ");
 		}
 		long start = System.nanoTime();
-		Entry<List<String>, List<Field>> updatePart = rProcessor.toPrepareUpdateClause((IQueryableEntity) template,dynamic);
+		Entry<List<String>, List<Field>> updatePart = rProcessor.toPrepareUpdateClause((IQueryableEntity) template,null,dynamic);
 		// 位于批当中的绑定变量
-		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), new SqlContext(null, template.getQuery()), true);
+		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), new SqlContext(null, template.getQuery()), true,null);
 		for (BindVariableDescription bind : wherePart.getBind()) {
 			bind.setInBatch(true);
 		}
@@ -2072,12 +2077,19 @@ public abstract class Session {
 	final protected int innerUpdatePrepared(IQueryableEntity obj, String myTableName) throws SQLException {
 		long start = System.currentTimeMillis();
 		Query<?> query=obj.getQuery();
-		BindSql whereValues = rProcessor.toPrepareWhereSql(query, new SqlContext(null,query), true);
 		if (!obj.needUpdate()) {
 			return 0;
 		}
-		Entry<List<String>, List<Field>> setValues = rProcessor.toPrepareUpdateClause((IQueryableEntity) obj,true);
 		PartitionResult[] tables = DbUtils.toTableNames(obj, myTableName, obj.getQuery(), getPartitionSupport());
+		DatabaseDialect profile=null;
+		if(tables!=null && tables.length>0){
+			profile=getProfile(tables[0].getDatabase());
+		}
+		BindSql whereValues = rProcessor.toPrepareWhereSql(query, new SqlContext(null,query), true,profile);
+		if (!obj.needUpdate()) {
+			return 0;
+		}
+		Entry<List<String>, List<Field>> setValues = rProcessor.toPrepareUpdateClause((IQueryableEntity) obj,tables,true);
 		int count = 0;
 		for (PartitionResult part : tables) {
 			count += p.processUpdatePrepared(asOperateTarget(part.getDatabase()), obj, setValues, whereValues, part, start);
@@ -2093,14 +2105,22 @@ public abstract class Session {
 	 */
 	final protected int innerUpdateNormal(IQueryableEntity obj, String myTableName) throws SQLException {
 		long start = System.currentTimeMillis();
-
-		String where = rProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), true);
+		if (!obj.needUpdate()) {
+			return 0;
+		}
+		PartitionResult[] sites=DbUtils.toTableNames(obj, myTableName, obj.getQuery(), getPartitionSupport());
+		DatabaseDialect profile=null;
+		if(sites!=null && sites.length>0){
+			profile=getProfile(sites[0].getDatabase());
+		}
+		
+		String where = rProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), true,profile);
 		if (!obj.needUpdate()) {
 			return 0;
 		}
 		String update = rProcessor.toUpdateClause(obj,true);
 		int count = 0;
-		for (PartitionResult site : DbUtils.toTableNames(obj, myTableName, obj.getQuery(), getPartitionSupport())) {
+		for (PartitionResult site :  sites) {
 			count += p.processUpdateNormal(asOperateTarget(site.getDatabase()), obj, start, where, update, site);
 		}
 		if (count > 0) {

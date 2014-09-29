@@ -26,7 +26,16 @@ import org.springframework.beans.factory.InitializingBean;
  */
 public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>, InitializingBean {
 	/**
-	 * 多数据源时的配置
+	 * 多数据源。分库分表时可以使用。
+	 * 在Spring配置时，可以使用这样的格式来配置
+	 * <pre><code>
+	 * &lt;property name="dataSources"&gt;
+	 * 	&lt;map&gt;
+	 * 	 &lt;entry key="dsname1" value-ref="ds1" /&gt;
+	 * 	 &lt;entry key="dsname2" value-ref="ds2" /&gt;
+	 * 	&lt;/map&gt;
+	 * &lt;/property&gt;
+	 * </code></pre>
 	 */
 	private Map<String,DataSource> dataSources;
 	/**
@@ -34,48 +43,85 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 	 */
 	private String defaultDatasource;
 	/**
-	 * 单数据源的配置
+	 * 单数据源。
 	 */
 	private DataSource dataSource;
 	/**
-	 * 指定对以下包内的实体做一次增强扫描
+	 * 指定对以下包内的实体做一次增强扫描。多个包名之间逗号分隔。<br>
+	 * 如果不配置此项，默认将对packagesToScan包下的类进行增强。<br>
+	 * 不过不想进行类增强扫描，可配置为"none"。
 	 */
 	private String enhancePackages;
 	/**
-	 * 指定扫描若干包，逗号分隔
+	 * 指定扫描若干包,配置示例如下——
+	 * <code><pre>
+	 * &lt;list&gt;
+	 *  &lt;value&gt;org.easyframe.test&lt;/value&gt;
+	 *  &lt;value&gt;org.easyframe.entity&lt;/value&gt;
+	 * &lt;/list&gt;
+	 * </pre></code>
 	 */
 	private String[] packagesToScan;
 	/**
-	 * 已知的若干注解实体类
+	 * 扫描已知的若干注解实体类，配置示例如下——
+	 * <code><pre>
+	 * &lt;list&gt;
+	 *  &lt;value&gt;org.easyframe.testp.jta.Product&lt;/value&gt;
+	 *  &lt;value&gt;org.easyframe.testp.jta.Users&lt;/value&gt;
+	 * &lt;/list&gt;
+	 * </pre></code>
 	 */
 	private String[] annotatedClasses;
 	
 	/**
-	 * 指定扫描若干表作为动态表，逗号分隔
+	 * 指定扫描若干表作为动态表，此处配置表名，名称之间逗号分隔
 	 */
 	private String dynamicTables;
+	
 	/**
-	 * 是否将所有未并映射的表都当做动态表进行映射
+	 * 是否将所有未并映射的表都当做动态表进行映射。
 	 */
 	private boolean registeNonMappingTableAsDynamic;
+	
 	/**
 	 * 扫描到实体后，如果数据库中不存在，是否建表
+	 * <br>
+	 * 默认开启
 	 */
 	private boolean createTable= true;
 	
 	/**
 	 * 扫描到实体后，如果数据库中存在，是否修改表
+	 * <br>
+	 * 默认开启
 	 */
 	private boolean alterTable = true;
 	
 	/**
 	 * 扫描到实体后，如果准备修改表，如果数据库中的列更多，是否允许删除列
+	 * <br>
+	 * 默认关闭
 	 */
 	private boolean allowDropColumn;
-	
-	
 	/**
-	 * 事务支持类型
+	 * 事务支持类型，可配置为
+	 * <ul>
+	 * <li><strong>JPA</strong></li><br>
+	 * 使用JPA的方式管理事务，对应Spring的 {@linkplain org.springframework.orm.jpa.JpaTransactionManager JpaTransactionManager},
+	 * 适用于ef-orm单独作为数据访问层时使用。
+	 * <li><strong>JTA</strong></li><br>
+	 * 使用JTA的分布式事务管理。使用JTA可以在多个数据源、内存数据库、JMS目标之间保持事务一致性。<br>推荐使用atomikos作为JTA管理器。
+	 * 对应Spring的 {@linkplain org.springframework.transaction.jta.JtaTransactionManager JtaTransactionManager}。<br>
+	 * 当需要在多个数据库之间保持事务一致性时酌情使用。
+	 * <li><strong>JDBC</strong></li><br>
+	 * 使用JDBC事务管理。当和Hibernate一起使用时，可以利用Hibernate的连接共享Hibernate事务。当与JdbcTemplate共同使用时，
+	 * 也可以获得DataSource所绑定的连接从而共享JDBC事务。
+	 * 对应Spring的 {@linkplain org.springframework.orm.hibernate3.HibernateTransactionManager HibernateTransactionManager}
+	 * 和{@linkplain org.springframework.jdbc.datasource.DataSourceTransactionManager DataSourceTransactionManager}。<br>
+	 * 一般用于和Hibernate/Ibatis/MyBatis/JdbcTemplate等共享同一个事务。
+	 * </ul>
+	 * 默认为{@code JPA}
+	 * @see TransactionMode
 	 */
 	private TransactionMode transactionMode;
 	/**
@@ -283,7 +329,15 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 	public String[] getAnnotatedClasses() {
 		return annotatedClasses;
 	}
-
+	/**
+	 * 扫描已知的若干注解实体类，配置示例如下——
+	 * <code><pre>
+	 * &lt;list&gt;
+	 *  &lt;value&gt;org.easyframe.testp.jta.Product&lt;/value&gt;
+	 *  &lt;value&gt;org.easyframe.testp.jta.Users&lt;/value&gt;
+	 * &lt;/list&gt;
+	 * </pre></code>
+	 */
 	public void setAnnotatedClasses(String[] annotatedClasses) {
 		this.annotatedClasses = annotatedClasses;
 	}
@@ -307,11 +361,25 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 	public String getDefaultDatasource() {
 		return defaultDatasource;
 	}
-
+	/**
+	 * 设置多数据源时的缺省数据源名称
+	 * @param defaultDatasource name of the datasource.
+	 */
 	public void setDefaultDatasource(String defaultDatasource) {
 		this.defaultDatasource = defaultDatasource;
 	}
-
+	/**
+	 * 多数据源。分库分表时可以使用。
+	 * 在Spring配置时，可以使用这样的格式来配置
+	 * <pre><code>
+	 * &lt;property name="dataSources"&gt;
+	 * 	&lt;map&gt;
+	 * 	 &lt;entry key="dsname1" value-ref="ds1" /&gt;
+	 * 	 &lt;entry key="dsname2" value-ref="ds2" /&gt;
+	 * 	&lt;/map&gt;
+	 * &lt;/property&gt;
+	 * </code></pre>
+	 */
 	public void setDataSources(Map<String, DataSource> datasources) {
 		this.dataSources = datasources;
 	}

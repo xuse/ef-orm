@@ -173,14 +173,14 @@ public class Condition implements Serializable{
 	}
 	
 	//产生非绑定变量下的where条件
-	public String toSqlClause(ITableMetadata meta,SqlContext context, SqlProcessor processor,IQueryableEntity instance){
+	public String toSqlClause(ITableMetadata meta,SqlContext context, SqlProcessor processor,IQueryableEntity instance,DatabaseDialect profile){
 		if(field==null) {
 			throw new NullPointerException("Condition not complete!");
 		}
 		Field field = this.field;
 		//特殊Field条件
 		if(field instanceof IConditionField){
-			return ((IConditionField)field).toSql(meta,processor,context,instance);
+			return ((IConditionField)field).toSql(meta,processor,context,instance,profile);
 		}else if(field instanceof RefField){
 			RefField ref=(RefField) field;
 			ITableMetadata refMeta=((RefField) field).getInstanceQuery(context).getMeta();
@@ -200,7 +200,7 @@ public class Condition implements Serializable{
 		if(field instanceof JpqlExpression){
 			columnName=((JpqlExpression) field).toSqlAndBindAttribs(context, processor);
 		}else{
-			columnName=DbUtils.toColumnName(field,processor.getProfile(),context==null?null:context.getCurrentAliasAndCheck(field));
+			columnName=DbUtils.toColumnName(field,profile,context==null?null:context.getCurrentAliasAndCheck(field));
 		}
 		if(operator==null){
 			return columnName;
@@ -223,7 +223,7 @@ public class Condition implements Serializable{
 				throw new IllegalArgumentException("There is no proper field in "+meta.getThisType().getName()+" to populate a SQL condition expression:"+field.name());
 			}
 		}
-		return toSql(columnName,operator,value,processor.getProfile(),context,type);
+		return toSql(columnName,operator,value,profile,context,type);
 	}
 	
 	/*
@@ -235,19 +235,19 @@ public class Condition implements Serializable{
 			ITableMetadata meta,
 			SqlContext context,
 			SqlProcessor processor,
-			IQueryableEntity instance) {
+			IQueryableEntity instance,DatabaseDialect profile) {
 		//特殊Field条件 
 		if(field instanceof IConditionField){
-			return ((IConditionField)field).toPrepareSql(fields,meta,processor,context,instance);
+			return ((IConditionField)field).toPrepareSql(fields,meta,processor,context,instance,profile);
 		}else if(field instanceof LazyQueryBindField){
 			LazyQueryBindField ref=(LazyQueryBindField) field;
 			ITableMetadata refMeta=ref.getInstanceQuery(context).getMeta();
 			SqlContext    refContext=context.getContextOf(ref.getInstanceQuery(context));
 			if(ref instanceof RefField){
-				return toPrepareSqlClause(fields,refMeta,refContext,processor,ref.getInstanceQuery(context).getInstance(),((RefField)ref).getField());	
+				return toPrepareSqlClause(fields,refMeta,refContext,processor,ref.getInstanceQuery(context).getInstance(),((RefField)ref).getField(),profile);	
 			}
 		}
-		return toPrepareSqlClause(fields,meta,context,processor,instance,field); 
+		return toPrepareSqlClause(fields,meta,context,processor,instance,field,profile); 
 	}
 	
 	/**
@@ -256,14 +256,14 @@ public class Condition implements Serializable{
 	 */
 	private String toPrepareSqlClause(List<BindVariableDescription> fields,
 			ITableMetadata meta, SqlContext context,
-			SqlProcessor processor, IQueryableEntity instance, Field rawField) {
+			SqlProcessor processor, IQueryableEntity instance, Field rawField,DatabaseDialect profile) {
 		//当value为Field的时候……
 		if(value instanceof jef.database.Field && value.getClass().isEnum()){//当value为基本field时
 			value=new RefField((Field)value);
 		}
 		//表达式对象无需绑定变量
 		if((value instanceof Expression)||value instanceof RefField){
-			return toSqlClause(meta,context,processor,instance);
+			return toSqlClause(meta,context,processor,instance,profile);
 		}
 		//Like条件下
 		if(ArrayUtils.contains(Like.LIKE_OPERATORS, operator)){
@@ -290,7 +290,7 @@ public class Condition implements Serializable{
 		if(rawField instanceof JpqlExpression){
 			columnName=((JpqlExpression) rawField).toSqlAndBindAttribs(context, processor);
 		}else{
-			columnName=DbUtils.toColumnName(rawField,processor.getProfile(),context==null?null:context.getCurrentAliasAndCheck(rawField));
+			columnName=DbUtils.toColumnName(rawField,profile,context==null?null:context.getCurrentAliasAndCheck(rawField));
 		}
 		
 		if(operator==Operator.IS_NULL){
@@ -328,7 +328,7 @@ public class Condition implements Serializable{
 						if(n>0)sb.append(div);
 						if(o instanceof Field){
 							Condition c=get((Field)o,null,null);
-							sb.append(c.toSqlClause(meta, context, processor, instance));
+							sb.append(c.toSqlClause(meta, context, processor, instance,profile));
 						}else{
 							sb.append('?');
 							fields.add(new BindVariableDescription(rawField,operator,o));

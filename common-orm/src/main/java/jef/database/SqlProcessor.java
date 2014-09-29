@@ -19,6 +19,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 import jef.common.Entry;
+import jef.database.annotation.PartitionResult;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.query.JoinElement;
@@ -37,24 +38,23 @@ public interface SqlProcessor{
 	 */
 	public String toCountSql(String sql)  throws SQLException;
 	/**
-	 * 转换为Where字句 
+	 * 转换为Where子句 
 	 * @param obj
 	 * @param context SQL语句上下文
 	 * @param update  是否在更新时
 	 */
-	public BindSql toPrepareWhereSql(JoinElement obj,SqlContext context,boolean update) ;
-	
+	public BindSql toPrepareWhereSql(JoinElement obj,SqlContext context,boolean update,DatabaseDialect profile) ;
 	
 	/**
-	 * 转换为Where字句
+	 * 转换为Where子句
 	 * @param joinElement
 	 * @param context SQL语句上下文
 	 * @return
 	 */
-	public String toWhereClause(JoinElement joinElement,SqlContext context,boolean update);
+	public String toWhereClause(JoinElement joinElement,SqlContext context,boolean update,DatabaseDialect profile);
 	
 	/**
-	 * 生成更新字句
+	 * 生成更新子句
 	 * @param obj
 	 * @param dynamic
 	 * @return SQL片段
@@ -68,7 +68,7 @@ public interface SqlProcessor{
 	 * @param dynamic 动态更新标记
 	 * @return SQL片段
 	 */
-	public Entry<List<String>, List<Field>> toPrepareUpdateClause(IQueryableEntity obj,boolean dynamic);
+	public Entry<List<String>, List<Field>> toPrepareUpdateClause(IQueryableEntity obj,PartitionResult[] prs,boolean dynamic);
 	
 	/**
 	 *  收集结果数据中的数据，用需要的容器包装并返回
@@ -78,15 +78,12 @@ public interface SqlProcessor{
 	 *  @return
 	 */
 	public Object collectValueToContainer(List<? extends IQueryableEntity> subs, Class<?> container, String targetField);
-	
-
-
 	/**
 	 * 获取数据库Dialect
 	 * @return
 	 * @deprecated
 	 */
 	public DatabaseDialect getProfile();
-	
+	public DatabaseDialect getProfile(PartitionResult[] prs);
 	public PartitionSupport getPartitionSupport();
 }

@@ -23,6 +23,7 @@ import jef.database.Condition;
 import jef.database.IConditionField;
 import jef.database.IQueryableEntity;
 import jef.database.SqlProcessor;
+import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
@@ -51,10 +52,10 @@ public class SqlExpression implements Expression,IConditionField{
 	public Iterable<Condition> getConditions() {
 		return Arrays.asList();
 	}
-	public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance) {
+	public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance,DatabaseDialect profile) {
 		return text;
 	}
-	public String toPrepareSql(List<BindVariableDescription> fields, ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance) {
+	public String toPrepareSql(List<BindVariableDescription> fields, ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance,DatabaseDialect profile) {
 		return text;
 	}
 	public void appendTo(StringBuilder sb) {

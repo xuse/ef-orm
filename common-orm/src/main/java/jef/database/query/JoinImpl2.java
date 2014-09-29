@@ -9,6 +9,7 @@ import jef.database.ORMConfig;
 import jef.database.QueryAlias;
 import jef.database.SqlProcessor;
 import jef.database.annotation.JoinType;
+import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.AbstractRefField;
 import jef.database.meta.IReferenceAllTable;
 import jef.database.meta.IReferenceColumn;
@@ -230,7 +231,7 @@ final class JoinImpl2 extends AbstractJoinImpl{
 	 * 返回SQL的表名部分 select xxx from [.....] where xxx，包括 join ... on ...等部分
 	 * @return
 	 */
-	public String toTableDefinitionSql(SqlProcessor processor,SqlContext context) {
+	public String toTableDefinitionSql(SqlProcessor processor,SqlContext context,DatabaseDialect profile) {
 		StringBuilder sb = new StringBuilder(64);
 		toTableDefSql(sb,context.queries.get(0), processor,context);
 //		sb.append(' ');
@@ -243,7 +244,7 @@ final class JoinImpl2 extends AbstractJoinImpl{
 			QueryAlias right=context.queries.get(i+1);
 			toTableDefSql(sb,right, processor,context);	
 			sb.append(" ON ");
-			relations.toOnExpression(sb,context,right,processor);
+			relations.toOnExpression(sb,context,right,processor,profile);
 		}
 		return sb.toString();
 	}

@@ -57,7 +57,7 @@ public final class CacheImpl implements TransactionCache{
 		IQueryableEntity data=meta.newInstance();
 		DbUtils.setPrimaryKeyValue(data, primaryKey);
 		
-		BindSql sql=sqlP.toPrepareWhereSql(data.getQuery(), new SqlContext(null,data.getQuery()), false);
+		BindSql sql=sqlP.toPrepareWhereSql(data.getQuery(), new SqlContext(null,data.getQuery()), false,null);
 		DimCache dc=tableCache.get(new KeyDimension(sql.getSql(),null));
 		if(dc==null)return false;
 		return dc.load(toParamList(sql.getBind()))!=null;
@@ -80,7 +80,7 @@ public final class CacheImpl implements TransactionCache{
 		IQueryableEntity data=meta.newInstance();
 		DbUtils.setPrimaryKeyValue(data, primaryKey);
 		
-		BindSql sql=sqlP.toPrepareWhereSql(data.getQuery(), new SqlContext(null, data.getQuery()), false);
+		BindSql sql=sqlP.toPrepareWhereSql(data.getQuery(), new SqlContext(null, data.getQuery()), false,null);
 	
 		DimCache dc=tableCache.get(new KeyDimension(sql.getSql(),null));
 		if(dc==null)return;
@@ -174,7 +174,7 @@ public final class CacheImpl implements TransactionCache{
 		CacheKey pkCache=null;
 		if(!meta.getPKField().isEmpty()){
 			//FIXME getPkDimenision
-			BindSql sql=sqlP.toPrepareWhereSql(obj.getQuery(),  new SqlContext(null, obj.getQuery()), false);
+			BindSql sql=sqlP.toPrepareWhereSql(obj.getQuery(),  new SqlContext(null, obj.getQuery()), false,null);
 			obj.clearQuery();
 			KeyDimension dim=new KeyDimension(sql.getSql(),null);
 			pkCache = new SqlCacheKey(table, dim, toParamList(sql.getBind()));
@@ -196,7 +196,7 @@ public final class CacheImpl implements TransactionCache{
 			evict(ir.getCacheKey());
 			return;
 		}
-		BindSql sql=sqlP.toPrepareWhereSql(obj.getQuery(),  new SqlContext(null, obj.getQuery()), false);
+		BindSql sql=sqlP.toPrepareWhereSql(obj.getQuery(),  new SqlContext(null, obj.getQuery()), false,null);
 		obj.clearQuery();
 		DimCache dc=tableCache.get(new KeyDimension(sql.getSql(),null));
 		if(dc==null)return;

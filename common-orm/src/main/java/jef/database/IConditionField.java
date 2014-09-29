@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import jef.database.Condition.Operator;
+import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.Query;
 import jef.database.query.SqlContext;
@@ -48,7 +49,7 @@ public interface IConditionField extends jef.database.Field{
 	 * @param instance
 	 * @return sql
 	 */
-	public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context,IQueryableEntity instance);
+	public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context,IQueryableEntity instance,DatabaseDialect profile);
 	
 	
 	/**
@@ -61,7 +62,7 @@ public interface IConditionField extends jef.database.Field{
 	 * @return sql
 	 */
 	public String toPrepareSql(List<BindVariableDescription> fields, ITableMetadata meta, SqlProcessor processor,  
-			SqlContext context,IQueryableEntity instance);
+			SqlContext context,IQueryableEntity instance,DatabaseDialect profile);
 	
 	/**
 	 * Or条件容器
@@ -112,20 +113,20 @@ public interface IConditionField extends jef.database.Field{
 		public void addCondition(Field field,Object value){
 			conditions.add(Condition.get(field,Operator.EQUALS, value));
 		}
-		public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance) {
+		public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance,DatabaseDialect profile) {
 			StringBuilder sb=new StringBuilder();
 			for(Condition c: conditions){
 				if(sb.length()>0)sb.append(" or ");
-				sb.append(c.toSqlClause(meta, context, processor,  instance));
+				sb.append(c.toSqlClause(meta, context, processor,  instance,profile));
 			}
 			return conditions.size()>1?"("+sb.toString()+")":sb.toString();
 		}
 		public String toPrepareSql(List<BindVariableDescription> fields, ITableMetadata meta, SqlProcessor processor, 
-				SqlContext context, IQueryableEntity instance) {
+				SqlContext context, IQueryableEntity instance,DatabaseDialect profile) {
 			StringBuilder sb=new StringBuilder();
 			for(Condition c: conditions){
 				if(sb.length()>0)sb.append(" or ");
-				sb.append(c.toPrepareSqlClause(fields, meta, context, processor, instance));
+				sb.append(c.toPrepareSqlClause(fields, meta, context, processor, instance,profile));
 			}
 			return conditions.size()>1?"("+sb.toString()+")":sb.toString();
 		}
@@ -151,12 +152,12 @@ public interface IConditionField extends jef.database.Field{
 		public String name() {
 			return new StringBuilder().append("not").append(condition.toString()).toString();
 		}
-		public String toSql(ITableMetadata meta, SqlProcessor processor,	SqlContext context, IQueryableEntity instance) {
-			String sql="not ".concat(condition.toSqlClause(meta, context, processor,  instance));
+		public String toSql(ITableMetadata meta, SqlProcessor processor,	SqlContext context, IQueryableEntity instance,DatabaseDialect profile) {
+			String sql="not ".concat(condition.toSqlClause(meta, context, processor,  instance,profile));
 			return sql;
 		}
-		public String toPrepareSql(List<BindVariableDescription> fields,ITableMetadata meta, SqlProcessor processor, SqlContext context,IQueryableEntity instance) {
-			String result="not ".concat(condition.toPrepareSqlClause(fields, meta, context, processor, instance));
+		public String toPrepareSql(List<BindVariableDescription> fields,ITableMetadata meta, SqlProcessor processor, SqlContext context,IQueryableEntity instance,DatabaseDialect profile) {
+			String result="not ".concat(condition.toPrepareSqlClause(fields, meta, context, processor, instance,profile));
 			return result;
 		}
 		public Iterable<Condition> getConditions() {
@@ -206,20 +207,20 @@ public interface IConditionField extends jef.database.Field{
 		public void addCondition(Condition condition){
 			conditions.add(condition);
 		}
-		public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance) {
+		public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance,DatabaseDialect profile) {
 			StringBuilder sb=new StringBuilder();
 			for(Condition c: conditions){
 				if(sb.length()>0)sb.append(" and ");
-				sb.append(c.toSqlClause(meta, context, processor,  instance));
+				sb.append(c.toSqlClause(meta, context, processor,  instance,profile));
 			}
 			return conditions.size()>1?"("+sb.toString()+")":sb.toString();
 		}
 		public String toPrepareSql(List<BindVariableDescription> fields, ITableMetadata meta, SqlProcessor processor, 
-				SqlContext context, IQueryableEntity instance) {
+				SqlContext context, IQueryableEntity instance,DatabaseDialect profile) {
 			StringBuilder sb=new StringBuilder();
 			for(Condition c: conditions){
 				if(sb.length()>0)sb.append(" and ");
-				sb.append(c.toPrepareSqlClause(fields, meta, context, processor, instance));
+				sb.append(c.toPrepareSqlClause(fields, meta, context, processor, instance,profile));
 			}
 			return conditions.size()>1?"("+sb.toString()+")":sb.toString();
 		}
@@ -264,24 +265,24 @@ public interface IConditionField extends jef.database.Field{
 			this.query=subQuery;
 		}
 		public String toSql(ITableMetadata meta, SqlProcessor processor,
-				SqlContext context, IQueryableEntity instance) {
+				SqlContext context, IQueryableEntity instance,DatabaseDialect profile) {
 			StringBuilder sb=new StringBuilder();
 			sb.append(name()).append("(");
 			sb.append("select 1 from ").append(DbUtils.toTableName(query.getInstance(), null, query,processor.getPartitionSupport()));
 			sb.append(" et ");
 			
-			sb.append(processor.toWhereClause(query,new SqlContext(context,"et",query),false));
+			sb.append(processor.toWhereClause(query,new SqlContext(context,"et",query),false,profile));
 			sb.append(")");
 			return sb.toString();
 		}
 		public String toPrepareSql(List<BindVariableDescription> fields,
 				ITableMetadata meta, SqlProcessor processor, SqlContext context,
-				IQueryableEntity instance) {
+				IQueryableEntity instance,DatabaseDialect profile) {
 			StringBuilder sb=new StringBuilder();
 			sb.append(name()).append("(");
 			sb.append("select 1 from ").append(DbUtils.toTableName(query.getInstance(), null,  query,processor.getPartitionSupport()));
 			sb.append(" et ");
-			sb.append(processor.toWhereClause(query,new SqlContext(context,"et",query),false));
+			sb.append(processor.toWhereClause(query,new SqlContext(context,"et",query),false,profile));
 			sb.append(")");
 			return sb.toString();
 		}
@@ -321,24 +322,24 @@ public interface IConditionField extends jef.database.Field{
 			this.query=subQuery;
 		}
 		public String toSql(ITableMetadata meta, SqlProcessor processor,
-				SqlContext context, IQueryableEntity instance) {
+				SqlContext context, IQueryableEntity instance,DatabaseDialect profile) {
 			StringBuilder sb=new StringBuilder();
 			sb.append(name()).append("(");
 			sb.append("select 1 from ").append(DbUtils.toTableName(query.getInstance(), null,query,processor.getPartitionSupport()));
 			sb.append(" et ");
 			
-			sb.append(processor.toWhereClause(query,new SqlContext(context,"et",query),false));
+			sb.append(processor.toWhereClause(query,new SqlContext(context,"et",query),false,profile));
 			sb.append(")");
 			return sb.toString();
 		}
 		public String toPrepareSql(List<BindVariableDescription> fields,
 				ITableMetadata meta, SqlProcessor processor, SqlContext context,
-				IQueryableEntity instance) {
+				IQueryableEntity instance,DatabaseDialect profile) {
 			StringBuilder sb=new StringBuilder();
 			sb.append(name()).append("(");
 			sb.append("select 1 from ").append(DbUtils.toTableName(query.getInstance(), null,query,processor.getPartitionSupport()));
 			sb.append(" et ");
-			sb.append(processor.toWhereClause(query,new SqlContext(context,"et",query),false));
+			sb.append(processor.toWhereClause(query,new SqlContext(context,"et",query),false,profile));
 			sb.append(")");
 			return sb.toString();
 		}

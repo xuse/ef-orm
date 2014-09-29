@@ -187,7 +187,7 @@ public class TransactionImpl extends Transaction {
 	}
 
 	public Transaction setAutoCommit(boolean autoCommit) {
-		if (autoCommit == this.autoCommit) {
+		if (autoCommit == this.autoCommit || parent.getTxType()==TransactionMode.JTA) {
 			return this;
 		}
 		this.autoCommit = autoCommit;
@@ -234,7 +234,7 @@ public class TransactionImpl extends Transaction {
 				if (readOnly) {
 					conn.setReadOnly(false);
 				}
-				if (!autoCommit) {
+				if (!autoCommit && parent.getTxType()!=TransactionMode.JTA) {
 					conn.setAutoCommit(true);
 				}
 			} catch (SQLException e) {
@@ -272,12 +272,14 @@ public class TransactionImpl extends Transaction {
 		}
 		if (conn == null) {
 			IConnection conn = parent.getPool().getConnection(this);
-			conn.setAutoCommit(autoCommit);
-			if (readOnly) {
-				conn.setReadOnly(true);
-			}
-			if (isolationLevel >= 0 && ORMConfig.getInstance().isSetTxIsolation()) {
-				conn.setTransactionIsolation(isolationLevel);
+			if(parent.getTxType()!=TransactionMode.JTA){
+				conn.setAutoCommit(autoCommit);
+				if (readOnly) {
+					conn.setReadOnly(true);
+				}
+				if (isolationLevel >= 0 && ORMConfig.getInstance().isSetTxIsolation()) {
+					conn.setTransactionIsolation(isolationLevel);
+				}	
 			}
 			this.conn = conn;
 		}

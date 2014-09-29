@@ -28,6 +28,7 @@ public class DebugConnection implements Connection {
 	public DebugConnection(Connection conn,DebugDataSource parent) {
 		super();
 		this.conn = conn;
+		this.parent=parent;
 	}
 
 	public PreparedStatement prepareStatement(String sql) throws SQLException {

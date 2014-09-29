@@ -7,8 +7,6 @@ import java.util.Map;
 
 import jef.common.wrapper.IntRange;
 import jef.database.meta.AbstractRefField;
-import jef.database.meta.ITableMetadata;
-import jef.database.meta.MetaHolder;
 import jef.database.meta.Reference;
 import jef.database.query.ConditionQuery;
 import jef.database.query.JoinElement;

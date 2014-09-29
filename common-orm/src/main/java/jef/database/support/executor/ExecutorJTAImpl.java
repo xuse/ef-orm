@@ -111,9 +111,9 @@ public class ExecutorJTAImpl implements Runnable, StatementExecutor {
 		try {
 			conn = parent.poll();
 			conn.setKey(dbkey);
-			if(!conn.getAutoCommit()){
-				conn.setAutoCommit(true);
-			}
+//			if(!conn.get AutoCommit()){
+//				conn.set AutoCommit(true);
+//			}
 			st = conn.createStatement();
 			return true;
 		} catch (SQLException e) {
@@ -162,7 +162,7 @@ public class ExecutorJTAImpl implements Runnable, StatementExecutor {
 	}
 
 	/**
-	 * 执行执行的DDL语句 同步方式
+	 * 执行的DDL语句 同步方式
 	 * 
 	 * @param ddls
 	 * @throws SQLException

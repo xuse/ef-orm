@@ -57,7 +57,15 @@ CXF 2.7.10提高了兼容性，但是CXF-Plus的ASM类产生的package-info不�
 org.easyframe.tutorial.lesson7.Case1.testLimitKeyword()中关于NAtiveQuery的count问题。(OK)
 在NativeQuery中传入limit语句所引发了一系列问题。(OK)
 对于自带分页的SQL语句的解析和支持(OK，统一携带limit关键字)
-
+在JTA事务过程中，框架内部其实没有必要再开启事务，而现在不得不为resultholder和cascade等场景开启事务(OK)
+修复了关于notnull注解未被识别的问题。 （OK）
+修复关于null关键字不在alter table中出现造成反复改表的问题 (OK)
+修复关于JTA场合下创建SEQ要再启动时进行的问题， (OK)
+在 JTA场合下，按需建表功能将失败问题 (OK,　可以根据当前事务模式选择是采用哪种执行器)
+屏蔽JTA模式下的setAutoCommic commit rollback等不应该有的操作(OK)
+新增案例支持——Hibernate共享事务、JTA事务(OK)
+重构，取消特殊的metadata连接池。共用统一的连接池。(OK)
+其他和JTA有关的混合事务支持案例编写(OK)
 ==========文档补充============
 更新文档中的站点
 reivew和修订文档
@@ -90,21 +98,10 @@ reivew和修订文档
 3、SQL语法与函数
 
 
-
-
-
 ================ 待解决的问题  ===================
-1 在JTA事务过程中，框架内部其实没有必要再开启事务，而现在不得不为resultholder和cascade等场景开启事务(OK)
-
-1 修复了关于notnull注解未被识别的问题。 （OK）
-2 修复关于null关键字不在alter table中出现造成反复改表的问题 (OK)
-3 修复关于JTA场合下创建SEQ要再启动时进行的问题， (OK)
-4 在 JTA场合下，按需建表功能将失败问题 (由一个新线程去做,OK，暂时先这样)
-5、在其他的垂直分表的情况下，异构数据库的方言如果不是默认数据库将失效的问题
-
+在其他的垂直分表的情况下，异构数据库的方言如果不是默认数据库将失效的问题(需要重构一轮关于SQL生成器部分)
 使用外部配置文件来配置分库分表JDataSource
-屏蔽JTA模式下的setAutoCommic getAutoCommit commit rollback等不应该有的操作(OK)
-
+支持orderby注解
 
 编写《论一种新的多结果集排序算法》
 测试和对比三种算法
@@ -118,8 +115,6 @@ reivew和修订文档
 准备WebService培训大纲
 
 
-
-2 POJO操作插入时，数据没有正确插入
 atomikos是分布式事务的解决方案
 1\H框架JTA事务
 2JEF JTA事务
@@ -135,8 +130,6 @@ atomikos是分布式事务的解决方案
   <version>3.7.1</version>
 </dependency>
 
-
-新增案例支持——Hibernate共享事务、JTA事务
 
 按主键查询逻辑优化
 之前性能测试均为极端情况，测试综合工况，如10条记录左右的查询查询500次耗时。 如update语句更新500次。

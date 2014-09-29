@@ -7,6 +7,7 @@ import jef.database.DbUtils;
 import jef.database.QueryAlias;
 import jef.database.SqlProcessor;
 import jef.database.annotation.JoinType;
+import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.JoinKey;
 import jef.database.meta.JoinPath;
@@ -39,7 +40,7 @@ public class JoinCondition {
 		}
 	}
 
-	public void toOnExpression(StringBuilder sb, SqlContext sqlContext,QueryAlias right,SqlProcessor processor) {
+	public void toOnExpression(StringBuilder sb, SqlContext sqlContext,QueryAlias right,SqlProcessor processor,DatabaseDialect profile) {
 
 		ITableMetadata meta=MetaHolder.getMeta(right.getQuery().getInstance());
 		sqlContext=sqlContext.getContextOf(right.getQuery()); 
@@ -55,41 +56,20 @@ public class JoinCondition {
 			if(key.getRightLock()!=null){
 				ra=sqlContext.getAliasOf(key.getRightLock());
 			}
-			String left=DbUtils.toColumnName(key.getLeft(),processor.getProfile(), la);
-			String rightStr=DbUtils.toColumnName(key.getRightAsField(),processor.getProfile(),ra);
+			String left=DbUtils.toColumnName(key.getLeft(),profile, la);
+			String rightStr=DbUtils.toColumnName(key.getRightAsField(),profile,ra);
 			keys.add(StringUtils.concat(left,"=",rightStr));
 		}
 		for(JoinKey key: value.getJoinExpression()){
 			if(key.getField()==null){
 				if(key.getValue() instanceof JpqlExpression){
 					JpqlExpression jpql=(JpqlExpression) key.getValue();
-					String code=jpql.toSqlAndBindAttribs(sqlContext,processor.getProfile());
+					String code=jpql.toSqlAndBindAttribs(sqlContext,profile);
 					keys.add(code);
 				}
 			}else{
-				keys.add(key.toSqlClause(meta, sqlContext, processor, left==null?null:left.getInstance()));	
+				keys.add(key.toSqlClause(meta, sqlContext, processor, left==null?null:left.getInstance(),profile));	
 			}
-			//					String left;
-			//					if(key.getLeft()==null){
-			//						FBIField fbi=(FBIField)key.getRight();
-			//						String alias=sqlContext.getAliasOf(fbi.getRoot());
-			//						keys.add(fbi.toSql(alias, profile));
-			//						continue;
-			//					}
-			//					if(key.getLeft() instanceof JpqlExpression){
-			//						JpqlExpression express=(JpqlExpression) key.getLeft();
-			//						left=express.toSql(rightAlias, profile);
-			//					}else{
-			//						left=DbUtils.toColumnName(key.getLeft(), profile, rightAlias);	
-			//					}
-			//					String right;
-			//					if(key.getRight() instanceof JpqlExpression){
-			//						JpqlExpression express=(JpqlExpression) key.getRight();
-			//						right=express.toSql(rightAlias, profile);
-			//					}else{
-			//						right=DbUtils.toColumnName(key.getLeft(), profile, rightAlias);	
-			//					}
-			//					keys.add(StringUtils.concat(left,key.getOpExpression()==null?"=":key.getOpExpression(),right));
 		}
 		sb.append(StringUtils.join(keys, " and "));
 	}

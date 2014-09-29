@@ -62,9 +62,15 @@ public abstract class SelectProcessor {
 		this.p = p;
 	}
 
+	@Deprecated
 	public DatabaseDialect getProfile() {
 		return parent.getProfile();
 	}
+	
+	public DatabaseDialect getProfile(PartitionResult[] sites) {
+		return this.parent.getProfile(sites);
+	}
+	
 
 	protected OrderClause toOrderClause(ConditionQuery obj, SqlContext context) {
 		if (obj.getOrderBy() == null || obj.getOrderBy().size() == 0) {
@@ -142,8 +148,9 @@ public abstract class SelectProcessor {
 				GroupClause groupClause = toGroupAndHavingClause(query, context);
 				clause.setGrouphavingPart(groupClause);
 				clause.setSelectPart(toSelectSql(context, groupClause));
-				clause.setTables(DbUtils.toTableNames(query.getInstance(), myTableName, query, db.getPartitionSupport()), query.getMeta().getName());
-				clause.setWherePart(parent.toWhereClause(query, context, false));
+				PartitionResult[] prs=DbUtils.toTableNames(query.getInstance(), myTableName, query, db.getPartitionSupport());
+				clause.setTables(prs, query.getMeta().getName());
+				clause.setWherePart(parent.toWhereClause(query, context, false,getProfile(prs)));
 				if(order)
 					clause.setOrderbyPart(toOrderClause(obj, context));
 			} else if (obj instanceof Join) {
@@ -152,8 +159,8 @@ public abstract class SelectProcessor {
 				GroupClause groupClause = toGroupAndHavingClause(join, context);
 				clause.setGrouphavingPart(groupClause);
 				clause.setSelectPart(toSelectSql(context, groupClause));
-				clause.setTableDefinition(join.toTableDefinitionSql(parent, context));
-				clause.setWherePart(parent.toWhereClause(join, context, false));
+				clause.setTableDefinition(join.toTableDefinitionSql(parent, context,getProfile()));
+				clause.setWherePart(parent.toWhereClause(join, context, false,getProfile()));
 				if(order)
 					clause.setOrderbyPart(toOrderClause(join, context));
 			} else if (obj instanceof ComplexQuery) {
@@ -224,14 +231,15 @@ public abstract class SelectProcessor {
 				for (PartitionResult site : tables) {
 					List<String> tablenames = site.getTables();
 					for (int i = 0; i < tablenames.size(); i++) {
-						result.addSql(site.getDatabase(), StringUtils.concat("select count(*) from ", tablenames.get(i), " t", parent.toWhereClause(query, context, false)));
+						result.addSql(site.getDatabase(), StringUtils.concat("select count(*) from ", tablenames.get(i), " t", parent.toWhereClause(query, context, false,parent.getPartitionSupport().getProfile(site.getDatabase()))));
 					}
 				}
 				return result;
 			} else if (obj instanceof Join) {
+				DatabaseDialect profile=getProfile();
 				Join join = (Join) obj;
 				SqlContext context = join.prepare();
-				result.addSql(null, "select count(*) from " + join.toTableDefinitionSql(parent, context) + parent.toWhereClause(join, context, false));
+				result.addSql(null, "select count(*) from " + join.toTableDefinitionSql(parent, context,profile) + parent.toWhereClause(join, context, false,profile));
 				return result;
 			} else if (obj instanceof ComplexQuery) {
 				ComplexQuery cq = (ComplexQuery) obj;
@@ -295,11 +303,11 @@ public abstract class SelectProcessor {
 				Query<?> query = (Query<?>) obj;
 				SqlContext context = query.prepare();
 				GroupClause groupClause = toGroupAndHavingClause(query, context);
-				BindSql whereResult = parent.toPrepareWhereSql(query, context, false);
-
+				PartitionResult[] prs=DbUtils.toTableNames(query.getInstance(), myTableName, query, db.getPartitionSupport());
+				BindSql whereResult = parent.toPrepareWhereSql(query, context, false,getProfile(prs));
 				sb.setSelectPart(toSelectSql(context, groupClause));
 				sb.setGrouphavingPart(groupClause);
-				sb.setTables(DbUtils.toTableNames(query.getInstance(), myTableName, query, db.getPartitionSupport()), query.getMeta().getName());
+				sb.setTables(prs, query.getMeta().getName());
 				sb.setWherePart(whereResult.getSql());
 				sb.setBind(whereResult.getBind());
 				if(order)
@@ -308,10 +316,10 @@ public abstract class SelectProcessor {
 				Join join = (Join) obj;
 				SqlContext context = join.prepare();
 				GroupClause groupClause = toGroupAndHavingClause(join, context);
-
+				DatabaseDialect profile=getProfile();
 				sb.setSelectPart(toSelectSql(context, groupClause));
-				sb.setTableDefinition(join.toTableDefinitionSql(parent, context));
-				BindSql whereResult = parent.toPrepareWhereSql(join, context, false);
+				sb.setTableDefinition(join.toTableDefinitionSql(parent, context,profile));
+				BindSql whereResult = parent.toPrepareWhereSql(join, context, false,profile);
 				sb.setWherePart(whereResult.getSql());
 				sb.setBind(whereResult.getBind());
 				sb.setGrouphavingPart(groupClause);
@@ -394,7 +402,8 @@ public abstract class SelectProcessor {
 						throw new MultipleDatabaseOperateException("Not Supported, Count with 'group'");
 					}
 				}
-				BindSql result = parent.toPrepareWhereSql(query, context, false);
+				DatabaseDialect profile=getProfile(sites);
+				BindSql result = parent.toPrepareWhereSql(query, context, false,profile);
 				if (context.isDistinct()) {
 					String countStr = toSelectCountSql(context.getSelectsImpl(), context, groupClause.isNotEmpty());
 					for (PartitionResult site : sites) {
@@ -424,8 +433,9 @@ public abstract class SelectProcessor {
 				}else{
 					countStr = "select count(*) from ";
 				}
-				BindSql result = parent.toPrepareWhereSql(join, context, false);
-				result.setSql(countStr + join.toTableDefinitionSql(parent, context) + result.getSql()+groupClause);
+				DatabaseDialect profile=getProfile();
+				BindSql result = parent.toPrepareWhereSql(join, context, false,profile);
+				result.setSql(countStr + join.toTableDefinitionSql(parent, context,profile) + result.getSql()+groupClause);
 				cq.addSql(null, result);
 				return cq;
 			} else if (obj instanceof ComplexQuery) {

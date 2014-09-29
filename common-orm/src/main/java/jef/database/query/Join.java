@@ -4,6 +4,7 @@ import java.util.List;
 
 import jef.database.QueryAlias;
 import jef.database.SqlProcessor;
+import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.JoinKey;
 import jef.database.meta.Reference;
 
@@ -76,7 +77,7 @@ public interface Join extends JoinElement{
 	 * @param context
 	 * @return
 	 */
-	String toTableDefinitionSql(SqlProcessor processor, SqlContext context);
+	String toTableDefinitionSql(SqlProcessor processor, SqlContext context,DatabaseDialect profile);
 
 	
 	/**
