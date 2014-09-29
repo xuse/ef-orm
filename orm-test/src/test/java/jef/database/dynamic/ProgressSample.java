@@ -2,7 +2,6 @@ package jef.database.dynamic;
 
 import java.awt.Container;
 import java.awt.GridLayout;
-import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -20,6 +19,7 @@ import jef.database.meta.ColumnChange;
 import jef.database.meta.ColumnModification;
 import jef.database.meta.ITableMetadata;
 import jef.database.support.MetadataEventListener;
+import jef.database.support.executor.StatementExecutor;
 import jef.tools.ThreadUtils;
 
 public class ProgressSample implements MetadataEventListener{
@@ -107,13 +107,12 @@ public class ProgressSample implements MetadataEventListener{
 		return true;
 	}
 
-	public void beforeAlterTable(String tablename, ITableMetadata meta, Connection conn, List<String> sql) {
+	public void beforeAlterTable(String tablename, ITableMetadata meta, StatementExecutor conn, List<String> sql) {
 		Statement st=null;
 		ResultSet rs=null;
 		int count=0;
 		try{
-			st=conn.createStatement();
-			rs=st.executeQuery("select count(*) from "+tablename);
+			rs=conn.executeQuery("select count(*) from "+tablename);
 			if(rs.next()){
 				count=rs.getInt(1);
 			}

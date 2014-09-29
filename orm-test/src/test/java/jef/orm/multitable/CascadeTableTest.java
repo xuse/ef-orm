@@ -25,7 +25,6 @@ import jef.database.query.Selects;
 import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
 import jef.database.test.DatabaseInit;
-import jef.database.test.IgnoreOn;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
 import jef.orm.multitable.model.Person;
 import jef.orm.multitable.model.School;
@@ -79,7 +78,7 @@ public class CascadeTableTest extends MultiTableTestBase {
 	@Test
 	public void testAssignSelectColumn() throws SQLException {
 		db.createTable(Person.class);
-		Session db = this.db.startTransaction();
+		Transaction db = this.db.startTransaction();
 		Person p = RandomData.newInstance(Person.class);
 		p.setGender("F");
 		p.setAge(19);
@@ -131,7 +130,8 @@ public class CascadeTableTest extends MultiTableTestBase {
 			List<Person> result = db.select(t1.getInstance());
 			LogUtil.show(result.get(0));
 		}
-		db.close();
+		
+		db.rollback(true);
 		System.out.println("===========result==============");
 	}
 
@@ -324,6 +324,7 @@ public class CascadeTableTest extends MultiTableTestBase {
 		System.out.println("=========== testRefInsert Begin ==========");
 		Person p = new Person();
 		p.setName("张三");
+		p.setGender("M");
 		p.setSchool(new School("浙江大学"));
 		p.setAge(22);
 		db.insertCascade(p);
@@ -344,6 +345,7 @@ public class CascadeTableTest extends MultiTableTestBase {
 	@Test
 	public void testRefUpdate() throws SQLException {
 		System.out.println("=========== testRefUpdate Begin ==========");
+		Transaction db=this.db.startTransaction();
 		Person p = new Person();
 		p.setId(2);
 		p = db.load(p);
@@ -352,6 +354,7 @@ public class CascadeTableTest extends MultiTableTestBase {
 		p.setSchool(new School("华南大学"));
 		p.setAge(123);
 		db.updateCascade(p);
+		db.rollback(true);
 		System.out.println("=========== testRefUpdate End ==========");
 	}
 
@@ -536,6 +539,7 @@ public class CascadeTableTest extends MultiTableTestBase {
 		p.setLastModified(new Date());
 		p.setParentId(1);
 		p.setSchool(s);
+		p.setName("刘备");
 		p.setSchoolId(3);
 		System.out.println(s);
 		db.insert(p);
@@ -555,6 +559,7 @@ public class CascadeTableTest extends MultiTableTestBase {
 		p.setLastModified(new Date());
 		p.setParentId(1);
 		p.setSchool(s);
+		p.setName("刘备");
 		p.setSchoolId(3);
 		db.insertCascade(p);
 		System.out.println(p.getSchoolId());

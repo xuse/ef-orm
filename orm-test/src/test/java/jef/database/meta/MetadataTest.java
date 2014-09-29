@@ -9,7 +9,6 @@ import jef.common.log.LogUtil;
 import jef.database.DbClient;
 import jef.database.DbMetaData;
 import jef.database.DbMetaData.ObjectType;
-import jef.database.DbMetaData.TableInfo;
 import jef.database.Session;
 import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;

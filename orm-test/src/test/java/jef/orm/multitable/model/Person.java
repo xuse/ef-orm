@@ -67,7 +67,7 @@ public class Person extends DataObject {
 	private String name;
 	
 	@Indexed
-	@Column(columnDefinition="Char",length=1,nullable=false)
+	@Column(columnDefinition="Char",length=1)
 	private String gender;
 	
 	@Indexed
@@ -131,6 +131,7 @@ public class Person extends DataObject {
 	//多对多关系
 	@ManyToMany(targetEntity=PersonFriends.class,cascade=CascadeType.ALL)
 	@JoinColumn(name="id",referencedColumnName="pid")
+	@JoinDescription(orderBy="friendId")
 	private List<PersonFriends> friends;
 	
 	@ManyToMany(targetEntity=PersonFriends.class)

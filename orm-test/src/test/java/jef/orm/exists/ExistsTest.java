@@ -67,6 +67,7 @@ public class ExistsTest extends org.junit.Assert{
 		
 		entityB.addCondition(TableB.Field.id, new RefField(entityA,"id"));
 		entityA.addCondition(new Exists(entityB));
+		entityA.orderByAsc(TableA.Field.id);
 		List<TableA> list=db.select(entityA);
 		
 		Assert.assertEquals(list.size(),2);
