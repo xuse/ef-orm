@@ -3,7 +3,6 @@ package jef.database.support;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -25,6 +24,7 @@ import jef.database.meta.Column;
 import jef.database.meta.ColumnModification;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
+import jef.database.support.executor.StatementExecutor;
 import jef.tools.ArrayUtils;
 import jef.tools.ClassScanner;
 import jef.tools.IOUtils;
@@ -222,7 +222,7 @@ public class QuerableEntityScanner {
 				return true;
 			}
 
-			public void beforeAlterTable(String tablename, ITableMetadata meta, Connection conn, List<String> sql) {
+			public void beforeAlterTable(String tablename, ITableMetadata meta, StatementExecutor conn, List<String> sql) {
 			}
 		});
 		if(checkSequence){

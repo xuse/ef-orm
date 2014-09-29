@@ -13,7 +13,7 @@ import jef.database.support.LogFormat;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 
-final class BindVariableContext {
+public final class BindVariableContext {
 	private PreparedStatement psmt;
 	private DatabaseDialect db;
 	private final StringBuilder logMessage;
@@ -32,7 +32,7 @@ final class BindVariableContext {
 		this.db=profile.getProfile();
 	}
 	
-	BindVariableContext(PreparedStatement psmt,DatabaseDialect profile,StringBuilder sb){
+	public BindVariableContext(PreparedStatement psmt,DatabaseDialect profile,StringBuilder sb){
 		this.psmt=psmt;
 		this.logMessage=sb;
 		this.db=profile;

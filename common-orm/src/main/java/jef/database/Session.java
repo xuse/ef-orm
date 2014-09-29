@@ -60,6 +60,7 @@ import jef.database.query.SqlContext;
 import jef.database.query.SqlExpression;
 import jef.database.query.TypedQuery;
 import jef.database.support.DbOperatorListener;
+import jef.database.support.MultipleDatabaseOperateException;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.CountClause;
@@ -567,14 +568,23 @@ public abstract class Session {
 		myTableName = MetaHolder.toSchemaAdjustedName(myTableName);
 
 		long start = System.currentTimeMillis();
-		
-		PartitionResult pr=DbUtils.toTableName(obj, myTableName, obj.hasQuery() ? obj.getQuery() : null, getPartitionSupport());
+		PartitionResult pr=null;
+		try{
+			pr=DbUtils.toTableName(obj, myTableName, obj.hasQuery() ? obj.getQuery() : null, getPartitionSupport());
+		}catch(MultipleDatabaseOperateException e){
+			//先路由方式失败。但是还是可以继续向后走。
+			//有一种情况下，后续操作可能成功。如果以Sequence作为分库分表主键，此时由于自增值尚未就绪，分库分表失败。
+			//待SQL语句解析完成后，分库分表就能成功。
+		}
 		InsertSqlClause sqls = insertp.toInsertSql(obj, myTableName, dynamic, false,pr);
 		if(sqls.getCallback()!=null){
 			sqls.getCallback().callBefore(Arrays.asList(obj));
 		}
-		sqls.setTableNames(pr);
-		
+		//回调完成，此时自增主键可能已经获得，因此有机会再执行一次分库分表
+		if(pr==null){
+			pr=DbUtils.toTableName(obj, myTableName, obj.hasQuery() ? obj.getQuery() : null, getPartitionSupport());
+			sqls.setTableNames(pr);
+		}
 		long parse = System.currentTimeMillis();
 		insertp.processInsert(asOperateTarget(sqls.getTable().getDatabase()), obj, sqls, start, parse);
 

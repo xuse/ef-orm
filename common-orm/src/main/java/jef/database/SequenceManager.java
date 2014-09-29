@@ -1,13 +1,8 @@
 package jef.database;
 
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import javax.persistence.GenerationType;
 import javax.persistence.PersistenceException;
@@ -289,7 +284,7 @@ public final class SequenceManager {
 			long value = conn.selectBySql(select, GET_LONG_OR_TABLE_NOT_EXIST, 1, Collections.EMPTY_LIST);
 			if (value == -9999L) {
 				long start = super.caclStartValue(conn, null, rawTable, rawColumn, initValue, 99999999999L);
-				conn.executeSql("INSERT INTO " + table + " VALUES(?)", Arrays.asList(start));
+				conn.executeSql("INSERT INTO " + table + " VALUES(?)", start);
 				value = 0;
 			}
 			return value;
@@ -310,7 +305,7 @@ public final class SequenceManager {
 				if (ORMConfig.getInstance().isAutoCreateSequence()) {
 					int start = 0;
 					meta.createTable(seqtable, table);
-					meta.executeSql("INSERT INTO " + table + " VALUES(?)", Arrays.asList(start));	
+					meta.executeSql("INSERT INTO " + table + " VALUES(?)",start);	
 				}else{
 					throw new PersistenceException("Table for sequence " + table + " does not exist on " + meta + "!");
 				}
@@ -396,7 +391,7 @@ public final class SequenceManager {
 			long value = conn.selectBySql(select, GET_LONG_OR_TABLE_NOT_EXIST, 1, Collections.EMPTY_LIST);
 			if (value == -9999L) {
 				long start = super.caclStartValue(conn, null, rawTable, rawColumn, initValue, 99999999999L);
-				conn.executeSql("INSERT INTO " + table + "(V,T) VALUES(?,?)", Arrays.<Object> asList(start, key));
+				conn.executeSql("INSERT INTO " + table + "(V,T) VALUES(?,?)", start, key);
 				value = 0;
 			}
 			return value;

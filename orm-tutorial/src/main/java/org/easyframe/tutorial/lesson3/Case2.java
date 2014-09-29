@@ -32,7 +32,7 @@ public class Case2 extends org.junit.Assert {
 		new EntityEnhancer().enhance("org.easyframe.tutorial");
 		db = new DbClient();
 		// 准备数据时关闭调试，减少控制台信息
-		ORMConfig.getInstance().setDebugMode(false);
+		ORMConfig.getInstance().setDebugMode(true);
 		db.dropTable(Student.class, StudentToLession.class);
 		db.createTable(Student.class, StudentToLession.class);
 		prepareData(15);

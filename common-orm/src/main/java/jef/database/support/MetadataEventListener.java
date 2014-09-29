@@ -10,6 +10,7 @@ import jef.database.dialect.ColumnType;
 import jef.database.meta.Column;
 import jef.database.meta.ColumnModification;
 import jef.database.meta.ITableMetadata;
+import jef.database.support.executor.StatementExecutor;
 
 /**
  * 表结构变更时，整个操作过程进度的事件监听器(可以干涉修改表的过程)
@@ -62,7 +63,7 @@ public interface MetadataEventListener {
 	 * @param conn       数据库连接
 	 * @param sql  所有的SQL语句
 	 */
-	void beforeAlterTable(String tablename, ITableMetadata meta, Connection conn, List<String> sql);
+	void beforeAlterTable(String tablename, ITableMetadata meta, StatementExecutor conn, List<String> sql);
 
 	/**
 	 * 每一句SQL语句执行完成后

@@ -32,7 +32,7 @@ final class SingleDummyConnectionPool implements IUserManagedPool{
 	private final DbMetaData metadata;
 	
 	
-	public SingleDummyConnectionPool(DataSource ds) {
+	SingleDummyConnectionPool(DataSource ds) {
 		this.ds = ds;
 		this.metadata = new DbMetaData(ds, this,null);
 		PoolReleaseThread.getInstance().addPool(this);
@@ -61,8 +61,6 @@ final class SingleDummyConnectionPool implements IUserManagedPool{
 			conn.closePhysical();
 		}
 		map.clear();
-		if(metadata!=null)
-			this.metadata.close();
 		PoolReleaseThread.getInstance().removePool(this);
 		System.out.println("pollCount:" + pollCount + " offer count:" + offerCount);
 	}
@@ -96,7 +94,6 @@ final class SingleDummyConnectionPool implements IUserManagedPool{
 	}
 
 	public void closeConnectionTillMin() {
-		metadata.closeConnectionTillMin();
 	}
 
 	public DbMetaData getMetadata(String dbkey) {

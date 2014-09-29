@@ -36,7 +36,7 @@ import jef.tools.StringUtils;
  */
 final class RoutingConnection implements ReentrantConnection{
 	private String defaultKey = null;
-	private boolean autoCommit;
+	private boolean autoCommit=true;
 	private boolean readOnly;
 	private int isolation = -1;
 	private int savePointId=0;

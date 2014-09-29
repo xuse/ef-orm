@@ -133,5 +133,9 @@ public interface IUserManagedPool extends IPool<ReentrantConnection>,MetadataSer
 	 */
 	void registeDbInitCallback(Callback<String, SQLException> callback);
 	
-	
+	/**
+	 * 是否为多种异构数据库
+	 * @return
+	 */
+//	boolean isMultipleRdbms();
 }

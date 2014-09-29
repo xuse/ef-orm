@@ -45,7 +45,7 @@ public class Case2 {
 		//构造一个多数据源的DbClient
 		db=new DbClient(new RoutingDataSource(lookup));
 		
-		ORMConfig.getInstance().setDebugMode(false);
+		ORMConfig.getInstance().setDebugMode(true);
 		db.dropTable(Person.class);
 		//将Person对象的对应数据库修改为datasource2。（默认应该用注解 @BindDataSource来设置）
 		((MetadataAdapter)MetaHolder.getMeta(Person.class)).setBindDsName("datasource2");

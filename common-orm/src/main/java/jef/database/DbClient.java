@@ -932,4 +932,8 @@ public class DbClient extends Session {
 	PartitionSupport getPartitionSupport() {
 		return pm;
 	}
+	
+	public void printPool(){
+		System.out.println(getPool().getStatus());
+	}
 }

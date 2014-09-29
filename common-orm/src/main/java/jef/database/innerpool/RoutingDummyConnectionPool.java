@@ -76,9 +76,6 @@ public class RoutingDummyConnectionPool implements IRoutingConnectionPool{
 			conn.closePhysical();	
 		}
 		usedConnection.clear();
-		for(DbMetaData meta:metadatas.values()){
-			meta.close();
-		}
 		PoolService.logPoolStatic(getClass().getSimpleName(),pollCount.get(), offerCount.get());
 	}
 
@@ -116,9 +113,6 @@ public class RoutingDummyConnectionPool implements IRoutingConnectionPool{
 
 
 	public void closeConnectionTillMin() {
-		for(DbMetaData meta:metadatas.values()){
-			meta.closeConnectionTillMin();
-		}
 		//无需任何功能
 	}
 

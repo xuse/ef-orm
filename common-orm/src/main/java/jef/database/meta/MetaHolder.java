@@ -50,7 +50,6 @@ import jef.common.wrapper.Holder;
 import jef.database.Condition.Operator;
 import jef.database.DbCfg;
 import jef.database.DbMetaData;
-import jef.database.DbMetaData.TableInfo;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
@@ -212,7 +211,7 @@ public final class MetaHolder {
 			throw new SQLException("The table " + tableName + " does not exit in database " + session.getNoTransactionSession().toString());
 		}
 		PrimaryKey pks = meta.getPrimaryKey(tableName);
-		List<jef.database.meta.Column> columns = meta.getColumns(tableName);
+		List<jef.database.meta.Column> columns = meta.getColumns(tableName,false);
 		TupleMetadata m = new TupleMetadata(tableName);
 		for (jef.database.meta.Column c : columns) {
 			boolean isPk = (pks == null) ? false : pks.hasColumn(c.getColumnName());

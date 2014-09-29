@@ -16,7 +16,7 @@ import jef.database.query.JoinElement;
 import jef.database.query.Query;
 import jef.tools.reflect.BeanWrapper;
 
-final class BindVariableTool {
+public final class BindVariableTool {
 	private static Object NOT_FOUND = new Object();
 
 	/**

@@ -33,11 +33,10 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
 import java.util.regex.Pattern;
 
 import javax.persistence.PersistenceException;
@@ -50,16 +49,15 @@ import jef.database.Condition.Operator;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
+import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.MappingType;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
-import jef.database.innerpool.MetadataConnectionPool;
 import jef.database.meta.Column;
 import jef.database.meta.ColumnChange;
 import jef.database.meta.ColumnModification;
-import jef.database.meta.DbProperty;
 import jef.database.meta.DdlGenerator;
 import jef.database.meta.DdlGeneratorImpl;
 import jef.database.meta.Feature;
@@ -69,9 +67,11 @@ import jef.database.meta.ITableMetadata;
 import jef.database.meta.Index;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.PrimaryKey;
+import jef.database.meta.TableInfo;
 import jef.database.query.DefaultPartitionCalculator;
-import jef.database.query.Func;
 import jef.database.support.MetadataEventListener;
+import jef.database.support.executor.ExecutorJTAImpl;
+import jef.database.support.executor.StatementExecutor;
 import jef.database.wrapper.populator.ResultPopulatorImpl;
 import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.populator.Transformer;
@@ -79,8 +79,6 @@ import jef.database.wrapper.result.ResultSetImpl;
 import jef.database.wrapper.result.ResultSets;
 import jef.http.client.support.CommentEntry;
 import jef.tools.Assert;
-import jef.tools.DateUtils;
-import jef.tools.DateUtils.TimeUnit;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
@@ -127,7 +125,9 @@ import org.apache.commons.lang.ArrayUtils;
  * @author Jiyi
  * 
  */
-public class DbMetaData extends MetadataConnectionPool {
+public class DbMetaData{
+	public final Set<String> checkedFunctions=new HashSet<String>();
+	
 	private String dbkey;
 
 	private ConnectInfo info;
@@ -164,8 +164,25 @@ public class DbMetaData extends MetadataConnectionPool {
 
 	private DdlGenerator ddlGenerator;
 
+	private DataSource ds;
+
 	private IUserManagedPool parent;
 
+	
+	protected Connection getConnection(boolean b) throws SQLException {
+		Connection conn;
+		if(b && (ds instanceof SimpleDataSource) && hasRemarkFeature()){
+			Properties props = new Properties();
+			props.put("remarksReporting", "true");
+			conn=((SimpleDataSource) ds).getConnectionFromDriver(props);
+		}else{
+			IConnection ic=parent.poll();
+			ic.setKey(dbkey);
+			conn=ic;
+		}
+		return conn;
+	}
+	
 	/**
 	 * 构造
 	 * 
@@ -177,15 +194,17 @@ public class DbMetaData extends MetadataConnectionPool {
 	 *            当前元数据所属的数据源名称
 	 */
 	public DbMetaData(DataSource ds, IUserManagedPool parent, String dbkey) {
-		super(ds);
-		this.subtableInterval = JefConfiguration.getInt(DbCfg.DB_PARTITION_REFRESH, 3600) * 1000;
+		this.ds=ds;
+		this.parent=parent;
 		this.dbkey = dbkey;
+		
+		this.subtableInterval = JefConfiguration.getInt(DbCfg.DB_PARTITION_REFRESH, 3600) * 1000;
 		this.subtableCacheExpireTime = System.currentTimeMillis() + subtableInterval;
 		this.parent = parent;
 		info = DbUtils.tryAnalyzeInfo(ds, false);
 		try {
 			if (info == null) {
-				Connection con = getConnection();
+				Connection con = getConnection(false);
 				try {
 					info = DbUtils.tryAnalyzeInfo(con);
 				} finally {
@@ -215,7 +234,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @return 表的信息
 	 */
 	public List<TableInfo> getTable(String name) throws SQLException {
-		return getDatabaseObject(ObjectType.TABLE, this.schema, getProfile().getObjectNameIfUppercase(name), null);
+		return getDatabaseObject(ObjectType.TABLE, this.schema, getProfile().getObjectNameIfUppercase(name), null, false);
 	}
 
 	/**
@@ -224,9 +243,19 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @return 表信息
 	 * @throws SQLException
 	 */
-	public List<TableInfo> getTables() throws SQLException {
-		return getDatabaseObject(ObjectType.TABLE, this.schema, null, null);
+	public List<TableInfo> getTables(boolean needRemark) throws SQLException {
+		return getDatabaseObject(ObjectType.TABLE, this.schema, null, null,needRemark);
 	}
+	
+	/**
+	 * 返回数据库中所有的表(当前schema下)
+	 * @return
+	 * @throws SQLException 
+	 */
+	public List<TableInfo> getTables() throws SQLException {
+		return getDatabaseObject(ObjectType.TABLE, this.schema, null, null,false);
+	}
+	
 
 	public void setDbTimeDelta(long dbTimeDelta) {
 		this.dbTimeDelta = dbTimeDelta;
@@ -251,7 +280,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @return 视图信息
 	 */
 	public List<TableInfo> getView(String name) throws SQLException {
-		return getDatabaseObject(ObjectType.VIEW, this.schema, getProfile().getObjectNameIfUppercase(name), null);
+		return getDatabaseObject(ObjectType.VIEW, this.schema, getProfile().getObjectNameIfUppercase(name), null,false);
 	}
 
 	/**
@@ -260,8 +289,8 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @return 视图信息
 	 * @throws SQLException
 	 */
-	public List<TableInfo> getViews() throws SQLException {
-		return getDatabaseObject(ObjectType.VIEW, this.schema, null, null);
+	public List<TableInfo> getViews(boolean needRemark) throws SQLException {
+		return getDatabaseObject(ObjectType.VIEW, this.schema, null, null,needRemark);
 	}
 
 	/**
@@ -273,7 +302,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	public List<CommentEntry> getSequence(String name) throws SQLException {
 		List<CommentEntry> result = new ArrayList<CommentEntry>();
 
-		for (TableInfo table : getDatabaseObject(ObjectType.SEQUENCE, this.schema, getProfile().getObjectNameIfUppercase(name), null)) {
+		for (TableInfo table : getDatabaseObject(ObjectType.SEQUENCE, this.schema, getProfile().getObjectNameIfUppercase(name), null,false)) {
 			CommentEntry e = new CommentEntry();
 			e.setKey(table.getName());
 			e.setValue(table.getRemarks());
@@ -295,7 +324,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @throws SQLException
 	 * @see Operator
 	 */
-	public List<TableInfo> getDatabaseObject(ObjectType type, String schema, String matchName, Operator oper) throws SQLException {
+	public List<TableInfo> getDatabaseObject(ObjectType type, String schema, String matchName, Operator oper,boolean needRemark) throws SQLException {
 		if (schema == null)
 			schema = this.schema;
 		if (matchName != null) {
@@ -316,7 +345,7 @@ public class DbMetaData extends MetadataConnectionPool {
 				matchName = matchName + "%";
 			}
 		}
-		Connection conn = getConnection();
+		Connection conn = getConnection(needRemark);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		DatabaseDialect trans = info.profile;
 		ResultSet rs = null;
@@ -325,14 +354,14 @@ public class DbMetaData extends MetadataConnectionPool {
 			List<TableInfo> result = new ArrayList<TableInfo>();
 			while (rs.next()) {
 				TableInfo info = new TableInfo();
-				info.catalog = rs.getString("TABLE_CAT");
-				info.schema = rs.getString("TABLE_SCHEM");
-				info.name = rs.getString("TABLE_NAME");
-				info.type = rs.getString("TABLE_TYPE");// "TABLE","VIEW",
+				info.setCatalog(rs.getString("TABLE_CAT"));
+				info.setSchema(rs.getString("TABLE_SCHEM"));
+				info.setName(rs.getString("TABLE_NAME"));
+				info.setType(rs.getString("TABLE_TYPE"));// "TABLE","VIEW",
 														// "SYSTEM TABLE",
 														// "GLOBAL TEMPORARY","LOCAL TEMPORARY",
 														// "ALIAS", "SYNONYM".
-				info.remarks = rs.getString("REMARKS");
+				info.setRemarks(rs.getString("REMARKS"));
 				result.add(info);
 			}
 			return result;
@@ -354,7 +383,7 @@ public class DbMetaData extends MetadataConnectionPool {
 		if (types == null || types.length == 0) {
 			types = new ObjectType[] { ObjectType.TABLE };
 		}
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		DatabaseDialect trans = info.profile;
 		String[] ts = new String[types.length];
@@ -393,7 +422,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @throws SQLException
 	 */
 	public String[] getCatalogs() throws SQLException {
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = databaseMetaData.getCatalogs();
 		try {
@@ -421,7 +450,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @throws SQLException
 	 */
 	public String[] getSchemas() throws SQLException {
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = databaseMetaData.getSchemas();
 		try {
@@ -480,6 +509,17 @@ public class DbMetaData extends MetadataConnectionPool {
 
 	/**
 	 * 得到指定表的所有列
+	 * @param tableName
+	 * @return
+	 * @throws SQLException
+	 */
+	public List<Column> getColumns(String tableName) throws SQLException {
+		return getColumns(tableName, false);
+	}
+	
+	
+	/**
+	 * 得到指定表的所有列
 	 * 
 	 * @param tableName
 	 *            表名
@@ -487,9 +527,11 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @throws SQLException
 	 * @see Column
 	 */
-	public List<Column> getColumns(String tableName) throws SQLException {
+	public List<Column> getColumns(String tableName,boolean needRemark) throws SQLException {
 		tableName = info.profile.getObjectNameIfUppercase(tableName);
-		Connection conn = getConnection();
+		
+		
+		Connection conn = getConnection(needRemark);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 
 		String schema = this.schema;
@@ -542,7 +584,7 @@ public class DbMetaData extends MetadataConnectionPool {
 		tableName = info.profile.getObjectNameIfUppercase(tableName);
 		if (info.profile.has(Feature.NOT_SUPPORT_INDEX_META))
 			return new ArrayList<Index>();
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		ResultSet rs = null;
 		try {
 			DatabaseMetaData databaseMetaData = conn.getMetaData();
@@ -581,7 +623,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @throws SQLException
 	 */
 	public String getDriverVersion() throws SQLException {
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		releaseConnection(conn);
 		return databaseMetaData.getDriverVersion();
@@ -594,7 +636,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @throws SQLException
 	 */
 	public String getDatabaseVersion() throws SQLException {
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		String version = databaseMetaData.getDatabaseProductVersion();
 		releaseConnection(conn);
@@ -613,7 +655,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 *         </ul>
 	 */
 	public Map<String, String> getDbVersion() throws SQLException {
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		Map<String, String> map = new SimpleMap<String, String>();
 		map.put("DriverName", databaseMetaData.getDriverName());
@@ -654,7 +696,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @return List<String> 数据类型
 	 */
 	public List<String> getSupportDataType() throws SQLException {
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		ResultSet rs = null;
 		try {
 			DatabaseMetaData databaseMetaData = conn.getMetaData();
@@ -681,7 +723,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	public PrimaryKey getPrimaryKey(String tableName) throws SQLException {
 		tableName = MetaHolder.toSchemaAdjustedName(tableName);
 		tableName = info.profile.getObjectNameIfUppercase(tableName);
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = null;
 		try {
@@ -721,7 +763,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 */
 	public ForeignKey[] getForeignKey(String tableName) throws SQLException {
 		tableName = info.profile.getObjectNameIfUppercase(tableName);
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = null;
 		try {
@@ -744,7 +786,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 */
 	public ForeignKey[] getForeignKeyReferenceBy(String tableName) throws SQLException {
 		tableName = info.profile.getObjectNameIfUppercase(tableName);
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = null;
 		try {
@@ -774,7 +816,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 *         </ul>
 	 */
 	public List<String> getAllBuildInFunctions() throws SQLException {
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		List<String> result = new ArrayList<String>();
 		result.addAll(Arrays.asList(StringUtils.split(databaseMetaData.getTimeDateFunctions(), ',')));
@@ -792,7 +834,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @throws SQLException
 	 */
 	public String getTimeDateFunctions() throws SQLException {
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		String result = databaseMetaData.getTimeDateFunctions();
 		releaseConnection(conn);
@@ -806,7 +848,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @throws SQLException
 	 */
 	public String getNumericFunctions() throws SQLException {
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		String result = databaseMetaData.getNumericFunctions();
 		releaseConnection(conn);
@@ -820,7 +862,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @throws SQLException
 	 */
 	public String getStringFunctions() throws SQLException {
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		String result = databaseMetaData.getStringFunctions();
 		releaseConnection(conn);
@@ -834,7 +876,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @throws SQLException
 	 */
 	public String getSystemFunctions() throws SQLException {
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		String result = databaseMetaData.getSystemFunctions();
 		releaseConnection(conn);
@@ -904,7 +946,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @throws SQLException
 	 */
 	public String[] getSQLKeywords() throws SQLException {
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		try {
 			DatabaseMetaData databaseMetaData = conn.getMetaData();
 			return org.apache.commons.lang.StringUtils.split(databaseMetaData.getSQLKeywords(), ',');
@@ -932,7 +974,7 @@ public class DbMetaData extends MetadataConnectionPool {
 			return 1;
 		}
 		String getMaxValueSql = createGetMaxSequenceColumnValueStatement(schema, tableName, sequenceColumnName);
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		Statement st = null;
 		ResultSet rs = null;
 		try {
@@ -968,7 +1010,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 */
 	public boolean supportsSavepoints() throws SQLException {
 		if (supportsSavepoints == null) {
-			Connection conn = getConnection();
+			Connection conn = getConnection(false);
 			supportsSavepoints = conn.getMetaData().supportsSavepoints();
 			releaseConnection(conn);
 		}
@@ -983,7 +1025,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @throws SQLException
 	 */
 	public boolean supportsTransactionIsolationLevel(int level) throws SQLException {
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		return conn.getMetaData().supportsTransactionIsolationLevel(level);
 	}
 
@@ -1004,7 +1046,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	}
 
 	private int caclJdbcVersion() throws SQLException {
-		Connection conn = this.getConnection();
+		Connection conn = this.getConnection(false);
 		try {
 			if (testJdbc4(conn))
 				return 4;
@@ -1085,7 +1127,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	public String[] getTableTypes() throws SQLException {
 		if (tableTypes == null) {
 			List<String> type = new ArrayList<String>();
-			Connection conn = getConnection();
+			Connection conn = getConnection(false);
 			ResultSet rs = null;
 			try {
 				rs = conn.getMetaData().getTableTypes();
@@ -1212,7 +1254,7 @@ public class DbMetaData extends MetadataConnectionPool {
 			LogUtil.warn("Current database [{}] doesn't support alter table column.", profile.getName());
 		}
 
-		List<Column> columns = this.getColumns(tablename);
+		List<Column> columns = this.getColumns(tablename,false);
 		if (columns.isEmpty()) {// 表不存在
 			if (allowCreateTable) {
 				boolean created = false;
@@ -1271,15 +1313,12 @@ public class DbMetaData extends MetadataConnectionPool {
 
 		List<String> altertables = ddlGenerator.toTableModifyClause(meta, tablename, insert, changed, delete);
 		boolean debug = ORMConfig.getInstance().isDebugMode();
-		Connection conn = null;
-		Statement st = null;
+		StatementExecutor exe=createExecutor();
 		try {
-			conn = getConnection();
-			st = conn.createStatement();
-			st.setQueryTimeout(180);// 最多执行3分钟
+			exe.setQueryTimeout(180);// 最多执行3分钟
 			String id = this.getTransactionId();
 			if (event != null) {
-				event.beforeAlterTable(tablename, meta, conn, altertables);
+				event.beforeAlterTable(tablename, meta, exe, altertables);
 			}
 			int n = 0;
 			for (String s : altertables) {
@@ -1289,7 +1328,7 @@ public class DbMetaData extends MetadataConnectionPool {
 				}
 				boolean success = true;
 				try {
-					st.executeUpdate(s);
+					exe.executeSql(s);
 				} catch (SQLException e) {
 					success = false;
 					if (event == null || !event.onSqlExecuteError(e, tablename, s, Collections.unmodifiableList(altertables), n)) {
@@ -1308,8 +1347,7 @@ public class DbMetaData extends MetadataConnectionPool {
 				n++;
 			}
 		} finally {
-			DbUtils.close(st);
-			this.releaseConnection(conn);
+			exe.close();
 		}
 		if (event != null) {
 			event.onTableFinished(meta, tablename);
@@ -1326,7 +1364,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @throws SQLException
 	 */
 	public void truncate(ITableMetadata meta, List<String> tablename) throws SQLException {
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		Statement st = conn.createStatement();
 		String sql = null;
 		boolean debug = ORMConfig.getInstance().isDebugMode();
@@ -1389,18 +1427,29 @@ public class DbMetaData extends MetadataConnectionPool {
 		if (sqls[2] != null) {
 			sql += sqls[2];
 		}
+		StatementExecutor exe = createExecutor();
+		try {
+			// execute table creation
+			exe.executeSql(sql);
+			// create sequence
+			if (sqls[1] != null) {
+				createSequence0(null, sqls[1], 1, StringUtils.toLong(sqls[3], Long.MAX_VALUE), exe);
+			}
+			// create indexes
+			exe.executeSql(ddlGenerator.toIndexClause(meta, tablename));
+			return true;
+		} finally {
+			exe.close();
+		}
+	}
 
-		executeInNewThread(sql);
-		// create sequence
-		if (sqls[1] != null) {
-			createSequence(null, sqls[1], 1, StringUtils.toLong(sqls[3], Long.MAX_VALUE));
-		}
-		// create indexes
-		List<String> idx = ddlGenerator.toIndexClause(meta, tablename);
-		for (String idxSql : idx) {
-			executeInNewThread(idxSql);
-		}
-		return true;
+	/*
+	 * 创建跨线程执行器。注意一定要在finally中关闭 DDLExecutor executor=createExecutor(); try{
+	 * createSequence0(schema,sequenceName,start,max,executor); }finally{
+	 * executor.close(); }
+	 */
+	private StatementExecutor createExecutor() {
+		return new ExecutorJTAImpl(parent, dbkey, getTransactionId());
 	}
 
 	/**
@@ -1417,6 +1466,15 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @throws SQLException
 	 */
 	public void createSequence(String schema, String sequenceName, long start, Long max) throws SQLException {
+		StatementExecutor executor = createExecutor();
+		try {
+			createSequence0(schema, sequenceName, start, max, executor);
+		} finally {
+			executor.close();
+		}
+	}
+
+	private void createSequence0(String schema, String sequenceName, long start, Long max, StatementExecutor executor) throws SQLException {
 		DatabaseDialect profile = this.getProfile();
 		sequenceName = profile.getObjectNameIfUppercase(sequenceName);
 		if (innerExists(ObjectType.SEQUENCE, schema, sequenceName))
@@ -1431,7 +1489,7 @@ public class DbMetaData extends MetadataConnectionPool {
 			sequenceName = schema + "." + sequenceName;
 		}
 		String sequenceSql = StringUtils.concat("create sequence ", sequenceName, " minvalue " + min + " maxvalue ", String.valueOf(max), " start with ", String.valueOf(start), " increment by 1");
-		executeInNewThread(sequenceSql);
+		executor.executeSql(sequenceSql);
 	}
 
 	/**
@@ -1457,8 +1515,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	public void executeScriptFile(URL url, String endChars) throws SQLException {
 		Assert.notNull(url);
 		char[] ends = endChars.toCharArray();
-		Connection conn = getConnection();
-		Statement st = conn.createStatement();
+		StatementExecutor exe = createExecutor();
 		try {
 			StringBuilder sb = new StringBuilder();
 			BufferedReader reader = IOUtils.getReader(url, null);
@@ -1473,19 +1530,18 @@ public class DbMetaData extends MetadataConnectionPool {
 					sb.append(line.substring(0, line.length() - 1));
 					String sql = sb.toString();
 					sb.setLength(0);
-					execute(st, sql);
+					exe.executeSql(sql);
 				} else {
 					sb.append(line).append('\n');
 				}
 			}
 			if (sb.length() > 0) {
-				execute(st, sb.toString());
+				exe.executeSql(sb.toString());
 			}
 		} catch (IOException e) {
 			LogUtil.exception(e);
 		} finally {
-			DbUtils.close(st);
-			releaseConnection(conn);
+			exe.close();
 		}
 	}
 
@@ -1500,37 +1556,15 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @return 影响的记录条数
 	 * @throws SQLException
 	 */
-	public final int executeSql(String sql, List<?> ps) throws SQLException {
-		long start = System.currentTimeMillis();
-		PreparedStatement st = null;
-		int total;
-		long dbAccess;
-		StringBuilder sb = null;
-		boolean debug = ORMConfig.getInstance().isDebugMode();
-		if (debug)
-			sb = new StringBuilder(sql).append("\t|").append(this.getTransactionId());
-		Connection conn = getConnection();
-		try {
-			st = conn.prepareStatement(sql);
-			if (ps != null && !ps.isEmpty()) {
-				BindVariableContext context = new BindVariableContext(st, getProfile(), sb);
-				BindVariableTool.setVariables(context, ps);
-			}
-			total = st.executeUpdate();
-			dbAccess = System.currentTimeMillis();
-		} catch (SQLException e) {
-			DebugUtil.setSqlState(e, sql);
-			throw e;
-		} finally {
-			if (debug)
-				LogUtil.show(sb);
-			DbUtils.close(st);
-			releaseConnection(conn);
+	public final int executeSql(String sql, Object... ps) throws SQLException {
+		StatementExecutor exe=createExecutor();
+		try{
+			return exe.executeUpdate(sql, ps);
+		}finally{
+			exe.close();
 		}
-		if (debug)
-			LogUtil.show(StringUtils.concat("Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms) |", getTransactionId()));
-		return total;
 	}
+	
 
 	/**
 	 * 根据指定的SQL语句查询
@@ -1550,7 +1584,7 @@ public class DbMetaData extends MetadataConnectionPool {
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		StringBuilder sb = null;
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		DatabaseDialect profile = getProfile();
 		boolean debug = ORMConfig.getInstance().isDebugMode();
 		try {
@@ -1584,118 +1618,7 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * @author jiyi
 	 * 
 	 */
-	public static class TableInfo {
-		private String catalog;
-		private String schema;
-		private String name;
-		private String remarks;
-		private String type;
-
-		@Override
-		public String toString() {
-			StringBuilder sb = new StringBuilder();
-			if (StringUtils.isNotEmpty(schema)) {
-				sb.append(schema).append('.');
-			}
-			sb.append(name);
-			if (StringUtils.isNotEmpty(remarks)) {
-				sb.append(':').append(remarks);
-			}
-			return sb.toString();
-		}
-
-		/**
-		 * 数据库表所属catalog
-		 * 
-		 * @return catalog
-		 */
-		public String getCatalog() {
-			return catalog;
-		}
-
-		/**
-		 * 设置Catalog
-		 * 
-		 * @param catalog
-		 */
-		public void setCatalog(String catalog) {
-			this.catalog = catalog;
-		}
-
-		/**
-		 * 获得表所在schema
-		 * 
-		 * @return
-		 */
-		public String getSchema() {
-			return schema;
-		}
-
-		/**
-		 * 设置 schema
-		 * 
-		 * @param schema
-		 */
-		public void setSchema(String schema) {
-			this.schema = schema;
-		}
-
-		/**
-		 * 获得表/视图(等)的名称
-		 * 
-		 * @return 名称
-		 */
-		public String getName() {
-			return name;
-		}
-
-		/**
-		 * 设置名称
-		 * 
-		 * @param name
-		 */
-		public void setName(String name) {
-			this.name = name;
-		}
-
-		/**
-		 * 获得表的备注信息
-		 * 
-		 * @return 备注
-		 */
-		public String getRemarks() {
-			return remarks;
-		}
-
-		/**
-		 * 设置备注
-		 * 
-		 * @param remarks
-		 *            备注
-		 */
-		public void setRemarks(String remarks) {
-			this.remarks = remarks;
-		}
-
-		/**
-		 * 获得表的类型
-		 * 
-		 * @return 类型
-		 */
-		public String getType() {
-			return type;
-		}
-
-		/**
-		 * 设置表类型
-		 * 
-		 * @param type
-		 *            类型
-		 */
-		public void setType(String type) {
-			this.type = type;
-		}
-	}
+	
 
 	/**
 	 * 删除表中的约束
@@ -1708,15 +1631,11 @@ public class DbMetaData extends MetadataConnectionPool {
 	 */
 	public void dropConstraint(String tablename, String constraintName) throws SQLException {
 		tablename = MetaHolder.toSchemaAdjustedName(tablename);
-		Connection conn = this.getConnection();
-		Statement st = null;
+		StatementExecutor exe = createExecutor();
 		try {
-			st = conn.createStatement();
-			dropConstraint0(tablename, constraintName, st);
+			dropConstraint0(tablename, constraintName, exe);
 		} finally {
-			this.releaseConnection(conn);
-			if (st != null)
-				st.close();
+			exe.close();
 		}
 	}
 
@@ -1729,7 +1648,12 @@ public class DbMetaData extends MetadataConnectionPool {
 	 */
 	public void dropAllForeignKey(String tablename) throws SQLException {
 		tablename = MetaHolder.toSchemaAdjustedName(tablename);
-		innerDropAllForeignKey(tablename, null);
+		StatementExecutor exe = createExecutor();
+		try {
+			dropAllForeignKey0(tablename, null, exe);
+		} finally {
+			exe.close();
+		}
 	}
 
 	/**
@@ -1771,15 +1695,20 @@ public class DbMetaData extends MetadataConnectionPool {
 	 */
 	public boolean dropTable(String table) throws SQLException {
 		if (existTable(table)) {
+			StatementExecutor exe = createExecutor();
 			String sql = "drop table " + table;
-			if (getProfile().has(Feature.DROP_CASCADE)) {
-				sql += " cascade constraints";
-			} else if (getProfile().notHas(Feature.NOT_SUPPORT_FOREIGN_KEY)) {
-				dropAllForeignKey(table);
+			try {
+				if (getProfile().has(Feature.DROP_CASCADE)) {
+					sql += " cascade constraints";
+				} else if (getProfile().notHas(Feature.NOT_SUPPORT_FOREIGN_KEY)) {
+					dropAllForeignKey0(table, null,exe);
+				}
+				exe.executeSql(sql);
+				subtableCacheExpireTime = 0;
+				return true;
+			} finally {
+				exe.close();
 			}
-			executeSql(sql, null);
-			subtableCacheExpireTime = 0;
-			return true;
 		}
 		return false;
 	}
@@ -1817,7 +1746,12 @@ public class DbMetaData extends MetadataConnectionPool {
 	public boolean dropSequence(String schema, String sequenceName) throws SQLException {
 		String seqName = (schema == null ? sequenceName : schema + "." + sequenceName);
 		if (exists(ObjectType.SEQUENCE, seqName)) {
-			executeSql("drop sequence " + seqName, null);
+			StatementExecutor exe = createExecutor();
+			try {
+				exe.executeSql("drop sequence " + seqName);
+			} finally {
+				exe.close();
+			}
 			return true;
 		}
 		return false;
@@ -1874,12 +1808,12 @@ public class DbMetaData extends MetadataConnectionPool {
 	 */
 	private Set<String> calculateSubTables(String tableName, ITableMetadata meta, boolean isDefault) throws SQLException {
 		long start = System.currentTimeMillis();
-		List<Column> columns = getColumns(tableName);
+		List<Column> columns = getColumns(tableName,false);
 		int baseColumnCount = columns.size();
 		if (baseColumnCount == 0) {
 			baseColumnCount = meta.getMetaFields().size();
 		}
-		List<TableInfo> tables = getDatabaseObject(ObjectType.TABLE, this.schema, tableName, Operator.MATCH_START);
+		List<TableInfo> tables = getDatabaseObject(ObjectType.TABLE, this.schema, tableName, Operator.MATCH_START,false);
 		String tableNameWithoutSchema = StringUtils.substringAfterIfExist(tableName, ".");
 		// 正则表达式计算
 		Pattern suffix;
@@ -1916,7 +1850,7 @@ public class DbMetaData extends MetadataConnectionPool {
 		for (TableInfo entry : tables) {
 			if (suffix.matcher(entry.getName()).matches()) {
 				String fullTableName = schema == null ? entry.getName() : schema + "." + entry.getName();
-				List<Column> subColumns = getColumns(fullTableName);
+				List<Column> subColumns = getColumns(fullTableName,false);
 				if (subColumns.size() == baseColumnCount) {
 					result.add(fullTableName.toUpperCase());
 				} else {
@@ -1949,7 +1883,7 @@ public class DbMetaData extends MetadataConnectionPool {
 			// }
 		}
 
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		DatabaseDialect trans = info.profile;
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = databaseMetaData.getTables(trans.getCatlog(schema), trans.getSchema(schema), objectName, new String[] { type.name() });
@@ -1966,7 +1900,7 @@ public class DbMetaData extends MetadataConnectionPool {
 			schema = this.schema;
 		}
 
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		DatabaseDialect profile = getProfile();
 		if (profile.has(Feature.NOT_SUPPORT_USER_FUNCTION)) {
 			return Collections.emptyList();
@@ -2006,7 +1940,7 @@ public class DbMetaData extends MetadataConnectionPool {
 		}
 
 		DatabaseDialect profile = getProfile();
-		Connection conn = getConnection();
+		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = null;
 		try {
@@ -2029,70 +1963,16 @@ public class DbMetaData extends MetadataConnectionPool {
 		}
 	}
 
-	static final class ThreadExe implements Runnable {
-		private CountDownLatch cl;
-		private String sql;
-		private IUserManagedPool parent;
-		private SQLException exception;
-		private String dbKey;
-
-		ThreadExe(CountDownLatch cl, String sql, IUserManagedPool parent,String dbKey) {
-			this.cl = cl;
-			this.parent = parent;
-			this.sql = sql;
-			this.dbKey=dbKey;
-		}
-
-		@Override
-		public void run() {
-			IConnection conn = null;
-			Statement st = null;
-			try {
-				conn = parent.poll();
-				conn.setKey(dbKey);
-				st = conn.createStatement();
-				st.executeUpdate(sql);
-			} catch (SQLException e) {
-				DebugUtil.setSqlState(e, sql);
-				exception=e;
-			} catch (Throwable e) {
-				LogUtil.exception(e);
-			} finally {
-				DbUtils.close(st);
-				DbUtils.closeConnection(conn);
-			}
-			cl.countDown();
-		}
-	}
-
-	// 反正是执行DDL。没什么绑定变量的
-	private void executeInNewThread(String sql) throws SQLException {
-		final CountDownLatch cl = new CountDownLatch(1);
-		ThreadExe exe = new ThreadExe(cl, sql, parent,this.dbkey);
-		DbUtils.es.execute(exe);
-		if (ORMConfig.getInstance().isDebugMode()) {
-			LogUtil.show(sql + " |" + getTransactionId());
-		}
-		try {
-			cl.await();
-		} catch (InterruptedException e) {
-			LogUtil.exception(e);
-		}
-		if (exe.exception != null) {
-			throw exe.exception;
-		}
-	}
-
-	private void execute(Statement st, String sql) throws SQLException {
-		if (ORMConfig.getInstance().isDebugMode())
-			LogUtil.show(sql + " |" + getTransactionId());
-		try {
-			st.executeUpdate(sql);
-		} catch (SQLException e) {
-			DebugUtil.setSqlState(e, sql);
-			throw e;
-		}
-	}
+	// private void execute(Statement st, String sql) throws SQLException {
+	// if (ORMConfig.getInstance().isDebugMode())
+	// LogUtil.show(sql + " |" + getTransactionId());
+	// try {
+	// st.executeUpdate(sql);
+	// } catch (SQLException e) {
+	// DebugUtil.setSqlState(e, sql);
+	// throw e;
+	// }
+	// }
 
 	private Map<Field, ColumnType> getColumnMap(ITableMetadata meta) {
 		Map<Field, ColumnType> map = new HashMap<Field, ColumnType>();
@@ -2110,17 +1990,16 @@ public class DbMetaData extends MetadataConnectionPool {
 		return sb.toString();
 	}
 
-	private Connection getConnection() throws SQLException {
-		return super.poll();
-	}
-
 	private void releaseConnection(Connection con) {
-		super.offer(con);
+		try {
+			con.close();
+		} catch (SQLException e) {
+		}
 	}
 
-	private void dropConstraint0(String tablename, String constraintName, Statement st) throws SQLException {
+	private void dropConstraint0(String tablename, String constraintName, StatementExecutor exe) throws SQLException {
 		String sql = String.format(DROP_CONSTRAINT_SQL, tablename, constraintName);
-		execute(st, sql);
+		exe.executeSql(sql);
 	}
 
 	/*
@@ -2132,25 +2011,16 @@ public class DbMetaData extends MetadataConnectionPool {
 	 * 
 	 * @throws SQLException
 	 */
-	private void innerDropAllForeignKey(String tablename, Boolean referenceBy) throws SQLException {
-		Connection conn = this.getConnection();
-		Statement st = null;
-		try {
-			st = conn.createStatement();
-			if (referenceBy == null || referenceBy == Boolean.TRUE) {
-				for (ForeignKey fk : getForeignKeyReferenceBy(tablename)) {
-					dropConstraint0(fk.getFromTable(), fk.getName(), st);
-				}
+	private void dropAllForeignKey0(String tablename, Boolean referenceBy, StatementExecutor exe) throws SQLException {
+		if (referenceBy == null || referenceBy == Boolean.TRUE) {
+			for (ForeignKey fk : getForeignKeyReferenceBy(tablename)) {
+				dropConstraint0(fk.getFromTable(), fk.getName(), exe);
 			}
-			if (referenceBy == null || referenceBy == Boolean.FALSE) {
-				for (ForeignKey fk : getForeignKey(tablename)) {
-					dropConstraint0(fk.getFromTable(), fk.getName(), st);
-				}
+		}
+		if (referenceBy == null || referenceBy == Boolean.FALSE) {
+			for (ForeignKey fk : getForeignKey(tablename)) {
+				dropConstraint0(fk.getFromTable(), fk.getName(), exe);
 			}
-		} finally {
-			this.releaseConnection(conn);
-			if (st != null)
-				st.close();
 		}
 	}
 
@@ -2203,37 +2073,30 @@ public class DbMetaData extends MetadataConnectionPool {
 		return profile.has(Feature.REMARK_META_FETCH);
 	}
 
-	@Override
-	protected String getTestSQL() {
-		if (info == null) {
-			return null;
-		}
-		return info.profile.getProperty(DbProperty.CHECK_SQL);
-	}
 
-	@Override
-	protected boolean processCheck(Connection conn) {
-		DatabaseDialect dialect = getProfile();
-		String func = dialect.getFunction(Func.current_timestamp);
-		String template = dialect.getProperty(DbProperty.SELECT_EXPRESSION);
-		String sql;
-		if (template == null) {
-			sql = "SELECT " + func;
-		} else {
-			sql = String.format(template, func);
-		}
-		try {
-			long current = System.currentTimeMillis();
-			Date date = this.selectBySql(sql, ResultSetExtractor.GET_FIRST_TIMESTAMP, 1, Collections.EMPTY_LIST);
-			current = (System.currentTimeMillis() + current) / 2;// 取两次操作的平均值，排除数据库查询误差
-			long delta = date.getTime() - System.currentTimeMillis();
-			if (Math.abs(delta) > 60000) { // 如果时间差大于1分钟则警告
-				LogUtil.warn("Database time checked. It is far different from local machine: " + DateUtils.formatTimePeriod(delta, TimeUnit.DAY, Locale.US));
-			}
-			this.dbTimeDelta = delta;
-			return true;
-		} catch (SQLException e) {
-			return false;
-		}
-	}
+//	@Override
+//	protected boolean processCheck(Connection conn) {
+//		DatabaseDialect dialect = getProfile();
+//		String func = dialect.getFunction(Func.current_timestamp);
+//		String template = dialect.getProperty(DbProperty.SELECT_EXPRESSION);
+//		String sql;
+//		if (template == null) {
+//			sql = "SELECT " + func;
+//		} else {
+//			sql = String.format(template, func);
+//		}
+//		try {
+//			long current = System.currentTimeMillis();
+//			Date date = this.selectBySql(sql, ResultSetExtractor.GET_FIRST_TIMESTAMP, 1, Collections.EMPTY_LIST);
+//			current = (System.currentTimeMillis() + current) / 2;// 取两次操作的平均值，排除数据库查询误差
+//			long delta = date.getTime() - System.currentTimeMillis();
+//			if (Math.abs(delta) > 60000) { // 如果时间差大于1分钟则警告
+//				LogUtil.warn("Database time checked. It is far different from local machine: " + DateUtils.formatTimePeriod(delta, TimeUnit.DAY, Locale.US));
+//			}
+//			this.dbTimeDelta = delta;
+//			return true;
+//		} catch (SQLException e) {
+//			return false;
+//		}
+//	}
 }

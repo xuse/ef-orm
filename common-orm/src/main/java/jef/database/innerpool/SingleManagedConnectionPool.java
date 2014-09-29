@@ -185,9 +185,6 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool, DataS
 		closeConnectionTillMin();
 		PoolReleaseThread.getInstance().removePool(this);
 		PoolService.logPoolStatic(getClass().getSimpleName(), pollCount.get(), offerCount.get());
-		if (metadata != null) {
-			metadata.close();
-		}
 	}
 
 	public void closeConnectionTillMin() {
@@ -198,7 +195,6 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool, DataS
 				conn.closePhysical();
 			}
 		}
-		metadata.closeConnectionTillMin();
 	}
 
 	public DbMetaData getMetadata(String dbkey) {
@@ -296,5 +292,9 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool, DataS
 		int total = freeConns.size();
 		int invalid = PoolService.doCheck(this.testSQL, freeConns.iterator());
 		LogUtil.info("Checked [{}]. total:{},  invalid:{}", this, total, invalid);
+	}
+
+	public boolean isMultipleRdbms() {
+		return false;
 	}
 }
