@@ -573,6 +573,20 @@ public class Case2 extends org.junit.Assert {
 				if(n++>10)break;
 			}
 		}
+		{
+			System.out.println("查询，所有表，跨库排序并分页");
+			String sql="select t.* from device t where createDate is not null order by createDate limit 5,6";
+			NativeQuery<Device> query=db.createNativeQuery(sql,Device.class).withRouting();;
+			long total=query.getResultCount();
+			System.out.println("预计查询结果总数Count:"+ total);
+			List<Device> devices=query.getResultList();
+			assertEquals(total, devices.size());
+			int n=0;
+			for(Device d: devices){
+				System.out.println(d);
+				if(n++>10)break;
+			}
+		}
 		/**
 		 * 查询两个条件时，
 		 */

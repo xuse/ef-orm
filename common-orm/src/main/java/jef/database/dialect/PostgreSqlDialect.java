@@ -353,108 +353,6 @@ public class PostgreSqlDialect extends DbmsProfile {
 		return buildComment(column, PostgreSqlColumnTypes.uuid.name(), flag);
 	}
 
-	// public String[] TYPE_VARCHAR() {
-	// return (String[]) ArrayUtils.addAll(new String[] {
-	// PostgreSqlColumnTypes.varbit.name(), PostgreSqlColumnTypes.cidr.name(),
-	// PostgreSqlColumnTypes.inet.name(), PostgreSqlColumnTypes.macaddr.name(),
-	// PostgreSqlColumnTypes.uuid.name(),
-	// PostgreSqlColumnTypes.money.name(), PostgreSqlColumnTypes.tsquery.name(),
-	// PostgreSqlColumnTypes.tsvector.name(),
-	// PostgreSqlColumnTypes.txid_snapshot.name(),
-	// PostgreSqlColumnTypes.box.name(), PostgreSqlColumnTypes.circle.name(),
-	// PostgreSqlColumnTypes.line.name(),
-	// PostgreSqlColumnTypes.lseg.name(), PostgreSqlColumnTypes.path.name(),
-	// PostgreSqlColumnTypes.point.name(), PostgreSqlColumnTypes.polygon.name(),
-	// PostgreSqlColumnTypes.interval.name() });
-	// };
-	//
-	// public String[] TYPE_CHAR() {
-	// return (String[]) ArrayUtils.addAll(super.TYPE_CHAR(), new String[] {
-	// PostgreSqlColumnTypes.bit.name(), PostgreSqlColumnTypes.character.name(),
-	// PostgreSqlColumnTypes.bpchar.name() });
-	// };
-	//
-	// public String[] TYPE_INT() {
-	// return (String[])
-	// ArrayUtils.addAll(ArrayUtils.removeElement(super.TYPE_INT(), "BIT"), new
-	// String[] { PostgreSqlColumnTypes.bigserial.name(),
-	// PostgreSqlColumnTypes.int8.name(), PostgreSqlColumnTypes.int4.name(),
-	// PostgreSqlColumnTypes.int2.name() });
-	// };
-	//
-	// public String[] TYPE_DOUBLE() {
-	// return (String[]) ArrayUtils.addAll(super.TYPE_DOUBLE(), new String[] {
-	// PostgreSqlColumnTypes.float8.name(), PostgreSqlColumnTypes.float4.name(),
-	// PostgreSqlColumnTypes.numeric.name(),
-	// PostgreSqlColumnTypes.decimal.name(), PostgreSqlColumnTypes.real.name()
-	// });
-	// };
-	//
-	// public String[] TYPE_TIMESTAMP() {
-	// return (String[]) ArrayUtils.addAll(super.TYPE_TIMESTAMP(), new String[]
-	// { PostgreSqlColumnTypes.timetz.name(),
-	// PostgreSqlColumnTypes.timestamptz.name() });
-	// };
-	//
-	// public String[] TYPE_CLOB() {
-	// return (String[]) ArrayUtils.addAll(super.TYPE_CLOB(), new String[] {
-	// PostgreSqlColumnTypes.xml.name() });
-	// };
-	//
-	// public String[] TYPE_BLOB() {
-	// return (String[]) ArrayUtils.addAll(super.TYPE_BLOB(), new String[] {
-	// PostgreSqlColumnTypes.bytea.name() });
-	// };
-	//
-	// @Override
-	// public ColumnType getProprtMetaFromDbType(jef.database.meta.Column
-	// column) {
-	// if (ArrayUtils.containsIgnoreCase(TYPE_VARCHAR(), column.getDataType()))
-	// {
-	// return new Varchar(column.getColumnSize());
-	// } else if (ArrayUtils.containsIgnoreCase(TYPE_BLOB(),
-	// column.getDataType())) {
-	// return new ColumnType.Blob();
-	// } else if (ArrayUtils.containsIgnoreCase(TYPE_BOOLEAN(),
-	// column.getDataType())) {
-	// return new ColumnType.Boolean();
-	// } else if (ArrayUtils.containsIgnoreCase(TYPE_CHAR(),
-	// column.getDataType())) {
-	// return new ColumnType.Char(column.getColumnSize());
-	// } else if (ArrayUtils.containsIgnoreCase(TYPE_CLOB(),
-	// column.getDataType())) {
-	// return new ColumnType.Clob();
-	// } else if (ArrayUtils.containsIgnoreCase(TYPE_DATE(),
-	// column.getDataType())) {
-	// return new ColumnType.Date();
-	// } else if (ArrayUtils.containsIgnoreCase(TYPE_DOUBLE(),
-	// column.getDataType())) {
-	// if (column.getColumnSize() == 0)
-	// column.setColumnSize(12);
-	// if (column.getDecimalDigit() == 0)
-	// column.setDecimalDigit(4);
-	// return new ColumnType.Double(column.getColumnSize(),
-	// column.getDecimalDigit());
-	// } else if (column.getDataType().startsWith("serial")) {
-	// return new ColumnType.AutoIncrement(column.getColumnSize());
-	// // PostgreSqlColumnTypes.serial8.name(),
-	// // PostgreSqlColumnTypes.serial4.name(),
-	// // PostgreSqlColumnTypes.serial.name(),
-	// } else if (ArrayUtils.containsIgnoreCase(TYPE_INT(),
-	// column.getDataType())) {
-	// return new ColumnType.Int(column.getColumnSize());
-	// } else if (ArrayUtils.containsIgnoreCase(TYPE_TIMESTAMP(),
-	// column.getDataType())) {
-	// return new ColumnType.TimeStamp();
-	// } else if ("AUTOINCREMENT".equalsIgnoreCase(column.getDataType())) {
-	// return new ColumnType.AutoIncrement(column.getColumnSize());
-	// } else if ("GUID".equalsIgnoreCase(column.getDataType())) {
-	// return new ColumnType.GUID();
-	// } else {
-	// throw new RuntimeException("Unknown data type " + column.getDataType());
-	// }
-	// }
-
 	public ColumnType getProprtMetaFromDbType(jef.database.meta.Column column) {
 		if ("text".equals(column.getDataType())) {
 			return new Clob();
@@ -616,7 +514,7 @@ public class PostgreSqlDialect extends DbmsProfile {
 			} catch (SQLException e) {
 				conn.rollback(sp);
 				//PG在Batch模式下抛出的顶层错误是难以理解的。直接抛出nextException即可。
-				throw e.getNextException();
+				throw e.getNextException()==null?e:e.getNextException();
 			} finally {
 				conn.releaseSavepoint(sp);
 			}
