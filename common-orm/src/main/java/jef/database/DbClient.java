@@ -565,7 +565,7 @@ public class DbClient extends Session {
 	 */
 	public void truncate(ITableMetadata meta) throws SQLException {
 		PartitionResult[] route;
-		route = DbUtils.toTableNames(meta.newInstance(), null, null, getPartitionSupport());
+		route = DbUtils.toTableNames(meta, getPartitionSupport(), 4);
 		truncate(meta, route);
 	}
 
