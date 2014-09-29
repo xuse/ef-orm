@@ -615,7 +615,8 @@ public class PostgreSqlDialect extends DbmsProfile {
 				return _stmt.executeBatch();
 			} catch (SQLException e) {
 				conn.rollback(sp);
-				throw e;
+				//PG在Batch模式下抛出的顶层错误是难以理解的。直接抛出nextException即可。
+				throw e.getNextException();
 			} finally {
 				conn.releaseSavepoint(sp);
 			}
