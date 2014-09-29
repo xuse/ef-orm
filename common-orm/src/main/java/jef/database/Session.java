@@ -567,11 +567,13 @@ public abstract class Session {
 		myTableName = MetaHolder.toSchemaAdjustedName(myTableName);
 
 		long start = System.currentTimeMillis();
-		InsertSqlClause sqls = insertp.toInsertSql(obj, myTableName, dynamic, false);
+		
+		PartitionResult pr=DbUtils.toTableName(obj, myTableName, obj.hasQuery() ? obj.getQuery() : null, getPartitionSupport());
+		InsertSqlClause sqls = insertp.toInsertSql(obj, myTableName, dynamic, false,pr);
 		if(sqls.getCallback()!=null){
 			sqls.getCallback().callBefore(Arrays.asList(obj));
 		}
-		sqls.setTableNames(DbUtils.toTableName(obj, myTableName, obj.hasQuery() ? obj.getQuery() : null, getPartitionSupport()));
+		sqls.setTableNames(pr);
 		
 		long parse = System.currentTimeMillis();
 		insertp.processInsert(asOperateTarget(sqls.getTable().getDatabase()), obj, sqls, start, parse);
@@ -1791,7 +1793,7 @@ public abstract class Session {
 		long start = System.nanoTime();
 		ITableMetadata meta = MetaHolder.getMeta(template);
 		Batch.Insert<T> b = new Batch.Insert<T>(this, meta);
-		InsertSqlClause insertPart = batchinsertp.toInsertSql((IQueryableEntity) template, tableName, dynamic, extreme);
+		InsertSqlClause insertPart = batchinsertp.toInsertSql((IQueryableEntity) template, tableName, dynamic, extreme,null);
 		b.setInsertPart(insertPart);
 		b.setForceTableName(tableName);
 		b.extreme=extreme;

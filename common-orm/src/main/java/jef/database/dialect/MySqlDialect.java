@@ -109,7 +109,7 @@ public class MySqlDialect extends DbmsProfile {
 	public MySqlDialect() {
 		// 在MYSQL中 ||是逻辑运算符
 		features = CollectionUtil.identityHashSet();
-		features.addAll(Arrays.asList(Feature.DBNAME_AS_SCHEMA, Feature.INDEX_LENGTH_LIMIT, Feature.ALTER_FOR_EACH_COLUMN,Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD,Feature.SUPPORT_LIMIT));
+		features.addAll(Arrays.asList(Feature.DBNAME_AS_SCHEMA, Feature.INDEX_LENGTH_LIMIT, Feature.ALTER_FOR_EACH_COLUMN,Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD,Feature.SUPPORT_LIMIT,Feature.COLUMN_DEF_ALLOW_NULL));
 		setProperty(DbProperty.ADD_COLUMN, "ADD");
 		setProperty(DbProperty.MODIFY_COLUMN, "MODIFY");
 		setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");
@@ -242,7 +242,7 @@ public class MySqlDialect extends DbmsProfile {
 		sb.append("INT UNSIGNED");
 		if (flag) {
 			if (!column.nullable)
-				sb.append(" NOT NULL");
+				sb.append(" not null");
 		}
 		sb.append(" AUTO_INCREMENT");
 		return sb.toString();
@@ -258,8 +258,11 @@ public class MySqlDialect extends DbmsProfile {
 		StringBuilder sb = new StringBuilder();
 		if (flag) {
 			sb.append("mediumblob");
-			if (!column.nullable)
+			if (column.nullable){
+				sb.append(" null");
+			}else{
 				sb.append(" not null");
+			}
 		}
 		return sb.toString();
 	}
@@ -271,8 +274,11 @@ public class MySqlDialect extends DbmsProfile {
 		StringBuilder sb = new StringBuilder();
 		sb.append("TEXT");
 		if (flag) {
-			if (!column.nullable)
-				sb.append(" NOT NULL");
+			if (column.nullable){
+				sb.append(" null");
+			}else{
+				sb.append(" not null");
+			}
 			if (column.defaultValue != null)
 				sb.append(" default ").append(toDefaultString(column.defaultValue));
 		}
@@ -290,8 +296,11 @@ public class MySqlDialect extends DbmsProfile {
 			sb.append("varchar(" + column.length + ")");
 		}
 		if (flag) {
-			if (!column.nullable)
+			if (column.nullable){
+				sb.append(" null");
+			}else{
 				sb.append(" not null");
+			}
 			if (column.defaultValue != null)
 				sb.append(" default ").append(super.toDefaultString(column.defaultValue));
 		}
@@ -336,8 +345,11 @@ public class MySqlDialect extends DbmsProfile {
 			sb.append("datetime");
 		}
 		if (flag) {
-			if (!column.nullable)
+			if (column.nullable){
+				sb.append(" null");
+			}else{
 				sb.append(" not null");
+			}
 
 			if (defaultValue != null) {
 				sb.append(" default ").append(toDefaultString(defaultValue));

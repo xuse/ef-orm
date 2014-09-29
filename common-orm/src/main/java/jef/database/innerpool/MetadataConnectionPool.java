@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.sql.DataSource;
+import javax.sql.XADataSource;
 
 import jef.common.pool.PoolStatus;
 import jef.database.DbUtils;

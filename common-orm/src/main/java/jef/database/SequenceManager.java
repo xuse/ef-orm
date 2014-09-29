@@ -10,6 +10,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.persistence.GenerationType;
+import javax.persistence.PersistenceException;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.TableGenerator;
 
@@ -40,7 +41,7 @@ public final class SequenceManager {
 	private final HashMap<String, Sequence> holders = new HashMap<String, Sequence>();
 	private boolean hiloFlag = JefConfiguration.getBoolean(DbCfg.DB_AUTOINCREMENT_HILO, false);
 	private DbClient parent;
-	public ExecutorService es= new ThreadPoolExecutor(2, 8,60000L, TimeUnit.MILLISECONDS,new LinkedBlockingQueue<Runnable>());
+
 	/**
 	 * 建sequence时对表名长度的限制，因为默认的seq名是:表名_SEQ 数据库对sequence名字长度的限制是30
 	 */
@@ -86,6 +87,18 @@ public final class SequenceManager {
 			}
 		}
 		return s;
+	}
+	
+	/**
+	 * 获取Sequence，无论什么数据库都可以获取Sequence。如果是原生支持Sequence的数据库，会返回原生的实现；如果非原生支持，
+	 * 会返回用数据表的模拟实现。
+	 * @param fieldDef
+	 * @param dbKey
+	 * @return
+	 * @throws SQLException
+	 */
+	public Sequence getSequence(AutoIncrementMapping<?> fieldDef, String dbKey) throws SQLException {
+		return getSequence(fieldDef,parent.asOperateTarget(dbKey));
 	}
 
 	/**
@@ -233,9 +246,9 @@ public final class SequenceManager {
 		 * 
 		 * @throws SQLException
 		 */
-		SeqTableImpl(OperateTarget meta, String seqTable, TableGenerator config, String rawTableName, String rawColumnName,SequenceManager parent) {
-			super(meta,parent);
-			Assert.notNull(meta);
+		SeqTableImpl(OperateTarget target, String seqTable, TableGenerator config, String rawTableName, String rawColumnName,SequenceManager parent) {
+			super(target,parent);
+			Assert.notNull(target);
 			this.table = seqTable;
 			this.rawTable = rawTableName;
 			this.rawColumn = rawColumnName;
@@ -248,6 +261,9 @@ public final class SequenceManager {
 			this.valueStep = JefConfiguration.getInt(DbCfg.SEQUENCE_BATCH_SIZE, 20);// 每次取一批
 			if (valueStep < 1)
 				valueStep = config == null ? 20 : config.allocationSize();
+			if(target!=null){
+				tryInit();
+			}
 		}
 
 		@Override
@@ -291,9 +307,13 @@ public final class SequenceManager {
 		protected boolean doInit(DbClient session, String dbKey) throws SQLException {
 			DbMetaData meta = session.getMetaData(dbKey);
 			if (!meta.exists(ObjectType.TABLE, table)) {
-				int start = 0;
-				meta.createTable(seqtable, table);
-				meta.executeSql("INSERT INTO " + table + " VALUES(?)", Arrays.asList(start));
+				if (ORMConfig.getInstance().isAutoCreateSequence()) {
+					int start = 0;
+					meta.createTable(seqtable, table);
+					meta.executeSql("INSERT INTO " + table + " VALUES(?)", Arrays.asList(start));	
+				}else{
+					throw new PersistenceException("Table for sequence " + table + " does not exist on " + meta + "!");
+				}
 			}
 			return true;
 		}
@@ -332,9 +352,9 @@ public final class SequenceManager {
 		 * 
 		 * @param tableName 表名
 		 */
-		AdvSeqTableImpl(OperateTarget meta, String key, TableGenerator config, String rawTable, String rawColumn,SequenceManager parent) {
-			super(meta,parent);
-			Assert.notNull(meta);
+		AdvSeqTableImpl(OperateTarget target, String key, TableGenerator config, String rawTable, String rawColumn,SequenceManager parent) {
+			super(target,parent);
+			Assert.notNull(target);
 			this.table = publicTableName;
 			this.key = key;
 
@@ -348,6 +368,9 @@ public final class SequenceManager {
 
 			this.update = "UPDATE " + table + " SET V=? WHERE V=? AND T='" + key + "'";
 			this.select = "SELECT V FROM " + table + " WHERE T='" + key + "'";
+			if(target!=null){
+				tryInit();
+			}
 		}
 
 		@Override
@@ -391,7 +414,11 @@ public final class SequenceManager {
 		protected boolean doInit(DbClient session, String dbKey) throws SQLException {
 			DbMetaData meta = session.getMetaData(dbKey);
 			if (!meta.exists(ObjectType.TABLE, table)) {
-				meta.createTable(seqtable, table);
+				if(ORMConfig.getInstance().isAutoCreateSequence()){
+					meta.createTable(seqtable, table);
+				}else{
+					throw new PersistenceException("Table for sequence " + table + " does not exist on " + meta + "!");
+				}
 			}
 			return true;
 		}
@@ -414,7 +441,6 @@ public final class SequenceManager {
 	};
 	
 	public void close(){
-		es.shutdown();
 		this.clearHolders();
 	}
 }

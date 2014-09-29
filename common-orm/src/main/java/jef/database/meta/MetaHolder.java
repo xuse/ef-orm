@@ -601,7 +601,7 @@ public final class MetaHolder {
 				if (c == null || StringUtils.isEmpty(c.columnDefinition())) {// 在没有Annonation的情况下,根据Field类型默认生成元数�?
 					ct = defaultColumnTypeByJava(f, c, gv, annos);
 				} else {
-					ct = createTypeByAnnotation(c.columnDefinition().toUpperCase(), c.length(), c.precision(), c.scale(), gv, f, annos);
+					ct = createTypeByAnnotation(c, gv, f, annos);
 				}
 			} catch (Exception e) {
 				throw new IllegalArgumentException(processingClz + " has invalid field/column " + f.getName(), e);
@@ -836,11 +836,11 @@ public final class MetaHolder {
 		}
 	}
 
-	private static ColumnType createTypeByAnnotation(String defStr, int length, int precision, int scale, GeneratedValue gv, java.lang.reflect.Field field, AnnotationProvider annos) throws ParseException {
-		ColumnDefinition c = DbUtils.parseColumnDef(defStr);
+	private static ColumnType createTypeByAnnotation(Column col,GeneratedValue gv, java.lang.reflect.Field field, AnnotationProvider annos) throws ParseException {
+		ColumnDefinition c = DbUtils.parseColumnDef(col.columnDefinition().toUpperCase());
 		String def = c.getColDataType().getDataType();
 		SqlExpression defaultExpression = null;
-		boolean nullable = true;
+		boolean nullable = col.nullable();
 		List<String> params = c.getColDataType().getArgumentsStringList();
 		String[] typeArgs = params == null ? ArrayUtils.EMPTY_STRING_ARRAY : params.toArray(new String[params.size()]);
 		if (c.getColumnSpecStrings() != null) {
@@ -864,6 +864,9 @@ public final class MetaHolder {
 				}
 			}
 		}
+		int length=col.length();
+		int precision=col.precision();
+		int scale=col.scale();
 		// //////////////////////////////////////////////
 		GenerationType geType = gv == null ? null : gv.strategy();
 		if ("VARCHAR".equals(def) || "VARCHAR2".equals(def)) {
@@ -930,6 +933,7 @@ public final class MetaHolder {
 		int len = c == null ? 0 : c.length();
 		int precision = c == null ? 0 : c.precision();
 		int scale = c == null ? 0 : c.scale();
+		boolean nullable= c==null?true:c.nullable();
 		GenerationType geType = gv == null ? null : gv.strategy();
 		if (geType != null && field.getType() == String.class) {
 			return new ColumnType.GUID();
@@ -940,42 +944,43 @@ public final class MetaHolder {
 		Class<?> type = field.getType();
 		if (type == String.class) {
 			if (lob != null)
-				return new ColumnType.Clob();
-			return new ColumnType.Varchar(len > 0 ? len : 255);
+				return new ColumnType.Clob().setNullable(nullable);
+			return new ColumnType.Varchar(len > 0 ? len : 255).setNullable(nullable);
 		} else if (type == Integer.class) {
-			return new ColumnType.Int(precision);
+			return new ColumnType.Int(precision).setNullable(nullable);
 		} else if (type == Integer.TYPE) {
-			return new ColumnType.Int(precision).notNull();
+			return new ColumnType.Int(precision).setNullable(nullable);
 		} else if (type == Double.class) {
-			return new ColumnType.Double(precision, scale);
+			return new ColumnType.Double(precision, scale).setNullable(nullable);
 		} else if (type == Double.TYPE) {
-			return new ColumnType.Double(precision, scale).notNull();
+			return new ColumnType.Double(precision, scale).setNullable(nullable);
 		} else if (type == Float.class) {
-			return new ColumnType.Double(precision, scale);
+			return new ColumnType.Double(precision, scale).setNullable(nullable);
 		} else if (type == Float.TYPE) {
-			return new ColumnType.Double(precision, scale).notNull();
+			return new ColumnType.Double(precision, scale).setNullable(nullable);
 		} else if (type == Boolean.class) {
-			return new ColumnType.Boolean();
+			return new ColumnType.Boolean().setNullable(nullable);
 		} else if (type == Boolean.TYPE) {
 			return new ColumnType.Boolean().notNull();
 		} else if (type == Long.class) {
-			return new ColumnType.Int(precision > 0 ? precision : 16);
+			return new ColumnType.Int(precision > 0 ? precision : 16).setNullable(nullable);
 		} else if (type == Long.TYPE) {
-			return new ColumnType.Int(precision > 0 ? precision : 16).notNull();
+			return new ColumnType.Int(precision > 0 ? precision : 16).setNullable(nullable);
 		} else if (type == Character.class) {
-			return new ColumnType.Char(1);
+			return new ColumnType.Char(1).setNullable(nullable);
 		} else if (type == Character.TYPE) {
-			return new ColumnType.Char(1).notNull();
+			return new ColumnType.Char(1).setNullable(nullable);
 		} else if (type == Date.class) {
 			ColumnType.TimeStamp ct = new ColumnType.TimeStamp();
+			ct.setNullable(nullable);
 			ct.setGenerateType(getDateGenerateType(gv));
 			return ct;
 		} else if (Enum.class.isAssignableFrom(type)) {
-			return new ColumnType.Varchar(32);
+			return new ColumnType.Varchar(32).setNullable(nullable);
 		} else if (type.isArray() && type.getComponentType() == Byte.TYPE) {
-			return new ColumnType.Blob();
+			return new ColumnType.Blob().setNullable(nullable);
 		} else if (type == File.class) {
-			return new ColumnType.Blob();
+			return new ColumnType.Blob().setNullable(nullable);
 		} else {
 			throw new IllegalArgumentException("Java type " + type.getName() + " can't mapping to a Db column type by default");
 		}

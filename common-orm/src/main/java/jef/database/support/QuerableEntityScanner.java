@@ -11,12 +11,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.GenerationType;
+
 import jef.accelerator.asm.ClassReader;
 import jef.common.log.LogUtil;
 import jef.database.Field;
-import jef.database.IQueryableEntity;
 import jef.database.annotation.EasyEntity;
 import jef.database.dialect.ColumnType;
+import jef.database.dialect.type.AutoIncrementMapping;
+import jef.database.dialect.type.MappingType;
 import jef.database.jpa.JefEntityManagerFactory;
 import jef.database.meta.Column;
 import jef.database.meta.ColumnModification;
@@ -47,11 +50,13 @@ public class QuerableEntityScanner {
 	 * 是否允许删除列
 	 */
 	private boolean allowDropColumn;
-	
+
 	private boolean createTable = true;
-	
+
 	private boolean alterTable = true;
 	
+	private boolean checkSequence=true;
+
 	/**
 	 * 扫描包
 	 */
@@ -140,7 +145,7 @@ public class QuerableEntityScanner {
 			}
 		}
 	}
-	
+
 	private Class<?> loadClass(ClassLoader cl, String s) {
 		try {
 			Class<?> c = cl.loadClass(s);
@@ -150,24 +155,17 @@ public class QuerableEntityScanner {
 			return null;
 		}
 	}
-	
-	
-	
-	public boolean registeEntity(String name){
-		ClassLoader cl=Thread.currentThread().getContextClassLoader();
-		if(cl==null){
-			cl=this.getClass().getClassLoader();
+
+	public boolean registeEntity(String name) {
+		ClassLoader cl = Thread.currentThread().getContextClassLoader();
+		if (cl == null) {
+			cl = this.getClass().getClassLoader();
 		}
-		try{
-			Class<?> c=cl.loadClass(name);
-			if(IQueryableEntity.class.isAssignableFrom(c)){
-				registeEntity(c);
-			}else{
-				MetaHolder.getMeta(c);
-				LogUtil.info("POJO entity registered.{}",c.getName());
-			}
+		try {
+			Class<?> c = cl.loadClass(name);
+			registeEntity(c);
 			return true;
-		}catch(Exception e){
+		} catch (Exception e) {
 			LogUtil.exception(e);
 			return false;
 		}
@@ -175,9 +173,9 @@ public class QuerableEntityScanner {
 
 	private void registeEntity(Class<?> c) {
 		try {
-			ITableMetadata meta = MetaHolder.getMeta(c.asSubclass(IQueryableEntity.class));// 用initMeta变为强制初始化。getMeta更优雅一点
+			ITableMetadata meta = MetaHolder.getMeta(c);// 用initMeta变为强制初始化。getMeta更优雅一点
 			if (meta != null) {
-				LogUtil.info("Table [" + meta.getTableName(true) + "] <--> [" + c.getName()+"]");
+				LogUtil.info("Table [" + meta.getTableName(true) + "] <--> [" + c.getName() + "]");
 			} else {
 				LogUtil.error("Entity [" + c.getName() + "] was not mapping to any table.");
 			}
@@ -185,36 +183,59 @@ public class QuerableEntityScanner {
 			final boolean create = createTable && (ee == null || ee.create());
 			final boolean refresh = alterTable && (ee == null || ee.refresh());
 			if (entityManagerFactory != null && (create || refresh)) {
-				entityManagerFactory.getDefault().refreshTable(meta, new MetadataEventListener() {
-					public void onTableFinished(ITableMetadata meta, String tablename) {
-					}
-					public boolean onTableCreate(ITableMetadata meta, String tablename) {
-						return create;
-					}
-					public boolean onSqlExecuteError(SQLException e, String tablename, String sql, List<String> sqls, int n) {
-						LogUtil.error("[ALTER-TABLE]. SQL:[{}] ERROR.\nMessage:[{}]",sql,e.getMessage() );
-						return true;
-					}
-					public boolean onCompareColumns(String tablename, List<Column> columns, Map<Field, ColumnType> defined) {
-						return refresh;
-					}
-					public boolean onColumnsCompared(String tablename, ITableMetadata meta, Map<String, ColumnType> insert, List<ColumnModification> changed, List<String> delete) {
-						if (!allowDropColumn) {
-							delete.clear();
-						}
-						return true;
-					}
-					public void onAlterSqlFinished(String tablename, String sql, List<String> sqls, int n, long cost) {
-					}
-					public boolean beforeTableRefresh(ITableMetadata meta, String table) {
-						return true;
-					}
-					public void beforeAlterTable(String tablename, ITableMetadata meta, Connection conn, List<String> sql) {
-					}
-				});
+				doTableDDL(meta,create,refresh);
 			}
 		} catch (Throwable e) {
 			LogUtil.error("EntityScanner:[Failure]" + StringUtils.exceptionStack(e));
+		}
+	}
+
+	private void doTableDDL(ITableMetadata meta,final boolean create, final boolean refresh) throws SQLException {
+		entityManagerFactory.getDefault().refreshTable(meta, new MetadataEventListener() {
+			public void onTableFinished(ITableMetadata meta, String tablename) {
+			}
+
+			public boolean onTableCreate(ITableMetadata meta, String tablename) {
+				return create;
+			}
+
+			public boolean onSqlExecuteError(SQLException e, String tablename, String sql, List<String> sqls, int n) {
+				LogUtil.error("[ALTER-TABLE]. SQL:[{}] ERROR.\nMessage:[{}]", sql, e.getMessage());
+				return true;
+			}
+
+			public boolean onCompareColumns(String tablename, List<Column> columns, Map<Field, ColumnType> defined) {
+				return refresh;
+			}
+
+			public boolean onColumnsCompared(String tablename, ITableMetadata meta, Map<String, ColumnType> insert, List<ColumnModification> changed, List<String> delete) {
+				if (!allowDropColumn) {
+					delete.clear();
+				}
+				return true;
+			}
+
+			public void onAlterSqlFinished(String tablename, String sql, List<String> sqls, int n, long cost) {
+			}
+
+			public boolean beforeTableRefresh(ITableMetadata meta, String table) {
+				return true;
+			}
+
+			public void beforeAlterTable(String tablename, ITableMetadata meta, Connection conn, List<String> sql) {
+			}
+		});
+		if(checkSequence){
+			for(MappingType<?> f:meta.getMetaFields()){
+				if(f instanceof AutoIncrementMapping){
+					AutoIncrementMapping<?> m=(AutoIncrementMapping<?>)f;
+					GenerationType gt=((AutoIncrementMapping<?>) f).getGenerationType(entityManagerFactory.getDefault().getProfile(meta.getBindDsName()));
+					if(gt==GenerationType.SEQUENCE || gt==GenerationType.TABLE){
+						entityManagerFactory.getDefault().getSequenceManager().getSequence(m, meta.getBindDsName());					
+					}
+					
+				}
+			}
 		}
 	}
 
@@ -256,5 +277,13 @@ public class QuerableEntityScanner {
 
 	public void setAlterTable(boolean alterTable) {
 		this.alterTable = alterTable;
+	}
+
+	public boolean isCheckSequence() {
+		return checkSequence;
+	}
+
+	public void setCheckSequence(boolean checkSequence) {
+		this.checkSequence = checkSequence;
 	}
 }

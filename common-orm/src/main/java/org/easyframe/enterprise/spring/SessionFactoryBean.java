@@ -99,11 +99,16 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 	}
 
 	private JefEntityManagerFactory buildSessionFactory() {
+		//try enahcen entity if theres 'enhancePackages'.
 		if(enhancePackages!=null){
-			new EntityEnhancer().enhance(StringUtils.split(enhancePackages,","));
+			if(!enhancePackages.equals("none")){
+				new EntityEnhancer().enhance(StringUtils.split(enhancePackages,","));
+			}
 		}else if(packagesToScan!=null){
+			//if there is no enhances packages, try enhance 'package to Scan'
 			new EntityEnhancer().enhance(packagesToScan);
 		}
+		//check data sources.
 		if(dataSource!=null && dataSources!=null){
 			throw new IllegalArgumentException("You must config either 'datasource' or 'datasources' but not both.");
 		}
@@ -116,6 +121,10 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 		}
 		if(packagesToScan!=null || annotatedClasses!=null){
 			QuerableEntityScanner qe=new QuerableEntityScanner();
+			if(transactionMode==TransactionMode.JTA){
+				//JTA事务下，DDL语句必须在已启动后立刻就做，迟了就被套进JTA是事务中，出错。
+				qe.setCheckSequence(false);
+			}
 			qe.setImplClasses(DataObject.class);
 			qe.setAllowDropColumn(allowDropColumn);
 			qe.setAlterTable(alterTable);

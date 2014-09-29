@@ -40,7 +40,11 @@ public enum Feature {
 	/**
 	 * 索引长度受限 (MYSQL)
 	 */
-	INDEX_LENGTH_LIMIT, 
+	INDEX_LENGTH_LIMIT,
+	/**
+	 * 允许使用NULL在列定义中
+	 */
+	COLUMN_DEF_ALLOW_NULL,
 	/**
 	 * ResultSet只能向前滚动，不支持向后滚动结果集(SQLlite）
 	 */

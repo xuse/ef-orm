@@ -9,7 +9,6 @@ import jef.database.DbUtils;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
 import jef.database.innerpool.PoolService;
-import jef.database.innerpool.ReentrantConnection;
 import jef.tools.ThreadUtils;
 
 import org.junit.Test;

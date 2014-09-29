@@ -130,7 +130,7 @@ final class SequenceNativeImpl extends AbstractSequence {
 			return;
 		}
 		// can be created automatically/
-		if (!JefConfiguration.getBoolean(DbCfg.AUTO_SEQUENCE_CREATION, true)) {
+		if (!ORMConfig.getInstance().isAutoCreateSequence()) {
 			throw new PersistenceException("Sequence " + schema + "." + sequence + " does not exist on " + meta + "!");
 		}
 		long max = StringUtils.toLong(StringUtils.repeat('9', length), Long.MAX_VALUE);

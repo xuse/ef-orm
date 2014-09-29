@@ -35,6 +35,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.persistence.FetchType;
 import javax.persistence.PersistenceException;
@@ -114,6 +118,13 @@ public final class DbUtils {
 
 	public static PartitionCalculator partitionUtil = new DefaultPartitionCalculator();
 
+	/**
+	 * 线程池。线程池有以下作用
+	 * 1、在分库分表时使用线程
+	 * 2、在JTA事务管理模式下，为了避免在JTA中执行DDL，因此不得不将代码在新的线程中执行。
+	 */
+	public static ExecutorService es= new ThreadPoolExecutor(2, 8,60000L, TimeUnit.MILLISECONDS,new LinkedBlockingQueue<Runnable>());
+	
 	/**
 	 * 获取数据库加密的密钥,目前使用固定密钥
 	 * 

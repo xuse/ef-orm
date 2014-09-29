@@ -148,6 +148,12 @@ public class ORMConfig implements ORMConfigMBean {
 	private boolean formatSQL;
 	
 	/**
+	 * 可以创建序列
+	 * 
+	 */
+	private boolean autoCreateSequence;
+	
+	/**
 	 * 是否设置事务隔离级别
 	 */
 	private boolean setTxIsolation;
@@ -191,8 +197,17 @@ public class ORMConfig implements ORMConfigMBean {
 		filterAbsentTables=JefConfiguration.getBoolean(DbCfg.PARTITION_FILTER_ABSENT_TABLES, true);
 		partitionCreateTableInneed=JefConfiguration.getBoolean(DbCfg.PARTITION_FILTER_ABSENT_TABLES, true);
 		partitionInMemoryMaxRows=JefConfiguration.getInt(DbCfg.PARTITION_INMEMORY_MAXROWS, 0);
+		autoCreateSequence=	JefConfiguration.getBoolean(DbCfg.AUTO_SEQUENCE_CREATION,true);
 	}
 	
+	public boolean isAutoCreateSequence() {
+		return autoCreateSequence;
+	}
+
+	public void setAutoCreateSequence(boolean autoCreateSequence) {
+		this.autoCreateSequence = autoCreateSequence;
+	}
+
 	public boolean isPartitionCreateTableInneed() {
 		return partitionCreateTableInneed;
 	}

@@ -91,7 +91,8 @@ public class OracleDialect extends DbmsProfile {
 				Feature.SUPPORT_CONCAT,
 				Feature.SUPPORT_CONNECT_BY,
 				Feature.DROP_CASCADE,
-				Feature.SUPPORT_SEQUENCE));
+				Feature.SUPPORT_SEQUENCE,
+				Feature.COLUMN_DEF_ALLOW_NULL));
 
 		super.loadKeywords("oracle_keywords.properties");
 		if (JefConfiguration.getBoolean(DbCfg.DB_ENABLE_ROWID, false)) {
@@ -247,8 +248,11 @@ public class OracleDialect extends DbmsProfile {
 		if (flag) {
 			if (column.defaultValue != null)
 				sb.append(" default ").append(toDefaultString(column.defaultValue));
-			if (!column.nullable)
+			if (column.nullable){
+				sb.append(" null");
+			}else{
 				sb.append(" not null");
+			}
 		}
 		return sb.toString();
 	}
@@ -259,8 +263,11 @@ public class OracleDialect extends DbmsProfile {
 		if (flag) {
 			if (column.defaultValue != null)
 				sb.append(" default ").append(column.defaultValue.toString());
-			if (!column.nullable)
+			if (column.nullable){
+				sb.append(" null");
+			}else{
 				sb.append(" not null");
+			}
 		}
 		return sb.toString();
 	}
@@ -271,8 +278,11 @@ public class OracleDialect extends DbmsProfile {
 		if (flag) {
 			if (column.defaultValue != null)
 				sb.append(" default ").append(column.defaultValue.toString());
-			if (!column.nullable)
+			if (column.nullable){
+				sb.append(" null");
+			}else{
 				sb.append(" not null");
+			}
 		}
 		return sb.toString();
 	}
@@ -281,8 +291,11 @@ public class OracleDialect extends DbmsProfile {
 		StringBuilder sb = new StringBuilder();
 		sb.append("number(" + column.length + ")");
 		if (flag) {
-			if (!column.nullable)
+			if (column.nullable){
+				sb.append(" null");
+			}else{
 				sb.append(" not null");
+			}
 		}
 		return sb.toString();
 	}
@@ -297,8 +310,11 @@ public class OracleDialect extends DbmsProfile {
 			if (column.defaultValue != null) {
 				sb.append(" default ").append(toDefaultString(column.defaultValue));
 			}
-			if (!column.nullable)
+			if (column.nullable){
+				sb.append(" null");
+			}else{
 				sb.append(" not null");
+			}
 		}
 		return sb.toString();
 	}

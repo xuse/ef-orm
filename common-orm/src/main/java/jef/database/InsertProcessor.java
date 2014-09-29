@@ -9,7 +9,7 @@ import java.util.List;
 
 import jef.common.log.LogUtil;
 import jef.database.AutoIncreatmentCallBack.OracleRowidKeyCallback;
-import jef.database.BindVariableTool.SqlType;
+import jef.database.annotation.PartitionResult;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.MappingType;
 import jef.database.meta.Feature;
@@ -34,7 +34,7 @@ abstract class InsertProcessor {
 	 * @return
 	 * @throws SQLException
 	 */
-	abstract InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName,boolean dynamic,boolean extreme)throws SQLException;
+	abstract InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName,boolean dynamic,boolean extreme,PartitionResult pr)throws SQLException;
 
 	/**
 	 * process insert operate
@@ -58,14 +58,15 @@ abstract class InsertProcessor {
 		}
 
 		@Override
-		InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName, boolean dynamic, boolean extreme) throws SQLException {
-			DatabaseDialect profile = parent.getProfile();
+		InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName, boolean dynamic, boolean extreme,PartitionResult pr) throws SQLException {
+			DatabaseDialect profile=pr==null?db.getProfile():db.getProfile(pr.getDatabase());
 			List<String> cStr = new ArrayList<String>();// 字段列表
 			List<String> vStr = new ArrayList<String>();// 值列表
 			ITableMetadata meta = MetaHolder.getMeta(obj);
 			InsertSqlClause result = new InsertSqlClause();
 			result.parent=db;
 			result.profile=profile;
+			result.setTableNames(pr);
 			for (MappingType<?> entry : meta.getMetaFields()) {
 				BeanWrapper wrapper=BeanWrapper.wrap(obj);
 				Object value = wrapper.getPropertyValue(entry.fieldName());
@@ -115,14 +116,15 @@ abstract class InsertProcessor {
 		}
 
 		@Override
-		InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName, boolean dynamic, boolean extreme) throws SQLException {
-			DatabaseDialect profile = parent.getProfile();
+		InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName, boolean dynamic, boolean extreme,PartitionResult pr) throws SQLException {
+			DatabaseDialect profile=pr==null?db.getProfile():db.getProfile(pr.getDatabase());
 			List<String> cStr = new ArrayList<String>();// 字段列表
 			List<String> vStr = new ArrayList<String>();// 值列表
 			ITableMetadata meta = MetaHolder.getMeta(obj);
 			InsertSqlClause result = new InsertSqlClause(extreme);
 			result.parent=db;
 			result.profile=profile;
+			result.setTableNames(pr);
 			for (MappingType<?> entry : meta.getMetaFields()) {
 				entry.processPreparedInsert(obj, cStr, vStr, result, dynamic);
 			}

@@ -35,7 +35,7 @@ public class PoolService {
 		int min = JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL, 3);
 		if (ds instanceof IRoutingDataSource) {
 			IRoutingDataSource rds = (IRoutingDataSource) ds;
-			if (auto || !noPool) {
+			if (auto && !noPool) {
 				return new RoutingManagedConnectionPool(rds, max, min, auto);
 			} else {
 				return new RoutingDummyConnectionPool(rds);

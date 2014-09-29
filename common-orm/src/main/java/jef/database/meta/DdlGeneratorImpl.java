@@ -16,6 +16,7 @@ import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.MappingType;
+import jef.database.meta.ColumnChange.Change;
 import jef.database.support.RDBMS;
 import jef.tools.StringUtils;
 import jef.tools.string.RandomData;
@@ -193,6 +194,7 @@ public class DdlGeneratorImpl implements DdlGenerator {
 							sqls.add(toChangeColumnSql(tableName, entry.getFrom().getColumnName(), change, profile));
 						}
 					} else {
+						//简单语法时
 						sqls.add(toChangeColumnSql(tableName, Arrays.asList(entry)));
 					}
 				}
