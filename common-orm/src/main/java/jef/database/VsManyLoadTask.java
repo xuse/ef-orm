@@ -64,8 +64,8 @@ final class VsManyLoadTask implements LazyLoadTask {
 			}
 
 			orders = new ArrayList<OrderField>();
-			if (StringUtils.isNotEmpty(desc.orderBy())) {
-				OrderBy order = DbUtils.parseOrderBy(desc.orderBy());
+			if (StringUtils.isNotEmpty(rs.getOrderBy())) {
+				OrderBy order = DbUtils.parseOrderBy(rs.getOrderBy());
 				for (OrderByElement ele : order.getOrderByElements()) {
 					Field field = targetTableMeta.findField(ele.getExpression().toString());
 					if (field != null) {

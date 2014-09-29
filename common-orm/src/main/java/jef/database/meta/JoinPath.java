@@ -18,6 +18,8 @@ package jef.database.meta;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.OrderBy;
+
 import jef.database.annotation.JoinDescription;
 import jef.database.annotation.JoinType;
 import jef.database.query.Join;
@@ -40,14 +42,16 @@ public class JoinPath {
 	private JoinKey[] joinExpression;
 	private JoinType type;
 	private JoinDescription description;
+	private OrderBy orderBy;
 	
 
 	public JoinDescription getDescription() {
 		return description;
 	}
 
-	public void setDescription(JoinDescription description) {
+	public void setDescription(JoinDescription description,OrderBy orderBy) {
 		this.description = description;
+		this.orderBy=orderBy;
 	}
 
 	public JoinKey[] getJoinKeys() {
@@ -195,6 +199,9 @@ public class JoinPath {
 		if (type != o.type)
 			return false;
 		//Annotation自身已经很好的实现的equals方法，不会受代理类等因素影响
+		if(!ObjectUtils.equals(this.orderBy, o.orderBy)){
+			return false;
+		}
 		return ObjectUtils.equals(this.description, o.description);
 	}
 
@@ -285,4 +292,7 @@ public class JoinPath {
 		return right;
 	}
 
+	public String getOrderBy() {
+		return orderBy==null?null:orderBy.value();
+	}
 }

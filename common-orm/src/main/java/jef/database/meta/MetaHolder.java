@@ -39,6 +39,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.OrderBy;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.TableGenerator;
 
@@ -623,10 +624,10 @@ public final class MetaHolder {
 	private static JoinPath getHint(AnnotationProvider annos, java.lang.reflect.Field f, MetadataAdapter meta, ITableMetadata target) {
 		if (annos.getFieldAnnotation(f, JoinColumn.class) != null) {
 			JoinColumn j = annos.getFieldAnnotation(f, JoinColumn.class);
-			return processJoin(meta, f.getName(), target, annos.getFieldAnnotation(f, JoinDescription.class), j);
+			return processJoin(meta, f, target, annos, j);
 		} else if (annos.getFieldAnnotation(f, JoinColumns.class) != null) {
 			JoinColumns jj = annos.getFieldAnnotation(f, JoinColumns.class);
-			return processJoin(meta, f.getName(), target, annos.getFieldAnnotation(f, JoinDescription.class), jj.value());
+			return processJoin(meta, f, target, annos, jj.value());
 		}
 		return null;
 	}
@@ -645,7 +646,7 @@ public final class MetaHolder {
 			if(config.path==null){
 				String mappedBy=r1Vs1.mappedBy();
 				if(StringUtils.isNotEmpty(mappedBy)){
-					config.path=processJoin(meta,f.getName(),target,annos.getFieldAnnotation(f, JoinDescription.class),mappedBy); 
+					config.path=processJoin(meta,f,target,annos,mappedBy); 
 				}
 			}
 			if (targetField == null) {
@@ -664,7 +665,7 @@ public final class MetaHolder {
 			if(config.path==null){
 				String mappedBy=r1VsN.mappedBy();
 				if(StringUtils.isNotEmpty(mappedBy)){
-					config.path=processJoin(meta,f.getName(),target,annos.getFieldAnnotation(f, JoinDescription.class),mappedBy); 
+					config.path=processJoin(meta,f,target,annos,mappedBy); 
 				}
 			}
 			if (targetField == null) {
@@ -699,7 +700,7 @@ public final class MetaHolder {
 			if(config.path==null){
 				String mappedBy=rNVsN.mappedBy();
 				if(StringUtils.isNotEmpty(mappedBy)){
-					config.path=processJoin(meta,f.getName(),target,annos.getFieldAnnotation(f, JoinDescription.class),mappedBy); 
+					config.path=processJoin(meta,f,target,annos,mappedBy); 
 				}
 			}
 			if (targetField == null) {
@@ -751,8 +752,9 @@ public final class MetaHolder {
 		throw new IllegalArgumentException(field.getDeclaringClass().getSimpleName() + ":" + field.getName() + " miss its targetEntity annotation.");
 	}
 
-	private static JoinPath processJoin(MetadataAdapter thisMeta, String fieldName, ITableMetadata target, JoinDescription joinDesc, JoinColumn... jj) {
+	private static JoinPath processJoin(MetadataAdapter thisMeta, java.lang.reflect.Field f, ITableMetadata target,AnnotationProvider annos, JoinColumn... jj) {
 		List<JoinKey> result = new ArrayList<JoinKey>();
+		String fieldName=f.getName();
 		for (JoinColumn j : jj) {
 			if (StringUtils.isBlank(j.name())) {
 				throw new IllegalArgumentException("Invalid reference [" + thisMeta.getThisType().getName() + "." + fieldName + "]:The field 'name' in JoinColumn is empty");
@@ -766,12 +768,13 @@ public final class MetaHolder {
 			result.add(new JoinKey(left, right));
 		}
 		JoinType type = JoinType.LEFT;
+		JoinDescription joinDesc=annos.getFieldAnnotation(f, JoinDescription.class);
 		if (joinDesc != null) {
 			type = joinDesc.type();
 		}
 		if (result.size() > 0) {
 			JoinPath path = new JoinPath(type, result.toArray(new JoinKey[result.size()]));
-			path.setDescription(joinDesc);
+			path.setDescription(joinDesc,annos.getFieldAnnotation(f, OrderBy.class));
 			if (joinDesc != null && joinDesc.filterCondition().length() > 0) {
 				JoinKey joinExpress = getJoinExpress(target, joinDesc.filterCondition().trim());
 				if (joinExpress != null)
@@ -782,7 +785,11 @@ public final class MetaHolder {
 		return null;
 	}
 
-	private static JoinPath processJoin(TableMetadata meta, String name, ITableMetadata target, JoinDescription joinDesc, String mappedBy) {
+	private static JoinPath processJoin(TableMetadata meta, java.lang.reflect.Field f, ITableMetadata target, AnnotationProvider annos,String mappedBy) {
+		JoinDescription joinDesc= annos.getFieldAnnotation(f, JoinDescription.class);
+		OrderBy orderBy=annos.getFieldAnnotation(f, OrderBy.class);
+		
+		
 		List<JoinKey> result = new ArrayList<JoinKey>();
 
 		if (meta.getPKField().size() != 1) {
@@ -800,7 +807,7 @@ public final class MetaHolder {
 		}
 		if (result.size() > 0) {
 			JoinPath path = new JoinPath(type, result.toArray(new JoinKey[result.size()]));
-			path.setDescription(joinDesc);
+			path.setDescription(joinDesc,orderBy);
 			if (joinDesc != null && joinDesc.filterCondition().length() > 0) {
 				JoinKey joinExpress = getJoinExpress(target, joinDesc.filterCondition().trim());
 				if (joinExpress != null)

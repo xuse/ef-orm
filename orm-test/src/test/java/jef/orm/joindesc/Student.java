@@ -8,6 +8,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 
 import jef.database.annotation.JoinDescription;
 
@@ -57,12 +58,14 @@ public class Student extends jef.database.DataObject {
 
 	@OneToMany(targetEntity = UserToLession.class)
 	@JoinColumn(name = "id", referencedColumnName = "userId")
-	@JoinDescription(filterCondition="testTime > date_sub(current_timestamp , 10)" ,orderBy="testTime desc" ,maxRows=10)
+	@JoinDescription(filterCondition="testTime > date_sub(current_timestamp , 10)" ,maxRows=10)
+	@OrderBy("testTime desc")
 	private List<UserToLession> toLession;
 	
 	@OneToMany(targetEntity = UserToLession.class)
 	@JoinColumn(name = "id", referencedColumnName = "userId")
-	@JoinDescription(filterCondition="testTime > date_sub(current_timestamp , 10)" ,orderBy="score desc" ,maxRows=1)
+	@OrderBy("score desc")
+	@JoinDescription(filterCondition="testTime > date_sub(current_timestamp , 10)" ,maxRows=1)
 	private UserToLession maxScoreLession;
 	
 	

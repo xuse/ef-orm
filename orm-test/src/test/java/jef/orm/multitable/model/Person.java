@@ -19,6 +19,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
 
 import jef.database.DataObject;
@@ -131,7 +132,7 @@ public class Person extends DataObject {
 	//多对多关系
 	@ManyToMany(targetEntity=PersonFriends.class,cascade=CascadeType.ALL)
 	@JoinColumn(name="id",referencedColumnName="pid")
-	@JoinDescription(orderBy="friendId")
+	@OrderBy("friendId")
 	private List<PersonFriends> friends;
 	
 	@ManyToMany(targetEntity=PersonFriends.class)
