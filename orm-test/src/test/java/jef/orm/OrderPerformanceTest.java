@@ -34,7 +34,7 @@ public class OrderPerformanceTest {
 		Transaction tx=db.startTransaction();
 		db.createTable(Foo.class);
 		List<Foo> list=new ArrayList<Foo>();
-		for(int i=0;i<2000;i++){
+		for(int i=0;i<10000;i++){
 			Foo foo=new Foo();
 			foo.setName(RandomData.randomChineseName());
 			list.add(foo);
@@ -56,14 +56,14 @@ public class OrderPerformanceTest {
 	 	Connection conn=DebugUtil.getConnection(db.getSqlTemplate(null));
 		Statement st=conn.createStatement();
 		ResultSet rs;
-		rs=st.executeQuery("select * from foo where id>0 and id<= 5000");
+		rs=st.executeQuery("select * from foo where id>10000 and id<= 15000");
 		c1.populate(rs);
 		rs.close();
-		rs=st.executeQuery("select * from foo where id>5000 and id<= 10000");
+		rs=st.executeQuery("select * from foo where id>15000 and id<= 20000");
 		c2.populate(rs);
 		rs.close();
 		
-		rs=st.executeQuery("select * from foo where id>10000 and id<=15000");
+		rs=st.executeQuery("select * from foo where id>20000 and id<=25000");
 		c3.populate(rs);
 		rs.close();
 		
@@ -136,12 +136,12 @@ public class OrderPerformanceTest {
 	private void testRsPerformces1(MultipleResultSet mrs,String name,int count) throws SQLException {
 		long start=System.currentTimeMillis();
 		for(int x=0;x<count ;x++){
-			int n=0;
+//			int n=0;
 			IResultSet rs=mrs.toSimple(null);
 			while(rs.next()){
-				n++;
+//				n++;
 			}
-			System.out.println(n);
+//			System.out.println(n);
 			rs1.beforeFirst();
 			rs2.beforeFirst();
 			rs3.beforeFirst();

@@ -80,7 +80,7 @@ final class ReorderResultSet2 extends AbstractResultSet {
 	}
 
 	public boolean next() {
-		// 当结果只有一个时的优化
+		//TODO 当结果只有一个时的优化
 		if (this.activeRs != null) {
 			// 加入后重新排序
 			if (this.activeRs.next()) {

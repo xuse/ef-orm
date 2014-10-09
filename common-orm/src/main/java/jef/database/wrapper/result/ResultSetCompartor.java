@@ -26,17 +26,17 @@ final class ResultSetCompartor implements Comparator<ResultSet> {
 		int[] orderFields = orders.getOrderFields();
 		boolean[] orderAscendent = orders.getOrderAsc();
 		int retVal = 0;
-		for (int i = 0; (i < len && retVal == 0); i++) {
+		for (int i = 0; i < len; i++) {
 			try {
 				retVal = compares(value.getObject(orderFields[i]), value2.getObject(orderFields[i]));
 			} catch (SQLException e) {
 				throw new PersistenceException(e);
 			}
-			if (!orderAscendent[i]) {
-				retVal = -retVal;
+			if(retVal!=0){
+				return orderAscendent[i]?retVal:-retVal; 
 			}
 		}
-		return retVal;
+		return 1;
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })

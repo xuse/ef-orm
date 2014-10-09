@@ -274,7 +274,7 @@ public final class MultipleResultSet extends AbstractResultSet{
 		}
 		//当仅有重排序要求时，可以使用ReorderResultSet简化计算。降低内存开销
 		if (inMemoryOrder != null && !ArrayUtils.fastContains(args, PopulateStrategy.NO_RESORT)) {
-			ReorderResultSet2 rw = new ReorderResultSet2(results, inMemoryOrder,columns);
+			ReorderResultSet rw = new ReorderResultSet(results, inMemoryOrder,columns);
 			rw.filters=filters;
 			return rw;
 		}
