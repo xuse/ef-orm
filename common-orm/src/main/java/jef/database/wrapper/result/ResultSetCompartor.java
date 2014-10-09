@@ -22,6 +22,7 @@ final class ResultSetCompartor implements Comparator<ResultSet> {
 
 	@Override
 	public int compare(ResultSet value, ResultSet value2) {
+		if(value==value2)return 0;
 		int len = orders.size();
 		int[] orderFields = orders.getOrderFields();
 		boolean[] orderAscendent = orders.getOrderAsc();
@@ -36,7 +37,7 @@ final class ResultSetCompartor implements Comparator<ResultSet> {
 				return orderAscendent[i]?retVal:-retVal; 
 			}
 		}
-		return 1;
+		return -1;
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })

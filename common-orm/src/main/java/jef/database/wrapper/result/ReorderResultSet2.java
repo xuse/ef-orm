@@ -20,7 +20,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
+import java.util.TreeMap;
 
 import javax.persistence.PersistenceException;
 
@@ -40,7 +40,7 @@ import jef.database.wrapper.populator.ColumnMeta;
 final class ReorderResultSet2 extends AbstractResultSet {
 	private ColumnMeta columns;
 
-	private final TreeSet<ResultSetHolder> gettingResults;
+	private final TreeMap<ResultSetHolder,Void> gettingResults;
 	private List<ResultSetHolder> allResults;
 	private ResultSetHolder activeRs;
 	// 级联过滤条件
@@ -53,7 +53,7 @@ final class ReorderResultSet2 extends AbstractResultSet {
 		this.allResults = r;
 		this.columns = columns;
 		ResultSetCompartor orders = new ResultSetCompartor(order);
-		gettingResults = new TreeSet<ResultSetHolder>(orders);
+		gettingResults = new TreeMap<ResultSetHolder,Void>(orders);
 		try {
 			chain(r);
 		} catch (SQLException e) {
@@ -66,7 +66,7 @@ final class ReorderResultSet2 extends AbstractResultSet {
 		for (int i = 0; i < len; i++) {
 			ResultSetHolder re = r.get(i);
 			if (re.next()) {
-				this.gettingResults.add(re);
+				this.gettingResults.put(re,null);
 			}
 		}
 	}
@@ -80,14 +80,20 @@ final class ReorderResultSet2 extends AbstractResultSet {
 	}
 
 	public boolean next() {
-		//TODO 当结果只有一个时的优化
 		if (this.activeRs != null) {
 			// 加入后重新排序
 			if (this.activeRs.next()) {
-				gettingResults.add(activeRs);
+				gettingResults.put(activeRs,null);
+			}else{
+				gettingResults.pollFirstEntry();
 			}
 		}
-		return (activeRs = gettingResults.pollFirst()) != null;
+		if(gettingResults.isEmpty()){
+			return false;
+		}else{
+			activeRs = gettingResults.firstKey();
+			return true;
+		}
 	}
 
 	public void beforeFirst() throws SQLException {
