@@ -132,4 +132,26 @@ public final class ResultSetHolder extends AbstractResultSet{
 	public Map<Reference, List<Condition>> getFilters() {
 		throw new UnsupportedOperationException();
 	}
+	@Override
+	public boolean isBeforeFirst() throws SQLException {
+		ensureOpen();
+		return rs.isBeforeFirst();
+	}
+
+	@Override
+	public boolean isAfterLast() throws SQLException {
+		ensureOpen();
+		return rs.isAfterLast();
+	}
+	@Override
+	public boolean isFirst() throws SQLException {
+		ensureOpen();
+		return rs.isFirst();
+	}
+
+	@Override
+	public boolean isLast() throws SQLException {
+		ensureOpen();
+		return rs.isLast();
+	}
 }

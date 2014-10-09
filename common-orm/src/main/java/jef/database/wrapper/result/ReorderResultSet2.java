@@ -84,14 +84,12 @@ final class ReorderResultSet2 extends AbstractResultSet {
 			// 加入后重新排序
 			if (this.activeRs.next()) {
 				gettingResults.put(activeRs,null);
-			}else{
-				gettingResults.pollFirstEntry();
 			}
 		}
 		if(gettingResults.isEmpty()){
 			return false;
 		}else{
-			activeRs = gettingResults.firstKey();
+			activeRs = gettingResults.pollFirstEntry().getKey();
 			return true;
 		}
 	}
