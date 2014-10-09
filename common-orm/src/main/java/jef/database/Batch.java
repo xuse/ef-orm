@@ -61,20 +61,19 @@ public abstract class Batch<T extends IQueryableEntity> {
 	 * 关闭时，按照不分表场景下的表名称，适用于用户能确保操作的所有数据位于一张表中的情况，以及用户自定义表名的情况
 	 */
 	private boolean groupForPartitionTable;
-	
+
 	private int executeResult;
 	/**
-	 * 极限模式，极限模式下，会使用数据库本地特性来尽可能加速操作。
-	 * 极限模式下，禁用数据回写功能。
+	 * 极限模式，极限模式下，会使用数据库本地特性来尽可能加速操作。 极限模式下，禁用数据回写功能。
 	 */
 	protected boolean extreme;
-	
+
 	/**
 	 * 固定使用的表名<br>
 	 * 当指定了固定的表名后，则认为要操作的表就是指定的表名，框架本身计算的表名（包含通过分表规则计算的表名）就会失效。
 	 */
 	String forceTableName;
-	
+
 	/**
 	 * 固定操作指定的数据源
 	 */
@@ -103,21 +102,21 @@ public abstract class Batch<T extends IQueryableEntity> {
 
 	/**
 	 * 获取指定的要在哪个数据库上执行操作
+	 * 
 	 * @return 要在哪个数据库上执行操作
 	 */
 	public String getForcrSite() {
 		return forcrSite;
 	}
 
-
 	/**
 	 * 指定要在哪个数据库上执行操作
+	 * 
 	 * @param forcrSite
 	 */
 	public void setForcrSite(String forcrSite) {
 		this.forcrSite = forcrSite;
 	}
-
 
 	/**
 	 * 获得当前指定的 固定表名
@@ -136,7 +135,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 	 * @param forceTableName
 	 */
 	public void setForceTableName(String forceTableName) {
-		if(forceTableName!=null){
+		if (forceTableName != null) {
 			this.forceTableName = MetaHolder.toSchemaAdjustedName(forceTableName);
 		}
 	}
@@ -173,13 +172,13 @@ public abstract class Batch<T extends IQueryableEntity> {
 	 * <li>此外。如果用户设置了固定表名({@link #setForceTableName(String)})，那么分组操作无效。</li>
 	 * 
 	 * 
-	 * @param regroupForPartitionTable 重分组功能开关
+	 * @param regroupForPartitionTable
+	 *            重分组功能开关
 	 */
 	public void setGroupForPartitionTable(boolean regroupForPartitionTable) {
 		this.groupForPartitionTable = regroupForPartitionTable;
 	}
 
-	
 	/**
 	 * 提交批数据
 	 * 
@@ -190,11 +189,11 @@ public abstract class Batch<T extends IQueryableEntity> {
 			return 0;
 		}
 		boolean debugMode = ORMConfig.getInstance().isDebugMode();
-		String tablename=null;
+		String tablename = null;
 		try {
 			if (this.groupForPartitionTable && forceTableName == null) {// 需要分组
 				callVeryBefore(objs);
-				int total=0;
+				int total = 0;
 				Map<String, List<T>> data = doGroup(objs);
 				for (Map.Entry<String, List<T>> entry : data.entrySet()) {
 					long start = System.currentTimeMillis();
@@ -207,33 +206,33 @@ public abstract class Batch<T extends IQueryableEntity> {
 					}
 					String dbName = parent.getTransactionId(site);
 					long dbAccess = innerCommit(entry.getValue(), site, tablename, dbName);
-					total+=executeResult;
+					total += executeResult;
 					if (debugMode) {
-						LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed:", String.valueOf(entry.getValue().size()),"/on ",String.valueOf(executeResult), " record(s) on ["+entry.getKey()+"]\t Time cost([ParseSQL]:", String.valueOf(parseTime / 1000), "us, [DbAccess]:", String.valueOf(dbAccess - start), "ms) |",
-								dbName));
+						LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed:", String.valueOf(entry.getValue().size()), "/on ", String.valueOf(executeResult), " record(s) on [" + entry.getKey() + "]\t Time cost([ParseSQL]:",
+								String.valueOf(parseTime / 1000), "us, [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", dbName));
 					}
 				}
-				if(debugMode){
-					LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed:", String.valueOf(objs.size()),"/on ",String.valueOf(total), " record(s) and ",String.valueOf(data.size())," tables. |  @",String.valueOf(Thread.currentThread().getId())));
+				if (debugMode) {
+					LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed:", String.valueOf(objs.size()), "/on ", String.valueOf(total), " record(s) and ", String.valueOf(data.size()), " tables. |  @", String.valueOf(Thread.currentThread().getId())));
 				}
 			} else {// 不分组
 				long start = System.currentTimeMillis();
 				T obj = objs.get(0);
-				String site=null;
-				
+				String site = null;
+
 				callVeryBefore(objs);
-				if(forceTableName!=null){
-					tablename=forceTableName;
-				}else{
-					PartitionResult pr= DbUtils.toTableName(obj, null, obj.getQuery(), parent.getPartitionSupport());
-					site=forcrSite!=null?forcrSite:pr.getDatabase();
-					tablename=pr.getAsOneTable();
+				if (forceTableName != null) {
+					tablename = forceTableName;
+				} else {
+					PartitionResult pr = DbUtils.toTableName(obj, null, obj.getQuery(), parent.getPartitionSupport());
+					site = forcrSite != null ? forcrSite : pr.getDatabase();
+					tablename = pr.getAsOneTable();
 				}
 				String dbName = parent.getTransactionId(null);
 				long dbAccess = innerCommit(objs, site, tablename, dbName);
 				if (debugMode) {
-					LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed total:", String.valueOf(objs.size()),"/on ",String.valueOf(executeResult), " record(s)\t Time cost([ParseSQL]:", String.valueOf(parseTime / 1000), "us, [DbAccess]:", String.valueOf(dbAccess - start), "ms) |",
-							dbName));
+					LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed total:", String.valueOf(objs.size()), "/on ", String.valueOf(executeResult), " record(s)\t Time cost([ParseSQL]:", String.valueOf(parseTime / 1000), "us, [DbAccess]:",
+							String.valueOf(dbAccess - start), "ms) |", dbName));
 				}
 			}
 		} catch (SQLException e) {
@@ -258,9 +257,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			db.releaseConnection();
 		}
 	}
-	
-	
-	
+
 	/*
 	 * 按计算的表名进行分组
 	 * 
@@ -271,7 +268,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 		for (T obj : objs) {
 			PartitionResult partitionResult = DbUtils.toTableName(obj, null, obj.getQuery(), parent.getPartitionSupport());
 			String tablename = null;
-			if(this.forcrSite!=null){
+			if (this.forcrSite != null) {
 				partitionResult.setDatabase(forcrSite);
 			}
 			if (StringUtils.isEmpty(partitionResult.getDatabase())) {
@@ -289,23 +286,22 @@ public abstract class Batch<T extends IQueryableEntity> {
 		return result;
 	}
 
-
 	/*
 	 * 提交每批数据，返回本次数据库完成后的时间
 	 */
 	protected long doCommit(PreparedStatement psmt, OperateTarget db, List<T> listValue) throws SQLException {
 		callEventListenerBefore(listValue);
 		processJdbcParams(psmt, listValue, db);
-		int[] result=psmt.executeBatch();
-		int total=0;
-		for(int i:result){
-			if(i<0){
-				total=i;//-2 成功执行 -3执行失败
-				break;
+		int[] result = psmt.executeBatch();
+		int total = 0;
+		if (result[0] < 0) {
+			total = result[0];
+		} else {
+			for (int i : result) {
+				total += i;
 			}
-			total+=i;
 		}
-		this.executeResult=total;
+		this.executeResult = total;
 		long dbAccess = System.currentTimeMillis();
 		callEventListenerAfter(listValue);
 		return dbAccess;
@@ -325,14 +321,13 @@ public abstract class Batch<T extends IQueryableEntity> {
 	 */
 	protected abstract String toSql(String tablename);
 
-	
 	static final class Insert<T extends IQueryableEntity> extends Batch<T> {
 		/**
 		 * SQL片段,Insert部分(INSERT语句使用)
 		 */
 		private InsertSqlClause insertPart;
 
-		Insert(Session parent,  ITableMetadata meta) throws SQLException {
+		Insert(Session parent, ITableMetadata meta) throws SQLException {
 			super(parent, meta);
 		}
 
@@ -347,11 +342,11 @@ public abstract class Batch<T extends IQueryableEntity> {
 		@Override
 		protected void callEventListenerBefore(List<T> listValue) throws SQLException {
 			Session parent = this.parent;
-			DbOperatorListener listener=parent.getListener();
+			DbOperatorListener listener = parent.getListener();
 			for (T t : listValue) {
-				try{
-					listener.beforeInseret(t, parent);	
-				}catch(Exception e){
+				try {
+					listener.beforeInseret(t, parent);
+				} catch (Exception e) {
 					LogUtil.exception(e);
 				}
 			}
@@ -362,28 +357,28 @@ public abstract class Batch<T extends IQueryableEntity> {
 			if (insertPart.getCallback() != null) {
 				insertPart.getCallback().callAfter(listValue);
 			}
-			TransactionCache cache=parent.getCache();
-			DbOperatorListener listener=parent.getListener();
-			if(extreme){
+			TransactionCache cache = parent.getCache();
+			DbOperatorListener listener = parent.getListener();
+			if (extreme) {
 				for (T t : listValue) {
-					try{
+					try {
 						listener.afterInsert(t, parent);
-					}catch(Exception e){
+					} catch (Exception e) {
 						LogUtil.exception(e);
 					}
 				}
-			}else{
+			} else {
 				for (T t : listValue) {
-					try{
+					try {
 						cache.onInsert(t);
 						listener.afterInsert(t, parent);
-					}catch(Exception e){
+					} catch (Exception e) {
 						LogUtil.exception(e);
 					}
 					t.clearUpdate();
-				}	
+				}
 			}
-			
+
 		}
 
 		@Override
@@ -409,7 +404,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 
 		protected long innerCommit(List<T> objs, String site, String tablename, String dbName) throws SQLException {
 			OperateTarget db = parent.asOperateTarget(site);
-			if(extreme){
+			if (extreme) {
 				db.getProfile().toExtremeInsert(insertPart);
 			}
 			String sql = toSql(tablename);
@@ -451,13 +446,13 @@ public abstract class Batch<T extends IQueryableEntity> {
 
 		@Override
 		protected String toSql(String tablename) {
-			return StringUtils.concat("update ", tablename, " set ", StringUtils.join(updatePart.getKey(),", "), wherePart.getSql());
+			return StringUtils.concat("update ", tablename, " set ", StringUtils.join(updatePart.getKey(), ", "), wherePart.getSql());
 		}
 
 		@Override
 		protected void callEventListenerBefore(List<T> listValue) {
 			Session parent = this.parent;
-			DbOperatorListener listener=parent.getListener();
+			DbOperatorListener listener = parent.getListener();
 			for (T t : listValue) {
 				listener.beforeUpdate(t, parent);
 			}
@@ -465,20 +460,20 @@ public abstract class Batch<T extends IQueryableEntity> {
 
 		@Override
 		protected void callEventListenerAfter(List<T> listValue) {
-			Session parent=this.parent;
-			DbOperatorListener listener=parent.getListener();
-			if(extreme){
+			Session parent = this.parent;
+			DbOperatorListener listener = parent.getListener();
+			if (extreme) {
 				for (T t : listValue) {
 					t.clearUpdate();
 					listener.afterUpdate(t, 1, parent);
 				}
-			}else{
+			} else {
 				for (T t : listValue) {
 					t.applyUpdate();
 					listener.afterUpdate(t, 1, parent);
-				}	
+				}
 			}
-			
+
 		}
 
 		public void setUpdatePart(Entry<List<String>, List<Field>> updatePart) {
@@ -500,8 +495,8 @@ public abstract class Batch<T extends IQueryableEntity> {
 				BindVariableContext context = new BindVariableContext(psmt, db, debug ? new StringBuilder(512).append("Batch Parameters: ").append(i + 1).append('/').append(len) : null);
 				List<Object> whereBind = BindVariableTool.setVariables(t.getQuery(), writeFields, bindVar, context);
 				psmt.addBatch();
-				parent.getCache().onUpdate(forceTableName==null?meta.getName():forceTableName, wherePart.getSql(), whereBind);
-				
+				parent.getCache().onUpdate(forceTableName == null ? meta.getName() : forceTableName, wherePart.getSql(), whereBind);
+
 				if (debug) {
 					LogUtil.info(context.getLogMessage());
 					int maxLog = ORMConfig.getInstance().getMaxBatchLog();
@@ -539,7 +534,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 		@Override
 		protected void callEventListenerBefore(List<T> listValue) {
 			Session parent = this.parent;
-			DbOperatorListener listener=parent.getListener();
+			DbOperatorListener listener = parent.getListener();
 			for (T t : listValue) {
 				listener.beforeDelete(t, parent);
 			}
@@ -547,8 +542,8 @@ public abstract class Batch<T extends IQueryableEntity> {
 
 		@Override
 		protected void callEventListenerAfter(List<T> listValue) {
-			Session parent=this.parent;
-			DbOperatorListener listener=parent.getListener();
+			Session parent = this.parent;
+			DbOperatorListener listener = parent.getListener();
 			for (T t : listValue) {
 				listener.afterDelete(t, 1, parent);
 			}
@@ -570,8 +565,8 @@ public abstract class Batch<T extends IQueryableEntity> {
 				}
 				BindVariableContext context = new BindVariableContext(psmt, db, debug ? new StringBuilder(512).append("Batch Parameters: ").append(i + 1).append('/').append(len) : null);
 				List<Object> whereBind = BindVariableTool.setVariables(t.getQuery(), null, bindVar, context);
-				parent.getCache().onDelete(forceTableName==null?meta.getName():forceTableName, wherePart.getSql(), whereBind);
-				
+				parent.getCache().onDelete(forceTableName == null ? meta.getName() : forceTableName, wherePart.getSql(), whereBind);
+
 				psmt.addBatch();
 				if (debug) {
 					LogUtil.info(context.getLogMessage());

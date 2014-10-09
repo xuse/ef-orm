@@ -20,9 +20,12 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import jef.common.log.LogUtil;
+import jef.database.Condition;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.meta.Reference;
 import jef.database.wrapper.clause.InMemoryOrderBy;
 import jef.database.wrapper.populator.ColumnMeta;
 
@@ -35,6 +38,12 @@ import org.apache.commons.lang.ArrayUtils;
  * 
  */
 final class ReorderResultSet extends AbstractResultSet {
+	// 级联过滤条件
+	protected Map<Reference, List<Condition>> filters;
+	public Map<Reference, List<Condition>> getFilters() {
+		return filters;
+	}
+
 	private ColumnMeta columns;
 	private ResultSetCompartor orders;
 	private final List<ResultSet> gettingResults = new ArrayList<ResultSet>();

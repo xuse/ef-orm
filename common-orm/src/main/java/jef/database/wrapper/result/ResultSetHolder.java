@@ -19,12 +19,16 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
+import java.util.Map;
 
 import javax.persistence.PersistenceException;
 
+import jef.database.Condition;
 import jef.database.DbUtils;
 import jef.database.OperateTarget;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.meta.Reference;
 import jef.database.wrapper.populator.ColumnMeta;
 
 public final class ResultSetHolder extends AbstractResultSet{
@@ -123,5 +127,9 @@ public final class ResultSetHolder extends AbstractResultSet{
 	protected ResultSet get() throws SQLException {
 		ensureOpen();
 		return rs;
+	}
+	@Override
+	public Map<Reference, List<Condition>> getFilters() {
+		throw new UnsupportedOperationException();
 	}
 }

@@ -20,11 +20,14 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import jef.common.log.LogUtil;
+import jef.database.Condition;
 import jef.database.DbUtils;
 import jef.database.ORMConfig;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.meta.Reference;
 import jef.database.rowset.CachedRowSetImpl;
 import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.clause.InMemoryProcessor;
@@ -35,7 +38,12 @@ public class InMemoryProcessResultSet extends AbstractResultSet{
 	private ColumnMeta columns;
 	private DatabaseDialect dialect;
 	private List<ResultSetHolder> results;
-	
+	// 级联过滤条件
+	protected Map<Reference, List<Condition>> filters;
+	public Map<Reference, List<Condition>> getFilters() {
+		return filters;
+	}
+
 	//动作
 	private final List<InMemoryProcessor> processors=new ArrayList<InMemoryProcessor>(4);
 	

@@ -4,15 +4,20 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import jef.database.DbClient;
 import jef.database.DebugUtil;
 import jef.database.OperateTarget;
+import jef.database.Transaction;
 import jef.database.rowset.CachedRowSetImpl;
 import jef.database.wrapper.clause.InMemoryOrderBy;
 import jef.database.wrapper.result.IResultSet;
 import jef.database.wrapper.result.MultipleResultSet;
 import jef.database.wrapper.result.ResultSetHolder;
+import jef.orm.onetable.model.Foo;
+import jef.tools.string.RandomData;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -23,20 +28,27 @@ public class OrderPerformanceTest {
 	private static ResultSet rs2;
 	private static ResultSet rs3;
 	
-	
+	@Test
+	public void addRecord() throws SQLException{
+		DbClient db=new DbClient();
+		Transaction tx=db.startTransaction();
+		db.createTable(Foo.class);
+		List<Foo> list=new ArrayList<Foo>();
+		for(int i=0;i<2000;i++){
+			Foo foo=new Foo();
+			foo.setName(RandomData.randomChineseName());
+			list.add(foo);
+		}
+		tx.batchInsert(list);
+		tx.commit(true);
+		db.close();
+	}
 	
 	@BeforeClass
 	public static void prepare() throws SQLException{
 		DbClient db=new DbClient();
 		
-//		db.createTable(Foo.class);
-//		List<Foo> list=new ArrayList<Foo>();
-//		for(int i=0;i<10000;i++){
-//			Foo foo=new Foo();
-//			foo.setName(RandomData.randomChineseName());
-//			list.add(foo);
-//		}
-//		db.batchInsert(list);
+
 		CachedRowSetImpl c1=new CachedRowSetImpl();
 		CachedRowSetImpl c2=new CachedRowSetImpl();
 		CachedRowSetImpl c3=new CachedRowSetImpl();
@@ -124,12 +136,12 @@ public class OrderPerformanceTest {
 	private void testRsPerformces1(MultipleResultSet mrs,String name,int count) throws SQLException {
 		long start=System.currentTimeMillis();
 		for(int x=0;x<count ;x++){
-//			int n=0;
+			int n=0;
 			IResultSet rs=mrs.toSimple(null);
 			while(rs.next()){
-//				n++;
+				n++;
 			}
-//			System.out.println(n);
+			System.out.println(n);
 			rs1.beforeFirst();
 			rs2.beforeFirst();
 			rs3.beforeFirst();

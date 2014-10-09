@@ -34,16 +34,9 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
-import java.util.List;
 import java.util.Map;
 
-import jef.database.Condition;
-import jef.database.meta.Reference;
-
 public abstract class AbstractResultSet implements IResultSet {
-	// 级联过滤条件
-	protected Map<Reference, List<Condition>> filters;
-
 	protected abstract ResultSet get() throws SQLException;
 
 	public Object getObject(String columnName) throws SQLException {
@@ -172,10 +165,6 @@ public abstract class AbstractResultSet implements IResultSet {
 
 	public void updateObject(String columnName, Object value) throws SQLException {
 		get().updateObject(columnName, value);
-	}
-
-	public Map<Reference, List<Condition>> getFilters() {
-		return filters;
 	}
 
 	public InputStream getBinaryStream(int columnIndex) throws SQLException {

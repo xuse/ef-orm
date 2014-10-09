@@ -19,11 +19,14 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 
 import javax.persistence.PersistenceException;
 
+import jef.database.Condition;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.meta.Reference;
 import jef.database.wrapper.clause.InMemoryOrderBy;
 import jef.database.wrapper.populator.ColumnMeta;
 
@@ -40,6 +43,11 @@ final class ReorderResultSet2 extends AbstractResultSet {
 	private final TreeSet<ResultSetHolder> gettingResults;
 	private List<ResultSetHolder> allResults;
 	private ResultSetHolder activeRs;
+	// 级联过滤条件
+	protected Map<Reference, List<Condition>> filters;
+	public Map<Reference, List<Condition>> getFilters() {
+		return filters;
+	}
 
 	public ReorderResultSet2(List<ResultSetHolder> r, InMemoryOrderBy order, ColumnMeta columns) {
 		this.allResults = r;

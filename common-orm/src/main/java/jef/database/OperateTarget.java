@@ -41,6 +41,8 @@ import jef.database.wrapper.result.ResultSetWrapper;
 import jef.tools.MathUtils;
 import jef.tools.StringUtils;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+
 /**
  * OperateTarge描述了一个带有状态的数据库操作对象。 这一情况发生在支持路由的多数据源的场合下。
  * 
@@ -640,7 +642,7 @@ public class OperateTarget implements SqlTemplate {
 	}
 
 	private boolean isJpaTx() {
-		return session instanceof Transaction;
+		return (session instanceof TransactionImpl) && session.getTxType()==TransactionMode.JPA;
 	}
 	
 	public PartitionSupport getPartitionSupport(){

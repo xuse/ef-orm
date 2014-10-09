@@ -79,6 +79,13 @@ public final class MultipleResultSet extends AbstractResultSet{
 		return columns;
 	}
 	
+	// 级联过滤条件
+	protected Map<Reference, List<Condition>> filters;
+	public Map<Reference, List<Condition>> getFilters() {
+		return filters;
+	}
+
+	
 	@Override
 	public ResultSetMetaData getMetaData() throws SQLException {
 		return columns.getMeta();
