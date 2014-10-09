@@ -36,9 +36,7 @@ import org.apache.commons.lang.ArrayUtils;
  */
 final class ReorderResultSet extends AbstractResultSet {
 	private ColumnMeta columns;
-
-	private int[] orderFields;
-	private boolean[] orderAsc;
+	private ResultSetCompartor orders;
 	private final List<ResultSet> gettingResults = new ArrayList<ResultSet>();
 	private DatabaseDialect[] profiles;
 	private List<ResultSetHolder> allResults;
@@ -46,8 +44,7 @@ final class ReorderResultSet extends AbstractResultSet {
 
 	public ReorderResultSet(List<ResultSetHolder> r,InMemoryOrderBy order, ColumnMeta columns) {
 		allResults=r;
-		this.orderFields=order.getOrderFields();
-		this.orderAsc=order.getOrderAsc();
+		this.orders=new ResultSetCompartor(order);
 		{
 			int len = r.size();
 			profiles = new DatabaseDialect[len];
@@ -117,36 +114,12 @@ final class ReorderResultSet extends AbstractResultSet {
 		ResultSet value = gettingResults.get(0);
 		for (int i = 1; i < gettingResults.size(); i++) {
 			ResultSet value2 = gettingResults.get(i);
-			if (isMin(value, value2)) {
+			if (orders.compare(value, value2)>0) {
 				currentIndex = i;
 				value = value2;
 			}
 		}
 		// System.out.println("->" + results.indexOf(gettingResults.get(currentIndex)));
-	}
-
-	/*
-	 * 如果value2要排在value1前面，则返回true
-	 * @param value
-	 * @param value2
-	 * @return
-	 * @throws SQLException
-	 */
-	// 总是取最小的数值
-	private boolean isMin(ResultSet value, ResultSet value2) throws SQLException {
-		for (int i = 0; i < orderFields.length; i++) {
-			int r = compare(value.getObject(orderFields[i]), value2.getObject(orderFields[i]));
-			if (r > 0) {
-				return orderAsc[i];
-			} else if (r < 0) {
-				return !orderAsc[i];
-			}
-			// 上面这个逻辑写了好半天啊……
-			// if((r>0)^(!orderAsc[i])){
-			// return true;
-			// }
-		}
-		return false;// all equals
 	}
 
 	public void beforeFirst() throws SQLException {
@@ -182,17 +155,7 @@ final class ReorderResultSet extends AbstractResultSet {
 			throw new IllegalStateException();
 		return profiles[currentIndex];
 	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private int compare(Object object, Object object2) {
-		if (object == object2)
-			return 0;
-		if (object == null)
-			return 1;
-		if (object2 == null)
-			return -1;
-		return ((Comparable) object).compareTo(object2);
-	}
+	
 
 	public boolean previous() throws SQLException {
 		throw new UnsupportedOperationException();
@@ -221,9 +184,6 @@ final class ReorderResultSet extends AbstractResultSet {
 	public boolean isClosed() throws SQLException {
 		return columns==null;
 	}
-
-
-
 
 	@Override
 	public ResultSetMetaData getMetaData() throws SQLException {

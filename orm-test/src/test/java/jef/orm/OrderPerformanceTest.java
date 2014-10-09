@@ -104,11 +104,11 @@ public class OrderPerformanceTest {
 	private void testRsPerformces2(MultipleResultSet mrs, String name,int count) throws SQLException {
 		long start=System.currentTimeMillis();
 		for(int x=0;x<count ;x++){
-			IResultSet rs=mrs.toSimpleInmem(null);
+//			IResultSet rs=mrs.toSimpleInmem(null);
 //			int n=0;
-			while(rs.next()){
-//				n++;
-			}
+//			while(rs.next()){
+////				n++;
+//			}
 //			System.out.println(n);
 			rs1.beforeFirst();
 			rs2.beforeFirst();

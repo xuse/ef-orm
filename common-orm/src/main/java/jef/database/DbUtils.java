@@ -123,7 +123,7 @@ public final class DbUtils {
 	 * 1、在分库分表时使用线程
 	 * 2、在JTA事务管理模式下，为了避免在JTA中执行DDL，因此不得不将代码在新的线程中执行。
 	 */
-	public static ExecutorService es= new ThreadPoolExecutor(2, 8,60000L, TimeUnit.MILLISECONDS,new LinkedBlockingQueue<Runnable>());
+	public static ExecutorService es= new ThreadPoolExecutor(1, 8,60000L, TimeUnit.MILLISECONDS,new LinkedBlockingQueue<Runnable>());
 	
 	/**
 	 * 获取数据库加密的密钥,目前使用固定密钥

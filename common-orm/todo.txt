@@ -1,4 +1,4 @@
-﻿============== 确定已经解决的问题 ==============
+﻿\============== 确定已经解决的问题 ==============
 读取Sequence initialValue=1000   allocationSize (OK)
 关于vsMany和vsOne目前界限正在模糊，需要按照lazy和eager两种方式重新修改。(OK)
 读取Table initialValue=1000   valueColumnName   pkColumnValue table   allocationSize (OK)
@@ -100,38 +100,31 @@ reivew和修订文档
 
 
 ================ 待解决的问题  ===================
-使用外部配置文件来配置分库分表JDataSource
+atomikos是分布式事务的解决方案
+1\H框架JTA事务 (OK)
+2JEF JTA事务   (OK)
+3 H框架、JEF共同参与JTA事务。可以，由atomikos内部基于线程分配事务。同一线程的操作被划分在一个事务中。(OK)
+4 H框架，JMS,JEF共存情况下的事务配置 (东方通为例。)基本完成，由于TongLinkQ的问题案例没跑通。
 
+优化reorder算法
 编写《论一种新的多结果集排序算法》
 测试和对比三种算法
 优化现有算法
-测试分析内存排序算法是否可以优化
+测试分析内存排序算法是否可以优化，分析内存分页算法是否可以优化。（不带排序时？没啥意义。）
 
-测试单国明的问题是不是由约束冲突引起
-
-测试axi2s2作为服务器，CXF作为客户端时，是否会出现命名空间规范性问题
-
-准备WebService培训大纲
-
-
-atomikos是分布式事务的解决方案
-1\H框架JTA事务
-2JEF JTA事务
-3 H框架JTA事务，并由JEF共享？？？做不到
-4 H框架，JMS,JEF共存情况下的事务配置
-
-
-
-这里的分布式事务不仅包括数据库事务，也包括MQ等jms事务，可以将MQ和RDBMS操作关联到一个JTA事务中——引申一下，是不是还可以将dubbo调用也封装到JTA事务中，这样今后程序的可靠性进一步增强……
-<dependency>
-  <groupId>com.atomikos</groupId>
-  <artifactId>transactions-jms</artifactId>
-  <version>3.7.1</version>
-</dependency>
 
 
 按主键查询逻辑优化
 之前性能测试均为极端情况，测试综合工况，如10条记录左右的查询查询500次耗时。 如update语句更新500次。
+支持读写分离模式
+
+
+
+准备WebService培训大纲
+
+使用外部配置文件来配置分库分表JDataSource
+是不是还可以将dubbo调用也封装到JTA事务中，这样今后程序的可靠性进一步增强……
+
 
 申请加入官方仓库
 工程合并并更名  (ef-common/ef-orm-core)

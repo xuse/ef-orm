@@ -44,7 +44,7 @@ public abstract class AbstractResultSet implements IResultSet {
 	// 级联过滤条件
 	protected Map<Reference, List<Condition>> filters;
 
-	protected abstract ResultSet get();
+	protected abstract ResultSet get() throws SQLException;
 
 	public Object getObject(String columnName) throws SQLException {
 		return get().getObject(columnName);

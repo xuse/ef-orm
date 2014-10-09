@@ -16,12 +16,18 @@
 package jef.database.wrapper.result;
 
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
 import java.sql.Statement;
+
+import javax.persistence.PersistenceException;
 
 import jef.database.DbUtils;
 import jef.database.OperateTarget;
+import jef.database.dialect.DatabaseDialect;
+import jef.database.wrapper.populator.ColumnMeta;
 
-public final class ResultSetHolder {
+public final class ResultSetHolder extends AbstractResultSet{
 	private Statement st;
 	ResultSet rs;
 	OperateTarget db;
@@ -57,5 +63,65 @@ public final class ResultSetHolder {
 			}	
 			db=null;
 		}
+	}
+	@Override
+	public DatabaseDialect getProfile() {
+		return db.getProfile();
+	}
+	@Override
+	public ColumnMeta getColumns() {
+		throw new UnsupportedOperationException();
+	}
+	@Override
+	public boolean next() {
+		try {
+			ensureOpen();
+			return rs.next();
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
+		}
+	}
+	private void ensureOpen() throws SQLException {
+		if(rs==null){
+			throw new SQLException("The resultset was closed!");
+		}
+	}
+	@Override
+	public void afterLast() throws SQLException {
+		ensureOpen();
+		rs.afterLast();
+	}
+	@Override
+	public void beforeFirst() throws SQLException {
+		ensureOpen();
+		rs.beforeFirst();
+	}
+	@Override
+	public void close() throws SQLException {
+		close(true);
+	}
+	@Override
+	public boolean first() throws SQLException {
+		ensureOpen();
+		return rs.first();
+	}
+	@Override
+	public ResultSetMetaData getMetaData() throws SQLException {
+		ensureOpen();
+		return rs.getMetaData();
+	}
+	@Override
+	public boolean isClosed() throws SQLException {
+		return rs.isClosed();
+	}
+	@Override
+	public boolean previous() throws SQLException {
+		ensureOpen();
+		return rs.previous();
+	}
+	@Override
+	protected ResultSet get() throws SQLException {
+		ensureOpen();
+		return rs;
 	}
 }
