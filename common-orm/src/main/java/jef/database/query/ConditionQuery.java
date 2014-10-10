@@ -3,6 +3,8 @@ package jef.database.query;
 import java.util.Collection;
 
 import jef.database.Field;
+import jef.database.SelectProcessor;
+import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.populator.Transformer;
 
 /**
@@ -11,6 +13,8 @@ import jef.database.wrapper.populator.Transformer;
  *
  */
 public interface ConditionQuery{
+	static final String CUSTOM_TABLE_NAME="_table_name";
+	
 	/**
 	 * 清除全部的请求数据
 	 * 
@@ -78,5 +82,24 @@ public interface ConditionQuery{
 	 */
 	Transformer getResultTransformer();
 	
-	static final String CUSTOM_TABLE_NAME="_table_name";
+	/**
+	 * 内部使用：
+	 * 准备进行查询。
+	 * @return
+	 */
+	SqlContext prepare();
+	/**
+	 * 内部使用：转换为查询语句无绑定
+	 * @param processor
+	 * @return
+	 */
+	QueryClause toQuerySql(SelectProcessor processor,SqlContext context,boolean order);
+	
+	/**
+	 * 内部使用：转换为查询语句(绑定)
+	 * @param processor
+	 * @param context
+	 * @return
+	 */
+	QueryClause toPrepareQuerySql(SelectProcessor processor, SqlContext context,boolean order);
 }

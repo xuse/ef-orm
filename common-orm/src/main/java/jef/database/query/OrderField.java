@@ -19,7 +19,7 @@ import java.io.Serializable;
 
 import jef.database.DbUtils;
 import jef.database.Field;
-import jef.database.SqlProcessor;
+import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.FBIField;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.TupleField;
@@ -31,99 +31,115 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 
 /**
  * 描述一个排序字段
+ * 
  * @author Administrator
- *
+ * 
  */
-public final class OrderField implements Serializable{
+public final class OrderField implements Serializable {
 	private static final long serialVersionUID = -5112285033060486050L;
 	private Field field;
 	private boolean asc;
-	
+
 	/**
 	 * 是否正序
+	 * 
 	 * @return
 	 */
 	public boolean isAsc() {
 		return asc;
 	}
+
 	/**
 	 * 排序字段
+	 * 
 	 * @return
 	 */
-	public Field getField(){
+	public Field getField() {
 		return field;
 	}
+
 	/**
 	 * 是否和查询绑定
+	 * 
 	 * @return
 	 */
-	public boolean isBind(){
-		if(!(field instanceof RefField))return false;
-		RefField ref=(RefField)field;
+	public boolean isBind() {
+		if (!(field instanceof RefField))
+			return false;
+		RefField ref = (RefField) field;
 		return ref.isBind();
 	}
+
 	/**
 	 * 构造
-	 * @param field 字段
-	 * @param asc   正序
+	 * 
+	 * @param field
+	 *            字段
+	 * @param asc
+	 *            正序
 	 */
-	public OrderField(Field field,boolean asc){
-		this.field=field;
-		this.asc=asc;
+	public OrderField(Field field, boolean asc) {
+		this.field = field;
+		this.asc = asc;
 	}
-	
+
 	public int hashCode() {
 		return new HashCodeBuilder().append(field.name()).append(asc).toHashCode();
 	}
-	
+
 	public boolean equals(Object obj) {
-		if(obj==null)return false;
-		if(obj==this)return true;
-		if(!(obj instanceof OrderField)){
+		if (obj == null)
+			return false;
+		if (obj == this)
+			return true;
+		if (!(obj instanceof OrderField)) {
 			return false;
 		}
-		OrderField rhs=(OrderField)obj;
+		OrderField rhs = (OrderField) obj;
 		return new EqualsBuilder().append(this.asc, rhs.asc).append(this.field.name(), rhs.field.name()).isEquals();
 	}
-	
-	//返回两个String,第一个是在OrderBy中的现实
-	public String toString(SqlProcessor processor,SqlContext context) {
-		String columnName=null;
-		if(field instanceof RefField){
+
+	// 返回两个String,第一个是在OrderBy中的现实
+	public String toString(DatabaseDialect profile, SqlContext context) {
+		String columnName = null;
+		if (field instanceof RefField) {
 			Assert.notNull(context);
-			RefField ref=(RefField)field;
-			String alias=context.getAliasOf(ref.getInstanceQuery(context));
-			columnName = DbUtils.toColumnName(ref.getField(),processor.getProfile(),alias);//无法支持分库排序
-		}else if(field instanceof Enum || field instanceof TupleField){
-			String alias=context==null?null:context.getCurrentAliasAndCheck(field);
-			columnName = DbUtils.toColumnName(field,processor.getProfile(),alias);//
-		}else if(field instanceof FBIField){
-			FBIField fbi=(FBIField)field;
-			columnName = StringUtils.upperCase(fbi.toSqlAndBindAttribs(context, processor));
-		}else if(field instanceof SqlExpression){
+			RefField ref = (RefField) field;
+			String alias = context.getAliasOf(ref.getInstanceQuery(context));
+			columnName = DbUtils.toColumnName(ref.getField(), profile, alias);// 无法支持分库排序
+		} else if (field instanceof Enum || field instanceof TupleField) {
+			String alias = context == null ? null : context.getCurrentAliasAndCheck(field);
+			columnName = DbUtils.toColumnName(field, profile, alias);//
+		} else if (field instanceof FBIField) {
+			FBIField fbi = (FBIField) field;
+			columnName = StringUtils.upperCase(fbi.toSqlAndBindAttribs(context, profile));
+		} else if (field instanceof SqlExpression) {
 			columnName = field.name();
-		}else{
-			throw new IllegalArgumentException("The field type " + field.getClass().getName() +" is invalid!");
+		} else {
+			throw new IllegalArgumentException("The field type " + field.getClass().getName() + " is invalid!");
 		}
 		return columnName;
 	}
+
 	/**
 	 * 原先绑定在所属的Query上（可能是以ref的形式暂存在其中，但作为join的一部分，现在要准备离开这个存储的位置了）
-	 * @param query 所属的query
+	 * 
+	 * @param query
+	 *            所属的query
 	 * @param context
 	 */
 	void prepareFlow(Query<?> query) {
-//		if(isBind()){
-//			return;
-//		}
-		if(field instanceof RefField){
+		// if(isBind()){
+		// return;
+		// }
+		if (field instanceof RefField) {
 			return;
 		}
-		ITableMetadata type=DbUtils.getTableMeta(field);
-		if(type!=query.getMeta()){
-			field=new RefField(field);
-		}else{
-			field=new RefField(query,field);
+		ITableMetadata type = DbUtils.getTableMeta(field);
+		if (type != query.getMeta()) {
+			field = new RefField(field);
+		} else {
+			field = new RefField(query, field);
 		}
 	}
 }

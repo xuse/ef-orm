@@ -67,16 +67,19 @@ import org.apache.commons.lang.RandomStringUtils;
 public class DefaultSqlProcessor implements SqlProcessor {
 	private DatabaseDialect profile;
 	protected DbClient parent;
-	private Expression EXP_ROWID;
-
-	DefaultSqlProcessor(DatabaseDialect profile, DbClient parent) {
-		this.profile = profile;
-		this.parent = parent;
+	private static Expression EXP_ROWID;
+	{
 		try {
-			this.EXP_ROWID = DbUtils.parseExpression("ROWID");
+			EXP_ROWID = DbUtils.parseExpression("ROWID");
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
+	}
+
+	
+	DefaultSqlProcessor(DatabaseDialect profile, DbClient parent) {
+		this.profile = profile;
+		this.parent = parent;
 	}
 
 	/**
@@ -264,7 +267,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 				JpqlExpression je = (JpqlExpression) value;
 				if (!je.isBind())
 					je.setBind(obj.getQuery());
-				cstr.add(columnName + " = " + je.toSqlAndBindAttribs(null, this));
+				cstr.add(columnName + " = " + je.toSqlAndBindAttribs(null, profile));
 			} else if (value instanceof jef.database.Field) {// FBI Field不可能在此
 				cstr.add(columnName + " = " + DbUtils.toColumnName((Field) value, profile,null));
 			} else {
@@ -388,7 +391,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 		for (Condition c : conds) {
 			if (sb.length() > 0)
 				sb.append(" and ");
-			sb.append(c.toSqlClause(meta, context, this, q.getInstance(),profile)); // 递归的，当do是属于Join中的一部分时，需要为其增加前缀
+			sb.append(c.toSqlClause(meta, context,this, q.getInstance(),profile)); // 递归的，当do是属于Join中的一部分时，需要为其增加前缀
 		}
 		if (sb.length() == 0)
 			throw new NullPointerException("Illegal usage of query:" + q.getClass().getName() + " object, must including any condition in query. or did you forget to set the primary key for the entity?");
@@ -401,7 +404,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 			AbstractJoinImpl join = (AbstractJoinImpl) query;
 			StringBuilder sb = new StringBuilder();
 			for (Query<?> ele : join.elements()) {
-				BindSql result = generateWhereCondition(ele, context.getContextOf(ele), ele.getConditions(), false);
+				BindSql result = generateWhereCondition(ele, context.getContextOf(ele), ele.getConditions(), false,profile);
 				if (result.getBind() != null) {
 					params.addAll(result.getBind());
 				}
@@ -415,7 +418,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 			}
 			for (Map.Entry<Query<?>, List<Condition>> entry : join.getRefConditions().entrySet()) {
 				Query<?> q = entry.getKey();
-				BindSql result = generateWhereCondition(q, context.getContextOf(q), entry.getValue(), false);
+				BindSql result = generateWhereCondition(q, context.getContextOf(q), entry.getValue(), false,profile);
 				if (result.getBind() != null) {
 					params.addAll(result.getBind());
 				}
@@ -429,13 +432,13 @@ public class DefaultSqlProcessor implements SqlProcessor {
 			}
 			return new BindSql(sb.toString(), params);
 		} else if (query instanceof Query<?>) {
-			return generateWhereCondition((Query<?>) query, context, query.getConditions(), removePKUpdate);
+			return generateWhereCondition((Query<?>) query, context, query.getConditions(), removePKUpdate,profile);
 		} else {
 			throw new IllegalArgumentException("Unknown Query class:" + query.getClass().getName());
 		}
 	}
 
-	private BindSql generateWhereCondition(Query<?> q, SqlContext context, List<Condition> conditions, boolean removePKUpdate) {
+	private BindSql generateWhereCondition(Query<?> q, SqlContext context, List<Condition> conditions, boolean removePKUpdate,DatabaseDialect profile) {
 		List<BindVariableDescription> params = new ArrayList<BindVariableDescription>();
 		IQueryableEntity obj = q.getInstance();
 		if (q.isAll())
@@ -455,7 +458,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 		for (Condition c : conditions) {
 			if (sb.length() > 0)
 				sb.append(" and ");
-			sb.append(c.toPrepareSqlClause(params, q.getMeta(), context, this, obj,profile));
+			sb.append(c.toPrepareSqlClause(params, q.getMeta(), context,this, obj,profile));
 		}
 
 		if (sb.length() > 0 || ORMConfig.getInstance().isAllowEmptyQuery()) {

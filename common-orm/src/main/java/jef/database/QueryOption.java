@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import jef.database.dialect.type.ResultSetAccessor;
-import jef.database.meta.MetaHolder;
 import jef.database.meta.Reference;
 import jef.database.query.ConditionQuery;
 import jef.database.query.JoinElement;
@@ -36,7 +35,6 @@ public final class QueryOption implements Cloneable {
 	private int queryTimeout;
 	boolean holdResult;
 	boolean cacheResultset;
-	String tableName;
 	
 	private transient MultipleResultSet rs;
 	
@@ -69,7 +67,6 @@ public final class QueryOption implements Cloneable {
 				throw new IllegalSelectorException();//never happens
 			}
 			op.queryTimeout=queryTimeout;
-			op.tableName=MetaHolder.toSchemaAdjustedName(tableName);
 			return op;
 		}else{
 			return DEFAULT_MAX1;
@@ -77,10 +74,6 @@ public final class QueryOption implements Cloneable {
 	}
 	
 	public static QueryOption createFrom(ConditionQuery queryObj){
-		String tableName=null;
-		if(queryObj instanceof JoinElement){
-			tableName=(String)((JoinElement)queryObj).getAttribute(JoinElement.CUSTOM_TABLE_NAME);	
-		}
 		QueryOption op=createOption();
 		int maxResult=queryObj.getMaxResult();
 		if(maxResult>0)
@@ -91,7 +84,6 @@ public final class QueryOption implements Cloneable {
 		int queryTimeout=queryObj.getQueryTimeout();
 		if(queryTimeout>0)
 			op.queryTimeout=queryTimeout;
-		op.tableName=MetaHolder.toSchemaAdjustedName(tableName);
 		return op;
 	}
 
@@ -106,14 +98,6 @@ public final class QueryOption implements Cloneable {
 	public int getFetchSize() {
 		return fetchSize;
 	}
-	
-	public String getTableName() {
-		return tableName;
-	}
-	public void setTableName(String tableName) {
-		this.tableName = tableName;
-	}
-
 	public int getMaxResult() {
 		return maxResult;
 	}

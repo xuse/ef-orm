@@ -12,8 +12,10 @@ import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.annotation.PartitionResult;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.innerpool.PartitionSupport;
 import jef.database.meta.Feature;
 import jef.database.meta.ISelectProvider;
+import jef.database.meta.MetaHolder;
 import jef.database.query.ComplexQuery;
 import jef.database.query.ConditionQuery;
 import jef.database.query.ISelectItemProvider;
@@ -30,8 +32,6 @@ import jef.database.wrapper.clause.CountClause;
 import jef.database.wrapper.clause.GroupClause;
 import jef.database.wrapper.clause.OrderClause;
 import jef.database.wrapper.clause.QueryClause;
-import jef.database.wrapper.clause.QueryClauseImpl;
-import jef.database.wrapper.clause.QueryClauseSqlImpl;
 import jef.database.wrapper.clause.SelectPart;
 import jef.database.wrapper.result.MultipleResultSet;
 import jef.http.client.support.CommentEntry;
@@ -39,21 +39,34 @@ import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
 
 public abstract class SelectProcessor {
-	public abstract QueryClause toQuerySql(ConditionQuery obj, IntRange range, String myTableName,boolean withOrder);
+	/**
+	 * 转换为SQL查询语句
+	 * 
+	 * @param obj
+	 *            请求
+	 * @param range
+	 *            范围
+	 * @param myTableName
+	 *            自定义表名（排除）
+	 * @param withOrder
+	 *            带排序
+	 * @return
+	 */
+	public abstract QueryClause toQuerySql(ConditionQuery obj, IntRange range, boolean withOrder);
 
 	/**
 	 * 形成count的语句 可以返回多个count语句，意味着要执行上述全部语句，然后累加
 	 * 
-	 * @deprecated 目前看来，当设置了投影操作时，这种转换很不靠谱
+	 * @FIXME 目前看来，当设置了投影操作时，这种转换不太靠谱，需要进一步改进计算方式．比如用group子句来实现distinct操作。
 	 */
-	public abstract CountClause toCountSql(ConditionQuery obj, String tableName) throws SQLException;
+	public abstract CountClause toCountSql(ConditionQuery obj) throws SQLException;
 
-	abstract void processSelect(OperateTarget db, QueryClause sql, PartitionResult site,ConditionQuery queryObj, MultipleResultSet rs, QueryOption option) throws SQLException;
+	abstract void processSelect(OperateTarget db, QueryClause sql, PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs, QueryOption option) throws SQLException;
 
 	abstract int processCount(OperateTarget db, List<BindSql> bindSqls) throws SQLException;
 
 	protected DbClient db;
-	protected SqlProcessor parent;
+	public SqlProcessor parent;
 	protected DbOperateProcessor p;
 
 	SelectProcessor(DbClient db, DbOperateProcessor p, SqlProcessor parent) {
@@ -66,71 +79,13 @@ public abstract class SelectProcessor {
 	public DatabaseDialect getProfile() {
 		return parent.getProfile();
 	}
-	
+
 	public DatabaseDialect getProfile(PartitionResult[] sites) {
 		return this.parent.getProfile(sites);
 	}
-	
 
-	protected OrderClause toOrderClause(ConditionQuery obj, SqlContext context) {
-		if (obj.getOrderBy() == null || obj.getOrderBy().size() == 0) {
-			return OrderClause.DEFAULT;
-		}
-		List<Entry<String, Boolean>> rs = new ArrayList<Entry<String, Boolean>>();
-		StringBuffer sb = new StringBuffer();
-		for (OrderField e : obj.getOrderBy()) {
-			if (sb.length() > 0) {
-				sb.append(",");
-			}
-			String orderResult = e.toString(parent, context);
-			sb.append(orderResult).append(' ');
-			sb.append(e.isAsc() ? "ASC" : "DESC");
-			rs.add(new Entry<String, Boolean>(orderResult, e.isAsc()));
-		}
-		return new OrderClause(" order by " + sb.toString(), rs);
-	}
-
-	// 转为group + having语句
-	protected GroupClause toGroupAndHavingClause(JoinElement q, SqlContext context) {
-		GroupClause result=new GroupClause();
-		for (ISelectItemProvider table : context.getReference()) {
-			if (table.getReferenceCol() == null)
-				continue;
-			for (ISelectProvider field : table.getReferenceCol()) {
-				if (field instanceof SingleColumnSelect) {
-					SingleColumnSelect column = (SingleColumnSelect) field;
-					if ((column.getProjection() & ISelectProvider.PROJECTION_GROUP) > 0) {
-						result.addGroup(column.getSelectItem(getProfile(), table.getSchema(), context));
-					}
-					if ((column.getProjection() & ISelectProvider.PROJECTION_HAVING) > 0) {
-						result.addHaving(column.toHavingClause(getProfile(), table.getSchema(), context));
-					} else if ((column.getProjection() & ISelectProvider.PROJECTION_HAVING_NOT_SELECT) > 0) {
-						result.addHaving(column.toHavingClause(getProfile(), table.getSchema(), context));
-					}
-				}
-			}
-		}
-		return result;
-	}
-
-	/**
-	 * 返回SQL的Select列部分,本来JDBC规定接口ResultsetMetadata中可以getTableName(int
-	 * columnIndex)来获得某个列的表名 但是大多数JDBC驱动都没有实现，返回的是""。 为此，需要对所有字段进行唯一化编码处理
-	 */
-	protected SelectPart toSelectSql(SqlContext context, GroupClause group) {
-		boolean groupMode=group.isNotEmpty();
-		SelectPart rs = new SelectPart();
-		rs.setDistinct(context.isDistinct());
-		for (ISelectItemProvider rp : context.getReference()) {// 每个rp就是一张表
-			rs.addAll(rp.getSelectColumns(getProfile(), groupMode, context));
-		}
-		if (!groupMode && getProfile().has(Feature.SELECT_ROW_NUM) && context.size() == 1) {
-			ISelectItemProvider ip = context.getReference().get(0);
-			if (ip.isAllTableColumns()) {
-				rs.add(new CommentEntry("t.rowid", "rowid_"));
-			}
-		}
-		return rs;
+	public PartitionSupport getPartitionSupport() {
+		return db.getPartitionSupport();
 	}
 
 	final static class NormalImpl extends SelectProcessor {
@@ -139,49 +94,13 @@ public abstract class SelectProcessor {
 			super(db, p, parent);
 		}
 
-		// 非递归，直接外部调用
-		public QueryClause toQuerySql(ConditionQuery obj, IntRange range, String myTableName,boolean order) {
-			QueryClauseImpl clause = new QueryClauseImpl(parent.getProfile());
-			if (obj instanceof Query<?>) {
-				Query<?> query = (Query<?>) obj;
-				SqlContext context = query.prepare();
-				GroupClause groupClause = toGroupAndHavingClause(query, context);
-				clause.setGrouphavingPart(groupClause);
-				clause.setSelectPart(toSelectSql(context, groupClause));
-				PartitionResult[] prs=DbUtils.toTableNames(query.getInstance(), myTableName, query, db.getPartitionSupport());
-				clause.setTables(prs, query.getMeta().getName());
-				clause.setWherePart(parent.toWhereClause(query, context, false,getProfile(prs)));
-				if(order)
-					clause.setOrderbyPart(toOrderClause(obj, context));
-			} else if (obj instanceof Join) {
-				Join join = (Join) obj;
-				SqlContext context = join.prepare();
-				GroupClause groupClause = toGroupAndHavingClause(join, context);
-				clause.setGrouphavingPart(groupClause);
-				clause.setSelectPart(toSelectSql(context, groupClause));
-				clause.setTableDefinition(join.toTableDefinitionSql(parent, context,getProfile()));
-				clause.setWherePart(parent.toWhereClause(join, context, false,getProfile()));
-				if(order)
-					clause.setOrderbyPart(toOrderClause(join, context));
-			} else if (obj instanceof ComplexQuery) {
-				ComplexQuery cq = (ComplexQuery) obj;
-				SqlContext context = cq.prepare();
-				String s = cq.toQuerySql(this);
-				QueryClauseSqlImpl result = new QueryClauseSqlImpl(getProfile(), true);
-				result.setBody(s);
-				if(order){
-					result.setOrderbyPart(toOrderClause(cq, context));
-				}
-				result.setPageRange(range);
-				return result;
-			} else {
-				throw new IllegalArgumentException();
-			}
+		public QueryClause toQuerySql(ConditionQuery obj, IntRange range, boolean order) {
+			QueryClause clause = obj.toQuerySql(this, obj.prepare(), order);
 			clause.setPageRange(range);
 			return clause;
 		}
 
-		void processSelect(OperateTarget db, QueryClause sql,PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
+		void processSelect(OperateTarget db, QueryClause sql, PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
 			Statement st = null;
 			ResultSet rs = null;
 
@@ -222,24 +141,27 @@ public abstract class SelectProcessor {
 		}
 
 		@Override
-		public CountClause toCountSql(ConditionQuery obj, String customTableName) throws SQLException {
+		public CountClause toCountSql(ConditionQuery obj) throws SQLException {
 			CountClause result = new CountClause();
 			if (obj instanceof Query<?>) {
 				Query<?> query = (Query<?>) obj;
-				PartitionResult[] tables = DbUtils.toTableNames(query.getInstance(), customTableName, query, db.getPartitionSupport());
+				String myTableName = (String) query.getAttribute("_table_name");
+				myTableName = MetaHolder.toSchemaAdjustedName(myTableName);
+
+				PartitionResult[] tables = DbUtils.toTableNames(query.getInstance(), myTableName, query, db.getPartitionSupport());
 				SqlContext context = query.prepare();
 				for (PartitionResult site : tables) {
 					List<String> tablenames = site.getTables();
 					for (int i = 0; i < tablenames.size(); i++) {
-						result.addSql(site.getDatabase(), StringUtils.concat("select count(*) from ", tablenames.get(i), " t", parent.toWhereClause(query, context, false,parent.getPartitionSupport().getProfile(site.getDatabase()))));
+						result.addSql(site.getDatabase(), StringUtils.concat("select count(*) from ", tablenames.get(i), " t", parent.toWhereClause(query, context, false, parent.getPartitionSupport().getProfile(site.getDatabase()))));
 					}
 				}
 				return result;
 			} else if (obj instanceof Join) {
-				DatabaseDialect profile=getProfile();
+				DatabaseDialect profile = getProfile();
 				Join join = (Join) obj;
 				SqlContext context = join.prepare();
-				result.addSql(null, "select count(*) from " + join.toTableDefinitionSql(parent, context,profile) + parent.toWhereClause(join, context, false,profile));
+				result.addSql(null, "select count(*) from " + join.toTableDefinitionSql(parent, context, profile) + parent.toWhereClause(join, context, false, profile));
 				return result;
 			} else if (obj instanceof ComplexQuery) {
 				ComplexQuery cq = (ComplexQuery) obj;
@@ -297,51 +219,13 @@ public abstract class SelectProcessor {
 			super(db, p, parent);
 		}
 
-		public QueryClause toQuerySql(ConditionQuery obj, IntRange range, String myTableName,boolean order) {
-			QueryClauseImpl sb = new QueryClauseImpl(getProfile());
-			if (obj instanceof Query<?>) {
-				Query<?> query = (Query<?>) obj;
-				SqlContext context = query.prepare();
-				GroupClause groupClause = toGroupAndHavingClause(query, context);
-				PartitionResult[] prs=DbUtils.toTableNames(query.getInstance(), myTableName, query, db.getPartitionSupport());
-				BindSql whereResult = parent.toPrepareWhereSql(query, context, false,getProfile(prs));
-				sb.setSelectPart(toSelectSql(context, groupClause));
-				sb.setGrouphavingPart(groupClause);
-				sb.setTables(prs, query.getMeta().getName());
-				sb.setWherePart(whereResult.getSql());
-				sb.setBind(whereResult.getBind());
-				if(order)
-					sb.setOrderbyPart(toOrderClause(obj, context));
-			} else if (obj instanceof Join) {
-				Join join = (Join) obj;
-				SqlContext context = join.prepare();
-				GroupClause groupClause = toGroupAndHavingClause(join, context);
-				DatabaseDialect profile=getProfile();
-				sb.setSelectPart(toSelectSql(context, groupClause));
-				sb.setTableDefinition(join.toTableDefinitionSql(parent, context,profile));
-				BindSql whereResult = parent.toPrepareWhereSql(join, context, false,profile);
-				sb.setWherePart(whereResult.getSql());
-				sb.setBind(whereResult.getBind());
-				sb.setGrouphavingPart(groupClause);
-				if(order)
-					sb.setOrderbyPart(toOrderClause(join, context));
-			} else if (obj instanceof ComplexQuery) {
-				ComplexQuery cq = (ComplexQuery) obj;
-				SqlContext context = cq.prepare();
-				QueryClause result = cq.toPrepareQuerySql(this, context);
-				if(order){
-					result.setOrderbyPart(toOrderClause(cq, context));
-				}
-				result.setPageRange(range);
-				return result;
-			} else {
-				throw new IllegalArgumentException();
-			}
-			sb.setPageRange(range);
-			return sb;
+		public QueryClause toQuerySql(ConditionQuery obj, IntRange range, boolean order) {
+			QueryClause result = obj.toPrepareQuerySql(this, obj.prepare(), order);
+			result.setPageRange(range);
+			return result;
 		}
 
-		void processSelect(OperateTarget db, QueryClause sqlResult,PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
+		void processSelect(OperateTarget db, QueryClause sqlResult, PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
 			// 计算查询结果集参数
 			int rsType;
 			int concurType;
@@ -365,7 +249,7 @@ public abstract class SelectProcessor {
 			try {
 				psmt = db.prepareStatement(sql.getSql(), rsType, concurType);
 				BindVariableContext context = new BindVariableContext(psmt, db, sb);
-				BindVariableTool.setVariables(queryObj,null, sql.getBind(), context);
+				BindVariableTool.setVariables(queryObj, null, sql.getBind(), context);
 				option.setSizeFor(psmt);
 				rs = psmt.executeQuery();
 				rs2.add(rs, psmt, db);
@@ -388,22 +272,26 @@ public abstract class SelectProcessor {
 		}
 
 		@Override
-		public CountClause toCountSql(ConditionQuery obj, String tableName) throws SQLException {
+		public CountClause toCountSql(ConditionQuery obj) throws SQLException {
 			if (obj instanceof Query<?>) {
 				Query<?> query = (Query<?>) obj;
 				CountClause cq = new CountClause();
-				PartitionResult[] sites = DbUtils.toTableNames(query.getInstance(), tableName, query, db.getPartitionSupport());
+				String myTableName = (String) query.getAttribute("_table_name");
+				myTableName = MetaHolder.toSchemaAdjustedName(myTableName);
+				
+				PartitionResult[] sites = DbUtils.toTableNames(query.getInstance(), myTableName, query, db.getPartitionSupport());
+				DatabaseDialect profile = getProfile(sites);
 				SqlContext context = query.prepare();
-				GroupClause groupClause = toGroupAndHavingClause(query, context);
+				GroupClause groupClause = toGroupAndHavingClause(query, context, profile);
 				if (sites.length > 1) {// 多数据库下还要Distinct，没办法了
-					if(context.isDistinct()){
+					if (context.isDistinct()) {
 						throw new MultipleDatabaseOperateException("Not Supported, Count with 'distinct'");
-					}else if(groupClause.isNotEmpty()){
+					} else if (groupClause.isNotEmpty()) {
 						throw new MultipleDatabaseOperateException("Not Supported, Count with 'group'");
 					}
 				}
-				DatabaseDialect profile=getProfile(sites);
-				BindSql result = parent.toPrepareWhereSql(query, context, false,profile);
+
+				BindSql result = parent.toPrepareWhereSql(query, context, false, profile);
 				if (context.isDistinct()) {
 					String countStr = toSelectCountSql(context.getSelectsImpl(), context, groupClause.isNotEmpty());
 					for (PartitionResult site : sites) {
@@ -424,18 +312,18 @@ public abstract class SelectProcessor {
 			} else if (obj instanceof Join) {
 				Join join = (Join) obj;
 				SqlContext context = join.prepare();
-				GroupClause groupClause = toGroupAndHavingClause(join, context);
+				DatabaseDialect profile = getProfile();
+				GroupClause groupClause = toGroupAndHavingClause(join, context, profile);
 
 				CountClause cq = new CountClause();
 				String countStr;
 				if (context.isDistinct()) {
 					countStr = toSelectCountSql(context.getSelectsImpl(), context, groupClause.isNotEmpty());
-				}else{
+				} else {
 					countStr = "select count(*) from ";
 				}
-				DatabaseDialect profile=getProfile();
-				BindSql result = parent.toPrepareWhereSql(join, context, false,profile);
-				result.setSql(countStr + join.toTableDefinitionSql(parent, context,profile) + result.getSql()+groupClause);
+				BindSql result = parent.toPrepareWhereSql(join, context, false, profile);
+				result.setSql(countStr + join.toTableDefinitionSql(parent, context, profile) + result.getSql() + groupClause);
 				cq.addSql(null, result);
 				return cq;
 			} else if (obj instanceof ComplexQuery) {
@@ -488,9 +376,9 @@ public abstract class SelectProcessor {
 					BindVariableContext context = new BindVariableContext(psmt, db, sb);
 					BindVariableTool.setVariables(null, null, bsql.getBind(), context);
 					rs = psmt.executeQuery();
-					if(rs.next()){
-						currentCount = rs.getInt(1);	
-						total += currentCount;	
+					if (rs.next()) {
+						currentCount = rs.getInt(1);
+						total += currentCount;
 					}
 				} catch (SQLException e) {
 					p.processError(e, sql, db);
@@ -507,5 +395,66 @@ public abstract class SelectProcessor {
 				LogUtil.show("Count:" + total);
 			return total;
 		}
+	}
+
+	public static OrderClause toOrderClause(ConditionQuery obj, SqlContext context, DatabaseDialect profile) {
+		if (obj.getOrderBy() == null || obj.getOrderBy().size() == 0) {
+			return OrderClause.DEFAULT;
+		}
+		List<Entry<String, Boolean>> rs = new ArrayList<Entry<String, Boolean>>();
+		StringBuffer sb = new StringBuffer();
+		for (OrderField e : obj.getOrderBy()) {
+			if (sb.length() > 0) {
+				sb.append(",");
+			}
+			String orderResult = e.toString(profile, context);
+			sb.append(orderResult).append(' ');
+			sb.append(e.isAsc() ? "ASC" : "DESC");
+			rs.add(new Entry<String, Boolean>(orderResult, e.isAsc()));
+		}
+		return new OrderClause(" order by " + sb.toString(), rs);
+	}
+
+	// 转为group + having语句
+	public static GroupClause toGroupAndHavingClause(JoinElement q, SqlContext context, DatabaseDialect profile) {
+		GroupClause result = new GroupClause();
+		for (ISelectItemProvider table : context.getReference()) {
+			if (table.getReferenceCol() == null)
+				continue;
+			for (ISelectProvider field : table.getReferenceCol()) {
+				if (field instanceof SingleColumnSelect) {
+					SingleColumnSelect column = (SingleColumnSelect) field;
+					if ((column.getProjection() & ISelectProvider.PROJECTION_GROUP) > 0) {
+						result.addGroup(column.getSelectItem(profile, table.getSchema(), context));
+					}
+					if ((column.getProjection() & ISelectProvider.PROJECTION_HAVING) > 0) {
+						result.addHaving(column.toHavingClause(profile, table.getSchema(), context));
+					} else if ((column.getProjection() & ISelectProvider.PROJECTION_HAVING_NOT_SELECT) > 0) {
+						result.addHaving(column.toHavingClause(profile, table.getSchema(), context));
+					}
+				}
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * 返回SQL的Select列部分,本来JDBC规定接口ResultsetMetadata中可以getTableName(int
+	 * columnIndex)来获得某个列的表名 但是大多数JDBC驱动都没有实现，返回的是""。 为此，需要对所有字段进行唯一化编码处理
+	 */
+	public static SelectPart toSelectSql(SqlContext context, GroupClause group, DatabaseDialect profile) {
+		boolean groupMode = group.isNotEmpty();
+		SelectPart rs = new SelectPart();
+		rs.setDistinct(context.isDistinct());
+		for (ISelectItemProvider rp : context.getReference()) {// 每个rp就是一张表
+			rs.addAll(rp.getSelectColumns(profile, groupMode, context));
+		}
+		if (!groupMode && profile.has(Feature.SELECT_ROW_NUM) && context.size() == 1) {
+			ISelectItemProvider ip = context.getReference().get(0);
+			if (ip.isAllTableColumns()) {
+				rs.add(new CommentEntry("t.rowid", "rowid_"));
+			}
+		}
+		return rs;
 	}
 }

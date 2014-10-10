@@ -75,9 +75,9 @@ final public class PagingIteratorObjImpl<T> extends PagingIterator<T>{
 	}
 	
 
-	private int getTotal(ConditionQuery j,String tableName) throws SQLException {
+	private int getTotal(ConditionQuery j) throws SQLException {
 		int total=0;
-		CountClause countResult=db.selectp.toCountSql(j,tableName);
+		CountClause countResult=db.selectp.toCountSql(j);
 		for(Map.Entry<String,List<BindSql>> s:countResult.getSqls().entrySet()){
 			String dbKey = s.getKey();
 			int current = db.selectp.processCount(db.asOperateTarget(dbKey),s.getValue());
@@ -134,12 +134,11 @@ final public class PagingIteratorObjImpl<T> extends PagingIterator<T>{
 				//拼装出带连接的查询请求
 				j = DbUtils.getJoin(query, map, ArrayUtils.asList(query.getOtherQueryProvider()),null);
 			}
-			String tableName=(String) query.getAttribute(ConditionQuery.CUSTOM_TABLE_NAME);
-			int total=getTotal(j,tableName);
+			int total=getTotal(j);
 			page.setTotal(total);
 			return total;
 		}else{
-			long total=getTotal(queryObj,null);
+			long total=getTotal(queryObj);
 			page.setTotal(total);
 			return total;
 		}

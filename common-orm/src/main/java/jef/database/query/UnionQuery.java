@@ -124,7 +124,7 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 						cq=DbUtils.toReferenceJoinQuery(qq, null);
 					}
 				}
-				CountClause result1=processor.toCountSql(cq, null);
+				CountClause result1=processor.toCountSql(cq);
 				for(Map.Entry<String,List<BindSql>> dbAndSql:result1.getSqls().entrySet()){
 					count.addSql(dbAndSql.getKey(),dbAndSql.getValue());	
 				}
@@ -147,7 +147,7 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 						cq=DbUtils.toReferenceJoinQuery(qq, null);
 					}
 				}
-				CountClause cr=processor.toCountSql(cq,null);
+				CountClause cr=processor.toCountSql(cq);
 				for(Map.Entry<String,List<BindSql>> dbAndSql:cr.getSqls().entrySet()){
 					count.addSql(dbAndSql.getKey(),dbAndSql.getValue());
 				}
@@ -176,7 +176,7 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 					cq=DbUtils.toReferenceJoinQuery(qq, null);
 				}
 			}
-			QueryClause sql=processor.toQuerySql(cq, null,null,false);
+			QueryClause sql=processor.toQuerySql(cq, null,false);
 			if(sql.isEmpty()){
 				continue;
 			}
@@ -196,20 +196,10 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 		return new BindSql(sql,binds);
 	}
 	
-	public QueryClause toPrepareQuerySql(SelectProcessor processor, SqlContext context) {
-		BindSql sql = toPrepareQuerySql0(processor, context,false);
-		if(sql==null)return QueryClauseImpl.EMPTY;
-		
-		QueryClauseSqlImpl result = new QueryClauseSqlImpl(processor.getProfile(), true);
-		result.setBody(sql.getSql());
-		result.setBind(sql.getBind());
-		return result;
-	}
 
 	public String toQuerySql(SelectProcessor processor) {
 		String[] sqls=new String[size()];
 		boolean withBuck=processor.getProfile().has(Feature.UNION_WITH_BUCK);
-		
 		for(int i=0;i<size();i++){
 			ConditionQuery cq=querys.get(i);
 			if(cq instanceof Query){
@@ -218,7 +208,7 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 					cq=DbUtils.toReferenceJoinQuery(qq, null);
 				}
 			}
-			QueryClause sql=processor.toQuerySql(cq, null,null,false);
+			QueryClause sql=processor.toQuerySql(cq, null,false);
 			if(withBuck){
 				sqls[i]="("+sql.toString()+")";	
 			}else{
@@ -265,4 +255,30 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 	public Transformer getResultTransformer(){
 		return t;
 	}
+
+	@Override
+	public QueryClause toQuerySql(SelectProcessor processor, SqlContext context, boolean order) {
+		@SuppressWarnings("deprecation")
+		QueryClauseSqlImpl clause = new QueryClauseSqlImpl(processor.getProfile(), true);
+		clause.setBody(toQuerySql(processor));
+		if(order){
+			clause.setOrderbyPart(processor.toOrderClause(this, context,processor.getProfile()));
+		}
+		return clause;
+	}
+
+	@Override
+	public QueryClause toPrepareQuerySql(SelectProcessor processor, SqlContext context, boolean order) {
+		BindSql sql = toPrepareQuerySql0(processor, context,false);
+		if(sql==null)return QueryClauseImpl.EMPTY;
+		@SuppressWarnings("deprecation")
+		QueryClauseSqlImpl result = new QueryClauseSqlImpl(processor.getProfile(), true);
+		result.setBody(sql.getSql());
+		result.setBind(sql.getBind());
+		if (order) {
+			result.setOrderbyPart(processor.toOrderClause(this, context,processor.getProfile()));
+		}
+		return result;
+	}
+	
 }

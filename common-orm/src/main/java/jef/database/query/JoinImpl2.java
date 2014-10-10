@@ -7,6 +7,7 @@ import java.util.List;
 import jef.database.DbUtils;
 import jef.database.ORMConfig;
 import jef.database.QueryAlias;
+import jef.database.SelectProcessor;
 import jef.database.SqlProcessor;
 import jef.database.annotation.JoinType;
 import jef.database.dialect.DatabaseDialect;
@@ -18,6 +19,10 @@ import jef.database.meta.ITableMetadata;
 import jef.database.meta.JoinKey;
 import jef.database.meta.JoinPath;
 import jef.database.meta.Reference;
+import jef.database.wrapper.clause.BindSql;
+import jef.database.wrapper.clause.GroupClause;
+import jef.database.wrapper.clause.QueryClause;
+import jef.database.wrapper.clause.QueryClauseImpl;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
 
@@ -330,4 +335,40 @@ final class JoinImpl2 extends AbstractJoinImpl{
 		}
 		return result;
 	}
+
+
+	@Override
+	public QueryClause toQuerySql(SelectProcessor processor, SqlContext context, boolean order) {
+		@SuppressWarnings("deprecation")
+		DatabaseDialect profile=processor.getProfile();
+		QueryClauseImpl clause = new QueryClauseImpl(profile);
+		GroupClause groupClause = SelectProcessor.toGroupAndHavingClause(this, context,profile);
+		clause.setGrouphavingPart(groupClause);
+		clause.setSelectPart(SelectProcessor.toSelectSql(context, groupClause,profile));
+		clause.setTableDefinition(toTableDefinitionSql(processor.parent, context,profile));
+		clause.setWherePart(processor.parent.toWhereClause(this, context, false,profile));
+		if(order)
+			clause.setOrderbyPart(SelectProcessor.toOrderClause(this, context,profile));
+		return clause;
+	}
+
+
+	@Override
+	public QueryClause toPrepareQuerySql(SelectProcessor processor, SqlContext context, boolean order) {
+		@SuppressWarnings("deprecation")
+		DatabaseDialect profile=processor.getProfile();
+		GroupClause groupClause = SelectProcessor.toGroupAndHavingClause(this, context,profile);
+		QueryClauseImpl result = new QueryClauseImpl(profile);
+		result.setSelectPart(SelectProcessor.toSelectSql(context, groupClause,profile));
+		result.setTableDefinition(toTableDefinitionSql(processor.parent, context, profile));
+		BindSql whereResult = processor.parent.toPrepareWhereSql(this, context, false, profile);
+		result.setWherePart(whereResult.getSql());
+		result.setBind(whereResult.getBind());
+		result.setGrouphavingPart(groupClause);
+		if (order)
+			result.setOrderbyPart(SelectProcessor.toOrderClause(this, context,profile));
+		return result;
+	}
+	
+	
 }

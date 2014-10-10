@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import jef.common.log.LogUtil;
+import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.JpqlParameter;
 import jef.database.jsqlparser.expression.Table;
@@ -37,10 +38,10 @@ import jef.tools.Assert;
  */
 public class JPQLSelectConvert extends VisitorAdapter {
 	private Map<String, Class<?>> aliasMap = new HashMap<String, Class<?>>();
-	private SqlProcessor rProcessor;
+	private DatabaseDialect profile;
 
-	public JPQLSelectConvert(SqlProcessor rPrcessor) {
-		this.rProcessor = rPrcessor;
+	public JPQLSelectConvert(DatabaseDialect profile) {
+		this.profile = profile;
 	}
 	static Map<String ,Class<?>> cache=new HashMap<String,Class<?>>();
 
@@ -83,7 +84,7 @@ public class JPQLSelectConvert extends VisitorAdapter {
 		}
 
 		public void visit(SubSelect subSelect) {
-			subSelect.getSelectBody().accept(new JPQLSelectConvert(rProcessor));
+			subSelect.getSelectBody().accept(new JPQLSelectConvert(profile));
 		}
 
 		public void visit(SubJoin subjoin) {
@@ -165,7 +166,7 @@ public class JPQLSelectConvert extends VisitorAdapter {
 				Field fld = meta.findField(col);
 				if (fld == null)
 					continue;
-				tableColumn.setColumnName(meta.getColumnName(fld, null, rProcessor.getProfile()));
+				tableColumn.setColumnName(meta.getColumnName(fld, null, profile));
 			}
 		} else {
 			cc = aliasMap.get(tbAlias);
@@ -175,7 +176,7 @@ public class JPQLSelectConvert extends VisitorAdapter {
 			Field fld = meta.findField(col);
 			if (fld == null)
 				return;
-			tableColumn.setColumnName(meta.getColumnName(fld, null, rProcessor.getProfile()));
+			tableColumn.setColumnName(meta.getColumnName(fld, null, profile));
 		}
 		super.visit(tableColumn);
 	}

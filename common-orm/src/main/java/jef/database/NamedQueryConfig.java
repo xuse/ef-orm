@@ -191,7 +191,7 @@ public class NamedQueryConfig extends jef.database.DataObject {
 			st.accept(localization);
 
 			if (type == TYPE_JPQL)
-				st.accept(new JPQLSelectConvert(db.getProcessor()));
+				st.accept(new JPQLSelectConvert(profile));
 
 			DialectCase result = new DialectCase();
 			result.statement = st;

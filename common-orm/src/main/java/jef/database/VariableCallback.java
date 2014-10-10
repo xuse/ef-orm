@@ -4,6 +4,7 @@ package jef.database;
 import java.util.List;
 
 import jef.database.Condition.Operator;
+import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
@@ -68,15 +69,15 @@ public interface VariableCallback {
 		}
 
 		public String toPrepareSql(List<BindVariableDescription> fields,
-				ITableMetadata meta, SqlProcessor processor, SqlContext context,
+				ITableMetadata meta, DatabaseDialect dialect, SqlContext context,
 				IQueryableEntity instance) {
 			// 只要使用了绑定变量方式获取，那么一定要做转义
-			escape = !processor.getProfile().has(
+			escape = !dialect.has(
 					Feature.NOT_SUPPORT_LIKE_ESCAPE);
 
 			StringBuilder sb = new StringBuilder();
 			String alias = context == null ? null : context.getCurrentAliasAndCheck(field);
-			String columnName = DbUtils.toColumnName(field, processor.getProfile(),alias);
+			String columnName = DbUtils.toColumnName(field, dialect, alias);
 			sb.append(columnName).append(name()).append("?");
 			if (escape) {
 				sb.append(ESCAPE_CLAUSE);
@@ -88,7 +89,7 @@ public interface VariableCallback {
 			return sb.toString();
 		}
 
-		public String toSql(ITableMetadata meta, SqlProcessor processor,
+		public String toSql(ITableMetadata meta, DatabaseDialect dialect,
 				SqlContext context, IQueryableEntity instance) {
 			String valueStr = StringUtils.toString(value);
 			if(!(value instanceof Expression)){
@@ -100,7 +101,7 @@ public interface VariableCallback {
 			
 			StringBuilder sb = new StringBuilder();
 			String alias = context == null ? null : context.getCurrentAliasAndCheck(field);
-			String columnName = DbUtils.toColumnName(field,processor.getProfile(),alias);
+			String columnName = DbUtils.toColumnName(field,dialect,alias);
 			sb.append(columnName).append(name());
 			sb.append('\'');
 			sb.append(valueStr);

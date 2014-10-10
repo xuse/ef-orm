@@ -6,28 +6,16 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
-import jef.common.wrapper.IntRange;
-import jef.database.BindVariableDescription;
 import jef.database.DbCfg;
 import jef.database.DbUtils;
 import jef.database.Field;
-import jef.database.ORMConfig;
 import jef.database.annotation.BindDataSource;
-import jef.database.annotation.PartitionResult;
-import jef.database.cache.CacheKey;
 import jef.database.cache.KeyDimension;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.MappingType;
 import jef.database.query.DbTable;
 import jef.database.query.JpqlExpression;
-import jef.database.query.Query;
-import jef.database.routing.sql.SqlAnalyzer;
-import jef.database.wrapper.clause.BindSql;
-import jef.database.wrapper.clause.GroupClause;
-import jef.database.wrapper.clause.OrderClause;
-import jef.database.wrapper.clause.QueryClause;
-import jef.database.wrapper.clause.SelectPart;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 
@@ -134,7 +122,6 @@ public abstract class MetadataAdapter implements ITableMetadata {
 	}
 	private DbTable cachedTable;
 	private DatabaseDialect bindProfile;
-	private QueryClause0 loadSql;
 	
 	public DbTable getBaseTable(DatabaseDialect profile){
 		if(bindProfile!=profile){
@@ -148,118 +135,5 @@ public abstract class MetadataAdapter implements ITableMetadata {
 	private void initCache(DatabaseDialect profile) {
 		bindProfile=profile;
 		cachedTable=new DbTable(bindDsName, profile.getObjectNameIfUppercase(getTableName(true)),false,false);
-		loadSql=caclLoadSql(profile);
-	}
-
-
-	public QueryClause0 getLoadByPkSql(DatabaseDialect profile,Query<?> q) {
-		if(bindProfile!=profile){
-			synchronized (this) {
-				initCache(profile);
-			}
-		}
-		return loadSql;
-	}
-
-	private QueryClause0 caclLoadSql(DatabaseDialect profile) {
-		
-		StringBuilder sb=new StringBuilder("select ");
-		if(ORMConfig.getInstance().isSpecifyAllColumnName()){
-			
-		}else{
-			sb.append('*');
-		}
-		sb.append(" from %1$s where ");
-		int n=0;
-		for(MappingType<?> field: this.getPKFields()){
-			if(n>0){
-				sb.append(" and ");
-			}
-			sb.append(field.getColumnName(profile, true)).append("=?");
-			n++;
-		}
-		return new QueryClause0(sb.toString());
-	}
-	
-	static class QueryClause0 implements QueryClause{
-		private String sql;
-		private List<BindVariableDescription> bind;
-		private PartitionResult[] sites;;
-		public QueryClause0(String string) {
-			this.sql=string;
-		}
-
-		@Override
-		public CacheKey getCacheKey() {
-			//TODO 补充此方法
-			return null;
-		}
-
-		@Override
-		public BindSql getSql(PartitionResult site) {
-			if(site.tableSize()==1){
-				String s= String.format(sql, site.getAsOneTable());
-				return new BindSql(s, bind);
-			}else{
-				StringBuilder sb=new StringBuilder();
-				int n=0;
-				for(String table: site.getTables()){
-					if(n>0){
-						sb.append("\n union all \n");
-					}
-					sb.append(String.format(sql, table));
-				}
-				 List<BindVariableDescription> bind = SqlAnalyzer.repeat(this.bind,  site.tableSize());
-				 return new BindSql(sb.toString(), bind);
-			}
-		}
-
-		@Override
-		public PartitionResult[] getTables() {
-			return sites;
-		}
-
-		@Override
-		public OrderClause getOrderbyPart() {
-			return null;
-		}
-
-		@Override
-		public SelectPart getSelectPart() {
-			return null;
-		}
-
-		@Override
-		public boolean isGroupBy() {
-			return false;
-		}
-
-		@Override
-		public boolean isEmpty() {
-			return false;
-		}
-
-		@Override
-		public void setOrderbyPart(OrderClause orderClause) {
-		}
-
-		@Override
-		public void setPageRange(IntRange range) {
-		}
-
-		@Override
-		public boolean isMultiDatabase() {
-			return sites!=null && sites.length>1;
-		}
-
-		@Override
-		public GroupClause getGrouphavingPart() {
-			return null;
-		}
-
-		@Override
-		public boolean isDistinct() {
-			return false;
-		}
 	}
 }

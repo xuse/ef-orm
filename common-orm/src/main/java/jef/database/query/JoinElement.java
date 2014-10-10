@@ -34,14 +34,6 @@ public interface JoinElement extends ConditionQuery{
 	void setSelectItems(Selects select);
 
 	/**
-	 * 内部使用：
-	 * 准备进行查询。
-	 * @return
-	 */
-	public SqlContext prepare();
-	
-
-	/**
 	 * 清除全部的请求数据
 	 */
 	void clearQuery();

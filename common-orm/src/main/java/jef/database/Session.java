@@ -1477,7 +1477,7 @@ public abstract class Session {
 		}
 
 		long start = System.currentTimeMillis();// 开始时间
-		QueryClause sql = selectp.toQuerySql(queryObj, range, option.tableName, true);
+		QueryClause sql = selectp.toQuerySql(queryObj, range,true);
 		if (sql.isEmpty())
 			return new ResultIterator.Impl<T>(new ArrayList<T>().iterator(), null);
 
@@ -1520,7 +1520,7 @@ public abstract class Session {
 
 		long start = System.currentTimeMillis();// 开始时间
 		// 生成 SQL
-		QueryClause sql = selectp.toQuerySql(queryObj, range, option.tableName, true);
+		QueryClause sql = selectp.toQuerySql(queryObj, range, true);
 		if (sql.isEmpty())
 			return Collections.EMPTY_LIST;
 		// 缓存命中
@@ -1703,40 +1703,6 @@ public abstract class Session {
 	 * @throws SQLException
 	 */
 	public final int count(ConditionQuery obj) throws SQLException {
-		if (obj instanceof Query<?>) {
-			Query<?> q = (Query<?>) obj;
-			String s = (String) q.getAttribute("_table_name");
-			if (StringUtils.isNotEmpty(s)) {
-				return count(obj, s);
-			}
-		}
-		return count(obj, null);
-	}
-
-	/**
-	 * 查记录条数
-	 * 
-	 * @param obj
-	 *            查询请求
-	 * @param tableName
-	 *            如果表名较为特殊的情况下，允许手工传入，一般情况下传入null。
-	 * @return 记录条数
-	 * @throws SQLException
-	 */
-	public final int count(IQueryableEntity obj, String tableName) throws SQLException {
-		return count(obj.getQuery(), tableName);
-	}
-
-	/**
-	 * 查询符合条件的记录条数
-	 * 
-	 * @param obj
-	 * @param myTableName
-	 *            支持Schema重定向
-	 * @return
-	 * @throws SQLException
-	 */
-	private int count(ConditionQuery obj, String myTableName) throws SQLException {
 		long start = System.currentTimeMillis(); // 开始时间
 		long parse = 0; // 解析时间
 		boolean debugMode = ORMConfig.getInstance().isDebugMode();
@@ -1748,9 +1714,7 @@ public abstract class Session {
 			}
 		}
 		Assert.notNull(obj);
-		myTableName = MetaHolder.toSchemaAdjustedName(myTableName);
-		@SuppressWarnings("deprecation")
-		CountClause sqls = selectp.toCountSql(obj, myTableName);
+		CountClause sqls = selectp.toCountSql(obj);
 
 		parse = System.currentTimeMillis();
 		int total = 0;
@@ -1763,6 +1727,20 @@ public abstract class Session {
 			LogUtil.show(StringUtils.concat("Total Count:", String.valueOf(total), "\t Time cost([ParseSQL]:", String.valueOf(parse), "ms, [DbAccess]:", String.valueOf(dbAccess), "ms) |", getTransactionId(null)));
 		}
 		return total;
+	}
+
+	/**
+	 * 查记录条数
+	 * 
+	 * @param obj
+	 *            查询请求
+	 * @param tableName
+	 *            如果表名较为特殊的情况下，允许手工传入，一般情况下传入null。
+	 * @return 记录条数
+	 * @throws SQLException
+	 */
+	public final int count(IQueryableEntity obj) throws SQLException {
+		return count(obj.getQuery());
 	}
 
 	/**

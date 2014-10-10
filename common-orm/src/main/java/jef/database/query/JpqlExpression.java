@@ -65,48 +65,9 @@ public class JpqlExpression implements Expression,LazyQueryBindField {
 		this(str, (Query<?>) null);
 	}
 
-	@SuppressWarnings("unchecked")
-	public String toSqlAndBindAttribs(final SqlContext context, final DatabaseDialect profile) {
-		st.accept(new SqlFunctionlocalization(profile, null));
-		if (context != null) {
-			final Map<String, Object> attribs = context.attribute == null ? Collections.EMPTY_MAP : context.attribute;
-			st.accept(new VisitorAdapter() {
-				@Override
-				public void visit(JpqlParameter parameter) {
-					if (parameter.getName() == null)
-						return;
-					Object obj = attribs.get(parameter.getName());
-					if (obj == null) {
-						if (!attribs.containsKey(parameter.getName())) {
-							throw new IllegalArgumentException("You have not set the value of param '" + parameter.getName() + "'");
-						} else {
-							parameter.setResolved("null");
-						}
-					} else {
-						if (obj instanceof Number) {
-							parameter.setResolved(String.valueOf(obj));
-						} else {
-							parameter.setResolved("'" + String.valueOf(obj) + "'");
-						}
-					}
-				}
-			});
-
-		}
-
-		if (instance == null)
-			return st.toString();
-		String alias = context == null ? null : context.getCurrentAlias();
-		ColumnAliasApplier convert = new ColumnAliasApplier(alias, profile);
-		st.accept(convert);
-		String result = st.toString();
-		convert.undo();
-		return result;
-	}
-
-	public String toSqlAndBindAttribs(final SqlContext context,final SqlProcessor processor){
+	public String toSqlAndBindAttribs(final SqlContext context,final DatabaseDialect profile){
 		//本地化
-		st.accept(new SqlFunctionlocalization(processor.getProfile(), null));
+		st.accept(new SqlFunctionlocalization(profile, null));
 		//属性提供
 		if(context!=null){
 			@SuppressWarnings("unchecked")
@@ -135,11 +96,11 @@ public class JpqlExpression implements Expression,LazyQueryBindField {
 		//字段转换
 		String result;
 		if(instance==null){
-			st.accept(new JPQLSelectConvert(processor));
+			st.accept(new JPQLSelectConvert(profile));
 			result=st.toString();
 		}else{
 			String alias=context==null?null:context.getAliasOf(instance);
-			ColumnAliasApplier convert=new ColumnAliasApplier(alias,processor.getProfile());
+			ColumnAliasApplier convert=new ColumnAliasApplier(alias,profile);
 			st.accept(convert);
 			result=st.toString();
 			convert.undo();

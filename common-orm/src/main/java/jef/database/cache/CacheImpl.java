@@ -192,7 +192,7 @@ public final class CacheImpl implements TransactionCache{
 		if(tableCache==null || tableCache.isEmpty())return;
 		
 		if(obj.hasQuery()){
-			QueryClause ir=	selectp.toQuerySql(obj.getQuery(), null, null,false);
+			QueryClause ir=	selectp.toQuerySql(obj.getQuery(), null, false);
 			evict(ir.getCacheKey());
 			return;
 		}

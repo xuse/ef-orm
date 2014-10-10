@@ -18,8 +18,6 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AbstractTimeMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.MappingType;
-import jef.database.query.Query;
-import jef.database.wrapper.clause.QueryClause;
 
 import com.google.common.collect.Multimap;
 
@@ -279,16 +277,9 @@ public interface  ITableMetadata {
 	 * FIXME 目前使用SqlProcessor方式返回的主键维度可能是按字母顺序排序的，默认按PkField顺序，当主键字段有多个时，两者可能不一致，主键维护应该修复为按元模型排序
 	 * 
 	 * TODO 这个问题需要编写几个案例测试一下。
-	 * @deprecated 似乎可以用getLoadByPkSql代替呢。如果可以这个方法就不用了
 	 * @return 主键缓存维度
 	 */
 	KeyDimension getPkDimension();
-	
-	/**
-	 * 优化使用,按主键加载时,将缓存的SQL语句直接返回
-	 * @return
-	 */
-	QueryClause getLoadByPkSql(DatabaseDialect profile,Query<?> q);
 	
 	/**
 	 * 将非IQueryableEntity的POJO类型封装为PojoWreapper

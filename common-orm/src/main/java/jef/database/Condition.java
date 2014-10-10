@@ -200,11 +200,11 @@ public class Condition implements Serializable{
 		//Like条件下
 		if(ArrayUtils.contains(Like.LIKE_OPERATORS, operator)){
 			Like like=new Like(field,operator,value);
-			return like.toSql(meta, processor, context, instance);
+			return like.toSql(meta, profile, context, instance);
 		}
 		String columnName;
 		if(field instanceof JpqlExpression){
-			columnName=((JpqlExpression) field).toSqlAndBindAttribs(context, processor);
+			columnName=((JpqlExpression) field).toSqlAndBindAttribs(context, profile);
 		}else{
 			columnName=DbUtils.toColumnName(field,profile,context==null?null:context.getCurrentAliasAndCheck(field));
 		}
@@ -274,7 +274,7 @@ public class Condition implements Serializable{
 		//Like条件下
 		if(ArrayUtils.contains(Like.LIKE_OPERATORS, operator)){
 			Like like=new Like(rawField,operator,value);
-			return like.toPrepareSql(fields, meta, processor, context, instance);
+			return like.toPrepareSql(fields, meta, profile,context, instance);
 		}
 		//其他简单条件情况下
 		if(operator==null ||rawField==null){
@@ -294,7 +294,7 @@ public class Condition implements Serializable{
 		String[] spOpers;
 		String columnName;
 		if(rawField instanceof JpqlExpression){
-			columnName=((JpqlExpression) rawField).toSqlAndBindAttribs(context, processor);
+			columnName=((JpqlExpression) rawField).toSqlAndBindAttribs(context, profile);
 		}else{
 			columnName=DbUtils.toColumnName(rawField,profile,context==null?null:context.getCurrentAliasAndCheck(rawField));
 		}

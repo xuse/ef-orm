@@ -2,21 +2,32 @@ package jef.database.query;
 
 import java.io.Serializable;
 import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import jef.database.BindVariableDescription;
 import jef.database.Condition;
 import jef.database.Condition.Operator;
+import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.IConditionField;
 import jef.database.IQueryableEntity;
 import jef.database.ORMConfig;
+import jef.database.SelectProcessor;
+import jef.database.annotation.PartitionResult;
+import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.MappingType;
 import jef.database.meta.ITableMetadata;
+import jef.database.meta.MetaHolder;
 import jef.database.meta.Reference;
+import jef.database.wrapper.clause.BindSql;
+import jef.database.wrapper.clause.GroupClause;
+import jef.database.wrapper.clause.QueryClause;
+import jef.database.wrapper.clause.QueryClauseImpl;
 import jef.database.wrapper.populator.Transformer;
 import jef.tools.Assert;
 
@@ -30,6 +41,9 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	public PKQuery(ITableMetadata clz,Serializable... pks){
 		this.type=clz;
 		this.instance=(T) clz.instance();
+		if(type.getPKFields().size()!=pks.length){
+			throw new IllegalArgumentException();
+		}
 		pkValues=Arrays.asList(pks);
 	}
 
@@ -49,6 +63,42 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 				return type.getPKFields().size();
 			}
 		};
+	}
+	
+	@Override
+	public QueryClause toPrepareQuerySql(SelectProcessor processor, SqlContext context, boolean order) {
+		String tableName = (String) getAttribute(JoinElement.CUSTOM_TABLE_NAME);
+		if (tableName != null)
+			tableName = MetaHolder.toSchemaAdjustedName(tableName);
+		PartitionResult[] prs = DbUtils.toTableNames(getInstance(), tableName, this, processor.getPartitionSupport());
+		DatabaseDialect profile = processor.getProfile(prs);
+
+		BindSql whereResult = toPrepareWhereSql(context, profile);
+
+		QueryClauseImpl result = new QueryClauseImpl(profile);
+		result.setGrouphavingPart(GroupClause.DEFAULT);
+		result.setSelectPart(SelectProcessor.toSelectSql(context, GroupClause.DEFAULT, profile));
+		result.setTables(prs, type.getName());
+		result.setWherePart(whereResult.getSql());
+		result.setBind(whereResult.getBind());
+//		if (order)
+//			result.setOrderbyPart(SelectProcessor.toOrderClause(this, context, profile));
+		return result;
+	}
+
+	private BindSql toPrepareWhereSql(SqlContext context, DatabaseDialect profile) {
+		int size=pkValues.size();
+		StringBuilder sb=new StringBuilder(128).append("where ");
+		List<BindVariableDescription> bind = new ArrayList<BindVariableDescription>(size);
+		for(int i=0;i<size;i++){
+			MappingType<?> field=type.getPKFields().get(i);
+			if(i>0){
+				sb.append(" and ");
+			}
+			sb.append(field.getColumnName(profile, true)).append("= ?");
+			bind.add(new BindVariableDescription(field.field(), Operator.EQUALS, pkValues.get(i)));
+		}
+		return new BindSql(sb.toString(), bind);
 	}
 
 	public EntityMappingProvider getSelectItems() {
