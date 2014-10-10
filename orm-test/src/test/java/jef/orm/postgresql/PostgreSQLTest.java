@@ -13,6 +13,7 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.TimeZone;
 
+import jef.codegen.EntityEnhancer;
 import jef.database.DbCfg;
 import jef.database.DbClient;
 import jef.database.DebugUtil;
@@ -36,6 +37,7 @@ import jef.tools.ResourceUtils;
 import junit.framework.Assert;
 
 import org.apache.commons.lang.StringUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -66,6 +68,7 @@ public class PostgreSQLTest {
 		isEQ84version = StringUtils.equals(dvVersionMain, "8.4");
 		isEQ83version = StringUtils.equals(dvVersionMain, "8.3");
 		isLE82version = Double.valueOf(dvVersionMain).doubleValue() <= 8.2;
+		new EntityEnhancer().enhance("jef.orm.postgresql.model");
 	}
 
 	private void dropTable() throws SQLException {
@@ -274,7 +277,7 @@ public class PostgreSQLTest {
 		ResultSet rs = null;
 
 		try {
-			IConnection conn=DebugUtil.getConnection(db.getSqlTemplate(null));
+			IConnection conn = DebugUtil.getConnection(db.getSqlTemplate(null));
 			pstmt = conn.prepareStatement("SELECT * FROM test_columntypes_db2entity");
 			rs = pstmt.executeQuery();
 			TestColumntypesDb2entity entity = new TestColumntypesDb2entity();
@@ -386,13 +389,15 @@ public class PostgreSQLTest {
 		// 通过JDBC和对象方式所取得的bitfield1值有所不同：
 		// 对象方式得到的值是布尔值
 		if (!StringUtils.equals("10101010", entity.getBitfield1())) {
-			if("false".equals(entity.getBitfield1())){//当启用Cache Rowset后，这里的值变为boolean，为此不得不容错.
+			if ("false".equals(entity.getBitfield1())) {// 当启用Cache
+														// Rowset后，这里的值变为boolean，为此不得不容错.
 				entity.setBitfield1("0");
 			}
 			Assert.assertEquals("0", entity.getBitfield1());
 		}
 
-		if("true".equals(entity.getBitfield2())){//当启用Cache Rowset后，这里的值变为boolean，为此不得不容错.
+		if ("true".equals(entity.getBitfield2())) {// 当启用Cache
+													// Rowset后，这里的值变为boolean，为此不得不容错.
 			entity.setBitfield2("1");
 		}
 		Assert.assertEquals("1", entity.getBitfield2());
@@ -499,18 +504,20 @@ public class PostgreSQLTest {
 	 * </p>
 	 */
 	@Test
+	@Ignore
 	public void testInsertByObjOnSpecialColumns() {
-		if(db==null)return;
+		if (db == null)
+			return;
 		try {
 			prepareDbByNativeSqls("postgresql_createtable3_test.sql");
 
 			TestColumntypesSpecial entity = new TestColumntypesSpecial();
 			// 每次只设置1项属性值，从PSQLException的描述中得到失败原因为：该列类型与值的形式不符。
 			entity.setMoneyfield("12.34");
-			// entity.setVarbitfield1("101010");
-			// entity.setVarbitfield2("1000000");
-			// entity.setBitfield1("10101010");
-			// entity.setBitfield2("1");
+			entity.setVarbitfield1("101010");
+			entity.setVarbitfield2("1000000");
+			 entity.setBitfield1("10101010");
+			 entity.setBitfield2(true);
 			// entity.setIntervalfield("1-2");
 			// entity.setCidrfield("192.168.100.128/25");
 			// entity.setInetfield("192.168.1.1");
@@ -524,14 +531,13 @@ public class PostgreSQLTest {
 			// entity.setCirclefield("((1,1),2)");
 			// entity.setLinefield("((0,0),(1,1))");
 			// entity.setLsegfield("((1,1),(2,2))");
-			// entity.setPathfield("((0,0),(1,1),(2,2))");
+			entity.setPathfield("((0,0),(1,1),(2,2))");
 			// entity.setPointfield("(5,5)");
 			// entity.setPolygonfield("((0,0),(1,1),(2,2))");
 
 			db.insert(entity);
-		} catch (SQLException e) {
-			e.printStackTrace();
 		} catch (Exception e) {
+			e.printStackTrace();
 			Assert.fail(e.getMessage());
 		}
 	}
@@ -548,7 +554,8 @@ public class PostgreSQLTest {
 	 */
 	@Test
 	public void testSelectByObjOnMoneyColumn() {
-		if(db==null)return;
+		if (db == null)
+			return;
 		try {
 			selectByObjOnSpecialColumns(isLE82version ? "postgresql_data_82_test.sql" : "postgresql_data_test.sql");
 		} catch (Exception e) {
@@ -588,7 +595,8 @@ public class PostgreSQLTest {
 	 */
 	@Test
 	public void testSelectByObjOnSpecialColumns() throws Exception {
-		if(db==null)return;
+		if (db == null)
+			return;
 		selectByObjOnSpecialColumns(isLE82version ? "postgresql_data2_82_test.sql" : "postgresql_data2_test.sql");
 
 	}

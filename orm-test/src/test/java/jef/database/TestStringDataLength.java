@@ -119,7 +119,7 @@ public class TestStringDataLength extends org.junit.Assert {
 				stmt.setLong(5, t1.getAssetId());
 				stmt.executeUpdate();
 			} catch (Exception e) {
-				e.printStackTrace();
+				System.out.println(e.getMessage());
 			} finally {
 				stmt.close();
 			}

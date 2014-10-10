@@ -387,8 +387,8 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 					obj = RangeDimension.EMPTY_RANGE;
 				}
 			} else {
-				if (q != null) {
-					obj = findConditionValuesByName(((QueryImpl<?>) q).conditions, field, false);
+				if (q != null && !q.isAll()) {
+					obj = findConditionValuesByName(q.getConditions(), field, false);
 				}
 				if (obj == null){
 					Object term=instance.getPropertyValue(field);
@@ -430,9 +430,6 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	private static Dimension findConditionValuesByName(Iterable<Condition> conditions, String field, boolean isOr) {
 		Dimension result = null;
 		for (Condition c : conditions) {
-			if (c == Condition.AllRecordsCondition) {
-				continue;
-			}
 			Dimension d = findDimensionByName(field, c);
 			if (d == null) {
 				continue;

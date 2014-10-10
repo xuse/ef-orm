@@ -1,5 +1,6 @@
 package jef.database.meta;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -47,7 +48,7 @@ public class TupleMetadata extends MetadataAdapter{
 	private Map<String,Field> 	   fields=new HashMap<String,Field>(10,0.6f);
 	private Map<String,Field> 	   fieldsLower=new HashMap<String,Field>(10,0.6f);
 	private Map<String,Field>	   columnToField=new HashMap<String,Field>(10,0.6f);
-	private List<Field> 		   pk=new ArrayList<Field>();
+	private List<MappingType<?>> 		   pk=new ArrayList<MappingType<?>>();
 	private Field[] lobFields;
 	
 	// /////////引用索引/////////////////
@@ -138,7 +139,17 @@ public class TupleMetadata extends MetadataAdapter{
 
 	public List<Field> getPKField() {
 		if(pk==null)return Collections.emptyList();
-		return pk;
+		return new AbstractList<Field>() {
+			@Override
+			public Field get(int index) {
+				return pk.get(index).field();
+			}
+
+			@Override
+			public int size() {
+				return pk.size();
+			}
+		};
 	}
 
 	public Field findField(String left) {
@@ -259,7 +270,7 @@ public class TupleMetadata extends MetadataAdapter{
 		fieldsLower.put(fieldName.toLowerCase(), oldField);
 		columnToField.put(columnName.toLowerCase(), oldField);
 		if(isPk)
-			pk.add(oldField);
+			pk.add(mType);
 		if(mType.isLob()){
 			lobFields=jef.tools.ArrayUtils.addElement(lobFields,oldField,jef.database.Field.class);
 		}
@@ -593,5 +604,11 @@ public class TupleMetadata extends MetadataAdapter{
 
 	public boolean containsMeta(ITableMetadata meta) {
 		return meta==this;
+	}
+
+	@Override
+	public List<MappingType<?>> getPKFields() {
+		if(pk==null)return Collections.emptyList();
+		return pk;
 	}
 }

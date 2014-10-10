@@ -172,7 +172,7 @@ public final class CacheImpl implements TransactionCache{
 		String table=meta.getName();
 		
 		CacheKey pkCache=null;
-		if(!meta.getPKField().isEmpty()){
+		if(!meta.getPKFields().isEmpty()){
 			//FIXME getPkDimenision
 			BindSql sql=sqlP.toPrepareWhereSql(obj.getQuery(),  new SqlContext(null, obj.getQuery()), false,null);
 			obj.clearQuery();

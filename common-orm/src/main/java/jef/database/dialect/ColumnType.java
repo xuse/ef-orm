@@ -65,6 +65,7 @@ import jef.database.dialect.type.NumIntStringMapping;
 import jef.database.dialect.type.TimestampDateMapping;
 import jef.database.dialect.type.TimestampLongMapping;
 import jef.database.dialect.type.TimestampTsMapping;
+import jef.database.dialect.type.UnknownStringMapping;
 import jef.database.dialect.type.VarcharDateMapping;
 import jef.database.dialect.type.VarcharEnumMapping;
 import jef.database.dialect.type.VarcharFloatMapping;
@@ -388,8 +389,11 @@ public abstract class ColumnType {
 
 		@Override
 		public MappingType<?> getMappingType(Class<?> fieldType) {
-			Assert.isTrue(fieldType == java.lang.Boolean.class || fieldType == java.lang.Boolean.TYPE || fieldType == Object.class);
-			return new DelegatorBoolean();
+			if(fieldType == java.lang.Boolean.class || fieldType == java.lang.Boolean.TYPE || fieldType == Object.class){
+				return new DelegatorBoolean();
+			}else{
+				throw new UnsupportedOperationException("can not support mapping from ["+fieldType.getName()+" -> boolean]");
+			}
 		}
 	}
 
@@ -901,6 +905,40 @@ public abstract class ColumnType {
 		}
 	}
 
+	public static class Unknown extends ColumnType {
+		private String name;
+		public Unknown(String name){
+			this.name=name;
+		}
+		@Override
+		protected boolean compare(ColumnType type, DatabaseDialect profile) {
+			return true;
+		}
+
+		@Override
+		protected void putAnnonation(Map<String, Object> map) {
+			if (!nullable)
+				map.put("nullable", java.lang.Boolean.FALSE);
+			map.put("columnDefinition", name);
+		}
+
+		@Override
+		public Class<?> getDefaultJavaType() {
+			return String.class;
+		}
+
+		@Override
+		public MappingType<?> getMappingType(Class<?> fieldType) {
+			if(fieldType==String.class){
+				return new UnknownStringMapping(name);
+			}else{
+				throw new UnsupportedOperationException("can not support mapping from ["+fieldType.getName()+" -> "+name+"]");
+			}
+			
+			
+		}
+	}
+	
 	// 这是比较用的，因此会有一些特殊逻辑
 	static ColumnType toNormal(ColumnType type) {
 		if (type instanceof AutoIncrement) {

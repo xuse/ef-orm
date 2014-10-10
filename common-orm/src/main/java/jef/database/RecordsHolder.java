@@ -95,8 +95,7 @@ public final class RecordsHolder<T extends IQueryableEntity>{
 			rhs.add(new RecordHolder<T>(this, i, objs.get(i)));
 		}		
 		if(holder.getProfile().has(Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD)){
-			for(Field field:meta.getPKField()){
-				MappingType<?> type=meta.getColumnDef(field);
+			for(MappingType<?> type:meta.getPKFields()){
 				if(type instanceof AutoIntMapping || type instanceof AutoLongMapping){
 					supportsNewRec=false;		
 				}
@@ -124,9 +123,8 @@ public final class RecordsHolder<T extends IQueryableEntity>{
 		}
 		@SuppressWarnings("unchecked")
 		T obj= (T) meta.newInstance();
-		if(!meta.getPKField().isEmpty()){
-			for(Field field:meta.getPKField()){
-				MappingType<?> type=meta.getColumnDef(field);
+		if(!meta.getPKFields().isEmpty()){
+			for(MappingType<?> type:meta.getPKFields()){
 				if(type instanceof AutoIncrementMapping<?>){
 					AutoIncrementMapping<?> mapping=(AutoIncrementMapping<?>)type;
 					mapping.getAccessor().set(obj, getNextAutoIncreament(mapping));

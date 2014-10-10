@@ -2,13 +2,21 @@ package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.SQLXML;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 
 public class XmlStringMapping extends ATypeMapping<String>{
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
-		st.setString(index, value==null?null:String.valueOf(value));
+		String s=String.valueOf(value);
+		if(s==null || s.length()==0){
+			st.setNull(index,java.sql.Types.SQLXML);
+		}else{
+			SQLXML xml=st.getConnection().createSQLXML();
+			xml.setString(String.valueOf(value));
+			st.setSQLXML(index, xml);
+		}
 		return value;
 	}
 

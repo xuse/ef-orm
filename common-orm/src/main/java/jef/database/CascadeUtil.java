@@ -356,7 +356,7 @@ final class CascadeUtil {
 				if (doUpdate) {
 					IQueryableEntity old = oldValue.get(0);
 					DbUtils.compareToUpdateMap(d, old);
-					if (old.needUpdate()) {
+					if (old.needUpdate()) { 
 						updateWithRefInTransaction(old, trans);
 					}
 				}

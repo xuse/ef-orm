@@ -256,7 +256,7 @@ public class TransactionImpl extends Transaction {
 	public void close() {
 		cache.evictAll();
 		if (parent != null) {
-			if (dirty && !autoCommit) {
+			if (!readOnly && dirty && !autoCommit) {
 				rollback();
 			}
 			doClose();

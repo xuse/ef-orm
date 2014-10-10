@@ -29,8 +29,8 @@ public class TestColumntypesSpecial extends DataObject{
 	@Column(name="bitfield1",columnDefinition="Char",length=8)
 	private String bitfield1;
 
-	@Column(name="bitfield2",columnDefinition="Char",length=1)
-	private String bitfield2;
+	@Column(name="bitfield2",columnDefinition="bit",length=1)
+	private Boolean bitfield2;
 
 	@Column(name="intervalfield",columnDefinition="Varchar",length=49)
 	private String intervalfield;
@@ -41,10 +41,10 @@ public class TestColumntypesSpecial extends DataObject{
 	@Column(name="inetfield",columnDefinition="Varchar",length=2147483647)
 	private String inetfield;
 
-	@Column(name="macaddrfield",columnDefinition="Varchar",length=2147483647)
+	@Column(name="macaddrfield",columnDefinition="macaddr",length=2147483647)
 	private String macaddrfield;
 
-	@Column(name="uuidfield",columnDefinition="Varchar",length=2147483647)
+	@Column(name="uuidfield",columnDefinition="uuid",length=2147483647)
 	private String uuidfield;
 
 	@Column(name="tsvectorfield",columnDefinition="Varchar",length=2147483647)
@@ -53,26 +53,25 @@ public class TestColumntypesSpecial extends DataObject{
 	@Column(name="tsqueryfield",columnDefinition="Varchar",length=2147483647)
 	private String tsqueryfield;
 
-	@Lob
-	@Column(name="xmlfield",columnDefinition="Clob")
+	@Column(name="xmlfield",columnDefinition="xml")
 	private String xmlfield;
 
-	@Column(name="txidfield",columnDefinition="Varchar",length=2147483647)
+	@Column(name="txidfield",columnDefinition="txid",length=2147483647)
 	private String txidfield;
 
-	@Column(name="boxfield",columnDefinition="Varchar",length=2147483647)
+	@Column(name="boxfield",columnDefinition="box",length=2147483647)
 	private String boxfield;
 
 	@Column(name="circlefield",columnDefinition="Varchar",length=2147483647)
 	private String circlefield;
 
-	@Column(name="linefield",columnDefinition="Varchar",length=2147483647)
+	@Column(name="linefield",columnDefinition="inet",length=2147483647)
 	private String linefield;
 
 	@Column(name="lsegfield",columnDefinition="Varchar",length=2147483647)
 	private String lsegfield;
 
-	@Column(name="pathfield",columnDefinition="Varchar",length=2147483647)
+	@Column(name="pathfield",columnDefinition="path",length=2147483647)
 	private String pathfield;
 
 	@Column(name="pointfield",columnDefinition="Varchar",length=2147483647)
@@ -113,11 +112,11 @@ public class TestColumntypesSpecial extends DataObject{
 		return bitfield1;
 	}
 
-	public void setBitfield2(String obj){
+	public void setBitfield2(Boolean obj){
 		this.bitfield2 = obj;
 	}
 
-	public String getBitfield2(){
+	public Boolean getBitfield2(){
 		return bitfield2;
 	}
 

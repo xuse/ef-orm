@@ -1,5 +1,8 @@
 package jef.database.query;
 
+import java.io.Serializable;
+import java.util.AbstractList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -7,58 +10,49 @@ import java.util.Map;
 
 import jef.database.Condition;
 import jef.database.Condition.Operator;
-import jef.database.DataObject;
-import jef.database.DebugUtil;
 import jef.database.Field;
 import jef.database.IConditionField;
 import jef.database.IQueryableEntity;
+import jef.database.ORMConfig;
+import jef.database.dialect.type.MappingType;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.Reference;
 import jef.database.wrapper.populator.Transformer;
+import jef.tools.Assert;
 
-/**
- * 不可更改的Query对象实现，用于内部处理
- * @author jiyi
- *
- * @param <T>
- */
-public final class ReadOnlyQuery<T extends IQueryableEntity> extends AbstractQuery<T> {
-	static private final Map<ITableMetadata, Query<?>> cacheOfQuery=new java.util.IdentityHashMap<ITableMetadata, Query<?>>(32);
-	public static Query<?> getEmptyQuery(ITableMetadata cls) {
-		Query<?> q=cacheOfQuery.get(cls);
-		if(q!=null)return q;
-		return putEmptyQuery(cls);
-	}
-
-	@SuppressWarnings("rawtypes")
-	private static synchronized Query<?> putEmptyQuery(ITableMetadata cls) {
-		Query<?> q=cacheOfQuery.get(cls);
-		if(q!=null)return q;
-		try {
-			DataObject e=(DataObject)cls.newInstance();
-			@SuppressWarnings("unchecked")
-			ReadOnlyQuery<?> rq=new ReadOnlyQuery(e,cls);
-			DebugUtil.bindQuery(e, rq);
-			cacheOfQuery.put(cls, rq);
-			return rq;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
+public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	
+	private List<Serializable> pkValues;
 	
-	public ReadOnlyQuery(T ins,ITableMetadata clz){
-		this.type=clz;
-		this.instance=ins;
-	}
-
+	private boolean cascadeViaOuterJoin=ORMConfig.getInstance().isUseOuterJoin();
+	
 	@SuppressWarnings("unchecked")
+	public PKQuery(ITableMetadata clz,Serializable... pks){
+		this.type=clz;
+		this.instance=(T) clz.instance();
+		pkValues=Arrays.asList(pks);
+	}
+
 	public List<Condition> getConditions() {
-		return Collections.EMPTY_LIST;
+		return new AbstractList<Condition>() {
+			@Override
+			public Condition get(int index) {
+				MappingType<?> m=type.getPKFields().get(index);
+//				Object value=m.getFieldAccessor().get(instance);
+				Object value=pkValues.get(index);
+				Assert.notNull(value);
+				return new Condition(m.field(),Operator.EQUALS,value);
+			}
+
+			@Override
+			public int size() {
+				return type.getPKFields().size();
+			}
+		};
 	}
 
 	public EntityMappingProvider getSelectItems() {
-		throw new UnsupportedOperationException();
+		return null;
 	}
 
 	public void setSelectItems(Selects select) {
@@ -99,18 +93,10 @@ public final class ReadOnlyQuery<T extends IQueryableEntity> extends AbstractQue
 		return Collections.EMPTY_MAP;
 	}
 
-	public void setMaxResult(int size) {
-	}
-
-	public void setFetchSize(int size) {
-	}
-
-	public void setQueryTimeout(int timout) {
-	}
-
 	public Query<T> addExtendQuery(Query<?> querys) {
 		throw new UnsupportedOperationException();
 	}
+
 	public Query<T> setAllRecordsCondition() {
 		throw new UnsupportedOperationException();
 	}
@@ -154,17 +140,17 @@ public final class ReadOnlyQuery<T extends IQueryableEntity> extends AbstractQue
 
 	@Override
 	public String toString() {
-		return type.getName()+"[Empty]";
+		return type.getName()+"[PK]";
 	}
 
 	public boolean isCascadeViaOuterJoin() {
-		return true;
+		return cascadeViaOuterJoin;
 	}
 
 	public void setCascadeViaOuterJoin(boolean cascadeViaOuterJoin) {
+		this.cascadeViaOuterJoin=cascadeViaOuterJoin;
 	}
-
-
+	
 	public void setCascade(boolean cascade) {
 		if(t==null){
 			t=new Transformer(type);
@@ -173,15 +159,8 @@ public final class ReadOnlyQuery<T extends IQueryableEntity> extends AbstractQue
 		t.setLoadVsOne(cascade);
 	}
 
-	public Transformer getResultTransformer() {
-		if (t == null) {
-			t = new Transformer(type);
-		}
-		return t;
-	}
-	
 	@Override
 	public boolean isAll() {
-		return true;
+		return false;
 	}
 }

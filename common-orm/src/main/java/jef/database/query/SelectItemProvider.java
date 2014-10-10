@@ -77,7 +77,7 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 	
 	
 	private static final AliasProvider EMPTY=new AliasProvider(){
-		public String getSelectedAliasOf(Field f, DatabaseDialect profile, String schema) {
+		public String getSelectedAliasOf(Field f, DatabaseDialect profile, String schema,boolean forSelect) {
 			return null;
 		}
 	};
@@ -96,7 +96,7 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 				for (MappingType<?> f : meta.getMetaFields()) {
 					CommentEntry entry=new CommentEntry();
 					entry.setKey(schema.concat(".").concat(f.getColumnName(profile, true)));
-					entry.setValue(aliasProvider.getSelectedAliasOf(f.field(), profile, schema));	
+					entry.setValue(aliasProvider.getSelectedAliasOf(f.field(), profile, schema,true));	
 					result.add(entry);
 				}	
 			}
@@ -123,7 +123,7 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 						if(referenceObj==null){
 							entry.setValue(DbUtils.getDefaultColumnAlias(f.field(), profile, schema));	
 						}else{
-							entry.setValue(referenceObj.getSelectedAliasOf(f.field(),profile,schema));	
+							entry.setValue(referenceObj.getSelectedAliasOf(f.field(),profile,schema,true));	
 						}
 						result.add(entry);
 					}

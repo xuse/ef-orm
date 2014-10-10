@@ -51,12 +51,18 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 public class Condition implements Serializable{
 	private static final long serialVersionUID = -864876729368518762L;
 	
-	public static final Condition AllRecordsCondition=new Condition();
+//	public static final Condition AllRecordsCondition=new Condition();
 	private static final Class<?>[] VALID_FIELD_TYPE_FOR_CONDITION={FBIField.class,RefField.class};
 	private static final Operator[] NULL_ABLE_VALUE=new Operator[]{Operator.IS_NULL,Operator.IS_NOT_NULL};
 	
 	protected Condition(){}
 	
+	public Condition(Field field2, Operator equals, Object value2) {
+		this.field=field2;
+		this.operator=equals;
+		this.value=value2;
+	}
+
 	/**
 	 * 字段（也可用于描述一个条件组）
 	 */
@@ -81,7 +87,7 @@ public class Condition implements Serializable{
 	public static Condition get(Field field,Operator oper,Object value){
 		boolean valid=(field instanceof IConditionField) || (field instanceof Enum)|| (field instanceof TupleField);
 		if(!valid){
-			valid=ArrayUtils.contains(VALID_FIELD_TYPE_FOR_CONDITION, field.getClass());
+			valid=ArrayUtils.fastContains(VALID_FIELD_TYPE_FOR_CONDITION, field.getClass());
 		}
 		Assert.isTrue(valid,"The field type "+ field.getClass()+" is not a valid field for condition!");
 		Condition c=new Condition();
@@ -438,9 +444,6 @@ public class Condition implements Serializable{
 	}
 	
 	public String toString(){
-		if(this==AllRecordsCondition){
-			return "[EMPTY]";
-		}
 		StringBuilder sb=new StringBuilder();
 		if(field!=null)
 			sb.append(field.name()).append(' ');

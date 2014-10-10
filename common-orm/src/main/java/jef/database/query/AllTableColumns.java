@@ -132,14 +132,16 @@ public final class AllTableColumns implements IReferenceAllTable{
 		this.projection=ISelectProvider.PROJECTION_NOT_SELECT;
 	}
 
-	public String getSelectedAliasOf(Field f, DatabaseDialect profile, String schema) {
+	public String getSelectedAliasOf(Field f, DatabaseDialect profile, String schema,boolean forSelect) {
 		String alias=getAlias(f);
 		if(alias!=null)return alias;
 		String value;
 		switch(aliasType){
 		case OMIT:
-			//这个地方必须注释掉，因为对于AllColumn来说，还是有可能位于join当中的。
+			//这个地方不可抛出异常.因为对于AllColumn来说，还是有可能位于join当中的。
 //			throw new IllegalArgumentException("the type should use 't.*' on select columns. ");
+			//一定是forSelect=false的场合下
+			return table.getMeta().getColumnName(f, profile,false);
 		case RAWNAME:
 			value=table.getMeta().getColumnName(f, profile,false);
 			aliasMap.put(f,value);

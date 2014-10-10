@@ -6,6 +6,7 @@ import java.util.Map;
 
 import jef.common.wrapper.Page;
 import jef.database.DbClient;
+import jef.database.IQueryableEntity;
 import jef.database.NamedQueryConfig;
 import jef.database.NativeQuery;
 import jef.database.Session;
@@ -282,6 +283,11 @@ public interface CommonDao{
 	<T> T loadByPrimaryKey(Class<T> entityClass, Object primaryKey);
 	
 	/**
+	 * 根据主键的值批量加载记录
+	 */
+	<T> List<T> loadByPrimaryKeys(Class<T> entityClass, List<Object> primaryKey);
+	
+	/**
 	 * 根据主键的值加载一条记录
 	 * @param meta 数据库表的元模型. {@linkplain ITableMetadata 什么是元模型}
 	 * @param id
@@ -297,6 +303,15 @@ public interface CommonDao{
 	 * @return  查询结果
 	 */
 	List<?> findByKey(ITableMetadata meta, String propertyName, Object value);
+	
+	/**
+	 * 根据指定的字段批量查找记录
+	 * @param meta
+	 * @param propertyName
+	 * @param value, 要查找的记录的字段值（多个）
+	 * @return
+	 */
+	List<?> findByKeys(ITableMetadata meta, String propertyName, List<Object> value);
 	
 	/**
 	 * 使用已知的属性查找一个结果

@@ -1,4 +1,4 @@
-﻿\============== 确定已经解决的问题 ==============
+﻿============== 确定已经解决的问题 ==============
 读取Sequence initialValue=1000   allocationSize (OK)
 关于vsMany和vsOne目前界限正在模糊，需要按照lazy和eager两种方式重新修改。(OK)
 读取Table initialValue=1000   valueColumnName   pkColumnValue table   allocationSize (OK)
@@ -67,6 +67,7 @@ org.easyframe.tutorial.lesson7.Case1.testLimitKeyword()中关于NAtiveQuery的co
 新增案例支持——Hibernate共享事务、JTA事务(OK)
 重构，取消特殊的metadata连接池。共用统一的连接池。(OK)
 其他和JTA有关的混合事务支持案例编写(OK)
+优化reorder算法(OK)
 ==========文档补充============
 更新文档中的站点
 reivew和修订文档
@@ -76,7 +77,16 @@ reivew和修订文档
 在使用JDataSource时，因为要实现分库后的分页功能，所以必须从SQL语句中解析出分页参数。
 而不同数据库的分页语句写法变化非常大，（如ORacle，SQLSErver）,综合考虑后，框架让传入的SQL语句统一使用LIMIT关键字来描述分页。
 
+ 发现MariaDB的驱动1.1.1~1.1.7版本中GeneratedKeys特性错误.不宜使用。记录
  
+ atomikos是分布式事务的解决方案
+1\H框架JTA事务 (OK)
+2JEF JTA事务   (OK)
+3 H框架、JEF共同参与JTA事务。可以，由atomikos内部基于线程分配事务。同一线程的操作被划分在一个事务中。(OK)
+4 H框架，JMS,JEF共存情况下的事务配置 (东方通为例。)基本完成，由于TongLinkQ的问题案例没跑通。
+
+编写《论一种新的多结果集排序算法》
+
 ==============特性展示===============
 特点一
 1、Query与Entity的统一，一体两面的事物。 更少的类，更灵活的用法。
@@ -100,33 +110,15 @@ reivew和修订文档
 
 
 ================ 待解决的问题  ===================
-atomikos是分布式事务的解决方案
-1\H框架JTA事务 (OK)
-2JEF JTA事务   (OK)
-3 H框架、JEF共同参与JTA事务。可以，由atomikos内部基于线程分配事务。同一线程的操作被划分在一个事务中。(OK)
-4 H框架，JMS,JEF共存情况下的事务配置 (东方通为例。)基本完成，由于TongLinkQ的问题案例没跑通。
-
-优化reorder算法
-编写《论一种新的多结果集排序算法》
-测试和对比三种算法
-优化现有算法
-测试分析内存排序算法是否可以优化，分析内存分页算法是否可以优化。（不带排序时？没啥意义。）
-
-发现MariaDB的驱动1.1.1~1.1.7版本中GeneratedKeys特性错误.不宜使用。
-
-发现atomikos换成3.9.3后Spring初始化即报错。
-
 按主键查询逻辑优化
 之前性能测试均为极端情况，测试综合工况，如10条记录左右的查询查询500次耗时。 如update语句更新500次。
+
 支持读写分离模式
-
-
 
 准备WebService培训大纲
 
 使用外部配置文件来配置分库分表JDataSource
 是不是还可以将dubbo调用也封装到JTA事务中，这样今后程序的可靠性进一步增强……
-
 
 申请加入官方仓库
 工程合并并更名  (ef-common/ef-orm-core)

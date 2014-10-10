@@ -25,7 +25,7 @@ public final class ReferenceObject extends AbstractRefField implements IReferenc
 		return null;
 	}
 
-	public String getSelectedAliasOf(Field f, DatabaseDialect profile, String schema) {
+	public String getSelectedAliasOf(Field f, DatabaseDialect profile, String schema,boolean forSelect) {
 		return DbUtils.getDefaultColumnAlias(f, profile, schema);
 	}
 	public boolean isLazyLob() {
@@ -64,7 +64,7 @@ public final class ReferenceObject extends AbstractRefField implements IReferenc
 			return null;
 		}
 
-		public String getSelectedAliasOf(Field f, DatabaseDialect profile, String schema) {
+		public String getSelectedAliasOf(Field f, DatabaseDialect profile, String schema,boolean forSelect) {
 			return DbUtils.getDefaultColumnAlias(f, profile, schema);
 		}
 		public boolean isLazyLob() {

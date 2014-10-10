@@ -275,6 +275,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 		return new Entry<List<String>, List<Field>>(cstr, params);
 	}
 
+	//将所有非主键字段作为update的值
 	@SuppressWarnings("unchecked")
 	private java.util.Map.Entry<Field, Object>[] getAllFieldValues(ITableMetadata meta, Map<Field, Object> map, BeanWrapper wrapper) {
 		List<Entry<Field, Object>> result = new ArrayList<Entry<Field, Object>>();
@@ -283,9 +284,9 @@ public class DefaultSqlProcessor implements SqlProcessor {
 			if (map.containsKey(field)) {
 				result.add(new Entry<Field, Object>(field, map.get(field)));
 			} else {
-				if (meta.getPKField().contains(field))
+				if(vType.isPk()){
 					continue;
-
+				}
 				if (vType instanceof AbstractTimeMapping<?>) {
 					AbstractTimeMapping<?> times = (AbstractTimeMapping<?>) vType;
 					if (times.isForUpdate()) {
@@ -368,10 +369,8 @@ public class DefaultSqlProcessor implements SqlProcessor {
 		}
 	}
 
-	private String generateWhereClause0(Query<?> obj, SqlContext context, boolean removePKUpdate, List<Condition> conds,DatabaseDialect profile) {
-		Query<?> q = (Query<?>) obj;
-
-		if (conds.size() == 1 && conds.get(0) == Condition.AllRecordsCondition)
+	private String generateWhereClause0(Query<?> q, SqlContext context, boolean removePKUpdate, List<Condition> conds,DatabaseDialect profile) {
+		if (q.isAll())
 			return "";
 		if (conds.isEmpty()) {
 			IQueryableEntity instance = q.getInstance();
@@ -392,7 +391,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 			sb.append(c.toSqlClause(meta, context, this, q.getInstance(),profile)); // 递归的，当do是属于Join中的一部分时，需要为其增加前缀
 		}
 		if (sb.length() == 0)
-			throw new NullPointerException("Illegal usage of query:" + obj.getClass().getName() + " object, must including any condition in query. or did you forget to set the primary key for the entity?");
+			throw new NullPointerException("Illegal usage of query:" + q.getClass().getName() + " object, must including any condition in query. or did you forget to set the primary key for the entity?");
 		return sb.toString();
 	}
 
@@ -439,7 +438,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 	private BindSql generateWhereCondition(Query<?> q, SqlContext context, List<Condition> conditions, boolean removePKUpdate) {
 		List<BindVariableDescription> params = new ArrayList<BindVariableDescription>();
 		IQueryableEntity obj = q.getInstance();
-		if (conditions.size() == 1 && conditions.get(0) == Condition.AllRecordsCondition)
+		if (q.isAll())
 			return new BindSql("", params);
 
 		if (conditions.isEmpty()) {
@@ -449,6 +448,9 @@ public class DefaultSqlProcessor implements SqlProcessor {
 				DbUtils.fillConditionFromField(obj, q, removePKUpdate, false);
 			}
 		}
+		
+		
+		
 		StringBuilder sb = new StringBuilder();
 		for (Condition c : conditions) {
 			if (sb.length() > 0)

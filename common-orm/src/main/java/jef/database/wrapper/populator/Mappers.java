@@ -322,7 +322,7 @@ public final class Mappers {
 					if (schema == null) {
 						columnName = skipColumnAnnotation ? f.name().toUpperCase() : meta.getColumnName(f, UPPER_COLUMNS, false);
 					} else {
-						columnName = AliasProvider.DEFAULT.getSelectedAliasOf(f, UPPER_COLUMNS, schema);
+						columnName = AliasProvider.DEFAULT.getSelectedAliasOf(f, UPPER_COLUMNS, schema,false);
 					}	
 				}
 				if (columnName != null) {

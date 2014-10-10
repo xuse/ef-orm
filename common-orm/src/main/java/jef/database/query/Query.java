@@ -155,4 +155,6 @@ public interface Query<T extends IQueryableEntity> extends TypedQuery<T>,JoinEle
 	 * @see jef.database.wrapper.populator.Transformer#setLoadVsOne(boolean)
 	 */
 	public void setCascade(boolean cascade);
+
+	boolean isAll();
 }

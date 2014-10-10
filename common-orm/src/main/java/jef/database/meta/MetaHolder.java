@@ -792,10 +792,10 @@ public final class MetaHolder {
 		
 		List<JoinKey> result = new ArrayList<JoinKey>();
 
-		if (meta.getPKField().size() != 1) {
-			throw new IllegalArgumentException(meta.getSimpleName() + " cann't map to " + target.getSimpleName() + " since its primary key field count " + meta.getPKField().size());
+		if (meta.getPKFields().size() != 1) {
+			throw new IllegalArgumentException(meta.getSimpleName() + " cann't map to " + target.getSimpleName() + " since its primary key field count " + meta.getPKFields().size());
 		}
-		Field left = meta.getPKField().get(0);
+		Field left = meta.getPKFields().get(0).field();
 		Field right = target.getField(mappedBy);
 		if (right == null) {
 			throw new IllegalArgumentException(meta.getSimpleName() + " cann't map to " + target.getSimpleName() + " since there is no field [" + mappedBy + "] in target entity");
@@ -930,8 +930,11 @@ public final class MetaHolder {
 			return new ColumnType.Boolean().setNullable(nullable).defaultIs(defaultExpression);
 		} else if ("XML".equalsIgnoreCase(def)) {
 			return new ColumnType.XML().setNullable(nullable);
+		} else if ("BIT".equalsIgnoreCase(def)) {
+			return new ColumnType.Boolean().setNullable(nullable);
 		} else {
 			throw new IllegalArgumentException("Unknow column Def:" + def);
+//			return new ColumnType.Unknown(def).setNullable(nullable);
 		}
 	}
 

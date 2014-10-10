@@ -17,6 +17,7 @@ package jef.database.meta;
 
 import java.lang.reflect.Constructor;
 import java.sql.SQLException;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -91,7 +92,7 @@ public final class TableMetadata extends MetadataAdapter {
 	
 	private Entry<PartitionKey, PartitionFunction>[] effectPartitionKeys;
 
-	private List<Field> pkFields;// 记录主键列
+	private List<MappingType<?>> pkFields;// 记录主键列
 
 	// //////////列名/字段索引//////////////////////
 	private final Map<Field, MappingType<?>> schemaMap = new IdentityHashMap<Field, MappingType<?>>(); // 提供Field到字段类型的转换
@@ -187,9 +188,22 @@ public final class TableMetadata extends MetadataAdapter {
 	}
 
 	public List<Field> getPKField() {
-		return pkFields;
+		return new AbstractList<Field>(){
+			@Override
+			public Field get(int index) {
+				return pkFields.get(index).field();
+			}
+
+			@Override
+			public int size() {
+				return pkFields.size();
+			}
+		};
 	}
 
+	public List<MappingType<?>> getPKFields() {
+		return pkFields;
+	}
 	/**
 	 * 按照引用的关系获取所有关联字段
 	 * 
@@ -245,22 +259,22 @@ public final class TableMetadata extends MetadataAdapter {
 		}
 		if (annoId != null) {
 			type.setPk(true);
-			List<Field> newPks = new ArrayList<Field>(pkFields);
-			newPks.add(field);
-			Collections.sort(newPks, new Comparator<Field>() {
-				public int compare(Field o1, Field o2) {
+			List<MappingType<?>> newPks = new ArrayList<MappingType<?>>(pkFields);
+			newPks.add(type);
+			Collections.sort(newPks, new Comparator<MappingType<?>>() {
+				public int compare(MappingType<?> o1, MappingType<?> o2) {
 					Integer i1=-1;
 					Integer i2=-1;
 					if(o1 instanceof Enum){
-						i1=((Enum<?>) o1).ordinal();
+						i1=((Enum<?>) o1.field()).ordinal();
 					}
 					if(o2 instanceof Enum){
-						i2=((Enum<?>) o2).ordinal();
+						i2=((Enum<?>) o2.field()).ordinal();
 					}
 					return i1.compareTo(i2);
 				}
 			});
-			this.pkFields = Arrays.asList(newPks.toArray(new Field[newPks.size()]));
+			this.pkFields = Arrays.<MappingType<?>>asList(newPks.toArray(new MappingType[newPks.size()]));
 		}
 		schemaMap.put(field, type);
 		

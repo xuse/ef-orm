@@ -15,7 +15,6 @@
  */
 package jef.database.query;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -23,8 +22,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.persistence.Transient;
 
 import jef.database.Condition;
 import jef.database.Condition.Operator;
@@ -47,35 +44,21 @@ import jef.tools.Assert;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-final class QueryImpl<T extends IQueryableEntity> implements Query<T>, Serializable {
+final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T>{
 	private static final long serialVersionUID = -8921719771049568842L;
 	
-	static final Query<?>[] EMPTY_Q = new Query[0];
-
-	// 基本的查询要素
-	@Transient
-	transient T instance;
-	//类型
-	@Transient
-	transient MetadataAdapter type;
-	
-	/**
-	 * 结果转换器
-	 */
-	private Transformer t;
-	
-
-	private int maxResult;
-	private int fetchSize;
-	private int queryTimeout; 
 	private boolean cascadeViaOuterJoin=ORMConfig.getInstance().isUseOuterJoin();
+	
 	final List<Condition> conditions = new ArrayList<Condition>(6);
 	/**
 	 * 当使用延迟过滤条件时，存储这些条件
 	 */
 	private Map<Reference, List<Condition>> cascadeCondition;
+	
 	final List<OrderField> orderBy = new ArrayList<OrderField>();
+	
 	EntityMappingProvider selected;
+	
 	private Map<String, Object> attribute;
 
 	/**
@@ -157,10 +140,9 @@ final class QueryImpl<T extends IQueryableEntity> implements Query<T>, Serializa
 	 * @see jef.database.query.Query#addCondition(jef.database.Condition)
 	 */
 	public Query<T> addCondition(Condition condition) {
-		if(conditions.size()==1)
-			conditions.remove(Condition.AllRecordsCondition);
 		if(!conditions.contains(condition))
 			conditions.add(condition);
+		allRecords=false;
 		wrapRef(condition);
 		return this;
 	}
@@ -190,12 +172,12 @@ final class QueryImpl<T extends IQueryableEntity> implements Query<T>, Serializa
 		}
 		return addExtendQuery(ReadOnlyQuery.getEmptyQuery(meta));
 	}
-	
+	private boolean allRecords;
 
 	public Query<T> setAllRecordsCondition() {
 		conditions.clear();
+		allRecords=true;
 		otherQueryProvider = null;
-		conditions.add(Condition.AllRecordsCondition);
 		return this;
 	}
 
@@ -205,10 +187,6 @@ final class QueryImpl<T extends IQueryableEntity> implements Query<T>, Serializa
 
 	public void setCascadeViaOuterJoin(boolean cascadeOuterJoin) {
 		this.cascadeViaOuterJoin = cascadeOuterJoin;
-	}
-
-	public void setAutoOuterJoin(boolean cascadeOuterJoin) {
-		setCascadeViaOuterJoin(cascadeOuterJoin);
 	}
 
 	//由于指定了RefName，因此变成了早绑定
@@ -279,14 +257,6 @@ final class QueryImpl<T extends IQueryableEntity> implements Query<T>, Serializa
 		return this;
 	}
 
-	public T getInstance() {
-		return instance;
-	}
-
-	@SuppressWarnings("unchecked")
-	public Class<T> getType() {
-		return (Class<T>) type.getThisType();
-	}
 
 	public EntityMappingProvider getSelectItems() {
 		return selected;
@@ -399,70 +369,17 @@ final class QueryImpl<T extends IQueryableEntity> implements Query<T>, Serializa
 		return type.getThisType().getSimpleName() + conditions.toString();
 	}
 	
-	public void setMaxResult(int size) {
-		this.maxResult=size;
-	}
 
-	public void setFetchSize(int fetchszie) {
-		this.fetchSize=fetchszie;
-	}
-
-	public void setQueryTimeout(int timeout) {
-		this.queryTimeout=timeout;
-	}
 
 	public void setCustomTableName(String name) {
 		setAttribute(CUSTOM_TABLE_NAME,name);
 	}
 
-	public int getMaxResult() {
-		return maxResult;
-	}
-
-	public int getFetchSize() {
-		return fetchSize;
-	}
-
-	public int getQueryTimeout() {
-		return queryTimeout;
-	}
 
 	public Map<String, Object> getAttributes() {
 		return attribute;
 	}
 
-	public MetadataAdapter getMeta() {
-		return type;
-	}
-	
-	public Transformer getResultTransformer(){
-		if(t==null){
-			t=new Transformer(type);
-			t.setLoadVsOne(true);
-			t.setLoadVsMany(true);
-		}
-		return t;
-	}
-
-	public void setCascade(boolean cascade) {
-		if(t==null){
-			t=new Transformer(type);
-		}
-		t.setLoadVsMany(cascade);
-		t.setLoadVsOne(cascade);
-		this.cascadeViaOuterJoin=false;
-	}
-
-	public JoinElement orderByAsc(Field... ascFields) {
-		addOrderBy(true, ascFields);
-		return this;
-	}
-
-	public JoinElement orderByDesc(Field... descFields) {
-		addOrderBy(false, descFields);
-		return this;
-	}
-	
 	/**
 	 * 针对每个FilterCondition，来判断该Filter是否允许合并查询
 	 * 该条件是否允许作用于合并后的外连接查询.
@@ -481,7 +398,18 @@ final class QueryImpl<T extends IQueryableEntity> implements Query<T>, Serializa
 		return false;
 	}
 
-	
 
-	
+	public void setCascade(boolean cascade) {
+		if(t==null){
+			t=new Transformer(type);
+		}
+		t.setLoadVsMany(cascade);
+		t.setLoadVsOne(cascade);
+		this.cascadeViaOuterJoin=false;
+	}
+
+	@Override
+	public boolean isAll() {
+		return allRecords && conditions.isEmpty();
+	}
 }

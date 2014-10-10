@@ -119,12 +119,10 @@ public final class DbUtils {
 	public static PartitionCalculator partitionUtil = new DefaultPartitionCalculator();
 
 	/**
-	 * 线程池。线程池有以下作用
-	 * 1、在分库分表时使用线程
-	 * 2、在JTA事务管理模式下，为了避免在JTA中执行DDL，因此不得不将代码在新的线程中执行。
+	 * 线程池。线程池有以下作用 1、在分库分表时使用线程 2、在JTA事务管理模式下，为了避免在JTA中执行DDL，因此不得不将代码在新的线程中执行。
 	 */
-	public static ExecutorService es= new ThreadPoolExecutor(1, 8,60000L, TimeUnit.MILLISECONDS,new LinkedBlockingQueue<Runnable>());
-	
+	public static ExecutorService es = new ThreadPoolExecutor(1, 8, 60000L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+
 	/**
 	 * 获取数据库加密的密钥,目前使用固定密钥
 	 * 
@@ -402,10 +400,10 @@ public final class DbUtils {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T extends IQueryableEntity> JoinElement toReferenceJoinQuery(Query<T> queryObj, List<Reference> excludeRef) {
-		//得到可以合并查询的引用关系
+		// 得到可以合并查询的引用关系
 		Map<Reference, List<AbstractRefField>> map = queryObj.isCascadeViaOuterJoin() ? DbUtils.getMergeAsOuterJoinRef(queryObj) : Collections.EMPTY_MAP;
-		Query<?>[] otherQuery=queryObj.getOtherQueryProvider();
-		
+		Query<?>[] otherQuery = queryObj.getOtherQueryProvider();
+
 		if (otherQuery.length == 0 && map.isEmpty()) {
 			return queryObj;
 		}
@@ -422,16 +420,16 @@ public final class DbUtils {
 				j.setSelectItems(select);
 			}
 			j.setResultTransformer(queryObj.getResultTransformer());
-			//FilterCondition合并
-			if(queryObj.getFilterCondition()!=null){
-				for(QueryAlias qa:j.allElements()){
-					if(qa.getStaticRef()!=null){
-						List<Condition> con=queryObj.getFilterCondition().get(qa.getStaticRef());
-						if(con!=null){
+			// FilterCondition合并
+			if (queryObj.getFilterCondition() != null) {
+				for (QueryAlias qa : j.allElements()) {
+					if (qa.getStaticRef() != null) {
+						List<Condition> con = queryObj.getFilterCondition().get(qa.getStaticRef());
+						if (con != null) {
 							j.addRefConditions(qa.getQuery(), con);
 						}
 					}
-				}	
+				}
 			}
 			return j;
 		} else {
@@ -512,57 +510,50 @@ public final class DbUtils {
 	 * @param pk
 	 *            主键，可以是Map或单值
 	 */
-	@SuppressWarnings("unchecked")
 	public static void setPrimaryKeyValue(IQueryableEntity data, Object pk) throws PersistenceException {
-		List<Field> fields = MetaHolder.getMeta(data).getPKField();
+		List<MappingType<?>> fields = MetaHolder.getMeta(data).getPKFields();
 		if (fields.isEmpty())
 			return;
 		Assert.notNull(pk);
-		if (pk instanceof Map) {
-			Map<String, Object> pkMap = (Map<String, Object>) pk;
-			BeanWrapper wrapper = BeanWrapper.wrap(data, BeanWrapper.FAST);
-			for (Field f : fields) {
-				if (wrapper.isWritableProperty(f.name())) {
-					wrapper.setPropertyValue(f.name(), pkMap.get(f.name()));
-				}
-			}
-		} else if (pk.getClass().isArray()) {
+		// if (pk instanceof Map) {
+		// Map<String, Object> pkMap = (Map<String, Object>) pk;
+		// BeanWrapper wrapper = BeanWrapper.wrap(data, BeanWrapper.FAST);
+		// for (Field f : fields) {
+		// if (wrapper.isWritableProperty(f.name())) {
+		// wrapper.setPropertyValue(f.name(), pkMap.get(f.name()));
+		// }
+		// }
+		// } else
+		if (pk.getClass().isArray()) {
 			int length = Array.getLength(pk);
 			int n = 0;
 			Assert.isTrue(length == fields.size());
-			BeanWrapper wrapper = BeanWrapper.wrap(data, BeanWrapper.FAST);
-			for (Field f : fields) {
-				wrapper.setPropertyValue(f.name(), Array.get(pk, n++));
+			for (MappingType<?> f : fields) {
+				f.getFieldAccessor().set(data, Array.get(pk, n++));
 			}
 		} else {
 			if (fields.size() != 1) {
 				throw new PersistenceException("No Proper PK fields!");
 			}
-			BeanWrapper wrapper = BeanWrapper.wrap(data, BeanWrapper.FAST);
-			wrapper.setPropertyValue(fields.get(0).name(), pk);
+			fields.get(0).getFieldAccessor().set(data, pk);
 		}
-
 	}
 
 	/**
 	 * 提供主键的值
 	 */
 	public static Map<String, Object> getPrimaryKeyValueMap(IQueryableEntity data) {
-		BeanWrapper wrapper = BeanWrapper.wrap(data, BeanWrapper.FAST);
 		ITableMetadata meta = MetaHolder.getMeta(data);
-		if (meta.getPKField().isEmpty())
-			return null;
-		int len = meta.getPKField().size();
+		int len = meta.getPKFields().size();
 		if (len == 0)
 			return null;
 		Map<String, Object> keyValMap = new HashMap<String, Object>();
 		for (int i = 0; i < len; i++) {
-			Field field = meta.getPKField().get(i);
-			String fieldName = field.name();
-			if (!isValidPKValue(data, meta, wrapper, field)) {
+			MappingType<?> field = meta.getPKFields().get(i);
+			if (!isValidPKValue(data, meta, field)) {
 				return null;
 			}
-			keyValMap.put(fieldName, wrapper.getPropertyValue(fieldName));
+			keyValMap.put(field.fieldName(), field.getFieldAccessor().get(data));
 		}
 		return keyValMap;
 	}
@@ -571,37 +562,32 @@ public final class DbUtils {
 	 * 提供主键的值
 	 */
 	public static List<Object> getPrimaryKeyValue(IQueryableEntity data) {
-		BeanWrapper wrapper = BeanWrapper.wrap(data);
 		ITableMetadata meta = MetaHolder.getMeta(data);
-		if (meta.getPKField().isEmpty())
+		if (meta.getPKFields().isEmpty())
 			return null;
 
-		int len = meta.getPKField().size();
+		int len = meta.getPKFields().size();
 		Object[] result = new Object[len];
 		for (int i = 0; i < len; i++) {
-			Field field = meta.getPKField().get(i);
-			String fieldName = field.name();
-			if (!isValidPKValue(data, meta, wrapper, field)) {
+			MappingType<?> field = meta.getPKFields().get(i);
+			if (!isValidPKValue(data, meta, field)) {
 				return null;
 			}
-			result[i] = wrapper.getPropertyValue(fieldName);
+			result[i] = field.getFieldAccessor().get(data);
 		}
 		return Arrays.asList(result);
 	}
 
 	// 从实体中获取主键的值，这里的实体都必须是已经从数据库中选择出来的，因此无需校验主键值是否合法
 	static List<Object> getPKValueSafe(IQueryableEntity data) {
-		// BeanWrapper wrapper = new BeanWrapperAsMethod(data);
-		BeanWrapper wrapper = BeanWrapper.wrap(data);
 		ITableMetadata meta = MetaHolder.getMeta(data);
-		if (meta.getPKField().isEmpty())
+		if (meta.getPKFields().isEmpty())
 			return null;
-		int len = meta.getPKField().size();
+		int len = meta.getPKFields().size();
 		Object[] result = new Object[len];
 		for (int i = 0; i < len; i++) {
-			Field field = meta.getPKField().get(i);
-			String fieldName = field.name();
-			result[i] = wrapper.getPropertyValue(fieldName);
+			MappingType<?> field = meta.getPKFields().get(i);
+			result[i] = field.getFieldAccessor().get(data);
 		}
 		return Arrays.asList(result);
 	}
@@ -619,10 +605,10 @@ public final class DbUtils {
 			return ((TupleField) field).toColumnName(tableAlias, feature);
 		}
 		ITableMetadata meta = getTableMeta(field);
-		if(field instanceof JpqlExpression){
+		if (field instanceof JpqlExpression) {
 			return ((JpqlExpression) field).toSqlAndBindAttribs(null, feature);
-		}else{
-			return  meta.getColumnName(field, tableAlias, feature);
+		} else {
+			return meta.getColumnName(field, tableAlias, feature);
 		}
 	}
 
@@ -752,7 +738,7 @@ public final class DbUtils {
 	 * @throws SQLException
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	protected static Object toProperContainerType(Collection<? extends IQueryableEntity> subs, Class<?> container,Class<?> bean,Cascade asMap) throws SQLException {
+	protected static Object toProperContainerType(Collection<? extends IQueryableEntity> subs, Class<?> container, Class<?> bean, Cascade asMap) throws SQLException {
 		if (container.isAssignableFrom(subs.getClass())) {
 			return subs;
 		}
@@ -767,13 +753,13 @@ public final class DbUtils {
 		} else if (container == Array.class) {
 			return subs.toArray();
 		} else if (container == Map.class) {
-			Map map=new HashMap();
-			String key=asMap.keyOfMap();
-			BeanAccessor ba=FastBeanWrapperImpl.getAccessorFor(bean);
-			for(IQueryableEntity e: subs){
+			Map map = new HashMap();
+			String key = asMap.keyOfMap();
+			BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(bean);
+			for (IQueryableEntity e : subs) {
 				map.put(ba.getProperty(e, key), e);
 			}
-			return map; 
+			return map;
 		}
 		throw new SQLException("the type " + container.getName() + " is not supported as a collection container.");
 	}
@@ -786,7 +772,7 @@ public final class DbUtils {
 	 */
 	protected static Map<Reference, List<AbstractRefField>> getMergeAsOuterJoinRef(Query<?> q) {
 		Map<Reference, List<AbstractRefField>> result = new HashMap<Reference, List<AbstractRefField>>(5);
-		//获得所有未配置为延迟加载的引用。
+		// 获得所有未配置为延迟加载的引用。
 		for (Map.Entry<Reference, List<AbstractRefField>> entry : q.getMeta().getRefFieldsByRef().entrySet()) {
 			Reference key = entry.getKey();
 			if (key.getType().isToOne()) {
@@ -798,11 +784,11 @@ public final class DbUtils {
 				result.put(key, value);
 			}
 		}
-		//过滤掉一部分因为使用了过滤条件而不得不延迟加载的应用
-		if(q.getFilterCondition()!=null){
-			for(Reference ref:q.getFilterCondition().keySet()){
-				if(ref.getType().isToOne() && ref.getJoinType()!=JoinType.LEFT){
-					result.remove(ref); 
+		// 过滤掉一部分因为使用了过滤条件而不得不延迟加载的应用
+		if (q.getFilterCondition() != null) {
+			for (Reference ref : q.getFilterCondition().keySet()) {
+				if (ref.getType().isToOne() && ref.getJoinType() != JoinType.LEFT) {
+					result.remove(ref);
 				}
 			}
 		}
@@ -819,15 +805,15 @@ public final class DbUtils {
 	 * @return
 	 */
 	protected static Map<Reference, List<AbstractRefField>> getLazyLoadRef(ITableMetadata data, Collection<Reference> excludeReference) {
-		//==null时，对单关联使用外连接，对多关联使用延迟加载,上个版本的形式
-		//应该逐渐淘汰的形式
+		// ==null时，对单关联使用外连接，对多关联使用延迟加载,上个版本的形式
+		// 应该逐渐淘汰的形式
 		if (excludeReference == null) {
 			Map<Reference, List<AbstractRefField>> result = new HashMap<Reference, List<AbstractRefField>>(5);
 			for (Map.Entry<Reference, List<AbstractRefField>> entry : data.getRefFieldsByRef().entrySet()) {
 				Reference key = entry.getKey();
 				ReferenceType type = key.getType();
 				List<AbstractRefField> value = entry.getValue();
-				if(type.isToOne()){
+				if (type.isToOne()) {
 					if (value.get(0).getFetch() == FetchType.LAZY) {
 						result.put(key, value);
 					}
@@ -836,10 +822,10 @@ public final class DbUtils {
 				}
 			}
 			return result;
-		//对单关联和对多关联都使用延迟加载的场合
-		} else if (excludeReference.isEmpty()) { 
+			// 对单关联和对多关联都使用延迟加载的场合
+		} else if (excludeReference.isEmpty()) {
 			return data.getRefFieldsByRef();
-		//!!今后主流的形式,过滤掉已经合并加载的ref
+			// !!今后主流的形式,过滤掉已经合并加载的ref
 		} else {
 			Map<Reference, List<AbstractRefField>> result = new HashMap<Reference, List<AbstractRefField>>(data.getRefFieldsByRef());
 			for (Reference ref : excludeReference) {
@@ -861,7 +847,7 @@ public final class DbUtils {
 			return (MetadataAdapter) ((TupleField) field).getMeta();
 		}
 		if (field instanceof LazyQueryBindField) {
-			return (MetadataAdapter)((LazyQueryBindField) field).getMeta();
+			return (MetadataAdapter) ((LazyQueryBindField) field).getMeta();
 		}
 		if (field instanceof Enum) {
 			Class<?> c = field.getClass().getDeclaringClass();
@@ -921,8 +907,7 @@ public final class DbUtils {
 	protected static void fillConditionFromField(IQueryableEntity obj, Query<?> query, boolean removePkUpdate, boolean force) {
 		Assert.isTrue(query.getConditions().isEmpty());
 		ITableMetadata meta = query.getMeta();
-		BeanWrapper wrapper = BeanWrapper.wrap(obj);
-		if (fillPKConditions(obj, meta, wrapper, query, removePkUpdate, force)) {
+		if (fillPKConditions(obj, meta, query, removePkUpdate, force)) {
 			return;
 		}
 		populateExampleConditions(obj);
@@ -931,12 +916,12 @@ public final class DbUtils {
 	/*
 	 * (nojava doc)
 	 */
-	private static boolean isValidPKValue(IQueryableEntity obj, ITableMetadata meta, BeanWrapper wrapper, Field field) {
-		Class<?> type = wrapper.getPropertyRawType(field.name());
-		Object value = wrapper.getPropertyValue(field.name());
+	private static boolean isValidPKValue(IQueryableEntity obj, ITableMetadata meta, MappingType<?> field) {
+		Class<?> type = field.getFieldAccessor().getType();
+		Object value = field.getFieldAccessor().get(obj);
 		if (type.isPrimitive()) {
 			if (BeanUtils.defaultValueOfPrimitive(type).equals(value)) {
-				if (meta.getPKField().size() == 1 && !obj.isUsed(field))
+				if (meta.getPKFields().size() == 1 && !obj.isUsed(field.field()))
 					return false;
 			}
 		} else {
@@ -962,17 +947,18 @@ public final class DbUtils {
 	 * 
 	 * @return
 	 */
-	protected static boolean fillPKConditions(IQueryableEntity obj, ITableMetadata meta, BeanWrapper wrapper, Query<?> query, boolean removePkUpdate, boolean force) {
-		if (meta.getPKField().isEmpty())
+	protected static boolean fillPKConditions(IQueryableEntity obj, ITableMetadata meta, Query<?> query, boolean removePkUpdate, boolean force) {
+		if (meta.getPKFields().isEmpty())
 			return false;
 		if (!force) {
-			for (Field field : meta.getPKField()) {
-				if (!isValidPKValue(obj, meta, wrapper, field))
+			for (MappingType<?> field : meta.getPKFields()) {
+				if (!isValidPKValue(obj, meta, field))
 					return false;
 			}
 		}
-		for (Field field : meta.getPKField()) {
-			Object value = wrapper.getPropertyValue(field.name());
+		for (MappingType<?> mapping : meta.getPKFields()) {
+			Object value = mapping.getFieldAccessor().get(obj);
+			Field field=mapping.field();
 			query.addCondition(field, value);
 			if (removePkUpdate && obj.getUpdateValueMap().containsKey(field)) {//
 				Map<Field, Object> map = obj.getUpdateValueMap();
@@ -1131,13 +1117,13 @@ public final class DbUtils {
 	 * @return
 	 */
 	public static PartitionResult[] toTableNames(IQueryableEntity obj, String customName, Query<?> q, PartitionSupport processor) {
-		MetadataAdapter meta = obj == null ? (MetadataAdapter)q.getMeta() : MetaHolder.getMeta(obj);
+		MetadataAdapter meta = obj == null ? (MetadataAdapter) q.getMeta() : MetaHolder.getMeta(obj);
 		if (StringUtils.isNotEmpty(customName))
 			return new PartitionResult[] { new PartitionResult(customName).setDatabase(meta.getBindDsName()) };
-		PartitionResult[] result=partitionUtil.toTableNames(meta, obj, q, processor,ORMConfig.getInstance().isFilterAbsentTables());
-//		if(ORMConfig.getInstance().isDebugMode()){
-//			LogUtil.show("Partitions:"+Arrays.toString(result));
-//		}
+		PartitionResult[] result = partitionUtil.toTableNames(meta, obj, q, processor, ORMConfig.getInstance().isFilterAbsentTables());
+		// if(ORMConfig.getInstance().isDebugMode()){
+		// LogUtil.show("Partitions:"+Arrays.toString(result));
+		// }
 		return result;
 	}
 
@@ -1148,19 +1134,20 @@ public final class DbUtils {
 	 * @param meta
 	 *            元数据描述
 	 * @param processor
-	 * @param operateType 计算表名所用的操作。0基表 1 不含基表  2 分表+基表 3 数据库中的存在表（不含基表） 4所有存在的表
-	 * 影响效果——建表的多寡。
-	 *            
+	 * @param operateType
+	 *            计算表名所用的操作。0基表 1 不含基表 2 分表+基表 3 数据库中的存在表（不含基表） 4所有存在的表
+	 *            影响效果——建表的多寡。
+	 * 
 	 * 
 	 * @return
 	 */
 	public static PartitionResult[] toTableNames(ITableMetadata meta, PartitionSupport processor, int operateType) {
-//		long start=System.nanoTime();
-//		try{
-			return partitionUtil.toTableNames((MetadataAdapter)meta, processor, operateType);
-//		}finally{
-//			System.out.println((System.nanoTime()-start)/1000+"us");
-//		}
+		// long start=System.nanoTime();
+		// try{
+		return partitionUtil.toTableNames((MetadataAdapter) meta, processor, operateType);
+		// }finally{
+		// System.out.println((System.nanoTime()-start)/1000+"us");
+		// }
 	}
 
 	/**
@@ -1173,7 +1160,7 @@ public final class DbUtils {
 	 * @return
 	 */
 	public static PartitionResult toTableName(IQueryableEntity obj, String customName, Query<?> q, PartitionSupport profile) {
-		MetadataAdapter meta = obj == null ? (MetadataAdapter)q.getMeta() : MetaHolder.getMeta(obj);
+		MetadataAdapter meta = obj == null ? (MetadataAdapter) q.getMeta() : MetaHolder.getMeta(obj);
 		if (StringUtils.isNotEmpty(customName))
 			return new PartitionResult(customName).setDatabase(meta.getBindDsName());
 		PartitionResult result = partitionUtil.toTableName(meta, obj, q, profile);

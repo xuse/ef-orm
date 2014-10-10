@@ -16,7 +16,6 @@ import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.MappingType;
-import jef.database.meta.ColumnChange.Change;
 import jef.database.support.RDBMS;
 import jef.tools.StringUtils;
 import jef.tools.string.RandomData;
@@ -51,7 +50,7 @@ public class DdlGeneratorImpl implements DdlGenerator {
 		String sequenceSql = null;
 		String charSetFix = null;// MY_SQL数据库只能索引255个UTF-8，所以一旦主键超过了这个长度，就在结尾处加上那个标记
 		String SequenceColumnSize = null;
-		List<Field> pkFields = meta.getPKField();
+		List<MappingType<?>> pkFields = meta.getPKFields();
 		for (MappingType<?> entry : meta.getMetaFields()) {
 			Field field = entry.field();
 			boolean isPK = pkFields.contains(field);
@@ -89,7 +88,7 @@ public class DdlGeneratorImpl implements DdlGenerator {
 			sb.append(",\n");
 			String[] columns = new String[pkFields.size()];
 			for (int n = 0; n < pkFields.size(); n++) {
-				columns[n] = meta.getColumnName(pkFields.get(n), null, profile);
+				columns[n] = pkFields.get(n).getColumnName(profile, true);
 			}
 			if (tablename.indexOf('.') > -1) {
 				// String schema=StringUtils.substringBefore(tablename, ".");

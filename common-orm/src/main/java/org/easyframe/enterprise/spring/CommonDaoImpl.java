@@ -83,6 +83,25 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	public <T> T loadByPrimaryKey(Class<T> entityClass, Object primaryKey) {
 		return super.getEntityManager().find(entityClass, primaryKey);
 	}
+	
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> List<T> loadByPrimaryKeys(Class<T> entityClass, List<Object> primaryKey) {
+		ITableMetadata meta=MetaHolder.getMeta(entityClass);
+		try{
+			if(meta.getType()==EntityType.POJO){
+				PojoWrapper pojo = meta.transfer(meta.instance(), true);
+				pojo.getQuery().addCondition(meta.getPKFields().get(0).field(),Operator.IN,primaryKey);
+				return (List<T>) getSessionEx().select(pojo);
+			}else{
+				return (List<T>) getSessionEx().batchLoad(entityClass.asSubclass(IQueryableEntity.class), primaryKey);
+			}	
+		}catch(SQLException e){
+			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+		}
+	}
+	
 
 	@SuppressWarnings("unchecked")
 	public <T> List<T> find(T obj) {
@@ -482,6 +501,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		ITableMetadata meta = MetaHolder.getMeta(type);
 		return loadByKey(meta, fieldname, key);
 	}
+	
 
 	public <T> int removeByKey(Class<T> type, String fieldname, Serializable key) {
 		if (type == null || fieldname == null)
@@ -628,5 +648,11 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		} catch (SQLException e) {
 			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}
+	}
+
+	@Override
+	public List<?> findByKeys(ITableMetadata meta, String propertyName, List<Object> value) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

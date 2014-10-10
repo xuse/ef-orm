@@ -668,7 +668,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 			if (fullRef == null) {
 				columnName = skipColumn ? f.name() : meta.getColumnName(f, profile, false);
 			} else {
-				columnName = fullRef.getSelectedAliasOf(f, profile, schema);
+				columnName = fullRef.getSelectedAliasOf(f, profile, schema,false);
 			}
 			if (columnName != null) {
 				ColumnDescription columnDesc = columns.getByFullName(columnName);
