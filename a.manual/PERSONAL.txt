@@ -1,0 +1,63 @@
+云计算：技术、应用、标准和商业模式    周洪波
+综合评级：想读(11)  在读(5)  已读(4)   品书斋鉴(0)   已有20人发表书评
+云计算，云算计？
+当云计算席卷全国，各厂商热热闹闹地“你方唱罢我登场”时，人们禁不住要发出这样的质疑：云计算是否真的是一场全新的IT革命？它究竟是否如传言中所说，即将成为IT人士的事业救星，有着广阔美好的“钱”程和前景？我们的社会、普通百姓是否能真正从云计算中获益？本书作者周洪波先生从自身丰富的实践经验出发，以科学求证的态度，对云计算的技术沿革、应用和商业模式做了清晰有力的论证分析，以期拨开云计算的迷雾，还原云计算的真实面目，为读者提供一份实证的见解。
+
+云计算时代相应的服务器平台或者开发环境作为服务进行提供就成为了 PaaS(Platform as a Service)。
+
+PaaS（Platform-as-a-Service：平台即服务）全称:(Platform as a service)中文: 平台即服务所谓PaaS实际上是指将软件研发的平台（计世资讯定义为业务基础平台）作为一种服务，以SaaS的模式提交给用户。因此，PaaS也是SaaS模式的一种应用。但是，PaaS的出现可以加快SaaS的发展，尤其是加快SaaS应用的开发速度。在2007年国内外SaaS厂商先后推出自己的PAAS平台。PAAS之所以能够推进SaaS的发展，主要在于它能够提供企业进行定制化研发的中间件平台，同时涵盖数据库和应用服务器等。PAAS可以提高在Web平台上利用的资源数量。例如，可通过远程Web服务使用数据即服务（Data-as-a-Service：数据即服务），还可以使用可视化的API。用户或者厂商基于PaaS平台可以快速开发自己所需要的应用和产品。同时，PaaS平台开发的应用能更好地搭建基于SOA架构的企业应用。
+
+
+PAAS平台应用代表
+国外：Google、Salesforce、Amazon
+
+国内：八百客  用友 BAE  SAE 阿里Ali  
+SAE
+注册即可免费试用约一个月
+通过实名认证可免费试用约半年
+通过开发者认证则几乎免费
+
+
+
+BAE
+  收费
+http://developer.baidu.com/wiki/index.php?title=docs/cplat/bae/bill
+BAE3.0采用后付费模式，即先使用服务，后支付账单。
+
+月底结算，每月初汇总生成上月账单。
+每月账单中，按应用维度统计该应用下各套餐及对应的累计使用时间，按小时计费，不足一小时部分不计费。
+计费公式：费用＝套餐单价*使用时长。
+优惠项：直接从总费用中减去。
+
+开源PaaS平台 Cloud Foundry
+作者 fmms 2011-11-12 19:53:32
+
+Cloud Foundry是VMware主导使用Ruby开发的一款开源PaaS云计算平台，类似于Salesforce旗下的Heroku，遵从OpenStack云计算平台规范。 
+项目地址： http://cloudfoundry.org/ 
+
+
+OpenStack云计算平台规范。 
+
+通过红帽OpenShift看开源PaaS
+　　以红帽OpenShift为例，它通过JBoss的生态环境可以使开发人员更好的利用业界最广泛的中间件服务。同时由于OpenShift支持大量的框架和语言，Java、PHP、Python和Ruby等，它可以为云计算的开发人员提供更全面的功能集合。
+
+
+
+开源PaaS系统 Deis编辑/纠错
+分享到 新浪微博腾讯微博微信已用    +0 收藏	+171
+第29期OSC源创会#南京#开始报名，AngularJS、Netty 等
+
+Deis 是一个 Django/Celery API 服务器、Python CLI 和一组 Chef cookbooks 合并起来提供一个类似 Heroku 的应用平台，用于公有云和私有云。Deis 的口号是：Your PaaS. Your Rules.
+
+Deis 是一个开源的 PaaS 系统，简化和 LXC 容器和 Chef 节点的发布和伸缩。可用于托管应用、数据库、中间件和其他服务。Deis 利用 Chef、Docker 和 Heroku Buildpacks 来提供的私有 PaaS 是非常轻量级和灵活的。
+
+Deis 提供开箱即用的 Ruby, Python, Node.js, Java, Clojure, Scala, Play, PHP, Perl, Dart 和 Go 语言的支持。此外 Deis 可使用 Heroku Buildpacks、Docker images 和 Chef recipes 发布任何内容。Deis 主要设计用来跟不同的云提供商进行交互，尽管目前只支持 EC2。
+
+
+此外，Redhat还推出了一个基于Condor作业调度的MRG（Messaging，Realtime, Grid）企业应用PaaS软件，如图9-53所示，可以和第三方IaaS平台，如AWS EC2等整合，支持HPC云计算。
+
+在PaaS技术选型中，人们最关心的问题是可移植性（基于标准化），不希望被提供商锁定（Lock-in），这就是如图9-54所示的"开放的PaaS"的问题（开源并不完全等于开放），在这一点上Redhat PaaS比竞争对手VMWare的基于SpringSource的PaaS平台更加开放，有更大的优势，VMWare的技术主要支持Spring框架。
+
+读者不难看出，Redhat和VMWare推出的开源PaaS与Apache Hadoop这个PaaS在技术架构、功能和用途等方面都有很大的区别，Redhat和VMWare的PaaS和微软的Azure以及IBM和Oracle推出的PaaS平台都属于主要服务于企业业务流程和管理应用的PaaS中间件，也就是前面所述的Online云计算应用，往往需要对多租户模式的支持，与Salesforce最早提出的PaaS理念是一致的，属于通用PaaS。而Apache Hadoop虽然也符合NIST对PaaS的定义，但它属于一种专用PaaS，主要服务于前述的Batch云计算。
+
+

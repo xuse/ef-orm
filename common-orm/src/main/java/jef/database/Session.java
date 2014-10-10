@@ -1199,14 +1199,20 @@ public abstract class Session {
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T extends IQueryableEntity> List<T> batchLoadByPK0(Class<T> obj, List<Object> pkValues) throws SQLException {
+	private <T> List<T> batchLoadByPK0(Class<T> obj, List<Object> pkValues) throws SQLException {
 		ITableMetadata meta = MetaHolder.getMeta(obj);
-		Query<?> q = meta.instance().getQuery();
 		if (meta.getPKFields().size() != 1) {
 			throw new SQLException("Only supports [1] column as primary key, but " + obj.getSimpleName() + " has " + meta.getPKFields().size() + " columns.");
 		}
-		q.addCondition(meta.getPKFields().get(0).field(), Operator.IN, pkValues);
-		return innerSelect(q, null, null, QueryOption.DEFAULT);
+		if(meta.getType()==EntityType.POJO){
+			Query<?> q = meta.instance().getQuery();
+			q.addCondition(meta.getPKFields().get(0).field(), Operator.IN, pkValues);
+			return PojoWrapper.unwrapList(innerSelect(q, null, null, QueryOption.DEFAULT));
+		}else{
+			Query<?> q = meta.instance().getQuery();
+			q.addCondition(meta.getPKFields().get(0).field(), Operator.IN, pkValues);
+			return innerSelect(q, null, null, QueryOption.DEFAULT);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1255,7 +1261,7 @@ public abstract class Session {
 	 * @return 查询结果
 	 * @throws SQLException
 	 */
-	public <T extends IQueryableEntity> List<T> batchLoad(Class<T> clz, List<Object> pkValues) throws SQLException {
+	public <T> List<T> batchLoad(Class<T> clz, List<Object> pkValues) throws SQLException {
 		if (pkValues.size() < 500)
 			return batchLoadByPK0(clz, pkValues);
 
