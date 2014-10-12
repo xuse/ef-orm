@@ -110,8 +110,7 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	}
 
 	public SqlContext prepare() {
-		SqlContext context = new SqlContext("t", this);
-		return context;
+		return new SqlContext("t", this);
 	}
 
 	public void clearQuery() {
