@@ -772,6 +772,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		db.select(entity);
 	}
 
+	
 	/**
 	 * 
 	 * And Or互相嵌套，再加上like语句的转义等混合场景下的操作.
@@ -828,5 +829,20 @@ public class SimpleTableTest extends org.junit.Assert {
 			System.out.println("=========================");
 		}
 		db.delete(t); // 删除数据
+	}
+	
+	@Test
+	public void testBatchLoad() throws SQLException{
+		CaAsset ca=db.load(CaAsset.class, 12);
+		List<CaAsset> ca1=db.loadByField(CaAsset.Field.acctId, 12);
+		Integer[] a=new Integer[501];
+		for(int i=0;i<501;i++){
+			a[i]=i+1;
+		}
+		
+		List<CaAsset>  list1=db.batchLoad(CaAsset.class, Arrays.asList(a));
+		
+		List<CaAsset>  list2=db.batchLoadByField(CaAsset.Field.acctId, Arrays.asList(a));
+		
 	}
 }

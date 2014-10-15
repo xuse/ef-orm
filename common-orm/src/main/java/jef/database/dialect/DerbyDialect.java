@@ -16,13 +16,13 @@
 package jef.database.dialect;
 
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Arrays;
 
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.ConnectInfo;
 import jef.database.OperateTarget;
-import jef.database.dialect.ColumnType.Boolean;
 import jef.database.jsqlparser.expression.LongValue;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
@@ -49,7 +49,7 @@ import jef.tools.string.JefStringReader;
  * @author Administrator
  * 
  */
-public class DerbyDialect extends DbmsProfile {
+public class DerbyDialect extends AbstractDialect {
 	private final static String DERBY_PAGE = " offset %start% row fetch next %next% rows only";
 	
 	public DerbyDialect() {
@@ -74,7 +74,7 @@ public class DerbyDialect extends DbmsProfile {
 		setProperty(DbProperty.CHECK_SQL, "values 1");
 		setProperty(DbProperty.SELECT_EXPRESSION, "values %s");
 		setProperty(DbProperty.WRAP_FOR_KEYWORD, "\"");
-		
+		setProperty(DbProperty.GET_IDENTITY_FUNCTION, "IDENTITY_VAL_LOCAL()");
 		registerNative(Func.abs,"absval");
 		registerNative(Func.mod);
 		registerNative(Func.coalesce);
@@ -183,41 +183,13 @@ public class DerbyDialect extends DbmsProfile {
 		// driverVersionMinor >= 7 ) ) {
 		// registerColumnType( Types.BOOLEAN, "boolean" );
 		// }
+		
+		typeNames.put(Types.BOOLEAN, "boolean", 0);
 	}
 
 	@Override
 	public String getDefaultSchema() {
 		return "APP";
-	}
-
-	// public String getComment(Double column,boolean flag) {
-	// StringBuilder sb=new StringBuilder();
-	// sb.append("double");
-	// if(!column.nullAble)sb.append(" not null");
-	// if(column.defaultValue!=null)
-	// sb.append(" default ").append(column.defaultValue.toString());
-	// return sb.toString();
-	// }
-	
-	
-
-	public String getGeneratedFetchFunction() {
-		return "IDENTITY_VAL_LOCAL()";
-	}
-
-	@Override
-	protected String getComment(Boolean column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("boolean");
-		if (flag) {
-			if (column.defaultValue != null){
-				java.lang.Boolean valueStr=StringUtils.toBoolean(column.defaultValue.toString(),false);
-				sb.append(" default ").append(valueStr.toString());
-			}
-			if (!column.nullable)
-				sb.append(" not null");
-		}
-		return sb.toString();
 	}
 
 	public String getDriverClass(String url) {

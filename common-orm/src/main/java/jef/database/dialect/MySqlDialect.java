@@ -16,6 +16,7 @@
 package jef.database.dialect;
 
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Arrays;
 
 import jef.common.log.LogUtil;
@@ -24,10 +25,6 @@ import jef.database.ConnectInfo;
 import jef.database.DbUtils;
 import jef.database.ORMConfig;
 import jef.database.dialect.ColumnType.AutoIncrement;
-import jef.database.dialect.ColumnType.Blob;
-import jef.database.dialect.ColumnType.Clob;
-import jef.database.dialect.ColumnType.Date;
-import jef.database.dialect.ColumnType.TimeStamp;
 import jef.database.dialect.ColumnType.Varchar;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
@@ -95,28 +92,25 @@ import jef.tools.string.JefStringReader;
  * <li>添加列： alter table 表名 add column 列名 varchar(30);</li>
  * <li>删除列： alter table 表名 drop column 列名;</li>
  * <li>修改列名： alter table bbb change nnnnn hh int;</li>
- * <li>修改列属性：alter table t_book modify name varchar(22);</li></ol>
+ * <li>修改列属性：alter table t_book modify name varchar(22);</li>
+ * </ol>
  * 
- * MySQL的四种BLOB类型
-类型 大小(单位：字节)
-TinyBlob 最大 255
-Blob 最大 65K
-MediumBlob 最大 16M
-LongBlob 最大 4G
-
+ * MySQL的四种BLOB类型 类型 大小(单位：字节) TinyBlob 最大 255 Blob 最大 65K MediumBlob 最大 16M
+ * LongBlob 最大 4G
  */
-public class MySqlDialect extends DbmsProfile {
+public class MySqlDialect extends AbstractDialect {
 	public MySqlDialect() {
 		// 在MYSQL中 ||是逻辑运算符
 		features = CollectionUtil.identityHashSet();
-		features.addAll(Arrays.asList(Feature.DBNAME_AS_SCHEMA, Feature.INDEX_LENGTH_LIMIT, Feature.ALTER_FOR_EACH_COLUMN,Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD,Feature.SUPPORT_LIMIT,Feature.COLUMN_DEF_ALLOW_NULL));
+		features.addAll(Arrays.asList(Feature.DBNAME_AS_SCHEMA, Feature.INDEX_LENGTH_LIMIT, Feature.ALTER_FOR_EACH_COLUMN, Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD, Feature.SUPPORT_LIMIT, Feature.COLUMN_DEF_ALLOW_NULL));
 		setProperty(DbProperty.ADD_COLUMN, "ADD");
 		setProperty(DbProperty.MODIFY_COLUMN, "MODIFY");
 		setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");
 		setProperty(DbProperty.CHECK_SQL, "select 1");
 		setProperty(DbProperty.SELECT_EXPRESSION, "select %s");
 		setProperty(DbProperty.WRAP_FOR_KEYWORD, "`");
-		
+		setProperty(DbProperty.GET_IDENTITY_FUNCTION, "SELECT LAST_INSERT_ID()");
+
 		loadKeywords("mysql_keywords.properties");
 		registerNative(new StandardSQLFunction("ascii"));
 		registerNative(new StandardSQLFunction("bin"));
@@ -141,7 +135,7 @@ public class MySqlDialect extends DbmsProfile {
 		registerNative(new StandardSQLFunction("space"));
 		registerNative(new StandardSQLFunction("unhex"));
 		registerNative(new StandardSQLFunction("truncate"));
-		registerCompatible(Func.trunc, new MySQLTruncate());//MYSQL的truncate函数因为是必须双参数的，其他数据库的允许单参数
+		registerCompatible(Func.trunc, new MySQLTruncate());// MYSQL的truncate函数因为是必须双参数的，其他数据库的允许单参数
 
 		registerNative(Scientific.cot);
 		registerNative(new StandardSQLFunction("crc32"));
@@ -172,9 +166,9 @@ public class MySqlDialect extends DbmsProfile {
 		registerNative(Func.subdate, "date_sub");
 
 		registerNative(Func.current_date, new NoArgSQLFunction("current_date", false), "curdate");
-		registerNative(Func.current_time,new NoArgSQLFunction("current_time", false), "curtime");
+		registerNative(Func.current_time, new NoArgSQLFunction("current_time", false), "curtime");
 
-		registerNative(Func.current_timestamp,new NoArgSQLFunction("current_timestamp", false));
+		registerNative(Func.current_timestamp, new NoArgSQLFunction("current_timestamp", false));
 		registerAlias(Func.now, "current_timestamp");
 		registerAlias("sysdate", "current_timestamp");
 
@@ -229,13 +223,48 @@ public class MySqlDialect extends DbmsProfile {
 		registerNative(Func.rpad);
 		registerNative(Func.timestampdiff);
 		registerNative(Func.timestampadd);
-		registerCompatible(Func.add_months, new TemplateFunction("add_months","timestampadd(MONTH,%2$s,%1$s)"));
+		registerCompatible(Func.add_months, new TemplateFunction("add_months", "timestampadd(MONTH,%2$s,%1$s)"));
 		registerCompatible(Func.decode, new EmuDecodeWithIf());
 		registerCompatible(Func.translate, new EmuTranslateByReplace());
 		registerCompatible(Func.str, new TemplateFunction("str", "cast(%s as char)"));
-		
+
+		typeNames.put(Types.BLOB,"mediumblob", 0);
+		typeNames.put(Types.BLOB, 255, "tinyblob", 0);
+		typeNames.put(Types.BLOB, 65535, "blob", 0);
+		typeNames.put(Types.BLOB, 1024 * 1024 * 16, "mediumblob", 0);
+		typeNames.put(Types.BLOB, 1024 * 1024 * 1024 * 4, "longblob", 0);
+		typeNames.put(Types.CLOB, "text", 0);
+
+		typeNames.put(Types.VARCHAR, 21785, "varchar($l)", 0);
+		typeNames.put(Types.VARCHAR, 65535, "text", Types.CLOB);
+		typeNames.put(Types.VARCHAR, 1024 * 1024 * 16, "mediumtext", Types.CLOB);
+		// MYSQL中的Timestamp含义有些特殊，默认还是用datetime记录
+		typeNames.put(Types.TIMESTAMP, 1024 * 1024 * 16, "datetime", 0);
 	}
 
+	@Override
+	public String getCreationComment(ColumnType column, boolean flag) {
+		int generateType = 0;
+		if (column instanceof SqlTypeDateTimeGenerated) {
+			generateType = ((SqlTypeDateTimeGenerated) column).getGenerateType();
+			Object defaultValue = column.defaultValue;
+			if (generateType == 0 && (defaultValue == Func.current_date || defaultValue == Func.current_time || defaultValue == Func.now)) {
+				generateType = 1;
+			}
+			if(generateType==0 && defaultValue!=null){
+				String dStr = defaultValue.toString().toLowerCase();
+				if (dStr.startsWith("current") || dStr.startsWith("sys")) {
+					generateType = 1;	
+				}
+			}
+		}
+		if(generateType==1){
+			return "timestamp not null default current_timestamp";
+		}else if(generateType==2){
+			return "timestamp not null default current_timestamp on update current_timestamp";
+		}
+		return super.getCreationComment(column, flag);
+	}
 	
 	protected String getComment(AutoIncrement column, boolean flag) {
 		StringBuilder sb = new StringBuilder();
@@ -247,64 +276,10 @@ public class MySqlDialect extends DbmsProfile {
 		sb.append(" AUTO_INCREMENT");
 		return sb.toString();
 	}
-	
+
 	@Override
 	public boolean containKeyword(String name) {
 		return keywords.contains(name.toLowerCase());
-	}
-
-	@Override
-	protected String getComment(Blob column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		if (flag) {
-			sb.append("mediumblob");
-			if (column.nullable){
-				sb.append(" null");
-			}else{
-				sb.append(" not null");
-			}
-		}
-		return sb.toString();
-	}
-
-	/**
-	 * 对于CLOB, MYSQL 当作 TEXT处理。
-	 */
-	protected String getComment(Clob column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("TEXT");
-		if (flag) {
-			if (column.nullable){
-				sb.append(" null");
-			}else{
-				sb.append(" not null");
-			}
-			if (column.defaultValue != null)
-				sb.append(" default ").append(toDefaultString(column.defaultValue));
-		}
-		return sb.toString();
-	}
-
-	/**
-	 * 
-	 */
-	protected String getComment(Varchar column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		if (column.length > 21785) {// 超过UTF-8下 MYSQL VARCHAR支持的最大长度
-			sb.append("MEDIUMTEXT");
-		} else {
-			sb.append("varchar(" + column.length + ")");
-		}
-		if (flag) {
-			if (column.nullable){
-				sb.append(" null");
-			}else{
-				sb.append(" not null");
-			}
-			if (column.defaultValue != null)
-				sb.append(" default ").append(super.toDefaultString(column.defaultValue));
-		}
-		return sb.toString();
 	}
 
 	/**
@@ -313,50 +288,7 @@ public class MySqlDialect extends DbmsProfile {
 	 * 其中 date time都只能设置默认值为常量，不能使用函数。 第一个timestamp则默认会变为not null default
 	 * current_timestamp on update current_timestamp
 	 */
-	@Override
-	protected String getComment(Date column, boolean flag) {
-		if (flag && (column.defaultValue instanceof Func)) {// 死局，MYSQL中DATE字段只能用常量作为默认值，这种情况下姑且强行将这个字段作为timestamp处理
-			return getComment(column.toTimeStamp(), flag);
-		}
-		return super.getComment(column, flag);
-	}
 
-	@Override
-	protected String getComment(TimeStamp column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		
-		Object defaultValue = column.defaultValue;
-		boolean isTimestamp =false;
-		if(defaultValue!=null){
-			isTimestamp =(column.defaultValue instanceof Func);
-			if(!isTimestamp){
-				String dStr=defaultValue.toString().toLowerCase();
-				if(dStr.startsWith("current")||dStr.startsWith("sys")){
-					isTimestamp =true;					
-				}
-			}
-		}
-		if (isTimestamp) {
-			if (defaultValue == Func.current_date || defaultValue == Func.current_time || defaultValue == Func.now) {
-				defaultValue = Func.current_timestamp;
-			}
-			sb.append("timestamp");
-		} else {
-			sb.append("datetime");
-		}
-		if (flag) {
-			if (column.nullable){
-				sb.append(" null");
-			}else{
-				sb.append(" not null");
-			}
-
-			if (defaultValue != null) {
-				sb.append(" default ").append(toDefaultString(defaultValue));
-			}
-		}
-		return sb.toString();
-	}
 
 	/**
 	 * MYSQL中，表名是全转小写的，列名才是保持大小写的，先做小写处理，如果有处理列名的场合，改为调用
@@ -390,31 +322,25 @@ public class MySqlDialect extends DbmsProfile {
 
 	/*
 	 * 
-	 * 关于MySQL的Auto_increament访问是比较复杂的
-	 * SELECT `AUTO_INCREMENT`
-FROM  INFORMATION_SCHEMA.TABLES
-WHERE TABLE_SCHEMA = 'DatabaseName'
-AND   TABLE_NAME   = 'TableName';
-
-
-$result = mysql_query("SHOW TABLE STATUS LIKE 'table_name'");
-$row = mysql_fetch_array($result);
-$nextId = $row['Auto_increment'];
-mysql_free_result($result);
-
-
- 
-down vote 
-accepted  Use this:
-
-ALTER TABLE users AUTO_INCREMENT = 1001;or if you haven't already id column, also add it
-
-ALTER TABLE users ADD id INT UNSIGNED NOT NULL AUTO_INCREMENT,
-    ADD INDEX (id); 
+	 * 关于MySQL的Auto_increament访问是比较复杂的 SELECT `AUTO_INCREMENT` FROM
+	 * INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'DatabaseName' AND
+	 * TABLE_NAME = 'TableName';
+	 * 
+	 * 
+	 * $result = mysql_query("SHOW TABLE STATUS LIKE 'table_name'"); $row =
+	 * mysql_fetch_array($result); $nextId = $row['Auto_increment'];
+	 * mysql_free_result($result);
+	 * 
+	 * 
+	 * 
+	 * down vote accepted Use this:
+	 * 
+	 * ALTER TABLE users AUTO_INCREMENT = 1001;or if you haven't already id
+	 * column, also add it
+	 * 
+	 * ALTER TABLE users ADD id INT UNSIGNED NOT NULL AUTO_INCREMENT, ADD INDEX
+	 * (id);
 	 */
-	public String getGeneratedFetchFunction() {
-		return "SELECT LAST_INSERT_ID()";
-	}
 
 	public String getDriverClass(String url) {
 		return "com.mysql.jdbc.Driver";
@@ -429,7 +355,7 @@ ALTER TABLE users ADD id INT UNSIGNED NOT NULL AUTO_INCREMENT,
 		sb.append("//").append(host).append(":").append(port <= 0 ? 3306 : port);
 		sb.append("/").append(pathOrName).append("?useUnicode=true&characterEncoding=UTF-8");//
 		String url = sb.toString();
-		if(ORMConfig.getInstance().isDebugMode()){
+		if (ORMConfig.getInstance().isDebugMode()) {
 			LogUtil.show(url);
 		}
 		return url;
@@ -459,36 +385,33 @@ ALTER TABLE users ADD id INT UNSIGNED NOT NULL AUTO_INCREMENT,
 	private final static String MYSQL_PAGE = " limit %start%,%next%";
 
 	public String toPageSQL(String sql, IntRange range) {
-		boolean isUnion=false;
+		boolean isUnion = false;
 		try {
-			Select select=DbUtils.parseNativeSelect(sql);
-			if(select.getSelectBody() instanceof Union){
-				isUnion=true;
+			Select select = DbUtils.parseNativeSelect(sql);
+			if (select.getSelectBody() instanceof Union) {
+				isUnion = true;
 			}
 			select.getSelectBody();
 		} catch (ParseException e) {
-			LogUtil.exception("SqlParse Error:",e);
+			LogUtil.exception("SqlParse Error:", e);
 		}
 		String limit = StringUtils.replaceEach(MYSQL_PAGE, new String[] { "%start%", "%next%" }, range.toStartLimit());
-		return isUnion ?
-				StringUtils.concat("select * from (", sql, ") tb__", limit) : sql.concat(limit);
+		return isUnion ? StringUtils.concat("select * from (", sql, ") tb__", limit) : sql.concat(limit);
 	}
 
 	public Select toPageSQL(Select select, IntRange range) {
-		int[] span=range.toStartLimitSpan();
-		Limit limit=new Limit();
+		int[] span = range.toStartLimitSpan();
+		Limit limit = new Limit();
 		limit.setOffset(span[0]);
 		limit.setRowCount(span[1]);
 		select.getSelectBody().setLimit(limit);
 		return select;
 	}
-	
 
 	@Override
-	public String toPageSQL(String sql, IntRange range,boolean isUnion) {
+	public String toPageSQL(String sql, IntRange range, boolean isUnion) {
 		String limit = StringUtils.replaceEach(MYSQL_PAGE, new String[] { "%start%", "%next%" }, range.toStartLimit());
-		return isUnion ?
-				StringUtils.concat("select * from (", sql, ") tb__", limit) : sql.concat(limit);
+		return isUnion ? StringUtils.concat("select * from (", sql, ") tb__", limit) : sql.concat(limit);
 	}
 
 	// " jdbc:mysql://localhost:3306/allandb?useUnicode=true&characterEncoding=UTF-8"
@@ -504,26 +427,23 @@ ALTER TABLE users ADD id INT UNSIGNED NOT NULL AUTO_INCREMENT,
 		connectInfo.setHost(host);
 		connectInfo.setDbname(dbname);
 	}
-	
-	
-	private final static int[] IO_ERROR_CODE = { 1158, 1159, 1160, 1161,
-			2001, 2002, 2003, 2004, 2006, 2013, 2024, 2025, 2026 };
-	
+
+	private final static int[] IO_ERROR_CODE = { 1158, 1159, 1160, 1161, 2001, 2002, 2003, 2004, 2006, 2013, 2024, 2025, 2026 };
+
 	@Override
 	public boolean isIOError(SQLException se) {
-		if (se.getSQLState() != null){ // per Mark Matthews at MySQL
-			if (se.getSQLState().startsWith("08")){//08s01 网络错误
+		if (se.getSQLState() != null) { // per Mark Matthews at MySQL
+			if (se.getSQLState().startsWith("08")) {// 08s01 网络错误
 				return true;
 			}
 		}
 		int code = se.getErrorCode();
 		if (ArrayUtils.contains(IO_ERROR_CODE, code)) {
 			return true;
-		} else if (se.getCause() != null
-				&& "NetException".equals(se.getCause().getClass().getSimpleName())) {
+		} else if (se.getCause() != null && "NetException".equals(se.getCause().getClass().getSimpleName())) {
 			return true;
 		} else {
-			LogUtil.info("MySQL non-io Err:{}: {}", se.getErrorCode(),se.getMessage());
+			LogUtil.info("MySQL non-io Err:{}: {}", se.getErrorCode(), se.getMessage());
 			return false;
 		}
 	}

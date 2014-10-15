@@ -98,4 +98,10 @@ public class ColumnChange {
 	public void setTo(String to) {
 		this.to = to;
 	}
+	@Override
+	public String toString() {
+		return type+"("+from+"->"+to+")";
+	}
+	
+	
 }

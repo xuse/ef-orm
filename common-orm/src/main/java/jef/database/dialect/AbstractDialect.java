@@ -16,16 +16,9 @@
 package jef.database.dialect;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.io.StringReader;
 import java.net.URL;
-import java.nio.ByteBuffer;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -42,8 +35,7 @@ import java.util.Set;
 
 import javax.sql.rowset.CachedRowSet;
 
-import jef.common.BigDataBuffer;
-import jef.common.ByteBufferInputStream;
+import jef.common.PairIS;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.DbCfg;
@@ -51,8 +43,6 @@ import jef.database.DbFunction;
 import jef.database.DbMetaData;
 import jef.database.OperateTarget;
 import jef.database.datasource.DataSourceInfo;
-import jef.database.dialect.ColumnType.Blob;
-import jef.database.dialect.ColumnType.Clob;
 import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.type.ATypeMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
@@ -83,98 +73,64 @@ import jef.tools.StringUtils;
  * @author Administrator
  * 
  */
-public abstract class DbmsProfile implements DatabaseDialect {
-	public void init(OperateTarget asOperateTarget) {
-	}
-
-	private static final Map<String, DbmsProfile> ITEMS = new HashMap<String, DbmsProfile>();
+public abstract class AbstractDialect implements DatabaseDialect {
+	/**
+	 * 所有已经构建的Dialect
+	 */
+	private static final Map<String, DatabaseDialect> ITEMS = new HashMap<String, DatabaseDialect>();
+	/**
+	 * 缺省的函数对象，所有数据库都支持的函数
+	 */
 	private static final List<FunctionMapping> DEFAULT_FUNCTIONS = new ArrayList<FunctionMapping>();
-	private static Map<String, String> dialectMappings;
-
+	/**
+	 * 数据库关键字
+	 */
 	protected final Set<String> keywords = new HashSet<String>();
-
-	public static DbmsProfile getProfile(String dbmsName) {
-		dbmsName = dbmsName.toLowerCase();
-		DbmsProfile profile = ITEMS.get(dbmsName);
-		if (profile != null)
-			return profile;
-		profile = lookupProfile(dbmsName);
-		return profile;
-	}
+	/**
+	 * 注册各种字段类型
+	 */
+	protected final TypeNames typeNames = new TypeNames();
+	/**
+	 * 函数
+	 */
+	protected Map<String, FunctionMapping> functions = new HashMap<String, FunctionMapping>();
+	/**
+	 * 函数
+	 */
+	protected Map<DbFunction, FunctionMapping> functionsIndex = new HashMap<DbFunction, FunctionMapping>();
+	/**
+	 * 各种文本属性
+	 */
+	private Map<DbProperty, String> properties = new IdentityHashMap<DbProperty, String>();
+	/**
+	 * 各种Boolean特性
+	 */
+	protected Set<Feature> features;
 
 	// 缺省的函数注册掉
-	public DbmsProfile() {
+	public AbstractDialect() {
 		for (FunctionMapping m : DEFAULT_FUNCTIONS) {
 			this.functions.put(m.getFunction().getName(), m);
 			this.functionsIndex.put(m.getStardard(), m);
 		}
-	}
-
-	private synchronized static DbmsProfile lookupProfile(String dbmsName) {
-		if (dialectMappings == null) {
-			dialectMappings=initDialectMapping();
-		}
-
-		String classname = dialectMappings.remove(dbmsName);
-		if (classname == null) {
-			throw new IllegalArgumentException("the dbms '" + dbmsName + "' is not supported yet");
-		}
-		try {
-			Class<?> c = Class.forName(classname);
-			DbmsProfile result = (DbmsProfile) c.newInstance();
-			ITEMS.put(dbmsName, result);
-			return result;
-		} catch (RuntimeException e) {
-			throw e;
-		} catch (Exception e) {
-			LogUtil.exception(e);
-			throw new IllegalArgumentException("the Dialect class can't be created:" + classname);
-		}
-	}
-
-	private static Map<String, String> initDialectMapping() {
-		URL url = DbmsProfile.class.getResource("/META-INF/dialect-mapping.properties");
-		if (url == null) {
-			LogUtil.fatal("Can not found Dialect Mapping File. /META-INF/dialect-mapping.properties");
-		}
-		Map<String, String> config = IOUtils.loadProperties(url);
-		String file = JefConfiguration.get(DbCfg.DB_DIALECT_CONFIG);
-		if (StringUtils.isNotEmpty(file)) {
-			url = DbmsProfile.class.getClassLoader().getResource(file);
-			if (url == null) {
-				LogUtil.warn("The custom dialect mapping file [{}] was not found.", file);
-			} else {
-				Map<String, String> config1 = IOUtils.loadProperties(url);
-				config.putAll(config1);
-			}
-		}
-		return config;
-	}
-
-	/**
-	 * 从指定的资源文件中加载关键字列表
-	 * 
-	 * @param path
-	 */
-	protected void loadKeywords(String path) {
-		InputStream in = this.getClass().getResourceAsStream(path);
-		if (in == null) {
-			throw new NullPointerException("Resource not found:" + path);
-		}
-		BufferedReader reader = IOUtils.getReader(in, "US-ASCII");
-		String line = null;
-		try {
-			while ((line = reader.readLine()) != null) {
-				line = line.trim();
-				if (line.length() > 0) {
-					keywords.add(line);
-				}
-			}
-		} catch (IOException e) {
-			throw new IllegalArgumentException(e);
-		} finally {
-			IOUtils.closeQuietly(reader);
-		}
+		
+		//注册缺省的数据类型
+		typeNames.put(Types.BLOB, "blob", 0);
+		typeNames.put(Types.CLOB, "clob", 0);
+		typeNames.put(Types.CHAR, "char($l)", 0);
+		typeNames.put(Types.BOOLEAN, "char(1)", Types.CHAR);
+		typeNames.put(Types.VARCHAR, "varchar($l)", 0);
+		
+		typeNames.put(Types.FLOAT, "float", 0);
+		typeNames.put(Types.DOUBLE, "double", 0);
+		typeNames.put(Types.INTEGER, "int", 0);
+		typeNames.put(Types.TINYINT, "smallint", Types.SMALLINT);
+		typeNames.put(Types.SMALLINT, "smallint", 0);
+		typeNames.put(Types.BIGINT, "bigint", 0);
+		
+		typeNames.put(Types.DATE, "date", 0);
+		typeNames.put(Types.TIME, "time", 0);
+		typeNames.put(Types.TIMESTAMP, "timestamp", 0);
 	}
 
 	static {
@@ -195,14 +151,9 @@ public abstract class DbmsProfile implements DatabaseDialect {
 		// Others
 		DEFAULT_FUNCTIONS.add(new FunctionMapping(new StandardSQLFunction("abs"), Func.abs, 0));
 		DEFAULT_FUNCTIONS.add(new FunctionMapping(new StandardSQLFunction("sign"), Func.sign, 0));
-
 	}
 
 	protected static final String QUOT = "'";
-	protected Set<Feature> features;
-	protected Map<String, FunctionMapping> functions = new HashMap<String, FunctionMapping>();
-	protected Map<DbFunction, FunctionMapping> functionsIndex = new HashMap<DbFunction, FunctionMapping>();
-	protected Map<DbProperty, String> properties = new IdentityHashMap<DbProperty, String>();
 
 	protected void setProperty(DbProperty key, String value) {
 		properties.put(key, value);
@@ -210,8 +161,11 @@ public abstract class DbmsProfile implements DatabaseDialect {
 
 	/**
 	 * 注册函数，该函数为数据库原生支持的。
-	 * @param func 要支持的数据库函数
-	 * @param synonyms 其他要支持的别名
+	 * 
+	 * @param func
+	 *            要支持的数据库函数
+	 * @param synonyms
+	 *            其他要支持的别名
 	 */
 	protected void registerNative(DbFunction func, String... synonyms) {
 		registerNative(func, new StandardSQLFunction(func.name()), synonyms);
@@ -219,9 +173,13 @@ public abstract class DbmsProfile implements DatabaseDialect {
 
 	/**
 	 * 注册函数，该函数为数据库原生支持的
-	 * @param func 要支持的数据库函数
-	 * @param function 函数实现
-	 * @param synonyms 其他要支持的别名
+	 * 
+	 * @param func
+	 *            要支持的数据库函数
+	 * @param function
+	 *            函数实现
+	 * @param synonyms
+	 *            其他要支持的别名
 	 */
 	protected void registerNative(DbFunction func, SQLFunction function, String... synonyms) {
 		FunctionMapping mapping = new FunctionMapping(function, func, FunctionMapping.MATCH_FULL);
@@ -230,10 +188,13 @@ public abstract class DbmsProfile implements DatabaseDialect {
 		// 按小写名称索引
 		this.functions.put(name, mapping);
 		if (func != null) {
+			@SuppressWarnings("unused")
 			FunctionMapping old = this.functionsIndex.put(func, mapping);
-			if (old != null && synonyms.length == 0) {
-				throw new IllegalArgumentException("duplicate reg of " + name + " in " + this.getName());
-			}
+			// 注释掉，可以支持覆盖。调试时可以重新开启
+			// if (old != null && synonyms.length == 0) {
+			// throw new IllegalArgumentException("duplicate reg of " + name +
+			// " in " + this.getName());
+			// }
 		}
 		// 各种别名的注册
 		for (String n : synonyms) {
@@ -243,19 +204,23 @@ public abstract class DbmsProfile implements DatabaseDialect {
 
 	/**
 	 * 注册函数，该函数为数据库原生支持的
-	 * @param function 函数实现
-	 * @param synonyms 其他要支持的别名
+	 * 
+	 * @param function
+	 *            函数实现
+	 * @param synonyms
+	 *            其他要支持的别名
 	 */
 	protected void registerNative(SQLFunction function, String... synonyms) {
 		registerNative(null, function, synonyms);
 	}
 
 	/**
-	 * 注册虚拟函数，该函数名和数据库本地函数不同，但用法相似（或一样）。
-	 * 实际使用时虚拟函数名将被替换为本地函数名
+	 * 注册虚拟函数，该函数名和数据库本地函数不同，但用法相似（或一样）。 实际使用时虚拟函数名将被替换为本地函数名
 	 * 
-	 * @param func        虚拟函数名
-	 * @param nativeName  本地函数名
+	 * @param func
+	 *            虚拟函数名
+	 * @param nativeName
+	 *            本地函数名
 	 */
 	protected void registerAlias(DbFunction func, String nativeName) {
 		FunctionMapping fm = functions.get(nativeName);
@@ -268,10 +233,12 @@ public abstract class DbmsProfile implements DatabaseDialect {
 	}
 
 	/**
-	 * 注册虚拟函数，该函数名和数据库本地函数不同，但用法相似（或一样）。
-	 * 实际使用时虚拟函数名将被替换为本地函数名
-	 * @param func       虚拟函数名
-	 * @param nativeName 本地函数名
+	 * 注册虚拟函数，该函数名和数据库本地函数不同，但用法相似（或一样）。 实际使用时虚拟函数名将被替换为本地函数名
+	 * 
+	 * @param func
+	 *            虚拟函数名
+	 * @param nativeName
+	 *            本地函数名
 	 */
 	protected void registerAlias(String func, String nativeName) {
 		FunctionMapping fm = functions.get(nativeName);
@@ -284,9 +251,13 @@ public abstract class DbmsProfile implements DatabaseDialect {
 
 	/**
 	 * 注册一个函数的兼容实现
-	 * @param func     要注册的函数
-	 * @param function 函数实现
-	 * @param synonyms 该实现的其他可用名称
+	 * 
+	 * @param func
+	 *            要注册的函数
+	 * @param function
+	 *            函数实现
+	 * @param synonyms
+	 *            该实现的其他可用名称
 	 * 
 	 */
 	protected void registerCompatible(DbFunction func, SQLFunction function, String... synonyms) {
@@ -315,17 +286,11 @@ public abstract class DbmsProfile implements DatabaseDialect {
 		} else {
 			List<Expression> exps = new ArrayList<Expression>();
 			for (Object s : params) {
-//				try {
-					if(s instanceof Expression){
-						exps.add((Expression)s);	
-					}else{
-//						StSqlParser parser = new StSqlParser(new StringReader(String.valueOf(s)));
-//						exps.add(parser.PrimaryExpression());
-						exps.add(new SqlExpression(String.valueOf(s)));
-					}
-//				} catch (ParseException e) {
-//					throw new PersistenceException("The input string [" + s + "] can not be parsed.", e);
-//				}
+				if (s instanceof Expression) {
+					exps.add((Expression) s);
+				} else {
+					exps.add(new SqlExpression(String.valueOf(s)));
+				}
 			}
 			SQLFunction sfunc = mapping.getFunction();
 			Expression ex = sfunc.renderExpression(exps);
@@ -336,10 +301,6 @@ public abstract class DbmsProfile implements DatabaseDialect {
 		}
 	}
 
-	/**
-	 * 四种情况 1、数据库的函数已经实现了所需要的标准函数。无需任何更改 2、数据库的函数和标准函数参数含义（基本）一样，仅需变化一下名称，如 nvl
-	 * -> ifnull 3、数据库的函数和标准函数差别较大，通过多个其他函数模拟实现。（参数一致） 4、数据库的无法实现指定的函数。
-	 */
 	public Map<String, FunctionMapping> getFunctions() {
 		return functions;
 	}
@@ -369,224 +330,49 @@ public abstract class DbmsProfile implements DatabaseDialect {
 	}
 
 	/**
-	 * 从ResultSet中的类型转换到合适的Java类型。
-	 */
-	public Object getJavaValue(ColumnType column, Object object) {
-		if (object == null)
-			return null;
-
-		// boolean类型的解析
-		if (column instanceof ColumnType.Boolean) {
-			return "1".equals((object.toString()));
-		}
-		// 除此之外的基本类型的值都不需要再单独处理
-		if (object instanceof String)
-			return object;
-		if (object instanceof Number)
-			return object;
-		// 复杂类型的解析
-		if (column instanceof ColumnType.Date) {
-			return object;
-		} else if (column instanceof ColumnType.TimeStamp) {
-			return object;
-			// }else{
-			// System.err.println("Unknown javaField Type: " +
-			// object.getClass().getName());
-		}
-		return object;
-	}
-
-	/**
 	 * 产生用于建表的SQL语句
 	 * 
 	 */
-	public final String getCreationComment(ColumnType column, boolean flag) {
-		if (column instanceof ColumnType.Char) {
-			return getComment((ColumnType.Char) column, flag);
-		} else if (column instanceof ColumnType.Boolean) {
-			return getComment((ColumnType.Boolean) column, flag);
-		} else if (column instanceof ColumnType.Varchar) {
-			return getComment((ColumnType.Varchar) column, flag);
-		} else if (column instanceof ColumnType.Double) {
-			return getComment((ColumnType.Double) column, flag);
-		} else if (column instanceof ColumnType.Int) {
-			return getComment((ColumnType.Int) column, flag);
-		} else if (column instanceof ColumnType.Date) {
-			return getComment((ColumnType.Date) column, flag);
-		} else if (column instanceof ColumnType.TimeStamp) {
-			return getComment((ColumnType.TimeStamp) column, flag);
-		} else if (column instanceof ColumnType.AutoIncrement) {
+	public String getCreationComment(ColumnType column, boolean flag) {
+		// 特殊情况先排除
+		if (column instanceof ColumnType.AutoIncrement) {
 			return getComment((ColumnType.AutoIncrement) column, flag);
-		} else if (column instanceof ColumnType.Clob) {
-			return getComment((ColumnType.Clob) column, flag);
-		} else if (column instanceof ColumnType.Blob) {
-			return getComment((ColumnType.Blob) column, flag);
-		} else if (column instanceof ColumnType.GUID) {
-			return getComment((ColumnType.GUID) column, flag);
+		}
+		// 按事先注册的类型进行建表
+		int rawSqlType=column.getSqlType();
+		PairIS def;
+		if (column instanceof SqlTypeSized) {
+			SqlTypeSized type = (SqlTypeSized) column;
+			def = typeNames.get(rawSqlType, type.getLength(), type.getPrecision(), type.getScale());
 		} else {
-			System.err.println("Unknown javaField Type: " + column.getClass().getName());
-			return "";
+			def = typeNames.get(rawSqlType);
 		}
-	}
-
-	protected String getComment(Blob column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		if (flag) {
-			sb.append("blob");
-			if (column.nullable){
-				if(has(Feature.COLUMN_DEF_ALLOW_NULL)){
-					sb.append(" null");	
-				}
-			}else{
-				sb.append(" not null");
-			}
+		if (!flag) {
+			return def.second;
 		}
-		return sb.toString();
-	}
-
-	protected String getComment(Clob column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		if (flag) {
-			sb.append("clob");
-			if (column.nullable){
-				if(has(Feature.COLUMN_DEF_ALLOW_NULL)){
-					sb.append(" null");	
-				}
-			}else{
-				sb.append(" not null");
+		StringBuilder sb = new StringBuilder(def.second);
+		if (column.defaultValue != null)
+			sb.append(" default ").append(toDefaultString0(column.defaultValue, rawSqlType,def.first));
+		if (column.nullable) {
+			if (has(Feature.COLUMN_DEF_ALLOW_NULL)) {
+				sb.append(" null");
 			}
-		}
-		return sb.toString();
-	}
-
-	protected String getComment(ColumnType.Char column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("char(").append(column.length).append(')');
-		if (flag) {
-			if (column.defaultValue != null)
-				sb.append(" default ").append(toDefaultString(column.defaultValue));
-			if (column.nullable){
-				if(has(Feature.COLUMN_DEF_ALLOW_NULL)){
-					sb.append(" null");	
-				}
-			}else{
-				sb.append(" not null");
-			}
-		}
-		return sb.toString();
-	}
-
-	protected String getComment(ColumnType.Boolean column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("char(1)");
-		if (flag) {
-			if (column.defaultValue != null) {
-				Boolean b = StringUtils.toBoolean(String.valueOf(column.defaultValue), false);
-				sb.append(" default ").append(b ? "'1'" : "'0'");
-			}
-			if (column.nullable){
-				if(has(Feature.COLUMN_DEF_ALLOW_NULL)){
-					sb.append(" null");	
-				}
-			}else{
-				sb.append(" not null");
-			}
-		}
-		return sb.toString();
-	}
-
-	protected String getComment(Varchar column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("varchar(").append(column.length).append(')');
-		if (flag) {
-			if (column.defaultValue != null)
-				sb.append(" default ").append(toDefaultString(column.defaultValue));
-			if (column.nullable){
-				if(has(Feature.COLUMN_DEF_ALLOW_NULL)){
-					sb.append(" null");	
-				}
-			}else{
-				sb.append(" not null");
-			}
-		}
-		return sb.toString();
-	}
-
-	protected String getComment(ColumnType.Double column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		if (column.precision + column.scale > 16) {
-			sb.append("double");
 		} else {
-			sb.append("float");
-		}
-		if (flag) {
-			if (column.defaultValue != null)
-				sb.append(" default ").append(column.defaultValue.toString());
-			if (column.nullable){
-				if(has(Feature.COLUMN_DEF_ALLOW_NULL)){
-					sb.append(" null");	
-				}
-			}else{
-				sb.append(" not null");
-			}
+			sb.append(" not null");
 		}
 		return sb.toString();
 	}
-
-	protected String getComment(ColumnType.Int column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		if (column.precision > 13) {
-			sb.append("bigint");
+	
+	@Override
+	public int getImplementationSqlType(ColumnType column) {
+		PairIS def;
+		if (column instanceof SqlTypeSized) {
+			SqlTypeSized type = (SqlTypeSized) column;
+			def = typeNames.get(column.getSqlType(), type.getLength(), type.getPrecision(), type.getScale());
 		} else {
-			sb.append("int");
+			def = typeNames.get(column.getSqlType());
 		}
-		if (flag) {
-			if (column.defaultValue != null)
-				sb.append(" default ").append(column.defaultValue.toString());
-			if (column.nullable){
-				if(has(Feature.COLUMN_DEF_ALLOW_NULL)){
-					sb.append(" null");	
-				}
-			}else{
-				sb.append(" not null");
-			}
-		}
-		return sb.toString();
-	}
-
-	protected String getComment(ColumnType.Date column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("date");
-		if (flag) {
-			if (column.defaultValue != null)
-				sb.append(" default ").append(toDefaultString(column.defaultValue));
-			if (column.nullable){
-				if(has(Feature.COLUMN_DEF_ALLOW_NULL)){
-					sb.append(" null");	
-				}
-			}else{
-				sb.append(" not null");
-			}
-		}
-		return sb.toString();
-	}
-
-	protected String getComment(ColumnType.TimeStamp column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("timestamp");
-		if (flag) {
-			if (column.defaultValue != null) {
-				sb.append(" default ").append(toDefaultString(column.defaultValue));
-				if (column.nullable){
-					if(has(Feature.COLUMN_DEF_ALLOW_NULL)){
-						sb.append(" null");	
-					}
-				}else{
-					sb.append(" not null");
-				}
-			}
-		}
-		return sb.toString();
+		return def.first;
 	}
 
 	/**
@@ -601,109 +387,66 @@ public abstract class DbmsProfile implements DatabaseDialect {
 	protected String getComment(ColumnType.AutoIncrement column, boolean flag) {
 		StringBuilder sb = new StringBuilder();
 		sb.append("int generated by default as identity ");
-		if (column.nullable){
-			if(has(Feature.COLUMN_DEF_ALLOW_NULL)){
-				sb.append(" null");	
+		if (column.nullable) {
+			if (has(Feature.COLUMN_DEF_ALLOW_NULL)) {
+				sb.append(" null");
 			}
-		}else{
+		} else {
 			sb.append(" not null");
 		}
 		return sb.toString();
 	}
 
-	protected String getComment(ColumnType.GUID column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("char(36)");
-		if (flag) {
-			if (column.defaultValue != null)
-				sb.append(" default ").append(toDefaultString(column.defaultValue));
-			if (column.nullable){
-				if(has(Feature.COLUMN_DEF_ALLOW_NULL)){
-					sb.append(" null");	
-				}
-			}else{
-				sb.append(" not null");
-			}
-		}
-		return sb.toString();
-	}
 
 	public boolean checkPKLength(ColumnType type) {
 		return true;
 	}
 
-	public String toDefaultString(Object defaultValue) {
+	public String toDefaultString(Object defaultValue, int sqlType) {
+		return toDefaultString0(defaultValue,sqlType,sqlType);
+	}
+
+	private String toDefaultString0(Object defaultValue, int sqlType, int changeTo) {
 		if (defaultValue == null) {
 			return null;
 		}
-		if (defaultValue instanceof Boolean) {
-			defaultValue = this.toBooleanSqlParam((java.lang.Boolean) defaultValue);
+		if (sqlType== Types.BOOLEAN){
+			if(!(defaultValue instanceof Boolean)){
+				String s=String.valueOf(defaultValue);
+				defaultValue=StringUtils.toBoolean(s,false);	
+			}
 		}
-		if (defaultValue instanceof DbFunction) {
+		if (defaultValue instanceof Boolean) {
+			return toBooleanSqlParam((java.lang.Boolean) defaultValue, changeTo);
+		}else if (defaultValue instanceof DbFunction) {
 			return this.getFunction((DbFunction) defaultValue);
 		} else if (defaultValue instanceof SqlExpression) {
 			return defaultValue.toString();
-		} else if (defaultValue instanceof Number) {
-			return defaultValue.toString();
-		} else if (defaultValue instanceof Boolean) {
+		}
+		if (defaultValue instanceof Number) {
 			return defaultValue.toString();
 		} else if (defaultValue instanceof String) {
-			if (((String) defaultValue).length() == 0)
+			String s=(String)defaultValue;
+			if (s.length() == 0)
 				return null;
 			return "'" + (String) defaultValue + "'";
 		} else {
 			return "'" + String.valueOf(defaultValue) + "'";
 		}
-
 	}
 
-	/**
-	 * 从Java对象得到数据流(供Blob使用)
-	 */
-	public static InputStream getStreamFromBeanField(Object value) throws IOException {
-		if (value == null)
-			return null;
-		if (value instanceof String) {
-			return new ByteArrayInputStream(((String) value).getBytes());
-		} else if (value instanceof File) {
-			return new FileInputStream((File) value);
-		} else if (value instanceof InputStream) {
-			return (InputStream) value;
-		} else if (value instanceof BigDataBuffer) {
-			return ((BigDataBuffer) value).getAsStream();
-		} else if (value instanceof byte[]) {
-			return new ByteArrayInputStream((byte[]) value);
-		} else if (value instanceof ByteBuffer) {
-			return new ByteBufferInputStream((ByteBuffer) value);
-		} else {
-			throw new IOException("Unsupported field type " + value.getClass().getName() + " who is mapping to the Oracle Lob column.");
-		}
-	}
-
-	/**
-	 * 从Java对象得到字符流(供Clob使用)
-	 * 
-	 * @param value
-	 * @return
-	 * @throws IOException
-	 */
-	public static BufferedReader getReaderFromBeanField(Object value) throws IOException {
-		if (value instanceof String) {
-			return new BufferedReader(new StringReader((String) value));
-		} else if (value instanceof File) {
-			return IOUtils.getReader((File) value, null);
-		} else if (value instanceof BufferedReader) {
-			return (BufferedReader) value;
-		} else if (value instanceof Reader) {
-			return new BufferedReader((Reader) value);
-		} else if (value instanceof InputStream) {
-			return new BufferedReader(new InputStreamReader((InputStream) value));
-		} else if (value instanceof BigDataBuffer) {
-			return new BufferedReader(new InputStreamReader(((BigDataBuffer) value).getAsStream()));
-		} else if (value instanceof byte[]) {
-			return new BufferedReader(new StringReader(new String((byte[]) value)));
-		} else {
-			throw new IOException("Unsupported field type " + value.getClass().getName() + " who is mapping to the Oracle Lob column.");
+	private String toBooleanSqlParam(Boolean defaultValue, int sqlType) {
+		switch(sqlType){
+		case Types.BOOLEAN:
+			return String.valueOf(defaultValue); 
+		case Types.VARCHAR:	
+		case Types.CHAR:
+			return defaultValue?"'1'":"'0'";
+		case Types.INTEGER:
+		case Types.NUMERIC:
+			return defaultValue?"1":"0";
+		default:
+			return String.valueOf(defaultValue); 
 		}
 	}
 
@@ -773,8 +516,9 @@ public abstract class DbmsProfile implements DatabaseDialect {
 		case Types.OTHER: // Varbit in PG and nvarchar2 in oracle returns OTHER,
 							// seems they can all mapping to String value in
 							// java..
-		case Types.SQLXML:
 			return new Varchar(column.getColumnSize());
+		case Types.SQLXML:
+			return new ColumnType.XML();
 		case Types.CLOB:
 		case Types.NCLOB:
 			return new ColumnType.Clob();
@@ -841,11 +585,6 @@ public abstract class DbmsProfile implements DatabaseDialect {
 		return defaultValue;
 	}
 
-	public Object toBooleanSqlParam(java.lang.Boolean bool) {
-		// 必然非null
-		return String.valueOf(bool.booleanValue());
-	}
-
 	public java.sql.Timestamp toTimestampSqlParam(Date timestamp) {
 		return DateUtils.toSqlTimeStamp(timestamp);
 	}
@@ -905,35 +644,123 @@ public abstract class DbmsProfile implements DatabaseDialect {
 			keywords.add(s);
 		}
 	}
-	
-	public static void ensureUserFunction(FunctionMapping mapping,OperateTarget db) throws SQLException {
-		DbMetaData meta=db.getMetaData();
-		boolean flag=true;
-		for(String name:mapping.requiresUserFunction()){
-			if(meta.checkedFunctions.contains(name)){
+
+	public void toExtremeInsert(InsertSqlClause sql) {
+	}
+
+	public void init(OperateTarget asOperateTarget) {
+	}
+
+	/**
+	 * 在数据库初始化时检查一些用于模拟函数的存储过程是否已经创建。如果没有则自动运行脚本创建。
+	 * 
+	 * @param mapping
+	 * @param db
+	 * @throws SQLException
+	 */
+	protected static void ensureUserFunction(FunctionMapping mapping, OperateTarget db) throws SQLException {
+		DbMetaData meta = db.getMetaData();
+		boolean flag = true;
+		for (String name : mapping.requiresUserFunction()) {
+			if (meta.checkedFunctions.contains(name)) {
 				continue;
 			}
 			meta.checkedFunctions.add(name);
-			if(!meta.existsFunction(null, name)){
-				flag=false;
+			if (!meta.existsFunction(null, name)) {
+				flag = false;
 				break;
 			}
 		}
-		if(flag)return;
-		SQLFunction sf=mapping.getFunction();
-		URL url=sf.getClass().getResource(sf.getClass().getSimpleName()+".sql");
-		if(url==null){
-			throw new IllegalArgumentException("Can't find user script file for user function "+ sf);
+		if (flag)
+			return;
+		SQLFunction sf = mapping.getFunction();
+		URL url = sf.getClass().getResource(sf.getClass().getSimpleName() + ".sql");
+		if (url == null) {
+			throw new IllegalArgumentException("Can't find user script file for user function " + sf);
 		}
-		try{
+		try {
 			meta.executeScriptFile(url);
-		}catch(SQLException ex){
+		} catch (SQLException ex) {
 			throw ex;
 		}
 	}
 
-	public void toExtremeInsert(InsertSqlClause sql) {
+	/**
+	 * 从指定的资源文件中加载关键字列表
+	 * 
+	 * @param path
+	 */
+	protected void loadKeywords(String path) {
+		InputStream in = this.getClass().getResourceAsStream(path);
+		if (in == null) {
+			throw new NullPointerException("Resource not found:" + path);
+		}
+		BufferedReader reader = IOUtils.getReader(in, "US-ASCII");
+		String line = null;
+		try {
+			while ((line = reader.readLine()) != null) {
+				line = line.trim();
+				if (line.length() > 0) {
+					keywords.add(line);
+				}
+			}
+		} catch (IOException e) {
+			throw new IllegalArgumentException(e);
+		} finally {
+			IOUtils.closeQuietly(reader);
+		}
 	}
-	
-	
+
+	/**
+	 * 根据RDBMS名称获得数据库方言
+	 * 
+	 * @param dbmsName
+	 * @return
+	 */
+	public static DatabaseDialect getProfile(String dbmsName) {
+		dbmsName = dbmsName.toLowerCase();
+		DatabaseDialect profile = ITEMS.get(dbmsName);
+		if (profile != null)
+			return profile;
+		profile = lookupDialect(dbmsName);
+		return profile;
+	}
+
+	private synchronized static DatabaseDialect lookupDialect(String dbmsName) {
+		Map<String, String> dialectMappings = initDialectMapping();
+		String classname = dialectMappings.remove(dbmsName);
+		if (classname == null) {
+			throw new IllegalArgumentException("the dbms '" + dbmsName + "' is not supported yet");
+		}
+		try {
+			Class<?> c = Class.forName(classname);
+			DatabaseDialect result = (DatabaseDialect) c.newInstance();
+			ITEMS.put(dbmsName, result);
+			return result;
+		} catch (RuntimeException e) {
+			throw e;
+		} catch (Exception e) {
+			LogUtil.exception(e);
+			throw new IllegalArgumentException("the Dialect class can't be created:" + classname);
+		}
+	}
+
+	private static Map<String, String> initDialectMapping() {
+		URL url = AbstractDialect.class.getResource("/META-INF/dialect-mapping.properties");
+		if (url == null) {
+			LogUtil.fatal("Can not found Dialect Mapping File. /META-INF/dialect-mapping.properties");
+		}
+		Map<String, String> config = IOUtils.loadProperties(url);
+		String file = JefConfiguration.get(DbCfg.DB_DIALECT_CONFIG);
+		if (StringUtils.isNotEmpty(file)) {
+			url = AbstractDialect.class.getClassLoader().getResource(file);
+			if (url == null) {
+				LogUtil.warn("The custom dialect mapping file [{}] was not found.", file);
+			} else {
+				Map<String, String> config1 = IOUtils.loadProperties(url);
+				config.putAll(config1);
+			}
+		}
+		return config;
+	}
 }

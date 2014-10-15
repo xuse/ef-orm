@@ -13,7 +13,6 @@ import jef.database.PojoWrapper;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
-import jef.database.cache.KeyDimension;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AbstractTimeMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
@@ -271,16 +270,6 @@ public interface  ITableMetadata {
 	 */
 	Field[] getLobFieldNames();
 
-	/**
-	 * 为了提高一级缓存效率，凡是主键缓存维度都固化，避免反复计算
-	 * 
-	 * FIXME 目前使用SqlProcessor方式返回的主键维度可能是按字母顺序排序的，默认按PkField顺序，当主键字段有多个时，两者可能不一致，主键维护应该修复为按元模型排序
-	 * 
-	 * TODO 这个问题需要编写几个案例测试一下。
-	 * @return 主键缓存维度
-	 */
-	KeyDimension getPkDimension();
-	
 	/**
 	 * 将非IQueryableEntity的POJO类型封装为PojoWreapper
 	 * @param p

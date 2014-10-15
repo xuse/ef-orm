@@ -31,7 +31,7 @@ import jef.tools.collection.CollectionUtil;
  * @author luolp@asiainfo-linkage.com
  * @Date 2013-1-28
  */
-public class GBaseDialect extends DbmsProfile {
+public class GBaseDialect extends AbstractDialect {
 
 	protected static final String DRIVER_CLASS = "com.gbase.jdbc.Driver";
 	protected static final int DEFAULT_PORT = 5258;
@@ -53,11 +53,6 @@ public class GBaseDialect extends DbmsProfile {
 
 	public RDBMS getName() {
 		return RDBMS.gbase;
-	}
-
-	public String getGeneratedFetchFunction() {
-		// TODO 暂未知
-		return null;
 	}
 
 	public String getDriverClass(String url) {

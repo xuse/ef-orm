@@ -19,9 +19,7 @@ import jef.database.DbUtils;
 import jef.database.ORMConfig;
 import jef.database.OperateTarget;
 import jef.database.dialect.ColumnType.AutoIncrement;
-import jef.database.dialect.ColumnType.Blob;
 import jef.database.dialect.ColumnType.Clob;
-import jef.database.dialect.ColumnType.Int;
 import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.statement.DelegatingPreparedStatement;
 import jef.database.dialect.statement.DelegatingStatement;
@@ -51,16 +49,12 @@ import jef.database.query.function.StandardSQLFunction;
 import jef.database.query.function.TemplateFunction;
 import jef.database.query.function.VarArgsSQLFunction;
 import jef.database.support.RDBMS;
-import jef.tools.ArrayUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtil;
 import jef.tools.string.JefStringReader;
 
-import org.postgresql.util.PGobject;
-
-public class PostgreSqlDialect extends DbmsProfile {
-	protected static final String DRIVER_CLASS = "org.postgresql.Driver";
+public class PostgreSqlDialect extends AbstractDialect {
 	protected static final String JDBC_URL_FORMAT = "jdbc:postgresql://%1$s:%2$s/%3$s";
 	protected static final int DEFAULT_PORT = 5432;
 
@@ -76,7 +70,7 @@ public class PostgreSqlDialect extends DbmsProfile {
 			features.add(Feature.AUTOINCREMENT_NEED_SEQUENCE);
 		}
 
-		loadKeywords("postgresql_keywords.properties");
+		loadKeywords("sqlserver_keywords.properties");
 
 		registerNative(Func.coalesce);
 		registerAlias(Func.nvl, "coalesce");
@@ -193,6 +187,18 @@ public class PostgreSqlDialect extends DbmsProfile {
 		setProperty(DbProperty.CHECK_SQL, "select 1");
 		setProperty(DbProperty.SEQUENCE_FETCH, "select nextval('%s')");
 		setProperty(DbProperty.WRAP_FOR_KEYWORD, "\"");
+		setProperty(DbProperty.GET_IDENTITY_FUNCTION, "SELECT currval('%tableName%_%columnName%_seq')");
+		
+		typeNames.put(Types.BLOB, "bytea", Types.VARBINARY);
+		typeNames.put(Types.CLOB, "text", 0);
+		typeNames.put(Types.BOOLEAN, "boolean", 0);
+		typeNames.put(Types.TINYINT, "int2", 0);
+		typeNames.put(Types.SMALLINT, "int2", 0);
+		typeNames.put(Types.INTEGER, "int4", 0);
+		typeNames.put(Types.BIGINT, "int8", 0);
+		typeNames.put(Types.FLOAT, "float4", 0);
+		typeNames.put(Types.DOUBLE, "float8", 0);
+		typeNames.put(Types.NUMERIC, "numeric($p, $s)", 0);
 	}
 
 	public RDBMS getName() {
@@ -209,18 +215,8 @@ public class PostgreSqlDialect extends DbmsProfile {
 		}
 	}
 
-	/**
-	 * 获取该数据库的返回已生成的主键的函数(暂时没用到，用到时需修改)
-	 * <p>
-	 * PostgreSQL: SELECT currval('表名_列名_seq')
-	 * </p>
-	 */
-	public String getGeneratedFetchFunction() {
-		return "SELECT currval('%tableName%_%columnName%_seq')";
-	}
-
 	public String getDriverClass(String url) {
-		return DRIVER_CLASS;
+		return "org.postgresql.Driver";
 	}
 
 	@Override
@@ -275,68 +271,6 @@ public class PostgreSqlDialect extends DbmsProfile {
 	}
 
 	@Override
-	public Object getJavaValue(ColumnType column, Object object) {
-		if (object == null)
-			return null;
-
-		// boolean类型的解析，优先处理 column type符合的情况
-		if (column instanceof ColumnType.Boolean) {
-			return ArrayUtils.containsIgnoreCase(new String[] { "t", "true", "y", "yes", "on", "1" }, object.toString());
-		}
-		// bit, bit[n]
-		else if (object instanceof java.lang.Boolean) {
-			return ((java.lang.Boolean) object).booleanValue() ? "1" : "0";
-		}
-		// varbit, cidr, inet, maccaddr, interval, tsvector, tsquery, xml,
-		// box, circle, line, lseg, path, point, polygon
-		else if (object instanceof PGobject) {
-			return ((PGobject) object).getValue();
-		} else if (object instanceof String || object instanceof Number || column instanceof ColumnType.Date || column instanceof ColumnType.TimeStamp || column instanceof ColumnType.Blob) {
-			return object;
-		} else {
-			System.err.println("Unknown javaField Type: " + object.getClass().getName());
-		}
-		return object;
-	}
-
-	@Override
-	protected String getComment(Blob column, boolean flag) {
-		return buildComment(column, PostgreSqlColumnTypes.bytea.name(), flag);
-	}
-
-	private String buildComment(ColumnType column, String nativeColumnType, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		sb.append(nativeColumnType);
-		if (flag) {
-			if (!column.nullable)
-				sb.append(" not null");
-			if (column.defaultValue != null)
-				sb.append(" default ").append(toDefaultString(column.defaultValue));
-		}
-		return sb.toString();
-	}
-
-	@Override
-	protected String getComment(Clob column, boolean flag) {
-		return buildComment(column, PostgreSqlColumnTypes.text.name(), flag);
-	}
-
-	@Override
-	protected String getComment(ColumnType.Boolean column, boolean flag) {
-		return buildComment(column, PostgreSqlColumnTypes.BOOLEAN.name().toLowerCase(), flag);
-	}
-
-	@Override
-	protected String getComment(Int column, boolean flag) {
-		return column.precision > 10 ? buildComment(column, PostgreSqlColumnTypes.int8.name(), flag) : buildComment(column, PostgreSqlColumnTypes.int4.name(), flag);
-	}
-
-	@Override
-	protected String getComment(ColumnType.Double column, boolean flag) {
-		return (column.precision + column.scale) > 16 ? buildComment(column, PostgreSqlColumnTypes.float8.name(), flag) : buildComment(column, PostgreSqlColumnTypes.float4.name(), flag);
-	}
-
-	@Override
 	protected String getComment(AutoIncrement column, boolean flag) {
 		/*
 		 * PG的自增主键后台其实是用类似于Oracle的实现完成的，后台会自动创建名为“： 表名_列命_seq这样一个sequence
@@ -346,12 +280,13 @@ public class PostgreSqlDialect extends DbmsProfile {
 		 * 要注意这里的currval含义用法和Oracle一样
 		 * ，不是获取sequence当前的值，而是返回当前sesssion中上一次获取过的seq值。
 		 */
-		return column.getLength() > 10 ? buildComment(column, PostgreSqlColumnTypes.serial8.name(), flag) : buildComment(column, PostgreSqlColumnTypes.serial4.name(), flag);
+		if(column.getSqlType()==Types.BIGINT){
+			return flag?"serial8 not null":"serial8";
+		}else{
+			return flag?"serial4 not null":"serial4";
+		}
 	}
-
-	protected String getComment(ColumnType.GUID column, boolean flag) {
-		return buildComment(column, PostgreSqlColumnTypes.uuid.name(), flag);
-	}
+	
 
 	public ColumnType getProprtMetaFromDbType(jef.database.meta.Column column) {
 		if ("text".equals(column.getDataType())) {
@@ -361,42 +296,6 @@ public class PostgreSqlDialect extends DbmsProfile {
 		} else {
 			return super.getProprtMetaFromDbType(column);
 		}
-	}
-
-	/**
-	 * Arrays, composite types, custom types are not yet supported.
-	 */
-	protected enum PostgreSqlColumnTypes {
-		// below column types will mapping to integer type
-		bigserial, serial8, serial4, serial, int8, int4, int2, INT, integer, bigint, smallint,
-
-		// below column types will mapping to real type
-		float8, float4, DOUBLE, numeric, decimal, real,
-
-		// below column types will mapping to varchar type
-		varbit, varchar, cidr, inet, macaddr, uuid, money, tsquery, tsvector, txid_snapshot, interval,
-
-		// below column types will mapping to varchar type too
-		box, circle, line, lseg, path, point, polygon,
-
-		// below column types will mapping to char type
-		// "bpchar" 是当 column 名称为 name 时，由db metadata得到的类型。
-		bit, character, CHAR, bpchar,
-
-		// below column types will mapping to boolean type
-		BOOLEAN, bool,
-
-		// below column types will mapping to date type
-		date,
-
-		// below column types will mapping to timestamp type
-		time, timetz, timestamp, timestamptz,
-
-		// below column types will mapping to blob type
-		bytea,
-
-		// below column types will mapping to clob type
-		text, xml;
 	}
 
 	// ,"jdbc:postgresql://localhost/soft"

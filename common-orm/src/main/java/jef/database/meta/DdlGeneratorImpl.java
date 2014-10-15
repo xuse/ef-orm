@@ -70,7 +70,7 @@ public class DdlGeneratorImpl implements DdlGenerator {
 			if (entry instanceof AutoIncrementMapping) {
 				if (profile.has(Feature.AUTOINCREMENT_NEED_SEQUENCE)) {
 					sequenceSql = ((AutoIncrementMapping<?>) entry).getSequenceName(profile);
-					SequenceColumnSize = StringUtils.repeat('9', ((AutoIncrement) vType).getLength());
+					SequenceColumnSize = StringUtils.repeat('9', ((AutoIncrement) vType).getPrecision());
 				}
 				if (profile.has(Feature.AUTOINCREMENT_MUSTBE_PK)) { //在一些数据库上，只有主键才能自增，并且此时不能再单独设置主键.
 					pkFields=Collections.emptyList(); //清空这些主键标记

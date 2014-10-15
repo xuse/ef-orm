@@ -8,14 +8,14 @@ import java.sql.SQLException;
 
 import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.DbmsProfile;
+import jef.database.dialect.AbstractDialect;
 
 
 public class JDBCUtil {
 	public static boolean existTable(Connection conn,String table) throws SQLException{
 		DatabaseMetaData meta=conn.getMetaData();
 		String name=meta.getDatabaseProductName();
-		DatabaseDialect profile=DbmsProfile.getProfile(name);
+		DatabaseDialect profile=AbstractDialect.getProfile(name);
 		int n = table.indexOf('.');
 		String schema=null;
 		if (n > -1) {

@@ -6,7 +6,7 @@ import javax.sql.DataSource;
 import jef.common.log.LogUtil;
 import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.DbmsProfile;
+import jef.database.dialect.AbstractDialect;
 import jef.tools.StringUtils;
 
 /**
@@ -116,7 +116,7 @@ public class DataSources {
 	 * @return
 	 */
 	public static DataSource create(String dbType, String host, int port, String database, String user, String password) {
-		DatabaseDialect profile = DbmsProfile.getProfile(dbType);
+		DatabaseDialect profile = AbstractDialect.getProfile(dbType);
 		if (profile == null) {
 			throw new UnsupportedOperationException("The database {" + dbType + "} was not supported yet..");
 		}

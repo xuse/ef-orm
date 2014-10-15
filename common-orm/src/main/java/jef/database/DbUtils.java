@@ -16,6 +16,7 @@
 package jef.database;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.io.StringReader;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
@@ -579,15 +580,15 @@ public final class DbUtils {
 	}
 
 	// 从实体中获取主键的值，这里的实体都必须是已经从数据库中选择出来的，因此无需校验主键值是否合法
-	static List<Object> getPKValueSafe(IQueryableEntity data) {
+	public static List<Serializable> getPKValueSafe(IQueryableEntity data) {
 		ITableMetadata meta = MetaHolder.getMeta(data);
 		if (meta.getPKFields().isEmpty())
 			return null;
 		int len = meta.getPKFields().size();
-		Object[] result = new Object[len];
+		Serializable[] result = new Serializable[len];
 		for (int i = 0; i < len; i++) {
 			MappingType<?> field = meta.getPKFields().get(i);
-			result[i] = field.getFieldAccessor().get(data);
+			result[i] = (Serializable) field.getFieldAccessor().get(data);
 		}
 		return Arrays.asList(result);
 	}

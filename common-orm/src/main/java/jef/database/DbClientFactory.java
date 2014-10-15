@@ -20,7 +20,8 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
-import jef.database.dialect.DbmsProfile;
+import jef.database.dialect.AbstractDialect;
+import jef.database.dialect.DatabaseDialect;
 import jef.tools.JefConfiguration;
 
 import org.easyframe.enterprise.spring.TransactionMode;
@@ -49,7 +50,7 @@ public class DbClientFactory {
 	 * @throws SQLException
 	 */
 	public static DbClient getDbClient(String dbType, String host, int port, String pathOrName, String user, String pass, int maxConnection) throws SQLException {
-		DbmsProfile profile = DbmsProfile.getProfile(dbType);
+		DatabaseDialect profile = AbstractDialect.getProfile(dbType);
 		if (profile == null) {
 			throw new SQLException("The DBMS:[" + dbType + "] is not supported yet.");
 		}

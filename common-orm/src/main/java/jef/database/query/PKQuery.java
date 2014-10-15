@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +38,7 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	
 	private boolean cascadeViaOuterJoin=ORMConfig.getInstance().isUseOuterJoin();
 	
+	
 	@SuppressWarnings("unchecked")
 	public PKQuery(ITableMetadata clz,Serializable... pks){
 		this.type=clz;
@@ -47,12 +49,18 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 		pkValues=Arrays.asList(pks);
 	}
 
+	@SuppressWarnings("unchecked")
+	public PKQuery(ITableMetadata meta, List<Serializable> pkValueSafe, IQueryableEntity obj) {
+		this.type=meta;
+		this.instance=(T) obj;
+		pkValues=pkValueSafe;
+	}
+
 	public List<Condition> getConditions() {
 		return new AbstractList<Condition>() {
 			@Override
 			public Condition get(int index) {
 				MappingType<?> m=type.getPKFields().get(index);
-//				Object value=m.getFieldAccessor().get(instance);
 				Object value=pkValues.get(index);
 				Assert.notNull(value);
 				return new Condition(m.field(),Operator.EQUALS,value);
@@ -71,32 +79,34 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 		if (tableName != null)
 			tableName = MetaHolder.toSchemaAdjustedName(tableName);
 		PartitionResult[] prs = DbUtils.toTableNames(getInstance(), tableName, this, processor.getPartitionSupport());
+		
+		
 		DatabaseDialect profile = processor.getProfile(prs);
-
 		BindSql whereResult = toPrepareWhereSql(context, profile);
-
 		QueryClauseImpl result = new QueryClauseImpl(profile);
 		result.setGrouphavingPart(GroupClause.DEFAULT);
 		result.setSelectPart(SelectProcessor.toSelectSql(context, GroupClause.DEFAULT, profile));
 		result.setTables(prs, type.getName());
 		result.setWherePart(whereResult.getSql());
 		result.setBind(whereResult.getBind());
-//		if (order)
-//			result.setOrderbyPart(SelectProcessor.toOrderClause(this, context, profile));
 		return result;
 	}
 
-	private BindSql toPrepareWhereSql(SqlContext context, DatabaseDialect profile) {
+	public BindSql toPrepareWhereSql(SqlContext context, DatabaseDialect profile) {
 		int size=pkValues.size();
-		StringBuilder sb=new StringBuilder(128).append("where ");
+		StringBuilder sb=new StringBuilder(128).append(" where ");
 		List<BindVariableDescription> bind = new ArrayList<BindVariableDescription>(size);
-		for(int i=0;i<size;i++){
-			MappingType<?> field=type.getPKFields().get(i);
-			if(i>0){
-				sb.append(" and ");
-			}
-			sb.append(field.getColumnName(profile, true)).append("= ?");
-			bind.add(new BindVariableDescription(field.field(), Operator.EQUALS, pkValues.get(i)));
+		
+		Iterator<MappingType<?>> pkfields=type.getPKFields().iterator();
+		
+		int n=0;
+		MappingType<?> field=pkfields.next();
+		sb.append(field.getColumnName(profile, true)).append("= ?");
+		bind.add(new BindVariableDescription(field.field(), Operator.EQUALS, pkValues.get(n++)));
+		while(pkfields.hasNext()){
+			field=pkfields.next();
+			sb.append(" and ").append(field.getColumnName(profile, true)).append("= ?");
+			bind.add(new BindVariableDescription(field.field(), Operator.EQUALS, pkValues.get(n++)));
 		}
 		return new BindSql(sb.toString(), bind);
 	}

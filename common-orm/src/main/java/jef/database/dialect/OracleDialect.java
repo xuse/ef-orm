@@ -17,6 +17,7 @@ package jef.database.dialect;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -35,9 +36,6 @@ import jef.database.OperateTarget;
 import jef.database.datasource.DataSourceInfo;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.ColumnType.AutoIncrement;
-import jef.database.dialect.ColumnType.Double;
-import jef.database.dialect.ColumnType.Int;
-import jef.database.dialect.ColumnType.TimeStamp;
 import jef.database.dialect.ColumnType.Varchar;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
@@ -75,12 +73,11 @@ import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtil;
 import jef.tools.string.JefStringReader;
-import oracle.sql.TIMESTAMP;
 
 /**
  * 修改列名Oracle：lter table bbb rename column nnnnn to hh int;
  */
-public class OracleDialect extends DbmsProfile {
+public class OracleDialect extends AbstractDialect {
 	public OracleDialect() {
 		features = CollectionUtil.identityHashSet();
 		features.addAll(Arrays.asList(
@@ -219,97 +216,26 @@ public class OracleDialect extends DbmsProfile {
 		
 		registerCompatible(Func.datediff, new TemplateFunction("datediff","trunc(%1$s-%2$s)"));
 		registerAlias(Func.str, "to_char");
-	}
-	
-	public Object getJavaValue(ColumnType column, Object object) {
-		if (object == null)
-			return null;
-
-		// boolean类型的解析
-		if (column instanceof ColumnType.Boolean) {
-			return "1".equals(object.toString());
-		}
-		// 除此之外的基本类型的值都不需要再单独处理
-		if (object instanceof String)
-			return object;
-
-		if (object instanceof TIMESTAMP)
-			try {
-				return ((TIMESTAMP) object).timestampValue();
-			} catch (SQLException e) {
-				LogUtil.exception(e);
-			}
-		return object;
-	}
-
-	protected String getComment(Varchar column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("varchar2(" + column.length + ")");
-		if (flag) {
-			if (column.defaultValue != null)
-				sb.append(" default ").append(toDefaultString(column.defaultValue));
-			if (column.nullable){
-				sb.append(" null");
-			}else{
-				sb.append(" not null");
-			}
-		}
-		return sb.toString();
-	}
-
-	protected String getComment(Double column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("number(" + column.precision + "," + column.scale + ")");
-		if (flag) {
-			if (column.defaultValue != null)
-				sb.append(" default ").append(column.defaultValue.toString());
-			if (column.nullable){
-				sb.append(" null");
-			}else{
-				sb.append(" not null");
-			}
-		}
-		return sb.toString();
-	}
-
-	protected String getComment(Int column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("number(" + column.precision + ")");
-		if (flag) {
-			if (column.defaultValue != null)
-				sb.append(" default ").append(column.defaultValue.toString());
-			if (column.nullable){
-				sb.append(" null");
-			}else{
-				sb.append(" not null");
-			}
-		}
-		return sb.toString();
+		
+		typeNames.put(Types.VARCHAR, 4000,"varchar2($l)", 0);
+		typeNames.put(Types.VARCHAR, 1024*1024*1024*4,"clob", Types.CLOB);
+		
+		typeNames.put(Types.FLOAT, "number($p,$s)", 0);
+		typeNames.put(Types.DOUBLE, "number($p,$s)", 0);
+		typeNames.put(Types.NUMERIC, "number($p,$s)", 0);
+		typeNames.put(Types.TINYINT, "number($p)", 0);
+		typeNames.put(Types.SMALLINT, "number($p)", 0);
+		typeNames.put(Types.INTEGER, "number($p)", 0);
+		typeNames.put(Types.BIGINT, "number($p)", 0);
+		
+		typeNames.put(Types.TIMESTAMP, "date", 0);
+		typeNames.put(Types.TIME, "date", 0);
 	}
 
 	protected String getComment(AutoIncrement column, boolean flag) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("number(" + column.length + ")");
+		sb.append("number(" + column.precision + ")");
 		if (flag) {
-			if (column.nullable){
-				sb.append(" null");
-			}else{
-				sb.append(" not null");
-			}
-		}
-		return sb.toString();
-	}
-
-	protected String getComment(TimeStamp column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		// 备注：Oracle中date可以表示到秒，timestamp可以表示到秒的小数点后若干位，
-		// 此处无必要，但保留Oracle timeStamp的处理以备以后扩展。
-		// sb.append("timestamp");
-		sb.append("date");
-		if (flag) {
-			if (column.defaultValue != null) {
-				sb.append(" default ").append(toDefaultString(column.defaultValue));
-			}
 			if (column.nullable){
 				sb.append(" null");
 			}else{
@@ -345,10 +271,6 @@ public class OracleDialect extends DbmsProfile {
 		} else {
 			return super.getProprtMetaFromDbType(column);
 		}
-	}
-
-	public String getGeneratedFetchFunction() {
-		throw new UnsupportedOperationException();
 	}
 
 	public String getDriverClass(String url) {
@@ -393,15 +315,6 @@ public class OracleDialect extends DbmsProfile {
 	@Override
 	public String getColumnNameIncase(String name) {
 		return name==null?null:name.toUpperCase();
-	}
-
-	@Override
-	public Object toBooleanSqlParam(java.lang.Boolean bool) {
-		if (bool == null) {
-			return "0";
-		} else {
-			return bool.booleanValue() ? "1" : "0";
-		}
 	}
 
 	/**

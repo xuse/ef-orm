@@ -51,7 +51,7 @@ public abstract class AutoIncrementMapping<T> extends ATypeMapping<T> {
 	@Override
 	public void init(Field field, String columnName, ColumnType type, ITableMetadata meta) {
 		super.init(field, columnName, type, meta);
-		len = ((AutoIncrement) type).getLength();
+		len = ((AutoIncrement) type).getPrecision();
 		this.isBig = len > 10;
 	}
 	

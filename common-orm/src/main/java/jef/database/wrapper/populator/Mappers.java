@@ -12,7 +12,7 @@ import jef.database.ConnectInfo;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.DbmsProfile;
+import jef.database.dialect.AbstractDialect;
 import jef.database.dialect.type.ColumnMappings;
 import jef.database.dialect.type.MappingType;
 import jef.database.dialect.type.ResultSetAccessor;
@@ -357,7 +357,7 @@ public final class Mappers {
 	/*
 	 * 内部使用，用于将列名一律转为大写
 	 */
-	public static DatabaseDialect UPPER_COLUMNS = new DbmsProfile() {
+	public static DatabaseDialect UPPER_COLUMNS = new AbstractDialect() {
 		public RDBMS getName() {
 			return null;
 		}

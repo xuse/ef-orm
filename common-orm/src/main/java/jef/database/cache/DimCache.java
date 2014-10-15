@@ -6,17 +6,17 @@ import java.util.Map;
 
 public class DimCache {
 
-	private Map<List<Object>, List<?>> sqlCache = new HashMap<List<Object>, List<?>>(10);
+	private Map<List<?>, List<?>> sqlCache = new HashMap<List<?>, List<?>>(10);
 
-	public List<?> load(List<Object> params) {
+	public List<?> load(List<?> params) {
 		return sqlCache.get(params);
 	}
 
-	public void remove(List<Object> params) {
+	public void remove(List<?> params) {
 		sqlCache.remove(params);
 	}
 
-	public void put(List<Object> params, List<?> obj) {
+	public void put(List<?> params, List<?> obj) {
 		sqlCache.put(params, obj);
 	}
 

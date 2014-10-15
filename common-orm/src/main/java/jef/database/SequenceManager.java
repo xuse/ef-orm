@@ -73,9 +73,9 @@ public final class SequenceManager {
 						client = (OperateTarget) client.getSession().getSqlTemplate(StringUtils.trimToNull(datasource));
 					}
 					if (type == GenerationType.SEQUENCE) {
-						s = createSequence(name, client, a.getLength(), fieldDef.getMeta().getTableName(true), fieldDef.columnName(), a.getSeqGenerator());
+						s = createSequence(name, client, a.getPrecision(), fieldDef.getMeta().getTableName(true), fieldDef.columnName(), a.getSeqGenerator());
 					} else if (type == GenerationType.TABLE) {
-						s = createTable(name, client, a.getLength(), fieldDef.getMeta().getTableName(true), fieldDef.columnName(), a.getTableGenerator());
+						s = createTable(name, client, a.getPrecision(), fieldDef.getMeta().getTableName(true), fieldDef.columnName(), a.getTableGenerator());
 					}
 					holders.put(name, wrapForHilo((AbstractSequence) s, a.getHiloConfig()));
 				}

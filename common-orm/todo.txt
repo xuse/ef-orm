@@ -68,6 +68,7 @@ org.easyframe.tutorial.lesson7.Case1.testLimitKeyword()中关于NAtiveQuery的co
 重构，取消特殊的metadata连接池。共用统一的连接池。(OK)
 其他和JTA有关的混合事务支持案例编写(OK)
 优化reorder算法(OK)
+一级缓存的主键优化(OK)
 ==========文档补充============
 更新文档中的站点
 reivew和修订文档
@@ -87,8 +88,14 @@ reivew和修订文档
 
 编写《论一种新的多结果集排序算法》
 
+测试新增的几个接口.(OK待文档)
+
 ==============特性展示===============
 特点一
+
+特点：用简单的API操作数据库的DDL(建表、删表、操作索引、修改表)
+
+
 1、Query与Entity的统一，一体两面的事物。 更少的类，更灵活的用法。
 2、Query不仅仅是代表查询条件，而是一个完整SQL操作的描述。
 3、由Query为核心构成的 Criteria API，解决了xQL和Criteria青黄不接的问题。
@@ -110,58 +117,9 @@ reivew和修订文档
 
 
 ================ 待解决的问题  ===================
+按主键查询和插入逻辑优化(使用分析工具进一步分析并优化。)
+更新性能分析报告。关于oltp类操作优化
 
-按义林想法加上hashCode计算情况如何
-
- 排序算法再次优化
-	public boolean next() {
-		if (this.activeRs != null) {
-			// 加入后重新排序
-			if (this.activeRs.next()) {
-				ResultSet rs=gettingResults.put(activeRs,activeRs);
-				if(rs==null){
-					gettingResults.pollFirstEntry();
-				}
-			}else{
-				gettingResults.pollFirstEntry();
-			}
-		}
-		if(gettingResults.isEmpty()){
-			return false;
-		}else{
-			activeRs = gettingResults.firstKey();//pollFirstEntry().getKey()
-			return true;
-		}
-	}
-
-public int compare(ResultSet value, ResultSet value2) {
-		if(value==value2)return 0;
-		int len = orders.size();
-		int[] orderFields = orders.getOrderFields();
-		boolean[] orderAscendent = orders.getOrderAsc();
-		int retVal = 0;
-		for (int i = 0; i < len; i++) {
-			try {
-				retVal = compares(value.getObject(orderFields[i]), value2.getObject(orderFields[i]));
-			} catch (SQLException e) {
-				throw new PersistenceException(e);
-			}
-			if(retVal!=0){
-				return orderAscendent[i]?retVal:-retVal; 
-			}
-		}
-		return Integer.valueOf(value.hashCode()).compareTo(value2.hashCode());
-	}
-
-
-
-
-
-
-按主键查询逻辑优化
->>>>>>> 2787cdb7019f7b3f90194a0151a36f2efdee6318
-之前性能测试均为极端情况，测试综合工况，如10条记录左右的查询查询500次耗时。 如update语句更新500次。
-按主键查询逻辑优化(OK,优化约10%性能，剩余等结果集拼装优化再说)
 
 支持读写分离模式
 MSSQL Server方言支持

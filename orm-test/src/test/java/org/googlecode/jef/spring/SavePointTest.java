@@ -9,7 +9,7 @@ import javax.sql.DataSource;
 
 import jef.common.log.LogUtil;
 import jef.database.DbUtils;
-import jef.database.dialect.DbmsProfile;
+import jef.database.dialect.AbstractDialect;
 import jef.database.test.JDBCUtil;
 
 import org.junit.Test;
@@ -19,7 +19,7 @@ import org.junit.Test;
 public class SavePointTest {
 	@Test
 	public void testMetadata() throws SQLException{
-		String url=DbmsProfile.getProfile("mysql").generateUrl("localhost", 3307, "test");
+		String url=AbstractDialect.getProfile("mysql").generateUrl("localhost", 3307, "test");
 		DataSource ds=DbUtils.createSimpleDataSource(url, "root", "admin");
 		System.out.println(url);
 		Connection conn=ds.getConnection();
@@ -42,7 +42,7 @@ public class SavePointTest {
 	
 	@Test
 	public void testSp() throws SQLException{
-		String url=DbmsProfile.getProfile("mysql").generateUrl("localhost", 3307, "test");
+		String url=AbstractDialect.getProfile("mysql").generateUrl("localhost", 3307, "test");
 		DataSource ds=DbUtils.createSimpleDataSource(url, "root", "admin");
 		Connection conn=ds.getConnection();
 		

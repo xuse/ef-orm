@@ -1,5 +1,6 @@
 package jef.database.meta;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -9,6 +10,7 @@ import java.util.List;
 import jef.database.DbCfg;
 import jef.database.DbUtils;
 import jef.database.Field;
+import jef.database.IQueryableEntity;
 import jef.database.annotation.BindDataSource;
 import jef.database.cache.KeyDimension;
 import jef.database.dialect.ColumnType;
@@ -16,6 +18,8 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.MappingType;
 import jef.database.query.DbTable;
 import jef.database.query.JpqlExpression;
+import jef.database.query.PKQuery;
+import jef.database.wrapper.clause.BindSql;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 
@@ -116,12 +120,10 @@ public abstract class MetadataAdapter implements ITableMetadata {
 			return getColumnName(fld, profile, true);
 		}
 	}
-
-	public KeyDimension getPkDimension() {
-		return null;
-	}
+	
 	private DbTable cachedTable;
 	private DatabaseDialect bindProfile;
+	private KeyDimension pkDim;
 	
 	public DbTable getBaseTable(DatabaseDialect profile){
 		if(bindProfile!=profile){
@@ -135,5 +137,16 @@ public abstract class MetadataAdapter implements ITableMetadata {
 	private void initCache(DatabaseDialect profile) {
 		bindProfile=profile;
 		cachedTable=new DbTable(bindDsName, profile.getObjectNameIfUppercase(getTableName(true)),false,false);
+	}
+
+
+	public KeyDimension getPKDimension(List<Serializable> pks,DatabaseDialect profile) {
+		if(pkDim==null){
+			PKQuery<?> query=new PKQuery<IQueryableEntity>(this, pks,instance());
+			BindSql sql = query.toPrepareWhereSql(null, profile);
+			KeyDimension dim = new KeyDimension(sql.getSql(), null);
+			pkDim=dim;
+		}
+		return pkDim;
 	}
 }

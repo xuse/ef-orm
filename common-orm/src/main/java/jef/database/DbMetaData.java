@@ -127,9 +127,9 @@ import org.easyframe.enterprise.spring.TransactionMode;
  * @author Jiyi
  * 
  */
-public class DbMetaData{
-	public final Set<String> checkedFunctions=new HashSet<String>();
-	
+public class DbMetaData {
+	public final Set<String> checkedFunctions = new HashSet<String>();
+
 	private String dbkey;
 
 	private ConnectInfo info;
@@ -170,21 +170,20 @@ public class DbMetaData{
 
 	private IUserManagedPool parent;
 
-	
 	protected Connection getConnection(boolean b) throws SQLException {
 		Connection conn;
-		if(b && (ds instanceof SimpleDataSource) && hasRemarkFeature()){
+		if (b && (ds instanceof SimpleDataSource) && hasRemarkFeature()) {
 			Properties props = new Properties();
 			props.put("remarksReporting", "true");
-			conn=((SimpleDataSource) ds).getConnectionFromDriver(props);
-		}else{
-			IConnection ic=parent.poll();
+			conn = ((SimpleDataSource) ds).getConnectionFromDriver(props);
+		} else {
+			IConnection ic = parent.poll();
 			ic.setKey(dbkey);
-			conn=ic;
+			conn = ic;
 		}
 		return conn;
 	}
-	
+
 	/**
 	 * 构造
 	 * 
@@ -196,10 +195,10 @@ public class DbMetaData{
 	 *            当前元数据所属的数据源名称
 	 */
 	public DbMetaData(DataSource ds, IUserManagedPool parent, String dbkey) {
-		this.ds=ds;
-		this.parent=parent;
+		this.ds = ds;
+		this.parent = parent;
 		this.dbkey = dbkey;
-		
+
 		this.subtableInterval = JefConfiguration.getInt(DbCfg.DB_PARTITION_REFRESH, 3600) * 1000;
 		this.subtableCacheExpireTime = System.currentTimeMillis() + subtableInterval;
 		this.parent = parent;
@@ -246,18 +245,18 @@ public class DbMetaData{
 	 * @throws SQLException
 	 */
 	public List<TableInfo> getTables(boolean needRemark) throws SQLException {
-		return getDatabaseObject(ObjectType.TABLE, this.schema, null, null,needRemark);
+		return getDatabaseObject(ObjectType.TABLE, this.schema, null, null, needRemark);
 	}
-	
+
 	/**
 	 * 返回数据库中所有的表(当前schema下)
+	 * 
 	 * @return
-	 * @throws SQLException 
+	 * @throws SQLException
 	 */
 	public List<TableInfo> getTables() throws SQLException {
-		return getDatabaseObject(ObjectType.TABLE, this.schema, null, null,false);
+		return getDatabaseObject(ObjectType.TABLE, this.schema, null, null, false);
 	}
-	
 
 	public void setDbTimeDelta(long dbTimeDelta) {
 		this.dbTimeDelta = dbTimeDelta;
@@ -282,7 +281,7 @@ public class DbMetaData{
 	 * @return 视图信息
 	 */
 	public List<TableInfo> getView(String name) throws SQLException {
-		return getDatabaseObject(ObjectType.VIEW, this.schema, getProfile().getObjectNameIfUppercase(name), null,false);
+		return getDatabaseObject(ObjectType.VIEW, this.schema, getProfile().getObjectNameIfUppercase(name), null, false);
 	}
 
 	/**
@@ -292,7 +291,7 @@ public class DbMetaData{
 	 * @throws SQLException
 	 */
 	public List<TableInfo> getViews(boolean needRemark) throws SQLException {
-		return getDatabaseObject(ObjectType.VIEW, this.schema, null, null,needRemark);
+		return getDatabaseObject(ObjectType.VIEW, this.schema, null, null, needRemark);
 	}
 
 	/**
@@ -304,7 +303,7 @@ public class DbMetaData{
 	public List<CommentEntry> getSequence(String name) throws SQLException {
 		List<CommentEntry> result = new ArrayList<CommentEntry>();
 
-		for (TableInfo table : getDatabaseObject(ObjectType.SEQUENCE, this.schema, getProfile().getObjectNameIfUppercase(name), null,false)) {
+		for (TableInfo table : getDatabaseObject(ObjectType.SEQUENCE, this.schema, getProfile().getObjectNameIfUppercase(name), null, false)) {
 			CommentEntry e = new CommentEntry();
 			e.setKey(table.getName());
 			e.setValue(table.getRemarks());
@@ -326,7 +325,7 @@ public class DbMetaData{
 	 * @throws SQLException
 	 * @see Operator
 	 */
-	public List<TableInfo> getDatabaseObject(ObjectType type, String schema, String matchName, Operator oper,boolean needRemark) throws SQLException {
+	public List<TableInfo> getDatabaseObject(ObjectType type, String schema, String matchName, Operator oper, boolean needRemark) throws SQLException {
 		if (schema == null)
 			schema = this.schema;
 		if (matchName != null) {
@@ -360,9 +359,10 @@ public class DbMetaData{
 				info.setSchema(rs.getString("TABLE_SCHEM"));
 				info.setName(rs.getString("TABLE_NAME"));
 				info.setType(rs.getString("TABLE_TYPE"));// "TABLE","VIEW",
-														// "SYSTEM TABLE",
-														// "GLOBAL TEMPORARY","LOCAL TEMPORARY",
-														// "ALIAS", "SYNONYM".
+															// "SYSTEM TABLE",
+															// "GLOBAL TEMPORARY","LOCAL TEMPORARY",
+															// "ALIAS",
+															// "SYNONYM".
 				info.setRemarks(rs.getString("REMARKS"));
 				result.add(info);
 			}
@@ -511,6 +511,7 @@ public class DbMetaData{
 
 	/**
 	 * 得到指定表的所有列
+	 * 
 	 * @param tableName
 	 * @return
 	 * @throws SQLException
@@ -518,8 +519,7 @@ public class DbMetaData{
 	public List<Column> getColumns(String tableName) throws SQLException {
 		return getColumns(tableName, false);
 	}
-	
-	
+
 	/**
 	 * 得到指定表的所有列
 	 * 
@@ -529,10 +529,9 @@ public class DbMetaData{
 	 * @throws SQLException
 	 * @see Column
 	 */
-	public List<Column> getColumns(String tableName,boolean needRemark) throws SQLException {
+	public List<Column> getColumns(String tableName, boolean needRemark) throws SQLException {
 		tableName = info.profile.getObjectNameIfUppercase(tableName);
-		
-		
+
 		Connection conn = getConnection(needRemark);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 
@@ -643,6 +642,11 @@ public class DbMetaData{
 		String version = databaseMetaData.getDatabaseProductVersion();
 		releaseConnection(conn);
 		return version;
+	}
+
+	public DatabaseMetaData get() throws SQLException {
+		Connection conn = getConnection(false);
+		return conn.getMetaData();
 	}
 
 	/**
@@ -1256,7 +1260,7 @@ public class DbMetaData{
 			LogUtil.warn("Current database [{}] doesn't support alter table column.", profile.getName());
 		}
 
-		List<Column> columns = this.getColumns(tablename,false);
+		List<Column> columns = this.getColumns(tablename, false);
 		if (columns.isEmpty()) {// 表不存在
 			if (allowCreateTable) {
 				boolean created = false;
@@ -1312,10 +1316,9 @@ public class DbMetaData{
 		if (event != null && event.onColumnsCompared(tablename, meta, insert, changed, delete) == false) {
 			return;
 		}
-
 		List<String> altertables = ddlGenerator.toTableModifyClause(meta, tablename, insert, changed, delete);
 		boolean debug = ORMConfig.getInstance().isDebugMode();
-		StatementExecutor exe=createExecutor();
+		StatementExecutor exe = createExecutor();
 		try {
 			exe.setQueryTimeout(180);// 最多执行3分钟
 			String id = this.getTransactionId();
@@ -1325,9 +1328,6 @@ public class DbMetaData{
 			int n = 0;
 			for (String s : altertables) {
 				long start = System.currentTimeMillis();
-				if (debug) {
-					LogUtil.show(s + " |" + id);
-				}
 				boolean success = true;
 				try {
 					exe.executeSql(s);
@@ -1451,10 +1451,10 @@ public class DbMetaData{
 	 * executor.close(); }
 	 */
 	private StatementExecutor createExecutor() {
-		if(parent.getTransactionMode()==TransactionMode.JTA){
+		if (parent.getTransactionMode() == TransactionMode.JTA) {
 			return new ExecutorJTAImpl(parent, dbkey, getTransactionId());
-		}else{
-			return new ExecutorImpl(parent,dbkey,getTransactionId());
+		} else {
+			return new ExecutorImpl(parent, dbkey, getTransactionId());
 		}
 	}
 
@@ -1563,14 +1563,13 @@ public class DbMetaData{
 	 * @throws SQLException
 	 */
 	public final int executeSql(String sql, Object... ps) throws SQLException {
-		StatementExecutor exe=createExecutor();
-		try{
+		StatementExecutor exe = createExecutor();
+		try {
 			return exe.executeUpdate(sql, ps);
-		}finally{
+		} finally {
 			exe.close();
 		}
 	}
-	
 
 	/**
 	 * 根据指定的SQL语句查询
@@ -1624,7 +1623,6 @@ public class DbMetaData{
 	 * @author jiyi
 	 * 
 	 */
-	
 
 	/**
 	 * 删除表中的约束
@@ -1707,7 +1705,7 @@ public class DbMetaData{
 				if (getProfile().has(Feature.DROP_CASCADE)) {
 					sql += " cascade constraints";
 				} else if (getProfile().notHas(Feature.NOT_SUPPORT_FOREIGN_KEY)) {
-					dropAllForeignKey0(table, null,exe);
+					dropAllForeignKey0(table, null, exe);
 				}
 				exe.executeSql(sql);
 				subtableCacheExpireTime = 0;
@@ -1814,12 +1812,12 @@ public class DbMetaData{
 	 */
 	private Set<String> calculateSubTables(String tableName, ITableMetadata meta, boolean isDefault) throws SQLException {
 		long start = System.currentTimeMillis();
-		List<Column> columns = getColumns(tableName,false);
+		List<Column> columns = getColumns(tableName, false);
 		int baseColumnCount = columns.size();
 		if (baseColumnCount == 0) {
 			baseColumnCount = meta.getMetaFields().size();
 		}
-		List<TableInfo> tables = getDatabaseObject(ObjectType.TABLE, this.schema, tableName, Operator.MATCH_START,false);
+		List<TableInfo> tables = getDatabaseObject(ObjectType.TABLE, this.schema, tableName, Operator.MATCH_START, false);
 		String tableNameWithoutSchema = StringUtils.substringAfterIfExist(tableName, ".");
 		// 正则表达式计算
 		Pattern suffix;
@@ -1856,7 +1854,7 @@ public class DbMetaData{
 		for (TableInfo entry : tables) {
 			if (suffix.matcher(entry.getName()).matches()) {
 				String fullTableName = schema == null ? entry.getName() : schema + "." + entry.getName();
-				List<Column> subColumns = getColumns(fullTableName,false);
+				List<Column> subColumns = getColumns(fullTableName, false);
 				if (subColumns.size() == baseColumnCount) {
 					result.add(fullTableName.toUpperCase());
 				} else {
@@ -2079,30 +2077,32 @@ public class DbMetaData{
 		return profile.has(Feature.REMARK_META_FETCH);
 	}
 
-
-//	@Override
-//	protected boolean processCheck(Connection conn) {
-//		DatabaseDialect dialect = getProfile();
-//		String func = dialect.getFunction(Func.current_timestamp);
-//		String template = dialect.getProperty(DbProperty.SELECT_EXPRESSION);
-//		String sql;
-//		if (template == null) {
-//			sql = "SELECT " + func;
-//		} else {
-//			sql = String.format(template, func);
-//		}
-//		try {
-//			long current = System.currentTimeMillis();
-//			Date date = this.selectBySql(sql, ResultSetExtractor.GET_FIRST_TIMESTAMP, 1, Collections.EMPTY_LIST);
-//			current = (System.currentTimeMillis() + current) / 2;// 取两次操作的平均值，排除数据库查询误差
-//			long delta = date.getTime() - System.currentTimeMillis();
-//			if (Math.abs(delta) > 60000) { // 如果时间差大于1分钟则警告
-//				LogUtil.warn("Database time checked. It is far different from local machine: " + DateUtils.formatTimePeriod(delta, TimeUnit.DAY, Locale.US));
-//			}
-//			this.dbTimeDelta = delta;
-//			return true;
-//		} catch (SQLException e) {
-//			return false;
-//		}
-//	}
+	// @Override
+	// protected boolean processCheck(Connection conn) {
+	// DatabaseDialect dialect = getProfile();
+	// String func = dialect.getFunction(Func.current_timestamp);
+	// String template = dialect.getProperty(DbProperty.SELECT_EXPRESSION);
+	// String sql;
+	// if (template == null) {
+	// sql = "SELECT " + func;
+	// } else {
+	// sql = String.format(template, func);
+	// }
+	// try {
+	// long current = System.currentTimeMillis();
+	// Date date = this.selectBySql(sql, ResultSetExtractor.GET_FIRST_TIMESTAMP,
+	// 1, Collections.EMPTY_LIST);
+	// current = (System.currentTimeMillis() + current) / 2;//
+	// 取两次操作的平均值，排除数据库查询误差
+	// long delta = date.getTime() - System.currentTimeMillis();
+	// if (Math.abs(delta) > 60000) { // 如果时间差大于1分钟则警告
+	// LogUtil.warn("Database time checked. It is far different from local machine: "
+	// + DateUtils.formatTimePeriod(delta, TimeUnit.DAY, Locale.US));
+	// }
+	// this.dbTimeDelta = delta;
+	// return true;
+	// } catch (SQLException e) {
+	// return false;
+	// }
+	// }
 }

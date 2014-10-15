@@ -603,7 +603,7 @@ public abstract class Session {
 		insertp.processInsert(asOperateTarget(sqls.getTable().getDatabase()), obj, sqls, start, parse);
 
 		obj.clearUpdate();
-		getCache().onInsert(obj);
+		getCache().onInsert(obj,myTableName);
 		getListener().afterInsert(obj, this);
 	}
 
@@ -1185,9 +1185,9 @@ public abstract class Session {
 	/**
 	 * 按指定的字段加载记录
 	 * 
-	 * @param field
-	 * @param values
-	 * @return
+	 * @param field 作为查询条件的字段
+	 * @param values 要查询的值
+	 * @return 符合条件的记录
 	 * @throws SQLException
 	 */
 	@SuppressWarnings("unchecked")
@@ -1199,7 +1199,7 @@ public abstract class Session {
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T> List<T> batchLoadByPK0(Class<T> obj, List<Object> pkValues) throws SQLException {
+	private <T> List<T> batchLoadByPK0(Class<T> obj, List<?> pkValues) throws SQLException {
 		ITableMetadata meta = MetaHolder.getMeta(obj);
 		if (meta.getPKFields().size() != 1) {
 			throw new SQLException("Only supports [1] column as primary key, but " + obj.getSimpleName() + " has " + meta.getPKFields().size() + " columns.");
@@ -1216,7 +1216,7 @@ public abstract class Session {
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T extends IQueryableEntity> List<T> batchLoadByField0(Field field, List<Object> values) throws SQLException {
+	private <T extends IQueryableEntity> List<T> batchLoadByField0(Field field, List<?> values) throws SQLException {
 		ITableMetadata meta = DbUtils.getTableMeta(field);
 		Query<?> q = meta.instance().getQuery();
 		q.addCondition(field, Operator.IN, values);
@@ -1224,25 +1224,25 @@ public abstract class Session {
 	}
 
 	/**
-	 * 按指定的字段加载多条记录
-	 * 
+	 * 按指定的字段加载多条记录.适用与拥有大量键值，需要在数据库中查询与之对应的记录时。<br>
+	 * 查询会使用IN条件来减少操作数据库的次数。如果要查询的条件超过了500个，会自动分多次进行查询。
 	 * @param field
 	 *            字段
 	 * @param values
-	 *            记录值
+	 *            条件值
 	 * @return
 	 * @throws SQLException
 	 */
-	public <T extends IQueryableEntity> List<T> batchLoadByField(jef.database.Field field, List<Object> values) throws SQLException {
-		if (values.size() < 500)
+	public <T extends IQueryableEntity> List<T> batchLoadByField(jef.database.Field field, List<?> values) throws SQLException {
+		if (values.size() < MAX_IN_CONDITIONS)
 			return batchLoadByField0(field, values);
 
 		List<T> result = new ArrayList<T>(800);
 		int offset = 0;
-		while (values.size() - offset > 500) {
-			List<T> r = batchLoadByField0(field, values.subList(offset, offset + 500));
+		while (values.size() - offset > MAX_IN_CONDITIONS) {
+			List<T> r = batchLoadByField0(field, values.subList(offset, offset + MAX_IN_CONDITIONS));
 			result.addAll(r);
-			offset += 500;
+			offset += MAX_IN_CONDITIONS;
 		}
 		if (values.size() > offset) {
 			List<T> r = batchLoadByField0(field, values.subList(offset, values.size()));
@@ -1251,26 +1251,29 @@ public abstract class Session {
 		return result;
 	}
 
+	private static final int  MAX_IN_CONDITIONS=500;
+	
 	/**
-	 * 按主键加载多条记录。适用与拥有大量主键值，需要在数据库中查询与之对应的记录时。
+	 * 按主键加载多条记录。适用与拥有大量主键值，需要在数据库中查询与之对应的记录时。<br>
+	 * 查询会使用IN条件来减少操作数据库的次数。如果要查询的条件超过了500个，会自动分多次进行查询。
 	 * 
 	 * @param clz
 	 *            类
 	 * @param pkValues
-	 *            主键的值
+	 *            主键的值(多值)
 	 * @return 查询结果
 	 * @throws SQLException
 	 */
-	public <T> List<T> batchLoad(Class<T> clz, List<Object> pkValues) throws SQLException {
-		if (pkValues.size() < 500)
+	public <T> List<T> batchLoad(Class<T> clz, List<?> pkValues) throws SQLException {
+		if (pkValues.size() < MAX_IN_CONDITIONS)
 			return batchLoadByPK0(clz, pkValues);
 
 		List<T> result = new ArrayList<T>(800);
 		int offset = 0;
-		while (pkValues.size() - offset > 500) {
-			List<T> r = batchLoadByPK0(clz, pkValues.subList(offset, offset + 500));
+		while (pkValues.size() - offset > MAX_IN_CONDITIONS) {
+			List<T> r = batchLoadByPK0(clz, pkValues.subList(offset, offset + MAX_IN_CONDITIONS));
 			result.addAll(r);
-			offset += 500;
+			offset += MAX_IN_CONDITIONS;
 		}
 		if (pkValues.size() > offset) {
 			result.addAll(batchLoadByPK0(clz, pkValues.subList(offset, pkValues.size())));
@@ -1806,7 +1809,7 @@ public abstract class Session {
 		} catch (Exception e) {
 			throw new SQLException(e.getMessage());
 		}
-		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), new SqlContext(null, template.getQuery()), false, null);
+		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), new SqlContext(null, template.getQuery()), false, getProfile(null));
 		for (BindVariableDescription bind : wherePart.getBind()) {
 			bind.setInBatch(true);
 		}
@@ -1830,7 +1833,7 @@ public abstract class Session {
 	public final <T extends IQueryableEntity> Batch<T> startBatchDelete(T template, String tableName) throws SQLException {
 		// 位于批当中的绑定变量
 		long start = System.nanoTime();
-		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), new SqlContext(null, template.getQuery()), false, null);
+		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), new SqlContext(null, template.getQuery()), false, getProfile(null));
 		for (BindVariableDescription bind : wherePart.getBind()) {
 			bind.setInBatch(true);
 		}
@@ -1965,7 +1968,7 @@ public abstract class Session {
 		long start = System.nanoTime();
 		Entry<List<String>, List<Field>> updatePart = rProcessor.toPrepareUpdateClause((IQueryableEntity) template, null, dynamic);
 		// 位于批当中的绑定变量
-		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), new SqlContext(null, template.getQuery()), true, null);
+		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), new SqlContext(null, template.getQuery()), true, getProfile(null));
 		for (BindVariableDescription bind : wherePart.getBind()) {
 			bind.setInBatch(true);
 		}

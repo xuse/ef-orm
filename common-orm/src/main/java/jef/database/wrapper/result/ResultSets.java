@@ -20,11 +20,15 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import jef.common.log.LogUtil;
+import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.tools.JefConfiguration;
@@ -99,12 +103,38 @@ public class ResultSets {
 			}
 		}
 	}
+	
+	public static List<Map<String,Object>> toMap(ResultSet rs) throws SQLException{
+		List<Map<String,Object>> result=new ArrayList<Map<String,Object>>();
+		ResultSetMetaData meta=rs.getMetaData();
+		int cols=meta.getColumnCount();
+		while(rs.next()){
+			Map<String,Object> map=new HashMap<String,Object>();
+			for(int i=1;i<=cols;i++){
+				map.put(meta.getColumnName(i), rs.getObject(i));
+			}
+			result.add(map);
+		}
+		DbUtils.close(rs);
+		return result;
+	}
+	
+	public static List<Object> toObject(ResultSet rs,int column) throws SQLException{
+		List<Object> result=new ArrayList<Object>();
+		ResultSetMetaData meta=rs.getMetaData();
+		result.add("("+meta.getColumnName(column)+")");
+		while(rs.next()){
+			result.add(rs.getObject(column));
+		}
+		DbUtils.close(rs);
+		return result;
+	}
 
-	public static List<Object> toObjectList(IResultSet wrapper, int column, int maxReturn) throws SQLException {
-		// String dateType = wrapper.getColumns().getColumns()[0].getType();
+	public static List<Object> toObjectList(ResultSet wrapper, int column, int maxReturn) throws SQLException {
+		if(maxReturn==0)maxReturn=Integer.MAX_VALUE;
 		int count = 0;
 		List<Object> data = new ArrayList<Object>();
-		while (wrapper.next() && count <= maxReturn) {
+		while (wrapper.next() && count < maxReturn) {
 			data.add(wrapper.getObject(column));
 			count++;
 		}

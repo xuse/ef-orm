@@ -146,8 +146,8 @@ public class PoolService {
 					try{
 						flag = conn.checkValid(5);
 					}catch(AbstractMethodError e){ //JDBC未实现此方法
-						LogUtil.exception(e);
-						LogUtil.warn("The Connection Check was disabled since the JDBC Driver doesn't support 'isValid(I)Z'");
+						//LogUtil.exception(e);无需输入堆栈
+						LogUtil.warn("The Connection Check was disabled since the JDBC Driver doesn't support 'isValid(I)Z'"+conn.toString());
 						return -1;
 					}
 				} else {

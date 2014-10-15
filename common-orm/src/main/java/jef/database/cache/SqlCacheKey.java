@@ -8,7 +8,7 @@ import org.apache.commons.lang.StringUtils;
 public class SqlCacheKey implements CacheKey{
 	private String table;
 	private KeyDimension dimension;
-	private List<Object> params;
+	private List<?> params;
 	
 	public SqlCacheKey(){
 	}
@@ -22,7 +22,7 @@ public class SqlCacheKey implements CacheKey{
 	}
 
 	
-	public SqlCacheKey(String tableName,KeyDimension dim,List<Object> params){
+	public SqlCacheKey(String tableName,KeyDimension dim,List<?> params){
 		this.table=formatTable(tableName);
 		this.dimension=dim;
 		this.params=params;
@@ -32,7 +32,7 @@ public class SqlCacheKey implements CacheKey{
 		return table;
 	}
 
-	public List<Object> getParams() {
+	public List<?> getParams() {
 		return params;
 	}
 

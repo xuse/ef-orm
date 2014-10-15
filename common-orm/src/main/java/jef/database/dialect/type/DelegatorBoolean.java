@@ -7,7 +7,11 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Feature;
 import jef.database.wrapper.result.IResultSet;
 
-
+/**
+ * 要求的数据库类型为Boolean，但实际上根据数据库特性，有BIT、CHAR(1)、BOOLEAN等多种实现
+ * @author jiyi
+ *
+ */
 public final class DelegatorBoolean extends ATypeMapping<Boolean>{
 	private ATypeMapping<Boolean> real;
 	private DatabaseDialect profile;
@@ -20,6 +24,7 @@ public final class DelegatorBoolean extends ATypeMapping<Boolean>{
 	}
 
 	private void init(DatabaseDialect profile) {
+		
 		if(profile.has(Feature.SUPPORT_BOOLEAN)){
 			real=new BooleanBoolMapping();
 		}else{

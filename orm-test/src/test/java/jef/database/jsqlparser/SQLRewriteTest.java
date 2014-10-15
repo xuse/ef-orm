@@ -5,7 +5,7 @@ import java.util.List;
 
 import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.DbmsProfile;
+import jef.database.dialect.AbstractDialect;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.visitor.Statement;
@@ -20,10 +20,10 @@ import org.junit.Test;
  * 
  */
 public class SQLRewriteTest extends org.junit.Assert {
-	private DatabaseDialect oracle = DbmsProfile.getProfile("oracle");
-	private DatabaseDialect derby = DbmsProfile.getProfile("derby");
-	private DatabaseDialect mysql = DbmsProfile.getProfile("mysql");
-	private DatabaseDialect postgres = DbmsProfile.getProfile("postgresql");
+	private DatabaseDialect oracle = AbstractDialect.getProfile("oracle");
+	private DatabaseDialect derby = AbstractDialect.getProfile("derby");
+	private DatabaseDialect mysql = AbstractDialect.getProfile("mysql");
+	private DatabaseDialect postgres = AbstractDialect.getProfile("postgresql");
 
 	@Test
 	public void test1() throws ParseException {

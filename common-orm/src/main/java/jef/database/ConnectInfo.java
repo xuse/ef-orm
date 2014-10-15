@@ -2,7 +2,8 @@ package jef.database;
 
 import javax.persistence.PersistenceException;
 
-import jef.database.dialect.DbmsProfile;
+import jef.database.dialect.AbstractDialect;
+import jef.database.dialect.DatabaseDialect;
 import jef.tools.Assert;
 
 /**
@@ -16,7 +17,7 @@ public class ConnectInfo {
 	String user;
 	String password;
 	// 三项高级信息
-	DbmsProfile profile;
+	DatabaseDialect profile;
 	String dbname;
 	String host;
 	/**
@@ -65,14 +66,14 @@ public class ConnectInfo {
 	 * 获得方言
 	 * @return database dialect
 	 */
-	public DbmsProfile getProfile() {
+	public DatabaseDialect getProfile() {
 		return profile;
 	}
 	/**
 	 * 设置方言
 	 * @param profile
 	 */
-	public void setProfile(DbmsProfile profile) {
+	public void setProfile(AbstractDialect profile) {
 		this.profile = profile;
 	}
 	/**
@@ -146,7 +147,7 @@ public class ConnectInfo {
 	 * jdbc:mimer:multi1 com.mimer.jdbc.Driver 
 	 * @return
 	 */
-	DbmsProfile parse(){
+	DatabaseDialect parse(){
 		Assert.notNull(url);
 		int start=url.indexOf("jdbc:");
 		if(start==-1){
@@ -154,7 +155,7 @@ public class ConnectInfo {
 		}
 		int end=url.indexOf(':',start+5);
 		String dbType=url.substring(start+5,end);
-		profile=DbmsProfile.getProfile(dbType); //传入时会自动转为小写
+		profile=AbstractDialect.getProfile(dbType); //传入时会自动转为小写
 		if(profile==null){
 			throw new PersistenceException("database not supported:"+dbType);
 		}

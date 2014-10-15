@@ -61,7 +61,9 @@ public abstract class Batch<T extends IQueryableEntity> {
 	 * 关闭时，按照不分表场景下的表名称，适用于用户能确保操作的所有数据位于一张表中的情况，以及用户自定义表名的情况
 	 */
 	private boolean groupForPartitionTable;
-
+	/**
+	 * 执行影响的总记录行数
+	 */
 	private int executeResult;
 	/**
 	 * 极限模式，极限模式下，会使用数据库本地特性来尽可能加速操作。 极限模式下，禁用数据回写功能。
@@ -370,7 +372,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			} else {
 				for (T t : listValue) {
 					try {
-						cache.onInsert(t);
+						cache.onInsert(t,forceTableName);
 						listener.afterInsert(t, parent);
 					} catch (Exception e) {
 						LogUtil.exception(e);

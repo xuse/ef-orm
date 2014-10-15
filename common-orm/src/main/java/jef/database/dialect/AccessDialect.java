@@ -27,7 +27,7 @@ import jef.database.support.RDBMS;
  * @author Administrator
  *
  */
-public class AccessDialect extends DbmsProfile{
+public class AccessDialect extends AbstractDialect{
 	
 	public AccessDialect() {
 		super();
@@ -35,9 +35,6 @@ public class AccessDialect extends DbmsProfile{
 		setProperty(DbProperty.MODIFY_COLUMN, "MODIFY COLUMN");
 		setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");
 
-	}
-	public String getGeneratedFetchFunction() {
-		return null;
 	}
 
 	public String getDriverClass(String url) {

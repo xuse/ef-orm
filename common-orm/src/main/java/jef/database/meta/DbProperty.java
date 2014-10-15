@@ -43,12 +43,18 @@ public enum DbProperty {
 	 * GBASE特性，在Index结尾需要指定USING HASH
 	 * GBase特性，非BITMAP索引需要使用USING HASH进行定义
 	 */
-	INDEX_USING_HASH
+	INDEX_USING_HASH,
+	/**
+	 * 用于返回数据库刚刚生成的自增键的函数
+	 */
+	GET_IDENTITY_FUNCTION
+	
+	
 	//Derby支持一下函数来获得当前环境
 //	CURRENT ISOLATION
 //
 //	CURRENT SCHEMA
 //	
 //	CURRENT_USER
-
+	
 }

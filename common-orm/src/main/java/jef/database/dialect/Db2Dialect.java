@@ -7,7 +7,7 @@ import jef.database.meta.DbProperty;
 import jef.database.support.RDBMS;
 import jef.tools.string.JefStringReader;
 
-public class Db2Dialect extends DbmsProfile{
+public class Db2Dialect extends AbstractDialect{
 
 	public Db2Dialect() {
 		super();
@@ -18,11 +18,6 @@ public class Db2Dialect extends DbmsProfile{
 
 	public RDBMS getName() {
 		return RDBMS.db2;
-	}
-
-	public String getGeneratedFetchFunction() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	public String getDriverClass(String url) {

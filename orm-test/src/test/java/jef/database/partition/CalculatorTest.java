@@ -17,7 +17,7 @@ import jef.database.annotation.PartitionResult;
 import jef.database.annotation.PartitionTable;
 import jef.database.annotation.PartitionTableImpl;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.DbmsProfile;
+import jef.database.dialect.AbstractDialect;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.parser.StSqlParser;
@@ -74,7 +74,7 @@ public class CalculatorTest extends org.junit.Assert{
 		}
 
 		public DatabaseDialect getProfile(String dbkey) {
-			return DbmsProfile.getProfile("oracle");
+			return AbstractDialect.getProfile("oracle");
 		}
 
 		public void ensureTableExists(String db,String table,ITableMetadata meta) {
@@ -92,7 +92,7 @@ public class CalculatorTest extends org.junit.Assert{
 
 	@Test
 	public void testTableResults() throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {
-		DatabaseDialect profile = DbmsProfile.getProfile("mariadb");
+		DatabaseDialect profile = AbstractDialect.getProfile("mariadb");
 //		{
 //			((PartitionKeyImpl) config.key()[0]).function = KeyFunction.RAW;
 //			((PartitionKeyImpl) config.key()[0]).defaultWhenFieldIsNull = "AA, BB, CC";

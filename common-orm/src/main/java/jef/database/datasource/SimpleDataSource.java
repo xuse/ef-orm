@@ -9,7 +9,7 @@ import javax.sql.DataSource;
 
 import jef.common.log.LogUtil;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.DbmsProfile;
+import jef.database.dialect.AbstractDialect;
 import jef.tools.StringUtils;
 
 /**
@@ -123,7 +123,7 @@ public final class SimpleDataSource extends AbstractDataSource implements DataSo
 			if (url.startsWith("jdbc:")) {
 				int m=url.indexOf(':',5);
 				String dbName = url.substring(5, m).trim();
-				DatabaseDialect profile = DbmsProfile.getProfile(dbName);
+				DatabaseDialect profile = AbstractDialect.getProfile(dbName);
 				if (profile == null) {
 					throw new IllegalArgumentException("the db type " + dbName + " not supported!");
 				}

@@ -24,5 +24,5 @@ public interface CacheKey extends Serializable{
 	 * 维度内的参数（坐标）
 	 * @return
 	 */
-	List<Object> getParams();
+	List<?> getParams();
 }

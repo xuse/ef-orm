@@ -43,7 +43,7 @@ import jef.database.support.RDBMS;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtil;
 
-public class SqliteDialect extends DbmsProfile {
+public class SqliteDialect extends AbstractDialect {
 	public SqliteDialect() {
 		features = CollectionUtil.identityHashSet();
 		features.add(Feature.SUPPORT_CONCAT);
@@ -66,6 +66,7 @@ public class SqliteDialect extends DbmsProfile {
 		setProperty(DbProperty.CHECK_SQL, "select 1");
 		setProperty(DbProperty.SELECT_EXPRESSION, "select %s");
 		setProperty(DbProperty.WRAP_FOR_KEYWORD, "\"");
+		setProperty(DbProperty.GET_IDENTITY_FUNCTION, "select last_insert_rowid()");
 
 		registerCompatible(Func.concat, new VarArgsSQLFunction("", "||", ""));
 		
@@ -160,17 +161,8 @@ public class SqliteDialect extends DbmsProfile {
 		
 		
 		registerCompatible(Func.lengthb, new TemplateFunction("rpad", "length(hex(%s))/2"));
-		
-		
-		
-		
 		registerCompatible(Func.translate, new EmuTranslateByReplace());
 		registerCompatible(Func.decode, new EmuDecodeWithCase());
-//		changes() The changes() function returns the number of database rows that were changed or inserted or deleted by the most recently completed INSERT, DELETE, or UPDATE statement, exclusive of statements in lower-level triggers. The changes() SQL function is a wrapper around the sqlite3_changes() C/C++ function and hence follows the same rules for counting changes.  
-//		char(X1,X2,...,XN) The char(X1,X2,...,XN) function returns a string composed of characters having the unicode code point values of integers X1 through XN, respectively.  
-//		glob(X,Y) The glob(X,Y) function is equivalent to the expression "Y GLOB X". Note that the X and Y arguments are reversed in the glob() function relative to the infix GLOB operator. If the sqlite3_create_function() interface is used to override the glob(X,Y) function with an alternative implementation then the GLOB operator will invoke the alternative implementation.  
-//		last_insert_rowid() The last_insert_rowid() function returns the ROWID of the last row insert from the database connection which invoked the function. The last_insert_rowid() SQL function is a wrapper around the sqlite3_last_insert_rowid() C/C++ interface function.  
-
 	}
 
 	@Override
@@ -182,10 +174,6 @@ public class SqliteDialect extends DbmsProfile {
 				sb.append(" not null");
 		}
 		return sb.toString();
-	}
-
-	public String getGeneratedFetchFunction() {
-		return "select last_insert_rowid()";
 	}
 
 	public String getDriverClass(String url) {

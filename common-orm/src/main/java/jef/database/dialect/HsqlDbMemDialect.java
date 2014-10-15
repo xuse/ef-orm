@@ -14,9 +14,7 @@ import jef.database.DbCfg;
 import jef.database.DbUtils;
 import jef.database.ORMConfig;
 import jef.database.OperateTarget;
-import jef.database.dialect.ColumnType.Boolean;
 import jef.database.dialect.ColumnType.Char;
-import jef.database.dialect.ColumnType.Int;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.select.Select;
@@ -39,7 +37,7 @@ import jef.tools.collection.CollectionUtil;
  * HSQLDB的dialect
  * 
  */
-public class HsqlDbMemDialect extends DbmsProfile {
+public class HsqlDbMemDialect extends AbstractDialect {
 	protected static final String DRIVER_CLASS = "org.hsqldb.jdbc.JDBCDriver";
 
 	protected static final String HSQL_PAGE = " limit %next% offset %start%";
@@ -175,59 +173,16 @@ public class HsqlDbMemDialect extends DbmsProfile {
 		setProperty(DbProperty.CHECK_SQL,"select 1 from (VALUES(0))");
 		setProperty(DbProperty.SELECT_EXPRESSION,"select %s from (VALUES(0))");
 		setProperty(DbProperty.WRAP_FOR_KEYWORD,"\"");
-	}
-	
-	
-	@Override
-	protected String getComment(Int column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		if (column.precision <3 ) {
-			sb.append("tinyint");
-		} else if(column.precision< 5){
-			sb.append("smallint");
-		}else if(column.precision<13){
-			sb.append("integer");
-		}else{
-			sb.append("bigint");
-		}
-		if (flag) {
-			if (column.defaultValue != null)
-				sb.append(" default ").append(column.defaultValue.toString());
-			if (!column.nullable)
-				sb.append(" not null");
-		}
-		return sb.toString();
+		setProperty(DbProperty.GET_IDENTITY_FUNCTION, "CALL IDENTITY()");
+		
+		typeNames.put(Types.TINYINT, "tinyint", 0);
+		typeNames.put(Types.INTEGER, "integer", 0);
+		typeNames.put(Types.BOOLEAN, "boolean", 0);
 	}
 
-	
-	@Override
-	protected String getComment(Boolean column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		sb.append("boolean");
-		if (flag) {
-			if (column.defaultValue != null)
-				sb.append(" default ").append(toDefaultString(column.defaultValue));
-			if (!column.nullable)
-				sb.append(" not null");
-		}
-		return sb.toString();
-	}
-
-
-	
 
 	public RDBMS getName() {
 		return RDBMS.hsqldb;
-	}
-
-	/**
-	 * 获取该数据库的返回已生成的主键的函数
-	 * <p>
-	 * HSQLDB: CALL IDENTITY()
-	 * </p>
-	 */
-	public String getGeneratedFetchFunction() {
-		return "CALL IDENTITY()";
 	}
 
 	public String getDriverClass(String url) {

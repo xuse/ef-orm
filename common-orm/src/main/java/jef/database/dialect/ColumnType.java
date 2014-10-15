@@ -16,6 +16,7 @@
 package jef.database.dialect;
 
 import java.io.File;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -78,7 +79,6 @@ import jef.database.meta.ColumnChange;
 import jef.database.meta.ColumnChange.Change;
 import jef.database.meta.Feature;
 import jef.database.support.RDBMS;
-import jef.tools.Assert;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 
@@ -92,6 +92,7 @@ public abstract class ColumnType {
 	private static boolean IS_NATIVE_AUTO = JefConfiguration.getBoolean(DbCfg.DB_AUTOINCREMENT_NATIVE, true);
 
 	protected boolean nullable = true;
+	
 	protected Object defaultValue;
 
 	public String toString() {
@@ -164,15 +165,15 @@ public abstract class ColumnType {
 	 * @return
 	 */
 	public List<ColumnChange> isEqualTo(Column c, DatabaseDialect profile) {
-		ColumnType oldType = toNormal(c.toColumnType(profile));
-		ColumnType newType = toNormal(this);
+		ColumnType oldType = c.toColumnType(profile);
+		ColumnType newType = this;
 		List<ColumnChange> result = new ArrayList<ColumnChange>();
 
 		// 对自增类型的数据不检查缺省值(兼容PG)
 		if (!(this instanceof AutoIncrement)) {
 			// 检查缺省值
-			String a1 = profile.toDefaultString(oldType.defaultValue);
-			String a2 = profile.toDefaultString(newType.defaultValue);
+			String a1 = profile.toDefaultString(oldType.defaultValue,oldType.getSqlType());
+			String a2 = profile.toDefaultString(newType.defaultValue,newType.getSqlType());
 			// 非字符串比较情况下全部按小写处理
 			if (a1 != null && !a1.startsWith("'")) {
 				a1 = StringUtils.lowerCase(a1);
@@ -203,7 +204,7 @@ public abstract class ColumnType {
 		}
 
 		// 再检查数据类型
-		if (this.getClass() == Boolean.class) {// 长度为1的字符或数字都算匹配
+		if (this.getClass() == Boolean.class) {// 长度为1的字符或数字都算匹配.目前对boolean的处理较为含糊
 			if (c.getColumnSize() == 1) {
 				return result;// 不用再比了。
 			}
@@ -215,14 +216,14 @@ public abstract class ColumnType {
 				}
 			}
 		}
-		if (oldType.getClass() == newType.getClass()) {
+		if (c.getDataTypeCode() == newType.getSqlType()) {
 			if (!newType.compare(oldType, profile)) {
-				ColumnChange cg = createChange(oldType, newType, profile);
+				ColumnChange cg = createChange(oldType, c.getDataType() ,newType, profile);
 				if (cg != null)
 					result.add(cg);
 			}
 		} else {
-			ColumnChange cg = createChange(oldType, newType, profile);
+			ColumnChange cg = createChange(oldType, c.getDataType(),newType, profile);
 			if (cg != null)
 				result.add(cg);
 		}
@@ -246,6 +247,13 @@ public abstract class ColumnType {
 	 * @return
 	 */
 	public abstract Class<?> getDefaultJavaType();
+	
+	/**
+	 * 返回对应于java.sql.Types的类型
+	 * @return
+	 */
+	public abstract int getSqlType();
+	
 	/**
 	 * 生成到特定字段类型的映射对象
 	 * @param fieldType
@@ -253,7 +261,7 @@ public abstract class ColumnType {
 	 */
 	public abstract MappingType<?> getMappingType(Class<?> fieldType);
 
-	public final static class Char extends ColumnType {
+	public final static class Char extends ColumnType implements SqlTypeSized {
 		protected int length;
 
 		public Char(int length) {
@@ -304,10 +312,23 @@ public abstract class ColumnType {
 			}
 			throw new IllegalArgumentException("Char can not mapping to class " + fieldType.getName());
 		}
+		@Override
+		public int getSqlType() {
+			return Types.CHAR;
+		}
 
+		@Override
+		public int getPrecision() {
+			return 0;
+		}
+
+		@Override
+		public int getScale() {
+			return 0;
+		}
 	}
 
-	public static final class Varchar extends ColumnType {
+	public static class Varchar extends ColumnType implements SqlTypeSized {
 		protected int length;
 
 		public Varchar(int length) {
@@ -359,6 +380,20 @@ public abstract class ColumnType {
 			}
 			throw new IllegalArgumentException("Varchar can not mapping to class " + fieldType.getName());
 		}
+		@Override
+		public int getSqlType() {
+			return Types.VARCHAR;
+		}
+
+		@Override
+		public int getPrecision() {
+			return 0;
+		}
+
+		@Override
+		public int getScale() {
+			return 0;
+		}
 	}
 
 	/**
@@ -395,9 +430,13 @@ public abstract class ColumnType {
 				throw new UnsupportedOperationException("can not support mapping from ["+fieldType.getName()+" -> boolean]");
 			}
 		}
+		@Override
+		public int getSqlType() {
+			return Types.BOOLEAN;
+		}
 	}
 
-	public static final class Double extends ColumnType {
+	public static final class Double extends ColumnType implements SqlTypeSized{
 		int precision = 16;
 		int scale = 6;
 
@@ -443,7 +482,7 @@ public abstract class ColumnType {
 
 		@Override
 		public MappingType<?> getMappingType(Class<?> fieldType) {
-			boolean isBig = (precision >= 12 || precision + scale >= 16);
+			boolean isBig = (precision >= 18);
 			if (isBig) {
 				if (fieldType == java.lang.Double.class || fieldType == java.lang.Double.TYPE || fieldType == Object.class) {
 					return new NumDoubleDoubleMapping();
@@ -461,10 +500,33 @@ public abstract class ColumnType {
 			}
 			throw new IllegalArgumentException("Double can not mapping to class " + fieldType.getName());
 		}
+		@Override
+		public int getSqlType() {
+			if (precision >= 18) {
+				return Types.DOUBLE;
+			} else {
+				return Types.FLOAT;
+			}
+		}
+
+		@Override
+		public int getLength() {
+			return precision;
+		}
+
+		@Override
+		public int getPrecision() {
+			return precision;
+		}
+
+		@Override
+		public int getScale() {
+			return scale;
+		}
 	}
 
 	// Int 和BigInt，BigInt对应Long,默认10
-	public static final class Int extends ColumnType {
+	public static class Int extends ColumnType implements SqlTypeSized{
 		int precision = 8;
 
 		public Int(int precision) {
@@ -495,9 +557,8 @@ public abstract class ColumnType {
 			map.put("columnDefinition", def);
 			map.put("precision", precision);
 		}
-
-		public void setPrecision(int p) {
-			this.precision = p;
+		public int getPrecision() {
+			return precision;
 		}
 
 		@Override
@@ -535,13 +596,38 @@ public abstract class ColumnType {
 					return new NumIntStringMapping();
 				} else if (fieldType == java.util.Date.class) {
 					return new NumBigDateMapping();
+				} else if(fieldType==java.lang.Boolean.class || fieldType==java.lang.Boolean.TYPE){
+					return new NumIntBooleanMapping();
 				}
 			}
 			throw new IllegalArgumentException("Int can not mapping to class " + fieldType.getName());
 		}
+
+		@Override
+		public int getSqlType() {
+			if (precision <3 ) {
+				return Types.TINYINT;
+			} else if(precision< 5){
+				return Types.SMALLINT;
+			}else if(precision<13){
+				return Types.INTEGER;
+			}else{
+				return Types.BIGINT;
+			}
+		}
+
+		@Override
+		public int getLength() {
+			return precision;
+		}
+
+		@Override
+		public int getScale() {
+			return 0;
+		}
 	}
 
-	public static final class Date extends ColumnType {
+	public static final class Date extends ColumnType implements SqlTypeDateTimeGenerated{
 		//0 不自动生成 1 创建时生成为sysdate 2更新时生成为sysdate 3创建时设置为为java系统时间  4为更新时设置为java系统时间
 		private int generateType;
 
@@ -573,14 +659,6 @@ public abstract class ColumnType {
 			return true;
 		}
 
-		public TimeStamp toTimeStamp() {
-			TimeStamp t = new TimeStamp();
-			t.defaultValue = this.defaultValue;
-			t.nullable = this.nullable;
-			t.generateType = this.generateType;
-			return t;
-		}
-
 		@Override
 		public MappingType<?> getMappingType(Class<?> fieldType) {
 			if (fieldType == java.sql.Date.class) {
@@ -592,9 +670,14 @@ public abstract class ColumnType {
 			}
 			throw new IllegalArgumentException("Date can not mapping to class " + fieldType.getName());
 		}
+
+		@Override
+		public int getSqlType() {
+			return Types.DATE;
+		}
 	}
 
-	public static final class TimeStamp extends ColumnType {
+	public static final class TimeStamp extends ColumnType implements SqlTypeDateTimeGenerated{
 		//0 不自动生成 1 创建时生成为sysdate 2更新时生成为sysdate 3创建时设置为为java系统时间  4为更新时设置为java系统时间
 		private int generateType;
 
@@ -637,6 +720,9 @@ public abstract class ColumnType {
 			}
 			throw new IllegalArgumentException("TimeStamp can not mapping to class " + fieldType.getName());
 		}
+		public int getSqlType() {
+			return Types.TIMESTAMP;
+		}
 	}
 
 	/**
@@ -645,8 +731,7 @@ public abstract class ColumnType {
 	 * 
 	 * @author Administrator
 	 */
-	public static final class AutoIncrement extends ColumnType {
-		int length = 10;
+	public static final class AutoIncrement extends Int {
 		private GenerationType type;
 		private TableGenerator tableGenerator;
 		private SequenceGenerator seqGenerator;
@@ -664,16 +749,6 @@ public abstract class ColumnType {
 			return type;
 		}
 
-		public int getLength() {
-			return length;
-		}
-
-		public Int toNormalType() {
-			Int i = new ColumnType.Int(length);
-			i.notNull();
-			return i;
-		}
-
 		public AutoIncrement(int i) {
 			this(i, GenerationType.AUTO, null, null, null);
 		}
@@ -683,8 +758,7 @@ public abstract class ColumnType {
 		}
 
 		public AutoIncrement(int i, GenerationType type, TableGenerator tg, SequenceGenerator sg, HiloGeneration hilo) {
-			if (i > 0)
-				this.length = i;
+			super(i);
 			this.nullable = false;
 			if (IS_NATIVE_AUTO) {
 				if (type == GenerationType.IDENTITY || type == GenerationType.SEQUENCE) {
@@ -696,22 +770,11 @@ public abstract class ColumnType {
 			this.seqGenerator = sg;
 		}
 
-		public Class<?> getDefaultJavaType() {
-			return length > 10 ? java.lang.Long.TYPE : java.lang.Integer.TYPE;
-		}
-
 		@Override
 		protected void putAnnonation(Map<String, Object> map) {
-			map.put("columnDefinition", "number(" + length + ")");
-			map.put("nullable", java.lang.Boolean.FALSE);
-			map.put("precision", length);
+			super.putAnnonation(map);
 			map.put("@Id", null);
 			map.put("@GeneratedValue", "strategy=GenerationType.SEQUENCE");
-		}
-
-		@Override
-		protected boolean compare(ColumnType type, DatabaseDialect profile) {
-			throw new UnsupportedOperationException();
 		}
 
 		@Override
@@ -723,7 +786,7 @@ public abstract class ColumnType {
 			} else if (fieldType == String.class) {
 				return new AutoStringMapping();
 			} else if (fieldType == Object.class) {
-				return length > 10 ? new AutoLongMapping() : new AutoIntMapping();
+				return this.precision > 10 ? new AutoLongMapping() : new AutoIntMapping();
 
 			}
 			throw new IllegalArgumentException("AutoIncrement can not mapping to class " + fieldType.getName());
@@ -751,14 +814,23 @@ public abstract class ColumnType {
 			}
 			return type;
 		}
+		public Int toNormalType() {
+			Int i = new ColumnType.Int(precision);
+			i.notNull();
+			return i;
+		}
 	}
 
 	/**
 	 * 对应Java数据类型:String 对应数据库类型：oracle:Clob mySql: text Derby: varchar2 sql
 	 * server:不支持 其他：不支持 其他：第一次插入时自动生成
 	 */
-	public static final class GUID extends ColumnType {
+	public static final class GUID extends Varchar {
 		private boolean removeDash;
+		
+		public GUID() {
+			super(36);
+		}
 
 		public boolean isRemoveDash() {
 			return removeDash;
@@ -768,30 +840,11 @@ public abstract class ColumnType {
 			this.removeDash = removeDash;
 		}
 
-		public ColumnType toNormalType() {
-			return new ColumnType.Varchar(36).notNull();
-		}
-
-		public Class<?> getDefaultJavaType() {
-			return java.lang.String.class;
-		}
-
 		@Override
 		protected void putAnnonation(Map<String, Object> map) {
-			String def = "varchar(36)";
-			if (defaultValue != null) {
-				def = def + " default " + String.valueOf(defaultValue);
-			}
-			map.put("columnDefinition", def);
-			map.put("length", 36);
-			map.put("nullable", java.lang.Boolean.FALSE);
+			super.putAnnonation(map);
 			map.put("@Id", null);
 			map.put("@GeneratedValue", "strategy=GenerationType.IDENTITY");
-		}
-
-		@Override
-		protected boolean compare(ColumnType type, DatabaseDialect profile) {
-			throw new UnsupportedOperationException();
 		}
 
 		@Override
@@ -800,6 +853,10 @@ public abstract class ColumnType {
 				throw new IllegalArgumentException();
 			}
 			return new AutoGuidMapping();
+		}
+
+		public ColumnType toNormalType() {
+			return new ColumnType.Varchar(36).notNull();
 		}
 	}
 
@@ -810,7 +867,9 @@ public abstract class ColumnType {
 	 * @author Administrator
 	 * 
 	 */
-	public static class Clob extends ColumnType {
+	public static class Clob extends ColumnType implements SqlTypeSized{
+		private int length;
+		
 		public Class<?> getDefaultJavaType() {
 			return java.lang.String.class;
 		}
@@ -841,6 +900,26 @@ public abstract class ColumnType {
 			}
 			throw new IllegalArgumentException("Clob can not mapping to class " + fieldType.getName());
 		}
+
+		@Override
+		public int getSqlType() {
+			return Types.CLOB;
+		}
+
+		@Override
+		public int getLength() {
+			return length;
+		}
+
+		@Override
+		public int getPrecision() {
+			return 0;
+		}
+
+		@Override
+		public int getScale() {
+			return 0;
+		}
 	}
 
 	/**
@@ -849,7 +928,9 @@ public abstract class ColumnType {
 	 * 
 	 * @author Administrator
 	 */
-	public static class Blob extends ColumnType {
+	public static class Blob extends ColumnType implements SqlTypeSized{
+		private int length;
+		
 		public Class<?> getDefaultJavaType() {
 			return byte[].class;
 		}
@@ -880,6 +961,26 @@ public abstract class ColumnType {
 			}
 			throw new IllegalArgumentException("Blob can not mapping to class " + fieldType.getName());
 		}
+
+		@Override
+		public int getSqlType() {
+			return Types.BLOB;
+		}
+
+		@Override
+		public int getLength() {
+			return length;
+		}
+
+		@Override
+		public int getPrecision() {
+			return 0;
+		}
+
+		@Override
+		public int getScale() {
+			return 0;
+		}
 	}
 	public static class XML extends ColumnType {
 		@Override
@@ -903,12 +1004,26 @@ public abstract class ColumnType {
 		public MappingType<?> getMappingType(Class<?> fieldType) {
 			return new XmlStringMapping();
 		}
+
+		@Override
+		public int getSqlType() {
+			return Types.SQLXML;
+		}
 	}
 
-	public static class Unknown extends ColumnType {
+	public static class Other extends ColumnType implements SqlTypeSized{
 		private String name;
-		public Unknown(String name){
+		private int sqlType;
+		private int length;
+		private int precision;
+		private int scale;
+		
+		public Other(String name,int sqlType,int length,int p,int s){
 			this.name=name;
+			this.sqlType=sqlType;
+			this.length=length;
+			this.precision=p;
+			this.scale=s;
 		}
 		@Override
 		protected boolean compare(ColumnType type, DatabaseDialect profile) {
@@ -934,31 +1049,36 @@ public abstract class ColumnType {
 			}else{
 				throw new UnsupportedOperationException("can not support mapping from ["+fieldType.getName()+" -> "+name+"]");
 			}
-			
-			
 		}
-	}
-	
-	// 这是比较用的，因此会有一些特殊逻辑
-	static ColumnType toNormal(ColumnType type) {
-		if (type instanceof AutoIncrement) {
-			Int i = ((AutoIncrement) type).toNormalType();
-//			i.precision = 8;// 退化时抹去精度差异.
-			return i;
-		} else if (type instanceof GUID) {
-			return ((GUID) type).toNormalType();
+		public String getName() {
+			return name;
 		}
-		return type;
+		public int getSqlType() {
+			return sqlType;
+		}
+		public int getLength() {
+			return length;
+		}
+		public int getPrecision() {
+			return precision;
+		}
+		public int getScale() {
+			return scale;
+		}
 	}
 
-	static ColumnChange createChange(ColumnType oldType, ColumnType newType, DatabaseDialect profile) {
+	static ColumnChange createChange(ColumnType oldType, String rawType,ColumnType newType, DatabaseDialect profile) {
 		ColumnChange change = new ColumnChange(Change.CHG_DATATYPE);
-		change.setFrom(profile.getCreationComment(oldType, false));// 这里要注意不要生成带有null
-																	// 和default
+		change.setFrom(rawType);// 这里要注意不要生成带有null
 																	// 值的文字，即只单纯的类型
 		change.setTo(profile.getCreationComment(newType, false));
-		if (change.getFrom().equals(change.getTo()))
+		if (change.getFrom().equalsIgnoreCase(change.getTo()))
 			return null;
+		
+		String oldValue=profile.getCreationComment(newType, false);
+		if(oldValue.equals(change.getTo())){
+			return null;
+		}
 		return change;
 	}
 }

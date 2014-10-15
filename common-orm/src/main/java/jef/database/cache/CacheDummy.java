@@ -42,7 +42,7 @@ public final class CacheDummy  implements TransactionCache{
 		return null;
 	}
 
-	public void onInsert(IQueryableEntity obj) {
+	public void onInsert(IQueryableEntity obj,String table) {
 	}
 
 	public void onDelete(String table, String where, List<Object> bind) {
