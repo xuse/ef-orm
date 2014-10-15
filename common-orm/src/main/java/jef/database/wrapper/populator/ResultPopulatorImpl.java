@@ -98,7 +98,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 		List<Map<String, Object>> list = new ArrayList<Map<String, Object>>(40);
 		while (rsVarIterator.hasNext()) {
 			Map<String, Object> v = rsVarIterator.next();
-			v.remove("");
+//			v.remove("");
 			list.add((Var) v);
 		}
 		return list;

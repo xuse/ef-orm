@@ -46,7 +46,6 @@ import jef.database.jsqlparser.expression.operators.relational.GreaterThanEquals
 import jef.database.jsqlparser.expression.operators.relational.InExpression;
 import jef.database.jsqlparser.expression.operators.relational.IsNullExpression;
 import jef.database.jsqlparser.expression.operators.relational.LikeExpression;
-import jef.database.jsqlparser.expression.operators.relational.Matches;
 import jef.database.jsqlparser.expression.operators.relational.MinorThan;
 import jef.database.jsqlparser.expression.operators.relational.MinorThanEquals;
 import jef.database.jsqlparser.expression.operators.relational.NotEqualsTo;
@@ -350,10 +349,6 @@ public class DeParserAdapter implements SelectVisitor, ExpressionVisitor, Statem
 
 	public void visit(Concat concat) {
 		visitBinaryExpression(concat, " || ");
-	}
-
-	public void visit(Matches matches) {
-		visitBinaryExpression(matches, " @@ ");
 	}
 
 	public void visit(BitwiseAnd bitwiseAnd) {

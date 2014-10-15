@@ -61,7 +61,6 @@ import jef.database.jsqlparser.expression.operators.relational.GreaterThanEquals
 import jef.database.jsqlparser.expression.operators.relational.InExpression;
 import jef.database.jsqlparser.expression.operators.relational.IsNullExpression;
 import jef.database.jsqlparser.expression.operators.relational.LikeExpression;
-import jef.database.jsqlparser.expression.operators.relational.Matches;
 import jef.database.jsqlparser.expression.operators.relational.MinorThan;
 import jef.database.jsqlparser.expression.operators.relational.MinorThanEquals;
 import jef.database.jsqlparser.expression.operators.relational.NotEqualsTo;
@@ -99,9 +98,11 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 
 	public void visit(PlainSelect plainSelect) {
 		visitPath.push(plainSelect);
-		plainSelect.getFromItem().accept(this);
 		for (SelectItem s : plainSelect.getSelectItems()) {
 			s.accept(this);
+		}
+		if(plainSelect.getFromItem()!=null){
+			plainSelect.getFromItem().accept(this);
 		}
 		if (plainSelect.getJoins() != null) {
 			for (Iterator<Join> joinsIt = plainSelect.getJoins().iterator(); joinsIt.hasNext();) {
@@ -368,11 +369,11 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 		visitPath.pop();
 	}
 
-	public void visit(Matches matches) {
-		visitPath.push(matches);
-		visitBinaryExpression(matches);
-		visitPath.pop();
-	}
+//	public void visit(Matches matches) {
+//		visitPath.push(matches);
+//		visitBinaryExpression(matches);
+//		visitPath.pop();
+//	}
 
 	public void visit(BitwiseAnd bitwiseAnd) {
 		visitPath.push(bitwiseAnd);

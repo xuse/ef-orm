@@ -72,7 +72,8 @@ public class LongValue implements Expression,SqlValue {
     }
 
     public static final LongValue L0=new LongValue(0);
-
+    public static final LongValue L1=new LongValue(1);
+    
 	public void appendTo(StringBuilder sb) {
 		sb.append(stringValue);
 	}
@@ -85,3 +86,4 @@ public class LongValue implements Expression,SqlValue {
 		return negate.longValue();
 	}
 }
+

@@ -7,16 +7,10 @@ import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.query.Func;
 import jef.database.query.Scientific;
-import jef.database.query.function.CastFunction;
-import jef.database.query.function.EmuDateAddSubByTimesatmpadd;
-import jef.database.query.function.EmuDatediffByTimestampdiff;
 import jef.database.query.function.EmuDecodeWithCase;
-import jef.database.query.function.EmuJDBCTimestampFunction;
-import jef.database.query.function.EmuLocateOnPostgres;
-import jef.database.query.function.EmuPostgreTimestampDiff;
-import jef.database.query.function.EmuPostgresAddDate;
-import jef.database.query.function.EmuPostgresExtract;
-import jef.database.query.function.EmuPostgresSubDate;
+import jef.database.query.function.EmuSQLServerTimestamp;
+import jef.database.query.function.EmuSQLServerTrunc;
+import jef.database.query.function.EmuTranslateByReplace;
 import jef.database.query.function.NoArgSQLFunction;
 import jef.database.query.function.StandardSQLFunction;
 import jef.database.query.function.TemplateFunction;
@@ -35,6 +29,7 @@ public class SQLServer2000Dialect extends AbstractDialect {
 		super();
 		features = CollectionUtil.identityHashSet();
 		features.add(Feature.COLUMN_DEF_ALLOW_NULL);
+		features.add(Feature.CONCAT_IS_ADD);
 		
 		setProperty(DbProperty.ADD_COLUMN, "ADD COLUMN");
 		setProperty(DbProperty.MODIFY_COLUMN, "MODIFY COLUMN");
@@ -46,112 +41,97 @@ public class SQLServer2000Dialect extends AbstractDialect {
 		
 		registerNative(Func.coalesce);
 		registerAlias(Func.nvl, "coalesce");
-
 		registerNative(Scientific.cot);
 		registerNative(Scientific.exp);
 		registerNative(Scientific.ln, "log");
-		registerNative(new StandardSQLFunction("cbrt"));
 		registerNative(Scientific.radians);
 		registerNative(Scientific.degrees);
-
-		registerNative(new StandardSQLFunction("stddev"));
-		registerNative(new StandardSQLFunction("variance"));
-
-		registerNative(new NoArgSQLFunction("random"));
-		registerAlias(Scientific.rand, "random");
-		registerNative(Func.cast, new CastFunction());
-		registerNative(Func.mod);
-		registerNative(Func.nullif);
-		registerNative(Func.round);
-		registerNative(Func.trunc);
-		registerNative(Func.ceil);
+		
+		
+		registerNative(new StandardSQLFunction("ceiling"));
+		registerAlias(Func.ceil,"ceiling");
 		registerNative(Func.floor);
-		registerNative(Func.translate);
-		registerNative(new StandardSQLFunction("chr"));
-		registerNative(Func.lower);
-		registerNative(Func.upper);
-		registerAlias("lcase", "lower");
-		registerAlias("ucase", "upper");
-		registerNative(new StandardSQLFunction("substr"));
-		registerAlias(Func.substring, "substr");
-		registerNative(new StandardSQLFunction("initcap"));
-		registerNative(new StandardSQLFunction("to_ascii"));
-		registerNative(new StandardSQLFunction("quote_ident"));
-		registerNative(new StandardSQLFunction("quote_literal"));
-		registerNative(new StandardSQLFunction("md5"));
-		registerNative(new StandardSQLFunction("ascii"));
-		registerNative(new StandardSQLFunction("char_length"));
-		registerAlias(Func.length, "char_length");
-		registerNative(new StandardSQLFunction("bit_length"));
-		registerNative(new StandardSQLFunction("octet_length"));
-
-		registerNative(new StandardSQLFunction("age"));// 单参数时计算当前时间与指定时间的差，双参数时计算第一个减去第二个时间
-		registerNative(new NoArgSQLFunction("current_date", false));
-		registerAlias(Func.current_date, "current_date");
-
-		registerNative(new NoArgSQLFunction("current_time", false));
-		registerAlias(Func.current_time, "current_time");
-
-		registerNative(new NoArgSQLFunction("current_timestamp", false), "now");
-		registerAlias(Func.current_timestamp, "current_timestamp");
-		registerAlias(Func.now, "current_timestamp");
-		registerAlias("sysdate", "current_timestamp");
-
-		registerNative(new StandardSQLFunction("date_trunc"));
-		registerNative(new NoArgSQLFunction("localtime", false));
-		registerNative(new NoArgSQLFunction("localtimestamp", false));
-
-		registerNative(new NoArgSQLFunction("timeofday"));
-		registerNative(new StandardSQLFunction("isfinite"));
-		registerNative(Func.date);
-		registerCompatible(Func.time, new TemplateFunction("time", "cast(%s as time)"));
-
-		registerNative(new NoArgSQLFunction("current_user", false));
-		registerNative(new NoArgSQLFunction("session_user", false));
-		registerNative(new NoArgSQLFunction("user", false));
-		registerNative(new NoArgSQLFunction("current_database", true));
-		registerNative(new NoArgSQLFunction("current_schema", true));
-
-		registerNative(new StandardSQLFunction("to_char"));
-		registerNative(new StandardSQLFunction("to_date"));
-		registerNative(new StandardSQLFunction("to_timestamp"));
-		registerNative(new StandardSQLFunction("to_number"));
-
-		registerNative(new StandardSQLFunction("bool_and"));
-		registerNative(new StandardSQLFunction("bool_or"));
-		registerNative(new StandardSQLFunction("bit_and"));
-		registerNative(new StandardSQLFunction("bit_or"));
-		registerNative(new StandardSQLFunction("extract"));
+		registerNative(Func.round);
+		registerNative(Func.nullif);
 		registerNative(Func.replace);
-		registerNative(Func.trim);
+		registerNative(Func.substring);
 		registerNative(Func.ltrim);
 		registerNative(Func.rtrim);
-		registerNative(Func.lpad);
-		registerNative(Func.rpad);
+		registerNative(Func.lower);
+		registerNative(Func.upper);
+		registerNative(Func.cast);
+		registerNative(Func.replace);
+		registerCompatible(Func.translate, new EmuTranslateByReplace());
 
-		registerCompatible(Func.concat, new VarArgsSQLFunction("", "||", "")); // Derby是没有concat函数的，要改写为相加
-		registerCompatible(Func.locate, new EmuLocateOnPostgres());
-		registerCompatible(Func.year, new EmuPostgresExtract("year"));
-		registerCompatible(Func.month, new EmuPostgresExtract("month"));
-		registerCompatible(Func.day, new EmuPostgresExtract("day"));
-		registerCompatible(Func.hour, new EmuPostgresExtract("hour"));
-		registerCompatible(Func.minute, new EmuPostgresExtract("minute"));
-		registerCompatible(Func.second, new EmuPostgresExtract("second"));
-		registerCompatible(Func.adddate, new EmuPostgresAddDate());
-		registerCompatible(Func.subdate, new EmuPostgresSubDate());
-		registerCompatible(Func.add_months, new TemplateFunction("add_months", "{fn timestampadd(SQL_TSI_MONTH,%2$s,%1$s)}"));
-		registerCompatible(null, new TemplateFunction("timestamp", "%1$s::TIMESTAMP"), "timestamp");
+		registerNative(new NoArgSQLFunction("@@datefirst", false));
+		registerNative(new NoArgSQLFunction("@@options", false));
+		registerNative(new NoArgSQLFunction("@@dbts", false));
+		registerNative(new NoArgSQLFunction("@@remserver", false));
+		registerNative(new NoArgSQLFunction("@@langid", false));
+		registerNative(new NoArgSQLFunction("@@servername", false));
+		registerNative(new NoArgSQLFunction("@@language", false));
+		registerNative(new NoArgSQLFunction("@@options", false));
+		registerNative(new NoArgSQLFunction("@@servicename", false));
+		registerNative(new NoArgSQLFunction("@@lock_timeout", false));
+		registerNative(new NoArgSQLFunction("@@spid", false));
+		registerNative(new NoArgSQLFunction("@@textsize", false));
+		registerNative(new NoArgSQLFunction("@@max_precision", false));
+		registerNative(new NoArgSQLFunction("@@max_connections", false));
+		registerNative(new NoArgSQLFunction("@@version", false));
+		registerNative(new NoArgSQLFunction("@@nestlevel", false));
+		
+		
+		registerNative(new StandardSQLFunction("char"));
+		registerNative(new StandardSQLFunction("ascii"));
+		registerNative(new StandardSQLFunction("space"));
+		registerNative(new StandardSQLFunction("patindex"));
+		registerNative(new StandardSQLFunction("charindex"));
+		registerNative(new StandardSQLFunction("stuff"));
+		registerNative(new StandardSQLFunction("replicate"));
+		registerNative(new StandardSQLFunction("reverse"));
+		registerNative(new StandardSQLFunction("dateadd"));
+		registerNative(new StandardSQLFunction("current_user"));
+		registerNative(new StandardSQLFunction("datename"));
+		registerNative(new StandardSQLFunction("len"));
+		
+		
+		registerAlias(Func.length, "len");
+		registerNative(new StandardSQLFunction("datalength"));
+		registerAlias(Func.lengthb, "datalength");
+		registerAlias(Func.locate, "charindex");
 
-		registerCompatible(Func.timestampdiff, new EmuPostgreTimestampDiff());// 等PG的驱动完善了，可以改为EmuJDBCTimestampFunction
-		registerCompatible(Func.timestampadd, new EmuJDBCTimestampFunction(Func.timestampadd, this));
+		registerNative(Func.current_timestamp,"getutcdate","getdate");
+		registerCompatible(Func.current_date,new TemplateFunction("current_date","cast(current_timestamp as date)"));
+		registerCompatible(Func.current_time,new TemplateFunction("current_time","cast(current_timestamp as time)"));
+		registerAlias(Func.now, "current_timestamp");
+		registerAlias("sysdate","current_timestamp");
+		
+		registerNative(Func.year);
+		registerNative(Func.month);
+		registerNative(Func.day);
+		registerCompatible(Func.hour,new TemplateFunction("hour","datepart(hour,%s)"));
+		registerCompatible(Func.minute,new TemplateFunction("minute","datepart(minute,%s)"));
+		registerCompatible(Func.second,new TemplateFunction("second","datepart(second,%s)"));
+		registerCompatible(Func.date,new TemplateFunction("date","cast(%s as date)"));
+		registerCompatible(Func.time,new TemplateFunction("time","cast(%s as time)"));
+		
+		registerCompatible(Func.timestampadd, new EmuSQLServerTimestamp("timestampadd","dateadd"));
+		registerCompatible(Func.timestampdiff, new EmuSQLServerTimestamp("timestampdiff","datediff"));
+		registerCompatible(Func.datediff,new TemplateFunction("datediff", "datediff(day,%2$s,%1$s)"));
 
-		registerCompatible(Func.datediff, new EmuDatediffByTimestampdiff());// 等PG的驱动完善了，可以改为EmuJDBCTimestampFunction
-		registerCompatible(Func.adddate, new EmuDateAddSubByTimesatmpadd(Func.adddate));
-		registerCompatible(Func.subdate, new EmuDateAddSubByTimesatmpadd(Func.subdate));
-
+		registerCompatible(Func.adddate, new TemplateFunction("adddate", "dateadd(day,%2$s,%1$s)"));
+		registerCompatible(Func.subdate, new TemplateFunction("subdate", "dateadd(day,-%2$s,%1$s)"));
+		
+		registerCompatible(Func.add_months, new TemplateFunction("add_months", "dateadd(month,%2$s,%1$s)"));
+		
+		registerCompatible(Func.mod, new TemplateFunction("mod","(%1$s %% %2$s)"));
 		registerCompatible(Func.decode, new EmuDecodeWithCase());
-		registerCompatible(Func.lengthb, new TemplateFunction("lengthb", "bit_length(%s)/8"));
-		registerCompatible(Func.str, new CastFunction("str", "varchar"));
+		registerCompatible(Func.concat,new VarArgsSQLFunction("", "+", "")); //没有concat函数的，要改写为相加
+		registerCompatible(Func.trim,new TemplateFunction("trim", "ltrim(rtrim(%s))")); //没有concat函数的，要改写为相加
+		registerCompatible(Func.lpad,new TemplateFunction("lpad", "(replicate(%3$s, %2$s-len(%1$s)) + %1$s)"));
+		registerCompatible(Func.rpad,new TemplateFunction("rpad", "(%1$s + replicate(%3$s, %2$s-len(%1$s)))"));
+		registerCompatible(Func.trunc,new EmuSQLServerTrunc());
+		registerCompatible(Func.str,new TemplateFunction("str","convert(varchar,%s,120)"));
 	}
 
 

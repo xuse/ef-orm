@@ -62,6 +62,12 @@ public enum Feature {
 	 * 如果没有这个特性的话，JEF就只能将字符串修改为concat(a,b,c...)的函数了 (Oracle)
 	 */
 	SUPPORT_CONCAT,	
+	
+	/**
+	 * SQLServer特性,不支持||表示字符串相加，而是用+表示
+	 */
+	CONCAT_IS_ADD,
+	
 	/**
 	 * Oracle特性，支持 start with ... connect by ....类型的语句
 	 */

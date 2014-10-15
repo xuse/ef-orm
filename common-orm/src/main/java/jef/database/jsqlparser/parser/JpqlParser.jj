@@ -71,7 +71,6 @@ import jef.database.jsqlparser.expression.operators.relational.InExpression;
 import jef.database.jsqlparser.expression.operators.relational.IsNullExpression;
 import jef.database.jsqlparser.expression.operators.relational.LikeExpression;
 import jef.database.jsqlparser.expression.operators.relational.ExistsExpression;
-import jef.database.jsqlparser.expression.operators.relational.Matches;
 import jef.database.jsqlparser.expression.operators.relational.MinorThan;
 import jef.database.jsqlparser.expression.operators.relational.MinorThanEquals;
 import jef.database.jsqlparser.expression.operators.relational.NotEqualsTo;
@@ -549,22 +548,23 @@ PlainSelect PlainSelect():
     
      // TODO
     [IntoClause()]
-    <K_FROM>
-    fromItem=FromItem()
-    joins=JoinsList()
-    [ where=WhereClause() { plainSelect.setWhere(where); }]
-    [ groupByColumnReferences=GroupByColumnReferences() { plainSelect.setGroupByColumnReferences(groupByColumnReferences); }]
-    [ having=Having() { plainSelect.setHaving(having); }]
-	[ startWith = StartWith() {plainSelect.setStartWith(startWith);} ]
-	[ orderBy = OrderByElements()	{ 		 plainSelect.setOrderBy(orderBy);	}   ]
-    [ limit = Limit() { plainSelect.setLimit(limit);	} ]
-	
+    [
+    <K_FROM> fromItem=FromItem()
+    	joins=JoinsList()
+    	[ where=WhereClause() { plainSelect.setWhere(where); }]
+    	[ groupByColumnReferences=GroupByColumnReferences() { plainSelect.setGroupByColumnReferences(groupByColumnReferences); }]
+    	[ having=Having() { plainSelect.setHaving(having); }]
+		[ startWith = StartWith() {plainSelect.setStartWith(startWith);} ]
+		[ orderBy = OrderByElements()	{ 		 plainSelect.setOrderBy(orderBy);	}   ]
+    	[ limit = Limit() { plainSelect.setLimit(limit);	} ]
+    	{    		plainSelect.setFromItem(fromItem);
+			if (joins.size() > 0)
+			plainSelect.setJoins(joins);
+		}
+	]
 	{
 	    plainSelect.setHint(tk.next);
 		plainSelect.setSelectItems(selectItems);
-		plainSelect.setFromItem(fromItem);
-		if (joins.size() > 0)
-			plainSelect.setJoins(joins);
 		return plainSelect; 
 	}
 }
@@ -1040,7 +1040,7 @@ Expression RegularCondition():
 	| ">=" { result = new GreaterThanEquals(); }
 	| "<=" { result = new MinorThanEquals(); }
 	| ("<>" | "!=") { result = new NotEqualsTo(); }
-	| "@@" { result = new Matches(); }
+//	| "@@" { result = new Matches(); }
 	)
 	[ <K_PRIOR> {prior=jef.database.jsqlparser.expression.BinaryExpression.Prior.RIGHT;}]
 	rightExpression=ComparisonItem()
@@ -1569,33 +1569,49 @@ WhenClause WhenThenValue():
 	}
 }
 
-
 Function Function():
 {
-	Function retval = new Function();
-	String funcName = null;
-	String tmp = null;
-	ExpressionList expressionList = null;
+	Function function;
 	Over over=null;
 }
 {
-	["{fn" { retval.setEscaped(true); } ]
-	(
-	    funcName=RelObjectName()
-    	| 
-    	// workaround for replace(string) function (name clash with mysql REPLACE expression)
-	    <K_REPLACE> { funcName = "REPLACE"; }
-    ) [ "." tmp=RelObjectName() { funcName+= "." + tmp; } ["." tmp=RelObjectName() { funcName+= "." + tmp; }]]
-    "(" [ [<K_DISTINCT> { retval.setDistinct(true); } | <K_ALL> { retval.setAllColumns(true); }] (expressionList=SimpleExpressionList() | "*" { retval.setAllColumns(true); }) ] ")"
-    
-    ["}"]
-    [over=Over()  { retval.setOver(over); } ]
-    { 
-	    retval.setParameters(expressionList);
-	    retval.setName(funcName);
-    	return retval; 
-    }
+  (    
+	"{fn" function=internalFunction()  "}"   {  function.setEscaped(true); }
+  |
+     function = internalFunction()
+  |
+     "@@" function = noArgFunction("@@")
+   )
+  [over=Over()  { function.setOver(over); } ]
+   { 
+    	return function; 
+   }
 }
+
+Function internalFunction():
+{
+  Function retval = new Function();
+	String funcName = null;
+	String tmp = null;
+	ExpressionList expressionList = null;
+}
+{
+  
+( funcName=RelObjectName()
+   | 
+  	// workaround for replace(string) function (name clash with mysql REPLACE expression MYSQL支持的replace into 语句，关键字撞车了)
+   <K_REPLACE> { funcName = "REPLACE"; }
+)
+ [ "." tmp=RelObjectName() { funcName+= "." + tmp; } ["." tmp=RelObjectName() { funcName+= "." + tmp; }]]
+    "(" [ [<K_DISTINCT> { retval.setDistinct(true); } | <K_ALL> { retval.setAllColumns(true); }] (expressionList=SimpleExpressionList() | "*" { retval.setAllColumns(true); }) ] ")"
+    {
+        retval.setParameters(expressionList);
+	    retval.setName(funcName);
+	    return retval;
+	 }
+}
+
+Function noArgFunction(String prefix) :{  Function retval = new Function();  String funcName = null;}{  funcName = RelObjectName()  {    retval.setName(prefix + funcName);    return retval;  }}
 
 Over Over():
 {

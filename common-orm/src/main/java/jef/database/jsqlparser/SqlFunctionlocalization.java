@@ -13,6 +13,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
+import jef.database.jsqlparser.expression.operators.arithmetic.Addition;
 import jef.database.jsqlparser.expression.operators.arithmetic.Concat;
 import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
 import jef.database.jsqlparser.statement.select.Limit;
@@ -51,7 +52,9 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 	@Override
 	public void visit(Concat concat) {
 		super.visit(concat);// 先处理内层的。。。
-		if (profile.notHas(Feature.SUPPORT_CONCAT)) {
+		if(profile.has(Feature.CONCAT_IS_ADD)){
+			concat.rewrite = new Addition(concat.getLeftExpression(),concat.getRightExpression());
+		}else if (profile.notHas(Feature.SUPPORT_CONCAT)) {
 			List<Expression> el = new ArrayList<Expression>();
 			recursion(concat, el);
 			Function func = new Function();

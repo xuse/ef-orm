@@ -273,7 +273,6 @@ public interface JpqlParserConstants {
     "\"<=\"",
     "\"<>\"",
     "\"!=\"",
-    "\"@@\"",
     "\"||\"",
     "\"|\"",
     "\"&\"",
@@ -288,6 +287,7 @@ public interface JpqlParserConstants {
     "\"{ts\"",
     "\":\"",
     "\"{fn\"",
+    "\"@@\"",
   };
 
 }

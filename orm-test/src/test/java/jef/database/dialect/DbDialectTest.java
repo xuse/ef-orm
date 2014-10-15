@@ -35,6 +35,9 @@ public class DbDialectTest {
 		
 		dialect=AbstractDialect.getProfile("sqlite");
 		check(dialect);
+		
+		dialect=new SQLServer2000Dialect();
+		check(dialect);
 	}
 
 	private void check(DatabaseDialect dialect) {

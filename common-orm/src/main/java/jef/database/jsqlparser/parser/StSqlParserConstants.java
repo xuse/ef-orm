@@ -270,7 +270,6 @@ public interface StSqlParserConstants {
     "\"<=\"",
     "\"<>\"",
     "\"!=\"",
-    "\"@@\"",
     "\"||\"",
     "\"|\"",
     "\"&\"",
@@ -284,6 +283,7 @@ public interface StSqlParserConstants {
     "\"{t\"",
     "\"{ts\"",
     "\"{fn\"",
+    "\"@@\"",
   };
 
 }

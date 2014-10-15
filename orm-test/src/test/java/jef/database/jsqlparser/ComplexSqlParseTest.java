@@ -32,6 +32,8 @@ import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
 import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlOutputVisitor;
 import com.alibaba.druid.sql.dialect.oracle.parser.OracleStatementParser;
 import com.alibaba.druid.sql.dialect.oracle.visitor.OracleOutputVisitor;
+import com.alibaba.druid.sql.dialect.sqlserver.parser.SQLServerStatementParser;
+import com.alibaba.druid.sql.dialect.sqlserver.visitor.SQLServerOutputVisitor;
 
 public class ComplexSqlParseTest extends org.junit.Assert {
 	@Test
@@ -93,17 +95,39 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 			System.out.println((System.nanoTime() - start) / 1000);
 		}
 	}
-	
-	@Test(expected=ParseException.class)
-	public void parseJpqlParams() throws ParseException{
-		String sql="select * from t where id=:top";
+
+	@Test(expected = ParseException.class)
+	public void parseJpqlParams() throws ParseException {
+		String sql = "select * from t where id=:top";
 		JpqlParser parser = new JpqlParser(new StringReader(sql));
 		parser.Statement();
-		
-		sql="update t set name=:desc";
+
+		sql = "update t set name=:desc";
 		parser = new JpqlParser(new StringReader(sql));
 		parser.Statement();
+
+	}
+
+	@Test
+	public void parseFunctionOnSQLServer() throws ParseException {
+		String s = "select @@LANGUAGE from dual";
+		{
+			StSqlParser parser = new StSqlParser(new StringReader(s));
+			Select select = parser.Select();
+			System.out.println(select);
+		}
+		{
+			SQLServerStatementParser parser = new SQLServerStatementParser(s);
+			StringBuilder out = new StringBuilder();
+			List<SQLStatement> statementList = parser.parseStatementList();
+			SQLServerOutputVisitor visitor = new SQLServerOutputVisitor(out);
+			statementList.get(0).accept(visitor);
+			System.out.println(out);
+			
+		}
+
 		
+
 	}
 
 	/**
@@ -505,9 +529,9 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 			OracleStatementParser parser = new OracleStatementParser(sql);
 			List<SQLStatement> statementList = parser.parseStatementList();
 			StringBuilder out = new StringBuilder();
-		    OracleOutputVisitor visitor = new OracleOutputVisitor(out);
-		    statementList.get(0).accept(visitor);
-		    System.out.println(out);
+			OracleOutputVisitor visitor = new OracleOutputVisitor(out);
+			statementList.get(0).accept(visitor);
+			System.out.println(out);
 			break;
 		}
 		case 3: {
@@ -516,8 +540,8 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 			st = statementList.get(0);
 			StringBuilder out = new StringBuilder();
 			MySqlOutputVisitor visitor = new MySqlOutputVisitor(out);
-		    statementList.get(0).accept(visitor);
-		    System.out.println(out);
+			statementList.get(0).accept(visitor);
+			System.out.println(out);
 			break;
 		}
 		default:

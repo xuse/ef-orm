@@ -141,6 +141,7 @@ public enum Func implements DbFunction{
 	trunc, 
 	/**
 	 * 双参数,在参数2中查找参数1，返回匹配的序号（序号从1开始）。(类似Java的indexOf，区别是参数相反)
+	 * TODO 支持三参数，第三个参数可以描述从指定序号的字符串开始查找
 	 */
 	locate, 
 
@@ -180,6 +181,7 @@ public enum Func implements DbFunction{
 	current_timestamp,
 	/**
 	 * 和CURRENT_TIMESTAMP是同义词
+	 * 注意，如果在SQL中书写，必须要写成 now()，括号不能省。
 	 */
 	now,
 	
@@ -228,10 +230,12 @@ public enum Func implements DbFunction{
 	timestampdiff,
 	/**
 	 * 时间调整
-	 * 第一个参数是时间调整单位。参见{@link jef.database.support.SQL_TSI}
-	 * (MYSQL原生实现了timestampadd,timestampdiff两个函数，并且允许时间单位简写，但如果你写作 SQL_TSI_DAY MYSQL也能识别。)
-	 * 第二个参数是整形表达式，表示调整的数值（正数+，负数-）
-	 * 第三个参数是时间timestamp表达式
+	 * <ul>
+	 * <li>第一个参数是时间调整单位。参见{@link jef.database.support.SQL_TSI}
+	 * (MYSQL原生实现了timestampadd,timestampdiff两个函数，并且允许时间单位简写，但如果你写作 SQL_TSI_DAY MYSQL也能识别。)</li>
+	 * <li>第二个参数是整形表达式，表示调整的数值（正数+，负数-）</li>
+	 * <li>第三个参数是时间timestamp表达式</li>
+	 * </ul>
 	 * ( JDBC标准函数)
 	 */
 	timestampadd,

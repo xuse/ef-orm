@@ -377,30 +377,32 @@ public class PlainSelect implements SelectBody {
 			sb.append(' ');
 		}
 		Util.getStringList(sb, selectItems, ",", false);
-		sb.append(" from ");
-		fromItem.appendTo(sb);// append(fromItem.toString());
-		if (joins != null) {
-			Iterator<Join> it = joins.iterator();
-			while (it.hasNext()) {
-				Join join = (Join) it.next();
-				if (join.isSimple()) {
-					join.appendTo(sb.append(", "));
-				} else {
-					join.appendTo(sb.append(' '));
+		if(fromItem!=null){
+			sb.append(" from ");
+			fromItem.appendTo(sb);// append(fromItem.toString());
+			if (joins != null) {
+				Iterator<Join> it = joins.iterator();
+				while (it.hasNext()) {
+					Join join = (Join) it.next();
+					if (join.isSimple()) {
+						join.appendTo(sb.append(", "));
+					} else {
+						join.appendTo(sb.append(' '));
+					}
 				}
 			}
+			if ((where != null)) {
+				appendWhere(sb, where);
+			}
+			if (startWith != null) {
+				startWith.appendTo(sb);
+			}
+			Util.getFormatedList(sb, groupByColumnReferences, " group by", false);
+			if (having != null) {
+				having.appendTo(sb.append(" having "));
+			}
 		}
-		if ((where != null)) {
-			appendWhere(sb, where);
-		}
-		if (startWith != null) {
-			startWith.appendTo(sb);
-		}
-
-		Util.getFormatedList(sb, groupByColumnReferences, " group by", false);
-		if (having != null) {
-			having.appendTo(sb.append(" having "));
-		}
+		
 		if (orderBy != null) {
 			orderBy.appendTo(sb);
 		}
