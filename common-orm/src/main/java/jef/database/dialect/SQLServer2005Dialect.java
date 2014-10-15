@@ -15,29 +15,7 @@
  */
 package jef.database.dialect;
 
-import jef.common.wrapper.IntRange;
 import jef.database.ConnectInfo;
-import jef.database.DbFunction;
-import jef.database.meta.DbProperty;
-import jef.database.meta.Feature;
-import jef.database.query.Func;
-import jef.database.query.Scientific;
-import jef.database.query.function.CastFunction;
-import jef.database.query.function.EmuDateAddSubByTimesatmpadd;
-import jef.database.query.function.EmuDatediffByTimestampdiff;
-import jef.database.query.function.EmuDecodeWithCase;
-import jef.database.query.function.EmuJDBCTimestampFunction;
-import jef.database.query.function.EmuLocateOnPostgres;
-import jef.database.query.function.EmuPostgreTimestampDiff;
-import jef.database.query.function.EmuPostgresAddDate;
-import jef.database.query.function.EmuPostgresExtract;
-import jef.database.query.function.EmuPostgresSubDate;
-import jef.database.query.function.NoArgSQLFunction;
-import jef.database.query.function.StandardSQLFunction;
-import jef.database.query.function.TemplateFunction;
-import jef.database.query.function.VarArgsSQLFunction;
-import jef.database.support.RDBMS;
-import jef.tools.collection.CollectionUtil;
 import jef.tools.string.JefStringReader;
 
 /**

@@ -798,15 +798,6 @@ public class DbClient extends Session {
 	}
 
 	/**
-	 * 是否为JTA事务下使用
-	 * 
-	 * @return true if the datasource is JTA Pool.
-	 */
-	public boolean isXADataSource() {
-		return false;
-	}
-
-	/**
 	 * 是否为路由场合下使用
 	 * 
 	 * @return true if the datasource is routing datasource

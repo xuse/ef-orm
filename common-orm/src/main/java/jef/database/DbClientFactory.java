@@ -135,7 +135,7 @@ public class DbClientFactory {
 	 * @return
 	 * @throws SQLException
 	 */
-	public static DbClient getDbClient(DataSource ds, TransactionMode isXA) throws SQLException {
-		return new DbClient(ds,JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50),isXA);
+	public static DbClient getDbClient(DataSource ds, TransactionMode txMode) throws SQLException {
+		return new DbClient(ds,JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50),txMode);
 	}
 }

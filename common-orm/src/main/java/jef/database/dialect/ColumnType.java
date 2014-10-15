@@ -1045,7 +1045,7 @@ public abstract class ColumnType {
 		@Override
 		public ColumnMapping<?> getMappingType(Class<?> fieldType) {
 			if(fieldType==String.class){
-				return new UnknownStringMapping(name);
+				return new UnknownStringMapping(name,sqlType);
 			}else{
 				throw new UnsupportedOperationException("can not support mapping from ["+fieldType.getName()+" -> "+name+"]");
 			}

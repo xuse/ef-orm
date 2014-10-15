@@ -8,19 +8,25 @@ import jef.database.wrapper.result.IResultSet;
 
 public class UnknownStringMapping extends AColumnMapping<String>{
 	private String name;
-	public UnknownStringMapping(String name) {
+	private int sqlType;
+	public UnknownStringMapping(String name, int sqlType) {
 		this.name=name;
+		this.sqlType=sqlType;
 	}
 
 	@Override
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect dialect) throws SQLException {
-		st.setObject(index, value);
+		if(value==null){
+			st.setNull(index, sqlType);
+		}else{
+			st.setObject(index, value);
+		}
 		return value;
 	}
 
 	@Override
 	public int getSqlType() {
-		return java.sql.Types.OTHER;
+		return sqlType;
 	}
 
 	@Override
