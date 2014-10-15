@@ -7,7 +7,7 @@ import java.sql.SQLXML;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 
-public class XmlStringMapping extends ATypeMapping<String>{
+public class XmlStringMapping extends AColumnMapping<String>{
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		String s=String.valueOf(value);
 		if(s==null || s.length()==0){

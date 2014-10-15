@@ -19,6 +19,6 @@ package jef.database.dialect;
  * @author jiyi
  *
  */
-public class SQLServer2008Dialect extends SQLServer2012Dialect{
+public class SQLServer2008Dialect extends SQLServer2005Dialect{
 	
 }

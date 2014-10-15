@@ -12,7 +12,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 import jef.tools.IOUtils;
 
-public class ClobFileMapping extends ATypeMapping<File>{
+public class ClobFileMapping extends AColumnMapping<File>{
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		File file=(File)value;
 		if(value==null || !file.exists()){

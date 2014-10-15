@@ -13,7 +13,7 @@ import jef.database.meta.Feature;
 import jef.database.wrapper.result.IResultSet;
 import jef.tools.IOUtils;
 
-public class BlobFileMapping extends ATypeMapping<File>{
+public class BlobFileMapping extends AColumnMapping<File>{
 
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect profile) throws SQLException {
 		File file=(File)value;

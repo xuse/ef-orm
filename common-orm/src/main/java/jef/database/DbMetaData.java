@@ -52,7 +52,7 @@ import jef.database.annotation.PartitionTable;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
 import jef.database.meta.Column;
@@ -671,19 +671,21 @@ public class DbMetaData {
 		map.put("DatabaseProductVersion", databaseMetaData.getDatabaseProductVersion() + " " + databaseMetaData.getDatabaseMinorVersion());
 		
 		String otherVersionSQL=info.profile.getProperty(DbProperty.OTHER_VERSION_SQL);
-		for (String sql : StringUtils.split(otherVersionSQL, ";")) {
-			if (StringUtils.isBlank(sql))
-				continue;
-			Statement st = conn.createStatement();
-			ResultSet rs = null;
-			try {
-				rs = st.executeQuery(sql);
-				while (rs.next()) {
-					map.put(rs.getString(1), rs.getString(2));
+		if(otherVersionSQL!=null){
+			for (String sql : StringUtils.split(otherVersionSQL, ";")) {
+				if (StringUtils.isBlank(sql))
+					continue;
+				Statement st = conn.createStatement();
+				ResultSet rs = null;
+				try {
+					rs = st.executeQuery(sql);
+					while (rs.next()) {
+						map.put(rs.getString(1), rs.getString(2));
+					}
+				} finally {
+					DbUtils.close(rs);
+					DbUtils.close(st);
 				}
-			} finally {
-				DbUtils.close(rs);
-				DbUtils.close(st);
 			}
 		}
 		releaseConnection(conn);
@@ -1983,7 +1985,7 @@ public class DbMetaData {
 
 	private Map<Field, ColumnType> getColumnMap(ITableMetadata meta) {
 		Map<Field, ColumnType> map = new HashMap<Field, ColumnType>();
-		for (MappingType<?> mapping : meta.getMetaFields()) {
+		for (ColumnMapping<?> mapping : meta.getMetaFields()) {
 			map.put(mapping.field(), mapping.get());
 		}
 		return map;

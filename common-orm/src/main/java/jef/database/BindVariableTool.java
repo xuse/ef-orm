@@ -8,7 +8,7 @@ import java.util.Map;
 
 import jef.common.log.LogUtil;
 import jef.database.Condition.Operator;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.BindVariableField;
 import jef.database.query.ConditionQuery;
@@ -60,7 +60,7 @@ public final class BindVariableTool {
 					context.log(count, "", value);
 					continue;
 				}
-				MappingType<?> cType = meta.getColumnDef(field);
+				ColumnMapping<?> cType = meta.getColumnDef(field);
 				try {
 					setUpdateMapValue(query.getInstance().getUpdateValueMap(), field, cType, count, bean, context);
 				} catch (SQLException ex) {
@@ -124,7 +124,7 @@ public final class BindVariableTool {
 //		context.log(count, fieldName, value);
 //	}
 
-	private static void setUpdateMapValue(Map<Field, Object> updateMap, Field field, MappingType<?> cType, int count, BeanWrapper bean, BindVariableContext context) throws SQLException {
+	private static void setUpdateMapValue(Map<Field, Object> updateMap, Field field, ColumnMapping<?> cType, int count, BeanWrapper bean, BindVariableContext context) throws SQLException {
 		if (updateMap.containsKey(field)) {
 			Object value = updateMap.get(field);
 			try {
@@ -157,7 +157,7 @@ public final class BindVariableTool {
 			value = context.setValueInPsmt(count, value, variableDesc.getColumnType());
 		} catch (Exception e) {
 			String field = variableDesc.getField().name();
-			MappingType<?> colType = variableDesc.getColumnType();
+			ColumnMapping<?> colType = variableDesc.getColumnType();
 			throw new SQLException("The query param type error, field=" + field + " type=" + (colType == null ? "" : colType.getClass().getSimpleName()) + "\n" + e.getClass().getName() + ":" + e.getMessage());
 		}
 		context.log(count, variableDesc.getField(), value);
@@ -201,9 +201,9 @@ public final class BindVariableTool {
 		}
 	}
 
-	public static void setInsertVariables(IQueryableEntity obj, List<MappingType<?>> fields, BindVariableContext context) throws SQLException {
+	public static void setInsertVariables(IQueryableEntity obj, List<ColumnMapping<?>> fields, BindVariableContext context) throws SQLException {
 		int count = 0;
-		for (MappingType<?> field : fields) {
+		for (ColumnMapping<?> field : fields) {
 			count++;
 			Object value = field.getFieldAccessor().get(obj);
 			try {

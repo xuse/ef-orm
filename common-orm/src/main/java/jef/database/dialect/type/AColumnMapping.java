@@ -23,7 +23,7 @@ import jef.tools.Assert;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.Property;
 
-public abstract class ATypeMapping<T> implements MappingType<T>{
+public abstract class AColumnMapping<T> implements ColumnMapping<T>{
 	/**
 	 * 原始的ColumnName
 	 */
@@ -39,8 +39,8 @@ public abstract class ATypeMapping<T> implements MappingType<T>{
 	protected transient DatabaseDialect bindedProfile;
 	protected Property fieldAccessor;
 	
-	@SuppressWarnings("unchecked")
-	public ATypeMapping(){
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public AColumnMapping(){
 		Type type=this.getClass().getGenericSuperclass();
 		if (type instanceof ParameterizedType) {
 			Type[] p = ((ParameterizedType) type).getActualTypeArguments();

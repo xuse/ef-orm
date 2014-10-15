@@ -6,19 +6,19 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.query.SqlContext;
 import jef.database.wrapper.result.ResultSetImpl;
 import jef.tools.reflect.BeanWrapper;
 
 public final class LobLazyLoadTask implements LazyLoadTask {
-	private MappingType<?> mType;
+	private ColumnMapping<?> mType;
 	private String tableName;
 	private String columnname;
 	private String fieldName;
 	private DatabaseDialect profile;
 	
-	public LobLazyLoadTask(MappingType<?> mtype, DatabaseDialect profile,String tableName) {
+	public LobLazyLoadTask(ColumnMapping<?> mtype, DatabaseDialect profile,String tableName) {
 		this.mType = mtype;
 		this.tableName=tableName;
 		this.columnname=mType.getColumnName(profile, true);

@@ -11,7 +11,7 @@ import jef.common.log.LogUtil;
 import jef.database.AutoIncreatmentCallBack.OracleRowidKeyCallback;
 import jef.database.annotation.PartitionResult;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
@@ -67,7 +67,7 @@ abstract class InsertProcessor {
 			result.parent=db;
 			result.profile=profile;
 			result.setTableNames(pr);
-			for (MappingType<?> entry : meta.getMetaFields()) {
+			for (ColumnMapping<?> entry : meta.getMetaFields()) {
 				BeanWrapper wrapper=BeanWrapper.wrap(obj);
 				Object value = wrapper.getPropertyValue(entry.fieldName());
 				entry.processInsert(value,result,cStr,vStr,dynamic,obj);
@@ -125,7 +125,7 @@ abstract class InsertProcessor {
 			result.parent=db;
 			result.profile=profile;
 			result.setTableNames(pr);
-			for (MappingType<?> entry : meta.getMetaFields()) {
+			for (ColumnMapping<?> entry : meta.getMetaFields()) {
 				entry.processPreparedInsert(obj, cStr, vStr, result, dynamic);
 			}
 			if(profile.has(Feature.SELECT_ROW_NUM) && !extreme){

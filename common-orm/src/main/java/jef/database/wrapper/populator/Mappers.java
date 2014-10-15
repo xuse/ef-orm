@@ -14,7 +14,7 @@ import jef.database.IQueryableEntity;
 import jef.database.dialect.AbstractDialect;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMappings;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.ResultSetAccessor;
 import jef.database.innerpool.ArrayElementPopulator;
 import jef.database.innerpool.NestedObjectPopulator;
@@ -315,7 +315,7 @@ public final class Mappers {
 				throw new IllegalArgumentException("the table metadata is null!");
 			}
 			BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(meta.getThisType());
-			for (MappingType<?> ft : meta.getMetaFields()) {
+			for (ColumnMapping<?> ft : meta.getMetaFields()) {
 				Field f = ft.field();
 				String columnName=customMap.get(f.name().toUpperCase());
 				if(columnName==null){

@@ -28,7 +28,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AbstractTimeMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ColumnMappings;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.query.ReferenceType;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
@@ -44,11 +44,11 @@ import com.google.common.collect.Multimap;
  *
  */
 public class TupleMetadata extends MetadataAdapter{
-	private Map<Field,MappingType<?>> schemaMap=new IdentityHashMap<Field,MappingType<?>>();
+	private Map<Field,ColumnMapping<?>> schemaMap=new IdentityHashMap<Field,ColumnMapping<?>>();
 	private Map<String,Field> 	   fields=new HashMap<String,Field>(10,0.6f);
 	private Map<String,Field> 	   fieldsLower=new HashMap<String,Field>(10,0.6f);
 	private Map<String,Field>	   columnToField=new HashMap<String,Field>(10,0.6f);
-	private List<MappingType<?>> 		   pk=new ArrayList<MappingType<?>>();
+	private List<ColumnMapping<?>> 		   pk=new ArrayList<ColumnMapping<?>>();
 	private Field[] lobFields;
 	
 	// /////////引用索引/////////////////
@@ -125,7 +125,7 @@ public class TupleMetadata extends MetadataAdapter{
 		return fields.get(fieldname);
 	}
 
-	protected Collection<MappingType<?>> getColumnSchema() {
+	protected Collection<ColumnMapping<?>> getColumnSchema() {
 		return schemaMap.values();
 	}
 
@@ -158,7 +158,7 @@ public class TupleMetadata extends MetadataAdapter{
 	}
 
 	public String getColumnName(Field fld, DatabaseDialect profile,boolean escape) {
-		MappingType<?> mType = this.schemaMap.get(fld);
+		ColumnMapping<?> mType = this.schemaMap.get(fld);
 		String name;
 		if (mType != null) {
 			name = profile.getColumnNameToUse(mType.columnName());
@@ -253,7 +253,7 @@ public class TupleMetadata extends MetadataAdapter{
 			oldField = field;
 		}
 		
-		MappingType<?> mType=ColumnMappings.getMapping(oldField, this, columnName, type,isPk);
+		ColumnMapping<?> mType=ColumnMappings.getMapping(oldField, this, columnName, type,isPk);
 		if(mType instanceof AutoIncrementMapping<?>){
 			increMappings=ArrayUtils.addElement(increMappings, (AutoIncrementMapping<?>)mType);
 		}
@@ -324,7 +324,7 @@ public class TupleMetadata extends MetadataAdapter{
 		if(field==null)return false;
 		fieldsLower.remove(fieldName.toLowerCase());
 		
-		MappingType<?> mType=schemaMap.remove(field);
+		ColumnMapping<?> mType=schemaMap.remove(field);
 		if(mType!=null){
 			columnToField.remove(mType.columnName().toLowerCase());	
 		}
@@ -547,7 +547,7 @@ public class TupleMetadata extends MetadataAdapter{
 		return type==this;
 	}
 
-	public MappingType<?> getColumnDef(Field field) {
+	public ColumnMapping<?> getColumnDef(Field field) {
 		return schemaMap.get(field);
 	}
 
@@ -607,7 +607,7 @@ public class TupleMetadata extends MetadataAdapter{
 	}
 
 	@Override
-	public List<MappingType<?>> getPKFields() {
+	public List<ColumnMapping<?>> getPKFields() {
 		if(pk==null)return Collections.emptyList();
 		return pk;
 	}

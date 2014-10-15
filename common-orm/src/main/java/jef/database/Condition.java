@@ -24,7 +24,7 @@ import jef.common.log.LogUtil;
 import jef.database.VariableCallback.Like;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMappings;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.FBIField;
 import jef.database.meta.ITableMetadata;
@@ -222,7 +222,7 @@ public class Condition implements Serializable{
 			}
 		}
 		
-		MappingType<?> type = null;
+		ColumnMapping<?> type = null;
 		if(field instanceof Enum || field instanceof TupleField){//计算列的数据类型
 			type=meta.getColumnDef(field);
 			if(type==null) {
@@ -368,7 +368,7 @@ public class Condition implements Serializable{
 		return null;
 	}
 
-	public static String toSql(String columnName,Operator operator,Object value,DatabaseDialect profile,SqlContext context,MappingType<?> type){
+	public static String toSql(String columnName,Operator operator,Object value,DatabaseDialect profile,SqlContext context,ColumnMapping<?> type){
 		if(value instanceof jef.database.Field && value.getClass().isEnum()){//基本field
 			value=new RefField((Field)value);
 		}

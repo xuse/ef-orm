@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 
-public class NumIntBooleanMapping extends ATypeMapping<Boolean>{
+public class NumIntBooleanMapping extends AColumnMapping<Boolean>{
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
 			st.setNull(index, java.sql.Types.INTEGER);

@@ -7,7 +7,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 
 
-public class CharEnumMapping<T extends Enum<T>> extends ATypeMapping<T> {
+public class CharEnumMapping<T extends Enum<T>> extends AColumnMapping<T> {
 	public CharEnumMapping(Class<T> clz){
 		this.clz=clz;
 	}

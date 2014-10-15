@@ -7,7 +7,7 @@ import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.log.LogUtil;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMappings;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.IReferenceColumn;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
@@ -32,7 +32,7 @@ public class FieldPopulator implements IPopulator{
 		}
 		
 		//计算元模型类型
-		MappingType<?> t = field.getTargetColumnType();
+		ColumnMapping<?> t = field.getTargetColumnType();
 		
 		//判断计算容器类型
 		String name=this.name;

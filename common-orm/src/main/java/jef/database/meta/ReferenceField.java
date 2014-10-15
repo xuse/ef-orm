@@ -18,7 +18,7 @@ package jef.database.meta;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.query.SqlContext;
 import jef.tools.Assert;
 
@@ -74,7 +74,7 @@ public final class ReferenceField extends AbstractRefField implements IReference
 	}
 	
 
-	public MappingType<?> getTargetColumnType() {
+	public ColumnMapping<?> getTargetColumnType() {
 		return reference.getTargetType().getColumnDef(targetField);
 	}
 	
@@ -98,7 +98,7 @@ public final class ReferenceField extends AbstractRefField implements IReference
 		public boolean isSingleColumn() {
 			return true;
 		}
-		public MappingType<?> getTargetColumnType() {
+		public ColumnMapping<?> getTargetColumnType() {
 			return ReferenceField.this.getTargetColumnType();
 		}
 	}

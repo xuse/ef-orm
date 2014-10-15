@@ -11,7 +11,7 @@ import jef.database.wrapper.result.IResultSet;
 import jef.tools.DateFormats;
 import jef.tools.StringUtils;
 
-public class CharDateMapping extends ATypeMapping<java.util.Date> {
+public class CharDateMapping extends AColumnMapping<java.util.Date> {
 	private ThreadLocal<DateFormat> format;
 	private ThreadLocal<DateFormat> dateOnly;
 

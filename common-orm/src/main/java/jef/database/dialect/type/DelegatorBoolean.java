@@ -12,8 +12,8 @@ import jef.database.wrapper.result.IResultSet;
  * @author jiyi
  *
  */
-public final class DelegatorBoolean extends ATypeMapping<Boolean>{
-	private ATypeMapping<Boolean> real;
+public final class DelegatorBoolean extends AColumnMapping<Boolean>{
+	private AColumnMapping<Boolean> real;
 	private DatabaseDialect profile;
 	
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect profile) throws SQLException {

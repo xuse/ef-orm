@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 
-public class BitBooleanMapping extends ATypeMapping<Boolean>{
+public class BitBooleanMapping extends AColumnMapping<Boolean>{
 	@Override
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect dialect) throws SQLException {
 		if(value==null){

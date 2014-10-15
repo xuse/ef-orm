@@ -57,7 +57,7 @@ import jef.database.datasource.DataSources;
 import jef.database.datasource.IRoutingDataSource;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.jsqlparser.parser.JpqlParser;
 import jef.database.jsqlparser.parser.ParseException;
@@ -512,7 +512,7 @@ public final class DbUtils {
 	 *            主键，可以是Map或单值
 	 */
 	public static void setPrimaryKeyValue(IQueryableEntity data, Object pk) throws PersistenceException {
-		List<MappingType<?>> fields = MetaHolder.getMeta(data).getPKFields();
+		List<ColumnMapping<?>> fields = MetaHolder.getMeta(data).getPKFields();
 		if (fields.isEmpty())
 			return;
 		Assert.notNull(pk);
@@ -529,7 +529,7 @@ public final class DbUtils {
 			int length = Array.getLength(pk);
 			int n = 0;
 			Assert.isTrue(length == fields.size());
-			for (MappingType<?> f : fields) {
+			for (ColumnMapping<?> f : fields) {
 				f.getFieldAccessor().set(data, Array.get(pk, n++));
 			}
 		} else {
@@ -550,7 +550,7 @@ public final class DbUtils {
 			return null;
 		Map<String, Object> keyValMap = new HashMap<String, Object>();
 		for (int i = 0; i < len; i++) {
-			MappingType<?> field = meta.getPKFields().get(i);
+			ColumnMapping<?> field = meta.getPKFields().get(i);
 			if (!isValidPKValue(data, meta, field)) {
 				return null;
 			}
@@ -570,7 +570,7 @@ public final class DbUtils {
 		int len = meta.getPKFields().size();
 		Object[] result = new Object[len];
 		for (int i = 0; i < len; i++) {
-			MappingType<?> field = meta.getPKFields().get(i);
+			ColumnMapping<?> field = meta.getPKFields().get(i);
 			if (!isValidPKValue(data, meta, field)) {
 				return null;
 			}
@@ -587,7 +587,7 @@ public final class DbUtils {
 		int len = meta.getPKFields().size();
 		Serializable[] result = new Serializable[len];
 		for (int i = 0; i < len; i++) {
-			MappingType<?> field = meta.getPKFields().get(i);
+			ColumnMapping<?> field = meta.getPKFields().get(i);
 			result[i] = (Serializable) field.getFieldAccessor().get(data);
 		}
 		return Arrays.asList(result);
@@ -917,7 +917,7 @@ public final class DbUtils {
 	/*
 	 * (nojava doc)
 	 */
-	private static boolean isValidPKValue(IQueryableEntity obj, ITableMetadata meta, MappingType<?> field) {
+	private static boolean isValidPKValue(IQueryableEntity obj, ITableMetadata meta, ColumnMapping<?> field) {
 		Class<?> type = field.getFieldAccessor().getType();
 		Object value = field.getFieldAccessor().get(obj);
 		if (type.isPrimitive()) {
@@ -952,12 +952,12 @@ public final class DbUtils {
 		if (meta.getPKFields().isEmpty())
 			return false;
 		if (!force) {
-			for (MappingType<?> field : meta.getPKFields()) {
+			for (ColumnMapping<?> field : meta.getPKFields()) {
 				if (!isValidPKValue(obj, meta, field))
 					return false;
 			}
 		}
-		for (MappingType<?> mapping : meta.getPKFields()) {
+		for (ColumnMapping<?> mapping : meta.getPKFields()) {
 			Object value = mapping.getFieldAccessor().get(obj);
 			Field field=mapping.field();
 			query.addCondition(field, value);
@@ -985,7 +985,7 @@ public final class DbUtils {
 		Assert.isTrue(ObjectUtils.equals(getPrimaryKeyValue(changedObj), getPKValueSafe(oldObj)), "For consistence, the two parameter must hava equally primary keys.");
 		BeanWrapper bean1 = BeanWrapper.wrap(changedObj);
 		ITableMetadata m = MetaHolder.getMeta(oldObj);
-		for (MappingType<?> mType : m.getMetaFields()) {
+		for (ColumnMapping<?> mType : m.getMetaFields()) {
 			if (mType.isPk())
 				continue;
 			Field field = mType.field();
@@ -1012,7 +1012,7 @@ public final class DbUtils {
 		BeanWrapper beanNew = BeanWrapper.wrap(changedObj);
 		BeanWrapper beanOld = BeanWrapper.wrap(oldObj);
 		ITableMetadata m = MetaHolder.getMeta(oldObj);
-		for (MappingType<?> mType : m.getMetaFields()) {
+		for (ColumnMapping<?> mType : m.getMetaFields()) {
 			if (mType.isPk())
 				continue;
 			Field field = mType.field();
@@ -1040,7 +1040,7 @@ public final class DbUtils {
 		ITableMetadata m = MetaHolder.getMeta(obj[0]);
 		for (T o : obj) {
 			BeanWrapper bean = BeanWrapper.wrap(o);
-			for (MappingType<?> mType : m.getMetaFields()) {
+			for (ColumnMapping<?> mType : m.getMetaFields()) {
 				if (mType.isPk()) {
 					continue;
 				}
@@ -1062,7 +1062,7 @@ public final class DbUtils {
 		ITableMetadata meta = query.getMeta();
 		BeanWrapper bw = BeanWrapper.wrap(obj, BeanWrapper.FAST);
 		if (properties.length == 0) {
-			for (MappingType<?> mType : meta.getMetaFields()) {
+			for (ColumnMapping<?> mType : meta.getMetaFields()) {
 				Field field = mType.field();
 				if (obj.isUsed(field)) {
 					Object value = bw.getPropertyValue(field.name());

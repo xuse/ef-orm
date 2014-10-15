@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.util.Date;
 
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.support.LogFormat;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
@@ -102,7 +102,7 @@ public final class BindVariableContext {
 	 * @throws SQLException
 	 */
 	@SuppressWarnings({ "rawtypes" })
-	public Object setValueInPsmt(int count, Object value, MappingType cType) throws SQLException {
+	public Object setValueInPsmt(int count, Object value, ColumnMapping cType) throws SQLException {
 		if(cType==null){
 			if(value.getClass()==java.util.Date.class){
 				value=db.toTimestampSqlParam((Date)value);

@@ -1,7 +1,7 @@
 package jef.database.meta;
 
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.query.SqlContext;
 
 public interface IReferenceColumn extends ISelectProvider{
@@ -29,5 +29,5 @@ public interface IReferenceColumn extends ISelectProvider{
 	 * 目标列的meta
 	 * @return
 	 */
-	MappingType<?> getTargetColumnType();
+	ColumnMapping<?> getTargetColumnType();
 }

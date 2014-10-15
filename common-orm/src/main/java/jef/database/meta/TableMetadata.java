@@ -57,7 +57,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AbstractTimeMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ColumnMappings;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.query.JpqlExpression;
 import jef.database.query.ReferenceType;
 import jef.database.routing.function.AbstractDateFunction;
@@ -92,10 +92,10 @@ public final class TableMetadata extends MetadataAdapter {
 	
 	private Entry<PartitionKey, PartitionFunction>[] effectPartitionKeys;
 
-	private List<MappingType<?>> pkFields;// 记录主键列
+	private List<ColumnMapping<?>> pkFields;// 记录主键列
 
 	// //////////列名/字段索引//////////////////////
-	private final Map<Field, MappingType<?>> schemaMap = new IdentityHashMap<Field, MappingType<?>>(); // 提供Field到字段类型的转换
+	private final Map<Field, ColumnMapping<?>> schemaMap = new IdentityHashMap<Field, ColumnMapping<?>>(); // 提供Field到字段类型的转换
 
 	private final Map<Field, String> fieldToColumn = new IdentityHashMap<Field, String>();// 提供Field到列名的转换
 	private final Map<String, String> lowerColumnToFieldName = new HashMap<String, String>();// 提供Column名称到Field的转换，不光包括元模型字段，也包括了非元模型字段但标注了Column的字段(key全部存小写)
@@ -106,7 +106,7 @@ public final class TableMetadata extends MetadataAdapter {
 	private final Map<String, AbstractRefField> refFieldsByName = new HashMap<String, AbstractRefField>();// 记录所有关联和引用字段referenceFields
 	private final Map<Reference, List<AbstractRefField>> refFieldsByRef = new HashMap<Reference, List<AbstractRefField>>();// 记录所有的引用字段，按引用关系
 
-	private List<MappingType<?>> metaFields;
+	private List<ColumnMapping<?>> metaFields;
 
 	TableMetadata(Class<? extends IQueryableEntity> clz, AnnotationProvider annos) {
 		this.containerType = clz;
@@ -179,7 +179,7 @@ public final class TableMetadata extends MetadataAdapter {
 		return containerType;
 	}
 
-	public MappingType<?> getColumnDef(jef.database.Field field) {
+	public ColumnMapping<?> getColumnDef(jef.database.Field field) {
 		return schemaMap.get(field);
 	}
 
@@ -201,7 +201,7 @@ public final class TableMetadata extends MetadataAdapter {
 		};
 	}
 
-	public List<MappingType<?>> getPKFields() {
+	public List<ColumnMapping<?>> getPKFields() {
 		return pkFields;
 	}
 	/**
@@ -251,7 +251,7 @@ public final class TableMetadata extends MetadataAdapter {
 		if(lastFieldName!=null && !field.name().equals(lastFieldName)){
 			throw new IllegalArgumentException(String.format("The field [%s] and [%s] in [%s] have a duplicate column name [%s].",lastFieldName,field.name(),containerType.getName(),cName));
 		}
-		MappingType<?> type;
+		ColumnMapping<?> type;
 		try {
 			type = ColumnMappings.getMapping(field, this, cName, column, false);
 		} catch (IllegalArgumentException e) {
@@ -259,10 +259,10 @@ public final class TableMetadata extends MetadataAdapter {
 		}
 		if (annoId != null) {
 			type.setPk(true);
-			List<MappingType<?>> newPks = new ArrayList<MappingType<?>>(pkFields);
+			List<ColumnMapping<?>> newPks = new ArrayList<ColumnMapping<?>>(pkFields);
 			newPks.add(type);
-			Collections.sort(newPks, new Comparator<MappingType<?>>() {
-				public int compare(MappingType<?> o1, MappingType<?> o2) {
+			Collections.sort(newPks, new Comparator<ColumnMapping<?>>() {
+				public int compare(ColumnMapping<?> o1, ColumnMapping<?> o2) {
 					Integer i1=-1;
 					Integer i2=-1;
 					if(o1 instanceof Enum){
@@ -274,7 +274,7 @@ public final class TableMetadata extends MetadataAdapter {
 					return i1.compareTo(i2);
 				}
 			});
-			this.pkFields = Arrays.<MappingType<?>>asList(newPks.toArray(new MappingType[newPks.size()]));
+			this.pkFields = Arrays.<ColumnMapping<?>>asList(newPks.toArray(new ColumnMapping[newPks.size()]));
 		}
 		schemaMap.put(field, type);
 		
@@ -344,7 +344,7 @@ public final class TableMetadata extends MetadataAdapter {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Entity: [").append(containerType.getName()).append("]\n");
-		for (MappingType<?> m:this.getMetaFields()) {
+		for (ColumnMapping<?> m:this.getMetaFields()) {
 			String fname=m.fieldName();
 			sb.append("  ").append(fname);
 			StringUtils.repeat(sb, ' ', 10-fname.length());
@@ -679,11 +679,11 @@ public final class TableMetadata extends MetadataAdapter {
 	}
 
 	// 会将LOB移动到最后
-	public List<MappingType<?>> getMetaFields() {
+	public List<ColumnMapping<?>> getMetaFields() {
 		if (metaFields == null) {
-			MappingType<?>[] fields = schemaMap.values().toArray(new MappingType<?>[schemaMap.size()]);
-			Arrays.sort(fields, new Comparator<MappingType<?>>() {
-				public int compare(MappingType<?> field1, MappingType<?> field2) {
+			ColumnMapping<?>[] fields = schemaMap.values().toArray(new ColumnMapping<?>[schemaMap.size()]);
+			Arrays.sort(fields, new Comparator<ColumnMapping<?>>() {
+				public int compare(ColumnMapping<?> field1, ColumnMapping<?> field2) {
 					Class<? extends ColumnType> type1 = field1.get().getClass();
 					Class<? extends ColumnType> type2 = field1.get().getClass();
 					Boolean b1 = (type1 == ColumnType.Blob.class || type1 == ColumnType.Clob.class);
@@ -783,7 +783,7 @@ public final class TableMetadata extends MetadataAdapter {
 	}
 
 	@Override
-	protected Collection<MappingType<?>> getColumnSchema() {
+	protected Collection<ColumnMapping<?>> getColumnSchema() {
 		return this.schemaMap.values();
 	}
 

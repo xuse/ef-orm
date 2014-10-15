@@ -31,7 +31,7 @@ import jef.database.annotation.PartitionResult;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AbstractTimeMapping;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.select.PlainSelect;
@@ -144,7 +144,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 			for (Map.Entry<Field, Object> entry : fields) {
 				Field field = entry.getKey();
 				Object value = entry.getValue();
-				MappingType<?> vType = meta.getColumnDef(field);
+				ColumnMapping<?> vType = meta.getColumnDef(field);
 				if (sb.length() > 0)
 					sb.append(", ");
 				sb.append(vType.getColumnName(profile, true)).append(" = ");
@@ -282,7 +282,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 	@SuppressWarnings("unchecked")
 	private java.util.Map.Entry<Field, Object>[] getAllFieldValues(ITableMetadata meta, Map<Field, Object> map, BeanWrapper wrapper) {
 		List<Entry<Field, Object>> result = new ArrayList<Entry<Field, Object>>();
-		for (MappingType<?> vType : meta.getMetaFields()) {
+		for (ColumnMapping<?> vType : meta.getMetaFields()) {
 			Field field = vType.field();
 			if (map.containsKey(field)) {
 				result.add(new Entry<Field, Object>(field, map.get(field)));

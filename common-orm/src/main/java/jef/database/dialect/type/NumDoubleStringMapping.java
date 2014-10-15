@@ -7,7 +7,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 import jef.tools.StringUtils;
 
-public class NumDoubleStringMapping extends ATypeMapping<String>{
+public class NumDoubleStringMapping extends AColumnMapping<String>{
 
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(StringUtils.isEmpty(value)){

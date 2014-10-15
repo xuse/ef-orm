@@ -36,7 +36,7 @@ import jef.tools.reflect.Property;
  * 
  * @param <T>
  */
-public abstract class AutoIncrementMapping<T> extends ATypeMapping<T> {
+public abstract class AutoIncrementMapping<T> extends AColumnMapping<T> {
 	protected Property accessor;
 	private int len;
 	private boolean isBig;

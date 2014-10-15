@@ -28,10 +28,10 @@ public final class ColumnMappings {
 	private ColumnMappings() {
 	}
 
-	public static MappingType<?> getMapping(Field field, ITableMetadata meta, String columnName, ColumnType type, boolean pk) {
+	public static ColumnMapping<?> getMapping(Field field, ITableMetadata meta, String columnName, ColumnType type, boolean pk) {
 		BeanAccessor bw = FastBeanWrapperImpl.getAccessorFor(meta.getThisType());
 		Class<?> fieldType = bw.getPropertyType(field.name());
-		MappingType<?> mType = type.getMappingType(fieldType);
+		ColumnMapping<?> mType = type.getMappingType(fieldType);
 		mType.init(field, columnName, type, meta);
 		return mType;
 	}
@@ -167,7 +167,7 @@ public final class ColumnMappings {
 	 * @param allowPrmitive
 	 * @return
 	 */
-	public static ResultSetAccessor getAccessor(Class<?> javaType, MappingType<?> ctype, ColumnDescription c, boolean allowPrmitive) {
+	public static ResultSetAccessor getAccessor(Class<?> javaType, ColumnMapping<?> ctype, ColumnDescription c, boolean allowPrmitive) {
 		/*
 		 * 已知字段映射
 		 */
@@ -251,7 +251,7 @@ public final class ColumnMappings {
 		if (value instanceof Expression) {
 			return value.toString();
 		} else if (value instanceof String) {
-			return ATypeMapping.wrapSqlStr((String) value);
+			return AColumnMapping.wrapSqlStr((String) value);
 		} else if (value instanceof java.lang.Number) {
 			return value.toString();
 		} else if (value instanceof java.util.Date) {

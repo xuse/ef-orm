@@ -8,7 +8,7 @@ import java.util.Date;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 
-public class SqlTimeDateMapping extends ATypeMapping<Date>{
+public class SqlTimeDateMapping extends AColumnMapping<Date>{
 
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){

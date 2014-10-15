@@ -18,7 +18,7 @@ import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.Assert;
 import jef.tools.reflect.Property;
 
-public abstract class AbstractTimeMapping<T> extends ATypeMapping<T> {
+public abstract class AbstractTimeMapping<T> extends AColumnMapping<T> {
 	//0 不自动生成 1 创建时生成为sysdate 2更新时生成为sysdate 3创建时设置为为java系统时间  4为更新时设置为java系统时间
 	private int generated;
 	private Property accessor;

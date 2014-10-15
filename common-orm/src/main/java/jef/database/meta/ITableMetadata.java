@@ -16,7 +16,7 @@ import jef.database.annotation.PartitionTable;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AbstractTimeMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 
 import com.google.common.collect.Multimap;
 
@@ -108,9 +108,9 @@ public interface  ITableMetadata {
 	 * 获取字段的元数据定义
 	 * 
 	 * @return MappingType,包含了该字段的数据库列名、java字段名、类型等各种信息。
-	 * @see MappingType
+	 * @see ColumnMapping
 	 */
-	public MappingType<?> getColumnDef(Field field);
+	public ColumnMapping<?> getColumnDef(Field field);
 	/**
 	 * 返回第一个自增字段的定义，如果没有则返回null
 	 * 
@@ -137,7 +137,7 @@ public interface  ITableMetadata {
 	 * 将逐渐替代getPKField()方法.
 	 * @return
 	 */
-	public List<MappingType<?>> getPKFields(); 
+	public List<ColumnMapping<?>> getPKFields(); 
 	
 	/**
 	 * 获取索引的元数据定义
@@ -180,7 +180,7 @@ public interface  ITableMetadata {
 	 * 这些字段的顺序一旦确定那么就是固定的
 	 * @return
 	 */
-	public List<MappingType<?>> getMetaFields() ;
+	public List<ColumnMapping<?>> getMetaFields() ;
 	/**
 	 * 根据名称得到一个Field对象（大小写不敏感）
 	 * @param name

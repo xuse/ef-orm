@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 
-public class VarcharEnumMapping<T extends Enum<T>>  extends ATypeMapping<T>{
+public class VarcharEnumMapping<T extends Enum<T>>  extends AColumnMapping<T>{
 	
 	public VarcharEnumMapping(Class<T> clz){
 		this.clz=clz;

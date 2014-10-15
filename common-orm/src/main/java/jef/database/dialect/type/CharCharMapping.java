@@ -7,7 +7,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 
 
-public class CharCharMapping extends ATypeMapping<Character>{
+public class CharCharMapping extends AColumnMapping<Character>{
 	public int getSqlType() {
 		return java.sql.Types.CHAR;
 	}

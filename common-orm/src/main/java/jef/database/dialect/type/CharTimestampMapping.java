@@ -11,7 +11,7 @@ import jef.database.wrapper.result.IResultSet;
 import jef.tools.DateFormats;
 import jef.tools.StringUtils;
 
-public class CharTimestampMapping extends ATypeMapping<java.sql.Timestamp>{
+public class CharTimestampMapping extends AColumnMapping<java.sql.Timestamp>{
 	private ThreadLocal<DateFormat> format;
 	
 	public CharTimestampMapping(String format){

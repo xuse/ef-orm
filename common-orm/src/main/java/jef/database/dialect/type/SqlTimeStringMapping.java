@@ -9,7 +9,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 import jef.tools.DateFormats;
 
-public class SqlTimeStringMapping extends ATypeMapping<String>{
+public class SqlTimeStringMapping extends AColumnMapping<String>{
 	private ThreadLocal<DateFormat> format=DateFormats.TIME_ONLY;
 	
 	public SqlTimeStringMapping(){

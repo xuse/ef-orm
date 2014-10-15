@@ -26,7 +26,7 @@ import jef.common.Entry;
 import jef.common.log.LogUtil;
 import jef.database.annotation.PartitionResult;
 import jef.database.cache.TransactionCache;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.support.DbOperatorListener;
@@ -385,7 +385,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 
 		@Override
 		protected void processJdbcParams(PreparedStatement psmt, List<T> listValue, OperateTarget db) throws SQLException {
-			List<MappingType<?>> writeFields = insertPart.getFields();
+			List<ColumnMapping<?>> writeFields = insertPart.getFields();
 			int len = listValue.size();
 			boolean debug = ORMConfig.getInstance().isDebugMode() && !extreme;
 			for (int i = 0; i < len; i++) {

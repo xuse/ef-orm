@@ -20,7 +20,7 @@ import jef.tools.reflect.Property;
  * @param <T>
  *            该列在java中映射的数据类型
  */
-public interface MappingType<T> extends ResultSetAccessor {
+public interface ColumnMapping<T> extends ResultSetAccessor {
 	/**
 	 * 得到ColumnType
 	 * 

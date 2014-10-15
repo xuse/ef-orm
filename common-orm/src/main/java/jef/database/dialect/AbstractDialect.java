@@ -44,7 +44,7 @@ import jef.database.DbMetaData;
 import jef.database.OperateTarget;
 import jef.database.datasource.DataSourceInfo;
 import jef.database.dialect.ColumnType.Varchar;
-import jef.database.dialect.type.ATypeMapping;
+import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
@@ -556,7 +556,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	 * @return
 	 */
 	public String getSchema(String schema) {
-		return StringUtils.upperCase(schema);
+		return schema;
 	}
 
 	public boolean notHas(Feature feature) {
@@ -607,15 +607,15 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	}
 
 	public String getSqlDateExpression(Date value) {
-		return ATypeMapping.wrapSqlStr(DateUtils.formatDate(value));
+		return AColumnMapping.wrapSqlStr(DateUtils.formatDate(value));
 	}
 
 	public String getSqlTimeExpression(Date value) {
-		return ATypeMapping.wrapSqlStr(DateFormats.TIME_ONLY.get().format(value));
+		return AColumnMapping.wrapSqlStr(DateFormats.TIME_ONLY.get().format(value));
 	}
 
 	public String getSqlTimestampExpression(Date value) {
-		return ATypeMapping.wrapSqlStr(DateFormats.DATE_TIME_CS.get().format(value));
+		return AColumnMapping.wrapSqlStr(DateFormats.DATE_TIME_CS.get().format(value));
 	}
 
 	public int getClobDataType() {

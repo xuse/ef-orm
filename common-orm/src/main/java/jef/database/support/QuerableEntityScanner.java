@@ -18,7 +18,7 @@ import jef.database.Field;
 import jef.database.annotation.EasyEntity;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.type.AutoIncrementMapping;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.jpa.JefEntityManagerFactory;
 import jef.database.meta.Column;
 import jef.database.meta.ColumnModification;
@@ -226,7 +226,7 @@ public class QuerableEntityScanner {
 			}
 		});
 		if(checkSequence){
-			for(MappingType<?> f:meta.getMetaFields()){
+			for(ColumnMapping<?> f:meta.getMetaFields()){
 				if(f instanceof AutoIncrementMapping){
 					AutoIncrementMapping<?> m=(AutoIncrementMapping<?>)f;
 					GenerationType gt=((AutoIncrementMapping<?>) f).getGenerationType(entityManagerFactory.getDefault().getProfile(meta.getBindDsName()));

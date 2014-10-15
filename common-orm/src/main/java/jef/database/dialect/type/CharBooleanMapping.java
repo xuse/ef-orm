@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 
-public class CharBooleanMapping extends ATypeMapping<Boolean>{
+public class CharBooleanMapping extends AColumnMapping<Boolean>{
 
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){

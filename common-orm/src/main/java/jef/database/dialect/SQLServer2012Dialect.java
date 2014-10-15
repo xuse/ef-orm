@@ -11,7 +11,7 @@ import jef.tools.StringUtils;
  * @author jiyi
  *
  */
-public class SQLServer2012Dialect extends SQLServer2005Dialect{
+public class SQLServer2012Dialect extends SQLServer2008Dialect{
 	
 	public SQLServer2012Dialect(){
 		//2012开始支持SEQUENCE

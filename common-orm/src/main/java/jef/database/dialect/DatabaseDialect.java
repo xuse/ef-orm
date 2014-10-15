@@ -46,7 +46,7 @@ import jef.database.wrapper.clause.InsertSqlClause;
  */
 public interface DatabaseDialect {
 	/**
-	 * 得到名称
+	 * 得到RDBMS的名称
 	 * 
 	 * @return
 	 */
@@ -63,7 +63,7 @@ public interface DatabaseDialect {
 	void processConnectProperties(DataSourceInfo dsw);
 
 	/**
-	 * 得到用于建表的备注文字
+	 * 得到用于建表的数据类型
 	 * 
 	 * @param vType
 	 * @param typeStrOnly

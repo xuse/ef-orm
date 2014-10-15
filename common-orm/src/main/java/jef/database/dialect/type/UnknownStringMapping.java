@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 
-public class UnknownStringMapping extends ATypeMapping<String>{
+public class UnknownStringMapping extends AColumnMapping<String>{
 	private String name;
 	public UnknownStringMapping(String name) {
 		this.name=name;

@@ -41,7 +41,7 @@ import jef.database.Session;
 import jef.database.Session.PopulateStrategy;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMappings;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.ResultSetAccessor;
 import jef.database.innerpool.FieldPopulator;
 import jef.database.innerpool.MultiplePopulator;
@@ -607,7 +607,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 					op1=fill(targetAccessor, rp.getSchema(), allcolumns, rs, columns, targetType, false);
 					if (allcolumns.isLazyLob()) {
 						for (Field field : targetType.getLobFieldNames()) {
-							MappingType<?> mType=targetType.getColumnDef(field);
+							ColumnMapping<?> mType=targetType.getColumnDef(field);
 							LobLazyLoadTask task = new LobLazyLoadTask(mType, rs.getProfile(), targetType.getTableName(true));
 							tasks.add(task);
 						}
@@ -662,7 +662,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 		Map<String, ColumnDescription> data = new HashMap<String, ColumnDescription>();
 		DatabaseDialect profile = rs.getProfile();
 		// 这里要按照列名来拼装，不是默认全拼装
-		for (MappingType<?> ft : meta.getMetaFields()) {
+		for (ColumnMapping<?> ft : meta.getMetaFields()) {
 			String columnName;
 			Field f = ft.field();
 			if (fullRef == null) {

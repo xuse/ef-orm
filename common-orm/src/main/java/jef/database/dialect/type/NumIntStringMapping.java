@@ -7,7 +7,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 import jef.tools.StringUtils;
 
-public class NumIntStringMapping  extends ATypeMapping<String>{
+public class NumIntStringMapping  extends AColumnMapping<String>{
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(StringUtils.isEmpty(value)){
 			st.setNull(index, java.sql.Types.INTEGER);

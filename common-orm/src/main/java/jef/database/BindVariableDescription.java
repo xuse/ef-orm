@@ -1,7 +1,7 @@
 package jef.database;
 
 import jef.database.Condition.Operator;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.FBIField;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.TupleField;
@@ -43,7 +43,7 @@ public class BindVariableDescription{
 	}
 	
 	@SuppressWarnings("rawtypes")
-	public MappingType getColumnType(){
+	public ColumnMapping getColumnType(){
 		return meta==null?null:meta.getColumnDef(field); 
 	}
 	

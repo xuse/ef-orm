@@ -4,7 +4,7 @@ import jef.database.Condition;
 import jef.database.Condition.Operator;
 import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.wrapper.clause.HavingEle;
 
 import org.apache.commons.lang.RandomStringUtils;
@@ -108,7 +108,7 @@ public class SelectExpression extends SingleColumnSelect {
 		return true;
 	}
 
-	public MappingType<?> getTargetColumnType() {
+	public ColumnMapping<?> getTargetColumnType() {
 		return null;
 	}
 }

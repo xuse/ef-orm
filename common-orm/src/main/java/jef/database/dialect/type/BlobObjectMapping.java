@@ -19,7 +19,7 @@ import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 
 
-public class BlobObjectMapping extends ATypeMapping<Object> {
+public class BlobObjectMapping extends AColumnMapping<Object> {
 	static int blobType;
 
 	static {

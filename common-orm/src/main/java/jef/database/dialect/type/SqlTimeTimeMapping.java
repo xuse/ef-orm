@@ -7,7 +7,7 @@ import java.sql.Time;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 
-public class SqlTimeTimeMapping extends ATypeMapping<java.sql.Time>{
+public class SqlTimeTimeMapping extends AColumnMapping<java.sql.Time>{
 
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		st.setTime(index, (Time)value);

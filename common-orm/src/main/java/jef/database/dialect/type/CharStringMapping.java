@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 
-public class CharStringMapping extends ATypeMapping<String>{
+public class CharStringMapping extends AColumnMapping<String>{
 	public int getSqlType() {
 		return java.sql.Types.CHAR;
 	}

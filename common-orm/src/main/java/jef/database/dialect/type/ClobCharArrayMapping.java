@@ -12,7 +12,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 import jef.tools.IOUtils;
 
-public class ClobCharArrayMapping extends ATypeMapping<char[]>{
+public class ClobCharArrayMapping extends AColumnMapping<char[]>{
 	public int getSqlType() {
 		return java.sql.Types.CLOB;
 	}

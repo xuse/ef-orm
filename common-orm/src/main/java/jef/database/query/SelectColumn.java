@@ -9,7 +9,7 @@ import jef.database.DbFunction;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.clause.HavingEle;
 
@@ -276,7 +276,7 @@ public final class SelectColumn extends SingleColumnSelect{
 		return true;
 	}
 
-	public MappingType<?> getTargetColumnType() {
+	public ColumnMapping<?> getTargetColumnType() {
 		return meta.getColumnDef(targetField);
 	}
 

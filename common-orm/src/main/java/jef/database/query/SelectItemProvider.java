@@ -7,7 +7,7 @@ import java.util.List;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.AliasProvider;
 import jef.database.meta.IReferenceAllTable;
 import jef.database.meta.IReferenceColumn;
@@ -93,7 +93,7 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 		if(assignedFields.isEmpty() && referenceObj==null){
 			if(!groupMode){//group模式下全部无效
 				ITableMetadata meta=table.getMeta();
-				for (MappingType<?> f : meta.getMetaFields()) {
+				for (ColumnMapping<?> f : meta.getMetaFields()) {
 					CommentEntry entry=new CommentEntry();
 					entry.setKey(schema.concat(".").concat(f.getColumnName(profile, true)));
 					entry.setValue(aliasProvider.getSelectedAliasOf(f.field(), profile, schema,true));	
@@ -111,7 +111,7 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 			}else{
 				if(!groupMode){
 					ITableMetadata meta=table.getMeta();
-					for (MappingType<?> f : meta.getMetaFields()) {
+					for (ColumnMapping<?> f : meta.getMetaFields()) {
 						if(referenceObj.isLazyLob()){
 							if(ArrayUtils.fastContains(meta.getLobFieldNames(), f.field())){
 								continue;

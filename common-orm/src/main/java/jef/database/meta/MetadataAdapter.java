@@ -15,7 +15,7 @@ import jef.database.annotation.BindDataSource;
 import jef.database.cache.KeyDimension;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.query.DbTable;
 import jef.database.query.JpqlExpression;
 import jef.database.query.PKQuery;
@@ -33,10 +33,10 @@ public abstract class MetadataAdapter implements ITableMetadata {
 	protected String schema;
 	protected String tableName;
 	private String bindDsName;
-	protected List<MappingType<?>> metaFields;
+	protected List<ColumnMapping<?>> metaFields;
 	final List<jef.database.annotation.Index> indexMap = new ArrayList<jef.database.annotation.Index>(5);//记录对应表的所有索引，当建表时使用可自动创建索引
 
-	protected abstract Collection<MappingType<?>> getColumnSchema();
+	protected abstract Collection<ColumnMapping<?>> getColumnSchema();
 
 
 	protected void initByAnno(Class<?> thisType,javax.persistence.Table table,BindDataSource bindDs) {
@@ -72,12 +72,12 @@ public abstract class MetadataAdapter implements ITableMetadata {
 		this.bindProfile=null;
 	}
 	
-	public List<MappingType<?>> getMetaFields() {
+	public List<ColumnMapping<?>> getMetaFields() {
 		if (metaFields == null) {
-			Collection<MappingType<?>> map = this.getColumnSchema();
-			MappingType<?>[] fields = map.toArray(new MappingType[map.size()]);
-			Arrays.sort(fields, new Comparator<MappingType<?>>() {
-				public int compare(MappingType<?> field1, MappingType<?> field2) {
+			Collection<ColumnMapping<?>> map = this.getColumnSchema();
+			ColumnMapping<?>[] fields = map.toArray(new ColumnMapping[map.size()]);
+			Arrays.sort(fields, new Comparator<ColumnMapping<?>>() {
+				public int compare(ColumnMapping<?> field1, ColumnMapping<?> field2) {
 					Class<? extends ColumnType> type1 = field1.get().getClass();
 					Class<? extends ColumnType> type2 = field2.get().getClass();
 					Boolean b1 = (type1 == ColumnType.Blob.class || type1 == ColumnType.Clob.class);

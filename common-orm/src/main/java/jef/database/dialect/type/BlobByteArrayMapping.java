@@ -11,7 +11,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 import jef.tools.IOUtils;
 
-public class BlobByteArrayMapping extends ATypeMapping<byte[]>{
+public class BlobByteArrayMapping extends AColumnMapping<byte[]>{
 	
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect dialect) throws SQLException {
 		if(value==null){

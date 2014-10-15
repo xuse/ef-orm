@@ -7,7 +7,7 @@ import java.util.Date;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 
-public class NumBigDateMapping extends ATypeMapping<Date>{
+public class NumBigDateMapping extends AColumnMapping<Date>{
 
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){

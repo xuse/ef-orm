@@ -13,7 +13,7 @@ import jef.database.dialect.type.AutoGuidMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.AutoIntMapping;
 import jef.database.dialect.type.AutoLongMapping;
-import jef.database.dialect.type.MappingType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
@@ -95,7 +95,7 @@ public final class RecordsHolder<T extends IQueryableEntity>{
 			rhs.add(new RecordHolder<T>(this, i, objs.get(i)));
 		}		
 		if(holder.getProfile().has(Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD)){
-			for(MappingType<?> type:meta.getPKFields()){
+			for(ColumnMapping<?> type:meta.getPKFields()){
 				if(type instanceof AutoIntMapping || type instanceof AutoLongMapping){
 					supportsNewRec=false;		
 				}
@@ -124,7 +124,7 @@ public final class RecordsHolder<T extends IQueryableEntity>{
 		@SuppressWarnings("unchecked")
 		T obj= (T) meta.newInstance();
 		if(!meta.getPKFields().isEmpty()){
-			for(MappingType<?> type:meta.getPKFields()){
+			for(ColumnMapping<?> type:meta.getPKFields()){
 				if(type instanceof AutoIncrementMapping<?>){
 					AutoIncrementMapping<?> mapping=(AutoIncrementMapping<?>)type;
 					mapping.getAccessor().set(obj, getNextAutoIncreament(mapping));
@@ -282,7 +282,7 @@ public final class RecordsHolder<T extends IQueryableEntity>{
 		rs.moveToInsertRow();
 		Assert.notNull(meta);
 		BeanWrapper bw=BeanWrapper.wrap(t);
-		for(MappingType<?> mType: meta.getMetaFields()){
+		for(ColumnMapping<?> mType: meta.getMetaFields()){
 			Field f = mType.field();
 			String columnName=mType.getColumnName(profile, false);
 			if(!bw.isReadableProperty(f.name()))continue;
