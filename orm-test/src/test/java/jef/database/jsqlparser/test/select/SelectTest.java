@@ -28,6 +28,7 @@ import jef.database.jsqlparser.util.deparser.StatementDeParser;
 import jef.database.jsqlparser.visitor.Statement;
 import junit.framework.TestCase;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class SelectTest extends TestCase {
@@ -599,16 +600,16 @@ public class SelectTest extends TestCase {
 		assertEquals(statement, parsed.toString());
 		assertEquals(statement, deParser.getBuffer().toString());
 	}
-
-	public void testMatches() throws ParseException {
-		String statement = "select * from team where team.search_column @@ to_tsquery('new & york & yankees')";
-		Statement parsed = jef.database.DbUtils.parseStatement(statement);
-		StatementDeParser deParser=new StatementDeParser(new StringBuilder());
-		parsed.accept(deParser);
-		
-		assertEquals(statement, parsed.toString());
-		assertEquals(statement, deParser.getBuffer().toString());
-	}
+	
+//	public void testMatches() throws ParseException {
+//		String statement = "select * from team where team.search_column @@ to_tsquery('new & york & yankees')";
+//		Statement parsed = jef.database.DbUtils.parseStatement(statement);
+//		StatementDeParser deParser=new StatementDeParser(new StringBuilder());
+//		parsed.accept(deParser);
+//		
+//		assertEquals(statement, parsed.toString());
+//		assertEquals(statement, deParser.getBuffer().toString());
+//	}
 
 	public void testGroupByExpression() throws ParseException {
 		String statement = 

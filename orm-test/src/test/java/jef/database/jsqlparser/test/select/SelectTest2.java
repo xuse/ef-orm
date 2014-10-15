@@ -600,15 +600,15 @@ public class SelectTest2 extends TestCase {
 		assertEquals(statement, deParser.getBuffer().toString());
 	}
 
-	public void testMatches() throws ParseException {
-		String statement = "select * from team where team.search_column @@ to_tsquery('new & york & yankees')";
-		Statement parsed = jef.database.DbUtils.parseStatement(statement);
-		DeParserAdapter deParser=new DeParserAdapter(new StringBuilder());
-		parsed.accept(deParser);
-		
-		assertEquals(statement, parsed.toString());
-		assertEquals(statement, deParser.getBuffer().toString());
-	}
+//	public void testMatches() throws ParseException {
+//		String statement = "select * from team where team.search_column @@ to_tsquery('new & york & yankees')";
+//		Statement parsed = jef.database.DbUtils.parseStatement(statement);
+//		DeParserAdapter deParser=new DeParserAdapter(new StringBuilder());
+//		parsed.accept(deParser);
+//		
+//		assertEquals(statement, parsed.toString());
+//		assertEquals(statement, deParser.getBuffer().toString());
+//	}
 
 	public void testGroupByExpression() throws ParseException {
 		String statement = 
