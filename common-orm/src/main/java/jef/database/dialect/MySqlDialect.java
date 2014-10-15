@@ -25,7 +25,6 @@ import jef.database.ConnectInfo;
 import jef.database.DbUtils;
 import jef.database.ORMConfig;
 import jef.database.dialect.ColumnType.AutoIncrement;
-import jef.database.dialect.ColumnType.Varchar;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
@@ -102,7 +101,7 @@ public class MySqlDialect extends AbstractDialect {
 	public MySqlDialect() {
 		// 在MYSQL中 ||是逻辑运算符
 		features = CollectionUtil.identityHashSet();
-		features.addAll(Arrays.asList(Feature.DBNAME_AS_SCHEMA, Feature.INDEX_LENGTH_LIMIT, Feature.ALTER_FOR_EACH_COLUMN, Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD, Feature.SUPPORT_LIMIT, Feature.COLUMN_DEF_ALLOW_NULL));
+		features.addAll(Arrays.asList(Feature.DBNAME_AS_SCHEMA, Feature.ALTER_FOR_EACH_COLUMN, Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD, Feature.SUPPORT_LIMIT, Feature.COLUMN_DEF_ALLOW_NULL));
 		setProperty(DbProperty.ADD_COLUMN, "ADD");
 		setProperty(DbProperty.MODIFY_COLUMN, "MODIFY");
 		setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");
@@ -110,7 +109,11 @@ public class MySqlDialect extends AbstractDialect {
 		setProperty(DbProperty.SELECT_EXPRESSION, "select %s");
 		setProperty(DbProperty.WRAP_FOR_KEYWORD, "`");
 		setProperty(DbProperty.GET_IDENTITY_FUNCTION, "SELECT LAST_INSERT_ID()");
-
+		setProperty(DbProperty.INDEX_LENGTH_LIMIT, "767");
+		setProperty(DbProperty.INDEX_LENGTH_LIMIT_FIX, "255");
+		setProperty(DbProperty.INDEX_LENGTH_CHARESET_FIX, "charset=latin5");
+		
+		
 		loadKeywords("mysql_keywords.properties");
 		registerNative(new StandardSQLFunction("ascii"));
 		registerNative(new StandardSQLFunction("bin"));
@@ -292,22 +295,11 @@ public class MySqlDialect extends AbstractDialect {
 
 	/**
 	 * MYSQL中，表名是全转小写的，列名才是保持大小写的，先做小写处理，如果有处理列名的场合，改为调用
-	 * {@link #getColumnNameIncase(String)}
+	 * {@link #getColumnNameToUse(String)}
 	 */
 	@Override
-	public String getObjectNameIfUppercase(String name) {
+	public String getObjectNameToUse(String name) {
 		return StringUtils.lowerCase(name);
-	}
-
-	public boolean checkPKLength(ColumnType type) {
-		if (type instanceof Varchar) {
-			if (((Varchar) type).length > 767) {
-				throw new IllegalArgumentException("The varchar column in MYSQL will not be indexed if length is >767.");
-			} else if (((Varchar) type).length > 255) {
-				return false;
-			}
-		}
-		return true;
 	}
 
 	@Override

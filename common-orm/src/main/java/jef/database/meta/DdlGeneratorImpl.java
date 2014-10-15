@@ -13,6 +13,7 @@ import jef.common.SimpleSet;
 import jef.database.Field;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.ColumnType.AutoIncrement;
+import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.MappingType;
@@ -61,9 +62,15 @@ public class DdlGeneratorImpl implements DdlGenerator {
 			ColumnType vType = entry.get();
 			if (isPK) {
 				vType.setNullable(false);
-				if (profile.has(Feature.INDEX_LENGTH_LIMIT)) {
-					if (!profile.checkPKLength(vType)) {
-						charSetFix = "charset=latin5";
+				if (vType instanceof Varchar) {
+					Varchar vcType=(Varchar) vType;
+					int check=profile.getPropertyInt(DbProperty.INDEX_LENGTH_LIMIT);
+					if(check>0 && vcType.getLength()>check){
+						throw new IllegalArgumentException("The varchar column in "+profile.getName()+" will not be indexed if length is >"+check);
+					}
+					check=profile.getPropertyInt(DbProperty.INDEX_LENGTH_LIMIT_FIX);
+					if(check>0 && vcType.getLength()>check){
+						charSetFix=profile.getProperty(DbProperty.INDEX_LENGTH_CHARESET_FIX);
 					}
 				}
 			}

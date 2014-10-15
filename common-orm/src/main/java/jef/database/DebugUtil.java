@@ -112,7 +112,7 @@ public class DebugUtil {
 	 */
 	public static Set<String> getColumnsInLowercase(OperateTarget db, String tableName) throws SQLException {
 		Set<String> set = new HashSet<String>();
-		tableName = db.getProfile().getObjectNameIfUppercase(tableName);
+		tableName = db.getProfile().getObjectNameToUse(tableName);
 		IConnection conn = DebugUtil.getConnection(db);
 		try {
 			DatabaseMetaData databaseMetaData = conn.getMetaData();
@@ -155,7 +155,7 @@ public class DebugUtil {
 		if (StringUtils.isEmpty(column))
 			return false;
 		boolean has = false;
-		tableName = db.getProfile().getObjectNameIfUppercase(tableName);
+		tableName = db.getProfile().getColumnNameToUse(tableName);
 		IConnection conn = DebugUtil.getConnection(db);
 		try {
 			DatabaseMetaData databaseMetaData = conn.getMetaData();

@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Feature;
@@ -17,7 +18,7 @@ public class BlobFileMapping extends ATypeMapping<File>{
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect profile) throws SQLException {
 		File file=(File)value;
 		if(value==null || !file.exists()){
-			st.setNull(index, profile.getBlobDataType());
+			st.setNull(index, profile.getImplementationSqlType(Types.BLOB));
 		}else{
 			try {
 				if(profile.has(Feature.NOT_SUPPORT_SET_BINARY)){

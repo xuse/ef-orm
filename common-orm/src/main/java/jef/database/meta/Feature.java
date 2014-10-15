@@ -38,10 +38,6 @@ public enum Feature {
 	 */
 	DBNAME_AS_SCHEMA, // 
 	/**
-	 * 索引长度受限 (MYSQL)
-	 */
-	INDEX_LENGTH_LIMIT,
-	/**
 	 * 允许使用NULL在列定义中
 	 */
 	COLUMN_DEF_ALLOW_NULL,

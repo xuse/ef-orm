@@ -49,11 +49,6 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	}
 
 	@Override
-	public boolean checkPKLength(ColumnType type) {
-		return dialect.checkPKLength(type);
-	}
-
-	@Override
 	public CachedRowSet newCacheRowSetInstance() throws SQLException {
 		return dialect.newCacheRowSetInstance();
 	}
@@ -104,13 +99,13 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	}
 
 	@Override
-	public String getObjectNameIfUppercase(String name) {
-		return dialect.getObjectNameIfUppercase(name);
+	public String getObjectNameToUse(String name) {
+		return dialect.getObjectNameToUse(name);
 	}
 
 	@Override
-	public String getColumnNameIncase(String name) {
-		return dialect.getColumnNameIncase(name);
+	public String getColumnNameToUse(String name) {
+		return dialect.getColumnNameToUse(name);
 	}
 
 	@Override
@@ -121,11 +116,6 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	@Override
 	public Timestamp toTimestampSqlParam(Date timestamp) {
 		return dialect.toTimestampSqlParam(timestamp);
-	}
-
-	@Override
-	public String[] getOtherVersionSql() {
-		return dialect.getOtherVersionSql();
 	}
 
 	@Override
@@ -199,16 +189,6 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	}
 
 	@Override
-	public int getClobDataType() {
-		return dialect.getClobDataType();
-	}
-
-	@Override
-	public int getBlobDataType() {
-		return dialect.getBlobDataType();
-	}
-
-	@Override
 	public long getColumnAutoIncreamentValue(AutoIncrementMapping<?> mapping, OperateTarget db) {
 		return dialect.getColumnAutoIncreamentValue(mapping, db);
 	}
@@ -234,12 +214,17 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	}
 
 	@Override
-	public int getImplementationSqlType(ColumnType vType) {
-		return dialect.getImplementationSqlType(vType);
+	public String toDefaultString(Object defaultValue, int sqlType) {
+		return dialect.toDefaultString(defaultValue, sqlType);
 	}
 
 	@Override
-	public String toDefaultString(Object defaultValue, int sqlType) {
-		return dialect.toDefaultString(defaultValue, sqlType);
+	public int getImplementationSqlType(int sqlType) {
+		return dialect.getImplementationSqlType(sqlType);
+	}
+
+	@Override
+	public int getPropertyInt(DbProperty key) {
+		return dialect.getPropertyInt(key);
 	}
 }

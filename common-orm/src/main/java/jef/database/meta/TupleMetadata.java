@@ -161,12 +161,12 @@ public class TupleMetadata extends MetadataAdapter{
 		MappingType<?> mType = this.schemaMap.get(fld);
 		String name;
 		if (mType != null) {
-			name = profile.getColumnNameIncase(mType.columnName());
+			name = profile.getColumnNameToUse(mType.columnName());
 		} else {
 			if (fld instanceof FBIField) {
 				throw new UnsupportedOperationException();
 			}
-			name = profile.getColumnNameIncase(fld.name());
+			name = profile.getColumnNameToUse(fld.name());
 		}
 		//进行关键字判断和处理
 		if(escape){

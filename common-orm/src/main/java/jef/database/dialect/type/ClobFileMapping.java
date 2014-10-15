@@ -6,6 +6,7 @@ import java.io.Reader;
 import java.sql.Clob;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
@@ -15,7 +16,7 @@ public class ClobFileMapping extends ATypeMapping<File>{
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		File file=(File)value;
 		if(value==null || !file.exists()){
-			st.setNull(index, session.getClobDataType());
+			st.setNull(index, session.getImplementationSqlType(Types.CLOB));
 		}else{
 			try {
 				st.setCharacterStream(index, IOUtils.getReader(file, null));//这个方法在JDBC4才支持。
@@ -27,7 +28,7 @@ public class ClobFileMapping extends ATypeMapping<File>{
 	}
 
 	public int getSqlType() {
-		return java.sql.Types.CLOB;
+		return Types.CLOB;
 	}
 
 	@Override

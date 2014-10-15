@@ -261,12 +261,12 @@ public class PostgreSqlDialect extends AbstractDialect {
 	 * @param name
 	 */
 	@Override
-	public String getObjectNameIfUppercase(String name) {
+	public String getObjectNameToUse(String name) {
 		return name == null ? null : name.toLowerCase();
 	}
 
 	@Override
-	public String getColumnNameIncase(String name) {
+	public String getColumnNameToUse(String name) {
 		return name == null ? null : name.toLowerCase();
 	}
 

@@ -102,6 +102,7 @@ public class OracleDialect extends AbstractDialect {
 		setProperty(DbProperty.SEQUENCE_FETCH, "SELECT %s.NEXTVAL FROM DUAL");
 		setProperty(DbProperty.SELECT_EXPRESSION, "SELECT %s FROM DUAL");
 		setProperty(DbProperty.WRAP_FOR_KEYWORD, "\"");
+		setProperty(DbProperty.OTHER_VERSION_SQL, "select 'USER_LANGUAGE',userenv('language') from dual");
 		
 		registerNative(Scientific.sinh);
 		registerNative(Scientific.cosh);
@@ -308,12 +309,12 @@ public class OracleDialect extends AbstractDialect {
 	}
 
 	@Override
-	public String getObjectNameIfUppercase(String name) {
+	public String getObjectNameToUse(String name) {
 		return name==null?null:name.toUpperCase();
 	}
 
 	@Override
-	public String getColumnNameIncase(String name) {
+	public String getColumnNameToUse(String name) {
 		return name==null?null:name.toUpperCase();
 	}
 
@@ -360,12 +361,6 @@ public class OracleDialect extends AbstractDialect {
 			LogUtil.exception(e);
 		}
 		return defaultValue;
-	}
-
-	@Override
-	public String[] getOtherVersionSql() {
-//		"select * from nls_database_parameters", 
-		return new String[] { "select 'USER_LANGUAGE',userenv('language') from dual" };
 	}
 
 	@Override

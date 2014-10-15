@@ -59,10 +59,10 @@ public class SelectExpression extends SingleColumnSelect {
 			if(alias==null){
 				alias="C".concat(RandomStringUtils.randomNumeric(12));
 			}else{
-				return DbUtils.escapeColumn(profile, profile.getColumnNameIncase(alias));
+				return DbUtils.escapeColumn(profile, profile.getColumnNameToUse(alias));
 			}
 		}
-		return profile.getColumnNameIncase(alias);
+		return profile.getColumnNameToUse(alias);
 	}
 
 	@Override

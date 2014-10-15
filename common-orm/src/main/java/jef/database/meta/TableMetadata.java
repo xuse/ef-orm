@@ -506,13 +506,13 @@ public final class TableMetadata extends MetadataAdapter {
 	public String getColumnName(Field fld, DatabaseDialect profile, boolean escape) {
 		String name = this.fieldToColumn.get(fld);
 		if (name != null) {
-			name = profile.getColumnNameIncase(name);
+			name = profile.getColumnNameToUse(name);
 		} else {
 			if (fld instanceof JpqlExpression) {
 				throw new UnsupportedOperationException();
 			}
 			if (name == null){
-				name = profile.getColumnNameIncase(fld.name());
+				name = profile.getColumnNameToUse(fld.name());
 			}
 		}
 		// 进行关键字判断和处理

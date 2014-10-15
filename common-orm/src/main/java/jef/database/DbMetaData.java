@@ -58,6 +58,7 @@ import jef.database.innerpool.IUserManagedPool;
 import jef.database.meta.Column;
 import jef.database.meta.ColumnChange;
 import jef.database.meta.ColumnModification;
+import jef.database.meta.DbProperty;
 import jef.database.meta.DdlGenerator;
 import jef.database.meta.DdlGeneratorImpl;
 import jef.database.meta.Feature;
@@ -215,9 +216,9 @@ public class DbMetaData {
 			DatabaseDialect profile = info.profile;
 			Assert.notNull(profile);
 			if (profile.has(Feature.USER_AS_SCHEMA)) {
-				this.schema = profile.getObjectNameIfUppercase(StringUtils.trimToNull(info.getUser()));
+				this.schema = profile.getObjectNameToUse(StringUtils.trimToNull(info.getUser()));
 			} else if (profile.has(Feature.DBNAME_AS_SCHEMA)) {
-				this.schema = profile.getObjectNameIfUppercase(StringUtils.trimToNull(info.getDbname()));
+				this.schema = profile.getObjectNameToUse(StringUtils.trimToNull(info.getDbname()));
 			}
 			if (this.schema == null)
 				schema = profile.getDefaultSchema();
@@ -235,7 +236,7 @@ public class DbMetaData {
 	 * @return 表的信息
 	 */
 	public List<TableInfo> getTable(String name) throws SQLException {
-		return getDatabaseObject(ObjectType.TABLE, this.schema, getProfile().getObjectNameIfUppercase(name), null, false);
+		return getDatabaseObject(ObjectType.TABLE, this.schema, getProfile().getObjectNameToUse(name), null, false);
 	}
 
 	/**
@@ -281,7 +282,7 @@ public class DbMetaData {
 	 * @return 视图信息
 	 */
 	public List<TableInfo> getView(String name) throws SQLException {
-		return getDatabaseObject(ObjectType.VIEW, this.schema, getProfile().getObjectNameIfUppercase(name), null, false);
+		return getDatabaseObject(ObjectType.VIEW, this.schema, getProfile().getObjectNameToUse(name), null, false);
 	}
 
 	/**
@@ -303,7 +304,7 @@ public class DbMetaData {
 	public List<CommentEntry> getSequence(String name) throws SQLException {
 		List<CommentEntry> result = new ArrayList<CommentEntry>();
 
-		for (TableInfo table : getDatabaseObject(ObjectType.SEQUENCE, this.schema, getProfile().getObjectNameIfUppercase(name), null, false)) {
+		for (TableInfo table : getDatabaseObject(ObjectType.SEQUENCE, this.schema, getProfile().getObjectNameToUse(name), null, false)) {
 			CommentEntry e = new CommentEntry();
 			e.setKey(table.getName());
 			e.setValue(table.getRemarks());
@@ -530,7 +531,7 @@ public class DbMetaData {
 	 * @see Column
 	 */
 	public List<Column> getColumns(String tableName, boolean needRemark) throws SQLException {
-		tableName = info.profile.getObjectNameIfUppercase(tableName);
+		tableName = info.profile.getObjectNameToUse(tableName);
 
 		Connection conn = getConnection(needRemark);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
@@ -582,7 +583,7 @@ public class DbMetaData {
 	 * @see Index
 	 */
 	public Collection<Index> getIndexes(String tableName) throws SQLException {
-		tableName = info.profile.getObjectNameIfUppercase(tableName);
+		tableName = info.profile.getObjectNameToUse(tableName);
 		if (info.profile.has(Feature.NOT_SUPPORT_INDEX_META))
 			return new ArrayList<Index>();
 		Connection conn = getConnection(false);
@@ -668,7 +669,9 @@ public class DbMetaData {
 		map.put("DriverVersion", databaseMetaData.getDriverVersion() + " " + databaseMetaData.getDatabaseMinorVersion());
 		map.put("DatabaseProductName", databaseMetaData.getDatabaseProductName());
 		map.put("DatabaseProductVersion", databaseMetaData.getDatabaseProductVersion() + " " + databaseMetaData.getDatabaseMinorVersion());
-		for (String sql : info.profile.getOtherVersionSql()) {
+		
+		String otherVersionSQL=info.profile.getProperty(DbProperty.OTHER_VERSION_SQL);
+		for (String sql : StringUtils.split(otherVersionSQL, ";")) {
 			if (StringUtils.isBlank(sql))
 				continue;
 			Statement st = conn.createStatement();
@@ -728,7 +731,7 @@ public class DbMetaData {
 	 */
 	public PrimaryKey getPrimaryKey(String tableName) throws SQLException {
 		tableName = MetaHolder.toSchemaAdjustedName(tableName);
-		tableName = info.profile.getObjectNameIfUppercase(tableName);
+		tableName = info.profile.getObjectNameToUse(tableName);
 		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = null;
@@ -768,7 +771,7 @@ public class DbMetaData {
 	 * @throws SQLException
 	 */
 	public ForeignKey[] getForeignKey(String tableName) throws SQLException {
-		tableName = info.profile.getObjectNameIfUppercase(tableName);
+		tableName = info.profile.getObjectNameToUse(tableName);
 		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = null;
@@ -791,7 +794,7 @@ public class DbMetaData {
 	 * @throws SQLException
 	 */
 	public ForeignKey[] getForeignKeyReferenceBy(String tableName) throws SQLException {
-		tableName = info.profile.getObjectNameIfUppercase(tableName);
+		tableName = info.profile.getObjectNameToUse(tableName);
 		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = null;
@@ -1217,7 +1220,7 @@ public class DbMetaData {
 			return Collections.emptySet();
 		}
 
-		String tableName = getProfile().getObjectNameIfUppercase(tableMetadata.getTableName(true));
+		String tableName = getProfile().getObjectNameToUse(tableMetadata.getTableName(true));
 		Set<String> result = null;
 		// 缓存有效性判断
 		if (System.currentTimeMillis() > subtableCacheExpireTime) {
@@ -1254,7 +1257,7 @@ public class DbMetaData {
 	 */
 	public void refreshTable(ITableMetadata meta, String tablename, MetadataEventListener event, boolean allowCreateTable) throws SQLException {
 		DatabaseDialect profile = getProfile();
-		tablename = profile.getObjectNameIfUppercase(tablename);
+		tablename = profile.getObjectNameToUse(tablename);
 		boolean supportChangeDelete = profile.notHas(Feature.NOT_SUPPORT_ALTER_DROP_COLUMN);
 		if (!supportChangeDelete) {
 			LogUtil.warn("Current database [{}] doesn't support alter table column.", profile.getName());
@@ -1482,7 +1485,7 @@ public class DbMetaData {
 
 	private void createSequence0(String schema, String sequenceName, long start, Long max, StatementExecutor executor) throws SQLException {
 		DatabaseDialect profile = this.getProfile();
-		sequenceName = profile.getObjectNameIfUppercase(sequenceName);
+		sequenceName = profile.getObjectNameToUse(sequenceName);
 		if (innerExists(ObjectType.SEQUENCE, schema, sequenceName))
 			return;
 		if (max == null)
@@ -1870,7 +1873,7 @@ public class DbMetaData {
 	}
 
 	private boolean innerExists(ObjectType type, String schema, String objectName) throws SQLException {
-		objectName = info.profile.getObjectNameIfUppercase(objectName);
+		objectName = info.profile.getObjectNameToUse(objectName);
 
 		if (schema == null)
 			schema = this.getCurrentSchema();// 如果当前schema计算不正确，会出错

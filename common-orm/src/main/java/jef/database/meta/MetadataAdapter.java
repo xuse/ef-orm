@@ -136,7 +136,7 @@ public abstract class MetadataAdapter implements ITableMetadata {
 
 	private void initCache(DatabaseDialect profile) {
 		bindProfile=profile;
-		cachedTable=new DbTable(bindDsName, profile.getObjectNameIfUppercase(getTableName(true)),false,false);
+		cachedTable=new DbTable(bindDsName, profile.getObjectNameToUse(getTableName(true)),false,false);
 	}
 
 

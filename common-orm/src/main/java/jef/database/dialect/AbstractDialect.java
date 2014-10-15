@@ -328,6 +328,16 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		String value = properties.get(key);
 		return value == null ? defaultValue : value;
 	}
+	
+
+	@Override
+	public int getPropertyInt(DbProperty key) {
+		String s=properties.get(key);
+		if(StringUtils.isEmpty(s)){
+			return 0;
+		}
+		return Integer.parseInt(s);
+	}
 
 	/**
 	 * 产生用于建表的SQL语句
@@ -364,15 +374,8 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	}
 	
 	@Override
-	public int getImplementationSqlType(ColumnType column) {
-		PairIS def;
-		if (column instanceof SqlTypeSized) {
-			SqlTypeSized type = (SqlTypeSized) column;
-			def = typeNames.get(column.getSqlType(), type.getLength(), type.getPrecision(), type.getScale());
-		} else {
-			def = typeNames.get(column.getSqlType());
-		}
-		return def.first;
+	public int getImplementationSqlType(int typecode){
+		return typeNames.get(typecode).first;
 	}
 
 	/**
@@ -573,11 +576,11 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		return url;
 	}
 
-	public String getObjectNameIfUppercase(String name) {
+	public String getObjectNameToUse(String name) {
 		return name;
 	}
 
-	public String getColumnNameIncase(String name) {
+	public String getColumnNameToUse(String name) {
 		return name;
 	}
 

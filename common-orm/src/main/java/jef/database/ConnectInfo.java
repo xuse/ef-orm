@@ -89,7 +89,7 @@ public class ConnectInfo {
 	 */
 	public void setDbname(String dbname) {
 		if(profile!=null){
-			dbname=profile.getObjectNameIfUppercase(dbname);
+			dbname=profile.getObjectNameToUse(dbname);
 		}
 		this.dbname = dbname;
 	}

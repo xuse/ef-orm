@@ -135,7 +135,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 				if (result.isTbRegexp && result.isDbRegexp) {// 正则表达式，意味着由于某个分表维度没有设置，变成宽松匹配。这里无法获得实际存在表推算，因此直接退化为基表
 					result = meta.getBaseTable(profile);
 				} else if (result.isTbRegexp) {
-					result = new DbTable(result.dbName, profile.getObjectNameIfUppercase(meta.getTableName(true)));
+					result = new DbTable(result.dbName, profile.getObjectNameToUse(meta.getTableName(true)));
 				} else if (result.isDbRegexp) { // 数据库名声正则的
 					result = new DbTable(meta.getBindDsName(), result.table);
 				}
@@ -162,7 +162,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 				if (result.isTbRegexp && result.isDbRegexp) {// 正则表达式，意味着由于某个分表维度没有设置，变成宽松匹配。这里无法获得实际存在表推算，因此直接退化为基表
 					result = meta.getBaseTable(profile);
 				} else if (result.isTbRegexp) {
-					result = new DbTable(result.dbName, profile.getObjectNameIfUppercase(meta.getTableName(true)));
+					result = new DbTable(result.dbName, profile.getObjectNameToUse(meta.getTableName(true)));
 				} else if (result.isDbRegexp) { // 数据库名声正则的
 					result = new DbTable(meta.getBindDsName(), result.table);
 				}
@@ -224,7 +224,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		List<Map<String, Object>> _dimVectors = toDimensionVectors(fieldDims, meta.getMinUnitFuncForEachPartitionKey());
 
 		String tbBaseName = meta.getTableName(true);
-		tbBaseName = profile.getObjectNameIfUppercase(tbBaseName);
+		tbBaseName = profile.getObjectNameToUse(tbBaseName);
 		PartitionTable pt = meta.getPartition();// 得到分区配置
 		Set<DbTable> _tbNames = new LinkedHashSet<DbTable>();
 
@@ -278,7 +278,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	private boolean appendSuffix(Object obj, PartitionKey key, PartitionFunction func, StringBuilder sb, DatabaseDialect profile, String regexp) {
 		if (obj == null) {
 			if (key.defaultWhenFieldIsNull().length() > 0) {
-				sb.append(profile.getObjectNameIfUppercase(toFixedLength(key.defaultWhenFieldIsNull(), key.filler(), key.length())));
+				sb.append(profile.getObjectNameToUse(toFixedLength(key.defaultWhenFieldIsNull(), key.filler(), key.length())));
 			} else { // 将其转换为正则表示匹配
 				if (isNumberFun(key)) {
 					sb.append("\\d");

@@ -77,7 +77,7 @@ public class PostgreSQLTest {
 
 	/**
 	 * 无论建表SQL中的表名是大写还是小写，最终DB中的表名都是小写， 所以当传入的参数值为大写时，需将其转换为小写。 <br>
-	 * 此处实际上是验证了 {@link PostgreSqlDialect#getObjectNameIfUppercase(String name)}
+	 * 此处实际上是验证了 {@link PostgreSqlDialect#getObjectNameToUse(String name)}
 	 */
 	@Test
 	public void testExistTableWithNameIsUppercase() {

@@ -47,7 +47,27 @@ public enum DbProperty {
 	/**
 	 * 用于返回数据库刚刚生成的自增键的函数
 	 */
-	GET_IDENTITY_FUNCTION
+	GET_IDENTITY_FUNCTION,
+	
+	/**
+	 * 返回若干用于查询数据库基本信息的SQL语句，如果配置了这些SQL语句，那么启动时在输出数据库版本信息的时候就会
+	 * 将这些SQL的执行结果也作为版本信息一起输出。
+	 * 如果有多句SQL,用';'分隔。
+	 */
+	OTHER_VERSION_SQL,
+	
+	/**
+	 * 索引的最大长度
+	 */
+	INDEX_LENGTH_LIMIT,
+	/**
+	 * 索引长度超过时，需要修复的长度（MYSQL）
+	 */
+	INDEX_LENGTH_LIMIT_FIX,
+	/**
+	 * 修复的关键字（MYSQL）
+	 */
+	INDEX_LENGTH_CHARESET_FIX,
 	
 	
 	//Derby支持一下函数来获得当前环境

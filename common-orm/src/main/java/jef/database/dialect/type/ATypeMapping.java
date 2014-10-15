@@ -107,7 +107,7 @@ public abstract class ATypeMapping<T> implements MappingType<T>{
 		if(escape && bindedProfile==profile){
 			return cachedEscapeColumnName;
 		}
-		String name = profile.getColumnNameIncase(rawColumnName);
+		String name = profile.getColumnNameToUse(rawColumnName);
 		if(escape){
 			String escapedColumn=DbUtils.escapeColumn(profile, name);
 			rebind(escapedColumn,profile);

@@ -194,14 +194,14 @@ public final class SelectColumn extends SingleColumnSelect{
 	}
 //	生成选择语句时生成列名别，null表示无别名
 	public String getSelectedAlias(String tableAlias,DatabaseDialect profile,boolean isSelect) {
-		if(isSelect)return DbUtils.escapeColumn(profile,profile.getColumnNameIncase(alias));
+		if(isSelect)return DbUtils.escapeColumn(profile,profile.getColumnNameToUse(alias));
 		if(alias==null){
 			if(columnSimpleName==null){
 				throw new IllegalArgumentException();
 			}
-			return profile.getColumnNameIncase(columnSimpleName);
+			return profile.getColumnNameToUse(columnSimpleName);
 		}else{
-			return profile.getColumnNameIncase(alias);	
+			return profile.getColumnNameToUse(alias);	
 		}
 	}
 	

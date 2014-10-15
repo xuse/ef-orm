@@ -237,11 +237,11 @@ public class HsqlDbMemDialect extends AbstractDialect {
 	 * HSQLDB将名称统一转成大写形式
 	 */
 	@Override
-	public String getObjectNameIfUppercase(String name) {
+	public String getObjectNameToUse(String name) {
 		return name==null? null : name.toUpperCase();
 	}
 	
-	public String getColumnNameIncase(String name) {
+	public String getColumnNameToUse(String name) {
 		return name==null?null:name.toUpperCase();
 	}
 

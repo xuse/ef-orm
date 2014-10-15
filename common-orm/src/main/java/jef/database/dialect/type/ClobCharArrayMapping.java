@@ -6,6 +6,7 @@ import java.io.Reader;
 import java.sql.Clob;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
@@ -18,7 +19,7 @@ public class ClobCharArrayMapping extends ATypeMapping<char[]>{
 
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
-			st.setNull(index, session.getClobDataType());
+			st.setNull(index, session.getImplementationSqlType(Types.CLOB));
 		}else{
 			char[] ca=(char[])value;
 			st.setCharacterStream(index, new CharArrayReader(ca),ca.length);

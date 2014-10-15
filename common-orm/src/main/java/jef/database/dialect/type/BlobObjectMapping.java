@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import jef.common.BigDataBuffer;
 import jef.database.DbCfg;
@@ -38,7 +39,7 @@ public class BlobObjectMapping extends ATypeMapping<Object> {
 
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect profile) throws SQLException {
 		if (value == null) {
-			st.setNull(index, profile.getBlobDataType());
+			st.setNull(index, profile.getImplementationSqlType(Types.BLOB));
 		} else if (value instanceof byte[]) {
 			byte[] data = (byte[]) value;
 			st.setBytes(index, data);

@@ -249,12 +249,12 @@ public class DerbyDialect extends AbstractDialect {
 	}
 
 	@Override
-	public String getObjectNameIfUppercase(String name) {
+	public String getObjectNameToUse(String name) {
 		return StringUtils.upperCase(name);
 	}
 
 	@Override
-	public String getColumnNameIncase(String name) {
+	public String getColumnNameToUse(String name) {
 		return StringUtils.upperCase(name);
 	}
 	

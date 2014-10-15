@@ -5,15 +5,17 @@ import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.result.IResultSet;
 import jef.tools.IOUtils;
 
 public class BlobByteArrayMapping extends ATypeMapping<byte[]>{
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+	
+	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect dialect) throws SQLException {
 		if(value==null){
-			st.setNull(index, session.getBlobDataType());
+			st.setNull(index, dialect.getImplementationSqlType(Types.BLOB));
 		}else{
 			byte[] bb=(byte[])value;
 			st.setBytes(index, bb);

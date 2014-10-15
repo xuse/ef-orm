@@ -78,32 +78,7 @@ public interface DatabaseDialect {
 	 * @param vType
 	 * @return
 	 */
-	int getImplementationSqlType(ColumnType vType);
-
-	/**
-	 * 检查主键字段的长度
-	 * @deprecated 此方法过于特殊，重构中要设法去除
-	 */
-	boolean checkPKLength(ColumnType type);
-	/**
-	 * @deprecated use {@link #getImplementationSqlType(ColumnType)} instead.
-	 * @return
-	 */
-	int getClobDataType();
-
-	/**
-	 * @deprecated use {@link #getImplementationSqlType(ColumnType)} instead. 
-	 */
-	int getBlobDataType();
-
-	/**
-	 * 返回若干用于查询数据库基本信息的SQL语句，如果配置了这些SQL语句，那么启动时在输出数据库版本信息的时候就会
-	 * 将这些SQL的执行结果也作为版本信息一起输出
-	 * @deprecated 今后重构中去除
-	 * 
-	 * @return
-	 */
-	String[] getOtherVersionSql();
+	int getImplementationSqlType(int sqlType);
 	
 	/**
 	 * 将表达式或值转换为文本形式的缺省值描述
@@ -204,26 +179,21 @@ public interface DatabaseDialect {
 	 * schema/table/view/sequence/dbname等转换的，都是用此方法，凡是设计列名转换，列别名定义的都用
 	 * {@link #getColumnNameIncase}方法
 	 * 
-	 * 注意这个方法接下来要改名为 getObjectNameToUse();in case这个说法歧义，参考Spring的命名，改为xxxxToUse更好一点
-	 * 
-	 * <p>
-	 * TODO 季怡2013-7新增了{@link #getColumnNameIncase}
-	 * ,目的是将列名的大小写策略和表/视图/schema名等策略区分开来。因为mysql似乎两者表现并不一致。
-	 * 目前几乎所有的代码都还是引用getObjectNameIfUppercase这个方法的。今后在修改中，要逐渐按上述约定分别调用两个方法
-	 * 
 	 * @param name
 	 * @return
 	 */
-	String getObjectNameIfUppercase(String name);
+	String getObjectNameToUse(String name);
 
 	/**
 	 * @since 3.0 季怡2013-7新增，数据库对于表明和列名的大小写策略并不总是一致。因此今后要将列名处理的场合逐渐由原来的函数移到这里来实现
 	 * 
-	 *       注意这个方法接下来要改名为 getColumnNameToUse();因为incase这个说法歧义，参考Spring的命名，改为 xxxxToUse更好一点
+	 * 季怡2013-7新增了{@link #getColumnNameIncase}
+	 * 目的是将列名的大小写策略和表/视图/schema名等策略区分开来。因为mysql似乎两者表现并不一致。
+	 * 
 	 * @param name
 	 * @return
 	 */
-	String getColumnNameIncase(String name);
+	String getColumnNameToUse(String name);
 
 	/**
 	 * 计算Sequence的步长, 在某些数据库上，可以从系统表中获得Sequence的步长。<br>
@@ -268,6 +238,13 @@ public interface DatabaseDialect {
 	 * @return
 	 */
 	public String getProperty(DbProperty key, String defaultValue);
+	
+	/**
+	 * 返回指定属性，如果无值返回0
+	 * @param key
+	 * @return
+	 */
+	public int getPropertyInt(DbProperty key);
 
 	/**
 	 * 不同数据库登录后，所在的默认schema是不一样的

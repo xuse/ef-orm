@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import jef.database.ORMConfig;
 import jef.database.dialect.DatabaseDialect;
@@ -15,7 +16,7 @@ public class BlobStringMapping extends ATypeMapping<String>{
 	
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
-			st.setNull(index, session.getBlobDataType());
+			st.setNull(index, session.getImplementationSqlType(Types.BLOB));
 		}else{
 			byte[] buf = ((String)value).getBytes(ORMConfig.getInstance().getDbEncodingCharset());
 			st.setBytes(index,buf);
@@ -24,7 +25,7 @@ public class BlobStringMapping extends ATypeMapping<String>{
 	}
 
 	public int getSqlType() {
-		return java.sql.Types.BLOB;
+		return Types.BLOB;
 	}
 	
 	@Override

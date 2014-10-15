@@ -11,8 +11,8 @@ import jef.common.wrapper.IntRange;
 import jef.database.ConnectInfo;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
-import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.AbstractDialect;
+import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMappings;
 import jef.database.dialect.type.MappingType;
 import jef.database.dialect.type.ResultSetAccessor;
@@ -361,11 +361,6 @@ public final class Mappers {
 		public RDBMS getName() {
 			return null;
 		}
-
-		public String getGeneratedFetchFunction() {
-			throw new UnsupportedOperationException();
-		}
-
 		public String getDriverClass(String url) {
 			throw new UnsupportedOperationException();
 		}
@@ -379,7 +374,7 @@ public final class Mappers {
 		}
 
 		@Override
-		public String getColumnNameIncase(String name) {
+		public String getColumnNameToUse(String name) {
 			return name == null ? null : name.toUpperCase();
 		}
 	};

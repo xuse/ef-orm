@@ -23,8 +23,8 @@ public class JDBCUtil {
 			table = table.substring(n + 1);
 		}
 		
-		schema=profile.getObjectNameIfUppercase(schema);
-		table = profile.getObjectNameIfUppercase(table);
+		schema=profile.getObjectNameToUse(schema);
+		table = profile.getObjectNameToUse(table);
 		
 		ResultSet rs = meta.getTables(profile.getCatlog(schema), profile.getSchema(schema), table, new String[]{"TABLE"});
 		try {

@@ -1107,7 +1107,7 @@ public final class DbUtils {
 		String fieldName = f.name();
 		if (StringUtils.isEmpty(alias))
 			return fieldName;
-		return profile.getColumnNameIncase(StringUtils.concat(alias, SqlContext.DIVEDER, fieldName));
+		return profile.getColumnNameToUse(StringUtils.concat(alias, SqlContext.DIVEDER, fieldName));
 	}
 
 	/**
