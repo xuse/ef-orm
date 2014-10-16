@@ -61,7 +61,6 @@ public class DerbyDialect extends AbstractDialect {
 				Feature.SUPPORT_CONCAT,
 				Feature.COLUMN_ALTERATION_SYNTAX,
 				Feature.CASE_WITHOUT_SWITCH,
-				Feature.SUPPORT_BOOLEAN,
 				Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD,
 				Feature.UNION_WITH_BUCK
 				));

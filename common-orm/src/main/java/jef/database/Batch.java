@@ -244,8 +244,6 @@ public abstract class Batch<T extends IQueryableEntity> {
 		return executeResult;
 	}
 
-	protected abstract void callVeryBefore(List<T> objs) throws SQLException;
-
 	protected long innerCommit(List<T> objs, String site, String tablename, String dbName) throws SQLException {
 		String sql = toSql(tablename);
 		if (ORMConfig.getInstance().isDebugMode())
@@ -308,12 +306,21 @@ public abstract class Batch<T extends IQueryableEntity> {
 		callEventListenerAfter(listValue);
 		return dbAccess;
 	}
-
+	
+	/*
+	 * 分库分表前执行，调用主键回调
+	 */
+	protected abstract void callVeryBefore(List<T> objs) throws SQLException;
+	/*
+	 * 操作前执行，调用监听器
+	 */
 	protected abstract void callEventListenerBefore(List<T> listValue) throws SQLException;
+	/*
+	 * 操作后执行，返回主键，以及执行监听器
+	 */
+	protected abstract void callEventListenerAfter(List<T> listValue) throws SQLException;
 
 	protected abstract void processJdbcParams(PreparedStatement psmt, List<T> listValue, OperateTarget db) throws SQLException;
-
-	protected abstract void callEventListenerAfter(List<T> listValue) throws SQLException;
 
 	/**
 	 * 根据传入的表名，计算针对该表的SQL语句
@@ -357,7 +364,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 		@Override
 		protected void callEventListenerAfter(List<T> listValue) throws SQLException {
 			if (insertPart.getCallback() != null) {
-				insertPart.getCallback().callAfter(listValue);
+				insertPart.getCallback().callAfterBatch(listValue);
 			}
 			TransactionCache cache = parent.getCache();
 			DbOperatorListener listener = parent.getListener();

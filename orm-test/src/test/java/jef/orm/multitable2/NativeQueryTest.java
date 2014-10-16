@@ -72,9 +72,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
-@DataSourceContext({ @DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"), @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
-		@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-		@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"), @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db") })
+@DataSourceContext({
+//	@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
+//	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
+//	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"),
+//	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
+//	@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"),
+//	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
+})
 public class NativeQueryTest extends org.junit.Assert {
 	private DbClient db;
 
@@ -683,6 +689,7 @@ public class NativeQueryTest extends org.junit.Assert {
 		union.setOrderBy(false, Leaf.Field.name);
 		// union.addOrderBy(false, new FBIField("alias_name"));
 		union.getResultTransformer().setResultType(Map.class);
+		union.orderByAsc(Leaf.Field.code);
 		int start = 1;
 		int limit = 5;
 		PagingIterator<Map> leafp = db.pageSelect(union, limit);
@@ -849,7 +856,7 @@ public class NativeQueryTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	@IgnoreOn("sqlite")
+	@IgnoreOn({"sqlite","sqlserver"})
 	public void testLoadForUpdate() throws SQLException {
 		RecordHolder<Root> holder = db.loadForUpdate(new Root(1)); //
 		if (holder != null) {
@@ -890,7 +897,7 @@ public class NativeQueryTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	@IgnoreOn("sqlite")
+	@IgnoreOn({"sqlite","sqlserver"})
 	public void testSelectForUpdate() throws SQLException {
 		RecordsHolder<Root> holder = db.selectForUpdate(QB.create(Root.class).getInstance());
 		int n = 0;
@@ -1078,7 +1085,7 @@ public class NativeQueryTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	@IgnoreOn({ "gbase", "mysql", "derby", "postgresql", "hsqldb" })
+	@IgnoreOn({ "gbase", "mysql", "derby", "postgresql", "hsqldb" ,"sqlserver"})
 	public void testExecuteSqlBatch() throws SQLException {
 		List<String> rowids = db.selectBySql("select t.rowid from leaf t", String.class);
 		List<?>[] rowArray = new List<?>[rowids.size()];

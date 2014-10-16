@@ -63,7 +63,7 @@ public class PostgreSqlDialect extends AbstractDialect {
 
 	public PostgreSqlDialect() {
 		features = CollectionUtil.identityHashSet();
-		features.addAll(Arrays.asList(Feature.ALTER_FOR_EACH_COLUMN, Feature.COLUMN_ALTERATION_SYNTAX, Feature.SUPPORT_CONCAT, Feature.SUPPORT_BOOLEAN, Feature.SUPPORT_SEQUENCE,Feature.SUPPORT_LIMIT));
+		features.addAll(Arrays.asList(Feature.ALTER_FOR_EACH_COLUMN, Feature.COLUMN_ALTERATION_SYNTAX, Feature.SUPPORT_CONCAT,  Feature.SUPPORT_SEQUENCE,Feature.SUPPORT_LIMIT));
 		
 		boolean needSequence = JefConfiguration.getBoolean(Cfg.valueOf("postgresql.need.sequence"), false);
 		if (needSequence) {
@@ -318,11 +318,6 @@ public class PostgreSqlDialect extends AbstractDialect {
 	@Override
 	public void processIntervalExpression(Function func, Interval interval) {
 		interval.toPostgresMode();
-	}
-
-	@Override
-	public int getBlobDataType() {
-		return Types.VARBINARY;
 	}
 
 	@Override

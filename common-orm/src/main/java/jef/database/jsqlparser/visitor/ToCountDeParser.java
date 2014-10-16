@@ -1,6 +1,7 @@
 package jef.database.jsqlparser.visitor;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
@@ -75,9 +76,25 @@ public class ToCountDeParser extends DeParserAdapter{
 		if (dis == null) {
 			sb.append('*');
 		} else {
-			rewriteDistinctCount(sb,dis, plainSelect.getSelectItems(),profile);
+//			if(plainSelect.getSelectItems().size()>1 && plainSelect.getGroupByColumnReferences()==null){
+//				rewriteDistinctWithGroup(sb,dis, plainSelect,profile);
+//			}else{
+				rewriteDistinctCount(sb,dis, plainSelect.getSelectItems(),profile);
+//			}
 		}
 		sb.append(")");
+	}
+
+	private static void rewriteDistinctWithGroup(StringBuilder sb, Distinct dis,PlainSelect plainSelect, DatabaseDialect profile) {
+		sb.append("*");
+		List<Expression> list=new ArrayList<Expression>();
+		for(SelectItem item:plainSelect.getSelectItems()){
+			if(item.isAllColumns()){
+				continue;
+			}
+			list.add(item.getAsSelectExpression().getExpression());
+		}
+		plainSelect.setGroupByColumnReferences(list);
 	}
 
 	/*
@@ -91,6 +108,10 @@ public class ToCountDeParser extends DeParserAdapter{
 		if (profile.has(Feature.SUPPORT_CONCAT)) {
 			concatStart = "";
 			concat = "||";
+			concatEnd = "";
+		}else if(profile.has(Feature.CONCAT_IS_ADD)){
+			concatStart = "";
+			concat = "+";
 			concatEnd = "";
 		}
 		int n = 0;

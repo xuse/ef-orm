@@ -139,13 +139,12 @@ public final class AllTableColumns implements IReferenceAllTable{
 		switch(aliasType){
 		case OMIT:
 			//这个地方不可抛出异常.因为对于AllColumn来说，还是有可能位于join当中的。
-//			throw new IllegalArgumentException("the type should use 't.*' on select columns. ");
-			//一定是forSelect=false的场合下
-			return table.getMeta().getColumnName(f, profile,false);
+			//此外，如果LOB字段延迟加载，也会出现OMIT参数无效的情况
+			//throw new IllegalArgumentException("the type should use 't.*' on select columns. ");
 		case RAWNAME:
 			value=table.getMeta().getColumnName(f, profile,false);
 			aliasMap.put(f,value);
-			return DbUtils.escapeColumn(profile, value);
+			return forSelect?null:DbUtils.escapeColumn(profile, value);
 		case DEFAULT:
 			value=DbUtils.getDefaultColumnAlias(f, profile, schema);
 			aliasMap.put(f,value);

@@ -2,6 +2,7 @@ package jef.database.cache;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +70,9 @@ public final class CacheImpl implements TransactionCache {
 		return dc.load(toParamList(sql.getBind())) != null;
 	}
 
+	@SuppressWarnings("unchecked")
 	public static List<Object> toParamList(List<BindVariableDescription> bind) {
+		if(bind==null)return Collections.EMPTY_LIST;
 		Object[] array = new Object[bind.size()];
 		int n = 0;
 		for (BindVariableDescription b : bind) {

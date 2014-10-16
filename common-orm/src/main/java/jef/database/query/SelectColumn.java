@@ -188,6 +188,12 @@ public final class SelectColumn extends SingleColumnSelect{
 		}
 		return this;
 	}
+	
+	
+	public SelectColumn toField(String property){
+		this.populateTo=property;
+		return this;
+	}
 
 	public String getName() {
 		return populateTo;

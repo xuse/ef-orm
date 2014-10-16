@@ -91,6 +91,12 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 		}
 	}
 	
+	public UnionQuery<T> orderByAsc(String... ascFields) {
+		for(String f:ascFields){
+			addOrderBy(true, new SqlExpression(f));
+		}
+		return this;
+	}
 	public UnionQuery<T> orderByAsc(Field... ascFields) {
 		addOrderBy(true, ascFields);
 		return this;
@@ -98,6 +104,13 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 
 	public UnionQuery<T> orderByDesc(Field... descFields) {
 		addOrderBy(false, descFields);
+		return this;
+	}
+	
+	public UnionQuery<T> orderByDesc(String... descFields) {
+		for(String f:descFields){
+			addOrderBy(false, new SqlExpression(f));
+		}
 		return this;
 	}
 

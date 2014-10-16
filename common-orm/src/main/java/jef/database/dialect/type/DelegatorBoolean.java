@@ -2,9 +2,9 @@ package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import jef.database.dialect.DatabaseDialect;
-import jef.database.meta.Feature;
 import jef.database.wrapper.result.IResultSet;
 
 /**
@@ -24,11 +24,15 @@ public final class DelegatorBoolean extends AColumnMapping<Boolean>{
 	}
 
 	private void init(DatabaseDialect profile) {
-		
-		if(profile.has(Feature.SUPPORT_BOOLEAN)){
-			real=new BooleanBoolMapping();
+		int type=profile.getImplementationSqlType(Types.BOOLEAN);
+		if(type==Types.BIT){
+			real=new BitBooleanMapping();
+		}else if(type==Types.CHAR){
+			real=new CharBooleanMapping();	
+		}else if(type==Types.TINYINT || type==Types.NUMERIC || type==Types.INTEGER){
+			real=new NumIntBooleanMapping();
 		}else{
-			real=new CharBooleanMapping();
+			real=new BooleanBoolMapping();
 		}
 		real.init(field, rawColumnName, ctype, meta);
 	}

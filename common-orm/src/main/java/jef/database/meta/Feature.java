@@ -84,6 +84,11 @@ public enum Feature {
 	 * 不光Derby的驱动是这样，Sqlite的驱动也是一样的。
 	 */
 	BATCH_GENERATED_KEY_ONLY_LAST,
+	
+	/**
+	 * SQLSErver特性，Batch模式下使用getGeneratedKeys无法正常返回主键值，所以不得不使用@@IDENTITY返回结果
+	 */
+	BATCH_GENERATED_KEY_BY_FUNCTION,
 	/**
 	 * 要想从元数据中获取备注需要特别的参数才行(Oracle)
 	 */
@@ -121,10 +126,6 @@ public enum Feature {
 	 * 游标操作特性，在游标上直接插入记录时是偶限制
 	 */
 	CURSOR_ENDS_ON_INSERT_ROW,
-	/**
-	 * 描述这个数据库支持boolean类型。
-	 */
-	SUPPORT_BOOLEAN,
 	/**
 	 * 支持Sequence
 	 */

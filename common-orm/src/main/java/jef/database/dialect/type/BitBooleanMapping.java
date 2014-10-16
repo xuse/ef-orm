@@ -31,9 +31,9 @@ public class BitBooleanMapping extends AColumnMapping<Boolean>{
 	@Override
 	protected String getSqlExpression(Object value, DatabaseDialect profile) {
 		if((Boolean)value){
-			return "'1'";
+			return "1";
 		}else{
-			return "'0'";
+			return "0";
 		}
 	}
 

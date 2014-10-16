@@ -25,6 +25,7 @@ import jef.common.log.LogUtil;
 import jef.tools.ArrayUtils;
 import jef.tools.ClassScanner;
 import jef.tools.IOUtils;
+import jef.tools.URLFile;
 
 /**
  * JEF中的Entity静态增强任务类
@@ -90,7 +91,37 @@ public class EntityEnhancer {
 
 		out.println(n + " classes enhanced.");
 	}
+	public boolean enhanceClass(String string) {
+		URL url=this.getClass().getClassLoader().getResource(string.replace('.', '/')+".class");
+		if(url==null){
+			throw new IllegalArgumentException("not found "+string);
+		}
+		URLFile file=new URLFile(url);
+		if(!file.isLocalFile()){
+			throw new IllegalArgumentException("not a local file."+string);
+		}
+		try {
+			return enhance(file.getLocalFile(),string);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 
+	private boolean enhance(File f,String cls) throws IOException, Exception {
+		EnhanceTaskASM enhancer=new EnhanceTaskASM(null,roots);
+		File sub = new File(f.getParentFile(), cls.replace('.', '/').concat("$Field.class"));
+		byte[] result=enhancer.doEnhance(cls, IOUtils.toByteArray(f), (sub.exists()?IOUtils.toByteArray(sub):null));
+		if(result!=null){
+			if(result.length==0){
+				out.println(cls + " is already enhanced.");
+			}else{
+				IOUtils.saveAsFile(f,result);
+				out.println("enhanced class:" + cls);// 增强完成
+				return true;
+			}
+		}
+		return false;
+	}
 
 	private boolean processEnhance(File root,String cls) throws Exception {
 		EnhanceTaskASM enhancer=new EnhanceTaskASM(root,roots);
@@ -140,5 +171,4 @@ public class EntityEnhancer {
 	public void setRoot(File... roots) {
 		this.roots = roots;
 	}
-
 }

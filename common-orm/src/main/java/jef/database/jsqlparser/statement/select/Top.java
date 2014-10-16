@@ -21,7 +21,14 @@ import jef.database.jsqlparser.statement.SqlAppendable;
  * A top clause in the form [TOP row_count] 
  */
 public class Top implements SqlAppendable{
-
+	
+	public Top(){
+	}
+	
+	public Top(long num){
+		this.rowCount=num;
+	}
+	
     private long rowCount;
 
     private boolean rowCountJdbcParameter = false;

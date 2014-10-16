@@ -50,7 +50,6 @@ public class HsqlDbMemDialect extends AbstractDialect {
 		features.add(Feature.ONE_COLUMN_IN_SINGLE_DDL);
 		features.add(Feature.COLUMN_ALTERATION_SYNTAX);
 		features.add(Feature.CURSOR_ENDS_ON_INSERT_ROW);
-		features.add(Feature.SUPPORT_BOOLEAN);
 		features.add(Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD);
 		features.add(Feature.SUPPORT_SEQUENCE);
 		

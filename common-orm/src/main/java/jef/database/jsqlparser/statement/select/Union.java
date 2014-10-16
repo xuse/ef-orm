@@ -138,4 +138,10 @@ public class Union implements SelectBody {
 	public void setOrderBy(OrderBy orderBy) {
 		this.orderBy = orderBy;
 	}
+
+	public PlainSelect getLastPlainSelect() {
+		if(plainSelects==null || plainSelects.isEmpty())return null;
+		return plainSelects.get(plainSelects.size()-1);
+		
+	}
 }

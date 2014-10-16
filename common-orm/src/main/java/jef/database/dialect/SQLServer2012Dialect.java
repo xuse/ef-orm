@@ -40,6 +40,7 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect{
 		registerNative(new StandardSQLFunction("choose"));
 		registerNative(new StandardSQLFunction("iif"));
 		registerNative(new StandardSQLFunction("format"));
+		super.features.remove(Feature.CONCAT_IS_ADD);
 		registerNative(Func.concat);//2012开始支持原生的concat函数。
 		
 //	2012新增的分析函数	

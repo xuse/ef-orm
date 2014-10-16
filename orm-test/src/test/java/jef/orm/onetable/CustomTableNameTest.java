@@ -31,7 +31,8 @@ import org.junit.runner.RunWith;
  @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
  @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
  @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
- @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db")
+ @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+ @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 public class CustomTableNameTest extends org.junit.Assert {
 	private static final String MY_FOO_TABLE="MY_FOO_TABLE";

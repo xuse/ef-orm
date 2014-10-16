@@ -391,14 +391,14 @@ public class MySqlDialect extends AbstractDialect {
 		return isUnion ? StringUtils.concat("select * from (", sql, ") tb__", limit) : sql.concat(limit);
 	}
 
-	public Select toPageSQL(Select select, IntRange range) {
-		int[] span = range.toStartLimitSpan();
-		Limit limit = new Limit();
-		limit.setOffset(span[0]);
-		limit.setRowCount(span[1]);
-		select.getSelectBody().setLimit(limit);
-		return select;
-	}
+//	public Select toPageSQL(Select select, IntRange range) {
+//		int[] span = range.toStartLimitSpan();
+//		Limit limit = new Limit();
+//		limit.setOffset(span[0]);
+//		limit.setRowCount(span[1]);
+//		select.getSelectBody().setLimit(limit);
+//		return select;
+//	}
 
 	@Override
 	public String toPageSQL(String sql, IntRange range, boolean isUnion) {
