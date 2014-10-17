@@ -121,6 +121,7 @@ MSSQL Server方言支持
 支持半动态表模型
 按主键查询和插入逻辑优化(使用分析工具进一步分析并优化。)
 更新性能分析报告。关于oltp类操作优化
+参考guzz，在一定程度上解决多表操作情况下分库分表的问题
 
 参考并引用Guzz的一些文档https://code.google.com/p/guzz/wiki/AboutGuzz?wl=zh-Hans
 

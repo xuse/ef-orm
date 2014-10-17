@@ -32,11 +32,8 @@ import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
 import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlOutputVisitor;
 import com.alibaba.druid.sql.dialect.oracle.parser.OracleStatementParser;
 import com.alibaba.druid.sql.dialect.oracle.visitor.OracleOutputVisitor;
-import com.alibaba.druid.sql.dialect.postgresql.parser.PGSQLStatementParser;
 import com.alibaba.druid.sql.dialect.sqlserver.parser.SQLServerStatementParser;
 import com.alibaba.druid.sql.dialect.sqlserver.visitor.SQLServerOutputVisitor;
-import com.alibaba.druid.sql.parser.SQLStatementParser;
-import com.alibaba.druid.sql.visitor.SQLASTOutputVisitor;
 
 public class ComplexSqlParseTest extends org.junit.Assert {
 	@Test
@@ -131,21 +128,6 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 		}
 	}
 	
-	
-	@Test
-	public void parseMatch() throws ParseException {
-		String s = "select * from team where team.search_column @@ to_tsquery('new & york & yankees')";
-		{
-			SQLStatementParser parser = new PGSQLStatementParser(s);
-			StringBuilder out = new StringBuilder();
-			List<SQLStatement> statementList = parser.parseStatementList();
-//			SQLASTOutputVisitor visitor = new PGSQLOutputVisitor(out);
-//			statementList.get(0).accept(visitor);
-			System.out.println(out);
-			
-		}
-	}
-
 	/**
 	 * 解析右侧的SQL表达式
 	 * 

@@ -31,7 +31,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Reference;
 import jef.database.wrapper.populator.ColumnMeta;
 
-public final class ResultSetHolder extends AbstractResultSet{
+public final class ResultSetHolder extends AbstractResultSet implements IResultSet{
 	private Statement st;
 	ResultSet rs;
 	OperateTarget db;

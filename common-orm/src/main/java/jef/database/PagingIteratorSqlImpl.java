@@ -61,7 +61,7 @@ final class PagingIteratorSqlImpl<T> extends PagingIterator<T>{
 		if(range.getStart()==1 && range.getEnd().intValue()==page.getTotal()){
 			pageFlag=false;
 		}
-		sql = pageFlag?profile.toPageSQL(sql, range):sql;
+		sql = pageFlag?profile.getLimitHandler().toPageSQL(sql, range):sql;
 		boolean debug=ORMConfig.getInstance().isDebugMode();
 		if (debug)
 			LogUtil.show(sql);

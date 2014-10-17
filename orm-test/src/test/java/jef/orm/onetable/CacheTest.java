@@ -8,7 +8,6 @@ import jef.database.DbClient;
 import jef.database.DebugUtil;
 import jef.database.NativeQuery;
 import jef.database.QB;
-import jef.database.Session;
 import jef.database.Transaction;
 import jef.database.cache.TransactionCache;
 import jef.database.jmx.JefFacade;
@@ -35,7 +34,8 @@ import org.junit.runner.RunWith;
 	 @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
 	 @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
 	 @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-//	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db")
+	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+	 @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 public class CacheTest extends org.junit.Assert{
 	private DbClient db;

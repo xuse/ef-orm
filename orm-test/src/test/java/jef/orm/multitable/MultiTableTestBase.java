@@ -7,7 +7,6 @@ import java.util.List;
 
 import jef.database.DbClient;
 import jef.database.meta.Feature;
-import jef.database.support.RDBMS;
 import jef.orm.multitable.model.Person;
 import jef.orm.multitable.model.PersonFriends;
 import jef.orm.multitable.model.School;
@@ -17,27 +16,8 @@ import jef.tools.reflect.BeanWrapperImpl;
 
 public abstract class MultiTableTestBase extends org.junit.Assert{
 	protected DbClient db;
-	private static String[] prepareSqlOracle=new String[]{
-		//MYSQL
-		"insert into person_friends(pid,friendId,\"COMMENT\") values (1,2,'1 has friend: 2')",
-		"insert into person_friends(pid,friendId,\"COMMENT\") values (1,3,'1 has friend: 3')",
-		"insert into person_friends(pid,friendId,\"COMMENT\") values (2,1,'2 has friend: 1')",
-		"insert into person_friends(pid,friendId,\"COMMENT\") values (2,3,'2 has friend: 3')",
-		"insert into person_friends(pid,friendId,\"COMMENT\") values (3,2,'3 has friend: 2')",
-		
-		"insert into score (score,pid,testtime,subject) values(50,1,current_date,'电脑')",
-		"insert into score (score,pid,testtime,subject) values(60,1,current_date,'语文')",
-		"insert into score (score,pid,testtime,subject) values(70,1,current_date,'算数')",
-		"insert into score (score,pid,testtime,subject) values(80,1,current_date,'英语')",
-		"insert into score (score,pid,testtime,subject) values(90,1,current_date,'物理')",
-		"insert into score (score,pid,testtime,subject) values(100,1,current_date,'化学')",
-		"insert into score (score,pid,testtime,subject)values(60,2,current_date,'语文')",
-		"insert into score (score,pid,testtime,subject)values(88,2,current_date,'算数')",
-		"insert into score (score,pid,testtime,subject)values(90,3,current_date,'语文')",
-		"insert into score (score,pid,testtime,subject)values(73,3,current_date,'算数')",
-	};
 	
-	private static String[] prepareSqlMySQL=new String[]{
+	private static String[] prepareSql=new String[]{
 		"insert into person_friends(pid,friendId,COMMENT) values (1,2,'1 has friend: 2')",
 		"insert into person_friends(pid,friendId,COMMENT) values (1,3,'1 has friend: 3')",
 		"insert into person_friends(pid,friendId,COMMENT) values (2,1,'2 has friend: 1')",
@@ -56,24 +36,6 @@ public abstract class MultiTableTestBase extends org.junit.Assert{
 		"insert into score (score,pid,testtime,subject)values(73,3,current_date,'算数')",
 	};
 			
-	private static String[] prepareSqlPostgreSQL = new String[] {
-		"insert into person_friends(pid,friendId,comment) values (1,2,'1 has friend: 2')",
-		"insert into person_friends(pid,friendId,comment) values (1,3,'1 has friend: 3')",
-		"insert into person_friends(pid,friendId,comment) values (2,1,'2 has friend: 1')",
-		"insert into person_friends(pid,friendId,comment) values (2,3,'2 has friend: 3')",
-		"insert into person_friends(pid,friendId,comment) values (3,2,'3 has friend: 2')",
-		
-		"insert into score (score,pid,testtime,subject) values(50,1,current_date,'电脑')",
-		"insert into score (score,pid,testtime,subject) values(60,1,current_date,'语文')",
-		"insert into score (score,pid,testtime,subject) values(70,1,current_date,'算数')",
-		"insert into score (score,pid,testtime,subject) values(80,1,current_date,'英语')",
-		"insert into score (score,pid,testtime,subject) values(90,1,current_date,'物理')",
-		"insert into score (score,pid,testtime,subject) values(100,1,current_date,'化学')",
-		"insert into score (score,pid,testtime,subject) values(60,2,current_date,'语文')",
-		"insert into score (score,pid,testtime,subject) values(88,2,current_date,'算数')",
-		"insert into score (score,pid,testtime,subject) values(90,3,current_date,'语文')",
-		"insert into score (score,pid,testtime,subject) values(73,3,current_date,'算数')",
-	};
 			
 	
 	protected void initData() throws SQLException {
@@ -93,19 +55,11 @@ public abstract class MultiTableTestBase extends org.junit.Assert{
 		s.setId(0);
 		s.setName("北平学校");
 		db.insert(s);
-		if(db.getProfile().getName()==RDBMS.mysql){
-			for(String sql:prepareSqlMySQL){
-				db.executeSql(sql);
-			}
-		} else if (db.getProfile().getName()==RDBMS.postgresql) {
-			for (String sql : prepareSqlPostgreSQL) {
-				db.executeSql(sql);
-			}
-		} else{
-			for(String sql:prepareSqlOracle){
-				db.executeSql(sql);
-			}
+
+		for(String sql:prepareSql){
+			db.createNativeQuery(sql).executeUpdate();
 		}
+		
 		System.out.println("=========== initData End ============");
 	}
 	protected void dropTable() throws SQLException {

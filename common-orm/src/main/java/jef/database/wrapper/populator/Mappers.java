@@ -7,14 +7,14 @@ import java.util.Map;
 
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
-import jef.common.wrapper.IntRange;
 import jef.database.ConnectInfo;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.dialect.AbstractDialect;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.ColumnMappings;
+import jef.database.dialect.statement.LimitHandler;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.dialect.type.ColumnMappings;
 import jef.database.dialect.type.ResultSetAccessor;
 import jef.database.innerpool.ArrayElementPopulator;
 import jef.database.innerpool.NestedObjectPopulator;
@@ -365,10 +365,6 @@ public final class Mappers {
 			throw new UnsupportedOperationException();
 		}
 
-		public String toPageSQL(String sql, IntRange range) {
-			throw new UnsupportedOperationException();
-		}
-
 		public void parseDbInfo(ConnectInfo connectInfo) {
 			throw new UnsupportedOperationException();
 		}
@@ -376,6 +372,10 @@ public final class Mappers {
 		@Override
 		public String getColumnNameToUse(String name) {
 			return name == null ? null : name.toUpperCase();
+		}
+		@Override
+		public LimitHandler getLimitHandler() {
+			throw new UnsupportedOperationException();
 		}
 	};
 }

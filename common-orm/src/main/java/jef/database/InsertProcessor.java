@@ -4,7 +4,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import jef.common.log.LogUtil;
@@ -91,7 +90,7 @@ abstract class InsertProcessor {
 				} else {
 					AutoIncreatmentCallBack cb = sqls.getCallback();
 					cb.executeUpdate(st, sqls.getSql());
-					cb.callAfter(Arrays.asList(obj));
+					cb.callAfter(obj);
 				}
 			} catch (SQLException e) {
 				p.processError(e, ArrayUtils.toString(sqls.getTable(), true), db);
@@ -156,7 +155,7 @@ abstract class InsertProcessor {
 				BindVariableTool.setInsertVariables(obj, sqls.getFields(), context);
 				psmt.execute();
 				if (callback != null) {
-					callback.callAfter(Arrays.asList(obj));
+					callback.callAfter(obj);
 				}
 			} catch (SQLException e) {
 				p.processError(e, ArrayUtils.toString(sqls.getTable(), true), db);

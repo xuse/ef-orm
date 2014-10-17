@@ -54,8 +54,8 @@ import org.junit.runner.RunWith;
 	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"),
 	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
 	@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"), 
-	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"), @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db")
-
+	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"), 
+	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 public class SimpleTableTest extends org.junit.Assert {
 	private DbClient db;
@@ -63,7 +63,7 @@ public class SimpleTableTest extends org.junit.Assert {
 	@BeforeClass
 	public static void setUp() {
 		EntityEnhancer en = new EntityEnhancer();
-		en.enhance("jef.orm.onetable.model");
+		en.enhance("jef.orm.onetable.model,");
 	}
 
 	@DatabaseInit
@@ -83,6 +83,7 @@ public class SimpleTableTest extends org.junit.Assert {
 			db.refreshTable(TestEntity.class); // 创建表
 			db.refreshTable(CaAsset.class);
 			CaAsset t1 = new CaAsset();
+			t1.setNormal("asfc");
 			t1.setAssetType(1);
 			db.insert(t1);
 			ThreadUtils.doSleep(500);
@@ -232,6 +233,16 @@ public class SimpleTableTest extends org.junit.Assert {
 		assertEquals(1, list.size());
 	}
 
+	@Test
+	public void testaBatch1() throws SQLException{
+		TestEntity t1 = RandomData.newInstance(TestEntity.class);
+		t1.setLongField(0);
+		db.batchInsert(Arrays.asList(t1));
+		long n = t1.getLongField();
+		System.out.println(t1.getLongField());
+	}
+	
+	
 	/**
 	 * @测试功能 批量插入
 	 * 
@@ -438,9 +449,15 @@ public class SimpleTableTest extends org.junit.Assert {
 	 */
 	@Test
 	public void testPaging() throws SQLException {
+		insert3Records();
+		insert3Records();
 		System.out.println("=========== testPaging  Begin ==========");
 		Query<TestEntity> q = QB.create(TestEntity.class);
+		Selects select=QB.selectFrom(q);
+		select.column(TestEntity.Field.longField).as("lf1").toField("longField");
+		
 		q.addCondition(TestEntity.Field.boolField, true);
+		q.orderByAsc(TestEntity.Field.longField);
 		PagingIterator<TestEntity> page = db.pageSelect(q, 5);
 		System.out.println("Total Page:" + page.getTotalPage());
 		for (; page.hasNext();) {
@@ -516,7 +533,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		data.setField2("hello aa world!!");
 		db.insert(data);
 
-		NativeQuery<TestEntity> q = db.createNativeQuery("select * from Test_Entity where field_2 like :likestr<$string$> ", TestEntity.class);
+		NativeQuery<TestEntity> q = db.createNativeQuery("select * from test_entity where field_2 like :likestr<$string$> ", TestEntity.class);
 		q.setParameter("likestr", "aa");
 
 		// 查询并检查数据
@@ -526,7 +543,7 @@ public class SimpleTableTest extends org.junit.Assert {
 	}
 
 	private long insert3Records() throws SQLException {
-		ORMConfig.getInstance().setDebugMode(false);
+//		ORMConfig.getInstance().setDebugMode(false);
 		TestEntity t1 = RandomData.newInstance(TestEntity.class);
 		t1.setLongField(1);
 		db.insert(t1);
@@ -729,7 +746,8 @@ public class SimpleTableTest extends org.junit.Assert {
 	 */
 	@Test
 	public void testComplexPageSQL() throws SQLException {
-		String sql = "SELECT t2.*  FROM CA_ASSET T2, (SELECT T.FIELD_1, MAX(T.longField) AS wo_run_id FROM TEST_ENTITY T " + "GROUP BY T.FIELD_1) T3 WHERE t2.normal = t3.field_1  AND t2.asset_type = t3.wo_run_id";
+		String sql = "SELECT t2.*  FROM ca_asset t2, (SELECT t.field_1, MAX(t.longfield) AS wo_run_id FROM test_entity t " +
+	"GROUP BY t.field_1) t3 WHERE t2.normal = t3.field_1  AND t2.asset_type = t3.wo_run_id";
 		PagingIterator<Person> pp = db.pageSelect(sql, Person.class, 10);
 		assertEquals(0, pp.getTotal());
 	}
@@ -741,6 +759,7 @@ public class SimpleTableTest extends org.junit.Assert {
 	 */
 	@Test
 	public void testMax() throws SQLException {
+		insert3Records();
 		// 方法1
 		Query<TestEntity> query = QB.create(TestEntity.class);
 		Selects s = QB.selectFrom(query);
@@ -748,10 +767,10 @@ public class SimpleTableTest extends org.junit.Assert {
 		int max1 = db.selectAs(query, Integer.class).get(0);
 
 		// 方法2
-		int max2 = db.createNativeQuery("select max(longField) from test_entity", Integer.class).getSingleResult();
+		int max2 = db.createNativeQuery("select max(longfield) from test_entity", Integer.class).getSingleResult();
 
 		// 方法3 不支持schema重定向
-		int max3 = (int) db.loadBySql("select max(longField) from test_entity", Integer.class);
+		int max3 = (int) db.loadBySql("select max(longfield) from test_entity", Integer.class);
 
 		assertEquals(max1, max2);
 		assertEquals(max2, max3);

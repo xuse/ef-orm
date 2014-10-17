@@ -15,8 +15,15 @@
  */
 package jef.database.dialect;
 
+import java.sql.Types;
+
+import jef.common.wrapper.IntRange;
 import jef.database.ConnectInfo;
+import jef.database.dialect.statement.LimitHandler;
+import jef.database.query.function.NoArgSQLFunction;
 import jef.tools.string.JefStringReader;
+
+import org.apache.commons.lang.StringUtils;
 
 /**
  * 
@@ -30,6 +37,20 @@ sp_rename：SQLServer 内置的存储过程，用与修改表的定义。
  */
 public class SQLServer2005Dialect extends SQLServer2000Dialect{
 	
+	
+	public SQLServer2005Dialect() {
+		typeNames.put(Types.BLOB, "varbinary(MAX)", Types.VARBINARY);
+		typeNames.put(Types.VARBINARY, "varbinary(MAX)", 0);
+		typeNames.put(Types.VARBINARY, 8000, "varbinary($l)", 0);
+		typeNames.put(Types.LONGVARBINARY, "varbinary(MAX)", 0);
+		typeNames.put(Types.CLOB, "varchar(MAX)", Types.VARCHAR);
+		typeNames.put(Types.LONGVARCHAR, "varchar(MAX)", Types.VARCHAR);
+		typeNames.put(Types.VARCHAR, "varchar(MAX)",0);
+		typeNames.put(Types.VARCHAR, 8000, "varchar($l)",0);
+		typeNames.put(Types.BIT, "bit",0);
+		registerNative(new NoArgSQLFunction("row_number"));
+	}
+
 	public void parseDbInfo(ConnectInfo connectInfo) {
 		JefStringReader reader=new JefStringReader(connectInfo.getUrl());
 		reader.setIgnoreChars(' ');
@@ -46,7 +67,7 @@ public class SQLServer2005Dialect extends SQLServer2000Dialect{
 	@Override
 	public String generateUrl(String host, int port, String pathOrName) {
 		StringBuilder sb=new StringBuilder("jdbc:");
-		//jdbc:microsoft:sqlserver:@localhost:1433; DatabaseName =allandb
+		//jdbc:sqlserver:localhost:1433; DatabaseName =allandb
 		sb.append("sqlserver:");
 		sb.append("//").append(host).append(":").append(port<=0?1433:port);
 		sb.append("; DatabaseName=").append(pathOrName);
@@ -57,4 +78,12 @@ public class SQLServer2005Dialect extends SQLServer2000Dialect{
 	public String getDriverClass(String url) {
 		return "com.microsoft.sqlserver.jdbc.SQLServerDriver";
 	}
+
+	@Override
+	protected LimitHandler generateLimitHander() {
+		return new SQLServer2005LimitHandler();
+	}
+	
+	
 }
+

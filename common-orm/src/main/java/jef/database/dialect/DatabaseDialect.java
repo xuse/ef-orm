@@ -28,6 +28,7 @@ import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.OperateTarget;
 import jef.database.datasource.DataSourceInfo;
+import jef.database.dialect.statement.LimitHandler;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
@@ -151,25 +152,13 @@ public interface DatabaseDialect {
 	 * @return
 	 */
 	String generateUrl(String host, int port, String pathOrName);
-
+	
+	
 	/**
-	 * 将SQL转换为分页的语句
-	 * 
-	 * @param sql
-	 * @param range
+	 * 得到分页管理器
 	 * @return
 	 */
-	String toPageSQL(String sql, IntRange range);
-
-	/**
-	 * 将SQL转换为分页的语句
-	 * 
-	 * @param sql
-	 *            是一个UNION语句
-	 * @param range
-	 * @return
-	 */
-	String toPageSQL(String sql, IntRange range, boolean isUnion);
+	LimitHandler getLimitHandler();
 
 	/**
 	 * Oracle会将所有未加引号的数据库对象名称都按照大写对象名来处理，MySQL则对表名一律转小写，列名则保留原来的大小写。

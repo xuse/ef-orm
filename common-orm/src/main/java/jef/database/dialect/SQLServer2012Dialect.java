@@ -1,10 +1,9 @@
 package jef.database.dialect;
 
-import jef.common.wrapper.IntRange;
+import jef.database.dialect.statement.LimitHandler;
 import jef.database.meta.Feature;
 import jef.database.query.Func;
 import jef.database.query.function.StandardSQLFunction;
-import jef.tools.StringUtils;
 
 /**
  * SQL Server 2012
@@ -40,6 +39,7 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect{
 		registerNative(new StandardSQLFunction("choose"));
 		registerNative(new StandardSQLFunction("iif"));
 		registerNative(new StandardSQLFunction("format"));
+		super.features.remove(Feature.CONCAT_IS_ADD);
 		registerNative(Func.concat);//2012开始支持原生的concat函数。
 		
 //	2012新增的分析函数	
@@ -57,15 +57,20 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect{
 
 	}
 
-	private final static String PAGE_SQL_2012 = " offset %start% row fetch next %next% rows only";
-
-
 	@Override
-	public String toPageSQL(String sql, IntRange range) {
-		String start = String.valueOf(range.getLeastValue() - 1);
-		String next = String.valueOf(range.getGreatestValue() - range.getLeastValue() + 1);
-		String limit = StringUtils.replaceEach(PAGE_SQL_2012, new String[] { "%start%", "%next%" }, new String[] { start, next });
-		return sql.concat(limit);
+	protected LimitHandler generateLimitHander() {
+		return new DerbyLimitHandler();
 	}
+
+//	private final static String PAGE_SQL_2012 = " offset %start% row fetch next %next% rows only";
+//
+//
+//	@Override
+//	public String toPageSQL(String sql, IntRange range) {
+//		String start = String.valueOf(range.getLeastValue() - 1);
+//		String next = String.valueOf(range.getGreatestValue() - range.getLeastValue() + 1);
+//		String limit = StringUtils.replaceEach(PAGE_SQL_2012, new String[] { "%start%", "%next%" }, new String[] { start, next });
+//		return sql.concat(limit);
+//	}
 	
 }

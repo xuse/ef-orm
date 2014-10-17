@@ -9,6 +9,7 @@ import jef.common.log.LogUtil;
 import jef.database.DbClient;
 import jef.database.DbClientFactory;
 import jef.database.DbMetaData;
+import jef.database.NativeQuery;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -19,7 +20,7 @@ public class SqlServerTest {
 
 	@BeforeClass
 	public static void setup() throws SQLException {
-		db = DbClientFactory.getDbClient("sqlserver", "10.17.48.103", 1433, "jiyi", "sa", "hik12345+");
+		db = DbClientFactory.getDbClient("sqlserver", "10.17.48.103", 1433, "jiyi2", "sa", "hik12345+");
 	}
 
 	@Test
@@ -75,14 +76,13 @@ public class SqlServerTest {
 		System.out.println(db.createNativeQuery("select current_timestamp", String.class).getSingleResult());
 
 		System.out.println(db.createNativeQuery("select sysdate", String.class).getSingleResult());
-		
 
 	}
-	
+
 	@Test
-	public void testAddAndAs(){
+	public void testAddAndAs() {
 		System.out.println(db.createNativeQuery("select 'A' || 'B' ", String.class).getSingleResult());
-		
+
 		System.out.println(db.createNativeQuery("select 'A' || 'B' c", String.class).getSingleResult());
 	}
 
@@ -90,20 +90,29 @@ public class SqlServerTest {
 	public void testDecodeTranslate() throws SQLException {
 		List<String> s = db.createNativeQuery("select decode(X,1,'一',2,'二',3,'三','其他') from dual_int", String.class).getResultList();
 		System.out.println(s);
-		
+
 		List<String> s1 = db.createNativeQuery("select translate('abcd1234','cd','=+') from dual", String.class).getResultList();
 		System.out.println(s1);
 	}
-	
+
 	@Test
-	public void testPad(){
+	public void testPad() {
 		System.out.println(db.createNativeQuery("select lpad(X,5,'o') pad_left, rpad(X,5,'o') as pad_right from dual", Map.class).getResultList());
-		
+
 	}
-	
+
 	@Test
-	public void testAddMonth(){
+	public void testAddMonth() {
 		System.out.println(db.createNativeQuery("select add_months(now(), 11) from dual", Map.class).getResultList());
 	}
-	
+
+	@Test
+	public void testPage() {
+		NativeQuery nq=db.createNativeQuery("SELECT distinct person_name,gender FROM person_table order by gender");
+		nq.setFirstResult(1);
+		nq.setMaxResults(3);
+		System.out.println(nq.getResultList());
+
+	}
+
 }

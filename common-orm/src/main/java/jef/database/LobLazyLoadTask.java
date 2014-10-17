@@ -20,7 +20,7 @@ public final class LobLazyLoadTask implements LazyLoadTask {
 	
 	public LobLazyLoadTask(ColumnMapping<?> mtype, DatabaseDialect profile,String tableName) {
 		this.mType = mtype;
-		this.tableName=tableName;
+		this.tableName=profile.getObjectNameToUse(tableName);
 		this.columnname=mType.getColumnName(profile, true);
 		this.profile=profile;
 		this.fieldName=mtype.fieldName();

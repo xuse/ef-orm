@@ -445,8 +445,11 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		case Types.VARCHAR:	
 		case Types.CHAR:
 			return defaultValue?"'1'":"'0'";
-		case Types.INTEGER:
 		case Types.NUMERIC:
+		case Types.INTEGER:
+		case Types.TINYINT:
+		case Types.SMALLINT:
+		case Types.BIT:
 			return defaultValue?"1":"0";
 		default:
 			return String.valueOf(defaultValue); 
@@ -618,20 +621,8 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		return AColumnMapping.wrapSqlStr(DateFormats.DATE_TIME_CS.get().format(value));
 	}
 
-	public int getClobDataType() {
-		return Types.CLOB;
-	}
-
-	public int getBlobDataType() {
-		return Types.BLOB;
-	}
-
 	public long getColumnAutoIncreamentValue(AutoIncrementMapping<?> mapping, OperateTarget db) {
 		throw new UnsupportedOperationException(mapping.getMeta().getName() + "." + mapping.fieldName() + " is auto-increament, but the database '" + this.getName() + "' doesn't support fetching the next AutoIncreament value.");
-	}
-
-	public String toPageSQL(String sql, IntRange range, boolean isUnion) {
-		return toPageSQL(sql, range);
 	}
 
 	public Statement wrap(Statement stmt, boolean isInJpaTx) throws SQLException {

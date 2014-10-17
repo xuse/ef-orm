@@ -31,6 +31,14 @@ public class SelectExpressionItem implements SelectItem {
 
 	private String alias;
 
+	public SelectExpressionItem(){
+	}
+	
+	public SelectExpressionItem(Expression expression,String alias){
+		this.expression=expression;
+		this.alias=alias;
+	}
+	
 	public String getAlias() {
 		return alias;
 	}

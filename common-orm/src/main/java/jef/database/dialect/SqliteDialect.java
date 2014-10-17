@@ -17,14 +17,9 @@ package jef.database.dialect;
 
 import java.io.File;
 
-import jef.common.log.LogUtil;
-import jef.common.wrapper.IntRange;
 import jef.database.ConnectInfo;
-import jef.database.DbUtils;
 import jef.database.dialect.ColumnType.AutoIncrement;
-import jef.database.jsqlparser.parser.ParseException;
-import jef.database.jsqlparser.statement.select.Select;
-import jef.database.jsqlparser.statement.select.Union;
+import jef.database.dialect.statement.LimitHandler;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.query.Func;
@@ -40,7 +35,6 @@ import jef.database.query.function.TemplateFunction;
 import jef.database.query.function.TransformFunction;
 import jef.database.query.function.VarArgsSQLFunction;
 import jef.database.support.RDBMS;
-import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtil;
 
 public class SqliteDialect extends AbstractDialect {
@@ -198,32 +192,12 @@ public class SqliteDialect extends AbstractDialect {
 		connectInfo.setDbname(file.getName());
 		connectInfo.setHost("");
 	}
-	
-	protected static final String POSTGRESQL_PAGE = " limit %next% offset %start%";
-	public String toPageSQL(String sql, IntRange range) {
-		boolean isUnion = false;
-		try {
-			Select select = DbUtils.parseNativeSelect(sql);
-			if (select.getSelectBody() instanceof Union) {
-				isUnion = true;
-			}
-			select.getSelectBody();
-		} catch (ParseException e) {
-			LogUtil.exception("SqlParse Error:", e);
-		}
 
-		String start = String.valueOf(range.getLeastValue() - 1);
-		String next = String.valueOf(range.getGreatestValue() - range.getLeastValue() + 1);
-		String limit = StringUtils.replaceEach(POSTGRESQL_PAGE, new String[] { "%start%", "%next%" }, new String[] { start, next });
-		return isUnion ? StringUtils.concat("select * from (", sql, ") tb__", limit) : sql.concat(limit);
-	}
-
+	private final LimitHandler limit=new LimitOffsetLimitHandler();
 	@Override
-	public String toPageSQL(String sql, IntRange range, boolean isUnion) {
-		String start = String.valueOf(range.getLeastValue() - 1);
-		String next = String.valueOf(range.getGreatestValue() - range.getLeastValue() + 1);
-		String limit = StringUtils.replaceEach(POSTGRESQL_PAGE, new String[] { "%start%", "%next%" }, new String[] { start, next });
-		return isUnion ? StringUtils.concat("select * from (", sql, ") tb__", limit) : sql.concat(limit);
+	public LimitHandler getLimitHandler() {
+		return limit;
 	}
+	
 
 }

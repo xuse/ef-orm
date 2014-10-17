@@ -49,7 +49,7 @@ import jef.tools.ArrayUtils;
  * @author Administrator
  * 
  */
-public final class MultipleResultSet extends AbstractResultSet{
+public final class MultipleResultSet extends AbstractResultSet implements IResultSet{
 	
 	private int current = -1;
 	//重新排序部分

@@ -1,10 +1,12 @@
 package jef.database.jsqlparser.statement.select;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import jef.database.jsqlparser.Util;
 import jef.database.jsqlparser.statement.SqlAppendable;
+import jef.database.jsqlparser.visitor.SelectItem;
 import jef.database.jsqlparser.visitor.SelectItemVisitor;
 
 public class OrderBy implements SqlAppendable {
@@ -25,6 +27,21 @@ public class OrderBy implements SqlAppendable {
 		if(nullsLast){
 			sb.append(" NULLS LAST");
 		}
+	}
+	
+	public void reverseAppendTo(StringBuilder sb,String tmpTableAlias,List<SelectItem> items) {
+		sb.append( " order by ");
+		Iterator<OrderByElement> iter=orderByElements.iterator();
+		if(iter.hasNext()){
+			iter.next().reverseAppendTo(sb,tmpTableAlias,items);
+		}
+		for(;iter.hasNext();){
+			sb.append(',');
+			iter.next().reverseAppendTo(sb,tmpTableAlias,items);
+		}
+//		if(nullsLast){ //SQLServer不支持,故不用考虑
+//			sb.append(" NULLS LAST");
+//		}
 	}
 
 	public void setOrderByElements(List<OrderByElement> orderByElements) {

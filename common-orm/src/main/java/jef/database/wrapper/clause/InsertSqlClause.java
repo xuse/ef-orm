@@ -54,7 +54,7 @@ public class InsertSqlClause{
 	 * @return
 	 */
 	public String getSql(String tablename) {
-		StringBuilder sb = new StringBuilder(fields.size()*8+32);
+		StringBuilder sb = fields==null?new StringBuilder():new StringBuilder(fields.size()*8+32);
 		sb.append(insert).append(tablename);
 		sb.append("(").append(columnsPart).append(") values(");
 		sb.append(valuesPart).append(")");

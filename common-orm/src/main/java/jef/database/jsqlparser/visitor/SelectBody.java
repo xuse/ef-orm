@@ -17,12 +17,15 @@ package jef.database.jsqlparser.visitor;
 
 import jef.database.jsqlparser.statement.SqlAppendable;
 import jef.database.jsqlparser.statement.select.Limit;
+import jef.database.jsqlparser.statement.select.OrderBy;
 
 public interface SelectBody extends SqlAppendable{
 
     public void accept(SelectVisitor selectVisitor);
     
     public void setLimit(Limit limit);
+    
+    public OrderBy getOrderBy();
     
     public Limit getLimit();
 }

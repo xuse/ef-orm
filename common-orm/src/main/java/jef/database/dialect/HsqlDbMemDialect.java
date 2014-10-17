@@ -8,17 +8,14 @@ import java.sql.Types;
 import javax.persistence.PersistenceException;
 
 import jef.common.log.LogUtil;
-import jef.common.wrapper.IntRange;
 import jef.database.ConnectInfo;
 import jef.database.DbCfg;
 import jef.database.DbUtils;
 import jef.database.ORMConfig;
 import jef.database.OperateTarget;
 import jef.database.dialect.ColumnType.Char;
+import jef.database.dialect.statement.LimitHandler;
 import jef.database.dialect.type.AutoIncrementMapping;
-import jef.database.jsqlparser.parser.ParseException;
-import jef.database.jsqlparser.statement.select.Select;
-import jef.database.jsqlparser.statement.select.Union;
 import jef.database.meta.Column;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
@@ -40,8 +37,6 @@ import jef.tools.collection.CollectionUtil;
 public class HsqlDbMemDialect extends AbstractDialect {
 	protected static final String DRIVER_CLASS = "org.hsqldb.jdbc.JDBCDriver";
 
-	protected static final String HSQL_PAGE = " limit %next% offset %start%";
-
 	public HsqlDbMemDialect() {
 		super();
 		super.loadKeywords("hsqldb_keywords.properties");
@@ -50,7 +45,6 @@ public class HsqlDbMemDialect extends AbstractDialect {
 		features.add(Feature.ONE_COLUMN_IN_SINGLE_DDL);
 		features.add(Feature.COLUMN_ALTERATION_SYNTAX);
 		features.add(Feature.CURSOR_ENDS_ON_INSERT_ROW);
-		features.add(Feature.SUPPORT_BOOLEAN);
 		features.add(Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD);
 		features.add(Feature.SUPPORT_SEQUENCE);
 		
@@ -203,36 +197,6 @@ public class HsqlDbMemDialect extends AbstractDialect {
 		}
 	}
 
-	public String toPageSQL(String sql, IntRange range) {
-		boolean isUnion=false;
-		try {
-			Select select=DbUtils.parseNativeSelect(sql);
-			if(select.getSelectBody() instanceof Union){
-				isUnion=true;
-			}
-			select.getSelectBody();
-		} catch (ParseException e) {
-			LogUtil.exception("SqlParse Error:",e);
-		}
-		
-		String start = String.valueOf(range.getLeastValue() - 1);
-		String next = String.valueOf(range.getGreatestValue()
-				- range.getLeastValue() + 1);
-		String limit = StringUtils.replaceEach(HSQL_PAGE, new String[] {
-				"%start%", "%next%" }, new String[] { start, next });
-		return isUnion ?
-				StringUtils.concat("select * from (", sql, ") tb__", limit) : sql.concat(limit);
-	}
-
-	public String toPageSQL(String sql, IntRange range,boolean isUnion) {
-		String start = String.valueOf(range.getLeastValue() - 1);
-		String next = String.valueOf(range.getGreatestValue()
-				- range.getLeastValue() + 1);
-		String limit = StringUtils.replaceEach(HSQL_PAGE, new String[] {
-				"%start%", "%next%" }, new String[] { start, next });
-		return isUnion ?
-				StringUtils.concat("select * from (", sql, ") tb__", limit) : sql.concat(limit);
-	}
 	/**
 	 * HSQLDB将名称统一转成大写形式
 	 */
@@ -321,5 +285,11 @@ public class HsqlDbMemDialect extends AbstractDialect {
 		}catch (SQLException e) {
 			throw new PersistenceException(e);
 		}
+	}
+	private final LimitHandler limit=new LimitOffsetLimitHandler();
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return limit;
 	}
 }

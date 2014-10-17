@@ -11,13 +11,14 @@ import java.util.List;
 
 import javax.persistence.GenerationType;
 
+import jef.codegen.EntityEnhancer;
 import jef.database.DbUtils;
 import jef.database.annotation.PartitionKeyImpl;
 import jef.database.annotation.PartitionResult;
 import jef.database.annotation.PartitionTable;
 import jef.database.annotation.PartitionTableImpl;
-import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.AbstractDialect;
+import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.parser.StSqlParser;
@@ -49,6 +50,7 @@ public class CalculatorTest extends org.junit.Assert{
 
 	@BeforeClass
 	public static void setup() throws SecurityException, NoSuchMethodException {
+		new EntityEnhancer().enhanceClass("jef.orm.onetable.model.TestEntity");
 		config.setAppender("_");
 		config.setKeySeparator("_");
 		PartitionKeyImpl[] keys = new PartitionKeyImpl[] { new PartitionKeyImpl("id", 1) };

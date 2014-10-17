@@ -511,7 +511,7 @@ public class OperateTarget implements SqlTemplate {
 	
 	public final <T> List<T> selectBySql(String sql, Transformer transformer, IntRange range, Object... params) throws SQLException {
 		if (range != null) {
-			sql = getProfile().toPageSQL(sql, range);
+			sql = getProfile().getLimitHandler().toPageSQL(sql, range);
 		}
 		long start = System.currentTimeMillis();
 		TransformerAdapter<T> sqlTransformer = new TransformerAdapter<T>(transformer,this);
