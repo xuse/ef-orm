@@ -18,6 +18,7 @@ package jef.database.dialect;
 import jef.common.wrapper.IntRange;
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
+import jef.database.dialect.statement.LimitHandler;
 import jef.database.meta.DbProperty;
 import jef.database.support.RDBMS;
 
@@ -68,8 +69,8 @@ public class AccessDialect extends AbstractDialect{
 	public void parseDbInfo(ConnectInfo connectInfo) {
 		throw new UnsupportedOperationException();
 	}
-
-	public String toPageSQL(String sql, IntRange range) {
+	@Override
+	public LimitHandler getLimitHandler() {
 		throw new UnsupportedOperationException();
 	}
 }

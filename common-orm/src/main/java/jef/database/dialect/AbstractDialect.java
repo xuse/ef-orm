@@ -625,10 +625,6 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		throw new UnsupportedOperationException(mapping.getMeta().getName() + "." + mapping.fieldName() + " is auto-increament, but the database '" + this.getName() + "' doesn't support fetching the next AutoIncreament value.");
 	}
 
-	public String toPageSQL(String sql, IntRange range, boolean isUnion) {
-		return toPageSQL(sql, range);
-	}
-
 	public Statement wrap(Statement stmt, boolean isInJpaTx) throws SQLException {
 		return stmt;
 	}

@@ -20,18 +20,13 @@ import java.sql.Types;
 import java.util.Arrays;
 
 import jef.common.log.LogUtil;
-import jef.common.wrapper.IntRange;
 import jef.database.ConnectInfo;
-import jef.database.DbUtils;
 import jef.database.ORMConfig;
 import jef.database.dialect.ColumnType.AutoIncrement;
+import jef.database.dialect.statement.LimitHandler;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
-import jef.database.jsqlparser.parser.ParseException;
-import jef.database.jsqlparser.statement.select.Limit;
-import jef.database.jsqlparser.statement.select.Select;
-import jef.database.jsqlparser.statement.select.Union;
 import jef.database.meta.Column;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
@@ -374,37 +369,6 @@ public class MySqlDialect extends AbstractDialect {
 		return RDBMS.mysql;
 	}
 
-	private final static String MYSQL_PAGE = " limit %start%,%next%";
-
-	public String toPageSQL(String sql, IntRange range) {
-		boolean isUnion = false;
-		try {
-			Select select = DbUtils.parseNativeSelect(sql);
-			if (select.getSelectBody() instanceof Union) {
-				isUnion = true;
-			}
-			select.getSelectBody();
-		} catch (ParseException e) {
-			LogUtil.exception("SqlParse Error:", e);
-		}
-		String limit = StringUtils.replaceEach(MYSQL_PAGE, new String[] { "%start%", "%next%" }, range.toStartLimit());
-		return isUnion ? StringUtils.concat("select * from (", sql, ") tb__", limit) : sql.concat(limit);
-	}
-
-//	public Select toPageSQL(Select select, IntRange range) {
-//		int[] span = range.toStartLimitSpan();
-//		Limit limit = new Limit();
-//		limit.setOffset(span[0]);
-//		limit.setRowCount(span[1]);
-//		select.getSelectBody().setLimit(limit);
-//		return select;
-//	}
-
-	@Override
-	public String toPageSQL(String sql, IntRange range, boolean isUnion) {
-		String limit = StringUtils.replaceEach(MYSQL_PAGE, new String[] { "%start%", "%next%" }, range.toStartLimit());
-		return isUnion ? StringUtils.concat("select * from (", sql, ") tb__", limit) : sql.concat(limit);
-	}
 
 	// " jdbc:mysql://localhost:3306/allandb?useUnicode=true&characterEncoding=UTF-8"
 	public void parseDbInfo(ConnectInfo connectInfo) {
@@ -448,5 +412,12 @@ public class MySqlDialect extends AbstractDialect {
 	@Override
 	public void processIntervalExpression(Function func, Interval interval) {
 		interval.toMySqlMode();
+	}
+	
+	private final LimitHandler limit=new MySqlLimitHandler();
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return limit;
 	}
 }

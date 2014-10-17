@@ -154,7 +154,7 @@ public class RoutingSQLExecutor implements SQLExecutor {
 				parse.setNewLimit(null);
 				IntRange range=new IntRange(offset+1, offset+rowcount);
 				boolean isUnion = sql==null?true:(((Select) sql).getSelectBody() instanceof Union);
-				return db.getProfile().toPageSQL(rawSQL, range, isUnion);
+				return db.getProfile().getLimitHandler().toPageSQL(rawSQL, range, isUnion);
 			}
 		}
 		return rawSQL;

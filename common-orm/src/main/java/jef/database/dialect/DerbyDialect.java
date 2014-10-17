@@ -23,6 +23,7 @@ import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.ConnectInfo;
 import jef.database.OperateTarget;
+import jef.database.dialect.statement.LimitHandler;
 import jef.database.jsqlparser.expression.LongValue;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
@@ -50,7 +51,6 @@ import jef.tools.string.JefStringReader;
  * 
  */
 public class DerbyDialect extends AbstractDialect {
-	private final static String DERBY_PAGE = " offset %start% row fetch next %next% rows only";
 	
 	public DerbyDialect() {
 		features = CollectionUtil.identityHashSet();
@@ -214,39 +214,6 @@ public class DerbyDialect extends AbstractDialect {
 		return RDBMS.derby;
 	}
 
-	public String toPageSQL(String sql, IntRange range) {
-//		boolean isUnion=false;
-//		try {
-//			Select select=DbUtils.parseNativeSelect(sql);
-//			if(select.getSelectBody() instanceof Union){
-//				isUnion=true;
-//			}
-//			select.getSelectBody();
-//		} catch (ParseException e) {
-//			LogUtil.exception("SqlParse Error:",e);
-//		}
-		String start = String.valueOf(range.getLeastValue() - 1);
-		String next = String.valueOf(range.getGreatestValue() - range.getLeastValue() + 1);
-		String limit = StringUtils.replaceEach(DERBY_PAGE, new String[] { "%start%", "%next%" }, new String[] { start, next });
-//		if (isUnion) {
-//			sql = StringUtils.concat("select * from (", sql, ") tb", limit);
-//		} else {
-			sql = sql.concat(limit);
-//		}
-		return sql;
-	}
-	
-	public String toPageSQL(String sql, IntRange range,boolean isUnion) {
-		String start = String.valueOf(range.getLeastValue() - 1);
-		String next = String.valueOf(range.getGreatestValue() - range.getLeastValue() + 1);
-		String limit = StringUtils.replaceEach(DERBY_PAGE, new String[] { "%start%", "%next%" }, new String[] { start, next });
-//		if (isUnion) {
-//			return StringUtils.concat("select * from (", sql, ") tb", limit);
-//		} else {
-			return sql.concat(limit);
-//		}
-	}
-
 	@Override
 	public String getObjectNameToUse(String name) {
 		return StringUtils.upperCase(name);
@@ -292,5 +259,11 @@ public class DerbyDialect extends AbstractDialect {
 			connectInfo.setHost(reader.readToken('/', ' '));
 			connectInfo.setDbname(reader.readToken(';'));
 		}
+	}
+
+	private final LimitHandler limit=new DerbyLimitHandler();
+	@Override
+	public LimitHandler getLimitHandler() {
+		return limit;
 	}
 }

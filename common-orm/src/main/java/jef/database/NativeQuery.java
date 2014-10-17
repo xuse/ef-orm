@@ -465,7 +465,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 				
 				IntRange range = new IntRange(offset + 1, offset + rowcount);
 				boolean isUnion = ((Select) sql).getSelectBody() instanceof Union;
-				return db.getProfile().toPageSQL(rawSQL, range, isUnion);
+				return db.getProfile().getLimitHandler().toPageSQL(rawSQL, range, isUnion);
 			}
 		}
 
@@ -475,7 +475,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 				context.setNewLimit(range);
 			}else{
 				boolean isUnion = sb instanceof Union;
-				return db.getProfile().toPageSQL(rawSQL, range, isUnion);	
+				return db.getProfile().getLimitHandler().toPageSQL(rawSQL, range, isUnion);	
 			}
 		}
 		return rawSQL;

@@ -27,7 +27,6 @@ import javax.sql.DataSource;
 import javax.sql.rowset.CachedRowSet;
 
 import jef.common.log.LogUtil;
-import jef.common.wrapper.IntRange;
 import jef.database.ConnectInfo;
 import jef.database.DbCfg;
 import jef.database.DebugUtil;
@@ -37,6 +36,7 @@ import jef.database.datasource.DataSourceInfo;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.ColumnType.Varchar;
+import jef.database.dialect.statement.LimitHandler;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
@@ -297,17 +297,6 @@ public class OracleDialect extends AbstractDialect {
 		return RDBMS.oracle;
 	}
 
-	private final static String ORACLE_PAGE1 = "select * from (select tb__.*, rownum rid__ from (";
-	private final static String ORACLE_PAGE2 = " ) tb__ where rownum <= %end%) where rid__ >= %start%";
-
-	public String toPageSQL(String sql, IntRange range) {
-		sql = ORACLE_PAGE1 + sql;
-		String limit = ORACLE_PAGE2.replace("%start%", String.valueOf(range.getLeastValue()));
-		limit = limit.replace("%end%", String.valueOf(range.getGreatestValue()));
-		sql = sql.concat(limit);
-		return sql;
-	}
-
 	@Override
 	public String getObjectNameToUse(String name) {
 		return name==null?null:name.toUpperCase();
@@ -517,5 +506,12 @@ public class OracleDialect extends AbstractDialect {
 	public void toExtremeInsert(InsertSqlClause sql) {
 //		alter table xxx nologging
 		sql.setInsert("insert /*+ APPEND */ into ");
+	}
+	
+	private LimitHandler limit=new OracleLimitHander();
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return limit;
 	}
 }

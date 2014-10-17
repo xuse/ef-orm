@@ -6,6 +6,8 @@ import java.util.List;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.expression.Function;
+import jef.database.jsqlparser.expression.LongValue;
+import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
 import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.statement.select.SelectExpressionItem;
@@ -18,6 +20,10 @@ import jef.database.jsqlparser.visitor.ToCountDeParser;
 import jef.database.query.SqlExpression;
 
 public class SelectToCountWrapper extends PlainSelect{
+	
+	private static final ExpressionList EXP_1=new ExpressionList(LongValue.L1);
+	private static final List<SelectItem> SELECT_1=Arrays.<SelectItem>asList(new SelectExpressionItem(LongValue.L1,"l"));
+	
 	private SubSelect inner;
 	private boolean isDistinct;
 	private Limit removedLimit;
@@ -43,27 +49,35 @@ public class SelectToCountWrapper extends PlainSelect{
 	
 	public SelectToCountWrapper(PlainSelect select,DatabaseDialect profile){
 		isDistinct=select.getDistinct()!=null;
-		if(select.isGroupBy()){
+		List<Expression> distinctToGroupBy=null;
+		if(isDistinct && select.getSelectItems().size()>1){//Distinct多个列
+			distinctToGroupBy=distinctItemToGroupItem(select);
+		}
+		if(select.isGroupBy() || distinctToGroupBy!=null){
 			Function count=new Function();
 			count.setName("count");
-			count.setAllColumns(true);
+			count.setParameters(EXP_1);
 			SelectExpressionItem countItem=new SelectExpressionItem();
 			countItem.setExpression(count);
 			countItem.setAlias("count");
 			this.selectItems=Arrays.<SelectItem>asList(countItem);
 			
 			//将原来的Select部分套在SubSelect内。
-			inner=new SubSelect();
-			PlainSelect newSelect=new PlainSelect(select);
-			newSelect.setOrderBy(null);
-			List<SelectItem> ns=new ArrayList<SelectItem>();
-			for(Expression exp: newSelect.getGroupByColumnReferences()){
-				SelectExpressionItem item=new SelectExpressionItem();
-				item.setExpression(exp);
-				ns.add(item);
+			PlainSelect innerSelect=new PlainSelect(select);
+			if(distinctToGroupBy!=null){
+				innerSelect.setDistinct(null);
+				innerSelect.setGroupByColumnReferences(distinctToGroupBy);
 			}
-			newSelect.setSelectItems(ns);
-			inner.setSelectBody(newSelect);
+			innerSelect.setOrderBy(null);
+//			List<SelectItem> ns=new ArrayList<SelectItem>();
+//			for(Expression exp: innerSelect.getGroupByColumnReferences()){
+//				SelectExpressionItem item=new SelectExpressionItem();
+//				item.setExpression(exp);
+//				ns.add(item);
+//			}
+			innerSelect.setSelectItems(SELECT_1);
+			inner=new SubSelect();
+			inner.setSelectBody(innerSelect);
 			inner.setAlias("t__cnt");//为了兼容Derby，故给表一个别名
 			this.fromItem=inner;
 		}else{
@@ -82,6 +96,17 @@ public class SelectToCountWrapper extends PlainSelect{
 		}
 	}
 	
+	private List<Expression> distinctItemToGroupItem(PlainSelect select) {
+		List<Expression> result=new ArrayList<Expression>();
+		for(SelectItem item:select.getSelectItems()){
+			if(item.isAllColumns()){
+				continue;
+			}
+			result.add(item.getAsSelectExpression().getExpression());//将
+		}
+		return result;
+	}
+
 	private SelectItem getSelectItem(PlainSelect select,DatabaseDialect profile) {
 		SelectExpressionItem result=new SelectExpressionItem();
 		StringBuilder sb=new StringBuilder(64);

@@ -36,7 +36,7 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
 
-public abstract class AbstractResultSet implements IResultSet {
+public abstract class AbstractResultSet implements ResultSet {
 	protected abstract ResultSet get() throws SQLException;
 
 	public Object getObject(String columnName) throws SQLException {
@@ -768,6 +768,7 @@ public abstract class AbstractResultSet implements IResultSet {
 		return get().getNCharacterStream(columnLabel);
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public <T> T unwrap(Class<T> iface) throws SQLException {
 		return (T)this;
@@ -778,6 +779,7 @@ public abstract class AbstractResultSet implements IResultSet {
 		return false;
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public InputStream getUnicodeStream(String columnLabel) throws SQLException {
 		return get().getUnicodeStream(columnLabel);

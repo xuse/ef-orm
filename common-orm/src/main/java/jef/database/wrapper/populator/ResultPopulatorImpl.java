@@ -154,6 +154,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 	}
 
 	// /////////////////////////////////////////////////////////
+	@SuppressWarnings("all")
 	final static class VarRsIterator implements Iterator<Map<String, Object>> {
 		private IResultSet rs;
 		private boolean hasNext;
@@ -282,7 +283,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 		private ObjectPopulator populateMeta;
 		private List<Mapper<?>> extendPopulator;
 		
-		@SuppressWarnings("unchecked")
+		@SuppressWarnings("all")
 		public PlainRsIterator(IResultSet rs, Transformer transformers) {
 			this.rs = rs;
 			/*
@@ -375,6 +376,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 		private List<Mapper<?>> populators;
 		private Class<?> componentType;
 
+		@SuppressWarnings("all")
 		public MultipleRsIterator(IResultSet rs, EntityMappingProvider context,Transformer transformer) {
 			this.componentType=transformer.getResultClazz().getComponentType();
 			Assert.isFalse(componentType.isPrimitive(),"Please use the complex type of "+componentType);
@@ -487,6 +489,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 		private ColumnMeta columnNames;
 		private Session session;
 
+		@SuppressWarnings("all")
 		public NormalRsIterator(IResultSet rs, EntityMappingProvider context, Transformer transformers, Session session) {
 			@SuppressWarnings("unchecked")
 			Class<T> resultObj=(Class<T>) transformers.getResultClazz();

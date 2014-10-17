@@ -2,18 +2,12 @@ package jef.database.dialect;
 
 import java.util.Arrays;
 
-import jef.common.log.LogUtil;
-import jef.common.wrapper.IntRange;
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
-import jef.database.DbUtils;
-import jef.database.jsqlparser.parser.ParseException;
-import jef.database.jsqlparser.statement.select.Select;
-import jef.database.jsqlparser.statement.select.Union;
+import jef.database.dialect.statement.LimitHandler;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.support.RDBMS;
-import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtil;
 
 /**
@@ -35,8 +29,6 @@ public class GBaseDialect extends AbstractDialect {
 
 	protected static final String DRIVER_CLASS = "com.gbase.jdbc.Driver";
 	protected static final int DEFAULT_PORT = 5258;
-
-	protected static final String GBASE_PAGE = " limit %next% offset %start%";
 
 	public GBaseDialect() {
 		features = CollectionUtil.identityHashSet();
@@ -82,37 +74,6 @@ public class GBaseDialect extends AbstractDialect {
 		}
 		return sb.toString();
 	}
-
-	public String toPageSQL(String sql, IntRange range) {
-		boolean isUnion=false;
-		try {
-			Select select=DbUtils.parseNativeSelect(sql);
-			if(select.getSelectBody() instanceof Union){
-				isUnion=true;
-			}
-			select.getSelectBody();
-		} catch (ParseException e) {
-			LogUtil.exception("SqlParse Error:",e);
-		}
-		
-		String start = String.valueOf(range.getLeastValue() - 1);
-		String next = String.valueOf(range.getGreatestValue() - range.getLeastValue() + 1);
-		String limit = StringUtils.replaceEach(GBASE_PAGE,
-				new String[] { "%start%", "%next%" }, new String[] { start, next });
-		return isUnion ?
-				StringUtils.concat("select * from (", sql, ") tb", limit) : sql.concat(limit);
-	}
-	
-	public String toPageSQL(String sql, IntRange range,boolean isUnion) {
-		String start = String.valueOf(range.getLeastValue() - 1);
-		String next = String.valueOf(range.getGreatestValue() - range.getLeastValue() + 1);
-		String limit = StringUtils.replaceEach(GBASE_PAGE,
-				new String[] { "%start%", "%next%" }, new String[] { start, next });
-		return isUnion ?
-				StringUtils.concat("select * from (", sql, ") tb", limit) : sql.concat(limit);
-	}
-
-
 	public String getFunction(DbFunction func, Object... params) {
 		if(func instanceof jef.database.query.Func){
 			switch ((jef.database.query.Func)func) {
@@ -131,7 +92,11 @@ public class GBaseDialect extends AbstractDialect {
 	}
 
 	public void parseDbInfo(ConnectInfo connectInfo) {
-		// TODO Auto-generated method stub
-		
+	}
+	private final LimitHandler limit=new LimitOffsetLimitHandler();
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return limit;
 	}
 }

@@ -37,7 +37,7 @@ import jef.database.wrapper.populator.ColumnMeta;
  * @author Jiyi
  * 
  */
-final class ReorderResultSet2 extends AbstractResultSet {
+final class ReorderResultSet2 extends AbstractResultSet implements IResultSet {
 	private ColumnMeta columns;
 
 	private final TreeMap<ResultSetHolder,Void> gettingResults;

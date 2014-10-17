@@ -17,9 +17,13 @@ package jef.database.dialect;
 
 import java.sql.Types;
 
+import jef.common.wrapper.IntRange;
 import jef.database.ConnectInfo;
+import jef.database.dialect.statement.LimitHandler;
 import jef.database.query.function.NoArgSQLFunction;
 import jef.tools.string.JefStringReader;
+
+import org.apache.commons.lang.StringUtils;
 
 /**
  * 
@@ -74,5 +78,12 @@ public class SQLServer2005Dialect extends SQLServer2000Dialect{
 	public String getDriverClass(String url) {
 		return "com.microsoft.sqlserver.jdbc.SQLServerDriver";
 	}
+
+	@Override
+	protected LimitHandler generateLimitHander() {
+		return new SQLServer2005LimitHandler();
+	}
+	
+	
 }
 

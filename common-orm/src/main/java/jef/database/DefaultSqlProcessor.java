@@ -33,13 +33,12 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AbstractTimeMapping;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.innerpool.PartitionSupport;
+import jef.database.jsqlparser.SelectToCountWrapper;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.statement.select.Union;
-import jef.database.jsqlparser.visitor.DeParserAdapter;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.SelectBody;
-import jef.database.jsqlparser.visitor.ToCountDeParser;
 import jef.database.meta.FBIField;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
@@ -194,14 +193,13 @@ public class DefaultSqlProcessor implements SqlProcessor {
 		// 重新解析
 		try {
 			SelectBody select = DbUtils.parseNativeSelect(sql).getSelectBody();
+			SelectToCountWrapper sw;
 			if (select instanceof Union) {
-				// 对于union是没有好的办法来count的……，union all则可以多次查询后累加
-				return wrapCount(sql);
+				sw=new SelectToCountWrapper((Union) select);
+			}else{
+				sw=new SelectToCountWrapper((PlainSelect) select,getProfile());				
 			}
-			PlainSelect plain = (PlainSelect) select;
-			DeParserAdapter deparse = new ToCountDeParser(profile);
-			plain.accept(deparse);
-			return deparse.getBuffer().toString();
+			return sw.toString();
 		} catch (ParseException e) {
 			throw new SQLException("Parser error:" + sql);
 		}

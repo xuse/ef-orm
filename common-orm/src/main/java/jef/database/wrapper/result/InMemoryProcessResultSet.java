@@ -33,7 +33,7 @@ import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.clause.InMemoryProcessor;
 import jef.database.wrapper.populator.ColumnMeta;
 
-public class InMemoryProcessResultSet extends AbstractResultSet{
+final class InMemoryProcessResultSet extends AbstractResultSet implements IResultSet{
 	private CachedRowSetImpl cache;
 	private ColumnMeta columns;
 	private DatabaseDialect dialect;

@@ -9,11 +9,11 @@ import java.util.Map;
 
 import javax.sql.rowset.CachedRowSet;
 
-import jef.common.wrapper.IntRange;
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.OperateTarget;
 import jef.database.datasource.DataSourceInfo;
+import jef.database.dialect.statement.LimitHandler;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
@@ -86,16 +86,6 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	@Override
 	public String generateUrl(String host, int port, String pathOrName) {
 		return dialect.generateUrl(host, port, pathOrName);
-	}
-
-	@Override
-	public String toPageSQL(String sql, IntRange range) {
-		return dialect.toPageSQL(sql, range);
-	}
-
-	@Override
-	public String toPageSQL(String sql, IntRange range, boolean isUnion) {
-		return dialect.toPageSQL(sql, range,isUnion);
 	}
 
 	@Override
@@ -226,5 +216,10 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	@Override
 	public int getPropertyInt(DbProperty key) {
 		return dialect.getPropertyInt(key);
+	}
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return dialect.getLimitHandler();
 	}
 }

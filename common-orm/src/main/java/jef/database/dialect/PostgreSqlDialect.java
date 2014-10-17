@@ -13,7 +13,6 @@ import javax.persistence.PersistenceException;
 
 import jef.common.Cfg;
 import jef.common.log.LogUtil;
-import jef.common.wrapper.IntRange;
 import jef.database.ConnectInfo;
 import jef.database.DbUtils;
 import jef.database.ORMConfig;
@@ -23,13 +22,11 @@ import jef.database.dialect.ColumnType.Clob;
 import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.statement.DelegatingPreparedStatement;
 import jef.database.dialect.statement.DelegatingStatement;
+import jef.database.dialect.statement.LimitHandler;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
-import jef.database.jsqlparser.parser.ParseException;
-import jef.database.jsqlparser.statement.select.Select;
-import jef.database.jsqlparser.statement.select.Union;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.query.Func;
@@ -58,7 +55,6 @@ public class PostgreSqlDialect extends AbstractDialect {
 	protected static final String JDBC_URL_FORMAT = "jdbc:postgresql://%1$s:%2$s/%3$s";
 	protected static final int DEFAULT_PORT = 5432;
 
-	protected static final String POSTGRESQL_PAGE = " limit %next% offset %start%";
 	
 
 	public PostgreSqlDialect() {
@@ -228,31 +224,6 @@ public class PostgreSqlDialect extends AbstractDialect {
 		return url;
 	}
 
-	public String toPageSQL(String sql, IntRange range) {
-		boolean isUnion = false;
-		try {
-			Select select = DbUtils.parseNativeSelect(sql);
-			if (select.getSelectBody() instanceof Union) {
-				isUnion = true;
-			}
-			select.getSelectBody();
-		} catch (ParseException e) {
-			LogUtil.exception("SqlParse Error:", e);
-		}
-
-		String start = String.valueOf(range.getLeastValue() - 1);
-		String next = String.valueOf(range.getGreatestValue() - range.getLeastValue() + 1);
-		String limit = StringUtils.replaceEach(POSTGRESQL_PAGE, new String[] { "%start%", "%next%" }, new String[] { start, next });
-		return isUnion ? StringUtils.concat("select * from (", sql, ") tb__", limit) : sql.concat(limit);
-	}
-
-	@Override
-	public String toPageSQL(String sql, IntRange range, boolean isUnion) {
-		String start = String.valueOf(range.getLeastValue() - 1);
-		String next = String.valueOf(range.getGreatestValue() - range.getLeastValue() + 1);
-		String limit = StringUtils.replaceEach(POSTGRESQL_PAGE, new String[] { "%start%", "%next%" }, new String[] { start, next });
-		return isUnion ? StringUtils.concat("select * from (", sql, ") tb__", limit) : sql.concat(limit);
-	}
 
 	/**
 	 * PostgreSQL 无论建表SQL中的表名是大写还是小写，最终DB中的表名都是小写； 而列名是区分大小写的； <br>
@@ -584,5 +555,12 @@ public class PostgreSqlDialect extends AbstractDialect {
 	@Override
 	public boolean containKeyword(String name) {
 		return keywords.contains(StringUtils.lowerCase(name));
+	}
+	
+	private final LimitHandler limit=new LimitOffsetLimitHandler();
+
+	@Override
+	public LimitHandler getLimitHandler() {
+		return limit;
 	}
 }

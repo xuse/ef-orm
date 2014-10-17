@@ -206,7 +206,7 @@ public class QueryClauseImpl implements QueryClause {
 
 	private String withPage(String sql, boolean union) {
 		if (pageRange != null && !isMultiDatabase()) {
-			return profile.toPageSQL(sql, pageRange, union);
+			return profile.getLimitHandler().toPageSQL(sql, pageRange, union);
 		}
 		return sql;
 	}
