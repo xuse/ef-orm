@@ -59,7 +59,9 @@ public class QueryClauseSqlImpl implements QueryClause {
 		return getSql(null).getSql();
 	}
 	public BindSql getSql(PartitionResult site) {
-		return new BindSql(withPage(body.concat(orderbyPart.getSql())),bind);
+		BindSql r=withPage(body.concat(orderbyPart.getSql()));
+		r.setBind(bind);
+		return r;
 	}
 	private DatabaseDialect profile;
 	public QueryClauseSqlImpl(DatabaseDialect profile,boolean isUnion){
@@ -67,11 +69,11 @@ public class QueryClauseSqlImpl implements QueryClause {
 		this.isUnion=isUnion;
 	}
 
-	private String withPage(String sql) {
+	private BindSql withPage(String sql) {
 		if (pageRange != null) {
-			return profile.getLimitHandler().toPageSQL(sql, pageRange,isUnion);
+			return profile.getLimitHandler().toPageSQL(sql, pageRange.toStartLimitSpan(),isUnion);
 		}
-		return sql;
+		return new BindSql(sql);
 	}
 	static final PartitionResult[] P=new PartitionResult[]{new PartitionResult("")};
 	public PartitionResult[] getTables() {

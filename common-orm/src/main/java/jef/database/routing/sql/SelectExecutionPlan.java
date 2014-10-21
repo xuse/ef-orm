@@ -363,4 +363,9 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements InMemo
 		}
 		return false;
 	}
+
+	@Override
+	public boolean isReverseResult() {
+		return false;
+	}
 }

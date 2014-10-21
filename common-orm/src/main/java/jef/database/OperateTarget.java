@@ -15,6 +15,8 @@ import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.Transaction.TransactionFlag;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.dialect.statement.ReversePreparedStatement;
+import jef.database.dialect.statement.ReverseStatement;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IManagedConnectionPool;
@@ -30,6 +32,7 @@ import jef.database.query.SqlExpression;
 import jef.database.routing.jdbc.UpdateReturn;
 import jef.database.routing.sql.InMemoryOperateProvider;
 import jef.database.wrapper.ResultIterator;
+import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.populator.Transformer;
@@ -66,28 +69,29 @@ public class OperateTarget implements SqlTemplate {
 	public Session getSession() {
 		return session;
 	}
-	
-	public Sequence getSequence(AutoIncrementMapping<?> mapping) throws SQLException{
+
+	public Sequence getSequence(AutoIncrementMapping<?> mapping) throws SQLException {
 		return session.getNoTransactionSession().getSequenceManager().getSequence(mapping, this);
 	}
-	
 
 	/**
 	 * 获得Sequence对象
-	 * @param name 名称
-	 * @param len      Sequence长度（位数）
+	 * 
+	 * @param name
+	 *            名称
+	 * @param len
+	 *            Sequence长度（位数）
 	 * @return sequence
 	 * @throws SQLException
 	 */
-	public Sequence getSequence(String name, int len) throws SQLException{
-		return session.getNoTransactionSession().getSequenceManager().getSequence(name,this, len);
+	public Sequence getSequence(String name, int len) throws SQLException {
+		return session.getNoTransactionSession().getSequenceManager().getSequence(name, this, len);
 	}
-	
 
 	public OperateTarget(Session tx, String key) {
 		this.session = tx;
 		this.dbkey = key;
-		this.profile=session.getProfile(key);
+		this.profile = session.getProfile(key);
 	}
 
 	public SqlProcessor getProcessor() {
@@ -111,6 +115,7 @@ public class OperateTarget implements SqlTemplate {
 			conn = null;
 		}
 	}
+
 	public String getTransactionId() {
 		return this.session.getTransactionId(dbkey);
 	}
@@ -120,49 +125,81 @@ public class OperateTarget implements SqlTemplate {
 		if (getProfile().isIOError(e)) {
 			LogUtil.warn("IO error on connection detected. closing current connection to refersh a new db connection.");
 			conn.closePhysical();
-			if(session.getPool() instanceof IManagedConnectionPool){
-				((IManagedConnectionPool)session.getPool()).notifyDbDisconnect();
-			}	
-			
+			if (session.getPool() instanceof IManagedConnectionPool) {
+				((IManagedConnectionPool) session.getPool()).notifyDbDisconnect();
+			}
+
 		}
 	}
 
 	public Statement createStatement() throws SQLException {
-		return profile.wrap(getConnection(dbkey).createStatement(),isJpaTx());
+		return profile.wrap(getConnection(dbkey).createStatement(), isJpaTx());
 	}
-	public Statement createStatement(int rsType, int concurType) throws SQLException {
-		return profile.wrap(getConnection(dbkey).createStatement(rsType, concurType),isJpaTx());
+
+	public Statement createStatement(boolean isReverse,boolean isUpdatable) throws SQLException {
+		Statement st;
+		int rsType=(isReverse || isUpdatable)?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY;
+		int rsUpdate=isUpdatable?ResultSet.CONCUR_UPDATABLE:ResultSet.CONCUR_READ_ONLY;
+		st=getConnection(dbkey).createStatement(rsType, rsUpdate);
+		if(isReverse){
+			st=new ReverseStatement(st);
+		}
+		return profile.wrap(st, isJpaTx());
 	}
-	
+
+	/*
+	 * 准备执行SQL
+	 */
 	public PreparedStatement prepareStatement(String sql) throws SQLException {
-		return profile.wrap(getConnection(dbkey).prepareStatement(sql),isJpaTx());
+		return profile.wrap(getConnection(dbkey).prepareStatement(sql), isJpaTx());
 	}
-	
+
+	/*
+	 * 准备执行SQL，插入
+	 */
 	public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException {
-		return profile.wrap(getConnection(dbkey).prepareStatement(sql, columnNames),isJpaTx());
+		return profile.wrap(getConnection(dbkey).prepareStatement(sql, columnNames), isJpaTx());
 	}
 
+	/*
+	 * 准备执行SQL，插入
+	 */
 	public PreparedStatement prepareStatement(String sql, int generateKeys) throws SQLException {
-		return profile.wrap(getConnection(dbkey).prepareStatement(sql, generateKeys),isJpaTx());
-	}
-	
-	public PreparedStatement prepareStatement(String sql, int[] columnIndexs) throws SQLException {
-		return profile.wrap(getConnection(dbkey).prepareStatement(sql, columnIndexs),isJpaTx());
+		return profile.wrap(getConnection(dbkey).prepareStatement(sql, generateKeys), isJpaTx());
 	}
 
-	PreparedStatement prepareStatement(String sql, int rsType, int concurType) throws SQLException {
-		return profile.wrap(getConnection(dbkey).prepareStatement(sql, rsType, concurType),isJpaTx());
+	/*
+	 * 准备执行SQL，插入
+	 */
+	public PreparedStatement prepareStatement(String sql, int[] columnIndexs) throws SQLException {
+		return profile.wrap(getConnection(dbkey).prepareStatement(sql, columnIndexs), isJpaTx());
 	}
-	
+
+	/*
+	 * 准备执行SQL，查询
+	 */
+	PreparedStatement prepareStatement(String sql, boolean isReverse,boolean isUpdatable) throws SQLException {
+		PreparedStatement st;
+		int rsType=(isReverse || isUpdatable)?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY;
+		int rsUpdate=isUpdatable?ResultSet.CONCUR_UPDATABLE:ResultSet.CONCUR_READ_ONLY;
+		st = getConnection(dbkey).prepareStatement(sql, rsType, rsUpdate);
+		if (isReverse) {
+			st = new ReversePreparedStatement(st);
+		}
+		return profile.wrap(st, isJpaTx());
+	}
+
+	/*
+	 * 准备执行SQL，查询
+	 */
 	public PreparedStatement prepareStatement(String sql, int rsType, int concurType, int hold) throws SQLException {
-		return profile.wrap(getConnection(dbkey).prepareStatement(sql, rsType, concurType, hold),isJpaTx());
+		return profile.wrap(getConnection(dbkey).prepareStatement(sql, rsType, concurType, hold), isJpaTx());
 	}
 
 	public CallableStatement prepareCall(String sql) throws SQLException {
 		return getConnection(dbkey).prepareCall(sql);
 	}
 
-	
 	public boolean isResultSetHolderTransaction() {
 		if (session instanceof Transaction) {
 			Transaction trans = (Transaction) session;
@@ -171,7 +208,7 @@ public class OperateTarget implements SqlTemplate {
 		return false;
 	}
 
-	public void commitAndClose(){
+	public void commitAndClose() {
 		if (session instanceof Transaction) {
 			((Transaction) session).commit(true);
 		}
@@ -181,10 +218,10 @@ public class OperateTarget implements SqlTemplate {
 		return getConnection(dbkey);
 	}
 
-	<T> List<T> populateResultSet(IResultSet rsw,EntityMappingProvider mapping,Transformer transformer) throws SQLException {
+	<T> List<T> populateResultSet(IResultSet rsw, EntityMappingProvider mapping, Transformer transformer) throws SQLException {
 		return session.populateResultSet(rsw, mapping, transformer);
 	}
-	
+
 	private IConnection getConnection(String dbkey2) {
 		if (conn == null) {
 			try {
@@ -196,7 +233,6 @@ public class OperateTarget implements SqlTemplate {
 		conn.setKey(dbkey2);
 		return conn;
 	}
-
 
 	public String getDbName() {
 		return session.getDbName(dbkey);
@@ -216,7 +252,7 @@ public class OperateTarget implements SqlTemplate {
 		try {
 			st = prepareStatement(sql);
 			st.setQueryTimeout(ORMConfig.getInstance().getUpdateTimeout() * 2);// 批量操作允许更多的时间。
-			int maxBatchlog=ORMConfig.getInstance().getMaxBatchLog();
+			int maxBatchlog = ORMConfig.getInstance().getMaxBatchLog();
 			for (int i = 0; i < params.length; i++) {
 				StringBuilder sb = debug ? new StringBuilder() : null;
 				session.getListener().beforeSqlExecute(sql, params[i]);
@@ -250,12 +286,12 @@ public class OperateTarget implements SqlTemplate {
 		}
 	}
 
-	public final UpdateReturn innerExecuteUpdate(String sql, List<Object> ps, int generatedKeys,int[] generatedIndex,String[] generatedColumn) throws SQLException {
+	public final UpdateReturn innerExecuteUpdate(String sql, List<Object> ps, int generatedKeys, int[] generatedIndex, String[] generatedColumn) throws SQLException {
 		Object[] params = ps.toArray();
 		DbOperateProcessor p = session.p;
 
 		session.getListener().beforeSqlExecute(sql, params);
-		boolean debugMode=ORMConfig.getInstance().isDebugMode();
+		boolean debugMode = ORMConfig.getInstance().isDebugMode();
 		long start = System.currentTimeMillis();
 		PreparedStatement st = null;
 		UpdateReturn result;
@@ -264,29 +300,29 @@ public class OperateTarget implements SqlTemplate {
 		StringBuilder sb = null;
 		if (debugMode)
 			sb = new StringBuilder(sql).append("\t|").append(this.getTransactionId());
-		boolean withGeneratedKeys=false;
+		boolean withGeneratedKeys = false;
 		try {
-			if(generatedColumn!=null){
-				st=prepareStatement(sql,generatedColumn);
-				withGeneratedKeys=true;
-			}else if(generatedIndex!=null){
-				st=prepareStatement(sql,generatedIndex);
-				withGeneratedKeys=true;
-			}else if(generatedKeys==Statement.RETURN_GENERATED_KEYS){
-				st=prepareStatement(sql,generatedKeys);
-				withGeneratedKeys=true;
-			}else{
-				st=prepareStatement(sql);
+			if (generatedColumn != null) {
+				st = prepareStatement(sql, generatedColumn);
+				withGeneratedKeys = true;
+			} else if (generatedIndex != null) {
+				st = prepareStatement(sql, generatedIndex);
+				withGeneratedKeys = true;
+			} else if (generatedKeys == Statement.RETURN_GENERATED_KEYS) {
+				st = prepareStatement(sql, generatedKeys);
+				withGeneratedKeys = true;
+			} else {
+				st = prepareStatement(sql);
 			}
 			st.setQueryTimeout(ORMConfig.getInstance().getUpdateTimeout());
 			if (!ps.isEmpty()) {
 				BindVariableContext context = new BindVariableContext(st, this, sb);
 				BindVariableTool.setVariables(context, ps);
 			}
-			total=st.executeUpdate();
+			total = st.executeUpdate();
 			result = new UpdateReturn(total);
 			dbAccess = System.currentTimeMillis();
-			if(withGeneratedKeys){
+			if (withGeneratedKeys) {
 				result.cacheGeneratedKeys(st.getGeneratedKeys());
 			}
 			if (total > 0) {
@@ -305,13 +341,13 @@ public class OperateTarget implements SqlTemplate {
 		session.getListener().afterSqlExecuted(sql, total, params);
 		return result;
 	}
-	
+
 	public final int innerExecuteSql(String sql, List<Object> ps) throws SQLException {
 		Object[] params = ps.toArray();
 		DbOperateProcessor p = session.p;
 
 		session.getListener().beforeSqlExecute(sql, params);
-		boolean debugMode=ORMConfig.getInstance().isDebugMode();
+		boolean debugMode = ORMConfig.getInstance().isDebugMode();
 		long start = System.currentTimeMillis();
 		PreparedStatement st = null;
 		int total;
@@ -345,29 +381,30 @@ public class OperateTarget implements SqlTemplate {
 		return total;
 	}
 
-	public final <T> T innerSelectBySql(String sql, ResultSetExtractor<T> rst, List<?> objs,InMemoryOperateProvider lazy) throws SQLException {
+	public final <T> T innerSelectBySql(String sql, ResultSetExtractor<T> rst, List<?> objs, InMemoryOperateProvider lazy) throws SQLException {
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		StringBuilder sb = null;
 		DbOperateProcessor p = session.p;
-		boolean debugMode=ORMConfig.getInstance().isDebugMode();
+		boolean debugMode = ORMConfig.getInstance().isDebugMode();
 		try {
 			if (debugMode)
 				sb = new StringBuilder(sql.length() + 30 + objs.size() * 20).append(sql).append(" | ").append(this.getTransactionId());
-			
-			st = prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-			
+
+			boolean isReverse = lazy != null && lazy.isReverseResult();
+			st = prepareStatement(sql, isReverse,false);
+
 			BindVariableContext context = new BindVariableContext(st, this, sb);
 			BindVariableTool.setVariables(context, objs);
 			rst.apply(st);
 			rs = st.executeQuery();
-			if(lazy!=null && lazy.hasInMemoryOperate()){
-				rs=MultipleResultSet.toInMemoryProcessorResultSet(lazy, new ResultSetHolder(this,st,rs));
+			if (lazy != null && lazy.hasInMemoryOperate()) {
+				rs = MultipleResultSet.toInMemoryProcessorResultSet(lazy, new ResultSetHolder(this, st, rs));
 			}
-			if(rst.autoClose()){
-				return rst.transformer(new ResultSetImpl(rs,getProfile()));
-			}else{
-				return rst.transformer(new ResultSetWrapper(this,st,rs));
+			if (rst.autoClose()) {
+				return rst.transformer(new ResultSetImpl(rs, getProfile()));
+			} else {
+				return rst.transformer(new ResultSetWrapper(this, st, rs));
 			}
 		} catch (SQLException e) {
 			p.processError(e, sql, this);
@@ -375,16 +412,17 @@ public class OperateTarget implements SqlTemplate {
 		} finally {
 			if (debugMode)
 				LogUtil.show(sb);
-			if(rst.autoClose()){
+			if (rst.autoClose()) {
 				DbUtils.close(rs);
 				DbUtils.close(st);
-				releaseConnection();	
+				releaseConnection();
 			}
 		}
 	}
 
 	/**
 	 * 获得原生的ResultSet，需要外部关闭，否则会泄露
+	 * 
 	 * @param sql
 	 * @param maxReturn
 	 * @param fetchSize
@@ -392,33 +430,36 @@ public class OperateTarget implements SqlTemplate {
 	 * @return
 	 * @throws SQLException
 	 */
-	public final IResultSet getRawResultSet(String sql, int maxReturn,int fetchSize, List<?> objs,InMemoryOperateProvider inmem) throws SQLException {
+	public final IResultSet getRawResultSet(String sql, int maxReturn, int fetchSize, List<?> objs, InMemoryOperateProvider inmem) throws SQLException {
 		PreparedStatement st = null;
 		StringBuilder sb = null;
 		DbOperateProcessor p = session.p;
-		ORMConfig config=ORMConfig.getInstance();
-		boolean debugMode=config.isDebugMode();
+		ORMConfig config = ORMConfig.getInstance();
+		boolean debugMode = config.isDebugMode();
 		try {
 			if (debugMode)
 				sb = new StringBuilder(sql.length() + 30 + objs.size() * 20).append(sql).append(" | ").append(this.getTransactionId());
-			st = prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+
+			boolean isReverse = inmem != null && inmem.isReverseResult();
+			st = prepareStatement(sql, isReverse,false);
 			BindVariableContext context = new BindVariableContext(st, this, sb);
 			BindVariableTool.setVariables(context, objs);
-			
+
 			st.setQueryTimeout(config.getSelectTimeout());
 			if (maxReturn <= 0)
 				maxReturn = config.getGlobalMaxResults();
 			if (maxReturn > 0)
 				st.setMaxRows(maxReturn);
-			if(fetchSize<=0)
-				fetchSize=config.getGlobalFetchSize();
+			if (fetchSize <= 0)
+				fetchSize = config.getGlobalFetchSize();
 			if (fetchSize > 0)
 				st.setFetchSize(fetchSize);
+
 			ResultSet rawRs = st.executeQuery();
-			ResultSetHolder rsh=new ResultSetHolder(this,st,rawRs);
-			if(inmem.hasInMemoryOperate()){
-				return MultipleResultSet.toInMemoryProcessorResultSet(inmem,rsh );
-			}else{
+			ResultSetHolder rsh = new ResultSetHolder(this, st, rawRs);
+			if (inmem.hasInMemoryOperate()) {
+				return MultipleResultSet.toInMemoryProcessorResultSet(inmem, rsh);
+			} else {
 				return new ResultSetWrapper(rsh);
 			}
 		} catch (SQLException e) {
@@ -430,26 +471,24 @@ public class OperateTarget implements SqlTemplate {
 		}
 	}
 
-	/////////////////////////////////SqlTemplate /////////////////////////
-	public <T> NativeQuery<T> createNativeQuery(String sqlString, Class<T> clz){
+	// ///////////////////////////////SqlTemplate /////////////////////////
+	public <T> NativeQuery<T> createNativeQuery(String sqlString, Class<T> clz) {
 		return new NativeQuery<T>(this, sqlString, new Transformer(clz));
 	}
-	
 
-	<T> NativeQuery<T> createNativeQuery(NQEntry nc,Class<T> resultClz){
-		return new NativeQuery<T>(this, nc.get(this.profile.getName()),  new Transformer(resultClz));
+	<T> NativeQuery<T> createNativeQuery(NQEntry nc, Class<T> resultClz) {
+		return new NativeQuery<T>(this, nc.get(this.profile.getName()), new Transformer(resultClz));
 	}
-	public <T> NativeQuery<T> createNativeQuery(String sqlString, ITableMetadata meta){
-		NativeQuery<T> q=new NativeQuery<T>(this, sqlString, new Transformer(meta));
+
+	public <T> NativeQuery<T> createNativeQuery(String sqlString, ITableMetadata meta) {
+		NativeQuery<T> q = new NativeQuery<T>(this, sqlString, new Transformer(meta));
 		return q;
 	}
-	
-	
-	<T> NativeQuery<T> createNativeQuery(NQEntry nc,ITableMetadata meta){
-		NativeQuery<T> q= new NativeQuery<T>(this, nc.get(this.profile.getName()), new Transformer(meta));
+
+	<T> NativeQuery<T> createNativeQuery(NQEntry nc, ITableMetadata meta) {
+		NativeQuery<T> q = new NativeQuery<T>(this, nc.get(this.profile.getName()), new Transformer(meta));
 		return q;
 	}
-	
 
 	public NativeCall createNativeCall(String procedureName, Type... paramClass) throws SQLException {
 		return new NativeCall(this, procedureName, paramClass, false);
@@ -464,7 +503,7 @@ public class OperateTarget implements SqlTemplate {
 		query.setIsNative(false);
 		return query;
 	}
-	
+
 	public <T> PagingIterator<T> pageSelectBySql(String sql, Class<T> clz, int pageSize) throws SQLException {
 		return new PagingIteratorSqlImpl<T>(sql, pageSize, new Transformer(clz), this);
 	}
@@ -472,26 +511,26 @@ public class OperateTarget implements SqlTemplate {
 	public <T> PagingIterator<T> pageSelectBySql(String sql, ITableMetadata meta, int pageSize) throws SQLException {
 		return new PagingIteratorSqlImpl<T>(sql, pageSize, new Transformer(meta), this);
 	}
-	
-	public int executeJPQL(String jpql,Map<String,Object> params) throws SQLException {
-		NativeQuery<?> nq=this.createQuery(jpql,null);
-		if(params!=null){
+
+	public int executeJPQL(String jpql, Map<String, Object> params) throws SQLException {
+		NativeQuery<?> nq = this.createQuery(jpql, null);
+		if (params != null) {
 			nq.setParameterMap(params);
 		}
 		return nq.executeUpdate();
 	}
-	
-	public <T> List<T> selectByJPQL(String jpql,Class<T> resultClz,Map<String,Object> params) throws SQLException {
-		NativeQuery<T> nq=this.createQuery(jpql,resultClz);
-		if(params!=null){
+
+	public <T> List<T> selectByJPQL(String jpql, Class<T> resultClz, Map<String, Object> params) throws SQLException {
+		NativeQuery<T> nq = this.createQuery(jpql, resultClz);
+		if (params != null) {
 			nq.setParameterMap(params);
 		}
 		return nq.getResultList();
 	}
-	
+
 	public long countBySql(String countSql, Object... params) throws SQLException {
 		long start = System.currentTimeMillis();
-		Long num = innerSelectBySql(countSql, ResultSetExtractor.GET_FIRST_LONG, Arrays.asList(params),null);
+		Long num = innerSelectBySql(countSql, ResultSetExtractor.GET_FIRST_LONG, Arrays.asList(params), null);
 		if (ORMConfig.getInstance().isDebugMode()) {
 			long dbAccess = System.currentTimeMillis();
 			LogUtil.show(StringUtils.concat("Count:", String.valueOf(num), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", getTransactionId()));
@@ -503,19 +542,15 @@ public class OperateTarget implements SqlTemplate {
 		return innerExecuteSql(key, Arrays.asList(params));
 	}
 
-
 	public final <T> List<T> selectBySql(String sql, Class<T> resultClz, Object... params) throws SQLException {
-		return selectBySql(sql,new Transformer(resultClz),null,params); 
+		return selectBySql(sql, new Transformer(resultClz), null, params);
 	}
-	
-	
+
 	public final <T> List<T> selectBySql(String sql, Transformer transformer, IntRange range, Object... params) throws SQLException {
-		if (range != null) {
-			sql = getProfile().getLimitHandler().toPageSQL(sql, range);
-		}
+		BindSql bs=range==null?new BindSql(sql):getProfile().getLimitHandler().toPageSQL(sql, range.toStartLimitSpan());
 		long start = System.currentTimeMillis();
-		TransformerAdapter<T> sqlTransformer = new TransformerAdapter<T>(transformer,this);
-		List<T> list = innerSelectBySql(sql, sqlTransformer,Arrays.asList(params),null);
+		TransformerAdapter<T> sqlTransformer = new TransformerAdapter<T>(transformer, this);
+		List<T> list = innerSelectBySql(bs.getSql(), sqlTransformer, Arrays.asList(params),bs);
 		if (ORMConfig.getInstance().isDebugMode()) {
 			long dbAccess = sqlTransformer.dbAccess;
 			LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(list.size()), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbAccess), "ms) |", getTransactionId()));
@@ -523,47 +558,47 @@ public class OperateTarget implements SqlTemplate {
 		return list;
 	}
 
-
-	public final <T> T loadBySql(String sql,Class<T> t,Object... params) throws SQLException {
-		TransformerAdapter<T> rst=new TransformerAdapter<T>(new Transformer(t),this);
+	public final <T> T loadBySql(String sql, Class<T> t, Object... params) throws SQLException {
+		TransformerAdapter<T> rst = new TransformerAdapter<T>(new Transformer(t), this);
 		rst.setMaxRows(2);
 		long start = System.currentTimeMillis();
-		List<T> result= innerSelectBySql(sql,rst,Arrays.asList(params),null);
+		List<T> result = innerSelectBySql(sql, rst, Arrays.asList(params), null);
 		if (ORMConfig.getInstance().isDebugMode()) {
 			long dbAccess = rst.dbAccess;
 			LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(result.size()), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbAccess), "ms) |", getTransactionId()));
 		}
-		if(result.size()>1){
-			throw new IllegalArgumentException("得到多个结果:"+result.size());
-		}else if(result.isEmpty()){
+		if (result.size() > 1) {
+			throw new IllegalArgumentException("得到多个结果:" + result.size());
+		} else if (result.isEmpty()) {
 			return null;
-		}else{
+		} else {
 			return result.get(0);
 		}
 	}
 
 	public final <T> ResultIterator<T> iteratorBySql(String sql, Transformer transformers, int maxReturn, int fetchSize, Object... objs) throws SQLException {
-		TransformerIteratrAdapter<T> t=new TransformerIteratrAdapter<T>(transformers,this);
+		TransformerIteratrAdapter<T> t = new TransformerIteratrAdapter<T>(transformers, this);
 		t.setMaxRows(maxReturn);
 		t.setFetchSize(fetchSize);
 		return this.innerSelectBySql(sql, t, Arrays.asList(objs), null);
 	}
-	
-	final <T> ResultIterator<T> iteratorBySql(String sql, Transformer transformers, int maxReturn, int fetchSize,InMemoryOperateProvider lazy ,Object... objs) throws SQLException {
-		TransformerIteratrAdapter<T> t=new TransformerIteratrAdapter<T>(transformers,this);
+
+	final <T> ResultIterator<T> iteratorBySql(String sql, Transformer transformers, int maxReturn, int fetchSize, InMemoryOperateProvider lazy, Object... objs) throws SQLException {
+		TransformerIteratrAdapter<T> t = new TransformerIteratrAdapter<T>(transformers, this);
 		t.setMaxRows(maxReturn);
 		t.setFetchSize(fetchSize);
 		return this.innerSelectBySql(sql, t, Arrays.asList(objs), lazy);
 	}
-	
+
 	public DbMetaData getMetaData() throws SQLException {
 		return session.getNoTransactionSession().getMetaData(dbkey);
 	}
-	
+
 	/**
 	 * 在这里支持内存混合处理
+	 * 
 	 * @author jiyi
-	 *
+	 * 
 	 * @param <T>
 	 */
 	public static class TransformerAdapter<T> extends AbstractResultSetTransformer<List<T>> {
@@ -571,29 +606,30 @@ public class OperateTarget implements SqlTemplate {
 		long dbAccess;
 		private OperateTarget db;
 
-		TransformerAdapter(Transformer t,OperateTarget db) {
+		TransformerAdapter(Transformer t, OperateTarget db) {
 			this.t = t;
-			this.db=db;
+			this.db = db;
 		}
 
 		public List<T> transformer(IResultSet rs) throws SQLException {
 			dbAccess = System.currentTimeMillis();
 			return db.populateResultSet(rs, null, t);
 		}
-		public Session getSession(){
+
+		public Session getSession() {
 			return db.session;
 		}
 	}
-	
+
 	public static class TransformerIteratrAdapter<T> extends AbstractResultSetTransformer<ResultIterator<T>> {
 		final Transformer transformers;
 		private OperateTarget db;
-		
-		TransformerIteratrAdapter(Transformer t,OperateTarget db) {
+
+		TransformerIteratrAdapter(Transformer t, OperateTarget db) {
 			this.transformers = t;
-			this.db=db;
+			this.db = db;
 		}
-		
+
 		@SuppressWarnings("unchecked")
 		@Override
 		public ResultIterator<T> transformer(IResultSet rs) throws SQLException {
@@ -606,33 +642,33 @@ public class OperateTarget implements SqlTemplate {
 		}
 	}
 
-	public <T> T getExpressionValue(DbFunction func, Class<T> clz,Object... params) throws SQLException {
-		SqlExpression ex=func(func, params);
+	public <T> T getExpressionValue(DbFunction func, Class<T> clz, Object... params) throws SQLException {
+		SqlExpression ex = func(func, params);
 		return getExpressionValue(ex.toString(), clz);
 	}
-	
-	public <T> T getExpressionValue(String expression, Class<T> clz,Object... params) throws SQLException {
-		String sql="select "+expression+" from dual";
+
+	public <T> T getExpressionValue(String expression, Class<T> clz, Object... params) throws SQLException {
+		String sql = "select " + expression + " from dual";
 		StSqlParser parser = new StSqlParser(new StringReader(sql));
 		List<SelectItem> sts;
 		try {
 			sts = parser.PlainSelect().getSelectItems();
 		} catch (ParseException e) {
-			throw new SQLException("ParseError:["+sql+"] Detail:"+e.getMessage());
+			throw new SQLException("ParseError:[" + sql + "] Detail:" + e.getMessage());
 		}
-		//进行本地语言转化
-		DatabaseDialect dialect=this.profile;
-		SqlFunctionlocalization visitor=new SqlFunctionlocalization(dialect,this);
-		for(SelectItem item:sts){
+		// 进行本地语言转化
+		DatabaseDialect dialect = this.profile;
+		SqlFunctionlocalization visitor = new SqlFunctionlocalization(dialect, this);
+		for (SelectItem item : sts) {
 			item.accept(visitor);
 		}
-		//形成语句
-		String template=dialect.getProperty(DbProperty.SELECT_EXPRESSION);
-		String exps=StringUtils.join(sts, ',');
-		if(template==null){
-			sql="SELECT "+exps;
-		}else{
-			sql=String.format(template, exps);
+		// 形成语句
+		String template = dialect.getProperty(DbProperty.SELECT_EXPRESSION);
+		String exps = StringUtils.join(sts, ',');
+		if (template == null) {
+			sql = "SELECT " + exps;
+		} else {
+			sql = String.format(template, exps);
 		}
 		return this.loadBySql(sql, clz, params);
 	}
@@ -642,15 +678,15 @@ public class OperateTarget implements SqlTemplate {
 	}
 
 	private boolean isJpaTx() {
-		return (session instanceof TransactionImpl) && session.getTxType()==TransactionMode.JPA;
+		return (session instanceof TransactionImpl) && session.getTxType() == TransactionMode.JPA;
 	}
-	
-	public PartitionSupport getPartitionSupport(){
+
+	public PartitionSupport getPartitionSupport() {
 		return session.getPartitionSupport();
 	}
 
 	public OperateTarget getTarget(String database) {
-		if(StringUtils.equals(dbkey,database)){
+		if (StringUtils.equals(dbkey, database)) {
 			return this;
 		}
 		return session.asOperateTarget(database);

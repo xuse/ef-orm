@@ -8,7 +8,6 @@ import java.util.List;
 
 import jef.common.PairSO;
 import jef.common.log.LogUtil;
-import jef.common.wrapper.IntRange;
 import jef.database.annotation.PartitionResult;
 import jef.database.jsqlparser.RemovedDelayProcess;
 import jef.database.jsqlparser.SqlFunctionlocalization;
@@ -30,6 +29,7 @@ import jef.database.routing.sql.SelectExecutionPlan;
 import jef.database.routing.sql.SqlAnalyzer;
 import jef.database.routing.sql.SqlAndParameter;
 import jef.database.routing.sql.TableMetaCollector;
+import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.result.IResultSet;
 import jef.database.wrapper.result.MultipleResultSet;
 import jef.tools.StringUtils;
@@ -152,9 +152,10 @@ public class RoutingSQLExecutor implements SQLExecutor {
 			}
 			if(offset>0 || rowcount>0){
 				parse.setNewLimit(null);
-				IntRange range=new IntRange(offset+1, offset+rowcount);
 				boolean isUnion = sql==null?true:(((Select) sql).getSelectBody() instanceof Union);
-				return db.getProfile().getLimitHandler().toPageSQL(rawSQL, range, isUnion);
+				BindSql bs=db.getProfile().getLimitHandler().toPageSQL(rawSQL, new int[]{offset,rowcount}, isUnion);
+				parse.setReverseResultSet(bs.isReverseResult());
+				return bs.getSql();
 			}
 		}
 		return rawSQL;
@@ -164,7 +165,7 @@ public class RoutingSQLExecutor implements SQLExecutor {
 		ORMConfig config = ORMConfig.getInstance();
 		MultipleResultSet mrs = new MultipleResultSet(config.isCacheResultset(), config.debugMode);
 		for (PartitionResult site : plan.getSites()) {
-			processQuery(db.getTarget(site.getDatabase()), plan.getSql(site, false), 0, mrs);
+			processQuery(db.getTarget(site.getDatabase()), plan.getSql(site, false), 0, mrs,parse.isReverseResult());
 		}
 		plan.parepareInMemoryProcess(null, mrs);
 		if (parse.hasInMemoryOperate()) {
@@ -187,14 +188,14 @@ public class RoutingSQLExecutor implements SQLExecutor {
 	/*
 	 * 执行查询动作，将查询结果放入mrs
 	 */
-	private void processQuery(OperateTarget db, PairSO<List<Object>> sql, int max, MultipleResultSet mrs) throws SQLException {
+	private void processQuery(OperateTarget db, PairSO<List<Object>> sql, int max, MultipleResultSet mrs,boolean isReverse) throws SQLException {
 		StringBuilder sb = null;
 		PreparedStatement psmt = null;
 		ResultSet rs = null;
 		if (mrs.isDebug())
 			sb = new StringBuilder(sql.first.length() + 150).append(sql.first).append(" | ").append(db.getTransactionId());
 		try {
-			psmt = db.prepareStatement(sql.first, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+			psmt = db.prepareStatement(sql.first,isReverse,false);
 			BindVariableContext context = new BindVariableContext(psmt, db, sb);
 			BindVariableTool.setVariables(context, sql.second);
 			if (fetchSize > 0) {

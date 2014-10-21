@@ -72,7 +72,6 @@ import com.google.common.collect.Multimap;
  *
  */
 public class SqlAnalyzer {
-	
 	/**
 	 * 获得select语句的执行计划
 	 * @param sql AST of select

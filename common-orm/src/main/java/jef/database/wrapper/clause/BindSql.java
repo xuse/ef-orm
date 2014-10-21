@@ -17,16 +17,20 @@ package jef.database.wrapper.clause;
 
 import java.util.List;
 
+import jef.common.wrapper.IntRange;
 import jef.database.BindVariableDescription;
+import jef.database.routing.sql.InMemoryOperateProvider;
+import jef.database.wrapper.result.MultipleResultSet;
 
 /**
  * 描述一个绑定变量的SQL语句
  * @author jiyi
  *
  */
-public final class BindSql {
+public final class BindSql implements InMemoryOperateProvider{
 	private String sql;
 	private List<BindVariableDescription> bind;
+	private boolean isReverseResultSet;
 	
 	public BindSql(String sql){
 		this.sql=sql;
@@ -53,8 +57,9 @@ public final class BindSql {
 	public List<BindVariableDescription> getBind() {
 		return bind;
 	}
-	public void setBind(List<BindVariableDescription> bind) {
+	public BindSql setBind(List<BindVariableDescription> bind) {
 		this.bind = bind;
+		return this;
 	}
 	public boolean isBind(){
 		return bind!=null && bind.size()>0;
@@ -63,5 +68,23 @@ public final class BindSql {
 	public String toString() {
 		return sql;
 	}
-	
+
+	public boolean isReverseResult() {
+		return isReverseResultSet;
+	}
+
+	public BindSql setReverseResult(boolean isReverseResultSet) {
+		this.isReverseResultSet = isReverseResultSet;
+		return this;
+	}
+
+	@Override
+	public boolean hasInMemoryOperate() {
+		return false;
+	}
+
+	@Override
+	public void parepareInMemoryProcess(IntRange range, MultipleResultSet rs) {
+		throw new UnsupportedOperationException();
+	}
 }

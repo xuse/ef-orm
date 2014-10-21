@@ -327,4 +327,20 @@ public final class MultipleResultSet extends AbstractResultSet implements IResul
 	public void setInMemoryConnectBy(InMemoryStartWithConnectBy parseStartWith) {
 		addToInMemprocessor(parseStartWith);
 	}
+	
+
+	@Override
+	public boolean isFirst() throws SQLException {
+		throw new UnsupportedOperationException("isFirst");
+	}
+
+	@Override
+	public boolean isLast() throws SQLException {
+		throw new UnsupportedOperationException("isLast");
+	}
+
+	@Override
+	public boolean last() throws SQLException {
+		throw new UnsupportedOperationException("last");
+	}
 }

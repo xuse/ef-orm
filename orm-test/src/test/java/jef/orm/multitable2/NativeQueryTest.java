@@ -201,7 +201,7 @@ public class NativeQueryTest extends org.junit.Assert {
 		System.out.println(count);
 
 		// ///////////////
-		String sql = "SELECT distinct T.NAME PNAME, T1.NAME FROM PARENT T, Child T1 WHERE T.ID = T1.PARENTID";
+		String sql = "SELECT distinct T.NAME PNAME, T1.NAME FROM parent T, child T1 WHERE T.ID = T1.PARENTID order by t.name";
 		PagingIterator<Var> pp = db.pageSelect(sql, Var.class, 5);
 		LogListener listener = new LogListener("select count\\(DISTINCT T.NAME\\|\\|T1.NAME\\).+");
 		LogUtil.show(pp.hasNext());
@@ -214,6 +214,9 @@ public class NativeQueryTest extends org.junit.Assert {
 		}
 		assertEquals(count, pp.getTotal());
 		assertEquals(2, pp.getTotalPage());
+		if(pp.hasNext()){
+			LogUtil.show(pp.next());
+		}
 	}
 
 

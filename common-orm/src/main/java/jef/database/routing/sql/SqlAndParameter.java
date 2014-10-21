@@ -361,4 +361,16 @@ public class SqlAndParameter implements InMemoryOperateProvider {
 	public void setLimit(Limit countLimit) {
 		this.limit=countLimit;
 	}
+	
+	
+	private boolean reverseResultSet;
+
+	@Override
+	public boolean isReverseResult() {
+		return reverseResultSet;
+	}
+	
+	public void setReverseResultSet(boolean reverseResultSet) {
+		this.reverseResultSet = reverseResultSet;
+	}
 }
