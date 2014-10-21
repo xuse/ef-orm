@@ -1,32 +1,25 @@
 package jef.database.dialect;
 
-import java.sql.ResultSet;
-
-import jef.common.wrapper.IntRange;
 import jef.database.dialect.statement.LimitHandler;
+import jef.database.wrapper.clause.BindSql;
 
 public class OracleLimitHander implements LimitHandler {
 
 	private final static String ORACLE_PAGE1 = "select * from (select tb__.*, rownum rid__ from (";
-	private final static String ORACLE_PAGE2 = " ) tb__ where rownum <= %end%) where rid__ >= %start%";
+	private final static String ORACLE_PAGE2 = " ) tb__ where rownum <= %end%) where rid__ > %start%";
 
-	public String toPageSQL(String sql, IntRange range) {
+	public BindSql toPageSQL(String sql, int[] range) {
 		sql = ORACLE_PAGE1 + sql;
-		String limit = ORACLE_PAGE2.replace("%start%", String.valueOf(range.getLeastValue()));
-		limit = limit.replace("%end%", String.valueOf(range.getGreatestValue()));
+		String limit = ORACLE_PAGE2.replace("%start%", String.valueOf(range[0]));
+		limit = limit.replace("%end%", String.valueOf(range[0]+range[1]));
 		sql = sql.concat(limit);
-		return sql;
+		return new BindSql(sql);
 	}
 
 
 	@Override
-	public String toPageSQL(String sql, IntRange offsetLimit, boolean isUnion) {
+	public BindSql toPageSQL(String sql, int[] offsetLimit, boolean isUnion) {
 		return toPageSQL(sql, offsetLimit);
-	}
-
-	@Override
-	public ResultSet afterProcess(ResultSet rs, IntRange offsetLimit) {
-		return rs;
 	}
 
 }

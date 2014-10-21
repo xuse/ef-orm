@@ -162,7 +162,7 @@ public class QueryClauseImpl implements QueryClause {
 
 	public BindSql getSql(PartitionResult site) {
 		if (tableDefinition != null) {
-			return new BindSql(withPage(getSql(tableDefinition, false).concat(orderbyPart.getSql()), false), bind);
+			return withPage(getSql(tableDefinition, false).concat(orderbyPart.getSql()), false).setBind(bind);
 		}
 		if (site == null) {
 			if (tables.length == 0) {
@@ -201,14 +201,14 @@ public class QueryClauseImpl implements QueryClause {
 		}
 
 		sb.append(orderbyPart.getSql());
-		return new BindSql(withPage(sb.toString(), moreTable), bind);
+		return withPage(sb.toString(), moreTable).setBind(bind);
 	}
 
-	private String withPage(String sql, boolean union) {
+	private BindSql withPage(String sql, boolean union) {
 		if (pageRange != null && !isMultiDatabase()) {
-			return profile.getLimitHandler().toPageSQL(sql, pageRange, union);
+			return profile.getLimitHandler().toPageSQL(sql, pageRange.toStartLimitSpan(), union);
 		}
-		return sql;
+		return new BindSql(sql);
 	}
 
 	private CacheKey cacheKey;

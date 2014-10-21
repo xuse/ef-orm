@@ -103,23 +103,14 @@ public abstract class SelectProcessor {
 		void processSelect(OperateTarget db, QueryClause sql, PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
 			Statement st = null;
 			ResultSet rs = null;
-
-			int rsType;
-			int concurType;
-			if (option.holdResult) {
-				if (db.getProfile().has(Feature.TYPE_FORWARD_ONLY)) {
-					throw new UnsupportedOperationException("The database " + db.getProfile() + " can not support your 'selectForUpdate' operation.");
-				}
-				rsType = ResultSet.TYPE_SCROLL_INSENSITIVE;
-				concurType = ResultSet.CONCUR_UPDATABLE;
-			} else {
-				rsType = ResultSet.TYPE_FORWARD_ONLY;
-				concurType = ResultSet.CONCUR_READ_ONLY;
+			BindSql bindSql = sql.getSql(site);
+			if (option.holdResult && db.getProfile().has(Feature.TYPE_FORWARD_ONLY)) {
+				throw new UnsupportedOperationException("The database " + db.getProfile() + " can not support your 'selectForUpdate' operation.");
 			}
 			try {
-				st = db.createStatement(rsType, concurType);
+				st = db.createStatement(bindSql.isReverseResult(), option.holdResult);
 				option.setSizeFor(st);
-				rs = st.executeQuery(sql.getSql(site).toString());
+				rs = st.executeQuery(bindSql.toString());
 				rs2.add(rs, st, db);
 				// 提前将连接归还连接池，用于接下来的查询，但是标记这个连接上还有未完成的查询结果集，因此不允许关闭这个连接。
 			} catch (SQLException e) {
@@ -227,18 +218,9 @@ public abstract class SelectProcessor {
 
 		void processSelect(OperateTarget db, QueryClause sqlResult, PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
 			// 计算查询结果集参数
-			int rsType;
-			int concurType;
 			boolean debugMode = ORMConfig.getInstance().isDebugMode();
-			if (option.holdResult) {
-				if (db.getProfile().has(Feature.TYPE_FORWARD_ONLY)) {
-					throw new UnsupportedOperationException("The database " + db.getProfile() + " can not support your 'selectForUpdate' operation.");
-				}
-				rsType = ResultSet.TYPE_SCROLL_INSENSITIVE;
-				concurType = ResultSet.CONCUR_UPDATABLE;
-			} else {
-				rsType = ResultSet.TYPE_FORWARD_ONLY;
-				concurType = ResultSet.CONCUR_READ_ONLY;
+			if (option.holdResult && db.getProfile().has(Feature.TYPE_FORWARD_ONLY)) {
+				throw new UnsupportedOperationException("The database " + db.getProfile() + " can not support your 'selectForUpdate' operation.");
 			}
 			BindSql sql = sqlResult.getSql(site);
 			StringBuilder sb = null;
@@ -247,7 +229,7 @@ public abstract class SelectProcessor {
 			if (debugMode)
 				sb = new StringBuilder(sql.getSql().length() + 150).append(sql).append(" | ").append(db.getTransactionId());
 			try {
-				psmt = db.prepareStatement(sql.getSql(), rsType, concurType);
+				psmt = db.prepareStatement(sql.getSql(), sql.isReverseResult(), option.holdResult);
 				BindVariableContext context = new BindVariableContext(psmt, db, sb);
 				BindVariableTool.setVariables(queryObj, null, sql.getBind(), context);
 				option.setSizeFor(psmt);
@@ -278,7 +260,7 @@ public abstract class SelectProcessor {
 				CountClause cq = new CountClause();
 				String myTableName = (String) query.getAttribute("_table_name");
 				myTableName = MetaHolder.toSchemaAdjustedName(myTableName);
-				
+
 				PartitionResult[] sites = DbUtils.toTableNames(query.getInstance(), myTableName, query, db.getPartitionSupport());
 				DatabaseDialect profile = getProfile(sites);
 				SqlContext context = query.prepare();

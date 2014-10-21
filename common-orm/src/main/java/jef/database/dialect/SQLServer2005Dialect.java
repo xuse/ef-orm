@@ -17,13 +17,11 @@ package jef.database.dialect;
 
 import java.sql.Types;
 
-import jef.common.wrapper.IntRange;
 import jef.database.ConnectInfo;
 import jef.database.dialect.statement.LimitHandler;
+import jef.database.dialect.statement.UnionJudgement;
 import jef.database.query.function.NoArgSQLFunction;
 import jef.tools.string.JefStringReader;
-
-import org.apache.commons.lang.StringUtils;
 
 /**
  * 
@@ -36,7 +34,6 @@ sp_rename：SQLServer 内置的存储过程，用与修改表的定义。
  * 
  */
 public class SQLServer2005Dialect extends SQLServer2000Dialect{
-	
 	
 	public SQLServer2005Dialect() {
 		typeNames.put(Types.BLOB, "varbinary(MAX)", Types.VARBINARY);
@@ -81,7 +78,11 @@ public class SQLServer2005Dialect extends SQLServer2000Dialect{
 
 	@Override
 	protected LimitHandler generateLimitHander() {
-		return new SQLServer2005LimitHandler();
+		if(UnionJudgement.isDruid()){
+			return new SQL2005LimitHandler();
+		}else{
+			return new SQL2005LimitHandlerSlowImpl();
+		}
 	}
 	
 	

@@ -5,6 +5,7 @@ import java.sql.Types;
 import jef.database.ConnectInfo;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.statement.LimitHandler;
+import jef.database.dialect.statement.UnionJudgement;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.query.Func;
@@ -237,7 +238,11 @@ public class SQLServer2000Dialect extends AbstractDialect {
 	}
 
 	protected LimitHandler generateLimitHander() {
-		return new SQLServer2000LimitHandler();
+		if(UnionJudgement.isDruid()){
+			return new SQL2000LimitHandler();
+		}else{
+			return new SQL2000LimitHandlerSlowImpl();
+		}
 	}
 
 }

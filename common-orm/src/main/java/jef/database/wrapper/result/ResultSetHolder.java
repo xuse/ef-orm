@@ -154,4 +154,10 @@ public final class ResultSetHolder extends AbstractResultSet implements IResultS
 		ensureOpen();
 		return rs.isLast();
 	}
+	
+	@Override
+	public boolean last() throws SQLException {
+		ensureOpen();
+		return rs.last();
+	}
 }

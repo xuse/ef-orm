@@ -847,7 +847,7 @@ public abstract class AbstractResultSet implements ResultSet {
 
 	@Override
 	public int getType() throws SQLException {
-		throw new UnsupportedOperationException("getType");
+		return get().getType();
 	}
 
 	@Override
@@ -883,22 +883,6 @@ public abstract class AbstractResultSet implements ResultSet {
 	@Override
 	public int getHoldability() throws SQLException {
 		throw new UnsupportedOperationException("getHoldability");
-	}
-	
-
-	@Override
-	public boolean isFirst() throws SQLException {
-		throw new UnsupportedOperationException("isFirst");
-	}
-
-	@Override
-	public boolean isLast() throws SQLException {
-		throw new UnsupportedOperationException("isLast");
-	}
-
-	@Override
-	public boolean last() throws SQLException {
-		throw new UnsupportedOperationException("last");
 	}
 
 	@Override

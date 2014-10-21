@@ -1,4 +1,4 @@
-package jef.database.dialect;
+package jef.database.dialect.statement;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -13,7 +13,7 @@ import jef.database.wrapper.result.AbstractResultSet;
  * @author jiyi
  *
  */
-public class ReverseResultSet extends AbstractResultSet {
+public final class ReverseResultSet extends AbstractResultSet {
 	private ResultSet rs;
 
 	public ReverseResultSet(ResultSet rs) {
@@ -66,9 +66,23 @@ public class ReverseResultSet extends AbstractResultSet {
 	}
 
 	@Override
+	public boolean isFirst() throws SQLException {
+		return rs.isLast();
+	}
+
+	@Override
+	public boolean isLast() throws SQLException {
+		return rs.isFirst();
+	}
+
+	@Override
+	public boolean last() throws SQLException {
+		return rs.first();
+	}
+
+	@Override
 	protected ResultSet get() throws SQLException {
-		// TODO Auto-generated method stub
-		return null;
+		return rs;
 	}
 
 }

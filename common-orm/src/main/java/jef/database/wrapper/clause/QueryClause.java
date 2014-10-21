@@ -19,17 +19,26 @@ import jef.common.wrapper.IntRange;
 import jef.database.annotation.PartitionResult;
 import jef.database.cache.CacheKeyProvider;
 
-
-public interface QueryClause extends SqlClause,CacheKeyProvider{
+public interface QueryClause extends SqlClause, CacheKeyProvider {
 	BindSql getSql(PartitionResult site);
+
 	PartitionResult[] getTables();
+
 	OrderClause getOrderbyPart();
-	SelectPart getSelectPart() ;
+
+	SelectPart getSelectPart();
+
 	boolean isGroupBy();
+
 	boolean isEmpty();
+
 	void setOrderbyPart(OrderClause orderClause);
+
 	void setPageRange(IntRange range);
+
 	boolean isMultiDatabase();
+
 	GroupClause getGrouphavingPart();
-	boolean isDistinct(); 
+
+	boolean isDistinct();
 }

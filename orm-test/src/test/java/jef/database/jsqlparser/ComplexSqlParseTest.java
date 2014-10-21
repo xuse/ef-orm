@@ -504,6 +504,14 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 		}
 	}
 
+	@Test
+	public void testFunction(){
+		OracleStatementParser parser = new OracleStatementParser("select upper(*) from aa order by now()");
+		SQLStatement st=parser.parseStatement();
+		System.out.println(st);
+		
+		
+	}
 	// 0 StSQL 1 Jpql 2 Druid Oracle 3 Druid MySQL
 	private void parseTest(String sql, int type) throws ParseException {
 		System.out.println("===================== [RAW]  ==================");
@@ -525,10 +533,10 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 		}
 		case 2: {
 			OracleStatementParser parser = new OracleStatementParser(sql);
-			List<SQLStatement> statementList = parser.parseStatementList();
+			SQLStatement statementList = parser.parseStatement();
 			StringBuilder out = new StringBuilder();
 			OracleOutputVisitor visitor = new OracleOutputVisitor(out);
-			statementList.get(0).accept(visitor);
+			statementList.accept(visitor);
 			System.out.println(out);
 			break;
 		}

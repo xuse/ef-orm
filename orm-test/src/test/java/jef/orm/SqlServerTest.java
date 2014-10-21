@@ -20,7 +20,7 @@ public class SqlServerTest {
 
 	@BeforeClass
 	public static void setup() throws SQLException {
-		db = DbClientFactory.getDbClient("sqlserver", "10.17.48.103", 1433, "jiyi2", "sa", "hik12345+");
+		db = DbClientFactory.getDbClient("sqlserver", "10.7.52.152", 1433, "jiyi2", "sa", "Abc_123");
 	}
 
 	@Test

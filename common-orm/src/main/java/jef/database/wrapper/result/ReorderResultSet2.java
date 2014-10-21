@@ -147,4 +147,19 @@ final class ReorderResultSet2 extends AbstractResultSet implements IResultSet {
 		return columns.getMeta();
 	}
 
+
+	@Override
+	public boolean isFirst() throws SQLException {
+		throw new UnsupportedOperationException("isFirst");
+	}
+
+	@Override
+	public boolean isLast() throws SQLException {
+		throw new UnsupportedOperationException("isLast");
+	}
+
+	@Override
+	public boolean last() throws SQLException {
+		throw new UnsupportedOperationException("last");
+	}
 }

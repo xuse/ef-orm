@@ -26,52 +26,60 @@ import jef.database.jsqlparser.visitor.SelectItemVisitor;
 /**
  * A subselect followed by an optional alias.
  */
-public class SubSelect implements FromItem, Expression,ItemsList{
+public class SubSelect implements FromItem, Expression, ItemsList {
 
-    private SelectBody selectBody;
+	public SubSelect() {
+	}
 
-    private String alias;
+	public SubSelect(SelectBody from, String alias) {
+		this.selectBody = from;
+		this.alias = alias;
+	}
 
-    public void accept(SelectItemVisitor fromItemVisitor) {
-        fromItemVisitor.visit(this);
-    }
+	private SelectBody selectBody;
 
-    public SelectBody getSelectBody() {
-        return selectBody;
-    }
+	private String alias;
 
-    public void setSelectBody(SelectBody body) {
-        selectBody = body;
-    }
+	public void accept(SelectItemVisitor fromItemVisitor) {
+		fromItemVisitor.visit(this);
+	}
 
-    public void accept(ExpressionVisitor expressionVisitor) {
-        expressionVisitor.visit(this);
-    }
+	public SelectBody getSelectBody() {
+		return selectBody;
+	}
 
-    public String getAlias() {
-        return alias;
-    }
+	public void setSelectBody(SelectBody body) {
+		selectBody = body;
+	}
 
-    public void setAlias(String string) {
-        alias = string;
-    }
+	public void accept(ExpressionVisitor expressionVisitor) {
+		expressionVisitor.visit(this);
+	}
 
-    public String toString() {
-    	StringBuilder sb=new StringBuilder();
-    	appendTo(sb);
-        return sb.toString();
-    }
+	public String getAlias() {
+		return alias;
+	}
+
+	public void setAlias(String string) {
+		alias = string;
+	}
+
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		appendTo(sb);
+		return sb.toString();
+	}
 
 	public void appendTo(StringBuilder sb) {
 		sb.append('(');
 		selectBody.appendTo(sb);
 		sb.append(')');
-		if(alias!=null)
+		if (alias != null)
 			sb.append(' ').append(alias);
 	}
 
 	public String toWholeName() {
-		StringBuilder sb=new StringBuilder();
+		StringBuilder sb = new StringBuilder();
 		sb.append('(');
 		selectBody.appendTo(sb);
 		sb.append(')');

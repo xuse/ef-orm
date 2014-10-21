@@ -8,6 +8,10 @@ import jef.database.wrapper.result.MultipleResultSet;
  * 
  */
 public interface InMemoryOperateProvider {
+	/**
+	 * 是否有需要在内存中计算的任务
+	 * @return
+	 */
 	boolean hasInMemoryOperate();
 
 	/**
@@ -15,5 +19,11 @@ public interface InMemoryOperateProvider {
 	 * @return  return true if need In Memory Process.
 	 */
 	void parepareInMemoryProcess(IntRange range, MultipleResultSet rs);
-
+	
+	
+	/**
+	 * 是否结果集要倒序？
+	 * @return
+	 */
+	boolean isReverseResult();
 }

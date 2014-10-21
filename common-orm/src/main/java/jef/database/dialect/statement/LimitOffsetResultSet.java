@@ -93,4 +93,20 @@ final class LimitOffsetResultSet extends AbstractResultSet {
 	protected ResultSet get() throws SQLException {
 		return rs;
 	}
+	
+
+	@Override
+	public boolean isFirst() throws SQLException {
+		throw new UnsupportedOperationException("isFirst");
+	}
+
+	@Override
+	public boolean isLast() throws SQLException {
+		throw new UnsupportedOperationException("isLast");
+	}
+
+	@Override
+	public boolean last() throws SQLException {
+		throw new UnsupportedOperationException("last");
+	}
 }

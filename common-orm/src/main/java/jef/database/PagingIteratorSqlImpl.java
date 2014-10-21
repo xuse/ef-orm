@@ -9,6 +9,7 @@ import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.Session.PopulateStrategy;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.result.ResultSetImpl;
 import jef.tools.Assert;
@@ -56,12 +57,11 @@ final class PagingIteratorSqlImpl<T> extends PagingIterator<T>{
 	protected List<T> doQuery(boolean pageFlag) throws SQLException {
 		DatabaseDialect profile = db.getProfile();
 		calcPage();
-		String sql = this.querySql;
 		IntRange range=page.getCurrentRecordRange();
 		if(range.getStart()==1 && range.getEnd().intValue()==page.getTotal()){
 			pageFlag=false;
 		}
-		sql = pageFlag?profile.getLimitHandler().toPageSQL(sql, range):sql;
+		BindSql sql = pageFlag?profile.getLimitHandler().toPageSQL(this.querySql, range.toStartLimitSpan()):new BindSql(this.querySql);
 		boolean debug=ORMConfig.getInstance().isDebugMode();
 		if (debug)
 			LogUtil.show(sql);
@@ -69,8 +69,8 @@ final class PagingIteratorSqlImpl<T> extends PagingIterator<T>{
 		ResultSet rs = null;
 		List<T> list;
 		try{
-			st=db.createStatement();
-			rs=st.executeQuery(sql);
+			st=db.createStatement(sql.isReverseResult(),false);
+			rs=st.executeQuery(sql.getSql());
 			list = db.populateResultSet(new ResultSetImpl(rs,db.getProfile()),  null,transformer);
 		}finally{
 			DbUtils.close(rs);

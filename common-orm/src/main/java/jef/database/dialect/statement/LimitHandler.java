@@ -1,8 +1,6 @@
 package jef.database.dialect.statement;
 
-import java.sql.ResultSet;
-
-import jef.common.wrapper.IntRange;
+import jef.database.wrapper.clause.BindSql;
 
 /**
  * LimitHandler用于进行结果集限制。offset,limit的控制
@@ -24,7 +22,7 @@ public interface LimitHandler {
 	 * @param offsetLimit
 	 * @return
 	 */
-	String toPageSQL(String sql,IntRange offsetLimit);
+	BindSql toPageSQL(String sql,int[] offsetLimit);
 	
 	/**
 	 * 对于SQL语句进行结果集限制
@@ -33,15 +31,5 @@ public interface LimitHandler {
 	 * @param isUnion
 	 * @return
 	 */
-	String toPageSQL(String sql,IntRange offsetLimit,boolean isUnion);
-	
-	/**
-	 * 对于结果集进行结果限定
-	 * 在一部分数据库上，结果集限制必须后处理。这包括重新封装ResultSet对象等操作
-	 * 
-	 * @param rs
-	 * @param offsetLimit
-	 * @return
-	 */
-	ResultSet afterProcess(ResultSet rs,IntRange offsetLimit);
+	BindSql toPageSQL(String sql,int[] offsetLimit,boolean isUnion);
 }

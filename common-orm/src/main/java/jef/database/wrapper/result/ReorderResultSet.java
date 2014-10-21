@@ -221,9 +221,6 @@ final class ReorderResultSet extends AbstractResultSet {
 		return columns==null;
 	}
 
-
-
-
 	@Override
 	public ResultSetMetaData getMetaData() throws SQLException {
 		return columns.getMeta();
@@ -233,6 +230,22 @@ final class ReorderResultSet extends AbstractResultSet {
 	protected Map<Reference, List<Condition>> filters;
 	public Map<Reference, List<Condition>> getFilters() {
 		return filters;
+	}
+	
+
+	@Override
+	public boolean isFirst() throws SQLException {
+		throw new UnsupportedOperationException("isFirst");
+	}
+
+	@Override
+	public boolean isLast() throws SQLException {
+		throw new UnsupportedOperationException("isLast");
+	}
+
+	@Override
+	public boolean last() throws SQLException {
+		throw new UnsupportedOperationException("last");
 	}
 
 }
