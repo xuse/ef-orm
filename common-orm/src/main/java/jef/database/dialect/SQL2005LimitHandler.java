@@ -44,6 +44,7 @@ public class SQL2005LimitHandler extends SQL2000LimitHandler {
 
 		StringBuilder sb = new StringBuilder("SELECT _tmp1.* FROM (");
 		SQLServerOutputVisitor visitor=new SQLServerOutputVisitor(sb);
+		visitor.setPrettyFormat(false);
 		select.accept(visitor);
 		sb.append(") _tmp1 WHERE __rn between ");
 		sb.append(offsetLimit[0] + 1).append(" and ").append(offsetLimit[0] + offsetLimit[1]);
@@ -61,6 +62,7 @@ public class SQL2005LimitHandler extends SQL2000LimitHandler {
 		// order可以直接移出
 		StringBuilder sb = new StringBuilder();
 		SQLServerOutputVisitor visitor=new SQLServerOutputVisitor(sb);
+		visitor.setPrettyFormat(false);
 		sb.append("SELECT _tmp.* FROM ( \nSELECT row_number() OVER (");
 		order.accept(visitor);
 		sb.append(") AS __rn, _tmp1.* FROM (");

@@ -59,6 +59,7 @@ public class SQL2000LimitHandler implements LimitHandler {
 		StringBuilder sb = new StringBuilder(raw.length() + 30);
 		sb.append("SELECT TOP ").append(offsetLimit[1]).append(" * FROM (");
 		SQLServerOutputVisitor visitor=new SQLServerOutputVisitor(sb);
+		visitor.setPrettyFormat(false);
 		select.accept(visitor);
 		sb.append(") __ef_t");
 		
@@ -80,6 +81,7 @@ public class SQL2000LimitHandler implements LimitHandler {
 		SQLSubqueryTableSource s = new SQLSubqueryTableSource(select,"__ef_tmp1");
 		
 		SQLServerOutputVisitor visitor=new SQLServerOutputVisitor(sb);
+		visitor.setPrettyFormat(false);
 		s.accept(visitor);
 		sb.append('\n');
 		order.accept(visitor);
