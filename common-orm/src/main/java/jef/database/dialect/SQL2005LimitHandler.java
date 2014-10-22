@@ -5,6 +5,7 @@ import jef.database.wrapper.clause.BindSql;
 import com.alibaba.druid.sql.ast.SQLOrderBy;
 import com.alibaba.druid.sql.ast.SQLOver;
 import com.alibaba.druid.sql.ast.expr.SQLAggregateExpr;
+import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.expr.SQLMethodInvokeExpr;
 import com.alibaba.druid.sql.ast.statement.SQLSelect;
 import com.alibaba.druid.sql.ast.statement.SQLSelectItem;
@@ -21,7 +22,7 @@ public class SQL2005LimitHandler extends SQL2000LimitHandler {
 		super();
 		defaultOrder = new SQLOrderBy();
 		SQLSelectOrderByItem oe = new SQLSelectOrderByItem();
-		oe.setExpr(new SQLMethodInvokeExpr("CURRENT_TIMESTAMP"));
+		oe.setExpr(new SQLIdentifierExpr("CURRENT_TIMESTAMP"));
 		defaultOrder.getItems().add(oe);
 	}
 
@@ -44,6 +45,7 @@ public class SQL2005LimitHandler extends SQL2000LimitHandler {
 
 		StringBuilder sb = new StringBuilder("SELECT _tmp1.* FROM (");
 		SQLServerOutputVisitor visitor=new SQLServerOutputVisitor(sb);
+		visitor.setPrettyFormat(false);
 		select.accept(visitor);
 		sb.append(") _tmp1 WHERE __rn between ");
 		sb.append(offsetLimit[0] + 1).append(" and ").append(offsetLimit[0] + offsetLimit[1]);
@@ -61,7 +63,8 @@ public class SQL2005LimitHandler extends SQL2000LimitHandler {
 		// order可以直接移出
 		StringBuilder sb = new StringBuilder();
 		SQLServerOutputVisitor visitor=new SQLServerOutputVisitor(sb);
-		sb.append("SELECT _tmp.* FROM ( \nSELECT row_number() OVER (");
+		visitor.setPrettyFormat(false);
+		sb.append("SELECT _tmp2.* FROM ( \nSELECT row_number() OVER (");
 		order.accept(visitor);
 		sb.append(") AS __rn, _tmp1.* FROM (");
 		union.accept(visitor);

@@ -43,7 +43,8 @@ import org.junit.runner.RunWith;
 	 @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
 	 @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
 	 @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db")
+	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 public class DynamicTableTest extends org.junit.Assert {
 	private DbClient db;
@@ -233,7 +234,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	@IgnoreOn("sqlite")
+	@IgnoreOn({"sqlite","sqlserver"})
 	public void testLoadForUpdate() throws SQLException {
 		int id = doInsert();
 		VarObject var = meta.newInstance();
@@ -254,7 +255,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	@IgnoreOn("sqlite")
+	@IgnoreOn({"sqlite","sqlserver"})
 	public void testSelectForUpdate() throws SQLException {
 		doInsert();
 		doInsert();
@@ -298,7 +299,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	@IgnoreOn("sqlite")
+	@IgnoreOn({"sqlite","sqlserver"})
 	public void testAlterTable_AddColumn() throws SQLException {
 		meta.addColumn("addColumn1", new ColumnType.Date());
 		meta.addColumn("addColumn2", new ColumnType.TimeStamp().notNull().defaultIs(Func.now));

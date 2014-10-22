@@ -34,7 +34,7 @@ public class ToCountDeParser extends DeParserAdapter {
 		}
 		visitPath.push(union);
 
-		sb.append("select count(*) as count from (");
+		sb.append("select count(*) as t__cnt from (");
 		for (Iterator<PlainSelect> iter = union.getPlainSelects().iterator(); iter.hasNext();) {
 			sb.append("(");
 			PlainSelect plainSelect = iter.next();

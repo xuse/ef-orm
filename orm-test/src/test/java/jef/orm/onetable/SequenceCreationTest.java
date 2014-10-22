@@ -13,6 +13,7 @@ import jef.database.test.DataSourceContext;
 import jef.database.test.DatabaseInit;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
 import jef.orm.onetable.model.TestEntity;
+import jef.tools.Assert;
 import jef.tools.ThreadUtils;
 import jef.tools.string.RandomData;
 
@@ -30,6 +31,7 @@ import org.junit.runner.RunWith;
 @DataSourceContext({
  @DataSource(name="oracle",url="${oracle.url}",user="${oracle.user}",password="${oracle.password}"),
  @DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), 
+ @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = "")
 })
 public class SequenceCreationTest extends org.junit.Assert{
 	
@@ -62,6 +64,7 @@ public class SequenceCreationTest extends org.junit.Assert{
 	 */
 	
 	private void testSequenceStartValueOnEmptyTable() throws SQLException {
+		Assert.notNull(db);
 		// 单个插入
 		TestEntity t1 = RandomData.newInstance(TestEntity.class);
 		db.insert(t1);

@@ -11,6 +11,7 @@ import jef.database.ORMConfig;
 import jef.database.OperateTarget;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.expression.BinaryExpression;
+import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
 import jef.database.jsqlparser.expression.operators.arithmetic.Addition;
@@ -20,6 +21,7 @@ import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.StartWithExpression;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.VisitorAdapter;
+import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.meta.FunctionMapping;
 import jef.database.query.function.SQLFunction;
@@ -61,6 +63,21 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 			func.setName("concat");
 			func.setParameters(new ExpressionList(el));
 			concat.rewrite = func;
+		}
+	}
+	
+	/**
+	 * Jiyi 2014-10-22添加。
+	 * 当用户输入的SQL语句中，对于关键字的列没有加上引号时，在不允许对应关键字的数据库上可能会出错，因此检测，如果是关键字那么就加上引号成为合法的列名。
+	 * 
+	 * TODO 但是这种修改可能会引起一些非预期的反应。如果解析器错误的将某个不带参数括号的函数当做是列名，则会引起误认，比如将CURRENT_TIMESTAMP误认为是列名而加上引号。
+	 * 目前尚未观测到此类现象发生。但应进一步测试。
+	 */
+	@Override
+	public void visit(Column tableColumn) {
+		String s=profile.getProperty(DbProperty.WRAP_FOR_KEYWORD);
+		if(s!=null && profile.containKeyword(tableColumn.getColumnName())){
+			tableColumn.setColumnName(s+tableColumn.getColumnName()+s);
 		}
 	}
 

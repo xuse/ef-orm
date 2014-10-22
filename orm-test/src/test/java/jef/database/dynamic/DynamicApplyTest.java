@@ -22,19 +22,22 @@ import org.junit.runner.RunWith;
 	 @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
 	 @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
 	 @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db")
+	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 public class DynamicApplyTest {
 	private DbClient db;
 	
 	@DatabaseInit
 	public void test123() throws SQLException{
+		int n=0;
 		for(String tableName:db.getMetaData(null).getTableNames()){
 			System.out.println("数据库表"+tableName+"已经扫描。");
 			MetaHolder.initMetadata(db, tableName);
+			n++;
+			if(n>5)break;
 		}
 	}
-	
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void test2(){

@@ -21,6 +21,12 @@ public class SqlServerTest {
 	@BeforeClass
 	public static void setup() throws SQLException {
 		db = DbClientFactory.getDbClient("sqlserver", "10.7.52.152", 1433, "jiyi2", "sa", "Abc_123");
+		if(!db.existTable("dual_int")){
+			db.executeSql("create table dual_int( X integer )");
+		}
+		if(!db.existTable("dual")){
+			db.executeSql("create table dual_int( X char(1) )");
+		}
 	}
 
 	@Test

@@ -58,17 +58,16 @@ public final class CacheImpl implements TransactionCache {
 		Map<KeyDimension, DimCache> tableCache = cache.get(cls.getName());
 		if (tableCache == null || tableCache.isEmpty())
 			return false;
-
-		ITableMetadata meta = MetaHolder.getMeta(cls);
-		IQueryableEntity data = meta.newInstance();
-		DbUtils.setPrimaryKeyValue(data, primaryKey);
-
-		BindSql sql = sqlP.toPrepareWhereSql(data.getQuery(), new SqlContext(null, data.getQuery()), false, null);
-		DimCache dc = tableCache.get(new KeyDimension(sql.getSql(), null));
+		MetadataAdapter meta = MetaHolder.getMeta(cls);
+		List<Serializable> pks=toPrimaryKey(primaryKey);
+		@SuppressWarnings("deprecation")
+		DimCache dc = tableCache.get(meta.getPKDimension(pks, sqlP.getProfile()));
 		if (dc == null)
 			return false;
-		return dc.load(toParamList(sql.getBind())) != null;
+		return dc.load(pks) != null;
 	}
+
+
 
 	@SuppressWarnings("unchecked")
 	public static List<Object> toParamList(List<BindVariableDescription> bind) {
@@ -85,17 +84,13 @@ public final class CacheImpl implements TransactionCache {
 		Map<KeyDimension, DimCache> tableCache = cache.get(cls.getName());
 		if (tableCache == null || tableCache.isEmpty())
 			return;
-
-		ITableMetadata meta = MetaHolder.getMeta(cls);
-		IQueryableEntity data = meta.newInstance();
-		DbUtils.setPrimaryKeyValue(data, primaryKey);
-
-		BindSql sql = sqlP.toPrepareWhereSql(data.getQuery(), new SqlContext(null, data.getQuery()), false, null);
-
-		DimCache dc = tableCache.get(new KeyDimension(sql.getSql(), null));
+		MetadataAdapter meta = MetaHolder.getMeta(cls);
+		List<Serializable> pks=toPrimaryKey(primaryKey);
+		@SuppressWarnings("deprecation")
+		DimCache dc = tableCache.get(meta.getPKDimension(pks, sqlP.getProfile()));
 		if (dc == null)
 			return;
-		dc.remove(toParamList(sql.getBind()));
+		dc.remove(pks);
 	}
 
 	public void evict(Class cls) {
@@ -343,6 +338,15 @@ public final class CacheImpl implements TransactionCache {
 			});
 			CacheKey key = new SqlCacheKey(meta.getName(), dim, list.subList(list.size() - count.get(), list.size()));
 			refreshCache(tableCache, key, null);
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private List<Serializable> toPrimaryKey(Object primaryKey) {
+		if(primaryKey instanceof List){
+			return (List<Serializable>)primaryKey;
+		}else{
+			return Arrays.asList((Serializable)primaryKey);
 		}
 	}
 

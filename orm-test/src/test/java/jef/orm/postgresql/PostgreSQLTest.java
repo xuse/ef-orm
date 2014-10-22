@@ -49,7 +49,9 @@ import org.junit.runner.RunWith;
  * @Date 2012-7-20
  */
 @RunWith(JefJUnit4DatabaseTestRunner.class)
-@DataSourceContext({ @DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}") })
+@DataSourceContext({ 
+	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}") 
+})
 public class PostgreSQLTest {
 	private DbClient db;
 	private String queryTable = JefConfiguration.get(DbCfg.DB_QUERY_TABLE_NAME);

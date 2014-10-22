@@ -38,13 +38,14 @@ import org.junit.runner.RunWith;
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({
  @DataSource(name="oracle",url="${oracle.url}",user="${oracle.user}",password="${oracle.password}"),
- @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}",
- password = "${mysql.password}"),
+ @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
  @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
  @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
- @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa",
- password = ""),
-@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db") })
+ @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
+ @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+ @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
+})
+
 public class DialectFunctionTest extends org.junit.Assert {
 	private DbClient db;
 	private TupleMetadata tuple;
@@ -217,7 +218,7 @@ public class DialectFunctionTest extends org.junit.Assert {
 	 * {@linkplain Func#trunc}
 	 */
 	@Test
-	@IgnoreOn({ "derby", "mysql", "postgresql" })
+	@IgnoreOn({ "derby", "mysql", "postgresql" ,"sqlserver"})
 	public void testOracleTrunc() throws SQLException {
 		// 准备数据
 		db.delete(QB.create(tuple));// 删除全部数据

@@ -28,7 +28,8 @@ import org.junit.runner.RunWith;
 	 @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
 	 @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
 	 @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db")
+	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+	 @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 public class MetadataTest extends org.junit.Assert{
 	private DbClient db;
@@ -124,21 +125,23 @@ public class MetadataTest extends org.junit.Assert{
 	 * @throws SQLException
 	 */
 	@Test
-	@IgnoreOn({"derby","sqlite","mysql","hsqldb"})
+	@IgnoreOn("hsqldb")
 	public void testExistSequenceWithSchema() throws SQLException {
 		DbMetaData meta = db.getMetaData(null);
-		String schema = meta.getCurrentSchema();
-		String seqName = "seq_test_for_exist";
-		createSequence(schema, seqName);
+		if(meta.supportsSequence()){
+			String schema = meta.getCurrentSchema();
+			String seqName = "seq_test_for_exist";
+			createSequence(schema, seqName);
 
-		boolean exist = meta.existsInSchema(ObjectType.SEQUENCE, StringUtils.upperCase(schema), seqName);
-		Assert.assertTrue(exist);
+			boolean exist = meta.existsInSchema(ObjectType.SEQUENCE, StringUtils.upperCase(schema), seqName);
+			Assert.assertTrue(exist);
 
-		exist = meta.existsInSchema(ObjectType.SEQUENCE,StringUtils.lowerCase(schema), seqName);
-		Assert.assertTrue(exist);
+			exist = meta.existsInSchema(ObjectType.SEQUENCE,StringUtils.lowerCase(schema), seqName);
+			Assert.assertTrue(exist);
 
-		dropSequence(schema + "." + seqName);
-		Assert.assertFalse(meta.existsInSchema(ObjectType.SEQUENCE, schema, seqName));
+			dropSequence(schema + "." + seqName);
+			Assert.assertFalse(meta.existsInSchema(ObjectType.SEQUENCE, schema, seqName));	
+		}
 	}
 
 	private void createSequence(String schema, String seqName) throws SQLException {
@@ -155,17 +158,19 @@ public class MetadataTest extends org.junit.Assert{
 	 * @throws SQLException
 	 */
 	@Test
-	@IgnoreOn({"derby","sqlite","mysql","hsqldb"})
+	@IgnoreOn("hsqldb")
 	public void testExistSequenceWithoutSchema() throws SQLException {
 		DbMetaData meta = db.getMetaData(null);
-		String seqName = "seq_test_for_exist";
-		createSequence(null, seqName);
+		if(meta.supportsSequence()){
+			String seqName = "seq_test_for_exist";
+			createSequence(null, seqName);
 
-		boolean exist = meta.exists(ObjectType.SEQUENCE, seqName);
-		Assert.assertTrue(exist);
+			boolean exist = meta.exists(ObjectType.SEQUENCE, seqName);
+			Assert.assertTrue(exist);
 
-		dropSequence(seqName);
-		Assert.assertFalse(meta.exists(ObjectType.SEQUENCE, seqName));
+			dropSequence(seqName);
+			Assert.assertFalse(meta.exists(ObjectType.SEQUENCE, seqName));	
+		}
 	}
 
 	@Test

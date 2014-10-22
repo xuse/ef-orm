@@ -238,12 +238,14 @@ public class MySqlDialect extends AbstractDialect {
 		typeNames.put(Types.VARCHAR, 1024 * 1024 * 16, "mediumtext", Types.CLOB);
 		// MYSQL中的Timestamp含义有些特殊，默认还是用datetime记录
 		typeNames.put(Types.TIMESTAMP, 1024 * 1024 * 16, "datetime", 0);
+		typeNames.put(Types.TIMESTAMP, "datetime", 0);
 	}
 
 	@Override
 	public String getCreationComment(ColumnType column, boolean flag) {
 		int generateType = 0;
 		if (column instanceof SqlTypeDateTimeGenerated) {
+			// 1 创建时生成为sysdate 2更新时生成为sysdate 3创建时设置为为java系统时间  4为更新时设置为java系统时间
 			generateType = ((SqlTypeDateTimeGenerated) column).getGenerateType();
 			Object defaultValue = column.defaultValue;
 			if (generateType == 0 && (defaultValue == Func.current_date || defaultValue == Func.current_time || defaultValue == Func.now)) {
@@ -257,7 +259,7 @@ public class MySqlDialect extends AbstractDialect {
 			}
 		}
 		if(generateType==1){
-			return "timestamp not null default current_timestamp";
+			return "datetime not null";
 		}else if(generateType==2){
 			return "timestamp not null default current_timestamp on update current_timestamp";
 		}

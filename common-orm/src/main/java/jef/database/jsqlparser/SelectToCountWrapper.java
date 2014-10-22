@@ -59,7 +59,7 @@ public class SelectToCountWrapper extends PlainSelect{
 			count.setParameters(EXP_1);
 			SelectExpressionItem countItem=new SelectExpressionItem();
 			countItem.setExpression(count);
-			countItem.setAlias("count");
+			countItem.setAlias("t__cnt");
 			this.selectItems=Arrays.<SelectItem>asList(countItem);
 			
 			//将原来的Select部分套在SubSelect内。

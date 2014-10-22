@@ -18,7 +18,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
-@DataSourceContext({ @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = "") })
+@DataSourceContext({
+	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
+	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
+})
 public class JoinDescrptionTest {
 
 	@BeforeClass
@@ -37,6 +40,8 @@ public class JoinDescrptionTest {
 	private DbClient db;
 
 	public void testPrepareData() throws SQLException {
+		db.truncate(Student.class);
+		db.truncate(UserToLession.class);
 		{
 			Student user=new Student("张三");
 			db.insert(user);

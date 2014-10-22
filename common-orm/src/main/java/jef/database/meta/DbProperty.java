@@ -4,7 +4,7 @@ public enum DbProperty {
 	/**
 	 * 操作关键字
 	 */
-	DROP_COLUMN,ADD_COLUMN,MODIFY_COLUMN,
+	DROP_COLUMN,ADD_COLUMN,MODIFY_COLUMN,ADD_CONSTRAINT,
 	
 	/**
 	 * 开销最小的查询SQL语句，用于检测数据库心跳，如果没有这样的语句，返回null

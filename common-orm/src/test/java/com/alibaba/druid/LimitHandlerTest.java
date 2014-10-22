@@ -6,7 +6,6 @@ import jef.database.dialect.MySqlLimitHandler;
 import jef.database.dialect.SQL2000LimitHandler;
 import jef.database.dialect.SQL2005LimitHandler;
 import jef.database.dialect.statement.LimitHandler;
-import jef.database.dialect.statement.RegexpSQL2005LimitHandler;
 
 import org.junit.Test;
 
@@ -15,15 +14,6 @@ public class LimitHandlerTest {
 			"(select * from child t where t.code like 'code%') union all (select rootid as parentid,code,id,name from parent) union all (select * from child t) order by name " };
 
 	int[] pageParam = new int[] { 70, 10 };
-
-	@Test
-	public void test2005SimpleImpl() {
-		LimitHandler lh = new RegexpSQL2005LimitHandler();
-		for (String sql : sqls) {
-			System.out.println(lh.toPageSQL(sql, pageParam));
-		}
-		doTest(lh);
-	}
 
 	@Test
 	public void testSql2000Impl() {

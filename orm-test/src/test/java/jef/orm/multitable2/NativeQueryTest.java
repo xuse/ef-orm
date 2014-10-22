@@ -73,12 +73,12 @@ import org.junit.runner.RunWith;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({
-//	@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
-//	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
-//	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"),
-//	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-//	@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"),
-//	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+	@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
+	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
+	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"),
+	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
+	@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"),
+	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
 	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 public class NativeQueryTest extends org.junit.Assert {
@@ -203,7 +203,7 @@ public class NativeQueryTest extends org.junit.Assert {
 		// ///////////////
 		String sql = "SELECT distinct T.NAME PNAME, T1.NAME FROM parent T, child T1 WHERE T.ID = T1.PARENTID order by t.name";
 		PagingIterator<Var> pp = db.pageSelect(sql, Var.class, 5);
-		LogListener listener = new LogListener("select count\\(DISTINCT T.NAME\\|\\|T1.NAME\\).+");
+		LogListener listener = new LogListener(".+group by T.NAME,T1.NAME.+");
 		LogUtil.show(pp.hasNext());
 		LogUtil.show(pp.next());
 		if (db.getProfile(null).has(Feature.SUPPORT_CONCAT)) {

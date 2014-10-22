@@ -15,6 +15,7 @@ import jef.database.query.Query;
 import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
 import jef.database.test.DatabaseInit;
+import jef.database.test.IgnoreOn;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
 import jef.orm.onetable.model.CaAsset;
 import jef.tools.string.RandomData;
@@ -48,6 +49,7 @@ public class CacheTest extends org.junit.Assert{
 		JefFacade.getOrmConfig().setCacheDebug(true);
 	}
 	
+	@IgnoreOn(allButExcept="sqlserver")
 	@Test
 	public void case1() throws SQLException{
 		Transaction session=db.startTransaction();

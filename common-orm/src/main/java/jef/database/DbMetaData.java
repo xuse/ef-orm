@@ -2082,6 +2082,10 @@ public class DbMetaData {
 		return profile.has(Feature.REMARK_META_FETCH);
 	}
 
+	public boolean supportsSequence() {
+		return getProfile().has(Feature.SUPPORT_SEQUENCE);
+	}
+
 	// @Override
 	// protected boolean processCheck(Connection conn) {
 	// DatabaseDialect dialect = getProfile();

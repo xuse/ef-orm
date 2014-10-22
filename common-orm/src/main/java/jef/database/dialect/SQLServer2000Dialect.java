@@ -38,15 +38,18 @@ public class SQLServer2000Dialect extends AbstractDialect {
 		features.add(Feature.CONCAT_IS_ADD);
 		features.add(Feature.NOT_SUPPORT_KEYWORD_DEFAULT);
 		features.add(Feature.BATCH_GENERATED_KEY_BY_FUNCTION);
+		
 		// features.add(Feature.NO_BIND_FOR_INSERT);
 		// features.add(Feature.NO_BIND_FOR_SELECT);
 
-		setProperty(DbProperty.ADD_COLUMN, "ADD COLUMN");
-		setProperty(DbProperty.MODIFY_COLUMN, "MODIFY COLUMN");
+		setProperty(DbProperty.ADD_COLUMN, "ADD");
+		setProperty(DbProperty.MODIFY_COLUMN, "ALTER COLUMN");
 		setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");
+		setProperty(DbProperty.ADD_CONSTRAINT, "ADD CONSTRAINT");
 		setProperty(DbProperty.CHECK_SQL, "select 1");
 		setProperty(DbProperty.GET_IDENTITY_FUNCTION, "SELECT @@IDENTITY");
-
+		setProperty(DbProperty.WRAP_FOR_KEYWORD, "\"");
+		
 		loadKeywords("sqlserver_keywords.properties");
 
 		typeNames.put(Types.BINARY, "binary($l)", 0);
@@ -87,6 +90,9 @@ public class SQLServer2000Dialect extends AbstractDialect {
 		registerNative(Func.upper);
 		registerNative(Func.cast);
 		registerNative(Func.replace);
+		registerAlias("substr", "substring");
+		registerAlias("lcase", "lower");
+		registerAlias("ucase", "upper");
 		registerCompatible(Func.translate, new EmuTranslateByReplace());
 
 		registerNative(new NoArgSQLFunction("@@datefirst", false));
@@ -145,8 +151,8 @@ public class SQLServer2000Dialect extends AbstractDialect {
 		registerCompatible(Func.timestampdiff, new EmuSQLServerTimestamp("timestampdiff", "datediff"));
 		registerCompatible(Func.datediff, new TemplateFunction("datediff", "datediff(day,%2$s,%1$s)"));
 
-		registerCompatible(Func.adddate, new TemplateFunction("adddate", "dateadd(day,%2$s,%1$s)"));
-		registerCompatible(Func.subdate, new TemplateFunction("subdate", "dateadd(day,-%2$s,%1$s)"));
+		registerCompatible(Func.adddate, new TemplateFunction("adddate", "dateadd(day,%2$s,%1$s)"),"date_add");
+		registerCompatible(Func.subdate, new TemplateFunction("subdate", "dateadd(day,-%2$s,%1$s)"),"date_sub");
 
 		registerCompatible(Func.add_months, new TemplateFunction("add_months", "dateadd(month,%2$s,%1$s)"));
 
