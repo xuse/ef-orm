@@ -143,14 +143,16 @@ public class ResultSets {
 
 	/**
 	 * 获取指定列的String数据，整体返回一个List<String>
-	 * 
-	 * @Title: toStringList
+	 * @param rs
+	 * @param column
+	 * @param maxReturn
+	 * @param profile
 	 * @return List<String> 返回类型
 	 * @throws SQLException
 	 */
 	public static List<String> toStringList(ResultSet rs, String column, int maxReturn, DatabaseDialect profile) throws SQLException {
 		ResultSetImpl wrapper = new ResultSetImpl(rs, profile);
-		ColumnDescription c = wrapper.getColumns().getByFullName(column);
+		ColumnDescription c = wrapper.getColumns().getByUpperName(column);
 		if (c == null) {
 			throw new SQLException("The column does not exist in the resultset: " + column);
 		}

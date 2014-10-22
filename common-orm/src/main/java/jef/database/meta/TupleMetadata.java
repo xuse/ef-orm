@@ -18,6 +18,7 @@ import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.PojoWrapper;
 import jef.database.VarObject;
+import jef.database.annotation.ColumnMetadataProvider;
 import jef.database.annotation.Index;
 import jef.database.annotation.JoinType;
 import jef.database.annotation.PartitionFunction;
@@ -27,8 +28,8 @@ import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AbstractTimeMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
-import jef.database.dialect.type.ColumnMappings;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.dialect.type.ColumnMappings;
 import jef.database.query.ReferenceType;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
@@ -43,7 +44,7 @@ import com.google.common.collect.Multimap;
  * @author jiyi
  *
  */
-public class TupleMetadata extends MetadataAdapter{
+public class TupleMetadata extends MetadataAdapter implements ColumnMetadataProvider{
 	private Map<Field,ColumnMapping<?>> schemaMap=new IdentityHashMap<Field,ColumnMapping<?>>();
 	private Map<String,Field> 	   fields=new HashMap<String,Field>(10,0.6f);
 	private Map<String,Field> 	   fieldsLower=new HashMap<String,Field>(10,0.6f);

@@ -54,15 +54,13 @@ public class SelectExpression extends SingleColumnSelect {
 		return StringUtils.replaceEach(tableAlias, from, to);
 	}
 
-	public String getSelectedAlias(String tableAlias, DatabaseDialect profile,boolean isSelecting) {
-		if(isSelecting){
-			if(alias==null){
-				alias="C".concat(RandomStringUtils.randomNumeric(12));
-			}else{
-				return DbUtils.escapeColumn(profile, profile.getColumnNameToUse(alias));
-			}
+	public String getSelectedAlias(String tableAlias, DatabaseDialect profile) {
+		if(alias==null){
+			alias="C".concat(RandomStringUtils.randomNumeric(12));
+			return profile.getColumnNameToUse(alias);
+		}else{
+			return DbUtils.escapeColumn(profile, profile.getColumnNameToUse(alias));
 		}
-		return profile.getColumnNameToUse(alias);
 	}
 
 	@Override
@@ -110,5 +108,10 @@ public class SelectExpression extends SingleColumnSelect {
 
 	public ColumnMapping<?> getTargetColumnType() {
 		return null;
+	}
+
+	@Override
+	public String getResultAlias(String tableAlias, DatabaseDialect profile) {
+		return StringUtils.upperCase(alias);
 	}
 }

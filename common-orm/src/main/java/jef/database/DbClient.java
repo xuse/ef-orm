@@ -968,4 +968,47 @@ public class DbClient extends Session {
 	public void printPool() {
 		System.out.println(getPool().getStatus());
 	}
+	
+	/*
+	 * 从配置中读取命名查询的配置位置(文件)
+	 * 
+	 */
+	private String namedQueryFilename=JefConfiguration.get(DbCfg.NAMED_QUERY_RESOURCE_NAME, "named-queries.xml");
+	/*
+	 * 从配置中读取命名查询的配置位置(数据库表)
+	 */
+	private String namedQueryTablename=JefConfiguration.get(DbCfg.DB_QUERY_TABLE_NAME);
+	
+	/**
+	 * 设置命名查询文件的名称
+	 * @param namedQueryFilename
+	 */
+	public void setNamedQueryFilename(String namedQueryFilename) {
+		if(namedQueries!=null){
+			throw new IllegalStateException("must set before named-query init");
+		}
+		this.namedQueryFilename = namedQueryFilename;
+	}
+
+	/**
+	 * 设置命名查询表的名称
+	 * @param namedQueryTablename
+	 */
+	public void setNamedQueryTablename(String namedQueryTablename) {
+		if(namedQueries!=null){
+			throw new IllegalStateException("must set before named-query init");
+		}
+		this.namedQueryTablename = namedQueryTablename;
+	}
+
+	String getNamedQueryFile(){
+		return namedQueryFilename;
+	}
+	
+	String getNamedQueryTable(){
+		return namedQueryTablename;
+	}
+	protected boolean isJpaTx() {
+		return false;
+	}
 }

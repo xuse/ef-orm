@@ -959,7 +959,7 @@ public final class DbUtils {
 		}
 		for (ColumnMapping<?> mapping : meta.getPKFields()) {
 			Object value = mapping.getFieldAccessor().get(obj);
-			Field field=mapping.field();
+			Field field = mapping.field();
 			query.addCondition(field, value);
 			if (removePkUpdate && obj.getUpdateValueMap().containsKey(field)) {//
 				Map<Field, Object> map = obj.getUpdateValueMap();
@@ -1093,21 +1093,6 @@ public final class DbUtils {
 			return ((JoinElement) queryObj).getSelectItems();
 		}
 		return null;
-	}
-
-	/**
-	 * 返回缺省的列的别名
-	 * 
-	 * @param f
-	 * @param profile
-	 * @param alias
-	 * @return
-	 */
-	public static String getDefaultColumnAlias(Field f, DatabaseDialect profile, String alias) {
-		String fieldName = f.name();
-		if (StringUtils.isEmpty(alias))
-			return fieldName;
-		return profile.getColumnNameToUse(StringUtils.concat(alias, SqlContext.DIVEDER, fieldName));
 	}
 
 	/**

@@ -52,9 +52,15 @@ public final class ReferenceField extends AbstractRefField implements IReference
 		return targetField;
 	}
 
-	public String getSelectedAlias(String alias,DatabaseDialect profile,boolean isSelect) {
+	public String getSelectedAlias(String alias,DatabaseDialect profile) {
 		return 	new StringBuilder(36).append(profile.getColumnNameToUse(alias)).append(SqlContext.DIVEDER)
 			.append(profile.getColumnNameToUse(targetField.name())).toString();
+	}
+	
+	@Override
+	public String getResultAlias(String alias, DatabaseDialect profile) {
+		return 	new StringBuilder(36).append(alias.toUpperCase()).append(SqlContext.DIVEDER)
+				.append(targetField.name().toUpperCase()).toString();
 	}
 
 	public String getSelectItem(DatabaseDialect profile,String tableAlias,SqlContext context) {
@@ -92,14 +98,18 @@ public final class ReferenceField extends AbstractRefField implements IReference
 		public String getSelectItem(DatabaseDialect profile, String tableAlias,SqlContext context) {
 			return ReferenceField.this.getSelectItem(profile, tableAlias,context);
 		}
-		public String getSelectedAlias(String tableAlias, DatabaseDialect profile,boolean isSelecting) {
-			return ReferenceField.this.getSelectedAlias(tableAlias,profile, isSelecting);
+		public String getSelectedAlias(String tableAlias, DatabaseDialect profile) {
+			return ReferenceField.this.getSelectedAlias(tableAlias,profile);
 		}
 		public boolean isSingleColumn() {
 			return true;
 		}
 		public ColumnMapping<?> getTargetColumnType() {
 			return ReferenceField.this.getTargetColumnType();
+		}
+		@Override
+		public String getResultAlias(String tableAlias, DatabaseDialect profile) {
+			return ReferenceField.this.getResultAlias(tableAlias,profile);
 		}
 	}
 }

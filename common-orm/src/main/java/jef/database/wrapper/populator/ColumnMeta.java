@@ -125,8 +125,14 @@ public class ColumnMeta {
 		return schemaIndex.get(schema);
 	}
 
-	public ColumnDescription getByFullName(String fieldName) {
-		return this.nameIndex.get(fieldName.toUpperCase());
+	/**
+	 * 优化实现1，如果确定传入字符串为大写时，可调用此方法。
+	 * 目前要求传入column时都必须大写。
+	 * @param column 大写的列名
+	 * @return
+	 */
+	public ColumnDescription getByUpperName(String column) {
+		return this.nameIndex.get(column);
 	}
 
 	public Set<String> getSchemas() {

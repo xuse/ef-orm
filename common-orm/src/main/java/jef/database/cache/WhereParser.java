@@ -29,7 +29,7 @@ public abstract class WhereParser {
 
 	abstract String process(String where);
 
-	public static final WhereParser NATIVE = new WhereParser() {
+	public static final class NativeImpl extends WhereParser{
 		@Override
 		String process(String where) {
 			StSqlParser parser = new StSqlParser(new StringReader(where));
@@ -62,7 +62,7 @@ public abstract class WhereParser {
 		});
 	}
 
-	public static final WhereParser DRUID = new WhereParser() {
+	public static final class DruidImpl extends WhereParser{
 		@Override
 		String process(String where) {
 			SQLExprParser parser = new SQLExprParser(where);

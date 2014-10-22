@@ -485,6 +485,8 @@ public abstract class Session {
 
 	protected abstract TransactionMode getTxType();
 
+	protected abstract boolean isJpaTx();
+	
 	/**
 	 * 支持关联表的插入 如果和其他表具有1VS1、1VSN的关系，那么插入时会自动维护其他表中的数据。这些操作包括了Insert或者update.
 	 * 

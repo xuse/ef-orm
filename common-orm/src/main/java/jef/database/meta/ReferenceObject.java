@@ -1,6 +1,5 @@
 package jef.database.meta;
 
-import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.ORMConfig;
 import jef.database.dialect.DatabaseDialect;
@@ -25,9 +24,14 @@ public final class ReferenceObject extends AbstractRefField implements IReferenc
 		return null;
 	}
 
-	public String getSelectedAliasOf(Field f, DatabaseDialect profile, String schema,boolean forSelect) {
-		return DbUtils.getDefaultColumnAlias(f, profile, schema);
+	public String getSelectedAliasOf(Field f, DatabaseDialect dialect, String schema) {
+		return AliasProvider.DEFAULT.getSelectedAliasOf(f, dialect, schema);
 	}
+	@Override
+	public String getResultAliasOf(Field f, DatabaseDialect dialect, String schema) {
+		return AliasProvider.DEFAULT.getResultAliasOf(f, dialect, schema);
+	}
+	
 	public boolean isLazyLob() {
 		return lazyLob;
 	}
@@ -64,8 +68,14 @@ public final class ReferenceObject extends AbstractRefField implements IReferenc
 			return null;
 		}
 
-		public String getSelectedAliasOf(Field f, DatabaseDialect profile, String schema,boolean forSelect) {
-			return DbUtils.getDefaultColumnAlias(f, profile, schema);
+		public String getSelectedAliasOf(Field f, DatabaseDialect dialect, String schema) {
+			return AliasProvider.DEFAULT.getSelectedAliasOf(f, dialect, schema);
+		}
+		
+
+		@Override
+		public String getResultAliasOf(Field f, DatabaseDialect dialect, String schema) {
+			return AliasProvider.DEFAULT.getResultAliasOf(f, dialect, schema);
 		}
 		public boolean isLazyLob() {
 			return lazyLob;

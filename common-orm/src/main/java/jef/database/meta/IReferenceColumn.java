@@ -23,7 +23,13 @@ public interface IReferenceColumn extends ISelectProvider{
 	 * @param isSelecting  当生成SQL时候为true,当拼结果的时候为false
 	 * @return
 	 */
-	String getSelectedAlias(String tableAlias,DatabaseDialect profile, boolean isSelecting);//
+	String getSelectedAlias(String tableAlias,DatabaseDialect profile);//
+	
+	/**
+	 * 获得列别名，当访问结果集时使用。要求返回大写字符
+	 * @return
+	 */
+	String getResultAlias(String tableAlias,DatabaseDialect profile);
 	
 	/**
 	 * 目标列的meta

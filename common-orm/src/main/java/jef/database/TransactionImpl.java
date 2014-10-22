@@ -332,4 +332,9 @@ public class TransactionImpl extends Transaction {
 	protected TransactionMode getTxType() {
 		return parent.getTxType();
 	}
+
+	@Override
+	protected boolean isJpaTx() {
+		return parent.getTxType()==TransactionMode.JPA;
+	}
 }

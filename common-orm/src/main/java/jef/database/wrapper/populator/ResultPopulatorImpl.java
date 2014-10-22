@@ -40,8 +40,8 @@ import jef.database.LobLazyLoadTask;
 import jef.database.Session;
 import jef.database.Session.PopulateStrategy;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.ColumnMappings;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.dialect.type.ColumnMappings;
 import jef.database.dialect.type.ResultSetAccessor;
 import jef.database.innerpool.FieldPopulator;
 import jef.database.innerpool.MultiplePopulator;
@@ -669,12 +669,12 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 			String columnName;
 			Field f = ft.field();
 			if (fullRef == null) {
-				columnName = skipColumn ? f.name() : meta.getColumnName(f, profile, false);
+				columnName = skipColumn ? f.name().toUpperCase() : ft.columnName().toUpperCase();
 			} else {
-				columnName = fullRef.getSelectedAliasOf(f, profile, schema,false);
+				columnName = fullRef.getResultAliasOf(f, profile, schema);
 			}
 			if (columnName != null) {
-				ColumnDescription columnDesc = columns.getByFullName(columnName);
+				ColumnDescription columnDesc = columns.getByUpperName(columnName);
 				if (columnDesc == null) {
 //					if (schema == "")
 //						System.err.println("Warnning: populating object " + meta.getThisType() + " error," + schema + ":" + columnName + " not found in the selected columns");
@@ -689,7 +689,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 
 		if (schema == "" || schema.length() < 2) {
 			if (profile.has(Feature.SELECT_ROW_NUM)) {
-				ColumnDescription columnDesc = columns.getByFullName("ROWID_");
+				ColumnDescription columnDesc = columns.getByUpperName("ROWID_");
 				if (columnDesc != null) {
 					op.bindRowidForColumn = columnDesc.getN();
 				}
@@ -714,7 +714,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 			} else {
 				columnName = fieldName;
 			}
-			ColumnDescription c = columnMeta.getByFullName(columnName);//findBySimpleName(columnName)
+			ColumnDescription c = columnMeta.getByUpperName(columnName.toUpperCase());//findBySimpleName(columnName)
 			if (c != null) {
 				c.setAccessor(ColumnMappings.getAccessor(ba.getPropertyType(fieldName), null, c, true));
 				map.put(fieldName, c);

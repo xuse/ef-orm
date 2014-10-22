@@ -1,12 +1,12 @@
 package jef.database.query;
 
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 
-import jef.database.ORMConfig;
-import jef.database.DbUtils;
 import jef.database.Field;
+import jef.database.ORMConfig;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.meta.AliasProvider;
 import jef.database.meta.IReferenceAllTable;
 import jef.database.meta.ISelectProvider;
 import jef.database.meta.ITableMetadata;
@@ -46,7 +46,7 @@ public final class AllTableColumns implements IReferenceAllTable{
 	private Query<?> table;//对应的表
 	private AliasMode aliasType;
 	private ITableMetadata customType;
-	private final Map<Field,String> aliasMap= new HashMap<Field,String>(16);//别名索引
+	private final Map<Field,String> aliasMap= new IdentityHashMap<Field,String>(16);//别名索引
 	
 	private int projection;													//只有 count 和 normal两种
 	private String countAlias;												//只有当count时才有用.描述count后的别名
@@ -132,9 +132,7 @@ public final class AllTableColumns implements IReferenceAllTable{
 		this.projection=ISelectProvider.PROJECTION_NOT_SELECT;
 	}
 
-	public String getSelectedAliasOf(Field f, DatabaseDialect profile, String schema,boolean forSelect) {
-		String alias=getAlias(f);
-		if(alias!=null)return alias;
+	public String getSelectedAliasOf(Field f, DatabaseDialect profile, String schema) {
 		String value;
 		switch(aliasType){
 		case OMIT:
@@ -144,9 +142,9 @@ public final class AllTableColumns implements IReferenceAllTable{
 		case RAWNAME:
 			value=table.getMeta().getColumnName(f, profile,false);
 			aliasMap.put(f,value);
-			return forSelect?null:DbUtils.escapeColumn(profile, value);
+			return null;
 		case DEFAULT:
-			value=DbUtils.getDefaultColumnAlias(f, profile, schema);
+			value=AliasProvider.DEFAULT.getSelectedAliasOf(f, profile, schema);
 			aliasMap.put(f,value);
 			return value;
 		case RANDOM:
@@ -160,6 +158,40 @@ public final class AllTableColumns implements IReferenceAllTable{
 		default:
 			throw new IllegalArgumentException();
 		}
+	}
+
+
+	@Override
+	public String getResultAliasOf(Field f, DatabaseDialect profile, String schema) {
+		String alias=getAlias(f);
+		if(alias!=null)return alias;
+		
+//		String value;
+//		switch(aliasType){
+//		case OMIT:
+//			//这个地方不可抛出异常.因为对于AllColumn来说，还是有可能位于join当中的。
+//			//此外，如果LOB字段延迟加载，也会出现OMIT参数无效的情况
+//			//throw new IllegalArgumentException("the type should use 't.*' on select columns. ");
+//		case RAWNAME:
+//			value=table.getMeta().getColumnName(f, profile,false);
+//			aliasMap.put(f,value);
+//			return DbUtils.escapeColumn(profile, value);
+//		case DEFAULT:
+//			value=DbUtils.getDefaultColumnAlias(f, profile, schema);
+//			aliasMap.put(f,value);
+//			return value;
+//		case RANDOM:
+//			value="C".concat(RandomStringUtils.randomNumeric(12));
+//			aliasMap.put(f, value);
+//			return value;
+//		case JAVA_NAME:
+//			value=f.name();
+//			aliasMap.put(f, value);
+//			return value;
+//		default:
+			throw new IllegalArgumentException();
+//		}
+//		return null;
 	}
 
 	protected void setName(String name) {

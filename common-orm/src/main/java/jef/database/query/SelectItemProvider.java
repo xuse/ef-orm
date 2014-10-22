@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
@@ -77,7 +76,12 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 	
 	
 	private static final AliasProvider EMPTY=new AliasProvider(){
-		public String getSelectedAliasOf(Field f, DatabaseDialect profile, String schema,boolean forSelect) {
+		public String getSelectedAliasOf(Field f, DatabaseDialect profile, String schema) {
+			return null;
+		}
+
+		@Override
+		public String getResultAliasOf(Field f, DatabaseDialect dialect, String schema) {
 			return null;
 		}
 	};
@@ -96,7 +100,7 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 				for (ColumnMapping<?> f : meta.getMetaFields()) {
 					CommentEntry entry=new CommentEntry();
 					entry.setKey(schema.concat(".").concat(f.getColumnName(profile, true)));
-					entry.setValue(aliasProvider.getSelectedAliasOf(f.field(), profile, schema,true));	
+					entry.setValue(aliasProvider.getSelectedAliasOf(f.field(), profile, schema));	
 					result.add(entry);
 				}	
 			}
@@ -121,9 +125,9 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 						CommentEntry entry=new CommentEntry();
 						entry.setKey(schema.concat(".").concat(f.getColumnName(profile,true)));
 						if(referenceObj==null){
-							entry.setValue(DbUtils.getDefaultColumnAlias(f.field(), profile, schema));	
+							entry.setValue(AliasProvider.DEFAULT.getSelectedAliasOf(f.field(), profile, schema));	
 						}else{
-							entry.setValue(referenceObj.getSelectedAliasOf(f.field(),profile,schema,true));	
+							entry.setValue(referenceObj.getSelectedAliasOf(f.field(),profile,schema));	
 						}
 						result.add(entry);
 					}
@@ -138,7 +142,7 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 			String column=f.getSelectItem(profile, schema,context);
 			if(column==null)continue;
 			entry.setKey(column);
-			entry.setValue(f.getSelectedAlias(schema,profile,true));
+			entry.setValue(f.getSelectedAlias(schema,profile));
 			result.add(entry);
 		}
 		return result.toArray(new CommentEntry[result.size()]);

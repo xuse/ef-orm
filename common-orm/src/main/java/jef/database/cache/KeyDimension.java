@@ -1,5 +1,7 @@
 package jef.database.cache;
 
+import jef.database.cache.WhereParser.DruidImpl;
+import jef.database.cache.WhereParser.NativeImpl;
 import jef.database.dialect.statement.UnionJudgement;
 import jef.database.jsqlparser.visitor.Expression;
 
@@ -62,9 +64,9 @@ public class KeyDimension {
 	
 	static{
 		if(UnionJudgement.isDruid()){
-			wp=WhereParser.DRUID;
+			wp=new DruidImpl();
 		}else{
-			wp=WhereParser.NATIVE;
+			wp=new NativeImpl();
 		}
 	}
 }

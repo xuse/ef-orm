@@ -199,17 +199,22 @@ public final class SelectColumn extends SingleColumnSelect{
 		return populateTo;
 	}
 //	生成选择语句时生成列名别，null表示无别名
-	public String getSelectedAlias(String tableAlias,DatabaseDialect profile,boolean isSelect) {
-		if(isSelect)return DbUtils.escapeColumn(profile,profile.getColumnNameToUse(alias));
+	public String getSelectedAlias(String tableAlias,DatabaseDialect profile) {
+		return DbUtils.escapeColumn(profile,profile.getColumnNameToUse(alias));
+	}
+
+	@Override
+	public String getResultAlias(String tableAlias, DatabaseDialect profile) {
 		if(alias==null){
 			if(columnSimpleName==null){
 				throw new IllegalArgumentException();
 			}
-			return profile.getColumnNameToUse(columnSimpleName);
+			return columnSimpleName.toUpperCase();
 		}else{
-			return profile.getColumnNameToUse(alias);	
+			return alias.toUpperCase();	
 		}
 	}
+	
 	
 	private String innerGetColumn(DatabaseDialect profile,String tableAlias){
 		//因为第一次操作列名改为额大写，造成第二次Parse出错
@@ -290,6 +295,4 @@ public final class SelectColumn extends SingleColumnSelect{
 	public String toString() {
 		return populateTo+":"+targetField+(alias==null?"":" as "+alias);
 	}
-	
-	
 }

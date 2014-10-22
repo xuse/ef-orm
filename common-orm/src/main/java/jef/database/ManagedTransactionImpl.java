@@ -135,5 +135,8 @@ public class ManagedTransactionImpl extends Transaction{
 	protected TransactionMode getTxType() {
 		return parent.getTxType();
 	}
-	
+	@Override
+	protected boolean isJpaTx() {
+		return false;
+	}
 }

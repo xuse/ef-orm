@@ -56,7 +56,7 @@ public class OrderClause {
 				throw new IllegalArgumentException("The order field " + order.getKey() + " does not selected in SQL!");
 			}
 			// 可能为null
-			ColumnDescription selectedColumn = columns.getByFullName(alias);
+			ColumnDescription selectedColumn = columns.getByUpperName(alias.toUpperCase());
 			if (selectedColumn == null) {
 				throw new IllegalArgumentException("The order field " + alias + " does not found in this Query!");
 			}

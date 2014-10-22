@@ -103,8 +103,34 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 	 * 默认关闭
 	 */
 	private boolean allowDropColumn;
+
 	/**
-	 * 事务支持类型，可配置为
+	 * 事务支持类型
+	 * @see #setTransactionMode(String)
+	 */
+	private TransactionMode transactionMode;
+	/**
+	 * 对象实例
+	 */
+	private JefEntityManagerFactory instance;
+
+	/**
+	 * 命名查询文件
+	 * @return 
+	 */
+	private String namedQueryFile;
+	
+	/**
+	 * 命名查询表
+	 */
+	private String namedQueryTable;
+	
+	public String getTransactionMode() {
+		return transactionMode==null?null:transactionMode.name();
+	}
+
+	/**
+	 * 事务管理模式，可配置为
 	 * <ul>
 	 * <li><strong>JPA</strong></li><br>
 	 * 使用JPA的方式管理事务，对应Spring的 {@linkplain org.springframework.orm.jpa.JpaTransactionManager JpaTransactionManager},
@@ -121,18 +147,11 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 	 * 一般用于和Hibernate/Ibatis/MyBatis/JdbcTemplate等共享同一个事务。
 	 * </ul>
 	 * 默认为{@code JPA}
+	 * 
+	 * @param txType 事务管理模式，可设置为JPA、JTA、JDBC
+	 * 
 	 * @see TransactionMode
 	 */
-	private TransactionMode transactionMode;
-	/**
-	 * 对象实例
-	 */
-	private JefEntityManagerFactory instance;
-
-	public String getTransactionMode() {
-		return transactionMode==null?null:transactionMode.name();
-	}
-
 	public void setTransactionMode(String txType) {
 		this.transactionMode =TransactionMode.valueOf(StringUtils.upperCase(txType));
 	}
@@ -165,6 +184,14 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 			RoutingDataSource rs=new RoutingDataSource(new MapDataSourceLookup(dataSources));
 			sf=new JefEntityManagerFactory(rs,transactionMode);
 		}
+		if(namedQueryFile!=null){
+			sf.getDefault().setNamedQueryFilename(namedQueryFile);
+		}
+		if(namedQueryTable!=null){
+			sf.getDefault().setNamedQueryTablename(namedQueryTable);
+		}
+		
+		
 		if(packagesToScan!=null || annotatedClasses!=null){
 			QuerableEntityScanner qe=new QuerableEntityScanner();
 			if(transactionMode==TransactionMode.JTA){
@@ -287,6 +314,30 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 
 	public boolean isAllowDropColumn() {
 		return allowDropColumn;
+	}
+	
+	public String getNamedQueryFile() {
+		return namedQueryFile;
+	}
+
+	/**
+	 * 设置存放命名查询的文件资源名（xml格式，将在classpath下查找）
+	 * @param namedQueryFile 命名查询文件名
+	 */
+	public void setNamedQueryFile(String namedQueryFile) {
+		this.namedQueryFile = namedQueryFile;
+	}
+
+	public String getNamedQueryTable() {
+		return namedQueryTable;
+	}
+
+	/**
+	 * 设置存放命名查询的数据库表名
+	 * @param namedQueryTable 命名查询数据库表
+	 */
+	public void setNamedQueryTable(String namedQueryTable) {
+		this.namedQueryTable = namedQueryTable;
 	}
 
 	/**

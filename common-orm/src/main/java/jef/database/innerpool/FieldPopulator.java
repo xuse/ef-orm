@@ -6,14 +6,13 @@ import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.log.LogUtil;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.ColumnMappings;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.dialect.type.ColumnMappings;
 import jef.database.meta.IReferenceColumn;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
 import jef.database.wrapper.populator.IPopulator;
 import jef.database.wrapper.result.IResultSet;
-import jef.tools.Assert;
 import jef.tools.reflect.BeanWrapper;
 
 public class FieldPopulator implements IPopulator{
@@ -23,13 +22,14 @@ public class FieldPopulator implements IPopulator{
 	private ColumnDescription desc;
 	
 	public FieldPopulator(IReferenceColumn field,DatabaseDialect profile,String schema,ColumnMeta columns,BeanAccessor ba){
-		this.columnName=field.getSelectedAlias(schema, profile, false);
-		Assert.notNull(columnName);
-		this.name = field.getName();
-		ColumnDescription desc = columns.getByFullName(columnName);
+		this.columnName=field.getResultAlias(schema, profile);
+		ColumnDescription desc = columns.getByUpperName(columnName);
 		if (desc == null) {
 			throw new IllegalArgumentException("Column not in ResultSet:" + columnName + " all:" + columns);
 		}
+		
+	//	Assert.notNull(columnName);
+		this.name = field.getName();
 		
 		//计算元模型类型
 		ColumnMapping<?> t = field.getTargetColumnType();

@@ -125,7 +125,7 @@ public final class ResultSetHolder extends AbstractResultSet implements IResultS
 	}
 	@Override
 	protected ResultSet get() throws SQLException {
-		ensureOpen();
+		//ensureOpen();
 		return rs;
 	}
 	@Override
