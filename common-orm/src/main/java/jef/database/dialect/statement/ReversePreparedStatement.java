@@ -4,6 +4,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+
+/**
+ * 返回查询结果会被颠倒的PreparedStatement
+ * @author jiyi
+ *
+ */
 public final class ReversePreparedStatement extends DelegatingPreparedStatement{
 	public ReversePreparedStatement(PreparedStatement s) {
 		super(s);

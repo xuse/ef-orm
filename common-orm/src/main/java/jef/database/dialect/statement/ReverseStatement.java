@@ -4,6 +4,11 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+/**
+ * 返回查询结果会被颠倒的Statement
+ * @author jiyi
+ *
+ */
 public final class ReverseStatement extends DelegatingStatement{
 	public ReverseStatement(Statement s) {
 		super(s);

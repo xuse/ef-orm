@@ -40,11 +40,11 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 
 	/**
 	 * 构造
-	 * @param profile 数据库简要表
+	 * @param dialect 数据库简要表
 	 * @param db      用于进行UserFunction检查，如果传入null则不进行检查
 	 */
-	public SqlFunctionlocalization(DatabaseDialect profile, OperateTarget db) {
-		this.profile = profile;
+	public SqlFunctionlocalization(DatabaseDialect dialect, OperateTarget db) {
+		this.profile = dialect;
 		this.db = db;
 		this.check = ORMConfig.getInstance().isCheckSqlFunctions();
 	}

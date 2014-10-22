@@ -1,10 +1,14 @@
 package jef.database.dialect.statement;
 
 import com.alibaba.druid.sql.ast.statement.SQLUnionQuery;
-import com.alibaba.druid.sql.dialect.postgresql.parser.PGSelectParser;
 import com.alibaba.druid.sql.dialect.sqlserver.parser.SQLServerSelectParser;
 
-public class UnionJudgementDruidPGImpl extends UnionJudgement{
+/**
+ * 使用Druid的SQL解析器判断是否为Union语句(Postgres语法专用)
+ * @author jiyi
+ *
+ */
+public final class UnionJudgementDruidPGImpl extends UnionJudgement{
 	
 	@Override
 	public boolean isUnion(String sql) {

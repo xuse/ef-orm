@@ -29,37 +29,43 @@ import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 import jef.database.meta.ITableMetadata;
 
-public class SqlExpression implements Expression,IConditionField{
+/**
+ * A SQL Expression.
+ * @author jiyi
+ */
+public final class SqlExpression implements Expression,IConditionField{
 	private static final long serialVersionUID = 1L;
-	private String text;
+	
+	private String sql;
 	
 	public SqlExpression(String text){
-		this.text=text;
+		this.sql=text;
 	}
 	public String getText() {
-		return text;
+		return sql;
 	}
+	
 	public void accept(ExpressionVisitor expressionVisitor) {
-		//
 	}
+	
 	@Override
 	public String toString() {
-		return text;
+		return sql;
 	}
 	public String name() {
-		return text;
+		return sql;
 	}
 	public Iterable<Condition> getConditions() {
 		return Arrays.asList();
 	}
 	public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance,DatabaseDialect profile) {
-		return text;
+		return sql;
 	}
 	public String toPrepareSql(List<BindVariableDescription> fields, ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance,DatabaseDialect profile) {
-		return text;
+		return sql;
 	}
 	public void appendTo(StringBuilder sb) {
-		sb.append(text);
+		sb.append(sql);
 	}
 	public ExpressionType getType() {
 		return ExpressionType.complex;

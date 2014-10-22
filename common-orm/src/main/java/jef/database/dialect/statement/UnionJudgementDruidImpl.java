@@ -3,7 +3,12 @@ package jef.database.dialect.statement;
 import com.alibaba.druid.sql.ast.statement.SQLUnionQuery;
 import com.alibaba.druid.sql.parser.SQLSelectParser;
 
-public class UnionJudgementDruidImpl extends UnionJudgement{
+/**
+ * 使用Druid的SQL解析器判断是否为Union语句
+ * @author jiyi
+ *
+ */
+public final class UnionJudgementDruidImpl extends UnionJudgement{
 	
 	@Override
 	public boolean isUnion(String sql) {

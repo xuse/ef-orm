@@ -8,6 +8,11 @@ import javax.persistence.PersistenceException;
 
 import jef.database.wrapper.result.AbstractResultSet;
 
+/**
+ * 对结果集跳过若干记录，并且限定其最大数的过滤器
+ * @author jiyi
+ *
+ */
 final class LimitOffsetResultSet extends AbstractResultSet {
 	private int offset;
 	private int limit;
