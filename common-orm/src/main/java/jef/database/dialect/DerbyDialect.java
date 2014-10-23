@@ -65,7 +65,7 @@ public class DerbyDialect extends AbstractDialect {
 				Feature.UNION_WITH_BUCK
 				));
 		keywords.addAll(Arrays.asList("ASC", "ACCESS", "ADD", "ALTER", "DESC", "AUDIT", "CLUSTER", "COLUMN", "COMMENT", "COMPRESS", "CONNECT", "DATE", "DROP", "EXCLUSIVE", "FILE", "IDENTITY", "IDENTIFIED", "IMMEDIATE", "INCREMENT", "INDEX", "INITIAL", "INTERSECT", "LEVEL",
-				"LOCK", "LONG", "MAXEXTENTS", "MINUS", "MODE", "NOAUDIT", "NOCOMPRESS", "NOWAIT", "NUMBER", "OFFLINE", "ONLINE", "PCTFREE", "PRIOR","KEY"));
+				"LOCK", "LONG", "MAXEXTENTS", "MINUS", "MODE", "NOAUDIT", "NOCOMPRESS", "NOWAIT", "NUMBER", "OFFLINE", "ONLINE", "PCTFREE", "PRIOR","KEY","ORDER"));
 
 		setProperty(DbProperty.ADD_COLUMN, "ADD COLUMN");
 		setProperty(DbProperty.MODIFY_COLUMN, "ALTER");

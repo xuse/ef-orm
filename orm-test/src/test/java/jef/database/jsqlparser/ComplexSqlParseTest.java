@@ -28,10 +28,12 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.alibaba.druid.sql.ast.SQLStatement;
+import com.alibaba.druid.sql.ast.statement.SQLSelect;
 import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
 import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlOutputVisitor;
 import com.alibaba.druid.sql.dialect.oracle.parser.OracleStatementParser;
 import com.alibaba.druid.sql.dialect.oracle.visitor.OracleOutputVisitor;
+import com.alibaba.druid.sql.dialect.sqlserver.parser.SQLServerSelectParser;
 import com.alibaba.druid.sql.dialect.sqlserver.parser.SQLServerStatementParser;
 import com.alibaba.druid.sql.dialect.sqlserver.visitor.SQLServerOutputVisitor;
 
@@ -55,6 +57,18 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	public void main2() throws ParseException {
 		Select ex = DbUtils.parseSelect("select * from D where not 1=2");
 		System.out.println(ex);
+	}
+	
+	
+	@Test
+	public void testDruid(){
+		String sql="select top 3 t.\"desc\",t.\"top\",t.\"percent\",t.comment,t.\"order\" from keyword t";
+		SQLServerSelectParser parser=new SQLServerSelectParser(sql);
+		SQLSelect select=parser.select();
+		
+		SQLServerOutputVisitor ov=new SQLServerOutputVisitor(new StringBuilder()); 
+		select.accept(ov);
+		System.out.println(ov.getAppender());
 	}
 
 	/**

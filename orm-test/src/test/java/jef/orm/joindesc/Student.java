@@ -58,14 +58,14 @@ public class Student extends jef.database.DataObject {
 
 	@OneToMany(targetEntity = UserToLession.class)
 	@JoinColumn(name = "id", referencedColumnName = "userId")
-	@JoinDescription(filterCondition="testTime > date_sub(current_timestamp , 10)" ,maxRows=10)
+	@JoinDescription(filterCondition="testTime > subdate(current_timestamp , 10)" ,maxRows=10)
 	@OrderBy("testTime desc")
 	private List<UserToLession> toLession;
 	
 	@OneToMany(targetEntity = UserToLession.class)
 	@JoinColumn(name = "id", referencedColumnName = "userId")
 	@OrderBy("score desc")
-	@JoinDescription(filterCondition="testTime > date_sub(current_timestamp , 10)" ,maxRows=1)
+	@JoinDescription(filterCondition="testTime > subdate(current_timestamp , 10)" ,maxRows=1)
 	private UserToLession maxScoreLession;
 	
 	

@@ -84,7 +84,7 @@ public class SqliteDialect extends AbstractDialect {
 		
 		registerNative(new StandardSQLFunction("substr"));
 		registerAlias(Func.substring, "substr");
-		
+		loadKeywords("mysql_keywords.properties");
 /*
  * FIXME 关于SQLite取当前时区的问题
  * 今天早上（8点以前）测试日期isSameDay方法不通过。原因是SQLITE查询当前时间返回的不是本地时间而是GMT时间，因此在8点以前GMT时间日期为昨天。而期望是按本地时区传出日期。

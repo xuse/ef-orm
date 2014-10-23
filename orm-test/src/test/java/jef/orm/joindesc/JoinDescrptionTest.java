@@ -20,7 +20,9 @@ import org.junit.runner.RunWith;
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({
 	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
+	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}"),
+	@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"),
+	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}")
 })
 public class JoinDescrptionTest {
 
@@ -32,7 +34,8 @@ public class JoinDescrptionTest {
 
 	@DatabaseInit
 	public void init() throws SQLException {
-		db.refreshTable(Student.class);
+		db.dropTable(Student.class);
+		db.createTable(Student.class);
 		db.refreshTable(Lesson.class);
 		db.refreshTable(UserToLession.class);
 	}
@@ -40,7 +43,6 @@ public class JoinDescrptionTest {
 	private DbClient db;
 
 	public void testPrepareData() throws SQLException {
-		db.truncate(Student.class);
 		db.truncate(UserToLession.class);
 		{
 			Student user=new Student("张三");
@@ -78,6 +80,11 @@ public class JoinDescrptionTest {
 		}
 	}
 
+	/**
+	 * FIXME 实际测试发现，由于Druid解析器不能支持JDBC escape语法，因此Derby案例会出错。暂时容错处理。
+	 * 待Druid修复后再行测试。
+	 * @throws SQLException
+	 */
 	@Test
 	public void testSelect() throws SQLException {
 		Session db=this.db.startTransaction();

@@ -65,7 +65,7 @@ public class EmuDateAddSubByTimesatmpadd extends BaseArgumentSqlFunction{
 			}
 			adjust=isSub?InverseExpression.getInverse(value):value;
 		}else{
-			adjust=isSub?InverseExpression.getInverse(arguments.get(0)):arguments.get(0);
+			adjust=isSub?InverseExpression.getInverse(adjust):adjust;
 		}
 		
 		Expression dateExpr=arguments.get(0);

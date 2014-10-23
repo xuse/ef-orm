@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
+import jef.common.log.LogUtil;
 import jef.database.dialect.statement.LimitHandler;
 import jef.database.wrapper.clause.BindSql;
 
@@ -24,6 +25,7 @@ import com.alibaba.druid.sql.dialect.sqlserver.ast.SQLServerSelectQueryBlock;
 import com.alibaba.druid.sql.dialect.sqlserver.ast.SQLServerTop;
 import com.alibaba.druid.sql.dialect.sqlserver.parser.SQLServerSelectParser;
 import com.alibaba.druid.sql.dialect.sqlserver.visitor.SQLServerOutputVisitor;
+import com.alibaba.druid.sql.parser.ParserException;
 
 public class SQL2000LimitHandler implements LimitHandler {
 	public BindSql toPageSQL(String sql, int[] offsetLimit) {
@@ -38,14 +40,17 @@ public class SQL2000LimitHandler implements LimitHandler {
 
 	private BindSql processToPageSQL(String sql, int[] offsetLimit) {
 		SQLServerSelectParser parser = new SQLServerSelectParser(sql);
-		SQLSelect select = parser.select();
-		if(select.getQuery() instanceof SQLUnionQuery){
-			return toPage(offsetLimit,(SQLUnionQuery)select.getQuery(),select,sql);
-		}else{
-			return toPage(offsetLimit,(SQLServerSelectQueryBlock)select.getQuery(),select ,sql);
+		try{
+			SQLSelect select = parser.select();
+			if(select.getQuery() instanceof SQLUnionQuery){
+				return toPage(offsetLimit,(SQLUnionQuery)select.getQuery(),select,sql);
+			}else{
+				return toPage(offsetLimit,(SQLServerSelectQueryBlock)select.getQuery(),select ,sql);
+			}
+		}catch(ParserException ex){
+			LogUtil.error(sql, ex);
+			throw ex;
 		}
-
-
 	}
 	
 	protected BindSql toPage(int[] offsetLimit, SQLServerSelectQueryBlock selectBody, SQLSelect select, String raw) {

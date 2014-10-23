@@ -683,6 +683,8 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 					columnDesc.setAccessor(accessor);
 					data.put(f.name(), columnDesc);	
 				}
+			}else{
+				System.out.println("!!!!");
 			}
 		}
 		ObjectPopulator op = new ObjectPopulator(meta, data);

@@ -123,7 +123,8 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 						}
 						
 						CommentEntry entry=new CommentEntry();
-						entry.setKey(schema.concat(".").concat(f.getColumnName(profile,true)));
+						String name=f.getColumnName(profile,true);
+						entry.setKey(new StringBuilder(schema.length()+1+name.length()).append(schema).append('.').append(name).toString());
 						if(referenceObj==null){
 							entry.setValue(AliasProvider.DEFAULT.getSelectedAliasOf(f.field(), profile, schema));	
 						}else{

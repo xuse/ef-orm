@@ -217,10 +217,14 @@ public class QueryClauseImpl implements QueryClause {
 	public CacheKey getCacheKey() {
 		if (cacheKey != null)
 			return cacheKey;
-		String table = rawClass == null ? tableDefinition : rawClass;
-		CacheKey key = new SqlCacheKey(table, new KeyDimension(wherePart, orderbyPart.getSql()), CacheImpl.toParamList(this.bind));
-		this.cacheKey = key;
-		return key;
+		try{
+			String table = rawClass == null ? tableDefinition : rawClass;
+			CacheKey key = new SqlCacheKey(table, new KeyDimension(wherePart, orderbyPart.getSql()), CacheImpl.toParamList(this.bind));
+			this.cacheKey = key;			
+			return key;
+		}catch(RuntimeException e){
+			return null;
+		}
 	}
 
 	public boolean isGroupBy() {

@@ -10,10 +10,11 @@ import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-
+@Ignore
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({
 //	 @DataSource(name="oracle",url="${oracle.url}",user="${oracle.user}",password="${oracle.password}"),

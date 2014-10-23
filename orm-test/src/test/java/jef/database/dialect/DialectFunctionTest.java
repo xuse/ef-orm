@@ -92,6 +92,7 @@ public class DialectFunctionTest extends org.junit.Assert {
 		db.insert(tupleObj, true);
 	}
 
+	@IgnoreOn(allButExcept="mysql")
 	@Test
 	public void testColumnAccessor() {
 		NativeQuery<Var> query = db.createNativeQuery("select 1 as bool_column from foo", Var.class);

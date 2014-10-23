@@ -34,13 +34,13 @@ public interface AliasProvider {
 	public static final AliasProvider DEFAULT=new AliasProvider(){
 		public String getSelectedAliasOf(Field f, DatabaseDialect profile, String alias) {
 			String fieldName = f.name();
-			return profile.getColumnNameToUse(StringUtils.isEmpty(alias) ? StringUtils.concat(alias, SqlContext.DIVEDER, fieldName) : fieldName);
+			return profile.getColumnNameToUse(StringUtils.isEmpty(alias) ?fieldName: StringUtils.concat(alias, SqlContext.DIVEDER, fieldName));
 		}
 
 		@Override
 		public String getResultAliasOf(Field f, DatabaseDialect dialect, String alias) {
 			String fieldName = f.name();
-			return StringUtils.isEmpty(alias) ? StringUtils.concat(alias, SqlContext.DIVEDER, fieldName).toUpperCase() : fieldName.toUpperCase();
+			return StringUtils.isEmpty(alias) ? fieldName.toUpperCase():StringUtils.concat(alias, SqlContext.DIVEDER, fieldName).toUpperCase() ;
 		}
 	};
 }

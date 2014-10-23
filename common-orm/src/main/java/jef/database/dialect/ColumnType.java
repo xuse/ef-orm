@@ -93,7 +93,7 @@ public abstract class ColumnType {
 
 	protected boolean nullable = true;
 	
-	protected Object defaultValue;
+	public Object defaultValue;
 
 	public String toString() {
 		Map<String,Object> map=toJpaAnnonation();

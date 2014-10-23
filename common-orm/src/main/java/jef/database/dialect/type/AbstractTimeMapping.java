@@ -13,6 +13,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.EntityType;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.BindVariableField;
+import jef.database.query.Func;
 import jef.database.query.SqlExpression;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.Assert;
@@ -30,6 +31,16 @@ public abstract class AbstractTimeMapping<T> extends AColumnMapping<T> {
 			this.generated = ((ColumnType.TimeStamp) type).getGenerateType();
 		}else if(type instanceof ColumnType.Date){
 			this.generated = ((ColumnType.Date) type).getGenerateType();
+		}
+		Object defaultValue=type.defaultValue;
+		if (generated == 0 && (defaultValue == Func.current_date || defaultValue == Func.current_time || defaultValue == Func.now)) {
+			generated = 1;
+		}
+		if(generated==0 && defaultValue!=null){
+			String dStr = defaultValue.toString().toLowerCase();
+			if (dStr.startsWith("current") || dStr.startsWith("sys")) {
+				generated = 1;	
+			}
 		}
 		BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(meta.getContainerType());
 		if (meta.getType() != EntityType.TUPLE) {

@@ -4,6 +4,7 @@ import java.io.StringReader;
 
 import javax.persistence.PersistenceException;
 
+import jef.common.log.LogUtil;
 import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.parser.StSqlParser;
@@ -15,6 +16,7 @@ import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr;
 import com.alibaba.druid.sql.parser.Lexer;
+import com.alibaba.druid.sql.parser.ParserException;
 import com.alibaba.druid.sql.parser.SQLExprParser;
 import com.alibaba.druid.sql.parser.Token;
 import com.alibaba.druid.sql.visitor.SQLASTOutputVisitor;
@@ -29,7 +31,7 @@ public abstract class WhereParser {
 
 	abstract String process(String where);
 
-	public static final class NativeImpl extends WhereParser{
+	public static final class NativeImpl extends WhereParser {
 		@Override
 		String process(String where) {
 			StSqlParser parser = new StSqlParser(new StringReader(where));
@@ -62,29 +64,35 @@ public abstract class WhereParser {
 		});
 	}
 
-	public static final class DruidImpl extends WhereParser{
+	public static final class DruidImpl extends WhereParser {
 		@Override
 		String process(String where) {
 			SQLExprParser parser = new SQLExprParser(where);
 			Lexer lexer = parser.getLexer();
-			if (lexer.token() == Token.WHERE) {
-				lexer.nextToken();
-				SQLExpr exp = parser.expr();
-				SQLASTOutputVisitor v = new SQLASTOutputVisitor(new StringBuilder(where.length() - 6)) {
-					@Override
-					public boolean visit(SQLIdentifierExpr x) {
-						print(x.getName().toUpperCase());
-						return false;
-					}
 
-					public boolean visit(SQLPropertyExpr x) {
-						print(x.getName().toUpperCase());
-						return false;
-					}
-				};
-				v.setPrettyFormat(false);
-				exp.accept(v);
-				return v.getAppender().toString();
+			if (lexer.token() == Token.WHERE) {
+				try {
+					lexer.nextToken();
+					SQLExpr exp = parser.expr();
+					SQLASTOutputVisitor v = new SQLASTOutputVisitor(new StringBuilder(where.length() - 6)) {
+						@Override
+						public boolean visit(SQLIdentifierExpr x) {
+							print(x.getName().toUpperCase());
+							return false;
+						}
+
+						public boolean visit(SQLPropertyExpr x) {
+							print(x.getName().toUpperCase());
+							return false;
+						}
+					};
+					v.setPrettyFormat(false);
+					exp.accept(v);
+					return v.getAppender().toString();
+				} catch (ParserException e) {
+					LogUtil.error("Parser error:{}\nException:{}", where,e);
+					throw e;
+				}
 			} else {
 				throw new PersistenceException("parse where error[" + where + "]");
 			}

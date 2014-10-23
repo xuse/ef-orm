@@ -37,6 +37,7 @@ import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.populator.Transformer;
 import jef.orm.multitable.model.Person;
 import jef.orm.onetable.model.CaAsset;
+import jef.orm.onetable.model.Keyword;
 import jef.orm.onetable.model.TestEntity;
 import jef.orm.onetable.model.TestEntitySon;
 import jef.tools.DateUtils;
@@ -62,8 +63,11 @@ public class SimpleTableTest extends org.junit.Assert {
 
 	@BeforeClass
 	public static void setUp() {
+		ORMConfig.getInstance().setSelectTimeout(20);
+		ORMConfig.getInstance().setUpdateTimeout(20);
+		ORMConfig.getInstance().setDeleteTimeout(20);
 		EntityEnhancer en = new EntityEnhancer();
-		en.enhance("jef.orm.onetable.model,");
+		en.enhance("jef.orm.onetable.model");
 	}
 
 	@DatabaseInit
@@ -79,7 +83,8 @@ public class SimpleTableTest extends org.junit.Assert {
 				holder = db.getSqlTemplate(null).getSequence(meta.getFirstAutoincrementDef());
 				holder.clear();
 			}
-			db.dropTable(TestEntity.class, CaAsset.class); // 删除表
+			db.dropTable(TestEntity.class, CaAsset.class,Keyword.class); // 删除表
+			db.createTable(Keyword.class);
 			db.refreshTable(TestEntity.class); // 创建表
 			db.refreshTable(CaAsset.class);
 			CaAsset t1 = new CaAsset();
@@ -115,6 +120,38 @@ public class SimpleTableTest extends org.junit.Assert {
 
 	}
 
+	@IgnoreOn(allButExcept="sqlserver")
+	@Test
+	public void testKeyword() throws SQLException {
+		db.delete(QB.create(Keyword.class));
+
+		Keyword t1 = RandomData.newInstance(Keyword.class);
+		Keyword t2 = RandomData.newInstance(Keyword.class);
+		Keyword t3 = RandomData.newInstance(Keyword.class);
+		Keyword t4 = RandomData.newInstance(Keyword.class);
+		t1.startUpdate();
+		t2.startUpdate();
+		t3.startUpdate();
+		t4.startUpdate();
+		db.insert(t1);
+		db.batchInsert(Arrays.asList(t2,t3,t4));
+		
+		List<Keyword> result1=db.loadByField(Keyword.Field.comment, t1.getComment());
+		LogUtil.show(result1);
+		List<Keyword> result2=db.select(QB.create(Keyword.class));
+		LogUtil.show(result1);
+		PagingIterator<Keyword> page=db.pageSelect(QB.create(Keyword.class), 3);
+		ORMConfig.getInstance().setSpecifyAllColumnName(true);
+		System.out.println(page.getTotal());
+		System.out.println(page.next());
+		
+		/**
+		 * FIXME 如果再翻一页会出错,因为Druid解析器中引号会被丢弃，重新序列化后变为非法SQL语句。
+		 * 已经给该项目提了BUG。https://github.com/alibaba/druid/issues/682
+		 * 待Druid修复版本发布后，再恢复此案例。
+		 */
+		//System.out.println(page.next());
+	}
 	/**
 	 * 使用普通方式插入
 	 * 

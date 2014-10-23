@@ -160,9 +160,12 @@ public class MySqlDialect extends AbstractDialect {
 		registerNative(new StandardSQLFunction("ifnull"));
 		registerAlias(Func.nvl, "ifnull");
 
-		registerNative(Func.adddate, "date_add");
-		registerNative(Func.subdate, "date_sub");
+		registerNative(Func.adddate);
+		registerNative(Func.subdate);
+		registerNative(new StandardSQLFunction("date_add"));
+		registerNative(new StandardSQLFunction("date_sub"));
 
+		
 		registerNative(Func.current_date, new NoArgSQLFunction("current_date", false), "curdate");
 		registerNative(Func.current_time, new NoArgSQLFunction("current_time", false), "curtime");
 
