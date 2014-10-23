@@ -56,9 +56,10 @@ import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AbstractTimeMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
-import jef.database.dialect.type.ColumnMappings;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.dialect.type.ColumnMappings;
 import jef.database.query.JpqlExpression;
+import jef.database.query.Query;
 import jef.database.query.ReferenceType;
 import jef.database.routing.function.AbstractDateFunction;
 import jef.database.routing.function.MapFunction;
@@ -826,10 +827,15 @@ public final class TableMetadata extends MetadataAdapter {
 		}
 		return false;
 	}
+	private ExtensionFactory extension;
+	
+
+	public void setExtensionFactory(ExtensionFactory extension) {
+		this.extension = extension;
+	}
 
 	@Override
-	public Field getExtendsField(String key) {
-		// TODO Auto-generated method stub
-		return null;
+	public ExtensionConfig getExtensionConfig(Query<?> q){
+		return extension.valueOf(q);
 	}
 }

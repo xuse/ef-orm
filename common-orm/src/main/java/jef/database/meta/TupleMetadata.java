@@ -29,6 +29,7 @@ import jef.database.dialect.type.AbstractTimeMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.ColumnMappings;
+import jef.database.query.Query;
 import jef.database.query.ReferenceType;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
@@ -612,9 +613,9 @@ public class TupleMetadata extends MetadataAdapter{
 		return pk;
 	}
 
+
 	@Override
-	public Field getExtendsField(String key) {
-		// TODO Auto-generated method stub
+	public ExtensionConfig getExtensionConfig(Query<?> q) {
 		return null;
 	}
 }

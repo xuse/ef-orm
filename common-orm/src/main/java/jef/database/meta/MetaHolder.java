@@ -61,6 +61,8 @@ import jef.database.Session;
 import jef.database.VarMeta;
 import jef.database.VarObject;
 import jef.database.annotation.Cascade;
+import jef.database.annotation.DynamicKeyValueExtension;
+import jef.database.annotation.DynamicTable;
 import jef.database.annotation.EasyEntity;
 import jef.database.annotation.FieldOfTargetEntity;
 import jef.database.annotation.HiloGeneration;
@@ -436,7 +438,39 @@ public final class MetaHolder {
 			// 还有一种情况，即定义了Column注解，但不属于元模型的一个字段，用于辅助映射的。当结果拼装时有用
 			processColumnHelper(f, meta, annos);
 		}
+		
+		//计算动态扩展字段
+		DynamicTable dt=clz.getAnnotation(DynamicTable.class);
+		DynamicKeyValueExtension dkv=clz.getAnnotation(DynamicKeyValueExtension.class);
+		if(dt!=null && dkv!=null){//两种扩展方式只能出现一种
+			throw new UnsupportedOperationException("Not support @DynamicTable and @DynamicKeyValueExtension simultaneously.");
+		}else if(dt!=null){
+			processDynamicTemplate(clz,meta,annos,dt);
+		}else if(dkv!=null){
+			processDynamicKvExtention(clz,meta,annos,dkv);
+		}
 		return meta;
+	}
+	
+	
+	/**
+	 * 转化为KV类型的子表实现
+	 * @param processingClz
+	 * @param meta
+	 * @param annos
+	 * @param f
+	 * @param dkv
+	 */
+	private static void processDynamicKvExtention(Class<?> processingClz, ITableMetadata meta, AnnotationProvider annos, DynamicKeyValueExtension dkv) {
+		
+		dkv.metadata();
+	
+		
+	}
+
+	private static void processDynamicTemplate(Class<?> clz,ITableMetadata meta, AnnotationProvider annos, DynamicTable dt) {
+		// TODO Auto-generated method stub
+		
 	}
 
 	// 处理非元模型的Column描述字段
@@ -554,7 +588,6 @@ public final class MetaHolder {
 			if (meta.getField(f.getName()) != null) { // 当子类父类中有同名field时，跳过父类的field
 				continue;
 			}
-
 			Column c = annos.getFieldAnnotation(f, Column.class);
 			List<Field> fieldss = metaModel.remove(f.getName());
 			if (fieldss.isEmpty()) {
@@ -620,7 +653,8 @@ public final class MetaHolder {
 			}
 		}
 	}
-	
+
+
 	private static JoinPath getHint(AnnotationProvider annos, java.lang.reflect.Field f, MetadataAdapter meta, ITableMetadata target) {
 		if (annos.getFieldAnnotation(f, JoinColumn.class) != null) {
 			JoinColumn j = annos.getFieldAnnotation(f, JoinColumn.class);

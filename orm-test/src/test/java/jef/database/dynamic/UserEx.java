@@ -8,12 +8,13 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 import jef.database.DataObject;
-import jef.database.annotation.DynamicKeyValueTable;
+import jef.database.annotation.DynamicKeyValueExtension;
 import jef.database.annotation.DynamicPropertyGetter;
 import jef.database.annotation.DynamicPropertySetter;
 import jef.database.annotation.EasyEntity;
 
 @EasyEntity
+@DynamicKeyValueExtension(table="USER_EXTENDS",keyColumn="key",valueColumn="value",metadata="USER_EX")
 public class UserEx extends DataObject {
 	@Id
 	@GeneratedValue
@@ -25,7 +26,6 @@ public class UserEx extends DataObject {
 	@Column
 	private String name;
 	
-	@DynamicKeyValueTable(table="USER_EXTENDS",keyColumn="key",valueColumn="value",metadata="USER_EX")
 	private Map<String,Object> specProps;
 	
 	public Map<String, Object> getSpecProps() {

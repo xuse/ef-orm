@@ -7,6 +7,7 @@ import jef.database.Condition.Operator;
 import jef.database.Field;
 import jef.database.IConditionField.Not;
 import jef.database.QB;
+import jef.database.meta.ExtensionConfig;
 import jef.database.meta.ITableMetadata;
 
 
@@ -161,7 +162,10 @@ public class Terms {
 		ITableMetadata meta=query.getMeta();
 		Field field= meta.getField(key);
 		if(field==null){
-			field=meta.getExtendsField(key);
+			ExtensionConfig ec=meta.getExtensionConfig(query);
+			if(ec!=null){
+				field=ec.getField(key);
+			}
 		}
 		return field;
 	}

@@ -17,6 +17,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AbstractTimeMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.query.Query;
 
 import com.google.common.collect.Multimap;
 
@@ -296,5 +297,9 @@ public interface  ITableMetadata {
 	 */
 	boolean containsMeta(ITableMetadata meta);
 	
-	Field getExtendsField(String key);
+	/**
+	 *　获得动态表扩展
+	 * @return
+	 */
+	ExtensionConfig getExtensionConfig(Query<?> query);
 }
