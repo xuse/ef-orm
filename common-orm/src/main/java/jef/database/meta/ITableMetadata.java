@@ -295,4 +295,6 @@ public interface  ITableMetadata {
 	 * @return 如果当前模型等于meta，或者当前模型继承了meta，返回true
 	 */
 	boolean containsMeta(ITableMetadata meta);
+	
+	Field getExtendsField(String key);
 }

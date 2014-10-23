@@ -55,7 +55,7 @@ public final class SqlExpression implements Expression,IConditionField{
 	public String name() {
 		return sql;
 	}
-	public Iterable<Condition> getConditions() {
+	public List<Condition> getConditions() {
 		return Arrays.asList();
 	}
 	public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance,DatabaseDialect profile) {

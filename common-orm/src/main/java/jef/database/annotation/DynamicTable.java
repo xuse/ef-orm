@@ -16,7 +16,6 @@ import java.lang.annotation.Target;
 @Target(TYPE) 
 @Retention(RUNTIME)
 public @interface DynamicTable {
-	
 	String resourceTypePrefix() default "";
 	
 	/**
@@ -24,13 +23,4 @@ public @interface DynamicTable {
 	 * @return
 	 */
 	String resourceTypeField();
-	
-	/**
-	 * 用于存放动态属性的Map字段位置
-	 */
-	String mapField() default "";
-	
-	
-	
-	
 }

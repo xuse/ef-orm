@@ -412,4 +412,9 @@ final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T>{
 	public boolean isAll() {
 		return allRecords && conditions.isEmpty();
 	}
+
+	@Override
+	public Terms terms() {
+		return new Terms(this);
+	}
 }

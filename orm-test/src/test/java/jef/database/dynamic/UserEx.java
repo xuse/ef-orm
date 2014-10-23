@@ -9,6 +9,8 @@ import javax.persistence.Id;
 
 import jef.database.DataObject;
 import jef.database.annotation.DynamicKeyValueTable;
+import jef.database.annotation.DynamicPropertyGetter;
+import jef.database.annotation.DynamicPropertySetter;
 import jef.database.annotation.EasyEntity;
 
 @EasyEntity
@@ -35,6 +37,7 @@ public class UserEx extends DataObject {
 	 * @param prop
 	 * @param value
 	 */
+	@DynamicPropertySetter
 	public void setExtProp(String prop,Object value){
 		if(specProps==null){
 			specProps=new HashMap<String,Object>();
@@ -47,6 +50,7 @@ public class UserEx extends DataObject {
 	 * @param prop
 	 * @return
 	 */
+	@DynamicPropertyGetter
 	public Object getExtProp(String prop){
 		if(specProps==null){
 			return null;

@@ -7,6 +7,8 @@ import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
+import jef.database.annotation.DynamicPropertyGetter;
+import jef.database.annotation.DynamicPropertySetter;
 import jef.database.annotation.DynamicTable;
 import jef.database.annotation.EasyEntity;
 
@@ -41,6 +43,7 @@ public class DynaResource extends jef.database.DataObject {
 	 * @param prop
 	 * @param value
 	 */
+    @DynamicPropertySetter
 	public void setExtendProp(String prop,Object value){
 		specProps.put(prop, value);
 	}
@@ -50,6 +53,7 @@ public class DynaResource extends jef.database.DataObject {
 	 * @param prop
 	 * @return
 	 */
+    @DynamicPropertyGetter
 	public Object getExtendProp(String prop){
 		return specProps.get(prop);
 	}
@@ -110,6 +114,6 @@ public class DynaResource extends jef.database.DataObject {
     }
 
     public enum Field implements jef.database.Field {
-        indexCode, name, level, elevation, status, resourceType
+        indexCode, name, price, elevation, status, resourceType
     }
 }

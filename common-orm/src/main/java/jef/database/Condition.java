@@ -23,8 +23,8 @@ import java.util.List;
 import jef.common.log.LogUtil;
 import jef.database.VariableCallback.Like;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.ColumnMappings;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.dialect.type.ColumnMappings;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.FBIField;
 import jef.database.meta.ITableMetadata;
@@ -445,10 +445,20 @@ public class Condition implements Serializable{
 	
 	public String toString(){
 		StringBuilder sb=new StringBuilder();
-		if(field!=null)
+		if(field!=null){
 			sb.append(field.name()).append(' ');
-		sb.append(operator==null?"=":operator.getKey()).append(' ');	
-		sb.append(StringUtils.toString(value));
+			if(field instanceof IConditionField){
+				return sb.toString();
+			}
+		}
+		sb.append(operator==null?"=":operator.getKey()).append(' ');
+		if(value==null){
+			sb.append("null");
+		}else if(value.getClass().isArray()){
+			sb.append(ArrayUtils.toString(value));
+		}else{
+			sb.append(value);	
+		}
 		return sb.toString();
 	}
 

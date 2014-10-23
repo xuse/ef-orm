@@ -39,7 +39,7 @@ public interface IConditionField extends jef.database.Field{
 	 * 获得所有的条件
 	 * @return 条件集合
 	 */
-	Iterable<Condition> getConditions();
+	List<Condition> getConditions();
 	
 	/**
 	 * 生成非绑定变量下的SQL
@@ -71,7 +71,7 @@ public interface IConditionField extends jef.database.Field{
 	 */
 	public static class Or implements IConditionField{
 		private static final long serialVersionUID = 1431445504013637081L;
-		List<Condition> conditions=new ArrayList<Condition>();
+		final List<Condition> conditions=new ArrayList<Condition>();
 		@Override
 		public int hashCode() {
 			HashCodeBuilder hash=new HashCodeBuilder();
@@ -94,7 +94,7 @@ public interface IConditionField extends jef.database.Field{
 			return eb.isEquals();
 		}
 		public String name() {
-			return new StringBuilder().append("or").append(conditions.toString()).toString();
+			return new StringBuilder().append("or ").append(conditions.toString()).toString();
 		}
 		public Or(Condition... conditionsArg ){
 			for(Condition c:conditionsArg){
@@ -130,7 +130,7 @@ public interface IConditionField extends jef.database.Field{
 			}
 			return conditions.size()>1?"("+sb.toString()+")":sb.toString();
 		}
-		public Iterable<Condition> getConditions() {
+		public List<Condition> getConditions() {
 			return conditions;
 		}
 	}
@@ -143,6 +143,9 @@ public interface IConditionField extends jef.database.Field{
 	public static class Not implements IConditionField{
 		private static final long serialVersionUID = 3453370626698025387L;
 		Condition condition;
+		public Not(){
+		}
+		
 		public Not(Condition condition){
 			this.condition=condition;
 		}
@@ -150,7 +153,7 @@ public interface IConditionField extends jef.database.Field{
 			this.condition=Condition.get(condition,Operator.EQUALS,null);
 		}
 		public String name() {
-			return new StringBuilder().append("not").append(condition.toString()).toString();
+			return new StringBuilder().append("not ").append(condition.toString()).toString();
 		}
 		public String toSql(ITableMetadata meta, SqlProcessor processor,	SqlContext context, IQueryableEntity instance,DatabaseDialect profile) {
 			String sql="not ".concat(condition.toSqlClause(meta, context, processor,  instance,profile));
@@ -160,7 +163,7 @@ public interface IConditionField extends jef.database.Field{
 			String result="not ".concat(condition.toPrepareSqlClause(fields, meta, context, processor, instance,profile));
 			return result;
 		}
-		public Iterable<Condition> getConditions() {
+		public List<Condition> getConditions() {
 			return Arrays.asList(condition);
 		}
 		@Override
@@ -180,6 +183,12 @@ public interface IConditionField extends jef.database.Field{
 			eb.append(this.condition, rhs.condition);
 			return eb.isEquals();
 		}
+		public void set(Condition cond){
+			this.condition=cond;
+		}
+		public Condition get(){
+			return this.condition;
+		}
 	}
 	
 	/**
@@ -189,9 +198,9 @@ public interface IConditionField extends jef.database.Field{
 	 */
 	public static class And implements IConditionField{
 		private static final long serialVersionUID = -4023661686645164036L;
-		List<Condition> conditions=new ArrayList<Condition>();
+		final List<Condition> conditions=new ArrayList<Condition>();
 		public String name() {
-			return new StringBuilder().append("and").append(conditions.toString()).toString();
+			return new StringBuilder().append("and ").append(conditions.toString()).toString();
 		}
 		public And(Condition...conditions1 ){
 			for(Condition c:conditions1){
@@ -224,7 +233,7 @@ public interface IConditionField extends jef.database.Field{
 			}
 			return conditions.size()>1?"("+sb.toString()+")":sb.toString();
 		}
-		public Iterable<Condition> getConditions() {
+		public List<Condition> getConditions() {
 			return conditions;
 		}
 		@Override
@@ -286,7 +295,7 @@ public interface IConditionField extends jef.database.Field{
 			sb.append(")");
 			return sb.toString();
 		}
-		public Iterable<Condition> getConditions() {
+		public List<Condition> getConditions() {
 			return Arrays.asList();
 		}
 		@Override
@@ -343,7 +352,7 @@ public interface IConditionField extends jef.database.Field{
 			sb.append(")");
 			return sb.toString();
 		}
-		public Iterable<Condition> getConditions() {
+		public List<Condition> getConditions() {
 			return Arrays.asList();
 		}
 		@Override

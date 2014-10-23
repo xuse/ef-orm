@@ -157,4 +157,11 @@ public interface Query<T extends IQueryableEntity> extends TypedQuery<T>,JoinEle
 	public void setCascade(boolean cascade);
 
 	boolean isAll();
+
+	/**
+	 * 查询条件生成器
+	 * @return Terms
+	 * @see Terms
+	 */
+	Terms terms();
 }

@@ -826,4 +826,10 @@ public final class TableMetadata extends MetadataAdapter {
 		}
 		return false;
 	}
+
+	@Override
+	public Field getExtendsField(String key) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }

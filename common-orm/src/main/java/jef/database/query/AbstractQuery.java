@@ -146,4 +146,8 @@ public abstract class AbstractQuery<T extends IQueryableEntity> implements Query
 		return result;
 	}
 
+	@Override
+	public Terms terms() {
+		throw new UnsupportedOperationException();
+	}
 }
