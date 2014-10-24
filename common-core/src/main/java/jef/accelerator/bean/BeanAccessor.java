@@ -55,9 +55,9 @@ public abstract class BeanAccessor {
 	 */
 	public abstract boolean setProperty(Object bean,String name,Object v);
 	/**
-	 * 在两个bean间快速拷贝
-	 * @param o1
-	 * @param o2
+	 * 在两个bean间快速拷贝，从o1拷贝到o2
+	 * @param o1 源对象
+	 * @param o2  目标对象。
 	 */
 	public abstract void copy(Object o1,Object o2);
 	
@@ -95,20 +95,26 @@ public abstract class BeanAccessor {
 	 * @throws NoSuchElementException 如果该属性不存在，抛出NoSuchElementException。
 	 */
 	public abstract IdentityHashMap<Class,Annotation> getAnnotationOnSetter(String name);
-
+	
 	/**
-	 * 构造一个实例，注意类必须有空构造方法
+	 * 构造一个实例，注意类必须有空构造方法，否则会抛出RuntimeException
 	 * @return 类的实例
+	 * @throws RuntimeException 如果类构造中抛出异常，或者类没有空构造方法
 	 */
 	public abstract Object newInstance();
-	
-	
+	/**
+	 * 得到Accessor所对应的类本身
+	 * @return
+	 */
 	public abstract Class<?> getType(); 
 	
 	/*
 	 * 框架内部使用，初始化所有的AnnotationMap
 	 */
 	public abstract void initAnnotations(IdentityHashMap<Class,Annotation>[] field,IdentityHashMap<Class,Annotation>[] getter,IdentityHashMap<Class,Annotation>[] setter);
+	/*
+	 * 框架内部使用，初始化所有的泛型类型 
+	 */
 	public abstract void initNthGenericType(int index,Class raw,Type type,int total,String fieldName);
 	
 	
@@ -125,5 +131,7 @@ public abstract class BeanAccessor {
 		return (T)anns.get(type);
 	}
 	
-	
+	public BeanAccessor bind(String extensionName) {
+		return this;
+	}
 }

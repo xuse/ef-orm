@@ -46,6 +46,7 @@ import javax.persistence.TableGenerator;
 import jef.accelerator.asm.Attribute;
 import jef.accelerator.asm.ClassReader;
 import jef.accelerator.asm.ClassVisitor;
+import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.Holder;
 import jef.database.Condition.Operator;
@@ -119,6 +120,7 @@ public final class MetaHolder {
 	// 反向查找表
 	private static final Map<String, ITableMetadata> inverseMapping = new HashMap<String, ITableMetadata>();
 
+	private static final EfPropertiesExtensionProvider extensionContext=new EfPropertiesExtensionProvider();
 	// 初始化分表规则加载器
 	static {
 		try {
@@ -154,6 +156,7 @@ public final class MetaHolder {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		FastBeanWrapperImpl.registerBeanExtensionProvider(extensionContext);
 	}
 
 	/**
@@ -451,26 +454,15 @@ public final class MetaHolder {
 		}
 		return meta;
 	}
-	
-	
-	/**
-	 * 转化为KV类型的子表实现
-	 * @param processingClz
-	 * @param meta
-	 * @param annos
-	 * @param f
-	 * @param dkv
-	 */
-	private static void processDynamicKvExtention(Class<?> processingClz, ITableMetadata meta, AnnotationProvider annos, DynamicKeyValueExtension dkv) {
-		
-		dkv.metadata();
-	
-		
+
+	private static void processDynamicKvExtention(Class<?> clz, TableMetadata meta, AnnotationProvider annos, DynamicKeyValueExtension dkv) {
+		ExtensionKeyValueTable ex=new ExtensionKeyValueTable(dkv,clz);
+		meta.setExtensionFactory(ex);
 	}
 
-	private static void processDynamicTemplate(Class<?> clz,ITableMetadata meta, AnnotationProvider annos, DynamicTable dt) {
-		// TODO Auto-generated method stub
-		
+	private static void processDynamicTemplate(Class<?> clz,TableMetadata meta, AnnotationProvider annos, DynamicTable dt) {
+		ExtensionTemplate ex=new ExtensionTemplate(dt,clz);
+		meta.setExtensionFactory(ex);
 	}
 
 	// 处理非元模型的Column描述字段

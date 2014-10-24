@@ -491,15 +491,12 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 
 		@SuppressWarnings("all")
 		public NormalRsIterator(IResultSet rs, EntityMappingProvider context, Transformer transformers, Session session) {
-			@SuppressWarnings("unchecked")
 			Class<T> resultObj=(Class<T>) transformers.getResultClazz();
 			this.rs = rs;
 			this.retClz = resultObj;
 			this.meta = transformers.getResultMeta();
 			this.session=session;
 			/*
-			 *  Eclipse或者findbugs或者checkStyle很有可能都对下面这句语句提出了警告。但事实上这是一个性能优化上的小技巧
-			 *  
 			 *  如果把一句话拆成两句来写
 			 *    hasNext=rs.next();
 			 *    if(hasNext){
@@ -513,9 +510,6 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
    			 *    40:  dup_x1
    			 *    41:  putfield        #62; //Field hasNext:Z
    			 *  在栈内做一次 dup的开销要小于getfield的开销。（前者是栈访问后者是堆访问）
-   			 *  
-   			 *  各种代码检查工具是针对写不好代码的人起到查漏补遗的作用的，但不能因此在有能力控制代码逻辑正确性的前提下，不去追求性能更好的写法。
-   			 *  因此，此处就是要这么写，不管各种代码检查工具如何警告，不管省下的性能多么微不足道，我坚持用性能最优的写法。
 			 */
 			if (hasNext = rs.next()) {
 				columnNames = rs.getColumns();
@@ -530,6 +524,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 				} else {
 					schemas = new String[] { "" };// 当引用查询时的基础表Schema
 				}
+				
 				if (meta == null && IQueryableEntity.class.isAssignableFrom(resultObj)) {
 					this.meta = MetaHolder.getMeta(resultObj.asSubclass(IQueryableEntity.class));
 				}
@@ -683,8 +678,6 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 					columnDesc.setAccessor(accessor);
 					data.put(f.name(), columnDesc);	
 				}
-			}else{
-				System.out.println("!!!!");
 			}
 		}
 		ObjectPopulator op = new ObjectPopulator(meta, data);

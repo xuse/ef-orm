@@ -7,4 +7,6 @@ package jef.accelerator.bean;
  */
 public interface BeanAccessorFactory {
 	 BeanAccessor getBeanAccessor(Class<?> javaBean);
+
+	void registerExtensionProvider(BeanExtensionProvider prov);
 }

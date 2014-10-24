@@ -827,10 +827,10 @@ public final class TableMetadata extends MetadataAdapter {
 		}
 		return false;
 	}
-	private ExtensionFactory extension;
+	private ExtensionConfigFactory extension;
 	
 
-	public void setExtensionFactory(ExtensionFactory extension) {
+	public void setExtensionFactory(ExtensionConfigFactory extension) {
 		this.extension = extension;
 	}
 

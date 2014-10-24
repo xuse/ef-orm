@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -21,8 +22,9 @@ import jef.tools.reflect.UnsafeUtils;
 
 final class ASMAccessorFactory implements BeanAccessorFactory {
 	@SuppressWarnings("rawtypes")
-	private static Map<Class, BeanAccessor> map = new IdentityHashMap<Class, BeanAccessor>();
-
+	private static final Map<Class, BeanAccessor> map = new IdentityHashMap<Class, BeanAccessor>();
+	private BeanExtensionProvider extension;
+	
 	public BeanAccessor getBeanAccessor(Class<?> javaBean) {
 		if (javaBean.isPrimitive()) {
 			throw new IllegalArgumentException(javaBean + " invalid!");
@@ -37,8 +39,8 @@ final class ASMAccessorFactory implements BeanAccessorFactory {
 		return ba;
 	}
 
-	private BeanAccessor generateAccessor(Class<?> javaBean) {
-		String clzName = javaBean.getName().replace('.', '_');
+	private BeanAccessor generateAccessor(Class<?> javaClz) {
+		String clzName = javaClz.getName().replace('.', '_');
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
 		if (cl == null)
 			cl = BeanAccessorFactory.class.getClassLoader();
@@ -49,14 +51,14 @@ final class ASMAccessorFactory implements BeanAccessorFactory {
 		} catch (ClassNotFoundException e1) {
 		}
 
-		FieldInfo[] fields = getFields(javaBean);
+		FieldInfo[] fields = getFields(javaClz);
 		boolean isHashProperty=sortFields(fields);
 		ClassGenerator asm;
 		if (cls == null) {
 			if (isHashProperty) {
-				asm= new ASMHashGenerator(javaBean, clzName, fields,cl);
+				asm= new ASMHashGenerator(javaClz, clzName, fields,cl);
 			} else {
-				asm = new ASMSwitcherGenerator(javaBean, clzName, fields);
+				asm = new ASMSwitcherGenerator(javaClz, clzName, fields);
 			}
 			byte[] clzdata = asm.generate();
 			// DEBUG
@@ -64,12 +66,20 @@ final class ASMAccessorFactory implements BeanAccessorFactory {
 			cls= UnsafeUtils.defineClass(clzName, clzdata, 0, clzdata.length, cl);
 		}
 		if (cls == null) {
-			throw new RuntimeException("Dynamic class accessor for " + javaBean + " failure!");
+			throw new RuntimeException("Dynamic class accessor for " + javaClz + " failure!");
 		}
 		try {
 			BeanAccessor ba = (BeanAccessor) cls.newInstance();
 			initAnnotations(ba, fields);
 			initGenericTypes(ba, fields);
+			if(extension!=null){
+				String name=extension.getStaticExtensionName(javaClz);
+				if(name!=null){
+					ba=new ExtensionAccessor(ba,name,extension);
+				}else if(extension.isDynamicExtensionClass(javaClz)){
+					ba=new ExtensionAccessorProxy(ba,extension);
+				}
+			}
 			return ba;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -210,5 +220,14 @@ final class ASMAccessorFactory implements BeanAccessorFactory {
 			}
 		});
 		return isDup;
+	}
+
+	@Override
+	public void registerExtensionProvider(BeanExtensionProvider prov) {
+		if(extension!=null){
+			throw new IllegalStateException("The bean extension alredy exists!");
+		}
+		prov.setBeanAccessorCache(Collections.unmodifiableMap(map));
+		this.extension=prov;
 	}
 }

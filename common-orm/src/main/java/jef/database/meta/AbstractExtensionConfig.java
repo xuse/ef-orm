@@ -1,19 +1,25 @@
 package jef.database.meta;
 
-import java.lang.reflect.Method;
-
 import jef.database.Field;
 
 public abstract class AbstractExtensionConfig implements ExtensionConfig{
-	
 	protected String name;
-	private Method getter;
-	private Method setter;
+	private TupleMetadata tuple;
 	
+	public TupleMetadata getMeta(){
+		if(tuple==null){
+			tuple=MetaHolder.getDynamicMeta(name);
+			if(tuple==null){
+				throw new IllegalArgumentException(); 
+			}
+		}
+		return tuple;
+	}
+	
+
 	@Override
 	public Field getField(String key) {
-		TupleMetadata tuple=MetaHolder.getDynamicMeta(name);
-		return tuple.getField(key);
+		return getMeta().getField(key);
 	}
 	
 	@Override
@@ -21,5 +27,9 @@ public abstract class AbstractExtensionConfig implements ExtensionConfig{
 		return name;
 	}
 	
-
+	public boolean isProperty(String str){
+		return getMeta().getField(str)!=null;
+	}
+	
+	
 }
