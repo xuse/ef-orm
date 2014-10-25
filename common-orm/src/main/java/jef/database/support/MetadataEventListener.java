@@ -7,6 +7,7 @@ import java.util.Map;
 
 import jef.database.Field;
 import jef.database.dialect.ColumnType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.Column;
 import jef.database.meta.ColumnModification;
 import jef.database.meta.ITableMetadata;
@@ -100,6 +101,6 @@ public interface MetadataEventListener {
 	 * @param defined  表模型中的所有列
 	 * @return 是否继续比较这张表
 	 */
-	boolean onCompareColumns(String tablename, List<Column> columns, Map<Field, ColumnType> defined);
+	boolean onCompareColumns(String tablename, List<Column> columns, Map<Field, ColumnMapping<?>> defined);
 
 }

@@ -518,14 +518,13 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 		}
 	}
 
-	@Test
+	@Test(expected=Exception.class)
 	public void testFunction(){
 		OracleStatementParser parser = new OracleStatementParser("select upper(*) from aa order by now()");
 		SQLStatement st=parser.parseStatement();
 		System.out.println(st);
-		
-		
 	}
+	
 	// 0 StSQL 1 Jpql 2 Druid Oracle 3 Druid MySQL
 	private void parseTest(String sql, int type) throws ParseException {
 		System.out.println("===================== [RAW]  ==================");

@@ -37,6 +37,7 @@ import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.statement.LimitHandler;
+import jef.database.dialect.type.AColumnMapping;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
@@ -306,7 +307,10 @@ public class OracleDialect extends AbstractDialect {
 	public String getColumnNameToUse(String name) {
 		return name==null?null:name.toUpperCase();
 	}
-
+	@Override
+	public String getColumnNameToUse(AColumnMapping<?> name) {
+		return name.upperColumnName();
+	}
 	/**
 	 * 由于暂不考虑支持Oracle TIMESTAMP到毫秒这个特性，因此在查询时需要对TIMESTAMP进行truncate处理，
 	 * 以避免因多了几个毫秒而导致查不到数据的问题。

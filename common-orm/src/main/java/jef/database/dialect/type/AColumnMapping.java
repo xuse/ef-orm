@@ -23,74 +23,83 @@ import jef.tools.Assert;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.Property;
 
-public abstract class AColumnMapping<T> implements ColumnMapping<T>{
+public abstract class AColumnMapping<T> implements ColumnMapping<T> {
 	/**
 	 * 原始的ColumnName
 	 */
-	protected String rawColumnName;
+	public String rawColumnName;
+	protected transient String cachedEscapeColumnName;
+	private transient String lowerColumnName;
+	private transient String upperColumnName;
+	
 	protected ITableMetadata meta;
 	private String fieldName;
 	protected Field field;
 	protected ColumnType ctype;
 	protected Class<T> clz;
-	private Class<?>   primitiveClz;
+	private Class<?> primitiveClz;
 	private boolean pk;
-	protected transient String cachedEscapeColumnName;
 	protected transient DatabaseDialect bindedProfile;
 	protected Property fieldAccessor;
-	
+
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public AColumnMapping(){
-		Type type=this.getClass().getGenericSuperclass();
+	public AColumnMapping() {
+		Type type = this.getClass().getGenericSuperclass();
 		if (type instanceof ParameterizedType) {
 			Type[] p = ((ParameterizedType) type).getActualTypeArguments();
-			if(p[0] instanceof Class){
+			if (p[0] instanceof Class) {
 				this.clz = (Class<T>) p[0];
-			}else if(p[0] instanceof GenericArrayType){
-				GenericArrayType at=(GenericArrayType)p[0];
-				Type compType=at.getGenericComponentType();
-				if(compType instanceof Class){
-					this.clz=(Class<T>) Array.newInstance((Class)compType, 0).getClass();
+			} else if (p[0] instanceof GenericArrayType) {
+				GenericArrayType at = (GenericArrayType) p[0];
+				Type compType = at.getGenericComponentType();
+				if (compType instanceof Class) {
+					this.clz = (Class<T>) Array.newInstance((Class) compType, 0).getClass();
 				}
 			}
-			this.primitiveClz=BeanUtils.toPrimitiveClass(this.clz);
+			this.primitiveClz = BeanUtils.toPrimitiveClass(this.clz);
 		}
 	}
-	
+
 	public boolean isPk() {
 		return pk;
 	}
 
-	public void init(Field field,String columnName,ColumnType type,ITableMetadata meta){
-		this.field=field;
-		this.fieldName=field.name();
-		this.rawColumnName=columnName;
-		this.meta=meta;
-		this.ctype=type;
-		
+	public void init(Field field, String columnName, ColumnType type, ITableMetadata meta) {
+		this.field = field;
+		this.fieldName = field.name();
+		this.rawColumnName = columnName;
+		this.lowerColumnName=columnName.toLowerCase();
+		this.upperColumnName=columnName.toUpperCase();
+		this.meta = meta;
+		this.ctype = type;
+
 		BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(meta.getContainerType());
-		if(meta.getType()!=EntityType.TUPLE){
+		if (meta.getType() != EntityType.TUPLE) {
 			Assert.isTrue(meta.getAllFieldNames().contains(field.name()));
 		}
-		fieldAccessor =ba.getProperty(field.name());
+		fieldAccessor = ba.getProperty(field.name());
 	}
-	
-	public String fieldName(){
+
+	public String fieldName() {
 		return fieldName;
 	}
-	
-	public String columnName(){
-		return rawColumnName;
+
+	public String upperColumnName() {
+		return upperColumnName;
 	}
 	
-	public Field field(){
+	public String lowerColumnName() {
+		return lowerColumnName;
+	}
+
+	public Field field() {
 		return field;
 	}
-	
-	public ITableMetadata getMeta(){
+
+	public ITableMetadata getMeta() {
 		return meta;
 	}
-	
+
 	public ColumnType get() {
 		return ctype;
 	}
@@ -98,72 +107,72 @@ public abstract class AColumnMapping<T> implements ColumnMapping<T>{
 	public Class<T> getFieldType() {
 		return clz;
 	}
-	
+
 	public Class<?> getPrimitiveType() {
 		return primitiveClz;
 	}
 
 	public String getColumnName(DatabaseDialect profile, boolean escape) {
-		if(escape && bindedProfile==profile){
+		if (!escape) {
+			return profile.getColumnNameToUse(this);
+		}
+		if (bindedProfile == profile) {
 			return cachedEscapeColumnName;
 		}
-		String name = profile.getColumnNameToUse(rawColumnName);
-		if(escape){
-			String escapedColumn=DbUtils.escapeColumn(profile, name);
-			rebind(escapedColumn,profile);
-			return escapedColumn;
-		}
-		return name;
+		String escapedColumn = DbUtils.escapeColumn(profile, profile.getColumnNameToUse(this));
+		rebind(escapedColumn, profile);
+		return escapedColumn;
 	}
 
 	protected void rebind(String escapedColumn, DatabaseDialect profile) {
-		bindedProfile=profile;
-		cachedEscapeColumnName=escapedColumn;
+		bindedProfile = profile;
+		cachedEscapeColumnName = escapedColumn;
 	}
 
 	public void setPk(boolean b) {
-		this.pk=b;
+		this.pk = b;
 	}
-	
+
 	/**
 	 * 用单引号包围字符串，并将其中的单引号按SQL转义
+	 * 
 	 * @param s
 	 * @return
 	 */
-	public final static String wrapSqlStr(String s){
-		StringBuilder sb=new StringBuilder(s.length()+16);
+	public final static String wrapSqlStr(String s) {
+		StringBuilder sb = new StringBuilder(s.length() + 16);
 		sb.append('\'');
-		for(int i=0;i<s.length();i++){
-			char c=s.charAt(i);
-			if(c=='\''){
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			if (c == '\'') {
 				sb.append("''");
-			}else{
+			} else {
 				sb.append(c);
 			}
 		}
 		sb.append('\'');
 		return sb.toString();
 	}
-	
-	public String getSqlStr(Object value,DatabaseDialect profile){
-		if(value==null){
+
+	public String getSqlStr(Object value, DatabaseDialect profile) {
+		if (value == null) {
 			return "null";
-		}else if(value instanceof Expression){
+		} else if (value instanceof Expression) {
 			return value.toString();
 		}
-		return getSqlExpression(value,profile);
+		return getSqlExpression(value, profile);
 	}
-	
+
 	/**
-	 * @param value 不为null，不为Expression
+	 * @param value
+	 *            不为null，不为Expression
 	 */
-	protected abstract String getSqlExpression(Object value,DatabaseDialect profile);
-	
-	         
-	public void processInsert(Object value, InsertSqlClause result, List<String> cStr, List<String> vStr,boolean smart,IQueryableEntity obj)throws SQLException {
-		String columnName=getColumnName(result.profile, true);
-		if (value==null){
-			if(result.profile.has(Feature.NOT_SUPPORT_KEYWORD_DEFAULT)) {// 必须使用默认的方法(即不插入)来描述缺省值
+	protected abstract String getSqlExpression(Object value, DatabaseDialect profile);
+
+	public void processInsert(Object value, InsertSqlClause result, List<String> cStr, List<String> vStr, boolean smart, IQueryableEntity obj) throws SQLException {
+		String columnName = getColumnName(result.profile, true);
+		if (value == null) {
+			if (result.profile.has(Feature.NOT_SUPPORT_KEYWORD_DEFAULT)) {// 必须使用默认的方法(即不插入)来描述缺省值
 			} else {
 				cStr.add(columnName);// 为空表示不指定，使用缺省值
 				vStr.add("DEFAULT");
@@ -174,35 +183,35 @@ public abstract class AColumnMapping<T> implements ColumnMapping<T>{
 			return;
 		}
 		cStr.add(columnName);
-		vStr.add(getSqlStr(value,result.profile));
+		vStr.add(getSqlStr(value, result.profile));
 	}
-	
-	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean dynamic)throws SQLException{
+
+	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean dynamic) throws SQLException {
 		if (dynamic && !obj.isUsed(field)) {
 			return;
 		}
-		String columnName=getColumnName(result.profile, true);
+		String columnName = getColumnName(result.profile, true);
 		cStr.add(columnName);
 		vStr.add("?");
-		result.addField(this);		
+		result.addField(this);
 	}
-	
+
 	public boolean isLob() {
 		return false;
 	}
 
 	public boolean applyFor(int type) {
-		return type==getSqlType();
+		return type == getSqlType();
 	}
-	
-	public Property getFieldAccessor(){
+
+	public Property getFieldAccessor() {
 		return fieldAccessor;
-		
+
 	}
 
 	@Override
 	public String toString() {
 		return this.fieldName;
 	}
-	
+
 }

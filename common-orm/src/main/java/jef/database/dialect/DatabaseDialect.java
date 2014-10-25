@@ -23,12 +23,12 @@ import java.util.Map;
 
 import javax.sql.rowset.CachedRowSet;
 
-import jef.common.wrapper.IntRange;
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.OperateTarget;
 import jef.database.datasource.DataSourceInfo;
 import jef.database.dialect.statement.LimitHandler;
+import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
@@ -183,6 +183,8 @@ public interface DatabaseDialect {
 	 * @return
 	 */
 	String getColumnNameToUse(String name);
+	
+	String getColumnNameToUse(AColumnMapping<?> name);
 
 	/**
 	 * 计算Sequence的步长, 在某些数据库上，可以从系统表中获得Sequence的步长。<br>

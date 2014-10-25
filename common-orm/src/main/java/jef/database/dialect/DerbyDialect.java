@@ -20,10 +20,10 @@ import java.sql.Types;
 import java.util.Arrays;
 
 import jef.common.log.LogUtil;
-import jef.common.wrapper.IntRange;
 import jef.database.ConnectInfo;
 import jef.database.OperateTarget;
 import jef.database.dialect.statement.LimitHandler;
+import jef.database.dialect.type.AColumnMapping;
 import jef.database.jsqlparser.expression.LongValue;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
@@ -224,7 +224,10 @@ public class DerbyDialect extends AbstractDialect {
 		return StringUtils.upperCase(name);
 	}
 	
-	
+	@Override
+	public String getColumnNameToUse(AColumnMapping<?> name) {
+		return name.upperColumnName();
+	}
 	
 	@Override
 	public void init(OperateTarget db) {

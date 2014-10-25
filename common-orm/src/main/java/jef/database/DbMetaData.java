@@ -1279,7 +1279,7 @@ public class DbMetaData {
 			return;
 		}
 		// 新增列
-		Map<Field, ColumnType> defined = getColumnMap(meta);
+		Map<Field, ColumnMapping<?>> defined = getColumnMap(meta);
 
 		// 在对比之前判断
 		if (event != null) {
@@ -1303,19 +1303,20 @@ public class DbMetaData {
 				}
 				continue;
 			}
-			ColumnType type = defined.remove(field);// from the metadata find
+			ColumnMapping<?> type = defined.remove(field);// from the metadata find
 													// the column defined
 			Assert.notNull(type);// 不应该发生
 			if (supportChangeDelete) {
-				List<ColumnChange> changes = type.isEqualTo(c, getProfile());
+				List<ColumnChange> changes = type.get().isEqualTo(c, getProfile());
 				if (!changes.isEmpty()) {
-					changed.add(new ColumnModification(c, changes, type));
+					changed.add(new ColumnModification(c, changes, type.get()));
 				}
 			}
 		}
 		Map<String, ColumnType> insert = new HashMap<String, ColumnType>();
-		for (Map.Entry<Field, ColumnType> e : defined.entrySet()) {
-			insert.put(meta.getColumnName(e.getKey(), getProfile(), true), e.getValue());
+		for (Map.Entry<Field, ColumnMapping<?>> e : defined.entrySet()) {
+			String columnName=e.getValue().getColumnName(getProfile(), true);
+			insert.put(columnName, e.getValue().get());
 		}
 		// 比较完成后，只剩下三类变更的列数据
 		if (event != null && event.onColumnsCompared(tablename, meta, insert, changed, delete) == false) {
@@ -1972,21 +1973,10 @@ public class DbMetaData {
 		}
 	}
 
-	// private void execute(Statement st, String sql) throws SQLException {
-	// if (ORMConfig.getInstance().isDebugMode())
-	// LogUtil.show(sql + " |" + getTransactionId());
-	// try {
-	// st.executeUpdate(sql);
-	// } catch (SQLException e) {
-	// DebugUtil.setSqlState(e, sql);
-	// throw e;
-	// }
-	// }
-
-	private Map<Field, ColumnType> getColumnMap(ITableMetadata meta) {
-		Map<Field, ColumnType> map = new HashMap<Field, ColumnType>();
+	private Map<Field, ColumnMapping<?>> getColumnMap(ITableMetadata meta) {
+		Map<Field, ColumnMapping<?>> map = new HashMap<Field, ColumnMapping<?>>();
 		for (ColumnMapping<?> mapping : meta.getMetaFields()) {
-			map.put(mapping.field(), mapping.get());
+			map.put(mapping.field(), mapping);
 		}
 		return map;
 	}

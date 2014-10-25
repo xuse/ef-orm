@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 import jef.database.DbCfg;
 import jef.database.DbUtils;
@@ -35,9 +37,16 @@ public abstract class MetadataAdapter implements ITableMetadata {
 	private String bindDsName;
 	protected List<ColumnMapping<?>> metaFields;
 	final List<jef.database.annotation.Index> indexMap = new ArrayList<jef.database.annotation.Index>(5);//记录对应表的所有索引，当建表时使用可自动创建索引
-
+	protected Field[] lobNames;
+	
+	protected final Map<Field, ColumnMapping<?>> schemaMap = new IdentityHashMap<Field, ColumnMapping<?>>();
+	
 	protected abstract Collection<ColumnMapping<?>> getColumnSchema();
 
+
+	public Field[] getLobFieldNames() {
+		return lobNames;
+	}
 
 	protected void initByAnno(Class<?> thisType,javax.persistence.Table table,BindDataSource bindDs) {
 		// schema初始化
@@ -106,7 +115,20 @@ public abstract class MetadataAdapter implements ITableMetadata {
 			return new StringBuilder(schema.length() + tableName.length() + 1).append(schema).append('.').append(tableName).toString();
 		return tableName;
 	}
-
+	
+	public String getColumnName(Field fld, DatabaseDialect profile, boolean escape) {
+		ColumnMapping<?> mType = this.schemaMap.get(fld);
+		if (mType != null) {
+			return mType.getColumnName(profile, escape);
+		}
+		//意外情况
+		if (fld instanceof JpqlExpression) {
+			throw new UnsupportedOperationException();
+		}
+		String name = profile.getColumnNameToUse(fld.name());
+		return escape?DbUtils.escapeColumn(profile, name):name; 
+	}
+	
 	public String getColumnName(Field fld, String alias, DatabaseDialect profile) {
 		if (alias != null) {
 			if (fld instanceof JpqlExpression) {
@@ -123,7 +145,7 @@ public abstract class MetadataAdapter implements ITableMetadata {
 	
 	private DbTable cachedTable;
 	private DatabaseDialect bindProfile;
-	private KeyDimension pkDim;
+	protected KeyDimension pkDim;
 	
 	public DbTable getBaseTable(DatabaseDialect profile){
 		if(bindProfile!=profile){

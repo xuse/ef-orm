@@ -166,7 +166,7 @@ public class JPQLSelectConvert extends VisitorAdapter {
 				Field fld = meta.findField(col);
 				if (fld == null)
 					continue;
-				tableColumn.setColumnName(meta.getColumnName(fld, null, profile));
+				tableColumn.setColumnName(meta.getColumnName(fld, profile,true));
 			}
 		} else {
 			cc = aliasMap.get(tbAlias);

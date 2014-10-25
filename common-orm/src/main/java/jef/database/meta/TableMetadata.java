@@ -53,12 +53,10 @@ import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
 import jef.database.dialect.ColumnType;
-import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AbstractTimeMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.ColumnMappings;
-import jef.database.query.JpqlExpression;
 import jef.database.query.Query;
 import jef.database.query.ReferenceType;
 import jef.database.routing.function.AbstractDateFunction;
@@ -95,8 +93,6 @@ public final class TableMetadata extends MetadataAdapter {
 
 	private List<ColumnMapping<?>> pkFields;// 记录主键列
 
-	// //////////列名/字段索引//////////////////////
-	private final Map<Field, ColumnMapping<?>> schemaMap = new IdentityHashMap<Field, ColumnMapping<?>>(); // 提供Field到字段类型的转换
 
 	private final Map<Field, String> fieldToColumn = new IdentityHashMap<Field, String>();// 提供Field到列名的转换
 	private final Map<String, String> lowerColumnToFieldName = new HashMap<String, String>();// 提供Column名称到Field的转换，不光包括元模型字段，也包括了非元模型字段但标注了Column的字段(key全部存小写)
@@ -222,8 +218,6 @@ public final class TableMetadata extends MetadataAdapter {
 	public Map<String, AbstractRefField> getRefFieldsByName() {
 		return refFieldsByName;
 	}
-
-	private Field[] lobNames;
 
 	/**
 	 * 将一个Java Field加入到列定义中
@@ -504,25 +498,6 @@ public final class TableMetadata extends MetadataAdapter {
 		refFieldsByName.put(f.getSourceField(), f);
 	}
 
-	public String getColumnName(Field fld, DatabaseDialect profile, boolean escape) {
-		String name = this.fieldToColumn.get(fld);
-		if (name != null) {
-			name = profile.getColumnNameToUse(name);
-		} else {
-			if (fld instanceof JpqlExpression) {
-				throw new UnsupportedOperationException();
-			}
-			if (name == null){
-				name = profile.getColumnNameToUse(fld.name());
-			}
-		}
-		// 进行关键字判断和处理
-		if (escape) {
-			return DbUtils.escapeColumn(profile, name);
-		}
-		return name;
-	}
-
 	/**
 	 * 添加一个非元模型的 Column映射字段（一般用于分表辅助）
 	 * 
@@ -753,10 +728,6 @@ public final class TableMetadata extends MetadataAdapter {
 
 	public boolean isAssignableFrom(ITableMetadata type) {
 		return this == type || this.containerType.isAssignableFrom(type.getThisType());
-	}
-
-	public Field[] getLobFieldNames() {
-		return lobNames;
 	}
 
 	private AutoIncrementMapping<?>[] incMapping;

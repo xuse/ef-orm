@@ -7,88 +7,153 @@ import java.util.Collection;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import jef.tools.reflect.Property;
 
-final class ExtensionAccessor extends BeanAccessor {
+final class ExtensionAccessor extends BeanAccessor implements ExtensionModificationListener {
 	private BeanAccessor accessor;
 	/**
 	 * 扩展属性列表
 	 */
-	private final Map<String, Property> extProperties;
+	private Map<String, Property> extProperties;
 	/**
 	 * 混合后的属性列表
 	 */
-	private final Collection<String> allPropNames;
-	
-	private final Collection<Property> allProps;
+	private Collection<String> allPropNames;
+
+	private Collection<Property> allProps;
+
+	private ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
 	/**
 	 * 构造
+	 * 
 	 * @param raw
 	 * @param provider
 	 */
-	public ExtensionAccessor(BeanAccessor raw, String extensionName,BeanExtensionProvider provider) {
+	public ExtensionAccessor(BeanAccessor raw, String extensionName, BeanExtensionProvider provider) {
 		this.accessor = raw;
-		this.extProperties=provider.getExtensionProperties(raw.getType(),extensionName);
-		Collection<String> rawNames=accessor.getPropertyNames();
-		Collection<? extends Property> rawProperties=accessor.getProperties();
-		List<String> mergeNames=new ArrayList<String>(rawNames.size()+extProperties.size());
-		List<Property> mergeProperties=new ArrayList<Property>(rawNames.size()+extProperties.size());
-		mergeNames.addAll(rawNames);
-		mergeNames.addAll(extProperties.keySet());
-		mergeProperties.addAll(rawProperties);
-		mergeProperties.addAll(extProperties.values());
-		allPropNames=mergeNames;
-		allProps=mergeProperties;
+		setExtProperties(provider.getExtensionProperties(raw.getType(), extensionName, this));
+	}
+
+	/**
+	 * 当元数据发生变化时
+	 * 
+	 * @param extProps
+	 */
+	public void setExtProperties(Map<String, Property> extProps) {
+		Lock lock = rwLock.writeLock();
+		lock.lock();
+		try {
+			Collection<String> rawNames = accessor.getPropertyNames();
+			Collection<? extends Property> rawProperties = accessor.getProperties();
+			List<String> mergeNames = new ArrayList<String>(rawNames.size() + extProperties.size());
+			List<Property> mergeProperties = new ArrayList<Property>(rawNames.size() + extProperties.size());
+			mergeNames.addAll(rawNames);
+			mergeNames.addAll(extProps.keySet());
+			mergeProperties.addAll(rawProperties);
+			mergeProperties.addAll(extProps.values());
+			this.extProperties = extProps;
+			this.allPropNames = mergeNames;
+			this.allProps = mergeProperties;
+		} finally {
+			lock.unlock();
+		}
+
 	}
 
 	@Override
 	public Collection<String> getPropertyNames() {
-		return allPropNames;
+		Lock lock = rwLock.readLock();
+		lock.lock();
+		try {
+			return allPropNames;
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	@Override
 	public Class<?> getPropertyType(String name) {
-		Property pp = extProperties.get(name);
+		Lock lock = rwLock.readLock();
+		lock.lock();
+		Property pp;
+		try {
+			pp = extProperties.get(name);
+		} finally {
+			lock.unlock();
+		}
 		return pp == null ? accessor.getPropertyType(name) : pp.getType();
 	}
 
 	@Override
 	public Type getGenericType(String name) {
-		Property pp = extProperties.get(name);
-		return pp == null ? accessor.getGenericType(name) : pp.getGenericType();
+		Lock lock = rwLock.readLock();
+		lock.lock();
+		try {
+			Property pp = extProperties.get(name);
+			return pp == null ? accessor.getGenericType(name) : pp.getGenericType();
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	@Override
 	public Object getProperty(Object bean, String name) {
-		Property pp = extProperties.get(name);
-		return pp == null ? accessor.getProperty(bean, name) : pp.get(bean);
+		Lock lock = rwLock.readLock();
+		lock.lock();
+		try {
+			Property pp = extProperties.get(name);
+			return pp == null ? accessor.getProperty(bean, name) : pp.get(bean);
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	@Override
 	public boolean setProperty(Object bean, String name, Object v) {
-		Property pp = extProperties.get(name);
-		if (pp == null) {
-			return accessor.setProperty(bean, name, v);
-		} else {
-			pp.set(bean, v);
-			return true;
+		Lock lock = rwLock.readLock();
+		lock.lock();
+		try {
+			Property pp = extProperties.get(name);
+			if (pp == null) {
+				return accessor.setProperty(bean, name, v);
+			} else {
+				pp.set(bean, v);
+				return true;
+			}
+		} finally {
+			lock.unlock();
 		}
 	}
 
 	@Override
 	public void copy(Object o1, Object o2) {
 		accessor.copy(o1, o2);
-		for (Property pp : extProperties.values()) {
-			pp.set(o2, pp.get(o1));
+		Lock lock = rwLock.readLock();
+		lock.lock();
+		try {
+			for (Property pp : extProperties.values()) {
+				pp.set(o2, pp.get(o1));
+			}
+		} finally {
+			lock.unlock();
 		}
 	}
 
 	@Override
 	public Property getProperty(String name) {
-		Property pp = extProperties.get(name);
-		return pp == null ? accessor.getProperty(name) : pp;
+		Lock lock = rwLock.readLock();
+		lock.lock();
+		try {
+			Property pp = extProperties.get(name);
+			return pp == null ? accessor.getProperty(name) : pp;
+		} finally {
+			lock.unlock();
+		}
 	}
 
 	@Override

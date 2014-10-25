@@ -58,7 +58,7 @@ public class DdlGeneratorImpl implements DdlGenerator {
 			if (sb.length() > 0)
 				sb.append(",\n");
 
-			sb.append("    ").append(meta.getColumnName(field, null, profile)).append(" ");
+			sb.append("    ").append(entry.getColumnName(profile, true)).append(" ");
 			ColumnType vType = entry.get();
 			if (isPK) {
 				vType.setNullable(false);
@@ -133,7 +133,7 @@ public class DdlGeneratorImpl implements DdlGenerator {
 				Field field = meta.getField(fieldname);
 				if (field == null)
 					field = new FBIField(fieldname);
-				String column = meta.getColumnName(field, profile, false);
+				String column = meta.getColumnDef(field).getColumnName(profile, false);
 				if (field instanceof FBIField) {
 					String fname = StringUtils.truncate(StringUtils.randomString(), maxField);
 					iNameBuilder.append(fname);

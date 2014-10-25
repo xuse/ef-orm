@@ -92,6 +92,17 @@ public class DynamicTableTest extends org.junit.Assert {
 	}
 	
 
+	@Test
+	public void testTuple(){
+		TupleMetadata meta=new TupleMetadata("asdf");
+		meta.addColumn("aa", new ColumnType.AutoIncrement(10));
+		meta.getAllColumnNames();
+		meta.getMetaFields();
+		meta.removeColumn("aa");
+		System.out.println(meta);
+	}
+	
+	
 	/**
 	 * 测试插入记录到动态表
 	 * @throws SQLException

@@ -63,7 +63,7 @@ public abstract class AutoIncrementMapping<T> extends AColumnMapping<T> {
 	 */
 	public String getSequenceDataSource(DatabaseDialect profile){
 		if (bindedProfile!=profile || sequenceName == null) {
-			String name = profile.getColumnNameToUse(rawColumnName);
+			String name = profile.getColumnNameToUse(this);
 			rebind(DbUtils.escapeColumn(profile, name),profile);
 		}
 		return sequenceName[0];
@@ -76,7 +76,7 @@ public abstract class AutoIncrementMapping<T> extends AColumnMapping<T> {
 	 */
 	public String getSequenceName(DatabaseDialect profile) {
 		if (bindedProfile!=profile || sequenceName == null) {
-			String name = profile.getColumnNameToUse(rawColumnName);
+			String name = profile.getColumnNameToUse(this);
 			rebind(DbUtils.escapeColumn(profile, name),profile);
 		}
 		return sequenceName[1];
@@ -104,7 +104,7 @@ public abstract class AutoIncrementMapping<T> extends AColumnMapping<T> {
 	 */
 	public GenerationType getGenerationType(DatabaseDialect profile) {
 		if (profile != bindedProfile  || sequenceName == null ) {
-			String name = profile.getColumnNameToUse(rawColumnName);
+			String name = profile.getColumnNameToUse(this);
 			rebind(DbUtils.escapeColumn(profile, name),profile);
 		}
 		return generationType;

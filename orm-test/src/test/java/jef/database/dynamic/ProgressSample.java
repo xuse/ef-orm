@@ -14,6 +14,7 @@ import javax.swing.JProgressBar;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.dialect.ColumnType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.Column;
 import jef.database.meta.ColumnChange;
 import jef.database.meta.ColumnModification;
@@ -66,7 +67,7 @@ public class ProgressSample implements MetadataEventListener{
 		return true;
 	}
 	
-	public boolean onCompareColumns(String tablename, List<Column> columns, Map<Field, ColumnType> defined) {
+	public boolean onCompareColumns(String tablename, List<Column> columns, Map<Field, ColumnMapping<?>> defined) {
 		progressBar.setValue(5);
 		progressBar.setString("正在比较表"+tablename+"的结构...");
 		ThreadUtils.doSleep(30*scale);

@@ -29,7 +29,7 @@ public interface BeanExtensionProvider {
 	 * @param type
 	 * @return
 	 */
-	Map<String, Property> getExtensionProperties(Class<?> clz,String extensionName);
+	Map<String, Property> getExtensionProperties(Class<?> clz,String extensionName,ExtensionModificationListener listener);
 
 	/**
 	 * 当注册成功后，可以得到BeanAccessor提供的一个视图，记录了目前已经缓存的所有BeanAccessor。可用于判断一个Class是否已经缓存了对应的BeanAccessor。

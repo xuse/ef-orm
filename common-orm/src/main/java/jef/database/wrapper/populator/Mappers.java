@@ -7,12 +7,8 @@ import java.util.Map;
 
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
-import jef.database.ConnectInfo;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
-import jef.database.dialect.AbstractDialect;
-import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.statement.LimitHandler;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.ColumnMappings;
 import jef.database.dialect.type.ResultSetAccessor;
@@ -21,7 +17,6 @@ import jef.database.innerpool.NestedObjectPopulator;
 import jef.database.meta.AliasProvider;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-import jef.database.support.RDBMS;
 import jef.database.wrapper.result.IResultSet;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
@@ -320,9 +315,9 @@ public final class Mappers {
 				String columnName=customMap.get(f.name().toUpperCase());
 				if(columnName==null){
 					if (schema == null) {
-						columnName = skipColumnAnnotation ? f.name().toUpperCase() : meta.getColumnName(f, UPPER_COLUMNS, false);
+						columnName = skipColumnAnnotation ? f.name().toUpperCase() : ft.upperColumnName();
 					} else {
-						columnName = AliasProvider.DEFAULT.getResultAliasOf(f, UPPER_COLUMNS, schema);
+						columnName = AliasProvider.DEFAULT.getResultAliasOf(ft, schema);
 					}	
 				}
 				if (columnName != null) {
@@ -353,29 +348,4 @@ public final class Mappers {
 			throw new UnsupportedOperationException();
 		}
 	}
-
-	/*
-	 * 内部使用，用于将列名一律转为大写
-	 */
-	public static DatabaseDialect UPPER_COLUMNS = new AbstractDialect() {
-		public RDBMS getName() {
-			return null;
-		}
-		public String getDriverClass(String url) {
-			throw new UnsupportedOperationException();
-		}
-
-		public void parseDbInfo(ConnectInfo connectInfo) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public String getColumnNameToUse(String name) {
-			return name == null ? null : name.toUpperCase();
-		}
-		@Override
-		public LimitHandler getLimitHandler() {
-			throw new UnsupportedOperationException();
-		}
-	};
 }

@@ -538,7 +538,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 			directPopulator = new ArrayList<ObjectPopulator>(schemas.length);
 			for (String schema : schemas) {
 				if(!transformers.hasIgnoreSchema(schema)){
-					directPopulator.add(fill(ba, schema, defaultField, rs, columnNames, meta, skipAnnataion));
+					directPopulator.add(fill(schema, defaultField, rs, columnNames, meta, skipAnnataion));
 				}
 			}
 			if (subObjects != null) {// 主对象拼装完毕后，拼装JOIN对象中指出的其他引用字段
@@ -602,7 +602,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 				ObjectPopulator op1;
 				List<LazyLoadTask> tasks = new ArrayList<LazyLoadTask>();
 				if(targetType.getType()!=EntityType.NATIVE || targetAccessor.getType()==targetType.getThisType()){
-					op1=fill(targetAccessor, rp.getSchema(), allcolumns, rs, columns, targetType, false);
+					op1=fill(rp.getSchema(), allcolumns, rs, columns, targetType, false);
 					if (allcolumns.isLazyLob()) {
 						for (Field field : targetType.getLobFieldNames()) {
 							ColumnMapping<?> mType=targetType.getColumnDef(field);
@@ -656,7 +656,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 	 * columns 数据库列
 	 * meta
 	 */
-	private static ObjectPopulator fill(BeanAccessor ba, String schema, AliasProvider fullRef, IResultSet rs, ColumnMeta columns, ITableMetadata meta, boolean skipColumn) {
+	private static ObjectPopulator fill(String schema, AliasProvider fullRef, IResultSet rs, ColumnMeta columns, ITableMetadata meta, boolean skipColumn) {
 		Map<String, ColumnDescription> data = new HashMap<String, ColumnDescription>();
 		DatabaseDialect profile = rs.getProfile();
 		// 这里要按照列名来拼装，不是默认全拼装
@@ -664,9 +664,9 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 			String columnName;
 			Field f = ft.field();
 			if (fullRef == null) {
-				columnName = skipColumn ? f.name().toUpperCase() : ft.columnName().toUpperCase();
+				columnName = skipColumn ? f.name().toUpperCase() : ft.upperColumnName();
 			} else {
-				columnName = fullRef.getResultAliasOf(f, profile, schema);
+				columnName = fullRef.getResultAliasOf(ft, schema);
 			}
 			if (columnName != null) {
 				ColumnDescription columnDesc = columns.getByUpperName(columnName);
@@ -674,7 +674,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 //					if (schema == "")
 //						System.err.println("Warnning: populating object " + meta.getThisType() + " error," + schema + ":" + columnName + " not found in the selected columns");
 				}else{
-					ResultSetAccessor accessor = ColumnMappings.getAccessor(ba.getPropertyType(f.name()), ft, columnDesc, false);
+					ResultSetAccessor accessor = ColumnMappings.getAccessor(ft.getFieldAccessor().getType(), ft, columnDesc, false);
 					columnDesc.setAccessor(accessor);
 					data.put(f.name(), columnDesc);	
 				}

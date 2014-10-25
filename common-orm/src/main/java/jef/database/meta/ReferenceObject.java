@@ -1,8 +1,8 @@
 package jef.database.meta;
 
-import jef.database.Field;
 import jef.database.ORMConfig;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.dialect.type.ColumnMapping;
 
 public final class ReferenceObject extends AbstractRefField implements IReferenceAllTable{
 	private boolean lazyLob;
@@ -24,12 +24,12 @@ public final class ReferenceObject extends AbstractRefField implements IReferenc
 		return null;
 	}
 
-	public String getSelectedAliasOf(Field f, DatabaseDialect dialect, String schema) {
+	public String getSelectedAliasOf(ColumnMapping<?> f, DatabaseDialect dialect, String schema) {
 		return AliasProvider.DEFAULT.getSelectedAliasOf(f, dialect, schema);
 	}
 	@Override
-	public String getResultAliasOf(Field f, DatabaseDialect dialect, String schema) {
-		return AliasProvider.DEFAULT.getResultAliasOf(f, dialect, schema);
+	public String getResultAliasOf(ColumnMapping<?> f, String schema) {
+		return AliasProvider.DEFAULT.getResultAliasOf(f, schema);
 	}
 	
 	public boolean isLazyLob() {
@@ -68,14 +68,12 @@ public final class ReferenceObject extends AbstractRefField implements IReferenc
 			return null;
 		}
 
-		public String getSelectedAliasOf(Field f, DatabaseDialect dialect, String schema) {
+		public String getSelectedAliasOf(ColumnMapping<?> f, DatabaseDialect dialect, String schema) {
 			return AliasProvider.DEFAULT.getSelectedAliasOf(f, dialect, schema);
 		}
-		
-
 		@Override
-		public String getResultAliasOf(Field f, DatabaseDialect dialect, String schema) {
-			return AliasProvider.DEFAULT.getResultAliasOf(f, dialect, schema);
+		public String getResultAliasOf(ColumnMapping<?> f, String schema) {
+			return AliasProvider.DEFAULT.getResultAliasOf(f, schema);
 		}
 		public boolean isLazyLob() {
 			return lazyLob;

@@ -15,6 +15,7 @@ import jef.database.ORMConfig;
 import jef.database.OperateTarget;
 import jef.database.dialect.ColumnType.Char;
 import jef.database.dialect.statement.LimitHandler;
+import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.meta.Column;
 import jef.database.meta.DbProperty;
@@ -208,6 +209,10 @@ public class HsqlDbMemDialect extends AbstractDialect {
 	public String getColumnNameToUse(String name) {
 		return name==null?null:name.toUpperCase();
 	}
+	@Override
+	public String getColumnNameToUse(AColumnMapping<?> name) {
+		return name.upperColumnName();
+	}
 
 	@Override
 	protected String getComment(ColumnType.AutoIncrement column,boolean flag) {
@@ -266,7 +271,7 @@ public class HsqlDbMemDialect extends AbstractDialect {
 	@Override
 	public long getColumnAutoIncreamentValue(AutoIncrementMapping<?> mapping, OperateTarget db) {
 		String tableName=mapping.getMeta().getTableName(false).toLowerCase();
-		String seqname=tableName+"_"+mapping.columnName().toLowerCase()+"_seq";
+		String seqname=tableName+"_"+mapping.lowerColumnName()+"_seq";
 		String sql=String.format("select nextval('%s') from dual" , seqname);
 		if(ORMConfig.getInstance().isDebugMode()){
 			LogUtil.show(sql + " | " + db.getTransactionId());

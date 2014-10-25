@@ -14,6 +14,7 @@ import jef.database.DbFunction;
 import jef.database.OperateTarget;
 import jef.database.datasource.DataSourceInfo;
 import jef.database.dialect.statement.LimitHandler;
+import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
@@ -221,5 +222,10 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	@Override
 	public LimitHandler getLimitHandler() {
 		return dialect.getLimitHandler();
+	}
+
+	@Override
+	public String getColumnNameToUse(AColumnMapping<?> name) {
+		return dialect.getColumnNameToUse(name);
 	}
 }

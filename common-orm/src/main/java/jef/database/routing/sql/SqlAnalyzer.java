@@ -437,7 +437,7 @@ public class SqlAnalyzer {
 				if (fld == null) {
 					throw new IllegalArgumentException("The partition field [" + field + "] is not a database column.");
 				}
-				String columnName = meta.getColumnName(fld, Mappers.UPPER_COLUMNS, false);
+				String columnName = meta.getColumnDef(fld).upperColumnName();
 				columnToPartitionKey.put(columnName, key.getKey().field());
 			}
 		}

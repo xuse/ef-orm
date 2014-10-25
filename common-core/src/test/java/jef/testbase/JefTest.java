@@ -94,6 +94,15 @@ public class JefTest extends Assert {
 		}
 	}
 	
+	@Test
+	public void arrayRemove(){
+		int[] aa=new int[]{1,2,3,4,5};
+		for(int x:aa){
+			System.out.println(x);
+		}
+	}
+	
+	
 	/**
 	 *  您<em>甚至</em><i>可以</i>插入一个列表：
     * <ol>

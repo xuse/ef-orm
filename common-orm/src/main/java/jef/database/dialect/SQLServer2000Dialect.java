@@ -6,6 +6,7 @@ import jef.database.ConnectInfo;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.statement.LimitHandler;
 import jef.database.dialect.statement.UnionJudgement;
+import jef.database.dialect.type.AColumnMapping;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.query.Func;
@@ -203,6 +204,11 @@ public class SQLServer2000Dialect extends AbstractDialect {
 		return StringUtils.lowerCase(name);
 	}
 
+	@Override
+	public String getColumnNameToUse(AColumnMapping<?> name) {
+		return name.lowerColumnName();
+	}
+	
 	@Override
 	public String getDefaultSchema() {
 		return "dbo";

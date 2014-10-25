@@ -37,7 +37,6 @@ import javax.sql.rowset.CachedRowSet;
 
 import jef.common.PairIS;
 import jef.common.log.LogUtil;
-import jef.common.wrapper.IntRange;
 import jef.database.DbCfg;
 import jef.database.DbFunction;
 import jef.database.DbMetaData;
@@ -586,7 +585,9 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	public String getColumnNameToUse(String name) {
 		return name;
 	}
-
+	public String getColumnNameToUse(AColumnMapping<?> name) {
+		return name.rawColumnName;
+	}
 	public int calcSequenceStep(OperateTarget conn, String schema, String seqName, int defaultValue) {
 		return defaultValue;
 	}

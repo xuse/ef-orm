@@ -41,8 +41,7 @@ public class AutoGuidMapping extends VarcharStringMapping {
 
 	@Override
 	public void processInsert(Object value, InsertSqlClause result, List<String> cStr, List<String> vStr, boolean smart, IQueryableEntity obj) throws SQLException {
-		Field field = this.field;
-		String columnName = meta.getColumnName(field, result.profile, true);
+		String columnName = this.getColumnName(result.profile,true);
 		String key;
 		if (value != null && ORMConfig.getInstance().isManualSequence() && obj.isUsed(field)) {// 手动指定
 			key = String.valueOf(value);
@@ -58,8 +57,7 @@ public class AutoGuidMapping extends VarcharStringMapping {
 
 	@Override
 	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean smart) {
-		Field field = this.field;
-		String columnName = meta.getColumnName(field, result.profile, true);
+		String columnName = this.getColumnName(result.profile, true);
 
 		Object value = accessor.get(obj);
 		if (value != null && ORMConfig.getInstance().isManualSequence() && obj.isUsed(field)) {

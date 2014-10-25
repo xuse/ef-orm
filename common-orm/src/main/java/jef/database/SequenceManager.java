@@ -72,10 +72,11 @@ public final class SequenceManager {
 					if (datasource != null) {// 必须绑定DataSource
 						client = (OperateTarget) client.getSession().getSqlTemplate(StringUtils.trimToNull(datasource));
 					}
+					String columnName=fieldDef.getColumnName(profile, true);
 					if (type == GenerationType.SEQUENCE) {
-						s = createSequence(name, client, a.getPrecision(), fieldDef.getMeta().getTableName(true), fieldDef.columnName(), a.getSeqGenerator());
+						s = createSequence(name, client, a.getPrecision(), fieldDef.getMeta().getTableName(true), columnName, a.getSeqGenerator());
 					} else if (type == GenerationType.TABLE) {
-						s = createTable(name, client, a.getPrecision(), fieldDef.getMeta().getTableName(true), fieldDef.columnName(), a.getTableGenerator());
+						s = createTable(name, client, a.getPrecision(), fieldDef.getMeta().getTableName(true), columnName, a.getTableGenerator());
 					}
 					holders.put(name, wrapForHilo((AbstractSequence) s, a.getHiloConfig()));
 				}

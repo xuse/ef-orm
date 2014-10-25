@@ -204,7 +204,7 @@ public class QuerableEntityScanner {
 				return true;
 			}
 
-			public boolean onCompareColumns(String tablename, List<Column> columns, Map<Field, ColumnType> defined) {
+			public boolean onCompareColumns(String tablename, List<Column> columns, Map<Field, ColumnMapping<?>> defined) {
 				return refresh;
 			}
 

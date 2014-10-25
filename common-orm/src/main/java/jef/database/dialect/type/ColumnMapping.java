@@ -66,11 +66,17 @@ public interface ColumnMapping<T> extends ResultSetAccessor {
 	String fieldName();
 
 	/**
-	 * 数据库列名(原始定义)
+	 * 数据库列名，小写，不转义
 	 * 
 	 * @return 数据库列名
 	 */
-	String columnName();
+	String lowerColumnName();
+	
+	/**
+	 * 数据库列名，大写，不转义
+	 * @return
+	 */
+	String upperColumnName();
 
 	/**
 	 * 返回在指定数据库环境下使用的列名（大小写，转义）

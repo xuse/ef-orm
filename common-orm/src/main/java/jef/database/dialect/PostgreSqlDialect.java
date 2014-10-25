@@ -23,6 +23,7 @@ import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.statement.DelegatingPreparedStatement;
 import jef.database.dialect.statement.DelegatingStatement;
 import jef.database.dialect.statement.LimitHandler;
+import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
@@ -240,6 +241,10 @@ public class PostgreSqlDialect extends AbstractDialect {
 	public String getColumnNameToUse(String name) {
 		return name == null ? null : name.toLowerCase();
 	}
+	@Override
+	public String getColumnNameToUse(AColumnMapping<?> name) {
+		return name.lowerColumnName();
+	}
 
 	@Override
 	protected String getComment(AutoIncrement column, boolean flag) {
@@ -294,7 +299,7 @@ public class PostgreSqlDialect extends AbstractDialect {
 	@Override
 	public long getColumnAutoIncreamentValue(AutoIncrementMapping<?> mapping, OperateTarget db) {
 		String tableName = mapping.getMeta().getTableName(false).toLowerCase();
-		String seqname = tableName + "_" + mapping.columnName().toLowerCase() + "_seq";
+		String seqname = tableName + "_" + mapping.lowerColumnName() + "_seq";
 		String sql = String.format("select nextval('%s')", seqname);
 		if (ORMConfig.getInstance().isDebugMode()) {
 			LogUtil.show(sql + " | " + db.getTransactionId());
