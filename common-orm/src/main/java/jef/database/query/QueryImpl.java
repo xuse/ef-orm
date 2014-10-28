@@ -25,7 +25,9 @@ import java.util.Map;
 
 import jef.database.Condition;
 import jef.database.Condition.Operator;
+import jef.database.DataObject;
 import jef.database.DbUtils;
+import jef.database.DebugUtil;
 import jef.database.Field;
 import jef.database.IConditionField;
 import jef.database.IQueryableEntity;
@@ -69,6 +71,13 @@ final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T>{
 
 	public QueryImpl(T p) {
 		this.instance = p;
+		type = MetaHolder.getMeta(p);
+	}
+	
+	public QueryImpl(T p,String key) {
+		this.instance = p;
+		DebugUtil.bindQuery((DataObject) p, this);
+		setAttribute(ConditionQuery.CUSTOM_TABLE_TYPE, key);
 		type = MetaHolder.getMeta(p);
 	}
 
@@ -172,7 +181,7 @@ final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T>{
 		}
 		return addExtendQuery(ReadOnlyQuery.getEmptyQuery(meta));
 	}
-	private boolean allRecords;
+	boolean allRecords;
 
 	public Query<T> setAllRecordsCondition() {
 		conditions.clear();

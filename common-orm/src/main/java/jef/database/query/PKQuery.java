@@ -22,14 +22,17 @@ import jef.database.SelectProcessor;
 import jef.database.annotation.PartitionResult;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.meta.EntityType;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
+import jef.database.meta.MetadataAdapter;
 import jef.database.meta.Reference;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.GroupClause;
 import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.clause.QueryClauseImpl;
 import jef.database.wrapper.populator.Transformer;
+import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 
 public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
@@ -40,8 +43,15 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	
 	
 	@SuppressWarnings("unchecked")
-	public PKQuery(ITableMetadata clz,Serializable... pks){
-		this.type=clz;
+	public PKQuery(MetadataAdapter clz,Serializable... pks){
+		if(clz.getType()==EntityType.TEMPLATE){
+			String key=String.valueOf(pks[0]);
+			pks=(Serializable[]) ArrayUtils.subarray(pks, 1, pks.length);
+			this.type=clz.getExtension(key).getMeta();			
+		}else{
+			this.type=clz;
+		}
+		
 		this.instance=(T) clz.instance();
 		if(type.getPKFields().size()!=pks.length){
 			throw new IllegalArgumentException();

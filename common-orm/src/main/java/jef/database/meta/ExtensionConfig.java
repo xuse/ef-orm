@@ -1,17 +1,31 @@
 package jef.database.meta;
 
-import jef.database.Field;
 
 public interface ExtensionConfig {
-
+	/**
+	 * 扩展名
+	 * @return
+	 */
 	String getName();
 
-	Field getField(String key);
+	/**
+	 * 获得关于扩充字段部分的元数据描述。
+	 * @return
+	 */
+	TupleMetadata getExtensionMeta();
 
-	TupleMetadata getMeta();
+	/**
+	 * 获得合并后所有字段的元数据描述
+	 * @return
+	 */
+	MetadataAdapter getMeta();
+	
+	/**
+	 * 是否为动态表实现
+	 * @return
+	 */
+	boolean isDynamicTable();
 
-	void doPropertySet(Object entity, String property, Object value);
-
-	Object doPropertyGet(Object entity, String property);
+	void flush(TupleMetadata meta);
 
 }

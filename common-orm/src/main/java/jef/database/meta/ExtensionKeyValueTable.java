@@ -1,38 +1,69 @@
 package jef.database.meta;
 
+import jef.database.IQueryableEntity;
 import jef.database.annotation.DynamicKeyValueExtension;
-import jef.database.query.Query;
+import jef.database.dialect.ColumnType;
+import jef.database.dialect.type.ColumnMapping;
 
-
-public final class ExtensionKeyValueTable extends AbstractExtensionConfig implements ExtensionConfigFactory{
-	public ExtensionKeyValueTable(DynamicKeyValueExtension dkv,Class<?> entityClass){
-		this.name=dkv.metadata();
-	}
-
+public final class ExtensionKeyValueTable extends AbstractExtensionConfig implements ExtensionConfigFactory {
+	private DynamicKeyValueExtension config;
+	private TupleMetadata kvTable;
 	
+	public ExtensionKeyValueTable(DynamicKeyValueExtension dkv, Class<?> entityClass,MetadataAdapter parent) {
+		super(dkv.metadata(),parent);
+		this.config=dkv;
+		// 创建KV表
+		TupleMetadata tuple = new TupleMetadata(config.table());
+		for (ColumnMapping<?> m : parent.getPKFields()) {
+			ColumnType ct = m.get();
+			if (ct instanceof ColumnType.GUID) {
+				ct = ((ColumnType.GUID) ct).toNormalType();
+			} else if (ct instanceof ColumnType.AutoIncrement) {
+				ct = ((ColumnType.AutoIncrement) ct).toNormalType();
+			}
+			tuple.addColumn(m.fieldName(),m.rawColumnName(), ct,true);
+		}
+		tuple.addColumn(config.keyColumn(),config.keyColumn(), new ColumnType.Varchar(64),true);
+		tuple.addColumn(config.valueColumn(), new ColumnType.Varchar(4000));
+		this.kvTable=tuple;
+	}
+
 
 	@Override
-	public ExtensionConfig valueOf(Query<?> q) {
+	public boolean isDynamicTable() {
+		return false;
+	}
+
+	public DynamicKeyValueExtension getConfig(){
+		return config;
+	}
+
+	public TupleMetadata getContainerTuple() {
+		return kvTable;
+	}
+
+	@Override
+	public ExtensionConfig getDefault() {
 		return this;
 	}
+
 	@Override
-	public ExtensionConfig valueOf(String value) {
+	public ExtensionConfig getExtension(String extensionName) {
+		return this;
+	}
+
+	@Override
+	public ExtensionConfig getExtension(IQueryableEntity q) {
 		return this;
 	}
 
 
-
 	@Override
-	public void doPropertySet(Object entity, String property, Object value) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-
-	@Override
-	public Object doPropertyGet(Object entity, String property) {
-		// TODO Auto-generated method stub
-		return null;
+	protected MetadataAdapter merge() {
+		TupleMetadata tuple = new TupleMetadata(parent,this);
+		for (ColumnMapping<?> f : getExtensionMeta().getColumns()) {
+			tuple.updateColumn(f.fieldName(), f.rawColumnName(), f.get(), f.isPk());
+		}
+		return tuple;
 	}
 }

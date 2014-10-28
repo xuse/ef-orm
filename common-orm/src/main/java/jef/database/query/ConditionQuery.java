@@ -14,6 +14,7 @@ import jef.database.wrapper.populator.Transformer;
  */
 public interface ConditionQuery{
 	static final String CUSTOM_TABLE_NAME="_table_name";
+	static final String CUSTOM_TABLE_TYPE="_table_type";
 	
 	/**
 	 * 清除全部的请求数据

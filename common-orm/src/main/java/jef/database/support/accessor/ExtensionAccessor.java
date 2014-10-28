@@ -1,4 +1,4 @@
-package jef.accelerator.bean;
+package jef.database.support.accessor;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -11,9 +11,10 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import jef.accelerator.bean.BeanAccessor;
 import jef.tools.reflect.Property;
 
-final class ExtensionAccessor extends BeanAccessor implements ExtensionModificationListener {
+public final class ExtensionAccessor extends BeanAccessor implements ExtensionModificationListener {
 	private BeanAccessor accessor;
 	/**
 	 * 扩展属性列表
@@ -50,8 +51,8 @@ final class ExtensionAccessor extends BeanAccessor implements ExtensionModificat
 		try {
 			Collection<String> rawNames = accessor.getPropertyNames();
 			Collection<? extends Property> rawProperties = accessor.getProperties();
-			List<String> mergeNames = new ArrayList<String>(rawNames.size() + extProperties.size());
-			List<Property> mergeProperties = new ArrayList<Property>(rawNames.size() + extProperties.size());
+			List<String> mergeNames = new ArrayList<String>(rawNames.size() + extProps.size());
+			List<Property> mergeProperties = new ArrayList<Property>(rawNames.size() + extProps.size());
 			mergeNames.addAll(rawNames);
 			mergeNames.addAll(extProps.keySet());
 			mergeProperties.addAll(rawProperties);
@@ -200,5 +201,4 @@ final class ExtensionAccessor extends BeanAccessor implements ExtensionModificat
 	public void initNthGenericType(int index, Class raw, Type type, int total, String fieldName) {
 		accessor.initNthGenericType(index, raw, type, total, fieldName);
 	}
-
 }

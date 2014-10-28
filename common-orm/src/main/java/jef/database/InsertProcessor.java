@@ -66,7 +66,7 @@ abstract class InsertProcessor {
 			result.parent=db;
 			result.profile=profile;
 			result.setTableNames(pr);
-			for (ColumnMapping<?> entry : meta.getMetaFields()) {
+			for (ColumnMapping<?> entry : meta.getColumns()) {
 				BeanWrapper wrapper=BeanWrapper.wrap(obj);
 				Object value = wrapper.getPropertyValue(entry.fieldName());
 				entry.processInsert(value,result,cStr,vStr,dynamic,obj);
@@ -124,7 +124,7 @@ abstract class InsertProcessor {
 			result.parent=db;
 			result.profile=profile;
 			result.setTableNames(pr);
-			for (ColumnMapping<?> entry : meta.getMetaFields()) {
+			for (ColumnMapping<?> entry : meta.getColumns()) {
 				entry.processPreparedInsert(obj, cStr, vStr, result, dynamic);
 			}
 			if(profile.has(Feature.SELECT_ROW_NUM) && !extreme){

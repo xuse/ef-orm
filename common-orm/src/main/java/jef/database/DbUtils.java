@@ -985,7 +985,7 @@ public final class DbUtils {
 		Assert.isTrue(ObjectUtils.equals(getPrimaryKeyValue(changedObj), getPKValueSafe(oldObj)), "For consistence, the two parameter must hava equally primary keys.");
 		BeanWrapper bean1 = BeanWrapper.wrap(changedObj);
 		ITableMetadata m = MetaHolder.getMeta(oldObj);
-		for (ColumnMapping<?> mType : m.getMetaFields()) {
+		for (ColumnMapping<?> mType : m.getColumns()) {
 			if (mType.isPk())
 				continue;
 			Field field = mType.field();
@@ -1012,7 +1012,7 @@ public final class DbUtils {
 		BeanWrapper beanNew = BeanWrapper.wrap(changedObj);
 		BeanWrapper beanOld = BeanWrapper.wrap(oldObj);
 		ITableMetadata m = MetaHolder.getMeta(oldObj);
-		for (ColumnMapping<?> mType : m.getMetaFields()) {
+		for (ColumnMapping<?> mType : m.getColumns()) {
 			if (mType.isPk())
 				continue;
 			Field field = mType.field();
@@ -1040,7 +1040,7 @@ public final class DbUtils {
 		ITableMetadata m = MetaHolder.getMeta(obj[0]);
 		for (T o : obj) {
 			BeanWrapper bean = BeanWrapper.wrap(o);
-			for (ColumnMapping<?> mType : m.getMetaFields()) {
+			for (ColumnMapping<?> mType : m.getColumns()) {
 				if (mType.isPk()) {
 					continue;
 				}
@@ -1062,7 +1062,7 @@ public final class DbUtils {
 		ITableMetadata meta = query.getMeta();
 		BeanWrapper bw = BeanWrapper.wrap(obj, BeanWrapper.FAST);
 		if (properties.length == 0) {
-			for (ColumnMapping<?> mType : meta.getMetaFields()) {
+			for (ColumnMapping<?> mType : meta.getColumns()) {
 				Field field = mType.field();
 				if (obj.isUsed(field)) {
 					Object value = bw.getPropertyValue(field.name());
@@ -1103,7 +1103,7 @@ public final class DbUtils {
 	 * @return
 	 */
 	public static PartitionResult[] toTableNames(IQueryableEntity obj, String customName, Query<?> q, PartitionSupport processor) {
-		MetadataAdapter meta = obj == null ? (MetadataAdapter) q.getMeta() : MetaHolder.getMeta(obj);
+		MetadataAdapter meta = q == null ? MetaHolder.getMeta(obj):(MetadataAdapter) q.getMeta();
 		if (StringUtils.isNotEmpty(customName))
 			return new PartitionResult[] { new PartitionResult(customName).setDatabase(meta.getBindDsName()) };
 		PartitionResult[] result = partitionUtil.toTableNames(meta, obj, q, processor, ORMConfig.getInstance().isFilterAbsentTables());
@@ -1128,6 +1128,7 @@ public final class DbUtils {
 	 * @return
 	 */
 	public static PartitionResult[] toTableNames(ITableMetadata meta, PartitionSupport processor, int operateType) {
+		Assert.notNull(meta);
 		// long start=System.nanoTime();
 		// try{
 		return partitionUtil.toTableNames((MetadataAdapter) meta, processor, operateType);

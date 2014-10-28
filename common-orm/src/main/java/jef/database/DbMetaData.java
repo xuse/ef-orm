@@ -43,6 +43,7 @@ import javax.persistence.PersistenceException;
 import javax.sql.DataSource;
 
 import jef.common.Entry;
+import jef.common.PairIS;
 import jef.common.SimpleMap;
 import jef.common.log.LogUtil;
 import jef.database.Condition.Operator;
@@ -68,6 +69,7 @@ import jef.database.meta.ITableMetadata;
 import jef.database.meta.Index;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.PrimaryKey;
+import jef.database.meta.TableCreateStatement;
 import jef.database.meta.TableInfo;
 import jef.database.query.DefaultPartitionCalculator;
 import jef.database.support.MetadataEventListener;
@@ -669,9 +671,9 @@ public class DbMetaData {
 		map.put("DriverVersion", databaseMetaData.getDriverVersion() + " " + databaseMetaData.getDatabaseMinorVersion());
 		map.put("DatabaseProductName", databaseMetaData.getDatabaseProductName());
 		map.put("DatabaseProductVersion", databaseMetaData.getDatabaseProductVersion() + " " + databaseMetaData.getDatabaseMinorVersion());
-		
-		String otherVersionSQL=info.profile.getProperty(DbProperty.OTHER_VERSION_SQL);
-		if(otherVersionSQL!=null){
+
+		String otherVersionSQL = info.profile.getProperty(DbProperty.OTHER_VERSION_SQL);
+		if (otherVersionSQL != null) {
 			for (String sql : StringUtils.split(otherVersionSQL, ";")) {
 				if (StringUtils.isBlank(sql))
 					continue;
@@ -1303,8 +1305,9 @@ public class DbMetaData {
 				}
 				continue;
 			}
-			ColumnMapping<?> type = defined.remove(field);// from the metadata find
-													// the column defined
+			ColumnMapping<?> type = defined.remove(field);// from the metadata
+															// find
+			// the column defined
 			Assert.notNull(type);// 不应该发生
 			if (supportChangeDelete) {
 				List<ColumnChange> changes = type.get().isEqualTo(c, getProfile());
@@ -1315,7 +1318,7 @@ public class DbMetaData {
 		}
 		Map<String, ColumnType> insert = new HashMap<String, ColumnType>();
 		for (Map.Entry<Field, ColumnMapping<?>> e : defined.entrySet()) {
-			String columnName=e.getValue().getColumnName(getProfile(), true);
+			String columnName = e.getValue().getColumnName(getProfile(), true);
 			insert.put(columnName, e.getValue().get());
 		}
 		// 比较完成后，只剩下三类变更的列数据
@@ -1430,25 +1433,30 @@ public class DbMetaData {
 		}
 		if (existTable(tablename))
 			return false;
-		String[] sqls = ddlGenerator.toTableCreateClause(meta, tablename);
-		String sql = "create table " + tablename + "(\n" + sqls[0] + "\n)";
-		if (sqls[2] != null) {
-			sql += sqls[2];
-		}
+		TableCreateStatement sqls = ddlGenerator.toTableCreateClause(meta, tablename);
 		StatementExecutor exe = createExecutor();
 		try {
-			// execute table creation
-			exe.executeSql(sql);
+			// 建表
+			exe.executeSql(sqls.getTableSQL());
 			// create sequence
-			if (sqls[1] != null) {
-				createSequence0(null, sqls[1], 1, StringUtils.toLong(sqls[3], Long.MAX_VALUE), exe);
+			for (PairIS seq : sqls.getSequences()) {
+				createSequence0(null, seq.second, 1, StringUtils.toLong(StringUtils.repeat('9', seq.first), Long.MAX_VALUE), exe);
 			}
+			// 创建外键约束等
+			exe.executeSql(sqls.getOtherContraints());
 			// create indexes
 			exe.executeSql(ddlGenerator.toIndexClause(meta, tablename));
-			return true;
 		} finally {
 			exe.close();
 		}
+		// 额外创建表
+		List<ITableMetadata> exc = meta.getReferenceTables();
+		if (exc != null) {
+			for (ITableMetadata ext : exc) {
+				refreshTable(ext, ext.getTableName(true), null, true);
+			}
+		}
+		return true;
 	}
 
 	/*
@@ -1821,7 +1829,7 @@ public class DbMetaData {
 		List<Column> columns = getColumns(tableName, false);
 		int baseColumnCount = columns.size();
 		if (baseColumnCount == 0) {
-			baseColumnCount = meta.getMetaFields().size();
+			baseColumnCount = meta.getColumns().size();
 		}
 		List<TableInfo> tables = getDatabaseObject(ObjectType.TABLE, this.schema, tableName, Operator.MATCH_START, false);
 		String tableNameWithoutSchema = StringUtils.substringAfterIfExist(tableName, ".");
@@ -1975,7 +1983,7 @@ public class DbMetaData {
 
 	private Map<Field, ColumnMapping<?>> getColumnMap(ITableMetadata meta) {
 		Map<Field, ColumnMapping<?>> map = new HashMap<Field, ColumnMapping<?>>();
-		for (ColumnMapping<?> mapping : meta.getMetaFields()) {
+		for (ColumnMapping<?> mapping : meta.getColumns()) {
 			map.put(mapping.field(), mapping);
 		}
 		return map;

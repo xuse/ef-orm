@@ -1,7 +1,8 @@
-package jef.accelerator.bean;
+package jef.database.support.accessor;
 
 import java.util.Map;
 
+import jef.accelerator.bean.BeanAccessor;
 import jef.tools.reflect.Property;
 
 /**

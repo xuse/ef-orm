@@ -22,8 +22,9 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 
 /**
  * 抽象类，用于实现所有Entity默认的各种方法
+ * 
  * @author Administrator
- *
+ * 
  */
 @SuppressWarnings("serial")
 @XmlTransient
@@ -33,10 +34,9 @@ public abstract class DataObject implements IQueryableEntity {
 	protected transient boolean _recordUpdate = true;
 	private transient String _rowid;
 	transient ILazyLoadContext lazyload;
-	
-	
-	private static final ConditionComparator cmp=new ConditionComparator();
-	
+
+	private static final ConditionComparator cmp = new ConditionComparator();
+
 	public final void startUpdate() {
 		_recordUpdate = true;
 	}
@@ -44,13 +44,14 @@ public abstract class DataObject implements IQueryableEntity {
 	public final void stopUpdate() {
 		_recordUpdate = false;
 	}
-	
-	public final boolean hasQuery(){
-		return query!=null;
+
+	public final boolean hasQuery() {
+		return query != null;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see jef.database.IQueryableEntity#getQuery()
 	 */
 	public final Query<?> getQuery() {
@@ -58,26 +59,30 @@ public abstract class DataObject implements IQueryableEntity {
 			query = QueryBuilder.createQuery(this);
 		return query;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see jef.database.IQueryableEntity#clearQuery()
 	 */
-	public final void clearQuery(){
-		query=null;
+	public final void clearQuery() {
+		query = null;
 	}
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see jef.database.IQueryableEntity#isUsed(jef.database.Field)
 	 */
-	public final boolean isUsed(Field field){
-		if(updateValueMap==null)return false;
+	public final boolean isUsed(Field field) {
+		if (updateValueMap == null)
+			return false;
 		return updateValueMap.containsKey(field);
 	}
-	
+
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see jef.database.query.UpdateAble#clearUpdate()
 	 */
 	public final void clearUpdate() {
@@ -86,6 +91,7 @@ public abstract class DataObject implements IQueryableEntity {
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see jef.database.query.UpdateAble#getUpdateValueMap()
 	 */
 	@SuppressWarnings("unchecked")
@@ -97,7 +103,9 @@ public abstract class DataObject implements IQueryableEntity {
 
 	/*
 	 * (non-Javadoc)
-	 * @see jef.database.query.UpdateAble#prepareUpdate(jef.database.Field, java.lang.Object)
+	 * 
+	 * @see jef.database.query.UpdateAble#prepareUpdate(jef.database.Field,
+	 * java.lang.Object)
 	 */
 	public final void prepareUpdate(Field field, Object newValue) {
 		prepareUpdate(field, newValue, false);
@@ -105,7 +113,9 @@ public abstract class DataObject implements IQueryableEntity {
 
 	/*
 	 * (non-Javadoc)
-	 * @see jef.database.query.UpdateAble#prepareUpdate(jef.database.Field, java.lang.Object, boolean)
+	 * 
+	 * @see jef.database.query.UpdateAble#prepareUpdate(jef.database.Field,
+	 * java.lang.Object, boolean)
 	 */
 	public final void prepareUpdate(Field field, Object newValue, boolean force) {
 		BeanWrapper wrapper = BeanWrapper.wrap(this);
@@ -122,15 +132,23 @@ public abstract class DataObject implements IQueryableEntity {
 		return;
 	}
 
+	void markUpdateFlag(Field field, Object newValue) {
+		if (updateValueMap == null){
+			updateValueMap = new TreeMap<Field, Object>(cmp);
+			updateValueMap.put(field, newValue);
+		}
+	}
+
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see jef.database.query.UpdateAble#applyUpdate()
 	 */
 	public final void applyUpdate() {
 		if (updateValueMap == null)
 			return;
 		BeanWrapper wrapper = BeanWrapper.wrap(this);
-		for (Entry<Field,Object> entry : updateValueMap.entrySet()) {
+		for (Entry<Field, Object> entry : updateValueMap.entrySet()) {
 			Object newValue = entry.getValue();
 			if (newValue instanceof Expression || newValue instanceof jef.database.Field) {
 				continue;
@@ -139,68 +157,68 @@ public abstract class DataObject implements IQueryableEntity {
 		}
 		clearUpdate();
 	}
+
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see jef.database.query.UpdateAble#needUpdate()
 	 */
 	public final boolean needUpdate() {
 		return (updateValueMap != null) && this.updateValueMap.size() > 0;
 	}
-	
 
 	public String rowid() {
 		return _rowid;
 	}
-	
-	public void bindRowid(String rowid){
-		this._rowid=rowid;
+
+	public void bindRowid(String rowid) {
+		this._rowid = rowid;
 	}
-	
 
 	/*
 	 * 供子类hashCode（）方法调用，判断内嵌的hashCode方法是否可用
 	 */
 	protected final int getHashCode() {
-		return new HashCodeBuilder()
-		.append(query)
-		.append(_recordUpdate)
-		.append(updateValueMap)
-		.toHashCode();
+		return new HashCodeBuilder().append(query).append(_recordUpdate).append(updateValueMap).toHashCode();
 	}
+
 	/*
 	 * 处理延迟加载的字段
 	 */
-	protected final void beforeGet(String fieldname){
-		if(lazyload==null)return;
-		int id=lazyload.needLoad(fieldname);
-		if(id>-1){
+	protected final void beforeGet(String fieldname) {
+		if (lazyload == null)
+			return;
+		int id = lazyload.needLoad(fieldname);
+		if (id > -1) {
 			try {
-				if(lazyload.process(this,id)){
-					lazyload=null;		//清理掉，以后不再需要延迟加载
+				if (lazyload.process(this, id)) {
+					lazyload = null; // 清理掉，以后不再需要延迟加载
 				}
 			} catch (SQLException e) {
 				throw new PersistenceException(e);
-			}	
+			}
 		}
 	}
-	
+
 	/*
 	 * 供子类的equals方法调用，判断内嵌的query对象、updateMap对象是否相等
 	 */
 	protected final boolean isEquals(Object obj) {
-		if(!(obj instanceof DataObject)){
+		if (!(obj instanceof DataObject)) {
 			return false;
 		}
-		DataObject rhs=(DataObject)obj;
-		return new EqualsBuilder().append(this.query, rhs.query).append(_recordUpdate, rhs._recordUpdate)
-				.append(this.updateValueMap, rhs.updateValueMap).isEquals();
+		DataObject rhs = (DataObject) obj;
+		return new EqualsBuilder().append(this.query, rhs.query).append(_recordUpdate, rhs._recordUpdate).append(this.updateValueMap, rhs.updateValueMap).isEquals();
 	}
-	
-	private static class ConditionComparator implements Comparator<Field>,Serializable {
+
+	private static class ConditionComparator implements Comparator<Field>, Serializable {
 		public int compare(Field o1, Field o2) {
-			if(o1==o2)return 0;
-			if(o1==null)return 1;
-			if(o2==null)return -1;
+			if (o1 == o2)
+				return 0;
+			if (o1 == null)
+				return 1;
+			if (o2 == null)
+				return -1;
 			return o1.name().compareTo(o2.name());
 		}
 	}

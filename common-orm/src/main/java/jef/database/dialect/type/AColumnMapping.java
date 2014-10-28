@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 import jef.accelerator.bean.BeanAccessor;
-import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
@@ -73,11 +72,12 @@ public abstract class AColumnMapping<T> implements ColumnMapping<T> {
 		this.meta = meta;
 		this.ctype = type;
 
-		BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(meta.getContainerType());
+		BeanAccessor ba = meta.getBeanAccessor();
 		if (meta.getType() != EntityType.TUPLE) {
 			Assert.isTrue(meta.getAllFieldNames().contains(field.name()));
 		}
 		fieldAccessor = ba.getProperty(field.name());
+		Assert.notNull(fieldAccessor,ba.toString()+field.toString());
 	}
 
 	public String fieldName() {
@@ -90,6 +90,11 @@ public abstract class AColumnMapping<T> implements ColumnMapping<T> {
 	
 	public String lowerColumnName() {
 		return lowerColumnName;
+	}
+
+	@Override
+	public String rawColumnName() {
+		return rawColumnName;
 	}
 
 	public Field field() {

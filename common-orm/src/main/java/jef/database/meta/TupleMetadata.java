@@ -12,6 +12,8 @@ import java.util.Set;
 
 import javax.persistence.FetchType;
 
+import jef.accelerator.bean.BeanAccessor;
+import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.Entry;
 import jef.database.DbUtils;
 import jef.database.Field;
@@ -24,15 +26,15 @@ import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
 import jef.database.dialect.ColumnType;
-import jef.database.dialect.type.AbstractTimeMapping;
-import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.ColumnMappings;
-import jef.database.query.Query;
 import jef.database.query.ReferenceType;
+import jef.database.support.accessor.EfPropertiesExtensionProvider;
+import jef.database.support.accessor.ExtensionAccessor;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
+import jef.tools.reflect.BeanAccessorMapImpl;
 import jef.tools.reflect.BeanUtils;
 
 import com.google.common.collect.Multimap;
@@ -45,15 +47,10 @@ import com.google.common.collect.Multimap;
  */
 public class TupleMetadata extends MetadataAdapter {
 
-	private Map<String, Field> fields = new HashMap<String, Field>(10, 0.6f);
-	private Map<String, Field> fieldsLower = new HashMap<String, Field>(10, 0.6f);
-	private Map<String, Field> columnToField = new HashMap<String, Field>(10, 0.6f);
+	private Class<? extends IQueryableEntity> type = VarObject.class;
+	private BeanAccessor accessor = BeanAccessorMapImpl.INSTANCE;
+	private Map<String, Field> lowerColumnToFieldName = new HashMap<String, Field>(10, 0.6f);
 	private List<ColumnMapping<?>> pk = new ArrayList<ColumnMapping<?>>();
-	private AutoIncrementMapping<?>[] increMappings;
-	private AbstractTimeMapping<?>[] updateTimeMapping;
-	// /////////引用索引/////////////////
-	private final Map<String, AbstractRefField> refFieldsByName = new HashMap<String, AbstractRefField>();// 记录所有关联和引用字段referenceFields
-	private final Map<Reference, List<AbstractRefField>> refFieldsByRef = new HashMap<Reference, List<AbstractRefField>>();// 记录所有的引用字段，按引用关系
 	private final Set<TupleModificationListener> listeners = new HashSet<TupleModificationListener>();
 
 	public VarObject newInstance() {
@@ -72,12 +69,8 @@ public class TupleMetadata extends MetadataAdapter {
 		return getTableName(false);
 	}
 
-	public Set<String> getAllFieldNames() {
-		return fields.keySet();
-	}
-
 	public Set<String> getAllColumnNames() {
-		return columnToField.keySet();
+		return lowerColumnToFieldName.keySet();
 	}
 
 	/**
@@ -114,12 +107,28 @@ public class TupleMetadata extends MetadataAdapter {
 		this.schema = StringUtils.trimToNull(schema);
 	}
 
+	public TupleMetadata(MetadataAdapter parent, ExtensionConfig extension) {
+		this.type = parent.getThisType().asSubclass(IQueryableEntity.class);
+		BeanAccessor raw = FastBeanWrapperImpl.getAccessorFor(type);
+		this.accessor = new ExtensionAccessor(raw, extension.getName(), EfPropertiesExtensionProvider.getInstance());
+		this.tableName = extension.getName();
+		this.schema = parent.getSchema();
+		setBindDsName(parent.getBindDsName());
+		for (ColumnMapping<?> m : parent.getColumnSchema()) {
+			this.internalUpdateColumn(m.field(), m.rawColumnName(), m.get(), m.isPk(), false);
+		}
+		this.refFieldsByName.putAll(parent.getRefFieldsByName());
+		this.refFieldsByRef.putAll(parent.getRefFieldsByRef());
+		this.indexMap.addAll(parent.getIndexSchema());
+
+	}
+
 	public Class<?> getThisType() {
-		return VarObject.class;
+		return type;
 	}
 
 	public Class<? extends IQueryableEntity> getContainerType() {
-		return VarObject.class;
+		return type;
 	}
 
 	public Field f(String fieldname) {
@@ -129,20 +138,8 @@ public class TupleMetadata extends MetadataAdapter {
 		return field;
 	}
 
-	public Field getField(String fieldname) {
-		return fields.get(fieldname);
-	}
-
 	protected Collection<ColumnMapping<?>> getColumnSchema() {
 		return schemaMap.values();
-	}
-
-	public ColumnType getColumnType(String name) {
-		Field field = fields.get(name);
-		if (field != null) {
-			return schemaMap.get(field).get();
-		}
-		return null;
 	}
 
 	public List<Field> getPKField() {
@@ -159,12 +156,6 @@ public class TupleMetadata extends MetadataAdapter {
 				return pk.size();
 			}
 		};
-	}
-
-	public Field findField(String left) {
-		if (left == null)
-			return null;
-		return fieldsLower.get(left.toLowerCase());
 	}
 
 	/**
@@ -250,30 +241,23 @@ public class TupleMetadata extends MetadataAdapter {
 		}
 
 		ColumnMapping<?> mType = ColumnMappings.getMapping(oldField, this, columnName, type, isPk);
-		if (mType instanceof AutoIncrementMapping<?>) {
-			increMappings = ArrayUtils.addElement(increMappings, (AutoIncrementMapping<?>) mType);
-		}
-		if (mType instanceof AbstractTimeMapping<?>) {
-			AbstractTimeMapping<?> tm = (AbstractTimeMapping<?>) mType;
-			if (tm.isForUpdate()) {
-				updateTimeMapping = ArrayUtils.addElement(updateTimeMapping, tm);
-			}
-		}
+
+		updateAutoIncrementAndUpdate(mType);
 
 		String fieldName = field.name();
 		schemaMap.put(oldField, mType);
 		fields.put(fieldName, oldField);
-		fieldsLower.put(fieldName.toLowerCase(), oldField);
-		columnToField.put(columnName.toLowerCase(), oldField);
+		lowerFields.put(fieldName.toLowerCase(), oldField);
+		lowerColumnToFieldName.put(columnName.toLowerCase(), oldField);
 		if (isPk)
 			pk.add(mType);
 		if (mType.isLob()) {
 			lobNames = jef.tools.ArrayUtils.addElement(lobNames, oldField, jef.database.Field.class);
 		}
 		super.metaFields = null;// 清缓存
-		super.pkDim=null;
-		for(TupleModificationListener listener:listeners){
-			listener.onUpdate(this,field);
+		super.pkDim = null;
+		for (TupleModificationListener listener : listeners) {
+			listener.onUpdate(this, field);
 		}
 		return replace;
 	}
@@ -283,9 +267,9 @@ public class TupleMetadata extends MetadataAdapter {
 		ColumnMapping<?> mType = schemaMap.remove(field);
 		if (mType != null) {
 			// columnToField
-			columnToField.remove(mType.lowerColumnName());
+			lowerColumnToFieldName.remove(mType.lowerColumnName());
 			pk.remove(mType);
-			fieldsLower.remove(field.name().toLowerCase());
+			lowerFields.remove(field.name().toLowerCase());
 		}
 		// increMappings
 		removeAutoIncAndTimeUpdatingField(field);
@@ -309,25 +293,6 @@ public class TupleMetadata extends MetadataAdapter {
 		return internalUpdateColumn(field, columnName, type, isPk, replace);
 	}
 
-	private void removeAutoIncAndTimeUpdatingField(Field oldField) {
-		if (increMappings != null) {
-			for (AutoIncrementMapping<?> m : increMappings) {
-				if (m.field() == oldField) {
-					increMappings=(AutoIncrementMapping[])ArrayUtils.removeElement(increMappings, m);
-					break;
-				}
-			}
-		}
-		if(updateTimeMapping!=null){
-			for (AbstractTimeMapping<?> m : updateTimeMapping) {
-				if (m.field() == oldField) {
-					updateTimeMapping=(AbstractTimeMapping[])ArrayUtils.removeElement(updateTimeMapping, m);
-					break;
-				}
-			}
-		}
-	}
-
 	/**
 	 * 删除指定的列
 	 * 
@@ -337,7 +302,7 @@ public class TupleMetadata extends MetadataAdapter {
 	public boolean removeColumn(String columnName) {
 		if (columnName == null)
 			return false;
-		Field field = columnToField.get(columnName.toLowerCase());
+		Field field = lowerColumnToFieldName.get(columnName.toLowerCase());
 		if (field != null) {
 			removeColumnByFieldName(field.name());
 			return true;
@@ -357,14 +322,14 @@ public class TupleMetadata extends MetadataAdapter {
 		if (field == null)
 			return false;
 		internalRemoveField(field);
-		for(TupleModificationListener listener:listeners){
-			listener.onDelete(this,field);
+		for (TupleModificationListener listener : listeners) {
+			listener.onDelete(this, field);
 		}
 		return true;
 	}
 
 	public Field getFieldByLowerColumn(String fieldname) {
-		return columnToField.get(fieldname);
+		return lowerColumnToFieldName.get(fieldname);
 	}
 
 	/*
@@ -554,80 +519,12 @@ public class TupleMetadata extends MetadataAdapter {
 		addRefField(field);
 	}
 
-	private void addRefField(AbstractRefField f) {
-		List<AbstractRefField> list = refFieldsByRef.get(f.getReference());
-		if (list == null) {
-			list = new ArrayList<AbstractRefField>();
-			refFieldsByRef.put(f.getReference(), list);
-		}
-		list.add(f);
-		refFieldsByName.put(f.getSourceField(), f);
-	}
-
-	public Map<Reference, List<AbstractRefField>> getRefFieldsByRef() {
-		return refFieldsByRef;
-	}
-
-	public Map<String, AbstractRefField> getRefFieldsByName() {
-		return refFieldsByName;
-	}
-
-	public Reference findPath(ITableMetadata class1) {
-		for (Reference r : this.refFieldsByRef.keySet()) {
-			if (r.getTargetType() == class1) {
-				return r;
-			}
-		}
-		return null;
-	}
-
-	public Reference findDistinctPath(ITableMetadata target) {
-		Reference ref = null;
-		for (Reference reference : this.refFieldsByRef.keySet()) {
-			if (reference.getTargetType() == target) {
-				if (ref != null) {
-					throw new IllegalArgumentException("There's more than one reference to [" + target.getSimpleName() + "] in type [" + getSimpleName() + "],please assign the reference field name.");
-				}
-				ref = reference;
-			}
-		}
-		if (ref == null) {
-			throw new IllegalArgumentException("Target class " + target.getSimpleName() + "of fileter-condition is not referenced by " + getSimpleName());
-		}
-		return ref;
-	}
-
 	public boolean isAssignableFrom(ITableMetadata type) {
 		return type == this;
 	}
 
-	public ColumnMapping<?> getColumnDef(Field field) {
-		return schemaMap.get(field);
-	}
-
 	public List<Index> getIndexSchema() {
 		return indexMap;
-	}
-
-	public AutoIncrementMapping<?> getFirstAutoincrementDef() {
-		AutoIncrementMapping<?>[] array = increMappings;
-		if (array != null && array.length > 0) {
-			return array[0];
-		} else {
-			return null;
-		}
-	}
-
-	public AutoIncrementMapping<?>[] getAutoincrementDef() {
-		if (increMappings == null) {
-			return new AutoIncrementMapping<?>[0];
-		} else {
-			return increMappings;
-		}
-	}
-
-	public AbstractTimeMapping<?>[] getUpdateTimeDef() {
-		return updateTimeMapping;
 	}
 
 	public PartitionTable getPartition() {
@@ -663,12 +560,12 @@ public class TupleMetadata extends MetadataAdapter {
 		return pk;
 	}
 
-	@Override
-	public ExtensionConfig getExtensionConfig(Query<?> q) {
-		return null;
-	}
-
 	public void addListener(TupleModificationListener adapter) {
 		this.listeners.add(adapter);
+	}
+
+	@Override
+	public BeanAccessor getBeanAccessor() {
+		return accessor;
 	}
 }

@@ -97,7 +97,7 @@ public class DynamicTableTest extends org.junit.Assert {
 		TupleMetadata meta=new TupleMetadata("asdf");
 		meta.addColumn("aa", new ColumnType.AutoIncrement(10));
 		meta.getAllColumnNames();
-		meta.getMetaFields();
+		meta.getColumns();
 		meta.removeColumn("aa");
 		System.out.println(meta);
 	}

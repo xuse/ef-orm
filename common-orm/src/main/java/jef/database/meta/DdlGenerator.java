@@ -15,7 +15,7 @@ public interface DdlGenerator {
 	 * @param tablename
 	 * @return
 	 */
-	String[] toTableCreateClause(ITableMetadata obj, String tablename);
+	TableCreateStatement toTableCreateClause(ITableMetadata obj, String tablename);
 
 	/**
 	 * 转为索引语句

@@ -161,12 +161,6 @@ public class Terms {
 	private Field getField(String key) {
 		ITableMetadata meta=query.getMeta();
 		Field field= meta.getField(key);
-		if(field==null){
-			ExtensionConfig ec=meta.getExtensionConfig(query);
-			if(ec!=null){
-				field=ec.getField(key);
-			}
-		}
 		return field;
 	}
 	

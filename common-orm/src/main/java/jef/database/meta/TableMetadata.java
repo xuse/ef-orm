@@ -53,11 +53,8 @@ import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
 import jef.database.dialect.ColumnType;
-import jef.database.dialect.type.AbstractTimeMapping;
-import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.ColumnMappings;
-import jef.database.query.Query;
 import jef.database.query.ReferenceType;
 import jef.database.routing.function.AbstractDateFunction;
 import jef.database.routing.function.MapFunction;
@@ -96,12 +93,7 @@ public final class TableMetadata extends MetadataAdapter {
 
 	private final Map<Field, String> fieldToColumn = new IdentityHashMap<Field, String>();// 提供Field到列名的转换
 	private final Map<String, String> lowerColumnToFieldName = new HashMap<String, String>();// 提供Column名称到Field的转换，不光包括元模型字段，也包括了非元模型字段但标注了Column的字段(key全部存小写)
-	private final Map<String, Field> fields = new HashMap<String, Field>(); // 提供field名称文本到field对象的转换
-	private final Map<String, Field> lowerFields = new HashMap<String, Field>(); // 提供field名称文本到field对象的转换
-
-	// /////////引用索引/////////////////
-	private final Map<String, AbstractRefField> refFieldsByName = new HashMap<String, AbstractRefField>();// 记录所有关联和引用字段referenceFields
-	private final Map<Reference, List<AbstractRefField>> refFieldsByRef = new HashMap<Reference, List<AbstractRefField>>();// 记录所有的引用字段，按引用关系
+	
 
 	private List<ColumnMapping<?>> metaFields;
 
@@ -176,10 +168,6 @@ public final class TableMetadata extends MetadataAdapter {
 		return containerType;
 	}
 
-	public ColumnMapping<?> getColumnDef(jef.database.Field field) {
-		return schemaMap.get(field);
-	}
-
 	public List<jef.database.annotation.Index> getIndexSchema() {
 		return indexMap;
 	}
@@ -201,24 +189,6 @@ public final class TableMetadata extends MetadataAdapter {
 	public List<ColumnMapping<?>> getPKFields() {
 		return pkFields;
 	}
-	/**
-	 * 按照引用的关系获取所有关联字段
-	 * 
-	 * @return
-	 */
-	public Map<Reference, List<AbstractRefField>> getRefFieldsByRef() {
-		return refFieldsByRef;
-	}
-
-	/**
-	 * 按照名称获得所有关联字段
-	 * 
-	 * @return
-	 */
-	public Map<String, AbstractRefField> getRefFieldsByName() {
-		return refFieldsByName;
-	}
-
 	/**
 	 * 将一个Java Field加入到列定义中
 	 * 
@@ -272,17 +242,7 @@ public final class TableMetadata extends MetadataAdapter {
 			this.pkFields = Arrays.<ColumnMapping<?>>asList(newPks.toArray(new ColumnMapping[newPks.size()]));
 		}
 		schemaMap.put(field, type);
-		
-		if(type instanceof AbstractTimeMapping<?>){
-			AbstractTimeMapping<?> m=(AbstractTimeMapping<?>)type;
-			if(m.isForUpdate()){
-				updateTimeMapping=ArrayUtils.addElement(updateTimeMapping,m);
-			}
-		}
-
-		if (type instanceof AutoIncrementMapping<?>) {
-			incMapping = ArrayUtils.addElement(incMapping, (AutoIncrementMapping<?>) type);
-		}
+		super.updateAutoIncrementAndUpdate(type);
 		if (type.isLob()) {
 			lobNames = ArrayUtils.addElement(lobNames, field, jef.database.Field.class);
 		}
@@ -308,29 +268,6 @@ public final class TableMetadata extends MetadataAdapter {
 		indexMap.add(index);
 	}
 
-	public Field getField(String name) {
-		return fields.get(name);
-	}
-
-	public Field findField(String name) {
-		if (name == null)
-			return null;
-		Field field = lowerFields.get(name.toLowerCase());
-//		if (field == null) {
-//			LogUtil.warn("looking field [" + name + "] in " + thisType.getName() + " but not found.");
-//		}
-		return field;
-	}
-
-	public ColumnType getColumnType(String fieldName) {
-		Field field = fields.get(fieldName);
-		if (field == null) {
-			LogUtil.warn(jef.tools.StringUtils.concat("The field [", fieldName, "] does not find in ", this.getThisType().getName()));
-			return null;
-		}
-		return schemaMap.get(field).get();
-	}
-
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -339,7 +276,7 @@ public final class TableMetadata extends MetadataAdapter {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Entity: [").append(containerType.getName()).append("]\n");
-		for (ColumnMapping<?> m:this.getMetaFields()) {
+		for (ColumnMapping<?> m:this.getColumns()) {
 			String fname=m.fieldName();
 			sb.append("  ").append(fname);
 			StringUtils.repeat(sb, ' ', 10-fname.length());
@@ -348,31 +285,6 @@ public final class TableMetadata extends MetadataAdapter {
 		}
 		sb.setLength(sb.length()-1);
 		return sb.toString();
-	}
-
-	public Reference findPath(ITableMetadata class1) {
-		for (Reference r : this.refFieldsByRef.keySet()) {
-			if (r.getTargetType() == class1) {
-				return r;
-			}
-		}
-		return null;
-	}
-
-	public Reference findDistinctPath(ITableMetadata target){
-		Reference ref = null;
-		for(Reference reference:this.refFieldsByRef.keySet()){
-			if(reference.getTargetType()==target){
-				if(ref!=null){
-					throw new IllegalArgumentException("There's more than one reference to ["+target.getSimpleName()+"] in type ["+getSimpleName()+"],please assign the reference field name.");
-				}
-				ref=reference;
-			}
-		}
-		if(ref==null){
-			throw new IllegalArgumentException("Target class "+ target.getSimpleName() + "of fileter-condition is not referenced by "+ getSimpleName());
-		}
-		return ref;
 	}
 	
 	/**
@@ -486,16 +398,6 @@ public final class TableMetadata extends MetadataAdapter {
 
 		ReferenceField f = new ReferenceField(fieldType, fieldName, r, targetField, config);
 		addRefField(f);
-	}
-
-	private void addRefField(AbstractRefField f) {
-		List<AbstractRefField> list = refFieldsByRef.get(f.getReference());
-		if (list == null) {
-			list = new ArrayList<AbstractRefField>();
-			refFieldsByRef.put(f.getReference(), list);
-		}
-		list.add(f);
-		refFieldsByName.put(f.getSourceField(), f);
 	}
 
 	/**
@@ -655,7 +557,7 @@ public final class TableMetadata extends MetadataAdapter {
 	}
 
 	// 会将LOB移动到最后
-	public List<ColumnMapping<?>> getMetaFields() {
+	public List<ColumnMapping<?>> getColumns() {
 		if (metaFields == null) {
 			ColumnMapping<?>[] fields = schemaMap.values().toArray(new ColumnMapping<?>[schemaMap.size()]);
 			Arrays.sort(fields, new Comparator<ColumnMapping<?>>() {
@@ -730,29 +632,7 @@ public final class TableMetadata extends MetadataAdapter {
 		return this == type || this.containerType.isAssignableFrom(type.getThisType());
 	}
 
-	private AutoIncrementMapping<?>[] incMapping;
-	private AbstractTimeMapping<?>[]  updateTimeMapping;
 
-	public AutoIncrementMapping<?> getFirstAutoincrementDef() {
-		AutoIncrementMapping<?>[] array = incMapping;
-		if (array != null && array.length > 0) {
-			return array[0];
-		} else {
-			return null;
-		}
-	}
-
-	public AutoIncrementMapping<?>[] getAutoincrementDef() {
-		if (incMapping == null) {
-			return new AutoIncrementMapping<?>[0];
-		} else {
-			return incMapping;
-		}
-	}
-
-	public AbstractTimeMapping<?>[] getUpdateTimeDef() {
-		return updateTimeMapping;
-	}
 
 	@Override
 	protected Collection<ColumnMapping<?>> getColumnSchema() {
@@ -770,10 +650,6 @@ public final class TableMetadata extends MetadataAdapter {
 		} else {
 			throw new IllegalArgumentException(p.getClass()+" != " + this.thisType);
 		}
-	}
-
-	public Set<String> getAllFieldNames() {
-		return fields.keySet();
 	}
 
 	public EntityType getType() {
@@ -798,15 +674,9 @@ public final class TableMetadata extends MetadataAdapter {
 		}
 		return false;
 	}
-	private ExtensionConfigFactory extension;
-	
-
-	public void setExtensionFactory(ExtensionConfigFactory extension) {
-		this.extension = extension;
-	}
 
 	@Override
-	public ExtensionConfig getExtensionConfig(Query<?> q){
-		return extension.valueOf(q);
+	public BeanAccessor getBeanAccessor() {
+		return FastBeanWrapperImpl.getAccessorFor(containerType);
 	}
 }

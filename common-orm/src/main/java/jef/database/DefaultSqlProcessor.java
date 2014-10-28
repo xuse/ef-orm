@@ -280,7 +280,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 	@SuppressWarnings("unchecked")
 	private java.util.Map.Entry<Field, Object>[] getAllFieldValues(ITableMetadata meta, Map<Field, Object> map, BeanWrapper wrapper) {
 		List<Entry<Field, Object>> result = new ArrayList<Entry<Field, Object>>();
-		for (ColumnMapping<?> vType : meta.getMetaFields()) {
+		for (ColumnMapping<?> vType : meta.getColumns()) {
 			Field field = vType.field();
 			if (map.containsKey(field)) {
 				result.add(new Entry<Field, Object>(field, map.get(field)));

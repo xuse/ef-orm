@@ -310,7 +310,7 @@ public final class Mappers {
 				throw new IllegalArgumentException("the table metadata is null!");
 			}
 			BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(meta.getThisType());
-			for (ColumnMapping<?> ft : meta.getMetaFields()) {
+			for (ColumnMapping<?> ft : meta.getColumns()) {
 				Field f = ft.field();
 				String columnName=customMap.get(f.name().toUpperCase());
 				if(columnName==null){

@@ -226,7 +226,7 @@ public class QuerableEntityScanner {
 			}
 		});
 		if(checkSequence){
-			for(ColumnMapping<?> f:meta.getMetaFields()){
+			for(ColumnMapping<?> f:meta.getColumns()){
 				if(f instanceof AutoIncrementMapping){
 					AutoIncrementMapping<?> m=(AutoIncrementMapping<?>)f;
 					GenerationType gt=((AutoIncrementMapping<?>) f).getGenerationType(entityManagerFactory.getDefault().getProfile(meta.getBindDsName()));

@@ -1,20 +1,16 @@
 package jef.database.dynamic;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import jef.database.annotation.DynamicPropertyGetter;
-import jef.database.annotation.DynamicPropertySetter;
+import jef.database.EntityExtensionSupport;
 import jef.database.annotation.DynamicTable;
 import jef.database.annotation.EasyEntity;
 
 @EasyEntity
 @DynamicTable(resourceTypeField = "resourceType")
-public class DynaResource extends jef.database.DataObject {
+public class DynaResource extends EntityExtensionSupport{
 
 	@Id
 	@Column
@@ -35,29 +31,7 @@ public class DynaResource extends jef.database.DataObject {
 
 	@Column
     private String resourceType;
-    
-    private final Map<String,Object> specProps=new HashMap<String,Object>();
-
-	/**
-	 * 设置扩展属性
-	 * @param prop
-	 * @param value
-	 */
-    @DynamicPropertySetter
-	public void setExtendProp(String prop,Object value){
-		specProps.put(prop, value);
-	}
-	
-	/**
-	 * 获取扩展属性
-	 * @param prop
-	 * @return
-	 */
-    @DynamicPropertyGetter
-	public Object getExtendProp(String prop){
-		return specProps.get(prop);
-	}
-	
+ 
     public DynaResource() {
     }
     public DynaResource(String string) {

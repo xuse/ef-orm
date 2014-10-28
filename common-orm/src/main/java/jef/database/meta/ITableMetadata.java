@@ -6,6 +6,7 @@ import java.util.Set;
 
 import javax.persistence.CascadeType;
 
+import jef.accelerator.bean.BeanAccessor;
 import jef.common.Entry;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
@@ -17,7 +18,6 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AbstractTimeMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ColumnMapping;
-import jef.database.query.Query;
 
 import com.google.common.collect.Multimap;
 
@@ -105,13 +105,7 @@ public interface  ITableMetadata {
 	 */
 	public Field getFieldByLowerColumn(String columnInLowerCase);
 	
-	/**
-	 * 获取字段的元数据定义
-	 * 
-	 * @return MappingType,包含了该字段的数据库列名、java字段名、类型等各种信息。
-	 * @see ColumnMapping
-	 */
-	public ColumnMapping<?> getColumnDef(Field field);
+	
 	/**
 	 * 返回第一个自增字段的定义，如果没有则返回null
 	 * 
@@ -181,7 +175,14 @@ public interface  ITableMetadata {
 	 * 这些字段的顺序一旦确定那么就是固定的
 	 * @return
 	 */
-	public List<ColumnMapping<?>> getMetaFields() ;
+	public List<ColumnMapping<?>> getColumns() ;
+	/**
+	 * 获取字段的元数据定义
+	 * 
+	 * @return MappingType,包含了该字段的数据库列名、java字段名、类型等各种信息。
+	 * @see ColumnMapping
+	 */
+	public ColumnMapping<?> getColumnDef(Field field);
 	/**
 	 * 根据名称得到一个Field对象（大小写不敏感）
 	 * @param name
@@ -298,8 +299,14 @@ public interface  ITableMetadata {
 	boolean containsMeta(ITableMetadata meta);
 	
 	/**
-	 *　获得动态表扩展
+	 * 得到关联的表的特性
 	 * @return
 	 */
-	ExtensionConfig getExtensionConfig(Query<?> query);
+	List<ITableMetadata> getReferenceTables();
+	
+	/**
+	 * 内部使用，得到Bean访问器
+	 * @return
+	 */
+	BeanAccessor getBeanAccessor();
 }

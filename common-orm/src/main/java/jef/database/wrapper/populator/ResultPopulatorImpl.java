@@ -660,7 +660,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 		Map<String, ColumnDescription> data = new HashMap<String, ColumnDescription>();
 		DatabaseDialect profile = rs.getProfile();
 		// 这里要按照列名来拼装，不是默认全拼装
-		for (ColumnMapping<?> ft : meta.getMetaFields()) {
+		for (ColumnMapping<?> ft : meta.getColumns()) {
 			String columnName;
 			Field f = ft.field();
 			if (fullRef == null) {

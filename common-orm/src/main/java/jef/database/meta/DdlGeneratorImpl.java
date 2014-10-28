@@ -2,7 +2,6 @@ package jef.database.meta;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -12,11 +11,7 @@ import java.util.Set;
 import jef.common.SimpleSet;
 import jef.database.Field;
 import jef.database.dialect.ColumnType;
-import jef.database.dialect.ColumnType.AutoIncrement;
-import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.AutoIncrementMapping;
-import jef.database.dialect.type.ColumnMapping;
 import jef.database.support.RDBMS;
 import jef.tools.StringUtils;
 import jef.tools.string.RandomData;
@@ -46,66 +41,10 @@ public class DdlGeneratorImpl implements DdlGenerator {
 	 * jef.database.SqlProcessor#toTableCreateClause(jef.database.DataObject,
 	 * java.lang.String)
 	 */
-	public String[] toTableCreateClause(ITableMetadata meta, String tablename) {
-		StringBuilder sb = new StringBuilder();
-		String sequenceSql = null;
-		String charSetFix = null;// MY_SQL数据库只能索引255个UTF-8，所以一旦主键超过了这个长度，就在结尾处加上那个标记
-		String SequenceColumnSize = null;
-		List<ColumnMapping<?>> pkFields = meta.getPKFields();
-		for (ColumnMapping<?> entry : meta.getMetaFields()) {
-			Field field = entry.field();
-			boolean isPK = pkFields.contains(field);
-			if (sb.length() > 0)
-				sb.append(",\n");
-
-			sb.append("    ").append(entry.getColumnName(profile, true)).append(" ");
-			ColumnType vType = entry.get();
-			if (isPK) {
-				vType.setNullable(false);
-				if (vType instanceof Varchar) {
-					Varchar vcType=(Varchar) vType;
-					int check=profile.getPropertyInt(DbProperty.INDEX_LENGTH_LIMIT);
-					if(check>0 && vcType.getLength()>check){
-						throw new IllegalArgumentException("The varchar column in "+profile.getName()+" will not be indexed if length is >"+check);
-					}
-					check=profile.getPropertyInt(DbProperty.INDEX_LENGTH_LIMIT_FIX);
-					if(check>0 && vcType.getLength()>check){
-						charSetFix=profile.getProperty(DbProperty.INDEX_LENGTH_CHARESET_FIX);
-					}
-				}
-			}
-			if (entry instanceof AutoIncrementMapping) {
-				if (profile.has(Feature.AUTOINCREMENT_NEED_SEQUENCE)) {
-					sequenceSql = ((AutoIncrementMapping<?>) entry).getSequenceName(profile);
-					SequenceColumnSize = StringUtils.repeat('9', ((AutoIncrement) vType).getPrecision());
-				}
-				if (profile.has(Feature.AUTOINCREMENT_MUSTBE_PK)) { //在一些数据库上，只有主键才能自增，并且此时不能再单独设置主键.
-					pkFields=Collections.emptyList(); //清空这些主键标记
-
-				}
-			}
-			if (meta.getEffectPartitionKeys() != null) { // 如果是分表的，自增键退化为常规字段
-				if (vType instanceof AutoIncrement) {
-					vType = ((AutoIncrement) vType).toNormalType();
-				}
-			}
-			sb.append(profile.getCreationComment(vType, true));
-		}
-		if (pkFields.size() > 0) {
-			sb.append(",\n");
-			String[] columns = new String[pkFields.size()];
-			for (int n = 0; n < pkFields.size(); n++) {
-				columns[n] = pkFields.get(n).getColumnName(profile, true);
-			}
-			if (tablename.indexOf('.') > -1) {
-				// String schema=StringUtils.substringBefore(tablename, ".");
-				tablename = StringUtils.substringAfter(tablename, ".");
-				sb.append("    constraint " + "PK_" + tablename + " primary key(" + StringUtils.join(columns, ',') + ")");
-			} else {
-				sb.append("    constraint PK_" + tablename + " primary key(" + StringUtils.join(columns, ',') + ")");
-			}
-		}
-		return new String[] { sb.toString(), sequenceSql, charSetFix, SequenceColumnSize };
+	public TableCreateStatement toTableCreateClause(ITableMetadata meta, String tablename) {
+		TableCreateStatement result=new TableCreateStatement();
+		result.addTableMeta(tablename, meta, profile);
+		return result;
 	}
 
 	/**
@@ -153,13 +92,13 @@ public class DdlGeneratorImpl implements DdlGenerator {
 			if (indexName.length() > 30)
 				indexName = indexName.substring(0, 30);
 			StringBuilder sb = new StringBuilder("create ");
-			if(index.definition().length()>0){
+			if (index.definition().length() > 0) {
 				sb.append(index.definition()).append(' ');
 			}
 			sb.append("index ");
 			sb.append(indexName).append(" on ");
 			sb.append(tablename).append("(").append(fieldsb.toString()).append(")");
-			sb.append(profile.getProperty(DbProperty.INDEX_USING_HASH,""));
+			sb.append(profile.getProperty(DbProperty.INDEX_USING_HASH, ""));
 			sqls.add(sb.toString());
 		}
 		return sqls;
@@ -200,7 +139,7 @@ public class DdlGeneratorImpl implements DdlGenerator {
 							sqls.add(toChangeColumnSql(tableName, entry.getFrom().getColumnName(), change, profile));
 						}
 					} else {
-						//简单语法时
+						// 简单语法时
 						sqls.add(toChangeColumnSql(tableName, Arrays.asList(entry)));
 					}
 				}

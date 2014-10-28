@@ -130,8 +130,4 @@ public abstract class BeanAccessor {
 		if(anns==null)return null;
 		return (T)anns.get(type);
 	}
-	
-	public BeanAccessor bind(String extensionName) {
-		return this;
-	}
 }

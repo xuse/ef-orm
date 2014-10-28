@@ -50,6 +50,7 @@ import jef.database.meta.EntityType;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
+import jef.database.meta.MetadataAdapter;
 import jef.database.meta.Reference;
 import jef.database.query.AllTableColumns;
 import jef.database.query.ConditionQuery;
@@ -1167,7 +1168,7 @@ public abstract class Session {
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <T> T load(Class<T> entityClass, Serializable... keys) throws SQLException {
-		ITableMetadata meta = MetaHolder.getMeta(entityClass);
+		MetadataAdapter meta = MetaHolder.getMeta(entityClass);
 		if (meta.getType() == EntityType.POJO) {
 			PKQuery<PojoWrapper> query = new PKQuery<PojoWrapper>(meta, keys);
 			List<PojoWrapper> result = innerSelect(query, null, null, QueryOption.DEFAULT_MAX1);

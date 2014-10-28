@@ -11,8 +11,6 @@ import jef.tools.reflect.BeanAccessorMapImpl;
 import jef.tools.reflect.BeanWrapper;
 import jef.tools.reflect.Property;
 
-import org.springframework.util.Assert;
-
 /**
  * 快速Bean访问器实现
  * @author jiyi
@@ -23,29 +21,20 @@ public final class FastBeanWrapperImpl extends BeanWrapper{
 	private Object obj;
 	private BeanAccessor accessor;
 	
-	
-	/**
-	 * 注册一个扩展属性提供器
-	 * @param prov
-	 */
-	public static void registerBeanExtensionProvider(BeanExtensionProvider prov){
-		Assert.notNull(prov);
-		bf.registerExtensionProvider(prov);
-	}
-	
 	public static final BeanAccessor getAccessorFor(Class<?> clz){
 		if(Map.class.isAssignableFrom(clz))return BeanAccessorMapImpl.INSTANCE;
 		return bf.getBeanAccessor(clz);
 	}
-	
-	public static final BeanAccessor getAccessorFor(Class<?> clz,String extensionName){
-		BeanAccessor ba=bf.getBeanAccessor(clz);
-		return ba.bind(extensionName);
-	}
-	
+
 	public FastBeanWrapperImpl(Object obj) {
 		super(obj);
 		this.accessor=bf.getBeanAccessor(obj.getClass());
+		this.obj=obj;
+	}
+	
+	public FastBeanWrapperImpl(Object obj,BeanAccessor ba) {
+		super(obj);
+		this.accessor=ba;
 		this.obj=obj;
 	}
 

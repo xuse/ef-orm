@@ -31,7 +31,7 @@ public @interface DynamicKeyValueExtension {
 	 * 属性表中，记录Value的值
 	 * @return
 	 */
-	String valueColumn() default "value";
+	String valueColumn() default "value_text";
 	
 	/**
 	 * 元数据定义的ID。将元数据以动态表的形式存入MetaHolder，按ID获取使用。

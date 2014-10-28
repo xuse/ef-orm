@@ -3,60 +3,86 @@ package jef.database.meta;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import jef.database.IQueryableEntity;
 import jef.database.annotation.DynamicTable;
-import jef.database.query.Query;
-import jef.tools.reflect.Property;
+import jef.database.dialect.type.ColumnMapping;
+import jef.database.query.ConditionQuery;
+import jef.tools.reflect.BeanUtils;
+import jef.tools.reflect.FieldAccessor;
+import jef.tools.reflect.FieldEx;
 
-public class ExtensionTemplate implements ExtensionConfigFactory{
-	
-	private final Map<String,ExtensionInstance> cache=new ConcurrentHashMap<String, ExtensionInstance>(); 
+public class ExtensionTemplate implements ExtensionConfigFactory {
+	private final Map<String, ExtensionInstance> cache = new ConcurrentHashMap<String, ExtensionInstance>();
+	@SuppressWarnings("unused")
 	private DynamicTable dt;
-	private Property keyAccessor;
-	
-	public ExtensionTemplate(DynamicTable dt,Class<?> clz){
-		this.dt=dt;
+	private FieldAccessor keyAccessor;
+	private MetadataAdapter parent;
+
+	public ExtensionTemplate(DynamicTable dt, Class<?> clz, MetadataAdapter meta) {
+		this.dt = dt;
+		this.parent = meta;
+
+		String keyField = dt.resourceTypeField();
+		FieldEx field = BeanUtils.getField(clz, keyField);
+		if (field == null) {
+			throw new IllegalArgumentException("Field " + keyField + " not exist");
+		}
+		this.keyAccessor = field.getAccessor();
+	}
+
+	public MetadataAdapter getTemplate() {
+		return parent;
 	}
 
 	@Override
-	public ExtensionConfig valueOf(Query<?> q) {
-		if(q==null){
+	public ExtensionConfig getExtension(IQueryableEntity q) {
+		if (q == null) {
 			throw new IllegalArgumentException();
 		}
-		String key=(String)keyAccessor.get(q.getInstance());
-		if(key==null){
-			throw new IllegalArgumentException();
+		String key = (String) keyAccessor.getObject(q);
+		if (key == null || key.length() == 0) {
+			if (q.hasQuery()) {
+				key = (String) q.getQuery().getAttribute(ConditionQuery.CUSTOM_TABLE_TYPE);
+			}
+			if (key == null || key.length() == 0)
+				throw new IllegalArgumentException("the entity has no key for dynamic extendsion");
 		}
-		return valueOf(key);
+		return getExtension(key);
 	}
-	
 
 	@Override
-	public ExtensionConfig valueOf(String key) {
-		ExtensionInstance ec=cache.get(key);
-		if(ec!=null)return ec;
-		ec=new ExtensionInstance(key);
-		cache.put(key,ec);
+	public ExtensionConfig getExtension(String extensionName) {
+		ExtensionInstance ec = cache.get(extensionName);
+		if (ec != null)
+			return ec;
+		ec = new ExtensionInstance(extensionName, parent);
+		cache.put(extensionName, ec);
 		return ec;
 	}
-	
-	class ExtensionInstance extends AbstractExtensionConfig{
-		public ExtensionInstance(String key) {
-			this.name=key;
+
+	@Override
+	public ExtensionConfig getDefault() {
+		// throw new UnsupportedOperationException();
+		return null;
+	}
+
+	final class ExtensionInstance extends AbstractExtensionConfig {
+		public ExtensionInstance(String key, MetadataAdapter meta) {
+			super(key, meta);
 		}
 
 		@Override
-		public void doPropertySet(Object entity, String property, Object value) {
-			// TODO Auto-generated method stub
-			
+		public boolean isDynamicTable() {
+			return true;
 		}
 
 		@Override
-		public Object doPropertyGet(Object entity, String property) {
-			// TODO Auto-generated method stub
-			return null;
+		protected MetadataAdapter merge() {
+			TupleMetadata tuple = new TupleMetadata(parent, this);
+			for (ColumnMapping<?> f : getExtensionMeta().getColumns()) {
+				tuple.updateColumn(f.fieldName(), f.rawColumnName(), f.get(), f.isPk());
+			}
+			return tuple;
 		}
-
-
-
 	}
 }

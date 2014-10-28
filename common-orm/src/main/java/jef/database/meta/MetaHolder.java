@@ -46,13 +46,13 @@ import javax.persistence.TableGenerator;
 import jef.accelerator.asm.Attribute;
 import jef.accelerator.asm.ClassReader;
 import jef.accelerator.asm.ClassVisitor;
-import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.Holder;
 import jef.database.Condition.Operator;
 import jef.database.DbCfg;
 import jef.database.DbMetaData;
 import jef.database.DbUtils;
+import jef.database.EntityExtensionSupport;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.JefClassLoader;
@@ -81,6 +81,7 @@ import jef.database.query.ReadOnlyQuery;
 import jef.database.query.SqlExpression;
 import jef.database.support.EntityNotEnhancedException;
 import jef.database.support.QuerableEntityScanner;
+import jef.database.support.accessor.EfPropertiesExtensionProvider;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
@@ -120,7 +121,8 @@ public final class MetaHolder {
 	// 反向查找表
 	private static final Map<String, ITableMetadata> inverseMapping = new HashMap<String, ITableMetadata>();
 
-	private static final EfPropertiesExtensionProvider extensionContext=new EfPropertiesExtensionProvider();
+	private static final Map<Class<?>, TableMetadata> template = new java.util.IdentityHashMap<Class<?>, TableMetadata>();
+
 	// 初始化分表规则加载器
 	static {
 		try {
@@ -156,7 +158,6 @@ public final class MetaHolder {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		FastBeanWrapperImpl.registerBeanExtensionProvider(extensionContext);
 	}
 
 	/**
@@ -192,8 +193,10 @@ public final class MetaHolder {
 	/**
 	 * 根据数据库的表情况，初始化动态表的模型 初始化完成后会缓存起来，下次获取可以直接用{@link #getMeta(String)}得到
 	 * 
-	 * @param session 数据库访问句柄 Session.
-	 * @param tableName 表名
+	 * @param session
+	 *            数据库访问句柄 Session.
+	 * @param tableName
+	 *            表名
 	 * @return
 	 */
 	public static TupleMetadata initMetadata(Session session, String tableName) throws SQLException {
@@ -203,8 +206,10 @@ public final class MetaHolder {
 	/**
 	 * 根据数据库的表情况，初始化动态表的模型 初始化完成后会缓存起来，下次获取可以直接用{@link #getMeta(String)}得到
 	 * 
-	 * @param session  数据库访问句柄 Session.
-	 * @param tableName 表名
+	 * @param session
+	 *            数据库访问句柄 Session.
+	 * @param tableName
+	 *            表名
 	 * @param convertColumnNames
 	 *            是否将数据库的列名转换为 java 习惯。 <br/>
 	 *            eg. CREATE_TIME -> createTime
@@ -217,7 +222,7 @@ public final class MetaHolder {
 			throw new SQLException("The table " + tableName + " does not exit in database " + session.getNoTransactionSession().toString());
 		}
 		PrimaryKey pks = meta.getPrimaryKey(tableName);
-		List<jef.database.meta.Column> columns = meta.getColumns(tableName,false);
+		List<jef.database.meta.Column> columns = meta.getColumns(tableName, false);
 		TupleMetadata m = new TupleMetadata(tableName);
 		for (jef.database.meta.Column c : columns) {
 			boolean isPk = (pks == null) ? false : pks.hasColumn(c.getColumnName());
@@ -339,9 +344,13 @@ public final class MetaHolder {
 	 */
 	public final static MetadataAdapter getMeta(Object d) {
 		if (d instanceof VarMeta) {
-			return (MetadataAdapter)((VarMeta) d).meta();
+			return (MetadataAdapter) ((VarMeta) d).meta();
 		}
-		return getMeta(d.getClass());
+		MetadataAdapter metadata=getMeta(d.getClass());
+		if(metadata.getType()==EntityType.TEMPLATE){
+			return metadata.getExtension((IQueryableEntity)d).getMeta();
+		}
+		return metadata;
 	}
 
 	private static boolean isFirstInterfaceClzEntity(Class<?> sc) {
@@ -364,18 +373,43 @@ public final class MetaHolder {
 				return m1; // 双重检查锁定
 		}
 		if (IQueryableEntity.class.isAssignableFrom(clz)) {
-			return initEntity(clz.asSubclass(IQueryableEntity.class));
+			
+			// 计算动态扩展字段
+			DynamicTable dt = clz.getAnnotation(DynamicTable.class);
+			DynamicKeyValueExtension dkv = clz.getAnnotation(DynamicKeyValueExtension.class);
+			if (dt == null && dkv == null) {// 两种扩展方式只能出现一种
+				return initEntity(clz.asSubclass(IQueryableEntity.class));	
+			} else if (dt != null) {
+				return initVarTemplate(clz.asSubclass(EntityExtensionSupport.class),dt);
+			} else if (dkv != null) {
+				return initVarEntity(clz.asSubclass(EntityExtensionSupport.class),dkv);
+			}else{
+				throw new UnsupportedOperationException("Not support @DynamicTable and @DynamicKeyValueExtension simultaneously.");
+			}
 		} else {
 			return initPojo(clz);
 		}
 	}
 
+	private static MetadataAdapter initVarTemplate(Class<? extends EntityExtensionSupport> asSubclass, DynamicTable dt) {
+		MetadataAdapter meta=initEntity(asSubclass);
+		ExtensionTemplate ef=new ExtensionTemplate(dt,asSubclass,meta);
+		EfPropertiesExtensionProvider.getInstance().register(asSubclass, ef);
+		return new TemplateMetadata(ef);
+	}
+
+	private static MetadataAdapter initVarEntity(Class<? extends EntityExtensionSupport> asSubclass, DynamicKeyValueExtension dkv) {
+		MetadataAdapter meta=initEntity(asSubclass);
+		ExtensionKeyValueTable ef=new ExtensionKeyValueTable(dkv,asSubclass,meta);
+		EfPropertiesExtensionProvider.getInstance().register(asSubclass, ef);
+		//直接使用转化后的Metadata
+		return ef.getDefault().getMeta();
+	}
+
 	private static MetadataAdapter initPojo(Class<?> clz) {
 		AnnotationProvider annos = config.getAnnotations(clz);
 		TableMetadata meta = new TableMetadata(PojoWrapper.class, clz, annos);
-		
-		
-		
+
 		List<java.lang.reflect.Field> unprocessedField = new ArrayList<java.lang.reflect.Field>();
 
 		MeteModelFields metaFields = new MeteModelFields(clz, meta);
@@ -395,10 +429,6 @@ public final class MetaHolder {
 	private static MetadataAdapter initEntity(Class<? extends IQueryableEntity> clz) {
 		AnnotationProvider annos = config.getAnnotations(clz);
 		{
-			// Entity e = annos.getAnnotation(Entity.class);
-			// if (e == null)
-			// throw new IllegalArgumentException(clz.getName() +
-			// " is not a Entity Class");
 			EasyEntity ee = annos.getAnnotation(EasyEntity.class);
 			if (ORMConfig.getInstance().isCheckEnhancement()) {
 				assertEnhanced(clz, ee, annos);
@@ -406,7 +436,6 @@ public final class MetaHolder {
 		}
 		TableMetadata meta = new TableMetadata(clz, annos);
 		List<java.lang.reflect.Field> unprocessedField = new ArrayList<java.lang.reflect.Field>();
-
 		MeteModelFields metaFields = new MeteModelFields(clz, meta);
 
 		Class<?> processingClz = clz;
@@ -431,8 +460,6 @@ public final class MetaHolder {
 		// 加载分表策略
 		Assert.notNull(partitionLoader, "the Partition loader is null!");
 		meta.setPartition(partitionLoader.get(clz));
-		// 此时就将基本字段计算完成的元数据加入缓存，以免在多表关系处理时遭遇死循环
-		pool.put(clz, meta);
 
 		// 针对未处理的字段，当做外部引用关系处理
 		for (java.lang.reflect.Field f : unprocessedField) {
@@ -441,28 +468,7 @@ public final class MetaHolder {
 			// 还有一种情况，即定义了Column注解，但不属于元模型的一个字段，用于辅助映射的。当结果拼装时有用
 			processColumnHelper(f, meta, annos);
 		}
-		
-		//计算动态扩展字段
-		DynamicTable dt=clz.getAnnotation(DynamicTable.class);
-		DynamicKeyValueExtension dkv=clz.getAnnotation(DynamicKeyValueExtension.class);
-		if(dt!=null && dkv!=null){//两种扩展方式只能出现一种
-			throw new UnsupportedOperationException("Not support @DynamicTable and @DynamicKeyValueExtension simultaneously.");
-		}else if(dt!=null){
-			processDynamicTemplate(clz,meta,annos,dt);
-		}else if(dkv!=null){
-			processDynamicKvExtention(clz,meta,annos,dkv);
-		}
 		return meta;
-	}
-
-	private static void processDynamicKvExtention(Class<?> clz, TableMetadata meta, AnnotationProvider annos, DynamicKeyValueExtension dkv) {
-		ExtensionKeyValueTable ex=new ExtensionKeyValueTable(dkv,clz);
-		meta.setExtensionFactory(ex);
-	}
-
-	private static void processDynamicTemplate(Class<?> clz,TableMetadata meta, AnnotationProvider annos, DynamicTable dt) {
-		ExtensionTemplate ex=new ExtensionTemplate(dt,clz);
-		meta.setExtensionFactory(ex);
 	}
 
 	// 处理非元模型的Column描述字段
@@ -646,7 +652,6 @@ public final class MetaHolder {
 		}
 	}
 
-
 	private static JoinPath getHint(AnnotationProvider annos, java.lang.reflect.Field f, MetadataAdapter meta, ITableMetadata target) {
 		if (annos.getFieldAnnotation(f, JoinColumn.class) != null) {
 			JoinColumn j = annos.getFieldAnnotation(f, JoinColumn.class);
@@ -660,23 +665,21 @@ public final class MetaHolder {
 
 	private static boolean processReference(java.lang.reflect.Field f, TableMetadata meta, AnnotationProvider annos) {
 		FieldOfTargetEntity targetField = annos.getFieldAnnotation(f, FieldOfTargetEntity.class);
-		CascadeConfig config=new CascadeConfig();
-		config.asMap=annos.getFieldAnnotation(f, Cascade.class);
-		
-		
-		
+		CascadeConfig config = new CascadeConfig();
+		config.asMap = annos.getFieldAnnotation(f, Cascade.class);
+
 		if (annos.getFieldAnnotation(f, OneToOne.class) != null) {
 			OneToOne r1Vs1 = annos.getFieldAnnotation(f, OneToOne.class);
 			ITableMetadata target = getTargetType(r1Vs1.targetEntity(), targetField, f, false);
-			config.path =getHint(annos,f,meta,target);
-			if(config.path==null){
-				String mappedBy=r1Vs1.mappedBy();
-				if(StringUtils.isNotEmpty(mappedBy)){
-					config.path=processJoin(meta,f,target,annos,mappedBy); 
+			config.path = getHint(annos, f, meta, target);
+			if (config.path == null) {
+				String mappedBy = r1Vs1.mappedBy();
+				if (StringUtils.isNotEmpty(mappedBy)) {
+					config.path = processJoin(meta, f, target, annos, mappedBy);
 				}
 			}
 			if (targetField == null) {
-				meta.addRefField_1vs1(f.getType(), f.getName(), target, r1Vs1,config);
+				meta.addRefField_1vs1(f.getType(), f.getName(), target, r1Vs1, config);
 			} else {
 				jef.database.Field field = target.getField(targetField.value());
 				Assert.notNull(field);
@@ -687,11 +690,11 @@ public final class MetaHolder {
 		if (annos.getFieldAnnotation(f, OneToMany.class) != null) {
 			OneToMany r1VsN = annos.getFieldAnnotation(f, OneToMany.class);
 			ITableMetadata target = getTargetType(r1VsN.targetEntity(), targetField, f, true);
-			config.path =getHint(annos,f,meta,target);
-			if(config.path==null){
-				String mappedBy=r1VsN.mappedBy();
-				if(StringUtils.isNotEmpty(mappedBy)){
-					config.path=processJoin(meta,f,target,annos,mappedBy); 
+			config.path = getHint(annos, f, meta, target);
+			if (config.path == null) {
+				String mappedBy = r1VsN.mappedBy();
+				if (StringUtils.isNotEmpty(mappedBy)) {
+					config.path = processJoin(meta, f, target, annos, mappedBy);
 				}
 			}
 			if (targetField == null) {
@@ -707,13 +710,13 @@ public final class MetaHolder {
 		if (annos.getFieldAnnotation(f, ManyToOne.class) != null) {
 			ManyToOne rNVs1 = annos.getFieldAnnotation(f, ManyToOne.class);
 			ITableMetadata target = getTargetType(rNVs1.targetEntity(), targetField, f, false);
-			config.path =getHint(annos,f,meta,target);
+			config.path = getHint(annos, f, meta, target);
 			if (targetField == null) {
 				meta.addRefField_Nvs1(f.getType(), f.getName(), target, rNVs1, config);
 			} else {
 				jef.database.Field field = target.getField(targetField.value());
-				if(field==null){
-					throw new IllegalArgumentException("["+targetField.value()+"] is not exist in entity:"+ target.getName());
+				if (field == null) {
+					throw new IllegalArgumentException("[" + targetField.value() + "] is not exist in entity:" + target.getName());
 				}
 				meta.addRefField_Nvs1(f.getType(), f.getName(), field, config);
 			}
@@ -722,11 +725,11 @@ public final class MetaHolder {
 		if (annos.getFieldAnnotation(f, ManyToMany.class) != null) {
 			ManyToMany rNVsN = annos.getFieldAnnotation(f, ManyToMany.class);
 			ITableMetadata target = getTargetType(rNVsN.targetEntity(), targetField, f, true);
-			config.path =getHint(annos,f,meta,target);
-			if(config.path==null){
-				String mappedBy=rNVsN.mappedBy();
-				if(StringUtils.isNotEmpty(mappedBy)){
-					config.path=processJoin(meta,f,target,annos,mappedBy); 
+			config.path = getHint(annos, f, meta, target);
+			if (config.path == null) {
+				String mappedBy = rNVsN.mappedBy();
+				if (StringUtils.isNotEmpty(mappedBy)) {
+					config.path = processJoin(meta, f, target, annos, mappedBy);
 				}
 			}
 			if (targetField == null) {
@@ -740,8 +743,6 @@ public final class MetaHolder {
 		}
 		return false;
 	}
-
-
 
 	/**
 	 * 计算出目标连接的类型
@@ -778,9 +779,9 @@ public final class MetaHolder {
 		throw new IllegalArgumentException(field.getDeclaringClass().getSimpleName() + ":" + field.getName() + " miss its targetEntity annotation.");
 	}
 
-	private static JoinPath processJoin(MetadataAdapter thisMeta, java.lang.reflect.Field f, ITableMetadata target,AnnotationProvider annos, JoinColumn... jj) {
+	private static JoinPath processJoin(MetadataAdapter thisMeta, java.lang.reflect.Field f, ITableMetadata target, AnnotationProvider annos, JoinColumn... jj) {
 		List<JoinKey> result = new ArrayList<JoinKey>();
-		String fieldName=f.getName();
+		String fieldName = f.getName();
 		for (JoinColumn j : jj) {
 			if (StringUtils.isBlank(j.name())) {
 				throw new IllegalArgumentException("Invalid reference [" + thisMeta.getThisType().getName() + "." + fieldName + "]:The field 'name' in JoinColumn is empty");
@@ -794,13 +795,13 @@ public final class MetaHolder {
 			result.add(new JoinKey(left, right));
 		}
 		JoinType type = JoinType.LEFT;
-		JoinDescription joinDesc=annos.getFieldAnnotation(f, JoinDescription.class);
+		JoinDescription joinDesc = annos.getFieldAnnotation(f, JoinDescription.class);
 		if (joinDesc != null) {
 			type = joinDesc.type();
 		}
 		if (result.size() > 0) {
 			JoinPath path = new JoinPath(type, result.toArray(new JoinKey[result.size()]));
-			path.setDescription(joinDesc,annos.getFieldAnnotation(f, OrderBy.class));
+			path.setDescription(joinDesc, annos.getFieldAnnotation(f, OrderBy.class));
 			if (joinDesc != null && joinDesc.filterCondition().length() > 0) {
 				JoinKey joinExpress = getJoinExpress(target, joinDesc.filterCondition().trim());
 				if (joinExpress != null)
@@ -811,11 +812,10 @@ public final class MetaHolder {
 		return null;
 	}
 
-	private static JoinPath processJoin(TableMetadata meta, java.lang.reflect.Field f, ITableMetadata target, AnnotationProvider annos,String mappedBy) {
-		JoinDescription joinDesc= annos.getFieldAnnotation(f, JoinDescription.class);
-		OrderBy orderBy=annos.getFieldAnnotation(f, OrderBy.class);
-		
-		
+	private static JoinPath processJoin(TableMetadata meta, java.lang.reflect.Field f, ITableMetadata target, AnnotationProvider annos, String mappedBy) {
+		JoinDescription joinDesc = annos.getFieldAnnotation(f, JoinDescription.class);
+		OrderBy orderBy = annos.getFieldAnnotation(f, OrderBy.class);
+
 		List<JoinKey> result = new ArrayList<JoinKey>();
 
 		if (meta.getPKFields().size() != 1) {
@@ -833,7 +833,7 @@ public final class MetaHolder {
 		}
 		if (result.size() > 0) {
 			JoinPath path = new JoinPath(type, result.toArray(new JoinKey[result.size()]));
-			path.setDescription(joinDesc,orderBy);
+			path.setDescription(joinDesc, orderBy);
 			if (joinDesc != null && joinDesc.filterCondition().length() > 0) {
 				JoinKey joinExpress = getJoinExpress(target, joinDesc.filterCondition().trim());
 				if (joinExpress != null)
@@ -868,7 +868,7 @@ public final class MetaHolder {
 		}
 	}
 
-	private static ColumnType createTypeByAnnotation(Column col,GeneratedValue gv, java.lang.reflect.Field field, AnnotationProvider annos) throws ParseException {
+	private static ColumnType createTypeByAnnotation(Column col, GeneratedValue gv, java.lang.reflect.Field field, AnnotationProvider annos) throws ParseException {
 		ColumnDefinition c = DbUtils.parseColumnDef(col.columnDefinition().toUpperCase());
 		String def = c.getColDataType().getDataType();
 		SqlExpression defaultExpression = null;
@@ -896,9 +896,9 @@ public final class MetaHolder {
 				}
 			}
 		}
-		int length=col.length();
-		int precision=col.precision();
-		int scale=col.scale();
+		int length = col.length();
+		int precision = col.precision();
+		int scale = col.scale();
 		// //////////////////////////////////////////////
 		GenerationType geType = gv == null ? null : gv.strategy();
 		if ("VARCHAR".equals(def) || "VARCHAR2".equals(def)) {
@@ -960,7 +960,7 @@ public final class MetaHolder {
 			return new ColumnType.Boolean().setNullable(nullable);
 		} else {
 			throw new IllegalArgumentException("Unknow column Def:" + def);
-//			return new ColumnType.Unknown(def).setNullable(nullable);
+			// return new ColumnType.Unknown(def).setNullable(nullable);
 		}
 	}
 
@@ -968,7 +968,7 @@ public final class MetaHolder {
 		int len = c == null ? 0 : c.length();
 		int precision = c == null ? 0 : c.precision();
 		int scale = c == null ? 0 : c.scale();
-		boolean nullable= c==null?true:c.nullable();
+		boolean nullable = c == null ? true : c.nullable();
 		GenerationType geType = gv == null ? null : gv.strategy();
 		if (geType != null && field.getType() == String.class) {
 			return new ColumnType.GUID();

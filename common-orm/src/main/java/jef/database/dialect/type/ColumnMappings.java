@@ -7,7 +7,6 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 
 import jef.accelerator.bean.BeanAccessor;
-import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.log.LogUtil;
 import jef.database.Field;
 import jef.database.dialect.ColumnType;
@@ -29,8 +28,8 @@ public final class ColumnMappings {
 	}
 
 	public static ColumnMapping<?> getMapping(Field field, ITableMetadata meta, String columnName, ColumnType type, boolean pk) {
-		BeanAccessor bw = FastBeanWrapperImpl.getAccessorFor(meta.getThisType());
-		Class<?> fieldType = bw.getPropertyType(field.name());
+		BeanAccessor beanAccessor = meta.getBeanAccessor();
+		Class<?> fieldType = beanAccessor.getPropertyType(field.name());
 		ColumnMapping<?> mType = type.getMappingType(fieldType);
 		mType.init(field, columnName, type, meta);
 		return mType;

@@ -1,18 +1,31 @@
-package jef.database.meta;
+package jef.database.support.accessor;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
 import jef.accelerator.bean.BeanAccessor;
-import jef.accelerator.bean.BeanExtensionProvider;
-import jef.accelerator.bean.ExtensionModificationListener;
+import jef.common.log.LogUtil;
+import jef.database.EntityExtensionSupport;
 import jef.database.Field;
 import jef.database.dialect.type.ColumnMapping;
-import jef.tools.Assert;
+import jef.database.meta.ExtensionConfig;
+import jef.database.meta.ExtensionConfigFactory;
+import jef.database.meta.ExtensionKeyValueTable;
+import jef.database.meta.ExtensionTemplate;
+import jef.database.meta.MetaHolder;
+import jef.database.meta.TupleMetadata;
+import jef.database.meta.TupleModificationListener;
 import jef.tools.reflect.Property;
 
 public class EfPropertiesExtensionProvider implements BeanExtensionProvider {
+
+	private static final EfPropertiesExtensionProvider extensionContext = new EfPropertiesExtensionProvider();
+
+	public static EfPropertiesExtensionProvider getInstance() {
+		return extensionContext;
+	}
+
 	@SuppressWarnings({ "unused", "rawtypes" })
 	private Map<Class, BeanAccessor> cacheView;
 
@@ -31,14 +44,12 @@ public class EfPropertiesExtensionProvider implements BeanExtensionProvider {
 	}
 
 	public static class ExtensionProperty implements Property {
-		private ExtensionConfig ef;
 		private String name;
 		private Class<?> type;
 		private Type genericType;
 
-		public ExtensionProperty(String fieldName, ExtensionConfig cf, Type genericType, Class<?> type) {
+		public ExtensionProperty(String fieldName, Type genericType, Class<?> type) {
 			this.name = fieldName;
-			this.ef = cf;
 			this.genericType = genericType;
 			this.type = type;
 		}
@@ -60,12 +71,12 @@ public class EfPropertiesExtensionProvider implements BeanExtensionProvider {
 
 		@Override
 		public Object get(Object obj) {
-			return ef.doPropertyGet(obj, name);
+			return ((EntityExtensionSupport) obj).getAtribute(name);
 		}
 
 		@Override
 		public void set(Object obj, Object value) {
-			ef.doPropertySet(obj, name, value);
+			((EntityExtensionSupport) obj).setAtribute(name, value);
 		}
 
 		@Override
@@ -91,42 +102,33 @@ public class EfPropertiesExtensionProvider implements BeanExtensionProvider {
 	@Override
 	public Map<String, Property> getExtensionProperties(Class<?> type, String extensionName, ExtensionModificationListener listener) {
 		ExtensionConfigFactory cf = extensions.get(type);
-		if (cf instanceof ExtensionKeyValueTable) {
-			ExtensionKeyValueTable ext = (ExtensionKeyValueTable) cf;
-			Assert.equals(extensionName, ext.getName());
+		if (cf != null) {
 			Map<String, Property> props = new HashMap<String, Property>();
-			for (ColumnMapping<?> f : ext.getMeta().getMetaFields()) {
-				props.put(f.fieldName(), new ExtensionProperty(f.fieldName(), ext, f.getFieldType(), f.getFieldType()));
+			ExtensionConfig config = cf.getExtension(extensionName);
+			TupleMetadata extension = config.getExtensionMeta();
+			for (ColumnMapping<?> f : extension.getColumns()) {
+				props.put(f.fieldName(), new ExtensionProperty(f.fieldName(), f.getFieldType(), f.getFieldType()));
 			}
-			ext.getMeta().addListener(new Adapter(listener,ext));
+			extension.addListener(new Adapter(config, listener));
 			return props;
-		} else if (cf instanceof ExtensionTemplate) {
-			ExtensionTemplate temp = (ExtensionTemplate) cf;
-			ExtensionConfig ext = temp.valueOf(extensionName);
-			Map<String, Property> props = new HashMap<String, Property>();
-			for (ColumnMapping<?> f : ext.getMeta().getMetaFields()) {
-				props.put(f.fieldName(), new ExtensionProperty(f.fieldName(), ext, f.getFieldType(), f.getFieldType()));
-			}
-			ext.getMeta().addListener(new Adapter(listener,ext));
-			return props;
-
 		}
 		throw new IllegalArgumentException();
 	}
 
 	class Adapter implements TupleModificationListener {
 		private ExtensionModificationListener ext;
-		private ExtensionConfig ef;
+		private ExtensionConfig config;
 
-		public Adapter(ExtensionModificationListener ext, ExtensionConfig ef) {
+		public Adapter(ExtensionConfig config, ExtensionModificationListener ext) {
 			this.ext = ext;
-			this.ef = ef;
+			this.config=config;
 		}
 
 		@Override
 		public void onDelete(TupleMetadata meta, Field field) {
 			event(meta);
 		}
+
 		@Override
 		public void onUpdate(TupleMetadata meta, Field field) {
 			event(meta);
@@ -134,11 +136,27 @@ public class EfPropertiesExtensionProvider implements BeanExtensionProvider {
 
 		private void event(TupleMetadata meta) {
 			Map<String, Property> props = new HashMap<String, Property>();
-			for (ColumnMapping<?> f : meta.getMetaFields()) {
-				props.put(f.fieldName(), new ExtensionProperty(f.fieldName(), ef, f.getFieldType(), f.getFieldType()));
+			for (ColumnMapping<?> f : meta.getColumns()) {
+				props.put(f.fieldName(), new ExtensionProperty(f.fieldName(), f.getFieldType(), f.getFieldType()));
 			}
+			config.flush(meta);
 			ext.setExtProperties(props);
 		}
+	}
 
+	public void register(Class<?> clz, ExtensionConfigFactory ef) {
+		ExtensionConfigFactory old=this.extensions.put(clz, ef);
+		if(old!=null){
+			LogUtil.warn("重复注册？"+clz+"  "+ef);
+		}
+	}
+	
+	public ExtensionConfigFactory getEF(Class<? extends EntityExtensionSupport> clz) {
+		ExtensionConfigFactory ef=extensions.get(clz);
+		if(ef==null){
+			MetaHolder.getMeta(clz);
+			ef=extensions.get(clz);
+		}
+		return ef;
 	}
 }

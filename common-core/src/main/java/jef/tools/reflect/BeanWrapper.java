@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.log.LogUtil;
 
@@ -180,6 +181,11 @@ public abstract class BeanWrapper {
 	 */
 	public static BeanWrapper wrap(Object obj){
 		return wrap(obj,FAST);
+	}
+	
+	public static BeanWrapper wrap(Object obj,BeanAccessor ba){
+		return new FastBeanWrapperImpl(obj,ba);
+		
 	}
 	/**
 	 * 返回属性类型（无泛型）

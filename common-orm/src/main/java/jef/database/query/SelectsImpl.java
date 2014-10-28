@@ -239,7 +239,7 @@ public class SelectsImpl extends AbstractEntityMappingProvider implements Select
 	/**
 	 * 指定一个选择列和别名
 	 * 
-	 * @param name
+	 * @param fld
 	 *            列
 	 * @param alias
 	 *            列的别名(在select中使用)
@@ -248,16 +248,16 @@ public class SelectsImpl extends AbstractEntityMappingProvider implements Select
 	 * @param populateTo
 	 *            结果最终拼装时的字段名
 	 */
-	private SelectColumn column(Query<?> query, Field name, String alias, String populateTo) {
-		if (name instanceof LazyQueryBindField) {
-			LazyQueryBindField qb = (LazyQueryBindField) name;
+	private SelectColumn column(Query<?> query, Field fld, String alias, String populateTo) {
+		if (fld instanceof LazyQueryBindField) {
+			LazyQueryBindField qb = (LazyQueryBindField) fld;
 			if (!qb.isBind()) {
 				qb.setBind(query);
 			}
 		}
 		QueryAlias config = findQuery(query); // 目前其实只有QueryAlias一个实现
 		Assert.notNull(config, "the query is not contain in the join tables.");
-		SelectColumn ac = new SelectColumn(name, populateTo);
+		SelectColumn ac = new SelectColumn(fld, populateTo);
 		ac.as(alias);
 		config.addField(ac);
 		return ac;

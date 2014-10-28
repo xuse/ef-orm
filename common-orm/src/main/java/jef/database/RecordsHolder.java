@@ -282,7 +282,7 @@ public final class RecordsHolder<T extends IQueryableEntity>{
 		rs.moveToInsertRow();
 		Assert.notNull(meta);
 		BeanWrapper bw=BeanWrapper.wrap(t);
-		for(ColumnMapping<?> mType: meta.getMetaFields()){
+		for(ColumnMapping<?> mType: meta.getColumns()){
 			Field f = mType.field();
 			String columnName=mType.getColumnName(profile, false);
 			if(!bw.isReadableProperty(f.name()))continue;

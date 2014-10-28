@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -23,7 +22,6 @@ import jef.tools.reflect.UnsafeUtils;
 final class ASMAccessorFactory implements BeanAccessorFactory {
 	@SuppressWarnings("rawtypes")
 	private static final Map<Class, BeanAccessor> map = new IdentityHashMap<Class, BeanAccessor>();
-	private BeanExtensionProvider extension;
 	
 	public BeanAccessor getBeanAccessor(Class<?> javaBean) {
 		if (javaBean.isPrimitive()) {
@@ -72,14 +70,6 @@ final class ASMAccessorFactory implements BeanAccessorFactory {
 			BeanAccessor ba = (BeanAccessor) cls.newInstance();
 			initAnnotations(ba, fields);
 			initGenericTypes(ba, fields);
-			if(extension!=null){
-				String name=extension.getStaticExtensionName(javaClz);
-				if(name!=null){
-					ba=new ExtensionAccessor(ba,name,extension);
-				}else if(extension.isDynamicExtensionClass(javaClz)){
-					ba=new ExtensionAccessorProxy(ba,extension);
-				}
-			}
 			return ba;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -220,14 +210,5 @@ final class ASMAccessorFactory implements BeanAccessorFactory {
 			}
 		});
 		return isDup;
-	}
-
-	@Override
-	public void registerExtensionProvider(BeanExtensionProvider prov) {
-		if(extension!=null){
-			throw new IllegalStateException("The bean extension alredy exists!");
-		}
-		prov.setBeanAccessorCache(Collections.unmodifiableMap(map));
-		this.extension=prov;
 	}
 }
