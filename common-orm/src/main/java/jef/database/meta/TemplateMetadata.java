@@ -16,18 +16,18 @@ import jef.database.dialect.type.ColumnMapping;
 
 import com.google.common.collect.Multimap;
 
-public class TemplateMetadata extends MetadataAdapter{
+@SuppressWarnings("rawtypes")
+public class TemplateMetadata extends MetadataAdapter {
 	private MetadataAdapter template;
 	private ExtensionTemplate extension;
-	
-	public ExtensionTemplate getExtension(){
+
+	public ExtensionTemplate getExtension() {
 		return extension;
 	}
-	
-	
+
 	public TemplateMetadata(ExtensionTemplate ef) {
-		this.extension=ef;
-		this.template=ef.getTemplate();
+		this.extension = ef;
+		this.template = ef.getTemplate();
 	}
 
 	@Override
@@ -35,106 +35,108 @@ public class TemplateMetadata extends MetadataAdapter{
 		return template.getContainerType();
 	}
 
+	@Override
+	public ColumnMapping<?> getColumnDef(Field field) {
+		ColumnMapping<?> result=schemaMap.get(field);
+		if (result != null) {
+			return result;
+		}
+		throw new UnsupportedOperationException("this is a abstract metadata template.");
+	}
+
+	@Override
+	public Field getField(String name) {
+		Field field = super.getField(name);
+		if (field != null) {
+			return field;
+		}
+		throw new UnsupportedOperationException("this is a abstract metadata template.");
+	}
 
 	@Override
 	public Class<?> getThisType() {
 		return template.getThisType();
 	}
 
-
 	@Override
 	public Field getFieldByLowerColumn(String columnInLowerCase) {
-		Field field=template.getFieldByLowerColumn(columnInLowerCase);
-		if(field!=null){
+		Field field = template.getFieldByLowerColumn(columnInLowerCase);
+		if (field != null) {
 			return field;
 		}
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
-
 
 	@Override
 	public List<ColumnMapping<?>> getPKFields() {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
 
-
 	@Override
 	public List<Index> getIndexSchema() {
 		return template.getIndexSchema();
 	}
-
 
 	@Override
 	public PartitionTable getPartition() {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
 
-
 	@Override
 	public Entry<PartitionKey, PartitionFunction>[] getEffectPartitionKeys() {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
-
 
 	@Override
 	public Multimap<String, PartitionFunction> getMinUnitFuncForEachPartitionKey() {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
 
-
 	@Override
 	public IQueryableEntity instance() {
 		return template.instance();
 	}
-
 
 	@Override
 	public IQueryableEntity newInstance() {
 		return template.newInstance();
 	}
 
-
 	@Override
 	public String getName() {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
-
 
 	@Override
 	public String getSimpleName() {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
 
-
 	@Override
 	public boolean isAssignableFrom(ITableMetadata type) {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
-
 
 	@Override
 	public PojoWrapper transfer(Object p, boolean isQuery) {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
 
-
 	@Override
 	public EntityType getType() {
 		return EntityType.TEMPLATE;
 	}
-
 
 	@Override
 	public boolean containsMeta(ITableMetadata meta) {
 		return false;
 	}
 
-
 	@Override
 	public ExtensionConfig getExtension(IQueryableEntity d) {
 		return extension.getExtension(d);
 	}
-	
+
 	@Override
 	public ExtensionConfig getExtension(String d) {
 		return extension.getExtension(d);
@@ -144,7 +146,6 @@ public class TemplateMetadata extends MetadataAdapter{
 	protected Collection<ColumnMapping<?>> getColumnSchema() {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
-
 
 	@Override
 	public BeanAccessor getBeanAccessor() {

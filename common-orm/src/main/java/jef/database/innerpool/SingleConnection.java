@@ -7,7 +7,6 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 
 import jef.database.DbUtils;
-import jef.database.innerpool.PoolService.CheckableConnection;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

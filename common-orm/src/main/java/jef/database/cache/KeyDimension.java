@@ -47,7 +47,8 @@ public class KeyDimension {
 			return where+order;
 		}
 	}
-	
+
+	/*
 	public static void main(String[] args) {
 		long time=System.currentTimeMillis();
 		for(int i=0;i<10000;i++){
@@ -59,6 +60,7 @@ public class KeyDimension {
 		System.out.println(k.where);
 		System.out.println(k.order);
 	}
+	*/
 	
 	private static final WhereParser wp;
 	

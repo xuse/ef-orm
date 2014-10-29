@@ -121,8 +121,6 @@ public final class MetaHolder {
 	// 反向查找表
 	private static final Map<String, ITableMetadata> inverseMapping = new HashMap<String, ITableMetadata>();
 
-	private static final Map<Class<?>, TableMetadata> template = new java.util.IdentityHashMap<Class<?>, TableMetadata>();
-
 	// 初始化分表规则加载器
 	static {
 		try {
@@ -272,16 +270,17 @@ public final class MetaHolder {
 	 */
 	public static ITableMetadata initMetadata(Class<? extends IQueryableEntity> clz, String schema, String tablename) {
 		Assert.notNull(clz);
-		TableMetadata m = (TableMetadata) pool.get(clz);
-		if (m == null) {
-			m = (TableMetadata) initData(clz);
-			pool.put(clz, m);
+		ITableMetadata me = (TableMetadata) pool.get(clz);
+		//initData方法会处理关于缓存的问题
+		me = initData(clz);
+		if(me instanceof TableMetadata){
+			TableMetadata m=(TableMetadata)me;
+			if (schema != null)
+				m.setSchema(getMappingSchema(schema));
+			if (StringUtils.isNotEmpty(tablename))
+				m.setTableName(tablename);	
 		}
-		if (schema != null)
-			m.setSchema(getMappingSchema(schema));
-		if (StringUtils.isNotEmpty(tablename))
-			m.setTableName(tablename);
-		return m;
+		return me;
 	}
 
 	/**
@@ -320,7 +319,19 @@ public final class MetaHolder {
 	public static Collection<MetadataAdapter> getCachedModels() {
 		return pool.values();
 	}
-
+	
+	public static final MetadataAdapter getMetaOrTemplate(Class<?> clz) {
+		Assert.notNull(clz);
+		if (clz == VarObject.class) {
+			throw new IllegalArgumentException("A VarObject class does not indicted to any table metadata.");
+		}
+		MetadataAdapter m = pool.get(clz);
+		if(m==null){
+			m= initData(clz);
+		}
+		return m;
+	}
+	
 	/**
 	 * 根据类获取表模型
 	 * 
@@ -333,7 +344,13 @@ public final class MetaHolder {
 			throw new IllegalArgumentException("A VarObject class does not indicted to any table metadata.");
 		}
 		MetadataAdapter m = pool.get(clz);
-		return m == null ? initData(clz) : m;
+		if(m==null){
+			m= initData(clz);
+		}
+		if(m.getType()==EntityType.TEMPLATE){
+			throw new IllegalArgumentException("A Template class does not indicted to any table metadata.");
+		}
+		return m;
 	}
 
 	/**
@@ -346,9 +363,9 @@ public final class MetaHolder {
 		if (d instanceof VarMeta) {
 			return (MetadataAdapter) ((VarMeta) d).meta();
 		}
-		MetadataAdapter metadata=getMeta(d.getClass());
-		if(metadata.getType()==EntityType.TEMPLATE){
-			return metadata.getExtension((IQueryableEntity)d).getMeta();
+		MetadataAdapter metadata = getMeta(d.getClass());
+		if (metadata.getType() == EntityType.TEMPLATE) {
+			return metadata.getExtension((IQueryableEntity) d).getMeta();
 		}
 		return metadata;
 	}
@@ -372,18 +389,18 @@ public final class MetaHolder {
 			if (m1 != null)
 				return m1; // 双重检查锁定
 		}
+		System.err.println("正在解析类:" + clz);
 		if (IQueryableEntity.class.isAssignableFrom(clz)) {
-			
 			// 计算动态扩展字段
 			DynamicTable dt = clz.getAnnotation(DynamicTable.class);
 			DynamicKeyValueExtension dkv = clz.getAnnotation(DynamicKeyValueExtension.class);
 			if (dt == null && dkv == null) {// 两种扩展方式只能出现一种
-				return initEntity(clz.asSubclass(IQueryableEntity.class));	
+				return initEntity(clz.asSubclass(IQueryableEntity.class));
 			} else if (dt != null) {
-				return initVarTemplate(clz.asSubclass(EntityExtensionSupport.class),dt);
+				return initVarTemplate(clz.asSubclass(EntityExtensionSupport.class), dt);
 			} else if (dkv != null) {
-				return initVarEntity(clz.asSubclass(EntityExtensionSupport.class),dkv);
-			}else{
+				return initVarEntity(clz.asSubclass(EntityExtensionSupport.class), dkv);
+			} else {
 				throw new UnsupportedOperationException("Not support @DynamicTable and @DynamicKeyValueExtension simultaneously.");
 			}
 		} else {
@@ -392,17 +409,19 @@ public final class MetaHolder {
 	}
 
 	private static MetadataAdapter initVarTemplate(Class<? extends EntityExtensionSupport> asSubclass, DynamicTable dt) {
-		MetadataAdapter meta=initEntity(asSubclass);
-		ExtensionTemplate ef=new ExtensionTemplate(dt,asSubclass,meta);
+		MetadataAdapter meta = initEntity(asSubclass);
+		ExtensionTemplate ef = new ExtensionTemplate(dt, asSubclass, meta);
 		EfPropertiesExtensionProvider.getInstance().register(asSubclass, ef);
-		return new TemplateMetadata(ef);
+		MetadataAdapter result=new TemplateMetadata(ef);
+		pool.put(asSubclass, result);
+		return result;
 	}
 
 	private static MetadataAdapter initVarEntity(Class<? extends EntityExtensionSupport> asSubclass, DynamicKeyValueExtension dkv) {
-		MetadataAdapter meta=initEntity(asSubclass);
-		ExtensionKeyValueTable ef=new ExtensionKeyValueTable(dkv,asSubclass,meta);
+		MetadataAdapter meta = initEntity(asSubclass);
+		ExtensionKeyValueTable ef = new ExtensionKeyValueTable(dkv, asSubclass, meta);
 		EfPropertiesExtensionProvider.getInstance().register(asSubclass, ef);
-		//直接使用转化后的Metadata
+		// 直接使用转化后的Metadata
 		return ef.getDefault().getMeta();
 	}
 
@@ -460,7 +479,9 @@ public final class MetaHolder {
 		// 加载分表策略
 		Assert.notNull(partitionLoader, "the Partition loader is null!");
 		meta.setPartition(partitionLoader.get(clz));
-
+		
+		// 此时就将基本字段计算完成的元数据加入缓存，以免在多表关系处理时遭遇死循环
+		pool.put(clz, meta);
 		// 针对未处理的字段，当做外部引用关系处理
 		for (java.lang.reflect.Field f : unprocessedField) {
 			// 将这个字段作为外部引用处理

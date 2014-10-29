@@ -4,11 +4,10 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
-import jef.accelerator.bean.BeanAccessor;
-import jef.common.log.LogUtil;
 import jef.database.EntityExtensionSupport;
 import jef.database.Field;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.meta.DynamicMetadata;
 import jef.database.meta.ExtensionConfig;
 import jef.database.meta.ExtensionConfigFactory;
 import jef.database.meta.ExtensionKeyValueTable;
@@ -26,21 +25,16 @@ public class EfPropertiesExtensionProvider implements BeanExtensionProvider {
 		return extensionContext;
 	}
 
-	@SuppressWarnings({ "unused", "rawtypes" })
-	private Map<Class, BeanAccessor> cacheView;
-
 	private final Map<Class<?>, ExtensionConfigFactory> extensions = new HashMap<Class<?>, ExtensionConfigFactory>();
-
-	@SuppressWarnings({ "rawtypes" })
-	@Override
-	public void setBeanAccessorCache(Map<Class, BeanAccessor> cache) {
-		this.cacheView = cache;
-	}
 
 	@Override
 	public boolean isDynamicExtensionClass(Class<?> javaBean) {
 		ExtensionConfigFactory cf = extensions.get(javaBean);
 		return cf != null && (cf instanceof ExtensionTemplate);
+	}
+	
+	public ExtensionConfigFactory getExtensionFactory(Class<?> javaBean){
+		return extensions.get(javaBean);
 	}
 
 	public static class ExtensionProperty implements Property {
@@ -125,16 +119,16 @@ public class EfPropertiesExtensionProvider implements BeanExtensionProvider {
 		}
 
 		@Override
-		public void onDelete(TupleMetadata meta, Field field) {
+		public void onDelete(DynamicMetadata meta, Field field) {
 			event(meta);
 		}
 
 		@Override
-		public void onUpdate(TupleMetadata meta, Field field) {
+		public void onUpdate(DynamicMetadata meta, Field field) {
 			event(meta);
 		}
 
-		private void event(TupleMetadata meta) {
+		private void event(DynamicMetadata meta) {
 			Map<String, Property> props = new HashMap<String, Property>();
 			for (ColumnMapping<?> f : meta.getColumns()) {
 				props.put(f.fieldName(), new ExtensionProperty(f.fieldName(), f.getFieldType(), f.getFieldType()));
@@ -146,15 +140,15 @@ public class EfPropertiesExtensionProvider implements BeanExtensionProvider {
 
 	public void register(Class<?> clz, ExtensionConfigFactory ef) {
 		ExtensionConfigFactory old=this.extensions.put(clz, ef);
-		if(old!=null){
-			LogUtil.warn("重复注册？"+clz+"  "+ef);
-		}
+//		if(old!=null){
+//			LogUtil.warn("重复注册？"+clz+"  "+ef);
+//		}
 	}
 	
 	public ExtensionConfigFactory getEF(Class<? extends EntityExtensionSupport> clz) {
 		ExtensionConfigFactory ef=extensions.get(clz);
 		if(ef==null){
-			MetaHolder.getMeta(clz);
+			MetaHolder.initMetadata(clz,null,null);
 			ef=extensions.get(clz);
 		}
 		return ef;

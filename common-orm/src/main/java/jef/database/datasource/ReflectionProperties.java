@@ -8,10 +8,10 @@ import jef.database.DbUtils;
 import jef.tools.StringUtils;
 
 public class ReflectionProperties extends Properties {
-	private Class clz;
+	private Class<?> clz;
 	private Object obj;
 	
-	public ReflectionProperties(Class clz,Object obj){
+	public ReflectionProperties(Class<?> clz,Object obj){
 		this.clz=clz;
 		this.obj=obj;
 	}

@@ -58,7 +58,6 @@ import jef.database.query.Dimension;
 import jef.database.query.RangeDimension;
 import jef.database.query.RegexpDimension;
 import jef.database.routing.jdbc.ParameterContext;
-import jef.database.wrapper.populator.Mappers;
 
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;

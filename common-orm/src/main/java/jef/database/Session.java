@@ -1168,7 +1168,7 @@ public abstract class Session {
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <T> T load(Class<T> entityClass, Serializable... keys) throws SQLException {
-		MetadataAdapter meta = MetaHolder.getMeta(entityClass);
+		MetadataAdapter meta = MetaHolder.getMetaOrTemplate(entityClass);
 		if (meta.getType() == EntityType.POJO) {
 			PKQuery<PojoWrapper> query = new PKQuery<PojoWrapper>(meta, keys);
 			List<PojoWrapper> result = innerSelect(query, null, null, QueryOption.DEFAULT_MAX1);

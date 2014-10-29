@@ -560,13 +560,21 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 			return hasNext;
 		}
 
+		@SuppressWarnings("unchecked")
 		public T next() {
 			if (!hasNext)
 				throw new NoSuchElementException();
 			try {
-				@SuppressWarnings("unchecked")
-				T retObj = meta == null ? UnsafeUtils.newInstance(retClz) : (T) meta.instance();
-				BeanWrapper wrapper = BeanWrapper.wrap(retObj, BeanWrapper.FAST);
+				
+				T retObj;
+				BeanWrapper wrapper;
+				if(meta==null){
+					retObj=UnsafeUtils.newInstance(retClz);
+					wrapper = BeanWrapper.wrap(retObj, BeanWrapper.FAST);
+				}else{
+					retObj=(T) meta.instance();
+					wrapper = new FastBeanWrapperImpl(retObj,meta.getBeanAccessor());
+				}
 				for (ObjectPopulator op : directPopulator) {
 					op.process(wrapper, rs);
 

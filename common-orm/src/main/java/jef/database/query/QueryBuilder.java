@@ -6,9 +6,7 @@ import java.util.List;
 
 import jef.database.Condition;
 import jef.database.Condition.Operator;
-import jef.database.DataObject;
 import jef.database.DbUtils;
-import jef.database.DebugUtil;
 import jef.database.Field;
 import jef.database.IConditionField;
 import jef.database.IConditionField.And;
@@ -60,18 +58,27 @@ public class QueryBuilder {
 	 *            要查询的表
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	public static <T extends IQueryableEntity> Query<T> create(Class<T> clz) {
 		T d = UnsafeUtils.newInstance(clz);
-		QueryImpl<T> query = new QueryImpl<T>(d);
+		QueryImpl<T> query = (QueryImpl<T>) d.getQuery();
 		query.allRecords=true;
 		return query;
 	}
 
 	public static <T extends IQueryableEntity> Query<T> create(Class<T> clz, String key) {
-		T d = UnsafeUtils.newInstance(clz);
-		QueryImpl<T> query =new QueryImpl<T>(d,key);
-		query.allRecords=true;
-		return query;
+		T d;
+		try {
+			d = clz.newInstance();
+			QueryImpl<T> query =new QueryImpl<T>(d,key);
+			query.allRecords=true;
+			return query;
+		} catch (InstantiationException e) {
+			throw new RuntimeException(e);
+		} catch (IllegalAccessException e) {
+			throw new RuntimeException(e);
+		}
+		
 	}
 
 	/**
@@ -826,10 +833,6 @@ public class QueryBuilder {
 	 */
 	public static JoinKey on(Query<?> t1, Field left, Query<?> t2, Field right) {
 		return new JoinKey(new RefField(t1, left), new RefField(t2, right));
-	}
-
-	public static <T extends IQueryableEntity> Query<T> createQuery(T t) {
-		return new QueryImpl<T>(t);
 	}
 
 	/**

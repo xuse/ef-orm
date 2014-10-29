@@ -4,8 +4,8 @@ import jef.database.Field;
 
 public interface TupleModificationListener {
 
-	void onDelete(TupleMetadata tupleMetadata, Field field);
+	void onDelete(DynamicMetadata tupleMetadata, Field field);
 
-	void onUpdate(TupleMetadata tupleMetadata, Field field);
+	void onUpdate(DynamicMetadata tupleMetadata, Field field);
 
 }

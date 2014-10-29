@@ -15,7 +15,6 @@
  */
 package jef.database.dialect;
 
-import jef.common.wrapper.IntRange;
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.dialect.statement.LimitHandler;

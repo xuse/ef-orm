@@ -962,7 +962,7 @@ public class NativeQueryTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	@IgnoreOn(allButExcept="hsqldb")
+//	@IgnoreOn(allButExcept="hsqldb")
 	public void testStartWith() throws Exception {
 		try {
 //			db.dropTable("sys_resource");

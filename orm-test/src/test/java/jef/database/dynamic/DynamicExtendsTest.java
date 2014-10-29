@@ -1,10 +1,14 @@
 package jef.database.dynamic;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import jef.codegen.EntityEnhancer;
 import jef.database.DbClient;
 import jef.database.QB;
+import jef.database.Transaction;
 import jef.database.dialect.ColumnType;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.TupleMetadata;
@@ -65,6 +69,7 @@ public class DynamicExtendsTest {
 		String id2;
 		String id3;
 		{
+			List<DynaResource> list=new ArrayList<DynaResource>();
 			DynaResource resource = new DynaResource("桌子");
 			resource.setName("一张大桌子");
 			resource.setElevation(120.243);
@@ -73,9 +78,59 @@ public class DynamicExtendsTest {
 			resource.setAtribute("height", 100);
 			resource.setAtribute("width", 100);
 			resource.setAtribute("type", "SQUARE");
+			list.add(resource);
 
-			db.insert(resource);
-			id1 = resource.getIndexCode();
+			resource = new DynaResource("桌子");
+			resource.setName("一张大桌子");
+			resource.setElevation(120.243);
+			resource.setPrice(199);
+			resource.setStatus(0);
+			resource.setAtribute("height", 100);
+			resource.setAtribute("width", 100);
+			resource.setAtribute("type", "SQUARE");
+			list.add(resource);
+			
+			db.batchInsert(list);
+			id1= list.get(0).getIndexCode();
+			id2 = list.get(1).getIndexCode();
+		}
+		{
+			DynaResource resource = new DynaResource("桌子");
+			resource.setIndexCode(id1);
+			resource.setElevation(200.0);
+			resource.setAtribute("width", 250);
+			db.update(resource);
+			
+			DynaResource loaded=db.load(resource);
+			loaded.setAtribute("height", 250);
+			db.update(loaded);
+		}
+		{
+			DynaResource r1= new DynaResource("桌子");
+			r1.setIndexCode(id1);
+			r1.setElevation(200.0);
+			r1.setAtribute("width", 250);
+			
+			DynaResource r2 = new DynaResource("桌子");
+			r2.setIndexCode(id2);
+			r2.setElevation(200.0);
+			r2.setAtribute("width", 250);
+			db.batchUpdate(Arrays.asList(r1,r2));
+			
+		}
+		{
+			Transaction tx=db.startTransaction();
+			DynaResource r1= new DynaResource("桌子");
+			r1.setIndexCode(id1);
+			DynaResource r2 = new DynaResource("桌子");
+			r2.setIndexCode(id2);
+			tx.batchDelete(Arrays.asList(r1,r2));
+			tx.rollback(true);
+		}
+		{
+			DynaResource r1= new DynaResource("桌子");
+			r1.setIndexCode(id2);
+			db.delete(r1);
 		}
 		{
 			DynaResource resource = new DynaResource("电视机");
@@ -109,10 +164,10 @@ public class DynamicExtendsTest {
 			System.out.println(res);
 
 			Query<DynaResource> q = QB.create(DynaResource.class,"桌子");
-
 			q.terms().gt("width", 100).or().gt("height", 100);
 			q.terms().not().in("type", new String[] { "CRICLE", "BOX" });
 			System.out.println(q.getConditions());
+			db.select(q);
 		}
 	}
 

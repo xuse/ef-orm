@@ -23,7 +23,6 @@ import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.JPQLSelectConvert;
 import jef.database.QueryAlias;
-import jef.database.SqlProcessor;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.SqlFunctionlocalization;
 import jef.database.jsqlparser.UndoableVisitor;

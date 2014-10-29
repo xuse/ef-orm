@@ -33,6 +33,10 @@ public class ExtensionTemplate implements ExtensionConfigFactory {
 	public MetadataAdapter getTemplate() {
 		return parent;
 	}
+	
+	public FieldAccessor getKeyAccessor(){
+		return keyAccessor;
+	}
 
 	@Override
 	public ExtensionConfig getExtension(IQueryableEntity q) {
@@ -78,7 +82,7 @@ public class ExtensionTemplate implements ExtensionConfigFactory {
 
 		@Override
 		protected MetadataAdapter merge() {
-			TupleMetadata tuple = new TupleMetadata(parent, this);
+			DynamicMetadata tuple = new DynamicMetadata(parent, this);
 			for (ColumnMapping<?> f : getExtensionMeta().getColumns()) {
 				tuple.updateColumn(f.fieldName(), f.rawColumnName(), f.get(), f.isPk());
 			}

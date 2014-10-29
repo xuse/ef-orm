@@ -49,9 +49,6 @@ public abstract class MetadataAdapter implements ITableMetadata {
 
 	final List<jef.database.annotation.Index> indexMap = new ArrayList<jef.database.annotation.Index>(5);// 记录对应表的所有索引，当建表时使用可自动创建索引
 	protected final Map<Field, ColumnMapping<?>> schemaMap = new IdentityHashMap<Field, ColumnMapping<?>>();
-
-	protected abstract Collection<ColumnMapping<?>> getColumnSchema();
-
 	protected Map<String, Field> fields = new HashMap<String, Field>(10, 0.6f);
 	protected Map<String, Field> lowerFields = new HashMap<String, Field>(10, 0.6f);
 
@@ -322,4 +319,5 @@ public abstract class MetadataAdapter implements ITableMetadata {
 	public ExtensionConfig getExtension(String key) {
 		throw new UnsupportedOperationException();
 	}
+	protected abstract Collection<ColumnMapping<?>> getColumnSchema();
 }

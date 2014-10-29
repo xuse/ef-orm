@@ -14,8 +14,6 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
-import java.util.List;
-import java.util.Map;
 
 /**
  * PreparedStatement设置参数的处理

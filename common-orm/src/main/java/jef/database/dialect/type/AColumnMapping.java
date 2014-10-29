@@ -20,6 +20,7 @@ import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.Assert;
 import jef.tools.reflect.BeanUtils;
+import jef.tools.reflect.GenericUtils;
 import jef.tools.reflect.Property;
 
 public abstract class AColumnMapping<T> implements ColumnMapping<T> {
@@ -30,7 +31,7 @@ public abstract class AColumnMapping<T> implements ColumnMapping<T> {
 	protected transient String cachedEscapeColumnName;
 	private transient String lowerColumnName;
 	private transient String upperColumnName;
-	
+
 	protected ITableMetadata meta;
 	private String fieldName;
 	protected Field field;
@@ -43,20 +44,18 @@ public abstract class AColumnMapping<T> implements ColumnMapping<T> {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public AColumnMapping() {
-		Type type = this.getClass().getGenericSuperclass();
-		if (type instanceof ParameterizedType) {
-			Type[] p = ((ParameterizedType) type).getActualTypeArguments();
-			if (p[0] instanceof Class) {
-				this.clz = (Class<T>) p[0];
-			} else if (p[0] instanceof GenericArrayType) {
-				GenericArrayType at = (GenericArrayType) p[0];
-				Type compType = at.getGenericComponentType();
-				if (compType instanceof Class) {
-					this.clz = (Class<T>) Array.newInstance((Class) compType, 0).getClass();
-				}
+		Type[] p =  GenericUtils.getTypeParameters(this.getClass(), ColumnMapping.class);
+		if (p[0] instanceof Class) {
+			this.clz = (Class<T>) p[0];
+		} else if (p[0] instanceof GenericArrayType) {
+			GenericArrayType at = (GenericArrayType) p[0];
+			Type compType = at.getGenericComponentType();
+			if (compType instanceof Class) {
+				this.clz = (Class<T>) Array.newInstance((Class) compType, 0).getClass();
 			}
-			this.primitiveClz = BeanUtils.toPrimitiveClass(this.clz);
 		}
+		this.primitiveClz = BeanUtils.toPrimitiveClass(this.clz);
+		Assert.notNull(clz);
 	}
 
 	public boolean isPk() {
@@ -67,8 +66,8 @@ public abstract class AColumnMapping<T> implements ColumnMapping<T> {
 		this.field = field;
 		this.fieldName = field.name();
 		this.rawColumnName = columnName;
-		this.lowerColumnName=columnName.toLowerCase();
-		this.upperColumnName=columnName.toUpperCase();
+		this.lowerColumnName = columnName.toLowerCase();
+		this.upperColumnName = columnName.toUpperCase();
 		this.meta = meta;
 		this.ctype = type;
 
@@ -77,7 +76,7 @@ public abstract class AColumnMapping<T> implements ColumnMapping<T> {
 			Assert.isTrue(meta.getAllFieldNames().contains(field.name()));
 		}
 		fieldAccessor = ba.getProperty(field.name());
-		Assert.notNull(fieldAccessor,ba.toString()+field.toString());
+		Assert.notNull(fieldAccessor, ba.toString() + field.toString());
 	}
 
 	public String fieldName() {
@@ -87,7 +86,7 @@ public abstract class AColumnMapping<T> implements ColumnMapping<T> {
 	public String upperColumnName() {
 		return upperColumnName;
 	}
-	
+
 	public String lowerColumnName() {
 		return lowerColumnName;
 	}
@@ -110,6 +109,7 @@ public abstract class AColumnMapping<T> implements ColumnMapping<T> {
 	}
 
 	public Class<T> getFieldType() {
+		Assert.notNull(clz);
 		return clz;
 	}
 

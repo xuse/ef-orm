@@ -33,6 +33,7 @@ import jef.database.routing.jdbc.JStatement;
  * 
  */
 public class JConnection implements Connection {
+	@SuppressWarnings("unused")
 	private DbClient db;
 	private Transaction currentSession;
 

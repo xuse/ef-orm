@@ -26,6 +26,6 @@ public interface ExtensionConfig {
 	 */
 	boolean isDynamicTable();
 
-	void flush(TupleMetadata meta);
+	void flush(DynamicMetadata meta);
 
 }

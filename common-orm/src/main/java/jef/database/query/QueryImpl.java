@@ -46,7 +46,7 @@ import jef.tools.Assert;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T>{
+public final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T>{
 	private static final long serialVersionUID = -8921719771049568842L;
 	
 	private boolean cascadeViaOuterJoin=ORMConfig.getInstance().isUseOuterJoin();

@@ -12,6 +12,9 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import jef.accelerator.bean.BeanAccessor;
+import jef.database.meta.ExtensionConfigFactory;
+import jef.database.meta.ExtensionTemplate;
+import jef.tools.reflect.FieldAccessor;
 import jef.tools.reflect.Property;
 
 public final class ExtensionAccessor extends BeanAccessor implements ExtensionModificationListener {
@@ -29,6 +32,9 @@ public final class ExtensionAccessor extends BeanAccessor implements ExtensionMo
 
 	private ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
+	private FieldAccessor key;
+	
+	private String extensionName;
 	/**
 	 * 构造
 	 * 
@@ -37,7 +43,13 @@ public final class ExtensionAccessor extends BeanAccessor implements ExtensionMo
 	 */
 	public ExtensionAccessor(BeanAccessor raw, String extensionName, BeanExtensionProvider provider) {
 		this.accessor = raw;
+		this.extensionName=extensionName;
 		setExtProperties(provider.getExtensionProperties(raw.getType(), extensionName, this));
+		ExtensionConfigFactory ef=provider.getExtensionFactory(raw.getType());
+		if(ef instanceof ExtensionTemplate){
+			this.key=((ExtensionTemplate) ef).getKeyAccessor();
+		}
+		
 	}
 
 	/**
@@ -182,7 +194,11 @@ public final class ExtensionAccessor extends BeanAccessor implements ExtensionMo
 
 	@Override
 	public Object newInstance() {
-		return accessor.newInstance();
+		Object obj=accessor.newInstance();
+		if(key!=null){
+			key.set(obj, extensionName);
+		}
+		return obj;
 	}
 
 	@Override

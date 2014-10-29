@@ -75,7 +75,7 @@ public class InMemoryGroupByHaving implements InMemoryProcessor {
 		return true;
 	}
 
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private boolean check(HavingEle ele, Row row) {
 		Object obj=row.getArrayObject(ele.getIndex());
 		switch(ele.havingCondOperator){

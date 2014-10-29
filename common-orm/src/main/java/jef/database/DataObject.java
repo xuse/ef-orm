@@ -11,9 +11,12 @@ import java.util.TreeMap;
 import javax.persistence.PersistenceException;
 import javax.xml.bind.annotation.XmlTransient;
 
+import jef.accelerator.bean.BeanAccessor;
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.meta.ITableMetadata;
+import jef.database.meta.MetaHolder;
 import jef.database.query.Query;
-import jef.database.query.QueryBuilder;
+import jef.database.query.QueryImpl;
 import jef.tools.reflect.BeanWrapper;
 
 import org.apache.commons.lang.ObjectUtils;
@@ -54,9 +57,10 @@ public abstract class DataObject implements IQueryableEntity {
 	 * 
 	 * @see jef.database.IQueryableEntity#getQuery()
 	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public final Query<?> getQuery() {
 		if (query == null)
-			query = QueryBuilder.createQuery(this);
+			query = new QueryImpl(this);
 		return query;
 	}
 
@@ -118,22 +122,19 @@ public abstract class DataObject implements IQueryableEntity {
 	 * java.lang.Object, boolean)
 	 */
 	public final void prepareUpdate(Field field, Object newValue, boolean force) {
-		BeanWrapper wrapper = BeanWrapper.wrap(this);
+		ITableMetadata meta = MetaHolder.getMeta(this);
+		BeanAccessor ba = meta.getBeanAccessor();
 		String fieldName = field.name();
-		if (wrapper.isProperty(fieldName)) {
-			if (updateValueMap == null)
-				updateValueMap = new TreeMap<Field, Object>(cmp);
-			if (force || !ObjectUtils.equals(wrapper.getPropertyValue(fieldName), newValue)) {
-				updateValueMap.put(field, newValue);
-			}
-		} else {
-			throw new IllegalArgumentException(fieldName.concat(" is not a Readable/Writable field. please make sure there's getter and setter method in your class."));
+		if (updateValueMap == null)
+			updateValueMap = new TreeMap<Field, Object>(cmp);
+		if (force || !ObjectUtils.equals(ba.getProperty(this,fieldName), newValue)) {
+			updateValueMap.put(field, newValue);
 		}
 		return;
 	}
 
 	void markUpdateFlag(Field field, Object newValue) {
-		if (updateValueMap == null){
+		if (updateValueMap == null) {
 			updateValueMap = new TreeMap<Field, Object>(cmp);
 			updateValueMap.put(field, newValue);
 		}
@@ -147,13 +148,16 @@ public abstract class DataObject implements IQueryableEntity {
 	public final void applyUpdate() {
 		if (updateValueMap == null)
 			return;
-		BeanWrapper wrapper = BeanWrapper.wrap(this);
+
+		ITableMetadata meta = MetaHolder.getMeta(this);
+		BeanAccessor ba = meta.getBeanAccessor();
+		
 		for (Entry<Field, Object> entry : updateValueMap.entrySet()) {
 			Object newValue = entry.getValue();
 			if (newValue instanceof Expression || newValue instanceof jef.database.Field) {
 				continue;
 			}
-			wrapper.setPropertyValue(entry.getKey().name(), newValue);
+			ba.setProperty(this, entry.getKey().name(), newValue);
 		}
 		clearUpdate();
 	}

@@ -59,26 +59,6 @@ public class JdbcRowSetResourceBundle implements Serializable {
      */
     static JdbcRowSetResourceBundle jpResBundle;
 
-    /**
-     * The varible which will represent the properties
-     * the suffix or extension of the resource bundle.
-     **/
-    private static final String PROPERTIES = "properties";
-
-    /**
-     * The varibale to represent underscore
-     **/
-    private static final String UNDERSCORE = "_";
-
-    /**
-     * The variable which will represent dot
-     **/
-    private static final String DOT = ".";
-
-    /**
-     * The variable which will represent the slash.
-     **/
-    private static final String SLASH = "/";
 
     /**
      * The variable where the default resource bundle will
@@ -142,7 +122,7 @@ public class JdbcRowSetResourceBundle implements Serializable {
      * @return an enumeration of keys which have messages tranlated to
      * corresponding locales.
      */
-    public Enumeration getKeys() {
+    public Enumeration<String> getKeys() {
        return propResBundle.getKeys();
     }
 

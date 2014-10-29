@@ -85,6 +85,7 @@ public class Condition implements Serializable{
 	 * @return
 	 */
 	public static Condition get(Field field,Operator oper,Object value){
+		Assert.notNull(field);
 		boolean valid=(field instanceof IConditionField) || (field instanceof Enum)|| (field instanceof TupleField);
 		if(!valid){
 			valid=ArrayUtils.fastContains(VALID_FIELD_TYPE_FOR_CONDITION, field.getClass());

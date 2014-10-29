@@ -44,7 +44,7 @@ public abstract class AbstractExtensionConfig implements ExtensionConfig {
 	protected abstract MetadataAdapter merge();
 
 	@Override
-	public void flush(TupleMetadata meta) {
+	public void flush(DynamicMetadata meta) {
 		mergedMeta = null;
 	}
 }

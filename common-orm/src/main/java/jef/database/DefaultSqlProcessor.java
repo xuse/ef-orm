@@ -52,6 +52,7 @@ import jef.database.query.Query;
 import jef.database.query.SqlContext;
 import jef.database.query.SqlExpression;
 import jef.database.wrapper.clause.BindSql;
+import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
 
@@ -313,6 +314,9 @@ public class DefaultSqlProcessor implements SqlProcessor {
 			public int compare(Map.Entry<Field, Object> o1, Map.Entry<Field, Object> o2) {
 				Field field1 = o1.getKey();
 				Field field2 = o2.getKey();
+				Assert.notNull(meta.getColumnDef(field1));
+				Assert.notNull(meta.getColumnDef(field2));
+				
 				Class<? extends ColumnType> type1 = meta.getColumnDef(field1).get().getClass();
 				Class<? extends ColumnType> type2 = meta.getColumnDef(field2).get().getClass();
 				Boolean b1 = (type1 == ColumnType.Blob.class || type1 == ColumnType.Clob.class);

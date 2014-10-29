@@ -1,12 +1,9 @@
 package jef.database.routing.sql;
 
 import java.sql.SQLException;
-import java.util.List;
 
 import jef.database.OperateTarget;
-import jef.database.Transaction;
 import jef.database.annotation.PartitionResult;
-import jef.database.routing.jdbc.ParameterContext;
 
 public interface ExecutionPlan {
 

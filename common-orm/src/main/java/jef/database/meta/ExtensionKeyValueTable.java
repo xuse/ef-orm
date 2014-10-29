@@ -60,7 +60,7 @@ public final class ExtensionKeyValueTable extends AbstractExtensionConfig implem
 
 	@Override
 	protected MetadataAdapter merge() {
-		TupleMetadata tuple = new TupleMetadata(parent,this);
+		DynamicMetadata tuple = new DynamicMetadata(parent,this);
 		for (ColumnMapping<?> f : getExtensionMeta().getColumns()) {
 			tuple.updateColumn(f.fieldName(), f.rawColumnName(), f.get(), f.isPk());
 		}
