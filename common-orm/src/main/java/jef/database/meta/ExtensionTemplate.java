@@ -1,5 +1,6 @@
 package jef.database.meta;
 
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -17,7 +18,11 @@ public class ExtensionTemplate implements ExtensionConfigFactory {
 	private DynamicTable dt;
 	private FieldAccessor keyAccessor;
 	private MetadataAdapter parent;
-
+	
+	List<java.lang.reflect.Field> unprocessedField;
+	AnnotationProvider annos;
+	
+	
 	public ExtensionTemplate(DynamicTable dt, Class<?> clz, MetadataAdapter meta) {
 		this.dt = dt;
 		this.parent = meta;
@@ -33,8 +38,8 @@ public class ExtensionTemplate implements ExtensionConfigFactory {
 	public MetadataAdapter getTemplate() {
 		return parent;
 	}
-	
-	public FieldAccessor getKeyAccessor(){
+
+	public FieldAccessor getKeyAccessor() {
 		return keyAccessor;
 	}
 
@@ -85,6 +90,14 @@ public class ExtensionTemplate implements ExtensionConfigFactory {
 			DynamicMetadata tuple = new DynamicMetadata(parent, this);
 			for (ColumnMapping<?> f : getExtensionMeta().getColumns()) {
 				tuple.updateColumn(f.fieldName(), f.rawColumnName(), f.get(), f.isPk());
+			}
+
+			// 针对未处理的字段，当做外部引用关系处理
+			for (java.lang.reflect.Field f : unprocessedField) {
+				// 将这个字段作为外部引用处理
+				MetaHolder.processReference(f, tuple, annos);
+				// 还有一种情况，即定义了Column注解，但不属于元模型的一个字段，用于辅助映射的。当结果拼装时有用
+//				processColumnHelper(f, tuple, annos);
 			}
 			return tuple;
 		}

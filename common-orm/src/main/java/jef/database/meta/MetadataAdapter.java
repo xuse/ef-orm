@@ -294,5 +294,6 @@ public abstract class MetadataAdapter implements ITableMetadata {
 	public ExtensionConfig getExtension(String key) {
 		throw new UnsupportedOperationException();
 	}
+
 	protected abstract Collection<ColumnMapping<?>> getColumnSchema();
 }

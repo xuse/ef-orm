@@ -43,11 +43,11 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	
 	
 	@SuppressWarnings("unchecked")
-	public PKQuery(MetadataAdapter clz,Serializable... pks){
+	public PKQuery(ITableMetadata clz,Serializable... pks){
 		if(clz.getType()==EntityType.TEMPLATE){
 			String key=String.valueOf(pks[0]);
 			pks=(Serializable[]) ArrayUtils.subarray(pks, 1, pks.length);
-			this.type=clz.getExtension(key).getMeta();			
+			this.type=((MetadataAdapter)clz).getExtension(key).getMeta();			
 		}else{
 			this.type=clz;
 		}

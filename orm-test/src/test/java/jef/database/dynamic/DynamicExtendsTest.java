@@ -15,6 +15,7 @@ import jef.database.meta.TupleMetadata;
 import jef.database.query.Query;
 import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
+import jef.database.test.DatabaseInit;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
 
 import org.junit.Test;
@@ -37,6 +38,17 @@ public class DynamicExtendsTest {
 
 	public DynamicExtendsTest() throws SQLException {
 		new EntityEnhancer().enhance("jef.database.dynamic");
+	}
+	@DatabaseInit
+	public void setup() throws SQLException{
+		db.dropTable(Status.class);
+		db.createTable(Status.class);
+		db.merge(new Status(0,"不可用"));
+		db.merge(new Status(1,"正常"));
+		db.merge(new Status(2,"警戒"));
+		db.merge(new Status(1,"异常"));
+		db.merge(new Status(1,"短路"));
+		db.merge(new Status(1,"网元故障"));
 	}
 
 	/**
@@ -97,6 +109,7 @@ public class DynamicExtendsTest {
 		{
 			DynaResource resource = new DynaResource("桌子");
 			resource.setIndexCode(id1);
+			resource.setStatus(1);
 			resource.setElevation(200.0);
 			resource.setAtribute("width", 250);
 			db.update(resource);
@@ -106,12 +119,21 @@ public class DynamicExtendsTest {
 			db.update(loaded);
 		}
 		{
+			System.out.println("====================测试关联====================");
+			List<DynaResource> tables=db.select(QB.create(DynaResource.class, "桌子"));
+			for(DynaResource t:tables){
+				System.out.println(t.getStatusObj().getData());
+			}
+		}
+		{
 			DynaResource r1= new DynaResource("桌子");
+			r1.setStatus(1);
 			r1.setIndexCode(id1);
 			r1.setElevation(200.0);
 			r1.setAtribute("width", 250);
 			
 			DynaResource r2 = new DynaResource("桌子");
+			r2.setStatus(1);
 			r2.setIndexCode(id2);
 			r2.setElevation(200.0);
 			r2.setAtribute("width", 250);
@@ -137,7 +159,7 @@ public class DynamicExtendsTest {
 			resource.setName("一台电视机");
 			resource.setElevation(120.243);
 			resource.setPrice(4280);
-			resource.setStatus(0);
+			resource.setStatus(2);
 			resource.setAtribute("pixel", "1920x1080");
 			resource.setAtribute("brand", "Sharp");
 			db.insert(resource);
@@ -148,7 +170,7 @@ public class DynamicExtendsTest {
 			resource.setName("一台计算机");
 			resource.setElevation(1.234);
 			resource.setPrice(6999);
-			resource.setStatus(0);
+			resource.setStatus(3);
 			resource.setAtribute("CPU", "Intel XEON E4200");
 			resource.setAtribute("mainboard", "gigabyte 227LE");
 			resource.setAtribute("memory", "4Gx2");

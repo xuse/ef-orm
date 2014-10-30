@@ -487,6 +487,28 @@ public abstract class Session {
 	protected abstract TransactionMode getTxType();
 
 	protected abstract boolean isJpaTx();
+	
+	/**
+	 * 合并记录——记录如果已经存在，则比较并更新；如果不存在则新增
+	 * @param entity 要合并的记录数据
+	 * @return  如果插入返回对象本身，如果是更新则返回旧记录的值
+	 * @throws SQLException
+	 */
+	@SuppressWarnings("unchecked")
+	public <T extends IQueryableEntity> T merge(T entity) throws SQLException {
+		IQueryableEntity old = null;
+		if (DbUtils.getPrimaryKeyValue(entity) != null) {
+			old = load(entity);
+		}
+		if (old == null) {
+			insertCascade(entity);
+			return entity;
+		} else {
+			DbUtils.compareToNewUpdateMap(entity, old);
+			updateCascade(entity);
+			return (T)old;
+		}
+	}
 
 	/**
 	 * 支持关联表的插入 如果和其他表具有1VS1、1VSN的关系，那么插入时会自动维护其他表中的数据。这些操作包括了Insert或者update.
@@ -1159,17 +1181,13 @@ public abstract class Session {
 
 	/**
 	 * 按主键获取一条记录
-	 * 
-	 * @param clz
-	 *            类型
+	 * @param entityClass
 	 * @param keys
-	 *            主键的值。
 	 * @return
 	 * @throws SQLException
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public <T> T load(Class<T> entityClass, Serializable... keys) throws SQLException {
-		MetadataAdapter meta = MetaHolder.getMetaOrTemplate(entityClass);
+	public <T> T load(ITableMetadata meta, Serializable... keys) throws SQLException {
 		if (meta.getType() == EntityType.POJO) {
 			PKQuery<PojoWrapper> query = new PKQuery<PojoWrapper>(meta, keys);
 			List<PojoWrapper> result = innerSelect(query, null, null, QueryOption.DEFAULT_MAX1);
@@ -1183,7 +1201,20 @@ public abstract class Session {
 				return null;
 			return result.get(0);
 		}
-
+	}
+	/**
+	 * 按主键获取一条记录
+	 * 
+	 * @param clz
+	 *            类型
+	 * @param keys
+	 *            主键的值。
+	 * @return
+	 * @throws SQLException
+	 */
+	public <T> T load(Class<T> entityClass, Serializable... keys) throws SQLException {
+		MetadataAdapter meta = MetaHolder.getMetaOrTemplate(entityClass);
+		return load(meta,keys);
 	}
 
 	/**

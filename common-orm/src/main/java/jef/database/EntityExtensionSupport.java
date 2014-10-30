@@ -23,6 +23,9 @@ public abstract class EntityExtensionSupport extends DataObject implements VarMe
 
 	public EntityExtensionSupport() {
 		this.extensionFactory = EfPropertiesExtensionProvider.getInstance().getEF(this.getClass());
+		if(extensionFactory==null){
+			System.out.println(this.getClass());
+		}
 		this.config = extensionFactory.getDefault();
 	}
 

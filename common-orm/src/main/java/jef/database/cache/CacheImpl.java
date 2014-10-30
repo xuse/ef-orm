@@ -182,6 +182,7 @@ public final class CacheImpl implements TransactionCache {
 			return;
 		MetadataAdapter meta = MetaHolder.getMeta(obj);
 		List<Serializable> pks=DbUtils.getPKValueSafe(obj);
+		if(pks==null)return;
 		@SuppressWarnings("deprecation")
 		KeyDimension dim = meta.getPKDimension(pks,sqlP.getProfile());
 		if (dim==null) {

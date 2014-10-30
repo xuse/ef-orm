@@ -442,7 +442,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				PojoWrapper wrapper = (PojoWrapper) getSession().load(bean);
 				return (T) wrapper.get();
 			} else {
-				return (T) getSession().load(meta.getThisType(), (Serializable)id);
+				return (T) getSession().load(meta, (Serializable)id);
 			}
 
 		} catch (SQLException e) {

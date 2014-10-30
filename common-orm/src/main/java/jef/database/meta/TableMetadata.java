@@ -105,7 +105,7 @@ public final class TableMetadata extends MetadataAdapter {
 
 	TableMetadata(Class<PojoWrapper> varClz, Class<?> clz, AnnotationProvider annos) {
 		this.containerType = varClz;
-		this.containerAccessor=FastBeanWrapperImpl.getAccessorFor(clz);
+		this.containerAccessor=FastBeanWrapperImpl.getAccessorFor(varClz);
 		this.thisType = clz;
 		this.pojoAccessor = FastBeanWrapperImpl.getAccessorFor(clz);
 		this.pkFields = Collections.emptyList();
@@ -276,7 +276,7 @@ public final class TableMetadata extends MetadataAdapter {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Entity: [").append(containerType.getName()).append("]\n");
-		for (ColumnMapping<?> m:this.getColumns()) {
+		for (ColumnMapping<?> m:schemaMap.values()) {
 			String fname=m.fieldName();
 			sb.append("  ").append(fname);
 			StringUtils.repeat(sb, ' ', 10-fname.length());

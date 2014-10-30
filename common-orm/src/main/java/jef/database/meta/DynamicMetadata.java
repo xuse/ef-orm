@@ -447,7 +447,7 @@ public class DynamicMetadata extends MetadataAdapter {
 		addIndex(new String[] { fieldName }, comment);
 	}
 
-	private void innerAdd(String fieldName, Field targetField, ReferenceType type, JoinPath path) {
+	protected void innerAdd(String fieldName, Field targetField, ReferenceType type, JoinPath path) {
 		ITableMetadata target = DbUtils.getTableMeta(targetField);
 		Reference r = new Reference(target, type, this);
 		if (path != null) {
@@ -462,7 +462,7 @@ public class DynamicMetadata extends MetadataAdapter {
 		addRefField(f);
 	}
 
-	private void innerAdd(String fieldName, ITableMetadata target, ReferenceType type, JoinPath path, FetchType fetch) {
+	protected void innerAdd(String fieldName, ITableMetadata target, ReferenceType type, JoinPath path, FetchType fetch) {
 		Reference r = new Reference(target, type, this);
 		if (path != null) {
 			r.setHint(path);

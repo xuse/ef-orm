@@ -3,6 +3,8 @@ package jef.database.dynamic;
 import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 
 import jef.database.EntityExtensionSupport;
 import jef.database.annotation.DynamicTable;
@@ -28,6 +30,10 @@ public class DynaResource extends EntityExtensionSupport{
 
 	@Column
     private int status;
+	
+	@ManyToOne()
+	@JoinColumn(name="status",referencedColumnName="code")
+	private Status statusObj;
 
 	@Column
     private String resourceType;
@@ -86,8 +92,17 @@ public class DynaResource extends EntityExtensionSupport{
     public void setResourceType(String resourceType) {
         this.resourceType = resourceType;
     }
+    
+    public Status getStatusObj() {
+		return statusObj;
+	}
+	public void setStatusObj(Status statusObj) {
+		this.statusObj = statusObj;
+	}
 
-    public enum Field implements jef.database.Field {
+
+
+	public enum Field implements jef.database.Field {
         indexCode, name, price, elevation, status, resourceType
     }
 }

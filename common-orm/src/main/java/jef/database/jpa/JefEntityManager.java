@@ -434,22 +434,9 @@ public class JefEntityManager implements EntityManager {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	private <T extends IQueryableEntity> T doMerge(T entity, boolean flag) {
 		try {
-			IQueryableEntity data = entity;
-			IQueryableEntity old = null;
-			if (DbUtils.getPrimaryKeyValue(data) != null) {
-				old = getSession().load(data);
-			}
-			if (old == null) {
-				getSession().insertCascade(data);
-				return entity;
-			} else {
-				DbUtils.compareToNewUpdateMap(data, old);
-				getSession().updateCascade(data);
-				return (T) data;
-			}
+			return getSession().merge(entity);
 		} catch (SQLException e) {
 			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}

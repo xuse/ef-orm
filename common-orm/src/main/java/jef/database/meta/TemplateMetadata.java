@@ -18,21 +18,21 @@ import com.google.common.collect.Multimap;
 
 @SuppressWarnings("rawtypes")
 public class TemplateMetadata extends MetadataAdapter {
-	private MetadataAdapter template;
-	private ExtensionTemplate extension;
+	private MetadataAdapter wrapped;
+	private ExtensionTemplate template;
 
 	public ExtensionTemplate getExtension() {
-		return extension;
+		return template;
 	}
 
 	public TemplateMetadata(ExtensionTemplate ef) {
-		this.extension = ef;
-		this.template = ef.getTemplate();
+		this.template = ef;
+		this.wrapped = ef.getTemplate();
 	}
 
 	@Override
 	public Class<? extends IQueryableEntity> getContainerType() {
-		return template.getContainerType();
+		return wrapped.getContainerType();
 	}
 
 	@Override
@@ -55,12 +55,12 @@ public class TemplateMetadata extends MetadataAdapter {
 
 	@Override
 	public Class<?> getThisType() {
-		return template.getThisType();
+		return wrapped.getThisType();
 	}
 
 	@Override
 	public Field getFieldByLowerColumn(String columnInLowerCase) {
-		Field field = template.getFieldByLowerColumn(columnInLowerCase);
+		Field field = wrapped.getFieldByLowerColumn(columnInLowerCase);
 		if (field != null) {
 			return field;
 		}
@@ -74,7 +74,7 @@ public class TemplateMetadata extends MetadataAdapter {
 
 	@Override
 	public List<Index> getIndexDefinition() {
-		return template.getIndexDefinition();
+		return wrapped.getIndexDefinition();
 	}
 
 	@Override
@@ -95,7 +95,7 @@ public class TemplateMetadata extends MetadataAdapter {
 	@Override
 	public IQueryableEntity newInstance() {
 //		throw new UnsupportedOperationException("this is a abstract metadata template.");
-		return template.newInstance();
+		return wrapped.newInstance();
 	}
 
 	@Override
@@ -130,12 +130,12 @@ public class TemplateMetadata extends MetadataAdapter {
 
 	@Override
 	public ExtensionConfig getExtension(IQueryableEntity d) {
-		return extension.getExtension(d);
+		return template.getExtension(d);
 	}
 
 	@Override
 	public ExtensionConfig getExtension(String d) {
-		return extension.getExtension(d);
+		return template.getExtension(d);
 	}
 
 	@Override
@@ -146,5 +146,10 @@ public class TemplateMetadata extends MetadataAdapter {
 	@Override
 	public BeanAccessor getContainerAccessor() {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
+	}
+
+	public void setUnprocessedFields(List<java.lang.reflect.Field> unprocessedField, AnnotationProvider annos) {
+		this.template.unprocessedField = unprocessedField;
+		this.template.annos = annos;
 	}
 }
