@@ -487,7 +487,7 @@ public abstract class Session {
 	protected abstract TransactionMode getTxType();
 
 	protected abstract boolean isJpaTx();
-	
+
 	/**
 	 * 支持关联表的插入 如果和其他表具有1VS1、1VSN的关系，那么插入时会自动维护其他表中的数据。这些操作包括了Insert或者update.
 	 * 
@@ -529,6 +529,18 @@ public abstract class Session {
 		}
 	}
 
+
+	/**
+	 * 插入对象
+	 * 
+	 * @param obj
+	 *            插入的对象。
+	 * @throws SQLException
+	 */
+	public void insert(IQueryableEntity obj) throws SQLException {
+		insert(obj, null, ORMConfig.getInstance().isDynamicInsert());
+	}
+	
 	/**
 	 * 插入对象。如果使用dynamic模式将会忽略掉没有set过的属性值
 	 * 
@@ -545,18 +557,7 @@ public abstract class Session {
 	}
 
 	/**
-	 * 插入对象
-	 * 
-	 * @param obj
-	 *            插入的对象。
-	 * @throws SQLException
-	 */
-	public void insert(IQueryableEntity obj) throws SQLException {
-		insert(obj, null, ORMConfig.getInstance().isDynamicInsert());
-	}
-
-	/**
-	 * 插入对象
+	 * 插入对象(自定义插入的表名)
 	 * 
 	 * @param obj
 	 *            要插入的对象
@@ -570,7 +571,7 @@ public abstract class Session {
 	}
 
 	/**
-	 * 插入对象
+	 * 插入对象(自定义插入的表名)
 	 * 
 	 * @param obj
 	 *            要插入的对象
@@ -606,18 +607,18 @@ public abstract class Session {
 		insertp.processInsert(asOperateTarget(sqls.getTable().getDatabase()), obj, sqls, start, parse);
 
 		obj.clearUpdate();
-		getCache().onInsert(obj,myTableName);
+		getCache().onInsert(obj, myTableName);
 		getListener().afterInsert(obj, this);
 	}
 
 	/**
-	 * 删除对象
+	 * 按主键删除单个对象
 	 * 
 	 * @param clz
 	 *            类型
 	 * @param keys
-	 *            主键的值。
-	 * @return
+	 *            主键的值。(注意，可变参数不是用于传入多行记录的值，而是用于传入单条记录的复合主键，要批量删除多条请用batchDelete方法)
+	 * @return 删除记录条数
 	 * @throws SQLException
 	 */
 	public <T> int delete(Class<T> entityClass, Serializable... keys) throws SQLException {
@@ -1188,15 +1189,17 @@ public abstract class Session {
 	/**
 	 * 按指定的字段加载记录
 	 * 
-	 * @param field 作为查询条件的字段
-	 * @param values 要查询的值
+	 * @param field
+	 *            作为查询条件的字段
+	 * @param values
+	 *            要查询的值
 	 * @return 符合条件的记录
 	 * @throws SQLException
 	 */
 	@SuppressWarnings("unchecked")
 	public <T extends IQueryableEntity> List<T> loadByField(jef.database.Field field, Object value) throws SQLException {
 		ITableMetadata meta = DbUtils.getTableMeta(field);
-		Query<?> query = meta.instance().getQuery();
+		Query<?> query = meta.newInstance().getQuery();
 		query.addCondition(field, Operator.EQUALS, value);
 		return innerSelect(query, null, null, QueryOption.DEFAULT);
 	}
@@ -1207,12 +1210,12 @@ public abstract class Session {
 		if (meta.getPKFields().size() != 1) {
 			throw new SQLException("Only supports [1] column as primary key, but " + obj.getSimpleName() + " has " + meta.getPKFields().size() + " columns.");
 		}
-		if(meta.getType()==EntityType.POJO){
-			Query<?> q = meta.instance().getQuery();
+		if (meta.getType() == EntityType.POJO) {
+			Query<?> q = meta.newInstance().getQuery();
 			q.addCondition(meta.getPKFields().get(0).field(), Operator.IN, pkValues);
 			return PojoWrapper.unwrapList(innerSelect(q, null, null, QueryOption.DEFAULT));
-		}else{
-			Query<?> q = meta.instance().getQuery();
+		} else {
+			Query<?> q = meta.newInstance().getQuery();
 			q.addCondition(meta.getPKFields().get(0).field(), Operator.IN, pkValues);
 			return innerSelect(q, null, null, QueryOption.DEFAULT);
 		}
@@ -1221,7 +1224,7 @@ public abstract class Session {
 	@SuppressWarnings("unchecked")
 	private <T extends IQueryableEntity> List<T> batchLoadByField0(Field field, List<?> values) throws SQLException {
 		ITableMetadata meta = DbUtils.getTableMeta(field);
-		Query<?> q = meta.instance().getQuery();
+		Query<?> q = meta.newInstance().getQuery();
 		q.addCondition(field, Operator.IN, values);
 		return innerSelect(q, null, null, QueryOption.DEFAULT);
 	}
@@ -1229,6 +1232,7 @@ public abstract class Session {
 	/**
 	 * 按指定的字段加载多条记录.适用与拥有大量键值，需要在数据库中查询与之对应的记录时。<br>
 	 * 查询会使用IN条件来减少操作数据库的次数。如果要查询的条件超过了500个，会自动分多次进行查询。
+	 * 
 	 * @param field
 	 *            字段
 	 * @param values
@@ -1254,8 +1258,8 @@ public abstract class Session {
 		return result;
 	}
 
-	private static final int  MAX_IN_CONDITIONS=500;
-	
+	private static final int MAX_IN_CONDITIONS = 500;
+
 	/**
 	 * 按主键加载多条记录。适用与拥有大量主键值，需要在数据库中查询与之对应的记录时。<br>
 	 * 查询会使用IN条件来减少操作数据库的次数。如果要查询的条件超过了500个，会自动分多次进行查询。
@@ -1489,7 +1493,7 @@ public abstract class Session {
 		}
 
 		long start = System.currentTimeMillis();// 开始时间
-		QueryClause sql = selectp.toQuerySql(queryObj, range,true);
+		QueryClause sql = selectp.toQuerySql(queryObj, range, true);
 		if (sql.isEmpty())
 			return new ResultIterator.Impl<T>(new ArrayList<T>().iterator(), null);
 
@@ -1792,7 +1796,6 @@ public abstract class Session {
 	 *            要删除的数据集合
 	 * @throws SQLException
 	 */
-	@SuppressWarnings("unchecked")
 	public final <T extends IQueryableEntity> void batchDeleteByPrimaryKey(List<T> entities) throws SQLException {
 		if (entities.isEmpty())
 			return;
@@ -1804,15 +1807,8 @@ public abstract class Session {
 		// 位于批当中的绑定变量
 		long start = System.nanoTime();
 		Batch.Delete<T> batch = new Batch.Delete<T>(this, meta);
-		T template;
-		try {
-			template = (T) meta.instance();
-			IQueryableEntity first = entities.get(0);
-			DbUtils.fillPKConditions(first, meta, template.getQuery(), false, true);
-		} catch (Exception e) {
-			throw new SQLException(e.getMessage());
-		}
-		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), new SqlContext(null, template.getQuery()), false, getProfile(null));
+		PKQuery<T> query = new PKQuery<T>(meta, DbUtils.getPKValueSafe(entities.get(0)), meta.newInstance());
+		BindSql wherePart = rProcessor.toPrepareWhereSql(query, new SqlContext(null, query), false, getProfile(null));
 		for (BindVariableDescription bind : wherePart.getBind()) {
 			bind.setInBatch(true);
 		}

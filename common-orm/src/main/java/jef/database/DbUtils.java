@@ -137,7 +137,42 @@ public final class DbUtils {
 		}
 		return s.getBytes();
 	}
-
+	
+	/**
+	 * 用于查找两个表之间的外键
+	 * @param class1
+	 * @return 外键关系
+	 */
+	public static Reference findPath(ITableMetadata from,ITableMetadata target){
+		for (Reference r : from.getRefFieldsByRef().keySet()) {
+			if (r.getTargetType() == target) {
+				return r;
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * 查找到目标类型的引用关系。只允许查找到一个到目标类型的关系。如果找到0个或者多个，那么会抛出异常。
+	 * @param class1
+	 * @return 外键关系
+	 * @throws IllegalArgumentException
+	 */
+	public static Reference findDistinctPath(ITableMetadata from,ITableMetadata target) {
+		Reference ref = null;
+		for (Reference reference : from.getRefFieldsByRef().keySet()) {
+			if (reference.getTargetType() == target) {
+				if (ref != null) {
+					throw new IllegalArgumentException("There's more than one reference to [" + target.getSimpleName() + "] in type [" + from.getSimpleName() + "],please assign the reference field name.");
+				}
+				ref = reference;
+			}
+		}
+		if (ref == null) {
+			throw new IllegalArgumentException("Target class " + target.getSimpleName() + "of fileter-condition is not referenced by " + from.getSimpleName());
+		}
+		return ref;
+	}
 	/**
 	 * 如果列名或表名碰到了数据库的关键字，那么就要增加引号一类字符进行转义
 	 * 

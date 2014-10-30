@@ -57,7 +57,7 @@ public class DdlGeneratorImpl implements DdlGenerator {
 			tablename = StringUtils.substringAfter(tablename, ".");
 		}
 
-		for (jef.database.annotation.Index index : meta.getIndexSchema()) {
+		for (jef.database.annotation.Index index : meta.getIndexDefinition()) {
 			StringBuilder iNameBuilder = new StringBuilder();
 			StringBuilder fieldsb = new StringBuilder();
 			iNameBuilder.append("IDX_").append(StringUtils.truncate(StringUtils.removeChars(tablename, '_'), 14)).append("_");

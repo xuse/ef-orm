@@ -42,11 +42,14 @@ import com.google.common.collect.Multimap;
 public class DynamicMetadata extends MetadataAdapter {
 
 	private Class<? extends IQueryableEntity> type = VarObject.class;
-	private BeanAccessor accessor = BeanAccessorMapImpl.INSTANCE;
-	private Map<String, Field> lowerColumnToFieldName = new HashMap<String, Field>(10, 0.6f);
-	private List<ColumnMapping<?>> pk = new ArrayList<ColumnMapping<?>>();
+	
+	protected Map<String, Field> lowerColumnToFieldName = new HashMap<String, Field>(10, 0.6f);
+	
+	private List<ColumnMapping<?>> pkFields = new ArrayList<ColumnMapping<?>>();
+	
 	private final Set<TupleModificationListener> listeners = new HashSet<TupleModificationListener>();
-
+	
+	private BeanAccessor containerAccessor = BeanAccessorMapImpl.INSTANCE;
 	/**
 	 * 创建当前元数据的对象实例。
 	 * 由于2.0版开始，TupleMetadata的数据容器类型不再仅有VarObject一种，因此newInstance返回的不是VarObject类型。
@@ -57,14 +60,7 @@ public class DynamicMetadata extends MetadataAdapter {
 		if(type==VarObject.class){
 			return new VarObject(this);
 		}
-		return (IQueryableEntity) accessor.newInstance();
-	}
-
-	public IQueryableEntity instance() {
-		if(type==VarObject.class){
-			return new VarObject(this, false);
-		}
-		return (IQueryableEntity) accessor.newInstance();
+		return (IQueryableEntity) containerAccessor.newInstance();
 	}
 
 	@Override
@@ -84,45 +80,32 @@ public class DynamicMetadata extends MetadataAdapter {
 		return lowerColumnToFieldName.keySet();
 	}
 
+	/*
+	 * 特殊处理，由于半动态表在实例化过程中，通过新建的TupleField代替了原来在元模型中定义的field，Field不再是单例对象，因此只能通过名称去匹配。
+	 */
 	public ColumnMapping<?> getColumnDef(Field field) {
 		return schemaMap.get(getField(field.name()));
 	}
 
-	protected DynamicMetadata(String tableName) {
-		tableName = tableName.trim();
-		String schema = null;
-		int index = tableName.indexOf('.');
-		if (index > -1) {
-			schema = tableName.substring(0, index);
-			tableName = tableName.substring(index + 1);
-		}
-		this.schema = schema;
-		this.tableName = tableName;
-	}
-
-	protected DynamicMetadata(String schema, String tableName) {
-		if (StringUtils.isBlank(tableName)) {
-			throw new IllegalArgumentException("Invalid table name " + tableName);
-		}
-		this.tableName = tableName.trim();
-		this.schema = StringUtils.trimToNull(schema);
-	}
-
+	/**
+	 * 构造，半动态模型
+	 * @param parent
+	 * @param extension
+	 */
 	public DynamicMetadata(MetadataAdapter parent, ExtensionConfig extension) {
-		System.err.println("初始化动态实体模板:"+parent.getName()+" - "+extension.getName());
+		//System.err.println("初始化动态实体模板:"+parent.getName()+" - "+extension.getName());
 		this.type = parent.getThisType().asSubclass(IQueryableEntity.class);
 		BeanAccessor raw = FastBeanWrapperImpl.getAccessorFor(type);
-		this.accessor = new ExtensionAccessor(raw, extension.getName(), EfPropertiesExtensionProvider.getInstance());
+		this.containerAccessor = new ExtensionAccessor(raw, extension.getName(), EfPropertiesExtensionProvider.getInstance());
 		this.tableName = extension.getName();
 		this.schema = parent.getSchema();
 		setBindDsName(parent.getBindDsName());
 		for (ColumnMapping<?> m : parent.getColumnSchema()) {
-//			this.internalUpdateColumn(m.field(), m.rawColumnName(), m.get(), m.isPk(), false);
 			this.updateColumn(m.fieldName(), m.rawColumnName(), m.get(), m.isPk(), false);
 		}
 		this.refFieldsByName.putAll(parent.getRefFieldsByName());
 		this.refFieldsByRef.putAll(parent.getRefFieldsByRef());
-		this.indexMap.addAll(parent.getIndexSchema());
+		this.indexMap.addAll(parent.getIndexDefinition());
 
 	}
 
@@ -134,6 +117,11 @@ public class DynamicMetadata extends MetadataAdapter {
 		return type;
 	}
 
+	/**
+	 * 快速获得动态模型定义的field对象
+	 * @param fieldname
+	 * @return
+	 */
 	public Field f(String fieldname) {
 		Field field = fields.get(fieldname);
 		if (field == null)
@@ -146,17 +134,17 @@ public class DynamicMetadata extends MetadataAdapter {
 	}
 
 	public List<Field> getPKField() {
-		if (pk == null)
+		if (pkFields == null)
 			return Collections.emptyList();
 		return new AbstractList<Field>() {
 			@Override
 			public Field get(int index) {
-				return pk.get(index).field();
+				return pkFields.get(index).field();
 			}
 
 			@Override
 			public int size() {
-				return pk.size();
+				return pkFields.size();
 			}
 		};
 	}
@@ -179,23 +167,6 @@ public class DynamicMetadata extends MetadataAdapter {
 		updateColumn(columnName, columnName, type, pk, false);
 	}
 
-	public void putJavaField(Field field, ColumnType type) {
-		boolean pk = (type instanceof ColumnType.AutoIncrement) || (type instanceof ColumnType.GUID);
-		this.internalUpdateColumn(field, field.name(), type, pk, false);
-
-	}
-
-	/**
-	 * 更新或添加一个列
-	 * 
-	 * @param columnName
-	 * @param type
-	 * @return
-	 */
-	public boolean updateColumn(String columnName, ColumnType type) {
-		boolean pk = (type instanceof ColumnType.AutoIncrement) || (type instanceof ColumnType.GUID);
-		return updateColumn(columnName, columnName, type, pk, true);
-	}
 
 	/**
 	 * 定义一个列
@@ -230,7 +201,7 @@ public class DynamicMetadata extends MetadataAdapter {
 		return updateColumn(fieldName, columnName, type, isPk, true);
 	}
 
-	private boolean internalUpdateColumn(Field field, String columnName, ColumnType type, boolean isPk, boolean replace) {
+	protected boolean internalUpdateColumn(Field field, String columnName, ColumnType type, boolean isPk, boolean replace) {
 		Field oldField = fields.get(field.name());
 		if (oldField != null) {
 			if (!replace) {
@@ -253,7 +224,7 @@ public class DynamicMetadata extends MetadataAdapter {
 		lowerFields.put(fieldName.toLowerCase(), oldField);
 		lowerColumnToFieldName.put(columnName.toLowerCase(), oldField);
 		if (isPk)
-			pk.add(mType);
+			pkFields.add(mType);
 		if (mType.isLob()) {
 			lobNames = jef.tools.ArrayUtils.addElement(lobNames, oldField, jef.database.Field.class);
 		}
@@ -271,7 +242,7 @@ public class DynamicMetadata extends MetadataAdapter {
 		if (mType != null) {
 			// columnToField
 			lowerColumnToFieldName.remove(mType.lowerColumnName());
-			pk.remove(mType);
+			pkFields.remove(mType);
 			lowerFields.remove(field.name().toLowerCase());
 		}
 		// increMappings
@@ -286,7 +257,7 @@ public class DynamicMetadata extends MetadataAdapter {
 
 	}
 
-	private boolean updateColumn(String fieldName, String columnName, ColumnType type, boolean isPk, boolean replace) {
+	protected boolean updateColumn(String fieldName, String columnName, ColumnType type, boolean isPk, boolean replace) {
 		fieldName = StringUtils.trimToNull(fieldName);
 		Assert.notNull(fieldName);
 		Field field = fields.get(fieldName);
@@ -296,22 +267,6 @@ public class DynamicMetadata extends MetadataAdapter {
 		return internalUpdateColumn(field, columnName, type, isPk, replace);
 	}
 
-	/**
-	 * 删除指定的列
-	 * 
-	 * @param columnName
-	 * @return false如果没找到此列
-	 */
-	public boolean removeColumn(String columnName) {
-		if (columnName == null)
-			return false;
-		Field field = lowerColumnToFieldName.get(columnName.toLowerCase());
-		if (field != null) {
-			removeColumnByFieldName(field.name());
-			return true;
-		}
-		return false;
-	}
 
 	/**
 	 * 删除指定的列
@@ -526,7 +481,7 @@ public class DynamicMetadata extends MetadataAdapter {
 		return type == this;
 	}
 
-	public List<Index> getIndexSchema() {
+	public List<Index> getIndexDefinition() {
 		return indexMap;
 	}
 
@@ -558,9 +513,9 @@ public class DynamicMetadata extends MetadataAdapter {
 
 	@Override
 	public List<ColumnMapping<?>> getPKFields() {
-		if (pk == null)
+		if (pkFields == null)
 			return Collections.emptyList();
-		return pk;
+		return pkFields;
 	}
 
 	public void addListener(TupleModificationListener adapter) {
@@ -568,7 +523,37 @@ public class DynamicMetadata extends MetadataAdapter {
 	}
 
 	@Override
-	public BeanAccessor getBeanAccessor() {
-		return accessor;
+	public BeanAccessor getContainerAccessor() {
+		return containerAccessor;
+	}
+	
+
+	/**
+	 * 给子类用的构造
+	 * @param tableName
+	 */
+	protected DynamicMetadata(String tableName) {
+		tableName = tableName.trim();
+		String schema = null;
+		int index = tableName.indexOf('.');
+		if (index > -1) {
+			schema = tableName.substring(0, index);
+			tableName = tableName.substring(index + 1);
+		}
+		this.schema = schema;
+		this.tableName = tableName;
+	}
+	
+	/**
+	 * 给子类用的构造
+	 * @param schema
+	 * @param tableName
+	 */
+	protected DynamicMetadata(String schema, String tableName) {
+		if (StringUtils.isBlank(tableName)) {
+			throw new IllegalArgumentException("Invalid table name " + tableName);
+		}
+		this.tableName = tableName.trim();
+		this.schema = StringUtils.trimToNull(schema);
 	}
 }

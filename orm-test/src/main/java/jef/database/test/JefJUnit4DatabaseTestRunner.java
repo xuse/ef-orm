@@ -25,6 +25,7 @@ import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.FieldEx;
 
 import org.apache.commons.lang.ArrayUtils;
+import org.junit.internal.runners.statements.ExpectException;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.manipulation.Filter;
@@ -95,7 +96,7 @@ public class JefJUnit4DatabaseTestRunner extends BlockJUnit4ClassRunner {
 		for (String s : connections.keySet()) {
 			for (FrameworkMethod me : methods) {
 				IgnoreOn at = me.getMethod().getAnnotation(IgnoreOn.class);
-				if (at == null || isNotIgnore(at,s)) {
+				if (at == null || isNotIgnore(at, s)) {
 					result.add(new DbFrameworkMethod(s, me.getMethod()));
 				}
 			}
@@ -104,9 +105,9 @@ public class JefJUnit4DatabaseTestRunner extends BlockJUnit4ClassRunner {
 	}
 
 	private boolean isNotIgnore(IgnoreOn at, String s) {
-		if(at.allButExcept().length==0){
-			return !ArrayUtils.contains(at.value(), s); 
-		}else{
+		if (at.allButExcept().length == 0) {
+			return !ArrayUtils.contains(at.value(), s);
+		} else {
 			return ArrayUtils.contains(at.allButExcept(), s);
 		}
 	}
@@ -116,8 +117,11 @@ public class JefJUnit4DatabaseTestRunner extends BlockJUnit4ClassRunner {
 		super.filter(new Filter() {
 			@Override
 			public boolean shouldRun(Description description) {
-				Description real = Description.createTestDescription(description.getTestClass(), StringUtils.substringBefore(description.getDisplayName(), " "));
-				return raw.shouldRun(real);
+				String testDisplay = StringUtils.substringBefore(description.getDisplayName(), " ");
+				if (testDisplay != description.getDisplayName()) {
+					description = Description.createTestDescription(description.getTestClass(), testDisplay);
+				}
+				return raw.shouldRun(description);
 			}
 
 			@Override
@@ -130,6 +134,7 @@ public class JefJUnit4DatabaseTestRunner extends BlockJUnit4ClassRunner {
 	@Override
 	protected Statement methodInvoker(FrameworkMethod method, Object test) {
 		boolean isNew = false;
+		boolean inject = false;
 		if (method instanceof DbFrameworkMethod) {
 			DbFrameworkMethod dbCase = (DbFrameworkMethod) method;
 			String dbType = dbCase.getDbType();
@@ -143,11 +148,12 @@ public class JefJUnit4DatabaseTestRunner extends BlockJUnit4ClassRunner {
 				isNew = true;
 			} else {
 				holder = (DbConnectionHolder) obj;
-				if(holder.db==null){
-					holder = createDbClient(holder.datasource);// CreateDbClient	
+				if (holder.db == null) {
+					holder = createDbClient(holder.datasource);// CreateDbClient
 				}
 			}
 			inject(test, holder.db, holder.datasource.field());
+			inject=true;
 		} else if (isRouting) {
 			if (routingDbClient == null) {
 				MapDataSourceInfoLookup lookup = new MapDataSourceInfoLookup();
@@ -165,31 +171,36 @@ public class JefJUnit4DatabaseTestRunner extends BlockJUnit4ClassRunner {
 				isNew = true;
 			}
 			inject(test, routingDbClient, "");
+			inject=true;
 		}
 		if (isNew) {
 			List<FrameworkMethod> methods = getTestClass().getAnnotatedMethods(DatabaseInit.class);
 			try {
 				for (FrameworkMethod m : methods) {
-					printMethod(m,method);
+					printMethod(m, method);
 					m.getMethod().invoke(test);
 				}
 			} catch (Exception e) {
 				throw DbUtils.toRuntimeException(e);
 			}
 		}
-		printMethod(method,null);
-		Statement result = super.methodInvoker(method, test);
-		return result;
+		printMethod(method, null);
+		if(inject){
+			return super.methodInvoker(method, test);
+		}else{
+			System.err.println("数据库未配置，跳过测试："+super.describeChild(method).getDisplayName());
+			return new ExpectException(null, NullPointerException.class);
+		}
 	}
 
 	private void printMethod(FrameworkMethod m, FrameworkMethod parentMethod) {
-		String name=m.getMethod().getDeclaringClass().getName()+"."+ m.getName();
-		if(parentMethod instanceof DbFrameworkMethod){
-			name=name+"@"+((DbFrameworkMethod)parentMethod).dbType;
-		}else if (m instanceof DbFrameworkMethod) {
-			name=name+"@"+((DbFrameworkMethod)m).dbType;
+		String name = m.getMethod().getDeclaringClass().getName() + "." + m.getName();
+		if (parentMethod instanceof DbFrameworkMethod) {
+			name = name + "@" + ((DbFrameworkMethod) parentMethod).dbType;
+		} else if (m instanceof DbFrameworkMethod) {
+			name = name + "@" + ((DbFrameworkMethod) m).dbType;
 		}
-		System.out.println("======================== "+ name+" ==========================");
+		System.out.println("======================== " + name + " ==========================");
 	}
 
 	private void inject(Object test, DbClient db, String field) {
@@ -240,13 +251,13 @@ public class JefJUnit4DatabaseTestRunner extends BlockJUnit4ClassRunner {
 				super.testRunFinished(result);
 				if (routingDbClient != null) {
 					close(routingDbClient, "");
-					routingDbClient=null;
+					routingDbClient = null;
 				}
 				for (Object obj : connections.values()) {
 					if (obj instanceof DbConnectionHolder) {
 						DbConnectionHolder holder = (DbConnectionHolder) obj;
 						close(holder.db, holder.datasource.field());
-						holder.db=null;
+						holder.db = null;
 					}
 				}
 			}

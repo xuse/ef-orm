@@ -2,10 +2,11 @@ package jef.database.meta;
 
 import jef.database.Field;
 import jef.database.VarObject;
+import jef.database.dialect.ColumnType;
 import jef.database.dialect.type.ColumnMapping;
 
 /**
- * 支持动态表。
+ * 所有字段均为动态属性的动态表。
  * 
  * @author jiyi
  * 
@@ -36,12 +37,48 @@ public final class TupleMetadata extends DynamicMetadata {
 	public VarObject newInstance() {
 		return new VarObject(this);
 	}
-
-	public VarObject instance() {
-		return new VarObject(this, false);
-	}
 	
 	public ColumnMapping<?> getColumnDef(Field field) {
 		return schemaMap.get(field);
+	}
+	
+	/**
+	 * 向动态模型中放入一个字段
+	 * @param field
+	 * @param type
+	 */
+	public void putJavaField(Field field, ColumnType type) {
+		boolean pk = (type instanceof ColumnType.AutoIncrement) || (type instanceof ColumnType.GUID);
+		this.internalUpdateColumn(field, field.name(), type, pk, false);
+
+	}
+
+	/**
+	 * 更新或添加一个列
+	 * 
+	 * @param columnName
+	 * @param type
+	 * @return
+	 */
+	public boolean updateColumn(String columnName, ColumnType type) {
+		boolean pk = (type instanceof ColumnType.AutoIncrement) || (type instanceof ColumnType.GUID);
+		return updateColumn(columnName, columnName, type, pk, true);
+	}
+	
+	/**
+	 * 删除指定的列
+	 * 
+	 * @param columnName
+	 * @return false如果没找到此列
+	 */
+	public boolean removeColumn(String columnName) {
+		if (columnName == null)
+			return false;
+		Field field = lowerColumnToFieldName.get(columnName.toLowerCase());
+		if (field != null) {
+			removeColumnByFieldName(field.name());
+			return true;
+		}
+		return false;
 	}
 }

@@ -71,7 +71,7 @@ public abstract class AColumnMapping<T> implements ColumnMapping<T> {
 		this.meta = meta;
 		this.ctype = type;
 
-		BeanAccessor ba = meta.getBeanAccessor();
+		BeanAccessor ba = meta.getContainerAccessor();
 		if (meta.getType() != EntityType.TUPLE) {
 			Assert.isTrue(meta.getAllFieldNames().contains(field.name()));
 		}

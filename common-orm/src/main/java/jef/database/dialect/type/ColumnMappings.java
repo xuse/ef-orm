@@ -28,7 +28,7 @@ public final class ColumnMappings {
 	}
 
 	public static ColumnMapping<?> getMapping(Field field, ITableMetadata meta, String columnName, ColumnType type, boolean pk) {
-		BeanAccessor beanAccessor = meta.getBeanAccessor();
+		BeanAccessor beanAccessor = meta.getContainerAccessor();
 		Class<?> fieldType = beanAccessor.getPropertyType(field.name());
 		ColumnMapping<?> mType = type.getMappingType(fieldType);
 		mType.init(field, columnName, type, meta);

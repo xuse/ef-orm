@@ -20,6 +20,7 @@ import jef.database.meta.ReferenceField;
 import jef.database.query.JoinElement;
 import jef.database.query.OrderField;
 import jef.database.query.Query;
+import jef.database.query.QueryBuilder;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
 
@@ -48,7 +49,7 @@ final class VsManyLoadTask implements LazyLoadTask {
 
 		Reference ref = entry.getKey(); // 引用关系
 		this.currentFilter=filters.get(ref);
-		query = ref.getTargetType().newInstance().getQuery();
+		query = QueryBuilder.create(ref.getTargetType());
 		rs = ref.toJoinPath();
 		if (rs == null) {
 			LogUtil.error("No join key found: " + ref);

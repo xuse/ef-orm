@@ -91,7 +91,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		ITableMetadata meta=MetaHolder.getMeta(entityClass);
 		try{
 			if(meta.getType()==EntityType.POJO){
-				PojoWrapper pojo = meta.transfer(meta.instance(), true);
+				PojoWrapper pojo = meta.transfer(meta.newInstance(), true);
 				pojo.getQuery().addCondition(meta.getPKFields().get(0).field(),Operator.IN,primaryKey);
 				return (List<T>) getSessionEx().select(pojo);
 			}else{
@@ -406,6 +406,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			IQueryableEntity t;
 			try {
 				t = meta.newInstance();
+				t.startUpdate();
 			} catch (Exception e) {
 				throw new IllegalArgumentException(e);
 			}
@@ -434,14 +435,14 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	public <T> T loadByPrimaryKey(ITableMetadata meta, Object id) {
 		if (meta == null || id == null)
 			return null;
-		IQueryableEntity bean = meta.newInstance();
-		DbUtils.setPrimaryKeyValue(bean, id);
 		try {
 			if (meta.getType() == EntityType.POJO) {
+				IQueryableEntity bean = meta.newInstance();
+				DbUtils.setPrimaryKeyValue(bean, id);
 				PojoWrapper wrapper = (PojoWrapper) getSession().load(bean);
 				return (T) wrapper.get();
 			} else {
-				return (T) getSession().load(bean);
+				return (T) getSession().load(meta.getThisType(), (Serializable)id);
 			}
 
 		} catch (SQLException e) {

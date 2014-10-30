@@ -179,7 +179,7 @@ public abstract class MetadataAdapter implements ITableMetadata {
 
 	public KeyDimension getPKDimension(List<Serializable> pks, DatabaseDialect profile) {
 		if (pkDim == null) {
-			PKQuery<?> query = new PKQuery<IQueryableEntity>(this, pks, instance());
+			PKQuery<?> query = new PKQuery<IQueryableEntity>(this, pks, newInstance());
 			BindSql sql = query.toPrepareWhereSql(null, profile);
 			KeyDimension dim = new KeyDimension(sql.getSql(), null);
 			pkDim = dim;
@@ -279,31 +279,6 @@ public abstract class MetadataAdapter implements ITableMetadata {
 
 	public Map<String, AbstractRefField> getRefFieldsByName() {
 		return refFieldsByName;
-	}
-
-	public Reference findPath(ITableMetadata class1) {
-		for (Reference r : this.refFieldsByRef.keySet()) {
-			if (r.getTargetType() == class1) {
-				return r;
-			}
-		}
-		return null;
-	}
-
-	public Reference findDistinctPath(ITableMetadata target) {
-		Reference ref = null;
-		for (Reference reference : this.refFieldsByRef.keySet()) {
-			if (reference.getTargetType() == target) {
-				if (ref != null) {
-					throw new IllegalArgumentException("There's more than one reference to [" + target.getSimpleName() + "] in type [" + getSimpleName() + "],please assign the reference field name.");
-				}
-				ref = reference;
-			}
-		}
-		if (ref == null) {
-			throw new IllegalArgumentException("Target class " + target.getSimpleName() + "of fileter-condition is not referenced by " + getSimpleName());
-		}
-		return ref;
 	}
 
 	@Override

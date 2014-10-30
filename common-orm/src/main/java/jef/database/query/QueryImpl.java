@@ -224,14 +224,14 @@ public final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T
 	
 	public Query<T> addCascadeCondition(Condition condition) {
 		ITableMetadata meta=DbUtils.getTableMeta(condition.getField());
-		Reference ref=type.findDistinctPath(meta);
+		Reference ref=DbUtils.findDistinctPath(type, meta);
 		return addFilterCondition(ref,condition);
 	}
 
 	private void checkRefs(Field c) {
 		if (c instanceof RefField) {
 			RefField f=(RefField)c;
-			Reference ref=type.findPath(DbUtils.getTableMeta(f.getField()));
+			Reference ref=DbUtils.findPath(type,DbUtils.getTableMeta(f.getField()));
 			ensureRef(ref);
 		} else if (c instanceof IConditionField) {
 			IConditionField ic = (IConditionField) c;

@@ -101,7 +101,7 @@ public class QueryBuilder {
 	 * @return
 	 */
 	public static Query<?> create(ITableMetadata meta) {
-		IQueryableEntity d = meta.instance();
+		IQueryableEntity d = meta.newInstance();
 		Query<?> query = d.getQuery();
 		query.setAllRecordsCondition();
 		return query;
@@ -115,7 +115,7 @@ public class QueryBuilder {
 	 * @return
 	 */
 	public static Query<VarObject> create(TupleMetadata meta) {
-		IQueryableEntity d = meta.instance();
+		IQueryableEntity d = meta.newInstance();
 		@SuppressWarnings("unchecked")
 		Query<VarObject> query = d.getQuery();
 		query.setAllRecordsCondition();

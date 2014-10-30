@@ -52,7 +52,7 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 			this.type=clz;
 		}
 		
-		this.instance=(T) clz.instance();
+		this.instance=(T) clz.newInstance();
 		if(type.getPKFields().size()>pks.length){
 			throw new IllegalArgumentException();
 		}

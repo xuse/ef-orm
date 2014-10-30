@@ -572,8 +572,10 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 					retObj=UnsafeUtils.newInstance(retClz);
 					wrapper = BeanWrapper.wrap(retObj, BeanWrapper.FAST);
 				}else{
-					retObj=(T) meta.instance();
-					wrapper = new FastBeanWrapperImpl(retObj,meta.getBeanAccessor());
+					IQueryableEntity e=meta.newInstance();
+					e.stopUpdate();
+					retObj=(T) e;
+					wrapper = new FastBeanWrapperImpl(retObj,meta.getContainerAccessor());
 				}
 				for (ObjectPopulator op : directPopulator) {
 					op.process(wrapper, rs);

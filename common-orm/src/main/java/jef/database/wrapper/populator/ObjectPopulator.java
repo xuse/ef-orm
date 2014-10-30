@@ -14,13 +14,13 @@ import jef.database.wrapper.result.IResultSet;
 import jef.tools.reflect.BeanWrapper;
 
 public final class ObjectPopulator implements InstancePopulator{
-	ITableMetadata clz;
+	ITableMetadata meta;
 	Map<String,ColumnDescription> data;
 	int bindRowidForColumn;
 	LazyLoadProcessor processor;
 
 	public ObjectPopulator(ITableMetadata meta,Map<String,ColumnDescription> data){
-		this.clz=meta;
+		this.meta=meta;
 		this.data=data;
 	}
 	/**
@@ -79,11 +79,13 @@ public final class ObjectPopulator implements InstancePopulator{
 	}
 	
 
-	public Object instance() {
-		return clz.instance();
+	public IQueryableEntity instance() {
+		IQueryableEntity entity=meta.newInstance();
+		entity.stopUpdate();
+		return entity;
 	}
 	
 	public Class<?> getObjectType(){
-		return clz.getContainerType();
+		return meta.getContainerType();
 	}
 }

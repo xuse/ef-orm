@@ -7,20 +7,26 @@ import java.util.Map;
 
 import jef.common.log.LogUtil;
 import jef.database.DbClient;
-import jef.database.DbClientFactory;
 import jef.database.DbMetaData;
 import jef.database.NativeQuery;
+import jef.database.test.DataSource;
+import jef.database.test.DataSourceContext;
+import jef.database.test.DatabaseInit;
+import jef.database.test.JefJUnit4DatabaseTestRunner;
 
-import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(JefJUnit4DatabaseTestRunner.class)
+@DataSourceContext({
+	 @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
+})
 public class SqlServerTest {
+	private DbClient db;
 
-	private static DbClient db;
-
-	@BeforeClass
-	public static void setup() throws SQLException {
-		db = DbClientFactory.getDbClient("sqlserver", "10.7.52.152", 1433, "jiyi2", "sa", "Abc_123");
+	@DatabaseInit
+	public void setup() throws SQLException {
+//		db = DbClientFactory.getDbClient("sqlserver", "10.7.52.152", 1433, "jiyi2", "sa", "Abc_123");
 		if(!db.existTable("dual_int")){
 			db.executeSql("create table dual_int( X integer )");
 		}
@@ -114,7 +120,7 @@ public class SqlServerTest {
 
 	@Test
 	public void testPage() {
-		NativeQuery nq=db.createNativeQuery("SELECT distinct person_name,gender FROM person_table order by gender");
+		NativeQuery<?> nq=db.createNativeQuery("SELECT distinct person_name,gender FROM person_table order by gender");
 		nq.setFirstResult(1);
 		nq.setMaxResults(3);
 		System.out.println(nq.getResultList());

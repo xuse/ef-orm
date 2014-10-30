@@ -20,8 +20,9 @@ import jef.database.NativeQuery;
 import jef.database.PagingIterator;
 import jef.database.PagingIteratorObjImpl;
 import jef.database.QB;
-import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
+import jef.database.meta.MetadataAdapter;
+import jef.database.query.PKQuery;
 import jef.tools.reflect.ClassWrapper;
 import jef.tools.reflect.GenericUtils;
 
@@ -37,7 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public abstract class GenericDaoSupport<T extends IQueryableEntity> extends BaseDao implements GenericDao<T> {
 	protected Class<T> entityClass;
-	protected ITableMetadata meta;
+	protected MetadataAdapter meta;
 
 	/**
 	 * 根据泛型参数构造
@@ -64,7 +65,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	 * @param meta
 	 */
 	@SuppressWarnings("unchecked")
-	public GenericDaoSupport(ITableMetadata meta) {
+	public GenericDaoSupport(MetadataAdapter meta) {
 		this.meta = meta;
 		this.entityClass = (Class<T>) meta.getThisType();
 	}
@@ -209,11 +210,13 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	 * 
 	 * @see org.easyframe.enterprise.spring.GenericDao#get(java.io.Serializable)
 	 */
-	@SuppressWarnings("unchecked")
 	public T get(Serializable key) {
-		T entity = (T) meta.newInstance();
-		DbUtils.setPrimaryKeyValue(entity, key);
-		return load(entity);
+		PKQuery<T> query = new PKQuery<T>(meta, key);
+		try {
+			return getSession().load(query);
+		} catch (SQLException e) {
+			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+		}
 	}
 
 	/*
@@ -223,7 +226,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	 */
 	@SuppressWarnings("unchecked")
 	public List<T> getAll() {
-		T t = (T) meta.instance();
+		T t = (T) meta.newInstance();
 		t.getQuery().setAllRecordsCondition();
 		return find(t);
 	}
@@ -477,7 +480,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
 		}
 		@SuppressWarnings("unchecked")
-		T q = (T) meta.instance();
+		T q = (T) meta.newInstance();
 		q.getQuery().addCondition(field, id);
 		try {
 			return getSession().load(q);
@@ -492,7 +495,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
 		}
 		@SuppressWarnings("unchecked")
-		T q = (T) meta.instance();
+		T q = (T) meta.newInstance();
 		q.getQuery().addCondition(field, id);
 		try {
 			return getSession().select(q);

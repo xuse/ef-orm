@@ -17,7 +17,6 @@ import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.Query;
 import jef.database.query.QueryImpl;
-import jef.tools.reflect.BeanWrapper;
 
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -123,7 +122,7 @@ public abstract class DataObject implements IQueryableEntity {
 	 */
 	public final void prepareUpdate(Field field, Object newValue, boolean force) {
 		ITableMetadata meta = MetaHolder.getMeta(this);
-		BeanAccessor ba = meta.getBeanAccessor();
+		BeanAccessor ba = meta.getContainerAccessor();
 		String fieldName = field.name();
 		if (updateValueMap == null)
 			updateValueMap = new TreeMap<Field, Object>(cmp);
@@ -150,7 +149,7 @@ public abstract class DataObject implements IQueryableEntity {
 			return;
 
 		ITableMetadata meta = MetaHolder.getMeta(this);
-		BeanAccessor ba = meta.getBeanAccessor();
+		BeanAccessor ba = meta.getContainerAccessor();
 		
 		for (Entry<Field, Object> entry : updateValueMap.entrySet()) {
 			Object newValue = entry.getValue();

@@ -249,7 +249,7 @@ final class CascadeUtil {
 	}
 
 	private static int doDeleteRef(Session trans, BeanWrapper bean, Reference ref) throws SQLException {
-		IQueryableEntity rObj = ref.getTargetType().instance();
+		IQueryableEntity rObj = ref.getTargetType().newInstance();
 		for (JoinKey r : ref.toJoinPath().getJoinKeys()) {
 			rObj.getQuery().addCondition(r.getRightAsField(), bean.getPropertyValue(r.getLeft().name()));
 		}
@@ -258,7 +258,7 @@ final class CascadeUtil {
 
 	private static Map<List<?>, IQueryableEntity> doSelectRef(Session trans, BeanWrapper bean, Reference ref) throws SQLException {
 		Map<List<?>, IQueryableEntity> result = new HashMap<List<?>, IQueryableEntity>();
-		IQueryableEntity rObj = ref.getTargetType().instance();
+		IQueryableEntity rObj = ref.getTargetType().newInstance();
 		for (JoinKey r : ref.toJoinPath().getJoinKeys()) {
 			rObj.getQuery().addCondition(r.getRightAsField(), bean.getPropertyValue(r.getLeft().name()));
 		}

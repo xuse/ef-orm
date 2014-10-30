@@ -73,8 +73,8 @@ public class TemplateMetadata extends MetadataAdapter {
 	}
 
 	@Override
-	public List<Index> getIndexSchema() {
-		return template.getIndexSchema();
+	public List<Index> getIndexDefinition() {
+		return template.getIndexDefinition();
 	}
 
 	@Override
@@ -93,12 +93,8 @@ public class TemplateMetadata extends MetadataAdapter {
 	}
 
 	@Override
-	public IQueryableEntity instance() {
-		return template.instance();
-	}
-
-	@Override
 	public IQueryableEntity newInstance() {
+//		throw new UnsupportedOperationException("this is a abstract metadata template.");
 		return template.newInstance();
 	}
 
@@ -148,7 +144,7 @@ public class TemplateMetadata extends MetadataAdapter {
 	}
 
 	@Override
-	public BeanAccessor getBeanAccessor() {
+	public BeanAccessor getContainerAccessor() {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
 }

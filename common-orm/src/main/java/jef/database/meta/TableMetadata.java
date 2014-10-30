@@ -64,7 +64,6 @@ import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanUtils;
-import jef.tools.reflect.UnsafeUtils;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
@@ -75,9 +74,11 @@ public final class TableMetadata extends MetadataAdapter {
 	/**
 	 * 记录当前Schema所对应的DO类。
 	 */
-	private Class<? extends IQueryableEntity> containerType;
 	private Class<?> thisType;
-	private BeanAccessor metaAccessor;
+	private BeanAccessor pojoAccessor;
+	
+	private Class<? extends IQueryableEntity> containerType;
+	private BeanAccessor containerAccessor;
 
 	// ///////////////分表配置信息//////////////////////
 	private PartitionTable partition;// 分表策略
@@ -93,12 +94,10 @@ public final class TableMetadata extends MetadataAdapter {
 
 	private final Map<Field, String> fieldToColumn = new IdentityHashMap<Field, String>();// 提供Field到列名的转换
 	private final Map<String, String> lowerColumnToFieldName = new HashMap<String, String>();// 提供Column名称到Field的转换，不光包括元模型字段，也包括了非元模型字段但标注了Column的字段(key全部存小写)
-	
-
-	private List<ColumnMapping<?>> metaFields;
 
 	TableMetadata(Class<? extends IQueryableEntity> clz, AnnotationProvider annos) {
 		this.containerType = clz;
+		this.containerAccessor=FastBeanWrapperImpl.getAccessorFor(clz);
 		this.thisType = clz;
 		this.pkFields = Collections.emptyList();
 		initByAnno(clz, annos.getAnnotation(Table.class),annos.getAnnotation(BindDataSource.class));
@@ -106,8 +105,9 @@ public final class TableMetadata extends MetadataAdapter {
 
 	TableMetadata(Class<PojoWrapper> varClz, Class<?> clz, AnnotationProvider annos) {
 		this.containerType = varClz;
+		this.containerAccessor=FastBeanWrapperImpl.getAccessorFor(clz);
 		this.thisType = clz;
-		this.metaAccessor = FastBeanWrapperImpl.getAccessorFor(clz);
+		this.pojoAccessor = FastBeanWrapperImpl.getAccessorFor(clz);
 		this.pkFields = Collections.emptyList();
 		initByAnno(clz,annos.getAnnotation(Table.class),annos.getAnnotation(BindDataSource.class));
 	}
@@ -168,7 +168,7 @@ public final class TableMetadata extends MetadataAdapter {
 		return containerType;
 	}
 
-	public List<jef.database.annotation.Index> getIndexSchema() {
+	public List<jef.database.annotation.Index> getIndexDefinition() {
 		return indexMap;
 	}
 
@@ -599,20 +599,10 @@ public final class TableMetadata extends MetadataAdapter {
 	}
 
 	public IQueryableEntity newInstance() {
-		try {
-			return containerType.newInstance();
-		} catch (InstantiationException e) {
-			throw new RuntimeException(e);
-		} catch (IllegalAccessException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public IQueryableEntity instance() {
-		if (metaAccessor != null) {
-			return new PojoWrapper(metaAccessor.newInstance(), metaAccessor, this, false);
+		if (pojoAccessor != null) {
+			return new PojoWrapper(pojoAccessor.newInstance(), pojoAccessor, this, false);
 		} else {
-			return UnsafeUtils.newInstance(containerType);
+			return (IQueryableEntity) containerAccessor.newInstance();
 		}
 	}
 
@@ -646,7 +636,7 @@ public final class TableMetadata extends MetadataAdapter {
 			throw new IllegalArgumentException();
 		}
 		if (p.getClass() == this.thisType) {
-			return new PojoWrapper(p, metaAccessor, this, isQuery);
+			return new PojoWrapper(p, pojoAccessor, this, isQuery);
 		} else {
 			throw new IllegalArgumentException(p.getClass()+" != " + this.thisType);
 		}
@@ -676,7 +666,7 @@ public final class TableMetadata extends MetadataAdapter {
 	}
 
 	@Override
-	public BeanAccessor getBeanAccessor() {
-		return FastBeanWrapperImpl.getAccessorFor(containerType);
+	public BeanAccessor getContainerAccessor() {
+		return containerAccessor;
 	}
 }

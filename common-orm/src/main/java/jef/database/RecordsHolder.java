@@ -123,6 +123,7 @@ public final class RecordsHolder<T extends IQueryableEntity>{
 		}
 		@SuppressWarnings("unchecked")
 		T obj= (T) meta.newInstance();
+		obj.startUpdate();
 		if(!meta.getPKFields().isEmpty()){
 			for(ColumnMapping<?> type:meta.getPKFields()){
 				if(type instanceof AutoIncrementMapping<?>){
