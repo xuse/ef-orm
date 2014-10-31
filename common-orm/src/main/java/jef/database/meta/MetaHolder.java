@@ -57,10 +57,10 @@ import jef.database.EntityExtensionSupport;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.JefClassLoader;
+import jef.database.MetadataContainer;
 import jef.database.ORMConfig;
 import jef.database.PojoWrapper;
 import jef.database.Session;
-import jef.database.VarMeta;
 import jef.database.VarObject;
 import jef.database.annotation.Cascade;
 import jef.database.annotation.DynamicKeyValueExtension;
@@ -74,6 +74,7 @@ import jef.database.annotation.JoinDescription;
 import jef.database.annotation.JoinType;
 import jef.database.annotation.NoForceEnhance;
 import jef.database.dialect.ColumnType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.create.ColumnDefinition;
@@ -117,7 +118,7 @@ public final class MetaHolder {
 	static Map<String, String> SITE_MAPPING;
 
 	// 元数据池
-	static final Map<Class<?>, MetadataAdapter> pool = new java.util.IdentityHashMap<Class<?>, MetadataAdapter>(32);
+	static final Map<Class<?>, AbstractMetadata> pool = new java.util.IdentityHashMap<Class<?>, AbstractMetadata>(32);
 	// 动态表元数据池
 	static final Map<String, TupleMetadata> dynPool = new java.util.HashMap<String, TupleMetadata>(32);
 	// 反向查找表
@@ -318,16 +319,16 @@ public final class MetaHolder {
 	/**
 	 * 获取所有已经缓存的静态表模型
 	 */
-	public static Collection<MetadataAdapter> getCachedModels() {
+	public static Collection<AbstractMetadata> getCachedModels() {
 		return pool.values();
 	}
 	
-	public static final MetadataAdapter getMetaOrTemplate(Class<?> clz) {
+	public static final AbstractMetadata getMetaOrTemplate(Class<?> clz) {
 		Assert.notNull(clz);
 		if (clz == VarObject.class) {
 			throw new IllegalArgumentException("A VarObject class does not indicted to any table metadata.");
 		}
-		MetadataAdapter m = pool.get(clz);
+		AbstractMetadata m = pool.get(clz);
 		if(m==null){
 			m= initData(clz);
 		}
@@ -340,12 +341,12 @@ public final class MetaHolder {
 	 * @param clz
 	 * @return
 	 */
-	public static final MetadataAdapter getMeta(Class<?> clz) {
+	public static final AbstractMetadata getMeta(Class<?> clz) {
 		Assert.notNull(clz);
 		if (clz == VarObject.class) {
 			throw new IllegalArgumentException("A VarObject class does not indicted to any table metadata.");
 		}
-		MetadataAdapter m = pool.get(clz);
+		AbstractMetadata m = pool.get(clz);
 		if(m==null){
 			m= initData(clz);
 		}
@@ -361,11 +362,11 @@ public final class MetaHolder {
 	 * @param d
 	 * @return
 	 */
-	public final static MetadataAdapter getMeta(Object d) {
-		if (d instanceof VarMeta) {
-			return (MetadataAdapter) ((VarMeta) d).meta();
+	public final static AbstractMetadata getMeta(Object d) {
+		if (d instanceof MetadataContainer) {
+			return (AbstractMetadata) ((MetadataContainer) d).getMeta();
 		}
-		MetadataAdapter metadata = getMeta(d.getClass());
+		AbstractMetadata metadata = getMeta(d.getClass());
 		if (metadata.getType() == EntityType.TEMPLATE) {
 			return metadata.getExtension((IQueryableEntity) d).getMeta();
 		}
@@ -385,9 +386,9 @@ public final class MetaHolder {
 	 * @param clz
 	 * @return
 	 */
-	private synchronized static MetadataAdapter initData(Class<?> clz) {
+	private synchronized static AbstractMetadata initData(Class<?> clz) {
 		{
-			MetadataAdapter m1 = pool.get(clz);
+			AbstractMetadata m1 = pool.get(clz);
 			if (m1 != null)
 				return m1; // 双重检查锁定
 		}
@@ -410,43 +411,15 @@ public final class MetaHolder {
 		}
 	}
 
-	private static MetadataAdapter initVarTemplate(Class<? extends EntityExtensionSupport> clz, DynamicTable dt) {
+	private static AbstractMetadata initVarTemplate(Class<? extends EntityExtensionSupport> clz, DynamicTable dt) {
 		AnnotationProvider annos = config.getAnnotations(clz);
-		{
-			EasyEntity ee = annos.getAnnotation(EasyEntity.class);
-			if (ORMConfig.getInstance().isCheckEnhancement()) {
-				assertEnhanced(clz, ee, annos);
-			}
-		}
-		TableMetadata meta = new TableMetadata(clz, annos);
 		List<java.lang.reflect.Field> unprocessedField = new ArrayList<java.lang.reflect.Field>();
-		MeteModelFields metaFields = new MeteModelFields(clz, meta);
-
-		Class<?> processingClz = clz;
-		while (processingClz != Object.class) {
-			processMetaForClz(processingClz, unprocessedField, meta, annos, metaFields);
-			if (processingClz != clz) {
-				meta.addParent(processingClz);
-			}
-			processingClz = processingClz.getSuperclass();// 父类:下一个要解析的类
-			if (isFirstInterfaceClzEntity(processingClz)) {
-				break;
-			}
-		}
-		metaFields.check();
-		// 计算复合索引
-		Indexes indexes = annos.getAnnotation(Indexes.class);
-		if (indexes != null) {
-			for (jef.database.annotation.Index index : indexes.value()) {
-				meta.indexMap.add(index);
-			}
-		}
+		TableMetadata meta=internalProcess(clz, unprocessedField, annos);
 		// 加载分表策略
 		Assert.notNull(partitionLoader, "the Partition loader is null!");
 		if(partitionLoader.get(clz)!=null){
 			throw new UnsupportedOperationException("Not support a dynamic template with partition.");
 		}
-		
 		
 		ExtensionTemplate ef = new ExtensionTemplate(dt, clz, meta);
 		EfPropertiesExtensionProvider.getInstance().register(clz, ef);
@@ -456,15 +429,37 @@ public final class MetaHolder {
 		return result;
 	}
 
-	private static MetadataAdapter initVarEntity(Class<? extends EntityExtensionSupport> clz, DynamicKeyValueExtension dkv) {
-		MetadataAdapter meta = initEntity(clz);
-		ExtensionKeyValueTable ef = new ExtensionKeyValueTable(dkv, clz, meta);
+	private static AbstractMetadata initVarEntity(Class<? extends EntityExtensionSupport> clz, DynamicKeyValueExtension dkv) {
+		AnnotationProvider annos = config.getAnnotations(clz);
+		List<java.lang.reflect.Field> unprocessedField = new ArrayList<java.lang.reflect.Field>();
+		TableMetadata raw=internalProcess(clz,unprocessedField,annos);
+		
+		// 加载分表策略
+		Assert.notNull(partitionLoader, "the Partition loader is null!");
+		raw.setPartition(partitionLoader.get(clz));
+		
+		ExtensionKeyValueTable ef = new ExtensionKeyValueTable(dkv, clz, raw);
 		EfPropertiesExtensionProvider.getInstance().register(clz, ef);
-		// 直接使用转化后的Metadata
-		return ef.getDefault().getMeta();
+		AbstractMetadata meta=ef.getDefault().getMeta();
+		
+		//此时就将基本字段计算完成的元数据加入缓存，以免在多表关系处理时遭遇死循环
+		pool.put(clz, meta);
+		// 针对未处理的字段，当做外部引用关系处理
+		if(meta instanceof TableMetadata){
+			for (java.lang.reflect.Field f : unprocessedField) {
+				// 将这个字段作为外部引用处理
+				processReference(f, (TableMetadata)meta, annos);
+			}
+		}else if(meta instanceof DynamicMetadata){
+			for (java.lang.reflect.Field f : unprocessedField) {
+				// 将这个字段作为外部引用处理
+				processReference(f, (DynamicMetadata)meta, annos);
+			}
+		}
+		return meta;
 	}
 
-	private static MetadataAdapter initPojo(Class<?> clz) {
+	private static AbstractMetadata initPojo(Class<?> clz) {
 		AnnotationProvider annos = config.getAnnotations(clz);
 		TableMetadata meta = new TableMetadata(PojoWrapper.class, clz, annos);
 
@@ -484,8 +479,27 @@ public final class MetaHolder {
 		return meta;
 	}
 
-	private static MetadataAdapter initEntity(Class<? extends IQueryableEntity> clz) {
+	private static AbstractMetadata initEntity(Class<? extends IQueryableEntity> clz) {
 		AnnotationProvider annos = config.getAnnotations(clz);
+		List<java.lang.reflect.Field> unprocessedField = new ArrayList<java.lang.reflect.Field>();
+		TableMetadata meta=internalProcess(clz,unprocessedField,annos);
+		// 加载分表策略
+		Assert.notNull(partitionLoader, "the Partition loader is null!");
+		meta.setPartition(partitionLoader.get(clz));
+		
+		// 此时就将基本字段计算完成的元数据加入缓存，以免在多表关系处理时遭遇死循环
+		pool.put(clz, meta);
+		// 针对未处理的字段，当做外部引用关系处理
+		for (java.lang.reflect.Field f : unprocessedField) {
+			// 将这个字段作为外部引用处理
+			processReference(f, meta, annos);
+			// 还有一种情况，即定义了Column注解，但不属于元模型的一个字段，用于辅助映射的。当结果拼装时有用
+			processColumnHelper(f, meta, annos);
+		}
+		return meta;
+	}
+
+	private static TableMetadata internalProcess(Class<? extends IQueryableEntity> clz,List<java.lang.reflect.Field> unprocessedField,AnnotationProvider annos) {
 		{
 			EasyEntity ee = annos.getAnnotation(EasyEntity.class);
 			if (ORMConfig.getInstance().isCheckEnhancement()) {
@@ -493,7 +507,6 @@ public final class MetaHolder {
 			}
 		}
 		TableMetadata meta = new TableMetadata(clz, annos);
-		List<java.lang.reflect.Field> unprocessedField = new ArrayList<java.lang.reflect.Field>();
 		MeteModelFields metaFields = new MeteModelFields(clz, meta);
 
 		Class<?> processingClz = clz;
@@ -514,19 +527,6 @@ public final class MetaHolder {
 			for (jef.database.annotation.Index index : indexes.value()) {
 				meta.indexMap.add(index);
 			}
-		}
-		// 加载分表策略
-		Assert.notNull(partitionLoader, "the Partition loader is null!");
-		meta.setPartition(partitionLoader.get(clz));
-		
-		// 此时就将基本字段计算完成的元数据加入缓存，以免在多表关系处理时遭遇死循环
-		pool.put(clz, meta);
-		// 针对未处理的字段，当做外部引用关系处理
-		for (java.lang.reflect.Field f : unprocessedField) {
-			// 将这个字段作为外部引用处理
-			processReference(f, meta, annos);
-			// 还有一种情况，即定义了Column注解，但不属于元模型的一个字段，用于辅助映射的。当结果拼装时有用
-			processColumnHelper(f, meta, annos);
 		}
 		return meta;
 	}
@@ -712,7 +712,7 @@ public final class MetaHolder {
 		}
 	}
 
-	private static JoinPath getHint(AnnotationProvider annos, java.lang.reflect.Field f, MetadataAdapter meta, ITableMetadata target) {
+	private static JoinPath getHint(AnnotationProvider annos, java.lang.reflect.Field f, AbstractMetadata meta, ITableMetadata target) {
 		if (annos.getFieldAnnotation(f, JoinColumn.class) != null) {
 			JoinColumn j = annos.getFieldAnnotation(f, JoinColumn.class);
 			return processJoin(meta, f, target, annos, j);
@@ -824,7 +824,7 @@ public final class MetaHolder {
 			} else {
 				jef.database.Field field = target.getField(targetField.value());
 				Assert.notNull(field);
-				meta.addRefField_1vs1(f.getType(), f.getName(), field, config);
+				meta.addRefField_1vs1(f.getType(), f.getName(), target.getColumnDef(field), config);
 			}
 			return true;
 		}
@@ -843,7 +843,7 @@ public final class MetaHolder {
 			} else {
 				jef.database.Field field = target.getField(targetField.value());
 				Assert.notNull(field);
-				meta.addRefField_1vsN(f.getType(), f.getName(), field, config);
+				meta.addRefField_1vsN(f.getType(), f.getName(), target.getColumnDef(field), config);
 			}
 			return true;
 		}
@@ -859,7 +859,7 @@ public final class MetaHolder {
 				if (field == null) {
 					throw new IllegalArgumentException("[" + targetField.value() + "] is not exist in entity:" + target.getName());
 				}
-				meta.addRefField_Nvs1(f.getType(), f.getName(), field, config);
+				meta.addRefField_Nvs1(f.getType(), f.getName(), target.getColumnDef(field), config);
 			}
 			return true;
 		}
@@ -878,7 +878,7 @@ public final class MetaHolder {
 			} else {
 				jef.database.Field field = target.getField(targetField.value());
 				Assert.notNull(field);
-				meta.addRefField_NvsN(f.getType(), f.getName(), field, config);
+				meta.addRefField_NvsN(f.getType(), f.getName(), target.getColumnDef(field), config);
 			}
 			return true;
 		}
@@ -920,7 +920,7 @@ public final class MetaHolder {
 		throw new IllegalArgumentException(field.getDeclaringClass().getSimpleName() + ":" + field.getName() + " miss its targetEntity annotation.");
 	}
 
-	private static JoinPath processJoin(MetadataAdapter thisMeta, java.lang.reflect.Field f, ITableMetadata target, AnnotationProvider annos, JoinColumn... jj) {
+	private static JoinPath processJoin(AbstractMetadata thisMeta, java.lang.reflect.Field f, ITableMetadata target, AnnotationProvider annos, JoinColumn... jj) {
 		List<JoinKey> result = new ArrayList<JoinKey>();
 		String fieldName = f.getName();
 		for (JoinColumn j : jj) {
@@ -991,14 +991,14 @@ public final class MetaHolder {
 			if (ex instanceof BinaryExpression) {
 				BinaryExpression bin = (BinaryExpression) ex;
 				String left = bin.getLeftExpression().toString().trim();
-				Field leftF = targetMeta.findField(left);// 假定左边的是字段
+				ColumnMapping<?> leftF = targetMeta.findField(left);// 假定左边的是字段
 				JoinKey key;
 				if (leftF == null) {
 					key = new JoinKey(null, null, new FBIField(bin, ReadOnlyQuery.getEmptyQuery(targetMeta)));// 建立一个函数Field
 				} else {
 					String oper = bin.getStringExpression();
 					Object value = new FBIField(bin.getRightExpression().toString(), ReadOnlyQuery.getEmptyQuery(targetMeta));
-					key = new JoinKey(leftF, Operator.valueOfKey(oper), value);
+					key = new JoinKey(leftF.field(), Operator.valueOfKey(oper), value);
 				}
 				return key;
 			} else {

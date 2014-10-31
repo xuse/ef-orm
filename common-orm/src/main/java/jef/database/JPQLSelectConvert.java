@@ -6,6 +6,7 @@ import java.util.Map;
 
 import jef.common.log.LogUtil;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.JpqlParameter;
 import jef.database.jsqlparser.expression.Table;
@@ -163,20 +164,20 @@ public class JPQLSelectConvert extends VisitorAdapter {
 				ITableMetadata meta = MetaHolder.getMeta(c.asSubclass(IQueryableEntity.class));
 				if (meta == null)
 					continue;
-				Field fld = meta.findField(col);
+				ColumnMapping<?> fld = meta.findField(col);
 				if (fld == null)
 					continue;
-				tableColumn.setColumnName(meta.getColumnName(fld, profile,true));
+				tableColumn.setColumnName(fld.getColumnName(profile, true));
 			}
 		} else {
 			cc = aliasMap.get(tbAlias);
 			if (cc == null)
 				return;
-			ITableMetadata meta = MetaHolder.getMeta(cc.asSubclass(IQueryableEntity.class));
-			Field fld = meta.findField(col);
+			ITableMetadata meta = MetaHolder.getMeta(cc);
+			ColumnMapping<?> fld = meta.findField(col);
 			if (fld == null)
 				return;
-			tableColumn.setColumnName(meta.getColumnName(fld, null, profile));
+			tableColumn.setColumnName(fld.getColumnName(profile, true));
 		}
 		super.visit(tableColumn);
 	}

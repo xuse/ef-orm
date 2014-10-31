@@ -16,13 +16,13 @@ import jef.tools.Assert;
 
 @XmlJavaTypeAdapter(VarObjAdapter.class)
 @EasyEntity(checkEnhanced = false, refresh = false)
-public final class VarObject extends DataObject implements Map<String, Object>,VarMeta {
+public final class VarObject extends DataObject implements Map<String, Object>,MetadataContainer {
 	private static final long serialVersionUID = 3915258646897359358L;
 	private final HashMap<String, Object> map = new HashMap<String, Object>();
 
 	private ITableMetadata meta;
 
-	public ITableMetadata meta() {
+	public ITableMetadata getMeta() {
 		return meta;
 	}
 

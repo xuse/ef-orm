@@ -80,7 +80,7 @@ public class BatchOperate extends org.junit.Assert {
 		}
 
 		{// 按主键批量删除记录
-			db.batchDeleteByPrimaryKey(persons);
+			db.batchDelete(persons,false);
 		}
 
 	}

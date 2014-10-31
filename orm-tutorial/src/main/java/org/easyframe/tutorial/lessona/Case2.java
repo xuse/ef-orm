@@ -326,7 +326,7 @@ public class Case2 extends org.junit.Assert {
 		db.batchUpdate(list);
 
 		// 批量删除
-		db.batchDelete(list);
+		db.executeBatchDeletion(list);
 	}
 
 	/**

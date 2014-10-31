@@ -3,10 +3,10 @@ package jef.database.query;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.QueryAlias;
+import jef.database.dialect.type.ColumnMapping;
+import jef.database.meta.AbstractMetadata;
 import jef.database.meta.ITableMetadata;
-import jef.database.meta.MetadataAdapter;
 import jef.database.meta.Reference;
-import jef.database.meta.TupleField;
 import jef.tools.Assert;
 
 import org.apache.commons.lang.ObjectUtils;
@@ -37,7 +37,7 @@ public class RefField implements Field,LazyQueryBindField{
 	private Query<?> instance; //构建时不再绑定
 	private AbstractEntityMappingProvider dynamicBindContext;//如果当前的绑定是属于动态绑定，需要存储此值
 	
-	private Field field;
+	private ColumnMapping<?> field;
 	Reference ref;//默认为null，用于迟邦定的情况下匹配Query
 	/**
 	 * 绑定构造，显式的指定field所绑定的查询表
@@ -45,9 +45,10 @@ public class RefField implements Field,LazyQueryBindField{
 	 * @param field
 	 */
 	public RefField(Query<?> ins,Field field){
-		this.field=field;
+		ColumnMapping<?> mapping=ins.getMeta().getColumnDef(field);
+		Assert.notNull(mapping,"The field in refField must be a metamodel field.");
+		this.field=mapping;
 		this.instance=ins;
-		Assert.isTrue(field instanceof Enum || field instanceof TupleField,"The field in refField must be a metamodel field.");
 	}
 	
 	/**
@@ -67,8 +68,9 @@ public class RefField implements Field,LazyQueryBindField{
 	 * @param fld
 	 */
 	public RefField(Field fld) {
-		this.field=fld;
-		Assert.notNull(field);
+		ColumnMapping<?> mapping=DbUtils.toColumnMapping(fld);
+		Assert.notNull(mapping,"The field in refField must be a metamodel field.");
+		this.field=mapping;
 	}
 	
 	/**
@@ -84,7 +86,7 @@ public class RefField implements Field,LazyQueryBindField{
 				return instance;	
 			}
 		}
-		MetadataAdapter type=DbUtils.getTableMeta(getField());
+		AbstractMetadata type=DbUtils.getTableMeta(getField());
 		if(context!=null){
 			QueryAlias al=context.findQuery(type,this.ref);
 			if(al!=null){
@@ -127,19 +129,19 @@ public class RefField implements Field,LazyQueryBindField{
 	 * @return field
 	 */
 	public Field getField() {
-		return field;
+		return field.field();
 	}
 	/**
 	 * 返回名称
 	 * @return name 
 	 */
 	public String name() {
-		return field.name();
+		return field.fieldName();
 	}
 
 	@Override
 	public String toString() {
-		return (instance==null?field.getClass().getName():instance.getType())+"."+field.name();
+		return (instance==null?field.getClass().getName():instance.getType())+"."+field.fieldName();
 	}
 	
 	
@@ -184,7 +186,7 @@ public class RefField implements Field,LazyQueryBindField{
 	}
 
 	public ITableMetadata getMeta() {
-		return DbUtils.getTableMeta(field);
+		return field.getMeta();
 	}
 
 	public Query<?> getBind() {

@@ -160,6 +160,11 @@ public class ORMConfig implements ORMConfigMBean {
 	
 	private boolean checkUpdateForNamedQueries;
 	
+	/**
+	 * in条件中允许出现的最多参数。缺省500个。
+	 */
+	private int maxInConditions;
+	
 	public String wrap ="";
 	public String wrapt="";
 	
@@ -198,8 +203,17 @@ public class ORMConfig implements ORMConfigMBean {
 		partitionCreateTableInneed=JefConfiguration.getBoolean(DbCfg.PARTITION_FILTER_ABSENT_TABLES, true);
 		partitionInMemoryMaxRows=JefConfiguration.getInt(DbCfg.PARTITION_INMEMORY_MAXROWS, 0);
 		autoCreateSequence=	JefConfiguration.getBoolean(DbCfg.AUTO_SEQUENCE_CREATION,true);
+		maxInConditions=JefConfiguration.getInt(DbCfg.DB_MAX_IN_CONDITIONS,500);
 	}
 	
+	public int getMaxInConditions() {
+		return maxInConditions;
+	}
+
+	public void setMaxInConditions(int maxInConditions) {
+		this.maxInConditions = maxInConditions;
+	}
+
 	public boolean isAutoCreateSequence() {
 		return autoCreateSequence;
 	}

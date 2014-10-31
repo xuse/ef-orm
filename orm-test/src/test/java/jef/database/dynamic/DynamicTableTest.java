@@ -223,7 +223,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	public void testRemoveBatch() throws SQLException {
 		testInsertBatch();
 		List<VarObject> result = db.select(QB.create(meta));
-		db.batchDelete(result);
+		db.executeBatchDeletion(result);
 
 	}
 

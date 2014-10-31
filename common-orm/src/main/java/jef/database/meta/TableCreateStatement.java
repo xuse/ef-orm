@@ -142,4 +142,14 @@ public class TableCreateStatement {
 	public List<PairIS> getSequences() {
 		return sequences;
 	}
+	
+	public List<ITableMetadata> getReferenceTable() {
+		return referenceTable;
+	}
+
+	public void setReferenceTable(List<ITableMetadata> referenceTable) {
+		this.referenceTable = referenceTable;
+	}
+
+	private List<ITableMetadata> referenceTable; 
 }

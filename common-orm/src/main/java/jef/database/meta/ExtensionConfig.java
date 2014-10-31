@@ -1,6 +1,7 @@
 package jef.database.meta;
 
 
+
 public interface ExtensionConfig {
 	/**
 	 * 扩展名
@@ -18,7 +19,7 @@ public interface ExtensionConfig {
 	 * 获得合并后所有字段的元数据描述
 	 * @return
 	 */
-	MetadataAdapter getMeta();
+	AbstractMetadata getMeta();
 	
 	/**
 	 * 是否为动态表实现
@@ -27,5 +28,4 @@ public interface ExtensionConfig {
 	boolean isDynamicTable();
 
 	void flush(DynamicMetadata meta);
-
 }

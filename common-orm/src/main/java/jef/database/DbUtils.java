@@ -69,15 +69,14 @@ import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.SelectItem;
+import jef.database.meta.AbstractMetadata;
 import jef.database.meta.AbstractRefField;
 import jef.database.meta.DbProperty;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.JoinKey;
 import jef.database.meta.JoinPath;
 import jef.database.meta.MetaHolder;
-import jef.database.meta.MetadataAdapter;
 import jef.database.meta.Reference;
-import jef.database.meta.TupleField;
 import jef.database.query.AbstractEntityMappingProvider;
 import jef.database.query.AbstractJoinImpl;
 import jef.database.query.ConditionQuery;
@@ -86,7 +85,6 @@ import jef.database.query.EntityMappingProvider;
 import jef.database.query.JoinElement;
 import jef.database.query.JoinUtil;
 import jef.database.query.JpqlExpression;
-import jef.database.query.LazyQueryBindField;
 import jef.database.query.OrderField;
 import jef.database.query.PartitionCalculator;
 import jef.database.query.Query;
@@ -137,13 +135,14 @@ public final class DbUtils {
 		}
 		return s.getBytes();
 	}
-	
+
 	/**
 	 * 用于查找两个表之间的外键
+	 * 
 	 * @param class1
 	 * @return 外键关系
 	 */
-	public static Reference findPath(ITableMetadata from,ITableMetadata target){
+	public static Reference findPath(ITableMetadata from, ITableMetadata target) {
 		for (Reference r : from.getRefFieldsByRef().keySet()) {
 			if (r.getTargetType() == target) {
 				return r;
@@ -151,14 +150,15 @@ public final class DbUtils {
 		}
 		return null;
 	}
-	
+
 	/**
 	 * 查找到目标类型的引用关系。只允许查找到一个到目标类型的关系。如果找到0个或者多个，那么会抛出异常。
+	 * 
 	 * @param class1
 	 * @return 外键关系
 	 * @throws IllegalArgumentException
 	 */
-	public static Reference findDistinctPath(ITableMetadata from,ITableMetadata target) {
+	public static Reference findDistinctPath(ITableMetadata from, ITableMetadata target) {
 		Reference ref = null;
 		for (Reference reference : from.getRefFieldsByRef().keySet()) {
 			if (reference.getTargetType() == target) {
@@ -173,6 +173,7 @@ public final class DbUtils {
 		}
 		return ref;
 	}
+
 	/**
 	 * 如果列名或表名碰到了数据库的关键字，那么就要增加引号一类字符进行转义
 	 * 
@@ -635,16 +636,65 @@ public final class DbUtils {
 	 * @param feature
 	 * @param tableAlias
 	 * @return
+	 * @deprecated use
+	 *             {@linkplain #toColumnName(ColumnMapping, DatabaseDialect, String)}
+	 *             instead
 	 */
 	public static String toColumnName(Field field, DatabaseDialect feature, String tableAlias) {
-		if (field.getClass() == TupleField.class) {
-			return ((TupleField) field).toColumnName(tableAlias, feature);
+		if (field instanceof MetadataContainer) {
+			ITableMetadata meta = ((MetadataContainer) field).getMeta();
+			return getColumnName(meta, field, tableAlias, feature);
 		}
 		ITableMetadata meta = getTableMeta(field);
 		if (field instanceof JpqlExpression) {
 			return ((JpqlExpression) field).toSqlAndBindAttribs(null, feature);
 		} else {
-			return meta.getColumnName(field, tableAlias, feature);
+			return getColumnName(meta, field, tableAlias, feature);
+		}
+	}
+
+	/**
+	 * 代替上面的方法，性能更好,也更安全
+	 * 
+	 * @param targetField
+	 * @param profile
+	 * @param tableAlias
+	 * @return
+	 */
+	public static String toColumnName(ColumnMapping<?> fld, DatabaseDialect profile, String alias) {
+		if (alias != null) {
+			StringBuilder sb = new StringBuilder();
+			sb.append(alias).append('.').append(fld.getColumnName(profile,true));
+			return sb.toString();
+		} else {
+			return fld.getColumnName(profile, true);
+		}
+	}
+
+	/**
+	 * 返回某个field的数据库列名称
+	 * 
+	 * @param field
+	 *            field
+	 * @param alias
+	 *            数据库表别名
+	 * @param profile
+	 *            当前数据库方言
+	 * @return 数据库列名称
+	 * 
+	 * @deprecated 不够安全
+	 */
+	public static String getColumnName(ITableMetadata meta, Field fld, String alias, DatabaseDialect profile) {
+		if (alias != null) {
+			if (fld instanceof JpqlExpression) {
+				throw new UnsupportedOperationException();
+			} else {
+				StringBuilder sb = new StringBuilder();
+				sb.append(alias).append('.').append(meta.getColumnName(fld, profile, true));
+				return sb.toString();
+			}
+		} else {
+			return meta.getColumnName(fld, profile, true);
 		}
 	}
 
@@ -877,15 +927,13 @@ public final class DbUtils {
 	 * @param field
 	 * @return
 	 */
-	public static MetadataAdapter getTableMeta(Field field) {
+	public static AbstractMetadata getTableMeta(Field field) {
 		Assert.notNull(field);
-		if (field instanceof TupleField) {
-			return (MetadataAdapter) ((TupleField) field).getMeta();
-		}
-		if (field instanceof LazyQueryBindField) {
-			return (MetadataAdapter) ((LazyQueryBindField) field).getMeta();
+		if (field instanceof MetadataContainer) {
+			return (AbstractMetadata) ((MetadataContainer) field).getMeta();
 		}
 		if (field instanceof Enum) {
+			// FIXME 这个算法对原始功能是适用的，但当动态扩展等系列功能出现后，适用上有一定问题。
 			Class<?> c = field.getClass().getDeclaringClass();
 			Assert.isTrue(IQueryableEntity.class.isAssignableFrom(c), field + " is not a defined in a IQueryableEntity's meta-model.");
 			return MetaHolder.getMeta(c.asSubclass(IQueryableEntity.class));
@@ -894,6 +942,25 @@ public final class DbUtils {
 		}
 	}
 
+	/**
+	 * 得到列的完整定义
+	 * @param field
+	 * @return
+	 */
+	public static ColumnMapping<?> toColumnMapping(Field field) {
+		if(field instanceof ColumnMapping<?>){
+			return (ColumnMapping<?>)field;
+		}else if(field instanceof MetadataContainer){
+			return ((MetadataContainer) field).getMeta().getColumnDef(field);
+		}else if (field instanceof Enum) {
+			Class<?> c = field.getClass().getDeclaringClass();
+			Assert.isTrue(IQueryableEntity.class.isAssignableFrom(c), field + " is not a defined in a IQueryableEntity's meta-model.");
+			ITableMetadata meta=MetaHolder.getMeta(c);
+			return meta.getColumnDef(field);
+		}
+		throw new IllegalArgumentException("method 'getTableMeta' doesn't support field type of " + field.getClass());
+	}
+	
 	/**
 	 * 根据引用关系字段，填充查询条件
 	 * 
@@ -1138,7 +1205,7 @@ public final class DbUtils {
 	 * @return
 	 */
 	public static PartitionResult[] toTableNames(IQueryableEntity obj, String customName, Query<?> q, PartitionSupport processor) {
-		MetadataAdapter meta = q == null ? MetaHolder.getMeta(obj):(MetadataAdapter) q.getMeta();
+		AbstractMetadata meta = q == null ? MetaHolder.getMeta(obj) : (AbstractMetadata) q.getMeta();
 		if (StringUtils.isNotEmpty(customName))
 			return new PartitionResult[] { new PartitionResult(customName).setDatabase(meta.getBindDsName()) };
 		PartitionResult[] result = partitionUtil.toTableNames(meta, obj, q, processor, ORMConfig.getInstance().isFilterAbsentTables());
@@ -1166,7 +1233,7 @@ public final class DbUtils {
 		Assert.notNull(meta);
 		// long start=System.nanoTime();
 		// try{
-		return partitionUtil.toTableNames((MetadataAdapter) meta, processor, operateType);
+		return partitionUtil.toTableNames((AbstractMetadata) meta, processor, operateType);
 		// }finally{
 		// System.out.println((System.nanoTime()-start)/1000+"us");
 		// }
@@ -1182,7 +1249,7 @@ public final class DbUtils {
 	 * @return
 	 */
 	public static PartitionResult toTableName(IQueryableEntity obj, String customName, Query<?> q, PartitionSupport profile) {
-		MetadataAdapter meta = obj == null ? (MetadataAdapter) q.getMeta() : MetaHolder.getMeta(obj);
+		AbstractMetadata meta = obj == null ? (AbstractMetadata) q.getMeta() : MetaHolder.getMeta(obj);
 		if (StringUtils.isNotEmpty(customName))
 			return new PartitionResult(customName).setDatabase(meta.getBindDsName());
 		PartitionResult result = partitionUtil.toTableName(meta, obj, q, profile);

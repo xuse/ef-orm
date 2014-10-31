@@ -6,6 +6,7 @@ import java.util.List;
 
 import jef.database.Field;
 import jef.database.IQueryableEntity;
+import jef.database.MetadataContainer;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.ITableMetadata;
@@ -19,8 +20,12 @@ import jef.tools.reflect.Property;
  * 
  * @param <T>
  *            该列在java中映射的数据类型
+ *            
+ *            
+ * @Modify
+ * 2014-10-31 为了实现在重构中，内部对于Field对象的表示逐渐过渡为  ColumnMapping对象，暂时先让ColumnMapping实现Field接口。         
  */
-public interface ColumnMapping<T> extends ResultSetAccessor {
+public interface ColumnMapping<T> extends ResultSetAccessor,MetadataContainer {
 	/**
 	 * 得到ColumnType
 	 * 

@@ -394,5 +394,9 @@ public enum DbCfg implements ConfigItem {
 	/**
 	 * 查询、删除、更新操作时过滤掉哪些数据库中不存在的表。默认开启
 	 */
-	PARTITION_FILTER_ABSENT_TABLES
+	PARTITION_FILTER_ABSENT_TABLES,
+	/**
+	 * 在一次in条件中允许出现的最多参数数量。缺省500.
+	 */
+	DB_MAX_IN_CONDITIONS;
 }

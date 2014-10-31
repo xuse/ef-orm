@@ -49,7 +49,7 @@ import jef.database.jmx.JefFacade;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-import jef.database.meta.MetadataAdapter;
+import jef.database.meta.AbstractMetadata;
 import jef.database.support.DbOperatorListener;
 import jef.database.support.DbOperatorListenerContainer;
 import jef.database.support.DefaultDbOperListener;
@@ -654,7 +654,7 @@ public class DbClient extends Session {
 	 * @throws SQLException
 	 */
 	public boolean createTable(IQueryableEntity obj) throws SQLException {
-		MetadataAdapter meta = MetaHolder.getMeta(obj);
+		AbstractMetadata meta = MetaHolder.getMeta(obj);
 		PartitionResult[] result = DbUtils.partitionUtil.toTableNames(meta, obj, obj.getQuery(), getPartitionSupport(), false);
 		if (ORMConfig.getInstance().isDebugMode()) {
 			LogUtil.show("Partitions:" + Arrays.toString(result));

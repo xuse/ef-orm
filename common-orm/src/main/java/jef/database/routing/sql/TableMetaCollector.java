@@ -23,9 +23,9 @@ import jef.database.jsqlparser.visitor.SelectBody;
 import jef.database.jsqlparser.visitor.StatementVisitor;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-import jef.database.meta.MetadataAdapter;
+import jef.database.meta.AbstractMetadata;
 
-public final class TableMetaCollector extends Holder<MetadataAdapter> implements StatementVisitor {
+public final class TableMetaCollector extends Holder<AbstractMetadata> implements StatementVisitor {
 	private boolean breakProcess;
 	private final List<Table> modificationPoints=new ArrayList<Table>();
 
@@ -66,7 +66,7 @@ public final class TableMetaCollector extends Holder<MetadataAdapter> implements
 		ITableMetadata meta = MetaHolder.lookup(schema, name);
 		if (this.get() == null) {
 			modificationPoints.add(table);
-			this.set((MetadataAdapter)meta);
+			this.set((AbstractMetadata)meta);
 		} else if (this.get() != meta) {//出现多张表,匹配失败
 			this.set(null);
 			breakProcess = true;

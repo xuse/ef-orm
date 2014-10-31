@@ -16,7 +16,7 @@ import jef.database.datasource.MapDataSourceLookup;
 import jef.database.datasource.RoutingDataSource;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.meta.MetaHolder;
-import jef.database.meta.MetadataAdapter;
+import jef.database.meta.AbstractMetadata;
 import junit.framework.Assert;
 
 import org.easyframe.tutorial.lesson4.entity.Person;
@@ -48,7 +48,7 @@ public class Case2 {
 		ORMConfig.getInstance().setDebugMode(true);
 		db.dropTable(Person.class);
 		//将Person对象的对应数据库修改为datasource2。（默认应该用注解 @BindDataSource来设置）
-		((MetadataAdapter)MetaHolder.getMeta(Person.class)).setBindDsName("datasource2");
+		((AbstractMetadata)MetaHolder.getMeta(Person.class)).setBindDsName("datasource2");
 		db.dropTable(Person.class);
 		db.createTable(Person.class);
 		

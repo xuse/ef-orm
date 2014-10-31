@@ -37,7 +37,7 @@ import jef.tools.StringUtils;
  * @author jiyi
  * 
  */
-public abstract class MetadataAdapter implements ITableMetadata {
+public abstract class AbstractMetadata implements ITableMetadata {
 	protected String schema;
 	protected String tableName;
 	private String bindDsName;
@@ -89,6 +89,10 @@ public abstract class MetadataAdapter implements ITableMetadata {
 	}
 
 	public ColumnMapping<?> getColumnDef(Field field) {
+		//2014-10-31 在重构用columnMapping代替的设计过程中，会出现两类对象的混用，引起此处作一个判断拦截field(暂时还不需要)
+		
+//		if(field instanceof ColumnMapping)
+//			return (ColumnMapping<?>)field;
 		return schemaMap.get(field);
 	}
 
@@ -145,20 +149,6 @@ public abstract class MetadataAdapter implements ITableMetadata {
 		return escape ? DbUtils.escapeColumn(profile, name) : name;
 	}
 
-	public String getColumnName(Field fld, String alias, DatabaseDialect profile) {
-		if (alias != null) {
-			if (fld instanceof JpqlExpression) {
-				throw new UnsupportedOperationException();
-			} else {
-				StringBuilder sb = new StringBuilder();
-				sb.append(alias).append('.').append(getColumnName(fld, profile, true));
-				return sb.toString();
-			}
-		} else {
-			return getColumnName(fld, profile, true);
-		}
-	}
-
 	private DbTable cachedTable;
 	private DatabaseDialect bindProfile;
 	protected KeyDimension pkDim;
@@ -187,10 +177,14 @@ public abstract class MetadataAdapter implements ITableMetadata {
 		return pkDim;
 	}
 
-	public Field findField(String left) {
+	public ColumnMapping<?> findField(String left) {
 		if (left == null)
 			return null;
-		return lowerFields.get(left.toLowerCase());
+		Field field= lowerFields.get(left.toLowerCase());
+		if(field!=null){
+			return getColumnDef(field);
+		}
+		return null;
 	}
 
 	public Field getField(String name) {
@@ -279,12 +273,6 @@ public abstract class MetadataAdapter implements ITableMetadata {
 
 	public Map<String, AbstractRefField> getRefFieldsByName() {
 		return refFieldsByName;
-	}
-
-	@Override
-	public List<ITableMetadata> getReferenceTables() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	public ExtensionConfig getExtension(IQueryableEntity d) {

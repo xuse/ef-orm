@@ -1,6 +1,6 @@
 package jef.database.query;
 
-import jef.database.meta.ITableMetadata;
+import jef.database.MetadataContainer;
 
 /**
  * 可绑定的Field
@@ -10,17 +10,18 @@ import jef.database.meta.ITableMetadata;
  * @author jiyi
  *
  */
-public interface LazyQueryBindField {
+public interface LazyQueryBindField extends MetadataContainer{
 	/**
 	 * 该Field是否绑定
 	 * @return
 	 */
 	public boolean isBind();
-	/**
-	 * 绑定的表的元数据，所谓的迟绑定，其实就是根据MetaData去比对，参与Join的几张表中，哪张表metadata一致。
-	 * @return
-	 */
-	public ITableMetadata getMeta();
+//	/**
+//	 * 绑定的表的元数据，所谓的迟绑定，其实就是根据MetaData去比对，参与Join的几张表中，哪张表metadata一致。
+//	 * @return
+//	 */
+//	public ITableMetadata getMeta();
+	
 	/**
 	 * 得到绑定的实例。如果是已经绑定的Field，直接返回绑定对象即可。如果是没有绑定的Field，从传入的context中选择合适的表绑定
 	 * @param context Join上下文

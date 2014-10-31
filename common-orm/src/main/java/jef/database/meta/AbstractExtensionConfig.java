@@ -3,10 +3,10 @@ package jef.database.meta;
 
 public abstract class AbstractExtensionConfig implements ExtensionConfig {
 	protected String name;
-	protected MetadataAdapter parent;
+	protected AbstractMetadata parent;
 	private TupleMetadata extension;
 
-	protected AbstractExtensionConfig(String name, MetadataAdapter parent) {
+	protected AbstractExtensionConfig(String name, AbstractMetadata parent) {
 		this.name = name;
 		this.parent = parent;
 		init();
@@ -31,17 +31,17 @@ public abstract class AbstractExtensionConfig implements ExtensionConfig {
 		return extension;
 	}
 
-	private MetadataAdapter mergedMeta;
+	private AbstractMetadata mergedMeta;
 
 	@Override
-	public MetadataAdapter getMeta() {
+	public AbstractMetadata getMeta() {
 		if (mergedMeta == null) {
 			mergedMeta = merge();
 		}
 		return mergedMeta;
 	}
 
-	protected abstract MetadataAdapter merge();
+	protected abstract AbstractMetadata merge();
 
 	@Override
 	public void flush(DynamicMetadata meta) {

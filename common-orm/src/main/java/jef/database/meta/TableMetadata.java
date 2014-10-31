@@ -42,7 +42,6 @@ import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.Entry;
 import jef.common.log.LogUtil;
-import jef.database.DbUtils;
 import jef.database.DebugUtil;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
@@ -69,7 +68,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 @SuppressWarnings("rawtypes")
-public final class TableMetadata extends MetadataAdapter {
+public final class TableMetadata extends AbstractMetadata {
 
 	/**
 	 * 记录当前Schema所对应的DO类。
@@ -388,10 +387,9 @@ public final class TableMetadata extends MetadataAdapter {
 		addRefField(field);
 	}
 
-	private void innerAdd(Class<?> fieldType, String fieldName, Field targetField, CascadeConfig config) {
-		ITableMetadata target = DbUtils.getTableMeta(targetField);
+	private void innerAdd(Class<?> fieldType, String fieldName, ColumnMapping<?> targetField, CascadeConfig config) {
 		Assert.notNull(containerType);
-		Reference r = new Reference(target, config.refType, this);
+		Reference r = new Reference(targetField.getMeta(), config.refType, this);
 		if (config.path != null) {
 			r.setHint(config.path);
 		}
@@ -417,14 +415,12 @@ public final class TableMetadata extends MetadataAdapter {
 	/*
 	 * 添加多对多引用字段
 	 */
-	public void addRefField_NvsN(Class<?> fieldType, String fieldName, Field targetField, CascadeConfig config) {
-		ITableMetadata targetClass = DbUtils.getTableMeta(targetField);
-		Reference r = new Reference(targetClass, ReferenceType.MANY_TO_MANY, this);
+	public void addRefField_NvsN(Class<?> fieldType, String fieldName, ColumnMapping<?> targetField, CascadeConfig config) {
+		Reference r = new Reference(targetField.getMeta(), ReferenceType.MANY_TO_MANY, this);
 		if (config.path != null) {
 			r.setHint(config.path);
 		}
-
-		ReferenceField f = new ReferenceField(fieldType, fieldName, r, targetField,config);
+		ReferenceField f = new ReferenceField(fieldType, fieldName, r, targetField ,config);
 		addRefField(f);
 	}
 
@@ -479,7 +475,7 @@ public final class TableMetadata extends MetadataAdapter {
 	 * 
 	 * @param path 用于连接到实体表的连接提示（如果在全局中注册了关系，则此处可以省略）
 	 */
-	public void addRefField_1vs1(Class<?> fieldType, String fieldName, Field target, CascadeConfig config) {
+	protected void addRefField_1vs1(Class<?> fieldType, String fieldName, ColumnMapping<?> target, CascadeConfig config) {
 		config.refType=ReferenceType.ONE_TO_ONE;
 		innerAdd(fieldType, fieldName, target,config);
 	}
@@ -511,7 +507,7 @@ public final class TableMetadata extends MetadataAdapter {
 	 * 
 	 * @param path 用于连接到实体表的连接提示（如果在全局中注册了关系，则此处可以省略）
 	 */
-	public void addRefField_1vsN(Class<?> fieldType, String fieldName, Field target, CascadeConfig config) {
+	protected void addRefField_1vsN(Class<?> fieldType, String fieldName, ColumnMapping<?> target, CascadeConfig config) {
 		config.refType=ReferenceType.ONE_TO_MANY;
 		innerAdd(fieldType, fieldName, target,config);
 	}
@@ -543,9 +539,9 @@ public final class TableMetadata extends MetadataAdapter {
 	 * 
 	 * @param path 用于连接到实体表的连接提示（如果在全局中注册了关系，则此处可以省略）
 	 */
-	public void addRefField_Nvs1(Class<?> fieldType, String fieldName, Field target, CascadeConfig config) {
+	public void addRefField_Nvs1(Class<?> fieldType, String fieldName, ColumnMapping<?> target, CascadeConfig config) {
 		config.refType=ReferenceType.MANY_TO_ONE;
-		innerAdd(fieldType, fieldName, target, config);
+		innerAdd(fieldType, fieldName,target, config);
 	}
 
 	void setTableName(String tableName) {
@@ -618,12 +614,6 @@ public final class TableMetadata extends MetadataAdapter {
 		return fields.get(lowerColumnToFieldName.get(columnLowercase));
 	}
 
-	public boolean isAssignableFrom(ITableMetadata type) {
-		return this == type || this.containerType.isAssignableFrom(type.getThisType());
-	}
-
-
-
 	@Override
 	protected Collection<ColumnMapping<?>> getColumnSchema() {
 		return this.schemaMap.values();
@@ -654,11 +644,17 @@ public final class TableMetadata extends MetadataAdapter {
 		parents.add(processingClz);
 		
 	}
-	public boolean containsMeta(ITableMetadata meta) {
-		if(meta==this)return true;
+//	
+//
+//	public boolean isAssignableFrom(ITableMetadata type) {
+//		return this == type || this.containerType.isAssignableFrom(type.getThisType());
+//	}
+	
+	public boolean containsMeta(ITableMetadata type) {
+		if(type==this)return true;
 		if(parents==null)return false;
 		for(Class clz:parents){
-			if(meta.getThisType()==clz){
+			if(type.getThisType()==clz){
 				return true;
 			}
 		}

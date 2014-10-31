@@ -25,7 +25,7 @@ import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.EntityType;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-import jef.database.meta.MetadataAdapter;
+import jef.database.meta.AbstractMetadata;
 import jef.database.meta.Reference;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.GroupClause;
@@ -47,7 +47,7 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 		if(clz.getType()==EntityType.TEMPLATE){
 			String key=String.valueOf(pks[0]);
 			pks=(Serializable[]) ArrayUtils.subarray(pks, 1, pks.length);
-			this.type=((MetadataAdapter)clz).getExtension(key).getMeta();			
+			this.type=((AbstractMetadata)clz).getExtension(key).getMeta();			
 		}else{
 			this.type=clz;
 		}

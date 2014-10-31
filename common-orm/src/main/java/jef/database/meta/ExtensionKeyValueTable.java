@@ -9,7 +9,7 @@ public final class ExtensionKeyValueTable extends AbstractExtensionConfig implem
 	private DynamicKeyValueExtension config;
 	private TupleMetadata kvTable;
 	
-	public ExtensionKeyValueTable(DynamicKeyValueExtension dkv, Class<?> entityClass,MetadataAdapter parent) {
+	public ExtensionKeyValueTable(DynamicKeyValueExtension dkv, Class<?> entityClass,AbstractMetadata parent) {
 		super(dkv.metadata(),parent);
 		this.config=dkv;
 		// 创建KV表
@@ -59,11 +59,15 @@ public final class ExtensionKeyValueTable extends AbstractExtensionConfig implem
 
 
 	@Override
-	protected MetadataAdapter merge() {
-		DynamicMetadata tuple = new DynamicMetadata(parent,this);
-		for (ColumnMapping<?> f : getExtensionMeta().getColumns()) {
-			tuple.updateColumn(f.fieldName(), f.rawColumnName(), f.get(), f.isPk());
-		}
-		return tuple;
+	protected AbstractMetadata merge() {
+//		DynamicMetadata tuple = new DynamicMetadata(parent,this);
+//		for (ColumnMapping<?> f : getExtensionMeta().getColumns()) {
+//			tuple.updateColumn(f.fieldName(), f.rawColumnName(), f.get(), f.isPk());
+//		}
+		return parent;
+	}
+
+	public ITableMetadata getRawMetadata() {
+		return parent;
 	}
 }

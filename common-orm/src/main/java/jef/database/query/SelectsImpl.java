@@ -7,6 +7,7 @@ import java.util.Set;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.QueryAlias;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.select.SelectExpressionItem;
@@ -161,9 +162,13 @@ public class SelectsImpl extends AbstractEntityMappingProvider implements Select
 					SelectExpressionItem expression = (SelectExpressionItem) item;
 					Expression column=expression.getExpression();
 					String exp = column.toString();
-					Field field = (column instanceof Column)?meta.findField(exp):null;
-					if (field == null)
+					ColumnMapping<?> mapping = (column instanceof Column)?meta.findField(exp):null;
+					Field field;
+					if (mapping == null){
 						field = new FBIField(exp, q);
+					}else{
+						field=mapping.field();
+					}
 					this.column(q, field, expression.getAlias(), null);
 				} else if (item instanceof jef.database.jsqlparser.statement.select.AllTableColumns) {
 					jef.database.jsqlparser.statement.select.AllTableColumns at = (jef.database.jsqlparser.statement.select.AllTableColumns) item;

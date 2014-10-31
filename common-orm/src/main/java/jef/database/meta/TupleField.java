@@ -1,9 +1,11 @@
 package jef.database.meta;
 
+import jef.database.DbUtils;
+import jef.database.MetadataContainer;
 import jef.database.dialect.DatabaseDialect;
 
 @SuppressWarnings("serial")
-public class TupleField implements jef.database.Field {
+public class TupleField implements jef.database.Field, MetadataContainer {
 	private ITableMetadata meta;
 	private String name;
 
@@ -18,10 +20,6 @@ public class TupleField implements jef.database.Field {
 
 	public ITableMetadata getMeta() {
 		return meta;
-	}
-
-	public String toColumnName(String tableAlias, DatabaseDialect feature) {
-		return meta.getColumnName(this, tableAlias, feature);
 	}
 
 	@Override

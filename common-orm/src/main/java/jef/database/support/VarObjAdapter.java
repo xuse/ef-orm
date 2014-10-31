@@ -51,7 +51,7 @@ public class VarObjAdapter extends XmlAdapter<VarAttribute[], VarObject> {
 	@Override
 	public VarAttribute[] marshal(VarObject v) throws Exception {
 		List<VarAttribute> list = new ArrayList<VarAttribute>(v.size() + 2);
-		ITableMetadata meta = v.meta();
+		ITableMetadata meta = v.getMeta();
 		VarAttribute a = new VarAttribute(VarAttribute.ATTR_CLASS_NAME, meta.getName());
 		list.add(a);
 		a = new VarAttribute(VarAttribute.ATTR_TABLE_NAME, meta.getTableName(true));

@@ -35,7 +35,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-import jef.database.meta.MetadataAdapter;
+import jef.database.meta.AbstractMetadata;
 import jef.database.routing.function.KeyFunction;
 import jef.database.routing.function.ModulusFunction;
 import jef.database.support.MultipleDatabaseOperateException;
@@ -57,7 +57,7 @@ import com.google.common.collect.Multimap;
  */
 public final class DefaultPartitionCalculator implements PartitionCalculator {
 
-	public PartitionResult[] toTableNames(MetadataAdapter meta, IQueryableEntity instance, Query<?> q, PartitionSupport processor,boolean doFileter) {
+	public PartitionResult[] toTableNames(AbstractMetadata meta, IQueryableEntity instance, Query<?> q, PartitionSupport processor,boolean doFileter) {
 		DatabaseDialect profile = processor.getProfile(null);
 		List<DbTable> result;
 		if (meta.getPartition() != null && instance != null) {// 分区表，并且具备分区条件
@@ -72,7 +72,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		return meta.getBaseTable(profile).toPartitionResults();
 	}
 	
-	public PartitionResult[] toTableNames(MetadataAdapter meta, Map<String,Dimension> val, PartitionSupport processor,boolean doFileter) {
+	public PartitionResult[] toTableNames(AbstractMetadata meta, Map<String,Dimension> val, PartitionSupport processor,boolean doFileter) {
 		DatabaseDialect profile = processor.getProfile(null);
 		List<DbTable> result;
 		if (meta.getPartition() != null && val != null) {// 分区表，并且具备分区条件
@@ -88,7 +88,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	}
 
 	//0基表 1 不含基表  2 分表+基表 3 数据库中的存在表（不含基表） 4所有存在的表
-	public PartitionResult[] toTableNames(MetadataAdapter meta, PartitionSupport processor, int opType) {
+	public PartitionResult[] toTableNames(AbstractMetadata meta, PartitionSupport processor, int opType) {
 		DatabaseDialect profile = processor.getProfile(null);
 		List<DbTable> result;
 		if (opType > 0 && meta.getPartition() != null) {// 分区表，并且具备分区条件
@@ -121,7 +121,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 * java.lang.String, jef.database.IQueryableEntity,
 	 * jef.database.query.Query, jef.database.meta.DbmsProfile)
 	 */
-	public PartitionResult toTableName(MetadataAdapter meta, IQueryableEntity instance, Query<?> q, PartitionSupport processor) {
+	public PartitionResult toTableName(AbstractMetadata meta, IQueryableEntity instance, Query<?> q, PartitionSupport processor) {
 		DatabaseDialect profile = processor.getProfile(null);
 		DbTable result;
 		if (meta.getPartition() != null && instance != null) {// 认为是分区表的场合
@@ -148,7 +148,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 
 	}
 	
-	public PartitionResult toTableName(MetadataAdapter meta, Map<String,Dimension> val,PartitionSupport processor) {
+	public PartitionResult toTableName(AbstractMetadata meta, Map<String,Dimension> val,PartitionSupport processor) {
 		DatabaseDialect profile = processor.getProfile(null);
 		DbTable result;
 		if (meta.getPartition() != null && val != null) {// 认为是分区表的场合
@@ -557,7 +557,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		return result;
 	}
 
-	private List<DbTable> analyzeRegexpResults(Set<DbTable> r, PartitionSupport processor, MetadataAdapter meta, DatabaseDialect profile) {
+	private List<DbTable> analyzeRegexpResults(Set<DbTable> r, PartitionSupport processor, AbstractMetadata meta, DatabaseDialect profile) {
 		List<DbTable> list = new ArrayList<DbTable>();
 		for (DbTable e : r) {
 			// 对于返回的每个分表分库结果，计算其分库名的正则表达式

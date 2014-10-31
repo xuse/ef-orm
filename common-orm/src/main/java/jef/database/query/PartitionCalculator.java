@@ -5,7 +5,7 @@ import java.util.Map;
 import jef.database.IQueryableEntity;
 import jef.database.annotation.PartitionResult;
 import jef.database.innerpool.PartitionSupport;
-import jef.database.meta.MetadataAdapter;
+import jef.database.meta.AbstractMetadata;
 
 /**
  * 分表规则计算器
@@ -25,7 +25,7 @@ public interface PartitionCalculator {
 	 * @return 分表计算结果
 	 * @see PartitionResult
 	 */
-	PartitionResult[] toTableNames(MetadataAdapter meta, IQueryableEntity instance, Query<?> q, PartitionSupport context,boolean filter);
+	PartitionResult[] toTableNames(AbstractMetadata meta, IQueryableEntity instance, Query<?> q, PartitionSupport context,boolean filter);
 	
 	/**
 	 * 根据从SQL中分析得到的维度矢量进行路由计算
@@ -34,7 +34,7 @@ public interface PartitionCalculator {
 	 * @param processor
 	 * @return
 	 */
-	PartitionResult[] toTableNames(MetadataAdapter meta, Map<String,Dimension> val, PartitionSupport processor,boolean filter); 
+	PartitionResult[] toTableNames(AbstractMetadata meta, Map<String,Dimension> val, PartitionSupport processor,boolean filter); 
 	
 	/**
 	 * 根据从SQL中分析得到的维度矢量进行路由计算
@@ -43,7 +43,7 @@ public interface PartitionCalculator {
 	 * @param processor
 	 * @return
 	 */
-	PartitionResult toTableName(MetadataAdapter meta, Map<String,Dimension> val,PartitionSupport processor);
+	PartitionResult toTableName(AbstractMetadata meta, Map<String,Dimension> val,PartitionSupport processor);
 	
 	/**
 	 * 在无实例的情况下计算表名,将会计算出全部可能的实现
@@ -55,7 +55,7 @@ public interface PartitionCalculator {
 	 * @param operateType 。0基表 1 分表，不含基表  2 分表+基表 3 数据库中的存在表（不含基表） 4所有存在的表
 	 * @return 分表计算结果
 	 */
-	PartitionResult[] toTableNames(MetadataAdapter meta, PartitionSupport context,int operateType);
+	PartitionResult[] toTableNames(AbstractMetadata meta, PartitionSupport context,int operateType);
 	
 	/**
 	 * 计算Query对应的表名，要求落在一个固定存在的表上。
@@ -68,6 +68,6 @@ public interface PartitionCalculator {
 	 * @return 计算结果
 	 * @see PartitionResult
 	 */
-	PartitionResult toTableName(MetadataAdapter meta, IQueryableEntity instance, Query<?> q,PartitionSupport context);
+	PartitionResult toTableName(AbstractMetadata meta, IQueryableEntity instance, Query<?> q,PartitionSupport context);
 	
 }

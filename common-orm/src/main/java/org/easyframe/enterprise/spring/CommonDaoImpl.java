@@ -22,6 +22,7 @@ import jef.database.PagingIterator;
 import jef.database.PojoWrapper;
 import jef.database.QB;
 import jef.database.Session;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.jpa.JefEntityManagerFactory;
 import jef.database.meta.EntityType;
 import jef.database.meta.ITableMetadata;
@@ -80,14 +81,14 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		}
 	}
 
-	public <T> T loadByPrimaryKey(Class<T> entityClass, Object primaryKey) {
+	public <T> T loadByPrimaryKey(Class<T> entityClass,  Serializable primaryKey) {
 		return super.getEntityManager().find(entityClass, primaryKey);
 	}
 	
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <T> List<T> loadByPrimaryKeys(Class<T> entityClass, List<Object> primaryKey) {
+	public <T> List<T> loadByPrimaryKeys(Class<T> entityClass, List<? extends Serializable> primaryKey) {
 		ITableMetadata meta=MetaHolder.getMeta(entityClass);
 		try{
 			if(meta.getType()==EntityType.POJO){
@@ -163,12 +164,12 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			Query<?> qq = ent.getQuery();
 			ITableMetadata meta = qq.getMeta();
 			for (String s : property) {
-				Field field = meta.findField(s);
+				ColumnMapping<?> field = meta.findField(s);
 				if (field == null) {
 					throw new IllegalArgumentException(s + " not found database field in entity " + bw.getClassName());
 				}
 				ent.getUpdateValueMap().remove(field);
-				qq.addCondition(field, bw.getPropertyValue(s));
+				qq.addCondition(field.field(), bw.getPropertyValue(s));
 			}
 			return getSession().update(qq.getInstance());
 		} catch (SQLException e) {
@@ -192,11 +193,11 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			ITableMetadata meta = qq.getMeta();
 			ent.clearUpdate();
 			for (Entry<String, Object> entry : setValues.entrySet()) {
-				Field field = meta.findField(entry.getKey());
+				ColumnMapping<?> field = meta.findField(entry.getKey());
 				if (field == null) {
 					throw new IllegalArgumentException(entry.getKey() + " not found database field in entity " + meta.getName());
 				}
-				ent.prepareUpdate(field, entry.getValue(), true);
+				ent.prepareUpdate(field.field(), entry.getValue(), true);
 			}
 			if (property.length == 0) {
 				return update(entity);
@@ -204,11 +205,11 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			// 准备where条件
 			BeanWrapper bw = BeanWrapper.wrap(ent);
 			for (String s : property) {
-				Field field = meta.findField(s);
+				ColumnMapping<?> field = meta.findField(s);
 				if (field == null) {
 					throw new IllegalArgumentException(s + " not found database field in entity " + bw.getClassName());
 				}
-				qq.addCondition(field, bw.getPropertyValue(s));
+				qq.addCondition(field.field(), bw.getPropertyValue(s));
 			}
 			return getSession().update(qq.getInstance());
 		} catch (SQLException e) {
@@ -415,7 +416,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			objs.add(t);
 		}
 		try {
-			getSession().batchDelete(objs);
+			getSession().executeBatchDeletion(objs);
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
 		}
@@ -454,12 +455,12 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	public List<?> findByKey(ITableMetadata meta, String propertyName, Object value) {
 		if (meta == null || propertyName == null)
 			return null;
-		Field field = meta.findField(propertyName);
+		ColumnMapping<?> field = meta.findField(propertyName);
 		if (field == null) {
 			throw new IllegalArgumentException("There's no property named " + propertyName + " in type of " + meta.getName());
 		}
 		Query<?> q = QB.create(meta);
-		q.addCondition(field, Operator.EQUALS, value);
+		q.addCondition(field.field(), Operator.EQUALS, value);
 		try {
 			if (meta.getType() == EntityType.POJO) {
 				return PojoWrapper.unwrapList(getSession().select((Query<PojoWrapper>) q));
@@ -617,10 +618,10 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		try {
 			T t = entities.get(0);
 			if (t instanceof IQueryableEntity) {
-				getSession().batchDelete((List<IQueryableEntity>) entities, doGroup);
+				getSession().executeBatchDeletion((List<IQueryableEntity>) entities, doGroup);
 			} else {
 				List<PojoWrapper> list = PojoWrapper.wrap(entities, false);
-				getSession().batchDelete(list, doGroup);
+				getSession().executeBatchDeletion(list, doGroup);
 			}
 			return entities.size();
 		} catch (SQLException e) {

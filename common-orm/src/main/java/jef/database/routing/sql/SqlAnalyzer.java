@@ -52,7 +52,7 @@ import jef.database.jsqlparser.visitor.SqlValue;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.jsqlparser.visitor.VisitorAdapter;
 import jef.database.meta.ITableMetadata;
-import jef.database.meta.MetadataAdapter;
+import jef.database.meta.AbstractMetadata;
 import jef.database.query.ComplexDimension;
 import jef.database.query.Dimension;
 import jef.database.query.RangeDimension;
@@ -82,7 +82,7 @@ public class SqlAnalyzer {
 		TableMetaCollector collector = new TableMetaCollector();
 		sql.accept(collector);
 		if(collector.get()==null)return null;
-		MetadataAdapter meta=collector.get();
+		AbstractMetadata meta=collector.get();
 		if (meta == null) {
 			return null;
 		}
@@ -125,7 +125,7 @@ public class SqlAnalyzer {
 	 * @param db
 	 * @return
 	 */
-	public static Multimap<String, List<ParameterContext>> doGroup(MetadataAdapter meta,List<List<ParameterContext>> params,Statement st,OperateTarget db) {
+	public static Multimap<String, List<ParameterContext>> doGroup(AbstractMetadata meta,List<List<ParameterContext>> params,Statement st,OperateTarget db) {
 		Multimap<String,List<ParameterContext>> result=ArrayListMultimap.create();
 		for(List<ParameterContext> param:params){
 			List<Object> values=asValue(param);
@@ -148,7 +148,7 @@ public class SqlAnalyzer {
 	public static ExecutionPlan getExecutionPlan(Statement sql,Map<Expression,Object> params, List<Object> value, OperateTarget db) {
 		TableMetaCollector collector = new TableMetaCollector();
 		sql.accept(collector);
-		MetadataAdapter meta=collector.get();
+		AbstractMetadata meta=collector.get();
 		if (meta == null) {
 			return null;
 		}
@@ -232,7 +232,7 @@ public class SqlAnalyzer {
 		if(collector.get()==null){
 			throw new IllegalArgumentException("The SQL is a known partition table.");
 		}
-		MetadataAdapter meta=collector.get();
+		AbstractMetadata meta=collector.get();
 		if (meta == null || meta.getPartition() == null) {
 			return null;
 		}
@@ -297,7 +297,7 @@ public class SqlAnalyzer {
 		return result;
 	}
 	
-	public static PartitionResult getPartitionResult(Statement st,MetadataAdapter meta,Map<Expression, Object> paramsMap,PartitionSupport support){
+	public static PartitionResult getPartitionResult(Statement st,AbstractMetadata meta,Map<Expression, Object> paramsMap,PartitionSupport support){
 		DimensionCollector collector = new DimensionCollector(meta, paramsMap);
 		Map<String, Dimension> val ;
 		if(st instanceof Insert){

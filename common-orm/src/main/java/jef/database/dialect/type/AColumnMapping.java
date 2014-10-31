@@ -2,7 +2,6 @@ package jef.database.dialect.type;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.sql.SQLException;
 import java.util.List;
@@ -57,7 +56,11 @@ public abstract class AColumnMapping<T> implements ColumnMapping<T> {
 		this.primitiveClz = BeanUtils.toPrimitiveClass(this.clz);
 		Assert.notNull(clz);
 	}
-
+	
+	public String name() {
+		return fieldName;
+	}
+	
 	public boolean isPk() {
 		return pk;
 	}

@@ -1450,7 +1450,7 @@ public class DbMetaData {
 			exe.close();
 		}
 		// 额外创建表
-		List<ITableMetadata> exc = meta.getReferenceTables();
+		List<ITableMetadata> exc = sqls.getReferenceTable();
 		if (exc != null) {
 			for (ITableMetadata ext : exc) {
 				refreshTable(ext, ext.getTableName(true), null, true);

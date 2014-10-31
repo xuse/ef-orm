@@ -39,7 +39,7 @@ import jef.tools.reflect.BeanUtils;
 
 import com.google.common.collect.Multimap;
 
-public class DynamicMetadata extends MetadataAdapter {
+public class DynamicMetadata extends AbstractMetadata {
 
 	private Class<? extends IQueryableEntity> type = VarObject.class;
 	
@@ -92,7 +92,7 @@ public class DynamicMetadata extends MetadataAdapter {
 	 * @param parent
 	 * @param extension
 	 */
-	public DynamicMetadata(MetadataAdapter parent, ExtensionConfig extension) {
+	public DynamicMetadata(AbstractMetadata parent, ExtensionConfig extension) {
 		//System.err.println("初始化动态实体模板:"+parent.getName()+" - "+extension.getName());
 		this.type = parent.getThisType().asSubclass(IQueryableEntity.class);
 		BeanAccessor raw = FastBeanWrapperImpl.getAccessorFor(type);
@@ -447,8 +447,10 @@ public class DynamicMetadata extends MetadataAdapter {
 		addIndex(new String[] { fieldName }, comment);
 	}
 
-	protected void innerAdd(String fieldName, Field targetField, ReferenceType type, JoinPath path) {
-		ITableMetadata target = DbUtils.getTableMeta(targetField);
+	protected void innerAdd(String fieldName, Field field, ReferenceType type, JoinPath path) {
+		ITableMetadata target = DbUtils.getTableMeta(field);
+		ColumnMapping<?> targetFld=target.getColumnDef(field);
+		Assert.notNull(targetFld);
 		Reference r = new Reference(target, type, this);
 		if (path != null) {
 			r.setHint(path);
@@ -458,7 +460,7 @@ public class DynamicMetadata extends MetadataAdapter {
 		if (!type.isToOne()) {
 			containerType = Collections.class;
 		}
-		ReferenceField f = new ReferenceField(containerType, fieldName, r, targetField, null);
+		ReferenceField f = new ReferenceField(containerType, fieldName, r, targetFld, null);
 		addRefField(f);
 	}
 

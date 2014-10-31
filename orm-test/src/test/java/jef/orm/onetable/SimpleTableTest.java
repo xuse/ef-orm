@@ -528,7 +528,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		batch.add(t1);
 		batch.add(t3);
 		batch.add(t5);
-		db.batchDelete(batch);
+		db.executeBatchDeletion(batch);
 		num = db.count(QB.create(TestEntity.class));
 		assertEquals(3, num);
 		System.out.println("=========== testBatchRemove  Begin ==========");

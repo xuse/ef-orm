@@ -16,7 +16,6 @@
 package jef.database.meta;
 
 import jef.database.DbUtils;
-import jef.database.Field;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.query.SqlContext;
@@ -36,31 +35,31 @@ public final class ReferenceField extends AbstractRefField implements IReference
 	 *   Department表的Name字段上。 （Many VS One）
 	 *   此时每次载入Person对象时，会自动载入DepartmenetName。但是该对字段作任何修改，都不会保存到数据库中去。
 	 */
-	private Field targetField;
+	private ColumnMapping<?> targetField;
 	/**
 	 * 构造
 	 * @param fName  字段名
 	 * @param ref  关联关系
 	 * @param fieldName 目标字段 （为null表示持有整个对象）
 	 */
-	public ReferenceField(Class<?> container,String fName,Reference ref,Field fieldName,CascadeConfig config) {
+	public ReferenceField(Class<?> container,String fName,Reference ref,ColumnMapping<?> fieldName,CascadeConfig config) {
 		super(container,fName,ref,config==null?null:config.asMap);
 		Assert.notNull(fieldName);
 		this.targetField=fieldName;
 	}
-	public Field getTargetField() {
+	public ColumnMapping<?> getTargetField() {
 		return targetField;
 	}
 
 	public String getSelectedAlias(String alias,DatabaseDialect profile) {
 		return 	new StringBuilder(36).append(profile.getColumnNameToUse(alias)).append(SqlContext.DIVEDER)
-			.append(profile.getColumnNameToUse(targetField.name())).toString();
+			.append(profile.getColumnNameToUse(targetField.fieldName())).toString();
 	}
 	
 	@Override
 	public String getResultAlias(String alias, DatabaseDialect profile) {
 		return 	new StringBuilder(36).append(alias.toUpperCase()).append(SqlContext.DIVEDER)
-				.append(targetField.name().toUpperCase()).toString();
+				.append(targetField.fieldName().toUpperCase()).toString();
 	}
 
 	public String getSelectItem(DatabaseDialect profile,String tableAlias,SqlContext context) {
@@ -81,7 +80,7 @@ public final class ReferenceField extends AbstractRefField implements IReference
 	
 
 	public ColumnMapping<?> getTargetColumnType() {
-		return reference.getTargetType().getColumnDef(targetField);
+		return targetField;
 	}
 	
 	private final class NestedReferenceField implements IReferenceColumn{

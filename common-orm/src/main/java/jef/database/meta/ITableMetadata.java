@@ -58,12 +58,12 @@ public interface ITableMetadata {
 	 * 得到此表对应的java class
 	 * 
 	 * @return 对应的java
-	 *         class，当metadata为POJO类型时，此处返回PoJoWrapper，为动态表类型时，返回VarObject
+	 *         class，当metadata为POJO类型时，此处返回PoJoWrapper，为动态表类型时，返回VarObject。
 	 */
 	Class<? extends IQueryableEntity> getContainerType();
 
 	/**
-	 * 得到此表对应的模型类
+	 * 得到此表对应的模型类。对于基本类型来说，模型类型和容器类型都是一致的。
 	 * 
 	 * @return 对应的模型类。
 	 */
@@ -83,13 +83,6 @@ public interface ITableMetadata {
 	 */
 	String getSimpleName();
 
-	/**
-	 * 判断目标的ITableMetadata是不是当前metadata的一个子类
-	 * 
-	 * @param type
-	 * @return true则为指定类型的子类
-	 */
-	boolean isAssignableFrom(ITableMetadata type);
 
 	/**
 	 * 得到该对象绑定的数据源名（重定向后）<br>
@@ -139,7 +132,31 @@ public interface ITableMetadata {
 	 * @return FIeld对象(字段元模型)
 	 */
 	public Field getFieldByLowerColumn(String columnInLowerCase);
+	
+	/**
+	 * 返回所有的元模型字段和类型。这些字段的顺序会进行调整，Clob和Blob将会被放在最后。 这些字段的顺序一旦确定那么就是固定的。
+	 * 
+	 * 注意当元数据未初始化完成前，不要调用这个方法。
+	 * 
+	 * @return
+	 */
+	public List<ColumnMapping<?>> getColumns();
+	
+	/**
+	 * 获取字段的元数据定义
+	 * 
+	 * @return MappingType,包含了该字段的数据库列名、java字段名、类型等各种信息。
+	 * @see ColumnMapping
+	 */
+	public ColumnMapping<?> getColumnDef(Field field);
 
+	/**
+	 * 返回所有自增字段的定义，如果没有则返回空数组
+	 * 
+	 * @return 所有自增字段的定义
+	 */
+	public AutoIncrementMapping<?>[] getAutoincrementDef();
+	
 	/**
 	 * 返回第一个自增字段的定义，如果没有则返回null
 	 * 
@@ -155,14 +172,7 @@ public interface ITableMetadata {
 	public AbstractTimeMapping<?>[] getUpdateTimeDef();
 
 	/**
-	 * 返回所有自增字段的定义，如果没有则返回空数组
-	 * 
-	 * @return 所有自增字段的定义
-	 */
-	public AutoIncrementMapping<?>[] getAutoincrementDef();
-
-	/**
-	 * 获取被设置为主键的字段 将逐渐替代getPKField()方法.
+	 * 获取被设置为主键的字段
 	 * 
 	 * @return
 	 */
@@ -191,20 +201,6 @@ public interface ITableMetadata {
 	public Map<String, jef.database.meta.AbstractRefField> getRefFieldsByName();
 
 	// //////////////////////附加功能////////////////////
-	/**
-	 * 返回所有的元模型字段和类型。这些字段的顺序会进行调整，Clob和Blob将会被放在最后。 这些字段的顺序一旦确定那么就是固定的。
-	 * 
-	 * @return
-	 */
-	public List<ColumnMapping<?>> getColumns();
-
-	/**
-	 * 获取字段的元数据定义
-	 * 
-	 * @return MappingType,包含了该字段的数据库列名、java字段名、类型等各种信息。
-	 * @see ColumnMapping
-	 */
-	public ColumnMapping<?> getColumnDef(Field field);
 
 	/**
 	 * 根据名称得到一个Field对象（大小写不敏感）
@@ -212,20 +208,7 @@ public interface ITableMetadata {
 	 * @param name
 	 * @return Field对象
 	 */
-	public Field findField(String left);
-
-	/**
-	 * 返回某个field的数据库列名称
-	 * 
-	 * @param field
-	 *            field
-	 * @param alias
-	 *            数据库表别名
-	 * @param profile
-	 *            当前数据库方言
-	 * @return 数据库列名称
-	 */
-	public String getColumnName(Field field, String alias, DatabaseDialect profile);
+	public ColumnMapping<?> findField(String left);
 
 	/**
 	 * 不考虑表别名的情况返回列名
@@ -318,11 +301,14 @@ public interface ITableMetadata {
 	 * @return 如果当前模型等于meta，或者当前模型继承了meta，返回true
 	 */
 	boolean containsMeta(ITableMetadata meta);
-
-	/**
-	 * 得到关联的表的特性
-	 * 
-	 * @return
-	 */
-	List<ITableMetadata> getReferenceTables();
+	
+	
+	
+	///////////////基于KV表扩展的设计//////////////
+	
+	
+	
+	
+	
+	
 }

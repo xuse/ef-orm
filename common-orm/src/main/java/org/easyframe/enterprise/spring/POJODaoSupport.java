@@ -176,10 +176,10 @@ public class POJODaoSupport<T> extends BaseDao{
 		try {
 			T t = entities.get(0);
 			if (t instanceof IQueryableEntity) {
-				getSession().batchDelete((List<IQueryableEntity>) entities, null);
+				getSession().executeBatchDeletion((List<IQueryableEntity>) entities, null);
 			} else {
 				List<PojoWrapper> list = PojoWrapper.wrap(entities, false);
-				getSession().batchDelete(list, null);
+				getSession().executeBatchDeletion(list, null);
 			}
 			return entities.size();
 		} catch (SQLException e) {

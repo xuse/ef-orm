@@ -45,12 +45,12 @@ import jef.database.innerpool.MetadataService;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.parser.StSqlParser;
+import jef.database.meta.AbstractMetadata;
 import jef.database.meta.AbstractRefField;
 import jef.database.meta.EntityType;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-import jef.database.meta.MetadataAdapter;
 import jef.database.meta.Reference;
 import jef.database.query.AllTableColumns;
 import jef.database.query.ConditionQuery;
@@ -180,20 +180,32 @@ public abstract class Session {
 	 */
 	abstract protected OperateTarget asOperateTarget(String dbKey);
 
+	/*
+	 * 获取当前数据库的事务管理模式
+	 */
+	protected abstract TransactionMode getTxType();
+
+	/*
+	 * 当前操作是否位于一个JPA事务中。
+	 * 
+	 * @return true is current is in a JPA transaction.
+	 */
+	protected abstract boolean isJpaTx();
+
 	/**
 	 * 清理一级缓存
 	 * 
 	 * @param entity
 	 *            要清理的数据或查询
 	 */
-	public void evict(IQueryableEntity entity) {
+	public final void evict(IQueryableEntity entity) {
 		getCache().evict(entity);
 	}
 
 	/**
 	 * 清空全部的一级缓存
 	 */
-	public void evictAll() {
+	public final void evictAll() {
 		getCache().evictAll();
 	}
 
@@ -268,7 +280,7 @@ public abstract class Session {
 	 * @return 查询对象(NativeQuery)
 	 * @see NativeQuery
 	 */
-	public <T> NativeQuery<T> createNamedQuery(String name) {
+	public final <T> NativeQuery<T> createNamedQuery(String name) {
 		return createNamedQuery(name, (Class<T>) null);
 	}
 
@@ -284,22 +296,6 @@ public abstract class Session {
 	 */
 	public final SqlTemplate getSqlTemplate(String dbKey) {
 		return asOperateTarget(dbKey);
-	}
-
-	/**
-	 * 分库分表计算（数据路由）
-	 * <p>
-	 * 根据查询/插入/更新/删除的请求来计算其影响到的表
-	 * 
-	 * @param entity
-	 *            要分表的对象或查询
-	 * @return PartitionResult数组，数组的每个元素(PartitionResult)表示一个独立的数据库， 其名称可以用
-	 *         getDatabase()获得，对于每一个数据库，可能会有多张表，用getTables()获得
-	 *         如果你能确定本次操作只会操作一张表，可以用getAsOneTable()获得表名.
-	 * @see PartitionResult
-	 */
-	public PartitionResult[] getPartitionResults(IQueryableEntity entity) {
-		return DbUtils.toTableNames(entity, null, entity.getQuery(), getPartitionSupport());
 	}
 
 	/**
@@ -425,7 +421,7 @@ public abstract class Session {
 	}
 
 	/**
-	 * 支持级联表的更新<br>
+	 * 更新数据（带级联）<br>
 	 * 如果和其他表具有关联的关系，那么插入时会自动维护其他表中的数据，这些操作包括了Delete操作（删除子表的部分数据）
 	 * 
 	 * @param obj
@@ -456,7 +452,8 @@ public abstract class Session {
 	}
 
 	/**
-	 * 支持关联表的删除 如果和其他表具有关联的关系，那么插入时会自动维护其他表中的数据，这些操作包括了Delete操作
+	 * 删除数据（带级联） <br>
+	 * 如果和其他表具有关联的关系，那么插入时会自动维护其他表中的数据，这些操作包括了Delete操作
 	 * 
 	 * @param obj
 	 *            删除请求的Entity对象
@@ -484,14 +481,12 @@ public abstract class Session {
 		}
 	}
 
-	protected abstract TransactionMode getTxType();
-
-	protected abstract boolean isJpaTx();
-	
 	/**
 	 * 合并记录——记录如果已经存在，则比较并更新；如果不存在则新增
-	 * @param entity 要合并的记录数据
-	 * @return  如果插入返回对象本身，如果是更新则返回旧记录的值
+	 * 
+	 * @param entity
+	 *            要合并的记录数据
+	 * @return 如果插入返回对象本身，如果是更新则返回旧记录的值
 	 * @throws SQLException
 	 */
 	@SuppressWarnings("unchecked")
@@ -506,12 +501,13 @@ public abstract class Session {
 		} else {
 			DbUtils.compareToNewUpdateMap(entity, old);
 			updateCascade(entity);
-			return (T)old;
+			return (T) old;
 		}
 	}
 
 	/**
-	 * 支持关联表的插入 如果和其他表具有1VS1、1VSN的关系，那么插入时会自动维护其他表中的数据。这些操作包括了Insert或者update.
+	 * 插入数据（带级联）<br>
+	 * 如果和其他表具有1VS1、1VSN的关系，那么插入时会自动维护其他表中的数据。这些操作包括了Insert或者update.
 	 * 
 	 * @param obj
 	 *            插入的对象
@@ -522,12 +518,15 @@ public abstract class Session {
 	}
 
 	/**
-	 * 支持关联表的插入 如果和其他表具有1VS1或1VSN的关系，那么插入时会自动维护其他表中的数据，这些操作包括了Insert或者update.
+	 * 插入数据（带级联）<br>
+	 * 如果和其他表具有1VS1或1VSN的关系，那么插入时会自动维护其他表中的数据，这些操作包括了Insert或者update.
 	 * 
 	 * @param obj
 	 *            插入的对象
 	 * @param dynamic
-	 *            智能插入模式:忽略掉没有set过的属性值
+	 *            dynamic模式：某些字段在数据库中设置了defauelt value。
+	 *            如果在实体中为null，那么会将null值插入数据库，造成数据库的缺省值无效。 为了使用dynamic模式后，
+	 *            只有手工设置为null的属性，插入数据库时才是null。如果没有设置过值，在插入数据库时将使用数据库的默认值。
 	 * @throws SQLException
 	 */
 	public void insertCascade(IQueryableEntity obj, boolean dynamic) throws SQLException {
@@ -551,9 +550,9 @@ public abstract class Session {
 		}
 	}
 
-
 	/**
-	 * 插入对象
+	 * 插入对象 <br>
+	 * 不处理级联关系。
 	 * 
 	 * @param obj
 	 *            插入的对象。
@@ -562,16 +561,16 @@ public abstract class Session {
 	public void insert(IQueryableEntity obj) throws SQLException {
 		insert(obj, null, ORMConfig.getInstance().isDynamicInsert());
 	}
-	
+
 	/**
-	 * 插入对象。如果使用dynamic模式将会忽略掉没有set过的属性值
+	 * 插入对象。<br>
+	 * 如果使用dynamic模式将会忽略掉没有set过的属性值
 	 * 
 	 * @param obj
 	 *            插入的对象。
 	 * @param dynamic
-	 *            dynamic模式：某些字段在数据库中设置了defauelt
-	 *            value，此时如果在实体中为null，那么会将null值插入数据库，造成数据库的缺省值无效。
-	 *            为了使用dynamic模式后，
+	 *            dynamic模式：某些字段在数据库中设置了defauelt value。
+	 *            如果在实体中为null，那么会将null值插入数据库，造成数据库的缺省值无效。 为了使用dynamic模式后，
 	 *            只有手工设置为null的属性，插入数据库时才是null。如果没有设置过值，在插入数据库时将使用数据库的默认值。
 	 */
 	public void insert(IQueryableEntity obj, boolean dynamic) throws SQLException {
@@ -599,8 +598,11 @@ public abstract class Session {
 	 *            要插入的对象
 	 * @param myTableName
 	 *            自定义表名称，一旦自定义了表名，将直接使用此表；不再计算表名(支持Schema重定向)
-	 * @param smart
-	 *            智能模式，当开启后自动忽略掉那些没有set过的property
+	 * @param dynamic
+	 *            dynamic模式：某些字段在数据库中设置了defauelt
+	 *            value，此时如果在实体中为null，那么会将null值插入数据库，造成数据库的缺省值无效。
+	 *            为了使用dynamic模式后，
+	 *            只有手工设置为null的属性，插入数据库时才是null。如果没有设置过值，在插入数据库时将使用数据库的默认值。
 	 * @throws SQLException
 	 */
 	public void insert(IQueryableEntity obj, String myTableName, boolean dynamic) throws SQLException {
@@ -634,33 +636,58 @@ public abstract class Session {
 	}
 
 	/**
-	 * 按主键删除单个对象
+	 * 按主键删除<strong>单条</strong>对象
 	 * 
 	 * @param clz
-	 *            类型
+	 *            实体类型
 	 * @param keys
-	 *            主键的值。(注意，可变参数不是用于传入多行记录的值，而是用于传入单条记录的复合主键，要批量删除多条请用batchDelete方法)
+	 *            主键的值。<br>
+	 *            (注意，可变参数不是用于传入多行记录的值，而是用于传入单条记录的复合主键， 要批量删除多条请用
+	 *            {@linkplain #batchDelete}方法)
 	 * @return 删除记录条数
 	 * @throws SQLException
 	 */
 	public <T> int delete(Class<T> entityClass, Serializable... keys) throws SQLException {
-		try {
-			Object obj = entityClass.newInstance();
-			if (obj instanceof IQueryableEntity) {
-				IQueryableEntity data = (IQueryableEntity) obj;
-				DbUtils.setPrimaryKeyValue(data, keys);
-				return delete(data);
-			} else {
-				ITableMetadata meta = MetaHolder.getMeta(entityClass);
-				PojoWrapper data = meta.transfer(obj, false);
-				DbUtils.setPrimaryKeyValue(data, keys);
-				return delete(data);
-			}
-		} catch (InstantiationException e) {
-			throw new RuntimeException(e);
-		} catch (IllegalAccessException e) {
-			throw new RuntimeException(e);
-		}
+		ITableMetadata meta = MetaHolder.getMeta(entityClass);
+		return delete(meta, keys);
+	}
+
+	/**
+	 * 按主键删除<strong>单条</strong>对象
+	 * 
+	 * @param entityClass
+	 *            实体的元模型
+	 * @param keys
+	 *            主键的值。<br>
+	 *            (注意，可变参数不是用于传入多行记录的值，而是用于传入单条记录的复合主键， 要批量删除多条请用
+	 *            {@linkplain #batchDelete}方法)
+	 * @return 删除记录条数
+	 * @throws SQLException
+	 */
+	public <T> int delete(ITableMetadata meta, Serializable... keys) throws SQLException {
+		Object obj = meta.newInstance();
+		IQueryableEntity data = (IQueryableEntity) obj;
+		DbUtils.setPrimaryKeyValue(data, keys);
+		return delete(data);
+	}
+
+	/**
+	 * 按指定字段的值删除对象。<br>
+	 * 如果要按该字段批量删除对象，请使用 {@link #batchDeleteByField(Field, List) }方法。
+	 * 
+	 * 
+	 * @param field
+	 *            作为删除条件的字段
+	 * @param value
+	 *            删除条件值
+	 * @return 删除的行数
+	 * @throws SQLException
+	 */
+	public <T> int deleteByField(Field field, Object value) throws SQLException {
+		ITableMetadata meta = DbUtils.getTableMeta(field);
+		Query<?> query = meta.newInstance().getQuery();
+		query.addCondition(field, Operator.EQUALS, value);
+		return this.delete(query);
 	}
 
 	/**
@@ -672,16 +699,30 @@ public abstract class Session {
 	 * @throws SQLException
 	 */
 	public int delete(IQueryableEntity obj) throws SQLException {
+		return delete(obj.getQuery());
+	}
+
+	/**
+	 * 根据一个Query条件删除数据
+	 * 
+	 * @param query
+	 *            删除请求
+	 * @return 影响的记录数
+	 * @throws SQLException
+	 */
+	public int delete(Query<?> query) throws SQLException {
 		long start = System.currentTimeMillis();
-		String myTableName = (String) obj.getQuery().getAttribute(Query.CUSTOM_TABLE_NAME);
+		IQueryableEntity obj = query.getInstance();
+		String myTableName = (String) query.getAttribute(Query.CUSTOM_TABLE_NAME);
 		myTableName = MetaHolder.toSchemaAdjustedName(StringUtils.trimToNull(myTableName));
-		PartitionResult[] sites = DbUtils.toTableNames(obj, myTableName, obj.getQuery(), getPartitionSupport());
+		PartitionResult[] sites = DbUtils.toTableNames(obj, myTableName, query, getPartitionSupport());
+
 		if (sites != null && sites.length > 0) {
 			DatabaseDialect profile = this.getProfile(sites[0].getDatabase());
 			getListener().beforeDelete(obj, this);
 			int count = 0;
 			if (profile.has(Feature.NO_BIND_FOR_DELETE)) {// 非绑定删除
-				String where = rProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), false, profile);
+				String where = rProcessor.toWhereClause(query, new SqlContext(null, query), false, profile);
 				for (PartitionResult site : sites) {
 					count += p.processDeleteNormal(asOperateTarget(site.getDatabase()), obj, site, start, where);
 				}
@@ -689,7 +730,7 @@ public abstract class Session {
 					getCache().onDelete(myTableName == null ? obj.getClass().getName() : myTableName, where, null);
 				}
 			} else {
-				BindSql where = rProcessor.toPrepareWhereSql(obj.getQuery(), new SqlContext(null, obj.getQuery()), false, profile);
+				BindSql where = rProcessor.toPrepareWhereSql(query, new SqlContext(null, query), false, profile);
 				for (PartitionResult site : sites) {
 					count += p.processDeletePrepared(asOperateTarget(site.getDatabase()), obj, site, start, where);
 				}
@@ -702,19 +743,6 @@ public abstract class Session {
 		} else {
 			return 0;
 		}
-
-	}
-
-	/**
-	 * 根据一个Query条件删除数据
-	 * 
-	 * @param query
-	 *            删除请求
-	 * @return 影响的记录数
-	 * @throws SQLException
-	 */
-	public int delete(Query<?> query) throws SQLException {
-		return delete(query.getInstance());
 	}
 
 	/**
@@ -869,7 +897,7 @@ public abstract class Session {
 	}
 
 	/**
-	 * 根据拼装好的Query进行查询。
+	 * 根据拼装好的Query进行查询。并将结果转换为期望的对象。
 	 * 
 	 * @param <T>
 	 * 
@@ -904,7 +932,7 @@ public abstract class Session {
 	}
 
 	/**
-	 * 查询并用指定的结果返回
+	 * 查询并用指定的结果返回。并将结果转换为期望的对象。
 	 * 
 	 * @param obj
 	 *            查询
@@ -1162,8 +1190,8 @@ public abstract class Session {
 	/**
 	 * 查出单个对象
 	 * 
-	 * @param <T>
 	 * @param obj
+	 *            查询条件
 	 * @return 使用传入的对象进行查询，结果返回记录的第一条。
 	 * @throws SQLException
 	 */
@@ -1180,10 +1208,33 @@ public abstract class Session {
 	}
 
 	/**
-	 * 按主键获取一条记录
-	 * @param entityClass
+	 * 按指定的字段的值加载记录<br>
+	 * 如果要根据该字段的值批量加载记录，可使用 {@link #batchLoadByField(Field, List) }方法。
+	 * 
+	 * @param field
+	 *            作为查询条件的字段
+	 * @param values
+	 *            要查询的值
+	 * @return 符合条件的记录
+	 * @throws SQLException
+	 */
+	@SuppressWarnings("unchecked")
+	public <T extends IQueryableEntity> List<T> loadByField(jef.database.Field field, Object value) throws SQLException {
+		ITableMetadata meta = DbUtils.getTableMeta(field);
+		Query<?> query = meta.newInstance().getQuery();
+		query.addCondition(field, Operator.EQUALS, value);
+		return innerSelect(query, null, null, QueryOption.DEFAULT);
+	}
+
+	/**
+	 * 按主键获取一条记录。注意这里的可变参数是为了支持复合主键，并不是加载多条记录。<br>
+	 * 如需加载多条记录，请用 {@link #batchLoad(Class, List) } 方法
+	 * 
+	 * @param meta
+	 *            元数据
 	 * @param keys
-	 * @return
+	 *            主键的值。
+	 * @return 查询结果
 	 * @throws SQLException
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -1202,76 +1253,91 @@ public abstract class Session {
 			return result.get(0);
 		}
 	}
+
 	/**
-	 * 按主键获取一条记录
+	 * 按主键获取一条记录。注意这里的可变参数是为了支持复合主键，并不是加载多条记录。
 	 * 
 	 * @param clz
 	 *            类型
 	 * @param keys
 	 *            主键的值。
-	 * @return
+	 * @return 查询结果
 	 * @throws SQLException
 	 */
 	public <T> T load(Class<T> entityClass, Serializable... keys) throws SQLException {
-		MetadataAdapter meta = MetaHolder.getMetaOrTemplate(entityClass);
-		return load(meta,keys);
+		AbstractMetadata meta = MetaHolder.getMetaOrTemplate(entityClass);
+		return load(meta, keys);
 	}
 
 	/**
-	 * 按指定的字段加载记录
+	 * 按主键加载多条记录。适用与拥有大量主键值，需要在数据库中查询与之对应的记录时。<br>
+	 * 查询会使用IN条件来减少操作数据库的次数。如果要查询的条件超过了500个，会自动分多次进行查询。
+	 * <p>
+	 * <strong>注意：在多库操作下，这一方法不支持对每条记录单独分组并计算路由。</strong>
+	 * <strong>注意：此方法不支持复合主键</strong>
 	 * 
-	 * @param field
-	 *            作为查询条件的字段
-	 * @param values
-	 *            要查询的值
-	 * @return 符合条件的记录
+	 * @param clz
+	 *            实体类
+	 * @param pkValues
+	 *            主键的值(多值)
+	 * @return 查询结果
+	 * @throws SQLException
+	 */
+	public final <T> List<T> batchLoad(Class<T> clz, List<? extends Serializable> pkValues) throws SQLException {
+		ITableMetadata meta = MetaHolder.getMeta(clz);
+		return batchLoad(meta, pkValues);
+	}
+
+	/**
+	 * 按主键加载多条记录。适用与拥有大量主键值，需要在数据库中查询与之对应的记录时。<br>
+	 * 查询会使用IN条件来减少操作数据库的次数。如果要查询的条件超过了500个，会自动分多次进行查询。
+	 * <p>
+	 * <strong>注意：在多库操作下，这一方法不支持对每条记录单独分组并计算路由。</strong>
+	 * <strong>注意：此方法不支持复合主键</strong>
+	 * 
+	 * @param meta
+	 *            实体元数据
+	 * @param pkValues
+	 *            主键的值(多值)
+	 * @return 查询结果
 	 * @throws SQLException
 	 */
 	@SuppressWarnings("unchecked")
-	public <T extends IQueryableEntity> List<T> loadByField(jef.database.Field field, Object value) throws SQLException {
-		ITableMetadata meta = DbUtils.getTableMeta(field);
-		Query<?> query = meta.newInstance().getQuery();
-		query.addCondition(field, Operator.EQUALS, value);
-		return innerSelect(query, null, null, QueryOption.DEFAULT);
-	}
-
-	@SuppressWarnings("unchecked")
-	private <T> List<T> batchLoadByPK0(Class<T> obj, List<?> pkValues) throws SQLException {
-		ITableMetadata meta = MetaHolder.getMeta(obj);
-		if (meta.getPKFields().size() != 1) {
-			throw new SQLException("Only supports [1] column as primary key, but " + obj.getSimpleName() + " has " + meta.getPKFields().size() + " columns.");
+	public final <T> List<T> batchLoad(ITableMetadata meta, List<? extends Serializable> pkValues) throws SQLException {
+		int MAX_IN_CONDITIONS = ORMConfig.getInstance().getMaxInConditions();
+		if (pkValues.size() < MAX_IN_CONDITIONS) {
+			return batchLoadByPK0(meta, pkValues);
 		}
-		if (meta.getType() == EntityType.POJO) {
-			Query<?> q = meta.newInstance().getQuery();
-			q.addCondition(meta.getPKFields().get(0).field(), Operator.IN, pkValues);
-			return PojoWrapper.unwrapList(innerSelect(q, null, null, QueryOption.DEFAULT));
-		} else {
-			Query<?> q = meta.newInstance().getQuery();
-			q.addCondition(meta.getPKFields().get(0).field(), Operator.IN, pkValues);
-			return innerSelect(q, null, null, QueryOption.DEFAULT);
+		List<T> result = new ArrayList<T>(MAX_IN_CONDITIONS);
+		int offset = 0;
+		while (pkValues.size() - offset > MAX_IN_CONDITIONS) {
+			List<T> r = batchLoadByPK0(meta, pkValues.subList(offset, offset + MAX_IN_CONDITIONS));
+			result.addAll(r);
+			offset += MAX_IN_CONDITIONS;
 		}
-	}
-
-	@SuppressWarnings("unchecked")
-	private <T extends IQueryableEntity> List<T> batchLoadByField0(Field field, List<?> values) throws SQLException {
-		ITableMetadata meta = DbUtils.getTableMeta(field);
-		Query<?> q = meta.newInstance().getQuery();
-		q.addCondition(field, Operator.IN, values);
-		return innerSelect(q, null, null, QueryOption.DEFAULT);
+		if (pkValues.size() > offset) {
+			result.addAll(batchLoadByPK0(meta, pkValues.subList(offset, pkValues.size())));
+		}
+		return result;
 	}
 
 	/**
 	 * 按指定的字段加载多条记录.适用与拥有大量键值，需要在数据库中查询与之对应的记录时。<br>
-	 * 查询会使用IN条件来减少操作数据库的次数。如果要查询的条件超过了500个，会自动分多次进行查询。
+	 * 查询会使用IN条件来减少操作数据库的次数。如果要查询的条件超过了500个，会自动分多次进行查询。 <strong>注意：</strong>
+	 * <ol>
+	 * <li>在多库操作下，这一方法不支持对每条记录单独分组并计算路由。</li>
+	 * <li>不支持复合主键。</li>
+	 * </ol>
 	 * 
 	 * @param field
 	 *            字段
 	 * @param values
 	 *            条件值
-	 * @return
+	 * @return 查询结果
 	 * @throws SQLException
 	 */
-	public <T extends IQueryableEntity> List<T> batchLoadByField(jef.database.Field field, List<?> values) throws SQLException {
+	public final <T extends IQueryableEntity> List<T> batchLoadByField(jef.database.Field field, List<?> values) throws SQLException {
+		int MAX_IN_CONDITIONS = ORMConfig.getInstance().getMaxInConditions();
 		if (values.size() < MAX_IN_CONDITIONS)
 			return batchLoadByField0(field, values);
 
@@ -1289,38 +1355,8 @@ public abstract class Session {
 		return result;
 	}
 
-	private static final int MAX_IN_CONDITIONS = 500;
-
 	/**
-	 * 按主键加载多条记录。适用与拥有大量主键值，需要在数据库中查询与之对应的记录时。<br>
-	 * 查询会使用IN条件来减少操作数据库的次数。如果要查询的条件超过了500个，会自动分多次进行查询。
-	 * 
-	 * @param clz
-	 *            类
-	 * @param pkValues
-	 *            主键的值(多值)
-	 * @return 查询结果
-	 * @throws SQLException
-	 */
-	public <T> List<T> batchLoad(Class<T> clz, List<?> pkValues) throws SQLException {
-		if (pkValues.size() < MAX_IN_CONDITIONS)
-			return batchLoadByPK0(clz, pkValues);
-
-		List<T> result = new ArrayList<T>(800);
-		int offset = 0;
-		while (pkValues.size() - offset > MAX_IN_CONDITIONS) {
-			List<T> r = batchLoadByPK0(clz, pkValues.subList(offset, offset + MAX_IN_CONDITIONS));
-			result.addAll(r);
-			offset += MAX_IN_CONDITIONS;
-		}
-		if (pkValues.size() > offset) {
-			result.addAll(batchLoadByPK0(clz, pkValues.subList(offset, pkValues.size())));
-		}
-		return result;
-	}
-
-	/**
-	 * 查询并指定返回结果。
+	 * 执行数据库查询。并将结果转换为期望的对象。
 	 * 
 	 * @param queryObj
 	 *            查询
@@ -1791,45 +1827,137 @@ public abstract class Session {
 	}
 
 	/**
-	 * 批量删除数据
+	 * 批量删除数据。每个传入参数都是一个实体对象。可以表示多组参数。 因此这一批量删除可以按相同的SQL语句执行多组参数。并不仅仅用于删除多条记录。
 	 * 
 	 * @param entities
-	 * @param group
+	 *            要删除的实体对象
+	 * @return 实际删除记录行数
 	 * @throws SQLException
 	 */
-	public final <T extends IQueryableEntity> void batchDelete(List<T> entities) throws SQLException {
-		batchDelete(entities, null);
+	public final <T extends IQueryableEntity> int executeBatchDeletion(List<T> entities) throws SQLException {
+		return executeBatchDeletion(entities, null);
 	}
 
 	/**
-	 * 批量删除数据
+	 * 批量删除数据。每个传入参数都是一个实体对象。可以表示多组参数。 因此这一批量删除可以按相同的SQL语句执行多组参数。并不仅仅用于删除多条记录。
 	 * 
-	 * @param <T>
 	 * @param entities
+	 *            要删除的实体对象。
+	 * @param group
+	 *            是否对传入的对象按所属表重新分组。<br>
+	 *            在启用分库分表后，用户如果不确定传入的多个对象在路由计算后属于同一张表，则需打开此开关。<br>
+	 *            开关开启后会对每个对象进行路由计算并重新分组操作（这一操作将损耗一定的性能）。
+	 * @return 实际删除记录行数
 	 * @throws SQLException
 	 */
-	public final <T extends IQueryableEntity> void batchDelete(List<T> entities, Boolean group) throws SQLException {
+	public final <T extends IQueryableEntity> int executeBatchDeletion(List<T> entities, Boolean group) throws SQLException {
 		if (entities.isEmpty())
-			return;
+			return 0;
 		Batch<T> batch = this.startBatchDelete(entities.get(0), null);
 		if (group != null) {
 			batch.setGroupForPartitionTable(group);
 		}
-		batch.execute(entities);
+		return batch.execute(entities);
 	}
 
 	/**
-	 * 批量删除数据（按主键），如果没有主键会报错
+	 * 按主键删除多条记录。适用与拥有大量主键值，需要在数据库中查询与之对应的记录时。<br>
+	 * 会使用IN条件来减少操作数据库的次数。如果要删除的条件超过了500个，会自动分多次进行删除。
+	 * 
+	 * <p>
+	 * <strong>注意1：在多库操作下，这一方法不支持对每条记录单独分组并计算路由。</strong><br>
+	 * 需要路由的场景下请使用 {@link #batchDelete(List, boolean)}方法
+	 * <p>
+	 * <strong>注意2：不支持复合主键</strong><br>
+	 * 需要复合主键的场景下请使用 {@link #batchDelete(List, boolean)}方法
+	 * 
+	 * @param clz
+	 *            要删除的记录类型
+	 * @param keys
+	 *            主键列表。复合主键不支持。如需批量删除复合主键的类请用{@link #batchDelete(List, boolean)}
+	 * @throws SQLException
+	 */
+	public final <T extends IQueryableEntity> int batchDelete(Class<?> clz, List<? extends Serializable> keys) throws SQLException {
+		ITableMetadata meta = MetaHolder.getMeta(clz);
+		return batchDelete(meta, keys);
+	}
+
+	/**
+	 * 按主键删除多条记录。适用与拥有大量主键值，需要在数据库中查询与之对应的记录时。<br>
+	 * 会使用IN条件来减少操作数据库的次数。如果要删除的条件超过了500个，会自动分多次进行删除。
+	 * 
+	 * <p>
+	 * <strong>注意：在多库操作下，这一方法不支持对每条记录单独分组并计算路由。</strong>
 	 * 
 	 * @param clz
 	 *            要删除的数据类
-	 * @param entities
-	 *            要删除的数据集合
+	 * @param keys
+	 *            主键列表。复合主键不支持。如需批量删除复合主键的类请用{@link #batchDelete(List)}
+	 * @return 实际删除数量
 	 * @throws SQLException
 	 */
-	public final <T extends IQueryableEntity> void batchDeleteByPrimaryKey(List<T> entities) throws SQLException {
+	public final <T extends IQueryableEntity> int batchDelete(ITableMetadata meta, List<? extends Serializable> pkValues) throws SQLException {
+		if (pkValues.isEmpty())
+			return 0;
+		if (meta.getPKFields().size() != 1) {
+			throw new SQLException("Only supports [1] column as primary key, but " + meta.getSimpleName() + " has " + meta.getPKFields().size() + " columns.");
+		}
+
+		int MAX_IN_CONDITIONS = ORMConfig.getInstance().getMaxInConditions();
+
+		if (pkValues.size() < MAX_IN_CONDITIONS) {
+			return batchDeleteByPK0(meta, pkValues);
+		}
+		int total = 0;
+		int offset = 0;
+		while (pkValues.size() - offset > MAX_IN_CONDITIONS) {
+			total += batchDeleteByPK0(meta, pkValues.subList(offset, offset + MAX_IN_CONDITIONS));
+			offset += MAX_IN_CONDITIONS;
+		}
+		if (pkValues.size() > offset) {
+			total += batchDeleteByPK0(meta, pkValues.subList(offset, pkValues.size()));
+		}
+		return total;
+	}
+
+	/**
+	 * 批量删除数据(按主键)<br>
+	 * <ol>
+	 * <li>本方法需要传入要删除的实体对象。（对象中只要主键设置了值即可，其他字段无需设值）。</li>
+	 * <li>本方法可以批量删除支持复合主键的实体。</li>
+	 * </ol>
+	 * @param entities
+	 *            要删除的实体对象
+	 *            
+	 * @return 实际删除数量
+	 * @throws SQLException 如果没有主键或者数据库操作错误，抛出SQLException。
+	 */
+	public final <T extends IQueryableEntity> int batchDelete(List<T> entities) throws SQLException {
+		return batchDelete(entities, false);
+	}
+	
+
+	/**
+	 * 批量删除数据(按主键)<br>
+	 * <ol>
+	 * <li>本方法需要传入要删除的实体对象。（对象中只要主键设置了值即可，其他字段无需设值）。</li>
+	 * <li>本方法可以批量删除支持复合主键的实体。</li>
+	 * <li>本方法可以支持数据路由（第二个参数传入true的场景下）</li>
+	 * </ol>
+	 * 
+	 * @param entities
+	 *            要删除的实体对象
+	 * @param group
+	 *            在分库分表情况下，是否对每条记录进行路由计算并重新分组。<br>
+	 *            在启用分库分表后，用户如果不确定传入的多个对象在路由计算后属于同一张表，则需打开此开关。<br>
+	 *            开关开启后会对每个对象进行路由计算并重新分组操作（这一操作将损耗一定的性能）。
+	 * 
+	 * @return 实际删除数量
+	 * @throws SQLException 如果没有主键或者数据库操作错误，抛出SQLException。
+	 */
+	public final <T extends IQueryableEntity> int batchDelete(List<T> entities, boolean group) throws SQLException {
 		if (entities.isEmpty())
-			return;
+			return 0;
 
 		ITableMetadata meta = MetaHolder.getMeta(entities.get(0));
 		if (meta.getPKFields().isEmpty()) {
@@ -1846,7 +1974,35 @@ public abstract class Session {
 		batch.setWherePart(wherePart);
 		batch.parseTime = System.nanoTime() - start;
 		batch.pkMpode = true;
-		batch.execute(entities);
+		batch.setGroupForPartitionTable(group);
+		return batch.execute(entities);
+	}
+
+	/**
+	 * 按某个字段值进行批量删除。
+	 * 
+	 * @param field
+	 *            要作为删除条件的字段。
+	 * @param values
+	 *            需要删除的值
+	 * @return 实际删除行数。
+	 * @throws SQLException 如果数据库操作错误，抛出。
+	 */
+	public final <T extends IQueryableEntity> int batchDeleteByField(Field field, List<? extends Serializable> values) throws SQLException {
+		int MAX_IN_CONDITIONS = ORMConfig.getInstance().getMaxInConditions();
+		if (values.size() < MAX_IN_CONDITIONS)
+			return batchDeleteByField0(field, values);
+
+		int total = 0;
+		int offset = 0;
+		while (values.size() - offset > MAX_IN_CONDITIONS) {
+			total += batchDeleteByField0(field, values.subList(offset, offset + MAX_IN_CONDITIONS));
+			offset += MAX_IN_CONDITIONS;
+		}
+		if (values.size() > offset) {
+			total += batchDeleteByField0(field, values.subList(offset, values.size()));
+		}
+		return total;
 	}
 
 	/**
@@ -1858,7 +2014,7 @@ public abstract class Session {
 	 * @param tableName
 	 *            强制指定表名，也就是说template当中的表名无效。（传入的表名支持Schema重定向）
 	 * @return Batch操作句柄
-	 * @throws SQLException
+	 * @throws SQLException  如果数据库操作错误，抛出。
 	 */
 	public final <T extends IQueryableEntity> Batch<T> startBatchDelete(T template, String tableName) throws SQLException {
 		// 位于批当中的绑定变量
@@ -1880,10 +2036,10 @@ public abstract class Session {
 	 * 
 	 * @param entities
 	 *            要插入的对象
-	 * @throws SQLException
+	 * @throws SQLException  如果数据库操作错误，抛出。
 	 */
 	public final <T extends IQueryableEntity> void batchInsert(List<T> entities) throws SQLException {
-		batchInsert(entities, null);
+		batchInsert(entities, null, null);
 	}
 
 	/**
@@ -1891,23 +2047,51 @@ public abstract class Session {
 	 * 
 	 * @param entities
 	 *            要插入的对象
+	 * @param group
+	 *            是否对传入的对象按所属表重新分组。<br>
+	 *            在启用分库分表后，用户如果不确定传入的多个对象在路由计算后属于同一张表，则需打开此开关。<br>
+	 *            开关开启后会对每个对象进行路由计算并重新分组操作（这一操作将损耗一定的性能）。
 	 * @throws SQLException
 	 */
 	public final <T extends IQueryableEntity> void batchInsert(List<T> entities, Boolean group) throws SQLException {
+		batchInsert(entities, group, null);
+	}
+
+	/**
+	 * 执行批量插入操作。
+	 * 
+	 * @param entities
+	 *            要插入的对象
+	 * @param group
+	 *            是否对传入的对象按所属表重新分组
+	 * @param dynamic
+	 *            是否Dynamic模式插入，Dynamic模式下会跳过未设值的字段。
+	 * @throws SQLException  如果数据库操作错误，抛出。
+	 */
+	public final <T extends IQueryableEntity> void batchInsert(List<T> entities, Boolean group, Boolean dynamic) throws SQLException {
 		if (entities.isEmpty())
 			return;
-		Batch<T> batch = startBatchInsert(entities.get(0), null, ORMConfig.getInstance().isDynamicInsert(), false);
+		boolean flag = dynamic == null ? ORMConfig.getInstance().isDynamicInsert() : dynamic.booleanValue();
+		Batch<T> batch = startBatchInsert(entities.get(0), null, flag, false);
 		if (group != null)
 			batch.setGroupForPartitionTable(group);
 		batch.execute(entities);
 	}
 
 	/**
-	 * 极限模式下的批量插入操作
+	 * 极限模式下的批量插入操作<br>
+	 * extreme模式：extreme是为了性能而优化的特殊模式，该模式下数据库自增主键将不会被回写到对象中。
+	 * 此外在一些特殊的数据库上会使用特定的语法来加速。<br>
+	 * 比如Oracle上，会使用 / *+ APPEND * /等特殊的SQL语法来提高性能。
 	 * 
 	 * @param entities
+	 *            要插入的对象
+	 * 
 	 * @param group
-	 * @throws SQLException
+	 *            在分库分表情况下，是否对每条记录进行路由计算并重新分组。<br>
+	 *            在启用分库分表后，用户如果不确定传入的多个对象在路由计算后属于同一张表，则需打开此开关。<br>
+	 *            开关开启后会对每个对象进行路由计算并重新分组操作（这一操作将损耗一定的性能）。
+	 * @throws SQLException  如果数据库操作错误，抛出。
 	 */
 	public final <T extends IQueryableEntity> void extremeInsert(List<T> entities, Boolean group) throws SQLException {
 		if (entities.isEmpty())
@@ -1919,11 +2103,17 @@ public abstract class Session {
 	}
 
 	/**
-	 * 极限模式下的批量更新操作
+	 * 极限模式下的批量更新操作 extreme模式：extreme是为了性能而优化的特殊模式，该模式下数据库自增主键将不会被回写到对象中。
+	 * 此外在一些特殊的数据库上会使用特定的语法来加速。<br>
+	 * 比如Oracle上，会使用 / *+ APPEND * /等特殊的SQL语法来提高性能。
 	 * 
 	 * @param entities
+	 *            要插入的对象
 	 * @param group
-	 * @throws SQLException
+	 *            在分库分表情况下，是否对每条记录进行路由计算并重新分组。<br>
+	 *            在启用分库分表后，用户如果不确定传入的多个对象在路由计算后属于同一张表，则需打开此开关。<br>
+	 *            开关开启后会对每个对象进行路由计算并重新分组操作（这一操作将损耗一定的性能）。
+	 * @throws SQLException  如果数据库操作错误，抛出。
 	 */
 	public final <T extends IQueryableEntity> void extremeUpdate(List<T> entities, Boolean group) throws SQLException {
 		if (entities.isEmpty())
@@ -1935,23 +2125,9 @@ public abstract class Session {
 	}
 
 	/**
-	 * 执行批量插入操作。
-	 * 
-	 * @param entities
-	 *            要插入的对象
-	 * @throws SQLException
-	 */
-	public final <T extends IQueryableEntity> void batchInsertDynamic(List<T> entities, Boolean group) throws SQLException {
-		if (entities.isEmpty())
-			return;
-		Batch<T> batch = startBatchInsert(entities.get(0), null, true, false);
-		if (group != null)
-			batch.setGroupForPartitionTable(group);
-		batch.execute(entities);
-	}
-
-	/**
-	 * 获得一个Bach对象，这个batch对象上可以执行批量插入操作。
+	 * 获得一个Bach对象，这个batch对象上可以执行批量插入操作。<br>
+	 * 一个Batch对象就是一个已经编译好的SQL语句。用户可以传入一批参数批量执行。<br>
+	 * batch对象可以反复使用，每次执行一批的参数。
 	 * 
 	 * @param template
 	 *            批操作的模板。传入的对象是可以插入的。后续的所有批量操作都按此模板執行操作。 如果开启了
@@ -1962,13 +2138,37 @@ public abstract class Session {
 	 * @param tableName
 	 *            强制指定表名，也就是说template当中的表名无效。（传入的表名支持Schema重定向）
 	 * @return Batch操作句柄
-	 * @throws SQLException
+	 * @throws SQLException  如果数据库操作错误，抛出。
 	 */
 	public final <T extends IQueryableEntity> Batch<T> startBatchInsert(T template, boolean dynamic) throws SQLException {
 		return startBatchInsert(template, null, dynamic, false);
 	}
 
-	public <T extends IQueryableEntity> Batch<T> startBatchInsert(T template, String tableName, boolean dynamic, boolean extreme) throws SQLException {
+	/**
+	 * 创建一个Batch对象。<br>
+	 * 一个Batch对象就是一个已经编译好的SQL语句。用户可以传入一批参数批量执行。<br>
+	 * batch对象可以反复使用，每次执行一批的参数。
+	 * 
+	 * @param template
+	 *            批操作的模板。传入的对象是可以插入的。后续的所有批量操作都按此模板執行操作。 如果开启了
+	 *            {@link JefConfiguration.Item#DB_DYNAMIC_INSERT
+	 *            DB_DYNAMIC_INSERT}
+	 *            功能，那么模板中插入数据库的字段就是后续任务中插入数据库的字段。后续数据库中其他字段即使赋值了也不会入库。
+	 * @param tableName
+	 *            强制指定表名，也就是说template当中的表名无效。（传入的表名支持Schema重定向） *
+	 * @param dynamic
+	 *            dynamic模式：某些字段在数据库中设置了defauelt value。
+	 *            如果在实体中为null，那么会将null值插入数据库，造成数据库的缺省值无效。 为了使用dynamic模式后，
+	 *            只有手工设置为null的属性，插入数据库时才是null。如果没有设置过值，在插入数据库时将使用数据库的默认值。
+	 * @param extreme
+	 *            extreme模式：extreme是为了性能而优化的特殊模式，该模式下数据库自增主键将不会被回写到对象中。
+	 *            此外在一些特殊的数据库上会使用特定的语法来加速。<br>
+	 *            比如Oracle上，会使用 / *+ APPEND * /等特殊的SQL语法来提高性能。
+	 * 
+	 * @return Batch操作句柄
+	 * @throws SQLException  如果数据库操作错误，抛出。
+	 */
+	public final <T extends IQueryableEntity> Batch<T> startBatchInsert(T template, String tableName, boolean dynamic, boolean extreme) throws SQLException {
 		long start = System.nanoTime();
 		ITableMetadata meta = MetaHolder.getMeta(template);
 		Batch.Insert<T> b = new Batch.Insert<T>(this, meta);
@@ -1989,7 +2189,7 @@ public abstract class Session {
 	 * @param tableName
 	 *            强制指定表名，也就是说template当中的表名无效。（传入的表名支持Schema重定向）
 	 * @return Batch操作句柄
-	 * @throws SQLException
+	 * @throws SQLException  如果数据库操作错误，抛出。
 	 */
 	public final <T extends IQueryableEntity> Batch<T> startBatchUpdate(T template, String tableName, boolean dynamic) throws SQLException {
 		if (dynamic && !template.needUpdate()) {
@@ -2013,10 +2213,11 @@ public abstract class Session {
 
 	/**
 	 * 批量更新
-	 * 
 	 * @param entities
-	 *            要更新的操作请求
-	 * @throws SQLException
+	 *            要更新的操作请求。<br>批量更新时第一个对象会作为整批的模板。该对象中的Query部分作为where条件。
+	 *            该对象本身被修改过的值作为set部分。后续的对象仅作为操作参数使用。
+	 *           
+	 * @throws SQLException  如果数据库操作错误，抛出。
 	 */
 	public final <T extends IQueryableEntity> void batchUpdate(List<T> entities) throws SQLException {
 		batchUpdate(entities, null);
@@ -2026,9 +2227,13 @@ public abstract class Session {
 	 * 批量更新
 	 * 
 	 * @param entities
-	 *            要更新的操作请求
+	 *            要更新的操作请求。<br>批量更新时第一个对象会作为整批的模板。该对象中的Query部分作为where条件。
+	 *            该对象本身被修改过的值作为set部分。后续的对象仅作为操作参数使用。
 	 * @param group
-	 *            是否要对操作请求重新分组（数据路由）
+	 *            在分库分表情况下，是否对每条记录进行路由计算并重新分组。<br>
+	 *            在启用分库分表后，用户如果不确定传入的多个对象在路由计算后属于同一张表，则需打开此开关。<br>
+	 *            开关开启后会对每个对象进行路由计算并重新分组操作（这一操作将损耗一定的性能）。
+	 * @throws SQLException  如果数据库操作错误，抛出。
 	 * @throws SQLException
 	 */
 	public final <T extends IQueryableEntity> void batchUpdate(List<T> entities, Boolean group) throws SQLException {
@@ -2086,8 +2291,24 @@ public abstract class Session {
 		return asOperateTarget(null).getExpressionValue(expression.toString(), clz);
 	}
 
-	public <T> T getExpressionValue(DbFunction func, Class<T> clz, Object... params) throws SQLException {
+	public final <T> T getExpressionValue(DbFunction func, Class<T> clz, Object... params) throws SQLException {
 		return asOperateTarget(null).getExpressionValue(func, clz, params);
+	}
+
+	/**
+	 * 分库分表计算（数据路由）
+	 * <p>
+	 * 根据查询/插入/更新/删除的请求来计算其影响到的表
+	 * 
+	 * @param entity
+	 *            要分表的对象或查询
+	 * @return PartitionResult数组，数组的每个元素(PartitionResult)表示一个独立的数据库， 其名称可以用
+	 *         getDatabase()获得，对于每一个数据库，可能会有多张表，用getTables()获得
+	 *         如果你能确定本次操作只会操作一张表，可以用getAsOneTable()获得表名.
+	 * @see PartitionResult
+	 */
+	public final PartitionResult[] getPartitionResults(IQueryableEntity entity) {
+		return DbUtils.toTableNames(entity, null, entity.getQuery(), getPartitionSupport());
 	}
 
 	/**
@@ -2210,7 +2431,49 @@ public abstract class Session {
 			return new OperateTarget(tx, null);
 		} else {
 			return new OperateTarget(this, null);
+		}
+	}
 
+	@SuppressWarnings("unchecked")
+	private <T extends IQueryableEntity> List<T> batchLoadByField0(Field field, List<?> values) throws SQLException {
+		ITableMetadata meta = DbUtils.getTableMeta(field);
+		Query<?> q = meta.newInstance().getQuery();
+		q.addCondition(field, Operator.IN, values);
+		return innerSelect(q, null, null, QueryOption.DEFAULT);
+	}
+
+	private int batchDeleteByField0(Field field, List<? extends Serializable> values) throws SQLException {
+		ITableMetadata meta = DbUtils.getTableMeta(field);
+		Query<?> q = meta.newInstance().getQuery();
+		q.addCondition(field, Operator.IN, values);
+		return this.delete(q);
+	}
+
+	private int batchDeleteByPK0(ITableMetadata meta, List<? extends Serializable> pkValues) throws SQLException {
+		if (meta.getType() == EntityType.POJO) {
+			Query<?> q = meta.newInstance().getQuery();
+			q.addCondition(meta.getPKFields().get(0).field(), Operator.IN, pkValues);
+			return this.delete(q);
+		} else {
+			Query<?> q = meta.newInstance().getQuery();
+			q.addCondition(meta.getPKFields().get(0).field(), Operator.IN, pkValues);
+			return this.delete(q);
+		}
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private List batchLoadByPK0(ITableMetadata meta, List<?> pkValues) throws SQLException {
+		if (meta.getPKFields().size() != 1) {
+			throw new SQLException("Only supports [1] column as primary key, but " + meta.getSimpleName() + " has " + meta.getPKFields().size() + " columns.");
+		}
+		if (meta.getType() == EntityType.POJO) {
+			Query<?> q = meta.newInstance().getQuery();
+			q.addCondition(meta.getPKFields().get(0).field(), Operator.IN, pkValues);
+			return PojoWrapper.unwrapList(innerSelect(q, null, null, QueryOption.DEFAULT));
+		} else {
+			Query<?> q = meta.newInstance().getQuery();
+			q.addCondition(meta.getPKFields().get(0).field(), Operator.IN, pkValues);
+			return innerSelect(q, null, null, QueryOption.DEFAULT);
 		}
 	}
 

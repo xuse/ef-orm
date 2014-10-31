@@ -15,7 +15,7 @@ import jef.database.wrapper.ResultIterator;
 import jef.tools.Assert;
 
 @SuppressWarnings("serial")
-public final class PojoWrapper extends DataObject implements Map<String, Object>, VarMeta {
+public final class PojoWrapper extends DataObject implements Map<String, Object>, MetadataContainer {
 	private TableMetadata meta;
 	private Set<String> names;
 	private BeanAccessor wrapperAccessor;
@@ -135,7 +135,7 @@ public final class PojoWrapper extends DataObject implements Map<String, Object>
 		throw new UnsupportedOperationException();
 	}
 
-	public ITableMetadata meta() {
+	public ITableMetadata getMeta() {
 		return meta;
 	}
 

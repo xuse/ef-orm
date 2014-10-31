@@ -9,6 +9,7 @@ import java.util.Map;
 
 import jef.common.log.LogUtil;
 import jef.database.annotation.JoinDescription;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.OrderByElement;
 import jef.database.meta.AbstractRefField;
@@ -68,9 +69,9 @@ final class VsManyLoadTask implements LazyLoadTask {
 			if (StringUtils.isNotEmpty(rs.getOrderBy())) {
 				OrderBy order = DbUtils.parseOrderBy(rs.getOrderBy());
 				for (OrderByElement ele : order.getOrderByElements()) {
-					Field field = targetTableMeta.findField(ele.getExpression().toString());
+					ColumnMapping<?> field = targetTableMeta.findField(ele.getExpression().toString());
 					if (field != null) {
-						orders.add(new OrderField(field, ele.isAsc()));
+						orders.add(new OrderField(field.field(), ele.isAsc()));
 					}
 				}
 			}
@@ -105,7 +106,7 @@ final class VsManyLoadTask implements LazyLoadTask {
 
 			if (refield.isSingleColumn()) {// 引用字段填充
 				Class<?> container = refield.getSourceContainerType();
-				Object value = db.rProcessor.collectValueToContainer(subs, container, ((ReferenceField) refield).getTargetField().name());
+				Object value = db.rProcessor.collectValueToContainer(subs, container, ((ReferenceField) refield).getTargetField().fieldName());
 				bean.setPropertyValue(refield.getSourceField(), value);
 			} else { // 全引用填充
 				Class<?> container = refield.getSourceContainerType();
@@ -120,7 +121,7 @@ final class VsManyLoadTask implements LazyLoadTask {
 		}
 		// 反相关系
 		if (reverse != null) {
-			reverse.process(bean, subs);
+			reverse.process(bean.getWrapped(), subs);
 		}
 	}
 

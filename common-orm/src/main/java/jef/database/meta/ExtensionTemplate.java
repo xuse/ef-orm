@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.annotation.DynamicTable;
 import jef.database.dialect.type.ColumnMapping;
@@ -17,13 +18,13 @@ public class ExtensionTemplate implements ExtensionConfigFactory {
 	@SuppressWarnings("unused")
 	private DynamicTable dt;
 	private FieldAccessor keyAccessor;
-	private MetadataAdapter parent;
+	private AbstractMetadata parent;
 	
 	List<java.lang.reflect.Field> unprocessedField;
 	AnnotationProvider annos;
 	
 	
-	public ExtensionTemplate(DynamicTable dt, Class<?> clz, MetadataAdapter meta) {
+	public ExtensionTemplate(DynamicTable dt, Class<?> clz, AbstractMetadata meta) {
 		this.dt = dt;
 		this.parent = meta;
 
@@ -35,7 +36,7 @@ public class ExtensionTemplate implements ExtensionConfigFactory {
 		this.keyAccessor = field.getAccessor();
 	}
 
-	public MetadataAdapter getTemplate() {
+	public AbstractMetadata getTemplate() {
 		return parent;
 	}
 
@@ -76,7 +77,7 @@ public class ExtensionTemplate implements ExtensionConfigFactory {
 	}
 
 	final class ExtensionInstance extends AbstractExtensionConfig {
-		public ExtensionInstance(String key, MetadataAdapter meta) {
+		public ExtensionInstance(String key, AbstractMetadata meta) {
 			super(key, meta);
 		}
 
@@ -86,7 +87,7 @@ public class ExtensionTemplate implements ExtensionConfigFactory {
 		}
 
 		@Override
-		protected MetadataAdapter merge() {
+		protected DynamicMetadata merge() {
 			DynamicMetadata tuple = new DynamicMetadata(parent, this);
 			for (ColumnMapping<?> f : getExtensionMeta().getColumns()) {
 				tuple.updateColumn(f.fieldName(), f.rawColumnName(), f.get(), f.isPk());

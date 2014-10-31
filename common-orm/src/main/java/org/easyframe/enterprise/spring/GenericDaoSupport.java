@@ -21,7 +21,7 @@ import jef.database.PagingIterator;
 import jef.database.PagingIteratorObjImpl;
 import jef.database.QB;
 import jef.database.meta.MetaHolder;
-import jef.database.meta.MetadataAdapter;
+import jef.database.meta.AbstractMetadata;
 import jef.database.query.PKQuery;
 import jef.tools.reflect.ClassWrapper;
 import jef.tools.reflect.GenericUtils;
@@ -38,7 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public abstract class GenericDaoSupport<T extends IQueryableEntity> extends BaseDao implements GenericDao<T> {
 	protected Class<T> entityClass;
-	protected MetadataAdapter meta;
+	protected AbstractMetadata meta;
 
 	/**
 	 * 根据泛型参数构造
@@ -65,7 +65,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	 * @param meta
 	 */
 	@SuppressWarnings("unchecked")
-	public GenericDaoSupport(MetadataAdapter meta) {
+	public GenericDaoSupport(AbstractMetadata meta) {
 		this.meta = meta;
 		this.entityClass = (Class<T>) meta.getThisType();
 	}
@@ -428,7 +428,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 
 	public int batchRemove(List<T> entities) {
 		try {
-			getSession().batchDelete(entities);
+			getSession().executeBatchDeletion(entities);
 		} catch (SQLException e) {
 			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}
@@ -437,7 +437,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 
 	public int batchRemove(List<T> entities, boolean group) {
 		try {
-			getSession().batchDelete(entities,group);
+			getSession().executeBatchDeletion(entities,group);
 		} catch (SQLException e) {
 			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}

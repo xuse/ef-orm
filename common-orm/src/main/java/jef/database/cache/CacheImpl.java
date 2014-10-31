@@ -24,7 +24,7 @@ import jef.database.jsqlparser.statement.update.Update;
 import jef.database.jsqlparser.visitor.VisitorAdapter;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-import jef.database.meta.MetadataAdapter;
+import jef.database.meta.AbstractMetadata;
 import jef.database.query.SqlContext;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.QueryClause;
@@ -58,7 +58,7 @@ public final class CacheImpl implements TransactionCache {
 		Map<KeyDimension, DimCache> tableCache = cache.get(cls.getName());
 		if (tableCache == null || tableCache.isEmpty())
 			return false;
-		MetadataAdapter meta = MetaHolder.getMeta(cls);
+		AbstractMetadata meta = MetaHolder.getMeta(cls);
 		List<Serializable> pks=toPrimaryKey(primaryKey);
 		@SuppressWarnings("deprecation")
 		DimCache dc = tableCache.get(meta.getPKDimension(pks, sqlP.getProfile()));
@@ -84,7 +84,7 @@ public final class CacheImpl implements TransactionCache {
 		Map<KeyDimension, DimCache> tableCache = cache.get(cls.getName());
 		if (tableCache == null || tableCache.isEmpty())
 			return;
-		MetadataAdapter meta = MetaHolder.getMeta(cls);
+		AbstractMetadata meta = MetaHolder.getMeta(cls);
 		List<Serializable> pks=toPrimaryKey(primaryKey);
 		@SuppressWarnings("deprecation")
 		DimCache dc = tableCache.get(meta.getPKDimension(pks, sqlP.getProfile()));
@@ -180,7 +180,7 @@ public final class CacheImpl implements TransactionCache {
 	public void onInsert(IQueryableEntity obj,String table) {
 		if (obj == null)
 			return;
-		MetadataAdapter meta = MetaHolder.getMeta(obj);
+		AbstractMetadata meta = MetaHolder.getMeta(obj);
 		List<Serializable> pks=DbUtils.getPKValueSafe(obj);
 		if(pks==null)return;
 		@SuppressWarnings("deprecation")

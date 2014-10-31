@@ -14,7 +14,7 @@ import jef.database.support.accessor.EfPropertiesExtensionProvider;
  * @author jiyi
  * 
  */
-public abstract class EntityExtensionSupport extends DataObject implements VarMeta{
+public abstract class EntityExtensionSupport extends DataObject implements MetadataContainer{
 	private transient Map<String, Object> attributes;
 	// 扩展点信息
 	private ExtensionConfigFactory extensionFactory;
@@ -29,7 +29,7 @@ public abstract class EntityExtensionSupport extends DataObject implements VarMe
 		this.config = extensionFactory.getDefault();
 	}
 
-	public ITableMetadata meta() {
+	public ITableMetadata getMeta() {
 		if (config == null) {
 			if(extensionFactory==null){
 				System.out.println(extensionFactory);
@@ -62,10 +62,10 @@ public abstract class EntityExtensionSupport extends DataObject implements VarMe
 		if (attributes == null) {
 			attributes = new HashMap<String, Object>();
 		}
-		ITableMetadata meta=this.meta();
+		ITableMetadata meta=this.getMeta();
 		Field field =  meta.getField(key);
 		if (field == null) {
-			throw new IllegalArgumentException("Unknown [" + key + "] .Avaliable: " + meta().getAllFieldNames());
+			throw new IllegalArgumentException("Unknown [" + key + "] .Avaliable: " + getMeta().getAllFieldNames());
 		} else {
 			// Check the data type
 			Class<?> expected =  meta.getColumnDef(field).getFieldType();

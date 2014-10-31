@@ -33,11 +33,11 @@ import jef.database.IConditionField;
 import jef.database.IQueryableEntity;
 import jef.database.ORMConfig;
 import jef.database.annotation.JoinType;
+import jef.database.meta.AbstractMetadata;
 import jef.database.meta.AbstractRefField;
 import jef.database.meta.EntityType;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-import jef.database.meta.MetadataAdapter;
 import jef.database.meta.Reference;
 import jef.database.meta.TupleField;
 import jef.database.wrapper.populator.Transformer;
@@ -89,9 +89,9 @@ public final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T
 	public void addOrderBy(boolean flag, Field... orderbys) {
 		for (Field f : orderbys) {
 			if (!(f instanceof RefField) && !(f instanceof SqlExpression)) {
-				ITableMetadata cls = DbUtils.getTableMeta(f);
-				if(!cls.isAssignableFrom(this.type)){
-					throw new IllegalArgumentException("the field ["+f.name()+"]which belongs to " + cls.getName() + " is not current type:" + getType().getName());
+				ITableMetadata metaOfField = DbUtils.getTableMeta(f);
+				if(!this.type.containsMeta(metaOfField)){
+					throw new IllegalArgumentException("the field ["+f.name()+"] which belongs to " + metaOfField.getName() + " is not current type:" + getType().getName());
 				}
 			}
 			orderBy.add(new OrderField(f, flag));
@@ -175,7 +175,7 @@ public final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T
 	}
 	
 	public Query<T> addExtendQuery(Class<?> emptyQuery) {
-		MetadataAdapter meta=MetaHolder.getMeta(emptyQuery);
+		AbstractMetadata meta=MetaHolder.getMeta(emptyQuery);
 		if(meta.getType()==EntityType.POJO){
 			throw new IllegalArgumentException();
 		}

@@ -17,8 +17,8 @@ import jef.database.dialect.type.ColumnMapping;
 import com.google.common.collect.Multimap;
 
 @SuppressWarnings("rawtypes")
-public class TemplateMetadata extends MetadataAdapter {
-	private MetadataAdapter wrapped;
+public class TemplateMetadata extends AbstractMetadata {
+	private AbstractMetadata wrapped;
 	private ExtensionTemplate template;
 
 	public ExtensionTemplate getExtension() {
@@ -105,11 +105,6 @@ public class TemplateMetadata extends MetadataAdapter {
 
 	@Override
 	public String getSimpleName() {
-		throw new UnsupportedOperationException("this is a abstract metadata template.");
-	}
-
-	@Override
-	public boolean isAssignableFrom(ITableMetadata type) {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
 

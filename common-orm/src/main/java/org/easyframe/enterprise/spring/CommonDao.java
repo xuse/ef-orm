@@ -280,12 +280,12 @@ public interface CommonDao{
 	 * @param primaryKey
 	 * @return 查询结果
 	 */
-	<T> T loadByPrimaryKey(Class<T> entityClass, Object primaryKey);
+	<T> T loadByPrimaryKey(Class<T> entityClass,  Serializable primaryKey);
 	
 	/**
 	 * 根据主键的值批量加载记录
 	 */
-	<T> List<T> loadByPrimaryKeys(Class<T> entityClass, List<Object> primaryKey);
+	<T> List<T> loadByPrimaryKeys(Class<T> entityClass, List<? extends Serializable> primaryKey);
 	
 	/**
 	 * 根据主键的值加载一条记录

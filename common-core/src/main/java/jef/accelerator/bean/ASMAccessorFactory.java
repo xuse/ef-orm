@@ -52,26 +52,35 @@ final class ASMAccessorFactory implements BeanAccessorFactory {
 		FieldInfo[] fields = getFields(javaClz);
 		boolean isHashProperty=sortFields(fields);
 		ClassGenerator asm;
+		byte[] clzdata=null;
 		if (cls == null) {
 			if (isHashProperty) {
 				asm= new ASMHashGenerator(javaClz, clzName, fields,cl);
 			} else {
 				asm = new ASMSwitcherGenerator(javaClz, clzName, fields);
 			}
-			byte[] clzdata = asm.generate();
+			clzdata = asm.generate();
 			// DEBUG
 //			saveClass(clzdata, clzName);
 			cls= UnsafeUtils.defineClass(clzName, clzdata, 0, clzdata.length, cl);
-		}
-		if (cls == null) {
-			throw new RuntimeException("Dynamic class accessor for " + javaClz + " failure!");
+			if (cls == null) {
+				throw new RuntimeException("Dynamic class accessor for " + javaClz + " failure!");
+			}
 		}
 		try {
 			BeanAccessor ba = (BeanAccessor) cls.newInstance();
 			initAnnotations(ba, fields);
 			initGenericTypes(ba, fields);
 			return ba;
+		} catch (Error e) {
+			if(clzdata!=null){
+				saveClass(clzdata, clzName);
+			}
+			throw e;
 		} catch (Exception e) {
+			if(clzdata!=null){
+				saveClass(clzdata, clzName);
+			}
 			throw new RuntimeException(e);
 		}
 	}

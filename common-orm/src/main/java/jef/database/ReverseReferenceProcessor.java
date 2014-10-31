@@ -18,23 +18,21 @@ public class ReverseReferenceProcessor {
 	}
 
 	//处理1vsN引用下的反向装填. 同时由于1vn下有可能反向的nv1是延迟加载的，此时还需要将延迟任务给取消掉。
-	public void process(BeanWrapper bean, List<? extends IQueryableEntity> subs) {
+	public void process(Object obj, List<? extends IQueryableEntity> subs) {
 		for(Reference ref :refs){
 			for(ISelectProvider prov:ref.getAllRefFields()){
 				if(prov.isSingleColumn()){
 					ReferenceField r=(ReferenceField)prov;
-					Object value=bean.getPropertyValue(r.getTargetField().name());//被引用的值
-					
+					Object value=r.getTargetField().getFieldAccessor().get(obj);
 					for(IQueryableEntity childObj:subs){
 						BeanWrapper child=BeanWrapper.wrap(childObj, BeanWrapper.FAST);
 						child.setPropertyValue(r.getName(), value);
 					}
 				}else{
 					ReferenceObject r=(ReferenceObject)prov;
-					Object value=bean.getWrapped();
 					for(IQueryableEntity childObj:subs){
 						BeanWrapper child=BeanWrapper.wrap(childObj, BeanWrapper.FAST);
-						child.setPropertyValue(r.getName(), value);
+						child.setPropertyValue(r.getName(), obj);
 					}		
 				}
 			}	

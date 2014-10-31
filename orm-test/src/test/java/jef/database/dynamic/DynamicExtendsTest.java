@@ -68,6 +68,8 @@ public class DynamicExtendsTest {
 		user.setAtribute("address", "重点萨芬撒地方");
 		user.setAtribute("day", 123);
 		db.insert(user);
+		
+		
 
 	}
 
@@ -146,7 +148,7 @@ public class DynamicExtendsTest {
 			r1.setIndexCode(id1);
 			DynaResource r2 = new DynaResource("桌子");
 			r2.setIndexCode(id2);
-			tx.batchDelete(Arrays.asList(r1,r2));
+			tx.executeBatchDeletion(Arrays.asList(r1,r2));
 			tx.rollback(true);
 		}
 		{

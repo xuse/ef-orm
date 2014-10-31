@@ -9,10 +9,12 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import jef.common.SimpleSet;
+import jef.database.EntityExtensionSupport;
 import jef.database.Field;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.support.RDBMS;
+import jef.database.support.accessor.EfPropertiesExtensionProvider;
 import jef.tools.StringUtils;
 import jef.tools.string.RandomData;
 
@@ -42,7 +44,17 @@ public class DdlGeneratorImpl implements DdlGenerator {
 	 * java.lang.String)
 	 */
 	public TableCreateStatement toTableCreateClause(ITableMetadata meta, String tablename) {
-		TableCreateStatement result=new TableCreateStatement();
+		TableCreateStatement result = new TableCreateStatement();
+		if (meta.newInstance() instanceof EntityExtensionSupport) {
+			ExtensionConfigFactory ext = EfPropertiesExtensionProvider.getInstance().getEF(meta.getContainerType().asSubclass(EntityExtensionSupport.class));
+			if (ext instanceof ExtensionKeyValueTable) {
+				ExtensionKeyValueTable kvMeta = (ExtensionKeyValueTable) ext;
+				ITableMetadata raw = kvMeta.getRawMetadata();
+				result.addTableMeta(raw.getTableName(true), raw, profile);
+				result.setReferenceTable(Arrays.<ITableMetadata> asList(kvMeta.getContainerTuple()));
+				return result;
+			}
+		}
 		result.addTableMeta(tablename, meta, profile);
 		return result;
 	}
