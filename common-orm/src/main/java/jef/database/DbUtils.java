@@ -1087,11 +1087,12 @@ public final class DbUtils {
 		Assert.isTrue(ObjectUtils.equals(getPrimaryKeyValue(changedObj), getPKValueSafe(oldObj)), "For consistence, the two parameter must hava equally primary keys.");
 		BeanWrapper bean1 = BeanWrapper.wrap(changedObj);
 		ITableMetadata m = MetaHolder.getMeta(oldObj);
+		boolean dynamic=ORMConfig.getInstance().isDynamicUpdate();
 		for (ColumnMapping<?> mType : m.getColumns()) {
 			if (mType.isPk())
 				continue;
 			Field field = mType.field();
-			if (ORMConfig.getInstance().isDynamicUpdate() && !changedObj.isUsed(field)) {// 智能更新下，发现字段未被设过值，就不予更新
+			if (dynamic && !changedObj.isUsed(field)) {// 智能更新下，发现字段未被设过值，就不予更新
 				continue;
 			}
 			Object value1 = bean1.getPropertyValue(field.name());
@@ -1114,11 +1115,12 @@ public final class DbUtils {
 		BeanWrapper beanNew = BeanWrapper.wrap(changedObj);
 		BeanWrapper beanOld = BeanWrapper.wrap(oldObj);
 		ITableMetadata m = MetaHolder.getMeta(oldObj);
+		boolean dynamic=ORMConfig.getInstance().isDynamicUpdate();
 		for (ColumnMapping<?> mType : m.getColumns()) {
 			if (mType.isPk())
 				continue;
 			Field field = mType.field();
-			if (ORMConfig.getInstance().isDynamicUpdate() && !changedObj.isUsed(field)) {// 智能更新下，发现字段未被设过值，就不予更新
+			if (dynamic && !changedObj.isUsed(field)) {// 智能更新下，发现字段未被设过值，就不予更新
 				continue;
 			}
 			Object valueNew = beanNew.getPropertyValue(field.name());

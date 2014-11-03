@@ -272,7 +272,7 @@ public interface ITableMetadata {
 
 	/**
 	 * 创建一个实例
-	 * 
+	 * 在某些情况下个getContainerAccessor().newInstance()不同，因此getContainerAccessor应当仅用于存取字段值，不应用于创建实例
 	 * @return 创建的实例
 	 */
 	public IQueryableEntity newInstance();
@@ -301,8 +301,6 @@ public interface ITableMetadata {
 	 * @return 如果当前模型等于meta，或者当前模型继承了meta，返回true
 	 */
 	boolean containsMeta(ITableMetadata meta);
-	
-	
 	
 	///////////////基于KV表扩展的设计//////////////
 	

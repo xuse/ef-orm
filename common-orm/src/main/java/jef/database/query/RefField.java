@@ -124,6 +124,10 @@ public class RefField implements Field,LazyQueryBindField{
 		return false;
 	}
 	
+	public ColumnMapping<?> getFieldDef(){
+		return field;
+	}
+	
 	/**
 	 * 返回field
 	 * @return field

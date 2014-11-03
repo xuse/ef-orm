@@ -34,7 +34,8 @@ import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.BeanWrapper;
 
 /**
- * 一个通用的DAO实现
+ * 一个通用的DAO实现，涵盖了Session()对象中大部分数据库操作的方法。。<br>
+ * 考虑到一般项目命名习惯等因素，建议有需要的同学自行继承BaseDao来编写通用的DAO，本类可当做是参考实现。
  * 
  * @see CommonDao
  * @author Administrator
@@ -52,12 +53,12 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	public void remove(Object entity) {
 		super.getEntityManager().remove(entity);
 	}
-	
-	public CommonDaoImpl(){
+
+	public CommonDaoImpl() {
 	}
-	
-	public CommonDaoImpl(DbClient db){
-		JefEntityManagerFactory emf=new JefEntityManagerFactory(db);
+
+	public CommonDaoImpl(DbClient db) {
+		JefEntityManagerFactory emf = new JefEntityManagerFactory(db);
 		BeanUtils.setFieldValue(this, "entityManagerFactory", emf);
 	}
 
@@ -81,28 +82,22 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		}
 	}
 
-	public <T> T loadByPrimaryKey(Class<T> entityClass,  Serializable primaryKey) {
-		return super.getEntityManager().find(entityClass, primaryKey);
-	}
-	
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <T> List<T> loadByPrimaryKeys(Class<T> entityClass, List<? extends Serializable> primaryKey) {
-		ITableMetadata meta=MetaHolder.getMeta(entityClass);
-		try{
-			if(meta.getType()==EntityType.POJO){
-				PojoWrapper pojo = meta.transfer(meta.newInstance(), true);
-				pojo.getQuery().addCondition(meta.getPKFields().get(0).field(),Operator.IN,primaryKey);
-				return (List<T>) getSessionEx().select(pojo);
-			}else{
-				return (List<T>) getSessionEx().batchLoad(entityClass.asSubclass(IQueryableEntity.class), primaryKey);
-			}	
-		}catch(SQLException e){
+	public <T> T loadByPrimaryKey(Class<T> entityClass, Serializable primaryKey) {
+		try {
+			return getSession().load(entityClass, primaryKey);
+		} catch (SQLException e) {
 			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}
 	}
-	
+
+	@Override
+	public <T> List<T> loadByPrimaryKeys(Class<T> entityClass, List<? extends Serializable> primaryKey) {
+		try {
+			return getSession().batchLoad(entityClass, primaryKey);
+		} catch (SQLException e) {
+			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+		}
+	}
 
 	@SuppressWarnings("unchecked")
 	public <T> List<T> find(T obj) {
@@ -443,7 +438,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				PojoWrapper wrapper = (PojoWrapper) getSession().load(bean);
 				return (T) wrapper.get();
 			} else {
-				return (T) getSession().load(meta, (Serializable)id);
+				return (T) getSession().load(meta, (Serializable) id);
 			}
 
 		} catch (SQLException e) {
@@ -503,7 +498,6 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		ITableMetadata meta = MetaHolder.getMeta(type);
 		return loadByKey(meta, fieldname, key);
 	}
-	
 
 	public <T> int removeByKey(Class<T> type, String fieldname, Serializable key) {
 		if (type == null || fieldname == null)
@@ -584,7 +578,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	}
 
 	public <T> int batchInsert(List<T> entities) {
-		return batchInsert(entities,null);
+		return batchInsert(entities, null);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -607,7 +601,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	}
 
 	public <T> int batchRemove(List<T> entities) {
-		return batchRemove(entities,null);
+		return batchRemove(entities, null);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -653,8 +647,15 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	}
 
 	@Override
-	public List<?> findByKeys(ITableMetadata meta, String propertyName, List<Object> value) {
-		// TODO Auto-generated method stub
-		return null;
+	public List<?> findByKeys(ITableMetadata meta, String propertyName, List<? extends Serializable> value) {
+		Field field=meta.getField(propertyName);
+		if(field==null){
+			throw new IllegalArgumentException("There's no property named " + propertyName + " in type of " + meta.getName());
+		}
+		try {
+			return getSession().batchLoadByField(field, value);
+		} catch (SQLException e) {
+			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+		}
 	}
 }

@@ -49,15 +49,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
-@DataSourceContext({
-	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
-	@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"), 
-	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"),
-	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-	@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"), 
-	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"), 
-	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
-})
+@DataSourceContext({ @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"), @DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
+		@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
+		@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"), @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"), @DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}") })
 public class SimpleTableTest extends org.junit.Assert {
 	private DbClient db;
 
@@ -83,7 +77,7 @@ public class SimpleTableTest extends org.junit.Assert {
 				holder = db.getSqlTemplate(null).getSequence(meta.getFirstAutoincrementDef());
 				holder.clear();
 			}
-			db.dropTable(TestEntity.class, CaAsset.class,Keyword.class); // 删除表
+			db.dropTable(TestEntity.class, CaAsset.class, Keyword.class); // 删除表
 			db.createTable(Keyword.class);
 			db.refreshTable(TestEntity.class); // 创建表
 			db.refreshTable(CaAsset.class);
@@ -120,7 +114,7 @@ public class SimpleTableTest extends org.junit.Assert {
 
 	}
 
-	@IgnoreOn(allButExcept="sqlserver")
+	@IgnoreOn(allButExcept = "sqlserver")
 	@Test
 	public void testKeyword() throws SQLException {
 		db.delete(QB.create(Keyword.class));
@@ -134,24 +128,25 @@ public class SimpleTableTest extends org.junit.Assert {
 		t3.startUpdate();
 		t4.startUpdate();
 		db.insert(t1);
-		db.batchInsert(Arrays.asList(t2,t3,t4));
-		
-		List<Keyword> result1=db.loadByField(Keyword.Field.comment, t1.getComment());
+		db.batchInsert(Arrays.asList(t2, t3, t4));
+
+		List<Keyword> result1 = db.loadByField(Keyword.Field.comment, t1.getComment());
 		LogUtil.show(result1);
-		List<Keyword> result2=db.select(QB.create(Keyword.class));
+		List<Keyword> result2 = db.select(QB.create(Keyword.class));
 		LogUtil.show(result1);
-		PagingIterator<Keyword> page=db.pageSelect(QB.create(Keyword.class), 3);
+		PagingIterator<Keyword> page = db.pageSelect(QB.create(Keyword.class), 3);
 		ORMConfig.getInstance().setSpecifyAllColumnName(true);
 		System.out.println(page.getTotal());
 		System.out.println(page.next());
-		
+
 		/**
 		 * FIXME 如果再翻一页会出错,因为Druid解析器中引号会被丢弃，重新序列化后变为非法SQL语句。
 		 * 已经给该项目提了BUG。https://github.com/alibaba/druid/issues/682
 		 * 待Druid修复版本发布后，再恢复此案例。
 		 */
-		//System.out.println(page.next());
+		// System.out.println(page.next());
 	}
+
 	/**
 	 * 使用普通方式插入
 	 * 
@@ -271,15 +266,14 @@ public class SimpleTableTest extends org.junit.Assert {
 	}
 
 	@Test
-	public void testaBatch1() throws SQLException{
+	public void testaBatch1() throws SQLException {
 		TestEntity t1 = RandomData.newInstance(TestEntity.class);
 		t1.setLongField(0);
 		db.batchInsert(Arrays.asList(t1));
 		long n = t1.getLongField();
 		System.out.println(t1.getLongField());
 	}
-	
-	
+
 	/**
 	 * @测试功能 批量插入
 	 * 
@@ -358,32 +352,62 @@ public class SimpleTableTest extends org.junit.Assert {
 			t1.prepareUpdate(TestEntity.Field.dateField, db.func(Func.current_timestamp));
 			t1.setBinaryData("人间".getBytes());
 			int i = db.update(t1);
-			assertEquals(1, i);	
+			assertEquals(1, i);
 		}
 	}
+	
+	/**
+	 * 测试单条语句更新记录
+	 * 
+	 * @throws SQLException
+	 */
+	@Test
+	@IgnoreOn(allButExcept="hsqldb")
+	public void testUpdateDynamicLess() throws SQLException {
+		boolean dynamic=ORMConfig.getInstance().isDynamicUpdate();
+		ORMConfig.getInstance().setDynamicUpdate(false);
+		Transaction db=this.db.startTransaction();
+		long lastId = insert3Records();
+		{
+			TestEntity t1 = new TestEntity();
+			t1.setLongField(lastId - 2);
+			t1 = db.load(t1);
+			t1.getQuery().addCondition(QB.eq(TestEntity.Field.longField2,t1.getLongField2()));
+			t1.setBinaryData("Hello".getBytes());
+			t1.setLongField(12356);
+			int i = db.update(t1);
+			assertEquals(1, i);
+		}
+		db.rollback(true);
+		ORMConfig.getInstance().setDynamicUpdate(dynamic);
+	}
+
 
 	@Test
-	@IgnoreOn("sqlite")  //SQLite由于当前时区的问题，该案例不过
+	@IgnoreOn("sqlite")
+	// SQLite由于当前时区的问题，该案例不过
 	public void testUpdate2() throws SQLException {
 		db.delete(QB.create(TestEntity.class));
 		long lastId = insert3Records();
-		//增加案例，支持
+		// 增加案例，支持
 		{
-			TestEntity t1 = new TestEntity();//>>>
+			TestEntity t1 = new TestEntity();// >>>
 			t1.getQuery().addCondition(new FBIField("date(createTime)"), DateUtils.sqlToday());
 			t1.setField2("uuuuuuuuuuuuuu");
-			int i=db.update(t1);
+			int i = db.update(t1);
 			assertEquals(3, i);
-			
+
 		}
 		{
-			//这个案例测试时要注意，在Oracle中，即便传入java.sql.Date对象，Oracle仍然会将其当作date类型（带时分秒进行判断）
+			// 这个案例测试时要注意，在Oracle中，即便传入java.sql.Date对象，Oracle仍然会将其当作date类型（带时分秒进行判断）
 			TestEntity t1 = new TestEntity();
 			t1.getQuery().addCondition(new FBIField("date(createTime)"), DateUtils.sqlToday());
-			int i=db.delete(t1);
+			int i = db.delete(t1);
 			assertEquals(3, i);
 		}
-	 }
+	}
+
+	
 	/**
 	 * 测试遍历模式的查询
 	 * 
@@ -490,9 +514,9 @@ public class SimpleTableTest extends org.junit.Assert {
 		insert3Records();
 		System.out.println("=========== testPaging  Begin ==========");
 		Query<TestEntity> q = QB.create(TestEntity.class);
-		Selects select=QB.selectFrom(q);
+		Selects select = QB.selectFrom(q);
 		select.column(TestEntity.Field.longField).as("lf1").toField("longField");
-		
+
 		q.addCondition(TestEntity.Field.boolField, true);
 		q.orderByAsc(TestEntity.Field.longField);
 		PagingIterator<TestEntity> page = db.pageSelect(q, 5);
@@ -580,7 +604,7 @@ public class SimpleTableTest extends org.junit.Assert {
 	}
 
 	private long insert3Records() throws SQLException {
-//		ORMConfig.getInstance().setDebugMode(false);
+		// ORMConfig.getInstance().setDebugMode(false);
 		TestEntity t1 = RandomData.newInstance(TestEntity.class);
 		t1.setLongField(1);
 		db.insert(t1);
@@ -783,8 +807,7 @@ public class SimpleTableTest extends org.junit.Assert {
 	 */
 	@Test
 	public void testComplexPageSQL() throws SQLException {
-		String sql = "SELECT t2.*  FROM ca_asset t2, (SELECT t.field_1, MAX(t.longfield) AS wo_run_id FROM test_entity t " +
-	"GROUP BY t.field_1) t3 WHERE t2.normal = t3.field_1  AND t2.asset_type = t3.wo_run_id";
+		String sql = "SELECT t2.*  FROM ca_asset t2, (SELECT t.field_1, MAX(t.longfield) AS wo_run_id FROM test_entity t " + "GROUP BY t.field_1) t3 WHERE t2.normal = t3.field_1  AND t2.asset_type = t3.wo_run_id";
 		PagingIterator<Person> pp = db.pageSelect(sql, Person.class, 10);
 		assertEquals(0, pp.getTotal());
 	}
@@ -814,7 +837,7 @@ public class SimpleTableTest extends org.junit.Assert {
 	}
 
 	/**
-	 * @throws SQLException 
+	 * @throws SQLException
 	 * @测试目的 添加orderby条件时使用父类entity中的field发生异常的BUG是否已被修复(see Trac#78601)
 	 * @预期结果 查询操作能正常解析并执行
 	 */
@@ -828,7 +851,6 @@ public class SimpleTableTest extends org.junit.Assert {
 		db.select(entity);
 	}
 
-	
 	/**
 	 * 
 	 * And Or互相嵌套，再加上like语句的转义等混合场景下的操作.
@@ -852,15 +874,10 @@ public class SimpleTableTest extends org.junit.Assert {
 			t.setField1("value is updated!"); // 设置要更新的数据
 
 			// (int_field_2=? and boolField=?)
-			Condition and = QB.and(
-				QB.eq(TestEntity.Field.intField2, 3),
-				QB.eq(TestEntity.Field.boolField, Boolean.FALSE)
-			);
+			Condition and = QB.and(QB.eq(TestEntity.Field.intField2, 3), QB.eq(TestEntity.Field.boolField, Boolean.FALSE));
 			// ((int_field_2=? and boolField=?) or field_2 like ? escape '/' )
-			Condition or = QB.or(
-				and,
-				QB.matchStart(TestEntity.Field.field2, "asa_") // 此处将自动转义
-			);
+			Condition or = QB.or(and, QB.matchStart(TestEntity.Field.field2, "asa_") // 此处将自动转义
+					);
 			// ((int_field_2=? and boolField=?) or field_2 like ? escape '/' )
 			// and int_field_2=?
 			t.getQuery().addCondition(or);
@@ -886,19 +903,19 @@ public class SimpleTableTest extends org.junit.Assert {
 		}
 		db.delete(t); // 删除数据
 	}
-	
+
 	@Test
-	public void testBatchLoad() throws SQLException{
-		CaAsset ca=db.load(CaAsset.class, 12);
-		List<CaAsset> ca1=db.loadByField(CaAsset.Field.acctId, 12);
-		Integer[] a=new Integer[501];
-		for(int i=0;i<501;i++){
-			a[i]=i+1;
+	public void testBatchLoad() throws SQLException {
+		CaAsset ca = db.load(CaAsset.class, 12);
+		List<CaAsset> ca1 = db.loadByField(CaAsset.Field.acctId, 12);
+		Integer[] a = new Integer[501];
+		for (int i = 0; i < 501; i++) {
+			a[i] = i + 1;
 		}
-		
-		List<CaAsset>  list1=db.batchLoad(CaAsset.class, Arrays.asList(a));
-		
-		List<CaAsset>  list2=db.batchLoadByField(CaAsset.Field.acctId, Arrays.asList(a));
-		
+
+		List<CaAsset> list1 = db.batchLoad(CaAsset.class, Arrays.asList(a));
+
+		List<CaAsset> list2 = db.batchLoadByField(CaAsset.Field.acctId, Arrays.asList(a));
+
 	}
 }

@@ -620,16 +620,30 @@ public class ArrayUtils extends org.apache.commons.lang.ArrayUtils {
 		return false;
 	}
 
+	/**
+	 * 判断列表中是否包含指定的对象,和Collection.contains方法比起来，前者是用obj1.equals(obj2)，
+	 * 这里用==直接判断是否<B>同一对象</B>，速度更快，但是不能比较出两个值完全相同的对象来。
+	 * @param list
+	 * @param keys
+	 * @return
+	 */
 	public static <T> boolean fastContainsAny(Collection<T> list, T[] keys) {
 		for (T e : list) {
 			for (T obj : keys) {
 				if (e == obj)
 					return true;
-			}
+			} 
 		}
 		return false;
 	}
 
+	/**
+	 * 判断列表中是否包含指定的对象,和Collection.contains方法比起来，前者是用obj1.equals(obj2)，
+	 * 这里用==直接判断是否<B>同一对象</B>，速度更快，但是不能比较出两个值完全相同的对象来。
+	 * @param list
+	 * @param keys
+	 * @return
+	 */
 	public static <T> boolean fastContainsAny(T[] list, T[] keys) {
 		if(list==null)return false;
 		for (T e : list) {
@@ -642,19 +656,11 @@ public class ArrayUtils extends org.apache.commons.lang.ArrayUtils {
 	}
 
 	/**
-	 * 同Arrays.asList方法,但实现类功能较强
+	 * 同Arrays.asList()方法类似,但包装容器改为常用的ArrayList。
+	 * 前者是包装出数组的一个只读视图。本方法则是转换为一个全新的集合对象。
 	 */
 	public static <T> List<T> asList(T... args) {
 		ArrayList<T> list = new ArrayList<T>(args.length + 16);
-		list.addAll(Arrays.asList(args));
-		return list;
-	}
-
-	/**
-	 * 同Arrays.asList方法,但实现类功能较强
-	 */
-	public static <T, X extends T> List<T> asTypedList(Class<T> clz, X... args) {
-		ArrayList<T> list = new ArrayList<T>();
 		list.addAll(Arrays.asList(args));
 		return list;
 	}

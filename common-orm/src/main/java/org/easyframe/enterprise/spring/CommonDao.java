@@ -311,7 +311,7 @@ public interface CommonDao{
 	 * @param value, 要查找的记录的字段值（多个）
 	 * @return
 	 */
-	List<?> findByKeys(ITableMetadata meta, String propertyName, List<Object> value);
+	List<?> findByKeys(ITableMetadata meta, String propertyName, List<? extends Serializable> value);
 	
 	/**
 	 * 使用已知的属性查找一个结果

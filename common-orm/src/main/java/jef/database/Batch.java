@@ -35,7 +35,13 @@ import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.StringUtils;
 
 /**
- * 批操作工具
+ * 批操作工具。由一个已经编译好的SQL语句构成。<br>
+ * Batch对象一旦建立，其对应的SQL语句是固定不变的，传入不同批次的数据，可以作为该SQL语句的参数，使用JDBC的批量执行接口执行。
+ * <p>
+ * 可以使用{@link #execute(List)}方法执行批量插入、更新或删除操作。
+ * <p>
+ * 可以使用{@link #setGroupForPartitionTable(boolean)}方法指定是否要对每条参数进行路由计算，根据路由结果重新分组后再执行插入、更新或删除操作。(仅当分库分表后才需要)
+ * 
  * 
  * @author Administrator
  * 
@@ -182,7 +188,8 @@ public abstract class Batch<T extends IQueryableEntity> {
 	}
 
 	/**
-	 * 提交批数据
+	 * 提交并执行批数据。
+	 * 注意Batch对应的SQL语句是固定的。因此此处传入的对象只会影响参数中的绑定变量和SQL语句中的表名。对where条件、Update中的set子句不会构成影响。
 	 * 
 	 * @throws SQLException
 	 */

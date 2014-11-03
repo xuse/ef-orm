@@ -80,7 +80,7 @@ public class BatchOperate extends org.junit.Assert {
 		}
 
 		{// 按主键批量删除记录
-			db.batchDelete(persons,false);
+			db.batchDelete(persons);
 		}
 
 	}
@@ -109,7 +109,7 @@ public class BatchOperate extends org.junit.Assert {
 		for (Person person : persons) {
 			person.setCreated(new Date());
 		}
-		Batch<Person> batch = db.startBatchUpdate(persons.get(0),null,true);
+		Batch<Person> batch = db.startBatchUpdate(persons.get(0), true);
 		batch.execute(persons);
 		persons = db.select(QB.create(Person.class));
 		batch.execute(persons);

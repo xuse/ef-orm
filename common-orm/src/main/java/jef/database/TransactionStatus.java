@@ -41,43 +41,47 @@ public interface TransactionStatus {
 
 	/**
 	 * 设置是否为仅可回滚
-	 * @param b
+	 * @param b 设置事务是否为仅可回滚
 	 */
 	public void setRollbackOnly(boolean b);
 
 	/**
 	 * 是否为仅可回滚
-	 * @return
+	 * @return 事务被标记为仅可回滚时，返回true
 	 */
 	public boolean isRollbackOnly();
 
 	/**
-	 * 是否开启
-	 * @return
+	 * 当前连接是否开启
+	 * @return 事务可用返回true。
 	 */
 	public boolean isOpen();
 
 	/**
 	 * 建立保存点
-	 * @param savepointName
-	 * @return
+	 * @param savepointName 保存点名
+	 * @return 保存点
 	 * @throws SQLException
 	 */
 	public Savepoint setSavepoint(String savepointName) throws SQLException;
 
 	/**
 	 * 回滚到保存点
-	 * @param savepoint
+	 * @param savepoint 保存点
 	 * @throws SQLException
 	 */
 	public void rollbackToSavepoint(Savepoint savepoint) throws SQLException;
 
 	/**
 	 * 释放回滚点
-	 * @param savepoint
+	 * @param savepoint 保存点
 	 */
 	public void releaseSavepoint(Savepoint savepoint) throws SQLException;
 	
-
+	/**
+	 * 得到当前事务的内部标记。
+	 * @return 事务内部标记
+	 * @see TransactionFlag 
+	 */
 	public TransactionFlag getTransactionFlag();
 }

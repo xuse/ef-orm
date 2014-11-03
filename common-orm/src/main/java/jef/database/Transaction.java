@@ -19,6 +19,8 @@ import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.util.Collection;
 
+import javax.persistence.PersistenceException;
+
 import jef.database.cache.TransactionCache;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.IConnection;
@@ -43,6 +45,8 @@ public abstract class Transaction extends Session implements TransactionStatus {
 	protected static Logger log = LoggerFactory.getLogger(Transaction.class);
 
 	/**
+	 * 内部事务标记
+	 * <p>
 	 * ORM中部分操作会在非事务场景下进行，而JEF本身的一些内部操作则必须保证在事务环境下执行。（如级联操作、批操作）
 	 * 为此JEF会在内部创建一个事务对象。这类内部的食物对象当操作完成后即提交并关闭。对用户透明。
 	 * 
@@ -59,7 +63,7 @@ public abstract class Transaction extends Session implements TransactionStatus {
 		 */
 		Cascade,
 		/**
-		 * 被外部管理的事务.
+		 * 被外部管理的事务.比如共享hibernate事务或者iBatis事务的场合。
 		 */
 		Managed
 	}
@@ -205,7 +209,7 @@ public abstract class Transaction extends Session implements TransactionStatus {
 			throw new IllegalStateException("Current transaction is closed!|" + getTransactionId(null));
 		}
 	}
-
+	
 	@Override
 	public PartitionSupport getPartitionSupport() {
 		return parent.getPartitionSupport();
@@ -228,30 +232,54 @@ public abstract class Transaction extends Session implements TransactionStatus {
 
 	abstract public void setReadonly(boolean flag);
 
+	/**
+	 * 当前事务是否为只读事务
+	 * @return 如果是只读事务返回true。否则false
+	 */
 	abstract public boolean isReadonly();
 
+	/**
+	 * 获得当前事务的数据库隔离级别。要求JDBC驱动能支持
+	 * @return
+	 */
 	abstract public int getIsolationLevel();
 
+	/**
+	 * 设置当前事务的数据库隔离级别。要求JDBC驱动能支持
+	 * @param isolationLevel
+	 */
 	abstract public void setIsolationLevel(int isolationLevel);
 	
+	/**
+	 * 设置当前连接的自动提交状态，如果设置为true则相当于无事务
+	 * @param autoCommit
+	 * @return
+	 */
 	abstract public Transaction setAutoCommit(boolean autoCommit);
-	
-	abstract public boolean isAutoCommit();
-	
 
 	/**
-	 * 提交当前事务中的操作
-	 * 
-	 * 仅提交，不会关闭事务和释放连接
+	 * 当前连接是否为自动提交状态（自动提交状态的即非事务）
+	 * @return
+	 */
+	abstract public boolean isAutoCommit();
+	
+	/**
+	 * 提交当前事务
+	 * <p>
+	 * 仅提交事务，不会关闭事务和释放连接。您需要调用{@link #close()}方法才能真正释放事务所用的连接。<br>
+	 * 你也可以使用{@code commit(true) }方法提交事务并释放连接。 
+	 * @throws PersistenceException 如果回滚中出现数据库错误抛出。
 	 */
 	public void commit() {
 		commit(false);
 	}
 	
 	/**
-	 * 回滚当前事务中的所有操作
-	 * 
-	 * 仅回滚，不会关闭事务和释放连接
+	 * 回滚当前事务
+	 * <p>
+	 * 仅回滚事务，不会关闭事务和释放连接。您需要调用{@link #close()}方法才能真正释放事务所用的连接。<br>
+	 * 你也可以使用{@code rollback(true) }方法提交事务并释放连接。
+	 * @throws PersistenceException 如果回滚中出现数据库错误抛出。
 	 */
 	public void rollback() {
 		rollback(false);

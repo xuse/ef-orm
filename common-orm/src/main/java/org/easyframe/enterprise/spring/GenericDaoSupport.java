@@ -12,16 +12,14 @@ import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 
 import jef.common.wrapper.Page;
-import jef.database.Condition.Operator;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.NativeQuery;
 import jef.database.PagingIterator;
 import jef.database.PagingIteratorObjImpl;
-import jef.database.QB;
-import jef.database.meta.MetaHolder;
 import jef.database.meta.AbstractMetadata;
+import jef.database.meta.MetaHolder;
 import jef.database.query.PKQuery;
 import jef.tools.reflect.ClassWrapper;
 import jef.tools.reflect.GenericUtils;
@@ -29,10 +27,9 @@ import jef.tools.reflect.GenericUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 框架提供的基本数据库操作实现
+ * 框架提供的基本数据库操作实现<br>
  * 
- * @author Administrator
- * 
+ * 考虑到一般项目命名习惯等因素，建议有需要的同学自行继承BaseDao来编写通用的DAO，本类可当做是参考实现。
  * @param <T>
  */
 @Transactional
@@ -307,8 +304,8 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		Page<T> p = new Page<T>();
 		try {
 			PagingIteratorObjImpl<T> i = (PagingIteratorObjImpl<T>) getSession().pageSelect(entity, limit);
-//			i.setRefQuery(false);
-//			i.setFillVsNField(false);
+			// i.setRefQuery(false);
+			// i.setFillVsNField(false);
 			i.setOffset(start);
 			p.setTotalCount(i.getTotal());
 			List<T> data = i.next();
@@ -437,7 +434,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 
 	public int batchRemove(List<T> entities, boolean group) {
 		try {
-			getSession().executeBatchDeletion(entities,group);
+			getSession().executeBatchDeletion(entities, group);
 		} catch (SQLException e) {
 			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}
@@ -455,7 +452,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 
 	public int batchUpdate(List<T> entities, boolean group) {
 		try {
-			getSession().batchUpdate(entities,group);
+			getSession().batchUpdate(entities, group);
 		} catch (SQLException e) {
 			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}
@@ -474,7 +471,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		return query.getResultList();
 	}
 
-	public T loadByKey(String fieldname, Serializable id) {
+	public T loadByField(String fieldname, Serializable id) {
 		Field field = meta.getField(fieldname);
 		if (field == null) {
 			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
@@ -489,32 +486,72 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		}
 	}
 
-	public List<T> findByKey(String fieldname, Serializable id) {
+	public List<T> findByField(String fieldname, Serializable id) {
 		Field field = meta.getField(fieldname);
 		if (field == null) {
 			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
 		}
-		@SuppressWarnings("unchecked")
-		T q = (T) meta.newInstance();
-		q.getQuery().addCondition(field, id);
 		try {
-			return getSession().select(q);
+			return getSession().loadByField(field, id);
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
 		}
 	}
 
-	public int removeByKey(String fieldname, Serializable key) {
-		jef.database.query.Query<?> q = QB.create(meta);
+	public int deleteByField(String fieldname, Serializable key) {
 		Field field = meta.getField(fieldname);
 		if (field == null) {
 			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
 		}
-		q.addCondition(field, Operator.EQUALS, key);
 		try {
-			return getSession().delete(q);
+			return getSession().deleteByField(field, key);
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
 		}
 	}
+
+	@Override
+	public List<T> batchLoad(List<? extends Serializable> pkValues) {
+		try {
+			return getSession().batchLoad(meta, pkValues);
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
+		}
+	}
+
+	@Override
+	public int batchDelete(List<? extends Serializable> pkValues) {
+		try {
+			return getSession().batchDelete(meta, pkValues);
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
+		}
+	}
+
+	@Override
+	public List<T> batchLoadByField(String fieldname, List<? extends Serializable> values) {
+		Field field = meta.getField(fieldname);
+		if (field == null) {
+			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
+		}
+		try {
+			return getSession().batchLoadByField(field, values);
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
+		}
+	}
+
+	@Override
+	public int batchDeleteByField(String fieldname, List<? extends Serializable> values) {
+		Field field = meta.getField(fieldname);
+		if (field == null) {
+			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
+		}
+		try {
+			return getSession().batchDeleteByField(field, values);
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
+		}
+	}
+
 }

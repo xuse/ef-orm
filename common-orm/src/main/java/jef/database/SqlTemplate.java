@@ -294,7 +294,7 @@ public interface SqlTemplate {
 	 * 
 	 * @param func 函数
 	 * @param clz 返回结果类型
-	 * @param 参数
+	 * @param params 函数参数
 	 * @return 根据函数查询出来的结果
 	 */
 	public <T> T getExpressionValue(DbFunction func,Class<T> clz,Object... params)throws SQLException;

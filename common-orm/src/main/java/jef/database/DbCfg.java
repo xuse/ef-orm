@@ -206,7 +206,8 @@ public enum DbCfg implements ConfigItem {
 	 */
 	DB_SPECIFY_ALLCOLUMN_NAME,
 	/**
-	 * 动态更新方式(其实就是更新的时候对于没有设值的字段不写入)，默认true.
+	 * 动态更新方式(更新的时候对于没有设值的字段不写入)，默认true。
+	 * 如果关闭则更新时，对除了主键以外的字段全部做更新。
 	 */
 	DB_DYNAMIC_UPDATE,
 	/**
