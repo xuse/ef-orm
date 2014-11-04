@@ -247,13 +247,14 @@ public class SqlAndParameter implements InMemoryOperateProvider {
 		return n1;
 	}
 
-	private boolean match(String table1, String columnName, ColumnDescription cd) {
-		if (table1 != null) {
-			if (!StringUtils.equalsIgnoreCase(table1, cd.getTable())) {
+	private boolean match(String keyTable, String keyColumn, ColumnDescription cd) {
+		String table=cd.getTable();
+		if (keyTable != null && StringUtils.isNotEmpty(table)) {
+			if (!StringUtils.equalsIgnoreCase(keyTable, table)) {
 				return false;
 			}
 		}
-		return StringUtils.equalsIgnoreCase(columnName, cd.getName());
+		return StringUtils.equalsIgnoreCase(keyColumn, cd.getName());
 	}
 
 	static class TableCollector extends VisitorAdapter {

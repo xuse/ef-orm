@@ -21,7 +21,7 @@ import jef.database.PagingIteratorObjImpl;
 import jef.database.meta.AbstractMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.PKQuery;
-import jef.tools.reflect.ClassWrapper;
+import jef.tools.reflect.ClassEx;
 import jef.tools.reflect.GenericUtils;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -43,7 +43,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	@SuppressWarnings("unchecked")
 	public GenericDaoSupport() {
 		Class<?> c = getClass();
-		c = ClassWrapper.getRealClass(c);
+		c = ClassEx.getRealClass(c);
 		Type[] t = GenericUtils.getTypeParameters(c, GenericDao.class);
 		Type type = t[0];
 		if (type instanceof Class<?>) {

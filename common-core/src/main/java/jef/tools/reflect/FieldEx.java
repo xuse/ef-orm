@@ -5,18 +5,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 
-import jef.tools.reflect.FieldAccessor.B;
-import jef.tools.reflect.FieldAccessor.C;
-import jef.tools.reflect.FieldAccessor.D;
-import jef.tools.reflect.FieldAccessor.F;
-import jef.tools.reflect.FieldAccessor.I;
-import jef.tools.reflect.FieldAccessor.J;
-import jef.tools.reflect.FieldAccessor.O;
-import jef.tools.reflect.FieldAccessor.S;
-import jef.tools.reflect.FieldAccessor.Z;
-
 /**
- * JDK的反射机制有一个缺陷或者说说遗憾，<BR>我们看下面这个场景
+ * JDK的反射机制有一个遗憾，<BR>我们看下面这个场景
  * <pre><code>
  *  public abstract class A&lt;K&gt;{
  * 　　　public K method1();
@@ -40,12 +30,14 @@ import jef.tools.reflect.FieldAccessor.Z;
  * 即任意一个Field实例中，由于丢失了实际所在的class(子类)信息，只保留了DeclearingClass(父类)，
  * 从而也就丢失了泛型的提供者， 因此永远不可能计算出泛型的最小边界。
  * 在泛型的场合下计算边界，三个泛型提供者Class/Methid/Field缺一不可。 
- * 为了弥补JDK的这个重要缺陷，提供了增强的FieldEx,和MethodEx类提供method对象的包装。
+ * 为了弥补JDK的这个缺陷，提供了{@link FieldEx},{@link MethodEx}和{@link ClassEx}类提供method对象的包装。
+ * @see ClassEx
+ * @see MethodEx
  *
  */
 public class FieldEx {
 	private java.lang.reflect.Field field;
-	ClassWrapper instanceClass;
+	ClassEx instanceClass;
 	private Type genericType;
 	private FieldAccessor accessor;
 	
@@ -53,7 +45,7 @@ public class FieldEx {
 		this(method,(Class<?>)null);
 	}
 
-	FieldEx(Field field, ClassWrapper clz) {
+	FieldEx(Field field, ClassEx clz) {
 		this.field=field;
 		this.instanceClass=clz;
 		this.genericType=clz.getFieldGenericType(field);
@@ -62,7 +54,7 @@ public class FieldEx {
 
 	public FieldEx(Field field, Class<?> clz) {
 		this.field=field;
-		this.instanceClass=new ClassWrapper(clz);
+		this.instanceClass=new ClassEx(clz);
 	}
 
 	public java.lang.reflect.Field getJavaField() {

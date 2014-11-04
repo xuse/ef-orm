@@ -147,4 +147,19 @@ public class TemplateMetadata extends AbstractMetadata {
 		this.template.unprocessedField = unprocessedField;
 		this.template.annos = annos;
 	}
+
+	@Override
+	public TupleMetadata getExtendsTable() {
+		throw new UnsupportedOperationException("this is a abstract metadata template.");
+	}
+
+	@Override
+	public Collection<ColumnMapping<?>> getExtendedColumns() {
+		throw new UnsupportedOperationException("this is a abstract metadata template.");
+	}
+
+	@Override
+	public ColumnMapping<?> getExtendedColumnDef(String field) {
+		throw new UnsupportedOperationException("this is a abstract metadata template.");
+	}
 }

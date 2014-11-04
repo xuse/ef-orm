@@ -60,8 +60,8 @@ public class QueryBuilder {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T extends IQueryableEntity> Query<T> create(Class<T> clz) {
-		T d = UnsafeUtils.newInstance(clz);
-		QueryImpl<T> query = (QueryImpl<T>) d.getQuery();
+		ITableMetadata meta=MetaHolder.getMeta(clz);
+		QueryImpl<T> query = (QueryImpl<T>) meta.newInstance().getQuery();
 		query.allRecords=true;
 		return query;
 	}

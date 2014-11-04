@@ -16,6 +16,7 @@ import jef.database.query.Query;
 import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
 import jef.database.test.DatabaseInit;
+import jef.database.test.IgnoreOn;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
 
 import org.junit.Test;
@@ -23,17 +24,13 @@ import org.junit.runner.RunWith;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({
-// @DataSource(name="oracle",url="${oracle.url}",user="${oracle.user}",password="${oracle.password}"),
-// @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}",
-// password = "${mysql.password}"),
-// @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
-// @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
+ @DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"), @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
+		@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
 @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-// @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
-// @DataSource(name = "sqlserver", url =
-// "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
+ @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+ @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
-public class DynamicExtendsTest {
+public class DynamicExtendsTest extends org.junit.Assert{
 	private DbClient db;
 
 	public DynamicExtendsTest() throws SQLException {
@@ -58,19 +55,70 @@ public class DynamicExtendsTest {
 	 */
 	@Test
 	public void testAttrTable() throws SQLException {
+//		ORMConfig.getInstance().setUseOuterJoin(false);
+//		ORMConfig.getInstance().setCacheLevel1(true);
+//		ORMConfig.getInstance().setCacheDebug(true);
 		initUserExtendInfo();
 		db.createTable(UserEx.class);
+		
+		Transaction db=this.db.startTransaction();
+		
 		UserEx user = new UserEx();
 		user.setComm("TEST of USEREXT");
 		user.setName("张三");
+		user.setStatus(2);
 		user.setAtribute("QQ", "213324333");
 		user.setAtribute("E_MAIL", "dsff@google.com");
 		user.setAtribute("address", "重点萨芬撒地方");
 		user.setAtribute("day", 123);
 		db.insert(user);
 		
+		user = new UserEx();
+		user.setComm("TEST of 2");
+		user.setName("李四");
+		user.setAtribute("QQ", "77853431");
+		user.setAtribute("E_MAIL", "Lisi@baidu.com");
+		user.setAtribute("address", "China town");
+		user.setAtribute("day", 8873);
+		user.setStObj(new Status(6,"测试"));
+		db.insert(user);
 		
-
+		{
+			List<UserEx> list=db.loadByField(UserEx.Field.name, "李四");
+			UserEx ex=list.get(0);
+			System.out.println(ex.getName());
+			System.out.println(ex.getAtribute("QQ"));
+			System.out.println(ex.getAtribute("E_MAIL"));
+			System.out.println(ex.getAtribute("address"));
+			System.out.println(ex.getAtribute("day"));
+			assertNotNull(ex.getId());
+			assertEquals(8873, ex.getAtribute("day"));
+			assertEquals("Lisi@baidu.com", ex.getAtribute("E_MAIL"));
+			assertEquals("77853431", ex.getAtribute("QQ"));
+			
+			ex.setAtribute("QQ", "6320535");
+			int i=db.update(ex);
+			assertEquals(0, i); //由于记录本身没有字段变化，仅级联对象变化，更新后记录行数仅返回主表更新行数，所以为0
+		}
+		{
+			List<UserEx> list=db.loadByField(UserEx.Field.name, "李四");
+			UserEx ex=list.get(0);
+			assertEquals(8873, ex.getAtribute("day"));
+			assertEquals("6320535", ex.getAtribute("QQ"));
+			ex.setComm("TestUpdated2");
+			int i=db.update(ex);
+			assertEquals(1, i);
+		}
+		{
+			List<UserEx> list=db.loadByField(UserEx.Field.name, "李四");
+			UserEx ex=list.get(0);
+			assertEquals("TestUpdated2", ex.getComm());
+			int i=db.delete(ex);
+			assertEquals(1, i);
+			int j=db.delete(QB.create(UserEx.class));
+			assertEquals(1, i);
+		}
+		db.commit(true);
 	}
 
 	@Test

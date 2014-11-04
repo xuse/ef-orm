@@ -142,7 +142,7 @@ public abstract class BeanWrapper {
 		}
 		Object v=null;
 		try{
-			v=ClassWrapper.toProperType(value, new ClassWrapper(c),oldValue);
+			v=ClassEx.toProperType(value, new ClassEx(c),oldValue);
 		}catch(Exception e){
 			LogUtil.error("Error at setting property to "+this.getClassName()+":"+fieldName+" whith value ["+value+"]");
 			throw new IllegalArgumentException(e.getMessage());

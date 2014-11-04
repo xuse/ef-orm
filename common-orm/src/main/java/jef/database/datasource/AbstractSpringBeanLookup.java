@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import jef.tools.Assert;
-import jef.tools.reflect.ClassWrapper;
+import jef.tools.reflect.ClassEx;
 import jef.tools.reflect.GenericUtils;
 
 import org.apache.commons.lang.StringUtils;
@@ -34,7 +34,7 @@ public abstract class AbstractSpringBeanLookup<T> implements ApplicationContextA
 	@SuppressWarnings("unchecked")
 	public AbstractSpringBeanLookup(){
 		Class<?> c = getClass();
-		c = ClassWrapper.getRealClass(c);
+		c = ClassEx.getRealClass(c);
 		Type[] t = GenericUtils.getTypeParameters(c, AbstractSpringBeanLookup.class);
 		Type type = t[0];
 		if (type instanceof Class<?>) {

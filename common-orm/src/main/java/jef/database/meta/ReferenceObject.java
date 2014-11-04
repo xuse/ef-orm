@@ -3,12 +3,16 @@ package jef.database.meta;
 import jef.database.ORMConfig;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
+import jef.tools.reflect.Property;
 
 public final class ReferenceObject extends AbstractRefField implements IReferenceAllTable{
+	/**
+	 * 是否延迟加载Lob字段
+	 */
 	private boolean lazyLob;
 	
-	public ReferenceObject(Class<?> fType,String fName, Reference ref,CascadeConfig config) {
-		super(fType,fName, ref,config==null?null:config.asMap);
+	public ReferenceObject(Property fName, Reference ref,CascadeConfig config) {
+		super(fName, ref,config);
 		lazyLob=ORMConfig.getInstance().isEnableLazyLoad() && this.reference.getTargetType().getLobFieldNames()!=null;
 	}
 

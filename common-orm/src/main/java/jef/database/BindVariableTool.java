@@ -64,7 +64,7 @@ public final class BindVariableTool {
 				try {
 					setUpdateMapValue(query.getInstance().getUpdateValueMap(), field, cType, count, bean, context);
 				} catch (SQLException ex) {
-					System.out.println("Error when set " + field.name() + " into bean " + query.getType() + " for " + cType.getClass().getName());
+					LogUtil.error("Error while setting [{}] into bean [{}] for {}", field.name(),query.getType(),cType.getClass().getName());
 					throw ex;
 				}
 			}
@@ -79,8 +79,7 @@ public final class BindVariableTool {
 					Object obj = setWhereVariable(field, da, count, context);
 					actualWhereParams[n++] = obj;
 				} catch (SQLException ex) {
-					LogUtil.exception(ex);
-					System.out.println("Error when set " + field.name() + " into bean " + da.getClass().getName());
+					LogUtil.error("Error while setting [{}] into bean [{}], error type={}" ,field.name(),da.getClass().getName(),ex.getClass().getName());
 					throw ex;
 				}
 			}

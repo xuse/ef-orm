@@ -3,6 +3,7 @@ package jef.database;
 import java.util.HashMap;
 import java.util.Map;
 
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.ExtensionConfig;
 import jef.database.meta.ExtensionConfigFactory;
 import jef.database.meta.ITableMetadata;
@@ -14,7 +15,7 @@ import jef.database.support.accessor.EfPropertiesExtensionProvider;
  * @author jiyi
  * 
  */
-public abstract class EntityExtensionSupport extends DataObject implements MetadataContainer{
+public abstract class EntityExtensionSupport extends DataObject implements MetadataContainer {
 	private transient Map<String, Object> attributes;
 	// 扩展点信息
 	private ExtensionConfigFactory extensionFactory;
@@ -23,7 +24,7 @@ public abstract class EntityExtensionSupport extends DataObject implements Metad
 
 	public EntityExtensionSupport() {
 		this.extensionFactory = EfPropertiesExtensionProvider.getInstance().getEF(this.getClass());
-		if(extensionFactory==null){
+		if (extensionFactory == null) {
 			System.out.println(this.getClass());
 		}
 		this.config = extensionFactory.getDefault();
@@ -31,7 +32,7 @@ public abstract class EntityExtensionSupport extends DataObject implements Metad
 
 	public ITableMetadata getMeta() {
 		if (config == null) {
-			if(extensionFactory==null){
+			if (extensionFactory == null) {
 				System.out.println(extensionFactory);
 			}
 			config = extensionFactory.getExtension(this);
@@ -62,18 +63,18 @@ public abstract class EntityExtensionSupport extends DataObject implements Metad
 		if (attributes == null) {
 			attributes = new HashMap<String, Object>();
 		}
-		ITableMetadata meta=this.getMeta();
-		Field field =  meta.getField(key);
+		ITableMetadata meta = this.getMeta();
+		ColumnMapping<?> field = meta.getExtendedColumnDef(key);
 		if (field == null) {
 			throw new IllegalArgumentException("Unknown [" + key + "] .Avaliable: " + getMeta().getAllFieldNames());
 		} else {
 			// Check the data type
-			Class<?> expected =  meta.getColumnDef(field).getFieldType();
+			Class<?> expected = field.getFieldType();
 			if (value != null && !expected.isAssignableFrom(value.getClass())) {
 				throw new IllegalArgumentException("Field value invalid for the data type of column. field name '" + key + "' value is a '" + value.getClass().getSimpleName() + "'. expected is " + expected.getSimpleName());
 			}
-			if (_recordUpdate)
-				super.markUpdateFlag(field, value);
+//			if (_recordUpdate)
+//				super.markUpdateFlag(field.field(), value);
 		}
 		attributes.put(key, value);
 	}
@@ -85,7 +86,7 @@ public abstract class EntityExtensionSupport extends DataObject implements Metad
 	 * @return
 	 */
 	public Object getAtribute(String key) {
-		super.beforeGet(key);
+		super.beforeGet("attributes");
 		if (attributes == null) {
 			return null;
 		}

@@ -87,8 +87,7 @@ public class DynamicTableTest extends org.junit.Assert {
 		GroupTable.addColumn("id", new ColumnType.AutoIncrement(8));
 		GroupTable.addColumn("serviceId", new ColumnType.Int(8));
 		GroupTable.addColumn("name", new ColumnType.Varchar(100));
-		GroupTable.addReference_1vsN("services", meta, QB.on(GroupTable.f("id"),meta.f("groupid")));
-		
+		GroupTable.addCascadeOneToMany("services", meta, QB.on(GroupTable.f("id"),meta.f("groupid")));
 	}
 	
 

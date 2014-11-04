@@ -1431,32 +1431,31 @@ public class DbMetaData {
 		if (tablename == null) {
 			tablename = meta.getTableName(true);
 		}
-		if (existTable(tablename))
-			return false;
-		TableCreateStatement sqls = ddlGenerator.toTableCreateClause(meta, tablename);
-		StatementExecutor exe = createExecutor();
-		try {
-			// 建表
-			exe.executeSql(sqls.getTableSQL());
-			// create sequence
-			for (PairIS seq : sqls.getSequences()) {
-				createSequence0(null, seq.second, 1, StringUtils.toLong(StringUtils.repeat('9', seq.first), Long.MAX_VALUE), exe);
-			}
-			// 创建外键约束等
-			exe.executeSql(sqls.getOtherContraints());
-			// create indexes
-			exe.executeSql(ddlGenerator.toIndexClause(meta, tablename));
-		} finally {
-			exe.close();
+		boolean created=false;
+		if (!existTable(tablename)){
+			TableCreateStatement sqls = ddlGenerator.toTableCreateClause(meta, tablename);
+			StatementExecutor exe = createExecutor();
+			try {
+				// 建表
+				exe.executeSql(sqls.getTableSQL());
+				// create sequence
+				for (PairIS seq : sqls.getSequences()) {
+					createSequence0(null, seq.second, 1, StringUtils.toLong(StringUtils.repeat('9', seq.first), Long.MAX_VALUE), exe);
+				}
+				// 创建外键约束等
+				exe.executeSql(sqls.getOtherContraints());
+				// create indexes
+				exe.executeSql(ddlGenerator.toIndexClause(meta, tablename));
+			} finally {
+				exe.close();
+			}	
+			created=true;
+		}
+		if(meta.getExtendsTable()!=null){
+			this.createTable(meta.getExtendsTable(), null);
 		}
 		// 额外创建表
-		List<ITableMetadata> exc = sqls.getReferenceTable();
-		if (exc != null) {
-			for (ITableMetadata ext : exc) {
-				refreshTable(ext, ext.getTableName(true), null, true);
-			}
-		}
-		return true;
+		return created;
 	}
 
 	/*

@@ -41,8 +41,8 @@ import jef.tools.collection.IterableAccessor;
 import org.apache.commons.lang.ObjectUtils;
 
 public class BeanUtils {
-	private static Map<Class<?>,ClassFieldAccessor> ACCESSOR_CACHE=new IdentityHashMap<Class<?>,ClassFieldAccessor>(256);
-	
+	private static Map<Class<?>, ClassFieldAccessor> ACCESSOR_CACHE = new IdentityHashMap<Class<?>, ClassFieldAccessor>(256);
+
 	/**
 	 * 返回八个原生类型的默认数值(的装箱类型)
 	 * 
@@ -50,21 +50,21 @@ public class BeanUtils {
 	 * @return
 	 */
 	public static Object defaultValueOfPrimitive(Class<?> javaClass) {
-//		int  226
-//		short  215
-//		long  221
-//		boolean  222
-//		float  219
-//		double  228
-//		char  201
-//		byte  237	
-		if(javaClass.isPrimitive()){
-			String s=javaClass.getName();	
-			switch(s.charAt(1)+s.charAt(2)){
+		// int 226
+		// short 215
+		// long 221
+		// boolean 222
+		// float 219
+		// double 228
+		// char 201
+		// byte 237
+		if (javaClass.isPrimitive()) {
+			String s = javaClass.getName();
+			switch (s.charAt(1) + s.charAt(2)) {
 			case 226:
 				return 0;
 			case 215:
-				return Short.valueOf((short)0);
+				return Short.valueOf((short) 0);
 			case 221:
 				return 0L;
 			case 222:
@@ -74,19 +74,21 @@ public class BeanUtils {
 			case 228:
 				return 0d;
 			case 201:
-				return (char)0;
+				return (char) 0;
 			case 237:
-				return Byte.valueOf((byte)0);
+				return Byte.valueOf((byte) 0);
 			}
 		}
 		throw new IllegalArgumentException(javaClass + " is not Primitive Type.");
 	}
 
 	/**
-	 * 得到原生对象和String的缺省值
+	 * 得到原生对象和String的缺省值。
 	 * 
 	 * @param cls
-	 * @return
+	 *            类型
+	 * 
+	 * @return 指定类型数据的缺省值。如果传入类型是primitive和String之外的类型返回null。
 	 */
 	public static Object defaultValueForBasicType(Class<?> cls) {
 		if (cls == Integer.class || cls == Integer.TYPE) {
@@ -112,32 +114,34 @@ public class BeanUtils {
 	}
 
 	/**
-	 * 将bean的可读属性变为map
-	 * 和 {@link #describe(Object)}含义相同
+	 * 将bean的可读属性变为map 和 {@link #describe(Object)}含义相同
+	 * 
 	 * @param obj
-	 * @return
+	 *            对象
+	 * @return 对象的属性并转换为Map
 	 * 
 	 */
-	public static Map<String,Object> toMap(Object obj){
+	public static Map<String, Object> toMap(Object obj) {
 		return describe(obj);
 	}
-	
+
 	/**
 	 * 将bean的可读属性变为map
+	 * 
 	 * @param obj
 	 * @return
 	 */
-	public static Map<String,Object> describe(Object obj){
-		Map<String,Object> map=new HashMap<String,Object>();
-		BeanWrapper bw=BeanWrapper.wrap(obj);
-		for(String s:bw.getPropertyNames()){
-			if(bw.isReadableProperty(s)){
+	public static Map<String, Object> describe(Object obj) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		BeanWrapper bw = BeanWrapper.wrap(obj);
+		for (String s : bw.getPropertyNames()) {
+			if (bw.isReadableProperty(s)) {
 				map.put(s, bw.getPropertyValue(s));
 			}
 		}
 		return map;
 	}
-	
+
 	/**
 	 * 强行获取字段值 ，且不抛出受检异常(慎用)
 	 * 
@@ -148,49 +152,52 @@ public class BeanUtils {
 	public static Object getFieldValue(Object obj, String fieldName) {
 		if (obj == null)
 			return null;
-		Class<?> clz=obj.getClass();
-		ClassFieldAccessor accessors=ACCESSOR_CACHE.get(clz);
-		if(accessors==null){
-			accessors=new ClassFieldAccessor();
-			ACCESSOR_CACHE=copyOnWritePut(clz, accessors,ACCESSOR_CACHE);
-		}else{
-			FieldAccessor acc=accessors.get(fieldName);
-			if(acc!=null){
+		Class<?> clz = obj.getClass();
+		ClassFieldAccessor accessors = ACCESSOR_CACHE.get(clz);
+		if (accessors == null) {
+			accessors = new ClassFieldAccessor();
+			ACCESSOR_CACHE = copyOnWritePut(clz, accessors, ACCESSOR_CACHE);
+		} else {
+			FieldAccessor acc = accessors.get(fieldName);
+			if (acc != null) {
 				return acc.getObject(obj);
 			}
 		}
 		FieldEx f = getField(clz, fieldName);
 		if (f == null)
-			throw new NoSuchElementException(fieldName+" in "+clz.getName());
+			throw new NoSuchElementException(fieldName + " in " + clz.getName());
 		accessors.put(fieldName, f.getAccessor());
 		return f.get(obj);
 	}
-	
+
 	/**
 	 * get the field accessor.
-	 * @param field  field 
-	 * @param cache  if true, the result accessor will be cached. 
+	 * 
+	 * @param field
+	 *            field
+	 * @param cache
+	 *            if true, the result accessor will be cached.
 	 * @return
 	 */
-	public static FieldAccessor getFieldAccessor(java.lang.reflect.Field field,boolean cache){
-		Class<?> clz=field.getDeclaringClass();
-		FieldAccessor accessor=null;
-		ClassFieldAccessor accessors=ACCESSOR_CACHE.get(clz);
-		if(accessors!=null){
-			accessor=accessors.get(field.getName());
+	public static FieldAccessor getFieldAccessor(java.lang.reflect.Field field, boolean cache) {
+		Class<?> clz = field.getDeclaringClass();
+		FieldAccessor accessor = null;
+		ClassFieldAccessor accessors = ACCESSOR_CACHE.get(clz);
+		if (accessors != null) {
+			accessor = accessors.get(field.getName());
 		}
-		if(accessor==null){
-			accessor=FieldAccessor.generateAccessor(field);
+		if (accessor == null) {
+			accessor = FieldAccessor.generateAccessor(field);
 		}
-		if(cache){
-			if(accessors==null){
-				accessors=new ClassFieldAccessor();
-				ACCESSOR_CACHE=copyOnWritePut(clz, accessors,ACCESSOR_CACHE);
+		if (cache) {
+			if (accessors == null) {
+				accessors = new ClassFieldAccessor();
+				ACCESSOR_CACHE = copyOnWritePut(clz, accessors, ACCESSOR_CACHE);
 			}
 			accessors.put(field.getName(), accessor);
 		}
 		return accessor;
-		
+
 	}
 
 	/**
@@ -199,26 +206,26 @@ public class BeanUtils {
 	 * @Title: getField
 	 */
 	public static Class<?> getFieldType(Class<?> clz, String fieldName) {
-		ClassFieldAccessor accessors=ACCESSOR_CACHE.get(clz);
-		if(accessors==null){
-			accessors=new ClassFieldAccessor();
-			ACCESSOR_CACHE=copyOnWritePut(clz, accessors,ACCESSOR_CACHE);
-		}else{
-			FieldAccessor acc=accessors.get(fieldName);
-			if(acc!=null){
+		ClassFieldAccessor accessors = ACCESSOR_CACHE.get(clz);
+		if (accessors == null) {
+			accessors = new ClassFieldAccessor();
+			ACCESSOR_CACHE = copyOnWritePut(clz, accessors, ACCESSOR_CACHE);
+		} else {
+			FieldAccessor acc = accessors.get(fieldName);
+			if (acc != null) {
 				return acc.getType();
 			}
 		}
-		
+
 		FieldEx f = getField(clz, fieldName);
 		if (f == null)
-			throw new NoSuchElementException(fieldName+" in "+clz.getName());
+			throw new NoSuchElementException(fieldName + " in " + clz.getName());
 		accessors.put(fieldName, f.getAccessor());
 		return f.getType();
 	}
- 
-	private static <K,V> Map<K, V> copyOnWritePut(K k, V v, Map<K, V> source) {
-		Map<K,V> map=new IdentityHashMap<K, V>(source);
+
+	private static <K, V> Map<K, V> copyOnWritePut(K k, V v, Map<K, V> source) {
+		Map<K, V> map = new IdentityHashMap<K, V>(source);
 		map.put(k, v);
 		return map;
 	}
@@ -229,21 +236,21 @@ public class BeanUtils {
 	public static void setFieldValue(Object obj, String fieldName, Object value) {
 		if (obj == null)
 			return;
-		Class<?> clz=obj.getClass();
-		ClassFieldAccessor accessors=ACCESSOR_CACHE.get(clz);
-		if(accessors==null){
-			accessors=new ClassFieldAccessor();
-			ACCESSOR_CACHE=copyOnWritePut(clz, accessors,ACCESSOR_CACHE);
-		}else{
-			FieldAccessor acc=accessors.get(fieldName);
-			if(acc!=null){
-				acc.set(obj,value);
+		Class<?> clz = obj.getClass();
+		ClassFieldAccessor accessors = ACCESSOR_CACHE.get(clz);
+		if (accessors == null) {
+			accessors = new ClassFieldAccessor();
+			ACCESSOR_CACHE = copyOnWritePut(clz, accessors, ACCESSOR_CACHE);
+		} else {
+			FieldAccessor acc = accessors.get(fieldName);
+			if (acc != null) {
+				acc.set(obj, value);
 				return;
 			}
 		}
 		FieldEx f = getField(obj.getClass(), fieldName);
 		if (f == null)
-			throw new NoSuchElementException(fieldName+" in "+clz.getName());
+			throw new NoSuchElementException(fieldName + " in " + clz.getName());
 		accessors.put(fieldName, f.getAccessor());
 		f.set(obj, value);
 	}
@@ -257,7 +264,7 @@ public class BeanUtils {
 	 * @return
 	 */
 	public static FieldEx getField(Class<?> cls, String fieldName) {
-		return getField(new ClassWrapper(cls), fieldName);
+		return getField(new ClassEx(cls), fieldName);
 	}
 
 	/**
@@ -265,7 +272,7 @@ public class BeanUtils {
 	 * 
 	 * @Title: getField
 	 */
-	static FieldEx getField(ClassWrapper c, String name) {
+	static FieldEx getField(ClassEx c, String name) {
 		java.lang.reflect.Field f = null;
 		Class<?> cls = c.getWrappered();
 		while (cls != null) {
@@ -297,7 +304,7 @@ public class BeanUtils {
 		Type c = f.getGenericType();
 		try {
 			Object oldValue = f.get(obj);
-			Object objV = toProperType(value, new ClassWrapper(c), oldValue);
+			Object objV = toProperType(value, new ClassEx(c), oldValue);
 			f.set(obj, objV);
 		} catch (IllegalArgumentException e) {
 			LogUtil.error("Error processing:" + fieldName);
@@ -307,8 +314,16 @@ public class BeanUtils {
 		return true;
 	}
 
-	public static Object toProperArrayType(IterableAccessor<?> values, ClassWrapper c, Object oldValue) {
-		ClassWrapper arrType = new ClassWrapper(c.getComponentType());
+	/**
+	 * 转换为合适的数组类型
+	 * 
+	 * @param values
+	 * @param c
+	 * @param oldValue
+	 * @return
+	 */
+	public static Object toProperArrayType(IterableAccessor<?> values, ClassEx c, Object oldValue) {
+		ClassEx arrType = new ClassEx(c.getComponentType());
 		Object array = Array.newInstance(arrType.getWrappered(), values.length());// 创建数组容器
 		int i = 0;
 		for (Object o : values) {
@@ -318,9 +333,17 @@ public class BeanUtils {
 		return array;
 	}
 
+	/**
+	 * 转换为合适的集合类型
+	 * 
+	 * @param values
+	 * @param c
+	 * @param oldValue
+	 * @return
+	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static Object toProperCollectionType(IterableAccessor values, ClassWrapper c, Object oldValue) {
-		ClassWrapper cType = new ClassWrapper(c.getComponentType());
+	public static Object toProperCollectionType(IterableAccessor values, ClassEx c, Object oldValue) {
+		ClassEx cType = new ClassEx(c.getComponentType());
 		try {
 			Collection l = (Collection) CollectionUtil.createContainerInstance(c, 0);
 			for (Object o : values) {
@@ -333,7 +356,8 @@ public class BeanUtils {
 	}
 
 	/**
-	 * 尝试将String转换为合适的类型，以设置到某个Bean或容器中。
+	 * 尝试将String转换为合适的类型，以设置到某个Bean或容器中。<br>
+	 * 目前能支持各种基本类型、数组、Map等复杂类型
 	 * 
 	 * @param value
 	 *            要转换的String
@@ -342,83 +366,63 @@ public class BeanUtils {
 	 * @param oldValue
 	 *            容器中原来的旧值，或可参照的对象实例。（可为null）
 	 * @throws UnsupportedOperationException
-	 *             如果无法转换，将抛出此异常 方法将尝试将String类型转换为容器所需的若干基本类型。
+	 *             如果无法转换，将抛出此异常
 	 * 
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static Object toProperType(String value, ClassWrapper c, Object oldValue) {
+	public static Object toProperType(String value, ClassEx c, Object oldValue) {
 		// 容器所允许的最宽松类型
-		ClassWrapper containerClass = c;
+		ClassEx containerClass = c;
 		if (oldValue != null)
-			c = new ClassWrapper(oldValue.getClass());
-		if (c.isAssignableFrom(String.class)){
+			c = new ClassEx(oldValue.getClass());
+		if (c.isAssignableFrom(String.class)) {
 			return value;
-		} else if (Date.class.isAssignableFrom(c.getWrappered())) {
-			if (StringUtils.isEmpty(value)) {
-				return null;
+		}
+		if (StringUtils.isEmpty(value)) {
+			return defaultValueForBasicType(c.getWrappered());
+		}
+		if (Date.class.isAssignableFrom(c.getWrappered())) {
+			Date date = DateUtils.autoParse(value);
+			if (date == null) {
+				throw new RuntimeException("unknow format of date: " + value);
+			}
+			if (java.sql.Date.class == c.getWrappered()) {
+				return DateUtils.toSqlDate(date);
+			} else if (java.sql.Time.class == c.getWrappered()) {
+				return DateUtils.toSqlTime(date);
+			} else if (java.sql.Timestamp.class == c.getWrappered()) {
+				return DateUtils.toSqlTimeStamp(date);
 			} else {
-				Date date = DateUtils.autoParse(value);
-				if (date == null) {
-					throw new RuntimeException("unknow format of date: " + value);
-				}
-				if (java.sql.Date.class == c.getWrappered() ) {
-					return DateUtils.toSqlDate(date);
-				} else if (java.sql.Time.class == c.getWrappered() ) {
-					return DateUtils.toSqlTime(date);
-				} else if (java.sql.Timestamp.class == c.getWrappered() ) {
-					return DateUtils.toSqlTimeStamp(date);
-				}else{
-					return date;
-				}
+				return date;
 			}
 		} else if (Integer.class == c.getWrappered() || Integer.TYPE == c.getWrappered()) {
-			if (StringUtils.isNotEmpty(value))
-				return Integer.valueOf(value);
-			return 0;
+			return Integer.valueOf(value);
 		} else if (Boolean.class == c.getWrappered() || Boolean.TYPE == c.getWrappered()) {
-			if (StringUtils.isNotEmpty(value))
-				return Boolean.valueOf(value);
-			return Boolean.FALSE;
+			return Boolean.valueOf(value);
 		} else if (Double.class == c.getWrappered() || Double.TYPE == c.getWrappered()) {
-			if (StringUtils.isNotEmpty(value))
-				return Double.valueOf(value);
-			return (double) 0.0;
+			return Double.valueOf(value);
 		} else if (Float.class == c.getWrappered() || Float.TYPE == c.getWrappered()) {
-			if (StringUtils.isNotEmpty(value))
-				return Float.valueOf(value);
-			return 0.0f;
+			return Float.valueOf(value);
 		} else if (Byte.class == c.getWrappered() || Byte.TYPE == c.getWrappered()) {
 			return Byte.valueOf(value);
 		} else if (Character.class == c.getWrappered() || Character.TYPE == c.getWrappered()) {
-			if (StringUtils.isNotEmpty(value))
-				return value.charAt(0);
-			return (char) 0; // 究竟是返回char(0) 还是null
+			return value.charAt(0);
 		} else if (Long.class == c.getWrappered() || Long.TYPE == c.getWrappered()) {
-			if (StringUtils.isNotEmpty(value))
-				return Long.valueOf(value);
-			return 0L;
+			return Long.valueOf(value);
 		} else if (Short.class == c.getWrappered() || Short.TYPE == c.getWrappered()) {
-			if (StringUtils.isNotEmpty(value))
-				return Short.valueOf(value);
-			return (short) 0;
+			return Short.valueOf(value);
 		} else if (c.isEnum()) {
-			if (StringUtils.isNotEmpty(value)) {
-				Class<? extends Enum> cc = c.getWrappered().asSubclass(Enum.class);
-				return Enum.valueOf(cc, value);
-			}
-			return null;
+			return Enums.valueOf(c.getWrappered().asSubclass(Enum.class), value, null);
 		} else if (Object.class == c.getWrappered()) {
 			return value;
 		} else if (Number.class == c.getWrappered()) {
-			if (StringUtils.isNotEmpty(value))
-				return Double.valueOf(value);
-			return 0;
+			return Double.valueOf(value);
 		} else if (c.isArray()) {
 			String[] values = value.split(",");
-			return toProperArrayType(new IterableAccessor(values),c,oldValue);
+			return toProperArrayType(new IterableAccessor(values), c, oldValue);
 		} else if (c.isCollection()) {
 			String[] values = value.split(",");
-			return toProperCollectionType(new IterableAccessor(values),c,oldValue);
+			return toProperCollectionType(new IterableAccessor(values), c, oldValue);
 		} else if (Map.class.isAssignableFrom(c.getWrappered())) {
 			return stringToMap(value, c, oldValue);
 		} else if (oldValue != null) {// 采用旧值类型转换不成功，尝试采用容器类型转换
@@ -457,14 +461,13 @@ public class BeanUtils {
 			try {
 				c.setAccessible(true);
 			} catch (SecurityException e) {
-				System.out.println(c.toString() + "\n" + e.getMessage());
+				LogUtil.exception(c.getName(), e);
 			}
 		}
 		Class<?>[] types = c.getParameterTypes();
 		Object[] p = new Object[types.length];
 		for (int i = 0; i < types.length; i++) {
 			// modified by mjj,2011.9.30
-			// p[i] = BeanUtils.getDefaultValueForBasicType(cls);
 			p[i] = BeanUtils.defaultValueForBasicType(types[i]);
 		}
 		try {
@@ -571,14 +574,14 @@ public class BeanUtils {
 	 * @return
 	 */
 	public static FieldEx[] getFields(Class<?> c, Class<?> resolveUntilSuperclass, boolean mustWithGetter, boolean mustWithSetter) {
-		if(resolveUntilSuperclass==null){
-			resolveUntilSuperclass=c.getSuperclass();
+		if (resolveUntilSuperclass == null) {
+			resolveUntilSuperclass = c.getSuperclass();
 		}
 		List<FieldEx> fields = new ArrayList<FieldEx>();
 		HashSet<String> names = new HashSet<String>();
-		ClassWrapper context = new ClassWrapper(c);
-		Class<?> cls=c;
-		while (cls!=resolveUntilSuperclass) {
+		ClassEx context = new ClassEx(c);
+		Class<?> cls = c;
+		while (cls != resolveUntilSuperclass) {
 			for (Field field : cls.getDeclaredFields()) {
 				int mod = field.getModifiers();
 				if (Modifier.isStatic(mod) || Modifier.isNative(mod)) {
@@ -608,7 +611,7 @@ public class BeanUtils {
 					}
 				}
 			}
-			cls=cls.getSuperclass();
+			cls = cls.getSuperclass();
 		}
 		return fields.toArray(new FieldEx[fields.size()]);
 	}
@@ -626,19 +629,21 @@ public class BeanUtils {
 	}
 
 	/**
-	 * 根据类的名称和参数构造实例。
-	 * 如果不能创建则返回null;
+	 * 根据类的名称和参数构造实例。 如果不能创建则返回null;
+	 * 
 	 * @param className
+	 *            类名
 	 * @param params
-	 * @return
+	 *            构造参数
+	 * @return 实例。如果过程中出现错误返回null。（不抛出异常）
 	 */
-	public static Object newInstance(String className, Object... params){
+	public static Object newInstance(String className, Object... params) {
 		Class<?> clz;
 		try {
 			clz = Class.forName(className);
 			return newInstance(clz, params);
 		} catch (ClassNotFoundException e) {
-//			LogUtil.exception(e);
+			// LogUtil.exception(e);
 			return null;
 		} catch (ReflectionException e) {
 			LogUtil.exception(e);
@@ -646,6 +651,16 @@ public class BeanUtils {
 		}
 	}
 
+	/**
+	 * 待参数调用构造方法来创建实例
+	 * 
+	 * @param cls
+	 *            类
+	 * @param params
+	 *            构造参数
+	 * @return 实例
+	 * @throws ReflectionException
+	 */
 	@SuppressWarnings("unchecked")
 	public static <T> T newInstance(Class<T> cls, Object... params) throws ReflectionException {
 		Constructor<T> me = null;
@@ -750,7 +765,7 @@ public class BeanUtils {
 	 */
 	public static MethodEx[] getMethods(Class<?> cls) {
 		Method[] methods = cls.getMethods();
-		ClassWrapper cw = new ClassWrapper(cls);
+		ClassEx cw = new ClassEx(cls);
 		MethodEx[] result = new MethodEx[methods.length];
 		for (int i = 0; i < methods.length; i++) {
 			result[i] = new MethodEx(methods[i], cw);
@@ -833,7 +848,7 @@ public class BeanUtils {
 	 *            最多返回的方法数,设置较少的数量有利于减少循环次数。
 	 * @return
 	 */
-	public static MethodEx[] getMethodByName(ClassWrapper c, String name, int maxReturn) {
+	public static MethodEx[] getMethodByName(ClassEx c, String name, int maxReturn) {
 		return getMethodByName(c, name, maxReturn, SearchMode.ALLWAYS_IN_SUPER);
 	}
 
@@ -863,7 +878,7 @@ public class BeanUtils {
 	 *            当找不到时，继续查找父类的方法，行为特征
 	 * @return
 	 */
-	public static MethodEx[] getMethodByName(ClassWrapper c, String name, int maxReturn, SearchMode mode) {
+	public static MethodEx[] getMethodByName(ClassEx c, String name, int maxReturn, SearchMode mode) {
 		List<MethodEx> methods = new ArrayList<MethodEx>();
 		HashSet<String> resultNames = new HashSet<String>();
 		Class<?> su = c.getWrappered();
@@ -917,25 +932,41 @@ public class BeanUtils {
 	 * 针对已经构造好的对象，执行这个方法
 	 * 
 	 * @param obj
+	 *            目标对象
 	 * @param method
+	 *            方法名
 	 * @param params
-	 * @return
+	 *            方法参数
+	 * @return 调用结果
 	 * @throws ReflectionException
 	 */
 	public static Object invokeMethod(Object obj, String method, Object... params) throws ReflectionException {
-		ClassWrapper r = new ClassWrapper(obj.getClass());
+		ClassEx r = new ClassEx(obj.getClass());
 		return r.innerInvoke(obj, method, false, params);
 	}
 
+	/**
+	 * 反射调用静态方法
+	 * 
+	 * @param clz
+	 *            目标类
+	 * @param method
+	 *            目标方法
+	 * @param params
+	 *            传入参数
+	 * @return 调用结果
+	 * @throws ReflectionException
+	 *             反射异常
+	 */
 	@SuppressWarnings("unchecked")
 	public static <X> X invokeStatic(Class<?> clz, String method, Object... params) throws ReflectionException {
-		ClassWrapper r = new ClassWrapper(clz);
+		ClassEx r = new ClassEx(clz);
 		return (X) r.invokeStaticMethod(method, params);
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private static Object stringToMap(String value, ClassWrapper c, Object oldValue) {
-		String[] values = StringUtils.split(value,',');
+	private static Object stringToMap(String value, ClassEx c, Object oldValue) {
+		String[] values = StringUtils.split(value, ',');
 		Entry<Type, Type> types = GenericUtils.getMapTypes(c.getGenericType());
 		try {
 			Map l = (Map) CollectionUtil.createContainerInstance(c, 0);
@@ -954,7 +985,7 @@ public class BeanUtils {
 			}
 			for (int i = 0; i < values.length; i++) {
 				CommentEntry e = CommentEntry.createFromString(values[i], ':', '=');
-				l.put(toProperType(e.getKey(), new ClassWrapper(types.getKey()), hintKey), toProperType(e.getValue(), new ClassWrapper(types.getValue()), hintValue));
+				l.put(toProperType(e.getKey(), new ClassEx(types.getKey()), hintKey), toProperType(e.getValue(), new ClassEx(types.getValue()), hintValue));
 			}
 			return l;
 		} catch (Exception e) {
@@ -964,47 +995,52 @@ public class BeanUtils {
 
 	/**
 	 * 从集合对象bean中的每个元素都获取一个字段的值，并且将这些值组成数组返回
+	 * 
 	 * @param entities
 	 * @param fieldName
 	 * @param type
 	 * @return
 	 */
 	public static <T> T[] getFieldValues(Collection<?> entities, String fieldName, Class<T> type) {
-		return getFieldValues(entities,fieldName,type,true);
+		return getFieldValues(entities, fieldName, type, true);
 	}
 
 	/**
 	 * 从集合对象bean中的每个元素都获取一个字段的值，并且将这些值组成数组返回
-	 * @param entities 对象集合
-	 * @param fieldName 字段名（支持复杂语法，如. [n]等表示嵌套元素或者数组下标）
+	 * 
+	 * @param entities
+	 *            对象集合
+	 * @param fieldName
+	 *            字段名（支持复杂语法，如. [n]等表示嵌套元素或者数组下标）
 	 * @param type
-	 * @param ignoreNullElement 如果为true，出现null元素则跳过，否则在返回结果中插入null值。
+	 * @param ignoreNullElement
+	 *            如果为true，出现null元素则跳过，否则在返回结果中插入null值。
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> T[] getFieldValues(Collection<?> entities, String fieldName, Class<T> type,boolean ignoreNullElement) {
+	public static <T> T[] getFieldValues(Collection<?> entities, String fieldName, Class<T> type, boolean ignoreNullElement) {
 		Assert.notNull(type, "the input class cann't be null.");
 		List<T> result = new ArrayList<T>(entities.size());
-		if(fieldName.indexOf('.')>-1 || fieldName.indexOf("[")>-1){
+		if (fieldName.indexOf('.') > -1 || fieldName.indexOf("[") > -1) {
 			for (Object e : entities) {
-				if(e==null){
-					if(!ignoreNullElement){
+				if (e == null) {
+					if (!ignoreNullElement) {
 						result.add(null);
 					}
 					continue;
 				}
 				BeanWrapperImpl bw = new BeanWrapperImpl(e);
 				result.add((T) bw.getNestedProperty(fieldName));
-			}	
-		}else{
+			}
+		} else {
 			for (Object e : entities) {
-				if(e==null){
-					if(!ignoreNullElement){
+				if (e == null) {
+					if (!ignoreNullElement) {
 						result.add(null);
 					}
 					continue;
 				}
-				BeanAccessor ba=FastBeanWrapperImpl.getAccessorFor(e.getClass());
+				BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(e.getClass());
 				result.add((T) ba.getProperty(e, fieldName));
 			}
 		}
@@ -1018,7 +1054,7 @@ public class BeanUtils {
 	 * @param cw
 	 * @return
 	 */
-	public static Type getBoundType(Type type, ClassWrapper cw) {
+	public static Type getBoundType(Type type, ClassEx cw) {
 		if (type instanceof TypeVariable<?>) {
 			TypeVariable<?> tv = (TypeVariable<?>) type;
 			Type real = cw.getImplType(tv);
@@ -1049,7 +1085,7 @@ public class BeanUtils {
 		return null;
 	}
 
-	// 是否一个计算后的最终类型
+	// 是否确定类型的泛型常量，还是类型不确定的泛型变量。
 	private static boolean isImplType(Type type) {
 		if (type instanceof Class<?>)
 			return true;
@@ -1074,8 +1110,11 @@ public class BeanUtils {
 	 * 获取一个 public的，非Native非static指定名称的方法(非Declared模式：找父类，不找私有)
 	 * 
 	 * @param c
+	 *            类
 	 * @param name
+	 *            方法名
 	 * @param types
+	 *            方法类型参数
 	 * @return
 	 */
 	static Method getNonStaticNativeMethod(Class<?> c, String name, Class<?>... types) {
@@ -1097,8 +1136,11 @@ public class BeanUtils {
 	 * 获取一个非Native非static指定名称的方法(Declared模式：不找父类，可找私有)
 	 * 
 	 * @param c
+	 *            类
 	 * @param name
+	 *            方法名
 	 * @param types
+	 *            方法参数类型
 	 * @return
 	 */
 	static Method getNonStaticNativeDeclaredMethod(Class<?> c, String name, Class<?>... types) {
@@ -1123,8 +1165,11 @@ public class BeanUtils {
 	 * 获取一个非Native非static指定名称的方法(高级模式：可找私有，可找父类)
 	 * 
 	 * @param c
+	 *            要查找的类
 	 * @param name
+	 *            方法名
 	 * @param types
+	 *            方法参数类型
 	 * @return
 	 */
 	static Method getNonStaticNativeDeclaredMethodWithSuperClz(Class<?> c, String name, Class<?>... types) {
@@ -1140,29 +1185,28 @@ public class BeanUtils {
 	/**
 	 * 将字段名变为大写或小写。根据Java Beans规范，有一种特殊情况。<br>
 	 * 首字母小写但第二个字母大写时，property名称不变。
+	 * 
 	 * @param fieldName
 	 * @return
 	 */
-	public static String capitalizeFieldName(String fieldName){
-		if(fieldName.length()>1 && Character.isLowerCase(fieldName.charAt(0)) && Character.isUpperCase(fieldName.charAt(1))){
+	public static String capitalizeFieldName(String fieldName) {
+		if (fieldName.length() > 1 && Character.isLowerCase(fieldName.charAt(0)) && Character.isUpperCase(fieldName.charAt(1))) {
 			return fieldName;
-		}else{
+		} else {
 			return StringUtils.capitalize(fieldName);
 		}
 	}
-	
+
 	/**
 	 * 获取field对应的getter
 	 * 
 	 * @param field
-	 * @return
+	 * @return Getter方法
 	 */
 	public static MethodEx getGetter(FieldEx field) {
 		Class<?> c = field.getDeclaringClass();
 		Class<?> type = field.getDeclaringType();
-		
-		
-		
+
 		Method getter = getNonStaticNativeDeclaredMethodWithSuperClz(c, "get" + capitalizeFieldName(field.getName()));
 		if (getter == null && (type == Boolean.class || type == Boolean.TYPE)) {
 			if (field.getName().startsWith("is")) {
@@ -1177,11 +1221,13 @@ public class BeanUtils {
 	}
 
 	/**
-	 * 获得field的setter
+	 * 获得field的setter方法
 	 * 
 	 * @param field
-	 * @param c
-	 * @return
+	 *            field对象
+	 * @return Setter方法。
+	 * @see MethodEx
+	 * @see FieldEX
 	 */
 	public static MethodEx getSetter(FieldEx field) {
 		Class<?> c = field.getDeclaringClass();
@@ -1196,15 +1242,18 @@ public class BeanUtils {
 	}
 
 	/**
-	 * 获得位于方法上的Annotation，会到父类和父接口查找
+	 * 获得位于方法的参数上的Annotation，
+	 * 
 	 * @param method
+	 *            方法
 	 * @param i
-	 * @param class1
-	 * @param findSuper
+	 *            参数序号
+	 * @param annotationClz
+	 *            注解类的类型
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T extends Annotation> T getMethodParamAnnotation(MethodEx method, int i, Class<T> class1, boolean findSuper) {
+	public static <T extends Annotation> T getMethodParamAnnotation(Method method, int i, Class<T> annotationClz) {
 		Annotation[][] annos = method.getParameterAnnotations();
 		if (i >= annos.length) {
 			throw new IllegalArgumentException("the param max index is:" + annos.length + ". the input index " + i + " is out of bound.");
@@ -1214,7 +1263,7 @@ public class BeanUtils {
 			return null;
 		}
 		for (Annotation a : anns) {
-			if (ArrayUtils.contains(a.getClass().getInterfaces(), class1)) {
+			if (ArrayUtils.contains(a.getClass().getInterfaces(), annotationClz)) {
 				return (T) a;
 			}
 		}
@@ -1222,77 +1271,56 @@ public class BeanUtils {
 	}
 
 	/**
-	 * 获得位于方法上的Annotation，会到父类查找
-	 * @param method
-	 * @param i
-	 * @param class1
-	 * @param findSuper
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T extends Annotation> T getMethodParamAnnotation(Method method, int i, Class<T> class1, boolean findSuper) {
-		Annotation[][] annos = method.getParameterAnnotations();
-		if (i >= annos.length) {
-			throw new IllegalArgumentException("the param max index is:" + annos.length + ". the input index " + i + " is out of bound.");
-		}
-		Annotation[] anns = annos[i];
-		if (anns == null || anns.length == 0) {
-			return null;
-		}
-		for (Annotation a : anns) {
-			if (ArrayUtils.contains(a.getClass().getInterfaces(), class1)) {
-				return (T) a;
-			}
-		}
-		return null;
-	}
-	
-	/**
 	 * 在两个bean之间复制属性。
-	 * 
-	 * JEF使用了动态类技术，将为拷贝的两个对象生成一个专门的动态拷贝类，性能达到反射极限。
-	 * 
-	 * 注意：这个方法使用了BeanAccessor,如果有批量的Bean需要拷贝，使用BeanAccessor是性能更好的选择(超过CGLib的BeanCopier，不过功能没有其强大)，具体代码如下
-	 * <code><pre>
+	 * <p>
+	 * 使用了动态类技术，将为拷贝的两个对象生成一个专门的动态拷贝类，性能达到反射极限。
+	 * <p>
+	 * 注意：这个方法使用了BeanAccessor,如果有批量的Bean需要拷贝，使用BeanAccessor性能更好(
+	 * 超过CGLib的BeanCopier，不过功能没有其强大)，具体代码如下 <code><pre>
 	 * BeanAccessor accessor=FastBeanWrapperImpl.getAccessorFor(source.getClass());
 	 * accessor.copy(source,target); //循环中调用
 	 * </pre></code>
-	 * 直接使用BeanAccessor可以省去很多多余步骤。 
 	 * 
-	 * 
-	 * @param source 源对象
-	 * @param target     目标对象，必须是source的子类
+	 * @param source
+	 *            源对象
+	 * @param target
+	 *            目标对象，必须是source的子类
 	 */
-	public final static void copyProperties(Object source,Object target){
+	public final static void copyProperties(Object source, Object target) {
 		Assert.notNull(source);
-		if(target==null)return;
-		BeanAccessor accessor=FastBeanWrapperImpl.getAccessorFor(source.getClass());
-		if(source.getClass()==target.getClass() || source.getClass().isAssignableFrom(target.getClass())){//这个校验的性能有点差
+		if (target == null)
+			return;
+		BeanAccessor accessor = FastBeanWrapperImpl.getAccessorFor(source.getClass());
+		if (source.getClass() == target.getClass() || source.getClass().isAssignableFrom(target.getClass())) {// 这个校验的性能有点差
 			accessor.copy(source, target);
-		}else{
-			for(String s: accessor.getPropertyNames()){
+		} else {
+			for (String s : accessor.getPropertyNames()) {
 				accessor.setProperty(target, s, accessor.getProperty(source, s));
-			}	
+			}
 		}
 	}
-	
+
 	/**
-	 * 将Map的数据封装为一个Annotation
+	 * 将Map的数据封装为一个Annotation(使用代理实现)
+	 * 
 	 * @param type
+	 *            Annotation类型
 	 * @param data
-	 * @return
+	 *            Annotation的数据。
+	 * @return Annotation对象
 	 */
 	@SuppressWarnings("unchecked")
-	public static final <T extends Annotation> T asAnnotation(Class<T> type,Map<String,Object> data){
-		for(Method method : type.getMethods()){
-			if(method.getDeclaringClass()!=type){
+	public static final <T extends Annotation> T asAnnotation(Class<T> type, Map<String, Object> data) {
+		for (Method method : type.getMethods()) {
+			if (method.getDeclaringClass() != type) {
 				continue;
 			}
-			if(!data.containsKey(method.getName())){
-				
+			// 如果Map中缺少数据，则用注解的默认值补上。
+			if (!data.containsKey(method.getName())) {
 				data.put(method.getName(), method.getDefaultValue());
 			}
 		}
-		return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{type}, new AnnotationInvocationHandler(type, data));
+		// 创建代理。
+		return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type }, new AnnotationInvocationHandler(type, data));
 	}
 }

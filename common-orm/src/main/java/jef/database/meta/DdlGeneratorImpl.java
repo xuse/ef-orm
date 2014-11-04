@@ -45,16 +45,6 @@ public class DdlGeneratorImpl implements DdlGenerator {
 	 */
 	public TableCreateStatement toTableCreateClause(ITableMetadata meta, String tablename) {
 		TableCreateStatement result = new TableCreateStatement();
-		if (meta.newInstance() instanceof EntityExtensionSupport) {
-			ExtensionConfigFactory ext = EfPropertiesExtensionProvider.getInstance().getEF(meta.getContainerType().asSubclass(EntityExtensionSupport.class));
-			if (ext instanceof ExtensionKeyValueTable) {
-				ExtensionKeyValueTable kvMeta = (ExtensionKeyValueTable) ext;
-				ITableMetadata raw = kvMeta.getRawMetadata();
-				result.addTableMeta(raw.getTableName(true), raw, profile);
-				result.setReferenceTable(Arrays.<ITableMetadata> asList(kvMeta.getContainerTuple()));
-				return result;
-			}
-		}
 		result.addTableMeta(tablename, meta, profile);
 		return result;
 	}

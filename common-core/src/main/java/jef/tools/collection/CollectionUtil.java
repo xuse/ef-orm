@@ -49,7 +49,7 @@ import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.BeanWrapper;
-import jef.tools.reflect.ClassWrapper;
+import jef.tools.reflect.ClassEx;
 import jef.tools.reflect.FieldEx;
 import jef.tools.reflect.GenericUtils;
 
@@ -73,7 +73,7 @@ public class CollectionUtil {
 		private Object value;
 		
 		public FieldValueFilter(Class<?> clz,String fieldname,Object value){
-			ClassWrapper cw=new ClassWrapper(clz);
+			ClassEx cw=new ClassEx(clz);
 			this.field=cw.getField(fieldname);
 			Assert.notNull(this.field,"the field "+ fieldname+" is not found in class "+ cw.getName());
 			this.value=value;
@@ -469,7 +469,7 @@ public class CollectionUtil {
 	 * 将根据传入的集合对象创建合适的集合容器
 	 */
 	@SuppressWarnings("rawtypes")
-	public static Object createContainerInstance(ClassWrapper collectionType, int size) {
+	public static Object createContainerInstance(ClassEx collectionType, int size) {
 		Class raw=collectionType.getWrappered();
 		try {
 			if (collectionType.isArray()) {

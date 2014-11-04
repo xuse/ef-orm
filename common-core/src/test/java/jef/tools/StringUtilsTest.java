@@ -3,6 +3,7 @@ package jef.tools;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 
 import jef.common.log.LogUtil;
 import jef.tools.string.StringSpliter;
@@ -10,8 +11,8 @@ import jef.tools.string.Substring;
 
 import org.junit.Test;
 
-public class StringUtilsTest extends org.junit.Assert{
-	
+public class StringUtilsTest extends org.junit.Assert {
+
 	@Test
 	public void testSubstring() {
 		String sss = "12345[67890abcdef]ghijklmn";
@@ -62,47 +63,47 @@ public class StringUtilsTest extends org.junit.Assert{
 	}
 
 	@Test
-	public void testMatchChars(){
-		String a="    at you are not along!";
-		String b="you are";
-		boolean flag=StringUtils.matchChars(a, 7, b);
+	public void testMatchChars() {
+		String a = "    at you are not along!";
+		String b = "you are";
+		boolean flag = StringUtils.matchChars(a, 7, b);
 		System.out.println(flag);
 		Assert.isTrue(flag);
 	}
-	
+
 	@Test
-	public void testMatch(){
-		String clz="com.ailk.openbilling.persistence.newModule.entity.Lineitem";
-		String key="com.ailk.*.persistence.*";
-		boolean flag=StringUtils.matches(clz, key, false);
+	public void testMatch() {
+		String clz = "com.ailk.openbilling.persistence.newModule.entity.Lineitem";
+		String key = "com.ailk.*.persistence.*";
+		boolean flag = StringUtils.matches(clz, key, false);
 		assertTrue(flag);
 	}
+
 	@Test
-	public void testToMap(){
-		String s="aa=\"123\"bb=\"456\"cc=\"789\"";
-		StringTokenizer t=new StringTokenizer(s, "\"=", false);
-		Map<String,String> map=new HashMap<String,String>();
-		while(t.hasMoreTokens()){
-			String key=t.nextToken();
-			String value=t.hasMoreTokens()?t.nextToken():"";
+	public void testToMap() {
+		String s = "aa=\"123\"bb=\"456\"cc=\"789\"";
+		StringTokenizer t = new StringTokenizer(s, "\"=", false);
+		Map<String, String> map = new HashMap<String, String>();
+		while (t.hasMoreTokens()) {
+			String key = t.nextToken();
+			String value = t.hasMoreTokens() ? t.nextToken() : "";
 			map.put(key, value);
 		}
 		assertEquals(3, map.size());
 	}
-	
+
 	@Test
-	public void testSplitLast(){
-		String s="usertname.txt.bat";
-		String[] ss=StringUtils.splitLast(s, ".");
-		String newName=ss[0]+"(2)."+ss[1];
+	public void testSplitLast() {
+		String s = "usertname.txt.bat";
+		String[] ss = StringUtils.splitLast(s, ".");
+		String newName = ss[0] + "(2)." + ss[1];
 		assertEquals("usertname.txt(2).bat", newName);
-		
+
 	}
-	
-	
+
 	@Test
-	public void testSplitLast123(){
-		String s="usertname.txt.bat";
+	public void testSplitLast123() {
+		String s = "usertname.txt.bat";
 		{
 			System.out.println(StringUtils.getSHA256(s));
 		}
@@ -112,6 +113,13 @@ public class StringUtilsTest extends org.junit.Assert{
 		{
 			System.out.println(StringUtils.getMD5(s));
 		}
-		
+
+	}
+
+	@Test
+	public void testStringRegexp(){
+		String sql="update TEST_ENTITY set DOUBLEFIELD2 = ?, FOLATFIELD2 = ?, BOOLFIELD = ?, CREATE_TIME = ?, FLOATFIELD = ?, LONGFIELD2 = ?, DOUBLEFIELD = ?, FIELD_1 = ?, FIELD_2 = ?, BINARYDATA = ?, INT_FIELD_1 = ?, INT_FIELD_2 = ?, LONGFIELD = ?, DATEFIELD = ?, BOOLFIELD2 = ? where LONGFIELD2=?\r\naa";
+		Pattern p=Pattern.compile("update TEST_ENTITY set.+",Pattern.MULTILINE );
+		System.out.println(p.matcher(sql).matches());
 	}
 }

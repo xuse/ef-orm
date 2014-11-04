@@ -314,15 +314,16 @@ public final class DbUtils {
 	 * @param ds
 	 */
 	public static void processDataSourceOfEnCrypted(DataSourceInfo ds) {
-		boolean flag = JefConfiguration.getBoolean(DbCfg.DB_PASSWORD_ENCRYPTED, true);
+		boolean flag = JefConfiguration.getBoolean(DbCfg.DB_PASSWORD_ENCRYPTED, false);
 		if (!flag) {
 			return;
 		}
 		String old = ds.getPassword();
-		if (old != null && old.length() >= 16) {
+		if (old != null && old.matches("[a-fA-F0-9]{16,}")) {
 			ds.setPassword(decrypt(old));
 		}
 	}
+
 
 	/**
 	 * 解析select后的语句

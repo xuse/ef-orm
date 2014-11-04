@@ -29,13 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import jef.accelerator.bean.BeanAccessor;
@@ -54,13 +49,11 @@ import jef.database.annotation.PartitionTable;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.ColumnMappings;
-import jef.database.query.ReferenceType;
 import jef.database.routing.function.AbstractDateFunction;
 import jef.database.routing.function.MapFunction;
 import jef.database.routing.function.ModulusFunction;
 import jef.database.routing.function.RawFunc;
 import jef.tools.ArrayUtils;
-import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanUtils;
 
@@ -77,7 +70,7 @@ public final class TableMetadata extends AbstractMetadata {
 	private BeanAccessor pojoAccessor;
 	
 	private Class<? extends IQueryableEntity> containerType;
-	private BeanAccessor containerAccessor;
+	BeanAccessor containerAccessor;
 
 	// ///////////////分表配置信息//////////////////////
 	private PartitionTable partition;// 分表策略
@@ -363,39 +356,10 @@ public final class TableMetadata extends AbstractMetadata {
 			throw new IllegalArgumentException("Unknown KeyFunction:" + value.function());
 		}
 	}
-
 	
 
 	public Multimap<String, PartitionFunction> getMinUnitFuncForEachPartitionKey() {
 		return partitionFuncs;
-	}
-
-	private void innerAdd(Class<?> fieldType, String fieldName, ITableMetadata target, CascadeConfig config) {
-		Assert.notNull(containerType);
-		Reference r = new Reference(target, config.refType, this);
-		if (config.path != null) {
-			r.setHint(config.path);
-		}
-		ReferenceObject field = new ReferenceObject(fieldType, fieldName, r,config);
-		if (config.cascade != null) {
-			if (config.cascade.length == 0) {// 由于EF-ORM中的级联操作都是显式操作，因此当不指定时可以默认用ALL计算
-				field.setCascade(ALL, config.fetch);
-			} else {
-				field.setCascade(config.cascade, config.fetch);
-			}
-		}
-		addRefField(field);
-	}
-
-	private void innerAdd(Class<?> fieldType, String fieldName, ColumnMapping<?> targetField, CascadeConfig config) {
-		Assert.notNull(containerType);
-		Reference r = new Reference(targetField.getMeta(), config.refType, this);
-		if (config.path != null) {
-			r.setHint(config.path);
-		}
-
-		ReferenceField f = new ReferenceField(fieldType, fieldName, r, targetField, config);
-		addRefField(f);
 	}
 
 	/**
@@ -410,138 +374,6 @@ public final class TableMetadata extends AbstractMetadata {
 			name = field;
 		}
 		lowerColumnToFieldName.put(name.toLowerCase(), field);
-	}
-
-	/*
-	 * 添加多对多引用字段
-	 */
-	public void addRefField_NvsN(Class<?> fieldType, String fieldName, ColumnMapping<?> targetField, CascadeConfig config) {
-		Reference r = new Reference(targetField.getMeta(), ReferenceType.MANY_TO_MANY, this);
-		if (config.path != null) {
-			r.setHint(config.path);
-		}
-		ReferenceField f = new ReferenceField(fieldType, fieldName, r, targetField ,config);
-		addRefField(f);
-	}
-
-	/*
-	 * 添加多对多引用字段
-	 */
-	public void addRefField_NvsN(Class<?> fieldType, String fieldName, ITableMetadata targetClass, ManyToMany m, CascadeConfig config) {
-		Assert.notNull(containerType);
-		Reference r = new Reference(targetClass, ReferenceType.MANY_TO_MANY, this);
-		if (config.path != null) {
-			r.setHint(config.path);
-		}
-
-		ReferenceObject f = new ReferenceObject(fieldType, fieldName, r,config);
-		if(m!=null){
-			CascadeType[] cascade=m.cascade();
-			if (cascade != null) {
-				if (cascade.length == 0) {
-					f.setCascade(ALL, m.fetch());
-				} else {
-					f.setCascade(cascade, m.fetch());
-				}
-			}	
-		}
-		addRefField(f);
-	}
-
-	/*
-	 * 添加一个1对1引用字段，引用实体表的DO对象
-	 * 
-	 * @param fieldName 字段名称
-	 * 
-	 * @param target 实体表对应的类
-	 * 
-	 * @param path 用于连接到实体表的连接提示（如果在全局中注册了关系，则此处可以省略）
-	 */
-	public void addRefField_1vs1(Class<?> fieldType, String fieldName, ITableMetadata target, OneToOne m,CascadeConfig config) {
-		if (m != null) {
-			config.cascade = m.cascade();
-			config.fetch = m.fetch();
-		}
-		config.refType=ReferenceType.ONE_TO_ONE;
-		innerAdd(fieldType, fieldName, target, config);
-	}
-
-	/*
-	 * 添加一个1对1引用字段，引用实体表的某个字段
-	 * 
-	 * @param fieldName 字段名称
-	 * 
-	 * @param target 实体表被引用字段
-	 * 
-	 * @param path 用于连接到实体表的连接提示（如果在全局中注册了关系，则此处可以省略）
-	 */
-	protected void addRefField_1vs1(Class<?> fieldType, String fieldName, ColumnMapping<?> target, CascadeConfig config) {
-		config.refType=ReferenceType.ONE_TO_ONE;
-		innerAdd(fieldType, fieldName, target,config);
-	}
-
-	/*
-	 * 添加一个1对多引用字段，引用实体表的DO对象
-	 * 
-	 * @param fieldName 字段名称
-	 * 
-	 * @param target 实体表的对应DO对象
-	 * 
-	 * @param path 用于连接到实体表的连接提示（如果在全局中注册了关系，则此处可以省略）
-	 */
-	public void addRefField_1vsN(Class<?> fieldType, String fieldName, ITableMetadata target, OneToMany m,CascadeConfig config) {
-		if (m != null) {
-			config.cascade = m.cascade();
-			config.fetch = m.fetch();
-		}
-		config.refType= ReferenceType.ONE_TO_MANY;
-		innerAdd(fieldType, fieldName, target ,config);
-	}
-
-	/*
-	 * 添加一个1对多引用字段，引用实体表的某个字段
-	 * 
-	 * @param fieldName 字段名称
-	 * 
-	 * @param target 实体表被引用字段
-	 * 
-	 * @param path 用于连接到实体表的连接提示（如果在全局中注册了关系，则此处可以省略）
-	 */
-	protected void addRefField_1vsN(Class<?> fieldType, String fieldName, ColumnMapping<?> target, CascadeConfig config) {
-		config.refType=ReferenceType.ONE_TO_MANY;
-		innerAdd(fieldType, fieldName, target,config);
-	}
-
-	/*
-	 * 添加一个多对一引用字段，引用实体表的DO对象
-	 * 
-	 * @param fieldName 字段名称
-	 * 
-	 * @param target 实体表被引用字段
-	 * 
-	 * @param path 用于连接到实体表的连接提示（如果在全局中注册了关系，则此处可以省略）
-	 */
-	public void addRefField_Nvs1(Class<?> fieldType, String fieldName, ITableMetadata target, ManyToOne m, CascadeConfig config) {
-		if (m != null) {
-			config.cascade = m.cascade();
-			config.fetch = m.fetch();
-		}
-		config.refType= ReferenceType.MANY_TO_ONE;
-		innerAdd(fieldType, fieldName, target, config);
-	}
-
-	/*
-	 * 添加一个多对一引用字段，引用实体表的一个字段
-	 * 
-	 * @param fieldName 字段名称
-	 * 
-	 * @param target 实体表被引用字段
-	 * 
-	 * @param path 用于连接到实体表的连接提示（如果在全局中注册了关系，则此处可以省略）
-	 */
-	public void addRefField_Nvs1(Class<?> fieldType, String fieldName, ColumnMapping<?> target, CascadeConfig config) {
-		config.refType=ReferenceType.MANY_TO_ONE;
-		innerAdd(fieldType, fieldName,target, config);
 	}
 
 	void setTableName(String tableName) {
@@ -614,11 +446,6 @@ public final class TableMetadata extends AbstractMetadata {
 		return fields.get(lowerColumnToFieldName.get(columnLowercase));
 	}
 
-	@Override
-	protected Collection<ColumnMapping<?>> getColumnSchema() {
-		return this.schemaMap.values();
-	}
-
 	public PojoWrapper transfer(Object p, boolean isQuery) {
 		if (p == null)
 			return null;
@@ -664,5 +491,23 @@ public final class TableMetadata extends AbstractMetadata {
 	@Override
 	public BeanAccessor getContainerAccessor() {
 		return containerAccessor;
+	}
+	
+	TupleMetadata extendMeta;
+	TupleMetadata extendContainer;
+
+	@Override
+	public TupleMetadata getExtendsTable() {
+		return extendContainer;
+	}
+
+	@Override
+	public Collection<ColumnMapping<?>> getExtendedColumns() {
+		return extendMeta.getColumnSchema();
+	}
+
+	@Override
+	public ColumnMapping<?> getExtendedColumnDef(String field) {
+		return extendMeta.getColumnDef(extendMeta.getField(field));
 	}
 }

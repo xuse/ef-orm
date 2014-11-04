@@ -5,12 +5,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
+import jef.tools.ArrayUtils;
+
 /**
- * JDK的反射机制有一个严重的缺陷，<BR>
- * 一般来说我们从一个class实例中得到method : clazz.getMethod(name,paramTypes);<BR>
- * 但是method实例中只有一个DeclearingClass，这个DeclearingClass并非之前的那个class实例，
- * 而之前的class实例实际上不存在于Method当中。<BR>
- * Field也有类似的问题。<BR>
+ * JDK的反射机制进行泛型计算有诸多不便，<BR>
  * <BR>
  * 然后我们看下面这个场景
  * <P>
@@ -32,15 +30,18 @@ import java.lang.reflect.Type;
  * </code>
  * </P>
  * <BR>
- * 
+ * Field也有类似的问题。<BR>
  * 即任意一个Method实例中，由于丢失了实际所在的class(子类)信息，只保留了DeclearingClass(父类)， 从而也就丢失了泛型的提供者，
  * 因此永远不可能计算出泛型的最小边界。 在泛型的场合下计算边界，三个泛型提供者Class/Methid/Field缺一不可。
- * 为了弥补JDK的这个重要缺陷，提供了增强的MethodEx,和FieldEx类提供method对象的包装。
+ * 为了弥补JDK的这个问题，提供了增强的ClassEx、MethodEx、FieldEx来代替JDK原生的Class、Method、Field进行带泛型的反射操作
+ * 
+ * @see FieldEx
+ * @see ClassEx
  * 
  */
 public class MethodEx {
 	private java.lang.reflect.Method method;
-	private ClassWrapper instanceClass;
+	private ClassEx instanceClass;
 	/**
 	 * The BridgeMethod is the method which extends from super class which
 	 * generic type was as same as superclass and also is is Volatile. The only
@@ -52,14 +53,14 @@ public class MethodEx {
 		this(method, (Class<?>) null);
 	}
 
-	MethodEx(Method method, ClassWrapper clz) {
+	MethodEx(Method method, ClassEx clz) {
 		this.method = method;
 		this.instanceClass = clz;
 	}
 
 	public MethodEx(Method method, Class<?> clz) {
 		this.method = method;
-		this.instanceClass = new ClassWrapper(clz);
+		this.instanceClass = new ClassEx(clz);
 	}
 
 	public java.lang.reflect.Method getJavaMethod() {
@@ -152,14 +153,40 @@ public class MethodEx {
 //		return result.toArray(new Method[result.size()]);
 //	}
 	/**
-	 * 返回指定序号参数上的Annotation
+	 * 返回方法指定序号的参数上的Annotation
 	 * 
+	 * @param i   参数序号
+	 * @param annotationCls Annotation类型
+	 * @return 注解(Annotation)对象，如果没有指定类型注解返回ull。
+	 * @throws IllegalArgumentException 如果序号超过参数
+	 */
+	public <T extends Annotation> T getParamAnnotation(int i, Class<T> annotationCls) {
+		return getMethodParamAnnotation(this, i, annotationCls);
+	}
+	
+	/**
+	 * 获得位于方法上的Annotation，会到父类和父接口查找
+	 * @param method
 	 * @param i
-	 * @param class1
+	 * @param annotationCls
 	 * @return
 	 */
-	public <T extends Annotation> T getParamAnnotation(int i, Class<T> class1, boolean findSuper) {
-		return BeanUtils.getMethodParamAnnotation(this, i, class1, findSuper);
+	@SuppressWarnings("unchecked")
+	private static <T extends Annotation> T getMethodParamAnnotation(MethodEx method, int i, Class<T> annotationCls) {
+		Annotation[][] annos = method.getParameterAnnotations();
+		if (i >= annos.length) {
+			throw new IllegalArgumentException("the param max index is:" + annos.length + ". the input index " + i + " is out of bound.");
+		}
+		Annotation[] anns = annos[i];
+		if (anns == null || anns.length == 0) {
+			return null;
+		}
+		for (Annotation a : anns) {
+			if (ArrayUtils.contains(a.getClass().getInterfaces(), annotationCls)) {
+				return (T) a;
+			}
+		}
+		return null;
 	}
 
 	public java.lang.reflect.Method getBridgeMethod() {

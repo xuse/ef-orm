@@ -1,5 +1,6 @@
 package jef.database.meta;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,7 +53,6 @@ import com.google.common.collect.Multimap;
  * @see EntityType#POJO
  */
 public interface ITableMetadata {
-	static final CascadeType[] ALL = new CascadeType[] { CascadeType.ALL };
 
 	/**
 	 * 得到此表对应的java class
@@ -149,7 +149,26 @@ public interface ITableMetadata {
 	 * @see ColumnMapping
 	 */
 	public ColumnMapping<?> getColumnDef(Field field);
+	
+	/**
+	 * 得到扩展属性的存放表结构
+	 * @return
+	 */
+	public TupleMetadata getExtendsTable();
 
+	/**
+	 * 得到所有的扩展属性字段
+	 * @return
+	 */
+	public Collection<ColumnMapping<?>> getExtendedColumns();
+	
+	/**
+	 * 得到指定名称的扩展属性字段
+	 * @param field
+	 * @return
+	 */
+	public ColumnMapping<?> getExtendedColumnDef(String field);
+	
 	/**
 	 * 返回所有自增字段的定义，如果没有则返回空数组
 	 * 

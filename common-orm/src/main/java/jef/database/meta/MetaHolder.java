@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.persistence.Column;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.JoinColumn;
@@ -80,7 +79,6 @@ import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.create.ColumnDefinition;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.query.ReadOnlyQuery;
-import jef.database.query.ReferenceType;
 import jef.database.query.SqlExpression;
 import jef.database.support.EntityNotEnhancedException;
 import jef.database.support.QuerableEntityScanner;
@@ -444,17 +442,12 @@ public final class MetaHolder {
 		
 		//此时就将基本字段计算完成的元数据加入缓存，以免在多表关系处理时遭遇死循环
 		pool.put(clz, meta);
+		ef.initMeta();
+		
 		// 针对未处理的字段，当做外部引用关系处理
-		if(meta instanceof TableMetadata){
-			for (java.lang.reflect.Field f : unprocessedField) {
-				// 将这个字段作为外部引用处理
-				processReference(f, (TableMetadata)meta, annos);
-			}
-		}else if(meta instanceof DynamicMetadata){
-			for (java.lang.reflect.Field f : unprocessedField) {
-				// 将这个字段作为外部引用处理
-				processReference(f, (DynamicMetadata)meta, annos);
-			}
+		for (java.lang.reflect.Field f : unprocessedField) {
+			// 将这个字段作为外部引用处理
+			processReference(f, meta, annos);
 		}
 		return meta;
 	}
@@ -722,96 +715,15 @@ public final class MetaHolder {
 		}
 		return null;
 	}
-
-	static boolean processReference(java.lang.reflect.Field f, DynamicMetadata meta, AnnotationProvider annos) {
-		FieldOfTargetEntity targetField = annos.getFieldAnnotation(f, FieldOfTargetEntity.class);
-		CascadeConfig config = new CascadeConfig();
-		config.asMap = annos.getFieldAnnotation(f, Cascade.class);
-
-		if (annos.getFieldAnnotation(f, OneToOne.class) != null) {
-			OneToOne r1Vs1 = annos.getFieldAnnotation(f, OneToOne.class);
-			ITableMetadata target = getTargetType(r1Vs1.targetEntity(), targetField, f, false);
-			config.path = getHint(annos, f, meta, target);
-			if (config.path == null) {
-				String mappedBy = r1Vs1.mappedBy();
-				if (StringUtils.isNotEmpty(mappedBy)) {
-					config.path = processJoin(meta, f, target, annos, mappedBy);
-				}
-			}
-			if (targetField == null) {
-				meta.innerAdd(f.getName(), target, ReferenceType.ONE_TO_ONE, config.path, FetchType.EAGER);
-			} else {
-				jef.database.Field field = target.getField(targetField.value());
-				Assert.notNull(field);
-				meta.innerAdd(f.getName(), field,ReferenceType.ONE_TO_ONE, config.path);
-			}
-			return true;
-		}
-		if (annos.getFieldAnnotation(f, OneToMany.class) != null) {
-			OneToMany r1VsN = annos.getFieldAnnotation(f, OneToMany.class);
-			ITableMetadata target = getTargetType(r1VsN.targetEntity(), targetField, f, true);
-			config.path = getHint(annos, f, meta, target);
-			if (config.path == null) {
-				String mappedBy = r1VsN.mappedBy();
-				if (StringUtils.isNotEmpty(mappedBy)) {
-					config.path = processJoin(meta, f, target, annos, mappedBy);
-				}
-			}
-			if (targetField == null) {
-				meta.innerAdd(f.getName(), target, ReferenceType.ONE_TO_MANY,config.path,FetchType.LAZY);
-			} else {
-				jef.database.Field field = target.getField(targetField.value());
-				Assert.notNull(field);
-				meta.innerAdd(f.getName(), field, ReferenceType.ONE_TO_MANY, config.path);
-			}
-			return true;
-		}
-
-		if (annos.getFieldAnnotation(f, ManyToOne.class) != null) {
-			ManyToOne rNVs1 = annos.getFieldAnnotation(f, ManyToOne.class);
-			ITableMetadata target = getTargetType(rNVs1.targetEntity(), targetField, f, false);
-			config.path = getHint(annos, f, meta, target);
-			if (targetField == null) {
-				meta.innerAdd(f.getName(), target, ReferenceType.MANY_TO_ONE, config.path, FetchType.EAGER);
-			} else {
-				jef.database.Field field = target.getField(targetField.value());
-				if (field == null) {
-					throw new IllegalArgumentException("[" + targetField.value() + "] is not exist in entity:" + target.getName());
-				}
-				meta.innerAdd(f.getName(), field, ReferenceType.MANY_TO_ONE, config.path);
-			}
-			return true;
-		}
-		if (annos.getFieldAnnotation(f, ManyToMany.class) != null) {
-			ManyToMany rNVsN = annos.getFieldAnnotation(f, ManyToMany.class);
-			ITableMetadata target = getTargetType(rNVsN.targetEntity(), targetField, f, true);
-			config.path = getHint(annos, f, meta, target);
-			if (config.path == null) {
-				String mappedBy = rNVsN.mappedBy();
-				if (StringUtils.isNotEmpty(mappedBy)) {
-					config.path = processJoin(meta, f, target, annos, mappedBy);
-				}
-			}
-			if (targetField == null) {
-				meta.innerAdd(f.getName(), target, ReferenceType.MANY_TO_MANY, config.path,FetchType.LAZY);
-			} else {
-				jef.database.Field field = target.getField(targetField.value());
-				Assert.notNull(field);
-				meta.innerAdd(f.getName(), field, ReferenceType.MANY_TO_MANY, config.path);
-			}
-			return true;
-		}
-		return false;
-	}
 	
-	private static boolean processReference(java.lang.reflect.Field f, TableMetadata meta, AnnotationProvider annos) {
+	protected static boolean processReference(java.lang.reflect.Field f, AbstractMetadata meta, AnnotationProvider annos) {
 		FieldOfTargetEntity targetField = annos.getFieldAnnotation(f, FieldOfTargetEntity.class);
-		CascadeConfig config = new CascadeConfig();
-		config.asMap = annos.getFieldAnnotation(f, Cascade.class);
-
+		Cascade cascade=annos.getFieldAnnotation(f, Cascade.class);
+		
 		if (annos.getFieldAnnotation(f, OneToOne.class) != null) {
 			OneToOne r1Vs1 = annos.getFieldAnnotation(f, OneToOne.class);
 			ITableMetadata target = getTargetType(r1Vs1.targetEntity(), targetField, f, false);
+			CascadeConfig config = new CascadeConfig(cascade,r1Vs1);
 			config.path = getHint(annos, f, meta, target);
 			if (config.path == null) {
 				String mappedBy = r1Vs1.mappedBy();
@@ -820,17 +732,18 @@ public final class MetaHolder {
 				}
 			}
 			if (targetField == null) {
-				meta.addRefField_1vs1(f.getType(), f.getName(), target, r1Vs1, config);
+				meta.addCascadeField(f.getName(), target, config);
 			} else {
 				jef.database.Field field = target.getField(targetField.value());
-				Assert.notNull(field);
-				meta.addRefField_1vs1(f.getType(), f.getName(), target.getColumnDef(field), config);
+				meta.addCascadeField(f.getName(), field, config);
 			}
 			return true;
 		}
+		
 		if (annos.getFieldAnnotation(f, OneToMany.class) != null) {
 			OneToMany r1VsN = annos.getFieldAnnotation(f, OneToMany.class);
 			ITableMetadata target = getTargetType(r1VsN.targetEntity(), targetField, f, true);
+			CascadeConfig config = new CascadeConfig(cascade,r1VsN);
 			config.path = getHint(annos, f, meta, target);
 			if (config.path == null) {
 				String mappedBy = r1VsN.mappedBy();
@@ -839,11 +752,10 @@ public final class MetaHolder {
 				}
 			}
 			if (targetField == null) {
-				meta.addRefField_1vsN(f.getType(), f.getName(), target, r1VsN, config);
+				meta.addCascadeField(f.getName(), target,config);
 			} else {
 				jef.database.Field field = target.getField(targetField.value());
-				Assert.notNull(field);
-				meta.addRefField_1vsN(f.getType(), f.getName(), target.getColumnDef(field), config);
+				meta.addCascadeField(f.getName(), field, config);
 			}
 			return true;
 		}
@@ -851,21 +763,22 @@ public final class MetaHolder {
 		if (annos.getFieldAnnotation(f, ManyToOne.class) != null) {
 			ManyToOne rNVs1 = annos.getFieldAnnotation(f, ManyToOne.class);
 			ITableMetadata target = getTargetType(rNVs1.targetEntity(), targetField, f, false);
+			CascadeConfig config = new CascadeConfig(cascade,rNVs1);
 			config.path = getHint(annos, f, meta, target);
 			if (targetField == null) {
-				meta.addRefField_Nvs1(f.getType(), f.getName(), target, rNVs1, config);
+				meta.addCascadeField(f.getName(), target, config);
 			} else {
 				jef.database.Field field = target.getField(targetField.value());
-				if (field == null) {
-					throw new IllegalArgumentException("[" + targetField.value() + "] is not exist in entity:" + target.getName());
-				}
-				meta.addRefField_Nvs1(f.getType(), f.getName(), target.getColumnDef(field), config);
+				meta.addCascadeField(f.getName(), field, config);
 			}
 			return true;
 		}
+		
+		
 		if (annos.getFieldAnnotation(f, ManyToMany.class) != null) {
 			ManyToMany rNVsN = annos.getFieldAnnotation(f, ManyToMany.class);
 			ITableMetadata target = getTargetType(rNVsN.targetEntity(), targetField, f, true);
+			CascadeConfig config = new CascadeConfig(cascade,rNVsN);
 			config.path = getHint(annos, f, meta, target);
 			if (config.path == null) {
 				String mappedBy = rNVsN.mappedBy();
@@ -874,11 +787,10 @@ public final class MetaHolder {
 				}
 			}
 			if (targetField == null) {
-				meta.addRefField_NvsN(f.getType(), f.getName(), target, rNVsN, config);
+				meta.addCascadeField(f.getName(), target,config);
 			} else {
 				jef.database.Field field = target.getField(targetField.value());
-				Assert.notNull(field);
-				meta.addRefField_NvsN(f.getType(), f.getName(), target.getColumnDef(field), config);
+				meta.addCascadeField(f.getName(), field, config);
 			}
 			return true;
 		}

@@ -422,7 +422,7 @@ public abstract class DateUtils {
 	}
 
 	/**
-	 * 解析日期时间 非法抛出异常
+	 * 解析日期时间 非法则抛出异常
 	 * @param s
 	 * @param format
 	 * @return
@@ -435,7 +435,7 @@ public abstract class DateUtils {
 	}
 
 	/**
-	 * 解析日期时间 非法抛出异常
+	 * 解析日期时间 非法则抛出异常
 	 * 
 	 * @Title: parse
 	 */
@@ -446,15 +446,15 @@ public abstract class DateUtils {
 	}
 	
 	/**
-	 * 自动解析日期格式，
+	 * 自动解析(猜测)日期格式               (某些特殊场景下可能解释错误)
 	 * 支持:中式日期、中式日期时间 yyyy-mm-dd
 	 *      美式日期、美式日期时间 MM/dd/yyyy HH:mm:ss
-	 *      8位数字日期
-	 *      14位数字日期时间
+	 *      8位数字日期   yyyyMMdd
+	 *      14位数字日期时间  yyyyMMddHHmmss
 	 *      12位数字时间：yyyyMMddHHmm无秒数
 	 *      毫秒数
 	 * @param dateStr
-	 * @return
+	 * @return 尽可能的猜测并解析时间。如果无法解析则返回null。
 	 */
 	public static Date autoParse(String dateStr) {
 		try {
@@ -462,7 +462,7 @@ public abstract class DateUtils {
 			if ( indexOfDash> 0) {// 按中式日期格式化(注意，首位为‘-’可能是负数日期，此处不应处理)
 				if(indexOfDash==2){//尝试修复仅有两位数的年
 					int year=StringUtils.toInt(dateStr.substring(0,indexOfDash), -1);
-					if(year>=50){
+					if(year>=50){//当年份只有两位数时，只能猜测是19xx年还是20xx年。
 						dateStr="19"+dateStr;
 					}else if(year>=0){
 						dateStr="20"+dateStr;

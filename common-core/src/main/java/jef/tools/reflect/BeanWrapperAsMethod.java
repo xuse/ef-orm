@@ -48,7 +48,7 @@ public final class BeanWrapperAsMethod extends BeanWrapper{
 		
 		properties=new HashMap<String, PropertyHolder>();
 		List<String> ll=new ArrayList<String>();
-		for(MethodEx m: new ClassWrapper(c).getMethods()){
+		for(MethodEx m: new ClassEx(c).getMethods()){
 			if(Modifier.isStatic(m.getModifiers())){
 				continue;
 			}

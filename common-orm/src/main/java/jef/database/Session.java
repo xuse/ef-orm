@@ -90,8 +90,7 @@ import org.easyframe.enterprise.spring.TransactionMode;
 /**
  * 描述一个事务(会话)的数据库操作句柄，提供了各种操作数据库的方法供用户使用。
  * <p>
- * 大部分数据库操作方法都被封装在这个类上。这个类也是EF-ORM中用户使用最多的一个类。
- * 该类有两类实现
+ * 大部分数据库操作方法都被封装在这个类上。这个类也是EF-ORM中用户使用最多的一个类。 该类有两类实现
  * <ul>
  * <li>Transaction 事务状态下的数据库封装，可以回滚和提交，设置SavePoint。</li>
  * <li>DbClient 非事务状态下的数据库连接，每次操作后自动提交不能回滚。但可以执行建表、删表等DDL语句。</li>
@@ -427,30 +426,13 @@ public abstract class Session {
 	 * 
 	 * @param obj
 	 *            被更新的对象
-	 * @return 更新的记录数
+	 * @return 更新的记录数 (仅主表，级联修改的记录行数未算在内。)
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 * @see {@link #update(IQueryableEntity)}
 	 */
 	public int updateCascade(IQueryableEntity obj) throws SQLException {
-		if ((this instanceof Transaction) || getTxType() != TransactionMode.JPA) {
-			return CascadeUtil.updateWithRefInTransaction(obj, this);
-		} else if (this instanceof DbClient) {
-			Transaction trans = new TransactionImpl((DbClient) this, TransactionFlag.Cascade, false);
-			try {
-				int i = CascadeUtil.updateWithRefInTransaction(obj, trans);
-				trans.commit(true);
-				return i;
-			} catch (SQLException e) {
-				trans.rollback(true);
-				throw e;
-			} catch (RuntimeException e) {
-				trans.rollback(true);
-				throw e;
-			}
-		} else {
-			throw new IllegalArgumentException("unknown DbClient");
-		}
+		return updateCascade0(obj, 0);
 	}
 
 	/**
@@ -459,29 +441,12 @@ public abstract class Session {
 	 * 
 	 * @param obj
 	 *            删除请求的Entity对象
-	 * @return 影响的记录数
+	 * @return 影响的记录数 (仅主表，级联修改的记录行数未算在内。)
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
 	public int deleteCascade(IQueryableEntity obj) throws SQLException {
-		if ((this instanceof Transaction) || getTxType() != TransactionMode.JPA) {
-			return CascadeUtil.deleteWithRefInTransaction(obj, this);
-		} else if (this instanceof DbClient) {
-			Transaction trans = new TransactionImpl((DbClient) this, TransactionFlag.Cascade, false);
-			try {
-				int i = CascadeUtil.deleteWithRefInTransaction(obj, trans);
-				trans.commit(true);
-				return i;
-			} catch (SQLException e) {
-				trans.rollback(true);
-				throw e;
-			} catch (RuntimeException e) {
-				trans.rollback(true);
-				throw e;
-			}
-		} else {
-			throw new IllegalArgumentException("unknown DbClient");
-		}
+		return deleteCascade0(obj, 0);
 	}
 
 	/**
@@ -503,7 +468,7 @@ public abstract class Session {
 			insertCascade(entity);
 			return entity;
 		} else {
-			DbUtils.compareToNewUpdateMap(entity, old);//之所以是将对比结果放到新对象中，是为了能将新对象中级联关系也保存到数据库中。
+			DbUtils.compareToNewUpdateMap(entity, old);// 之所以是将对比结果放到新对象中，是为了能将新对象中级联关系也保存到数据库中。
 			updateCascade(entity);
 			return (T) old;
 		}
@@ -519,7 +484,7 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 */
 	public void insertCascade(IQueryableEntity obj) throws SQLException {
-		insertCascade(obj, ORMConfig.getInstance().isDynamicInsert());
+		insertCascade0(obj, ORMConfig.getInstance().isDynamicInsert(), 0);
 	}
 
 	/**
@@ -536,24 +501,7 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 */
 	public void insertCascade(IQueryableEntity obj, boolean dynamic) throws SQLException {
-		if ((this instanceof Transaction) || getTxType() != TransactionMode.JPA) {
-			CascadeUtil.insertWithRefInTransaction(obj, this, dynamic);
-		} else if (this instanceof DbClient) {
-			Transaction trans = new TransactionImpl((DbClient) this, TransactionFlag.Cascade, false);
-			try {
-				CascadeUtil.insertWithRefInTransaction(obj, trans, dynamic);
-				trans.commit(true);
-			} catch (SQLException e) {
-				LogUtil.exception(e);
-				trans.rollback(true);
-				throw e;
-			} catch (RuntimeException e) {
-				trans.rollback(true);
-				throw e;
-			}
-		} else {
-			throw new IllegalArgumentException("unknown DbClient");
-		}
+		insertCascade0(obj, dynamic, 0);
 	}
 
 	/**
@@ -615,33 +563,15 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 */
 	public void insert(IQueryableEntity obj, String myTableName, boolean dynamic) throws SQLException {
-		getListener().beforeInseret(obj, this);
-		myTableName = MetaHolder.toSchemaAdjustedName(myTableName);
-
-		long start = System.currentTimeMillis();
-		PartitionResult pr = null;
-		try {
-			pr = DbUtils.toTableName(obj, myTableName, obj.hasQuery() ? obj.getQuery() : null, getPartitionSupport());
-		} catch (MultipleDatabaseOperateException e) {
-			// 先路由方式失败。但是还是可以继续向后走。
-			// 有一种情况下，后续操作可能成功。如果以Sequence作为分库分表主键，此时由于自增值尚未就绪，分库分表失败。
-			// 待SQL语句解析完成后，分库分表就能成功。
+		ITableMetadata meta = MetaHolder.getMeta(obj);
+		if (meta.getExtendsTable() != null) {
+			if (myTableName != null) {
+				throw new UnsupportedOperationException();// 暂不支持扩展表时定制表名
+			}
+			insertCascade0(obj, dynamic, 5);
+			return;
 		}
-		InsertSqlClause sqls = insertp.toInsertSql(obj, myTableName, dynamic, false, pr);
-		if (sqls.getCallback() != null) {
-			sqls.getCallback().callBefore(Arrays.asList(obj));
-		}
-		// 回调完成，此时自增主键可能已经获得，因此有机会再执行一次分库分表
-		if (pr == null) {
-			pr = DbUtils.toTableName(obj, myTableName, obj.hasQuery() ? obj.getQuery() : null, getPartitionSupport());
-			sqls.setTableNames(pr);
-		}
-		long parse = System.currentTimeMillis();
-		insertp.processInsert(asOperateTarget(sqls.getTable().getDatabase()), obj, sqls, start, parse);
-
-		obj.clearUpdate();
-		getCache().onInsert(obj, myTableName);
-		getListener().afterInsert(obj, this);
+		insert0(obj, myTableName, dynamic);
 	}
 
 	/**
@@ -657,7 +587,7 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public <T> int delete(Class<T> entityClass, Serializable... keys) throws SQLException {
+	public int delete(Class<?> entityClass, Serializable... keys) throws SQLException {
 		ITableMetadata meta = MetaHolder.getMeta(entityClass);
 		return delete(meta, keys);
 	}
@@ -675,11 +605,9 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public <T> int delete(ITableMetadata meta, Serializable... keys) throws SQLException {
-		Object obj = meta.newInstance();
-		IQueryableEntity data = (IQueryableEntity) obj;
-		DbUtils.setPrimaryKeyValue(data, keys);
-		return delete(data);
+	@SuppressWarnings("rawtypes")
+	public int delete(ITableMetadata meta, Serializable... keys) throws SQLException {
+		return delete(new PKQuery(meta, keys));
 	}
 
 	/**
@@ -725,38 +653,11 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 */
 	public int delete(Query<?> query) throws SQLException {
-		long start = System.currentTimeMillis();
-		IQueryableEntity obj = query.getInstance();
-		String myTableName = (String) query.getAttribute(Query.CUSTOM_TABLE_NAME);
-		myTableName = MetaHolder.toSchemaAdjustedName(StringUtils.trimToNull(myTableName));
-		PartitionResult[] sites = DbUtils.toTableNames(obj, myTableName, query, getPartitionSupport());
-
-		if (sites != null && sites.length > 0) {
-			DatabaseDialect profile = this.getProfile(sites[0].getDatabase());
-			getListener().beforeDelete(obj, this);
-			int count = 0;
-			if (profile.has(Feature.NO_BIND_FOR_DELETE)) {// 非绑定删除
-				String where = rProcessor.toWhereClause(query, new SqlContext(null, query), false, profile);
-				for (PartitionResult site : sites) {
-					count += p.processDeleteNormal(asOperateTarget(site.getDatabase()), obj, site, start, where);
-				}
-				if (count > 0) {
-					getCache().onDelete(myTableName == null ? obj.getClass().getName() : myTableName, where, null);
-				}
-			} else {
-				BindSql where = rProcessor.toPrepareWhereSql(query, new SqlContext(null, query), false, profile);
-				for (PartitionResult site : sites) {
-					count += p.processDeletePrepared(asOperateTarget(site.getDatabase()), obj, site, start, where);
-				}
-				if (count > 0) {
-					getCache().onDelete(myTableName == null ? obj.getClass().getName() : myTableName, where.getSql(), CacheImpl.toParamList(where.getBind()));
-				}
-			}
-			getListener().afterDelete(obj, count, this);
-			return count;
-		} else {
-			return 0;
+		ITableMetadata meta = query.getMeta();
+		if (meta.getExtendsTable() != null) {
+			return deleteCascade0(query.getInstance(), 5);
 		}
+		return delete0(query);
 	}
 
 	/**
@@ -786,21 +687,14 @@ public abstract class Session {
 	 * @see #update(IQueryableEntity)
 	 */
 	public int update(IQueryableEntity obj, String myTableName) throws SQLException {
-		if (!obj.needUpdate()) {
-			if (ORMConfig.getInstance().isDebugMode())
-				LogUtil.show(obj.getClass().getSimpleName().concat(" Update canceled..."));
-			return 0;
+		ITableMetadata meta = MetaHolder.getMeta(obj);
+		if (meta.getExtendsTable() != null) {
+			if (myTableName != null) {
+				throw new UnsupportedOperationException();// 暂不支持扩展表时定制表名
+			}
+			return updateCascade0(obj, 5);
 		}
-		getListener().beforeUpdate(obj, this);
-		int n;
-		myTableName = MetaHolder.toSchemaAdjustedName(myTableName);
-		if (getProfile().has(Feature.NO_BIND_FOR_UPDATE)) {
-			n = innerUpdateNormal(obj, myTableName);
-		} else {
-			n = innerUpdatePrepared(obj, myTableName);
-		}
-		getListener().afterUpdate(obj, n, this);
-		return n;
+		return update0(obj, myTableName);
 	}
 
 	/**
@@ -1254,9 +1148,9 @@ public abstract class Session {
 	@SuppressWarnings("unchecked")
 	public <T extends IQueryableEntity> List<T> loadByField(jef.database.Field field, Object value) throws SQLException {
 		ITableMetadata meta = DbUtils.getTableMeta(field);
-		Query<?> query = meta.newInstance().getQuery();
+		Query<T> query = meta.newInstance().getQuery();
 		query.addCondition(field, Operator.EQUALS, value);
-		return innerSelect(query, null, null, QueryOption.DEFAULT);
+		return typedSelect(query, null, QueryOption.DEFAULT);
 	}
 
 	/**
@@ -1712,7 +1606,9 @@ public abstract class Session {
 				rs.close();
 			}
 		}
-		if (!option.holdResult) {
+		//Jiyi modified 2014-11-4 如果查询结果为空，不缓存
+		//目的是减少CacheKey的计算，这部分计算有一定开销，权衡之下，缓存空结果意义不大。
+		if (!option.holdResult && !list.isEmpty()) {
 			getCache().onLoad(sql.getCacheKey(), list, transformer.getResultClazz());
 		}
 		// 凡是对多查询都通过分次查询来解决，填充1vsN字段
@@ -2088,7 +1984,7 @@ public abstract class Session {
 	 * @return Batch对象，可执行批操作
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
-	 * @see Batch            
+	 * @see Batch
 	 */
 	public final <T extends IQueryableEntity> Batch<T> startBatchDelete(T template, String tableName) throws SQLException {
 		// 位于批当中的绑定变量
@@ -2264,7 +2160,7 @@ public abstract class Session {
 		b.parseTime = System.nanoTime() - start;
 		return b;
 	}
-	
+
 	/**
 	 * 获得一个Bach对象，这个batch对象上可以执行批量更新操作。
 	 * 
@@ -2382,17 +2278,17 @@ public abstract class Session {
 		if (entities.isEmpty())
 			return 0;
 		T template = null;
-		for (int i = 0; i < 3; i++) {
-			template = entities.get(i);
-			if (!dynamic || template.needUpdate()) {
-				break;
-			}
-		}
 		boolean dyna;
 		if (dynamic == null) {// 如果未指定时
 			dyna = ORMConfig.getInstance().isDynamicUpdate();
 		} else {
 			dyna = dynamic.booleanValue();
+		}
+		for (int i = 0; i < 3; i++) {
+			template = entities.get(i);
+			if (!dyna || template.needUpdate()) {
+				break;
+			}
 		}
 		if (!template.needUpdate()) {
 			dyna = false;
@@ -2436,7 +2332,8 @@ public abstract class Session {
 	 * @param clz
 	 *            返回值类型
 	 * @return 查询结果
-	 * @throws SQLException 当数据库异常时抛出
+	 * @throws SQLException
+	 *             当数据库异常时抛出
 	 * @see SqlTemplate#getExpressionValue(String, Class, Object...)
 	 */
 	public final <T> T getExpressionValue(String expression, Class<T> clz) throws SQLException {
@@ -2444,12 +2341,17 @@ public abstract class Session {
 	}
 
 	/**
-	 *  在数据库中查询得到函数表达式的值 <h3>Example.</h3>
-	 * @param func 函数种类
-	 * @param clz 返回结果类型
-	 * @param params 函数入参
+	 * 在数据库中查询得到函数表达式的值 <h3>Example.</h3>
+	 * 
+	 * @param func
+	 *            函数种类
+	 * @param clz
+	 *            返回结果类型
+	 * @param params
+	 *            函数入参
 	 * @return 该函数的执行结果
-	 * @throws SQLException 当数据库异常时抛出
+	 * @throws SQLException
+	 *             当数据库异常时抛出
 	 * @see SqlTemplate#getExpressionValue(DbFunction, Class, Object...)
 	 */
 	public final <T> T getExpressionValue(DbFunction func, Class<T> clz, Object... params) throws SQLException {
@@ -2717,6 +2619,152 @@ public abstract class Session {
 			getCache().onUpdate(myTableName == null ? obj.getClass().getName() : myTableName, where, null);
 		}
 		return count;
+	}
+
+	protected int delete0(Query<?> query) throws SQLException {
+		long start = System.currentTimeMillis();
+		IQueryableEntity obj = query.getInstance();
+		String myTableName = (String) query.getAttribute(Query.CUSTOM_TABLE_NAME);
+		myTableName = MetaHolder.toSchemaAdjustedName(StringUtils.trimToNull(myTableName));
+		PartitionResult[] sites = DbUtils.toTableNames(obj, myTableName, query, getPartitionSupport());
+
+		if (sites != null && sites.length > 0) {
+			DatabaseDialect profile = this.getProfile(sites[0].getDatabase());
+			getListener().beforeDelete(obj, this);
+			int count = 0;
+			if (profile.has(Feature.NO_BIND_FOR_DELETE)) {// 非绑定删除
+				String where = rProcessor.toWhereClause(query, new SqlContext(null, query), false, profile);
+				for (PartitionResult site : sites) {
+					count += p.processDeleteNormal(asOperateTarget(site.getDatabase()), obj, site, start, where);
+				}
+				if (count > 0) {
+					getCache().onDelete(myTableName == null ? obj.getClass().getName() : myTableName, where, null);
+				}
+			} else {
+				BindSql where = rProcessor.toPrepareWhereSql(query, new SqlContext(null, query), false, profile);
+				for (PartitionResult site : sites) {
+					count += p.processDeletePrepared(asOperateTarget(site.getDatabase()), obj, site, start, where);
+				}
+				if (count > 0) {
+					getCache().onDelete(myTableName == null ? obj.getClass().getName() : myTableName, where.getSql(), CacheImpl.toParamList(where.getBind()));
+				}
+			}
+			getListener().afterDelete(obj, count, this);
+			return count;
+		} else {
+			return 0;
+		}
+	}
+
+	protected int update0(IQueryableEntity obj, String myTableName) throws SQLException {
+		if (!obj.needUpdate()) {
+			if (ORMConfig.getInstance().isDebugMode())
+				LogUtil.show(obj.getClass().getSimpleName().concat(" Update canceled..."));
+			return 0;
+		}
+		getListener().beforeUpdate(obj, this);
+		int n;
+		myTableName = MetaHolder.toSchemaAdjustedName(myTableName);
+		if (getProfile().has(Feature.NO_BIND_FOR_UPDATE)) {
+			n = innerUpdateNormal(obj, myTableName);
+		} else {
+			n = innerUpdatePrepared(obj, myTableName);
+		}
+		getListener().afterUpdate(obj, n, this);
+		return n;
+	}
+
+	protected void insert0(IQueryableEntity obj, String myTableName, boolean dynamic) throws SQLException {
+		getListener().beforeInseret(obj, this);
+		myTableName = MetaHolder.toSchemaAdjustedName(myTableName);
+
+		long start = System.currentTimeMillis();
+		PartitionResult pr = null;
+		try {
+			pr = DbUtils.toTableName(obj, myTableName, obj.hasQuery() ? obj.getQuery() : null, getPartitionSupport());
+		} catch (MultipleDatabaseOperateException e) {
+			// 先路由方式失败。但是还是可以继续向后走。
+			// 有一种情况下，后续操作可能成功。如果以Sequence作为分库分表主键，此时由于自增值尚未就绪，分库分表失败。
+			// 待SQL语句解析完成后，分库分表就能成功。
+		}
+		InsertSqlClause sqls = insertp.toInsertSql(obj, myTableName, dynamic, false, pr);
+		if (sqls.getCallback() != null) {
+			sqls.getCallback().callBefore(Arrays.asList(obj));
+		}
+		// 回调完成，此时自增主键可能已经获得，因此有机会再执行一次分库分表
+		if (pr == null) {
+			pr = DbUtils.toTableName(obj, myTableName, obj.hasQuery() ? obj.getQuery() : null, getPartitionSupport());
+			sqls.setTableNames(pr);
+		}
+		long parse = System.currentTimeMillis();
+		insertp.processInsert(asOperateTarget(sqls.getTable().getDatabase()), obj, sqls, start, parse);
+
+		obj.clearUpdate();
+		getCache().onInsert(obj, myTableName);
+		getListener().afterInsert(obj, this);
+	}
+
+	private int updateCascade0(IQueryableEntity obj, int minPriority) throws SQLException {
+		if ((this instanceof Transaction) || getTxType() != TransactionMode.JPA) {
+			return CascadeUtil.updateWithRefInTransaction(obj, this, minPriority);
+		} else if (this instanceof DbClient) {
+			Transaction trans = new TransactionImpl((DbClient) this, TransactionFlag.Cascade, false);
+			try {
+				int i = CascadeUtil.updateWithRefInTransaction(obj, trans, minPriority);
+				trans.commit(true);
+				return i;
+			} catch (SQLException e) {
+				trans.rollback(true);
+				throw e;
+			} catch (RuntimeException e) {
+				trans.rollback(true);
+				throw e;
+			}
+		} else {
+			throw new IllegalArgumentException("unknown DbClient");
+		}
+	}
+
+	private int deleteCascade0(IQueryableEntity obj, int minPriority) throws SQLException {
+		if ((this instanceof Transaction) || getTxType() != TransactionMode.JPA) {
+			return CascadeUtil.deleteWithRefInTransaction(obj, this, 0);
+		} else if (this instanceof DbClient) {
+			Transaction trans = new TransactionImpl((DbClient) this, TransactionFlag.Cascade, false);
+			try {
+				int i = CascadeUtil.deleteWithRefInTransaction(obj, trans, 0);
+				trans.commit(true);
+				return i;
+			} catch (SQLException e) {
+				trans.rollback(true);
+				throw e;
+			} catch (RuntimeException e) {
+				trans.rollback(true);
+				throw e;
+			}
+		} else {
+			throw new IllegalArgumentException("unknown DbClient");
+		}
+	}
+
+	private void insertCascade0(IQueryableEntity obj, boolean dynamic, int minPriority) throws SQLException {
+		if ((this instanceof Transaction) || getTxType() != TransactionMode.JPA) {
+			CascadeUtil.insertWithRefInTransaction(Arrays.asList(obj), this, dynamic, minPriority);
+		} else if (this instanceof DbClient) {
+			Transaction trans = new TransactionImpl((DbClient) this, TransactionFlag.Cascade, false);
+			try {
+				CascadeUtil.insertWithRefInTransaction(Arrays.asList(obj), trans, dynamic, minPriority);
+				trans.commit(true);
+			} catch (SQLException e) {
+				LogUtil.exception(e);
+				trans.rollback(true);
+				throw e;
+			} catch (RuntimeException e) {
+				trans.rollback(true);
+				throw e;
+			}
+		} else {
+			throw new IllegalArgumentException("unknown DbClient");
+		}
 	}
 
 	abstract PartitionSupport getPartitionSupport();

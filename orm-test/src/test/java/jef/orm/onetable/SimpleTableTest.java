@@ -33,6 +33,7 @@ import jef.database.test.DataSourceContext;
 import jef.database.test.DatabaseInit;
 import jef.database.test.IgnoreOn;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
+import jef.database.test.LogListener;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.populator.Transformer;
 import jef.orm.multitable.model.Person;
@@ -44,6 +45,7 @@ import jef.tools.DateUtils;
 import jef.tools.ThreadUtils;
 import jef.tools.string.RandomData;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -362,13 +364,14 @@ public class SimpleTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	@IgnoreOn(allButExcept="hsqldb")
+	@IgnoreOn(allButExcept={"hsqldb"})
 	public void testUpdateDynamicLess() throws SQLException {
 		boolean dynamic=ORMConfig.getInstance().isDynamicUpdate();
 		ORMConfig.getInstance().setDynamicUpdate(false);
 		Transaction db=this.db.startTransaction();
 		long lastId = insert3Records();
 		{
+			LogListener listener=new LogListener("update TEST_ENTITY set.+");
 			TestEntity t1 = new TestEntity();
 			t1.setLongField(lastId - 2);
 			t1 = db.load(t1);

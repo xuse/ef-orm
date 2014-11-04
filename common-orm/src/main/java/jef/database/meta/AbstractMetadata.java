@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -28,8 +29,10 @@ import jef.database.query.JpqlExpression;
 import jef.database.query.PKQuery;
 import jef.database.wrapper.clause.BindSql;
 import jef.tools.ArrayUtils;
+import jef.tools.Assert;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
+import jef.tools.reflect.Property;
 
 /**
  * 抽象类用于简化Tablemeta的实现
@@ -164,7 +167,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 
 	private void initCache(DatabaseDialect profile) {
 		bindProfile = profile;
-		cachedTable = new DbTable(bindDsName, profile.getObjectNameToUse(getTableName(true)), false, false);
+		cachedTable = new DbTable(bindDsName, DbUtils.escapeColumn(profile,profile.getObjectNameToUse(getTableName(true))), false, false);
 	}
 
 	public KeyDimension getPKDimension(List<Serializable> pks, DatabaseDialect profile) {
@@ -257,14 +260,14 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		}
 	}
 
-	protected void addRefField(AbstractRefField f) {
+	private void addRefField(AbstractRefField f) {
 		List<AbstractRefField> list = refFieldsByRef.get(f.getReference());
 		if (list == null) {
 			list = new ArrayList<AbstractRefField>();
 			refFieldsByRef.put(f.getReference(), list);
 		}
 		list.add(f);
-		refFieldsByName.put(f.getSourceField(), f);
+		refFieldsByName.put(f.getName(), f);
 	}
 
 	public Map<Reference, List<AbstractRefField>> getRefFieldsByRef() {
@@ -283,5 +286,74 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		throw new UnsupportedOperationException();
 	}
 
-	protected abstract Collection<ColumnMapping<?>> getColumnSchema();
+	protected Collection<ColumnMapping<?>> getColumnSchema() {
+		return this.schemaMap.values();
+	}
+
+	protected ReferenceObject innerAdd(Property pp, ITableMetadata target, CascadeConfig config) {
+		Reference r = new Reference(target, config.getRefType(), this);
+		if (config.path != null) {
+			r.setHint(config.path);
+		}
+		ReferenceObject ref = new ReferenceObject(pp, r, config);
+		if(pp.getType()==Object.class){
+			Class<?> targetContainer = target.getThisType();
+			if (!config.getRefType().isToOne()) {
+				targetContainer = Collection.class;
+			}
+			ref.setSourceFieldType(targetContainer);
+		}
+		
+		addRefField(ref);	
+		return ref;
+	}
+
+	protected ReferenceField innerAdd(Property pp, ColumnMapping<?> targetFld, CascadeConfig config) {
+		Assert.notNull(targetFld);
+		Reference r = new Reference(targetFld.getMeta(), config.getRefType(), this);
+		if (config.path != null) {
+			r.setHint(config.path);
+		}
+		ReferenceField f = new ReferenceField(pp, r, targetFld, config);
+		if(pp.getType()==Object.class){
+			Class<?> containerType = targetFld.getFieldType();
+			if (!config.getRefType().isToOne()) {
+				containerType = Collections.class;
+			}
+			f.setSourceFieldType(containerType);
+		}
+		addRefField(f);
+		return f;
+	}
+	
+
+	/*
+	 * 添加一个引用字段，引用实体表的DO对象
+	 * 
+	 * @param fieldName 字段名称
+	 * 
+	 * @param target 实体表对应的类
+	 * 
+	 * @param path 用于连接到实体表的连接提示（如果在全局中注册了关系，则此处可以省略）
+	 */
+	protected ReferenceObject addCascadeField(String fieldName, ITableMetadata target, CascadeConfig config) {
+		Property pp = getContainerAccessor().getProperty(fieldName);
+		return innerAdd(pp, target, config);
+	}
+
+	/*
+	 * 添加一个引用字段，引用实体表的某个字段
+	 * 
+	 * @param fieldName 字段名称
+	 * 
+	 * @param target 实体表被引用字段
+	 * 
+	 * @param path 用于连接到实体表的连接提示（如果在全局中注册了关系，则此处可以省略）
+	 */
+	protected ReferenceField addCascadeField(String fieldName, Field target, CascadeConfig config) {
+		Assert.notNull(target);
+		Property pp = getContainerAccessor().getProperty(fieldName);
+		ColumnMapping<?> targetFld= DbUtils.toColumnMapping(target);
+		return innerAdd(pp, targetFld, config);
+	}
 }

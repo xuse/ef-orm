@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.annotation.DynamicTable;
 import jef.database.dialect.type.ColumnMapping;

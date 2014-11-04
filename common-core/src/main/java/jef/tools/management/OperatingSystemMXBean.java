@@ -24,7 +24,7 @@ import jef.jre5support.ProcessUtil;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtil;
-import jef.tools.reflect.ClassWrapper;
+import jef.tools.reflect.ClassEx;
 
 /**
  * 这个Bean封装了JDK的OperatingSystemMXBean,可以根据SUN JDK(及其兼容)，IBM JDK等 提供与JDK平台无关的扩展接口
@@ -45,7 +45,7 @@ public class OperatingSystemMXBean implements java.lang.management.OperatingSyst
 	
 	private OperatingSystemMXBean() {
 		bean = ManagementFactory.getOperatingSystemMXBean();
-		ClassWrapper cw = new ClassWrapper(bean.getClass());
+		ClassEx cw = new ClassEx(bean.getClass());
 		List<String> result = CollectionUtil.getPropertyValues(cw.getAllInterfaces(), "getName", String.class);
 		if (result.contains("com.sun.management.UnixOperatingSystemMXBean")) {
 			initSunJDKBean(cw);
@@ -105,7 +105,7 @@ public class OperatingSystemMXBean implements java.lang.management.OperatingSyst
 	/*
 	 * 
 	 */
-	private void initSunJDKBean(ClassWrapper cw) {
+	private void initSunJDKBean(ClassEx cw) {
 		try {
 			propertyMap.put(Attribute.CommittedVirtualMemorySize, cw.getMethod("getCommittedVirtualMemorySize").getJavaMethod());
 			propertyMap.put(Attribute.FreePhysicalMemorySize, cw.getMethod("getFreePhysicalMemorySize").getJavaMethod());
@@ -118,7 +118,7 @@ public class OperatingSystemMXBean implements java.lang.management.OperatingSyst
 		}
 	}
 
-	private void initIBMJDKBean(ClassWrapper cw) {
+	private void initIBMJDKBean(ClassEx cw) {
 		try {
 			propertyMap.put(Attribute.TotalPhysicalMemorySize, cw.getMethod("getTotalPhysicalMemory").getJavaMethod());
 		} catch (NoSuchMethodException e) {
@@ -126,7 +126,7 @@ public class OperatingSystemMXBean implements java.lang.management.OperatingSyst
 		}
 	}
 
-	private void initMethodInJDK6(ClassWrapper cw) {
+	private void initMethodInJDK6(ClassEx cw) {
 		try {
 			propertyMap.put(Attribute.SystemLoadAverage, cw.getMethod("getSystemLoadAverage").getJavaMethod());
 		} catch (NoSuchMethodException e) {

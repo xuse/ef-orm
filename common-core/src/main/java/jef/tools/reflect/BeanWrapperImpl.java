@@ -79,7 +79,7 @@ public final class BeanWrapperImpl extends BeanWrapper {
 	}
 
 	protected Object obj;
-	private ClassWrapper clz;
+	private ClassEx clz;
 	private Map<String, PropertyHolder> properties = null;
 
 	public BeanWrapperImpl(Object obj) {
@@ -103,7 +103,7 @@ public final class BeanWrapperImpl extends BeanWrapper {
 		super(obj);
 		this.obj = obj;
 		Class<?> c = obj.getClass();
-		this.clz=new ClassWrapper(c);
+		this.clz=new ClassEx(c);
 		if (cache.containsKey(c)) {
 			properties = cache.get(c);
 		} else {
@@ -112,7 +112,7 @@ public final class BeanWrapperImpl extends BeanWrapper {
 		}
 	}
 
-	private static Map<String, PropertyHolder> init(ClassWrapper cls, boolean fieldBase) {
+	private static Map<String, PropertyHolder> init(ClassEx cls, boolean fieldBase) {
 		List<Class<?>> supers = new ArrayList<Class<?>>();
 		Class<?> c=cls.getWrappered();
 		while (c != Object.class){
@@ -126,7 +126,7 @@ public final class BeanWrapperImpl extends BeanWrapper {
 		return result;
 	}
 
-	private static Map<String, PropertyHolder> initByClass(ClassWrapper cw,Class<?> c, boolean fieldBase) {
+	private static Map<String, PropertyHolder> initByClass(ClassEx cw,Class<?> c, boolean fieldBase) {
 		Map<String, PropertyHolder> myMap = new HashMap<String, PropertyHolder>();
 		for (Field field : c.getDeclaredFields()) {
 			int mod = field.getModifiers();
@@ -376,14 +376,14 @@ public final class BeanWrapperImpl extends BeanWrapper {
 		if (x > -1 && y > -1 && y > x) {
 			Entry<String, Integer> info = toKeyAndIndex(field, x, y);
 			int index = info.getValue();
-			ClassWrapper c = new ClassWrapper(getPropertyType(info.getKey()));
+			ClassEx c = new ClassEx(getPropertyType(info.getKey()));
 			Object o = getPropertyValue(info.getKey());
 			if (o == null) {
 				if (c.isArray()) {
-					ClassWrapper cmpType=new ClassWrapper(c.getComponentType());
+					ClassEx cmpType=new ClassEx(c.getComponentType());
 					Object array = Array.newInstance(cmpType.getWrappered(), 0);
 					// 修正数据类型
-					value = ClassWrapper.toProperType(value, cmpType, null);
+					value = ClassEx.toProperType(value, cmpType, null);
 					array = ArrayUtils.setValueAndExpandArray(array, index, value);
 					this.setPropertyValue(info.getKey(), array);
 				} else if (List.class.isAssignableFrom(c.getWrappered())) {
@@ -393,22 +393,22 @@ public final class BeanWrapperImpl extends BeanWrapper {
 				}
 			} else {
 				if (c.isArray()) {
-					ClassWrapper cmpType=new ClassWrapper(c.getComponentType());
-					value = ClassWrapper.toProperType(value, cmpType, null);
+					ClassEx cmpType=new ClassEx(c.getComponentType());
+					value = ClassEx.toProperType(value, cmpType, null);
 					Object array = ArrayUtils.setValueAndExpandArray(o, index, value);
 					if (array != value)
 						this.setPropertyValue(info.getKey(), array);
 				} else if (List.class.isAssignableFrom(c.getWrappered())) {
-					ClassWrapper cmpType=new ClassWrapper(c.getComponentType());
+					ClassEx cmpType=new ClassEx(c.getComponentType());
 					Object old = CollectionUtil.findElementInstance(o);
-					value = ClassWrapper.toProperType(value, cmpType, old);
+					value = ClassEx.toProperType(value, cmpType, old);
 					CollectionUtil.listSetAndExpand((List) value, index, value);
 				}
 			}
 		} else {
 			Type c = this.getPropertyType(field);
 			Object old = this.isReadableProperty(field) ? this.getPropertyValue(field) : null;
-			value = ClassWrapper.toProperType(value, new ClassWrapper(c), old);
+			value = ClassEx.toProperType(value, new ClassEx(c), old);
 			this.setPropertyValue(field, value);
 		}
 	}
@@ -464,7 +464,7 @@ public final class BeanWrapperImpl extends BeanWrapper {
 		} else {
 			Object obj = getPropertyValue(field);
 			if (obj == null && create) {
-				ClassWrapper c = new ClassWrapper(getPropertyType(field));
+				ClassEx c = new ClassEx(getPropertyType(field));
 				try {
 					obj = c.newInstance();
 				} catch (Exception e) {

@@ -15,7 +15,7 @@ import jef.database.PojoWrapper;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.Query;
-import jef.tools.reflect.ClassWrapper;
+import jef.tools.reflect.ClassEx;
 import jef.tools.reflect.GenericUtils;
 
 public class POJODaoSupport<T> extends BaseDao{
@@ -27,7 +27,7 @@ public class POJODaoSupport<T> extends BaseDao{
 	@SuppressWarnings("unchecked")
 	public POJODaoSupport() {
 		Class<?> c = getClass();
-		c = ClassWrapper.getRealClass(c);
+		c = ClassEx.getRealClass(c);
 		Type[] t = GenericUtils.getTypeParameters(c, POJODaoSupport.class);
 		Type type = t[0];
 		if (type instanceof Class<?>) {

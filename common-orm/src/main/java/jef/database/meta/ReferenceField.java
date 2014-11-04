@@ -20,6 +20,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.query.SqlContext;
 import jef.tools.Assert;
+import jef.tools.reflect.Property;
 
 /**
  * 描述框架内部对象之间关联的关系字段
@@ -40,12 +41,12 @@ public final class ReferenceField extends AbstractRefField implements IReference
 	 * 构造
 	 * @param fName  字段名
 	 * @param ref  关联关系
-	 * @param fieldName 目标字段 （为null表示持有整个对象）
+	 * @param field 目标字段 （为null表示持有整个对象）
 	 */
-	public ReferenceField(Class<?> container,String fName,Reference ref,ColumnMapping<?> fieldName,CascadeConfig config) {
-		super(container,fName,ref,config==null?null:config.asMap);
-		Assert.notNull(fieldName);
-		this.targetField=fieldName;
+	public ReferenceField(Property fName,Reference ref,ColumnMapping<?> field,CascadeConfig config) {
+		super(fName,ref,config);
+		Assert.notNull(field);
+		this.targetField=field;
 	}
 	public ColumnMapping<?> getTargetField() {
 		return targetField;

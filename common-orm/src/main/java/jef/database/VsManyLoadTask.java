@@ -104,19 +104,18 @@ final class VsManyLoadTask implements LazyLoadTask {
 		for (ISelectProvider reff : refs) { // 根据配置装填到对象中去
 			AbstractRefField refield = (AbstractRefField) reff;
 
+			Class<?> container = refield.getSourceFieldType();
 			if (refield.isSingleColumn()) {// 引用字段填充
-				Class<?> container = refield.getSourceContainerType();
 				Object value = db.rProcessor.collectValueToContainer(subs, container, ((ReferenceField) refield).getTargetField().fieldName());
-				bean.setPropertyValue(refield.getSourceField(), value);
+				refield.getField().set(obj, value);
 			} else { // 全引用填充
-				Class<?> container = refield.getSourceContainerType();
 				Object value;
 				if (targetTableMeta.getContainerType() == container) {
 					value = subs.isEmpty() ? null : subs.get(0);
 				} else {
 					value = DbUtils.toProperContainerType(subs, container,targetTableMeta.getContainerType(),refield.getAsMap());
 				}
-				bean.setPropertyValue(refield.getSourceField(), value);
+				refield.getField().set(obj, value);
 			}
 		}
 		// 反相关系

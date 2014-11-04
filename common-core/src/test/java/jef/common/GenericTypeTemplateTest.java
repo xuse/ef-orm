@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 import jef.tools.reflect.BeanUtils;
-import jef.tools.reflect.ClassWrapper;
+import jef.tools.reflect.ClassEx;
 import jef.tools.reflect.FieldEx;
 import jef.tools.reflect.GenericUtils;
 import jef.tools.reflect.MethodEx;
@@ -114,7 +114,7 @@ public class GenericTypeTemplateTest<T extends Date> {
 		Type map2=GenericUtils.newMapType(String.class, Object.class);
 		Type map3=Map.class;
 		Type c=GenericUtils.newGenericType(GenericTypeTemplateTest.class, java.sql.Date.class);
-		ClassWrapper cw=new ClassWrapper(c);
+		ClassEx cw=new ClassEx(c);
 		MethodEx method=cw.getFirstMethodByName("test4");
 		System.out.println(map1.equals(method.getGenericParameterTypes()[0]));
 		System.out.println(map2.equals(method.getGenericReturnType()));
@@ -127,7 +127,7 @@ public class GenericTypeTemplateTest<T extends Date> {
 		Type c1=new TypeToken<GenericTypeTemplateTest<java.sql.Date>>() {}.getType();//得到泛型类的实例类型。
 		Type c=GenericUtils.newGenericType(GenericTypeTemplateTest.class, java.sql.Date.class);
 		
-		ClassWrapper cw=new ClassWrapper(c);
+		ClassEx cw=new ClassEx(c);
 		MethodEx method=cw.getFirstMethodByName("test1");
 		Type type=method.getGenericReturnType();
 		Type result=BeanUtils.getBoundType(type,cw);

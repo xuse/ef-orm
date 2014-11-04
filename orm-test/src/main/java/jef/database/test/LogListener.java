@@ -1,6 +1,9 @@
 package jef.database.test;
 
+import java.io.BufferedReader;
+import java.io.CharArrayReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,19 +41,22 @@ public class LogListener extends Writer{
 
 	@Override
 	public void write(char[] cbuf, int off, int len) throws IOException {
-		String s=new String(cbuf,off,len);
-		Matcher m=pattern.matcher(s);
-		if(m.matches()){
-			int n=m.groupCount();
-			if(n==0){
-				sqls.add(new String[]{m.group()});
-			}else{
-				String[] result=new String[n];
-				for(int i=1;i<=n;i++){
-					result[i-1]=m.group(i);
+		BufferedReader sr=new BufferedReader(new CharArrayReader(cbuf,off,len));
+		String s;
+		while((s=sr.readLine())!=null){
+			Matcher m=pattern.matcher(s);
+			if(m.matches()){
+				int n=m.groupCount();
+				if(n==0){
+					sqls.add(new String[]{m.group()});
+				}else{
+					String[] result=new String[n];
+					for(int i=1;i<=n;i++){
+						result[i-1]=m.group(i);
+					}
+					sqls.add(result);
 				}
-				sqls.add(result);
-			}
+			}	
 		}
 	}
 

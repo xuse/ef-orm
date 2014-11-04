@@ -1,9 +1,11 @@
 package jef.database.dynamic;
 
 import javax.persistence.Entity;
+import javax.persistence.Id;
 
 @Entity()
 public class Status extends jef.database.DataObject {
+	@Id
 	private int code;
 
 	private String data;

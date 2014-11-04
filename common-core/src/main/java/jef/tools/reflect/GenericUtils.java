@@ -61,7 +61,7 @@ public final class GenericUtils extends JefGson{
 	 * @return
 	 */
 	public static Type resolve (Type context,Type toResolve){
-		return BeanUtils.getBoundType(toResolve, context==null?null:new ClassWrapper(context));
+		return BeanUtils.getBoundType(toResolve, context==null?null:new ClassEx(context));
 	}
 	
 	/**

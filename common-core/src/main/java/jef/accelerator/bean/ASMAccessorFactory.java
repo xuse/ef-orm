@@ -14,7 +14,7 @@ import java.util.Set;
 
 import jef.tools.IOUtils;
 import jef.tools.reflect.BeanUtils;
-import jef.tools.reflect.ClassWrapper;
+import jef.tools.reflect.ClassEx;
 import jef.tools.reflect.FieldEx;
 import jef.tools.reflect.MethodEx;
 import jef.tools.reflect.UnsafeUtils;
@@ -116,7 +116,7 @@ final class ASMAccessorFactory implements BeanAccessorFactory {
 	 */
 	@SuppressWarnings("rawtypes")
 	private static FieldInfo[] getFields(Class<?> javaBean) {
-		ClassWrapper cw = new ClassWrapper(javaBean);
+		ClassEx cw = new ClassEx(javaBean);
 		FieldEx[] fs = cw.getFields();
 		List<FieldInfo> result=new ArrayList<FieldInfo>(fs.length);
 		for (FieldEx f : fs) {

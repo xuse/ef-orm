@@ -10,7 +10,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.FetchType;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
@@ -28,7 +31,6 @@ import jef.database.annotation.PartitionTable;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.ColumnMappings;
-import jef.database.query.ReferenceType;
 import jef.database.support.accessor.EfPropertiesExtensionProvider;
 import jef.database.support.accessor.ExtensionAccessor;
 import jef.tools.ArrayUtils;
@@ -36,28 +38,30 @@ import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanAccessorMapImpl;
 import jef.tools.reflect.BeanUtils;
+import jef.tools.reflect.Property;
 
 import com.google.common.collect.Multimap;
 
 public class DynamicMetadata extends AbstractMetadata {
 
 	private Class<? extends IQueryableEntity> type = VarObject.class;
-	
+
 	protected Map<String, Field> lowerColumnToFieldName = new HashMap<String, Field>(10, 0.6f);
-	
+
 	private List<ColumnMapping<?>> pkFields = new ArrayList<ColumnMapping<?>>();
-	
+
 	private final Set<TupleModificationListener> listeners = new HashSet<TupleModificationListener>();
-	
+
 	private BeanAccessor containerAccessor = BeanAccessorMapImpl.INSTANCE;
+
 	/**
-	 * 创建当前元数据的对象实例。
-	 * 由于2.0版开始，TupleMetadata的数据容器类型不再仅有VarObject一种，因此newInstance返回的不是VarObject类型。
-	 * 2.0之前的代码需要改为使用{@link #newVar()}。
+	 * 创建当前元数据的对象实例。 由于2.0版开始，TupleMetadata的数据容器类型不再仅有VarObject一种，
+	 * 因此newInstance返回的不是VarObject类型。 2.0之前的代码需要改为使用{@link #newVar()}。
+	 * 
 	 * @since 2.0
 	 */
 	public IQueryableEntity newInstance() {
-		if(type==VarObject.class){
+		if (type == VarObject.class) {
 			return new VarObject(this);
 		}
 		return (IQueryableEntity) containerAccessor.newInstance();
@@ -81,7 +85,8 @@ public class DynamicMetadata extends AbstractMetadata {
 	}
 
 	/*
-	 * 特殊处理，由于半动态表在实例化过程中，通过新建的TupleField代替了原来在元模型中定义的field，Field不再是单例对象，因此只能通过名称去匹配。
+	 * 特殊处理，由于半动态表在实例化过程中，通过新建的TupleField代替了原来在元模型中定义的field，Field不再是单例对象，因此只能通过名称去匹配
+	 * 。
 	 */
 	public ColumnMapping<?> getColumnDef(Field field) {
 		return schemaMap.get(getField(field.name()));
@@ -89,11 +94,12 @@ public class DynamicMetadata extends AbstractMetadata {
 
 	/**
 	 * 构造，半动态模型
+	 * 
 	 * @param parent
 	 * @param extension
 	 */
 	public DynamicMetadata(AbstractMetadata parent, ExtensionConfig extension) {
-		//System.err.println("初始化动态实体模板:"+parent.getName()+" - "+extension.getName());
+		// System.err.println("初始化动态实体模板:"+parent.getName()+" - "+extension.getName());
 		this.type = parent.getThisType().asSubclass(IQueryableEntity.class);
 		BeanAccessor raw = FastBeanWrapperImpl.getAccessorFor(type);
 		this.containerAccessor = new ExtensionAccessor(raw, extension.getName(), EfPropertiesExtensionProvider.getInstance());
@@ -119,6 +125,7 @@ public class DynamicMetadata extends AbstractMetadata {
 
 	/**
 	 * 快速获得动态模型定义的field对象
+	 * 
 	 * @param fieldname
 	 * @return
 	 */
@@ -127,10 +134,6 @@ public class DynamicMetadata extends AbstractMetadata {
 		if (field == null)
 			throw new IllegalArgumentException("There is no field '" + fieldname + "' in table " + this.tableName);
 		return field;
-	}
-
-	protected Collection<ColumnMapping<?>> getColumnSchema() {
-		return schemaMap.values();
 	}
 
 	public List<Field> getPKField() {
@@ -167,7 +170,6 @@ public class DynamicMetadata extends AbstractMetadata {
 		updateColumn(columnName, columnName, type, pk, false);
 	}
 
-
 	/**
 	 * 定义一个列
 	 * 
@@ -202,6 +204,9 @@ public class DynamicMetadata extends AbstractMetadata {
 	}
 
 	protected boolean internalUpdateColumn(Field field, String columnName, ColumnType type, boolean isPk, boolean replace) {
+		if(isPk){
+			type.setNullable(false);
+		}
 		Field oldField = fields.get(field.name());
 		if (oldField != null) {
 			if (!replace) {
@@ -267,7 +272,6 @@ public class DynamicMetadata extends AbstractMetadata {
 		return internalUpdateColumn(field, columnName, type, isPk, replace);
 	}
 
-
 	/**
 	 * 删除指定的列
 	 * 
@@ -293,23 +297,26 @@ public class DynamicMetadata extends AbstractMetadata {
 	/*
 	 * 添加多对多引用字段
 	 */
-	public void addFieldReference_NvsN(String fieldName, Field targetField, JoinKey... path) {
+	public void addCascadeManyToMany(String fieldName, Field targetField, JoinKey... path) {
+		CascadeConfig config=new CascadeConfig(null, (ManyToMany)null);
 		if (path.length > 0) {
-			innerAdd(fieldName, targetField, ReferenceType.MANY_TO_MANY, new JoinPath(JoinType.INNER, path));
-		} else {
-			innerAdd(fieldName, targetField, ReferenceType.MANY_TO_MANY, null);
+			config.path= new JoinPath(JoinType.INNER, path);
 		}
+		ColumnMapping<?> targetFld= DbUtils.toColumnMapping(targetField);
+		Property pp = containerAccessor.getProperty(fieldName);
+		innerAdd(pp, targetFld, config);
 	}
 
 	/*
 	 * 添加多对多引用字段
 	 */
-	public void addReference_NvsN(String fieldName, ITableMetadata targetClass, JoinKey... path) {
+	public void addCascadeManyToMany(String fieldName, ITableMetadata targetClass, JoinKey... path) {
+		CascadeConfig config = new CascadeConfig(null, (ManyToMany) null);
 		if (path.length > 0) {
-			innerAdd(fieldName, targetClass, ReferenceType.MANY_TO_MANY, new JoinPath(JoinType.INNER, path), FetchType.LAZY);
-		} else {
-			innerAdd(fieldName, targetClass, ReferenceType.MANY_TO_MANY, null, FetchType.LAZY);
+			config.path = new JoinPath(JoinType.INNER, path);
 		}
+		Property pp = containerAccessor.getProperty(fieldName);
+		innerAdd(pp, targetClass,config);
 	}
 
 	/**
@@ -324,8 +331,11 @@ public class DynamicMetadata extends AbstractMetadata {
 	 * @param path
 	 *            用于连接到实体表的连接提示（如果在全局中注册了关系，则此处可以省略）
 	 */
-	public void addReference_1vs1(String fieldName, ITableMetadata target, JoinPath path) {
-		innerAdd(fieldName, target, ReferenceType.ONE_TO_ONE, path, FetchType.LAZY);
+	public void addCascadeOneToOne(String fieldName, ITableMetadata target, JoinPath path) {
+		CascadeConfig config = new CascadeConfig(null, (OneToOne) null);
+		config.path=path;
+		Property pp = containerAccessor.getProperty(fieldName);
+		innerAdd(pp, target, config);
 	}
 
 	/**
@@ -340,8 +350,12 @@ public class DynamicMetadata extends AbstractMetadata {
 	 * @param path
 	 *            用于连接到实体表的连接提示（如果在全局中注册了关系，则此处可以省略）
 	 */
-	public void addFieldReference_1vs1(String fieldName, Field target, JoinPath path) {
-		innerAdd(fieldName, target, ReferenceType.ONE_TO_ONE, path);
+	public void addCascadeOneToOne(String fieldName, Field target, JoinPath path) {
+		CascadeConfig config = new CascadeConfig(null, (OneToOne) null);
+		config.path=path;
+		ColumnMapping<?> targetFld= DbUtils.toColumnMapping(target);
+		Property pp = containerAccessor.getProperty(fieldName);
+		innerAdd(pp, targetFld, config);
 	}
 
 	/**
@@ -356,13 +370,13 @@ public class DynamicMetadata extends AbstractMetadata {
 	 * @param path
 	 *            用于连接到实体表的连接提示（如果在全局中注册了关系，则此处可以省略）
 	 */
-	public void addReference_1vsN(String fieldName, ITableMetadata target, JoinKey... path) {
+	public void addCascadeOneToMany(String fieldName, ITableMetadata target, JoinKey... path) {
+		CascadeConfig config = new CascadeConfig(null, (OneToMany) null);
 		if (path.length > 0) {
-			innerAdd(fieldName, target, ReferenceType.ONE_TO_MANY, new JoinPath(JoinType.INNER, path), FetchType.LAZY);
-		} else {
-			innerAdd(fieldName, target, ReferenceType.ONE_TO_MANY, null, FetchType.LAZY);
+			config.path = new JoinPath(JoinType.INNER, path);
 		}
-
+		Property pp = containerAccessor.getProperty(fieldName);
+		innerAdd(pp, target, config);
 	}
 
 	/**
@@ -377,13 +391,14 @@ public class DynamicMetadata extends AbstractMetadata {
 	 * @param path
 	 *            用于连接到实体表的连接提示（如果在全局中注册了关系，则此处可以省略）
 	 */
-	public void addFieldReference_1vsN(String fieldName, Field target, JoinKey... path) {
+	public void addCascadeOneToMany(String fieldName, Field target, JoinKey... path) {
+		CascadeConfig config = new CascadeConfig(null, (OneToMany) null);
 		if (path.length > 0) {
-			innerAdd(fieldName, target, ReferenceType.ONE_TO_MANY, new JoinPath(JoinType.INNER, path));
-		} else {
-			innerAdd(fieldName, target, ReferenceType.ONE_TO_MANY, null);
+			config.path = new JoinPath(JoinType.INNER, path);
 		}
-
+		ColumnMapping<?> targetFld= DbUtils.toColumnMapping(target);
+		Property pp = containerAccessor.getProperty(fieldName);
+		innerAdd(pp, targetFld, config);
 	}
 
 	/**
@@ -398,8 +413,10 @@ public class DynamicMetadata extends AbstractMetadata {
 	 * @param path
 	 *            用于连接到实体表的连接提示（如果在全局中注册了关系，则此处可以省略）
 	 */
-	public void addReference_Nvs1(String fieldName, ITableMetadata target, JoinPath path) {
-		innerAdd(fieldName, target, ReferenceType.MANY_TO_ONE, path, FetchType.LAZY);
+	public void addCascadeManyToOne(String fieldName, ITableMetadata target, JoinPath path) {
+		CascadeConfig config = new CascadeConfig(null, (ManyToOne) null);
+		Property pp = containerAccessor.getProperty(fieldName);
+		innerAdd(pp, target, config);
 	}
 
 	/**
@@ -414,8 +431,11 @@ public class DynamicMetadata extends AbstractMetadata {
 	 * @param path
 	 *            用于连接到实体表的连接提示（如果在全局中注册了关系，则此处可以省略）
 	 */
-	public void addFieldReference_Nvs1(String fieldName, Field target, JoinPath path) {
-		innerAdd(fieldName, target, ReferenceType.MANY_TO_ONE, path);
+	public void addCascadeManyToOne(String fieldName, Field target, JoinPath path) {
+		CascadeConfig config = new CascadeConfig(null, (ManyToOne) null);
+		ColumnMapping<?> targetFld= DbUtils.toColumnMapping(target);
+		Property pp = containerAccessor.getProperty(fieldName);
+		innerAdd(pp, targetFld, config);
 	}
 
 	/**
@@ -445,38 +465,6 @@ public class DynamicMetadata extends AbstractMetadata {
 	 */
 	public void addIndex(String fieldName, String comment) {
 		addIndex(new String[] { fieldName }, comment);
-	}
-
-	protected void innerAdd(String fieldName, Field field, ReferenceType type, JoinPath path) {
-		ITableMetadata target = DbUtils.getTableMeta(field);
-		ColumnMapping<?> targetFld=target.getColumnDef(field);
-		Assert.notNull(targetFld);
-		Reference r = new Reference(target, type, this);
-		if (path != null) {
-			r.setHint(path);
-		}
-
-		Class<?> containerType = Object.class;
-		if (!type.isToOne()) {
-			containerType = Collections.class;
-		}
-		ReferenceField f = new ReferenceField(containerType, fieldName, r, targetFld, null);
-		addRefField(f);
-	}
-
-	protected void innerAdd(String fieldName, ITableMetadata target, ReferenceType type, JoinPath path, FetchType fetch) {
-		Reference r = new Reference(target, type, this);
-		if (path != null) {
-			r.setHint(path);
-		}
-
-		Class<?> containerType = target.getThisType();
-		if (!type.isToOne()) {
-			containerType = Collection.class;
-		}
-		ReferenceObject field = new ReferenceObject(containerType, fieldName, r, null);
-		field.setCascade(ALL, fetch);
-		addRefField(field);
 	}
 
 	public boolean isAssignableFrom(ITableMetadata type) {
@@ -528,10 +516,10 @@ public class DynamicMetadata extends AbstractMetadata {
 	public BeanAccessor getContainerAccessor() {
 		return containerAccessor;
 	}
-	
 
 	/**
 	 * 给子类用的构造
+	 * 
 	 * @param tableName
 	 */
 	protected DynamicMetadata(String tableName) {
@@ -545,9 +533,10 @@ public class DynamicMetadata extends AbstractMetadata {
 		this.schema = schema;
 		this.tableName = tableName;
 	}
-	
+
 	/**
 	 * 给子类用的构造
+	 * 
 	 * @param schema
 	 * @param tableName
 	 */
@@ -557,5 +546,20 @@ public class DynamicMetadata extends AbstractMetadata {
 		}
 		this.tableName = tableName.trim();
 		this.schema = StringUtils.trimToNull(schema);
+	}
+
+	@Override
+	public TupleMetadata getExtendsTable() {
+		return null;
+	}
+
+	@Override
+	public Collection<ColumnMapping<?>> getExtendedColumns() {
+		return getColumnSchema();
+	}
+
+	@Override
+	public ColumnMapping<?> getExtendedColumnDef(String field) {
+		return schemaMap.get(getField(field));
 	}
 }
