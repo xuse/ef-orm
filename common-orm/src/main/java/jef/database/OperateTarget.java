@@ -15,8 +15,9 @@ import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.Transaction.TransactionFlag;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.statement.ReversePreparedStatement;
-import jef.database.dialect.statement.ReverseStatement;
+import jef.database.dialect.statement.ResultSetLaterProcess;
+import jef.database.dialect.statement.ProcessablePreparedStatement;
+import jef.database.dialect.statement.ProcessableStatement;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IManagedConnectionPool;
@@ -134,13 +135,13 @@ public class OperateTarget implements SqlTemplate {
 		return profile.wrap(getConnection(dbkey).createStatement(), isJpaTx());
 	}
 
-	public Statement createStatement(boolean isReverse,boolean isUpdatable) throws SQLException {
+	public Statement createStatement(ResultSetLaterProcess rslp, boolean isUpdatable) throws SQLException {
 		Statement st;
-		int rsType=(isReverse || isUpdatable)?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY;
-		int rsUpdate=isUpdatable?ResultSet.CONCUR_UPDATABLE:ResultSet.CONCUR_READ_ONLY;
-		st=getConnection(dbkey).createStatement(rsType, rsUpdate);
-		if(isReverse){
-			st=new ReverseStatement(st);
+		int rsType = (isUpdatable) ? ResultSet.TYPE_SCROLL_INSENSITIVE : ResultSet.TYPE_FORWARD_ONLY;
+		int rsUpdate = isUpdatable ? ResultSet.CONCUR_UPDATABLE : ResultSet.CONCUR_READ_ONLY;
+		st = getConnection(dbkey).createStatement(rsType, rsUpdate);
+		if (rslp!=null) {
+			st = new ProcessableStatement(st,rslp);
 		}
 		return profile.wrap(st, isJpaTx());
 	}
@@ -176,13 +177,13 @@ public class OperateTarget implements SqlTemplate {
 	/*
 	 * 准备执行SQL，查询
 	 */
-	PreparedStatement prepareStatement(String sql, boolean isReverse,boolean isUpdatable) throws SQLException {
+	PreparedStatement prepareStatement(String sql, ResultSetLaterProcess rslp, boolean isUpdatable) throws SQLException {
 		PreparedStatement st;
-		int rsType=(isReverse || isUpdatable)?ResultSet.TYPE_SCROLL_INSENSITIVE:ResultSet.TYPE_FORWARD_ONLY;
-		int rsUpdate=isUpdatable?ResultSet.CONCUR_UPDATABLE:ResultSet.CONCUR_READ_ONLY;
+		int rsType = (isUpdatable) ? ResultSet.TYPE_SCROLL_INSENSITIVE : ResultSet.TYPE_FORWARD_ONLY;
+		int rsUpdate = isUpdatable ? ResultSet.CONCUR_UPDATABLE : ResultSet.CONCUR_READ_ONLY;
 		st = getConnection(dbkey).prepareStatement(sql, rsType, rsUpdate);
-		if (isReverse) {
-			st = new ReversePreparedStatement(st);
+		if (rslp!=null) {
+			st = new ProcessablePreparedStatement(st,rslp);
 		}
 		return profile.wrap(st, isJpaTx());
 	}
@@ -389,8 +390,8 @@ public class OperateTarget implements SqlTemplate {
 			if (debugMode)
 				sb = new StringBuilder(sql.length() + 30 + objs.size() * 20).append(sql).append(" | ").append(this.getTransactionId());
 
-			boolean isReverse = lazy != null && lazy.isReverseResult();
-			st = prepareStatement(sql, isReverse,false);
+			ResultSetLaterProcess isReverse = lazy == null ? null : lazy.isReverseResult();
+			st = prepareStatement(sql, isReverse, false);
 
 			BindVariableContext context = new BindVariableContext(st, this, sb);
 			BindVariableTool.setVariables(context, objs);
@@ -438,8 +439,8 @@ public class OperateTarget implements SqlTemplate {
 			if (debugMode)
 				sb = new StringBuilder(sql.length() + 30 + objs.size() * 20).append(sql).append(" | ").append(this.getTransactionId());
 
-			boolean isReverse = inmem != null && inmem.isReverseResult();
-			st = prepareStatement(sql, isReverse,false);
+			ResultSetLaterProcess isReverse = inmem == null?null:inmem.isReverseResult();
+			st = prepareStatement(sql, isReverse, false);
 			BindVariableContext context = new BindVariableContext(st, this, sb);
 			BindVariableTool.setVariables(context, objs);
 
@@ -545,10 +546,10 @@ public class OperateTarget implements SqlTemplate {
 	}
 
 	public final <T> List<T> selectBySql(String sql, Transformer transformer, IntRange range, Object... params) throws SQLException {
-		BindSql bs=range==null?new BindSql(sql):getProfile().getLimitHandler().toPageSQL(sql, range.toStartLimitSpan());
+		BindSql bs = range == null ? new BindSql(sql) : getProfile().getLimitHandler().toPageSQL(sql, range.toStartLimitSpan());
 		long start = System.currentTimeMillis();
 		TransformerAdapter<T> sqlTransformer = new TransformerAdapter<T>(transformer, this);
-		List<T> list = innerSelectBySql(bs.getSql(), sqlTransformer, Arrays.asList(params),bs);
+		List<T> list = innerSelectBySql(bs.getSql(), sqlTransformer, Arrays.asList(params), bs);
 		if (ORMConfig.getInstance().isDebugMode()) {
 			long dbAccess = sqlTransformer.dbAccess;
 			LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(list.size()), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbAccess), "ms) |", getTransactionId()));

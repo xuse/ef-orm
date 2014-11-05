@@ -19,6 +19,7 @@ import java.util.List;
 
 import jef.common.wrapper.IntRange;
 import jef.database.BindVariableDescription;
+import jef.database.dialect.statement.ResultSetLaterProcess;
 import jef.database.routing.sql.InMemoryOperateProvider;
 import jef.database.wrapper.result.MultipleResultSet;
 
@@ -30,7 +31,7 @@ import jef.database.wrapper.result.MultipleResultSet;
 public final class BindSql implements InMemoryOperateProvider{
 	private String sql;
 	private List<BindVariableDescription> bind;
-	private boolean isReverseResultSet;
+	private ResultSetLaterProcess isReverseResultSet;
 	
 	public BindSql(String sql){
 		this.sql=sql;
@@ -69,11 +70,11 @@ public final class BindSql implements InMemoryOperateProvider{
 		return sql;
 	}
 
-	public boolean isReverseResult() {
+	public ResultSetLaterProcess isReverseResult() {
 		return isReverseResultSet;
 	}
 
-	public BindSql setReverseResult(boolean isReverseResultSet) {
+	public BindSql setReverseResult(ResultSetLaterProcess isReverseResultSet) {
 		this.isReverseResultSet = isReverseResultSet;
 		return this;
 	}

@@ -6,7 +6,9 @@ import java.util.List;
 
 import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
+import jef.common.wrapper.IntRange;
 import jef.database.DbClient;
+import jef.database.NativeQuery;
 import jef.database.QB;
 import jef.database.meta.FBIField;
 import jef.database.query.AllTableColumns.AliasMode;
@@ -169,5 +171,12 @@ public class ComplexQuerysTest {
 		System.out.println(l.get(0).getField2());
 		LogUtil.show(l);
 		List<TestEntity> l2 = db.select(t1);
+	}
+	
+	@Test
+	public void testUnionSQL() throws SQLException{
+		NativeQuery<Foo> q=db.createNativeQuery("select id,name from foo union all select id,name from foo order by id",Foo.class);
+		q.setRange(new IntRange(6,10));
+		q.getResultList();
 	}
 }

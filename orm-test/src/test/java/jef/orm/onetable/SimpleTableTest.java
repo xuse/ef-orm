@@ -116,7 +116,6 @@ public class SimpleTableTest extends org.junit.Assert {
 
 	}
 
-	@IgnoreOn(allButExcept = "sqlserver")
 	@Test
 	public void testKeyword() throws SQLException {
 		db.delete(QB.create(Keyword.class));
@@ -364,7 +363,6 @@ public class SimpleTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	@IgnoreOn(allButExcept={"hsqldb"})
 	public void testUpdateDynamicLess() throws SQLException {
 		boolean dynamic=ORMConfig.getInstance().isDynamicUpdate();
 		ORMConfig.getInstance().setDynamicUpdate(false);
@@ -512,7 +510,6 @@ public class SimpleTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	@IgnoreOn(allButExcept="sqlserver")
 	public void testPaging() throws SQLException {
 		insert3Records();
 		insert3Records();
@@ -531,10 +528,11 @@ public class SimpleTableTest extends org.junit.Assert {
 		}
 		System.out.println("=========== testPaging  End ==========");
 		
-		List<TestEntity> entities=db.select(q,new IntRange(8, 10));
+		List<TestEntity> entities=db.select(q,new IntRange(8, 10));//查出3条是错误的。只能查出两条
 		for(TestEntity e: entities){
 			System.out.println(e);
 		}
+		assertEquals(2,entities.size());
 		
 	}
 

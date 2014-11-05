@@ -4,6 +4,7 @@ import javax.persistence.PersistenceException;
 
 import jef.database.DbUtils;
 import jef.database.dialect.statement.LimitHandler;
+import jef.database.dialect.statement.ResultSetLaterProcess;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.PlainSelect;
@@ -53,7 +54,7 @@ public class SQL2000LimitHandlerSlowImpl implements LimitHandler {
 			}
 		}
 		StringBuilder sb=new StringBuilder(raw.length()+40);
-		sb.append("select top ").append(offsetLimit[1]).append(" * from (\nselect top ");
+		sb.append("select top ");
 		sb.append(offsetLimit[0]+offsetLimit[1]).append(" * from");
 		SubSelect s=new SubSelect();
 		union.setOrderBy(null);
@@ -62,9 +63,9 @@ public class SQL2000LimitHandlerSlowImpl implements LimitHandler {
 		s.appendTo(sb);
 		sb.append('\n');
 		order.appendTo(sb);
-		sb.append(") __ef_tmp2\n");
-		order.reverseAppendTo(sb,"__ef_tmp2",null);
-		return new BindSql(sb.toString()).setReverseResult(true);
+//		sb.append(") __ef_tmp2\n");
+//		order.reverseAppendTo(sb,"__ef_tmp2",null);
+		return new BindSql(sb.toString()).setReverseResult(new ResultSetLaterProcess(offsetLimit[0]));
 	}
 
 	private BindSql toPage(int[] offsetLimit, PlainSelect selectBody,String raw) {
@@ -75,11 +76,11 @@ public class SQL2000LimitHandlerSlowImpl implements LimitHandler {
 		selectBody.setTop(new Top(offsetLimit[0]+offsetLimit[1]));
 		
 		StringBuilder sb=new StringBuilder(raw.length()+30);
-		sb.append("select top ").append(offsetLimit[1]).append(" * from (");
+//		sb.append("select top ").append(offsetLimit[1]).append(" * from (");
 		selectBody.appendTo(sb);
-		sb.append(") __ef_t");
-		order.reverseAppendTo(sb,"__ef_t",selectBody.getSelectItems());
-		return new BindSql(sb.toString()).setReverseResult(true);
+//		sb.append(") __ef_t");
+//		order.reverseAppendTo(sb,"__ef_t",selectBody.getSelectItems());
+		return new BindSql(sb.toString()).setReverseResult(new ResultSetLaterProcess(offsetLimit[0]));
 	}
 
 

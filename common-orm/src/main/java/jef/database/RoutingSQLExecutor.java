@@ -9,6 +9,7 @@ import java.util.List;
 import jef.common.PairSO;
 import jef.common.log.LogUtil;
 import jef.database.annotation.PartitionResult;
+import jef.database.dialect.statement.ResultSetLaterProcess;
 import jef.database.jsqlparser.RemovedDelayProcess;
 import jef.database.jsqlparser.SqlFunctionlocalization;
 import jef.database.jsqlparser.expression.Table;
@@ -188,7 +189,7 @@ public class RoutingSQLExecutor implements SQLExecutor {
 	/*
 	 * 执行查询动作，将查询结果放入mrs
 	 */
-	private void processQuery(OperateTarget db, PairSO<List<Object>> sql, int max, MultipleResultSet mrs,boolean isReverse) throws SQLException {
+	private void processQuery(OperateTarget db, PairSO<List<Object>> sql, int max, MultipleResultSet mrs,ResultSetLaterProcess isReverse) throws SQLException {
 		StringBuilder sb = null;
 		PreparedStatement psmt = null;
 		ResultSet rs = null;

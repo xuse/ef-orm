@@ -10,14 +10,17 @@ import java.sql.SQLException;
  * @author jiyi
  *
  */
-public final class ReversePreparedStatement extends DelegatingPreparedStatement{
-	public ReversePreparedStatement(PreparedStatement s) {
+public final class ProcessablePreparedStatement extends DelegatingPreparedStatement{
+	private ResultSetLaterProcess rslp;
+	
+	public ProcessablePreparedStatement(PreparedStatement s,ResultSetLaterProcess rslp) {
 		super(s);
+		this.rslp=rslp;
 	}
 
 	@Override
 	public ResultSet executeQuery() throws SQLException {
-		return new ReverseResultSet(((PreparedStatement) _stmt).executeQuery());
+		return new ProcessableResultSet(((PreparedStatement) _stmt).executeQuery(),rslp);
 	}
 
 	@Override
@@ -27,6 +30,6 @@ public final class ReversePreparedStatement extends DelegatingPreparedStatement{
 
 	@Override
 	public ResultSet getResultSet() throws SQLException {
-		return new ReverseResultSet(_stmt.getResultSet());
+		return new ProcessableResultSet(_stmt.getResultSet(),rslp);
 	}
 }

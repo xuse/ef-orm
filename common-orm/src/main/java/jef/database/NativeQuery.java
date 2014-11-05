@@ -42,6 +42,7 @@ import jef.database.OperateTarget.TransformerAdapter;
 import jef.database.OperateTarget.TransformerIteratrAdapter;
 import jef.database.Session.PopulateStrategy;
 import jef.database.annotation.PartitionResult;
+import jef.database.dialect.statement.ResultSetLaterProcess;
 import jef.database.dialect.type.ResultSetAccessor;
 import jef.database.jsqlparser.expression.JpqlDataType;
 import jef.database.jsqlparser.expression.JpqlParameter;
@@ -581,7 +582,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	/*
 	 * 执行查询动作，将查询结果放入mrs
 	 */
-	private void processQuery(OperateTarget db, PairSO<List<Object>> sql, int max, MultipleResultSet mrs,boolean reverseResult) throws SQLException {
+	private void processQuery(OperateTarget db, PairSO<List<Object>> sql, int max, MultipleResultSet mrs,ResultSetLaterProcess reverseResult) throws SQLException {
 		StringBuilder sb = null;
 		PreparedStatement psmt = null;
 		ResultSet rs = null;

@@ -6,6 +6,7 @@ import java.util.List;
 
 import jef.common.log.LogUtil;
 import jef.database.dialect.statement.LimitHandler;
+import jef.database.dialect.statement.ResultSetLaterProcess;
 import jef.database.wrapper.clause.BindSql;
 
 import org.apache.commons.lang.StringUtils;
@@ -62,14 +63,14 @@ public class SQL2000LimitHandler implements LimitHandler {
 		top.setExpr(new SQLIntegerExpr(offsetLimit[0] + offsetLimit[1]));
 		selectBody.setTop(top);
 		StringBuilder sb = new StringBuilder(raw.length() + 30);
-		sb.append("SELECT TOP ").append(offsetLimit[1]).append(" * FROM (");
+		//sb.append("SELECT TOP ").append(offsetLimit[1]).append(" * FROM (");
 		SQLServerOutputVisitor visitor=new SQLServerOutputVisitor(sb);
 		visitor.setPrettyFormat(false);
 		select.accept(visitor);
-		sb.append(") __ef_t");
+		//sb.append(") __ef_t");
 		
-		appendOrderReverse(order,visitor, "__ef_t", selectBody.getSelectList());
-		return new BindSql(sb.toString()).setReverseResult(true);
+		//appendOrderReverse(order,visitor, "__ef_t", selectBody.getSelectList());
+		return new BindSql(sb.toString()).setReverseResult(new ResultSetLaterProcess(offsetLimit[0]));
 	}
 
 	
@@ -81,7 +82,8 @@ public class SQL2000LimitHandler implements LimitHandler {
 		}
 
 		StringBuilder sb = new StringBuilder(raw.length() + 40);
-		sb.append("SELECT TOP ").append(offsetLimit[1]).append(" * FROM (\nSELECT TOP ");
+//		sb.append("SELECT TOP ").append(offsetLimit[1]).append(" * FROM (\n");
+		sb.append("SELECT TOP ");
 		sb.append(offsetLimit[0] + offsetLimit[1]).append(" * FROM");
 		SQLSubqueryTableSource s = new SQLSubqueryTableSource(select,"__ef_tmp1");
 		
@@ -90,10 +92,9 @@ public class SQL2000LimitHandler implements LimitHandler {
 		s.accept(visitor);
 		sb.append('\n');
 		order.accept(visitor);
-		sb.append(") __ef_tmp2\n");
-		appendOrderReverse(order,visitor,"__ef_tmp2",null);
-//		order.reverseAppendTo(sb, "__ef_tmp2", null);
-		return new BindSql(sb.toString()).setReverseResult(true);
+//		sb.append(") __ef_tmp2\n");
+//		appendOrderReverse(order,visitor,"__ef_tmp2",null);
+		return new BindSql(sb.toString()).setReverseResult(new ResultSetLaterProcess(offsetLimit[0]));
 	}
 
 	private void appendOrderReverse(SQLOrderBy order, SQLServerOutputVisitor visitor,String tmpTableAlias,List<SQLSelectItem> items) {

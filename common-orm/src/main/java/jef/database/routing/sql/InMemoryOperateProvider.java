@@ -1,6 +1,7 @@
 package jef.database.routing.sql;
 
 import jef.common.wrapper.IntRange;
+import jef.database.dialect.statement.ResultSetLaterProcess;
 import jef.database.wrapper.result.MultipleResultSet;
 
 /**
@@ -25,5 +26,5 @@ public interface InMemoryOperateProvider {
 	 * 是否结果集要倒序？
 	 * @return
 	 */
-	boolean isReverseResult();
+	ResultSetLaterProcess isReverseResult();
 }

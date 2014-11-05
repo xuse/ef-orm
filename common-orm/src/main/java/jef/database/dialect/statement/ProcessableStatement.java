@@ -9,18 +9,21 @@ import java.sql.Statement;
  * @author jiyi
  *
  */
-public final class ReverseStatement extends DelegatingStatement{
-	public ReverseStatement(Statement s) {
+public final class ProcessableStatement extends DelegatingStatement{
+	private ResultSetLaterProcess rslp;
+	
+	public ProcessableStatement(Statement s,ResultSetLaterProcess rslp) {
 		super(s);
+		this.rslp=rslp;
 	}
 
 	@Override
 	public ResultSet executeQuery(String sql) throws SQLException {
-		return new ReverseResultSet(_stmt.executeQuery(sql));
+		return new ProcessableResultSet(_stmt.executeQuery(sql),rslp);
 	}
 
 	@Override
 	public ResultSet getResultSet() throws SQLException {
-		return new ReverseResultSet(_stmt.getResultSet());
+		return new ProcessableResultSet(_stmt.getResultSet(),rslp);
 	}
 }
