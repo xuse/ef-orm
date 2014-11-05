@@ -51,9 +51,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
-@DataSourceContext({ @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"), @DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
-		@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-		@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"), @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"), @DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}") })
+@DataSourceContext({
+	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
+	@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
+	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"),
+	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
+	@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"),
+	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+	@DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}")
+})
 public class SimpleTableTest extends org.junit.Assert {
 	private DbClient db;
 
@@ -375,12 +381,30 @@ public class SimpleTableTest extends org.junit.Assert {
 			t1 = db.load(t1);
 			t1.getQuery().addCondition(QB.eq(TestEntity.Field.longField2,t1.getLongField2()));
 			t1.setBinaryData("Hello".getBytes());
-			t1.setLongField(12356);
+//			t1.setLongField(12356);
 			int i = db.update(t1);
 			assertEquals(1, i);
 		}
 		db.rollback(true);
 		ORMConfig.getInstance().setDynamicUpdate(dynamic);
+	}
+	
+	/**
+	 * 在SQLServer中，如果主键列被标记为自增键值 Identity，那么将无法通过Update预计更新主键列的值。
+	 * @throws SQLException
+	 */
+	@Test(expected=SQLException.class)
+	@IgnoreOn(allButExcept="sqlserver")
+	public void testSqlServerUpdateId() throws SQLException{
+		insert3Records();
+		TestEntity entity=db.load(QB.create(TestEntity.class));
+		if(entity==null){
+			return;
+		}
+		entity.setLongField(9123);
+		entity.getQuery().addCondition(TestEntity.Field.longField2,entity.getLongField2());
+		db.update(entity);
+		
 	}
 
 
@@ -526,9 +550,11 @@ public class SimpleTableTest extends org.junit.Assert {
 		for (; page.hasNext();) {
 			List<TestEntity> list = page.next();
 		}
-		System.out.println("=========== testPaging  End ==========");
 		
-		List<TestEntity> entities=db.select(q,new IntRange(8, 10));//查出3条是错误的。只能查出两条
+		int count=(int)page.getTotal();
+		
+		System.out.println("=========== testPaging  End ==========");
+		List<TestEntity> entities=db.select(q,new IntRange(count-1, count+1));//查出3条是错误的。只能查出两条
 		for(TestEntity e: entities){
 			System.out.println(e);
 		}

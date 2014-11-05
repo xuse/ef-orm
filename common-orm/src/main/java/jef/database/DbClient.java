@@ -30,8 +30,6 @@ import javax.sql.DataSource;
 import jef.common.Callback;
 import jef.common.log.LogUtil;
 import jef.common.pool.PoolStatus;
-import jef.database.SelectProcessor.NormalImpl;
-import jef.database.SelectProcessor.PreparedImpl;
 import jef.database.annotation.PartitionResult;
 import jef.database.cache.CacheDummy;
 import jef.database.cache.TransactionCache;
@@ -46,10 +44,9 @@ import jef.database.innerpool.PartitionSupport;
 import jef.database.innerpool.PoolService;
 import jef.database.innerpool.RoutingManagedConnectionPool;
 import jef.database.jmx.JefFacade;
-import jef.database.meta.Feature;
+import jef.database.meta.AbstractMetadata;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-import jef.database.meta.AbstractMetadata;
 import jef.database.support.DbOperatorListener;
 import jef.database.support.DbOperatorListenerContainer;
 import jef.database.support.DefaultDbOperListener;
@@ -341,19 +338,12 @@ public class DbClient extends Session {
 	private void afterPoolReady() throws SQLException {
 		// 初始化处理器
 		DatabaseDialect profile = this.getProfile(null);
-		rProcessor = new DefaultSqlProcessor(profile, this);
-		p = new DbOperateProcessor();
-		if (profile.has(Feature.NO_BIND_FOR_SELECT)) {
-			selectp = new NormalImpl(this, p, rProcessor);
-		} else {
-			selectp = new PreparedImpl(this, p, rProcessor);
-		}
-		batchinsertp = new InsertProcessor.PreparedImpl(this, p, rProcessor);
-		if (profile.has(Feature.NO_BIND_FOR_INSERT)) {
-			insertp = new InsertProcessor.NormalImpl(this, p, rProcessor);
-		} else {
-			insertp = batchinsertp;
-		}
+		this.rProcessor = new DefaultSqlProcessor(profile, this);
+		this.selectp = SelectProcessor.get(profile, this);
+		this.insertp = InsertProcessor.get(profile, this);
+		this.updatep = UpdateProcessor.get(profile, this);
+		this.deletep = DeleteProcessor.get(profile, this);
+
 		this.sequenceManager = new SequenceManager(this);
 		this.pm = new PartitionMetadata(connPool);
 		// 配置好的初始化选项
@@ -622,7 +612,7 @@ public class DbClient extends Session {
 		tablename = MetaHolder.toSchemaAdjustedName(tablename);
 		dbName = MetaHolder.getMappingSite(dbName);
 		List<SQLException> ex = new ArrayList<SQLException>();
-		boolean ok= createTable0(meta,ex, new PartitionResult(tablename).setDatabase(dbName)) > 0;
+		boolean ok = createTable0(meta, ex, new PartitionResult(tablename).setDatabase(dbName)) > 0;
 		if (!ex.isEmpty()) {
 			throw DbUtils.wrapExceptions(ex);
 		}
@@ -660,7 +650,7 @@ public class DbClient extends Session {
 			LogUtil.show("Partitions:" + Arrays.toString(result));
 		}
 		List<SQLException> ex = new ArrayList<SQLException>();
-		boolean ok= createTable0(meta, ex, result) > 0;
+		boolean ok = createTable0(meta, ex, result) > 0;
 		if (!ex.isEmpty()) {
 			throw DbUtils.wrapExceptions(ex);
 		}
@@ -968,23 +958,23 @@ public class DbClient extends Session {
 	public void printPool() {
 		System.out.println(getPool().getStatus());
 	}
-	
+
 	/*
 	 * 从配置中读取命名查询的配置位置(文件)
-	 * 
 	 */
-	private String namedQueryFilename=JefConfiguration.get(DbCfg.NAMED_QUERY_RESOURCE_NAME, "named-queries.xml");
+	private String namedQueryFilename = JefConfiguration.get(DbCfg.NAMED_QUERY_RESOURCE_NAME, "named-queries.xml");
 	/*
 	 * 从配置中读取命名查询的配置位置(数据库表)
 	 */
-	private String namedQueryTablename=JefConfiguration.get(DbCfg.DB_QUERY_TABLE_NAME);
-	
+	private String namedQueryTablename = JefConfiguration.get(DbCfg.DB_QUERY_TABLE_NAME);
+
 	/**
 	 * 设置命名查询文件的名称
+	 * 
 	 * @param namedQueryFilename
 	 */
 	public void setNamedQueryFilename(String namedQueryFilename) {
-		if(namedQueries!=null){
+		if (namedQueries != null) {
 			throw new IllegalStateException("must set before named-query init");
 		}
 		this.namedQueryFilename = namedQueryFilename;
@@ -992,22 +982,24 @@ public class DbClient extends Session {
 
 	/**
 	 * 设置命名查询表的名称
+	 * 
 	 * @param namedQueryTablename
 	 */
 	public void setNamedQueryTablename(String namedQueryTablename) {
-		if(namedQueries!=null){
+		if (namedQueries != null) {
 			throw new IllegalStateException("must set before named-query init");
 		}
 		this.namedQueryTablename = namedQueryTablename;
 	}
 
-	String getNamedQueryFile(){
+	String getNamedQueryFile() {
 		return namedQueryFilename;
 	}
-	
-	String getNamedQueryTable(){
+
+	String getNamedQueryTable() {
 		return namedQueryTablename;
 	}
+
 	protected boolean isJpaTx() {
 		return false;
 	}

@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.GenerationType;
 import javax.sql.rowset.CachedRowSet;
 
 import jef.common.PairIS;
@@ -345,7 +346,13 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	public String getCreationComment(ColumnType column, boolean flag) {
 		// 特殊情况先排除
 		if (column instanceof ColumnType.AutoIncrement) {
-			return getComment((ColumnType.AutoIncrement) column, flag);
+			ColumnType.AutoIncrement cType=(ColumnType.AutoIncrement) column;
+			GenerationType type=cType.getGenerationType(this, true);
+			if(type==GenerationType.IDENTITY){
+				return getComment(cType,flag);				
+			}else{
+				column=cType.toNormalType();
+			}
 		}
 		// 按事先注册的类型进行建表
 		int rawSqlType=column.getSqlType();

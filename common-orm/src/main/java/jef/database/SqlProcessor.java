@@ -18,7 +18,6 @@ package jef.database;
 import java.sql.SQLException;
 import java.util.List;
 
-import jef.common.Entry;
 import jef.database.annotation.PartitionResult;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.PartitionSupport;
@@ -51,24 +50,9 @@ public interface SqlProcessor{
 	 * @param context SQL语句上下文
 	 * @return
 	 */
-	public String toWhereClause(JoinElement joinElement,SqlContext context,boolean update,DatabaseDialect profile);
+	public BindSql toWhereClause(JoinElement joinElement,SqlContext context,boolean update,DatabaseDialect profile);
 	
-	/**
-	 * 生成更新子句
-	 * @param obj
-	 * @param dynamic
-	 * @return SQL片段
-	 * @throws SQLException
-	 */
-	public String toUpdateClause(IQueryableEntity obj,boolean dynamic) throws SQLException;
 	
-	/**
-	 * 形成update语句 
-	 * @param obj     更新请求
-	 * @param dynamic 动态更新标记
-	 * @return SQL片段
-	 */
-	public Entry<List<String>, List<Field>> toPrepareUpdateClause(IQueryableEntity obj,PartitionResult[] prs,boolean dynamic);
 	
 	/**
 	 *  收集结果数据中的数据，用需要的容器包装并返回

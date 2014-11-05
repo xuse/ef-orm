@@ -5,11 +5,11 @@ import java.sql.SQLException;
 
 import javax.persistence.PersistenceException;
 
-import org.easyframe.enterprise.spring.TransactionMode;
-
 import jef.database.cache.CacheDummy;
 import jef.database.innerpool.AbstractJDBCConnection;
 import jef.database.innerpool.IConnection;
+
+import org.easyframe.enterprise.spring.TransactionMode;
 
 public class ManagedTransactionImpl extends Transaction{
 	
@@ -17,11 +17,12 @@ public class ManagedTransactionImpl extends Transaction{
 		super();
 		this.parent = parent;
 		rProcessor = parent.rProcessor;
-		selectp = parent.selectp;
-		p = parent.p;
+		this.selectp = parent.selectp;
+		this.insertp = parent.insertp;
+		this.updatep=parent.updatep;
+		this.deletep=parent.deletep;
+		
 		cache = CacheDummy.getInstance();
-		insertp = parent.insertp;
-		batchinsertp = parent.batchinsertp;
 		this.conn=new Conn(connection);
 	}
 	static final class Conn extends AbstractJDBCConnection implements IConnection{

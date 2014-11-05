@@ -15,8 +15,6 @@
  */
 package jef.database;
 
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -42,7 +40,6 @@ import jef.database.OperateTarget.TransformerAdapter;
 import jef.database.OperateTarget.TransformerIteratrAdapter;
 import jef.database.Session.PopulateStrategy;
 import jef.database.annotation.PartitionResult;
-import jef.database.dialect.statement.ResultSetLaterProcess;
 import jef.database.dialect.type.ResultSetAccessor;
 import jef.database.jsqlparser.expression.JpqlDataType;
 import jef.database.jsqlparser.expression.JpqlParameter;
@@ -555,8 +552,10 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		ORMConfig config = ORMConfig.getInstance();
 		boolean debug = config.debugMode;
 		MultipleResultSet mrs = new MultipleResultSet(config.isCacheResultset(), debug);
-		for (PartitionResult site : plan.getSites()) {
-			processQuery(db.getTarget(site.getDatabase()), plan.getSql(site, noOrder), rst.getMaxRows(), mrs, sqlContext.isReverseResult());
+		if(plan.getSites().length>= config.getParallelSelect()){
+			new ParallelExecutor().executeQuery(db,plan,noOrder,rst,mrs,sqlContext);
+		}else{
+			SerialExecutor.INSTANCE.executeQuery(db,plan,noOrder,rst,mrs,sqlContext);
 		}
 		IResultSet rsw = null;
 		try {
@@ -579,32 +578,6 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		}
 	}
 
-	/*
-	 * 执行查询动作，将查询结果放入mrs
-	 */
-	private void processQuery(OperateTarget db, PairSO<List<Object>> sql, int max, MultipleResultSet mrs,ResultSetLaterProcess reverseResult) throws SQLException {
-		StringBuilder sb = null;
-		PreparedStatement psmt = null;
-		ResultSet rs = null;
-		if (mrs.isDebug())
-			sb = new StringBuilder(sql.first.length() + 150).append(sql.first).append(" | ").append(db.getTransactionId());
-		try {
-			psmt = db.prepareStatement(sql.first,reverseResult,false);
-			BindVariableContext context = new BindVariableContext(psmt, db, sb);
-			BindVariableTool.setVariables(context, sql.second);
-			if (fetchSize > 0) {
-				psmt.setFetchSize(fetchSize);
-			}
-			if (max > 0) {
-				psmt.setMaxRows(max);
-			}
-			rs = psmt.executeQuery();
-			mrs.add(rs, psmt, db);
-		} finally {
-			if (mrs.isDebug())
-				LogUtil.show(sb);
-		}
-	}
 
 	/**
 	 * 设置查询结果的条数限制，即分页 包含了{@link #setMaxResults(int)}和

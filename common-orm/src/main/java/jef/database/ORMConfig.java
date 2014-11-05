@@ -157,13 +157,20 @@ public class ORMConfig implements ORMConfigMBean {
 	 * 是否设置事务隔离级别
 	 */
 	private boolean setTxIsolation;
-	
+	/**
+	 * 命名查询检查更新
+	 */
 	private boolean checkUpdateForNamedQueries;
 	
 	/**
 	 * in条件中允许出现的最多参数。缺省500个。
 	 */
 	private int maxInConditions;
+	
+	/**
+	 * 多站点查询时启用并行查询
+	 */
+	private int parallelSelect;
 	
 	public String wrap ="";
 	public String wrapt="";
@@ -204,6 +211,7 @@ public class ORMConfig implements ORMConfigMBean {
 		partitionInMemoryMaxRows=JefConfiguration.getInt(DbCfg.PARTITION_INMEMORY_MAXROWS, 0);
 		autoCreateSequence=	JefConfiguration.getBoolean(DbCfg.AUTO_SEQUENCE_CREATION,true);
 		maxInConditions=JefConfiguration.getInt(DbCfg.DB_MAX_IN_CONDITIONS,500);
+		parallelSelect=JefConfiguration.getInt(DbCfg.PARTITION_PARALLEL_SELECT, 3);
 	}
 	
 	public int getMaxInConditions() {
@@ -383,6 +391,14 @@ public class ORMConfig implements ORMConfigMBean {
 
 	public boolean isSingleSite() {
 		return singleSite;
+	}
+
+	public int getParallelSelect() {
+		return parallelSelect;
+	}
+
+	public void setParallelSelect(int parallelSelect) {
+		this.parallelSelect = parallelSelect;
 	}
 
 	public void setSingleSite(boolean singleSite) {

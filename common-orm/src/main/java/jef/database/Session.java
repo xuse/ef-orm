@@ -30,7 +30,6 @@ import java.util.Map;
 
 import javax.persistence.PersistenceException;
 
-import jef.common.Entry;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.Condition.Operator;
@@ -48,7 +47,6 @@ import jef.database.jsqlparser.parser.StSqlParser;
 import jef.database.meta.AbstractMetadata;
 import jef.database.meta.AbstractRefField;
 import jef.database.meta.EntityType;
-import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.Reference;
@@ -72,6 +70,7 @@ import jef.database.wrapper.clause.InMemoryDistinct;
 import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.QueryClause;
+import jef.database.wrapper.clause.UpdateClause;
 import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.database.wrapper.populator.ResultPopulatorImpl;
 import jef.database.wrapper.populator.Transformer;
@@ -104,10 +103,10 @@ import org.easyframe.enterprise.spring.TransactionMode;
 public abstract class Session {
 	// 这六个值在初始化的时候赋值
 	protected SqlProcessor rProcessor;
-	protected DbOperateProcessor p;
-	protected SelectProcessor selectp;
 	protected InsertProcessor insertp;
-	protected InsertProcessor batchinsertp;
+	protected UpdateProcessor updatep;
+	protected DeleteProcessor deletep;
+	protected SelectProcessor selectp;
 
 	/**
 	 * 获取数据库方言<br>
@@ -1521,11 +1520,12 @@ public abstract class Session {
 		MultipleResultSet rs = new MultipleResultSet(false, ORMConfig.getInstance().isDebugMode());
 		long parse = System.currentTimeMillis();
 		if (sql.getTables() == null) {// 没有分表结果，采用当前连接的默认表名操作
-			OperateTarget trans = wrapThisWithEmptyKey(rs, true);
-			selectp.processSelect(trans, sql, null, queryObj, rs, option);
+			selectp.processSelect(wrapThisWithEmptyKey(rs, true), sql, null, queryObj, rs, option);
 		} else {
-			for (PartitionResult site : sql.getTables()) {
-				selectp.processSelect(asOperateTarget(site.getDatabase()), sql, site, queryObj, rs, option);
+			if(sql.getTables().length>= ORMConfig.getInstance().getParallelSelect()){
+				new ParallelExecutor().executeSelect(sql, selectp, this, queryObj, rs, option);
+			}else{
+				SerialExecutor.INSTANCE.executeSelect(sql, selectp, this, queryObj, rs, option);
 			}
 			if (sql.isMultiDatabase()) {
 				if (sql.getOrderbyPart().isNotEmpty()) {
@@ -1567,11 +1567,13 @@ public abstract class Session {
 		MultipleResultSet rs = new MultipleResultSet(option.cacheResultset && !option.holdResult, debugMode);// 只有当非读写模式并且开启结果缓存才缓存结果集
 		long parse = System.currentTimeMillis();
 		if (sql.getTables() == null) {// 没有分表结果，采用当前连接的默认表名操作
-			OperateTarget trans = wrapThisWithEmptyKey(rs, option.holdResult); // 如果是结果集持有的，那么必须在事务中
-			selectp.processSelect(trans, sql, null, queryObj, rs, option);
+			OperateTarget target = wrapThisWithEmptyKey(rs, option.holdResult); // 如果是结果集持有的，那么必须在事务中
+			selectp.processSelect(target, sql, null, queryObj, rs, option);
 		} else {
-			for (PartitionResult site : sql.getTables()) {
-				selectp.processSelect(asOperateTarget(site.getDatabase()), sql, site, queryObj, rs, option);
+			if(sql.getTables().length>= ORMConfig.getInstance().getParallelSelect()){
+				new ParallelExecutor().executeSelect(sql,selectp,this,queryObj,rs,option);
+			}else{
+				SerialExecutor.INSTANCE.executeSelect(sql,selectp,this,queryObj,rs,option);
 			}
 			if (sql.isMultiDatabase()) {// 最复杂的情况，多数据库下的排序
 				if (sql.getOrderbyPart().isNotEmpty()) {
@@ -1606,8 +1608,8 @@ public abstract class Session {
 				rs.close();
 			}
 		}
-		//Jiyi modified 2014-11-4 如果查询结果为空，不缓存
-		//目的是减少CacheKey的计算，这部分计算有一定开销，权衡之下，缓存空结果意义不大。
+		// Jiyi modified 2014-11-4 如果查询结果为空，不缓存
+		// 目的是减少CacheKey的计算，这部分计算有一定开销，权衡之下，缓存空结果意义不大。
 		if (!option.holdResult && !list.isEmpty()) {
 			getCache().onLoad(sql.getCacheKey(), list, transformer.getResultClazz());
 		}
@@ -2153,7 +2155,7 @@ public abstract class Session {
 		long start = System.nanoTime();
 		ITableMetadata meta = MetaHolder.getMeta(template);
 		Batch.Insert<T> b = new Batch.Insert<T>(this, meta);
-		InsertSqlClause insertPart = batchinsertp.toInsertSql((IQueryableEntity) template, tableName, dynamic, extreme, null);
+		InsertSqlClause insertPart = insertp.toInsertSqlBatch((IQueryableEntity) template, tableName, dynamic, extreme, null);
 		b.setInsertPart(insertPart);
 		b.setForceTableName(tableName);
 		b.extreme = extreme;
@@ -2205,7 +2207,7 @@ public abstract class Session {
 			throw new IllegalArgumentException("The input object is not a valid update query Template, since its update value map is empty, change to ");
 		}
 		long start = System.nanoTime();
-		Entry<List<String>, List<Field>> updatePart = rProcessor.toPrepareUpdateClause((IQueryableEntity) template, null, dynamic);
+		UpdateClause updatePart = updatep.toUpdateClauseBatch((IQueryableEntity) template, null, dynamic);
 		// 位于批当中的绑定变量
 		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), new SqlContext(null, template.getQuery()), true, getProfile(null));
 		for (BindVariableDescription bind : wherePart.getBind()) {
@@ -2563,64 +2565,6 @@ public abstract class Session {
 		}
 	}
 
-	/*
-	 * 内部使用 使用绑定变量的更新
-	 */
-	final protected int innerUpdatePrepared(IQueryableEntity obj, String myTableName) throws SQLException {
-		long start = System.currentTimeMillis();
-		Query<?> query = obj.getQuery();
-		if (!obj.needUpdate()) {
-			return 0;
-		}
-		PartitionResult[] tables = DbUtils.toTableNames(obj, myTableName, obj.getQuery(), getPartitionSupport());
-		DatabaseDialect profile = null;
-		if (tables != null && tables.length > 0) {
-			profile = getProfile(tables[0].getDatabase());
-		}
-		BindSql whereValues = rProcessor.toPrepareWhereSql(query, new SqlContext(null, query), true, profile);
-		if (!obj.needUpdate()) {
-			return 0;
-		}
-		Entry<List<String>, List<Field>> setValues = rProcessor.toPrepareUpdateClause((IQueryableEntity) obj, tables, ORMConfig.getInstance().isDynamicUpdate());
-		int count = 0;
-		for (PartitionResult part : tables) {
-			count += p.processUpdatePrepared(asOperateTarget(part.getDatabase()), obj, setValues, whereValues, part, start);
-		}
-		if (count > 0) {
-			getCache().onUpdate(myTableName == null ? obj.getClass().getName() : myTableName, whereValues.getSql(), CacheImpl.toParamList(whereValues.getBind()));
-		}
-		return count;
-	}
-
-	/*
-	 * 内部使用 不使用绑定变量的插入
-	 */
-	final protected int innerUpdateNormal(IQueryableEntity obj, String myTableName) throws SQLException {
-		long start = System.currentTimeMillis();
-		if (!obj.needUpdate()) {
-			return 0;
-		}
-		PartitionResult[] sites = DbUtils.toTableNames(obj, myTableName, obj.getQuery(), getPartitionSupport());
-		DatabaseDialect profile = null;
-		if (sites != null && sites.length > 0) {
-			profile = getProfile(sites[0].getDatabase());
-		}
-
-		String where = rProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), true, profile);
-		if (!obj.needUpdate()) {
-			return 0;
-		}
-		String update = rProcessor.toUpdateClause(obj, ORMConfig.getInstance().isDynamicUpdate());
-		int count = 0;
-		for (PartitionResult site : sites) {
-			count += p.processUpdateNormal(asOperateTarget(site.getDatabase()), obj, start, where, update, site);
-		}
-		if (count > 0) {
-			getCache().onUpdate(myTableName == null ? obj.getClass().getName() : myTableName, where, null);
-		}
-		return count;
-	}
-
 	protected int delete0(Query<?> query) throws SQLException {
 		long start = System.currentTimeMillis();
 		IQueryableEntity obj = query.getInstance();
@@ -2632,22 +2576,12 @@ public abstract class Session {
 			DatabaseDialect profile = this.getProfile(sites[0].getDatabase());
 			getListener().beforeDelete(obj, this);
 			int count = 0;
-			if (profile.has(Feature.NO_BIND_FOR_DELETE)) {// 非绑定删除
-				String where = rProcessor.toWhereClause(query, new SqlContext(null, query), false, profile);
-				for (PartitionResult site : sites) {
-					count += p.processDeleteNormal(asOperateTarget(site.getDatabase()), obj, site, start, where);
-				}
-				if (count > 0) {
-					getCache().onDelete(myTableName == null ? obj.getClass().getName() : myTableName, where, null);
-				}
-			} else {
-				BindSql where = rProcessor.toPrepareWhereSql(query, new SqlContext(null, query), false, profile);
-				for (PartitionResult site : sites) {
-					count += p.processDeletePrepared(asOperateTarget(site.getDatabase()), obj, site, start, where);
-				}
-				if (count > 0) {
-					getCache().onDelete(myTableName == null ? obj.getClass().getName() : myTableName, where.getSql(), CacheImpl.toParamList(where.getBind()));
-				}
+			BindSql where = deletep.toWhereClause(query, new SqlContext(null, query), false, profile);
+			for (PartitionResult site : sites) {
+				count += deletep.processDelete(asOperateTarget(site.getDatabase()), obj, where, site, start);
+			}
+			if (count > 0) {
+				getCache().onDelete(myTableName == null ? obj.getClass().getName() : myTableName, where.getSql(), CacheImpl.toParamList(where.getBind()));
 			}
 			getListener().afterDelete(obj, count, this);
 			return count;
@@ -2657,21 +2591,35 @@ public abstract class Session {
 	}
 
 	protected int update0(IQueryableEntity obj, String myTableName) throws SQLException {
-		if (!obj.needUpdate()) {
-			if (ORMConfig.getInstance().isDebugMode())
-				LogUtil.show(obj.getClass().getSimpleName().concat(" Update canceled..."));
+		myTableName = MetaHolder.toSchemaAdjustedName(myTableName);
+		boolean dynamic = ORMConfig.getInstance().isDynamicUpdate();
+
+		Query<?> query = obj.getQuery();
+		long parseCost = System.currentTimeMillis();
+		PartitionResult[] sites = DbUtils.toTableNames(obj, myTableName, obj.getQuery(), getPartitionSupport());
+		if(sites.length==0){
 			return 0;
 		}
-		getListener().beforeUpdate(obj, this);
-		int n;
-		myTableName = MetaHolder.toSchemaAdjustedName(myTableName);
-		if (getProfile().has(Feature.NO_BIND_FOR_UPDATE)) {
-			n = innerUpdateNormal(obj, myTableName);
-		} else {
-			n = innerUpdatePrepared(obj, myTableName);
+		DatabaseDialect profile = getProfile(sites[0].getDatabase());
+		BindSql whereClause = updatep.toWhereClause(query, new SqlContext(null, query), true, profile);
+
+		if (dynamic && !obj.needUpdate()) {// 重新检查一遍
+			return 0;
 		}
-		getListener().afterUpdate(obj, n, this);
-		return n;
+		
+		UpdateClause updateClause = updatep.toUpdateClause(obj, sites, dynamic);
+		parseCost = System.currentTimeMillis() - parseCost;
+		getListener().beforeUpdate(obj, this);
+		int count = 0;
+		for (PartitionResult site : sites) {
+			count += updatep.processUpdate(asOperateTarget(site.getDatabase()), obj, updateClause, whereClause, site, parseCost);
+		}
+		if (count > 0) {
+			getCache().onUpdate(myTableName == null ? obj.getClass().getName() : myTableName, whereClause.getSql(), CacheImpl.toParamList(whereClause.getBind()));
+		}
+		
+		getListener().afterUpdate(obj, count, this);
+		return count;
 	}
 
 	protected void insert0(IQueryableEntity obj, String myTableName, boolean dynamic) throws SQLException {
@@ -2687,7 +2635,7 @@ public abstract class Session {
 			// 有一种情况下，后续操作可能成功。如果以Sequence作为分库分表主键，此时由于自增值尚未就绪，分库分表失败。
 			// 待SQL语句解析完成后，分库分表就能成功。
 		}
-		InsertSqlClause sqls = insertp.toInsertSql(obj, myTableName, dynamic, false, pr);
+		InsertSqlClause sqls = insertp.toInsertSql(obj, myTableName, dynamic, pr);
 		if (sqls.getCallback() != null) {
 			sqls.getCallback().callBefore(Arrays.asList(obj));
 		}

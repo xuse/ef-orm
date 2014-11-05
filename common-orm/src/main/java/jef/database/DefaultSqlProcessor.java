@@ -18,20 +18,14 @@ package jef.database;
 import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jef.common.Entry;
 import jef.database.annotation.PartitionResult;
-import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.AbstractTimeMapping;
-import jef.database.dialect.type.ColumnMapping;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.jsqlparser.SelectToCountWrapper;
 import jef.database.jsqlparser.parser.ParseException;
@@ -44,15 +38,10 @@ import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.AbstractJoinImpl;
-import jef.database.query.BindVariableField;
 import jef.database.query.JoinElement;
-import jef.database.query.JpqlExpression;
-import jef.database.query.ParameterProvider.MapProvider;
 import jef.database.query.Query;
 import jef.database.query.SqlContext;
-import jef.database.query.SqlExpression;
 import jef.database.wrapper.clause.BindSql;
-import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
 
@@ -76,7 +65,6 @@ public class DefaultSqlProcessor implements SqlProcessor {
 		}
 	}
 
-	
 	DefaultSqlProcessor(DatabaseDialect profile, DbClient parent) {
 		this.profile = profile;
 		this.parent = parent;
@@ -85,78 +73,27 @@ public class DefaultSqlProcessor implements SqlProcessor {
 	/**
 	 * 转换到Where子句
 	 */
-	public String toWhereClause(JoinElement obj, SqlContext context, boolean update,DatabaseDialect profile) {
-		String sb = innerToWhereClause(obj, context, update,profile);
+	public BindSql toWhereClause(JoinElement obj, SqlContext context, boolean update, DatabaseDialect profile) {
+		String sb = innerToWhereClause(obj, context, update, profile);
 		if (sb.length() > 0) {
-			return " where " + sb;
+			return new BindSql(" where " + sb);
 		} else {
-			return sb;
+			return new BindSql(sb);
 		}
 	}
 
 	/**
 	 * 转换到绑定类Where字句
 	 */
-	public BindSql toPrepareWhereSql(JoinElement obj, SqlContext context, boolean update,DatabaseDialect profile) {
-		BindSql result = innerToPrepareWhereSql(obj, context, update,profile);
+	public BindSql toPrepareWhereSql(JoinElement obj, SqlContext context, boolean update, DatabaseDialect profile) {
+		BindSql result = innerToPrepareWhereSql(obj, context, update, profile);
 		if (result.getSql().length() > 0) {
 			result.setSql(" where ".concat(result.getSql()));
 		}
 		return result;
 	}
 
-	/**
-	 * 转换成Update字句
-	 */
-	@SuppressWarnings("unchecked")
-	public String toUpdateClause(IQueryableEntity obj, boolean dynamic) throws SQLException {
-		DatabaseDialect profile = getProfile();
-		StringBuilder sb = new StringBuilder();
-		ITableMetadata meta = MetaHolder.getMeta(obj);
-		Map<Field, Object> map = obj.getUpdateValueMap();
-
-		Map.Entry<Field, Object>[] fields;
-		if (dynamic) {
-			fields = map.entrySet().toArray(new Map.Entry[map.size()]);
-			moveLobFieldsToLast(fields, meta);
-
-			// 增加时间戳自动更新的列
-			AbstractTimeMapping<?>[] autoUpdateTime = meta.getUpdateTimeDef();
-			if (autoUpdateTime != null) {
-				for (AbstractTimeMapping<?> tm : autoUpdateTime) {
-					if (!map.containsKey(tm.field())) {
-						Object value = tm.getAutoUpdateValue(profile, obj);
-						if (value != null) {
-							if (sb.length() > 0)
-								sb.append(", ");
-							sb.append(tm.getColumnName(profile, true)).append(" = ");
-							sb.append(tm.getSqlStr(value, profile));
-						}
-					}
-				}
-			}
-		} else {
-			fields = getAllFieldValues(meta, map, BeanWrapper.wrap(obj));
-		}
-
-		if (dynamic) {
-			// 其他列
-			for (Map.Entry<Field, Object> entry : fields) {
-				Field field = entry.getKey();
-				Object value = entry.getValue();
-				ColumnMapping<?> vType = meta.getColumnDef(field);
-				if (sb.length() > 0)
-					sb.append(", ");
-				sb.append(vType.getColumnName(profile, true)).append(" = ");
-				if (value == null) {
-					sb.append("null");
-				} else {
-					sb.append(vType.getSqlStr(value, profile));
-				}
-			}
-		}
-		return sb.toString();
-	}
+	
 
 	// 获得容器需要的值
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -196,9 +133,9 @@ public class DefaultSqlProcessor implements SqlProcessor {
 			SelectBody select = DbUtils.parseNativeSelect(sql).getSelectBody();
 			SelectToCountWrapper sw;
 			if (select instanceof Union) {
-				sw=new SelectToCountWrapper((Union) select);
-			}else{
-				sw=new SelectToCountWrapper((PlainSelect) select,getProfile());				
+				sw = new SelectToCountWrapper((Union) select);
+			} else {
+				sw = new SelectToCountWrapper((PlainSelect) select, getProfile());
 			}
 			return sw.toString();
 		} catch (ParseException e) {
@@ -206,147 +143,31 @@ public class DefaultSqlProcessor implements SqlProcessor {
 		}
 	}
 
-	/**
-	 * 返回2个参数 第一个为带？的SQL String 第二个为 update语句中所用的Field
-	 * 
-	 * @param obj
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public Entry<List<String>, List<Field>> toPrepareUpdateClause(IQueryableEntity obj, PartitionResult[] prs,boolean dynamic) {
-		DatabaseDialect profile = getProfile(prs);
-		List<String> cstr = new ArrayList<String>();
-		List<Field> params = new ArrayList<Field>();
-		Map<Field, Object> map = obj.getUpdateValueMap();
 
-		Map.Entry<Field, Object>[] fields;
-		ITableMetadata meta = MetaHolder.getMeta(obj);
-		if (dynamic) {
-			fields = map.entrySet().toArray(new Map.Entry[map.size()]);
-			moveLobFieldsToLast(fields, meta);
 
-			// 增加时间戳自动更新的列
-			AbstractTimeMapping<?>[] autoUpdateTime = meta.getUpdateTimeDef();
-			if (autoUpdateTime != null) {
-				for (AbstractTimeMapping<?> tm : autoUpdateTime) {
-					if (!map.containsKey(tm.field())) {
-						tm.processAutoUpdate(profile, cstr, params);
-					}
-				}
-			}
-		} else {
-			fields = getAllFieldValues(meta, map, BeanWrapper.wrap(obj));
-		}
-
-		for (Map.Entry<Field, Object> e : fields) {
-			Field field = e.getKey();
-			Object value = e.getValue();
-			String columnName = meta.getColumnName(field, profile, true);
-			if (value instanceof SqlExpression) {
-				String sql = ((SqlExpression) value).getText();
-				if (obj.hasQuery()) {
-					Map<String, Object> attrs = ((Query<?>) obj.getQuery()).getAttributes();
-					if (attrs != null && attrs.size() > 0) {
-						try {
-							Expression ex = DbUtils.parseExpression(sql);
-							Entry<String, List<Object>> fieldInExpress = NamedQueryConfig.applyParam(ex, new MapProvider(attrs));
-							if (fieldInExpress.getValue().size() > 0) {
-								sql = fieldInExpress.getKey();
-								for (Object v : fieldInExpress.getValue()) {
-									params.add(new BindVariableField(v));
-								}
-							}
-						} catch (ParseException e1) {
-							// 如果解析异常就不修改sql语句
-						}
-					}
-				}
-				cstr.add(columnName + " = " + sql);
-			} else if (value instanceof JpqlExpression) {
-				JpqlExpression je = (JpqlExpression) value;
-				if (!je.isBind())
-					je.setBind(obj.getQuery());
-				cstr.add(columnName + " = " + je.toSqlAndBindAttribs(null, profile));
-			} else if (value instanceof jef.database.Field) {// FBI Field不可能在此
-				cstr.add(columnName + " = " + DbUtils.toColumnName((Field) value, profile,null));
-			} else {
-				cstr.add(columnName + " = ?");
-				params.add(field);
-			}
-		}
-		return new Entry<List<String>, List<Field>>(cstr, params);
-	}
-
-	//将所有非主键字段作为update的值
-	@SuppressWarnings("unchecked")
-	private java.util.Map.Entry<Field, Object>[] getAllFieldValues(ITableMetadata meta, Map<Field, Object> map, BeanWrapper wrapper) {
-		List<Entry<Field, Object>> result = new ArrayList<Entry<Field, Object>>();
-		for (ColumnMapping<?> vType : meta.getColumns()) {
-			Field field = vType.field();
-			if (map.containsKey(field)) {
-				result.add(new Entry<Field, Object>(field, map.get(field)));
-			} else {
-				if(vType.isPk()){
-					continue;
-				}
-				if (vType instanceof AbstractTimeMapping<?>) {
-					AbstractTimeMapping<?> times = (AbstractTimeMapping<?>) vType;
-					if (times.isForUpdate()) {
-						Object value = times.getAutoUpdateValue(profile, wrapper.getWrapped());
-						result.add(new Entry<Field, Object>(field, value));
-						continue;
-					}
-				}
-				result.add(new Entry<Field, Object>(field, wrapper.getPropertyValue(field.name())));
-			}
-		}
-		return result.toArray(new Map.Entry[result.size()]);
-	}
-
-	/**
-	 * 更新前，将所有LLOB字段都移动到最后去
-	 * 
-	 * @param fields
-	 * @param meta
-	 */
-	static void moveLobFieldsToLast(java.util.Map.Entry<Field, Object>[] fields, final ITableMetadata meta) {
-		Arrays.sort(fields, new Comparator<Map.Entry<Field, Object>>() {
-			public int compare(Map.Entry<Field, Object> o1, Map.Entry<Field, Object> o2) {
-				Field field1 = o1.getKey();
-				Field field2 = o2.getKey();
-				Assert.notNull(meta.getColumnDef(field1));
-				Assert.notNull(meta.getColumnDef(field2));
-				
-				Class<? extends ColumnType> type1 = meta.getColumnDef(field1).get().getClass();
-				Class<? extends ColumnType> type2 = meta.getColumnDef(field2).get().getClass();
-				Boolean b1 = (type1 == ColumnType.Blob.class || type1 == ColumnType.Clob.class);
-				Boolean b2 = (type2 == ColumnType.Blob.class || type2 == ColumnType.Clob.class);
-				return b1.compareTo(b2);
-			}
-		});
-	}
 
 	/**
 	 * 获取数据库属性简要表
+	 * 
 	 * @deprecated use getProfile(PartitionResult[])
 	 */
 	public DatabaseDialect getProfile() {
 		return profile;
 	}
-	
+
 	public DatabaseDialect getProfile(PartitionResult[] prs) {
-		if(prs==null || prs.length==0){
+		if (prs == null || prs.length == 0) {
 			return profile;
 		}
 		return this.parent.getProfile(prs[0].getDatabase());
 	}
 
-	private String innerToWhereClause(JoinElement obj, SqlContext context, boolean removePKUpdate,DatabaseDialect profile) {
+	private String innerToWhereClause(JoinElement obj, SqlContext context, boolean removePKUpdate, DatabaseDialect profile) {
 		if (obj instanceof AbstractJoinImpl) {
 			AbstractJoinImpl join = (AbstractJoinImpl) obj;
 			StringBuilder sb = new StringBuilder();
 			for (Query<?> ele : join.elements()) {
-				String condStr = generateWhereClause0(ele, context.getContextOf(ele), removePKUpdate, ele.getConditions(),profile);
+				String condStr = generateWhereClause0(ele, context.getContextOf(ele), removePKUpdate, ele.getConditions(), profile);
 				if (StringUtils.isEmpty(condStr)) {
 					continue;
 				}
@@ -357,7 +178,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 			}
 			for (Map.Entry<Query<?>, List<Condition>> entry : join.getRefConditions().entrySet()) {
 				Query<?> q = entry.getKey();
-				String condStr = generateWhereClause0(q, context.getContextOf(q), false, entry.getValue(),profile);
+				String condStr = generateWhereClause0(q, context.getContextOf(q), false, entry.getValue(), profile);
 				if (StringUtils.isEmpty(condStr)) {
 					continue;
 				}
@@ -368,13 +189,13 @@ public class DefaultSqlProcessor implements SqlProcessor {
 			}
 			return sb.toString();
 		} else if (obj instanceof Query<?>) {
-			return generateWhereClause0((Query<?>) obj, context, removePKUpdate, obj.getConditions(),profile);
+			return generateWhereClause0((Query<?>) obj, context, removePKUpdate, obj.getConditions(), profile);
 		} else {
 			throw new IllegalArgumentException("Unknown Query class:" + obj.getClass().getName());
 		}
 	}
 
-	private String generateWhereClause0(Query<?> q, SqlContext context, boolean removePKUpdate, List<Condition> conds,DatabaseDialect profile) {
+	private String generateWhereClause0(Query<?> q, SqlContext context, boolean removePKUpdate, List<Condition> conds, DatabaseDialect profile) {
 		if (q.isAll())
 			return "";
 		if (conds.isEmpty()) {
@@ -393,20 +214,20 @@ public class DefaultSqlProcessor implements SqlProcessor {
 		for (Condition c : conds) {
 			if (sb.length() > 0)
 				sb.append(" and ");
-			sb.append(c.toSqlClause(meta, context,this, q.getInstance(),profile)); // 递归的，当do是属于Join中的一部分时，需要为其增加前缀
+			sb.append(c.toSqlClause(meta, context, this, q.getInstance(), profile)); // 递归的，当do是属于Join中的一部分时，需要为其增加前缀
 		}
 		if (sb.length() == 0)
 			throw new NullPointerException("Illegal usage of query:" + q.getClass().getName() + " object, must including any condition in query. or did you forget to set the primary key for the entity?");
 		return sb.toString();
 	}
 
-	private BindSql innerToPrepareWhereSql(JoinElement query, SqlContext context, boolean removePKUpdate,DatabaseDialect profile) {
+	private BindSql innerToPrepareWhereSql(JoinElement query, SqlContext context, boolean removePKUpdate, DatabaseDialect profile) {
 		if (query instanceof AbstractJoinImpl) {
 			List<BindVariableDescription> params = new ArrayList<BindVariableDescription>();
 			AbstractJoinImpl join = (AbstractJoinImpl) query;
 			StringBuilder sb = new StringBuilder();
 			for (Query<?> ele : join.elements()) {
-				BindSql result = generateWhereCondition(ele, context.getContextOf(ele), ele.getConditions(), false,profile);
+				BindSql result = generateWhereCondition(ele, context.getContextOf(ele), ele.getConditions(), false, profile);
 				if (result.getBind() != null) {
 					params.addAll(result.getBind());
 				}
@@ -420,7 +241,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 			}
 			for (Map.Entry<Query<?>, List<Condition>> entry : join.getRefConditions().entrySet()) {
 				Query<?> q = entry.getKey();
-				BindSql result = generateWhereCondition(q, context.getContextOf(q), entry.getValue(), false,profile);
+				BindSql result = generateWhereCondition(q, context.getContextOf(q), entry.getValue(), false, profile);
 				if (result.getBind() != null) {
 					params.addAll(result.getBind());
 				}
@@ -434,13 +255,13 @@ public class DefaultSqlProcessor implements SqlProcessor {
 			}
 			return new BindSql(sb.toString(), params);
 		} else if (query instanceof Query<?>) {
-			return generateWhereCondition((Query<?>) query, context, query.getConditions(), removePKUpdate,profile);
+			return generateWhereCondition((Query<?>) query, context, query.getConditions(), removePKUpdate, profile);
 		} else {
 			throw new IllegalArgumentException("Unknown Query class:" + query.getClass().getName());
 		}
 	}
 
-	private BindSql generateWhereCondition(Query<?> q, SqlContext context, List<Condition> conditions, boolean removePKUpdate,DatabaseDialect profile) {
+	private BindSql generateWhereCondition(Query<?> q, SqlContext context, List<Condition> conditions, boolean removePKUpdate, DatabaseDialect profile) {
 		List<BindVariableDescription> params = new ArrayList<BindVariableDescription>();
 		IQueryableEntity obj = q.getInstance();
 		if (q.isAll())
@@ -453,14 +274,12 @@ public class DefaultSqlProcessor implements SqlProcessor {
 				DbUtils.fillConditionFromField(obj, q, removePKUpdate, false);
 			}
 		}
-		
-		
-		
+
 		StringBuilder sb = new StringBuilder();
 		for (Condition c : conditions) {
 			if (sb.length() > 0)
 				sb.append(" and ");
-			sb.append(c.toPrepareSqlClause(params, q.getMeta(), context,this, obj,profile));
+			sb.append(c.toPrepareSqlClause(params, q.getMeta(), context, this, obj, profile));
 		}
 
 		if (sb.length() > 0 || ORMConfig.getInstance().isAllowEmptyQuery()) {

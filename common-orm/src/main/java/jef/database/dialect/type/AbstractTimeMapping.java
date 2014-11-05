@@ -16,6 +16,7 @@ import jef.database.query.BindVariableField;
 import jef.database.query.Func;
 import jef.database.query.SqlExpression;
 import jef.database.wrapper.clause.InsertSqlClause;
+import jef.database.wrapper.clause.UpdateClause;
 import jef.tools.Assert;
 import jef.tools.reflect.Property;
 
@@ -92,13 +93,12 @@ public abstract class AbstractTimeMapping<T> extends AColumnMapping<T> {
 		}
 	}
 	
-	public void processAutoUpdate(DatabaseDialect profile,List<String> sqls, List<jef.database.Field> params){
+	public void processAutoUpdate(DatabaseDialect profile,UpdateClause result){
 		String columnName = getColumnName(profile, true);
 		if(isJavaSysdate()){
-			sqls.add(columnName+" = ?");
-			params.add(new BindVariableField(getCurrentSqlValue()));
+			result.addEntry(columnName, new BindVariableField(getCurrentSqlValue()));
 		}else{
-			sqls.add(columnName+" = "+getFunctionString(profile));
+			result.addEntry(columnName, getFunctionString(profile));
 		};
 	}
 

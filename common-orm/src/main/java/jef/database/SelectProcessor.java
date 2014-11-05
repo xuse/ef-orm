@@ -39,6 +39,15 @@ import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
 
 public abstract class SelectProcessor {
+	
+	static SelectProcessor get(DatabaseDialect profile, DbClient db) {
+		if (profile.has(Feature.NO_BIND_FOR_SELECT)) {
+			return new NormalImpl(db, db.rProcessor);
+		} else {
+			return new PreparedImpl(db, db.rProcessor);
+		}
+	}
+	
 	/**
 	 * 转换为SQL查询语句
 	 * 
@@ -67,12 +76,10 @@ public abstract class SelectProcessor {
 
 	protected DbClient db;
 	public SqlProcessor parent;
-	protected DbOperateProcessor p;
 
-	SelectProcessor(DbClient db, DbOperateProcessor p, SqlProcessor parent) {
+	SelectProcessor(DbClient db, SqlProcessor parent) {
 		this.db = db;
 		this.parent = parent;
-		this.p = p;
 	}
 
 	@Deprecated
@@ -90,8 +97,8 @@ public abstract class SelectProcessor {
 
 	final static class NormalImpl extends SelectProcessor {
 
-		NormalImpl(DbClient db, DbOperateProcessor p, SqlProcessor parent) {
-			super(db, p, parent);
+		NormalImpl(DbClient db, SqlProcessor parent) {
+			super(db, parent);
 		}
 
 		public QueryClause toQuerySql(ConditionQuery obj, IntRange range, boolean order) {
@@ -116,7 +123,7 @@ public abstract class SelectProcessor {
 			} catch (SQLException e) {
 				DbUtils.close(rs);
 				DbUtils.close(st);
-				p.processError(e, ArrayUtils.toString(sql.getTables(), true), db);
+				DbUtils.processError(e, ArrayUtils.toString(sql.getTables(), true), db);
 				db.releaseConnection();
 				throw e;
 			} catch (RuntimeException e) {
@@ -144,7 +151,8 @@ public abstract class SelectProcessor {
 				for (PartitionResult site : tables) {
 					List<String> tablenames = site.getTables();
 					for (int i = 0; i < tablenames.size(); i++) {
-						result.addSql(site.getDatabase(), StringUtils.concat("select count(*) from ", tablenames.get(i), " t", parent.toWhereClause(query, context, false, parent.getPartitionSupport().getProfile(site.getDatabase()))));
+						BindSql sql=parent.toWhereClause(query, context, false, parent.getPartitionSupport().getProfile(site.getDatabase()));
+						result.addSql(site.getDatabase(), StringUtils.concat("select count(*) from ", tablenames.get(i), " t", sql.getSql()));
 					}
 				}
 				return result;
@@ -180,7 +188,7 @@ public abstract class SelectProcessor {
 						rs.next();
 						total += rs.getInt(1);
 					} catch (SQLException e) {
-						p.processError(e, sql.getSql(), db);
+						DbUtils.processError(e, sql.getSql(), db);
 						throw e;
 					} finally {
 						if (rs != null)
@@ -206,8 +214,8 @@ public abstract class SelectProcessor {
 	}
 
 	final static class PreparedImpl extends SelectProcessor {
-		PreparedImpl(DbClient db, DbOperateProcessor p, SqlProcessor parent) {
-			super(db, p, parent);
+		PreparedImpl(DbClient db, SqlProcessor parent) {
+			super(db, parent);
 		}
 
 		public QueryClause toQuerySql(ConditionQuery obj, IntRange range, boolean order) {
@@ -238,7 +246,7 @@ public abstract class SelectProcessor {
 			} catch (SQLException e) {
 				DbUtils.close(rs);
 				DbUtils.close(psmt);
-				p.processError(e, ArrayUtils.toString(sqlResult.getTables(), true), db);
+				DbUtils.processError(e, ArrayUtils.toString(sqlResult.getTables(), true), db);
 				db.releaseConnection();
 				throw e;
 			} catch (RuntimeException e) {
@@ -363,7 +371,7 @@ public abstract class SelectProcessor {
 						total += currentCount;
 					}
 				} catch (SQLException e) {
-					p.processError(e, sql, db);
+					DbUtils.processError(e, sql, db);
 					throw e;
 				} finally {
 					if (debug)

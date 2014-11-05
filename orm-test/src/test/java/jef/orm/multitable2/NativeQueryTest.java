@@ -832,6 +832,7 @@ public class NativeQueryTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
+	@IgnoreOn("sqlserver")
 	public void testNamedQueryPaging() throws SQLException {
 		NativeQuery<Root> query = db.createNamedQuery("testPage", Root.class);
 		query.setFirstResult(3);

@@ -2,6 +2,8 @@ package jef.database.dialect;
 
 import java.sql.Types;
 
+import javax.persistence.GenerationType;
+
 import jef.database.ConnectInfo;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.statement.LimitHandler;
@@ -170,7 +172,7 @@ public class SQLServer2000Dialect extends AbstractDialect {
 	@Override
 	protected String getComment(AutoIncrement column, boolean flag) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("int identity(1,1)");
+		sb.append("int identity(1,1)");			
 		if (flag) {
 			if (!column.nullable)
 				sb.append(" not null");

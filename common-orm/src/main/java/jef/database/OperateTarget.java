@@ -15,9 +15,9 @@ import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.Transaction.TransactionFlag;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.statement.ResultSetLaterProcess;
 import jef.database.dialect.statement.ProcessablePreparedStatement;
 import jef.database.dialect.statement.ProcessableStatement;
+import jef.database.dialect.statement.ResultSetLaterProcess;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IManagedConnectionPool;
@@ -99,10 +99,6 @@ public class OperateTarget implements SqlTemplate {
 
 	public DatabaseDialect getProfile() {
 		return profile;
-	}
-
-	public DbOperateProcessor getOperator() {
-		return session.p;
 	}
 
 	/**
@@ -246,7 +242,6 @@ public class OperateTarget implements SqlTemplate {
 		if (debug)
 			LogUtil.show(sql);
 		PreparedStatement st = null;
-		DbOperateProcessor p = session.p;
 		long start = System.currentTimeMillis();
 		try {
 			st = prepareStatement(sql);
@@ -276,7 +271,7 @@ public class OperateTarget implements SqlTemplate {
 			}
 			return total;
 		} catch (SQLException e) {
-			p.processError(e, sql, this);
+			DbUtils.processError(e, sql, this);
 			throw e;
 		} finally {
 			if (st != null)
@@ -287,7 +282,6 @@ public class OperateTarget implements SqlTemplate {
 
 	public final UpdateReturn innerExecuteUpdate(String sql, List<Object> ps, int generatedKeys, int[] generatedIndex, String[] generatedColumn) throws SQLException {
 		Object[] params = ps.toArray();
-		DbOperateProcessor p = session.p;
 
 		session.getListener().beforeSqlExecute(sql, params);
 		boolean debugMode = ORMConfig.getInstance().isDebugMode();
@@ -328,7 +322,7 @@ public class OperateTarget implements SqlTemplate {
 				session.checkCacheUpdate(sql, ps);
 			}
 		} catch (SQLException e) {
-			p.processError(e, sql, this);
+			DbUtils.processError(e, sql, this);
 			throw e;
 		} finally {
 			if (debugMode)
@@ -343,7 +337,6 @@ public class OperateTarget implements SqlTemplate {
 
 	public final int innerExecuteSql(String sql, List<Object> ps) throws SQLException {
 		Object[] params = ps.toArray();
-		DbOperateProcessor p = session.p;
 
 		session.getListener().beforeSqlExecute(sql, params);
 		boolean debugMode = ORMConfig.getInstance().isDebugMode();
@@ -367,7 +360,7 @@ public class OperateTarget implements SqlTemplate {
 				session.checkCacheUpdate(sql, ps);
 			}
 		} catch (SQLException e) {
-			p.processError(e, sql, this);
+			DbUtils.processError(e, sql, this);
 			throw e;
 		} finally {
 			if (debugMode)
@@ -384,7 +377,6 @@ public class OperateTarget implements SqlTemplate {
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		StringBuilder sb = null;
-		DbOperateProcessor p = session.p;
 		boolean debugMode = ORMConfig.getInstance().isDebugMode();
 		try {
 			if (debugMode)
@@ -406,7 +398,7 @@ public class OperateTarget implements SqlTemplate {
 				return rst.transformer(new ResultSetWrapper(this, st, rs));
 			}
 		} catch (SQLException e) {
-			p.processError(e, sql, this);
+			DbUtils.processError(e, sql, this);
 			throw e;
 		} finally {
 			if (debugMode)
@@ -432,7 +424,6 @@ public class OperateTarget implements SqlTemplate {
 	public final IResultSet getRawResultSet(String sql, int maxReturn, int fetchSize, List<?> objs, InMemoryOperateProvider inmem) throws SQLException {
 		PreparedStatement st = null;
 		StringBuilder sb = null;
-		DbOperateProcessor p = session.p;
 		ORMConfig config = ORMConfig.getInstance();
 		boolean debugMode = config.isDebugMode();
 		try {
@@ -462,7 +453,7 @@ public class OperateTarget implements SqlTemplate {
 				return new ResultSetWrapper(rsh);
 			}
 		} catch (SQLException e) {
-			p.processError(e, sql, this);
+			DbUtils.processError(e, sql, this);
 			throw e;
 		} finally {
 			if (debugMode)

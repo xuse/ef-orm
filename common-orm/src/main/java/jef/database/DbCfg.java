@@ -383,6 +383,10 @@ public enum DbCfg implements ConfigItem {
 	 */
 	PARTITION_DATE_SPAN,
 	/**
+	 * 当需要查询的数据库数量大于等于指定值时，启用多线程并行查询。(默认值3，即3个数据库或以上启用并行查询)
+	 */
+	PARTITION_PARALLEL_SELECT,
+	/**
 	 * 当分库操作时，不得不进行内存排序和聚合计算时，限制最大操作的行数，防止内存溢出。
 	 * 一旦达到最大行数，该次操作将抛出异常。
 	 * 默认0，表示不限制。

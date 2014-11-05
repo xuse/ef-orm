@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jef.common.Entry;
 import jef.common.log.LogUtil;
 import jef.database.annotation.PartitionResult;
 import jef.database.cache.TransactionCache;
@@ -32,6 +31,7 @@ import jef.database.meta.MetaHolder;
 import jef.database.support.DbOperatorListener;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.InsertSqlClause;
+import jef.database.wrapper.clause.UpdateClause;
 import jef.tools.StringUtils;
 
 /**
@@ -449,7 +449,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 		/**
 		 * SQL片段，update部分(UPDATE语句使用)
 		 */
-		private Entry<List<String>, List<Field>> updatePart;
+		private UpdateClause updatePart;
 
 		/**
 		 * SQL片段，where部分(UPDATE和DELETE语句使用)
@@ -462,7 +462,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 
 		@Override
 		protected String toSql(String tablename) {
-			return StringUtils.concat("update ", tablename, " set ", StringUtils.join(updatePart.getKey(), ", "), wherePart.getSql());
+			return StringUtils.concat("update ", tablename, " set ", updatePart.getSql(), wherePart.getSql());
 		}
 
 		@Override
@@ -492,7 +492,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 
 		}
 
-		public void setUpdatePart(Entry<List<String>, List<Field>> updatePart) {
+		public void setUpdatePart(UpdateClause updatePart) {
 			this.updatePart = updatePart;
 		}
 
@@ -502,14 +502,13 @@ public abstract class Batch<T extends IQueryableEntity> {
 
 		@Override
 		protected void processJdbcParams(PreparedStatement psmt, List<T> listValue, OperateTarget db) throws SQLException {
-			List<Field> writeFields = updatePart.getValue();
 			List<BindVariableDescription> bindVar = wherePart.getBind();
 			int len = listValue.size();
 			boolean debug = ORMConfig.getInstance().isDebugMode() && !extreme;
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
 				BindVariableContext context = new BindVariableContext(psmt, db, debug ? new StringBuilder(512).append("Batch Parameters: ").append(i + 1).append('/').append(len) : null);
-				List<Object> whereBind = BindVariableTool.setVariables(t.getQuery(), writeFields, bindVar, context);
+				List<Object> whereBind = BindVariableTool.setVariables(t.getQuery(), updatePart.getVariables(), bindVar, context);
 				psmt.addBatch();
 				parent.getCache().onUpdate(forceTableName == null ? meta.getName() : forceTableName, wherePart.getSql(), whereBind);
 

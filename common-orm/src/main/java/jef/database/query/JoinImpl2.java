@@ -345,7 +345,7 @@ final class JoinImpl2 extends AbstractJoinImpl {
 		clause.setGrouphavingPart(groupClause);
 		clause.setSelectPart(SelectProcessor.toSelectSql(context, groupClause, profile));
 		clause.setTableDefinition(toTableDefinitionSql(processor.parent, context, profile));
-		clause.setWherePart(processor.parent.toWhereClause(this, context, false, profile));
+		clause.setWherePart(processor.parent.toWhereClause(this, context, false, profile).getSql());
 		if (order)
 			clause.setOrderbyPart(SelectProcessor.toOrderClause(this, context, profile));
 		return clause;

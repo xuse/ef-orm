@@ -171,7 +171,9 @@ public final class MultipleResultSet extends AbstractResultSet implements IResul
 				throw new IllegalStateException(e);
 			}
 		}
-		results.add(rsh);
+		synchronized (results) {
+			results.add(rsh);
+		}
 		if (cache) {
 			try{
 				rsh.rs = tryCache(rsh.rs, rsh.db.getProfile());
@@ -199,7 +201,9 @@ public final class MultipleResultSet extends AbstractResultSet implements IResul
 			}
 		}
 		ResultSetHolder rsh = new ResultSetHolder(tx,statement,rs);
-		results.add(rsh);
+		synchronized (results) {
+			results.add(rsh);
+		}
 		if (cache) {
 			try{
 				rsh.rs = tryCache(rs, tx.getProfile());

@@ -46,7 +46,7 @@ public class TestEntity extends jef.database.DataObject {
     private Integer intField2;
 
     @Id
-	@GeneratedValue(strategy=GenerationType.SEQUENCE)
+	@GeneratedValue(strategy=GenerationType.AUTO)
     @Column(precision=10,scale=5)
     private long longField;
 

@@ -22,10 +22,18 @@ import jef.tools.reflect.BeanWrapper;
 abstract class InsertProcessor {
 	protected DbClient db;
 	protected SqlProcessor parent;
-	protected DbOperateProcessor p;
+
+	static InsertProcessor get(DatabaseDialect profile, DbClient db) {
+		if (profile.has(Feature.NO_BIND_FOR_INSERT)) {
+			return new NormalImpl(db, db.rProcessor);
+		} else {
+			return new PreparedImpl(db, db.rProcessor);
+		}
+	}
 
 	/**
 	 * generate a insert SQL.
+	 * 
 	 * @param obj
 	 * @param tableName
 	 * @param dynamic
@@ -33,10 +41,13 @@ abstract class InsertProcessor {
 	 * @return
 	 * @throws SQLException
 	 */
-	abstract InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName,boolean dynamic,boolean extreme,PartitionResult pr)throws SQLException;
+	abstract InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName, boolean dynamic, PartitionResult pr) throws SQLException;
+
+	abstract InsertSqlClause toInsertSqlBatch(IQueryableEntity obj, String tableName, boolean dynamic, boolean extreme, PartitionResult pr) throws SQLException;
 
 	/**
 	 * process insert operate
+	 * 
 	 * @param db
 	 * @param obj
 	 * @param sqls
@@ -45,35 +56,44 @@ abstract class InsertProcessor {
 	 * @throws SQLException
 	 */
 	abstract void processInsert(OperateTarget db, IQueryableEntity obj, InsertSqlClause sqls, long start, long parse) throws SQLException;
-	InsertProcessor(DbClient parentDbClient, DbOperateProcessor p, SqlProcessor rProcessor) {
-		this.db=parentDbClient;
-		this.p=p;
-		this.parent=rProcessor;
+
+	/**
+	 * 构造
+	 * 
+	 * @param parentDbClient
+	 * @param rProcessor
+	 */
+	InsertProcessor(DbClient parentDbClient, SqlProcessor rProcessor) {
+		this.db = parentDbClient;
+		this.parent = rProcessor;
 	}
-	
-	static final class NormalImpl extends InsertProcessor{
-		NormalImpl(DbClient parentDbClient, DbOperateProcessor p, SqlProcessor rProcessor) {
-			super(parentDbClient, p, rProcessor);
+
+	static final class NormalImpl extends InsertProcessor {
+		private PreparedImpl batchImpl;
+		
+		NormalImpl(DbClient parentDbClient, SqlProcessor rProcessor) {
+			super(parentDbClient, rProcessor);
+			batchImpl=new PreparedImpl(parentDbClient, rProcessor);
 		}
 
 		@Override
-		InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName, boolean dynamic, boolean extreme,PartitionResult pr) throws SQLException {
-			DatabaseDialect profile=pr==null?db.getProfile():db.getProfile(pr.getDatabase());
+		InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName, boolean dynamic, PartitionResult pr) throws SQLException {
+			DatabaseDialect profile = pr == null ? db.getProfile() : db.getProfile(pr.getDatabase());
 			List<String> cStr = new ArrayList<String>();// 字段列表
 			List<String> vStr = new ArrayList<String>();// 值列表
 			ITableMetadata meta = MetaHolder.getMeta(obj);
 			InsertSqlClause result = new InsertSqlClause();
-			result.parent=db;
-			result.profile=profile;
+			result.parent = db;
+			result.profile = profile;
 			result.setTableNames(pr);
 			for (ColumnMapping<?> entry : meta.getColumns()) {
-				BeanWrapper wrapper=BeanWrapper.wrap(obj);
+				BeanWrapper wrapper = BeanWrapper.wrap(obj);
 				Object value = wrapper.getPropertyValue(entry.fieldName());
-				entry.processInsert(value,result,cStr,vStr,dynamic,obj);
+				entry.processInsert(value, result, cStr, vStr, dynamic, obj);
 			}
 			result.setColumnsPart(StringUtils.join(cStr, ','));
 			result.setValuesPart(StringUtils.join(vStr, ','));
-			if(profile.has(Feature.SELECT_ROW_NUM)){
+			if (profile.has(Feature.SELECT_ROW_NUM)) {
 				result.setCallback(new OracleRowidKeyCallback(result.getCallback()));
 			}
 			return result;
@@ -82,7 +102,7 @@ abstract class InsertProcessor {
 		@Override
 		void processInsert(OperateTarget db, IQueryableEntity obj, InsertSqlClause sqls, long start, long parse) throws SQLException {
 			Statement st = null;
-			boolean debug=ORMConfig.getInstance().isDebugMode();
+			boolean debug = ORMConfig.getInstance().isDebugMode();
 			try {
 				st = db.createStatement();
 				if (sqls.getCallback() == null) {
@@ -93,7 +113,7 @@ abstract class InsertProcessor {
 					cb.callAfter(obj);
 				}
 			} catch (SQLException e) {
-				p.processError(e, ArrayUtils.toString(sqls.getTable(), true), db);
+				DbUtils.processError(e, ArrayUtils.toString(sqls.getTable(), true), db);
 				throw e;
 			} finally {
 				if (debug)
@@ -103,31 +123,42 @@ abstract class InsertProcessor {
 					st.close();
 				db.releaseConnection();
 			}
-			if (debug){
-				long dbAccess=System.currentTimeMillis();
-				LogUtil.show(StringUtils.concat("Insert:1\tTime cost([ParseSQL]:", String.valueOf( parse - start), "ms, [DbAccess]:", String.valueOf(dbAccess- parse), "ms) |", db.getTransactionId()));	
+			if (debug) {
+				long dbAccess = System.currentTimeMillis();
+				LogUtil.show(StringUtils.concat("Insert:1\tTime cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbAccess - parse), "ms) |", db.getTransactionId()));
 			}
-		}
-	}
-	static final class PreparedImpl extends InsertProcessor{
-		PreparedImpl(DbClient parentDbClient, DbOperateProcessor p, SqlProcessor rProcessor) {
-			super(parentDbClient, p, rProcessor);
 		}
 
 		@Override
-		InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName, boolean dynamic, boolean extreme,PartitionResult pr) throws SQLException {
-			DatabaseDialect profile=pr==null?db.getProfile():db.getProfile(pr.getDatabase());
+		InsertSqlClause toInsertSqlBatch(IQueryableEntity obj, String tableName, boolean dynamic, boolean extreme, PartitionResult pr) throws SQLException {
+			return batchImpl.toInsertSqlBatch(obj, tableName, dynamic, extreme,pr);
+		}
+	}
+
+	static final class PreparedImpl extends InsertProcessor {
+		PreparedImpl(DbClient parentDbClient, SqlProcessor rProcessor) {
+			super(parentDbClient, rProcessor);
+		}
+
+		@Override
+		InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName, boolean dynamic, PartitionResult pr) throws SQLException {
+			return toInsertSqlBatch(obj, tableName, dynamic, false, pr);
+		}
+
+		@Override
+		InsertSqlClause toInsertSqlBatch(IQueryableEntity obj, String tableName, boolean dynamic, boolean extreme, PartitionResult pr) throws SQLException {
+			DatabaseDialect profile = pr == null ? db.getProfile() : db.getProfile(pr.getDatabase());
 			List<String> cStr = new ArrayList<String>();// 字段列表
 			List<String> vStr = new ArrayList<String>();// 值列表
 			ITableMetadata meta = MetaHolder.getMeta(obj);
 			InsertSqlClause result = new InsertSqlClause(extreme);
-			result.parent=db;
-			result.profile=profile;
+			result.parent = db;
+			result.profile = profile;
 			result.setTableNames(pr);
 			for (ColumnMapping<?> entry : meta.getColumns()) {
 				entry.processPreparedInsert(obj, cStr, vStr, result, dynamic);
 			}
-			if(profile.has(Feature.SELECT_ROW_NUM) && !extreme){
+			if (profile.has(Feature.SELECT_ROW_NUM) && !extreme) {
 				result.setCallback(new OracleRowidKeyCallback(result.getCallback()));
 			}
 			result.setColumnsPart(StringUtils.join(cStr, ','));
@@ -137,7 +168,7 @@ abstract class InsertProcessor {
 
 		@Override
 		void processInsert(OperateTarget db, IQueryableEntity obj, InsertSqlClause sqls, long start, long parse) throws SQLException {
-			boolean debug=ORMConfig.getInstance().isDebugMode();
+			boolean debug = ORMConfig.getInstance().isDebugMode();
 			StringBuilder sb = null;
 			if (debug) {
 				sb = new StringBuilder(sqls.getSql().length()).append(sqls.getSql()).append("|").append(db.getTransactionId());
@@ -151,14 +182,14 @@ abstract class InsertProcessor {
 					String dbName = debug ? db.getTransactionId() : null;
 					psmt = callback.doPrepareStatement(db, sqls.getSql(), dbName);
 				}
-				BindVariableContext context = new BindVariableContext(psmt,db, sb);
+				BindVariableContext context = new BindVariableContext(psmt, db, sb);
 				BindVariableTool.setInsertVariables(obj, sqls.getFields(), context);
 				psmt.execute();
 				if (callback != null) {
 					callback.callAfter(obj);
 				}
 			} catch (SQLException e) {
-				p.processError(e, ArrayUtils.toString(sqls.getTable(), true), db);
+				DbUtils.processError(e, ArrayUtils.toString(sqls.getTable(), true), db);
 				throw e;
 			} finally {
 				if (debug)
@@ -168,9 +199,9 @@ abstract class InsertProcessor {
 					psmt.close();
 				db.releaseConnection();
 			}
-			if (debug){
-				long dbAccess=System.currentTimeMillis();
-				LogUtil.show(StringUtils.concat("Insert:1\tTime cost([ParseSQL]:", String.valueOf( parse - start), "ms, [DbAccess]:", String.valueOf(dbAccess- parse), "ms) |", db.getTransactionId()));	
+			if (debug) {
+				long dbAccess = System.currentTimeMillis();
+				LogUtil.show(StringUtils.concat("Insert:1\tTime cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbAccess - parse), "ms) |", db.getTransactionId()));
 			}
 		}
 	}

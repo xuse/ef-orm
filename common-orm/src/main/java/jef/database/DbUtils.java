@@ -118,9 +118,10 @@ public final class DbUtils {
 	public static PartitionCalculator partitionUtil = new DefaultPartitionCalculator();
 
 	/**
-	 * 线程池。线程池有以下作用 1、在分库分表时使用线程 2、在JTA事务管理模式下，为了避免在JTA中执行DDL，因此不得不将代码在新的线程中执行。
+	 * 线程池。线程池有以下作用 1、在分库分表时使用线程
+	 *  2、在JTA事务管理模式下，为了避免在JTA中执行DDL，因此不得不将代码在新的线程中执行。
 	 */
-	public static ExecutorService es = new ThreadPoolExecutor(1, 8, 60000L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+	public static ExecutorService es = new ThreadPoolExecutor(1, 128, 120000L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
 
 	/**
 	 * 获取数据库加密的密钥,目前使用固定密钥
@@ -134,6 +135,21 @@ public final class DbUtils {
 			s = "781296-5e32-89122";
 		}
 		return s.getBytes();
+	}
+	
+
+	/*
+	 * 处理SQL执行错误
+	 * <strong>注意，这个方法执行期间会调用连接，因此必须在这个方法执行完后才能释放连接</strong>
+	 * @param e
+	 * @param tablename
+	 * @param conn
+	 */
+	public static void processError(SQLException e, String tablename, OperateTarget conn) {
+		if(conn.getProfile().isIOError(e)){
+			conn.notifyDisconnect(e);
+		}
+		DebugUtil.setSqlState(e, tablename);
 	}
 
 	/**
@@ -276,7 +292,7 @@ public final class DbUtils {
 	 * @param errors
 	 * @return
 	 */
-	public static final SQLException wrapExceptions(List<SQLException> errors) {
+	public static final SQLException wrapExceptions(Collection<SQLException> errors) {
 		if (errors == null || errors.isEmpty())
 			return null;
 		Iterator<SQLException> iter = errors.iterator();
