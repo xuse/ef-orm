@@ -124,7 +124,5 @@ public class SqlServerTest {
 		nq.setFirstResult(1);
 		nq.setMaxResults(3);
 		System.out.println(nq.getResultList());
-
 	}
-
 }

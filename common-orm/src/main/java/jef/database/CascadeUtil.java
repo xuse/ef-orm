@@ -13,6 +13,7 @@ import java.util.Map.Entry;
 
 import javax.persistence.FetchType;
 
+import jef.database.annotation.Cascade;
 import jef.database.meta.AbstractRefField;
 import jef.database.meta.ISelectProvider;
 import jef.database.meta.ITableMetadata;
@@ -22,13 +23,14 @@ import jef.database.meta.MetaHolder;
 import jef.database.meta.Reference;
 import jef.database.query.ReferenceType;
 import jef.tools.Assert;
+import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
 
 import org.apache.commons.lang.ObjectUtils;
 
 final class CascadeUtil {
 	static int deleteWithRefInTransaction(IQueryableEntity source, Session trans, int minPriority) throws SQLException {
-		return deleteCascadeByQuery(source, trans, true, true,minPriority);
+		return deleteCascadeByQuery(source, trans, true, true, minPriority);
 	}
 
 	// 删除单个对象或请求和其所有级联引用
@@ -36,7 +38,7 @@ final class CascadeUtil {
 		ITableMetadata meta = MetaHolder.getMeta(source);
 		List<Reference> delrefs = new ArrayList<Reference>();
 		for (AbstractRefField f : meta.getRefFieldsByName().values()) {
-			if(!f.canDelete() || f.getPriority()<minPriority){
+			if (!f.canDelete() || f.getPriority() < minPriority) {
 				continue;
 			}
 			Reference ref = f.getReference();
@@ -82,10 +84,10 @@ final class CascadeUtil {
 	/*
 	 * smartMode: 智能模式，当开启后自动忽略掉那些没有set过的property
 	 */
-	static void insertWithRefInTransaction(List<IQueryableEntity> list, Session trans, boolean smartMode,int minPriority) throws SQLException {
+	static void insertWithRefInTransaction(List<IQueryableEntity> list, Session trans, boolean smartMode, int minPriority) throws SQLException {
 		if (list.isEmpty())
 			return;
-		boolean single=list.size()==1;
+		boolean single = list.size() == 1;
 		ITableMetadata meta = MetaHolder.getMeta(list.get(0));
 
 		for (IQueryableEntity obj : list) {
@@ -93,7 +95,7 @@ final class CascadeUtil {
 			BeanWrapper bean = BeanWrapper.wrap(obj);
 			for (AbstractRefField f : meta.getRefFieldsByName().values()) {
 				// 无需执行级联操作
-				if (!f.canInsert() || f.getPriority()<minPriority) {
+				if (!f.canInsert() || f.getPriority() < minPriority) {
 					continue;
 				}
 				Reference ref = f.getReference();
@@ -103,18 +105,18 @@ final class CascadeUtil {
 				}
 			}
 		}
-		if(single){
+		if (single) {
 			trans.insert0(list.get(0), null, smartMode);
-		}else{
+		} else {
 			trans.batchInsert(list, smartMode);
 		}
 		for (IQueryableEntity obj : list) {
 			BeanWrapper bean = BeanWrapper.wrap(obj);
 			// 在维护端操作之后
 			for (AbstractRefField f : meta.getRefFieldsByName().values()) {
-				if (!f.canInsert()  || f.getPriority()<minPriority)
+				if (!f.canInsert() || f.getPriority() < minPriority)
 					continue;
-				
+
 				Reference ref = f.getReference();
 				Object value = f.getField().get(obj);
 				// 其他几种情况，维护子表
@@ -123,22 +125,22 @@ final class CascadeUtil {
 					doInsertRef1(trans, value, bean, ref, true);
 					break;
 				case ONE_TO_MANY:
-					doInsertRefN(trans, value, bean, ref);
+					doInsertRefN(trans, value, bean, f);
 					break;
 				case MANY_TO_MANY:
-					doInsertRefN(trans, value, bean, ref);
+					doInsertRefN(trans, value, bean, f);
 				}
 			}
 		}
 
 	}
 
-	static int updateWithRefInTransaction(IQueryableEntity obj, Session trans,int minPriority) throws SQLException {
+	static int updateWithRefInTransaction(IQueryableEntity obj, Session trans, int minPriority) throws SQLException {
 		Collection<AbstractRefField> refs = MetaHolder.getMeta(obj).getRefFieldsByName().values();
 		int result = 0;
 		// 在维护端操作之前
 		for (AbstractRefField f : refs) {
-			if(!f.canUpdate() || f.getPriority()<minPriority){
+			if (!f.canUpdate() || f.getPriority() < minPriority) {
 				continue;
 			}
 			Reference ref = f.getReference();
@@ -153,7 +155,7 @@ final class CascadeUtil {
 		// 维护端操作之后
 		for (AbstractRefField f : refs) {
 			// 无需执行级联操作
-			if(!f.canUpdate() || f.getPriority()<minPriority){
+			if (!f.canUpdate() || f.getPriority() < minPriority) {
 				continue;
 			}
 			Reference ref = f.getReference();
@@ -161,10 +163,10 @@ final class CascadeUtil {
 			BeanWrapper bean = BeanWrapper.wrap(obj);
 			switch (ref.getType()) {
 			case ONE_TO_MANY:
-				doUpdateRefN(trans, value, bean, ref, true);
+				doUpdateRefN(trans, value, bean, f, true);
 				break;
 			case MANY_TO_MANY:
-				doUpdateRefN(trans, value, bean, ref, false);
+				doUpdateRefN(trans, value, bean, f, false);
 				break;
 			case ONE_TO_ONE:
 				doUpdateRef1(trans, value, bean, ref, true);
@@ -222,15 +224,16 @@ final class CascadeUtil {
 	 * @param reverse
 	 * @throws SQLException
 	 */
-	private static void doInsertRefN(Session trans, Object value, BeanWrapper bean, Reference ref) throws SQLException {
+	private static void doInsertRefN(Session trans, Object value, BeanWrapper bean, AbstractRefField f) throws SQLException {
 		Map<String, Object> map = new HashMap<String, Object>();
+		Reference ref = f.getReference();
 		for (JoinKey jk : ref.toJoinPath().getJoinKeys()) {
 			if (bean.isReadableProperty(jk.getLeft().name())) {
 				Object refValue = bean.getPropertyValue(jk.getLeft().name());
 				map.put(jk.getRightAsField().name(), refValue);
 			}
 		}
-		Collection<? extends IQueryableEntity> list = castToList(value, ref);
+		Collection<? extends IQueryableEntity> list = castToList(value, f);
 		for (IQueryableEntity d : list) {
 			BeanWrapper bwSub = BeanWrapper.wrap(d);
 			for (Entry<String, Object> e : map.entrySet()) {
@@ -289,14 +292,16 @@ final class CascadeUtil {
 		}
 	}
 
-	private static void doUpdateRefN(Session trans, Object value, BeanWrapper bean, Reference ref, boolean doDeletion) throws SQLException {
+	private static void doUpdateRefN(Session trans, Object value, BeanWrapper bean, AbstractRefField f, boolean doDeletion) throws SQLException {
 		// 2011-12-22:refactor logic, avoid to use delete-insert algorithm.
 		// 2014-5-1: add rule, if refByMany then no deletion
 
 		// 取得新旧的引用关系List.查出旧的引用数据集合，并按主键存放
+
+		Reference ref = f.getReference();
 		Map<List<?>, IQueryableEntity> olds = doSelectRef(trans, bean, ref);
 		// 新的引用关系
-		Collection<? extends IQueryableEntity> list = castToList(value, ref);
+		Collection<? extends IQueryableEntity> list = castToList(value, f);
 
 		// 计算要更新要子表的字段和数值
 		Map<String, Object> map = new HashMap<String, Object>();
@@ -329,13 +334,13 @@ final class CascadeUtil {
 			if (old != null) {// 存在旧值，更新处理
 				DbUtils.compareToUpdateMap(d, old);
 				if (old.needUpdate()) {
-					updateWithRefInTransaction(old, trans,0);
+					updateWithRefInTransaction(old, trans, 0);
 				}
 			} else {
 				toAdd.add(d);// 无旧值，插入处理
 			}
 		}
-		insertWithRefInTransaction(toAdd,trans, true, 0);
+		insertWithRefInTransaction(toAdd, trans, true, 0);
 		// 旧值中有而新值中没有，删除处理
 		if (doDeletion) {
 			// 将剩余的子表数据删掉
@@ -359,7 +364,7 @@ final class CascadeUtil {
 						IQueryableEntity old = oldValue.get(0);
 						DbUtils.compareToUpdateMap(d, old);
 						if (old.needUpdate()) {
-							updateWithRefInTransaction(old, trans,0);
+							updateWithRefInTransaction(old, trans, 0);
 						}
 					}
 					return;
@@ -368,7 +373,7 @@ final class CascadeUtil {
 			toAdd.add(d);
 		}
 		// 插入
-		insertWithRefInTransaction(toAdd, trans, ORMConfig.getInstance().isDynamicInsert(),0);
+		insertWithRefInTransaction(toAdd, trans, ORMConfig.getInstance().isDynamicInsert(), 0);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -383,10 +388,10 @@ final class CascadeUtil {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private static <T extends IQueryableEntity> Collection<T> castToList(Object obj, Reference ref) {
+	private static <T extends IQueryableEntity> Collection<T> castToList(Object obj, AbstractRefField ref) {
 		if (obj == null)
 			return Collections.EMPTY_LIST;
-		ITableMetadata c = ref.getTargetType();
+		ITableMetadata c = ref.getReference().getTargetType();
 		if (obj instanceof List<?>) {// 基于泛型擦除机制，自行校验对象
 			for (Object element : (List<?>) obj) {
 				if (!c.getThisType().isAssignableFrom(element.getClass())) {
@@ -416,7 +421,22 @@ final class CascadeUtil {
 			}
 			return list;
 		} else if (obj instanceof Map) {
-			return ((Map) obj).values();
+			Cascade cascade = ref.getAsMap();
+
+			if (cascade == null || StringUtils.isEmpty(cascade.valueOfMap())) {
+				Collection<T> collection = ((Map) obj).values();
+				return collection;
+			} else {
+				List<T> result = new ArrayList<T>();
+				for (Map.Entry<String, ?> entry : ((Map<String, ?>) obj).entrySet()) {
+					Object target = c.newInstance();
+					BeanWrapper bw = BeanWrapper.wrap(target);
+					bw.setPropertyValue(cascade.keyOfMap(), entry.getKey());
+					bw.setPropertyValue(cascade.valueOfMap(), String.valueOf(entry.getValue()));
+					result.add((T) target);
+				}
+				return result;
+			}
 		}
 		throw new IllegalArgumentException("Unknow set class:" + obj.getClass());
 	}

@@ -75,12 +75,12 @@ public class KvEntensionProperty implements Property {
 			VarObject v = new VarObject(extKvMeta);
 			v.put(kColumn, entry.getKey());
 			v.put(vColumn, String.valueOf(entry.getValue()));
-			for (ColumnMapping<?> mapping : baseResourceMeta.getPKFields()) {
-				Object idValue = mapping.getFieldAccessor().get(obj);
-				if (idValue != null) {
-					v.put(mapping.fieldName(), idValue);
-				}
-			}
+//			for (ColumnMapping<?> mapping : baseResourceMeta.getPKFields()) {
+//				Object idValue = mapping.getFieldAccessor().get(obj);
+//				if (idValue != null) {
+//					v.put(mapping.fieldName(), idValue);
+//				}
+//			}
 			attrs.add(v);
 		}
 		return attrs;

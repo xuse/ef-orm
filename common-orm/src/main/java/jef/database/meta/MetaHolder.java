@@ -436,7 +436,7 @@ public final class MetaHolder {
 		Assert.notNull(partitionLoader, "the Partition loader is null!");
 		raw.setPartition(partitionLoader.get(clz));
 		
-		ExtensionKeyValueTable ef = new ExtensionKeyValueTable(dkv, clz, raw);
+		KvExtensionImpl ef = new KvExtensionImpl(dkv, clz, raw);
 		EfPropertiesExtensionProvider.getInstance().register(clz, ef);
 		AbstractMetadata meta=ef.getDefault().getMeta();
 		

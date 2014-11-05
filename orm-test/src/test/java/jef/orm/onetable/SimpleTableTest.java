@@ -8,6 +8,7 @@ import java.util.List;
 
 import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
+import jef.common.wrapper.IntRange;
 import jef.database.Condition;
 import jef.database.Condition.Operator;
 import jef.database.DbClient;
@@ -45,7 +46,6 @@ import jef.tools.DateUtils;
 import jef.tools.ThreadUtils;
 import jef.tools.string.RandomData;
 
-import org.apache.commons.lang.StringUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -146,7 +146,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		 * 已经给该项目提了BUG。https://github.com/alibaba/druid/issues/682
 		 * 待Druid修复版本发布后，再恢复此案例。
 		 */
-		// System.out.println(page.next());
+//		 System.out.println(page.next());
 	}
 
 	/**
@@ -512,7 +512,9 @@ public class SimpleTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
+	@IgnoreOn(allButExcept="sqlserver")
 	public void testPaging() throws SQLException {
+		insert3Records();
 		insert3Records();
 		insert3Records();
 		System.out.println("=========== testPaging  Begin ==========");
@@ -520,7 +522,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		Selects select = QB.selectFrom(q);
 		select.column(TestEntity.Field.longField).as("lf1").toField("longField");
 
-		q.addCondition(TestEntity.Field.boolField, true);
+//		q.addCondition(TestEntity.Field.boolField, true);
 		q.orderByAsc(TestEntity.Field.longField);
 		PagingIterator<TestEntity> page = db.pageSelect(q, 5);
 		System.out.println("Total Page:" + page.getTotalPage());
@@ -528,6 +530,12 @@ public class SimpleTableTest extends org.junit.Assert {
 			List<TestEntity> list = page.next();
 		}
 		System.out.println("=========== testPaging  End ==========");
+		
+		List<TestEntity> entities=db.select(q,new IntRange(8, 10));
+		for(TestEntity e: entities){
+			System.out.println(e);
+		}
+		
 	}
 
 	/**

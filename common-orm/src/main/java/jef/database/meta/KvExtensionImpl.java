@@ -12,11 +12,11 @@ import jef.database.dialect.ColumnType;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.support.accessor.KvEntensionProperty;
 
-public final class ExtensionKeyValueTable extends AbstractExtensionConfig implements ExtensionConfigFactory {
+public final class KvExtensionImpl extends AbstractExtensionConfig implements ExtensionConfigFactory {
 	private DynamicKeyValueExtension config;
 	private TupleMetadata kvTable;
 	private JoinPath joinPath;
-	public ExtensionKeyValueTable(DynamicKeyValueExtension dkv, Class<?> entityClass,AbstractMetadata parent) {
+	public KvExtensionImpl(DynamicKeyValueExtension dkv, Class<?> entityClass,AbstractMetadata parent) {
 		super(dkv.metadata(),parent);
 		this.config=dkv;
 		// 创建KV表

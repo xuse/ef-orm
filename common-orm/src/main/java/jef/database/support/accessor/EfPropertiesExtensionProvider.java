@@ -10,7 +10,7 @@ import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.DynamicMetadata;
 import jef.database.meta.ExtensionConfig;
 import jef.database.meta.ExtensionConfigFactory;
-import jef.database.meta.ExtensionKeyValueTable;
+import jef.database.meta.KvExtensionImpl;
 import jef.database.meta.ExtensionTemplate;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.TupleMetadata;
@@ -87,8 +87,8 @@ public class EfPropertiesExtensionProvider implements BeanExtensionProvider {
 	@Override
 	public String getStaticExtensionName(Class<?> clz) {
 		ExtensionConfigFactory cf = extensions.get(clz);
-		if (cf instanceof ExtensionKeyValueTable) {
-			((ExtensionKeyValueTable) cf).getName();
+		if (cf instanceof KvExtensionImpl) {
+			((KvExtensionImpl) cf).getName();
 		}
 		return null;
 	}

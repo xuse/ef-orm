@@ -113,7 +113,7 @@ public abstract class AbstractRefField implements ISelectProvider {
 	}
 
 	public String toString() {
-		return field.getName();
+		return this.reference.getThisType().getName()+"."+field.getName();
 	}
 
 	public FetchType getFetch() {

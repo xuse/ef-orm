@@ -113,7 +113,7 @@ final class VsManyLoadTask implements LazyLoadTask {
 				if (targetTableMeta.getContainerType() == container) {
 					value = subs.isEmpty() ? null : subs.get(0);
 				} else {
-					value = DbUtils.toProperContainerType(subs, container,targetTableMeta.getContainerType(),refield.getAsMap());
+					value = DbUtils.toProperContainerType(subs, container,targetTableMeta.getContainerType(),refield);
 				}
 				refield.getField().set(obj, value);
 			}

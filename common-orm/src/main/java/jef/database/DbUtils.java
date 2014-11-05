@@ -825,7 +825,7 @@ public final class DbUtils {
 	 * @throws SQLException
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	protected static Object toProperContainerType(Collection<? extends IQueryableEntity> subs, Class<?> container, Class<?> bean, Cascade asMap) throws SQLException {
+	protected static Object toProperContainerType(Collection<? extends IQueryableEntity> subs, Class<?> container, Class<?> bean, AbstractRefField config) throws SQLException {
 		if (container.isAssignableFrom(subs.getClass())) {
 			return subs;
 		}
@@ -840,11 +840,22 @@ public final class DbUtils {
 		} else if (container == Array.class) {
 			return subs.toArray();
 		} else if (container == Map.class) {
+			Cascade cascade=config.getAsMap();
+			if(cascade==null){
+				throw new SQLException("@Cascade annotation is required for Map mapping "+config.toString());
+			}
 			Map map = new HashMap();
-			String key = asMap.keyOfMap();
+			String key = cascade.keyOfMap();
 			BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(bean);
-			for (IQueryableEntity e : subs) {
-				map.put(ba.getProperty(e, key), e);
+			if(StringUtils.isEmpty(cascade.valueOfMap())){
+				for (IQueryableEntity e : subs) {
+					map.put(ba.getProperty(e, key), e);
+				}	
+			}else{
+				String vField=cascade.valueOfMap();
+				for (IQueryableEntity e : subs) {
+					map.put(ba.getProperty(e, key), ba.getProperty(e,vField));
+				}
 			}
 			return map;
 		}

@@ -148,7 +148,7 @@ public class Case1 extends org.junit.Assert {
 		q.addCascadeCondition("items.itemExtInfos", QB.eq(ItemExtendInfo.Field.key, "拍摄地点"));// 作为Filter能生效
 		Catalogy c = db.load(q);
 		for (Item item : c.getItems()) {
-			System.out.print(item.getItemExtInfos());
+			System.out.println(item.getItemExtInfos());
 		}
 	}
 
@@ -165,6 +165,16 @@ public class Case1 extends org.junit.Assert {
 	}
 
 
+	@Test
+	public void testExtProp() throws SQLException{
+		Item item = new Item("条目X").setExtendInfo("2000", "1:30:00", "China");
+		db.insertCascade(item);
+		
+		Item item2=db.load(Item.class,item.getId());
+		System.out.println(item2.getCatalogyId());
+		System.out.println(item2.getItemExtInfos());
+				
+	}
 
 
 }
