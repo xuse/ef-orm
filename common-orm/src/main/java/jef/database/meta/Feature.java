@@ -166,6 +166,12 @@ public enum Feature {
 	 * Union语句上每个子句两边加上括号
 	 */
 	UNION_WITH_BUCK,
+	
+	/**
+	 * Oracle特性，长度为0的字符串为null值
+	 */
+	EMPTY_CHAR_IS_NULL,
+	
 	/**
 	 * 绑定变量语法特性
 	 */

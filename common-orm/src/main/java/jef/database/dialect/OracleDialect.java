@@ -90,6 +90,7 @@ public class OracleDialect extends AbstractDialect {
 				Feature.SUPPORT_CONNECT_BY,
 				Feature.DROP_CASCADE,
 				Feature.SUPPORT_SEQUENCE,
+				Feature.EMPTY_CHAR_IS_NULL,
 				Feature.COLUMN_DEF_ALLOW_NULL));
 
 		super.loadKeywords("oracle_keywords.properties");

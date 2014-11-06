@@ -27,6 +27,7 @@ import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.ColumnMappings;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.FBIField;
+import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.TupleField;
 import jef.database.query.JpqlExpression;
@@ -129,20 +130,27 @@ public class Condition implements Serializable{
 		LESS("<"),
 		GREAT_EQUALS(">="),
 		LESS_EQUALS("<="),
-		MATCH_ANY("*="),
-		MATCH_START("^="),
-		MATCH_END("$="),
-		IN("in"),
+		MATCH_ANY("*="," like "),
+		MATCH_START("^="," like "),
+		MATCH_END("$="," like "),
+		IN("in"," in "),
 		NOT_IN("not in"),
-		NOT_EQUALS("<>"),
+		NOT_EQUALS("!="),
 		BETWEEN_L_L("[]"),
 		IS_NULL("=NULL"),
 		IS_NOT_NULL("!=NULL");
 		
+		Operator(String key,String oper){
+			this.key=key;
+			this.oper=oper;
+		}
 		Operator(String key){
 			this.key=key;
+			this.oper=key;
 		}
+		
 		private String key;
+		private String oper;
 		public String getKey() {
 			return key;
 		}
@@ -212,8 +220,13 @@ public class Condition implements Serializable{
 		if(operator==null){
 			return columnName;
 		}
+		if(profile.has(Feature.EMPTY_CHAR_IS_NULL) && value instanceof CharSequence){
+			if(((CharSequence)value).length()==0){
+				value=null;
+			}
+		}
 		//常规Field条件
-		if(operator!=Operator.IS_NULL && value==null){
+		if(ArrayUtils.notContains(NULL_ABLE_VALUE,operator) && value==null){
 			if(operator==Operator.EQUALS){
 				operator=Operator.IS_NULL;
 			}else if(operator==Operator.NOT_EQUALS){
@@ -280,6 +293,11 @@ public class Condition implements Serializable{
 		//其他简单条件情况下
 		if(operator==null ||rawField==null){
 			throw new NullPointerException("Condition not complete!");
+		}
+		if(profile.has(Feature.EMPTY_CHAR_IS_NULL) && value instanceof CharSequence){
+			if(((CharSequence)value).length()==0){
+				value=null;
+			}
 		}
 		//修复is null和is not null两种特殊情况
 		if(value==null && ArrayUtils.notContains(NULL_ABLE_VALUE,operator)){
@@ -348,7 +366,7 @@ public class Condition implements Serializable{
 				throw new RuntimeException("Error param, the value of in operator must be a array or string :" + value.getClass().getName());				
 			}
 		}else{
-			sb.append(columnName).append(toString(operator)).append("?");	
+			sb.append(columnName).append(operator.oper).append("?");	
 			fields.add(new BindVariableDescription(rawField,operator,value));
 		}
 		return sb.toString();
@@ -384,12 +402,12 @@ public class Condition implements Serializable{
 			RefField rf=(RefField) value;
 			String alias=context==null?"":context.getAliasOf(rf.getInstanceQuery(context));
 			if(alias!=null){
-				sb.append(columnName).append(toString(operator)).append(alias);
+				sb.append(columnName).append(operator.oper).append(alias);
 				if(alias.length()>0)sb.append('.');
 				sb.append(DbUtils.toColumnName(rf.getFieldDef(),profile,null));
 			}else{
 				LogUtil.show("Not found Table Alias for ref-field:" + rf.toString());
-				sb.append(columnName).append(toString(operator)).append(DbUtils.toColumnName(rf.getFieldDef(),profile,null));	
+				sb.append(columnName).append(operator.oper).append(DbUtils.toColumnName(rf.getFieldDef(),profile,null));	
 			}
 		}else if ((spOpers=getInBetweenOper(operator))!=null){
 			String oper=spOpers[0];
@@ -415,34 +433,16 @@ public class Condition implements Serializable{
 				}	
 			}
 		}else if(value instanceof SqlExpression){
-			sb.append(columnName).append(toString(operator)).append(((SqlExpression) value).getText());
+			sb.append(columnName).append(operator.oper).append(((SqlExpression) value).getText());
 		}else if(value instanceof JpqlExpression){
 			JpqlExpression jpql=(JpqlExpression) value;
-			sb.append(columnName).append(toString(operator)).append(jpql.toSqlAndBindAttribs(context,profile));
+			sb.append(columnName).append(operator.oper).append(jpql.toSqlAndBindAttribs(context,profile));
 		}else{
-			sb.append(columnName).append(toString(operator)).append(type==null?ColumnMappings.getSqlStr(value,profile):type.getSqlStr(value,profile));
+			sb.append(columnName).append(operator.oper).append(type==null?ColumnMappings.getSqlStr(value,profile):type.getSqlStr(value,profile));
 		}
 		return sb.toString();
 	}
 	
-
-
-	private static String toString(Operator operator) {
-		switch(operator){
-		case BETWEEN_L_L:
-			throw new NullPointerException("Unknown operator: " + operator.toString());
-		case MATCH_ANY:
-			return " like ";
-		case MATCH_END:
-			return " like ";
-		case MATCH_START:
-			return " like ";
-		case IN:
-			return " in ";
-		default:
-			return operator.getKey();
-		}
-	}
 	
 	public String toString(){
 		StringBuilder sb=new StringBuilder();

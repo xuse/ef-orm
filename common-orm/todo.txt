@@ -132,7 +132,7 @@ reivew和修订文档
 
 ================ 待解决的问题  ===================
 
-使用多线程并发请求多个数据库
+使用多线程并发请求多个数据库(部分完成，Select部分支持，Insert, Delete, Update还未支持，JDataSource部分还未支持，NativeQuery Update部分还未支持）
 
 使用外部配置文件来配置分库分表JDataSource
 ORM手册继续编写

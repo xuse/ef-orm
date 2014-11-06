@@ -51,15 +51,9 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
-@DataSourceContext({
-	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
-	@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
-	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"),
-	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-	@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"),
-	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
-	@DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}")
-})
+@DataSourceContext({ @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"), @DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
+		@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
+		@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"), @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"), @DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}") })
 public class SimpleTableTest extends org.junit.Assert {
 	private DbClient db;
 
@@ -151,7 +145,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		 * 已经给该项目提了BUG。https://github.com/alibaba/druid/issues/682
 		 * 待Druid修复版本发布后，再恢复此案例。
 		 */
-//		 System.out.println(page.next());
+		// System.out.println(page.next());
 	}
 
 	/**
@@ -362,7 +356,7 @@ public class SimpleTableTest extends org.junit.Assert {
 			assertEquals(1, i);
 		}
 	}
-	
+
 	/**
 	 * 测试单条语句更新记录
 	 * 
@@ -370,43 +364,43 @@ public class SimpleTableTest extends org.junit.Assert {
 	 */
 	@Test
 	public void testUpdateDynamicLess() throws SQLException {
-		boolean dynamic=ORMConfig.getInstance().isDynamicUpdate();
+		boolean dynamic = ORMConfig.getInstance().isDynamicUpdate();
 		ORMConfig.getInstance().setDynamicUpdate(false);
-		Transaction db=this.db.startTransaction();
+		Transaction db = this.db.startTransaction();
 		long lastId = insert3Records();
 		{
-			LogListener listener=new LogListener("update TEST_ENTITY set.+");
+			LogListener listener = new LogListener("update TEST_ENTITY set.+");
 			TestEntity t1 = new TestEntity();
 			t1.setLongField(lastId - 2);
 			t1 = db.load(t1);
-			t1.getQuery().addCondition(QB.eq(TestEntity.Field.longField2,t1.getLongField2()));
+			t1.getQuery().addCondition(QB.eq(TestEntity.Field.longField2, t1.getLongField2()));
 			t1.setBinaryData("Hello".getBytes());
-//			t1.setLongField(12356);
+			// t1.setLongField(12356);
 			int i = db.update(t1);
 			assertEquals(1, i);
 		}
 		db.rollback(true);
 		ORMConfig.getInstance().setDynamicUpdate(dynamic);
 	}
-	
+
 	/**
 	 * 在SQLServer中，如果主键列被标记为自增键值 Identity，那么将无法通过Update预计更新主键列的值。
+	 * 
 	 * @throws SQLException
 	 */
-	@Test(expected=SQLException.class)
-	@IgnoreOn(allButExcept="sqlserver")
-	public void testSqlServerUpdateId() throws SQLException{
+	@Test(expected = SQLException.class)
+	@IgnoreOn(allButExcept = "sqlserver")
+	public void testSqlServerUpdateId() throws SQLException {
 		insert3Records();
-		TestEntity entity=db.load(QB.create(TestEntity.class));
-		if(entity==null){
+		TestEntity entity = db.load(QB.create(TestEntity.class));
+		if (entity == null) {
 			return;
 		}
 		entity.setLongField(9123);
-		entity.getQuery().addCondition(TestEntity.Field.longField2,entity.getLongField2());
+		entity.getQuery().addCondition(TestEntity.Field.longField2, entity.getLongField2());
 		db.update(entity);
-		
-	}
 
+	}
 
 	@Test
 	@IgnoreOn("sqlite")
@@ -432,7 +426,6 @@ public class SimpleTableTest extends org.junit.Assert {
 		}
 	}
 
-	
 	/**
 	 * 测试遍历模式的查询
 	 * 
@@ -543,23 +536,23 @@ public class SimpleTableTest extends org.junit.Assert {
 		Selects select = QB.selectFrom(q);
 		select.column(TestEntity.Field.longField).as("lf1").toField("longField");
 
-//		q.addCondition(TestEntity.Field.boolField, true);
+		// q.addCondition(TestEntity.Field.boolField, true);
 		q.orderByAsc(TestEntity.Field.longField);
 		PagingIterator<TestEntity> page = db.pageSelect(q, 5);
 		System.out.println("Total Page:" + page.getTotalPage());
 		for (; page.hasNext();) {
 			List<TestEntity> list = page.next();
 		}
-		
-		int count=(int)page.getTotal();
-		
+
+		int count = (int) page.getTotal();
+
 		System.out.println("=========== testPaging  End ==========");
-		List<TestEntity> entities=db.select(q,new IntRange(count-1, count+1));//查出3条是错误的。只能查出两条
-		for(TestEntity e: entities){
+		List<TestEntity> entities = db.select(q, new IntRange(count - 1, count + 1));// 查出3条是错误的。只能查出两条
+		for (TestEntity e : entities) {
 			System.out.println(e);
 		}
-		assertEquals(2,entities.size());
-		
+		assertEquals(2, entities.size());
+
 	}
 
 	/**
@@ -951,6 +944,30 @@ public class SimpleTableTest extends org.junit.Assert {
 		List<CaAsset> list1 = db.batchLoad(CaAsset.class, Arrays.asList(a));
 
 		List<CaAsset> list2 = db.batchLoadByField(CaAsset.Field.acctId, Arrays.asList(a));
+	}
 
+	/**
+	 * 测试NotNull计算符含义在Oracle下的统一
+	 * @throws SQLException
+	 */
+	@Test
+	@IgnoreOn(allButExcept={"oracle","postgresql"})
+	public void testIsNull() throws SQLException {
+		int old=db.count(QB.create(CaAsset.class));
+		
+		CaAsset ca=new CaAsset();
+		ca.setNormal("");
+		db.insert(ca);
+		
+		System.out.println(db.select(QB.create(CaAsset.class)));
+		
+		
+		CaAsset a=new CaAsset();
+		a.getQuery().addCondition(QB.notNull(CaAsset.Field.normal));
+		a.getQuery().addCondition(QB.ne(CaAsset.Field.normal,""));
+		int v=db.select(a).size();
+		
+		assertEquals(old, v);
+		
 	}
 }
