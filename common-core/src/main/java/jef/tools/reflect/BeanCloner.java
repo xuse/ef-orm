@@ -10,9 +10,13 @@ final class BeanCloner extends Cloner{
 	}
 
 	@Override
-	public Object clone(Object object) {
+	public Object clone(Object object,boolean deep) {
 		Object result=bc.createInstance();
-		bc.copy(object, result, CloneUtils.clone_cvt);
+		if(deep){
+			bc.copy(object, result, CloneUtils.clone_cvt_deep);
+		}else{
+			bc.copy(object, result, CloneUtils.clone_cvt_safe);
+		}
 		return result;
 	}
 }

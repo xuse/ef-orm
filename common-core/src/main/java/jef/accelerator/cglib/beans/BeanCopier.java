@@ -126,7 +126,7 @@ abstract public class BeanCopier {
 				PropertyDescriptor[] getters = ReflectUtils.getBeanGetters(source);
 				PropertyDescriptor[] setters = ReflectUtils.getBeanSetters(target);
 				if(getters.length!=setters.length){
-					System.out.println(source+"  "+getters.length+"  "+setters.length);
+					//System.out.println(source+"  "+getters.length+"  "+setters.length);
 					for(PropertyDescriptor s:setters){
 						System.out.println(s.getDisplayName());
 					}

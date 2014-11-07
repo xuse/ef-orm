@@ -29,108 +29,97 @@ import jef.common.SimpleMap;
 
 /**
  * 深拷贝工具，基于CG-Lib，可以对任何对象实施Clone.是目前已知的最高效的Java实现
+ * 
  * @author Administrator
- *
+ * 
  */
 public class CloneUtils {
 	private static ConcurrentMap<Class<?>, Cloner> BEAN_CLONERS = new ConcurrentHashMap<Class<?>, Cloner>();
-	
-	static{
+
+	static {
 		BEAN_CLONERS.put(ArrayList.class, new Cloner._ArrayList());
 		BEAN_CLONERS.put(HashSet.class, new Cloner._HashSet());
 		BEAN_CLONERS.put(Arrays.asList().getClass(), new Cloner._ArrayList());
 		BEAN_CLONERS.put(HashMap.class, new Cloner._HashMap());
 		BEAN_CLONERS.put(SimpleMap.class, new Cloner._HashMap());
+		BEAN_CLONERS.put(String.class, Cloner.RAW);
+		BEAN_CLONERS.put(Integer.class, Cloner.RAW);
+		BEAN_CLONERS.put(Long.class, Cloner.RAW);
+		BEAN_CLONERS.put(Short.class, Cloner.RAW);
+		BEAN_CLONERS.put(Float.class, Cloner.RAW);
+		BEAN_CLONERS.put(Double.class, Cloner.RAW);
+		BEAN_CLONERS.put(Boolean.class, Cloner.RAW);
+		BEAN_CLONERS.put(Byte.class, Cloner.RAW);
+		BEAN_CLONERS.put(Character.class, Cloner.RAW);
+	}
+	
+
+	public static Object clone(Object obj, boolean deep) {
+		Cloner copier = getCloner(obj.getClass());
+		return copier.clone(obj, deep);
 	}
 
-	
-	
 	public static Object clone(Object obj) {
 		Cloner copier = getCloner(obj.getClass());
-		return copier.clone(obj);
+		return copier.clone(obj, false);
 	}
-	
-	static final Converter clone_cvt = new Converter() {
+
+	static final Converter clone_cvt_safe = new Converter() {
 		@SuppressWarnings("rawtypes")
 		public Object convert(Object pojo, Class fieldType, Object fieldName) {
-			return _clone(pojo);
+			return _clone(pojo, false);
 		}
 	};
-	
-	private static Object _clone(Object bean) {
+
+	static final Converter clone_cvt_deep = new Converter() {
+		@SuppressWarnings("rawtypes")
+		public Object convert(Object pojo, Class fieldType, Object fieldName) {
+			return _clone(pojo, true);
+		}
+	};
+
+	private static Object _clone(Object bean, boolean deep) {
 		if (bean == null) {
 			return null;
-		}else if (bean instanceof DeepCloneable) {
-			return CloneUtils.clone(bean);
 		}
-		Class<?> clz=bean.getClass();
-		Cloner cl=BEAN_CLONERS.get(bean.getClass());
-		if(cl!=null){
-			return cl.clone(bean);
+		if (bean instanceof DeepCloneable) {
+			return CloneUtils.clone(bean, deep);
+		}
+		Class<?> clz = bean.getClass();
+		Cloner cl = BEAN_CLONERS.get(bean.getClass());
+		if (cl != null) {
+			return cl.clone(bean, deep);
 		}
 		if (clz.isArray()) {
-			return cloneArray(bean);
+			return cloneArray(bean,deep);
 		}
 		return bean;
-//		if(isStateLessType(bean.getClass())){
-//			return bean;
-//		}else{
-//			return CloneUtils.clone(bean);
-//		}
 	}
-//	
-//	private static boolean isStateLessType(Class<?> cls){
-//		if(cls.isPrimitive() || cls.isEnum())return true;
-//		if(cls.getName().startsWith("java.lang."))return true;
-//		if(cls.getName().startsWith("java.io."))return true;
-//		return false;
-//	}
-//	
-//	
-//	@SuppressWarnings("rawtypes")
-//	private static Object cloneCollection(Object obj) {
-//		Class<?> cls=obj.getClass();
-//		Collection result;
-//		try {
-//			result = (Collection<?>) cls.newInstance();
-//		} catch (InstantiationException e) {
-//			throw new RuntimeException(e);
-//		} catch (IllegalAccessException e) {
-//			throw new RuntimeException(e);
-//		}
-//		for(Object key: (Collection)obj){
-//			result.add(_clone(key));
-//		}
-//		return result;
-//	}
-//	
-//	@SuppressWarnings("rawtypes")
-//	private static Object cloneMap(Object obj){
-//		Class<?> cls=obj.getClass();
-//		Map result;
-//		try {
-//			result = (Map) cls.newInstance();
-//		} catch (InstantiationException e) {
-//			throw new RuntimeException(e);
-//		} catch (IllegalAccessException e) {
-//			throw new RuntimeException(e);
-//		}
-//		Set<Map.Entry> entries=((Map)obj).entrySet();
-//		for(Map.Entry key: entries){
-//			result.put(key.getKey(),_clone(key.getValue()));
-//		}
-//		return result;
-//	}
-	
+
 	private static Cloner getCloner(Class<?> clz) {
-		Cloner cloner=BEAN_CLONERS.get(clz);
-		if(cloner!=null)return cloner;
-		cloner=new BeanCloner(BeanCopier.create(clz, clz, true));
+		Cloner cloner = BEAN_CLONERS.get(clz);
+		if (cloner != null)
+			return cloner;
+		if(isStateLessType(clz)){
+			cloner = Cloner.RAW;
+		}else{
+			cloner = new BeanCloner(BeanCopier.create(clz, clz, true));
+		}
 		BEAN_CLONERS.putIfAbsent(clz, cloner);
 		return cloner;
 	}
 
-	private static Object cloneArray(Object obj) {
+	
+	public static boolean isStateLessType(Class<?> cls){
+		if(cls.isPrimitive())return true;
+		if(cls.getName().startsWith("java.lang."))return true;
+		if(cls.getName().startsWith("java.io."))return true;
+		if(cls.isEnum())return true;
+		return false;
+	}
+	
+	
+	private static Object cloneArray(Object obj,boolean deep) {
 		int len = Array.getLength(obj);
 		Class<?> priType = obj.getClass().getComponentType();
 		Object clone = Array.newInstance(priType, len);
@@ -140,9 +129,9 @@ public class CloneUtils {
 			return clone;
 		}
 		for (int i = 0; i < len; i++) {
-			Array.set(clone, i, _clone(Array.get(obj, i)));
+			Array.set(clone, i, _clone(Array.get(obj, i),deep));
 		}
 		return clone;
 	}
-	
+
 }

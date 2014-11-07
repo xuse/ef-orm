@@ -241,8 +241,15 @@ public class JefTest extends Assert {
 	public void cloneTest() throws CloneNotSupportedException{
 		Parent p=new Parent();
 		
-		Parent clone=(Parent) CloneUtils.clone(p);
+		Parent clone=(Parent) CloneUtils.clone(p,true);
 		System.out.println(p);
+		System.out.println(clone);
+		
+	}
+	
+	@Test
+	public void cloneTest2() throws CloneNotSupportedException{
+		String clone=(String)CloneUtils.clone("aaaa",true);
 		System.out.println(clone);
 		
 	}
