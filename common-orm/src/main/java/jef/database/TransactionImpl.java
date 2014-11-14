@@ -44,6 +44,8 @@ public class TransactionImpl extends Transaction {
 	 * 为了将这种内部自动生成的事务和用户事务加以区别，所以通过这个字符串表名事务的类别。 并且可以体现在日志中。
 	 */
 	TransactionFlag innerFlag;
+	
+	private boolean isJpa;
 
 	public void setReadonly(boolean flag) {
 		if (this.readOnly == flag)
@@ -130,6 +132,7 @@ public class TransactionImpl extends Transaction {
 		if (timeout > 0) {
 			this.deadline = System.currentTimeMillis() + timeout * 1000;
 		}
+		this.isJpa=parent.getTxType() == TransactionMode.JPA;
 	}
 
 	/**
@@ -334,6 +337,6 @@ public class TransactionImpl extends Transaction {
 
 	@Override
 	protected boolean isJpaTx() {
-		return parent.getTxType() == TransactionMode.JPA;
+		return isJpa;
 	}
 }

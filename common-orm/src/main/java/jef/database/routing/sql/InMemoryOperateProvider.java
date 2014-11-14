@@ -1,7 +1,7 @@
 package jef.database.routing.sql;
 
 import jef.common.wrapper.IntRange;
-import jef.database.dialect.statement.ResultSetLaterProcess;
+import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.wrapper.result.MultipleResultSet;
 
 /**

@@ -42,7 +42,7 @@ public class CloneUtils {
 	private static ConcurrentMap<Class<?>, Cloner> BEAN_CLONERS = new ConcurrentHashMap<Class<?>, Cloner>(32);
 
 	/**
-	 * 常用的克隆类型，预定义好。
+	 * 常用的克隆策略，预定义好。
 	 */
 	static {
 		BEAN_CLONERS.put(ArrayList.class, new Cloner._ArrayList());

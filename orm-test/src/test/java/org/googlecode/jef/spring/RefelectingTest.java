@@ -3,7 +3,7 @@ package org.googlecode.jef.spring;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import jef.database.dialect.statement.DelegatingStatement;
+import jef.database.jdbc.statement.DelegatingStatement;
 import jef.database.test.generator.TestObject;
 
 import org.junit.Test;
@@ -23,11 +23,11 @@ public class RefelectingTest {
 	private void doMethod1() throws SQLException {
 		Connection conn = Mocks.getMockConnection();
 		{
-			jef.database.dialect.statement.DelegatingStatement st = new DelegatingStatement(conn.createStatement());
+			jef.database.jdbc.statement.DelegatingStatement st = new DelegatingStatement(conn.createStatement());
 			TestObject.invokeObject(st);
 		}
 		{
-			jef.database.dialect.statement.DelegatingPreparedStatement st = new jef.database.dialect.statement.DelegatingPreparedStatement(conn.prepareStatement(""));
+			jef.database.jdbc.statement.DelegatingPreparedStatement st = new jef.database.jdbc.statement.DelegatingPreparedStatement(conn.prepareStatement(""));
 			TestObject.invokeObject(st);
 		}
 

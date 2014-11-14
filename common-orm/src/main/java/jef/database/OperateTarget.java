@@ -15,13 +15,13 @@ import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.Transaction.TransactionFlag;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.statement.ProcessablePreparedStatement;
-import jef.database.dialect.statement.ProcessableStatement;
-import jef.database.dialect.statement.ResultSetLaterProcess;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IManagedConnectionPool;
 import jef.database.innerpool.PartitionSupport;
+import jef.database.jdbc.statement.ProcessablePreparedStatement;
+import jef.database.jdbc.statement.ProcessableStatement;
+import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.jsqlparser.SqlFunctionlocalization;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.parser.StSqlParser;
@@ -37,6 +37,8 @@ import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.populator.Transformer;
+import jef.database.wrapper.processor.BindVariableContext;
+import jef.database.wrapper.processor.BindVariableTool;
 import jef.database.wrapper.result.IResultSet;
 import jef.database.wrapper.result.MultipleResultSet;
 import jef.database.wrapper.result.ResultSetHolder;
@@ -250,7 +252,7 @@ public class OperateTarget implements SqlTemplate {
 			for (int i = 0; i < params.length; i++) {
 				StringBuilder sb = debug ? new StringBuilder() : null;
 				session.getListener().beforeSqlExecute(sql, params[i]);
-				BindVariableContext context = new BindVariableContext(st, this, sb);
+				BindVariableContext context = new BindVariableContext(st, getProfile(), sb);
 				BindVariableTool.setVariables(context, params[i]);
 				st.addBatch();
 				if (debug) {
@@ -309,7 +311,7 @@ public class OperateTarget implements SqlTemplate {
 			}
 			st.setQueryTimeout(ORMConfig.getInstance().getUpdateTimeout());
 			if (!ps.isEmpty()) {
-				BindVariableContext context = new BindVariableContext(st, this, sb);
+				BindVariableContext context = new BindVariableContext(st, getProfile(), sb);
 				BindVariableTool.setVariables(context, ps);
 			}
 			total = st.executeUpdate();
@@ -351,7 +353,7 @@ public class OperateTarget implements SqlTemplate {
 			st = prepareStatement(sql);
 			st.setQueryTimeout(ORMConfig.getInstance().getUpdateTimeout());
 			if (!ps.isEmpty()) {
-				BindVariableContext context = new BindVariableContext(st, this, sb);
+				BindVariableContext context = new BindVariableContext(st, getProfile(), sb);
 				BindVariableTool.setVariables(context, ps);
 			}
 			total = st.executeUpdate();
@@ -385,7 +387,7 @@ public class OperateTarget implements SqlTemplate {
 			ResultSetLaterProcess isReverse = lazy == null ? null : lazy.isReverseResult();
 			st = prepareStatement(sql, isReverse, false);
 
-			BindVariableContext context = new BindVariableContext(st, this, sb);
+			BindVariableContext context = new BindVariableContext(st, getProfile(), sb);
 			BindVariableTool.setVariables(context, objs);
 			rst.apply(st);
 			rs = st.executeQuery();
@@ -432,7 +434,7 @@ public class OperateTarget implements SqlTemplate {
 
 			ResultSetLaterProcess isReverse = inmem == null?null:inmem.isReverseResult();
 			st = prepareStatement(sql, isReverse, false);
-			BindVariableContext context = new BindVariableContext(st, this, sb);
+			BindVariableContext context = new BindVariableContext(st, getProfile(), sb);
 			BindVariableTool.setVariables(context, objs);
 
 			st.setQueryTimeout(config.getSelectTimeout());

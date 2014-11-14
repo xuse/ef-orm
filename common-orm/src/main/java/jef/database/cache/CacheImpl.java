@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import jef.database.BindVariableDescription;
 import jef.database.DbUtils;
 import jef.database.IQueryableEntity;
 import jef.database.ORMConfig;
@@ -28,6 +27,7 @@ import jef.database.meta.MetaHolder;
 import jef.database.query.SqlContext;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.QueryClause;
+import jef.database.wrapper.processor.BindVariableDescription;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

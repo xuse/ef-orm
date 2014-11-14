@@ -2,13 +2,10 @@ package jef.database.dialect;
 
 import java.sql.Types;
 
-import javax.persistence.GenerationType;
-
 import jef.database.ConnectInfo;
 import jef.database.dialect.ColumnType.AutoIncrement;
-import jef.database.dialect.statement.LimitHandler;
-import jef.database.dialect.statement.UnionJudgement;
 import jef.database.dialect.type.AColumnMapping;
+import jef.database.jdbc.statement.UnionJudgement;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.query.Func;

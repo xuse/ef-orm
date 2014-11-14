@@ -24,7 +24,7 @@ import jef.database.meta.Column;
 import jef.database.meta.ColumnModification;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-import jef.database.support.executor.StatementExecutor;
+import jef.database.wrapper.executor.StatementExecutor;
 import jef.tools.ArrayUtils;
 import jef.tools.ClassScanner;
 import jef.tools.IOUtils;

@@ -7,7 +7,7 @@ import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.ExtensionConfig;
 import jef.database.meta.ExtensionConfigFactory;
 import jef.database.meta.ITableMetadata;
-import jef.database.support.accessor.EfPropertiesExtensionProvider;
+import jef.database.meta.extension.EfPropertiesExtensionProvider;
 
 /**
  * 扩展属性支持

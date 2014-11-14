@@ -36,7 +36,6 @@ import jef.database.datasource.DataSourceInfo;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.ColumnType.Varchar;
-import jef.database.dialect.statement.LimitHandler;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;

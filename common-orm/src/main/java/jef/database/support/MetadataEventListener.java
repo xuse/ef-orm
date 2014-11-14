@@ -11,7 +11,7 @@ import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.Column;
 import jef.database.meta.ColumnModification;
 import jef.database.meta.ITableMetadata;
-import jef.database.support.executor.StatementExecutor;
+import jef.database.wrapper.executor.StatementExecutor;
 
 /**
  * 表结构变更时，整个操作过程进度的事件监听器(可以干涉修改表的过程)

@@ -9,6 +9,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.Query;
 import jef.database.query.SqlContext;
+import jef.database.wrapper.processor.BindVariableDescription;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;

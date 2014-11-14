@@ -9,6 +9,7 @@ import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.SqlContext;
+import jef.database.wrapper.processor.BindVariableDescription;
 import jef.tools.StringUtils;
 
 /**

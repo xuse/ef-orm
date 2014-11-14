@@ -22,7 +22,6 @@ import java.util.Arrays;
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.OperateTarget;
-import jef.database.dialect.statement.LimitHandler;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.jsqlparser.expression.LongValue;
 import jef.database.meta.DbProperty;

@@ -42,6 +42,7 @@ import jef.database.query.JoinElement;
 import jef.database.query.Query;
 import jef.database.query.SqlContext;
 import jef.database.wrapper.clause.BindSql;
+import jef.database.wrapper.processor.BindVariableDescription;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
 

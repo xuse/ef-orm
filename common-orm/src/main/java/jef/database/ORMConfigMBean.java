@@ -144,4 +144,21 @@ public interface ORMConfigMBean {
 	boolean isCheckSqlFunctions();
 
 	void setCheckSqlFunctions(boolean checkSqlFunctions);
+
+	boolean isAutoCreateSequence();
+
+	void setAutoCreateSequence(boolean autoCreateSequence);
+
+	boolean isPartitionCreateTableInneed();
+
+	void setPartitionCreateTableInneed(boolean partitionCreateTableInneed);
+
+	boolean isFilterAbsentTables();
+
+	void setFilterAbsentTables(boolean filterAbsentTables);
+
+	boolean isJpaContinueCommitIfError();
+
+	void setJpaContinueCommitIfError(boolean jpaContinueCommitIfError);
+
 }

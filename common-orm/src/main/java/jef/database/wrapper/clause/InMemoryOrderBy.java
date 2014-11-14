@@ -19,8 +19,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import jef.database.rowset.CachedRowSetImpl;
-import jef.database.rowset.Row;
+import jef.database.jdbc.rowset.CachedRowSetImpl;
+import jef.database.jdbc.rowset.Row;
 
 public class InMemoryOrderBy implements InMemoryProcessor {
 	private int[] orderFields;

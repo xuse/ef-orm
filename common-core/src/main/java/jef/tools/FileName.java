@@ -12,6 +12,10 @@ public class FileName {
 	private String name;
 	private int index;
 	
+	/**
+	 * 构造
+	 * @param name
+	 */
 	public FileName(String name){
 		this.name=name;
 		this.index=name.lastIndexOf('.');
@@ -19,7 +23,7 @@ public class FileName {
 	}
 	/**
 	 * 将文件名和扩展名拆成两个部分
-	 * @return
+	 * @return 数组，[0]是文件名部分 [1]是扩展名
 	 */
 	public String[] getAsArray(){
 		return new String[]{getMain(),(index==name.length()?"":name.substring(index+1))};
@@ -51,6 +55,7 @@ public class FileName {
 	/**
 	 * 在文件名右侧(扩展名左侧)加上文字
 	 * @param append
+	 * @return this
 	 */
 	public FileName append(String append){
 		if(append==null)append="";
@@ -60,21 +65,21 @@ public class FileName {
 	}
 	
 	/**
-	 * 在文件名整体，右侧加上文字
-	 * @param append
-	 * @return
+	 * 在文件名整体的右侧加上文字
+	 * @param append 内容
+	 * @return this
 	 */
-	public FileName appendAtlast(String append){
+	public FileName appendAtLast(String append){
 		if(append==null)append="";
 		name=name.concat(append);
 		return this;
 	}
 	
 	/**
+	 * 假设文件名后添加了指定后缀后的结果<br>
 	 * 不改变当前对象，返回“如果”在右侧加上某个文本之后的整体文件名。
-	 * 
-	 * @param append
-	 * @return
+	 * @param append 
+	 * @return 虚构文件名
 	 */
 	public String getValueIfAppend(String append){
 		if(append==null || append.length()==0)return name;
@@ -85,8 +90,8 @@ public class FileName {
 	
 	/**
 	 * 当右侧加上某段文本后，构造成file
-	 * @param append
-	 * @return
+	 * @param append 假设添加的文字
+	 * @return 文件对象
 	 */
 	public File getFileIfAppend(String append){
 		return new File(getValueIfAppend(append));
@@ -95,7 +100,7 @@ public class FileName {
 	/**
 	 * 当右侧加上某段文本后，构造成file
 	 * @param parent 上级文件夹
-	 * @param append
+	 * @param append 假设添加的文字
 	 * @return
 	 */
 	public File getFileIfAppend(String parent,String append){
@@ -160,30 +165,4 @@ public class FileName {
 					name.substring(n + 1).toLowerCase() };
 		}
 	}
-	
-//	
-//	public static void main(String[] args) {
-//		String n1=".sjfdnsdj";
-//		String n2="asdas.yxy.txt";
-//		String n3="fsdfs.TXT";
-//		String n4="sdfmwsjfldsfds";
-//		FileName f=new FileName(n1);
-//		System.out.println(f.getMain());
-//		System.out.println(f.getExt());
-//		
-//		f=new FileName(n2);
-//		f.append("(part2)");
-//		System.out.println(f.getMain());
-//		
-//
-//		
-//		f=new FileName(n3);
-//		System.out.println(f.getMain());
-//		System.out.println(f.getExt());
-//		
-//		f=new FileName(n4);
-//		System.out.println(f.getMain());
-//		System.out.println(f.getExt());
-//		
-//	}
 }

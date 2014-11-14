@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import jef.database.BindVariableDescription;
 import jef.database.DbUtils;
 import jef.database.DefaultSqlProcessor;
 import jef.database.Field;
@@ -19,6 +18,7 @@ import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.clause.QueryClauseImpl;
 import jef.database.wrapper.clause.QueryClauseSqlImpl;
 import jef.database.wrapper.populator.Transformer;
+import jef.database.wrapper.processor.BindVariableDescription;
 import jef.tools.StringUtils;
 
 /**

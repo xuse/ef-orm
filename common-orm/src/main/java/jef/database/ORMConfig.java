@@ -18,8 +18,10 @@ import jef.tools.JefConfiguration.Item;
  */
 public class ORMConfig implements ORMConfigMBean {
 	private static ORMConfig instance = new ORMConfig();
-	private MetadataFacade metaFacade=new MetadataFacade();
-	
+	private MetadataFacade metaFacade = new MetadataFacade();
+
+	private String serverName;
+
 	public static ORMConfig getInstance() {
 		return instance;
 	}
@@ -40,17 +42,17 @@ public class ORMConfig implements ORMConfigMBean {
 	/**
 	 * 过滤不存在的分区表
 	 */
-	private boolean filterAbsentTables; 
+	private boolean filterAbsentTables;
 	/**
 	 * 按需建表（分区表）
 	 */
 	private boolean partitionCreateTableInneed;
-	
+
 	/**
 	 * 内存排序和聚合等计算的最大支持结果数
 	 */
 	private int partitionInMemoryMaxRows;
-	
+
 	/**
 	 * Lob等数据流映射到String时的编码
 	 */
@@ -144,15 +146,15 @@ public class ORMConfig implements ORMConfigMBean {
 	 * 定期检查连接
 	 */
 	private long heartBeatSleep;
-	
+
 	private boolean formatSQL;
-	
+
 	/**
 	 * 可以创建序列
 	 * 
 	 */
 	private boolean autoCreateSequence;
-	
+
 	/**
 	 * 是否设置事务隔离级别
 	 */
@@ -161,20 +163,22 @@ public class ORMConfig implements ORMConfigMBean {
 	 * 命名查询检查更新
 	 */
 	private boolean checkUpdateForNamedQueries;
-	
+
 	/**
 	 * in条件中允许出现的最多参数。缺省500个。
 	 */
 	private int maxInConditions;
-	
+
+	private boolean jpaContinueCommitIfError;
+
 	/**
 	 * 多站点查询时启用并行查询
 	 */
 	private int parallelSelect;
-	
-	public String wrap ="";
-	public String wrapt="";
-	
+
+	public String wrap = "";
+	public String wrapt = "";
+
 	private boolean checkSqlFunctions;
 
 	private void init() {
@@ -200,20 +204,21 @@ public class ORMConfig implements ORMConfigMBean {
 		allowEmptyQuery = JefConfiguration.getBoolean(DbCfg.ALLOW_EMPTY_QUERY, false);
 		enableLazyLoad = JefConfiguration.getBoolean(DbCfg.DB_ENABLE_LAZY_LOAD, true);
 		cacheLevel1 = JefConfiguration.getBoolean(DbCfg.CACHE_LEVEL_1, false);
-		cacheDebug = System.getProperty("cache.debug")!=null;
-		setFormatSQL(JefConfiguration.getBoolean(DbCfg.DB_FORMAT_SQL,true));
-		heartBeatSleep=JefConfiguration.getLong(DbCfg.DB_HEARTBEAT, 120000);
-		setTxIsolation=JefConfiguration.getBoolean(DbCfg.DB_SET_ISOLATION, true);
-		checkUpdateForNamedQueries=JefConfiguration.getBoolean(DbCfg.DB_NAMED_QUERY_UPDATE, debugMode);
-		checkSqlFunctions=JefConfiguration.getBoolean(DbCfg.DB_CHECK_SQL_FUNCTIONS, true);
-		filterAbsentTables=JefConfiguration.getBoolean(DbCfg.PARTITION_FILTER_ABSENT_TABLES, true);
-		partitionCreateTableInneed=JefConfiguration.getBoolean(DbCfg.PARTITION_FILTER_ABSENT_TABLES, true);
-		partitionInMemoryMaxRows=JefConfiguration.getInt(DbCfg.PARTITION_INMEMORY_MAXROWS, 0);
-		autoCreateSequence=	JefConfiguration.getBoolean(DbCfg.AUTO_SEQUENCE_CREATION,true);
-		maxInConditions=JefConfiguration.getInt(DbCfg.DB_MAX_IN_CONDITIONS,500);
-		parallelSelect=JefConfiguration.getInt(DbCfg.PARTITION_PARALLEL_SELECT, 3);
+		cacheDebug = System.getProperty("cache.debug") != null;
+		setFormatSQL(JefConfiguration.getBoolean(DbCfg.DB_FORMAT_SQL, true));
+		heartBeatSleep = JefConfiguration.getLong(DbCfg.DB_HEARTBEAT, 120000);
+		setTxIsolation = JefConfiguration.getBoolean(DbCfg.DB_SET_ISOLATION, true);
+		checkUpdateForNamedQueries = JefConfiguration.getBoolean(DbCfg.DB_NAMED_QUERY_UPDATE, debugMode);
+		checkSqlFunctions = JefConfiguration.getBoolean(DbCfg.DB_CHECK_SQL_FUNCTIONS, true);
+		filterAbsentTables = JefConfiguration.getBoolean(DbCfg.PARTITION_FILTER_ABSENT_TABLES, true);
+		partitionCreateTableInneed = JefConfiguration.getBoolean(DbCfg.PARTITION_FILTER_ABSENT_TABLES, true);
+		partitionInMemoryMaxRows = JefConfiguration.getInt(DbCfg.PARTITION_INMEMORY_MAXROWS, 0);
+		autoCreateSequence = JefConfiguration.getBoolean(DbCfg.AUTO_SEQUENCE_CREATION, true);
+		maxInConditions = JefConfiguration.getInt(DbCfg.DB_MAX_IN_CONDITIONS, 500);
+		parallelSelect = JefConfiguration.getInt(DbCfg.PARTITION_PARALLEL_SELECT, 3);
+		jpaContinueCommitIfError = JefConfiguration.getBoolean(DbCfg.DB_JPA_CONTINUE_COMMIT_IF_ERROR, false);
 	}
-	
+
 	public int getMaxInConditions() {
 		return maxInConditions;
 	}
@@ -444,6 +449,7 @@ public class ORMConfig implements ORMConfigMBean {
 	public void setDynamicUpdate(boolean dynamicUpdate) {
 		this.dynamicUpdate = dynamicUpdate;
 	}
+
 	public boolean isCacheLevel1() {
 		return cacheLevel1;
 	}
@@ -451,11 +457,13 @@ public class ORMConfig implements ORMConfigMBean {
 	public void setCacheLevel1(boolean cacheLevel1) {
 		this.cacheLevel1 = cacheLevel1;
 	}
+
 	public void setCacheResultset(boolean cacheResultset) {
 		this.cacheResultset = cacheResultset;
 		QueryOption.DEFAULT.setCacheResultset(cacheResultset);
 		QueryOption.DEFAULT_MAX1.setCacheResultset(cacheResultset);
 	}
+
 	public boolean isCacheDebug() {
 		return cacheDebug;
 	}
@@ -463,13 +471,15 @@ public class ORMConfig implements ORMConfigMBean {
 	public void setCacheDebug(boolean cacheDebug) {
 		this.cacheDebug = cacheDebug;
 	}
-	public boolean isFormatSQL(){
+
+	public boolean isFormatSQL() {
 		return formatSQL;
 	}
-	public void setFormatSQL(boolean value){
-		this.formatSQL=value;
-		this.wrap= formatSQL?"\n":"";
-		this.wrapt = formatSQL?"\n\t":"";
+
+	public void setFormatSQL(boolean value) {
+		this.formatSQL = value;
+		this.wrap = formatSQL ? "\n" : "";
+		this.wrapt = formatSQL ? "\n\t" : "";
 	}
 
 	public long getHeartBeatSleep() {
@@ -479,19 +489,18 @@ public class ORMConfig implements ORMConfigMBean {
 	public void setHeartBeatSleep(long heartBeatSleep) {
 		this.heartBeatSleep = heartBeatSleep;
 	}
-	
-	private String serverName;
+
 	public String getServerName() {
-		if (serverName==null){
-			serverName=ProcessUtil.getServerName();
+		if (serverName == null) {
+			serverName = ProcessUtil.getServerName();
 		}
 		return serverName;
 	}
-	
 
 	public String getHostIp() {
 		return ProcessUtil.getLocalIp();
 	}
+
 	public int getLoadedEntityCount() {
 		return metaFacade.getLoadedEntityCount();
 	}
@@ -525,8 +534,8 @@ public class ORMConfig implements ORMConfigMBean {
 	}
 
 	public String getMetadataResourcePattern() {
-		if(metaFacade.getDefaultMeta()==null){
-			return "-";	
+		if (metaFacade.getDefaultMeta() == null) {
+			return "-";
 		}
 		return metaFacade.getDefaultMeta().getPattern();
 	}
@@ -539,10 +548,18 @@ public class ORMConfig implements ORMConfigMBean {
 		this.partitionInMemoryMaxRows = partitionInMemoryMaxRows;
 	}
 
+	public boolean isJpaContinueCommitIfError() {
+		return jpaContinueCommitIfError;
+	}
+
+	public void setJpaContinueCommitIfError(boolean jpaContinueCommitIfError) {
+		this.jpaContinueCommitIfError = jpaContinueCommitIfError;
+	}
+
 	public void setMetadataResourcePattern(String pattern) {
 		MetaHolder.getMappingSchema("");
-		if(metaFacade.getDefaultMeta()==null){
-			return;	
+		if (metaFacade.getDefaultMeta() == null) {
+			return;
 		}
 		metaFacade.getDefaultMeta().setPattern(pattern);
 	}

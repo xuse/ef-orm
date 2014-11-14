@@ -18,10 +18,10 @@ package jef.database.wrapper.clause;
 import java.util.List;
 
 import jef.common.wrapper.IntRange;
-import jef.database.BindVariableDescription;
 import jef.database.annotation.PartitionResult;
 import jef.database.cache.CacheKey;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.wrapper.processor.BindVariableDescription;
 
 public class QueryClauseSqlImpl implements QueryClause {
 	private String body;

@@ -1,5 +1,6 @@
 package jef.common.wrapper;
 
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
@@ -22,5 +23,21 @@ public class PropertiesMap extends AbstractMap<String, String> implements Map<St
 	@Override
 	public Set<java.util.Map.Entry<String, String>> entrySet() {
 		return (Set)prop.entrySet();
+	}
+
+	@Override
+	public int size() {
+		return prop.size();
+	}
+
+	@Override
+	public void clear() {
+		prop.clear();		
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Iterator<? extends java.util.Map.Entry<String, String>> entryIterator() {
+		return (Iterator<? extends java.util.Map.Entry<String, String>>) prop.entrySet().iterator();
 	}
 }

@@ -248,6 +248,13 @@ public enum DbCfg implements ConfigItem {
 	 */
 	DB_KEEP_TX_FOR_POSTGRESQL,
 	
+	/**
+	 * 默认情况下，JPA事务提交时为顺序提交，一旦出错就终止提交并回滚。
+	 * 开启此选项后，可以让各个连接相对独立。仅回滚提交出错的连接。
+	 * 注意：此选项并不表示各个连接的事务独立。如果是程序运行时抛出异常，所有连接还是会一起回滚的。
+	 */
+	DB_JPA_CONTINUE_COMMIT_IF_ERROR,
+	
 	/////////////数据库Sequence生成相关配置////////////////
 	/**
 	 * JPA实现关于自增实现分为

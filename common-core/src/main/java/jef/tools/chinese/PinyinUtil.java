@@ -28,8 +28,8 @@ import net.sourceforge.pinyin4j.format.HanyuPinyinVCharType;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
 
 /**
- * 汉字拼音工具，使用pinyin4j
- * 
+ * 汉字拼音工具，使用pinyin4j(需要第三方包)。
+ * <p>
  * pinyin4j支持将汉字转化成六种拼音表示法。其对应关系是:
  * <table width="90%" border=1>
  * <tr>
@@ -58,21 +58,40 @@ import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombi
  * <td>国语罗马字，它是由林语堂提议建立的，在1928年由国民政府大学堂颁布推行，很少人用</td>
  * </tr>
  * </table>
- * 
- * 关于输出格式Format 声调选项 WITH_TONE_NUMBER(以数字代替声调) : zhong1 zhong4 WITHOUT_TONE
- * (无声调) : zhong zhong WITH_TONE_MARK (有声调) : zhōng zhòng (需要用unicode支持)
- * 
- * u v u(上两点)的的表示方式，吕的输出为 WITH_U_AND_COLON : lu:3 (u加上冒号) WITH_V : lv3
- * (用v表示u上两点,符合现行输入法习惯) WITH_U_UNICODE : lü3 (用unocide的U上两点符号)
+ * <p>
+ * <h3>关于输出格式:</h3>
+ * 声调选项
+ * <ul>
+ * <li> WITH_TONE_NUMBER(以数字代替声调) : zhong1 zhong4</li>
+ *  <li>WITHOUT_TONE
+ * (无声调) : zhong zhong </li>
+ * <li>WITH_TONE_MARK (有声调) : zhōng zhòng (需要用unicode支持)</li>
+ * </ul>
+ * u v u(上两点)的的表示方式，以‘吕’的输出为例
+ * <ul>
+ * <li>WITH_U_AND_COLON : lu:3 (u加上冒号)</li>
+ * <li>WITH_V : lv3
+ * (用v表示u上两点,符合现行输入法习惯) </li>
+ * <li>WITH_U_UNICODE : lü3 (用unocide的U上两点符号)</li>
+ * </ul>
+ * <p>
+ * 此功能需要依赖第三方包pinyin4j。
  * 
  * @author Jiyi
  * 
  */
 public class PinyinUtil {
 	
+	/**
+	 * 默认输出格式： 小写、用v表示ü的拼音、无声调。
+	 */
 	private static final HanyuPinyinOutputFormat FORMAT_DEFAULT = new HanyuPinyinOutputFormat();
+	/**
+	 * 输出格式：带声调，用数字1,2,3,4表示声调的阴平、阳平、上声、去声，无数字表示轻声。
+	 */
 	private static final HanyuPinyinOutputFormat FORMAT_WITH_TONE = new HanyuPinyinOutputFormat();
 	static{
+		//设置默认输出格式
 		FORMAT_DEFAULT.setCaseType(HanyuPinyinCaseType.LOWERCASE);
 		FORMAT_DEFAULT.setToneType(HanyuPinyinToneType.WITHOUT_TONE);
 		FORMAT_DEFAULT.setVCharType(HanyuPinyinVCharType.WITH_V);	
@@ -83,7 +102,8 @@ public class PinyinUtil {
 	/**
 	 * 将指定字符串转为拼音
 	 * 
-	 * @param source
+	 * @param source 字符串。
+	 * @return 拼音。英文字符不变。多个汉字的拼音之间没有分隔。
 	 */
 	public static String getPinyin(String source){
 		return getPinyin(source,"");
@@ -92,9 +112,9 @@ public class PinyinUtil {
 	/**
 	 * 将指定字符串转为拼音
 	 * 
-	 * @param source
-	 * @param sep 子与子枝间的分隔符
-	 * @return
+	 * @param source 字符串
+	 * @param sep 每个汉字拼音之间的分隔符
+	 * @return 拼音。英文字符不变。多个汉字的拼音之间用指定的字符分隔
 	 */
 	@SuppressWarnings("deprecation")
 	public static String getPinyin(String source,String sep){

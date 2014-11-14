@@ -1,11 +1,11 @@
 package com.alibaba.druid;
 
 import jef.database.dialect.DerbyLimitHandler;
+import jef.database.dialect.LimitHandler;
 import jef.database.dialect.LimitOffsetLimitHandler;
 import jef.database.dialect.MySqlLimitHandler;
 import jef.database.dialect.SQL2000LimitHandler;
 import jef.database.dialect.SQL2005LimitHandler;
-import jef.database.dialect.statement.LimitHandler;
 
 import org.junit.Test;
 

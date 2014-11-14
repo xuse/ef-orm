@@ -10,7 +10,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import jef.database.BindVariableDescription;
 import jef.database.Condition;
 import jef.database.Condition.Operator;
 import jef.database.DbUtils;
@@ -32,6 +31,7 @@ import jef.database.wrapper.clause.GroupClause;
 import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.clause.QueryClauseImpl;
 import jef.database.wrapper.populator.Transformer;
+import jef.database.wrapper.processor.BindVariableDescription;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 

@@ -20,7 +20,7 @@ import jef.database.meta.ColumnChange;
 import jef.database.meta.ColumnModification;
 import jef.database.meta.ITableMetadata;
 import jef.database.support.MetadataEventListener;
-import jef.database.support.executor.StatementExecutor;
+import jef.database.wrapper.executor.StatementExecutor;
 import jef.tools.ThreadUtils;
 
 public class ProgressSample implements MetadataEventListener{

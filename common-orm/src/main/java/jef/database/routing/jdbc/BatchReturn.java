@@ -5,7 +5,7 @@ import java.sql.SQLException;
 
 import jef.common.IntList;
 import jef.database.DbUtils;
-import jef.database.rowset.CachedRowSetImpl;
+import jef.database.jdbc.rowset.CachedRowSetImpl;
 
 public class BatchReturn extends UpdateReturn{
 	private final IntList batchResult=new IntList();

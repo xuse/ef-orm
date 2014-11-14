@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jef.common.log.LogUtil;
-import jef.database.AutoIncreatmentCallBack.OracleRowidKeyCallback;
 import jef.database.annotation.PartitionResult;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
@@ -15,6 +14,10 @@ import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.wrapper.clause.InsertSqlClause;
+import jef.database.wrapper.processor.AutoIncreatmentCallBack;
+import jef.database.wrapper.processor.BindVariableContext;
+import jef.database.wrapper.processor.BindVariableTool;
+import jef.database.wrapper.processor.AutoIncreatmentCallBack.OracleRowidKeyCallback;
 import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
@@ -182,7 +185,7 @@ abstract class InsertProcessor {
 					String dbName = debug ? db.getTransactionId() : null;
 					psmt = callback.doPrepareStatement(db, sqls.getSql(), dbName);
 				}
-				BindVariableContext context = new BindVariableContext(psmt, db, sb);
+				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
 				BindVariableTool.setInsertVariables(obj, sqls.getFields(), context);
 				psmt.execute();
 				if (callback != null) {

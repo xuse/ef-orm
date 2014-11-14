@@ -30,6 +30,8 @@ import jef.database.query.SqlContext;
 import jef.database.query.SqlExpression;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.UpdateClause;
+import jef.database.wrapper.processor.BindVariableContext;
+import jef.database.wrapper.processor.BindVariableTool;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
@@ -213,7 +215,7 @@ public abstract class UpdateProcessor {
 					if (updateTimeout > 0) {
 						psmt.setQueryTimeout(updateTimeout);
 					}
-					BindVariableContext context = new BindVariableContext(psmt, db, sb);
+					BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
 					BindVariableTool.setVariables(obj.getQuery(), setValues.getVariables(), whereValues.getBind(), context);
 					psmt.execute();
 					int currentUpdateCount = psmt.getUpdateCount();

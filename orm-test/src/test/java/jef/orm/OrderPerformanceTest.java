@@ -9,12 +9,11 @@ import java.util.List;
 
 import jef.codegen.EntityEnhancer;
 import jef.database.DbClient;
-import jef.database.DbClientFactory;
 import jef.database.DebugUtil;
 import jef.database.ORMConfig;
 import jef.database.OperateTarget;
 import jef.database.Transaction;
-import jef.database.rowset.CachedRowSetImpl;
+import jef.database.jdbc.rowset.CachedRowSetImpl;
 import jef.database.wrapper.clause.InMemoryOrderBy;
 import jef.database.wrapper.result.IResultSet;
 import jef.database.wrapper.result.MultipleResultSet;

@@ -69,15 +69,6 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
     /**
      * {@inheritDoc}
      *
-     * <p>This implementation returns <tt>entrySet().size()</tt>.
-     */
-    public int size() {
-	return entrySet().size();
-    }
-
-    /**
-     * {@inheritDoc}
-     *
      * <p>This implementation returns <tt>size() == 0</tt>.
      */
     public boolean isEmpty() {
@@ -97,7 +88,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * @throws NullPointerException {@inheritDoc}
      */
     public boolean containsValue(Object value) {
-	Iterator<Entry<K,V>> i = entrySet().iterator();
+	Iterator<? extends Entry<K,V>> i = entryIterator();
 	if (value==null) {
 	    while (i.hasNext()) {
 		Entry<K,V> e = i.next();
@@ -128,7 +119,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * @throws NullPointerException {@inheritDoc}
      */
     public boolean containsKey(Object key) {
-	Iterator<Map.Entry<K,V>> i = entrySet().iterator();
+	Iterator<? extends Map.Entry<K,V>> i = entryIterator();
 	if (key==null) {
 	    while (i.hasNext()) {
 		Entry<K,V> e = i.next();
@@ -159,7 +150,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * @throws NullPointerException          {@inheritDoc}
      */
     public V get(Object key) {
-	Iterator<Entry<K,V>> i = entrySet().iterator();
+	Iterator<? extends Entry<K,V>> i = entryIterator();
 	if (key==null) {
 	    while (i.hasNext()) {
 		Entry<K,V> e = i.next();
@@ -216,7 +207,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * @throws NullPointerException          {@inheritDoc}
      */
     public V remove(Object key) {
-	Iterator<Entry<K,V>> i = entrySet().iterator();
+	Iterator<? extends Entry<K,V>> i = entryIterator();
 	Entry<K,V> correctEntry = null;
 	if (key==null) {
 	    while (correctEntry==null && i.hasNext()) {
@@ -245,11 +236,6 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
 
     /**
      * {@inheritDoc}
-     *
-     * <p>This implementation iterates over the specified map's
-     * <tt>entrySet()</tt> collection, and calls this map's <tt>put</tt>
-     * operation once for each entry returned by the iteration.
-     *
      * <p>Note that this implementation throws an
      * <tt>UnsupportedOperationException</tt> if this map does not support
      * the <tt>put</tt> operation and the specified map is nonempty.
@@ -262,21 +248,6 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
     public void putAll(Map<? extends K, ? extends V> m) {
         for (Map.Entry<? extends K, ? extends V> e : m.entrySet())
             put(e.getKey(), e.getValue());
-    }
-
-    /**
-     * {@inheritDoc}
-     *
-     * <p>This implementation calls <tt>entrySet().clear()</tt>.
-     *
-     * <p>Note that this implementation throws an
-     * <tt>UnsupportedOperationException</tt> if the <tt>entrySet</tt>
-     * does not support the <tt>clear</tt> operation.
-     *
-     * @throws UnsupportedOperationException {@inheritDoc}
-     */
-    public void clear() {
-	entrySet().clear();
     }
 
 
@@ -310,7 +281,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
 	    keySet = new AbstractSet<K>() {
 		public Iterator<K> iterator() {
 		    return new Iterator<K>() {
-			private Iterator<Entry<K,V>> i = entrySet().iterator();
+			private Iterator<? extends Entry<K,V>> i = entryIterator();
 
 			public boolean hasNext() {
 			    return i.hasNext();
@@ -358,7 +329,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
 	    values = new AbstractCollection<V>() {
 		public Iterator<V> iterator() {
 		    return new Iterator<V>() {
-			private Iterator<Entry<K,V>> i = entrySet().iterator();
+			private Iterator<? extends Entry<K,V>> i = entryIterator();
 
 			public boolean hasNext() {
 			    return i.hasNext();
@@ -386,8 +357,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
 	return values;
     }
 
-    public abstract Set<Entry<K,V>> entrySet();
-
+    public abstract Iterator<? extends Entry<K,V>> entryIterator();
 
     // Comparison and hashing
 
@@ -423,7 +393,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
 	    return false;
 
         try {
-            Iterator<Entry<K,V>> i = entrySet().iterator();
+            Iterator<? extends Entry<K,V>> i = entryIterator();
             while (i.hasNext()) {
                 Entry<K,V> e = i.next();
 		K key = e.getKey();
@@ -464,7 +434,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      */
     public int hashCode() {
 	int h = 0;
-	Iterator<Entry<K,V>> i = entrySet().iterator();
+	Iterator<? extends Entry<K,V>> i = entryIterator();
 	while (i.hasNext())
 	    h += i.next().hashCode();
 	return h;
@@ -483,7 +453,7 @@ public abstract class AbstractMap<K,V> implements Map<K,V> {
      * @return a string representation of this map
      */
     public String toString() {
-	Iterator<Entry<K,V>> i = entrySet().iterator();
+	Iterator<? extends Entry<K,V>> i = entryIterator();
 	if (! i.hasNext())
 	    return "{}";
 

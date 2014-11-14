@@ -13,8 +13,8 @@ import jef.database.EntityExtensionSupport;
 import jef.database.Field;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.meta.extension.EfPropertiesExtensionProvider;
 import jef.database.support.RDBMS;
-import jef.database.support.accessor.EfPropertiesExtensionProvider;
 import jef.tools.StringUtils;
 import jef.tools.string.RandomData;
 

@@ -463,7 +463,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	}
 
 	public CachedRowSet newCacheRowSetInstance() throws SQLException {
-		return new jef.database.rowset.CachedRowSetImpl();
+		return new jef.database.jdbc.rowset.CachedRowSetImpl();
 	}
 
 	/**

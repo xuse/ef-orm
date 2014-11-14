@@ -6,8 +6,6 @@ import java.util.UUID;
 
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
-import jef.database.AutoIncreatmentCallBack.GUIDGenerateCallback;
-import jef.database.AutoIncreatmentCallBack.SingleKeySetCallback;
 import jef.database.ORMConfig;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
@@ -16,6 +14,8 @@ import jef.database.dialect.ColumnType.GUID;
 import jef.database.meta.EntityType;
 import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.clause.InsertSqlClause;
+import jef.database.wrapper.processor.AutoIncreatmentCallBack.GUIDGenerateCallback;
+import jef.database.wrapper.processor.AutoIncreatmentCallBack.SingleKeySetCallback;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.Property;

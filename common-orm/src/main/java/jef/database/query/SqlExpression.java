@@ -18,7 +18,6 @@ package jef.database.query;
 import java.util.Arrays;
 import java.util.List;
 
-import jef.database.BindVariableDescription;
 import jef.database.Condition;
 import jef.database.IConditionField;
 import jef.database.IQueryableEntity;
@@ -28,6 +27,7 @@ import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
 import jef.database.meta.ITableMetadata;
+import jef.database.wrapper.processor.BindVariableDescription;
 
 /**
  * A SQL Expression.

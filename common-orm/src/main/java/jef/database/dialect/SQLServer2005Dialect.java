@@ -18,8 +18,7 @@ package jef.database.dialect;
 import java.sql.Types;
 
 import jef.database.ConnectInfo;
-import jef.database.dialect.statement.LimitHandler;
-import jef.database.dialect.statement.UnionJudgement;
+import jef.database.jdbc.statement.UnionJudgement;
 import jef.database.query.function.NoArgSQLFunction;
 import jef.tools.string.JefStringReader;
 

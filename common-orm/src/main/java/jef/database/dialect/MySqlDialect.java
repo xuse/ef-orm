@@ -23,7 +23,6 @@ import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.ORMConfig;
 import jef.database.dialect.ColumnType.AutoIncrement;
-import jef.database.dialect.statement.LimitHandler;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;

@@ -1,8 +1,7 @@
 package jef.database.dialect;
 
-import jef.database.dialect.statement.LimitHandler;
-import jef.database.dialect.statement.UnionJudgement;
-import jef.database.dialect.statement.UnionJudgementDruidMySQLImpl;
+import jef.database.jdbc.statement.UnionJudgement;
+import jef.database.jdbc.statement.UnionJudgementDruidMySQLImpl;
 import jef.database.wrapper.clause.BindSql;
 import jef.tools.StringUtils;
 

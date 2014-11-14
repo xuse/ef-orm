@@ -13,6 +13,17 @@ import java.util.Map.Entry;
 
 import javax.persistence.FetchType;
 
+import jef.database.Condition;
+import jef.database.DataObject;
+import jef.database.DbUtils;
+import jef.database.IQueryableEntity;
+import jef.database.LazyLoadContext;
+import jef.database.LazyLoadProcessor;
+import jef.database.LazyLoadTask;
+import jef.database.ORMConfig;
+import jef.database.ReverseReferenceProcessor;
+import jef.database.Session;
+import jef.database.CascadeLoaderTask;
 import jef.database.annotation.Cascade;
 import jef.database.meta.AbstractRefField;
 import jef.database.meta.ISelectProvider;
@@ -465,7 +476,7 @@ final class CascadeUtil {
 	protected static <T> void fillOneVsManyReference(List<T> list, Map.Entry<Reference, List<AbstractRefField>> entry, Map<Reference, List<Condition>> filters, Session session) throws SQLException {
 		if (list.isEmpty())
 			return;
-		VsManyLoadTask task = new VsManyLoadTask(entry, filters);
+		CascadeLoaderTask task = new CascadeLoaderTask(entry, filters);
 		if (list.size() > 1000 || lazy(entry.getValue())) {// 不对超过1000个元素进行一对多填充//必须使用延迟加载
 			markTask(task, list, session);
 		} else {

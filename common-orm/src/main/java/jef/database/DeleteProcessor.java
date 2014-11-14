@@ -12,6 +12,8 @@ import jef.database.meta.Feature;
 import jef.database.query.JoinElement;
 import jef.database.query.SqlContext;
 import jef.database.wrapper.clause.BindSql;
+import jef.database.wrapper.processor.BindVariableContext;
+import jef.database.wrapper.processor.BindVariableTool;
 import jef.tools.StringUtils;
 
 /**
@@ -102,7 +104,7 @@ public abstract class DeleteProcessor {
 					if (deleteTimeout > 0) {
 						psmt.setQueryTimeout(deleteTimeout);
 					}
-					BindVariableContext context = new BindVariableContext(psmt, db, sb);
+					BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
 					BindVariableTool.setVariables(obj.getQuery(), null, where.getBind(), context);
 					psmt.execute();
 					count += psmt.getUpdateCount();

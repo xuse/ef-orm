@@ -1,6 +1,5 @@
 package jef.database.dialect;
 
-import jef.database.dialect.statement.LimitHandler;
 import jef.database.wrapper.clause.BindSql;
 
 public class OracleLimitHander implements LimitHandler {

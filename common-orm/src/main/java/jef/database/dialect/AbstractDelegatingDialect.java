@@ -13,7 +13,6 @@ import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.OperateTarget;
 import jef.database.datasource.DataSourceInfo;
-import jef.database.dialect.statement.LimitHandler;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.jsqlparser.expression.BinaryExpression;

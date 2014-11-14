@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jef.common.wrapper.IntRange;
-import jef.database.rowset.CachedRowSetImpl;
-import jef.database.rowset.Row;
+import jef.database.jdbc.rowset.CachedRowSetImpl;
+import jef.database.jdbc.rowset.Row;
 
 /**
  * 在内存中实现结果集分页

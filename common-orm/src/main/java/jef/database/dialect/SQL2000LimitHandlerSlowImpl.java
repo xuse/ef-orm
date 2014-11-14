@@ -3,8 +3,7 @@ package jef.database.dialect;
 import javax.persistence.PersistenceException;
 
 import jef.database.DbUtils;
-import jef.database.dialect.statement.LimitHandler;
-import jef.database.dialect.statement.ResultSetLaterProcess;
+import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.select.OrderBy;
 import jef.database.jsqlparser.statement.select.PlainSelect;

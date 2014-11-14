@@ -33,6 +33,8 @@ import jef.database.wrapper.clause.GroupClause;
 import jef.database.wrapper.clause.OrderClause;
 import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.clause.SelectPart;
+import jef.database.wrapper.processor.BindVariableContext;
+import jef.database.wrapper.processor.BindVariableTool;
 import jef.database.wrapper.result.MultipleResultSet;
 import jef.http.client.support.CommentEntry;
 import jef.tools.ArrayUtils;
@@ -238,7 +240,7 @@ public abstract class SelectProcessor {
 				sb = new StringBuilder(sql.getSql().length() + 150).append(sql).append(" | ").append(db.getTransactionId());
 			try {
 				psmt = db.prepareStatement(sql.getSql(), sql.isReverseResult(), option.holdResult);
-				BindVariableContext context = new BindVariableContext(psmt, db, sb);
+				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
 				BindVariableTool.setVariables(queryObj, null, sql.getBind(), context);
 				option.setSizeFor(psmt);
 				rs = psmt.executeQuery();
@@ -363,7 +365,7 @@ public abstract class SelectProcessor {
 					psmt = db.prepareStatement(sql);
 
 					psmt.setQueryTimeout(ORMConfig.getInstance().getSelectTimeout());
-					BindVariableContext context = new BindVariableContext(psmt, db, sb);
+					BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
 					BindVariableTool.setVariables(null, null, bsql.getBind(), context);
 					rs = psmt.executeQuery();
 					if (rs.next()) {

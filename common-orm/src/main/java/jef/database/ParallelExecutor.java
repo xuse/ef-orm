@@ -11,12 +11,14 @@ import java.util.concurrent.CountDownLatch;
 import jef.common.PairSO;
 import jef.common.log.LogUtil;
 import jef.database.annotation.PartitionResult;
-import jef.database.dialect.statement.ResultSetLaterProcess;
+import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.query.ConditionQuery;
 import jef.database.routing.sql.InMemoryOperateProvider;
 import jef.database.routing.sql.SelectExecutionPlan;
 import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.populator.ResultSetExtractor;
+import jef.database.wrapper.processor.BindVariableContext;
+import jef.database.wrapper.processor.BindVariableTool;
 import jef.database.wrapper.result.MultipleResultSet;
 import jef.tools.Assert;
 
@@ -104,7 +106,7 @@ public class ParallelExecutor {
 			sb = new StringBuilder(sql.first.length() + 150).append(sql.first).append(" | ").append(db.getTransactionId());
 		try {
 			psmt = db.prepareStatement(sql.first, reverseResult, false);
-			BindVariableContext context = new BindVariableContext(psmt, db, sb);
+			BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
 			BindVariableTool.setVariables(context, sql.second);
 			rst.apply(psmt);
 			rs = psmt.executeQuery();

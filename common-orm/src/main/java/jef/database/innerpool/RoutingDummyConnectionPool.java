@@ -13,10 +13,14 @@ import javax.sql.DataSource;
 import jef.common.Callback;
 import jef.common.pool.PoolStatus;
 import jef.database.ConnectInfo;
+import jef.database.DbCfg;
 import jef.database.DbMetaData;
 import jef.database.DbUtils;
+import jef.database.ORMConfig;
 import jef.database.datasource.IRoutingDataSource;
 import jef.database.dialect.DatabaseDialect;
+import jef.tools.JefConfiguration;
+import jef.tools.support.JefBase64;
 
 import org.easyframe.enterprise.spring.TransactionMode;
 
@@ -45,7 +49,7 @@ public class RoutingDummyConnectionPool implements IRoutingConnectionPool{
 		pollCount.incrementAndGet();
 		RoutingConnection conn=usedConnection.get(transaction);
 		if(conn==null){
-			conn=new RoutingConnection(this);
+			conn=new RoutingConnection(this,ORMConfig.getInstance().isJpaContinueCommitIfError());
 			conn.ensureOpen();//对于Routing连接来说，监测是否有效是没有意义的
 			usedConnection.put(transaction, conn);
 			conn.setUsedByObject(transaction);

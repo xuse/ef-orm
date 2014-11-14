@@ -4,7 +4,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import jef.database.DbUtils;
-import jef.database.rowset.CachedRowSetImpl;
+import jef.database.jdbc.rowset.CachedRowSetImpl;
 
 /**
  * @author junyu

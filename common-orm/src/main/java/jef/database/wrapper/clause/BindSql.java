@@ -18,9 +18,9 @@ package jef.database.wrapper.clause;
 import java.util.List;
 
 import jef.common.wrapper.IntRange;
-import jef.database.BindVariableDescription;
-import jef.database.dialect.statement.ResultSetLaterProcess;
+import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.routing.sql.InMemoryOperateProvider;
+import jef.database.wrapper.processor.BindVariableDescription;
 import jef.database.wrapper.result.MultipleResultSet;
 
 /**

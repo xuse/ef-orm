@@ -11,7 +11,7 @@ import jef.common.wrapper.IntRange;
 import jef.database.ORMConfig;
 import jef.database.OperateTarget;
 import jef.database.annotation.PartitionResult;
-import jef.database.dialect.statement.ResultSetLaterProcess;
+import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.jsqlparser.SelectToCountWrapper;
 import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.statement.select.Distinct;

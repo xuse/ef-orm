@@ -74,6 +74,7 @@ import jef.database.wrapper.clause.UpdateClause;
 import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.database.wrapper.populator.ResultPopulatorImpl;
 import jef.database.wrapper.populator.Transformer;
+import jef.database.wrapper.processor.BindVariableDescription;
 import jef.database.wrapper.result.IResultSet;
 import jef.database.wrapper.result.MultipleResultSet;
 import jef.database.wrapper.result.ResultSetWrapper;

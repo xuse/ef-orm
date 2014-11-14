@@ -10,7 +10,7 @@ import jef.database.annotation.DynamicKeyValueExtension;
 import jef.database.annotation.JoinType;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.type.ColumnMapping;
-import jef.database.support.accessor.KvEntensionProperty;
+import jef.database.meta.extension.KvEntensionProperty;
 
 public final class KvExtensionImpl extends AbstractExtensionConfig implements ExtensionConfigFactory {
 	private DynamicKeyValueExtension config;

@@ -5,8 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import jef.common.log.LogUtil;
-import jef.database.dialect.statement.LimitHandler;
-import jef.database.dialect.statement.ResultSetLaterProcess;
+import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.wrapper.clause.BindSql;
 
 import org.apache.commons.lang.StringUtils;

@@ -18,11 +18,11 @@ package jef.database.wrapper.clause;
 import java.util.ArrayList;
 import java.util.List;
 
-import jef.database.AutoIncreatmentCallBack;
 import jef.database.Session;
 import jef.database.annotation.PartitionResult;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.wrapper.processor.AutoIncreatmentCallBack;
 
 public class InsertSqlClause{
 	private String columnsPart;

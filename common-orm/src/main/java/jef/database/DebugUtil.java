@@ -189,7 +189,7 @@ public class DebugUtil {
 	}
 	
 	public static LazyLoadTask getLazyTaskMarker(Map.Entry<Reference, List<AbstractRefField>> entry, Map<Reference,List<Condition>> filters, Session session) {
-		return new VsManyLoadTask(entry, filters);
+		return new CascadeLoaderTask(entry, filters);
 	}
 	
 	public static TransactionCache getCache(Session session){

@@ -19,7 +19,6 @@ import java.io.File;
 
 import jef.database.ConnectInfo;
 import jef.database.dialect.ColumnType.AutoIncrement;
-import jef.database.dialect.statement.LimitHandler;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.query.Func;

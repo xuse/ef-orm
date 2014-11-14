@@ -25,6 +25,7 @@ import java.util.concurrent.Executor;
 
 import javax.sql.DataSource;
 
+import jef.common.SimpleMap;
 import jef.database.DbUtils;
 import jef.tools.StringUtils;
 
@@ -35,17 +36,53 @@ import jef.tools.StringUtils;
  * 
  */
 final class RoutingConnection implements ReentrantConnection{
+	/**
+	 * 缺省数据源名称
+	 */
 	private String defaultKey = null;
+	/**
+	 * 自动提交
+	 */
 	private boolean autoCommit=true;
+	/**
+	 * 只读标记
+	 */
 	private boolean readOnly;
+	/**
+	 * 事务隔离级别
+	 */
 	private int isolation = -1;
+	/**
+	 * 当前的Savapoint序号
+	 */
 	private int savePointId=0;
+	/**
+	 * 连接池
+	 */
 	private IRoutingConnectionPool parent;
-	private Map<String, Connection> connections = new HashMap<String, Connection>(4);
+	/**
+	 * 目前已经用到的连接
+	 */
+	private final Map<String, Connection> connections = new HashMap<String, Connection>(4);
+	/**
+	 * 目前使用的连接数据源名称
+	 */
 	private String key;
+	
+	/**
+	 * 即便提交过程中出现错误，也持续将剩余的连接都提交完。
+	 * 如果设置为false，那么任意连接的提交错误将终止提交过程。剩余的连接等待回滚。
+	 * 
+	 */
+	private boolean continueCommitEvenException;
 
-	public RoutingConnection(IRoutingConnectionPool parent) {
+	/**
+	 * 构造
+	 * @param parent
+	 */
+	public RoutingConnection(IRoutingConnectionPool parent,boolean isCommitEvenExeption) {
 		this.parent = parent;
+		this.continueCommitEvenException=isCommitEvenExeption;
 	}
 	/**
 	 * 归还到父池中
@@ -94,6 +131,14 @@ final class RoutingConnection implements ReentrantConnection{
 		}
 	}
 
+	public boolean isContinueCommitEvenException() {
+		return continueCommitEvenException;
+	}
+	
+	public void setContinueCommitEvenException(boolean continueCommitEvenException) {
+		this.continueCommitEvenException = continueCommitEvenException;
+	}
+	
 	public void setKey(String key) {
 		if (key != null && key.length() == 0) {
 			key = null;
@@ -101,60 +146,76 @@ final class RoutingConnection implements ReentrantConnection{
 		this.key = key;
 	}
 
+	/**
+	 * 当有多个连接需要提交时，对每个连接进行提交。
+	 * 无论过程中是否有异常，都记录提交过程中发生的异常信息，并继续提交后续的连接。
+	 */
 	public void commit() throws SQLException {
+		if(connections.isEmpty() || autoCommit)return;
 		ensureOpen();
 		List<String> successed = new ArrayList<String>();
-		SQLException error = null;
-		String errDsName = null;
+		SimpleMap<String, SQLException> errors=new SimpleMap<String,SQLException>();
 		for (Map.Entry<String, Connection> entry : connections.entrySet()) {
 			try {
 				entry.getValue().commit();
 				successed.add(entry.getKey());
 			} catch (SQLException e) {
-				errDsName = entry.getKey();
-				error = e;
-				break;
+				errors.add(entry.getKey(), e);
+				if(!continueCommitEvenException)
+					break;
+			} catch (RuntimeException e) {
+				errors.add(entry.getKey(), new SQLException(e));
+				if(!continueCommitEvenException)
+					break;
 			}
 		}
-		if (error == null) {
+		if (errors.isEmpty()) {
 			return;
 		}
 		if (successed.isEmpty()) {// 第一个连接提交就出错，事务依然保持一致
-			throw error;
+			throw DbUtils.wrapExceptions(errors.values());
 		} else { // 第success.size()+1个连接提交出错
-			String message = StringUtils.concat("Error while commit data to datasource [", errDsName, "], and this is the ", String.valueOf(successed.size() + 1), "th commit of ", String.valueOf(connections.size()),
+			Entry<String,SQLException> error=errors.getEntries().get(0);
+			String message = StringUtils.concat("Error while commit data to datasource [", error.getKey(), "], and this is the ", String.valueOf(successed.size() + 1), "th commit of ", String.valueOf(connections.size()),
 					", there must be some data consistency problem, please check it.");
-			SQLException e = new SQLException(message, error);
-			e.setNextException(error);
+			SQLException e = new SQLException(message, error.getValue());
+			e.setNextException(DbUtils.wrapExceptions(errors.values()));
 			throw e;
 		}
 	}
 
+	/**
+	 * 当有多个连接需要回滚时，对每个连接进行回滚。
+	 * 无论过程中是否有异常，都记录回滚过程中发生的异常信息，并继续回滚后续的连接。
+	 */
 	public void rollback() throws SQLException {
+		if(connections.isEmpty() || autoCommit)return;
 		ensureOpen();
 		List<String> successed = new ArrayList<String>();
-		SQLException error = null;
-		String errDsName = null;
+		SimpleMap<String,SQLException> errors= new SimpleMap<String,SQLException>();
 		for (Map.Entry<String, Connection> entry : connections.entrySet()) {
 			try {
 				entry.getValue().rollback();
 				successed.add(entry.getKey());
 			} catch (SQLException e) {
-				errDsName = entry.getKey();
-				error = e;
-				break;
+				errors.add(entry.getKey(),e);
+				//即时前面的连接出错，后面的依然要回滚
+			}catch(RuntimeException e){
+				errors.add(entry.getKey(),new SQLException(e));
 			}
 		}
-		if (error == null) {
+		if (errors.isEmpty()) {
 			return;
 		}
 		if (successed.isEmpty()) {// 第一个连接提交就出错，事务依然保持一致
-			throw error;
+			throw DbUtils.wrapExceptions(errors.values());
 		} else { // 第success.size()+1个连接提交出错
-			String message = StringUtils.concat("Error while rollback data to datasource [", errDsName, "], and this is the ", String.valueOf(successed.size() + 1), "th rollback of ", String.valueOf(connections.size()),
+			Entry<String,SQLException> error=errors.getEntries().get(0);
+			String message = StringUtils.concat("Error while rollback data to datasource [", error.getKey(), "], and this is the ", String.valueOf(successed.size() + 1), "th rollback of ", String.valueOf(connections.size()),
 					", there must be some data consistency problem, please check it.");
-			SQLException e = new SQLException(message, error);
-			e.setNextException(error);
+			SQLException ex=DbUtils.wrapExceptions(errors.values());
+			SQLException e = new SQLException(message,ex);
+			e.setNextException(ex);
 			throw e;
 		}
 	}

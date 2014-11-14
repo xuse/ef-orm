@@ -9,7 +9,7 @@ import java.util.List;
 import jef.common.PairSO;
 import jef.common.log.LogUtil;
 import jef.database.annotation.PartitionResult;
-import jef.database.dialect.statement.ResultSetLaterProcess;
+import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.jsqlparser.RemovedDelayProcess;
 import jef.database.jsqlparser.SqlFunctionlocalization;
 import jef.database.jsqlparser.expression.Table;
@@ -31,6 +31,8 @@ import jef.database.routing.sql.SqlAnalyzer;
 import jef.database.routing.sql.SqlAndParameter;
 import jef.database.routing.sql.TableMetaCollector;
 import jef.database.wrapper.clause.BindSql;
+import jef.database.wrapper.processor.BindVariableContext;
+import jef.database.wrapper.processor.BindVariableTool;
 import jef.database.wrapper.result.IResultSet;
 import jef.database.wrapper.result.MultipleResultSet;
 import jef.tools.StringUtils;
@@ -197,7 +199,7 @@ public class RoutingSQLExecutor implements SQLExecutor {
 			sb = new StringBuilder(sql.first.length() + 150).append(sql.first).append(" | ").append(db.getTransactionId());
 		try {
 			psmt = db.prepareStatement(sql.first,isReverse,false);
-			BindVariableContext context = new BindVariableContext(psmt, db, sb);
+			BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
 			BindVariableTool.setVariables(context, sql.second);
 			if (fetchSize > 0) {
 				psmt.setFetchSize(fetchSize);

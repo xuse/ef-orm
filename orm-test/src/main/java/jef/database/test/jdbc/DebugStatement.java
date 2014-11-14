@@ -2,7 +2,7 @@ package jef.database.test.jdbc;
 
 import java.sql.Statement;
 
-import jef.database.dialect.statement.DelegatingStatement;
+import jef.database.jdbc.statement.DelegatingStatement;
 
 public class DebugStatement extends DelegatingStatement{
 	private DebugConnection conn;

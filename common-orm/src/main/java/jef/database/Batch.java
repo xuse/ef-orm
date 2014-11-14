@@ -32,6 +32,10 @@ import jef.database.support.DbOperatorListener;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.UpdateClause;
+import jef.database.wrapper.processor.AutoIncreatmentCallBack;
+import jef.database.wrapper.processor.BindVariableContext;
+import jef.database.wrapper.processor.BindVariableDescription;
+import jef.database.wrapper.processor.BindVariableTool;
 import jef.tools.StringUtils;
 
 /**
@@ -404,7 +408,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			boolean debug = ORMConfig.getInstance().isDebugMode() && !extreme;
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
-				BindVariableContext context = new BindVariableContext(psmt, db, debug ? new StringBuilder(512).append("Batch Parameters: ").append(i + 1).append('/').append(len) : null);
+				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), debug ? new StringBuilder(512).append("Batch Parameters: ").append(i + 1).append('/').append(len) : null);
 				BindVariableTool.setInsertVariables(t, writeFields, context);
 				psmt.addBatch();
 				if (debug) {
@@ -507,7 +511,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			boolean debug = ORMConfig.getInstance().isDebugMode() && !extreme;
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
-				BindVariableContext context = new BindVariableContext(psmt, db, debug ? new StringBuilder(512).append("Batch Parameters: ").append(i + 1).append('/').append(len) : null);
+				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), debug ? new StringBuilder(512).append("Batch Parameters: ").append(i + 1).append('/').append(len) : null);
 				List<Object> whereBind = BindVariableTool.setVariables(t.getQuery(), updatePart.getVariables(), bindVar, context);
 				psmt.addBatch();
 				parent.getCache().onUpdate(forceTableName == null ? meta.getName() : forceTableName, wherePart.getSql(), whereBind);
@@ -578,7 +582,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 				if (t.getQuery().getConditions().isEmpty()) {
 					DbUtils.fillConditionFromField(t, t.getQuery(), true, pkMpode);
 				}
-				BindVariableContext context = new BindVariableContext(psmt, db, debug ? new StringBuilder(512).append("Batch Parameters: ").append(i + 1).append('/').append(len) : null);
+				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), debug ? new StringBuilder(512).append("Batch Parameters: ").append(i + 1).append('/').append(len) : null);
 				List<Object> whereBind = BindVariableTool.setVariables(t.getQuery(), null, bindVar, context);
 				parent.getCache().onDelete(forceTableName == null ? meta.getName() : forceTableName, wherePart.getSql(), whereBind);
 

@@ -8,7 +8,7 @@ import java.util.Map;
 
 import jef.common.wrapper.IntRange;
 import jef.database.Condition.Operator;
-import jef.database.dialect.statement.ResultSetLaterProcess;
+import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.jsqlparser.RemovedDelayProcess;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.BinaryExpression.Prior;

@@ -2,7 +2,7 @@ package jef.database.cache;
 
 import jef.database.cache.WhereParser.DruidImpl;
 import jef.database.cache.WhereParser.NativeImpl;
-import jef.database.dialect.statement.UnionJudgement;
+import jef.database.jdbc.statement.UnionJudgement;
 import jef.database.jsqlparser.visitor.Expression;
 
 public class KeyDimension {
