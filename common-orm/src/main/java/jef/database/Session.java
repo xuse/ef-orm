@@ -95,6 +95,7 @@ import org.easyframe.enterprise.spring.TransactionMode;
  * <li>Transaction 事务状态下的数据库封装，可以回滚和提交，设置SavePoint。</li>
  * <li>DbClient 非事务状态下的数据库连接，每次操作后自动提交不能回滚。但可以执行建表、删表等DDL语句。</li>
  * </ul>
+ * 这个类是线程安全的。
  * 
  * @author Jiyi
  * @see DbClient

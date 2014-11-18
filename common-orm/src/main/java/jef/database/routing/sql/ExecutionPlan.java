@@ -1,10 +1,12 @@
 package jef.database.routing.sql;
 
-import java.sql.SQLException;
-
-import jef.database.OperateTarget;
 import jef.database.annotation.PartitionResult;
 
+/**
+ * 执行计划
+ * @author jiyi
+ *
+ */
 public interface ExecutionPlan {
 
 	/**
@@ -18,27 +20,18 @@ public interface ExecutionPlan {
 	 * @return
 	 */
 	boolean isSimple();
-
+	
 	/**
 	 * 得到路由结果
 	 * @return
 	 */
 	PartitionResult[] getSites();
-
-	/**
-	 * 执行操作
-	 * @param site
-	 * @param session
-	 * @return
-	 */
-	int processUpdate(PartitionResult site, OperateTarget session) throws SQLException;
 	
 	/**
-	 * 非分库分表，仅切换数据源即可
+	 * 得到在指定表上的SQL语句
+	 * @param table
 	 * @return
 	 */
-	String isChangeDatasource();
-	
 	public String getSql(String table);
 	
 }

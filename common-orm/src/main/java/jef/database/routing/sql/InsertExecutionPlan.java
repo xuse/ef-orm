@@ -6,8 +6,9 @@ import jef.database.OperateTarget;
 import jef.database.annotation.PartitionResult;
 import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.statement.insert.Insert;
+import jef.database.routing.jdbc.UpdateReturn;
 
-public class InsertExecutionPlan extends AbstractExecutionPlan {
+public class InsertExecutionPlan extends AbstractExecutionPlan implements ExecuteablePlan{
 
 	private StatementContext<Insert> context;
 
@@ -17,11 +18,11 @@ public class InsertExecutionPlan extends AbstractExecutionPlan {
 	}
 
 	// Insert操作是最简单的因为表名肯定只有一个
-	public int processUpdate(PartitionResult site, OperateTarget session) throws SQLException {
-		session = session.getTarget(site.getDatabase());
+	public UpdateReturn processUpdate(int generatedKeys, int[] returnIndex, String[] returnColumns) throws SQLException {
+		PartitionResult site = this.sites[0];
+		OperateTarget session=context.db.getTarget(site.getDatabase());
 		String s=getSql(site.getAsOneTable());
-		session.innerExecuteSql(s, context.params);
-		return 1;
+		return session.innerExecuteUpdate(s, context.params, generatedKeys, returnIndex, returnColumns);
 	}
 
 	@Override

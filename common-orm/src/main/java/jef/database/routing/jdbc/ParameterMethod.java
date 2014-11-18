@@ -19,114 +19,166 @@ import java.util.Calendar;
  * PreparedStatement设置参数的处理
  * 
  * @author linxuan
- *
+ * 
  */
-public enum ParameterMethod {
-	setArray, setAsciiStream, setBigDecimal, setBinaryStream, setBlob, setBoolean, setByte, setBytes, //
-	setCharacterStream, setClob, setDate1, setDate2, setDouble, setFloat, setInt, setLong, //
-	setNull1, setNull2, setObject1, setObject2, setObject3, setRef, setShort, setString, //
-	setTime1, setTime2, setTimestamp1, setTimestamp2, setURL, setUnicodeStream; //
+abstract class ParameterMethod {
+	abstract void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException;
 
-	/**
-	 * args[0]: index
-	 * args[1..n] 参数
-	 * @throws SQLException 
-	 */
-	@SuppressWarnings("deprecation")
-	public void setParameter(PreparedStatement stmt, Object... args) throws SQLException {
-		switch (this) {
-		case setArray:
-			stmt.setArray((Integer) args[0], (Array) args[1]);
-			break;
-		case setAsciiStream:
-			stmt.setAsciiStream((Integer) args[0], (InputStream) args[1], (Integer) args[2]);
-			break;
-		case setBigDecimal:
-			stmt.setBigDecimal((Integer) args[0], (BigDecimal) args[1]);
-			break;
-		case setBinaryStream:
-			stmt.setBinaryStream((Integer) args[0], (InputStream) args[1], (Integer) args[2]);
-			break;
-		case setBlob:
-			stmt.setBlob((Integer) args[0], (Blob) args[1]);
-			break;
-		case setBoolean:
-			stmt.setBoolean((Integer) args[0], (Boolean) args[1]);
-			break;
-		case setByte:
-			stmt.setByte((Integer) args[0], (Byte) args[1]);
-			break;
-		case setBytes:
-			stmt.setBytes((Integer) args[0], (byte[]) args[1]);
-			break;
-		case setCharacterStream:
-			stmt.setCharacterStream((Integer) args[0], (Reader) args[1], (Integer) args[2]);
-			break;
-		case setClob:
-			stmt.setClob((Integer) args[0], (Clob) args[1]);
-			break;
-		case setDate1:
-			stmt.setDate((Integer) args[0], (Date) args[1]);
-			break;
-		case setDate2:
-			stmt.setDate((Integer) args[0], (Date) args[1], (Calendar) args[2]);
-			break;
-		case setDouble:
-			stmt.setDouble((Integer) args[0], (Double) args[1]);
-			break;
-		case setFloat:
-			stmt.setFloat((Integer) args[0], (Float) args[1]);
-			break;
-		case setInt:
-			stmt.setInt((Integer) args[0], (Integer) args[1]);
-			break;
-		case setLong:
-			stmt.setLong((Integer) args[0], (Long) args[1]);
-			break;
-		case setNull1:
-			stmt.setNull((Integer) args[0], (Integer) args[1]);
-			break;
-		case setNull2:
-			stmt.setNull((Integer) args[0], (Integer) args[1], (String) args[2]);
-			break;
-		case setObject1:
-			stmt.setObject((Integer) args[0], args[1]);
-			break;
-		case setObject2:
-			stmt.setObject((Integer) args[0], args[1], (Integer) args[2]);
-			break;
-		case setObject3:
-			stmt.setObject((Integer) args[0], args[1], (Integer) args[2], (Integer) args[3]);
-			break;
-		case setRef:
-			stmt.setRef((Integer) args[0], (Ref) args[1]);
-			break;
-		case setShort:
-			stmt.setShort((Integer) args[0], (Short) args[1]);
-			break;
-		case setString:
-			stmt.setString((Integer) args[0], (String) args[1]);
-			break;
-		case setTime1:
-			stmt.setTime((Integer) args[0], (Time) args[1]);
-			break;
-		case setTime2:
-			stmt.setTime((Integer) args[0], (Time) args[1], (Calendar) args[2]);
-			break;
-		case setTimestamp1:
-			stmt.setTimestamp((Integer) args[0], (Timestamp) args[1]);
-			break;
-		case setTimestamp2:
-			stmt.setTimestamp((Integer) args[0], (Timestamp) args[1], (Calendar) args[2]);
-			break;
-		case setURL:
-			stmt.setURL((Integer) args[0], (URL) args[1]);
-			break;
-		case setUnicodeStream:
-			stmt.setUnicodeStream((Integer) args[0], (InputStream) args[1], (Integer) args[2]);
-			break;
-		default:
-			throw new IllegalArgumentException("Unhandled ParameterMethod:" + this.name());
+	static ParameterMethod setArray = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setArray(index, (Array) args[0]);
 		}
-	}
+	};
+	static ParameterMethod setAsciiStream = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setAsciiStream(index, (InputStream) args[0], (Integer) args[1]);
+		}
+	};
+	static ParameterMethod setBigDecimal = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setBigDecimal(index, (BigDecimal) args[0]);
+		}
+	};
+	static ParameterMethod setBinaryStream = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setBinaryStream(index, (InputStream) args[0], (Integer) args[1]);
+		}
+	};
+
+	static ParameterMethod setBlob = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setBlob(index, (Blob) args[0]);
+		}
+	};
+	static ParameterMethod setBoolean = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setBoolean(index, (Boolean) args[0]);
+		}
+	};
+	static ParameterMethod setByte = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setByte(index, (Byte) args[0]);
+		}
+	};
+	static ParameterMethod setBytes = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setBytes(index, (byte[]) args[0]);
+		}
+	};
+	static ParameterMethod setCharacterStream = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setCharacterStream(index, (Reader) args[0]);
+		}
+	};
+	static ParameterMethod setClob = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setClob(index, (Clob) args[0]);
+		}
+	};
+	static ParameterMethod setDate1 = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setDate(index, (Date) args[0]);
+		}
+	};
+	static ParameterMethod setDate2 = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setDate(index, (Date) args[0], (Calendar) args[1]);
+		}
+	};
+	static ParameterMethod setDouble = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setDouble(index, (Double) args[0]);
+		}
+	};
+	static ParameterMethod setFloat = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setFloat(index, (Float) args[0]);
+		}
+	};
+
+	static ParameterMethod setInt = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setInt(index, (Integer) args[0]);
+		}
+	};
+	static ParameterMethod setLong = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setLong(index, (Long) args[0]);
+		}
+	};
+	static ParameterMethod setNull1 = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setNull(index, (Integer) args[0]);
+		}
+	};
+
+	static ParameterMethod setNull2 = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setNull(index, (Integer) args[0], (String) args[1]);
+		}
+	};
+	static ParameterMethod setObject1 = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setObject(index, (Integer) args[0]);
+		}
+	};
+	static ParameterMethod setObject2 = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setObject(index, (Integer) args[0], (Integer) args[1]);
+		}
+	};
+	static ParameterMethod setObject3 = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setObject(index, (Integer) args[0], (Integer) args[1], (Integer) args[2]);
+		}
+	};
+
+	static ParameterMethod setRef = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setRef(index, (Ref) args[0]);
+		}
+	};
+	static ParameterMethod setShort = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setShort(index, (Short) args[0]);
+		}
+	};
+	static ParameterMethod setString = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setString(index, (String) args[0]);
+		}
+	};
+
+	static ParameterMethod setTime1 = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setTime(index, (Time) args[0]);
+		}
+	};
+	static ParameterMethod setTime2 = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setTime(index, (Time) args[0], (Calendar) args[1]);
+		}
+	};
+	static ParameterMethod setTimestamp1 = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setTimestamp(index, (Timestamp) args[0]);
+		}
+	};
+	static ParameterMethod setTimestamp2 = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setTimestamp(index, (Timestamp) args[0], (Calendar) args[1]);
+		}
+	};
+
+	static ParameterMethod setURL = new ParameterMethod() {
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setURL(index, (URL) args[0]);
+		}
+	};
+	static ParameterMethod setUnicodeStream = new ParameterMethod() {
+		@SuppressWarnings("deprecation")
+		void setParameter(PreparedStatement stmt, int index, Object[] args) throws SQLException {
+			stmt.setUnicodeStream(index, (InputStream) args[0], (Integer) args[1]);
+		}
+	};
 }

@@ -6,13 +6,15 @@ import java.sql.Statement;
 import javax.sql.rowset.CachedRowSet;
 
 import jef.database.ORMConfig;
+import jef.database.Session.PopulateStrategy;
 import jef.database.wrapper.result.IResultSet;
 
 public abstract class AbstractResultSetTransformer<T> implements ResultSetExtractor<T> {
 	private int fetchSize;
 	private int queryTimeout;
 	private int maxRows;
-
+	private static final PopulateStrategy[] EMPTY=new PopulateStrategy[0];
+	
 	protected AbstractResultSetTransformer(){
 		ORMConfig config=ORMConfig.getInstance();
 		this.fetchSize=config.getGlobalFetchSize();
@@ -60,12 +62,17 @@ public abstract class AbstractResultSetTransformer<T> implements ResultSetExtrac
 	}
 
 	@Override
+	public PopulateStrategy[] getStrategy() {
+		return EMPTY;
+	}
+
+	@Override
 	public boolean autoClose() {
 		return true;
 	}
 	
 	
-	final static class CacheAction extends AbstractResultSetTransformer<CachedRowSet>{
+	private final static class CacheAction extends AbstractResultSetTransformer<CachedRowSet>{
 		@Override
 		public CachedRowSet transformer(IResultSet rs) throws SQLException {
 			CachedRowSet cache = rs.getProfile().newCacheRowSetInstance();
@@ -74,7 +81,7 @@ public abstract class AbstractResultSetTransformer<T> implements ResultSetExtrac
 		}
 	}
 	
-	final static class CountAction extends AbstractResultSetTransformer<Long>{
+	private final static class CountAction extends AbstractResultSetTransformer<Long>{
 		@Override
 		public Long transformer(IResultSet rs) throws SQLException {
 			long count=0;

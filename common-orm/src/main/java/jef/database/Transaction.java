@@ -169,7 +169,7 @@ public abstract class Transaction extends Session implements TransactionStatus {
 	}
 
 	@Override
-	protected OperateTarget asOperateTarget(String dbKey) {
+	public OperateTarget asOperateTarget(String dbKey) {
 		if (StringUtils.isEmpty(dbKey))
 			return new OperateTarget(this, null);
 		return new OperateTarget(this, dbKey);

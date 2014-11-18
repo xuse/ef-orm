@@ -7,11 +7,13 @@ import jef.database.DbUtils;
 import jef.database.jdbc.rowset.CachedRowSetImpl;
 
 /**
- * @author junyu
- * 
+ * 插入、更新、删除操作返回结果
  */
 public class UpdateReturn {
 	private int affectedRows;
+	/**
+	 * 插入时的返回自增主键值
+	 */
 	protected CachedRowSetImpl generatedKeys;
 
 	public boolean isBatch(){

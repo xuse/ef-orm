@@ -19,6 +19,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 
+import jef.database.Session.PopulateStrategy;
 import jef.database.wrapper.result.IResultSet;
 
 /**
@@ -29,22 +30,54 @@ import jef.database.wrapper.result.IResultSet;
  * @param <T>
  */
 public interface ResultSetExtractor<T> {
+	/**
+	 * 将结果集转换为需要的类型
+	 * @param rs
+	 * @return
+	 * @throws SQLException
+	 */
 	T transformer(IResultSet rs) throws SQLException;
 
-	int getMaxRows();
-
-	int getFetchSize();
-
-	int getQueryTimeout();
-
+	/**
+	 * 设置查询参数
+	 * @param maxRows 最大返回记录数
+	 * @return this
+	 */
 	ResultSetExtractor<T> setMaxRows(int maxRows);
 
+	/**
+	 *  设置查询参数
+	 * @param fetchSize 每批获取数
+	 * @return this
+	 */
 	ResultSetExtractor<T> setFetchSize(int fetchSize);
 
+	/**
+	 *  设置查询参数
+	 * @param timeout 查询超时
+	 * @return this
+	 */
 	ResultSetExtractor<T> setQueryTimeout(int timeout);
 
+	/**
+	 * Apply 3 parameters
+	 * @param st
+	 * @throws SQLException
+	 */
 	void apply(Statement st) throws SQLException;
 
+	/**
+	 * 返回结果拼装的策略特性。
+	 * @return
+	 */
+	PopulateStrategy[] getStrategy();
+	
+	/**
+	 * 转换完成后是否要关闭结果集，释放资源。
+	 * 正常情况下应该返回true。外部程序判断此方法为true后，即释放资源。
+	 * 如果是Iterator的形式返回结果，此时资源不能释放。
+	 * @return 结果转换完成后可以释放资源返回true，不能释放资源返回false。
+	 */
 	boolean autoClose();
 
 	public static final ResultSetExtractor<Long> GET_FIRST_LONG = new AbstractResultSetTransformer<Long>() {

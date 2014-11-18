@@ -3,12 +3,16 @@ package jef.database.routing.sql;
 import java.sql.SQLException;
 import java.util.List;
 
+import jef.common.log.LogUtil;
+import jef.database.ORMConfig;
 import jef.database.OperateTarget;
 import jef.database.annotation.PartitionResult;
 import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.statement.delete.Delete;
+import jef.database.routing.jdbc.UpdateReturn;
+import jef.tools.StringUtils;
 
-public class DeleteExecutionPlan extends AbstractExecutionPlan{
+public class DeleteExecutionPlan extends AbstractExecutionPlan implements ExecuteablePlan {
 	private StatementContext<Delete> context;
 
 	public DeleteExecutionPlan(PartitionResult[] results, StatementContext<Delete> context) {
@@ -16,8 +20,20 @@ public class DeleteExecutionPlan extends AbstractExecutionPlan{
 		this.context=context;
 	}
 
-	public int processUpdate(PartitionResult site, OperateTarget session) throws SQLException {
-		OperateTarget db=session.getTarget(site.getDatabase());
+	public UpdateReturn processUpdate(int generateKeys, int[] returnIndex, String[] returnColumns) throws SQLException {
+		long start = System.currentTimeMillis();
+		int total = 0;
+		for (PartitionResult site : getSites()) {
+			total += processUpdate0(site);
+		}
+		if (isMultiDatabase() && ORMConfig.getInstance().isDebugMode()) {
+			LogUtil.show(StringUtils.concat("Total Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(System.currentTimeMillis() - start), "ms) |  @", String.valueOf(Thread.currentThread().getId())));
+		}
+		return new UpdateReturn(total);
+	}
+	
+	private int processUpdate0(PartitionResult site) throws SQLException {
+		OperateTarget db=context.db.getTarget(site.getDatabase());
 		int count=0;
 		for(String table: site.getTables()){
 			String sql=getSql(table);

@@ -1,4 +1,4 @@
-package jef.database;
+package jef.database.routing.jdbc;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -6,35 +6,23 @@ import java.sql.SQLException;
 import java.util.Collection;
 import java.util.List;
 
-import jef.common.PairSO;
-import jef.common.log.LogUtil;
-import jef.database.annotation.PartitionResult;
-import jef.database.jdbc.statement.ResultSetLaterProcess;
+import jef.database.DbUtils;
+import jef.database.ORMConfig;
+import jef.database.OperateTarget;
+import jef.database.Transaction;
 import jef.database.jsqlparser.RemovedDelayProcess;
 import jef.database.jsqlparser.SqlFunctionlocalization;
 import jef.database.jsqlparser.expression.Table;
-import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.Select;
-import jef.database.jsqlparser.statement.select.Union;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.meta.AbstractMetadata;
 import jef.database.query.DbTable;
 import jef.database.query.ParameterProvider;
-import jef.database.routing.jdbc.BatchReturn;
-import jef.database.routing.jdbc.ParameterContext;
-import jef.database.routing.jdbc.SQLExecutor;
-import jef.database.routing.jdbc.UpdateReturn;
-import jef.database.routing.sql.ExecutionPlan;
-import jef.database.routing.sql.InMemoryOperateProvider;
-import jef.database.routing.sql.SelectExecutionPlan;
+import jef.database.routing.sql.ExecuteablePlan;
+import jef.database.routing.sql.QueryablePlan;
 import jef.database.routing.sql.SqlAnalyzer;
 import jef.database.routing.sql.SqlAndParameter;
 import jef.database.routing.sql.TableMetaCollector;
-import jef.database.wrapper.clause.BindSql;
-import jef.database.wrapper.processor.BindVariableContext;
-import jef.database.wrapper.processor.BindVariableTool;
-import jef.database.wrapper.result.IResultSet;
-import jef.database.wrapper.result.MultipleResultSet;
 import jef.tools.StringUtils;
 
 import com.google.common.collect.Multimap;
@@ -91,93 +79,10 @@ public class RoutingSQLExecutor implements SQLExecutor {
 	 */
 	public ResultSet getResultSet(int type, int concurrency, int holder, List<ParameterContext> params) throws SQLException {
 		SqlAndParameter parse = getSqlAndParams(db, this, params);
-		Statement sql = parse.statement;
-
-		SelectExecutionPlan plan = null;
-		plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select) sql, parse.getParamsMap(), parse.params, db);
-
-		if (plan == null) {
-			//Scenario 1: Normal Select
-			String s = processPage(parse, sql,sql.toString());
-			return db.getRawResultSet(s, maxResult, fetchSize, parse.params, parse);
-		} else if (plan.isChangeDatasource() != null) {
-			//Scenario 2: 普通查询 (变更数据源，垂直拆分场景)
-			//Scenario 2: Normal Select (Change datasource)
-			OperateTarget db = this.db.getTarget(plan.isChangeDatasource());
-			String s = processPage(parse, sql,sql.toString());
-			return db.getRawResultSet(s, maxResult, fetchSize, parse.params, parse);
-		} else if (plan.isMultiDatabase()) {
-			//Scenario 3: 多库查询
-			//Scenario 3: Multiple Databases.
-			return doMultiDatabaseQuery(plan, parse);
-		} else if (plan.isEmpty()) {
-			//Scenario 4: 无任何匹配表。但是如果不查ResultSetMetadata无法生成。是否有更好的办法.
-			//Scenario 4: No any table.
-			return db.getRawResultSet(sql.toString(), maxResult, fetchSize, parse.params, parse);
-		} else {
-			//Scenario 5: 单库，(单表或多表)，基于Union的查询. 可以使用数据库分页
-			//Scenario 5: Single Database(One table or more tables)
-			PartitionResult site = plan.getSites()[0];
-			PairSO<List<Object>> result = plan.getSql(plan.getSites()[0], false);
-			boolean isMultiTable=site.tableSize()>1;
-			String s = processPage(parse,isMultiTable?null:sql,result.first);
-			return db.getTarget(site.getDatabase()).getRawResultSet(s, maxResult, fetchSize, result.second, parse);
-		}
+		QueryablePlan plan = SqlAnalyzer.getSelectExecutionPlan((Select) parse.statement, parse.getParamsMap(), parse.params, db);
+		return plan.getResultSet(parse,maxResult,fetchSize);
 	}
 
-	/*
-	 * @param parse 
-	 * @param sql 如果传入null，则一定是union查询
-	 * @param rawSQL 
-	 * @return
-	 */
-	private String processPage(SqlAndParameter parse, Statement sql,String rawSQL) {
-		if(parse.getLimit()!=null){
-			Limit limit = parse.getLimit();
-			int offset = 0;
-			int rowcount = 0;
-			if (limit.getOffsetJdbcParameter() != null) {
-				Object obj=parse.getParamsMap().get(limit.getOffsetJdbcParameter());
-				if(obj instanceof Number){
-					offset = ((Number) obj).intValue();
-				}
-			} else {
-				offset = (int)limit.getOffset();
-			}
-			if (limit.getRowCountJdbcParameter() != null) {
-				Object obj=parse.getParamsMap().get(limit.getRowCountJdbcParameter());
-				if(obj instanceof Number){
-					rowcount = ((Number) obj).intValue();						
-				}
-
-			} else {
-				rowcount = (int)limit.getRowCount();
-			}
-			if(offset>0 || rowcount>0){
-				parse.setNewLimit(null);
-				boolean isUnion = sql==null?true:(((Select) sql).getSelectBody() instanceof Union);
-				BindSql bs=db.getProfile().getLimitHandler().toPageSQL(rawSQL, new int[]{offset,rowcount}, isUnion);
-				parse.setReverseResultSet(bs.isReverseResult());
-				return bs.getSql();
-			}
-		}
-		return rawSQL;
-	}
-
-	private ResultSet doMultiDatabaseQuery(SelectExecutionPlan plan, InMemoryOperateProvider parse) throws SQLException {
-		ORMConfig config = ORMConfig.getInstance();
-		MultipleResultSet mrs = new MultipleResultSet(config.isCacheResultset(), config.debugMode);
-		for (PartitionResult site : plan.getSites()) {
-			processQuery(db.getTarget(site.getDatabase()), plan.getSql(site, false), 0, mrs,parse.isReverseResult());
-		}
-		plan.parepareInMemoryProcess(null, mrs);
-		if (parse.hasInMemoryOperate()) {
-			parse.parepareInMemoryProcess(null, mrs);
-		}
-		IResultSet irs = mrs.toSimple(null);
-
-		return irs;
-	}
 
 	private SqlAndParameter getSqlAndParams(OperateTarget db2, RoutingSQLExecutor jQuery, List<ParameterContext> params) {
 		ContextProvider cp = new ContextProvider(params);
@@ -188,32 +93,6 @@ public class RoutingSQLExecutor implements SQLExecutor {
 		return sp;
 	}
 
-	/*
-	 * 执行查询动作，将查询结果放入mrs
-	 */
-	private void processQuery(OperateTarget db, PairSO<List<Object>> sql, int max, MultipleResultSet mrs,ResultSetLaterProcess isReverse) throws SQLException {
-		StringBuilder sb = null;
-		PreparedStatement psmt = null;
-		ResultSet rs = null;
-		if (mrs.isDebug())
-			sb = new StringBuilder(sql.first.length() + 150).append(sql.first).append(" | ").append(db.getTransactionId());
-		try {
-			psmt = db.prepareStatement(sql.first,isReverse,false);
-			BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
-			BindVariableTool.setVariables(context, sql.second);
-			if (fetchSize > 0) {
-				psmt.setFetchSize(fetchSize);
-			}
-			if (max > 0) {
-				psmt.setMaxRows(max);
-			}
-			rs = psmt.executeQuery();
-			mrs.add(rs, psmt, db);
-		} finally {
-			if (mrs.isDebug())
-				LogUtil.show(sb);
-		}
-	}
 
 	static class ContextProvider implements ParameterProvider {
 		private List<ParameterContext> params;
@@ -251,22 +130,24 @@ public class RoutingSQLExecutor implements SQLExecutor {
 		SqlAndParameter parse = getSqlAndParams(db, this, params);
 		Statement sql = parse.statement;
 
-		ExecutionPlan plan = SqlAnalyzer.getExecutionPlan(sql, parse.getParamsMap(), parse.params, db);
-		if (plan == null) {
-			return db.innerExecuteUpdate(parse.statement.toString(), parse.params, generateKeys, returnIndex, returnColumns);
-		} else if (plan.isChangeDatasource() != null) {
-			return db.getTarget(plan.isChangeDatasource()).innerExecuteUpdate(parse.statement.toString(), parse.params, generateKeys, returnIndex, returnColumns);
-		} else {
-			long start = System.currentTimeMillis();
-			int total = 0;
-			for (PartitionResult site : plan.getSites()) {
-				total += plan.processUpdate(site, db);
-			}
-			if (plan.isMultiDatabase() && ORMConfig.getInstance().debugMode) {
-				LogUtil.show(StringUtils.concat("Total Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(System.currentTimeMillis() - start), "ms) |  @", String.valueOf(Thread.currentThread().getId())));
-			}
-			return new UpdateReturn(total);
-		}
+		ExecuteablePlan plan = SqlAnalyzer.getExecutionPlan(sql, parse.getParamsMap(), parse.params, db);
+		return plan.processUpdate(generateKeys, returnIndex, returnColumns);
+		
+//		if (plan == null) {
+//			return db.innerExecuteUpdate(parse.statement.toString(), parse.params, generateKeys, returnIndex, returnColumns);
+//		} else if (plan.isChangeDatasource() != null) {
+//			return db.getTarget(plan.isChangeDatasource()).innerExecuteUpdate(parse.statement.toString(), parse.params, generateKeys, returnIndex, returnColumns);
+//		} else {
+//			long start = System.currentTimeMillis();
+//			int total = 0;
+//			for (PartitionResult site : plan.getSites()) {
+//				total += plan.processUpdate(site, db);
+//			}
+//			if (plan.isMultiDatabase() && ORMConfig.getInstance().isDebugMode()) {
+//				LogUtil.show(StringUtils.concat("Total Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(System.currentTimeMillis() - start), "ms) |  @", String.valueOf(Thread.currentThread().getId())));
+//			}
+//			return new UpdateReturn(total);
+//		}
 	}
 
 	/**

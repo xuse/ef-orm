@@ -13,6 +13,7 @@ import java.util.Map;
 
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
+import jef.database.Session.PopulateStrategy;
 import jef.database.Transaction.TransactionFlag;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AutoIncrementMapping;
@@ -175,7 +176,7 @@ public class OperateTarget implements SqlTemplate {
 	/*
 	 * 准备执行SQL，查询
 	 */
-	PreparedStatement prepareStatement(String sql, ResultSetLaterProcess rslp, boolean isUpdatable) throws SQLException {
+	public PreparedStatement prepareStatement(String sql, ResultSetLaterProcess rslp, boolean isUpdatable) throws SQLException {
 		PreparedStatement st;
 		int rsType = (isUpdatable) ? ResultSet.TYPE_SCROLL_INSENSITIVE : ResultSet.TYPE_FORWARD_ONLY;
 		int rsUpdate = isUpdatable ? ResultSet.CONCUR_UPDATABLE : ResultSet.CONCUR_READ_ONLY;
@@ -594,20 +595,23 @@ public class OperateTarget implements SqlTemplate {
 	 * @param <T>
 	 */
 	public static class TransformerAdapter<T> extends AbstractResultSetTransformer<List<T>> {
-		final Transformer t;
-		long dbAccess;
+		final Transformer transformers;
+		public long dbAccess;
 		private OperateTarget db;
 
 		TransformerAdapter(Transformer t, OperateTarget db) {
-			this.t = t;
+			this.transformers = t;
 			this.db = db;
 		}
-
+		@Override
+		public PopulateStrategy[] getStrategy() {
+			return transformers.getStrategy();
+		}
+		
 		public List<T> transformer(IResultSet rs) throws SQLException {
 			dbAccess = System.currentTimeMillis();
-			return db.populateResultSet(rs, null, t);
+			return db.populateResultSet(rs, null, transformers);
 		}
-
 		public Session getSession() {
 			return db.session;
 		}
@@ -620,6 +624,11 @@ public class OperateTarget implements SqlTemplate {
 		TransformerIteratrAdapter(Transformer t, OperateTarget db) {
 			this.transformers = t;
 			this.db = db;
+		}
+
+		@Override
+		public PopulateStrategy[] getStrategy() {
+			return transformers.getStrategy();
 		}
 
 		@SuppressWarnings("unchecked")

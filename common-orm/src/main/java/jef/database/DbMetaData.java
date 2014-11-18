@@ -1601,6 +1601,10 @@ public class DbMetaData {
 	 * @throws SQLException
 	 */
 	public final <T> T selectBySql(String sql, ResultSetExtractor<T> rst, int maxReturn, List<?> objs) throws SQLException {
+		//这个方法是不支持使用非自动关闭的ResultSet的。
+		if(!rst.autoClose()){
+			throw new UnsupportedOperationException();
+		}
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		StringBuilder sb = null;

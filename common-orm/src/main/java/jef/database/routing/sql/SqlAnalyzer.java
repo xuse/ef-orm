@@ -51,8 +51,8 @@ import jef.database.jsqlparser.visitor.SelectBody;
 import jef.database.jsqlparser.visitor.SqlValue;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.jsqlparser.visitor.VisitorAdapter;
-import jef.database.meta.ITableMetadata;
 import jef.database.meta.AbstractMetadata;
+import jef.database.meta.ITableMetadata;
 import jef.database.query.ComplexDimension;
 import jef.database.query.Dimension;
 import jef.database.query.RangeDimension;
@@ -78,19 +78,17 @@ public class SqlAnalyzer {
 	 * @param db  数据库Session
 	 * @return
 	 */
-	public static SelectExecutionPlan getSelectExecutionPlan(Select sql,Map<Expression, Object>  params, List<Object> value, OperateTarget db) {
+	public static QueryablePlan getSelectExecutionPlan(Select sql,Map<Expression, Object>  params, List<Object> value, OperateTarget db) {
 		TableMetaCollector collector = new TableMetaCollector();
 		sql.accept(collector);
-		if(collector.get()==null)return null;
+		if(collector.get()==null)return new SimpleExecutionPlan(sql, value, null, db);
+		
 		AbstractMetadata meta=collector.get();
-		if (meta == null) {
-			return null;
-		}
 		if(meta.getPartition() == null){
 			if(meta.getBindDsName()!=null && !meta.getBindDsName().equals(db.getDbkey())){
-				return new SelectExecutionPlan(meta.getBindDsName());
+				return new SimpleExecutionPlan(sql,value,meta.getBindDsName(),db);
 			}else{
-				return null;
+				return new SimpleExecutionPlan(sql, value, null, db);
 			}
 		}
 		Select select = (Select) sql;
@@ -145,18 +143,18 @@ public class SqlAnalyzer {
 	 * @param db     数据库Session
 	 * @return
 	 */
-	public static ExecutionPlan getExecutionPlan(Statement sql,Map<Expression,Object> params, List<Object> value, OperateTarget db) {
+	public static ExecuteablePlan getExecutionPlan(Statement sql,Map<Expression,Object> params, List<Object> value, OperateTarget db) {
 		TableMetaCollector collector = new TableMetaCollector();
 		sql.accept(collector);
 		AbstractMetadata meta=collector.get();
 		if (meta == null) {
-			return null;
+			return new SimpleExecutionPlan(sql,value,null,db);
 		}
 		if(meta.getPartition() == null){
-			if(meta.getBindDsName()!=null && !meta.getBindDsName().equals(db.getDbkey())){
-				return new SelectExecutionPlan(meta.getBindDsName());
+			if(meta.getBindDsName()==null || meta.getBindDsName().equals(db.getDbkey())){
+				return new SimpleExecutionPlan(sql,value,null,db);
 			}else{
-				return null;
+				return new SimpleExecutionPlan(sql,value,meta.getBindDsName(),db);
 			}
 		}
 		if (sql instanceof Insert) {
@@ -169,7 +167,7 @@ public class SqlAnalyzer {
 			StatementContext<Delete> context=new StatementContext<Delete>((Delete) sql,meta,params,value,db,collector.getModificationPoints());
 			return getDeleteExePlan(context);
 		}
-		return null;
+		return new SimpleExecutionPlan(sql,value,null,db);
 	}
 
 	/*
@@ -217,7 +215,7 @@ public class SqlAnalyzer {
 	/*
 	 * 为Delete生成执行计划
 	 */
-	private static ExecutionPlan getDeleteExePlan(StatementContext<Delete> context) {
+	private static ExecuteablePlan getDeleteExePlan(StatementContext<Delete> context) {
 		DimensionCollector collector = new DimensionCollector(context.meta, context.paramsMap);
 		Map<String, Dimension> val = getPartitionCondition(context.statement, collector);
 		val=fill(val,collector);
@@ -262,7 +260,7 @@ public class SqlAnalyzer {
 	/*
 	 * 为Update生成执行计划
 	 */
-	private static ExecutionPlan getUpdateExePlan(StatementContext<Update> context) {
+	private static ExecuteablePlan getUpdateExePlan(StatementContext<Update> context) {
 		DimensionCollector collector = new DimensionCollector(context.meta, context.paramsMap);
 		Map<String, Dimension> val = getPartitionCondition(context.statement, collector);
 		val=fill(val,collector);
@@ -316,7 +314,7 @@ public class SqlAnalyzer {
 	/*
 	 * 为Insert生成执行计划
 	 */
-	private static ExecutionPlan getInsertExePlan(StatementContext<Insert> context) {
+	private static ExecuteablePlan getInsertExePlan(StatementContext<Insert> context) {
 		DimensionCollector collector = new DimensionCollector(context.meta, context.paramsMap);
 		Map<String, Dimension> val = getPartitionCondition(context.statement, collector);
 		val=fill(val,collector);

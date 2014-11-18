@@ -230,123 +230,123 @@ public class JPreparedStatement extends JStatement implements java.sql.PreparedS
 	
 	////////////////////////////////设置参数///////////////////////////////////
 
-	public void setArray(int i, Array x) throws SQLException {
-		parameterSettings.put(i, new ParameterContext(ParameterMethod.setArray, new Object[] { i, x }));
+	public void setArray(int i, Array x) throws SQLException { 
+		parameterSettings.put(i, new ParameterContext(ParameterMethod.setArray, i, x));
 	}
 
 	public void setAsciiStream(int parameterIndex, InputStream x, int length) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setAsciiStream, new Object[] { parameterIndex, x, length }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setAsciiStream, parameterIndex, x, length));
 	}
 
 	public void setBigDecimal(int parameterIndex, BigDecimal x) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setBigDecimal, new Object[] { parameterIndex, x }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setBigDecimal, parameterIndex, x));
 	}
 
 	public void setBinaryStream(int parameterIndex, InputStream x, int length) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setBinaryStream, new Object[] { parameterIndex, x, length }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setBinaryStream, parameterIndex, x, length));
 	}
 
 	public void setBlob(int i, Blob x) throws SQLException {
-		parameterSettings.put(i, new ParameterContext(ParameterMethod.setBlob, new Object[] { i, x }));
+		parameterSettings.put(i, new ParameterContext(ParameterMethod.setBlob, i, x));
 	}
 
 	public void setBoolean(int parameterIndex, boolean x) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setBoolean, new Object[] { parameterIndex, x }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setBoolean, parameterIndex, x));
 	}
 
 	public void setByte(int parameterIndex, byte x) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setByte, new Object[] { parameterIndex, x }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setByte, parameterIndex, x));
 	}
 
 	public void setBytes(int parameterIndex, byte[] x) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setBytes, new Object[] { parameterIndex, x }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setBytes, parameterIndex, x));
 	}
 
 	public void setCharacterStream(int parameterIndex, Reader reader, int length) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setCharacterStream, new Object[] { parameterIndex, reader, length }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setCharacterStream, parameterIndex, reader, length));
 	}
 
 	public void setClob(int i, Clob x) throws SQLException {
-		parameterSettings.put(i, new ParameterContext(ParameterMethod.setClob, new Object[] { i, x }));
+		parameterSettings.put(i, new ParameterContext(ParameterMethod.setClob, i, x));
 	}
 
 	public void setDate(int parameterIndex, Date x) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setDate1, new Object[] { parameterIndex, x }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setDate1, parameterIndex, x ));
 	}
 
 	public void setDate(int parameterIndex, Date x, Calendar cal) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setDate2, new Object[] { parameterIndex, x, cal }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setDate2, parameterIndex, x, cal ));
 	}
 
 	public void setDouble(int parameterIndex, double x) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setDouble, new Object[] { parameterIndex, x }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setDouble, parameterIndex, x ));
 	}
 
 	public void setFloat(int parameterIndex, float x) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setFloat, new Object[] { parameterIndex, x }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setFloat, parameterIndex, x ));
 	}
 
 	public void setInt(int parameterIndex, int x) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setInt, new Object[] { parameterIndex, x }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setInt, parameterIndex, x ));
 	}
 
 	public void setLong(int parameterIndex, long x) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setLong, new Object[] { parameterIndex, x }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setLong, parameterIndex, x ));
 	}
 
 	public void setNull(int parameterIndex, int sqlType) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setNull1, new Object[] { parameterIndex, sqlType }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setNull1, parameterIndex, sqlType ));
 	}
 
 	public void setNull(int paramIndex, int sqlType, String typeName) throws SQLException {
-		parameterSettings.put(paramIndex, new ParameterContext(ParameterMethod.setNull2, new Object[] { paramIndex, sqlType, typeName }));
+		parameterSettings.put(paramIndex, new ParameterContext(ParameterMethod.setNull2, paramIndex, sqlType, typeName ));
 	}
 
 	public void setObject(int parameterIndex, Object x) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setObject1, new Object[] { parameterIndex, x }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setObject1, parameterIndex, x ));
 	}
 
 	public void setObject(int parameterIndex, Object x, int targetSqlType) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setObject2, new Object[] { parameterIndex, x, targetSqlType }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setObject2, parameterIndex, x, targetSqlType ));
 	}
 
 	public void setObject(int parameterIndex, Object x, int targetSqlType, int scale) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setObject3, new Object[] { parameterIndex, x, targetSqlType, scale }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setObject3, parameterIndex, x, targetSqlType, scale ));
 	}
 
 	public void setRef(int i, Ref x) throws SQLException {
-		parameterSettings.put(i, new ParameterContext(ParameterMethod.setRef, new Object[] { i, x }));
+		parameterSettings.put(i, new ParameterContext(ParameterMethod.setRef, i, x ));
 	}
 
 	public void setShort(int parameterIndex, short x) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setShort, new Object[] { parameterIndex, x }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setShort, parameterIndex, x ));
 	}
 
 	public void setString(int parameterIndex, String x) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setString, new Object[] { parameterIndex, x }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setString, parameterIndex, x ));
 	}
 
 	public void setTime(int parameterIndex, Time x) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setTime1, new Object[] { parameterIndex, x }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setTime1, parameterIndex, x ));
 	}
 
 	public void setTime(int parameterIndex, Time x, Calendar cal) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setTime2, new Object[] { parameterIndex, x, cal }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setTime2, parameterIndex, x, cal ));
 	}
 
 	public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setTimestamp1, new Object[] { parameterIndex, x }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setTimestamp1, parameterIndex, x ));
 	}
 
 	public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setTimestamp2, new Object[] { parameterIndex, x, cal }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setTimestamp2, parameterIndex, x, cal ));
 	}
 
 	public void setURL(int parameterIndex, URL x) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setURL, new Object[] { parameterIndex, x }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setURL, parameterIndex, x ));
 	}
 
 	public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {
-		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setUnicodeStream, new Object[] { parameterIndex, x, length }));
+		parameterSettings.put(parameterIndex, new ParameterContext(ParameterMethod.setUnicodeStream, parameterIndex, x, length ));
 	}
 }
