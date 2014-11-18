@@ -75,9 +75,12 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 	 */
 	@Override
 	public void visit(Column tableColumn) {
+		
 		String s=profile.getProperty(DbProperty.WRAP_FOR_KEYWORD);
-		if(s!=null && profile.containKeyword(tableColumn.getColumnName())){
-			tableColumn.setColumnName(s+tableColumn.getColumnName()+s);
+		if(!(visitPath.getFirst() instanceof ExpressionList)){
+			if(s!=null && profile.containKeyword(tableColumn.getColumnName())){
+				tableColumn.setColumnName(s+tableColumn.getColumnName()+s);
+			}	
 		}
 	}
 

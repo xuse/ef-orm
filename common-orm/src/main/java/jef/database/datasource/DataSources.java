@@ -64,6 +64,7 @@ public class DataSources {
 				LogUtil.warn(StringUtils.concat("Unknown datasource type:", datasource.getClass().getName(), " Using refelcting datasource wrapper to access it. "));
 				return w;
 			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 		return null;

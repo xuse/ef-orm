@@ -1525,7 +1525,7 @@ public abstract class Session {
 			selectp.processSelect(wrapThisWithEmptyKey(rs, true), sql, null, queryObj, rs, option);
 		} else {
 			if(sql.getTables().length>= ORMConfig.getInstance().getParallelSelect()){
-				new ParallelExecutor().executeSelect(sql, selectp, this, queryObj, rs, option);
+				SerialExecutor.INSTANCE.executeSelect(sql, selectp, this, queryObj, rs, option);
 			}else{
 				SerialExecutor.INSTANCE.executeSelect(sql, selectp, this, queryObj, rs, option);
 			}
@@ -1573,7 +1573,7 @@ public abstract class Session {
 			selectp.processSelect(target, sql, null, queryObj, rs, option);
 		} else {
 			if(sql.getTables().length>= ORMConfig.getInstance().getParallelSelect()){
-				new ParallelExecutor().executeSelect(sql,selectp,this,queryObj,rs,option);
+				SerialExecutor.INSTANCE.executeSelect(sql,selectp,this,queryObj,rs,option);
 			}else{
 				SerialExecutor.INSTANCE.executeSelect(sql,selectp,this,queryObj,rs,option);
 			}

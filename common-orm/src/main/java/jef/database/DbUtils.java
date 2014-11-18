@@ -220,21 +220,7 @@ public final class DbUtils {
 	 * @throws SQLException
 	 */
 	public static ConnectInfo tryAnalyzeInfo(DataSource ds, boolean updateDataSourceProperties) {
-		DataSourceWrapper dsw = DataSources.wrapFor(ds);
-		if (dsw != null) {
-			ConnectInfo info = new ConnectInfo();
-			DbUtils.processDataSourceOfEnCrypted(dsw);
-
-			info.url = dsw.getUrl();
-			info.user = dsw.getUser();
-			info.password = dsw.getPassword();
-			DatabaseDialect profile = info.parse();// 解析，获得profile, 解析出数据库名等信息
-			if (updateDataSourceProperties)
-				profile.processConnectProperties(dsw);
-			return info;// 理想情况
-		}
-		// 比较糟糕的情况，尝试通过试连接数据库来获得URL等信息
-		if (ds instanceof IRoutingDataSource) {//
+		if (ds instanceof IRoutingDataSource) {
 			IRoutingDataSource rds = (IRoutingDataSource) ds;
 			Entry<String, DataSource> e = rds.getDefaultDatasource();
 			if (e == null) {// 更见鬼了，没法获得缺省的DataSource。
@@ -247,6 +233,19 @@ public final class DbUtils {
 			} else {
 				return tryAnalyzeInfo(e.getValue(), updateDataSourceProperties);
 			}
+		}
+		DataSourceWrapper dsw = DataSources.wrapFor(ds);
+		if (dsw != null) {
+			ConnectInfo info = new ConnectInfo();
+			DbUtils.processDataSourceOfEnCrypted(dsw);
+
+			info.url = dsw.getUrl();
+			info.user = dsw.getUser();
+			info.password = dsw.getPassword();
+			DatabaseDialect profile = info.parse();// 解析，获得profile, 解析出数据库名等信息
+			if (updateDataSourceProperties)
+				profile.processConnectProperties(dsw);
+			return info;// 理想情况
 		}
 		return null;
 	}

@@ -516,7 +516,11 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		boolean debug = config.isDebugMode();
 		MultipleResultSet mrs = new MultipleResultSet(config.isCacheResultset(), debug);
 		if(getSites().length>= config.getParallelSelect()){
-			new ParallelExecutor().executeQuery(context.db,this,noOrder,rst,mrs,sqlContext);
+			
+			//TODO 
+			//采用多线程并行出现了一个问题，即原先的NativeQuery中使用ThreadLocal来绑定Statement中绑定变量参数个数，由于线程切换，绑定的变量个数丢失，造成错误。
+			//现在先暂时回滚到串行策略
+			SerialExecutor.INSTANCE.executeQuery(context.db,this,noOrder,rst,mrs,sqlContext);
 		}else{
 			SerialExecutor.INSTANCE.executeQuery(context.db,this,noOrder,rst,mrs,sqlContext);
 		}

@@ -334,7 +334,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			SqlAndParameter paramHolder = config.getCountSqlAndParams(db, this);
 			QueryablePlan plan = null;
 			if (routing) {
-				plan = (SelectExecutionPlan) SqlAnalyzer.getSelectExecutionPlan((Select) paramHolder.statement, paramHolder.getParamsMap(), paramHolder.params, db);
+				plan = SqlAnalyzer.getSelectExecutionPlan((Select) paramHolder.statement, paramHolder.getParamsMap(), paramHolder.params, db);
 			} else {
 				plan = new SimpleExecutionPlan(paramHolder.statement, paramHolder.params, null, db);
 			}

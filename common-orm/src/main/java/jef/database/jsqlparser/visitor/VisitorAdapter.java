@@ -369,12 +369,6 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 		visitPath.pop();
 	}
 
-//	public void visit(Matches matches) {
-//		visitPath.push(matches);
-//		visitBinaryExpression(matches);
-//		visitPath.pop();
-//	}
-
 	public void visit(BitwiseAnd bitwiseAnd) {
 		visitPath.push(bitwiseAnd);
 		visitBinaryExpression(bitwiseAnd);
@@ -543,6 +537,7 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 	}
 
 	public void visit(WithItem with) {
+		visitPath.push(with);
 		if(with.getWithItemList()!=null){
 			for(SelectItem item:with.getWithItemList()){
 				item.accept(this);
@@ -551,15 +546,18 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 		if(with.getSelectBody()!=null){
 			with.getSelectBody().accept(this);
 		}
+		visitPath.pop();
 	}
 
 	@Override
 	public void visit(Limit limit) {
+		visitPath.push(limit);
 		if(limit.getOffsetJdbcParameter()!=null){
-			limit.accept(this);
+			limit.getOffsetJdbcParameter().accept(this);
 		}
 		if(limit.getRowCountJdbcParameter()!=null){
-			limit.accept(this);
+			limit.getRowCountJdbcParameter().accept(this);
 		}
+		visitPath.pop();
 	}
 }
