@@ -69,7 +69,7 @@ final class PagingIteratorSqlImpl<T> extends PagingIterator<T>{
 		ResultSet rs = null;
 		List<T> list;
 		try{
-			st=db.createStatement(sql.isReverseResult(),false);
+			st=db.createStatement(sql.getRsLaterProcessor(),false);
 			rs=st.executeQuery(sql.getSql());
 			list = db.populateResultSet(new ResultSetImpl(rs,db.getProfile()),  null,transformer);
 		}finally{

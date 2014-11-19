@@ -76,7 +76,7 @@ import jef.database.wrapper.populator.ResultPopulatorImpl;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.processor.BindVariableDescription;
 import jef.database.wrapper.result.IResultSet;
-import jef.database.wrapper.result.MultipleResultSet;
+import jef.database.wrapper.result.ResultSetContainer;
 import jef.database.wrapper.result.ResultSetWrapper;
 import jef.database.wrapper.result.ResultSets;
 import jef.script.javascript.Var;
@@ -1104,11 +1104,11 @@ public abstract class Session {
 		@SuppressWarnings("unchecked")
 		List<T> objs = innerSelect(query, range, query.getFilterCondition(), option);
 		RecordsHolder<T> result = new RecordsHolder<T>(query.getMeta());
-		MultipleResultSet rawrs = option.getRs();
+		ResultSetContainer rawrs = option.getRs();
 		if (rawrs.size() > 1) {
 			throw new UnsupportedOperationException("select from update operate can only support one table.");
 		}
-		IResultSet rset = option.getRs().toSimple(null);
+		IResultSet rset = option.getRs().toProperResultSet(null);
 		result.init((ResultSetWrapper) rset, objs, rset.getProfile());
 		return result;
 	}
@@ -1519,7 +1519,7 @@ public abstract class Session {
 			return new ResultIterator.Impl<T>(new ArrayList<T>().iterator(), null);
 
 		ResultIterator<T> result;
-		MultipleResultSet rs = new MultipleResultSet(false, ORMConfig.getInstance().isDebugMode());
+		ResultSetContainer rs = new ResultSetContainer(false, ORMConfig.getInstance().isDebugMode());
 		long parse = System.currentTimeMillis();
 		if (sql.getTables() == null) {// 没有分表结果，采用当前连接的默认表名操作
 			selectp.processSelect(wrapThisWithEmptyKey(rs, true), sql, null, queryObj, rs, option);
@@ -1542,7 +1542,7 @@ public abstract class Session {
 		LogUtil.show(StringUtils.concat("Result: Iterator", "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms) |", getTransactionId(null)));
 		EntityMappingProvider mapping = DbUtils.getMappingProvider(queryObj);
 		Transformer transformer = queryObj.getResultTransformer();
-		IResultSet irs = rs.toSimple(null, transformer.getStrategy());
+		IResultSet irs = rs.toProperResultSet(null, transformer.getStrategy());
 		result = new ResultIterator.Impl<T>(iterateResultSet(irs, mapping, transformer), irs);
 		return result;
 	}
@@ -1566,7 +1566,7 @@ public abstract class Session {
 		if (cachedResult != null)
 			return cachedResult;
 
-		MultipleResultSet rs = new MultipleResultSet(option.cacheResultset && !option.holdResult, debugMode);// 只有当非读写模式并且开启结果缓存才缓存结果集
+		ResultSetContainer rs = new ResultSetContainer(option.cacheResultset && !option.holdResult, debugMode);// 只有当非读写模式并且开启结果缓存才缓存结果集
 		long parse = System.currentTimeMillis();
 		if (sql.getTables() == null) {// 没有分表结果，采用当前连接的默认表名操作
 			OperateTarget target = wrapThisWithEmptyKey(rs, option.holdResult); // 如果是结果集持有的，那么必须在事务中
@@ -1598,7 +1598,7 @@ public abstract class Session {
 		Transformer transformer = queryObj.getResultTransformer();
 		try {
 			EntityMappingProvider mapping = DbUtils.getMappingProvider(queryObj);
-			list = populateResultSet(rs.toSimple(filters, transformer.getStrategy()), mapping, transformer);
+			list = populateResultSet(rs.toProperResultSet(filters, transformer.getStrategy()), mapping, transformer);
 			if (debugMode) {
 				LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(list.size()), "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbselect),
 						"ms) max:", option.toString(), " |", getTransactionId(null)));
@@ -2421,15 +2421,6 @@ public abstract class Session {
 		 */
 		PLAIN_MODE,
 		/**
-		 * 禁用内存重新排序功能<br>
-		 * 当查询分解为多个select语句分别得到结果集后，每个结果集显然是已经按照order by的要求排好了序<br>
-		 * 但是多个结果集拼在一起以后，这个顺序未必就是order by的顺序了。<br>
-		 * 为此我们会在内存中对结果集再次排序，以满足原先的SQL的Order by子句的要求。<br>
-		 * 禁用这个选项可以节省性能开销<br>
-		 * 此外，我们的重排序算法主要还是影响速度，并不占用多少内存。所以您无需为了内存原因而禁用重排序功能<br>
-		 */
-		NO_RESORT,
-		/**
 		 * 当返回结果是数组时，将查出的每个列作为一个元素，用数组的形式返回
 		 */
 		COLUMN_TO_ARRAY
@@ -2492,7 +2483,7 @@ public abstract class Session {
 	}
 
 	// 包装当前AbsDbClient,包装为缺省的操作对象即无dbkey.
-	private final OperateTarget wrapThisWithEmptyKey(MultipleResultSet rs, boolean mustTx) throws SQLException {
+	private final OperateTarget wrapThisWithEmptyKey(ResultSetContainer rs, boolean mustTx) throws SQLException {
 		if (mustTx && this instanceof DbClient) {// 如果不是在事务中，那么就用一个内嵌事务将其包裹住，作用是在resultSet的生命周期内，该连接不会被归还。并且也预防了基于线程的连接模型中，该连接被本线程的其他SQL操作再次取用然后释放回池
 			Transaction tx = new TransactionImpl((DbClient) this, TransactionFlag.ResultHolder, true);
 			return new OperateTarget(tx, null);

@@ -806,16 +806,6 @@ public abstract class AbstractResultSet implements ResultSet {
 	}
 
 	@Override
-	public boolean isBeforeFirst() throws SQLException {
-		throw new UnsupportedOperationException("isBeforeFirst");
-	}
-
-	@Override
-	public boolean isAfterLast() throws SQLException {
-		throw new UnsupportedOperationException("isAfterLast");
-	}
-
-	@Override
 	public boolean absolute(int row) throws SQLException {
 		throw new UnsupportedOperationException("absolute");
 	}

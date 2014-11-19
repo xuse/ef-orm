@@ -41,7 +41,7 @@ import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.processor.BindVariableContext;
 import jef.database.wrapper.processor.BindVariableTool;
 import jef.database.wrapper.result.IResultSet;
-import jef.database.wrapper.result.MultipleResultSet;
+import jef.database.wrapper.result.ResultSetContainer;
 import jef.database.wrapper.result.ResultSetHolder;
 import jef.database.wrapper.result.ResultSetImpl;
 import jef.database.wrapper.result.ResultSetWrapper;
@@ -385,7 +385,7 @@ public class OperateTarget implements SqlTemplate {
 			if (debugMode)
 				sb = new StringBuilder(sql.length() + 30 + objs.size() * 20).append(sql).append(" | ").append(this.getTransactionId());
 
-			ResultSetLaterProcess isReverse = lazy == null ? null : lazy.isReverseResult();
+			ResultSetLaterProcess isReverse = lazy == null ? null : lazy.getRsLaterProcessor();
 			st = prepareStatement(sql, isReverse, false);
 
 			BindVariableContext context = new BindVariableContext(st, getProfile(), sb);
@@ -393,7 +393,7 @@ public class OperateTarget implements SqlTemplate {
 			rst.apply(st);
 			rs = st.executeQuery();
 			if (lazy != null && lazy.hasInMemoryOperate()) {
-				rs = MultipleResultSet.toInMemoryProcessorResultSet(lazy, new ResultSetHolder(this, st, rs));
+				rs = ResultSetContainer.toInMemoryProcessorResultSet(lazy, new ResultSetHolder(this, st, rs));
 			}
 			if (rst.autoClose()) {
 				return rst.transformer(new ResultSetImpl(rs, getProfile()));
@@ -433,7 +433,7 @@ public class OperateTarget implements SqlTemplate {
 			if (debugMode)
 				sb = new StringBuilder(sql.length() + 30 + objs.size() * 20).append(sql).append(" | ").append(this.getTransactionId());
 
-			ResultSetLaterProcess isReverse = inmem == null?null:inmem.isReverseResult();
+			ResultSetLaterProcess isReverse = inmem == null?null:inmem.getRsLaterProcessor();
 			st = prepareStatement(sql, isReverse, false);
 			BindVariableContext context = new BindVariableContext(st, getProfile(), sb);
 			BindVariableTool.setVariables(context, objs);
@@ -451,7 +451,7 @@ public class OperateTarget implements SqlTemplate {
 			ResultSet rawRs = st.executeQuery();
 			ResultSetHolder rsh = new ResultSetHolder(this, st, rawRs);
 			if (inmem.hasInMemoryOperate()) {
-				return MultipleResultSet.toInMemoryProcessorResultSet(inmem, rsh);
+				return ResultSetContainer.toInMemoryProcessorResultSet(inmem, rsh);
 			} else {
 				return new ResultSetWrapper(rsh);
 			}

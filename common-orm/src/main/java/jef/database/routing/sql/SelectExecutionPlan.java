@@ -14,7 +14,6 @@ import jef.common.wrapper.IntRange;
 import jef.database.ORMConfig;
 import jef.database.OperateTarget;
 import jef.database.OperateTarget.TransformerAdapter;
-import jef.database.ParallelExecutor;
 import jef.database.SerialExecutor;
 import jef.database.annotation.PartitionResult;
 import jef.database.jdbc.statement.ResultSetLaterProcess;
@@ -45,7 +44,7 @@ import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.processor.BindVariableContext;
 import jef.database.wrapper.processor.BindVariableTool;
 import jef.database.wrapper.result.IResultSet;
-import jef.database.wrapper.result.MultipleResultSet;
+import jef.database.wrapper.result.ResultSetContainer;
 import jef.tools.StringUtils;
 
 /**
@@ -146,7 +145,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		return false;
 	}
 
-	public void parepareInMemoryProcess(IntRange range, MultipleResultSet rs) {
+	public void parepareInMemoryProcess(IntRange range, ResultSetContainer rs) {
 		PlainSelect st = context.statement;
 		ColumnMeta meta = rs.getColumns();
 		if (st.getGroupByColumnReferences() != null && !st.getGroupByColumnReferences().isEmpty()) {
@@ -221,7 +220,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 	}
 
 	@Override
-	public ResultSetLaterProcess isReverseResult() {
+	public ResultSetLaterProcess getRsLaterProcessor() {
 		return null;
 	}
 
@@ -274,7 +273,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 	}
 
 	private InMemoryPaging processPage(ColumnMeta meta, int start, int rows) {
-		return new InMemoryPaging(start, start + rows);
+		return new InMemoryPaging(start,rows);
 	}
 
 	private InMemoryGroupByHaving processGroupBy(ColumnMeta meta) {
@@ -390,15 +389,15 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 	
 	private ResultSet doMultiDatabaseQuery(InMemoryOperateProvider parse,int maxRows,int fetchSize) throws SQLException {
 		ORMConfig config = ORMConfig.getInstance();
-		MultipleResultSet mrs = new MultipleResultSet(config.isCacheResultset(), config.isDebugMode());
+		ResultSetContainer mrs = new ResultSetContainer(config.isCacheResultset(), config.isDebugMode());
 		for (PartitionResult site : getSites()) {
-			processQuery(context.db.getTarget(site.getDatabase()), getSql(site, false), maxRows,fetchSize, mrs,parse.isReverseResult());
+			processQuery(context.db.getTarget(site.getDatabase()), getSql(site, false), maxRows,fetchSize, mrs,parse.getRsLaterProcessor());
 		}
 		parepareInMemoryProcess(null, mrs);
 		if (parse.hasInMemoryOperate()) {
 			parse.parepareInMemoryProcess(null, mrs);
 		}
-		IResultSet irs = mrs.toSimple(null);
+		IResultSet irs = mrs.toProperResultSet(null);
 
 		return irs;
 	}
@@ -406,7 +405,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 	/*
 	 * 执行查询动作，将查询结果放入mrs
 	 */
-	private void processQuery(OperateTarget db, PairSO<List<Object>> sql, int max, int fetchSize,MultipleResultSet mrs,ResultSetLaterProcess isReverse) throws SQLException {
+	private void processQuery(OperateTarget db, PairSO<List<Object>> sql, int max, int fetchSize,ResultSetContainer mrs,ResultSetLaterProcess isReverse) throws SQLException {
 		StringBuilder sb = null;
 		PreparedStatement psmt = null;
 		ResultSet rs = null;
@@ -462,7 +461,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 				parse.setNewLimit(null);
 				boolean isUnion = sql==null?true:(((Select) sql).getSelectBody() instanceof Union);
 				BindSql bs=context.db.getProfile().getLimitHandler().toPageSQL(rawSQL, new int[]{offset,rowcount}, isUnion);
-				parse.setReverseResultSet(bs.isReverseResult());
+				parse.setReverseResultSet(bs.getRsLaterProcessor());
 				return bs.getSql();
 			}
 		}
@@ -514,7 +513,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 	private <T> T executeMultiQuery(boolean noOrder, ResultSetExtractor<T> rst, InMemoryOperateProvider sqlContext,IntRange range) throws SQLException {
 		ORMConfig config = ORMConfig.getInstance();
 		boolean debug = config.isDebugMode();
-		MultipleResultSet mrs = new MultipleResultSet(config.isCacheResultset(), debug);
+		ResultSetContainer mrs = new ResultSetContainer(config.isCacheResultset(), debug);
 		if(getSites().length>= config.getParallelSelect()){
 			
 			//TODO 
@@ -537,7 +536,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 				sqlContext.parepareInMemoryProcess(null, mrs);
 			}
 
-			rsw = mrs.toSimple(null, rst.getStrategy());
+			rsw = mrs.toProperResultSet(null, rst.getStrategy());
 			return rst.transformer(rsw);
 		} finally {
 			if (rst.autoClose() && rsw != null)
@@ -582,7 +581,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 				IntRange range1 = new IntRange(offset + 1, offset + rowcount);
 				boolean isUnion = ((Select) sql).getSelectBody() instanceof Union;
 				BindSql bs= this.context.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range1.toStartLimitSpan(), isUnion);
-				context.setReverseResultSet(bs.isReverseResult());
+				context.setReverseResultSet(bs.getRsLaterProcessor());
 				return bs.getSql();
 			}
 		}
@@ -594,7 +593,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 			}else{
 				boolean isUnion = sb instanceof Union;
 				BindSql bs= this.context.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range.toStartLimitSpan(), isUnion);
-				context.setReverseResultSet(bs.isReverseResult());
+				context.setReverseResultSet(bs.getRsLaterProcessor());
 				return bs.getSql();
 			}
 		}

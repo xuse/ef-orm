@@ -135,7 +135,7 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 				parse.setNewLimit(null);
 				boolean isUnion = sql == null ? true : (((Select) sql).getSelectBody() instanceof Union);
 				BindSql bs = db.getProfile().getLimitHandler().toPageSQL(rawSQL, new int[] { offset, rowcount }, isUnion);
-				parse.setReverseResultSet(bs.isReverseResult());
+				parse.setReverseResultSet(bs.getRsLaterProcessor());
 				return bs.getSql();
 			}
 		}
@@ -179,7 +179,7 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 				IntRange range1 = new IntRange(offset + 1, offset + rowcount);
 				boolean isUnion = ((Select) sql).getSelectBody() instanceof Union;
 				BindSql bs = this.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range1.toStartLimitSpan(), isUnion);
-				context.setReverseResultSet(bs.isReverseResult());
+				context.setReverseResultSet(bs.getRsLaterProcessor());
 				return bs.getSql();
 			}
 		}
@@ -191,7 +191,7 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 			} else {
 				boolean isUnion = sb instanceof Union;
 				BindSql bs = this.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range.toStartLimitSpan(), isUnion);
-				context.setReverseResultSet(bs.isReverseResult());
+				context.setReverseResultSet(bs.getRsLaterProcessor());
 				return bs.getSql();
 			}
 		}

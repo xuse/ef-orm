@@ -16,7 +16,7 @@ import jef.database.Transaction;
 import jef.database.jdbc.rowset.CachedRowSetImpl;
 import jef.database.wrapper.clause.InMemoryOrderBy;
 import jef.database.wrapper.result.IResultSet;
-import jef.database.wrapper.result.MultipleResultSet;
+import jef.database.wrapper.result.ResultSetContainer;
 import jef.database.wrapper.result.ResultSetHolder;
 import jef.orm.onetable.model.Foo;
 import jef.tools.string.RandomData;
@@ -91,7 +91,7 @@ public class OrderPerformanceTest {
 
 	public void testOrder1(DbClient db, int count) throws SQLException {
 		OperateTarget tx = (OperateTarget) db.getSqlTemplate(null);
-		MultipleResultSet mrs = new MultipleResultSet(false, false);
+		ResultSetContainer mrs = new ResultSetContainer(false, false);
 		mrs.add(new ResultSetHolder(tx, null, rs1));
 		mrs.add(new ResultSetHolder(tx, null, rs2));
 		mrs.add(new ResultSetHolder(tx, null, rs3));
@@ -101,7 +101,7 @@ public class OrderPerformanceTest {
 
 	private void testOrder1Count(DbClient db, int count) throws SQLException {
 		OperateTarget tx = (OperateTarget) db.getSqlTemplate(null);
-		MultipleResultSet mrs = new MultipleResultSet(false, false);
+		ResultSetContainer mrs = new ResultSetContainer(false, false);
 		mrs.add(new ResultSetHolder(tx, null, rs1));
 		mrs.add(new ResultSetHolder(tx, null, rs2));
 		mrs.add(new ResultSetHolder(tx, null, rs3));
@@ -109,11 +109,11 @@ public class OrderPerformanceTest {
 		testRsPerformcesCount(mrs, "simple", count);// 开始测试
 	}
 
-	private void testRsPerformces(MultipleResultSet mrs, String name, int count) throws SQLException {
+	private void testRsPerformces(ResultSetContainer mrs, String name, int count) throws SQLException {
 		long start = System.currentTimeMillis();
 		for (int x = 0; x < count; x++) {
 			// int n=0;
-			IResultSet rs = mrs.toSimple(null);
+			IResultSet rs = mrs.toProperResultSet(null);
 			while (rs.next()) {
 				// n++;
 			}
@@ -128,10 +128,10 @@ public class OrderPerformanceTest {
 		}
 	}
 
-	private void testRsPerformcesCount(MultipleResultSet mrs, String name, int count) throws SQLException {
+	private void testRsPerformcesCount(ResultSetContainer mrs, String name, int count) throws SQLException {
 		for (int x = 0; x < count; x++) {
 			int n = 0;
-			IResultSet rs = mrs.toSimple(null);
+			IResultSet rs = mrs.toProperResultSet(null);
 			while (rs.next()) {
 				n++;
 			}

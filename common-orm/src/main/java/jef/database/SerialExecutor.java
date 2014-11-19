@@ -16,22 +16,22 @@ import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.processor.BindVariableContext;
 import jef.database.wrapper.processor.BindVariableTool;
-import jef.database.wrapper.result.MultipleResultSet;
+import jef.database.wrapper.result.ResultSetContainer;
 
 
 
 public class SerialExecutor {
 	public static SerialExecutor INSTANCE = new SerialExecutor();
 
-	public void executeSelect(QueryClause sql,SelectProcessor selectp,Session session,ConditionQuery queryObj,MultipleResultSet rs,QueryOption option) throws SQLException {
+	public void executeSelect(QueryClause sql,SelectProcessor selectp,Session session,ConditionQuery queryObj,ResultSetContainer rs,QueryOption option) throws SQLException {
 		for (PartitionResult site : sql.getTables()) {
 			selectp.processSelect(session.asOperateTarget(site.getDatabase()), sql, site, queryObj, rs, option);
 		}
 	}
 	@SuppressWarnings("rawtypes") 
-	public void executeQuery(OperateTarget db,SelectExecutionPlan plan,boolean noOrder,ResultSetExtractor rst,MultipleResultSet mrs,InMemoryOperateProvider sqlContext ) throws SQLException {
+	public void executeQuery(OperateTarget db,SelectExecutionPlan plan,boolean noOrder,ResultSetExtractor rst,ResultSetContainer mrs,InMemoryOperateProvider sqlContext ) throws SQLException {
 		for (PartitionResult site : plan.getSites()) {
-			processQuery(db.getTarget(site.getDatabase()), plan.getSql(site, noOrder), rst, mrs, sqlContext.isReverseResult());
+			processQuery(db.getTarget(site.getDatabase()), plan.getSql(site, noOrder), rst, mrs, sqlContext.getRsLaterProcessor());
 		}
 	}
 	
@@ -39,7 +39,7 @@ public class SerialExecutor {
 	 * 执行查询动作，将查询结果放入mrs
 	 */
 	@SuppressWarnings("rawtypes") 
-	private static void processQuery(OperateTarget db, PairSO<List<Object>> sql, ResultSetExtractor rst,MultipleResultSet mrs,ResultSetLaterProcess reverseResult) throws SQLException {
+	private static void processQuery(OperateTarget db, PairSO<List<Object>> sql, ResultSetExtractor rst,ResultSetContainer mrs,ResultSetLaterProcess reverseResult) throws SQLException {
 		StringBuilder sb = null;
 		PreparedStatement psmt = null;
 		ResultSet rs = null;

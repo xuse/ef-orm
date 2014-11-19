@@ -3,36 +3,68 @@ package jef.database.jdbc.statement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
 
 import javax.persistence.PersistenceException;
 
+import jef.database.Condition;
+import jef.database.dialect.DatabaseDialect;
+import jef.database.meta.Reference;
+import jef.database.wrapper.populator.ColumnMeta;
 import jef.database.wrapper.result.AbstractResultSet;
+import jef.database.wrapper.result.IResultSet;
 
 /**
- * 对结果集跳过若干记录，并且限定其最大数的过滤器
+ * 对结果集跳过若干记录，并且限定其最大数的ResultSet实现
+ * 
  * @author jiyi
- *
+ * 
  */
-final class LimitOffsetResultSet extends AbstractResultSet {
+public final class LimitOffsetResultSet extends AbstractResultSet implements IResultSet{
 	private int offset;
 	private int limit;
 	private ResultSet rs;
-	private int position; 
+	/**
+	 * 当前游标所处位置，从0开始。0表示在第一条结果之前。 如果position=Integer.MAX_VALUE则表示在最后一条结果之后
+	 */
+	private int position;
 
-	public LimitOffsetResultSet(ResultSet rs, int[] offsetLimit) {
-		this.offset = offsetLimit[0];
-		this.limit = offsetLimit[1];
+	/**
+	 * 构造一个可用于跳过条数，以及限制结果数量的ResultSet。
+	 * 
+	 * @param rs
+	 * @param offset
+	 * @param limit
+	 */
+	public LimitOffsetResultSet(ResultSet rs, int offset, int limit) {
+		this.offset = offset;
+		this.limit = limit == 0 ? Integer.MAX_VALUE : limit;
 		this.rs = rs;
 		try {
-			skipOffset(rs,offset);
+			skipOffset(rs, offset);
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
+		}
+	}
+	
+	public LimitOffsetResultSet(IResultSet rs, int offset, int limit) {
+		this.offset = offset;
+		this.limit = limit == 0 ? Integer.MAX_VALUE : limit;
+		this.meta=rs.getColumns();
+		this.profile=rs.getProfile();
+		this.filters=rs.getFilters();
+		this.rs = rs;
+		try {
+			skipOffset(rs, offset);
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
 		}
 	}
 
-	private void skipOffset(ResultSet rs,int offset) throws SQLException {
+	private void skipOffset(ResultSet rs, int offset) throws SQLException {
 		for (int i = 0; i < offset; i++) {
-			if(!rs.next()){
+			if (!rs.next()) {
 				break;
 			}
 		}
@@ -40,15 +72,22 @@ final class LimitOffsetResultSet extends AbstractResultSet {
 
 	@SuppressWarnings("all")
 	@Override
-	public boolean next() throws SQLException {
-		if(position>=limit){
+	public boolean next(){
+		if (position >= limit) {
+			position = Integer.MAX_VALUE;
 			return false;
 		}
-		boolean next;
-		if(next=rs.next()){
-			position++;
+		try{
+			final boolean next;
+			if (next = rs.next()) {
+				position++;
+			} else {
+				position = Integer.MAX_VALUE;
+			}
+			return next;	
+		}catch(SQLException e){
+			throw new PersistenceException(e);
 		}
-		return next;
 	}
 
 	@Override
@@ -62,27 +101,49 @@ final class LimitOffsetResultSet extends AbstractResultSet {
 	}
 
 	@Override
+	public boolean isBeforeFirst() throws SQLException {
+		return position == 0;
+	}
+
+	@Override
+	public boolean isAfterLast() throws SQLException {
+		return position == Integer.MAX_VALUE;
+	}
+
+	@Override
 	public void beforeFirst() throws SQLException {
-		throw new UnsupportedOperationException();
+		rs.beforeFirst();
+		skipOffset(rs, offset);
+		position = 0;
 	}
 
 	@Override
 	public void afterLast() throws SQLException {
-		throw new UnsupportedOperationException();
+		while (next());
 	}
 
 	@Override
 	public boolean first() throws SQLException {
-		if(rs.first()){
+		if (rs.first()) {
 			skipOffset(rs, offset);
+			position = 1;
 			return true;
 		}
 		return false;
 	}
 
 	@Override
+	public boolean last() throws SQLException {
+		while (position<limit){
+			if(rs.isLast())break;
+			next();
+		}
+		return true;
+	}
+	
+	@Override
 	public boolean previous() throws SQLException {
-		if(rs.previous()){
+		if (rs.previous()) {
 			position--;
 			return true;
 		}
@@ -98,20 +159,32 @@ final class LimitOffsetResultSet extends AbstractResultSet {
 	protected ResultSet get() throws SQLException {
 		return rs;
 	}
-	
 
 	@Override
 	public boolean isFirst() throws SQLException {
-		throw new UnsupportedOperationException("isFirst");
+		return position == 1;
 	}
 
 	@Override
 	public boolean isLast() throws SQLException {
-		throw new UnsupportedOperationException("isLast");
+		return position == limit || rs.isLast();
+	}
+
+	private Map<Reference, List<Condition>> filters;
+	private DatabaseDialect profile;
+	private ColumnMeta meta ;
+	@Override
+	public Map<Reference, List<Condition>> getFilters() {
+		return filters;
 	}
 
 	@Override
-	public boolean last() throws SQLException {
-		throw new UnsupportedOperationException("last");
+	public DatabaseDialect getProfile() {
+		return profile;
+	}
+
+	@Override
+	public ColumnMeta getColumns() {
+		return meta;
 	}
 }

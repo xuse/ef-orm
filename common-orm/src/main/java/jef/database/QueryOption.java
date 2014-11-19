@@ -10,7 +10,7 @@ import jef.database.dialect.type.ResultSetAccessor;
 import jef.database.meta.Reference;
 import jef.database.query.ConditionQuery;
 import jef.database.query.JoinElement;
-import jef.database.wrapper.result.MultipleResultSet;
+import jef.database.wrapper.result.ResultSetContainer;
 
 public final class QueryOption implements Cloneable {
 	public static final QueryOption DEFAULT=new QueryOption();
@@ -36,13 +36,13 @@ public final class QueryOption implements Cloneable {
 	boolean holdResult;
 	boolean cacheResultset;
 	
-	private transient MultipleResultSet rs;
+	private transient ResultSetContainer rs;
 	
-	MultipleResultSet getRs() {
+	ResultSetContainer getRs() {
 		return rs;
 	}
 
-	void setRs(MultipleResultSet rs) {
+	void setRs(ResultSetContainer rs) {
 		this.rs = rs;
 	}
 

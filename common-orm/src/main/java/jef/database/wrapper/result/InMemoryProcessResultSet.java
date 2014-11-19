@@ -39,7 +39,7 @@ final class InMemoryProcessResultSet extends AbstractResultSet implements IResul
 	private DatabaseDialect dialect;
 	private List<ResultSetHolder> results;
 	// 级联过滤条件
-	protected Map<Reference, List<Condition>> filters;
+	private Map<Reference, List<Condition>> filters;
 	public Map<Reference, List<Condition>> getFilters() {
 		return filters;
 	}
@@ -47,10 +47,11 @@ final class InMemoryProcessResultSet extends AbstractResultSet implements IResul
 	//动作
 	private final List<InMemoryProcessor> processors=new ArrayList<InMemoryProcessor>(4);
 	
-	public InMemoryProcessResultSet(List<ResultSetHolder> results, ColumnMeta columns) {
+	public InMemoryProcessResultSet(List<ResultSetHolder> results, ColumnMeta columns,Map<Reference, List<Condition>> filters) {
 		this.results=results;
 		this.columns=columns;
 		this.dialect=results.get(0).getDb().getProfile();
+		this.filters=filters;
 	}
 
 	public void process() throws SQLException {
@@ -178,5 +179,15 @@ final class InMemoryProcessResultSet extends AbstractResultSet implements IResul
 	@Override
 	public void moveToCurrentRow() throws SQLException {
 		cache.moveToCurrentRow();
+	}
+
+	@Override
+	public boolean isBeforeFirst() throws SQLException {
+		return cache.isBeforeFirst();
+	}
+
+	@Override
+	public boolean isAfterLast() throws SQLException {
+		return cache.isAfterLast();
 	}
 }

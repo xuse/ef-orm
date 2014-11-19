@@ -34,7 +34,7 @@ import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.clause.InMemoryStartWithConnectBy;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
-import jef.database.wrapper.result.MultipleResultSet;
+import jef.database.wrapper.result.ResultSetContainer;
 import jef.tools.StringUtils;
 
 import com.alibaba.druid.proxy.jdbc.JdbcParameter;
@@ -302,7 +302,7 @@ public class SqlAndParameter implements InMemoryOperateProvider {
 		int offset=value[0];
 		int rowcount=value[1];
 		if(offset>0 || rowcount>0){
-			return new InMemoryPaging(offset, offset+rowcount);
+			return new InMemoryPaging(offset, rowcount);
 		}else{
 			return null;
 		}
@@ -323,7 +323,7 @@ public class SqlAndParameter implements InMemoryOperateProvider {
 	}
 
 	@Override
-	public void parepareInMemoryProcess(IntRange range, MultipleResultSet mrs) {
+	public void parepareInMemoryProcess(IntRange range, ResultSetContainer mrs) {
 		if(startWith!=null){
 			mrs.setInMemoryConnectBy(parseStartWith(mrs.getColumns()));
 		}
@@ -368,7 +368,7 @@ public class SqlAndParameter implements InMemoryOperateProvider {
 	private ResultSetLaterProcess reverseResultSet;
 
 	@Override
-	public ResultSetLaterProcess isReverseResult() {
+	public ResultSetLaterProcess getRsLaterProcessor() {
 		return reverseResultSet;
 	}
 	

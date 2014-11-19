@@ -43,15 +43,11 @@ final class ReorderResultSet2 extends AbstractResultSet implements IResultSet {
 	private final TreeMap<ResultSetHolder,Void> gettingResults;
 	private List<ResultSetHolder> allResults;
 	private ResultSetHolder activeRs;
-	// 级联过滤条件
-	protected Map<Reference, List<Condition>> filters;
-	public Map<Reference, List<Condition>> getFilters() {
-		return filters;
-	}
 
-	public ReorderResultSet2(List<ResultSetHolder> r, InMemoryOrderBy order, ColumnMeta columns) {
+	public ReorderResultSet2(List<ResultSetHolder> r, InMemoryOrderBy order, ColumnMeta columns,Map<Reference, List<Condition>> filters) {
 		this.allResults = r;
 		this.columns = columns;
+		this.filters=filters;
 		ResultSetCompartor orders = new ResultSetCompartor(order);
 		gettingResults = new TreeMap<ResultSetHolder,Void>(orders);
 		try {
@@ -161,5 +157,21 @@ final class ReorderResultSet2 extends AbstractResultSet implements IResultSet {
 	@Override
 	public boolean last() throws SQLException {
 		throw new UnsupportedOperationException("last");
+	}
+
+	@Override
+	public boolean isBeforeFirst() throws SQLException {
+		throw new UnsupportedOperationException("isBeforeFirst");
+	}
+
+	@Override
+	public boolean isAfterLast() throws SQLException {
+		throw new UnsupportedOperationException("isAfterLast");
+	}
+	
+	// 级联过滤条件
+	private Map<Reference, List<Condition>> filters;
+	public Map<Reference, List<Condition>> getFilters() {
+		return filters;
 	}
 }

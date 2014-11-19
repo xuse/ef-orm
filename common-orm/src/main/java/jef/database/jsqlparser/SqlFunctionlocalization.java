@@ -36,14 +36,17 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 	private DatabaseDialect profile;
 	private OperateTarget db;
 	private boolean check;
-	
+
 	public StartWithExpression delayStartWith;
-	public Limit               delayLimit;
+	public Limit delayLimit;
 
 	/**
 	 * 构造
-	 * @param dialect 数据库简要表
-	 * @param db      用于进行UserFunction检查，如果传入null则不进行检查
+	 * 
+	 * @param dialect
+	 *            数据库简要表
+	 * @param db
+	 *            用于进行UserFunction检查，如果传入null则不进行检查
 	 */
 	public SqlFunctionlocalization(DatabaseDialect dialect, OperateTarget db) {
 		this.profile = dialect;
@@ -54,9 +57,9 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 	@Override
 	public void visit(Concat concat) {
 		super.visit(concat);// 先处理内层的。。。
-		if(profile.has(Feature.CONCAT_IS_ADD)){
-			concat.rewrite = new Addition(concat.getLeftExpression(),concat.getRightExpression());
-		}else if (profile.notHas(Feature.SUPPORT_CONCAT)) {
+		if (profile.has(Feature.CONCAT_IS_ADD)) {
+			concat.rewrite = new Addition(concat.getLeftExpression(), concat.getRightExpression());
+		} else if (profile.notHas(Feature.SUPPORT_CONCAT)) {
 			List<Expression> el = new ArrayList<Expression>();
 			recursion(concat, el);
 			Function func = new Function();
@@ -65,22 +68,26 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 			concat.rewrite = func;
 		}
 	}
-	
+
 	/**
-	 * Jiyi 2014-10-22添加。
-	 * 当用户输入的SQL语句中，对于关键字的列没有加上引号时，在不允许对应关键字的数据库上可能会出错，因此检测，如果是关键字那么就加上引号成为合法的列名。
+	 * Jiyi 2014-10-22添加。 当用户输入的SQL语句中，对于关键字的列没有加上引号时，在不允许对应关键字的数据库上可能会出错，因此检测，
+	 * 如果是关键字那么就加上引号成为合法的列名。
 	 * 
-	 * TODO 但是这种修改可能会引起一些非预期的反应。如果解析器错误的将某个不带参数括号的函数当做是列名，则会引起误认，比如将CURRENT_TIMESTAMP误认为是列名而加上引号。
-	 * 目前尚未观测到此类现象发生。但应进一步测试。
+	 * TODO 但是这种修改可能会引起一些非预期的反应。如果解析器错误的将某个不带参数括号的函数当做是列名，则会引起误认，
+	 * 比如将CURRENT_TIMESTAMP误认为是列名而加上引号。 目前尚未观测到此类现象发生。但应进一步测试。
 	 */
 	@Override
 	public void visit(Column tableColumn) {
-		
-		String s=profile.getProperty(DbProperty.WRAP_FOR_KEYWORD);
-		if(!(visitPath.getFirst() instanceof ExpressionList)){
-			if(s!=null && profile.containKeyword(tableColumn.getColumnName())){
-				tableColumn.setColumnName(s+tableColumn.getColumnName()+s);
-			}	
+		String s = profile.getProperty(DbProperty.WRAP_FOR_KEYWORD);
+		if (s != null && profile.containKeyword(tableColumn.getColumnName())) {
+			Object obj=visitPath.getFirst();
+			if(obj instanceof ExpressionList){
+				if(!((ExpressionList) obj).getBetween().equals(",")){
+					//为了防止将 cast(xx as int)中的int加上引号。
+					return;
+				}
+			}
+			tableColumn.setColumnName(s + tableColumn.getColumnName() + s);
 		}
 	}
 
@@ -132,7 +139,8 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 	@Override
 	public void visit(StartWithExpression startWithExpression) {
 		if (profile.notHas(Feature.SUPPORT_CONNECT_BY)) {
-			if (super.visitPath.size() <= 2) { // 距离statement最大为2 将递归条件保留下来，从而后续支持内存中 递归过滤
+			if (super.visitPath.size() <= 2) { // 距离statement最大为2
+												// 将递归条件保留下来，从而后续支持内存中 递归过滤
 				delayStartWith = new StartWithExpression(startWithExpression.getStartExpression(), startWithExpression.getConnectExpression());
 			} else {
 				if (ORMConfig.getInstance().isAllowRemoveStartWith()) {
@@ -144,7 +152,7 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 			}
 			startWithExpression.setStartExpression(null);
 			startWithExpression.setConnectExpression(null);
-			
+
 		}
 		super.visit(startWithExpression);
 	}
@@ -152,14 +160,15 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 	@Override
 	public void visit(Limit limit) {
 		if (profile.notHas(Feature.SUPPORT_LIMIT)) {
-			if (super.visitPath.size() <= 2) { // 距离statement最大为2 将递归条件保留下来，从而后续支持内存中 递归过滤
-				delayLimit=new Limit(limit);
+			if (super.visitPath.size() <= 2) { // 距离statement最大为2
+												// 将递归条件保留下来，从而后续支持内存中 递归过滤
+				delayLimit = new Limit(limit);
 				limit.clear();
 			}
 		}
 		super.visit(limit);
 	}
-	
+
 	public static void ensureUserFunction(FunctionMapping mapping, OperateTarget db) throws SQLException {
 		DbMetaData meta = db.getMetaData();
 		boolean flag = true;

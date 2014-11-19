@@ -32,6 +32,7 @@ import jef.database.DbUtils;
 import jef.database.OperateTarget;
 import jef.database.Session.PopulateStrategy;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.jdbc.statement.LimitOffsetResultSet;
 import jef.database.meta.Reference;
 import jef.database.routing.sql.InMemoryOperateProvider;
 import jef.database.wrapper.clause.InMemoryDistinct;
@@ -41,7 +42,6 @@ import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.clause.InMemoryProcessor;
 import jef.database.wrapper.clause.InMemoryStartWithConnectBy;
 import jef.database.wrapper.populator.ColumnMeta;
-import jef.tools.ArrayUtils;
 
 /**
  * 查询时记录的结果集
@@ -49,24 +49,26 @@ import jef.tools.ArrayUtils;
  * @author Administrator
  * 
  */
-public final class MultipleResultSet extends AbstractResultSet implements IResultSet{
-	
+public final class ResultSetContainer extends AbstractResultSet implements IResultSet {
+
 	private int current = -1;
-	//重新排序部分
+	// 重新排序部分
 	private InMemoryOrderBy inMemoryOrder;
-	//重新分组处理逻辑
+	// 重新分页逻辑
+	private InMemoryPaging inMemoryPage;
+	// 重新分组处理逻辑
 	private List<InMemoryProcessor> mustInMemoryProcessor;
 
-	//所有列的元数据记录
+	// 所有列的元数据记录
 	private ColumnMeta columns;
 
 	protected final List<ResultSetHolder> results = new ArrayList<ResultSetHolder>(5);
-
+	// 是否缓存
 	private boolean cache;
-
+	// 是否调试
 	private boolean debug;
 
-	public MultipleResultSet(boolean cache, boolean debug) {
+	public ResultSetContainer(boolean cache, boolean debug) {
 		this.cache = cache;
 		this.debug = debug;
 	}
@@ -78,31 +80,26 @@ public final class MultipleResultSet extends AbstractResultSet implements IResul
 	public ColumnMeta getColumns() {
 		return columns;
 	}
-	
+
 	// 级联过滤条件
 	protected Map<Reference, List<Condition>> filters;
+
 	public Map<Reference, List<Condition>> getFilters() {
 		return filters;
 	}
 
-	
 	@Override
 	public ResultSetMetaData getMetaData() throws SQLException {
 		return columns.getMeta();
 	}
-	
-	private void initMetadata(ResultSet wrapped) throws SQLException {
-		ResultSetMetaData meta = wrapped.getMetaData();
-		this.columns = new ColumnMeta(meta);
-	}
 
-	public static IResultSet toInMemoryProcessorResultSet(InMemoryOperateProvider context,ResultSetHolder... rs){
-		MultipleResultSet mrs=new MultipleResultSet(false,false);
-		for(ResultSetHolder rsh:rs){
+	public static IResultSet toInMemoryProcessorResultSet(InMemoryOperateProvider context, ResultSetHolder... rs) {
+		ResultSetContainer mrs = new ResultSetContainer(false, false);
+		for (ResultSetHolder rsh : rs) {
 			mrs.add(rsh);
 		}
 		context.parepareInMemoryProcess(null, mrs);
-		return mrs.toSimple(null);
+		return mrs.toProperResultSet(null);
 	}
 
 	public boolean next() {
@@ -136,7 +133,7 @@ public final class MultipleResultSet extends AbstractResultSet implements IResul
 		}
 		return b;
 	}
-	
+
 	public void beforeFirst() throws SQLException {
 		for (ResultSetHolder rs : results) {
 			rs.rs.beforeFirst();
@@ -162,7 +159,7 @@ public final class MultipleResultSet extends AbstractResultSet implements IResul
 		}
 		current = results.size();
 	}
-	
+
 	public void add(ResultSetHolder rsh) {
 		if (columns == null) {
 			try {
@@ -175,17 +172,17 @@ public final class MultipleResultSet extends AbstractResultSet implements IResul
 			results.add(rsh);
 		}
 		if (cache) {
-			try{
-				rsh.rs = tryCache(rsh.rs, rsh.db.getProfile());
+			try {
+				rsh.rs = tryCache(rsh.rs, rsh.getProfile());
 				rsh.close(false);
 				return;
-			}catch(SQLException e){
-				//缓存失败
+			} catch (SQLException e) {
+				// 缓存失败
 				LogUtil.exception(e);
 			}
 		}
 	}
-	
+
 	/**
 	 * 添加一个
 	 * 
@@ -200,33 +197,21 @@ public final class MultipleResultSet extends AbstractResultSet implements IResul
 				throw new IllegalStateException(e);
 			}
 		}
-		ResultSetHolder rsh = new ResultSetHolder(tx,statement,rs);
+		ResultSetHolder rsh = new ResultSetHolder(tx, statement, rs);
 		synchronized (results) {
 			results.add(rsh);
 		}
 		if (cache) {
-			try{
+			try {
 				rsh.rs = tryCache(rs, tx.getProfile());
 				rsh.close(false);
 				return;
-			}catch(SQLException e){
-				//缓存失败
+			} catch (SQLException e) {
+				// 缓存失败
 				LogUtil.exception(e);
 			}
 		}
-//		rsh.rs = rs;
-	}
-
-	private ResultSet tryCache(ResultSet set, DatabaseDialect profile) throws SQLException {
-		long start = System.currentTimeMillis();
-		CachedRowSet rs = profile.newCacheRowSetInstance();
-		rs.populate(set);
-		if (debug) {
-			LogUtil.debug("Caching Results from database. Cost {}ms.", System.currentTimeMillis() - start);
-		}
-		set.close();
-		return rs;
-
+		// rsh.rs = rs;
 	}
 
 	/**
@@ -245,50 +230,61 @@ public final class MultipleResultSet extends AbstractResultSet implements IResul
 		}
 	}
 
-
 	/**
-	 * 进行结果集退化
+	 * 转换为可以用于输出正确的结果集
+	 * 
+	 * 
+	 * 1、a 有内存任务，使用内存处理并排序。
+	 *    b 无内存任务，有多个结果集且有排序任务，使用混合排序
+	 *    c 无内存任务，有多个结果集且无排序任务，使用当前对象作为结果集
+	 *    d 无内存内务，无多个结果集，退化为简单结果集
+	 * 2、有分页任务，包装为分页结果集
+	 * 
 	 * 
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public IResultSet toSimple(Map<Reference, List<Condition>> filters,PopulateStrategy... args) {
-		if(filters==null){
-			filters=Collections.EMPTY_MAP;
+	public IResultSet toProperResultSet(Map<Reference, List<Condition>> filters, PopulateStrategy... args) {
+		if (filters == null) {
+			filters = Collections.EMPTY_MAP;
 		}
-		if(results.isEmpty()){
+		if (results.isEmpty()) {
 			return new ResultSetWrapper();
 		}
-		if(mustInMemoryProcessor!=null){
-			InMemoryProcessResultSet rw=new InMemoryProcessResultSet(results,columns);
-			rw.filters=filters;
+		//最后将要包装的对象
+		IResultSet result;
+		
+		// 除了Order、Page以外的内存处理任务
+		if (mustInMemoryProcessor != null) {
+			InMemoryProcessResultSet rw = new InMemoryProcessResultSet(results,columns,filters);
 			rw.addProcessor(mustInMemoryProcessor);
-			rw.addProcessor(inMemoryOrder);//如果需要处理,排序是第一位的.
+			rw.addProcessor(inMemoryOrder);// 如果需要处理,排序是第一位的.
 			try {
 				rw.process();
 			} catch (SQLException e) {
 				throw DbUtils.toRuntimeException(e);
 			}
-			return rw;
+			result=rw;
+		}else if(results.size()==1){
+			ResultSetWrapper rw = new ResultSetWrapper(results.get(0), columns);
+			rw.setFilters(filters);
+			result=rw;
+		}else if(inMemoryOrder!=null){
+			ReorderResultSet2 rw = new ReorderResultSet2(results, inMemoryOrder, columns, filters);
+			result=rw;
+		}else{
+			this.filters=filters;
+			result=this;
 		}
-		if (results.size() == 1) {
-			ResultSetWrapper rsw = new ResultSetWrapper(results.get(0), columns);
-			rsw.setFilters(filters);
-			return rsw;
+		//分页处理器
+		if(inMemoryPage!=null){
+			result=new LimitOffsetResultSet(result, inMemoryPage.getOffset(), inMemoryPage.getLimit());
 		}
-		//当仅有重排序要求时，可以使用ReorderResultSet简化计算。降低内存开销
-		if (inMemoryOrder != null && !ArrayUtils.fastContains(args, PopulateStrategy.NO_RESORT)) {
-			ReorderResultSet2 rw = new ReorderResultSet2(results, inMemoryOrder,columns);
-			rw.filters=filters;
-			return rw;
-		}
-		this.filters=filters;
-		return this;
+		return result;
 	}
 
-
 	public DatabaseDialect getProfile() {
-		return results.get(current).db.getProfile();
+		return results.get(current).getProfile();
 	}
 
 	@Override
@@ -297,9 +293,9 @@ public final class MultipleResultSet extends AbstractResultSet implements IResul
 	}
 
 	public void setInMemoryPage(InMemoryPaging inMemoryPaging) {
-		addToInMemprocessor(inMemoryPaging);
+		this.inMemoryPage = inMemoryPaging;
 	}
-	
+
 	public void setInMemoryOrder(InMemoryOrderBy inMemoryOrder) {
 		this.inMemoryOrder = inMemoryOrder;
 	}
@@ -308,30 +304,21 @@ public final class MultipleResultSet extends AbstractResultSet implements IResul
 		addToInMemprocessor(inMemoryGroups);
 	}
 
-	private void addToInMemprocessor(InMemoryProcessor process) {
-		if(process!=null){
-			if(this.mustInMemoryProcessor==null){
-				mustInMemoryProcessor=new ArrayList<InMemoryProcessor>(4);
-			}
-			mustInMemoryProcessor.add(process);
-		}
-	}
-
 	public void setInMemoryDistinct(InMemoryDistinct instance) {
 		addToInMemprocessor(instance);
-	}
-
-	public boolean isClosed() throws SQLException {
-		return results.isEmpty();
-	}
-	public boolean isDebug(){
-		return debug;
 	}
 
 	public void setInMemoryConnectBy(InMemoryStartWithConnectBy parseStartWith) {
 		addToInMemprocessor(parseStartWith);
 	}
-	
+
+	public boolean isClosed() throws SQLException {
+		return results.isEmpty();
+	}
+
+	public boolean isDebug() {
+		return debug;
+	}
 
 	@Override
 	public boolean isFirst() throws SQLException {
@@ -346,5 +333,41 @@ public final class MultipleResultSet extends AbstractResultSet implements IResul
 	@Override
 	public boolean last() throws SQLException {
 		throw new UnsupportedOperationException("last");
+	}
+
+	@Override
+	public boolean isBeforeFirst() throws SQLException {
+		throw new UnsupportedOperationException("isBeforeFirst");
+	}
+
+	@Override
+	public boolean isAfterLast() throws SQLException {
+		throw new UnsupportedOperationException("isAfterLast");
+	}
+
+	// //////////////////////////// 私有方法 ///////////////////////////////////
+	private void addToInMemprocessor(InMemoryProcessor process) {
+		if (process != null) {
+			if (this.mustInMemoryProcessor == null) {
+				mustInMemoryProcessor = new ArrayList<InMemoryProcessor>(4);
+			}
+			mustInMemoryProcessor.add(process);
+		}
+	}
+
+	private void initMetadata(ResultSet wrapped) throws SQLException {
+		ResultSetMetaData meta = wrapped.getMetaData();
+		this.columns = new ColumnMeta(meta);
+	}
+
+	private ResultSet tryCache(ResultSet set, DatabaseDialect profile) throws SQLException {
+		long start = System.currentTimeMillis();
+		CachedRowSet rs = profile.newCacheRowSetInstance();
+		rs.populate(set);
+		if (debug) {
+			LogUtil.debug("Caching Results from database. Cost {}ms.", System.currentTimeMillis() - start);
+		}
+		set.close();
+		return rs;
 	}
 }

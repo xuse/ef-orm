@@ -21,7 +21,7 @@ import jef.common.wrapper.IntRange;
 import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.routing.sql.InMemoryOperateProvider;
 import jef.database.wrapper.processor.BindVariableDescription;
-import jef.database.wrapper.result.MultipleResultSet;
+import jef.database.wrapper.result.ResultSetContainer;
 
 /**
  * 描述一个绑定变量的SQL语句
@@ -70,7 +70,7 @@ public final class BindSql implements InMemoryOperateProvider{
 		return sql;
 	}
 
-	public ResultSetLaterProcess isReverseResult() {
+	public ResultSetLaterProcess getRsLaterProcessor() {
 		return isReverseResultSet;
 	}
 
@@ -85,7 +85,7 @@ public final class BindSql implements InMemoryOperateProvider{
 	}
 
 	@Override
-	public void parepareInMemoryProcess(IntRange range, MultipleResultSet rs) {
+	public void parepareInMemoryProcess(IntRange range, ResultSetContainer rs) {
 		throw new UnsupportedOperationException();
 	}
 }

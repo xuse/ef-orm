@@ -15,25 +15,26 @@ import jef.database.jdbc.rowset.Row;
  */
 public class InMemoryPaging implements InMemoryProcessor{
 	private int start;
-	private int end;
+	private int limit;
 	
-	public InMemoryPaging(int start,int end){
+	public InMemoryPaging(int start,int limit){
 		this.start=start;
-		this.end=end;
+		this.limit=limit;
 	}
 	
 	public InMemoryPaging(IntRange range) {
 		int[] data=range.toStartLimitSpan();
 		this.start=data[0];
-		this.end=data[1]+start;
+		this.limit=data[1];
 	}
 
 	public void process(CachedRowSetImpl rows) throws SQLException {
 		List<Row> list=rows.getRvh();
+
+		int end=start+limit;
 		if(start==0 && end>=list.size()){//不需要截取的场合
 			return;
 		}
-		int end=this.end;
 		if(end>list.size()){ //防止溢出
 			end=list.size();
 		}
@@ -48,6 +49,13 @@ public class InMemoryPaging implements InMemoryProcessor{
 	public String getName() {
 		return "PAGING";
 	}
-
+	public int getOffset(){
+		return start;
+	}
+	
+	public int getLimit(){
+		return limit;
+	}
+	
 	
 }

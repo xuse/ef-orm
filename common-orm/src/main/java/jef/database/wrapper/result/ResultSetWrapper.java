@@ -36,14 +36,14 @@ public final class ResultSetWrapper extends ResultSetImpl{
 	}
 	
 	public ResultSetWrapper(ResultSetHolder holder) {
-		super(holder,holder.db.getProfile());
+		super(holder,holder.getProfile());
 	}
 	
 	public ResultSetWrapper(ResultSetHolder holder,ColumnMeta columns) {
-		super(holder,columns,holder.db.getProfile());
+		super(holder,columns,holder.getProfile());
 	}
 	
 	public OperateTarget getTarget() {
-		return ((ResultSetHolder)super.rs).db;
+		return ((ResultSetHolder)super.rs).getDb();
 	}
 }

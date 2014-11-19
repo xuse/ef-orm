@@ -19,7 +19,7 @@ import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.processor.BindVariableContext;
 import jef.database.wrapper.processor.BindVariableTool;
-import jef.database.wrapper.result.MultipleResultSet;
+import jef.database.wrapper.result.ResultSetContainer;
 import jef.tools.Assert;
 
 @SuppressWarnings("rawtypes")
@@ -34,11 +34,11 @@ public class ParallelExecutor {
 		private SelectProcessor selectp;
 		private Session session;
 		private ConditionQuery queryObj;
-		private MultipleResultSet rs;
+		private ResultSetContainer rs;
 		private QueryOption option;
 		private PartitionResult site;
 
-		Task1(QueryClause sql, SelectProcessor selectp, Session session, ConditionQuery queryObj, MultipleResultSet rs, QueryOption option, PartitionResult site) {
+		Task1(QueryClause sql, SelectProcessor selectp, Session session, ConditionQuery queryObj, ResultSetContainer rs, QueryOption option, PartitionResult site) {
 			this.sql = sql;
 			this.selectp = selectp;
 			this.session = session;
@@ -67,11 +67,11 @@ public class ParallelExecutor {
 		private SelectExecutionPlan plan;
 		private boolean noOrder;
 		private ResultSetExtractor rst;
-		private MultipleResultSet mrs;
+		private ResultSetContainer mrs;
 		private InMemoryOperateProvider sqlContext;
 		private PartitionResult site;
 		
-		public Task2(OperateTarget db, SelectExecutionPlan plan, boolean noOrder, ResultSetExtractor rst, MultipleResultSet mrs, InMemoryOperateProvider sqlContext, PartitionResult site) {
+		public Task2(OperateTarget db, SelectExecutionPlan plan, boolean noOrder, ResultSetExtractor rst, ResultSetContainer mrs, InMemoryOperateProvider sqlContext, PartitionResult site) {
 			this.db = db;
 			this.plan = plan;
 			this.noOrder = noOrder;
@@ -84,7 +84,7 @@ public class ParallelExecutor {
 		@Override
 		public void run() {
 			try {
-				processQuery(db.getTarget(site.getDatabase()), plan.getSql(site, noOrder), rst, mrs, sqlContext.isReverseResult());
+				processQuery(db.getTarget(site.getDatabase()), plan.getSql(site, noOrder), rst, mrs, sqlContext.getRsLaterProcessor());
 			} catch (SQLException e) {
 				exceptions.add(e);
 			} catch (Throwable e) {
@@ -98,7 +98,7 @@ public class ParallelExecutor {
 	/*
 	 * 执行查询动作，将查询结果放入mrs
 	 */
-	private static void processQuery(OperateTarget db, PairSO<List<Object>> sql, ResultSetExtractor rst, MultipleResultSet mrs, ResultSetLaterProcess reverseResult) throws SQLException {
+	private static void processQuery(OperateTarget db, PairSO<List<Object>> sql, ResultSetExtractor rst, ResultSetContainer mrs, ResultSetLaterProcess reverseResult) throws SQLException {
 		StringBuilder sb = null;
 		PreparedStatement psmt = null;
 		ResultSet rs = null;
@@ -117,7 +117,7 @@ public class ParallelExecutor {
 		}
 	}
 
-	public void executeSelect(QueryClause sql, SelectProcessor selectp, Session session, ConditionQuery queryObj, MultipleResultSet rs, QueryOption option) throws SQLException {
+	public void executeSelect(QueryClause sql, SelectProcessor selectp, Session session, ConditionQuery queryObj, ResultSetContainer rs, QueryOption option) throws SQLException {
 		initLatch(sql.getTables().length);
 		for (PartitionResult site : sql.getTables()) {
 			Task1 t1 = new Task1(sql, selectp, session, queryObj, rs, option, site);
@@ -141,7 +141,7 @@ public class ParallelExecutor {
 		latch = new CountDownLatch(length);
 	}
 
-	public void executeQuery(OperateTarget db, SelectExecutionPlan plan, boolean noOrder, ResultSetExtractor rst, MultipleResultSet mrs, InMemoryOperateProvider sqlContext) throws SQLException {
+	public void executeQuery(OperateTarget db, SelectExecutionPlan plan, boolean noOrder, ResultSetExtractor rst, ResultSetContainer mrs, InMemoryOperateProvider sqlContext) throws SQLException {
 		initLatch(plan.getSites().length);
 		for (PartitionResult site : plan.getSites()) {
 			Task2 t1 = new Task2(db, plan, noOrder, rst, mrs, sqlContext, site);

@@ -35,7 +35,7 @@ import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.clause.SelectPart;
 import jef.database.wrapper.processor.BindVariableContext;
 import jef.database.wrapper.processor.BindVariableTool;
-import jef.database.wrapper.result.MultipleResultSet;
+import jef.database.wrapper.result.ResultSetContainer;
 import jef.http.client.support.CommentEntry;
 import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
@@ -72,7 +72,7 @@ public abstract class SelectProcessor {
 	 */
 	public abstract CountClause toCountSql(ConditionQuery obj) throws SQLException;
 
-	abstract void processSelect(OperateTarget db, QueryClause sql, PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs, QueryOption option) throws SQLException;
+	abstract void processSelect(OperateTarget db, QueryClause sql, PartitionResult site, ConditionQuery queryObj, ResultSetContainer rs, QueryOption option) throws SQLException;
 
 	abstract int processCount(OperateTarget db, List<BindSql> bindSqls) throws SQLException;
 
@@ -109,7 +109,7 @@ public abstract class SelectProcessor {
 			return clause;
 		}
 
-		void processSelect(OperateTarget db, QueryClause sql, PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
+		void processSelect(OperateTarget db, QueryClause sql, PartitionResult site, ConditionQuery queryObj, ResultSetContainer rs2, QueryOption option) throws SQLException {
 			Statement st = null;
 			ResultSet rs = null;
 			BindSql bindSql = sql.getSql(site);
@@ -117,7 +117,7 @@ public abstract class SelectProcessor {
 				throw new UnsupportedOperationException("The database " + db.getProfile() + " can not support your 'selectForUpdate' operation.");
 			}
 			try {
-				st = db.createStatement(bindSql.isReverseResult(), option.holdResult);
+				st = db.createStatement(bindSql.getRsLaterProcessor(), option.holdResult);
 				option.setSizeFor(st);
 				rs = st.executeQuery(bindSql.toString());
 				rs2.add(rs, st, db);
@@ -226,7 +226,7 @@ public abstract class SelectProcessor {
 			return result;
 		}
 
-		void processSelect(OperateTarget db, QueryClause sqlResult, PartitionResult site, ConditionQuery queryObj, MultipleResultSet rs2, QueryOption option) throws SQLException {
+		void processSelect(OperateTarget db, QueryClause sqlResult, PartitionResult site, ConditionQuery queryObj, ResultSetContainer rs2, QueryOption option) throws SQLException {
 			// 计算查询结果集参数
 			boolean debugMode = ORMConfig.getInstance().isDebugMode();
 			if (option.holdResult && db.getProfile().has(Feature.TYPE_FORWARD_ONLY)) {
@@ -239,7 +239,7 @@ public abstract class SelectProcessor {
 			if (debugMode)
 				sb = new StringBuilder(sql.getSql().length() + 150).append(sql).append(" | ").append(db.getTransactionId());
 			try {
-				psmt = db.prepareStatement(sql.getSql(), sql.isReverseResult(), option.holdResult);
+				psmt = db.prepareStatement(sql.getSql(), sql.getRsLaterProcessor(), option.holdResult);
 				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
 				BindVariableTool.setVariables(queryObj, null, sql.getBind(), context);
 				option.setSizeFor(psmt);

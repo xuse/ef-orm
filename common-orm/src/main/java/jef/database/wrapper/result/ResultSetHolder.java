@@ -34,11 +34,18 @@ import jef.database.wrapper.populator.ColumnMeta;
 public final class ResultSetHolder extends AbstractResultSet implements IResultSet{
 	private Statement st;
 	ResultSet rs;
-	OperateTarget db;
+	private OperateTarget db;
 
 	public OperateTarget getDb() {
 		return db;
 	}
+	
+	/**
+	 * 构造
+	 * @param tx
+	 * @param st
+	 * @param rs
+	 */
 	public ResultSetHolder(OperateTarget tx,Statement st,ResultSet rs) {
 		this.db=tx;
 		this.st=st;
