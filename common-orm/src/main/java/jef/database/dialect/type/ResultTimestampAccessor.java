@@ -4,7 +4,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
 
-import jef.database.wrapper.result.IResultSet;
+import jef.database.jdbc.result.IResultSet;
 
 final class ResultTimestampAccessor implements ResultSetAccessor {
 	public Object getProperObject(IResultSet rs,int n) throws SQLException {

@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.List;
 
 import jef.database.OperateTarget;
-import jef.database.wrapper.result.ResultSetWrapper;
+import jef.database.jdbc.result.ResultSetWrapper;
 
 public class SimpleSQLExecutor implements SQLExecutor {
 	private String sql;

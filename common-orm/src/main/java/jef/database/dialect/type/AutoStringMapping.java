@@ -7,8 +7,8 @@ import jef.accelerator.bean.AbstractFastProperty;
 import jef.database.Field;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.jdbc.result.IResultSet;
 import jef.database.meta.ITableMetadata;
-import jef.database.wrapper.result.IResultSet;
 import jef.tools.StringUtils;
 import jef.tools.reflect.Property;
 

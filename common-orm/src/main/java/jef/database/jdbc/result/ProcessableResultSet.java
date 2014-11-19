@@ -1,10 +1,10 @@
-package jef.database.jdbc.statement;
+package jef.database.jdbc.result;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
-import jef.database.wrapper.result.AbstractResultSet;
+import jef.database.jdbc.statement.ResultSetLaterProcess;
 
 /**
  * 倒序获取结果的ResultSet

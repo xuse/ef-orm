@@ -4,6 +4,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+import jef.database.jdbc.result.ProcessableResultSet;
+
 /**
  * 返回查询结果会被颠倒的Statement
  * @author jiyi

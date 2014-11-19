@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jef.database.wrapper.result;
+package jef.database.jdbc.result;
 
 import java.io.InputStream;
 import java.io.Reader;
@@ -36,7 +36,7 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
 
-public abstract class AbstractResultSet implements ResultSet {
+abstract class AbstractResultSet implements ResultSet {
 	protected abstract ResultSet get() throws SQLException;
 
 	public Object getObject(String columnName) throws SQLException {

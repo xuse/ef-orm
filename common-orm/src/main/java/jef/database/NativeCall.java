@@ -27,9 +27,9 @@ import javax.persistence.PersistenceException;
 
 import jef.common.log.LogUtil;
 import jef.database.Session.PopulateStrategy;
+import jef.database.jdbc.result.ResultSetImpl;
 import jef.database.query.OutParam;
 import jef.database.wrapper.populator.Transformer;
-import jef.database.wrapper.result.ResultSetImpl;
 
 /**
  * 存储过程调用对象

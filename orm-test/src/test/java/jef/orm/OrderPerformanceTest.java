@@ -13,11 +13,11 @@ import jef.database.DebugUtil;
 import jef.database.ORMConfig;
 import jef.database.OperateTarget;
 import jef.database.Transaction;
+import jef.database.jdbc.result.IResultSet;
+import jef.database.jdbc.result.ResultSetContainer;
+import jef.database.jdbc.result.ResultSetHolder;
 import jef.database.jdbc.rowset.CachedRowSetImpl;
 import jef.database.wrapper.clause.InMemoryOrderBy;
-import jef.database.wrapper.result.IResultSet;
-import jef.database.wrapper.result.ResultSetContainer;
-import jef.database.wrapper.result.ResultSetHolder;
 import jef.orm.onetable.model.Foo;
 import jef.tools.string.RandomData;
 

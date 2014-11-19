@@ -1,4 +1,4 @@
-package jef.database.jdbc.statement;
+package jef.database.jdbc.result;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -12,8 +12,6 @@ import jef.database.Condition;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Reference;
 import jef.database.wrapper.populator.ColumnMeta;
-import jef.database.wrapper.result.AbstractResultSet;
-import jef.database.wrapper.result.IResultSet;
 
 /**
  * 对结果集跳过若干记录，并且限定其最大数的ResultSet实现
@@ -21,7 +19,7 @@ import jef.database.wrapper.result.IResultSet;
  * @author jiyi
  * 
  */
-public final class LimitOffsetResultSet extends AbstractResultSet implements IResultSet{
+final class LimitOffsetResultSet extends AbstractResultSet implements IResultSet{
 	private int offset;
 	private int limit;
 	private ResultSet rs;

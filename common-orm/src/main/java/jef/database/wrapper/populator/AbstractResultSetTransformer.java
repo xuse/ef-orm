@@ -7,7 +7,7 @@ import javax.sql.rowset.CachedRowSet;
 
 import jef.database.ORMConfig;
 import jef.database.Session.PopulateStrategy;
-import jef.database.wrapper.result.IResultSet;
+import jef.database.jdbc.result.IResultSet;
 
 public abstract class AbstractResultSetTransformer<T> implements ResultSetExtractor<T> {
 	private int fetchSize;

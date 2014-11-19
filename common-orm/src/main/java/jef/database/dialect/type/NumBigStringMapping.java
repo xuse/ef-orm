@@ -4,7 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import jef.database.dialect.DatabaseDialect;
-import jef.database.wrapper.result.IResultSet;
+import jef.database.jdbc.result.IResultSet;
 import jef.tools.StringUtils;
 
 public class NumBigStringMapping extends AColumnMapping<Integer> {

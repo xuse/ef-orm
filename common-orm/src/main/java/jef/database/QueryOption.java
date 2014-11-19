@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.Map;
 
 import jef.database.dialect.type.ResultSetAccessor;
+import jef.database.jdbc.result.ResultSetContainer;
 import jef.database.meta.Reference;
 import jef.database.query.ConditionQuery;
 import jef.database.query.JoinElement;
-import jef.database.wrapper.result.ResultSetContainer;
 
 public final class QueryOption implements Cloneable {
 	public static final QueryOption DEFAULT=new QueryOption();

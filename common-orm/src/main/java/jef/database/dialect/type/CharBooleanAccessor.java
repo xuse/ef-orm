@@ -3,7 +3,7 @@ package jef.database.dialect.type;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import jef.database.wrapper.result.IResultSet;
+import jef.database.jdbc.result.IResultSet;
 
 final class CharBooleanAccessor implements ResultSetAccessor{
 

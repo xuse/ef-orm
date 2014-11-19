@@ -13,7 +13,7 @@ import jef.database.jdbc.rowset.Row;
  * @author jiyi
  *
  */
-public class InMemoryPaging implements InMemoryProcessor{
+public class InMemoryPaging{
 	private int start;
 	private int limit;
 	

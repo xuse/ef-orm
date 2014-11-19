@@ -8,11 +8,11 @@ import jef.common.log.LogUtil;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.ColumnMappings;
+import jef.database.jdbc.result.IResultSet;
 import jef.database.meta.IReferenceColumn;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
 import jef.database.wrapper.populator.IPopulator;
-import jef.database.wrapper.result.IResultSet;
 import jef.tools.reflect.BeanWrapper;
 
 public class FieldPopulator implements IPopulator{

@@ -16,6 +16,8 @@ import jef.database.OperateTarget;
 import jef.database.OperateTarget.TransformerAdapter;
 import jef.database.SerialExecutor;
 import jef.database.annotation.PartitionResult;
+import jef.database.jdbc.result.IResultSet;
+import jef.database.jdbc.result.ResultSetContainer;
 import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.jsqlparser.SelectToCountWrapper;
 import jef.database.jsqlparser.expression.Table;
@@ -43,8 +45,6 @@ import jef.database.wrapper.populator.ColumnMeta;
 import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.processor.BindVariableContext;
 import jef.database.wrapper.processor.BindVariableTool;
-import jef.database.wrapper.result.IResultSet;
-import jef.database.wrapper.result.ResultSetContainer;
 import jef.tools.StringUtils;
 
 /**

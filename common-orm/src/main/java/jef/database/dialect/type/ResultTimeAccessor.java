@@ -3,7 +3,7 @@ package jef.database.dialect.type;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import jef.database.wrapper.result.IResultSet;
+import jef.database.jdbc.result.IResultSet;
 
 final class ResultTimeAccessor implements ResultSetAccessor{
 	public Object getProperObject(IResultSet rs,int n) throws SQLException {

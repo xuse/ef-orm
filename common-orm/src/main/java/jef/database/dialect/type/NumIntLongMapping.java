@@ -4,7 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import jef.database.dialect.DatabaseDialect;
-import jef.database.wrapper.result.IResultSet;
+import jef.database.jdbc.result.IResultSet;
 
 public class NumIntLongMapping extends AColumnMapping<Long>{
 	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {

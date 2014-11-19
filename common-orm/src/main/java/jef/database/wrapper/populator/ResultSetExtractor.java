@@ -20,7 +20,7 @@ import java.sql.Statement;
 import java.util.Date;
 
 import jef.database.Session.PopulateStrategy;
-import jef.database.wrapper.result.IResultSet;
+import jef.database.jdbc.result.IResultSet;
 
 /**
  * 直接对JDBC结果集进行操作的转换器

@@ -7,7 +7,7 @@ import java.text.ParseException;
 import java.util.Date;
 
 import jef.database.dialect.DatabaseDialect;
-import jef.database.wrapper.result.IResultSet;
+import jef.database.jdbc.result.IResultSet;
 import jef.tools.DateFormats;
 import jef.tools.StringUtils;
 

@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import jef.database.Session;
+import jef.database.jdbc.result.IResultSet;
 import jef.database.query.EntityMappingProvider;
-import jef.database.wrapper.result.IResultSet;
 
 public interface ResultSetPopulator {
 	/**

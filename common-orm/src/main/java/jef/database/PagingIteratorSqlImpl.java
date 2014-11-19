@@ -9,9 +9,9 @@ import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.Session.PopulateStrategy;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.jdbc.result.ResultSetImpl;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.populator.Transformer;
-import jef.database.wrapper.result.ResultSetImpl;
 import jef.tools.Assert;
 import jef.tools.PageInfo;
 

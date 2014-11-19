@@ -8,6 +8,7 @@ import java.util.Map;
 
 import jef.common.wrapper.IntRange;
 import jef.database.Condition.Operator;
+import jef.database.jdbc.result.ResultSetContainer;
 import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.jsqlparser.RemovedDelayProcess;
 import jef.database.jsqlparser.expression.BinaryExpression;
@@ -34,7 +35,6 @@ import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.clause.InMemoryStartWithConnectBy;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
-import jef.database.wrapper.result.ResultSetContainer;
 import jef.tools.StringUtils;
 
 import com.alibaba.druid.proxy.jdbc.JdbcParameter;

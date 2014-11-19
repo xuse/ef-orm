@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import jef.database.dialect.DatabaseDialect;
-import jef.database.wrapper.result.IResultSet;
+import jef.database.jdbc.result.IResultSet;
 
 /**
  * 要求的数据库类型为Boolean，但实际上根据数据库特性，有BIT、CHAR(1)、BOOLEAN等多种实现

@@ -5,8 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 import jef.database.dialect.DatabaseDialect;
+import jef.database.jdbc.result.IResultSet;
 import jef.database.query.Func;
-import jef.database.wrapper.result.IResultSet;
 
 /**
  * DATE <-> java.sql.Date

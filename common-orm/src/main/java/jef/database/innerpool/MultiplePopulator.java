@@ -2,8 +2,8 @@ package jef.database.innerpool;
 
 import java.sql.SQLException;
 
+import jef.database.jdbc.result.IResultSet;
 import jef.database.wrapper.populator.IPopulator;
-import jef.database.wrapper.result.IResultSet;
 import jef.tools.reflect.BeanWrapper;
 
 public final class MultiplePopulator implements IPopulator{

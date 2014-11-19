@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import java.sql.Time;
 
 import jef.database.dialect.DatabaseDialect;
-import jef.database.wrapper.result.IResultSet;
+import jef.database.jdbc.result.IResultSet;
 
 public class SqlTimeTimeMapping extends AColumnMapping<java.sql.Time>{
 

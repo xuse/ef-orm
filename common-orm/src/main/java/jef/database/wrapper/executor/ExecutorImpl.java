@@ -16,9 +16,9 @@ import jef.database.ORMConfig;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
+import jef.database.jdbc.result.ResultSetWrapper;
 import jef.database.wrapper.processor.BindVariableContext;
 import jef.database.wrapper.processor.BindVariableTool;
-import jef.database.wrapper.result.ResultSetWrapper;
 import jef.tools.StringUtils;
 
 public class ExecutorImpl implements StatementExecutor{

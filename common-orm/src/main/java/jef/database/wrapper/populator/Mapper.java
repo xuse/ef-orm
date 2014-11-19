@@ -18,7 +18,7 @@ package jef.database.wrapper.populator;
 import java.sql.SQLException;
 import java.util.Map;
 
-import jef.database.wrapper.result.IResultSet;
+import jef.database.jdbc.result.IResultSet;
 import jef.tools.reflect.BeanWrapper;
 
 /**

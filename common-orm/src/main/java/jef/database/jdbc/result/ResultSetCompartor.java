@@ -1,4 +1,4 @@
-package jef.database.wrapper.result;
+package jef.database.jdbc.result;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

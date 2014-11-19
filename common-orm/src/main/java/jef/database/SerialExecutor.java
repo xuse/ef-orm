@@ -8,6 +8,7 @@ import java.util.List;
 import jef.common.PairSO;
 import jef.common.log.LogUtil;
 import jef.database.annotation.PartitionResult;
+import jef.database.jdbc.result.ResultSetContainer;
 import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.query.ConditionQuery;
 import jef.database.routing.sql.InMemoryOperateProvider;
@@ -16,7 +17,6 @@ import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.processor.BindVariableContext;
 import jef.database.wrapper.processor.BindVariableTool;
-import jef.database.wrapper.result.ResultSetContainer;
 
 
 

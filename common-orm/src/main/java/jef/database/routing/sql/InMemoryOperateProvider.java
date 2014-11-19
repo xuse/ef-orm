@@ -1,8 +1,8 @@
 package jef.database.routing.sql;
 
 import jef.common.wrapper.IntRange;
+import jef.database.jdbc.result.ResultSetContainer;
 import jef.database.jdbc.statement.ResultSetLaterProcess;
-import jef.database.wrapper.result.ResultSetContainer;
 
 /**
  * 在内存中进行计算处理的运算提供者

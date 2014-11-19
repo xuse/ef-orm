@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import jef.database.dialect.DatabaseDialect;
-import jef.database.wrapper.result.IResultSet;
+import jef.database.jdbc.result.IResultSet;
 import jef.tools.IOUtils;
 
 public class BlobByteArrayMapping extends AColumnMapping<byte[]>{

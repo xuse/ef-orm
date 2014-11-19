@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jef.database.wrapper.result;
+package jef.database.jdbc.result;
 
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -32,7 +32,6 @@ import jef.database.DbUtils;
 import jef.database.OperateTarget;
 import jef.database.Session.PopulateStrategy;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.jdbc.statement.LimitOffsetResultSet;
 import jef.database.meta.Reference;
 import jef.database.routing.sql.InMemoryOperateProvider;
 import jef.database.wrapper.clause.InMemoryDistinct;

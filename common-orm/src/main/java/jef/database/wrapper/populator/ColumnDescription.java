@@ -19,7 +19,7 @@ import java.sql.SQLException;
 
 import jef.common.log.LogUtil;
 import jef.database.dialect.type.ResultSetAccessor;
-import jef.database.wrapper.result.IResultSet;
+import jef.database.jdbc.result.IResultSet;
 
 public class ColumnDescription{
 	private int n;
