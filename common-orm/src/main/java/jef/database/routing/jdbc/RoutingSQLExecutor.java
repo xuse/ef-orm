@@ -132,22 +132,6 @@ public class RoutingSQLExecutor implements SQLExecutor {
 
 		ExecuteablePlan plan = SqlAnalyzer.getExecutionPlan(sql, parse.getParamsMap(), parse.params, db);
 		return plan.processUpdate(generateKeys, returnIndex, returnColumns);
-		
-//		if (plan == null) {
-//			return db.innerExecuteUpdate(parse.statement.toString(), parse.params, generateKeys, returnIndex, returnColumns);
-//		} else if (plan.isChangeDatasource() != null) {
-//			return db.getTarget(plan.isChangeDatasource()).innerExecuteUpdate(parse.statement.toString(), parse.params, generateKeys, returnIndex, returnColumns);
-//		} else {
-//			long start = System.currentTimeMillis();
-//			int total = 0;
-//			for (PartitionResult site : plan.getSites()) {
-//				total += plan.processUpdate(site, db);
-//			}
-//			if (plan.isMultiDatabase() && ORMConfig.getInstance().isDebugMode()) {
-//				LogUtil.show(StringUtils.concat("Total Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(System.currentTimeMillis() - start), "ms) |  @", String.valueOf(Thread.currentThread().getId())));
-//			}
-//			return new UpdateReturn(total);
-//		}
 	}
 
 	/**

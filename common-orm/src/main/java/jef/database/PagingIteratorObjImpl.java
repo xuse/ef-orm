@@ -76,17 +76,8 @@ final public class PagingIteratorObjImpl<T> extends PagingIterator<T>{
 	
 
 	private int getTotal(ConditionQuery j) throws SQLException {
-		int total=0;
 		CountClause countResult=db.selectp.toCountSql(j);
-		for(Map.Entry<String,List<BindSql>> s:countResult.getSqls().entrySet()){
-			String dbKey = s.getKey();
-			int current = db.selectp.processCount(db.asOperateTarget(dbKey),s.getValue());
-			if(total>0 && current>0){
-				isMultiDb=true;
-			}
-			total+=current;
-		}
-		return total;
+		return db.selectp.processCount(db, countResult);
 	}
 
 	/*

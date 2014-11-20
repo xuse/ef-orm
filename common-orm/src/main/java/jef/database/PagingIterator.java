@@ -62,15 +62,6 @@ public abstract class PagingIterator<T> implements Iterator<List<T>> {
 	 * FIXME 这个设计有点冗余
 	 */
 	protected int lastPage = -1;
-	
-	/*
-	 * 查询结果将会分布于多个不同的数据库中。如果isMultiDb=true，将会开启内存分页。
-	 */
-	protected boolean isMultiDb = false;
-	/*
-	 * 最坏的情况是出现后，不得不使用内存分页。 内存分页的结果集
-	 */
-	private List<T> allResults;
 
 	/*
 	 * TODO 用于报表或导出时，使用Oracle共享锁，阻止记录被插入和更改。
@@ -166,10 +157,6 @@ public abstract class PagingIterator<T> implements Iterator<List<T>> {
 		calcPage();
 		int old=page.getCurPage();
 		page.setCurPage(pageNum);
-		if (isMultiDb) {
-			loadAllRecords();
-			return getSubList();
-		}
 		try {
 			return doQuery(true);
 		} catch (SQLException e) {
@@ -178,25 +165,6 @@ public abstract class PagingIterator<T> implements Iterator<List<T>> {
 			page.setCurPage(old);
 		}
 	}
-
-	/**
-	 * 返回基于内存分页的所有结果
-	 * 
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	private List<T> getSubList() {
-		IntRange current = page.getCurrentRecordRange();
-		if (current.getStart() > allResults.size()) {
-			return Collections.EMPTY_LIST;
-		} else if (allResults.size() < current.getEnd()) {
-			return allResults.subList(current.getStart() - 1, allResults.size());
-		} else {
-			return allResults.subList(current.getStart() - 1, current.getEnd());
-		}
-	}
-
-
 
 	/**
 	 * 下一页
@@ -208,26 +176,12 @@ public abstract class PagingIterator<T> implements Iterator<List<T>> {
 			if (page.getCurrentRecordRange().size() <= 0) {
 				return Collections.EMPTY_LIST;
 			}
-			if (isMultiDb) {// 最糟糕的情况……
-				loadAllRecords();
-				return getSubList();
-			}
 			return doQuery(true);
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
 		} finally {
 			if (!page.gotoNext()) {
 				lastPage = page.getCurPage() - 1;
-			}
-		}
-	}
-
-	private void loadAllRecords() {
-		if (allResults == null) {
-			try {
-				allResults = doQuery(false);
-			} catch (SQLException e) {
-				throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 			}
 		}
 	}
@@ -285,9 +239,6 @@ public abstract class PagingIterator<T> implements Iterator<List<T>> {
 			page.setTotal(doCount());
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
-		}
-		if (isMultiDb && page.getTotal() > 50000) {
-			throw new MultipleDatabaseOperateException("Data is located in multiple databases and the result count [" + page.getTotal() + "] exceed max limit.");
 		}
 	}
 

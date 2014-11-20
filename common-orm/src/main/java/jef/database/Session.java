@@ -70,8 +70,6 @@ import jef.database.support.MultipleDatabaseOperateException;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.CountClause;
-import jef.database.wrapper.clause.InMemoryDistinct;
-import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.clause.UpdateClause;
@@ -1521,23 +1519,7 @@ public abstract class Session {
 		ResultIterator<T> result;
 		ResultSetContainer rs = new ResultSetContainer(false, ORMConfig.getInstance().isDebugMode());
 		long parse = System.currentTimeMillis();
-		if (sql.getTables() == null) {// 没有分表结果，采用当前连接的默认表名操作
-			selectp.processSelect(wrapThisWithEmptyKey(rs, true), sql, null, queryObj, rs, option);
-		} else {
-			if(sql.getTables().length>= ORMConfig.getInstance().getParallelSelect()){
-				SerialExecutor.INSTANCE.executeSelect(sql, selectp, this, queryObj, rs, option);
-			}else{
-				SerialExecutor.INSTANCE.executeSelect(sql, selectp, this, queryObj, rs, option);
-			}
-			if (sql.isMultiDatabase()) {
-				if (sql.getOrderbyPart().isNotEmpty()) {
-					rs.setInMemoryOrder(sql.getOrderbyPart().parseAsSelectOrder(sql.getSelectPart(), rs.getColumns()));
-				}
-				if (sql.getGrouphavingPart().isNotEmpty()) {
-					rs.setInMemoryGroups(sql.getGrouphavingPart().parseSelectFunction(sql.getSelectPart()));
-				}
-			}
-		}
+		selectp.processSelect(sql, this, queryObj, rs, option, 1);
 		long dbselect = System.currentTimeMillis();
 		LogUtil.show(StringUtils.concat("Result: Iterator", "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms) |", getTransactionId(null)));
 		EntityMappingProvider mapping = DbUtils.getMappingProvider(queryObj);
@@ -1568,30 +1550,7 @@ public abstract class Session {
 
 		ResultSetContainer rs = new ResultSetContainer(option.cacheResultset && !option.holdResult, debugMode);// 只有当非读写模式并且开启结果缓存才缓存结果集
 		long parse = System.currentTimeMillis();
-		if (sql.getTables() == null) {// 没有分表结果，采用当前连接的默认表名操作
-			OperateTarget target = wrapThisWithEmptyKey(rs, option.holdResult); // 如果是结果集持有的，那么必须在事务中
-			selectp.processSelect(target, sql, null, queryObj, rs, option);
-		} else {
-			if(sql.getTables().length>= ORMConfig.getInstance().getParallelSelect()){
-				SerialExecutor.INSTANCE.executeSelect(sql,selectp,this,queryObj,rs,option);
-			}else{
-				SerialExecutor.INSTANCE.executeSelect(sql,selectp,this,queryObj,rs,option);
-			}
-			if (sql.isMultiDatabase()) {// 最复杂的情况，多数据库下的排序
-				if (sql.getOrderbyPart().isNotEmpty()) {
-					rs.setInMemoryOrder(sql.getOrderbyPart().parseAsSelectOrder(sql.getSelectPart(), rs.getColumns()));
-				}
-				if (sql.getGrouphavingPart().isNotEmpty()) {
-					rs.setInMemoryGroups(sql.getGrouphavingPart().parseSelectFunction(sql.getSelectPart()));
-				}
-				if (sql.isDistinct()) {
-					rs.setInMemoryDistinct(InMemoryDistinct.instance);
-				}
-				if (range != null) {
-					rs.setInMemoryPage(new InMemoryPaging(range));
-				}
-			}
-		}
+		selectp.processSelect(sql, this, queryObj, rs, option, option.holdResult ? 2 : 0);
 		long dbselect = System.currentTimeMillis(); // 查询完成时间
 		List list;
 
@@ -1765,10 +1724,7 @@ public abstract class Session {
 		CountClause sqls = selectp.toCountSql(obj);
 
 		parse = System.currentTimeMillis();
-		int total = 0;
-		for (Map.Entry<String, List<BindSql>> sql : sqls.getSqls().entrySet()) {
-			total += selectp.processCount(asOperateTarget(sql.getKey()), sql.getValue());
-		}
+		int total = selectp.processCount(this, sqls);
 		if (debugMode) {
 			long dbAccess = System.currentTimeMillis() - parse; // 数据库查询时间
 			parse = parse - start; // 解析SQL时间
@@ -2483,12 +2439,12 @@ public abstract class Session {
 	}
 
 	// 包装当前AbsDbClient,包装为缺省的操作对象即无dbkey.
-	private final OperateTarget wrapThisWithEmptyKey(ResultSetContainer rs, boolean mustTx) throws SQLException {
-		if (mustTx && this instanceof DbClient) {// 如果不是在事务中，那么就用一个内嵌事务将其包裹住，作用是在resultSet的生命周期内，该连接不会被归还。并且也预防了基于线程的连接模型中，该连接被本线程的其他SQL操作再次取用然后释放回池
-			Transaction tx = new TransactionImpl((DbClient) this, TransactionFlag.ResultHolder, true);
-			return new OperateTarget(tx, null);
+	protected final OperateTarget wrapTarget(String dbName, int mustTx) throws SQLException {
+		if (mustTx>0 && this instanceof DbClient) {// 如果不是在事务中，那么就用一个内嵌事务将其包裹住，作用是在resultSet的生命周期内，该连接不会被归还。并且也预防了基于线程的连接模型中，该连接被本线程的其他SQL操作再次取用然后释放回池
+			Transaction tx = new TransactionImpl((DbClient) this, TransactionFlag.ResultHolder, mustTx==1);
+			return new OperateTarget(tx, dbName);
 		} else {
-			return new OperateTarget(this, null);
+			return new OperateTarget(this, dbName);
 		}
 	}
 
@@ -2568,11 +2524,9 @@ public abstract class Session {
 		if (sites != null && sites.length > 0) {
 			DatabaseDialect profile = this.getProfile(sites[0].getDatabase());
 			getListener().beforeDelete(obj, this);
-			int count = 0;
+			
 			BindSql where = deletep.toWhereClause(query, new SqlContext(null, query), false, profile);
-			for (PartitionResult site : sites) {
-				count += deletep.processDelete(asOperateTarget(site.getDatabase()), obj, where, site, start);
-			}
+			int count = deletep.processDelete(this, obj, where, sites, start);
 			if (count > 0) {
 				getCache().onDelete(myTableName == null ? obj.getClass().getName() : myTableName, where.getSql(), CacheImpl.toParamList(where.getBind()));
 			}
@@ -2590,12 +2544,11 @@ public abstract class Session {
 		Query<?> query = obj.getQuery();
 		long parseCost = System.currentTimeMillis();
 		PartitionResult[] sites = DbUtils.toTableNames(obj, myTableName, obj.getQuery(), getPartitionSupport());
-		if(sites.length==0){
+		if (sites.length == 0) {
 			return 0;
 		}
 		DatabaseDialect profile = getProfile(sites[0].getDatabase());
 		BindSql whereClause = updatep.toWhereClause(query, new SqlContext(null, query), true, profile);
-
 		if (dynamic && !obj.needUpdate()) {// 重新检查一遍
 			return 0;
 		}
@@ -2603,14 +2556,10 @@ public abstract class Session {
 		UpdateClause updateClause = updatep.toUpdateClause(obj, sites, dynamic);
 		parseCost = System.currentTimeMillis() - parseCost;
 		getListener().beforeUpdate(obj, this);
-		int count = 0;
-		for (PartitionResult site : sites) {
-			count += updatep.processUpdate(asOperateTarget(site.getDatabase()), obj, updateClause, whereClause, site, parseCost);
-		}
+		int count = updatep.processUpdate(this, obj, updateClause, whereClause, sites, parseCost);
 		if (count > 0) {
 			getCache().onUpdate(myTableName == null ? obj.getClass().getName() : myTableName, whereClause.getSql(), CacheImpl.toParamList(whereClause.getBind()));
 		}
-		
 		getListener().afterUpdate(obj, count, this);
 		return count;
 	}

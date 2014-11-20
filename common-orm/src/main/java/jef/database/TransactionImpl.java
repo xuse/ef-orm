@@ -233,11 +233,12 @@ public class TransactionImpl extends Transaction {
 
 		if (conn != null) {
 			try {
-				if (readOnly) {
-					conn.setReadOnly(false);
-				}
 				if (!autoCommit && parent.getTxType() != TransactionMode.JTA) {
 					conn.setAutoCommit(true);
+				}
+				//注意，readOnly必须在AutoCommit设置完成后才能设置，因为在Postgres上，autocommit=false时，认为是在事务中，而事务中不允许修改readOnly属性
+				if (readOnly) {
+					conn.setReadOnly(false);
 				}
 			} catch (SQLException e) {
 				LogUtil.exception(e);

@@ -51,9 +51,6 @@ import jef.tools.StringUtils;
 /**
  * OperateTarge描述了一个带有状态的数据库操作对象。 这一情况发生在支持路由的多数据源的场合下。
  * 
- * 使用不同的实现类，比如非绑定变量的实现和绑定变量的实现，这样操作的时候无需考虑是否绑定变量，直接用多态来兼容
- * 
- * 从目前的实现来看，CRUD四种操作的绑定变量操作和非绑定操作参数是完全相同的，因此可以用策略模式实现
  * 
  * @author jiyi
  * 
@@ -129,7 +126,7 @@ public class OperateTarget implements SqlTemplate {
 
 		}
 	}
-
+	
 	public Statement createStatement() throws SQLException {
 		return profile.wrap(getConnection(dbkey).createStatement(), isJpaTx());
 	}
@@ -206,9 +203,14 @@ public class OperateTarget implements SqlTemplate {
 		return false;
 	}
 
-	public void commitAndClose() {
+	public void closeTx() {
 		if (session instanceof Transaction) {
-			((Transaction) session).commit(true);
+			Transaction tx=(Transaction)session;
+			if(tx.isReadonly()){
+				tx.close();
+			}else{
+				tx.commit(true);
+			}
 		}
 	}
 

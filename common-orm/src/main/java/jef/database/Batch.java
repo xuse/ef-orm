@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jef.common.PairSS;
 import jef.common.log.LogUtil;
 import jef.database.annotation.PartitionResult;
 import jef.database.cache.TransactionCache;
@@ -202,23 +203,19 @@ public abstract class Batch<T extends IQueryableEntity> {
 			return 0;
 		}
 		boolean debugMode = ORMConfig.getInstance().isDebugMode();
-		String tablename = null;
+		String tablename=null;
+		
 		try {
 			if (this.groupForPartitionTable && forceTableName == null) {// 需要分组
 				callVeryBefore(objs);
 				int total = 0;
-				Map<String, List<T>> data = doGroup(objs);
-				for (Map.Entry<String, List<T>> entry : data.entrySet()) {
+				Map<PairSS, List<T>> data = doGroup(objs);
+				for (Map.Entry<PairSS, List<T>> entry : data.entrySet()) {
 					long start = System.currentTimeMillis();
-					String site = null;
-					tablename = entry.getKey();
-					int offset = tablename.lastIndexOf('-');
-					if (offset > -1) {
-						site = tablename.substring(0, offset);
-						tablename = tablename.substring(offset + 1);
-					}
-					String dbName = parent.getTransactionId(site);
-					long dbAccess = innerCommit(entry.getValue(), site, tablename, dbName);
+					PairSS target = entry.getKey();
+					String dbName = parent.getTransactionId(target.first);
+					tablename=target.second;
+					long dbAccess = innerCommit(entry.getValue(),target.first, tablename, dbName);
 					total += executeResult;
 					if (debugMode) {
 						LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed:", String.valueOf(entry.getValue().size()), "/on ", String.valueOf(executeResult), " record(s) on [" + entry.getKey() + "]\t Time cost([ParseSQL]:",
@@ -232,7 +229,6 @@ public abstract class Batch<T extends IQueryableEntity> {
 				long start = System.currentTimeMillis();
 				T obj = objs.get(0);
 				String site = null;
-
 				callVeryBefore(objs);
 				if (forceTableName != null) {
 					tablename = forceTableName;
@@ -274,19 +270,14 @@ public abstract class Batch<T extends IQueryableEntity> {
 	 * 
 	 * @return 返回的Map中，key为计算出的表名(数据源名称加上-表名)，value为该表上的操作对象
 	 */
-	private Map<String, List<T>> doGroup(List<T> objs) {
-		Map<String, List<T>> result = new HashMap<String, List<T>>();
+	private Map<PairSS, List<T>> doGroup(List<T> objs) {
+		Map<PairSS, List<T>> result = new HashMap<PairSS, List<T>>();
 		for (T obj : objs) {
 			PartitionResult partitionResult = DbUtils.toTableName(obj, null, obj.getQuery(), parent.getPartitionSupport());
-			String tablename = null;
 			if (this.forcrSite != null) {
 				partitionResult.setDatabase(forcrSite);
 			}
-			if (StringUtils.isEmpty(partitionResult.getDatabase())) {
-				tablename = partitionResult.getAsOneTable();
-			} else {
-				tablename = partitionResult.getDatabase() + "-" + partitionResult.getAsOneTable();
-			}
+			PairSS tablename = new PairSS(partitionResult.getDatabase(),partitionResult.getAsOneTable());
 			List<T> list = result.get(tablename);
 			if (list == null) {
 				list = new ArrayList<T>();

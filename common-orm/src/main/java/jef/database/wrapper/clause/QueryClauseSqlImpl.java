@@ -21,6 +21,8 @@ import jef.common.wrapper.IntRange;
 import jef.database.annotation.PartitionResult;
 import jef.database.cache.CacheKey;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.jdbc.result.ResultSetContainer;
+import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.wrapper.processor.BindVariableDescription;
 
 public class QueryClauseSqlImpl implements QueryClause {
@@ -29,75 +31,107 @@ public class QueryClauseSqlImpl implements QueryClause {
 	private List<BindVariableDescription> bind;
 	private IntRange pageRange;
 	private boolean isUnion;
-	
+
 	public IntRange getPageRange() {
 		return pageRange;
 	}
+
 	public void setPageRange(IntRange pageRange) {
 		this.pageRange = pageRange;
 	}
+
 	public String getBody() {
 		return body;
 	}
+
 	public void setBody(String body) {
 		this.body = body;
 	}
+
 	public OrderClause getOrderbyPart() {
 		return orderbyPart;
 	}
+
 	public void setOrderbyPart(OrderClause orderbyPart) {
 		this.orderbyPart = orderbyPart;
 	}
+
 	public List<BindVariableDescription> getBind() {
 		return bind;
 	}
+
 	public void setBind(List<BindVariableDescription> bind) {
 		this.bind = bind;
 	}
+
 	@Override
 	public String toString() {
 		return getSql(null).getSql();
 	}
+
 	public BindSql getSql(PartitionResult site) {
-		BindSql r=withPage(body.concat(orderbyPart.getSql()));
+		BindSql r = withPage(body.concat(orderbyPart.getSql()));
 		r.setBind(bind);
 		return r;
 	}
+
 	private DatabaseDialect profile;
-	public QueryClauseSqlImpl(DatabaseDialect profile,boolean isUnion){
-		this.profile=profile;
-		this.isUnion=isUnion;
+
+	public QueryClauseSqlImpl(DatabaseDialect profile, boolean isUnion) {
+		this.profile = profile;
+		this.isUnion = isUnion;
 	}
 
 	private BindSql withPage(String sql) {
 		if (pageRange != null) {
-			return profile.getLimitHandler().toPageSQL(sql, pageRange.toStartLimitSpan(),isUnion);
+			return profile.getLimitHandler().toPageSQL(sql, pageRange.toStartLimitSpan(), isUnion);
 		}
 		return new BindSql(sql);
 	}
-	static final PartitionResult[] P=new PartitionResult[]{new PartitionResult("")};
+
 	public PartitionResult[] getTables() {
-		return null;
+		return P;
 	}
+
 	public SelectPart getSelectPart() {
 		return null;
 	}
+
 	public CacheKey getCacheKey() {
 		return null;
 	}
+
 	public boolean isGroupBy() {
 		return false;
 	}
+
 	public boolean isEmpty() {
 		return false;
 	}
+
 	public boolean isMultiDatabase() {
 		return false;
 	}
+
 	public GroupClause getGrouphavingPart() {
 		return GroupClause.DEFAULT;
 	}
+
 	public boolean isDistinct() {
 		return false;
+	}
+
+	@Override
+	public boolean hasInMemoryOperate() {
+		return false;
+	}
+
+	@Override
+	public void parepareInMemoryProcess(IntRange range, ResultSetContainer rs) {
+	}
+
+	@Override
+	public ResultSetLaterProcess getRsLaterProcessor() {
+		return null;
 	}
 }

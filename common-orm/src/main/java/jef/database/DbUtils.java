@@ -35,7 +35,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -93,6 +96,7 @@ import jef.database.query.ReferenceType;
 import jef.database.query.SelectsImpl;
 import jef.database.query.SqlContext;
 import jef.database.query.SqlExpression;
+import jef.database.wrapper.executor.DbTask;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.JefConfiguration;
@@ -137,6 +141,31 @@ public final class DbUtils {
 		return s.getBytes();
 	}
 	
+	/**
+	 * 并行执行多个数据库任务
+	 * @param tasks
+	 * @throws SQLException
+	 */
+	public static void parallelExecute(List<DbTask> tasks) throws SQLException{
+		CountDownLatch latch = new CountDownLatch(tasks.size());
+		Queue<SQLException> exceptions=new ConcurrentLinkedQueue<SQLException>();
+		Queue<Throwable>    throwables=	new ConcurrentLinkedQueue<Throwable>();
+		for (DbTask task : tasks) {
+			task.prepare(latch,exceptions,throwables);
+			DbUtils.es.execute(task);
+		}
+		try {
+			latch.await();
+		} catch (InterruptedException e) {
+			throw new SQLException(e);
+		}
+		if(!exceptions.isEmpty()){
+			throw DbUtils.wrapExceptions(exceptions);
+		}
+		if(!throwables.isEmpty()){
+			throw DbUtils.toRuntimeException(throwables.peek());
+		}
+	}
 
 	/*
 	 * 处理SQL执行错误

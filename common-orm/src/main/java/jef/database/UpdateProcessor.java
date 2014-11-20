@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import jef.common.Entry;
 import jef.common.log.LogUtil;
@@ -30,6 +31,7 @@ import jef.database.query.SqlContext;
 import jef.database.query.SqlExpression;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.UpdateClause;
+import jef.database.wrapper.executor.DbTask;
 import jef.database.wrapper.processor.BindVariableContext;
 import jef.database.wrapper.processor.BindVariableTool;
 import jef.tools.Assert;
@@ -45,6 +47,7 @@ import jef.tools.reflect.BeanWrapper;
 public abstract class UpdateProcessor {
 	/**
 	 * 执行更新操作
+	 * 
 	 * @param db
 	 * @param obj
 	 * @param setValues
@@ -54,35 +57,41 @@ public abstract class UpdateProcessor {
 	 * @return
 	 * @throws SQLException
 	 */
-	abstract int processUpdate(OperateTarget db, IQueryableEntity obj, UpdateClause setValues, BindSql whereValues, PartitionResult p, long parseCost) throws SQLException;
+	abstract int processUpdate0(OperateTarget db, IQueryableEntity obj, UpdateClause setValues, BindSql whereValues, PartitionResult site) throws SQLException;
 
 	/**
-	 * 形成update语句 
-	 * @param obj     更新请求
-	 * @param dynamic 动态更新标记
+	 * 形成update语句
+	 * 
+	 * @param obj
+	 *            更新请求
+	 * @param dynamic
+	 *            动态更新标记
 	 * @return SQL片段
 	 */
 	abstract UpdateClause toUpdateClause(IQueryableEntity obj, PartitionResult[] prs, boolean dynamic) throws SQLException;
 
 	/**
-	 * 形成update语句 
-	 * @param obj     更新请求
-	 * @param dynamic 动态更新标记
+	 * 形成update语句
+	 * 
+	 * @param obj
+	 *            更新请求
+	 * @param dynamic
+	 *            动态更新标记
 	 * @return SQL片段
 	 */
 	abstract UpdateClause toUpdateClauseBatch(IQueryableEntity obj, PartitionResult[] prs, boolean dynamic) throws SQLException;
 
 	/**
 	 * 形成whrer部分语句
+	 * 
 	 * @param joinElement
 	 * @param context
 	 * @param update
 	 * @param profile
 	 * @return
 	 */
-	abstract BindSql toWhereClause(JoinElement joinElement,SqlContext context,boolean update,DatabaseDialect profile);
-	
-	
+	abstract BindSql toWhereClause(JoinElement joinElement, SqlContext context, boolean update, DatabaseDialect profile);
+
 	static UpdateProcessor get(DatabaseDialect profile, DbClient db) {
 		if (profile.has(Feature.NO_BIND_FOR_UPDATE)) {
 			return new NormalImpl(db);
@@ -105,9 +114,8 @@ public abstract class UpdateProcessor {
 			prepared = new PreparedImpl(db);
 		}
 
-		int processUpdate(OperateTarget db, IQueryableEntity obj, UpdateClause update, BindSql where, PartitionResult site, long parseCost) throws SQLException {
+		int processUpdate0(OperateTarget db, IQueryableEntity obj, UpdateClause update, BindSql where, PartitionResult site) throws SQLException {
 			int result = 0;
-			long accessStart = System.currentTimeMillis();
 			for (String tablename : site.getTables()) {
 				String sql = "update " + tablename + " set " + update.getSql() + where;
 				Statement st = null;
@@ -121,6 +129,7 @@ public abstract class UpdateProcessor {
 					obj.applyUpdate();
 				} catch (SQLException e) {
 					DbUtils.processError(e, tablename, db);
+					db.releaseConnection();
 					throw e;
 				} finally {
 					if (ORMConfig.getInstance().isDebugMode())
@@ -131,7 +140,6 @@ public abstract class UpdateProcessor {
 				}
 			}
 			db.releaseConnection();
-			showUpdateLogIfTimeoutOrInDebugMode(db, null, parseCost, accessStart, result);
 			return result;
 		}
 
@@ -163,7 +171,7 @@ public abstract class UpdateProcessor {
 					}
 				}
 			} else {
-				fields = getAllFieldValues(meta, map, BeanWrapper.wrap(obj),profile);
+				fields = getAllFieldValues(meta, map, BeanWrapper.wrap(obj), profile);
 			}
 
 			// 其他列
@@ -197,12 +205,10 @@ public abstract class UpdateProcessor {
 			super(db);
 		}
 
-		int processUpdate(OperateTarget db, IQueryableEntity obj, UpdateClause setValues, BindSql whereValues, PartitionResult p, long parseCost) throws SQLException {
+		int processUpdate0(OperateTarget db, IQueryableEntity obj, UpdateClause setValues, BindSql whereValues, PartitionResult site) throws SQLException {
 			boolean debugMode = ORMConfig.getInstance().isDebugMode();
-
 			int result = 0;
-			long accessStart = System.currentTimeMillis();
-			for (String tablename : p.getTables()) {
+			for (String tablename : site.getTables()) {
 				String updateSql = StringUtils.concat("update ", tablename, " set ", setValues.getSql(), whereValues.getSql());
 				StringBuilder sb = null;
 				if (debugMode)
@@ -223,6 +229,7 @@ public abstract class UpdateProcessor {
 					obj.applyUpdate();
 				} catch (SQLException e) {
 					DbUtils.processError(e, tablename, db);
+					db.releaseConnection();
 					throw e;
 				} finally {
 					if (debugMode)
@@ -233,8 +240,6 @@ public abstract class UpdateProcessor {
 				}
 			}
 			db.releaseConnection();
-			if (debugMode)
-				showUpdateLogIfTimeoutOrInDebugMode(db, null, parseCost, accessStart, result);
 			return result;
 		}
 
@@ -266,7 +271,7 @@ public abstract class UpdateProcessor {
 					}
 				}
 			} else {
-				fields = getAllFieldValues(meta, map, BeanWrapper.wrap(obj),profile);
+				fields = getAllFieldValues(meta, map, BeanWrapper.wrap(obj), profile);
 			}
 
 			for (Map.Entry<Field, Object> e : fields) {
@@ -320,11 +325,6 @@ public abstract class UpdateProcessor {
 		}
 	}
 
-	protected void showUpdateLogIfTimeoutOrInDebugMode(OperateTarget db, String sql, long parseCost, long accessStart, int result) {
-		long dbAccess = System.currentTimeMillis() - accessStart;
-		LogUtil.show(StringUtils.concat("Updated:", String.valueOf(result), "\t Time cost([ParseSQL]:", String.valueOf(parseCost), "ms, [DbAccess]:", String.valueOf(dbAccess), "ms) |", db.getTransactionId()));
-	}
-
 	/**
 	 * 更新前，将所有LLOB字段都移动到最后去
 	 * 
@@ -357,7 +357,7 @@ public abstract class UpdateProcessor {
 
 	// 将所有非主键字段作为update的值
 	@SuppressWarnings("unchecked")
-	static java.util.Map.Entry<Field, Object>[] getAllFieldValues(ITableMetadata meta, Map<Field, Object> map, BeanWrapper wrapper,DatabaseDialect profile) {
+	static java.util.Map.Entry<Field, Object>[] getAllFieldValues(ITableMetadata meta, Map<Field, Object> map, BeanWrapper wrapper, DatabaseDialect profile) {
 		List<Entry<Field, Object>> result = new ArrayList<Entry<Field, Object>>();
 		for (ColumnMapping<?> vType : meta.getColumns()) {
 			Field field = vType.field();
@@ -379,5 +379,38 @@ public abstract class UpdateProcessor {
 			}
 		}
 		return result.toArray(new Map.Entry[result.size()]);
+	}
+
+	public int processUpdate(Session session, final IQueryableEntity obj,final UpdateClause updateClause,final BindSql whereClause, PartitionResult[] sites, long parseCost) throws SQLException {
+		int total = 0;
+		long access=System.currentTimeMillis();
+		String dbName=null;
+		if (sites.length >= ORMConfig.getInstance().getParallelSelect()) {
+			List<DbTask> tasks = new ArrayList<DbTask>();
+			final AtomicInteger count=new AtomicInteger();
+			for (final PartitionResult site : sites) {
+				final OperateTarget db = session.asOperateTarget(site.getDatabase());
+				dbName=db.getTransactionId();
+				tasks.add(new DbTask(){
+					@Override
+					public void execute() throws SQLException {
+						count.addAndGet(processUpdate0(db, obj, updateClause, whereClause, site));
+					}
+				});
+			}
+			DbUtils.parallelExecute(tasks);
+			total=count.get();
+		} else {
+			for (PartitionResult site : sites) {
+				OperateTarget db = session.asOperateTarget(site.getDatabase());
+				dbName=db.getTransactionId();
+				total += processUpdate0(db, obj, updateClause, whereClause, site);
+			}
+		}
+		if (ORMConfig.getInstance().debugMode){
+			access=System.currentTimeMillis();
+			LogUtil.show(StringUtils.concat("Updated:", String.valueOf(total), "\t Time cost([ParseSQL]:", String.valueOf(parseCost), "ms, [DbAccess]:", String.valueOf(access), "ms) |", dbName));
+		}
+		return total;
 	}
 }

@@ -25,8 +25,11 @@ import jef.database.cache.CacheKey;
 import jef.database.cache.KeyDimension;
 import jef.database.cache.SqlCacheKey;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.jdbc.result.ResultSetContainer;
+import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.routing.sql.SqlAnalyzer;
 import jef.database.wrapper.processor.BindVariableDescription;
+import jef.tools.Assert;
 
 /**
  * 必要Part五部分， 4+1
@@ -39,7 +42,7 @@ public class QueryClauseImpl implements QueryClause {
 	 * 这两部分总是只有一个有值 当单表查询时支持分表，所以是PartitionResult 当多表关联时，目前不支持分表，所以是string
 	 */
 	private String tableDefinition;
-	private PartitionResult[] tables;
+	private PartitionResult[] tables = P;
 
 	public static final QueryClauseImpl EMPTY = new QueryClauseImpl(new PartitionResult[0]);
 
@@ -241,5 +244,32 @@ public class QueryClauseImpl implements QueryClause {
 
 	public boolean isDistinct() {
 		return selectPart.isDistinct();
+	}
+
+	@Override
+	public boolean hasInMemoryOperate() {
+		return isMultiDatabase();
+	}
+
+	@Override
+	public void parepareInMemoryProcess(IntRange range, ResultSetContainer rs) {
+		if (getOrderbyPart().isNotEmpty()) {
+			rs.setInMemoryOrder(getOrderbyPart().parseAsSelectOrder(getSelectPart(), rs.getColumns()));
+		}
+		if (getGrouphavingPart().isNotEmpty()) {
+			rs.setInMemoryGroups(getGrouphavingPart().parseSelectFunction(getSelectPart()));
+		}
+		if (isDistinct()) {
+			rs.setInMemoryDistinct(InMemoryDistinct.instance);
+		}
+		Assert.isNull(range);
+		if (this.pageRange != null) {
+			rs.setInMemoryPage(new InMemoryPaging(this.pageRange));
+		}
+	}
+
+	@Override
+	public ResultSetLaterProcess getRsLaterProcessor() {
+		return null;
 	}
 }

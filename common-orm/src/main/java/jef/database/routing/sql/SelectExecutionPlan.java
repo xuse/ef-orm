@@ -7,14 +7,15 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 import jef.common.PairSO;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
+import jef.database.DbUtils;
 import jef.database.ORMConfig;
 import jef.database.OperateTarget;
 import jef.database.OperateTarget.TransformerAdapter;
-import jef.database.SerialExecutor;
 import jef.database.annotation.PartitionResult;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.jdbc.result.ResultSetContainer;
@@ -40,6 +41,7 @@ import jef.database.wrapper.clause.InMemoryDistinct;
 import jef.database.wrapper.clause.InMemoryGroupByHaving;
 import jef.database.wrapper.clause.InMemoryOrderBy;
 import jef.database.wrapper.clause.InMemoryPaging;
+import jef.database.wrapper.executor.DbTask;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
 import jef.database.wrapper.populator.ResultSetExtractor;
@@ -53,7 +55,7 @@ import jef.tools.StringUtils;
  * @author jiyi
  * 
  */
-public class SelectExecutionPlan extends AbstractExecutionPlan implements QueryablePlan,InMemoryOperateProvider {
+public class SelectExecutionPlan extends AbstractExecutionPlan implements QueryablePlan, InMemoryOperateProvider {
 	/**
 	 * 输入的SQL上下文
 	 */
@@ -69,60 +71,6 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 	public SelectExecutionPlan(PartitionResult[] results, StatementContext<PlainSelect> context) {
 		super(results);
 		this.context = context;
-	}
-
-	/*
-	 * p 得到一个数据库上操作的SQL语句 //表名改写 条件：全部 //noGroup延迟——SQL尾部以及Select部分中的聚合函数去除
-	 * 条件:多表(不区分) //延迟Group消除—— 当多库时(?) 延迟Group不添加 //延迟noHaving消除——位于延迟的SQL尾部
-	 * 条件:多库() ——union部分
-	 * 
-	 * //Order——位于子查询的尾部 条件：多表(不区分) //limit延迟 条件：单库多表 //limit去除 条件：多库
-	 */
-	public PairSO<List<Object>> getSql(PartitionResult site, boolean noOrder) {
-		List<String> tables = site.getTables();
-		boolean moreTable = tables.size() > 1; // 是否为多表
-		boolean moreDatabase = isMultiDatabase();// 是否为多库
-
-		PlainSelect st = context.statement;
-		if (moreTable) {
-			String tableAlias = st.getFromItem().getAlias();
-			StringBuilder sb = new StringBuilder(200);
-			for (int i = 0; i < tables.size(); i++) {
-				if (i > 0) {
-					sb.append("\n union all \n");
-				}
-				String tableName = site.getTables().get(i);
-				appendSql(sb, tableName, true, true, true, true, true); // union子查询
-			}
-			// 绑定变量参数翻倍
-			List<Object> params = SqlAnalyzer.repeat(context.params, tables.size());
-
-			// 聚合操作用Union外嵌查询实现
-			if (hasAnyGroupDistinctOrderLimit()) {
-				StringBuilder sb2 = new StringBuilder();
-				st.appendSelect(sb2, false);
-				sb2.append(" from \n(").append(sb).append(") ");
-				if (tableAlias != null) {
-					sb2.append(tableAlias);
-				} else {
-					sb2.append("t");
-				}
-				sb2.append(ORMConfig.getInstance().wrap);
-				st.appendGroupHavingOrderLimit(sb2, moreDatabase, noOrder, moreDatabase);
-				sb = sb2;
-			}
-			return new PairSO<List<Object>>(sb.toString(), params);
-		} else {
-			String table = site.getTables().get(0);
-			StringBuilder sb = new StringBuilder();
-			// 单表情况下
-			if (moreDatabase) {// 多库单表
-				appendSql(sb, table, false, false, false, true, false);
-			} else {
-				appendSql(sb, table, false, false, false, false, false);
-			}
-			return new PairSO<List<Object>>(sb.toString(), context.params);
-		}
 	}
 
 	@Override
@@ -166,25 +114,6 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		}
 	}
 
-	/**
-	 * 为NativeQuery场景提供getCount()的实现
-	 * 
-	 * @param site
-	 * @param session
-	 * @return
-	 * @throws SQLException
-	 */
-	private long getCount0(PartitionResult site) throws SQLException {
-		OperateTarget db = context.db.getTarget(site.getDatabase());
-		long count = 0;
-		for (String table : site.getTables()) {
-			String sql = getSql(table);
-			count += db.innerSelectBySql(sql, ResultSetExtractor.GET_FIRST_LONG, context.params, null);
-		}
-		return count;
-	}
-
-
 	public String getSql(String table) {
 		for (Table t : context.modifications) {
 			t.setReplace(table);
@@ -222,6 +151,214 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 	@Override
 	public ResultSetLaterProcess getRsLaterProcessor() {
 		return null;
+	}
+
+	public ResultSet getResultSet(SqlAndParameter parse, int maxRows, int fetchSize) throws SQLException {
+		// Scenario 3: 多库查询
+		// Scenario 3: Multiple Databases.
+		if (isMultiDatabase()) {
+			return doMultiDatabaseQuery(parse, maxRows, fetchSize);
+		} else if (isEmpty()) {
+			// Scenario 4: 无任何匹配表。但是如果不查ResultSetMetadata无法生成。是否有更好的办法.
+			// Scenario 4: No any table.
+			String sql = context.statement.toString();
+			return context.db.getRawResultSet(sql, maxRows, fetchSize, parse.params, parse);
+		} else {
+			// Scenario 5: 单库，(单表或多表)，基于Union的查询. 可以使用数据库分页
+			// Scenario 5: Single Database(One table or more tables)
+			PartitionResult site = getSites()[0];
+			PairSO<List<Object>> result = getSql(getSites()[0], false);
+			boolean isMultiTable = site.tableSize() > 1;
+			String s = processPage(parse, isMultiTable ? null : parse.statement, result.first);
+			return context.db.getTarget(site.getDatabase()).getRawResultSet(s, maxRows, fetchSize, result.second, parse);
+		}
+
+	}
+
+	/**
+	 * 为NativeQuery场景提供getCount()的实现
+	 * 
+	 * @param site
+	 * @param session
+	 * @return
+	 * @throws SQLException
+	 */
+	@Override
+	public long getCount(SqlAndParameter parse, int maxSize, int fetchSize) throws SQLException {
+		// 多库多表查询场合
+		long total = 0;
+		long start = System.currentTimeMillis();
+		if(sites.length>=ORMConfig.getInstance().getParallelSelect()){
+			final AtomicLong counter=new AtomicLong();
+			List<DbTask> tasks=new ArrayList<DbTask>(sites.length);
+			for (final PartitionResult site : getSites()) {
+				tasks.add(new DbTask(){
+					public void execute() throws SQLException {
+						counter.addAndGet(getCount0(site));
+					}
+				});
+			}
+			DbUtils.parallelExecute(tasks);
+			total=counter.get();
+		}else{
+			for (PartitionResult site : getSites()) {
+				total += getCount0(site);
+			}			
+		}
+		total = (maxSize > 0 && maxSize < total) ? maxSize : total;
+		LogUtil.show(StringUtils.concat("Count:", String.valueOf(total), "\t [DbAccess]:", String.valueOf(System.currentTimeMillis() - start), "ms) |  @", String.valueOf(Thread.currentThread().getId())));
+		return total;
+	}
+
+	@Override
+	public <T> T doQuery(SqlAndParameter sqlContext, ResultSetExtractor<T> extractor, boolean forCount, IntRange range) throws SQLException {
+		long start = System.currentTimeMillis();
+		String rawSQL = sqlContext.statement.toString();
+		T result;
+		OperateTarget db = context.db;
+		if (isMultiDatabase()) {// 多库
+			return executeMultiQuery(forCount, extractor, sqlContext, range);
+		} else { // 单库多表，基于Union的查询. 可以使用数据库分页
+			PartitionResult pr = getSites()[0];
+			PairSO<List<Object>> sql = getSql(pr, false);
+			rawSQL = sql.first;
+			rawSQL = toPageSql(sqlContext, rawSQL, range);
+			db = db.getTarget(pr.getDatabase());
+			result = db.innerSelectBySql(rawSQL, extractor, sql.second, sqlContext);
+		}
+		if (ORMConfig.getInstance().isDebugMode()) {
+			if (extractor.autoClose()) {// 普通方式
+				long dbAccess = ((TransformerAdapter<?>) extractor).dbAccess;
+				List<?> l = (List<?>) result;
+				LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(l.size()), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbAccess), "ms) |", db.getTransactionId()));
+			} else {// Iterate方式
+				LogUtil.show(StringUtils.concat("Result Iterator:", "\t Time cost([DbAccess]:", String.valueOf(System.currentTimeMillis() - start), "ms  |", db.getTransactionId()));
+			}
+		}
+		return result;
+	}
+
+	/*
+	 * 执行查询动作，将查询结果放入mrs
+	 */
+	@SuppressWarnings("rawtypes")
+	private static void processQuery(OperateTarget db, PairSO<List<Object>> sql, ResultSetExtractor rst, ResultSetContainer mrs, ResultSetLaterProcess lazyProcessor) throws SQLException {
+		StringBuilder sb = null;
+		PreparedStatement psmt = null;
+		ResultSet rs = null;
+		if (mrs.isDebug())
+			sb = new StringBuilder(sql.first.length() + 150).append(sql.first).append(" | ").append(db.getTransactionId());
+		try {
+			psmt = db.prepareStatement(sql.first, lazyProcessor, false);
+			BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
+			BindVariableTool.setVariables(context, sql.second);
+			rst.apply(psmt);
+			rs = psmt.executeQuery();
+			mrs.add(rs, psmt, db);
+		} finally {
+			if (mrs.isDebug())
+				LogUtil.show(sb);
+		}
+	}
+
+	private <T> T executeMultiQuery(boolean noOrder, final ResultSetExtractor<T> rst, final InMemoryOperateProvider sqlContext, IntRange range) throws SQLException {
+		ORMConfig config = ORMConfig.getInstance();
+		boolean debug = config.isDebugMode();
+		final ResultSetContainer mrs = new ResultSetContainer(config.isCacheResultset(), debug);
+		if (getSites().length >= config.getParallelSelect()) {
+			// 并行查询
+			List<DbTask> tasks = new ArrayList<DbTask>();
+			for (final PartitionResult site : getSites()) {
+				final PairSO<List<Object>> sql = getSql(site, noOrder);
+				tasks.add(new DbTask() {
+					@Override
+					public void execute() throws SQLException {
+						processQuery(context.db.getTarget(site.getDatabase()), sql, rst, mrs, sqlContext.getRsLaterProcessor());
+					}
+				});
+				DbUtils.parallelExecute(tasks);
+			}
+		} else {
+			for (PartitionResult site : getSites()) {
+				PairSO<List<Object>> sql = getSql(site, noOrder);
+				processQuery(context.db.getTarget(site.getDatabase()), sql, rst, mrs, sqlContext.getRsLaterProcessor());
+			}
+		}
+		IResultSet rsw = null;
+		try {
+			// 这里可能有问题，在非limit的多库上运行时，
+			// limit已经被虚化，并且作为追加任务处理。
+			// 此时虚化的Limit会产生何种影响
+			parepareInMemoryProcess(range, mrs);
+			if (noOrder) { // 去除内存排序
+				mrs.setInMemoryOrder(null);
+			}
+			if (sqlContext.hasInMemoryOperate()) {
+				sqlContext.parepareInMemoryProcess(null, mrs);
+			}
+
+			rsw = mrs.toProperResultSet(null, rst.getStrategy());
+			return rst.transformer(rsw);
+		} finally {
+			if (rst.autoClose() && rsw != null)
+				rsw.close();
+		}
+	}
+
+	private String toPageSql(SqlAndParameter context, String rawSQL, IntRange range) {
+		if (range == null && context.getLimit() == null) {
+			return rawSQL;
+		}
+		Statement sql = context.statement;
+		if (!(sql instanceof Select))
+			return rawSQL;
+
+		if (context.getLimit() != null) {
+			Limit limit = context.getLimit();
+			int offset = 0;
+			int rowcount = 0;
+			if (limit.getOffsetJdbcParameter() != null) {
+				Object obj = context.getParamsMap().get(limit.getOffsetJdbcParameter());
+				if (obj instanceof Number) {
+					offset = ((Number) obj).intValue();
+				}
+			} else {
+				offset = (int) limit.getOffset();
+			}
+			if (limit.getRowCountJdbcParameter() != null) {
+				Object obj = context.getParamsMap().get(limit.getRowCountJdbcParameter());
+				if (obj instanceof Number) {
+					rowcount = ((Number) obj).intValue();
+				}
+
+			} else {
+				rowcount = (int) limit.getRowCount();
+			}
+			if (offset > 0 || rowcount > 0) {
+				// 优先解析并执行SQL中指定的分页上的操作
+				// Range如果null，相当于清空limit，Range如果非null，相当于变为后过滤
+				context.setNewLimit(range);
+
+				IntRange range1 = new IntRange(offset + 1, offset + rowcount);
+				boolean isUnion = ((Select) sql).getSelectBody() instanceof Union;
+				BindSql bs = this.context.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range1.toStartLimitSpan(), isUnion);
+				context.setReverseResultSet(bs.getRsLaterProcessor());
+				return bs.getSql();
+			}
+		}
+
+		if (range != null) {// 再执行后设置的结果限制操作
+			SelectBody sb = ((Select) sql).getSelectBody();
+			if (sb.getLimit() != null) {// 如果SQL中已经有限制的情况下，Range变为后过滤。
+				context.setNewLimit(range);
+			} else {
+				boolean isUnion = sb instanceof Union;
+				BindSql bs = this.context.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range.toStartLimitSpan(), isUnion);
+				context.setReverseResultSet(bs.getRsLaterProcessor());
+				return bs.getSql();
+			}
+		}
+		return rawSQL;
 	}
 
 	// 多库Distinct
@@ -273,7 +410,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 	}
 
 	private InMemoryPaging processPage(ColumnMeta meta, int start, int rows) {
-		return new InMemoryPaging(start,rows);
+		return new InMemoryPaging(start, rows);
 	}
 
 	private InMemoryGroupByHaving processGroupBy(ColumnMeta meta) {
@@ -365,33 +502,11 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		}
 	}
 
-	public ResultSet getResultSet(SqlAndParameter parse,int maxRows,int fetchSize) throws SQLException {
-		//Scenario 3: 多库查询
-		//Scenario 3: Multiple Databases.
-		if (isMultiDatabase()) {
-			return doMultiDatabaseQuery(parse,maxRows,fetchSize);
-		} else if (isEmpty()) {
-			//Scenario 4: 无任何匹配表。但是如果不查ResultSetMetadata无法生成。是否有更好的办法.
-			//Scenario 4: No any table.
-			String sql=context.statement.toString();
-			return context.db.getRawResultSet(sql, maxRows, fetchSize, parse.params, parse);
-		} else {
-			//Scenario 5: 单库，(单表或多表)，基于Union的查询. 可以使用数据库分页
-			//Scenario 5: Single Database(One table or more tables)
-			PartitionResult site = getSites()[0];
-			PairSO<List<Object>> result = getSql(getSites()[0], false);
-			boolean isMultiTable=site.tableSize()>1;
-			String s = processPage(parse,isMultiTable?null:parse.statement,result.first);
-			return context.db.getTarget(site.getDatabase()).getRawResultSet(s, maxRows, fetchSize, result.second, parse);
-		}
-		
-	}
-	
-	private ResultSet doMultiDatabaseQuery(InMemoryOperateProvider parse,int maxRows,int fetchSize) throws SQLException {
+	private ResultSet doMultiDatabaseQuery(InMemoryOperateProvider parse, int maxRows, int fetchSize) throws SQLException {
 		ORMConfig config = ORMConfig.getInstance();
 		ResultSetContainer mrs = new ResultSetContainer(config.isCacheResultset(), config.isDebugMode());
 		for (PartitionResult site : getSites()) {
-			processQuery(context.db.getTarget(site.getDatabase()), getSql(site, false), maxRows,fetchSize, mrs,parse.getRsLaterProcessor());
+			processQuery(context.db.getTarget(site.getDatabase()), getSql(site, false), maxRows, fetchSize, mrs, parse.getRsLaterProcessor());
 		}
 		parepareInMemoryProcess(null, mrs);
 		if (parse.hasInMemoryOperate()) {
@@ -401,18 +516,18 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 
 		return irs;
 	}
-	
+
 	/*
 	 * 执行查询动作，将查询结果放入mrs
 	 */
-	private void processQuery(OperateTarget db, PairSO<List<Object>> sql, int max, int fetchSize,ResultSetContainer mrs,ResultSetLaterProcess isReverse) throws SQLException {
+	private void processQuery(OperateTarget db, PairSO<List<Object>> sql, int max, int fetchSize, ResultSetContainer mrs, ResultSetLaterProcess isReverse) throws SQLException {
 		StringBuilder sb = null;
 		PreparedStatement psmt = null;
 		ResultSet rs = null;
 		if (mrs.isDebug())
 			sb = new StringBuilder(sql.first.length() + 150).append(sql.first).append(" | ").append(db.getTransactionId());
 		try {
-			psmt = db.prepareStatement(sql.first,isReverse,false);
+			psmt = db.prepareStatement(sql.first, isReverse, false);
 			BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
 			BindVariableTool.setVariables(context, sql.second);
 			if (fetchSize > 0) {
@@ -428,136 +543,23 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 				LogUtil.show(sb);
 		}
 	}
-	
+
 	/*
-	 * @param parse 
+	 * @param parse
+	 * 
 	 * @param sql 如果传入null，则一定是union查询
-	 * @param rawSQL 
+	 * 
+	 * @param rawSQL
+	 * 
 	 * @return
 	 */
-	private String processPage(SqlAndParameter parse, Statement sql,String rawSQL) {
-		if(parse.getLimit()!=null){
+	private String processPage(SqlAndParameter parse, Statement sql, String rawSQL) {
+		if (parse.getLimit() != null) {
 			Limit limit = parse.getLimit();
 			int offset = 0;
 			int rowcount = 0;
 			if (limit.getOffsetJdbcParameter() != null) {
-				Object obj=parse.getParamsMap().get(limit.getOffsetJdbcParameter());
-				if(obj instanceof Number){
-					offset = ((Number) obj).intValue();
-				}
-			} else {
-				offset = (int)limit.getOffset();
-			}
-			if (limit.getRowCountJdbcParameter() != null) {
-				Object obj=parse.getParamsMap().get(limit.getRowCountJdbcParameter());
-				if(obj instanceof Number){
-					rowcount = ((Number) obj).intValue();						
-				}
-
-			} else {
-				rowcount = (int)limit.getRowCount();
-			}
-			if(offset>0 || rowcount>0){
-				parse.setNewLimit(null);
-				boolean isUnion = sql==null?true:(((Select) sql).getSelectBody() instanceof Union);
-				BindSql bs=context.db.getProfile().getLimitHandler().toPageSQL(rawSQL, new int[]{offset,rowcount}, isUnion);
-				parse.setReverseResultSet(bs.getRsLaterProcessor());
-				return bs.getSql();
-			}
-		}
-		return rawSQL;
-	}
-
-	@Override
-	public long getCount(SqlAndParameter parse,int maxSize,int fetchSize) throws SQLException {
-			// 多库多表查询场合
-			long total = 0;
-			long start = System.currentTimeMillis();
-			for (PartitionResult site : getSites()) {
-				total += getCount0(site);
-			}
-			total = (maxSize > 0 && maxSize < total) ? maxSize : total;
-			LogUtil.show(StringUtils.concat("Count:", String.valueOf(total), "\t [DbAccess]:", String.valueOf(System.currentTimeMillis() - start), "ms) |  @", String.valueOf(Thread.currentThread().getId())));
-			return total;
-	}
-
-	@Override
-	public <T> T doQuery(SqlAndParameter sqlContext,ResultSetExtractor<T> extractor, boolean forCount,IntRange range) throws SQLException {
-		long start=System.currentTimeMillis();
-		String rawSQL = sqlContext.statement.toString();
-		T result;
-		OperateTarget db=context.db;
-		if (isMultiDatabase()) {// 多库
-			return executeMultiQuery(forCount, extractor, sqlContext,range);
-		} else { // 单库多表，基于Union的查询. 可以使用数据库分页
-			PartitionResult pr = getSites()[0];
-			PairSO<List<Object>> sql = getSql(pr, false);
-			rawSQL = sql.first;
-			rawSQL = toPageSql(sqlContext, rawSQL,range);
-			db = db.getTarget(pr.getDatabase());
-			result = db.innerSelectBySql(rawSQL, extractor, sql.second, sqlContext);
-		}
-		if (ORMConfig.getInstance().isDebugMode()) {
-			if (extractor.autoClose()) {// 普通方式
-				long dbAccess = ((TransformerAdapter<?>) extractor).dbAccess;
-				List<?> l = (List<?>) result;
-				LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(l.size()), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbAccess), "ms) |", db.getTransactionId()));
-			} else {// Iterate方式
-				LogUtil.show(StringUtils.concat("Result Iterator:", "\t Time cost([DbAccess]:", String.valueOf(System.currentTimeMillis() - start), "ms  |", db.getTransactionId()));
-			}
-		}
-		return result;
-	}
-	
-
-	private <T> T executeMultiQuery(boolean noOrder, ResultSetExtractor<T> rst, InMemoryOperateProvider sqlContext,IntRange range) throws SQLException {
-		ORMConfig config = ORMConfig.getInstance();
-		boolean debug = config.isDebugMode();
-		ResultSetContainer mrs = new ResultSetContainer(config.isCacheResultset(), debug);
-		if(getSites().length>= config.getParallelSelect()){
-			
-			//TODO 
-			//采用多线程并行出现了一个问题，即原先的NativeQuery中使用ThreadLocal来绑定Statement中绑定变量参数个数，由于线程切换，绑定的变量个数丢失，造成错误。
-			//现在先暂时回滚到串行策略
-			SerialExecutor.INSTANCE.executeQuery(context.db,this,noOrder,rst,mrs,sqlContext);
-		}else{
-			SerialExecutor.INSTANCE.executeQuery(context.db,this,noOrder,rst,mrs,sqlContext);
-		}
-		IResultSet rsw = null;
-		try {
-			// 这里可能有问题，在非limit的多库上运行时，
-			// limit已经被虚化，并且作为追加任务处理。
-			// 此时虚化的Limit会产生何种影响
-			parepareInMemoryProcess(range, mrs);
-			if (noOrder) { // 去除内存排序
-				mrs.setInMemoryOrder(null);
-			}
-			if (sqlContext.hasInMemoryOperate()) {
-				sqlContext.parepareInMemoryProcess(null, mrs);
-			}
-
-			rsw = mrs.toProperResultSet(null, rst.getStrategy());
-			return rst.transformer(rsw);
-		} finally {
-			if (rst.autoClose() && rsw != null)
-				rsw.close();
-		}
-	}
-
-	private String toPageSql(SqlAndParameter context, String rawSQL,IntRange range) {
-		if (range == null && context.getLimit() == null) {
-			return rawSQL;
-		}
-		Statement sql = context.statement;
-		if (!(sql instanceof Select))
-			return rawSQL;
-
-		if (context.getLimit() != null) {
-			Limit limit = context.getLimit();
-			int offset = 0;
-			int rowcount = 0;
-			if (limit.getOffsetJdbcParameter() != null) {
-				Object obj = context.getParamsMap().get(limit.getOffsetJdbcParameter());
+				Object obj = parse.getParamsMap().get(limit.getOffsetJdbcParameter());
 				if (obj instanceof Number) {
 					offset = ((Number) obj).intValue();
 				}
@@ -565,7 +567,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 				offset = (int) limit.getOffset();
 			}
 			if (limit.getRowCountJdbcParameter() != null) {
-				Object obj = context.getParamsMap().get(limit.getRowCountJdbcParameter());
+				Object obj = parse.getParamsMap().get(limit.getRowCountJdbcParameter());
 				if (obj instanceof Number) {
 					rowcount = ((Number) obj).intValue();
 				}
@@ -574,30 +576,78 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 				rowcount = (int) limit.getRowCount();
 			}
 			if (offset > 0 || rowcount > 0) {
-				// 优先解析并执行SQL中指定的分页上的操作
-				//Range如果null，相当于清空limit，Range如果非null，相当于变为后过滤
-				context.setNewLimit(range);
-				
-				IntRange range1 = new IntRange(offset + 1, offset + rowcount);
-				boolean isUnion = ((Select) sql).getSelectBody() instanceof Union;
-				BindSql bs= this.context.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range1.toStartLimitSpan(), isUnion);
-				context.setReverseResultSet(bs.getRsLaterProcessor());
-				return bs.getSql();
-			}
-		}
-
-		if (range != null) {// 再执行后设置的结果限制操作
-			SelectBody sb=((Select) sql).getSelectBody();
-			if(sb.getLimit()!=null){//如果SQL中已经有限制的情况下，Range变为后过滤。 
-				context.setNewLimit(range);
-			}else{
-				boolean isUnion = sb instanceof Union;
-				BindSql bs= this.context.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range.toStartLimitSpan(), isUnion);
-				context.setReverseResultSet(bs.getRsLaterProcessor());
+				parse.setNewLimit(null);
+				boolean isUnion = sql == null ? true : (((Select) sql).getSelectBody() instanceof Union);
+				BindSql bs = context.db.getProfile().getLimitHandler().toPageSQL(rawSQL, new int[] { offset, rowcount }, isUnion);
+				parse.setReverseResultSet(bs.getRsLaterProcessor());
 				return bs.getSql();
 			}
 		}
 		return rawSQL;
+	}
+
+	private long getCount0(PartitionResult site) throws SQLException {
+		OperateTarget db = context.db.getTarget(site.getDatabase());
+		long count = 0;
+		for (String table : site.getTables()) {
+			String sql = getSql(table);
+			count += db.innerSelectBySql(sql, ResultSetExtractor.GET_FIRST_LONG, context.params, null);
+		}
+		return count;
+	}
+
+	/*
+	 * p 得到一个数据库上操作的SQL语句 //表名改写 条件：全部 //noGroup延迟——SQL尾部以及Select部分中的聚合函数去除
+	 * 条件:多表(不区分) //延迟Group消除—— 当多库时(?) 延迟Group不添加 //延迟noHaving消除——位于延迟的SQL尾部
+	 * 条件:多库() ——union部分
+	 * 
+	 * //Order——位于子查询的尾部 条件：多表(不区分) //limit延迟 条件：单库多表 //limit去除 条件：多库
+	 */
+	private PairSO<List<Object>> getSql(PartitionResult site, boolean noOrder) {
+		List<String> tables = site.getTables();
+		boolean moreTable = tables.size() > 1; // 是否为多表
+		boolean moreDatabase = isMultiDatabase();// 是否为多库
+
+		PlainSelect st = context.statement;
+		if (moreTable) {
+			String tableAlias = st.getFromItem().getAlias();
+			StringBuilder sb = new StringBuilder(200);
+			for (int i = 0; i < tables.size(); i++) {
+				if (i > 0) {
+					sb.append("\n union all \n");
+				}
+				String tableName = site.getTables().get(i);
+				appendSql(sb, tableName, true, true, true, true, true); // union子查询
+			}
+			// 绑定变量参数翻倍
+			List<Object> params = SqlAnalyzer.repeat(context.params, tables.size());
+
+			// 聚合操作用Union外嵌查询实现
+			if (hasAnyGroupDistinctOrderLimit()) {
+				StringBuilder sb2 = new StringBuilder();
+				st.appendSelect(sb2, false);
+				sb2.append(" from \n(").append(sb).append(") ");
+				if (tableAlias != null) {
+					sb2.append(tableAlias);
+				} else {
+					sb2.append("t");
+				}
+				sb2.append(ORMConfig.getInstance().wrap);
+				st.appendGroupHavingOrderLimit(sb2, moreDatabase, noOrder, moreDatabase);
+				sb = sb2;
+			}
+			return new PairSO<List<Object>>(sb.toString(), params);
+		} else {
+			String table = site.getTables().get(0);
+			StringBuilder sb = new StringBuilder();
+			// 单表情况下
+			if (moreDatabase) {// 多库单表
+				appendSql(sb, table, false, false, false, true, false);
+			} else {
+				appendSql(sb, table, false, false, false, false, false);
+			}
+			return new PairSO<List<Object>>(sb.toString(), context.params);
+		}
 	}
 
 }

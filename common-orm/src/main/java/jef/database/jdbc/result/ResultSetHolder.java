@@ -70,7 +70,7 @@ public final class ResultSetHolder extends AbstractResultSet implements IResultS
 			//而目前设计约束凡是用户持有游标的场景，必须嵌套到一个内部的事务中去。因此实际上不会出现非当前线程的方法来释放连接的可能。
 			//如果是为了持有结果集专门设计的连接，那么直接就关闭掉			
 			if(db.isResultSetHolderTransaction()){
-				db.commitAndClose();
+				db.closeTx();
 			}	
 			db=null;
 		}

@@ -244,7 +244,8 @@ public class DynamicTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	@IgnoreOn({"sqlite","sqlserver"})
+//	@IgnoreOn({"sqlite","sqlserver"})
+	@IgnoreOn(allButExcept="postgresql")
 	public void testLoadForUpdate() throws SQLException {
 		int id = doInsert();
 		VarObject var = meta.newInstance();

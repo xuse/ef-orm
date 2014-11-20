@@ -215,7 +215,7 @@ public class ORMConfig implements ORMConfigMBean {
 		partitionInMemoryMaxRows = JefConfiguration.getInt(DbCfg.PARTITION_INMEMORY_MAXROWS, 0);
 		autoCreateSequence = JefConfiguration.getBoolean(DbCfg.AUTO_SEQUENCE_CREATION, true);
 		maxInConditions = JefConfiguration.getInt(DbCfg.DB_MAX_IN_CONDITIONS, 500);
-		parallelSelect = JefConfiguration.getInt(DbCfg.PARTITION_PARALLEL_SELECT, 3);
+		parallelSelect = JefConfiguration.getInt(DbCfg.PARTITION_PARALLEL, 3);
 		jpaContinueCommitIfError = JefConfiguration.getBoolean(DbCfg.DB_JPA_CONTINUE_COMMIT_IF_ERROR, false);
 	}
 
