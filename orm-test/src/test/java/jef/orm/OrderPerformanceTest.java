@@ -91,7 +91,7 @@ public class OrderPerformanceTest {
 
 	public void testOrder1(DbClient db, int count) throws SQLException {
 		OperateTarget tx = (OperateTarget) db.getSqlTemplate(null);
-		ResultSetContainer mrs = new ResultSetContainer(false, false);
+		ResultSetContainer mrs = new ResultSetContainer(false);
 		mrs.add(new ResultSetHolder(tx, null, rs1));
 		mrs.add(new ResultSetHolder(tx, null, rs2));
 		mrs.add(new ResultSetHolder(tx, null, rs3));
@@ -101,7 +101,7 @@ public class OrderPerformanceTest {
 
 	private void testOrder1Count(DbClient db, int count) throws SQLException {
 		OperateTarget tx = (OperateTarget) db.getSqlTemplate(null);
-		ResultSetContainer mrs = new ResultSetContainer(false, false);
+		ResultSetContainer mrs = new ResultSetContainer(false);
 		mrs.add(new ResultSetHolder(tx, null, rs1));
 		mrs.add(new ResultSetHolder(tx, null, rs2));
 		mrs.add(new ResultSetHolder(tx, null, rs3));

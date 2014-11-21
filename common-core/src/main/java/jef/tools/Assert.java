@@ -76,7 +76,7 @@ public class Assert {
 	 */
 	public static void isNull(Object obj) {
 		if (obj != null)
-			throw new RuntimeException();
+			throw new IllegalArgumentException("The input param must be null.");
 	}
 
 	/**

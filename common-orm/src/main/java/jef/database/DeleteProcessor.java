@@ -8,17 +8,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import jef.common.log.LogUtil;
 import jef.database.annotation.PartitionResult;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Feature;
 import jef.database.query.JoinElement;
 import jef.database.query.SqlContext;
+import jef.database.support.SqlLog;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.executor.DbTask;
 import jef.database.wrapper.processor.BindVariableContext;
 import jef.database.wrapper.processor.BindVariableTool;
-import jef.tools.StringUtils;
 
 /**
  * 基本数据库操作
@@ -27,7 +26,7 @@ import jef.tools.StringUtils;
  * 
  */
 public abstract class DeleteProcessor {
-	abstract int processDelete0(OperateTarget db, IQueryableEntity obj, BindSql where, PartitionResult site) throws SQLException;
+	abstract int processDelete0(OperateTarget db, IQueryableEntity obj, BindSql where, PartitionResult site,SqlLog sb) throws SQLException;
 
 	abstract BindSql toWhereClause(JoinElement joinElement, SqlContext context, boolean update, DatabaseDialect profile);
 
@@ -41,7 +40,7 @@ public abstract class DeleteProcessor {
 
 	final int processDelete(Session session,final IQueryableEntity obj, final BindSql where, PartitionResult[] sites, long parseCost) throws SQLException {
 		long parse = System.currentTimeMillis();
-		boolean debugMode = ORMConfig.getInstance().isDebugMode();
+		final SqlLog log=ORMConfig.getInstance().newLogger();
 		int total=0;
 		String dbname = null;
 		if (sites.length >= ORMConfig.getInstance().getParallelSelect()) {
@@ -53,7 +52,7 @@ public abstract class DeleteProcessor {
 				tasks.add(new DbTask(){
 					@Override
 					public void execute() throws SQLException {
-						count.addAndGet(processDelete0(target, obj, where, site));
+						count.addAndGet(processDelete0(target, obj, where, site,log));
 					}
 				});
 			}
@@ -63,11 +62,11 @@ public abstract class DeleteProcessor {
 			for (PartitionResult site : sites) {
 				OperateTarget target=session.asOperateTarget(site.getDatabase());
 				dbname=target.getTransactionId();
-				total += processDelete0(target, obj, where, site);
+				total += processDelete0(target, obj, where, site,log);
 			}
 		}
-		if (debugMode)
-			LogUtil.show(StringUtils.concat("Deleted:", String.valueOf(total), "\t Time cost([ParseSQL]:", String.valueOf(parse - parseCost), "ms, [DbAccess]:", String.valueOf(System.currentTimeMillis() - parse), "ms) |", dbname));
+		log.append("Deleted:",total).append("\t Time cost([ParseSQL]:",parse - parseCost).append("ms, [DbAccess]:",System.currentTimeMillis() - parse).append("ms) |", dbname);
+		log.output();
 		return total;
 	}
 
@@ -78,7 +77,7 @@ public abstract class DeleteProcessor {
 			this.parent = parent;
 		}
 
-		int processDelete0(OperateTarget db, IQueryableEntity obj, BindSql where, PartitionResult site) throws SQLException {
+		int processDelete0(OperateTarget db, IQueryableEntity obj, BindSql where, PartitionResult site,SqlLog sb) throws SQLException {
 			int count = 0;
 			Statement st = null;
 			String tablename = null;
@@ -90,14 +89,15 @@ public abstract class DeleteProcessor {
 				for (Iterator<String> iter = site.getTables().iterator(); iter.hasNext();) {
 					tablename = iter.next();
 					StringBuilder sql = new StringBuilder("delete from ").append(tablename).append(where.toString());
-					try {
+					sb.append(sql).append(db);
+					sb.append('\n');
+//					try {
 						count += st.executeUpdate(sql.toString());
-					} finally {
-						if (ORMConfig.getInstance().isDebugMode())
-							LogUtil.show(sql + " | " + db.getTransactionId());
-					}
+//						sb.append("")
+//					} finally {
+						
+//					}
 				}
-				
 			} catch (SQLException e) {
 				DbUtils.processError(e, tablename, db);
 				throw e;
@@ -105,8 +105,8 @@ public abstract class DeleteProcessor {
 				if (st != null)
 					st.close();
 				db.releaseConnection();
+				sb.output();
 			}
-
 			return count;
 		}
 
@@ -123,14 +123,13 @@ public abstract class DeleteProcessor {
 			this.parent = parent;
 		}
 
-		int processDelete0(OperateTarget db, IQueryableEntity obj, BindSql where, PartitionResult site) throws SQLException {
+		int processDelete0(OperateTarget db, IQueryableEntity obj, BindSql where, PartitionResult site,SqlLog sb) throws SQLException {
 			int count = 0;
-			boolean debugMode = ORMConfig.getInstance().isDebugMode();
 			for (String tablename : site.getTables()) {
 				String sql = "delete from " + tablename + where.getSql();
-				StringBuilder sb = null;
-				if (debugMode)
-					sb = new StringBuilder(sql.length() + 150).append(sql).append(" | ").append(db.getTransactionId());
+				sb.ensureCapacity(sql.length() + 150);
+				sb.append(sql).append(db);
+					
 				PreparedStatement psmt = null;
 				try {
 					psmt = db.prepareStatement(sql);
@@ -149,8 +148,7 @@ public abstract class DeleteProcessor {
 				} catch (RuntimeException e) {
 					db.releaseConnection();// 如果在处理过程中发现异常，方法即中断，就要释放连接，这样就不用在外面再套一层finally
 				} finally {
-					if (debugMode)
-						LogUtil.show(sb.append(" | ").append(db.getTransactionId()));
+					sb.output();
 					if (psmt != null)
 						psmt.close();
 				}

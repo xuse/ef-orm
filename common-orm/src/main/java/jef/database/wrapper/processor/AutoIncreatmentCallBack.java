@@ -46,7 +46,7 @@ public interface AutoIncreatmentCallBack{
 	
 	void callAfter(IQueryableEntity data)throws SQLException;
 	
-	PreparedStatement doPrepareStatement(OperateTarget conn,String sql,String dbName) throws SQLException;
+	PreparedStatement doPrepareStatement(OperateTarget conn,String sql) throws SQLException;
 	
 	int executeUpdate(Statement st,String sql) throws SQLException;
 	
@@ -86,7 +86,7 @@ public interface AutoIncreatmentCallBack{
 				fieldName.set(data, sKey);
 			}
 		}
-		public PreparedStatement doPrepareStatement(OperateTarget conn, String sql,String dbName) throws SQLException {
+		public PreparedStatement doPrepareStatement(OperateTarget conn, String sql) throws SQLException {
 			return conn.prepareStatement(sql);
 		}
 		public int executeUpdate(Statement st, String sql) throws SQLException {
@@ -125,7 +125,7 @@ public interface AutoIncreatmentCallBack{
 				rs.close();
 			}
 		}
-		public PreparedStatement doPrepareStatement(OperateTarget conn, String sql,String dbName) throws SQLException {
+		public PreparedStatement doPrepareStatement(OperateTarget conn, String sql) throws SQLException {
 			PreparedStatement pst= conn.prepareStatement(sql);
 			this.st=pst;
 			return pst;
@@ -168,7 +168,7 @@ public interface AutoIncreatmentCallBack{
 				}
 			}	
 		}
-		public PreparedStatement doPrepareStatement(OperateTarget conn, String sql,String dbName) throws SQLException {
+		public PreparedStatement doPrepareStatement(OperateTarget conn, String sql) throws SQLException {
 			return conn.prepareStatement(sql);
 		}
 		public int executeUpdate(Statement st, String sql) throws SQLException {
@@ -202,7 +202,7 @@ public interface AutoIncreatmentCallBack{
 				field.set(o, key);
 			}
 		}
-		public PreparedStatement doPrepareStatement(OperateTarget conn, String sql,String dbName) throws SQLException {
+		public PreparedStatement doPrepareStatement(OperateTarget conn, String sql) throws SQLException {
 			return conn.prepareStatement(sql);
 		}
 		public int executeUpdate(Statement st, String sql) throws SQLException {
@@ -246,7 +246,7 @@ public interface AutoIncreatmentCallBack{
 			if(parent!=null)parent.callAfter(entity);
 			
 		}
-		public PreparedStatement doPrepareStatement(OperateTarget conn, String sql,String dbName) throws SQLException {
+		public PreparedStatement doPrepareStatement(OperateTarget conn, String sql) throws SQLException {
 			PreparedStatement pst=conn.prepareStatement(sql, 1);
 			this.st=pst;
 			return pst;
@@ -341,7 +341,7 @@ public interface AutoIncreatmentCallBack{
 			}	
 		}
 
-		public PreparedStatement doPrepareStatement(OperateTarget conn, String sql,String dbName) throws SQLException {
+		public PreparedStatement doPrepareStatement(OperateTarget conn, String sql) throws SQLException {
 			PreparedStatement pst=conn.prepareStatement(sql,columnName);
 			this.st=pst;
 			return pst;

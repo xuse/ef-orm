@@ -28,7 +28,7 @@ public abstract class DbTask implements Runnable{
 	public abstract void execute() throws SQLException;
 
 	public final void prepare(CountDownLatch latch,Queue<SQLException> exceptions,Queue<Throwable> t) {
-		Assert.isNull(latch);
+		Assert.isNull(this.latch);
 		this.latch=latch;
 		this.exceptions=exceptions;
 		this.throwables=t;

@@ -30,6 +30,7 @@ import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.support.DbOperatorListener;
+import jef.database.support.SqlLog;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.UpdateClause;
@@ -396,18 +397,18 @@ public abstract class Batch<T extends IQueryableEntity> {
 		protected void processJdbcParams(PreparedStatement psmt, List<T> listValue, OperateTarget db) throws SQLException {
 			List<ColumnMapping<?>> writeFields = insertPart.getFields();
 			int len = listValue.size();
-			boolean debug = ORMConfig.getInstance().isDebugMode() && !extreme;
+			SqlLog log=ORMConfig.getInstance().newLogger(this.extreme);
+			int maxLog = ORMConfig.getInstance().getMaxBatchLog();
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
-				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), debug ? new StringBuilder(512).append("Batch Parameters: ").append(i + 1).append('/').append(len) : null);
+				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ",i + 1).append('/').append(len));
 				BindVariableTool.setInsertVariables(t, writeFields, context);
 				psmt.addBatch();
-				if (debug) {
-					LogUtil.info(context.getLogMessage());
-					int maxLog = ORMConfig.getInstance().getMaxBatchLog();
+				if (log.isDebug()) {
+					log.output();
 					if (i + 1 == maxLog) {
-						debug = false;// 关闭日志开关
-						LogUtil.info("Batch Parameters: After " + maxLog + "th are ignored to reduce the size of log file.");
+						log.directLog("Batch Parameters: After " + maxLog + "th are ignored to reduce the size of log file.");
+						log=SqlLog.DUMMY;
 					}
 				}
 			}
@@ -422,7 +423,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			if (ORMConfig.getInstance().isDebugMode())
 				LogUtil.show(sql + " | " + dbName);
 			AutoIncreatmentCallBack callback = insertPart.getCallback();
-			PreparedStatement p = callback == null ? db.prepareStatement(sql) : callback.doPrepareStatement(db, sql, dbName);
+			PreparedStatement p = callback == null ? db.prepareStatement(sql) : callback.doPrepareStatement(db, sql);
 			try {
 				long dbAccess = doCommit(p, db, objs);
 				return dbAccess;
@@ -499,20 +500,20 @@ public abstract class Batch<T extends IQueryableEntity> {
 		protected void processJdbcParams(PreparedStatement psmt, List<T> listValue, OperateTarget db) throws SQLException {
 			List<BindVariableDescription> bindVar = wherePart.getBind();
 			int len = listValue.size();
-			boolean debug = ORMConfig.getInstance().isDebugMode() && !extreme;
+			SqlLog log=ORMConfig.getInstance().newLogger(this.extreme);
+			int maxLog = ORMConfig.getInstance().getMaxBatchLog();
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
-				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), debug ? new StringBuilder(512).append("Batch Parameters: ").append(i + 1).append('/').append(len) : null);
+				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ",i + 1).append('/').append(len));
 				List<Object> whereBind = BindVariableTool.setVariables(t.getQuery(), updatePart.getVariables(), bindVar, context);
 				psmt.addBatch();
 				parent.getCache().onUpdate(forceTableName == null ? meta.getName() : forceTableName, wherePart.getSql(), whereBind);
 
-				if (debug) {
-					LogUtil.info(context.getLogMessage());
-					int maxLog = ORMConfig.getInstance().getMaxBatchLog();
+				if (log.isDebug()) {
+					log.output();
 					if (i + 1 == maxLog) {
-						debug = false;// 关闭日志开关
-						LogUtil.info("Batch Parameters: After " + maxLog + "th are ignored to reduce the size of log file.");
+						log.directLog("Batch Parameters: After " + maxLog + "th are ignored to reduce the size of log file.");
+						log=SqlLog.DUMMY;
 					}
 
 				}
@@ -567,25 +568,24 @@ public abstract class Batch<T extends IQueryableEntity> {
 		protected void processJdbcParams(PreparedStatement psmt, List<T> listValue, OperateTarget db) throws SQLException {
 			List<BindVariableDescription> bindVar = wherePart.getBind();
 			int len = listValue.size();
-			boolean debug = ORMConfig.getInstance().isDebugMode();
+			SqlLog log=ORMConfig.getInstance().newLogger(this.extreme);
+			int maxLog = ORMConfig.getInstance().getMaxBatchLog();
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
 				if (t.getQuery().getConditions().isEmpty()) {
 					DbUtils.fillConditionFromField(t, t.getQuery(), true, pkMpode);
 				}
-				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), debug ? new StringBuilder(512).append("Batch Parameters: ").append(i + 1).append('/').append(len) : null);
+				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ",i + 1).append('/').append(len));
 				List<Object> whereBind = BindVariableTool.setVariables(t.getQuery(), null, bindVar, context);
 				parent.getCache().onDelete(forceTableName == null ? meta.getName() : forceTableName, wherePart.getSql(), whereBind);
 
 				psmt.addBatch();
-				if (debug) {
-					LogUtil.info(context.getLogMessage());
-					int maxLog = ORMConfig.getInstance().getMaxBatchLog();
+				if (log.isDebug()) {
+					log.output();
 					if (i + 1 == maxLog) {
-						debug = false;// 关闭日志开关
-						LogUtil.info("Batch Parameters: After " + maxLog + "th are ignored to reduce the size of log file.");
+						log.directLog("Batch Parameters: After " + maxLog + "th are ignored to reduce the size of log file.");
+						log=SqlLog.DUMMY;// 关闭日志开关
 					}
-
 				}
 
 			}

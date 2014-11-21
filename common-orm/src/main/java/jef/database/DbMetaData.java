@@ -75,6 +75,7 @@ import jef.database.meta.TableCreateStatement;
 import jef.database.meta.TableInfo;
 import jef.database.query.DefaultPartitionCalculator;
 import jef.database.support.MetadataEventListener;
+import jef.database.support.SqlLog;
 import jef.database.wrapper.executor.ExecutorImpl;
 import jef.database.wrapper.executor.ExecutorJTAImpl;
 import jef.database.wrapper.executor.StatementExecutor;
@@ -1328,11 +1329,9 @@ public class DbMetaData {
 			return;
 		}
 		List<String> altertables = ddlGenerator.toTableModifyClause(meta, tablename, insert, changed, delete);
-		boolean debug = ORMConfig.getInstance().isDebugMode();
 		StatementExecutor exe = createExecutor();
 		try {
 			exe.setQueryTimeout(180);// 最多执行3分钟
-			String id = this.getTransactionId();
 			if (event != null) {
 				event.beforeAlterTable(tablename, meta, exe, altertables);
 			}
@@ -1352,9 +1351,6 @@ public class DbMetaData {
 					long cost = System.currentTimeMillis() - start;
 					if (event != null) {
 						event.onAlterSqlFinished(tablename, s, Collections.unmodifiableList(altertables), n, cost);
-					}
-					if (debug) {
-						LogUtil.show("DDL Executed: cost " + (cost) + " ms. |" + id);
 					}
 				}
 				n++;
@@ -1377,31 +1373,19 @@ public class DbMetaData {
 	 * @throws SQLException
 	 */
 	public void truncate(ITableMetadata meta, List<String> tablename) throws SQLException {
-		Connection conn = getConnection(false);
-		Statement st = conn.createStatement();
-		String sql = null;
-		boolean debug = ORMConfig.getInstance().isDebugMode();
+		StatementExecutor exe=createExecutor();
 		try {
 			if (getProfile().has(Feature.NOT_SUPPORT_TRUNCATE)) {
 				for (String table : tablename) {
-					sql = "delete from " + table;
-					if (debug) {
-						LogUtil.show(sql + "  |" + getTransactionId());
-					}
-					st.executeUpdate(sql);
+					exe.executeSql("delete from " + table);
 				}
 			} else {
 				for (String table : tablename) {
-					sql = "truncate table " + table;
-					if (debug) {
-						LogUtil.show(sql + "  |" + getTransactionId());
-					}
-					st.executeUpdate(sql);
+					exe.executeSql("truncate table " + table);
 				}
 			}
 		} finally {
-			DbUtils.close(st);
-			releaseConnection(conn);
+			exe.close();
 		}
 	}
 
@@ -1433,8 +1417,8 @@ public class DbMetaData {
 		if (tablename == null) {
 			tablename = meta.getTableName(true);
 		}
-		boolean created=false;
-		if (!existTable(tablename)){
+		boolean created = false;
+		if (!existTable(tablename)) {
 			TableCreateStatement sqls = ddlGenerator.toTableCreateClause(meta, tablename);
 			StatementExecutor exe = createExecutor();
 			try {
@@ -1450,10 +1434,10 @@ public class DbMetaData {
 				exe.executeSql(ddlGenerator.toIndexClause(meta, tablename));
 			} finally {
 				exe.close();
-			}	
-			created=true;
+			}
+			created = true;
 		}
-		if(meta.getExtendsTable()!=null){
+		if (meta.getExtendsTable() != null) {
 			this.createTable(meta.getExtendsTable(), null);
 		}
 		// 额外创建表
@@ -1601,23 +1585,21 @@ public class DbMetaData {
 	 * @throws SQLException
 	 */
 	public final <T> T selectBySql(String sql, ResultSetExtractor<T> rst, int maxReturn, List<?> objs) throws SQLException {
-		//这个方法是不支持使用非自动关闭的ResultSet的。
-		if(!rst.autoClose()){
+		// 这个方法是不支持使用非自动关闭的ResultSet的。
+		if (!rst.autoClose()) {
 			throw new UnsupportedOperationException();
 		}
 		PreparedStatement st = null;
 		ResultSet rs = null;
-		StringBuilder sb = null;
 		Connection conn = getConnection(false);
 		DatabaseDialect profile = getProfile();
-		boolean debug = ORMConfig.getInstance().isDebugMode();
+		SqlLog debug = ORMConfig.getInstance().newLogger();
 		try {
-			if (debug)
-				sb = new StringBuilder(sql.length() + 30).append(sql).append(" | ").append(this.getTransactionId());
-
+			debug.ensureCapacity(sql.length() + 30);
+			debug.append(sql).append(" | ", getTransactionId());
 			st = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 			if (objs != null) {
-				BindVariableContext context = new BindVariableContext(st, profile, sb);
+				BindVariableContext context = new BindVariableContext(st, profile, debug);
 				BindVariableTool.setVariables(context, objs);
 			}
 			if (maxReturn > 0)
@@ -1630,8 +1612,7 @@ public class DbMetaData {
 		} finally {
 			DbUtils.close(rs);
 			DbUtils.close(st);
-			if (debug)
-				LogUtil.show(sb);
+			debug.output();
 			releaseConnection(conn);
 		}
 	}

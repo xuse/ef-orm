@@ -21,6 +21,7 @@ import java.util.Date;
 
 import jef.database.Session.PopulateStrategy;
 import jef.database.jdbc.result.IResultSet;
+import jef.database.support.SqlLog;
 
 /**
  * 直接对JDBC结果集进行操作的转换器
@@ -79,6 +80,12 @@ public interface ResultSetExtractor<T> {
 	 * @return 结果转换完成后可以释放资源返回true，不能释放资源返回false。
 	 */
 	boolean autoClose();
+	
+	/**
+	 * 向日志对象写入输出信息
+	 * @param log
+	 */
+	void appendLog(SqlLog log,T result);
 
 	public static final ResultSetExtractor<Long> GET_FIRST_LONG = new AbstractResultSetTransformer<Long>() {
 		public Long transformer(IResultSet rs) throws SQLException {

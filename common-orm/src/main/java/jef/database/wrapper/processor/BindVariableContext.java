@@ -7,42 +7,32 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Date;
 
-import jef.database.DbCfg;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
-import jef.database.support.LogFormat;
+import jef.database.support.SqlLog;
 import jef.tools.IOUtils;
-import jef.tools.JefConfiguration;
 
 public final class BindVariableContext {
 	private PreparedStatement psmt;
 	private DatabaseDialect db;
-	private final StringBuilder logMessage;
-	private static LogFormat formatter=getLogFormat();
+	private final SqlLog logMessage;
+
 	
 	
-	public BindVariableContext(PreparedStatement psmt,DatabaseDialect profile,StringBuilder sb){
+	public BindVariableContext(PreparedStatement psmt,DatabaseDialect profile,SqlLog sb){
 		this.psmt=psmt;
 		this.logMessage=sb;
 		this.db=profile;
 	}
 	
-	private static LogFormat getLogFormat() {
-		if("no_wrap".equalsIgnoreCase(JefConfiguration.get(DbCfg.DB_LOG_FORMAT))){
-			return new jef.database.support.LogFormat.NowrapLineLogFormat();
-		}
-		return new jef.database.support.LogFormat.Default();
-	}
-
-
-	public CharSequence getLogMessage(){
+	
+	public SqlLog getLogMessage(){
 		return logMessage;
 	}
+
 	
 	public void log(int count,Object fieldName,Object value){
-		if (logMessage != null) {
-			formatter.log(logMessage, count, String.valueOf(fieldName), value);
-		}
+		logMessage.append(count, fieldName, value);
 	}
 	
 	public void setObject(int count, Object value) throws SQLException {

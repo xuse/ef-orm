@@ -38,6 +38,7 @@ import jef.database.query.EntityMappingProvider;
 import jef.database.query.SqlExpression;
 import jef.database.routing.jdbc.UpdateReturn;
 import jef.database.routing.sql.InMemoryOperateProvider;
+import jef.database.support.SqlLog;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.populator.AbstractResultSetTransformer;
@@ -126,7 +127,7 @@ public class OperateTarget implements SqlTemplate {
 
 		}
 	}
-	
+
 	public Statement createStatement() throws SQLException {
 		return profile.wrap(getConnection(dbkey).createStatement(), isJpaTx());
 	}
@@ -136,8 +137,8 @@ public class OperateTarget implements SqlTemplate {
 		int rsType = (isUpdatable) ? ResultSet.TYPE_SCROLL_INSENSITIVE : ResultSet.TYPE_FORWARD_ONLY;
 		int rsUpdate = isUpdatable ? ResultSet.CONCUR_UPDATABLE : ResultSet.CONCUR_READ_ONLY;
 		st = getConnection(dbkey).createStatement(rsType, rsUpdate);
-		if (rslp!=null) {
-			st = new ProcessableStatement(st,rslp);
+		if (rslp != null) {
+			st = new ProcessableStatement(st, rslp);
 		}
 		return profile.wrap(st, isJpaTx());
 	}
@@ -178,8 +179,8 @@ public class OperateTarget implements SqlTemplate {
 		int rsType = (isUpdatable) ? ResultSet.TYPE_SCROLL_INSENSITIVE : ResultSet.TYPE_FORWARD_ONLY;
 		int rsUpdate = isUpdatable ? ResultSet.CONCUR_UPDATABLE : ResultSet.CONCUR_READ_ONLY;
 		st = getConnection(dbkey).prepareStatement(sql, rsType, rsUpdate);
-		if (rslp!=null) {
-			st = new ProcessablePreparedStatement(st,rslp);
+		if (rslp != null) {
+			st = new ProcessablePreparedStatement(st, rslp);
 		}
 		return profile.wrap(st, isJpaTx());
 	}
@@ -205,10 +206,10 @@ public class OperateTarget implements SqlTemplate {
 
 	public void closeTx() {
 		if (session instanceof Transaction) {
-			Transaction tx=(Transaction)session;
-			if(tx.isReadonly()){
+			Transaction tx = (Transaction) session;
+			if (tx.isReadonly()) {
 				tx.close();
-			}else{
+			} else {
 				tx.commit(true);
 			}
 		}
@@ -243,9 +244,8 @@ public class OperateTarget implements SqlTemplate {
 	}
 
 	final int innerExecuteSqlBatch(String sql, List<?>... params) throws SQLException {
-		boolean debug = ORMConfig.getInstance().isDebugMode();
-		if (debug)
-			LogUtil.show(sql);
+		SqlLog log = ORMConfig.getInstance().newLogger(sql.length() + 64);
+		log.append(sql);
 		PreparedStatement st = null;
 		long start = System.currentTimeMillis();
 		try {
@@ -253,15 +253,14 @@ public class OperateTarget implements SqlTemplate {
 			st.setQueryTimeout(ORMConfig.getInstance().getUpdateTimeout() * 2);// 批量操作允许更多的时间。
 			int maxBatchlog = ORMConfig.getInstance().getMaxBatchLog();
 			for (int i = 0; i < params.length; i++) {
-				StringBuilder sb = debug ? new StringBuilder() : null;
 				session.getListener().beforeSqlExecute(sql, params[i]);
-				BindVariableContext context = new BindVariableContext(st, getProfile(), sb);
+				BindVariableContext context = new BindVariableContext(st, getProfile(), log);
 				BindVariableTool.setVariables(context, params[i]);
 				st.addBatch();
-				if (debug) {
-					LogUtil.show(sb);
+				if (log.isDebug()) {
+					log.output();
 					if (i >= maxBatchlog) {
-						debug = false;
+						log = SqlLog.DUMMY;
 					}
 				}
 				session.checkCacheUpdate(sql, params[i]);
@@ -269,7 +268,8 @@ public class OperateTarget implements SqlTemplate {
 			int[] result = st.executeBatch();
 			long dbAccess = System.currentTimeMillis();
 			int total = MathUtils.sum(result);
-			LogUtil.show(StringUtils.concat("Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms) |", getTransactionId()));
+
+			log.directLog(StringUtils.concat("Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms) |", getTransactionId()));
 			// 执行回调
 			for (int i = 0; i < params.length; i++) {
 				session.getListener().afterSqlExecuted(sql, i < result.length ? result[i] : 1, params[i]);
@@ -289,15 +289,15 @@ public class OperateTarget implements SqlTemplate {
 		Object[] params = ps.toArray();
 
 		session.getListener().beforeSqlExecute(sql, params);
-		boolean debugMode = ORMConfig.getInstance().isDebugMode();
+		SqlLog sb = ORMConfig.getInstance().newLogger();
+
 		long start = System.currentTimeMillis();
 		PreparedStatement st = null;
 		UpdateReturn result;
 		long dbAccess;
 		int total;
-		StringBuilder sb = null;
-		if (debugMode)
-			sb = new StringBuilder(sql).append("\t|").append(this.getTransactionId());
+		sb.append(sql).append(this);
+
 		boolean withGeneratedKeys = false;
 		try {
 			if (generatedColumn != null) {
@@ -330,12 +330,11 @@ public class OperateTarget implements SqlTemplate {
 			DbUtils.processError(e, sql, this);
 			throw e;
 		} finally {
-			if (debugMode)
-				LogUtil.show(sb);
+			sb.output();
 			DbUtils.close(st);
 			releaseConnection();
 		}
-		LogUtil.show(StringUtils.concat("Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms) |", getTransactionId()));
+		sb.directLog(StringUtils.concat("Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms) |", getTransactionId()));
 		session.getListener().afterSqlExecuted(sql, total, params);
 		return result;
 	}
@@ -344,14 +343,13 @@ public class OperateTarget implements SqlTemplate {
 		Object[] params = ps.toArray();
 
 		session.getListener().beforeSqlExecute(sql, params);
-		boolean debugMode = ORMConfig.getInstance().isDebugMode();
+		SqlLog sb = ORMConfig.getInstance().newLogger();
 		long start = System.currentTimeMillis();
 		PreparedStatement st = null;
 		int total;
 		long dbAccess;
-		StringBuilder sb = null;
-		if (debugMode)
-			sb = new StringBuilder(sql).append("\t|").append(this.getTransactionId());
+		sb.append(sql).append(this);
+
 		try {
 			st = prepareStatement(sql);
 			st.setQueryTimeout(ORMConfig.getInstance().getUpdateTimeout());
@@ -368,12 +366,11 @@ public class OperateTarget implements SqlTemplate {
 			DbUtils.processError(e, sql, this);
 			throw e;
 		} finally {
-			if (debugMode)
-				LogUtil.show(sb);
+			sb.output();
 			DbUtils.close(st);
 			releaseConnection();
 		}
-		LogUtil.show(StringUtils.concat("Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms) |", getTransactionId()));
+		sb.directLog(StringUtils.concat("Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms) |", getTransactionId()));
 		session.getListener().afterSqlExecuted(sql, total, params);
 		return total;
 	}
@@ -381,12 +378,11 @@ public class OperateTarget implements SqlTemplate {
 	public final <T> T innerSelectBySql(String sql, ResultSetExtractor<T> rst, List<?> objs, InMemoryOperateProvider lazy) throws SQLException {
 		PreparedStatement st = null;
 		ResultSet rs = null;
-		StringBuilder sb = null;
-		boolean debugMode = ORMConfig.getInstance().isDebugMode();
+		SqlLog sb = ORMConfig.getInstance().newLogger();
 		try {
-			if (debugMode)
-				sb = new StringBuilder(sql.length() + 30 + objs.size() * 20).append(sql).append(" | ").append(this.getTransactionId());
-
+			sb.ensureCapacity(sql.length() + 30 + objs.size() * 20);
+			sb.append(sql).append(this);
+			long start=System.currentTimeMillis();
 			ResultSetLaterProcess isReverse = lazy == null ? null : lazy.getRsLaterProcessor();
 			st = prepareStatement(sql, isReverse, false);
 
@@ -394,20 +390,24 @@ public class OperateTarget implements SqlTemplate {
 			BindVariableTool.setVariables(context, objs);
 			rst.apply(st);
 			rs = st.executeQuery();
+			long dbAccessed=System.currentTimeMillis();
 			if (lazy != null && lazy.hasInMemoryOperate()) {
 				rs = ResultSetContainer.toInMemoryProcessorResultSet(lazy, new ResultSetHolder(this, st, rs));
 			}
+			T t;
 			if (rst.autoClose()) {
-				return rst.transformer(new ResultSetImpl(rs, getProfile()));
+				t= rst.transformer(new ResultSetImpl(rs, getProfile()));
 			} else {
-				return rst.transformer(new ResultSetWrapper(this, st, rs));
+				t=rst.transformer(new ResultSetWrapper(this, st, rs));
 			}
+			rst.appendLog(sb, t);
+			sb.append("\tTime cost([DbAccess]:",dbAccessed-start).append("ms, [Populate]:",System.currentTimeMillis()-dbAccessed).append("ms").append(this);
+			return t;
 		} catch (SQLException e) {
 			DbUtils.processError(e, sql, this);
 			throw e;
 		} finally {
-			if (debugMode)
-				LogUtil.show(sb);
+			sb.output();
 			if (rst.autoClose()) {
 				DbUtils.close(rs);
 				DbUtils.close(st);
@@ -428,14 +428,13 @@ public class OperateTarget implements SqlTemplate {
 	 */
 	public final IResultSet getRawResultSet(String sql, int maxReturn, int fetchSize, List<?> objs, InMemoryOperateProvider inmem) throws SQLException {
 		PreparedStatement st = null;
-		StringBuilder sb = null;
+		SqlLog sb = ORMConfig.getInstance().newLogger();
 		ORMConfig config = ORMConfig.getInstance();
-		boolean debugMode = config.isDebugMode();
 		try {
-			if (debugMode)
-				sb = new StringBuilder(sql.length() + 30 + objs.size() * 20).append(sql).append(" | ").append(this.getTransactionId());
+			sb.ensureCapacity(sql.length() + 30 + objs.size() * 20);
+			sb.append(sql).append(this);
 
-			ResultSetLaterProcess isReverse = inmem == null?null:inmem.getRsLaterProcessor();
+			ResultSetLaterProcess isReverse = inmem == null ? null : inmem.getRsLaterProcessor();
 			st = prepareStatement(sql, isReverse, false);
 			BindVariableContext context = new BindVariableContext(st, getProfile(), sb);
 			BindVariableTool.setVariables(context, objs);
@@ -461,8 +460,7 @@ public class OperateTarget implements SqlTemplate {
 			DbUtils.processError(e, sql, this);
 			throw e;
 		} finally {
-			if (debugMode)
-				LogUtil.show(sb);
+			sb.output();
 		}
 	}
 
@@ -605,17 +603,24 @@ public class OperateTarget implements SqlTemplate {
 			this.transformers = t;
 			this.db = db;
 		}
+
 		@Override
 		public PopulateStrategy[] getStrategy() {
 			return transformers.getStrategy();
 		}
-		
+
 		public List<T> transformer(IResultSet rs) throws SQLException {
 			dbAccess = System.currentTimeMillis();
 			return db.populateResultSet(rs, null, transformers);
 		}
+
 		public Session getSession() {
 			return db.session;
+		}
+
+		@Override
+		public void appendLog(SqlLog log, List<T> result) {
+			log.append("\nResult Count:",result.size());
 		}
 	}
 
@@ -642,6 +647,11 @@ public class OperateTarget implements SqlTemplate {
 		@Override
 		public boolean autoClose() {
 			return false;
+		}
+
+		@Override
+		public void appendLog(SqlLog log, ResultIterator<T> result) {
+			log.append("\nResult: Iterator");
 		}
 	}
 

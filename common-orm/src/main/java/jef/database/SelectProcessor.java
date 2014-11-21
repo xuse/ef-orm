@@ -30,6 +30,7 @@ import jef.database.query.SelectsImpl;
 import jef.database.query.SingleColumnSelect;
 import jef.database.query.SqlContext;
 import jef.database.support.MultipleDatabaseOperateException;
+import jef.database.support.SqlLog;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.CountClause;
 import jef.database.wrapper.clause.GroupClause;
@@ -75,9 +76,9 @@ public abstract class SelectProcessor {
 	 */
 	public abstract CountClause toCountSql(ConditionQuery obj) throws SQLException;
 
-	protected abstract void processSelect0(OperateTarget db, QueryClause sql, PartitionResult site, ConditionQuery queryObj, ResultSetContainer rs, QueryOption option) throws SQLException;
+	protected abstract void processSelect0(OperateTarget db, QueryClause sql, PartitionResult site, ConditionQuery queryObj, ResultSetContainer rs, QueryOption option, SqlLog debug) throws SQLException;
 
-	protected abstract int processCount0(OperateTarget db, BindSql bindSqls) throws SQLException;
+	protected abstract int processCount0(OperateTarget db, BindSql bindSqls,SqlLog debug) throws SQLException;
 
 	protected DbClient db;
 	public SqlProcessor parent;
@@ -112,7 +113,7 @@ public abstract class SelectProcessor {
 			return clause;
 		}
 
-		protected void processSelect0(OperateTarget db, QueryClause sql, PartitionResult site, ConditionQuery queryObj, ResultSetContainer rs2, QueryOption option) throws SQLException {
+		protected void processSelect0(OperateTarget db, QueryClause sql, PartitionResult site, ConditionQuery queryObj, ResultSetContainer rs2, QueryOption option, SqlLog debug) throws SQLException {
 			Statement st = null;
 			ResultSet rs = null;
 			BindSql bindSql = sql.getSql(site);
@@ -177,33 +178,30 @@ public abstract class SelectProcessor {
 		}
 
 		@Override
-		protected int processCount0(OperateTarget db, BindSql sql) throws SQLException {
-			boolean debug = ORMConfig.getInstance().isDebugMode();
+		protected int processCount0(OperateTarget db, BindSql sql,SqlLog log) throws SQLException {
 			Statement st = null;
 			try {
 				st = db.createStatement();
 				int selectTimeout = ORMConfig.getInstance().getSelectTimeout();
 				if (selectTimeout > 0)
 					st.setQueryTimeout(selectTimeout);
-
 				ResultSet rs = null;
 				int result;
 				try {
-					rs = st.executeQuery(sql.getSql());
+					String str=sql.getSql();
+					log.append(str ).append(db);
+					rs = st.executeQuery(str);
 					rs.next();
 					result = rs.getInt(1);
+					log.append("\tCount=" , result);
 				} catch (SQLException e) {
 					DbUtils.processError(e, sql.getSql(), db);
 					throw e;
 				} finally {
+					log.output();
 					if (rs != null)
 						rs.close();
-					if (debug) {
-						LogUtil.show(sql.getSql() + " | " + db.getTransactionId());
-					}
 				}
-				if (debug)
-					LogUtil.show("Count:" + result);
 				return result;
 			} finally {
 				try {
@@ -228,18 +226,17 @@ public abstract class SelectProcessor {
 			return result;
 		}
 
-		protected void processSelect0(OperateTarget db, QueryClause sqlResult, PartitionResult site, ConditionQuery queryObj, ResultSetContainer rs2, QueryOption option) throws SQLException {
+		protected void processSelect0(OperateTarget db, QueryClause sqlResult, PartitionResult site, ConditionQuery queryObj, ResultSetContainer rs2, QueryOption option, SqlLog sb) throws SQLException {
 			// 计算查询结果集参数
-			boolean debugMode = ORMConfig.getInstance().isDebugMode();
 			if (option.holdResult && db.getProfile().has(Feature.TYPE_FORWARD_ONLY)) {
 				throw new UnsupportedOperationException("The database " + db.getProfile() + " can not support your 'selectForUpdate' operation.");
 			}
 			BindSql sql = sqlResult.getSql(site);
-			StringBuilder sb = null;
 			PreparedStatement psmt = null;
 			ResultSet rs = null;
-			if (debugMode)
-				sb = new StringBuilder(sql.getSql().length() + 150).append(sql).append(" | ").append(db.getTransactionId());
+			
+			sb.ensureCapacity(sql.getSql().length() + 150);
+			sb.append(sql.getSql()).append(db);
 			try {
 				psmt = db.prepareStatement(sql.getSql(), sql.getRsLaterProcessor(), option.holdResult);
 				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
@@ -259,8 +256,7 @@ public abstract class SelectProcessor {
 				db.releaseConnection();
 				throw e;
 			} finally {
-				if (debugMode)
-					LogUtil.show(sb);
+				sb.output();
 			}
 		}
 
@@ -353,14 +349,12 @@ public abstract class SelectProcessor {
 		}
 
 		@Override
-		protected int processCount0(OperateTarget db, BindSql bsql) throws SQLException {
+		protected int processCount0(OperateTarget db, BindSql bsql,SqlLog sb) throws SQLException {
 			int total = 0;
-			boolean debug = ORMConfig.getInstance().isDebugMode();
-
 			PreparedStatement psmt = null;
 			String sql = bsql.getSql();
 			ResultSet rs = null;
-			StringBuilder sb = new StringBuilder(sql.length() + 150).append(sql).append(" | ").append(db.getTransactionId());
+			sb.append(sql).append(db);
 			int currentCount = 0;
 			try {
 				psmt = db.prepareStatement(sql);
@@ -371,20 +365,18 @@ public abstract class SelectProcessor {
 				rs = psmt.executeQuery();
 				if (rs.next()) {
 					currentCount = rs.getInt(1);
+					sb.append("\tCount=").append(currentCount);
 					total += currentCount;
 				}
 			} catch (SQLException e) {
 				DbUtils.processError(e, sql, db);
 				throw e;
 			} finally {
-				if (debug)
-					LogUtil.show(sb);
+				sb.output();
 				DbUtils.close(rs);
 				DbUtils.close(psmt);
 				db.releaseConnection();
 			}
-			if (debug)
-				LogUtil.show("Count:" + total);
 			return total;
 		}
 	}
@@ -455,16 +447,18 @@ public abstract class SelectProcessor {
 			if (sql.getTables().length >= ORMConfig.getInstance().getParallelSelect()) {// 启用并行查询
 				List<DbTask> tasks = new ArrayList<DbTask>();
 				for (final PartitionResult site : sql.getTables()) {
+					final SqlLog debug = ORMConfig.getInstance().newLogger();
 					tasks.add(new DbTask() {
 						public void execute() throws SQLException {
-							processSelect0(session.asOperateTarget(site.getDatabase()), sql, site, queryObj, rs, option);
+							processSelect0(session.asOperateTarget(site.getDatabase()), sql, site, queryObj, rs, option,debug);
 						}
 					});
 				}
 				DbUtils.parallelExecute(tasks);
 			} else {
+				final SqlLog debug = ORMConfig.getInstance().newLogger();
 				for (PartitionResult site : sql.getTables()) {
-					processSelect0(session.asOperateTarget(site.getDatabase()), sql, site, queryObj, rs, option);
+					processSelect0(session.asOperateTarget(site.getDatabase()), sql, site, queryObj, rs, option,debug);
 				}
 			}
 			sql.parepareInMemoryProcess(null, rs);
@@ -472,7 +466,7 @@ public abstract class SelectProcessor {
 			// 如果是结果集持有的，那么必须在事务中
 			PartitionResult site = sql.getTables()[0];
 			OperateTarget target = session.wrapTarget(site.getDatabase(), mustTx);
-			processSelect0(target, sql, site, queryObj, rs, option);
+			processSelect0(target, sql, site, queryObj, rs, option, ORMConfig.getInstance().newLogger());
 		}
 	}
 
@@ -481,12 +475,13 @@ public abstract class SelectProcessor {
 			final AtomicInteger total = new AtomicInteger();
 			List<DbTask> tasks = new ArrayList<DbTask>();
 			for (final Map.Entry<String, List<BindSql>> sql : sqls.getSqls().entrySet()) {
+				final SqlLog debug = ORMConfig.getInstance().newLogger();
 				final OperateTarget target = session.asOperateTarget(sql.getKey());
 				tasks.add(new DbTask() {
 					@Override
 					public void execute() throws SQLException {
 						for (BindSql bs : sql.getValue()) {
-							total.addAndGet(processCount0(target, bs));
+							total.addAndGet(processCount0(target, bs,debug));
 						}
 					}
 				});
@@ -495,12 +490,14 @@ public abstract class SelectProcessor {
 			return total.get();
 		} else {
 			int total = 0;
+			final SqlLog debug = ORMConfig.getInstance().newLogger();
 			for (Map.Entry<String, List<BindSql>> sql : sqls.getSqls().entrySet()) {
 				OperateTarget target = session.asOperateTarget(sql.getKey());
 				for (BindSql bs : sql.getValue()) {
-					total += processCount0(target, bs);
+					total += processCount0(target, bs, debug);
 				}
 			}
+			debug.output();
 			return total;
 		}
 

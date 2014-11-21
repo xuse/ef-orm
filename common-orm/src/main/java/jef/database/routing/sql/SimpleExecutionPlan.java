@@ -91,7 +91,7 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 		total = (maxSize > 0 && maxSize < total) ? maxSize : total;
 		if (debug) {
 			long dbAccess = System.currentTimeMillis();
-			LogUtil.show(StringUtils.concat("Count:", String.valueOf(total), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", db.getTransactionId()));
+			LogUtil.show(StringUtils.concat("Count:", String.valueOf(total), "\t ([DbAccess]:", String.valueOf(dbAccess - start), "ms) |", db.getTransactionId()));
 		}
 		return total;
 	}

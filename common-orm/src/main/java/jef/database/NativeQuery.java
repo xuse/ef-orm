@@ -48,7 +48,6 @@ import jef.database.query.QueryHints;
 import jef.database.query.SqlExpression;
 import jef.database.routing.sql.ExecuteablePlan;
 import jef.database.routing.sql.QueryablePlan;
-import jef.database.routing.sql.SelectExecutionPlan;
 import jef.database.routing.sql.SimpleExecutionPlan;
 import jef.database.routing.sql.SqlAnalyzer;
 import jef.database.routing.sql.SqlAndParameter;

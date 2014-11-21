@@ -40,8 +40,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
 import java.util.concurrent.TimeUnit;
 
 import javax.persistence.FetchType;
@@ -122,10 +124,17 @@ public final class DbUtils {
 	public static PartitionCalculator partitionUtil = new DefaultPartitionCalculator();
 
 	/**
-	 * 线程池。线程池有以下作用 1、在分库分表时使用线程
-	 *  2、在JTA事务管理模式下，为了避免在JTA中执行DDL，因此不得不将代码在新的线程中执行。
+	 * 线程池。线程池有以下作用 1、在分库分表时使用线程 2、在JTA事务管理模式下，为了避免在JTA中执行DDL，因此不得不将代码在新的线程中执行。
+	 * 
+	 * 线程池策略： 1、平时最大线程数为CPU个数乘以2. 2、任务堆积最大256个
+	 * 3、超出256个堆积任务后，如果线程数还不到128个，则开启新线程消除堆积。如果已经达到，则让请求线程自行完成任务
 	 */
-	public static ExecutorService es = new ThreadPoolExecutor(1, 128, 120000L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+	public static ExecutorService es;
+
+	static {
+		int processorCount = Runtime.getRuntime().availableProcessors();
+		es = new ThreadPoolExecutor(processorCount*2, processorCount * 4, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(processorCount * 4), Executors.defaultThreadFactory(), new CallerRunsPolicy());
+	}
 
 	/**
 	 * 获取数据库加密的密钥,目前使用固定密钥
@@ -140,18 +149,19 @@ public final class DbUtils {
 		}
 		return s.getBytes();
 	}
-	
+
 	/**
 	 * 并行执行多个数据库任务
+	 * 
 	 * @param tasks
 	 * @throws SQLException
 	 */
-	public static void parallelExecute(List<DbTask> tasks) throws SQLException{
+	public static void parallelExecute(List<DbTask> tasks) throws SQLException {
 		CountDownLatch latch = new CountDownLatch(tasks.size());
-		Queue<SQLException> exceptions=new ConcurrentLinkedQueue<SQLException>();
-		Queue<Throwable>    throwables=	new ConcurrentLinkedQueue<Throwable>();
+		Queue<SQLException> exceptions = new ConcurrentLinkedQueue<SQLException>();
+		Queue<Throwable> throwables = new ConcurrentLinkedQueue<Throwable>();
 		for (DbTask task : tasks) {
-			task.prepare(latch,exceptions,throwables);
+			task.prepare(latch, exceptions, throwables);
 			DbUtils.es.execute(task);
 		}
 		try {
@@ -159,23 +169,25 @@ public final class DbUtils {
 		} catch (InterruptedException e) {
 			throw new SQLException(e);
 		}
-		if(!exceptions.isEmpty()){
+		if (!exceptions.isEmpty()) {
 			throw DbUtils.wrapExceptions(exceptions);
 		}
-		if(!throwables.isEmpty()){
+		if (!throwables.isEmpty()) {
 			throw DbUtils.toRuntimeException(throwables.peek());
 		}
 	}
 
 	/*
-	 * 处理SQL执行错误
-	 * <strong>注意，这个方法执行期间会调用连接，因此必须在这个方法执行完后才能释放连接</strong>
+	 * 处理SQL执行错误 <strong>注意，这个方法执行期间会调用连接，因此必须在这个方法执行完后才能释放连接</strong>
+	 * 
 	 * @param e
+	 * 
 	 * @param tablename
+	 * 
 	 * @param conn
 	 */
 	public static void processError(SQLException e, String tablename, OperateTarget conn) {
-		if(conn.getProfile().isIOError(e)){
+		if (conn.getProfile().isIOError(e)) {
 			conn.notifyDisconnect(e);
 		}
 		DebugUtil.setSqlState(e, tablename);
@@ -367,7 +379,6 @@ public final class DbUtils {
 			ds.setPassword(decrypt(old));
 		}
 	}
-
 
 	/**
 	 * 解析select后的语句
@@ -709,7 +720,7 @@ public final class DbUtils {
 	public static String toColumnName(ColumnMapping<?> fld, DatabaseDialect profile, String alias) {
 		if (alias != null) {
 			StringBuilder sb = new StringBuilder();
-			sb.append(alias).append('.').append(fld.getColumnName(profile,true));
+			sb.append(alias).append('.').append(fld.getColumnName(profile, true));
 			return sb.toString();
 		} else {
 			return fld.getColumnName(profile, true);
@@ -884,21 +895,21 @@ public final class DbUtils {
 		} else if (container == Array.class) {
 			return subs.toArray();
 		} else if (container == Map.class) {
-			Cascade cascade=config.getAsMap();
-			if(cascade==null){
-				throw new SQLException("@Cascade annotation is required for Map mapping "+config.toString());
+			Cascade cascade = config.getAsMap();
+			if (cascade == null) {
+				throw new SQLException("@Cascade annotation is required for Map mapping " + config.toString());
 			}
 			Map map = new HashMap();
 			String key = cascade.keyOfMap();
 			BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(bean);
-			if(StringUtils.isEmpty(cascade.valueOfMap())){
+			if (StringUtils.isEmpty(cascade.valueOfMap())) {
 				for (IQueryableEntity e : subs) {
 					map.put(ba.getProperty(e, key), e);
-				}	
-			}else{
-				String vField=cascade.valueOfMap();
+				}
+			} else {
+				String vField = cascade.valueOfMap();
 				for (IQueryableEntity e : subs) {
-					map.put(ba.getProperty(e, key), ba.getProperty(e,vField));
+					map.put(ba.getProperty(e, key), ba.getProperty(e, vField));
 				}
 			}
 			return map;
@@ -1000,23 +1011,24 @@ public final class DbUtils {
 
 	/**
 	 * 得到列的完整定义
+	 * 
 	 * @param field
 	 * @return
 	 */
 	public static ColumnMapping<?> toColumnMapping(Field field) {
-		if(field instanceof ColumnMapping<?>){
-			return (ColumnMapping<?>)field;
-		}else if(field instanceof MetadataContainer){
+		if (field instanceof ColumnMapping<?>) {
+			return (ColumnMapping<?>) field;
+		} else if (field instanceof MetadataContainer) {
 			return ((MetadataContainer) field).getMeta().getColumnDef(field);
-		}else if (field instanceof Enum) {
+		} else if (field instanceof Enum) {
 			Class<?> c = field.getClass().getDeclaringClass();
 			Assert.isTrue(IQueryableEntity.class.isAssignableFrom(c), field + " is not a defined in a IQueryableEntity's meta-model.");
-			ITableMetadata meta=MetaHolder.getMeta(c);
+			ITableMetadata meta = MetaHolder.getMeta(c);
 			return meta.getColumnDef(field);
 		}
 		throw new IllegalArgumentException("method 'getTableMeta' doesn't support field type of " + field.getClass());
 	}
-	
+
 	/**
 	 * 根据引用关系字段，填充查询条件
 	 * 
@@ -1143,7 +1155,7 @@ public final class DbUtils {
 		Assert.isTrue(ObjectUtils.equals(getPrimaryKeyValue(changedObj), getPKValueSafe(oldObj)), "For consistence, the two parameter must hava equally primary keys.");
 		BeanWrapper bean1 = BeanWrapper.wrap(changedObj);
 		ITableMetadata m = MetaHolder.getMeta(oldObj);
-		boolean dynamic=ORMConfig.getInstance().isDynamicUpdate();
+		boolean dynamic = ORMConfig.getInstance().isDynamicUpdate();
 		for (ColumnMapping<?> mType : m.getColumns()) {
 			if (mType.isPk())
 				continue;
@@ -1171,7 +1183,7 @@ public final class DbUtils {
 		BeanWrapper beanNew = BeanWrapper.wrap(changedObj);
 		BeanWrapper beanOld = BeanWrapper.wrap(oldObj);
 		ITableMetadata m = MetaHolder.getMeta(oldObj);
-		boolean dynamic=ORMConfig.getInstance().isDynamicUpdate();
+		boolean dynamic = ORMConfig.getInstance().isDynamicUpdate();
 		for (ColumnMapping<?> mType : m.getColumns()) {
 			if (mType.isPk())
 				continue;

@@ -1,7 +1,6 @@
 package jef.database.dialect.type;
 
 import java.sql.SQLException;
-import java.sql.Types;
 
 import jef.database.jdbc.result.IResultSet;
 
@@ -21,7 +20,7 @@ public final class ResultDoubleAccessor implements ResultSetAccessor {
 		return Double.class;
 	}
 	public boolean applyFor(int type) {
-		return Types.DOUBLE==type || Types.FLOAT==type || Types.NUMERIC==type || Types.INTEGER==type || Types.TINYINT==type ||Types.BIGINT==type;
+		return type>=2 && type<=8;
 	}
 
 }

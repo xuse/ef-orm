@@ -29,6 +29,7 @@ import javax.sql.rowset.CachedRowSet;
 import jef.common.log.LogUtil;
 import jef.database.Condition;
 import jef.database.DbUtils;
+import jef.database.ORMConfig;
 import jef.database.OperateTarget;
 import jef.database.Session.PopulateStrategy;
 import jef.database.dialect.DatabaseDialect;
@@ -64,12 +65,9 @@ public final class ResultSetContainer extends AbstractResultSet implements IResu
 	protected final List<ResultSetHolder> results = new ArrayList<ResultSetHolder>(5);
 	// 是否缓存
 	private boolean cache;
-	// 是否调试
-	private boolean debug;
 
-	public ResultSetContainer(boolean cache, boolean debug) {
+	public ResultSetContainer(boolean cache) {
 		this.cache = cache;
-		this.debug = debug;
 	}
 
 	public int size() {
@@ -93,7 +91,7 @@ public final class ResultSetContainer extends AbstractResultSet implements IResu
 	}
 
 	public static IResultSet toInMemoryProcessorResultSet(InMemoryOperateProvider context, ResultSetHolder... rs) {
-		ResultSetContainer mrs = new ResultSetContainer(false, false);
+		ResultSetContainer mrs = new ResultSetContainer(false);
 		for (ResultSetHolder rsh : rs) {
 			mrs.add(rsh);
 		}
@@ -315,10 +313,6 @@ public final class ResultSetContainer extends AbstractResultSet implements IResu
 		return results.isEmpty();
 	}
 
-	public boolean isDebug() {
-		return debug;
-	}
-
 	@Override
 	public boolean isFirst() throws SQLException {
 		throw new UnsupportedOperationException("isFirst");
@@ -363,7 +357,7 @@ public final class ResultSetContainer extends AbstractResultSet implements IResu
 		long start = System.currentTimeMillis();
 		CachedRowSet rs = profile.newCacheRowSetInstance();
 		rs.populate(set);
-		if (debug) {
+		if (ORMConfig.getInstance().isDebugMode()) {
 			LogUtil.debug("Caching Results from database. Cost {}ms.", System.currentTimeMillis() - start);
 		}
 		set.close();

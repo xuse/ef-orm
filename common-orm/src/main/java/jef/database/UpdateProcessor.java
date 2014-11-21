@@ -29,6 +29,7 @@ import jef.database.query.ParameterProvider.MapProvider;
 import jef.database.query.Query;
 import jef.database.query.SqlContext;
 import jef.database.query.SqlExpression;
+import jef.database.support.SqlLog;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.UpdateClause;
 import jef.database.wrapper.executor.DbTask;
@@ -57,7 +58,7 @@ public abstract class UpdateProcessor {
 	 * @return
 	 * @throws SQLException
 	 */
-	abstract int processUpdate0(OperateTarget db, IQueryableEntity obj, UpdateClause setValues, BindSql whereValues, PartitionResult site) throws SQLException;
+	abstract int processUpdate0(OperateTarget db, IQueryableEntity obj, UpdateClause setValues, BindSql whereValues, PartitionResult site, SqlLog log) throws SQLException;
 
 	/**
 	 * 形成update语句
@@ -114,7 +115,7 @@ public abstract class UpdateProcessor {
 			prepared = new PreparedImpl(db);
 		}
 
-		int processUpdate0(OperateTarget db, IQueryableEntity obj, UpdateClause update, BindSql where, PartitionResult site) throws SQLException {
+		int processUpdate0(OperateTarget db, IQueryableEntity obj, UpdateClause update, BindSql where, PartitionResult site, SqlLog log) throws SQLException {
 			int result = 0;
 			for (String tablename : site.getTables()) {
 				String sql = "update " + tablename + " set " + update.getSql() + where;
@@ -132,9 +133,8 @@ public abstract class UpdateProcessor {
 					db.releaseConnection();
 					throw e;
 				} finally {
-					if (ORMConfig.getInstance().isDebugMode())
-						LogUtil.show(sql + " | " + db.getTransactionId());
-
+					log.append(sql).append(db);
+					log.output();
 					if (st != null)
 						st.close();
 				}
@@ -205,23 +205,20 @@ public abstract class UpdateProcessor {
 			super(db);
 		}
 
-		int processUpdate0(OperateTarget db, IQueryableEntity obj, UpdateClause setValues, BindSql whereValues, PartitionResult site) throws SQLException {
-			boolean debugMode = ORMConfig.getInstance().isDebugMode();
+		int processUpdate0(OperateTarget db, IQueryableEntity obj, UpdateClause setValues, BindSql whereValues, PartitionResult site, SqlLog log) throws SQLException {
 			int result = 0;
 			for (String tablename : site.getTables()) {
 				String updateSql = StringUtils.concat("update ", tablename, " set ", setValues.getSql(), whereValues.getSql());
-				StringBuilder sb = null;
-				if (debugMode)
-					sb = new StringBuilder(updateSql.length() + 150).append(updateSql).append(" | ").append(db.getTransactionId());
+				log.ensureCapacity(updateSql.length() + 150);
+				log.append(updateSql).append(db);
 				PreparedStatement psmt = null;
 				try {
-
 					psmt = db.prepareStatement(updateSql);
 					int updateTimeout = ORMConfig.getInstance().getUpdateTimeout();
 					if (updateTimeout > 0) {
 						psmt.setQueryTimeout(updateTimeout);
 					}
-					BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
+					BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log);
 					BindVariableTool.setVariables(obj.getQuery(), setValues.getVariables(), whereValues.getBind(), context);
 					psmt.execute();
 					int currentUpdateCount = psmt.getUpdateCount();
@@ -232,9 +229,7 @@ public abstract class UpdateProcessor {
 					db.releaseConnection();
 					throw e;
 				} finally {
-					if (debugMode)
-						LogUtil.show(sb);
-
+					log.output();
 					if (psmt != null)
 						psmt.close();
 				}
@@ -348,6 +343,7 @@ public abstract class UpdateProcessor {
 		});
 	}
 
+	@SuppressWarnings("deprecation")
 	protected DatabaseDialect getProfile(PartitionResult[] prs) {
 		if (prs == null || prs.length == 0) {
 			return parent.getProfile();
@@ -381,34 +377,35 @@ public abstract class UpdateProcessor {
 		return result.toArray(new Map.Entry[result.size()]);
 	}
 
-	public int processUpdate(Session session, final IQueryableEntity obj,final UpdateClause updateClause,final BindSql whereClause, PartitionResult[] sites, long parseCost) throws SQLException {
+	public int processUpdate(Session session, final IQueryableEntity obj, final UpdateClause updateClause, final BindSql whereClause, PartitionResult[] sites, long parseCost) throws SQLException {
 		int total = 0;
-		long access=System.currentTimeMillis();
-		String dbName=null;
+		long access = System.currentTimeMillis();
+		String dbName = null;
+		final SqlLog log = ORMConfig.getInstance().newLogger();
 		if (sites.length >= ORMConfig.getInstance().getParallelSelect()) {
 			List<DbTask> tasks = new ArrayList<DbTask>();
-			final AtomicInteger count=new AtomicInteger();
+			final AtomicInteger count = new AtomicInteger();
 			for (final PartitionResult site : sites) {
 				final OperateTarget db = session.asOperateTarget(site.getDatabase());
-				dbName=db.getTransactionId();
-				tasks.add(new DbTask(){
+				dbName = db.getTransactionId();
+				tasks.add(new DbTask() {
 					@Override
 					public void execute() throws SQLException {
-						count.addAndGet(processUpdate0(db, obj, updateClause, whereClause, site));
+						count.addAndGet(processUpdate0(db, obj, updateClause, whereClause, site, log));
 					}
 				});
 			}
 			DbUtils.parallelExecute(tasks);
-			total=count.get();
+			total = count.get();
 		} else {
 			for (PartitionResult site : sites) {
 				OperateTarget db = session.asOperateTarget(site.getDatabase());
-				dbName=db.getTransactionId();
-				total += processUpdate0(db, obj, updateClause, whereClause, site);
+				dbName = db.getTransactionId();
+				total += processUpdate0(db, obj, updateClause, whereClause, site, log);
 			}
 		}
-		if (ORMConfig.getInstance().debugMode){
-			access=System.currentTimeMillis();
+		if (ORMConfig.getInstance().debugMode) {
+			access = System.currentTimeMillis();
 			LogUtil.show(StringUtils.concat("Updated:", String.valueOf(total), "\t Time cost([ParseSQL]:", String.valueOf(parseCost), "ms, [DbAccess]:", String.valueOf(access), "ms) |", dbName));
 		}
 		return total;

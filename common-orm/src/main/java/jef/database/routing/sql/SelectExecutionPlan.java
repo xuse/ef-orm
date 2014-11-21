@@ -34,6 +34,7 @@ import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.SelectBody;
 import jef.database.jsqlparser.visitor.SelectItem;
 import jef.database.jsqlparser.visitor.Statement;
+import jef.database.support.SqlLog;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.GroupByItem;
 import jef.database.wrapper.clause.GroupFunctionType;
@@ -242,12 +243,11 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 	 * 执行查询动作，将查询结果放入mrs
 	 */
 	@SuppressWarnings("rawtypes")
-	private static void processQuery(OperateTarget db, PairSO<List<Object>> sql, ResultSetExtractor rst, ResultSetContainer mrs, ResultSetLaterProcess lazyProcessor) throws SQLException {
-		StringBuilder sb = null;
+	private static void processQuery(OperateTarget db, PairSO<List<Object>> sql, ResultSetExtractor rst, ResultSetContainer mrs, ResultSetLaterProcess lazyProcessor,SqlLog sb) throws SQLException {
 		PreparedStatement psmt = null;
 		ResultSet rs = null;
-		if (mrs.isDebug())
-			sb = new StringBuilder(sql.first.length() + 150).append(sql.first).append(" | ").append(db.getTransactionId());
+		sb.ensureCapacity(sql.first.length() + 150);
+		sb.append(sql.first).append(db);
 		try {
 			psmt = db.prepareStatement(sql.first, lazyProcessor, false);
 			BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
@@ -256,15 +256,13 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 			rs = psmt.executeQuery();
 			mrs.add(rs, psmt, db);
 		} finally {
-			if (mrs.isDebug())
-				LogUtil.show(sb);
+			sb.output();
 		}
 	}
 
 	private <T> T executeMultiQuery(boolean noOrder, final ResultSetExtractor<T> rst, final InMemoryOperateProvider sqlContext, IntRange range) throws SQLException {
-		ORMConfig config = ORMConfig.getInstance();
-		boolean debug = config.isDebugMode();
-		final ResultSetContainer mrs = new ResultSetContainer(config.isCacheResultset(), debug);
+		final ORMConfig config = ORMConfig.getInstance();
+		final ResultSetContainer mrs = new ResultSetContainer(config.isCacheResultset());
 		if (getSites().length >= config.getParallelSelect()) {
 			// 并行查询
 			List<DbTask> tasks = new ArrayList<DbTask>();
@@ -273,15 +271,16 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 				tasks.add(new DbTask() {
 					@Override
 					public void execute() throws SQLException {
-						processQuery(context.db.getTarget(site.getDatabase()), sql, rst, mrs, sqlContext.getRsLaterProcessor());
+						processQuery(context.db.getTarget(site.getDatabase()), sql, rst, mrs, sqlContext.getRsLaterProcessor(),config.newLogger());
 					}
 				});
 				DbUtils.parallelExecute(tasks);
 			}
 		} else {
+			SqlLog sb=config.newLogger();
 			for (PartitionResult site : getSites()) {
 				PairSO<List<Object>> sql = getSql(site, noOrder);
-				processQuery(context.db.getTarget(site.getDatabase()), sql, rst, mrs, sqlContext.getRsLaterProcessor());
+				processQuery(context.db.getTarget(site.getDatabase()), sql, rst, mrs, sqlContext.getRsLaterProcessor(),sb);
 			}
 		}
 		IResultSet rsw = null;
@@ -502,30 +501,40 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		}
 	}
 
-	private ResultSet doMultiDatabaseQuery(InMemoryOperateProvider parse, int maxRows, int fetchSize) throws SQLException {
-		ORMConfig config = ORMConfig.getInstance();
-		ResultSetContainer mrs = new ResultSetContainer(config.isCacheResultset(), config.isDebugMode());
-		for (PartitionResult site : getSites()) {
-			processQuery(context.db.getTarget(site.getDatabase()), getSql(site, false), maxRows, fetchSize, mrs, parse.getRsLaterProcessor());
+	private ResultSet doMultiDatabaseQuery(final InMemoryOperateProvider parse, final int maxRows,final int fetchSize) throws SQLException {
+		final ResultSetContainer mrs = new ResultSetContainer(ORMConfig.getInstance().isCacheResultset());
+		if(sites.length> ORMConfig.getInstance().getParallelSelect()){
+			List<DbTask> tasks=new ArrayList<DbTask>(sites.length);
+			for (final PartitionResult site : getSites()) {
+				final PairSO<List<Object>> sql=getSql(site, false);
+				tasks.add(new DbTask(){
+					public void execute() throws SQLException {
+						processQuery(context.db.getTarget(site.getDatabase()), sql, maxRows, fetchSize, mrs, parse.getRsLaterProcessor(),ORMConfig.getInstance().newLogger());
+					}
+				});
+			}
+			DbUtils.parallelExecute(tasks);
+		}else{
+			SqlLog log=ORMConfig.getInstance().newLogger();
+			for (PartitionResult site : getSites()) {
+				processQuery(context.db.getTarget(site.getDatabase()), getSql(site, false), maxRows, fetchSize, mrs, parse.getRsLaterProcessor(),log);
+			}	
 		}
 		parepareInMemoryProcess(null, mrs);
 		if (parse.hasInMemoryOperate()) {
 			parse.parepareInMemoryProcess(null, mrs);
 		}
-		IResultSet irs = mrs.toProperResultSet(null);
-
-		return irs;
+		return mrs.toProperResultSet(null);
 	}
 
 	/*
 	 * 执行查询动作，将查询结果放入mrs
 	 */
-	private void processQuery(OperateTarget db, PairSO<List<Object>> sql, int max, int fetchSize, ResultSetContainer mrs, ResultSetLaterProcess isReverse) throws SQLException {
-		StringBuilder sb = null;
+	private void processQuery(OperateTarget db, PairSO<List<Object>> sql, int max, int fetchSize, ResultSetContainer mrs, ResultSetLaterProcess isReverse,SqlLog sb) throws SQLException {
 		PreparedStatement psmt = null;
 		ResultSet rs = null;
-		if (mrs.isDebug())
-			sb = new StringBuilder(sql.first.length() + 150).append(sql.first).append(" | ").append(db.getTransactionId());
+		sb.ensureCapacity(sql.first.length() + 150);
+		sb.append(sql.first).append(db);
 		try {
 			psmt = db.prepareStatement(sql.first, isReverse, false);
 			BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
@@ -539,8 +548,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 			rs = psmt.executeQuery();
 			mrs.add(rs, psmt, db);
 		} finally {
-			if (mrs.isDebug())
-				LogUtil.show(sb);
+			sb.output();
 		}
 	}
 

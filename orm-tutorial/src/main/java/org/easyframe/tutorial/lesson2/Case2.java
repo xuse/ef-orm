@@ -5,6 +5,7 @@ import java.util.List;
 
 import jef.codegen.EntityEnhancer;
 import jef.database.DbClient;
+import jef.database.ORMConfig;
 
 import org.easyframe.tutorial.lesson2.entity.Student;
 import org.junit.AfterClass;
@@ -15,20 +16,22 @@ public class Case2 {
 	private static DbClient db;
 	
 	@BeforeClass
-	public static void setup(){
+	public static void setup() throws SQLException{
 		new EntityEnhancer().enhance("org.easyframe.tutorial");
 		db=new DbClient();
+		db.createTable(Student.class);
 	}
 	
 	/**
 	 * 按顺序查出全部学生,错误的用法.
 	 * @throws SQLException
 	 */
-	@Test(expected=NullPointerException.class)
+	@Test()
 	public void testAllRecords_error() throws SQLException{
 		//查出全部学生
 		List<Student> allStudents=db.selectAll(Student.class);
 
+		ORMConfig.getInstance().setAllowEmptyQuery(true);
 		//按学号顺序查出全部学生
 		Student st=new Student();
 		st.getQuery().orderByAsc(Student.Field.id);

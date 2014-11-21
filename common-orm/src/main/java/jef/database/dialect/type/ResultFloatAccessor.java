@@ -1,9 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.SQLException;
-import java.sql.Types;
 
-import jef.accelerator.asm.Type;
 import jef.database.jdbc.result.IResultSet;
 
 public class ResultFloatAccessor implements ResultSetAccessor {
@@ -24,6 +22,6 @@ public class ResultFloatAccessor implements ResultSetAccessor {
 	}
 
 	public boolean applyFor(int type) {
-		return Type.FLOAT==type  || Types.DOUBLE==type || Types.NUMERIC==type;
+		return type>=2 && type<=8;
 	}
 }

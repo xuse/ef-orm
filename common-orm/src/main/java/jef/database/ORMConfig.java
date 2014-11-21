@@ -4,6 +4,7 @@ import java.nio.charset.Charset;
 
 import jef.database.meta.MetaHolder;
 import jef.database.meta.MetadataFacade;
+import jef.database.support.SqlLog;
 import jef.jre5support.ProcessUtil;
 import jef.tools.JefConfiguration;
 import jef.tools.JefConfiguration.Item;
@@ -563,4 +564,27 @@ public class ORMConfig implements ORMConfigMBean {
 		}
 		metaFacade.getDefaultMeta().setPattern(pattern);
 	}
+	
+	public SqlLog newLogger(int len){
+		if(debugMode){
+			return new SqlLog.LogImpl(len);
+		}else {
+			return SqlLog.DUMMY;
+		}
+	}
+	public SqlLog newLogger(){
+		if(debugMode){
+			return new SqlLog.LogImpl();
+		}else {
+			return SqlLog.DUMMY;
+		}
+	}
+	public SqlLog newLogger(boolean isDummy){
+		if(debugMode && !isDummy){
+			return new SqlLog.LogImpl();
+		}else{
+			return SqlLog.DUMMY;
+		}
+	}
+	
 }

@@ -1517,7 +1517,7 @@ public abstract class Session {
 			return new ResultIterator.Impl<T>(new ArrayList<T>().iterator(), null);
 
 		ResultIterator<T> result;
-		ResultSetContainer rs = new ResultSetContainer(false, ORMConfig.getInstance().isDebugMode());
+		ResultSetContainer rs = new ResultSetContainer(false);
 		long parse = System.currentTimeMillis();
 		selectp.processSelect(sql, this, queryObj, rs, option, 1);
 		long dbselect = System.currentTimeMillis();
@@ -1548,7 +1548,7 @@ public abstract class Session {
 		if (cachedResult != null)
 			return cachedResult;
 
-		ResultSetContainer rs = new ResultSetContainer(option.cacheResultset && !option.holdResult, debugMode);// 只有当非读写模式并且开启结果缓存才缓存结果集
+		ResultSetContainer rs = new ResultSetContainer(option.cacheResultset && !option.holdResult);// 只有当非读写模式并且开启结果缓存才缓存结果集
 		long parse = System.currentTimeMillis();
 		selectp.processSelect(sql, this, queryObj, rs, option, option.holdResult ? 2 : 0);
 		long dbselect = System.currentTimeMillis(); // 查询完成时间

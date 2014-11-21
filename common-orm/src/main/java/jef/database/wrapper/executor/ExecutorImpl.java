@@ -17,9 +17,9 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
 import jef.database.jdbc.result.ResultSetWrapper;
+import jef.database.support.SqlLog;
 import jef.database.wrapper.processor.BindVariableContext;
 import jef.database.wrapper.processor.BindVariableTool;
-import jef.tools.StringUtils;
 
 public class ExecutorImpl implements StatementExecutor{
 	IConnection conn;
@@ -61,15 +61,17 @@ public class ExecutorImpl implements StatementExecutor{
 	
 
 	private void doSql(Statement st, String txId, String sql) throws SQLException {
+		SqlLog log=ORMConfig.getInstance().newLogger(sql.length()+60);
 		try {
+			long start=System.currentTimeMillis();
+			log.append(sql).append(" | ",txId);
 			st.executeUpdate(sql);
+			log.append("\nExecuted: ",System.currentTimeMillis()-start).append("ms");
 		} catch (SQLException e) {
 			DebugUtil.setSqlState(e, sql);
 			throw e;
 		}finally{
-			if (ORMConfig.getInstance().isDebugMode()) {
-				LogUtil.show(sql + " |" + txId);
-			}
+			log.output();
 		}
 	}
 	
@@ -113,11 +115,7 @@ public class ExecutorImpl implements StatementExecutor{
 
 	@Override
 	public int executeUpdate(String sql, Object... params) throws SQLException {
-		boolean debug = ORMConfig.getInstance().isDebugMode();
-		StringBuilder sb = null;
-		if (debug)
-			sb = new StringBuilder(sql).append("\t|").append(txId);
-
+		SqlLog sb = ORMConfig.getInstance().newLogger(sql.length()+64).append(sql,"\t|").append(txId);
 		PreparedStatement ps = null;
 		try {
 			ps = conn.prepareStatement(sql);
@@ -125,17 +123,11 @@ public class ExecutorImpl implements StatementExecutor{
 				BindVariableContext context = new BindVariableContext(ps, profile, sb);
 				BindVariableTool.setVariables(context, Arrays.asList(params));
 			}
-		} finally {
-			if (debug) {
-				LogUtil.show(sb);
-			}
-		}
-		try {
 			int total = ps.executeUpdate();
-			if (debug)
-				LogUtil.show(StringUtils.concat("Executed:", String.valueOf(total), "\t |", txId));
+			sb.append("\nExecuted:",total).append("\t |",txId);
 			return total;
 		} finally {
+			sb.output();
 			DbUtils.close(ps);
 		}
 	}

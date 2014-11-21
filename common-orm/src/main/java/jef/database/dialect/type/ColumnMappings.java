@@ -205,6 +205,7 @@ public final class ColumnMappings {
 			return IntType.getMappingType(javaType);
 		case Types.BIGINT:
 			return LongType.getMappingType(javaType);
+		case Types.REAL:
 		case Types.DOUBLE:
 			return DoubleType.getMappingType(javaType);
 		case Types.FLOAT:

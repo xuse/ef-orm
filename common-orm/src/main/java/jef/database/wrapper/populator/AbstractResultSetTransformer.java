@@ -8,6 +8,7 @@ import javax.sql.rowset.CachedRowSet;
 import jef.database.ORMConfig;
 import jef.database.Session.PopulateStrategy;
 import jef.database.jdbc.result.IResultSet;
+import jef.database.support.SqlLog;
 
 public abstract class AbstractResultSetTransformer<T> implements ResultSetExtractor<T> {
 	private int fetchSize;
@@ -70,7 +71,9 @@ public abstract class AbstractResultSetTransformer<T> implements ResultSetExtrac
 	public boolean autoClose() {
 		return true;
 	}
-	
+	@Override
+	public void appendLog(SqlLog log,T result) {
+	}
 	
 	private final static class CacheAction extends AbstractResultSetTransformer<CachedRowSet>{
 		@Override
@@ -78,6 +81,12 @@ public abstract class AbstractResultSetTransformer<T> implements ResultSetExtrac
 			CachedRowSet cache = rs.getProfile().newCacheRowSetInstance();
 			cache.populate(rs);
 			return cache;
+		}
+
+		@Override
+		public void appendLog(SqlLog log, CachedRowSet result) {
+			if(result!=null)
+				log.append("Cached rows:",result.size());
 		}
 	}
 	
@@ -90,6 +99,13 @@ public abstract class AbstractResultSetTransformer<T> implements ResultSetExtrac
 			}
 			return count;
 		}
+
+		@Override
+		public void appendLog(SqlLog log, Long result) {
+			if(result!=null)
+				log.append("Count:",result);
+		}
+		
 	}
 	
 	private static final CacheAction DEFAULT=new CacheAction();
