@@ -19,9 +19,11 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 
+import jef.common.log.LogUtil;
 import jef.database.Session.PopulateStrategy;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.support.SqlLog;
+import jef.tools.StringUtils;
 
 /**
  * 直接对JDBC结果集进行操作的转换器
@@ -95,6 +97,19 @@ public interface ResultSetExtractor<T> {
 				throw new SQLException("Result incorrect.count result must not be empty.");
 			}
 		}
+
+		@Override
+		public void appendLog(SqlLog log, Long result) {
+			if(result!=null){
+				log.append("Count:",result);
+			}
+//			if (debug) {
+//				long dbAccess = System.currentTimeMillis();
+//				LogUtil.show(StringUtils.concat("Count:", String.valueOf(total), "\t ([DbAccess]:", String.valueOf(dbAccess - start), "ms) |", db.getTransactionId()));
+//			}
+		}
+		
+		
 	}.setMaxRows(1);
 
 	public static final ResultSetExtractor<Integer> GET_FIRST_INT = new AbstractResultSetTransformer<Integer>() {

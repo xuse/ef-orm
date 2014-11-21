@@ -160,9 +160,6 @@ public class Terms {
 	private Field getField(String key) {
 		ITableMetadata meta=query.getMeta();
 		Field field= meta.getField(key);
-		if(field==null){
-			System.out.println(meta);
-		}
 		return field;
 	}
 	

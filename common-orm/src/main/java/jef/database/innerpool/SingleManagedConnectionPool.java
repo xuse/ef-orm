@@ -146,13 +146,13 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool, DataS
 		}
 	}
 
-	@SuppressWarnings("unused")
-	private void log(Object transaction, ReentrantConnection conn, String action) {
-		StackTraceElement[] eles = new Throwable().getStackTrace();
-		System.out.println(action + " " + conn);
-		System.out.println(eles[4]);
-		System.out.println(eles[5]);
-	}
+//	@SuppressWarnings("unused")
+//	private void log(Object transaction, ReentrantConnection conn, String action) {
+//		StackTraceElement[] eles = new Throwable().getStackTrace();
+//		System.out.println(action + " " + conn);
+//		System.out.println(eles[4]);
+//		System.out.println(eles[5]);
+//	}
 
 	public ReentrantConnection poll() throws SQLException {
 		return getConnection(Thread.currentThread());

@@ -193,9 +193,13 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 			final AtomicLong counter=new AtomicLong();
 			List<DbTask> tasks=new ArrayList<DbTask>(sites.length);
 			for (final PartitionResult site : getSites()) {
+				final List<String> sqls=new ArrayList<String>(site.tableSize());
+				for(String table: site.getTables()){
+					sqls.add(getSql(table));
+				}
 				tasks.add(new DbTask(){
 					public void execute() throws SQLException {
-						counter.addAndGet(getCount0(site));
+						counter.addAndGet(getCount0(site,sqls));
 					}
 				});
 			}
@@ -203,7 +207,11 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 			total=counter.get();
 		}else{
 			for (PartitionResult site : getSites()) {
-				total += getCount0(site);
+				final List<String> sqls=new ArrayList<String>(site.tableSize());
+				for(String table: site.getTables()){
+					sqls.add(getSql(table));
+				}
+				total += getCount0(site,sqls);
 			}			
 		}
 		total = (maxSize > 0 && maxSize < total) ? maxSize : total;
@@ -274,8 +282,8 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 						processQuery(context.db.getTarget(site.getDatabase()), sql, rst, mrs, sqlContext.getRsLaterProcessor(),config.newLogger());
 					}
 				});
-				DbUtils.parallelExecute(tasks);
 			}
+			DbUtils.parallelExecute(tasks);
 		} else {
 			SqlLog sb=config.newLogger();
 			for (PartitionResult site : getSites()) {
@@ -594,13 +602,16 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		return rawSQL;
 	}
 
-	private long getCount0(PartitionResult site) throws SQLException {
+	private long getCount0(PartitionResult site,List<String> sqls) throws SQLException {
 		OperateTarget db = context.db.getTarget(site.getDatabase());
 		long count = 0;
-		for (String table : site.getTables()) {
-			String sql = getSql(table);
+		for (String sql:sqls) {
 			count += db.innerSelectBySql(sql, ResultSetExtractor.GET_FIRST_LONG, context.params, null);
 		}
+//		for (String table : site.getTables()) {
+//			String sql = getSql(table);
+//			count += db.innerSelectBySql(sql, ResultSetExtractor.GET_FIRST_LONG, context.params, null);
+//		}
 		return count;
 	}
 

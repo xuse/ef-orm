@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import jef.common.log.LogUtil;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.QueryAlias;
@@ -116,7 +117,7 @@ public class SelectsImpl extends AbstractEntityMappingProvider implements Select
 			ITableMetadata meta = MetaHolder.getMeta(qa.getTableDef().getInstance());
 			Field find = meta.getField(name);
 			if (find != null && field != null) {
-				System.err.println("There are duplicate field named '" + name + "' in multi table columns");
+				LogUtil.error("There are duplicate field named '" + name + "' in multi table columns");
 			} else if (find != null) {
 				field = find;
 				matched = qa.getTableDef();

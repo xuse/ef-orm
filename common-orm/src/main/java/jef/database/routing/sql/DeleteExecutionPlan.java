@@ -31,9 +31,14 @@ public class DeleteExecutionPlan extends AbstractExecutionPlan implements Execut
 			final AtomicInteger counter = new AtomicInteger();
 			List<DbTask> tasks=new ArrayList<DbTask>(sites.length);
 			for (final PartitionResult site : getSites()) {
+				final String siteName=site.getDatabase();
+				final List<String> sqls=new ArrayList<String>(site.tableSize());
+				for(String table: site.getTables()){
+					sqls.add(getSql(table));
+				}
 				tasks.add(new DbTask(){
 					public void execute() throws SQLException {
-						counter.addAndGet(processUpdate0(site));
+						counter.addAndGet(processUpdate0(siteName,sqls));
 					}
 				});
 			}
@@ -41,7 +46,12 @@ public class DeleteExecutionPlan extends AbstractExecutionPlan implements Execut
 			total=counter.get();
 		} else {
 			for (PartitionResult site : getSites()) {
-				total += processUpdate0(site);
+				final String siteName=site.getDatabase();
+				List<String> sqls=new ArrayList<String>(site.tableSize());
+				for(String table: site.getTables()){
+					sqls.add(getSql(table));
+				}
+				total += processUpdate0(siteName,sqls);
 			}
 		}
 		if (isMultiDatabase() && ORMConfig.getInstance().isDebugMode()) {
@@ -50,11 +60,10 @@ public class DeleteExecutionPlan extends AbstractExecutionPlan implements Execut
 		return new UpdateReturn(total);
 	}
 
-	private int processUpdate0(PartitionResult site) throws SQLException {
-		OperateTarget db = context.db.getTarget(site.getDatabase());
+	private int processUpdate0(String site,List<String> sqls) throws SQLException {
+		OperateTarget db = context.db.getTarget(site);
 		int count = 0;
-		for (String table : site.getTables()) {
-			String sql = getSql(table);
+		for (String sql:sqls) {
 			List<Object> params = context.params;
 			count += db.innerExecuteSql(sql, params);
 		}

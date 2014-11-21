@@ -351,7 +351,6 @@ public interface AutoIncreatmentCallBack{
 			return st.executeUpdate(sql,columnName);
 		}
 		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
-			System.out.println("");
 		}
 
 		@Override

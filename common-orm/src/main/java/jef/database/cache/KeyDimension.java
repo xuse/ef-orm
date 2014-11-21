@@ -48,19 +48,19 @@ public class KeyDimension {
 		}
 	}
 
-	/*
-	public static void main(String[] args) {
-		long time=System.currentTimeMillis();
-		for(int i=0;i<10000;i++){
-			KeyDimension k=new KeyDimension("  where t.task_id=? and t.\"key\"=?",null);
-		}
-		System.out.println(System.currentTimeMillis()-time);
-		
-		KeyDimension k=new KeyDimension("  where t.task_id=? and t.\"key\"=?",null);
-		System.out.println(k.where);
-		System.out.println(k.order);
-	}
-	*/
+//	/*
+//	public static void main(String[] args) {
+//		long time=System.currentTimeMillis();
+//		for(int i=0;i<10000;i++){
+//			KeyDimension k=new KeyDimension("  where t.task_id=? and t.\"key\"=?",null);
+//		}
+//		System.out.println(System.currentTimeMillis()-time);
+//		
+//		KeyDimension k=new KeyDimension("  where t.task_id=? and t.\"key\"=?",null);
+//		System.out.println(k.where);
+//		System.out.println(k.order);
+//	}
+//	*/
 	
 	private static final WhereParser wp;
 	

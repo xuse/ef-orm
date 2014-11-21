@@ -81,10 +81,8 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 		boolean debug = ORMConfig.getInstance().isDebugMode();
 		OperateTarget db = this.db;
 		if (changeDataSource != null) {
-			// Scenario 2: 普通查询 (变更数据源，垂直拆分场景)
 			db = db.getTarget(changeDataSource);
 		}
-		// 无路由场合
 		String sql = paramHolder.statement.toString();
 		long start = System.currentTimeMillis();
 		long total = db.innerSelectBySql(sql, ResultSetExtractor.GET_FIRST_LONG, paramHolder.params, paramHolder);

@@ -3,6 +3,7 @@ package jef.database;
 import java.util.HashMap;
 import java.util.Map;
 
+import jef.common.log.LogUtil;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.ExtensionConfig;
 import jef.database.meta.ExtensionConfigFactory;
@@ -25,16 +26,13 @@ public abstract class EntityExtensionSupport extends DataObject implements Metad
 	public EntityExtensionSupport() {
 		this.extensionFactory = EfPropertiesExtensionProvider.getInstance().getEF(this.getClass());
 		if (extensionFactory == null) {
-			System.out.println(this.getClass());
+			LogUtil.error(this.getClass());
 		}
 		this.config = extensionFactory.getDefault();
 	}
 
 	public ITableMetadata getMeta() {
 		if (config == null) {
-			if (extensionFactory == null) {
-				System.out.println(extensionFactory);
-			}
 			config = extensionFactory.getExtension(this);
 		}
 		return config.getMeta();

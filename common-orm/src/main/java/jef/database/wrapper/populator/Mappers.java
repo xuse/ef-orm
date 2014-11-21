@@ -7,6 +7,7 @@ import java.util.Map;
 
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
+import jef.common.log.LogUtil;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.dialect.type.ColumnMapping;
@@ -324,7 +325,7 @@ public final class Mappers {
 					ColumnDescription columnDesc = nameIndex.get(columnName);
 					if (columnDesc == null) {
 						if (schema == "")
-							System.err.println("Warnning: populating object " + meta.getThisType() + " error," + schema + ":" + columnName + " not found in the selected columns");
+							LogUtil.warn("Warnning: populating object " + meta.getThisType() + " error," + schema + ":" + columnName + " not found in the selected columns");
 					} else {
 						ResultSetAccessor accessor = ColumnMappings.getAccessor(ba.getPropertyType(f.name()), ft, columnDesc, false);
 						columnDesc.setAccessor(accessor);

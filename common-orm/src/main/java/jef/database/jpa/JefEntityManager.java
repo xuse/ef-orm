@@ -31,6 +31,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.metamodel.Metamodel;
 
+import jef.common.log.LogUtil;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
@@ -150,7 +151,7 @@ public class JefEntityManager implements EntityManager {
 				for (String s : properties.keySet()) {
 					Field f = MetaHolder.getMeta(data).getField(s);
 					if (f == null) {
-						System.err.println("No Field named " + s + " in bean " + data.getClass().getName());
+						LogUtil.error("No Field named " + s + " in bean " + data.getClass().getName());
 						continue;
 					}
 					data.getQuery().addCondition(f, properties.get(s));
