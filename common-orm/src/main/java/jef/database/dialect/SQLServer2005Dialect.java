@@ -78,9 +78,9 @@ public class SQLServer2005Dialect extends SQLServer2000Dialect{
 	@Override
 	protected LimitHandler generateLimitHander() {
 		if(UnionJudgement.isDruid()){
-			return new SQL2000LimitHandler();
+			return new SQL2005LimitHandler();
 		}else{
-			return new SQL2000LimitHandlerSlowImpl();
+			return new SQL2005LimitHandlerSlowImpl();
 		}
 	}
 	

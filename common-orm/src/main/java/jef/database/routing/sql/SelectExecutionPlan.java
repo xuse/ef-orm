@@ -226,7 +226,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		T result;
 		OperateTarget db = context.db;
 		if (isMultiDatabase()) {// 多库
-			return executeMultiQuery(forCount, extractor, sqlContext, range);
+			result=executeMultiQuery(forCount, extractor, sqlContext, range);
 		} else { // 单库多表，基于Union的查询. 可以使用数据库分页
 			PartitionResult pr = getSites()[0];
 			PairSO<List<Object>> sql = getSql(pr, false);
@@ -236,7 +236,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 			result = db.innerSelectBySql(rawSQL, extractor, sql.second, sqlContext);
 		}
 		if (ORMConfig.getInstance().isDebugMode()) {
-			if (extractor.autoClose()) {// 普通方式
+			if (extractor.autoClose() && extractor instanceof TransformerAdapter) {// 普通方式
 				long dbAccess = ((TransformerAdapter<?>) extractor).dbAccess;
 				List<?> l = (List<?>) result;
 				LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(l.size()), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbAccess), "ms) |", db.getTransactionId()));

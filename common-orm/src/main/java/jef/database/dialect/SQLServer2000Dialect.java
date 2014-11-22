@@ -48,7 +48,7 @@ public class SQLServer2000Dialect extends AbstractDialect {
 		setProperty(DbProperty.ADD_CONSTRAINT, "ADD CONSTRAINT");
 		setProperty(DbProperty.CHECK_SQL, "select 1");
 		setProperty(DbProperty.GET_IDENTITY_FUNCTION, "SELECT @@IDENTITY");
-		setProperty(DbProperty.WRAP_FOR_KEYWORD, "\"");
+		setProperty(DbProperty.WRAP_FOR_KEYWORD, "[]");
 		
 		loadKeywords("sqlserver_keywords.properties");
 

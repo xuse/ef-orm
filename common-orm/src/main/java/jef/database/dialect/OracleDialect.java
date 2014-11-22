@@ -102,7 +102,7 @@ public class OracleDialect extends AbstractDialect {
 		setProperty(DbProperty.CHECK_SQL, "SELECT 1 FROM DUAL");
 		setProperty(DbProperty.SEQUENCE_FETCH, "SELECT %s.NEXTVAL FROM DUAL");
 		setProperty(DbProperty.SELECT_EXPRESSION, "SELECT %s FROM DUAL");
-		setProperty(DbProperty.WRAP_FOR_KEYWORD, "\"");
+		setProperty(DbProperty.WRAP_FOR_KEYWORD, "\"\"");
 		setProperty(DbProperty.OTHER_VERSION_SQL, "select 'USER_LANGUAGE',userenv('language') from dual");
 		
 		registerNative(Scientific.sinh);

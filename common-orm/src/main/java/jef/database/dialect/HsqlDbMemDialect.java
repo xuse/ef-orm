@@ -166,7 +166,7 @@ public class HsqlDbMemDialect extends AbstractDialect {
 		setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");
 		setProperty(DbProperty.CHECK_SQL,"select 1 from (VALUES(0))");
 		setProperty(DbProperty.SELECT_EXPRESSION,"select %s from (VALUES(0))");
-		setProperty(DbProperty.WRAP_FOR_KEYWORD,"\"");
+		setProperty(DbProperty.WRAP_FOR_KEYWORD,"\"\"");
 		setProperty(DbProperty.GET_IDENTITY_FUNCTION, "CALL IDENTITY()");
 		
 		typeNames.put(Types.TINYINT, "tinyint", 0);

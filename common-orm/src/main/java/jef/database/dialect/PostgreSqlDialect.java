@@ -182,7 +182,7 @@ public class PostgreSqlDialect extends AbstractDialect {
 		setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");
 		setProperty(DbProperty.CHECK_SQL, "select 1");
 		setProperty(DbProperty.SEQUENCE_FETCH, "select nextval('%s')");
-		setProperty(DbProperty.WRAP_FOR_KEYWORD, "\"");
+		setProperty(DbProperty.WRAP_FOR_KEYWORD, "\"\"");
 		setProperty(DbProperty.GET_IDENTITY_FUNCTION, "SELECT currval('%tableName%_%columnName%_seq')");
 		
 		typeNames.put(Types.BLOB, "bytea", Types.VARBINARY);

@@ -244,8 +244,7 @@ public final class DbUtils {
 		String w = profile.getProperty(DbProperty.WRAP_FOR_KEYWORD);
 		if (w != null && profile.containKeyword(name)) {
 			StringBuilder sb = new StringBuilder(name.length() + 2);
-			char c = w.charAt(0);
-			sb.append(c).append(name).append(c);
+			sb.append(w.charAt(0)).append(name).append(w.charAt(1));
 			return sb.toString();
 		}
 		return name;

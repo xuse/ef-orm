@@ -71,7 +71,7 @@ public class DerbyDialect extends AbstractDialect {
 		setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");
 		setProperty(DbProperty.CHECK_SQL, "values 1");
 		setProperty(DbProperty.SELECT_EXPRESSION, "values %s");
-		setProperty(DbProperty.WRAP_FOR_KEYWORD, "\"");
+		setProperty(DbProperty.WRAP_FOR_KEYWORD, "\"\"");
 		setProperty(DbProperty.GET_IDENTITY_FUNCTION, "IDENTITY_VAL_LOCAL()");
 		registerNative(Func.abs,"absval");
 		registerNative(Func.mod);

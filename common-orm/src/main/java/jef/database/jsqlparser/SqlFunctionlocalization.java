@@ -87,7 +87,9 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 					return;
 				}
 			}
-			tableColumn.setColumnName(s + tableColumn.getColumnName() + s);
+			String columnName=tableColumn.getColumnName();
+			StringBuilder sb=new StringBuilder(columnName.length()+2);
+			tableColumn.setColumnName(sb.append(s.charAt(0)).append(columnName).append(s.charAt(1)).toString());
 		}
 	}
 

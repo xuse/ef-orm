@@ -101,7 +101,7 @@ public class MySqlDialect extends AbstractDialect {
 		setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");
 		setProperty(DbProperty.CHECK_SQL, "select 1");
 		setProperty(DbProperty.SELECT_EXPRESSION, "select %s");
-		setProperty(DbProperty.WRAP_FOR_KEYWORD, "`");
+		setProperty(DbProperty.WRAP_FOR_KEYWORD, "``");
 		setProperty(DbProperty.GET_IDENTITY_FUNCTION, "SELECT LAST_INSERT_ID()");
 		setProperty(DbProperty.INDEX_LENGTH_LIMIT, "767");
 		setProperty(DbProperty.INDEX_LENGTH_LIMIT_FIX, "255");

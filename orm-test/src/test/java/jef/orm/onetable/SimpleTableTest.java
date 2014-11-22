@@ -144,13 +144,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		ORMConfig.getInstance().setSpecifyAllColumnName(true);
 		System.out.println(page.getTotal());
 		System.out.println(page.next());
-
-		/**
-		 * FIXME 如果再翻一页会出错,因为Druid解析器中引号会被丢弃，重新序列化后变为非法SQL语句。
-		 * 已经给该项目提了BUG。https://github.com/alibaba/druid/issues/682
-		 * 待Druid修复版本发布后，再恢复此案例。
-		 */
-		// System.out.println(page.next());
+		 System.out.println(page.next());
 	}
 
 	/**
