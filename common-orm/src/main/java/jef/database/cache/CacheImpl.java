@@ -213,14 +213,14 @@ public final class CacheImpl implements TransactionCache {
 		}
 		BindSql sql = sqlP.toPrepareWhereSql(obj.getQuery(), new SqlContext(null, obj.getQuery()), false, null);
 		obj.clearQuery();
-		DimCache dc = tableCache.get(new KeyDimension(sql.getSql(), null));
+		DimCache dc = tableCache.get(new KeyDimension(sql.getSql(), null,sqlP.getProfile()));
 		if (dc == null)
 			return;
 		dc.remove(toParamList(sql.getBind()));
 	}
 
 	public void onDelete(String table, String where, List<Object> object) {
-		CacheKey key = new SqlCacheKey(table, new KeyDimension(where, null), object);
+		CacheKey key = new SqlCacheKey(table, new KeyDimension(where, null,sqlP.getProfile()), object);
 		Map<KeyDimension, DimCache> tableCache = this.cache.get(table);
 		if (tableCache == null || tableCache.isEmpty()) {
 			return;
@@ -229,7 +229,7 @@ public final class CacheImpl implements TransactionCache {
 	}
 
 	public void onUpdate(String table, String where, List<Object> object) {
-		CacheKey key = new SqlCacheKey(table, new KeyDimension(where, null), object);
+		CacheKey key = new SqlCacheKey(table, new KeyDimension(where, null,sqlP.getProfile()), object);
 		Map<KeyDimension, DimCache> tableCache = this.cache.get(table);
 		if (tableCache == null || tableCache.isEmpty()) {
 			return;

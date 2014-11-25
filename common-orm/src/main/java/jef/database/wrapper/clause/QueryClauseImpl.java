@@ -222,7 +222,7 @@ public class QueryClauseImpl implements QueryClause {
 			return cacheKey;
 		try{
 			String table = rawClass == null ? tableDefinition : rawClass;
-			CacheKey key = new SqlCacheKey(table, new KeyDimension(wherePart, orderbyPart.getSql()), CacheImpl.toParamList(this.bind));
+			CacheKey key = new SqlCacheKey(table, new KeyDimension(wherePart, orderbyPart.getSql(),profile), CacheImpl.toParamList(this.bind));
 			this.cacheKey = key;			
 			return key;
 		}catch(RuntimeException e){

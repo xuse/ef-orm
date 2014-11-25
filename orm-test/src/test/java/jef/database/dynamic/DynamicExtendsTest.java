@@ -52,6 +52,8 @@ public class DynamicExtendsTest extends org.junit.Assert{
 	/**
 	 * 测试两种动态属性扩展的实现方式，
 	 * 
+	 * 当使用[]作为SQLSERVER的关键字回避方式后，
+	 * 
 	 * @throws SQLException
 	 */
 	@Test

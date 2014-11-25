@@ -46,6 +46,7 @@ import jef.database.datasource.DataSourceInfo;
 import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
+import jef.database.dialect.type.ParserFactory;
 import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
@@ -765,5 +766,11 @@ public abstract class AbstractDialect implements DatabaseDialect {
 			}
 		}
 		return config;
+	}
+
+	static ParserFactory DEFAULT_PARSER=new ParserFactory.Default();
+	@Override
+	public ParserFactory getParserFactory() {
+		return DEFAULT_PARSER;
 	}
 }

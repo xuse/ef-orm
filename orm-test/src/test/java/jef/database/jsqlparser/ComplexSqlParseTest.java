@@ -58,15 +58,20 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 		Select ex = DbUtils.parseSelect("select * from D where not 1=2");
 		System.out.println(ex);
 	}
-	
-	
+
 	@Test
-	public void testDruid(){
-		String sql="select top 3 t.\"desc\",t.\"top\",t.\"percent\",t.comment,t.\"order\" from keyword t";
-		SQLServerSelectParser parser=new SQLServerSelectParser(sql);
-		SQLSelect select=parser.select();
-		
-		SQLServerOutputVisitor ov=new SQLServerOutputVisitor(new StringBuilder()); 
+	public void testSqlServerEscape() throws ParseException {
+		String source = "select [key],t.[top] from table1 t where t.[key]=1";
+		Statement re = jef.database.DbUtils.parseStatement(source);
+	}
+
+	@Test
+	public void testDruid() {
+		String sql = "select top 3 t.\"desc\",t.\"top\",t.\"percent\",t.comment,t.\"order\" from keyword t";
+		SQLServerSelectParser parser = new SQLServerSelectParser(sql);
+		SQLSelect select = parser.select();
+
+		SQLServerOutputVisitor ov = new SQLServerOutputVisitor(new StringBuilder());
 		select.accept(ov);
 		System.out.println(ov.getAppender());
 	}
@@ -124,7 +129,7 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 
 	@Test
 	public void parseFunctionOnSQLServer() throws ParseException {
-//		
+		//
 		String s = "select @@LANGUAGE from dual";
 		{
 			StSqlParser parser = new StSqlParser(new StringReader(s));
@@ -138,10 +143,10 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 			SQLServerOutputVisitor visitor = new SQLServerOutputVisitor(out);
 			statementList.get(0).accept(visitor);
 			System.out.println(out);
-			
+
 		}
 	}
-	
+
 	/**
 	 * 解析右侧的SQL表达式
 	 * 
@@ -518,13 +523,13 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 		}
 	}
 
-	@Test(expected=Exception.class)
-	public void testFunction(){
+	@Test(expected = Exception.class)
+	public void testFunction() {
 		OracleStatementParser parser = new OracleStatementParser("select upper(*) from aa order by now()");
-		SQLStatement st=parser.parseStatement();
+		SQLStatement st = parser.parseStatement();
 		System.out.println(st);
 	}
-	
+
 	// 0 StSQL 1 Jpql 2 Druid Oracle 3 Druid MySQL
 	private void parseTest(String sql, int type) throws ParseException {
 		System.out.println("===================== [RAW]  ==================");

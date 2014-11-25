@@ -2,6 +2,7 @@ package jef.database.cache;
 
 import jef.database.cache.WhereParser.DruidImpl;
 import jef.database.cache.WhereParser.NativeImpl;
+import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.statement.UnionJudgement;
 import jef.database.jsqlparser.visitor.Expression;
 
@@ -10,11 +11,11 @@ public class KeyDimension {
 	private String order;
 	
 	
-	public KeyDimension(String where,String order) {
+	public KeyDimension(String where,String order,DatabaseDialect profile) {
 		if(where==null || where.length()==0){
 			this.where=where;
 		}else{
-			this.where=wp.process(where);
+			this.where=wp.process(where,profile);
 		}
 		this.order=order==null?"":order;
 	}

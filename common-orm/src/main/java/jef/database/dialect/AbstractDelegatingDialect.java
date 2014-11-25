@@ -15,6 +15,7 @@ import jef.database.OperateTarget;
 import jef.database.datasource.DataSourceInfo;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
+import jef.database.dialect.type.ParserFactory;
 import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
@@ -227,5 +228,10 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	@Override
 	public String getColumnNameToUse(AColumnMapping<?> name) {
 		return dialect.getColumnNameToUse(name);
+	}
+
+	@Override
+	public ParserFactory getParserFactory() {
+		return dialect.getParserFactory();
 	}
 }

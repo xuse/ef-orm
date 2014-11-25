@@ -11,6 +11,7 @@ import jef.database.Session;
 import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
 import jef.database.test.DatabaseInit;
+import jef.database.test.IgnoreOn;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
 
 import org.junit.BeforeClass;
@@ -19,10 +20,13 @@ import org.junit.runner.RunWith;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({
-	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}"),
-	@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"),
-	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}")
+ @DataSource(name="oracle",url="${oracle.url}",user="${oracle.user}",password="${oracle.password}"),
+ @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
+ @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
+ @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
+ @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
+ @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+ @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 public class JoinDescrptionTest {
 
@@ -86,6 +90,7 @@ public class JoinDescrptionTest {
 	 * @throws SQLException
 	 */
 	@Test
+	@IgnoreOn("sqlite")
 	public void testSelect() throws SQLException {
 		Session db=this.db.startTransaction();
 		testPrepareData();

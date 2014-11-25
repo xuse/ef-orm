@@ -29,6 +29,7 @@ import jef.database.OperateTarget;
 import jef.database.datasource.DataSourceInfo;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
+import jef.database.dialect.type.ParserFactory;
 import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
@@ -358,4 +359,6 @@ public interface DatabaseDialect {
 	 * @param sql
 	 */
 	void toExtremeInsert(InsertSqlClause sql);
+	
+	ParserFactory getParserFactory();
 }

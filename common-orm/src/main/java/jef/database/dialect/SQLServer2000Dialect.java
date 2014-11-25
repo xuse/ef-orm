@@ -5,6 +5,7 @@ import java.sql.Types;
 import jef.database.ConnectInfo;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.type.AColumnMapping;
+import jef.database.dialect.type.ParserFactory;
 import jef.database.jdbc.statement.UnionJudgement;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
@@ -255,5 +256,11 @@ public class SQLServer2000Dialect extends AbstractDialect {
 			return new SQL2000LimitHandlerSlowImpl();
 		}
 	}
+	
+	final static ParserFactory factory=new ParserFactory.SQLServer();
 
+	@Override
+	public ParserFactory getParserFactory() {
+		return factory;
+	}
 }

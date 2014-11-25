@@ -5,6 +5,7 @@ import java.io.StringReader;
 import javax.persistence.PersistenceException;
 
 import jef.common.log.LogUtil;
+import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.parser.StSqlParser;
@@ -29,11 +30,11 @@ public abstract class WhereParser {
 		}
 	}
 
-	abstract String process(String where);
+	abstract String process(String where,DatabaseDialect profile);
 
 	public static final class NativeImpl extends WhereParser {
 		@Override
-		String process(String where) {
+		String process(String where,DatabaseDialect profile) {
 			StSqlParser parser = new StSqlParser(new StringReader(where));
 			try {
 				Expression exp = parser.WhereClause();
@@ -66,14 +67,16 @@ public abstract class WhereParser {
 
 	public static final class DruidImpl extends WhereParser {
 		@Override
-		String process(String where) {
-			SQLExprParser parser = new SQLExprParser(where);
+		String process(String where,DatabaseDialect profile) {
+			SQLExprParser parser = profile.getParserFactory().getExprParser(where);
 			Lexer lexer = parser.getLexer();
 
 			if (lexer.token() == Token.WHERE) {
 				try {
 					lexer.nextToken();
 					SQLExpr exp = parser.expr();
+					
+					
 					SQLASTOutputVisitor v = new SQLASTOutputVisitor(new StringBuilder(where.length() - 6)) {
 						@Override
 						public boolean visit(SQLIdentifierExpr x) {

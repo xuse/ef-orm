@@ -174,7 +174,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		if (pkDim == null) {
 			PKQuery<?> query = new PKQuery<IQueryableEntity>(this, pks, newInstance());
 			BindSql sql = query.toPrepareWhereSql(null, profile);
-			KeyDimension dim = new KeyDimension(sql.getSql(), null);
+			KeyDimension dim = new KeyDimension(sql.getSql(), null,profile);
 			pkDim = dim;
 		}
 		return pkDim;
