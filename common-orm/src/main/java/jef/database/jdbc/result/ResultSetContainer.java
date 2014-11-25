@@ -30,9 +30,9 @@ import jef.common.log.LogUtil;
 import jef.database.Condition;
 import jef.database.DbUtils;
 import jef.database.ORMConfig;
-import jef.database.OperateTarget;
 import jef.database.Session.PopulateStrategy;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.jdbc.JDBCTarget;
 import jef.database.meta.Reference;
 import jef.database.routing.sql.InMemoryOperateProvider;
 import jef.database.wrapper.clause.InMemoryDistinct;
@@ -186,7 +186,7 @@ public final class ResultSetContainer extends AbstractResultSet implements IResu
 	 * @param rs
 	 * @param statement
 	 */
-	public void add(ResultSet rs, Statement statement, OperateTarget tx) {
+	public void add(ResultSet rs, Statement statement, JDBCTarget tx) {
 		if (columns == null) {
 			try {
 				initMetadata(rs);

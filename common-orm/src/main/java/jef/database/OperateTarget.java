@@ -20,6 +20,8 @@ import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IManagedConnectionPool;
 import jef.database.innerpool.PartitionSupport;
+import jef.database.jdbc.GenerateKeyReturnOper;
+import jef.database.jdbc.JDBCTarget;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.jdbc.result.ResultSetContainer;
 import jef.database.jdbc.result.ResultSetHolder;
@@ -56,7 +58,7 @@ import jef.tools.StringUtils;
  * @author jiyi
  * 
  */
-public class OperateTarget implements SqlTemplate {
+public class OperateTarget implements SqlTemplate, JDBCTarget {
 	private Session session;
 	private String dbkey;
 	private DatabaseDialect profile;
@@ -285,7 +287,7 @@ public class OperateTarget implements SqlTemplate {
 		}
 	}
 
-	public final UpdateReturn innerExecuteUpdate(String sql, List<Object> ps, int generatedKeys, int[] generatedIndex, String[] generatedColumn) throws SQLException {
+	public final UpdateReturn innerExecuteUpdate(String sql, List<Object> ps, GenerateKeyReturnOper keyOper) throws SQLException {
 		Object[] params = ps.toArray();
 
 		session.getListener().beforeSqlExecute(sql, params);
@@ -297,21 +299,8 @@ public class OperateTarget implements SqlTemplate {
 		long dbAccess;
 		int total;
 		sb.append(sql).append(this);
-
-		boolean withGeneratedKeys = false;
 		try {
-			if (generatedColumn != null) {
-				st = prepareStatement(sql, generatedColumn);
-				withGeneratedKeys = true;
-			} else if (generatedIndex != null) {
-				st = prepareStatement(sql, generatedIndex);
-				withGeneratedKeys = true;
-			} else if (generatedKeys == Statement.RETURN_GENERATED_KEYS) {
-				st = prepareStatement(sql, generatedKeys);
-				withGeneratedKeys = true;
-			} else {
-				st = prepareStatement(sql);
-			}
+			st = keyOper.prepareStatement(this, sql);
 			st.setQueryTimeout(ORMConfig.getInstance().getUpdateTimeout());
 			if (!ps.isEmpty()) {
 				BindVariableContext context = new BindVariableContext(st, getProfile(), sb);
@@ -320,9 +309,7 @@ public class OperateTarget implements SqlTemplate {
 			total = st.executeUpdate();
 			result = new UpdateReturn(total);
 			dbAccess = System.currentTimeMillis();
-			if (withGeneratedKeys) {
-				result.cacheGeneratedKeys(st.getGeneratedKeys());
-			}
+			keyOper.getGeneratedKey(result, st);
 			if (total > 0) {
 				session.checkCacheUpdate(sql, ps);
 			}
@@ -339,42 +326,6 @@ public class OperateTarget implements SqlTemplate {
 		return result;
 	}
 
-	public final int innerExecuteSql(String sql, List<Object> ps) throws SQLException {
-		Object[] params = ps.toArray();
-
-		session.getListener().beforeSqlExecute(sql, params);
-		SqlLog sb = ORMConfig.getInstance().newLogger();
-		long start = System.currentTimeMillis();
-		PreparedStatement st = null;
-		int total;
-		long dbAccess;
-		sb.append(sql).append(this);
-
-		try {
-			st = prepareStatement(sql);
-			st.setQueryTimeout(ORMConfig.getInstance().getUpdateTimeout());
-			if (!ps.isEmpty()) {
-				BindVariableContext context = new BindVariableContext(st, getProfile(), sb);
-				BindVariableTool.setVariables(context, ps);
-			}
-			total = st.executeUpdate();
-			dbAccess = System.currentTimeMillis();
-			if (total > 0) {
-				session.checkCacheUpdate(sql, ps);
-			}
-		} catch (SQLException e) {
-			DbUtils.processError(e, sql, this);
-			throw e;
-		} finally {
-			sb.output();
-			DbUtils.close(st);
-			releaseConnection();
-		}
-		sb.directLog(StringUtils.concat("Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms) |", getTransactionId()));
-		session.getListener().afterSqlExecuted(sql, total, params);
-		return total;
-	}
-
 	public final <T> T innerSelectBySql(String sql, ResultSetExtractor<T> rst, List<?> objs, InMemoryOperateProvider lazy) throws SQLException {
 		PreparedStatement st = null;
 		ResultSet rs = null;
@@ -382,7 +333,7 @@ public class OperateTarget implements SqlTemplate {
 		try {
 			sb.ensureCapacity(sql.length() + 30 + objs.size() * 20);
 			sb.append(sql).append(this);
-			long start=System.currentTimeMillis();
+			long start = System.currentTimeMillis();
 			ResultSetLaterProcess isReverse = lazy == null ? null : lazy.getRsLaterProcessor();
 			st = prepareStatement(sql, isReverse, false);
 
@@ -390,18 +341,18 @@ public class OperateTarget implements SqlTemplate {
 			BindVariableTool.setVariables(context, objs);
 			rst.apply(st);
 			rs = st.executeQuery();
-			long dbAccessed=System.currentTimeMillis();
+			long dbAccessed = System.currentTimeMillis();
 			if (lazy != null && lazy.hasInMemoryOperate()) {
 				rs = ResultSetContainer.toInMemoryProcessorResultSet(lazy, new ResultSetHolder(this, st, rs));
 			}
 			T t;
 			if (rst.autoClose()) {
-				t= rst.transformer(new ResultSetImpl(rs, getProfile()));
+				t = rst.transformer(new ResultSetImpl(rs, getProfile()));
 			} else {
-				t=rst.transformer(new ResultSetWrapper(this, st, rs));
+				t = rst.transformer(new ResultSetWrapper(this, st, rs));
 			}
 			rst.appendLog(sb, t);
-			sb.append("\tTime cost([DbAccess]:",dbAccessed-start).append("ms, [Populate]:",System.currentTimeMillis()-dbAccessed).append("ms").append(this);
+			sb.append("\tTime cost([DbAccess]:", dbAccessed - start).append("ms, [Populate]:", System.currentTimeMillis() - dbAccessed).append("ms").append(this);
 			return t;
 		} catch (SQLException e) {
 			DbUtils.processError(e, sql, this);
@@ -413,54 +364,6 @@ public class OperateTarget implements SqlTemplate {
 				DbUtils.close(st);
 				releaseConnection();
 			}
-		}
-	}
-
-	/**
-	 * 获得原生的ResultSet，需要外部关闭，否则会泄露
-	 * 
-	 * @param sql
-	 * @param maxReturn
-	 * @param fetchSize
-	 * @param objs
-	 * @return
-	 * @throws SQLException
-	 */
-	public final IResultSet getRawResultSet(String sql, int maxReturn, int fetchSize, List<?> objs, InMemoryOperateProvider inmem) throws SQLException {
-		PreparedStatement st = null;
-		SqlLog sb = ORMConfig.getInstance().newLogger();
-		ORMConfig config = ORMConfig.getInstance();
-		try {
-			sb.ensureCapacity(sql.length() + 30 + objs.size() * 20);
-			sb.append(sql).append(this);
-
-			ResultSetLaterProcess isReverse = inmem == null ? null : inmem.getRsLaterProcessor();
-			st = prepareStatement(sql, isReverse, false);
-			BindVariableContext context = new BindVariableContext(st, getProfile(), sb);
-			BindVariableTool.setVariables(context, objs);
-
-			st.setQueryTimeout(config.getSelectTimeout());
-			if (maxReturn <= 0)
-				maxReturn = config.getGlobalMaxResults();
-			if (maxReturn > 0)
-				st.setMaxRows(maxReturn);
-			if (fetchSize <= 0)
-				fetchSize = config.getGlobalFetchSize();
-			if (fetchSize > 0)
-				st.setFetchSize(fetchSize);
-
-			ResultSet rawRs = st.executeQuery();
-			ResultSetHolder rsh = new ResultSetHolder(this, st, rawRs);
-			if (inmem.hasInMemoryOperate()) {
-				return ResultSetContainer.toInMemoryProcessorResultSet(inmem, rsh);
-			} else {
-				return new ResultSetWrapper(rsh);
-			}
-		} catch (SQLException e) {
-			DbUtils.processError(e, sql, this);
-			throw e;
-		} finally {
-			sb.output();
 		}
 	}
 
@@ -531,8 +434,8 @@ public class OperateTarget implements SqlTemplate {
 		return num;
 	}
 
-	public int executeSql(String key, Object... params) throws SQLException {
-		return innerExecuteSql(key, Arrays.asList(params));
+	public int executeSql(String sql, Object... params) throws SQLException {
+		return innerExecuteUpdate(sql, Arrays.asList(params), GenerateKeyReturnOper.NONE).getAffectedRows();
 	}
 
 	public final <T> List<T> selectBySql(String sql, Class<T> resultClz, Object... params) throws SQLException {
@@ -620,7 +523,7 @@ public class OperateTarget implements SqlTemplate {
 
 		@Override
 		public void appendLog(SqlLog log, List<T> result) {
-			log.append("\nResult Count:",result.size());
+			log.append("\nResult Count:", result.size());
 		}
 	}
 
@@ -702,6 +605,6 @@ public class OperateTarget implements SqlTemplate {
 		if (StringUtils.equals(dbkey, database)) {
 			return this;
 		}
-		return session.asOperateTarget(database);
+		return session.selectTarget(database);
 	}
 }

@@ -19,31 +19,33 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 
 import jef.database.OperateTarget;
+import jef.database.jdbc.JDBCTarget;
 import jef.database.wrapper.populator.ColumnMeta;
 
 /**
  * IResultSet的最简实现相似。但CLose的时候能够将Statement和对应的数据库连接一起释放。
+ * 
  * @author jiyi
- *
+ * 
  */
-public final class ResultSetWrapper extends ResultSetImpl{
-	ResultSetWrapper(){
-		super(null,null,null);
+public final class ResultSetWrapper extends ResultSetImpl {
+	ResultSetWrapper() {
+		super(null, null, null);
 	}
-	
-	public ResultSetWrapper(OperateTarget tx,Statement st,ResultSet rs) {
-		super(new ResultSetHolder(tx,st,rs),tx.getProfile());
+
+	public ResultSetWrapper(OperateTarget tx, Statement st, ResultSet rs) {
+		super(new ResultSetHolder(tx, st, rs), tx.getProfile());
 	}
-	
+
 	public ResultSetWrapper(ResultSetHolder holder) {
-		super(holder,holder.getProfile());
+		super(holder, holder.getProfile());
 	}
-	
-	public ResultSetWrapper(ResultSetHolder holder,ColumnMeta columns) {
-		super(holder,columns,holder.getProfile());
+
+	public ResultSetWrapper(ResultSetHolder holder, ColumnMeta columns) {
+		super(holder, columns, holder.getProfile());
 	}
-	
-	public OperateTarget getTarget() {
-		return ((ResultSetHolder)super.rs).getDb();
+
+	public JDBCTarget getTarget() {
+		return ((ResultSetHolder) super.rs).getDb();
 	}
 }

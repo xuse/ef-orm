@@ -7,8 +7,9 @@ import java.util.List;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.ORMConfig;
-import jef.database.OperateTarget;
 import jef.database.annotation.PartitionResult;
+import jef.database.jdbc.GenerateKeyReturnOper;
+import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.statement.select.Union;
@@ -16,20 +17,21 @@ import jef.database.jsqlparser.visitor.SelectBody;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.routing.jdbc.UpdateReturn;
 import jef.database.wrapper.clause.BindSql;
+import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.tools.StringUtils;
 
 public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 	private Statement sql;
 	private List<Object> params;
-	private OperateTarget db;
+	private JDBCTarget db;
 	private String changeDataSource;
 
 	public String isChangeDatasource() {
 		return changeDataSource;
 	}
 
-	public SimpleExecutionPlan(Statement sql, List<Object> params, String bindDsName, OperateTarget db) {
+	public SimpleExecutionPlan(Statement sql, List<Object> params, String bindDsName, JDBCTarget db) {
 		this.changeDataSource = bindDsName;
 		this.sql = sql;
 		this.params = params;
@@ -42,12 +44,12 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 	}
 
 	@Override
-	public UpdateReturn processUpdate(int generateKeys, int[] returnIndex, String[] returnColumns) throws SQLException {
-		OperateTarget db = this.db;
+	public UpdateReturn processUpdate(GenerateKeyReturnOper generateKeys) throws SQLException {
+		JDBCTarget db = this.db;
 		if (changeDataSource != null) {
 			db = db.getTarget(changeDataSource);
 		}
-		return db.innerExecuteUpdate(sql.toString(), params, generateKeys, returnIndex, returnColumns);
+		return db.innerExecuteUpdate(sql.toString(), params, generateKeys);
 	}
 
 	@Override
@@ -67,19 +69,19 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 
 	@Override
 	public ResultSet getResultSet(SqlAndParameter parse, int maxRows, int fetchSize) throws SQLException {
-		OperateTarget db = this.db;
+		JDBCTarget db = this.db;
 		if (changeDataSource != null) {
 			// Scenario 2: 普通查询 (变更数据源，垂直拆分场景)
 			db = db.getTarget(changeDataSource);
 		}
 		String s = processPage(parse, sql, sql.toString());
-		return db.getRawResultSet(s, maxRows, fetchSize, parse.params, parse);
+		return db.innerSelectBySql(s, AbstractResultSetTransformer.getRaw(fetchSize, maxRows), parse.params, parse);
 	}
 
 	@Override
 	public long getCount(SqlAndParameter paramHolder, int maxSize, int fetchSize) throws SQLException {
 		boolean debug = ORMConfig.getInstance().isDebugMode();
-		OperateTarget db = this.db;
+		JDBCTarget db = this.db;
 		if (changeDataSource != null) {
 			db = db.getTarget(changeDataSource);
 		}
@@ -198,7 +200,7 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 
 	@Override
 	public <T> T doQuery(SqlAndParameter sqlContext, ResultSetExtractor<T> extractor, boolean forCount, IntRange range) throws SQLException {
-		OperateTarget db = this.db;
+		JDBCTarget db = this.db;
 		if (changeDataSource != null) {
 			db = db.getTarget(changeDataSource);
 		}

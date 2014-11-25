@@ -17,7 +17,7 @@ package jef.database.jpa;
 
 import javax.persistence.EntityTransaction;
 
-import jef.database.TransactionStatus;
+import jef.database.WrappedConnection;
 import jef.tools.Assert;
 
 import org.slf4j.Logger;
@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  * 
  */
 public class JefEntityTransaction implements EntityTransaction {
-	private TransactionStatus trans;
+	private WrappedConnection trans;
 	private JefEntityManager parent = null;
 	private static Logger log = LoggerFactory.getLogger(JefEntityTransaction.class);
 
@@ -39,7 +39,7 @@ public class JefEntityTransaction implements EntityTransaction {
 		this.parent = parent;
 	}
 
-	public JefEntityTransaction(JefEntityManager parent, TransactionStatus session) {
+	public JefEntityTransaction(JefEntityManager parent, WrappedConnection session) {
 		this.parent = parent;
 		this.trans=session;
 	}
@@ -100,7 +100,7 @@ public class JefEntityTransaction implements EntityTransaction {
 		}
 	}
 
-	public TransactionStatus get() {
+	public WrappedConnection get() {
 		return trans;
 	}
 }

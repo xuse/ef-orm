@@ -12,10 +12,10 @@ import jef.database.ConnectInfo;
 import jef.database.DbCfg;
 import jef.database.DbUtils;
 import jef.database.ORMConfig;
-import jef.database.OperateTarget;
 import jef.database.dialect.ColumnType.Char;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
+import jef.database.jdbc.JDBCTarget;
 import jef.database.meta.Column;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
@@ -268,7 +268,7 @@ public class HsqlDbMemDialect extends AbstractDialect {
 	}
 	
 	@Override
-	public long getColumnAutoIncreamentValue(AutoIncrementMapping<?> mapping, OperateTarget db) {
+	public long getColumnAutoIncreamentValue(AutoIncrementMapping<?> mapping, JDBCTarget db) {
 		String tableName=mapping.getMeta().getTableName(false).toLowerCase();
 		String seqname=tableName+"_"+mapping.lowerColumnName()+"_seq";
 		String sql=String.format("select nextval('%s') from dual" , seqname);

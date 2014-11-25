@@ -450,7 +450,7 @@ public abstract class SelectProcessor {
 					final SqlLog debug = ORMConfig.getInstance().newLogger();
 					tasks.add(new DbTask() {
 						public void execute() throws SQLException {
-							processSelect0(session.asOperateTarget(site.getDatabase()), sql, site, queryObj, rs, option,debug);
+							processSelect0(session.selectTarget(site.getDatabase()), sql, site, queryObj, rs, option,debug);
 						}
 					});
 				}
@@ -458,7 +458,7 @@ public abstract class SelectProcessor {
 			} else {
 				final SqlLog debug = ORMConfig.getInstance().newLogger();
 				for (PartitionResult site : sql.getTables()) {
-					processSelect0(session.asOperateTarget(site.getDatabase()), sql, site, queryObj, rs, option,debug);
+					processSelect0(session.selectTarget(site.getDatabase()), sql, site, queryObj, rs, option,debug);
 				}
 			}
 			sql.parepareInMemoryProcess(null, rs);
@@ -476,7 +476,7 @@ public abstract class SelectProcessor {
 			List<DbTask> tasks = new ArrayList<DbTask>();
 			for (final Map.Entry<String, List<BindSql>> sql : sqls.getSqls().entrySet()) {
 				final SqlLog debug = ORMConfig.getInstance().newLogger();
-				final OperateTarget target = session.asOperateTarget(sql.getKey());
+				final OperateTarget target = session.selectTarget(sql.getKey());
 				tasks.add(new DbTask() {
 					@Override
 					public void execute() throws SQLException {
@@ -492,7 +492,7 @@ public abstract class SelectProcessor {
 			int total = 0;
 			final SqlLog debug = ORMConfig.getInstance().newLogger();
 			for (Map.Entry<String, List<BindSql>> sql : sqls.getSqls().entrySet()) {
-				OperateTarget target = session.asOperateTarget(sql.getKey());
+				OperateTarget target = session.selectTarget(sql.getKey());
 				for (BindSql bs : sql.getValue()) {
 					total += processCount0(target, bs, debug);
 				}

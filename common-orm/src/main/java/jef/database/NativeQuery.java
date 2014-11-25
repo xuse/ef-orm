@@ -38,6 +38,7 @@ import jef.database.OperateTarget.TransformerAdapter;
 import jef.database.OperateTarget.TransformerIteratrAdapter;
 import jef.database.Session.PopulateStrategy;
 import jef.database.dialect.type.ResultSetAccessor;
+import jef.database.jdbc.GenerateKeyReturnOper;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.jsqlparser.expression.JpqlDataType;
 import jef.database.jsqlparser.expression.JpqlParameter;
@@ -421,7 +422,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		} else {
 			plan = new SimpleExecutionPlan(sqlContext.statement, sqlContext.params, null, db);
 		}
-		return plan.doQuery(sqlContext,extractor, forCount,range);
+		return plan.doQuery(sqlContext, extractor, forCount, range);
 	}
 
 	/**
@@ -493,10 +494,10 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			ExecuteablePlan plan = null;
 			if (routing) {
 				plan = SqlAnalyzer.getExecutionPlan(sql, parse.getParamsMap(), parse.params, db);
-			}else{
-				plan=new SimpleExecutionPlan(sql, parse.params, null, db);
+			} else {
+				plan = new SimpleExecutionPlan(sql, parse.params, null, db);
 			}
-			return plan.processUpdate(0, null, null).getAffectedRows();
+			return plan.processUpdate(GenerateKeyReturnOper.NONE).getAffectedRows();
 		} catch (SQLException e) {
 			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}

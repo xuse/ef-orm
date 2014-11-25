@@ -2,6 +2,7 @@ package jef.database.routing.sql;
 
 import java.sql.SQLException;
 
+import jef.database.jdbc.GenerateKeyReturnOper;
 import jef.database.routing.jdbc.UpdateReturn;
 
 public interface ExecuteablePlan extends ExecutionPlan{
@@ -11,5 +12,5 @@ public interface ExecuteablePlan extends ExecutionPlan{
 	 * @param session
 	 * @return
 	 */
-	UpdateReturn processUpdate(int generateKeys, int[] returnIndex, String[] returnColumns) throws SQLException;
+	UpdateReturn processUpdate(GenerateKeyReturnOper generateKeys) throws SQLException;
 }

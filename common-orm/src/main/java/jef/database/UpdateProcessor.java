@@ -386,7 +386,7 @@ public abstract class UpdateProcessor {
 			List<DbTask> tasks = new ArrayList<DbTask>();
 			final AtomicInteger count = new AtomicInteger();
 			for (final PartitionResult site : sites) {
-				final OperateTarget db = session.asOperateTarget(site.getDatabase());
+				final OperateTarget db = session.selectTarget(site.getDatabase());
 				dbName = db.getTransactionId();
 				tasks.add(new DbTask() {
 					@Override
@@ -399,7 +399,7 @@ public abstract class UpdateProcessor {
 			total = count.get();
 		} else {
 			for (PartitionResult site : sites) {
-				OperateTarget db = session.asOperateTarget(site.getDatabase());
+				OperateTarget db = session.selectTarget(site.getDatabase());
 				dbName = db.getTransactionId();
 				total += processUpdate0(db, obj, updateClause, whereClause, site, log);
 			}

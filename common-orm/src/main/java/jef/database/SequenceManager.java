@@ -94,7 +94,7 @@ public final class SequenceManager {
 	 * @throws SQLException
 	 */
 	public Sequence getSequence(AutoIncrementMapping<?> fieldDef, String dbKey) throws SQLException {
-		return getSequence(fieldDef,parent.asOperateTarget(dbKey));
+		return getSequence(fieldDef,parent.selectTarget(dbKey));
 	}
 
 	/**
@@ -114,7 +114,7 @@ public final class SequenceManager {
 				s = holders.get(seqName);
 				if (s == null) {// 双重检查锁定: 防止被多线程的情况下初始化多次
 					if(client==null){
-						client=this.parent.asOperateTarget(null);
+						client=this.parent.selectTarget(null);
 					}
 					if (client.getProfile().has(Feature.SUPPORT_SEQUENCE)) {
 						s = createSequence(seqName, client, length, null, null, null);

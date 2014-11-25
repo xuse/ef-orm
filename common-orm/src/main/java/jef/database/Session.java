@@ -171,15 +171,6 @@ public abstract class Session {
 	abstract protected Collection<String> getAllDatasourceNames();
 
 	/*
-	 * 获取指定数据源的操作对象
-	 * 
-	 * @param dbKey 数据源名称
-	 * 
-	 * @return 指定数据源为dbKey的数据库操作对象
-	 */
-	abstract protected OperateTarget asOperateTarget(String dbKey);
-
-	/*
 	 * 获取当前数据库的事务管理模式
 	 */
 	protected abstract TransactionMode getTxType();
@@ -190,6 +181,15 @@ public abstract class Session {
 	 * @return true is current is in a JPA transaction.
 	 */
 	protected abstract boolean isJpaTx();
+
+	/**
+	 * 关闭数据库事务。<br>
+	 * <ul>
+	 * <li>在DbClient上调用此方法，无任何影响。</li>
+	 * <li>在Transaction上调用此方法，将会关闭事务，未被提交的修改将会回滚。</li>
+	 * </ul>
+	 */
+	public abstract void close();
 
 	/**
 	 * 清理一级缓存
@@ -207,15 +207,6 @@ public abstract class Session {
 	public final void evictAll() {
 		getCache().evictAll();
 	}
-
-	/**
-	 * 关闭数据库操作，或者回滚事务。<br>
-	 * <ul>
-	 * <li>在DbClient上调用此方法，将会关闭所有连接。</li>
-	 * <li>在Transaction上调用此方法，将会关闭事务，未被提交的修改将会回滚。</li>
-	 * </ul>
-	 */
-	public abstract void close();
 
 	/**
 	 * 判断Session是否有效
@@ -294,8 +285,10 @@ public abstract class Session {
 	 * @see SqlTemplate
 	 */
 	public final SqlTemplate getSqlTemplate(String dbKey) {
-		return asOperateTarget(dbKey);
+		return selectTarget(dbKey);
 	}
+
+	protected abstract OperateTarget selectTarget(String dbKey);
 
 	/**
 	 * 创建SQL查询（支持绑定变量）
@@ -306,7 +299,7 @@ public abstract class Session {
 	 * @see NativeQuery
 	 */
 	public NativeQuery<?> createNativeQuery(String sqlString) {
-		return asOperateTarget(null).createNativeQuery(sqlString, (Class<?>) null);
+		return selectTarget(null).createNativeQuery(sqlString, (Class<?>) null);
 	}
 
 	/**
@@ -320,7 +313,7 @@ public abstract class Session {
 	 * @see NativeQuery
 	 */
 	public <T> NativeQuery<T> createNativeQuery(String sqlString, Class<T> resultClass) {
-		return asOperateTarget(null).createNativeQuery(sqlString, resultClass);
+		return selectTarget(null).createNativeQuery(sqlString, resultClass);
 	}
 
 	/**
@@ -334,7 +327,7 @@ public abstract class Session {
 	 * @see NativeQuery
 	 */
 	public <T> NativeQuery<T> createNativeQuery(String sqlString, ITableMetadata resultMeta) {
-		return asOperateTarget(null).createNativeQuery(sqlString, resultMeta);
+		return selectTarget(null).createNativeQuery(sqlString, resultMeta);
 	}
 
 	/**
@@ -358,7 +351,7 @@ public abstract class Session {
 	 * @see NativeCall
 	 */
 	public NativeCall createNativeCall(String procedureName, Type... paramClass) throws SQLException {
-		return asOperateTarget(null).createNativeCall(procedureName, paramClass);
+		return selectTarget(null).createNativeCall(procedureName, paramClass);
 	}
 
 	/**
@@ -382,7 +375,7 @@ public abstract class Session {
 	 * @see NativeCall
 	 */
 	public NativeCall createAnonymousNativeCall(String callString, Type... paramClass) throws SQLException {
-		return asOperateTarget(null).createAnonymousNativeCall(callString, paramClass);
+		return selectTarget(null).createAnonymousNativeCall(callString, paramClass);
 	}
 
 	/**
@@ -395,7 +388,7 @@ public abstract class Session {
 	 */
 	public NativeQuery<?> createQuery(String jpql) {
 		try {
-			return asOperateTarget(null).createQuery(jpql, null);
+			return selectTarget(null).createQuery(jpql, null);
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
 		}
@@ -413,7 +406,7 @@ public abstract class Session {
 	 */
 	public <T> NativeQuery<T> createQuery(String jpql, Class<T> resultClass) {
 		try {
-			return asOperateTarget(null).createQuery(jpql, resultClass);
+			return selectTarget(null).createQuery(jpql, resultClass);
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
 		}
@@ -1609,7 +1602,7 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 */
 	public final int executeSql(String sql, Object... params) throws SQLException {
-		return asOperateTarget(null).innerExecuteSql(sql, Arrays.asList(params));
+		return selectTarget(null).executeSql(sql, params);
 	}
 
 	/**
@@ -1626,7 +1619,7 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 */
 	public final ResultSet getResultSet(String sql, int maxRows, Object... params) throws SQLException {
-		return asOperateTarget(null).innerSelectBySql(sql, AbstractResultSetTransformer.cacheResultSet(maxRows, 0), Arrays.asList(params), null);
+		return selectTarget(null).innerSelectBySql(sql, AbstractResultSetTransformer.cacheResultSet(maxRows, 0), Arrays.asList(params), null);
 	}
 
 	/**
@@ -1679,7 +1672,7 @@ public abstract class Session {
 	 * @see #createNativeQuery(String,Class)
 	 */
 	public final <T> List<T> selectBySql(String sql, Transformer transformer, IntRange range, Object... params) throws SQLException {
-		return asOperateTarget(null).selectBySql(sql, transformer, range, params);
+		return selectTarget(null).selectBySql(sql, transformer, range, params);
 	}
 
 	/**
@@ -1697,7 +1690,7 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 */
 	public final <T> T loadBySql(String sql, Class<T> returnType, Object... params) throws SQLException {
-		return asOperateTarget(null).loadBySql(sql, returnType, params);
+		return selectTarget(null).loadBySql(sql, returnType, params);
 	}
 
 	/**
@@ -2270,7 +2263,7 @@ public abstract class Session {
 	 * @return 符合数据库方言的函数表达式
 	 */
 	public final SqlExpression func(DbFunction func, Object... params) {
-		return asOperateTarget(null).func(func, params);
+		return selectTarget(null).func(func, params);
 	}
 
 	/**
@@ -2297,7 +2290,7 @@ public abstract class Session {
 	 * @see SqlTemplate#getExpressionValue(String, Class, Object...)
 	 */
 	public final <T> T getExpressionValue(String expression, Class<T> clz) throws SQLException {
-		return asOperateTarget(null).getExpressionValue(expression.toString(), clz);
+		return selectTarget(null).getExpressionValue(expression.toString(), clz);
 	}
 
 	/**
@@ -2315,7 +2308,7 @@ public abstract class Session {
 	 * @see SqlTemplate#getExpressionValue(DbFunction, Class, Object...)
 	 */
 	public final <T> T getExpressionValue(DbFunction func, Class<T> clz, Object... params) throws SQLException {
-		return asOperateTarget(null).getExpressionValue(func, clz, params);
+		return selectTarget(null).getExpressionValue(func, clz, params);
 	}
 
 	/**
@@ -2440,8 +2433,8 @@ public abstract class Session {
 
 	// 包装当前AbsDbClient,包装为缺省的操作对象即无dbkey.
 	protected final OperateTarget wrapTarget(String dbName, int mustTx) throws SQLException {
-		if (mustTx>0 && this instanceof DbClient) {// 如果不是在事务中，那么就用一个内嵌事务将其包裹住，作用是在resultSet的生命周期内，该连接不会被归还。并且也预防了基于线程的连接模型中，该连接被本线程的其他SQL操作再次取用然后释放回池
-			Transaction tx = new TransactionImpl((DbClient) this, TransactionFlag.ResultHolder, mustTx==1);
+		if (mustTx > 0 && this instanceof DbClient) {// 如果不是在事务中，那么就用一个内嵌事务将其包裹住，作用是在resultSet的生命周期内，该连接不会被归还。并且也预防了基于线程的连接模型中，该连接被本线程的其他SQL操作再次取用然后释放回池
+			Transaction tx = new TransactionImpl((DbClient) this, TransactionFlag.ResultHolder, mustTx == 1);
 			return new OperateTarget(tx, dbName);
 		} else {
 			return new OperateTarget(this, dbName);
@@ -2524,7 +2517,7 @@ public abstract class Session {
 		if (sites != null && sites.length > 0) {
 			DatabaseDialect profile = this.getProfile(sites[0].getDatabase());
 			getListener().beforeDelete(obj, this);
-			
+
 			BindSql where = deletep.toWhereClause(query, new SqlContext(null, query), false, profile);
 			int count = deletep.processDelete(this, obj, where, sites, start);
 			if (count > 0) {
@@ -2552,7 +2545,7 @@ public abstract class Session {
 		if (dynamic && !obj.needUpdate()) {// 重新检查一遍
 			return 0;
 		}
-		
+
 		UpdateClause updateClause = updatep.toUpdateClause(obj, sites, dynamic);
 		parseCost = System.currentTimeMillis() - parseCost;
 		getListener().beforeUpdate(obj, this);
@@ -2587,7 +2580,7 @@ public abstract class Session {
 			sqls.setTableNames(pr);
 		}
 		long parse = System.currentTimeMillis();
-		insertp.processInsert(asOperateTarget(sqls.getTable().getDatabase()), obj, sqls, start, parse);
+		insertp.processInsert(selectTarget(sqls.getTable().getDatabase()), obj, sqls, start, parse);
 
 		obj.clearUpdate();
 		getCache().onInsert(obj, myTableName);

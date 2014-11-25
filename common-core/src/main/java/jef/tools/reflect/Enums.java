@@ -3,14 +3,15 @@ package jef.tools.reflect;
 
 /**
  * 自己写的Enum工具，Guava的实现也看了，总觉他搞复杂了，0.3us~0.8us 的一次转换操作被他多搞出一个Optional对象来，
- * 
+ * <p>
  * Guava：
  * <code>Item i=Enums.getIfPresent(Item.class, "HTTP_TIMEOUT").orNull();</code>
- * Consume 962ns 
- * Jef:
+ * Consume 962ns
+ * <p> 
+ * EF:
  * <code>Item i=jef.tools.Enums.valueOf(Item.class, "HTTP_TIMEOUT", null);</code>
  * Consume 321ns
- * 
+ * <p>
  * 感觉Guava为了让编程符合自然语言习惯已经有点走火入魔了。 
  * @author jiyi
  *
@@ -49,5 +50,4 @@ public final class Enums {
 			throw new IllegalArgumentException(String.format(exceptionMessage, params));
 		}
 	}
-
 }

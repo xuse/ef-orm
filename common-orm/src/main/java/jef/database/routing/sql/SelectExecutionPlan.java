@@ -14,9 +14,9 @@ import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.DbUtils;
 import jef.database.ORMConfig;
-import jef.database.OperateTarget;
 import jef.database.OperateTarget.TransformerAdapter;
 import jef.database.annotation.PartitionResult;
+import jef.database.jdbc.JDBCTarget;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.jdbc.result.ResultSetContainer;
 import jef.database.jdbc.statement.ResultSetLaterProcess;
@@ -43,6 +43,7 @@ import jef.database.wrapper.clause.InMemoryGroupByHaving;
 import jef.database.wrapper.clause.InMemoryOrderBy;
 import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.executor.DbTask;
+import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
 import jef.database.wrapper.populator.ResultSetExtractor;
@@ -163,7 +164,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 			// Scenario 4: 无任何匹配表。但是如果不查ResultSetMetadata无法生成。是否有更好的办法.
 			// Scenario 4: No any table.
 			String sql = context.statement.toString();
-			return context.db.getRawResultSet(sql, maxRows, fetchSize, parse.params, parse);
+			return context.db.innerSelectBySql(sql, AbstractResultSetTransformer.getRaw(fetchSize, maxRows), parse.params, parse);
 		} else {
 			// Scenario 5: 单库，(单表或多表)，基于Union的查询. 可以使用数据库分页
 			// Scenario 5: Single Database(One table or more tables)
@@ -171,7 +172,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 			PairSO<List<Object>> result = getSql(getSites()[0], false);
 			boolean isMultiTable = site.tableSize() > 1;
 			String s = processPage(parse, isMultiTable ? null : parse.statement, result.first);
-			return context.db.getTarget(site.getDatabase()).getRawResultSet(s, maxRows, fetchSize, result.second, parse);
+			return context.db.getTarget(site.getDatabase()).innerSelectBySql(s, AbstractResultSetTransformer.getRaw(fetchSize, maxRows), result.second, parse);
 		}
 
 	}
@@ -189,30 +190,30 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		// 多库多表查询场合
 		long total = 0;
 		long start = System.currentTimeMillis();
-		if(sites.length>=ORMConfig.getInstance().getParallelSelect()){
-			final AtomicLong counter=new AtomicLong();
-			List<DbTask> tasks=new ArrayList<DbTask>(sites.length);
+		if (sites.length >= ORMConfig.getInstance().getParallelSelect()) {
+			final AtomicLong counter = new AtomicLong();
+			List<DbTask> tasks = new ArrayList<DbTask>(sites.length);
 			for (final PartitionResult site : getSites()) {
-				final List<String> sqls=new ArrayList<String>(site.tableSize());
-				for(String table: site.getTables()){
+				final List<String> sqls = new ArrayList<String>(site.tableSize());
+				for (String table : site.getTables()) {
 					sqls.add(getSql(table));
 				}
-				tasks.add(new DbTask(){
+				tasks.add(new DbTask() {
 					public void execute() throws SQLException {
-						counter.addAndGet(getCount0(site,sqls));
+						counter.addAndGet(getCount0(site, sqls));
 					}
 				});
 			}
 			DbUtils.parallelExecute(tasks);
-			total=counter.get();
-		}else{
+			total = counter.get();
+		} else {
 			for (PartitionResult site : getSites()) {
-				final List<String> sqls=new ArrayList<String>(site.tableSize());
-				for(String table: site.getTables()){
+				final List<String> sqls = new ArrayList<String>(site.tableSize());
+				for (String table : site.getTables()) {
 					sqls.add(getSql(table));
 				}
-				total += getCount0(site,sqls);
-			}			
+				total += getCount0(site, sqls);
+			}
 		}
 		total = (maxSize > 0 && maxSize < total) ? maxSize : total;
 		LogUtil.show(StringUtils.concat("Count:", String.valueOf(total), "\t [DbAccess]:", String.valueOf(System.currentTimeMillis() - start), "ms) |  @", String.valueOf(Thread.currentThread().getId())));
@@ -224,9 +225,9 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		long start = System.currentTimeMillis();
 		String rawSQL = sqlContext.statement.toString();
 		T result;
-		OperateTarget db = context.db;
+		JDBCTarget db = context.db;
 		if (isMultiDatabase()) {// 多库
-			result=executeMultiQuery(forCount, extractor, sqlContext, range);
+			result = executeMultiQuery(forCount, extractor, sqlContext, range);
 		} else { // 单库多表，基于Union的查询. 可以使用数据库分页
 			PartitionResult pr = getSites()[0];
 			PairSO<List<Object>> sql = getSql(pr, false);
@@ -251,7 +252,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 	 * 执行查询动作，将查询结果放入mrs
 	 */
 	@SuppressWarnings("rawtypes")
-	private static void processQuery(OperateTarget db, PairSO<List<Object>> sql, ResultSetExtractor rst, ResultSetContainer mrs, ResultSetLaterProcess lazyProcessor,SqlLog sb) throws SQLException {
+	private static void processQuery(JDBCTarget db, PairSO<List<Object>> sql, ResultSetExtractor rst, ResultSetContainer mrs, ResultSetLaterProcess lazyProcessor, SqlLog sb) throws SQLException {
 		PreparedStatement psmt = null;
 		ResultSet rs = null;
 		sb.ensureCapacity(sql.first.length() + 150);
@@ -279,16 +280,16 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 				tasks.add(new DbTask() {
 					@Override
 					public void execute() throws SQLException {
-						processQuery(context.db.getTarget(site.getDatabase()), sql, rst, mrs, sqlContext.getRsLaterProcessor(),config.newLogger());
+						processQuery(context.db.getTarget(site.getDatabase()), sql, rst, mrs, sqlContext.getRsLaterProcessor(), config.newLogger());
 					}
 				});
 			}
 			DbUtils.parallelExecute(tasks);
 		} else {
-			SqlLog sb=config.newLogger();
+			SqlLog sb = config.newLogger();
 			for (PartitionResult site : getSites()) {
 				PairSO<List<Object>> sql = getSql(site, noOrder);
-				processQuery(context.db.getTarget(site.getDatabase()), sql, rst, mrs, sqlContext.getRsLaterProcessor(),sb);
+				processQuery(context.db.getTarget(site.getDatabase()), sql, rst, mrs, sqlContext.getRsLaterProcessor(), sb);
 			}
 		}
 		IResultSet rsw = null;
@@ -509,24 +510,24 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		}
 	}
 
-	private ResultSet doMultiDatabaseQuery(final InMemoryOperateProvider parse, final int maxRows,final int fetchSize) throws SQLException {
+	private ResultSet doMultiDatabaseQuery(final InMemoryOperateProvider parse, final int maxRows, final int fetchSize) throws SQLException {
 		final ResultSetContainer mrs = new ResultSetContainer(ORMConfig.getInstance().isCacheResultset());
-		if(sites.length> ORMConfig.getInstance().getParallelSelect()){
-			List<DbTask> tasks=new ArrayList<DbTask>(sites.length);
+		if (sites.length > ORMConfig.getInstance().getParallelSelect()) {
+			List<DbTask> tasks = new ArrayList<DbTask>(sites.length);
 			for (final PartitionResult site : getSites()) {
-				final PairSO<List<Object>> sql=getSql(site, false);
-				tasks.add(new DbTask(){
+				final PairSO<List<Object>> sql = getSql(site, false);
+				tasks.add(new DbTask() {
 					public void execute() throws SQLException {
-						processQuery(context.db.getTarget(site.getDatabase()), sql, maxRows, fetchSize, mrs, parse.getRsLaterProcessor(),ORMConfig.getInstance().newLogger());
+						processQuery(context.db.getTarget(site.getDatabase()), sql, maxRows, fetchSize, mrs, parse.getRsLaterProcessor(), ORMConfig.getInstance().newLogger());
 					}
 				});
 			}
 			DbUtils.parallelExecute(tasks);
-		}else{
-			SqlLog log=ORMConfig.getInstance().newLogger();
+		} else {
+			SqlLog log = ORMConfig.getInstance().newLogger();
 			for (PartitionResult site : getSites()) {
-				processQuery(context.db.getTarget(site.getDatabase()), getSql(site, false), maxRows, fetchSize, mrs, parse.getRsLaterProcessor(),log);
-			}	
+				processQuery(context.db.getTarget(site.getDatabase()), getSql(site, false), maxRows, fetchSize, mrs, parse.getRsLaterProcessor(), log);
+			}
 		}
 		parepareInMemoryProcess(null, mrs);
 		if (parse.hasInMemoryOperate()) {
@@ -538,7 +539,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 	/*
 	 * 执行查询动作，将查询结果放入mrs
 	 */
-	private void processQuery(OperateTarget db, PairSO<List<Object>> sql, int max, int fetchSize, ResultSetContainer mrs, ResultSetLaterProcess isReverse,SqlLog sb) throws SQLException {
+	private void processQuery(JDBCTarget db, PairSO<List<Object>> sql, int max, int fetchSize, ResultSetContainer mrs, ResultSetLaterProcess isReverse, SqlLog sb) throws SQLException {
 		PreparedStatement psmt = null;
 		ResultSet rs = null;
 		sb.ensureCapacity(sql.first.length() + 150);
@@ -602,16 +603,17 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		return rawSQL;
 	}
 
-	private long getCount0(PartitionResult site,List<String> sqls) throws SQLException {
-		OperateTarget db = context.db.getTarget(site.getDatabase());
+	private long getCount0(PartitionResult site, List<String> sqls) throws SQLException {
+		JDBCTarget db = context.db.getTarget(site.getDatabase());
 		long count = 0;
-		for (String sql:sqls) {
+		for (String sql : sqls) {
 			count += db.innerSelectBySql(sql, ResultSetExtractor.GET_FIRST_LONG, context.params, null);
 		}
-//		for (String table : site.getTables()) {
-//			String sql = getSql(table);
-//			count += db.innerSelectBySql(sql, ResultSetExtractor.GET_FIRST_LONG, context.params, null);
-//		}
+		// for (String table : site.getTables()) {
+		// String sql = getSql(table);
+		// count += db.innerSelectBySql(sql, ResultSetExtractor.GET_FIRST_LONG,
+		// context.params, null);
+		// }
 		return count;
 	}
 

@@ -47,7 +47,7 @@ public abstract class DeleteProcessor {
 			List<DbTask> tasks = new ArrayList<DbTask>();
 			final AtomicInteger count=new AtomicInteger();
 			for (final PartitionResult site : sites) {
-				final OperateTarget target=session.asOperateTarget(site.getDatabase());
+				final OperateTarget target=session.selectTarget(site.getDatabase());
 				dbname=target.getTransactionId();
 				tasks.add(new DbTask(){
 					@Override
@@ -60,7 +60,7 @@ public abstract class DeleteProcessor {
 			total=count.get();
 		} else {
 			for (PartitionResult site : sites) {
-				OperateTarget target=session.asOperateTarget(site.getDatabase());
+				OperateTarget target=session.selectTarget(site.getDatabase());
 				dbname=target.getTransactionId();
 				total += processDelete0(target, obj, where, site,log);
 			}

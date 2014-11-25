@@ -5,16 +5,16 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
+import jef.database.ConnectionFactory;
 import jef.database.DbClient;
 import jef.database.datasource.AbstractDataSource;
 import jef.database.datasource.DataSourceLookup;
 import jef.database.datasource.RoutingDataSource;
 import jef.database.innerpool.JConnection;
 
-import org.easyframe.enterprise.spring.TransactionMode;
-
 /**
  * 将EF-ORM封装为一个标准的JDBC DataSource。
+ * 
  * <pre>
  * 使用此DataSource进行JDBC操作，可以享受由EF-ORM带来的以下特性——
  * 1、数据库SQL改写，支持本地化操作。目前支持的SQL特性包括
@@ -40,30 +40,32 @@ import org.easyframe.enterprise.spring.TransactionMode;
  * 不支持的特性——
  *     多表关联
  *     跨库时：select avg(x) from table
- *     </pre>
+ * </pre>
  */
-public class JDataSource extends AbstractDataSource{
-	private DbClient db;
-	
-	public JDataSource(){
+public class JDataSource extends AbstractDataSource {
+	private ConnectionFactory db;
+
+	public JDataSource() {
 	}
-	
-	public JDataSource(DbClient lookup){
-		this.db=lookup;
+
+	public JDataSource(ConnectionFactory lookup) {
+		this.db = lookup;
 	}
+
 	/**
 	 * 构造
+	 * 
 	 * @param lookup
 	 */
-	public JDataSource(DataSourceLookup lookup){
-		this.db=new DbClient(new RoutingDataSource(lookup),0,TransactionMode.JDBC);
+	public JDataSource(DataSourceLookup lookup) {
+		this.db = new DbClient(new RoutingDataSource(lookup));
 	}
-	
+
 	@Override
 	public Connection getConnection() throws SQLException {
 		return new JConnection(db);
 	}
-	
+
 	@Override
 	public Connection getConnection(String username, String password) throws SQLException {
 		return getConnection();
@@ -73,8 +75,15 @@ public class JDataSource extends AbstractDataSource{
 	protected Class<? extends DataSource> getWrappedClass() {
 		return null;
 	}
-	
-	public DbClient getDbClient(){
-		return db;
+
+	/**
+	 * @deprecated
+	 * @return
+	 */
+	public DbClient getDbClient() {
+		if(db instanceof DbClient){
+			return (DbClient)db;
+		}
+		throw new UnsupportedOperationException();
 	}
 }

@@ -103,7 +103,7 @@ public class SequenceKeyHolderTest {
 			int i = 0;
 			do {
 				try {
-					Sequence holder = db.asOperateTarget(null).getSequence(seq, 12);
+					Sequence holder = db.selectTarget(null).getSequence(seq, 12);
 					Assert.assertNotNull(holder);
 					// 获取下一个sequence值时，也需要受到失败次数的约束。
 					try {
@@ -119,7 +119,7 @@ public class SequenceKeyHolderTest {
 	}
 
 	private void recreateSequence() throws SQLException {
-		if (db.asOperateTarget(null).getMetaData().existsInSchema(ObjectType.SEQUENCE, SCHEMA, SEQ_NAME)) {
+		if (db.selectTarget(null).getMetaData().existsInSchema(ObjectType.SEQUENCE, SCHEMA, SEQ_NAME)) {
 			db.getMetaData(null).dropSequence(SEQ_NAME);
 		}
 
@@ -129,7 +129,7 @@ public class SequenceKeyHolderTest {
 	}
 
 	private void getNext() throws SQLException {
-		Sequence holder = db.asOperateTarget(null).getSequence(SEQ_NAME, 12);
+		Sequence holder = db.selectTarget(null).getSequence(SEQ_NAME, 12);
 
 		// 首次获取下一个序列值时将通过查询DB获得
 		long next = getNextSequenceValue(holder);

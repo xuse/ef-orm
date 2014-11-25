@@ -22,6 +22,7 @@ import jef.database.dialect.ColumnType.Clob;
 import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
+import jef.database.jdbc.JDBCTarget;
 import jef.database.jdbc.statement.DelegatingPreparedStatement;
 import jef.database.jdbc.statement.DelegatingStatement;
 import jef.database.jsqlparser.expression.BinaryExpression;
@@ -296,7 +297,7 @@ public class PostgreSqlDialect extends AbstractDialect {
 	}
 
 	@Override
-	public long getColumnAutoIncreamentValue(AutoIncrementMapping<?> mapping, OperateTarget db) {
+	public long getColumnAutoIncreamentValue(AutoIncrementMapping<?> mapping, JDBCTarget db) {
 		String tableName = mapping.getMeta().getTableName(false).toLowerCase();
 		String seqname = tableName + "_" + mapping.lowerColumnName() + "_seq";
 		String sql = String.format("select nextval('%s')", seqname);

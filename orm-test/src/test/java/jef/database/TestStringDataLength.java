@@ -111,7 +111,7 @@ public class TestStringDataLength extends org.junit.Assert {
 		{//故意出錯
 			CaAsset t2 = RandomData.newInstance(CaAsset.class);
 			t2.setAssetId(t1.getAssetId());
-			PreparedStatement stmt = session.asOperateTarget(null).prepareStatement("insert into ca_asset(normal,acct_id,asset_type,valid_date,asset_id) values(?,?,?,?,?)");
+			PreparedStatement stmt = session.selectTarget(null).prepareStatement("insert into ca_asset(normal,acct_id,asset_type,valid_date,asset_id) values(?,?,?,?,?)");
 			try {
 				stmt.setString(1, "廖丘");
 				stmt.setInt(2, 20474239);

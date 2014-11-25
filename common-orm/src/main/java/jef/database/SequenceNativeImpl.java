@@ -96,7 +96,7 @@ final class SequenceNativeImpl extends AbstractSequence {
 		ensureExists(meta, table, column, length, initValue);
 		this.selectSql = getSelectSql(meta.getProfile());
 		if (exists) {
-			OperateTarget target=session.asOperateTarget(dbKey);
+			OperateTarget target=session.selectTarget(dbKey);
 			initStep(target, selectSql);
 		}
 		return true;

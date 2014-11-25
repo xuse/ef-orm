@@ -15,6 +15,7 @@ import jef.database.OperateTarget;
 import jef.database.datasource.DataSourceInfo;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
+import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
@@ -179,7 +180,7 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	}
 
 	@Override
-	public long getColumnAutoIncreamentValue(AutoIncrementMapping<?> mapping, OperateTarget db) {
+	public long getColumnAutoIncreamentValue(AutoIncrementMapping<?> mapping, JDBCTarget db) {
 		return dialect.getColumnAutoIncreamentValue(mapping, db);
 	}
 

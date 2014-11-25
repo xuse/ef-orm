@@ -40,32 +40,34 @@ public class DebugUtil {
 		}
 	}
 
-	public ILazyLoadContext getLazy(DataObject o){
+	public ILazyLoadContext getLazy(DataObject o) {
 		return o.lazyload;
 	}
-	
-	public static void addLazy(DataObject o,LazyLoadProcessor lazy){
-		if(o.lazyload==null){
-			o.lazyload=new LazyLoadContext(lazy);
-		}else{
+
+	public static void addLazy(DataObject o, LazyLoadProcessor lazy) {
+		if (o.lazyload == null) {
+			o.lazyload = new LazyLoadContext(lazy);
+		} else {
 			throw new IllegalStateException();
 		}
 	}
-	
+
 	private DebugUtil() {
 	}
-	
-	public static void bindQuery(DataObject d,Query<?> e){
-		d.query=e;
+
+	public static void bindQuery(DataObject d, Query<?> e) {
+		d.query = e;
 	}
 
 	/**
-	 * 将指定的文本，通过反射强行赋值到SQLException类的seqState字段，用于在不重新封装SQLException的情况下，在SQLException中携带一些自定义的Message。
+	 * 将指定的文本，通过反射强行赋值到SQLException类的seqState字段，用于在不重新封装SQLException的情况下，
+	 * 在SQLException中携带一些自定义的Message。
+	 * 
 	 * @param e
 	 * @param sql
 	 */
 	public static void setSqlState(SQLException e, String sql) {
-		if(sqlState!=null){
+		if (sqlState != null) {
 			try {
 				sqlState.set(e, sql);
 			} catch (Exception e1) {
@@ -73,34 +75,39 @@ public class DebugUtil {
 			}
 		}
 	}
-	
-	public static PartitionSupport getPartitionSupport(Session db){
+
+	public static PartitionSupport getPartitionSupport(Session db) {
 		return db.getPartitionSupport();
-		
+
 	}
-	public static PoolStatus getPoolStatus(DbClient db){
+
+	public static PoolStatus getPoolStatus(DbClient db) {
 		return db.getPool().getStatus();
 	}
-	
+
 	public static String getTransactionId(Session db) {
 		return db.getTransactionId(null);
 	}
 
 	public static IConnection getConnection(SqlTemplate db) {
-		return ((OperateTarget)db).getRawConnection();
+		return ((OperateTarget) db).getRawConnection();
 	}
 
-	public static IConnection getIConnection(Session db) throws SQLException {
-		return db.getConnection();
+	public static IConnection getIConnection(WrappedConnection db) throws SQLException {
+		if(db instanceof Transaction){
+			return ((Transaction) db).getConnection();
+		}else{
+			throw new IllegalArgumentException(db.getClass().getName());
+		}
 	}
+
 	public static IConnection getPooledConnection(DbClient db) {
 		try {
 			return db.getPool().getConnection(Thread.currentThread());
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage()+" "+e.getSQLState(),e);
+			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}
 	}
-
 
 	/**
 	 * 得到表的全部字段，小写
@@ -187,12 +194,12 @@ public class DebugUtil {
 			db.releaseConnection();
 		}
 	}
-	
-	public static LazyLoadTask getLazyTaskMarker(Map.Entry<Reference, List<AbstractRefField>> entry, Map<Reference,List<Condition>> filters, Session session) {
+
+	public static LazyLoadTask getLazyTaskMarker(Map.Entry<Reference, List<AbstractRefField>> entry, Map<Reference, List<Condition>> filters, Session session) {
 		return new CascadeLoaderTask(entry, filters);
 	}
-	
-	public static TransactionCache getCache(Session session){
+
+	public static TransactionCache getCache(Session session) {
 		return session.getCache();
 	}
 }

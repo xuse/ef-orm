@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * @author jiyi
  * 
  */
-public abstract class Transaction extends Session implements TransactionStatus {
+public abstract class Transaction extends Session implements WrappedConnection {
 	protected static Logger log = LoggerFactory.getLogger(Transaction.class);
 
 	/**
@@ -102,7 +102,7 @@ public abstract class Transaction extends Session implements TransactionStatus {
 		NQEntry nc = parent.namedQueries.get(name);
 		if (nc == null)
 			return null;
-		return asOperateTarget(MetaHolder.getMappingSite(nc.getTag())).createNativeQuery(nc, resultWrapper);
+		return selectTarget(MetaHolder.getMappingSite(nc.getTag())).createNativeQuery(nc, resultWrapper);
 	}
 
 	@Override
@@ -112,7 +112,7 @@ public abstract class Transaction extends Session implements TransactionStatus {
 		NQEntry nc = parent.namedQueries.get(name);
 		if (nc == null)
 			return null;
-		return asOperateTarget(MetaHolder.getMappingSite(nc.getTag())).createNativeQuery(nc, resultMeta);
+		return selectTarget(MetaHolder.getMappingSite(nc.getTag())).createNativeQuery(nc, resultMeta);
 	}
 
 	@Override
@@ -155,7 +155,7 @@ public abstract class Transaction extends Session implements TransactionStatus {
 	}
 
 	public Savepoint setSavepoint() throws SQLException, SavepointNotSupportedException {
-		if (!parent.asOperateTarget(null).getMetaData().supportsSavepoints())
+		if (!parent.selectTarget(null).getMetaData().supportsSavepoints())
 			throw new SavepointNotSupportedException("Savepoints are not supported by your JDBC driver.");
 		return getConnection().setSavepoint();// 如果不支持SP，返回null
 	}
@@ -169,7 +169,7 @@ public abstract class Transaction extends Session implements TransactionStatus {
 	}
 
 	@Override
-	public OperateTarget asOperateTarget(String dbKey) {
+	public OperateTarget selectTarget(String dbKey) {
 		if (StringUtils.isEmpty(dbKey))
 			return new OperateTarget(this, null);
 		return new OperateTarget(this, dbKey);
@@ -230,39 +230,6 @@ public abstract class Transaction extends Session implements TransactionStatus {
 		return sb.toString();
 	}
 
-	abstract public void setReadonly(boolean flag);
-
-	/**
-	 * 当前事务是否为只读事务
-	 * @return 如果是只读事务返回true。否则false
-	 */
-	abstract public boolean isReadonly();
-
-	/**
-	 * 获得当前事务的数据库隔离级别。要求JDBC驱动能支持
-	 * @return
-	 */
-	abstract public int getIsolationLevel();
-
-	/**
-	 * 设置当前事务的数据库隔离级别。要求JDBC驱动能支持
-	 * @param isolationLevel
-	 */
-	abstract public void setIsolationLevel(int isolationLevel);
-	
-	/**
-	 * 设置当前连接的自动提交状态，如果设置为true则相当于无事务
-	 * @param autoCommit
-	 * @return
-	 */
-	abstract public Transaction setAutoCommit(boolean autoCommit);
-
-	/**
-	 * 当前连接是否为自动提交状态（自动提交状态的即非事务）
-	 * @return
-	 */
-	abstract public boolean isAutoCommit();
-	
 	/**
 	 * 提交当前事务
 	 * <p>

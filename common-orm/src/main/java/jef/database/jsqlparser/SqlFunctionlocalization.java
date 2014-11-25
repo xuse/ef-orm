@@ -10,6 +10,7 @@ import jef.database.DbMetaData;
 import jef.database.ORMConfig;
 import jef.database.OperateTarget;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.Function;
@@ -34,7 +35,7 @@ import jef.database.query.function.SQLFunction;
  */
 public class SqlFunctionlocalization extends VisitorAdapter {
 	private DatabaseDialect profile;
-	private OperateTarget db;
+	private JDBCTarget db;
 	private boolean check;
 
 	public StartWithExpression delayStartWith;
@@ -48,7 +49,7 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 	 * @param db
 	 *            用于进行UserFunction检查，如果传入null则不进行检查
 	 */
-	public SqlFunctionlocalization(DatabaseDialect dialect, OperateTarget db) {
+	public SqlFunctionlocalization(DatabaseDialect dialect, JDBCTarget db) {
 		this.profile = dialect;
 		this.db = db;
 		this.check = ORMConfig.getInstance().isCheckSqlFunctions();
@@ -128,7 +129,7 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 			throw new IllegalArgumentException("database " + profile.getName() + " doesn't support function: " + funName + ".");
 		}
 		DbMetaData meta = db.getMetaData();
-		if (meta.checkedFunctions.contains(funName)) {
+		if (meta==null || meta.checkedFunctions.contains(funName)) {
 			return;
 		}
 		if (meta.existsFunction(null, funName)) {

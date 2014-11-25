@@ -65,7 +65,7 @@ import org.easyframe.enterprise.spring.TransactionMode;
  * 
  * @author jiyi
  */
-public class DbClient extends Session {
+public class DbClient extends Session implements ConnectionFactory {
 	/**
 	 * 命名查询
 	 */
@@ -203,7 +203,7 @@ public class DbClient extends Session {
 		if (nc == null) {
 			throw new IllegalArgumentException("The query which named [" + name + "] was not found.");
 		}
-		return asOperateTarget(MetaHolder.getMappingSite(nc.getTag())).createNativeQuery(nc, resultWrapper);
+		return selectTarget(MetaHolder.getMappingSite(nc.getTag())).createNativeQuery(nc, resultWrapper);
 	}
 
 	/*
@@ -220,7 +220,7 @@ public class DbClient extends Session {
 		if (nc == null) {
 			throw new IllegalArgumentException("The query which named [" + name + "] was not found.");
 		}
-		return asOperateTarget(MetaHolder.getMappingSite(nc.getTag())).createNativeQuery(nc, resultMeta);
+		return selectTarget(MetaHolder.getMappingSite(nc.getTag())).createNativeQuery(nc, resultMeta);
 	}
 
 	/**
@@ -278,7 +278,7 @@ public class DbClient extends Session {
 	}
 
 	@Override
-	protected OperateTarget asOperateTarget(String dbKey) {
+	protected OperateTarget selectTarget(String dbKey) {
 		if (connPool == null) {
 			throw new IllegalAccessError("The database client was closed!");
 		}
@@ -407,7 +407,7 @@ public class DbClient extends Session {
 			if (showVersion) {
 				LogUtil.show(meta.getDbVersion());
 			}
-			meta.getProfile().init(session.asOperateTarget(key));
+			meta.getProfile().init(session.selectTarget(key));
 		}
 	}
 
@@ -746,24 +746,7 @@ public class DbClient extends Session {
 		}
 	}
 
-	/**
-	 * 关闭Client，释放连接池和各种资源
-	 */
 	public void close() {
-		try {
-			this.getListener().onDbClientClose();
-		} catch (Exception e) {
-			LogUtil.exception(e);
-		}
-		this.sequenceManager.close();
-		try {
-			connPool.close();
-			JefFacade.unregisteEmf((DbClient) this);
-		} catch (SQLException e) {
-			throw DbUtils.toRuntimeException(e);
-		} finally {
-			connPool = null;
-		}
 	}
 
 	/*
@@ -887,7 +870,7 @@ public class DbClient extends Session {
 				}
 				if (meta != null) {
 					for (AutoIncrementMapping<?> mapping : meta.getAutoincrementDef()) {
-						sequenceManager.dropSequence(mapping, this.asOperateTarget(pr.getDatabase()));
+						sequenceManager.dropSequence(mapping, this.selectTarget(pr.getDatabase()));
 					}
 				}
 				for (String s : otherseq) {
@@ -1002,5 +985,23 @@ public class DbClient extends Session {
 
 	protected boolean isJpaTx() {
 		return false;
+	}
+
+	@Override
+	public void shutdown() {
+		try {
+			this.getListener().onDbClientClose();
+		} catch (Exception e) {
+			LogUtil.exception(e);
+		}
+		this.sequenceManager.close();
+		try {
+			connPool.close();
+			JefFacade.unregisteEmf((DbClient) this);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		} finally {
+			connPool = null;
+		}
 	}
 }

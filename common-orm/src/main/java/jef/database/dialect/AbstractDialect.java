@@ -46,6 +46,7 @@ import jef.database.datasource.DataSourceInfo;
 import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
+import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
@@ -629,7 +630,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		return AColumnMapping.wrapSqlStr(DateFormats.DATE_TIME_CS.get().format(value));
 	}
 
-	public long getColumnAutoIncreamentValue(AutoIncrementMapping<?> mapping, OperateTarget db) {
+	public long getColumnAutoIncreamentValue(AutoIncrementMapping<?> mapping, JDBCTarget db) {
 		throw new UnsupportedOperationException(mapping.getMeta().getName() + "." + mapping.fieldName() + " is auto-increament, but the database '" + this.getName() + "' doesn't support fetching the next AutoIncreament value.");
 	}
 

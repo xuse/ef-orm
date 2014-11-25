@@ -75,6 +75,24 @@ public abstract class AbstractResultSetTransformer<T> implements ResultSetExtrac
 	public void appendLog(SqlLog log,T result) {
 	}
 	
+	
+	public final static class RawAction extends AbstractResultSetTransformer<IResultSet>{
+		@Override
+		public IResultSet transformer(IResultSet rs) throws SQLException {
+			return rs;
+		}
+
+		@Override
+		public boolean autoClose() {
+			return false;
+		}
+	}
+	
+	/**
+	 * 用于缓存结果的Extractor
+	 * @author jiyi
+	 *
+	 */
 	private final static class CacheAction extends AbstractResultSetTransformer<CachedRowSet>{
 		@Override
 		public CachedRowSet transformer(IResultSet rs) throws SQLException {
@@ -90,6 +108,11 @@ public abstract class AbstractResultSetTransformer<T> implements ResultSetExtrac
 		}
 	}
 	
+	/**
+	 * 用于统计结果条数的Extractor
+	 * @author jiyi
+	 *
+	 */
 	private final static class CountAction extends AbstractResultSetTransformer<Long>{
 		@Override
 		public Long transformer(IResultSet rs) throws SQLException {
@@ -105,7 +128,6 @@ public abstract class AbstractResultSetTransformer<T> implements ResultSetExtrac
 			if(result!=null)
 				log.append("Count:",result);
 		}
-		
 	}
 	
 	private static final CacheAction DEFAULT=new CacheAction();
@@ -119,5 +141,12 @@ public abstract class AbstractResultSetTransformer<T> implements ResultSetExtrac
 	
 	public static ResultSetExtractor<Long> countResultSet(int fetchSize){
 		 return new CountAction().setFetchSize(fetchSize);
+	}
+	
+	public static ResultSetExtractor<IResultSet> getRaw(int fetchSize,int maxRows){
+		ResultSetExtractor<IResultSet> action= new RawAction();
+		action.setMaxRows(maxRows);
+		action.setFetchSize(fetchSize);
+		return action;
 	}
 }

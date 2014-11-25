@@ -26,63 +26,68 @@ import javax.persistence.PersistenceException;
 
 import jef.database.Condition;
 import jef.database.DbUtils;
-import jef.database.OperateTarget;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.jdbc.JDBCTarget;
 import jef.database.meta.Reference;
 import jef.database.wrapper.populator.ColumnMeta;
 
-public final class ResultSetHolder extends AbstractResultSet implements IResultSet{
+public final class ResultSetHolder extends AbstractResultSet implements IResultSet {
 	private Statement st;
 	ResultSet rs;
-	private OperateTarget db;
+	private JDBCTarget db;
 
-	public OperateTarget getDb() {
+	public JDBCTarget getDb() {
 		return db;
 	}
-	
+
 	/**
 	 * 构造
+	 * 
 	 * @param tx
 	 * @param st
 	 * @param rs
 	 */
-	public ResultSetHolder(OperateTarget tx,Statement st,ResultSet rs) {
-		this.db=tx;
-		this.st=st;
-		this.rs=rs;
+	public ResultSetHolder(JDBCTarget tx, Statement st, ResultSet rs) {
+		this.db = tx;
+		this.st = st;
+		this.rs = rs;
 	}
-	
+
 	/**
 	 * 
-	 * @param closeResultSet 是否关闭ResultSet
+	 * @param closeResultSet
+	 *            是否关闭ResultSet
 	 */
 	public void close(boolean closeResultSet) {
-		if(closeResultSet && rs!=null){
+		if (closeResultSet && rs != null) {
 			DbUtils.close(rs);
-			rs=null;
+			rs = null;
 		}
-		if(st!=null){
+		if (st != null) {
 			DbUtils.close(st);
-			st=null;	
+			st = null;
 		}
-		if(db!=null){
+		if (db != null) {
 			db.releaseConnection();
-			//而目前设计约束凡是用户持有游标的场景，必须嵌套到一个内部的事务中去。因此实际上不会出现非当前线程的方法来释放连接的可能。
-			//如果是为了持有结果集专门设计的连接，那么直接就关闭掉			
-			if(db.isResultSetHolderTransaction()){
+			// 而目前设计约束凡是用户持有游标的场景，必须嵌套到一个内部的事务中去。因此实际上不会出现非当前线程的方法来释放连接的可能。
+			// 如果是为了持有结果集专门设计的连接，那么直接就关闭掉
+			if (db.isResultSetHolderTransaction()) {
 				db.closeTx();
-			}	
-			db=null;
+			}
+			db = null;
 		}
 	}
+
 	@Override
 	public DatabaseDialect getProfile() {
 		return db.getProfile();
 	}
+
 	@Override
 	public ColumnMeta getColumns() {
 		throw new UnsupportedOperationException();
 	}
+
 	@Override
 	public boolean next() {
 		try {
@@ -92,53 +97,64 @@ public final class ResultSetHolder extends AbstractResultSet implements IResultS
 			throw new PersistenceException(e);
 		}
 	}
+
 	private void ensureOpen() throws SQLException {
-		if(rs==null){
+		if (rs == null) {
 			throw new SQLException("The resultset was closed!");
 		}
 	}
+
 	@Override
 	public void afterLast() throws SQLException {
 		ensureOpen();
 		rs.afterLast();
 	}
+
 	@Override
 	public void beforeFirst() throws SQLException {
 		ensureOpen();
 		rs.beforeFirst();
 	}
+
 	@Override
 	public void close() throws SQLException {
 		close(true);
 	}
+
 	@Override
 	public boolean first() throws SQLException {
 		ensureOpen();
 		return rs.first();
 	}
+
 	@Override
 	public ResultSetMetaData getMetaData() throws SQLException {
 		ensureOpen();
 		return rs.getMetaData();
 	}
+
 	@Override
 	public boolean isClosed() throws SQLException {
 		return rs.isClosed();
 	}
+
 	@Override
 	public boolean previous() throws SQLException {
 		ensureOpen();
 		return rs.previous();
 	}
+
 	@Override
 	protected ResultSet get() throws SQLException {
-		//ensureOpen();
+		// ensureOpen();
 		return rs;
 	}
+
 	@Override
 	public Map<Reference, List<Condition>> getFilters() {
 		throw new UnsupportedOperationException();
 	}
+
 	@Override
 	public boolean isBeforeFirst() throws SQLException {
 		ensureOpen();
@@ -150,6 +166,7 @@ public final class ResultSetHolder extends AbstractResultSet implements IResultS
 		ensureOpen();
 		return rs.isAfterLast();
 	}
+
 	@Override
 	public boolean isFirst() throws SQLException {
 		ensureOpen();
@@ -161,7 +178,7 @@ public final class ResultSetHolder extends AbstractResultSet implements IResultS
 		ensureOpen();
 		return rs.isLast();
 	}
-	
+
 	@Override
 	public boolean last() throws SQLException {
 		ensureOpen();

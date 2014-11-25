@@ -66,5 +66,4 @@ public class LimitHandlerTest {
 		}
 		System.out.println(System.currentTimeMillis() - start);
 	}
-
 }

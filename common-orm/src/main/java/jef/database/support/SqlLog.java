@@ -2,7 +2,7 @@ package jef.database.support;
 
 import jef.common.log.LogUtil;
 import jef.database.DbCfg;
-import jef.database.OperateTarget;
+import jef.database.jdbc.JDBCTarget;
 import jef.tools.JefConfiguration;
 
 /**
@@ -14,7 +14,7 @@ import jef.tools.JefConfiguration;
 public abstract class SqlLog {
 	public abstract void append(int count, Object fieldName, Object value);
 
-	public abstract void append(OperateTarget db);
+	public abstract void append(JDBCTarget db);
 
 	/**
 	 * 输出日志并清除缓冲区
@@ -135,7 +135,7 @@ public abstract class SqlLog {
 		}
 
 		@Override
-		public void append(OperateTarget db) {
+		public void append(JDBCTarget db) {
 			sb.append(" | ").append(db.getTransactionId());
 		}
 
@@ -208,7 +208,7 @@ public abstract class SqlLog {
 		}
 
 		@Override
-		public void append(OperateTarget db) {
+		public void append(JDBCTarget db) {
 		}
 
 		@Override

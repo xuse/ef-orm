@@ -15,11 +15,11 @@ import jef.common.PairSO;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.ORMConfig;
-import jef.database.OperateTarget;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionResult;
 import jef.database.innerpool.PartitionSupport;
+import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.JdbcParameter;
@@ -78,7 +78,7 @@ public class SqlAnalyzer {
 	 * @param db  数据库Session
 	 * @return
 	 */
-	public static QueryablePlan getSelectExecutionPlan(Select sql,Map<Expression, Object>  params, List<Object> value, OperateTarget db) {
+	public static QueryablePlan getSelectExecutionPlan(Select sql,Map<Expression, Object>  params, List<Object> value, JDBCTarget db) {
 		TableMetaCollector collector = new TableMetaCollector();
 		sql.accept(collector);
 		if(collector.get()==null)return new SimpleExecutionPlan(sql, value, null, db);
@@ -123,7 +123,7 @@ public class SqlAnalyzer {
 	 * @param db
 	 * @return
 	 */
-	public static Multimap<String, List<ParameterContext>> doGroup(AbstractMetadata meta,List<List<ParameterContext>> params,Statement st,OperateTarget db) {
+	public static Multimap<String, List<ParameterContext>> doGroup(AbstractMetadata meta,List<List<ParameterContext>> params,Statement st,JDBCTarget db) {
 		Multimap<String,List<ParameterContext>> result=ArrayListMultimap.create();
 		for(List<ParameterContext> param:params){
 			List<Object> values=asValue(param);
@@ -143,7 +143,7 @@ public class SqlAnalyzer {
 	 * @param db     数据库Session
 	 * @return
 	 */
-	public static ExecuteablePlan getExecutionPlan(Statement sql,Map<Expression,Object> params, List<Object> value, OperateTarget db) {
+	public static ExecuteablePlan getExecutionPlan(Statement sql,Map<Expression,Object> params, List<Object> value, JDBCTarget db) {
 		TableMetaCollector collector = new TableMetaCollector();
 		sql.accept(collector);
 		AbstractMetadata meta=collector.get();

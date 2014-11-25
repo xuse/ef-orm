@@ -151,7 +151,7 @@ public final class RecordsHolder<T extends IQueryableEntity>{
 		GenerationType gtype=mapping.getGenerationType(profile);
 		if(gtype==GenerationType.SEQUENCE || gtype==GenerationType.TABLE){
 			try{
-				Sequence sq=rs.getTarget().getSequence(mapping);
+				Sequence sq=((OperateTarget)rs.getTarget()).getSequence(mapping);
 				return sq.next();
 			}catch(SQLException e){
 				throw new PersistenceException(e);

@@ -89,8 +89,12 @@ public final class SimplePooledDatasource extends AbstractDataSource implements 
 
 	public Connection poll() throws SQLException {
 		try {
-			Connection conn;
-			if (freeConns.isEmpty() && used.get() < max) {// 尝试用新连接
+			Connection conn=freeConns.poll();
+			if(conn!=null){
+				used.incrementAndGet();
+				return conn;
+			}
+			if (used.get() < max) {// 尝试用新连接
 				used.incrementAndGet();// 必须立刻累加计数器，否则并发的线程会立刻抢先创建对象，从而超出连接池限制
 				conn = datasource.getConnection();
 			} else {
