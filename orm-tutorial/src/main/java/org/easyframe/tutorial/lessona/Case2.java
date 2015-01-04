@@ -351,21 +351,21 @@ public class Case2 extends org.junit.Assert {
 		List<Device> list = generateDevice(50);
 		ORMConfig.getInstance().setMaxBatchLog(2);
 		db.batchInsert(list);
-		System.err.println("=====数据准备：插入50条记录完成=====");
+		System.err.println("=====1. 数据准备：插入50条记录完成=====");
 		
+		System.err.println("=====2. 跨库查询总数=====");
 		System.out.println("当前总数是:" + db.count(QB.create(Device.class)));
 		
 		
 		{
+			System.err.println("=====3. 查询indexCode 4开头的记录完成=====");
 			Query<Device> query = QB.create(Device.class);
 			query.addCondition(QB.matchStart(Device.Field.indexcode, "4"));
-
 			List<Device> results = db.select(query);
-			System.out.println("=====查询indexCode 4开头的记录完成=====");
 			LogUtil.show(results);
 		}
 		{
-			System.out.println("=====查询indexcode含0的记录，并按创建日期排序=====");
+			System.err.println("=====4. 查询indexcode含0的记录，并按创建日期排序=====");
 			// 分库分表后的难点之一——跨库查询并且并且排序
 			Query<Device> query = QB.create(Device.class);
 			query.addCondition(QB.matchAny(Device.Field.indexcode, "0"));// 显然这个查询意味着要调动好几个数据库上的好几张表
@@ -375,7 +375,7 @@ public class Case2 extends org.junit.Assert {
 				System.out.println(ss);
 			}
 
-			System.out.println("=====查询indexcode含0的记录，并按创建日期排序，每页10条，显示第二页=====");
+			System.err.println("=====5. 查询indexcode含0的记录，并按创建日期排序，每页10条，显示第二页=====");
 			// 更麻烦一点——[跨库查询]并且并且[排序]还要[分页]——每页10条，从第二页开始显示
 			Page<Device> page = db.pageSelect(query, Device.class, 10).setOffset(10).getPageData();
 			System.out.println("总数:" + page.getTotalCount() + " 每页:" + page.getPageSize());
@@ -383,7 +383,7 @@ public class Case2 extends org.junit.Assert {
 		}
 		{
 
-			System.out.println("=====跨数据库 聚合查询=====");
+			System.out.println("=====6. 跨数据库 聚合查询=====");
 			// 分库分表后的难点之二——聚合查询
 			Query<Device> query = QB.create(Device.class);
 			Selects select = QB.selectFrom(query);
@@ -397,7 +397,7 @@ public class Case2 extends org.junit.Assert {
 			}
 		}
 		{
-			System.out.println("=====跨数据库 聚合+重新排序 查询=====");
+			System.out.println("=====7. 跨数据库 聚合+重新排序 查询=====");
 			// 分库分表后的难点之二——聚合查询+再加上排序
 			Query<Device> query = QB.create(Device.class);
 			Selects select = QB.selectFrom(query);
@@ -412,7 +412,7 @@ public class Case2 extends org.junit.Assert {
 		}
 		{
 
-			System.out.println("=====跨数据库 Distinct 查询=====");
+			System.out.println("=====8. 跨数据库 Distinct 查询=====");
 			// 分库分表后的难点之三——Distinct操作
 			Query<Device> query = QB.create(Device.class);
 			Selects select = QB.selectFrom(query);
@@ -428,7 +428,7 @@ public class Case2 extends org.junit.Assert {
 			assertNotNull(results.get(0).getType());
 		}
 		{
-			System.out.println("=====跨数据库查询并带排序分页=====");
+			System.out.println("=====9. 跨数据库查询并带排序分页=====");
 			Query<Device> query = QB.create(Device.class);
 			query.orderByDesc(Device.Field.indexcode);
 			List<Device> results = db.select(query, new IntRange(11, 20));
@@ -439,7 +439,7 @@ public class Case2 extends org.junit.Assert {
 			assertNotNull(results.get(0).getType());
 		}
 		{
-			System.out.println("=====跨数据库 聚合+Having +重新排序=====");
+			System.out.println("=====10. 跨数据库 聚合+Having +重新排序=====");
 			Query<Device> query = QB.create(Device.class);
 			Selects select = QB.selectFrom(query);
 			select.column(Device.Field.type).group();
@@ -452,7 +452,7 @@ public class Case2 extends org.junit.Assert {
 			}
 		}
 		{
-			System.out.println("=====跨数据库 聚合+Having +重新排序 + 分页=====");
+			System.out.println("=====11. 跨数据库 聚合+Having +重新排序 + 分页=====");
 			//反正已经够复杂了，分页也一起上吧！
 			Query<Device> query = QB.create(Device.class);
 			Selects select = QB.selectFrom(query);

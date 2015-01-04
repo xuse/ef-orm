@@ -33,8 +33,6 @@ public interface QueryClause extends SqlClause, CacheKeyProvider,InMemoryOperate
 
 	SelectPart getSelectPart();
 
-	boolean isGroupBy();
-
 	boolean isEmpty();
 
 	void setOrderbyPart(OrderClause orderClause);

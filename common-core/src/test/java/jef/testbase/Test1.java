@@ -1,5 +1,8 @@
 package jef.testbase;
 
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
+
 import org.junit.Test;
 
 public class Test1 {
@@ -13,9 +16,10 @@ public class Test1 {
 		}
 		System.out.println(System.nanoTime() - start);
 	}
-	
+
 	private static Class sc = String.class;
 	private static final Class sfc = String.class;
+
 	@Test
 	public void getClz1_s() {
 		long start = System.nanoTime();
@@ -33,7 +37,7 @@ public class Test1 {
 		}
 		System.out.println(System.nanoTime() - start);
 	}
-	
+
 	@Test
 	public void getClz2() {// 12225 9300//
 		long start = System.nanoTime();
@@ -42,8 +46,6 @@ public class Test1 {
 		}
 		System.out.println(System.nanoTime() - start);
 	}
-	
-	
 
 	@Test
 	public void getClz3() {// 8660

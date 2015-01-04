@@ -208,8 +208,14 @@ public class QueryClauseImpl implements QueryClause {
 	}
 
 	private BindSql withPage(String sql, boolean union) {
-		if (pageRange != null && !isMultiDatabase()) {
-			return profile.getLimitHandler().toPageSQL(sql, pageRange.toStartLimitSpan(), union);
+		if (pageRange != null) {
+			if(isMultiDatabase()){
+				if(grouphavingPart==null || !grouphavingPart.isNotEmpty()){
+					return profile.getLimitHandler().toPageSQL(sql, new int[]{0,pageRange.getEnd()}, union);
+				}
+			}else{
+				return profile.getLimitHandler().toPageSQL(sql, pageRange.toStartLimitSpan(), union);
+			}
 		}
 		return new BindSql(sql);
 	}
@@ -228,10 +234,6 @@ public class QueryClauseImpl implements QueryClause {
 		}catch(RuntimeException e){
 			return null;
 		}
-	}
-
-	public boolean isGroupBy() {
-		return this.grouphavingPart != null && !grouphavingPart.isNotEmpty();
 	}
 
 	public boolean isEmpty() {

@@ -4,8 +4,12 @@ import jef.database.dialect.DerbyLimitHandler;
 import jef.database.dialect.LimitHandler;
 import jef.database.dialect.LimitOffsetLimitHandler;
 import jef.database.dialect.MySqlLimitHandler;
+import jef.database.dialect.OracleLimitHander;
 import jef.database.dialect.SQL2000LimitHandler;
 import jef.database.dialect.SQL2005LimitHandler;
+import jef.database.dialect.SQLServer2005Dialect;
+import jef.database.wrapper.clause.BindSql;
+import junit.framework.Assert;
 
 import org.junit.Test;
 
@@ -18,9 +22,12 @@ public class LimitHandlerTest {
 	@Test
 	public void testSql2000Impl() {
 		LimitHandler lh = new SQL2000LimitHandler();
-		for (String sql : sqls) {
-			System.out.println(lh.toPageSQL(sql, pageParam));
-		}
+		String expect="SELECT TOP 80 T.NAME AS PNAME, T1.NAME FROM parent T, child T1 WHERE T.ID = T1.PARENTID ORDER BY t1.name";
+		doAssert(sqls[0],lh,expect);
+		
+		expect="SELECT TOP 80 * FROM(SELECT * FROM child t WHERE t.code LIKE 'code%' UNION ALL SELECT rootid AS parentid, code, id, name FROM parent UNION ALL SELECT * FROM child t ) __ef_tmp1"+
+"\nORDER BY name";
+		doAssert(sqls[1],lh,expect);
 		doTest(lh);
 	}
 
@@ -64,6 +71,46 @@ public class LimitHandlerTest {
 		for (int i = 0; i < 10000; i++) {
 			lh.toPageSQL(sql, pageParam);
 		}
-		System.out.println(System.currentTimeMillis() - start);
+		long cost=System.currentTimeMillis() - start;
+		System.out.println(lh.getClass().getSimpleName()+"运行一万次，耗时"+cost+"ms.");
+	}
+	
+
+	private void doAssert(String raw, LimitHandler lh, String expect) {
+		BindSql sql=lh.toPageSQL(raw, pageParam);
+		String actual=sql.getSql();
+		System.out.println(actual);
+		Assert.assertEquals(expect, actual);
+	}
+	
+	@Test
+	public void testWhenOffsetIs0(){
+		LimitHandler lh=new OracleLimitHander();
+		BindSql sql=lh.toPageSQL(sqls[0],new int[]{0,15});
+		System.out.println(sql.getSql());
+		
+		lh=new SQL2000LimitHandler();
+		sql=lh.toPageSQL(sqls[0],new int[]{0,15});
+		System.out.println(sql.getSql());
+		
+		lh=new SQL2005LimitHandler();
+		sql=lh.toPageSQL(sqls[0],new int[]{0,15});
+		System.out.println(sql.getSql());
+		
+		lh=new DerbyLimitHandler();
+		sql=lh.toPageSQL(sqls[0],new int[]{0,15});
+		System.out.println(sql.getSql());
+		
+		
+		lh=new LimitOffsetLimitHandler();
+		sql=lh.toPageSQL(sqls[0],new int[]{0,15});
+		System.out.println(sql.getSql());
+		
+
+		lh=new MySqlLimitHandler();
+		sql=lh.toPageSQL(sqls[0],new int[]{0,15});
+		System.out.println(sql.getSql());
+		
+		
 	}
 }

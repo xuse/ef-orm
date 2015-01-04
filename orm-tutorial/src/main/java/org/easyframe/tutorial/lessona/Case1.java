@@ -81,11 +81,14 @@ public class Case1 extends org.junit.Assert {
 		PartitionSupport s = DebugUtil.getPartitionSupport(db);
 		ORMConfig.getInstance().setFilterAbsentTables(false);
 		Customer c = new Customer();
+		System.out.println("列出CUSTOMER表所有可能的表");
 		LogUtil.show(toTableName(c, s));
 		System.out.println("================");
+		System.out.println("当customNo=11时。根据分库规则，11 mod 3=2。因此将只落于datasource2上。");
 		c.setCustomerNo(11);
 		LogUtil.show(toTableName(c, s));
 		System.out.println("================");
+		System.out.println("当customNo=11时。根据分库规则，11 mod 3=2。因此将只落于datasource2上。createDate=今天，故可以定位到具体的一张表上");
 		c.setCreateDate(new Date());
 		LogUtil.show(toTableName(c, s));
 	}
