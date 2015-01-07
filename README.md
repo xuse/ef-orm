@@ -4,8 +4,11 @@
 A Simple OR-Mapping framework on multiple databases.
 
 
-使用手册(中文)<br>
+* 使用手册(中文)<br>
 https://github.com/xuse/ef-orm/blob/master/a.manual/EF-ORM%E4%BD%BF%E7%94%A8%E6%89%8B%E5%86%8C.docx
+<br>
+* 使用示例工程
+https://github.com/xuse/ef-orm/tree/master/orm-tutorial
 
 EF-ORM是一个轻量，便捷的Java ORM框架。并且具备若干企业级的应用特性，如分库分表、JTA事务等。
 
