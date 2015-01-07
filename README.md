@@ -44,7 +44,10 @@ xxQL有着拼装语句可读性差、编译器无法检查、变更维护困难等问题，但是却广受开发人员
 得益于ASM的动态代码生成技术，部分耗时操作通过动态代码固化为硬编码实现，EF-ORM的大部分操作性能要超过已知的其他框架。
      实际性能测试表明，EF的大部分操作都要快于Hiberante和MyBatis， 部分操作速度甚至数十倍于上述框架。
 EF在极限插入模式下，甚至刷新了每秒10万条写入的记录。远远超过了其他框架。
-一个初步的性能测试：https://github.com/xuse/ef-orm/blob/master/a.manual/performance-compare.docx
+
+一个初步的性能测试：<br>
+测试代码：https://github.com/xuse/ef-orm/blob/master/a.manual/performance-test.rar
+测试报告：https://github.com/xuse/ef-orm/blob/master/a.manual/performance-compare.docx
 
 * 阅读推荐：第9、17章
 
