@@ -211,8 +211,9 @@ public class SessionFactoryBean implements FactoryBean<JefEntityManagerFactory>,
 				}
 			}
 			if(packagesToScan!=null){
-				qe.setPackageNames(StringUtils.join(packagesToScan,','));
-				LogUtil.info("Starting scan easyframe entity from package: "+ packagesToScan);
+				String joined=StringUtils.join(packagesToScan,',');
+				qe.setPackageNames(joined);
+				LogUtil.info("Starting scan easyframe entity from package: "+ joined);
 				qe.doScan();	
 			}
 		}

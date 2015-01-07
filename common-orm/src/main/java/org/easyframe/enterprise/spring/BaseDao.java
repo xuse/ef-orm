@@ -68,7 +68,7 @@ public class BaseDao {
 	 * 获得JEF的操作Session
 	 * @return
 	 */
-	protected final Session getSession() {
+	public Session getSession() {
 		JefEntityManager em=(JefEntityManager)getEntityManager();
 		Session session= em.getSession();
 		Assert.notNull(session);

@@ -35,7 +35,7 @@ import jef.tools.StringUtils;
  * @author jiyi
  * 
  */
-final class RoutingConnection implements ReentrantConnection{
+final class RoutingConnection implements ReentrantConnection {
 	/**
 	 * 缺省数据源名称
 	 */
@@ -43,7 +43,7 @@ final class RoutingConnection implements ReentrantConnection{
 	/**
 	 * 自动提交
 	 */
-	private boolean autoCommit=true;
+	private boolean autoCommit = true;
 	/**
 	 * 只读标记
 	 */
@@ -55,7 +55,7 @@ final class RoutingConnection implements ReentrantConnection{
 	/**
 	 * 当前的Savapoint序号
 	 */
-	private int savePointId=0;
+	private int savePointId = 0;
 	/**
 	 * 连接池
 	 */
@@ -68,27 +68,28 @@ final class RoutingConnection implements ReentrantConnection{
 	 * 目前使用的连接数据源名称
 	 */
 	private String key;
-	
+
 	/**
-	 * 即便提交过程中出现错误，也持续将剩余的连接都提交完。
-	 * 如果设置为false，那么任意连接的提交错误将终止提交过程。剩余的连接等待回滚。
+	 * 即便提交过程中出现错误，也持续将剩余的连接都提交完。 如果设置为false，那么任意连接的提交错误将终止提交过程。剩余的连接等待回滚。
 	 * 
 	 */
 	private boolean continueCommitEvenException;
 
 	/**
 	 * 构造
+	 * 
 	 * @param parent
 	 */
-	public RoutingConnection(IRoutingConnectionPool parent,boolean isCommitEvenExeption) {
+	public RoutingConnection(IRoutingConnectionPool parent, boolean isCommitEvenExeption) {
 		this.parent = parent;
-		this.continueCommitEvenException=isCommitEvenExeption;
+		this.continueCommitEvenException = isCommitEvenExeption;
 	}
+
 	/**
 	 * 归还到父池中
 	 */
 	public void closePhysical() {
-		savePointId=0;
+		savePointId = 0;
 		if (parent != null) {
 			IRoutingConnectionPool parent = this.parent;
 			for (Entry<String, Connection> entry : connections.entrySet()) {
@@ -134,11 +135,11 @@ final class RoutingConnection implements ReentrantConnection{
 	public boolean isContinueCommitEvenException() {
 		return continueCommitEvenException;
 	}
-	
+
 	public void setContinueCommitEvenException(boolean continueCommitEvenException) {
 		this.continueCommitEvenException = continueCommitEvenException;
 	}
-	
+
 	public void setKey(String key) {
 		if (key != null && key.length() == 0) {
 			key = null;
@@ -147,61 +148,61 @@ final class RoutingConnection implements ReentrantConnection{
 	}
 
 	/**
-	 * 当有多个连接需要提交时，对每个连接进行提交。
-	 * 无论过程中是否有异常，都记录提交过程中发生的异常信息，并继续提交后续的连接。
+	 * 当有多个连接需要提交时，对每个连接进行提交。 无论过程中是否有异常，都记录提交过程中发生的异常信息，并继续提交后续的连接。
 	 */
 	public void commit() throws SQLException {
-		if(connections.isEmpty() || autoCommit)return;
+		//如果没有需要提交的连接，直接返回
+		if (connections.isEmpty() || autoCommit)
+			return;
 		ensureOpen();
-		List<String> successed = new ArrayList<String>();
-		SimpleMap<String, SQLException> errors=new SimpleMap<String,SQLException>();
+		//记录提交程度的数据源名称
+		List<String> succeed = new ArrayList<String>();
+		//
+		SimpleMap<String, SQLException> errors = new SimpleMap<String, SQLException>();
 		for (Map.Entry<String, Connection> entry : connections.entrySet()) {
 			try {
 				entry.getValue().commit();
-				successed.add(entry.getKey());
+				succeed.add(entry.getKey());
 			} catch (SQLException e) {
 				errors.add(entry.getKey(), e);
-				if(!continueCommitEvenException)
+				if (!continueCommitEvenException){
 					break;
+				}
 			} catch (RuntimeException e) {
 				errors.add(entry.getKey(), new SQLException(e));
-				if(!continueCommitEvenException)
+				if (!continueCommitEvenException){
 					break;
+				}
 			}
 		}
 		if (errors.isEmpty()) {
 			return;
 		}
-		if (successed.isEmpty()) {// 第一个连接提交就出错，事务依然保持一致
+		if (succeed.isEmpty()) {// 第一个连接提交就出错，事务依然保持一致
 			throw DbUtils.wrapExceptions(errors.values());
 		} else { // 第success.size()+1个连接提交出错
-			Entry<String,SQLException> error=errors.getEntries().get(0);
-			String message = StringUtils.concat("Error while commit data to datasource [", error.getKey(), "], and this is the ", String.valueOf(successed.size() + 1), "th commit of ", String.valueOf(connections.size()),
-					", there must be some data consistency problem, please check it.");
-			SQLException e = new SQLException(message, error.getValue());
-			e.setNextException(DbUtils.wrapExceptions(errors.values()));
-			throw e;
+			throw new InconsistentCommitException(succeed,errors,connections.size());
 		}
 	}
 
 	/**
-	 * 当有多个连接需要回滚时，对每个连接进行回滚。
-	 * 无论过程中是否有异常，都记录回滚过程中发生的异常信息，并继续回滚后续的连接。
+	 * 当有多个连接需要回滚时，对每个连接进行回滚。 无论过程中是否有异常，都记录回滚过程中发生的异常信息，并继续回滚后续的连接。
 	 */
 	public void rollback() throws SQLException {
-		if(connections.isEmpty() || autoCommit)return;
+		if (connections.isEmpty() || autoCommit)
+			return;
 		ensureOpen();
 		List<String> successed = new ArrayList<String>();
-		SimpleMap<String,SQLException> errors= new SimpleMap<String,SQLException>();
+		SimpleMap<String, SQLException> errors = new SimpleMap<String, SQLException>();
 		for (Map.Entry<String, Connection> entry : connections.entrySet()) {
 			try {
 				entry.getValue().rollback();
 				successed.add(entry.getKey());
 			} catch (SQLException e) {
-				errors.add(entry.getKey(),e);
-				//即时前面的连接出错，后面的依然要回滚
-			}catch(RuntimeException e){
-				errors.add(entry.getKey(),new SQLException(e));
+				errors.add(entry.getKey(), e);
+				// 即时前面的连接出错，后面的依然要回滚
+			} catch (RuntimeException e) {
+				errors.add(entry.getKey(), new SQLException(e));
 			}
 		}
 		if (errors.isEmpty()) {
@@ -210,11 +211,11 @@ final class RoutingConnection implements ReentrantConnection{
 		if (successed.isEmpty()) {// 第一个连接提交就出错，事务依然保持一致
 			throw DbUtils.wrapExceptions(errors.values());
 		} else { // 第success.size()+1个连接提交出错
-			Entry<String,SQLException> error=errors.getEntries().get(0);
+			Entry<String, SQLException> error = errors.getEntries().get(0);
 			String message = StringUtils.concat("Error while rollback data to datasource [", error.getKey(), "], and this is the ", String.valueOf(successed.size() + 1), "th rollback of ", String.valueOf(connections.size()),
 					", there must be some data consistency problem, please check it.");
-			SQLException ex=DbUtils.wrapExceptions(errors.values());
-			SQLException e = new SQLException(message,ex);
+			SQLException ex = DbUtils.wrapExceptions(errors.values());
+			SQLException e = new SQLException(message, ex);
 			e.setNextException(ex);
 			throw e;
 		}
@@ -318,10 +319,11 @@ final class RoutingConnection implements ReentrantConnection{
 	public void addUsedByObject() {
 		count++;
 	}
-//
-//	public boolean isUsed() {
-//		return count > 0;
-//	}
+
+	//
+	// public boolean isUsed() {
+	// return count > 0;
+	// }
 
 	public void notifyDisconnect() {
 	}
@@ -345,7 +347,7 @@ final class RoutingConnection implements ReentrantConnection{
 	/**
 	 * 归还到父池中
 	 */
-	public void close(){
+	public void close() {
 		parent.offer(this);
 	}
 
@@ -408,7 +410,6 @@ final class RoutingConnection implements ReentrantConnection{
 		return getConnection().getHoldability();
 	}
 
-	
 	public Savepoint setSavepoint() throws SQLException {
 		ensureOpen();
 		List<SQLException> errors = new ArrayList<SQLException>();
@@ -428,7 +429,7 @@ final class RoutingConnection implements ReentrantConnection{
 	}
 
 	public Savepoint setSavepoint(String name) throws SQLException {
-		if(name==null){
+		if (name == null) {
 			return setSavepoint();
 		}
 		ensureOpen();
@@ -449,18 +450,18 @@ final class RoutingConnection implements ReentrantConnection{
 	}
 
 	public void rollback(Savepoint savepoint) throws SQLException {
-		if(savepoint instanceof Savepoints){
-			((Savepoints)savepoint).doRollback();
-		}else{
-			throw new SQLException(savepoint+" is not a valid savepoint!");
+		if (savepoint instanceof Savepoints) {
+			((Savepoints) savepoint).doRollback();
+		} else {
+			throw new SQLException(savepoint + " is not a valid savepoint!");
 		}
 	}
 
 	public void releaseSavepoint(Savepoint savepoint) throws SQLException {
-		if(savepoint instanceof Savepoints){
-			((Savepoints)savepoint).doRelease();
-		}else{
-			throw new SQLException(savepoint+" is not a valid savepoint!");
+		if (savepoint instanceof Savepoints) {
+			((Savepoints) savepoint).doRelease();
+		} else {
+			throw new SQLException(savepoint + " is not a valid savepoint!");
 		}
 	}
 
@@ -537,17 +538,21 @@ final class RoutingConnection implements ReentrantConnection{
 	public int getNetworkTimeout() throws SQLException {
 		return 0;
 	}
+
 	@Override
 	public void setInvalid() {
 	}
+
 	@Override
 	public boolean checkValid(String testSql) throws SQLException {
 		return true;
 	}
+
 	@Override
 	public boolean checkValid(int timeout) throws SQLException {
 		return true;
 	}
+
 	@Override
 	public boolean isUsed() {
 		return count > 0;

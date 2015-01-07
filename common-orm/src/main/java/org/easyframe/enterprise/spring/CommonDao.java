@@ -351,7 +351,7 @@ public interface CommonDao{
 	/**
 	 * 得到当前的JEF Session
 	 */
-	Session getSessionEx();
+	Session getSession();
 	
 	/**
 	 * 得到当前无事务的操作Session，可以在其上执行各种DDL。访问Database MetaData等。<br>

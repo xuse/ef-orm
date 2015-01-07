@@ -21,7 +21,6 @@ import jef.database.NativeQuery;
 import jef.database.PagingIterator;
 import jef.database.PojoWrapper;
 import jef.database.QB;
-import jef.database.Session;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.jpa.JefEntityManagerFactory;
 import jef.database.meta.EntityType;
@@ -567,10 +566,6 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		NativeQuery<T> query = getSession().createNativeQuery(sql, returnType);
 		query.setParameterMap(params);
 		return query.getResultIterator();
-	}
-
-	public Session getSessionEx() {
-		return super.getSession();
 	}
 
 	public DbClient getNoTransactionSession() {

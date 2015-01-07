@@ -262,7 +262,7 @@ public enum DbCfg implements ConfigItem {
 	 * <li>Identity: 使用数据库表本身的自增特性</li>
 	 * <li>Sequence： 使用Sequence生成自增</li>
 	 * <li>Table： 使用数据库表模拟出Sequence。</li>
-	 * <li>Auto: 根据数据库自动选择 Identity  > Sequence > Table <br />(由于数据库多少都支持前两个特性，所以实际上Table默认不会被使用</li>
+	 * <li>Auto: 根据数据库自动选择 Identity  > Sequence > Table <br />(由于数据库多少都支持前两个特性，所以实际上Table默认不会被使用。（分库分表下会被使用）</li>
 	 * </ul>
 	 * <p /> 
 	 * 
@@ -272,15 +272,21 @@ public enum DbCfg implements ConfigItem {
 	DB_AUTOINCREMENT_NATIVE,
 	
 	/**
-	 * 允许手工指定的值代替自动生成的值，默认false 
+	 * 允许手工指定的值代替自动生成的值，默认false。
+	 * 正常情况下，自增主键的字段是无法由用户设值的，开启此选项后，如果用户设值了自增主键的值，则将尝试将此值代替自增主键值。
+	 * <br>
+	 * <strong>
+	 * 在MSSQL和SQLite上次特性不能使用。
+	 * </strong>
+	 * TODO 补充MSSQL上的测试案例。
 	 */
 	DB_SUPPORT_MANUAL_GENERATE,
 	
 	/**
-	 * 如果自增实现实际使用了Sequence或Table作为自增策略，那么开启hilo优化模式。即sequence或table生成的值作为主键的高位，再根据当前时间等自动填充低位。
+	 * 如果自增实现<strong>实际使用</strong>了Sequence或Table作为自增策略，那么开启hilo优化模式。即sequence或table生成的值作为主键的高位，再根据当前时间等自动填充低位。
 	 * 这样做的好处是一次操作数据库可以生成好几个值，减少了数据库操作的次数，提高了性能。
 	 * <p>
-	 * 如果实际使用的是Identity模式，那么此项配置无效。
+	 * 如果实际使用的是Identity模式(即数据库自行生成自增值)，那么此项配置无效。
 	 * <p>
 	 * true/false。默认false。仅有&#64;HiloGeneration(always=true)的配置会使用hilo。
 	 * 一旦设置为true，那么所有配置了&#64;HiloGeneration()的自增键都会使用hilo.
@@ -288,16 +294,18 @@ public enum DbCfg implements ConfigItem {
 	DB_AUTOINCREMENT_HILO,
 	
 	/**
-	 * 如果自增实现中实际使用了Sequence作为自增策略，那么可以step优化模式。即sequence生成的值每次递增超过1，然后ORM会补齐被跳过的编号。
+	 * 如果自增实现中<strong>实际使用</strong>了Sequence作为自增策略，那么可以使用该参数适配不同步长的sequence以优化性能。即sequence生成的值每次递增超过1，然后ORM会补齐被跳过的编号。
 	 * 对identity,table模式无效。
 	 * 当配置为
 	 * <ul>
-	 * <li>0: Sequence：对Oracle自动检测，其他数据库为1</li>
-	 * <li>-1:Sequence模式下：对所有数据库均自动检测。在非Oracle数据库上会消耗一次Sequence。</li>
-	 * <li>1: Sequence模式下：相当于该功能关闭，Sequence拿到多少就是多少。</li>
-	 * <li>&gt;1:Sequence模式下：数据库不再自动检测，按配置值作为Sequence步长（如果和实际Sequence步长不一致可能出错）</li>
+	 * <li>0 : Oracle自动检测，其他数据库为1 (默认)</li>
+	 * <li>-1: 对所有数据库均自动检测。在非Oracle数据库上会消耗一次Sequence。</li>
+	 * <li>1 :  Sequence步长固定为1.相当于该功能关闭，Sequence拿到多少就是多少。</li>
+	 * <li>&gt;1的数值: 数据库不再自动检测，按配置值作为Sequence步长（不推荐。如果和实际Sequence步长不一致可能出错）</li>
 	 * </ul>
-	 * 默认为0，
+	 * 默认为0，<br>
+	 * 注意：此参数不会修改数据库中已存在的Sequence的步长。也不影响由ef-orm自动创建的sequence步长。
+	 * 
 	 * 这项配置一般不需要配置，如果你不是很清楚的了解其作用，就不要配这个参数。
 	 */
 	DB_SEQUENCE_STEP,
@@ -310,18 +318,21 @@ public enum DbCfg implements ConfigItem {
 	 */
 	SEQUENCE_BATCH_SIZE,
 	/**
-	 * 允许自动创建数据库SEQUENCE (或模拟用的TABLE)，一般用在开发时和一些小型项目中，不适用于对用户权限有严格规范的专业项目中。
+	 * 开启此选项后，允许自动创建数据库SEQUENCE (或模拟用的TABLE)。
+	 * 一般用在开发时和一些小型项目中，不适用于对用户权限有严格规范的专业项目中。
 	 */
 	AUTO_SEQUENCE_CREATION, //
 	/**
-	 * 在自动创建SEQUENCE (或模拟用的TABLE)时，Sequence的校准值。
+	 * 在自动创建SEQUENCE (或模拟用的TABLE)时，Sequence的初始值。
 	 * 
 	 * 默认-1，表示根据表中现存的记录自动校准(最大值+1)。
 	 * 当配置为正数时，为每张表的初始值+配置值。
 	 */
 	AUTO_SEQUENCE_OFFSET,
 	/**
-	 * 如果表本身没有配置Sequence的名称，此处配置默认的Sequence名称模板。
+	 * Sequence名称模板<br>
+	 * 可以被@SequenceGenerator当中的Sequence名称所覆盖。<br>
+
 	 * 当需要使用Sequence的时候就会被使用。
 	 * 
 	 * 默认值%s_SEQ 表名_SEQ
@@ -386,7 +397,9 @@ public enum DbCfg implements ConfigItem {
 	 */
 	DB_CHECK_SQL_FUNCTIONS,
 	/**
-	 * 当分表维度缺失时，默认时间宽度。是一个表达式，例如 -6,3表示从当天算起时间维度为向前三个月到向后一个月
+	 * 当分表维度缺失时，默认时间宽度。是一个表达式，例如 -3,1表示从当天算起时间维度为向前三个月到向后一个月
+	 * 分库分表场景下，如果使用时间作为分表维度，而查询数据而又未指定明确的时间时，将只查询该时段范围内的数据。
+	 * 
 	 */
 	PARTITION_DATE_SPAN,
 	/**
