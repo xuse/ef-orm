@@ -648,7 +648,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			throw new IllegalArgumentException("There's no property named " + propertyName + " in type of " + meta.getName());
 		}
 		try {
-			return getSession().batchLoadByField(field, value);
+			return (List<?>)getSession().batchLoadByField(field, value);
 		} catch (SQLException e) {
 			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}

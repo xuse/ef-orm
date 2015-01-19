@@ -31,9 +31,6 @@ public class CaseJTA extends AbstractJUnit4SpringContextTests {
 	public void ysss1() throws SQLException {
 		SqlTemplate ds1=dao.getSession().getSqlTemplate("ds1");
 		
-		ds1.executeSql("", params)
-		
-		
 		SqlTemplate ds2=dao.getSession().getSqlTemplate("ds2");
 		
 		

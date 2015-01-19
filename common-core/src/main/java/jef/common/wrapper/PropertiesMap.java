@@ -35,9 +35,9 @@ public class PropertiesMap extends AbstractMap<String, String> implements Map<St
 		prop.clear();		
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Override
-	public Iterator<? extends java.util.Map.Entry<String, String>> entryIterator() {
-		return (Iterator<? extends java.util.Map.Entry<String, String>>) prop.entrySet().iterator();
+	public Iterator entryIterator() {
+		return prop.entrySet().iterator();
 	}
 }
