@@ -19,6 +19,11 @@ import jef.tools.reflect.FieldEx;
 import jef.tools.reflect.MethodEx;
 import jef.tools.reflect.UnsafeUtils;
 
+/**
+ * 用于生成动态访问者类（Accessor）的类工厂。
+ * @author jiyi
+ *
+ */
 final class ASMAccessorFactory implements BeanAccessorFactory {
 	@SuppressWarnings("rawtypes")
 	private static final Map<Class, BeanAccessor> map = new IdentityHashMap<Class, BeanAccessor>();
