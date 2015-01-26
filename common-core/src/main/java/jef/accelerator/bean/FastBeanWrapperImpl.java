@@ -82,7 +82,7 @@ public final class FastBeanWrapperImpl extends BeanWrapper{
 	public void setPropertyValue(String fieldName, Object newValue) {
 		boolean flag=accessor.setProperty(obj, fieldName, newValue);
 		if(!flag){
-			throw new NoSuchElementException("There's no accessable field '"+ fieldName +"' in bean "+getClassName());
+			throw new NoSuchElementException("There's no accessable field '"+ fieldName +"' in class "+getClassName());
 		}	
 	}
 
