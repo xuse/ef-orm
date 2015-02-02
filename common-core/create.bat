@@ -1,1 +1,0 @@
-javah -classpath target\classes -d src\main\cpp jef.tools.unrar.Rar

@@ -40,10 +40,11 @@ import jef.tools.zip.ZipOutputStream;
 
 /**
  * JEF压缩解压的通用包：目前支持以下格式的文件
+ * <ul>
  * <li>zip 压缩/解压 密码不支持，修复了JDK的编码问题。</li>
  * <li>tar.gz 压缩/解压  修复了Apache同名类的编码问题。</li>
  * <li>tar 压缩/解压</li>
- * <li>rar 仅解压 支持分卷、密码 Native代码，不同平台需要重新编译库</li>
+ * </ul>
  */
 public class ZipUtils {
 	static {
@@ -198,7 +199,7 @@ public class ZipUtils {
 	 * @param target  解压后文件
 	 * @throws IOException
 	 */
-	public static void unGzip(File source,File target) throws IOException {
+	public static void ungzip(File source,File target) throws IOException {
 		IOUtils.copy(new GZIPInputStream(IOUtils.getInputStream(source)), IOUtils.getOutputStream(target), true);
 	}
 	
