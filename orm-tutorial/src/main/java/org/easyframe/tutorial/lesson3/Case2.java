@@ -25,6 +25,11 @@ import org.easyframe.tutorial.lesson2.entity.Student;
 import org.easyframe.tutorial.lesson2.entity.StudentToLession;
 import org.junit.Test;
 
+/**
+ * 之前看了查询条件的用法。现在看看更多灵活的查询用法。
+ * @author geequery
+ *
+ */
 public class Case2 extends org.junit.Assert {
 	DbClient db;
 
@@ -39,11 +44,16 @@ public class Case2 extends org.junit.Assert {
 		ORMConfig.getInstance().setDebugMode(true);
 	}
 
+	/**
+	 * 使用selectFrom方法，来指定要查询的字段 。未指定要查询的字段不会被查出。
+	 * @throws SQLException
+	 */
 	@Test
 	public void testSelect_selectFrom() throws SQLException {
 		Query<Student> query = QueryBuilder.create(Student.class);
 		query.addCondition(QueryBuilder.eq(Student.Field.gender, "F"));
 
+		//指定：仅查询id,name两个字段
 		Selects selects = QueryBuilder.selectFrom(query);
 		selects.column(Student.Field.id);
 		selects.column(Student.Field.name);
@@ -59,7 +69,7 @@ public class Case2 extends org.junit.Assert {
 	}
 
 	/**
-	 * 查出所有学生姓名，不带重复的
+	 * 查出所有学生姓名，使用distinct语句过滤掉重复的。
 	 * 
 	 * @throws SQLException
 	 */
@@ -75,7 +85,8 @@ public class Case2 extends org.junit.Assert {
 	}
 
 	/**
-	 * 按男生、女生分组
+	 * group by的查询该怎么用？
+	 * 下面的例子演示了将学生按照男生、女生分组进行统计。
 	 * 
 	 * @throws SQLException
 	 */
@@ -99,7 +110,8 @@ public class Case2 extends org.junit.Assert {
 	}
 
 	/**
-	 * Having
+	 * 带有Having子句的查询该怎么使用？
+	 * 我们对学生按年级进行分组统计，同时使用having子句过滤掉人数大于2的年级。
 	 * 
 	 * @throws SQLException
 	 */
@@ -118,6 +130,10 @@ public class Case2 extends org.junit.Assert {
 		}
 	}
 
+	/**
+	 * 查询学生数量的语句中，使用distinct……
+	 * @throws SQLException
+	 */
 	@Test
 	public void testSelect_countDistinct() throws SQLException {
 		Query<Student> q = QB.create(Student.class);
@@ -125,13 +141,16 @@ public class Case2 extends org.junit.Assert {
 		Selects items = QB.selectFrom(q);
 		items.column(Student.Field.name);
 		items.setDistinct(true);
-		q.setMaxResult(1);
+		//q.setMaxResult(1);
 
 		long total = db.count(q);// 取总数
 		List<String> result=db.selectAs(q,String.class);
 		System.out.println("总数为:"+ total +" 查出"+ result.size()+"条");
 	}
 	
+	/**
+	 * 查询学生数量的语句中，使用distinct——的另一种写法
+	 */
 	@Test
 	public void testSelect_countDistinct2() throws SQLException {
 		Query<Student> q = QB.create(Student.class);
@@ -143,7 +162,10 @@ public class Case2 extends org.junit.Assert {
 		System.out.println("Count:"+  total);
 	}
 
-	
+	/**
+	 * 分组查询 group by以后，常用的统计函数——
+	 * @throws SQLException
+	 */
 	@Test
 	public void testSelect_function1() throws SQLException {
 		Query<Student> q = QB.create(Student.class);
@@ -159,6 +181,12 @@ public class Case2 extends org.junit.Assert {
 		}
 	}
 	
+	/**
+	 * 在查询中，除了常用统计函数，还可以使用标准的系统函数，这些系统函数几乎囊括了大部分数据库上的常用函数。
+	 * 例如下面的 decode函数和upper函数。
+	 * 
+	 * @throws SQLException
+	 */
 	@Test
 	public void testSelect_function2() throws SQLException {
 		Query<Student> q = QB.create(Student.class);
@@ -176,6 +204,12 @@ public class Case2 extends org.junit.Assert {
 		}
 	}
 	
+	/**
+	 * 当然如果不愿意用API编写select 部分的，直接写SQL 片段也是允许的。
+	 * 
+	 * 下面的例子直接用SQL片段来描述查询的内容。同时对片段也是支持各种数据库兼容的。（用到了SQL改写技术）
+	 * @throws SQLException
+	 */
 	@Test
 	public void testSelect_sqlExpression() throws SQLException {
 		Query<Student> q = QB.create(Student.class);
@@ -187,6 +221,10 @@ public class Case2 extends org.junit.Assert {
 		}
 	}
 	
+	/**
+	 * 同样的日期时间也有相关的标准函数支持。
+	 * @throws SQLException
+	 */
 	@Test
 	public void testSelect_sqlExpression2() throws SQLException {
 		Query<Student> q = QB.create(Student.class);

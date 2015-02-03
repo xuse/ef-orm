@@ -19,7 +19,10 @@ import org.junit.Test;
 public class Case1 {
 
 	private static DbClient db;
-
+	
+	/**
+	 * 环境准备
+	 */
 	@BeforeClass
 	public static void setup() throws SQLException {
 		new EntityEnhancer().enhance("org.easyframe.tutorial");
@@ -34,6 +37,10 @@ public class Case1 {
 			db.close();
 	}
 
+	/**
+	 * 删表与建表
+	 * @throws SQLException
+	 */
 	@Test
 	public void testCreateTable() throws SQLException {
 		db.dropTable(StudentToLession.class);
@@ -43,6 +50,7 @@ public class Case1 {
 	/**
 	 * 自增主键的返回
 	 * 
+	 * 插入时，字段可以是自增的，操作完成后，自增值将会赋值到对象中。
 	 * @throws SQLException
 	 */
 	@Test
@@ -58,7 +66,7 @@ public class Case1 {
 	}
 
 	/**
-	 * 查询示例
+	 * 各种简单条件的单表查询
 	 * 
 	 * @throws SQLException
 	 */
@@ -83,15 +91,16 @@ public class Case1 {
 			Student query = new Student();
 			query.setGender("F");
 			query.setGrade("2");
-			List<Student> sts = db.select(query);// 查出所有Gender='F' and
-													// grade='2'的记录。
+			// 查出所有Gender='F' and grade='2'的记录。
+			List<Student> sts = db.select(query);
 		}
 		// 如果一个对象的复合主键没有全部赋值的情况，那么也当做普通字段对待
 		// 最终效果和findByExample()一样。
 		{
 			StudentToLession query = new StudentToLession();
 			query.setLessionId(1);
-			List<StudentToLession> sts = db.select(query);// 查出所有lessionId='1'的记录。
+			// 查出所有lessionId='1'的记录。
+			List<StudentToLession> sts = db.select(query);
 
 		}
 		// 如果一个对象的主键都赋了值，非主键字段也赋值。那么非主键字段不会作为查询条件
@@ -100,7 +109,8 @@ public class Case1 {
 			Student query = new Student();
 			query.setGrade("1");
 			query.setId(12);
-			List<Student> sts = db.select(query); // 查询条件为 id=12。grade不用作查询条件
+			 // 查询条件为 id=12。grade = 12不用作查询条件
+			List<Student> sts = db.select(query);
 		}
 	}
 
@@ -120,8 +130,11 @@ public class Case1 {
 	}
 
 	/**
-	 * 更为复杂的查询1
+	 * 带有大于、小于、Like等各种复杂的复合条件查询
 	 * 
+	 * 注意：由于有了enum类型的字段枚举，您将不会有机会拼写错误的字段名。
+	 *       而且一旦字段发生变更，编译器也能帮您判断出问题的所在。
+	 *        
 	 * @throws SQLException
 	 */
 	@Test
@@ -129,14 +142,16 @@ public class Case1 {
 		Student s = new Student();
 		s.getQuery()
 			.addCondition(Student.Field.name, Operator.MATCH_ANY, "Jhon")
-			.addCondition(Student.Field.id, Operator.LESS, 100)
+			.addCondition(Student.Field.id,   Operator.LESS,      100)
 			.orderByDesc(Student.Field.grade);
 		List<Student> sts = db.select(s);
 		Assert.assertEquals(sts.size(), db.count(s.getQuery()));
 	}
 
 	/**
-	 * 更为复杂的查询2、增加一个条件：正确写法
+	 * 更为复杂的查询
+	 * 增加一个条件的正确写法。如果使用了Query对象，那么在Student中直接setXxx设值，不会用作查询条件。
+	 * 因此，您必须用一致的写法来描述查询条件。
 	 * 
 	 * @throws SQLException
 	 */
@@ -146,10 +161,8 @@ public class Case1 {
 
 		// s.setGrade("3"); //在已经使用了Query对象中的情况下，此处设值不作为查询条件
 
-		s.getQuery().addCondition(Student.Field.grade, "3"); // 添加
-																// grade='3'这个条件。当运算符为
-																// =
-																// 时，中间的运算符可以省略不写。
+		s.getQuery().addCondition(Student.Field.grade, "3"); // 添加 grade='3'这个条件。
+														    //当运算符为 = 时，可以省略不写。
 
 		s.getQuery().addCondition(Student.Field.name, Operator.MATCH_ANY, "Jhon");
 		s.getQuery().addCondition(Student.Field.id, Operator.LESS, 100);
@@ -160,7 +173,11 @@ public class Case1 {
 	}
 
 	/**
-	 * 使用Like条件和in条件的更新和删除
+	 * 使用Like条件和in条件的更新和删除——
+	 * 在学会使用Query对象来操作查询语句后，实现复杂条件下的update和delete也就是举一反三的事情了。
+	 * 
+	 * 看了这个例子后，我们会发现db.delete db.select db.update三个方法传入的实体对象，实际上是一个完整SQL语句的载体。
+	 * 因此，这套API本质上不是为了实现单行记录的增删改查而设计的。这点和某H框架并不一样。
 	 * 
 	 * @throws SQLException
 	 */
@@ -182,7 +199,10 @@ public class Case1 {
 	}
 
 	/**
-	 * 更新对象的主键列
+	 * 更新对象的主键列——
+	 * 既然我们传入的实体是一个完整的SQL的载体，那么自然也可以做一些传统ORM很难实现的功能。
+	 * 比如 —— 更新主键字段。
+	 * 
 	 */
 	@Test
 	public void testUpdatePrimaryKey() throws SQLException {
@@ -199,17 +219,10 @@ public class Case1 {
 		// update STUDENT set ID = 100 where ID= 1
 	}
 
-	private int insert() throws SQLException {
-		Student s = new Student();
-		s.setName("Jhon Smith");
-		s.setGender("M");
-		s.setGrade("2");
-		db.insert(s);
-		return s.getId();
-	}
 
 	/**
-	 * 更为复杂的查询2、修改写法,使用QueryBuilder
+	 * 另一种风格的条件书写。
+	 * 为了满足不同偏好的小伙伴的要求，API支持好几种 条件的书写风格。这是使用QueryBuilder(QB)风格。
 	 * 
 	 * @throws SQLException
 	 */
@@ -227,4 +240,36 @@ public class Case1 {
 		Assert.assertEquals(sts.size(), db.count(query));
 	}
 
+
+	/**
+	 * 另一种风格的条件书写。
+	 * 为了满足不同偏好的小伙伴的要求，API支持好几种 条件的书写风格。这是使用Terms风格。
+	 * 
+	 * 和上例的效果是完全一样的
+	 * @throws SQLException
+	 */
+	@Test
+	public void testSelect_LikeAndEtc4() throws SQLException {
+		Query<Student> query = QueryBuilder.create(Student.class);
+
+		query.terms().eq(Student.Field.grade, "3")
+			.and().matchAny(Student.Field.name, "Jhon")
+			.and().lt(Student.Field.id, 100);
+		
+		
+		query.orderByDesc(Student.Field.grade);
+		List<Student> sts = db.select(query);
+
+		Assert.assertEquals(sts.size(), db.count(query));
+	}
+	
+
+	private int insert() throws SQLException {
+		Student s = new Student();
+		s.setName("Jhon Smith");
+		s.setGender("M");
+		s.setGrade("2");
+		db.insert(s);
+		return s.getId();
+	}
 }
