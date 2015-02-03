@@ -34,6 +34,11 @@ import org.easyframe.tutorial.lesson5.entity.Item;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+/**
+ * 演示 指定查询结果的装配方法，从而让数据库查询结果转换为需要的类型。
+ * @author jiyi
+ *
+ */
 public class Case1 extends org.junit.Assert {
 	private static DbClient db;
 

@@ -21,7 +21,11 @@ import org.easyframe.tutorial.lesson4.entity.School;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-
+/**
+ * 批量操作，是在操作大量数据时提高性能的有效方法
+ * @author jiyi
+ *
+ */
 public class BatchOperate extends org.junit.Assert {
 
 	private static DbClient db;
@@ -85,6 +89,11 @@ public class BatchOperate extends org.junit.Assert {
 
 	}
 
+	/**
+	 * 设置多组更新数据。
+	 * 注意、后面的更新请求必须和第一个请求具有完全相同的更新字段和条件。
+	 * @throws SQLException
+	 */
 	@Test
 	public void testBatchUpdate() throws SQLException {
 		doInsert(5);

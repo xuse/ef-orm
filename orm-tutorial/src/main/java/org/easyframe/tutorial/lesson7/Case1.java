@@ -29,6 +29,11 @@ import org.easyframe.tutorial.lesson7.entity.NodeTable;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+/**
+ * NativeQuery相关操作演示
+ * @author jiyi
+ *
+ */
 public class Case1 extends org.junit.Assert {
 	private static DbClient db;
 

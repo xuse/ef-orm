@@ -57,7 +57,10 @@ public class Case2 extends org.junit.Assert {
 		ORMConfig.getInstance().setDebugMode(true);
 	}
 	
-	
+	/**
+	 * 当需要查询的数据量非常庞大时，如数据导出等，可以使用Iterator模式 流式处理。
+	 * @throws SQLException
+	 */
 	@Test
 	public void  testIteratedSelect() throws SQLException{
 		Query<Person> p=QB.create(Person.class);
@@ -74,7 +77,4 @@ public class Case2 extends org.junit.Assert {
 			results.close();
 		}
 	}
-	
-
-
 }

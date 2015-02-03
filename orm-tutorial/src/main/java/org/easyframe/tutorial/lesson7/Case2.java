@@ -23,7 +23,10 @@ import org.easyframe.tutorial.lesson4.entity.Person;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-
+/**
+ * nativeQuery支持路由功能（多数据库） 
+ *
+ */
 public class Case2 {
 	
 	private static DbClient db;

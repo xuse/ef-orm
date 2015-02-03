@@ -92,5 +92,5 @@
 	<tx:annotation-driven transaction-manager="transactionManager"
 		proxy-target-class="true" />
 	<bean id="commonDao" class="org.easyframe.enterprise.spring.CommonDaoImpl" />
-
+	<bean class="org.easyframe.tutorial.lessonb.JTATestService"/>
 </beans> 
