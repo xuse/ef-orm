@@ -13,6 +13,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 
+
+/**
+ * JTA事务的测试/演示
+ * @author jiyi
+ *
+ */
 @ContextConfiguration(locations = { "classpath:spring/spring-test-jta.xml" })
 public class CaseJTA extends AbstractJUnit4SpringContextTests {
 	@Autowired

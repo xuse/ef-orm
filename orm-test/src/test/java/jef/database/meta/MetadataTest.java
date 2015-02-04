@@ -78,7 +78,7 @@ public class MetadataTest extends org.junit.Assert{
 	@Test
 	@IgnoreOn("sqlite")
 	public void testMeta() throws SQLException {
-		ForeignKey[] fk=db.getMetaData(null).getForeignKey("T3");
+		List<ForeignKey> fk=db.getMetaData(null).getForeignKey("T3");
 		for(ForeignKey k: fk){
 			System.out.println("===============");
 			System.out.println(k.toString());

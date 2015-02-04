@@ -416,7 +416,7 @@ public class DbClient extends Session implements ConnectionFactory {
 	 * one datasource, input null is fine.
 	 * 
 	 * @param dbkey
-	 *            the name of datasource. input null to assign a default
+	 *            the name of datasource. input null to access the metadata of default
 	 *            datasource.
 	 * @return
 	 * @throws SQLException
