@@ -15,6 +15,12 @@ import org.junit.Assert;
 import org.junit.Test;
 
 public class Case1 {
+	/**
+	 * At the very begining. 在最初的开始——
+	 * 
+	 * 我们现在创建一个名为Foo的实体 {@link Foo}。然后用API为这个实体建表、并实现增删改查操作。
+	 * 大家平时操作ORM框架都是使用了一个Dao对象的，因此这里也使用了一个通用的DAO对象。
+	 */
 	@Test
 	public void simpleTest() throws SQLException{
 		DbClient db=new DbClient();
@@ -22,11 +28,12 @@ public class Case1 {
 		CommonDao dao=new CommonDaoImpl();
 		//模拟Spring自动注入
 		((BaseDao)dao).setEntityManagerFactory(emf);
+		
 		//创建表
 		dao.getNoTransactionSession().dropTable(Foo.class);
 		dao.getNoTransactionSession().createTable(Foo.class); 
 		
-		
+		//增加记录
 		Foo foo=new Foo();
 		foo.setId(1);
 		foo.setName("Hello,World!");

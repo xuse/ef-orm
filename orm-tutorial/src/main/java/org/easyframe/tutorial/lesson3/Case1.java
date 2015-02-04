@@ -20,7 +20,7 @@ import org.easyframe.tutorial.lesson2.entity.Student;
 import org.junit.Test;
 
 /**
- * 这个案例演示单表查询Criteria的用法，请对照执行后控制台上的打印出的SQL语句来验证。
+ * 这个案例演示更多的单表查询Criteria的用法，请对照执行后控制台上的打印出的SQL语句来验证。
  * 
  * @author jiyi
  * 
@@ -39,6 +39,10 @@ public class Case1 extends org.junit.Assert {
 		ORMConfig.getInstance().setDebugMode(true);
 	}
 
+	/**
+	 * 根据 "模板对象" 的属性进行查询
+	 * @throws SQLException
+	 */
 	@Test
 	public void testSelect_example() throws SQLException {
 		Student st = new Student();
@@ -46,12 +50,16 @@ public class Case1 extends org.junit.Assert {
 		st.setGrade("2");
 		List<Student> students = db.select(st);
 
-		System.out.println("2年纪的男生：" + students.size());
+		System.out.println("2年级的男生：" + students.size());
 
 		// 用改写成count语句的方式再查一遍，检查两遍是否相等。
 		assertEquals(db.count(st.getQuery()), students.size());
 	}
 
+	/**
+	 * 根据主键查询
+	 * @throws SQLException
+	 */
 	@Test
 	public void testSelect_Id() throws SQLException {
 		Student st = new Student();
@@ -65,6 +73,10 @@ public class Case1 extends org.junit.Assert {
 		assertEquals(db.count(st.getQuery()), students.size());
 	}
 
+	/**
+	 * 使用in 作为查询条件
+	 * @throws SQLException
+	 */
 	@Test
 	public void testSelect_In() throws SQLException {
 		Student st = new Student();
@@ -81,6 +93,10 @@ public class Case1 extends org.junit.Assert {
 		assertEquals(db.count(st.getQuery()), students.size());
 	}
 
+	/**
+	 * 使用 Between 条件。
+	 * @throws SQLException
+	 */
 	@Test
 	public void testSelect_Between() throws SQLException {
 		Student st = new Student();
@@ -95,6 +111,10 @@ public class Case1 extends org.junit.Assert {
 		assertEquals(db.count(st.getQuery()), students.size());
 	}
 
+	/**
+	 * 在查询中使用 or、not
+	 * @throws SQLException
+	 */
 	@Test
 	public void testSelect_AndOrNot() throws SQLException {
 		Student st = new Student();
@@ -122,6 +142,12 @@ public class Case1 extends org.junit.Assert {
 		assertEquals(db.count(st.getQuery()), students.size());
 	}
 
+	/**
+	 * 在查询中使用数据库函数
+	 * 
+	 * 注意观察——concat、lower等在不支持这些函数的数据库上，也能被转化为本地语言，正常运行。
+	 * @throws SQLException
+	 */
 	@Test
 	public void testSelect_Function() throws SQLException {
 		Student st = new Student();
@@ -132,6 +158,12 @@ public class Case1 extends org.junit.Assert {
 		
 	}
 	
+	/**
+	 * 在查询中使用 数据库函数 作为表达式的条件。
+	 * 
+	 * 注意观察——upper、nvl等在不支持这些函数的数据库上，也能被转化为本地语言，正常运行。
+	 * @throws SQLException
+	 */
 	@Test
 	public void testSelect_JpqlExpression() throws SQLException {
 		Student st = new Student();
@@ -150,6 +182,11 @@ public class Case1 extends org.junit.Assert {
 		}
 	}
 	
+	/**
+	 * 更灵活的用法——
+	 * 还可以直接把一个SQL语句作为查询条件中的表达式
+	 * @throws SQLException
+	 */
 	@Test
 	public void testSelect_SqlExpression() throws SQLException {
 		Student st = new Student();
@@ -160,7 +197,12 @@ public class Case1 extends org.junit.Assert {
 		assertEquals(db.count(st.getQuery()), students.size());	
 	}
 	
-	
+	/**
+	 * 更灵活的用法——
+	 * 1 可以使用一个表达式直接作为整个查询条件本身。
+	 * 2 支持JDBC函数。
+	 * @throws SQLException
+	 */
 	@Test
 	public void testSelect_SqlExpression2() throws SQLException {
 		Student st = new Student();
@@ -173,16 +215,20 @@ public class Case1 extends org.junit.Assert {
 		assertEquals(db.count(st.getQuery()), students.size());	
 	}
 	
-	
+	/**
+	 * 上述对Query条件的操作，在Update语句中同样适用。
+	 * 同理，Delete语句也一样。
+	 * @throws SQLException
+	 */
 	@Test
 	public void testUpdate_SqlExpression() throws SQLException {
 		Student st = new Student();
 		st.getQuery().addCondition(new FBIField("concat(lower(gender) , grade)"),"f2");
-		List<Student> students=db.select(st);
 		
-		assertEquals(db.count(st.getQuery()), students.size());
+		st.setGrade("6");
+		// update STUDENT set GRADE = '6' where lower(gender)||grade='f2'
+		db.update(st);
 	}
-	
 	
 	private void prepareData(int num) throws SQLException {
 		List<Student> data = new ArrayList<Student>();

@@ -29,6 +29,11 @@ import org.easyframe.tutorial.lesson7.entity.NodeTable;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+/**
+ * NativeQuery相关操作演示
+ * @author jiyi
+ *
+ */
 public class Case1 extends org.junit.Assert {
 	private static DbClient db;
 
@@ -260,20 +265,6 @@ public class Case1 extends org.junit.Assert {
 		System.out.println(db.createNativeQuery(sql).getResultList());
 	}
 
-	/**
-	 * 本案例演示扩展方言的效用。本例中出现的ifnull和atan2函数都是内置的方言中没有用注册的函数。
-	 * 通过自定义的方言覆盖内置方言，才能支持这些函数。
-	 * 
-	 * @throws SQLException
-	 */
-	@Test
-	public void testExtendDialact() throws SQLException {
-		String sql = "select atan2(12, 1) from t_person";
-		System.out.println(db.createNativeQuery(sql).getResultList());
-
-		sql = "select ifnull(gender, 'F') from t_person";
-		System.out.println(db.createNativeQuery(sql).getResultList());
-	}
 
 	/**
 	 * 绑定变量中使用Like条件，通过在SQL中指定参数类型使查询支持模糊匹配。

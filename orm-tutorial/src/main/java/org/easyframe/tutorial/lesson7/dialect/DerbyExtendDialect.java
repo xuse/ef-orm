@@ -1,4 +1,4 @@
-package org.easyframe.tutorial.lessonc;
+package org.easyframe.tutorial.lesson7.dialect;
 
 import jef.database.dialect.DerbyDialect;
 import jef.database.query.function.StandardSQLFunction;

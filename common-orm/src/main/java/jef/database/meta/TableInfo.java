@@ -2,6 +2,12 @@ package jef.database.meta;
 
 import jef.tools.StringUtils;
 
+/**
+ * 一张数据库表或视图。<br/>
+ * Indicates a table/view in database.
+ * @author xuse
+ *
+ */
 public class TableInfo {
 	private String catalog;
 	private String schema;
@@ -43,7 +49,7 @@ public class TableInfo {
 	/**
 	 * 获得表所在schema
 	 * 
-	 * @return
+	 * @return the schema of table
 	 */
 	public String getSchema() {
 		return schema;
