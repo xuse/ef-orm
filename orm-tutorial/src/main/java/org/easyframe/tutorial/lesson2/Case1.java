@@ -10,7 +10,7 @@ import jef.database.query.Query;
 import jef.database.query.QueryBuilder;
 
 import org.easyframe.tutorial.lesson2.entity.Student;
-import org.easyframe.tutorial.lesson2.entity.StudentToLession;
+import org.easyframe.tutorial.lesson2.entity.StudentToLesson;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -27,8 +27,8 @@ public class Case1 {
 	public static void setup() throws SQLException {
 		new EntityEnhancer().enhance("org.easyframe.tutorial");
 		db = new DbClient();
-		db.dropTable(Student.class,StudentToLession.class);
-		db.createTable(Student.class,StudentToLession.class);
+		db.dropTable(Student.class,StudentToLesson.class);
+		db.createTable(Student.class,StudentToLesson.class);
 	}
 
 	@AfterClass
@@ -43,8 +43,8 @@ public class Case1 {
 	 */
 	@Test
 	public void testCreateTable() throws SQLException {
-		db.dropTable(StudentToLession.class);
-		db.createTable(StudentToLession.class);
+		db.dropTable(StudentToLesson.class);
+		db.createTable(StudentToLesson.class);
 	}
 
 	/**
@@ -82,7 +82,7 @@ public class Case1 {
 		// 键值数量必须和复合主键的数量一致，顺序按field在emun Field中的出现顺序。
 		{
 			Student st = db.load(Student.class, 3);
-			StudentToLession stl = db.load(StudentToLession.class, 3, 1);
+			StudentToLesson stl = db.load(StudentToLesson.class, 3, 1);
 		}
 		// load方法都是查询单值的，select方法可以查询多值
 		// 创建一个模板对象,当模板对象的字段有值时，按这些字段查询
@@ -97,10 +97,10 @@ public class Case1 {
 		// 如果一个对象的复合主键没有全部赋值的情况，那么也当做普通字段对待
 		// 最终效果和findByExample()一样。
 		{
-			StudentToLession query = new StudentToLession();
+			StudentToLesson query = new StudentToLesson();
 			query.setLessionId(1);
 			// 查出所有lessionId='1'的记录。
-			List<StudentToLession> sts = db.select(query);
+			List<StudentToLesson> sts = db.select(query);
 
 		}
 		// 如果一个对象的主键都赋了值，非主键字段也赋值。那么非主键字段不会作为查询条件

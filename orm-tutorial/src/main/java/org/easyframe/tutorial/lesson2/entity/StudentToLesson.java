@@ -12,9 +12,10 @@ import javax.persistence.Table;
  *
  */
 @Entity
-@Table(name="STUDENT_TO_LESSION")
-public class StudentToLession extends jef.database.DataObject {
-    @Id
+@Table(name="STUDENT_TO_LESSON")
+public class StudentToLesson extends jef.database.DataObject {
+	private static final long serialVersionUID = 1L;
+	@Id
     private int lessionId;
     @Id
     private int studentId;

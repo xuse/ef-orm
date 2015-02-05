@@ -82,7 +82,7 @@ public class MetadataTest extends org.junit.Assert{
 		for(ForeignKey k: fk){
 			System.out.println("===============");
 			System.out.println(k.toString());
-			System.out.println(k.toCreateSql());
+			System.out.println(k.toCreateSql(db.getProfile()));
 			System.out.println(k.getPkName());
 		}
 	}

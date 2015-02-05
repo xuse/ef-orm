@@ -5,15 +5,21 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.database.DbClient;
 import jef.database.DbMetaData;
 import jef.database.meta.Column;
+import jef.database.meta.ForeignKey;
 import jef.database.meta.Index;
 import jef.database.meta.TableInfo;
 import jef.tools.StringUtils;
 
+import org.easyframe.tutorial.lesson2.entity.LessonInfo;
+import org.easyframe.tutorial.lesson2.entity.Student;
+import org.easyframe.tutorial.lesson2.entity.StudentToLesson;
 import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -23,8 +29,14 @@ import org.junit.Test;
  * 
  */
 public class CaseDatabaseMetadata {
-	private static DbClient db = new DbClient();
+	private static DbClient db;
 
+	@BeforeClass
+	public static void setup() throws SQLException{
+		new EntityEnhancer().enhance("org.easyframe.tutorial");
+		db = new DbClient();
+		db.createTable(Student.class,StudentToLesson.class,LessonInfo.class);
+	}
 	/**
 	 * 使用DbMetadata来访问数据库基本信息
 	 * 
@@ -69,24 +81,52 @@ public class CaseDatabaseMetadata {
 		if(tables.isEmpty())return;
 		String tableName=tables.get(0).getName();
 		List<Column> cs = meta.getColumns(tableName,true);
-		LogUtil.show("======= Table " + tableName + " has " + cs.size() + " columns. ========");
+		System.out.println("======= Table " + tableName + " has " + cs.size() + " columns. ========");
 		for (Column c : cs) {
-			LogUtil.show(StringUtils.rightPad(c.getColumnName(), 10) + "\t" + StringUtils.rightPad(c.getDataType(), 9) + "\t" + c.getColumnSize() + "\t" + (c.isNullAble() ? "null" : "not null") + "\t" + c.getRemarks());
+			System.out.println(StringUtils.rightPad(c.getColumnName(), 10) + "\t" + StringUtils.rightPad(c.getDataType(), 9) + "\t" + c.getColumnSize() + "\t" + (c.isNullAble() ? "null" : "not null") + "\t" + c.getRemarks());
 		}
-		LogUtil.show("======= Table " + tableName + " Primary key ========");
-		LogUtil.show(meta.getPrimaryKey(tableName));
+		System.out.println("======= Table " + tableName + " Primary key ========");
+		System.out.println(meta.getPrimaryKey(tableName));
 
 		Collection<Index> is = meta.getIndexes(tableName);
-		LogUtil.show("======= Table " + tableName + " has " + is.size() + " indexes. ========");
+		System.out.println("======= Table " + tableName + " has " + is.size() + " indexes. ========");
 		for (Index i : is) {
-			LogUtil.show(StringUtils.rightPad(i.getIndexName(), 10) + "\t" + StringUtils.rightPad(StringUtils.join(i.getColumnName(), ','), 10) + "\t" + (i.isUnique() ? "Uniqie" : "NonUnique") + (i.isOrderAsc() ? " Asc" : " Desc") + "\t" + i.getType());
+			System.out.println(StringUtils.rightPad(i.getIndexName(), 10) + "\t" + StringUtils.rightPad(StringUtils.join(i.getColumnName(), ','), 10) + "\t" + (i.isUnique() ? "Uniqie" : "NonUnique") + (i.isOrderAsc() ? " Asc" : " Desc") + "\t" + i.getType());
 		}
 	}
 	
+	/**
+	 * 操作外键的演示
+	 * @throws SQLException
+	 */
 	@Test
 	public void testKeys() throws SQLException{
+		String tableName="STUDENT_TO_LESSON";
 		DbMetaData meta = db.getMetaData(null);
-		meta.getForeignKey("Foo");
+		
+		//在表上面创建两个外键，分别引用Student表和LessonInfo表。
+		meta.createForeignKey(StudentToLesson.Field.studentId, Student.Field.id);
+		meta.createForeignKey(StudentToLesson.Field.lessionId, LessonInfo.Field.id);
+		
+		//打印目前表上的外键(应该看到两个外键)
+		System.out.println("=== Foreign keys on table ["+tableName+"] ===");
+		LogUtil.show(meta.getForeignKey(tableName));
+		
+		//打印引用到表Student的外键（应该看到一个外键）
+		System.out.println("=== Foreign keys on table [STUDENT] ===");
+		LogUtil.show(meta.getForeignKeyReferenceTo("STUDENT"));
+		
+		//打印引用到表LessonInfo的外键（应该看到一个外键）
+		System.out.println("=== Foreign keys on table [LESSON_INFO] ===");
+		LogUtil.show(meta.getForeignKeyReferenceTo("LESSON_INFO"));
+		
+		//删除表上的所有外键
+		System.out.println("=== Drop Foreign keys ===");
+		meta.dropAllForeignKey(tableName);
+		
+		//打印目前表上的外键(应该没有外键)
+		System.out.println("=== Foreign keys on table "+tableName+" ===");
+		LogUtil.show(meta.getForeignKey(tableName));
 	}
 
 	@AfterClass
