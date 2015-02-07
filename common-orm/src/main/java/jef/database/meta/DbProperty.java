@@ -68,7 +68,12 @@ public enum DbProperty {
 	 * 修复的关键字（MYSQL）
 	 */
 	INDEX_LENGTH_CHARESET_FIX,
-	
+	/**
+	 * 像Oracle,DB2,PG，drop index xxx 即可。
+	 * 但是像SQLServer，需要drop index table.index。
+	 * 像MySQL，需要 drop index xxx on tablexxx.
+	 */
+	DROP_INDEX_TABLE_PATTERN,
 	
 	//Derby支持一下函数来获得当前环境
 //	CURRENT ISOLATION

@@ -362,7 +362,7 @@ public class DbClient extends Session implements ConnectionFactory {
 		if (StringUtils.isNotEmpty(queryTable)) {
 			MetaHolder.initMetadata(NamedQueryConfig.class, null, queryTable);
 			try {
-				refreshTable(MetaHolder.getMeta(NamedQueryConfig.class));// 创建表
+				refreshTable(MetaHolder.getMeta(NamedQueryConfig.class),null);// 创建表
 			} catch (SQLException e) {
 				LogUtil.warn("Named Query Table:" + queryTable + " was not refreshed. Error:" + e.getMessage());
 			}
@@ -701,29 +701,18 @@ public class DbClient extends Session implements ConnectionFactory {
 	}
 
 	/**
-	 * 检查并修改表
+	 * 检查并修改数据库中的表，使其和传入的实体模型保持一致。
 	 * 
 	 * @param clz
 	 *            要更新的表对应的类
 	 * @throws SQLException
 	 */
-	public void refreshTable(Class<? extends IQueryableEntity> clz) throws SQLException {
+	public void refreshTable(Class<?> clz) throws SQLException {
 		refreshTable(MetaHolder.getMeta(clz), null);
 	}
 
 	/**
-	 * 刷新数据库表。根据指定的元数据库更改/创建数据库表
-	 * 
-	 * @param meta
-	 *            要更新的表的元数据
-	 * @throws SQLException
-	 */
-	public void refreshTable(ITableMetadata meta) throws SQLException {
-		refreshTable(meta, null);
-	}
-
-	/**
-	 * 刷新数据库表。 根据指定的元数据库更改/创建数据库表
+	 * 检查并修改数据库中的表，使其和传入的实体模型保持一致。
 	 * 
 	 * @param meta
 	 *            要更新的表的元数据
@@ -740,10 +729,23 @@ public class DbClient extends Session implements ConnectionFactory {
 			DbMetaData dbmeta = getPool().getMetadata(result.getDatabase());
 			for (String table : result.getTables()) {
 				if (event == null || event.beforeTableRefresh(meta, table)) {
-					dbmeta.refreshTable(meta, table, event, true);
+					dbmeta.refreshTable(meta, table, event);
 				}
 			}
 		}
+	}
+	
+	/**
+	 * 检查并修改数据库中的表，使其和传入的实体模型保持一致。
+	 * 
+	 * @param clz
+	 *            要更新的表对应的类
+	 * @param listener
+	 *   	事件监听器，可以监听刷新过程的事件
+	 * @throws SQLException
+	 */
+	public void refreshTable(Class<?> clz, MetadataEventListener listener) throws SQLException {
+		refreshTable(MetaHolder.getMeta(clz), listener);
 	}
 
 	public void close() {

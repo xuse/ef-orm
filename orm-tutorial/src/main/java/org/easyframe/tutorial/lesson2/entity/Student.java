@@ -32,6 +32,7 @@ public class Student extends jef.database.DataObject {
     /**
      * 性别 
      */
+    @Column(columnDefinition="varchar",length=12)
     private String gender;
     
     /**

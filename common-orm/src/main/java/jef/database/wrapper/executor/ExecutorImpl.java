@@ -9,17 +9,19 @@ import java.util.List;
 
 import javax.persistence.PersistenceException;
 
-import jef.common.log.LogUtil;
 import jef.database.DbUtils;
 import jef.database.DebugUtil;
 import jef.database.ORMConfig;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
+import jef.database.jdbc.result.CloseableResultSet;
 import jef.database.jdbc.result.ResultSetWrapper;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.processor.BindVariableContext;
 import jef.database.wrapper.processor.BindVariableTool;
+
+import org.springframework.util.Assert;
 
 public class ExecutorImpl implements StatementExecutor{
 	IConnection conn;
@@ -61,6 +63,7 @@ public class ExecutorImpl implements StatementExecutor{
 	
 
 	private void doSql(Statement st, String txId, String sql) throws SQLException {
+		Assert.notNull(sql);
 		SqlLog log=ORMConfig.getInstance().newLogger(sql.length()+60);
 		try {
 			long start=System.currentTimeMillis();
@@ -110,7 +113,7 @@ public class ExecutorImpl implements StatementExecutor{
 			ps.setObject(i + 1, params[i]);
 		}
 		ResultSet rs = ps.executeQuery();
-		return new ResultSetWrapper(null, ps, rs);
+		return new CloseableResultSet(ps, rs);
 	}
 
 	@Override

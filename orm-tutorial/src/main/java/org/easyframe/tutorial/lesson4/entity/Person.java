@@ -27,7 +27,7 @@ public class Person extends DataObject {
 	private Integer id;
 
 	@Column(name = "person_name", length = 20, nullable = false)
-	@Indexed(definition = "unique")
+	@Indexed(unique=true)
 	private String name;
 
 	@Column(name = "current_school_id", columnDefinition = "integer")

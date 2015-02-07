@@ -50,6 +50,7 @@ public class SQLServer2000Dialect extends AbstractDialect {
 		setProperty(DbProperty.CHECK_SQL, "select 1");
 		setProperty(DbProperty.GET_IDENTITY_FUNCTION, "SELECT @@IDENTITY");
 		setProperty(DbProperty.WRAP_FOR_KEYWORD, "[]");
+		setProperty(DbProperty.DROP_INDEX_TABLE_PATTERN, "%2$s.%1$s");
 		
 		loadKeywords("sqlserver_keywords.properties");
 

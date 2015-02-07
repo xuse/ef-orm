@@ -19,7 +19,7 @@ import jef.database.annotation.Indexes;
 @Entity
 @EasyEntity(checkEnhanced=false)
 @Indexes({
-	@Index(fields={"id","name"},name="IDX_DEFAULT_TEST",definition="unique")  //单独再定义一个复合索引
+	@Index(fields={"id","name desc"},name="IDX_DEFAULT_TEST",definition="unique")  //单独再定义一个复合索引
 })
 public class TableForTest extends jef.database.DataObject {
 	private static final long serialVersionUID = 1L;

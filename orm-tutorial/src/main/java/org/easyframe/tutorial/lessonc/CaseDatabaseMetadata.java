@@ -10,7 +10,7 @@ import jef.common.log.LogUtil;
 import jef.database.DbClient;
 import jef.database.DbMetaData;
 import jef.database.meta.Column;
-import jef.database.meta.ForeignKey;
+import jef.database.meta.Function;
 import jef.database.meta.Index;
 import jef.database.meta.TableInfo;
 import jef.tools.StringUtils;
@@ -83,16 +83,32 @@ public class CaseDatabaseMetadata {
 		List<Column> cs = meta.getColumns(tableName,true);
 		System.out.println("======= Table " + tableName + " has " + cs.size() + " columns. ========");
 		for (Column c : cs) {
-			System.out.println(StringUtils.rightPad(c.getColumnName(), 10) + "\t" + StringUtils.rightPad(c.getDataType(), 9) + "\t" + c.getColumnSize() + "\t" + (c.isNullAble() ? "null" : "not null") + "\t" + c.getRemarks());
+			System.out.println(c.getColumnName()+"\t"+c.getDataType() + "\t" + c.getColumnSize() + "\t"+ c.getRemarks());
 		}
+		//表的主键
 		System.out.println("======= Table " + tableName + " Primary key ========");
 		System.out.println(meta.getPrimaryKey(tableName));
-
+		//表的索引
 		Collection<Index> is = meta.getIndexes(tableName);
 		System.out.println("======= Table " + tableName + " has " + is.size() + " indexes. ========");
 		for (Index i : is) {
-			System.out.println(StringUtils.rightPad(i.getIndexName(), 10) + "\t" + StringUtils.rightPad(StringUtils.join(i.getColumnName(), ','), 10) + "\t" + (i.isUnique() ? "Uniqie" : "NonUnique") + (i.isOrderAsc() ? " Asc" : " Desc") + "\t" + i.getType());
+			System.out.println(i);
 		}
+	}
+	
+	/**
+	 * 删除表并建表。
+	 * 删除表时会主动删除相关的所有主外键、索引、约束。
+	 * 建表时会同时创建表的索引。
+	 * @throws SQLException
+	 */
+	@Test
+	public void testTableDropCreate() throws SQLException{
+		DbMetaData meta = db.getMetaData(null);
+		//删除Student表
+		meta.dropTable(Student.class);
+		//创建Student表
+		meta.createTable(Student.class);
 	}
 	
 	/**
@@ -100,7 +116,7 @@ public class CaseDatabaseMetadata {
 	 * @throws SQLException
 	 */
 	@Test
-	public void testKeys() throws SQLException{
+	public void testForeignKeys() throws SQLException{
 		String tableName="STUDENT_TO_LESSON";
 		DbMetaData meta = db.getMetaData(null);
 		
@@ -129,6 +145,68 @@ public class CaseDatabaseMetadata {
 		LogUtil.show(meta.getForeignKey(tableName));
 	}
 
+	/**
+	 * 演示如何操作索引
+	 * @throws SQLException
+	 */
+	@Test
+	public void testIndexes() throws SQLException{
+		DbMetaData meta = db.getMetaData(null);
+		System.out.println("=== Indexes on table Student ===");
+		for(Index index: meta.getIndexes(Student.class)){
+			System.out.println(index);
+		}
+		
+		System.out.println("=== Now we try to create two indexes ===");
+		//创建单字段的unique索引
+		Index index1=meta.toIndexDescrption(Student.class, "name");
+		index1.setUnique(true);
+		meta.createIndex(index1);
+		//创建复合索引
+		Index index2=meta.toIndexDescrption(Student.class, "grade desc", "gender");
+		meta.createIndex(index2);
+		
+		//打印出表上的所有索引
+		System.out.println("=== Indexes on table Student (After create)===");
+		for(Index index: meta.getIndexes(Student.class)){
+			System.out.println(index);
+		}
+		
+		System.out.println("=== Now we try to drop all indexes ===");
+		//删除所有索引
+		for(Index index: meta.getIndexes(Student.class)){
+			if(index.getIndexName().startsWith("IDX")){
+				meta.dropIndex(index);
+			}
+		}
+		
+		//打印出表上的所有索引
+		System.out.println("=== Indexes on table Student (After drop)===");
+		for(Index index: meta.getIndexes(Student.class)){
+			System.out.println(index);
+		}
+	}
+	
+	/**
+	 * 打印出数据库中的自定义函数和存储过程
+	 * @throws SQLException
+	 */
+	@Test
+	public void testFunctions() throws SQLException{
+		DbMetaData meta = db.getMetaData(null);
+		System.out.println("=== User Defined Functions ===");
+		List<Function> functions=meta.getFunctions(null);
+		for(Function f: functions){
+			System.out.println(f);
+		}
+		System.out.println("=== User Defined Procedures ===");
+		functions=meta.getProcedures(null);
+		for(Function f: functions){
+			System.out.println(f);
+		}		
+	}
+	
+	
 	@AfterClass
 	public static void close() {
 		if (db != null) {

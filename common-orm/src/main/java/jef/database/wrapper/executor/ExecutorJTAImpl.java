@@ -19,7 +19,7 @@ import jef.database.ORMConfig;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
-import jef.database.jdbc.result.ResultSetWrapper;
+import jef.database.jdbc.result.CloseableResultSet;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.processor.BindVariableContext;
 import jef.database.wrapper.processor.BindVariableTool;
@@ -226,7 +226,7 @@ public class ExecutorJTAImpl implements Runnable, StatementExecutor {
 			ps.setObject(i + 1, params[i]);
 		}
 		ResultSet rs = ps.executeQuery();
-		return new ResultSetWrapper(null, ps, rs);
+		return new CloseableResultSet(ps, rs);
 	}
 
 	public int executeUpdate(String sql, Object... params) throws SQLException {

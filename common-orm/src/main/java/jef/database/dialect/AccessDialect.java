@@ -33,7 +33,7 @@ public class AccessDialect extends AbstractDialect{
 		setProperty(DbProperty.ADD_COLUMN, "ADD COLUMN");
 		setProperty(DbProperty.MODIFY_COLUMN, "MODIFY COLUMN");
 		setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");
-
+		setProperty(DbProperty.DROP_INDEX_TABLE_PATTERN, "%1$s ON %2$s");
 	}
 
 	public String getDriverClass(String url) {

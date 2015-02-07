@@ -65,11 +65,13 @@ import jef.database.meta.ColumnModification;
 import jef.database.meta.DbProperty;
 import jef.database.meta.DdlGenerator;
 import jef.database.meta.DdlGeneratorImpl;
+import jef.database.meta.FBIField;
 import jef.database.meta.Feature;
 import jef.database.meta.ForeignKey;
 import jef.database.meta.Function;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.Index;
+import jef.database.meta.Index.IndexItem;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.PrimaryKey;
 import jef.database.meta.TableCreateStatement;
@@ -86,12 +88,12 @@ import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.processor.BindVariableContext;
 import jef.database.wrapper.processor.BindVariableTool;
 import jef.http.client.support.CommentEntry;
+import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.easyframe.enterprise.spring.TransactionMode;
 
 /*
@@ -596,6 +598,29 @@ public class DbMetaData {
 	}
 
 	/**
+	 * 得到指定实体的所有索引
+	 * @param type 指定实体类型
+	 * @return A Collection of index information.
+	 * @throws SQLException
+	 * @see Index
+	 */
+	public Collection<Index> getIndexes(Class<?> type) throws SQLException {
+		ITableMetadata meta=MetaHolder.getMeta(type);
+		return getIndexes(meta.getTableName(true));
+	}
+	
+	/**
+	 * 得到指定表的所有索引
+	 * @param meta 表的元模型
+	 * @return A Collection of index information.
+	 * @throws SQLException
+	 * @see Index
+	 */
+	public Collection<Index> getIndexes(ITableMetadata meta) throws SQLException {
+		return getIndexes(meta.getTableName(true));
+	}
+	
+	/**
 	 * 得到指定表的所有索引
 	 * 
 	 * @param tableName
@@ -604,9 +629,19 @@ public class DbMetaData {
 	 * @see Index
 	 */
 	public Collection<Index> getIndexes(String tableName) throws SQLException {
+		//JDBC驱动不支持的情况
+		if (info.profile.has(Feature.NOT_SUPPORT_INDEX_META)){
+			LogUtil.warn("Current JDBC version doesn't suppoer fetch index info.");
+			return Collections.emptyList();
+		}
+		
 		tableName = info.profile.getObjectNameToUse(tableName);
-		if (info.profile.has(Feature.NOT_SUPPORT_INDEX_META))
-			return new ArrayList<Index>();
+		String schema=this.schema;
+		int n=tableName.indexOf('.');
+		if(n>-1){
+			schema=tableName.substring(0,n);
+			tableName=tableName.substring(n+1);
+		}
 		Connection conn = getConnection(false);
 		ResultSet rs = null;
 		try {
@@ -621,16 +656,18 @@ public class DbMetaData {
 				Index index = map.get(indexName);
 				if (index == null) {
 					index = new Index();
-					index.setTableName(tableName);
 					index.setIndexName(indexName);
+					index.setTableName(rs.getString("TABLE_NAME"));
+					index.setTableSchema(rs.getString("TABLE_SCHEM"));
+					index.setIndexQualifier(rs.getString("INDEX_QUALIFIER"));
 					index.setUnique(!rs.getBoolean("NON_UNIQUE"));
-					String asc = rs.getString("ASC_OR_DESC");
-					if (asc != null)
-						index.setOrderAsc(asc.startsWith("A"));
 					index.setType(rs.getInt("TYPE"));
 					map.put(indexName, index);
 				}
-				index.addColumnName(cName);
+				
+				String asc = rs.getString("ASC_OR_DESC");
+				Boolean isAsc=(asc == null?true:asc.startsWith("A"));
+				index.addColumn(cName,isAsc);
 			}
 			return map.values();
 		} finally {
@@ -826,11 +863,37 @@ public class DbMetaData {
 
 	/**
 	 * 创建外键
-	 * @param fromField
-	 * @param refField
+	 * @param fromField 外键位于该列上
+	 * @param refField  引用其他表的外键
 	 * @throws SQLException
 	 */
 	public void createForeignKey(Field fromField, Field refField) throws SQLException {
+		createForeignKey(fromField,refField,DatabaseMetaData.importedKeyNoAction,DatabaseMetaData.importedKeyNoAction);
+	}
+	
+	
+	
+	
+	/**
+	 * 创建外键
+	 * 
+	 * <p>
+	 * 当外键无法保持时的规则动作（注意大部分数据库都仅支持importedKeyRestrict）
+	 * <ol>
+	 * <li>{@link DatabaseMetaData#importedKeyNoAction} - 不允许被引用的记录删除或更新</li>
+	 * <li>{@link DatabaseMetaData#importedKeyCascade} - 删除引用外键的记录</li>
+	 * <li>{@link DatabaseMetaData#importedKeySetNull} - 将引用外键的列值改为null</li>
+	 * <li>{@link DatabaseMetaData#importedKeyRestrict} - 同importedKeyNoAction</li>
+	 * <li>{@link DatabaseMetaData#importedKeySetDefault} - 将引用外键的列值改为其缺省值</li>
+	 * </ol>
+	 * 
+	 * @param fromField 外键位于该列上
+	 * @param refField 引用其他表的外键
+	 * @param deleteRule 当被引用的记录发生删除引起无法保持时，执行什么操作，参见上面的规则动作列表
+	 * @param updateRule 当被引用的记录发生更新引起外键无法保持时，执行什么操作，参见上面的规则动作列表
+	 * @throws SQLException
+	 */
+	public void createForeignKey(Field fromField, Field refField,int deleteRule,int updateRule) throws SQLException {
 		AbstractMetadata from = DbUtils.getTableMeta(fromField);
 		AbstractMetadata ref = DbUtils.getTableMeta(refField);
 
@@ -841,7 +904,9 @@ public class DbMetaData {
 		ForeignKey key=new ForeignKey(fromTable,fromColumn,refTable,refColumn);
 		key.setFromSchema(from.getSchema());
 		key.setReferenceSchema(ref.getSchema());
-		
+		key.setDeleteRule(deleteRule);
+		key.setUpdateRule(updateRule);
+				
 		if(!checkFK(key)){
 			String sql=key.toCreateSql(getProfile());
 			StatementExecutor executor=this.createExecutor();
@@ -1337,7 +1402,7 @@ public class DbMetaData {
 	 *             修改表失败时抛出
 	 * @see MetadataEventListener 变更监听器
 	 */
-	public void refreshTable(ITableMetadata meta, String tablename, MetadataEventListener event, boolean allowCreateTable) throws SQLException {
+	public void refreshTable(ITableMetadata meta, String tablename, MetadataEventListener event) throws SQLException {
 		DatabaseDialect profile = getProfile();
 		tablename = profile.getObjectNameToUse(tablename);
 		boolean supportChangeDelete = profile.notHas(Feature.NOT_SUPPORT_ALTER_DROP_COLUMN);
@@ -1347,14 +1412,12 @@ public class DbMetaData {
 
 		List<Column> columns = this.getColumns(tablename, false);
 		if (columns.isEmpty()) {// 表不存在
-			if (allowCreateTable) {
-				boolean created = false;
-				if (event == null || event.onTableCreate(meta, tablename)) {
-					created = this.createTable(meta, tablename);
-				}
-				if (created && event != null) {
-					event.onTableFinished(meta, tablename);
-				}
+			boolean created = false;
+			if (event == null || event.onTableCreate(meta, tablename)) {
+				created = this.createTable(meta, tablename);
+			}
+			if (created && event != null) {
+				event.onTableFinished(meta, tablename);
 			}
 			return;
 		}
@@ -1766,12 +1829,130 @@ public class DbMetaData {
 	}
 
 	/**
+	 * 将给定的参数转换成合法的Index描述对象
+	 * @param type 实体类
+	 * @param columns 索引的列
+	 * @return 索引的名称
+	 * @throws SQLException
+	 */
+	public Index toIndexDescrption(Class<?> type,String... columns) throws SQLException{
+		ITableMetadata meta=MetaHolder.getMeta(type);
+		return toIndexDescrption(meta,columns);
+	}
+	
+	/**
+	 * 将给定的参数转换成合法的Index描述对象
+	 * @param meta 表的元模型
+	 * @param columns 索引的列
+	 * @return 索引名称
+	 * @throws SQLException 
+	 */
+	public Index toIndexDescrption(ITableMetadata meta, String... columnes) throws SQLException {
+		List<Field> fields=new ArrayList<Field>();
+		List<IndexItem> columns=new ArrayList<IndexItem>();
+		for (String fieldname : columnes) {
+			boolean asc=true;
+			if(fieldname.toLowerCase().endsWith(" desc")){
+				asc=false;
+				fieldname=fieldname.substring(0,fieldname.length()-5).trim();
+			}
+			Field field = meta.getField(fieldname);
+			if (field == null){
+				field=new FBIField(fieldname);
+				columns.add(new IndexItem(fieldname,asc,0));
+			}else{
+				String columnName=meta.getColumnName(field, getProfile(),true);
+				columns.add(new IndexItem(columnName,asc,0));
+			}
+			fields.add(field);
+		}
+		StringBuilder iNameBuilder = new StringBuilder();
+		iNameBuilder.append("IDX_").append(StringUtils.truncate(StringUtils.removeChars(meta.getTableName(false), '_'), 14));
+		int maxField = ((28 - iNameBuilder.length()) / columnes.length) - 1;
+		if (maxField < 1)
+			maxField = 1;				
+		for(Field field: fields){
+			iNameBuilder.append('_');
+			if(field instanceof FBIField){
+				iNameBuilder.append(
+				StringUtils.truncate(StringUtils.randomString(), maxField)
+				);
+			}else{
+				iNameBuilder.append(
+				StringUtils.truncate(meta.getColumnDef(field).getColumnName(getProfile(),false), maxField)
+				);
+			}
+		}
+		String indexName=iNameBuilder.toString();
+		if (indexName.length() > 30)
+			indexName = indexName.substring(0, 30);
+		
+		Index indexobj=new Index(indexName);
+		indexobj.setTableSchema(meta.getSchema());
+		indexobj.setTableName(meta.getTableName(false));
+		for(IndexItem c:columns){
+			indexobj.addColumn(c.column, c.asc);	
+		}
+		return indexobj;
+	}
+
+	/**
+	 * 创建索引
+	 * @param index
+	 * @throws SQLException
+	 */
+	public boolean createIndex(Index index) throws SQLException{
+		Collection<Index> indexs=getIndexes(index.getTableWithSchem());
+		index.generateName();
+		for(Index old: indexs){
+			if(ArrayUtils.equals(old.getColumnNames(),index.getColumnNames())){
+				LogUtil.warn(index+" duplicate with old index "+ old.getIndexName());
+				return false;
+			}
+			if(old.getIndexName().equalsIgnoreCase(index.getIndexName())){
+				String name="IDX"+StringUtils.removeChars(index.getTableName(),'_')+"_";
+				name+=StringUtils.randomString();
+				index.setIndexName(name);
+			}
+		}
+		String sql=index.toCreateSql(getProfile());
+		StatementExecutor exe = createExecutor();
+		try {
+			exe.executeSql(sql);
+			return true;
+		} finally {
+			exe.close();
+		}
+	}
+	
+	/**
+	 * 删除索引
+	 * @param index
+	 * @throws SQLException
+	 */
+	public void dropIndex(Index index) throws SQLException {
+		String pattern=getProfile().getProperty(DbProperty.DROP_INDEX_TABLE_PATTERN);
+		String sql;
+		if(pattern==null){
+			sql="DROP INDEX "+index.getIndexName();
+		}else{
+			sql="DROP INDEX "+String.format(pattern, index.getIndexName(),index.getTableSchema());
+		}
+		StatementExecutor exe = createExecutor();
+		try {
+			exe.executeSql(sql);
+		} finally {
+			exe.close();
+		}
+	}
+
+	/**
 	 * 删除指定名称的表
 	 * 
 	 * @param table
 	 *            the name of table.
-	 * @return true if table dropped.
-	 * @throws SQLException
+	 * @return true if table was dropped. false if the table was not exist.
+	 * @throws SQLException Any error while executing SQL.
 	 */
 	public boolean dropTable(String table) throws SQLException {
 		if (existTable(table)) {
@@ -1793,6 +1974,17 @@ public class DbMetaData {
 		return false;
 	}
 
+	/**
+	 * 删除表
+	 * @param table 表的Entity
+	 * @return true if table was dropped. false if the table was not exist. 
+	 * @throws SQLException Any error while executing SQL.
+	 */
+	public boolean dropTable(Class<?> table) throws SQLException {
+		ITableMetadata meta=MetaHolder.getMeta(table);
+		return dropTable(meta.getTableName(true));
+	}
+	
 	/**
 	 * 得到当前元数据所属的数据源名称 get the datasource name of current metadata connection.
 	 * 

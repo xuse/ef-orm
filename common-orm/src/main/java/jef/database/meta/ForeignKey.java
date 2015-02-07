@@ -220,7 +220,7 @@ public class ForeignKey {
 				.append(name);
 		return sb.toString();
 	}
-
+	
 	/**
 	 * 生成修改表增加外键的SQL语句
 	 * 
