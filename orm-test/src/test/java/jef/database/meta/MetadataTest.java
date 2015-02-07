@@ -82,7 +82,7 @@ public class MetadataTest extends org.junit.Assert{
 		for(ForeignKey k: fk){
 			System.out.println("===============");
 			System.out.println(k.toString());
-			System.out.println(k.toCreateSql());
+			System.out.println(k.toCreateSql(db.getProfile()));
 			System.out.println(k.getPkName());
 		}
 	}
@@ -94,7 +94,6 @@ public class MetadataTest extends org.junit.Assert{
 	@Test
 	@IgnoreOn({"mysql","sqlite"})
 	public void testSchema() throws SQLException {
-		LogUtil.show(db.getMetaData(null).getSchemas());
 		Session s=db;
 		DbMetaData meta=s.getNoTransactionSession().getMetaData(null);
 		String[] schemas=meta.getSchemas();
@@ -108,10 +107,10 @@ public class MetadataTest extends org.junit.Assert{
 		if(!tables.isEmpty()){
 			String name=tables.get(0).getName();
 			for(Index indexInfo:meta.getIndexes(name)){
+				System.out.println(indexInfo.toString());
 				System.out.println("索引名称:"+indexInfo.getIndexName());
-				System.out.println("索引字段:"+Arrays.toString(indexInfo.getColumnName()));
+				System.out.println("索引字段:"+Arrays.toString(indexInfo.getColumnNames()));
 				System.out.println("是否唯一:"+indexInfo.isUnique());
-				System.out.println("是否正序:"+indexInfo.isOrderAsc());
 			}
 		}
 		

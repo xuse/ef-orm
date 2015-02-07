@@ -1,22 +1,20 @@
 package jef.database.meta;
 
+import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import jef.common.SimpleSet;
-import jef.database.EntityExtensionSupport;
 import jef.database.Field;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.meta.extension.EfPropertiesExtensionProvider;
+import jef.database.meta.Index.IndexItem;
 import jef.database.support.RDBMS;
 import jef.tools.StringUtils;
-import jef.tools.string.RandomData;
 
 public class DdlGeneratorImpl implements DdlGenerator {
 	private DatabaseDialect profile;
@@ -54,54 +52,68 @@ public class DdlGeneratorImpl implements DdlGenerator {
 	 */
 	public List<String> toIndexClause(ITableMetadata meta, String tablename) {
 		List<String> sqls = new ArrayList<String>();
-		Set<String> indexNames = new HashSet<String>();
-		if (tablename.indexOf('.') > -1) {
-			tablename = StringUtils.substringAfter(tablename, ".");
+		int n=tablename.indexOf('.');
+		String tableschema=null;
+		if(n>-1){
+			tableschema=tablename.substring(0,n);
+			tablename=tablename.substring(n+1);
 		}
-
 		for (jef.database.annotation.Index index : meta.getIndexDefinition()) {
-			StringBuilder iNameBuilder = new StringBuilder();
-			StringBuilder fieldsb = new StringBuilder();
-			iNameBuilder.append("IDX_").append(StringUtils.truncate(StringUtils.removeChars(tablename, '_'), 14)).append("_");
-			int maxField = ((28 - iNameBuilder.length()) / index.fields().length) - 1;
-			if (maxField < 1)
-				maxField = 1;
+			List<Field> fields=new ArrayList<Field>();
+			List<IndexItem> columns=new ArrayList<IndexItem>();
 			for (String fieldname : index.fields()) {
-				if (fieldsb.length() > 0) {
-					fieldsb.append(",");
-					iNameBuilder.append("_");
+				boolean asc=true;
+				if(fieldname.toLowerCase().endsWith(" desc")){
+					asc=false;
+					fieldname=fieldname.substring(0,fieldname.length()-5).trim();
 				}
 				Field field = meta.getField(fieldname);
-				if (field == null)
-					field = new FBIField(fieldname);
-				String column = meta.getColumnDef(field).getColumnName(profile, false);
-				if (field instanceof FBIField) {
-					String fname = StringUtils.truncate(StringUtils.randomString(), maxField);
-					iNameBuilder.append(fname);
-				} else {
-					String fname = StringUtils.truncate(column, maxField);
-					iNameBuilder.append(fname);
+				if (field == null){
+					field=new FBIField(fieldname);
+					columns.add(new IndexItem(fieldname,asc,0));
+				}else{
+					String columnName=meta.getColumnName(field, profile,true);
+					columns.add(new IndexItem(columnName,asc,0));
 				}
-				fieldsb.append(column);
+				fields.add(field);
 			}
-			String indexName = index.name().length() == 0 ? iNameBuilder.toString() : index.name();
-			String escapedName = indexName;
-
-			while (indexNames.contains(escapedName)) {
-				escapedName = indexName + RandomData.randomInteger(0, 10);
+			
+			String indexName=index.name();
+			if(StringUtils.isEmpty(indexName)){
+				StringBuilder iNameBuilder = new StringBuilder();
+				iNameBuilder.append("IDX_").append(StringUtils.truncate(StringUtils.removeChars(tablename, '_'), 14));
+				int maxField = ((28 - iNameBuilder.length()) / index.fields().length) - 1;
+				if (maxField < 1)
+					maxField = 1;				
+				for(Field field: fields){
+					iNameBuilder.append('_');
+					if(field instanceof FBIField){
+						iNameBuilder.append(
+						StringUtils.truncate(StringUtils.randomString(), maxField)
+						);
+					}else{
+						iNameBuilder.append(
+						StringUtils.truncate(meta.getColumnDef(field).getColumnName(profile,false), maxField)
+						);
+					}
+				}
+				indexName=iNameBuilder.toString();
 			}
-			indexNames.add(escapedName);
 			if (indexName.length() > 30)
 				indexName = indexName.substring(0, 30);
-			StringBuilder sb = new StringBuilder("create ");
-			if (index.definition().length() > 0) {
-				sb.append(index.definition()).append(' ');
+			
+			Index indexobj=new Index(indexName);
+			indexobj.setTableSchema(tableschema);
+			indexobj.setTableName(tablename);
+			indexobj.setUnique(index.unique());
+			indexobj.setUserDefinition(index.definition());
+			if(index.clustered()){
+				indexobj.setType(DatabaseMetaData.tableIndexClustered);
 			}
-			sb.append("index ");
-			sb.append(indexName).append(" on ");
-			sb.append(tablename).append("(").append(fieldsb.toString()).append(")");
-			sb.append(profile.getProperty(DbProperty.INDEX_USING_HASH, ""));
-			sqls.add(sb.toString());
+			for(IndexItem c:columns){
+				indexobj.addColumn(c.column, c.asc);	
+			}
+			sqls.add(indexobj.toCreateSql(profile));
 		}
 		return sqls;
 	}
@@ -114,7 +126,6 @@ public class DdlGeneratorImpl implements DdlGenerator {
 	// ALTER [ COLUMN ] column SET DEFAULT expression
 	// ALTER [ COLUMN ] column DROP DEFAULT
 	// ALTER [ COLUMN ] column { SET | DROP } NOT NULL
-
 	public List<String> toTableModifyClause(ITableMetadata meta, String tableName, Map<String, ColumnType> insert, List<ColumnModification> changed, List<String> delete) {
 		List<String> sqls = new ArrayList<String>();
 		if (!insert.isEmpty()) {
@@ -125,7 +136,7 @@ public class DdlGeneratorImpl implements DdlGenerator {
 					ss.add(entry);
 					sqls.add(toAddColumnSql(tableName, ss));
 				}
-			} else {
+			} else {;
 				sqls.add(toAddColumnSql(tableName, insert.entrySet()));
 			}
 

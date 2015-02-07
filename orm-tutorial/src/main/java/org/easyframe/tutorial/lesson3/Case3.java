@@ -15,7 +15,7 @@ import jef.database.query.Query;
 import jef.tools.string.RandomData;
 
 import org.easyframe.tutorial.lesson2.entity.Student;
-import org.easyframe.tutorial.lesson2.entity.StudentToLession;
+import org.easyframe.tutorial.lesson2.entity.StudentToLesson;
 import org.junit.Test;
 
 public class Case3 extends org.junit.Assert {
@@ -26,13 +26,16 @@ public class Case3 extends org.junit.Assert {
 		db = new DbClient();
 		// 准备数据时关闭调试，减少控制台信息
 		ORMConfig.getInstance().setDebugMode(false);
-		db.dropTable(Student.class, StudentToLession.class);
-		db.createTable(Student.class, StudentToLession.class);
+		db.dropTable(Student.class, StudentToLesson.class);
+		db.createTable(Student.class, StudentToLesson.class);
 		prepareData(15);
 		ORMConfig.getInstance().setDebugMode(true);
 	}
 	
-	
+	/**
+	 * 使用IntRange方法实现分页信息的描述
+	 * @throws SQLException
+	 */
 	@Test
 	public void test_IntRange() throws SQLException{
 		Query<Student> q = QB.create(Student.class);
@@ -42,7 +45,10 @@ public class Case3 extends org.junit.Assert {
 		assertEquals(count-10, results.size());
 	}
 	
-	
+	/**
+	 * 使用pageSelect方法获得分页内的数据
+	 * @throws SQLException
+	 */
 	@Test
 	public void test_PageSelect() throws SQLException{
 		Student st=new Student();
@@ -74,9 +80,9 @@ public class Case3 extends org.junit.Assert {
 		}
 		db.batchInsert(data);
 
-		List<StudentToLession> data2 = new ArrayList<StudentToLession>();
+		List<StudentToLesson> data2 = new ArrayList<StudentToLesson>();
 		for (int i = 0; i < num; i++) {
-			StudentToLession sl = new StudentToLession();
+			StudentToLesson sl = new StudentToLesson();
 			sl.setStudentId(data.get(i).getId());
 			sl.setLessionId(100);
 			data2.add(sl);

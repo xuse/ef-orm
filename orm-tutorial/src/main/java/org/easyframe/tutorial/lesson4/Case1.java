@@ -26,7 +26,7 @@ public class Case1 extends org.junit.Assert{
 	@BeforeClass
 	public static void setup() throws SQLException {
 		new EntityEnhancer().enhance("org.easyframe.tutorial.lesson4");
-		ORMConfig.getInstance().setDebugMode(false);
+		ORMConfig.getInstance().setDebugMode(true);
 		db.dropTable(Person.class, School.class,DataDict.class);
 		db.createTable(Person.class, School.class,DataDict.class);
 

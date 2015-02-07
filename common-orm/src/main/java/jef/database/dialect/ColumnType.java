@@ -1075,7 +1075,7 @@ public abstract class ColumnType {
 		if (change.getFrom().equalsIgnoreCase(change.getTo()))
 			return null;
 		
-		String oldValue=profile.getCreationComment(newType, false);
+		String oldValue=profile.getCreationComment(oldType, false);
 		if(oldValue.equals(change.getTo())){
 			return null;
 		}

@@ -106,7 +106,7 @@ public class MySqlDialect extends AbstractDialect {
 		setProperty(DbProperty.INDEX_LENGTH_LIMIT, "767");
 		setProperty(DbProperty.INDEX_LENGTH_LIMIT_FIX, "255");
 		setProperty(DbProperty.INDEX_LENGTH_CHARESET_FIX, "charset=latin5");
-		
+		setProperty(DbProperty.DROP_INDEX_TABLE_PATTERN, "%1$s ON %2$s");
 		
 		loadKeywords("mysql_keywords.properties");
 		registerNative(new StandardSQLFunction("ascii"));

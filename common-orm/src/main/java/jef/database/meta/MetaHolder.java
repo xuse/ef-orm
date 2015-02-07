@@ -697,7 +697,8 @@ public final class MetaHolder {
 			Indexed i = annos.getFieldAnnotation(f, Indexed.class);// 单列索引
 			if (i != null) {
 				Map<String, Object> data = new HashMap<String, Object>(4);
-				data.put("fields", new String[] { field.name() });
+				data.put("fields", new String[] { i.desc()?field.name()+" desc":field.name() });
+				data.put("unique", i.unique());
 				data.put("definition", i.definition());
 				data.put("name", i.name());
 				meta.indexMap.add(BeanUtils.asAnnotation(jef.database.annotation.Index.class, data));

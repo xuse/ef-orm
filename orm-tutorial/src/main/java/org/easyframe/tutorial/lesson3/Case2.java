@@ -22,7 +22,7 @@ import jef.http.client.support.CommentEntry;
 import jef.tools.string.RandomData;
 
 import org.easyframe.tutorial.lesson2.entity.Student;
-import org.easyframe.tutorial.lesson2.entity.StudentToLession;
+import org.easyframe.tutorial.lesson2.entity.StudentToLesson;
 import org.junit.Test;
 
 /**
@@ -38,8 +38,8 @@ public class Case2 extends org.junit.Assert {
 		db = new DbClient();
 		// 准备数据时关闭调试，减少控制台信息
 		ORMConfig.getInstance().setDebugMode(true);
-		db.dropTable(Student.class, StudentToLession.class);
-		db.createTable(Student.class, StudentToLession.class);
+		db.dropTable(Student.class, StudentToLesson.class);
+		db.createTable(Student.class, StudentToLesson.class);
 		prepareData(15);
 		ORMConfig.getInstance().setDebugMode(true);
 	}
@@ -244,9 +244,9 @@ public class Case2 extends org.junit.Assert {
 	@Test
 	public void testSelect_JoinCountDistinct() throws SQLException {
 		Query<Student> q = QB.create(Student.class);
-		Query<StudentToLession> q2 = QB.create(StudentToLession.class);
+		Query<StudentToLesson> q2 = QB.create(StudentToLesson.class);
 
-		Join join = QueryBuilder.innerJoin(q, q2, QB.on(Student.Field.id, StudentToLession.Field.studentId));
+		Join join = QueryBuilder.innerJoin(q, q2, QB.on(Student.Field.id, StudentToLesson.Field.studentId));
 
 		Selects items = QB.selectFrom(join);
 		items.noColums(q2);
@@ -282,13 +282,13 @@ public class Case2 extends org.junit.Assert {
 	@Test
 	public void testSelect_selectMulti() throws SQLException {
 		Query<Student> query = QueryBuilder.create(Student.class);
-		Join join = QB.innerJoin(query, QB.create(StudentToLession.class), QB.on(Student.Field.id, StudentToLession.Field.studentId));
+		Join join = QB.innerJoin(query, QB.create(StudentToLesson.class), QB.on(Student.Field.id, StudentToLesson.Field.studentId));
 
 		List<Object[]> results = db.selectAs(join, Object[].class);
 
 		for (Object[] result : results) {
 			Student st = (Student) result[0];
-			StudentToLession sl = (StudentToLession) result[1];
+			StudentToLesson sl = (StudentToLesson) result[1];
 			System.out.println(st + " - " + sl);
 		}
 	}
@@ -307,9 +307,9 @@ public class Case2 extends org.junit.Assert {
 		}
 		db.batchInsert(data);
 
-		List<StudentToLession> data2 = new ArrayList<StudentToLession>();
+		List<StudentToLesson> data2 = new ArrayList<StudentToLesson>();
 		for (int i = 0; i < num; i++) {
-			StudentToLession sl = new StudentToLession();
+			StudentToLesson sl = new StudentToLesson();
 			sl.setStudentId(data.get(i).getId());
 			sl.setLessionId(100);
 			data2.add(sl);

@@ -16,17 +16,17 @@ import jef.database.wrapper.executor.StatementExecutor;
 /**
  * 表结构变更时，整个操作过程进度的事件监听器(可以干涉修改表的过程)
  * 
- * <ul>
+ * <ol>
  * 按事件的时间顺序如下
- * <li>{@linkplain #beforeTableRefresh(ITableMetadata, String) 变更表之前} </li>
- * <li>{@linkplain #onTableCreate(ITableMetadata, String) 如果表不存在，创建表之前}</li>
- * <li>{@linkplain #onCompareColumns(String, List, Map) 如果表存在，在比较表之前}</li>
+ * <li>{@linkplain #beforeTableRefresh(ITableMetadata, String) 变更表之前 （可以控制是否继续刷新操作）} </li>
+ * <li>{@linkplain #onTableCreate(ITableMetadata, String) 如果表不存在，创建表之前（可以控制是否建表）}</li>
+ * <li>{@linkplain #onCompareColumns(String, List, Map) 如果表存在，在比较表之前（可以控制是否继续刷新操作）}</li>
  * <li>{@linkplain #onColumnsCompared(String, ITableMetadata, Map, List, List) 数据库中的表和元数据比较完成后}</li>
  * <li>{@linkplain #beforeAlterTable(String, ITableMetadata, Connection, List) 比较完成并生成SQL后，在操作表之前}</li>
  * <li>{@linkplain #onAlterSqlFinished(String, String, List, int, long) 在每句SQL执行成功后}</li>
  * <li>{@linkplain #onSqlExecuteError(SQLException, String, String, List, int) 在任何一句SQL执行失败后}</li>
  * <li>{@linkplain #onTableFinished(ITableMetadata, String) 在所有SQL都执行完成后}</li>
- * </ul>
+ * </ol>
  * @author jiyi
  * 
  */
@@ -47,13 +47,15 @@ public interface MetadataEventListener {
 	boolean onTableCreate(ITableMetadata meta, String tablename);
 
 	/**
-	 * 表结构比较完成后出发，提供了表的对比结果供用户判断。
+	 * 表结构比较完成后出发，提供了表的对比结果供用户判断。<br>
+	 * 在这个方法中，实现类可以直接修改传入的比较结果，让后续的程序按修改后的比较结果执行ALTER TABLE语句。
+	 * 
 	 * @param tablename  表名
 	 * @param meta  表的元数据
 	 * @param insert      将要增加的数据库列(列名、数据类型)
 	 * @param changed     数据格式发生了变更的列
 	 * @param delete      将要删除的列
-	 * @return  false，则放弃变更此表
+	 * @return  false则放弃变更此表
 	 */
 	boolean onColumnsCompared(String tablename, ITableMetadata meta, Map<String, ColumnType> insert, List<ColumnModification> changed, List<String> delete);
 

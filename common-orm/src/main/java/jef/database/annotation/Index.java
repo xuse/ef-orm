@@ -40,7 +40,17 @@ public @interface Index {
 	 */
 	String name() default "";
 	/**
-	 * unique,desc等修饰
+	 * unique索引
+	 * @return true if the index is a unique index.
+	 */
+	boolean unique() default false;
+	/**
+	 * 是否聚簇索引
+	 * @return true if the index is a clustered index.
+	 */
+	boolean clustered() default false;
+	/**
+	 * 其他索引类型的定义关键字，如bitmap 
 	 * @return
 	 */
 	String definition() default "";
