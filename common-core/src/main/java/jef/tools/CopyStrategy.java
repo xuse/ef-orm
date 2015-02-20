@@ -138,9 +138,11 @@ public class CopyStrategy {
 					conflictCount++;
 					return null;//版本不同，不覆盖
 				}
-			}
-			if (file.isFile())
+			}else if (file.isFile()){
+				System.out.println("Target is directory and source is a file:"+file.getAbsolutePath());
 				normalCount++;
+				return null;
+			}
 			return f;
 		}
 
