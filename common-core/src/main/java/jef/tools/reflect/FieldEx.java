@@ -22,7 +22,7 @@ import java.lang.reflect.Type;
  *    method.getGenericReturnType();//即使用这个方法也一样，不会得到String.class<BR>
  * </code></P>
  * <BR>
- * 上述问题其实说明了，任何一个泛型计算都需要有一个上下文。也就是说，只有 提供A<String>这个上下文，才能正确得到A当中的方法method1的返回类型。
+ * 上述问题其实说明了，任何一个泛型计算都需要有一个上下文。只有提供A<String>这个上下文，才能正确得到A当中的方法method1的返回类型。
  * 而Java反射接口的设计中，这个上下文被丢弃了。从一个class实例中得到Method对象中只有一个DeclearingClass，当泛型的子类继承父类时这个DeclearingClass并非之前的那个class实例，
  * 而之前的class实例实际上不存在于Method当中。<BR>
  * Field也有类似的问题。<BR>

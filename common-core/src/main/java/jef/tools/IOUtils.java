@@ -1533,7 +1533,11 @@ public class IOUtils {
 				if (target != null) {
 					copyFile(f, target, strategy);
 				}
-
+			}
+			if(strategy.isMove()){
+				if(file.list().length==0){
+					file.delete();
+				}
 			}
 			return true;
 		} else {

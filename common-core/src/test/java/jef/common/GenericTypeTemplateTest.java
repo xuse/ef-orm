@@ -130,7 +130,7 @@ public class GenericTypeTemplateTest<T extends Date> {
 		ClassEx cw=new ClassEx(c);
 		MethodEx method=cw.getFirstMethodByName("test1");
 		Type type=method.getGenericReturnType();
-		Type result=BeanUtils.getBoundType(type,cw);
+		Type result=GenericUtils.getBoundType(type,cw);
 		System.out.println("result:" + result);
 		
 //		Type type=method.getGenericReturnType();

@@ -20,6 +20,8 @@ import java.io.Serializable;
 import java.io.StringReader;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -105,6 +107,7 @@ import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.BeanWrapper;
+import jef.tools.reflect.GenericUtils;
 import jef.tools.security.cplus.TripleDES;
 import jef.tools.string.CharUtils;
 
@@ -1450,5 +1453,26 @@ public final class DbUtils {
 		s.setUrl(url);
 		s.setPassword(pass);
 		return s;
+	}
+	
+	/**
+	 * 得到继承上级所指定的泛型类型
+	 * @param subclass
+	 * @param superclass
+	 * @return
+	 */
+	public static Type[] getTypeParameters(Class<?> subclass,Class<?> superclass) {
+		if(superclass==null){//在没有指定父类的情况下，默认选择第一个接口
+			if(subclass.getSuperclass()==Object.class && subclass.getInterfaces().length>0){
+				superclass=subclass.getInterfaces()[0];	
+			}else{
+				superclass=subclass.getSuperclass();	
+			}
+		}
+		Type type= GenericUtils.getSuperType(null, subclass,superclass);
+		if(type instanceof ParameterizedType){
+			return ((ParameterizedType) type).getActualTypeArguments();
+		}
+		throw new RuntimeException("Can not get the generic param type for class:" + subclass.getName());
 	}
 }

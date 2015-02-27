@@ -106,7 +106,7 @@ public class Assert {
 	 */
 	public static void isFalse(Boolean obj) {
 		if (obj.equals(Boolean.TRUE))
-			throw new RuntimeException();
+			throw new IllegalArgumentException();
 	}
 
 	/**
@@ -116,16 +116,27 @@ public class Assert {
 	 */
 	public static void isFalse(Boolean obj, String string) {
 		if (obj.equals(Boolean.TRUE))
-			throw new RuntimeException(string);
+			throw new IllegalArgumentException(string);
 	}
 
 	/**
 	 * 断言为真
 	 * @param obj
 	 */
+	public static void isTrue(boolean obj) {
+		if(!obj){
+			throw new IllegalArgumentException();
+		}
+	}
+	
+	
+	/**
+	 * 断言为真
+	 * @param obj
+	 */
 	public static void isTrue(Boolean obj) {
 		if (obj.equals(Boolean.FALSE))
-			throw new RuntimeException();
+			throw new IllegalArgumentException();
 	}
 
 	/**
@@ -135,7 +146,7 @@ public class Assert {
 	 */
 	public static void isTrue(Boolean obj, String string) {
 		if (obj.equals(Boolean.FALSE))
-			throw new RuntimeException(string);
+			throw new IllegalArgumentException(string);
 	}
 
 	/**

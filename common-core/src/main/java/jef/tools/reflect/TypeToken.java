@@ -23,6 +23,8 @@ import java.lang.reflect.TypeVariable;
 import java.util.HashMap;
 import java.util.Map;
 
+import jef.tools.Assert;
+
 /**
  * Represents a generic type {@code T}. Java doesn't yet provide a way to
  * represent generic types, so this class does. Forces clients to create a
@@ -59,7 +61,7 @@ public class TypeToken<T> {
   @SuppressWarnings("unchecked")
   protected TypeToken() {
     this.type = getSuperclassTypeParameter(getClass());
-    this.rawType = (Class<? super T>) $Gson$Types.getRawType(type);
+    this.rawType = (Class<? super T>) GenericUtils.getRawClass(type);
     this.hashCode = type.hashCode();
   }
 
@@ -68,8 +70,9 @@ public class TypeToken<T> {
    */
   @SuppressWarnings("unchecked")
   TypeToken(Type type) {
-    this.type = $Gson$Types.canonicalize($Gson$Preconditions.checkNotNull(type));
-    this.rawType = (Class<? super T>) $Gson$Types.getRawType(this.type);
+	 Assert.notNull(type);
+    this.type = GqGenericResolver.canonicalize(type);
+    this.rawType = (Class<? super T>) GenericUtils.getRawClass(this.type);
     this.hashCode = this.type.hashCode();
   }
 
@@ -83,7 +86,7 @@ public class TypeToken<T> {
       throw new RuntimeException("Missing type parameter.");
     }
     ParameterizedType parameterized = (ParameterizedType) superclass;
-    return $Gson$Types.canonicalize(parameterized.getActualTypeArguments()[0]);
+    return GqGenericResolver.canonicalize(parameterized.getActualTypeArguments()[0]);
   }
 
   /**
@@ -128,12 +131,12 @@ public class TypeToken<T> {
     }
 
     if (type instanceof Class<?>) {
-      return rawType.isAssignableFrom($Gson$Types.getRawType(from));
+      return rawType.isAssignableFrom(GenericUtils.getRawClass(from));
     } else if (type instanceof ParameterizedType) {
       return isAssignableFrom(from, (ParameterizedType) type,
           new HashMap<String, Type>());
     } else if (type instanceof GenericArrayType) {
-      return rawType.isAssignableFrom($Gson$Types.getRawType(from))
+      return rawType.isAssignableFrom(GenericUtils.getRawClass(from))
           && isAssignableFrom(from, (GenericArrayType) type);
     } else {
       throw buildUnexpectedTypeError(
@@ -193,7 +196,7 @@ public class TypeToken<T> {
     }
 
     // First figure out the class and any type information.
-    Class<?> clazz = $Gson$Types.getRawType(from);
+    Class<?> clazz = GenericUtils.getRawClass(from);
     ParameterizedType ptype = null;
     if (from instanceof ParameterizedType) {
       ptype = (ParameterizedType) from;
@@ -281,11 +284,11 @@ public class TypeToken<T> {
 
   @Override public final boolean equals(Object o) {
     return o instanceof TypeToken<?>
-        && $Gson$Types.equals(type, ((TypeToken<?>) o).type);
+        && GqGenericResolver.equals(type, ((TypeToken<?>) o).type);
   }
 
   @Override public final String toString() {
-    return $Gson$Types.typeToString(type);
+    return GqGenericResolver.typeToString(type);
   }
 
   /**

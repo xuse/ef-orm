@@ -218,7 +218,7 @@ public class ClassEx {
 			Type type = GenericUtils.getSuperType(null, cls, method.getDeclaringClass());
 			cw = new ClassEx(type);
 		}
-		return BeanUtils.getBoundType(method.getGenericReturnType(), cw);
+		return GenericUtils.getBoundType(method.getGenericReturnType(), cw);
 	}
 
 	/**
@@ -239,7 +239,7 @@ public class ClassEx {
 		if (index < 0 || index > types.length) {
 			throw new IllegalArgumentException(StringUtils.concat("the method ", method.getName(), " has ", String.valueOf(types.length), " params, index=", String.valueOf(index), " is out of bound."));
 		}
-		return BeanUtils.getBoundType(types[index], cw);
+		return GenericUtils.getBoundType(types[index], cw);
 	}
 
 	private Method getRealMethod(Method method) {
@@ -271,7 +271,7 @@ public class ClassEx {
 		}
 		Type[] types = method.getGenericParameterTypes();
 		for (int i = 0; i < types.length; i++) {
-			types[i] = BeanUtils.getBoundType(types[i], cw);
+			types[i] = GenericUtils.getBoundType(types[i], cw);
 		}
 		return types;
 	}
@@ -520,7 +520,7 @@ public class ClassEx {
 			Type type = GenericUtils.getSuperType(null, cls, field.getDeclaringClass());
 			cw = new ClassEx(type);
 		}
-		return BeanUtils.getBoundType(field.getGenericType(), cw);
+		return GenericUtils.getBoundType(field.getGenericType(), cw);
 	}
 
 	/**

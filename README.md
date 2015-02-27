@@ -5,10 +5,10 @@ A Simple OR-Mapping framework on multiple databases.
 
 
 * Ê¹ÓÃÊÖ²á(ÖĞÎÄ)<br>
-https://github.com/xuse/ef-orm/blob/master/a.manual/EF-ORM%E4%BD%BF%E7%94%A8%E6%89%8B%E5%86%8C.docx
+http://geequery.github.io/ef-orm/manual/EF-ORM-user-guide.docx
 <br>
 * Ê¹ÓÃÊ¾Àı¹¤³Ì
-https://github.com/xuse/ef-orm/tree/master/orm-tutorial
+https://github.com/GeeQuery/ef-orm/tree/master/orm-tutorial
 
 EF-ORMÊÇÒ»¸öÇáÁ¿£¬±ã½İµÄJava ORM¿ò¼Ü¡£²¢ÇÒ¾ß±¸Èô¸ÉÆóÒµ¼¶µÄÓ¦ÓÃÌØĞÔ£¬Èç·Ö¿â·Ö±í¡¢JTAÊÂÎñµÈ¡£
 
@@ -52,8 +52,8 @@ EFÖĞ³ıÁËCriteria APIÒÔÍâ£¬¿ÉÒÔÖ±½ÓÊ¹ÓÃ¡°SQLÓï¾ä¡±»òÕß¡°SQLÆ¬¶Î¡±¡£µ«ÊÇÕâĞ©SQLÓï¾
 EFÔÚ¼«ÏŞ²åÈëÄ£Ê½ÏÂ£¬ÉõÖÁË¢ĞÂÁËÃ¿Ãë10ÍòÌõĞ´ÈëµÄ¼ÇÂ¼¡£Ô¶Ô¶³¬¹ıÁËÆäËû¿ò¼Ü¡£
 
 Ò»¸ö³õ²½µÄĞÔÄÜ²âÊÔ£º<br>
-²âÊÔ´úÂë£ºhttps://github.com/xuse/ef-orm/blob/master/a.manual/performance-test.rar
-²âÊÔ±¨¸æ£ºhttps://github.com/xuse/ef-orm/blob/master/a.manual/performance-compare.docx
+²âÊÔ´úÂë£ºhttp://geequery.github.io/ef-orm/manual/performance-test.rar
+²âÊÔ±¨¸æ£ºhttp://geequery.github.io/ef-orm/manual/performance-compare.docx
 
 * ÔÄ¶ÁÍÆ¼ö£ºµÚ9¡¢17ÕÂ
 
