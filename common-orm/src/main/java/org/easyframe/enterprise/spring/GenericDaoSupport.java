@@ -44,7 +44,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	public GenericDaoSupport() {
 		Class<?> c = getClass();
 		c = ClassEx.getRealClass(c);
-		Type[] t = GenericUtils.getTypeParameters(c, GenericDao.class);
+		Type[] t = DbUtils.getTypeParameters(c, GenericDao.class);
 		Type type = t[0];
 		if (type instanceof Class<?>) {
 		} else if (type instanceof ParameterizedType) {

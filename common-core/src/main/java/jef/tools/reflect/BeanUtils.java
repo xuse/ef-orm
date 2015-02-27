@@ -1047,64 +1047,6 @@ public class BeanUtils {
 		return result.toArray((T[]) Array.newInstance(type, result.size()));
 	}
 
-	/**
-	 * 计算泛型边界，将泛型变量、边界描述、全部按照允许的最左边界进行计算
-	 * 
-	 * @param type
-	 * @param cw
-	 * @return
-	 */
-	public static Type getBoundType(Type type, ClassEx cw) {
-		if (type instanceof TypeVariable<?>) {
-			TypeVariable<?> tv = (TypeVariable<?>) type;
-			Type real = cw.getImplType(tv);
-			if (real != null) {
-				return getBoundType(real, cw);
-			}
-			real = tv.getBounds()[0];
-			return getBoundType(real, cw);
-		} else if (type instanceof WildcardType) {
-			WildcardType wild = (WildcardType) type;
-			return getBoundType(wild.getUpperBounds()[0], cw);
-		}
-		if (isImplType(type)) {
-			return type;
-		}
-		if (type instanceof ParameterizedType) {
-			ParameterizedType pt = (ParameterizedType) type;
-			Type[] types = pt.getActualTypeArguments();
-			for (int i = 0; i < types.length; i++) {
-				types[i] = getBoundType(types[i], cw);
-			}
-			Class<?> raw = (Class<?>) getBoundType(pt.getRawType(), cw);
-			return GenericUtils.newGenericType(raw, types);
-		} else if (type instanceof GenericArrayType) {
-			GenericArrayType at = (GenericArrayType) type;
-			return GenericUtils.newArrayType(getBoundType(at.getGenericComponentType(), cw));
-		}
-		return null;
-	}
-
-	// 是否确定类型的泛型常量，还是类型不确定的泛型变量。
-	private static boolean isImplType(Type type) {
-		if (type instanceof Class<?>)
-			return true;
-		if (type instanceof GenericArrayType) {
-			return isImplType(((GenericArrayType) type).getGenericComponentType());
-		} else if (type instanceof ParameterizedType) {
-			for (Type sub : ((ParameterizedType) type).getActualTypeArguments()) {
-				if (!isImplType(sub)) {
-					return false;
-				}
-			}
-			return true;
-		} else if (type instanceof TypeVariable<?>) {
-			return false;
-		} else if (type instanceof WildcardType) {
-			return false;
-		}
-		throw new IllegalArgumentException();
-	}
 
 	/**
 	 * 获取一个 public的，非Native非static指定名称的方法(非Declared模式：找父类，不找私有)

@@ -5,6 +5,7 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
+import jef.database.DbUtils;
 import jef.tools.Assert;
 import jef.tools.reflect.ClassEx;
 import jef.tools.reflect.GenericUtils;
@@ -35,7 +36,7 @@ public abstract class AbstractSpringBeanLookup<T> implements ApplicationContextA
 	public AbstractSpringBeanLookup(){
 		Class<?> c = getClass();
 		c = ClassEx.getRealClass(c);
-		Type[] t = GenericUtils.getTypeParameters(c, AbstractSpringBeanLookup.class);
+		Type[] t = DbUtils.getTypeParameters(c, AbstractSpringBeanLookup.class);
 		Type type = t[0];
 		if (type instanceof Class<?>) {
 		} else if (type instanceof ParameterizedType) {

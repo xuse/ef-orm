@@ -5,10 +5,13 @@ import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.GenericDeclaration;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import jef.common.Entry;
@@ -21,7 +24,7 @@ import jef.tools.Assert;
  * @author Administrator
  * @Date 2011-6-20
  */
-public final class GenericUtils extends JefGson{
+public final class GenericUtils{
 	/**
 	 * 泛型类型常量 Map&lt;String,String&gt;
 	 */
@@ -43,6 +46,40 @@ public final class GenericUtils extends JefGson{
 	 */
 	public static final Type LIST_OBJECT=newListType(Object.class);
 	
+	public static Class<?> getRawClass(Type type) {
+		if (type instanceof Class<?>) {
+			// type is a normal class.
+			return (Class<?>) type;
+
+		} else if (type instanceof ParameterizedType) {
+			ParameterizedType parameterizedType = (ParameterizedType) type;
+
+			// I'm not exactly sure why getRawType() returns Type instead of
+			// Class.
+			// Neal isn't either but suspects some pathological case related
+			// to nested classes exists.
+			Type rawType = parameterizedType.getRawType();
+			Assert.isTrue(rawType instanceof Class);
+			return (Class<?>) rawType;
+
+		} else if (type instanceof GenericArrayType) {
+			Type componentType = ((GenericArrayType) type).getGenericComponentType();
+			return Array.newInstance(getRawClass(componentType), 0).getClass();
+
+		} else if (type instanceof TypeVariable) {
+			// we could use the variable's bounds, but that won't work if there
+			// are multiple.
+			// having a raw type that's more general than necessary is okay
+			return Object.class;
+
+		} else if (type instanceof WildcardType) {
+			return getRawClass(((WildcardType) type).getUpperBounds()[0]);
+
+		} else {
+			String className = type == null ? "null" : type.getClass().getName();
+			throw new IllegalArgumentException("Expected a Class, ParameterizedType, or " + "GenericArrayType, but <" + type + "> is of type " + className);
+		}
+	}
 	
 	/**
 	 * Google编写的泛型解析方法
@@ -51,7 +88,7 @@ public final class GenericUtils extends JefGson{
 	 * @return
 	 */
 	public static Type resolve2(Type context,Type toResolve){
-		return $Gson$Types.resolve(context, context==null?null:getRawClass(context), toResolve);
+		return GqGenericResolver.resolve(context, context==null?null:getRawClass(context), toResolve);
 	}
 	
 	/**
@@ -61,7 +98,45 @@ public final class GenericUtils extends JefGson{
 	 * @return
 	 */
 	public static Type resolve (Type context,Type toResolve){
-		return BeanUtils.getBoundType(toResolve, context==null?null:new ClassEx(context));
+		return getBoundType(toResolve, context==null?null:new ClassEx(context));
+	}
+	
+	/**
+	 * Jiyi 编写的计算泛型边界，将泛型变量、边界描述、全部按照允许的最左边界进行计算
+	 * 
+	 * @param type
+	 * @param cw
+	 * @return
+	 */
+	public static Type getBoundType(Type type, ClassEx cw) {
+		if (type instanceof TypeVariable<?>) {
+			TypeVariable<?> tv = (TypeVariable<?>) type;
+			Type real = cw.getImplType(tv);
+			if (real != null) {
+				return getBoundType(real, cw);
+			}
+			real = tv.getBounds()[0];
+			return getBoundType(real, cw);
+		} else if (type instanceof WildcardType) {
+			WildcardType wild = (WildcardType) type;
+			return getBoundType(wild.getUpperBounds()[0], cw);
+		}
+		if (isImplType(type)) {
+			return type;
+		}
+		if (type instanceof ParameterizedType) {
+			ParameterizedType pt = (ParameterizedType) type;
+			Type[] types = pt.getActualTypeArguments();
+			for (int i = 0; i < types.length; i++) {
+				types[i] = getBoundType(types[i], cw);
+			}
+			Class<?> raw = (Class<?>) getBoundType(pt.getRawType(), cw);
+			return GenericUtils.newGenericType(raw, types);
+		} else if (type instanceof GenericArrayType) {
+			GenericArrayType at = (GenericArrayType) type;
+			return GenericUtils.newArrayType(getBoundType(at.getGenericComponentType(), cw));
+		}
+		return null;
 	}
 	
 	/**
@@ -109,6 +184,27 @@ public final class GenericUtils extends JefGson{
 		throw new RuntimeException("the "+subclass.getName()+" doesn't implements " + superclass.getName());
 	}
 	
+	// 是否确定类型的泛型常量，还是类型不确定的泛型变量。
+	private static boolean isImplType(Type type) {
+		if (type instanceof Class<?>)
+			return true;
+		if (type instanceof GenericArrayType) {
+			return isImplType(((GenericArrayType) type).getGenericComponentType());
+		} else if (type instanceof ParameterizedType) {
+			for (Type sub : ((ParameterizedType) type).getActualTypeArguments()) {
+				if (!isImplType(sub)) {
+					return false;
+				}
+			}
+			return true;
+		} else if (type instanceof TypeVariable<?>) {
+			return false;
+		} else if (type instanceof WildcardType) {
+			return false;
+		}
+		throw new IllegalArgumentException();
+	}
+	
 	/**
 	 * 创建一个泛型类型
 	 * @param clz
@@ -119,7 +215,7 @@ public final class GenericUtils extends JefGson{
 		if(!isGenericType(clz)){
 			throw new IllegalArgumentException();
 		}
-		return $Gson$Types.newParameterizedTypeWithOwner(clz.getEnclosingClass(), clz, valueType);
+		return GqGenericResolver.newParameterizedTypeWithOwner(clz.getEnclosingClass(), clz, valueType);
 	}
 	
 	/**
@@ -135,7 +231,21 @@ public final class GenericUtils extends JefGson{
 		if(valueType instanceof Class<?>){
 			valueType=BeanUtils.toWrapperClass((Class<?>)valueType);
 		}
-		return $Gson$Types.newParameterizedTypeWithOwner(null, Map.class, keyType,valueType);
+		return GqGenericResolver.newParameterizedTypeWithOwner(null, Map.class, keyType,valueType);
+	}
+	
+
+	/**
+	 * Returns the generic form of {@code supertype}. For example, if this is
+	 * {@code ArrayList<String>}, this returns {@code Iterable<String>} given
+	 * the input {@code Iterable.class}.
+	 * 
+	 * @param supertype
+	 *            a superclass of, or interface implemented by, this.
+	 */
+	public static Type getSuperType(Type context, Class<?> contextRawType, Class<?> supertype) {
+		Assert.isTrue(supertype.isAssignableFrom(contextRawType));
+		return GqGenericResolver.resolve(context, contextRawType, GqGenericResolver.getGenericSupertype(context, contextRawType, supertype));
 	}
 	
 	/**
@@ -147,7 +257,7 @@ public final class GenericUtils extends JefGson{
 		if(elementType instanceof Class<?>){
 			elementType=BeanUtils.toWrapperClass((Class<?>)elementType);
 		}
-		return $Gson$Types.newParameterizedTypeWithOwner(null, List.class, elementType);
+		return GqGenericResolver.newParameterizedTypeWithOwner(null, List.class, elementType);
 	}
 	
 	/**
@@ -159,7 +269,7 @@ public final class GenericUtils extends JefGson{
 		if(elementType instanceof Class<?>){
 			elementType=BeanUtils.toWrapperClass((Class<?>)elementType);
 		}
-		return $Gson$Types.newParameterizedTypeWithOwner(null, Set.class, elementType);
+		return GqGenericResolver.newParameterizedTypeWithOwner(null, Set.class, elementType);
 	}
 	
 	/**
@@ -170,7 +280,7 @@ public final class GenericUtils extends JefGson{
 	 * 可以使用getRawClass()得到该类型的class形式。
 	 */
 	public static GenericArrayType newArrayType(Type elementType){
-		return $Gson$Types.arrayOf(elementType);
+		return GqGenericResolver.arrayOf(elementType);
 	}
 	
 	/**
@@ -215,7 +325,19 @@ public final class GenericUtils extends JefGson{
 	 * @return
 	 */
 	public static Type getCollectionType(Type context) {
-		return $Gson$Types.getCollectionElementType(context, Collection.class);
+		return getCollectionElementType(context, Collection.class);
+	}
+	
+
+	/**
+	 * Returns the element type of this collection type.
+	 * 
+	 * @throws IllegalArgumentException
+	 *             if this type is not a collection.
+	 */
+	public static Type getCollectionElementType(Type context, Class<?> contextRawType) {
+		Type collectionType = getSuperType(context, contextRawType, Collection.class);
+		return ((ParameterizedType) collectionType).getActualTypeArguments()[0];
 	}
 	
 	/**
@@ -227,10 +349,29 @@ public final class GenericUtils extends JefGson{
 		if(mapType instanceof Class){
 			return new Entry<Type,Type>(Object.class,Object.class);
 		}else{
-			Type[] types= $Gson$Types.getMapKeyAndValueTypes(mapType, Map.class);
+			Type[] types= getMapKeyAndValueTypes(mapType, Map.class);
 			return new Entry<Type,Type>(types[0],types[1]);
 		}
-		
+	}
+	
+
+	/**
+	 * Returns a two element array containing this map's key and value types in
+	 * positions 0 and 1 respectively.
+	 */
+	public static Type[] getMapKeyAndValueTypes(Type context, Class<?> contextRawType) {
+		/*
+		 * Work around a problem with the declaration of java.util.Properties.
+		 * That class should extend Hashtable<String, String>, but it's declared
+		 * to extend Hashtable<Object, Object>.
+		 */
+		if (context == Properties.class) {
+			return new Type[] { String.class, String.class };
+		}
+
+		Type mapType = getSuperType(context, contextRawType, Map.class);
+		ParameterizedType mapParameterizedType = (ParameterizedType) mapType;
+		return mapParameterizedType.getActualTypeArguments();
 	}
 	
 	/**
@@ -239,18 +380,9 @@ public final class GenericUtils extends JefGson{
 	 * @return
 	 */
 	public static boolean isArray(Type type){
-		return $Gson$Types.isArray(type);
+		return GqGenericResolver.isArray(type);
 	}
-	
-	/**
-	 * 得到原始类型
-	 * @param type
-	 */
-	public static Class<?> getRawClass(Type type){
-		if(type==null)return null;
-		return $Gson$Types.getRawType(type);
-	}
-	
+
 	/**
 	 * 批量转换为RawClass
 	 * @param types
@@ -259,7 +391,7 @@ public final class GenericUtils extends JefGson{
 	public static Class<?>[] getRawClasses(Type[] types){
 		Class<?>[] result=new Class[types.length];
 		for(int i=0;i<types.length;i++){
-			result[i]=$Gson$Types.getRawType(types[i]);
+			result[i]=getRawClass(types[i]);
 		}
 		return result;
 	}
@@ -270,11 +402,7 @@ public final class GenericUtils extends JefGson{
 	 * @return
 	 */
 	public static Type getArrayComponentType(Type array) {
-		return $Gson$Types.getArrayComponentType(array);
-	}
-	
-	public static Type[] getMapKeyAndValueTypes(Type context, Class<?> contextRawType) {
-		return $Gson$Types.getMapKeyAndValueTypes(context,contextRawType);
+		return GqGenericResolver.getArrayComponentType(array);
 	}
 	
 	/**

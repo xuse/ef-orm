@@ -28,7 +28,7 @@ public class POJODaoSupport<T> extends BaseDao{
 	public POJODaoSupport() {
 		Class<?> c = getClass();
 		c = ClassEx.getRealClass(c);
-		Type[] t = GenericUtils.getTypeParameters(c, POJODaoSupport.class);
+		Type[] t = DbUtils.getTypeParameters(c, POJODaoSupport.class);
 		Type type = t[0];
 		if (type instanceof Class<?>) {
 		} else if (type instanceof ParameterizedType) {

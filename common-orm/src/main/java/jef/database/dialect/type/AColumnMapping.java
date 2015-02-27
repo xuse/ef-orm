@@ -19,7 +19,6 @@ import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.Assert;
 import jef.tools.reflect.BeanUtils;
-import jef.tools.reflect.GenericUtils;
 import jef.tools.reflect.Property;
 
 public abstract class AColumnMapping<T> implements ColumnMapping<T> {
@@ -43,7 +42,7 @@ public abstract class AColumnMapping<T> implements ColumnMapping<T> {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public AColumnMapping() {
-		Type[] p =  GenericUtils.getTypeParameters(this.getClass(), ColumnMapping.class);
+		Type[] p =  DbUtils.getTypeParameters(this.getClass(), ColumnMapping.class);
 		if (p[0] instanceof Class) {
 			this.clz = (Class<T>) p[0];
 		} else if (p[0] instanceof GenericArrayType) {
