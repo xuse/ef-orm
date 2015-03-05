@@ -46,9 +46,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -69,6 +67,7 @@ public class IOUtils {
 	 * 关闭指定的对象，不会抛出异常
 	 * 
 	 * @param input
+	 *            需要关闭的资源
 	 * @deprecated 请使用{@link #closeQuietly}，该方法和Apache commons-io中的工具类同名，更适合代码复用
 	 */
 	public static void close(Closeable input) {
@@ -79,6 +78,7 @@ public class IOUtils {
 	 * 关闭指定的对象，不会抛出异常
 	 * 
 	 * @param input
+	 *            需要关闭的资源
 	 */
 	public static void closeQuietly(Closeable input) {
 		if (input != null) {
@@ -91,12 +91,17 @@ public class IOUtils {
 	}
 
 	/**
-	 * 在临时文件目录下创建一个目录，如果不能正常操作就抛出权限不足的异常。 检查一次就好，不要老是检查
+	 * 在临时文件目录下创建一个目录并清空，如果不能正常操作就抛出权限不足的异常(在linux上经常出现)。<br>
+	 * 这个临时目录会使用pid作为名称，因此一个程序如果PID不变，每次都能得到相同的目录。<br>
+	 * 
+	 * 一般来说这个目录用于存放和本次运行相关的信息，如果上次运行后这个目录中存在数据，那么本次将清空这个目录。
+	 * 
+	 * @param 临时文件的文件名
+	 * @return 创建的临时目录
 	 */
 	public synchronized static File createTempDirectory(String name) {
 		String tempPath = System.getProperty("java.io.tmpdir");
 		File f = new File(tempPath, name + "." + ProcessUtil.getPid());
-		String user = System.getProperty("user.name");
 		try {
 			if (f.isDirectory()) {
 				deleteAllChildren(f);
@@ -106,47 +111,27 @@ public class IOUtils {
 			f.mkdirs();
 			return f;
 		} catch (Exception e) {
+			String user = System.getProperty("user.name");
 			throw new SimpleException("Current user[" + user + "] doesn't have any permission to access folder " + e.getMessage());
 		}
 	}
 
-	static final void loadProperties(BufferedReader in, Map<String, String> map) {
-		if (in == null)
-			return;
-		try {
-			String s;
-			while ((s = in.readLine()) != null) {
-				if (StringUtils.isBlank(s) || s.startsWith("#"))
-					continue;
-				int index = s.indexOf("=");
-				String key;
-				String value;
-				if (index > -1) {
-					key = s.substring(0, index).trim();
-					value = s.substring(index + 1).trim();
-				} else {
-					key = s.trim();
-					value = "";
-				}
-				if (StringUtils.isEmpty(key))
-					continue;
-				while (value.endsWith("\\") && (s = in.readLine()) != null) {
-					value = value.concat(s);
-				}
-				map.put(key, value);
-			}
-		} catch (Exception e1) {
-			LogUtil.exception(e1);
-		} finally {
-			closeQuietly(in);
-		}
-	}
-
 	/**
-	 * 获得配置文件的项目。配置文件用=分隔值对，类似于properties文件
+	 * 获得配置文件的项目。配置文件用= :等分隔对，语法同properties文件
+	 * <p>
+	 * 使用此方法可以代替使用JDK中的{@link java.util.Properties}工具。因为Properties操作中往往有以下不便
+	 * <ol>
+	 * <li>在遍历时，由于Properties继承了Map&lt;Object,Object&gt;泛型，不得不编写强制类型转换的代码。</li>
+	 * <li>Properties继承了Hashtable性能低下，此外如果getProperty(null)还会抛出异常。</li>
+	 * <li>Properties中的数据是乱序的，无法保持原先在文件中出现的顺序</li>
+	 * <li>Properties保留了基于InputStream的接口，使用时容易出现编码错误</li>
+	 * </ol>
+	 * 因此，建议在加载.properties文件时，不要使用JDK中的{@link java.util.Properties}。
+	 * <s>彻底淘汰落后的java.util.Properties</s>
 	 * 
-	 * @param file
-	 * @return
+	 * @param in
+	 *            要读取的资源
+	 * @return 文件中的键值对信息。
 	 */
 	public static Map<String, String> loadProperties(URL in) {
 		Map<String, String> result = new LinkedHashMap<String, String>();
@@ -155,31 +140,46 @@ public class IOUtils {
 	}
 
 	/**
-	 * 获得配置文件的项目。配置文件用=分隔值对，类似于properties文件
+	 * 获得配置文件的项目。配置文件用= :等分隔对，语法同properties文件
+	 * <p>
+	 * 使用此方法可以代替使用JDK中的{@link java.util.Properties}工具。因为Properties操作中往往有以下不便
+	 * <ol>
+	 * <li>在遍历时，由于Properties继承了Map&lt;Object,Object&gt;泛型，不得不编写强制类型转换的代码。</li>
+	 * <li>Properties继承了Hashtable性能低下，此外如果getProperty(null)还会抛出异常。</li>
+	 * <li>Properties中的数据是乱序的，无法保持原先在文件中出现的顺序</li>
+	 * <li>Properties保留了基于InputStream的接口，使用时容易出现编码错误</li>
+	 * </ol>
+	 * 因此，建议在加载.properties文件时，不要使用JDK中的{@link java.util.Properties}。
+	 * <s>彻底淘汰落后的java.util.Properties</s>
 	 * 
 	 * @param file
-	 * @return
+	 *            要读取的数据流。注意读取完成后流会被关闭。
+	 * @return 文件中的键值对信息。
 	 */
-	public static Map<String, String> loadProperties(BufferedReader in) {
+	public static Map<String, String> loadProperties(Reader in) {
 		Map<String, String> result = new LinkedHashMap<String, String>();
 		loadProperties(in, result);
 		return result;
 	}
 
 	/**
-	 * 保存成properties文件
+	 * 将Map内的数据保存成properties文件
 	 * 
 	 * @param writer
+	 *            要输出的流
 	 * @param map
+	 *            要保存的键值对信息
 	 * @param closeWriter
+	 *            true表示保存完后关闭输出流，false则保持不变
 	 */
-	public static void storeProperties(BufferedWriter writer, Map<String, String> map, boolean closeWriter) {
+	public static void storeProperties(Writer writer, Map<String, String> map, boolean closeWriter) {
 		try {
-			for (String key : map.keySet()) {
-				writer.write(key);
+			
+			for (Map.Entry<String, String> entry : map.entrySet()) {
+				writer.write(saveConvert(entry.getKey(), true));
 				writer.write('=');
-				writer.write(map.get(key));
-				writer.newLine();
+				writer.write(saveConvert(entry.getValue(), false));
+				writer.write(StringUtils.CRLF_STR);
 			}
 			writer.flush();
 		} catch (IOException e1) {
@@ -191,10 +191,12 @@ public class IOUtils {
 	}
 
 	/**
-	 * 删除文件夹内部的所有内容，文件夹本身不删除。 如果输入一个file，那么总是返回true
+	 * 清空指定目录<br>
+	 * 删除文件夹下的所有内容，文件夹本身不删除。 如果输入一个file，那么总是返回true
 	 * 
 	 * @param f
-	 * @return
+	 *            要清空的目录
+	 * @return true表示操作成功，如果某些文件不能正常删除返回false.
 	 */
 	public static boolean deleteAllChildren(File f) {
 		Assert.notNull(f);
@@ -240,14 +242,17 @@ public class IOUtils {
 	}
 
 	/**
-	 * 递归列出所有文件夹
+	 * 递归列出(所有层级的)目录
 	 * 
-	 * @param file
-	 * @return
+	 * @param root
+	 *            要搜索的目录
+	 * @param folderFilter
+	 *            自定义过滤器，可过滤掉不需要的文件夹
+	 * @return 所有未被过滤的文件夹
 	 */
-	public static File[] listFoldersRecursive(File file, final FileFilter folderFilter) {
+	public static File[] listFoldersRecursive(File root, final FileFilter folderFilter) {
 		List<File> files = new ArrayList<File>();
-		for (File folder : listFolders(file)) {
+		for (File folder : listFolders(root)) {
 			if (folderFilter == null || folderFilter.accept(folder)) {
 				files.add(folder);
 				files.addAll(Arrays.asList(listFoldersRecursive(folder, folderFilter)));
@@ -255,55 +260,42 @@ public class IOUtils {
 		}
 		return files.toArray(new File[files.size()]);
 	}
-	
-	
-	/**
-	 * 功能和listFilesRecursive一样，区别在于实现模式不同，迭代器的模式可以减少开销
-	 * @param file
-	 * @param extnames
-	 * @return
-	 */
-	public static Iterator<File> iterateFilesRecursive(File file, FileFilter filter){
-		
-		
-		
-		
-		
-//		File[] folders=listFolders(file);
-		return null;
-		
-		
-	}
 
 	/**
-	 * 递归列出指定目录下的文件（不含文件夹）
+	 * 递归列出目录下(所有层级的)文件。可以指定哪些扩展名，如果不指定扩展名则所有文件都被列出， <br>
+	 * 不会列出目录
 	 * 
-	 * @param file
+	 * @param root
+	 *            要搜索的目录
 	 * @param extnames
-	 *            允许列出的扩展名，必须小写，不含.号
-	 * @return
+	 *            允许列出的扩展名，必须小写，不含.号。可以指定多种扩展名
+	 * @return 所有指定扩展名的文件。
 	 */
-	public static File[] listFilesRecursive(File file, final String... extnames) {
+	public static File[] listFilesRecursive(File root, final String... extnames) {
 		List<File> files = new ArrayList<File>();
-		for (File folder : listFolders(file)) {
+		for (File folder : listFolders(root)) {
 			files.addAll(Arrays.asList(listFilesRecursive(folder, extnames)));
 		}
-		files.addAll(Arrays.asList(listFiles(file, extnames)));
+		files.addAll(Arrays.asList(listFiles(root, extnames)));
 		return files.toArray(new File[files.size()]);
 	}
 
 	/**
-	 * 递归列出指定目录下的文件（不含文件夹）
+	 * 递归列出目录下(所有层级的)文件。可以指定过滤器，过滤掉不需要的文件 <br>
+	 * 不会列出目录
 	 * 
-	 * @param file
+	 * @param root
+	 *            要搜索的目录
 	 * @param filter
 	 *            指定的过滤器
-	 * @return
+	 * @param folderFilter
+	 *            文件夹过滤器，可以用此过滤器来防止搜索不需要的目录
+	 * @return 所有未被过滤的文件
 	 */
-	public static File[] listFilesRecursive(File file, final FileFilter fileFilter, final FileFilter folderFilter) {
+	public static File[] listFilesRecursive(File root, final FileFilter fileFilter, final FileFilter folderFilter) {
 		List<File> files = new ArrayList<File>();
-		if (file.exists()) {
-			for (File f : file.listFiles()) {
+		if (root.exists()) {
+			for (File f : root.listFiles()) {
 				if (f.isDirectory()) {
 					if (folderFilter != null && !folderFilter.accept(f)) {
 						continue;
@@ -321,15 +313,18 @@ public class IOUtils {
 	}
 
 	/**
-	 * 递归列出指定目录下的文件（不含文件夹）
+	 * 递归列出目录下(所有层级的)文件。可以指定文件名的模板进行匹配。
+	 * <p>
+	 * 匹配字符串。该字符串中可以用*表示任意字符，用?表示单个字符。 这个函数的功能类似于windows的文件搜索。
 	 * 
-	 * @param file
+	 * @param root
+	 *            要搜索的目录
 	 * @param pattern
-	 *            指定的匹配字符串
-	 * @return
+	 *            指定的匹配字符串。该字符串中可以用*表示任意字符，用?表示单个字符。
+	 * @return 所有符合条件的文件
 	 */
-	public static File[] listFilesRecursiveLike(File file, final String pattern) {
-		return listFilesRecursive(file, new FileFilter() {
+	public static File[] listFilesRecursiveLike(File root, final String pattern) {
+		return listFilesRecursive(root, new FileFilter() {
 			public boolean accept(File f) {
 				if (StringUtils.matches(f.getName(), pattern, true)) {
 					return true;
@@ -340,11 +335,13 @@ public class IOUtils {
 	}
 
 	/**
-	 * 列出符合扩展名条件的全部文件
+	 * 递归列出目录下文件。可以指定扩展名。
 	 * 
 	 * @param file
+	 *            要搜索的目录
 	 * @param extnames
-	 * @return
+	 *            需要的文件类型（扩展名）。要求小写，无需带'.'符号。
+	 * @return 该目录下符合指定类型的所有文件(只搜索一层，不会递归搜索)。仅列出文件，不会返回目录
 	 */
 	public static File[] listFiles(File file, final String... extnames) {
 		File[] r = file.listFiles(new FileFilter() {
@@ -360,15 +357,16 @@ public class IOUtils {
 	}
 
 	/**
-	 * 列出指定目录下的文件(不含文件夹)
+	 * 列出指定目录下的文件。可以指定文件名的模板进行匹配。
 	 * 
-	 * @param file
+	 * @param root
+	 *            要搜索的目录
 	 * @param pattern
-	 *            ,文件名，可以用*,?,+表示匹配任意字符
-	 * @return
+	 *            搜索字符串，可以用*,?,+表示匹配任意字符。
+	 * @return 该目录下，文件名符合指定搜索字符串的文件(只搜索一层，不会递归搜索)。仅列出文件，不会返回目录
 	 */
-	public static File[] listFilesLike(File file, final String pattern) {
-		File[] r = file.listFiles(new FileFilter() {
+	public static File[] listFilesLike(File root, final String pattern) {
+		File[] r = root.listFiles(new FileFilter() {
 			public boolean accept(File f) {
 				if (f.isFile() && StringUtils.matches(f.getName(), pattern, true)) {
 					return true;
@@ -382,11 +380,12 @@ public class IOUtils {
 	/**
 	 * 列出指定目录下的文件夹
 	 * 
-	 * @param file
-	 * @return
+	 * @param root
+	 *            指定目录
+	 * @return 该目录下的所有文件夹
 	 */
-	public static File[] listFolders(File file) {
-		File[] r = file.listFiles(new FileFilter() {
+	public static File[] listFolders(File root) {
+		File[] r = root.listFiles(new FileFilter() {
 			public boolean accept(File f) {
 				if (f.isDirectory()) {
 					return true;
@@ -400,12 +399,14 @@ public class IOUtils {
 	/**
 	 * 列出指定目录下文件夹，匹配指定的字符串
 	 * 
-	 * @param file
+	 * @param root
+	 *            要搜索的目录
 	 * @param pattern
-	 * @return
+	 *            搜索字符串，可以用*,?,+表示匹配任意字符。
+	 * @return 该目录下符合搜索字符串的所有文件夹。(只搜索一层，不会递归搜索)。仅列出文件夹，不会返回文件
 	 */
-	public static File[] listFoldersLike(File file, final String pattern) {
-		File[] r = file.listFiles(new FileFilter() {
+	public static File[] listFoldersLike(File root, final String pattern) {
+		File[] r = root.listFiles(new FileFilter() {
 			public boolean accept(File f) {
 				if (f.isDirectory() && StringUtils.matches(f.getName(), pattern, true)) {
 					return true;
@@ -419,13 +420,14 @@ public class IOUtils {
 	/**
 	 * 列出指定目录下的文件和文件夹，其中文件只列出符合扩展名的文件。
 	 * 
-	 * @param file
+	 * @param root
+	 *            要搜索的目录
 	 * @param extnames
-	 *            ，允许列出的扩展名，必须小写。不含.号
-	 * @return
+	 *            允许列出的扩展名，必须小写。不含.号
+	 * @return 该目录下的所有文件夹（不管名称中有没有.xxx）以及符合类型的文件。
 	 */
-	public static File[] listFilesAndFolders(File file, final String... extnames) {
-		File[] r = file.listFiles(new FileFilter() {
+	public static File[] listFilesAndFolders(File root, final String... extnames) {
+		File[] r = root.listFiles(new FileFilter() {
 			public boolean accept(File f) {
 				boolean isAll = extnames.length == 0;
 				if (f.isDirectory()) {
@@ -441,14 +443,16 @@ public class IOUtils {
 	}
 
 	/**
-	 * 列出指定目录下的文件和文件夹，只列出符合字符串的对象。
+	 * 列出指定目录下的文件和文件夹，可以指定搜索字符串
 	 * 
-	 * @param file
+	 * @param root
+	 *            要搜索的目录
 	 * @param pattern
-	 * @return
+	 *            搜索字符串
+	 * @return 该目录下所有符合搜索串的 文件和目录。(只搜索一层，不会递归搜索)
 	 */
-	public static File[] listFilesAndFoldersLike(File file, final String pattern) {
-		File[] r = file.listFiles(new FileFilter() {
+	public static File[] listFilesAndFoldersLike(File root, final String pattern) {
+		File[] r = root.listFiles(new FileFilter() {
 			public boolean accept(File f) {
 				return StringUtils.matches(f.getName(), pattern, true);
 			}
@@ -457,33 +461,37 @@ public class IOUtils {
 	}
 
 	/**
-	 * 给定一个File,确认其不存在于在磁盘上，如果存在就改名以回避
+	 * 给定一个File,确认其不存在于在磁盘上，如果存在就改名以回避 <br>
+	 * 这个方法用于向磁盘输出文件时使用。<br>
+	 * 比如输出名为 report.txt时，如果发现上一次的report.txt还在那么就会返回 "report(1).txt"。
+	 * 如果"report(1).txt"也存在就会返回"report(2).txt"。 以此类推。
 	 * 
-	 * @param outputFile
-	 * @return
+	 * @param file
+	 *            目标文件
+	 * @return 如果目标文件不存在，返回本身。如果目标文件已存在，就返回一个带后缀而磁盘上不存在的文件。
 	 */
-	public static File escapeExistFile(File outputFile) {
-		if (!outputFile.exists())
-			return outputFile;
-		int pos = outputFile.getName().lastIndexOf(".");
-		String path = outputFile.getParent();
+	public static File escapeExistFile(File file) {
+		if (!file.exists())
+			return file;
+		int pos = file.getName().lastIndexOf(".");
+		String path = file.getParent();
 		if (StringUtils.isEmpty(path)) {
-			throw new IllegalArgumentException(outputFile.getAbsolutePath() + " has no valid parent folder.");
+			throw new IllegalArgumentException(file.getAbsolutePath() + " has no valid parent folder.");
 		}
 		String baseFilename = null;
 		String extName = null;
 		if (pos > -1) {
-			baseFilename = outputFile.getName().substring(0, pos);
-			extName = outputFile.getName().substring(pos + 1);
+			baseFilename = file.getName().substring(0, pos);
+			extName = file.getName().substring(pos + 1);
 		} else {
-			baseFilename = outputFile.getName();
+			baseFilename = file.getName();
 		}
 		int n = 1;
-		while (outputFile.exists()) {
-			outputFile = new File(path + "/" + baseFilename + "(" + n + ")" + ((extName == null) ? "" : "." + extName));
+		while (file.exists()) {
+			file = new File(path + "/" + baseFilename + "(" + n + ")" + ((extName == null) ? "" : "." + extName));
 			n++;
 		}
-		return outputFile;
+		return file;
 	}
 
 	/**
@@ -955,10 +963,21 @@ public class IOUtils {
 		return asString(getReader(pStream, charset));
 	}
 
-	public static String asString(URL filepath, String charset) throws IOException {
-		if (filepath == null)
+	/**
+	 * 将指定位置的数据读出成为文本
+	 * 
+	 * @param url
+	 *            资源位置
+	 * @param charset
+	 *            字符编码，可以传入null
+	 * @return 读到的文本
+	 * @throws IOException
+	 *             IO操作异常
+	 **/
+	public static String asString(URL url, String charset) throws IOException {
+		if (url == null)
 			return null;
-		return asString(filepath.openStream(), charset, true);
+		return asString(url.openStream(), charset, true);
 	}
 
 	/**
@@ -994,16 +1013,27 @@ public class IOUtils {
 		}
 	}
 
-	public static byte[] toByteArray(URL file) throws IOException {
-		return toByteArray(file.openStream());
+	/**
+	 * 将制定的URL中的数据读出成byte[]
+	 * 
+	 * @param url
+	 *            资源目标位置
+	 * @return 字节数组
+	 * @throws IOException
+	 *             IO操作异常
+	 */
+	public static byte[] toByteArray(URL url) throws IOException {
+		return toByteArray(url.openStream());
 	}
 
 	/**
 	 * 读取文件到内存(不可用于大文件)
 	 * 
 	 * @param file
-	 * @return
+	 *            本地文件
+	 * @return 字节数组
 	 * @throws IOException
+	 *             IO操作异常
 	 */
 	public static byte[] toByteArray(File file) throws IOException {
 		InputStream in = (file instanceof URLFile) ? ((URLFile) file).getInputStream() : new FileInputStream(file);
@@ -1355,7 +1385,7 @@ public class IOUtils {
 	 * @throws IOException
 	 */
 	public static void saveAsFile(File file, Charset charset, Reader... readers) throws IOException {
-		BufferedWriter os = getWriter(file, charset==null?null:charset.name(),false);
+		BufferedWriter os = getWriter(file, charset == null ? null : charset.name(), false);
 		try {
 			for (Reader reader : readers) {
 				copy(reader, os, true, false, new char[2048]);
@@ -1374,7 +1404,7 @@ public class IOUtils {
 	 * @throws IOException
 	 */
 	public static void saveAsFile(File file, Charset charset, String... texts) throws IOException {
-		BufferedWriter os = getWriter(file, charset==null?null:charset.name(),false);
+		BufferedWriter os = getWriter(file, charset == null ? null : charset.name(), false);
 		try {
 			for (String text : texts) {
 				os.write(text);
@@ -1497,29 +1527,47 @@ public class IOUtils {
 	}
 
 	/**
-	 * 拷贝文件或文件夹（覆盖）
+	 * 拷贝（目录）拷贝<br>
+	 * 支持目录拷贝，指定目录下的目录结构会被保留，并复制到新的路径上<br>
+	 * 如果有同名文件或文件夹，会自动覆盖。
 	 * 
 	 * @param file
+	 *            源文件或文件夹
 	 * @param newFile
-	 * @return
+	 *            目标文件或文件夹
+	 * @return true拷贝成功，false表示拷贝过程出现失败
 	 */
 	public static boolean copyFile(File file, File newFile) {
 		return copyFile(file, newFile, CopyStrategy.ALLWAYS_OVERWRITE);
 	}
 
 	/**
-	 * 文件1拷贝为文件2 支持目录
+	 * 拷贝（目录）拷贝<br>
+	 * 可以指定拷贝策略<br>
+	 * 支持目录拷贝，指定目录下的目录结构会被保留，并复制到新的路径上
+	 * <p>
+	 * 注意，此方法是在两个完整 文件/目录 路径之间进行拷贝。
+	 * <p>
+	 * 例如 copyFile(new File("c:\temp"),new File("d:\temproot"));
+	 * //c:\temp和d:\temproot都是目录 拷贝后，c:\temp目录下的所有文件都被拷贝到d:'temproot目录下。
+	 * <p>
+	 * copyFile(new File("c:\temp\io.sys"),new File("d:\temproot"));
+	 * 如果d:\temproot不存在，那么拷贝后d:\temproot是一个文件。
 	 * 
-	 * @param file
+	 * @param source
+	 *            源文件或目录
 	 * @param newFile
+	 *            目标文件或目录。
 	 * @param strategy
-	 * @return
+	 *            拷贝策略，拷贝策略可以用于指定拷贝中的各种行为
+	 * @return true拷贝成功，false表示拷贝过程出现失败
+	 * @see CopyStrategy
 	 */
-	public static boolean copyFile(File file, File newFile, CopyStrategy strategy) {
-		if (!file.exists())
+	public static boolean copyFile(File source, File newFile, CopyStrategy strategy) {
+		if (!source.exists())
 			return false;
-		if (file.isDirectory()) {
-			if (!strategy.processFolder(file, newFile)) {
+		if (source.isDirectory()) {// 源为目录时
+			if (!strategy.processFolder(source, newFile)) {
 				return false;
 			}
 			if (newFile.exists()) {
@@ -1528,35 +1576,42 @@ public class IOUtils {
 				}
 			}
 			newFile.mkdirs();
-			for (File f : file.listFiles()) {
+			for (File f : source.listFiles()) {
 				File target = strategy.getTargetFile(f, newFile);
 				if (target != null) {
 					copyFile(f, target, strategy);
 				}
 			}
-			if(strategy.isMove()){
-				if(file.list().length==0){
-					file.delete();
+			if (strategy.isMove()) {
+				if (source.list().length == 0) {
+					source.delete();
 				}
 			}
 			return true;
-		} else {
-			if (newFile.exists() && !strategy.canOverWritten(file, newFile)) {
+		} else {// 源为文件时
+			if (newFile.isDirectory()) {
+				if (strategy.allowFileIntoFolder()) {
+					return copyFile(source, new File(newFile, source.getName()), strategy);
+				} else {
+					throw new IllegalArgumentException("the target " + newFile.getPath() + " has exist, and is a folder.");
+				}
+			}
+			if (newFile.exists() && !strategy.canOverWritten(source, newFile)) {
 				return false;
 			}
 			if (strategy.isMove()) {
-				if (newFile.exists() && !newFile.delete()) {//如果目标存在，并且无法删除，则移动失败
+				if (newFile.exists() && !newFile.delete()) {// 如果目标存在，并且无法删除，则移动失败
 					return false;
 				}
-				return move(file, newFile);
+				return move(source, newFile);
 			} else {
 				FileChannel in = null;
 				FileChannel out = null;
 				boolean flag = false;
 				try {
-					in = ((file instanceof URLFile) ? ((URLFile) file).getInputStream() : new FileInputStream(file)).getChannel();
+					in = ((source instanceof URLFile) ? ((URLFile) source).getInputStream() : new FileInputStream(source)).getChannel();
 					out = new FileOutputStream(newFile).getChannel();
-					in.transferTo(0, file.length(), out);
+					in.transferTo(0, source.length(), out);
 					flag = true;
 				} catch (IOException e) {
 					LogUtil.exception(e);
@@ -1570,24 +1625,36 @@ public class IOUtils {
 	}
 
 	/**
-	 * 将文件拷贝到指定目录下
+	 * 将文件拷贝到指定目录下，文件名保持不变<br>
 	 * 
 	 * @param tmpFile
+	 *            需要复制的文件或目录
 	 * @param path
-	 * @return
+	 *            文本，要复制的目标路径(必须是一个文件夹)，如果目标不存在会自动创建为文件夹。
+	 * @return 拷贝后的文件
 	 * @throws IOException
+	 *             磁盘操作异常时抛出
+	 * @deprecated Please use {@link #copyIntoFolder(File, File)};
 	 */
 	public static File copyToFolder(File file, String path) throws IOException {
-		path = path.replace('\\', '/');
-		File dir = new File(path);
-		if (!dir.exists())
-			dir.mkdirs();
-		if (!path.endsWith("/"))
-			path = path + "/";
-		File targetFile = new File(path + file.getName());
-		InputStream in = (file instanceof URLFile) ? ((URLFile) file).getInputStream() : new FileInputStream(file);
-		copy(in, new FileOutputStream(targetFile), true);
-		return targetFile;
+		return copyIntoFolder(file, new File(path));
+	}
+
+	/**
+	 * 将文件拷贝到指定目录下，文件名保持不变<br>
+	 * 
+	 * @param tmpFile
+	 *            需要复制的文件或目录
+	 * @param path
+	 *            文本，要复制的目标路径(必须是一个文件夹)，如果目标不存在会自动创建为文件夹。
+	 * @return 拷贝后的文件
+	 * @throws IOException
+	 *             磁盘操作异常时抛出
+	 */
+	public static File copyIntoFolder(File source, File dir) {
+		File target = new File(dir, source.getName());
+		copyFile(source, target);
+		return target;
 	}
 
 	/**
@@ -1622,10 +1689,15 @@ public class IOUtils {
 	}
 
 	/**
+	 * 文件(目录)重新命名
 	 * 
 	 * @param file
+	 *            要处理的文件或目录
 	 * @param newName
-	 * @return 如果成功改名，返回改名后的file对象，否则返回null
+	 *            修改后的文件名（不含路径）。
+	 * @param overwite
+	 *            覆盖模式，如果目标文件已经存在，则删除目标文件后再改名
+	 * @return 如果成功改名，返回改名后的file对象，否则返回null。
 	 */
 	public static File rename(File file, String newName, boolean overwite) {
 		File target = new File(file.getParentFile(), newName);
@@ -1665,7 +1737,7 @@ public class IOUtils {
 	 * @throws IOException
 	 */
 	public static int converFileEncode(File f, final String from, final String to, String... extPatterns) throws IOException {
-		TextFileCallback c = new TextFileCallback(from,to,Dealwith.REPLACE);
+		TextFileCallback c = new TextFileCallback(from, to, Dealwith.REPLACE);
 		int n = 0;
 		if (f.isDirectory()) {
 			for (File sub : f.listFiles()) {
@@ -1680,11 +1752,17 @@ public class IOUtils {
 		return n;
 	}
 
+	/**
+	 * 文件过滤器
+	 * 
+	 * @author jiyi
+	 * 
+	 */
 	public static abstract class FileFilterEx implements FileFilter {
 		/**
-		 * 是否跳出当前文件夹搜索
+		 * 是否跳出当前文件夹搜索 每次运行完成accept方法后，程序会执行此方法，如果返回true则将停止在此目录中的搜索。
 		 * 
-		 * @return
+		 * @return true中断文件搜索，false继续搜索。
 		 */
 		protected boolean breakFolder(File root) {
 			return false;
@@ -1842,10 +1920,10 @@ public class IOUtils {
 	 * @throws IOException
 	 */
 	public static File processFile(File f, TextFileCallback call) throws IOException {
-		if(!call.accept(f)){
+		if (!call.accept(f)) {
 			return null;
 		}
-		String sourceCharset= call.sourceCharset(f);
+		String sourceCharset = call.sourceCharset(f);
 		BufferedReader reader = getReader(f, sourceCharset);
 		call.sourceFile = f;
 		String charSet = call.targetCharset();
@@ -1880,19 +1958,19 @@ public class IOUtils {
 		if (w != null)
 			w.close();
 
-		if (call.isSuccess() && target!=null) {
-			Dealwith deal=call.dealwithSourceOnSuccess(f);
-			if(deal==Dealwith.REPLACE){
+		if (call.isSuccess() && target != null) {
+			Dealwith deal = call.dealwithSourceOnSuccess(f);
+			if (deal == Dealwith.REPLACE) {
 				if (f.delete()) {
 					File n = new File(f.getPath());
 					target.renameTo(n);
 					return n;
 				}
-			} else if (deal==Dealwith.DELETE) {
+			} else if (deal == Dealwith.DELETE) {
 				f.delete();
-			} else if(deal==Dealwith.BACKUP_REPLACE){
-				File backupfile=new File(f.getParentFile(),f.getName()+".bak");
-				backupfile=escapeExistFile(backupfile);
+			} else if (deal == Dealwith.BACKUP_REPLACE) {
+				File backupfile = new File(f.getParentFile(), f.getName() + ".bak");
+				backupfile = escapeExistFile(backupfile);
 				if (f.renameTo(backupfile)) {
 					File n = new File(f.getPath());
 					target.renameTo(n);
@@ -2097,7 +2175,7 @@ public class IOUtils {
 				charSet = Charset.defaultCharset().name();
 			OutputStreamWriter osw = new OutputStreamWriter(os, charSet);
 			return new BufferedWriter(osw);
-		}catch(IOException e){
+		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 
@@ -2112,11 +2190,12 @@ public class IOUtils {
 	 * @throws IOException
 	 */
 	public static BufferedWriter getWriter(File target, String charSet) throws IOException {
-		return getWriter(target, charSet , false);
+		return getWriter(target, charSet, false);
 	}
-	
+
 	/**
 	 * 将OutputStream封装为BufferedWriter
+	 * 
 	 * @param out
 	 * @param charSet
 	 * @return
@@ -2345,67 +2424,15 @@ public class IOUtils {
 		return getRelativepath(s1, s2);
 	}
 
-	/**
-	 * JDK提供了native2ascii.exe ascii2native.exe， 不过要命令行，不能在eclipse里面直接操作，因此编写了一个可
-	 * 运行的类，在eclipse里直接运行。
-	 * 
-	 * @author Administrator
-	 */
-	public static class ResourceAscii2Native {
-		public static void main(String... args) throws IOException {
-			if (args.length == 0) {
-				System.out.println("please input the file/folder path you want to convert as a running arg.");
-				return;
-			}
-			File f = new File(StringUtils.join(args, " "));
-			if (!f.exists()) {
-				System.out.println("target file " + f.getAbsolutePath() + " not found.");
-				return;
-			}
-			File t = new File(f.getAbsolutePath() + ".nav");
-			IOUtils.fromHexUnicodeString(f, t, "UTF-8");
-			File bak = escapeExistFile(new File(f.getAbsolutePath() + ".bak"));
-			if (f.renameTo(bak) && t.renameTo(f)) {
-				System.out.println("convert successful! the original file was backup as :" + bak.getAbsolutePath());
-			} else {
-				System.out.println("convert successful!");
-			}
-		}
-	}
 
-	/**
-	 * JDK提供了native2ascii.exe ascii2native.exe， 不过要命令行，不能在eclipse里面直接操作，因此编写了一个可
-	 * 运行的类，在eclipse里直接运行。
-	 * 
-	 * @author Administrator
-	 */
-	public static class ResourceNative2Ascii {
-		public static void main(String... args) throws IOException {
-			if (args.length == 0) {
-				System.out.println("please input the file/folder path you want to convert as a running arg.");
-				return;
-			}
-			File f = new File(StringUtils.join(args, " "));
-			if (!f.exists()) {
-				System.out.println("target file " + f.getAbsolutePath() + " not found.");
-				return;
-			}
-			File t = new File(f.getAbsolutePath() + ".nav");
-			IOUtils.toHexUnicodeString(f, t, "UTF-8");
-			File bak = escapeExistFile(new File(f.getAbsolutePath() + ".bak"));
-			if (f.renameTo(bak) && t.renameTo(f)) {
-				System.out.println("convert successful! the original file was backup as :" + bak.getAbsolutePath());
-			} else {
-				System.out.println("convert successful!");
-			}
-		}
-	}
+	
 
 	/**
 	 * 将ByteBuffer对象脱壳，得到byte[]
 	 * 
 	 * @param bf
-	 * @return
+	 *            ByteBuffer对象
+	 * @return 字节数组
 	 */
 	public static byte[] toByteArray(ByteBuffer bf) {
 		if (bf.position() != 0) {
@@ -2420,14 +2447,13 @@ public class IOUtils {
 	}
 
 	/**
-	 * 在指定目录下查找文件
+	 * 在指定目录下搜索单个文件
 	 * 
 	 * @Title: findFile
 	 * @param root
 	 * @param filter
 	 *            过滤条件
-	 * @return File 返回类型
-	 * @throws
+	 * @return File 返回文件
 	 */
 	public static File findFile(File root, FileFilterEx filter) {
 		if (root == null || !root.exists())
@@ -2450,11 +2476,13 @@ public class IOUtils {
 	}
 
 	/**
-	 * 在指定目录下查找文件
+	 * 在指定目录下搜索文件
 	 * 
 	 * @param root
+	 *            要搜索的目录
 	 * @param filter
-	 * @return
+	 *            文件过滤器
+	 * @return 搜索到的所有文件
 	 */
 	public static Collection<File> findFiles(File root, FileFilterEx filter) {
 		if (root == null || !root.exists())
@@ -2476,17 +2504,15 @@ public class IOUtils {
 	}
 
 	/**
-	 * 在指定目录下查找文件
+	 * 在指定目录下搜索单个文件
 	 * 
-	 * @Title: findFile
 	 * @param root
-	 *            查找目录
+	 *            要搜索的目录
 	 * @param name
-	 *            查找的文件名称（完全匹配）
+	 *            搜索的文件名称（完全匹配）
 	 * @param acceptFolder
-	 *            是否查找文件夹
-	 * @return File 返回类型
-	 * @throws
+	 *            是否搜索文件夹
+	 * @return File 返回文件
 	 */
 	public static File findFile(File root, final String name, final boolean acceptFolder) {
 		return findFile(root, new FileFilterEx() {
@@ -2499,6 +2525,7 @@ public class IOUtils {
 	}
 
 	// 一段较为粗糙的代码，目的是区分GB18030和几种UTF编码，但不能识别其他复杂编码
+	// 更精确的处理还是要用chardet包才行
 	public static String get_charset(File file) {
 		String charset = "GB18030";
 		byte[] first3Bytes = new byte[3];
@@ -2563,82 +2590,358 @@ public class IOUtils {
 	}
 
 	/**
-	 * 比较两个文件是否内容一致
+	 * 比较两个文件/目录是否内容一致。 <br>
+	 * 作为传入参数的文件/目录的名称不会被比较。
+	 * 
 	 * @param origin
-	 * @param file
+	 *            源文件。可传入文件或目录
+	 * @param target
+	 *            目标文件。可传入文件或目录
 	 * @return
 	 */
-	public static boolean equals(File origin, File file) {
-		return FileComparator.LENGTH_SKIP.equals(origin, file);
+	public static boolean equals(File origin, File target) {
+		boolean isFile = origin.isFile();
+		if (isFile != target.isFile()) {
+			return false;
+		}
+		if (isFile) {
+			// 文件比较
+			return FileComparator.LENGTH_SKIP.equals(origin, target);
+		} else if (origin.isDirectory() && target.isDirectory()) {
+			File[] ss = origin.listFiles();
+			File[] ts = target.listFiles();
+			if (ss.length != ts.length) {
+				return false;
+			}
+			// 目录比较
+			for (File file : ss) {
+				File newTarget = new File(target, file.getName());
+				boolean flag = equals(file, newTarget);
+				if (!flag) {
+					return false;
+				}
+			}
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	/*
+	 * Read in a "logical line" from an InputStream/Reader, skip all comment and
+	 * blank lines and filter out those leading whitespace characters ( , and )
+	 * from the beginning of a "natural line". Method returns the char length of
+	 * the "logical line" and stores the line in "lineBuf".
+	 */
+	static final class LineReader {
+		private char[] inCharBuf;
+		private char[] lineBuf = new char[1024];
+		private int inLimit = 0;
+		private int inOff = 0;
+		private Reader reader;
+
+		public LineReader(Reader reader) {
+			this.reader = reader;
+			inCharBuf = new char[8192];
+		}
+
+		int readLine() throws IOException {
+			int len = 0;
+			char c = 0;
+
+			boolean skipWhiteSpace = true;
+			boolean isCommentLine = false;
+			boolean isNewLine = true;
+			boolean appendedLineBegin = false;
+			boolean precedingBackslash = false;
+			boolean skipLF = false;
+
+			while (true) {
+				if (inOff >= inLimit) {
+					inLimit = reader.read(inCharBuf);
+					inOff = 0;
+					if (inLimit <= 0) {
+						if (len == 0 || isCommentLine) {
+							return -1;
+						}
+						return len;
+					}
+				}
+				c = inCharBuf[inOff++];
+
+				if (skipLF) {
+					skipLF = false;
+					if (c == '\n') {
+						continue;
+					}
+				}
+				if (skipWhiteSpace) {
+					if (c == ' ' || c == '\t' || c == '\f') {
+						continue;
+					}
+					if (!appendedLineBegin && (c == '\r' || c == '\n')) {
+						continue;
+					}
+					skipWhiteSpace = false;
+					appendedLineBegin = false;
+				}
+				if (isNewLine) {
+					isNewLine = false;
+					if (c == '#' || c == '!') {
+						isCommentLine = true;
+						continue;
+					}
+				}
+
+				if (c != '\n' && c != '\r') {
+					lineBuf[len++] = c;
+					if (len == lineBuf.length) {
+						int newLength = lineBuf.length * 2;
+						if (newLength < 0) {
+							newLength = Integer.MAX_VALUE;
+						}
+						char[] buf = new char[newLength];
+						System.arraycopy(lineBuf, 0, buf, 0, lineBuf.length);
+						lineBuf = buf;
+					}
+					// flip the preceding backslash flag
+					if (c == '\\') {
+						precedingBackslash = !precedingBackslash;
+					} else {
+						precedingBackslash = false;
+					}
+				} else {
+					// reached EOL
+					if (isCommentLine || len == 0) {
+						isCommentLine = false;
+						isNewLine = true;
+						skipWhiteSpace = true;
+						len = 0;
+						continue;
+					}
+					if (inOff >= inLimit) {
+						inLimit = reader.read(inCharBuf);
+						inOff = 0;
+						if (inLimit <= 0) {
+							return len;
+						}
+					}
+					if (precedingBackslash) {
+						len -= 1;
+						// skip the leading whitespace characters in following
+						// line
+						skipWhiteSpace = true;
+						appendedLineBegin = true;
+						precedingBackslash = false;
+						if (c == '\r') {
+							skipLF = true;
+						}
+					} else {
+						return len;
+					}
+				}
+			}
+		}
+	}
+
+	private static void load0(LineReader lr, Map<String, String> map) throws IOException {
+		char[] convtBuf = new char[1024];
+		int limit;
+		int keyLen;
+		int valueStart;
+		char c;
+		boolean hasSep;
+		boolean precedingBackslash;
+
+		while ((limit = lr.readLine()) >= 0) {
+			c = 0;
+			keyLen = 0;
+			valueStart = limit;
+			hasSep = false;
+
+			precedingBackslash = false;
+			while (keyLen < limit) {
+				c = lr.lineBuf[keyLen];
+				// need check if escaped.
+				if ((c == '=' || c == ':') && !precedingBackslash) {
+					valueStart = keyLen + 1;
+					hasSep = true;
+					break;
+				} else if ((c == ' ' || c == '\t' || c == '\f') && !precedingBackslash) {
+					valueStart = keyLen + 1;
+					break;
+				}
+				if (c == '\\') {
+					precedingBackslash = !precedingBackslash;
+				} else {
+					precedingBackslash = false;
+				}
+				keyLen++;
+			}
+			while (valueStart < limit) {
+				c = lr.lineBuf[valueStart];
+				if (c != ' ' && c != '\t' && c != '\f') {
+					if (!hasSep && (c == '=' || c == ':')) {
+						hasSep = true;
+					} else {
+						break;
+					}
+				}
+				valueStart++;
+			}
+			String key = loadConvert(lr.lineBuf, 0, keyLen, convtBuf);
+			String value = loadConvert(lr.lineBuf, valueStart, limit - valueStart, convtBuf);
+			map.put(key, value);
+		}
+	}
+
+	/*
+	 * Converts encoded &#92;uxxxx to unicode chars and changes special saved
+	 * chars to their original forms
+	 */
+	private static String loadConvert(char[] in, int off, int len, char[] convtBuf) {
+		if (convtBuf.length < len) {
+			int newLen = len * 2;
+			if (newLen < 0) {
+				newLen = Integer.MAX_VALUE;
+			}
+			convtBuf = new char[newLen];
+		}
+		char aChar;
+		char[] out = convtBuf;
+		int outLen = 0;
+		int end = off + len;
+
+		while (off < end) {
+			aChar = in[off++];
+			if (aChar == '\\') {
+				aChar = in[off++];
+				if (aChar == 'u') {
+					// Read the xxxx
+					int value = 0;
+					for (int i = 0; i < 4; i++) {
+						aChar = in[off++];
+						switch (aChar) {
+						case '0':
+						case '1':
+						case '2':
+						case '3':
+						case '4':
+						case '5':
+						case '6':
+						case '7':
+						case '8':
+						case '9':
+							value = (value << 4) + aChar - '0';
+							break;
+						case 'a':
+						case 'b':
+						case 'c':
+						case 'd':
+						case 'e':
+						case 'f':
+							value = (value << 4) + 10 + aChar - 'a';
+							break;
+						case 'A':
+						case 'B':
+						case 'C':
+						case 'D':
+						case 'E':
+						case 'F':
+							value = (value << 4) + 10 + aChar - 'A';
+							break;
+						default:
+							throw new IllegalArgumentException("Malformed \\uxxxx encoding.");
+						}
+					}
+					out[outLen++] = (char) value;
+				} else {
+					if (aChar == 't')
+						aChar = '\t';
+					else if (aChar == 'r')
+						aChar = '\r';
+					else if (aChar == 'n')
+						aChar = '\n';
+					else if (aChar == 'f')
+						aChar = '\f';
+					out[outLen++] = aChar;
+				}
+			} else {
+				out[outLen++] = (char) aChar;
+			}
+		}
+		return new String(out, 0, outLen);
+	}
+
+	private static String saveConvert(String theString, boolean escapeSpace) {
+		int len = theString.length();
+		int bufLen = len * 2;
+		if (bufLen < 0) {
+			bufLen = Integer.MAX_VALUE;
+		}
+		StringBuilder outBuffer = new StringBuilder(bufLen);
+
+		for (int x = 0; x < len; x++) {
+			char aChar = theString.charAt(x);
+			// Handle common case first, selecting largest block that
+			// avoids the specials below
+			if ((aChar > 61) && (aChar < 127)) {
+				if (aChar == '\\') {
+					outBuffer.append('\\');
+					outBuffer.append('\\');
+					continue;
+				}
+				outBuffer.append(aChar);
+				continue;
+			}
+			switch (aChar) {
+			case ' ':
+				if (x == 0 || escapeSpace)
+					outBuffer.append('\\');
+				outBuffer.append(' ');
+				break;
+			case '\t':
+				outBuffer.append('\\');
+				outBuffer.append('t');
+				break;
+			case '\n':
+				outBuffer.append('\\');
+				outBuffer.append('n');
+				break;
+			case '\r':
+				outBuffer.append('\\');
+				outBuffer.append('r');
+				break;
+			case '\f':
+				outBuffer.append('\\');
+				outBuffer.append('f');
+				break;
+			case '=': // Fall through
+			case ':': // Fall through
+			case '#': // Fall through
+			case '!':
+				outBuffer.append('\\');
+				outBuffer.append(aChar);
+				break;
+			default:
+				outBuffer.append(aChar);
+			}
+		}
+		return outBuffer.toString();
 	}
 	
-	private static final String FOLDER_SEPARATOR = "/";
-
-	private static final String WINDOWS_FOLDER_SEPARATOR = "\\";
-	
-	private static final String TOP_PATH = "..";
-
-	private static final String CURRENT_PATH = ".";
-	
-	/**
-	 * Normalize the path by suppressing sequences like "path/.." and
-	 * inner simple dots.
-	 * <p>The result is convenient for path comparison. For other uses,
-	 * notice that Windows separators ("\") are replaced by simple slashes.
-	 * @param path the original path
-	 * @return the normalized path
+	/*
+	 * 内部使用,properties文件读取
 	 */
-	public static String cleanPath(String path) {
-		if (path == null) {
-			return null;
+	static final void loadProperties(Reader in, Map<String, String> map) {
+		if (in == null)
+			return;
+		try {
+			load0(new LineReader(in), map);
+		} catch (Exception e1) {
+			LogUtil.exception(e1);
+		} finally {
+			closeQuietly(in);
 		}
-		String pathToUse = StringUtils.replace(path, WINDOWS_FOLDER_SEPARATOR, FOLDER_SEPARATOR);
-
-		// Strip prefix from path to analyze, to not treat it as part of the
-		// first path element. This is necessary to correctly parse paths like
-		// "file:core/../core/io/Resource.class", where the ".." should just
-		// strip the first "core" directory while keeping the "file:" prefix.
-		int prefixIndex = pathToUse.indexOf(":");
-		String prefix = "";
-		if (prefixIndex != -1) {
-			prefix = pathToUse.substring(0, prefixIndex + 1);
-			pathToUse = pathToUse.substring(prefixIndex + 1);
-		}
-		if (pathToUse.startsWith(FOLDER_SEPARATOR)) {
-			prefix = prefix + FOLDER_SEPARATOR;
-			pathToUse = pathToUse.substring(1);
-		}
-
-		String[] pathArray = StringUtils.split(pathToUse, FOLDER_SEPARATOR);
-		List<String> pathElements = new LinkedList<String>();
-		int tops = 0;
-
-		for (int i = pathArray.length - 1; i >= 0; i--) {
-			String element = pathArray[i];
-			if (CURRENT_PATH.equals(element)) {
-				// Points to current directory - drop it.
-			}
-			else if (TOP_PATH.equals(element)) {
-				// Registering top path found.
-				tops++;
-			}
-			else {
-				if (tops > 0) {
-					// Merging path element with element corresponding to top path.
-					tops--;
-				}
-				else {
-					// Normal path element found.
-					pathElements.add(0, element);
-				}
-			}
-		}
-
-		// Remaining top paths need to be retained.
-		for (int i = 0; i < tops; i++) {
-			pathElements.add(0, TOP_PATH);
-		}
-
-		return prefix + StringUtils.join(pathElements, FOLDER_SEPARATOR);
 	}
 }

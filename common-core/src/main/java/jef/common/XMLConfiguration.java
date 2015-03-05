@@ -1,6 +1,7 @@
 package jef.common;
 
 import jef.common.log.LogUtil;
+import jef.tools.SimpleXPath;
 import jef.tools.XMLUtils;
 
 import org.w3c.dom.Document;
@@ -45,7 +46,7 @@ public final class XMLConfiguration extends Cfg{
 	 */
 	public Element getElement(String xpath){
 		try{
-			Element ele=(Element)XMLUtils.getNodeByXPath(doc, xpath);
+			Element ele=(Element)SimpleXPath.getNodeByXPath(doc, xpath);
 			return ele;
 		}catch(Exception e){
 			LogUtil.warn(e.getMessage());
@@ -70,14 +71,14 @@ public final class XMLConfiguration extends Cfg{
 		if(nodeTextMode){
 			Node node=null;
 			try{
-				node=XMLUtils.getNodeByXPath(doc, key);
+				node=SimpleXPath.getNodeByXPath(doc, key);
 			}catch(Exception e){
 				LogUtil.warn(e.getMessage());
 			}
 			if(node!=null)return XMLUtils.nodeText(node);
 		}else{
 			try{
-				return XMLUtils.getAttributeByXPath(doc, key);
+				return SimpleXPath.getAttributeByXPath(doc, key);
 			}catch(Exception e){
 				LogUtil.warn(e.getMessage());
 			}

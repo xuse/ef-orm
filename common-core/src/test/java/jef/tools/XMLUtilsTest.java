@@ -28,7 +28,7 @@ public class XMLUtilsTest {
 //		Element e=XMLUtils.first(doc.getDocumentElement(), "fields");
 //		//XMLUtils.printNode(e, 99, true);
 //		XMLUtils.saveDocument(e, System.out, "UTF-8");
-		LogUtil.show(XMLUtils.getAttributesByXPath(doc, "entity/fields/field|complex-field|reference-field[?]@name"));
+		LogUtil.show(SimpleXPath.getAttributesByXPath(doc, "entity/fields/field|complex-field|reference-field[?]@name"));
 		XMLUtils.setXsdSchema(doc,null);
 		
 		Element e=XMLUtils.first(doc.getDocumentElement(), "fields");

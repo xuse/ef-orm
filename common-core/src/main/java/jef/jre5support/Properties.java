@@ -25,7 +25,7 @@ import java.util.Enumeration;
 
 /**
  * JRE 6中，Properties支持reader参数构造，因此可以支持各种非标准编码的properties文件。
- * 开发者将不再需要将properties文件用native2ascii转换为\\uxxxx格式的编码。
+ * 开发者将不再需要将properties文件用native2ascii转换为\\uxxxx格式的编码，
  * 而是可以直接以utf-8格式来存储properties并在其中使用各种语言。
  * 
  * 然而悲催的是，当时还有很多应用是使用JRE5的，因此当时我可以想到的办法就是，将JDK 6 的Properties拿出来，

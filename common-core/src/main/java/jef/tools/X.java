@@ -39,7 +39,7 @@ public final class X extends XMLUtils{
 	 */
 	public static Element $(String xpath,Node node){
 		try{
-			Node result=getNodeByXPath(node, xpath);
+			Node result=SimpleXPath.getNodeByXPath(node, xpath);
 			if(result.getNodeType()==Node.ELEMENT_NODE){
 				return (Element) result;
 			}
@@ -58,7 +58,7 @@ public final class X extends XMLUtils{
 	 */
 	public static List<Element> $$(String xpath,Node node){
 		try{
-			NodeList result=getNodeListByXPath(node, xpath);
+			NodeList result=SimpleXPath.getNodeListByXPath(node, xpath);
 			return toElementList(result) ;
 		}catch(Exception e){
 			LogUtil.show(e.getMessage());

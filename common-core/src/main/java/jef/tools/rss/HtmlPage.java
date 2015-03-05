@@ -17,6 +17,7 @@ package jef.tools.rss;
 
 import java.util.List;
 
+import jef.tools.SimpleXPath;
 import jef.tools.XMLUtils;
 
 import org.w3c.dom.DocumentFragment;
@@ -90,11 +91,11 @@ public class HtmlPage{
 	 * @return
 	 */
 	public String getFormattedText(String xpath) {
-		return XMLUtils.getAttributeByXPath(bodyNode, "/text:"+xpath);
+		return SimpleXPath.getAttributeByXPath(bodyNode, "/text:"+xpath);
 	}
 
 	public List<? extends Node> getElementList(String xpath) {
-		NodeList nds=XMLUtils.getNodeListByXPath(bodyNode, xpath);
+		NodeList nds=SimpleXPath.getNodeListByXPath(bodyNode, xpath);
 		return XMLUtils.toList(nds);
 	}
 }

@@ -300,9 +300,9 @@ public class CollectionUtil {
 		} else if (type instanceof Class) {
 			Class<?> rawType = (Class<?>) type;
 			return rawType.isArray() || Collection.class.isAssignableFrom(rawType);
+		}else{
+			return Collection.class.isAssignableFrom(GenericUtils.getRawClass(type));
 		}
-		Class<?> rawType = GenericUtils.getRawClass(type);
-		return Collection.class.isAssignableFrom(rawType);
 	}
 
 	/**
@@ -317,11 +317,9 @@ public class CollectionUtil {
 		} else if (type instanceof Class) {
 			Class<?> rawType = (Class<?>) type;
 			return Collection.class.isAssignableFrom(rawType);
-		} else if (type instanceof ParameterizedType) {
-			ParameterizedType pType = (ParameterizedType) type;
-			return isArrayOrCollection(pType.getRawType());
+		} else {
+			return Collection.class.isAssignableFrom(GenericUtils.getRawClass(type));
 		}
-		return false;
 	}
 
 	/**

@@ -17,7 +17,6 @@ package jef.tools;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.FilterReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,13 +61,12 @@ import jef.tools.reflect.BeanWrapperImpl;
 import jef.tools.reflect.Property;
 import jef.tools.reflect.UnsafeUtils;
 import jef.tools.string.CharsetName;
-import jef.tools.string.StringSpliterEx;
-import jef.tools.string.Substring;
-import jef.tools.string.SubstringIterator;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.html.dom.HTMLDocumentImpl;
 import org.easyframe.fastjson.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Attr;
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Comment;
@@ -80,12 +78,16 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
 import org.w3c.dom.html.HTMLDocument;
+import org.xml.sax.EntityResolver;
 import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 /**
+ * 使用JAXP，封装了基于XML的各种基本操作
+ * 
+ * 
  * <b>重要，关于xercesImpl</b>
  * 
  * <pre>
@@ -102,16 +104,20 @@ import org.xml.sax.SAXParseException;
  * 
  */
 public class XMLUtils {
-	/**
-	 * Xpath解析器
-	 */
-	private static XPathFactory xp = XPathFactory.newInstance();
+	private static final Logger log = LoggerFactory.getLogger("XMLUtils");
 
 	/**
-	 * HTML解析器
+	 * 缓存的DocumentBuilderFactory<br>
+	 * 每个DocumentBuilderFactory构造开销在0.3ms左右，缓存很有必要
 	 */
-	private static jef.tools.IDOMFragmentParser parser;
+	private static DocumentBuilderFactory domFactoryTT;
+	private static DocumentBuilderFactory domFactoryTF;
+	private static DocumentBuilderFactory domFactoryFT;
+	private static DocumentBuilderFactory domFactoryFF;
 
+	/**
+	 * 初始化各类解析器，分析当前运行环境
+	 */
 	static {
 		try {
 			Class.forName("org.apache.xerces.xni.XMLDocumentHandler");
@@ -128,30 +134,174 @@ public class XMLUtils {
 			// xerces版本过旧，不支持进行HTML解析
 			LogUtil.warn("The Apache xerces implemention not avaliable, HTMLParser feature will be disabled. you must import library 'xercesImpl'(version >= 2.7.1) into classpath.");
 		}
+		try {
+			domFactoryTT = initFactory(true, true);
+			domFactoryTF = initFactory(true, false);
+			domFactoryFT = initFactory(false, true);
+			domFactoryFF = initFactory(false, false);
+		} catch (Exception e) {
+			log.error("FATAL: Error in init DocumentBuilderFactory. XML Parser will not work!", e);
+		}
+	}
+
+	/*
+	 * 创建解析器工厂
+	 * 
+	 * @param ignorComments 忽略注释
+	 * 
+	 * @param namespaceAware 识别命名空间
+	 * 
+	 * @return DocumentBuilderFactoy
+	 */
+	private static DocumentBuilderFactory initFactory(boolean ignorComments, boolean namespaceAware) {
+		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		dbf.setIgnoringElementContentWhitespace(true);
+		dbf.setValidating(false); // 关闭DTD校验
+		dbf.setIgnoringComments(ignorComments);
+		dbf.setNamespaceAware(namespaceAware);
+		// dbf.setCoalescing(true);//CDATA
+		// 节点转换为Text节点，并将其附加到相邻（如果有）的文本节点，开启后解析更方便，但无法还原
+		try {
+			// dbf.setFeature("http://xml.org/sax/features/namespaces", false);
+			// dbf.setFeature("http://xml.org/sax/features/validation", false);
+			dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
+			dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+		} catch (ParserConfigurationException e) {
+			log.warn("Your xerces implemention is too old to support 'load-dtd-grammar' and 'load-external-dtd' feature. Please upgrade xercesImpl.jar to 2.6.2 or above.");
+		} catch (AbstractMethodError e) {
+			log.warn("Your xerces implemention is too old to support 'load-dtd-grammar' and 'load-external-dtd' feature. Please upgrade xercesImpl.jar to 2.6.2 or above.");
+		}
+
+		try {
+			dbf.setAttribute("http://xml.org/sax/features/external-general-entities", false);
+		} catch (IllegalArgumentException e) {
+			log.warn("Your xerces implemention is too old to support 'external-general-entities' attribute.");
+		}
+		try {
+			dbf.setAttribute("http://xml.org/sax/features/external-parameter-entities", false);
+		} catch (IllegalArgumentException e) {
+			log.warn("Your xerces implemention is too old to support 'external-parameter-entities' attribute.");
+		}
+		try {
+			dbf.setAttribute("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+		} catch (IllegalArgumentException e) {
+			log.warn("Your xerces implemention is too old to support 'load-external-dtd' attribute.");
+		}
+		return dbf;
+	}
+
+	// 内部匿名类，ErrorHandler
+	private static final ErrorHandler EH = new ErrorHandler() {
+		public void error(SAXParseException x) throws SAXException {
+			throw x;
+		}
+
+		public void fatalError(SAXParseException x) throws SAXException {
+			throw x;
+		}
+
+		public void warning(SAXParseException x) throws SAXException {
+			log.warn("SAXParserWarnning:", x);
+		}
+	};
+
+	/**
+	 * 内部匿名类，DTD解析器。优先寻找本地classpath下的DTD资源，然后才考虑通过网络连接获取DTD
+	 */
+	private static final EntityResolver ER = new EntityResolver() {
+		public InputSource resolveEntity(String publicId, String systemId) throws SAXException, IOException {
+			if (systemId != null && systemId.endsWith(".dtd")) {
+				URL url = new URL(systemId);
+				String file = StringUtils.substringAfterLastIfExist(url.getFile(), "/");
+				URL u = this.getClass().getClassLoader().getResource(file);
+				if (u == null) {
+					u = url;
+				}
+				InputSource source = new InputSource(u.openStream());
+				source.setPublicId(publicId);
+				source.setSystemId(systemId);
+				return source;
+			}
+			return null;
+		}
+	};
+
+	/**
+	 * 缓存的DocumentBuilderCache<br>
+	 * 每个DocumentBuilder的构造开销在0.4ms左右，缓存很有必要
+	 */
+	private static final ThreadLocal<DocumentBuilderCache> REUSABLE_BUILDER = new ThreadLocal<DocumentBuilderCache>() {
+		@Override
+		protected DocumentBuilderCache initialValue() {
+			return new DocumentBuilderCache();
+		}
+	};
+
+	/**
+	 * 缓存DocumentBuilder的容器
+	 * 
+	 * @author jiyi
+	 * 
+	 */
+	private final static class DocumentBuilderCache {
+		DocumentBuilder cacheTT;
+		DocumentBuilder cacheTF;
+		DocumentBuilder cacheFT;
+		DocumentBuilder cacheFF;
+
+		/**
+		 * 根据传入的特性，提供满足条件的DocumentBuilder
+		 * 
+		 * @param ignorComments
+		 * @param namespaceAware
+		 * @return
+		 */
+		public DocumentBuilder getDocumentBuilder(boolean ignorComments, boolean namespaceAware) {
+			if (ignorComments && namespaceAware) {
+				if (cacheTT == null) {
+					cacheTT = initBuilder(domFactoryTT);
+				}
+				return cacheTT;
+			} else if (ignorComments) {
+				if (cacheTF == null) {
+					cacheTF = initBuilder(domFactoryTF);
+				}
+				return cacheTF;
+			} else if (namespaceAware) {
+				if (cacheFT == null) {
+					cacheFT = initBuilder(domFactoryFT);
+				}
+				return cacheFT;
+			} else {
+				if (cacheFF == null) {
+					cacheFF = initBuilder(domFactoryFF);
+				}
+				return cacheFF;
+			}
+		}
+
+		private DocumentBuilder initBuilder(DocumentBuilderFactory domFactory) {
+			DocumentBuilder builder;
+			try {
+				builder = domFactory.newDocumentBuilder();
+			} catch (ParserConfigurationException e) {
+				throw new UnsupportedOperationException(e);
+			}
+			builder.setErrorHandler(EH);
+			builder.setEntityResolver(ER);
+			return builder;
+		}
 	}
 
 	/**
-	 * 设置Schema
-	 * 
-	 * @param node
-	 * @param schemaURL
+	 * Xpath解析器
 	 */
-	public static void setXsdSchema(Node node, String schemaURL) {
-		Document doc;
-		if (node.getNodeType() != Node.DOCUMENT_NODE) {
-			doc = node.getOwnerDocument();
-		} else {
-			doc = (Document) node;
-		}
-		Element root = doc.getDocumentElement();
-		if (schemaURL == null) {
-			root.removeAttribute("xmlns:xsi");
-			root.removeAttribute("xsi:noNamespaceSchemaLocation");
-		} else {
-			root.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
-			root.setAttribute("xsi:noNamespaceSchemaLocation", schemaURL);
-		}
-	}
+	private static XPathFactory xp = XPathFactory.newInstance();
+
+	/**
+	 * HTML解析器
+	 */
+	private static jef.tools.IDOMFragmentParser parser;
 
 	/**
 	 * 丛Json格式转换为XML Document(兼容Json-Lib)
@@ -184,7 +334,9 @@ public class XMLUtils {
 	 *            文件
 	 * @return Document
 	 * @throws SAXException
+	 *             解析错误
 	 * @throws IOException
+	 *             磁盘操作错误
 	 */
 	public static Document loadDocument(File file) throws SAXException, IOException {
 		return loadDocument(file, true);
@@ -250,15 +402,40 @@ public class XMLUtils {
 	 * @throws IOException
 	 */
 	public static Document loadDocument(Reader reader, boolean ignorComments, boolean namespaceAware) throws SAXException, IOException {
-		DocumentBuilderFactory dbf = getFactory(ignorComments, namespaceAware);
 		try {
-			DocumentBuilder db = dbf.newDocumentBuilder();
-			db.setErrorHandler(new EH());
+			DocumentBuilder db = getDocumentBuilder(ignorComments, namespaceAware);
 			InputSource is = new InputSource(reader);
 			Document doc = db.parse(is);
 			return doc;
-		} catch (ParserConfigurationException x) {
-			throw new Error(x);
+		} finally {
+			IOUtils.closeQuietly(reader);
+		}
+	}
+
+	/**
+	 * 从当前ThreadLocal中获得缓存的DocumentBuilder
+	 * @param ignorComments
+	 * @param namespaceAware
+	 * @return
+	 */
+	private static DocumentBuilder getDocumentBuilder(boolean ignorComments, boolean namespaceAware) {
+		return REUSABLE_BUILDER.get().getDocumentBuilder(ignorComments, namespaceAware);
+	}
+
+	/**
+	 * 解析xml文本
+	 * 
+	 * @param xmlContent
+	 *            XML文本
+	 * @return Document
+	 * @throws SAXException
+	 * @throws IOException
+	 */
+	public static Document parse(String xmlContent) throws SAXException, IOException {
+		Reader reader = null;
+		try {
+			reader = new StringReader(xmlContent);
+			return loadDocument(reader, true, false);
 		} finally {
 			IOUtils.closeQuietly(reader);
 		}
@@ -272,69 +449,10 @@ public class XMLUtils {
 	 * @return Document
 	 * @throws SAXException
 	 * @throws IOException
+	 * @deprecated use #
 	 */
 	public static Document loadDocumentByString(String xmlContent) throws SAXException, IOException {
-		Reader reader = null;
-		try {
-			reader = new StringReader(xmlContent);
-			return loadDocument(reader, true, false);
-		} finally {
-			IOUtils.closeQuietly(reader);
-		}
-	}
-
-	private static DocumentBuilderFactory domFactoryTT;
-	private static DocumentBuilderFactory domFactoryTF;
-	private static DocumentBuilderFactory domFactoryFT;
-	private static DocumentBuilderFactory domFactoryFF;
-
-	private static DocumentBuilderFactory getFactory(boolean ignorComments, boolean namespaceAware) {
-		if (ignorComments && namespaceAware) {
-			if (domFactoryTT == null) {
-				domFactoryTT = createDocumentBuilderFactory(true, true);
-			}
-			return domFactoryTT;
-		}else if(ignorComments){
-			if(domFactoryTF==null){
-				domFactoryTF=createDocumentBuilderFactory(true, false);
-			}
-			return domFactoryTF;
-		}else if(namespaceAware){
-			if(domFactoryFT==null){
-				domFactoryFT=createDocumentBuilderFactory(false, true);
-			}
-			return domFactoryFT;
-		}else{
-			if(domFactoryFF==null){
-				domFactoryFF=createDocumentBuilderFactory(false, false);
-			}
-			return domFactoryFF;
-		}
-	}
-
-	/*
-	 *创建解析器工场 
-	 * @param ignorComments 忽略注释
-	 * @param namespaceAware 识别命名空间
-	 * @return
-	 */
-	private static DocumentBuilderFactory createDocumentBuilderFactory(boolean ignorComments, boolean namespaceAware) {
-		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-		dbf.setIgnoringElementContentWhitespace(true);
-		dbf.setValidating(false);
-		dbf.setIgnoringComments(ignorComments);
-		dbf.setNamespaceAware(namespaceAware);
-		// dbf.setCoalescing(true);//CDATA
-		// 节点转换为Text节点，并将其附加到相邻（如果有）的文本节点，开启后解析更方便，但无法还原
-		try {
-			// dbf.setFeature("http://xml.org/sax/features/namespaces", false);
-			// dbf.setFeature("http://xml.org/sax/features/validation", false);
-			dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-dtd-grammar", false);
-			dbf.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
-		} catch (ParserConfigurationException e) {
-			LogUtil.warn("Your xerces implemention is too old that does not support 'load-dtd-grammar' and 'load-external-dtd' feature.");
-		}
-		return dbf;
+		return parse(xmlContent);
 	}
 
 	/**
@@ -368,43 +486,30 @@ public class XMLUtils {
 	 * @throws IOException
 	 */
 	public static Document loadDocument(InputStream in, String charSet, boolean ignorComment, boolean namespaceaware) throws SAXException, IOException {
-		DocumentBuilderFactory dbf = getFactory(ignorComment, namespaceaware);
-		try {
-			DocumentBuilder db = dbf.newDocumentBuilder();
-			db.setErrorHandler(new EH());
-			db.setEntityResolver(null);
-			// 用自定义的EntityResolver来提供DTD文件的 重定向
-			// db.setEntityResolver(new EntityResolver() {
-			// public InputSource resolveEntity(String publicId, String
-			// systemId) throws SAXException, IOException {
-			// return null;
-			// }
-			// });
-			InputSource is = null;
-			// 解析流来获取charset
-			if (charSet == null) {// 读取头200个字节来分析编码
-				byte[] buf = new byte[200];
-				PushbackInputStream pin = new PushbackInputStream(in, 200);
-				in = pin;
-				int len = pin.read(buf);
-				if (len > 0) {
-					pin.unread(buf, 0, len);
-					charSet = getCharsetInXml(buf, len);
-				}
+		DocumentBuilder db = getDocumentBuilder(ignorComment, namespaceaware);
+		InputSource is = null;
+		// 解析流来获取charset
+		if (charSet == null) {// 读取头200个字节来分析编码
+			byte[] buf = new byte[200];
+			PushbackInputStream pin = new PushbackInputStream(in, 200);
+			in = pin;
+			int len = pin.read(buf);
+			if (len > 0) {
+				pin.unread(buf, 0, len);
+				charSet = getCharsetInXml(buf, len);
 			}
-			if (charSet != null) {
-				is = new InputSource(new XmlFixedReader(new InputStreamReader(in, charSet)));
-				is.setEncoding(charSet);
-			} else { // 自动检测编码
-				Reader reader = new InputStreamReader(in, "UTF-8");// 为了过滤XML当中的非法字符，所以要转换为Reader，又为了转换为Reader，所以要获得XML的编码
-				is = new InputSource(new XmlFixedReader(reader));
-			}
-			Document doc = db.parse(is);
-			doc.setXmlStandalone(true);// 设置为True保存时才不会出现讨厌的standalone="no"
-			return doc;
-		} catch (ParserConfigurationException x) {
-			throw new Error(x);
 		}
+		if (charSet != null) {
+			is = new InputSource(new XmlFixedReader(new InputStreamReader(in, charSet)));
+			is.setEncoding(charSet);
+		} else { // 自动检测编码
+			Reader reader = new InputStreamReader(in, "UTF-8");// 为了过滤XML当中的非法字符，所以要转换为Reader，又为了转换为Reader，所以要获得XML的编码
+			is = new InputSource(new XmlFixedReader(reader));
+		}
+		Document doc = db.parse(is);
+		doc.setXmlStandalone(true);// 设置为True保存时才不会出现讨厌的standalone="no"
+		return doc;
+
 	}
 
 	/**
@@ -445,7 +550,7 @@ public class XMLUtils {
 	 * @throws SAXException
 	 * @throws IOException
 	 */
-	public static DocumentFragment loadHtmlDocument(Reader in) throws SAXException, IOException {
+	public static DocumentFragment parseHTML(Reader in) throws SAXException, IOException {
 		if (parser == null)
 			throw new UnsupportedOperationException("HTML parser module not loaded, to activate this feature, you must add JEF common-ioc.jar to classpath");
 		InputSource source;
@@ -467,10 +572,10 @@ public class XMLUtils {
 	 * @throws SAXException
 	 * @throws IOException
 	 */
-	public static DocumentFragment loadHtmlDocument(File file) throws IOException, SAXException {
+	public static DocumentFragment parseHTML(File file) throws IOException, SAXException {
 		InputStream in = IOUtils.getInputStream(file);
 		try {
-			DocumentFragment document = loadHtmlDocument(in, null);
+			DocumentFragment document = parseHTML(in, null);
 			return document;
 		} finally {
 			in.close();
@@ -485,8 +590,8 @@ public class XMLUtils {
 	 * @throws SAXException
 	 * @throws IOException
 	 */
-	public static DocumentFragment loadHtmlDocument(URL url) throws SAXException, IOException {
-		return loadHtmlDocument(url.openStream(), null);
+	public static DocumentFragment parseHTML(URL url) throws SAXException, IOException {
+		return parseHTML(url.openStream(), null);
 	}
 
 	/**
@@ -498,7 +603,7 @@ public class XMLUtils {
 	 * @throws SAXException
 	 * @throws IOException
 	 */
-	public static DocumentFragment loadHtmlDocument(InputStream in, String charSet) throws SAXException, IOException {
+	public static DocumentFragment parseHTML(InputStream in, String charSet) throws SAXException, IOException {
 		if (parser == null)
 			throw new UnsupportedOperationException("HTML parser module not loaded, to activate this feature, you must add JEF common-ioc.jar to classpath");
 		InputSource source;
@@ -556,7 +661,7 @@ public class XMLUtils {
 	 * @throws IOException
 	 */
 	public static void output(Node node, OutputStream os) throws IOException {
-		output(node, os, null, true, null);
+		output(node, os, null, 4, null);
 	}
 
 	/**
@@ -568,7 +673,7 @@ public class XMLUtils {
 	 * @throws IOException
 	 */
 	public static void output(Node node, OutputStream os, String encoding) throws IOException {
-		output(node, os, encoding, true, null);
+		output(node, os, encoding, 4, null);
 	}
 
 	/**
@@ -596,7 +701,7 @@ public class XMLUtils {
 	 *            null如果是document對象則頂部有xml定義，true不管如何都有 false都沒有
 	 * @throws IOException
 	 */
-	public static void output(Node node, OutputStream os, String encoding, boolean warpLine, Boolean xmlDeclare) throws IOException {
+	public static void output(Node node, OutputStream os, String encoding, int warpLine, Boolean xmlDeclare) throws IOException {
 		StreamResult sr = new StreamResult(encoding == null ? new OutputStreamWriter(os) : new OutputStreamWriter(os, encoding));
 		output(node, sr, encoding, warpLine, xmlDeclare);
 	}
@@ -614,34 +719,39 @@ public class XMLUtils {
 	 *            是否要排版
 	 * @throws IOException
 	 */
-	public static void output(Node node, Writer os, String encoding, boolean warpLine) throws IOException {
+	public static void output(Node node, Writer os, String encoding, int indent) throws IOException {
 		StreamResult sr = new StreamResult(os);
-		output(node, sr, encoding, warpLine, null);
+		output(node, sr, encoding, indent, null);
 	}
 
-	private static void output(Node node, StreamResult sr, String encoding, boolean warpLine, Boolean XmlDeclarion) throws IOException {
+	private static void output(Node node, StreamResult sr, String encoding, int indent, Boolean XmlDeclarion) throws IOException {
 		TransformerFactory tf = TransformerFactory.newInstance();
 		Transformer t = null;
-		if (warpLine) {
-			try {
-				tf.setAttribute("indent-number", 4);
-			} catch (Exception e) {
-			}
-		}
+
 		try {
-			t = tf.newTransformer();
-			if (warpLine) {
-				try {// 某些垃圾的XML解析包会造成无法正确的设置属性
+			if (indent > 0) {
+				try {
+					tf.setAttribute("indent-number", indent);
+					t = tf.newTransformer();
+					// 某些垃圾的XML解析包会造成无法正确的设置属性。一些旧版本的XML解析器会有此问题
 					t.setOutputProperty(OutputKeys.INDENT, "yes");
 				} catch (Exception e) {
 				}
+			} else {
+				t = tf.newTransformer();
 			}
+
 			t.setOutputProperty(OutputKeys.METHOD, "xml");
 			if (encoding != null) {
 				t.setOutputProperty(OutputKeys.ENCODING, encoding);
 			}
 			if (XmlDeclarion == null) {
 				XmlDeclarion = (node instanceof Document);
+			}
+			if (node instanceof Document) {
+				Document doc = (Document) node;
+				t.setOutputProperty(javax.xml.transform.OutputKeys.DOCTYPE_PUBLIC, doc.getDoctype().getPublicId());
+				t.setOutputProperty(javax.xml.transform.OutputKeys.DOCTYPE_SYSTEM, doc.getDoctype().getSystemId());
 			}
 			if (XmlDeclarion) {
 				t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
@@ -658,20 +768,6 @@ public class XMLUtils {
 			IOException ioe = new IOException();
 			ioe.initCause(te);
 			throw ioe;
-		}
-	}
-
-	private static class EH implements ErrorHandler {
-		public void error(SAXParseException x) throws SAXException {
-			throw x;
-		}
-
-		public void fatalError(SAXParseException x) throws SAXException {
-			throw x;
-		}
-
-		public void warning(SAXParseException x) throws SAXException {
-			throw x;
 		}
 	}
 
@@ -704,7 +800,6 @@ public class XMLUtils {
 	 * @return
 	 * @throws XPathExpressionException
 	 */
-	@Deprecated
 	public static String evalXpath(Object startPoint, String expr) throws XPathExpressionException {
 		XPath xpath = xp.newXPath();
 		return xpath.evaluate(expr, startPoint);
@@ -719,7 +814,6 @@ public class XMLUtils {
 	 * @return
 	 * @throws XPathExpressionException
 	 */
-	@Deprecated
 	public static Node selectNode(Object startPoint, String expr) throws XPathExpressionException {
 		XPath xpath = xp.newXPath();
 		return (Node) xpath.evaluate(expr, startPoint, XPathConstants.NODE);
@@ -733,7 +827,6 @@ public class XMLUtils {
 	 * @return
 	 * @throws XPathExpressionException
 	 */
-	@Deprecated
 	public static NodeList selectNodes(Object startPoint, String expr) throws XPathExpressionException {
 		XPath xpath = xp.newXPath();
 		return (NodeList) xpath.evaluate(expr, startPoint, XPathConstants.NODESET);
@@ -1351,44 +1444,6 @@ public class XMLUtils {
 	}
 
 	/**
-	 * 根据xpath设置若干属性的值
-	 * 
-	 * @param node
-	 * @param xPath
-	 * @param attribute
-	 * @param isSubNode
-	 */
-	public static void setAttributeByXpath(Node node, String xPath, Map<String, Object> attribute, boolean isSubNode) {
-		int i = xPath.lastIndexOf('@');
-		if (i >= 0)
-			throw new IllegalArgumentException("there is @ in your xpath.");
-		Node n = getNodeByXPath(node, xPath);
-		if (n instanceof Element) {
-			setAttributesByMap((Element) n, attribute, isSubNode);
-		} else {
-			throw new IllegalArgumentException("node at " + xPath + " is not a element!");
-		}
-	}
-
-	public static void setAttributeByXPath(Node node, String xPath, String value) {
-		int i = xPath.lastIndexOf('@');
-		if (i < 0)
-			throw new IllegalArgumentException("there is no @ in your xpath.");
-		String left = xPath.substring(0, i);
-		String right = xPath.substring(i + 1);
-		Node n = getNodeByXPath(node, left);
-		if (n instanceof Element) {
-			if ("#text".equals(right)) {
-				setText(n, value);
-			} else {
-				((Element) n).setAttribute(right, value);
-			}
-		} else {
-			throw new IllegalArgumentException("node at " + left + " is not a element!");
-		}
-	}
-
-	/**
 	 * 设置文本节点的值
 	 * 
 	 * @param e
@@ -1658,33 +1713,6 @@ public class XMLUtils {
 		return list;
 	}
 
-	static class NodeListIterable implements Iterable<Node> {
-		private int n;
-		private int len;
-		private NodeList nds;
-
-		NodeListIterable(NodeList nds) {
-			this.nds = nds;
-			this.len = nds.getLength();
-		}
-
-		public Iterator<Node> iterator() {
-			return new Iterator<Node>() {
-				public boolean hasNext() {
-					return n < len;
-				}
-
-				public Node next() {
-					return nds.item(n++);
-				}
-
-				public void remove() {
-					throw new UnsupportedOperationException();
-				}
-			};
-		}
-	}
-
 	/**
 	 * 将Nodelist转换为Element List
 	 * 
@@ -1787,57 +1815,6 @@ public class XMLUtils {
 		return result.toArray(new Node[0]);
 	}
 
-	private static void innerSearch(Node node, String text, List<Node> result, boolean searchAttribute) {
-		String value = getValue(node);
-		// 检查节点本身
-		if (value != null && value.indexOf(text) > -1)
-			result.add(node);
-		// 检查属性节点
-		if (searchAttribute && node.getAttributes() != null) {
-			for (Node n : toArray(node.getAttributes())) {
-				value = getValue(n);
-				if (value != null && value.indexOf(text) > -1) {
-					result.add(n);
-				}
-			}
-		}
-		// 检查下属元素节点
-		for (Node sub : toArray(node.getChildNodes())) {
-			innerSearch(sub, text, result, searchAttribute);
-		}
-	}
-
-	private static String getValue(Node node) {
-		switch (node.getNodeType()) {
-		case Node.ELEMENT_NODE:
-			return nodeText((Element) node);
-		case Node.TEXT_NODE:
-			return StringUtils.trimToNull(StringEscapeUtils.unescapeHtml(node.getTextContent()));
-		case Node.CDATA_SECTION_NODE:
-			return ((CDATASection) node).getTextContent();
-		default:
-			return StringEscapeUtils.unescapeHtml(node.getNodeValue());
-		}
-	}
-
-	private static void innerSearchByAttribute(Node node, String attribName, String id, List<Element> result, boolean findFirst) {
-		if (node.getNodeType() == Node.ELEMENT_NODE) {
-			Element e = (Element) node;
-			String s = attrib(e, attribName);
-			if (s != null && s.equals(id)) {
-				result.add(e);
-				if (findFirst)
-					return;
-			}
-		}
-
-		for (Node sub : toArray(node.getChildNodes())) {
-			innerSearchByAttribute(sub, attribName, id, result, findFirst);
-			if (findFirst && result.size() > 0)
-				return;
-		}
-	}
-
 	/**
 	 * 查找指定名称的Element，并且其指定的属性值符合条件
 	 * 
@@ -1875,32 +1852,6 @@ public class XMLUtils {
 		return findElementsByNameAndAttribute(root, tagName, attribName, keyword, false);
 	}
 
-	private static Element[] findElementsByNameAndAttribute(Node root, String tagName, String attribName, String keyword, boolean findFirst) {
-		List<Element> result = new ArrayList<Element>();
-		List<Element> es;
-		if (root instanceof Document) {
-			es = toElementList(((Document) root).getElementsByTagName(tagName));
-		} else if (root instanceof Element) {
-			es = toElementList(((Element) root).getElementsByTagName(tagName));
-		} else if (root instanceof DocumentFragment) {
-			Element eRoot = (Element) first(root, Node.ELEMENT_NODE);
-			es = toElementList(eRoot.getElementsByTagName(tagName));
-			if (eRoot.getNodeName().equals(tagName))
-				es.add(eRoot);
-		} else {
-			throw new UnsupportedOperationException(root + " is a unknow Node type to find");
-		}
-		for (Element e : es) {
-			String s = attrib(e, attribName);
-			if (s != null && s.equals(keyword)) {
-				result.add(e);
-				if (findFirst)
-					break;
-			}
-		}
-		return result.toArray(new Element[result.size()]);
-	}
-
 	/**
 	 * 查找第一个属性为某个值的Element节点并返回
 	 * 
@@ -1926,12 +1877,6 @@ public class XMLUtils {
 	 */
 	public static Element[] findElementsByAttribute(Node node, String attribName, String keyword) {
 		return findElementsByAttribute(node, attribName, keyword, false);
-	}
-
-	private static Element[] findElementsByAttribute(Node node, String attribName, String keyword, boolean findFirst) {
-		List<Element> result = new ArrayList<Element>();
-		innerSearchByAttribute(node, attribName, keyword, result, findFirst);
-		return result.toArray(new Element[0]);
 	}
 
 	/**
@@ -2023,41 +1968,6 @@ public class XMLUtils {
 	}
 
 	/**
-	 * 得到指定节点的Xpath
-	 * 
-	 * @param node
-	 * @return
-	 */
-	public static String getXPath(Node node) {
-		String path = "";
-		if (node.getNodeType() == Node.ATTRIBUTE_NODE) {
-			path = "@" + node.getNodeName();
-			node = ((Attr) node).getOwnerElement();
-		}
-		while (node != null) {
-			int index = getIndexOfNode(node);
-			String tmp = "/" + ((index > 1) ? node.getNodeName() + "[" + index + "]" : node.getNodeName());
-			path = tmp + path;
-			node = node.getParentNode();
-		}
-		return path;
-	}
-
-	private static int getIndexOfNode(Node node) {
-		if (node.getParentNode() == null)
-			return 0;
-		int count = 0;
-		for (Node e : toArray(node.getParentNode().getChildNodes())) {
-			if (e.getNodeName().equals(node.getNodeName())) {
-				count++;
-				if (e == node)
-					return count;
-			}
-		}
-		throw new RuntimeException("Cann't locate the node's index of its parent.");
-	}
-
-	/**
 	 * 过滤xml的无效字符。
 	 * <p/>
 	 * XML中出现以下字符就是无效的，此时Parser会抛出异常，仅仅因为个别字符导致整个文档无法解析，是不是小题大作了点？
@@ -2113,87 +2023,6 @@ public class XMLUtils {
 		}
 	}
 
-	private static final String[] XPATH_KEYS = { "//", "@", "/" };
-
-	/**
-	 * W3C Xpath的语法规范功能很强，但是性能不佳，许多时候我只需要用一个表达式定位节点即可，不需要复杂考虑的逻辑运算、命名空间等问题。
-	 * JEF在xpath规范的基础上，从新提炼了一个简化版的Xpath规则，参见:{@link XPathFunction}
-	 * 
-	 * <p>
-	 * 提供了若干方法用于快速计算XPath表达式。
-	 * </p>
-	 * 
-	 * @param node
-	 * @param xPath
-	 *            jef-xpath表达式
-	 * @return 计算后的属性值，多值文本列表
-	 */
-	@SuppressWarnings("unchecked")
-	public static String[] getAttributesByXPath(Node node, String xPath) {
-		Object re = getByXPath(node, xPath, false);
-		if (re instanceof String)
-			return new String[] { (String) re };
-		if (re instanceof List)
-			return ((List<String>) re).toArray(ArrayUtils.EMPTY_STRING_ARRAY);
-		if (re instanceof NodeList) {
-			if (((NodeList) re).getLength() == 0) {
-				return ArrayUtils.EMPTY_STRING_ARRAY;
-			}
-		}
-		throw new IllegalArgumentException("Can not return Attribute, Xpath expression[" + xPath + "] result is a " + re.getClass().getSimpleName());
-	}
-
-	/**
-	 * W3C Xpath的语法规范功能很强，但是性能不佳，许多时候我只需要用一个表达式定位节点即可，不需要复杂考虑的逻辑运算、命名空间等问题。
-	 * JEF在xpath规范的基础上，从新提炼了一个简化版的Xpath规则，参见:{@link XPathFunction}
-	 * 
-	 */
-	public static String getAttributeByXPath(Node node, String xPath) {
-		String[] re = getAttributesByXPath(node, xPath);
-		if (re.length > 0)
-			return re[0];
-		throw new IllegalArgumentException("No proper attribute matchs. can not return Attribute.");
-	}
-
-	/**
-	 * W3C Xpath的语法规范功能很强，但是性能不佳，许多时候我只需要用一个表达式定位节点即可，不需要复杂考虑的逻辑运算、命名空间等问题。
-	 * JEF在xpath规范的基础上，从新提炼了一个简化版的Xpath规则，参见:{@link XPathFunction}
-	 * 
-	 * 注意，这个方法的目的是在文档中定位，当运算中间结果出现多个元素时，会自动取第一个元素而不抛出异常。 下面提供了三个方法
-	 * getAttributeByXPath / getNodeByXPath / getNodeListByXPath 用于快速计算XPath表达式。
-	 * 
-	 * @param node
-	 * @param xPath
-	 *            简易版Xpath表达式
-	 * @return 计算后的节点
-	 */
-	public static Node getNodeByXPath(Node node, String xPath) {
-		try {
-			Object re = getByXPath(node, xPath, false);
-			if (re instanceof Node)
-				return (Node) re;
-			if (re instanceof NodeList) {
-				NodeList l = ((NodeList) re);
-				if (l.getLength() == 0)
-					return null;
-				return l.item(0);
-			}
-			throw new IllegalArgumentException("Can not return node, Xpath [" + xPath + "] result is a " + re.getClass().getSimpleName());
-		} catch (NullPointerException e) {
-			try {
-				File file = new File("c:/dump" + StringUtils.getTimeStamp() + ".xml");
-				FileOutputStream out = new FileOutputStream(file);
-				printNode(node, out);
-				out.write(("======\nXPATH:" + xPath).getBytes());
-				LogUtil.show("Xpath error, dump file is:" + file.getAbsolutePath());
-				IOUtils.closeQuietly(out);
-			} catch (Exception e1) {
-				LogUtil.exception(e1);
-			}
-			throw new IllegalArgumentException(e);
-		}
-	}
-
 	/**
 	 * 无视层级，获得所有指定Tagname的element节点
 	 * 
@@ -2227,385 +2056,6 @@ public class XMLUtils {
 	}
 
 	/**
-	 * JEF Enhanced Xpath <li>// 表示当前节点下多层</li> <li>/ 当前节点下一层</li> <li>../ 上一层</li>
-	 * <li>@ 取属性</li> <li>@#text 取节点文本</li> <li>| 允许选择多个不同名称的节点，用|分隔</li> <li>
-	 * [n] 选择器：返回第n个</li> <li>[-2] 选择器：倒数第二个</li> <li>[2--2] 选择器：从第2个到倒数第2个</li>
-	 * <li>[?] 选择器：返回所有</li> <li>/count: 函数,用于计算节点的数量</li> <li>/plain:
-	 * 函数,获得节点内下属结点转换而成文本(含节点本身)</li> <li>/childrenplain:
-	 * 函数,节点本身和下属结点转换而成文本(不含节点本身)</li> <li>/text:
-	 * 函数,节点下的所有文本节点输出，如果碰到HTML标签作一定的处理</li> <li>/find:<code>str</code>
-	 * 函数,自动查找id=str的节点</li> <li>/findby:<code>name:value</code>
-	 * 函数,自动查找属性名城和属性值匹配的节点</li> <li>/parent:<code>str</code>
-	 * 函数,向上级查找节点指定名称的父节点，如不指定，则等效于../</li> <li>/parent:<code>str</code>
-	 * 函数,向上级查找节点指定名称的父节点，如不指定，则等效于../</li> <li>/next:<code>str</code> 函数,
-	 * 在平级向后查找指定名称的兄弟节点，如不指定，则取后第一个兄弟节点</li> <li>/prev:<code>str</code> 函数,
-	 * 在平级向前查找指定名称的兄弟节点，如不指定，则取前第一个兄弟节点</li>
-	 */
-	public static enum XPathFunction {
-		COUNT, // 用于计算节点的数量
-		PLAIN, // 用于获得节点内下属结点转换而成文本(含节点本身)
-		CHILDRENPLAIN, // 用于获得节点本身和下属结点转换而成文本(不含节点本身)
-		TEXT, // 将节点下的所有文本节点输出，如果碰到HTML标签作一定的处理
-		FIND, FINDBY, PARENT, NEXT, PREV
-	}
-
-	/**
-	 * W3C Xpath的语法规范功能很强，但是性能不佳，许多时候我只需要用一个表达式定位节点即可，不需要复杂考虑的逻辑运算、命名空间等问题。
-	 * JEF在xpath规范的基础上，从新提炼了一个简化版的Xpath规则，参见:{@link XPathFunction}
-	 * 
-	 * @param node
-	 * @param xPath
-	 *            简易版Xpath表达式
-	 * @return 计算后的NodeList
-	 */
-	public static NodeList getNodeListByXPath(Node node, String xPath) {
-		Object re = getByXPath(node, xPath, false);
-		if (re instanceof NodeList)
-			return (NodeList) re;
-		throw new IllegalArgumentException("Can not return NodeList, the result type of xpath[" + xPath + "] is " + re.getClass().getSimpleName());
-	}
-
-	static final int INDEX_DEFAULT = -999;
-	static final int INDEX_RANGE = -1000;
-
-	// 1号解析函数，处理单个节点的运算
-	// 解析并获取Xpath的对象，这个方法不够安全，限制类内部使用
-	// 返回以下对象
-	// String / Node /NodeList/ List<String>
-	private static Object getByXPath(Node node, String xPath, boolean allowNull) {
-		if (StringUtils.isEmpty(xPath))
-			return node;
-		Node curNode = node;
-		XPathFunction function = null;
-		for (Iterator<Substring> iter = new SubstringIterator(new Substring(xPath), XPATH_KEYS, true); iter.hasNext();) {
-			Substring str = iter.next();
-			if (str.isEmpty())
-				continue;
-
-			if (str.startsWith("/count:")) {
-				Assert.isNull(function);
-				function = XPathFunction.COUNT;
-				continue;
-			} else if (str.startsWith("/plain:")) {
-				Assert.isNull(function);
-				function = XPathFunction.PLAIN;
-				continue;
-			} else if (str.startsWith("/childrenplain:")) {
-				Assert.isNull(function);
-				function = XPathFunction.CHILDRENPLAIN;
-				continue;
-			} else if (str.startsWith("/text:")) {
-				Assert.isNull(function);
-				function = XPathFunction.TEXT;
-				continue;
-			} else if (str.startsWith("/find:")) {
-				str = StringUtils.stringRight(str.toString(), "find:", false);
-				Element newNode = findElementById(curNode, str.toString());
-				if (newNode == null) {
-					throw new IllegalArgumentException("There's no element with id=" + str + " under xpath " + getXPath(curNode));
-				}
-				curNode = newNode;
-				continue;
-			} else if (str.startsWith("/findby:")) {
-				str = StringUtils.stringRight(str.toString(), "findby:", false);
-				String[] args = StringUtils.split(str.toString(), ':');
-				Assert.isTrue(args.length == 2, "findby function must have to args, divide with ':'");
-				Element[] newNodes = findElementsByAttribute(curNode, args[0], args[1]);
-				if (newNodes.length == 0) {
-					throw new IllegalArgumentException("There's no element with attrib is " + str + " under xpath " + getXPath(curNode));
-				} else if (newNodes.length == 1) {
-					curNode = newNodes[0];
-					continue;
-				} else {
-					return withFunction(getByXPath(toNodeList(newNodes), iter), function);// 按照NodeList继续进行计算
-				}
-			} else if (str.startsWith("/parent:")) {
-				str = StringUtils.stringRight(str.toString(), "parent:", false);
-				Element newNode = firstParent(curNode, str.toString());
-				if (newNode == null) {
-					throw new IllegalArgumentException("There's no element with name=" + str + " under xpath " + getXPath(curNode));
-				}
-				curNode = newNode;
-				continue;
-			} else if (str.startsWith("/next:")) {
-				str = StringUtils.stringRight(str.toString(), "next:", false);
-				Element newNode = firstSibling(curNode, str.toString());
-				if (newNode == null) {
-					throw new IllegalArgumentException("There's no element with name=" + str + " under xpath " + getXPath(curNode));
-				}
-				curNode = newNode;
-				continue;
-			} else if (str.startsWith("/prev:")) {
-				str = StringUtils.stringRight(str.toString(), "prev:", false);
-				Element newNode = firstPrevSibling(curNode, str.toString());
-				if (newNode == null) {
-					throw new IllegalArgumentException("There's no element with name=" + str + " under xpath " + getXPath(curNode));
-				}
-				curNode = newNode;
-				continue;
-			} else if (str.equals("/.")) {
-				continue;
-			} else if (str.equals("/..")) {
-				curNode = (Element) curNode.getParentNode();
-				continue;
-			}
-			String elementName = null;
-			String index = null;
-			boolean isWild = false;
-			if (str.startsWith("//")) {
-				StringSpliterEx sp = new StringSpliterEx(str.sub(2, str.length()));
-				if (sp.setKeys("[", "]") == StringSpliterEx.RESULT_BOTH_KEY) {
-					elementName = sp.getLeft().toString();
-					index = sp.getMiddle().toString();
-				} else {
-					elementName = sp.getSource().toString();
-				}
-				isWild = true;
-			} else if (str.startsWith("/")) {
-				StringSpliterEx sp = new StringSpliterEx(str.sub(1, str.length()));
-				if (sp.setKeys("[", "]") == StringSpliterEx.RESULT_BOTH_KEY) {
-					elementName = sp.getLeft().toString();
-					index = sp.getMiddle().toString();
-				} else {
-					elementName = sp.getSource().toString();
-				}
-			} else if (str.startsWith("@")) {
-				String attribName = str.sub(1, str.length()).toString();
-				String value = null;
-				if (attribName.equals("#text")) {
-					value = nodeText(curNode);
-				} else if (attribName.equals("#alltext")) {
-					value = nodeText(curNode, true);
-				} else {
-					Element el = null;
-					if (curNode instanceof Document) {
-						el = ((Document) curNode).getDocumentElement();
-					} else {
-						el = (Element) curNode;
-					}
-					if (str.siblingLeft().equals("//")) {
-						return attribs(el, attribName);
-					}
-					value = attrib(el, attribName);
-				}
-				if (value == null)
-					value = "";
-				if (iter.hasNext())
-					throw new IllegalArgumentException("Xpath invalid, there's no attributes after.");
-				return withFunction(value, function); // 返回节点内容
-			} else {
-				StringSpliterEx sp = new StringSpliterEx(str);
-				if (sp.setKeys("[", "]") == StringSpliterEx.RESULT_BOTH_KEY) {
-					elementName = sp.getLeft().toString();
-					index = sp.getMiddle().toString();
-				} else {
-					elementName = sp.getSource().toString();
-				}
-			}
-			NodeList nds = null;
-			int i;
-			if ("?".equals(index)) {
-				i = INDEX_DEFAULT;
-			} else if (index != null && index.lastIndexOf("-") > 0) {// 指定的是一个Index范围
-				i = INDEX_RANGE;
-			} else {
-				i = StringUtils.toInt(index, 1);
-			}
-
-			if (StringUtils.isNotEmpty(elementName)) {
-				if (isWild) {
-					nds = toNodeList(getElementsByTagNames(curNode, StringUtils.split(elementName, '|')));
-				} else {
-					nds = toNodeList(childElements(curNode, StringUtils.split(elementName, '|')));
-				}
-				if ((!iter.hasNext() && index == null))
-					i = INDEX_DEFAULT;// 没有下一个并且没有显式指定序号
-
-				if (i == INDEX_DEFAULT) {// && nds.getLength()!=1
-					return withFunction(getByXPath(nds, iter), function);// 按照NodeList继续进行计算
-				} else if (i == INDEX_RANGE) { // 指定序号范围
-					Node[] nArray = toArray(nds);
-					int x = index.indexOf("--");
-					if (x < 0)
-						x = index.lastIndexOf('-');
-					int iS = StringUtils.toInt(index.substring(0, x), 1);
-					if (iS < 0)
-						iS += nds.getLength() + 1;
-					int iE = StringUtils.toInt(index.substring(x + 1), nArray.length);
-					if (iE < 0)
-						iE += nds.getLength() + 1;
-					nds = toNodeList(ArrayUtils.subArray(nArray, iS - 1, iE));
-					return withFunction(getByXPath(nds, iter), function);// 按照NodeList继续进行计算
-				} else if (i < 0) {// 倒数第i个节点
-					if (nds.getLength() < Math.abs(i)) {
-						if (allowNull)
-							return null;
-						throw new NoSuchElementException("Node not found:" + getXPath(curNode) + " " + str + "the parent nodelist has " + nds.getLength() + " elements, but index is " + i);
-					} else {
-						curNode = (Element) nds.item(nds.getLength() + i);
-					}
-				} else {// 正数第i个节点
-					if (nds.getLength() < i) {
-						if (allowNull)
-							return null;
-						throw new NoSuchElementException("Node not found:" + getXPath(curNode) + " /" + elementName + " element.[" + str + "] the nodelist has " + nds.getLength() + " elements, but index is " + i);
-					} else {
-						curNode = (Element) nds.item(i - 1);
-					}
-				}
-			} else {// 无视节点名称
-
-			}
-		}
-		return withFunction(curNode, function);
-	}
-
-	private static enum Tee {
-		StringList, NodeList, Node, String
-	}
-
-	// 2号解析函数，处理节点集的下一步运算，合并结果集
-	@SuppressWarnings("unchecked")
-	private static Object getByXPath(NodeList nds, Iterator<Substring> iter) {
-		for (; iter.hasNext();) {
-			List<Node> nlist = new ArrayList<Node>();
-			List<String> slist = new ArrayList<String>();
-			Tee type = null;
-			String xpath = iter.next().toString();
-			if (xpath.indexOf(':') > -1) {// 如果是函数，就将剩下的字串全部交给1号解析函数处理
-				for (; iter.hasNext();) {
-					xpath += iter.next();
-				}
-			}
-			if (StringUtils.isEmpty(xpath))
-				continue;
-
-			for (Node node : toArray(nds)) {
-				if (node.getNodeType() != Node.ELEMENT_NODE) {
-					throw new UnsupportedOperationException("Unsupport node type:" + node.getNodeType());
-				}
-				Object obj = getByXPath(node, xpath, true);
-				if (obj == null) {
-					// skip it;
-				} else if (obj instanceof List) {
-					if (type == null) {
-						type = Tee.StringList;
-					} else if (type != Tee.StringList) {
-						throw new UnsupportedOperationException();
-					}
-					slist.addAll((List<String>) obj);
-				} else if (obj instanceof Node) {
-					if (type == null) {
-						type = Tee.Node;
-					} else if (type != Tee.Node) {
-						throw new UnsupportedOperationException("old type is " + type.name());
-					}
-					nlist.add((Node) obj);
-				} else if (obj instanceof NodeList) {
-					if (type == null) {
-						type = Tee.NodeList;
-					} else if (type != Tee.NodeList) {
-						throw new UnsupportedOperationException();
-					}
-					nlist.addAll(toList((NodeList) obj));
-				} else if (obj instanceof String) {
-					if (type == null) {
-						type = Tee.String;
-					} else if (type != Tee.String) {
-						throw new UnsupportedOperationException();
-					}
-					slist.add((String) obj);
-				} else {
-					throw new UnsupportedOperationException();
-				}
-			}
-			if (type == Tee.String || type == Tee.StringList) {
-				return slist;
-			} else if (type == Tee.Node || type == Tee.NodeList) {
-				nds = toNodeList(nlist);
-			}
-		}
-		return nds;
-	}
-
-	@SuppressWarnings({ "rawtypes" })
-	private static Object withFunction(Object obj, XPathFunction function) {
-		if (function == null)
-			return obj;
-		if (function == XPathFunction.COUNT) {
-			if (obj instanceof NodeList) {
-				return String.valueOf(((NodeList) obj).getLength());
-			} else if (obj instanceof NamedNodeMap) {
-				return String.valueOf(((NamedNodeMap) obj).getLength());
-			} else if (obj instanceof List) {
-				return String.valueOf(((List) obj).size());
-			} else {
-				throw new IllegalArgumentException();
-			}
-		} else if (function == XPathFunction.PLAIN) {
-			return toPlainText(obj, true);
-		} else if (function == XPathFunction.CHILDRENPLAIN) {
-			return toPlainText(obj, false);
-		} else if (function == XPathFunction.TEXT) {
-			if (obj instanceof Node) {
-				return htmlNodeToString((Node) obj, true);
-			} else if (obj instanceof NodeList) {
-				StringBuilder sb = new StringBuilder();
-				Node[] list = toArray((NodeList) obj);
-				for (int i = 0; i < list.length; i++) {
-					Node node = list[i];
-					if (i > 0)
-						sb.append("\n");
-					sb.append(htmlNodeToString(node, true));
-				}
-				return sb.toString();
-			} else if (obj instanceof List) {
-				StringBuilder sb = new StringBuilder();
-				for (Object o : (List) obj) {
-					if (sb.length() > 0)
-						sb.append(",");
-					sb.append(o.toString());
-				}
-				return sb.toString();
-			} else {
-				return obj.toString();
-			}
-		}
-		return obj;
-	}
-
-	@SuppressWarnings("rawtypes")
-	private static String toPlainText(Object obj, boolean includeMe) {
-		if (obj instanceof Node) {
-			if (includeMe) {
-				return toString((Node) obj);
-			} else {
-				StringBuilder sb = new StringBuilder();
-				for (Node node : toArray(((Node) obj).getChildNodes())) {
-					sb.append(toString(node));
-				}
-				return sb.toString();
-			}
-		} else if (obj instanceof NodeList) {
-			StringBuilder sb = new StringBuilder();
-			for (Node node : toArray((NodeList) obj)) {
-				sb.append(toPlainText(node, includeMe));
-			}
-			return sb.toString();
-		} else if (obj instanceof List) {
-			StringBuilder sb = new StringBuilder();
-			for (Object o : (List) obj) {
-				if (sb.length() > 0)
-					sb.append(",");
-				sb.append(o.toString());
-			}
-			return sb.toString();
-		} else {
-			return obj.toString();
-		}
-	}
-
-	/**
 	 * 将Node打印到输出流
 	 * 
 	 * @param node
@@ -2613,62 +2063,14 @@ public class XMLUtils {
 	 * @throws IOException
 	 */
 	public static void printNode(Node node, OutputStream out) throws IOException {
-		output(node, out, null, true, null);
+		output(node, out, null, 4, null);
 	}
 
 	/**
-	 * 控制台打印出节点和其下属的内容，在解析和调试DOM时很有用。
+	 * 将DOM节点转换为文本
 	 * 
 	 * @param node
-	 *            要打印的节点
-	 * @param maxLevel
-	 *            打印几层
-	 */
-	public static void printChilrenNodes(Node node, int maxLevel, boolean attFlag) {
-		if (maxLevel < 0)
-			maxLevel = Integer.MAX_VALUE;
-		printChilrenNodes(node, 0, maxLevel, attFlag);
-	}
-
-	private static void printChilrenNodes(Node parentNode, int level, int maxLevel, boolean attFlag) {
-		for (Node node : toArray(parentNode.getChildNodes())) {
-			if (node.getNodeType() == Node.TEXT_NODE) {
-				continue;
-			}
-			String span = StringUtils.repeat("   ", level);
-			StringBuilder sb = new StringBuilder();
-			sb.append(span);
-			sb.append("<").append(node.getNodeName());
-
-			if (attFlag && node.getAttributes() != null) {// 打印属性
-				Node[] atts = toArray(node.getAttributes());
-				for (Node att : atts) {
-					sb.append(" ");
-					sb.append(att.getNodeName() + "=\"" + att.getNodeValue() + "\"");
-				}
-			}
-			if (node.hasChildNodes()) {
-				sb.append(">");
-				if (node.getChildNodes().getLength() == 1 && node.getFirstChild().getNodeType() == Node.TEXT_NODE) {
-					sb.append(node.getFirstChild().getNodeValue().trim());
-					sb.append("</" + node.getNodeName() + ">");
-					LogUtil.show(sb.toString());
-				} else {
-					LogUtil.show(sb.toString());
-					if (maxLevel > level) {
-						printChilrenNodes(node, level + 1, maxLevel, attFlag);
-					}
-					LogUtil.show(span + "</" + node.getNodeName() + ">");
-				}
-			} else {
-				sb.append("/>");
-				LogUtil.show(sb.toString());
-			}
-		}
-	}
-
-	/**
-	 * @param node
+	 *            DOM节点
 	 * @param charset
 	 *            字符集，该属性只影响xml头部的声明，由于返回的string仍然是标准的unicode string，
 	 *            你必须注意在输出时指定编码和此处的编码一致.
@@ -2680,7 +2082,7 @@ public class XMLUtils {
 		StringWriter sw = new StringWriter(4096);
 		StreamResult sr = new StreamResult(sw);
 		try {
-			output(node, sr, charset, true, xmlHeader);
+			output(node, sr, charset, 4, xmlHeader);
 		} catch (IOException e) {
 			LogUtil.exception(e);
 		}
@@ -2701,41 +2103,109 @@ public class XMLUtils {
 	}
 
 	/**
-	 * 将一个HTML节点内转换成格式文本
+	 * 设置XSD Schema
 	 * 
 	 * @param node
-	 * @param keepenter
-	 *            是否保留原来文字当中的换行符
-	 * @return
+	 * @param schemaURL
 	 */
-	public static String htmlNodeToString(Node node, boolean... keepenter) {
-		boolean keepEnter = (keepenter.length == 0 || keepenter[0] == true);
-		if (node.getNodeType() == Node.TEXT_NODE) {
-			if (keepEnter) {
-				return node.getTextContent();
-			} else {
-				String str = node.getTextContent();
-				str = StringUtils.remove(str, '\t');
-				str = StringUtils.remove(str, '\n');
-				return str;
-			}
+	public static void setXsdSchema(Node node, String schemaURL) {
+		Document doc;
+		if (node.getNodeType() != Node.DOCUMENT_NODE) {
+			doc = node.getOwnerDocument();
 		} else {
-			StringBuilder sb = new StringBuilder();
-			if ("BR".equals(node.getNodeName()) || "TR".equals(node.getNodeName()) || "P".equals(node.getNodeName())) {
-				// if (keepEnter) {
-				sb.append("\n");
-				// }
-			} else if ("TD".equals(node.getNodeName())) {
-				// if (keepEnter) {
-				sb.append("\t");
-				// }
-			} else if ("IMG".equals(node.getNodeName())) {
-				sb.append("[img]").append(attrib((Element) node, "src")).append("[img]");
-			}
-			for (Node child : toArray(node.getChildNodes())) {
-				sb.append(htmlNodeToString(child, keepenter));
-			}
-			return sb.toString();
+			doc = (Document) node;
+		}
+		Element root = doc.getDocumentElement();
+		if (schemaURL == null) {
+			root.removeAttribute("xmlns:xsi");
+			root.removeAttribute("xsi:noNamespaceSchemaLocation");
+		} else {
+			root.setAttribute("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+			root.setAttribute("xsi:noNamespaceSchemaLocation", schemaURL);
 		}
 	}
+
+	private static void innerSearch(Node node, String text, List<Node> result, boolean searchAttribute) {
+		String value = getValue(node);
+		// 检查节点本身
+		if (value != null && value.indexOf(text) > -1)
+			result.add(node);
+		// 检查属性节点
+		if (searchAttribute && node.getAttributes() != null) {
+			for (Node n : toArray(node.getAttributes())) {
+				value = getValue(n);
+				if (value != null && value.indexOf(text) > -1) {
+					result.add(n);
+				}
+			}
+		}
+		// 检查下属元素节点
+		for (Node sub : toArray(node.getChildNodes())) {
+			innerSearch(sub, text, result, searchAttribute);
+		}
+	}
+
+	private static String getValue(Node node) {
+		switch (node.getNodeType()) {
+		case Node.ELEMENT_NODE:
+			return nodeText((Element) node);
+		case Node.TEXT_NODE:
+			return StringUtils.trimToNull(StringEscapeUtils.unescapeHtml(node.getTextContent()));
+		case Node.CDATA_SECTION_NODE:
+			return ((CDATASection) node).getTextContent();
+		default:
+			return StringEscapeUtils.unescapeHtml(node.getNodeValue());
+		}
+	}
+
+	private static void innerSearchByAttribute(Node node, String attribName, String id, List<Element> result, boolean findFirst) {
+		if (node.getNodeType() == Node.ELEMENT_NODE) {
+			Element e = (Element) node;
+			String s = attrib(e, attribName);
+			if (s != null && s.equals(id)) {
+				result.add(e);
+				if (findFirst)
+					return;
+			}
+		}
+
+		for (Node sub : toArray(node.getChildNodes())) {
+			innerSearchByAttribute(sub, attribName, id, result, findFirst);
+			if (findFirst && result.size() > 0)
+				return;
+		}
+	}
+
+	private static Element[] findElementsByNameAndAttribute(Node root, String tagName, String attribName, String keyword, boolean findFirst) {
+		List<Element> result = new ArrayList<Element>();
+		List<Element> es;
+		if (root instanceof Document) {
+			es = toElementList(((Document) root).getElementsByTagName(tagName));
+		} else if (root instanceof Element) {
+			es = toElementList(((Element) root).getElementsByTagName(tagName));
+		} else if (root instanceof DocumentFragment) {
+			Element eRoot = (Element) first(root, Node.ELEMENT_NODE);
+			es = toElementList(eRoot.getElementsByTagName(tagName));
+			if (eRoot.getNodeName().equals(tagName))
+				es.add(eRoot);
+		} else {
+			throw new UnsupportedOperationException(root + " is a unknow Node type to find");
+		}
+		for (Element e : es) {
+			String s = attrib(e, attribName);
+			if (s != null && s.equals(keyword)) {
+				result.add(e);
+				if (findFirst)
+					break;
+			}
+		}
+		return result.toArray(new Element[result.size()]);
+	}
+
+	private static Element[] findElementsByAttribute(Node node, String attribName, String keyword, boolean findFirst) {
+		List<Element> result = new ArrayList<Element>();
+		innerSearchByAttribute(node, attribName, keyword, result, findFirst);
+		return result.toArray(new Element[0]);
+	}
+
 }
