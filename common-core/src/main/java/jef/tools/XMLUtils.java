@@ -35,7 +35,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -256,7 +255,7 @@ public class XMLUtils {
 		 * @param namespaceAware
 		 * @return
 		 */
-		public DocumentBuilder getDocumentBuilder(boolean ignorComments, boolean namespaceAware) {
+		private DocumentBuilder getDocumentBuilder(boolean ignorComments, boolean namespaceAware) {
 			if (ignorComments && namespaceAware) {
 				if (cacheTT == null) {
 					cacheTT = initBuilder(domFactoryTT);
@@ -356,7 +355,7 @@ public class XMLUtils {
 	public static Document loadDocument(File file, boolean ignorComments) throws SAXException, IOException {
 		InputStream in = IOUtils.getInputStream(file);
 		try {
-			Document document = loadDocument(in, null, true, false);
+			Document document = loadDocument(in, null, ignorComments, false);
 			return document;
 		} finally {
 			in.close();
@@ -403,23 +402,13 @@ public class XMLUtils {
 	 */
 	public static Document loadDocument(Reader reader, boolean ignorComments, boolean namespaceAware) throws SAXException, IOException {
 		try {
-			DocumentBuilder db = getDocumentBuilder(ignorComments, namespaceAware);
+			DocumentBuilder db = REUSABLE_BUILDER.get().getDocumentBuilder(ignorComments, namespaceAware);
 			InputSource is = new InputSource(reader);
 			Document doc = db.parse(is);
 			return doc;
 		} finally {
 			IOUtils.closeQuietly(reader);
 		}
-	}
-
-	/**
-	 * 从当前ThreadLocal中获得缓存的DocumentBuilder
-	 * @param ignorComments
-	 * @param namespaceAware
-	 * @return
-	 */
-	private static DocumentBuilder getDocumentBuilder(boolean ignorComments, boolean namespaceAware) {
-		return REUSABLE_BUILDER.get().getDocumentBuilder(ignorComments, namespaceAware);
 	}
 
 	/**
@@ -485,8 +474,8 @@ public class XMLUtils {
 	 * @throws SAXException
 	 * @throws IOException
 	 */
-	public static Document loadDocument(InputStream in, String charSet, boolean ignorComment, boolean namespaceaware) throws SAXException, IOException {
-		DocumentBuilder db = getDocumentBuilder(ignorComment, namespaceaware);
+	public static Document loadDocument(InputStream in, String charSet, boolean ignorComments, boolean namespaceAware) throws SAXException, IOException {
+		DocumentBuilder db = REUSABLE_BUILDER.get().getDocumentBuilder(ignorComments, namespaceAware);
 		InputSource is = null;
 		// 解析流来获取charset
 		if (charSet == null) {// 读取头200个字节来分析编码
@@ -595,13 +584,28 @@ public class XMLUtils {
 	}
 
 	/**
+	 * 从指定流解析HTML。已经废弃。
+	 * 
+	 * @param in 输入流
+	 * @param charSet 字符集，为null时自动检测
+	 * @return 解析后的DocumentFragment对象
+	 * @throws SAXException XML语法异常时抛出
+	 * @throws IOException  IO操作错误时抛出
+	 * @deprecated Use {@link #parseHTML(InputStream, String)} instead.
+	 */
+	public static DocumentFragment loadHtmlDocument(InputStream in, String charSet) throws SAXException, IOException {
+		return parseHTML(in,charSet);
+	}
+
+	
+	/**
 	 * 从指定流解析HTML
 	 * 
-	 * @param in
-	 * @param charSet
-	 * @return DocumentFragment对象
-	 * @throws SAXException
-	 * @throws IOException
+	 * @param in 输入流
+	 * @param charSet 字符集，为null时自动检测
+	 * @return 解析后的DocumentFragment对象
+	 * @throws SAXException XML语法异常时抛出
+	 * @throws IOException  IO操作错误时抛出
 	 */
 	public static DocumentFragment parseHTML(InputStream in, String charSet) throws SAXException, IOException {
 		if (parser == null)
@@ -2207,5 +2211,4 @@ public class XMLUtils {
 		innerSearchByAttribute(node, attribName, keyword, result, findFirst);
 		return result.toArray(new Element[0]);
 	}
-
 }
