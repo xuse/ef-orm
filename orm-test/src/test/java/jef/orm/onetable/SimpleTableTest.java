@@ -254,7 +254,7 @@ public class SimpleTableTest extends org.junit.Assert {
 	public void testSelectBetween() throws SQLException {
 		db.delete(QB.create(TestEntity.class));
 		TestEntity t1 = RandomData.newInstance(TestEntity.class);
-		t1.setDateField(DateUtils.getDate(2012, 5, 1, 16, 24, 30));
+		t1.setDateField(DateUtils.get(2012, 5, 1, 16, 24, 30));
 		db.insert(t1);
 
 		Query<TestEntity> query = QB.create(TestEntity.class);
