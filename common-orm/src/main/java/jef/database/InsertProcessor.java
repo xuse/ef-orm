@@ -6,12 +6,12 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import jef.database.annotation.PartitionResult;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
+import jef.database.routing.PartitionResult;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.processor.AutoIncreatmentCallBack;
@@ -90,7 +90,7 @@ abstract class InsertProcessor {
 			result.parent = db;
 			result.profile = profile;
 			result.setTableNames(pr);
-			for (ColumnMapping<?> entry : meta.getColumns()) {
+			for (ColumnMapping entry : meta.getColumns()) {
 				BeanWrapper wrapper = BeanWrapper.wrap(obj);
 				Object value = wrapper.getPropertyValue(entry.fieldName());
 				entry.processInsert(value, result, cStr, vStr, dynamic, obj);
@@ -158,7 +158,7 @@ abstract class InsertProcessor {
 			result.parent = db;
 			result.profile = profile;
 			result.setTableNames(pr);
-			for (ColumnMapping<?> entry : meta.getColumns()) {
+			for (ColumnMapping entry : meta.getColumns()) {
 				entry.processPreparedInsert(obj, cStr, vStr, result, dynamic);
 			}
 			if (profile.has(Feature.SELECT_ROW_NUM) && !extreme) {

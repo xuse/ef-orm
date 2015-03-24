@@ -132,7 +132,7 @@ public class MapDeserializer implements ObjectDeserializer {
                     String typeName = lexer.scanSymbol(parser.getSymbolTable(), '"');
                     Class<?> clazz = TypeUtils.loadClass(typeName);
 
-                    if (clazz == map.getClass()) {
+                    if (Map.class.isAssignableFrom(clazz) ) {
                         lexer.nextToken(JSONToken.COMMA);
                         if (lexer.token() == JSONToken.RBRACE) {
                             lexer.nextToken(JSONToken.COMMA);
@@ -315,8 +315,6 @@ public class MapDeserializer implements ObjectDeserializer {
         Class<?> clazz = (Class<?>) type;
         if (clazz.isInterface()) {
             throw new JSONException("unsupport type " + type);
-        }else if(clazz.isMemberClass()){
-        	return new HashMap();
         }
         
         try {

@@ -237,7 +237,7 @@ public class Condition implements Serializable{
 			}
 		}
 		
-		ColumnMapping<?> type = null;
+		ColumnMapping type = null;
 		if(field instanceof Enum || field instanceof TupleField){//计算列的数据类型
 			type=meta.getColumnDef(field);
 			if(type==null) {
@@ -388,7 +388,7 @@ public class Condition implements Serializable{
 		return null;
 	}
 
-	public static String toSql(String columnName,Operator operator,Object value,DatabaseDialect profile,SqlContext context,ColumnMapping<?> type){
+	public static String toSql(String columnName,Operator operator,Object value,DatabaseDialect profile,SqlContext context,ColumnMapping type){
 		if(value instanceof jef.database.Field && value.getClass().isEnum()){//基本field
 			value=new RefField((Field)value);
 		}

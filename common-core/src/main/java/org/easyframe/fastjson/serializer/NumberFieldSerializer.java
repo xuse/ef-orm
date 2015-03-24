@@ -18,7 +18,7 @@ package org.easyframe.fastjson.serializer;
 import org.easyframe.fastjson.util.FieldInfo;
 
 /**
- * @author wenshao<szujobs@hotmail.com>
+ * @author wenshao[szujobs@hotmail.com]
  */
 final class NumberFieldSerializer extends FieldSerializer {
 

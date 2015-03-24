@@ -1,8 +1,5 @@
 package jef.database.dialect.type;
 
-import java.lang.reflect.Array;
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.Type;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -13,15 +10,13 @@ import jef.database.IQueryableEntity;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.visitor.Expression;
-import jef.database.meta.EntityType;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.Assert;
-import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.Property;
 
-public abstract class AColumnMapping<T> implements ColumnMapping<T> {
+public abstract class AColumnMapping implements ColumnMapping {
 	/**
 	 * 原始的ColumnName
 	 */
@@ -33,29 +28,19 @@ public abstract class AColumnMapping<T> implements ColumnMapping<T> {
 	protected ITableMetadata meta;
 	private String fieldName;
 	protected Field field;
-	protected ColumnType ctype;
-	protected Class<T> clz;
-	private Class<?> primitiveClz;
+	protected ColumnType columnDef;
+	
+	protected Class<?> clz;
 	private boolean pk;
 	protected transient DatabaseDialect bindedProfile;
 	protected Property fieldAccessor;
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public AColumnMapping() {
-		Type[] p =  DbUtils.getTypeParameters(this.getClass(), ColumnMapping.class);
-		if (p[0] instanceof Class) {
-			this.clz = (Class<T>) p[0];
-		} else if (p[0] instanceof GenericArrayType) {
-			GenericArrayType at = (GenericArrayType) p[0];
-			Type compType = at.getGenericComponentType();
-			if (compType instanceof Class) {
-				this.clz = (Class<T>) Array.newInstance((Class) compType, 0).getClass();
-			}
-		}
-		this.primitiveClz = BeanUtils.toPrimitiveClass(this.clz);
-		Assert.notNull(clz);
+		this.clz=getDefaultJavaType();
 	}
 	
+	abstract protected  Class<?> getDefaultJavaType();
+
 	public String name() {
 		return fieldName;
 	}
@@ -71,14 +56,12 @@ public abstract class AColumnMapping<T> implements ColumnMapping<T> {
 		this.lowerColumnName = columnName.toLowerCase();
 		this.upperColumnName = columnName.toUpperCase();
 		this.meta = meta;
-		this.ctype = type;
+		this.columnDef = type;
 
 		BeanAccessor ba = meta.getContainerAccessor();
-		if (meta.getType() != EntityType.TUPLE) {
-			Assert.isTrue(meta.getAllFieldNames().contains(field.name()));
-		}
 		fieldAccessor = ba.getProperty(field.name());
 		Assert.notNull(fieldAccessor, ba.toString() + field.toString());
+		this.clz=fieldAccessor.getType();
 	}
 
 	public String fieldName() {
@@ -107,16 +90,11 @@ public abstract class AColumnMapping<T> implements ColumnMapping<T> {
 	}
 
 	public ColumnType get() {
-		return ctype;
+		return columnDef;
 	}
 
-	public Class<T> getFieldType() {
-		Assert.notNull(clz);
+	public Class<?> getFieldType() {
 		return clz;
-	}
-
-	public Class<?> getPrimitiveType() {
-		return primitiveClz;
 	}
 
 	public String getColumnName(DatabaseDialect profile, boolean escape) {
@@ -213,7 +191,6 @@ public abstract class AColumnMapping<T> implements ColumnMapping<T> {
 
 	public Property getFieldAccessor() {
 		return fieldAccessor;
-
 	}
 
 	@Override

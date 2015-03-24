@@ -36,19 +36,19 @@ public final class ReferenceField extends AbstractRefField implements IReference
 	 *   Department表的Name字段上。 （Many VS One）
 	 *   此时每次载入Person对象时，会自动载入DepartmenetName。但是该对字段作任何修改，都不会保存到数据库中去。
 	 */
-	private ColumnMapping<?> targetField;
+	private ColumnMapping targetField;
 	/**
 	 * 构造
 	 * @param fName  字段名
 	 * @param ref  关联关系
 	 * @param field 目标字段 （为null表示持有整个对象）
 	 */
-	public ReferenceField(Property fName,Reference ref,ColumnMapping<?> field,CascadeConfig config) {
+	public ReferenceField(Property fName,Reference ref,ColumnMapping field,CascadeConfig config) {
 		super(fName,ref,config);
 		Assert.notNull(field);
 		this.targetField=field;
 	}
-	public ColumnMapping<?> getTargetField() {
+	public ColumnMapping getTargetField() {
 		return targetField;
 	}
 
@@ -80,7 +80,7 @@ public final class ReferenceField extends AbstractRefField implements IReference
 	}
 	
 
-	public ColumnMapping<?> getTargetColumnType() {
+	public ColumnMapping getTargetColumnType() {
 		return targetField;
 	}
 	
@@ -104,7 +104,7 @@ public final class ReferenceField extends AbstractRefField implements IReference
 		public boolean isSingleColumn() {
 			return true;
 		}
-		public ColumnMapping<?> getTargetColumnType() {
+		public ColumnMapping getTargetColumnType() {
 			return ReferenceField.this.getTargetColumnType();
 		}
 		@Override

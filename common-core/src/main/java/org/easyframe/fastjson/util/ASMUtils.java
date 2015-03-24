@@ -1,4 +1,4 @@
-package org.easyframe.fastjson.util;
+﻿package org.easyframe.fastjson.util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -17,6 +17,10 @@ import org.easyframe.fastjson.parser.deserializer.ObjectDeserializer;
 public class ASMUtils {
 
 	public static boolean isAndroid(String vmName) {
+		if (vmName == null) { // default is false
+			return false;
+		}
+
 		String lowerVMName = vmName.toLowerCase();
 
 		return lowerVMName.contains("dalvik") //
@@ -98,14 +102,14 @@ public class ASMUtils {
 	}
 
 	public static Type getFieldType(Class<?> clazz, String fieldName) {
-		Class<?> clz=clazz;
-		while(clz!=Object.class){
+		Class<?> clz = clazz;
+		while (clz != Object.class) {
 			try {
 				Field field = clazz.getDeclaredField(fieldName);
-				return field.getGenericType();	
+				return field.getGenericType();
 			} catch (Exception ex) {
 			}
-			clz=clz.getSuperclass();
+			clz = clz.getSuperclass();
 		}
 		return null;
 	}
@@ -138,8 +142,19 @@ public class ASMUtils {
 		parser.accept(JSONToken.RBRACKET, JSONToken.COMMA);
 	}
 
+	public static boolean checkName(String name) {
+		for (int i = 0; i < name.length(); ++i) {
+			char c = name.charAt(i);
+			if (c < '\001' || c > '\177') {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	/**
 	 * get the class object of primitive type
+	 * 
 	 * @param mw
 	 * @param rawType
 	 */
@@ -174,39 +189,39 @@ public class ASMUtils {
 
 	public static void doWrap(MethodVisitor mw, jef.accelerator.asm.Type paramType) {
 		Class<?> w;
-		switch(paramType.getSort()){
+		switch (paramType.getSort()) {
 		case jef.accelerator.asm.Type.BOOLEAN:
-			w=Boolean.class;
+			w = Boolean.class;
 			break;
 		case jef.accelerator.asm.Type.BYTE:
-			w=Byte.class;
+			w = Byte.class;
 			break;
 		case jef.accelerator.asm.Type.CHAR:
-			w=Character.class;
+			w = Character.class;
 			break;
 		case jef.accelerator.asm.Type.DOUBLE:
-			w=Double.class;
+			w = Double.class;
 			break;
 		case jef.accelerator.asm.Type.FLOAT:
-			w=Float.class;
+			w = Float.class;
 			break;
 		case jef.accelerator.asm.Type.INT:
-			w=Integer.class;
+			w = Integer.class;
 			break;
 		case jef.accelerator.asm.Type.LONG:
-			w=Long.class;
+			w = Long.class;
 			break;
 		case jef.accelerator.asm.Type.SHORT:
-			w=Short.class;
+			w = Short.class;
 			break;
 		default:
 			throw new IllegalArgumentException();
 		}
 		mw.visitMethodInsn(Opcodes.INVOKESTATIC, getType(w), "valueOf", getMethodDesc(w, BeanUtils.toPrimitiveClass(w)));
 	}
-	
+
 	public static int getLoadIns(jef.accelerator.asm.Type paramType) {
-		switch(paramType.getSort()){
+		switch (paramType.getSort()) {
 		case jef.accelerator.asm.Type.BOOLEAN:
 			return Opcodes.ILOAD;
 		case jef.accelerator.asm.Type.BYTE:
@@ -227,7 +242,7 @@ public class ASMUtils {
 			return Opcodes.ALOAD;
 		}
 	}
-	
+
 	public static void iconst(MethodVisitor mw, int s) {
 		switch (s) {
 		case 0:

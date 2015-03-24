@@ -14,9 +14,9 @@ import jef.database.query.Func;
  * @author jiyi
  *
  */
-public class DateDateMapping extends AbstractTimeMapping<java.util.Date>{
+public class DateDateMapping extends AbstractTimeMapping{
 	
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
 			st.setNull(index, java.sql.Types.DATE);
 			return null;
@@ -40,7 +40,7 @@ public class DateDateMapping extends AbstractTimeMapping<java.util.Date>{
 	}
 	
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		return rs.getDate(n);
 	}
 	
@@ -52,5 +52,10 @@ public class DateDateMapping extends AbstractTimeMapping<java.util.Date>{
 	@Override
 	public Object getCurrentValue() {
 		return new java.util.Date();
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return java.util.Date.class;
 	}
 }

@@ -13,9 +13,9 @@ import jef.database.jdbc.result.IResultSet;
 import jef.database.meta.Feature;
 import jef.tools.IOUtils;
 
-public class BlobFileMapping extends AColumnMapping<File>{
+public class BlobFileMapping extends AColumnMapping{
 
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect profile) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect profile) throws SQLException {
 		File file=(File)value;
 		if(value==null || !file.exists()){
 			st.setNull(index, profile.getImplementationSqlType(Types.BLOB));
@@ -45,7 +45,7 @@ public class BlobFileMapping extends AColumnMapping<File>{
 	public boolean isLob() {
 		return true;
 	}
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		Object obj=rs.getObject(n);
 		if(obj==null)return null;
 		if(obj.getClass().isArray()){
@@ -64,5 +64,10 @@ public class BlobFileMapping extends AColumnMapping<File>{
 		} catch (IOException e) {
 			throw new SQLException("Error at saving Blob to file",e);
 		}
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return File.class;
 	}
 }

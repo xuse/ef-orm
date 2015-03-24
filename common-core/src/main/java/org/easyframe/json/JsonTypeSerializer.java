@@ -24,7 +24,7 @@ import org.easyframe.fastjson.serializer.SerializeWriter;
  */
 public abstract class JsonTypeSerializer<T> implements ObjectSerializer{
 	@SuppressWarnings("unchecked")
-	public final void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType) throws IOException {
+	public final void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType,int features) throws IOException {
 		SerializeWriter out=serializer.getWriter();
 		if (object == null) {
 			out.writeNull();
@@ -37,7 +37,7 @@ public abstract class JsonTypeSerializer<T> implements ObjectSerializer{
 		}
 
         SerialContext parent = serializer.getContext();
-        serializer.setContext(parent, object, fieldName);
+        serializer.setContext(parent, object, fieldName,0);
         serializer.write(processToJson((T)object));
 	}
 

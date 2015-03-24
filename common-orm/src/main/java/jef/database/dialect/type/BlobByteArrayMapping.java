@@ -11,9 +11,9 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 import jef.tools.IOUtils;
 
-public class BlobByteArrayMapping extends AColumnMapping<byte[]>{
+public class BlobByteArrayMapping extends AColumnMapping{
 	
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect dialect) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect dialect) throws SQLException {
 		if(value==null){
 			st.setNull(index, dialect.getImplementationSqlType(Types.BLOB));
 		}else{
@@ -37,7 +37,7 @@ public class BlobByteArrayMapping extends AColumnMapping<byte[]>{
 		return true;
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		Object obj=rs.getObject(n);
 		if(obj==null)return null;
 		if(obj.getClass().isArray()){
@@ -50,5 +50,10 @@ public class BlobByteArrayMapping extends AColumnMapping<byte[]>{
 		} catch (IOException e) {
 			throw new IllegalStateException(e);
 		}
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return byte[].class;
 	}
 }

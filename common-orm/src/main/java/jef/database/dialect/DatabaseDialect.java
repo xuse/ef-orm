@@ -185,7 +185,7 @@ public interface DatabaseDialect {
 	 */
 	String getColumnNameToUse(String name);
 	
-	String getColumnNameToUse(AColumnMapping<?> name);
+	String getColumnNameToUse(AColumnMapping name);
 
 	/**
 	 * 计算Sequence的步长, 在某些数据库上，可以从系统表中获得Sequence的步长。<br>
@@ -326,7 +326,7 @@ public interface DatabaseDialect {
 	 * @param meta
 	 * @return
 	 */
-	long getColumnAutoIncreamentValue(AutoIncrementMapping<?> mapping, JDBCTarget db);
+	long getColumnAutoIncreamentValue(AutoIncrementMapping mapping, JDBCTarget db);
 
 	/**
 	 * 允许数据库方言对Statement再进行一次包装

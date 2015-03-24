@@ -1,6 +1,6 @@
 package jef.database.query;
 
-import jef.database.annotation.PartitionResult;
+import jef.database.routing.PartitionResult;
 import jef.tools.StringUtils;
 
 /**

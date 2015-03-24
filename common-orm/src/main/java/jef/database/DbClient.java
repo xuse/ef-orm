@@ -30,7 +30,6 @@ import javax.sql.DataSource;
 import jef.common.Callback;
 import jef.common.log.LogUtil;
 import jef.common.pool.PoolStatus;
-import jef.database.annotation.PartitionResult;
 import jef.database.cache.CacheDummy;
 import jef.database.cache.TransactionCache;
 import jef.database.datasource.SimpleDataSource;
@@ -47,6 +46,7 @@ import jef.database.jmx.JefFacade;
 import jef.database.meta.AbstractMetadata;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
+import jef.database.routing.PartitionResult;
 import jef.database.support.DbOperatorListener;
 import jef.database.support.DbOperatorListenerContainer;
 import jef.database.support.DefaultDbOperListener;
@@ -138,29 +138,13 @@ public class DbClient extends Session implements ConnectionFactory {
 	}
 
 	/**
-	 * 使用JDBC URL构造DbClient
-	 * 
-	 * @param url
-	 *            JDBC URL
-	 * @param user
-	 *            username for logon.
-	 * @param password
-	 *            password for logon
-	 * @param max
-	 *            内建连接池的最大连接数 @
-	 */
-	public DbClient(String url, String user, String password, int max) {
-		this(DbUtils.createSimpleDataSource(url, user, password), max, null);
-	}
-
-	/**
 	 * 使用Datasource 构造DbClient
 	 * 
 	 * @param datasource
 	 *            数据源信息 如果datasource已经是一个连接池，那么不会再启动内嵌的连接池，否则会使用内建的连接池
 	 */
 	public DbClient(DataSource datasource) {
-		this(datasource, JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50), null);
+		this(datasource, JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL, 3), JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50), null);
 	}
 
 	/**
@@ -171,11 +155,14 @@ public class DbClient extends Session implements ConnectionFactory {
 	 * @param max
 	 *            内建连接池的最大值，如果DataSource已经是一个连接池，那么内建连接池不会启动，此参数无效。
 	 */
-	public DbClient(DataSource datasource, int max, TransactionMode txType) {
+	public DbClient(DataSource datasource, int min, int max, TransactionMode txType) {
 		try {
 			if (txType != null)
 				this.txType = txType;
-			init(datasource, max);
+			if(datasource==null){
+				datasource=getDefaultDataSource();
+			}
+			init(datasource, min,max);
 			JefFacade.registeEmf(this, null);
 		} catch (SQLException e) {
 			throw new RuntimeException(e);
@@ -186,7 +173,7 @@ public class DbClient extends Session implements ConnectionFactory {
 	 * 构造，会使用jef.properties中配置的信息来连接数据库。
 	 */
 	public DbClient() {
-		this(getDefaultDataSource(), JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50), null);
+		this(getDefaultDataSource(), JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL, 3), JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50), null);
 	}
 
 	/*
@@ -258,8 +245,6 @@ public class DbClient extends Session implements ConnectionFactory {
 			if (StringUtils.isNotEmpty(clz)) {
 				try {
 					listener = (DbOperatorListener) BeanUtils.newInstance(Class.forName(clz));
-				} catch (ReflectionException e) {
-					LogUtil.exception(e);
 				} catch (ClassNotFoundException e) {
 					LogUtil.exception(e);
 				}
@@ -322,10 +307,10 @@ public class DbClient extends Session implements ConnectionFactory {
 	/*
 	 * 初始化
 	 */
-	protected void init(DataSource ds, int max) throws SQLException {
+	protected void init(DataSource ds,int min, int max) throws SQLException {
 		DbUtils.tryAnalyzeInfo(ds, true);// 尝试解析并处理连接参数。
 		this.ds = ds;
-		this.connPool = PoolService.getPool(ds, max, txType);
+		this.connPool = PoolService.getPool(ds,min, max, txType);
 		Assert.notNull(connPool);
 		if (ORMConfig.getInstance().isDebugMode())
 			LogUtil.info("Init DB Connection:" + connPool.getInfo(null));
@@ -362,7 +347,7 @@ public class DbClient extends Session implements ConnectionFactory {
 		if (StringUtils.isNotEmpty(queryTable)) {
 			MetaHolder.initMetadata(NamedQueryConfig.class, null, queryTable);
 			try {
-				refreshTable(MetaHolder.getMeta(NamedQueryConfig.class),null);// 创建表
+				refreshTable(MetaHolder.getMeta(NamedQueryConfig.class), null);// 创建表
 			} catch (SQLException e) {
 				LogUtil.warn("Named Query Table:" + queryTable + " was not refreshed. Error:" + e.getMessage());
 			}
@@ -416,8 +401,8 @@ public class DbClient extends Session implements ConnectionFactory {
 	 * one datasource, input null is fine.
 	 * 
 	 * @param dbkey
-	 *            the name of datasource. input null to access the metadata of default
-	 *            datasource.
+	 *            the name of datasource. input null to access the metadata of
+	 *            default datasource.
 	 * @return
 	 * @throws SQLException
 	 */
@@ -734,14 +719,14 @@ public class DbClient extends Session implements ConnectionFactory {
 			}
 		}
 	}
-	
+
 	/**
 	 * 检查并修改数据库中的表，使其和传入的实体模型保持一致。
 	 * 
 	 * @param clz
 	 *            要更新的表对应的类
 	 * @param listener
-	 *   	事件监听器，可以监听刷新过程的事件
+	 *            事件监听器，可以监听刷新过程的事件
 	 * @throws SQLException
 	 */
 	public void refreshTable(Class<?> clz, MetadataEventListener listener) throws SQLException {
@@ -871,7 +856,7 @@ public class DbClient extends Session implements ConnectionFactory {
 					count++;
 				}
 				if (meta != null) {
-					for (AutoIncrementMapping<?> mapping : meta.getAutoincrementDef()) {
+					for (AutoIncrementMapping mapping : meta.getAutoincrementDef()) {
 						sequenceManager.dropSequence(mapping, this.selectTarget(pr.getDatabase()));
 					}
 				}

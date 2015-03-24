@@ -19,15 +19,19 @@ public class SQLServerDialect extends AbstractDelegatingDialect {
 	@Override
 	public String generateUrl(String host, int port, String pathOrName) {
 		if (this.dialect == null) {
-			DatabaseDialect dialect = new SQLServer2005Dialect();
-			try {
-				Class.forName(dialect.getDriverClass(""));
-				this.dialect = dialect; // 暂时先作为2005处理，后续根据版本号再升级为2012和2014
-			} catch (ClassNotFoundException e) {
-				dialect = new SQLServer2000Dialect();
-			}
+			createDefaultDialect();
 		}
 		return dialect.generateUrl(host, port, pathOrName);
+	}
+
+	private void createDefaultDialect() {
+		DatabaseDialect dialect = new SQLServer2005Dialect();
+		try {
+			Class.forName(dialect.getDriverClass(""));
+			this.dialect = dialect; // 暂时先作为2005处理，后续根据版本号再升级为2012和2014
+		} catch (ClassNotFoundException e) {
+			dialect = new SQLServer2000Dialect();
+		}
 	}
 
 	@Override
@@ -42,6 +46,14 @@ public class SQLServerDialect extends AbstractDelegatingDialect {
 			}
 		}
 		super.parseDbInfo(connectInfo);
+	}
+
+	@Override
+	public String getDriverClass(String url) {
+		if (this.dialect == null) {
+			createDefaultDialect();
+		}
+		return super.getDriverClass(url);
 	}
 
 	@Override
@@ -68,4 +80,6 @@ public class SQLServerDialect extends AbstractDelegatingDialect {
 		}
 		super.init(asOperateTarget);
 	}
+	
+	
 }

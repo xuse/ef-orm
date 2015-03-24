@@ -44,14 +44,14 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	protected String schema;
 	protected String tableName;
 	private String bindDsName;
-	private AutoIncrementMapping<?>[] increMappings;
-	private AbstractTimeMapping<?>[] updateTimeMapping;
+	private AutoIncrementMapping[] increMappings;
+	private AbstractTimeMapping[] updateTimeMapping;
 
-	protected List<ColumnMapping<?>> metaFields;
+	protected List<ColumnMapping> metaFields;
 	protected Field[] lobNames;
 
 	final List<jef.database.annotation.Index> indexMap = new ArrayList<jef.database.annotation.Index>(5);// 记录对应表的所有索引，当建表时使用可自动创建索引
-	protected final Map<Field, ColumnMapping<?>> schemaMap = new IdentityHashMap<Field, ColumnMapping<?>>();
+	protected final Map<Field, ColumnMapping> schemaMap = new IdentityHashMap<Field, ColumnMapping>();
 	protected Map<String, Field> fields = new HashMap<String, Field>(10, 0.6f);
 	protected Map<String, Field> lowerFields = new HashMap<String, Field>(10, 0.6f);
 
@@ -91,11 +91,11 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		return bindDsName;
 	}
 
-	public ColumnMapping<?> getColumnDef(Field field) {
+	public ColumnMapping getColumnDef(Field field) {
 		//2014-10-31 在重构用columnMapping代替的设计过程中，会出现两类对象的混用，引起此处作一个判断拦截field(暂时还不需要)
 		
 //		if(field instanceof ColumnMapping)
-//			return (ColumnMapping<?>)field;
+//			return (ColumnMapping)field;
 		return schemaMap.get(field);
 	}
 
@@ -104,12 +104,12 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		this.bindProfile = null;
 	}
 
-	public List<ColumnMapping<?>> getColumns() {
+	public List<ColumnMapping> getColumns() {
 		if (metaFields == null) {
-			Collection<ColumnMapping<?>> map = this.getColumnSchema();
-			ColumnMapping<?>[] fields = map.toArray(new ColumnMapping[map.size()]);
-			Arrays.sort(fields, new Comparator<ColumnMapping<?>>() {
-				public int compare(ColumnMapping<?> field1, ColumnMapping<?> field2) {
+			Collection<ColumnMapping> map = this.getColumnSchema();
+			ColumnMapping[] fields = map.toArray(new ColumnMapping[map.size()]);
+			Arrays.sort(fields, new Comparator<ColumnMapping>() {
+				public int compare(ColumnMapping field1, ColumnMapping field2) {
 					Class<? extends ColumnType> type1 = field1.get().getClass();
 					Class<? extends ColumnType> type2 = field2.get().getClass();
 					Boolean b1 = (type1 == ColumnType.Blob.class || type1 == ColumnType.Clob.class);
@@ -140,7 +140,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	}
 
 	public String getColumnName(Field fld, DatabaseDialect profile, boolean escape) {
-		ColumnMapping<?> mType = this.schemaMap.get(fld);
+		ColumnMapping mType = this.schemaMap.get(fld);
 		if (mType != null) {
 			return mType.getColumnName(profile, escape);
 		}
@@ -180,7 +180,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		return pkDim;
 	}
 
-	public ColumnMapping<?> findField(String left) {
+	public ColumnMapping findField(String left) {
 		if (left == null)
 			return null;
 		Field field= lowerFields.get(left.toLowerCase());
@@ -207,8 +207,8 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		return schemaMap.get(field).get();
 	}
 
-	public AutoIncrementMapping<?> getFirstAutoincrementDef() {
-		AutoIncrementMapping<?>[] array = increMappings;
+	public AutoIncrementMapping getFirstAutoincrementDef() {
+		AutoIncrementMapping[] array = increMappings;
 		if (array != null && array.length > 0) {
 			return array[0];
 		} else {
@@ -216,21 +216,21 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		}
 	}
 
-	public AutoIncrementMapping<?>[] getAutoincrementDef() {
+	public AutoIncrementMapping[] getAutoincrementDef() {
 		if (increMappings == null) {
-			return new AutoIncrementMapping<?>[0];
+			return new AutoIncrementMapping[0];
 		} else {
 			return increMappings;
 		}
 	}
 
-	public AbstractTimeMapping<?>[] getUpdateTimeDef() {
+	public AbstractTimeMapping[] getUpdateTimeDef() {
 		return updateTimeMapping;
 	}
 
 	protected void removeAutoIncAndTimeUpdatingField(Field oldField) {
 		if (increMappings != null) {
-			for (AutoIncrementMapping<?> m : increMappings) {
+			for (AutoIncrementMapping m : increMappings) {
 				if (m.field() == oldField) {
 					increMappings = (AutoIncrementMapping[]) ArrayUtils.removeElement(increMappings, m);
 					break;
@@ -238,7 +238,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 			}
 		}
 		if (updateTimeMapping != null) {
-			for (AbstractTimeMapping<?> m : updateTimeMapping) {
+			for (AbstractTimeMapping m : updateTimeMapping) {
 				if (m.field() == oldField) {
 					updateTimeMapping = (AbstractTimeMapping[]) ArrayUtils.removeElement(updateTimeMapping, m);
 					break;
@@ -247,16 +247,16 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		}
 	}
 
-	protected void updateAutoIncrementAndUpdate(ColumnMapping<?> mType) {
-		if (mType instanceof AbstractTimeMapping<?>) {
-			AbstractTimeMapping<?> m = (AbstractTimeMapping<?>) mType;
+	protected void updateAutoIncrementAndUpdate(ColumnMapping mType) {
+		if (mType instanceof AbstractTimeMapping) {
+			AbstractTimeMapping m = (AbstractTimeMapping) mType;
 			if (m.isForUpdate()) {
 				updateTimeMapping = ArrayUtils.addElement(updateTimeMapping, m);
 			}
 		}
 
-		if (mType instanceof AutoIncrementMapping<?>) {
-			increMappings = ArrayUtils.addElement(increMappings, (AutoIncrementMapping<?>) mType);
+		if (mType instanceof AutoIncrementMapping) {
+			increMappings = ArrayUtils.addElement(increMappings, (AutoIncrementMapping) mType);
 		}
 	}
 
@@ -286,7 +286,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		throw new UnsupportedOperationException();
 	}
 
-	protected Collection<ColumnMapping<?>> getColumnSchema() {
+	protected Collection<ColumnMapping> getColumnSchema() {
 		return this.schemaMap.values();
 	}
 
@@ -308,7 +308,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		return ref;
 	}
 
-	protected ReferenceField innerAdd(Property pp, ColumnMapping<?> targetFld, CascadeConfig config) {
+	protected ReferenceField innerAdd(Property pp, ColumnMapping targetFld, CascadeConfig config) {
 		Assert.notNull(targetFld);
 		Reference r = new Reference(targetFld.getMeta(), config.getRefType(), this);
 		if (config.path != null) {
@@ -353,7 +353,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	protected ReferenceField addCascadeField(String fieldName, Field target, CascadeConfig config) {
 		Assert.notNull(target);
 		Property pp = getContainerAccessor().getProperty(fieldName);
-		ColumnMapping<?> targetFld= DbUtils.toColumnMapping(target);
+		ColumnMapping targetFld= DbUtils.toColumnMapping(target);
 		return innerAdd(pp, targetFld, config);
 	}
 }

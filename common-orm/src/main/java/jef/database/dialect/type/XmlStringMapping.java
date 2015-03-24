@@ -7,8 +7,8 @@ import java.sql.SQLXML;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 
-public class XmlStringMapping extends AColumnMapping<String>{
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+public class XmlStringMapping extends AColumnMapping{
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		String s=String.valueOf(value);
 		if(s==null || s.length()==0){
 			st.setNull(index,java.sql.Types.SQLXML);
@@ -29,7 +29,12 @@ public class XmlStringMapping extends AColumnMapping<String>{
 		return super.wrapSqlStr(value.toString());
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		return rs.getString(n);
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return String.class;
 	}
 }

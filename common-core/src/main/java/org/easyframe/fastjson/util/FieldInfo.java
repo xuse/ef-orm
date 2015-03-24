@@ -25,7 +25,7 @@ public class FieldInfo implements Comparable<FieldInfo> {
     private boolean        getOnly = false;
     public  FieldAccessor accessor;
 
-    public FieldInfo(String name, Class<?> declaringClass, Class<?> fieldClass, Type fieldType, Field field){
+    public FieldInfo(String name, Class<?> declaringClass, Class<?> fieldClass, Type fieldType, Field field,int ordinal, int features){
         this.name = name;
         this.declaringClass = declaringClass;
         this.fieldClass = fieldClass;
@@ -38,7 +38,7 @@ public class FieldInfo implements Comparable<FieldInfo> {
         }
     }
 
-    public FieldInfo(String name, Method method, Field field){
+    public FieldInfo(String name, Method method, Field field,int ordinal, int features){
         this(name, method, field, null, null);
     }
 

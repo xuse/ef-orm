@@ -49,7 +49,7 @@ public class XmlJsonSerializer implements ObjectSerializer {
 		out.append(']');
 	}
 
-	public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType){
+	public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType,int features){
 		Node src=(Node)object;
 		SerializeWriter writer=serializer.getWriter();
 		if(src.getNodeType()==Node.ELEMENT_NODE){
@@ -71,7 +71,7 @@ public class XmlJsonSerializer implements ObjectSerializer {
 			}
 		}else if(src.getNodeType()==Node.DOCUMENT_NODE){
 			Element root=((Document)src).getDocumentElement();
-			write(serializer,root,fieldName,fieldType);
+			write(serializer,root,fieldName,fieldType,features);
 			return ;
 		}else{
 			throw new IllegalArgumentException();
@@ -84,7 +84,7 @@ public class XmlJsonSerializer implements ObjectSerializer {
 				Attr attr=(Attr)node;
 				String key=attr.getName();
 				String value=attr.getValue();
-				writeKeyValue(first,serializer,writer,key,value);
+				writeKeyValue(first,serializer,writer,key,value,features);
 				first=false;
 			}	
 		}
@@ -108,14 +108,14 @@ public class XmlJsonSerializer implements ObjectSerializer {
 				nodeText.append(s);	
 			}
 			if(nodeText.length()>0){
-				writeKeyValue(first,serializer,writer,"#text", nodeText.toString());	
+				writeKeyValue(first,serializer,writer,"#text", nodeText.toString(),features);	
 				first=false;
 			}
 		}
 		for(String key: childsMap.keySet()){
 			List<Node> nodes=childsMap.get(key);
 			if(nodes.size()==1){
-				writeKeyValue(first,serializer,writer,key,nodes.get(0));
+				writeKeyValue(first,serializer,writer,key,nodes.get(0),features);
 			}else{
 				if(!first)
 					writer.write(',');
@@ -124,11 +124,11 @@ public class XmlJsonSerializer implements ObjectSerializer {
 				Iterator<Node> nodeIter=nodes.iterator();
 				if(nodeIter.hasNext()){
 					Node n=nodeIter.next();
-					write(serializer,n,null,Node.class);
+					write(serializer,n,null,Node.class,features);
 					while(nodeIter.hasNext()){
 						writer.write(',');
 						n=nodeIter.next();
-						write(serializer,n,null,Node.class);
+						write(serializer,n,null,Node.class,features);
 					}
 				}
 				endArray(writer);
@@ -138,7 +138,7 @@ public class XmlJsonSerializer implements ObjectSerializer {
 		endObject(writer);
 	}
 
-	private void writeKeyValue(boolean first,JSONSerializer serializer, SerializeWriter writer, String key, Object value) {
+	private void writeKeyValue(boolean first,JSONSerializer serializer, SerializeWriter writer, String key, Object value,int features) {
 		if(!first){
 			writer.write(',');
 		}
@@ -147,7 +147,7 @@ public class XmlJsonSerializer implements ObjectSerializer {
 			writer.writeNull();
 		}else if (value instanceof Node){
 			writer.writeFieldName(key);
-			write(serializer,value,null,Node.class);
+			write(serializer,value,null,Node.class,features);
 		}else{
 			writer.writeFieldName(key);
 			String s=String.valueOf(value);

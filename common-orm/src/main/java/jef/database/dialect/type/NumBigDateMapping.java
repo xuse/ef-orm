@@ -7,9 +7,9 @@ import java.util.Date;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 
-public class NumBigDateMapping extends AColumnMapping<Date>{
+public class NumBigDateMapping extends AColumnMapping{
 
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
 			st.setNull(index, java.sql.Types.BIGINT);
 			return null;
@@ -24,7 +24,7 @@ public class NumBigDateMapping extends AColumnMapping<Date>{
 		return java.sql.Types.BIGINT;
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		Object o=rs.getObject(n);
 		if(o==null)return null;
 		long l=((Number)o).longValue();
@@ -35,5 +35,10 @@ public class NumBigDateMapping extends AColumnMapping<Date>{
 	protected String getSqlExpression(Object value, DatabaseDialect profile) {
 		Date date=(Date)value;
 		return String.valueOf(date.getTime());
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return Date.class;
 	}
 }

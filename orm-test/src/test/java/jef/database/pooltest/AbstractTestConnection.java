@@ -26,7 +26,7 @@ public class AbstractTestConnection {
 	//连接数据源
 	public void prepare(String url,String uname,String pwd,int POOL_SIZE) throws SQLException{
 		ds = DbUtils.createSimpleDataSource(url, uname, pwd);
-		pool = PoolService.getPool(ds, POOL_SIZE,TransactionMode.JPA);
+		pool = PoolService.getPool(ds, POOL_SIZE,POOL_SIZE,TransactionMode.JPA);
 		System.out.println(pool.toString());
 	}
 	

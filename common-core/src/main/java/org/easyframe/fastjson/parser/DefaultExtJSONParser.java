@@ -17,7 +17,7 @@ package org.easyframe.fastjson.parser;
 
 
 /**
- * @author wenshao<szujobs@hotmail.com>
+ * @author wenshao[szujobs@hotmail.com]
  */
 @Deprecated
 public class DefaultExtJSONParser extends DefaultJSONParser {

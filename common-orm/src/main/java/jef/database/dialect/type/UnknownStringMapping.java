@@ -2,20 +2,24 @@ package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 
-public class UnknownStringMapping extends AColumnMapping<String>{
+public class UnknownStringMapping extends AColumnMapping{
 	private String name;
 	private int sqlType;
+	public UnknownStringMapping() {
+		this("Other",Types.OTHER);
+	}
 	public UnknownStringMapping(String name, int sqlType) {
 		this.name=name;
 		this.sqlType=sqlType;
 	}
 
 	@Override
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect dialect) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect dialect) throws SQLException {
 		if(value==null){
 			st.setNull(index, sqlType);
 		}else{
@@ -30,7 +34,7 @@ public class UnknownStringMapping extends AColumnMapping<String>{
 	}
 
 	@Override
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		return String.valueOf(rs.getObject(n));
 	}
 
@@ -43,6 +47,8 @@ public class UnknownStringMapping extends AColumnMapping<String>{
 	public String toString() {
 		return name+"|"+super.toString();
 	}
-	
-	
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return String.class;
+	}
 }

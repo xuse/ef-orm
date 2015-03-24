@@ -72,7 +72,7 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 		return session;
 	}
 
-	public Sequence getSequence(AutoIncrementMapping<?> mapping) throws SQLException {
+	public Sequence getSequence(AutoIncrementMapping mapping) throws SQLException {
 		return session.getNoTransactionSession().getSequenceManager().getSequence(mapping, this);
 	}
 

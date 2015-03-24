@@ -206,7 +206,7 @@ public class SQLServer2000Dialect extends AbstractDialect {
 	}
 
 	@Override
-	public String getColumnNameToUse(AColumnMapping<?> name) {
+	public String getColumnNameToUse(AColumnMapping name) {
 		return name.lowerColumnName();
 	}
 	

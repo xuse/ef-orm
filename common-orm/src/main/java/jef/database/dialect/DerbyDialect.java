@@ -224,7 +224,7 @@ public class DerbyDialect extends AbstractDialect {
 	}
 	
 	@Override
-	public String getColumnNameToUse(AColumnMapping<?> name) {
+	public String getColumnNameToUse(AColumnMapping name) {
 		return name.upperColumnName();
 	}
 	

@@ -25,7 +25,6 @@ import jef.accelerator.asm.FieldVisitor;
 import jef.accelerator.asm.Label;
 import jef.accelerator.asm.MethodVisitor;
 import jef.accelerator.asm.Opcodes;
-import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.FieldAccessor;
 
 import org.easyframe.fastjson.JSONException;
@@ -48,7 +47,7 @@ public class ASMDeserializerFactory implements Opcodes {
 
     private static final ASMDeserializerFactory instance    = new ASMDeserializerFactory();
 
-    private ASMClassLoader                      classLoader = new ASMClassLoader();
+    private ASMClassLoader                      classLoader;
 
     private final AtomicLong                    seed        = new AtomicLong();
 
@@ -64,10 +63,14 @@ public class ASMDeserializerFactory implements Opcodes {
     }
 
     public ASMDeserializerFactory(){
-
+    	classLoader= new ASMClassLoader();
     }
 
-    public final static ASMDeserializerFactory getInstance() {
+    public ASMDeserializerFactory(ClassLoader parentClassLoader) {
+    	classLoader= new ASMClassLoader(parentClassLoader);
+	}
+
+	public final static ASMDeserializerFactory getInstance() {
         return instance;
     }
 

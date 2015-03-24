@@ -10,17 +10,15 @@ import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.meta.EntityType;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.BindVariableField;
 import jef.database.query.Func;
 import jef.database.query.SqlExpression;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.UpdateClause;
-import jef.tools.Assert;
 import jef.tools.reflect.Property;
 
-public abstract class AbstractTimeMapping<T> extends AColumnMapping<T> {
+public abstract class AbstractTimeMapping extends AColumnMapping {
 	//0 不自动生成 1 创建时生成为sysdate 2更新时生成为sysdate 3创建时设置为为java系统时间  4为更新时设置为java系统时间
 	private int generated;
 	private Property accessor;
@@ -44,9 +42,9 @@ public abstract class AbstractTimeMapping<T> extends AColumnMapping<T> {
 			}
 		}
 		BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(meta.getContainerType());
-		if (meta.getType() != EntityType.TUPLE) {
-			Assert.isTrue(meta.getAllFieldNames().contains(field.name()));
-		}
+//		if (meta.getType() != EntityType.TUPLE) {
+//			Assert.isTrue(meta.getAllFieldNames().contains(field.name()));
+//		}
 		accessor = ba.getProperty(field.name());
 	}
 

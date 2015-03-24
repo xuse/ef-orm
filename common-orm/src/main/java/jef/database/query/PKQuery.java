@@ -18,7 +18,6 @@ import jef.database.IConditionField;
 import jef.database.IQueryableEntity;
 import jef.database.ORMConfig;
 import jef.database.SelectProcessor;
-import jef.database.annotation.PartitionResult;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.EntityType;
@@ -26,6 +25,7 @@ import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.AbstractMetadata;
 import jef.database.meta.Reference;
+import jef.database.routing.PartitionResult;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.GroupClause;
 import jef.database.wrapper.clause.QueryClause;
@@ -70,7 +70,7 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 		return new AbstractList<Condition>() {
 			@Override
 			public Condition get(int index) {
-				ColumnMapping<?> m=type.getPKFields().get(index);
+				ColumnMapping m=type.getPKFields().get(index);
 				Object value=pkValues.get(index);
 				Assert.notNull(value);
 				return new Condition(m.field(),Operator.EQUALS,value);
@@ -107,10 +107,10 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 		StringBuilder sb=new StringBuilder(128).append(" where ");
 		List<BindVariableDescription> bind = new ArrayList<BindVariableDescription>(size);
 		
-		Iterator<ColumnMapping<?>> pkfields=type.getPKFields().iterator();
+		Iterator<ColumnMapping> pkfields=type.getPKFields().iterator();
 		
 		int n=0;
-		ColumnMapping<?> field=pkfields.next();
+		ColumnMapping field=pkfields.next();
 		sb.append(field.getColumnName(profile, true)).append("= ?");
 		bind.add(new BindVariableDescription(field.field(), Operator.EQUALS, pkValues.get(n++)));
 		while(pkfields.hasNext()){

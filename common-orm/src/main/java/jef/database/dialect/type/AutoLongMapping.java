@@ -9,14 +9,14 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.meta.ITableMetadata;
 
-public final class AutoLongMapping extends AutoIncrementMapping<Long> {
+public final class AutoLongMapping extends AutoIncrementMapping {
 	@Override
 	public void init(Field field, String columnName, ColumnType type, ITableMetadata meta) {
 		super.init(field, columnName, type, meta);
 		accessor = super.fieldAccessor;
 	}
 
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if (value == null) {
 			st.setNull(index, getSqlType());
 		} else {
@@ -25,7 +25,7 @@ public final class AutoLongMapping extends AutoIncrementMapping<Long> {
 		return value;
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		Object obj = rs.getObject(n);
 		if (obj == null)
 			return null;
@@ -37,5 +37,10 @@ public final class AutoLongMapping extends AutoIncrementMapping<Long> {
 	@Override
 	protected String getSqlExpression(Object value, DatabaseDialect profile) {
 		return value.toString();
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return Long.class;
 	}
 }

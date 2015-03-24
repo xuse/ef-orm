@@ -78,4 +78,27 @@ public class XMLUtilsTest {
 			node.setNodeValue(text.substring(0,index+10)+"密码隐藏>");
 		}
 	}
+	
+	
+	
+	@Test
+	public void testNodeMove() throws SAXException, IOException{
+		Document doc=XMLUtils.loadDocument(this.getClass().getResource("/db-beans.xml").openStream(),null,false,false);
+		Element ele=XMLUtils.first(doc.getDocumentElement(), "bean");
+		XMLUtils.printNode(ele, System.out);
+		
+		
+		Document doc2=XMLUtils.loadDocument(this.getClass().getResource("/db-empty.xml").openStream(),null,false,false);
+		
+		doc2.getDocumentElement().appendChild(doc2.importNode(ele, true));
+		XMLUtils.printNode(doc2, System.out);
+	
+		
+		
+		
+		
+		
+		
+		
+	}
 }

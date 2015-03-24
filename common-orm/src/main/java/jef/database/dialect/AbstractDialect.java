@@ -356,15 +356,20 @@ public abstract class AbstractDialect implements DatabaseDialect {
 				column=cType.toNormalType();
 			}
 		}
-		// 按事先注册的类型进行建表
-		int rawSqlType=column.getSqlType();
 		PairIS def;
-		if (column instanceof SqlTypeSized) {
-			SqlTypeSized type = (SqlTypeSized) column;
-			def = typeNames.get(rawSqlType, type.getLength(), type.getPrecision(), type.getScale());
-		} else {
-			def = typeNames.get(rawSqlType);
+		int rawSqlType=column.getSqlType();
+		if(column instanceof ColumnType.Other){
+			def=new PairIS(rawSqlType,((ColumnType.Other) column).getName()); 
+		}else{
+			// 按事先注册的类型进行建表
+			if (column instanceof SqlTypeSized) {
+				SqlTypeSized type = (SqlTypeSized) column;
+				def = typeNames.get(rawSqlType, type.getLength(), type.getPrecision(), type.getScale());
+			} else {
+				def = typeNames.get(rawSqlType);
+			}			
 		}
+
 		if (!flag) {
 			return def.second;
 		}
@@ -594,7 +599,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	public String getColumnNameToUse(String name) {
 		return name;
 	}
-	public String getColumnNameToUse(AColumnMapping<?> name) {
+	public String getColumnNameToUse(AColumnMapping name) {
 		return name.rawColumnName;
 	}
 	public int calcSequenceStep(OperateTarget conn, String schema, String seqName, int defaultValue) {
@@ -631,7 +636,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		return AColumnMapping.wrapSqlStr(DateFormats.DATE_TIME_CS.get().format(value));
 	}
 
-	public long getColumnAutoIncreamentValue(AutoIncrementMapping<?> mapping, JDBCTarget db) {
+	public long getColumnAutoIncreamentValue(AutoIncrementMapping mapping, JDBCTarget db) {
 		throw new UnsupportedOperationException(mapping.getMeta().getName() + "." + mapping.fieldName() + " is auto-increament, but the database '" + this.getName() + "' doesn't support fetching the next AutoIncreament value.");
 	}
 

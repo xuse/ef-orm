@@ -158,7 +158,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			Query<?> qq = ent.getQuery();
 			ITableMetadata meta = qq.getMeta();
 			for (String s : property) {
-				ColumnMapping<?> field = meta.findField(s);
+				ColumnMapping field = meta.findField(s);
 				if (field == null) {
 					throw new IllegalArgumentException(s + " not found database field in entity " + bw.getClassName());
 				}
@@ -187,7 +187,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			ITableMetadata meta = qq.getMeta();
 			ent.clearUpdate();
 			for (Entry<String, Object> entry : setValues.entrySet()) {
-				ColumnMapping<?> field = meta.findField(entry.getKey());
+				ColumnMapping field = meta.findField(entry.getKey());
 				if (field == null) {
 					throw new IllegalArgumentException(entry.getKey() + " not found database field in entity " + meta.getName());
 				}
@@ -199,7 +199,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			// 准备where条件
 			BeanWrapper bw = BeanWrapper.wrap(ent);
 			for (String s : property) {
-				ColumnMapping<?> field = meta.findField(s);
+				ColumnMapping field = meta.findField(s);
 				if (field == null) {
 					throw new IllegalArgumentException(s + " not found database field in entity " + bw.getClassName());
 				}
@@ -449,7 +449,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	public List<?> findByKey(ITableMetadata meta, String propertyName, Object value) {
 		if (meta == null || propertyName == null)
 			return null;
-		ColumnMapping<?> field = meta.findField(propertyName);
+		ColumnMapping field = meta.findField(propertyName);
 		if (field == null) {
 			throw new IllegalArgumentException("There's no property named " + propertyName + " in type of " + meta.getName());
 		}

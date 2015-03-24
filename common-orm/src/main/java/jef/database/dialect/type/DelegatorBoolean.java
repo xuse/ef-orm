@@ -12,15 +12,15 @@ import jef.database.jdbc.result.IResultSet;
  * @author jiyi
  *
  */
-public final class DelegatorBoolean extends AColumnMapping<Boolean>{
-	private AColumnMapping<Boolean> real;
+public final class DelegatorBoolean extends AColumnMapping{
+	private AColumnMapping real;
 	private DatabaseDialect profile;
 	
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect profile) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect profile) throws SQLException {
 		if(real==null || this.profile!=profile){
 			init(profile);
 		}
-		return real.set(st, value, index, profile);
+		return real.jdbcSet(st, value, index, profile);
 	}
 
 	private void init(DatabaseDialect profile) {
@@ -34,7 +34,7 @@ public final class DelegatorBoolean extends AColumnMapping<Boolean>{
 		}else{
 			real=new BooleanBoolMapping();
 		}
-		real.init(field, rawColumnName, ctype, meta);
+		real.init(field, rawColumnName, columnDef, meta);
 	}
 
 	public int getSqlType() {
@@ -49,10 +49,15 @@ public final class DelegatorBoolean extends AColumnMapping<Boolean>{
 		return real.getSqlExpression(value, profile);
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		if(real==null){
 			init(rs.getProfile());
 		}
-		return real.getProperObject(rs, n);
+		return real.jdbcGet(rs, n);
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return Boolean.class;
 	}
 }

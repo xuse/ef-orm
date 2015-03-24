@@ -32,7 +32,7 @@ public class FieldPopulator implements IPopulator{
 		this.name = field.getName();
 		
 		//计算元模型类型
-		ColumnMapping<?> t = field.getTargetColumnType();
+		ColumnMapping t = field.getTargetColumnType();
 		
 		//判断计算容器类型
 		String name=this.name;
@@ -62,7 +62,7 @@ public class FieldPopulator implements IPopulator{
 			bw = BeanWrapper.wrap(bean);
 		}
 		try {
-			bw.setPropertyValue(name, desc.getAccessor().getProperObject(rs, desc.getN()));
+			bw.setPropertyValue(name, desc.getAccessor().jdbcGet(rs, desc.getN()));
 		} catch (SQLException s) {
 			LogUtil.exception("[" + columnName + "] is not found from the resultset.", s);
 			throw s;

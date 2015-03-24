@@ -24,7 +24,7 @@ public final class KvExtensionImpl extends AbstractExtensionConfig implements Ex
 		
 		List<JoinKey> joinkeys=new ArrayList<JoinKey>();
 		
-		for (ColumnMapping<?> m : parent.getPKFields()) {
+		for (ColumnMapping m : parent.getPKFields()) {
 			ColumnType ct = m.get();
 			if (ct instanceof ColumnType.GUID) {
 				ct = ((ColumnType.GUID) ct).toNormalType();

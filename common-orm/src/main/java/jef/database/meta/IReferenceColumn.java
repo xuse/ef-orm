@@ -35,5 +35,5 @@ public interface IReferenceColumn extends ISelectProvider{
 	 * 目标列的meta
 	 * @return
 	 */
-	ColumnMapping<?> getTargetColumnType();
+	ColumnMapping getTargetColumnType();
 }

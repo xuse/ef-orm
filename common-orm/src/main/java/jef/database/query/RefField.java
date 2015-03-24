@@ -37,7 +37,7 @@ public class RefField implements Field,LazyQueryBindField{
 	private Query<?> instance; //构建时不再绑定
 	private AbstractEntityMappingProvider dynamicBindContext;//如果当前的绑定是属于动态绑定，需要存储此值
 	
-	private ColumnMapping<?> field;
+	private ColumnMapping field;
 	Reference ref;//默认为null，用于迟邦定的情况下匹配Query
 	/**
 	 * 绑定构造，显式的指定field所绑定的查询表
@@ -45,7 +45,7 @@ public class RefField implements Field,LazyQueryBindField{
 	 * @param field
 	 */
 	public RefField(Query<?> ins,Field field){
-		ColumnMapping<?> mapping=ins.getMeta().getColumnDef(field);
+		ColumnMapping mapping=ins.getMeta().getColumnDef(field);
 		Assert.notNull(mapping,"The field in refField must be a metamodel field.");
 		this.field=mapping;
 		this.instance=ins;
@@ -68,7 +68,7 @@ public class RefField implements Field,LazyQueryBindField{
 	 * @param fld
 	 */
 	public RefField(Field fld) {
-		ColumnMapping<?> mapping=DbUtils.toColumnMapping(fld);
+		ColumnMapping mapping=DbUtils.toColumnMapping(fld);
 		Assert.notNull(mapping,"The field in refField must be a metamodel field.");
 		this.field=mapping;
 	}
@@ -124,7 +124,7 @@ public class RefField implements Field,LazyQueryBindField{
 		return false;
 	}
 	
-	public ColumnMapping<?> getFieldDef(){
+	public ColumnMapping getFieldDef(){
 		return field;
 	}
 	

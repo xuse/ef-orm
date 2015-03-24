@@ -24,11 +24,11 @@ import java.util.Map;
 
 import jef.common.PairSS;
 import jef.common.log.LogUtil;
-import jef.database.annotation.PartitionResult;
 import jef.database.cache.TransactionCache;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
+import jef.database.routing.PartitionResult;
 import jef.database.support.DbOperatorListener;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.clause.BindSql;
@@ -395,7 +395,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 
 		@Override
 		protected void processJdbcParams(PreparedStatement psmt, List<T> listValue, OperateTarget db) throws SQLException {
-			List<ColumnMapping<?>> writeFields = insertPart.getFields();
+			List<ColumnMapping> writeFields = insertPart.getFields();
 			int len = listValue.size();
 			SqlLog log=ORMConfig.getInstance().newLogger(this.extreme);
 			int maxLog = ORMConfig.getInstance().getMaxBatchLog();

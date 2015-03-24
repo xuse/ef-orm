@@ -75,7 +75,7 @@ public class KvEntensionProperty implements Property {
 			VarObject v = new VarObject(extKvMeta);
 			v.put(kColumn, entry.getKey());
 			v.put(vColumn, String.valueOf(entry.getValue()));
-//			for (ColumnMapping<?> mapping : baseResourceMeta.getPKFields()) {
+//			for (ColumnMapping mapping : baseResourceMeta.getPKFields()) {
 //				Object idValue = mapping.getFieldAccessor().get(obj);
 //				if (idValue != null) {
 //					v.put(mapping.fieldName(), idValue);
@@ -104,7 +104,7 @@ public class KvEntensionProperty implements Property {
 	}
 
 	private Object fixValue(String key,String text) {
-		ColumnMapping<?> mapping=extensionMeta.getColumnDef(extensionMeta.getField(key));
+		ColumnMapping mapping=extensionMeta.getColumnDef(extensionMeta.getField(key));
 		if(mapping==null)return text;
 		return BeanUtils.toProperType(text, new ClassEx(mapping.getFieldType()), null);
 	}

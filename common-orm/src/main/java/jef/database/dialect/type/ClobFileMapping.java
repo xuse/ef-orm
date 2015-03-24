@@ -12,8 +12,8 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 import jef.tools.IOUtils;
 
-public class ClobFileMapping extends AColumnMapping<File>{
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+public class ClobFileMapping extends AColumnMapping{
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		File file=(File)value;
 		if(value==null || !file.exists()){
 			st.setNull(index, session.getImplementationSqlType(Types.CLOB));
@@ -41,7 +41,7 @@ public class ClobFileMapping extends AColumnMapping<File>{
 		return true;
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		Object obj=rs.getObject(n);
 		if(obj==null)return null;
 		if(obj instanceof String){
@@ -59,5 +59,10 @@ public class ClobFileMapping extends AColumnMapping<File>{
 		} catch (IOException e) {
 			throw new SQLException("Error at save clob to file.",e);
 		}
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return File.class;
 	}
 }

@@ -11,14 +11,14 @@ import jef.database.jdbc.result.IResultSet;
 import jef.database.meta.ITableMetadata;
 import jef.tools.reflect.Property;
 
-public final class AutoIntMapping extends AutoIncrementMapping<Integer> {
+public final class AutoIntMapping extends AutoIncrementMapping {
 	@Override
 	public void init(Field field, String columnName, ColumnType type, ITableMetadata meta) {
 		super.init(field, columnName, type, meta);
 		accessor = new J2IProperty(super.fieldAccessor);
 	}
 
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if (value == null) {
 			st.setNull(index, getSqlType());
 		} else {
@@ -27,7 +27,7 @@ public final class AutoIntMapping extends AutoIncrementMapping<Integer> {
 		return value;
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		Object obj = rs.getObject(n);
 		if (obj == null)
 			return null;
@@ -65,5 +65,10 @@ public final class AutoIntMapping extends AutoIncrementMapping<Integer> {
 			}
 			sProperty.set(obj, value);
 		}
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return Integer.class;
 	}
 }

@@ -27,10 +27,10 @@ public final class ColumnMappings {
 	private ColumnMappings() {
 	}
 
-	public static ColumnMapping<?> getMapping(Field field, ITableMetadata meta, String columnName, ColumnType type, boolean pk) {
+	public static ColumnMapping getMapping(Field field, ITableMetadata meta, String columnName, ColumnType type, boolean pk) {
 		BeanAccessor beanAccessor = meta.getContainerAccessor();
 		Class<?> fieldType = beanAccessor.getPropertyType(field.name());
-		ColumnMapping<?> mType = type.getMappingType(fieldType);
+		ColumnMapping mType = type.getMappingType(fieldType);
 		mType.init(field, columnName, type, meta);
 		return mType;
 	}
@@ -63,7 +63,7 @@ public final class ColumnMappings {
 	 * Accessor of primitive int.
 	 */
 	public static final ResultSetAccessor I = new ResultSetAccessor() {
-		public Object getProperObject(IResultSet rs, int n) throws SQLException {
+		public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 			return rs.getInt(n);
 		}
 
@@ -75,7 +75,7 @@ public final class ColumnMappings {
 	 * Accessor of primitive long.
 	 */
 	public static final ResultSetAccessor J = new ResultSetAccessor() {
-		public Object getProperObject(IResultSet rs, int n) throws SQLException {
+		public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 			return rs.getLong(n);
 		}
 
@@ -87,7 +87,7 @@ public final class ColumnMappings {
 	 * Accessor of primitive boolean.
 	 */
 	public static final ResultSetAccessor Z = new ResultSetAccessor() {
-		public Object getProperObject(IResultSet rs, int n) throws SQLException {
+		public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 			return rs.getBoolean(n);
 		}
 
@@ -102,7 +102,7 @@ public final class ColumnMappings {
 	 * Accessor of primitive float.
 	 */
 	public static final ResultSetAccessor F = new ResultSetAccessor() {
-		public Object getProperObject(IResultSet rs, int n) throws SQLException {
+		public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 			return rs.getFloat(n);
 		}
 
@@ -114,7 +114,7 @@ public final class ColumnMappings {
 	 * Accessor of primitive double.
 	 */
 	public static final ResultSetAccessor D = new ResultSetAccessor() {
-		public Object getProperObject(IResultSet rs, int n) throws SQLException {
+		public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 			return rs.getDouble(n);
 		}
 
@@ -166,12 +166,12 @@ public final class ColumnMappings {
 	 * @param allowPrmitive
 	 * @return
 	 */
-	public static ResultSetAccessor getAccessor(Class<?> javaType, ColumnMapping<?> ctype, ColumnDescription c, boolean allowPrmitive) {
+	public static ResultSetAccessor getAccessor(Class<?> javaType, ColumnMapping ctype, ColumnDescription c, boolean allowPrmitive) {
 		/*
 		 * 已知字段映射
 		 */
 		if (ctype != null){
-			if(javaType==null|| javaType==ctype.getPrimitiveType()|| javaType.isAssignableFrom(ctype.getFieldType())){
+			if(javaType==null|| javaType==ctype.getFieldType()|| javaType.isAssignableFrom(ctype.getFieldType())){
 				return ctype;
 			}
 		}

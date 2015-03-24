@@ -28,11 +28,11 @@ public final class ReferenceObject extends AbstractRefField implements IReferenc
 		return null;
 	}
 
-	public String getSelectedAliasOf(ColumnMapping<?> f, DatabaseDialect dialect, String schema) {
+	public String getSelectedAliasOf(ColumnMapping f, DatabaseDialect dialect, String schema) {
 		return AliasProvider.DEFAULT.getSelectedAliasOf(f, dialect, schema);
 	}
 	@Override
-	public String getResultAliasOf(ColumnMapping<?> f, String schema) {
+	public String getResultAliasOf(ColumnMapping f, String schema) {
 		return AliasProvider.DEFAULT.getResultAliasOf(f, schema);
 	}
 	
@@ -72,11 +72,11 @@ public final class ReferenceObject extends AbstractRefField implements IReferenc
 			return null;
 		}
 
-		public String getSelectedAliasOf(ColumnMapping<?> f, DatabaseDialect dialect, String schema) {
+		public String getSelectedAliasOf(ColumnMapping f, DatabaseDialect dialect, String schema) {
 			return AliasProvider.DEFAULT.getSelectedAliasOf(f, dialect, schema);
 		}
 		@Override
-		public String getResultAliasOf(ColumnMapping<?> f, String schema) {
+		public String getResultAliasOf(ColumnMapping f, String schema) {
 			return AliasProvider.DEFAULT.getResultAliasOf(f, schema);
 		}
 		public boolean isLazyLob() {

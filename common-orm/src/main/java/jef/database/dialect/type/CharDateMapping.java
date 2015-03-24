@@ -11,7 +11,7 @@ import jef.database.jdbc.result.IResultSet;
 import jef.tools.DateFormats;
 import jef.tools.StringUtils;
 
-public class CharDateMapping extends AColumnMapping<java.util.Date> {
+public class CharDateMapping extends AColumnMapping {
 	private ThreadLocal<DateFormat> format;
 	private ThreadLocal<DateFormat> dateOnly;
 
@@ -29,7 +29,7 @@ public class CharDateMapping extends AColumnMapping<java.util.Date> {
 		return java.sql.Types.CHAR;
 	}
 
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		String s = format.get().format((Date) value);
 		st.setString(index, s);
 		return value;
@@ -40,7 +40,7 @@ public class CharDateMapping extends AColumnMapping<java.util.Date> {
 		return super.wrapSqlStr(value.toString());
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		String s = rs.getString(n);
 		if (StringUtils.isEmpty(s)) {
 			return null;
@@ -55,5 +55,10 @@ public class CharDateMapping extends AColumnMapping<java.util.Date> {
 		} catch (ParseException e) {
 			throw new SQLException(e);
 		}
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return java.util.Date.class;
 	}
 }

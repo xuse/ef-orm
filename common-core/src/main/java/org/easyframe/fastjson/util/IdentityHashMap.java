@@ -15,15 +15,10 @@
  */
 package org.easyframe.fastjson.util;
 
-import java.util.AbstractSet;
-import java.util.Iterator;
-import java.util.Set;
-
-
 /**
  * for concurrent IdentityHashMap
  * 
- * @author wenshao<szujobs@hotmail.com>
+ * @author wenshao[szujobs@hotmail.com]
  */
 @SuppressWarnings("unchecked")
 public class IdentityHashMap<K, V> {
@@ -97,50 +92,5 @@ public class IdentityHashMap<K, V> {
             this.hashCode = hash;
         }
     }
-	private class _Iterator implements Iterator<Entry<K,V>> {
-		private int bucketsIndex=0;
-		private Entry<K, V> next;
-		public boolean hasNext() {
-			return next!=null;
-		}
-		_Iterator(){
-			findNext();
-		}
-		public Entry<K, V> next() {
-			Entry<K,V> value=next;
-			findNext();
-			return value;
-		}
 
-		public void remove() {
-			throw new UnsupportedOperationException();
-		}
-		private void findNext(){
-			if(next!=null)
-				next=next.next;
-			while(next==null && bucketsIndex<buckets.length){
-				next=(Entry<K, V>) buckets[bucketsIndex++];
-			}
-		}
-	};
-	class EntrySet extends AbstractSet<Entry<K,V>> implements Set<Entry<K,V>>{
-		@Override
-		public Iterator<Entry<K, V>> iterator() {
-			return new _Iterator();
-		}
-
-		@Override
-		public int size() {
-			return IdentityHashMap.this.size();
-		}
-
-	}
-	
-	private EntrySet entrys;
-	public Set<Entry<K,V>> entrySet() {
-		if(entrys==null){
-			entrys=new EntrySet();
-		}
-		return entrys;
-	}
 }

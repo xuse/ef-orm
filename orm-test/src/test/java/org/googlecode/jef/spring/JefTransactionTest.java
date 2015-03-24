@@ -7,6 +7,7 @@ import java.util.List;
 import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 import jef.database.QB;
 import jef.database.datasource.DataSourceInfoImpl;
 import jef.database.jpa.JefEntityManager;
@@ -49,7 +50,7 @@ public class JefTransactionTest extends SpringTestBase {
 	}
 
 	private void ensureLocalConfig() throws SQLException {
-		DbClient db=new DbClient("jdbc:derby:./db;create=true","pomelo","pomelo",1);
+		DbClient db=new DbClientBuilder("jdbc:derby:./db;create=true","pomelo","pomelo",1).build();
 		db.createTable(DataSourceInfoImpl.class);
 		db.delete(QB.create(DataSourceInfoImpl.class));
 		

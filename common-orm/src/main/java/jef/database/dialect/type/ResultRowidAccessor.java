@@ -6,7 +6,7 @@ import java.sql.SQLException;
 import jef.database.jdbc.result.IResultSet;
 
 final  class ResultRowidAccessor implements ResultSetAccessor{
-	public Object getProperObject(IResultSet rs,int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs,int n) throws SQLException {
 		byte[] bytes=rs.getRowId(n).getBytes();
 		try {
 			return new String(bytes,"US-ASCII");

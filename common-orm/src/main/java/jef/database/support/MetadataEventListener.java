@@ -103,6 +103,6 @@ public interface MetadataEventListener {
 	 * @param defined  表模型中的所有列
 	 * @return 是否继续比较这张表
 	 */
-	boolean onCompareColumns(String tablename, List<Column> columns, Map<Field, ColumnMapping<?>> defined);
+	boolean onCompareColumns(String tablename, List<Column> columns, Map<Field, ColumnMapping> defined);
 
 }

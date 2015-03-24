@@ -1,13 +1,13 @@
 package org.googlecode.jef.spring;
 
 import java.sql.SQLException;
+import java.sql.Types;
 
 import jef.common.log.LogUtil;
 import jef.database.dialect.ColumnType;
 import jef.database.meta.TupleMetadata;
 
 import org.easyframe.enterprise.spring.CommonDao;
-import org.hsqldb.types.Types;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +17,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import com.company.my.application.LooService;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = { "classpath:spring/common-ef-orm2.xml" })
+@ContextConfiguration(locations = { "classpath:spring/common-ef-orm.xml" })
 public class CommonSpringTest {
 	
 	@Autowired

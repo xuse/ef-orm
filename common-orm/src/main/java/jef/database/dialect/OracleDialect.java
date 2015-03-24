@@ -308,7 +308,7 @@ public class OracleDialect extends AbstractDialect {
 		return name==null?null:name.toUpperCase();
 	}
 	@Override
-	public String getColumnNameToUse(AColumnMapping<?> name) {
+	public String getColumnNameToUse(AColumnMapping name) {
 		return name.upperColumnName();
 	}
 	/**

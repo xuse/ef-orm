@@ -88,7 +88,7 @@ public final class BindVariableContext {
 			}
 			psmt.setObject(count,value);
 		}else{
-			value = cType.set(psmt, value, count, db);	
+			value = cType.jdbcSet(psmt, value, count, db);	
 		}
 		return value;
 	}

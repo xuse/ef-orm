@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jef.database.annotation.PartitionResult;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.jsqlparser.SelectToCountWrapper;
@@ -41,6 +40,7 @@ import jef.database.query.AbstractJoinImpl;
 import jef.database.query.JoinElement;
 import jef.database.query.Query;
 import jef.database.query.SqlContext;
+import jef.database.routing.PartitionResult;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.processor.BindVariableDescription;
 import jef.tools.StringUtils;

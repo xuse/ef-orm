@@ -37,7 +37,7 @@ import jef.tools.reflect.Property;
  * 
  * @param <T>
  */
-public abstract class AutoIncrementMapping<T> extends AColumnMapping<T> {
+public abstract class AutoIncrementMapping extends AColumnMapping {
 	protected Property accessor;
 	private int len;
 	private boolean isBig;
@@ -89,7 +89,7 @@ public abstract class AutoIncrementMapping<T> extends AColumnMapping<T> {
 	protected void rebind(String escapedColumn, DatabaseDialect profile) {
 		super.rebind(escapedColumn, profile);
 		
-		AutoIncrement a = (AutoIncrement) ctype;
+		AutoIncrement a = (AutoIncrement) columnDef;
 		GenerationType type = a.getGenerationType(profile, this.meta.getEffectPartitionKeys() == null);// 只有非分表的类允许使用Identity方式生成，其他都仅允许Seq或Tble
 		generationType=type;
 		sequenceName = getSequenceName0(meta.getSchema(), meta.getTableName(false),type);		
@@ -111,7 +111,7 @@ public abstract class AutoIncrementMapping<T> extends AColumnMapping<T> {
 	}
 
 	private String[] getSequenceName0(String schema, String tableName,GenerationType gtype) {
-		AutoIncrement type = (AutoIncrement) ctype;
+		AutoIncrement type = (AutoIncrement) columnDef;
 		SequenceGenerator sg = type.getSeqGenerator();
 		//多数据源下，数据源必须计算得到，不能用null表示
 		boolean isMultiDatasource=isTableOnMultipleDataSources();

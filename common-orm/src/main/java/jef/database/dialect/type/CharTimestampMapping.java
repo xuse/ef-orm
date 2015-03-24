@@ -11,7 +11,7 @@ import jef.database.jdbc.result.IResultSet;
 import jef.tools.DateFormats;
 import jef.tools.StringUtils;
 
-public class CharTimestampMapping extends AColumnMapping<java.sql.Timestamp>{
+public class CharTimestampMapping extends AColumnMapping{
 	private ThreadLocal<DateFormat> format;
 	
 	public CharTimestampMapping(String format){
@@ -26,7 +26,7 @@ public class CharTimestampMapping extends AColumnMapping<java.sql.Timestamp>{
 		return java.sql.Types.CHAR;
 	}
 	
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		String s=format.get().format((Date)value);
 		st.setString(index, s);
 		return value;
@@ -37,7 +37,7 @@ public class CharTimestampMapping extends AColumnMapping<java.sql.Timestamp>{
 		return super.wrapSqlStr(value.toString());
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		String s=rs.getString(n);
 		if(StringUtils.isEmpty(s)){
 			return null;
@@ -50,5 +50,10 @@ public class CharTimestampMapping extends AColumnMapping<java.sql.Timestamp>{
 			}
 			return new java.sql.Timestamp(d.getTime());
 		}
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return java.sql.Timestamp.class;
 	}
 }

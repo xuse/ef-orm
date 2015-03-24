@@ -16,7 +16,7 @@ import jef.tools.DateFormats;
  * @author jiyi
  *
  */
-public class DateStringMapping extends AbstractTimeMapping<String>{
+public class DateStringMapping extends AbstractTimeMapping{
 	
 	private ThreadLocal<DateFormat> format=DateFormats.DATE_CS;
 	
@@ -28,7 +28,7 @@ public class DateStringMapping extends AbstractTimeMapping<String>{
 	}
 	
 	
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
 			st.setNull(index, java.sql.Types.DATE);
 		}else{
@@ -55,7 +55,7 @@ public class DateStringMapping extends AbstractTimeMapping<String>{
 		}
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		java.sql.Date date= rs.getDate(n);
 		if(date==null)return null;
 		return format.get().format(date);
@@ -69,5 +69,10 @@ public class DateStringMapping extends AbstractTimeMapping<String>{
 	@Override
 	public Object getCurrentValue() {
 		return format.get().format(new Date());
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return String.class;
 	}
 }

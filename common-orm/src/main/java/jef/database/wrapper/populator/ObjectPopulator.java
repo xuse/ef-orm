@@ -35,7 +35,7 @@ public final class ObjectPopulator implements InstancePopulator{
 			String fieldName=entry.getKey();
 			ColumnDescription c=entry.getValue();
 			// Note: 使用getObject方法时，在Oracle 2008-2-2 10.2.4.0驱动下会变为getDate()，从而丢失时分秒。
-			Object obj=c.getAccessor().getProperObject(rs, c.getN());
+			Object obj=c.getAccessor().jdbcGet(rs, c.getN());
 			if(!flag && obj!=null){
 				flag=true;
 			}
@@ -45,7 +45,7 @@ public final class ObjectPopulator implements InstancePopulator{
 		}
 		
 		if(bindRowidForColumn>0){
-			String rowid=(String)ColumnMappings.ROWID.getProperObject(rs, bindRowidForColumn);
+			String rowid=(String)ColumnMappings.ROWID.jdbcGet(rs, bindRowidForColumn);
 			((IQueryableEntity) wrapper.getWrapped()).bindRowid(rowid);
 		}
 		if(processor!=null){
@@ -60,11 +60,11 @@ public final class ObjectPopulator implements InstancePopulator{
 			String fieldName=entry.getKey();
 			ColumnDescription c=entry.getValue();
 			// Note: 使用getObject方法时，在Oracle 2008-2-2 10.2.4.0驱动下会变为getDate()，从而丢失时分秒。
-			Object obj=c.getAccessor().getProperObject(rs, c.getN());
+			Object obj=c.getAccessor().jdbcGet(rs, c.getN());
 			wrapper.setPropertyValue(fieldName, obj);
 		}
 		if(bindRowidForColumn>0){
-			String rowid=(String)ColumnMappings.ROWID.getProperObject(rs, bindRowidForColumn);
+			String rowid=(String)ColumnMappings.ROWID.jdbcGet(rs, bindRowidForColumn);
 			((IQueryableEntity) wrapper.getWrapped()).bindRowid(rowid);
 		}
 		if(processor!=null){

@@ -13,6 +13,7 @@ import java.util.Properties;
 import jef.common.log.LogUtil;
 import jef.database.DbCfg;
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 import jef.database.DbUtils;
 import jef.database.datasource.DataSourceInfoImpl;
 import jef.database.datasource.MapDataSourceInfoLookup;
@@ -221,7 +222,7 @@ public class JefJUnit4DatabaseTestRunner extends BlockJUnit4ClassRunner {
 	private DbConnectionHolder createDbClient(DataSource ds) {
 		MetaHolder.clear();
 		int max = JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50);
-		DbClient db = new DbClient(apply(ds.url()), apply(ds.user()), apply(ds.password()), max);
+		DbClient db = new DbClientBuilder(apply(ds.url()), apply(ds.user()), apply(ds.password())).setMaxPoolSize(max).build();
 		DbConnectionHolder holder = new DbConnectionHolder(ds, db);
 		connections.put(ds.name(), holder);
 		return holder;

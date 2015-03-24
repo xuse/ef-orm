@@ -6,8 +6,8 @@ import java.sql.SQLException;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 
-public class NumIntBooleanMapping extends AColumnMapping<Boolean>{
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+public class NumIntBooleanMapping extends AColumnMapping{
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
 			st.setNull(index, java.sql.Types.INTEGER);
 		}else{
@@ -25,9 +25,14 @@ public class NumIntBooleanMapping extends AColumnMapping<Boolean>{
 		return value.toString();
 	}
 	
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		Object obj=rs.getObject(n);
 		if(obj==null)return null;
 		return ((Number)obj).intValue()!=0;
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return Boolean.class;
 	}
 }

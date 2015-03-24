@@ -74,6 +74,7 @@ import jef.database.annotation.JoinType;
 import jef.database.annotation.NoForceEnhance;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.dialect.type.ColumnMappings;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.create.ColumnDefinition;
@@ -272,14 +273,14 @@ public final class MetaHolder {
 	public static ITableMetadata initMetadata(Class<? extends IQueryableEntity> clz, String schema, String tablename) {
 		Assert.notNull(clz);
 		ITableMetadata me = (TableMetadata) pool.get(clz);
-		//initData方法会处理关于缓存的问题
+		// initData方法会处理关于缓存的问题
 		me = initData(clz);
-		if(me instanceof TableMetadata){
-			TableMetadata m=(TableMetadata)me;
+		if (me instanceof TableMetadata) {
+			TableMetadata m = (TableMetadata) me;
 			if (schema != null)
 				m.setSchema(getMappingSchema(schema));
 			if (StringUtils.isNotEmpty(tablename))
-				m.setTableName(tablename);	
+				m.setTableName(tablename);
 		}
 		return me;
 	}
@@ -320,19 +321,19 @@ public final class MetaHolder {
 	public static Collection<AbstractMetadata> getCachedModels() {
 		return pool.values();
 	}
-	
+
 	public static final AbstractMetadata getMetaOrTemplate(Class<?> clz) {
 		Assert.notNull(clz);
 		if (clz == VarObject.class) {
 			throw new IllegalArgumentException("A VarObject class does not indicted to any table metadata.");
 		}
 		AbstractMetadata m = pool.get(clz);
-		if(m==null){
-			m= initData(clz);
+		if (m == null) {
+			m = initData(clz);
 		}
 		return m;
 	}
-	
+
 	/**
 	 * 根据类获取表模型
 	 * 
@@ -345,10 +346,10 @@ public final class MetaHolder {
 			throw new IllegalArgumentException("A VarObject class does not indicted to any table metadata.");
 		}
 		AbstractMetadata m = pool.get(clz);
-		if(m==null){
-			m= initData(clz);
+		if (m == null) {
+			m = initData(clz);
 		}
-		if(m.getType()==EntityType.TEMPLATE){
+		if (m.getType() == EntityType.TEMPLATE) {
 			throw new IllegalArgumentException("A Template class does not indicted to any table metadata.");
 		}
 		return m;
@@ -390,7 +391,7 @@ public final class MetaHolder {
 			if (m1 != null)
 				return m1; // 双重检查锁定
 		}
-//		System.err.println("正在解析类:" + clz);
+		// System.err.println("正在解析类:" + clz);
 		if (IQueryableEntity.class.isAssignableFrom(clz)) {
 			// 计算动态扩展字段
 			DynamicTable dt = clz.getAnnotation(DynamicTable.class);
@@ -412,17 +413,17 @@ public final class MetaHolder {
 	private static AbstractMetadata initVarTemplate(Class<? extends EntityExtensionSupport> clz, DynamicTable dt) {
 		AnnotationProvider annos = config.getAnnotations(clz);
 		List<java.lang.reflect.Field> unprocessedField = new ArrayList<java.lang.reflect.Field>();
-		TableMetadata meta=internalProcess(clz, unprocessedField, annos);
+		TableMetadata meta = internalProcess(clz, unprocessedField, annos);
 		// 加载分表策略
 		Assert.notNull(partitionLoader, "the Partition loader is null!");
-		if(partitionLoader.get(clz)!=null){
+		if (partitionLoader.get(clz) != null) {
 			throw new UnsupportedOperationException("Not support a dynamic template with partition.");
 		}
-		
+
 		ExtensionTemplate ef = new ExtensionTemplate(dt, clz, meta);
 		EfPropertiesExtensionProvider.getInstance().register(clz, ef);
-		TemplateMetadata result=new TemplateMetadata(ef);
-		result.setUnprocessedFields(unprocessedField,annos);
+		TemplateMetadata result = new TemplateMetadata(ef);
+		result.setUnprocessedFields(unprocessedField, annos);
 		pool.put(clz, result);
 		return result;
 	}
@@ -430,20 +431,20 @@ public final class MetaHolder {
 	private static AbstractMetadata initVarEntity(Class<? extends EntityExtensionSupport> clz, DynamicKeyValueExtension dkv) {
 		AnnotationProvider annos = config.getAnnotations(clz);
 		List<java.lang.reflect.Field> unprocessedField = new ArrayList<java.lang.reflect.Field>();
-		TableMetadata raw=internalProcess(clz,unprocessedField,annos);
-		
+		TableMetadata raw = internalProcess(clz, unprocessedField, annos);
+
 		// 加载分表策略
 		Assert.notNull(partitionLoader, "the Partition loader is null!");
 		raw.setPartition(partitionLoader.get(clz));
-		
+
 		KvExtensionImpl ef = new KvExtensionImpl(dkv, clz, raw);
 		EfPropertiesExtensionProvider.getInstance().register(clz, ef);
-		AbstractMetadata meta=ef.getDefault().getMeta();
-		
-		//此时就将基本字段计算完成的元数据加入缓存，以免在多表关系处理时遭遇死循环
+		AbstractMetadata meta = ef.getDefault().getMeta();
+
+		// 此时就将基本字段计算完成的元数据加入缓存，以免在多表关系处理时遭遇死循环
 		pool.put(clz, meta);
 		ef.initMeta();
-		
+
 		// 针对未处理的字段，当做外部引用关系处理
 		for (java.lang.reflect.Field f : unprocessedField) {
 			// 将这个字段作为外部引用处理
@@ -475,11 +476,11 @@ public final class MetaHolder {
 	private static AbstractMetadata initEntity(Class<? extends IQueryableEntity> clz) {
 		AnnotationProvider annos = config.getAnnotations(clz);
 		List<java.lang.reflect.Field> unprocessedField = new ArrayList<java.lang.reflect.Field>();
-		TableMetadata meta=internalProcess(clz,unprocessedField,annos);
+		TableMetadata meta = internalProcess(clz, unprocessedField, annos);
 		// 加载分表策略
 		Assert.notNull(partitionLoader, "the Partition loader is null!");
 		meta.setPartition(partitionLoader.get(clz));
-		
+
 		// 此时就将基本字段计算完成的元数据加入缓存，以免在多表关系处理时遭遇死循环
 		pool.put(clz, meta);
 		// 针对未处理的字段，当做外部引用关系处理
@@ -492,7 +493,7 @@ public final class MetaHolder {
 		return meta;
 	}
 
-	private static TableMetadata internalProcess(Class<? extends IQueryableEntity> clz,List<java.lang.reflect.Field> unprocessedField,AnnotationProvider annos) {
+	private static TableMetadata internalProcess(Class<? extends IQueryableEntity> clz, List<java.lang.reflect.Field> unprocessedField, AnnotationProvider annos) {
 		{
 			EasyEntity ee = annos.getAnnotation(EasyEntity.class);
 			if (ORMConfig.getInstance().isCheckEnhancement()) {
@@ -677,32 +678,62 @@ public final class MetaHolder {
 				}
 			}
 
+			String columnName = getColumnName(field, c);
 			// 在得到了元模型的情况下
-			javax.persistence.Id id = annos.getFieldAnnotation(f, javax.persistence.Id.class);
+			boolean isPK = annos.getFieldAnnotation(f, javax.persistence.Id.class) != null;
 			GeneratedValue gv = annos.getFieldAnnotation(f, javax.persistence.GeneratedValue.class);
+			jef.database.annotation.Type mappingHint = annos.getFieldAnnotation(f, jef.database.annotation.Type.class);
 			ColumnType ct;
+			ColumnMapping type=null;
+			Class<?> fieldType;
+			if (mappingHint != null) {
+				type=BeanUtils.newInstance(mappingHint.value());
+				fieldType=type.getFieldType();
+			}else{
+				fieldType=f.getType();
+			}
 			try {
 				if (c == null || StringUtils.isEmpty(c.columnDefinition())) {// 在没有Annonation的情况下,根据Field类型默认生成元数�?
-					ct = defaultColumnTypeByJava(f, c, gv, annos);
+					ct = defaultColumnTypeByJava(f, c, gv, annos,fieldType);
 				} else {
 					ct = createTypeByAnnotation(c, gv, f, annos);
 				}
 			} catch (Exception e) {
 				throw new IllegalArgumentException(processingClz + " has invalid field/column " + f.getName(), e);
 			}
-			if (id != null)
+
+			if (isPK)
 				ct.notNull();
-			meta.putJavaField(field, ct, id, c);
+			
+			try {
+				if(type==null){
+					type = ColumnMappings.getMapping(field, meta, columnName, ct, false);	
+				}else{
+					type.init(field, columnName, ct, meta);
+				}
+			} catch (IllegalArgumentException e) {
+				throw new IllegalArgumentException(meta.getName() + ":" + field.name() + " can not mapping to sql type.", e);
+			}
+			meta.putJavaField(field, type, columnName, isPK);
+
 			// 设置索引
 			Indexed i = annos.getFieldAnnotation(f, Indexed.class);// 单列索引
 			if (i != null) {
 				Map<String, Object> data = new HashMap<String, Object>(4);
-				data.put("fields", new String[] { i.desc()?field.name()+" desc":field.name() });
+				data.put("fields", new String[] { i.desc() ? field.name() + " desc" : field.name() });
 				data.put("unique", i.unique());
 				data.put("definition", i.definition());
 				data.put("name", i.name());
 				meta.indexMap.add(BeanUtils.asAnnotation(jef.database.annotation.Index.class, data));
 			}
+		}
+	}
+
+	private static String getColumnName(Field field, Column a) {
+		if (a != null && a.name().length() > 0) {
+			return a.name().trim();
+		} else {
+			return field.name();
 		}
 	}
 
@@ -716,15 +747,15 @@ public final class MetaHolder {
 		}
 		return null;
 	}
-	
+
 	protected static boolean processReference(java.lang.reflect.Field f, AbstractMetadata meta, AnnotationProvider annos) {
 		FieldOfTargetEntity targetField = annos.getFieldAnnotation(f, FieldOfTargetEntity.class);
-		Cascade cascade=annos.getFieldAnnotation(f, Cascade.class);
-		
+		Cascade cascade = annos.getFieldAnnotation(f, Cascade.class);
+
 		if (annos.getFieldAnnotation(f, OneToOne.class) != null) {
 			OneToOne r1Vs1 = annos.getFieldAnnotation(f, OneToOne.class);
 			ITableMetadata target = getTargetType(r1Vs1.targetEntity(), targetField, f, false);
-			CascadeConfig config = new CascadeConfig(cascade,r1Vs1);
+			CascadeConfig config = new CascadeConfig(cascade, r1Vs1);
 			config.path = getHint(annos, f, meta, target);
 			if (config.path == null) {
 				String mappedBy = r1Vs1.mappedBy();
@@ -740,11 +771,11 @@ public final class MetaHolder {
 			}
 			return true;
 		}
-		
+
 		if (annos.getFieldAnnotation(f, OneToMany.class) != null) {
 			OneToMany r1VsN = annos.getFieldAnnotation(f, OneToMany.class);
 			ITableMetadata target = getTargetType(r1VsN.targetEntity(), targetField, f, true);
-			CascadeConfig config = new CascadeConfig(cascade,r1VsN);
+			CascadeConfig config = new CascadeConfig(cascade, r1VsN);
 			config.path = getHint(annos, f, meta, target);
 			if (config.path == null) {
 				String mappedBy = r1VsN.mappedBy();
@@ -753,7 +784,7 @@ public final class MetaHolder {
 				}
 			}
 			if (targetField == null) {
-				meta.addCascadeField(f.getName(), target,config);
+				meta.addCascadeField(f.getName(), target, config);
 			} else {
 				jef.database.Field field = target.getField(targetField.value());
 				meta.addCascadeField(f.getName(), field, config);
@@ -764,7 +795,7 @@ public final class MetaHolder {
 		if (annos.getFieldAnnotation(f, ManyToOne.class) != null) {
 			ManyToOne rNVs1 = annos.getFieldAnnotation(f, ManyToOne.class);
 			ITableMetadata target = getTargetType(rNVs1.targetEntity(), targetField, f, false);
-			CascadeConfig config = new CascadeConfig(cascade,rNVs1);
+			CascadeConfig config = new CascadeConfig(cascade, rNVs1);
 			config.path = getHint(annos, f, meta, target);
 			if (targetField == null) {
 				meta.addCascadeField(f.getName(), target, config);
@@ -774,12 +805,11 @@ public final class MetaHolder {
 			}
 			return true;
 		}
-		
-		
+
 		if (annos.getFieldAnnotation(f, ManyToMany.class) != null) {
 			ManyToMany rNVsN = annos.getFieldAnnotation(f, ManyToMany.class);
 			ITableMetadata target = getTargetType(rNVsN.targetEntity(), targetField, f, true);
-			CascadeConfig config = new CascadeConfig(cascade,rNVsN);
+			CascadeConfig config = new CascadeConfig(cascade, rNVsN);
 			config.path = getHint(annos, f, meta, target);
 			if (config.path == null) {
 				String mappedBy = rNVsN.mappedBy();
@@ -788,7 +818,7 @@ public final class MetaHolder {
 				}
 			}
 			if (targetField == null) {
-				meta.addCascadeField(f.getName(), target,config);
+				meta.addCascadeField(f.getName(), target, config);
 			} else {
 				jef.database.Field field = target.getField(targetField.value());
 				meta.addCascadeField(f.getName(), field, config);
@@ -904,7 +934,7 @@ public final class MetaHolder {
 			if (ex instanceof BinaryExpression) {
 				BinaryExpression bin = (BinaryExpression) ex;
 				String left = bin.getLeftExpression().toString().trim();
-				ColumnMapping<?> leftF = targetMeta.findField(left);// 假定左边的是字段
+				ColumnMapping leftF = targetMeta.findField(left);// 假定左边的是字段
 				JoinKey key;
 				if (leftF == null) {
 					key = new JoinKey(null, null, new FBIField(bin, ReadOnlyQuery.getEmptyQuery(targetMeta)));// 建立一个函数Field
@@ -1012,25 +1042,28 @@ public final class MetaHolder {
 			return new ColumnType.XML().setNullable(nullable);
 		} else if ("BIT".equalsIgnoreCase(def)) {
 			return new ColumnType.Boolean().setNullable(nullable);
+		} else if(annos.getFieldAnnotation(field, jef.database.annotation.Type.class)!=null){
+			jef.database.annotation.Type t=annos.getFieldAnnotation(field, jef.database.annotation.Type.class);
+			ColumnMapping cm=BeanUtils.newInstance(t.value());
+			return new ColumnType.Other(def, cm.getSqlType(), field.getType());
 		} else {
 			throw new IllegalArgumentException("Unknow column Def:" + def);
 			// return new ColumnType.Unknown(def).setNullable(nullable);
 		}
 	}
 
-	private static ColumnType defaultColumnTypeByJava(java.lang.reflect.Field field, Column c, GeneratedValue gv, AnnotationProvider annos) {
+	private static ColumnType defaultColumnTypeByJava(java.lang.reflect.Field field, Column c, GeneratedValue gv, AnnotationProvider annos,Class<?> type) {
 		int len = c == null ? 0 : c.length();
 		int precision = c == null ? 0 : c.precision();
 		int scale = c == null ? 0 : c.scale();
 		boolean nullable = c == null ? true : c.nullable();
 		GenerationType geType = gv == null ? null : gv.strategy();
-		if (geType != null && field.getType() == String.class) {
+		if (geType != null && type == String.class) {
 			return new ColumnType.GUID();
-		} else if (geType != null && Number.class.isAssignableFrom(BeanUtils.toWrapperClass(field.getType()))) {
+		} else if (geType != null && Number.class.isAssignableFrom(BeanUtils.toWrapperClass(type))) {
 			return new ColumnType.AutoIncrement(precision, geType, annos.getFieldAnnotation(field, TableGenerator.class), annos.getFieldAnnotation(field, SequenceGenerator.class), annos.getFieldAnnotation(field, HiloGeneration.class));
 		}
 		Lob lob = annos.getFieldAnnotation(field, Lob.class);
-		Class<?> type = field.getType();
 		if (type == String.class) {
 			if (lob != null)
 				return new ColumnType.Clob().setNullable(nullable);

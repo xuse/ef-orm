@@ -7,7 +7,7 @@ import java.sql.Statement;
 
 import jef.common.log.LogUtil;
 import jef.database.DbClient;
-import jef.database.DbClientFactory;
+import jef.database.DbClientBuilder;
 import jef.database.DbUtils;
 import jef.database.DebugUtil;
 import jef.database.NativeQuery;
@@ -60,7 +60,7 @@ public class ConnectionPoolTest {
 	@Test
 	@Ignore
 	public void testPoolReconnect() throws SQLException{
-		DbClient db=DbClientFactory.getDbClient("oracle", "oel1246.hz.asiainfo.com", 1521, "oel1246", "XG", "XG",0);
+		DbClient db=new DbClientBuilder("oracle", "oel1246.hz.asiainfo.com", 1521, "oel1246", "XG", "XG").setMaxPoolSize(1).build();
 		NativeQuery<Integer> config=db.createNativeQuery("select count(*) from JEF_NAMED_QUERIES",Integer.class);
 		LogUtil.show(config.getSingleResult());
 		System.out.println("请拔掉网线。");

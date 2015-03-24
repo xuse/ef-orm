@@ -12,12 +12,12 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 import jef.tools.IOUtils;
 
-public class ClobCharArrayMapping extends AColumnMapping<char[]>{
+public class ClobCharArrayMapping extends AColumnMapping{
 	public int getSqlType() {
 		return java.sql.Types.CLOB;
 	}
 
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
 			st.setNull(index, session.getImplementationSqlType(Types.CLOB));
 		}else{
@@ -38,7 +38,7 @@ public class ClobCharArrayMapping extends AColumnMapping<char[]>{
 		return true;
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		Object obj=rs.getObject(n);
 		if(obj==null)return null;
 		if(obj instanceof String){
@@ -50,5 +50,10 @@ public class ClobCharArrayMapping extends AColumnMapping<char[]>{
 		} catch (IOException e) {
 			throw new SQLException("Error at reading clob",e);
 		}
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return char[].class;
 	}
 }

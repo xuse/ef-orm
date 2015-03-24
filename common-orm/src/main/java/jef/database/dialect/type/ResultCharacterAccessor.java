@@ -7,7 +7,7 @@ import jef.database.jdbc.result.IResultSet;
 final  class ResultCharacterAccessor implements ResultSetAccessor{
 	private Character defaultValue;
 	
-	public Object getProperObject(IResultSet rs,int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs,int n) throws SQLException {
 		String value=rs.getString(n);
 		if(value!=null && value.length()>0){
 			return value.charAt(0);

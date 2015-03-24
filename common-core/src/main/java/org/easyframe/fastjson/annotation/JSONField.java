@@ -24,11 +24,17 @@ import org.easyframe.fastjson.parser.Feature;
 import org.easyframe.fastjson.serializer.SerializerFeature;
 
 /**
- * @author wenshao<szujobs@hotmail.com>
+ * @author wenshao[szujobs@hotmail.com]
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.FIELD, ElementType.PARAMETER })
 public @interface JSONField {
+    /**
+     * config encode/decode ordinal
+     * @since 1.1.42
+     * @return
+     */
+    int ordinal() default 0;
 
     String name() default "";
 

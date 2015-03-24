@@ -8,9 +8,9 @@ import java.util.Date;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 
-public class SqlTimeDateMapping extends AColumnMapping<Date>{
+public class SqlTimeDateMapping extends AColumnMapping{
 
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
 			st.setNull(index, java.sql.Types.TIME);
 			return value;
@@ -33,9 +33,14 @@ public class SqlTimeDateMapping extends AColumnMapping<Date>{
 		throw new IllegalArgumentException("The input param can not cast to Date.");
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		java.sql.Time obj=rs.getTime(n);
 		if(obj==null)return null;
 		return new Date(obj.getTime()); 
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return Date.class;
 	}
 }

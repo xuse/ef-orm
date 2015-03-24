@@ -20,7 +20,7 @@ public interface AliasProvider {
 	 * @param forSelect 当生成查询语句时true，当拼装结果时false
 	 * @return
 	 */
-	String getSelectedAliasOf(ColumnMapping<?> f, DatabaseDialect dialect, String schema);
+	String getSelectedAliasOf(ColumnMapping f, DatabaseDialect dialect, String schema);
 	
 	/**
 	 * 结果时获得列别名，要求返回大写
@@ -29,16 +29,16 @@ public interface AliasProvider {
 	 * @param schema
 	 * @return
 	 */
-	String getResultAliasOf(ColumnMapping<?> f,String schema);
+	String getResultAliasOf(ColumnMapping f,String schema);
 	
 	public static final AliasProvider DEFAULT=new AliasProvider(){
-		public String getSelectedAliasOf(ColumnMapping<?> f, DatabaseDialect profile, String alias) {
+		public String getSelectedAliasOf(ColumnMapping f, DatabaseDialect profile, String alias) {
 			String fieldName = f.fieldName();
 			return profile.getColumnNameToUse(StringUtils.isEmpty(alias) ?fieldName: StringUtils.concat(alias, SqlContext.DIVEDER, fieldName));
 		}
 
 		@Override
-		public String getResultAliasOf(ColumnMapping<?> f, String alias) {
+		public String getResultAliasOf(ColumnMapping f, String alias) {
 			String fieldName = f.fieldName();
 			return StringUtils.isEmpty(alias) ? fieldName.toUpperCase():StringUtils.concat(alias, SqlContext.DIVEDER, fieldName).toUpperCase() ;
 		}

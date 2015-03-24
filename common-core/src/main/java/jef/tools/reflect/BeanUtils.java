@@ -4,15 +4,11 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -34,6 +30,7 @@ import jef.http.client.support.CommentEntry;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.DateUtils;
+import jef.tools.Exceptions;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtil;
 import jef.tools.collection.IterableAccessor;
@@ -643,10 +640,6 @@ public class BeanUtils {
 			clz = Class.forName(className);
 			return newInstance(clz, params);
 		} catch (ClassNotFoundException e) {
-			// LogUtil.exception(e);
-			return null;
-		} catch (ReflectionException e) {
-			LogUtil.exception(e);
 			return null;
 		}
 	}
@@ -659,10 +652,9 @@ public class BeanUtils {
 	 * @param params
 	 *            构造参数
 	 * @return 实例
-	 * @throws ReflectionException
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> T newInstance(Class<T> cls, Object... params) throws ReflectionException {
+	public static <T> T newInstance(Class<T> cls, Object... params){
 		Constructor<T> me = null;
 		if (params.length == 0) {
 			try {
@@ -674,8 +666,7 @@ public class BeanUtils {
 					return me.newInstance(params);
 				}
 			} catch (Exception e) {
-				LogUtil.exception(e);
-				throw new ReflectionException(e);
+				Exceptions.thorwAsIllegalState(e); 
 			}
 		}
 		List<Class<?>> list = new ArrayList<Class<?>>();

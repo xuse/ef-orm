@@ -1,10 +1,11 @@
-package org.easyframe.fastjson.annotation;
+﻿package org.easyframe.fastjson.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.easyframe.fastjson.parser.Feature;
 import org.easyframe.fastjson.serializer.SerializerFeature;
 
 /**
@@ -32,6 +33,8 @@ public @interface JSONType {
      */
     SerializerFeature[] serialzeFeatures() default {};
     
+    Feature[] parseFeatures() default {};
+
     boolean alphabetic() default true;
     /**
      * 反序列化时，如使用全序列化，则使用另一个类型来实例化，用于注解在抽象类或接口上

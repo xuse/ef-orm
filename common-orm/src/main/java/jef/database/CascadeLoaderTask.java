@@ -69,7 +69,7 @@ final class CascadeLoaderTask implements LazyLoadTask {
 			if (StringUtils.isNotEmpty(rs.getOrderBy())) {
 				OrderBy order = DbUtils.parseOrderBy(rs.getOrderBy());
 				for (OrderByElement ele : order.getOrderByElements()) {
-					ColumnMapping<?> field = targetTableMeta.findField(ele.getExpression().toString());
+					ColumnMapping field = targetTableMeta.findField(ele.getExpression().toString());
 					if (field != null) {
 						orders.add(new OrderField(field.field(), ele.isAsc()));
 					}

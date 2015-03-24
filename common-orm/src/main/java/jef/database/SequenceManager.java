@@ -54,7 +54,7 @@ public final class SequenceManager {
 	 * @return
 	 * @throws SQLException
 	 */
-	public Sequence getSequence(AutoIncrementMapping<?> fieldDef, OperateTarget client) throws SQLException {
+	public Sequence getSequence(AutoIncrementMapping fieldDef, OperateTarget client) throws SQLException {
 		if (fieldDef == null)
 			return null;
 		String name = fieldDef.getSequenceName(client.getProfile());
@@ -93,7 +93,7 @@ public final class SequenceManager {
 	 * @return
 	 * @throws SQLException
 	 */
-	public Sequence getSequence(AutoIncrementMapping<?> fieldDef, String dbKey) throws SQLException {
+	public Sequence getSequence(AutoIncrementMapping fieldDef, String dbKey) throws SQLException {
 		return getSequence(fieldDef,parent.selectTarget(dbKey));
 	}
 
@@ -135,7 +135,7 @@ public final class SequenceManager {
 	 * @param meta
 	 * @throws SQLException
 	 */
-	public void dropSequence(AutoIncrementMapping<?> mapping, OperateTarget meta) throws SQLException {
+	public void dropSequence(AutoIncrementMapping mapping, OperateTarget meta) throws SQLException {
 		DatabaseDialect profile = meta.getProfile();
 		GenerationType type = mapping.getGenerationType(profile);
 		String datasource = mapping.getSequenceDataSource(profile);

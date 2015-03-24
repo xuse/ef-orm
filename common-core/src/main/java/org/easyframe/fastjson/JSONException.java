@@ -16,7 +16,7 @@
 package org.easyframe.fastjson;
 
 /**
- * @author wenshao<szujobs@hotmail.com>
+ * @author wenshao[szujobs@hotmail.com]
  */
 public class JSONException extends RuntimeException {
 

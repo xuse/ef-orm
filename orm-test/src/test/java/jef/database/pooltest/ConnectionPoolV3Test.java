@@ -26,7 +26,7 @@ public class ConnectionPoolV3Test {
 	@Test
 	public void testPoolV2() throws SQLException{
 		DataSource ds=DbUtils.createSimpleDataSource("jdbc:derby:./db", "", "");
-		final IUserManagedPool pool=PoolService.getPool(ds, 20,TransactionMode.JPA);
+		final IUserManagedPool pool=PoolService.getPool(ds,3, 20,TransactionMode.JPA);
 		doTest(pool);
 	}
 

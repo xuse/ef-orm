@@ -30,6 +30,7 @@ import static org.easyframe.fastjson.parser.JSONToken.RBRACKET;
 import static org.easyframe.fastjson.parser.JSONToken.SET;
 import static org.easyframe.fastjson.parser.JSONToken.TREE_SET;
 import static org.easyframe.fastjson.parser.JSONToken.TRUE;
+import static org.easyframe.fastjson.parser.JSONToken.UNDEFINED;
 
 import java.io.Closeable;
 import java.lang.reflect.ParameterizedType;
@@ -69,7 +70,7 @@ import org.easyframe.fastjson.serializer.StringCodec;
 import org.easyframe.fastjson.util.TypeUtils;
 
 /**
- * @author wenshao<szujobs@hotmail.com>
+ * @author wenshao[szujobs@hotmail.com]
  */
 public class DefaultJSONParser extends AbstractJSONParser implements Closeable {
 
@@ -189,6 +190,11 @@ public class DefaultJSONParser extends AbstractJSONParser implements Closeable {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public final Object parseObject(final Map object, Object fieldName) {
         final JSONLexer lexer = this.lexer;
+        
+        if (lexer.token() == JSONToken.NULL) {
+            lexer.next();
+            return null;
+        }
 
         if (lexer.token() != JSONToken.LBRACE && lexer.token() != JSONToken.COMMA) {
             throw new JSONException("syntax error, expect {, actual " + lexer.tokenName());
@@ -329,7 +335,13 @@ public class DefaultJSONParser extends AbstractJSONParser implements Closeable {
                         Object refValue = null;
                         if ("@".equals(ref)) {
                             if (this.getContext() != null) {
-                                refValue = this.getContext().getObject();
+                                ParseContext thisContext = this.getContext();
+                                Object thisObj = thisContext.getObject();
+                                if (thisObj instanceof Object[] || thisObj instanceof Collection<?>) {
+                                    refValue = thisObj;
+                                } else if (thisContext.getParentContext() != null) {
+                                    refValue = thisContext.getParentContext().getObject();
+                                }
                             }
                         } else if ("..".equals(ref)) {
                             ParseContext parentContext = context.getParentContext();
@@ -370,15 +382,10 @@ public class DefaultJSONParser extends AbstractJSONParser implements Closeable {
                 if (!setContextFlag) {
                     setContext(object, fieldName);
                     setContextFlag = true;
-
-                    // fix Issue #40
-                    if (this.context != null && !(fieldName instanceof Integer)) {
-                        this.popContext();
-                    }
                 }
-                
+
                 if (object.getClass() == JSONObject.class) {
-                    key = (key == null) ? "null" : key.toString(); 
+                    key = (key == null) ? "null" : key.toString();
                 }
 
                 Object value;
@@ -401,7 +408,7 @@ public class DefaultJSONParser extends AbstractJSONParser implements Closeable {
                     if (lexer.token() == JSONToken.LITERAL_INT) {
                         value = lexer.integerValue();
                     } else {
-                        value = lexer.numberValue();
+                        value = lexer.decimalValue(isEnabled(Feature.UseBigDecimal));
                     }
 
                     object.put(key, value);
@@ -422,7 +429,21 @@ public class DefaultJSONParser extends AbstractJSONParser implements Closeable {
                     }
                 } else if (ch == '{') { // 减少嵌套，兼容android
                     lexer.nextToken();
-                    Object obj = this.parseObject(new JSONObject(), key);
+
+                    final boolean parentIsArray = fieldName != null && fieldName.getClass() == Integer.class;
+
+                    JSONObject input = new JSONObject(isEnabled(Feature.OrderedField));
+                    ParseContext ctxLocal = null;
+
+                    if (!parentIsArray) {
+                        ctxLocal = setContext(context, input, key);
+                    }
+
+                    Object obj = this.parseObject(input, key);
+                    if (ctxLocal != null && input != obj) {
+                        ctxLocal.setObject(object);
+                    }
+
                     checkMapResolve(object, key.toString());
 
                     if (object.getClass() == JSONObject.class) {
@@ -431,7 +452,9 @@ public class DefaultJSONParser extends AbstractJSONParser implements Closeable {
                         object.put(key, obj);
                     }
 
-                    setContext(context, obj, key);
+                    if (parentIsArray) {
+                        setContext(context, obj, key);
+                    }
 
                     if (lexer.token() == JSONToken.RBRACE) {
                         lexer.nextToken();
@@ -446,7 +469,7 @@ public class DefaultJSONParser extends AbstractJSONParser implements Closeable {
                 } else {
                     lexer.nextToken();
                     value = parse();
-                    
+
                     if (object.getClass() == JSONObject.class) {
                         key = key.toString();
                     }
@@ -505,6 +528,21 @@ public class DefaultJSONParser extends AbstractJSONParser implements Closeable {
         if (lexer.token() == JSONToken.NULL) {
             lexer.nextToken();
             return null;
+        }
+
+        if (lexer.token() == JSONToken.LITERAL_STRING) {
+            type = TypeUtils.unwrap(type);
+            if (type == byte[].class) {
+                byte[] bytes = lexer.bytesValue();
+                lexer.nextToken();
+                return (T) bytes;
+            }
+
+            if (type == char[].class) {
+                String strVal = lexer.stringVal();
+                lexer.nextToken();
+                return (T) strVal.toCharArray();
+            }
         }
 
         ObjectDeserializer derializer = config.getDeserializer(type);
@@ -751,6 +789,16 @@ public class DefaultJSONParser extends AbstractJSONParser implements Closeable {
             }
 
             FieldDeserializer fieldDeser = setters.get(key);
+            
+            if (fieldDeser == null && key != null) {
+                for (Map.Entry<String, FieldDeserializer> entry : setters.entrySet()) {
+                    if (key.equalsIgnoreCase((entry.getKey()))) {
+                        fieldDeser = entry.getValue();
+                        break;
+                    }
+                }
+            }
+            
             if (fieldDeser == null) {
                 if (!isEnabled(Feature.IgnoreNotMatch)) {
                     throw new JSONException("setter not found, class " + clazz.getName() + ", property " + key);
@@ -943,7 +991,7 @@ public class DefaultJSONParser extends AbstractJSONParser implements Closeable {
     }
 
     public JSONObject parseObject() {
-        JSONObject object = new JSONObject();
+        JSONObject object = new JSONObject(isEnabled(Feature.OrderedField));
         parseObject(object);
         return object;
     }
@@ -1019,7 +1067,7 @@ public class DefaultJSONParser extends AbstractJSONParser implements Closeable {
                         lexer.nextToken(JSONToken.COMMA);
                         break;
                     case LBRACE:
-                        JSONObject object = new JSONObject();
+                        JSONObject object = new JSONObject(isEnabled(Feature.OrderedField));
                         value = parseObject(object, i);
                         break;
                     case LBRACKET:
@@ -1028,6 +1076,10 @@ public class DefaultJSONParser extends AbstractJSONParser implements Closeable {
                         value = items;
                         break;
                     case NULL:
+                        value = null;
+                        lexer.nextToken(JSONToken.LITERAL_STRING);
+                        break;
+                    case UNDEFINED:
                         value = null;
                         lexer.nextToken(JSONToken.LITERAL_STRING);
                         break;
@@ -1097,7 +1149,7 @@ public class DefaultJSONParser extends AbstractJSONParser implements Closeable {
         }
         return extraTypeProviders;
     }
-    
+
     public List<ExtraTypeProvider> getExtraTypeProvidersDirect() {
         return extraTypeProviders;
     }
@@ -1180,7 +1232,7 @@ public class DefaultJSONParser extends AbstractJSONParser implements Closeable {
                 parseArray(array, fieldName);
                 return array;
             case LBRACE:
-                JSONObject object = new JSONObject();
+                JSONObject object = new JSONObject(isEnabled(Feature.OrderedField));
                 return parseObject(object, fieldName);
             case LITERAL_INT:
                 Number intValue = lexer.integerValue();
@@ -1207,6 +1259,9 @@ public class DefaultJSONParser extends AbstractJSONParser implements Closeable {
 
                 return stringLiteral;
             case NULL:
+                lexer.nextToken();
+                return null;
+            case UNDEFINED:
                 lexer.nextToken();
                 return null;
             case TRUE:
@@ -1284,6 +1339,36 @@ public class DefaultJSONParser extends AbstractJSONParser implements Closeable {
             }
         } finally {
             lexer.close();
+        }
+    }
+
+    public void handleResovleTask(Object value) {
+        if (resolveTaskList == null) {
+            return;
+        }
+
+        int size = resolveTaskList.size();
+        for (int i = 0; i < size; ++i) {
+            ResolveTask task = resolveTaskList.get(i);
+            FieldDeserializer fieldDeser = task.getFieldDeserializer();
+
+            if (fieldDeser == null) {
+                continue;
+            }
+
+            Object object = null;
+            if (task.getOwnerContext() != null) {
+                object = task.getOwnerContext().getObject();
+            }
+
+            String ref = task.getReferenceValue();
+            Object refValue;
+            if (ref.startsWith("$")) {
+                refValue = getObject(ref);
+            } else {
+                refValue = task.getContext().getObject();
+            }
+            fieldDeser.setValue(object, refValue);
         }
     }
 

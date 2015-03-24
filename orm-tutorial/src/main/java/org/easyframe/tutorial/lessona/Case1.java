@@ -10,10 +10,10 @@ import jef.database.DbClient;
 import jef.database.DbUtils;
 import jef.database.DebugUtil;
 import jef.database.ORMConfig;
-import jef.database.annotation.PartitionResult;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
+import jef.database.routing.PartitionResult;
 import jef.tools.DateUtils;
 
 import org.easyframe.tutorial.lessona.entity.Customer;

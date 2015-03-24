@@ -1568,7 +1568,6 @@ public class XMLUtils {
 	 * @throws ReflectionException
 	 * @deprecated 使用loadBean(Element,Class)方法
 	 */
-	@Deprecated
 	public static <W> W elementToBean(Element e, Class<W> clz) throws ReflectionException {
 		return loadBean(e, clz);
 	}
@@ -1624,6 +1623,22 @@ public class XMLUtils {
 		if (bean == null)
 			return null;
 		return appendBean(node, bean, bean.getClass(), tryAttribute, null);
+	}
+	
+	/**
+	 * 将一个或多个节点挂到指定的节点之下。如果两边节点不在同一个Document对象中，会自动创建新的拷贝。
+	 * @param parent 父节点
+	 * @param nodes 多个子节点
+	 */
+	public static void appendChild(Node parent, Node... nodes){
+		Document doc=parent.getOwnerDocument();
+		for(Node node:nodes){
+			if(node.getOwnerDocument()!=doc){
+				parent.appendChild(doc.importNode(node, true));
+			}else{
+				parent.appendChild(node);
+			}
+		}
 	}
 
 	private static Element appendBean(Node parent, Object bean, Class<?> type, Boolean asAttrib, String tagName) {

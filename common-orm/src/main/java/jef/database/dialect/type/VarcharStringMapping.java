@@ -6,8 +6,8 @@ import java.sql.SQLException;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 
-public class VarcharStringMapping extends AColumnMapping<String>{
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+public class VarcharStringMapping extends AColumnMapping{
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		st.setString(index, value==null?null:String.valueOf(value));
 		return value;
 	}
@@ -21,7 +21,12 @@ public class VarcharStringMapping extends AColumnMapping<String>{
 		return super.wrapSqlStr(value.toString());
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		return rs.getString(n);
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return String.class;
 	}
 }

@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import jef.common.Entry;
 import jef.common.log.LogUtil;
-import jef.database.annotation.PartitionResult;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AbstractTimeMapping;
@@ -29,6 +28,7 @@ import jef.database.query.ParameterProvider.MapProvider;
 import jef.database.query.Query;
 import jef.database.query.SqlContext;
 import jef.database.query.SqlExpression;
+import jef.database.routing.PartitionResult;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.UpdateClause;
@@ -159,9 +159,9 @@ public abstract class UpdateProcessor {
 				moveLobFieldsToLast(fields, meta);
 
 				// 增加时间戳自动更新的列
-				AbstractTimeMapping<?>[] autoUpdateTime = meta.getUpdateTimeDef();
+				AbstractTimeMapping[] autoUpdateTime = meta.getUpdateTimeDef();
 				if (autoUpdateTime != null) {
-					for (AbstractTimeMapping<?> tm : autoUpdateTime) {
+					for (AbstractTimeMapping tm : autoUpdateTime) {
 						if (!map.containsKey(tm.field())) {
 							Object value = tm.getAutoUpdateValue(profile, obj);
 							if (value != null) {
@@ -178,7 +178,7 @@ public abstract class UpdateProcessor {
 			for (Map.Entry<Field, Object> entry : fields) {
 				Field field = entry.getKey();
 				Object value = entry.getValue();
-				ColumnMapping<?> vType = meta.getColumnDef(field);
+				ColumnMapping vType = meta.getColumnDef(field);
 
 				if (value == null) {
 					result.addEntry(vType.getColumnName(profile, true), "null");
@@ -257,9 +257,9 @@ public abstract class UpdateProcessor {
 				moveLobFieldsToLast(fields, meta);
 
 				// 增加时间戳自动更新的列
-				AbstractTimeMapping<?>[] autoUpdateTime = meta.getUpdateTimeDef();
+				AbstractTimeMapping[] autoUpdateTime = meta.getUpdateTimeDef();
 				if (autoUpdateTime != null) {
-					for (AbstractTimeMapping<?> tm : autoUpdateTime) {
+					for (AbstractTimeMapping tm : autoUpdateTime) {
 						if (!map.containsKey(tm.field())) {
 							tm.processAutoUpdate(profile, result);
 						}
@@ -355,7 +355,7 @@ public abstract class UpdateProcessor {
 	@SuppressWarnings("unchecked")
 	static java.util.Map.Entry<Field, Object>[] getAllFieldValues(ITableMetadata meta, Map<Field, Object> map, BeanWrapper wrapper, DatabaseDialect profile) {
 		List<Entry<Field, Object>> result = new ArrayList<Entry<Field, Object>>();
-		for (ColumnMapping<?> vType : meta.getColumns()) {
+		for (ColumnMapping vType : meta.getColumns()) {
 			Field field = vType.field();
 			if (map.containsKey(field)) {
 				result.add(new Entry<Field, Object>(field, map.get(field)));
@@ -363,8 +363,8 @@ public abstract class UpdateProcessor {
 				if (vType.isPk()) {
 					continue;
 				}
-				if (vType instanceof AbstractTimeMapping<?>) {
-					AbstractTimeMapping<?> times = (AbstractTimeMapping<?>) vType;
+				if (vType instanceof AbstractTimeMapping) {
+					AbstractTimeMapping times = (AbstractTimeMapping) vType;
 					if (times.isForUpdate()) {
 						Object value = times.getAutoUpdateValue(profile, wrapper.getWrapped());
 						result.add(new Entry<Field, Object>(field, value));

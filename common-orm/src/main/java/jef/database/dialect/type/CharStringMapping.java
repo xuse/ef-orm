@@ -6,12 +6,12 @@ import java.sql.SQLException;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 
-public class CharStringMapping extends AColumnMapping<String>{
+public class CharStringMapping extends AColumnMapping{
 	public int getSqlType() {
 		return java.sql.Types.CHAR;
 	}
 	
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		st.setString(index, (String)value);
 		return value;
 	}
@@ -21,7 +21,12 @@ public class CharStringMapping extends AColumnMapping<String>{
 		return super.wrapSqlStr(value.toString());
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		return rs.getString(n);
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return String.class;
 	}
 }

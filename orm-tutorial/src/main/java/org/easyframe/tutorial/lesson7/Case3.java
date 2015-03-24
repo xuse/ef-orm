@@ -4,6 +4,7 @@ import java.sql.SQLException;
 
 import jef.codegen.EntityEnhancer;
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 import jef.database.DbMetaData;
 import jef.database.NativeCall;
 import jef.database.ORMConfig;
@@ -28,7 +29,7 @@ public class Case3 {
 		//****************************************************
 		//*  请先将此处的URL配置成一个可以连接的MYSQL数据库地址 *
 		//****************************************************
-		db = new DbClient("jdbc:mysql://localhost:3307/test","root","admin",5);
+		db = new DbClientBuilder("jdbc:mysql://localhost:3307/test","root","admin").build();
 		ORMConfig.getInstance().setDebugMode(false);
 		db.dropTable(Employee.class);
 		db.createTable(Employee.class);

@@ -1078,7 +1078,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		}
 
 		public void process(BeanWrapper wrapper, IResultSet rs) throws SQLException {
-			wrapper.setPropertyValue(name, accessor.getProperObject(rs, n));
+			wrapper.setPropertyValue(name, accessor.jdbcGet(rs, n));
 		}
 
 		protected void transform(Object wrapped, IResultSet rs) {

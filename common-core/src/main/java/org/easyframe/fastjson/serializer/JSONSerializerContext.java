@@ -18,7 +18,7 @@ package org.easyframe.fastjson.serializer;
 /**
  * circular references detect
  * 
- * @author wenshao<szujobs@hotmail.com>
+ * @author wenshao[szujobs@hotmail.com]
  */
 public final class JSONSerializerContext {
 

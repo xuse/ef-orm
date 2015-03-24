@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import jef.database.jdbc.result.IResultSet;
 
 final  class ResultStringAccessor implements ResultSetAccessor{
-	public Object getProperObject(IResultSet rs,int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs,int n) throws SQLException {
 		return rs.getString(n);
 	}
 

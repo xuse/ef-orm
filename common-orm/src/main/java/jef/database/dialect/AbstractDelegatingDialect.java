@@ -181,7 +181,7 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	}
 
 	@Override
-	public long getColumnAutoIncreamentValue(AutoIncrementMapping<?> mapping, JDBCTarget db) {
+	public long getColumnAutoIncreamentValue(AutoIncrementMapping mapping, JDBCTarget db) {
 		return dialect.getColumnAutoIncreamentValue(mapping, db);
 	}
 
@@ -226,7 +226,7 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	}
 
 	@Override
-	public String getColumnNameToUse(AColumnMapping<?> name) {
+	public String getColumnNameToUse(AColumnMapping name) {
 		return dialect.getColumnNameToUse(name);
 	}
 

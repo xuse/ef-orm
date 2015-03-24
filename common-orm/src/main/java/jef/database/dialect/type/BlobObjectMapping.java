@@ -19,7 +19,7 @@ import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 
 
-public class BlobObjectMapping extends AColumnMapping<Object> {
+public class BlobObjectMapping extends AColumnMapping {
 	static int blobType;
 
 	static {
@@ -37,7 +37,7 @@ public class BlobObjectMapping extends AColumnMapping<Object> {
 		}
 	}
 
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect profile) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect profile) throws SQLException {
 		if (value == null) {
 			st.setNull(index, profile.getImplementationSqlType(Types.BLOB));
 		} else if (value instanceof byte[]) {
@@ -65,7 +65,7 @@ public class BlobObjectMapping extends AColumnMapping<Object> {
 		return java.sql.Types.BLOB;
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		Object value = rs.getObject(n);
 		if (value == null)
 			return null;
@@ -118,6 +118,11 @@ public class BlobObjectMapping extends AColumnMapping<Object> {
 	@Override
 	protected String getSqlExpression(Object value, DatabaseDialect profile) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return Object.class;
 	}
 
 }

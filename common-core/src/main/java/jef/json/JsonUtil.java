@@ -366,7 +366,7 @@ public class JsonUtil {
 	static {
 		JSCFG = ConfigManager.get("EXT");
 		JSCFG.putHierarchy(JScriptExpression.class, new ObjectSerializer() {
-			public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType) throws IOException {
+			public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType,int features) throws IOException {
 				serializer.getWriter().write(String.valueOf(object));
 			}
 		});

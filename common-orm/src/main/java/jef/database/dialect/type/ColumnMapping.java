@@ -25,11 +25,10 @@ import jef.tools.reflect.Property;
  * @Modify
  * 2014-10-31 为了实现在重构中，内部对于Field对象的表示逐渐过渡为  ColumnMapping对象，暂时先让ColumnMapping实现Field接口。         
  */
-public interface ColumnMapping<T> extends ResultSetAccessor,MetadataContainer {
+public interface ColumnMapping extends ResultSetAccessor,MetadataContainer {
 	/**
-	 * 得到ColumnType
-	 * 
-	 * @return
+	 * 得到数据库中的列定义
+	 * @return ColumnType
 	 */
 	ColumnType get();
 
@@ -39,7 +38,7 @@ public interface ColumnMapping<T> extends ResultSetAccessor,MetadataContainer {
 	 * @param st
 	 *            JDBC PreparedStatement
 	 * @param value
-	 *            绑定变量的值
+	 *            绑定变量的值(有可能为null)
 	 * @param index
 	 *            绑定变量序号
 	 * @param dialect
@@ -49,19 +48,14 @@ public interface ColumnMapping<T> extends ResultSetAccessor,MetadataContainer {
 	 *         Statement中时需要转换类型，例如java.util.Date需要转换为java.sql.Date。
 	 * @throws SQLException
 	 */
-	Object set(PreparedStatement st, Object value, int index, DatabaseDialect dialect) throws SQLException;
+	Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect dialect) throws SQLException;
 
 	/**
 	 * 得到java类型
 	 * 
 	 * @return java字段类型
 	 */
-	Class<T> getFieldType();
-	/**
-	 * 如果java类型由对应的原生类型则得到，如果映射类型无原生类型，返回非原生类型
-	 * @return
-	 */
-	Class<?> getPrimitiveType();
+	Class<?> getFieldType();
 
 	/**
 	 * java字段名
@@ -130,13 +124,14 @@ public interface ColumnMapping<T> extends ResultSetAccessor,MetadataContainer {
 	boolean isPk();
 
 	/**
-	 * 返回在非绑定语句下的SQL表达式字符串
-	 * 
+	 * 返回在非绑定语句下的SQL表达式字符串<br>
+	 * 将在后续版本中取消非绑定变量的操作方式，以后此方法可能无需实现。
 	 * @param value
 	 *            值
 	 * @param profile
 	 *            方言
 	 * @return 在SQL语句中该值的写法。
+	 *  
 	 */
 	String getSqlStr(Object value, DatabaseDialect profile);
 
@@ -198,6 +193,15 @@ public interface ColumnMapping<T> extends ResultSetAccessor,MetadataContainer {
 	 */
 	void init(Field field, String columnName, ColumnType type, ITableMetadata meta);
 	
+	/**
+	 * 设置，是否为主键
+	 * @param b
+	 */
 	void setPk(boolean b);
+	
+	/**
+	 * 获得字段访问器
+	 * @return
+	 */
 	public Property getFieldAccessor();
 }

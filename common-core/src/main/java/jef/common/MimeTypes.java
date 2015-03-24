@@ -24,14 +24,17 @@ public final class MimeTypes {
 	static{
 		//Office
 		MIME_TYPES.put("xls","application/msexcel");
+		MIME_TYPES.put("xlsx","application/msexcel");
 		MIME_TYPES.put("xla","application/msexcel");
 		MIME_TYPES.put("hlp","application/mshelp");
 		MIME_TYPES.put("chm","application/mshelp");
 		MIME_TYPES.put("ppt","application/mspowerpoint");
+		MIME_TYPES.put("pptx","application/mspowerpoint");
 		MIME_TYPES.put("pps","application/mspowerpoint");
 		MIME_TYPES.put("ppz","application/mspowerpoint");
 		MIME_TYPES.put("pot","application/mspowerpoint");
 		MIME_TYPES.put("doc","application/msword");
+		MIME_TYPES.put("docx","application/msword");
 		MIME_TYPES.put("dot","application/msword");
 		MIME_TYPES.put("mdb","application/access");
 		//Text
@@ -52,7 +55,7 @@ public final class MimeTypes {
 		MIME_TYPES.put("pl","text/plain");
 		MIME_TYPES.put("xml","text/xml");
 		MIME_TYPES.put("dtd","text/xml");
-		//Compass package
+		//Compress package
 		MIME_TYPES.put("rar","application/x-rar-compressed");
 		MIME_TYPES.put("cab","application/x-shockwave-flash");
 		MIME_TYPES.put("jar","application/java-archive");

@@ -12,6 +12,7 @@ import jef.database.query.function.StandardSQLFunction;
 public class SQLServer2012Dialect extends SQLServer2008Dialect{
 	
 	public SQLServer2012Dialect(){
+		super();
 		//2012开始支持SEQUENCE
 		features.add(Feature.SUPPORT_SEQUENCE);
 		

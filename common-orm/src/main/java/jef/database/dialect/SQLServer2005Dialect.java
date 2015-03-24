@@ -35,6 +35,7 @@ sp_rename：SQLServer 内置的存储过程，用与修改表的定义。
 public class SQLServer2005Dialect extends SQLServer2000Dialect{
 	
 	public SQLServer2005Dialect() {
+		super();
 		typeNames.put(Types.BLOB, "varbinary(MAX)", Types.VARBINARY);
 		typeNames.put(Types.VARBINARY, "varbinary(MAX)", 0);
 		typeNames.put(Types.VARBINARY, 8000, "varbinary($l)", 0);

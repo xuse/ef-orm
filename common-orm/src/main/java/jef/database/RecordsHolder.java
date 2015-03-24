@@ -95,7 +95,7 @@ public final class RecordsHolder<T extends IQueryableEntity>{
 			rhs.add(new RecordHolder<T>(this, i, objs.get(i)));
 		}		
 		if(holder.getProfile().has(Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD)){
-			for(ColumnMapping<?> type:meta.getPKFields()){
+			for(ColumnMapping type:meta.getPKFields()){
 				if(type instanceof AutoIntMapping || type instanceof AutoLongMapping){
 					supportsNewRec=false;		
 				}
@@ -125,9 +125,9 @@ public final class RecordsHolder<T extends IQueryableEntity>{
 		T obj= (T) meta.newInstance();
 		obj.startUpdate();
 		if(!meta.getPKFields().isEmpty()){
-			for(ColumnMapping<?> type:meta.getPKFields()){
-				if(type instanceof AutoIncrementMapping<?>){
-					AutoIncrementMapping<?> mapping=(AutoIncrementMapping<?>)type;
+			for(ColumnMapping type:meta.getPKFields()){
+				if(type instanceof AutoIncrementMapping){
+					AutoIncrementMapping mapping=(AutoIncrementMapping)type;
 					mapping.getAccessor().set(obj, getNextAutoIncreament(mapping));
 				}else if(type instanceof AutoGuidMapping){
 					BeanWrapper bean=BeanWrapper.wrap(obj,BeanWrapper.FAST);
@@ -147,7 +147,7 @@ public final class RecordsHolder<T extends IQueryableEntity>{
 	 * @param mapping
 	 * @return
 	 */
-	private long getNextAutoIncreament(AutoIncrementMapping<?> mapping){
+	private long getNextAutoIncreament(AutoIncrementMapping mapping){
 		GenerationType gtype=mapping.getGenerationType(profile);
 		if(gtype==GenerationType.SEQUENCE || gtype==GenerationType.TABLE){
 			try{
@@ -283,7 +283,7 @@ public final class RecordsHolder<T extends IQueryableEntity>{
 		rs.moveToInsertRow();
 		Assert.notNull(meta);
 		BeanWrapper bw=BeanWrapper.wrap(t);
-		for(ColumnMapping<?> mType: meta.getColumns()){
+		for(ColumnMapping mType: meta.getColumns()){
 			Field f = mType.field();
 			String columnName=mType.getColumnName(profile, false);
 			if(!bw.isReadableProperty(f.name()))continue;

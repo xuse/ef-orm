@@ -67,7 +67,7 @@ public class PostgreSqlDialect extends AbstractDialect {
 			features.add(Feature.AUTOINCREMENT_NEED_SEQUENCE);
 		}
 
-		loadKeywords("sqlserver_keywords.properties");
+		loadKeywords("postgresql_keywords.properties");
 
 		registerNative(Func.coalesce);
 		registerAlias(Func.nvl, "coalesce");
@@ -242,7 +242,7 @@ public class PostgreSqlDialect extends AbstractDialect {
 		return name == null ? null : name.toLowerCase();
 	}
 	@Override
-	public String getColumnNameToUse(AColumnMapping<?> name) {
+	public String getColumnNameToUse(AColumnMapping name) {
 		return name.lowerColumnName();
 	}
 
@@ -297,7 +297,7 @@ public class PostgreSqlDialect extends AbstractDialect {
 	}
 
 	@Override
-	public long getColumnAutoIncreamentValue(AutoIncrementMapping<?> mapping, JDBCTarget db) {
+	public long getColumnAutoIncreamentValue(AutoIncrementMapping mapping, JDBCTarget db) {
 		String tableName = mapping.getMeta().getTableName(false).toLowerCase();
 		String seqname = tableName + "_" + mapping.lowerColumnName() + "_seq";
 		String sql = String.format("select nextval('%s')", seqname);
