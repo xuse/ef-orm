@@ -7,11 +7,11 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.jdbc.result.IResultSet;
 
-import org.easyframe.fastjson.JSON;
 import org.hsqldb.types.Types;
 import org.postgresql.util.PGobject;
 
 import com.alibaba.druid.support.json.JSONUtils;
+import com.alibaba.fastjson.JSON;
 
 public class JsonJsonMapping extends AColumnMapping {
 

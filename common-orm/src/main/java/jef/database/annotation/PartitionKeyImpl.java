@@ -3,13 +3,14 @@ package jef.database.annotation;
 import java.lang.annotation.Annotation;
 
 import jef.database.routing.function.KeyFunction;
+import jef.json.JSONCustom;
+import jef.json.JsonTypeSerializer;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
-import org.easyframe.fastjson.JSONObject;
-import org.easyframe.fastjson.annotation.JSONType;
-import org.easyframe.fastjson.serializer.ObjectSerializer;
-import org.easyframe.json.JsonTypeSerializer;
+
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.ObjectSerializer;
 
 /**
  * 默认的PartitionKey实现，用于非Annotation场合下使用。
@@ -17,7 +18,7 @@ import org.easyframe.json.JsonTypeSerializer;
  * @author Administrator
  * 
  */
-@JSONType(serializer = PartitionKeyImpl.class, fieldAccess = true)
+@JSONCustom(serializer = PartitionKeyImpl.class)//, fieldAccess = true
 @SuppressWarnings("all")
 public class PartitionKeyImpl implements PartitionKey {
 	int sourceDesc;

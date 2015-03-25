@@ -8,8 +8,9 @@ import jef.database.DbClient;
 import jef.database.DbClientBuilder;
 import jef.orm.onetable.model.Foo;
 
-import org.easyframe.fastjson.JSONObject;
 import org.junit.Test;
+
+import com.alibaba.fastjson.JSONObject;
 
 public class DatatypeTest {
 	

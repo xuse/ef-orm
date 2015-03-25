@@ -5,9 +5,10 @@ import java.io.File;
 import jef.database.DbClient;
 import jef.database.DbClientBuilder;
 
-import org.easyframe.fastjson.JSON;
-import org.easyframe.fastjson.JSONObject;
 import org.junit.Test;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 
 public class InitTest {
 

@@ -9,7 +9,7 @@ import javax.persistence.Entity;
 import jef.database.DataObject;
 import jef.database.annotation.Type;
 
-import org.easyframe.fastjson.JSON;
+import com.alibaba.fastjson.JSON;
 
 @Entity()
 public class MyFoo extends DataObject {

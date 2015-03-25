@@ -10,8 +10,8 @@ import jef.json.JsonUtil;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 
-import org.easyframe.fastjson.JSONArray;
-import org.easyframe.fastjson.JSONObject;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 
 /**
  * 读取Json格式数据源配置的抽象实现
