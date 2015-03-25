@@ -4,9 +4,10 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.Set;
 
-import org.easyframe.fastjson.JSONObject;
-import org.easyframe.fastjson.parser.ParserConfig;
-import org.easyframe.json.JsonTypeDeserializer;
+import jef.json.JsonTypeDeserializer;
+
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.parser.ParserConfig;
 
 public class FooDeserializer extends JsonTypeDeserializer<Foo>{
 	@Override

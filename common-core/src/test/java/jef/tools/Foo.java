@@ -2,9 +2,9 @@ package jef.tools;
 
 import java.util.Date;
 
-import org.easyframe.fastjson.annotation.JSONType;
+import jef.json.JSONCustom;
 
-@JSONType(serializer=FooSerializer.class,deserializer=FooDeserializer.class)
+@JSONCustom(serializer=FooSerializer.class,deserializer=FooDeserializer.class)
 public class Foo {
 	private int id;
 	private String name;

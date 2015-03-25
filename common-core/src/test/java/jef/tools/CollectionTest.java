@@ -2,13 +2,13 @@ package jef.tools;
 
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 
 import jef.tools.string.RandomData;
 
-import org.easyframe.fastjson.util.IdentityHashMap;
 import org.junit.Test;
 
 import com.google.common.collect.MapMaker;

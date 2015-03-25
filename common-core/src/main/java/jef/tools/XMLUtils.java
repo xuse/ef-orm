@@ -63,7 +63,6 @@ import jef.tools.string.CharsetName;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.html.dom.HTMLDocumentImpl;
-import org.easyframe.fastjson.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Attr;
@@ -82,6 +81,8 @@ import org.xml.sax.ErrorHandler;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
+
+import com.alibaba.fastjson.JSONObject;
 
 /**
  * 使用JAXP，封装了基于XML的各种基本操作

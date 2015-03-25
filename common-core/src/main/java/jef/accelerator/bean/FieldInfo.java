@@ -7,7 +7,7 @@ import java.util.IdentityHashMap;
 
 import jef.tools.reflect.GenericUtils;
 
-import org.easyframe.fastjson.util.ASMUtils;
+import jef.accelerator.asm.ASMUtils;
 
 @SuppressWarnings("rawtypes")
 public class FieldInfo {

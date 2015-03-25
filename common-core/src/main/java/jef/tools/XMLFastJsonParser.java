@@ -4,17 +4,17 @@ import java.util.Date;
 import java.util.Map.Entry;
 
 import jef.json.JsonUtil;
+import jef.json.SerializeConfigEx;
+import jef.json.XmlJsonSerializer;
 
-import org.easyframe.fastjson.JSON;
-import org.easyframe.fastjson.JSONArray;
-import org.easyframe.fastjson.JSONObject;
-import org.easyframe.fastjson.serializer.ObjectSerializer;
-import org.easyframe.fastjson.serializer.SerializeConfig;
-import org.easyframe.json.ConfigManager;
-import org.easyframe.json.XmlJsonSerializer;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.ObjectSerializer;
 
 /**
  * 提供Json和XML的互相转换
@@ -101,10 +101,10 @@ public abstract class XMLFastJsonParser {
 	public abstract String toJsonString(Node node);
 
 	static class SimpleXmlJsonImpl extends XMLFastJsonParser {
-		private static SerializeConfig XML_GSON;
+		private static SerializeConfigEx XML_GSON;
 		static {
-			XML_GSON = ConfigManager.get("XML");
-			ObjectSerializer nodeSer=new org.easyframe.json.XmlJsonSerializer();
+			XML_GSON = new SerializeConfigEx();
+			ObjectSerializer nodeSer=new XmlJsonSerializer();
 			XML_GSON.putHierarchy(org.w3c.dom.Node.class, nodeSer);
 		}
 

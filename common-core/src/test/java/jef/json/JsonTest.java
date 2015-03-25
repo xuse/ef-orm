@@ -8,27 +8,25 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import jef.tools.BeanForTest;
 import jef.tools.DateFormats;
 import jef.tools.Foo;
-import jef.tools.BeanForTest;
 import jef.tools.ResourceUtils;
 import jef.tools.XMLUtils;
 import jef.tools.reflect.GenericUtils;
 import jef.tools.string.RandomData;
 
-import org.easyframe.fastjson.JSON;
-import org.easyframe.fastjson.JSONObject;
-import org.easyframe.fastjson.serializer.JSONSerializer;
-import org.easyframe.fastjson.serializer.ObjectSerializer;
-import org.easyframe.fastjson.serializer.SerializeConfig;
-import org.easyframe.fastjson.serializer.SerializerFeature;
-import org.easyframe.json.ConfigManager;
 import org.junit.Assert;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
-import com.google.common.collect.ImmutableMap;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.JSONSerializer;
+import com.alibaba.fastjson.serializer.ObjectSerializer;
+import com.alibaba.fastjson.serializer.SerializeConfig;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 
 public class JsonTest extends org.junit.Assert{
 	@Test
@@ -229,15 +227,15 @@ public class JsonTest extends org.junit.Assert{
 	}
 
 	private String toJson(Object obj) throws Exception {
-		System.out.println(ConfigManager.get("custom1").hasType(BeanForTest.class));
+		System.out.println(ConfigManager.get("custom1").get(BeanForTest.class)!=null);
 		JSONSerializer serializer = new JSONSerializer(ConfigManager.get("custom1"));
 		try {
 //			serializer.config(SerializerFeature.PrettyFormat, true);
 			SerializeConfig config=serializer.getMapping();
-			ObjectSerializer se=config.createASMSerializer(BeanForTest.class,ImmutableMap.of("id","the_id","name","name_person"));
+			ObjectSerializer se=config.createASMSerializer(BeanForTest.class);//,ImmutableMap.of("id","the_id","name","name_person")
 			config.put(BeanForTest.class,se);
 			serializer.write(obj);
-			System.out.println(ConfigManager.get("custom1").hasType(BeanForTest.class));
+			System.out.println(ConfigManager.get("custom1").get(BeanForTest.class)!=null);
 			return serializer.toString();
 		} finally {
 			serializer.close();

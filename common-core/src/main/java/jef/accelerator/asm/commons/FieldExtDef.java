@@ -4,12 +4,12 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import jef.accelerator.asm.ASMUtils;
 import jef.accelerator.asm.AnnotationVisitor;
 import jef.accelerator.asm.Attribute;
 import jef.accelerator.asm.FieldVisitor;
 import jef.tools.Assert;
 
-import org.easyframe.fastjson.util.ASMUtils;
 
 public class FieldExtDef extends FieldVisitor {
 	private boolean end = false;
