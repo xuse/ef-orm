@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:jee="http://www.springframework.org/schema/jee" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+			http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+			http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+			http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-2.5.xsd
+			http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+			http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd">
+
+	<context:property-placeholder location="classpath*:system.properties" />
+	<!-- 连接池 -->
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="${jdbc.driverClassName}" />
+		<property name="url" value="${jdbc.url}" />
+		<property name="username" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<!-- 连接池启动时的初始值 -->
+		<property name="initialSize" value="10" />
+		<!-- 连接池的最大值 -->
+		<property name="maxActive" value="100" />
+		<!-- 最大空闲值.当经过一个高峰时间后，连接池可以慢慢将已经用不到的连接慢慢释放一部分，一直减少到maxIdle为止 -->
+		<property name="maxIdle" value="50" />
+		<!-- 最小空闲值.当空闲的连接数少于阀值时，连接池就会预申请去一些连接，以免洪峰来时来不及申请 -->
+		<property name="minIdle" value="10" />
+		<!--#给出一条简单的sql语句进行验证 -->
+		<property name="validationQuery" value="select 1" />
+		<!--#在取出连接时进行有效验证 -->
+		<property name="testOnBorrow" value="true" />
+		<property name="removeAbandonedTimeout" value="120" />
+		<property name="removeAbandoned" value="true" />
+		<!-- #运行判断连接超时任务的时间间隔，单位为毫秒，默认为-1，即不执行任务。 -->
+		<property name="timeBetweenEvictionRunsMillis" value="3600000" />
+		<!-- #连接的超时时间，默认为半小时。 -->
+		<property name="minEvictableIdleTimeMillis" value="3600000" />
+	</bean>
+	
+		<bean id="transactionManager"
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="get*" propagation="SUPPORTS" read-only="true"
+				isolation="READ_COMMITTED" />
+			<tx:method name="query*" propagation="SUPPORTS" read-only="true"
+				isolation="READ_COMMITTED" />
+			<tx:method name="find*" propagation="SUPPORTS" read-only="true"
+				isolation="READ_COMMITTED" />
+			<tx:method name="load*" propagation="SUPPORTS" read-only="true"
+				isolation="READ_COMMITTED" />
+			<tx:method name="search*" propagation="SUPPORTS" read-only="true"
+				isolation="READ_COMMITTED" />
+			<tx:method name="cu*" propagation="SUPPORTS" read-only="true"
+				isolation="READ_COMMITTED" />
+			<tx:method name="*Token*" propagation="NOT_SUPPORTED"
+				read-only="true" />
+			<tx:method name="*" propagation="REQUIRED" isolation="READ_COMMITTED" />
+		</tx:attributes>
+	</tx:advice>
+
+	<context:component-scan base-package="com.spling"/>
+	<context:annotation-config></context:annotation-config>
+
+
+	<!-- <bean id="applicationEventListener" class="com.hikvision.hikframework.gateway.listener.ApplicationEventListener" 
+		/> -->
+	<!-- <import resource="classpath:spring/spring-bean.xml"/> -->
+</beans>
+ 
