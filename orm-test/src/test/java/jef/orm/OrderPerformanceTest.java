@@ -7,8 +7,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
-import jef.codegen.EntityEnhancer;
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 import jef.database.DebugUtil;
 import jef.database.ORMConfig;
 import jef.database.OperateTarget;
@@ -33,8 +33,7 @@ public class OrderPerformanceTest {
 	@Test
 	public void addRecord() throws SQLException {
 		ORMConfig.getInstance().setCacheDebug(true);
-		new EntityEnhancer().enhance("jef.orm.onetable.model");
-		DbClient db = new DbClient();
+		DbClient db = new DbClientBuilder().setEnhancePackages("jef.orm.onetable.model").build();
 		Transaction tx = db.startTransaction();
 		db.createTable(Foo.class);
 		List<Foo> list = new ArrayList<Foo>();
@@ -50,7 +49,7 @@ public class OrderPerformanceTest {
 
 	@BeforeClass
 	public static void prepare() throws SQLException {
-		DbClient db = new DbClient();
+		DbClient db = new DbClientBuilder().build();
 
 		CachedRowSetImpl c1 = new CachedRowSetImpl();
 		CachedRowSetImpl c2 = new CachedRowSetImpl();
@@ -83,7 +82,7 @@ public class OrderPerformanceTest {
 
 	@Test
 	public void run1() throws SQLException {
-		DbClient db = new DbClient();
+		DbClient db = new DbClientBuilder().build();
 		testOrder1Count(db, 1); // 预热
 		testOrder1(db, 100);// 正式测试
 		db.close();

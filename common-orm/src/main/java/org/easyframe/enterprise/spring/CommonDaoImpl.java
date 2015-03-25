@@ -29,7 +29,6 @@ import jef.database.meta.MetaHolder;
 import jef.database.query.Query;
 import jef.database.wrapper.ResultIterator;
 import jef.tools.Assert;
-import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.BeanWrapper;
 
 /**
@@ -53,12 +52,22 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		super.getEntityManager().remove(entity);
 	}
 
+	/**
+	 * 空构造，一般用于在SpringFramework中初始化此Bean
+	 */
 	public CommonDaoImpl() {
 	}
 
+	public CommonDaoImpl(JefEntityManagerFactory emf) {
+		this.setEntityManagerFactory(emf);
+	}
+	
+	/**
+	 * 构造
+	 * @param db
+	 */
 	public CommonDaoImpl(DbClient db) {
-		JefEntityManagerFactory emf = new JefEntityManagerFactory(db);
-		BeanUtils.setFieldValue(this, "entityManagerFactory", emf);
+		this.setEntityManagerFactory(new JefEntityManagerFactory(db));
 	}
 
 	@SuppressWarnings("unchecked")

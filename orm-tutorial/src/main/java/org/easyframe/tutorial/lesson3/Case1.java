@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import jef.codegen.EntityEnhancer;
 import jef.database.Condition;
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 import jef.database.ORMConfig;
 import jef.database.meta.FBIField;
 import jef.database.query.JpqlExpression;
@@ -29,8 +29,7 @@ public class Case1 extends org.junit.Assert {
 	DbClient db;
 
 	public Case1() throws SQLException {
-		new EntityEnhancer().enhance("org.easyframe.tutorial");
-		db = new DbClient();
+		db = new DbClientBuilder().setEnhancePackages("org.easyframe.tutorial").build();
 		// 准备数据时关闭调试，减少控制台信息
 		ORMConfig.getInstance().setDebugMode(false);
 		db.dropTable(Student.class);

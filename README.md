@@ -12,6 +12,8 @@ https://github.com/GeeQuery/ef-orm/tree/master/orm-tutorial
 
 EF-ORM是一个轻量，便捷的Java ORM框架。并且具备若干企业级的应用特性，如分库分表、JTA事务等。
 
+* 代码生成插件for eclipse（请在eclipse中Help/Install new software后输入地址并安装）
+http://geequery.github.io/plugins/1.3.x/
 -----------
 ###特点一
 EF的设计的一个主要目的是提高开发效率，减少编码工作，让开发者“零配置”“少编码”的操作数据库大部分功能。

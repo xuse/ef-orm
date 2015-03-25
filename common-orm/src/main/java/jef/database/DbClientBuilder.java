@@ -60,7 +60,7 @@ public class DbClientBuilder {
 	/**
 	 * 单数据源。
 	 */
-	private DataSource dataSource;
+	protected DataSource dataSource;
 
 	/**
 	 * 多数据源时的缺省数据源名称
@@ -160,6 +160,16 @@ public class DbClientBuilder {
 	public DbClientBuilder() {
 	}
 
+	/**
+	 * 构造
+	 * @param 是否对classpath下的目录进行类增强
+	 */
+	public DbClientBuilder(boolean enhance) {
+		if(!enhance){
+			this.setEnhancePackages("none");
+		}
+	}
+	
 	/**
 	 * 构造
 	 * 
@@ -299,7 +309,7 @@ public class DbClientBuilder {
 	public DataSource getDataSource() {
 		return dataSource;
 	}
-
+	
 	/**
 	 * 设置数据源
 	 * 

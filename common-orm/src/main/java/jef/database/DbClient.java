@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.management.ReflectionException;
 import javax.sql.DataSource;
 
 import jef.common.Callback;
@@ -171,6 +170,7 @@ public class DbClient extends Session implements ConnectionFactory {
 
 	/**
 	 * 构造，会使用jef.properties中配置的信息来连接数据库。
+	 * @deprecated use new DbClientBuilder().build() to create a new DbClient.
 	 */
 	public DbClient() {
 		this(getDefaultDataSource(), JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL, 3), JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50), null);

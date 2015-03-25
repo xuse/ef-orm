@@ -64,7 +64,9 @@ public class EntityEnhancer {
 				LogUtil.exception(e);
 			}
 		}
-		
+		if(roots==null){
+			return;
+		}
 		int n = 0;
 		for (File root : roots) {
 			String[] clss = ClassScanner.listClassNameInPackage(root, pkgNames, true, true, false);

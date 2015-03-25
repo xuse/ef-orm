@@ -8,12 +8,12 @@ import java.util.Map;
 import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 import jef.database.DbMetaData;
 import jef.database.meta.Column;
 import jef.database.meta.Function;
 import jef.database.meta.Index;
 import jef.database.meta.TableInfo;
-import jef.tools.StringUtils;
 
 import org.easyframe.tutorial.lesson2.entity.LessonInfo;
 import org.easyframe.tutorial.lesson2.entity.Student;
@@ -34,7 +34,7 @@ public class CaseDatabaseMetadata {
 	@BeforeClass
 	public static void setup() throws SQLException{
 		new EntityEnhancer().enhance("org.easyframe.tutorial");
-		db = new DbClient();
+		db = new DbClientBuilder().build();
 		db.createTable(Student.class,StudentToLesson.class,LessonInfo.class);
 	}
 	/**

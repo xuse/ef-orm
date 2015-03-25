@@ -24,12 +24,28 @@ import com.alibaba.fastjson.serializer.ObjectSerializer;
  */
 public abstract class XMLFastJsonParser {
 	/**
-	 * 缺省转换规则
+	 * 缺省转换规则。和json-lib中的转换规则一样
+	 * <pre><code>
+	 * {"id":576,"desc":"嵇舒门","created":1427266557000,"name":"奚惠","score":38,"modified":1427266815000}
+	 * </code></pre>
+	 * 将被转换为<code><pre>&lt;o&gt;
+    &lt;score type="number"&gt;38.0&lt;/score&gt;
+    &lt;id type="number"&gt;576&lt;/id&gt;
+    &lt;desc type="string"&gt;嵇舒门&lt;/desc&gt;
+    &lt;created type="date"&gt;1427266557000&lt;/created&gt;
+    &lt;name type="string"&gt;奚惠&lt;/name&gt;
+    &lt;modified type="date"&gt;1427266815000&lt;/modified&gt;
+&lt;/o&gt;
+	 * </pre></code>
+	 * 
 	 */
 	public static final XMLFastJsonParser DEFAULT = new XMLJsonParserImpl();
 
 	/**
 	 * 简易转换规则
+	 * {"created":1427266557000,"desc":"嵇舒门","id":576,"modified":1427266815000,"name":"奚惠","score":38}
+<?xml version="1.0" encoding="UTF-8"?>
+<o created="1427266557000" desc="嵇舒门" id="576" modified="1427266815000" name="奚惠" score="38"/>
 	 */
 	public static final XMLFastJsonParser SIMPLE = new SimpleXmlJsonImpl();
 

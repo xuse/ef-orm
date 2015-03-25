@@ -5,6 +5,7 @@ import java.util.List;
 
 import jef.codegen.EntityEnhancer;
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 import jef.database.ORMConfig;
 
 import org.easyframe.tutorial.lesson2.entity.Student;
@@ -17,8 +18,7 @@ public class Case2 {
 	
 	@BeforeClass
 	public static void setup() throws SQLException{
-		new EntityEnhancer().enhance("org.easyframe.tutorial");
-		db=new DbClient();
+		db=new DbClientBuilder().build();
 		db.createTable(Student.class);
 	}
 	

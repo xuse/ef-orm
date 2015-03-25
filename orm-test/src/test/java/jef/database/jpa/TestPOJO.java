@@ -6,9 +6,8 @@ import java.util.List;
 
 import jef.common.wrapper.Page;
 import jef.database.DbClient;
-import jef.tools.reflect.BeanUtils;
+import jef.database.DbClientBuilder;
 
-import org.easyframe.enterprise.spring.BaseDao;
 import org.easyframe.enterprise.spring.CommonDao;
 import org.easyframe.enterprise.spring.CommonDaoImpl;
 import org.junit.Test;
@@ -18,9 +17,8 @@ public class TestPOJO {
 	CommonDao dao;
 	
 	public TestPOJO() throws SQLException{
-		db=new DbClient();
-		dao=new CommonDaoImpl();
-		((BaseDao)dao).setEntityManagerFactory(new JefEntityManagerFactory(db));
+		db=new DbClientBuilder().build();
+		dao=new CommonDaoImpl(db);
 		dao.getNoTransactionSession().createTable(PojoEntity.class);
 		dao.getNoTransactionSession().createTable(PojoFoo.class);
 		

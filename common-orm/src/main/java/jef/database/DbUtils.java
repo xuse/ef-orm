@@ -1203,7 +1203,9 @@ public final class DbUtils {
 	}
 
 	/**
-	 * 将指定对象中除了主键以外的所有字段都作为需要update的字段，放置到updateMap中去
+	 * 将指定对象中除了主键以外的所有字段都作为需要update的字段。（标记为'已修改的'）
+	 * <br>
+	 * 这个方法实际操作时：即除了主键以外的所有字段都放置到updateMap中去
 	 * 
 	 * @param <T>
 	 * @param prepareObj
@@ -1444,14 +1446,14 @@ public final class DbUtils {
 	 * 
 	 * @param url
 	 * @param user
-	 * @param pass
+	 * @param password
 	 * @return
 	 */
-	public static SimpleDataSource createSimpleDataSource(String url, String user, String pass) {
+	public static SimpleDataSource createSimpleDataSource(String url, String user, String password) {
 		SimpleDataSource s = new SimpleDataSource();
 		s.setUsername(user);
 		s.setUrl(url);
-		s.setPassword(pass);
+		s.setPassword(password);
 		return s;
 	}
 	

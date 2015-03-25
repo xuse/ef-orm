@@ -12,6 +12,7 @@ import jef.tools.BeanForTest;
 import jef.tools.DateFormats;
 import jef.tools.Foo;
 import jef.tools.ResourceUtils;
+import jef.tools.XMLFastJsonParser;
 import jef.tools.XMLUtils;
 import jef.tools.reflect.GenericUtils;
 import jef.tools.string.RandomData;
@@ -195,14 +196,36 @@ public class JsonTest extends org.junit.Assert{
 //		Person p=RandomData.newInstance(Person.class);
 		Foo p=RandomData.newInstance(Foo.class);
 		String s1=JsonUtil.toJson(p);
+		System.out.println("直接转换为JSON");
 		System.out.println(s1);
+		
+		
 		JSONObject o=(JSONObject) JSON.toJSON(p);
 		Document doc=JsonUtil.jsonToXML(o);
-		String s2=XMLUtils.toString(doc);
-		System.out.println(s2);
+		System.out.println("转换为JSON再转为XML");
+		String xml=XMLUtils.toString(doc);
+		System.out.println(xml);
 		
 		JSONObject s3=JsonUtil.xmlToJson(doc);
+		System.out.println("XML再转为JSON");
 		System.out.println(s3);
+		
+		System.out.println("========================================");
+		{
+			Document doc2=XMLFastJsonParser.DEFAULT.toDocument(o);
+			System.out.println(XMLUtils.toString(doc2));
+			
+			String s=XMLFastJsonParser.DEFAULT.toJsonString(doc2);
+			System.out.println(s);
+		}
+		System.out.println("========================================");
+		{
+			String s=XMLFastJsonParser.SIMPLE.toJsonString(doc);
+			System.out.println(s);
+			Document doc2=XMLFastJsonParser.SIMPLE.toDocument((JSONObject)JSON.parse(s));
+			System.out.println(XMLUtils.toString(doc2));
+		}
+		
 	}
 	
 	@Test

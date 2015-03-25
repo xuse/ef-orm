@@ -2,8 +2,8 @@ package org.easyframe.tutorial.lessonc;
 
 import java.sql.SQLException;
 
-import jef.codegen.EntityEnhancer;
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 import jef.database.dialect.ColumnType;
 import jef.database.meta.TupleMetadata;
 import jef.database.query.Func;
@@ -18,9 +18,7 @@ public class CaseAlterTable {
 
 	@BeforeClass
 	public static void setup() throws SQLException{
-		new EntityEnhancer().enhance("org.easyframe.tutorial");
-		db = new DbClient();
-		
+		db = new DbClientBuilder().build();
 	}
 	
 	/**

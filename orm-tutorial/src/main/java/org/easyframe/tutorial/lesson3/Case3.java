@@ -9,6 +9,7 @@ import jef.codegen.EntityEnhancer;
 import jef.common.wrapper.IntRange;
 import jef.common.wrapper.Page;
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 import jef.database.ORMConfig;
 import jef.database.QB;
 import jef.database.query.Query;
@@ -22,8 +23,7 @@ public class Case3 extends org.junit.Assert {
 	DbClient db;
 
 	public Case3() throws SQLException {
-		new EntityEnhancer().enhance("org.easyframe.tutorial");
-		db = new DbClient();
+		db = new DbClientBuilder().setEnhancePackages("org.easyframe.tutorial").build();
 		// 准备数据时关闭调试，减少控制台信息
 		ORMConfig.getInstance().setDebugMode(false);
 		db.dropTable(Student.class, StudentToLesson.class);

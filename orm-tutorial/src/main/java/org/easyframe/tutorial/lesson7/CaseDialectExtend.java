@@ -4,6 +4,7 @@ import java.sql.SQLException;
 
 import jef.codegen.EntityEnhancer;
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 import jef.database.ORMConfig;
 
 import org.easyframe.tutorial.lesson4.entity.Person;
@@ -16,8 +17,8 @@ public class CaseDialectExtend {
 
 	@BeforeClass
 	public static void setup() throws SQLException {
-		new EntityEnhancer().enhance("org.easyframe.tutorial");
-		db = new DbClient();
+		db = new DbClientBuilder().setEnhancePackages("org.easyframe.tutorial").build();
+		
 		ORMConfig.getInstance().setDebugMode(false);
 		db.createTable(Person.class);
 		ORMConfig.getInstance().setDebugMode(true);

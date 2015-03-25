@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import jef.codegen.EntityEnhancer;
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 import jef.database.ORMConfig;
 import jef.database.QB;
 import jef.database.Transaction;
@@ -29,9 +30,9 @@ public class Case1 extends org.junit.Assert {
 
 	@BeforeClass
 	public static void setup() throws SQLException {
-		new EntityEnhancer().enhance("org.easyframe.tutorial.lesson5");
+		db =  new DbClientBuilder().setEnhancePackages("org.easyframe.tutorial.lesson5").build();
+		
 		ORMConfig.getInstance().setDebugMode(false);
-		db = new DbClient();
 		db.dropTable(Catalogy.class, Item.class, Student.class, TeacherLesson.class, ItemExtendInfo.class);
 		db.createTable(Catalogy.class, Item.class, Student.class, TeacherLesson.class, ItemExtendInfo.class);
 		Catalogy c = new Catalogy();
