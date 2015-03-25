@@ -19,7 +19,6 @@ import java.util.List;
 
 import jef.common.wrapper.IntRange;
 import jef.database.ORMConfig;
-import jef.database.annotation.PartitionResult;
 import jef.database.cache.CacheImpl;
 import jef.database.cache.CacheKey;
 import jef.database.cache.KeyDimension;
@@ -27,6 +26,7 @@ import jef.database.cache.SqlCacheKey;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.ResultSetContainer;
 import jef.database.jdbc.statement.ResultSetLaterProcess;
+import jef.database.routing.PartitionResult;
 import jef.database.routing.sql.SqlAnalyzer;
 import jef.database.wrapper.processor.BindVariableDescription;
 import jef.tools.Assert;

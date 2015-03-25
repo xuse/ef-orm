@@ -261,7 +261,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 			if (!hasNext)
 				throw new NoSuchElementException();
 			try {
-				return (T) accessor.getProperObject(rs, 1);
+				return (T) accessor.jdbcGet(rs, 1);
 			} catch (SQLException e) {
 				throw new RuntimeException(e);
 			} finally {
@@ -365,7 +365,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 		protected void transform(Object[] obj, IResultSet rs) throws SQLException {
 			int size=accessor.length;
 			for(int i=0;i<size;i++){
-				obj[i]=accessor[i].getProperObject(rs, i+1);
+				obj[i]=accessor[i].jdbcGet(rs, i+1);
 			}
 		}
 	}
@@ -615,7 +615,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 					op1=fill(rp.getSchema(), allcolumns, rs, columns, targetType, false);
 					if (allcolumns.isLazyLob()) {
 						for (Field field : targetType.getLobFieldNames()) {
-							ColumnMapping<?> mType=targetType.getColumnDef(field);
+							ColumnMapping mType=targetType.getColumnDef(field);
 							LobLazyLoadTask task = new LobLazyLoadTask(mType, rs.getProfile(), targetType.getTableName(true));
 							tasks.add(task);
 						}
@@ -670,7 +670,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 		Map<String, ColumnDescription> data = new HashMap<String, ColumnDescription>();
 		DatabaseDialect profile = rs.getProfile();
 		// 这里要按照列名来拼装，不是默认全拼装
-		for (ColumnMapping<?> ft : meta.getColumns()) {
+		for (ColumnMapping ft : meta.getColumns()) {
 			String columnName;
 			Field f = ft.field();
 			if (fullRef == null) {

@@ -9,6 +9,7 @@ import java.util.Map;
 import jef.codegen.EntityEnhancer;
 import jef.database.Condition.Operator;
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.ORMConfig;
@@ -25,8 +26,8 @@ public class CaseUpdate {
 	static DbClient db;
 
 	public CaseUpdate() throws SQLException {
-		new EntityEnhancer().enhance("org.easyframe.tutorial");
-		db = new DbClient();
+		db = new DbClientBuilder().setEnhancePackages("org.easyframe.tutorial").build();
+		
 		// 准备数据时关闭调试，减少控制台信息
 		ORMConfig.getInstance().setDebugMode(false);
 		db.dropTable(Student.class, UserBalance.class);

@@ -6,9 +6,9 @@ import java.sql.SQLException;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 
-public class BitBooleanMapping extends AColumnMapping<Boolean>{
+public class BitBooleanMapping extends AColumnMapping{
 	@Override
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect dialect) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect dialect) throws SQLException {
 		if(value==null){
 			st.setNull(index, java.sql.Types.BIT);
 			return null;
@@ -24,7 +24,7 @@ public class BitBooleanMapping extends AColumnMapping<Boolean>{
 	}
 
 	@Override
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		return rs.getBoolean(n);
 	}
 
@@ -35,6 +35,11 @@ public class BitBooleanMapping extends AColumnMapping<Boolean>{
 		}else{
 			return "0";
 		}
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return Boolean.class;
 	}
 
 }

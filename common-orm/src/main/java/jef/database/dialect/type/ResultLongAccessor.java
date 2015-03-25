@@ -6,7 +6,7 @@ import java.sql.Types;
 import jef.database.jdbc.result.IResultSet;
 
 final  class ResultLongAccessor implements ResultSetAccessor {
-	public Object getProperObject(IResultSet rs,int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs,int n) throws SQLException {
 		Object value=rs.getObject(n);
 		if(value==null)return null;
 		if(value instanceof Long){

@@ -9,7 +9,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 import jef.tools.DateFormats;
 
-public class SqlTimeStringMapping extends AColumnMapping<String>{
+public class SqlTimeStringMapping extends AColumnMapping{
 	private ThreadLocal<DateFormat> format=DateFormats.TIME_ONLY;
 	
 	public SqlTimeStringMapping(){
@@ -19,7 +19,7 @@ public class SqlTimeStringMapping extends AColumnMapping<String>{
 		this.format=DateFormats.getThreadLocalDateFormat(pattern);
 	}
 	
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
 			st.setNull(index, java.sql.Types.TIME);
 			return value;
@@ -49,10 +49,15 @@ public class SqlTimeStringMapping extends AColumnMapping<String>{
 		}
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		java.sql.Time t=rs.getTime(n);
 		if(t==null)return null;
 		return format.get().format(t);
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return String.class;
 	}
 
 }

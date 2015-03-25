@@ -12,7 +12,12 @@ import jef.database.meta.ITableMetadata;
 import jef.tools.StringUtils;
 import jef.tools.reflect.Property;
 
-public final class AutoStringMapping extends AutoIncrementMapping<String> {
+/**
+ * 数据库中是自增数值，而java中使用String来映射的情况
+ * @author jiyi
+ *
+ */
+public final class AutoStringMapping extends AutoIncrementMapping {
 	@Override
 	public void init(Field field, String columnName, ColumnType type, ITableMetadata meta) {
 		super.init(field, columnName, type, meta);
@@ -20,7 +25,7 @@ public final class AutoStringMapping extends AutoIncrementMapping<String> {
 	}
 
 
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if (value == null) {
 			st.setNull(index, getSqlType());
 		} else {
@@ -31,7 +36,7 @@ public final class AutoStringMapping extends AutoIncrementMapping<String> {
 	}
 
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		Object obj = rs.getObject(n);
 		if (obj == null)
 			return null;
@@ -67,5 +72,10 @@ public final class AutoStringMapping extends AutoIncrementMapping<String> {
 			}
 			sProperty.set(obj, value);
 		}
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return String.class;
 	}
 }

@@ -3,9 +3,9 @@ package jef.database.query;
 import java.util.Map;
 
 import jef.database.IQueryableEntity;
-import jef.database.annotation.PartitionResult;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.meta.AbstractMetadata;
+import jef.database.routing.PartitionResult;
 
 /**
  * 分表规则计算器

@@ -28,7 +28,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.sql.DataSource;
 
-import jef.database.DbClient;
 import jef.database.innerpool.IPool;
 import jef.database.innerpool.PoolService;
 import jef.database.innerpool.SimplePooledDatasource;

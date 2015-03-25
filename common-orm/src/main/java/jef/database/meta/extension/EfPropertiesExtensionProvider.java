@@ -100,7 +100,7 @@ public class EfPropertiesExtensionProvider implements BeanExtensionProvider {
 			Map<String, Property> props = new HashMap<String, Property>();
 			ExtensionConfig config = cf.getExtension(extensionName);
 			TupleMetadata extension = config.getExtensionMeta();
-			for (ColumnMapping<?> f : extension.getColumns()) {
+			for (ColumnMapping f : extension.getColumns()) {
 				props.put(f.fieldName(), new ExtensionProperty(f.fieldName(), f.getFieldType(), f.getFieldType()));
 			}
 			extension.addListener(new Adapter(config, listener));
@@ -130,7 +130,7 @@ public class EfPropertiesExtensionProvider implements BeanExtensionProvider {
 
 		private void event(DynamicMetadata meta) {
 			Map<String, Property> props = new HashMap<String, Property>();
-			for (ColumnMapping<?> f : meta.getColumns()) {
+			for (ColumnMapping f : meta.getColumns()) {
 				props.put(f.fieldName(), new ExtensionProperty(f.fieldName(), f.getFieldType(), f.getFieldType()));
 			}
 			config.flush(meta);

@@ -11,6 +11,7 @@ import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.database.Condition.Operator;
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 import jef.database.ORMConfig;
 import jef.database.QB;
 import jef.database.query.Func;
@@ -34,8 +35,7 @@ public class Case2 extends org.junit.Assert {
 	DbClient db;
 
 	public Case2() throws SQLException {
-		new EntityEnhancer().enhance("org.easyframe.tutorial");
-		db = new DbClient();
+		db = new DbClientBuilder().setEnhancePackages("org.easyframe.tutorial").build();
 		// 准备数据时关闭调试，减少控制台信息
 		ORMConfig.getInstance().setDebugMode(true);
 		db.dropTable(Student.class, StudentToLesson.class);

@@ -14,8 +14,8 @@ import jef.database.query.Func;
  * @author jiyi
  *
  */
-public class TimestampDateMapping extends AbstractTimeMapping<Date>{
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+public class TimestampDateMapping extends AbstractTimeMapping{
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
 			st.setNull(index, java.sql.Types.TIMESTAMP);
 			return null;
@@ -38,7 +38,7 @@ public class TimestampDateMapping extends AbstractTimeMapping<Date>{
 		throw new IllegalArgumentException("The input param can not cast to Date.");
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		Timestamp ts=rs.getTimestamp(n);
 		return ts;
 	}
@@ -51,5 +51,10 @@ public class TimestampDateMapping extends AbstractTimeMapping<Date>{
 	@Override
 	public Object getCurrentValue() {
 		return new Date();
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return Date.class;
 	}
 }

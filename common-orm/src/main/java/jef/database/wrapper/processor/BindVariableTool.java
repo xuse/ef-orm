@@ -63,7 +63,7 @@ public final class BindVariableTool {
 					context.log(count, "", value);
 					continue;
 				}
-				ColumnMapping<?> cType = meta.getColumnDef(field);
+				ColumnMapping cType = meta.getColumnDef(field);
 				try {
 					setUpdateMapValue(query.getInstance().getUpdateValueMap(), field, cType, count, bean, context);
 				} catch (SQLException ex) {
@@ -126,7 +126,7 @@ public final class BindVariableTool {
 //		context.log(count, fieldName, value);
 //	}
 
-	private static void setUpdateMapValue(Map<Field, Object> updateMap, Field field, ColumnMapping<?> cType, int count, BeanWrapper bean, BindVariableContext context) throws SQLException {
+	private static void setUpdateMapValue(Map<Field, Object> updateMap, Field field, ColumnMapping cType, int count, BeanWrapper bean, BindVariableContext context) throws SQLException {
 		if (updateMap.containsKey(field)) {
 			Object value = updateMap.get(field);
 			try {
@@ -159,7 +159,7 @@ public final class BindVariableTool {
 			value = context.setValueInPsmt(count, value, variableDesc.getColumnType());
 		} catch (Exception e) {
 			String field = variableDesc.getField().name();
-			ColumnMapping<?> colType = variableDesc.getColumnType();
+			ColumnMapping colType = variableDesc.getColumnType();
 			throw new SQLException("The query param type error, field=" + field + " type=" + (colType == null ? "" : colType.getClass().getSimpleName()) + "\n" + e.getClass().getName() + ":" + e.getMessage());
 		}
 		context.log(count, variableDesc.getField(), value);
@@ -203,9 +203,9 @@ public final class BindVariableTool {
 		}
 	}
 
-	public static void setInsertVariables(IQueryableEntity obj, List<ColumnMapping<?>> fields, BindVariableContext context) throws SQLException {
+	public static void setInsertVariables(IQueryableEntity obj, List<ColumnMapping> fields, BindVariableContext context) throws SQLException {
 		int count = 0;
-		for (ColumnMapping<?> field : fields) {
+		for (ColumnMapping field : fields) {
 			count++;
 			Object value = field.getFieldAccessor().get(obj);
 			try {

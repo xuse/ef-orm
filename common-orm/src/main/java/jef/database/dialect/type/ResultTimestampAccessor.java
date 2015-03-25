@@ -7,7 +7,7 @@ import java.sql.Types;
 import jef.database.jdbc.result.IResultSet;
 
 final class ResultTimestampAccessor implements ResultSetAccessor {
-	public Object getProperObject(IResultSet rs,int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs,int n) throws SQLException {
 		Timestamp d= rs.getTimestamp(n);
 		if(d!=null){
 			return new java.util.Date(d.getTime());

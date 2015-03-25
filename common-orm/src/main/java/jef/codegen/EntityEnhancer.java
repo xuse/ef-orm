@@ -64,7 +64,9 @@ public class EntityEnhancer {
 				LogUtil.exception(e);
 			}
 		}
-		
+		if(roots==null){
+			return;
+		}
 		int n = 0;
 		for (File root : roots) {
 			String[] clss = ClassScanner.listClassNameInPackage(root, pkgNames, true, true, false);
@@ -152,16 +154,18 @@ public class EntityEnhancer {
 		return includePattern;
 	}
 
-	public void setIncludePattern(String includePattern) {
+	public EntityEnhancer setIncludePattern(String includePattern) {
 		this.includePattern = includePattern;
+		return this;
 	}
 
 	public String[] getExcludePatter() {
 		return excludePatter;
 	}
 
-	public void setExcludePatter(String[] excludePatter) {
+	public EntityEnhancer setExcludePatter(String[] excludePatter) {
 		this.excludePatter = excludePatter;
+		return this;
 	}
 
 	public File[] getRoot() {

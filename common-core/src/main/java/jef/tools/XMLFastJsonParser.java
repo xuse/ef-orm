@@ -4,17 +4,17 @@ import java.util.Date;
 import java.util.Map.Entry;
 
 import jef.json.JsonUtil;
+import jef.json.SerializeConfigEx;
+import jef.json.XmlJsonSerializer;
 
-import org.easyframe.fastjson.JSON;
-import org.easyframe.fastjson.JSONArray;
-import org.easyframe.fastjson.JSONObject;
-import org.easyframe.fastjson.serializer.ObjectSerializer;
-import org.easyframe.fastjson.serializer.SerializeConfig;
-import org.easyframe.json.ConfigManager;
-import org.easyframe.json.XmlJsonSerializer;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.ObjectSerializer;
 
 /**
  * 提供Json和XML的互相转换
@@ -24,12 +24,28 @@ import org.w3c.dom.Node;
  */
 public abstract class XMLFastJsonParser {
 	/**
-	 * 缺省转换规则
+	 * 缺省转换规则。和json-lib中的转换规则一样
+	 * <pre><code>
+	 * {"id":576,"desc":"嵇舒门","created":1427266557000,"name":"奚惠","score":38,"modified":1427266815000}
+	 * </code></pre>
+	 * 将被转换为<code><pre>&lt;o&gt;
+    &lt;score type="number"&gt;38.0&lt;/score&gt;
+    &lt;id type="number"&gt;576&lt;/id&gt;
+    &lt;desc type="string"&gt;嵇舒门&lt;/desc&gt;
+    &lt;created type="date"&gt;1427266557000&lt;/created&gt;
+    &lt;name type="string"&gt;奚惠&lt;/name&gt;
+    &lt;modified type="date"&gt;1427266815000&lt;/modified&gt;
+&lt;/o&gt;
+	 * </pre></code>
+	 * 
 	 */
 	public static final XMLFastJsonParser DEFAULT = new XMLJsonParserImpl();
 
 	/**
 	 * 简易转换规则
+	 * {"created":1427266557000,"desc":"嵇舒门","id":576,"modified":1427266815000,"name":"奚惠","score":38}
+<?xml version="1.0" encoding="UTF-8"?>
+<o created="1427266557000" desc="嵇舒门" id="576" modified="1427266815000" name="奚惠" score="38"/>
 	 */
 	public static final XMLFastJsonParser SIMPLE = new SimpleXmlJsonImpl();
 
@@ -101,10 +117,10 @@ public abstract class XMLFastJsonParser {
 	public abstract String toJsonString(Node node);
 
 	static class SimpleXmlJsonImpl extends XMLFastJsonParser {
-		private static SerializeConfig XML_GSON;
+		private static SerializeConfigEx XML_GSON;
 		static {
-			XML_GSON = ConfigManager.get("XML");
-			ObjectSerializer nodeSer=new org.easyframe.json.XmlJsonSerializer();
+			XML_GSON = new SerializeConfigEx();
+			ObjectSerializer nodeSer=new XmlJsonSerializer();
 			XML_GSON.putHierarchy(org.w3c.dom.Node.class, nodeSer);
 		}
 

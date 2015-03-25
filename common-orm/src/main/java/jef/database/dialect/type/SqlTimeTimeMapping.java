@@ -7,9 +7,9 @@ import java.sql.Time;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 
-public class SqlTimeTimeMapping extends AColumnMapping<java.sql.Time>{
+public class SqlTimeTimeMapping extends AColumnMapping{
 
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		st.setTime(index, (Time)value);
 		return value;
 	}
@@ -23,8 +23,13 @@ public class SqlTimeTimeMapping extends AColumnMapping<java.sql.Time>{
 		return profile.getSqlTimeExpression((java.util.Date)value);
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		return rs.getTime(n);
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return java.sql.Time.class;
 	}
 
 }

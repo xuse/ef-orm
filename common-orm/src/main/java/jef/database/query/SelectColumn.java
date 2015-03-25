@@ -287,7 +287,7 @@ public final class SelectColumn extends SingleColumnSelect{
 		return true;
 	}
 
-	public ColumnMapping<?> getTargetColumnType() {
+	public ColumnMapping getTargetColumnType() {
 		return meta.getColumnDef(targetField);
 	}
 

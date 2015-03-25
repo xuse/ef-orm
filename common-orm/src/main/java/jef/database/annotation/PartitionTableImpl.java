@@ -2,15 +2,16 @@ package jef.database.annotation;
 
 import java.lang.annotation.Annotation;
 
+import jef.json.JSONCustom;
+import jef.json.JsonTypeSerializer;
 import jef.tools.StringUtils;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
-import org.easyframe.fastjson.JSONObject;
-import org.easyframe.fastjson.annotation.JSONType;
-import org.easyframe.fastjson.serializer.ObjectSerializer;
-import org.easyframe.json.JsonTypeSerializer;
 
-@JSONType(serializer=PartitionTableImpl.class,fieldAccess=true)
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.ObjectSerializer;
+
+@JSONCustom(serializer=PartitionTableImpl.class)//,fieldAccess=true
 @SuppressWarnings("all")
 public class PartitionTableImpl implements PartitionTable {
 	private String appender="_";

@@ -7,7 +7,7 @@ import jef.database.jdbc.result.IResultSet;
 
 final class CharBooleanAccessor implements ResultSetAccessor{
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		String s=rs.getString(n);
 		if(s!=null && s.length()>0){
 			char c=s.charAt(0);

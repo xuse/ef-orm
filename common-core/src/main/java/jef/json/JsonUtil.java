@@ -27,16 +27,16 @@ import jef.tools.StringUtils;
 import jef.tools.XMLFastJsonParser;
 import jef.tools.reflect.GenericUtils;
 
-import org.easyframe.fastjson.JSON;
-import org.easyframe.fastjson.JSONArray;
-import org.easyframe.fastjson.JSONObject;
-import org.easyframe.fastjson.serializer.JSONSerializer;
-import org.easyframe.fastjson.serializer.ObjectSerializer;
-import org.easyframe.fastjson.serializer.SerializeConfig;
-import org.easyframe.fastjson.serializer.SerializerFeature;
-import org.easyframe.json.ConfigManager;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.JSONSerializer;
+import com.alibaba.fastjson.serializer.ObjectSerializer;
+import com.alibaba.fastjson.serializer.SerializeConfig;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 
 /**
  * 从Json序列化/反序列化的工具封装
@@ -207,7 +207,6 @@ public class JsonUtil {
 	 * @param src
 	 * @return
 	 */
-	@SuppressWarnings("deprecation")
 	public static JSON toJsonTree(Object src) {
 		return (JSON) JSON.toJSON(src);
 	}
@@ -362,14 +361,14 @@ public class JsonUtil {
 		return sb.toString();
 	}
 
-	private static SerializeConfig JSCFG;
+	private static SerializeConfigEx JSCFG=new SerializeConfigEx();
 	static {
-		JSCFG = ConfigManager.get("EXT");
-		JSCFG.putHierarchy(JScriptExpression.class, new ObjectSerializer() {
-			public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType) throws IOException {
+		ObjectSerializer os=new ObjectSerializer() {
+			public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType,int features) throws IOException {
 				serializer.getWriter().write(String.valueOf(object));
 			}
-		});
+		};
+		JSCFG.putHierarchy(JScriptExpression.class, os);
 	}
 
 }

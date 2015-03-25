@@ -6,8 +6,8 @@ import java.sql.SQLException;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 
-public class NumIntLongMapping extends AColumnMapping<Long>{
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+public class NumIntLongMapping extends AColumnMapping{
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
 			st.setNull(index, java.sql.Types.INTEGER);
 		}else{
@@ -25,10 +25,15 @@ public class NumIntLongMapping extends AColumnMapping<Long>{
 		return value.toString();
 	}
 	
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		Object obj=rs.getObject(n);
 		if(obj==null)return null;
 		if(obj instanceof Long)return obj;
 		return ((Number)obj).longValue();
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return Long.class;
 	}
 }

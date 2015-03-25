@@ -10,6 +10,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
+import jef.accelerator.asm.ASMUtils;
 import jef.accelerator.asm.Attribute;
 import jef.accelerator.asm.ClassReader;
 import jef.accelerator.asm.ClassVisitor;
@@ -27,7 +28,6 @@ import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 
 import org.apache.commons.lang.ArrayUtils;
-import org.easyframe.fastjson.util.ASMUtils;
 
 public class EnhanceTaskASM {
 	private File root;

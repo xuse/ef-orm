@@ -36,8 +36,8 @@ public class TemplateMetadata extends AbstractMetadata {
 	}
 
 	@Override
-	public ColumnMapping<?> getColumnDef(Field field) {
-		ColumnMapping<?> result=schemaMap.get(field);
+	public ColumnMapping getColumnDef(Field field) {
+		ColumnMapping result=schemaMap.get(field);
 		if (result != null) {
 			return result;
 		}
@@ -68,7 +68,7 @@ public class TemplateMetadata extends AbstractMetadata {
 	}
 
 	@Override
-	public List<ColumnMapping<?>> getPKFields() {
+	public List<ColumnMapping> getPKFields() {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
 
@@ -134,7 +134,7 @@ public class TemplateMetadata extends AbstractMetadata {
 	}
 
 	@Override
-	protected Collection<ColumnMapping<?>> getColumnSchema() {
+	protected Collection<ColumnMapping> getColumnSchema() {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
 
@@ -154,12 +154,12 @@ public class TemplateMetadata extends AbstractMetadata {
 	}
 
 	@Override
-	public Collection<ColumnMapping<?>> getExtendedColumns() {
+	public Collection<ColumnMapping> getExtendedColumns() {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
 
 	@Override
-	public ColumnMapping<?> getExtendedColumnDef(String field) {
+	public ColumnMapping getExtendedColumnDef(String field) {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
 }

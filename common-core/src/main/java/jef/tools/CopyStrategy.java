@@ -77,6 +77,14 @@ public class CopyStrategy {
 		return false;
 	}
 	
+	/**
+	 * 如果源是一个文件而目标是一个目录，是否允许将源复制到目录下。
+	 * 
+	 * @return true表示允许；false表示不允许，此时将抛出异常。
+	 */
+	public boolean allowFileIntoFolder() {
+		return true;
+	}
 
 	/**
 	 * 返回true，表示是移动文件，源文件将被删除

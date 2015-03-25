@@ -6,9 +6,9 @@ import java.sql.SQLException;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 
-public class CharBooleanMapping extends AColumnMapping<Boolean>{
+public class CharBooleanMapping extends AColumnMapping{
 
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
 			st.setNull(index, java.sql.Types.CHAR);
 			return null;
@@ -33,12 +33,17 @@ public class CharBooleanMapping extends AColumnMapping<Boolean>{
 		}
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		String s=rs.getString(n);
 		if(s!=null && s.length()>0){
 			char c=s.charAt(0);
 			return Boolean.valueOf(c=='1' || c=='T');
 		}
 		return null;
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return Boolean.class;
 	}
 }

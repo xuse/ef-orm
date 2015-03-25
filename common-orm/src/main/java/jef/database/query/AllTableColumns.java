@@ -135,7 +135,7 @@ public final class AllTableColumns implements IReferenceAllTable {
 		this.projection = ISelectProvider.PROJECTION_NOT_SELECT;
 	}
 
-	public String getSelectedAliasOf(ColumnMapping<?> f, DatabaseDialect profile, String schema) {
+	public String getSelectedAliasOf(ColumnMapping f, DatabaseDialect profile, String schema) {
 		String value;
 		Field field = f.field();
 		switch (aliasType) {
@@ -178,7 +178,7 @@ public final class AllTableColumns implements IReferenceAllTable {
 	}
 
 	@Override
-	public String getResultAliasOf(ColumnMapping<?> f, String schema) {
+	public String getResultAliasOf(ColumnMapping f, String schema) {
 		String alias = getAlias(f.field());
 		if (alias != null)
 			return alias.toUpperCase();

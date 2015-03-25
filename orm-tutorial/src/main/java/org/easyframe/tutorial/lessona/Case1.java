@@ -7,13 +7,14 @@ import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.database.DataObject;
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 import jef.database.DbUtils;
 import jef.database.DebugUtil;
 import jef.database.ORMConfig;
-import jef.database.annotation.PartitionResult;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
+import jef.database.routing.PartitionResult;
 import jef.tools.DateUtils;
 
 import org.easyframe.tutorial.lessona.entity.Customer;
@@ -33,8 +34,8 @@ public class Case1 extends org.junit.Assert {
 
 	@BeforeClass
 	public static void setup() throws SQLException {
-		new EntityEnhancer().enhance("org.easyframe.tutorial.lessona");
-		db = new DbClient();
+		db = new DbClientBuilder().setEnhancePackages("org.easyframe.tutorial").build();
+		
 		db.dropTable("OPERATELOG_20100302");
 	}
 

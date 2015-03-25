@@ -1422,7 +1422,7 @@ public class DbMetaData {
 			return;
 		}
 		// 新增列
-		Map<Field, ColumnMapping<?>> defined = getColumnMap(meta);
+		Map<Field, ColumnMapping> defined = getColumnMap(meta);
 
 		// 在对比之前判断
 		if (event != null) {
@@ -1446,7 +1446,7 @@ public class DbMetaData {
 				}
 				continue;
 			}
-			ColumnMapping<?> type = defined.remove(field);// from the metadata
+			ColumnMapping type = defined.remove(field);// from the metadata
 															// find
 			// the column defined
 			Assert.notNull(type);// 不应该发生
@@ -1458,7 +1458,7 @@ public class DbMetaData {
 			}
 		}
 		Map<String, ColumnType> insert = new HashMap<String, ColumnType>();
-		for (Map.Entry<Field, ColumnMapping<?>> e : defined.entrySet()) {
+		for (Map.Entry<Field, ColumnMapping> e : defined.entrySet()) {
 			String columnName = e.getValue().getColumnName(getProfile(), true);
 			insert.put(columnName, e.getValue().get());
 		}
@@ -2235,9 +2235,9 @@ public class DbMetaData {
 		}
 	}
 
-	private Map<Field, ColumnMapping<?>> getColumnMap(ITableMetadata meta) {
-		Map<Field, ColumnMapping<?>> map = new HashMap<Field, ColumnMapping<?>>();
-		for (ColumnMapping<?> mapping : meta.getColumns()) {
+	private Map<Field, ColumnMapping> getColumnMap(ITableMetadata meta) {
+		Map<Field, ColumnMapping> map = new HashMap<Field, ColumnMapping>();
+		for (ColumnMapping mapping : meta.getColumns()) {
 			map.put(mapping.field(), mapping);
 		}
 		return map;

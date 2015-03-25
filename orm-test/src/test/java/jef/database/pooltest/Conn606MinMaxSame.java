@@ -66,7 +66,7 @@ public class Conn606MinMaxSame {
 		log.info("The current size of MAX is "+maxSize);
 		log.info("Oracle 测试用户："+dbUser);
 		DataSource ds = DbUtils.createSimpleDataSource(dbUrl, dbUser, dbPasswd);
-		final IUserManagedPool pool = PoolService.getPool(ds, maxSize,TransactionMode.JPA);
+		final IUserManagedPool pool = PoolService.getPool(ds, maxSize,maxSize,TransactionMode.JPA);
 		// pool.
 		for (int i = 0; i < 15; i++) {
 			new MyThread(pool).start();

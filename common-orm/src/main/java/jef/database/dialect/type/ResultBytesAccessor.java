@@ -7,7 +7,7 @@ import jef.database.jdbc.result.IResultSet;
 
 public class ResultBytesAccessor implements ResultSetAccessor{
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		return rs.getBytes(n);
 	}
 

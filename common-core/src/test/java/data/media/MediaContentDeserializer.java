@@ -2,10 +2,10 @@ package data.media;
 
 import java.lang.reflect.Type;
 
-import org.easyframe.fastjson.parser.DefaultJSONParser;
-import org.easyframe.fastjson.parser.JSONScanner;
-import org.easyframe.fastjson.parser.JSONToken;
-import org.easyframe.fastjson.parser.deserializer.ObjectDeserializer;
+import com.alibaba.fastjson.parser.DefaultJSONParser;
+import com.alibaba.fastjson.parser.JSONScanner;
+import com.alibaba.fastjson.parser.JSONToken;
+import com.alibaba.fastjson.parser.deserializer.ObjectDeserializer;
 
 public class MediaContentDeserializer implements ObjectDeserializer {
     private ObjectDeserializer mediaDeserializer;

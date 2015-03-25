@@ -38,7 +38,7 @@ public final class TupleMetadata extends DynamicMetadata {
 		return new VarObject(this);
 	}
 	
-	public ColumnMapping<?> getColumnDef(Field field) {
+	public ColumnMapping getColumnDef(Field field) {
 		return schemaMap.get(field);
 	}
 	

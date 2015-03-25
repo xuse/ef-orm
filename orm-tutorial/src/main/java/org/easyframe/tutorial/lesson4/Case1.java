@@ -4,8 +4,8 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-import jef.codegen.EntityEnhancer;
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 import jef.database.ORMConfig;
 import jef.database.QB;
 import jef.database.query.Query;
@@ -17,7 +17,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class Case1 extends org.junit.Assert{
-	private static DbClient db = new DbClient();
+	private static DbClient db = new DbClientBuilder().build();
 	private static int firstId;
 	/**
 	 * 准备
@@ -25,7 +25,6 @@ public class Case1 extends org.junit.Assert{
 	 */
 	@BeforeClass
 	public static void setup() throws SQLException {
-		new EntityEnhancer().enhance("org.easyframe.tutorial.lesson4");
 		ORMConfig.getInstance().setDebugMode(true);
 		db.dropTable(Person.class, School.class,DataDict.class);
 		db.createTable(Person.class, School.class,DataDict.class);

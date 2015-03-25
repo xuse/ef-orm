@@ -4,8 +4,9 @@ import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.Set;
 
-import org.easyframe.fastjson.JSONObject;
-import org.easyframe.json.JsonTypeSerializer;
+import jef.json.JsonTypeSerializer;
+
+import com.alibaba.fastjson.JSONObject;
 
 public class FooSerializer extends JsonTypeSerializer<Foo>{
 

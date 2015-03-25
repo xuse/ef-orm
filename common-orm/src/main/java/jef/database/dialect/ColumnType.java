@@ -45,11 +45,11 @@ import jef.database.dialect.type.CharTimestampMapping;
 import jef.database.dialect.type.ClobCharArrayMapping;
 import jef.database.dialect.type.ClobFileMapping;
 import jef.database.dialect.type.ClobStringMapping;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.DateDateMapping;
 import jef.database.dialect.type.DateSDateMapping;
 import jef.database.dialect.type.DateStringMapping;
 import jef.database.dialect.type.DelegatorBoolean;
-import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.NumBigDateMapping;
 import jef.database.dialect.type.NumBigIntMapping;
 import jef.database.dialect.type.NumBigLongMapping;
@@ -259,7 +259,7 @@ public abstract class ColumnType {
 	 * @param fieldType
 	 * @return
 	 */
-	public abstract ColumnMapping<?> getMappingType(Class<?> fieldType);
+	public abstract ColumnMapping getMappingType(Class<?> fieldType);
 
 	public final static class Char extends ColumnType implements SqlTypeSized {
 		protected int length;
@@ -294,15 +294,14 @@ public abstract class ColumnType {
 			return rhs.length == this.length;
 		}
 
-		@SuppressWarnings({ "rawtypes", "unchecked" })
 		@Override
-		public ColumnMapping<?> getMappingType(Class<?> fieldType) {
+		public ColumnMapping getMappingType(Class<?> fieldType) {
 			if (fieldType == String.class || fieldType == Object.class) {
 				return new CharStringMapping();
 			} else if (fieldType == Character.class || fieldType == Character.TYPE) {
 				return new CharCharMapping();
 			} else if (fieldType.isEnum()) {
-				return new CharEnumMapping(fieldType.asSubclass(Enum.class));
+				return new CharEnumMapping();
 			} else if (fieldType == java.util.Date.class) {
 				return new CharDateMapping();
 			} else if (fieldType == java.sql.Timestamp.class) {
@@ -362,13 +361,12 @@ public abstract class ColumnType {
 			return rhs.length == this.length;
 		}
 
-		@SuppressWarnings({ "rawtypes", "unchecked" })
 		@Override
-		public ColumnMapping<?> getMappingType(Class<?> fieldType) {
+		public ColumnMapping getMappingType(Class<?> fieldType) {
 			if (fieldType == String.class || fieldType == Object.class) {
 				return new VarcharStringMapping();
 			} else if (fieldType.isEnum()) {
-				return new VarcharEnumMapping(fieldType.asSubclass(Enum.class));
+				return new VarcharEnumMapping();
 			} else if (fieldType == Integer.class || fieldType == Integer.TYPE) {
 				return new VarcharIntMapping();
 			} else if (fieldType == java.util.Date.class) {
@@ -423,7 +421,7 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		public ColumnMapping<?> getMappingType(Class<?> fieldType) {
+		public ColumnMapping getMappingType(Class<?> fieldType) {
 			if(fieldType == java.lang.Boolean.class || fieldType == java.lang.Boolean.TYPE || fieldType == Object.class){
 				return new DelegatorBoolean();
 			}else{
@@ -481,7 +479,7 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		public ColumnMapping<?> getMappingType(Class<?> fieldType) {
+		public ColumnMapping getMappingType(Class<?> fieldType) {
 			boolean isBig = (precision >= 18);
 			if (isBig) {
 				if (fieldType == java.lang.Double.class || fieldType == java.lang.Double.TYPE || fieldType == Object.class) {
@@ -572,7 +570,7 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		public ColumnMapping<?> getMappingType(Class<?> fieldType) {
+		public ColumnMapping getMappingType(Class<?> fieldType) {
 			if (fieldType == java.lang.Boolean.class || fieldType == java.lang.Boolean.TYPE) {
 				return new NumIntBooleanMapping();
 			}
@@ -660,7 +658,7 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		public ColumnMapping<?> getMappingType(Class<?> fieldType) {
+		public ColumnMapping getMappingType(Class<?> fieldType) {
 			if (fieldType == java.sql.Date.class) {
 				return new DateSDateMapping();
 			} else if (fieldType == java.util.Date.class || fieldType == Object.class) {
@@ -710,7 +708,7 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		public ColumnMapping<?> getMappingType(Class<?> fieldType) {
+		public ColumnMapping getMappingType(Class<?> fieldType) {
 			if (fieldType == java.sql.Timestamp.class) {
 				return new TimestampTsMapping();
 			} else if (fieldType == java.util.Date.class || fieldType == Object.class) {
@@ -778,7 +776,7 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		public ColumnMapping<?> getMappingType(Class<?> fieldType) {
+		public ColumnMapping getMappingType(Class<?> fieldType) {
 			if (fieldType == Integer.class || fieldType == Integer.TYPE) {
 				return new AutoIntMapping();
 			} else if (fieldType == Long.class || fieldType == Long.TYPE) {
@@ -848,7 +846,7 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		public ColumnMapping<?> getMappingType(Class<?> fieldType) {
+		public ColumnMapping getMappingType(Class<?> fieldType) {
 			if (!CharSequence.class.isAssignableFrom(fieldType)) {
 				throw new IllegalArgumentException();
 			}
@@ -888,7 +886,7 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		public ColumnMapping<?> getMappingType(Class<?> fieldType) {
+		public ColumnMapping getMappingType(Class<?> fieldType) {
 			if (fieldType == char[].class) {
 				return new ClobCharArrayMapping();
 			} else if (fieldType == File.class) {
@@ -949,7 +947,7 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		public ColumnMapping<?> getMappingType(Class<?> fieldType) {
+		public ColumnMapping getMappingType(Class<?> fieldType) {
 			if (fieldType == byte[].class) {
 				return new BlobByteArrayMapping();
 			} else if (fieldType == File.class) {
@@ -1001,7 +999,7 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		public ColumnMapping<?> getMappingType(Class<?> fieldType) {
+		public ColumnMapping getMappingType(Class<?> fieldType) {
 			return new XmlStringMapping();
 		}
 
@@ -1017,6 +1015,7 @@ public abstract class ColumnType {
 		private int length;
 		private int precision;
 		private int scale;
+		private Class<?> javaType=String.class;
 		
 		public Other(String name,int sqlType,int length,int p,int s){
 			this.name=name;
@@ -1024,6 +1023,11 @@ public abstract class ColumnType {
 			this.length=length;
 			this.precision=p;
 			this.scale=s;
+		}
+		public Other(String name, int sqlType, Class<?> javaType) {
+			this.name=name;
+			this.sqlType=sqlType;
+			this.javaType=javaType;
 		}
 		@Override
 		protected boolean compare(ColumnType type, DatabaseDialect profile) {
@@ -1039,11 +1043,11 @@ public abstract class ColumnType {
 
 		@Override
 		public Class<?> getDefaultJavaType() {
-			return String.class;
+			return javaType;
 		}
 
 		@Override
-		public ColumnMapping<?> getMappingType(Class<?> fieldType) {
+		public ColumnMapping getMappingType(Class<?> fieldType) {
 			if(fieldType==String.class){
 				return new UnknownStringMapping(name,sqlType);
 			}else{

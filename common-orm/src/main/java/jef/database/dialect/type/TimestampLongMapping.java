@@ -14,8 +14,8 @@ import jef.database.query.Func;
  * @author jiyi
  *
  */
-public class TimestampLongMapping extends AbstractTimeMapping<Long>{
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+public class TimestampLongMapping extends AbstractTimeMapping{
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
 			st.setNull(index, java.sql.Types.TIMESTAMP);
 			return null;
@@ -40,7 +40,7 @@ public class TimestampLongMapping extends AbstractTimeMapping<Long>{
 		return profile.getSqlTimestampExpression((Date)value);
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		Timestamp ts=rs.getTimestamp(n);
 		if(ts==null)return null;
 		return ts.getTime();
@@ -56,6 +56,13 @@ public class TimestampLongMapping extends AbstractTimeMapping<Long>{
 	@Override
 	public Object getCurrentValue() {
 		return System.currentTimeMillis();
+	}
+
+
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return Long.class;
 	}
 	
 	

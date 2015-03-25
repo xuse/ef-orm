@@ -6,8 +6,8 @@ import java.sql.SQLException;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 
-public class NumFloatDoubleMapping extends AColumnMapping<Double>{
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+public class NumFloatDoubleMapping extends AColumnMapping{
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
 			st.setNull(index, java.sql.Types.FLOAT);
 		}else{
@@ -25,10 +25,15 @@ public class NumFloatDoubleMapping extends AColumnMapping<Double>{
 		return value.toString();
 	}
 	
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		Object obj=rs.getObject(n);
 		if(obj==null)return null;
 		if(obj instanceof Double)return obj;
 		return ((Number)obj).doubleValue();
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return Double.class;
 	}
 }

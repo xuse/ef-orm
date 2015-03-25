@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
-
 import jef.accelerator.bean.BeanAccessor;
 import jef.common.Entry;
 import jef.database.Field;
@@ -140,7 +138,7 @@ public interface ITableMetadata {
 	 * 
 	 * @return
 	 */
-	public List<ColumnMapping<?>> getColumns();
+	public List<ColumnMapping> getColumns();
 	
 	/**
 	 * 获取字段的元数据定义
@@ -148,7 +146,7 @@ public interface ITableMetadata {
 	 * @return MappingType,包含了该字段的数据库列名、java字段名、类型等各种信息。
 	 * @see ColumnMapping
 	 */
-	public ColumnMapping<?> getColumnDef(Field field);
+	public ColumnMapping getColumnDef(Field field);
 	
 	/**
 	 * 得到扩展属性的存放表结构
@@ -160,42 +158,42 @@ public interface ITableMetadata {
 	 * 得到所有的扩展属性字段
 	 * @return
 	 */
-	public Collection<ColumnMapping<?>> getExtendedColumns();
+	public Collection<ColumnMapping> getExtendedColumns();
 	
 	/**
 	 * 得到指定名称的扩展属性字段
 	 * @param field
 	 * @return
 	 */
-	public ColumnMapping<?> getExtendedColumnDef(String field);
+	public ColumnMapping getExtendedColumnDef(String field);
 	
 	/**
 	 * 返回所有自增字段的定义，如果没有则返回空数组
 	 * 
 	 * @return 所有自增字段的定义
 	 */
-	public AutoIncrementMapping<?>[] getAutoincrementDef();
+	public AutoIncrementMapping[] getAutoincrementDef();
 	
 	/**
 	 * 返回第一个自增字段的定义，如果没有则返回null
 	 * 
 	 * @return 返回第一个自增字段的定义
 	 */
-	public AutoIncrementMapping<?> getFirstAutoincrementDef();
+	public AutoIncrementMapping getFirstAutoincrementDef();
 
 	/**
 	 * 需要自动维护记录更新时间的列定义
 	 * 
 	 * @return 需要自动维护记录更新时间的列定义
 	 */
-	public AbstractTimeMapping<?>[] getUpdateTimeDef();
+	public AbstractTimeMapping[] getUpdateTimeDef();
 
 	/**
 	 * 获取被设置为主键的字段
 	 * 
 	 * @return
 	 */
-	public List<ColumnMapping<?>> getPKFields();
+	public List<ColumnMapping> getPKFields();
 
 	/**
 	 * 获取索引的元数据定义
@@ -227,7 +225,7 @@ public interface ITableMetadata {
 	 * @param name
 	 * @return Field对象
 	 */
-	public ColumnMapping<?> findField(String left);
+	public ColumnMapping findField(String left);
 
 	/**
 	 * 不考虑表别名的情况返回列名

@@ -72,7 +72,7 @@ final class ProgressSample implements MetadataEventListener{
 		return true;
 	}
 	
-	public boolean onCompareColumns(String tablename, List<Column> columns, Map<Field, ColumnMapping<?>> defined) {
+	public boolean onCompareColumns(String tablename, List<Column> columns, Map<Field, ColumnMapping> defined) {
 		progressBar.setValue(5);
 		progressBar.setString("正在比较表"+tablename+"的结构...");
 		ThreadUtils.doSleep(30*scale);

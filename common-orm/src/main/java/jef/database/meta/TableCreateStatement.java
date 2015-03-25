@@ -28,7 +28,7 @@ public class TableCreateStatement {
 	public void addTableMeta(String tablename, ITableMetadata meta, DatabaseDialect profile) {
 		TableDef tableDef = new TableDef();
 		tableDef.tablename = tablename;
-		for (ColumnMapping<?> column : meta.getColumns()) {
+		for (ColumnMapping column : meta.getColumns()) {
 			processField(column, tableDef, profile);
 		}
 		if (!tableDef.NoPkConstraint && !meta.getPKFields().isEmpty()) {
@@ -37,7 +37,7 @@ public class TableCreateStatement {
 		this.tables.add(tableDef);
 	}
 
-	private void processField(ColumnMapping<?> entry, TableDef result, DatabaseDialect profile) {
+	private void processField(ColumnMapping entry, TableDef result, DatabaseDialect profile) {
 		StringBuilder sb = result.getColumnDef();
 		if (sb.length() > 0)
 			sb.append(",\n");
@@ -61,7 +61,7 @@ public class TableCreateStatement {
 		if (entry instanceof AutoIncrementMapping) {
 			if (profile.has(Feature.AUTOINCREMENT_NEED_SEQUENCE)) {
 				int precision = ((AutoIncrement) vType).getPrecision();
-				addSequence(((AutoIncrementMapping<?>) entry).getSequenceName(profile), precision);
+				addSequence(((AutoIncrementMapping) entry).getSequenceName(profile), precision);
 
 			}
 			if (profile.has(Feature.AUTOINCREMENT_MUSTBE_PK)) { // 在一些数据库上，只有主键才能自增，并且此时不能再单独设置主键.
@@ -110,7 +110,7 @@ public class TableCreateStatement {
 			return columnDefinition;
 		}
 
-		public void addPkConstraint(List<ColumnMapping<?>> pkFields, DatabaseDialect profile) {
+		public void addPkConstraint(List<ColumnMapping> pkFields, DatabaseDialect profile) {
 			StringBuilder sb = getColumnDef();
 			sb.append(",\n");
 			String[] columns = new String[pkFields.size()];

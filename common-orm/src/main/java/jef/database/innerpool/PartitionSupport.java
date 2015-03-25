@@ -3,9 +3,9 @@ package jef.database.innerpool;
 import java.sql.SQLException;
 import java.util.Collection;
 
-import jef.database.annotation.PartitionResult;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.ITableMetadata;
+import jef.database.routing.PartitionResult;
 
 /**
  * 分库分表的环境上下文

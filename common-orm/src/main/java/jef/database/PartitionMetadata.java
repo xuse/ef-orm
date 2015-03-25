@@ -6,11 +6,11 @@ import java.util.Collection;
 import java.util.List;
 
 import jef.common.log.LogUtil;
-import jef.database.annotation.PartitionResult;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.IUserManagedPool;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.meta.ITableMetadata;
+import jef.database.routing.PartitionResult;
 
 /**
  * 描述分表后的实际存在表的情况

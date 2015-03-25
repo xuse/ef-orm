@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import javax.naming.NamingException;
 
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 import jef.database.ORMConfig;
 import jef.database.datasource.DbDataSourceLookup;
 import jef.database.datasource.JndiDatasourceLookup;
@@ -129,7 +130,7 @@ public class DatasourceLookupTest extends org.junit.Assert implements Applicatio
 	}
 
 	private void mockDatabase() throws SQLException {
-		DbClient db=new DbClient("jdbc:hsqldb:mem:db1","","",2);
+		DbClient db=new DbClientBuilder("jdbc:hsqldb:mem:db1","","").setMaxPoolSize(2).build();
 		ORMConfig.getInstance().setDebugMode(false);
 		TupleMetadata t=new TupleMetadata("DATASOURCE_CONFIG");
 		t.addColumn("ENABLE", new ColumnType.Char(1));

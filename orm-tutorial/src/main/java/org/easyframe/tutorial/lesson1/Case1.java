@@ -4,12 +4,9 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
-import jef.database.DbClient;
-import jef.database.jpa.JefEntityManagerFactory;
-
-import org.easyframe.enterprise.spring.BaseDao;
 import org.easyframe.enterprise.spring.CommonDao;
 import org.easyframe.enterprise.spring.CommonDaoImpl;
+import org.easyframe.enterprise.spring.SessionFactoryBean;
 import org.easyframe.tutorial.lesson1.entity.Foo;
 import org.junit.Assert;
 import org.junit.Test;
@@ -23,11 +20,11 @@ public class Case1 {
 	 */
 	@Test
 	public void simpleTest() throws SQLException{
-		DbClient db=new DbClient();
-		JefEntityManagerFactory emf=new JefEntityManagerFactory(db);
-		CommonDao dao=new CommonDaoImpl();
-		//模拟Spring自动注入
-		((BaseDao)dao).setEntityManagerFactory(emf);
+		//模拟Spring的初始化
+		SessionFactoryBean sessionFactory=new SessionFactoryBean();
+		sessionFactory.setDataSource("jdbc:derby:./db;create=true", null, null);
+		CommonDao dao=new CommonDaoImpl(sessionFactory.getObject());
+		
 		
 		//创建表
 		dao.getNoTransactionSession().dropTable(Foo.class);

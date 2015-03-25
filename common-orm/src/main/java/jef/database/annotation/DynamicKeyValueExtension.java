@@ -7,7 +7,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * 支持类似KV表的动态属性实现
+ * 支持类似KV表的动态属性实现扩展字段功能
  * 
  * 用来描述表中的动态属性
  * @author jiyi

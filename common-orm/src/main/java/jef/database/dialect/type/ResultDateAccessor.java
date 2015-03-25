@@ -6,7 +6,7 @@ import java.sql.Types;
 import jef.database.jdbc.result.IResultSet;
 
 final class ResultDateAccessor implements ResultSetAccessor{
-	public Object getProperObject(IResultSet rs,int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs,int n) throws SQLException {
 		java.sql.Date d=rs.getDate(n);
 		return d==null?null:new java.util.Date(d.getTime());
 	}

@@ -57,7 +57,6 @@ import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.log.LogUtil;
 import jef.database.annotation.Cascade;
 import jef.database.annotation.JoinType;
-import jef.database.annotation.PartitionResult;
 import jef.database.datasource.DataSourceInfo;
 import jef.database.datasource.DataSourceWrapper;
 import jef.database.datasource.DataSources;
@@ -100,6 +99,7 @@ import jef.database.query.ReferenceType;
 import jef.database.query.SelectsImpl;
 import jef.database.query.SqlContext;
 import jef.database.query.SqlExpression;
+import jef.database.routing.PartitionResult;
 import jef.database.wrapper.executor.DbTask;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
@@ -606,7 +606,7 @@ public final class DbUtils {
 	 *            主键，可以是Map或单值
 	 */
 	public static void setPrimaryKeyValue(IQueryableEntity data, Object pk) throws PersistenceException {
-		List<ColumnMapping<?>> fields = MetaHolder.getMeta(data).getPKFields();
+		List<ColumnMapping> fields = MetaHolder.getMeta(data).getPKFields();
 		if (fields.isEmpty())
 			return;
 		Assert.notNull(pk);
@@ -623,7 +623,7 @@ public final class DbUtils {
 			int length = Array.getLength(pk);
 			int n = 0;
 			Assert.isTrue(length == fields.size());
-			for (ColumnMapping<?> f : fields) {
+			for (ColumnMapping f : fields) {
 				f.getFieldAccessor().set(data, Array.get(pk, n++));
 			}
 		} else {
@@ -644,7 +644,7 @@ public final class DbUtils {
 			return null;
 		Map<String, Object> keyValMap = new HashMap<String, Object>();
 		for (int i = 0; i < len; i++) {
-			ColumnMapping<?> field = meta.getPKFields().get(i);
+			ColumnMapping field = meta.getPKFields().get(i);
 			if (!isValidPKValue(data, meta, field)) {
 				return null;
 			}
@@ -664,7 +664,7 @@ public final class DbUtils {
 		int len = meta.getPKFields().size();
 		Object[] result = new Object[len];
 		for (int i = 0; i < len; i++) {
-			ColumnMapping<?> field = meta.getPKFields().get(i);
+			ColumnMapping field = meta.getPKFields().get(i);
 			if (!isValidPKValue(data, meta, field)) {
 				return null;
 			}
@@ -681,7 +681,7 @@ public final class DbUtils {
 		int len = meta.getPKFields().size();
 		Serializable[] result = new Serializable[len];
 		for (int i = 0; i < len; i++) {
-			ColumnMapping<?> field = meta.getPKFields().get(i);
+			ColumnMapping field = meta.getPKFields().get(i);
 			result[i] = (Serializable) field.getFieldAccessor().get(data);
 		}
 		return Arrays.asList(result);
@@ -719,7 +719,7 @@ public final class DbUtils {
 	 * @param tableAlias
 	 * @return
 	 */
-	public static String toColumnName(ColumnMapping<?> fld, DatabaseDialect profile, String alias) {
+	public static String toColumnName(ColumnMapping fld, DatabaseDialect profile, String alias) {
 		if (alias != null) {
 			StringBuilder sb = new StringBuilder();
 			sb.append(alias).append('.').append(fld.getColumnName(profile, true));
@@ -1017,9 +1017,9 @@ public final class DbUtils {
 	 * @param field
 	 * @return
 	 */
-	public static ColumnMapping<?> toColumnMapping(Field field) {
-		if (field instanceof ColumnMapping<?>) {
-			return (ColumnMapping<?>) field;
+	public static ColumnMapping toColumnMapping(Field field) {
+		if (field instanceof ColumnMapping) {
+			return (ColumnMapping) field;
 		} else if (field instanceof MetadataContainer) {
 			return ((MetadataContainer) field).getMeta().getColumnDef(field);
 		} else if (field instanceof Enum) {
@@ -1089,7 +1089,7 @@ public final class DbUtils {
 	/*
 	 * (nojava doc)
 	 */
-	private static boolean isValidPKValue(IQueryableEntity obj, ITableMetadata meta, ColumnMapping<?> field) {
+	private static boolean isValidPKValue(IQueryableEntity obj, ITableMetadata meta, ColumnMapping field) {
 		Class<?> type = field.getFieldAccessor().getType();
 		Object value = field.getFieldAccessor().get(obj);
 		if (type.isPrimitive()) {
@@ -1124,12 +1124,12 @@ public final class DbUtils {
 		if (meta.getPKFields().isEmpty())
 			return false;
 		if (!force) {
-			for (ColumnMapping<?> field : meta.getPKFields()) {
+			for (ColumnMapping field : meta.getPKFields()) {
 				if (!isValidPKValue(obj, meta, field))
 					return false;
 			}
 		}
-		for (ColumnMapping<?> mapping : meta.getPKFields()) {
+		for (ColumnMapping mapping : meta.getPKFields()) {
 			Object value = mapping.getFieldAccessor().get(obj);
 			Field field = mapping.field();
 			query.addCondition(field, value);
@@ -1158,7 +1158,7 @@ public final class DbUtils {
 		BeanWrapper bean1 = BeanWrapper.wrap(changedObj);
 		ITableMetadata m = MetaHolder.getMeta(oldObj);
 		boolean dynamic = ORMConfig.getInstance().isDynamicUpdate();
-		for (ColumnMapping<?> mType : m.getColumns()) {
+		for (ColumnMapping mType : m.getColumns()) {
 			if (mType.isPk())
 				continue;
 			Field field = mType.field();
@@ -1186,7 +1186,7 @@ public final class DbUtils {
 		BeanWrapper beanOld = BeanWrapper.wrap(oldObj);
 		ITableMetadata m = MetaHolder.getMeta(oldObj);
 		boolean dynamic = ORMConfig.getInstance().isDynamicUpdate();
-		for (ColumnMapping<?> mType : m.getColumns()) {
+		for (ColumnMapping mType : m.getColumns()) {
 			if (mType.isPk())
 				continue;
 			Field field = mType.field();
@@ -1203,7 +1203,9 @@ public final class DbUtils {
 	}
 
 	/**
-	 * 将指定对象中除了主键以外的所有字段都作为需要update的字段，放置到updateMap中去
+	 * 将指定对象中除了主键以外的所有字段都作为需要update的字段。（标记为'已修改的'）
+	 * <br>
+	 * 这个方法实际操作时：即除了主键以外的所有字段都放置到updateMap中去
 	 * 
 	 * @param <T>
 	 * @param prepareObj
@@ -1214,7 +1216,7 @@ public final class DbUtils {
 		ITableMetadata m = MetaHolder.getMeta(obj[0]);
 		for (T o : obj) {
 			BeanWrapper bean = BeanWrapper.wrap(o);
-			for (ColumnMapping<?> mType : m.getColumns()) {
+			for (ColumnMapping mType : m.getColumns()) {
 				if (mType.isPk()) {
 					continue;
 				}
@@ -1236,7 +1238,7 @@ public final class DbUtils {
 		ITableMetadata meta = query.getMeta();
 		BeanWrapper bw = BeanWrapper.wrap(obj, BeanWrapper.FAST);
 		if (properties.length == 0) {
-			for (ColumnMapping<?> mType : meta.getColumns()) {
+			for (ColumnMapping mType : meta.getColumns()) {
 				Field field = mType.field();
 				if (obj.isUsed(field)) {
 					Object value = bw.getPropertyValue(field.name());
@@ -1444,14 +1446,14 @@ public final class DbUtils {
 	 * 
 	 * @param url
 	 * @param user
-	 * @param pass
+	 * @param password
 	 * @return
 	 */
-	public static SimpleDataSource createSimpleDataSource(String url, String user, String pass) {
+	public static SimpleDataSource createSimpleDataSource(String url, String user, String password) {
 		SimpleDataSource s = new SimpleDataSource();
 		s.setUsername(user);
 		s.setUrl(url);
-		s.setPassword(pass);
+		s.setPassword(password);
 		return s;
 	}
 	

@@ -1,6 +1,6 @@
 package jef.database.routing.sql;
 
-import jef.database.annotation.PartitionResult;
+import jef.database.routing.PartitionResult;
 
 /**
  * 执行计划

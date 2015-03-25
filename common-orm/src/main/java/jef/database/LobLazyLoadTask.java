@@ -12,13 +12,13 @@ import jef.database.query.SqlContext;
 import jef.tools.reflect.BeanWrapper;
 
 public final class LobLazyLoadTask implements LazyLoadTask {
-	private ColumnMapping<?> mType;
+	private ColumnMapping mType;
 	private String tableName;
 	private String columnname;
 	private String fieldName;
 	private DatabaseDialect profile;
 	
-	public LobLazyLoadTask(ColumnMapping<?> mtype, DatabaseDialect profile,String tableName) {
+	public LobLazyLoadTask(ColumnMapping mtype, DatabaseDialect profile,String tableName) {
 		this.mType = mtype;
 		this.tableName=profile.getObjectNameToUse(tableName);
 		this.columnname=mType.getColumnName(profile, true);
@@ -31,7 +31,7 @@ public final class LobLazyLoadTask implements LazyLoadTask {
 		String sql = "select " + columnname + " from " + tableName + db.rProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), false,profile);
 		ResultSet rs = db.getResultSet(sql, 10);
 		if (rs.next()) {
-			Object value = mType.getProperObject(new ResultSetImpl(rs, profile), 1);
+			Object value = mType.jdbcGet(new ResultSetImpl(rs, profile), 1);
 			if(value!=null){
 				BeanWrapper bw=BeanWrapper.wrap(o,BeanWrapper.FAST);
 				bw.setPropertyValue(fieldName, value);

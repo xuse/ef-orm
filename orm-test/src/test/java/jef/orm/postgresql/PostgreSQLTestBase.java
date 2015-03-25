@@ -7,7 +7,7 @@ import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.database.DbCfg;
 import jef.database.DbClient;
-import jef.database.DbClientFactory;
+import jef.database.DbClientBuilder;
 import jef.database.DebugUtil;
 import jef.database.OperateTarget;
 import jef.database.innerpool.IConnection;
@@ -39,8 +39,7 @@ public class PostgreSQLTestBase {
 	@BeforeClass
 	public static void init() throws SQLException {
 		try{
-			db = DbClientFactory.getDbClient(
-					"jdbc:postgresql://localhost:5432/mydb", "test", "test");
+			db = new DbClientBuilder("jdbc:postgresql://localhost:5432/mydb", "test", "test",1).build();
 	
 			String dbVersion = db.getMetaData(null).getDatabaseVersion();
 			String dvVersionMain = StringUtils.substringBeforeLast(dbVersion, ".");

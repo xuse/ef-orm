@@ -209,7 +209,7 @@ public class HsqlDbMemDialect extends AbstractDialect {
 		return name==null?null:name.toUpperCase();
 	}
 	@Override
-	public String getColumnNameToUse(AColumnMapping<?> name) {
+	public String getColumnNameToUse(AColumnMapping name) {
 		return name.upperColumnName();
 	}
 
@@ -268,7 +268,7 @@ public class HsqlDbMemDialect extends AbstractDialect {
 	}
 	
 	@Override
-	public long getColumnAutoIncreamentValue(AutoIncrementMapping<?> mapping, JDBCTarget db) {
+	public long getColumnAutoIncreamentValue(AutoIncrementMapping mapping, JDBCTarget db) {
 		String tableName=mapping.getMeta().getTableName(false).toLowerCase();
 		String seqname=tableName+"_"+mapping.lowerColumnName()+"_seq";
 		String sql=String.format("select nextval('%s') from dual" , seqname);

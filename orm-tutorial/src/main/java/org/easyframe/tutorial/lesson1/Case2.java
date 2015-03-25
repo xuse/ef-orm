@@ -6,6 +6,7 @@ import java.util.List;
 
 import jef.codegen.EntityEnhancer;
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 
 import org.easyframe.tutorial.lesson1.entity.Foo2;
 import org.junit.Assert;
@@ -25,9 +26,7 @@ public class Case2 {
 	 */
 	@Test
 	public void simpleTest() throws SQLException{
-		DbClient db=new DbClient();
-		//这个操作称为增强，含义是扫描包下面类文件，并进行字节码(bytecode)修改
-		new EntityEnhancer().enhance("org.easyframe.tutorial");
+		DbClient db=new DbClientBuilder().build();
 		
 		//创建表
 		db.createTable(Foo2.class); 

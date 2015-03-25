@@ -10,6 +10,7 @@ import jef.codegen.EntityEnhancer;
 import jef.database.Batch;
 import jef.database.Condition.Operator;
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 import jef.database.QB;
 import jef.database.query.Func;
 import jef.tools.DateUtils;
@@ -37,8 +38,8 @@ public class BatchOperate extends org.junit.Assert {
 	 */
 	@BeforeClass
 	public static void setup() throws SQLException {
-		new EntityEnhancer().enhance("org.easyframe.tutorial");
-		db = new DbClient();
+		db = new DbClientBuilder().setEnhancePackages("org.easyframe.tutorial").build();
+		
 		db.dropTable(Person.class,School.class,DataDict.class);
 		db.createTable(Person.class,School.class,DataDict.class);
 	}

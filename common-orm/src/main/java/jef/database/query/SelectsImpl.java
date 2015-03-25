@@ -163,7 +163,7 @@ public class SelectsImpl extends AbstractEntityMappingProvider implements Select
 					SelectExpressionItem expression = (SelectExpressionItem) item;
 					Expression column=expression.getExpression();
 					String exp = column.toString();
-					ColumnMapping<?> mapping = (column instanceof Column)?meta.findField(exp):null;
+					ColumnMapping mapping = (column instanceof Column)?meta.findField(exp):null;
 					Field field;
 					if (mapping == null){
 						field = new FBIField(exp, q);

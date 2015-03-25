@@ -204,7 +204,7 @@ public class QuerableEntityScanner {
 				return true;
 			}
 
-			public boolean onCompareColumns(String tablename, List<Column> columns, Map<Field, ColumnMapping<?>> defined) {
+			public boolean onCompareColumns(String tablename, List<Column> columns, Map<Field, ColumnMapping> defined) {
 				return refresh;
 			}
 
@@ -226,10 +226,10 @@ public class QuerableEntityScanner {
 			}
 		});
 		if(checkSequence){
-			for(ColumnMapping<?> f:meta.getColumns()){
+			for(ColumnMapping f:meta.getColumns()){
 				if(f instanceof AutoIncrementMapping){
-					AutoIncrementMapping<?> m=(AutoIncrementMapping<?>)f;
-					GenerationType gt=((AutoIncrementMapping<?>) f).getGenerationType(entityManagerFactory.getDefault().getProfile(meta.getBindDsName()));
+					AutoIncrementMapping m=(AutoIncrementMapping)f;
+					GenerationType gt=((AutoIncrementMapping) f).getGenerationType(entityManagerFactory.getDefault().getProfile(meta.getBindDsName()));
 					if(gt==GenerationType.SEQUENCE || gt==GenerationType.TABLE){
 						entityManagerFactory.getDefault().getSequenceManager().getSequence(m, meta.getBindDsName());					
 					}

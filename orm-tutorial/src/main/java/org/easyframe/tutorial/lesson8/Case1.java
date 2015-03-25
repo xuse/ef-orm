@@ -12,6 +12,7 @@ import jef.codegen.EntityEnhancer;
 import jef.common.Entry;
 import jef.common.wrapper.Holder;
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 import jef.database.NativeQuery;
 import jef.database.ORMConfig;
 import jef.database.QB;
@@ -49,8 +50,8 @@ public class Case1 extends org.junit.Assert {
 	 */
 	@BeforeClass
 	public static void setup() throws SQLException {
-		new EntityEnhancer().enhance("org.easyframe.tutorial");
-		db = new DbClient();
+		db = new DbClientBuilder().setEnhancePackages("org.easyframe.tutorial").build();
+		
 		ORMConfig.getInstance().setDebugMode(false);
 		db.dropTable(Person.class, Item.class, Student.class, School.class, DataDict.class);
 		db.createTable(Person.class, Item.class, Student.class, School.class, DataDict.class);

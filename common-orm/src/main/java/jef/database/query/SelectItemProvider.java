@@ -75,12 +75,12 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 	
 	
 	private static final AliasProvider EMPTY=new AliasProvider(){
-		public String getSelectedAliasOf(ColumnMapping<?> f, DatabaseDialect profile, String schema) {
+		public String getSelectedAliasOf(ColumnMapping f, DatabaseDialect profile, String schema) {
 			return null;
 		}
 
 		@Override
-		public String getResultAliasOf(ColumnMapping<?> f,String schema) {
+		public String getResultAliasOf(ColumnMapping f,String schema) {
 			return null;
 		}
 	};
@@ -96,7 +96,7 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 		if(assignedFields.isEmpty() && referenceObj==null){
 			if(!groupMode){//group模式下全部无效
 				ITableMetadata meta=table.getMeta();
-				for (ColumnMapping<?> f : meta.getColumns()) {
+				for (ColumnMapping f : meta.getColumns()) {
 					CommentEntry entry=new CommentEntry();
 					entry.setKey(schema.concat(".").concat(f.getColumnName(profile, true)));
 					entry.setValue(aliasProvider.getSelectedAliasOf(f, profile, schema));	
@@ -114,7 +114,7 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 			}else{
 				if(!groupMode){
 					ITableMetadata meta=table.getMeta();
-					for (ColumnMapping<?> f : meta.getColumns()) {
+					for (ColumnMapping f : meta.getColumns()) {
 						if(referenceObj.isLazyLob()){
 							if(ArrayUtils.fastContains(meta.getLobFieldNames(), f.field())){
 								continue;

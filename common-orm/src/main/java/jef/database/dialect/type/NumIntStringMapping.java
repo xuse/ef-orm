@@ -7,8 +7,8 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 import jef.tools.StringUtils;
 
-public class NumIntStringMapping  extends AColumnMapping<String>{
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+public class NumIntStringMapping  extends AColumnMapping{
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(StringUtils.isEmpty(value)){
 			st.setNull(index, java.sql.Types.INTEGER);
 		}else{
@@ -26,9 +26,14 @@ public class NumIntStringMapping  extends AColumnMapping<String>{
 		return value.toString();
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		Object obj=rs.getObject(n);
 		if(obj==null)return null;
 		return obj.toString();
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return String.class;
 	}
 }

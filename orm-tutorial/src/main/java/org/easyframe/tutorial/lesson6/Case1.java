@@ -6,11 +6,11 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import jef.codegen.EntityEnhancer;
 import jef.common.wrapper.IntRange;
 import jef.common.wrapper.Page;
 import jef.database.Condition.Operator;
 import jef.database.DbClient;
+import jef.database.DbClientBuilder;
 import jef.database.QB;
 import jef.database.query.Join;
 import jef.database.query.JoinElement;
@@ -30,8 +30,7 @@ public class Case1 extends org.junit.Assert {
 
 	@BeforeClass
 	public static void setup() throws SQLException {
-		new EntityEnhancer().enhance("org.easyframe.tutorial");
-		db = new DbClient();
+		db = new DbClientBuilder().setEnhancePackages("org.easyframe.tutorial").build();
 		db.dropTable(Person.class, Item.class, Student.class,School.class);
 		db.createTable(Person.class, Item.class, Student.class,School.class);
 

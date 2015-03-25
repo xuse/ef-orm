@@ -342,7 +342,7 @@ public class LogUtil {
 			}
 		} else if (o instanceof Node) {
 			try {
-				XMLUtils.output((Node)o, new StringBuilderWriter(sb), null, true);
+				XMLUtils.output((Node)o, new StringBuilderWriter(sb), null, 4);
 			} catch (IOException e) {
 				e.printStackTrace();
 				sb.append(o);

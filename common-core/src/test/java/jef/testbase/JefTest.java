@@ -47,10 +47,11 @@ import jef.tools.support.NumberText;
 import jef.tools.support.TimeIterable;
 import junit.framework.Assert;
 
-import org.easyframe.fastjson.JSON;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.w3c.dom.Document;
+
+import com.alibaba.fastjson.JSON;
 
 /**
  * @author jiyi

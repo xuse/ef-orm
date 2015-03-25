@@ -317,7 +317,7 @@ public interface SqlTemplate {
 	 * @throws SQLException
 	 * @see Sequence 
 	 */
-	public Sequence getSequence(AutoIncrementMapping<?> mapping) throws SQLException;
+	public Sequence getSequence(AutoIncrementMapping mapping) throws SQLException;
 
 	/**
 	 * 获得Sequence

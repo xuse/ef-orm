@@ -1,6 +1,5 @@
 package jef.database.jpa;
 
-import java.sql.SQLException;
 import java.util.Map;
 
 import javax.persistence.Cache;
@@ -11,10 +10,11 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.metamodel.Metamodel;
 import javax.sql.DataSource;
 
+import jef.database.DbCfg;
 import jef.database.DbClient;
-import jef.database.DbClientFactory;
 import jef.database.cache.CacheDummy;
 import jef.database.jmx.JefFacade;
+import jef.tools.JefConfiguration;
 
 import org.easyframe.enterprise.spring.TransactionMode;
 import org.slf4j.Logger;
@@ -92,16 +92,11 @@ public class JefEntityManagerFactory implements EntityManagerFactory {
 	}
 
 	public JefEntityManagerFactory(DataSource ds) {
-		this(ds, null);
+		this(ds, JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL, 3), JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50), null);
 	}
 
-	public JefEntityManagerFactory(DataSource dataSource, TransactionMode txType) {
-		try {
-			this.db = DbClientFactory.getDbClient(dataSource, txType);
-			JefFacade.registeEmf(db, this);
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
+	public JefEntityManagerFactory(DataSource dataSource, int min, int max, TransactionMode txMode) {
+		this.db = new DbClient(dataSource, min, max, txMode);
 	}
 
 	public DbClient getDefault() {

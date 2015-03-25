@@ -106,7 +106,7 @@ public class SelectExpression extends SingleColumnSelect {
 		return true;
 	}
 
-	public ColumnMapping<?> getTargetColumnType() {
+	public ColumnMapping getTargetColumnType() {
 		return null;
 	}
 

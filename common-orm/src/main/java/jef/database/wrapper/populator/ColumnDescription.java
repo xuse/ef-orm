@@ -95,7 +95,7 @@ public class ColumnDescription{
 	}
 
 	public Object getValue(IResultSet rs) throws SQLException {
-		return accessor.getProperObject(rs, n);
+		return accessor.jdbcGet(rs, n);
 	}
 	
 }

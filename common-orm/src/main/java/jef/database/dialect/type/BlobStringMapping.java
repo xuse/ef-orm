@@ -12,9 +12,9 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 import jef.tools.IOUtils;
 
-public class BlobStringMapping extends AColumnMapping<String>{
+public class BlobStringMapping extends AColumnMapping{
 	
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
 			st.setNull(index, session.getImplementationSqlType(Types.BLOB));
 		}else{
@@ -41,7 +41,7 @@ public class BlobStringMapping extends AColumnMapping<String>{
 		return ORMConfig.getInstance().getDbEncodingCharset().encode(str).limit(); 
 	}
 	
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		Object obj=rs.getObject(n);
 		if(obj==null)return null;
 		if(obj.getClass().isArray()){
@@ -55,5 +55,10 @@ public class BlobStringMapping extends AColumnMapping<String>{
 		} catch (IOException e) {
 			throw new IllegalStateException(e);
 		}
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return String.class;
 	}
 }

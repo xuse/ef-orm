@@ -2,11 +2,11 @@ package jef.database.routing.sql;
 
 import java.sql.SQLException;
 
-import jef.database.annotation.PartitionResult;
 import jef.database.jdbc.GenerateKeyReturnOper;
 import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.statement.insert.Insert;
+import jef.database.routing.PartitionResult;
 import jef.database.routing.jdbc.UpdateReturn;
 
 public class InsertExecutionPlan extends AbstractExecutionPlan implements ExecuteablePlan{

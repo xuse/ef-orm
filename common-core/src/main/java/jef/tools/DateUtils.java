@@ -187,11 +187,12 @@ public abstract class DateUtils {
 			return ms;
 		}
 	}
+	
 	/**
 	 * 截断时间
 	 * @param d  时间
-	 * @param field 要保留到的field.
-	 * @return
+	 * @param field 要保留到的field. Calendar类的常量
+	 * @return 截断后的时间
 	 */
 	public final static Date truncate(Date d, int field) {
 		return org.apache.commons.lang.time.DateUtils.truncate(d, field);
@@ -199,9 +200,9 @@ public abstract class DateUtils {
 
 	/**
 	 * 截断时间
-	 * @param date
-	 * @param field
-	 * @return
+	 * @param date 时间
+	 * @param field 要保留到的field. Calendar类的常量
+	 * @return 截断后的时间
 	 */
 	public final static Calendar truncate(Calendar date, int field) {
 		return org.apache.commons.lang.time.DateUtils.truncate(date, field);
@@ -357,8 +358,8 @@ public abstract class DateUtils {
 	 * @param dateF
 	 * @param timeF
 	 * @return
+	 * @deprecated 不推荐使用。以前为解析某个RSS站点的日期显示而设计，并不通用。
 	 */
-	//FIXME。国际化
 	public static String formatWithToday(Date d, DateFormat dateF, DateFormat timeF) {
 		if (d == null)
 			return "";
@@ -812,7 +813,13 @@ public abstract class DateUtils {
 	}
 
 	/**
-	 * 在原日期上调整指定的 年、月、日数 ，并返回新对象
+	 * 
+	 * 在原日期上增加指定的 年、月、日数 。这个方法不会修改传入的Date对象，而是一个新的Date对象
+	 * @param date 原日期时间
+	 * @param year 增加的年（可为负数）
+	 * @param month 增加的月（可为负数）
+	 * @param day 增加的日（可为负数）
+	 * @return 调整后的日期（新的日期对象）
 	 */
 	public static Date adjustDate(Date date, int year, int month, int day) {
 		Calendar c = Calendar.getInstance();
@@ -824,7 +831,12 @@ public abstract class DateUtils {
 	}
 
 	/**
-	 * 在原日期上调整指定的 时、分、秒数，并返回新对象
+	 * 在原日期上增加指定的  时、分、秒数 。这个方法不会修改传入的Date对象，而是一个新的Date对象
+	 * @param date 原日期时间
+	 * @param hour 增加的时（可为负数）
+	 * @param minute 增加的分（可为负数）
+	 * @param second 增加的秒（可为负数）
+	 * @return 调整后的日期时间（新的日期对象）
 	 */
 	public static Date adjustTime(Date date, int hour, int minute, int second) {
 		Calendar c = Calendar.getInstance();
@@ -836,10 +848,14 @@ public abstract class DateUtils {
 	}
 
 	/**
-	 * 在原日期上调整指定的毫秒并返回新对象
+	 * 在原日期上调整指定的毫秒并返回新对象。这个方法不会修改传入的Date对象，而是一个新的Date对象。
+	 * @param date 原日期时间
+	 * @param mills 毫秒数（可为负数） 
+	 * @return 调整后的日期时间（新的日期对象）
+	 * 
 	 */
-	public static Date adjust(Date d, long mills) {
-		return new Date(d.getTime() + mills);
+	public static Date adjust(Date date, long mills) {
+		return new Date(date.getTime() + mills);
 	}
 
 	/**
@@ -851,9 +867,24 @@ public abstract class DateUtils {
 	 *            从1开始
 	 * @param date
 	 *            从1开始
-	 * @return
+	 * @return 要求的日期
+	 * @deprecated use {@link #get(int, int, int)} instead.
 	 */
 	public static final Date getDate(int year, int month, int date) {
+		return get(year,month,date);
+	}
+	
+	/**
+	 * 获取一个日期对象(java.util.Date)
+	 * @param year
+	 *            格式为：2004
+	 * @param month
+	 *            从1开始
+	 * @param date
+	 *            从1开始
+	 * @return 要求的日期
+	 */
+	public static final Date get(int year, int month, int date) {
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(year, month - 1, date,0,0,0);
 		calendar.set(Calendar.MILLISECOND, 0);
@@ -885,13 +916,32 @@ public abstract class DateUtils {
 	 * @param hour 小时(0-24)
 	 * @param minute 分(0-59)
 	 * @param second 秒(0-59)
-	 * @return
+	 * @return Date
 	 */
-	public static final Date getDate(int year, int month, int date, int hour, int minute, int second) {
+	public static final Date get(int year, int month, int date, int hour, int minute, int second) {
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(year, month - 1, date, hour, minute, second);
 		calendar.set(Calendar.MILLISECOND, 0);
 		return calendar.getTime();
+	}
+	
+	/**
+	 * 获取一个时间对象
+	 * 
+	 * @param year
+	 *            格式为：2004
+	 * @param month
+	 *            从1开始
+	 * @param date
+	 *            从1开始
+	 * @param hour 小时(0-24)
+	 * @param minute 分(0-59)
+	 * @param second 秒(0-59)
+	 * @return Date
+	 * @deprecated Use {@link #getDate(int, int, int, int, int, int)} instead.
+	 */
+	public static final Date getDate(int year, int month, int date, int hour, int minute, int second) {
+		return get(year,month,date,hour,minute,second);
 	}
 
 	/**
@@ -1012,7 +1062,7 @@ public abstract class DateUtils {
 	public static Date yesterday() {
 		return futureDay(-1);
 	}
-
+	
 	/**
 	 * 返回未来多少天的同一时间
 	 * @param i
@@ -1085,6 +1135,7 @@ public abstract class DateUtils {
 	public static Date now(){
 		return new Date();
 	}
+	
 	/**
 	 * 指定时间是否为一天的开始
 	 * @param date

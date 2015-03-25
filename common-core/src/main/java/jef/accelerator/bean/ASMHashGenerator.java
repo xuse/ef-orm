@@ -1,8 +1,8 @@
 package jef.accelerator.bean;
 
-import static org.easyframe.fastjson.util.ASMUtils.getDesc;
-import static org.easyframe.fastjson.util.ASMUtils.getMethodDesc;
-import static org.easyframe.fastjson.util.ASMUtils.getType;
+import static jef.accelerator.asm.ASMUtils.getDesc;
+import static jef.accelerator.asm.ASMUtils.getMethodDesc;
+import static jef.accelerator.asm.ASMUtils.getType;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import jef.accelerator.asm.ASMUtils;
 import jef.accelerator.asm.ClassWriter;
 import jef.accelerator.asm.FieldVisitor;
 import jef.accelerator.asm.Label;
@@ -19,8 +20,6 @@ import jef.accelerator.asm.Type;
 import jef.accelerator.bean.ASMAccessorFactory.ClassGenerator;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.UnsafeUtils;
-
-import org.easyframe.fastjson.util.ASMUtils;
 
 final class ASMHashGenerator implements Opcodes,ClassGenerator {
 	private Class<?> beanClass;

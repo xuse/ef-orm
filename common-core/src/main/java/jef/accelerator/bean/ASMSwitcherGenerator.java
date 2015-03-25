@@ -1,12 +1,12 @@
 package jef.accelerator.bean;
 
-import static org.easyframe.fastjson.util.ASMUtils.doUnwrap;
-import static org.easyframe.fastjson.util.ASMUtils.doWrap;
-import static org.easyframe.fastjson.util.ASMUtils.getDesc;
-import static org.easyframe.fastjson.util.ASMUtils.getMethodDesc;
-import static org.easyframe.fastjson.util.ASMUtils.getPrimitiveType;
-import static org.easyframe.fastjson.util.ASMUtils.getType;
-import static org.easyframe.fastjson.util.ASMUtils.iconst;
+import static jef.accelerator.asm.ASMUtils.doUnwrap;
+import static jef.accelerator.asm.ASMUtils.doWrap;
+import static jef.accelerator.asm.ASMUtils.getDesc;
+import static jef.accelerator.asm.ASMUtils.getMethodDesc;
+import static jef.accelerator.asm.ASMUtils.getPrimitiveType;
+import static jef.accelerator.asm.ASMUtils.getType;
+import static jef.accelerator.asm.ASMUtils.iconst;
 
 import java.lang.reflect.Method;
 import java.util.HashSet;

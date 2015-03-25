@@ -17,7 +17,6 @@ import jef.database.Field;
 import jef.database.ORMConfig;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
-import jef.database.annotation.PartitionResult;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.BinaryExpression;
@@ -57,6 +56,7 @@ import jef.database.query.ComplexDimension;
 import jef.database.query.Dimension;
 import jef.database.query.RangeDimension;
 import jef.database.query.RegexpDimension;
+import jef.database.routing.PartitionResult;
 import jef.database.routing.jdbc.ParameterContext;
 
 import org.apache.commons.lang.ObjectUtils;

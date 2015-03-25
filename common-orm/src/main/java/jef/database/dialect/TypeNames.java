@@ -18,6 +18,11 @@ public class TypeNames {
 	private Map<Integer, Map<Integer, PairIS>> weighted = new HashMap<Integer, Map<Integer, PairIS>>();
 	private Map<Integer, PairIS> defaults = new HashMap<Integer, PairIS>();
 
+	/**
+	 * 返回该SQL类型在此数据库中的描述类型
+	 * @param typecode 要求的sql类型
+	 * @return  PairIS，first表示在当前数据库中的实现SQL类型，second表示字段类型描述文字
+	 */
 	public PairIS get(int typecode) {
 		PairIS result = defaults.get(typecode);
 		if (result == null)
@@ -25,6 +30,14 @@ public class TypeNames {
 		return result;
 	}
 
+	/**
+	 * 返回该SQL类型在此数据库中的描述类型
+	 * @param typecode 要求的sql类型
+	 * @param size  大小
+	 * @param precision 数值长度 
+	 * @param scale     精度
+	 * @return PairIS，first表示在当前数据库中的实现SQL类型，second表示字段类型描述文字
+	 */
 	public PairIS get(int typecode, int size, int precision, int scale) {
 		Map<Integer, PairIS> map = weighted.get(typecode);
 		if (map != null && map.size() > 0) {

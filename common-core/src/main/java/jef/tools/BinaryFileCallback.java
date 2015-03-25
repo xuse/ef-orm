@@ -5,6 +5,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 
+/**
+ *  总是被继承，用于描述对一个二进制文件的修改处理步骤。 通过继承这个类可以形成对文件处理的详细控制。
+ * @author jiyi
+ *
+ */
 public abstract class BinaryFileCallback {
 	protected abstract int nextBufferSize();
 	

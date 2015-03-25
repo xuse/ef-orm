@@ -8,27 +8,26 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import jef.tools.BeanForTest;
 import jef.tools.DateFormats;
 import jef.tools.Foo;
-import jef.tools.BeanForTest;
 import jef.tools.ResourceUtils;
+import jef.tools.XMLFastJsonParser;
 import jef.tools.XMLUtils;
 import jef.tools.reflect.GenericUtils;
 import jef.tools.string.RandomData;
 
-import org.easyframe.fastjson.JSON;
-import org.easyframe.fastjson.JSONObject;
-import org.easyframe.fastjson.serializer.JSONSerializer;
-import org.easyframe.fastjson.serializer.ObjectSerializer;
-import org.easyframe.fastjson.serializer.SerializeConfig;
-import org.easyframe.fastjson.serializer.SerializerFeature;
-import org.easyframe.json.ConfigManager;
 import org.junit.Assert;
 import org.junit.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
-import com.google.common.collect.ImmutableMap;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.JSONSerializer;
+import com.alibaba.fastjson.serializer.ObjectSerializer;
+import com.alibaba.fastjson.serializer.SerializeConfig;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 
 public class JsonTest extends org.junit.Assert{
 	@Test
@@ -197,14 +196,36 @@ public class JsonTest extends org.junit.Assert{
 //		Person p=RandomData.newInstance(Person.class);
 		Foo p=RandomData.newInstance(Foo.class);
 		String s1=JsonUtil.toJson(p);
+		System.out.println("直接转换为JSON");
 		System.out.println(s1);
+		
+		
 		JSONObject o=(JSONObject) JSON.toJSON(p);
 		Document doc=JsonUtil.jsonToXML(o);
-		String s2=XMLUtils.toString(doc);
-		System.out.println(s2);
+		System.out.println("转换为JSON再转为XML");
+		String xml=XMLUtils.toString(doc);
+		System.out.println(xml);
 		
 		JSONObject s3=JsonUtil.xmlToJson(doc);
+		System.out.println("XML再转为JSON");
 		System.out.println(s3);
+		
+		System.out.println("========================================");
+		{
+			Document doc2=XMLFastJsonParser.DEFAULT.toDocument(o);
+			System.out.println(XMLUtils.toString(doc2));
+			
+			String s=XMLFastJsonParser.DEFAULT.toJsonString(doc2);
+			System.out.println(s);
+		}
+		System.out.println("========================================");
+		{
+			String s=XMLFastJsonParser.SIMPLE.toJsonString(doc);
+			System.out.println(s);
+			Document doc2=XMLFastJsonParser.SIMPLE.toDocument((JSONObject)JSON.parse(s));
+			System.out.println(XMLUtils.toString(doc2));
+		}
+		
 	}
 	
 	@Test
@@ -229,15 +250,15 @@ public class JsonTest extends org.junit.Assert{
 	}
 
 	private String toJson(Object obj) throws Exception {
-		System.out.println(ConfigManager.get("custom1").hasType(BeanForTest.class));
+		System.out.println(ConfigManager.get("custom1").get(BeanForTest.class)!=null);
 		JSONSerializer serializer = new JSONSerializer(ConfigManager.get("custom1"));
 		try {
 //			serializer.config(SerializerFeature.PrettyFormat, true);
 			SerializeConfig config=serializer.getMapping();
-			ObjectSerializer se=config.createASMSerializer(BeanForTest.class,ImmutableMap.of("id","the_id","name","name_person"));
+			ObjectSerializer se=config.createASMSerializer(BeanForTest.class);//,ImmutableMap.of("id","the_id","name","name_person")
 			config.put(BeanForTest.class,se);
 			serializer.write(obj);
-			System.out.println(ConfigManager.get("custom1").hasType(BeanForTest.class));
+			System.out.println(ConfigManager.get("custom1").get(BeanForTest.class)!=null);
 			return serializer.toString();
 		} finally {
 			serializer.close();

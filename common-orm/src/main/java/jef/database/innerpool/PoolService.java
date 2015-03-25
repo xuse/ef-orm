@@ -28,16 +28,16 @@ public class PoolService {
 	 * @param max 当Max==0时等同于Nopool
 	 * @return
 	 */
-	public static IUserManagedPool getPool(DataSource ds, int max,TransactionMode txMode) {
+	public static IUserManagedPool getPool(DataSource ds, int min,int max,TransactionMode txMode) {
 		String noPoolStr = JefConfiguration.get(DbCfg.DB_NO_POOL, "auto");
 		if(txMode==TransactionMode.JDBC || txMode==TransactionMode.JTA){
 			max=0;
 		}
 		boolean auto = "auto".equalsIgnoreCase(noPoolStr) && max>0;
-		boolean noPool = StringUtils.toBoolean(noPoolStr, false) || max==0;
-		int min = JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL, 3);
-		
-		
+		boolean noPool = StringUtils.toBoolean(noPoolStr, false) || max==0 ;
+		if(min==0){
+			min = JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL, 3);
+		}
 		IUserManagedPool result;
 		
 		if (ds instanceof IRoutingDataSource) {

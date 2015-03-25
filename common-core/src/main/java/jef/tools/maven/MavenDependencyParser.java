@@ -13,6 +13,7 @@ import java.util.Set;
 
 import jef.common.log.LogUtil;
 import jef.tools.Assert;
+import jef.tools.SimpleXPath;
 import jef.tools.StringUtils;
 import jef.tools.X;
 import jef.tools.XMLUtils;
@@ -191,7 +192,7 @@ public class MavenDependencyParser {
 	private static void parseExtends(ExtendsAsset parentContext, Pom doc) throws SAXException, IOException {
 		List<Pom> parents = getParents(doc);
 		for (Pom parent : parents) {
-			Map<String, String> map = XMLUtils.getAttributesMap((Element) XMLUtils.getNodeByXPath(parent.getDocument(), "/project/properties"), true);
+			Map<String, String> map = XMLUtils.getAttributesMap((Element) SimpleXPath.getNodeByXPath(parent.getDocument(), "/project/properties"), true);
 			parentContext.properties.putAll(map);
 			parseDependency(parentContext, parent);
 		}
@@ -249,12 +250,12 @@ public class MavenDependencyParser {
 		Document doc = pom.getDocument();
 		if ("project.version".equals(paramName)) {
 			try {
-				paramValue = XMLUtils.getAttributeByXPath(doc, "/project/version@#text");
+				paramValue = SimpleXPath.getAttributeByXPath(doc, "/project/version@#text");
 			} catch (NoSuchElementException e) {
 			}
 			if (StringUtils.isEmpty(paramValue)) {
 				try {
-					paramValue = XMLUtils.getAttributeByXPath(doc, "/project/parent/version@#text");
+					paramValue = SimpleXPath.getAttributeByXPath(doc, "/project/parent/version@#text");
 				} catch (NoSuchElementException e) {
 				}
 			}
@@ -263,7 +264,7 @@ public class MavenDependencyParser {
 			if (paramValue == null) {
 				Pom currentDoc = pom;
 				while (currentDoc != null) {
-					Element propertiesNode = (Element) XMLUtils.getNodeByXPath(currentDoc.getDocument(), "/project/properties");
+					Element propertiesNode = (Element) SimpleXPath.getNodeByXPath(currentDoc.getDocument(), "/project/properties");
 					paramValue = XMLUtils.nodeText(propertiesNode, paramName);
 					if (paramValue != null)
 						break;

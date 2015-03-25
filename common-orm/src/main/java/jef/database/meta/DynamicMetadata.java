@@ -48,7 +48,7 @@ public class DynamicMetadata extends AbstractMetadata {
 
 	protected Map<String, Field> lowerColumnToFieldName = new HashMap<String, Field>(10, 0.6f);
 
-	private List<ColumnMapping<?>> pkFields = new ArrayList<ColumnMapping<?>>();
+	private List<ColumnMapping> pkFields = new ArrayList<ColumnMapping>();
 
 	private final Set<TupleModificationListener> listeners = new HashSet<TupleModificationListener>();
 
@@ -88,7 +88,7 @@ public class DynamicMetadata extends AbstractMetadata {
 	 * 特殊处理，由于半动态表在实例化过程中，通过新建的TupleField代替了原来在元模型中定义的field，Field不再是单例对象，因此只能通过名称去匹配
 	 * 。
 	 */
-	public ColumnMapping<?> getColumnDef(Field field) {
+	public ColumnMapping getColumnDef(Field field) {
 		return schemaMap.get(getField(field.name()));
 	}
 
@@ -106,7 +106,7 @@ public class DynamicMetadata extends AbstractMetadata {
 		this.tableName = extension.getName();
 		this.schema = parent.getSchema();
 		setBindDsName(parent.getBindDsName());
-		for (ColumnMapping<?> m : parent.getColumnSchema()) {
+		for (ColumnMapping m : parent.getColumnSchema()) {
 			this.updateColumn(m.fieldName(), m.rawColumnName(), m.get(), m.isPk(), false);
 		}
 		this.refFieldsByName.putAll(parent.getRefFieldsByName());
@@ -219,7 +219,7 @@ public class DynamicMetadata extends AbstractMetadata {
 			oldField = field;
 		}
 
-		ColumnMapping<?> mType = ColumnMappings.getMapping(oldField, this, columnName, type, isPk);
+		ColumnMapping mType = ColumnMappings.getMapping(oldField, this, columnName, type, isPk);
 
 		updateAutoIncrementAndUpdate(mType);
 
@@ -243,7 +243,7 @@ public class DynamicMetadata extends AbstractMetadata {
 
 	private void internalRemoveField(Field field) {
 		// fields
-		ColumnMapping<?> mType = schemaMap.remove(field);
+		ColumnMapping mType = schemaMap.remove(field);
 		if (mType != null) {
 			// columnToField
 			lowerColumnToFieldName.remove(mType.lowerColumnName());
@@ -302,7 +302,7 @@ public class DynamicMetadata extends AbstractMetadata {
 		if (path.length > 0) {
 			config.path= new JoinPath(JoinType.INNER, path);
 		}
-		ColumnMapping<?> targetFld= DbUtils.toColumnMapping(targetField);
+		ColumnMapping targetFld= DbUtils.toColumnMapping(targetField);
 		Property pp = containerAccessor.getProperty(fieldName);
 		innerAdd(pp, targetFld, config);
 	}
@@ -353,7 +353,7 @@ public class DynamicMetadata extends AbstractMetadata {
 	public void addCascadeOneToOne(String fieldName, Field target, JoinPath path) {
 		CascadeConfig config = new CascadeConfig(null, (OneToOne) null);
 		config.path=path;
-		ColumnMapping<?> targetFld= DbUtils.toColumnMapping(target);
+		ColumnMapping targetFld= DbUtils.toColumnMapping(target);
 		Property pp = containerAccessor.getProperty(fieldName);
 		innerAdd(pp, targetFld, config);
 	}
@@ -396,7 +396,7 @@ public class DynamicMetadata extends AbstractMetadata {
 		if (path.length > 0) {
 			config.path = new JoinPath(JoinType.INNER, path);
 		}
-		ColumnMapping<?> targetFld= DbUtils.toColumnMapping(target);
+		ColumnMapping targetFld= DbUtils.toColumnMapping(target);
 		Property pp = containerAccessor.getProperty(fieldName);
 		innerAdd(pp, targetFld, config);
 	}
@@ -433,7 +433,7 @@ public class DynamicMetadata extends AbstractMetadata {
 	 */
 	public void addCascadeManyToOne(String fieldName, Field target, JoinPath path) {
 		CascadeConfig config = new CascadeConfig(null, (ManyToOne) null);
-		ColumnMapping<?> targetFld= DbUtils.toColumnMapping(target);
+		ColumnMapping targetFld= DbUtils.toColumnMapping(target);
 		Property pp = containerAccessor.getProperty(fieldName);
 		innerAdd(pp, targetFld, config);
 	}
@@ -502,7 +502,7 @@ public class DynamicMetadata extends AbstractMetadata {
 	}
 
 	@Override
-	public List<ColumnMapping<?>> getPKFields() {
+	public List<ColumnMapping> getPKFields() {
 		if (pkFields == null)
 			return Collections.emptyList();
 		return pkFields;
@@ -554,12 +554,12 @@ public class DynamicMetadata extends AbstractMetadata {
 	}
 
 	@Override
-	public Collection<ColumnMapping<?>> getExtendedColumns() {
+	public Collection<ColumnMapping> getExtendedColumns() {
 		return getColumnSchema();
 	}
 
 	@Override
-	public ColumnMapping<?> getExtendedColumnDef(String field) {
+	public ColumnMapping getExtendedColumnDef(String field) {
 		return schemaMap.get(getField(field));
 	}
 }

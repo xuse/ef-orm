@@ -62,7 +62,7 @@ public abstract class EntityExtensionSupport extends DataObject implements Metad
 			attributes = new HashMap<String, Object>();
 		}
 		ITableMetadata meta = this.getMeta();
-		ColumnMapping<?> field = meta.getExtendedColumnDef(key);
+		ColumnMapping field = meta.getExtendedColumnDef(key);
 		if (field == null) {
 			throw new IllegalArgumentException("Unknown [" + key + "] .Avaliable: " + getMeta().getAllFieldNames());
 		} else {

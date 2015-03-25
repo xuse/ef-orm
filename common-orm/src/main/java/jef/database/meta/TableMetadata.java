@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.Column;
-import javax.persistence.Id;
 import javax.persistence.Table;
 
 import jef.accelerator.bean.BeanAccessor;
@@ -48,7 +47,6 @@ import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.type.ColumnMapping;
-import jef.database.dialect.type.ColumnMappings;
 import jef.database.routing.function.AbstractDateFunction;
 import jef.database.routing.function.MapFunction;
 import jef.database.routing.function.ModulusFunction;
@@ -81,7 +79,7 @@ public final class TableMetadata extends AbstractMetadata {
 	
 	private Entry<PartitionKey, PartitionFunction>[] effectPartitionKeys;
 
-	private List<ColumnMapping<?>> pkFields;// 记录主键列
+	private List<ColumnMapping> pkFields;// 记录主键列
 
 
 	private final Map<Field, String> fieldToColumn = new IdentityHashMap<Field, String>();// 提供Field到列名的转换
@@ -178,7 +176,7 @@ public final class TableMetadata extends AbstractMetadata {
 		};
 	}
 
-	public List<ColumnMapping<?>> getPKFields() {
+	public List<ColumnMapping> getPKFields() {
 		return pkFields;
 	}
 	/**
@@ -187,39 +185,22 @@ public final class TableMetadata extends AbstractMetadata {
 	 * @param field
 	 * @param column
 	 */
-	public void putJavaField(Field field, ColumnType column, Id annoId, javax.persistence.Column a) {
+	public void putJavaField(Field field, ColumnMapping type, String columnName,boolean isPk) {
 		fields.put(field.name(), field);
 		lowerFields.put(field.name().toLowerCase(), field);
-
-		// 计算列名并备份
-		// FieldEx f = BeanUtils.getField(metaType, field.name());
-		// Assert.notNull(f, "There's no field named '" + field.name() +
-		// "' in class " + metaType.getName());
-
-		String cName;
-		if (a != null && a.name().length() > 0) {
-			cName = a.name().trim();
-		} else {
-			cName = field.name();
-
-		}
-		fieldToColumn.put(field, cName);
-		String lastFieldName=lowerColumnToFieldName.put(cName.toLowerCase(), field.name());
+	
+		fieldToColumn.put(field, columnName);
+		String lastFieldName=lowerColumnToFieldName.put(columnName.toLowerCase(), field.name());
 		if(lastFieldName!=null && !field.name().equals(lastFieldName)){
-			throw new IllegalArgumentException(String.format("The field [%s] and [%s] in [%s] have a duplicate column name [%s].",lastFieldName,field.name(),containerType.getName(),cName));
+			throw new IllegalArgumentException(String.format("The field [%s] and [%s] in [%s] have a duplicate column name [%s].",lastFieldName,field.name(),containerType.getName(),columnName));
 		}
-		ColumnMapping<?> type;
-		try {
-			type = ColumnMappings.getMapping(field, this, cName, column, false);
-		} catch (IllegalArgumentException e) {
-			throw new IllegalArgumentException(this.getName() + ":" + field.name() + " can not mapping to sql type.", e);
-		}
-		if (annoId != null) {
+	
+		if (isPk) {
 			type.setPk(true);
-			List<ColumnMapping<?>> newPks = new ArrayList<ColumnMapping<?>>(pkFields);
+			List<ColumnMapping> newPks = new ArrayList<ColumnMapping>(pkFields);
 			newPks.add(type);
-			Collections.sort(newPks, new Comparator<ColumnMapping<?>>() {
-				public int compare(ColumnMapping<?> o1, ColumnMapping<?> o2) {
+			Collections.sort(newPks, new Comparator<ColumnMapping>() {
+				public int compare(ColumnMapping o1, ColumnMapping o2) {
 					Integer i1=-1;
 					Integer i2=-1;
 					if(o1 instanceof Enum){
@@ -231,7 +212,7 @@ public final class TableMetadata extends AbstractMetadata {
 					return i1.compareTo(i2);
 				}
 			});
-			this.pkFields = Arrays.<ColumnMapping<?>>asList(newPks.toArray(new ColumnMapping[newPks.size()]));
+			this.pkFields = Arrays.<ColumnMapping>asList(newPks.toArray(new ColumnMapping[newPks.size()]));
 		}
 		schemaMap.put(field, type);
 		super.updateAutoIncrementAndUpdate(type);
@@ -268,7 +249,7 @@ public final class TableMetadata extends AbstractMetadata {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Entity: [").append(containerType.getName()).append("]\n");
-		for (ColumnMapping<?> m:schemaMap.values()) {
+		for (ColumnMapping m:schemaMap.values()) {
 			String fname=m.fieldName();
 			sb.append("  ").append(fname);
 			StringUtils.repeat(sb, ' ', 10-fname.length());
@@ -385,11 +366,11 @@ public final class TableMetadata extends AbstractMetadata {
 	}
 
 	// 会将LOB移动到最后
-	public List<ColumnMapping<?>> getColumns() {
+	public List<ColumnMapping> getColumns() {
 		if (metaFields == null) {
-			ColumnMapping<?>[] fields = schemaMap.values().toArray(new ColumnMapping<?>[schemaMap.size()]);
-			Arrays.sort(fields, new Comparator<ColumnMapping<?>>() {
-				public int compare(ColumnMapping<?> field1, ColumnMapping<?> field2) {
+			ColumnMapping[] fields = schemaMap.values().toArray(new ColumnMapping[schemaMap.size()]);
+			Arrays.sort(fields, new Comparator<ColumnMapping>() {
+				public int compare(ColumnMapping field1, ColumnMapping field2) {
 					Class<? extends ColumnType> type1 = field1.get().getClass();
 					Class<? extends ColumnType> type2 = field1.get().getClass();
 					Boolean b1 = (type1 == ColumnType.Blob.class || type1 == ColumnType.Clob.class);
@@ -502,12 +483,12 @@ public final class TableMetadata extends AbstractMetadata {
 	}
 
 	@Override
-	public Collection<ColumnMapping<?>> getExtendedColumns() {
+	public Collection<ColumnMapping> getExtendedColumns() {
 		return extendMeta.getColumnSchema();
 	}
 
 	@Override
-	public ColumnMapping<?> getExtendedColumnDef(String field) {
+	public ColumnMapping getExtendedColumnDef(String field) {
 		return extendMeta.getColumnDef(extendMeta.getField(field));
 	}
 }

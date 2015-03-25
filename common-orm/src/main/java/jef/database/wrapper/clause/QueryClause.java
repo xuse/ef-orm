@@ -16,8 +16,8 @@
 package jef.database.wrapper.clause;
 
 import jef.common.wrapper.IntRange;
-import jef.database.annotation.PartitionResult;
 import jef.database.cache.CacheKeyProvider;
+import jef.database.routing.PartitionResult;
 import jef.database.routing.sql.InMemoryOperateProvider;
 
 public interface QueryClause extends SqlClause, CacheKeyProvider,InMemoryOperateProvider {

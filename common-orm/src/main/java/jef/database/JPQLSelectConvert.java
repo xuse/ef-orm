@@ -164,7 +164,7 @@ public class JPQLSelectConvert extends VisitorAdapter {
 				ITableMetadata meta = MetaHolder.getMeta(c.asSubclass(IQueryableEntity.class));
 				if (meta == null)
 					continue;
-				ColumnMapping<?> fld = meta.findField(col);
+				ColumnMapping fld = meta.findField(col);
 				if (fld == null)
 					continue;
 				tableColumn.setColumnName(fld.getColumnName(profile, true));
@@ -174,7 +174,7 @@ public class JPQLSelectConvert extends VisitorAdapter {
 			if (cc == null)
 				return;
 			ITableMetadata meta = MetaHolder.getMeta(cc);
-			ColumnMapping<?> fld = meta.findField(col);
+			ColumnMapping fld = meta.findField(col);
 			if (fld == null)
 				return;
 			tableColumn.setColumnName(fld.getColumnName(profile, true));

@@ -7,12 +7,12 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 
 
-public class CharCharMapping extends AColumnMapping<Character>{
+public class CharCharMapping extends AColumnMapping{
 	public int getSqlType() {
 		return java.sql.Types.CHAR;
 	}
 	
-	public Object set(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
 			st.setNull(index, java.sql.Types.CHAR);
 		}else{
@@ -26,9 +26,14 @@ public class CharCharMapping extends AColumnMapping<Character>{
 		return wrapSqlStr(value.toString());
 	}
 
-	public Object getProperObject(IResultSet rs, int n) throws SQLException {
+	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		String s=rs.getString(n);
 		if(s==null || s.length()==0)return null;
 		return s.charAt(0);
+	}
+
+	@Override
+	protected Class<?> getDefaultJavaType() {
+		return Character.class;
 	}
 }
