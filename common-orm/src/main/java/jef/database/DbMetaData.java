@@ -1957,7 +1957,7 @@ public class DbMetaData {
 	public boolean dropTable(String table) throws SQLException {
 		if (existTable(table)) {
 			StatementExecutor exe = createExecutor();
-			String sql = "drop table " + table;
+			String sql = "drop table " + DbUtils.escapeColumn(getProfile(), table);
 			try {
 				if (getProfile().has(Feature.DROP_CASCADE)) {
 					sql += " cascade constraints";

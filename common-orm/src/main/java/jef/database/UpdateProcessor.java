@@ -118,6 +118,7 @@ public abstract class UpdateProcessor {
 		int processUpdate0(OperateTarget db, IQueryableEntity obj, UpdateClause update, BindSql where, PartitionResult site, SqlLog log) throws SQLException {
 			int result = 0;
 			for (String tablename : site.getTables()) {
+				tablename=DbUtils.escapeColumn(db.getProfile(), tablename);
 				String sql = "update " + tablename + " set " + update.getSql() + where;
 				Statement st = null;
 				try {
@@ -208,6 +209,7 @@ public abstract class UpdateProcessor {
 		int processUpdate0(OperateTarget db, IQueryableEntity obj, UpdateClause setValues, BindSql whereValues, PartitionResult site, SqlLog log) throws SQLException {
 			int result = 0;
 			for (String tablename : site.getTables()) {
+				tablename=DbUtils.escapeColumn(db.getProfile(), tablename);
 				String updateSql = StringUtils.concat("update ", tablename, " set ", setValues.getSql(), whereValues.getSql());
 				log.ensureCapacity(updateSql.length() + 150);
 				log.append(updateSql).append(db);

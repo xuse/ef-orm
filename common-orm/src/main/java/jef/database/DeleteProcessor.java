@@ -88,6 +88,7 @@ public abstract class DeleteProcessor {
 					st.setQueryTimeout(deleteTimeout);
 				for (Iterator<String> iter = site.getTables().iterator(); iter.hasNext();) {
 					tablename = iter.next();
+					tablename=DbUtils.escapeColumn(db.getProfile(),tablename);
 					StringBuilder sql = new StringBuilder("delete from ").append(tablename).append(where.toString());
 					sb.append(sql).append(db);
 					sb.append('\n');
@@ -126,7 +127,7 @@ public abstract class DeleteProcessor {
 		int processDelete0(OperateTarget db, IQueryableEntity obj, BindSql where, PartitionResult site,SqlLog sb) throws SQLException {
 			int count = 0;
 			for (String tablename : site.getTables()) {
-				String sql = "delete from " + tablename + where.getSql();
+				String sql = "delete from " + DbUtils.escapeColumn(db.getProfile(),tablename) + where.getSql();
 				sb.ensureCapacity(sql.length() + 150);
 				sb.append(sql).append(db);
 					

@@ -253,10 +253,11 @@ public abstract class Batch<T extends IQueryableEntity> {
 	}
 
 	protected long innerCommit(List<T> objs, String site, String tablename, String dbName) throws SQLException {
-		String sql = toSql(tablename);
+		OperateTarget db = parent.selectTarget(site);
+		String sql = toSql(DbUtils.escapeColumn(db.getProfile(), tablename));
 		if (ORMConfig.getInstance().isDebugMode())
 			LogUtil.show(sql + " | " + dbName);
-		OperateTarget db = parent.selectTarget(site);
+		
 		PreparedStatement p = db.prepareStatement(sql);
 		try {
 			return doCommit(p, db, objs);

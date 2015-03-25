@@ -18,6 +18,7 @@ package jef.database.wrapper.clause;
 import java.util.ArrayList;
 import java.util.List;
 
+import jef.database.DbUtils;
 import jef.database.Session;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
@@ -55,7 +56,7 @@ public class InsertSqlClause{
 	 */
 	public String getSql(String tablename) {
 		StringBuilder sb = fields==null?new StringBuilder():new StringBuilder(fields.size()*8+32);
-		sb.append(insert).append(tablename);
+		sb.append(insert).append(DbUtils.escapeColumn(profile, tablename));
 		sb.append("(").append(columnsPart).append(") values(");
 		sb.append(valuesPart).append(")");
 		sb.append(tailer);

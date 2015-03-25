@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import jef.common.PairIS;
+import jef.database.DbUtils;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.ColumnType.Varchar;
@@ -27,12 +28,12 @@ public class TableCreateStatement {
 
 	public void addTableMeta(String tablename, ITableMetadata meta, DatabaseDialect profile) {
 		TableDef tableDef = new TableDef();
-		tableDef.tablename = tablename;
+		tableDef.escapedTablename = DbUtils.escapeColumn(profile, tablename);
 		for (ColumnMapping column : meta.getColumns()) {
 			processField(column, tableDef, profile);
 		}
 		if (!tableDef.NoPkConstraint && !meta.getPKFields().isEmpty()) {
-			tableDef.addPkConstraint(meta.getPKFields(), profile);
+			tableDef.addPkConstraint(meta.getPKFields(), profile, tablename);
 		}
 		this.tables.add(tableDef);
 	}
@@ -86,7 +87,7 @@ public class TableCreateStatement {
 	private final List<PairIS> sequences = new ArrayList<PairIS>();
 
 	static class TableDef {
-		private String tablename;
+		private String escapedTablename;
 		/**
 		 * MySQL专用。字符集编码
 		 */
@@ -99,7 +100,7 @@ public class TableCreateStatement {
 		private boolean NoPkConstraint;
 
 		public String getTableSQL() {
-			String sql = "create table " + tablename + "(\n" + columnDefinition + "\n)";
+			String sql = "create table " + escapedTablename + "(\n" + columnDefinition + "\n)";
 			if (charSetFix != null) {
 				sql = sql + charSetFix;
 			}
@@ -110,7 +111,7 @@ public class TableCreateStatement {
 			return columnDefinition;
 		}
 
-		public void addPkConstraint(List<ColumnMapping> pkFields, DatabaseDialect profile) {
+		public void addPkConstraint(List<ColumnMapping> pkFields, DatabaseDialect profile,String tablename) {
 			StringBuilder sb = getColumnDef();
 			sb.append(",\n");
 			String[] columns = new String[pkFields.size()];

@@ -167,7 +167,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 
 	private void initCache(DatabaseDialect profile) {
 		bindProfile = profile;
-		cachedTable = new DbTable(bindDsName, DbUtils.escapeColumn(profile,profile.getObjectNameToUse(getTableName(true))), false, false);
+		cachedTable = new DbTable(bindDsName, profile.getObjectNameToUse(getTableName(true)), false, false);
 	}
 
 	public KeyDimension getPKDimension(List<Serializable> pks, DatabaseDialect profile) {
