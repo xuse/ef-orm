@@ -1,4 +1,4 @@
-﻿package org.easyframe.fastjson.util;
+package org.easyframe.fastjson.util;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

@@ -16,8 +16,6 @@ import java.util.WeakHashMap;
 import jef.common.wrapper.Page;
 import jef.tools.Assert;
 
-import org.springframework.core.GenericCollectionTypeResolver;
-import org.springframework.core.JdkVersion;
 
 /**
  * Helper class for resolving generic types against type variables.

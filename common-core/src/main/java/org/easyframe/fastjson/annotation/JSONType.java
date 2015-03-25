@@ -1,4 +1,4 @@
-﻿package org.easyframe.fastjson.annotation;
+package org.easyframe.fastjson.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
