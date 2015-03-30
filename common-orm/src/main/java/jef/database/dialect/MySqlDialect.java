@@ -298,8 +298,12 @@ public class MySqlDialect extends AbstractDialect {
 	 */
 	@Override
 	public String getObjectNameToUse(String name) {
-		return StringUtils.lowerCase(name);
+		if(name==null)return null;
+		if(name.charAt(1)=='`')return name;
+		return name.toLowerCase();
 	}
+	
+	
 
 	@Override
 	public String getCatlog(String schema) {
