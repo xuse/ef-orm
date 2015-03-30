@@ -1,5 +1,8 @@
 package jef.database.meta;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import jef.database.Field;
 import jef.database.VarObject;
 import jef.database.dialect.ColumnType;
@@ -80,5 +83,10 @@ public final class TupleMetadata extends DynamicMetadata {
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public Collection<ColumnMapping> getColumns() {
+		return Collections.unmodifiableCollection(orderdColumns);
 	}
 }

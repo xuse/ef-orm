@@ -53,6 +53,8 @@ public class DynamicMetadata extends AbstractMetadata {
 	private final Set<TupleModificationListener> listeners = new HashSet<TupleModificationListener>();
 
 	private BeanAccessor containerAccessor = BeanAccessorMapImpl.INSTANCE;
+	
+	protected final List<ColumnMapping> orderdColumns = new ArrayList<ColumnMapping>();
 
 	/**
 	 * 创建当前元数据的对象实例。 由于2.0版开始，TupleMetadata的数据容器类型不再仅有VarObject一种，
@@ -223,6 +225,8 @@ public class DynamicMetadata extends AbstractMetadata {
 
 		String fieldName = field.name();
 		schemaMap.put(oldField, mType);
+		orderdColumns.add(mType);
+		
 		fields.put(fieldName, oldField);
 		lowerFields.put(fieldName.toLowerCase(), oldField);
 		lowerColumnToFieldName.put(columnName.toLowerCase(), oldField);
@@ -242,6 +246,7 @@ public class DynamicMetadata extends AbstractMetadata {
 	private void internalRemoveField(Field field) {
 		// fields
 		ColumnMapping mType = schemaMap.remove(field);
+		orderdColumns.remove(mType);
 		if (mType != null) {
 			// columnToField
 			lowerColumnToFieldName.remove(mType.lowerColumnName());

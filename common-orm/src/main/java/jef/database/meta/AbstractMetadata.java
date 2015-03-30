@@ -104,7 +104,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		this.bindProfile = null;
 	}
 
-	public List<ColumnMapping> getColumns() {
+	public Collection<ColumnMapping> getColumns() {
 		if (metaFields == null) {
 			Collection<ColumnMapping> map = this.getColumnSchema();
 			ColumnMapping[] fields = map.toArray(new ColumnMapping[map.size()]);

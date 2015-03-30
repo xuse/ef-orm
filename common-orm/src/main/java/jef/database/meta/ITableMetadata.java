@@ -138,7 +138,7 @@ public interface ITableMetadata {
 	 * 
 	 * @return
 	 */
-	public List<ColumnMapping> getColumns();
+	public Collection<ColumnMapping> getColumns();
 	
 	/**
 	 * 获取字段的元数据定义
