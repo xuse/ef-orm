@@ -31,6 +31,7 @@ import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.manipulation.Filter;
 import org.junit.runner.manipulation.NoTestsRemainException;
+import org.junit.runner.notification.Failure;
 import org.junit.runner.notification.RunListener;
 import org.junit.runner.notification.RunNotifier;
 import org.junit.runners.BlockJUnit4ClassRunner;
@@ -246,7 +247,6 @@ public class JefJUnit4DatabaseTestRunner extends BlockJUnit4ClassRunner {
 
 	@Override
 	public void run(RunNotifier notifier) {
-		super.run(notifier);
 		notifier.addListener(new RunListener() {
 			public void testRunFinished(Result result) throws Exception {
 				super.testRunFinished(result);
@@ -262,7 +262,15 @@ public class JefJUnit4DatabaseTestRunner extends BlockJUnit4ClassRunner {
 					}
 				}
 			}
+
+			@Override
+			public void testFailure(Failure failure) throws Exception {
+				super.testFailure(failure);
+				System.err.println("!!!Failure!!!");
+				failure.getException().printStackTrace();
+			}
 		});
+		super.run(notifier);
 	}
 
 	private void close(DbClient db, String field) {

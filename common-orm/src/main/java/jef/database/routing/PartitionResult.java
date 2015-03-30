@@ -1,8 +1,12 @@
 package jef.database.routing;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import jef.database.DbUtils;
+import jef.database.dialect.DatabaseDialect;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -49,6 +53,30 @@ public class PartitionResult {
 		if(tables==null)return Collections.EMPTY_LIST;
 		return tables;
 	}
+	
+	/**
+	 * 得到多个数据库表名称，如果带schema则表示 schema.tablename
+	 * @param profile
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public List<String> getTablesEscaped(DatabaseDialect profile) {
+		if(tables==null)return Collections.EMPTY_LIST;
+		String raw=tables.get(0);
+		//FIXME if there is schema in table name, how...
+		String name=DbUtils.escapeColumn(profile, raw);
+		
+		if(name==raw){
+			return tables; 
+		}else{
+			List<String> r=new ArrayList<String>(tables);
+			r.set(0, name);
+			return r;
+		}
+	}
+	
+	
+	
 	public void setTables(List<String> tables) {
 		this.tables = tables;
 	}
@@ -75,6 +103,21 @@ public class PartitionResult {
 			throw new IllegalArgumentException("There's no table!");
 		}
 		return tables.get(0);
+	}
+	
+	/**
+	 * 获得表名。Escaped
+	 * @param profile
+	 * @return
+	 */
+	public String getAsOneTableEscaped(DatabaseDialect profile) {
+		int n=tables.size();
+		if(n>1){
+			throw new IllegalArgumentException("There's " + n+" tables!");
+		}else if(n==0){
+			throw new IllegalArgumentException("There's no table!");
+		}
+		return DbUtils.escapeColumn(profile, tables.get(0));
 	}
 
 	/**

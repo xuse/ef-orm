@@ -73,6 +73,7 @@ import jef.database.annotation.JoinDescription;
 import jef.database.annotation.JoinType;
 import jef.database.annotation.NoForceEnhance;
 import jef.database.dialect.ColumnType;
+import jef.database.dialect.TypeDefImpl;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.ColumnMappings;
 import jef.database.jsqlparser.expression.BinaryExpression;
@@ -1045,7 +1046,7 @@ public final class MetaHolder {
 		} else if(annos.getFieldAnnotation(field, jef.database.annotation.Type.class)!=null){
 			jef.database.annotation.Type t=annos.getFieldAnnotation(field, jef.database.annotation.Type.class);
 			ColumnMapping cm=BeanUtils.newInstance(t.value());
-			return new ColumnType.Other(def, cm.getSqlType(), field.getType());
+			return new TypeDefImpl(def, cm.getSqlType(), field.getType());
 		} else {
 			throw new IllegalArgumentException("Unknow column Def:" + def);
 			// return new ColumnType.Unknown(def).setNullable(nullable);

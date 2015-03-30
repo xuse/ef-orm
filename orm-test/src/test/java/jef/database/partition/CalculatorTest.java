@@ -9,8 +9,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import javax.persistence.GenerationType;
-
 import jef.codegen.EntityEnhancer;
 import jef.database.DbUtils;
 import jef.database.annotation.PartitionKeyImpl;
@@ -18,6 +16,7 @@ import jef.database.annotation.PartitionTable;
 import jef.database.annotation.PartitionTableImpl;
 import jef.database.dialect.AbstractDialect;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.dialect.type.AutoIncrementMapping.GenerationResolution;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.parser.StSqlParser;
@@ -157,7 +156,7 @@ public class CalculatorTest extends org.junit.Assert{
 			Assert.notNull(result);
 			System.out.println(Arrays.asList(result));
 			assertEquals("[test_entity_MM]",Arrays.toString(result));
-			assertEquals(GenerationType.TABLE, meta.getFirstAutoincrementDef().getGenerationType(profile));
+			assertEquals(GenerationResolution.TABLE, meta.getFirstAutoincrementDef().getGenerationType(profile));
 		}
 	}
 

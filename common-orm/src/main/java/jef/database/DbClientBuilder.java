@@ -41,6 +41,8 @@ import org.easyframe.enterprise.spring.TransactionMode;
  * 
  */
 public class DbClientBuilder {
+	// 为了防止在单元测试中反复执行文件扫描。
+	private static long lastEnhanceTime;
 	/**
 	 * 多数据源。分库分表时可以使用。 在Spring配置时，可以使用这样的格式来配置
 	 * 
@@ -162,14 +164,15 @@ public class DbClientBuilder {
 
 	/**
 	 * 构造
+	 * 
 	 * @param 是否对classpath下的目录进行类增强
 	 */
 	public DbClientBuilder(boolean enhance) {
-		if(!enhance){
+		if (!enhance) {
 			this.setEnhancePackages("none");
 		}
 	}
-	
+
 	/**
 	 * 构造
 	 * 
@@ -309,7 +312,7 @@ public class DbClientBuilder {
 	public DataSource getDataSource() {
 		return dataSource;
 	}
-	
+
 	/**
 	 * 设置数据源
 	 * 
@@ -512,7 +515,7 @@ public class DbClientBuilder {
 	public String getNamedQueryFile() {
 		return namedQueryFile;
 	}
-	
+
 	protected JefEntityManagerFactory buildSessionFactory() {
 		if (instance != null)
 			return instance;
@@ -525,8 +528,11 @@ public class DbClientBuilder {
 		} else if (packagesToScan != null) {
 			// if there is no enhances packages, try enhance 'package to Scan'
 			new EntityEnhancer().enhance(packagesToScan);
-		}else{
-			new EntityEnhancer().setExcludePatter(new String[]{"java","javax","org.apache","org.eclipse","junit","ant"}).enhance();
+		} else {
+			if (System.currentTimeMillis() - lastEnhanceTime > 30000) {
+				new EntityEnhancer().setExcludePatter(new String[] { "java", "javax", "org.apache", "org.eclipse", "junit", "ant" }).enhance();
+			}
+			lastEnhanceTime = System.currentTimeMillis();
 		}
 
 		JefEntityManagerFactory sf;

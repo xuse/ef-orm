@@ -53,6 +53,8 @@ public class DynamicMetadata extends AbstractMetadata {
 	private final Set<TupleModificationListener> listeners = new HashSet<TupleModificationListener>();
 
 	private BeanAccessor containerAccessor = BeanAccessorMapImpl.INSTANCE;
+	
+	protected final List<ColumnMapping> orderdColumns = new ArrayList<ColumnMapping>();
 
 	/**
 	 * 创建当前元数据的对象实例。 由于2.0版开始，TupleMetadata的数据容器类型不再仅有VarObject一种，
@@ -204,7 +206,7 @@ public class DynamicMetadata extends AbstractMetadata {
 	}
 
 	protected boolean internalUpdateColumn(Field field, String columnName, ColumnType type, boolean isPk, boolean replace) {
-		if(isPk){
+		if (isPk) {
 			type.setNullable(false);
 		}
 		Field oldField = fields.get(field.name());
@@ -218,13 +220,13 @@ public class DynamicMetadata extends AbstractMetadata {
 			replace = false;// 新建的场合
 			oldField = field;
 		}
-
 		ColumnMapping mType = ColumnMappings.getMapping(oldField, this, columnName, type, isPk);
-
 		updateAutoIncrementAndUpdate(mType);
 
 		String fieldName = field.name();
 		schemaMap.put(oldField, mType);
+		orderdColumns.add(mType);
+		
 		fields.put(fieldName, oldField);
 		lowerFields.put(fieldName.toLowerCase(), oldField);
 		lowerColumnToFieldName.put(columnName.toLowerCase(), oldField);
@@ -244,6 +246,7 @@ public class DynamicMetadata extends AbstractMetadata {
 	private void internalRemoveField(Field field) {
 		// fields
 		ColumnMapping mType = schemaMap.remove(field);
+		orderdColumns.remove(mType);
 		if (mType != null) {
 			// columnToField
 			lowerColumnToFieldName.remove(mType.lowerColumnName());
@@ -298,11 +301,11 @@ public class DynamicMetadata extends AbstractMetadata {
 	 * 添加多对多引用字段
 	 */
 	public void addCascadeManyToMany(String fieldName, Field targetField, JoinKey... path) {
-		CascadeConfig config=new CascadeConfig(null, (ManyToMany)null);
+		CascadeConfig config = new CascadeConfig(null, (ManyToMany) null);
 		if (path.length > 0) {
-			config.path= new JoinPath(JoinType.INNER, path);
+			config.path = new JoinPath(JoinType.INNER, path);
 		}
-		ColumnMapping targetFld= DbUtils.toColumnMapping(targetField);
+		ColumnMapping targetFld = DbUtils.toColumnMapping(targetField);
 		Property pp = containerAccessor.getProperty(fieldName);
 		innerAdd(pp, targetFld, config);
 	}
@@ -316,7 +319,7 @@ public class DynamicMetadata extends AbstractMetadata {
 			config.path = new JoinPath(JoinType.INNER, path);
 		}
 		Property pp = containerAccessor.getProperty(fieldName);
-		innerAdd(pp, targetClass,config);
+		innerAdd(pp, targetClass, config);
 	}
 
 	/**
@@ -333,7 +336,7 @@ public class DynamicMetadata extends AbstractMetadata {
 	 */
 	public void addCascadeOneToOne(String fieldName, ITableMetadata target, JoinPath path) {
 		CascadeConfig config = new CascadeConfig(null, (OneToOne) null);
-		config.path=path;
+		config.path = path;
 		Property pp = containerAccessor.getProperty(fieldName);
 		innerAdd(pp, target, config);
 	}
@@ -352,8 +355,8 @@ public class DynamicMetadata extends AbstractMetadata {
 	 */
 	public void addCascadeOneToOne(String fieldName, Field target, JoinPath path) {
 		CascadeConfig config = new CascadeConfig(null, (OneToOne) null);
-		config.path=path;
-		ColumnMapping targetFld= DbUtils.toColumnMapping(target);
+		config.path = path;
+		ColumnMapping targetFld = DbUtils.toColumnMapping(target);
 		Property pp = containerAccessor.getProperty(fieldName);
 		innerAdd(pp, targetFld, config);
 	}
@@ -396,7 +399,7 @@ public class DynamicMetadata extends AbstractMetadata {
 		if (path.length > 0) {
 			config.path = new JoinPath(JoinType.INNER, path);
 		}
-		ColumnMapping targetFld= DbUtils.toColumnMapping(target);
+		ColumnMapping targetFld = DbUtils.toColumnMapping(target);
 		Property pp = containerAccessor.getProperty(fieldName);
 		innerAdd(pp, targetFld, config);
 	}
@@ -433,7 +436,7 @@ public class DynamicMetadata extends AbstractMetadata {
 	 */
 	public void addCascadeManyToOne(String fieldName, Field target, JoinPath path) {
 		CascadeConfig config = new CascadeConfig(null, (ManyToOne) null);
-		ColumnMapping targetFld= DbUtils.toColumnMapping(target);
+		ColumnMapping targetFld = DbUtils.toColumnMapping(target);
 		Property pp = containerAccessor.getProperty(fieldName);
 		innerAdd(pp, targetFld, config);
 	}

@@ -104,7 +104,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		this.bindProfile = null;
 	}
 
-	public List<ColumnMapping> getColumns() {
+	public Collection<ColumnMapping> getColumns() {
 		if (metaFields == null) {
 			Collection<ColumnMapping> map = this.getColumnSchema();
 			ColumnMapping[] fields = map.toArray(new ColumnMapping[map.size()]);
@@ -167,7 +167,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 
 	private void initCache(DatabaseDialect profile) {
 		bindProfile = profile;
-		cachedTable = new DbTable(bindDsName, DbUtils.escapeColumn(profile,profile.getObjectNameToUse(getTableName(true))), false, false);
+		cachedTable = new DbTable(bindDsName, profile.getObjectNameToUse(getTableName(true)), false, false);
 	}
 
 	public KeyDimension getPKDimension(List<Serializable> pks, DatabaseDialect profile) {

@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import jef.common.PairIS;
+import jef.database.DbUtils;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.ColumnType.Varchar;
@@ -27,12 +28,12 @@ public class TableCreateStatement {
 
 	public void addTableMeta(String tablename, ITableMetadata meta, DatabaseDialect profile) {
 		TableDef tableDef = new TableDef();
-		tableDef.tablename = tablename;
+		tableDef.escapedTablename = DbUtils.escapeColumn(profile, tablename);
 		for (ColumnMapping column : meta.getColumns()) {
 			processField(column, tableDef, profile);
 		}
 		if (!tableDef.NoPkConstraint && !meta.getPKFields().isEmpty()) {
-			tableDef.addPkConstraint(meta.getPKFields(), profile);
+			tableDef.addPkConstraint(meta.getPKFields(), profile, tablename);
 		}
 		this.tables.add(tableDef);
 	}
@@ -79,14 +80,14 @@ public class TableCreateStatement {
 	private void addSequence(String seq, int precision) {
 		sequences.add(new PairIS(precision, seq));
 	}
-	
+
 	/**
 	 * 要创建的Sequence
 	 */
 	private final List<PairIS> sequences = new ArrayList<PairIS>();
 
 	static class TableDef {
-		private String tablename;
+		private String escapedTablename;
 		/**
 		 * MySQL专用。字符集编码
 		 */
@@ -99,7 +100,7 @@ public class TableCreateStatement {
 		private boolean NoPkConstraint;
 
 		public String getTableSQL() {
-			String sql = "create table " + tablename + "(\n" + columnDefinition + "\n)";
+			String sql = "create table " + escapedTablename + "(\n" + columnDefinition + "\n)";
 			if (charSetFix != null) {
 				sql = sql + charSetFix;
 			}
@@ -110,7 +111,7 @@ public class TableCreateStatement {
 			return columnDefinition;
 		}
 
-		public void addPkConstraint(List<ColumnMapping> pkFields, DatabaseDialect profile) {
+		public void addPkConstraint(List<ColumnMapping> pkFields, DatabaseDialect profile, String tablename) {
 			StringBuilder sb = getColumnDef();
 			sb.append(",\n");
 			String[] columns = new String[pkFields.size()];
@@ -119,10 +120,9 @@ public class TableCreateStatement {
 			}
 			if (tablename.indexOf('.') > -1) {
 				tablename = StringUtils.substringAfter(tablename, ".");
-				sb.append("    constraint " + "PK_" + tablename + " primary key(" + StringUtils.join(columns, ',') + ")");
-			} else {
-				sb.append("    constraint PK_" + tablename + " primary key(" + StringUtils.join(columns, ',') + ")");
 			}
+			String pkName = profile.getObjectNameToUse("PK_" + tablename);
+			sb.append("    constraint " + pkName + " primary key(" + StringUtils.join(columns, ',') + ")");
 		}
 
 	}

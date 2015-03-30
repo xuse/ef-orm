@@ -15,6 +15,7 @@ import jef.database.dialect.ColumnType;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AutoIncrementMapping;
+import jef.database.dialect.type.AutoIncrementMapping.GenerationResolution;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.meta.AbstractSequence;
 import jef.database.meta.Feature;
@@ -137,16 +138,16 @@ public final class SequenceManager {
 	 */
 	public void dropSequence(AutoIncrementMapping mapping, OperateTarget meta) throws SQLException {
 		DatabaseDialect profile = meta.getProfile();
-		GenerationType type = mapping.getGenerationType(profile);
+		GenerationResolution type = mapping.getGenerationType(profile);
 		String datasource = mapping.getSequenceDataSource(profile);
 
 		if (datasource != null) {// 必须绑定DataSource
 			meta = (OperateTarget) meta.getSession().getSqlTemplate(StringUtils.trimToNull(datasource));
 		}
 		String name = mapping.getSequenceName(profile);
-		if (type == GenerationType.SEQUENCE) {
+		if (type == GenerationResolution.SEQUENCE) {
 			meta.getMetaData().dropSequence(name);
-		} else if (type == GenerationType.TABLE) {
+		} else if (type == GenerationResolution.TABLE) {
 			String pname = JefConfiguration.get(DbCfg.DB_GLOBAL_SEQUENCE_TABLE);
 			if (StringUtils.isEmpty(pname)) {
 				meta.getMetaData().dropTable(name);

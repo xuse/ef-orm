@@ -5,7 +5,9 @@ import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
 
 import jef.database.DataObject;
 
@@ -14,7 +16,8 @@ import jef.database.DataObject;
 public class Foo extends DataObject{
 	
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy=GenerationType.SEQUENCE)
+	@SequenceGenerator(name="s",sequenceName="ss_FOO")
 	@Column(name="ID",columnDefinition="INT")
 	private int id;
 	

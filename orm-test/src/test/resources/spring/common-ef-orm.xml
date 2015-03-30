@@ -14,7 +14,7 @@
 
 	<!--EF加上事务管理的典型配置 -->
 	<bean id="dataSource" class="jef.database.datasource.SimpleDataSource"
-		p:url="jdbc:postgresql://127.0.0.1:5432/cms" p:user="root" p:password="admin"/>
+		p:url="jdbc:postgresql://NB-PUBLICGXRJ10:5432/test" p:user="root" p:password="admin"/>
 
 	<bean id="entityManagerFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean">
 		<property name="dataSource" ref="dataSource" />

@@ -356,12 +356,16 @@ public abstract class AbstractDialect implements DatabaseDialect {
 				column=cType.toNormalType();
 			}
 		}
-		PairIS def;
+		PairIS def = null;
 		int rawSqlType=column.getSqlType();
-		if(column instanceof ColumnType.Other){
-			def=new PairIS(rawSqlType,((ColumnType.Other) column).getName()); 
-		}else{
-			// 按事先注册的类型进行建表
+		if(column instanceof TypeDefImpl){
+			String name=((TypeDefImpl) column).getName();
+			if(name!=null){
+				def=new PairIS(rawSqlType,name);	
+			}
+		}
+		// 按事先注册的类型进行建表
+		if(def==null){
 			if (column instanceof SqlTypeSized) {
 				SqlTypeSized type = (SqlTypeSized) column;
 				def = typeNames.get(rawSqlType, type.getLength(), type.getPrecision(), type.getScale());
