@@ -1405,7 +1405,7 @@ public final class DbUtils {
 		}
 	}
 
-	private static final String DEFAULT_SEQUENCE_PATTERN = "%s_SEQ";
+	private static final String DEFAULT_SEQUENCE_PATTERN = "S_%s";
 	private static final int TABLE_NAME_MAX_LENGTH = 26;
 
 	public static String calcSeqNameByTable(String schema, String tableName, String columnName) {

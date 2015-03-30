@@ -5,6 +5,8 @@ import java.util.Map;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 import jef.database.DataObject;
 import jef.database.annotation.Type;
@@ -13,7 +15,8 @@ import com.alibaba.fastjson.JSON;
 
 @Entity()
 public class MyFoo extends DataObject {
-
+	@Id
+	@GeneratedValue
 	private int id;
 
 	private String name;
@@ -26,10 +29,14 @@ public class MyFoo extends DataObject {
 	@Type(HstoreMapMapping.class)
 	private Map<String, String> hstoreField;
 
-	@Column(name = "jsonb_c", columnDefinition = "json")
-	@Type(JsonJsonMapping.class)
+	@Column(name = "json_col", columnDefinition = "json")
+	@Type(ObjectJsonMapping.class)
 	private JSON jsonField;
 
+	@Column(name = "jsonb_col", columnDefinition = "jsonb")
+	@Type(ObjectJsonbMapping.class)
+	private Map<String,Object> jsonbField;
+	
 	public int getId() {
 		return id;
 	}
@@ -70,8 +77,16 @@ public class MyFoo extends DataObject {
 		this.jsonField = jsonField;
 	}
 
+	public Map<String, Object> getJsonbField() {
+		return jsonbField;
+	}
+
+	public void setJsonbField(Map<String, Object> jsonbField) {
+		this.jsonbField = jsonbField;
+	}
+
 	public enum Field implements jef.database.Field {
 
-		id, name, data, hstoreField, jsonField
+		id, name, data, hstoreField, jsonField,jsonbField
 	}
 }

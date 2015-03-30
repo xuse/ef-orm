@@ -24,7 +24,7 @@ public abstract class UnionJudgement {
 				Select select = DbUtils.parseNativeSelect(sql);
 				return (select.getSelectBody() instanceof Union);  
 			} catch (ParseException e) {
-				LogUtil.exception("SqlParse Error:", e);
+				LogUtil.warn("Druid parser Error:", e);
 				return false;
 			}
 		}

@@ -18,6 +18,7 @@ import jef.database.Field;
 import jef.database.annotation.EasyEntity;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.type.AutoIncrementMapping;
+import jef.database.dialect.type.AutoIncrementMapping.GenerationResolution;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.jpa.JefEntityManagerFactory;
 import jef.database.meta.Column;
@@ -229,8 +230,8 @@ public class QuerableEntityScanner {
 			for(ColumnMapping f:meta.getColumns()){
 				if(f instanceof AutoIncrementMapping){
 					AutoIncrementMapping m=(AutoIncrementMapping)f;
-					GenerationType gt=((AutoIncrementMapping) f).getGenerationType(entityManagerFactory.getDefault().getProfile(meta.getBindDsName()));
-					if(gt==GenerationType.SEQUENCE || gt==GenerationType.TABLE){
+					GenerationResolution gt=((AutoIncrementMapping) f).getGenerationType(entityManagerFactory.getDefault().getProfile(meta.getBindDsName()));
+					if(gt==GenerationResolution.SEQUENCE || gt==GenerationResolution.TABLE){
 						entityManagerFactory.getDefault().getSequenceManager().getSequence(m, meta.getBindDsName());					
 					}
 					

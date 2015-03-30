@@ -335,7 +335,7 @@ public enum DbCfg implements ConfigItem {
 
 	 * 当需要使用Sequence的时候就会被使用。
 	 * 
-	 * 默认值%s_SEQ 表名_SEQ
+	 * 默认值s_%s S_表名
 	 */
 	SEQUENCE_NAME_PATTERN,
 	

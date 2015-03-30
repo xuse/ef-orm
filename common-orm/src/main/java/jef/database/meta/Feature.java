@@ -23,8 +23,19 @@ package jef.database.meta;
 public enum Feature {
 	/**
 	 * 必须使用sequence才能实现自增，即表本身不支持自增列 (Oracle)
+	 * 
+	 * Postgres虽然也必须使用Sequence，但是其支持serial数据类型（即default表达式 nextval('seq_name'); ）模式，因此框架处理时认为
+	 * postgresql是可以无须SEQUENCE的。
 	 */
 	AUTOINCREMENT_NEED_SEQUENCE,
+	
+	/**
+	 * Postgres专用特性，Postgresql的表关于自增有两种可能，一种情况下用户使用 default nextval('seq_name')作为主键的缺省值，模拟出了表自增的效果。
+	 * 一种是没有模拟的和Oracle类似，由于无法控制用户建表的方法，因此两种情况都有可能存在。
+	 * 因此特地增加这一选项，在每个表处理中检查该表的字段缺省值，用于强行确定到底是属于那种情况。
+	 */
+	AI_TO_SEQUENCE_WITHOUT_DEFAULT,
+	
 	/**
 	 * 允许使用Rownum/支持rowUID来限定结果数量 特别SQL语法特性(Oracle)
 	 */
@@ -74,46 +85,53 @@ public enum Feature {
 	SUPPORT_CONNECT_BY,
 	
 	/**
-	 * DERBY特性，在CASE WHEN THEN ELSE END这个系列的语法中，Derby的语法和别的数据库是不一样的。居然不允许在case后面写switch条件，而必须在每个when后面写条件表达式
+	 * 
+	 * 在CASE WHEN THEN ELSE END这个系列的语法中，Derby的语法和别的数据库是不一样的。不允许在case后面写switch条件，而必须在每个when后面写条件表达式
+	 * (Derby)
 	 */
 	CASE_WITHOUT_SWITCH,
 	/**
+	 * 当批量插入时，使用JDBC getGeneratedKeys方法只能返回自增值的最后一个。
 	 * Abbout derby Bug: https://issues.apache.org/jira/browse/DERBY-3609 Since
-	 * Derby return generated keys feature implement partially,
-	 * 
-	 * 不光Derby的驱动是这样，Sqlite的驱动也是一样的。
+	 * Derby return generated keys feature implement partially
+	 * (Derby,Sqlite)
 	 */
 	BATCH_GENERATED_KEY_ONLY_LAST,
 	
 	/**
-	 * SQLSErver特性，Batch模式下使用getGeneratedKeys无法正常返回主键值，所以不得不使用@@IDENTITY返回结果
+	 * SQLServer特性，Batch模式下使用getGeneratedKeys无法正常返回主键值，所以不得不使用@@IDENTITY返回结果
 	 */
 	BATCH_GENERATED_KEY_BY_FUNCTION,
+	
 	/**
 	 * 要想从元数据中获取备注需要特别的参数才行(Oracle)
 	 */
-	REMARK_META_FETCH, 
+	REMARK_META_FETCH,
+	
 	/**
 	 * Derby和Postgres特性，alter table语句中修改列支持必须用更复杂的语法
 	 * column-alteration syntax
-	 *  key words must 
+	 * key words must 
 	 * column-Name SET DATA TYPE VARCHAR(integer) |
-	 * 	column-Name SET DATA TYPE VARCHAR FOR BIT DATA(integer) |
+	 * column-Name SET DATA TYPE VARCHAR FOR BIT DATA(integer) |
 	 * column-name SET INCREMENT BY integer-constant |
 	 * column-name RESTART WITH integer-constant |
 	 * column-name [ NOT ] NULL |
 	 * column-name [ WITH | SET ] DEFAULT default-value |
 	 * column-name DROP DEFAULT 
 	 */
-	COLUMN_ALTERATION_SYNTAX,//Derby feature，很复杂的 modify column语法
+	COLUMN_ALTERATION_SYNTAX,
+	
 	/**
 	 * 在执行ALTER TABLE语句的时候一次只能操作一个列 (Derby)
 	 */
 	ONE_COLUMN_IN_SINGLE_DDL,
+	
 	/**
 	 * 必须将改表语句中的多列用括号起来，不然报错(Oracle)
 	 */
 	BRUKETS_FOR_ALTER_TABLE,
+	
 	/**
 	 * 在一个alter table中可以操作多个列，但是每列的前面要加上命令(MYSQL, POSTGRES)
 	 */
@@ -123,7 +141,7 @@ public enum Feature {
 	 */
 	NOT_FETCH_NEXT_AUTOINCREAMENTD,
 	/**
-	 * 游标操作特性，在游标上直接插入记录时是偶限制
+	 * 游标操作特性，在游标上直接插入记录时是限制
 	 */
 	CURSOR_ENDS_ON_INSERT_ROW,
 	/**
@@ -173,10 +191,23 @@ public enum Feature {
 	EMPTY_CHAR_IS_NULL,
 	
 	/**
-	 * 绑定变量语法特性
+	 * 查询语句不支持绑定变量
+	 * @deprecated 基本上已经没用了，现在没有哪个数据库不支持绑定变量的
 	 */
-	NO_BIND_FOR_SELECT, // 查询语句不支持绑定变量
+	NO_BIND_FOR_SELECT, // 
+	/**
+	 * Update语句不支持绑定变量
+	 * @deprecated 基本上已经没用了，现在没有哪个数据库不支持绑定变量的
+	 */
 	NO_BIND_FOR_UPDATE, // 更新语句不支持绑定变量
+	/**
+	 * Insert语句不支持绑定变量
+	 * @deprecated 基本上已经没用了，现在没有哪个数据库不支持绑定变量的
+	 */
 	NO_BIND_FOR_INSERT, // 插入语句不支持绑定变量
+	/**
+	 * Delete语句不支持绑定变量
+	 * @deprecated 基本上已经没用了，现在没有哪个数据库不支持绑定变量的
+	 */
 	NO_BIND_FOR_DELETE // 删除语句不支持绑定变量
 }

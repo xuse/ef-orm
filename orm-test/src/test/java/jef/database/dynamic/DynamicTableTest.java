@@ -27,8 +27,10 @@ import jef.database.test.JefJUnit4DatabaseTestRunner;
 import jef.orm.onetable.model.TestEntity;
 import jef.script.javascript.Var;
 
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 
 /**
  * 这个类测试动态表的创建、单表操作、批操作、查询、删除、表修改等功能
@@ -46,6 +48,7 @@ import org.junit.runner.RunWith;
 	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
 	 @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class DynamicTableTest extends org.junit.Assert {
 	private DbClient db;
 	private TupleMetadata meta;
@@ -92,7 +95,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	
 
 	@Test
-	public void testTuple(){
+	public void test1Tuple(){
 		TupleMetadata meta=new TupleMetadata("asdf");
 		meta.addColumn("aa", new ColumnType.AutoIncrement(10));
 		meta.getAllColumnNames();
@@ -107,7 +110,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	public void testInsert() throws SQLException {
+	public void test2Insert() throws SQLException {
 		try{
 			doInsert();
 		}catch(SQLException e){
@@ -131,7 +134,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	public void testInsertBatch() throws SQLException {
+	public void test3InsertBatch() throws SQLException {
 		File file=null;
 		file=new File("c:/bootmgr");
 		if(!file.exists()){
@@ -170,7 +173,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	 */
 
 	@Test
-	public void testUpdate() throws SQLException {
+	public void test4Update() throws SQLException {
 		int id = doInsert();
 
 		VarObject obj1 = meta.newInstance();
@@ -187,8 +190,8 @@ public class DynamicTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	public void testUpdateBatch() throws SQLException {
-		testInsert();
+	public void test5UpdateBatch() throws SQLException {
+		test2Insert();
 		List<VarObject> result = db.select(QB.create(meta));
 		System.out.println(result.size());
 		int n = 0;
@@ -204,8 +207,8 @@ public class DynamicTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	public void testRemove() throws SQLException {
-		testInsert();
+	public void test6Remove() throws SQLException {
+		test2Insert();
 		List<VarObject> result = db.select(QB.create(meta));
 		if (result.size() > 0) {
 			db.delete(result.get(0));
@@ -219,8 +222,8 @@ public class DynamicTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	public void testRemoveBatch() throws SQLException {
-		testInsertBatch();
+	public void test7RemoveBatch() throws SQLException {
+		test3InsertBatch();
 		List<VarObject> result = db.select(QB.create(meta));
 		db.executeBatchDeletion(result);
 
@@ -231,8 +234,8 @@ public class DynamicTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	public void testSelectNativeQuery() throws SQLException {
-		testInsertBatch();
+	public void test8SelectNativeQuery() throws SQLException {
+		test3InsertBatch();
 		NativeQuery<VarObject>  q= db.createNativeQuery("select * from URM_SERVICE_1", meta);
 		List<VarObject> result = q.getResultList();
 		VarObject first=result.get(0);
@@ -246,7 +249,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	@Test
 //	@IgnoreOn({"sqlite","sqlserver"})
 	@IgnoreOn(allButExcept="postgresql")
-	public void testLoadForUpdate() throws SQLException {
+	public void test9LoadForUpdate() throws SQLException {
 		int id = doInsert();
 		VarObject var = meta.newInstance();
 		var.set("id", id);
@@ -267,7 +270,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	 */
 	@Test
 	@IgnoreOn({"sqlite","sqlserver"})
-	public void testSelectForUpdate() throws SQLException {
+	public void testaSelectForUpdate() throws SQLException {
 		doInsert();
 		doInsert();
 		int max=doInsert();
@@ -311,7 +314,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	 */
 	@Test
 	@IgnoreOn({"sqlite","sqlserver"})
-	public void testAlterTable_AddColumn() throws SQLException {
+	public void testbAlterTable_AddColumn() throws SQLException {
 		meta.addColumn("addColumn1", new ColumnType.Date());
 		meta.addColumn("addColumn2", new ColumnType.TimeStamp().notNull().defaultIs(Func.now));
 		try {
@@ -324,7 +327,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	
 	@Test
 	@IgnoreOn(allButExcept="sqlite")
-	public void testAlterTable_AddColumn_forSqlite() throws SQLException {
+	public void testcAlterTable_AddColumn_forSqlite() throws SQLException {
 		meta.addColumn("addColumn1", new ColumnType.Date());
 		meta.addColumn("addColumn2", new ColumnType.TimeStamp());
 		try {
@@ -340,7 +343,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	public void testAlterTable_RemoveColumn() throws SQLException {
+	public void testdAlterTable_RemoveColumn() throws SQLException {
 		meta.removeColumn("flag");
 		meta.removeColumn("photo");
 		try {
@@ -360,7 +363,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	public void testAlterTable_ChangeColumn() throws SQLException {
+	public void testeAlterTable_ChangeColumn() throws SQLException {
 		meta.updateColumn("flag1", new ColumnType.Boolean());
 		meta.updateColumn("name", new ColumnType.Varchar(200).notNull());
 		try {
@@ -376,7 +379,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	public void testFreeConditionQuery() throws SQLException{
+	public void testfFreeConditionQuery() throws SQLException{
 		this.prepareTable();
 		doInsert();
 		Query<VarObject> q=QB.create(meta);
@@ -391,7 +394,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	public void test2TableJoin() throws SQLException{
+	public void testg2TableJoin() throws SQLException{
 		db.truncate(meta);
 		db.truncate(GroupTable);
 		//准备数据
@@ -431,7 +434,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	public void testCascade1vN() throws SQLException{
+	public void testhCascade1vN() throws SQLException{
 		db.delete(QB.create(meta));
 		int id;
 		{

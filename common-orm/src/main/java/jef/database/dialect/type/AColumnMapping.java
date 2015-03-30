@@ -29,22 +29,22 @@ public abstract class AColumnMapping implements ColumnMapping {
 	private String fieldName;
 	protected Field field;
 	protected ColumnType columnDef;
-	
+
 	protected Class<?> clz;
 	private boolean pk;
 	protected transient DatabaseDialect bindedProfile;
 	protected Property fieldAccessor;
 
 	public AColumnMapping() {
-		this.clz=getDefaultJavaType();
+		this.clz = getDefaultJavaType();
 	}
-	
-	abstract protected  Class<?> getDefaultJavaType();
+
+	abstract protected Class<?> getDefaultJavaType();
 
 	public String name() {
 		return fieldName;
 	}
-	
+
 	public boolean isPk() {
 		return pk;
 	}
@@ -61,7 +61,11 @@ public abstract class AColumnMapping implements ColumnMapping {
 		BeanAccessor ba = meta.getContainerAccessor();
 		fieldAccessor = ba.getProperty(field.name());
 		Assert.notNull(fieldAccessor, ba.toString() + field.toString());
-		this.clz=fieldAccessor.getType();
+		Class<?> containerType = fieldAccessor.getType();
+		if (clz.isAssignableFrom(containerType)) {
+			this.clz = containerType;
+		}
+
 	}
 
 	public String fieldName() {

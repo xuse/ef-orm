@@ -155,7 +155,7 @@ public abstract class SelectProcessor {
 				PartitionResult[] sites = DbUtils.toTableNames(query.getInstance(), myTableName, query, db.getPartitionSupport());
 				SqlContext context = query.prepare();
 				for (PartitionResult site : sites) {
-					List<String> tablenames = site.getTables();
+					List<String> tablenames = site.getTablesEscaped(db.getProfile(site.getDatabase()));
 					for (int i = 0; i < tablenames.size(); i++) {
 						BindSql sql = parent.toWhereClause(query, context, false, parent.getPartitionSupport().getProfile(site.getDatabase()));
 						result.addSql(site.getDatabase(), StringUtils.concat("select count(*) from ", tablenames.get(i), " t", sql.getSql()));
@@ -284,14 +284,14 @@ public abstract class SelectProcessor {
 				if (context.isDistinct()) {
 					String countStr = toSelectCountSql(context.getSelectsImpl(), context, groupClause.isNotEmpty());
 					for (PartitionResult site : sites) {
-						for (String table : site.getTables()) {
+						for (String table : site.getTablesEscaped(db.getProfile(site.getDatabase()))) {
 							String sql = StringUtils.concat(countStr, table, " t", result.getSql(), groupClause.toString());
 							cq.addSql(site.getDatabase(), new BindSql(sql, result.getBind()));
 						}
 					}
 				} else {
 					for (PartitionResult site : sites) {
-						for (String table : site.getTables()) {
+						for (String table : site.getTablesEscaped(db.getProfile(site.getDatabase()))) {
 							String sql = StringUtils.concat("select count(*) from ", table, " t", result.getSql(), groupClause.toString());
 							cq.addSql(site.getDatabase(), new BindSql(sql, result.getBind()));
 						}

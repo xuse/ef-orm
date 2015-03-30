@@ -41,7 +41,8 @@ public interface JDBCTarget {
 	DbMetaData getMetaData()throws SQLException ;
 
 	JDBCTarget getTarget(String changeDataSource);
-
+	DatabaseDialect getDialectOf(String database);
+	
 	String getTransactionId();
 
 	String getDbkey();

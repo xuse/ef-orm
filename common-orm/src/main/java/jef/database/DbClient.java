@@ -545,7 +545,7 @@ public class DbClient extends Session implements ConnectionFactory {
 		for (PartitionResult site : route) {
 			DbMetaData dbmeta = connPool.getMetadata(site.getDatabase());
 			try {
-				dbmeta.truncate(meta, site.getTables());
+				dbmeta.truncate(meta, site.getTablesEscaped(dbmeta.getProfile()));
 				total += site.getTables().size();
 			} catch (SQLException e) {
 				errors.add(e);

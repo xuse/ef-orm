@@ -11,7 +11,6 @@ import java.util.Arrays;
 
 import javax.persistence.PersistenceException;
 
-import jef.common.Cfg;
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.DbUtils;
@@ -47,7 +46,6 @@ import jef.database.query.function.StandardSQLFunction;
 import jef.database.query.function.TemplateFunction;
 import jef.database.query.function.VarArgsSQLFunction;
 import jef.database.support.RDBMS;
-import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtil;
 import jef.tools.string.JefStringReader;
@@ -56,16 +54,10 @@ public class PostgreSqlDialect extends AbstractDialect {
 	protected static final String JDBC_URL_FORMAT = "jdbc:postgresql://%1$s:%2$s/%3$s";
 	protected static final int DEFAULT_PORT = 5432;
 
-	
 
 	public PostgreSqlDialect() {
 		features = CollectionUtil.identityHashSet();
-		features.addAll(Arrays.asList(Feature.ALTER_FOR_EACH_COLUMN, Feature.COLUMN_ALTERATION_SYNTAX, Feature.SUPPORT_CONCAT,  Feature.SUPPORT_SEQUENCE,Feature.SUPPORT_LIMIT));
-		
-		boolean needSequence = JefConfiguration.getBoolean(Cfg.valueOf("postgresql.need.sequence"), false);
-		if (needSequence) {
-			features.add(Feature.AUTOINCREMENT_NEED_SEQUENCE);
-		}
+		features.addAll(Arrays.asList(Feature.ALTER_FOR_EACH_COLUMN, Feature.COLUMN_ALTERATION_SYNTAX, Feature.SUPPORT_CONCAT,  Feature.SUPPORT_SEQUENCE,Feature.SUPPORT_LIMIT,Feature.AI_TO_SEQUENCE_WITHOUT_DEFAULT));
 
 		loadKeywords("postgresql_keywords.properties");
 
@@ -256,11 +248,19 @@ public class PostgreSqlDialect extends AbstractDialect {
 		 * 要注意这里的currval含义用法和Oracle一样
 		 * ，不是获取sequence当前的值，而是返回当前sesssion中上一次获取过的seq值。
 		 */
-		if(column.getSqlType()==Types.BIGINT){
-			return flag?"serial8 not null":"serial8";
-		}else{
-			return flag?"serial4 not null":"serial4";
-		}
+//		if(sequenceMode){
+//			if(column.getSqlType()==Types.BIGINT){
+//				return flag?"int8 not null":"int8";
+//			}else{
+//				return flag?"int4 not null":"int4";
+//			}	
+//		}else{
+			if(column.getSqlType()==Types.BIGINT){
+				return flag?"serial8 not null":"serial8";
+			}else{
+				return flag?"serial4 not null":"serial4";
+			}
+//		}
 	}
 	
 

@@ -20,11 +20,14 @@ import jef.database.cache.CacheKeyProvider;
 import jef.database.routing.PartitionResult;
 import jef.database.routing.sql.InMemoryOperateProvider;
 
-public interface QueryClause extends SqlClause, CacheKeyProvider,InMemoryOperateProvider {
+public interface QueryClause extends SqlClause, CacheKeyProvider, InMemoryOperateProvider {
 	BindSql getSql(PartitionResult site);
+
 	static final PartitionResult[] P = new PartitionResult[] { new PartitionResult("") };
+
 	/**
 	 * 不允许返回null。
+	 * 
 	 * @return
 	 */
 	PartitionResult[] getTables();

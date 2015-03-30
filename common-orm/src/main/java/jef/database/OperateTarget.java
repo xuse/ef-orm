@@ -607,4 +607,8 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 		}
 		return session.selectTarget(database);
 	}
+	
+	public DatabaseDialect getDialectOf(String database) {
+		return session.getProfile(database);
+	}
 }

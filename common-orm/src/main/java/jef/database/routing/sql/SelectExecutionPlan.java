@@ -195,7 +195,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 			List<DbTask> tasks = new ArrayList<DbTask>(sites.length);
 			for (final PartitionResult site : getSites()) {
 				final List<String> sqls = new ArrayList<String>(site.tableSize());
-				for (String table : site.getTables()) {
+				for (String table : site.getTablesEscaped(context.db.getDialectOf(site.getDatabase()))) {
 					sqls.add(getSql(table));
 				}
 				tasks.add(new DbTask() {

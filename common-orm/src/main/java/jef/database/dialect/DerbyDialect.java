@@ -183,6 +183,8 @@ public class DerbyDialect extends AbstractDialect {
 		// }
 		
 		typeNames.put(Types.BOOLEAN, "boolean", 0);
+		//Derby中，Float是double的同义词
+		typeNames.put(Types.FLOAT, "double", Types.DOUBLE);
 	}
 
 	@Override

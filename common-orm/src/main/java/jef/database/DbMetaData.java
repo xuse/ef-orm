@@ -545,6 +545,40 @@ public class DbMetaData {
 	}
 
 	/**
+	 * 返回指定的列的信息，如果没有找到该列返回null
+	 * @param tableName 表名
+	 * @param column 列名
+	 * @return 如果没有找到该列返回null
+	 * @throws SQLException
+	 */
+	public Column getColumn(String tableName, String column) throws SQLException {
+		tableName = info.profile.getObjectNameToUse(tableName);
+		column =  info.profile.getColumnNameToUse(column);
+		Connection conn = getConnection(false);
+		DatabaseMetaData databaseMetaData = conn.getMetaData();
+
+		String schema = this.schema;
+		int n = tableName.indexOf('.');
+		if (n > 0) {// 尝试从表名中计算schema
+			schema = tableName.substring(0, n);
+			tableName = tableName.substring(n + 1);
+		}
+		ResultSet rs = null;
+		try {
+			rs = databaseMetaData.getColumns(null, schema, tableName, column);
+			Column result=null;
+			if (rs.next()) {
+				 result= new Column();
+				 populateColumn(result,rs,tableName);
+			}
+			return result;
+		} finally {
+			DbUtils.close(rs);
+			releaseConnection(conn);
+		}
+	}
+
+	/**
 	 * 得到指定表的所有列
 	 * 
 	 * @param tableName
@@ -571,23 +605,7 @@ public class DbMetaData {
 			rs = databaseMetaData.getColumns(null, schema, tableName, "%");
 			while (rs.next()) {
 				Column column = new Column();
-				/*
-				 * Notice: Oracle非常变态，当调用rs.getString("COLUMN_DEF")会经常抛出
-				 * "Stream is already closed" Exception。
-				 * 百思不得其解，google了半天有人提供了回避这个问题的办法
-				 * （https://issues.apache.org/jira/browse/DDLUTILS-29），
-				 * 就是将getString("COLUMN_DEF")作为第一个获取的字段， 非常神奇的就好了。叹息啊。。。
-				 */
-				String defaultVal = rs.getString("COLUMN_DEF");
-				column.setColumnDef(StringUtils.trimToNull(defaultVal));// Oracle会在后面加上换行等怪字符。
-				column.setColumnName(rs.getString("COLUMN_NAME"));
-				column.setColumnSize(rs.getInt("COLUMN_SIZE"));
-				column.setDecimalDigit(rs.getInt("DECIMAL_DIGITS"));
-				column.setDataType(rs.getString("TYPE_NAME"));
-				column.setDataTypeCode(rs.getInt("DATA_TYPE"));
-				column.setNullAble(rs.getString("IS_NULLABLE").equalsIgnoreCase("YES"));
-				column.setRemarks(rs.getString("REMARKS"));// 这个操作容易出问题，一定要最后操作
-				column.setTableName(tableName);
+				populateColumn(column,rs,tableName);
 				list.add(column);
 			}
 		} finally {
@@ -597,21 +615,45 @@ public class DbMetaData {
 		return list;
 	}
 
+	private void populateColumn(Column column, ResultSet rs, String tableName) throws SQLException {
+		/*
+		 * Notice: Oracle非常变态，当调用rs.getString("COLUMN_DEF")会经常抛出
+		 * "Stream is already closed" Exception。
+		 * 百思不得其解，google了半天有人提供了回避这个问题的办法
+		 * （https://issues.apache.org/jira/browse/DDLUTILS-29），
+		 * 就是将getString("COLUMN_DEF")作为第一个获取的字段， 非常神奇的就好了。叹息啊。。。
+		 */
+		String defaultVal = rs.getString("COLUMN_DEF");
+		column.setColumnDef(StringUtils.trimToNull(defaultVal));// Oracle会在后面加上换行等怪字符。
+		column.setColumnName(rs.getString("COLUMN_NAME"));
+		column.setColumnSize(rs.getInt("COLUMN_SIZE"));
+		column.setDecimalDigit(rs.getInt("DECIMAL_DIGITS"));
+		column.setDataType(rs.getString("TYPE_NAME"));
+		column.setDataTypeCode(rs.getInt("DATA_TYPE"));
+		column.setNullAble(rs.getString("IS_NULLABLE").equalsIgnoreCase("YES"));
+		column.setRemarks(rs.getString("REMARKS"));// 这个操作容易出问题，一定要最后操作
+		column.setTableName(tableName);
+	}
+
 	/**
 	 * 得到指定实体的所有索引
-	 * @param type 指定实体类型
+	 * 
+	 * @param type
+	 *            指定实体类型
 	 * @return A Collection of index information.
 	 * @throws SQLException
 	 * @see Index
 	 */
 	public Collection<Index> getIndexes(Class<?> type) throws SQLException {
-		ITableMetadata meta=MetaHolder.getMeta(type);
+		ITableMetadata meta = MetaHolder.getMeta(type);
 		return getIndexes(meta.getTableName(true));
 	}
-	
+
 	/**
 	 * 得到指定表的所有索引
-	 * @param meta 表的元模型
+	 * 
+	 * @param meta
+	 *            表的元模型
 	 * @return A Collection of index information.
 	 * @throws SQLException
 	 * @see Index
@@ -619,7 +661,7 @@ public class DbMetaData {
 	public Collection<Index> getIndexes(ITableMetadata meta) throws SQLException {
 		return getIndexes(meta.getTableName(true));
 	}
-	
+
 	/**
 	 * 得到指定表的所有索引
 	 * 
@@ -629,18 +671,18 @@ public class DbMetaData {
 	 * @see Index
 	 */
 	public Collection<Index> getIndexes(String tableName) throws SQLException {
-		//JDBC驱动不支持的情况
-		if (info.profile.has(Feature.NOT_SUPPORT_INDEX_META)){
+		// JDBC驱动不支持的情况
+		if (info.profile.has(Feature.NOT_SUPPORT_INDEX_META)) {
 			LogUtil.warn("Current JDBC version doesn't suppoer fetch index info.");
 			return Collections.emptyList();
 		}
-		
+
 		tableName = info.profile.getObjectNameToUse(tableName);
-		String schema=this.schema;
-		int n=tableName.indexOf('.');
-		if(n>-1){
-			schema=tableName.substring(0,n);
-			tableName=tableName.substring(n+1);
+		String schema = this.schema;
+		int n = tableName.indexOf('.');
+		if (n > -1) {
+			schema = tableName.substring(0, n);
+			tableName = tableName.substring(n + 1);
 		}
 		Connection conn = getConnection(false);
 		ResultSet rs = null;
@@ -664,10 +706,10 @@ public class DbMetaData {
 					index.setType(rs.getInt("TYPE"));
 					map.put(indexName, index);
 				}
-				
+
 				String asc = rs.getString("ASC_OR_DESC");
-				Boolean isAsc=(asc == null?true:asc.startsWith("A"));
-				index.addColumn(cName,isAsc);
+				Boolean isAsc = (asc == null ? true : asc.startsWith("A"));
+				index.addColumn(cName, isAsc);
 			}
 			return map.values();
 		} finally {
@@ -836,17 +878,18 @@ public class DbMetaData {
 	 * @throws SQLException
 	 */
 	public List<ForeignKey> getForeignKey(String tableName) throws SQLException {
-		return getForeignKey(schema,tableName);
+		return getForeignKey(schema, tableName);
 	}
-	
+
 	/**
 	 * 获得外键（引用其他表的键）
+	 * 
 	 * @param schema
 	 * @param tableName
 	 * @return
 	 * @throws SQLException
 	 */
-	public List<ForeignKey> getForeignKey(String schema,String tableName) throws SQLException {
+	public List<ForeignKey> getForeignKey(String schema, String tableName) throws SQLException {
 		tableName = info.profile.getObjectNameToUse(tableName);
 		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
@@ -863,17 +906,17 @@ public class DbMetaData {
 
 	/**
 	 * 创建外键
-	 * @param fromField 外键位于该列上
-	 * @param refField  引用其他表的外键
+	 * 
+	 * @param fromField
+	 *            外键位于该列上
+	 * @param refField
+	 *            引用其他表的外键
 	 * @throws SQLException
 	 */
 	public void createForeignKey(Field fromField, Field refField) throws SQLException {
-		createForeignKey(fromField,refField,DatabaseMetaData.importedKeyNoAction,DatabaseMetaData.importedKeyNoAction);
+		createForeignKey(fromField, refField, DatabaseMetaData.importedKeyNoAction, DatabaseMetaData.importedKeyNoAction);
 	}
-	
-	
-	
-	
+
 	/**
 	 * 创建外键
 	 * 
@@ -887,34 +930,38 @@ public class DbMetaData {
 	 * <li>{@link DatabaseMetaData#importedKeySetDefault} - 将引用外键的列值改为其缺省值</li>
 	 * </ol>
 	 * 
-	 * @param fromField 外键位于该列上
-	 * @param refField 引用其他表的外键
-	 * @param deleteRule 当被引用的记录发生删除引起无法保持时，执行什么操作，参见上面的规则动作列表
-	 * @param updateRule 当被引用的记录发生更新引起外键无法保持时，执行什么操作，参见上面的规则动作列表
+	 * @param fromField
+	 *            外键位于该列上
+	 * @param refField
+	 *            引用其他表的外键
+	 * @param deleteRule
+	 *            当被引用的记录发生删除引起无法保持时，执行什么操作，参见上面的规则动作列表
+	 * @param updateRule
+	 *            当被引用的记录发生更新引起外键无法保持时，执行什么操作，参见上面的规则动作列表
 	 * @throws SQLException
 	 */
-	public void createForeignKey(Field fromField, Field refField,int deleteRule,int updateRule) throws SQLException {
+	public void createForeignKey(Field fromField, Field refField, int deleteRule, int updateRule) throws SQLException {
 		AbstractMetadata from = DbUtils.getTableMeta(fromField);
 		AbstractMetadata ref = DbUtils.getTableMeta(refField);
 
 		String fromTable = from.getTableName(false);
 		String fromColumn = from.getColumnName(fromField, getProfile(), true);
-		String refTable=ref.getTableName(false);
-		String refColumn=ref.getColumnName(refField, getProfile(), true);
-		ForeignKey key=new ForeignKey(fromTable,fromColumn,refTable,refColumn);
+		String refTable = ref.getTableName(false);
+		String refColumn = ref.getColumnName(refField, getProfile(), true);
+		ForeignKey key = new ForeignKey(fromTable, fromColumn, refTable, refColumn);
 		key.setFromSchema(from.getSchema());
 		key.setReferenceSchema(ref.getSchema());
 		key.setDeleteRule(deleteRule);
 		key.setUpdateRule(updateRule);
-				
-		if(!checkFK(key)){
-			String sql=key.toCreateSql(getProfile());
-			StatementExecutor executor=this.createExecutor();
-			try{
+
+		if (!checkFK(key)) {
+			String sql = key.toCreateSql(getProfile());
+			StatementExecutor executor = this.createExecutor();
+			try {
 				executor.executeSql(sql);
-			}finally{
+			} finally {
 				executor.close();
-			}	
+			}
 		}
 	}
 
@@ -922,9 +969,9 @@ public class DbMetaData {
 	 * 检查FK,如果存在则返回true，如果不存在则返回false，如果存在但不一致则Drop掉再返回false
 	 */
 	private boolean checkFK(ForeignKey key) throws SQLException {
-		List<ForeignKey> keys=getForeignKey(key.getFromSchema(), key.getFromTable());
-		for(ForeignKey old: keys){
-			if(old.getFromColumn().equalsIgnoreCase(key.getFromColumn())){
+		List<ForeignKey> keys = getForeignKey(key.getFromSchema(), key.getFromTable());
+		for (ForeignKey old : keys) {
+			if (old.getFromColumn().equalsIgnoreCase(key.getFromColumn())) {
 				return true;
 			}
 		}
@@ -1447,7 +1494,7 @@ public class DbMetaData {
 				continue;
 			}
 			ColumnMapping type = defined.remove(field);// from the metadata
-															// find
+														// find
 			// the column defined
 			Assert.notNull(type);// 不应该发生
 			if (supportChangeDelete) {
@@ -1830,39 +1877,45 @@ public class DbMetaData {
 
 	/**
 	 * 将给定的参数转换成合法的Index描述对象
-	 * @param type 实体类
-	 * @param columns 索引的列
+	 * 
+	 * @param type
+	 *            实体类
+	 * @param columns
+	 *            索引的列
 	 * @return 索引的名称
 	 * @throws SQLException
 	 */
-	public Index toIndexDescrption(Class<?> type,String... columns) throws SQLException{
-		ITableMetadata meta=MetaHolder.getMeta(type);
-		return toIndexDescrption(meta,columns);
+	public Index toIndexDescrption(Class<?> type, String... columns) throws SQLException {
+		ITableMetadata meta = MetaHolder.getMeta(type);
+		return toIndexDescrption(meta, columns);
 	}
-	
+
 	/**
 	 * 将给定的参数转换成合法的Index描述对象
-	 * @param meta 表的元模型
-	 * @param columns 索引的列
+	 * 
+	 * @param meta
+	 *            表的元模型
+	 * @param columns
+	 *            索引的列
 	 * @return 索引名称
-	 * @throws SQLException 
+	 * @throws SQLException
 	 */
 	public Index toIndexDescrption(ITableMetadata meta, String... columnes) throws SQLException {
-		List<Field> fields=new ArrayList<Field>();
-		List<IndexItem> columns=new ArrayList<IndexItem>();
+		List<Field> fields = new ArrayList<Field>();
+		List<IndexItem> columns = new ArrayList<IndexItem>();
 		for (String fieldname : columnes) {
-			boolean asc=true;
-			if(fieldname.toLowerCase().endsWith(" desc")){
-				asc=false;
-				fieldname=fieldname.substring(0,fieldname.length()-5).trim();
+			boolean asc = true;
+			if (fieldname.toLowerCase().endsWith(" desc")) {
+				asc = false;
+				fieldname = fieldname.substring(0, fieldname.length() - 5).trim();
 			}
 			Field field = meta.getField(fieldname);
-			if (field == null){
-				field=new FBIField(fieldname);
-				columns.add(new IndexItem(fieldname,asc,0));
-			}else{
-				String columnName=meta.getColumnName(field, getProfile(),true);
-				columns.add(new IndexItem(columnName,asc,0));
+			if (field == null) {
+				field = new FBIField(fieldname);
+				columns.add(new IndexItem(fieldname, asc, 0));
+			} else {
+				String columnName = meta.getColumnName(field, getProfile(), true);
+				columns.add(new IndexItem(columnName, asc, 0));
 			}
 			fields.add(field);
 		}
@@ -1870,52 +1923,49 @@ public class DbMetaData {
 		iNameBuilder.append("IDX_").append(StringUtils.truncate(StringUtils.removeChars(meta.getTableName(false), '_'), 14));
 		int maxField = ((28 - iNameBuilder.length()) / columnes.length) - 1;
 		if (maxField < 1)
-			maxField = 1;				
-		for(Field field: fields){
+			maxField = 1;
+		for (Field field : fields) {
 			iNameBuilder.append('_');
-			if(field instanceof FBIField){
-				iNameBuilder.append(
-				StringUtils.truncate(StringUtils.randomString(), maxField)
-				);
-			}else{
-				iNameBuilder.append(
-				StringUtils.truncate(meta.getColumnDef(field).getColumnName(getProfile(),false), maxField)
-				);
+			if (field instanceof FBIField) {
+				iNameBuilder.append(StringUtils.truncate(StringUtils.randomString(), maxField));
+			} else {
+				iNameBuilder.append(StringUtils.truncate(meta.getColumnDef(field).getColumnName(getProfile(), false), maxField));
 			}
 		}
-		String indexName=iNameBuilder.toString();
+		String indexName = iNameBuilder.toString();
 		if (indexName.length() > 30)
 			indexName = indexName.substring(0, 30);
-		
-		Index indexobj=new Index(indexName);
+
+		Index indexobj = new Index(indexName);
 		indexobj.setTableSchema(meta.getSchema());
 		indexobj.setTableName(meta.getTableName(false));
-		for(IndexItem c:columns){
-			indexobj.addColumn(c.column, c.asc);	
+		for (IndexItem c : columns) {
+			indexobj.addColumn(c.column, c.asc);
 		}
 		return indexobj;
 	}
 
 	/**
 	 * 创建索引
+	 * 
 	 * @param index
 	 * @throws SQLException
 	 */
-	public boolean createIndex(Index index) throws SQLException{
-		Collection<Index> indexs=getIndexes(index.getTableWithSchem());
+	public boolean createIndex(Index index) throws SQLException {
+		Collection<Index> indexs = getIndexes(index.getTableWithSchem());
 		index.generateName();
-		for(Index old: indexs){
-			if(ArrayUtils.equals(old.getColumnNames(),index.getColumnNames())){
-				LogUtil.warn(index+" duplicate with old index "+ old.getIndexName());
+		for (Index old : indexs) {
+			if (ArrayUtils.equals(old.getColumnNames(), index.getColumnNames())) {
+				LogUtil.warn(index + " duplicate with old index " + old.getIndexName());
 				return false;
 			}
-			if(old.getIndexName().equalsIgnoreCase(index.getIndexName())){
-				String name="IDX"+StringUtils.removeChars(index.getTableName(),'_')+"_";
-				name+=StringUtils.randomString();
+			if (old.getIndexName().equalsIgnoreCase(index.getIndexName())) {
+				String name = "IDX" + StringUtils.removeChars(index.getTableName(), '_') + "_";
+				name += StringUtils.randomString();
 				index.setIndexName(name);
 			}
 		}
-		String sql=index.toCreateSql(getProfile());
+		String sql = index.toCreateSql(getProfile());
 		StatementExecutor exe = createExecutor();
 		try {
 			exe.executeSql(sql);
@@ -1924,19 +1974,20 @@ public class DbMetaData {
 			exe.close();
 		}
 	}
-	
+
 	/**
 	 * 删除索引
+	 * 
 	 * @param index
 	 * @throws SQLException
 	 */
 	public void dropIndex(Index index) throws SQLException {
-		String pattern=getProfile().getProperty(DbProperty.DROP_INDEX_TABLE_PATTERN);
+		String pattern = getProfile().getProperty(DbProperty.DROP_INDEX_TABLE_PATTERN);
 		String sql;
-		if(pattern==null){
-			sql="DROP INDEX "+index.getIndexName();
-		}else{
-			sql="DROP INDEX "+String.format(pattern, index.getIndexName(),index.getTableSchema());
+		if (pattern == null) {
+			sql = "DROP INDEX " + index.getIndexName();
+		} else {
+			sql = "DROP INDEX " + String.format(pattern, index.getIndexName(), index.getTableSchema());
 		}
 		StatementExecutor exe = createExecutor();
 		try {
@@ -1952,7 +2003,8 @@ public class DbMetaData {
 	 * @param table
 	 *            the name of table.
 	 * @return true if table was dropped. false if the table was not exist.
-	 * @throws SQLException Any error while executing SQL.
+	 * @throws SQLException
+	 *             Any error while executing SQL.
 	 */
 	public boolean dropTable(String table) throws SQLException {
 		if (existTable(table)) {
@@ -1976,15 +2028,18 @@ public class DbMetaData {
 
 	/**
 	 * 删除表
-	 * @param table 表的Entity
-	 * @return true if table was dropped. false if the table was not exist. 
-	 * @throws SQLException Any error while executing SQL.
+	 * 
+	 * @param table
+	 *            表的Entity
+	 * @return true if table was dropped. false if the table was not exist.
+	 * @throws SQLException
+	 *             Any error while executing SQL.
 	 */
 	public boolean dropTable(Class<?> table) throws SQLException {
-		ITableMetadata meta=MetaHolder.getMeta(table);
+		ITableMetadata meta = MetaHolder.getMeta(table);
 		return dropTable(meta.getTableName(true));
 	}
-	
+
 	/**
 	 * 得到当前元数据所属的数据源名称 get the datasource name of current metadata connection.
 	 * 

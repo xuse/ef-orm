@@ -93,7 +93,7 @@ public abstract class WhereParser {
 					exp.accept(v);
 					return v.getAppender().toString();
 				} catch (ParserException e) {
-					LogUtil.error("Parser error:{}\nException:{}", where,e);
+					LogUtil.warn("Druid Parser error:{}\nException:{}", where,e);
 					throw e;
 				}
 			} else {

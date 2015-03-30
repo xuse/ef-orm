@@ -4,13 +4,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.GenerationType;
 import javax.persistence.PersistenceException;
 
 import jef.common.log.LogUtil;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AutoGuidMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
+import jef.database.dialect.type.AutoIncrementMapping.GenerationResolution;
 import jef.database.dialect.type.AutoIntMapping;
 import jef.database.dialect.type.AutoLongMapping;
 import jef.database.dialect.type.ColumnMapping;
@@ -148,8 +148,8 @@ public final class RecordsHolder<T extends IQueryableEntity>{
 	 * @return
 	 */
 	private long getNextAutoIncreament(AutoIncrementMapping mapping){
-		GenerationType gtype=mapping.getGenerationType(profile);
-		if(gtype==GenerationType.SEQUENCE || gtype==GenerationType.TABLE){
+		GenerationResolution gtype=mapping.getGenerationType(profile);
+		if(gtype==GenerationResolution.SEQUENCE || gtype==GenerationResolution.TABLE){
 			try{
 				Sequence sq=((OperateTarget)rs.getTarget()).getSequence(mapping);
 				return sq.next();

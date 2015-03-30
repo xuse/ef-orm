@@ -80,7 +80,7 @@ public class TableCreateStatement {
 	private void addSequence(String seq, int precision) {
 		sequences.add(new PairIS(precision, seq));
 	}
-	
+
 	/**
 	 * 要创建的Sequence
 	 */
@@ -111,7 +111,7 @@ public class TableCreateStatement {
 			return columnDefinition;
 		}
 
-		public void addPkConstraint(List<ColumnMapping> pkFields, DatabaseDialect profile,String tablename) {
+		public void addPkConstraint(List<ColumnMapping> pkFields, DatabaseDialect profile, String tablename) {
 			StringBuilder sb = getColumnDef();
 			sb.append(",\n");
 			String[] columns = new String[pkFields.size()];
@@ -120,10 +120,9 @@ public class TableCreateStatement {
 			}
 			if (tablename.indexOf('.') > -1) {
 				tablename = StringUtils.substringAfter(tablename, ".");
-				sb.append("    constraint " + "PK_" + tablename + " primary key(" + StringUtils.join(columns, ',') + ")");
-			} else {
-				sb.append("    constraint PK_" + tablename + " primary key(" + StringUtils.join(columns, ',') + ")");
 			}
+			String pkName = profile.getObjectNameToUse("PK_" + tablename);
+			sb.append("    constraint " + pkName + " primary key(" + StringUtils.join(columns, ',') + ")");
 		}
 
 	}
