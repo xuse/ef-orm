@@ -5,7 +5,8 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import jef.common.SimpleException;
+import javax.persistence.PersistenceException;
+
 import jef.common.log.LogUtil;
 import jef.database.DbCfg;
 import jef.database.DbClient;
@@ -79,10 +80,10 @@ public abstract class AbstractSequence implements Sequence {
 				if(tryInitCount.get()<3){
 					tryInit();
 					if(!initSuccess){
-						throw new SimpleException("Sequence/Table ["+this.getName()+"] createing failure.");	
+						throw new PersistenceException("Sequence/Table ["+this.getName()+"] createing failure.");	
 					}
 				}else{
-					throw new SimpleException("Sequence/Table ["+this.getName()+"] is not exist, and there will be no attemp to create it.");	
+					throw new PersistenceException("Sequence/Table ["+this.getName()+"] is not exist, and there will be no attemp to create it.");	
 				}
 			}
 			return getFirstAndPushOthers(cacheSize, session, dbKey);

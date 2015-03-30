@@ -17,7 +17,7 @@ public class Foo extends DataObject{
 	
 	@Id
 	@GeneratedValue(strategy=GenerationType.SEQUENCE)
-	@SequenceGenerator(name="s",sequenceName="ss_FOO")
+	@SequenceGenerator(name="s",sequenceName="s_FOO")
 	@Column(name="ID",columnDefinition="INT")
 	private int id;
 	
