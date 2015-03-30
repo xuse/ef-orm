@@ -1172,10 +1172,11 @@ public class DbMetaData {
 	 * @throws SQLException
 	 */
 	public long getSequenceStartValue(String schema, String tableName, String sequenceColumnName) throws SQLException {
+		tableName=info.profile.getObjectNameToUse(tableName);
 		if (!existTable(tableName)) {
 			return 1;
 		}
-		String getMaxValueSql = createGetMaxSequenceColumnValueStatement(schema, tableName, sequenceColumnName);
+		String getMaxValueSql = createGetMaxSequenceColumnValueStatement(schema, DbUtils.escapeColumn(info.profile, tableName), sequenceColumnName);
 		Connection conn = getConnection(false);
 		Statement st = null;
 		ResultSet rs = null;
