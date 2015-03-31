@@ -267,7 +267,7 @@ public enum DbCfg implements ConfigItem {
 	 * <p /> 
 	 * 
 	 * true/false。 开启此选项后，即便用户配置为Sequence或IDentity也会被认为采用Auto模式。(Table模式保留不变)
-	 * 默认true
+	 * 默认false
 	 */
 	DB_AUTOINCREMENT_NATIVE,
 	
@@ -276,9 +276,8 @@ public enum DbCfg implements ConfigItem {
 	 * 正常情况下，自增主键的字段是无法由用户设值的，开启此选项后，如果用户设值了自增主键的值，则将尝试将此值代替自增主键值。
 	 * <br>
 	 * <strong>
-	 * 在MSSQL和SQLite上次特性不能使用。
+	 * WARN: 在MSSQL和SQLite上开启后此特性也不能使用。如果要兼容所有数据库，请勿使用此功能。
 	 * </strong>
-	 * TODO 补充MSSQL上的测试案例。
 	 */
 	DB_SUPPORT_MANUAL_GENERATE,
 	

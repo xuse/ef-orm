@@ -464,5 +464,9 @@ public interface ORMConfigMBean {
 	 * 
 	 */
 	void setJpaContinueCommitIfError(boolean jpaContinueCommitIfError);
+	
+	boolean isGenerateBySequenceAndIdentityToAUTO();
+	
+	void setGenerateBySequenceAndIdentityToAUTO(boolean generateBySequenceAndIdentityToAUTO);
 
 }

@@ -86,7 +86,9 @@ public class SimpleTableTest extends org.junit.Assert {
 
 				meta = MetaHolder.getMeta(CaAsset.class);
 				holder = db.getSqlTemplate(null).getSequence(meta.getFirstAutoincrementDef());
-				holder.clear();
+				if(holder!=null){
+					holder.clear();
+				}
 			}
 			db.dropTable(TestEntity.class, CaAsset.class, Keyword.class); // 删除表
 			db.createTable(Keyword.class);

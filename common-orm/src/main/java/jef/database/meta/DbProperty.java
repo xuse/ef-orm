@@ -8,7 +8,7 @@ public enum DbProperty {
 	
 	/**
 	 * 开销最小的查询SQL语句，用于检测数据库心跳，如果没有这样的语句，返回null
-	 * 目前采用了JDBC 4.0中的isValid方法来检查连接心跳，因此这个参数最近没什么用。
+	 * @deprecated 目前采用了JDBC 4.0中的isValid方法来检查连接心跳，因此这个参数最近没什么用。
 	 */
 	CHECK_SQL,
 	/**
@@ -26,6 +26,7 @@ public enum DbProperty {
 	
 	/**
 	 * 当使用关键字作为表名或列名时的处理
+	 * 大部分数据库用 "
 	 * MYSQL用`来包围表名和列名
 	 */
 	WRAP_FOR_KEYWORD,
@@ -74,6 +75,11 @@ public enum DbProperty {
 	 * 像MySQL，需要 drop index xxx on tablexxx.
 	 */
 	DROP_INDEX_TABLE_PATTERN,
+	
+	/*
+	 * Sequence的最大长度
+	 */
+	MAX_SEQUENCE_VALUE,
 	
 	//Derby支持一下函数来获得当前环境
 //	CURRENT ISOLATION

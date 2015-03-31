@@ -64,6 +64,7 @@ public class HsqlDbMemDialect extends AbstractDialect {
 		features.add(Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD);
 		features.add(Feature.SUPPORT_SEQUENCE);
 
+	
 		if (JefConfiguration.getBoolean(DbCfg.DB_ENABLE_ROWID, false)) {
 			features.add(Feature.SELECT_ROW_NUM);
 		}
@@ -183,9 +184,12 @@ public class HsqlDbMemDialect extends AbstractDialect {
 		setProperty(DbProperty.MODIFY_COLUMN, "ALTER");
 		setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");
 		setProperty(DbProperty.CHECK_SQL, "select 1 from (VALUES(0))");
-		setProperty(DbProperty.SELECT_EXPRESSION, "select %s from (VALUES(0))");
+		setProperty(DbProperty.SELECT_EXPRESSION, "SELECT %s FROM (VALUES(0))");
+		setProperty(DbProperty.SEQUENCE_FETCH, "CALL NEXT VALUE FOR %s");
 		setProperty(DbProperty.WRAP_FOR_KEYWORD, "\"\"");
 		setProperty(DbProperty.GET_IDENTITY_FUNCTION, "CALL IDENTITY()");
+		setProperty(DbProperty.MAX_SEQUENCE_VALUE, "999999999");
+		
 
 		typeNames.put(Types.TINYINT, "tinyint", 0);
 		typeNames.put(Types.INTEGER, "integer", 0);

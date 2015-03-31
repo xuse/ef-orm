@@ -238,6 +238,13 @@ public interface DatabaseDialect {
 	 * @return
 	 */
 	public int getPropertyInt(DbProperty key);
+	
+	/**
+	 * 返回指定属性，如果无值返回0
+	 * @param key
+	 * @return
+	 */
+	public long getPropertyLong(DbProperty key);
 
 	/**
 	 * 不同数据库登录后，所在的默认schema是不一样的

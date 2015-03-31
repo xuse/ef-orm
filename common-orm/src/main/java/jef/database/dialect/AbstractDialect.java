@@ -346,6 +346,14 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		}
 		return Integer.parseInt(s);
 	}
+	@Override
+	public long getPropertyLong(DbProperty key) {
+		String s=properties.get(key);
+		if(StringUtils.isEmpty(s)){
+			return 0;
+		}
+		return Long.parseLong(s);
+	}
 
 	/**
 	 * 产生用于建表的SQL语句

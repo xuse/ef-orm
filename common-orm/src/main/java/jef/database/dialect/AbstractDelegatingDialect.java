@@ -240,4 +240,9 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
 		return dialect.getViolatedConstraintNameExtracter();
 	}
+
+	@Override
+	public long getPropertyLong(DbProperty key) {
+		return dialect.getPropertyLong(key);
+	}
 }

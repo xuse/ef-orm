@@ -14,7 +14,7 @@ import javax.persistence.Table;
 import jef.database.annotation.EasyEntity;
 
 @EasyEntity
-@Table(name="test_entity")
+@Table(name="order")
 public class TestEntity extends jef.database.DataObject {
 	private static final long serialVersionUID = 1L;
 
@@ -46,7 +46,7 @@ public class TestEntity extends jef.database.DataObject {
     private Integer intField2;
 
     @Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
+	@GeneratedValue(strategy=GenerationType.SEQUENCE)
     @Column(precision=10,scale=5)
     private long longField;
 
