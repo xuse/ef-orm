@@ -36,6 +36,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.JSONSerializer;
 import com.alibaba.fastjson.serializer.ObjectSerializer;
 import com.alibaba.fastjson.serializer.SerializeConfig;
+import com.alibaba.fastjson.serializer.SerializeWriter;
 import com.alibaba.fastjson.serializer.SerializerFeature;
 
 /**
@@ -88,7 +89,7 @@ public class JsonUtil {
 	 * 转换为StringList
 	 * 
 	 * @param data
-	 * @return
+	 * @return 
 	 */
 	public static List<String> toStringList(String data) {
 		return JSON.parseObject(data, GenericUtils.LIST_STRING);
@@ -110,8 +111,8 @@ public class JsonUtil {
 	 * 
 	 * @param <T>
 	 * @param data
-	 * @param elementType
-	 * @return
+	 * @param elementType 要转换的List的元素类型
+	 * @return 
 	 */
 	public static <T> List<T> toList(String data, Class<T> elementType) {
 		return JSON.parseObject(data, GenericUtils.newListType(elementType));
@@ -122,7 +123,7 @@ public class JsonUtil {
 	 * 
 	 * @param <T>
 	 * @param data
-	 * @param elementType
+	 * @param elementType 要转换的数组的元素类型
 	 * @return
 	 */
 	public static <T> T[] toArray(String data, Class<T> elementType) {
@@ -186,7 +187,7 @@ public class JsonUtil {
 	public static String toJson(Object object) {
 		if (object == null)
 			return EMPTY_JSON;
-		return JSON.toJSONString(object);
+		return JSON.toJSONString(object,JSCFG);
 	}
 
 	/**
@@ -198,7 +199,7 @@ public class JsonUtil {
 	 * @return
 	 */
 	public static final String toJson(Object object, DateFormat dateFormat, SerializerFeature... features) {
-		return toJson(object,SerializeConfig.getGlobalInstance(),dateFormat,features);
+		return toJson(object, JSCFG, dateFormat, features);
 	}
 
 	/**
@@ -217,7 +218,7 @@ public class JsonUtil {
 	 * @param src
 	 * @param writer
 	 */
-	public static void toJson(Object src, Writer writer) {
+	public static void writeTo(Object src, Writer writer, SerializerFeature... features) {
 		if (src == null)
 			try {
 				writer.append(EMPTY_JSON);
@@ -225,7 +226,12 @@ public class JsonUtil {
 			} catch (IOException e) {
 				throw new RuntimeException(e.getMessage());
 			}
-		JSON.writeJSONStringTo(src, writer);
+
+		JSONSerializer serializer = new JSONSerializer(JSCFG);
+		for (com.alibaba.fastjson.serializer.SerializerFeature feature : features) {
+			serializer.config(feature, true);
+		}
+		serializer.write(new SerializeWriter(writer));
 	}
 
 	/**
@@ -249,6 +255,12 @@ public class JsonUtil {
 		return XMLFastJsonParser.SIMPLE.toDocument(obj);
 	}
 
+	/**
+	 * 将Json结构转换为XML
+	 * 
+	 * @param obj
+	 * @return
+	 */
 	public static Document jsonToXML(JSONObject obj) {
 		return XMLFastJsonParser.SIMPLE.toDocument(obj);
 	}
@@ -263,27 +275,6 @@ public class JsonUtil {
 		return XMLFastJsonParser.SIMPLE.toJsonObject(node);
 	}
 
-	public static String toJson(Object object, SerializeConfig config, DateFormat dataFormat, SerializerFeature... features) {
-		if (object == null)
-			return EMPTY_JSON;
-		
-		JSONSerializer serializer = new JSONSerializer(config);
-		serializer.setDateFormat(dataFormat);
-		try {
-			for (SerializerFeature f : features) {
-				serializer.config(f, true);
-			}
-			if (dataFormat != null) {
-				serializer.config(SerializerFeature.WriteDateUseDateFormat, true);
-				serializer.setDateFormat(dataFormat);
-			}
-			serializer.write(object);
-			return serializer.toString();
-		} finally {
-			serializer.close();
-		}
-	}
-
 	/**
 	 * 转换为JSON文本，字段名不加引号
 	 * 
@@ -291,7 +282,7 @@ public class JsonUtil {
 	 * @return
 	 */
 	public static String toJsonWithoutQuot(Object src) {
-		JSONSerializer serializer = new JSONSerializer();
+		JSONSerializer serializer = new JSONSerializer(JSCFG);
 		try {
 			serializer.config(SerializerFeature.QuoteFieldNames, false);
 			serializer.write(src);
@@ -361,14 +352,37 @@ public class JsonUtil {
 		return sb.toString();
 	}
 
-	private static SerializeConfigEx JSCFG=new SerializeConfigEx();
+	private static String toJson(Object object, SerializeConfig config, DateFormat dataFormat, SerializerFeature... features) {
+		if (object == null)
+			return EMPTY_JSON;
+
+		JSONSerializer serializer = new JSONSerializer(config);
+		serializer.setDateFormat(dataFormat);
+		try {
+			for (SerializerFeature f : features) {
+				serializer.config(f, true);
+			}
+			if (dataFormat != null) {
+				serializer.config(SerializerFeature.WriteDateUseDateFormat, true);
+				serializer.setDateFormat(dataFormat);
+			}
+			serializer.write(object);
+			return serializer.toString();
+		} finally {
+			serializer.close();
+		}
+	}
+
+	/**
+	 * 支持JsFunction序列化的上下文
+	 */
+	private static SerializeConfigEx JSCFG = new SerializeConfigEx();
 	static {
-		ObjectSerializer os=new ObjectSerializer() {
-			public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType,int features) throws IOException {
+		ObjectSerializer os = new ObjectSerializer() {
+			public void write(JSONSerializer serializer, Object object, Object fieldName, Type fieldType, int features) throws IOException {
 				serializer.getWriter().write(String.valueOf(object));
 			}
 		};
 		JSCFG.putHierarchy(JScriptExpression.class, os);
 	}
-
 }

@@ -1186,6 +1186,9 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 */
 	public <T> T load(Class<T> entityClass, Serializable... keys) throws SQLException {
+		if(keys.length==0 || keys[0]==null){
+			throw new IllegalArgumentException("Please input a valid value as primary key.");
+		}
 		AbstractMetadata meta = MetaHolder.getMetaOrTemplate(entityClass);
 		return load(meta, keys);
 	}

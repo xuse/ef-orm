@@ -47,6 +47,7 @@ import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ParserFactory;
+import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
@@ -76,6 +77,11 @@ import jef.tools.StringUtils;
  * 
  */
 public abstract class AbstractDialect implements DatabaseDialect {
+	private static final ViolatedConstraintNameExtracter EXTRACTER = new ViolatedConstraintNameExtracter() {
+		public String extractConstraintName(SQLException sqle) {
+			return null;
+		}
+	};
 	/**
 	 * 所有已经构建的Dialect
 	 */
@@ -782,4 +788,11 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	public ParserFactory getParserFactory() {
 		return DEFAULT_PARSER;
 	}
+
+	@Override
+	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
+		return EXTRACTER;
+	}
+	
+	
 }

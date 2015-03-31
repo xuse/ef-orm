@@ -56,30 +56,50 @@ public class SQLServerDialect extends AbstractDelegatingDialect {
 		return super.getDriverClass(url);
 	}
 
+	/**
+	 * 根据数据库版本信息判断当前数据库实际应该用哪个方言
+	 */
 	@Override
 	public void init(OperateTarget asOperateTarget) {
 		try{
 			String version=asOperateTarget.getMetaData().getDatabaseVersion();
-			if(version.startsWith("9.")){    //
+			int index=version.indexOf('.');
+			if(index==-1){
+				return;
+			}
+			int ver=Integer.parseInt(version.substring(0,index));
+			switch(ver){
+			case 9:
 				if(!(dialect instanceof SQLServer2005Dialect)){
 					this.dialect=new SQLServer2005Dialect();
 					LogUtil.info("Determin SQL-Server Dialect to [{}]",dialect.getClass());
 				}
-			}else if(version.startsWith("10.")){//10.0=2008, 10.5=2008 R2 
+				break;
+			case 10:
+				//10.0=2008, 10.5=2008 R2
 				this.dialect=new SQLServer2008Dialect();
 				LogUtil.info("Determin SQL-Server Dialect to [{}]",dialect.getClass());
-			}else if(version.startsWith("11.")){//2012
+				break;
+			case 11:
+				//version 11= SQLServer 2012
+			case 12:
+				//version 12= SQLServer 2014
+			case 13:
+				//???
+			case 14:
+				//???
+			case 15:
+				//???
+			case 16:
+				//???
+			case 17:
 				this.dialect=new SQLServer2012Dialect();
 				LogUtil.info("Determin SQL-Server Dialect to [{}]",dialect.getClass());
-			}else if(version.startsWith("12.")){//2014 
-				this.dialect=new SQLServer2012Dialect();
-				LogUtil.info("Determin SQL-Server Dialect to [{}]",dialect.getClass());
+				break;
 			}
 		}catch(SQLException e){
 			throw new PersistenceException(e);
 		}
 		super.init(asOperateTarget);
 	}
-	
-	
 }

@@ -41,9 +41,22 @@ import com.alibaba.fastjson.serializer.SerializeConfig;
 import com.alibaba.fastjson.serializer.TimeZoneCodec;
 import com.alibaba.fastjson.util.ServiceLoader;
 
+/**
+ * 对FastJSON的SerializeConfig稍作改变，以支持JSON/XML互转等一些功能。
+ * @author jiyi
+ *
+ */
 public class SerializeConfigEx extends SerializeConfig {
+	/**
+	 * 接口的序列化器
+	 */
 	private Map<Class<?>, ObjectSerializer> typeCodecs;
 
+	/**
+	 * 对传入类型和子类都生效的序列化器
+	 * @param class1
+	 * @param nodeSer
+	 */
 	public void putHierarchy(Class<?> class1, ObjectSerializer nodeSer) {
 		if (typeCodecs == null) {
 			typeCodecs = new HashMap<Class<?>, ObjectSerializer>();

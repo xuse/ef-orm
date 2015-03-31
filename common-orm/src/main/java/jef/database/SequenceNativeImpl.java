@@ -241,7 +241,7 @@ final class SequenceNativeImpl extends AbstractSequence {
 			target.releaseConnection();
 		}
 		if (ORMConfig.getInstance().isDebugMode()) {
-			LogUtil.info(StringUtils.concat(selectSql, " fetch size=", String.valueOf(size), "[Cost:", String.valueOf(System.currentTimeMillis() - start), "ms]|", target.getTransactionId()));
+			LogUtil.info(StringUtils.concat(selectSql, " (fetch size=", String.valueOf(size), ")\t[Cost:", String.valueOf(System.currentTimeMillis() - start), "ms]|", target.getTransactionId()));
 		}
 		return result;
 	}

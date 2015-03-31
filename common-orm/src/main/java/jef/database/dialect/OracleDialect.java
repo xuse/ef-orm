@@ -37,6 +37,9 @@ import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.type.AColumnMapping;
+import jef.database.exception.JDBCExceptionHelper;
+import jef.database.exception.TemplatedViolatedConstraintNameExtracter;
+import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
@@ -369,7 +372,7 @@ public class OracleDialect extends AbstractDialect {
 			return true;
 		} else {
 			// 为了跟踪所有Oracle出现网络异常时的错误码，将错误码和异常信息打印出来。
-			LogUtil.info("Oracle non-io Err:" + se.getErrorCode() + ":" + se.getMessage());
+//			LogUtil.info("Oracle non-io Err:" + se.getErrorCode() + ":" + se.getMessage());
 			return false;
 		}
 	}
@@ -522,4 +525,52 @@ public class OracleDialect extends AbstractDialect {
 	public LimitHandler getLimitHandler() {
 		return limit;
 	}
+	private static ViolatedConstraintNameExtracter EXTRACTER_8 = new TemplatedViolatedConstraintNameExtracter() {
+
+		/**
+		 * Extract the name of the violated constraint from the given SQLException.
+		 *
+		 * @param sqle The exception that was the result of the constraint violation.
+		 * @return The extracted constraint name.
+		 */
+		public String extractConstraintName(SQLException sqle) {
+			int errorCode = JDBCExceptionHelper.extractErrorCode(sqle);
+			if ( errorCode == 1 || errorCode == 2291 || errorCode == 2292 ) {
+				return extractUsingTemplate( "constraint (", ") violated", sqle.getMessage() );
+			}
+			else if ( errorCode == 1400 ) {
+				// simple nullability constraint
+				return null;
+			}
+			else {
+				return null;
+			}
+		}
+	};
+	
+
+	private static ViolatedConstraintNameExtracter EXTRACTER_9 = new TemplatedViolatedConstraintNameExtracter() {
+
+		/**
+		 * Extract the name of the violated constraint from the given SQLException.
+		 *
+		 * @param sqle The exception that was the result of the constraint violation.
+		 * @return The extracted constraint name.
+		 */
+		public String extractConstraintName(SQLException sqle) {
+			int errorCode = JDBCExceptionHelper.extractErrorCode(sqle);
+			if ( errorCode == 1 || errorCode == 2291 || errorCode == 2292 ) {
+				return extractUsingTemplate( "constraint (", ") violated", sqle.getMessage() );
+			}
+			else if ( errorCode == 1400 ) {
+				// simple nullability constraint
+				return null;
+			}
+			else {
+				return null;
+			}
+		}
+
+	};
+
 }

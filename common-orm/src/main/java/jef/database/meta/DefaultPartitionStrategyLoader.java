@@ -56,8 +56,9 @@ public class DefaultPartitionStrategyLoader implements PartitionStrategyLoader {
 			if (!data.startsWith("{")) {
 				data = StringUtils.concat("{", data, "}");
 			}
-			LogUtil.info(StringUtils.concat("Loading the partition strategy from file:", url.toString(), data));
+			LogUtil.info("Loading partition strategy from:{}", url.getPath());
 			PartitionTableImpl table = JsonUtil.toObject(data, PartitionTableImpl.class);
+			System.out.println(JsonUtil.toJson(table));
 			return table;
 		} catch (Exception e) {
 			LogUtil.exception("The Partition rule load failure in file:" + url + ", it will be ignored!", e);

@@ -3,7 +3,6 @@ package jef.tools;
 import java.util.Date;
 import java.util.Map.Entry;
 
-import jef.json.JsonUtil;
 import jef.json.SerializeConfigEx;
 import jef.json.XmlJsonSerializer;
 
@@ -151,7 +150,7 @@ public abstract class XMLFastJsonParser {
 
 		@Override
 		public String toJsonString(Node node) {
-			return JsonUtil.toJson(node, XML_GSON,null);
+			return JSON.toJSONString(node, XML_GSON);
 		}
 
 		private void processJsonProperty(Element root, String key, Object value) {
