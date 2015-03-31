@@ -15,9 +15,12 @@
  */
 package jef.database.dialect;
 
+import java.sql.SQLException;
 import java.sql.Types;
 
 import jef.database.ConnectInfo;
+import jef.database.exception.JDBCExceptionHelper;
+import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.jdbc.statement.UnionJudgement;
 import jef.database.query.function.NoArgSQLFunction;
 import jef.tools.string.JefStringReader;
@@ -85,6 +88,21 @@ public class SQLServer2005Dialect extends SQLServer2000Dialect{
 		}
 	}
 	
-	
+	private static ViolatedConstraintNameExtracter EXTRATER=new ViolatedConstraintNameExtracter(){
+		@Override
+		public String extractConstraintName(SQLException sqle) {
+			int sqlState = Integer.valueOf(JDBCExceptionHelper.extractSqlState(sqle)).intValue();
+			switch (sqlState) {
+			case 23000:
+				return sqle.getMessage();
+			}
+			return null;
+		}
+	};
+
+	@Override
+	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
+		return EXTRATER;
+	}
 }
 

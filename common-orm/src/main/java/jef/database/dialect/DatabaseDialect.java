@@ -30,6 +30,7 @@ import jef.database.datasource.DataSourceInfo;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ParserFactory;
+import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
@@ -237,6 +238,13 @@ public interface DatabaseDialect {
 	 * @return
 	 */
 	public int getPropertyInt(DbProperty key);
+	
+	/**
+	 * 返回指定属性，如果无值返回0
+	 * @param key
+	 * @return
+	 */
+	public long getPropertyLong(DbProperty key);
 
 	/**
 	 * 不同数据库登录后，所在的默认schema是不一样的
@@ -361,4 +369,6 @@ public interface DatabaseDialect {
 	void toExtremeInsert(InsertSqlClause sql);
 	
 	ParserFactory getParserFactory();
+	
+	ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter();
 }

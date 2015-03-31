@@ -15,8 +15,10 @@
  */
 package jef.database;
 
+import java.sql.BatchUpdateException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,7 +48,8 @@ import jef.tools.StringUtils;
  * <p>
  * 可以使用{@link #execute(List)}方法执行批量插入、更新或删除操作。
  * <p>
- * 可以使用{@link #setGroupForPartitionTable(boolean)}方法指定是否要对每条参数进行路由计算，根据路由结果重新分组后再执行插入、更新或删除操作。(仅当分库分表后才需要)
+ * 可以使用{@link #setGroupForPartitionTable(boolean)}
+ * 方法指定是否要对每条参数进行路由计算，根据路由结果重新分组后再执行插入、更新或删除操作。(仅当分库分表后才需要)
  * 
  * 
  * @author Administrator
@@ -194,8 +197,8 @@ public abstract class Batch<T extends IQueryableEntity> {
 	}
 
 	/**
-	 * 提交并执行批数据。
-	 * 注意Batch对应的SQL语句是固定的。因此此处传入的对象只会影响参数中的绑定变量和SQL语句中的表名。对where条件、Update中的set子句不会构成影响。
+	 * 提交并执行批数据。 注意Batch对应的SQL语句是固定的。因此此处传入的对象只会影响参数中的绑定变量和SQL语句中的表名。对where条件、
+	 * Update中的set子句不会构成影响。
 	 * 
 	 * @throws SQLException
 	 */
@@ -204,8 +207,8 @@ public abstract class Batch<T extends IQueryableEntity> {
 			return 0;
 		}
 		boolean debugMode = ORMConfig.getInstance().isDebugMode();
-		String tablename=null;
-		
+		String tablename = null;
+
 		try {
 			if (this.groupForPartitionTable && forceTableName == null) {// 需要分组
 				callVeryBefore(objs);
@@ -215,8 +218,8 @@ public abstract class Batch<T extends IQueryableEntity> {
 					long start = System.currentTimeMillis();
 					PairSS target = entry.getKey();
 					String dbName = parent.getTransactionId(target.first);
-					tablename=target.second;
-					long dbAccess = innerCommit(entry.getValue(),target.first, tablename, dbName);
+					tablename = target.second;
+					long dbAccess = innerCommit(entry.getValue(), target.first, tablename, dbName);
 					total += executeResult;
 					if (debugMode) {
 						LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed:", String.valueOf(entry.getValue().size()), "/on ", String.valueOf(executeResult), " record(s) on [" + entry.getKey() + "]\t Time cost([ParseSQL]:",
@@ -257,7 +260,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 		String sql = toSql(DbUtils.escapeColumn(db.getProfile(), tablename));
 		if (ORMConfig.getInstance().isDebugMode())
 			LogUtil.show(sql + " | " + dbName);
-		
+
 		PreparedStatement p = db.prepareStatement(sql);
 		try {
 			return doCommit(p, db, objs);
@@ -279,7 +282,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			if (this.forcrSite != null) {
 				partitionResult.setDatabase(forcrSite);
 			}
-			PairSS tablename = new PairSS(partitionResult.getDatabase(),partitionResult.getAsOneTable());
+			PairSS tablename = new PairSS(partitionResult.getDatabase(), partitionResult.getAsOneTable());
 			List<T> list = result.get(tablename);
 			if (list == null) {
 				list = new ArrayList<T>();
@@ -296,7 +299,44 @@ public abstract class Batch<T extends IQueryableEntity> {
 	protected long doCommit(PreparedStatement psmt, OperateTarget db, List<T> listValue) throws SQLException {
 		callEventListenerBefore(listValue);
 		processJdbcParams(psmt, listValue, db);
-		int[] result = psmt.executeBatch();
+		int[] result;
+		try {
+			result = psmt.executeBatch();
+		} catch (BatchUpdateException e) {
+			// 大部分标准JDBC实现都会抛出BatchUpdateException
+			SQLException realException = e.getNextException();
+			if (realException == null) {
+				if(e.getCause() instanceof SQLException){
+					realException=(SQLException)e.getCause();
+				}else{
+					realException = e;
+				}
+			}
+			if (realException instanceof SQLIntegrityConstraintViolationException) {
+				throw realException;
+			}
+			String constraintName = db.getProfile().getViolatedConstraintNameExtracter().extractConstraintName(realException);
+			if (constraintName != null) {
+				if (realException instanceof SQLIntegrityConstraintViolationException) {
+					throw realException;
+				} else {
+					throw new SQLIntegrityConstraintViolationException(constraintName);
+				}
+			} else {
+				throw realException;
+			}
+		} catch (SQLException e) {
+			String constraintName = db.getProfile().getViolatedConstraintNameExtracter().extractConstraintName(e);
+			if (constraintName != null) {
+				if (e instanceof SQLIntegrityConstraintViolationException) {
+					throw e;
+				} else {
+					throw new SQLIntegrityConstraintViolationException(constraintName);
+				}
+			} else {
+				throw e;
+			}
+		}
 		int total = 0;
 		if (result[0] < 0) {
 			total = result[0];
@@ -310,15 +350,17 @@ public abstract class Batch<T extends IQueryableEntity> {
 		callEventListenerAfter(listValue);
 		return dbAccess;
 	}
-	
+
 	/*
 	 * 分库分表前执行，调用主键回调
 	 */
 	protected abstract void callVeryBefore(List<T> objs) throws SQLException;
+
 	/*
 	 * 操作前执行，调用监听器
 	 */
 	protected abstract void callEventListenerBefore(List<T> listValue) throws SQLException;
+
 	/*
 	 * 操作后执行，返回主键，以及执行监听器
 	 */
@@ -383,7 +425,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			} else {
 				for (T t : listValue) {
 					try {
-						cache.onInsert(t,forceTableName);
+						cache.onInsert(t, forceTableName);
 						listener.afterInsert(t, parent);
 					} catch (Exception e) {
 						LogUtil.exception(e);
@@ -398,18 +440,18 @@ public abstract class Batch<T extends IQueryableEntity> {
 		protected void processJdbcParams(PreparedStatement psmt, List<T> listValue, OperateTarget db) throws SQLException {
 			List<ColumnMapping> writeFields = insertPart.getFields();
 			int len = listValue.size();
-			SqlLog log=ORMConfig.getInstance().newLogger(this.extreme);
+			SqlLog log = ORMConfig.getInstance().newLogger(this.extreme);
 			int maxLog = ORMConfig.getInstance().getMaxBatchLog();
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
-				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ",i + 1).append('/').append(len));
+				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ", i + 1).append('/').append(len));
 				BindVariableTool.setInsertVariables(t, writeFields, context);
 				psmt.addBatch();
 				if (log.isDebug()) {
 					log.output();
 					if (i + 1 == maxLog) {
 						log.directLog("Batch Parameters: After " + maxLog + "th are ignored to reduce the size of log file.");
-						log=SqlLog.DUMMY;
+						log = SqlLog.DUMMY;
 					}
 				}
 			}
@@ -501,11 +543,11 @@ public abstract class Batch<T extends IQueryableEntity> {
 		protected void processJdbcParams(PreparedStatement psmt, List<T> listValue, OperateTarget db) throws SQLException {
 			List<BindVariableDescription> bindVar = wherePart.getBind();
 			int len = listValue.size();
-			SqlLog log=ORMConfig.getInstance().newLogger(this.extreme);
+			SqlLog log = ORMConfig.getInstance().newLogger(this.extreme);
 			int maxLog = ORMConfig.getInstance().getMaxBatchLog();
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
-				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ",i + 1).append('/').append(len));
+				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ", i + 1).append('/').append(len));
 				List<Object> whereBind = BindVariableTool.setVariables(t.getQuery(), updatePart.getVariables(), bindVar, context);
 				psmt.addBatch();
 				parent.getCache().onUpdate(forceTableName == null ? meta.getName() : forceTableName, wherePart.getSql(), whereBind);
@@ -514,7 +556,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 					log.output();
 					if (i + 1 == maxLog) {
 						log.directLog("Batch Parameters: After " + maxLog + "th are ignored to reduce the size of log file.");
-						log=SqlLog.DUMMY;
+						log = SqlLog.DUMMY;
 					}
 
 				}
@@ -569,14 +611,14 @@ public abstract class Batch<T extends IQueryableEntity> {
 		protected void processJdbcParams(PreparedStatement psmt, List<T> listValue, OperateTarget db) throws SQLException {
 			List<BindVariableDescription> bindVar = wherePart.getBind();
 			int len = listValue.size();
-			SqlLog log=ORMConfig.getInstance().newLogger(this.extreme);
+			SqlLog log = ORMConfig.getInstance().newLogger(this.extreme);
 			int maxLog = ORMConfig.getInstance().getMaxBatchLog();
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
 				if (t.getQuery().getConditions().isEmpty()) {
 					DbUtils.fillConditionFromField(t, t.getQuery(), true, pkMpode);
 				}
-				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ",i + 1).append('/').append(len));
+				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ", i + 1).append('/').append(len));
 				List<Object> whereBind = BindVariableTool.setVariables(t.getQuery(), null, bindVar, context);
 				parent.getCache().onDelete(forceTableName == null ? meta.getName() : forceTableName, wherePart.getSql(), whereBind);
 
@@ -585,7 +627,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 					log.output();
 					if (i + 1 == maxLog) {
 						log.directLog("Batch Parameters: After " + maxLog + "th are ignored to reduce the size of log file.");
-						log=SqlLog.DUMMY;// 关闭日志开关
+						log = SqlLog.DUMMY;// 关闭日志开关
 					}
 				}
 

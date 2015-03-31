@@ -21,6 +21,9 @@ import jef.database.dialect.ColumnType.Clob;
 import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
+import jef.database.exception.JDBCExceptionHelper;
+import jef.database.exception.TemplatedViolatedConstraintNameExtracter;
+import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.jdbc.JDBCTarget;
 import jef.database.jdbc.statement.DelegatingPreparedStatement;
 import jef.database.jdbc.statement.DelegatingStatement;
@@ -54,10 +57,9 @@ public class PostgreSqlDialect extends AbstractDialect {
 	protected static final String JDBC_URL_FORMAT = "jdbc:postgresql://%1$s:%2$s/%3$s";
 	protected static final int DEFAULT_PORT = 5432;
 
-
 	public PostgreSqlDialect() {
 		features = CollectionUtil.identityHashSet();
-		features.addAll(Arrays.asList(Feature.ALTER_FOR_EACH_COLUMN, Feature.COLUMN_ALTERATION_SYNTAX, Feature.SUPPORT_CONCAT,  Feature.SUPPORT_SEQUENCE,Feature.SUPPORT_LIMIT,Feature.AI_TO_SEQUENCE_WITHOUT_DEFAULT));
+		features.addAll(Arrays.asList(Feature.ALTER_FOR_EACH_COLUMN, Feature.COLUMN_ALTERATION_SYNTAX, Feature.SUPPORT_CONCAT, Feature.SUPPORT_SEQUENCE, Feature.SUPPORT_LIMIT, Feature.AI_TO_SEQUENCE_WITHOUT_DEFAULT));
 
 		loadKeywords("postgresql_keywords.properties");
 
@@ -177,7 +179,7 @@ public class PostgreSqlDialect extends AbstractDialect {
 		setProperty(DbProperty.SEQUENCE_FETCH, "select nextval('%s')");
 		setProperty(DbProperty.WRAP_FOR_KEYWORD, "\"\"");
 		setProperty(DbProperty.GET_IDENTITY_FUNCTION, "SELECT currval('%tableName%_%columnName%_seq')");
-		
+
 		typeNames.put(Types.BLOB, "bytea", Types.VARBINARY);
 		typeNames.put(Types.CLOB, "text", 0);
 		typeNames.put(Types.BOOLEAN, "boolean", 0);
@@ -193,14 +195,14 @@ public class PostgreSqlDialect extends AbstractDialect {
 	public RDBMS getName() {
 		return RDBMS.postgresql;
 	}
-	
+
 	@Override
 	public void init(OperateTarget db) {
 		super.init(db);
 		try {
 			ensureUserFunction(this.functions.get("timestampdiff"), db);
 		} catch (SQLException e) {
-			LogUtil.exception("Initlize user function error.",e);
+			LogUtil.exception("Initlize user function error.", e);
 		}
 	}
 
@@ -211,12 +213,11 @@ public class PostgreSqlDialect extends AbstractDialect {
 	@Override
 	public String generateUrl(String host, int port, String pathOrName) {
 		String url = String.format(JDBC_URL_FORMAT, host, (port <= 0 ? DEFAULT_PORT : port), pathOrName);
-		if(ORMConfig.getInstance().isDebugMode()){
+		if (ORMConfig.getInstance().isDebugMode()) {
 			LogUtil.show(url);
 		}
 		return url;
 	}
-
 
 	/**
 	 * PostgreSQL 无论建表SQL中的表名是大写还是小写，最终DB中的表名都是小写； 而列名是区分大小写的； <br>
@@ -226,17 +227,22 @@ public class PostgreSqlDialect extends AbstractDialect {
 	 */
 	@Override
 	public String getObjectNameToUse(String name) {
-		if(name==null)return null;
-		if(name.charAt(1)=='"')return name;
+		if (name == null)
+			return null;
+		if (name.charAt(1) == '"')
+			return name;
 		return name.toLowerCase();
 	}
 
 	@Override
 	public String getColumnNameToUse(String name) {
-		if(name==null)return null;
-		if(name.charAt(1)=='"')return name;
+		if (name == null)
+			return null;
+		if (name.charAt(1) == '"')
+			return name;
 		return name.toLowerCase();
 	}
+
 	@Override
 	public String getColumnNameToUse(AColumnMapping name) {
 		return name.lowerColumnName();
@@ -252,21 +258,20 @@ public class PostgreSqlDialect extends AbstractDialect {
 		 * 要注意这里的currval含义用法和Oracle一样
 		 * ，不是获取sequence当前的值，而是返回当前sesssion中上一次获取过的seq值。
 		 */
-//		if(sequenceMode){
-//			if(column.getSqlType()==Types.BIGINT){
-//				return flag?"int8 not null":"int8";
-//			}else{
-//				return flag?"int4 not null":"int4";
-//			}	
-//		}else{
-			if(column.getSqlType()==Types.BIGINT){
-				return flag?"serial8 not null":"serial8";
-			}else{
-				return flag?"serial4 not null":"serial4";
-			}
-//		}
+		// if(sequenceMode){
+		// if(column.getSqlType()==Types.BIGINT){
+		// return flag?"int8 not null":"int8";
+		// }else{
+		// return flag?"int4 not null":"int4";
+		// }
+		// }else{
+		if (column.getSqlType() == Types.BIGINT) {
+			return flag ? "serial8 not null" : "serial8";
+		} else {
+			return flag ? "serial4 not null" : "serial4";
+		}
+		// }
 	}
-	
 
 	public ColumnType getProprtMetaFromDbType(jef.database.meta.Column column) {
 		if ("text".equals(column.getDataType())) {
@@ -387,8 +392,9 @@ public class PostgreSqlDialect extends AbstractDialect {
 				return _stmt.executeBatch();
 			} catch (SQLException e) {
 				conn.rollback(sp);
-				//PG在Batch模式下抛出的顶层错误是难以理解的。直接抛出nextException即可。
-				throw e.getNextException()==null?e:e.getNextException();
+				// PG在Batch模式下抛出的顶层错误是难以理解的。直接抛出nextException即可。
+				//throw e.getNextException() == null ? e : e.getNextException();
+				throw e;
 			} finally {
 				conn.releaseSavepoint(sp);
 			}
@@ -565,11 +571,46 @@ public class PostgreSqlDialect extends AbstractDialect {
 	public boolean containKeyword(String name) {
 		return keywords.contains(StringUtils.lowerCase(name));
 	}
-	
-	private final LimitHandler limit=new LimitOffsetLimitHandler();
+
+	private final LimitHandler limit = new LimitOffsetLimitHandler();
 
 	@Override
 	public LimitHandler getLimitHandler() {
 		return limit;
 	}
+
+	@Override
+	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
+		return EXTRACTER;
+	}
+
+	private static ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
+		public String extractConstraintName(SQLException sqle) {
+			try {
+				int sqlState = Integer.valueOf(JDBCExceptionHelper.extractSqlState(sqle)).intValue();
+				switch (sqlState) {
+				// CHECK VIOLATION
+				case 23514:
+					return sqle.getMessage();
+					// UNIQUE VIOLATION
+				case 23505:
+					return sqle.getMessage();
+					// FOREIGN KEY VIOLATION
+				case 23503:
+					return sqle.getMessage();
+					// NOT NULL VIOLATION
+				case 23502:
+					return sqle.getMessage();
+					// TODO: RESTRICT VIOLATION
+				case 23001:
+					return null;
+					// ALL OTHER
+				default:
+					return null;
+				}
+			} catch (NumberFormatException nfe) {
+				return null;
+			}
+		}
+	};
 }

@@ -26,7 +26,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.TableGenerator;
 
-import jef.database.DbCfg;
+import jef.database.ORMConfig;
 import jef.database.annotation.HiloGeneration;
 import jef.database.dialect.type.AutoGuidMapping;
 import jef.database.dialect.type.AutoIntMapping;
@@ -78,7 +78,6 @@ import jef.database.meta.ColumnChange;
 import jef.database.meta.ColumnChange.Change;
 import jef.database.meta.Feature;
 import jef.database.support.RDBMS;
-import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 
 /**
@@ -88,8 +87,6 @@ import jef.tools.StringUtils;
  * 
  */
 public abstract class ColumnType {
-	private static boolean IS_NATIVE_AUTO = JefConfiguration.getBoolean(DbCfg.DB_AUTOINCREMENT_NATIVE, true);
-
 	protected boolean nullable = true;
 
 	public Object defaultValue;
@@ -776,7 +773,7 @@ public abstract class ColumnType {
 		public AutoIncrement(int i, GenerationType type, TableGenerator tg, SequenceGenerator sg, HiloGeneration hilo) {
 			super(i);
 			this.nullable = false;
-			if (IS_NATIVE_AUTO) {
+			if (ORMConfig.getInstance().isGenerateBySequenceAndIdentityToAUTO()) {
 				if (type == GenerationType.IDENTITY || type == GenerationType.SEQUENCE) {
 					type = GenerationType.AUTO;
 				}

@@ -94,7 +94,7 @@ final class SequenceNativeImpl extends AbstractSequence {
 	protected boolean doInit(DbClient session, String dbKey) throws SQLException {
 		DbMetaData meta=session.getMetaData(dbKey);
 		ensureExists(meta, table, column, length, initValue);
-		this.selectSql = getSelectSql(meta.getProfile());
+		this.selectSql = generateSQL(meta.getProfile());
 		if (exists) {
 			OperateTarget target=session.selectTarget(dbKey);
 			initStep(target, selectSql);
@@ -102,7 +102,7 @@ final class SequenceNativeImpl extends AbstractSequence {
 		return true;
 	}
 
-	private String getSelectSql(DatabaseDialect dialect) {
+	private String generateSQL(DatabaseDialect dialect) {
 		String sql;
 		if (schema == null) {
 			sql = sequence;
@@ -136,7 +136,6 @@ final class SequenceNativeImpl extends AbstractSequence {
 		long max = StringUtils.toLong(StringUtils.repeat('9', length), Long.MAX_VALUE);
 		long start = caclStartValue(meta, schema, table, column, initValue, max);
 		try {
-
 			meta.createSequence(schema, sequence, start+1, max);
 			exists = true;
 		} catch (SQLException e) {
@@ -241,7 +240,7 @@ final class SequenceNativeImpl extends AbstractSequence {
 			target.releaseConnection();
 		}
 		if (ORMConfig.getInstance().isDebugMode()) {
-			LogUtil.info(StringUtils.concat(selectSql, " fetch size=", String.valueOf(size), "[Cost:", String.valueOf(System.currentTimeMillis() - start), "ms]|", target.getTransactionId()));
+			LogUtil.info(StringUtils.concat(selectSql, " (fetch size=", String.valueOf(size), ")\t[Cost:", String.valueOf(System.currentTimeMillis() - start), "ms]|", target.getTransactionId()));
 		}
 		return result;
 	}

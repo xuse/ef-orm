@@ -1,6 +1,7 @@
 package jef.orm.onetable;
 
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -85,7 +86,9 @@ public class SimpleTableTest extends org.junit.Assert {
 
 				meta = MetaHolder.getMeta(CaAsset.class);
 				holder = db.getSqlTemplate(null).getSequence(meta.getFirstAutoincrementDef());
-				holder.clear();
+				if(holder!=null){
+					holder.clear();
+				}
 			}
 			db.dropTable(TestEntity.class, CaAsset.class, Keyword.class); // 删除表
 			db.createTable(Keyword.class);
@@ -118,8 +121,9 @@ public class SimpleTableTest extends org.junit.Assert {
 		assertTrue(count > 0);
 	}
 
+	
 	@Test
-	public void testCase1XX() throws SQLException {
+	public void testRefreshTable() throws SQLException {
 		db.refreshTable(TestEntity.class);
 	}
 
@@ -224,6 +228,40 @@ public class SimpleTableTest extends org.junit.Assert {
 		session.commit(true);
 	}
 
+	/**
+	 * 测试主键冲突抛出的异常。要求主键冲突时，无论是单记录插入，还是多条记录插入，都抛出 SQLIntegrityConstraintViolationException
+	 * 
+	 * @throws SQLException 
+	 * @see SQLIntegrityConstraintViolationException
+	 */
+	@Test
+	@IgnoreOn(allButExcept="sqlserver")
+	public void testConstraintViolationException() throws SQLException{
+		ORMConfig.getInstance().setManualSequence(true);
+		CaAsset obj=db.load(QB.create(CaAsset.class));
+		obj.setAssetId(obj.getAssetId());
+		Transaction tx=db.startTransaction();
+		try{
+			try{
+				tx.insert(obj);	
+			}catch(SQLIntegrityConstraintViolationException ex){
+				System.out.println("Pass1:"+ex.getMessage());
+			}
+			try{
+				CaAsset obj1=new CaAsset();
+				obj1.setAcctId(12L);
+				obj1.setNormal("sfddfdfd");
+				tx.batchInsert(Arrays.asList(obj,obj1));	
+			}catch(SQLIntegrityConstraintViolationException ex){
+				System.out.println("Pass2:"+ex.getMessage());
+			}
+			
+		}finally{
+			tx.close();
+		}
+		
+	}
+	
 	@Test
 	public void testForChenfy() throws SQLException {
 

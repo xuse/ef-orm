@@ -23,6 +23,7 @@ import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.ORMConfig;
 import jef.database.dialect.ColumnType.AutoIncrement;
+import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
@@ -40,7 +41,6 @@ import jef.database.query.function.StandardSQLFunction;
 import jef.database.query.function.TemplateFunction;
 import jef.database.support.RDBMS;
 import jef.tools.ArrayUtils;
-import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtil;
 import jef.tools.string.JefStringReader;
 
@@ -428,4 +428,21 @@ public class MySqlDialect extends AbstractDialect {
 	public LimitHandler getLimitHandler() {
 		return limit;
 	}
+
+	@Override
+	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
+		return EXTRACTER;
+	}
+	
+	private static ViolatedConstraintNameExtracter EXTRACTER = new ViolatedConstraintNameExtracter(){
+		@Override
+		public String extractConstraintName(SQLException sqle) {
+			if("MySQLIntegrityConstraintViolationException".equals(sqle.getClass().getSimpleName())){
+				return sqle.getMessage();
+			}
+			return null;
+		}
+		
+	};
+	
 }

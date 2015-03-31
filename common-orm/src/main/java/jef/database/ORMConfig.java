@@ -176,6 +176,11 @@ public class ORMConfig implements ORMConfigMBean {
 	 * 多站点查询时启用并行查询
 	 */
 	private int parallelSelect;
+	
+	/**
+	 * 将自增实现的两种常用实现映射为AUTO
+	 */
+	private boolean generateBySequenceAndIdentityToAUTO;
 
 	public String wrap = "";
 	public String wrapt = "";
@@ -218,6 +223,7 @@ public class ORMConfig implements ORMConfigMBean {
 		maxInConditions = JefConfiguration.getInt(DbCfg.DB_MAX_IN_CONDITIONS, 500);
 		parallelSelect = JefConfiguration.getInt(DbCfg.PARTITION_PARALLEL, 3);
 		jpaContinueCommitIfError = JefConfiguration.getBoolean(DbCfg.DB_JPA_CONTINUE_COMMIT_IF_ERROR, false);
+		generateBySequenceAndIdentityToAUTO=JefConfiguration.getBoolean(DbCfg.DB_AUTOINCREMENT_NATIVE, false);
 	}
 
 	public int getMaxInConditions() {
@@ -579,6 +585,15 @@ public class ORMConfig implements ORMConfigMBean {
 			return SqlLog.DUMMY;
 		}
 	}
+	
+	public boolean isGenerateBySequenceAndIdentityToAUTO() {
+		return generateBySequenceAndIdentityToAUTO;
+	}
+
+	public void setGenerateBySequenceAndIdentityToAUTO(boolean generateBySequenceAndIdentityToAUTO) {
+		this.generateBySequenceAndIdentityToAUTO = generateBySequenceAndIdentityToAUTO;
+	}
+
 	public SqlLog newLogger(boolean isDummy){
 		if(debugMode && !isDummy){
 			return new SqlLog.LogImpl();

@@ -244,26 +244,9 @@ public class JsonTest extends org.junit.Assert{
 	@Test
 	public void testJ1() throws Exception {
 		BeanForTest p = RandomData.newInstance(BeanForTest.class);
-		String z = toJson(p);
-		System.out.println(z);
 		System.out.println(JSON.toJSONString(p));
 	}
 
-	private String toJson(Object obj) throws Exception {
-		System.out.println(ConfigManager.get("custom1").get(BeanForTest.class)!=null);
-		JSONSerializer serializer = new JSONSerializer(ConfigManager.get("custom1"));
-		try {
-//			serializer.config(SerializerFeature.PrettyFormat, true);
-			SerializeConfig config=serializer.getMapping();
-			ObjectSerializer se=config.createASMSerializer(BeanForTest.class);//,ImmutableMap.of("id","the_id","name","name_person")
-			config.put(BeanForTest.class,se);
-			serializer.write(obj);
-			System.out.println(ConfigManager.get("custom1").get(BeanForTest.class)!=null);
-			return serializer.toString();
-		} finally {
-			serializer.close();
-		}
-	}
 	@Test
 	public void test222() {
 		BeanForTest p = RandomData.newInstance(BeanForTest.class);

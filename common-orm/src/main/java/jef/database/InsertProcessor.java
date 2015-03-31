@@ -2,6 +2,7 @@ package jef.database;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
@@ -110,9 +111,9 @@ abstract class InsertProcessor {
 			try {
 				st = db.createStatement();
 				String sql = sqls.getSql();
-				sb.ensureCapacity(sql.length()+150);
+				sb.ensureCapacity(sql.length() + 150);
 				sb.append(sql).append(db);
-				
+
 				if (sqls.getCallback() == null) {
 					st.executeUpdate(sql);
 				} else {
@@ -120,10 +121,17 @@ abstract class InsertProcessor {
 					cb.executeUpdate(st, sql);
 					cb.callAfter(obj);
 				}
-				sb.append("\nInsert:1\tTime cost([ParseSQL]:",parse - start).append("ms, [DbAccess]:",System.currentTimeMillis() - parse).append("ms)").append(db);
-			} catch (SQLException e) {
-				DbUtils.processError(e, ArrayUtils.toString(sqls.getTable(), true), db);
+				sb.append("\nInsert:1\tTime cost([ParseSQL]:", parse - start).append("ms, [DbAccess]:", System.currentTimeMillis() - parse).append("ms)").append(db);
+			} catch (SQLIntegrityConstraintViolationException e) {
 				throw e;
+			} catch (SQLException e) {
+				String s = db.getProfile().getViolatedConstraintNameExtracter().extractConstraintName(e);
+				if (s != null) {
+					throw new SQLIntegrityConstraintViolationException(s);
+				} else {
+					DbUtils.processError(e, ArrayUtils.toString(sqls.getTable(), true), db);
+					throw e;
+				}
 			} finally {
 				sb.output();
 				if (st != null)
@@ -176,6 +184,7 @@ abstract class InsertProcessor {
 			sb.ensureCapacity(sql.length() + 128);
 			sb.append(sql).append(db);
 			PreparedStatement psmt = null;
+			DatabaseDialect profile = db.getProfile();
 			try {
 				AutoIncreatmentCallBack callback = sqls.getCallback();
 				if (callback == null) {
@@ -183,7 +192,7 @@ abstract class InsertProcessor {
 				} else {
 					psmt = callback.doPrepareStatement(db, sql);
 				}
-				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
+				BindVariableContext context = new BindVariableContext(psmt, profile, sb);
 				BindVariableTool.setInsertVariables(obj, sqls.getFields(), context);
 				psmt.execute();
 				sb.append("\nInsert:1\tTime cost([ParseSQL]:", parse - start).append("ms, [DbAccess]:", System.currentTimeMillis() - parse).append("ms)").append(db);
@@ -191,9 +200,16 @@ abstract class InsertProcessor {
 				if (callback != null) {
 					callback.callAfter(obj);
 				}
-			} catch (SQLException e) {
-				DbUtils.processError(e, ArrayUtils.toString(sqls.getTable(), true), db);
+			} catch (SQLIntegrityConstraintViolationException e) {
 				throw e;
+			} catch (SQLException e) {
+				String s = profile.getViolatedConstraintNameExtracter().extractConstraintName(e);
+				if (s != null) {
+					throw new SQLIntegrityConstraintViolationException(s);
+				} else {
+					DbUtils.processError(e, ArrayUtils.toString(sqls.getTable(), true), db);
+					throw e;
+				}
 			} finally {
 				sb.output();
 				if (psmt != null)

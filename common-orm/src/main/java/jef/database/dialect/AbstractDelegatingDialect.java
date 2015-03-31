@@ -16,6 +16,7 @@ import jef.database.datasource.DataSourceInfo;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ParserFactory;
+import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
@@ -233,5 +234,15 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	@Override
 	public ParserFactory getParserFactory() {
 		return dialect.getParserFactory();
+	}
+
+	@Override
+	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
+		return dialect.getViolatedConstraintNameExtracter();
+	}
+
+	@Override
+	public long getPropertyLong(DbProperty key) {
+		return dialect.getPropertyLong(key);
 	}
 }

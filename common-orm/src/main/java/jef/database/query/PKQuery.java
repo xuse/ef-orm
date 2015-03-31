@@ -54,7 +54,7 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 		
 		this.instance=(T) clz.newInstance();
 		if(type.getPKFields().size()>pks.length){
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException("The primark key count is not match input value:"+type.getPKFields().size()+">"+pks.length);
 		}
 		pkValues=Arrays.asList(pks);
 	}

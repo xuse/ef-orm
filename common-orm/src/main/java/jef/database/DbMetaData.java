@@ -1673,6 +1673,10 @@ public class DbMetaData {
 			return;
 		if (max == null)
 			max = 9999999999L;
+		long limit=profile.getPropertyLong(DbProperty.MAX_SEQUENCE_VALUE);
+		if(limit>0){
+			max=Math.min(max, limit);
+		}
 		long min = 1;
 		if (min > start)
 			min = start;

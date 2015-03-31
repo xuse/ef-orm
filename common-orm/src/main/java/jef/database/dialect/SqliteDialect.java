@@ -16,9 +16,11 @@
 package jef.database.dialect;
 
 import java.io.File;
+import java.sql.SQLException;
 
 import jef.database.ConnectInfo;
 import jef.database.dialect.ColumnType.AutoIncrement;
+import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.query.Func;
@@ -197,6 +199,24 @@ public class SqliteDialect extends AbstractDialect {
 	public LimitHandler getLimitHandler() {
 		return limit;
 	}
+	
+	private static ViolatedConstraintNameExtracter EXTRACTER=new ViolatedConstraintNameExtracter(){
+		@Override
+		public String extractConstraintName(SQLException sqle) {
+			String message=sqle.getMessage();
+			if(message.startsWith("[SQLITE_CONSTRAINT]")){
+				return message;
+			}else if("PRIMARY KEY must be unique".equals(message)){
+				return message;
+			}
+			return null;
+		}
+	};
+	@Override
+	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
+		return EXTRACTER;
+	}
+	
 	
 
 }
