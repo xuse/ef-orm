@@ -8,6 +8,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import javax.persistence.PersistenceException;
+
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 import jef.tools.IOUtils;
@@ -21,7 +23,7 @@ public class ClobFileMapping extends AColumnMapping{
 			try {
 				st.setCharacterStream(index, IOUtils.getReader(file, null));//这个方法在JDBC4才支持。
 			} catch (IOException e) {
-				throw new IllegalArgumentException();
+				throw new PersistenceException(e);
 			}	
 		}
 		return value;

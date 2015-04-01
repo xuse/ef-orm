@@ -26,6 +26,8 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.SQLTimeoutException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,8 +50,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
 import java.util.concurrent.TimeUnit;
 
+import javax.persistence.EntityExistsException;
 import javax.persistence.FetchType;
 import javax.persistence.PersistenceException;
+import javax.persistence.QueryTimeoutException;
 import javax.sql.DataSource;
 
 import jef.accelerator.bean.BeanAccessor;
@@ -1380,6 +1384,21 @@ public final class DbUtils {
 	}
 
 	/**
+	 * 将异常包装为RuntimeException
+	 * @param e
+	 * @return
+	 */
+	public static PersistenceException toRuntimeException(SQLException e) {
+		String s = e.getSQLState();
+		if (e instanceof SQLIntegrityConstraintViolationException) {
+			return new EntityExistsException(e);
+		}else if (e instanceof SQLTimeoutException) {
+			return new QueryTimeoutException(s,e);
+		}
+		return new PersistenceException(s, e);
+	}
+
+	/**
 	 * 将异常包装为Runtime异常
 	 * 
 	 * @param e
@@ -1394,12 +1413,11 @@ public final class DbUtils {
 				e = e.getCause();
 				continue;
 			}
-			if (e instanceof SQLException) {
-				String s = ((SQLException) e).getSQLState();
-				return new PersistenceException(s, e);
-			}
 			if (e instanceof Error) {
 				throw (Error) e;
+			}
+			if (e instanceof SQLException) {
+				return toRuntimeException((SQLException)e);
 			}
 			return new IllegalStateException(e);
 		}

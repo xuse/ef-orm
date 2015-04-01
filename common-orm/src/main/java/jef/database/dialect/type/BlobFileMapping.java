@@ -8,6 +8,8 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import javax.persistence.PersistenceException;
+
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.meta.Feature;
@@ -27,7 +29,7 @@ public class BlobFileMapping extends AColumnMapping{
 					st.setBinaryStream(index, IOUtils.getInputStream(file),file.length());
 				}
 			} catch (IOException e) {
-				throw new IllegalArgumentException();
+				throw new PersistenceException(e);
 			}
 		}
 		return value;

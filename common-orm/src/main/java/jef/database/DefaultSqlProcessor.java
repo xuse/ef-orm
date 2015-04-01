@@ -24,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.NoResultException;
+
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.jsqlparser.SelectToCountWrapper;
@@ -218,7 +220,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 			sb.append(c.toSqlClause(meta, context, this, q.getInstance(), profile)); // 递归的，当do是属于Join中的一部分时，需要为其增加前缀
 		}
 		if (sb.length() == 0)
-			throw new NullPointerException("Illegal usage of query:" + q.getClass().getName() + " object, must including any condition in query. or did you forget to set the primary key for the entity?");
+			throw new NoResultException("Illegal usage of query:" + q.getClass().getName() + " object, must including any condition in query. or did you forget to set the primary key for the entity?");
 		return sb.toString();
 	}
 
@@ -286,7 +288,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 		if (sb.length() > 0 || ORMConfig.getInstance().isAllowEmptyQuery()) {
 			return new BindSql(sb.toString(), params);
 		} else {
-			throw new NullPointerException("Illegal usage of Query object, must including any condition in query.");
+			throw new NoResultException("Illegal usage of Query object, must including any condition in query.");
 		}
 	}
 

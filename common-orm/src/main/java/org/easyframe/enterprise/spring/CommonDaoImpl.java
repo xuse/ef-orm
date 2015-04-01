@@ -233,7 +233,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			}
 			return entity;
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -600,7 +600,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			}
 			return entities.size();
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 

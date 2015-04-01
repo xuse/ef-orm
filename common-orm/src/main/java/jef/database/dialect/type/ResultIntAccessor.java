@@ -3,6 +3,8 @@ package jef.database.dialect.type;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import javax.persistence.PersistenceException;
+
 import jef.database.jdbc.result.IResultSet;
 
 final  class ResultIntAccessor implements ResultSetAccessor{
@@ -14,7 +16,7 @@ final  class ResultIntAccessor implements ResultSetAccessor{
 		}else if(value instanceof Number){
 			return ((Number) value).intValue();
 		}
-		throw new IllegalArgumentException("The column "+n+" from database is type "+value.getClass()+" but expected is int.");
+		throw new PersistenceException("The column "+n+" from database is type "+value.getClass()+" but expected is int.");
 	}
 	public Class<?> getReturnType() {
 		return Integer.class;

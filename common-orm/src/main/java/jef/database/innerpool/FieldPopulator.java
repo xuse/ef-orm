@@ -2,6 +2,8 @@ package jef.database.innerpool;
 
 import java.sql.SQLException;
 
+import javax.persistence.PersistenceException;
+
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.log.LogUtil;
@@ -25,7 +27,7 @@ public class FieldPopulator implements IPopulator{
 		this.columnName=field.getResultAlias(schema, profile);
 		ColumnDescription desc = columns.getByUpperName(columnName);
 		if (desc == null) {
-			throw new IllegalArgumentException("Column not in ResultSet:" + columnName + " all:" + columns);
+			throw new PersistenceException("Column not in ResultSet:" + columnName + " all:" + columns);
 		}
 		
 	//	Assert.notNull(columnName);

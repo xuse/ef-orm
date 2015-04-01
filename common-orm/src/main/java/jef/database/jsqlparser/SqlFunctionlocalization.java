@@ -5,6 +5,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.PersistenceException;
+
 import jef.common.log.LogUtil;
 import jef.database.DbMetaData;
 import jef.database.ORMConfig;
@@ -150,7 +152,7 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 					String removed = startWithExpression.toString();
 					LogUtil.warn("[" + removed + "] was removed from your SQL since current db doesn't support it.");
 				} else {
-					throw new IllegalArgumentException("The 'START WITH ... CONNECT BY ...' syntax, current db [" + profile.getName() + "] doesn't support!");
+					throw new PersistenceException("The 'START WITH ... CONNECT BY ...' syntax, current db [" + profile.getName() + "] doesn't support!");
 				}
 			}
 			startWithExpression.setStartExpression(null);

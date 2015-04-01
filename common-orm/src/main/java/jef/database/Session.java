@@ -2641,7 +2641,7 @@ public abstract class Session {
 				CascadeUtil.insertWithRefInTransaction(Arrays.asList(obj), trans, dynamic, minPriority);
 				trans.commit(true);
 			} catch (SQLException e) {
-				LogUtil.exception(e);
+//				LogUtil.exception(e);
 				trans.rollback(true);
 				throw e;
 			} catch (RuntimeException e) {

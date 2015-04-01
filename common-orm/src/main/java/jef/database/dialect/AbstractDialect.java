@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.GenerationType;
+import javax.persistence.PersistenceException;
 import javax.sql.rowset.CachedRowSet;
 
 import jef.common.PairIS;
@@ -732,7 +733,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 				}
 			}
 		} catch (IOException e) {
-			throw new IllegalArgumentException(e);
+			throw new PersistenceException(e);
 		} finally {
 			IOUtils.closeQuietly(reader);
 		}
