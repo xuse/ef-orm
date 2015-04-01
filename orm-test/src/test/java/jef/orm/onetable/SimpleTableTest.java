@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import javax.persistence.EntityExistsException;
+
 import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
@@ -47,6 +49,9 @@ import jef.tools.DateUtils;
 import jef.tools.ThreadUtils;
 import jef.tools.string.RandomData;
 
+import org.easyframe.enterprise.spring.CommonDao;
+import org.easyframe.enterprise.spring.CommonDaoImpl;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -54,15 +59,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
-@DataSourceContext({ 
-		@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"), 
- 		@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
-		@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"),
-		@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-		@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"), @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
-		@DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}")
-	})
-@FixMethodOrder(MethodSorters.NAME_ASCENDING)   
+@DataSourceContext({ @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"), @DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
+		@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
+		@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"), @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"), @DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}") })
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class SimpleTableTest extends org.junit.Assert {
 	private DbClient db;
 
@@ -86,7 +86,7 @@ public class SimpleTableTest extends org.junit.Assert {
 
 				meta = MetaHolder.getMeta(CaAsset.class);
 				holder = db.getSqlTemplate(null).getSequence(meta.getFirstAutoincrementDef());
-				if(holder!=null){
+				if (holder != null) {
 					holder.clear();
 				}
 			}
@@ -121,7 +121,6 @@ public class SimpleTableTest extends org.junit.Assert {
 		assertTrue(count > 0);
 	}
 
-	
 	@Test
 	public void testRefreshTable() throws SQLException {
 		db.refreshTable(TestEntity.class);
@@ -150,7 +149,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		ORMConfig.getInstance().setSpecifyAllColumnName(true);
 		System.out.println(page.getTotal());
 		System.out.println(page.next());
-		 System.out.println(page.next());
+		System.out.println(page.next());
 	}
 
 	/**
@@ -229,39 +228,62 @@ public class SimpleTableTest extends org.junit.Assert {
 	}
 
 	/**
-	 * 测试主键冲突抛出的异常。要求主键冲突时，无论是单记录插入，还是多条记录插入，都抛出 SQLIntegrityConstraintViolationException
+	 * 测试主键冲突抛出的异常。要求主键冲突时，无论是单记录插入，还是多条记录插入，都抛出
+	 * SQLIntegrityConstraintViolationException
 	 * 
-	 * @throws SQLException 
+	 * @throws SQLException
 	 * @see SQLIntegrityConstraintViolationException
 	 */
 	@Test
-	@IgnoreOn(allButExcept="sqlserver")
-	public void testConstraintViolationException() throws SQLException{
-		ORMConfig.getInstance().setManualSequence(true);
-		CaAsset obj=db.load(QB.create(CaAsset.class));
+	public void testConstraintViolationException() throws SQLException {
+		CaAsset obj = db.load(QB.create(CaAsset.class));
 		obj.setAssetId(obj.getAssetId());
-		Transaction tx=db.startTransaction();
-		try{
-			try{
-				tx.insert(obj);	
-			}catch(SQLIntegrityConstraintViolationException ex){
-				System.out.println("Pass1:"+ex.getMessage());
+		Transaction tx = db.startTransaction();
+		try {
+			try {
+				tx.insert(obj);
+			} catch (SQLIntegrityConstraintViolationException ex) {
+				System.out.println("Pass1:" + ex.getMessage());
 			}
-			try{
-				CaAsset obj1=new CaAsset();
+			try {
+				CaAsset obj1 = new CaAsset();
 				obj1.setAcctId(12L);
 				obj1.setNormal("sfddfdfd");
-				tx.batchInsert(Arrays.asList(obj,obj1));	
-			}catch(SQLIntegrityConstraintViolationException ex){
-				System.out.println("Pass2:"+ex.getMessage());
+				tx.batchInsert(Arrays.asList(obj, obj1));
+			} catch (SQLIntegrityConstraintViolationException ex) {
+				System.out.println("Pass2:" + ex.getMessage());
 			}
-			
-		}finally{
+
+		} finally {
 			tx.close();
 		}
-		
+
 	}
-	
+
+	@Test
+	@IgnoreOn(allButExcept = "oracle")
+	public void testConstraintViolationException2() throws SQLException {
+		ORMConfig.getInstance().setManualSequence(true);
+		CommonDao dao = new CommonDaoImpl(db);
+		CaAsset obj = db.load(QB.create(CaAsset.class));
+		obj.setAssetId(obj.getAssetId());
+		try {
+			dao.insert(obj);
+			Assert.fail("Must throw exception");
+		} catch (EntityExistsException ex) {
+			System.out.println("Pass1:" + ex.getMessage());
+		}
+		try {
+			CaAsset obj1 = new CaAsset();
+			obj1.setAcctId(12L);
+			obj1.setNormal("sfddfdfd");
+			dao.batchInsert(Arrays.asList(obj, obj1));
+			Assert.fail("Must throw exception");
+		} catch (EntityExistsException ex) {
+			System.out.println("Pass2:" + ex.getMessage());
+		}
+	}
+
 	@Test
 	public void testForChenfy() throws SQLException {
 
@@ -987,27 +1009,27 @@ public class SimpleTableTest extends org.junit.Assert {
 
 	/**
 	 * 测试NotNull计算符含义在Oracle下的统一
+	 * 
 	 * @throws SQLException
 	 */
 	@Test
-	@IgnoreOn(allButExcept={"oracle","postgresql"})
+	@IgnoreOn(allButExcept = { "oracle", "postgresql" })
 	public void testIsNull() throws SQLException {
 		db.executeSql("delete from ca_asset where normal is null");
-		int old=db.count(QB.create(CaAsset.class));
-		
-		CaAsset ca=new CaAsset();
+		int old = db.count(QB.create(CaAsset.class));
+
+		CaAsset ca = new CaAsset();
 		ca.setNormal("");
 		db.insert(ca);
-		
+
 		System.out.println(db.select(QB.create(CaAsset.class)));
-		
-		
-		CaAsset a=new CaAsset();
+
+		CaAsset a = new CaAsset();
 		a.getQuery().addCondition(QB.notNull(CaAsset.Field.normal));
-		a.getQuery().addCondition(QB.ne(CaAsset.Field.normal,""));
-		int v=db.select(a).size();
-		
+		a.getQuery().addCondition(QB.ne(CaAsset.Field.normal, ""));
+		int v = db.select(a).size();
+
 		assertEquals(old, v);
-		
+
 	}
 }

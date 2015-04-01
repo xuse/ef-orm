@@ -5,6 +5,8 @@ import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
 
+import javax.persistence.PersistenceException;
+
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 import jef.tools.DateFormats;
@@ -29,7 +31,7 @@ public class SqlTimeStringMapping extends AColumnMapping{
 				st.setTime(index, time);
 				return time;
 			} catch (ParseException e) {
-				throw new IllegalArgumentException((String)value,e);
+				throw new PersistenceException((String)value,e);
 			}
 		}
 		
@@ -45,7 +47,7 @@ public class SqlTimeStringMapping extends AColumnMapping{
 			java.util.Date date=format.get().parse((String)value);
 			return profile.getSqlTimeExpression(date);
 		} catch (ParseException e) {
-			throw new IllegalArgumentException("Error cast date string.",e);
+			throw new PersistenceException("Error cast date string.",e);
 		}
 	}
 

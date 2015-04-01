@@ -6,6 +6,8 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
 
+import javax.persistence.PersistenceException;
+
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.query.Func;
@@ -35,7 +37,7 @@ public class DateStringMapping extends AbstractTimeMapping{
 			try {
 				st.setDate(index,new java.sql.Date(format.get().parse((String)value).getTime()));
 			} catch (ParseException e) {
-				throw new IllegalArgumentException((String)value,e);
+				throw new PersistenceException((String)value,e);
 			}
 		}
 		return value;
@@ -51,7 +53,7 @@ public class DateStringMapping extends AbstractTimeMapping{
 			java.util.Date date=format.get().parse((String)value);
 			return profile.getSqlDateExpression(date);
 		} catch (ParseException e) {
-			throw new IllegalArgumentException("Error cast date string.",e);
+			throw new PersistenceException("Error cast date string.",e);
 		}
 	}
 

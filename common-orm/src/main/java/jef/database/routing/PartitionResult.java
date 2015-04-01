@@ -5,6 +5,9 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
+
 import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
 
@@ -98,9 +101,9 @@ public class PartitionResult {
 	public String getAsOneTable() {
 		int n=tables.size();
 		if(n>1){
-			throw new IllegalArgumentException("There's " + n+" tables!");
+			throw new NonUniqueResultException("There's " + n+" tables!");
 		}else if(n==0){
-			throw new IllegalArgumentException("There's no table!");
+			throw new NoResultException("There's no table!");
 		}
 		return tables.get(0);
 	}
@@ -113,9 +116,9 @@ public class PartitionResult {
 	public String getAsOneTableEscaped(DatabaseDialect profile) {
 		int n=tables.size();
 		if(n>1){
-			throw new IllegalArgumentException("There's " + n+" tables!");
+			throw new NonUniqueResultException("There's " + n+" tables!");
 		}else if(n==0){
-			throw new IllegalArgumentException("There's no table!");
+			throw new NoResultException("There's no table!");
 		}
 		return DbUtils.escapeColumn(profile, tables.get(0));
 	}

@@ -37,9 +37,11 @@ import javax.persistence.JoinColumns;
 import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.NoResultException;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.OrderBy;
+import javax.persistence.PersistenceException;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.TableGenerator;
 
@@ -700,7 +702,7 @@ public final class MetaHolder {
 					ct = createTypeByAnnotation(c, gv, f, annos);
 				}
 			} catch (Exception e) {
-				throw new IllegalArgumentException(processingClz + " has invalid field/column " + f.getName(), e);
+				throw new PersistenceException(processingClz + " has invalid field/column " + f.getName(), e);
 			}
 
 			if (isPK)
@@ -713,7 +715,7 @@ public final class MetaHolder {
 					type.init(field, columnName, ct, meta);
 				}
 			} catch (IllegalArgumentException e) {
-				throw new IllegalArgumentException(meta.getName() + ":" + field.name() + " can not mapping to sql type.", e);
+				throw new PersistenceException(meta.getName() + ":" + field.name() + " can not mapping to sql type.", e);
 			}
 			meta.putJavaField(field, type, columnName, isPK);
 
@@ -875,7 +877,7 @@ public final class MetaHolder {
 			Assert.notNull(left, "Invalid reference [" + thisMeta.getThisType().getName() + "." + fieldName + "]: field [" + j.name() + "] not found from entity " + thisMeta.getThisType().getName());
 			Field right = target.getField(j.referencedColumnName());
 			if (right == null) {
-				throw new NullPointerException("Invalid reference [" + thisMeta.getThisType().getName() + "." + fieldName + "]: '" + j.referencedColumnName() + "' is not available in " + target.getThisType().getName());
+				throw new NoResultException("Invalid reference [" + thisMeta.getThisType().getName() + "." + fieldName + "]: '" + j.referencedColumnName() + "' is not available in " + target.getThisType().getName());
 			}
 			result.add(new JoinKey(left, right));
 		}

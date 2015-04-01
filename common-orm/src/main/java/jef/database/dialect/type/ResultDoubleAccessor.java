@@ -2,6 +2,8 @@ package jef.database.dialect.type;
 
 import java.sql.SQLException;
 
+import javax.persistence.PersistenceException;
+
 import jef.database.jdbc.result.IResultSet;
 
 public final class ResultDoubleAccessor implements ResultSetAccessor {
@@ -14,7 +16,7 @@ public final class ResultDoubleAccessor implements ResultSetAccessor {
 		}else if(value instanceof Number){
 			return ((Number) value).doubleValue();
 		}
-		throw new IllegalArgumentException("The column "+n+" from database is type "+value.getClass()+" but expected is double.");
+		throw new PersistenceException("The column "+n+" from database is type "+value.getClass()+" but expected is double.");
 	}
 	public Class<?> getReturnType() {
 		return Double.class;
