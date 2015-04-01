@@ -14,7 +14,6 @@ target/
 *.iml
 
 # Package Files #
-*.jar
 *.log
 test.db
 
