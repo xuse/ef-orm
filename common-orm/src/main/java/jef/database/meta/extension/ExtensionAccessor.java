@@ -208,7 +208,7 @@ public final class ExtensionAccessor extends BeanAccessor implements ExtensionMo
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public void initAnnotations(IdentityHashMap<Class, Annotation>[] field, IdentityHashMap<Class, Annotation>[] getter, IdentityHashMap<Class, Annotation>[] setter) {
+	public void initAnnotations(IdentityHashMap[] field, IdentityHashMap[] getter, IdentityHashMap[] setter) {
 		accessor.initAnnotations(field, getter, setter);
 	}
 
