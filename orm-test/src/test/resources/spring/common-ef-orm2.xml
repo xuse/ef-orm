@@ -12,7 +12,7 @@ http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
     http://www.springframework.org/schema/tx 
 http://www.springframework.org/schema/tx/spring-tx-3.0.xsd">
 
-	<!--EF加上事务管理的典型配置 -->
+	<!--EF使用配置来实现声明式事务 -->
 	<bean id="dataSource" class="jef.database.datasource.SimpleDataSource"
 		p:url="jdbc:postgresql://127.0.0.1:5432/cms" p:user="root" p:password="admin" />
 
