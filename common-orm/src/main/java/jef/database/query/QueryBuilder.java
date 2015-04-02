@@ -27,7 +27,6 @@ import jef.database.meta.MetaHolder;
 import jef.database.meta.TupleMetadata;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
-import jef.tools.reflect.UnsafeUtils;
 
 /**
  * Criteria API的工具类。
@@ -66,6 +65,22 @@ public class QueryBuilder {
 		return query;
 	}
 
+	/**
+	 * 创建查询条件
+	 * @param clz
+	 * @return
+	 */
+	public static <T extends IQueryableEntity> Terms terms(Class<T> clz) {
+		return create(clz).terms();
+	}
+	
+	
+	/**
+	 * 针对动态表模板，创建指定KEY的查询
+	 * @param clz
+	 * @param key
+	 * @return
+	 */
 	public static <T extends IQueryableEntity> Query<T> create(Class<T> clz, String key) {
 		T d;
 		try {
@@ -78,7 +93,6 @@ public class QueryBuilder {
 		} catch (IllegalAccessException e) {
 			throw new RuntimeException(e);
 		}
-		
 	}
 
 	/**
