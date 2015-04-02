@@ -44,6 +44,8 @@ import javax.persistence.OrderBy;
 import javax.persistence.PersistenceException;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.TableGenerator;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 import jef.accelerator.asm.Attribute;
 import jef.accelerator.asm.ClassReader;
@@ -643,7 +645,6 @@ public final class MetaHolder {
 			if (meta.getField(f.getName()) != null) { // 当子类父类中有同名field时，跳过父类的field
 				continue;
 			}
-			Column c = annos.getFieldAnnotation(f, Column.class);
 			List<Field> fieldss = metaModel.remove(f.getName());
 			if (fieldss.isEmpty()) {
 				unprocessedField.add(f);
@@ -680,26 +681,24 @@ public final class MetaHolder {
 					throw new IllegalArgumentException("Field [" + field.name() + "] may be not enhanced. Please add the enum Field [" + field.name() + "] into " + processingClz.getName());
 				}
 			}
-
-			String columnName = getColumnName(field, c);
 			// 在得到了元模型的情况下
 			boolean isPK = annos.getFieldAnnotation(f, javax.persistence.Id.class) != null;
-			GeneratedValue gv = annos.getFieldAnnotation(f, javax.persistence.GeneratedValue.class);
 			jef.database.annotation.Type mappingHint = annos.getFieldAnnotation(f, jef.database.annotation.Type.class);
-			ColumnType ct;
-			ColumnMapping type=null;
+			ColumnMapping type = null;
 			Class<?> fieldType;
 			if (mappingHint != null) {
-				type=BeanUtils.newInstance(mappingHint.value());
-				fieldType=type.getFieldType();
-			}else{
-				fieldType=f.getType();
+				type = BeanUtils.newInstance(mappingHint.value());
+				fieldType = type.getFieldType();
+			} else {
+				fieldType = f.getType();
 			}
+			Column c = annos.getFieldAnnotation(f, Column.class);
+			ColumnType ct;
 			try {
 				if (c == null || StringUtils.isEmpty(c.columnDefinition())) {// 在没有Annonation的情况下,根据Field类型默认生成元数�?
-					ct = defaultColumnTypeByJava(f, c, gv, annos,fieldType);
+					ct = defaultColumnTypeByJava(f, c, annos, fieldType);
 				} else {
-					ct = createTypeByAnnotation(c, gv, f, annos);
+					ct = createTypeByAnnotation(c, f, annos);
 				}
 			} catch (Exception e) {
 				throw new PersistenceException(processingClz + " has invalid field/column " + f.getName(), e);
@@ -707,17 +706,18 @@ public final class MetaHolder {
 
 			if (isPK)
 				ct.notNull();
-			
+
 			try {
-				if(type==null){
-					type = ColumnMappings.getMapping(field, meta, columnName, ct, false);	
-				}else{
+				String columnName = getColumnName(field, c);
+				if (type == null) {
+					type = ColumnMappings.getMapping(field, meta, columnName, ct, false);
+				} else {
 					type.init(field, columnName, ct, meta);
 				}
+				meta.putJavaField(field, type, columnName, isPK);
 			} catch (IllegalArgumentException e) {
 				throw new PersistenceException(meta.getName() + ":" + field.name() + " can not mapping to sql type.", e);
 			}
-			meta.putJavaField(field, type, columnName, isPK);
 
 			// 设置索引
 			Indexed i = annos.getFieldAnnotation(f, Indexed.class);// 单列索引
@@ -955,7 +955,7 @@ public final class MetaHolder {
 		}
 	}
 
-	private static ColumnType createTypeByAnnotation(Column col, GeneratedValue gv, java.lang.reflect.Field field, AnnotationProvider annos) throws ParseException {
+	private static ColumnType createTypeByAnnotation(Column col, java.lang.reflect.Field field, AnnotationProvider annos) throws ParseException {
 		ColumnDefinition c = DbUtils.parseColumnDef(col.columnDefinition().toUpperCase());
 		String def = c.getColDataType().getDataType();
 		SqlExpression defaultExpression = null;
@@ -987,6 +987,7 @@ public final class MetaHolder {
 		int precision = col.precision();
 		int scale = col.scale();
 		// //////////////////////////////////////////////
+		GeneratedValue gv = annos.getFieldAnnotation(field, javax.persistence.GeneratedValue.class);
 		GenerationType geType = gv == null ? null : gv.strategy();
 		if ("VARCHAR".equals(def) || "VARCHAR2".equals(def)) {
 			if (geType != null) {
@@ -1030,24 +1031,22 @@ public final class MetaHolder {
 		} else if ("BLOB".equalsIgnoreCase(def)) {
 			return new ColumnType.Blob().setNullable(nullable).defaultIs(defaultExpression);
 		} else if ("Date".equalsIgnoreCase(def)) {
-			ColumnType.Date d = new ColumnType.Date();
-			d.setNullable(nullable).defaultIs(defaultExpression);
-			d.setGenerateType(getDateGenerateType(gv));
-			return d;
+			Temporal temporal=annos.getFieldAnnotation(field, Temporal.class);
+			TemporalType t=temporal==null?TemporalType.DATE:temporal.value();
+			return newDateTimeColumnDef(t, nullable, gv).defaultIs(defaultExpression);
 		} else if ("TIMESTAMP".equalsIgnoreCase(def)) {
-			ColumnType.TimeStamp d = new ColumnType.TimeStamp();
-			d.setNullable(nullable).defaultIs(defaultExpression);
-			d.setGenerateType(getDateGenerateType(gv));
-			return d;
+			Temporal temporal=annos.getFieldAnnotation(field, Temporal.class);
+			TemporalType t=temporal==null?TemporalType.TIMESTAMP:temporal.value();
+			return newDateTimeColumnDef(t, nullable, gv).defaultIs(defaultExpression);
 		} else if ("BOOLEAN".equalsIgnoreCase(def)) {
 			return new ColumnType.Boolean().setNullable(nullable).defaultIs(defaultExpression);
 		} else if ("XML".equalsIgnoreCase(def)) {
 			return new ColumnType.XML().setNullable(nullable);
 		} else if ("BIT".equalsIgnoreCase(def)) {
 			return new ColumnType.Boolean().setNullable(nullable);
-		} else if(annos.getFieldAnnotation(field, jef.database.annotation.Type.class)!=null){
-			jef.database.annotation.Type t=annos.getFieldAnnotation(field, jef.database.annotation.Type.class);
-			ColumnMapping cm=BeanUtils.newInstance(t.value());
+		} else if (annos.getFieldAnnotation(field, jef.database.annotation.Type.class) != null) {
+			jef.database.annotation.Type t = annos.getFieldAnnotation(field, jef.database.annotation.Type.class);
+			ColumnMapping cm = BeanUtils.newInstance(t.value());
 			return new TypeDefImpl(def, cm.getSqlType(), field.getType());
 		} else {
 			throw new IllegalArgumentException("Unknow column Def:" + def);
@@ -1055,11 +1054,12 @@ public final class MetaHolder {
 		}
 	}
 
-	private static ColumnType defaultColumnTypeByJava(java.lang.reflect.Field field, Column c, GeneratedValue gv, AnnotationProvider annos,Class<?> type) {
+	private static ColumnType defaultColumnTypeByJava(java.lang.reflect.Field field, Column c, AnnotationProvider annos, Class<?> type) {
 		int len = c == null ? 0 : c.length();
 		int precision = c == null ? 0 : c.precision();
 		int scale = c == null ? 0 : c.scale();
 		boolean nullable = c == null ? true : c.nullable();
+		GeneratedValue gv = annos.getFieldAnnotation(field, javax.persistence.GeneratedValue.class);
 		GenerationType geType = gv == null ? null : gv.strategy();
 		if (geType != null && type == String.class) {
 			return new ColumnType.GUID();
@@ -1096,10 +1096,14 @@ public final class MetaHolder {
 		} else if (type == Character.TYPE) {
 			return new ColumnType.Char(1).setNullable(nullable);
 		} else if (type == Date.class) {
-			ColumnType.TimeStamp ct = new ColumnType.TimeStamp();
-			ct.setNullable(nullable);
-			ct.setGenerateType(getDateGenerateType(gv));
-			return ct;
+			Temporal t = annos.getFieldAnnotation(field, Temporal.class);
+			return newDateTimeColumnDef(t == null ? TemporalType.TIMESTAMP : t.value(), nullable, gv);
+		} else if (type == java.sql.Date.class) {
+			return newDateTimeColumnDef(TemporalType.DATE, nullable, gv);
+		} else if (type == java.sql.Timestamp.class) {
+			return newDateTimeColumnDef(TemporalType.TIMESTAMP, nullable, gv);
+		} else if (type == java.sql.Time.class) {
+			return newDateTimeColumnDef(TemporalType.TIME, nullable, gv);
 		} else if (Enum.class.isAssignableFrom(type)) {
 			return new ColumnType.Varchar(32).setNullable(nullable);
 		} else if (type.isArray() && type.getComponentType() == Byte.TYPE) {
@@ -1109,6 +1113,25 @@ public final class MetaHolder {
 		} else {
 			throw new IllegalArgumentException("Java type " + type.getName() + " can't mapping to a Db column type by default");
 		}
+	}
+
+	private static ColumnType newDateTimeColumnDef(TemporalType temporalType, boolean nullable, GeneratedValue gv) {
+		ColumnType ct;
+		switch (temporalType) {
+		case DATE:
+			ct = new ColumnType.Date().setGenerateType(getDateGenerateType(gv));
+			break;
+		case TIME:
+			ct = new ColumnType.TimeStamp().setGenerateType(getDateGenerateType(gv));// FIXME
+			break;
+		case TIMESTAMP:
+			ct = new ColumnType.TimeStamp().setGenerateType(getDateGenerateType(gv));
+			break;
+		default:
+			throw new UnsupportedOperationException();
+		}
+		ct.setNullable(nullable);
+		return ct;
 	}
 
 	private static int getDateGenerateType(GeneratedValue gv) {

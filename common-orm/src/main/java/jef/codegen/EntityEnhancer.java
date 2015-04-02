@@ -54,14 +54,14 @@ public class EntityEnhancer {
 	public void enhance(final String... pkgNames) {
 		if (roots == null || roots.length == 0) {
 				StackTraceElement[] eles = Thread.currentThread().getStackTrace();
-			StackTraceElement last = eles[eles.length - 1];
+			StackTraceElement last = eles[1];
 			try {
 				Class<?> clz=Class.forName(last.getClassName());
 				roots = IOUtils.urlToFile(ArrayUtils.toArray(clz.getClassLoader().getResources("."), URL.class));
 			} catch (IOException e) {
 				LogUtil.exception(e);
 			} catch (ClassNotFoundException e) {
-				LogUtil.exception(e);
+				//do nothing
 			}
 		}
 		if(roots==null){

@@ -646,8 +646,9 @@ public abstract class ColumnType {
 			return generateType;
 		}
 
-		public void setGenerateType(int generateType) {
+		public ColumnType setGenerateType(int generateType) {
 			this.generateType = generateType;
+			return this;
 		}
 
 		public Class<?> getDefaultJavaType() {
@@ -697,8 +698,9 @@ public abstract class ColumnType {
 			return generateType;
 		}
 
-		public void setGenerateType(int generated) {
+		public ColumnType setGenerateType(int generated) {
 			this.generateType = generated;
+			return this;
 		}
 
 		public Class<?> getDefaultJavaType() {

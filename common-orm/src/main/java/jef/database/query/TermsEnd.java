@@ -4,6 +4,7 @@ import jef.database.Condition;
 import jef.database.Condition.Operator;
 import jef.database.IConditionField.And;
 import jef.database.IConditionField.Or;
+import jef.database.IQueryableEntity;
 
 public class TermsEnd {
 	private ConditionAccessor context;
@@ -79,5 +80,10 @@ public class TermsEnd {
 			
 		}
 		return this;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <T extends IQueryableEntity> Query<T> build(){
+		return (Query<T>)query;
 	}
 }

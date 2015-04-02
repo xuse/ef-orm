@@ -530,7 +530,7 @@ public class DbClientBuilder {
 			new EntityEnhancer().enhance(packagesToScan);
 		} else {
 			if (System.currentTimeMillis() - lastEnhanceTime > 30000) {
-				new EntityEnhancer().setExcludePatter(new String[] { "java", "javax", "org.apache", "org.eclipse", "junit", "ant" }).enhance();
+				new EntityEnhancer().setExcludePatter(new String[] { "java", "javax", "org.apache", "org.eclipse", "junit", "ant","org.codehaus" }).enhance();
 			}
 			lastEnhanceTime = System.currentTimeMillis();
 		}
