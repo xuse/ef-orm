@@ -450,20 +450,24 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	@SuppressWarnings("unchecked")
 	public <T extends IQueryableEntity> T merge(T entity) throws SQLException {
-		IQueryableEntity old = null;
-		if (DbUtils.getPrimaryKeyValue(entity) != null) {
+		T old = null;
+		if (DbUtils.getPrimaryKeyValue(entity) == null) {
 			old = load(entity);
-		}
-		if (old == null) {
-			insertCascade(entity);
-			return entity;
+			if (old != null) {
+				return old;
+			}
 		} else {
-			DbUtils.compareToNewUpdateMap(entity, old);// 之所以是将对比结果放到新对象中，是为了能将新对象中级联关系也保存到数据库中。
-			updateCascade(entity);
-			return (T) old;
+			old = load(entity);
+			if (old != null) {
+				DbUtils.compareToNewUpdateMap(entity, old);// 之所以是将对比结果放到新对象中，是为了能将新对象中级联关系也保存到数据库中。
+				updateCascade(entity);
+				return old;
+			}
 		}
+		//如果旧数据不存在
+		insertCascade(entity);
+		return entity;
 	}
 
 	/**
@@ -1186,7 +1190,7 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 */
 	public <T> T load(Class<T> entityClass, Serializable... keys) throws SQLException {
-		if(keys.length==0 || keys[0]==null){
+		if (keys.length == 0 || keys[0] == null) {
 			throw new IllegalArgumentException("Please input a valid value as primary key.");
 		}
 		AbstractMetadata meta = MetaHolder.getMetaOrTemplate(entityClass);
@@ -1752,7 +1756,7 @@ public abstract class Session {
 	 * @return 实际删除记录行数
 	 * @throws SQLException
 	 */
-	public final <T extends IQueryableEntity> int executeBatchDeletion(List<T> entities) throws SQLException {
+	public final <T> int executeBatchDeletion(List<T> entities) throws SQLException {
 		return executeBatchDeletion(entities, null);
 	}
 
@@ -1769,9 +1773,20 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public final <T extends IQueryableEntity> int executeBatchDeletion(List<T> entities, Boolean group) throws SQLException {
-		if (entities.isEmpty())
+	@SuppressWarnings("unchecked")
+	public final <T> int executeBatchDeletion(List<T> entities, Boolean group) throws SQLException {
+		if (entities == null || entities.isEmpty())
 			return 0;
+		T t = entities.get(0);
+		if (t instanceof IQueryableEntity) {
+			return executeBatchDeletion0((List<IQueryableEntity>) entities, group);
+		} else {
+			List<PojoWrapper> list = PojoWrapper.wrap(entities, false);
+			return executeBatchDeletion0(list, group);
+		}
+	}
+
+	private final <T extends IQueryableEntity> int executeBatchDeletion0(List<T> entities, Boolean group) throws SQLException {
 		Batch<T> batch = this.startBatchDelete(entities.get(0), null);
 		if (group != null) {
 			batch.setGroupForPartitionTable(group);
@@ -1965,7 +1980,7 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public final <T extends IQueryableEntity> void batchInsert(List<T> entities) throws SQLException {
+	public final <T> void batchInsert(List<T> entities) throws SQLException {
 		batchInsert(entities, null, null);
 	}
 
@@ -1980,7 +1995,7 @@ public abstract class Session {
 	 *            开关开启后会对每个对象进行路由计算并重新分组操作（这一操作将损耗一定的性能）。
 	 * @throws SQLException
 	 */
-	public final <T extends IQueryableEntity> void batchInsert(List<T> entities, Boolean group) throws SQLException {
+	public final <T> void batchInsert(List<T> entities, Boolean group) throws SQLException {
 		batchInsert(entities, group, null);
 	}
 
@@ -1999,9 +2014,21 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public final <T extends IQueryableEntity> void batchInsert(List<T> entities, Boolean group, Boolean dynamic) throws SQLException {
-		if (entities.isEmpty())
+	@SuppressWarnings("unchecked")
+	public final <T> void batchInsert(List<T> entities, Boolean doGroup, Boolean dynamic) throws SQLException {
+		if (entities == null || entities.isEmpty())
 			return;
+
+		T t = entities.get(0);
+		if (t instanceof IQueryableEntity) {
+			batchInsert0((List<IQueryableEntity>) entities, doGroup, dynamic);
+		} else {
+			List<PojoWrapper> list = PojoWrapper.wrap(entities, false);
+			batchInsert0(list, doGroup, dynamic);
+		}
+	}
+
+	private final <T extends IQueryableEntity> void batchInsert0(List<T> entities, Boolean group, Boolean dynamic) throws SQLException {
 		boolean flag = dynamic == null ? ORMConfig.getInstance().isDynamicInsert() : dynamic.booleanValue();
 		Batch<T> batch = startBatchInsert(entities.get(0), null, flag, false);
 		if (group != null)
@@ -2207,7 +2234,7 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public final <T extends IQueryableEntity> int batchUpdate(List<T> entities, Boolean group) throws SQLException {
+	public final <T> int batchUpdate(List<T> entities, Boolean group) throws SQLException {
 		return batchUpdate(entities, group, null);
 	}
 
@@ -2230,7 +2257,21 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public final <T extends IQueryableEntity> int batchUpdate(List<T> entities, Boolean group, Boolean dynamic) throws SQLException {
+	@SuppressWarnings("unchecked")
+	public final <T> int batchUpdate(List<T> entities, Boolean group, Boolean dynamic) throws SQLException {
+		if (entities == null || entities.isEmpty())
+			return 0;
+
+		T t = entities.get(0);
+		if (t instanceof IQueryableEntity) {
+			return batchUpdate0((List<IQueryableEntity>) entities, group, null);
+		} else {
+			List<PojoWrapper> list = PojoWrapper.wrap(entities, false);
+			return batchUpdate0(list, group, null);
+		}
+	}
+
+	private final <T extends IQueryableEntity> int batchUpdate0(List<T> entities, Boolean group, Boolean dynamic) throws SQLException {
 		if (entities.isEmpty())
 			return 0;
 		T template = null;
@@ -2641,7 +2682,7 @@ public abstract class Session {
 				CascadeUtil.insertWithRefInTransaction(Arrays.asList(obj), trans, dynamic, minPriority);
 				trans.commit(true);
 			} catch (SQLException e) {
-//				LogUtil.exception(e);
+				// LogUtil.exception(e);
 				trans.rollback(true);
 				throw e;
 			} catch (RuntimeException e) {

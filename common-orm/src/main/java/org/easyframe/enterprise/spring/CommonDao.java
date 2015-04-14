@@ -383,7 +383,7 @@ public interface CommonDao{
 	 * @param entities  要删除的对象列表
 	 * @return 影响记录行数
 	 */
-	<T> int batchRemove(List<T> entities);
+	<T> int batchDelete(List<T> entities);
 	
 	/**
 	 * 批量删除
@@ -391,7 +391,7 @@ public interface CommonDao{
 	 * @param doGroup  是否对每条记录重新分组。{@linkplain jef.database.Batch#isGroupForPartitionTable 什么是重新分组}
 	 * @return 影响记录行数
 	 */
-	<T>  int batchRemove(List<T> entities,Boolean doGroup);
+	<T>  int batchDelete(List<T> entities,Boolean doGroup);
 
 	/**
 	 * 批量（按主键）更新

@@ -150,6 +150,19 @@ public class DbClientBuilder {
 	 * 默认关闭
 	 */
 	private boolean allowDropColumn;
+	/**
+	 * 在建表后插入初始化数据<p>
+	 * EF-ORM允许用户在和class相同的位置创建一个 <i>class-name</i>.init.json的文件，记录了表中的初始化数据。
+	 * 开启此选项后，在初始化建表时会插入这些数据。
+	 */
+	private boolean initDataAfterCreate;
+	
+	/**
+	 * 如果表已经存在，检查初始化的必备数据是否已经存在于表中，如无则插入
+	 * EF-ORM允许用户在和class相同的位置创建一个 <i>class-name</i>.init.json的文件，记录了表中的初始化数据。
+	 * 开启此选项后，在启动扫描表后会检查并插入这些数据。
+	 */
+	private boolean initDataIfTableExists;
 
 	/**
 	 * 最终构造出来的对象实例
@@ -352,7 +365,28 @@ public class DbClientBuilder {
 		this.alterTable = alterTable;
 		return this;
 	}
+	
+	/**
+	 * 设置是否处于调试
+	 * @param debug
+	 * @return
+	 */
+	public DbClientBuilder setDebug(boolean debug) {
+		ORMConfig.getInstance().setDebugMode(debug);
+		return this;
+	}
+	/**
+	 * 查询是否为调试模式
+	 * @return
+	 */
+	public boolean isDebug(){
+		return ORMConfig.getInstance().isDebugMode();
+	}
 
+	/**
+	 * 查询是否会自动建表
+	 * @return
+	 */
 	public boolean isCreateTable() {
 		return createTable;
 	}
@@ -406,6 +440,18 @@ public class DbClientBuilder {
 
 	public String[] getPackagesToScan() {
 		return packagesToScan;
+	}
+
+	public boolean isInitDataAfterCreate() {
+		return initDataAfterCreate;
+	}
+
+	public void setInitDataAfterCreate(boolean initDataAfterCreate) {
+		this.initDataAfterCreate = initDataAfterCreate;
+	}
+
+	public void setMinPoolSize(int minPoolSize) {
+		this.minPoolSize = minPoolSize;
 	}
 
 	/**
@@ -563,6 +609,8 @@ public class DbClientBuilder {
 			qe.setAllowDropColumn(allowDropColumn);
 			qe.setAlterTable(alterTable);
 			qe.setCreateTable(createTable);
+			qe.setInitDataAfterCreate(this.initDataAfterCreate);
+			qe.setInitDataIfTableExists(this.initDataIfTableExists);
 			qe.setEntityManagerFactory(sf);
 			if (annotatedClasses != null) {
 				for (String s : annotatedClasses) {
@@ -599,6 +647,15 @@ public class DbClientBuilder {
 
 		}
 		return sf;
+	}
+
+	
+	public boolean isInitDataIfTableExists() {
+		return initDataIfTableExists;
+	}
+
+	public void setInitDataIfTableExists(boolean initDataIfTableExists) {
+		this.initDataIfTableExists = initDataIfTableExists;
 	}
 
 	private void registe(DbClient client, String table) {

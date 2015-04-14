@@ -61,9 +61,10 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	public CommonDaoImpl(JefEntityManagerFactory emf) {
 		this.setEntityManagerFactory(emf);
 	}
-	
+
 	/**
 	 * 构造
+	 * 
 	 * @param db
 	 */
 	public CommonDaoImpl(DbClient db) {
@@ -585,45 +586,24 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		return batchInsert(entities, null);
 	}
 
-	@SuppressWarnings("unchecked")
 	public <T> int batchInsert(List<T> entities, Boolean doGroup) {
-		if (entities == null || entities.isEmpty())
-			return 0;
-
 		try {
-			T t = entities.get(0);
-			if (t instanceof IQueryableEntity) {
-				getSession().batchInsert((List<IQueryableEntity>) entities, doGroup);
-			} else {
-				List<PojoWrapper> list = PojoWrapper.wrap(entities, false);
-				getSession().batchInsert(list, doGroup);
-			}
+			getSession().batchInsert(entities, doGroup);
 			return entities.size();
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
-	public <T> int batchRemove(List<T> entities) {
-		return batchRemove(entities, null);
+	public <T> int batchDelete(List<T> entities) {
+		return batchDelete(entities, null);
 	}
 
-	@SuppressWarnings("unchecked")
-	public <T> int batchRemove(List<T> entities, Boolean doGroup) {
-		if (entities == null || entities.isEmpty())
-			return 0;
-
+	public <T> int batchDelete(List<T> entities, Boolean doGroup) {
 		try {
-			T t = entities.get(0);
-			if (t instanceof IQueryableEntity) {
-				getSession().executeBatchDeletion((List<IQueryableEntity>) entities, doGroup);
-			} else {
-				List<PojoWrapper> list = PojoWrapper.wrap(entities, false);
-				getSession().executeBatchDeletion(list, doGroup);
-			}
-			return entities.size();
+			return	getSession().executeBatchDeletion(entities, doGroup);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -631,33 +611,22 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		return batchUpdate(entities, null);
 	}
 
-	@SuppressWarnings("unchecked")
 	public <T> int batchUpdate(List<T> entities, Boolean doGroup) {
-		if (entities == null || entities.isEmpty())
-			return 0;
-
 		try {
-			T t = entities.get(0);
-			if (t instanceof IQueryableEntity) {
-				getSession().batchUpdate((List<IQueryableEntity>) entities, doGroup);
-			} else {
-				List<PojoWrapper> list = PojoWrapper.wrap(entities, false);
-				getSession().batchUpdate(list, doGroup);
-			}
-			return entities.size();
+			return getSession().batchUpdate(entities, doGroup);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
 	@Override
 	public List<?> findByKeys(ITableMetadata meta, String propertyName, List<? extends Serializable> value) {
-		Field field=meta.getField(propertyName);
-		if(field==null){
+		Field field = meta.getField(propertyName);
+		if (field == null) {
 			throw new IllegalArgumentException("There's no property named " + propertyName + " in type of " + meta.getName());
 		}
 		try {
-			return (List<?>)getSession().batchLoadByField(field, value);
+			return (List<?>) getSession().batchLoadByField(field, value);
 		} catch (SQLException e) {
 			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}
