@@ -221,13 +221,15 @@ public class QuerableEntityScanner {
 	}
 
 	private void doTableDDL(ITableMetadata meta, final boolean create, final boolean refresh) throws SQLException {
-		final Holder<Boolean> isCreate=new Holder<Boolean>(false);
+		final Holder<Boolean> isTableExist=new Holder<Boolean>(true);
+		final Holder<Boolean> isNewTable=new Holder<Boolean>(false);
 		entityManagerFactory.getDefault().refreshTable(meta, new MetadataEventListener() {
 			public void onTableFinished(ITableMetadata meta, String tablename) {
 			}
 
 			public boolean onTableCreate(ITableMetadata meta, String tablename) {
-				isCreate.set(create);
+				isNewTable.set(create);
+				isTableExist.set(create);
 				return create;
 			}
 
@@ -257,6 +259,10 @@ public class QuerableEntityScanner {
 			public void beforeAlterTable(String tablename, ITableMetadata meta, StatementExecutor conn, List<String> sql) {
 			}
 		});
+		if(!isTableExist.get()){
+			return;
+		}
+		//检查Sequence
 		if (checkSequence) {
 			for (ColumnMapping f : meta.getColumns()) {
 				if (f instanceof AutoIncrementMapping) {
@@ -271,7 +277,7 @@ public class QuerableEntityScanner {
 		}
 		
 		 //初始化表中的数据
-		if(isCreate.get() && initDataAfterCreate){
+		if(isNewTable.get() && initDataAfterCreate){
 			URL url=meta.getThisType().getResource(meta.getThisType().getSimpleName()+".init.json");
 			if(url!=null){
 				try {
@@ -280,7 +286,7 @@ public class QuerableEntityScanner {
 					LogUtil.exception(e1);
 				}
 			}
-		}else if(!isCreate.get() && initDataIfTableExists){
+		}else if(!isNewTable.get() && initDataIfTableExists){
 			URL url=meta.getThisType().getResource(meta.getThisType().getSimpleName()+".init.json");
 			if(url!=null){
 				try {

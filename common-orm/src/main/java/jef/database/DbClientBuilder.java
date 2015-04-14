@@ -160,7 +160,7 @@ public class DbClientBuilder {
 	/**
 	 * 如果表已经存在，检查初始化的必备数据是否已经存在于表中，如无则插入
 	 * EF-ORM允许用户在和class相同的位置创建一个 <i>class-name</i>.init.json的文件，记录了表中的初始化数据。
-	 * 开启此选项后，在启动扫描表后会检查并插入这些数据。
+	 * 开启此选项后，在启动扫描表后会检查表中是否存在这些数据，如不存在或不一致会修改这些数据。
 	 */
 	private boolean initDataIfTableExists;
 
@@ -649,11 +649,23 @@ public class DbClientBuilder {
 		return sf;
 	}
 
-	
+	/**
+	 * 
+	 * @return
+	 */
 	public boolean isInitDataIfTableExists() {
 		return initDataIfTableExists;
 	}
 
+	/**
+	 * 如果表已经存在，检查初始化的必备数据是否已经存在于表中，如无则插入
+	 * EF-ORM允许用户在和class相同的位置创建一个 <i>class-name</i>.init.json的文件，记录了表中的初始化数据。
+	 * 开启此选项后，在启动扫描表后会检查表中是否存在这些数据，如不存在或不一致会修改这些数据。
+	 * <p>
+	 * 一般来说只有在开发环境中才需要开启此开关
+	 * @param initDataIfTableExists true开启
+	 * 
+	 */
 	public void setInitDataIfTableExists(boolean initDataIfTableExists) {
 		this.initDataIfTableExists = initDataIfTableExists;
 	}
