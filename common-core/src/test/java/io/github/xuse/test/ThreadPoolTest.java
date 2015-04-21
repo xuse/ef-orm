@@ -6,6 +6,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import jef.common.log.LogUtil;
+import jef.tools.ResourceUtils;
+
 import org.junit.Test;
 
 public class ThreadPoolTest {
@@ -29,4 +32,5 @@ public class ThreadPoolTest {
 		counter.await();
 
 	}
+	
 }
