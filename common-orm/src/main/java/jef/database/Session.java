@@ -452,6 +452,7 @@ public abstract class Session {
 	 */
 	public <T extends IQueryableEntity> T merge(T entity) throws SQLException {
 		T old = null;
+		entity.getQuery().setCascade(false);
 		if (DbUtils.getPrimaryKeyValue(entity) == null) {
 			old = load(entity);
 			if (old != null) {
@@ -1824,10 +1825,10 @@ public abstract class Session {
 	 * <p>
 	 * <strong>注意：在多库操作下，这一方法不支持对每条记录单独分组并计算路由。</strong>
 	 * 
-	 * @param clz
-	 *            要删除的数据类
-	 * @param keys
-	 *            主键列表。复合主键不支持。如需批量删除复合主键的类请用{@link #batchDelete(List)}
+	 * @param meta
+	 *    	要删除的数据类
+	 * @param pkValues
+	 *           主键值列表。复合主键不支持。如需批量删除复合主键的类请用{@link #batchDelete(List)}
 	 * @return 实际删除数量
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
@@ -2095,7 +2096,7 @@ public abstract class Session {
 	 *            DB_DYNAMIC_INSERT}
 	 *            功能，那么模板中插入数据库的字段就是后续任务中插入数据库的字段。后续数据库中其他字段即使赋值了也不会入库。
 	 * 
-	 * @param tableName
+	 * @param dynamic 是否跳过未赋值的字段。
 	 *            强制指定表名，也就是说template当中的表名无效。（传入的表名支持Schema重定向）
 	 * @return Batch操作句柄
 	 * @throws SQLException

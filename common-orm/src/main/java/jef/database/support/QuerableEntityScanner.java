@@ -34,6 +34,7 @@ import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONException;
 
 /**
  * 自动扫描工具，在构造时可以根据构造方法，自动的将继承DataObject的类检查出来，并载入
@@ -310,7 +311,12 @@ public class QuerableEntityScanner {
 	private void initData(URL url, ITableMetadata meta) throws IOException {
 		LogUtil.info("init data for table {}",meta.getTableName(true));
 		String data=IOUtils.asString(url, "UTF-8");
-		List<?> results=JSON.parseArray(data, meta.getThisType());
+		List<?> results;
+		try{
+			results=JSON.parseArray(data, meta.getThisType());	
+		}catch(JSONException e){
+			throw new IllegalArgumentException(url.toString()+" is a invalid json file",e);
+		}
 		try {
 			entityManagerFactory.getDefault().batchInsert(results);
 		} catch (SQLException e) {

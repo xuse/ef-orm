@@ -296,7 +296,7 @@ public class DbClientBuilder {
 	 * {@linkplain org.springframework.orm.hibernate3.HibernateTransactionManager
 	 * HibernateTransactionManager} 和
 	 * {@linkplain org.springframework.jdbc.datasource.DataSourceTransactionManager
-	 * DataSourceTransactionManager}。<br>
+	 * DataSourceTransactionManager}。
 	 * 一般用于和Hibernate/Ibatis/MyBatis/JdbcTemplate等共享同一个事务。
 	 * </ul>
 	 * 默认为{@code JPA}
@@ -426,12 +426,12 @@ public class DbClientBuilder {
 	}
 
 	/**
-	 * 扫描已知的若干注解实体类，配置示例如下—— <code><pre>
+	 * 扫描已知的若干注解实体类，配置示例如下—— <pre><code>
 	 * &lt;list&gt;
 	 *  &lt;value&gt;org.easyframe.testp.jta.Product&lt;/value&gt;
 	 *  &lt;value&gt;org.easyframe.testp.jta.Users&lt;/value&gt;
 	 * &lt;/list&gt;
-	 * </pre></code>
+	 * </code></pre>
 	 */
 	public DbClientBuilder setAnnotatedClasses(String[] annotatedClasses) {
 		this.annotatedClasses = annotatedClasses;
