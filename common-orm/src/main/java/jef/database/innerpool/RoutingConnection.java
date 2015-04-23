@@ -557,4 +557,13 @@ final class RoutingConnection implements ReentrantConnection {
 	public boolean isUsed() {
 		return count > 0;
 	}
+
+	@Override
+	public String getSchema() throws SQLException {
+		return null;
+	}
+
+	@Override
+	public void abort(Executor executor) throws SQLException {
+	}
 }

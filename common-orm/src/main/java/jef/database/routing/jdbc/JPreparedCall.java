@@ -698,4 +698,16 @@ public class JPreparedCall extends JPreparedStatement implements CallableStateme
 		
 	}
 
+	@Override
+	public <T> T getObject(int parameterIndex, Class<T> type) throws SQLException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public <T> T getObject(String parameterName, Class<T> type) throws SQLException {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

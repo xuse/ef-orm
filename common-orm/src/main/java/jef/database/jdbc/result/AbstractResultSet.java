@@ -879,5 +879,15 @@ abstract class AbstractResultSet implements ResultSet {
 	public void moveToCurrentRow() throws SQLException {
 		throw new UnsupportedOperationException("moveToCurrentRow");
 	}
+
+	@Override
+	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
+		return get().getObject(columnIndex, type);
+	}
+
+	@Override
+	public <T> T getObject(String columnLabel, Class<T> type) throws SQLException {
+		return get().getObject(columnLabel, type);
+	}
 }
 
