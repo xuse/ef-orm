@@ -97,7 +97,7 @@ public final class JefBase64 {
 	 * 不带换行的Base64编码
 	 * 
 	 * @param data
-	 * @return
+	 * @return 编码后文本
 	 */
 	public static String encode(byte[] data) {
 		if (data == null)
@@ -150,12 +150,12 @@ public final class JefBase64 {
 	}
 
 	/**
-	 * 带有换行的Base64编码。RFC2045。 这个接口是专门为发送邮件而设计的，为了实现最高的效率，
+	 * 带有换行的Base64编码。按RFC2045。 这个接口是专门为发送邮件而设计的，为了实现最高的效率，
 	 * 直接将Base64编码后的字节，以76字节为一行，输出到指定的输出流中去了，省去了中间的String等转换过程
 	 * 
-	 * @param data
-	 * @return
-	 * @throws IOException
+	 * @param data 编码前的数据 
+	 * @param pw   输出流
+	 * @throws IOException IO操作异常
 	 */
 	public static void encodeAndPOutput(byte[] data, PrintWriter pw) throws IOException {
 		if (data == null)

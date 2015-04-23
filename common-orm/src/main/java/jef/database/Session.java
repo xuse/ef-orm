@@ -442,7 +442,7 @@ public abstract class Session {
 	}
 
 	/**
-	 * 合并记录——记录如果已经存在，则比较并更新；如果不存在则新增
+	 * 合并记录——记录如果已经存在，则比较并更新；如果不存在则新增。（无级联操作）
 	 * 
 	 * @param entity
 	 *            要合并的记录数据
@@ -456,6 +456,34 @@ public abstract class Session {
 		if (DbUtils.getPrimaryKeyValue(entity) == null) {
 			old = load(entity);
 			if (old != null) {
+				return old;
+			}
+		} else {
+			old = load(entity);
+			if (old != null) {
+				DbUtils.compareToUpdateMap(entity, old);
+				update(old);
+				return old;
+			}
+		}
+		//如果旧数据不存在
+		insert(entity);
+		return entity;
+	}
+	
+	/**
+	 * 合并记录——记录如果已经存在，则比较并更新；如果不存在则新增。（带级联操作）
+	 * @param entity  要合并的记录数据
+	 * @return 如果插入返回对象本身，如果是更新则返回旧记录的值
+	 * @throws SQLException  如果数据库操作错误，抛出。
+	 */
+	public <T extends IQueryableEntity> T mergeCascade(T entity) throws SQLException {
+		T old = null;
+		if (DbUtils.getPrimaryKeyValue(entity) == null) {
+			old = load(entity);
+			if (old != null) {
+				entity.clearUpdate();
+				updateCascade(entity);
 				return old;
 			}
 		} else {
@@ -503,7 +531,7 @@ public abstract class Session {
 
 	/**
 	 * 插入对象 <br>
-	 * 不处理级联关系。
+	 * 不处理级联关系。如果要支持级联插入，请使用{@link #insertCascade(IQueryableEntity)}
 	 * 
 	 * @param obj
 	 *            插入的对象。
@@ -2632,6 +2660,9 @@ public abstract class Session {
 		getListener().afterInsert(obj, this);
 	}
 
+	/**
+	 * @param minPriority 一般性级联操作的优先级是0，KV表扩展时的级联操作是5
+	 */
 	private int updateCascade0(IQueryableEntity obj, int minPriority) throws SQLException {
 		if ((this instanceof Transaction) || getTxType() != TransactionMode.JPA) {
 			return CascadeUtil.updateWithRefInTransaction(obj, this, minPriority);
