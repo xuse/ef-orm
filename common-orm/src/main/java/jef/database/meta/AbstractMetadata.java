@@ -338,6 +338,9 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	 */
 	protected ReferenceObject addCascadeField(String fieldName, ITableMetadata target, CascadeConfig config) {
 		Property pp = getContainerAccessor().getProperty(fieldName);
+		if(pp==null){
+			throw new IllegalArgumentException(fieldName+" is not exist in "+this.getName());
+		}
 		return innerAdd(pp, target, config);
 	}
 
@@ -353,6 +356,9 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	protected ReferenceField addCascadeField(String fieldName, Field target, CascadeConfig config) {
 		Assert.notNull(target);
 		Property pp = getContainerAccessor().getProperty(fieldName);
+		if(pp==null){
+			throw new IllegalArgumentException(fieldName+" is not exist in "+this.getName());
+		}
 		ColumnMapping targetFld= DbUtils.toColumnMapping(target);
 		return innerAdd(pp, targetFld, config);
 	}
