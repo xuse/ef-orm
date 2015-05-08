@@ -1284,4 +1284,16 @@ public class ResultSetImpl implements IResultSet {
 	public boolean isWrapperFor(Class<?> iface) throws SQLException {
 		return false;
 	}
+
+
+	@Override
+	public <T> T getObject(int columnIndex, Class<T> type) throws SQLException {
+		return rs.getObject(columnIndex, type);
+	}
+
+
+	@Override
+	public <T> T getObject(String columnLabel, Class<T> type) throws SQLException {
+		return rs.getObject(columnLabel, type);
+	}
 }

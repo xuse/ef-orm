@@ -442,7 +442,7 @@ public abstract class Session {
 	}
 
 	/**
-	 * 合并记录——记录如果已经存在，则比较并更新；如果不存在则新增
+	 * 合并记录——记录如果已经存在，则比较并更新；如果不存在则新增。（无级联操作）
 	 * 
 	 * @param entity
 	 *            要合并的记录数据
@@ -450,20 +450,53 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	@SuppressWarnings("unchecked")
 	public <T extends IQueryableEntity> T merge(T entity) throws SQLException {
-		IQueryableEntity old = null;
-		if (DbUtils.getPrimaryKeyValue(entity) != null) {
+		T old = null;
+		entity.getQuery().setCascade(false);
+		if (DbUtils.getPrimaryKeyValue(entity) == null) {
 			old = load(entity);
-		}
-		if (old == null) {
-			insertCascade(entity);
-			return entity;
+			if (old != null) {
+				return old;
+			}
 		} else {
-			DbUtils.compareToNewUpdateMap(entity, old);// 之所以是将对比结果放到新对象中，是为了能将新对象中级联关系也保存到数据库中。
-			updateCascade(entity);
-			return (T) old;
+			old = load(entity);
+			if (old != null) {
+				DbUtils.compareToUpdateMap(entity, old);
+				update(old);
+				return old;
+			}
 		}
+		//如果旧数据不存在
+		insert(entity);
+		return entity;
+	}
+	
+	/**
+	 * 合并记录——记录如果已经存在，则比较并更新；如果不存在则新增。（带级联操作）
+	 * @param entity  要合并的记录数据
+	 * @return 如果插入返回对象本身，如果是更新则返回旧记录的值
+	 * @throws SQLException  如果数据库操作错误，抛出。
+	 */
+	public <T extends IQueryableEntity> T mergeCascade(T entity) throws SQLException {
+		T old = null;
+		if (DbUtils.getPrimaryKeyValue(entity) == null) {
+			old = load(entity);
+			if (old != null) {
+				entity.clearUpdate();
+				updateCascade(entity);
+				return old;
+			}
+		} else {
+			old = load(entity);
+			if (old != null) {
+				DbUtils.compareToNewUpdateMap(entity, old);// 之所以是将对比结果放到新对象中，是为了能将新对象中级联关系也保存到数据库中。
+				updateCascade(entity);
+				return old;
+			}
+		}
+		//如果旧数据不存在
+		insertCascade(entity);
+		return entity;
 	}
 
 	/**
@@ -498,7 +531,7 @@ public abstract class Session {
 
 	/**
 	 * 插入对象 <br>
-	 * 不处理级联关系。
+	 * 不处理级联关系。如果要支持级联插入，请使用{@link #insertCascade(IQueryableEntity)}
 	 * 
 	 * @param obj
 	 *            插入的对象。
@@ -1186,7 +1219,7 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 */
 	public <T> T load(Class<T> entityClass, Serializable... keys) throws SQLException {
-		if(keys.length==0 || keys[0]==null){
+		if (keys.length == 0 || keys[0] == null) {
 			throw new IllegalArgumentException("Please input a valid value as primary key.");
 		}
 		AbstractMetadata meta = MetaHolder.getMetaOrTemplate(entityClass);
@@ -1752,7 +1785,7 @@ public abstract class Session {
 	 * @return 实际删除记录行数
 	 * @throws SQLException
 	 */
-	public final <T extends IQueryableEntity> int executeBatchDeletion(List<T> entities) throws SQLException {
+	public final <T> int executeBatchDeletion(List<T> entities) throws SQLException {
 		return executeBatchDeletion(entities, null);
 	}
 
@@ -1769,9 +1802,20 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public final <T extends IQueryableEntity> int executeBatchDeletion(List<T> entities, Boolean group) throws SQLException {
-		if (entities.isEmpty())
+	@SuppressWarnings("unchecked")
+	public final <T> int executeBatchDeletion(List<T> entities, Boolean group) throws SQLException {
+		if (entities == null || entities.isEmpty())
 			return 0;
+		T t = entities.get(0);
+		if (t instanceof IQueryableEntity) {
+			return executeBatchDeletion0((List<IQueryableEntity>) entities, group);
+		} else {
+			List<PojoWrapper> list = PojoWrapper.wrap(entities, false);
+			return executeBatchDeletion0(list, group);
+		}
+	}
+
+	private final <T extends IQueryableEntity> int executeBatchDeletion0(List<T> entities, Boolean group) throws SQLException {
 		Batch<T> batch = this.startBatchDelete(entities.get(0), null);
 		if (group != null) {
 			batch.setGroupForPartitionTable(group);
@@ -1809,10 +1853,10 @@ public abstract class Session {
 	 * <p>
 	 * <strong>注意：在多库操作下，这一方法不支持对每条记录单独分组并计算路由。</strong>
 	 * 
-	 * @param clz
-	 *            要删除的数据类
-	 * @param keys
-	 *            主键列表。复合主键不支持。如需批量删除复合主键的类请用{@link #batchDelete(List)}
+	 * @param meta
+	 *    	要删除的数据类
+	 * @param pkValues
+	 *           主键值列表。复合主键不支持。如需批量删除复合主键的类请用{@link #batchDelete(List)}
 	 * @return 实际删除数量
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
@@ -1965,7 +2009,7 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public final <T extends IQueryableEntity> void batchInsert(List<T> entities) throws SQLException {
+	public final <T> void batchInsert(List<T> entities) throws SQLException {
 		batchInsert(entities, null, null);
 	}
 
@@ -1980,7 +2024,7 @@ public abstract class Session {
 	 *            开关开启后会对每个对象进行路由计算并重新分组操作（这一操作将损耗一定的性能）。
 	 * @throws SQLException
 	 */
-	public final <T extends IQueryableEntity> void batchInsert(List<T> entities, Boolean group) throws SQLException {
+	public final <T> void batchInsert(List<T> entities, Boolean group) throws SQLException {
 		batchInsert(entities, group, null);
 	}
 
@@ -1999,9 +2043,21 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public final <T extends IQueryableEntity> void batchInsert(List<T> entities, Boolean group, Boolean dynamic) throws SQLException {
-		if (entities.isEmpty())
+	@SuppressWarnings("unchecked")
+	public final <T> void batchInsert(List<T> entities, Boolean doGroup, Boolean dynamic) throws SQLException {
+		if (entities == null || entities.isEmpty())
 			return;
+
+		T t = entities.get(0);
+		if (t instanceof IQueryableEntity) {
+			batchInsert0((List<IQueryableEntity>) entities, doGroup, dynamic);
+		} else {
+			List<PojoWrapper> list = PojoWrapper.wrap(entities, false);
+			batchInsert0(list, doGroup, dynamic);
+		}
+	}
+
+	private final <T extends IQueryableEntity> void batchInsert0(List<T> entities, Boolean group, Boolean dynamic) throws SQLException {
 		boolean flag = dynamic == null ? ORMConfig.getInstance().isDynamicInsert() : dynamic.booleanValue();
 		Batch<T> batch = startBatchInsert(entities.get(0), null, flag, false);
 		if (group != null)
@@ -2068,7 +2124,7 @@ public abstract class Session {
 	 *            DB_DYNAMIC_INSERT}
 	 *            功能，那么模板中插入数据库的字段就是后续任务中插入数据库的字段。后续数据库中其他字段即使赋值了也不会入库。
 	 * 
-	 * @param tableName
+	 * @param dynamic 是否跳过未赋值的字段。
 	 *            强制指定表名，也就是说template当中的表名无效。（传入的表名支持Schema重定向）
 	 * @return Batch操作句柄
 	 * @throws SQLException
@@ -2207,7 +2263,7 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public final <T extends IQueryableEntity> int batchUpdate(List<T> entities, Boolean group) throws SQLException {
+	public final <T> int batchUpdate(List<T> entities, Boolean group) throws SQLException {
 		return batchUpdate(entities, group, null);
 	}
 
@@ -2230,7 +2286,21 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public final <T extends IQueryableEntity> int batchUpdate(List<T> entities, Boolean group, Boolean dynamic) throws SQLException {
+	@SuppressWarnings("unchecked")
+	public final <T> int batchUpdate(List<T> entities, Boolean group, Boolean dynamic) throws SQLException {
+		if (entities == null || entities.isEmpty())
+			return 0;
+
+		T t = entities.get(0);
+		if (t instanceof IQueryableEntity) {
+			return batchUpdate0((List<IQueryableEntity>) entities, group, null);
+		} else {
+			List<PojoWrapper> list = PojoWrapper.wrap(entities, false);
+			return batchUpdate0(list, group, null);
+		}
+	}
+
+	private final <T extends IQueryableEntity> int batchUpdate0(List<T> entities, Boolean group, Boolean dynamic) throws SQLException {
 		if (entities.isEmpty())
 			return 0;
 		T template = null;
@@ -2590,6 +2660,9 @@ public abstract class Session {
 		getListener().afterInsert(obj, this);
 	}
 
+	/**
+	 * @param minPriority 一般性级联操作的优先级是0，KV表扩展时的级联操作是5
+	 */
 	private int updateCascade0(IQueryableEntity obj, int minPriority) throws SQLException {
 		if ((this instanceof Transaction) || getTxType() != TransactionMode.JPA) {
 			return CascadeUtil.updateWithRefInTransaction(obj, this, minPriority);
@@ -2641,7 +2714,7 @@ public abstract class Session {
 				CascadeUtil.insertWithRefInTransaction(Arrays.asList(obj), trans, dynamic, minPriority);
 				trans.commit(true);
 			} catch (SQLException e) {
-//				LogUtil.exception(e);
+				// LogUtil.exception(e);
 				trans.rollback(true);
 				throw e;
 			} catch (RuntimeException e) {

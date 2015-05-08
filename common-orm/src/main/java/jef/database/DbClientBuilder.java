@@ -150,6 +150,19 @@ public class DbClientBuilder {
 	 * 默认关闭
 	 */
 	private boolean allowDropColumn;
+	/**
+	 * 在建表后插入初始化数据<p>
+	 * EF-ORM允许用户在和class相同的位置创建一个 <i>class-name</i>.init.json的文件，记录了表中的初始化数据。
+	 * 开启此选项后，在初始化建表时会插入这些数据。
+	 */
+	private boolean initDataAfterCreate;
+	
+	/**
+	 * 如果表已经存在，检查初始化的必备数据是否已经存在于表中，如无则插入
+	 * EF-ORM允许用户在和class相同的位置创建一个 <i>class-name</i>.init.json的文件，记录了表中的初始化数据。
+	 * 开启此选项后，在启动扫描表后会检查表中是否存在这些数据，如不存在或不一致会修改这些数据。
+	 */
+	private boolean initDataIfTableExists;
 
 	/**
 	 * 最终构造出来的对象实例
@@ -283,7 +296,7 @@ public class DbClientBuilder {
 	 * {@linkplain org.springframework.orm.hibernate3.HibernateTransactionManager
 	 * HibernateTransactionManager} 和
 	 * {@linkplain org.springframework.jdbc.datasource.DataSourceTransactionManager
-	 * DataSourceTransactionManager}。<br>
+	 * DataSourceTransactionManager}。
 	 * 一般用于和Hibernate/Ibatis/MyBatis/JdbcTemplate等共享同一个事务。
 	 * </ul>
 	 * 默认为{@code JPA}
@@ -352,7 +365,28 @@ public class DbClientBuilder {
 		this.alterTable = alterTable;
 		return this;
 	}
+	
+	/**
+	 * 设置是否处于调试
+	 * @param debug
+	 * @return
+	 */
+	public DbClientBuilder setDebug(boolean debug) {
+		ORMConfig.getInstance().setDebugMode(debug);
+		return this;
+	}
+	/**
+	 * 查询是否为调试模式
+	 * @return
+	 */
+	public boolean isDebug(){
+		return ORMConfig.getInstance().isDebugMode();
+	}
 
+	/**
+	 * 查询是否会自动建表
+	 * @return
+	 */
 	public boolean isCreateTable() {
 		return createTable;
 	}
@@ -392,12 +426,12 @@ public class DbClientBuilder {
 	}
 
 	/**
-	 * 扫描已知的若干注解实体类，配置示例如下—— <code><pre>
+	 * 扫描已知的若干注解实体类，配置示例如下—— <pre><code>
 	 * &lt;list&gt;
 	 *  &lt;value&gt;org.easyframe.testp.jta.Product&lt;/value&gt;
 	 *  &lt;value&gt;org.easyframe.testp.jta.Users&lt;/value&gt;
 	 * &lt;/list&gt;
-	 * </pre></code>
+	 * </code></pre>
 	 */
 	public DbClientBuilder setAnnotatedClasses(String[] annotatedClasses) {
 		this.annotatedClasses = annotatedClasses;
@@ -406,6 +440,18 @@ public class DbClientBuilder {
 
 	public String[] getPackagesToScan() {
 		return packagesToScan;
+	}
+
+	public boolean isInitDataAfterCreate() {
+		return initDataAfterCreate;
+	}
+
+	public void setInitDataAfterCreate(boolean initDataAfterCreate) {
+		this.initDataAfterCreate = initDataAfterCreate;
+	}
+
+	public void setMinPoolSize(int minPoolSize) {
+		this.minPoolSize = minPoolSize;
 	}
 
 	/**
@@ -563,6 +609,8 @@ public class DbClientBuilder {
 			qe.setAllowDropColumn(allowDropColumn);
 			qe.setAlterTable(alterTable);
 			qe.setCreateTable(createTable);
+			qe.setInitDataAfterCreate(this.initDataAfterCreate);
+			qe.setInitDataIfTableExists(this.initDataIfTableExists);
 			qe.setEntityManagerFactory(sf);
 			if (annotatedClasses != null) {
 				for (String s : annotatedClasses) {
@@ -599,6 +647,27 @@ public class DbClientBuilder {
 
 		}
 		return sf;
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public boolean isInitDataIfTableExists() {
+		return initDataIfTableExists;
+	}
+
+	/**
+	 * 如果表已经存在，检查初始化的必备数据是否已经存在于表中，如无则插入
+	 * EF-ORM允许用户在和class相同的位置创建一个 <i>class-name</i>.init.json的文件，记录了表中的初始化数据。
+	 * 开启此选项后，在启动扫描表后会检查表中是否存在这些数据，如不存在或不一致会修改这些数据。
+	 * <p>
+	 * 一般来说只有在开发环境中才需要开启此开关
+	 * @param initDataIfTableExists true开启
+	 * 
+	 */
+	public void setInitDataIfTableExists(boolean initDataIfTableExists) {
+		this.initDataIfTableExists = initDataIfTableExists;
 	}
 
 	private void registe(DbClient client, String table) {

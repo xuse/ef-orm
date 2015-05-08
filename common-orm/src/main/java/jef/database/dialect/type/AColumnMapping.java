@@ -153,6 +153,7 @@ public abstract class AColumnMapping implements ColumnMapping {
 	}
 
 	/**
+	 * 获得SQL表达式的写法。
 	 * @param value
 	 *            不为null，不为Expression
 	 */

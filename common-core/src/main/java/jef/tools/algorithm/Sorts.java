@@ -13,22 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jef.tools;
+package jef.tools.algorithm;
 
 /**
- * 排序工具
+ * 排序算法集
  * 
  * @author jiyi
  * 
  */
-public class SortUtils {
+public class Sorts {
+
 	/**
 	 * 排序(快速排序)
 	 * 
 	 * @param data
 	 */
 	public static <T extends Comparable<T>> void sort(T[] data) {
-		sort(data, ALGORITHM_IMPROVED_QUICK);
+		sort(data, 0, data.length, ALGORITHM_QUICK);
+	}
+
+	/**
+	 * 排序(快速排序)
+	 * 
+	 * @param data
+	 */
+	public static <T extends Comparable<T>> void sort(T[] data, int begin, int end) {
+		sort(data, begin, end, ALGORITHM_IMPROVED_QUICK);
+	}
+	
+	/**
+	 * 用指定的算法排序
+	 * 
+	 * @param data
+	 * @param algorithm
+	 */
+	public static <T extends Comparable<T>> void sort(T[] data, int algorithm) {
+		sort(data, 0, data.length, algorithm);
 	}
 
 	/**
@@ -37,8 +57,8 @@ public class SortUtils {
 	 * @param data
 	 * @param algorithm
 	 */
-	public static <T extends Comparable<T>> void sort(T[] data, int algorithm) {
-		impl[algorithm - 1].sort(data);
+	public static <T extends Comparable<T>> void sort(T[] data, int begin, int end, int algorithm) {
+		impl[algorithm - 1].sort(data, begin, end);
 	}
 
 	/**
@@ -59,29 +79,23 @@ public class SortUtils {
 	public final static int ALGORITHM_SELECTION = 3;
 	/** 希尔排序 */
 	public final static int ALGORITHM_SHELL = 4;
-	/**快速排序 */
+	/** 快速排序 */
 	public final static int ALGORITHM_QUICK = 5;
 	/** 快速排序 改 */
 	public final static int ALGORITHM_IMPROVED_QUICK = 6;
-	/** 归并排序  */
+	/** 归并排序 */
 	public final static int ALGORITHM_MERGE = 7;
 	/** 归并排序 改 */
 	public final static int ALGORITHM_IMPROVED_MERGE = 8;
 	/** 堆排序 */
 	public final static int ALGORITHM_HEAP = 9;
 
-	private static String[] name = { "insert",
-		"bubble", "selection", "shell", "quick", 
-		"improved_quick", "merge", "improved_merge", "heap" };
-	
-	private static Sort[] impl = new Sort[] { 
-		new InsertSort(), new BubbleSort(), new SelectionSort(), 
-		new ShellSort(), new QuickSort(), new ImprovedQuickSort(), 
-		new MergeSort(), new ImprovedMergeSort(), new HeapSort()
-	};
+	private static String[] name = { "insert", "bubble", "selection", "shell", "quick", "improved_quick", "merge", "improved_merge", "heap" };
+
+	private static Sort[] impl = new Sort[] { new InsertSort(), new BubbleSort(), new SelectionSort(), new ShellSort(), new QuickSort(), new ImprovedQuickSort(), new MergeSort(), new ImprovedMergeSort(), new HeapSort() };
 
 	static interface Sort {
-		public <T extends Comparable<T>> void sort(T[] data);
+		public <T extends Comparable<T>> void sort(T[] data, int begin, int end);
 	}
 
 	static void swap(Comparable<?>[] data, int i, int j) {
@@ -92,24 +106,24 @@ public class SortUtils {
 }
 
 // 插入排序：
-class InsertSort implements SortUtils.Sort {
-	public <T extends Comparable<T>> void sort(T[] data) {
+class InsertSort implements Sorts.Sort {
+	public <T extends Comparable<T>> void sort(T[] data, int begin, int end) {
 		// int temp;
 		for (int i = 1; i < data.length; i++) {
 			for (int j = i; (j > 0) && (data[j].compareTo(data[j - 1]) < 0); j--) {
-				SortUtils.swap(data, j, j - 1);
+				Sorts.swap(data, j, j - 1);
 			}
 		}
 	}
 }
 
 // 冒泡排序：
-class BubbleSort implements SortUtils.Sort {
-	public <T extends Comparable<T>> void sort(T[] data) {
+class BubbleSort implements Sorts.Sort {
+	public <T extends Comparable<T>> void sort(T[] data, int begin, int end) {
 		for (int i = 0; i < data.length; i++) {
 			for (int j = data.length - 1; j > i; j--) {
 				if (data[j].compareTo(data[j - 1]) < 0) {
-					SortUtils.swap(data, j, j - 1);
+					Sorts.swap(data, j, j - 1);
 				}
 			}
 		}
@@ -118,8 +132,8 @@ class BubbleSort implements SortUtils.Sort {
 }
 
 // 选择排序：
-class SelectionSort implements SortUtils.Sort {
-	public <T extends Comparable<T>> void sort(T[] data) {
+class SelectionSort implements Sorts.Sort {
+	public <T extends Comparable<T>> void sort(T[] data, int begin, int end) {
 		// int temp;
 		for (int i = 0; i < data.length; i++) {
 			int lowIndex = i;
@@ -128,14 +142,14 @@ class SelectionSort implements SortUtils.Sort {
 					lowIndex = j;
 				}
 			}
-			SortUtils.swap(data, i, lowIndex);
+			Sorts.swap(data, i, lowIndex);
 		}
 	}
 }
 
 // Shell排序：
-class ShellSort implements SortUtils.Sort {
-	public <T extends Comparable<T>> void sort(T[] data) {
+class ShellSort implements Sorts.Sort {
+	public <T extends Comparable<T>> void sort(T[] data, int begin, int end) {
 		for (int i = data.length / 2; i > 2; i /= 2) {
 			for (int j = 0; j < i; j++) {
 				insertSort(data, j, i);
@@ -148,25 +162,25 @@ class ShellSort implements SortUtils.Sort {
 		// int temp;
 		for (int i = start + inc; i < data.length; i += inc) {
 			for (int j = i; (j >= inc) && (data[j].compareTo(data[j - inc]) < 0); j -= inc) {
-				SortUtils.swap(data, j, j - inc);
+				Sorts.swap(data, j, j - inc);
 			}
 		}
 	}
 }
 
 // 快速排序：
-class QuickSort implements SortUtils.Sort {
-	public <T extends Comparable<T>> void sort(T[] data) {
+class QuickSort implements Sorts.Sort {
+	public <T extends Comparable<T>> void sort(T[] data, int begin, int end) {
 		quickSort(data, 0, data.length - 1);
 	}
 
 	private <T extends Comparable<T>> void quickSort(T[] data, int i, int j) {
 		int pivotIndex = (i + j) / 2;
 		// swap
-		SortUtils.swap(data, pivotIndex, j);
+		Sorts.swap(data, pivotIndex, j);
 
 		int k = partition(data, i - 1, j, data[j]);
-		SortUtils.swap(data, k, j);
+		Sorts.swap(data, k, j);
 		if ((k - i) > 1)
 			quickSort(data, i, k - 1);
 		if ((j - k) > 1)
@@ -179,19 +193,19 @@ class QuickSort implements SortUtils.Sort {
 				;
 			while ((r != 0) && data[--r].compareTo(pivot) > 0)
 				;
-			SortUtils.swap(data, l, r);
+			Sorts.swap(data, l, r);
 		} while (l < r);
-		SortUtils.swap(data, l, r);
+		Sorts.swap(data, l, r);
 		return l;
 	}
 }
 
 // 改进后的快速排序：(默认)
-class ImprovedQuickSort implements SortUtils.Sort {
+class ImprovedQuickSort implements Sorts.Sort {
 	private static int MAX_STACK_SIZE = 4096;
 	private static int THRESHOLD = 10;
 
-	public <T extends Comparable<T>> void sort(T[] data) {
+	public <T extends Comparable<T>> void sort(T[] data, int begin, int end) {
 		int[] stack = new int[MAX_STACK_SIZE];
 
 		int top = -1;
@@ -208,7 +222,7 @@ class ImprovedQuickSort implements SortUtils.Sort {
 			pivotIndex = (i + j) / 2;
 			pivot = data[pivotIndex];
 
-			SortUtils.swap(data, pivotIndex, j);
+			Sorts.swap(data, pivotIndex, j);
 
 			// partition
 			l = i - 1;
@@ -218,10 +232,10 @@ class ImprovedQuickSort implements SortUtils.Sort {
 					;
 				while ((r != 0) && (data[--r].compareTo(pivot) > 0))
 					;
-				SortUtils.swap(data, l, r);
+				Sorts.swap(data, l, r);
 			} while (l < r);
-			SortUtils.swap(data, l, r);
-			SortUtils.swap(data, l, j);
+			Sorts.swap(data, l, r);
+			Sorts.swap(data, l, j);
 
 			if ((l - i) > THRESHOLD) {
 				stack[++top] = i;
@@ -241,17 +255,17 @@ class ImprovedQuickSort implements SortUtils.Sort {
 		// int temp;
 		for (int i = 1; i < data.length; i++) {
 			for (int j = i; (j > 0) && (data[j].compareTo(data[j - 1]) < 0); j--) {
-				SortUtils.swap(data, j, j - 1);
+				Sorts.swap(data, j, j - 1);
 			}
 		}
 	}
 }
 
 // 归并排序：
-class MergeSort implements SortUtils.Sort {
+class MergeSort implements Sorts.Sort {
 	@SuppressWarnings("unchecked")
-	public <T extends Comparable<T>> void sort(T[] data) {
-		T[] temp = (T[])new Comparable[data.length];
+	public <T extends Comparable<T>> void sort(T[] data, int begin, int end) {
+		T[] temp = (T[]) new Comparable[data.length];
 		mergeSort(data, temp, 0, data.length - 1);
 	}
 
@@ -281,8 +295,9 @@ class MergeSort implements SortUtils.Sort {
 
 // 改进后的归并排序:
 @SuppressWarnings("unchecked")
-class ImprovedMergeSort implements SortUtils.Sort {
+class ImprovedMergeSort implements Sorts.Sort {
 	private static final int THRESHOLD = 10;
+
 	private <T extends Comparable<T>> void mergeSort(T[] data, T[] temp, int l, int r) {
 		int i, j, k;
 		int mid = (l + r) / 2;
@@ -319,22 +334,22 @@ class ImprovedMergeSort implements SortUtils.Sort {
 	private <T extends Comparable<T>> void insertSort(T[] data, int start, int len) {
 		for (int i = start + 1; i < start + len; i++) {
 			for (int j = i; (j > start) && data[j].compareTo(data[j - 1]) < 0; j--) {
-				SortUtils.swap(data, j, j - 1);
+				Sorts.swap(data, j, j - 1);
 			}
 		}
 	}
 
-	public <T extends Comparable<T>> void sort(T[] data) {
-		T[] temp = (T[])new Comparable[data.length];
+	public <T extends Comparable<T>> void sort(T[] data, int begin, int end) {
+		T[] temp = (T[]) new Comparable[data.length];
 		mergeSort(data, temp, 0, data.length - 1);
 	}
 }
 
 // 堆排序：
 @SuppressWarnings("unchecked")
-class HeapSort implements SortUtils.Sort {
+class HeapSort implements Sorts.Sort {
 
-	public <T extends Comparable<T>> void sort(T[] data) {
+	public <T extends Comparable<T>> void sort(T[] data, int begin, int end) {
 		MaxHeap<T> h = new MaxHeap<T>();
 		h.init(data);
 		for (int i = 0; i < data.length; i++)
@@ -357,7 +372,7 @@ class HeapSort implements SortUtils.Sort {
 		private T[] queue;
 
 		public void remove() {
-			SortUtils.swap(queue, 1, size--);
+			Sorts.swap(queue, 1, size--);
 			fixDown(1);
 		}
 
@@ -369,7 +384,7 @@ class HeapSort implements SortUtils.Sort {
 					j++;
 				if (queue[k].compareTo(queue[j]) > 0) // 不用交换
 					break;
-				SortUtils.swap(queue, j, k);
+				Sorts.swap(queue, j, k);
 				k = j;
 			}
 		}
@@ -379,7 +394,7 @@ class HeapSort implements SortUtils.Sort {
 				int j = k >> 1;
 				if (queue[j].compareTo(queue[k]) > 0)
 					break;
-				SortUtils.swap(queue, j, k);
+				Sorts.swap(queue, j, k);
 				k = j;
 			}
 		}

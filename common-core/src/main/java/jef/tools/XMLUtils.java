@@ -332,7 +332,7 @@ public class XMLUtils {
 	 * 
 	 * @param file
 	 *            文件
-	 * @return Document
+	 * @return Document 加载后的DOM模型
 	 * @throws SAXException
 	 *             解析错误
 	 * @throws IOException
@@ -349,7 +349,7 @@ public class XMLUtils {
 	 *            文件
 	 * @param ignorComments
 	 *            是否忽略掉XML中的注释
-	 * @return Document
+	 * @return Document 加载后的DOM模型
 	 * @throws SAXException
 	 * @throws IOException
 	 */
@@ -368,7 +368,7 @@ public class XMLUtils {
 	 * 
 	 * @param filename
 	 *            文件路径
-	 * @return
+	 * @return 加载后的DOM模型
 	 * @throws SAXException
 	 * @throws IOException
 	 */
@@ -380,7 +380,7 @@ public class XMLUtils {
 	 * 从URL装载XML
 	 * 
 	 * @param reader
-	 * @return
+	 * @return 加载后的DOM模型
 	 * @throws SAXException
 	 * @throws IOException
 	 */
@@ -397,7 +397,7 @@ public class XMLUtils {
 	 *            是否跳过注解
 	 * @param namespaceAware
 	 *            是否忽略命名空间
-	 * @return
+	 * @return 加载后的DOM模型
 	 * @throws SAXException
 	 * @throws IOException
 	 */
@@ -417,9 +417,11 @@ public class XMLUtils {
 	 * 
 	 * @param xmlContent
 	 *            XML文本
-	 * @return Document
+	 * @return Document DOM模型
 	 * @throws SAXException
+	 *             解析错误
 	 * @throws IOException
+	 *             读写错误
 	 */
 	public static Document parse(String xmlContent) throws SAXException, IOException {
 		Reader reader = null;
@@ -436,10 +438,12 @@ public class XMLUtils {
 	 * 
 	 * @param xmlContent
 	 *            XML文本
-	 * @return Document
+	 * @return Document 解析后的DOM模型
 	 * @throws SAXException
+	 *             解析错误
 	 * @throws IOException
-	 * @deprecated use #
+	 *             读写错误
+	 * @deprecated use {@link #parse(String)}
 	 */
 	public static Document loadDocumentByString(String xmlContent) throws SAXException, IOException {
 		return parse(xmlContent);
@@ -454,9 +458,11 @@ public class XMLUtils {
 	 *            字符编码
 	 * @param ignorComment
 	 *            忽略注释
-	 * @return
+	 * @return Document 加载后的DOM模型
 	 * @throws SAXException
+	 *             解析错误
 	 * @throws IOException
+	 *             读写错误
 	 */
 	public static Document loadDocument(InputStream in, String charSet, boolean ignorComment) throws SAXException, IOException {
 		return loadDocument(in, charSet, ignorComment, false);
@@ -471,9 +477,11 @@ public class XMLUtils {
 	 *            编码
 	 * @param ignorComment
 	 *            跳过注释节点
-	 * @return
+	 * @return Document. DOM模型
 	 * @throws SAXException
+	 *             解析错误
 	 * @throws IOException
+	 *             读写错误
 	 */
 	public static Document loadDocument(InputStream in, String charSet, boolean ignorComments, boolean namespaceAware) throws SAXException, IOException {
 		DocumentBuilder db = REUSABLE_BUILDER.get().getDocumentBuilder(ignorComments, namespaceAware);
@@ -506,8 +514,10 @@ public class XMLUtils {
 	 * 通过读取XML头部文字来判断xml文件的编码
 	 * 
 	 * @param buf
+	 *            XML文件头部若干字节
 	 * @param len
-	 * @return
+	 *            判定长度
+	 * @return 获得XML编码。如果不成功返回null。
 	 */
 	public static String getCharsetInXml(byte[] buf, int len) {
 		buf = ArrayUtils.subarray(buf, 0, len);
@@ -536,9 +546,12 @@ public class XMLUtils {
 	 * 载入HTML文档
 	 * 
 	 * @param in
-	 * @return
+	 *            输入流
+	 * @return DocumentFragment DOM模型
 	 * @throws SAXException
+	 *             解析错误
 	 * @throws IOException
+	 *             读写错误
 	 */
 	public static DocumentFragment parseHTML(Reader in) throws SAXException, IOException {
 		if (parser == null)
@@ -557,10 +570,14 @@ public class XMLUtils {
 	 * 从指定文件载入HTML
 	 * 
 	 * @param in
+	 *            输入流
 	 * @param charSet
-	 * @return DocumentFragment对象
+	 *            编码
+	 * @return DocumentFragment对象 DOM模型
 	 * @throws SAXException
+	 *             解析错误
 	 * @throws IOException
+	 *             读写错误
 	 */
 	public static DocumentFragment parseHTML(File file) throws IOException, SAXException {
 		InputStream in = IOUtils.getInputStream(file);
@@ -576,7 +593,8 @@ public class XMLUtils {
 	 * 从指定的地址加载HTMLDocument
 	 * 
 	 * @param url
-	 * @return
+	 *            输入源
+	 * @return DocumentFragment DOM模型
 	 * @throws SAXException
 	 * @throws IOException
 	 */
@@ -587,26 +605,33 @@ public class XMLUtils {
 	/**
 	 * 从指定流解析HTML。已经废弃。
 	 * 
-	 * @param in 输入流
-	 * @param charSet 字符集，为null时自动检测
+	 * @param in
+	 *            输入流
+	 * @param charSet
+	 *            字符集，为null时自动检测
 	 * @return 解析后的DocumentFragment对象
-	 * @throws SAXException XML语法异常时抛出
-	 * @throws IOException  IO操作错误时抛出
+	 * @throws SAXException
+	 *             XML语法异常时抛出
+	 * @throws IOException
+	 *             IO操作错误时抛出
 	 * @deprecated Use {@link #parseHTML(InputStream, String)} instead.
 	 */
 	public static DocumentFragment loadHtmlDocument(InputStream in, String charSet) throws SAXException, IOException {
-		return parseHTML(in,charSet);
+		return parseHTML(in, charSet);
 	}
 
-	
 	/**
 	 * 从指定流解析HTML
 	 * 
-	 * @param in 输入流
-	 * @param charSet 字符集，为null时自动检测
+	 * @param in
+	 *            输入流
+	 * @param charSet
+	 *            字符集，为null时自动检测
 	 * @return 解析后的DocumentFragment对象
-	 * @throws SAXException XML语法异常时抛出
-	 * @throws IOException  IO操作错误时抛出
+	 * @throws SAXException
+	 *             XML语法异常时抛出
+	 * @throws IOException
+	 *             IO操作错误时抛出
 	 */
 	public static DocumentFragment parseHTML(InputStream in, String charSet) throws SAXException, IOException {
 		if (parser == null)
@@ -630,8 +655,11 @@ public class XMLUtils {
 	 * 保存XML文档
 	 * 
 	 * @param doc
+	 *            节点DOM对象
 	 * @param file
+	 *            保存到文件
 	 * @throws IOException
+	 *             读写错误
 	 */
 	public static void saveDocument(Node doc, File file) throws IOException {
 		saveDocument(doc, file, "UTF-8");
@@ -641,7 +669,7 @@ public class XMLUtils {
 	 * 保存XML文档
 	 * 
 	 * @param doc
-	 *            DOM对象
+	 *            节点DOM对象
 	 * @param file
 	 *            文件
 	 * @param encoding
@@ -661,9 +689,11 @@ public class XMLUtils {
 	 * 将XML文档输出到流
 	 * 
 	 * @param node
+	 *            节点DOM对象
 	 * @param os
-	 * @param encoding
+	 *            输出流
 	 * @throws IOException
+	 *             读写错误
 	 */
 	public static void output(Node node, OutputStream os) throws IOException {
 		output(node, os, null, 4, null);
@@ -673,9 +703,13 @@ public class XMLUtils {
 	 * 将XML文档输出到流
 	 * 
 	 * @param node
+	 *            节点DOM对象
 	 * @param os
+	 *            输出流
 	 * @param encoding
+	 *            编码
 	 * @throws IOException
+	 *             读写错误
 	 */
 	public static void output(Node node, OutputStream os, String encoding) throws IOException {
 		output(node, os, encoding, 4, null);
@@ -685,7 +719,8 @@ public class XMLUtils {
 	 * 节点转换为String
 	 * 
 	 * @param node
-	 * @return
+	 *            节点DOM对象
+	 * @return 转换后的XML文本
 	 */
 	public static String toString(Node node) {
 		return toString(node, null);
@@ -705,6 +740,7 @@ public class XMLUtils {
 	 * @param xmlDeclare
 	 *            null如果是document對象則頂部有xml定義，true不管如何都有 false都沒有
 	 * @throws IOException
+	 *             读写错误
 	 */
 	public static void output(Node node, OutputStream os, String encoding, int warpLine, Boolean xmlDeclare) throws IOException {
 		StreamResult sr = new StreamResult(encoding == null ? new OutputStreamWriter(os) : new OutputStreamWriter(os, encoding));
@@ -723,6 +759,7 @@ public class XMLUtils {
 	 * @param warpLine
 	 *            是否要排版
 	 * @throws IOException
+	 *             读写错误
 	 */
 	public static void output(Node node, Writer os, String encoding, int indent) throws IOException {
 		StreamResult sr = new StreamResult(os);
@@ -783,7 +820,7 @@ public class XMLUtils {
 	 *            父节点
 	 * @param data
 	 *            CDATA文字内容
-	 * @return
+	 * @return 生成的CDATA节点
 	 */
 	public static CDATASection addCDataText(Node node, String data) {
 		Document doc = null;
@@ -800,9 +837,11 @@ public class XMLUtils {
 	/**
 	 * 标准XPath计算
 	 * 
-	 * @param expr
 	 * @param startPoint
-	 * @return
+	 *            起始节点
+	 * @param expr
+	 *            xpath表达式
+	 * @return xpath表达式的计算结果（文本）
 	 * @throws XPathExpressionException
 	 */
 	public static String evalXpath(Object startPoint, String expr) throws XPathExpressionException {
@@ -813,10 +852,11 @@ public class XMLUtils {
 	/**
 	 * 标准XPATH计算
 	 * 
-	 * @param expr
 	 * @param startPoint
-	 * @param returnType
-	 * @return
+	 *            起始节点
+	 * @param expr
+	 *            xpath表达式
+	 * @return 该xpath下的节点
 	 * @throws XPathExpressionException
 	 */
 	public static Node selectNode(Object startPoint, String expr) throws XPathExpressionException {
@@ -828,8 +868,10 @@ public class XMLUtils {
 	 * 标准XPATH计算
 	 * 
 	 * @param startPoint
+	 *            起始节点
 	 * @param expr
-	 * @return
+	 *            xpath表达式
+	 * @return 符合xpath的所有节点
 	 * @throws XPathExpressionException
 	 */
 	public static NodeList selectNodes(Object startPoint, String expr) throws XPathExpressionException {
@@ -856,7 +898,7 @@ public class XMLUtils {
 	 *            节点
 	 * @param data
 	 *            文本内容
-	 * @return
+	 * @return DOM文本节点
 	 */
 	public static Text setText(Node node, String data) {
 		Document doc = null;
@@ -875,9 +917,10 @@ public class XMLUtils {
 	 * 在一个节点下插入注释
 	 * 
 	 * @param node
+	 *            节点
 	 * @param comment
 	 *            注释内容
-	 * @return
+	 * @return Comment节点
 	 */
 	public static Comment addComment(Node node, String comment) {
 		Document doc = null;
@@ -892,12 +935,32 @@ public class XMLUtils {
 	}
 
 	/**
-	 * 在指定节点之前插入节点
+	 * 在指定节点之前插入节点（兄弟节点）。 举例
+	 * 
+	 * <pre>
+	 *    &lt;parent&gt;
+	 *    	&lt;a&gt;text-a&lt;/a&gt;
+	 *    	&lt;c&gt;text-c&lt;/c&gt;
+	 *    &lt;/parent&gt;
+	 * </pre>
+	 * 
+	 * 调用{@code addElementBefore(c,"b","text-b")}，其中c为上面的c节点。 结果
+	 * 
+	 * <pre>
+	 * 	 &lt;parent&gt;
+	 *    	&lt;a&gt;text-a&lt;/a&gt;
+	 *    	&lt;b&gt;text-b&lt;/b&gt;
+	 *    	&lt;c&gt;text-c&lt;/c&gt;
+	 *    &lt;/parent&gt;
+	 * </pre>
 	 * 
 	 * @param node
+	 *            节点DOM对象
 	 * @param tagName
+	 *            新增的元素名称
 	 * @param nodeText
-	 * @return
+	 *            元素文本
+	 * @return Element对象
 	 */
 	public static Element addElementBefore(Node node, String tagName, String... nodeText) {
 		Node pNode = node.getParentNode();
@@ -917,12 +980,15 @@ public class XMLUtils {
 	}
 
 	/**
-	 * 在之后插入节点
+	 * 在之后插入节点（兄弟节点）
 	 * 
 	 * @param node
+	 *            节点DOM对象
 	 * @param tagName
+	 *            新增的元素名称
 	 * @param nodeText
-	 * @return
+	 *            元素文本
+	 * @return Element对象
 	 */
 	public static Element addElementAfter(Node node, String tagName, String... nodeText) {
 		Node pNode = node.getParentNode();
@@ -951,7 +1017,7 @@ public class XMLUtils {
 	 *            新节点名称
 	 * @param nodeText
 	 *            节点文本
-	 * @author Administrator
+	 * @return Element对象
 	 */
 	public static Element replaceElement(Node node, String tagName, String... nodeText) {
 		Node pNode = node.getParentNode();
@@ -976,10 +1042,14 @@ public class XMLUtils {
 	 * 在指定节点下查找一个Element，如果没有就添加
 	 * 
 	 * @param parent
+	 *            父节点
 	 * @param tagName
+	 *            查找的子节点名
 	 * @param attribName
+	 *            查找属性名
 	 * @param attribValue
-	 * @return
+	 *            查找的属性值
+	 * @return 如果找到，返回已有的节点。如果没找到，返回创建的新节点。
 	 */
 	public static Element getOrCreateChildElement(Node parent, String tagName, String attribName, String attribValue) {
 		for (Element e : XMLUtils.childElements(parent, tagName)) {
@@ -996,7 +1066,9 @@ public class XMLUtils {
 	 * 删除节点下的指定了TagName的元素
 	 * 
 	 * @param node
+	 *            父节点
 	 * @param tagName
+	 *            要删除的元素名称
 	 * @return 删除数量
 	 */
 	public static int removeChildElements(Node node, String... tagName) {
@@ -1008,9 +1080,10 @@ public class XMLUtils {
 	}
 
 	/**
-	 * 清除节点的所有子元素
+	 * 清除节点的所有子节点。执行该方法后，节点下的所有子节点将被全部清除。
 	 * 
 	 * @param node
+	 *            父节点
 	 */
 	public static void clearChildren(Node node) {
 		clearChildren(node, 0);
@@ -1035,6 +1108,7 @@ public class XMLUtils {
 	 * 清除元素节点的所有属性
 	 * 
 	 * @param element
+	 *            要清除属性的节点
 	 */
 	public static void clearAttribute(Element element) {
 		for (Node node : toArray(element.getAttributes())) {
@@ -1046,6 +1120,7 @@ public class XMLUtils {
 	 * 清除元素节点所有属性和子节点
 	 * 
 	 * @param element
+	 *            要清除的节点
 	 */
 	public static void clearChildrenAndAttr(Element element) {
 		clearChildren(element);
@@ -1056,9 +1131,12 @@ public class XMLUtils {
 	 * 在一个节点下插入元素和文本
 	 * 
 	 * @param node
+	 *            父节点
 	 * @param tagName
+	 *            新建元素名称
 	 * @param nodeText
-	 * @return
+	 *            新建元素文本
+	 * @return 新建的Element
 	 */
 	public static Element addElement(Node node, String tagName, String... nodeText) {
 		Document doc = null;
@@ -1081,8 +1159,10 @@ public class XMLUtils {
 	 * 反回一个新节点，代替旧节点，其名称可以设置
 	 * 
 	 * @param node
+	 *            要变更名称的元素节点
 	 * @param newName
-	 * @return
+	 *            新名称
+	 * @return 重命名后的DOM节点（实现过程中会用新创建的Element代替旧的）
 	 */
 	public static Element changeNodeName(Element node, String newName) {
 		Document doc = node.getOwnerDocument();
@@ -1102,9 +1182,10 @@ public class XMLUtils {
 	 * 得到节点下，具有指定标签的Element。(只搜索一层)
 	 * 
 	 * @param node
+	 *            父节点
 	 * @param tagName
-	 *            ,标签，如果为null表示返回全部Element
-	 * @return
+	 *            要搜索的节点名，如果为null表示返回全部Element
+	 * @return 搜索到的全部子元素
 	 */
 	public static List<Element> childElements(Node node, String... tagName) {
 		if (node == null)
@@ -1159,7 +1240,8 @@ public class XMLUtils {
 	 * 获取指定元素的文本(Trimed)
 	 * 
 	 * @param element
-	 * @return
+	 *            节点
+	 * @return 节点的文本。xml转义符会被还原；两端空格会被截去。
 	 */
 	public static String nodeText(Node element) {
 		Node first = first(element, Node.TEXT_NODE, Node.CDATA_SECTION_NODE);
@@ -1185,9 +1267,10 @@ public class XMLUtils {
 	 * 得到节点下全部的text文本内容
 	 * 
 	 * @param element
+	 *            元素节点
 	 * @param withChildren
-	 *            :如果为真，则将该节点下属所有节点的文本合并起来返回
-	 * @return
+	 *            如果为真，则将该节点下属所有子元素的文本合并起来返回
+	 * @return 节点文本。xml转义符会被还原；两端空格会被截去。
 	 */
 	public static String nodeText(Node element, boolean withChildren) {
 		StringBuilder sb = new StringBuilder();
@@ -1209,8 +1292,10 @@ public class XMLUtils {
 	 * 获得属性值
 	 * 
 	 * @param e
+	 *            元素节点
 	 * @param attributeName
-	 * @return
+	 *            属性名
+	 * @return 属性值。xml转义符会被还原；两端空格会被截去。
 	 */
 	public static String attrib(Element e, String attributeName) {
 		if (!e.hasAttribute(attributeName))
@@ -1223,8 +1308,10 @@ public class XMLUtils {
 	 * 获得属性值(遍历子节点)
 	 * 
 	 * @param e
+	 *            父元素节点
 	 * @param attributeName
-	 * @return
+	 *            属性名
+	 * @return 父节点和子节点的指定属性值组成List，一起返回
 	 */
 	public static List<String> attribs(Element e, String attributeName) {
 		List<String> _list = new ArrayList<String>();
@@ -1248,8 +1335,10 @@ public class XMLUtils {
 	 * 获取当前元素下，一个子元素的文本(Trim)
 	 * 
 	 * @param element
+	 *            元素
 	 * @param subEleName
-	 * @return
+	 *            子元素节点名
+	 * @return 子元素的文本。xml转义符会被还原；两端空格会被截去。
 	 */
 	public static String nodeText(Element element, String subEleName) {
 		Element e = first(element, subEleName);
@@ -1258,7 +1347,17 @@ public class XMLUtils {
 		return nodeText(e);
 	}
 
-	/** 得到节点下第n个指定元素(不分层次) */
+	/**
+	 * 得到节点下第n个指定元素(不分层次)
+	 * 
+	 * @param parent
+	 *            父节点
+	 * @param elementName
+	 *            元素名称
+	 * @param index
+	 *            序号
+	 * @return 查找到的元素节点DOM
+	 */
 	public static Element nthElement(Element parent, String elementName, int index) {
 		NodeList nds = parent.getElementsByTagName(elementName);
 		if (nds.getLength() < index)
@@ -1271,8 +1370,10 @@ public class XMLUtils {
 	 * 得到当前元素下，第一个符合Tag Name的子元素
 	 * 
 	 * @param parent
+	 *            父节点
 	 * @param elementName
-	 * @return
+	 *            要求的元素名
+	 * @return 父节点下第一个符合条件的元素
 	 */
 	public static Element first(Node node, String tagName) {
 		if (node == null)
@@ -1302,8 +1403,11 @@ public class XMLUtils {
 	 * 获得符合类型的第一个节点(单层)
 	 * 
 	 * @param node
+	 *            父节点
 	 * @param nodeType
-	 * @return
+	 *            节点类型，定义在Node中的常量，如{@link Node#ELEMENT_NODE}、
+	 *            {@link Node#DOCUMENT_NODE}
+	 * @return 第一个类型相符的节点
 	 */
 	public static Node first(Node node, int... nodeType) {
 		if (node == null)
@@ -1323,7 +1427,7 @@ public class XMLUtils {
 	 * 
 	 * @param tagName
 	 *            根节点元素名
-	 * @return
+	 * @return Document对象
 	 */
 	public static Document newDocument(String tagName) {
 		Assert.notNull(tagName);
@@ -1335,7 +1439,7 @@ public class XMLUtils {
 	/**
 	 * 创建一份新的空白XML文档
 	 * 
-	 * @return
+	 * @return 空白XML
 	 */
 	public static Document newDocument() {
 		try {
@@ -1351,10 +1455,11 @@ public class XMLUtils {
 	}
 
 	/**
-	 * 将NamedNodeMap对象转换为List对象
+	 * 将NamedNodeMap对象转换为Node数组
 	 * 
 	 * @param nds
-	 * @return
+	 *            NamedNodeMap对象
+	 * @return Node数组
 	 */
 	public static Node[] toArray(NamedNodeMap nds) {
 		Node[] array = new Node[nds.getLength()];
@@ -1368,9 +1473,11 @@ public class XMLUtils {
 	 * 将Map所有值设置为属性
 	 * 
 	 * @param e
+	 *            元素节点
 	 * @param attrMap
-	 *            属性，这些值将作为属性设置到当前节点上
-	 * @isSubNode 设置方式，false时优先设置为属性,true时设置为子节点
+	 *            属性，这些值将作为属性设置到元素节点上
+	 * @param isSubNode
+	 *            设置方式，false时优先设置为属性,true时设置为子节点
 	 */
 	public static void setAttributesByMap(Element e, Map<String, Object> attrMap, boolean isSubNode) {
 		if (attrMap == null)
@@ -1382,7 +1489,9 @@ public class XMLUtils {
 	 * 将Map所有值设置为属性
 	 * 
 	 * @param e
+	 *            元素节点
 	 * @param map
+	 *            属性，这些值将作为属性设置到元素节点上
 	 */
 	public static void setAttributesByMap(Element e, Map<String, Object> map) {
 		setAttributesByMap(e, map, false);
@@ -1449,14 +1558,17 @@ public class XMLUtils {
 	}
 
 	/**
-	 * 设置文本节点的值
+	 * 在父节点下找寻子元素并为其设置文本。
 	 * 
-	 * @param e
+	 * @param parent
+	 *            父元素节点
 	 * @param tagName
+	 *            要找寻的子元素名
 	 * @param value
+	 *            文本内容
 	 */
-	public static void setNodeText(Element e, String tagName, String value) {
-		Element child = first(e, tagName);
+	public static void setNodeText(Element parent, String tagName, String value) {
+		Element child = first(parent, tagName);
 		if (child != null) {
 			setText(child, value);
 		}
@@ -1464,6 +1576,10 @@ public class XMLUtils {
 
 	/**
 	 * 获取所有属性，以Map形式返回
+	 * 
+	 * @param e
+	 *            元素节点
+	 * @return 所有属性名称和值构成的Map
 	 */
 	public static Map<String, String> getAttributesMap(Element e) {
 		return getAttributesMap(e, false);
@@ -1473,6 +1589,7 @@ public class XMLUtils {
 	 * 获取所有属性。
 	 * 
 	 * @param e
+	 *            元素节点
 	 * @param subElementAsAttr
 	 *            为true时，包括下属第一级的Element后的文本节点，也作为属性返回<br>
 	 *            例如
@@ -1516,13 +1633,29 @@ public class XMLUtils {
 	}
 
 	/**
-	 * 从子节点的文本当做属性来获取
+	 * 从子节点中获得指定的属性
 	 * 
-	 * @param e
-	 * @return
+	 * <pre>
+	 * &lt;object&gt;
+	 * &lt;id&gt;100&lt;/id&gt;
+	 * &lt;name&gt;Jhon smith&lt;/name&gt;
+	 * &lt;phone&gt;130100000&lt;/phone&gt;
+	 * &lt;object&gt;
+	 * </pre>
+	 * 
+	 * 对上面例的对象，
+	 * {@code getAttributesInChildElements(objectNode, "name", "phone")}，则可以得到
+	 * {name="Jhon smith"，phone="130100000"}这样的一个Map。
+	 * 如果不指定属性名，那么所有子元素的文本都会被获取到Map中。
+	 * 
+	 * @param parent
+	 *            父节点
+	 * @param keys
+	 *            需要的属性
+	 * @return 由提取的文本构成的Map
 	 */
-	public static Map<String, String> getAttributesInChildElements(Element e, String... keys) {
-		NodeList nds = e.getChildNodes();
+	public static Map<String, String> getAttributesInChildElements(Element parent, String... keys) {
+		NodeList nds = parent.getChildNodes();
 		Map<String, String> attribs = new HashMap<String, String>();
 		for (int i = 0; i < nds.getLength(); i++) {
 			Node node = nds.item(i);
@@ -1542,6 +1675,31 @@ public class XMLUtils {
 		return attribs;
 	}
 
+	/**
+	 * 将
+	 * 
+	 * <pre>
+	 * &lt;object&gt;
+	 * &lt;id&gt;100&lt;/id&gt;
+	 * &lt;name&gt;Jhon smith&lt;/name&gt;
+	 * &lt;phone&gt;130100000&lt;/phone&gt;
+	 * &lt;object&gt;
+	 * </pre>
+	 * 
+	 * 结构的XML描述，改为
+	 * 
+	 * <pre>
+	 * &lt;object id="100" name="Jhon smith" pone="130100000"&gt;
+	 * &lt;/object&gt;
+	 * </pre>
+	 * 
+	 * 这样的格式。
+	 * 
+	 * @param e
+	 *            要处理的元素节点
+	 * @param keys
+	 *            要迁移的属性值
+	 */
 	public static void moveChildElementAsAttribute(Element e, String... keys) {
 		NodeList nds = e.getChildNodes();
 		for (Node node : toArray(nds)) {
@@ -1562,11 +1720,14 @@ public class XMLUtils {
 	}
 
 	/**
-	 * 将节点的属性赋值到指定的bean中
+	 * 将XML元素节点转换为一个Java对象
 	 * 
 	 * @param e
-	 * @param bean
+	 *            元素节点
+	 * @param clz
+	 *            要转换的java对象
 	 * @throws ReflectionException
+	 *             反射错误
 	 * @deprecated 使用loadBean(Element,Class)方法
 	 */
 	public static <W> W elementToBean(Element e, Class<W> clz) throws ReflectionException {
@@ -1574,12 +1735,17 @@ public class XMLUtils {
 	}
 
 	/**
-	 * 将一个Element作为一个Bean那样载入 注意这个方法和并不是putBean的逆运算、因为条件所限，这里只load
-	 * bean的属性，但不会load bean内部其他bean的值。即不支持递归嵌套。 而putBean的功能是比较强的。
+	 * 将XML元素节点转换为一个Java对象
+	 * <p>
+	 * 注意这个方法和并不是putBean的逆运算、因为条件所限，这里只load bean的属性，但不会load
+	 * bean内部其他bean的值。即不支持递归嵌套。 而putBean的功能是比较强的。
 	 * 
 	 * @param e
+	 *            元素节点
 	 * @param bean
+	 *            要转换的java对象
 	 * @throws ReflectionException
+	 *             反射错误
 	 */
 	public static <W> W loadBean(Element e, Class<W> clz) {
 		W bean = UnsafeUtils.newInstance(clz);
@@ -1594,22 +1760,23 @@ public class XMLUtils {
 	}
 
 	/**
-	 * 将指定的bean展开后添加到当前的XML节点下面
+	 * 将指定的java bean转换为XML元素。 并将转换后的元素添加到当前的XML节点下面
 	 * 
-	 * @param node
+	 * @param parent
 	 *            要放置的节点
 	 * @param bean
 	 *            要放置的对象
-	 * @return
+	 * @return 转换后的元素节点
 	 */
-	public static Element putBean(Node node, Object bean) {
+	public static Element putBean(Node parent, Object bean) {
 		if (bean == null)
 			return null;
-		return appendBean(node, bean, bean.getClass(), null, null);
+		return appendBean(parent, bean, bean.getClass(), null, null);
 	}
 
 	/**
-	 * 将指定的bean展开后添加到当前的XML节点下面
+	 * 将指定的java bean转换为XML元素。 并将转换后的元素添加到当前的XML节点下面
+	 * 
 	 * 
 	 * @param node
 	 *            要放置的节点
@@ -1618,25 +1785,29 @@ public class XMLUtils {
 	 * @param tryAttribute
 	 *            当为true时对象的属性尽量作为XML属性 当为false对象的属性都作为XML文本节点
 	 *            当为null时自动判断，一些简单类型作为属性，复杂类型用文本节点
-	 * @return
+	 * @return 转换后的元素节点
 	 */
 	public static Element putBean(Node node, Object bean, Boolean tryAttribute) {
 		if (bean == null)
 			return null;
 		return appendBean(node, bean, bean.getClass(), tryAttribute, null);
 	}
-	
+
 	/**
-	 * 将一个或多个节点挂到指定的节点之下。如果两边节点不在同一个Document对象中，会自动创建新的拷贝。
-	 * @param parent 父节点
-	 * @param nodes 多个子节点
+	 * 将一个或多个节点挂到指定的节点之下。如果两边节点不在同一个Document对象中，会自动创建新的拷贝。<br/>
+	 * 这个方式适用于在不同的Document中迁移节点。
+	 * 
+	 * @param parent
+	 *            父节点
+	 * @param nodes
+	 *            要迁移的子节点
 	 */
-	public static void appendChild(Node parent, Node... nodes){
-		Document doc=parent.getOwnerDocument();
-		for(Node node:nodes){
-			if(node.getOwnerDocument()!=doc){
+	public static void appendChild(Node parent, Node... nodes) {
+		Document doc = parent.getOwnerDocument();
+		for (Node node : nodes) {
+			if (node.getOwnerDocument() != doc) {
 				parent.appendChild(doc.importNode(node, true));
-			}else{
+			} else {
 				parent.appendChild(node);
 			}
 		}
@@ -1703,7 +1874,8 @@ public class XMLUtils {
 	 * NodeList转换为数组
 	 * 
 	 * @param nds
-	 * @return
+	 *            NodeList对象
+	 * @return Node数组
 	 */
 	public static Node[] toArray(NodeList nds) {
 		if (nds instanceof MyNodeList)
@@ -1719,7 +1891,8 @@ public class XMLUtils {
 	 * NodeList对象转换为List
 	 * 
 	 * @param nds
-	 * @return
+	 *            NodeList对象
+	 * @return Node组成的List
 	 */
 	public static List<? extends Node> toList(NodeList nds) {
 		if (nds instanceof MyNodeList)
@@ -1737,7 +1910,8 @@ public class XMLUtils {
 	 * 将Nodelist转换为Element List
 	 * 
 	 * @param nds
-	 * @return
+	 *            NodeList
+	 * @return 将NodeList中的Element节点组成一个List。（其他类型节点被丢弃）
 	 */
 	public static List<Element> toElementList(NodeList nds) {
 		List<Element> list = new ArrayList<Element>();
@@ -1751,32 +1925,37 @@ public class XMLUtils {
 	}
 
 	/**
-	 * 将List对象转换为NodeList对象
+	 * 将Node的列表对象转换为NodeList对象。是{@link #toList(NodeList)}的逆运算。
 	 * 
-	 * @param nds
-	 * @return
+	 * @param list
+	 *            Node的列表
+	 * @return NodeList对象。
 	 */
 	public static NodeList toNodeList(List<? extends Node> list) {
 		return new MyNodeList(list);
 	}
 
 	/**
-	 * 数组转换为NodeList
+	 * 将Node数组转换为NodeList对象，是{@link #toArray(NodeList)}的逆运算
 	 * 
-	 * @param list
-	 * @return
+	 * @param array
+	 *            Node数组
+	 * @return NodeList对象
 	 */
-	public static NodeList toNodeList(Node[] list) {
-		return new MyNodeList(list);
+	public static NodeList toNodeList(Node[] array) {
+		return new MyNodeList(array);
 	}
 
 	/**
 	 * 在当前节点及下属节点中查找文本
 	 * 
 	 * @param node
+	 *            要查找的节点
 	 * @param text
+	 *            检索文本
 	 * @param searchAttribute
-	 * @return Node对象，匹配文本的第一个节点
+	 *            是否在属性值中查找
+	 * @return Node对象，匹配文本的第一个节点。未找到返回null。
 	 */
 	public static Node findFirst(Node node, String text, boolean searchAttribute) {
 		String value = getValue(node);
@@ -1798,26 +1977,33 @@ public class XMLUtils {
 	}
 
 	/**
-	 * 在当前节点及下属节点中并删除节点
+	 * 查找并移除具有指定关键字的节点。
 	 * 
 	 * @param node
+	 *            要查找的节点
 	 * @param text
+	 *            检索关键字
 	 * @param searchAttribute
-	 * @return Node对象，匹配文本的第一个节点
+	 *            是否在属性值中查找
 	 */
-	public static void removeFirstNode(Node node, String text, boolean searchAttribute) {
+	public static void removeNodeWithKeyword(Node node, String text, boolean searchAttribute) {
 		String value = getValue(node);
-		if (value != null && value.indexOf(text) > -1)
+		if (value != null && value.indexOf(text) > -1) {
 			node.getParentNode().removeChild(node);
+			return;
+		}
+
 		if (searchAttribute && node.getAttributes() != null) {
 			for (Node n : toArray(node.getAttributes())) {
 				value = getValue(n);
-				if (value != null && value.indexOf(text) > -1)
+				if (value != null && value.indexOf(text) > -1) {
 					node.getParentNode().removeChild(node);
+					return;
+				}
 			}
 		}
 		for (Node sub : toArray(node.getChildNodes())) {
-			removeFirstNode(sub, text, searchAttribute);
+			removeNodeWithKeyword(sub, text, searchAttribute);
 		}
 	}
 
@@ -1825,8 +2011,11 @@ public class XMLUtils {
 	 * 在当前节点及下属节点中查找文本
 	 * 
 	 * @param node
+	 *            节点
 	 * @param text
+	 *            关键字
 	 * @param searchAttribute
+	 *            是否查找属性
 	 * @return Node对象，匹配文本的第一个节点
 	 */
 	public static Node[] find(Node node, String text, boolean searchAttribute) {
@@ -1846,7 +2035,7 @@ public class XMLUtils {
 	 *            要匹配的属性名城
 	 * @param keyword
 	 *            要匹配的属性值
-	 * @return
+	 * @return 第一个符合查询条件的元素
 	 */
 	public static Element findElementByNameAndAttribute(Node root, String tagName, String attribName, String keyword) {
 		Element[] es = findElementsByNameAndAttribute(root, tagName, attribName, keyword, true);
@@ -1863,10 +2052,10 @@ public class XMLUtils {
 	 * @param tagName
 	 *            要匹配的element名称
 	 * @param attribName
-	 *            要匹配的属性名城
+	 *            要匹配的属性名
 	 * @param keyword
-	 *            要匹配的属性值
-	 * @return
+	 *            要匹配的属性关键字
+	 * @return 所有符合查询条件的元素
 	 */
 	public static Element[] findElementsByNameAndAttribute(Node root, String tagName, String attribName, String keyword) {
 		return findElementsByNameAndAttribute(root, tagName, attribName, keyword, false);
@@ -1876,8 +2065,11 @@ public class XMLUtils {
 	 * 查找第一个属性为某个值的Element节点并返回
 	 * 
 	 * @param node
+	 *            根节点
 	 * @param attribName
+	 *            属性名称
 	 * @param keyword
+	 *            要匹配的属性关键字
 	 * @return 符合条件的第一个Element
 	 */
 	public static Element findElementByAttribute(Node node, String attribName, String keyword) {
@@ -1891,9 +2083,12 @@ public class XMLUtils {
 	 * 查找Element,其拥有某个指定的属性值。
 	 * 
 	 * @param node
+	 *            根节点
 	 * @param attribName
+	 *            属性名
 	 * @param keyword
-	 * @return
+	 *            属性值
+	 * @return 所有符合查询条件的元素
 	 */
 	public static Element[] findElementsByAttribute(Node node, String attribName, String keyword) {
 		return findElementsByAttribute(node, attribName, keyword, false);
@@ -1903,8 +2098,10 @@ public class XMLUtils {
 	 * 根据attrib属性id定位节点，功能类似于JS中的document.getElementById();
 	 * 
 	 * @param node
-	 * @param tagName
-	 * @return
+	 *            根节点
+	 * @param id
+	 *            查找的ID
+	 * @return 找到的元素
 	 */
 	public static Element findElementById(Node node, String id) {
 		if (node == null)
@@ -1930,9 +2127,10 @@ public class XMLUtils {
 	 * 逐级向上查找父节点，返回第一个符合指定的tagName的Element
 	 * 
 	 * @param node
+	 *            起始节点
 	 * @param tagName
 	 *            要匹配的元素名称，为空表示无限制
-	 * @return
+	 * @return 符合的上级节点。
 	 */
 	public static Element firstParent(Node node, String tagName) {
 		if (StringUtils.isEmpty(tagName))
@@ -1951,9 +2149,10 @@ public class XMLUtils {
 	 * 向后查找兄弟节点
 	 * 
 	 * @param node
+	 *            起始节点
 	 * @param tagName
 	 *            匹配的元素名称，为空表示无限制
-	 * @return
+	 * @return 符合的兄弟节点
 	 */
 	public static Element firstSibling(Node node, String tagName) {
 		Node p = node.getNextSibling();
@@ -1971,9 +2170,10 @@ public class XMLUtils {
 	 * 向前查找符合条件的兄弟节点
 	 * 
 	 * @param node
+	 *            起始节点
 	 * @param tagName
 	 *            匹配的元素名称，为空表示无限制
-	 * @return
+	 * @return 符合的兄弟节点
 	 */
 	public static Element firstPrevSibling(Node node, String tagName) {
 		Node p = node.getPreviousSibling();
@@ -2047,8 +2247,10 @@ public class XMLUtils {
 	 * 无视层级，获得所有指定Tagname的element节点
 	 * 
 	 * @param node
+	 *            起始节点
 	 * @param tagName
-	 * @return
+	 *            找寻的下级元素节点名称
+	 * @return 所有符合条件的节点
 	 */
 	public static List<Element> getElementsByTagNames(Node node, String... tagName) {
 		List<Element> nds = new ArrayList<Element>();
@@ -2079,8 +2281,11 @@ public class XMLUtils {
 	 * 将Node打印到输出流
 	 * 
 	 * @param node
+	 *            DOM节点
 	 * @param out
+	 *            输出流
 	 * @throws IOException
+	 *             读写错误
 	 */
 	public static void printNode(Node node, OutputStream out) throws IOException {
 		output(node, out, null, 4, null);
@@ -2096,7 +2301,7 @@ public class XMLUtils {
 	 *            你必须注意在输出时指定编码和此处的编码一致.
 	 * @param xmlHeader
 	 *            是否要携带XML头部标签<?xml ....>
-	 * @return
+	 * @return 转换后的XML文本
 	 */
 	public static String toString(Node node, String charset, Boolean xmlHeader) {
 		StringWriter sw = new StringWriter(4096);
@@ -2113,10 +2318,11 @@ public class XMLUtils {
 	 * 将DOM节点还原为XML片段文本
 	 * 
 	 * @param node
+	 *            DOM节点
 	 * @param charset
 	 *            字符集，该属性只影响xml头部的声明，由于返回的string仍然是标准的unicode string，
 	 *            你必须注意在输出时指定编码和此处的编码一致.
-	 * @return
+	 * @return 转换后的XML文本
 	 */
 	public static String toString(Node node, String charset) {
 		return toString(node, charset, null);
@@ -2125,8 +2331,8 @@ public class XMLUtils {
 	/**
 	 * 设置XSD Schema
 	 * 
-	 * @param node
-	 * @param schemaURL
+	 * @param node  DOM节点
+	 * @param schemaURL 设置的XSD的URL
 	 */
 	public static void setXsdSchema(Node node, String schemaURL) {
 		Document doc;
@@ -2165,6 +2371,9 @@ public class XMLUtils {
 		}
 	}
 
+	/*
+	 * 获得节点的值，无论是元素节点还是文本节点还是属性节点，都能正确获得其值
+	 */
 	private static String getValue(Node node) {
 		switch (node.getNodeType()) {
 		case Node.ELEMENT_NODE:

@@ -1189,12 +1189,19 @@ public final class DbUtils {
 		BeanWrapper beanNew = BeanWrapper.wrap(changedObj);
 		BeanWrapper beanOld = BeanWrapper.wrap(oldObj);
 		ITableMetadata m = MetaHolder.getMeta(oldObj);
+		
+		Map<Field,Object> used=null;
 		boolean dynamic = ORMConfig.getInstance().isDynamicUpdate();
+		if(dynamic){
+			used=new HashMap<Field,Object>(changedObj.getUpdateValueMap());
+		}
+		changedObj.getUpdateValueMap().clear();
 		for (ColumnMapping mType : m.getColumns()) {
-			if (mType.isPk())
-				continue;
 			Field field = mType.field();
-			if (dynamic && !changedObj.isUsed(field)) {// 智能更新下，发现字段未被设过值，就不予更新
+			if (mType.isPk()){
+				continue;
+			}
+			if (dynamic && !used.containsKey(field)) {// 智能更新下，发现字段未被设过值，就不予更新
 				continue;
 			}
 			Object valueNew = beanNew.getPropertyValue(field.name());

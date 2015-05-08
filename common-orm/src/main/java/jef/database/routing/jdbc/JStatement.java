@@ -406,4 +406,13 @@ public class JStatement implements java.sql.Statement {
 		}
 	}
 
+	@Override
+	public void closeOnCompletion() throws SQLException {
+	}
+
+	@Override
+	public boolean isCloseOnCompletion() throws SQLException {
+		return false;
+	}
+
 }

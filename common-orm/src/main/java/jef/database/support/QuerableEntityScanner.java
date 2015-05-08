@@ -10,10 +10,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.GenerationType;
+import javax.persistence.EntityManager;
 
 import jef.accelerator.asm.ClassReader;
 import jef.common.log.LogUtil;
+import jef.common.wrapper.Holder;
+import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.annotation.EasyEntity;
 import jef.database.dialect.ColumnType;
@@ -31,6 +33,9 @@ import jef.tools.ClassScanner;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONException;
+
 /**
  * 自动扫描工具，在构造时可以根据构造方法，自动的将继承DataObject的类检查出来，并载入
  * 
@@ -47,16 +52,41 @@ public class QuerableEntityScanner {
 	 * 是否扫描子包
 	 */
 	private boolean scanSubPackage = true;
+
 	/**
-	 * 是否允许删除列
+	 * 是否创建不存在的表
+	 */
+	private boolean createTable = true;
+
+	/**
+	 * 是否修改存在的表
+	 */
+	private boolean alterTable = true;
+
+	/**
+	 * 当alterTable=true时，如果修改表时需要删除列，是否允许删除列
 	 */
 	private boolean allowDropColumn;
 
-	private boolean createTable = true;
+	/**
+	 * 是否检查序列
+	 */
+	private boolean checkSequence = true;
 
-	private boolean alterTable = true;
-	
-	private boolean checkSequence=true;
+	/**
+	 * 是否检查索引
+	 */
+	private boolean checkIndex = true;
+
+	/**
+	 * 当创建新表后，是否同时初始化表中的数据
+	 */
+	private boolean initDataAfterCreate = true;
+	/**
+	 * 当扫描到已经存在的表后，是否检查初始化数据。
+	 * 一般在开发阶段开启
+	 */
+	private boolean initDataIfTableExists=false;
 
 	/**
 	 * 扫描包
@@ -184,19 +214,23 @@ public class QuerableEntityScanner {
 			final boolean create = createTable && (ee == null || ee.create());
 			final boolean refresh = alterTable && (ee == null || ee.refresh());
 			if (entityManagerFactory != null && (create || refresh)) {
-				doTableDDL(meta,create,refresh);
+				doTableDDL(meta, create, refresh);
 			}
 		} catch (Throwable e) {
 			LogUtil.error("EntityScanner:[Failure]" + StringUtils.exceptionStack(e));
 		}
 	}
 
-	private void doTableDDL(ITableMetadata meta,final boolean create, final boolean refresh) throws SQLException {
+	private void doTableDDL(ITableMetadata meta, final boolean create, final boolean refresh) throws SQLException {
+		final Holder<Boolean> isTableExist=new Holder<Boolean>(true);
+		final Holder<Boolean> isNewTable=new Holder<Boolean>(false);
 		entityManagerFactory.getDefault().refreshTable(meta, new MetadataEventListener() {
 			public void onTableFinished(ITableMetadata meta, String tablename) {
 			}
 
 			public boolean onTableCreate(ITableMetadata meta, String tablename) {
+				isNewTable.set(create);
+				isTableExist.set(create);
 				return create;
 			}
 
@@ -226,20 +260,84 @@ public class QuerableEntityScanner {
 			public void beforeAlterTable(String tablename, ITableMetadata meta, StatementExecutor conn, List<String> sql) {
 			}
 		});
-		if(checkSequence){
-			for(ColumnMapping f:meta.getColumns()){
-				if(f instanceof AutoIncrementMapping){
-					AutoIncrementMapping m=(AutoIncrementMapping)f;
-					GenerationResolution gt=((AutoIncrementMapping) f).getGenerationType(entityManagerFactory.getDefault().getProfile(meta.getBindDsName()));
-					if(gt==GenerationResolution.SEQUENCE || gt==GenerationResolution.TABLE){
-						entityManagerFactory.getDefault().getSequenceManager().getSequence(m, meta.getBindDsName());					
+		if(!isTableExist.get()){
+			return;
+		}
+		//检查Sequence
+		if (checkSequence) {
+			for (ColumnMapping f : meta.getColumns()) {
+				if (f instanceof AutoIncrementMapping) {
+					AutoIncrementMapping m = (AutoIncrementMapping) f;
+					GenerationResolution gt = ((AutoIncrementMapping) f).getGenerationType(entityManagerFactory.getDefault().getProfile(meta.getBindDsName()));
+					if (gt == GenerationResolution.SEQUENCE || gt == GenerationResolution.TABLE) {
+						entityManagerFactory.getDefault().getSequenceManager().getSequence(m, meta.getBindDsName());
 					}
-					
+
 				}
 			}
 		}
+		
+		 //初始化表中的数据
+		if(isNewTable.get() && initDataAfterCreate){
+			URL url=meta.getThisType().getResource(meta.getThisType().getSimpleName()+".init.json");
+			if(url!=null){
+				try {
+					initData(url,meta);
+				} catch (IOException e1) {
+					LogUtil.exception(e1);
+				}
+			}
+		}else if(!isNewTable.get() && initDataIfTableExists){
+			URL url=meta.getThisType().getResource(meta.getThisType().getSimpleName()+".init.json");
+			if(url!=null){
+				try {
+					mergeData(url,meta);
+				} catch (IOException e1) {
+					LogUtil.exception(e1);
+				}
+			}
+		}
+		//检查并添加索引
+		if(checkIndex){
+			//TODO
+		}
 	}
 
+	/*
+	 * 数据初始化 
+	 * @param url
+	 * @param meta
+	 */
+	private void initData(URL url, ITableMetadata meta) throws IOException {
+		LogUtil.info("init data for table {}",meta.getTableName(true));
+		String data=IOUtils.asString(url, "UTF-8");
+		List<?> results;
+		try{
+			results=JSON.parseArray(data, meta.getThisType());	
+		}catch(JSONException e){
+			throw new IllegalArgumentException(url.toString()+" is a invalid json file",e);
+		}
+		try {
+			entityManagerFactory.getDefault().batchInsert(results);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
+	private void mergeData(URL url, ITableMetadata meta) throws IOException {
+		LogUtil.info("merge data for table {}",meta.getTableName(true));
+		String data=IOUtils.asString(url, "UTF-8");
+		List<?> results=JSON.parseArray(data, meta.getThisType());
+		EntityManager em=entityManagerFactory.createEntityManager();
+		try {
+			for(Object o:results){
+				em.merge(o);
+			}
+		}finally{
+			em.close();
+		}
+	}
+	
 	private String[] getClassNames() {
 		List<String> clzs = new ArrayList<String>();
 		for (int i = 0; i < implClasses.length; i++) {
@@ -286,5 +384,29 @@ public class QuerableEntityScanner {
 
 	public void setCheckSequence(boolean checkSequence) {
 		this.checkSequence = checkSequence;
+	}
+
+	public void setInitDataAfterCreate(boolean initDataAfterCreate) {
+		this.initDataAfterCreate = initDataAfterCreate;
+	}
+
+	public boolean isInitDataAfterCreate() {
+		return initDataAfterCreate;
+	}
+
+	public boolean isCheckIndex() {
+		return checkIndex;
+	}
+
+	public boolean isInitDataIfTableExists() {
+		return initDataIfTableExists;
+	}
+
+	public void setInitDataIfTableExists(boolean initDataIfTableExists) {
+		this.initDataIfTableExists = initDataIfTableExists;
+	}
+
+	public void setCheckIndex(boolean checkIndex) {
+		this.checkIndex = checkIndex;
 	}
 }

@@ -430,7 +430,7 @@ public class JefEntityManager implements EntityManager {
 			try {
 				tx.get().releaseSavepoint(savepoint);
 			} catch (SQLException e) {
-				throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+				throw DbUtils.toRuntimeException(e);
 			}
 		}
 	}
@@ -439,7 +439,7 @@ public class JefEntityManager implements EntityManager {
 		try {
 			return getSession().merge(entity);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 

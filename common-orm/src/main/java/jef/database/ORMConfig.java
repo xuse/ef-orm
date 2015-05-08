@@ -211,7 +211,7 @@ public class ORMConfig implements ORMConfigMBean {
 		enableLazyLoad = JefConfiguration.getBoolean(DbCfg.DB_ENABLE_LAZY_LOAD, true);
 		cacheLevel1 = JefConfiguration.getBoolean(DbCfg.CACHE_LEVEL_1, false);
 		cacheDebug = System.getProperty("cache.debug") != null;
-		setFormatSQL(JefConfiguration.getBoolean(DbCfg.DB_FORMAT_SQL, true));
+		setFormatSQL(JefConfiguration.getBoolean(DbCfg.DB_FORMAT_SQL, false));
 		heartBeatSleep = JefConfiguration.getLong(DbCfg.DB_HEARTBEAT, 120000);
 		setTxIsolation = JefConfiguration.getBoolean(DbCfg.DB_SET_ISOLATION, true);
 		checkUpdateForNamedQueries = JefConfiguration.getBoolean(DbCfg.DB_NAMED_QUERY_UPDATE, debugMode);
