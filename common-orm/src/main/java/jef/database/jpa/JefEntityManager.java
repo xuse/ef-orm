@@ -89,6 +89,18 @@ public class JefEntityManager implements EntityManager {
 	@SuppressWarnings("unchecked")
 	public <T> T merge(T entity) {
 		if(entity instanceof IQueryableEntity){
+			return (T)doMerge((IQueryableEntity)entity, false);
+		}else{
+			ITableMetadata meta=MetaHolder.getMeta(entity.getClass());
+			PojoWrapper wrapper=meta.transfer(entity,false);
+			wrapper=doMerge(wrapper, false);
+			return (T)wrapper.get();
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public <T> T mergeCascade(T entity) {
+		if(entity instanceof IQueryableEntity){
 			return (T)doMerge((IQueryableEntity)entity, true);
 		}else{
 			ITableMetadata meta=MetaHolder.getMeta(entity.getClass());
@@ -437,7 +449,11 @@ public class JefEntityManager implements EntityManager {
 
 	private <T extends IQueryableEntity> T doMerge(T entity, boolean flag) {
 		try {
-			return getSession().merge(entity);
+			if(flag){
+				return getSession().mergeCascade(entity);
+			}else{
+				return getSession().merge(entity);
+			}
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}

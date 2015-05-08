@@ -2,6 +2,7 @@ package jef.orm.multitable;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +38,8 @@ import jef.tools.string.RandomData;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import com.alibaba.fastjson.JSON;
 
 /**
  * 级联操作相关测试
@@ -231,6 +234,7 @@ public class CascadeTableTest extends MultiTableTestBase {
 		assertEquals(1, p1.getId().intValue());
 		assertEquals(2, p2.getId().intValue());
 		assertEquals(3, p3.getId().intValue());
+//		System.out.println(JSON.toJSONString(Arrays.asList(p1,p2,p3)));
 	}
 
 

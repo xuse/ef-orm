@@ -13,17 +13,6 @@ import java.util.Map.Entry;
 
 import javax.persistence.FetchType;
 
-import jef.database.Condition;
-import jef.database.DataObject;
-import jef.database.DbUtils;
-import jef.database.IQueryableEntity;
-import jef.database.LazyLoadContext;
-import jef.database.LazyLoadProcessor;
-import jef.database.LazyLoadTask;
-import jef.database.ORMConfig;
-import jef.database.ReverseReferenceProcessor;
-import jef.database.Session;
-import jef.database.CascadeLoaderTask;
 import jef.database.annotation.Cascade;
 import jef.database.meta.AbstractRefField;
 import jef.database.meta.ISelectProvider;
@@ -130,6 +119,7 @@ final class CascadeUtil {
 
 				Reference ref = f.getReference();
 				Object value = f.getField().get(obj);
+				if(value==null)continue;
 				// 其他几种情况，维护子表
 				switch (ref.getType()) {
 				case ONE_TO_ONE:

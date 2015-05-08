@@ -1,0 +1,49 @@
+#cascade:true
+[
+	{
+		"age": 22,
+		"birthDay": 1431080565704,
+		"cell": "135gg876",
+		"gender": "M",
+		"homeTown": "BEIJING",
+		"id": 1,
+		"lastModified": 1431080565704,
+		"name": "爸爸05872524",
+		"parentId": 0,
+		"phone": "(083-2233)88778800",
+		"schoolId": 2,
+		friends:[
+			{friendId:1}
+		]
+	}, {
+		"age": 22,
+		"birthDay": 1431080565751,
+		"cell": "13506877",
+		"gender": "M",
+		"homeTown": "BEIJING",
+		"id": 2,
+		"lastModified": 1431080565751,
+		"name": "JinWang92385862",
+		"parentId": 0,
+		"phone": "(083-87ss0",
+		"schoolId": 3,
+		friends:[
+			{friendId:2}
+		]
+	}, {
+		"age": 22,
+		"birthDay": 1431080565751,
+		"cell": "1350ff876",
+		"gender": "M",
+		"homeTown": "BEIJING",
+		"id": 3,
+		"lastModified": 1431080565751,
+		"name": "儿子03262809",
+		"parentId": 1,
+		"phone": "(083-28800)",
+		"schoolId": 2,
+		friends:[
+			{friendId:3}
+		]
+	}
+]
