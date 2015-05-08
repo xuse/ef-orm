@@ -615,7 +615,10 @@ public class CascadeTableTest extends MultiTableTestBase {
 	public void testDeleteCascade() throws SQLException{
 		Transaction db=this.db.startTransaction();
 		Person p=new Person();
-		p.setId(3);
+		p.setAge(20);
+		db.select(p);
+		
+		
 		System.out.println(p.getScores());
 		db.deleteCascade(p);
 		db.rollback(true);
