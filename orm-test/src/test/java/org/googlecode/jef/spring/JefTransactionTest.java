@@ -56,21 +56,21 @@ public class JefTransactionTest extends SpringTestBase {
 		
 		DataSourceInfoImpl info=new DataSourceInfoImpl();
 		info.setDbKey("dataSource");
-		info.setUrl("jdbc:mysql://localhost:3307/test");
+		info.setUrl("jdbc:mysql://localhost:3306/test");
 		info.setUser("root");
 		info.setPassword("admin");
 		db.insert(info);
 		
 		info=new DataSourceInfoImpl();
 		info.setDbKey("dataSource2");
-		info.setUrl("jdbc:mysql://localhost:3307/test2");
+		info.setUrl("jdbc:mysql://localhost:3306/test2");
 		info.setUser("root");
 		info.setPassword("admin");
 		db.insert(info);
 		
 		info=new DataSourceInfoImpl();
 		info.setDbKey("dataSource3");
-		info.setUrl("jdbc:mysql://localhost:3307/test3");
+		info.setUrl("jdbc:mysql://localhost:3306/test3");
 		info.setUser("root");
 		info.setPassword("admin");
 		db.insert(info);

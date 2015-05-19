@@ -323,13 +323,14 @@ public class DbMetaData {
 	 *         <li>{@link CommentEntry#getValue()} 返回sequence备注</li>
 	 *         </ul>
 	 */
-	public List<CommentEntry> getSequence(String name) throws SQLException {
-		List<CommentEntry> result = new ArrayList<CommentEntry>();
-
+	public List<SequenceInfo> getSequence(String name) throws SQLException {
+		List<SequenceInfo> result=info.profile.getSequenceInfo(this, this.schema, name);
+		if(result!=null) {
+			return result;
+		}
 		for (TableInfo table : getDatabaseObject(ObjectType.SEQUENCE, this.schema, getProfile().getObjectNameToUse(name), null, false)) {
-			CommentEntry e = new CommentEntry();
-			e.setKey(table.getName());
-			e.setValue(table.getRemarks());
+			SequenceInfo e = new SequenceInfo();
+			e.setName(table.getName());
 		}
 		return result;
 	}
