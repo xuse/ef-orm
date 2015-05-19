@@ -36,7 +36,7 @@
 	<!-- JTA数据源配置一，使用 com.atomikos.jdbc.nonxa.AtomikosNonXADataSourceBean 直接配置原始的DriverClass-->
 	<bean id="ds1" class="com.atomikos.jdbc.nonxa.AtomikosNonXADataSourceBean"
 	p:uniqueResourceName="mysql/ds1" 
-	p:url="jdbc:mysql://localhost:3307/test" 
+	p:url="jdbc:mysql://localhost:3306/test" 
 	p:user="root"
 	p:password="admin"
 	p:driverClassName="org.gjt.mm.mysql.Driver">
@@ -46,7 +46,7 @@
 
 	<bean id="ds2" class="com.atomikos.jdbc.nonxa.AtomikosNonXADataSourceBean"
 	p:uniqueResourceName="mysql/ds2"
-	p:url="jdbc:mysql://localhost:3307/test" 
+	p:url="jdbc:mysql://localhost:3306/test" 
 	p:user="root" 
 	p:password="admin"
 	p:driverClassName="org.gjt.mm.mysql.Driver">

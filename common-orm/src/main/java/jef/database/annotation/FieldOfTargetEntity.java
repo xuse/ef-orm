@@ -28,7 +28,7 @@ import java.lang.annotation.Target;
  * 
  * 字段引用都只用于查询操作，不能用于插入和更新操作
  * <p>为什么要有这个功能？</p>
- * 笔者在设计JEF时，考虑到性能问题，很多时候不需要查询目标整个实体，只需要个别字段即可。
+ * 笔者在设计GeeQuery时，考虑到性能问题，很多时候不需要查询目标整个实体，只需要个别字段即可。
  * 
  * 
  * 
@@ -37,5 +37,10 @@ import java.lang.annotation.Target;
 @Target(FIELD)
 @Retention(RUNTIME)
 public @interface FieldOfTargetEntity {
+	
+	/**
+	 * @see FieldOfTargetEntity
+	 * @return field name
+	 */
 	String value();
 }

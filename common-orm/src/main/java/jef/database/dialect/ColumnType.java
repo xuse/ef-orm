@@ -60,6 +60,7 @@ import jef.database.dialect.type.NumDoubleStringMapping;
 import jef.database.dialect.type.NumFloatDoubleMapping;
 import jef.database.dialect.type.NumFloatMapping;
 import jef.database.dialect.type.NumIntBooleanMapping;
+import jef.database.dialect.type.NumIntEnumMapping;
 import jef.database.dialect.type.NumIntIntMapping;
 import jef.database.dialect.type.NumIntLongMapping;
 import jef.database.dialect.type.NumIntStringMapping;
@@ -73,6 +74,7 @@ import jef.database.dialect.type.VarcharIntMapping;
 import jef.database.dialect.type.VarcharStringMapping;
 import jef.database.dialect.type.VarcharTimestampMapping;
 import jef.database.dialect.type.XmlStringMapping;
+import jef.database.meta.AnnotationProvider.FieldAnnotationProvider;
 import jef.database.meta.Column;
 import jef.database.meta.ColumnChange;
 import jef.database.meta.ColumnChange.Change;
@@ -596,6 +598,8 @@ public abstract class ColumnType {
 					return new NumBigDateMapping();
 				} else if (fieldType == String.class) {
 					return new NumBigStringMapping();
+				} else if (fieldType.isEnum()) {
+					return new NumIntEnumMapping();
 				}
 			} else {
 				if (fieldType == Long.class || fieldType == Long.TYPE) {
@@ -608,6 +612,8 @@ public abstract class ColumnType {
 					return new NumBigDateMapping();
 				} else if (fieldType == java.lang.Boolean.class || fieldType == java.lang.Boolean.TYPE) {
 					return new NumIntBooleanMapping();
+				} else if (fieldType.isEnum()) {
+					return new NumIntEnumMapping();
 				}
 			}
 			throw new IllegalArgumentException("Int can not mapping to class " + fieldType.getName());
@@ -764,16 +770,25 @@ public abstract class ColumnType {
 			return type;
 		}
 
-		public AutoIncrement(int i) {
-			this(i, GenerationType.AUTO, null, null, null);
-		}
-
 		public HiloGeneration getHiloConfig() {
 			return hilo;
 		}
 
-		public AutoIncrement(int i, GenerationType type, TableGenerator tg, SequenceGenerator sg, HiloGeneration hilo) {
+		public AutoIncrement(int i) {
 			super(i);
+			init(GenerationType.AUTO, null, null, null);
+		}
+
+
+		public AutoIncrement(int i, GenerationType type, FieldAnnotationProvider fieldProvider) {
+			super(i);
+			TableGenerator tg = fieldProvider.getAnnotation(TableGenerator.class);
+			SequenceGenerator sg = fieldProvider.getAnnotation(SequenceGenerator.class);
+			HiloGeneration hilo = fieldProvider.getAnnotation(HiloGeneration.class);
+			init(type,tg,sg,hilo);
+		}
+
+		private void init(GenerationType type, TableGenerator tg, SequenceGenerator sg, HiloGeneration hilo) {
 			this.nullable = false;
 			if (ORMConfig.getInstance().isGenerateBySequenceAndIdentityToAUTO()) {
 				if (type == GenerationType.IDENTITY || type == GenerationType.SEQUENCE) {
@@ -809,14 +824,15 @@ public abstract class ColumnType {
 
 		/**
 		 * 返回自增实现方式
+		 * 
 		 * @param profile
 		 * @param allowIdentity
 		 * @return 以下三种之一
-		 * <ol>
-		 * <li>GenerationType.IDENTITY</li>
-		 * <li>GenerationType.SEQUENCE</li>
-		 * <li>GenerationType.TABLE</li>
-		 * </ol>
+		 *         <ol>
+		 *         <li>GenerationType.IDENTITY</li>
+		 *         <li>GenerationType.SEQUENCE</li>
+		 *         <li>GenerationType.TABLE</li>
+		 *         </ol>
 		 */
 		public GenerationType getGenerationType(DatabaseDialect profile, boolean allowIdentity) {
 			boolean supportSequence = profile.has(Feature.SUPPORT_SEQUENCE);
@@ -1038,7 +1054,6 @@ public abstract class ColumnType {
 			return Types.SQLXML;
 		}
 	}
-
 
 	static ColumnChange createChange(ColumnType oldType, String rawType, ColumnType newType, DatabaseDialect profile) {
 		ColumnChange change = new ColumnChange(Change.CHG_DATATYPE);

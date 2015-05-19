@@ -4,13 +4,18 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.persistence.PersistenceException;
 
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.DbCfg;
+import jef.database.DbMetaData;
 import jef.database.DbUtils;
+import jef.database.DebugUtil;
 import jef.database.ORMConfig;
 import jef.database.dialect.ColumnType.Char;
 import jef.database.dialect.type.AColumnMapping;
@@ -19,9 +24,11 @@ import jef.database.exception.JDBCExceptionHelper;
 import jef.database.exception.TemplatedViolatedConstraintNameExtracter;
 import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.jdbc.JDBCTarget;
+import jef.database.jdbc.result.IResultSet;
 import jef.database.meta.Column;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
+import jef.database.meta.SequenceInfo;
 import jef.database.query.Func;
 import jef.database.query.Scientific;
 import jef.database.query.function.CastFunction;
@@ -29,6 +36,7 @@ import jef.database.query.function.NoArgSQLFunction;
 import jef.database.query.function.StandardSQLFunction;
 import jef.database.query.function.TemplateFunction;
 import jef.database.support.RDBMS;
+import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtil;
@@ -383,4 +391,41 @@ public class HsqlDbMemDialect extends AbstractDialect {
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
 		return hsqldbVersion < 20 ? EXTRACTER_18 : EXTRACTER_20;
 	}
+
+	@Override
+	public List<SequenceInfo> getSequenceInfo(DbMetaData conn, String schema, String seqName) {
+		String sql="select SEQUENCE_CATALOG,SEQUENCE_SCHEMA,SEQUENCE_NAME,MINIMUM_VALUE,MAXIMUM_VALUE,INCREMENT,START_WITH,NEXT_VALUE from INFORMATION_SCHEMA.sequences where SEQUENCE_SCHEMA like ? and SEQUENCE_NAME like ?";
+		schema=StringUtils.isBlank(schema) ? "%" : schema.toUpperCase();
+		seqName=StringUtils.isBlank(seqName) ? "%" : seqName.toUpperCase();
+		
+		seqName=seqName.toUpperCase();
+		try {
+			return conn.selectBySql(sql, new AbstractResultSetTransformer<List<SequenceInfo>>() {
+				@Override
+				public List<SequenceInfo> transformer(IResultSet rs) throws SQLException {
+					List<SequenceInfo> result=new ArrayList<SequenceInfo>();
+					while(rs.next()) {
+						SequenceInfo seq=new SequenceInfo();
+						seq.setCatalog(rs.getString(1));
+						seq.setSchema(rs.getString(2));
+						seq.setName(rs.getString(3));
+						seq.setMinValue(rs.getLong(4));
+						seq.setMaxValue(rs.getLong(5));
+						seq.setStartValue(rs.getLong(6));
+						seq.setStep(rs.getInt(7));
+						seq.setCurrentValue(rs.getLong(8));
+						result.add(seq);
+					}
+					return result;
+				}
+				
+			}, 0, Arrays.asList(schema,seqName));
+		} catch (SQLException e) {
+			DebugUtil.setSqlState(e, sql);
+			LogUtil.exception(e);
+		}
+		return null;
+	}
+	
+	
 }

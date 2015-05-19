@@ -15,12 +15,16 @@ import java.lang.annotation.Target;
  * 
  * @see jef.tools.JefConfiguration.Item#DB_SINGLE_DATASOURCE
  * @see jef.tools.JefConfiguration.Item#DB_DATASOURCE_MAPPING
- * 
+
  * @author jiyi
  *
  */
 @Target(TYPE) 
 @Retention(RUNTIME)
 public @interface BindDataSource {
+	/**
+	 * @see BindDataSource
+	 * @return
+	 */
 	String value() default "";
 }

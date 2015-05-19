@@ -53,7 +53,7 @@ public interface IQueryableEntity extends Queryable, Serializable,Cloneable {
 	void stopUpdate();
 
 	/**
-	 * 判断该字段是否存在于updateValueMap中 
+	 * 判断该字段是否被赋值过
 	 */
 	boolean isUsed(Field field);
 	

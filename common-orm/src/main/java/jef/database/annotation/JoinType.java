@@ -27,6 +27,7 @@ package jef.database.annotation;
  * <li>{@link #FULL}</li>
  * </ul>
  * 
+ * <s>啥，还要笛卡尔积连接……</s>
  * @author Jiyi
  * @Date 2011-4-12
  */

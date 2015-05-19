@@ -30,12 +30,13 @@ final class CascadeLoaderTask implements LazyLoadTask {
 	private Query<?> query;
 	private JoinElement finalQuery;
 	private QueryOption option;
-	private JoinPath rs;
+	private JoinPath joinPath;
 	private Map<Reference, List<Condition>> filters;
 	private List<Condition> currentFilter;
 	private ITableMetadata targetTableMeta;
 	private List<AbstractRefField> refs;
 	private List<OrderField> orders;
+	private boolean isManyToMany;
 
 	/**
 	 * 
@@ -50,24 +51,32 @@ final class CascadeLoaderTask implements LazyLoadTask {
 
 		Reference ref = entry.getKey(); // 引用关系
 		this.currentFilter=filters.get(ref);
-		query = QueryBuilder.create(ref.getTargetType());
-		rs = ref.toJoinPath();
-		if (rs == null) {
+		joinPath = ref.toJoinPath();
+		if (joinPath == null) {
 			LogUtil.error("No join key found: " + ref);
 		}
 		this.reverse = CascadeUtil.getReverseProcessor(ref);
+		
+		if(joinPath.getRelationTable()!=null) {
+			query = QueryBuilder.create(joinPath.getRelationTable());
+			isManyToMany=true;
+		}else {
+			query = QueryBuilder.create(ref.getTargetType());	
+		}
+		
+		
 		targetTableMeta = query.getMeta();
 
 		// 将预制的两个条件加入
-		if (rs.getDescription() != null) {
-			JoinDescription desc = rs.getDescription();
+		if (joinPath.getDescription() != null) {
+			JoinDescription desc = joinPath.getDescription();
 			if (desc.maxRows() > 0) {
 				query.setMaxResult(desc.maxRows());
 			}
 
 			orders = new ArrayList<OrderField>();
-			if (StringUtils.isNotEmpty(rs.getOrderBy())) {
-				OrderBy order = DbUtils.parseOrderBy(rs.getOrderBy());
+			if (StringUtils.isNotEmpty(joinPath.getOrderBy())) {
+				OrderBy order = DbUtils.parseOrderBy(joinPath.getOrderBy());
 				for (OrderByElement ele : order.getOrderByElements()) {
 					ColumnMapping field = targetTableMeta.findField(ele.getExpression().toString());
 					if (field != null) {
@@ -91,15 +100,22 @@ final class CascadeLoaderTask implements LazyLoadTask {
 			throw new SQLException("try to load field "+refs.get(0).getName()+" but the session was already closed!");
 		}
 		BeanWrapper bean = BeanWrapper.wrap(obj);
-		if (DbUtils.appendRefCondition(bean, rs, query, currentFilter) == false)
+		if (DbUtils.appendRefCondition(bean, joinPath, query, currentFilter) == false)
 			return;
 		if(orders!=null){
 			for(OrderField f:orders){
 				query.addOrderBy(f.isAsc(), f.getField());
 			}
 		}
-		@SuppressWarnings("unchecked")
-		List<? extends IQueryableEntity> subs = db.innerSelect(finalQuery, null, filters, option);		
+		List<IQueryableEntity> subs = db.innerSelect(finalQuery, null, filters, option);		
+		if(isManyToMany) {
+			List<? extends IQueryableEntity> old=subs;
+			subs=new ArrayList<IQueryableEntity>();
+			for(IQueryableEntity d: old) {
+				IQueryableEntity realObj=(IQueryableEntity) ((VarObject)d).get("_OBJ");
+				subs.add(realObj);
+			}
+		}
 		
 		for (ISelectProvider reff : refs) { // 根据配置装填到对象中去
 			AbstractRefField refield = (AbstractRefField) reff;

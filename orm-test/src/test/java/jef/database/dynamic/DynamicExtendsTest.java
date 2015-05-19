@@ -44,9 +44,9 @@ public class DynamicExtendsTest extends org.junit.Assert{
 		db.merge(new Status(0,"不可用"));
 		db.merge(new Status(1,"正常"));
 		db.merge(new Status(2,"警戒"));
-		db.merge(new Status(1,"异常"));
-		db.merge(new Status(1,"短路"));
-		db.merge(new Status(1,"网元故障"));
+		db.merge(new Status(3,"异常"));
+		db.merge(new Status(4,"短路"));
+		db.merge(new Status(5,"网元故障"));
 	}
 
 	/**

@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import jef.database.IQueryableEntity;
 import jef.database.annotation.DynamicTable;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.meta.AnnotationProvider.ClassAnnotationProvider;
 import jef.database.query.ConditionQuery;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.FieldAccessor;
@@ -20,7 +21,7 @@ public class ExtensionTemplate implements ExtensionConfigFactory {
 	private AbstractMetadata parent;
 	
 	List<java.lang.reflect.Field> unprocessedField;
-	AnnotationProvider annos;
+	ClassAnnotationProvider annos;
 	
 	
 	public ExtensionTemplate(DynamicTable dt, Class<?> clz, AbstractMetadata meta) {
@@ -95,7 +96,7 @@ public class ExtensionTemplate implements ExtensionConfigFactory {
 			// 针对未处理的字段，当做外部引用关系处理
 			for (java.lang.reflect.Field f : unprocessedField) {
 				// 将这个字段作为外部引用处理
-				MetaHolder.processReference(f, tuple, annos);
+				MetaHolder.processReference(tuple, annos.forField(f));
 				// 还有一种情况，即定义了Column注解，但不属于元模型的一个字段，用于辅助映射的。当结果拼装时有用
 //				processColumnHelper(f, tuple, annos);
 			}

@@ -868,6 +868,8 @@ public class IOUtils {
 		}
 		return total;
 	}
+	
+	
 
 	/**
 	 * 流之间拷贝
@@ -886,25 +888,53 @@ public class IOUtils {
 	public static long copy(InputStream in, OutputStream out, boolean inClose, boolean outClose) throws IOException {
 		return copy(in, out, inClose, outClose, new byte[DEFAULT_BUFFER_SIZE]);
 	}
+	
+	/**
+	 * 流之间拷贝
+	 * @param in 输入
+	 * @param out 输出
+	 * @param inClose 关闭输入流
+	 * @param outClose 关闭输出流
+	 * @return
+	 * @throws IOException
+	 */
+	public static long copy(Reader in, Writer out, boolean inClose, boolean outClose) throws IOException {
+		return copy(in, out, inClose, outClose, new char[DEFAULT_BUFFER_SIZE]);
+	}
+	
 
 	/**
 	 * 流之间拷贝
 	 * 
-	 * @param pInputStream
-	 * @param pOutputStream
-	 * @param pClose
+	 * @param in 输入
+	 * @param out 输出
+	 * @param pClose 
+	 *            关闭输出流? 
+	 * @return 拷贝长度
+	 * @throws IOException
+	 */
+	public static long copy(Reader in, Writer out, boolean pClose) throws IOException {
+		return copy(in, out, true, pClose, new char[DEFAULT_BUFFER_SIZE]);
+	}
+
+	/**
+	 * 流之间拷贝
+	 * 
+	 * @param in 输入
+	 * @param out 输出
+	 * @param closeOutStream
 	 *            关闭输出流? (输入流默认关闭)
 	 * @return
 	 * @throws IOException
 	 */
-	public static long copy(InputStream pInputStream, OutputStream pOutputStream, boolean pClose) throws IOException {
-		return copy(pInputStream, pOutputStream, true, pClose, new byte[DEFAULT_BUFFER_SIZE]);
+	public static long copy(InputStream in, OutputStream out, boolean closeOutStream) throws IOException {
+		return copy(in, out, true, closeOutStream, new byte[DEFAULT_BUFFER_SIZE]);
 	}
 
 	/**
 	 * 将Reader内容读取到内存中的charArray
 	 * 
-	 * @param reader
+	 * @param reader 输入
 	 * @return
 	 * @throws IOException
 	 */

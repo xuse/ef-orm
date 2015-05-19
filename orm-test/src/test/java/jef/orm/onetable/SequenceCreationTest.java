@@ -2,12 +2,17 @@ package jef.orm.onetable;
 
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.List;
 
 import jef.common.log.LogUtil;
+import jef.database.Condition.Operator;
 import jef.database.DbClient;
+import jef.database.DbMetaData;
 import jef.database.IQueryableEntity;
+import jef.database.jdbc.result.ResultSets;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
+import jef.database.meta.TableInfo;
 import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
 import jef.database.test.DatabaseInit;
@@ -29,8 +34,8 @@ import org.junit.runner.RunWith;
  */
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({
- @DataSource(name="oracle",url="${oracle.url}",user="${oracle.user}",password="${oracle.password}"),
- @DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), 
+// @DataSource(name="oracle",url="${oracle.url}",user="${oracle.user}",password="${oracle.password}"),
+// @DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), 
  @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = "")
 })
 public class SequenceCreationTest extends org.junit.Assert{
@@ -119,4 +124,5 @@ public class SequenceCreationTest extends org.junit.Assert{
 		ITableMetadata meta = MetaHolder.getMeta(table);
 		return meta.getFirstAutoincrementDef().getSequenceName(db.getProfile());
 	}
+	
 }

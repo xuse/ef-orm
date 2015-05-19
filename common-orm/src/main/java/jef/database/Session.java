@@ -1142,7 +1142,7 @@ public abstract class Session {
 	 * 
 	 * @param obj
 	 *            查询条件
-	 * @return 使用传入的对象进行查询，结果返回记录的第一条。
+	 * @return 使用传入的对象进行查询，结果返回记录的第一条。如未查到返回null
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */

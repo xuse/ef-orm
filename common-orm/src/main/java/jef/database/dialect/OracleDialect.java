@@ -18,9 +18,11 @@ package jef.database.dialect;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Properties;
 
 import javax.sql.DataSource;
@@ -29,9 +31,9 @@ import javax.sql.rowset.CachedRowSet;
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.DbCfg;
+import jef.database.DbMetaData;
 import jef.database.DebugUtil;
 import jef.database.ORMConfig;
-import jef.database.OperateTarget;
 import jef.database.datasource.DataSourceInfo;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.ColumnType.AutoIncrement;
@@ -40,6 +42,7 @@ import jef.database.dialect.type.AColumnMapping;
 import jef.database.exception.JDBCExceptionHelper;
 import jef.database.exception.TemplatedViolatedConstraintNameExtracter;
 import jef.database.exception.ViolatedConstraintNameExtracter;
+import jef.database.jdbc.result.IResultSet;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
@@ -50,6 +53,7 @@ import jef.database.jsqlparser.expression.operators.arithmetic.Multiplication;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
+import jef.database.meta.SequenceInfo;
 import jef.database.query.Func;
 import jef.database.query.Scientific;
 import jef.database.query.function.EmuCoalesce_Nvl;
@@ -68,7 +72,7 @@ import jef.database.query.function.TransformFunction;
 import jef.database.query.function.VarArgsSQLFunction;
 import jef.database.support.RDBMS;
 import jef.database.wrapper.clause.InsertSqlClause;
-import jef.database.wrapper.populator.ResultSetExtractor;
+import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.jre5support.ProcessUtil;
 import jef.tools.DateFormats;
 import jef.tools.DateUtils;
@@ -303,15 +307,15 @@ public class OracleDialect extends AbstractDialect {
 
 	@Override
 	public String getObjectNameToUse(String name) {
-		if(name==null)return null;
-		if(name.charAt(1)=='"')return name;
+		if(name==null || name.length()==0)return null;
+		if(name.charAt(0)=='"')return name;
 		return name.toUpperCase();
 	}
 
 	@Override
 	public String getColumnNameToUse(String name) {
-		if(name==null)return null;
-		if(name.charAt(1)=='"')return name;
+		if(name==null|| name.length()==0)return null;
+		if(name.charAt(0)=='"')return name;
 		return name.toUpperCase();
 	}
 	@Override
@@ -340,28 +344,39 @@ public class OracleDialect extends AbstractDialect {
 	}
 
 	@Override
-	public int calcSequenceStep(OperateTarget conn, String schema, String seqName, int defaultValue) {
-		if (defaultValue > 0)
-			return defaultValue;
-		if (StringUtils.isBlank(seqName)) {
-			LogUtil.warn("Return defaultValue because sequence name is blank on calculating SequenceStep.");
-			return defaultValue;
-		}
-		
-		String sql = "select increment_by from all_sequences where sequence_owner like ? and sequence_name = ?";
-		
+	public List<SequenceInfo> getSequenceInfo(DbMetaData conn, String schema, String seqName) {
+		String sql = "select sequence_owner,sequence_name,min_value,max_value,increment_by,cache_size,last_number from all_sequences where sequence_owner like ? and sequence_name like ?";
 		schema=StringUtils.isBlank(schema) ? "%" : schema.toUpperCase();
-		seqName=seqName.toUpperCase();
+		seqName=StringUtils.isBlank(seqName) ? "%" : seqName.toUpperCase();
 		try {
-			int value=conn.getMetaData().selectBySql(sql, ResultSetExtractor.GET_FIRST_INT, 1, Arrays.asList(schema,seqName));
-			LogUtil.info("Tring to access ALL_SEQUENCE to get the increament of sequence [" + seqName+"], the step="+value);
-			return value;
+			return conn.selectBySql(sql, new AbstractResultSetTransformer<List<SequenceInfo>>() {
+				@Override
+				public List<SequenceInfo> transformer(IResultSet rs) throws SQLException {
+					List<SequenceInfo>  result=new ArrayList<SequenceInfo>();
+					if(rs.next()) {
+						SequenceInfo seq=new SequenceInfo();
+						seq.setCatalog(null);
+						seq.setSchema(rs.getString(1));
+						seq.setName(rs.getString(2));
+						seq.setMinValue(rs.getLong(3));
+						seq.setMaxValue(rs.getLong(4));
+						seq.setStep(rs.getInt(5));
+						seq.setCacheSize(rs.getInt(6));
+						seq.setCurrentValue(rs.getLong(7));
+						result.add(seq);
+					}
+					return result;
+					
+				}
+				
+			}, 0, Arrays.asList(schema,seqName));
 		} catch (SQLException e) {
 			DebugUtil.setSqlState(e, sql);
 			LogUtil.exception(e);
 		}
-		return defaultValue;
+		return null;
 	}
+
 
 	@Override
 	public boolean isIOError(SQLException se) {

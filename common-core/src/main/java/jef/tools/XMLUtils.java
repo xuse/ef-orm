@@ -37,6 +37,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 
 import javax.management.ReflectionException;
@@ -1839,6 +1840,16 @@ public class XMLUtils {
 				appendBean(collection, obj, null, asAttrib, null);
 			}
 			return collection;
+		} else if (Map.class.isAssignableFrom(type)) {
+			Element map = addElement(parent, tagName);
+			for(Entry<?,?> e: ((Map<?,?>)bean).entrySet()){
+				Element entry=XMLUtils.addElement(map, "entry");
+				Element key=XMLUtils.addElement(entry, "key");
+				appendBean(key,e.getKey(),null,asAttrib,null);
+				Element value=XMLUtils.addElement(entry, "value");
+				appendBean(value,e.getValue(),null,asAttrib,null);
+			}
+			return map;
 		} else if (CharSequence.class.isAssignableFrom(type)) {
 			if (Boolean.TRUE.equals(asAttrib)) {
 				((Element) parent).setAttribute(tagName, StringUtils.toString(bean));

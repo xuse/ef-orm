@@ -25,6 +25,10 @@ public class MyFoo extends DataObject {
 	@Type(JSONVarcharMapping.class)
 	private List<String> data;
 
+	/**
+	 * 默认PG没有用开启hstore。需要人工执行
+	 * CREATE EXTENSION hstore; 
+	 */
 	@Column(name = "hstore_c", columnDefinition = "hstore")
 	@Type(HstoreMapMapping.class)
 	private Map<String, String> hstoreField;

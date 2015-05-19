@@ -227,18 +227,18 @@ public class PostgreSqlDialect extends AbstractDialect {
 	 */
 	@Override
 	public String getObjectNameToUse(String name) {
-		if (name == null)
+		if (name == null || name.length()==0)
 			return null;
-		if (name.charAt(1) == '"')
+		if (name.charAt(0) == '"')
 			return name;
 		return name.toLowerCase();
 	}
 
 	@Override
 	public String getColumnNameToUse(String name) {
-		if (name == null)
+		if (name == null || name.length()==0)
 			return null;
-		if (name.charAt(1) == '"')
+		if (name.charAt(0) == '"')
 			return name;
 		return name.toLowerCase();
 	}

@@ -57,6 +57,7 @@ import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.meta.FunctionMapping;
+import jef.database.meta.SequenceInfo;
 import jef.database.query.Func;
 import jef.database.query.Scientific;
 import jef.database.query.SqlExpression;
@@ -621,8 +622,10 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	public String getColumnNameToUse(AColumnMapping name) {
 		return name.rawColumnName;
 	}
-	public int calcSequenceStep(OperateTarget conn, String schema, String seqName, int defaultValue) {
-		return defaultValue;
+
+	@Override
+	public List<SequenceInfo> getSequenceInfo(DbMetaData conn, String schema, String seqName) {
+		return null;
 	}
 
 	public java.sql.Timestamp toTimestampSqlParam(Date timestamp) {

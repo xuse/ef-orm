@@ -19,12 +19,14 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import javax.sql.rowset.CachedRowSet;
 
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
+import jef.database.DbMetaData;
 import jef.database.OperateTarget;
 import jef.database.datasource.DataSourceInfo;
 import jef.database.dialect.type.AColumnMapping;
@@ -38,6 +40,7 @@ import jef.database.jsqlparser.expression.Interval;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.meta.FunctionMapping;
+import jef.database.meta.SequenceInfo;
 import jef.database.support.RDBMS;
 import jef.database.wrapper.clause.InsertSqlClause;
 
@@ -186,13 +189,20 @@ public interface DatabaseDialect {
 	 */
 	String getColumnNameToUse(String name);
 	
+	/**
+	 * 获得大小写正确的列名
+	 * @param name
+	 * @return
+	 */
 	String getColumnNameToUse(AColumnMapping name);
 
 	/**
-	 * 计算Sequence的步长, 在某些数据库上，可以从系统表中获得Sequence的步长。<br>
-	 * 如果不支持计算步长，返回defaultValue。
+	 * 根据数据库特性，从数据库系统表中返回序列信息，如果不支持则返回null。如果不存在返回空列表
+	 * @param conn
+	 * @param schema 允许为null。可以使用%
+	 * @param seqName 允许为null。可以使用%
 	 */
-	int calcSequenceStep(OperateTarget conn, String schema, String seqName, int defaultValue);
+	List<SequenceInfo> getSequenceInfo(DbMetaData conn, String schema, String seqName);
 
 	/**
 	 * 当使用Timestamp类型的绑定变量操作时，转换为什么值

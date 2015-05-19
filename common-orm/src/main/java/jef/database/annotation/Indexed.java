@@ -22,7 +22,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * 加在一个映射到数据库的field上，描述该字段上存在单键索引. JEF Db Enhanced
+ * 加在一个映射到数据库的field上，描述该字段上存在单键索引. 
  */
 @Target(FIELD)
 @Retention(RUNTIME)

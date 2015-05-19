@@ -13,6 +13,7 @@ import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.meta.AnnotationProvider.ClassAnnotationProvider;
 
 import com.google.common.collect.Multimap;
 
@@ -143,7 +144,7 @@ public class TemplateMetadata extends AbstractMetadata {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
 
-	public void setUnprocessedFields(List<java.lang.reflect.Field> unprocessedField, AnnotationProvider annos) {
+	public void setUnprocessedFields(List<java.lang.reflect.Field> unprocessedField, ClassAnnotationProvider annos) {
 		this.template.unprocessedField = unprocessedField;
 		this.template.annos = annos;
 	}

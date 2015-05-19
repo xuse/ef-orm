@@ -124,7 +124,7 @@ public class DynamicTableTest extends org.junit.Assert {
 		obj.put("name", "MyName is Jiyi");
 		obj.put("pname", "assa");
 		obj.put("flag", false);
-		obj.put("photo", new File("c:/config.sys"));//将本地文件存入BLOB
+		obj.put("photo", new File("c:/bootmgr"));//将本地文件存入BLOB
 		db.insert(obj);
 		return (Integer) obj.get("id");
 	}

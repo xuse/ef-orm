@@ -1,5 +1,7 @@
 package jef.database.meta;
 
+import jef.database.meta.AnnotationProvider.ClassAnnotationProvider;
+
 /**
  * 接口。定义元模型的加载方式.
  * @author jiyi
@@ -13,5 +15,5 @@ public interface MetadataConfiguration {
 	 * @return
 	 */
 	@SuppressWarnings("rawtypes")
-	AnnotationProvider getAnnotations(Class clz);
+	ClassAnnotationProvider getAnnotations(Class clz);
 }

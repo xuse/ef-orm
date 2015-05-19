@@ -13,17 +13,6 @@ import java.util.Map.Entry;
 
 import javax.persistence.FetchType;
 
-import jef.database.Condition;
-import jef.database.DataObject;
-import jef.database.DbUtils;
-import jef.database.IQueryableEntity;
-import jef.database.LazyLoadContext;
-import jef.database.LazyLoadProcessor;
-import jef.database.LazyLoadTask;
-import jef.database.ORMConfig;
-import jef.database.ReverseReferenceProcessor;
-import jef.database.Session;
-import jef.database.CascadeLoaderTask;
 import jef.database.annotation.Cascade;
 import jef.database.meta.AbstractRefField;
 import jef.database.meta.ISelectProvider;
@@ -32,6 +21,7 @@ import jef.database.meta.JoinKey;
 import jef.database.meta.JoinPath;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.Reference;
+import jef.database.meta.TupleMetadata;
 import jef.database.query.ReferenceType;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
@@ -54,6 +44,8 @@ final class CascadeUtil {
 			}
 			Reference ref = f.getReference();
 			if (ref.getType() == ReferenceType.ONE_TO_MANY || ref.getType() == ReferenceType.ONE_TO_ONE) {
+				delrefs.add(ref);
+			}else if(ref.getHint()!=null && ref.getHint().getRelationTable()!=null) {
 				delrefs.add(ref);
 			}
 		}
@@ -83,10 +75,11 @@ final class CascadeUtil {
 		int count = 0;
 		for (IQueryableEntity obj : objs) {
 			for (Reference ref : refs) {
-				if (ref.getType() == ReferenceType.ONE_TO_MANY || ref.getType() == ReferenceType.ONE_TO_ONE) {
+				//前面已经检查过，无需再次检查
+//				if (ref.getType() == ReferenceType.ONE_TO_MANY || ref.getType() == ReferenceType.ONE_TO_ONE) {
 					BeanWrapper bean = BeanWrapper.wrap(obj);
 					count += doDeleteRef(trans, bean, ref);
-				}
+//				}
 			}
 		}
 		return count;
@@ -130,6 +123,7 @@ final class CascadeUtil {
 
 				Reference ref = f.getReference();
 				Object value = f.getField().get(obj);
+				if(value==null)continue;
 				// 其他几种情况，维护子表
 				switch (ref.getType()) {
 				case ONE_TO_ONE:
@@ -139,7 +133,8 @@ final class CascadeUtil {
 					doInsertRefN(trans, value, bean, f);
 					break;
 				case MANY_TO_MANY:
-					doInsertRefN(trans, value, bean, f);
+					doInsertRefNN(trans, value, bean, f);
+				default:
 				}
 			}
 		}
@@ -177,10 +172,12 @@ final class CascadeUtil {
 				doUpdateRefN(trans, value, bean, f, true);
 				break;
 			case MANY_TO_MANY:
-				doUpdateRefN(trans, value, bean, f, false);
+				doUpdateRefNN(trans, value, bean, f);
 				break;
 			case ONE_TO_ONE:
 				doUpdateRef1(trans, value, bean, ref, true);
+			default:
+				break;
 			}
 		}
 		return result;
@@ -228,16 +225,16 @@ final class CascadeUtil {
 	/**
 	 * 对多关系，无论是一对多还是多对多，目前都是先插入父表，再插入子表的……因此其实都是反向模式
 	 * 
-	 * @param trans
-	 * @param value
-	 * @param bean
-	 * @param ref
-	 * @param reverse
+	 * @param trans 事务
+	 * @param value 级联对象
+	 * @param bean 父对象反射包装
+	 * @param f 引用关系
 	 * @throws SQLException
 	 */
 	private static void doInsertRefN(Session trans, Object value, BeanWrapper bean, AbstractRefField f) throws SQLException {
-		Map<String, Object> map = new HashMap<String, Object>();
 		Reference ref = f.getReference();
+		
+		Map<String, Object> map = new HashMap<String, Object>();
 		for (JoinKey jk : ref.toJoinPath().getJoinKeys()) {
 			if (bean.isReadableProperty(jk.getLeft().name())) {
 				Object refValue = bean.getPropertyValue(jk.getLeft().name());
@@ -259,8 +256,63 @@ final class CascadeUtil {
 		checkAndInsert(trans, list, true);
 	}
 
+	/**
+	 * 对多关系，无论是一对多还是多对多，目前都是先插入父表，再插入子表的……因此其实都是反向模式
+	 * 
+	 * @param trans 事务
+	 * @param value 级联对象
+	 * @param bean 父对象反射包装
+	 * @param f 引用关系
+	 * @throws SQLException
+	 */
+	private static void doInsertRefNN(Session trans, Object value, BeanWrapper bean, AbstractRefField f) throws SQLException {
+		Reference ref = f.getReference();
+		if(ref.getHint()!=null && ref.getHint().getRelationTable()==null) {
+			doInsertRefN(trans,value,bean,f);
+			return;
+		}
+		//对于用过中间表的多对多关系，其级联对象关联位于一张隐含的表中，和当前对象的单表字段没有关系。
+		//故修改数值一致性操作省略
+		Collection<? extends IQueryableEntity> list = castToList(value, f);
+		//目标表处理
+		checkAndInsert(trans,list,true);
+		//关系表处理
+		List<VarObject> relations=generateRelationData(ref,list,bean);
+				
+		checkAndInsert(trans,relations,false);
+	}
+	
+	/**
+	 * 产生关系表数据
+	 */
+	private static List<VarObject> generateRelationData(Reference ref,Collection<? extends IQueryableEntity> list,BeanWrapper bean ) {
+		List<VarObject> relations=new ArrayList<VarObject>();
+		JoinPath path=ref.getHint();
+		TupleMetadata meta=path.getRelationTable();
+		JoinPath path2=path.getRelationToTarget();
+		for(IQueryableEntity d:list) {
+			VarObject obj=meta.newInstance();
+			//主对象赋值
+			for(JoinKey jk:path.getJoinKeys()) {
+				obj.put(jk.getRightAsField().name(), bean.getPropertyValue(jk.getLeft().name()));
+			}
+			//级联对象赋值
+			BeanWrapper sub=BeanWrapper.wrap(d);
+			for(JoinKey jk:path2.getJoinKeys()) {
+				obj.put(jk.getLeft().name(), sub.getPropertyValue(jk.getRightAsField().name()));
+			}
+			relations.add(obj);
+		}
+		return relations;
+	}
+
 	private static int doDeleteRef(Session trans, BeanWrapper bean, Reference ref) throws SQLException {
-		IQueryableEntity rObj = ref.getTargetType().newInstance();
+		IQueryableEntity rObj;
+		if(ref.getHint()!=null && ref.getHint().getRelationTable()!=null) {
+			rObj=ref.getHint().getRelationTable().newInstance();
+		}else {
+			rObj = ref.getTargetType().newInstance();
+		}
 		for (JoinKey r : ref.toJoinPath().getJoinKeys()) {
 			rObj.getQuery().addCondition(r.getRightAsField(), bean.getPropertyValue(r.getLeft().name()));
 		}
@@ -360,15 +412,51 @@ final class CascadeUtil {
 			}
 		}
 	}
+	
+	/**
+	 * 多对多的更新操作
+	 * @param trans 事务 
+	 * @param value 级联对象
+	 * @param bean 父对象
+	 * @param f 引用字段
+	 * @param b 是否执行删除
+	 * @throws SQLException 
+	 */
+	private static void doUpdateRefNN(Session trans, Object value, BeanWrapper bean, AbstractRefField f) throws SQLException {
+		Reference ref = f.getReference();
+		if(ref.getHint()!=null && ref.getHint().getRelationTable()==null) {
+			doUpdateRefN(trans,value,bean,f,false);
+			return;
+		}
+		//检查目标表
+		//对于用过中间表的多对多关系，其级联对象关联位于一张隐含的表中，和当前对象的单表字段没有关系。
+		//故修改数值一致性操作省略
+		Collection<? extends IQueryableEntity> list = castToList(value, f);
+		//目标表处理
+		checkAndInsert(trans,list,true);
+		
+		//维护关系表
+		List<VarObject> relations=generateRelationData(ref,list,bean);
+		doDeleteRef(trans,bean,ref);
+		trans.batchInsert(relations);
+	}
 
-	// 按主键去检查每条字表记录，有的就更新，没有的就插入
-	private static void checkAndInsert(Session trans, Collection<? extends IQueryableEntity> ds, boolean doUpdate) throws SQLException {
-		if (ds == null)
+
+	/**
+	 * 按主键去检查每条字表记录，有的就更新，没有的就插入
+	 * @param trans
+	 * @param subs 级联对象
+	 * @param doUpdate 执行更新
+	 * @throws SQLException
+	 */
+	private static void checkAndInsert(Session trans, Collection<? extends IQueryableEntity> subs, boolean doUpdate) throws SQLException {
+		if (subs == null)
 			return;
 		List<IQueryableEntity> toAdd = new ArrayList<IQueryableEntity>();
-		for (IQueryableEntity d : ds) {
+		for (IQueryableEntity d : subs) {
 			if (DbUtils.getPrimaryKeyValue(d) != null) {
 				d.getQuery().clearQuery();
+				d.getQuery().setCascadeViaOuterJoin(false);
 				List<IQueryableEntity> oldValue = trans.select(d);
 				if (oldValue.size() > 0) {// 更新
 					if (doUpdate) {
@@ -378,7 +466,7 @@ final class CascadeUtil {
 							updateWithRefInTransaction(old, trans, 0);
 						}
 					}
-					return;
+					continue;
 				}
 			}
 			toAdd.add(d);
@@ -403,17 +491,11 @@ final class CascadeUtil {
 		if (obj == null)
 			return Collections.EMPTY_LIST;
 		ITableMetadata c = ref.getReference().getTargetType();
-		if (obj instanceof List<?>) {// 基于泛型擦除机制，自行校验对象
-			for (Object element : (List<?>) obj) {
-				if (!c.getThisType().isAssignableFrom(element.getClass())) {
-					throw new IllegalArgumentException("There's a value can't cast to class:" + c);
-				}
-			}
-			return (List<T>) obj;
-		} else if (obj instanceof Collection<?>) {// 其他的Clection
+		if (obj instanceof Collection<?>) {// 其他的Clection
 			Collection<?> collection = (Collection<?>) obj;
 			List<T> list = new ArrayList<T>();
 			for (Object o : collection) {
+				if(o==null)continue;
 				if (c.getThisType().isAssignableFrom(o.getClass())) {
 					list.add((T) o);
 				} else {

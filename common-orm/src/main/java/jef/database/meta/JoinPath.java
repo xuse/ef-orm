@@ -43,15 +43,33 @@ public class JoinPath {
 	private JoinType type;
 	private JoinDescription description;
 	private OrderBy orderBy;
-	
+
+	/**
+	 * ManyToMany时三表连接
+	 */
+	private TupleMetadata relationTable;
+	private JoinPath relationToTarget;	
+
+	public TupleMetadata getRelationTable() {
+		return relationTable;
+	}
+
+
+	public JoinPath getRelationToTarget() {
+		return relationToTarget;
+	}
+	public void setRelationTable(TupleMetadata relationTable,JoinPath toTarget) {
+		this.relationTable = relationTable;
+		this.relationToTarget=toTarget;
+	}
 
 	public JoinDescription getDescription() {
 		return description;
 	}
 
-	public void setDescription(JoinDescription description,OrderBy orderBy) {
+	public void setDescription(JoinDescription description, OrderBy orderBy) {
 		this.description = description;
-		this.orderBy=orderBy;
+		this.orderBy = orderBy;
 	}
 
 	public JoinKey[] getJoinKeys() {
@@ -142,6 +160,10 @@ public class JoinPath {
 	 * @return
 	 */
 	public JoinPath accept(JoinElement left, Query<?> obj) {
+		if (relationTable != null) {
+			return pathAccept(obj);
+		}
+
 		if (joinKeys != null) {
 			for (int i = 0; i < joinKeys.length; i++) {
 				JoinKey jk = joinKeys[i];
@@ -184,6 +206,16 @@ public class JoinPath {
 		return this;
 	}
 
+	private JoinPath pathAccept( Query<?> obj) {
+		// 先在当前表中查询已定义的可用引用关系。
+		for (Reference ref : relationTable.getRefFieldsByRef().keySet()) {
+			if (ref.getThisType() == relationTable && ref.getTargetType() == obj.getMeta() && ref.getHint() != null) {
+				return this;
+			}
+		}
+		return null;
+	}
+
 	@Override
 	public int hashCode() {
 		return new HashCodeBuilder().append(joinKeys).append(joinExpression).toHashCode();
@@ -198,8 +230,8 @@ public class JoinPath {
 			return false;
 		if (type != o.type)
 			return false;
-		//Annotation自身已经很好的实现的equals方法，不会受代理类等因素影响
-		if(!ObjectUtils.equals(this.orderBy, o.orderBy)){
+		// Annotation自身已经很好的实现的equals方法，不会受代理类等因素影响
+		if (!ObjectUtils.equals(this.orderBy, o.orderBy)) {
 			return false;
 		}
 		return ObjectUtils.equals(this.description, o.description);
@@ -293,6 +325,6 @@ public class JoinPath {
 	}
 
 	public String getOrderBy() {
-		return orderBy==null?null:orderBy.value();
+		return orderBy == null ? null : orderBy.value();
 	}
 }

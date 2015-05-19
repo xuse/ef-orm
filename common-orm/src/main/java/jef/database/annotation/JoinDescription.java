@@ -31,9 +31,4 @@ public @interface JoinDescription {
 	 * @return
 	 */
 	int maxRows() default 0;
-	
-//	/**
-//	 * 当查询引用关系对象时，排序字段表达式。order by关键字不要写 
-//	 */
-//	String orderBy() default "";
 }
