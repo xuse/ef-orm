@@ -407,7 +407,7 @@ public class DbClient extends Session implements ConnectionFactory {
 	 * @return
 	 * @throws SQLException
 	 */
-	public DbMetaData getMetaData(String dbkey) throws SQLException {
+	public DbMetaData getMetaData(String dbkey){
 		return connPool.getMetadata(dbkey);
 	}
 

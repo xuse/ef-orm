@@ -18,6 +18,7 @@ package jef.database;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 import javax.persistence.PersistenceException;
 
@@ -26,6 +27,7 @@ import jef.database.DbMetaData.ObjectType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.AbstractSequence;
 import jef.database.meta.DbProperty;
+import jef.database.meta.SequenceInfo;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 
@@ -97,7 +99,11 @@ final class SequenceNativeImpl extends AbstractSequence {
 		this.selectSql = generateSQL(meta.getProfile());
 		if (exists) {
 			OperateTarget target=session.selectTarget(dbKey);
-			initStep(target, selectSql);
+			
+			this.step = calcStep(target, selectSql);
+			int cacheSize = getCacheSize();
+			if (cacheSize > 1)
+				this.setCacheSize(cacheSize / step);// 根据步长做除法
 		}
 		return true;
 	}
@@ -157,15 +163,25 @@ final class SequenceNativeImpl extends AbstractSequence {
 	/*
 	 * 初始化Sequence步长
 	 */
-	private void initStep(OperateTarget client, String selectSql) {
+	private int calcStep(OperateTarget client, String selectSql) {
 		int step = JefConfiguration.getInt(DbCfg.DB_SEQUENCE_STEP, 0);
+		//强制设定步长时，直接return
 		if (step > 0) {
-			return;
+			return step;
 		}
-		// 通过方言，不消耗值计算步长
-		step = client.getProfile().calcSequenceStep(client, this.schema, this.sequence, step);
-
-		if (step == -1) {// 强制计算步长
+		
+		//尝试从数据库获取
+		List<SequenceInfo> info=client.getProfile().getSequenceInfo(client.getMetaData(), this.schema, this.sequence);
+		if(info!=null) {
+			if(info.isEmpty() || info.size()>1) {
+				throw new IllegalArgumentException("The sequence "+sequence+" was not correct in system_tables. size="+info.size());
+			}else if(info.get(0).getStep()>0){
+				return info.get(0).getStep();	
+			}
+		}
+		
+		//无论数据库是否支持，强制计算步长
+		if (step == -1) {
 			try {
 				long[] min_max = getSequenceStepByConsumeTwice(client, selectSql);
 				step = (int) (min_max[1] - min_max[0]);
@@ -174,12 +190,10 @@ final class SequenceNativeImpl extends AbstractSequence {
 				throw new PersistenceException(e);
 			}
 		}
+		//修复数据
 		if (step < 1)
 			step = 1;// 不允许出现0或者负数
-		this.step = step;
-		int cacheSize = getCacheSize();
-		if (cacheSize > 1)
-			this.setCacheSize(cacheSize / step);// 根据步长做除法
+		return step;
 	}
 
 	/**

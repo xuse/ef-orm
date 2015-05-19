@@ -74,6 +74,7 @@ import jef.database.meta.Index;
 import jef.database.meta.Index.IndexItem;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.PrimaryKey;
+import jef.database.meta.SequenceInfo;
 import jef.database.meta.TableCreateStatement;
 import jef.database.meta.TableInfo;
 import jef.database.query.DefaultPartitionCalculator;
@@ -356,6 +357,7 @@ public class DbMetaData {
 				schema = matchName.substring(0, n);
 				matchName = matchName.substring(n + 1);
 			}
+			
 		}
 		if (oper != null && oper != Operator.EQUALS) {
 			if (StringUtils.isEmpty(matchName)) {
@@ -373,7 +375,7 @@ public class DbMetaData {
 		DatabaseDialect trans = info.profile;
 		ResultSet rs = null;
 		try {
-			rs = databaseMetaData.getTables(trans.getCatlog(schema), trans.getSchema(schema), matchName, new String[] { type.name() });
+			rs = databaseMetaData.getTables(trans.getCatlog(schema), trans.getSchema(schema), matchName, type==null?null:new String[] { type.name() });
 			List<TableInfo> result = new ArrayList<TableInfo>();
 			while (rs.next()) {
 				TableInfo info = new TableInfo();
@@ -852,10 +854,10 @@ public class DbMetaData {
 
 				if (pk == null) {
 					pk = new PrimaryKey(pkName);
-				} else {
-					if (!StringUtils.equals(pk.getName(), pkName)) {
-						throw new SQLException("There is more than one primary key on table " + tableName + "?!" + pk.getName() + " vs " + pkName);
-					}
+//				} else {
+//					if (!StringUtils.equals(pk.getName(), pkName)) {
+//						throw new SQLException("There is more than one primary key on table " + tableName + "?!" + pk.getName() + " vs " + pkName);
+//					}
 				}
 				pkColumns.add(col);
 			}
@@ -2208,17 +2210,18 @@ public class DbMetaData {
 		case PROCEDURE:
 			return existsProcdure(schema, objectName);
 		case SEQUENCE:
-			// String[] types=this.getTableTypes();
-			// if(!ArrayUtils.contains(types, "SEQUENCE")){
-			// throw new
-			// UnsupportedOperationException("Current database "+info.profile+" not support check sequence.");
-			// }
+			List<SequenceInfo> seqs=this.getProfile().getSequenceInfo(this, schema, objectName);
+			if(seqs!=null) {
+				return !seqs.isEmpty();
+			}
+		default:
+			break;
 		}
-
 		Connection conn = getConnection(false);
 		DatabaseDialect trans = info.profile;
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = databaseMetaData.getTables(trans.getCatlog(schema), trans.getSchema(schema), objectName, new String[] { type.name() });
+		
 		try {
 			return rs.next();
 		} finally {

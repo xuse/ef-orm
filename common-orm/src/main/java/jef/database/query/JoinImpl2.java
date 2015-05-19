@@ -259,7 +259,7 @@ final class JoinImpl2 extends AbstractJoinImpl {
 		Assert.notNull(alias);
 		Query<?> q = obj.getQuery();
 		String table = DbUtils.toTableName(q.getInstance(), null, q, processor.getPartitionSupport()).getAsOneTable();
-		sb.append(table).append(' ').append(alias);
+		sb.append(DbUtils.escapeColumn(processor.getProfile(), table)).append(' ').append(alias);
 	}
 
 	private void checkInstance(Query<?> right2) {

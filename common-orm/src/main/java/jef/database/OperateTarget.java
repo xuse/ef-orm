@@ -486,7 +486,7 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 		return this.innerSelectBySql(sql, t, Arrays.asList(objs), lazy);
 	}
 
-	public DbMetaData getMetaData() throws SQLException {
+	public DbMetaData getMetaData() {
 		return session.getNoTransactionSession().getMetaData(dbkey);
 	}
 

@@ -23,11 +23,11 @@
 		p:url="${db.url}" p:username="${db.user}" p:password="${db.password}" />
 
 	<bean id="dataSource2" class="jef.database.datasource.SimpleDataSource"
-		p:url="jdbc:mysql://localhost:3307/test2" p:username="${db.user}"
+		p:url="jdbc:mysql://localhost:3306/test2" p:username="${db.user}"
 		p:password="${db.password}" />
 
 	<bean id="dataSource3" class="jef.database.datasource.SimpleDataSource"
-		p:url="jdbc:mysql://localhost:3307/test3" p:username="${db.user}"
+		p:url="jdbc:mysql://localhost:3306/test3" p:username="${db.user}"
 		p:password="${db.password}" />
 
 	<bean id="routingDS" class="jef.database.datasource.RoutingDataSource">

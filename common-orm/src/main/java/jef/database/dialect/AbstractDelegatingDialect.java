@@ -5,12 +5,14 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import javax.sql.rowset.CachedRowSet;
 
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
+import jef.database.DbMetaData;
 import jef.database.OperateTarget;
 import jef.database.datasource.DataSourceInfo;
 import jef.database.dialect.type.AColumnMapping;
@@ -25,6 +27,7 @@ import jef.database.meta.Column;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.meta.FunctionMapping;
+import jef.database.meta.SequenceInfo;
 import jef.database.support.RDBMS;
 import jef.database.wrapper.clause.InsertSqlClause;
 
@@ -99,11 +102,6 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	@Override
 	public String getColumnNameToUse(String name) {
 		return dialect.getColumnNameToUse(name);
-	}
-
-	@Override
-	public int calcSequenceStep(OperateTarget conn, String schema, String seqName, int defaultValue) {
-		return dialect.calcSequenceStep(conn, schema, seqName, defaultValue);
 	}
 
 	@Override
@@ -244,5 +242,10 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	@Override
 	public long getPropertyLong(DbProperty key) {
 		return dialect.getPropertyLong(key);
+	}
+
+	@Override
+	public List<SequenceInfo> getSequenceInfo(DbMetaData conn, String schema, String seqName) {
+		return dialect.getSequenceInfo(conn, schema, seqName);
 	}
 }
