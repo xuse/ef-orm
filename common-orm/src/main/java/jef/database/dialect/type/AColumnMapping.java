@@ -1,12 +1,15 @@
 package jef.database.dialect.type;
 
+import java.lang.annotation.Annotation;
 import java.sql.SQLException;
+import java.util.IdentityHashMap;
 import java.util.List;
 
 import jef.accelerator.bean.BeanAccessor;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
+import jef.database.annotation.UnsavedValue;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.visitor.Expression;
@@ -14,6 +17,8 @@ import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.Assert;
+import jef.tools.StringUtils;
+import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.Property;
 
 public abstract class AColumnMapping implements ColumnMapping {
@@ -34,6 +39,7 @@ public abstract class AColumnMapping implements ColumnMapping {
 	private boolean pk;
 	protected transient DatabaseDialect bindedProfile;
 	protected Property fieldAccessor;
+	private Object unsavedValue;
 
 	public AColumnMapping() {
 		this.clz = getDefaultJavaType();
@@ -59,13 +65,57 @@ public abstract class AColumnMapping implements ColumnMapping {
 		this.columnDef = type;
 
 		BeanAccessor ba = meta.getContainerAccessor();
+
 		fieldAccessor = ba.getProperty(field.name());
 		Assert.notNull(fieldAccessor, ba.toString() + field.toString());
 		Class<?> containerType = fieldAccessor.getType();
 		if (clz.isAssignableFrom(containerType)) {
 			this.clz = containerType;
 		}
+		if(containerType.isPrimitive()) {
+			@SuppressWarnings("rawtypes")
+			IdentityHashMap<Class,Annotation> map=ba.getAnnotationOnField(field.name());
+			UnsavedValue value = map==null?null:(UnsavedValue)map.get(UnsavedValue.class);
+			if (value == null) {
+				unsavedValue = BeanUtils.defaultValueOfPrimitive(containerType);
+			} else {
+				unsavedValue = parseValue(containerType, value.value());
+			}	
+		}
+	}
 
+	private Object parseValue(Class<?> containerType, String value) {
+		// int 226
+		// short 215
+		// long 221
+		// boolean 222
+		// float 219
+		// double 228
+		// char 201
+		// byte 237
+		if (containerType.isPrimitive()) {
+			String s = containerType.getName();
+			switch (s.charAt(1) + s.charAt(2)) {
+			case 226:
+				return StringUtils.toInt(value, 0);
+			case 215:
+				return StringUtils.toInt(value, 0);
+			case 221:
+				return StringUtils.toLong(value, 0L);
+			case 222:
+				return StringUtils.toBoolean(value, false);
+			case 219:
+				return StringUtils.toFloat(value, 0f);
+			case 228:
+				return StringUtils.toDouble(value, 0d);
+			case 201:
+				if(value.length()==0)return (char)0;
+				return value.charAt(0);
+			case 237:
+				return StringUtils.toInt(value, 0);
+			}
+		}
+		return null;
 	}
 
 	public String fieldName() {
@@ -154,6 +204,7 @@ public abstract class AColumnMapping implements ColumnMapping {
 
 	/**
 	 * 获得SQL表达式的写法。
+	 * 
 	 * @param value
 	 *            不为null，不为Expression
 	 */
@@ -203,4 +254,8 @@ public abstract class AColumnMapping implements ColumnMapping {
 		return this.fieldName;
 	}
 
+	@Override
+	public Object getUnsavedValue() {
+		return unsavedValue;
+	}
 }

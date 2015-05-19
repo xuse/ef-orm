@@ -418,6 +418,7 @@ public class DynamicMetadata extends AbstractMetadata {
 	 */
 	public void addCascadeManyToOne(String fieldName, ITableMetadata target, JoinPath path) {
 		CascadeConfig config = new CascadeConfig(null, (ManyToOne) null);
+		config.path = path;
 		Property pp = containerAccessor.getProperty(fieldName);
 		innerAdd(pp, target, config);
 	}
@@ -436,6 +437,7 @@ public class DynamicMetadata extends AbstractMetadata {
 	 */
 	public void addCascadeManyToOne(String fieldName, Field target, JoinPath path) {
 		CascadeConfig config = new CascadeConfig(null, (ManyToOne) null);
+		config.path = path;
 		ColumnMapping targetFld = DbUtils.toColumnMapping(target);
 		Property pp = containerAccessor.getProperty(fieldName);
 		innerAdd(pp, targetFld, config);

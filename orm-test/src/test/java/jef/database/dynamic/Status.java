@@ -3,9 +3,14 @@ package jef.database.dynamic;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-@Entity()
+import jef.database.annotation.UnsavedValue;
+
+@Entity
 public class Status extends jef.database.DataObject {
+	private static final long serialVersionUID = 1L;
+
 	@Id
+	@UnsavedValue("-1")
 	private int code;
 
 	private String data;

@@ -109,7 +109,6 @@ import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
-import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.BeanWrapper;
 import jef.tools.reflect.GenericUtils;
 import jef.tools.security.cplus.TripleDES;
@@ -1097,7 +1096,7 @@ public final class DbUtils {
 		Class<?> type = field.getFieldAccessor().getType();
 		Object value = field.getFieldAccessor().get(obj);
 		if (type.isPrimitive()) {
-			if (BeanUtils.defaultValueOfPrimitive(type).equals(value)) {
+			if (field.getUnsavedValue().equals(value)) {
 				if (meta.getPKFields().size() == 1 && !obj.isUsed(field.field()))
 					return false;
 			}

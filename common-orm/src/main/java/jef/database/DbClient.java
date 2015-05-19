@@ -45,6 +45,7 @@ import jef.database.jmx.JefFacade;
 import jef.database.meta.AbstractMetadata;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
+import jef.database.meta.Reference;
 import jef.database.routing.PartitionResult;
 import jef.database.support.DbOperatorListener;
 import jef.database.support.DbOperatorListenerContainer;
@@ -829,7 +830,7 @@ public class DbClient extends Session implements ConnectionFactory {
 		return connPool.getInfo(dbKey).getDbname();
 	}
 
-	private int createTable0(ITableMetadata meta, List<SQLException> errors, PartitionResult... route) {
+	private int createTable0(ITableMetadata meta, List<SQLException> errors, PartitionResult... route) throws SQLException {
 		int total = 0;
 		for (PartitionResult site : route) {
 			DbMetaData dbmeta = connPool.getMetadata(site.getDatabase());
@@ -841,6 +842,23 @@ public class DbClient extends Session implements ConnectionFactory {
 					errors.add(e);
 				}
 			}
+		}
+		if(meta!=null) {
+			for(Reference ref:meta.getRefFieldsByRef().keySet()) {
+				if(ref.getHint()!=null && ref.getHint().getRelationTable()!=null) {
+					try {
+						createTable(ref.getHint().getRelationTable());
+					} catch (SQLException e) {
+						errors.add(e);
+					}
+				}
+			}	
+		}
+		for (Exception e : errors) {
+			LogUtil.exception(e);
+		}
+		if (!errors.isEmpty()) {
+			throw DbUtils.wrapExceptions(errors);
 		}
 		return total;
 	}
@@ -869,7 +887,17 @@ public class DbClient extends Session implements ConnectionFactory {
 			if (meta != null)
 				metaData.clearTableMetadataCache(meta);
 		}
-
+		if(meta!=null) {
+			for(Reference ref:meta.getRefFieldsByRef().keySet()) {
+				if(ref.getHint()!=null && ref.getHint().getRelationTable()!=null) {
+					try {
+						dropTable(ref.getHint().getRelationTable());
+					} catch (SQLException e) {
+						errors.add(e);
+					}
+				}
+			}	
+		}
 		for (Exception e : errors) {
 			LogUtil.exception(e);
 		}

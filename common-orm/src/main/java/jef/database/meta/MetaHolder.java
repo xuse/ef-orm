@@ -34,6 +34,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
+import javax.persistence.JoinTable;
 import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -42,8 +43,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.OrderBy;
 import javax.persistence.PersistenceException;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.TableGenerator;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -70,13 +69,14 @@ import jef.database.annotation.DynamicKeyValueExtension;
 import jef.database.annotation.DynamicTable;
 import jef.database.annotation.EasyEntity;
 import jef.database.annotation.FieldOfTargetEntity;
-import jef.database.annotation.HiloGeneration;
 import jef.database.annotation.Indexed;
 import jef.database.annotation.Indexes;
 import jef.database.annotation.JoinDescription;
 import jef.database.annotation.JoinType;
 import jef.database.annotation.NoForceEnhance;
 import jef.database.dialect.ColumnType;
+import jef.database.dialect.ColumnType.AutoIncrement;
+import jef.database.dialect.ColumnType.GUID;
 import jef.database.dialect.TypeDefImpl;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.ColumnMappings;
@@ -84,6 +84,8 @@ import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.create.ColumnDefinition;
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.meta.AnnotationProvider.ClassAnnotationProvider;
+import jef.database.meta.AnnotationProvider.FieldAnnotationProvider;
 import jef.database.meta.extension.EfPropertiesExtensionProvider;
 import jef.database.query.ReadOnlyQuery;
 import jef.database.query.SqlExpression;
@@ -416,7 +418,7 @@ public final class MetaHolder {
 	}
 
 	private static AbstractMetadata initVarTemplate(Class<? extends EntityExtensionSupport> clz, DynamicTable dt) {
-		AnnotationProvider annos = config.getAnnotations(clz);
+		ClassAnnotationProvider annos = config.getAnnotations(clz);
 		List<java.lang.reflect.Field> unprocessedField = new ArrayList<java.lang.reflect.Field>();
 		TableMetadata meta = internalProcess(clz, unprocessedField, annos);
 		// 加载分表策略
@@ -434,7 +436,7 @@ public final class MetaHolder {
 	}
 
 	private static AbstractMetadata initVarEntity(Class<? extends EntityExtensionSupport> clz, DynamicKeyValueExtension dkv) {
-		AnnotationProvider annos = config.getAnnotations(clz);
+		ClassAnnotationProvider annos = config.getAnnotations(clz);
 		List<java.lang.reflect.Field> unprocessedField = new ArrayList<java.lang.reflect.Field>();
 		TableMetadata raw = internalProcess(clz, unprocessedField, annos);
 
@@ -453,13 +455,13 @@ public final class MetaHolder {
 		// 针对未处理的字段，当做外部引用关系处理
 		for (java.lang.reflect.Field f : unprocessedField) {
 			// 将这个字段作为外部引用处理
-			processReference(f, meta, annos);
+			processReference(meta, annos.forField(f));
 		}
 		return meta;
 	}
 
 	private static AbstractMetadata initPojo(Class<?> clz) {
-		AnnotationProvider annos = config.getAnnotations(clz);
+		ClassAnnotationProvider annos = config.getAnnotations(clz);
 		TableMetadata meta = new TableMetadata(PojoWrapper.class, clz, annos);
 
 		List<java.lang.reflect.Field> unprocessedField = new ArrayList<java.lang.reflect.Field>();
@@ -479,7 +481,7 @@ public final class MetaHolder {
 	}
 
 	private static AbstractMetadata initEntity(Class<? extends IQueryableEntity> clz) {
-		AnnotationProvider annos = config.getAnnotations(clz);
+		ClassAnnotationProvider annos = config.getAnnotations(clz);
 		List<java.lang.reflect.Field> unprocessedField = new ArrayList<java.lang.reflect.Field>();
 		TableMetadata meta = internalProcess(clz, unprocessedField, annos);
 		// 加载分表策略
@@ -491,14 +493,14 @@ public final class MetaHolder {
 		// 针对未处理的字段，当做外部引用关系处理
 		for (java.lang.reflect.Field f : unprocessedField) {
 			// 将这个字段作为外部引用处理
-			processReference(f, meta, annos);
+			processReference(meta, annos.forField(f));
 			// 还有一种情况，即定义了Column注解，但不属于元模型的一个字段，用于辅助映射的。当结果拼装时有用
-			processColumnHelper(f, meta, annos);
+			processColumnHelper(meta, annos.forField(f));
 		}
 		return meta;
 	}
 
-	private static TableMetadata internalProcess(Class<? extends IQueryableEntity> clz, List<java.lang.reflect.Field> unprocessedField, AnnotationProvider annos) {
+	private static TableMetadata internalProcess(Class<? extends IQueryableEntity> clz, List<java.lang.reflect.Field> unprocessedField, ClassAnnotationProvider annos) {
 		{
 			EasyEntity ee = annos.getAnnotation(EasyEntity.class);
 			if (ORMConfig.getInstance().isCheckEnhancement()) {
@@ -531,10 +533,10 @@ public final class MetaHolder {
 	}
 
 	// 处理非元模型的Column描述字段
-	private static void processColumnHelper(java.lang.reflect.Field f, TableMetadata meta, AnnotationProvider annos) {
-		Column column = annos.getFieldAnnotation(f, Column.class);
+	private static void processColumnHelper(TableMetadata meta, FieldAnnotationProvider field) {
+		Column column = field.getAnnotation(Column.class);
 		if (column != null) {
-			meta.addNonMetaModelFieldMapping(f.getName(), column);
+			meta.addNonMetaModelFieldMapping(field.getName(), column);
 		}
 	}
 
@@ -638,7 +640,7 @@ public final class MetaHolder {
 		}
 	}
 
-	private static void processMetaForClz(Class<?> processingClz, List<java.lang.reflect.Field> unprocessedField, TableMetadata meta, AnnotationProvider annos, MeteModelFields metaModel) {
+	private static void processMetaForClz(Class<?> processingClz, List<java.lang.reflect.Field> unprocessedField, TableMetadata meta, ClassAnnotationProvider annos, MeteModelFields metaModel) {
 		for (java.lang.reflect.Field f : processingClz.getDeclaredFields()) {
 			if (Modifier.isStatic(f.getModifiers()))
 				continue;
@@ -681,9 +683,12 @@ public final class MetaHolder {
 					throw new IllegalArgumentException("Field [" + field.name() + "] may be not enhanced. Please add the enum Field [" + field.name() + "] into " + processingClz.getName());
 				}
 			}
+
+			FieldAnnotationProvider fa = annos.forField(f);
+
 			// 在得到了元模型的情况下
-			boolean isPK = annos.getFieldAnnotation(f, javax.persistence.Id.class) != null;
-			jef.database.annotation.Type mappingHint = annos.getFieldAnnotation(f, jef.database.annotation.Type.class);
+			boolean isPK = fa.getAnnotation(javax.persistence.Id.class) != null;
+			jef.database.annotation.Type mappingHint = fa.getAnnotation(jef.database.annotation.Type.class);
 			ColumnMapping type = null;
 			Class<?> fieldType;
 			if (mappingHint != null) {
@@ -692,11 +697,11 @@ public final class MetaHolder {
 			} else {
 				fieldType = f.getType();
 			}
-			Column c = annos.getFieldAnnotation(f, Column.class);
+			Column c = fa.getAnnotation(Column.class);
 			ColumnType ct;
 			try {
 				if (c == null || StringUtils.isEmpty(c.columnDefinition())) {// 在没有Annonation的情况下,根据Field类型默认生成元数�?
-					ct = defaultColumnTypeByJava(f, c, annos, fieldType);
+					ct = defaultColumnTypeByJava(fa, c, fieldType);
 				} else {
 					ct = createTypeByAnnotation(c, f, annos);
 				}
@@ -720,7 +725,7 @@ public final class MetaHolder {
 			}
 
 			// 设置索引
-			Indexed i = annos.getFieldAnnotation(f, Indexed.class);// 单列索引
+			Indexed i = fa.getAnnotation(Indexed.class);// 单列索引
 			if (i != null) {
 				Map<String, Object> data = new HashMap<String, Object>(4);
 				data.put("fields", new String[] { i.desc() ? field.name() + " desc" : field.name() });
@@ -740,91 +745,142 @@ public final class MetaHolder {
 		}
 	}
 
-	private static JoinPath getHint(AnnotationProvider annos, java.lang.reflect.Field f, AbstractMetadata meta, ITableMetadata target) {
-		if (annos.getFieldAnnotation(f, JoinColumn.class) != null) {
-			JoinColumn j = annos.getFieldAnnotation(f, JoinColumn.class);
-			return processJoin(meta, f, target, annos, j);
-		} else if (annos.getFieldAnnotation(f, JoinColumns.class) != null) {
-			JoinColumns jj = annos.getFieldAnnotation(f, JoinColumns.class);
-			return processJoin(meta, f, target, annos, jj.value());
+	private static JoinPath getHint(FieldAnnotationProvider annos, AbstractMetadata meta, ITableMetadata target) {
+		if (annos.getAnnotation(JoinColumn.class) != null) {
+			JoinColumn j = annos.getAnnotation(JoinColumn.class);
+			return processJoin(meta, target, annos, j);
+		} else if (annos.getAnnotation(JoinColumns.class) != null) {
+			JoinColumns jj = annos.getAnnotation(JoinColumns.class);
+			return processJoin(meta, target, annos, jj.value());
+		} else if (annos.getAnnotation(JoinTable.class) != null) {
+			JoinTable jt = annos.getAnnotation(JoinTable.class);
+			return processJoin(meta, target, annos, jt);
 		}
 		return null;
 	}
 
-	protected static boolean processReference(java.lang.reflect.Field f, AbstractMetadata meta, AnnotationProvider annos) {
-		FieldOfTargetEntity targetField = annos.getFieldAnnotation(f, FieldOfTargetEntity.class);
-		Cascade cascade = annos.getFieldAnnotation(f, Cascade.class);
+	private static JoinPath processJoin(AbstractMetadata meta, ITableMetadata target, FieldAnnotationProvider annos, JoinTable jt) {
+		String table=jt.name();
+		//计算生成关系表
+		TupleMetadata rt=new TupleMetadata(table);
+		JoinColumn[] jc1 = jt.joinColumns();
+		for(JoinColumn jc:jc1){
+			ColumnType ct=meta.getColumnType(jc.referencedColumnName());
+			rt.addColumn(jc.name(),jc.name(), toNormal(ct),jt.uniqueConstraints().length>0)	;
+			rt.addIndex(jc.name(),null);
+		}
+		
+		JoinColumn[] jc2 = jt.inverseJoinColumns();
+		for(JoinColumn jc:jc2){
+			String name=jc.referencedColumnName();
+			ColumnMapping ct=target.getColumnDef(target.getField(name));
+			
+			Assert.notNull(ct);
+			rt.addColumn(jc.name(),jc.name(), toNormal(ct.get()),jt.uniqueConstraints().length>0);
+			rt.addIndex(jc.name(),null);
+		}
+		//补充关系表注册
+		putDynamicMeta(rt);
+		
+		//创建关系表到目标表的连接
+		JoinPath path2=processJoin(rt,target,annos,jc2);
+		rt.addCascadeManyToOne("_OBJ", target, path2);
+		
+		//创建到关系表的连接
+		JoinColumn[] jc3=new JoinColumn[jc1.length];
+		for(int i=0;i<jc1.length;i++) {
+			JoinColumnImpl jc=new JoinColumnImpl(jc1[i]);
+			jc.reverseColumn();
+			jc3[i]=jc;
+		}
+		JoinPath path1=processJoin(meta,rt,annos,jc3);
+		path1.setRelationTable(rt,path2);
+		return path1;
+	}
 
-		if (annos.getFieldAnnotation(f, OneToOne.class) != null) {
-			OneToOne r1Vs1 = annos.getFieldAnnotation(f, OneToOne.class);
-			ITableMetadata target = getTargetType(r1Vs1.targetEntity(), targetField, f, false);
+	private static ColumnType toNormal(ColumnType columnType) {
+		if(columnType instanceof AutoIncrement) {
+			return ((AutoIncrement) columnType).toNormalType();
+		}else if(columnType instanceof ColumnType.GUID) {
+			return ((GUID)columnType).toNormalType();
+		}
+		return columnType;
+	}
+
+	protected static boolean processReference(AbstractMetadata meta, FieldAnnotationProvider field) {
+		FieldOfTargetEntity targetField = field.getAnnotation(FieldOfTargetEntity.class);
+		Cascade cascade = field.getAnnotation(Cascade.class);
+
+		if (field.getAnnotation(OneToOne.class) != null) {
+			OneToOne r1Vs1 = field.getAnnotation(OneToOne.class);
+			ITableMetadata target = getTargetType(r1Vs1.targetEntity(), targetField, field, false);
 			CascadeConfig config = new CascadeConfig(cascade, r1Vs1);
-			config.path = getHint(annos, f, meta, target);
+			config.path = getHint(field, meta, target);
 			if (config.path == null) {
 				String mappedBy = r1Vs1.mappedBy();
 				if (StringUtils.isNotEmpty(mappedBy)) {
-					config.path = processJoin(meta, f, target, annos, mappedBy);
+					config.path = processJoin(meta, target, field, mappedBy);
 				}
 			}
 			if (targetField == null) {
-				meta.addCascadeField(f.getName(), target, config);
+				meta.addCascadeField(field.getName(), target, config);
 			} else {
-				jef.database.Field field = target.getField(targetField.value());
-				meta.addCascadeField(f.getName(), field, config);
+				jef.database.Field targetf = target.getField(targetField.value());
+				meta.addCascadeField(field.getName(), targetf, config);
 			}
 			return true;
 		}
 
-		if (annos.getFieldAnnotation(f, OneToMany.class) != null) {
-			OneToMany r1VsN = annos.getFieldAnnotation(f, OneToMany.class);
-			ITableMetadata target = getTargetType(r1VsN.targetEntity(), targetField, f, true);
+		if (field.getAnnotation(OneToMany.class) != null) {
+			OneToMany r1VsN = field.getAnnotation(OneToMany.class);
+			ITableMetadata target = getTargetType(r1VsN.targetEntity(), targetField, field, true);
 			CascadeConfig config = new CascadeConfig(cascade, r1VsN);
-			config.path = getHint(annos, f, meta, target);
+			config.path = getHint(field, meta, target);
 			if (config.path == null) {
 				String mappedBy = r1VsN.mappedBy();
 				if (StringUtils.isNotEmpty(mappedBy)) {
-					config.path = processJoin(meta, f, target, annos, mappedBy);
+					config.path = processJoin(meta, target, field, mappedBy);
 				}
 			}
 			if (targetField == null) {
-				meta.addCascadeField(f.getName(), target, config);
+				meta.addCascadeField(field.getName(), target, config);
 			} else {
-				jef.database.Field field = target.getField(targetField.value());
-				meta.addCascadeField(f.getName(), field, config);
+				jef.database.Field targetf = target.getField(targetField.value());
+				meta.addCascadeField(field.getName(), targetf, config);
 			}
 			return true;
 		}
 
-		if (annos.getFieldAnnotation(f, ManyToOne.class) != null) {
-			ManyToOne rNVs1 = annos.getFieldAnnotation(f, ManyToOne.class);
-			ITableMetadata target = getTargetType(rNVs1.targetEntity(), targetField, f, false);
+		if (field.getAnnotation(ManyToOne.class) != null) {
+			ManyToOne rNVs1 = field.getAnnotation(ManyToOne.class);
+			ITableMetadata target = getTargetType(rNVs1.targetEntity(), targetField, field, false);
 			CascadeConfig config = new CascadeConfig(cascade, rNVs1);
-			config.path = getHint(annos, f, meta, target);
+			config.path = getHint(field, meta, target);
 			if (targetField == null) {
-				meta.addCascadeField(f.getName(), target, config);
+				meta.addCascadeField(field.getName(), target, config);
 			} else {
-				jef.database.Field field = target.getField(targetField.value());
-				meta.addCascadeField(f.getName(), field, config);
+				jef.database.Field targetf = target.getField(targetField.value());
+				meta.addCascadeField(field.getName(), targetf, config);
 			}
 			return true;
 		}
 
-		if (annos.getFieldAnnotation(f, ManyToMany.class) != null) {
-			ManyToMany rNVsN = annos.getFieldAnnotation(f, ManyToMany.class);
-			ITableMetadata target = getTargetType(rNVsN.targetEntity(), targetField, f, true);
+		if (field.getAnnotation(ManyToMany.class) != null) {
+			ManyToMany rNVsN = field.getAnnotation(ManyToMany.class);
+			ITableMetadata target = getTargetType(rNVsN.targetEntity(), targetField, field, true);
 			CascadeConfig config = new CascadeConfig(cascade, rNVsN);
-			config.path = getHint(annos, f, meta, target);
+			config.path = getHint(field, meta, target);
 			if (config.path == null) {
 				String mappedBy = rNVsN.mappedBy();
 				if (StringUtils.isNotEmpty(mappedBy)) {
-					config.path = processJoin(meta, f, target, annos, mappedBy);
+					config.path = processJoin(meta, target, field, mappedBy);
 				}
 			}
 			if (targetField == null) {
-				meta.addCascadeField(f.getName(), target, config);
+				meta.addCascadeField(field.getName(), target, config);
 			} else {
-				jef.database.Field field = target.getField(targetField.value());
-				meta.addCascadeField(f.getName(), field, config);
+				jef.database.Field targetf = target.getField(targetField.value());
+				meta.addCascadeField(field.getName(), targetf, config);
 			}
 			return true;
 		}
@@ -841,7 +897,7 @@ public final class MetaHolder {
 	 *            是toMany类型的连�?
 	 * @return
 	 */
-	private static ITableMetadata getTargetType(Class<?> targetEntity, FieldOfTargetEntity targetField, java.lang.reflect.Field field, boolean isMany) {
+	private static ITableMetadata getTargetType(Class<?> targetEntity, FieldOfTargetEntity targetField, FieldAnnotationProvider field, boolean isMany) {
 		if (targetEntity != void.class) {
 			if (IQueryableEntity.class.isAssignableFrom(targetEntity)) {
 				return MetaHolder.getMeta(targetEntity.asSubclass(IQueryableEntity.class));
@@ -866,9 +922,10 @@ public final class MetaHolder {
 		throw new IllegalArgumentException(field.getDeclaringClass().getSimpleName() + ":" + field.getName() + " miss its targetEntity annotation.");
 	}
 
-	private static JoinPath processJoin(AbstractMetadata thisMeta, java.lang.reflect.Field f, ITableMetadata target, AnnotationProvider annos, JoinColumn... jj) {
+	private static JoinPath processJoin(AbstractMetadata thisMeta, ITableMetadata target, AnnotationProvider field, JoinColumn... jj) {
 		List<JoinKey> result = new ArrayList<JoinKey>();
-		String fieldName = f.getName();
+
+		String fieldName = field.getName();
 		for (JoinColumn j : jj) {
 			if (StringUtils.isBlank(j.name())) {
 				throw new IllegalArgumentException("Invalid reference [" + thisMeta.getThisType().getName() + "." + fieldName + "]:The field 'name' in JoinColumn is empty");
@@ -882,13 +939,13 @@ public final class MetaHolder {
 			result.add(new JoinKey(left, right));
 		}
 		JoinType type = JoinType.LEFT;
-		JoinDescription joinDesc = annos.getFieldAnnotation(f, JoinDescription.class);
+		JoinDescription joinDesc = field.getAnnotation(JoinDescription.class);
 		if (joinDesc != null) {
 			type = joinDesc.type();
 		}
 		if (result.size() > 0) {
 			JoinPath path = new JoinPath(type, result.toArray(new JoinKey[result.size()]));
-			path.setDescription(joinDesc, annos.getFieldAnnotation(f, OrderBy.class));
+			path.setDescription(joinDesc, field.getAnnotation(OrderBy.class));
 			if (joinDesc != null && joinDesc.filterCondition().length() > 0) {
 				JoinKey joinExpress = getJoinExpress(target, joinDesc.filterCondition().trim());
 				if (joinExpress != null)
@@ -899,9 +956,9 @@ public final class MetaHolder {
 		return null;
 	}
 
-	private static JoinPath processJoin(ITableMetadata meta, java.lang.reflect.Field f, ITableMetadata target, AnnotationProvider annos, String mappedBy) {
-		JoinDescription joinDesc = annos.getFieldAnnotation(f, JoinDescription.class);
-		OrderBy orderBy = annos.getFieldAnnotation(f, OrderBy.class);
+	private static JoinPath processJoin(ITableMetadata meta, ITableMetadata target, AnnotationProvider annos, String mappedBy) {
+		JoinDescription joinDesc = annos.getAnnotation(JoinDescription.class);
+		OrderBy orderBy = annos.getAnnotation(OrderBy.class);
 
 		List<JoinKey> result = new ArrayList<JoinKey>();
 
@@ -955,7 +1012,7 @@ public final class MetaHolder {
 		}
 	}
 
-	private static ColumnType createTypeByAnnotation(Column col, java.lang.reflect.Field field, AnnotationProvider annos) throws ParseException {
+	private static ColumnType createTypeByAnnotation(Column col, java.lang.reflect.Field field, ClassAnnotationProvider annos) throws ParseException {
 		ColumnDefinition c = DbUtils.parseColumnDef(col.columnDefinition().toUpperCase());
 		String def = c.getColDataType().getDataType();
 		SqlExpression defaultExpression = null;
@@ -987,12 +1044,14 @@ public final class MetaHolder {
 		int precision = col.precision();
 		int scale = col.scale();
 		// //////////////////////////////////////////////
-		GeneratedValue gv = annos.getFieldAnnotation(field, javax.persistence.GeneratedValue.class);
+		FieldAnnotationProvider fieldProvider = annos.forField(field);
+
+		GeneratedValue gv = fieldProvider.getAnnotation(javax.persistence.GeneratedValue.class);
 		GenerationType geType = gv == null ? null : gv.strategy();
 		if ("VARCHAR".equals(def) || "VARCHAR2".equals(def)) {
 			if (geType != null) {
 				if (geType == GenerationType.TABLE || geType == GenerationType.SEQUENCE) {
-					return new ColumnType.AutoIncrement(length, geType, annos.getFieldAnnotation(field, TableGenerator.class), annos.getFieldAnnotation(field, SequenceGenerator.class), annos.getFieldAnnotation(field, HiloGeneration.class));
+					return new ColumnType.AutoIncrement(length, geType, fieldProvider);
 				} else {
 					return new ColumnType.GUID();
 				}
@@ -1005,7 +1064,7 @@ public final class MetaHolder {
 		} else if ("CHAR".equalsIgnoreCase(def)) {
 			if (geType != null) {
 				if (geType == GenerationType.TABLE || geType == GenerationType.SEQUENCE) {
-					return new ColumnType.AutoIncrement(length, geType, annos.getFieldAnnotation(field, TableGenerator.class), annos.getFieldAnnotation(field, SequenceGenerator.class), annos.getFieldAnnotation(field, HiloGeneration.class));
+					return new ColumnType.AutoIncrement(length, geType, fieldProvider);
 				} else {
 					return new ColumnType.GUID();
 				}
@@ -1020,7 +1079,7 @@ public final class MetaHolder {
 				precision = length;
 			}
 			if (geType != null) {
-				return new ColumnType.AutoIncrement(precision, geType, annos.getFieldAnnotation(field, TableGenerator.class), annos.getFieldAnnotation(field, SequenceGenerator.class), annos.getFieldAnnotation(field, HiloGeneration.class));
+				return new ColumnType.AutoIncrement(precision, geType, fieldProvider);
 			} else if (scale > 0) {
 				return new ColumnType.Double(precision, scale).setNullable(nullable).defaultIs(defaultExpression);
 			} else {
@@ -1031,12 +1090,12 @@ public final class MetaHolder {
 		} else if ("BLOB".equalsIgnoreCase(def)) {
 			return new ColumnType.Blob().setNullable(nullable).defaultIs(defaultExpression);
 		} else if ("Date".equalsIgnoreCase(def)) {
-			Temporal temporal=annos.getFieldAnnotation(field, Temporal.class);
-			TemporalType t=temporal==null?TemporalType.DATE:temporal.value();
+			Temporal temporal = fieldProvider.getAnnotation(Temporal.class);
+			TemporalType t = temporal == null ? TemporalType.DATE : temporal.value();
 			return newDateTimeColumnDef(t, nullable, gv).defaultIs(defaultExpression);
 		} else if ("TIMESTAMP".equalsIgnoreCase(def)) {
-			Temporal temporal=annos.getFieldAnnotation(field, Temporal.class);
-			TemporalType t=temporal==null?TemporalType.TIMESTAMP:temporal.value();
+			Temporal temporal = fieldProvider.getAnnotation(Temporal.class);
+			TemporalType t = temporal == null ? TemporalType.TIMESTAMP : temporal.value();
 			return newDateTimeColumnDef(t, nullable, gv).defaultIs(defaultExpression);
 		} else if ("BOOLEAN".equalsIgnoreCase(def)) {
 			return new ColumnType.Boolean().setNullable(nullable).defaultIs(defaultExpression);
@@ -1044,8 +1103,8 @@ public final class MetaHolder {
 			return new ColumnType.XML().setNullable(nullable);
 		} else if ("BIT".equalsIgnoreCase(def)) {
 			return new ColumnType.Boolean().setNullable(nullable);
-		} else if (annos.getFieldAnnotation(field, jef.database.annotation.Type.class) != null) {
-			jef.database.annotation.Type t = annos.getFieldAnnotation(field, jef.database.annotation.Type.class);
+		} else if (fieldProvider.getAnnotation(jef.database.annotation.Type.class) != null) {
+			jef.database.annotation.Type t = fieldProvider.getAnnotation(jef.database.annotation.Type.class);
 			ColumnMapping cm = BeanUtils.newInstance(t.value());
 			return new TypeDefImpl(def, cm.getSqlType(), field.getType());
 		} else {
@@ -1054,19 +1113,19 @@ public final class MetaHolder {
 		}
 	}
 
-	private static ColumnType defaultColumnTypeByJava(java.lang.reflect.Field field, Column c, AnnotationProvider annos, Class<?> type) {
+	private static ColumnType defaultColumnTypeByJava(FieldAnnotationProvider fieldProvider, Column c, Class<?> type) {
 		int len = c == null ? 0 : c.length();
 		int precision = c == null ? 0 : c.precision();
 		int scale = c == null ? 0 : c.scale();
 		boolean nullable = c == null ? true : c.nullable();
-		GeneratedValue gv = annos.getFieldAnnotation(field, javax.persistence.GeneratedValue.class);
+		GeneratedValue gv = fieldProvider.getAnnotation(javax.persistence.GeneratedValue.class);
 		GenerationType geType = gv == null ? null : gv.strategy();
 		if (geType != null && type == String.class) {
 			return new ColumnType.GUID();
 		} else if (geType != null && Number.class.isAssignableFrom(BeanUtils.toWrapperClass(type))) {
-			return new ColumnType.AutoIncrement(precision, geType, annos.getFieldAnnotation(field, TableGenerator.class), annos.getFieldAnnotation(field, SequenceGenerator.class), annos.getFieldAnnotation(field, HiloGeneration.class));
+			return new ColumnType.AutoIncrement(precision, geType, fieldProvider);
 		}
-		Lob lob = annos.getFieldAnnotation(field, Lob.class);
+		Lob lob = fieldProvider.getAnnotation(Lob.class);
 		if (type == String.class) {
 			if (lob != null)
 				return new ColumnType.Clob().setNullable(nullable);
@@ -1096,7 +1155,7 @@ public final class MetaHolder {
 		} else if (type == Character.TYPE) {
 			return new ColumnType.Char(1).setNullable(nullable);
 		} else if (type == Date.class) {
-			Temporal t = annos.getFieldAnnotation(field, Temporal.class);
+			Temporal t = fieldProvider.getAnnotation(Temporal.class);
 			return newDateTimeColumnDef(t == null ? TemporalType.TIMESTAMP : t.value(), nullable, gv);
 		} else if (type == java.sql.Date.class) {
 			return newDateTimeColumnDef(TemporalType.DATE, nullable, gv);

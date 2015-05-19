@@ -1,8 +1,12 @@
 package jef.tools;
 
 import java.io.IOException;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import jef.common.log.LogUtil;
+import jef.tools.string.RandomData;
 
 import org.junit.Test;
 import org.w3c.dom.Comment;
@@ -11,6 +15,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+
+import com.alibaba.fastjson.JSON;
 
 public class XMLUtilsTest {
 	
@@ -92,13 +98,67 @@ public class XMLUtilsTest {
 		
 		doc2.getDocumentElement().appendChild(doc2.importNode(ele, true));
 		XMLUtils.printNode(doc2, System.out);
+		
+	}
 	
+	@Test
+	public void testMapBeans() throws IOException{
+		Fo1 bean=RandomData.newInstance(Fo1.class);
+		bean.getMap2().put("tomodsds", RandomData.newInstance(Foo.class));
+		Document doc=XMLUtils.newDocument("ROOT");
+		//Element ele=JXB.objectToXML(bean, doc.getDocumentElement());
 		
-		
-		
-		
-		
-		
-		
+		Element ele=XMLUtils.putBean(doc.getDocumentElement(), bean,false);
+		XMLUtils.printNode(doc, System.out);
+		Fo1 fo1=XMLUtils.loadBean(ele, Fo1.class);
+		System.out.println(JSON.toJSONString(fo1));
+	}
+	
+	
+	public static class Fo1{
+		private String name;
+		private Map<String,String> map1;
+		private Map<String,Object> map2;
+		private List<Date> list1;
+
+
+		public String getName() {
+			return name;
+		}
+
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+
+		public Map<String, String> getMap1() {
+			return map1;
+		}
+
+
+		public void setMap1(Map<String, String> map1) {
+			this.map1 = map1;
+		}
+
+
+		public Map<String, Object> getMap2() {
+			return map2;
+		}
+
+
+		public void setMap2(Map<String, Object> map2) {
+			this.map2 = map2;
+		}
+
+
+		public List<Date> getList1() {
+			return list1;
+		}
+
+
+		public void setList1(List<Date> list1) {
+			this.list1 = list1;
+		}
 	}
 }

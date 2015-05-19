@@ -3,6 +3,7 @@ package jef.database.meta;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,6 +19,8 @@ import javax.persistence.Table;
 
 import jef.database.DbCfg;
 import jef.database.annotation.EasyEntity;
+import jef.database.meta.AnnotationProvider.ClassAnnotationProvider;
+import jef.database.meta.AnnotationProvider.FieldAnnotationProvider;
 import jef.tools.JefConfiguration;
 import jef.tools.ResourceUtils;
 import jef.tools.StringUtils;
@@ -26,12 +29,14 @@ import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.Enums;
 import jef.tools.resource.IResource;
 
+import org.springframework.util.Assert;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 /**
  * 默认的元模型加载工具
+ * 
  * @author jiyi
  *
  */
@@ -44,13 +49,13 @@ public class DefaultMetaLoader implements MetadataConfiguration {
 	private static final Entity ENTITY = BeanUtils.asAnnotation(Entity.class, new HashMap<String, Object>(2));
 	private String pattern;
 	private int patternType = 0;
-	
+
 	static DefaultMetaLoader instance;
 
 	public DefaultMetaLoader() {
-		String pattern=StringUtils.trimToNull(JefConfiguration.get(DbCfg.METADATA_RESOURCE_PATTERN));
+		String pattern = StringUtils.trimToNull(JefConfiguration.get(DbCfg.METADATA_RESOURCE_PATTERN));
 		setPattern(pattern);
-		instance=this;
+		instance = this;
 	}
 
 	public String getPattern() {
@@ -58,7 +63,7 @@ public class DefaultMetaLoader implements MetadataConfiguration {
 	}
 
 	public void setPattern(String pattern) {
-		if(StringUtils.equals(pattern, this.pattern)){
+		if (StringUtils.equals(pattern, this.pattern)) {
 			return;
 		}
 		if (pattern != null) {
@@ -70,8 +75,8 @@ public class DefaultMetaLoader implements MetadataConfiguration {
 				patternType = 3;
 			}
 		}
-		this.pattern=pattern;
-		urlmaps=null;
+		this.pattern = pattern;
+		urlmaps = null;
 	}
 
 	private Container loadFromResourceUrl(URL url, Class<?> cls) throws SAXException, IOException {
@@ -116,9 +121,9 @@ public class DefaultMetaLoader implements MetadataConfiguration {
 				adjustType("length", map, 255);
 				adjustType("precision", map, 0);
 				adjustType("scale", map, 0);
-				adjustType("name",map,"");
-				adjustType("columnDefinition",map,"");
-				adjustType("table",map,"");
+				adjustType("name", map, "");
+				adjustType("columnDefinition", map, "");
+				adjustType("table", map, "");
 				cas.put(javax.persistence.Column.class, BeanUtils.asAnnotation(javax.persistence.Column.class, map));
 			}
 
@@ -196,15 +201,14 @@ public class DefaultMetaLoader implements MetadataConfiguration {
 				value = Enums.valueOf(enumValue.getDeclaringClass(), text.toUpperCase(), (T) enumValue);
 			}
 			map.put(string, value);
-		}else if(value==null){
+		} else if (value == null) {
 			map.put(string, enumValue);
 		}
 	}
-	
 
-	private void adjustType(String string, Map map,String value) {
+	private void adjustType(String string, Map map, String value) {
 		Object v = map.get(string);
-		if(v ==null ){
+		if (v == null) {
 			map.put(string, value);
 		}
 	}
@@ -220,7 +224,7 @@ public class DefaultMetaLoader implements MetadataConfiguration {
 				value = StringUtils.toInt(text, i);
 			}
 			map.put(string, value);
-		}else if(value==null){
+		} else if (value == null) {
 			map.put(string, i);
 		}
 	}
@@ -236,7 +240,7 @@ public class DefaultMetaLoader implements MetadataConfiguration {
 				value = StringUtils.toBoolean(text, b);
 			}
 			map.put(string, value);
-		}else if(value==null){
+		} else if (value == null) {
 			map.put(string, b);
 		}
 	}
@@ -292,11 +296,11 @@ public class DefaultMetaLoader implements MetadataConfiguration {
 		}
 	}
 
-	public AnnotationProvider getAnnotations(Class clz) {
+	public ClassAnnotationProvider getAnnotations(Class clz) {
 		URL url = getResource(clz);
 		if (url != null) {
 			try {
-				AnnotationProvider ano = loadFromResourceUrl(url, clz);
+				ClassAnnotationProvider ano = loadFromResourceUrl(url, clz);
 				if (ano != null)
 					return ano;
 			} catch (SAXException e) {
@@ -308,15 +312,11 @@ public class DefaultMetaLoader implements MetadataConfiguration {
 		return new AnnoImpl(clz);
 	}
 
-	static class AnnoImpl implements AnnotationProvider {
+	static class AnnoImpl implements ClassAnnotationProvider {
 		private Class<?> clz;
 
 		public AnnoImpl(Class clz) {
 			this.clz = clz;
-		}
-
-		public String getType() {
-			return clz.getName();
 		}
 
 		public <T extends Annotation> T getAnnotation(Class<T> type) {
@@ -324,11 +324,58 @@ public class DefaultMetaLoader implements MetadataConfiguration {
 		}
 
 		public <T extends Annotation> T getFieldAnnotation(Field fieldname, Class<T> type) {
+			if (fieldname == null) {
+				return null;
+			}
 			return fieldname.getAnnotation(type);
+		}
+
+		@Override
+		public String getName() {
+			return clz.getName();
+		}
+
+		@Override
+		public FieldAnnotationProvider forField(Field field) {
+			return new FieldProviderImpl(field);
 		}
 	}
 
-	private static class Container implements AnnotationProvider {
+	static class FieldProviderImpl implements FieldAnnotationProvider {
+		protected java.lang.reflect.Field field;
+
+		public FieldProviderImpl(Field field) {
+			Assert.notNull(field);
+			this.field = field;
+		}
+
+		@Override
+		public <T extends Annotation> T getAnnotation(Class<T> type) {
+			return field.getAnnotation(type);
+		}
+
+		@Override
+		public String getName() {
+			return field.getName();
+		}
+
+		@Override
+		public Class<?> getDeclaringClass() {
+			return field.getDeclaringClass();
+		}
+
+		@Override
+		public Type getGenericType() {
+			return field.getGenericType();
+		}
+
+		@Override
+		public Class<?> getType() {
+			return field.getType();
+		}
+	}
+
+	private static class Container implements ClassAnnotationProvider {
 		private Class<?> clz;
 		private EasyEntity easy;
 		private String type;
@@ -339,19 +386,7 @@ public class DefaultMetaLoader implements MetadataConfiguration {
 			clz = cls;
 		}
 
-		public <T extends Annotation> T getFieldAnnotation(Field fieldName, Class<T> type) {
-			Map<Class<?>, Annotation> anns = fieldColumns.get(fieldName.getName());
-			if (anns == null)
-				return null;
-			T t = (T) anns.get(type);
-			if (t == null) {
-				return fieldName.getAnnotation(type);
-			} else {
-				return t;
-			}
-		}
-
-		public String getType() {
+		public String getName() {
 			return type;
 		}
 
@@ -365,6 +400,21 @@ public class DefaultMetaLoader implements MetadataConfiguration {
 				return (T) ENTITY;
 			}
 			return t == null ? clz.getAnnotation(type) : t;
+		}
+
+		@Override
+		public FieldAnnotationProvider forField(Field field) {
+			return new FieldProviderImpl(field) {
+				@Override
+				public <T extends Annotation> T getAnnotation(Class<T> type) {
+					Map<Class<?>, Annotation> anns = fieldColumns.get(field.getName());
+					T t = null;
+					if (anns != null) {
+						t = (T) anns.get(type);
+					}
+					return t == null ? field.getAnnotation(type) : t;
+				}
+			};
 		}
 	}
 }

@@ -6,16 +6,16 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import jef.database.dialect.type.ColumnMapping;
 
 /**
- * 扩展数据类型的注解，可用于支持新的数据映射方式
- * 
+ * 当数据类型为int, long, short, char等基础类型时。如果Entity的修改记录了该值是设置过的，
+ * 那么认为是有效值。<br>
+ * 如果无记录，那么不等于UnsavedValue的值认为是有效值。
  * @author jiyi
  *
  */
 @Target({ FIELD })
 @Retention(RUNTIME)
-public @interface Type {
-	Class<? extends ColumnMapping> value();
+public @interface UnsavedValue {
+	String value();
 }

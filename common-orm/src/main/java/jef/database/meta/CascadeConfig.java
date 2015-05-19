@@ -79,4 +79,15 @@ public class CascadeConfig {
 	public ReferenceType getRefType() {
 		return refType;
 	}
+
+	public JoinPath getPath() {
+		return path;
+	}
+
+	public CascadeConfig setPath(JoinPath path) {
+		this.path = path;
+		return this;
+	}
+	
+	
 }

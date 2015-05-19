@@ -33,6 +33,12 @@ public interface ColumnMapping extends ResultSetAccessor,MetadataContainer {
 	ColumnType get();
 
 	/**
+	 * 得到默认未设置或修饰过的值
+	 * @return
+	 */
+	Object getUnsavedValue();
+	
+	/**
 	 * 设置绑定变量
 	 * 
 	 * @param st
