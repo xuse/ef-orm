@@ -11,6 +11,7 @@ import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 
 import jef.database.DataObject;
+import jef.database.annotation.FieldOfTargetEntity;
 
 @Entity
 @Table(name="t_user")
@@ -28,6 +29,14 @@ public class User extends DataObject{
 	)
 	private List<Role> roles;
 
+	@ManyToMany(targetEntity=Role.class)
+	@JoinTable(name = "user_roles", 
+		joinColumns = { @JoinColumn(name = "user_id", referencedColumnName = "id") }, 
+		inverseJoinColumns = { @JoinColumn(name = "role_id", referencedColumnName = "id") }
+	)
+	@FieldOfTargetEntity("name")
+	private List<String> roleNames;
+	
 	public int getId() {
 		return id;
 	}
@@ -55,4 +64,13 @@ public class User extends DataObject{
 	public void setRoles(List<Role> roles) {
 		this.roles = roles;
 	}
+
+	public List<String> getRoleNames() {
+		return roleNames;
+	}
+
+	public void setRoleNames(List<String> roleNames) {
+		this.roleNames = roleNames;
+	}
+	
 }

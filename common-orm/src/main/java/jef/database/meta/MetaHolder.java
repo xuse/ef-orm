@@ -760,49 +760,57 @@ public final class MetaHolder {
 	}
 
 	private static JoinPath processJoin(AbstractMetadata meta, ITableMetadata target, FieldAnnotationProvider annos, JoinTable jt) {
-		String table=jt.name();
-		//计算生成关系表
-		TupleMetadata rt=new TupleMetadata(table);
+		String table = jt.name();
+
+		// 计算生成关系表
+		TupleMetadata rt = getDynamicMeta(table);
 		JoinColumn[] jc1 = jt.joinColumns();
-		for(JoinColumn jc:jc1){
-			ColumnType ct=meta.getColumnType(jc.referencedColumnName());
-			rt.addColumn(jc.name(),jc.name(), toNormal(ct),jt.uniqueConstraints().length>0)	;
-			rt.addIndex(jc.name(),null);
-		}
 		
-		JoinColumn[] jc2 = jt.inverseJoinColumns();
-		for(JoinColumn jc:jc2){
-			String name=jc.referencedColumnName();
-			ColumnMapping ct=target.getColumnDef(target.getField(name));
+		if (rt == null) {
+			rt = new TupleMetadata(table);
+			for (JoinColumn jc : jc1) {
+				ColumnType ct = meta.getColumnType(jc.referencedColumnName());
+				rt.addColumn(jc.name(), jc.name(), toNormal(ct), jt.uniqueConstraints().length > 0);
+				rt.addIndex(jc.name(), null);
+			}
+
+			JoinColumn[] jc2 = jt.inverseJoinColumns();
+			for (JoinColumn jc : jc2) {
+				String name = jc.referencedColumnName();
+				ColumnMapping ct = target.getColumnDef(target.getField(name));
+
+				Assert.notNull(ct);
+				rt.addColumn(jc.name(), jc.name(), toNormal(ct.get()), jt.uniqueConstraints().length > 0);
+				rt.addIndex(jc.name(), null);
+			}
+			// 补充关系表注册
+			putDynamicMeta(rt);
 			
-			Assert.notNull(ct);
-			rt.addColumn(jc.name(),jc.name(), toNormal(ct.get()),jt.uniqueConstraints().length>0);
-			rt.addIndex(jc.name(),null);
+			// 创建关系表到目标表的连接
+			JoinPath path2 = processJoin(rt, target, annos, jc2);
+			rt.addCascadeManyToOne("_OBJ", target, path2);
 		}
-		//补充关系表注册
-		putDynamicMeta(rt);
 		
-		//创建关系表到目标表的连接
-		JoinPath path2=processJoin(rt,target,annos,jc2);
-		rt.addCascadeManyToOne("_OBJ", target, path2);
-		
-		//创建到关系表的连接
-		JoinColumn[] jc3=new JoinColumn[jc1.length];
-		for(int i=0;i<jc1.length;i++) {
-			JoinColumnImpl jc=new JoinColumnImpl(jc1[i]);
+		AbstractRefField refs=rt.getRefFieldsByName().get("_OBJ");
+		Assert.notNull(refs);
+
+		// 创建到关系表的连接
+		JoinColumn[] jc3 = new JoinColumn[jc1.length];
+		for (int i = 0; i < jc1.length; i++) {
+			JoinColumnImpl jc = new JoinColumnImpl(jc1[i]);
 			jc.reverseColumn();
-			jc3[i]=jc;
+			jc3[i] = jc;
 		}
-		JoinPath path1=processJoin(meta,rt,annos,jc3);
-		path1.setRelationTable(rt,path2);
+		JoinPath path1 = processJoin(meta, rt, annos, jc3);
+		path1.setRelationTable(rt, refs.getReference().getHint());
 		return path1;
 	}
 
 	private static ColumnType toNormal(ColumnType columnType) {
-		if(columnType instanceof AutoIncrement) {
+		if (columnType instanceof AutoIncrement) {
 			return ((AutoIncrement) columnType).toNormalType();
-		}else if(columnType instanceof ColumnType.GUID) {
-			return ((GUID)columnType).toNormalType();
+		} else if (columnType instanceof ColumnType.GUID) {
+			return ((GUID) columnType).toNormalType();
 		}
 		return columnType;
 	}
