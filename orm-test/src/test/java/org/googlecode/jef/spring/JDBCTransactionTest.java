@@ -55,9 +55,8 @@ public class JDBCTransactionTest extends SpringTestBase{
 		table.addColumn("user", new ColumnType.Varchar(64));
 		table.addColumn("password", new ColumnType.Varchar(64));
 		table.addColumn("score", new ColumnType.Int(10));
-		if(db.createTable(table)==0){
-			db.truncate(table);	
-		}
+		db.dropTable(table);
+		db.createTable(table);
 	}
 	
 	

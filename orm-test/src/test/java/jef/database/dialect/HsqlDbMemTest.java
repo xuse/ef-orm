@@ -20,7 +20,6 @@ import jef.orm.onetable.model.TestEntity;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.string.RandomData;
-import junit.framework.Assert;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,15 +55,15 @@ public class HsqlDbMemTest extends org.junit.Assert {
 	public void testExistTable() {
 		if(StringUtils.isNotEmpty(queryTable)){
 			try {
-				Assert.assertTrue(db.existTable(queryTable.toUpperCase()));
-				Assert.assertTrue(db.existTable(queryTable.toLowerCase()));
+				assertTrue(db.existTable(queryTable.toUpperCase()));
+				assertTrue(db.existTable(queryTable.toLowerCase()));
 
-				Assert.assertTrue(db.existTable("Test_Entity"));
-				Assert.assertTrue(db.existTable("test_entity"));
-				Assert.assertTrue(db.existTable("TEST_ENTITY"));
+				assertTrue(db.existTable("Test_Entity"));
+				assertTrue(db.existTable("test_entity"));
+				assertTrue(db.existTable("TEST_ENTITY"));
 
 			} catch (SQLException e) {
-				Assert.fail(e.getMessage());
+				fail(e.getMessage());
 			}	
 		}
 	}
@@ -78,22 +77,23 @@ public class HsqlDbMemTest extends org.junit.Assert {
 			pstmt = conn.prepareStatement("CREATE SCHEMA " + schema);
 			pstmt.execute();
 		} catch (SQLException e) {
-			Assert.fail(e.getMessage());
+			fail(e.getMessage());
 		} catch (Exception e) {
-			Assert.fail(e.getMessage());
+			fail(e.getMessage());
 		} finally {
 			try {
 				pstmt.close();
 				// AfterClass will close conn, so need not call conn.close here.
 			} catch (SQLException e) {
-				Assert.fail(e.getMessage());
+				fail(e.getMessage());
 			} catch (Exception e) {
-				Assert.fail(e.getMessage());
+				fail(e.getMessage());
 			}
 		}
 	}
 
 	protected void createTable() throws SQLException {
+		db.dropTable(TestEntity.class);
 		db.createTable(TestEntity.class);
 	}
 
@@ -106,17 +106,17 @@ public class HsqlDbMemTest extends org.junit.Assert {
 			pstmt = conn.prepareStatement("DROP TABLE " + table);
 			pstmt.execute();
 		} catch (SQLException e) {
-			Assert.fail(e.getMessage());
+			fail(e.getMessage());
 		} catch (Exception e) {
-			Assert.fail(e.getMessage());
+			fail(e.getMessage());
 		} finally {
 			try {
 				pstmt.close();
 				// AfterClass will close conn, so need not call conn.close here.
 			} catch (SQLException e) {
-				Assert.fail(e.getMessage());
+				fail(e.getMessage());
 			} catch (Exception e) {
-				Assert.fail(e.getMessage());
+				fail(e.getMessage());
 			}
 		}
 	}
@@ -147,7 +147,7 @@ public class HsqlDbMemTest extends org.junit.Assert {
 //			memoryOccupied(100000);
 		} catch (Exception e) {
 			e.printStackTrace();
-			Assert.fail(e.getMessage());
+			fail(e.getMessage());
 		}
 	}
 

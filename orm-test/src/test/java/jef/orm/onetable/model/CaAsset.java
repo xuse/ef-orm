@@ -4,6 +4,8 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
@@ -27,7 +29,7 @@ public class CaAsset extends DataObject {
 	 * Asset ID
 	 */
 	@Id
-//    @GeneratedValue(strategy = GenerationType.SEQUENCE) 
+    @GeneratedValue(strategy = GenerationType.SEQUENCE) 
 	@Column(name = "asset_id", precision = 6, columnDefinition = "NUMBER", nullable = false)
 	private int assetId;
 
