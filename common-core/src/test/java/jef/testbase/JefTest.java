@@ -9,6 +9,7 @@ import java.io.OutputStream;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -196,6 +197,13 @@ public class JefTest extends Assert {
 		CollectionUtil.setElement(l, 4, "value4");
 		System.out.println(l);
 	}
+	
+	@Test
+	public void urltest() throws MalformedURLException{
+		URL url=new URL("http://fd.com/fsd/fdsfdsgfdfg/ddd.go?sdsfdsfsf=1&df=55&ddd");
+		System.out.println(url.getPath());
+	}
+		
 
 	@Test
 	public void testSttinh() {
@@ -231,15 +239,6 @@ public class JefTest extends Assert {
 
 	}
 
-	@Test
-	public void cloneTest() throws CloneNotSupportedException {
-		Parent p = new Parent();
-
-		Parent clone = (Parent) CloneUtils.clone(p, true);
-		System.out.println(p);
-		System.out.println(clone);
-
-	}
 
 	@Test
 	public void cloneTest2() throws CloneNotSupportedException {

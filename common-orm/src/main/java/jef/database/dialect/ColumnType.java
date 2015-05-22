@@ -367,6 +367,9 @@ public abstract class ColumnType {
 
 		@Override
 		protected boolean compare(ColumnType type, DatabaseDialect profile) {
+			if(type instanceof Varchar) {
+				return false;
+			}
 			Varchar rhs = (Varchar) type;
 			return rhs.length == this.length;
 		}
@@ -927,7 +930,7 @@ public abstract class ColumnType {
 
 		@Override
 		protected boolean compare(ColumnType type, DatabaseDialect profile) {
-			return true;
+			return type instanceof Clob;
 		}
 
 		@Override
@@ -988,7 +991,7 @@ public abstract class ColumnType {
 
 		@Override
 		protected boolean compare(ColumnType type, DatabaseDialect profile) {
-			return true;
+			return type instanceof Blob;
 		}
 
 		@Override
