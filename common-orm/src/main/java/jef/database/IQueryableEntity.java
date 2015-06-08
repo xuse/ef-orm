@@ -58,7 +58,7 @@ public interface IQueryableEntity extends Queryable, Serializable,Cloneable {
 	boolean isUsed(Field field);
 	
 	/**
-	 * 清除对象中的Query对象
+	 * 清除对象中的Query对象，包括延迟加载的钩子等等
 	 */
 	void clearQuery();
 }

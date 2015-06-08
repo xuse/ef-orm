@@ -407,7 +407,7 @@ public abstract class UpdateProcessor {
 			}
 		}
 		if (ORMConfig.getInstance().debugMode) {
-			access = System.currentTimeMillis();
+			access = System.currentTimeMillis()-access;
 			LogUtil.show(StringUtils.concat("Updated:", String.valueOf(total), "\t Time cost([ParseSQL]:", String.valueOf(parseCost), "ms, [DbAccess]:", String.valueOf(access), "ms) |", dbName));
 		}
 		return total;

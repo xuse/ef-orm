@@ -126,7 +126,7 @@ public final class ColumnMappings {
 	private static final Map<Class<?>, ResultSetAccessor> FAST_ACCESSOR_MAP_PRIMTIVE = new IdentityHashMap<Class<?>, ResultSetAccessor>();
 	private static final Map<Class<?>, ResultSetAccessor> FAST_ACCESSOR_MAP = new IdentityHashMap<Class<?>, ResultSetAccessor>();
 	static {
-		ResultSetAccessor C=new ResultCharacterAccessor((char)0);
+		ResultSetAccessor C = new ResultCharacterAccessor((char) 0);
 		FAST_ACCESSOR_MAP_PRIMTIVE.put(Integer.TYPE, I);
 		FAST_ACCESSOR_MAP_PRIMTIVE.put(Long.TYPE, J);
 		FAST_ACCESSOR_MAP_PRIMTIVE.put(Float.TYPE, F);
@@ -170,8 +170,8 @@ public final class ColumnMappings {
 		/*
 		 * 已知字段映射
 		 */
-		if (ctype != null){
-			if(javaType==null|| javaType==ctype.getFieldType()|| javaType.isAssignableFrom(ctype.getFieldType())){
+		if (ctype != null) {
+			if (javaType == null || javaType == ctype.getFieldType() || javaType.isAssignableFrom(ctype.getFieldType())) {
 				return ctype;
 			}
 		}
@@ -190,51 +190,57 @@ public final class ColumnMappings {
 		if (c.getType() == 0) {
 			return RAW;
 		}
-//		LogUtil.warn("Dynamic Mapping creating from [{}] to sql-type:[{}]", javaType.getName(), c.getType());
-		switch (c.getType()) {
-		case Types.LONGNVARCHAR:
-		case Types.LONGVARCHAR:
-		case Types.NVARCHAR:
-		case Types.NCHAR:
-		case Types.VARCHAR:
-		case Types.CHAR:
-			return StringType.getMappingType(javaType);
-		case Types.INTEGER:
-		case Types.SMALLINT:
-		case Types.TINYINT:
-			return IntType.getMappingType(javaType);
-		case Types.BIGINT:
-			return LongType.getMappingType(javaType);
-		case Types.REAL:
-		case Types.DOUBLE:
-			return DoubleType.getMappingType(javaType);
-		case Types.FLOAT:
-			return FloatType.getMappingType(javaType);
-			// case Types.NUMERIC:
-			// case Types.DECIMAL:
-			// case Types.REAL:
-		case Types.BINARY:
-		case Types.LONGVARBINARY:
-		case Types.BLOB:
-			return BlobType.getMappingType(javaType);
-		case Types.CLOB:
-		case Types.NCLOB:
-			return ClobType.getMappingType(javaType);
-		case Types.BOOLEAN:
-			return new BooleanBoolMapping();
-		case Types.DATE:
-			return DateType.getMappingType(javaType);
-		case Types.TIME:
-		case Types.TIMESTAMP:
-			return TimestampType.getMappingType(javaType);
-		case Types.ROWID:
-			return ROWID;
-		default:
-			if (rsa != null) {
-				LogUtil.warn("The result accessor [{}] was nor extractly match the column type[{}], but no better accessor was found.", rsa, c.getType());
-				return rsa;
+		try {
+
+			// LogUtil.warn("Dynamic Mapping creating from [{}] to sql-type:[{}]",
+			// javaType.getName(), c.getType());
+			switch (c.getType()) {
+			case Types.LONGNVARCHAR:
+			case Types.LONGVARCHAR:
+			case Types.NVARCHAR:
+			case Types.NCHAR:
+			case Types.VARCHAR:
+			case Types.CHAR:
+				return StringType.getMappingType(javaType);
+			case Types.INTEGER:
+			case Types.SMALLINT:
+			case Types.TINYINT:
+				return IntType.getMappingType(javaType);
+			case Types.BIGINT:
+				return LongType.getMappingType(javaType);
+			case Types.REAL:
+			case Types.DOUBLE:
+				return DoubleType.getMappingType(javaType);
+			case Types.FLOAT:
+				return FloatType.getMappingType(javaType);
+				// case Types.NUMERIC:
+				// case Types.DECIMAL:
+				// case Types.REAL:
+			case Types.BINARY:
+			case Types.LONGVARBINARY:
+			case Types.BLOB:
+				return BlobType.getMappingType(javaType);
+			case Types.CLOB:
+			case Types.NCLOB:
+				return ClobType.getMappingType(javaType);
+			case Types.BOOLEAN:
+				return new BooleanBoolMapping();
+			case Types.DATE:
+				return DateType.getMappingType(javaType);
+			case Types.TIME:
+			case Types.TIMESTAMP:
+				return TimestampType.getMappingType(javaType);
+			case Types.ROWID:
+				return ROWID;
+			default:
+				if (rsa != null) {
+					LogUtil.warn("The result accessor [{}] was nor extractly match the column type[{}], but no better accessor was found.", rsa, c.getType());
+					return rsa;
+				}
+				throw new IllegalArgumentException("No ProperAccessor found! " + c);
 			}
-			throw new IllegalArgumentException("No ProperAccessor found! " + c);
+		} catch (IllegalArgumentException e) {
+			throw new IllegalArgumentException(c.toString(), e);
 		}
 	}
 
