@@ -40,6 +40,8 @@ import jef.database.dialect.type.CharBooleanMapping;
 import jef.database.dialect.type.CharCharMapping;
 import jef.database.dialect.type.CharDateMapping;
 import jef.database.dialect.type.CharEnumMapping;
+import jef.database.dialect.type.CharIntMapping;
+import jef.database.dialect.type.CharLongMapping;
 import jef.database.dialect.type.CharStringMapping;
 import jef.database.dialect.type.CharTimestampMapping;
 import jef.database.dialect.type.ClobCharArrayMapping;
@@ -68,9 +70,11 @@ import jef.database.dialect.type.TimestampDateMapping;
 import jef.database.dialect.type.TimestampLongMapping;
 import jef.database.dialect.type.TimestampTsMapping;
 import jef.database.dialect.type.VarcharDateMapping;
+import jef.database.dialect.type.VarcharDoubleMapping;
 import jef.database.dialect.type.VarcharEnumMapping;
 import jef.database.dialect.type.VarcharFloatMapping;
 import jef.database.dialect.type.VarcharIntMapping;
+import jef.database.dialect.type.VarcharLongMapping;
 import jef.database.dialect.type.VarcharStringMapping;
 import jef.database.dialect.type.VarcharTimestampMapping;
 import jef.database.dialect.type.XmlStringMapping;
@@ -315,6 +319,10 @@ public abstract class ColumnType {
 				return new CharDateMapping();
 			} else if (fieldType == java.sql.Timestamp.class) {
 				return new CharTimestampMapping();
+			} else if (fieldType == Integer.class || fieldType == Integer.TYPE) {
+				return new CharIntMapping();
+			} else if (fieldType == Long.class || fieldType == Long.TYPE) {
+				return new CharLongMapping();
 			} else if (length == 1 && (fieldType == java.lang.Boolean.class || fieldType == java.lang.Boolean.TYPE)) {
 				return new CharBooleanMapping();
 			}
@@ -382,12 +390,16 @@ public abstract class ColumnType {
 				return new VarcharEnumMapping();
 			} else if (fieldType == Integer.class || fieldType == Integer.TYPE) {
 				return new VarcharIntMapping();
+			} else if (fieldType == Float.class || fieldType == Float.TYPE) {
+				return new VarcharFloatMapping();
+			} else if (fieldType == java.lang.Double.class || fieldType == java.lang.Double.TYPE) {
+				return new VarcharDoubleMapping();
+			} else if (fieldType == java.lang.Long.class || fieldType == java.lang.Long.TYPE) {
+				return new VarcharLongMapping();
 			} else if (fieldType == java.util.Date.class) {
 				return new VarcharDateMapping();
 			} else if (fieldType == java.sql.Timestamp.class) {
 				return new VarcharTimestampMapping();
-			} else if (fieldType == Float.class || fieldType == Float.TYPE) {
-				return new VarcharFloatMapping();
 			}
 			throw new IllegalArgumentException("Varchar can not mapping to class " + fieldType.getName());
 		}

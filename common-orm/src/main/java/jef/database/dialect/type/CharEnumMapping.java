@@ -10,7 +10,6 @@ import javax.persistence.Enumerated;
 
 import jef.accelerator.bean.BeanAccessor;
 import jef.database.Field;
-import jef.database.annotation.UnsavedValue;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
