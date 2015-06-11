@@ -4,6 +4,7 @@ import java.util.Date;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -27,6 +28,19 @@ public class Foo extends DataObject{
 	@GeneratedValue
 	private Date modified;
 	
+	
+	@Column(columnDefinition="number(1)")
+	@Enumerated
+	private java.lang.Thread.State state = java.lang.Thread.State.NEW;
+	
+	
+	public java.lang.Thread.State getState() {
+		return state;
+	}
+
+	public void setState(java.lang.Thread.State state) {
+		this.state = state;
+	}
 	public int getId() {
 		return id;
 	}
@@ -46,6 +60,6 @@ public class Foo extends DataObject{
 		this.modified = modified;
 	}
 	public enum Field implements jef.database.Field{
-		id,name,modified
+		id,name,modified,state
 	}
 }

@@ -237,7 +237,7 @@ public final class ColumnMappings {
 					LogUtil.warn("The result accessor [{}] was nor extractly match the column type[{}], but no better accessor was found.", rsa, c.getType());
 					return rsa;
 				}
-				throw new IllegalArgumentException("No ProperAccessor found! " + c);
+				throw new IllegalArgumentException("No Proper Accessor found! " + c+"expect java:"+javaType);
 			}
 		} catch (IllegalArgumentException e) {
 			throw new IllegalArgumentException(c.toString(), e);

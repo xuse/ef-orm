@@ -42,6 +42,6 @@ public class NumIntEnumMapping extends AColumnMapping{
 
 	@Override
 	protected Class<?> getDefaultJavaType() {
-		return Integer.class;
+		return Enum.class;
 	}
 }
