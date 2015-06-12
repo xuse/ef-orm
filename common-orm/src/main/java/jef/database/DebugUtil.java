@@ -12,7 +12,7 @@ import javax.persistence.PersistenceException;
 
 import jef.common.log.LogUtil;
 import jef.common.pool.PoolStatus;
-import jef.database.cache.TransactionCache;
+import jef.database.cache.Cache;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.meta.AbstractRefField;
@@ -93,7 +93,7 @@ public class DebugUtil {
 		return ((OperateTarget) db).getRawConnection();
 	}
 
-	public static IConnection getIConnection(WrappedConnection db) throws SQLException {
+	public static IConnection getIConnection(TransactionalSession db) throws SQLException {
 		if(db instanceof Transaction){
 			return ((Transaction) db).getConnection();
 		}else{
@@ -199,7 +199,7 @@ public class DebugUtil {
 		return new CascadeLoaderTask(entry, filters);
 	}
 
-	public static TransactionCache getCache(Session session) {
+	public static Cache getCache(Session session) {
 		return session.getCache();
 	}
 }

@@ -28,7 +28,7 @@ import jef.database.support.SavepointNotSupportedException;
  * @author jiyi
  * 
  */
-public interface WrappedConnection{
+public interface TransactionalSession{
 	/**
 	 * 提交事务
 	 * 

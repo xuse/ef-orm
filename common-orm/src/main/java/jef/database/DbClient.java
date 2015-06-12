@@ -30,7 +30,7 @@ import jef.common.Callback;
 import jef.common.log.LogUtil;
 import jef.common.pool.PoolStatus;
 import jef.database.cache.CacheDummy;
-import jef.database.cache.TransactionCache;
+import jef.database.cache.Cache;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.AbstractDialect;
 import jef.database.dialect.DatabaseDialect;
@@ -65,7 +65,7 @@ import org.easyframe.enterprise.spring.TransactionMode;
  * 
  * @author jiyi
  */
-public class DbClient extends Session implements ConnectionFactory {
+public class DbClient extends Session implements SessionFactory {
 	/**
 	 * 命名查询
 	 */
@@ -232,7 +232,7 @@ public class DbClient extends Session implements ConnectionFactory {
 	}
 
 	@Override
-	protected TransactionCache getCache() {
+	protected Cache getCache() {
 		return CacheDummy.getInstance();
 	}
 
@@ -1018,5 +1018,10 @@ public class DbClient extends Session implements ConnectionFactory {
 		} finally {
 			connPool = null;
 		}
+	}
+
+	@Override
+	public Session getSession() {
+		return this;
 	}
 }

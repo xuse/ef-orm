@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import jef.database.DbUtils;
 import jef.database.IQueryableEntity;
@@ -39,13 +40,13 @@ import org.slf4j.LoggerFactory;
  * 
  */
 @SuppressWarnings("rawtypes")
-public final class CacheImpl implements TransactionCache {
+public final class CacheImpl implements Cache {
 	SqlProcessor sqlP;
 	SelectProcessor selectp;
 	private boolean debug = ORMConfig.getInstance().isCacheDebug();
 	private static Logger logger = LoggerFactory.getLogger(CacheImpl.class);
-	private AtomicInteger hit = new AtomicInteger();
-	private AtomicInteger miss = new AtomicInteger();
+	private AtomicLong hit = new AtomicLong();
+	private AtomicLong miss = new AtomicLong();
 
 	public CacheImpl(SqlProcessor sql, SelectProcessor selectp) {
 		this.sqlP = sql;
@@ -351,11 +352,11 @@ public final class CacheImpl implements TransactionCache {
 		}
 	}
 
-	public int getHitCount() {
+	public long getHitCount() {
 		return hit.get();
 	}
 
-	public int getMissCount() {
+	public long getMissCount() {
 		return miss.get();
 	}
 }

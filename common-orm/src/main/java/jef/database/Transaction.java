@@ -21,7 +21,7 @@ import java.util.Collection;
 
 import javax.persistence.PersistenceException;
 
-import jef.database.cache.TransactionCache;
+import jef.database.cache.Cache;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * @author jiyi
  * 
  */
-public abstract class Transaction extends Session implements WrappedConnection {
+public abstract class Transaction extends Session implements TransactionalSession {
 	protected static Logger log = LoggerFactory.getLogger(Transaction.class);
 
 	/**
@@ -81,7 +81,7 @@ public abstract class Transaction extends Session implements WrappedConnection {
 	protected String parentName;// 当关闭后parent即为null，此时需要使用该变量显示日志
 	protected DbClient parent;
 	protected volatile IConnection conn;
-	protected TransactionCache cache;
+	protected Cache cache;
 
 	@Override
 	public String toString() {
@@ -116,7 +116,7 @@ public abstract class Transaction extends Session implements WrappedConnection {
 	}
 
 	@Override
-	protected TransactionCache getCache() {
+	protected Cache getCache() {
 		return cache;
 	}
 

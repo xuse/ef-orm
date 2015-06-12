@@ -3,6 +3,8 @@ package jef.database.cache;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 
 @SuppressWarnings("serial")
 public class SqlCacheKey implements CacheKey{
@@ -49,4 +51,23 @@ public class SqlCacheKey implements CacheKey{
 		sb.append(params);
 		return sb.toString();
 	}
+
+
+	@Override
+	public int hashCode() {
+		
+		return new HashCodeBuilder().append(table).append(dimension).append(params).toHashCode();
+	}
+
+
+	@Override
+	public boolean equals(Object obj) {
+		if(obj instanceof SqlCacheKey) {
+			SqlCacheKey rhs=(SqlCacheKey)obj;
+			return new EqualsBuilder().append(this.table, rhs.table).append(this.dimension, rhs.dimension).append(this.params, rhs.params).isEquals();
+		}
+		return false;
+	}
+	
+	
 }

@@ -5,7 +5,7 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
-import jef.database.ConnectionFactory;
+import jef.database.SessionFactory;
 import jef.database.DbClient;
 import jef.database.datasource.AbstractDataSource;
 import jef.database.datasource.DataSourceLookup;
@@ -43,12 +43,12 @@ import jef.database.innerpool.JConnection;
  * </pre>
  */
 public class JDataSource extends AbstractDataSource {
-	private ConnectionFactory db;
+	private SessionFactory db;
 
 	public JDataSource() {
 	}
 
-	public JDataSource(ConnectionFactory lookup) {
+	public JDataSource(SessionFactory lookup) {
 		this.db = lookup;
 	}
 

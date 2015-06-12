@@ -26,7 +26,7 @@ import java.util.Map;
 
 import jef.common.PairSS;
 import jef.common.log.LogUtil;
-import jef.database.cache.TransactionCache;
+import jef.database.cache.Cache;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
@@ -412,7 +412,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			if (insertPart.getCallback() != null) {
 				insertPart.getCallback().callAfterBatch(listValue);
 			}
-			TransactionCache cache = parent.getCache();
+			Cache cache = parent.getCache();
 			DbOperatorListener listener = parent.getListener();
 			if (extreme) {
 				for (T t : listValue) {

@@ -35,7 +35,7 @@ import jef.common.wrapper.IntRange;
 import jef.database.Condition.Operator;
 import jef.database.Transaction.TransactionFlag;
 import jef.database.cache.CacheImpl;
-import jef.database.cache.TransactionCache;
+import jef.database.cache.Cache;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
@@ -100,7 +100,7 @@ import org.easyframe.enterprise.spring.TransactionMode;
  * @see Transaction
  * @see #getSqlTemplate(String)
  */
-public abstract class Session {
+public abstract class Session{
 	// 这六个值在初始化的时候赋值
 	protected SqlProcessor rProcessor;
 	protected InsertProcessor insertp;
@@ -151,7 +151,7 @@ public abstract class Session {
 	/*
 	 * 内部使用 得到缓存
 	 */
-	abstract protected TransactionCache getCache();
+	abstract protected Cache getCache();
 
 	/*
 	 * 得到数据库操作监听器（观测者模式的回调对象）

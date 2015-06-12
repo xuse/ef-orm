@@ -9,7 +9,7 @@ import jef.database.DebugUtil;
 import jef.database.NativeQuery;
 import jef.database.QB;
 import jef.database.Transaction;
-import jef.database.cache.TransactionCache;
+import jef.database.cache.Cache;
 import jef.database.jmx.JefFacade;
 import jef.database.query.Query;
 import jef.database.test.DataSource;
@@ -56,7 +56,7 @@ public class CacheTest extends org.junit.Assert{
 		Transaction session=db.startTransaction();
 		CaAsset ca=RandomData.newInstance(jef.orm.onetable.model.CaAsset.class);
 		session.insert(ca);
-		TransactionCache cache=DebugUtil.getCache(session);
+		Cache cache=DebugUtil.getCache(session);
 
 		{
 			int hit=cache.getHitCount();

@@ -37,7 +37,7 @@ import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.PojoWrapper;
 import jef.database.Session;
-import jef.database.WrappedConnection;
+import jef.database.TransactionalSession;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.support.SavepointNotSupportedException;
@@ -69,7 +69,7 @@ public class JefEntityManager implements EntityManager {
 		this.properties = properties;
 	}
 	
-	public JefEntityManager(EntityManagerFactory parent, Map properties,WrappedConnection session) {
+	public JefEntityManager(EntityManagerFactory parent, Map properties,TransactionalSession session) {
 		this.parent=(JefEntityManagerFactory) parent;
 		this.properties=properties;
 		this.tx=new JefEntityTransaction(this,session);

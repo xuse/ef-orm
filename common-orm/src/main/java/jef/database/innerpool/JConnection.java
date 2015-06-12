@@ -20,9 +20,9 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
-import jef.database.ConnectionFactory;
+import jef.database.SessionFactory;
 import jef.database.DebugUtil;
-import jef.database.WrappedConnection;
+import jef.database.TransactionalSession;
 import jef.database.jdbc.GenerateKeyReturnOper;
 import jef.database.routing.jdbc.JPreparedCall;
 import jef.database.routing.jdbc.JPreparedStatement;
@@ -36,10 +36,10 @@ import jef.database.routing.jdbc.JStatement;
  */
 public class JConnection implements Connection {
 	@SuppressWarnings("unused")
-	private ConnectionFactory connectionFactory;
-	private WrappedConnection connection;
+	private SessionFactory connectionFactory;
+	private TransactionalSession connection;
 
-	public JConnection(ConnectionFactory db) {
+	public JConnection(SessionFactory db) {
 		this.connectionFactory = db;
 		this.connection = db.startTransaction().setAutoCommit(true);
 	}
@@ -299,7 +299,7 @@ public class JConnection implements Connection {
 		return conn().getHoldability();
 	}
 
-	public WrappedConnection get() {
+	public TransactionalSession get() {
 		return this.connection;
 	}
 
