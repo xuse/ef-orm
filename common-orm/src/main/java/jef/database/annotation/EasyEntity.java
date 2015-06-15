@@ -31,4 +31,10 @@ public @interface EasyEntity {
 	 * @return
 	 */
 	boolean create() default true;
+	
+	/**
+	 * 使用外连接
+	 * @return
+	 */
+	boolean useOuterJoin() default true;
 }
