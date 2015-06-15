@@ -175,8 +175,6 @@ public final class ReadOnlyQuery<T extends IQueryableEntity> extends AbstractQue
 
 	public void setCascade(boolean cascade) {
 		throw new UnsupportedOperationException();
-//		t.setLoadVsMany(cascade);
-//		t.setLoadVsOne(cascade);
 	}
 
 	public Transformer getResultTransformer() {
@@ -193,6 +191,6 @@ public final class ReadOnlyQuery<T extends IQueryableEntity> extends AbstractQue
 
 	@Override
 	public boolean isSelectCustomized() {
-		return false;
+		return !type.cacheable();
 	}
 }

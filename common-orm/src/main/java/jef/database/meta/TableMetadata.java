@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Table;
 
@@ -90,7 +91,7 @@ public final class TableMetadata extends AbstractMetadata {
 		this.containerAccessor=FastBeanWrapperImpl.getAccessorFor(clz);
 		this.thisType = clz;
 		this.pkFields = Collections.emptyList();
-		initByAnno(clz, annos.getAnnotation(Table.class),annos.getAnnotation(BindDataSource.class));
+		initByAnno(clz, annos.getAnnotation(Table.class),annos.getAnnotation(BindDataSource.class),annos.getAnnotation(Cacheable.class));
 	}
 
 	TableMetadata(Class<PojoWrapper> varClz, Class<?> clz, AnnotationProvider annos) {
@@ -99,7 +100,7 @@ public final class TableMetadata extends AbstractMetadata {
 		this.thisType = clz;
 		this.pojoAccessor = FastBeanWrapperImpl.getAccessorFor(clz);
 		this.pkFields = Collections.emptyList();
-		initByAnno(clz,annos.getAnnotation(Table.class),annos.getAnnotation(BindDataSource.class));
+		initByAnno(clz,annos.getAnnotation(Table.class),annos.getAnnotation(BindDataSource.class),annos.getAnnotation(Cacheable.class));
 	}
 
 	/**

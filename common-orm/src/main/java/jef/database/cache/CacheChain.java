@@ -67,6 +67,7 @@ public final class CacheChain implements Cache{
 
 	@Override
 	public List load(CacheKey key) {
+		if(key==null)return null;
 		for(Cache c: chains) {
 			List l=c.load(key);
 			if(l!=null) {

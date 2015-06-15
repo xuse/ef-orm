@@ -680,4 +680,39 @@ public class DbClientBuilder {
 			}
 		}
 	}
+	
+	public boolean isCacheDebug() {
+		return ORMConfig.getInstance().isCacheDebug();
+	}
+	
+	public DbClientBuilder setCacheDebug(boolean cacheDebug) {
+		ORMConfig.getInstance().setCacheDebug(cacheDebug);
+		return this;
+	}
+	
+	
+	public boolean isCacheLevel1() {
+		return ORMConfig.getInstance().isCacheLevel1();
+	}
+	
+	public DbClientBuilder setCacheLevel1(boolean cache) {
+		ORMConfig.getInstance().setCacheLevel1(cache);
+		return this;
+	}
+	
+	public int getGlobalCacheLiveTime() {
+		return ORMConfig.getInstance().getCacheLevel2();
+	}
+	
+	/**
+	 * 设置全局缓存的生存时间，单位秒。
+	 * 全局缓存是类似于一级缓存的一个存储结构，可以自动分析数据库操作关联性并进行数据刷新。
+	 * @param second
+	 * @return
+	 */
+	public DbClientBuilder setGlobalCacheLiveTime(int second) {
+		ORMConfig.getInstance().setCacheLevel2(second);
+		return this;
+	}
+	
 }

@@ -43,7 +43,7 @@ import com.google.common.collect.ImmutableList;
  * 
  */
 @SuppressWarnings("rawtypes")
-public final class CacheImpl implements Cache {
+public class CacheImpl implements Cache {
 	SqlProcessor sqlP;
 	SelectProcessor selectp;
 	private ORMConfig config = ORMConfig.getInstance();
@@ -69,7 +69,7 @@ public final class CacheImpl implements Cache {
 
 	/**
 	 * 
-	 * 缓存实际上是三级Map。 第一级是以查询用的表（或多表）为key。 第二级是以where语句的模版为key（维度：排序问题如何处理？待检查）
+	 * 缓存实际上是三级Map。 第一级是以查询用的表（或多表）为key。 第二级是以where语句的模版为key
 	 * 第三级是以where语句中的参数为key。
 	 * 
 	 * 定时失效机制如何添加：拟添加在第三层 清洗规则中，可以以任意一级为条件进行清洗
@@ -244,14 +244,14 @@ public final class CacheImpl implements Cache {
 		 * 2015-6-15 由于在存入对象时，没有延迟加载钩子，造成读取到缓存中的对象时，延迟加载功能未生效。
 		 * 由于Entity有状态（延迟加载钩子），缓存中如何处理？
 		 * 
-		 * 临时办法1：先停止插入时的缓存。 解决办法2：级联关系不缓存，也就是说，每次单表查询完成后，无论是否命中缓存都要重新计算级联关系。
+		 * 办法1：先停止插入时的缓存。 解决办法2：级联关系不缓存，也就是说，每次单表查询完成后，无论是否命中缓存都要重新计算级联关系。
 		 * 
-		 * 目前暂时采用方案1由于存入缓存的对象句柄依然在外部，意味着用户可以随意修改该对象用作其他用途，因此将这样的对象直接缓存下来是危险的。
+		 * 目前两个方案都启用。
+		 * 采用方案1由于存入缓存的对象句柄依然在外部，意味着用户可以随意修改该对象用作其他用途，因此将这样的对象直接缓存下来是危险的。
 		 */
 		AbstractMetadata meta = MetaHolder.getMeta(obj);
 		KeyDimension dim = null;
-		
-		
+
 		if (!meta.getPKFields().isEmpty()) {
 			List<Serializable> pks = DbUtils.getPKValueSafe(obj);
 			if (pks == null)
@@ -266,9 +266,9 @@ public final class CacheImpl implements Cache {
 
 			Map<KeyDimension, DimCache> tableCache = getCreateTableCache(pkCache.getStoreSpace());
 			refreshCache(tableCache, pkCache, null);
-		}else {
-			Map<KeyDimension, DimCache>  tableCache=cache.get(meta.getTableName(false).toUpperCase());
-			if(tableCache!=null)
+		} else {
+			Map<KeyDimension, DimCache> tableCache = cache.get(meta.getTableName(false).toUpperCase());
+			if (tableCache != null)
 				refreshCacheExcept(tableCache, null);
 		}
 	}
@@ -390,10 +390,11 @@ public final class CacheImpl implements Cache {
 
 	public void process(Truncate st, List<Object> list) {
 		Table t = st.getTable();
-		ITableMetadata meta = MetaHolder.lookup(t.getSchemaName(), t.getName());
-		if (meta == null)
-			return;
-		this.cache.remove(meta.getName());
+		String tableName = t.getName().toUpperCase();
+		Map<KeyDimension, DimCache> tableCache = this.cache.get(tableName);
+		if (tableCache != null) {
+			refreshCacheExcept(tableCache, null);
+		}
 	}
 
 	public void process(Delete st, List<Object> list) {
@@ -401,7 +402,6 @@ public final class CacheImpl implements Cache {
 			Table t = (Table) st.getTable();
 			KeyDimension dim = new KeyDimension(t, st.getWhere(), null);
 			CacheKey key = new SqlCacheKey(dim, list);
-
 			Map<KeyDimension, DimCache> tableCache = this.cache.get(key.getStoreSpace());
 
 			if (tableCache == null)

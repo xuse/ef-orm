@@ -322,8 +322,6 @@ public interface ITableMetadata {
 	///////////////基于KV表扩展的设计//////////////
 	
 	
-	
-	
-	
+	boolean cacheable();
 	
 }

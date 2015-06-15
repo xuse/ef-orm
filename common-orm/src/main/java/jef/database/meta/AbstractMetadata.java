@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.Cacheable;
+
 import jef.common.log.LogUtil;
 import jef.database.DbCfg;
 import jef.database.DbUtils;
@@ -59,12 +61,13 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	// /////////引用索引/////////////////
 	protected final Map<String, AbstractRefField> refFieldsByName = new HashMap<String, AbstractRefField>();// 记录所有关联和引用字段referenceFields
 	protected final Map<Reference, List<AbstractRefField>> refFieldsByRef = new HashMap<Reference, List<AbstractRefField>>();// 记录所有的引用字段，按引用关系
+	private boolean cacheable;
 
 	public Field[] getLobFieldNames() {
 		return lobNames;
 	}
 
-	protected void initByAnno(Class<?> thisType, javax.persistence.Table table, BindDataSource bindDs) {
+	protected void initByAnno(Class<?> thisType, javax.persistence.Table table, BindDataSource bindDs, Cacheable cache) {
 		// schema初始化
 		if (table != null) {
 			if (table.schema().length() > 0) {
@@ -86,6 +89,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		if (bindDs != null) {
 			this.bindDsName = MetaHolder.getMappingSite(StringUtils.trimToNull(bindDs.value()));
 		}
+		this.cacheable = cache != null && cache.value();
 	}
 
 	public String getBindDsName() {
@@ -174,9 +178,9 @@ public abstract class AbstractMetadata implements ITableMetadata {
 
 	public KeyDimension getPKDimension(DatabaseDialect profile) {
 		if (pkDim == null) {
-			List<Serializable> pks=new ArrayList<Serializable>();
-			for(ColumnMapping mapping: this.getPKFields()) {
-				pks.add((Serializable)BeanUtils.defaultValueForBasicType(mapping.getFieldType()));
+			List<Serializable> pks = new ArrayList<Serializable>();
+			for (ColumnMapping mapping : this.getPKFields()) {
+				pks.add((Serializable) BeanUtils.defaultValueForBasicType(mapping.getFieldType()));
 			}
 			PKQuery<?> query = new PKQuery<IQueryableEntity>(this, pks, newInstance());
 			BindSql sql = query.toPrepareWhereSql(null, profile);
@@ -367,4 +371,10 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		ColumnMapping targetFld = DbUtils.toColumnMapping(target);
 		return innerAdd(pp, targetFld, config);
 	}
+
+	@Override
+	public boolean cacheable() {
+		return cacheable;
+	}
+
 }

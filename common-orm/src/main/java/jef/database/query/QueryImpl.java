@@ -448,6 +448,7 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 
 	@Override
 	public boolean isSelectCustomized() {
+		if(!type.cacheable())return true;
 		PopulateStrategy[] s=t.getStrategy();
 		if(s!=null && s.length>0)return true;
 		return this.selected!=null;
