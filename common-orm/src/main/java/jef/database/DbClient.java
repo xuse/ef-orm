@@ -29,8 +29,9 @@ import javax.sql.DataSource;
 import jef.common.Callback;
 import jef.common.log.LogUtil;
 import jef.common.pool.PoolStatus;
+import jef.database.cache.Cache;
 import jef.database.cache.CacheDummy;
-import jef.database.cache.TransactionCache;
+import jef.database.cache.CacheImpl;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.AbstractDialect;
 import jef.database.dialect.DatabaseDialect;
@@ -65,7 +66,7 @@ import org.easyframe.enterprise.spring.TransactionMode;
  * 
  * @author jiyi
  */
-public class DbClient extends Session implements ConnectionFactory {
+public class DbClient extends Session implements SessionFactory {
 	/**
 	 * 命名查询
 	 */
@@ -93,6 +94,10 @@ public class DbClient extends Session implements ConnectionFactory {
 	 * 构造当前对象的DataSource 也可能是RoutingDataSource
 	 */
 	private DataSource ds;
+	/**
+	 * 全局缓存
+	 */
+	private Cache golbalCache;
 
 	/**
 	 * 启动一个事务。
@@ -230,10 +235,11 @@ public class DbClient extends Session implements ConnectionFactory {
 	protected synchronized void initNQ() {
 		namedQueries = new NamedQueryHolder(this);
 	}
+	
 
 	@Override
-	protected TransactionCache getCache() {
-		return CacheDummy.getInstance();
+	protected Cache getCache() {
+		return golbalCache;
 	}
 
 	/**
@@ -329,8 +335,15 @@ public class DbClient extends Session implements ConnectionFactory {
 		this.insertp = InsertProcessor.get(profile, this);
 		this.updatep = UpdateProcessor.get(profile, this);
 		this.deletep = DeleteProcessor.get(profile, this);
-
 		this.sequenceManager = new SequenceManager(this);
+		
+		//设置全局缓存
+		if(ORMConfig.getInstance().getCacheLevel2()>0) {
+			this.golbalCache=new CacheImpl(rProcessor, selectp, ORMConfig.getInstance().getCacheLevel2(),"GLOBAL");
+		}else {
+			this.golbalCache=CacheDummy.getInstance();
+		}
+		//设置分区加载器
 		this.pm = new PartitionMetadata(connPool);
 		// 配置好的初始化选项
 		String str = JefConfiguration.get(DbCfg.DB_INIT_STATIC);
@@ -1018,5 +1031,10 @@ public class DbClient extends Session implements ConnectionFactory {
 		} finally {
 			connPool = null;
 		}
+	}
+
+	@Override
+	public Session getSession() {
+		return this;
 	}
 }

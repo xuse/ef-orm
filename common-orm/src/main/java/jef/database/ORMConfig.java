@@ -142,7 +142,13 @@ public class ORMConfig implements ORMConfigMBean {
 	/**
 	 * 缓存是否开启调试，这项配置不能在外部配置，默认是flase，只能通过代码或JMX开启
 	 */
-	private boolean cacheDebug;
+	public volatile boolean cacheDebug;
+	
+	/**
+	 * 二级缓存的生存周期，为0时禁用二级缓存。
+	 */
+	private int cacheLevel2;
+	
 	/**
 	 * 定期检查连接
 	 */
@@ -210,6 +216,7 @@ public class ORMConfig implements ORMConfigMBean {
 		allowEmptyQuery = JefConfiguration.getBoolean(DbCfg.ALLOW_EMPTY_QUERY, false);
 		enableLazyLoad = JefConfiguration.getBoolean(DbCfg.DB_ENABLE_LAZY_LOAD, true);
 		cacheLevel1 = JefConfiguration.getBoolean(DbCfg.CACHE_LEVEL_1, false);
+		cacheLevel2=JefConfiguration.getInt(DbCfg.CACHE_GLOBAL_EXPIRE_TIME, 0);
 		cacheDebug = System.getProperty("cache.debug") != null;
 		setFormatSQL(JefConfiguration.getBoolean(DbCfg.DB_FORMAT_SQL, false));
 		heartBeatSleep = JefConfiguration.getLong(DbCfg.DB_HEARTBEAT, 120000);
@@ -601,5 +608,12 @@ public class ORMConfig implements ORMConfigMBean {
 			return SqlLog.DUMMY;
 		}
 	}
-	
+
+	public int getCacheLevel2() {
+		return cacheLevel2;
+	}
+
+	public void setCacheLevel2(int cacheLevel2) {
+		this.cacheLevel2 = cacheLevel2;
+	}
 }

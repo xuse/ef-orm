@@ -113,7 +113,9 @@ public interface CommonDao{
 	
 	/**
 	 * 查询并分页
-	 * @param data
+	 * @param data 查询请求
+	 * @param start 起始记录，offset。从0开始。
+	 * @param limit 限制记录条数。如每页10条传入10。
 	 * @return
 	 */
 	<T> Page<T> findAndPage(T data,int start,int limit);
@@ -259,8 +261,10 @@ public interface CommonDao{
 	/**
 	 * 根据指定的SQL查找并分页
 	 * @param sql SQL语句,可使用 {@linkplain NativeQuery 增强的SQL (参见什么是E-SQL条目)}。
-	 * @param retutnType
-	 * @param params
+	 * @param retutnType 返回结果类型
+	 * @param params     绑定变量参数
+	 * @param start      起始记录行，第一条记录从0开始。
+	 * @param limit		  每页记录数
 	 * @return
 	 */
 	<T> Page<T> findAndPageByQuery(String sql,Class<T> retutnType, Map<String, Object> params,int start,int limit);
@@ -268,8 +272,10 @@ public interface CommonDao{
 	/**
 	 * 根据指定的SQL查找并分页
 	 * @param sql SQL语句,可使用 {@linkplain NativeQuery 增强的SQL (参见什么是E-SQL条目)}。
-	 * @param retutnType
-	 * @param params
+	 * @param retutnType 返回结果类型
+	 * @param params 绑定变量参数
+	 * @param start 起始记录行，第一条记录从0开始。
+	 * @param limit  每页记录数
 	 * @return
 	 */
 	<T> Page<T> findAndPageByQuery(String sql,ITableMetadata retutnType, Map<String, Object> params,int start,int limit);

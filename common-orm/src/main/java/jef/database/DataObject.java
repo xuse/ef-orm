@@ -70,6 +70,7 @@ public abstract class DataObject implements IQueryableEntity {
 	 */
 	public final void clearQuery() {
 		query = null;
+		lazyload=null;
 	}
 
 	/*

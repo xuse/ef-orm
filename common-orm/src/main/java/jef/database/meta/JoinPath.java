@@ -231,6 +231,10 @@ public class JoinPath {
 		if (type != o.type)
 			return false;
 		// Annotation自身已经很好的实现的equals方法，不会受代理类等因素影响
+		if(relationTable!=o.relationTable) {
+			return false;
+		}
+		
 		if (!ObjectUtils.equals(this.orderBy, o.orderBy)) {
 			return false;
 		}

@@ -8,6 +8,7 @@ import java.util.List;
 import jef.database.Condition.Operator;
 import jef.database.DbClient;
 import jef.database.NativeQuery;
+import jef.database.ORMConfig;
 import jef.database.QB;
 import jef.database.RecordHolder;
 import jef.database.RecordsHolder;
@@ -65,7 +66,6 @@ public class DynamicTableTest extends org.junit.Assert {
 		
 		db.createTable(meta);
 		db.createTable(GroupTable);
-
 	}
 	/**
 	 * 添加了@DatabaseDestroy註解的方法在每次数据库关闭时执行

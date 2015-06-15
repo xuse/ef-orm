@@ -10,7 +10,7 @@ import jef.database.jsqlparser.statement.update.Update;
 
 
 @SuppressWarnings("rawtypes") 
-public final class CacheDummy  implements TransactionCache{
+public final class CacheDummy  implements Cache{
 	
 	static CacheDummy instance=new CacheDummy();
 	public static CacheDummy getInstance(){
@@ -64,10 +64,10 @@ public final class CacheDummy  implements TransactionCache{
 	public void process(Update st, List<Object> list) {
 		throw new UnsupportedOperationException();
 	}
-	public int getHitCount() {
-		return 0;
+	public long getHitCount() {
+		return 0L;
 	}
-	public int getMissCount() {
-		return 0;
+	public long getMissCount() {
+		return 0L;
 	}
 }

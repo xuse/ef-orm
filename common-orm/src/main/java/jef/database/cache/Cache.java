@@ -2,8 +2,6 @@ package jef.database.cache;
 
 import java.util.List;
 
-import javax.persistence.Cache;
-
 import jef.database.IQueryableEntity;
 import jef.database.jsqlparser.statement.delete.Delete;
 import jef.database.jsqlparser.statement.insert.Insert;
@@ -15,7 +13,7 @@ import jef.database.jsqlparser.statement.update.Update;
  * @author Jiyi
  *
  */
-public interface TransactionCache extends Cache{
+public interface Cache extends javax.persistence.Cache{
 	/**
 	 * Store the results into cache.
 	 * @param key Key of cache.
@@ -53,7 +51,7 @@ public interface TransactionCache extends Cache{
 
 	/**
 	 * on object delete, remove the cache
-	 * @param table
+	 * @param table 注意，对于VarObject的特殊情况需要外部传入时处理完
 	 * @param where
 	 * @param bind
 	 */
@@ -98,8 +96,14 @@ public interface TransactionCache extends Cache{
 	 * @param list
 	 */
 	public void process(Update st, List<Object> list);
-	
-	int getHitCount();
-	
-	int getMissCount();
+	/**
+	 * 得到统计信息，命中次数
+	 * @return
+	 */
+	long getHitCount();
+	/**
+	 * 得到统计信息，未命中次数
+	 * @return
+	 */
+	long getMissCount();
 }

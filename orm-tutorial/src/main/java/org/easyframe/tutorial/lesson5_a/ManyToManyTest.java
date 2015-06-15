@@ -51,6 +51,8 @@ public class ManyToManyTest extends org.junit.Assert {
 			assertNotNull(u);
 			assertNotNull(r);
 			assertEquals(1,u.getRoles().size());
+			System.out.println("====1");
+			System.out.println(u.getRoleNames());
 		}
 		
 		Role role2=new Role();	
@@ -66,6 +68,8 @@ public class ManyToManyTest extends org.junit.Assert {
 			
 			u = db.load(User.class, userId);
 			assertEquals(2, u.getRoles().size());
+			System.out.println("====2");
+			System.out.println(u.getRoleNames());
 		}
 		
 		u=new User();

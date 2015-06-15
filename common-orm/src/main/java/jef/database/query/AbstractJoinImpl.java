@@ -10,6 +10,7 @@ import jef.database.Condition;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.QueryAlias;
+import jef.database.Session.PopulateStrategy;
 import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.populator.Transformer;
 
@@ -26,6 +27,13 @@ public abstract class AbstractJoinImpl implements Join{
 	
 	private Map<Query<?>,List<Condition>> refConditions;
 
+	@Override
+	public boolean isSelectCustomized() {
+		PopulateStrategy[] s=t.getStrategy();
+		if(s!=null && s.length>0)return true;
+		return context.getSelectsImpl()!=null;
+	}
+	
 	public EntityMappingProvider getSelectItems() {
 		return context.getSelectsImpl()==null?context:context.getSelectsImpl();
 	}

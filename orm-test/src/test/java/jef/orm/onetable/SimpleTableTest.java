@@ -715,7 +715,7 @@ public class SimpleTableTest extends org.junit.Assert {
 	@Test
 	public void testCassetInsertLoad() throws SQLException {
 		Query<?> q = QB.create(CaAsset.class);
-		QB.selectFrom(q).column(CaAsset.Field.acctId).max();
+		QB.selectFrom(q).column(CaAsset.Field.assetId).max();
 		q.getResultTransformer().setResultType(Integer.class);
 		Integer max = db.load(q);
 		if (max == null)
@@ -728,7 +728,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		t2.setNormal("aa");
 		db.insert(t2);
 		CaAsset t3 = new CaAsset();
-		t3.setAssetId(1);
+		t3.setAssetId(max + 2);
 		t3.setNormal("bb");
 		db.insert(t3);
 		CaAsset t4 = new CaAsset();

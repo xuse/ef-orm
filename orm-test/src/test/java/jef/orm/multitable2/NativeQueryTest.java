@@ -63,13 +63,14 @@ import jef.orm.multitable2.model.TreeTable;
 import jef.orm.onetable.model.Foo;
 import jef.script.javascript.Var;
 import jef.tools.string.RandomData;
-import junit.framework.Assert;
 
 import org.apache.commons.lang.math.RandomUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({
@@ -81,6 +82,7 @@ import org.junit.runner.RunWith;
 	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
 	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class NativeQueryTest extends org.junit.Assert {
 	private DbClient db;
 
@@ -174,7 +176,7 @@ public class NativeQueryTest extends org.junit.Assert {
 
 		db.createTable(TreeTable.class);
 		db.createTable(Person.class);
-		if(db.getProfile().getName()!=RDBMS.oracle){
+		if(db.getProfile().getName()!=RDBMS.oracle && db.getProfile().getName()!=RDBMS.mysql ){
 			if(!db.existTable("dual")){
 				db.executeSql("create table dual(X varchar(20))");
 			}
@@ -1067,7 +1069,7 @@ public class NativeQueryTest extends org.junit.Assert {
 				call3.execute();
 				List<Map> obj = call3.getOutParameterAsList(1, Map.class);
 				call3.close();
-				Assert.assertTrue(obj.size() > 0);
+				org.junit.Assert.assertTrue(obj.size() > 0);
 				// LogUtil.show(obj);
 			}
 
@@ -1110,7 +1112,7 @@ public class NativeQueryTest extends org.junit.Assert {
 		db.getSqlTemplate(null).executeSqlBatch("delete from leaf where rowid = ? and id = ?", rowArray);
 
 		// 由于删除条件id的值均匹配不上，所以executeSqlBatch执行后，表中数据量应无变化
-		Assert.assertEquals(count, db.select(QB.create(Leaf.class)).size());
+		org.junit.Assert.assertEquals(count, db.select(QB.create(Leaf.class)).size());
 	}
 
 	public static class ResultContainer {

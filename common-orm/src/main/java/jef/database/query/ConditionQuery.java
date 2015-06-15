@@ -103,4 +103,11 @@ public interface ConditionQuery{
 	 * @return
 	 */
 	QueryClause toPrepareQuerySql(SelectProcessor processor, SqlContext context,boolean order);
+	
+	/**
+	 * 该查询的Select部分是否经过了自定义。
+	 * 一般来说，使用了SelectItems或者PopulateStrategy都会使该查询成为一个复杂定义查询，而一级缓存和二级缓存对复杂定义查询不生效。
+	 * @return
+	 */
+	boolean isSelectCustomized();
 }

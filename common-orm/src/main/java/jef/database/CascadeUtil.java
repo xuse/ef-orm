@@ -93,9 +93,9 @@ final class CascadeUtil {
 			return;
 		boolean single = list.size() == 1;
 		ITableMetadata meta = MetaHolder.getMeta(list.get(0));
-
 		for (IQueryableEntity obj : list) {
 			// 在维护端操作之前
+			obj.clearQuery();//目的是清理掉对象内的延迟加载上下文
 			BeanWrapper bean = BeanWrapper.wrap(obj);
 			for (AbstractRefField f : meta.getRefFieldsByName().values()) {
 				// 无需执行级联操作
@@ -143,6 +143,7 @@ final class CascadeUtil {
 
 	static int updateWithRefInTransaction(IQueryableEntity obj, Session trans, int minPriority) throws SQLException {
 		Collection<AbstractRefField> refs = MetaHolder.getMeta(obj).getRefFieldsByName().values();
+		obj.clearQuery();//目的是清理掉对象内的延迟加载上下文
 		int result = 0;
 		// 在维护端操作之前
 		for (AbstractRefField f : refs) {

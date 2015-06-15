@@ -8,7 +8,7 @@ import java.util.List;
 
 import jef.database.DbUtils;
 import jef.database.ORMConfig;
-import jef.database.WrappedConnection;
+import jef.database.TransactionalSession;
 import jef.database.jdbc.GenerateKeyReturnOper;
 import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.RemovedDelayProcess;
@@ -42,7 +42,7 @@ public class RoutingSQLExecutor implements SQLExecutor {
 	 * @param sql
 	 * @param resultClass
 	 */
-	public RoutingSQLExecutor(WrappedConnection db, Statement sql) {
+	public RoutingSQLExecutor(TransactionalSession db, Statement sql) {
 		if (StringUtils.isEmpty(sql)) {
 			throw new IllegalArgumentException("Please don't input an empty SQL.");
 		}

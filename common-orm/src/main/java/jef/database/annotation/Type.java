@@ -17,5 +17,14 @@ import jef.database.dialect.type.ColumnMapping;
 @Target({ FIELD })
 @Retention(RUNTIME)
 public @interface Type {
+	/**
+	 * 自定义的java和数据库类型映射实现
+	 * @return
+	 */
 	Class<? extends ColumnMapping> value();
+
+	/**
+	 * Any configuration parameters for the named type.
+	 */
+	Parameter[] parameters() default {};
 }

@@ -74,6 +74,7 @@ import jef.database.annotation.Indexes;
 import jef.database.annotation.JoinDescription;
 import jef.database.annotation.JoinType;
 import jef.database.annotation.NoForceEnhance;
+import jef.database.annotation.Parameter;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.ColumnType.GUID;
@@ -98,6 +99,7 @@ import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtil;
 import jef.tools.reflect.BeanUtils;
+import jef.tools.reflect.BeanWrapper;
 
 import com.google.common.collect.ArrayListMultimap;
 
@@ -128,7 +130,7 @@ public final class MetaHolder {
 	// 动态表元数据池
 	static final Map<String, TupleMetadata> dynPool = new java.util.HashMap<String, TupleMetadata>(32);
 	// 反向查找表
-	private static final Map<String, ITableMetadata> inverseMapping = new HashMap<String, ITableMetadata>();
+	private static final Map<String, AbstractMetadata> inverseMapping = new HashMap<String, AbstractMetadata>();
 
 	// 初始化分表规则加载器
 	static {
@@ -693,6 +695,11 @@ public final class MetaHolder {
 			Class<?> fieldType;
 			if (mappingHint != null) {
 				type = BeanUtils.newInstance(mappingHint.value());
+				try {
+					applyParams(mappingHint.parameters(), type);
+				}catch(Exception e) {
+					throw new IllegalArgumentException("@Type annotation on field "+field+" is invalid",e);
+				}
 				fieldType = type.getFieldType();
 			} else {
 				fieldType = f.getType();
@@ -737,6 +744,16 @@ public final class MetaHolder {
 		}
 	}
 
+	private static void applyParams(Parameter[] parameters, ColumnMapping type) {
+		BeanWrapper bw = BeanWrapper.wrap(type);
+		for (Parameter p : parameters) {
+			if (bw.isWritableProperty(p.name())) {
+				bw.setPropertyValueByString(p.name(), p.value());
+			}
+		}
+
+	}
+
 	private static String getColumnName(Field field, Column a) {
 		if (a != null && a.name().length() > 0) {
 			return a.name().trim();
@@ -760,49 +777,57 @@ public final class MetaHolder {
 	}
 
 	private static JoinPath processJoin(AbstractMetadata meta, ITableMetadata target, FieldAnnotationProvider annos, JoinTable jt) {
-		String table=jt.name();
-		//计算生成关系表
-		TupleMetadata rt=new TupleMetadata(table);
+		String table = jt.name();
+
+		// 计算生成关系表
+		TupleMetadata rt = getDynamicMeta(table);
 		JoinColumn[] jc1 = jt.joinColumns();
-		for(JoinColumn jc:jc1){
-			ColumnType ct=meta.getColumnType(jc.referencedColumnName());
-			rt.addColumn(jc.name(),jc.name(), toNormal(ct),jt.uniqueConstraints().length>0)	;
-			rt.addIndex(jc.name(),null);
+
+		if (rt == null) {
+			rt = new TupleMetadata(table);
+			for (JoinColumn jc : jc1) {
+				ColumnType ct = meta.getColumnType(jc.referencedColumnName());
+				rt.addColumn(jc.name(), jc.name(), toNormal(ct), jt.uniqueConstraints().length > 0);
+				rt.addIndex(jc.name(), null);
+			}
+
+			JoinColumn[] jc2 = jt.inverseJoinColumns();
+			for (JoinColumn jc : jc2) {
+				String name = jc.referencedColumnName();
+				ColumnMapping ct = target.getColumnDef(target.getField(name));
+
+				Assert.notNull(ct);
+				rt.addColumn(jc.name(), jc.name(), toNormal(ct.get()), jt.uniqueConstraints().length > 0);
+				rt.addIndex(jc.name(), null);
+			}
+			// 补充关系表注册
+			putDynamicMeta(rt);
+
+			// 创建关系表到目标表的连接
+			JoinPath path2 = processJoin(rt, target, annos, jc2);
+			rt.addCascadeManyToOne("_OBJ", target, path2);
 		}
-		
-		JoinColumn[] jc2 = jt.inverseJoinColumns();
-		for(JoinColumn jc:jc2){
-			String name=jc.referencedColumnName();
-			ColumnMapping ct=target.getColumnDef(target.getField(name));
-			
-			Assert.notNull(ct);
-			rt.addColumn(jc.name(),jc.name(), toNormal(ct.get()),jt.uniqueConstraints().length>0);
-			rt.addIndex(jc.name(),null);
-		}
-		//补充关系表注册
-		putDynamicMeta(rt);
-		
-		//创建关系表到目标表的连接
-		JoinPath path2=processJoin(rt,target,annos,jc2);
-		rt.addCascadeManyToOne("_OBJ", target, path2);
-		
-		//创建到关系表的连接
-		JoinColumn[] jc3=new JoinColumn[jc1.length];
-		for(int i=0;i<jc1.length;i++) {
-			JoinColumnImpl jc=new JoinColumnImpl(jc1[i]);
+
+		AbstractRefField refs = rt.getRefFieldsByName().get("_OBJ");
+		Assert.notNull(refs);
+
+		// 创建到关系表的连接
+		JoinColumn[] jc3 = new JoinColumn[jc1.length];
+		for (int i = 0; i < jc1.length; i++) {
+			JoinColumnImpl jc = new JoinColumnImpl(jc1[i]);
 			jc.reverseColumn();
-			jc3[i]=jc;
+			jc3[i] = jc;
 		}
-		JoinPath path1=processJoin(meta,rt,annos,jc3);
-		path1.setRelationTable(rt,path2);
+		JoinPath path1 = processJoin(meta, rt, annos, jc3);
+		path1.setRelationTable(rt, refs.getReference().getHint());
 		return path1;
 	}
 
 	private static ColumnType toNormal(ColumnType columnType) {
-		if(columnType instanceof AutoIncrement) {
+		if (columnType instanceof AutoIncrement) {
 			return ((AutoIncrement) columnType).toNormalType();
-		}else if(columnType instanceof ColumnType.GUID) {
-			return ((GUID)columnType).toNormalType();
+		} else if (columnType instanceof ColumnType.GUID) {
+			return ((GUID) columnType).toNormalType();
 		}
 		return columnType;
 	}
@@ -1106,6 +1131,11 @@ public final class MetaHolder {
 		} else if (fieldProvider.getAnnotation(jef.database.annotation.Type.class) != null) {
 			jef.database.annotation.Type t = fieldProvider.getAnnotation(jef.database.annotation.Type.class);
 			ColumnMapping cm = BeanUtils.newInstance(t.value());
+			try {
+				applyParams(t.parameters(), cm);
+			}catch(Exception e) {
+				throw new IllegalArgumentException("@Type annotation on field "+field+" is invalid",e);
+			}
 			return new TypeDefImpl(def, cm.getSqlType(), field.getType());
 		} else {
 			throw new IllegalArgumentException("Unknow column Def:" + def);
@@ -1215,9 +1245,9 @@ public final class MetaHolder {
 	/**
 	 * 逆向查找元模型
 	 */
-	public static ITableMetadata lookup(String schema, String table) {
+	public static AbstractMetadata lookup(String schema, String table) {
 		String key = (schema + "." + table).toUpperCase();
-		ITableMetadata m = inverseMapping.get(key);
+		AbstractMetadata m = inverseMapping.get(key);
 		if (m != null)
 			return m;
 
@@ -1233,7 +1263,7 @@ public final class MetaHolder {
 		}
 
 		// Lookup static models
-		for (ITableMetadata meta : pool.values()) {
+		for (AbstractMetadata meta : pool.values()) {
 			String tablename = meta.getTableName(false);
 			if (schema != null && (!StringUtils.equals(meta.getSchema(), schema))) {// schema不同则跳
 				continue;
@@ -1245,7 +1275,7 @@ public final class MetaHolder {
 		}
 		if (m == null) {
 			// Lookup dynamic models
-			for (ITableMetadata meta : dynPool.values()) {
+			for (AbstractMetadata meta : dynPool.values()) {
 				String tablename = meta.getTableName(false);
 				if (schema != null && (!StringUtils.equals(meta.getSchema(), schema))) {// schema不同则跳
 					continue;

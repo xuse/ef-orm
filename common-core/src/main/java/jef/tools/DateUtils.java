@@ -1145,4 +1145,6 @@ public abstract class DateUtils {
 		Date d1= org.apache.commons.lang.time.DateUtils.truncate(date, Calendar.DATE);
 		return d1.getTime()==date.getTime();
 	}
+	
+	
 }

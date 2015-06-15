@@ -32,6 +32,7 @@ import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
+import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.Property;
 
 /**
@@ -92,10 +93,11 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	}
 
 	public ColumnMapping getColumnDef(Field field) {
-		//2014-10-31 在重构用columnMapping代替的设计过程中，会出现两类对象的混用，引起此处作一个判断拦截field(暂时还不需要)
-		
-//		if(field instanceof ColumnMapping)
-//			return (ColumnMapping)field;
+		// 2014-10-31
+		// 在重构用columnMapping代替的设计过程中，会出现两类对象的混用，引起此处作一个判断拦截field(暂时还不需要)
+
+		// if(field instanceof ColumnMapping)
+		// return (ColumnMapping)field;
 		return schemaMap.get(field);
 	}
 
@@ -170,11 +172,15 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		cachedTable = new DbTable(bindDsName, profile.getObjectNameToUse(getTableName(true)), false, false);
 	}
 
-	public KeyDimension getPKDimension(List<Serializable> pks, DatabaseDialect profile) {
+	public KeyDimension getPKDimension(DatabaseDialect profile) {
 		if (pkDim == null) {
+			List<Serializable> pks=new ArrayList<Serializable>();
+			for(ColumnMapping mapping: this.getPKFields()) {
+				pks.add((Serializable)BeanUtils.defaultValueForBasicType(mapping.getFieldType()));
+			}
 			PKQuery<?> query = new PKQuery<IQueryableEntity>(this, pks, newInstance());
 			BindSql sql = query.toPrepareWhereSql(null, profile);
-			KeyDimension dim = new KeyDimension(sql.getSql(), null,profile);
+			KeyDimension dim = KeyDimension.forSingleTable(tableName, sql.getSql(), null, profile);
 			pkDim = dim;
 		}
 		return pkDim;
@@ -183,8 +189,8 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	public ColumnMapping findField(String left) {
 		if (left == null)
 			return null;
-		Field field= lowerFields.get(left.toLowerCase());
-		if(field!=null){
+		Field field = lowerFields.get(left.toLowerCase());
+		if (field != null) {
 			return getColumnDef(field);
 		}
 		return null;
@@ -296,15 +302,15 @@ public abstract class AbstractMetadata implements ITableMetadata {
 			r.setHint(config.path);
 		}
 		ReferenceObject ref = new ReferenceObject(pp, r, config);
-		if(pp.getType()==Object.class){
+		if (pp.getType() == Object.class) {
 			Class<?> targetContainer = target.getThisType();
 			if (!config.getRefType().isToOne()) {
 				targetContainer = Collection.class;
 			}
 			ref.setSourceFieldType(targetContainer);
 		}
-		
-		addRefField(ref);	
+
+		addRefField(ref);
 		return ref;
 	}
 
@@ -315,7 +321,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 			r.setHint(config.path);
 		}
 		ReferenceField f = new ReferenceField(pp, r, targetFld, config);
-		if(pp.getType()==Object.class){
+		if (pp.getType() == Object.class) {
 			Class<?> containerType = targetFld.getFieldType();
 			if (!config.getRefType().isToOne()) {
 				containerType = Collections.class;
@@ -325,7 +331,6 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		addRefField(f);
 		return f;
 	}
-	
 
 	/*
 	 * 添加一个引用字段，引用实体表的DO对象
@@ -338,8 +343,8 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	 */
 	protected ReferenceObject addCascadeField(String fieldName, ITableMetadata target, CascadeConfig config) {
 		Property pp = getContainerAccessor().getProperty(fieldName);
-		if(pp==null){
-			throw new IllegalArgumentException(fieldName+" is not exist in "+this.getName());
+		if (pp == null) {
+			throw new IllegalArgumentException(fieldName + " is not exist in " + this.getName());
 		}
 		return innerAdd(pp, target, config);
 	}
@@ -356,10 +361,10 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	protected ReferenceField addCascadeField(String fieldName, Field target, CascadeConfig config) {
 		Assert.notNull(target);
 		Property pp = getContainerAccessor().getProperty(fieldName);
-		if(pp==null){
-			throw new IllegalArgumentException(fieldName+" is not exist in "+this.getName());
+		if (pp == null) {
+			throw new IllegalArgumentException(fieldName + " is not exist in " + this.getName());
 		}
-		ColumnMapping targetFld= DbUtils.toColumnMapping(target);
+		ColumnMapping targetFld = DbUtils.toColumnMapping(target);
 		return innerAdd(pp, targetFld, config);
 	}
 }

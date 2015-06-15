@@ -19,13 +19,13 @@ import japa.parser.ast.type.PrimitiveType;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import jef.common.log.LogUtil;
 import jef.tools.ArrayUtils;
-import jef.tools.Assert;
 import jef.tools.IOUtils;
 
 /**
@@ -34,12 +34,12 @@ import jef.tools.IOUtils;
  * @Date 2011-4-16
  */
 public class EntityCastor {
-	public static void main(String[] args) {
-		EntityCastor ec=new EntityCastor();
-		File f=new File("src/test/java/jef/orm/test/onetable/model/TestEntity.java");
-		Assert.fileExist(f);
-		ec.process(f);
-	}
+//	public static void main(String[] args) {
+//		EntityCastor ec=new EntityCastor();
+//		File f=new File("src/test/java/jef/orm/test/onetable/model/TestEntity.java");
+//		Assert.fileExist(f);
+//		ec.process(f);
+//	}
 	
 	private String charset = "UTF-8";
 
@@ -67,7 +67,7 @@ public class EntityCastor {
 			CompilationUnit unit = JavaParser.parse(java, charset);
 			if (processUnit(unit)) {
 				System.out.println("Modified " + java.getPath());
-				IOUtils.saveAsFile(new File(java.getPath()),unit.toString());
+				IOUtils.saveAsFile(new File(java.getPath()),Charset.forName(charset),unit.toString());
 				return true;
 			}
 		} catch (ParseException e) {

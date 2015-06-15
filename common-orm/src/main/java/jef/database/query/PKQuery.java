@@ -18,12 +18,13 @@ import jef.database.IConditionField;
 import jef.database.IQueryableEntity;
 import jef.database.ORMConfig;
 import jef.database.SelectProcessor;
+import jef.database.Session.PopulateStrategy;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.meta.AbstractMetadata;
 import jef.database.meta.EntityType;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-import jef.database.meta.AbstractMetadata;
 import jef.database.meta.Reference;
 import jef.database.routing.PartitionResult;
 import jef.database.wrapper.clause.BindSql;
@@ -35,12 +36,16 @@ import jef.database.wrapper.processor.BindVariableDescription;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 
+@SuppressWarnings("serial")
 public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	
 	private List<Serializable> pkValues;
 	
 	private boolean cascadeViaOuterJoin=ORMConfig.getInstance().isUseOuterJoin();
-	
+	/**
+	 * 结果转换器
+	 */
+	protected final Transformer t;
 	
 	@SuppressWarnings("unchecked")
 	public PKQuery(ITableMetadata clz,Serializable... pks){
@@ -51,11 +56,11 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 		}else{
 			this.type=clz;
 		}
-		
 		this.instance=(T) clz.newInstance();
 		if(type.getPKFields().size()>pks.length){
 			throw new IllegalArgumentException("The primark key count is not match input value:"+type.getPKFields().size()+">"+pks.length);
 		}
+		t=new Transformer(type);
 		pkValues=Arrays.asList(pks);
 	}
 
@@ -63,6 +68,7 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	public PKQuery(ITableMetadata meta, List<Serializable> pkValueSafe, IQueryableEntity obj) {
 		this.type=meta;
 		this.instance=(T) obj;
+		t=new Transformer(type);
 		pkValues=pkValueSafe;
 	}
 
@@ -96,7 +102,7 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 		QueryClauseImpl result = new QueryClauseImpl(profile);
 		result.setGrouphavingPart(GroupClause.DEFAULT);
 		result.setSelectPart(SelectProcessor.toSelectSql(context, GroupClause.DEFAULT, profile));
-		result.setTables(prs, type.getName());
+		result.setTables(type.getTableName(false), prs);
 		result.setWherePart(whereResult.getSql());
 		result.setBind(whereResult.getBind());
 		return result;
@@ -221,15 +227,24 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	}
 	
 	public void setCascade(boolean cascade) {
-		if(t==null){
-			t=new Transformer(type);
-		}
 		t.setLoadVsMany(cascade);
 		t.setLoadVsOne(cascade);
 	}
 
 	@Override
 	public boolean isAll() {
+		return false;
+	}
+
+	@Override
+	public Transformer getResultTransformer() {
+		return t;
+	}
+
+	@Override
+	public boolean isSelectCustomized() {
+		PopulateStrategy[] s=t.getStrategy();
+		if(s!=null && s.length>0)return true;
 		return false;
 	}
 }

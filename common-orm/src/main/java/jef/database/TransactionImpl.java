@@ -5,7 +5,7 @@ import java.sql.SQLException;
 import javax.persistence.PersistenceException;
 
 import jef.common.log.LogUtil;
-import jef.database.cache.CacheDummy;
+import jef.database.cache.CacheChain;
 import jef.database.cache.CacheImpl;
 import jef.database.innerpool.IConnection;
 import jef.database.support.TransactionTimedOutException;
@@ -123,10 +123,15 @@ public class TransactionImpl extends Transaction {
 		this.insertp = parent.insertp;
 		this.updatep = parent.updatep;
 		this.deletep = parent.deletep;
-		if (noCache) {
-			cache = CacheDummy.getInstance();
+		if (noCache || !ORMConfig.getInstance().isCacheLevel1()) {
+			//没有自己的缓存
+			cache = parent.getCache();
+		} else if(parent.getCache().isDummy()){
+			//自己有缓存，上级无缓存
+			cache = new CacheImpl(rProcessor, selectp, 0,"L1");
 		} else {
-			cache = ORMConfig.getInstance().isCacheLevel1() ? new CacheImpl(rProcessor, selectp) : CacheDummy.getInstance();
+			//两级缓存都启用的情况下
+			cache=new CacheChain(new CacheImpl(rProcessor, selectp, 0,"L1"),parent.getCache());
 		}
 		getListener().newTransaction(this);
 		if (timeout > 0) {

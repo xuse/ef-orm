@@ -26,7 +26,7 @@ import java.util.Map;
 
 import jef.common.PairSS;
 import jef.common.log.LogUtil;
-import jef.database.cache.TransactionCache;
+import jef.database.cache.Cache;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
@@ -412,7 +412,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			if (insertPart.getCallback() != null) {
 				insertPart.getCallback().callAfterBatch(listValue);
 			}
-			TransactionCache cache = parent.getCache();
+			Cache cache = parent.getCache();
 			DbOperatorListener listener = parent.getListener();
 			if (extreme) {
 				for (T t : listValue) {
@@ -550,7 +550,8 @@ public abstract class Batch<T extends IQueryableEntity> {
 				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ", i + 1).append('/').append(len));
 				List<Object> whereBind = BindVariableTool.setVariables(t.getQuery(), updatePart.getVariables(), bindVar, context);
 				psmt.addBatch();
-				parent.getCache().onUpdate(forceTableName == null ? meta.getName() : forceTableName, wherePart.getSql(), whereBind);
+				String baseTableName=forceTableName == null ? meta.getTableName(false) : forceTableName;
+				parent.getCache().onUpdate(baseTableName, wherePart.getSql(), whereBind);
 
 				if (log.isDebug()) {
 					log.output();
@@ -620,7 +621,8 @@ public abstract class Batch<T extends IQueryableEntity> {
 				}
 				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ", i + 1).append('/').append(len));
 				List<Object> whereBind = BindVariableTool.setVariables(t.getQuery(), null, bindVar, context);
-				parent.getCache().onDelete(forceTableName == null ? meta.getName() : forceTableName, wherePart.getSql(), whereBind);
+				String baseTableName=(forceTableName == null ? meta.getTableName(false) : forceTableName);
+				parent.getCache().onDelete(baseTableName, wherePart.getSql(), whereBind);
 
 				psmt.addBatch();
 				if (log.isDebug()) {

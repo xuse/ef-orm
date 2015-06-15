@@ -127,9 +127,9 @@ public class QueryClauseImpl implements QueryClause {
 		return tables;
 	}
 
-	public void setTables(PartitionResult[] tables, String rawClass) {
+	public void setTables(String baseTableName,PartitionResult[] tables) {
+		this.baseTableName = baseTableName;
 		this.tables = tables;
-		this.rawClass = rawClass;
 	}
 
 	@Override
@@ -221,16 +221,18 @@ public class QueryClauseImpl implements QueryClause {
 	}
 
 	private CacheKey cacheKey;
-	private String rawClass;
+	private String baseTableName;
 
 	public CacheKey getCacheKey() {
 		if (cacheKey != null)
 			return cacheKey;
 		try{
-			String table = rawClass == null ? tableDefinition : rawClass;
-			CacheKey key = new SqlCacheKey(table, new KeyDimension(wherePart, orderbyPart.getSql(),profile), CacheImpl.toParamList(this.bind));
-			this.cacheKey = key;			
-			return key;
+			if(baseTableName == null) {
+				this.cacheKey=new SqlCacheKey(new KeyDimension(tableDefinition,wherePart, orderbyPart.getSql(),profile), CacheImpl.toParamList(this.bind));
+			}else {
+				this.cacheKey=new SqlCacheKey(KeyDimension.forSingleTable(baseTableName,wherePart, orderbyPart.getSql(),profile), CacheImpl.toParamList(this.bind));
+			}
+			return cacheKey;
 		}catch(RuntimeException e){
 			return null;
 		}

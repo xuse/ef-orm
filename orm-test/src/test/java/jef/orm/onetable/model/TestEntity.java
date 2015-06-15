@@ -14,7 +14,7 @@ import javax.persistence.Table;
 import jef.database.annotation.EasyEntity;
 
 @EasyEntity
-@Table(name="order")
+@Table(name="test_entity")
 public class TestEntity extends jef.database.DataObject {
 	private static final long serialVersionUID = 1L;
 
