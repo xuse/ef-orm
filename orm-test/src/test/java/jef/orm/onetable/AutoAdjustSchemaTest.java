@@ -21,21 +21,22 @@ import org.junit.runner.RunWith;
 
 /**
  * Schema重定向单元测试类
+ * 
  * @Date 2012-10-17
  */
 @RunWith(JefJUnit4DatabaseTestRunner.class)
-@DataSourceContext({ 
-	@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"), 
-	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
-	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), 
-	@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"),
+@DataSourceContext({
 	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
-	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
-})
+//		@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
+//		@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
+//		@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"),
+//		@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"),
+//		@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+//		@DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}") 
+	})
 public class AutoAdjustSchemaTest {
 
-	private static final String TABLE_NAME = "ailk2.root";
+	private static final String TABLE_NAME = "root_cus";
 
 	private DbClient db;
 
@@ -43,7 +44,7 @@ public class AutoAdjustSchemaTest {
 	public void init() {
 		EntityEnhancer en = new EntityEnhancer();
 		en.enhance("jef.orm");
-		ORMConfig.getInstance().setSchemaMapping("AILK2:,JIYI:pomelo");
+//		ORMConfig.getInstance().setSchemaMapping("AILK2:,JIYI:pomelo");
 		try {
 			dropTable();
 			createtable();
@@ -58,36 +59,43 @@ public class AutoAdjustSchemaTest {
 	}
 
 	private void createtable() throws SQLException {
-		db.createTable(Root.class, TABLE_NAME,null);
+		db.createTable(Root.class, TABLE_NAME, null);
 		db.createTable(EnumationTable.class);
+		ORMConfig.getInstance().cacheDebug = true;
 	}
 
 	@SuppressWarnings("rawtypes")
 	@Test
 	public void testCRUD() throws SQLException {
-			Assert.assertTrue(db.existTable(TABLE_NAME));
-
-			Root root = RandomData.newInstance(Root.class);
-			db.insert(root, TABLE_NAME);
-			
-			
-			root.startUpdate();
-			root.getQuery().setCustomTableName(TABLE_NAME);
-			Assert.assertEquals(1,
-					db.select(root.getQuery(), null).size());
-
-			String name = "name" + RandomStringUtils.randomNumeric(6);
-			root.setName(name);
-			db.update(root, TABLE_NAME);
-			root.getQuery().setCustomTableName(TABLE_NAME);
-			List roots = db.select(root.getQuery(), null);
-			Assert.assertEquals(name, ((Root) roots.get(0)).getName().trim());
-			root.getQuery().setCustomTableName(TABLE_NAME);
-			db.delete(root);
-			root.getQuery().setCustomTableName(TABLE_NAME);
-			Assert.assertEquals(0,
-					db.select(root.getQuery(), null).size());
 		
+		Assert.assertTrue(db.existTable(TABLE_NAME));
+
+		Root root = RandomData.newInstance(Root.class);
+		db.insert(root, TABLE_NAME);
+
+		//当发生多表外连接级联时，CUSTOMTABLE无效。
+		root.getQuery().setCustomTableName(TABLE_NAME);
+		Assert.assertEquals(1, db.select(root.getQuery(), null).size());
+
+		root.startUpdate();
+		String name = "name" + RandomStringUtils.randomNumeric(6);
+		root.setName(name);
+		db.update(root, TABLE_NAME);
+
+		root.getQuery().setCustomTableName(TABLE_NAME);
+		List roots = db.select(root.getQuery(), null);
+		
+		//此前查询是自动关联为多表查询的，此时缓存也是按多表进行的。然后更新了单表数据，此时多表缓存并未更新，造成多表查询缓存再次命中
+		//得到了更新前的数据
+		//BUG: 更新单表数据时，没有刷新引用到这张表的多表查询的缓存。
+		Assert.assertEquals(name, ((Root) roots.get(0)).getName().trim());
+
+		root.getQuery().setCustomTableName(TABLE_NAME);
+		db.delete(root);
+
+		root.getQuery().setCustomTableName(TABLE_NAME);
+		Assert.assertEquals(0, db.select(root.getQuery(), null).size());
+
 	}
 
 }

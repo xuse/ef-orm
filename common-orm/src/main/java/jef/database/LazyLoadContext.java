@@ -1,6 +1,7 @@
 package jef.database;
 
 import java.sql.SQLException;
+import java.util.BitSet;
 
 /**
  * 在每个需要延迟加载的对象中存放一个。
@@ -12,7 +13,8 @@ final class LazyLoadContext implements ILazyLoadContext {
 	//策略
 	private LazyLoadProcessor processor;
 	//已经load过的数据
-	private boolean[] loaded;
+	private BitSet loaded;
+	//load过的次数
 	private int executed;
 	
 	public LazyLoadContext(LazyLoadProcessor processor2) {
@@ -28,9 +30,9 @@ final class LazyLoadContext implements ILazyLoadContext {
 		int id=processor.getTaskId(field);
 		if(id==-1)return id;
 		if(loaded==null){
-			loaded=new boolean[processor.size()];
+			loaded=new BitSet(processor.size());
 		}else{
-			if(loaded[id]){
+			if(loaded.get(id)){
 				return -1;
 			}	
 		}
@@ -38,9 +40,9 @@ final class LazyLoadContext implements ILazyLoadContext {
 	}
 
 	public boolean process(DataObject dataObject, int id) throws SQLException {
-		if(!loaded[id]){
+		if(!loaded.get(id)){
 			processor.doTask(dataObject,id);
-			loaded[id]=true;
+			loaded.set(id,true);
 			executed++;
 		}
 		return executed>=processor.size();

@@ -62,7 +62,7 @@ public class PartitionTest extends org.junit.Assert {
 	private DbClient db;
 	
 	public static class A{
-		private Class clz;
+		Class<?> clz;
 	}
 	
 	@Test
@@ -89,32 +89,32 @@ public class PartitionTest extends org.junit.Assert {
 			db.createTable(PartitionEntity.class);
 			
 			PartitionEntity p = new PartitionEntity();
-			p.setDateField(DateUtils.getDate(2012, 3, 1));
+			p.setDateField(DateUtils.get(2012, 3, 1));
 			p.setName("Zxa");
 			db.dropTable(p);
 			db.createTable(p);
 	
-//			p.setDateField(DateUtils.getDate(2012, 3, 2));
+//			p.setDateField(DateUtils.get(2012, 3, 2));
 //			p.setName("XX");
 //			db.dropTable(p);
 //			db.createTable(p);
 //			
-//			p.setDateField(DateUtils.getDate(2012, 4, 1));
+//			p.setDateField(DateUtils.get(2012, 4, 1));
 //			p.setName("a");
 //			db.dropTable(p);
 //			db.createTable(p);
 //	
-//			p.setDateField(DateUtils.getDate(2012, 5, 1));
+//			p.setDateField(DateUtils.get(2012, 5, 1));
 //			p.setName("A");
 //			db.dropTable(p);
 //			db.createTable(p);
 //	
-//			p.setDateField(DateUtils.getDate(2012, 6, 1));
+//			p.setDateField(DateUtils.get(2012, 6, 1));
 //			p.setName("XXX");
 //			db.dropTable(p);
 //			db.createTable(p);
 //	
-//			p.setDateField(DateUtils.getDate(2012, 7, 1));
+//			p.setDateField(DateUtils.get(2012, 7, 1));
 //			p.setName(null);
 //			db.dropTable(p);
 //			db.createTable(p);
@@ -136,7 +136,7 @@ public class PartitionTest extends org.junit.Assert {
 		System.out.println("===================== testBetween 03,04,05,06=======================");
 		Query<PartitionEntity> q = QB.create(PartitionEntity.class);
 		q.getInstance().setName("Zxa");
-		q.addCondition(QB.between(PartitionEntity.Field.dateField, DateUtils.getDate(2012, 3, 1), DateUtils.getDate(2012, 6, 1)));
+		q.addCondition(QB.between(PartitionEntity.Field.dateField, DateUtils.get(2012, 3, 1), DateUtils.get(2012, 6, 1)));
 		q.addOrderBy(false, PartitionEntity.Field.name);
 		db.select(q);
 	}
@@ -154,7 +154,7 @@ public class PartitionTest extends org.junit.Assert {
 	public void testDimensionIn() throws SQLException {
 		System.out.println("===================== testDimensionIn 03,06=======================");
 		Query<PartitionEntity> q = QB.create(PartitionEntity.class);
-		q.addCondition(PartitionEntity.Field.dateField, Operator.IN, new Date[] { DateUtils.getDate(2012, 3, 1), DateUtils.getDate(2012, 6, 1) });
+		q.addCondition(PartitionEntity.Field.dateField, Operator.IN, new Date[] { DateUtils.get(2012, 3, 1), DateUtils.get(2012, 6, 1) });
 		q.addOrderBy(false, PartitionEntity.Field.name);
 		db.select(q);
 	}
@@ -182,7 +182,7 @@ public class PartitionTest extends org.junit.Assert {
 	public void testDimension3ConditionOr() throws SQLException {
 		System.out.println("===================== testDimension3ConditionOr 03,05,06=======================");
 		Query<PartitionEntity> q = QB.create(PartitionEntity.class);
-		q.addCondition(QB.or(QB.eq(PartitionEntity.Field.dateField, DateUtils.getDate(2012, 3, 1)), QB.eq(PartitionEntity.Field.dateField, DateUtils.getDate(2012, 5, 1)), QB.eq(PartitionEntity.Field.dateField, DateUtils.getDate(2012, 6, 1))));
+		q.addCondition(QB.or(QB.eq(PartitionEntity.Field.dateField, DateUtils.get(2012, 3, 1)), QB.eq(PartitionEntity.Field.dateField, DateUtils.get(2012, 5, 1)), QB.eq(PartitionEntity.Field.dateField, DateUtils.get(2012, 6, 1))));
 		q.addOrderBy(false, PartitionEntity.Field.name);
 		/*
 		 * select * from (select t.* from PARTITIONENTITY_05 t where (t.ID=? or
@@ -206,8 +206,8 @@ public class PartitionTest extends org.junit.Assert {
 	public void testDimensionSpan() throws SQLException {
 		System.out.println("===================== testDimensionSpan 3,4,5,6=======================");
 		Query<PartitionEntity> q = QB.create(PartitionEntity.class);
-		q.addCondition(PartitionEntity.Field.dateField, Operator.GREAT_EQUALS, DateUtils.getDate(2012, 3, 1));
-		q.addCondition(PartitionEntity.Field.dateField, Operator.LESS, DateUtils.getDate(2012, 6,2));
+		q.addCondition(PartitionEntity.Field.dateField, Operator.GREAT_EQUALS, DateUtils.get(2012, 3, 1));
+		q.addCondition(PartitionEntity.Field.dateField, Operator.LESS, DateUtils.get(2012, 6,2));
 		q.addOrderBy(false, PartitionEntity.Field.name);
 		db.select(q);
 	}
@@ -225,8 +225,8 @@ public class PartitionTest extends org.junit.Assert {
 	public void testDimensionInWithRange() throws SQLException {
 		System.out.println("===================== testSpan 03=======================");
 		Query<PartitionEntity> q = QB.create(PartitionEntity.class);
-		q.addCondition(PartitionEntity.Field.dateField, Operator.IN, new Date[] { DateUtils.getDate(2012, 3, 1), DateUtils.getDate(2012, 6, 1) });
-		q.addCondition(PartitionEntity.Field.dateField, Operator.LESS, DateUtils.getDate(2012, 5, 1));
+		q.addCondition(PartitionEntity.Field.dateField, Operator.IN, new Date[] { DateUtils.get(2012, 3, 1), DateUtils.get(2012, 6, 1) });
+		q.addCondition(PartitionEntity.Field.dateField, Operator.LESS, DateUtils.get(2012, 5, 1));
 		q.addOrderBy(false, PartitionEntity.Field.name);
 		db.select(q);
 	}
@@ -247,8 +247,8 @@ public class PartitionTest extends org.junit.Assert {
 	public void testDimensionInWithRange2() throws SQLException {
 		System.out.println("===================== testSpan 原始表=======================");
 		Query<PartitionEntity> q = QB.create(PartitionEntity.class);
-		q.addCondition(PartitionEntity.Field.dateField, Operator.IN, new Date[] { DateUtils.getDate(2012, 3, 1), DateUtils.getDate(2012, 6, 1) });
-		q.addCondition(PartitionEntity.Field.dateField, Operator.LESS, DateUtils.getDate(2012, 3, 1));
+		q.addCondition(PartitionEntity.Field.dateField, Operator.IN, new Date[] { DateUtils.get(2012, 3, 1), DateUtils.get(2012, 6, 1) });
+		q.addCondition(PartitionEntity.Field.dateField, Operator.LESS, DateUtils.get(2012, 3, 1));
 		q.addOrderBy(false, PartitionEntity.Field.name);
 		db.select(q);
 	}
@@ -263,7 +263,7 @@ public class PartitionTest extends org.junit.Assert {
 	public void testDimensionInX() throws SQLException {
 		System.out.println("===================== testSpan 03,05,06,07=======================");
 		Query<PartitionEntity> q = QB.create(PartitionEntity.class);
-		q.addCondition(QB.or(QB.in(PartitionEntity.Field.dateField, new Date[] { DateUtils.getDate(2012, 3, 1), DateUtils.getDate(2012, 6, 1) }), QB.between(PartitionEntity.Field.dateField, DateUtils.getDate(2012, 5, 1), DateUtils.getDate(2012, 7, 1))));
+		q.addCondition(QB.or(QB.in(PartitionEntity.Field.dateField, new Date[] { DateUtils.get(2012, 3, 1), DateUtils.get(2012, 6, 1) }), QB.between(PartitionEntity.Field.dateField, DateUtils.get(2012, 5, 1), DateUtils.get(2012, 7, 1))));
 		q.addCondition(PartitionEntity.Field.intField,Operator.GREAT,14);
 		q.addCondition(PartitionEntity.Field.intField,Operator.LESS,17);
 		q.addOrderBy(false, PartitionEntity.Field.name);
@@ -293,8 +293,8 @@ public class PartitionTest extends org.junit.Assert {
 		System.out.println(a + " OR " + f + " = " + a.mergeOr(f));
 
 		RangeDimension<Date> g = new RangeDimension<Date>(new Date(), null);
-		RangeDimension<Date> h = new RangeDimension<Date>(DateUtils.getDate(2011, 1, 1), DateUtils.getDate(2012, 5, 1), false, false);
-		RangeDimension<Date> i = new RangeDimension<Date>(DateUtils.getDate(2011, 1, 1), DateUtils.getDate(2012, 5, 1), true, true);
+		RangeDimension<Date> h = new RangeDimension<Date>(DateUtils.get(2011, 1, 1), DateUtils.get(2012, 5, 1), false, false);
+		RangeDimension<Date> i = new RangeDimension<Date>(DateUtils.get(2011, 1, 1), DateUtils.get(2012, 5, 1), true, true);
 
 		System.out.println(g + " AND " + h + " = " + g.mergeAnd(h));
 		System.out.println(g + " AND " + i + " = " + g.mergeAnd(i));
@@ -311,32 +311,31 @@ public class PartitionTest extends org.junit.Assert {
 	 */
 	@Test
 	public void testPartitionBatchInsert() throws SQLException{
-		System.out.println("======================testPartitionBatchInsert========================");
 		db.createTable(PartitionEntity.class);
 		
 		List<PartitionEntity> batch=new ArrayList<PartitionEntity>();
 		PartitionEntity p = new PartitionEntity();
-		p.setDateField(DateUtils.getDate(2012, 3, 1));
+		p.setDateField(DateUtils.get(2012, 3, 1));
 		p.setName("张三");
 		batch.add(p);
 		
 		p = new PartitionEntity();
-		p.setDateField(DateUtils.getDate(2012, 5, 1));
+		p.setDateField(DateUtils.get(2012, 5, 1));
 		p.setName("王五");
 		batch.add(p);
 		
 		p = new PartitionEntity();
-		p.setDateField(DateUtils.getDate(2012, 4, 10));
+		p.setDateField(DateUtils.get(2012, 4, 10));
 		p.setName("李四");
 		batch.add(p);
 		
 		p = new PartitionEntity();
-		p.setDateField(DateUtils.getDate(2012, 5, 20));
+		p.setDateField(DateUtils.get(2012, 5, 20));
 		p.setName("前五");
 		batch.add(p);
 		
 		p = new PartitionEntity();
-		p.setDateField(DateUtils.getDate(2012, 3, 8));
+		p.setDateField(DateUtils.get(2012, 3, 8));
 		p.setName("赵三");
 		batch.add(p);
 		
@@ -394,9 +393,9 @@ public class PartitionTest extends org.junit.Assert {
 	@Test
 	public void testSelectUsingAlias() throws SQLException {
 		ORMConfig.getInstance().setFilterAbsentTables(false);
-		System.out.println("===================== testSelectUsingAlias =======================");
 		testPartitionBatchInsert(); // prepare data
 
+		ORMConfig.getInstance().cacheDebug=true;
 		Query<PartitionEntity> q = QB.create(PartitionEntity.class);
 		Selects items = QB.selectFrom(q);
 		items.column(PartitionEntity.Field.id).as("id");
@@ -409,7 +408,7 @@ public class PartitionTest extends org.junit.Assert {
 		List<PartitionEntity> list = db.select(q, null);
 		for (PartitionEntity obj : list) {
 			LogUtil.show(obj.toString());
-			junit.framework.Assert.assertTrue(obj.getDateField() != null);
+			org.junit.Assert.assertTrue(obj.getDateField() != null);
 		}
 		
 		// 再测试下使用UnionQuery的场景
@@ -418,7 +417,7 @@ public class PartitionTest extends org.junit.Assert {
 		List<PartitionEntity> list2 = db.select(unionQuery, null);
 		for (PartitionEntity obj : list2) {
 			LogUtil.show(obj.toString());
-			junit.framework.Assert.assertTrue(obj.getDateField() != null);
+			org.junit.Assert.assertTrue(obj.getDateField() != null);
 		}
 	}
 
@@ -454,7 +453,7 @@ public class PartitionTest extends org.junit.Assert {
 
 		PartitionEntity entity = new PartitionEntity();
 		entity.getQuery().addCondition(QB.between(PartitionEntity.Field.dateField,
-				DateUtils.getDate(2012, 3, 1), DateUtils.getDate(2012, 6, 1)));
+				DateUtils.get(2012, 3, 1), DateUtils.get(2012, 6, 1)));
 
 		Selects selectItems1 = QB.selectFrom(entity.getQuery());
 		selectItems1.column(PartitionEntity.Field.id).as("id");
@@ -468,7 +467,7 @@ public class PartitionTest extends org.junit.Assert {
 		List<PartitionEntity> list = page.next();
 		for (PartitionEntity obj : list) {
 			LogUtil.show(obj.toString());
-			junit.framework.Assert.assertTrue(obj.getDateField() != null);
+			org.junit.Assert.assertTrue(obj.getDateField() != null);
 		}
 	}
 
@@ -487,27 +486,27 @@ public class PartitionTest extends org.junit.Assert {
 		db.createTable(NonPartitionEntity.class);
 		List<NonPartitionEntity> batch=new ArrayList<NonPartitionEntity>();
 		NonPartitionEntity p = new NonPartitionEntity();
-		p.setDateField(DateUtils.getDate(2012, 3, 1));
+		p.setDateField(DateUtils.get(2012, 3, 1));
 		p.setName("张三");
 		batch.add(p);
 
 		p = new NonPartitionEntity();
-		p.setDateField(DateUtils.getDate(2012, 5, 1));
+		p.setDateField(DateUtils.get(2012, 5, 1));
 		p.setName("王五");
 		batch.add(p);
 
 		p = new NonPartitionEntity();
-		p.setDateField(DateUtils.getDate(2012, 4, 10));
+		p.setDateField(DateUtils.get(2012, 4, 10));
 		p.setName("李四");
 		batch.add(p);
 
 		p = new NonPartitionEntity();
-		p.setDateField(DateUtils.getDate(2012, 5, 20));
+		p.setDateField(DateUtils.get(2012, 5, 20));
 		p.setName("前五");
 		batch.add(p);
 
 		p = new NonPartitionEntity();
-		p.setDateField(DateUtils.getDate(2012, 3, 8));
+		p.setDateField(DateUtils.get(2012, 3, 8));
 		p.setName("赵三");
 		batch.add(p);
 
@@ -520,7 +519,7 @@ public class PartitionTest extends org.junit.Assert {
 
 		PartitionEntity entity = new PartitionEntity();
 		entity.getQuery().addCondition(QB.between(PartitionEntity.Field.dateField,
-				DateUtils.getDate(2012, 3, 1), DateUtils.getDate(2012, 6, 1)));
+				DateUtils.get(2012, 3, 1), DateUtils.get(2012, 6, 1)));
 
 		Selects selectItems1 = QB.selectFrom(entity1.getQuery());
 		selectItems1.column(NonPartitionEntity.Field.id).as("id");
@@ -546,7 +545,7 @@ public class PartitionTest extends org.junit.Assert {
 		List<NonPartitionEntity> list = page.next();
 		for (NonPartitionEntity obj : list) {
 			LogUtil.show(obj.toString());
-			junit.framework.Assert.assertTrue(obj.getDateField() != null);
+			org.junit.Assert.assertTrue(obj.getDateField() != null);
 		}
 		
 		// 再测试下查询结果映射到不带有@Column的实体类的场景
@@ -557,7 +556,7 @@ public class PartitionTest extends org.junit.Assert {
 		List<PartitionEntityResult> list2 = page2.next();
 		for (PartitionEntityResult obj : list2) {
 			LogUtil.show(obj.toString());
-			junit.framework.Assert.assertTrue(obj.getDateField() != null);
+			org.junit.Assert.assertTrue(obj.getDateField() != null);
 		}
 	}
 	@Test

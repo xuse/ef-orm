@@ -293,5 +293,10 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 		}
 		return result;
 	}
+
+	@Override
+	public boolean isSelectCustomized() {
+		return false;
+	}
 	
 }

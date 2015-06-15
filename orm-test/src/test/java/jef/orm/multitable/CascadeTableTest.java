@@ -2,7 +2,6 @@ package jef.orm.multitable;
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -14,6 +13,7 @@ import jef.database.Condition;
 import jef.database.Condition.Operator;
 import jef.database.IConditionField.And;
 import jef.database.IConditionField.Or;
+import jef.database.ORMConfig;
 import jef.database.PagingIterator;
 import jef.database.QB;
 import jef.database.Session;
@@ -39,8 +39,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import com.alibaba.fastjson.JSON;
-
 /**
  * 级联操作相关测试
  * 
@@ -49,11 +47,11 @@ import com.alibaba.fastjson.JSON;
  */
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({ 
+	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
 	@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"), 
 	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
 	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), 
 	@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"),
-	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
 	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
 	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
@@ -399,7 +397,9 @@ public class CascadeTableTest extends MultiTableTestBase {
 	 * @throws SQLException
 	 */
 	@Test
+	
 	public void testFilterInOneToManyRef() throws SQLException {
+		ORMConfig.getInstance().setCacheDebug(true);
 		System.out.println("=========== testFilterInOneToManyRef Start ==========");
 		// 无过滤条件的
 		Person p1 = new Person();

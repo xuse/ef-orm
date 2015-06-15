@@ -258,7 +258,12 @@ final class JoinImpl2 extends AbstractJoinImpl {
 		String alias = obj.getAlias();
 		Assert.notNull(alias);
 		Query<?> q = obj.getQuery();
-		String table = DbUtils.toTableName(q.getInstance(), null, q, processor.getPartitionSupport()).getAsOneTable();
+		String table;
+		if(q.getAttribute(ConditionQuery.CUSTOM_TABLE_NAME)!=null) {
+			table=String.valueOf(q.getAttribute(ConditionQuery.CUSTOM_TABLE_NAME));
+		}else {
+			table=DbUtils.toTableName(q.getInstance(), null, q, processor.getPartitionSupport()).getAsOneTable();
+		}
 		sb.append(DbUtils.escapeColumn(processor.getProfile(), table)).append(' ').append(alias);
 	}
 
@@ -367,5 +372,4 @@ final class JoinImpl2 extends AbstractJoinImpl {
 			result.setOrderbyPart(SelectProcessor.toOrderClause(this, context, profile));
 		return result;
 	}
-
 }

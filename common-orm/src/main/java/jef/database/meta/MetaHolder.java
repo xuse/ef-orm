@@ -130,7 +130,7 @@ public final class MetaHolder {
 	// 动态表元数据池
 	static final Map<String, TupleMetadata> dynPool = new java.util.HashMap<String, TupleMetadata>(32);
 	// 反向查找表
-	private static final Map<String, ITableMetadata> inverseMapping = new HashMap<String, ITableMetadata>();
+	private static final Map<String, AbstractMetadata> inverseMapping = new HashMap<String, AbstractMetadata>();
 
 	// 初始化分表规则加载器
 	static {
@@ -1245,9 +1245,9 @@ public final class MetaHolder {
 	/**
 	 * 逆向查找元模型
 	 */
-	public static ITableMetadata lookup(String schema, String table) {
+	public static AbstractMetadata lookup(String schema, String table) {
 		String key = (schema + "." + table).toUpperCase();
-		ITableMetadata m = inverseMapping.get(key);
+		AbstractMetadata m = inverseMapping.get(key);
 		if (m != null)
 			return m;
 
@@ -1263,7 +1263,7 @@ public final class MetaHolder {
 		}
 
 		// Lookup static models
-		for (ITableMetadata meta : pool.values()) {
+		for (AbstractMetadata meta : pool.values()) {
 			String tablename = meta.getTableName(false);
 			if (schema != null && (!StringUtils.equals(meta.getSchema(), schema))) {// schema不同则跳
 				continue;
@@ -1275,7 +1275,7 @@ public final class MetaHolder {
 		}
 		if (m == null) {
 			// Lookup dynamic models
-			for (ITableMetadata meta : dynPool.values()) {
+			for (AbstractMetadata meta : dynPool.values()) {
 				String tablename = meta.getTableName(false);
 				if (schema != null && (!StringUtils.equals(meta.getSchema(), schema))) {// schema不同则跳
 					continue;

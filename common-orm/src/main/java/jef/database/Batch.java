@@ -550,7 +550,8 @@ public abstract class Batch<T extends IQueryableEntity> {
 				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ", i + 1).append('/').append(len));
 				List<Object> whereBind = BindVariableTool.setVariables(t.getQuery(), updatePart.getVariables(), bindVar, context);
 				psmt.addBatch();
-				parent.getCache().onUpdate(forceTableName == null ? meta.getName() : forceTableName, wherePart.getSql(), whereBind);
+				String baseTableName=forceTableName == null ? meta.getTableName(false) : forceTableName;
+				parent.getCache().onUpdate(baseTableName, wherePart.getSql(), whereBind);
 
 				if (log.isDebug()) {
 					log.output();
@@ -620,7 +621,8 @@ public abstract class Batch<T extends IQueryableEntity> {
 				}
 				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ", i + 1).append('/').append(len));
 				List<Object> whereBind = BindVariableTool.setVariables(t.getQuery(), null, bindVar, context);
-				parent.getCache().onDelete(forceTableName == null ? meta.getName() : forceTableName, wherePart.getSql(), whereBind);
+				String baseTableName=(forceTableName == null ? meta.getTableName(false) : forceTableName);
+				parent.getCache().onDelete(baseTableName, wherePart.getSql(), whereBind);
 
 				psmt.addBatch();
 				if (log.isDebug()) {

@@ -16,8 +16,8 @@ import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.GroupClause;
 import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.clause.QueryClauseImpl;
-import jef.database.wrapper.populator.Transformer;
 
+@SuppressWarnings("serial")
 public abstract class AbstractQuery<T extends IQueryableEntity> implements Query<T>, Serializable {
 
 	static final Query<?>[] EMPTY_Q = new Query[0];
@@ -33,10 +33,6 @@ public abstract class AbstractQuery<T extends IQueryableEntity> implements Query
 	@Transient
 	transient ITableMetadata type;
 
-	/**
-	 * 结果转换器
-	 */
-	protected Transformer t;
 
 	private int maxResult;
 	private int fetchSize;
@@ -64,15 +60,6 @@ public abstract class AbstractQuery<T extends IQueryableEntity> implements Query
 
 	public int getQueryTimeout() {
 		return queryTimeout;
-	}
-
-	public Transformer getResultTransformer() {
-		if (t == null) {
-			t = new Transformer(type);
-			t.setLoadVsOne(true);
-			t.setLoadVsMany(true);
-		}
-		return t;
 	}
 
 	public void setAutoOuterJoin(boolean cascadeOuterJoin) {
@@ -116,7 +103,7 @@ public abstract class AbstractQuery<T extends IQueryableEntity> implements Query
 		clause.setGrouphavingPart(groupClause);
 
 		clause.setSelectPart(SelectProcessor.toSelectSql(context, groupClause, profile));
-		clause.setTables(prs, type.getName());
+		clause.setTables(type.getTableName(false),prs);
 		clause.setWherePart(processor.parent.toWhereClause(this, context, false, profile).getSql());
 		if (order)
 			clause.setOrderbyPart(SelectProcessor.toOrderClause(this, context, profile));
@@ -138,7 +125,7 @@ public abstract class AbstractQuery<T extends IQueryableEntity> implements Query
 		QueryClauseImpl result = new QueryClauseImpl(profile);
 		result.setSelectPart(SelectProcessor.toSelectSql(context, groupClause, profile));
 		result.setGrouphavingPart(groupClause);
-		result.setTables(prs, type.getName());
+		result.setTables(type.getTableName(false),prs);
 		result.setWherePart(whereResult.getSql());
 		result.setBind(whereResult.getBind());
 		if (order)

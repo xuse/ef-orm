@@ -13,8 +13,17 @@ import jef.database.jsqlparser.statement.update.Update;
  * @author jiyi
  *
  */
-final class CacheChain implements Cache{
+@SuppressWarnings("rawtypes")
+public final class CacheChain implements Cache{
 	private Cache[] chains;
+	
+	/**
+	 * 构造缓存链，本级在前，上级在后
+	 * @param chain
+	 */
+	public CacheChain(Cache... chain) {
+		this.chains=chain;
+	}
 
 	@Override
 	public boolean contains(Class cls, Object primaryKey) {

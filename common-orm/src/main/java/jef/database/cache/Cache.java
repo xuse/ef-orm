@@ -51,7 +51,7 @@ public interface Cache extends javax.persistence.Cache{
 
 	/**
 	 * on object delete, remove the cache
-	 * @param table
+	 * @param table 注意，对于VarObject的特殊情况需要外部传入时处理完
 	 * @param where
 	 * @param bind
 	 */

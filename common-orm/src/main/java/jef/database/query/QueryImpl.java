@@ -32,6 +32,7 @@ import jef.database.Field;
 import jef.database.IConditionField;
 import jef.database.IQueryableEntity;
 import jef.database.ORMConfig;
+import jef.database.Session.PopulateStrategy;
 import jef.database.annotation.JoinType;
 import jef.database.meta.AbstractMetadata;
 import jef.database.meta.AbstractRefField;
@@ -46,39 +47,55 @@ import jef.tools.Assert;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
-public final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T>{
+public final class QueryImpl<T extends IQueryableEntity> extends
+		AbstractQuery<T> {
 	private static final long serialVersionUID = -8921719771049568842L;
-	
-	private boolean cascadeViaOuterJoin=ORMConfig.getInstance().isUseOuterJoin();
-	
+
+	private boolean cascadeViaOuterJoin = ORMConfig.getInstance()
+			.isUseOuterJoin();
+
 	final List<Condition> conditions = new ArrayList<Condition>(6);
 	/**
 	 * 当使用延迟过滤条件时，存储这些条件
 	 */
 	private Map<Reference, List<Condition>> cascadeCondition;
-	
+
 	final List<OrderField> orderBy = new ArrayList<OrderField>();
-	
+
 	EntityMappingProvider selected;
-	
+
 	private Map<String, Object> attribute;
+
+	/**
+	 * 结果转换器
+	 */
+	protected final Transformer t;
+
+	public Transformer getResultTransformer() {
+		return t;
+	}
 
 	/**
 	 * 当使用ref field时，存储ref field的对象提供者
 	 */
 	private List<Query<?>> otherQueryProvider = null;
 
-
 	public QueryImpl(T p) {
 		this.instance = p;
 		type = MetaHolder.getMeta(p);
+		t = new Transformer(type);
+		t.setLoadVsOne(true);
+		t.setLoadVsMany(true);
 	}
-	
-	public QueryImpl(T p,String key) {
+
+	public QueryImpl(T p, String key) {
 		this.instance = p;
 		DebugUtil.bindQuery((DataObject) p, this);
 		setAttribute(ConditionQuery.CUSTOM_TABLE_TYPE, key);
 		type = MetaHolder.getMeta(p);
+		t = new Transformer(type);
+		t.setLoadVsOne(true);
+		t.setLoadVsMany(true);
 	}
 
 	public void setOrderBy(boolean asc, Field... orderbys) {
@@ -90,8 +107,10 @@ public final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T
 		for (Field f : orderbys) {
 			if (!(f instanceof RefField) && !(f instanceof SqlExpression)) {
 				ITableMetadata metaOfField = DbUtils.getTableMeta(f);
-				if(!this.type.containsMeta(metaOfField)){
-					throw new IllegalArgumentException("the field ["+f.name()+"] which belongs to " + metaOfField.getName() + " is not current type:" + getType().getName());
+				if (!this.type.containsMeta(metaOfField)) {
+					throw new IllegalArgumentException("the field [" + f.name()
+							+ "] which belongs to " + metaOfField.getName()
+							+ " is not current type:" + getType().getName());
 				}
 			}
 			orderBy.add(new OrderField(f, flag));
@@ -99,11 +118,11 @@ public final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T
 	}
 
 	public void clearQuery() {
-		conditions.clear();	
+		conditions.clear();
 		orderBy.clear();
-		if(cascadeCondition!=null)
+		if (cascadeCondition != null)
 			cascadeCondition.clear();
-		
+
 	}
 
 	@SuppressWarnings("unchecked")
@@ -125,67 +144,71 @@ public final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T
 	 * 检查Condition，将需要迟绑定的Field标记为迟邦定（即嵌套上RefField对象）
 	 */
 	private void wrapRef(IConditionField field) {
-		for(Condition c:field.getConditions()){
+		for (Condition c : field.getConditions()) {
 			wrapRef(c);
 		}
 	}
+
 	/*
 	 * 检查Condition，将需要迟绑定的Field标记为迟邦定（即嵌套上RefField对象）
 	 */
 	private void wrapRef(Condition c) {
-		Field field=c.getField();
-		if(field instanceof Enum || field instanceof TupleField){
-			ITableMetadata meta=DbUtils.getTableMeta(field);
-			if(meta!=type){
+		Field field = c.getField();
+		if (field instanceof Enum || field instanceof TupleField) {
+			ITableMetadata meta = DbUtils.getTableMeta(field);
+			if (meta != type) {
 				c.setField(new RefField(field));
 			}
-		}else if(field instanceof IConditionField){
-			wrapRef((IConditionField)field);
+		} else if (field instanceof IConditionField) {
+			wrapRef((IConditionField) field);
 		}
 	}
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see jef.database.query.Query#addCondition(jef.database.Condition)
 	 */
 	public Query<T> addCondition(Condition condition) {
-		if(!conditions.contains(condition))
+		if (!conditions.contains(condition))
 			conditions.add(condition);
-		allRecords=false;
+		allRecords = false;
 		wrapRef(condition);
 		return this;
 	}
 
 	public Query<T> addCondition(Field field, Object value) {
-		return addCondition(Condition.get(field, Condition.Operator.EQUALS, value));
+		return addCondition(Condition.get(field, Condition.Operator.EQUALS,
+				value));
 	}
 
 	public Query<T> addCondition(Field field, Operator oper, Object value) {
 		return addCondition(Condition.get(field, oper, value));
 	}
-	
+
 	public Query<T> addExtendQuery(Query<?> query) {
-		if (query != null){
-			if(otherQueryProvider==null){
-				otherQueryProvider=new ArrayList<Query<?>>(4);
+		if (query != null) {
+			if (otherQueryProvider == null) {
+				otherQueryProvider = new ArrayList<Query<?>>(4);
 			}
 			otherQueryProvider.add(query);
 		}
 		return this;
 	}
-	
+
 	public Query<T> addExtendQuery(Class<?> emptyQuery) {
-		AbstractMetadata meta=MetaHolder.getMeta(emptyQuery);
-		if(meta.getType()==EntityType.POJO){
+		AbstractMetadata meta = MetaHolder.getMeta(emptyQuery);
+		if (meta.getType() == EntityType.POJO) {
 			throw new IllegalArgumentException();
 		}
 		return addExtendQuery(ReadOnlyQuery.getEmptyQuery(meta));
 	}
+
 	boolean allRecords;
 
 	public Query<T> setAllRecordsCondition() {
 		conditions.clear();
-		allRecords=true;
+		allRecords = true;
 		otherQueryProvider = null;
 		return this;
 	}
@@ -198,40 +221,44 @@ public final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T
 		this.cascadeViaOuterJoin = cascadeOuterJoin;
 	}
 
-	//由于指定了RefName，因此变成了早绑定
-	//问题1：级联的级联条件是否可以用xx.xx.xx这样的ref名称来描述
-	public Query<T> addCascadeCondition(String refName,Condition... conds) {
-		int n=refName.indexOf('.');
-		
-		ITableMetadata type=this.type;
+	// 由于指定了RefName，因此变成了早绑定
+	// 问题1：级联的级联条件是否可以用xx.xx.xx这样的ref名称来描述
+	public Query<T> addCascadeCondition(String refName, Condition... conds) {
+		int n = refName.indexOf('.');
+
+		ITableMetadata type = this.type;
 		Reference reference;
-		while(n>-1){
-			AbstractRefField rField=type.getRefFieldsByName().get(refName.substring(0,n));
-			Assert.notNull(rField,"the input field '"+refName+"' is not Cascade field in "+ type.getName());
-			if(rField.isSingleColumn()){
+		while (n > -1) {
+			AbstractRefField rField = type.getRefFieldsByName().get(
+					refName.substring(0, n));
+			Assert.notNull(rField, "the input field '" + refName
+					+ "' is not Cascade field in " + type.getName());
+			if (rField.isSingleColumn()) {
 				throw new IllegalArgumentException();
 			}
-			reference=rField.getReference();
-			type=reference.getTargetType();
-			refName=refName.substring(n+1);
-			n=refName.indexOf('.');	
+			reference = rField.getReference();
+			type = reference.getTargetType();
+			refName = refName.substring(n + 1);
+			n = refName.indexOf('.');
 		}
-		AbstractRefField rField=type.getRefFieldsByName().get(refName);
-		Assert.notNull(rField,"the input field '"+refName+"' is not Cascade field in "+ type.getName());
-		reference=rField.getReference();
-		return addFilterCondition(reference,conds);
+		AbstractRefField rField = type.getRefFieldsByName().get(refName);
+		Assert.notNull(rField, "the input field '" + refName
+				+ "' is not Cascade field in " + type.getName());
+		reference = rField.getReference();
+		return addFilterCondition(reference, conds);
 	}
-	
+
 	public Query<T> addCascadeCondition(Condition condition) {
-		ITableMetadata meta=DbUtils.getTableMeta(condition.getField());
-		Reference ref=DbUtils.findDistinctPath(type, meta);
-		return addFilterCondition(ref,condition);
+		ITableMetadata meta = DbUtils.getTableMeta(condition.getField());
+		Reference ref = DbUtils.findDistinctPath(type, meta);
+		return addFilterCondition(ref, condition);
 	}
 
 	private void checkRefs(Field c) {
 		if (c instanceof RefField) {
-			RefField f=(RefField)c;
-			Reference ref=DbUtils.findPath(type,DbUtils.getTableMeta(f.getField()));
+			RefField f = (RefField) c;
+			Reference ref = DbUtils.findPath(type,
+					DbUtils.getTableMeta(f.getField()));
 			ensureRef(ref);
 		} else if (c instanceof IConditionField) {
 			IConditionField ic = (IConditionField) c;
@@ -240,12 +267,12 @@ public final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T
 			}
 		}
 	}
-	
+
 	private void ensureRef(Reference ref) {
-		if(!this.cascadeViaOuterJoin){
-			if(otherQueryProvider!=null){
-				for(Query<?> q:otherQueryProvider){
-					if(q.getMeta()==ref.getTargetType()){
+		if (!this.cascadeViaOuterJoin) {
+			if (otherQueryProvider != null) {
+				for (Query<?> q : otherQueryProvider) {
+					if (q.getMeta() == ref.getTargetType()) {
 						return;
 					}
 				}
@@ -253,7 +280,7 @@ public final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T
 			this.addExtendQuery(ReadOnlyQuery.getEmptyQuery(ref.getTargetType()));
 		}
 	}
-	
+
 	private Query<T> addFilterCondition(Reference ref, Condition... cs) {
 		if (cascadeCondition == null)
 			cascadeCondition = new HashMap<Reference, List<Condition>>(4);
@@ -265,7 +292,6 @@ public final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T
 		cond.addAll(Arrays.asList(cs));
 		return this;
 	}
-
 
 	public EntityMappingProvider getSelectItems() {
 		return selected;
@@ -285,7 +311,7 @@ public final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T
 		} else {
 			SqlContext context = new SqlContext("t", this);
 			context.attribute = this.attribute;
-			this.selected=context;
+			this.selected = context;
 			return context;
 		}
 	}
@@ -345,14 +371,15 @@ public final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T
 		return eb.isEquals();
 	}
 
-	//这个方法是最终查询执行前的标识,在这里分清楚哪些条件是事后，哪些是实时的
+	// 这个方法是最终查询执行前的标识,在这里分清楚哪些条件是事后，哪些是实时的
 	public Query<?>[] getOtherQueryProvider() {
-		if(!cascadeViaOuterJoin){
-			for(Condition c:this.conditions){
+		if (!cascadeViaOuterJoin) {
+			for (Condition c : this.conditions) {
 				checkRefs(c.getField());
 			}
 		}
-		return otherQueryProvider == null ? EMPTY_Q : otherQueryProvider.toArray(new Query<?>[otherQueryProvider.size()]);
+		return otherQueryProvider == null ? EMPTY_Q : otherQueryProvider
+				.toArray(new Query<?>[otherQueryProvider.size()]);
 	}
 
 	public void setAttribute(String key, Object value) {
@@ -377,44 +404,36 @@ public final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T
 	public String toString() {
 		return type.getThisType().getSimpleName() + conditions.toString();
 	}
-	
-
 
 	public void setCustomTableName(String name) {
-		setAttribute(CUSTOM_TABLE_NAME,name);
+		setAttribute(CUSTOM_TABLE_NAME, name);
 	}
-
 
 	public Map<String, Object> getAttributes() {
 		return attribute;
 	}
 
 	/**
-	 * 针对每个FilterCondition，来判断该Filter是否允许合并查询
-	 * 该条件是否允许作用于合并后的外连接查询.
+	 * 针对每个FilterCondition，来判断该Filter是否允许合并查询 该条件是否允许作用于合并后的外连接查询.
 	 * 只有当左外连接，并且是xxxToOne的连接，才允许作用于合并后的外连接查询上。
 	 * 
 	 * @return 该条件是否允许作用于合并后的外连接查询.
 	 */
-	public static boolean isAllowMergeAsOuterJoin(Reference ref){
-		if(ref==null){
+	public static boolean isAllowMergeAsOuterJoin(Reference ref) {
+		if (ref == null) {
 			throw new IllegalStateException();
 		}
-		ReferenceType type=ref.getType();
-		if(type.isToOne()){
-			return ref.getJoinType()==JoinType.LEFT; 
+		ReferenceType type = ref.getType();
+		if (type.isToOne()) {
+			return ref.getJoinType() == JoinType.LEFT;
 		}
 		return false;
 	}
 
-
 	public void setCascade(boolean cascade) {
-		if(t==null){
-			t=new Transformer(type);
-		}
 		t.setLoadVsMany(cascade);
 		t.setLoadVsOne(cascade);
-		this.cascadeViaOuterJoin=false;
+		this.cascadeViaOuterJoin = false;
 	}
 
 	@Override
@@ -425,5 +444,12 @@ public final class QueryImpl<T extends IQueryableEntity> extends AbstractQuery<T
 	@Override
 	public Terms terms() {
 		return new Terms(this);
+	}
+
+	@Override
+	public boolean isSelectCustomized() {
+		PopulateStrategy[] s=t.getStrategy();
+		if(s!=null && s.length>0)return true;
+		return this.selected!=null;
 	}
 }

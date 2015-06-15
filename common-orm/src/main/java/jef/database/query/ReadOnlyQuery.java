@@ -24,6 +24,13 @@ import jef.database.wrapper.populator.Transformer;
  */
 public final class ReadOnlyQuery<T extends IQueryableEntity> extends AbstractQuery<T> {
 	static private final Map<ITableMetadata, Query<?>> cacheOfQuery=new java.util.IdentityHashMap<ITableMetadata, Query<?>>(32);
+	
+	/**
+	 * 结果转换器
+	 */
+	protected final Transformer t;
+	
+	
 	public static Query<?> getEmptyQuery(ITableMetadata cls) {
 		Query<?> q=cacheOfQuery.get(cls);
 		if(q!=null)return q;
@@ -50,6 +57,7 @@ public final class ReadOnlyQuery<T extends IQueryableEntity> extends AbstractQue
 	public ReadOnlyQuery(T ins,ITableMetadata clz){
 		this.type=clz;
 		this.instance=ins;
+		t = new Transformer(type);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -166,16 +174,14 @@ public final class ReadOnlyQuery<T extends IQueryableEntity> extends AbstractQue
 
 
 	public void setCascade(boolean cascade) {
-		if(t==null){
-			t=new Transformer(type);
-		}
-		t.setLoadVsMany(cascade);
-		t.setLoadVsOne(cascade);
+		throw new UnsupportedOperationException();
+//		t.setLoadVsMany(cascade);
+//		t.setLoadVsOne(cascade);
 	}
 
 	public Transformer getResultTransformer() {
 		if (t == null) {
-			t = new Transformer(type);
+			
 		}
 		return t;
 	}
@@ -183,5 +189,10 @@ public final class ReadOnlyQuery<T extends IQueryableEntity> extends AbstractQue
 	@Override
 	public boolean isAll() {
 		return true;
+	}
+
+	@Override
+	public boolean isSelectCustomized() {
+		return false;
 	}
 }

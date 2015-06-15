@@ -34,8 +34,8 @@ import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.Condition.Operator;
 import jef.database.Transaction.TransactionFlag;
-import jef.database.cache.CacheImpl;
 import jef.database.cache.Cache;
+import jef.database.cache.CacheImpl;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
@@ -1572,37 +1572,39 @@ public abstract class Session{
 		QueryClause sql = selectp.toQuerySql(queryObj, range, true);
 		if (sql.isEmpty())
 			return Collections.EMPTY_LIST;
-		// 缓存命中
-		List cachedResult = getCache().load(sql.getCacheKey());
-		if (cachedResult != null)
-			return cachedResult;
-
-		ResultSetContainer rs = new ResultSetContainer(option.cacheResultset && !option.holdResult);// 只有当非读写模式并且开启结果缓存才缓存结果集
-		long parse = System.currentTimeMillis();
-		selectp.processSelect(sql, this, queryObj, rs, option, option.holdResult ? 2 : 0);
-		long dbselect = System.currentTimeMillis(); // 查询完成时间
-		List list;
-
+		
 		Transformer transformer = queryObj.getResultTransformer();
-		try {
-			EntityMappingProvider mapping = DbUtils.getMappingProvider(queryObj);
-			list = populateResultSet(rs.toProperResultSet(filters, transformer.getStrategy()), mapping, transformer);
-			if (debugMode) {
-				LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(list.size()), "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbselect),
-						"ms) max:", option.toString(), " |", getTransactionId(null)));
+		boolean noCache=queryObj.isSelectCustomized();
+		
+		// 缓存命中
+		List resultList = noCache?null:getCache().load(sql.getCacheKey());
+		if (resultList == null) {
+			ResultSetContainer rs = new ResultSetContainer(option.cacheResultset && !option.holdResult);// 只有当非读写模式并且开启结果缓存才缓存结果集
+			long parse = System.currentTimeMillis();
+			selectp.processSelect(sql, this, queryObj, rs, option, option.holdResult ? 2 : 0);
+			long dbselect = System.currentTimeMillis(); // 查询完成时间
+			try {
+				EntityMappingProvider mapping = DbUtils.getMappingProvider(queryObj);
+				resultList = populateResultSet(rs.toProperResultSet(filters, transformer.getStrategy()), mapping, transformer);
+				if (debugMode) {
+					LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(resultList.size()), "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbselect),
+							"ms) max:", option.toString(), " |", getTransactionId(null)));
+				}
+			} finally {
+				if (option.holdResult) {
+					option.setRs(rs);
+				} else {
+					rs.close();
+				}
 			}
-		} finally {
-			if (option.holdResult) {
-				option.setRs(rs);
-			} else {
-				rs.close();
+			
+			// Jiyi modified 2014-11-4 如果查询结果为空，不缓存
+			// 目的是减少CacheKey的计算，这部分计算有一定开销，权衡之下，缓存空结果意义不大。
+			if (!noCache && !option.holdResult && !resultList.isEmpty()) {
+				getCache().onLoad(sql.getCacheKey(), resultList, transformer.getResultClazz());
 			}
 		}
-		// Jiyi modified 2014-11-4 如果查询结果为空，不缓存
-		// 目的是减少CacheKey的计算，这部分计算有一定开销，权衡之下，缓存空结果意义不大。
-		if (!option.holdResult && !list.isEmpty()) {
-			getCache().onLoad(sql.getCacheKey(), list, transformer.getResultClazz());
-		}
+
 		// 凡是对多查询都通过分次查询来解决，填充1vsN字段
 		if (transformer.isLoadVsMany() && transformer.isQueryableEntity()) {
 			Map<Reference, List<AbstractRefField>> map;
@@ -1620,10 +1622,11 @@ public abstract class Session{
 			}
 
 			for (Map.Entry<Reference, List<AbstractRefField>> entry : map.entrySet()) {
-				CascadeUtil.fillOneVsManyReference(list, entry, filters == null ? Collections.EMPTY_MAP : filters, this);
+				//如果是缓存命中的情况，依然要重新更新缓存中的级联对象
+				CascadeUtil.fillOneVsManyReference(resultList, entry, filters == null ? Collections.EMPTY_MAP : filters, this);
 			}
 		}
-		return list;
+		return resultList;
 	}
 
 	/**
@@ -2594,7 +2597,7 @@ public abstract class Session{
 			BindSql where = deletep.toWhereClause(query, new SqlContext(null, query), false, profile);
 			int count = deletep.processDelete(this, obj, where, sites, start);
 			if (count > 0) {
-				getCache().onDelete(myTableName == null ? obj.getClass().getName() : myTableName, where.getSql(), CacheImpl.toParamList(where.getBind()));
+				getCache().onDelete(myTableName == null ? query.getMeta().getTableName(false) : myTableName, where.getSql(), CacheImpl.toParamList(where.getBind()));
 			}
 			getListener().afterDelete(obj, count, this);
 			return count;
@@ -2624,7 +2627,8 @@ public abstract class Session{
 		getListener().beforeUpdate(obj, this);
 		int count = updatep.processUpdate(this, obj, updateClause, whereClause, sites, parseCost);
 		if (count > 0) {
-			getCache().onUpdate(myTableName == null ? obj.getClass().getName() : myTableName, whereClause.getSql(), CacheImpl.toParamList(whereClause.getBind()));
+			String tableName=myTableName == null ? query.getMeta().getTableName(false) : myTableName;
+			getCache().onUpdate(tableName, whereClause.getSql(), CacheImpl.toParamList(whereClause.getBind()));
 		}
 		getListener().afterUpdate(obj, count, this);
 		return count;

@@ -351,6 +351,12 @@ public enum DbCfg implements ConfigItem {
 	 * 启用一级缓存，默认false
 	 */
 	CACHE_LEVEL_1,
+	
+	/**
+	 * 默认为0。当为0时，表示不启用二级缓存。
+	 * 如果设置为>0的数值表示启用二级缓存，每条缓存记录的最大生存时间等于指定的秒数。
+	 */
+	CACHE_GLOBAL_EXPIRE_TIME,
 	/**
 	 * 允许为空的查询条件，默认false
 	 */

@@ -7,6 +7,7 @@ import java.util.List;
 
 import jef.codegen.EntityEnhancer;
 import jef.database.DbClient;
+import jef.database.ORMConfig;
 import jef.database.Session;
 import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
@@ -88,6 +89,12 @@ public class JoinDescrptionTest {
 	 * FIXME 实际测试发现，由于Druid解析器不能支持JDBC escape语法，因此Derby案例会出错。暂时容错处理。
 	 * 待Druid修复后再行测试。
 	 * @throws SQLException
+	 * 
+	 * 
+	 * 
+	 * 由于在存入对象时，没有延迟加载钩子，造成读取到缓存中的对象时，延迟加载功能未生效。
+	 * 由于Entity有状态（延迟加载钩子），缓存中如何处理？
+	 * 其实整个缓存设计都有此问题，非级联对象被加载出来后，另一个级联查询使用的场景怎么办？
 	 */
 	@Test
 	@IgnoreOn("sqlite")
