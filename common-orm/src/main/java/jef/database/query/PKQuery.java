@@ -243,6 +243,7 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 
 	@Override
 	public boolean isSelectCustomized() {
+		if(!type.cacheable())return true;
 		PopulateStrategy[] s=t.getStrategy();
 		if(s!=null && s.length>0)return true;
 		return false;

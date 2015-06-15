@@ -609,6 +609,11 @@ public class ORMConfig implements ORMConfigMBean {
 		}
 	}
 
+	/**
+	 * 二级缓存的生存周期，为0时禁用二级缓存。
+	 * 该值必须在DbClient对象创建之前设置。对象创建后再设置无效
+	 * @return
+	 */
 	public int getCacheLevel2() {
 		return cacheLevel2;
 	}
