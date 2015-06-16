@@ -10,12 +10,12 @@ final class BeanCloner extends Cloner{
 	}
 
 	@Override
-	public Object clone(Object object,boolean deep) {
+	public Object clone(Object object,int restLevel) {
 		Object result=bc.createInstance();
-		if(deep){
-			bc.copy(object, result, CloneUtils.clone_cvt_deep);
+		if(restLevel>0){
+			bc.copy(object, result, new CloneUtils.CloneConvert(restLevel-1));
 		}else{
-			bc.copy(object, result, CloneUtils.clone_cvt_safe);
+			bc.copy(object, result, CloneUtils.clone_cvt_dummy);
 		}
 		return result;
 	}
