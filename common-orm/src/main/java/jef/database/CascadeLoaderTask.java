@@ -36,8 +36,7 @@ final class CascadeLoaderTask implements LazyLoadTask {
 	private ITableMetadata targetTableMeta;
 	private List<AbstractRefField> refs;
 	private List<OrderField> orders;
-	private boolean isManyToMany;
-
+	private String keyOfJoinTable;
 	/**
 	 * 
 	 * @param entry
@@ -59,7 +58,7 @@ final class CascadeLoaderTask implements LazyLoadTask {
 		
 		if(joinPath.getRelationTable()!=null) {
 			query = QueryBuilder.create(joinPath.getRelationTable());
-			isManyToMany=true;
+			keyOfJoinTable=ref.getThisType().getName().replace('.', '_')+"_OBJ";
 		}else {
 			query = QueryBuilder.create(ref.getTargetType());	
 		}
@@ -107,12 +106,13 @@ final class CascadeLoaderTask implements LazyLoadTask {
 				query.addOrderBy(f.isAsc(), f.getField());
 			}
 		}
+		String isManyToMany=this.keyOfJoinTable;
 		List<IQueryableEntity> subs = db.innerSelect(finalQuery, null, filters, option);		
-		if(isManyToMany) {
+		if(isManyToMany!=null) {
 			List<? extends IQueryableEntity> old=subs;
 			subs=new ArrayList<IQueryableEntity>();
 			for(IQueryableEntity d: old) {
-				IQueryableEntity realObj=(IQueryableEntity) ((VarObject)d).get("_OBJ");
+				IQueryableEntity realObj=(IQueryableEntity) ((VarObject)d).get(isManyToMany);
 				subs.add(realObj);
 			}
 		}

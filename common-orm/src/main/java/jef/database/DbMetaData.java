@@ -1616,7 +1616,7 @@ public class DbMetaData {
 				exe.executeSql(sqls.getTableSQL());
 				// create sequence
 				for (PairIS seq : sqls.getSequences()) {
-					createSequence0(null, seq.second, 1, StringUtils.toLong(StringUtils.repeat('9', seq.first), Long.MAX_VALUE), exe);
+					createSequence0(null, seq.second, 1, StringUtils.toLong(StringUtils.repeat('9', seq.first), Long.MAX_VALUE), exe,true);
 				}
 				// 创建外键约束等
 				exe.executeSql(sqls.getOtherContraints());
@@ -1663,16 +1663,25 @@ public class DbMetaData {
 	public void createSequence(String schema, String sequenceName, long start, Long max) throws SQLException {
 		StatementExecutor executor = createExecutor();
 		try {
-			createSequence0(schema, sequenceName, start, max, executor);
+			createSequence0(schema, sequenceName, start, max, executor,true);
+		} finally {
+			executor.close();
+		}
+	}
+	
+	void createSequenceWithoutCheck(String schema, String sequenceName, long start, Long max) throws SQLException {
+		StatementExecutor executor = createExecutor();
+		try {
+			createSequence0(schema, sequenceName, start, max, executor,false);
 		} finally {
 			executor.close();
 		}
 	}
 
-	private void createSequence0(String schema, String sequenceName, long start, Long max, StatementExecutor executor) throws SQLException {
+	private void createSequence0(String schema, String sequenceName, long start, Long max, StatementExecutor executor,boolean check) throws SQLException {
 		DatabaseDialect profile = this.getProfile();
 		sequenceName = profile.getObjectNameToUse(sequenceName);
-		if (innerExists(ObjectType.SEQUENCE, schema, sequenceName))
+		if (check && innerExists(ObjectType.SEQUENCE, schema, sequenceName))
 			return;
 		if (max == null)
 			max = 9999999999L;

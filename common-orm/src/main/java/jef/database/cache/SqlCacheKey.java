@@ -34,7 +34,7 @@ public class SqlCacheKey implements CacheKey{
 	@Override
 	public String toString() {
 		StringBuilder sb=new StringBuilder();
-		sb.append('[').append(dimension.getTables());
+		sb.append('[').append(dimension.getTableDefinition());
 		sb.append("] ").append(dimension);
 		sb.append(' ');
 		sb.append(params);

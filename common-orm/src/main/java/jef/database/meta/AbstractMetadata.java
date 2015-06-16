@@ -12,14 +12,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.Cacheable;
-
+import jef.common.SimpleException;
 import jef.common.log.LogUtil;
-import jef.database.DbCfg;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
-import jef.database.annotation.BindDataSource;
 import jef.database.cache.KeyDimension;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
@@ -32,8 +29,6 @@ import jef.database.query.PKQuery;
 import jef.database.wrapper.clause.BindSql;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
-import jef.tools.JefConfiguration;
-import jef.tools.StringUtils;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.Property;
 
@@ -46,7 +41,7 @@ import jef.tools.reflect.Property;
 public abstract class AbstractMetadata implements ITableMetadata {
 	protected String schema;
 	protected String tableName;
-	private String bindDsName;
+	protected String bindDsName;
 	private AutoIncrementMapping[] increMappings;
 	private AbstractTimeMapping[] updateTimeMapping;
 
@@ -61,35 +56,11 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	// /////////引用索引/////////////////
 	protected final Map<String, AbstractRefField> refFieldsByName = new HashMap<String, AbstractRefField>();// 记录所有关联和引用字段referenceFields
 	protected final Map<Reference, List<AbstractRefField>> refFieldsByRef = new HashMap<Reference, List<AbstractRefField>>();// 记录所有的引用字段，按引用关系
-	private boolean cacheable;
+	protected boolean cacheable;
+	protected boolean useOuterJoin = true;
 
 	public Field[] getLobFieldNames() {
 		return lobNames;
-	}
-
-	protected void initByAnno(Class<?> thisType, javax.persistence.Table table, BindDataSource bindDs, Cacheable cache) {
-		// schema初始化
-		if (table != null) {
-			if (table.schema().length() > 0) {
-				schema = MetaHolder.getMappingSchema(table.schema());// 重定向
-			}
-			if (table.name().length() > 0) {
-				tableName = table.name();
-			}
-		}
-		if (tableName == null) {
-			// 表名未指定，缺省生成
-			boolean needTranslate = JefConfiguration.getBoolean(DbCfg.TABLE_NAME_TRANSLATE, false);
-			if (needTranslate) {
-				tableName = DbUtils.upperToUnderline(thisType.getSimpleName());
-			} else {
-				tableName = thisType.getSimpleName();
-			}
-		}
-		if (bindDs != null) {
-			this.bindDsName = MetaHolder.getMappingSite(StringUtils.trimToNull(bindDs.value()));
-		}
-		this.cacheable = cache != null && cache.value();
 	}
 
 	public String getBindDsName() {
@@ -303,7 +274,11 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	protected ReferenceObject innerAdd(Property pp, ITableMetadata target, CascadeConfig config) {
 		Reference r = new Reference(target, config.getRefType(), this);
 		if (config.path != null) {
-			r.setHint(config.path);
+			try {
+				r.setHint(config.path);
+			} catch (Exception e) {
+				throw new SimpleException(e);
+			}
 		}
 		ReferenceObject ref = new ReferenceObject(pp, r, config);
 		if (pp.getType() == Object.class) {
@@ -372,9 +347,22 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		return innerAdd(pp, targetFld, config);
 	}
 
-	@Override
-	public boolean cacheable() {
+	public boolean isCacheable() {
 		return cacheable;
 	}
+
+	public void setCacheable(boolean cacheable) {
+		this.cacheable = cacheable;
+	}
+
+	public boolean isUseOuterJoin() {
+		return useOuterJoin;
+	}
+
+	public void setUseOuterJoin(boolean useOuterJoin) {
+		this.useOuterJoin = useOuterJoin;
+	}
+	
+	
 
 }

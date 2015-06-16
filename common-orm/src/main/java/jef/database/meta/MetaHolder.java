@@ -778,11 +778,11 @@ public final class MetaHolder {
 
 	private static JoinPath processJoin(AbstractMetadata meta, ITableMetadata target, FieldAnnotationProvider annos, JoinTable jt) {
 		String table = jt.name();
-
+		LogUtil.info("创建从{}到{}的关系。",meta.getName(),target.getName());
 		// 计算生成关系表
 		TupleMetadata rt = getDynamicMeta(table);
 		JoinColumn[] jc1 = jt.joinColumns();
-
+		String thisName=meta.getName().replace('.', '_');
 		if (rt == null) {
 			rt = new TupleMetadata(table);
 			for (JoinColumn jc : jc1) {
@@ -802,13 +802,16 @@ public final class MetaHolder {
 			}
 			// 补充关系表注册
 			putDynamicMeta(rt);
-
-			// 创建关系表到目标表的连接
-			JoinPath path2 = processJoin(rt, target, annos, jc2);
-			rt.addCascadeManyToOne("_OBJ", target, path2);
 		}
 
-		AbstractRefField refs = rt.getRefFieldsByName().get("_OBJ");
+		AbstractRefField refs = rt.getRefFieldsByName().get(thisName+"_OBJ");
+		if(refs==null) {
+			JoinColumn[] jc2 = jt.inverseJoinColumns();
+			// 创建关系表到目标表的连接
+			JoinPath path2 = processJoin(rt, target, annos, jc2);
+			rt.addCascadeManyToOne(thisName+"_OBJ", target, path2);
+		}
+		refs = rt.getRefFieldsByName().get(thisName+"_OBJ");
 		Assert.notNull(refs);
 
 		// 创建到关系表的连接

@@ -37,12 +37,15 @@ import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.Entry;
 import jef.common.log.LogUtil;
+import jef.database.DbCfg;
+import jef.database.DbUtils;
 import jef.database.DebugUtil;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.OperateTarget;
 import jef.database.PojoWrapper;
 import jef.database.annotation.BindDataSource;
+import jef.database.annotation.EasyEntity;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
@@ -53,6 +56,7 @@ import jef.database.routing.function.MapFunction;
 import jef.database.routing.function.ModulusFunction;
 import jef.database.routing.function.RawFunc;
 import jef.tools.ArrayUtils;
+import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanUtils;
 
@@ -91,7 +95,7 @@ public final class TableMetadata extends AbstractMetadata {
 		this.containerAccessor=FastBeanWrapperImpl.getAccessorFor(clz);
 		this.thisType = clz;
 		this.pkFields = Collections.emptyList();
-		initByAnno(clz, annos.getAnnotation(Table.class),annos.getAnnotation(BindDataSource.class),annos.getAnnotation(Cacheable.class));
+		initByAnno(clz, annos);
 	}
 
 	TableMetadata(Class<PojoWrapper> varClz, Class<?> clz, AnnotationProvider annos) {
@@ -100,7 +104,42 @@ public final class TableMetadata extends AbstractMetadata {
 		this.thisType = clz;
 		this.pojoAccessor = FastBeanWrapperImpl.getAccessorFor(clz);
 		this.pkFields = Collections.emptyList();
-		initByAnno(clz,annos.getAnnotation(Table.class),annos.getAnnotation(BindDataSource.class),annos.getAnnotation(Cacheable.class));
+		initByAnno(clz,annos);
+	}
+	
+
+	protected void initByAnno(Class<?> thisType, AnnotationProvider annos) {
+		// schema初始化
+		Table table=annos.getAnnotation(javax.persistence.Table.class);
+		if (table != null) {
+			if (table.schema().length() > 0) {
+				schema = MetaHolder.getMappingSchema(table.schema());// 重定向
+			}
+			if (table.name().length() > 0) {
+				tableName = table.name();
+			}
+		}
+		if (tableName == null) {
+			// 表名未指定，缺省生成
+			boolean needTranslate = JefConfiguration.getBoolean(DbCfg.TABLE_NAME_TRANSLATE, false);
+			if (needTranslate) {
+				tableName = DbUtils.upperToUnderline(thisType.getSimpleName());
+			} else {
+				tableName = thisType.getSimpleName();
+			}
+		}
+		BindDataSource bindDs=annos.getAnnotation(BindDataSource.class);
+		if (bindDs != null) {
+			this.bindDsName = MetaHolder.getMappingSite(StringUtils.trimToNull(bindDs.value()));
+		}
+		
+		Cacheable cache=annos.getAnnotation(Cacheable.class);
+		this.cacheable = cache != null && cache.value();
+		
+		EasyEntity entity=annos.getAnnotation(EasyEntity.class);
+		if(entity!=null) {
+			this.useOuterJoin=entity.useOuterJoin();
+		}
 	}
 
 	/**
