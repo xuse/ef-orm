@@ -1190,9 +1190,10 @@ public abstract class Session{
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	@SuppressWarnings("unchecked")
+	
 	public <T extends IQueryableEntity> T loadByField(jef.database.Field field, Object value) throws SQLException {
 		ITableMetadata meta = DbUtils.getTableMeta(field);
+		@SuppressWarnings("unchecked")
 		Query<T> query = meta.newInstance().getQuery();
 		query.addCondition(field, Operator.EQUALS, value);
 		List<T>  list=typedSelect(query, null, QueryOption.DEFAULT_MAX1);

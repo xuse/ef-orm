@@ -87,7 +87,7 @@ public class DynamicExtendsTest extends org.junit.Assert{
 		db.insert(user);
 		
 		{
-			List<UserEx> list=db.loadByField(UserEx.Field.name, "李四");
+			List<UserEx> list=db.selectByField(UserEx.Field.name, "李四");
 			UserEx ex=list.get(0);
 			System.out.println(ex.getName());
 			System.out.println(ex.getAtribute("QQ"));
@@ -104,7 +104,7 @@ public class DynamicExtendsTest extends org.junit.Assert{
 			assertEquals(0, i); //由于记录本身没有字段变化，仅级联对象变化，更新后记录行数仅返回主表更新行数，所以为0
 		}
 		{
-			List<UserEx> list=db.loadByField(UserEx.Field.name, "李四");
+			List<UserEx> list=db.selectByField(UserEx.Field.name, "李四");
 			UserEx ex=list.get(0);
 			assertEquals(8873, ex.getAtribute("day"));
 			assertEquals("6320535", ex.getAtribute("QQ"));
@@ -113,7 +113,7 @@ public class DynamicExtendsTest extends org.junit.Assert{
 			assertEquals(1, i);
 		}
 		{
-			List<UserEx> list=db.loadByField(UserEx.Field.name, "李四");
+			List<UserEx> list=db.selectByField(UserEx.Field.name, "李四");
 			UserEx ex=list.get(0);
 			assertEquals("TestUpdated2", ex.getComm());
 			int i=db.delete(ex);

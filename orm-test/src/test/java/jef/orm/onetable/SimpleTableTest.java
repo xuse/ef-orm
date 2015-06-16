@@ -141,7 +141,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		db.insert(t1);
 		db.batchInsert(Arrays.asList(t2, t3, t4));
 
-		List<Keyword> result1 = db.loadByField(Keyword.Field.comment, t1.getComment());
+		List<Keyword> result1 = db.selectByField(Keyword.Field.comment, t1.getComment());
 		LogUtil.show(result1);
 		List<Keyword> result2 = db.select(QB.create(Keyword.class));
 		LogUtil.show(result1);
@@ -997,7 +997,7 @@ public class SimpleTableTest extends org.junit.Assert {
 	@Test
 	public void testBatchLoad() throws SQLException {
 		CaAsset ca = db.load(CaAsset.class, 12);
-		List<CaAsset> ca1 = db.loadByField(CaAsset.Field.acctId, 12);
+		List<CaAsset> ca1 = db.selectByField(CaAsset.Field.acctId, 12);
 		Integer[] a = new Integer[501];
 		for (int i = 0; i < 501; i++) {
 			a[i] = i + 1;

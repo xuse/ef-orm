@@ -492,7 +492,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
 		}
 		try {
-			return getSession().loadByField(field, id);
+			return getSession().selectByField(field, id);
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
 		}
