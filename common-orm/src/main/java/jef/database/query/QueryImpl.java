@@ -84,7 +84,7 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 		this.instance = p;
 		type = MetaHolder.getMeta(p);
 		t = new Transformer(type);
-		t.setLoadVsOne(true);
+		t.setLoadVsOne(type.isUseOuterJoin());
 		t.setLoadVsMany(true);
 	}
 
@@ -94,7 +94,7 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 		setAttribute(ConditionQuery.CUSTOM_TABLE_TYPE, key);
 		type = MetaHolder.getMeta(p);
 		t = new Transformer(type);
-		t.setLoadVsOne(true);
+		t.setLoadVsOne(type.isUseOuterJoin());
 		t.setLoadVsMany(true);
 	}
 
@@ -448,7 +448,7 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 
 	@Override
 	public boolean isSelectCustomized() {
-		if(!type.cacheable())return true;
+		if(!type.isCacheable())return true;
 		PopulateStrategy[] s=t.getStrategy();
 		if(s!=null && s.length>0)return true;
 		return this.selected!=null;

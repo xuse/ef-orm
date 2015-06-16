@@ -191,6 +191,6 @@ public final class ReadOnlyQuery<T extends IQueryableEntity> extends AbstractQue
 
 	@Override
 	public boolean isSelectCustomized() {
-		return !type.cacheable();
+		return !type.isCacheable();
 	}
 }

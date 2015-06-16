@@ -739,6 +739,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		t3 = db.load(t3);
 	}
 
+	@IgnoreOn(allButExcept="hsqldb")
 	@Test
 	public void testAssignPK() throws SQLException {
 		System.out.println("=========== testAssignPK ========");

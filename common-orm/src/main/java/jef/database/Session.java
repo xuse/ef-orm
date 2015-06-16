@@ -1171,11 +1171,33 @@ public abstract class Session{
 	 *             如果数据库操作错误，抛出。
 	 */
 	@SuppressWarnings("unchecked")
-	public <T extends IQueryableEntity> List<T> loadByField(jef.database.Field field, Object value) throws SQLException {
+	public <T extends IQueryableEntity> List<T> selectByField(jef.database.Field field, Object value) throws SQLException {
 		ITableMetadata meta = DbUtils.getTableMeta(field);
 		Query<T> query = meta.newInstance().getQuery();
 		query.addCondition(field, Operator.EQUALS, value);
 		return typedSelect(query, null, QueryOption.DEFAULT);
+	}
+	
+	/**
+	 * 按指定的字段的值加载记录<br>
+	 * 如果指定的字段不是主键，也只返回第一条数据。
+	 * 
+	 * @param field
+	 *            作为查询条件的字段
+	 * @param values
+	 *            要查询的值
+	 * @return 符合条件的记录
+	 * @throws SQLException
+	 *             如果数据库操作错误，抛出。
+	 */
+	@SuppressWarnings("unchecked")
+	public <T extends IQueryableEntity> T loadByField(jef.database.Field field, Object value) throws SQLException {
+		ITableMetadata meta = DbUtils.getTableMeta(field);
+		Query<T> query = meta.newInstance().getQuery();
+		query.addCondition(field, Operator.EQUALS, value);
+		List<T>  list=typedSelect(query, null, QueryOption.DEFAULT_MAX1);
+		if(list.isEmpty())return null;
+		return list.get(0);
 	}
 
 	/**

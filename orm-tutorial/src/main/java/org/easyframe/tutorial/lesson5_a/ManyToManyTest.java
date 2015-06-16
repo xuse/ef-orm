@@ -43,8 +43,9 @@ public class ManyToManyTest extends org.junit.Assert {
 		db.insertCascade(user);
 		int userId=user.getId();
 		int roleId=role.getId();
-
+		System.out.println("=========================================111");
 		User u = db.load(User.class, userId);
+		System.out.println("=========================================222");
 		Role r = db.load(Role.class, roleId);
 		{
 			//检查
@@ -53,6 +54,8 @@ public class ManyToManyTest extends org.junit.Assert {
 			assertEquals(1,u.getRoles().size());
 			System.out.println("====1");
 			System.out.println(u.getRoleNames());
+			System.out.println("====xxx");
+			System.out.println(u.getRoles().get(0).getUsers());
 		}
 		
 		Role role2=new Role();	
