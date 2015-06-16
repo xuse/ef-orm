@@ -451,6 +451,6 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 		if(!type.isCacheable())return true;
 		PopulateStrategy[] s=t.getStrategy();
 		if(s!=null && s.length>0)return true;
-		return this.selected!=null;
+		return selected instanceof SelectsImpl;
 	}
 }
