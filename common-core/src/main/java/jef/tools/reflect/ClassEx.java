@@ -38,8 +38,7 @@ import javax.management.ReflectionException;
 import jef.common.log.LogUtil;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
-import jef.tools.collection.CollectionUtil;
-import jef.tools.collection.IterableAccessor;
+import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.BeanUtils.SearchMode;
 
 import org.apache.commons.lang.ObjectUtils;
@@ -315,14 +314,14 @@ public class ClassEx {
 			} else {
 				return value;
 			}
-		} else if (CollectionUtil.isArrayOrCollection(clz)) {
-			IterableAccessor<Object> accesor = new IterableAccessor<Object>(value);
+		} else if (CollectionUtils.isArrayOrCollection(clz)) {
+			Collection<Object> accessor=CollectionUtils.toCollection(value, Object.class);
 			if (container.isArray()) {
-				return BeanUtils.toProperArrayType(accesor, container, oldValue);
+				return BeanUtils.toProperArrayType(accessor, container, oldValue);
 			} else if (container.isCollection()) {
-				return BeanUtils.toProperCollectionType(accesor, container, oldValue);
+				return BeanUtils.toProperCollectionType(accessor, container, oldValue);
 			} else {
-				BeanUtils.toProperType(accesor.toString(), container, oldValue);
+				BeanUtils.toProperType(accessor.toString(), container, oldValue);
 			}
 		}
 		return BeanUtils.toProperType(ObjectUtils.toString(value), container, oldValue);
@@ -757,7 +756,7 @@ public class ClassEx {
 	}
 
 	public boolean isCollection() {
-		return CollectionUtil.isCollection(genericType);
+		return CollectionUtils.isCollection(genericType);
 	}
 
 	public boolean isMap() {
@@ -765,7 +764,7 @@ public class ClassEx {
 	}
 
 	public Type getComponentType() {
-		return CollectionUtil.getComponentType(genericType);
+		return CollectionUtils.getComponentType(genericType);
 	}
 
 	/**

@@ -37,7 +37,7 @@ import jef.common.log.LogUtil;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
-import jef.tools.collection.CollectionUtil;
+import jef.tools.collection.CollectionUtils;
 
 public final class BeanWrapperImpl extends BeanWrapper {
 	private static final int MAX_ENTRIES = 200;
@@ -388,7 +388,7 @@ public final class BeanWrapperImpl extends BeanWrapper {
 					this.setPropertyValue(info.getKey(), array);
 				} else if (List.class.isAssignableFrom(c.getWrappered())) {
 					List list = new ArrayList();
-					CollectionUtil.listSetAndExpand(list, index, value);
+					CollectionUtils.listSetAndExpand(list, index, value);
 					this.setPropertyValue(info.getKey(), list);
 				}
 			} else {
@@ -402,7 +402,7 @@ public final class BeanWrapperImpl extends BeanWrapper {
 					ClassEx cmpType=new ClassEx(c.getComponentType());
 					Object old = BeanUtils.findElementInstance(o);
 					value = ClassEx.toProperType(value, cmpType, old);
-					CollectionUtil.listSetAndExpand((List) value, index, value);
+					CollectionUtils.listSetAndExpand((List) value, index, value);
 				}
 			}
 		} else {
@@ -450,11 +450,11 @@ public final class BeanWrapperImpl extends BeanWrapper {
 				}
 				return ArrayUtils.get(o, index);
 			} else if (o instanceof List) {
-				if (create && CollectionUtil.isIndexValid(o, index) == false) {
-					CollectionUtil.toFixedSize((List) o, (index < 0 ? -index : index + 1));
+				if (create && CollectionUtils.isIndexValid(o, index) == false) {
+					CollectionUtils.toFixedSize((List) o, (index < 0 ? -index : index + 1));
 					Object instance = BeanUtils.createElementByElement(o);
 					if (instance != null)
-						CollectionUtil.listSet((List) o, index, instance);
+						CollectionUtils.listSet((List) o, index, instance);
 				}
 				List<?> l = (List<?>) o;
 				return index >= 0 ? l.get(index) : l.get(l.size() + index);

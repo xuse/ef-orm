@@ -8,10 +8,18 @@ import java.lang.ref.SoftReference;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
 
+/**
+ * 提供中文字符集
+ * @author jiyi
+ *
+ */
 public class ChineseCharProvider {
 	static ChineseCharProvider instance;
 
 	public enum Type {
+		/**
+		 * 百家姓
+		 */
 		CHINESE_LAST_NAME
 	}
 

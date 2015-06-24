@@ -10,6 +10,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -32,8 +33,7 @@ import jef.tools.Assert;
 import jef.tools.DateUtils;
 import jef.tools.Exceptions;
 import jef.tools.StringUtils;
-import jef.tools.collection.CollectionUtil;
-import jef.tools.collection.IterableAccessor;
+import jef.tools.collection.CollectionUtils;
 
 import org.apache.commons.lang.ObjectUtils;
 
@@ -319,11 +319,11 @@ public class BeanUtils {
 	 * @param oldValue
 	 * @return
 	 */
-	public static Object toProperArrayType(IterableAccessor<?> values, ClassEx c, Object oldValue) {
+	public static Object toProperArrayType(Collection<?> values, ClassEx c, Object oldValue) {
 		ClassEx arrType = new ClassEx(c.getComponentType());
-		Object array = Array.newInstance(arrType.getWrappered(), values.length());// 创建数组容器
+		Object array = Array.newInstance(arrType.getWrappered(), values.size());// 创建数组容器
 		int i = 0;
-		for (Object o : values) {
+		for (Object o:values) {
 			ArrayUtils.set(array, i, toProperType(ObjectUtils.toString(o), arrType, null));
 			i++;
 		}
@@ -339,10 +339,10 @@ public class BeanUtils {
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static Object toProperCollectionType(IterableAccessor values, ClassEx c, Object oldValue) {
+	public static Object toProperCollectionType(Collection<?> values, ClassEx c, Object oldValue) {
 		ClassEx cType = new ClassEx(c.getComponentType());
 		try {
-			Collection l = (Collection) CollectionUtil.createContainerInstance(c, 0);
+			Collection l = (Collection) CollectionUtils.createContainerInstance(c, 0);
 			for (Object o : values) {
 				l.add(toProperType(ObjectUtils.toString(o), cType, findElementInstance(oldValue)));
 			}
@@ -366,7 +366,7 @@ public class BeanUtils {
 	 *             如果无法转换，将抛出此异常
 	 * 
 	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked"})
 	public static Object toProperType(String value, ClassEx c, Object oldValue) {
 		// 容器所允许的最宽松类型
 		ClassEx containerClass = c;
@@ -416,10 +416,10 @@ public class BeanUtils {
 			return Double.valueOf(value);
 		} else if (c.isArray()) {
 			String[] values = value.split(",");
-			return toProperArrayType(new IterableAccessor(values), c, oldValue);
+			return toProperArrayType(Arrays.asList(values), c, oldValue);
 		} else if (c.isCollection()) {
 			String[] values = value.split(",");
-			return toProperCollectionType(new IterableAccessor(values), c, oldValue);
+			return toProperCollectionType(Arrays.asList(values), c, oldValue);
 		} else if (Map.class.isAssignableFrom(c.getWrappered())) {
 			return stringToMap(value, c, oldValue);
 		} else if (oldValue != null) {// 采用旧值类型转换不成功，尝试采用容器类型转换
@@ -433,7 +433,7 @@ public class BeanUtils {
 			throw new UnsupportedOperationException(sb.toString());
 		}
 	}
-	
+
 	/**
 	 * 将输入对象视为集合、数组对象，查找其中的非空元素，返回第一个 注意：Map不是Collection
 	 * 
@@ -443,7 +443,7 @@ public class BeanUtils {
 		if (collection == null)
 			return null;
 		if (collection.getClass().isArray()) {
-			for (int i = 0; i <  Array.getLength(collection); i++) {
+			for (int i = 0; i < Array.getLength(collection); i++) {
 				Object o = Array.get(collection, i);
 				if (o != null) {
 					return o;
@@ -696,7 +696,7 @@ public class BeanUtils {
 	 * @return 实例
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> T newInstance(Class<T> cls, Object... params){
+	public static <T> T newInstance(Class<T> cls, Object... params) {
 		Constructor<T> me = null;
 		if (params.length == 0) {
 			try {
@@ -708,7 +708,7 @@ public class BeanUtils {
 					return me.newInstance(params);
 				}
 			} catch (Exception e) {
-				Exceptions.thorwAsIllegalState(e); 
+				Exceptions.thorwAsIllegalState(e);
 			}
 		}
 		List<Class<?>> list = new ArrayList<Class<?>>();
@@ -1002,7 +1002,7 @@ public class BeanUtils {
 		String[] values = StringUtils.split(value, ',');
 		Entry<Type, Type> types = GenericUtils.getMapTypes(c.getGenericType());
 		try {
-			Map l = (Map) CollectionUtil.createContainerInstance(c, 0);
+			Map l = (Map) CollectionUtils.createContainerInstance(c, 0);
 			Object hintKey = null;
 			Object hintValue = null;
 			if (oldValue != null) {
@@ -1079,7 +1079,6 @@ public class BeanUtils {
 		}
 		return result.toArray((T[]) Array.newInstance(type, result.size()));
 	}
-
 
 	/**
 	 * 获取一个 public的，非Native非static指定名称的方法(非Declared模式：找父类，不找私有)

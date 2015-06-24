@@ -34,7 +34,7 @@ import java.util.Map;
 import java.util.Set;
 
 import jef.tools.Assert;
-import jef.tools.collection.CollectionUtil;
+import jef.tools.collection.CollectionUtils;
 
 @SuppressWarnings({"unchecked","rawtypes"})
 public abstract class ClassUtils {
@@ -925,7 +925,7 @@ public abstract class ClassUtils {
 	 * @see java.util.AbstractCollection#toString()
 	 */
 	public static String classNamesToString(Collection<Class> classes) {
-		if (CollectionUtil.isEmpty(classes)) {
+		if (CollectionUtils.isEmpty(classes)) {
 			return "[]";
 		}
 		StringBuilder sb = new StringBuilder("[");
