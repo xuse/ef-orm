@@ -344,7 +344,7 @@ public class BeanUtils {
 		try {
 			Collection l = (Collection) CollectionUtil.createContainerInstance(c, 0);
 			for (Object o : values) {
-				l.add(toProperType(ObjectUtils.toString(o), cType, CollectionUtil.findElementInstance(oldValue)));
+				l.add(toProperType(ObjectUtils.toString(o), cType, findElementInstance(oldValue)));
 			}
 			return l;
 		} catch (Exception e) {
@@ -432,6 +432,48 @@ public class BeanUtils {
 			sb.append("] to proper javatype:" + c.getName());
 			throw new UnsupportedOperationException(sb.toString());
 		}
+	}
+	
+	/**
+	 * 将输入对象视为集合、数组对象，查找其中的非空元素，返回第一个 注意：Map不是Collection
+	 * 
+	 * @param 参数
+	 */
+	public static Object findElementInstance(Object collection) {
+		if (collection == null)
+			return null;
+		if (collection.getClass().isArray()) {
+			for (int i = 0; i <  Array.getLength(collection); i++) {
+				Object o = Array.get(collection, i);
+				if (o != null) {
+					return o;
+				}
+			}
+		} else if (collection instanceof Collection) {
+			for (Object o : ((Collection<?>) collection)) {
+				if (o != null) {
+					return o;
+				}
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * 将输入对象视为集合、数组对象，根据其中的元素类型，返回新的元素实例
+	 * 
+	 * @throws
+	 */
+	public static Object createElementByElement(Object collection) {
+		Object o = findElementInstance(collection);
+		try {
+			if (o != null) {
+				return BeanUtils.newInstanceAnyway(o.getClass());
+			}
+		} catch (ReflectionException e) {
+			LogUtil.exception(e);
+		}
+		return null;
 	}
 
 	/**

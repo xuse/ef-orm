@@ -16,7 +16,6 @@ public final class PromotionPO {
 	private int promotionType;
 	private Timestamp startTime;
 	private String supplierID;
-	
 	private String field1;
 	private String field2;
 	private String field3;

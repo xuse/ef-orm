@@ -12,11 +12,10 @@ import jef.tools.reflect.Property;
  * @author Administrator
  *
  */
-@SuppressWarnings("rawtypes")
 public abstract class HashBeanAccessor extends BeanAccessor{
-	protected IdentityHashMap<Class, Annotation>[] fieldAnnoMaps;
-	protected IdentityHashMap<Class, Annotation>[] getterAnnoMaps;
-	protected IdentityHashMap<Class, Annotation>[] setterAnnoMaps;
+	protected IdentityHashMap<Class<?>, Annotation>[] fieldAnnoMaps;
+	protected IdentityHashMap<Class<?>, Annotation>[] getterAnnoMaps;
+	protected IdentityHashMap<Class<?>, Annotation>[] setterAnnoMaps;
 
 	public final Class<?> getPropertyType(String name) {
 		Property pp=getProperty(name);
@@ -56,12 +55,12 @@ public abstract class HashBeanAccessor extends BeanAccessor{
 		return true;
 	}
 	
-	public final void initAnnotations(IdentityHashMap<Class,Annotation>[] field,IdentityHashMap<Class,Annotation>[] getter,IdentityHashMap<Class,Annotation>[] setter){
+	public final void initAnnotations(IdentityHashMap<Class<?>,Annotation>[] field,IdentityHashMap<Class<?>,Annotation>[] getter,IdentityHashMap<Class<?>,Annotation>[] setter){
 		this.fieldAnnoMaps=field;
 		this.getterAnnoMaps=getter;
 		this.setterAnnoMaps=setter;
 	}
-	public final void initNthGenericType(int index,Class raw,Type type,int total,String fieldName){
+	public final void initNthGenericType(int index,Class<?> raw,Type type,int total,String fieldName){
 		AbstractFastProperty pp=(AbstractFastProperty)getProperty(fieldName);
 		pp.n=index;
 		pp.genericType=type;

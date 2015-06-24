@@ -41,13 +41,9 @@ import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 
-import javax.management.ReflectionException;
-
-import jef.common.log.LogUtil;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
-import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.BeanWrapper;
 import jef.tools.reflect.ClassEx;
 import jef.tools.reflect.FieldEx;
@@ -104,6 +100,23 @@ public class CollectionUtil {
 	
 	
 	/**
+	 * 将集合转换为Map
+	 * @param collection
+	 * @param function
+	 * @return
+	 */
+	public static <K,V> Map<K,V> toMap(Collection<V> collection,Function<V,K> function){
+		if(collection==null || collection.isEmpty())return Collections.emptyMap();
+		Map<K,V> result=new HashMap<K,V>();
+		for(V value:collection) {
+			K key=function.apply(value);
+			result.put(key, value);
+		}
+		return result;
+	}
+	
+	
+	/**
 	 * 将一个可遍历的对象中的某个property取出，组成所需要的list.
 	 * @param iterable
 	 * @param fieldName
@@ -130,7 +143,7 @@ public class CollectionUtil {
 	 * @return
 	 */
 	public static <T,A> List<T> extract(Collection<A> collection,Function<A,T> function){
-		List<T> result=new ArrayList<T>();
+		List<T> result=new ArrayList<T>(collection.size());
 		if(collection!=null){
 			for(A a:collection){
 				result.add(function.apply(a));
@@ -247,27 +260,27 @@ public class CollectionUtil {
 	/**
 	 * 根据字段名称和字段值查找所有记录
 	 * 
-	 * @param <T>
-	 * @param collection
-	 * @param fieldname
-	 * @param value
+	 * @param <T> 泛型
+	 * @param collection 集合
+	 * @param fieldname  字段
+	 * @param value    值
 	 * @return
 	 */
-	public static <T> List<T> findAll(Collection<T> collection, String fieldname, Object value) {
+	public static <T> List<T> filter(Collection<T> collection, String fieldname, Object value) {
 		Class<?> clz = collection.iterator().next().getClass();
 		FieldValueFilter<T> f = new FieldValueFilter<T>(clz, fieldname, value);
-		return find(collection, f);
+		return filter(collection, f);
 	}
 
 	/**
 	 * 在集合中查找符合条件的元素
 	 * 
-	 * @param <T>
-	 * @param collection
-	 * @param filter
+	 * @param <T> 泛型
+	 * @param collection 集合
+	 * @param filter 过滤器
 	 * @return
 	 */
-	public static <T> List<T> find(Collection<T> collection, Function<T,Boolean> filter) {
+	public static <T> List<T> filter(Collection<T> collection, Function<T,Boolean> filter) {
 		List<T> list = new ArrayList<T>();
 		if (collection == null || collection.isEmpty())
 			return list;
@@ -496,70 +509,13 @@ public class CollectionUtil {
 		}
 	}
 
-	/**
-	 * 将输入对象视为集合、数组对象，查找其中的非空元素，返回第一个 注意：Map不是Collection
-	 * 
-	 * @param 参数
-	 */
-	public static Object findElementInstance(Object collection) {
-		if (collection == null)
-			return null;
-		if (collection.getClass().isArray()) {
-			for (int i = 0; i <  Array.getLength(collection); i++) {
-				Object o = Array.get(collection, i);
-				if (o != null) {
-					return o;
-				}
-			}
-		} else if (collection instanceof Collection) {
-			for (Object o : ((Collection<?>) collection)) {
-				if (o != null) {
-					return o;
-				}
-			}
-		}
-		return null;
-	}
 
-	/**
-	 * 将输入对象视为集合、数组对象，根据其中的元素类型，返回新的元素实例
-	 * 
-	 * @throws
-	 */
-	public static Object createElementByElement(Object collection) {
-		Object o = findElementInstance(collection);
-		try {
-			if (o != null) {
-				return BeanUtils.newInstanceAnyway(o.getClass());
-			}
-		} catch (ReflectionException e) {
-			LogUtil.exception(e);
-		}
-		return null;
-	}
-
-	/**
-	 * 转换为数组
-	 * @param obj
-	 * @return
-	 */
-	@SuppressWarnings("rawtypes")
-	public static Object[] toArray(Object obj) {
-		if(obj==null)return null;
-		if(obj.getClass().isArray()){
-			return ArrayUtils.toObject(obj);
-		}else if(obj instanceof Collection){
-			return ((Collection) obj).toArray();
-		}
-		throw new IllegalArgumentException("The input object "+ obj.getClass()+" is not array or collection !");
-	}
-	
 	
 	/**
 	 * 转换为制定类型的数组
-	 * @param collection
-	 * @param clz
-	 * @return
+	 * @param collection 集合
+	 * @param clz 数组类型
+	 * @return 数组
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> T[] toArray(Collection<?> collection, Class<T> clz) {
@@ -576,8 +532,8 @@ public class CollectionUtil {
 	 * 两个集合对象的合并
 	 * 
 	 * @param <T>
-	 * @param a
-	 * @param b
+	 * @param a 集合A
+	 * @param b 集合B
 	 * @return
 	 */
 	public static <T> Collection<T> union(Collection<T> a, Collection<T> b) {
@@ -635,8 +591,9 @@ public class CollectionUtil {
 	 *            the element to look for
 	 * @return <code>true</code> if found, <code>false</code> else
 	 */
-	public static boolean contains(Iterator<?> iterator, Object element) {
-		if (iterator != null) {
+	public static boolean contains(Iterable<?> iterable, Object element) {
+		if (iterable != null) {
+			Iterator<?> iterator=iterable.iterator();
 			while (iterator.hasNext()) {
 				Object candidate = iterator.next();
 				if (ObjectUtils.equals(candidate, element)) {
@@ -713,38 +670,15 @@ public class CollectionUtil {
 		return false;
 	}
 
-	/**
-	 * Return the first element in '<code>candidates</code>' that is contained
-	 * in '<code>source</code>'. If no element in '<code>candidates</code>' is
-	 * present in '<code>source</code>' returns <code>null</code>. Iteration
-	 * order is {@link Collection} implementation specific.
-	 * 
-	 * @param source
-	 *            the source Collection
-	 * @param candidates
-	 *            the candidates to search for
-	 * @return the first present object, or <code>null</code> if not found
-	 */
-	public static Object findFirstMatch(Collection<?> source, Collection<?> candidates) {
-		if (isEmpty(source) || isEmpty(candidates)) {
-			return null;
-		}
-		for (Object candidate : candidates) {
-			if (source.contains(candidate)) {
-				return candidate;
-			}
-		}
-		return null;
-	}
 
 	/**
-	 * Find the common element type of the given Collection, if any.
-	 * 
+	 * Find the common element type of the given Collection, if any.<br>
+	 *  如果集合中的元素都是同一类型，返回这个类型。如果集合中数据类型不同，返回null
 	 * @param collection
 	 *            the Collection to check
 	 * @return the common element type, or <code>null</code> if no clear common
 	 *         type has been found (or the collection was empty)
-	 *         如果集合中的元素都是同一类型，返回这个类型。如果集合中数据类型不同，返回null
+	 *        
 	 */
 	public static Class<?> findCommonElementType(Collection<?> collection) {
 		if (isEmpty(collection)) {
@@ -764,6 +698,7 @@ public class CollectionUtil {
 	}
 	
 	/**
+	 * 
 	 * Create a new identityHashSet.
 	 * @return
 	 */
@@ -773,6 +708,7 @@ public class CollectionUtil {
 	
 
 	/**
+	 * 将Enumeration转换为Iterator
 	 * Adapts an enumeration to an iterator.
 	 * 
 	 * @param enumeration
@@ -804,36 +740,5 @@ public class CollectionUtil {
 		public void remove() throws UnsupportedOperationException {
 			throw new UnsupportedOperationException("Not supported");
 		}
-	}
-	
-	/**
-	 * 将数组，Enumeration等都作为Collection处理
-	 * @param o
-	 * @return
-	 */
-	public Collection<?> toCollection(Object o){
-		if(o==null)return null;
-		if(o instanceof Collection<?>){
-			return (Collection<?>)o;
-		}
-		if(o.getClass().isArray()){
-			return Arrays.asList(ArrayUtils.toObject(o));
-		}
-		if(o instanceof Iterable<?>){
-			List<Object> list=new ArrayList<Object>();
-			for(Object x: (Iterable<?>)o){
-				list.add(x);
-			}
-			return list;
-		}
-		if(o instanceof Enumeration<?>){
-			List<Object> list=new ArrayList<Object>();
-			Enumeration<?> e=(Enumeration<?>)o;
-			for(;e.hasMoreElements();){
-				list.add(e.nextElement());
-			}
-			return list;
-		}
-		throw new IllegalArgumentException("The type "+o.getClass().getName()+" Can not cast to Collection.");
 	}
 }

@@ -101,22 +101,22 @@ public final class FastBeanWrapperImpl extends BeanWrapper{
 		return accessor.getProperty(name);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked"})
 	@Override
 	public <T extends Annotation> T getAnnotationOnField(String name, Class<T> clz) {
-		IdentityHashMap<Class,Annotation> map=accessor.getAnnotationOnField(name);
+		IdentityHashMap<Class<?>,Annotation> map=accessor.getAnnotationOnField(name);
 		return map==null?null:(T)map.get(clz);
 	}
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked"})
 	@Override
 	public <T extends Annotation> T getAnnotationOnGetter(String name, Class<T> clz) {
-		IdentityHashMap<Class,Annotation> map=accessor.getAnnotationOnGetter(name);
+		IdentityHashMap<Class<?>,Annotation> map=accessor.getAnnotationOnGetter(name);
 		return map==null?null:(T)map.get(clz);
 	}
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked" })
 	@Override
 	public <T extends Annotation> T getAnnotationOnSetter(String name, Class<T> clz) {
-		IdentityHashMap<Class,Annotation> map=accessor.getAnnotationOnSetter(name);
+		IdentityHashMap<Class<?>,Annotation> map=accessor.getAnnotationOnSetter(name);
 		return map==null?null:(T)map.get(clz);
 	}
 

@@ -15,7 +15,6 @@ import jef.tools.reflect.Property;
  *
  * @param <T>
  */
-@SuppressWarnings("rawtypes")
 public abstract class BeanAccessor {
 	/**
 	 * 得到bean的全部属性
@@ -79,7 +78,7 @@ public abstract class BeanAccessor {
 	 * @return 包含各种Annotation的Map
 	 * @throws NoSuchElementException 如果该属性不存在，抛出NoSuchElementException。
 	 */
-	public abstract IdentityHashMap<Class,Annotation> getAnnotationOnField(String name);
+	public abstract IdentityHashMap<Class<?>,Annotation> getAnnotationOnField(String name);
 	
 	/**
 	 * 得到位于getter上的annotation
@@ -87,14 +86,14 @@ public abstract class BeanAccessor {
 	 * @return 包含各种Annotation的Map
 	 * @throws NoSuchElementException 如果该属性不存在，抛出NoSuchElementException。
 	 */
-	public abstract IdentityHashMap<Class,Annotation> getAnnotationOnGetter(String name);
+	public abstract IdentityHashMap<Class<?>,Annotation> getAnnotationOnGetter(String name);
 	/**
 	 * 得到位于属性setter上的annotation
 	 * @param name
 	 * @return 包含各种Annotation的Map
 	 * @throws NoSuchElementException 如果该属性不存在，抛出NoSuchElementException。
 	 */
-	public abstract IdentityHashMap<Class,Annotation> getAnnotationOnSetter(String name);
+	public abstract IdentityHashMap<Class<?>,Annotation> getAnnotationOnSetter(String name);
 	
 	/**
 	 * 构造一个实例，注意类必须有空构造方法，否则会抛出RuntimeException
@@ -102,6 +101,14 @@ public abstract class BeanAccessor {
 	 * @throws RuntimeException 如果类构造中抛出异常，或者类没有空构造方法
 	 */
 	public abstract Object newInstance();
+	
+	/**
+	 * 使用硬编码的方式快速将对象转换为Map
+	 * @param obj
+	 * @return 转换后的HashMap
+	 */
+	public abstract Map<String,Object> convert(Object obj);
+	
 	/**
 	 * 得到Accessor所对应的类本身
 	 * @return
@@ -111,11 +118,11 @@ public abstract class BeanAccessor {
 	/*
 	 * 框架内部使用，初始化所有的AnnotationMap
 	 */
-	public abstract void initAnnotations(IdentityHashMap<Class,Annotation>[] field,IdentityHashMap<Class,Annotation>[] getter,IdentityHashMap<Class,Annotation>[] setter);
+	public abstract void initAnnotations(IdentityHashMap<Class<?>,Annotation>[] field,IdentityHashMap<Class<?>,Annotation>[] getter,IdentityHashMap<Class<?>,Annotation>[] setter);
 	/*
 	 * 框架内部使用，初始化所有的泛型类型 
 	 */
-	public abstract void initNthGenericType(int index,Class raw,Type type,int total,String fieldName);
+	public abstract void initNthGenericType(int index,Class<?> raw,Type type,int total,String fieldName);
 	
 	
 	/**
@@ -124,9 +131,8 @@ public abstract class BeanAccessor {
 	 * @param type
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
 	public <T extends Annotation> T getFieldAnnotation(String field,Class<T> type){
-		Map<Class,Annotation> anns=getAnnotationOnField(field);
+		Map<Class<?>,Annotation> anns=getAnnotationOnField(field);
 		if(anns==null)return null;
 		return (T)anns.get(type);
 	}

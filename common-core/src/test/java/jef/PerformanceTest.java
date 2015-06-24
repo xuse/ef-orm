@@ -264,7 +264,28 @@ public class PerformanceTest {
 	
 	@Test
 	public void sdfsa(){
-		FastBeanWrapperImpl.getAccessorFor(PromotionPO.class);
-		
+		BeanAccessor ba=FastBeanWrapperImpl.getAccessorFor(PromotionPO.class);
+		PromotionPO source = new PromotionPO();
+		Timestamp now = new Timestamp(System.currentTimeMillis());
+		source.setCode("code");
+		source.setDescription("haha");
+		source.setDiscount(5.4);
+		source.setEndTime(new Date());
+		source.setID(39578395L);
+		source.setPriority(1);
+		source.setPromotionType(3);
+		source.setStartTime(now);
+		source.setSupplierID("123245L");
+		source.setField1("dsds");
+		source.setField2("fdsfsdfds");
+		source.setField3("sdff33");
+		source.setField4("dfsef4344");
+		source.setField5("cfer4344");
+		source.setField6("dssfsfdsf");
+		source.setField7("cdedfewfdsf");
+		Map map=ba.convert(source);
+		System.out.println(map);
 	}
+	
+	
 }

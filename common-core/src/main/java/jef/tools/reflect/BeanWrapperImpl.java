@@ -400,7 +400,7 @@ public final class BeanWrapperImpl extends BeanWrapper {
 						this.setPropertyValue(info.getKey(), array);
 				} else if (List.class.isAssignableFrom(c.getWrappered())) {
 					ClassEx cmpType=new ClassEx(c.getComponentType());
-					Object old = CollectionUtil.findElementInstance(o);
+					Object old = BeanUtils.findElementInstance(o);
 					value = ClassEx.toProperType(value, cmpType, old);
 					CollectionUtil.listSetAndExpand((List) value, index, value);
 				}
@@ -444,7 +444,7 @@ public final class BeanWrapperImpl extends BeanWrapper {
 					Object r = ArrayUtils.toFixLength(o, (index < 0 ? -index : index + 1));
 					if (r != o)
 						setPropertyValue(info.getKey(), r);// 扩展数组
-					Object instance = CollectionUtil.createElementByElement(r);
+					Object instance = BeanUtils.createElementByElement(r);
 					if (instance != null)
 						ArrayUtils.set(r, index, instance);
 				}
@@ -452,7 +452,7 @@ public final class BeanWrapperImpl extends BeanWrapper {
 			} else if (o instanceof List) {
 				if (create && CollectionUtil.isIndexValid(o, index) == false) {
 					CollectionUtil.toFixedSize((List) o, (index < 0 ? -index : index + 1));
-					Object instance = CollectionUtil.createElementByElement(o);
+					Object instance = BeanUtils.createElementByElement(o);
 					if (instance != null)
 						CollectionUtil.listSet((List) o, index, instance);
 				}

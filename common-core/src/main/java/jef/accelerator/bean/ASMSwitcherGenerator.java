@@ -9,10 +9,13 @@ import static jef.accelerator.asm.ASMUtils.getType;
 import static jef.accelerator.asm.ASMUtils.iconst;
 
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import jef.accelerator.asm.ASMUtils;
 import jef.accelerator.asm.ClassWriter;
 import jef.accelerator.asm.FieldVisitor;
 import jef.accelerator.asm.Label;
@@ -372,6 +375,48 @@ final class ASMSwitcherGenerator implements Opcodes,ClassGenerator {
 			}
 			mw.visitInsn(RETURN);
 			mw.visitMaxs(3, 5);
+			mw.visitEnd();
+		}
+		{
+			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "convert", getMethodDesc(Map.class, Object.class), null,null);
+			//L2 S0
+			Label checkArg = new Label();
+			
+			mw.visitVarInsn(ALOAD, 1);//S1
+			mw.visitJumpInsn(IFNONNULL, checkArg);
+			mw.visitInsn(Opcodes.ACONST_NULL);
+			mw.visitInsn(ARETURN);
+
+			mw.visitLabel(checkArg);
+			
+			mw.visitVarInsn(ALOAD, 1);//S1
+			mw.visitTypeInsn(CHECKCAST, beanType);
+			mw.visitVarInsn(ASTORE, 2);//L3 S0
+			
+			mw.visitTypeInsn(NEW, getType(HashMap.class));//S1
+			mw.visitInsn(DUP); //S2
+			iconst(mw, fields.length); //S3
+			mw.visitMethodInsn(INVOKESPECIAL,getType(HashMap.class), "<init>", "(I)V");//S1
+			mw.visitVarInsn(ASTORE, 3);//L4 S0
+
+			for (int i = 0; i < fields.length; i++) {
+				FieldInfo fi=fields[i];
+				mw.visitVarInsn(ALOAD, 3);//S1
+				mw.visitLdcInsn(fi.getName());//S2
+				
+				mw.visitVarInsn(ALOAD, 2);//S3
+				Method getter=fi.getGetter();
+				generateInvokeMethod(mw,getter);//S3
+				if(fi.isPrimitive()){
+					ASMUtils.doWrap(mw, fi.getRawType());
+				}
+				
+				mw.visitMethodInsn(INVOKEVIRTUAL, getType(HashMap.class), "put", getMethodDesc(Object.class,Object.class,Object.class));
+				mw.visitInsn(POP);
+			}
+			mw.visitVarInsn(ALOAD, 3);
+			mw.visitInsn(ARETURN);
+			mw.visitMaxs(4, 4);
 			mw.visitEnd();
 		}
 		{
