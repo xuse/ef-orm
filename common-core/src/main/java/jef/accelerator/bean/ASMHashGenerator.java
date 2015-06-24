@@ -127,7 +127,7 @@ final class ASMHashGenerator implements Opcodes,ClassGenerator {
 			mw.visitEnd();
 		}
 		{
-			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "getAnnotationOnField", getMethodDesc(java.util.IdentityHashMap.class, String.class),null, null);
+			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "getAnnotationOnField", getMethodDesc(java.util.Map.class, String.class),null, null);
 			mw.visitVarInsn(ALOAD, 0);  //S1
 			mw.visitFieldInsn(GETFIELD, className, "fields", "Ljava/util/Map;");		//S1
 			mw.visitVarInsn(ALOAD, 1);		//S2
@@ -140,7 +140,7 @@ final class ASMHashGenerator implements Opcodes,ClassGenerator {
 			mw.visitVarInsn(ASTORE, 2);		//S0
 			
 			mw.visitVarInsn(ALOAD, 0);			//S1`
-			mw.visitFieldInsn(GETFIELD, typeName, "fieldAnnoMaps", "[Ljava/util/IdentityHashMap;"); //S1
+			mw.visitFieldInsn(GETFIELD, typeName, "fieldAnnoMaps", "[Ljava/util/Map;"); //S1
 			
 			mw.visitVarInsn(ALOAD, 2);			//S2
 			mw.visitFieldInsn(GETFIELD, getType(jef.accelerator.bean.AbstractFastProperty.class), "n", "I"); //S2==int
@@ -166,7 +166,7 @@ final class ASMHashGenerator implements Opcodes,ClassGenerator {
 			mw.visitEnd();
 		}
 		{
-			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "getAnnotationOnGetter", getMethodDesc(java.util.IdentityHashMap.class, String.class),null, null);
+			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "getAnnotationOnGetter", getMethodDesc(java.util.Map.class, String.class),null, null);
 			
 			mw.visitVarInsn(ALOAD, 0);  //S1
 			mw.visitFieldInsn(GETFIELD, className, "fields", "Ljava/util/Map;");		//S1
@@ -181,7 +181,7 @@ final class ASMHashGenerator implements Opcodes,ClassGenerator {
 			mw.visitVarInsn(ASTORE, 2);		//S0
 			
 			mw.visitVarInsn(ALOAD, 0);			//S1
-			mw.visitFieldInsn(GETFIELD, typeName, "getterAnnoMaps", "[Ljava/util/IdentityHashMap;"); //S1
+			mw.visitFieldInsn(GETFIELD, typeName, "getterAnnoMaps", "[Ljava/util/Map;"); //S1
 			
 			mw.visitVarInsn(ALOAD, 2);			//S2
 			mw.visitFieldInsn(GETFIELD, getType(jef.accelerator.bean.AbstractFastProperty.class), "n", "I"); //S2==int
@@ -207,7 +207,7 @@ final class ASMHashGenerator implements Opcodes,ClassGenerator {
 			mw.visitEnd();
 		}
 		{
-			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "getAnnotationOnSetter", getMethodDesc(java.util.IdentityHashMap.class, String.class),null, null);
+			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "getAnnotationOnSetter", getMethodDesc(java.util.Map.class, String.class),null, null);
 			mw.visitVarInsn(ALOAD, 0);  //S1
 			mw.visitFieldInsn(GETFIELD, className, "fields", "Ljava/util/Map;");		//S1
 			mw.visitVarInsn(ALOAD, 1);		//S2
@@ -220,7 +220,7 @@ final class ASMHashGenerator implements Opcodes,ClassGenerator {
 			mw.visitVarInsn(ASTORE, 2);		//S0
 			
 			mw.visitVarInsn(ALOAD, 0);			//S1 this
-			mw.visitFieldInsn(GETFIELD, typeName, "setterAnnoMaps", "[Ljava/util/IdentityHashMap;"); //S1
+			mw.visitFieldInsn(GETFIELD, typeName, "setterAnnoMaps", "[Ljava/util/Map;"); //S1
 			
 			mw.visitVarInsn(ALOAD, 2);			//S2 AbstractFastProperty
 			mw.visitFieldInsn(GETFIELD, getType(jef.accelerator.bean.AbstractFastProperty.class), "n", "I"); //S2==int 获取序号

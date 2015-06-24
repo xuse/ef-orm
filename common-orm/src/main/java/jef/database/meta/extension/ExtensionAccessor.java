@@ -4,7 +4,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
@@ -174,21 +173,18 @@ public final class ExtensionAccessor extends BeanAccessor implements ExtensionMo
 		return allProps;
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public IdentityHashMap<Class, Annotation> getAnnotationOnField(String name) {
+	public Map<Class<?>, Annotation> getAnnotationOnField(String name) {
 		return accessor.getAnnotationOnField(name);
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public IdentityHashMap<Class, Annotation> getAnnotationOnGetter(String name) {
+	public Map<Class<?>, Annotation> getAnnotationOnGetter(String name) {
 		return accessor.getAnnotationOnGetter(name);
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public IdentityHashMap<Class, Annotation> getAnnotationOnSetter(String name) {
+	public Map<Class<?>, Annotation> getAnnotationOnSetter(String name) {
 		return accessor.getAnnotationOnSetter(name);
 	}
 
@@ -205,16 +201,20 @@ public final class ExtensionAccessor extends BeanAccessor implements ExtensionMo
 	public Class<?> getType() {
 		return accessor.getType();
 	}
-
-	@SuppressWarnings("rawtypes")
+	
 	@Override
-	public void initAnnotations(IdentityHashMap[] field, IdentityHashMap[] getter, IdentityHashMap[] setter) {
+	public void initAnnotations(Map<Class<?>,Annotation>[] field, Map<Class<?>,Annotation>[] getter, Map<Class<?>,Annotation>[] setter) {
 		accessor.initAnnotations(field, getter, setter);
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public void initNthGenericType(int index, Class raw, Type type, int total, String fieldName) {
+	public void initNthGenericType(int index, Class<?> raw, Type type, int total, String fieldName) {
 		accessor.initNthGenericType(index, raw, type, total, fieldName);
+	}
+
+	@Override
+	public Map<String, Object> convert(Object obj) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

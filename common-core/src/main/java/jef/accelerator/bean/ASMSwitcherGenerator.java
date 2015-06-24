@@ -243,7 +243,7 @@ final class ASMSwitcherGenerator implements Opcodes,ClassGenerator {
 			mw.visitEnd();
 		}
 		{
-			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "getAnnotationOnField", getMethodDesc(java.util.IdentityHashMap.class, String.class), null,null);
+			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "getAnnotationOnField", getMethodDesc(java.util.Map.class, String.class), null,null);
 			mw.visitVarInsn(ALOAD, 1);
 			mw.visitMethodInsn(INVOKEVIRTUAL, getType(String.class), "hashCode", "()I");
 			SwitchHelper sw = new SwitchHelper();
@@ -252,7 +252,7 @@ final class ASMSwitcherGenerator implements Opcodes,ClassGenerator {
 			for (int i = 0; i < sw.size(); i++) {
 				mw.visitLabel(sw.labels[i]);
 				mw.visitVarInsn(ALOAD, 0);
-				mw.visitFieldInsn(GETFIELD, typeName, "fieldAnnoMaps", "[Ljava/util/IdentityHashMap;");
+				mw.visitFieldInsn(GETFIELD, typeName, "fieldAnnoMaps", "[Ljava/util/Map;");
 				iconst(mw, i);
 				mw.visitInsn(AALOAD);
 				mw.visitInsn(ARETURN);
@@ -275,7 +275,7 @@ final class ASMSwitcherGenerator implements Opcodes,ClassGenerator {
 			mw.visitEnd();
 		}
 		{
-			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "getAnnotationOnGetter", getMethodDesc(java.util.IdentityHashMap.class, String.class), null,null);
+			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "getAnnotationOnGetter", getMethodDesc(java.util.Map.class, String.class), null,null);
 			mw.visitVarInsn(ALOAD, 1);
 			mw.visitMethodInsn(INVOKEVIRTUAL, getType(String.class), "hashCode", "()I");
 			SwitchHelper sw = new SwitchHelper();
@@ -284,7 +284,7 @@ final class ASMSwitcherGenerator implements Opcodes,ClassGenerator {
 			for (int i = 0; i < sw.size(); i++) {
 				mw.visitLabel(sw.labels[i]);
 				mw.visitVarInsn(ALOAD, 0);
-				mw.visitFieldInsn(GETFIELD, typeName, "getterAnnoMaps", "[Ljava/util/IdentityHashMap;");
+				mw.visitFieldInsn(GETFIELD, typeName, "getterAnnoMaps", "[Ljava/util/Map;");
 				iconst(mw, i);
 				mw.visitInsn(AALOAD);
 				mw.visitInsn(ARETURN);
@@ -307,7 +307,7 @@ final class ASMSwitcherGenerator implements Opcodes,ClassGenerator {
 			mw.visitEnd();
 		}
 		{
-			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "getAnnotationOnSetter", getMethodDesc(java.util.IdentityHashMap.class, String.class), null,null);
+			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "getAnnotationOnSetter", getMethodDesc(java.util.Map.class, String.class), null,null);
 			mw.visitVarInsn(ALOAD, 1); //S1
 			mw.visitMethodInsn(INVOKEVIRTUAL,getType(String.class), "hashCode",  "()I"); //S1
 			SwitchHelper sw = new SwitchHelper();
@@ -316,7 +316,7 @@ final class ASMSwitcherGenerator implements Opcodes,ClassGenerator {
 			for (int i = 0; i < sw.size(); i++) {
 				mw.visitLabel(sw.labels[i]);
 				mw.visitVarInsn(ALOAD, 0);
-				mw.visitFieldInsn(GETFIELD, typeName, "setterAnnoMaps", "[Ljava/util/IdentityHashMap;");
+				mw.visitFieldInsn(GETFIELD, typeName, "setterAnnoMaps", "[Ljava/util/Map;");
 				iconst(mw, i);
 				mw.visitInsn(AALOAD);
 				mw.visitInsn(ARETURN);

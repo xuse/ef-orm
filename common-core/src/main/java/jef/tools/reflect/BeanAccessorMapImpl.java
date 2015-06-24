@@ -4,7 +4,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.Map;
 
 import jef.accelerator.bean.BeanAccessor;
@@ -56,19 +55,19 @@ public final class BeanAccessorMapImpl extends BeanAccessor{
 		throw new UnsupportedOperationException();
 	}
 
-	public IdentityHashMap<Class<?>, Annotation> getAnnotationOnField(String name) {
+	public Map<Class<?>, Annotation> getAnnotationOnField(String name) {
 		return null;
 	}
 
-	public IdentityHashMap<Class<?>, Annotation> getAnnotationOnGetter(String name) {
+	public Map<Class<?>, Annotation> getAnnotationOnGetter(String name) {
 		return null;
 	}
 
-	public IdentityHashMap<Class<?>, Annotation> getAnnotationOnSetter(String name) {
+	public Map<Class<?>, Annotation> getAnnotationOnSetter(String name) {
 		return null;
 	}
 
-	public void initAnnotations(IdentityHashMap<Class<?>, Annotation>[] field, IdentityHashMap<Class<?>, Annotation>[] getter, IdentityHashMap<Class<?>, Annotation>[] setter) {
+	public void initAnnotations(Map<Class<?>, Annotation>[] field, Map<Class<?>, Annotation>[] getter, Map<Class<?>, Annotation>[] setter) {
 	}
 
 	public void initNthGenericType(int index, Class<?> raw, Type type, int total, String fieldName) {

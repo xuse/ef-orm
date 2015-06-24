@@ -2,8 +2,8 @@ package jef.database.dialect.type;
 
 import java.lang.annotation.Annotation;
 import java.sql.SQLException;
-import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 import jef.accelerator.bean.BeanAccessor;
 import jef.database.DbUtils;
@@ -73,8 +73,7 @@ public abstract class AColumnMapping implements ColumnMapping {
 			this.clz = containerType;
 		}
 		if(containerType.isPrimitive()) {
-			@SuppressWarnings("rawtypes")
-			IdentityHashMap<Class,Annotation> map=ba.getAnnotationOnField(field.name());
+			Map<Class<?>,Annotation> map=ba.getAnnotationOnField(field.name());
 			UnsavedValue value = map==null?null:(UnsavedValue)map.get(UnsavedValue.class);
 			if (value == null) {
 				unsavedValue = BeanUtils.defaultValueOfPrimitive(containerType);

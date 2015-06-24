@@ -27,7 +27,7 @@ import java.util.Map;
  * @author Chris Nokleberg
  * @version $Id: CollectionUtils.java,v 1.7 2004/06/24 21:15:21 herbyderby Exp $
  */
-public class CollectionUtils {
+final class CollectionUtils {
     private CollectionUtils() { }
 
     public static Map bucket(Collection c, Transformer t) {

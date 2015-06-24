@@ -4,8 +4,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import jef.tools.reflect.Property;
@@ -17,9 +17,9 @@ import jef.tools.reflect.Property;
  */
 public abstract class SwitchBeanAccessor extends BeanAccessor{
 	private Collection<? extends Property> properties;
-	protected IdentityHashMap<Class<?>, Annotation>[] fieldAnnoMaps;
-	protected IdentityHashMap<Class<?>, Annotation>[] setterAnnoMaps;
-	protected IdentityHashMap<Class<?>, Annotation>[] getterAnnoMaps;
+	protected Map<Class<?>, Annotation>[] fieldAnnoMaps;
+	protected Map<Class<?>, Annotation>[] setterAnnoMaps;
+	protected Map<Class<?>, Annotation>[] getterAnnoMaps;
 	//泛型类型很难用代码描述，因此这里将凡是泛型的类型变量保存下来
 	protected Type[] genericType;
 	
@@ -48,7 +48,7 @@ public abstract class SwitchBeanAccessor extends BeanAccessor{
 		return properties;
 	}
 	
-	public void initAnnotations(IdentityHashMap<Class<?>,Annotation>[] field,IdentityHashMap<Class<?>,Annotation>[] getter,IdentityHashMap<Class<?>,Annotation>[] setter){
+	public void initAnnotations(Map<Class<?>,Annotation>[] field,Map<Class<?>,Annotation>[] getter,Map<Class<?>,Annotation>[] setter){
 		this.fieldAnnoMaps=field;
 		this.getterAnnoMaps=getter;
 		this.setterAnnoMaps=setter;
