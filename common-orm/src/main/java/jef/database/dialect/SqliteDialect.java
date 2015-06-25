@@ -36,11 +36,11 @@ import jef.database.query.function.TemplateFunction;
 import jef.database.query.function.TransformFunction;
 import jef.database.query.function.VarArgsSQLFunction;
 import jef.database.support.RDBMS;
-import jef.tools.collection.CollectionUtil;
+import jef.tools.collection.CollectionUtils;
 
 public class SqliteDialect extends AbstractDialect {
 	public SqliteDialect() {
-		features = CollectionUtil.identityHashSet();
+		features = CollectionUtils.identityHashSet();
 		features.add(Feature.SUPPORT_CONCAT);
 		features.add(Feature.AUTOINCREMENT_MUSTBE_PK);
 		features.add(Feature.TYPE_FORWARD_ONLY);

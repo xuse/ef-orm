@@ -20,7 +20,7 @@ import jef.database.query.function.StandardSQLFunction;
 import jef.database.query.function.TemplateFunction;
 import jef.database.query.function.VarArgsSQLFunction;
 import jef.database.support.RDBMS;
-import jef.tools.collection.CollectionUtil;
+import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
 
 import org.apache.commons.lang.StringUtils;
@@ -34,7 +34,7 @@ import org.apache.commons.lang.StringUtils;
 public class SQLServer2000Dialect extends AbstractDialect {
 	public SQLServer2000Dialect() {
 		super();
-		features = CollectionUtil.identityHashSet();
+		features = CollectionUtils.identityHashSet();
 		features.add(Feature.COLUMN_DEF_ALLOW_NULL);
 		features.add(Feature.CONCAT_IS_ADD);
 		features.add(Feature.NOT_SUPPORT_KEYWORD_DEFAULT);

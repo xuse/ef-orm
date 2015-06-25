@@ -17,8 +17,6 @@ package jef.common;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.Writer;
 import java.net.URL;
 import java.util.Collections;
 import java.util.HashMap;
@@ -27,8 +25,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import jef.common.log.LogUtil;
-import jef.jre5support.Properties;
 import jef.tools.Assert;
+import jef.tools.IOUtils;
 import jef.tools.ResourceUtils;
 import jef.tools.resource.FileResource;
 import jef.tools.resource.Resource;
@@ -131,9 +129,8 @@ public class Configuration extends Cfg {
 		if(pFile==null && !pFile.isReadable()){
 			return defaultValue;
 		}
-		Properties properties = new Properties();
-		properties.load(pFile.openReader());
-		String value = properties.getProperty(key);
+		Map<String,String> properties=IOUtils.loadProperties(pFile.openReader());
+		String value = properties.get(key);
 		if (value == null)
 			value = defaultValue;
 		return value;
@@ -166,15 +163,10 @@ public class Configuration extends Cfg {
 			return;
 		}
 		try {
-			Properties properties = new Properties();
-			InputStream in = pFile.openStream();
-			properties.load(in);
-			in.close();
+			Map<String,String> properties = IOUtils.loadProperties(pFile.openReader());
 			String key = itemkey.toString().replaceAll("_", ".").toLowerCase();
-			properties.setProperty(key, value);
-			Writer out = pFile.getWriter();
-			properties.store(out, null);
-			out.close();
+			properties.put(key, value);
+			IOUtils.storeProperties(pFile.getWriter(), properties, true);
 		} catch (IOException e) {
 			LogUtil.exception(e);
 		}
@@ -190,19 +182,13 @@ public class Configuration extends Cfg {
 			return;
 		}
 		try {
-			Properties properties = new Properties();
-			InputStream in = pFile.openStream();
-			properties.load(in);
-			in.close();
+			Map<String,String> properties = IOUtils.loadProperties(pFile.openReader());
 			
 			for(ConfigItem itemKey: entries.keySet()){
 				String key = itemKey.toString().replaceAll("_", ".").toLowerCase();
-				properties.setProperty(key, entries.get(itemKey));	
+				properties.put(key, entries.get(itemKey));	
 			}
-			
-			Writer out =  pFile.getWriter();
-			properties.store(out, null);
-			out.close();
+			IOUtils.storeProperties(pFile.getWriter(), properties, true);
 		} catch (IOException e) {
 			LogUtil.exception(e);
 		}

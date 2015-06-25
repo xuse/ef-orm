@@ -50,7 +50,7 @@ import jef.database.query.function.TemplateFunction;
 import jef.database.query.function.VarArgsSQLFunction;
 import jef.database.support.RDBMS;
 import jef.tools.StringUtils;
-import jef.tools.collection.CollectionUtil;
+import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
 
 public class PostgreSqlDialect extends AbstractDialect {
@@ -58,7 +58,7 @@ public class PostgreSqlDialect extends AbstractDialect {
 	protected static final int DEFAULT_PORT = 5432;
 
 	public PostgreSqlDialect() {
-		features = CollectionUtil.identityHashSet();
+		features = CollectionUtils.identityHashSet();
 		features.addAll(Arrays.asList(Feature.ALTER_FOR_EACH_COLUMN, Feature.COLUMN_ALTERATION_SYNTAX, Feature.SUPPORT_CONCAT, Feature.SUPPORT_SEQUENCE, Feature.SUPPORT_LIMIT, Feature.AI_TO_SEQUENCE_WITHOUT_DEFAULT));
 
 		loadKeywords("postgresql_keywords.properties");

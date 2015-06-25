@@ -97,7 +97,7 @@ import jef.tools.Assert;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
-import jef.tools.collection.CollectionUtil;
+import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.BeanWrapper;
 
@@ -937,7 +937,7 @@ public final class MetaHolder {
 			throw new IllegalArgumentException(field.getDeclaringClass().getSimpleName() + ":" + field.getName() + " miss its targetEntity annotation.");
 		}
 		if (isMany) {
-			Class<?> compType = CollectionUtil.getSimpleComponentType(field.getGenericType());
+			Class<?> compType = CollectionUtils.getSimpleComponentType(field.getGenericType());
 			if (compType != null && IQueryableEntity.class.isAssignableFrom(compType)) {
 				return MetaHolder.getMeta(compType.asSubclass(IQueryableEntity.class));
 			}

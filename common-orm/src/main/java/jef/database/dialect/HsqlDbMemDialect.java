@@ -39,7 +39,7 @@ import jef.database.support.RDBMS;
 import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
-import jef.tools.collection.CollectionUtil;
+import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.ClassEx;
 
 /**
@@ -65,7 +65,7 @@ public class HsqlDbMemDialect extends AbstractDialect {
 			// must be a very old version
 		}
 
-		features = CollectionUtil.identityHashSet();
+		features = CollectionUtils.identityHashSet();
 		features.add(Feature.ONE_COLUMN_IN_SINGLE_DDL);
 		features.add(Feature.COLUMN_ALTERATION_SYNTAX);
 		features.add(Feature.CURSOR_ENDS_ON_INSERT_ROW);

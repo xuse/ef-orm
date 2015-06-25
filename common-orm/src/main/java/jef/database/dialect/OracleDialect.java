@@ -78,7 +78,7 @@ import jef.tools.DateFormats;
 import jef.tools.DateUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
-import jef.tools.collection.CollectionUtil;
+import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
 
 /**
@@ -86,7 +86,7 @@ import jef.tools.string.JefStringReader;
  */
 public class OracleDialect extends AbstractDialect {
 	public OracleDialect() {
-		features = CollectionUtil.identityHashSet();
+		features = CollectionUtils.identityHashSet();
 		features.addAll(Arrays.asList(
 				Feature.AUTOINCREMENT_NEED_SEQUENCE, 
 				Feature.USER_AS_SCHEMA, 
