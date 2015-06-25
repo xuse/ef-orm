@@ -9,40 +9,26 @@ import static jef.accelerator.asm.ASMUtils.getType;
 import static jef.accelerator.asm.ASMUtils.iconst;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import jef.accelerator.asm.ASMUtils;
 import jef.accelerator.asm.ClassWriter;
 import jef.accelerator.asm.FieldVisitor;
 import jef.accelerator.asm.Label;
 import jef.accelerator.asm.MethodVisitor;
-import jef.accelerator.asm.Opcodes;
 import jef.accelerator.asm.Type;
-import jef.accelerator.bean.ASMAccessorFactory.ClassGenerator;
 import jef.tools.reflect.BeanUtils;
 
-final class ASMSwitcherGenerator implements Opcodes,ClassGenerator {
-	private Class<?> beanClass;
-	private String className;
-	private FieldInfo[] fields;
-	private String typeName;
-	private String beanType;
+final class ASMSwitcherGenerator extends ClassGenerator {
 
-	public ASMSwitcherGenerator(Class<?> javaBean, String clzName, FieldInfo[] fields) {
-		this.beanClass = javaBean;
-		this.className = clzName;
-		this.fields = fields;
-		this.typeName = className.replace('.', '/');
-		this.beanType = getType(beanClass);
+	public ASMSwitcherGenerator(Class<?> beanClass, String accessorName, FieldInfo[] fields,ClassLoader cl) {
+		super(beanClass,accessorName,fields,cl);
 	}
 
 	public byte[] generate() {
 		ClassWriter cw = new ClassWriter(0);
-		cw.visit(V1_5, ACC_PUBLIC + ACC_SUPER + ACC_FINAL, className,null, "jef/accelerator/bean/SwitchBeanAccessor", new String[] {});
+		cw.visit(V1_5, ACC_PUBLIC + ACC_SUPER + ACC_FINAL, accessorName,null, "jef/accelerator/bean/SwitchBeanAccessor", new String[] {});
 		// field
 		{
 			FieldVisitor fw = cw.visitField(ACC_PRIVATE, "fields", getDesc(java.util.Set.class), null,null);
@@ -50,8 +36,7 @@ final class ASMSwitcherGenerator implements Opcodes,ClassGenerator {
 
 			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "getPropertyNames", "()Ljava/util/Collection;", null,null);
 			mw.visitVarInsn(ALOAD, 0);
-
-			mw.visitFieldInsn(GETFIELD, typeName, "fields", getDesc(java.util.Set.class));
+			mw.visitFieldInsn(GETFIELD, accessorType, "fields", getDesc(java.util.Set.class));
 			mw.visitInsn(ARETURN);
 			mw.visitMaxs(1, 1);
 			mw.visitEnd();
@@ -68,7 +53,7 @@ final class ASMSwitcherGenerator implements Opcodes,ClassGenerator {
 			mw.visitVarInsn(ASTORE, 1);
 			mw.visitVarInsn(ALOAD, 0);
 			mw.visitVarInsn(ALOAD, 1);
-			mw.visitFieldInsn(PUTFIELD, typeName, "fields", getDesc(java.util.Set.class));
+			mw.visitFieldInsn(PUTFIELD, accessorType, "fields", getDesc(java.util.Set.class));
 
 			for (FieldInfo info : fields) {
 				mw.visitVarInsn(ALOAD, 1);
@@ -220,7 +205,7 @@ final class ASMSwitcherGenerator implements Opcodes,ClassGenerator {
 			for (int i = 0; i < sw.size(); i++) {
 				mw.visitLabel(sw.labels[i]);
 				mw.visitVarInsn(ALOAD, 0);
-				mw.visitFieldInsn(GETFIELD, typeName, "genericType", "[Ljava/lang/reflect/Type;");
+				mw.visitFieldInsn(GETFIELD, accessorType, "genericType", "[Ljava/lang/reflect/Type;");
 				iconst(mw, i);
 				mw.visitInsn(AALOAD);
 				mw.visitInsn(ARETURN);
@@ -252,7 +237,7 @@ final class ASMSwitcherGenerator implements Opcodes,ClassGenerator {
 			for (int i = 0; i < sw.size(); i++) {
 				mw.visitLabel(sw.labels[i]);
 				mw.visitVarInsn(ALOAD, 0);
-				mw.visitFieldInsn(GETFIELD, typeName, "fieldAnnoMaps", "[Ljava/util/Map;");
+				mw.visitFieldInsn(GETFIELD, accessorType, "fieldAnnoMaps", "[Ljava/util/Map;");
 				iconst(mw, i);
 				mw.visitInsn(AALOAD);
 				mw.visitInsn(ARETURN);
@@ -284,7 +269,7 @@ final class ASMSwitcherGenerator implements Opcodes,ClassGenerator {
 			for (int i = 0; i < sw.size(); i++) {
 				mw.visitLabel(sw.labels[i]);
 				mw.visitVarInsn(ALOAD, 0);
-				mw.visitFieldInsn(GETFIELD, typeName, "getterAnnoMaps", "[Ljava/util/Map;");
+				mw.visitFieldInsn(GETFIELD, accessorType, "getterAnnoMaps", "[Ljava/util/Map;");
 				iconst(mw, i);
 				mw.visitInsn(AALOAD);
 				mw.visitInsn(ARETURN);
@@ -316,7 +301,7 @@ final class ASMSwitcherGenerator implements Opcodes,ClassGenerator {
 			for (int i = 0; i < sw.size(); i++) {
 				mw.visitLabel(sw.labels[i]);
 				mw.visitVarInsn(ALOAD, 0);
-				mw.visitFieldInsn(GETFIELD, typeName, "setterAnnoMaps", "[Ljava/util/Map;");
+				mw.visitFieldInsn(GETFIELD, accessorType, "setterAnnoMaps", "[Ljava/util/Map;");
 				iconst(mw, i);
 				mw.visitInsn(AALOAD);
 				mw.visitInsn(ARETURN);
@@ -338,118 +323,9 @@ final class ASMSwitcherGenerator implements Opcodes,ClassGenerator {
 			mw.visitMaxs(5, 2);
 			mw.visitEnd();
 		}
-		{
-
-			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "copy", getMethodDesc(Void.TYPE, Object.class, Object.class), null,null);
-
-			Label checkArg2 = new Label();
-			Label checkOver = new Label();
-
-			mw.visitVarInsn(ALOAD, 1);
-			mw.visitJumpInsn(IFNONNULL, checkArg2);
-			mw.visitInsn(RETURN);
-
-			mw.visitLabel(checkArg2);
-			mw.visitVarInsn(ALOAD, 2);
-			mw.visitJumpInsn(IFNONNULL, checkOver);
-			mw.visitInsn(RETURN);
-
-			mw.visitLabel(checkOver);
-			mw.visitVarInsn(ALOAD, 1);
-			mw.visitTypeInsn(CHECKCAST, beanType);
-			mw.visitVarInsn(ASTORE, 3);
-			mw.visitVarInsn(ALOAD, 2);
-			mw.visitTypeInsn(CHECKCAST, beanType);
-			mw.visitVarInsn(ASTORE, 4);
-
-			for (int i = 0; i < fields.length; i++) {
-				mw.visitVarInsn(ALOAD, 4);
-				mw.visitVarInsn(ALOAD, 3);
-				Method getter=fields[i].getGetter();
-				generateInvokeMethod(mw,getter);
-				Method setter=fields[i].getSetter();
-				generateInvokeMethod(mw,setter);
-				if(setter.getReturnType()!=void.class){
-					mw.visitInsn(POP);
-				}
-			}
-			mw.visitInsn(RETURN);
-			mw.visitMaxs(3, 5);
-			mw.visitEnd();
-		}
-		{
-			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "convert", getMethodDesc(Map.class, Object.class), null,null);
-			//L2 S0
-			Label checkArg = new Label();
-			
-			mw.visitVarInsn(ALOAD, 1);//S1
-			mw.visitJumpInsn(IFNONNULL, checkArg);
-			mw.visitInsn(Opcodes.ACONST_NULL);
-			mw.visitInsn(ARETURN);
-
-			mw.visitLabel(checkArg);
-			
-			mw.visitVarInsn(ALOAD, 1);//S1
-			mw.visitTypeInsn(CHECKCAST, beanType);
-			mw.visitVarInsn(ASTORE, 2);//L3 S0
-			
-			mw.visitTypeInsn(NEW, getType(HashMap.class));//S1
-			mw.visitInsn(DUP); //S2
-			iconst(mw, fields.length); //S3
-			mw.visitMethodInsn(INVOKESPECIAL,getType(HashMap.class), "<init>", "(I)V");//S1
-			mw.visitVarInsn(ASTORE, 3);//L4 S0
-
-			for (int i = 0; i < fields.length; i++) {
-				FieldInfo fi=fields[i];
-				mw.visitVarInsn(ALOAD, 3);//S1
-				mw.visitLdcInsn(fi.getName());//S2
-				
-				mw.visitVarInsn(ALOAD, 2);//S3
-				Method getter=fi.getGetter();
-				generateInvokeMethod(mw,getter);//S3
-				if(fi.isPrimitive()){
-					ASMUtils.doWrap(mw, fi.getRawType());
-				}
-				
-				mw.visitMethodInsn(INVOKEVIRTUAL, getType(HashMap.class), "put", getMethodDesc(Object.class,Object.class,Object.class));
-				mw.visitInsn(POP);
-			}
-			mw.visitVarInsn(ALOAD, 3);
-			mw.visitInsn(ARETURN);
-			mw.visitMaxs(4, 4);
-			mw.visitEnd();
-		}
-		{
-			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "newInstance", getMethodDesc(Object.class), null,null);
-			mw.visitTypeInsn(NEW, beanType);
-			try {
-				//运行空构造方法
-				if(beanClass.getDeclaredConstructor()!=null){
-					mw.visitInsn(DUP);
-					mw.visitMethodInsn(INVOKESPECIAL,beanType, "<init>", "()V");
-				}
-			} catch (SecurityException e) {
-				e.printStackTrace();
-			} catch (NoSuchMethodException e) {
-				e.printStackTrace();
-			}
-			mw.visitInsn(ARETURN);
-			mw.visitMaxs(2, 1);
-			mw.visitEnd();
-		}
-		{
-			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "getType", getMethodDesc(Class.class), null,null);
-			mw.visitLdcInsn(Type.getType(beanClass));//S1
-			mw.visitInsn(ARETURN);
-			mw.visitMaxs(1, 1);
-			mw.visitEnd();
-		}
+		super.generatePublicMethods(cw);
 		cw.visitEnd();
 		return cw.toByteArray();
-	}
-
-	private void generateInvokeMethod(MethodVisitor mw, Method m) {
-		mw.visitMethodInsn(INVOKEVIRTUAL, getType(m.getDeclaringClass()), m.getName(), getDesc(m));
 	}
 
 	private class SwitchHelper {

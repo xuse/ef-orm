@@ -12,7 +12,7 @@ import jef.tools.reflect.Property;
 public abstract class AbstractFastProperty implements Property{
 	protected Type genericType;
 	protected Class<?> rawType;
-	int n;
+	public int n;
 	public boolean isReadable() {
 		return true;
 	}

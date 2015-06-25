@@ -109,6 +109,13 @@ public abstract class BeanAccessor {
 	public abstract Map<String,Object> convert(Object obj);
 	
 	/**
+	 * 将Map对象逆向转换回来
+	 * @param map
+	 * @return
+	 */
+	public abstract Object fromMap(Map<String, Object> map);
+	
+	/**
 	 * 得到Accessor所对应的类本身
 	 * @return
 	 */
