@@ -13,8 +13,11 @@ import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.accelerator.cglib.beans.BeanCopier;
 import jef.common.log.LogUtil;
+import jef.tools.Foo;
+import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.BeanWrapper;
 
+import org.apache.commons.lang.builder.ToStringBuilder;
 import org.junit.Test;
 
 public class PerformanceTest {
@@ -264,27 +267,58 @@ public class PerformanceTest {
 	
 	@Test
 	public void sdfsa(){
-		BeanAccessor ba=FastBeanWrapperImpl.getAccessorFor(PromotionPO.class);
-		PromotionPO source = new PromotionPO();
-		Timestamp now = new Timestamp(System.currentTimeMillis());
-		source.setCode("code");
-		source.setDescription("haha");
-		source.setDiscount(5.4);
-		source.setEndTime(new Date());
-		source.setID(39578395L);
-		source.setPriority(1);
-		source.setPromotionType(3);
-		source.setStartTime(now);
-		source.setSupplierID("123245L");
-		source.setField1("dsds");
-		source.setField2("fdsfsdfds");
-		source.setField3("sdff33");
-		source.setField4("dfsef4344");
-		source.setField5("cfer4344");
-		source.setField6("dssfsfdsf");
-		source.setField7("cdedfewfdsf");
-		Map map=ba.convert(source);
-		System.out.println(map);
+		{
+			BeanAccessor ba=FastBeanWrapperImpl.getAccessorFor(PromotionPO.class);
+			PromotionPO source = new PromotionPO();
+			Timestamp now = new Timestamp(System.currentTimeMillis());
+			source.setCode("code");
+			source.setDescription("haha");
+			source.setDiscount(5.4);
+			source.setEndTime(new Date());
+			source.setID(39578395L);
+			source.setPriority(1);
+			source.setPromotionType(3);
+			source.setStartTime(now);
+			source.setSupplierID("123245L");
+			source.setField1("dsds");
+			source.setField2("fdsfsdfds");
+			source.setField3("sdff33");
+			source.setField4("dfsef4344");
+			source.setField5("cfer4344");
+			source.setField6("dssfsfdsf");
+			source.setField7("cdedfewfdsf");
+			Map map=ba.convert(source);
+			ba.getAnnotationOnField("code");
+			ba.getAnnotationOnGetter("code");
+			ba.getAnnotationOnSetter("code");
+			PromotionPO source2=(PromotionPO)ba.fromMap(map);
+			System.out.println(map);	
+			System.out.println(ToStringBuilder.reflectionToString(source));
+			System.out.println(ToStringBuilder.reflectionToString(source2));
+		}
+		{
+			BeanAccessor ba=FastBeanWrapperImpl.getAccessorFor(Foo.class);
+			Foo foo=new Foo();
+			foo.setId(1);
+			foo.setName("aaa");
+			foo.setScore(123D);
+			foo.setCreated(new Date());
+			Map map=ba.convert(foo);
+			ba.getAnnotationOnField("name");
+			ba.getAnnotationOnGetter("name");
+			ba.getAnnotationOnSetter("name");
+			map.remove("score");
+			Foo foo2=(Foo)ba.fromMap(map);
+			System.out.println(map);
+			System.out.println(ToStringBuilder.reflectionToString(foo));
+			System.out.println(ToStringBuilder.reflectionToString(foo2));
+			
+			map.put("id", "3");
+			Foo foo3=BeanUtils.undescribeSafe(map, Foo.class);
+			System.out.println(ToStringBuilder.reflectionToString(foo3));
+			
+		}
+		
 	}
 	
 	

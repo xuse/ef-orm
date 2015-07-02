@@ -484,7 +484,7 @@ public abstract class DateUtils {
 				return DateFormats.DATE_SHORT.get().parse(dateStr);
 			} else if (dateStr.length() == 14 && StringUtils.isNumeric(dateStr)&& (dateStr.startsWith("19") || dateStr.startsWith("20"))) {// 按14位数字格式化yyyyMMDDHHMMSS
 				return DateFormats.DATE_TIME_SHORT_14.get().parse(dateStr);
-			} else if (dateStr.length() == 12 && StringUtils.isNumeric(dateStr)&& (dateStr.startsWith("19") || dateStr.startsWith("20"))) {// 按14位数字格式化yyyyMMDDHHMM
+			} else if (dateStr.length() == 12 && StringUtils.isNumeric(dateStr)&& (dateStr.startsWith("19") || dateStr.startsWith("20"))) {// 按12位数字格式化yyyyMMDDHHMM
 				return DateFormats.DATE_TIME_SHORT_12.get().parse(dateStr);				
 			} else if (StringUtils.isNumericOrMinus(dateStr)) {
 				long value=Long.valueOf(dateStr).longValue();

@@ -29,8 +29,8 @@ import jef.database.query.PKQuery;
 import jef.database.wrapper.clause.BindSql;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
-import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.Property;
+import jef.tools.reflect.ConvertUtils;
 
 /**
  * 抽象类用于简化Tablemeta的实现
@@ -151,7 +151,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		if (pkDim == null) {
 			List<Serializable> pks = new ArrayList<Serializable>();
 			for (ColumnMapping mapping : this.getPKFields()) {
-				pks.add((Serializable) BeanUtils.defaultValueForBasicType(mapping.getFieldType()));
+				pks.add((Serializable) ConvertUtils.defaultValueForBasicType(mapping.getFieldType()));
 			}
 			PKQuery<?> query = new PKQuery<IQueryableEntity>(this, pks, newInstance());
 			BindSql sql = query.toPrepareWhereSql(null, profile);

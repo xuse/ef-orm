@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 @SuppressWarnings("rawtypes")
-public abstract class Cloner {
+abstract class Cloner {
 	abstract public Object clone(Object object, int restLevel);
 
 	public static final Cloner RAW = new Cloner() {

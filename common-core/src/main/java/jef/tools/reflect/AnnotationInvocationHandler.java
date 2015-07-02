@@ -24,7 +24,8 @@ import java.util.Map;
  * @author  Josh Bloch
  * @since   1.5
  */
-class AnnotationInvocationHandler implements InvocationHandler, Serializable {
+@SuppressWarnings("rawtypes")
+final class AnnotationInvocationHandler implements InvocationHandler, Serializable {
 	private static final long serialVersionUID = -5039773346546729275L;
 	private final Class type;
     private final Map<String, Object> memberValues;

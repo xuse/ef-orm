@@ -18,8 +18,8 @@ import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
-import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.Property;
+import jef.tools.reflect.ConvertUtils;
 
 public abstract class AColumnMapping implements ColumnMapping {
 	/**
@@ -76,7 +76,7 @@ public abstract class AColumnMapping implements ColumnMapping {
 			Map<Class<?>,Annotation> map=ba.getAnnotationOnField(field.name());
 			UnsavedValue value = map==null?null:(UnsavedValue)map.get(UnsavedValue.class);
 			if (value == null) {
-				unsavedValue = BeanUtils.defaultValueOfPrimitive(containerType);
+				unsavedValue = ConvertUtils.defaultValueOfPrimitive(containerType);
 			} else {
 				unsavedValue = parseValue(containerType, value.value());
 			}	

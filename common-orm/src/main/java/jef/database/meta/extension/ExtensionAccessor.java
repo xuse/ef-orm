@@ -214,7 +214,28 @@ public final class ExtensionAccessor extends BeanAccessor implements ExtensionMo
 
 	@Override
 	public Map<String, Object> convert(Object obj) {
-		// TODO Auto-generated method stub
-		return null;
+		Map<String,Object> map=accessor.convert(obj);
+		for(Map.Entry<String, Property> entry:extProperties.entrySet()) {
+			map.put(entry.getKey(), entry.getValue().get(obj));
+		}
+		return map;
+	}
+
+	@Override
+	public Object fromMap(Map<String, Object> map) {
+		Object o=accessor.fromMap(map);
+		for(Map.Entry<String, Property> entry:extProperties.entrySet()) {
+			entry.getValue().set(o, map.get(entry.getKey()));
+		}
+		return o;
+	}
+
+	@Override
+	public Object fromMap2(Map<String, Object> map) {
+		Object o=accessor.fromMap2(map);
+		for(Map.Entry<String, Property> entry:extProperties.entrySet()) {
+			entry.getValue().set(o, map.get(entry.getKey()));
+		}
+		return o;
 	}
 }

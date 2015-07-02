@@ -77,7 +77,7 @@ public class JefParser implements JavaUnitParser{
 		//jianghy3 2012.08.29 Bug #55696 解决思路：先保留原有的，再根据本次配置信息删除/修改。
 		List<AnnotationExpr> annos = type.getAnnotations();
 		if(!CollectionUtils.isEmpty(annos)){
-			java.addAnnotation(parseAnnoExprToString(CollectionUtils.toArray(annos, AnnotationExpr.class)));
+			java.addAnnotation(parseAnnoExprToString(annos.toArray(new AnnotationExpr[annos.size()])));
 		}
 		
 		

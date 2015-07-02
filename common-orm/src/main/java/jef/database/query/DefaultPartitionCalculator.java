@@ -32,18 +32,18 @@ import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.PartitionSupport;
+import jef.database.meta.AbstractMetadata;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-import jef.database.meta.AbstractMetadata;
 import jef.database.routing.PartitionResult;
 import jef.database.routing.function.KeyFunction;
 import jef.database.routing.function.ModulusFunction;
 import jef.database.support.MultipleDatabaseOperateException;
 import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
-import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.BeanWrapper;
 import jef.tools.reflect.NopBeanWrapper;
+import jef.tools.reflect.ConvertUtils;
 
 import org.apache.commons.lang.ObjectUtils;
 
@@ -396,7 +396,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 					if(term!=null){
 						Class<?> clz=instance.getPropertyRawType(field);
 						if(clz.isPrimitive()){//如果是缺省值，当做null处理。
-							if(ObjectUtils.equals(term, BeanUtils.defaultValueOfPrimitive(clz))){//如果是和原生值一样
+							if(ObjectUtils.equals(term, ConvertUtils.defaultValueOfPrimitive(clz))){//如果是和原生值一样
 								IQueryableEntity qq=(IQueryableEntity)instance.getWrapped();
 								Field fld=meta.getField(field);
 								if(!(qq).isUsed(fld)){

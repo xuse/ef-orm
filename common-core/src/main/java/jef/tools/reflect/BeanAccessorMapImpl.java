@@ -83,8 +83,19 @@ public final class BeanAccessorMapImpl extends BeanAccessor{
 		return Map.class;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public Map<String, Object> convert(Object obj) {
 		return (Map)obj;
+	}
+
+	@Override
+	public Object fromMap(Map<String, Object> map) {
+		return map;
+	}
+
+	@Override
+	public Object fromMap2(Map<String, Object> map) {
+		return map;
 	}
 }

@@ -383,7 +383,7 @@ public final class BeanWrapperImpl extends BeanWrapper {
 					ClassEx cmpType=new ClassEx(c.getComponentType());
 					Object array = Array.newInstance(cmpType.getWrappered(), 0);
 					// 修正数据类型
-					value = ClassEx.toProperType(value, cmpType, null);
+					value = ConvertUtils.toProperType(value, cmpType, null);
 					array = ArrayUtils.setValueAndExpandArray(array, index, value);
 					this.setPropertyValue(info.getKey(), array);
 				} else if (List.class.isAssignableFrom(c.getWrappered())) {
@@ -394,21 +394,21 @@ public final class BeanWrapperImpl extends BeanWrapper {
 			} else {
 				if (c.isArray()) {
 					ClassEx cmpType=new ClassEx(c.getComponentType());
-					value = ClassEx.toProperType(value, cmpType, null);
+					value = ConvertUtils.toProperType(value, cmpType, null);
 					Object array = ArrayUtils.setValueAndExpandArray(o, index, value);
 					if (array != value)
 						this.setPropertyValue(info.getKey(), array);
 				} else if (List.class.isAssignableFrom(c.getWrappered())) {
 					ClassEx cmpType=new ClassEx(c.getComponentType());
-					Object old = BeanUtils.findElementInstance(o);
-					value = ClassEx.toProperType(value, cmpType, old);
+					Object old = ConvertUtils.findElementInstance(o);
+					value = ConvertUtils.toProperType(value, cmpType, old);
 					CollectionUtils.listSetAndExpand((List) value, index, value);
 				}
 			}
 		} else {
 			Type c = this.getPropertyType(field);
 			Object old = this.isReadableProperty(field) ? this.getPropertyValue(field) : null;
-			value = ClassEx.toProperType(value, new ClassEx(c), old);
+			value = ConvertUtils.toProperType(value, new ClassEx(c), old);
 			this.setPropertyValue(field, value);
 		}
 	}
@@ -444,7 +444,7 @@ public final class BeanWrapperImpl extends BeanWrapper {
 					Object r = ArrayUtils.toFixLength(o, (index < 0 ? -index : index + 1));
 					if (r != o)
 						setPropertyValue(info.getKey(), r);// 扩展数组
-					Object instance = BeanUtils.createElementByElement(r);
+					Object instance = ConvertUtils.createElementByElement(r);
 					if (instance != null)
 						ArrayUtils.set(r, index, instance);
 				}
@@ -452,7 +452,7 @@ public final class BeanWrapperImpl extends BeanWrapper {
 			} else if (o instanceof List) {
 				if (create && CollectionUtils.isIndexValid(o, index) == false) {
 					CollectionUtils.toFixedSize((List) o, (index < 0 ? -index : index + 1));
-					Object instance = BeanUtils.createElementByElement(o);
+					Object instance = ConvertUtils.createElementByElement(o);
 					if (instance != null)
 						CollectionUtils.listSet((List) o, index, instance);
 				}

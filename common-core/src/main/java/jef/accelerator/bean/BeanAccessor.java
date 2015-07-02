@@ -116,6 +116,13 @@ public abstract class BeanAccessor {
 	public abstract Object fromMap(Map<String, Object> map);
 	
 	/**
+	 * 将Map逆向转换回来，可以处理不匹配类型的转换（但要消耗更多时间）
+	 * @param map
+	 * @return
+	 */
+	public abstract Object fromMap2(Map<String, Object> map);
+	
+	/**
 	 * 得到Accessor所对应的类本身
 	 * @return
 	 */

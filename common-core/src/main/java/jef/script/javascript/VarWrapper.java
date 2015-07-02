@@ -18,8 +18,8 @@ package jef.script.javascript;
 import java.util.Collection;
 import java.util.Map;
 
-import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.MapWrapper;
+import jef.tools.reflect.ConvertUtils;
 
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Scriptable;
@@ -107,7 +107,7 @@ public class VarWrapper implements Scriptable {
 	}
 
 	public Object getDefaultValue(Class<?> hint) {
-		return BeanUtils.defaultValueForBasicType(hint);
+		return ConvertUtils.defaultValueForBasicType(hint);
 	}
 
 	public boolean hasInstance(Scriptable instance) {

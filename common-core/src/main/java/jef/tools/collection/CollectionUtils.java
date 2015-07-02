@@ -608,26 +608,6 @@ public final class CollectionUtils {
 	}
 
 	/**
-	 * 转换为制定类型的数组
-	 * 
-	 * @param collection
-	 *            集合
-	 * @param clz
-	 *            数组类型
-	 * @return 数组
-	 */
-	@SuppressWarnings("unchecked")
-	public static <T> T[] toArray(Collection<?> collection, Class<T> clz) {
-		T[] result = (T[]) Array.newInstance(clz, collection.size());
-		int n = 0;
-		for (Object o : collection) {
-			result[n] = (T) o;
-			n++;
-		}
-		return result;
-	}
-
-	/**
 	 * 两个集合对象的合并
 	 * 
 	 * @param <T>

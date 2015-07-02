@@ -16,6 +16,7 @@ import jef.accelerator.asm.MethodVisitor;
 import jef.accelerator.asm.Opcodes;
 import jef.accelerator.asm.Type;
 import jef.tools.reflect.BeanUtils;
+import jef.tools.reflect.ConvertUtils;
 
 public abstract class ClassGenerator implements Opcodes {
 	protected Class<?> beanClass;
@@ -94,21 +95,134 @@ public abstract class ClassGenerator implements Opcodes {
 			mw.visitMethodInsn(INVOKEINTERFACE, getType(Map.class), "get", "(Ljava/lang/Object;)Ljava/lang/Object;"); //S2 value
 			
 			if (fi.isPrimitive()) {
+				Label notnull=new Label();
+				Label end=new Label();
+				mw.visitInsn(DUP); // S3
+				mw.visitJumpInsn(IFNONNULL, notnull);//S2
+				mw.visitInsn(POP2);//S0
+				mw.visitJumpInsn(GOTO,end);
+				mw.visitLabel(notnull);
 				Class<?> wrpped=BeanUtils.toWrapperClass(fi.getRawType());
 				mw.visitTypeInsn(CHECKCAST, getType(wrpped));	//S2 value
 				ASMUtils.doUnwrap(mw, fi.getRawType(), wrpped);
+				this.generateInvokeMethod(mw, fi.getSetter());//S0
+				if (fi.getSetter().getReturnType() != void.class) {
+					mw.visitInsn(POP);
+				}
+				mw.visitLabel(end);
 			}else {
 				mw.visitTypeInsn(CHECKCAST, getType(fi.getRawType()));	//S2 value
-			}
-			this.generateInvokeMethod(mw, fi.getSetter());
-			if (fi.getSetter().getReturnType() != void.class) {
-				mw.visitInsn(POP);
+				this.generateInvokeMethod(mw, fi.getSetter());
+				if (fi.getSetter().getReturnType() != void.class) {
+					mw.visitInsn(POP);
+				}
 			}
 		}
 		mw.visitVarInsn(ALOAD, 2);
 		mw.visitInsn(ARETURN);
 		mw.visitMaxs(3,3);
 		mw.visitEnd();
+		
+		
+		mw = cw.visitMethod(ACC_PUBLIC, "fromMap2", getMethodDesc(Object.class, Map.class), null, null);
+		mw.visitTypeInsn(NEW, beanType);//S1 L2
+		try {
+			// 运行空构造方法
+			if (beanClass.getDeclaredConstructor() != null) {
+				mw.visitInsn(DUP);
+				mw.visitMethodInsn(INVOKESPECIAL, beanType, "<init>", "()V");
+			}
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
+		}
+		mw.visitVarInsn(ASTORE, 2);// L3 S0
+		
+		for (int i = 0; i < fields.length; i++) {
+			FieldInfo fi = fields[i];
+			mw.visitVarInsn(ALOAD, 2);// S1 the object
+			
+			mw.visitVarInsn(ALOAD, 1);// S2 the map
+			mw.visitLdcInsn(fi.getName());// S3 key
+			mw.visitMethodInsn(INVOKEINTERFACE, getType(Map.class), "get", "(Ljava/lang/Object;)Ljava/lang/Object;"); //S2 value
+
+			pushGenericType(mw,fi.getRawType(),fi.getName());
+			mw.visitMethodInsn(INVOKESTATIC, getType(ConvertUtils.class), "toProperType", "(Ljava/lang/Object;Ljava/lang/reflect/Type;)Ljava/lang/Object;"); //S2 value
+			
+			if (fi.isPrimitive()) {
+				Label notnull=new Label();
+				Label end=new Label();
+				mw.visitInsn(DUP); // S3
+				mw.visitJumpInsn(IFNONNULL, notnull);//S2
+				mw.visitInsn(POP2);//S0
+				mw.visitJumpInsn(GOTO,end);
+				mw.visitLabel(notnull);
+				Class<?> wrpped=BeanUtils.toWrapperClass(fi.getRawType());
+				mw.visitTypeInsn(CHECKCAST, getType(wrpped));	//S2 value
+				ASMUtils.doUnwrap(mw, fi.getRawType(), wrpped);
+				this.generateInvokeMethod(mw, fi.getSetter());//S0
+				if (fi.getSetter().getReturnType() != void.class) {
+					mw.visitInsn(POP);
+				}
+				mw.visitLabel(end);
+			}else {
+				mw.visitTypeInsn(CHECKCAST, getType(fi.getRawType()));	//S2 value
+				this.generateInvokeMethod(mw, fi.getSetter());
+				if (fi.getSetter().getReturnType() != void.class) {
+					mw.visitInsn(POP);
+				}
+			}
+		}
+		mw.visitVarInsn(ALOAD, 2);
+		mw.visitInsn(ARETURN);
+		mw.visitMaxs(4,3);
+		mw.visitEnd();
+	}
+
+	private void pushGenericType(MethodVisitor mw,Class<?> rawType,String pname) {
+		if(rawType.isPrimitive()) {
+			String s = rawType.getName();
+			// int 226
+			// short 215
+			// long 221
+			// boolean 222
+			// float 219
+			// double 228
+			// char 201
+			// byte 237
+			switch (s.charAt(1) + s.charAt(2)) {
+			case 226:
+				mw.visitFieldInsn(GETSTATIC, getType(Integer.class), "TYPE", "Ljava/lang/Class;");
+				break;
+			case 215:
+				mw.visitFieldInsn(GETSTATIC, getType(Short.class), "TYPE", "Ljava/lang/Class;");
+				break;
+			case 221:
+				mw.visitFieldInsn(GETSTATIC, getType(Long.class), "TYPE", "Ljava/lang/Class;");
+				break;
+			case 222:
+				mw.visitFieldInsn(GETSTATIC, getType(Boolean.class), "TYPE", "Ljava/lang/Class;");
+				break;
+			case 219:
+				mw.visitFieldInsn(GETSTATIC, getType(Float.class), "TYPE", "Ljava/lang/Class;");
+				break;
+			case 228:
+				mw.visitFieldInsn(GETSTATIC, getType(Double.class), "TYPE", "Ljava/lang/Class;");
+				break;
+			case 201:
+				mw.visitFieldInsn(GETSTATIC, getType(Character.class), "TYPE", "Ljava/lang/Class;");
+				break;
+			case 237:
+				mw.visitFieldInsn(GETSTATIC, getType(Byte.class), "TYPE", "Ljava/lang/Class;");
+				break;
+			}
+		}else {
+			mw.visitVarInsn(ALOAD, 0);
+			mw.visitLdcInsn(pname);// S2
+			mw.visitMethodInsn(INVOKEVIRTUAL, accessorType, "getGenericType", getMethodDesc(java.lang.reflect.Type.class,String.class));
+			
+		}
 	}
 
 	private void generateConvert(ClassWriter cw) {
