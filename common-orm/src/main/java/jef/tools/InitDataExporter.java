@@ -20,20 +20,24 @@ public class InitDataExporter {
 	private boolean deleteEmpty;
 	private File rootPath;
 
-	public InitDataExporter(DbClient session,File sourcePath) {
+	public InitDataExporter(DbClient session, File sourcePath) {
 		this.session = session;
-		this.rootPath=sourcePath;
+		this.rootPath = sourcePath;
 	}
 
-	public void export(@SuppressWarnings("rawtypes") Class clz) throws SQLException{
+	public void export(@SuppressWarnings("rawtypes") Class clz) throws SQLException {
+		export(clz, false);
+	}
+
+	public void export(@SuppressWarnings("rawtypes") Class clz, boolean cascade) throws SQLException {
 		ITableMetadata meta = MetaHolder.getMeta(clz);
 		if (meta == null)
 			return;
-		
-		File file=new File(rootPath,meta.getThisType().getName().replace('.', '/')+".init.json");
+
+		File file = new File(rootPath, meta.getThisType().getName().replace('.', '/') + ".init.json");
 		@SuppressWarnings("unchecked")
-		Query<?> query=QB.create(clz);
-		query.setCascade(false);
+		Query<?> query = QB.create(clz);
+		query.setCascade(cascade);
 		List<?> o = session.select(query);
 		if (o.isEmpty()) {
 			if (deleteEmpty && file.exists()) {
@@ -41,9 +45,10 @@ public class InitDataExporter {
 			}
 			return;
 		}
-		BufferedWriter writer=IOUtils.getWriter(file, "UTF-8");
+		BufferedWriter writer = IOUtils.getWriter(file, "UTF-8");
 		JSON.writeJSONStringTo(o, writer, SerializerFeature.PrettyFormat);
 		IOUtils.closeQuietly(writer);
-		System.out.println(file.getAbsolutePath()+" was updated.");
+		System.out.println(file.getAbsolutePath() + " was updated.");
 	}
+
 }

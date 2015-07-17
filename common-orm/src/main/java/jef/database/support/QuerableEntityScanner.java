@@ -18,7 +18,6 @@ import jef.common.wrapper.Holder;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
-import jef.database.Session;
 import jef.database.annotation.EasyEntity;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.type.AutoIncrementMapping;

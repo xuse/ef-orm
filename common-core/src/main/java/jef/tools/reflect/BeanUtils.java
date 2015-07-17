@@ -20,8 +20,6 @@ import java.util.NoSuchElementException;
 
 import javax.management.ReflectionException;
 
-import org.springframework.beans.TypeConverter;
-
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.log.LogUtil;
