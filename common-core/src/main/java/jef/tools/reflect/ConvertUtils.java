@@ -25,7 +25,12 @@ import jef.tools.reflect.convert.Converter;
 
 import org.apache.commons.lang.ObjectUtils;
 
-public class ConvertUtils {
+/**
+ * 数据类型转换工具类
+ * @author jiyi
+ *
+ */
+public final class ConvertUtils {
 	private static final Converter<Long> N2J = new Converter<Long>() {
 		public Long apply(Object input) {
 			return ((Number) input).longValue();
@@ -333,11 +338,10 @@ public class ConvertUtils {
 	private static class StringArrayConverter extends Converter< Object> {
 		private Class<?> clz;
 		private ClassEx cex;
-
-		StringArrayConverter(Class<?> clz) {
-			this.clz = clz;
-			this.cex=new ClassEx(clz);
-		}
+//		StringArrayConverter(Class<?> clz) {
+//			this.clz = clz;
+//			this.cex=new ClassEx(clz);
+//		}
 		
 		StringArrayConverter(Type clz) {
 			this.cex=new ClassEx(clz);
@@ -399,7 +403,7 @@ public class ConvertUtils {
 		CACHE.put(boolean.class, toBoolean);
 		CACHE.put(Boolean.class, toBoolean);
 
-		CACHE.put(String.class, new Node<Converter<?>>(O2S));
+		CACHE.put(String.class, new Node<Converter<?>>(O2String));
 
 		CACHE.put(java.util.Date.class, new Node<Converter<?>>(String2Date));
 		CACHE.put(java.sql.Date.class, new Node<Converter<?>>(String2SqlDate));
@@ -426,7 +430,6 @@ public class ConvertUtils {
 	 *             如果无法转换，将抛出此异常
 	 * 
 	 */
-	@SuppressWarnings({ "unchecked" })
 	public static Object toProperType(String value, ClassEx clz, Object oldValue) {
 		if (value == null) {
 			if (clz.isPrimitive()) {
@@ -455,13 +458,12 @@ public class ConvertUtils {
 		if (clz.isEnum()) {
 			EnumConverter<?> ec = new EnumConverter<>(clz.getWrappered().asSubclass(Enum.class));
 			CACHE.put(clz.getWrappered(), new Node<Converter<?>>(ec));
-			return ec.accept(value);
+			return ec.apply(value);
 		} else if (clz.isArray()) {
 			StringArrayConverter ec=new StringArrayConverter(clz.getComponentType());
 			CACHE.put(clz.getWrappered(), new Node<Converter<?>>(ec));
-			return ec.accept(value);
+			return ec.apply(value);
 		} else if (clz.isCollection()) {
-			
 			String[] values = value.split(",");
 			return toProperCollectionType(Arrays.asList(values), clz, oldValue);
 		} else if (Map.class.isAssignableFrom(clz.getWrappered())) {

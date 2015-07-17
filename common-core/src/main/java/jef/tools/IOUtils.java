@@ -341,7 +341,7 @@ public class IOUtils {
 	 *            要搜索的目录
 	 * @param extnames
 	 *            需要的文件类型（扩展名）。要求小写，无需带'.'符号。
-	 * @return 该目录下符合指定类型的所有文件(只搜索一层，不会递归搜索)。仅列出文件，不会返回目录
+	 * @return 该目录下符合指定类型的所有文件(只搜索一层，不会递归搜索)。<strong>仅列出文件，不会返回目录</strong>
 	 */
 	public static File[] listFiles(File file, final String... extnames) {
 		File[] r = file.listFiles(new FileFilter() {
@@ -2219,7 +2219,7 @@ public class IOUtils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static BufferedWriter getWriter(File target, String charSet) throws IOException {
+	public static BufferedWriter getWriter(File target, String charSet){
 		return getWriter(target, charSet, false);
 	}
 

@@ -698,7 +698,7 @@ public final class MetaHolder {
 				try {
 					applyParams(mappingHint.parameters(), type);
 				}catch(Exception e) {
-					throw new IllegalArgumentException("@Type annotation on field "+field+" is invalid",e);
+					throw new IllegalArgumentException("@Type annotation on field "+processingClz+"."+field+" is invalid",e);
 				}
 				fieldType = type.getFieldType();
 			} else {
@@ -745,6 +745,7 @@ public final class MetaHolder {
 	}
 
 	private static void applyParams(Parameter[] parameters, ColumnMapping type) {
+		if(parameters==null || parameters.length==0)return;
 		BeanWrapper bw = BeanWrapper.wrap(type);
 		for (Parameter p : parameters) {
 			if (bw.isWritableProperty(p.name())) {

@@ -1814,72 +1814,7 @@ public class XMLUtils {
 		}
 	}
 
-	private static Element appendBean(Node parent, Object bean, Class<?> type, Boolean asAttrib, String tagName) {
-		if (type == null) {
-			if (bean == null) {
-				return null;
-			}
-			type = bean.getClass();
-		}
-		if (tagName == null || tagName.length() == 0) {
-			tagName = type.getSimpleName();
-		}
-		if (type.isArray()) {
-			if (bean == null)
-				return null;
-			Element collection = addElement(parent, tagName);
-			for (int i = 0; i < Array.getLength(bean); i++) {
-				appendBean(collection, Array.get(bean, i), null, asAttrib, null);
-			}
-			return collection;
-		} else if (Collection.class.isAssignableFrom(type)) {
-			if (bean == null)
-				return null;
-			Element collection = addElement(parent, tagName);
-			for (Object obj : (Collection<?>) bean) {
-				appendBean(collection, obj, null, asAttrib, null);
-			}
-			return collection;
-		} else if (Map.class.isAssignableFrom(type)) {
-			Element map = addElement(parent, tagName);
-			for(Entry<?,?> e: ((Map<?,?>)bean).entrySet()){
-				Element entry=XMLUtils.addElement(map, "entry");
-				Element key=XMLUtils.addElement(entry, "key");
-				appendBean(key,e.getKey(),null,asAttrib,null);
-				Element value=XMLUtils.addElement(entry, "value");
-				appendBean(value,e.getValue(),null,asAttrib,null);
-			}
-			return map;
-		} else if (CharSequence.class.isAssignableFrom(type)) {
-			if (Boolean.TRUE.equals(asAttrib)) {
-				((Element) parent).setAttribute(tagName, StringUtils.toString(bean));
-			} else {
-				addElement(parent, tagName, StringUtils.toString(bean));
-			}
-		} else if (Date.class.isAssignableFrom(type)) {
-			if (Boolean.FALSE.equals(asAttrib)) {
-				addElement(parent, tagName, DateUtils.formatDateTime((Date) bean));
-			} else {
-				((Element) parent).setAttribute(tagName, DateUtils.formatDateTime((Date) bean));
-			}
-		} else if (Number.class.isAssignableFrom(type) || type.isPrimitive() || type == Boolean.class) {
-			if (Boolean.FALSE.equals(asAttrib)) {
-				addElement(parent, tagName, StringUtils.toString(bean));
-			} else {
-				((Element) parent).setAttribute(tagName, StringUtils.toString(bean));
-			}
-		} else {
-			if (bean == null)
-				return null;
-			Element root = addElement(parent, type.getSimpleName());
-			BeanWrapper bw = BeanWrapper.wrap(bean);
-			for (Property p : bw.getProperties()) {
-				appendBean(root, p.get(bean), p.getType(), asAttrib, p.getName());
-			}
-			return root;
-		}
-		return null;
-	}
+	
 
 	/**
 	 * NodeList转换为数组
@@ -2446,5 +2381,72 @@ public class XMLUtils {
 		List<Element> result = new ArrayList<Element>();
 		innerSearchByAttribute(node, attribName, keyword, result, findFirst);
 		return result.toArray(new Element[0]);
+	}
+	
+	private static Element appendBean(Node parent, Object bean, Class<?> type, Boolean asAttrib, String tagName) {
+		if (type == null) {
+			if (bean == null) {
+				return null;
+			}
+			type = bean.getClass();
+		}
+		if (tagName == null || tagName.length() == 0) {
+			tagName = type.getSimpleName();
+		}
+		if (type.isArray()) {
+			if (bean == null)
+				return null;
+			Element collection = addElement(parent, tagName);
+			for (int i = 0; i < Array.getLength(bean); i++) {
+				appendBean(collection, Array.get(bean, i), null, asAttrib, null);
+			}
+			return collection;
+		} else if (Collection.class.isAssignableFrom(type)) {
+			if (bean == null)
+				return null;
+			Element collection = addElement(parent, tagName);
+			for (Object obj : (Collection<?>) bean) {
+				appendBean(collection, obj, null, asAttrib, null);
+			}
+			return collection;
+		} else if (Map.class.isAssignableFrom(type)) {
+			Element map = addElement(parent, tagName);
+			for(Entry<?,?> e: ((Map<?,?>)bean).entrySet()){
+				Element entry=XMLUtils.addElement(map, "entry");
+				Element key=XMLUtils.addElement(entry, "key");
+				appendBean(key,e.getKey(),null,asAttrib,null);
+				Element value=XMLUtils.addElement(entry, "value");
+				appendBean(value,e.getValue(),null,asAttrib,null);
+			}
+			return map;
+		} else if (CharSequence.class.isAssignableFrom(type)) {
+			if (Boolean.TRUE.equals(asAttrib)) {
+				((Element) parent).setAttribute(tagName, StringUtils.toString(bean));
+			} else {
+				addElement(parent, tagName, StringUtils.toString(bean));
+			}
+		} else if (Date.class.isAssignableFrom(type)) {
+			if (Boolean.FALSE.equals(asAttrib)) {
+				addElement(parent, tagName, DateUtils.formatDateTime((Date) bean));
+			} else {
+				((Element) parent).setAttribute(tagName, DateUtils.formatDateTime((Date) bean));
+			}
+		} else if (Number.class.isAssignableFrom(type) || type.isPrimitive() || type == Boolean.class) {
+			if (Boolean.FALSE.equals(asAttrib)) {
+				addElement(parent, tagName, StringUtils.toString(bean));
+			} else {
+				((Element) parent).setAttribute(tagName, StringUtils.toString(bean));
+			}
+		} else {
+			if (bean == null)
+				return null;
+			Element root = addElement(parent, type.getSimpleName());
+			BeanWrapper bw = BeanWrapper.wrap(bean);
+			for (Property p : bw.getProperties()) {
+				appendBean(root, p.get(bean), p.getType(), asAttrib, p.getName());
+			}
+			return root;
+		}
+		return null;
 	}
 }
