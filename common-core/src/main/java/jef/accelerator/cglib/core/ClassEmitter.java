@@ -21,6 +21,7 @@ import java.util.Map;
 import jef.accelerator.asm.ClassVisitor;
 import jef.accelerator.asm.FieldVisitor;
 import jef.accelerator.asm.MethodVisitor;
+import jef.accelerator.asm.Opcodes;
 import jef.accelerator.asm.Type;
 
 /**
@@ -37,12 +38,12 @@ public class ClassEmitter extends ClassVisitor {
     private Signature staticHookSig;
 
     public ClassEmitter(ClassVisitor cv) {
-        super(null);
+        super(Opcodes.ASM5);
         setTarget(cv);
     }
 
     public ClassEmitter() {
-        super(null);
+        super(Opcodes.ASM5);
     }
 
     public void setTarget(ClassVisitor cv) {
@@ -146,7 +147,7 @@ public class ClassEmitter extends ClassVisitor {
                                          TypeUtils.toInternalNames(exceptions));
         if (sig.equals(Constants.SIG_STATIC) && !TypeUtils.isInterface(getAccess())) {
             rawStaticInit = v;
-            MethodVisitor wrapped = new MethodVisitor(v) {
+            MethodVisitor wrapped = new MethodVisitor(api,v) {
                 public void visitMaxs(int maxStack, int maxLocals) {
                     // ignore
                 }

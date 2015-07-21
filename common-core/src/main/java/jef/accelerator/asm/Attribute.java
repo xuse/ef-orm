@@ -58,13 +58,8 @@ public class Attribute {
      * @param type
      *            the type of the attribute.
      */
-    protected Attribute(final String type) {
+    public Attribute(final String type) {
         this.type = type;
-    }
-    
-    public Attribute(final String type,byte[] value) {
-        this.type = type;
-        this.value=value;
     }
 
     /**

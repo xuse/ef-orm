@@ -20,6 +20,7 @@ import java.util.List;
 
 import jef.accelerator.asm.ClassReader;
 import jef.accelerator.asm.ClassVisitor;
+import jef.accelerator.asm.Opcodes;
 
 // TODO: optimize (ClassReader buffers entire class before accept)
 public class ClassNameReader {
@@ -38,7 +39,7 @@ public class ClassNameReader {
     public static String[] getClassInfo(ClassReader r) {
         final List array = new ArrayList();
         try {
-            r.accept(new ClassVisitor(null) {
+            r.accept(new ClassVisitor(Opcodes.ASM5,null) {
                 public void visit(int version,
                                   int access,
                                   String name,

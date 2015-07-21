@@ -12,8 +12,8 @@ import jef.tools.Assert;
 public class AnnotationDef extends AnnotationVisitor{
 	private boolean end=false;
 	
-	public AnnotationDef(String desc) {
-		super();
+	public AnnotationDef(int api,String desc) {
+		super(api);
 		this.desc=desc;
 	}
 	protected boolean visible;
@@ -36,14 +36,14 @@ public class AnnotationDef extends AnnotationVisitor{
 
 	@Override
 	public AnnotationVisitor visitAnnotation(String name, String desc) {
-		AnnotationDef ann=new AnnotationDef(desc);
+		AnnotationDef ann=new AnnotationDef(api,desc);
 		annotations.put(name, ann);
 		return ann;
 	}
 
 	@Override
 	public AnnotationVisitor visitArray(String name) {
-		AnnotationDef ann=new AnnotationDef(name);
+		AnnotationDef ann=new AnnotationDef(api,name);
 		arrays.put(name, ann);
 		return ann;
 	}

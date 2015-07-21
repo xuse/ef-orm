@@ -38,6 +38,13 @@ package jef.accelerator.asm;
  * @author Eugene Kuleshov
  */
 public abstract class AnnotationVisitor {
+
+    /**
+     * The ASM API version implemented by this visitor. The value of this field
+     * must be one of {@link Opcodes#ASM4} or {@link Opcodes#ASM5}.
+     */
+    protected final int api;
+
     /**
      * The annotation visitor to which this visitor must delegate method calls.
      * May be null.
@@ -49,20 +56,27 @@ public abstract class AnnotationVisitor {
      * 
      * @param api
      *            the ASM API version implemented by this visitor. Must be one
-     *            of {@link Opcodes#ASM4}.
+     *            of {@link Opcodes#ASM4} or {@link Opcodes#ASM5}.
      */
-    public AnnotationVisitor() {
-        this(null);
+    public AnnotationVisitor(final int api) {
+        this(api, null);
     }
 
     /**
      * Constructs a new {@link AnnotationVisitor}.
      * 
+     * @param api
+     *            the ASM API version implemented by this visitor. Must be one
+     *            of {@link Opcodes#ASM4} or {@link Opcodes#ASM5}.
      * @param av
      *            the annotation visitor to which this visitor must delegate
      *            method calls. May be null.
      */
-    public AnnotationVisitor(final AnnotationVisitor av) {
+    public AnnotationVisitor(final int api, final AnnotationVisitor av) {
+        if (api != Opcodes.ASM4 && api != Opcodes.ASM5) {
+            throw new IllegalArgumentException();
+        }
+        this.api = api;
         this.av = av;
     }
 

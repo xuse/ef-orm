@@ -74,7 +74,7 @@ public class EnhanceTaskASM {
 		final List<String> enumFields = new ArrayList<String>();
 		if (fieldEumData != null) {
 			ClassReader reader = new ClassReader(fieldEumData);
-			reader.accept(new ClassVisitor() {
+			reader.accept(new ClassVisitor(Opcodes.ASM5) {
 				@Override
 				public FieldVisitor visitField(int access, String name, String desc, String sig, Object value) {
 					if ((access & Opcodes.ACC_ENUM) > 0) {
@@ -107,7 +107,7 @@ public class EnhanceTaskASM {
 			return null;
 
 		ClassWriter cw = new ClassWriter(0);
-		reader.accept(new ClassVisitor(cw) {
+		reader.accept(new ClassVisitor(Opcodes.ASM5,cw) {
 			private List<String> nonStaticFields = new ArrayList<String>();
 			private List<String> lobAndRefFields = new ArrayList<String>();
 			private String typeName;
@@ -115,9 +115,9 @@ public class EnhanceTaskASM {
 			@Override
 			public void visit(int version, int access, String name, String sig, String superName, String[] interfaces) {
 				this.typeName = name.replace('.', '/');
-				if(version==Opcodes.V1_7){ //JVM 7 use SplitVerifier for classes in version 51.
-					version=Opcodes.V1_6;
-				}
+//				if(version==Opcodes.V1_7){ //JVM 7 use SplitVerifier for classes in version 51.
+//					version=Opcodes.V1_6;
+//				}
 				super.visit(version, access, name, sig, superName, interfaces);
 			}
 
@@ -131,7 +131,8 @@ public class EnhanceTaskASM {
 
 			@Override
 			public void visitEnd() {
-				Attribute attr = new Attribute("jefd", new byte[] { 0x1f });
+				Attribute attr = new Attribute("jefd");
+				attr.value=new byte[] { 0x1f };
 				super.visitAttribute(attr);
 			}
 
@@ -141,7 +142,7 @@ public class EnhanceTaskASM {
 				if ((access & Opcodes.ACC_STATIC) > 0)
 					return visitor;
 				nonStaticFields.add(name);
-				return new FieldExtDef(new FieldExtCallback(visitor) {
+				return new FieldExtDef(Opcodes.ASM5,new FieldExtCallback(visitor) {
 					public void onFieldRead(FieldExtDef info) {
 						boolean contains = enumFields.contains(name);
 						if (contains) {
@@ -265,7 +266,7 @@ public class EnhanceTaskASM {
 		private String typeName;
 
 		public GetterVisitor(MethodVisitor mv, String name, String typeName) {
-			super(mv);
+			super(Opcodes.ASM5,mv);
 			this.name = name;
 			this.typeName = typeName;
 		}
@@ -312,7 +313,7 @@ public class EnhanceTaskASM {
 		private Type paramType;
 
 		public SetterVisitor(MethodVisitor mv, String name, String typeName, Type paramType) {
-			super(mv);
+			super(Opcodes.ASM5,mv);
 			this.name = name;
 			this.typeName = typeName;
 			this.paramType = paramType;

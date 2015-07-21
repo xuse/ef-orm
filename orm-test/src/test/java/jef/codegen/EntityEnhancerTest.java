@@ -14,6 +14,7 @@ import jef.accelerator.asm.Attribute;
 import jef.accelerator.asm.ClassReader;
 import jef.accelerator.asm.ClassVisitor;
 import jef.accelerator.asm.ClassWriter;
+import jef.accelerator.asm.Opcodes;
 import jef.database.DataObject;
 import jef.database.VarObject;
 import jef.database.dialect.ColumnType;
@@ -48,7 +49,7 @@ public class EntityEnhancerTest {
 		URL url=ClassLoader.getSystemResource("jef.orm.multitable.model.Person$Field".replace('.', '/') + ".class");
 		
 		ClassWriter writer = new ClassWriter(0);
-		reader.accept(new ClassVisitor(writer){
+		reader.accept(new ClassVisitor(Opcodes.ASM5,writer){
 			@Override
 			public void visitAttribute(Attribute attr) {
 				if(!"jefd".equals(attr.type)){

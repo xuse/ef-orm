@@ -49,6 +49,7 @@ import javax.persistence.TemporalType;
 import jef.accelerator.asm.Attribute;
 import jef.accelerator.asm.ClassReader;
 import jef.accelerator.asm.ClassVisitor;
+import jef.accelerator.asm.Opcodes;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.Holder;
 import jef.database.Condition.Operator;
@@ -577,7 +578,7 @@ public final class MetaHolder {
 		ClassReader cr = new ClassReader(data);
 
 		final Holder<Boolean> checkd = new Holder<Boolean>(false);
-		cr.accept(new ClassVisitor() {
+		cr.accept(new ClassVisitor(Opcodes.ASM5) {
 			public void visitAttribute(Attribute attr) {
 				if ("jefd".equals(attr.type)) {
 					checkd.set(true);

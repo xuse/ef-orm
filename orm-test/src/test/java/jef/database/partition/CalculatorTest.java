@@ -124,7 +124,7 @@ public class CalculatorTest extends org.junit.Assert{
 			inv.invoke(meta, config);
 			PartitionResult[] result = calc.toTableNames(meta, supportor,2);
 			System.out.println(Arrays.asList(result));
-			assertEquals("[TEST_ENTITY_2014,TEST_ENTITY]",Arrays.toString(result));
+			assertEquals("[TEST_ENTITY_2015,TEST_ENTITY]",Arrays.toString(result));
 			assertEquals(GenerationResolution.TABLE, meta.getFirstAutoincrementDef().getGenerationType(profile));
 		}
 		{
