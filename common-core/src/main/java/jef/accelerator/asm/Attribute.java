@@ -45,7 +45,7 @@ public class Attribute {
     /**
      * The raw value of this attribute, used only for unknown attributes.
      */
-    public byte[] value;
+    byte[] value;
 
     /**
      * The next attribute in this attribute list. May be <tt>null</tt>.
@@ -58,11 +58,16 @@ public class Attribute {
      * @param type
      *            the type of the attribute.
      */
-    public Attribute(final String type) {
+    protected Attribute(final String type) {
         this.type = type;
     }
 
-    /**
+    public Attribute(String string, byte[] bs) {
+		this.type=string;
+		this.value=bs;
+	}
+
+	/**
      * Returns <tt>true</tt> if this type of attribute is unknown. The default
      * implementation of this method always returns <tt>true</tt>.
      * 

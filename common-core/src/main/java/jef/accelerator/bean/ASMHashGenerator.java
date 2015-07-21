@@ -267,12 +267,12 @@ final class ASMHashGenerator extends ClassGenerator {
 		// SET
 		{
 			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "set", "(Ljava/lang/Object;Ljava/lang/Object;)V", null,null);
-			mw.visitInsn(ALOAD_1);//S1
+			mw.visitIntInsn(ALOAD,1);//S1
 			mw.visitTypeInsn(CHECKCAST, beanType);
-			mw.visitInsn(ASTORE_3);//S0
+			mw.visitIntInsn(ASTORE,3);//S0
 			
-			mw.visitInsn(ALOAD_3);
-			mw.visitInsn(ALOAD_2);	//S2
+			mw.visitIntInsn(ALOAD,3);
+			mw.visitIntInsn(ALOAD,2);	//S2
 			
 			if(fi.isPrimitive()){
 				Class<?> wrpped=BeanUtils.toWrapperClass(fi.getRawType());
@@ -294,12 +294,12 @@ final class ASMHashGenerator extends ClassGenerator {
 		//GET
 		{
 			MethodVisitor mw = cw.visitMethod(ACC_PUBLIC, "get", "(Ljava/lang/Object;)Ljava/lang/Object;", null,null);
-			mw.visitInsn(ALOAD_1);
+			mw.visitIntInsn(ALOAD,1);
 			mw.visitTypeInsn(CHECKCAST, beanType);
-			mw.visitInsn(ASTORE_2);
+			mw.visitIntInsn(ASTORE,2);
 			
-			mw.visitInsn(ALOAD_0);
-			mw.visitInsn(ALOAD_2);
+			mw.visitIntInsn(ALOAD,0);
+			mw.visitIntInsn(ALOAD,2);
 			generateInvokeMethod(mw, fi.getGetter());
 			if(fi.isPrimitive()){//inbox
 				ASMUtils.doWrap(mw, fi.getRawType());
