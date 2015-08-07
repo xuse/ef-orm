@@ -37,7 +37,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.PersistenceException;
 import javax.sql.rowset.CachedRowSet;
 
-import jef.common.PairIS;
 import jef.common.log.LogUtil;
 import jef.database.DbCfg;
 import jef.database.DbFunction;
@@ -372,12 +371,12 @@ public abstract class AbstractDialect implements DatabaseDialect {
 				column=cType.toNormalType();
 			}
 		}
-		PairIS def = null;
+		Type def = null;
 		int rawSqlType=column.getSqlType();
 		if(column instanceof TypeDefImpl){
 			String name=((TypeDefImpl) column).getName();
 			if(name!=null){
-				def=new PairIS(rawSqlType,name);	
+				def=new Type(rawSqlType,name);	
 			}
 		}
 		// 按事先注册的类型进行建表
@@ -391,11 +390,11 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		}
 
 		if (!flag) {
-			return def.second;
+			return def.getName();
 		}
-		StringBuilder sb = new StringBuilder(def.second);
+		StringBuilder sb = new StringBuilder(def.getName());
 		if (column.defaultValue != null)
-			sb.append(" default ").append(toDefaultString0(column.defaultValue, rawSqlType,def.first));
+			sb.append(" default ").append(toDefaultString0(column.defaultValue, rawSqlType,def.getSqlType()));
 		if (column.nullable) {
 			if (has(Feature.COLUMN_DEF_ALLOW_NULL)) {
 				sb.append(" null");
@@ -408,7 +407,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	
 	@Override
 	public int getImplementationSqlType(int typecode){
-		return typeNames.get(typecode).first;
+		return typeNames.get(typecode).getSqlType();
 	}
 
 	/**
@@ -498,6 +497,10 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	 */
 	public ColumnType getProprtMetaFromDbType(jef.database.meta.Column column) {
 		int type = column.getDataTypeCode();
+		if(type==-9999) {
+			type=judgeTypeCode(column.getDataType());
+		}
+		
 		switch (type) {
 		case Types.TINYINT:
 		case Types.SMALLINT:
@@ -573,6 +576,12 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		default:
 			throw new RuntimeException("Unknown data type " + column.getDataType() + " " + type + "  " + column);
 		}
+	}
+
+	private int judgeTypeCode(String dataType) {
+		Integer i=this.typeNames.getTypeNameCodes().get(dataType);
+		if(i!=null)return i;
+		throw new IllegalArgumentException("Unknown data type of ["+getName().name()+"]:"+dataType);
 	}
 
 	/**

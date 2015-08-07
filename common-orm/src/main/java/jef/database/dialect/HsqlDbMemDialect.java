@@ -201,7 +201,7 @@ public class HsqlDbMemDialect extends AbstractDialect {
 
 		typeNames.put(Types.TINYINT, "tinyint", 0);
 		typeNames.put(Types.INTEGER, "integer", 0);
-		typeNames.put(Types.BOOLEAN, "boolean", 0);
+		typeNames.put(Types.BOOLEAN, "boolean", 0,"bool");
 	}
 
 	public RDBMS getName() {

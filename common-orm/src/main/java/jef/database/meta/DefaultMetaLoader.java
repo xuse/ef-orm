@@ -21,6 +21,7 @@ import jef.database.DbCfg;
 import jef.database.annotation.EasyEntity;
 import jef.database.meta.AnnotationProvider.ClassAnnotationProvider;
 import jef.database.meta.AnnotationProvider.FieldAnnotationProvider;
+import jef.tools.Assert;
 import jef.tools.JefConfiguration;
 import jef.tools.ResourceUtils;
 import jef.tools.StringUtils;
@@ -29,7 +30,6 @@ import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.Enums;
 import jef.tools.resource.IResource;
 
-import org.springframework.util.Assert;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;

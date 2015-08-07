@@ -182,7 +182,7 @@ public class PostgreSqlDialect extends AbstractDialect {
 
 		typeNames.put(Types.BLOB, "bytea", Types.VARBINARY);
 		typeNames.put(Types.CLOB, "text", 0);
-		typeNames.put(Types.BOOLEAN, "boolean", 0);
+		typeNames.put(Types.BOOLEAN, "boolean", 0,"bool");
 		typeNames.put(Types.TINYINT, "int2", 0);
 		typeNames.put(Types.SMALLINT, "int2", 0);
 		typeNames.put(Types.INTEGER, "int4", 0);

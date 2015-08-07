@@ -47,17 +47,21 @@ public class MetaColumn {
     	c.setColumnName(code);
     	c.setColumnSize(length);
     	c.setDataType(StringUtils.upperCase(type));
-    	c.setDataTypeCode(-1);
+    	c.setDataTypeCode(-9999);
     	c.setDecimalDigit(precision);
     	c.setNullAble(!mandatory);
     	c.setRemarks(comment);
     	c.setTableName(parentTable);
     	if(StringUtils.isNotEmpty(this.defaultVal)){
-    		String typeStr=this.getType().toLowerCase();
-    		if(typeStr.startsWith("varchar") || typeStr.startsWith("char")||typeStr.startsWith("text")){
-    			c.setColumnDef("'"+this.defaultVal+"'");
-    		}else{
-    			c.setColumnDef(this.defaultVal);	
+    		if(this.defaultVal.startsWith("~")) {
+    			c.setColumnDef(this.defaultVal.substring(1,this.defaultVal.length()-1));
+    		}else {
+        		String typeStr=this.getType().toLowerCase();
+        		if(typeStr.startsWith("varchar") || typeStr.startsWith("char")||typeStr.startsWith("text")){
+        			c.setColumnDef("'"+this.defaultVal+"'");
+        		}else{
+        			c.setColumnDef(this.defaultVal);	
+        		}    			
     		}
     	}
     	return c;

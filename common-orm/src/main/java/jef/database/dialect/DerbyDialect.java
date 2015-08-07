@@ -182,7 +182,7 @@ public class DerbyDialect extends AbstractDialect {
 		// registerColumnType( Types.BOOLEAN, "boolean" );
 		// }
 		
-		typeNames.put(Types.BOOLEAN, "boolean", 0);
+		typeNames.put(Types.BOOLEAN, "boolean", 0,"bool");
 		//Derby中，Float是double的同义词
 		typeNames.put(Types.FLOAT, "double", Types.DOUBLE);
 	}
