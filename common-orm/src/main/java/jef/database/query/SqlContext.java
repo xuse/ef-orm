@@ -50,7 +50,7 @@ public class SqlContext extends AbstractEntityMappingProvider  implements Entity
 		this.currentIndex=0;
 		QueryAlias qa=new QueryAlias(alias,query);
 		AllTableColumns ac=new AllTableColumns(query);
-		ac.setLazyLob(ORMConfig.getInstance().isEnableLazyLoad());
+		ac.setLazyLob(ORMConfig.getInstance().isEnableLazyLob());
 		qa.setFields(ac);
 		this.queries=Arrays.asList(qa);
 	}

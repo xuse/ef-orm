@@ -3,15 +3,12 @@ package com.github.geequery.codegen.pdm;
 import java.io.File;
 import java.sql.SQLException;
 
-import jef.database.DbClient;
-import jef.database.DbClientBuilder;
 import jef.database.dialect.AbstractDialect;
 
 import org.junit.Test;
 
 import com.github.geequery.codegen.EntityGenerator;
 import com.github.geequery.codegen.MetaProvider.PDMProvider;
-import com.hikvision.test.Tenant;
 
 public class PDMGenerateTest {
 	@Test
@@ -29,9 +26,9 @@ public class PDMGenerateTest {
 
 	}
 	
-	@Test
-	public void testCreate() throws SQLException {
-		DbClient client=new DbClientBuilder("jdbc:postgresql://10.33.25.48:5432/hae2", "root", "admin").build();
-		client.createTable(Tenant.class);
-	}
+//	@Test
+//	public void testCreate() throws SQLException {
+//		DbClient client=new DbClientBuilder("jdbc:postgresql://10.33.25.48:5432/hae2", "root", "admin").build();
+//		client.createTable(Tenant.class);
+//	}
 }
