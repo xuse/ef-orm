@@ -64,6 +64,7 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 		t.setLoadVsOne(type.isUseOuterJoin());
 		t.setLoadVsMany(true);
 		pkValues=Arrays.asList(pks);
+		context= new SqlContext("t", this);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -72,6 +73,7 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 		this.instance=(T) obj;
 		t=new Transformer(type);
 		pkValues=pkValueSafe;
+		context= new SqlContext("t", this);
 	}
 
 	public List<Condition> getConditions() {
@@ -130,7 +132,7 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	}
 
 	public EntityMappingProvider getSelectItems() {
-		return null;
+		return context;
 	}
 
 	public void setSelectItems(Selects select) {
@@ -138,9 +140,11 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	}
 
 	public SqlContext prepare() {
-		return new SqlContext("t", this);
+		return context;
 	}
-
+	
+	private SqlContext context;
+	
 	public void clearQuery() {
 	}
 

@@ -1,8 +1,10 @@
 package org.easyframe.tutorial.lesson1.entity;
 
 import java.util.Date;
-import javax.persistence.Id;
+
 import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Lob;
 
 @Entity
 public class Foo2 extends jef.database.DataObject {
@@ -13,6 +15,9 @@ public class Foo2 extends jef.database.DataObject {
     private String name;
 
     private Date created;
+    
+    @Lob
+    private String comments;
 
     public int getId() {
         return id;
@@ -37,8 +42,20 @@ public class Foo2 extends jef.database.DataObject {
     public void setCreated(Date created) {
         this.created = created;
     }
+    
+    
 
-    public enum Field implements jef.database.Field {
-        id, name, created
+    public String getComments() {
+		return comments;
+	}
+
+	public void setComments(String comments) {
+		this.comments = comments;
+	}
+
+
+
+	public enum Field implements jef.database.Field {
+        id, name, created,comments
     }
 }
