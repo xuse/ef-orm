@@ -85,6 +85,7 @@ public class BaseDao {
 	}
 
 	public void setEntityManagerFactory(EntityManagerFactory entityManagerFactory) {
+		Assert.notNull(entityManagerFactory);
 		this.entityManagerFactory = entityManagerFactory;
 		this.jefEmf=(JefEntityManagerFactory)entityManagerFactory;
 	}

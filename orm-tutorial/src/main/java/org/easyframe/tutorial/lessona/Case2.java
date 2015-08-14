@@ -310,7 +310,7 @@ public class Case2 extends org.junit.Assert {
 
 		// 跨表跨库的搜索
 		Query<Customer> query = QB.create(Customer.class);
-		query.addCondition(QB.between(Customer.Field.createDate, DateUtils.getDate(2013, 4, 30), DateUtils.getDate(2014, 12, 31)));
+		query.addCondition(QB.between(Customer.Field.createDate, DateUtils.getDate(2013, 4, 30), DateUtils.getDate(2018, 12, 31)));
 
 		// 艰难的查找——
 		// 由于条件只有一个时间范围，因此会搜索所有可能出现记录的表。包括——三个数据库上所有时段在13年4月到14年12月的表。理论上所有可能的组合。

@@ -152,7 +152,7 @@ public final class SequenceManager {
 			if (StringUtils.isEmpty(pname)) {
 				meta.getMetaData().dropTable(name);
 			} else {
-				removeRecordInSeqTable(pname, name, meta);
+				removeRecordInSeqTable(pname.trim(), name, meta);
 			}
 		}
 	}
@@ -324,7 +324,7 @@ public final class SequenceManager {
 	 * 第二种SQL实现，所有Sequence公用一张表
 	 */
 	private static final class AdvSeqTableImpl extends AbstractSequence {
-		static String publicTableName = JefConfiguration.get(DbCfg.DB_GLOBAL_SEQUENCE_TABLE, "JEF_SEQUENCES");
+		static String publicTableName = StringUtils.trimToNull(JefConfiguration.get(DbCfg.DB_GLOBAL_SEQUENCE_TABLE, "JEF_SEQUENCES"));
 		static TupleMetadata seqtable;
 		static {
 			seqtable = new TupleMetadata(publicTableName);

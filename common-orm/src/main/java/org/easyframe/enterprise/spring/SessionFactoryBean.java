@@ -14,7 +14,7 @@ import org.springframework.beans.factory.InitializingBean;
  * 
  */
 public class SessionFactoryBean extends DbClientBuilder implements FactoryBean<JefEntityManagerFactory>, InitializingBean {
-	public void afterPropertiesSet() throws Exception {
+	public void afterPropertiesSet(){
 		instance = buildSessionFactory();
 	}
 

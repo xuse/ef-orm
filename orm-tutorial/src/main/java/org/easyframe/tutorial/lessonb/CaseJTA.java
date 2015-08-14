@@ -29,6 +29,11 @@ public class CaseJTA extends AbstractJUnit4SpringContextTests {
 	@Before
 	public void setup() throws SQLException {
 		dao.getNoTransactionSession().getMetaData("ds1")
+		.dropTable(Foo2.class);
+		dao.getNoTransactionSession().getMetaData("ds2")
+		.dropTable(Student.class);
+		
+		dao.getNoTransactionSession().getMetaData("ds1")
 				.createTable(Foo2.class);
 		dao.getNoTransactionSession().getMetaData("ds2")
 				.createTable(Student.class);

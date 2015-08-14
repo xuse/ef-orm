@@ -23,6 +23,7 @@ public class Case1 {
 		//模拟Spring的初始化
 		SessionFactoryBean sessionFactory=new SessionFactoryBean();
 		sessionFactory.setDataSource("jdbc:derby:./db;create=true", null, null);
+		sessionFactory.afterPropertiesSet();
 		CommonDao dao=new CommonDaoImpl(sessionFactory.getObject());
 		
 		
