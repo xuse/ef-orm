@@ -20,7 +20,6 @@ import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -703,9 +702,9 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 		return op;
 	}
 	
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked"})
 	private static <A extends Annotation> A getAnnotation(BeanAccessor ba, String fieldName, Class<A> class1) {
-		IdentityHashMap<Class, Annotation> map = ba.getAnnotationOnField(fieldName);
+		Map<Class<?>, Annotation> map = ba.getAnnotationOnField(fieldName);
 		return map == null ? null : (A) map.get(class1);
 	}
 	

@@ -4,9 +4,9 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
-import jef.codegen.EntityEnhancer;
 import jef.database.DbClient;
 import jef.database.DbClientBuilder;
+import jef.database.ORMConfig;
 
 import org.easyframe.tutorial.lesson1.entity.Foo2;
 import org.junit.Assert;
@@ -26,8 +26,8 @@ public class Case2 {
 	 */
 	@Test
 	public void simpleTest() throws SQLException{
+		ORMConfig.getInstance().setEnableLazyLob(true);
 		DbClient db=new DbClientBuilder().build();
-		
 		//创建表
 		db.createTable(Foo2.class); 
 		
@@ -36,11 +36,15 @@ public class Case2 {
 		foo.setId(1);
 		foo.setName("Hello,World!");
 		foo.setCreated(new Date());
+		foo.setComments("岁的江苏大丰");
 		db.insert(foo);  //插入一条记录
 		
 		//从数据库查询这条记录
-		Foo2 loaded=db.load(foo);
+//		Foo2 loaded=db.load(foo);
+		Foo2 loaded=db.load(Foo2.class, foo.getId());
 		System.out.println(loaded.getName());
+		System.out.println("==================================");
+		System.out.println(loaded.getComments());
 		
 		//更新这条记录
 		loaded.setName("EF-ORM is very simple.");

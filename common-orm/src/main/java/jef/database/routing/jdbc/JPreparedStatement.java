@@ -29,7 +29,7 @@ import java.util.TreeMap;
 import jef.database.innerpool.JConnection;
 import jef.database.jdbc.GenerateKeyReturnOper;
 import jef.tools.Assert;
-import jef.tools.collection.CollectionUtil;
+import jef.tools.collection.CollectionUtils;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,7 +97,7 @@ public class JPreparedStatement extends JStatement implements java.sql.PreparedS
 	private List<ParameterContext> toValues(Map<Integer, ParameterContext> parameterSettings2) {
 		List<ParameterContext> l = new ArrayList<ParameterContext>();
 		for (Entry<Integer, ParameterContext> e : parameterSettings2.entrySet()) {
-			CollectionUtil.setElement(l, e.getKey() - 1, e.getValue());
+			CollectionUtils.setElement(l, e.getKey() - 1, e.getValue());
 		}
 		return l;
 	}

@@ -41,7 +41,7 @@ import jef.database.query.function.StandardSQLFunction;
 import jef.database.query.function.TemplateFunction;
 import jef.database.support.RDBMS;
 import jef.tools.ArrayUtils;
-import jef.tools.collection.CollectionUtil;
+import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
 
 /**
@@ -94,7 +94,7 @@ import jef.tools.string.JefStringReader;
 public class MySqlDialect extends AbstractDialect {
 	public MySqlDialect() {
 		// 在MYSQL中 ||是逻辑运算符
-		features = CollectionUtil.identityHashSet();
+		features = CollectionUtils.identityHashSet();
 		features.addAll(Arrays.asList(Feature.DBNAME_AS_SCHEMA, Feature.ALTER_FOR_EACH_COLUMN, Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD, Feature.SUPPORT_LIMIT, Feature.COLUMN_DEF_ALLOW_NULL));
 		setProperty(DbProperty.ADD_COLUMN, "ADD");
 		setProperty(DbProperty.MODIFY_COLUMN, "MODIFY");

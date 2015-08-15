@@ -22,9 +22,9 @@ public class FieldInfo {
 	
 	private Method setter;
 	
-	private IdentityHashMap<Class,Annotation> annoOnField;
-	private IdentityHashMap<Class,Annotation> annoOnGetter;
-	private IdentityHashMap<Class,Annotation> annoOnSetter;
+	private IdentityHashMap<Class<?>,Annotation> annoOnField;
+	private IdentityHashMap<Class<?>,Annotation> annoOnGetter;
+	private IdentityHashMap<Class<?>,Annotation> annoOnSetter;
 	
 	public void setGetter(Method getter) {
 		this.getter=getter;
@@ -79,22 +79,22 @@ public class FieldInfo {
 	public Method getSetter() {
 		return setter;
 	}
-	public IdentityHashMap<Class, Annotation> getAnnoOnField() {
+	public IdentityHashMap<Class<?>, Annotation> getAnnoOnField() {
 		return annoOnField;
 	}
-	public void setAnnoOnField(IdentityHashMap<Class, Annotation> annoOnField) {
+	public void setAnnoOnField(IdentityHashMap<Class<?>, Annotation> annoOnField) {
 		this.annoOnField = annoOnField;
 	}
-	public IdentityHashMap<Class, Annotation> getAnnoOnGetter() {
+	public IdentityHashMap<Class<?>, Annotation> getAnnoOnGetter() {
 		return annoOnGetter;
 	}
-	public void setAnnoOnGetter(IdentityHashMap<Class, Annotation> annoOnGetter) {
+	public void setAnnoOnGetter(IdentityHashMap<Class<?>, Annotation> annoOnGetter) {
 		this.annoOnGetter = annoOnGetter;
 	}
-	public IdentityHashMap<Class, Annotation> getAnnoOnSetter() {
+	public IdentityHashMap<Class<?>, Annotation> getAnnoOnSetter() {
 		return annoOnSetter;
 	}
-	public void setAnnoOnSetter(IdentityHashMap<Class, Annotation> annoOnSetter) {
+	public void setAnnoOnSetter(IdentityHashMap<Class<?>, Annotation> annoOnSetter) {
 		this.annoOnSetter = annoOnSetter;
 	}
 	public boolean isPrimitive() {

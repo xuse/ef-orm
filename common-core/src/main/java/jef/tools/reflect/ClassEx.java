@@ -26,23 +26,17 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 import javax.management.ReflectionException;
 
 import jef.common.log.LogUtil;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
-import jef.tools.collection.CollectionUtil;
-import jef.tools.collection.IterableAccessor;
+import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.BeanUtils.SearchMode;
-
-import org.apache.commons.lang.ObjectUtils;
 
 /**
  * 带有泛型上下文的Class对象的封装。
@@ -57,8 +51,11 @@ public class ClassEx {
 	/**
 	 * 完整的泛型上下文
 	 */
-	private Type genericType;
+	Type genericType;
 	
+	/**
+	 * context
+	 */
 	private ClassEx instanceClz;
 
 	public ClassEx(Type type) {
@@ -292,94 +289,6 @@ public class ClassEx {
 	// 判断这个类是不是CGLIB处理过的类
 	private static boolean isCGLibProxy(Class<?> declaringClass) {
 		return (declaringClass.getName().indexOf("$$EnhancerByCGLIB$$") > -1);
-	}
-
-	/**
-	 * 根据容器类型，转换数值
-	 * 
-	 * @param value
-	 * @param container
-	 * @param oldValue
-	 * @return
-	 */
-	@SuppressWarnings("rawtypes")
-	public static Object toProperType(Object value, ClassEx container, Object oldValue) {
-		if (value == null)
-			return null;
-		Class<?> clz = value.getClass();
-		if (container.isAssignableFrom(clz)) {
-			if (container.isCollection()) {
-				return checkAndConvertCollection((Collection) value, container);
-			} else if (container.isMap()) {
-				return checkAndConvertMap((Map) value, container);
-			} else {
-				return value;
-			}
-		} else if (CollectionUtil.isArrayOrCollection(clz)) {
-			IterableAccessor<Object> accesor = new IterableAccessor<Object>(value);
-			if (container.isArray()) {
-				return BeanUtils.toProperArrayType(accesor, container, oldValue);
-			} else if (container.isCollection()) {
-				return BeanUtils.toProperCollectionType(accesor, container, oldValue);
-			} else {
-				BeanUtils.toProperType(accesor.toString(), container, oldValue);
-			}
-		}
-		return BeanUtils.toProperType(ObjectUtils.toString(value), container, oldValue);
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private static Object checkAndConvertMap(Map rawValue, ClassEx container) {
-		Entry<Type, Type> types = GenericUtils.getMapTypes(container.genericType);
-		boolean checkKey = types.getKey() != Object.class;
-		boolean checkValue = types.getValue() != Object.class;
-		if (!checkKey && !checkValue)
-			return rawValue;
-
-		ClassEx tk = new ClassEx(types.getKey());
-		ClassEx tv = new ClassEx(types.getValue());
-
-		Set<Map.Entry> es = rawValue.entrySet();
-		Map result;
-		try {
-			result = rawValue.getClass().newInstance();
-		} catch (InstantiationException e1) {
-			throw new IllegalArgumentException(e1);
-		} catch (IllegalAccessException e1) {
-			throw new IllegalArgumentException(e1);
-		}
-		for (Map.Entry e : es) {
-			Object key = e.getKey();
-			Object value = e.getValue();
-			if (key != null && checkKey)
-				key = toProperType(key, tk, null);
-			if (value != null && checkValue)
-				value = toProperType(value, tv, null);
-			result.put(key, value);
-		}
-		return result;
-	}
-
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private static Object checkAndConvertCollection(Collection rawValue, ClassEx container) {
-		Type type = GenericUtils.getCollectionType(container.genericType);
-		if (type == Object.class)
-			return rawValue;
-		ClassEx t = new ClassEx(type);
-		Collection result;
-		try {
-			result = rawValue.getClass().newInstance();
-		} catch (InstantiationException e1) {
-			throw new IllegalArgumentException(e1);
-		} catch (IllegalAccessException e1) {
-			throw new IllegalArgumentException(e1);
-		}
-
-		for (Object e : rawValue) {
-			e = toProperType(e, t, null);
-			result.add(e);
-		}
-		return result;
 	}
 
 	/**
@@ -755,9 +664,13 @@ public class ClassEx {
 	public boolean isArray() {
 		return GenericUtils.isArray(genericType);
 	}
+	
+	public boolean isPrimitive() {
+		return this.cls.isPrimitive();
+	}
 
 	public boolean isCollection() {
-		return CollectionUtil.isCollection(genericType);
+		return CollectionUtils.isCollection(genericType);
 	}
 
 	public boolean isMap() {
@@ -765,7 +678,7 @@ public class ClassEx {
 	}
 
 	public Type getComponentType() {
-		return CollectionUtil.getComponentType(genericType);
+		return CollectionUtils.getComponentType(genericType);
 	}
 
 	/**

@@ -187,6 +187,9 @@ public class ORMConfig implements ORMConfigMBean {
 	 * 将自增实现的两种常用实现映射为AUTO
 	 */
 	private boolean generateBySequenceAndIdentityToAUTO;
+	
+	
+	private boolean enableLazyLob;
 
 	public String wrap = "";
 	public String wrapt = "";
@@ -215,6 +218,7 @@ public class ORMConfig implements ORMConfigMBean {
 		manualSequence = JefConfiguration.getBoolean(DbCfg.DB_SUPPORT_MANUAL_GENERATE, false);
 		allowEmptyQuery = JefConfiguration.getBoolean(DbCfg.ALLOW_EMPTY_QUERY, false);
 		enableLazyLoad = JefConfiguration.getBoolean(DbCfg.DB_ENABLE_LAZY_LOAD, true);
+		enableLazyLob = JefConfiguration.getBoolean(DbCfg.DB_LOB_LAZY_LOAD, false);
 		cacheLevel1 = JefConfiguration.getBoolean(DbCfg.CACHE_LEVEL_1, false);
 		cacheLevel2=JefConfiguration.getInt(DbCfg.CACHE_GLOBAL_EXPIRE_TIME, 0);
 		cacheDebug = System.getProperty("cache.debug") != null;
@@ -279,6 +283,14 @@ public class ORMConfig implements ORMConfigMBean {
 
 	public void setEnableLazyLoad(boolean enableLazyLoad) {
 		this.enableLazyLoad = enableLazyLoad;
+	}
+
+	public boolean isEnableLazyLob() {
+		return enableLazyLob;
+	}
+
+	public void setEnableLazyLob(boolean enableLazyLob) {
+		this.enableLazyLob = enableLazyLob;
 	}
 
 	public boolean isAllowEmptyQuery() {

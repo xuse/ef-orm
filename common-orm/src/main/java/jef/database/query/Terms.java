@@ -14,6 +14,8 @@ import jef.database.meta.ITableMetadata;
  * 查询条件生成器
  * 可以更方便的设置各种查询条件
  * 
+ * <strong>试验性功能。<strong>
+ * 
  */
 public class Terms {
 	protected ConditionAccessor accessor;

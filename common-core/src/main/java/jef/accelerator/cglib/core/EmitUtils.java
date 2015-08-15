@@ -198,7 +198,7 @@ public class EmitUtils {
                                            final ObjectSwitchCallback callback) throws Exception {
         final Label def = e.make_label();
         final Label end = e.make_label();
-        final Map buckets = CollectionUtils.bucket(Arrays.asList(strings), new Transformer() {
+        final Map buckets = Collections3.bucket(Arrays.asList(strings), new Transformer() {
             public Object transform(Object value) {
                 return new Integer(((String)value).length());
             }
@@ -227,7 +227,7 @@ public class EmitUtils {
                                            final Label end,
                                            final int index) throws Exception {
         final int len = ((String)strings.get(0)).length();
-        final Map buckets = CollectionUtils.bucket(strings, new Transformer() {
+        final Map buckets = Collections3.bucket(strings, new Transformer() {
             public Object transform(Object value) {
                 return new Integer(((String)value).charAt(index));
             }
@@ -265,7 +265,7 @@ public class EmitUtils {
                                            final String[] strings,
                                            final ObjectSwitchCallback callback,
                                            final boolean skipEquals) throws Exception {
-        final Map buckets = CollectionUtils.bucket(Arrays.asList(strings), new Transformer() {
+        final Map buckets = Collections3.bucket(Arrays.asList(strings), new Transformer() {
             public Object transform(Object value) {
                 return new Integer(value.hashCode());
             }
@@ -709,7 +709,7 @@ public class EmitUtils {
             final Label end = e.make_label();
             if (useName) {
                 e.swap();
-                final Map buckets = CollectionUtils.bucket(members, new Transformer() {
+                final Map buckets = Collections3.bucket(members, new Transformer() {
                         public Object transform(Object value) {
                             return ((MethodInfo)value).getSignature().getName();
                         }
@@ -745,7 +745,7 @@ public class EmitUtils {
                                            final ParameterTyper typer,
                                            final Label def,
                                            final Label end) throws Exception {
-        final Map buckets = CollectionUtils.bucket(members, new Transformer() {
+        final Map buckets = Collections3.bucket(members, new Transformer() {
             public Object transform(Object value) {
                 return new Integer(typer.getParameterTypes((MethodInfo)value).length);
             }
@@ -793,7 +793,7 @@ public class EmitUtils {
             int index = -1;
             for (int i = 0; i < example.length; i++) {
                 final int j = i;
-                Map test = CollectionUtils.bucket(members, new Transformer() {
+                Map test = Collections3.bucket(members, new Transformer() {
                     public Object transform(Object value) {
                         return TypeUtils.emulateClassGetName(typer.getParameterTypes((MethodInfo)value)[j]);
                     }

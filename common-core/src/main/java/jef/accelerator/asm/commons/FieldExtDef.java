@@ -17,14 +17,14 @@ public class FieldExtDef extends FieldVisitor {
 	private Map<String, Attribute> attrs = new LinkedHashMap<String, Attribute>();
 	private FieldExtCallback call;
 
-	public FieldExtDef(FieldExtCallback call) {
-		super(null);
+	public FieldExtDef(int api,FieldExtCallback call) {
+		super(api,null);
 		this.call = call;
 	}
 
 	@Override
 	public AnnotationVisitor visitAnnotation(String desc, boolean visible) {
-		AnnotationDef ann = new AnnotationDef(desc);
+		AnnotationDef ann = new AnnotationDef(api,desc);
 		ann.visible = visible;
 		annotations.put(desc, ann);
 		return ann;

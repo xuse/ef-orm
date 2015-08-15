@@ -11,104 +11,25 @@ import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Set;
 
 import javax.management.ReflectionException;
 
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
-import jef.common.Entry;
 import jef.common.log.LogUtil;
-import jef.http.client.support.CommentEntry;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
-import jef.tools.DateUtils;
 import jef.tools.Exceptions;
 import jef.tools.StringUtils;
-import jef.tools.collection.CollectionUtil;
-import jef.tools.collection.IterableAccessor;
-
-import org.apache.commons.lang.ObjectUtils;
 
 public class BeanUtils {
 	private static Map<Class<?>, ClassFieldAccessor> ACCESSOR_CACHE = new IdentityHashMap<Class<?>, ClassFieldAccessor>(256);
-
-	/**
-	 * 返回八个原生类型的默认数值(的装箱类型)
-	 * 
-	 * @param javaClass
-	 * @return
-	 */
-	public static Object defaultValueOfPrimitive(Class<?> javaClass) {
-		// int 226
-		// short 215
-		// long 221
-		// boolean 222
-		// float 219
-		// double 228
-		// char 201
-		// byte 237
-		if (javaClass.isPrimitive()) {
-			String s = javaClass.getName();
-			switch (s.charAt(1) + s.charAt(2)) {
-			case 226:
-				return 0;
-			case 215:
-				return Short.valueOf((short) 0);
-			case 221:
-				return 0L;
-			case 222:
-				return Boolean.FALSE;
-			case 219:
-				return 0f;
-			case 228:
-				return 0d;
-			case 201:
-				return (char) 0;
-			case 237:
-				return Byte.valueOf((byte) 0);
-			}
-		}
-		throw new IllegalArgumentException(javaClass + " is not Primitive Type.");
-	}
-
-	/**
-	 * 得到原生对象和String的缺省值。
-	 * 
-	 * @param cls
-	 *            类型
-	 * 
-	 * @return 指定类型数据的缺省值。如果传入类型是primitive和String之外的类型返回null。
-	 */
-	public static Object defaultValueForBasicType(Class<?> cls) {
-		if (cls == Integer.class || cls == Integer.TYPE) {
-			return Integer.valueOf(0);
-		} else if (cls == Byte.class || cls == Byte.TYPE) {
-			return (byte) 0;
-		} else if (cls == Character.class || cls == Character.TYPE) {
-			return (char) 0;
-		} else if (cls == Boolean.class || cls == Boolean.TYPE) {
-			return Boolean.FALSE;
-		} else if (cls == Long.class || cls == Long.TYPE) {
-			return Long.valueOf(0);
-		} else if (cls == Short.class || cls == Short.TYPE) {
-			return (short) 0;
-		} else if (cls == Double.class || cls == Double.TYPE) {
-			return Double.valueOf(0);
-		} else if (cls == Float.class || cls == Float.TYPE) {
-			return Float.valueOf(0);
-		} else if (cls == String.class) {
-			return "";
-		}
-		return null;
-	}
 
 	/**
 	 * 将bean的可读属性变为map 和 {@link #describe(Object)}含义相同
@@ -116,27 +37,53 @@ public class BeanUtils {
 	 * @param obj
 	 *            对象
 	 * @return 对象的属性并转换为Map
-	 * 
+	 * @deprecated use {@link #describe(Object)} instead.
 	 */
 	public static Map<String, Object> toMap(Object obj) {
 		return describe(obj);
 	}
 
 	/**
-	 * 将bean的可读属性变为map
+	 * 将bean的可读属性变为map（不递归）
 	 * 
 	 * @param obj
-	 * @return
+	 * @return 对应的Map
 	 */
 	public static Map<String, Object> describe(Object obj) {
-		Map<String, Object> map = new HashMap<String, Object>();
-		BeanWrapper bw = BeanWrapper.wrap(obj);
-		for (String s : bw.getPropertyNames()) {
-			if (bw.isReadableProperty(s)) {
-				map.put(s, bw.getPropertyValue(s));
-			}
-		}
-		return map;
+		if (obj == null)
+			return Collections.emptyMap();
+		BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(obj.getClass());
+		return ba.convert(obj);
+	}
+
+	/**
+	 * 将Map转换回Bean，要求类型一致，比如Bean中的int对应Map中的Integer
+	 * 
+	 * @param map
+	 *            Map
+	 * @param clz
+	 *            目标类型
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> T undescribe(Map<String, Object> map, Class<T> clz) {
+		BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(clz);
+		return (T) ba.fromMap(map);
+	}
+
+	/**
+	 * 将Map转换回Bean，map中类型可以和Bean中数据类型不太一致，因此将花费更多的时间进行动态的类型判断和转换
+	 * 
+	 * <br>
+	 * @see ConvertUtils#toProperType(Object, Class) 对每个属性都将使用此方法进行类型检查和转换。
+	 * 
+	 * @param map
+	 * @param clz
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> T undescribeSafe(Map<String, Object> map, Class<T> clz) {
+		BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(clz);
+		return (T) ba.fromMap2(map);
 	}
 
 	/**
@@ -200,7 +147,12 @@ public class BeanUtils {
 	/**
 	 * 获取指定的Field的类型
 	 * 
-	 * @Title: getField
+	 * @param clz
+	 *            类
+	 * @param fieldName
+	 *            字段名
+	 * @return 字段类型
+	 * 
 	 */
 	public static Class<?> getFieldType(Class<?> clz, String fieldName) {
 		ClassFieldAccessor accessors = ACCESSOR_CACHE.get(clz);
@@ -229,6 +181,13 @@ public class BeanUtils {
 
 	/**
 	 * 强行设置字段值
+	 * 
+	 * @param obj
+	 *            目标对象
+	 * @param fieldName
+	 *            字段名
+	 * @param value
+	 *            字段值
 	 */
 	public static void setFieldValue(Object obj, String fieldName, Object value) {
 		if (obj == null)
@@ -257,8 +216,11 @@ public class BeanUtils {
 	 * 此处可以返回受保护的和私有的方法(并可以运行)。子类中没有的也会去父类中找。</li>
 	 * 
 	 * @param cls
+	 *            类
 	 * @param fieldName
-	 * @return
+	 *            字段名
+	 * @return 该字段对象
+	 * @see FieldEx
 	 */
 	public static FieldEx getField(Class<?> cls, String fieldName) {
 		return getField(new ClassEx(cls), fieldName);
@@ -291,6 +253,13 @@ public class BeanUtils {
 
 	/**
 	 * 用String设置字段的值
+	 * 
+	 * @param obj
+	 *            对象
+	 * @param fieldName
+	 *            字段名
+	 * @param value
+	 *            值的String表达
 	 */
 	public static boolean setFieldValueByString(Object obj, String fieldName, String value) throws ReflectionException {
 		if (obj == null)
@@ -301,7 +270,7 @@ public class BeanUtils {
 		Type c = f.getGenericType();
 		try {
 			Object oldValue = f.get(obj);
-			Object objV = toProperType(value, new ClassEx(c), oldValue);
+			Object objV = ConvertUtils.toProperType(value, new ClassEx(c), oldValue);
 			f.set(obj, objV);
 		} catch (IllegalArgumentException e) {
 			LogUtil.error("Error processing:" + fieldName);
@@ -312,134 +281,11 @@ public class BeanUtils {
 	}
 
 	/**
-	 * 转换为合适的数组类型
-	 * 
-	 * @param values
-	 * @param c
-	 * @param oldValue
-	 * @return
-	 */
-	public static Object toProperArrayType(IterableAccessor<?> values, ClassEx c, Object oldValue) {
-		ClassEx arrType = new ClassEx(c.getComponentType());
-		Object array = Array.newInstance(arrType.getWrappered(), values.length());// 创建数组容器
-		int i = 0;
-		for (Object o : values) {
-			ArrayUtils.set(array, i, toProperType(ObjectUtils.toString(o), arrType, null));
-			i++;
-		}
-		return array;
-	}
-
-	/**
-	 * 转换为合适的集合类型
-	 * 
-	 * @param values
-	 * @param c
-	 * @param oldValue
-	 * @return
-	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static Object toProperCollectionType(IterableAccessor values, ClassEx c, Object oldValue) {
-		ClassEx cType = new ClassEx(c.getComponentType());
-		try {
-			Collection l = (Collection) CollectionUtil.createContainerInstance(c, 0);
-			for (Object o : values) {
-				l.add(toProperType(ObjectUtils.toString(o), cType, CollectionUtil.findElementInstance(oldValue)));
-			}
-			return l;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	/**
-	 * 尝试将String转换为合适的类型，以设置到某个Bean或容器中。<br>
-	 * 目前能支持各种基本类型、数组、Map等复杂类型
-	 * 
-	 * @param value
-	 *            要转换的String
-	 * @param c
-	 *            容器类型
-	 * @param oldValue
-	 *            容器中原来的旧值，或可参照的对象实例。（可为null）
-	 * @throws UnsupportedOperationException
-	 *             如果无法转换，将抛出此异常
-	 * 
-	 */
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public static Object toProperType(String value, ClassEx c, Object oldValue) {
-		// 容器所允许的最宽松类型
-		ClassEx containerClass = c;
-		if (oldValue != null)
-			c = new ClassEx(oldValue.getClass());
-		if (c.isAssignableFrom(String.class)) {
-			return value;
-		}
-		if (StringUtils.isEmpty(value)) {
-			return defaultValueForBasicType(c.getWrappered());
-		}
-		if (Date.class.isAssignableFrom(c.getWrappered())) {
-			Date date = DateUtils.autoParse(value);
-			if (date == null) {
-				throw new RuntimeException("unknow format of date: " + value);
-			}
-			if (java.sql.Date.class == c.getWrappered()) {
-				return DateUtils.toSqlDate(date);
-			} else if (java.sql.Time.class == c.getWrappered()) {
-				return DateUtils.toSqlTime(date);
-			} else if (java.sql.Timestamp.class == c.getWrappered()) {
-				return DateUtils.toSqlTimeStamp(date);
-			} else {
-				return date;
-			}
-		} else if (Integer.class == c.getWrappered() || Integer.TYPE == c.getWrappered()) {
-			return Integer.valueOf(value);
-		} else if (Boolean.class == c.getWrappered() || Boolean.TYPE == c.getWrappered()) {
-			return Boolean.valueOf(value);
-		} else if (Double.class == c.getWrappered() || Double.TYPE == c.getWrappered()) {
-			return Double.valueOf(value);
-		} else if (Float.class == c.getWrappered() || Float.TYPE == c.getWrappered()) {
-			return Float.valueOf(value);
-		} else if (Byte.class == c.getWrappered() || Byte.TYPE == c.getWrappered()) {
-			return Byte.valueOf(value);
-		} else if (Character.class == c.getWrappered() || Character.TYPE == c.getWrappered()) {
-			return value.charAt(0);
-		} else if (Long.class == c.getWrappered() || Long.TYPE == c.getWrappered()) {
-			return Long.valueOf(value);
-		} else if (Short.class == c.getWrappered() || Short.TYPE == c.getWrappered()) {
-			return Short.valueOf(value);
-		} else if (c.isEnum()) {
-			return Enums.valueOf(c.getWrappered().asSubclass(Enum.class), value, null);
-		} else if (Object.class == c.getWrappered()) {
-			return value;
-		} else if (Number.class == c.getWrappered()) {
-			return Double.valueOf(value);
-		} else if (c.isArray()) {
-			String[] values = value.split(",");
-			return toProperArrayType(new IterableAccessor(values), c, oldValue);
-		} else if (c.isCollection()) {
-			String[] values = value.split(",");
-			return toProperCollectionType(new IterableAccessor(values), c, oldValue);
-		} else if (Map.class.isAssignableFrom(c.getWrappered())) {
-			return stringToMap(value, c, oldValue);
-		} else if (oldValue != null) {// 采用旧值类型转换不成功，尝试采用容器类型转换
-			return toProperType(value, containerClass, null);
-		} else if (StringUtils.isEmpty(value)) {// 没东西，转啥呀
-			return null;
-		} else {
-			StringBuilder sb = new StringBuilder("Can not convert [");
-			sb.append(StringUtils.truncate(value, 200));
-			sb.append("] to proper javatype:" + c.getName());
-			throw new UnsupportedOperationException(sb.toString());
-		}
-	}
-
-	/**
 	 * 使用空参数构造，无视构造参数一律传null
 	 */
 	public static Object newInstanceAnyway(Class<?> cls) throws ReflectionException {
 		Constructor<?> c = null;
-		Object o = BeanUtils.defaultValueForBasicType(cls);
+		Object o = ConvertUtils.defaultValueForBasicType(cls);
 		if (o != null)
 			return null;
 		for (Constructor<?> con : cls.getDeclaredConstructors()) {// 获取全部构造
@@ -465,7 +311,7 @@ public class BeanUtils {
 		Object[] p = new Object[types.length];
 		for (int i = 0; i < types.length; i++) {
 			// modified by mjj,2011.9.30
-			p[i] = BeanUtils.defaultValueForBasicType(types[i]);
+			p[i] = ConvertUtils.defaultValueForBasicType(types[i]);
 		}
 		try {
 			return c.newInstance(p);
@@ -654,7 +500,7 @@ public class BeanUtils {
 	 * @return 实例
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> T newInstance(Class<T> cls, Object... params){
+	public static <T> T newInstance(Class<T> cls, Object... params) {
 		Constructor<T> me = null;
 		if (params.length == 0) {
 			try {
@@ -666,7 +512,7 @@ public class BeanUtils {
 					return me.newInstance(params);
 				}
 			} catch (Exception e) {
-				Exceptions.thorwAsIllegalState(e); 
+				Exceptions.thorwAsIllegalState(e);
 			}
 		}
 		List<Class<?>> list = new ArrayList<Class<?>>();
@@ -730,23 +576,6 @@ public class BeanUtils {
 		}
 		return true;
 	}
-
-	// @SuppressWarnings({"unchecked","rawtypes"})
-	// private static boolean isAssignableFrom(Class mType, Class iType) {
-	// if(mType.isInterface()){
-	// Class s=iType;
-	// while(s!=Object.class){
-	// Class[] intfs=s.getInterfaces();
-	// if(jef.tools.ArrayUtils.fastContains(intfs, mType)){
-	// return true;
-	// }
-	// s=s.getSuperclass();
-	// }
-	// return false;
-	// }else{
-	// return mType.isAssignableFrom(iType);
-	// }
-	// }
 
 	/**
 	 * 获取所有方法：
@@ -955,35 +784,6 @@ public class BeanUtils {
 		return (X) r.invokeStaticMethod(method, params);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	private static Object stringToMap(String value, ClassEx c, Object oldValue) {
-		String[] values = StringUtils.split(value, ',');
-		Entry<Type, Type> types = GenericUtils.getMapTypes(c.getGenericType());
-		try {
-			Map l = (Map) CollectionUtil.createContainerInstance(c, 0);
-			Object hintKey = null;
-			Object hintValue = null;
-			if (oldValue != null) {
-				Map old = (Map) oldValue;
-				Set ks = old.keySet();
-				Collection vs = old.values();
-				if (ks.size() > 0) {
-					hintKey = ks.iterator().next();
-				}
-				if (vs.size() > 0) {
-					hintValue = vs.iterator().next();
-				}
-			}
-			for (int i = 0; i < values.length; i++) {
-				CommentEntry e = CommentEntry.createFromString(values[i], ':', '=');
-				l.put(toProperType(e.getKey(), new ClassEx(types.getKey()), hintKey), toProperType(e.getValue(), new ClassEx(types.getValue()), hintValue));
-			}
-			return l;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
-	}
-
 	/**
 	 * 从集合对象bean中的每个元素都获取一个字段的值，并且将这些值组成数组返回
 	 * 
@@ -1037,7 +837,6 @@ public class BeanUtils {
 		}
 		return result.toArray((T[]) Array.newInstance(type, result.size()));
 	}
-
 
 	/**
 	 * 获取一个 public的，非Native非static指定名称的方法(非Declared模式：找父类，不找私有)
@@ -1180,13 +979,13 @@ public class BeanUtils {
 	 * @param method
 	 *            方法
 	 * @param i
-	 *            参数序号
+	 *            参数序号，从0开始
 	 * @param annotationClz
 	 *            注解类的类型
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T extends Annotation> T getMethodParamAnnotation(Method method, int i, Class<T> annotationClz) {
+	public static <T extends Annotation> T getParamAnnotation(Method method, int i, Class<T> annotationClz) {
 		Annotation[][] annos = method.getParameterAnnotations();
 		if (i >= annos.length) {
 			throw new IllegalArgumentException("the param max index is:" + annos.length + ". the input index " + i + " is out of bound.");
@@ -1249,11 +1048,24 @@ public class BeanUtils {
 				continue;
 			}
 			// 如果Map中缺少数据，则用注解的默认值补上。
-			if (!data.containsKey(method.getName())) {
+			Object value = data.get(method.getName());
+			if (value == null) {
 				data.put(method.getName(), method.getDefaultValue());
 			}
 		}
 		// 创建代理。
 		return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type }, new AnnotationInvocationHandler(type, data));
+	}
+	
+	/**
+	 * 将文本转换为需要的类型
+	 * @param value 文本
+	 * @param c
+	 * @param oldValue
+	 * @return
+	 * @deprecated use {@link ConvertUtils#toProperType(String, ClassEx, Object)} instead.
+	 */
+	public static Object toProperType(String value, ClassEx c, Object oldValue) {
+		return ConvertUtils.toProperType(value, c, oldValue);
 	}
 }

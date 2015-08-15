@@ -39,7 +39,7 @@ import jef.database.wrapper.processor.BindVariableDescription;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
-import jef.tools.collection.CollectionUtil;
+import jef.tools.collection.CollectionUtils;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -335,8 +335,8 @@ public class Condition implements Serializable{
 				}
 				value=value1;
 			}
-			if(CollectionUtil.isArrayOrCollection(value.getClass())){
-				int len=CollectionUtil.length(value);
+			if(CollectionUtils.isArrayOrCollection(value.getClass())){
+				int len=CollectionUtils.length(value);
 				if(operator==Operator.BETWEEN_L_L && len!=2){//无效的BETWEEN操作
 					throw new RuntimeException("The between operator must have 2 params");
 				}
@@ -349,7 +349,7 @@ public class Condition implements Serializable{
 				}else{
 					sb.append(columnName).append(oper);
 					int n=0;
-					for(Iterator<Object> iter=CollectionUtil.iterable(value).iterator();iter.hasNext();){
+					for(Iterator<Object> iter=CollectionUtils.iterator(value,Object.class);iter.hasNext();){
 						Object o=iter.next();
 						if(n>0)sb.append(div);
 						if(o instanceof Field){
@@ -418,7 +418,7 @@ public class Condition implements Serializable{
 				sb.append(columnName).append(oper).append('\'').append(value.toString()).append('\'').append(tailer);
 			}else{
 				List<String> sqlValues=new ArrayList<String>();
-				Iterator<Object> iter=CollectionUtil.iterable(value).iterator();
+				Iterator<Object> iter=CollectionUtils.iterator(value,Object.class);
 				Assert.notNull(iter,"Error param, the value of in operator must be a array or string :" + value.getClass().getName());
 				for(;iter.hasNext();){
 					Object v=iter.next();

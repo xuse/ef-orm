@@ -32,7 +32,7 @@ import jef.orm.multitable.model.School;
 import jef.orm.multitable.model.Score;
 import jef.script.javascript.Var;
 import jef.tools.StringUtils;
-import jef.tools.collection.CollectionUtil;
+import jef.tools.collection.CollectionUtils;
 import jef.tools.string.RandomData;
 
 import org.junit.BeforeClass;
@@ -241,12 +241,12 @@ public class CascadeTableTest extends MultiTableTestBase {
 		Person p1 = result.get(0);
 		assertTrue(p1.getName().startsWith("爸爸"));
 		assertTrue(p1.getScores().size() == 6);
-		assertEquals(80, CollectionUtil.findFirst(p1.getScores(), "subject", "英语").getScore());
-		assertEquals(90, CollectionUtil.findFirst(p1.getScores(), "subject", "物理").getScore());
-		assertEquals(50, CollectionUtil.findFirst(p1.getScores(), "subject", "电脑").getScore());
-		assertEquals(70, CollectionUtil.findFirst(p1.getScores(), "subject", "算数").getScore());
-		assertEquals(60, CollectionUtil.findFirst(p1.getScores(), "subject", "语文").getScore());
-		assertEquals(100, CollectionUtil.findFirst(p1.getScores(), "subject", "化学").getScore());
+		assertEquals(80, CollectionUtils.findFirst(p1.getScores(), "subject", "英语").getScore());
+		assertEquals(90, CollectionUtils.findFirst(p1.getScores(), "subject", "物理").getScore());
+		assertEquals(50, CollectionUtils.findFirst(p1.getScores(), "subject", "电脑").getScore());
+		assertEquals(70, CollectionUtils.findFirst(p1.getScores(), "subject", "算数").getScore());
+		assertEquals(60, CollectionUtils.findFirst(p1.getScores(), "subject", "语文").getScore());
+		assertEquals(100, CollectionUtils.findFirst(p1.getScores(), "subject", "化学").getScore());
 		assertTrue(p1.getSchoolId() == 2);
 		assertEquals("战国高校", p1.getSchoolName());
 		assertEquals(p1.getSchoolName(), p1.getSchool().getName());

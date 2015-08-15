@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import jef.tools.reflect.BeanUtils;
+import jef.tools.reflect.ConvertUtils;
 
 public class TestObject {
 	static boolean printStacktrace=false;
@@ -62,7 +62,7 @@ public class TestObject {
 	private static Object getParam(Class<?> class1) {
 		Object obj=defaultValueMap.get(class1);
 		if(obj!=null)return obj;
-		return BeanUtils.defaultValueForBasicType(class1);
+		return ConvertUtils.defaultValueForBasicType(class1);
 	}
 	
 	static{

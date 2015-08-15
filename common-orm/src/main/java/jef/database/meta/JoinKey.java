@@ -18,6 +18,7 @@ package jef.database.meta;
 import jef.database.Condition;
 import jef.database.DbUtils;
 import jef.database.Field;
+import jef.database.MetadataContainer;
 import jef.database.QueryAlias;
 import jef.database.query.Join;
 import jef.database.query.JoinElement;
@@ -228,9 +229,9 @@ public class JoinKey extends Condition {
 			}
 		}else{
 			ITableMetadata meta=null;
-			if(this.value instanceof LazyQueryBindField){
-				meta=((LazyQueryBindField) value).getMeta();
-			}else if(value instanceof Field){
+			if(this.value instanceof MetadataContainer){
+				meta=((MetadataContainer) value).getMeta();
+			}else if(value instanceof Field && value instanceof Enum){
 				meta=DbUtils.getTableMeta((Field)value);	
 			}
 			if(meta==null)return true;

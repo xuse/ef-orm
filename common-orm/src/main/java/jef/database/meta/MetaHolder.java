@@ -49,6 +49,7 @@ import javax.persistence.TemporalType;
 import jef.accelerator.asm.Attribute;
 import jef.accelerator.asm.ClassReader;
 import jef.accelerator.asm.ClassVisitor;
+import jef.accelerator.asm.Opcodes;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.Holder;
 import jef.database.Condition.Operator;
@@ -85,6 +86,7 @@ import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.create.ColumnDefinition;
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.meta.AnnotationProvider.ClassAnnotationProvider;
 import jef.database.meta.AnnotationProvider.FieldAnnotationProvider;
 import jef.database.meta.extension.EfPropertiesExtensionProvider;
@@ -97,7 +99,7 @@ import jef.tools.Assert;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
-import jef.tools.collection.CollectionUtil;
+import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.BeanWrapper;
 
@@ -577,7 +579,7 @@ public final class MetaHolder {
 		ClassReader cr = new ClassReader(data);
 
 		final Holder<Boolean> checkd = new Holder<Boolean>(false);
-		cr.accept(new ClassVisitor() {
+		cr.accept(new ClassVisitor(Opcodes.ASM5) {
 			public void visitAttribute(Attribute attr) {
 				if ("jefd".equals(attr.type)) {
 					checkd.set(true);
@@ -698,7 +700,7 @@ public final class MetaHolder {
 				try {
 					applyParams(mappingHint.parameters(), type);
 				}catch(Exception e) {
-					throw new IllegalArgumentException("@Type annotation on field "+field+" is invalid",e);
+					throw new IllegalArgumentException("@Type annotation on field "+processingClz+"."+field+" is invalid",e);
 				}
 				fieldType = type.getFieldType();
 			} else {
@@ -745,6 +747,7 @@ public final class MetaHolder {
 	}
 
 	private static void applyParams(Parameter[] parameters, ColumnMapping type) {
+		if(parameters==null || parameters.length==0)return;
 		BeanWrapper bw = BeanWrapper.wrap(type);
 		for (Parameter p : parameters) {
 			if (bw.isWritableProperty(p.name())) {
@@ -937,7 +940,7 @@ public final class MetaHolder {
 			throw new IllegalArgumentException(field.getDeclaringClass().getSimpleName() + ":" + field.getName() + " miss its targetEntity annotation.");
 		}
 		if (isMany) {
-			Class<?> compType = CollectionUtil.getSimpleComponentType(field.getGenericType());
+			Class<?> compType = CollectionUtils.getSimpleComponentType(field.getGenericType());
 			if (compType != null && IQueryableEntity.class.isAssignableFrom(compType)) {
 				return MetaHolder.getMeta(compType.asSubclass(IQueryableEntity.class));
 			}
@@ -975,7 +978,7 @@ public final class MetaHolder {
 			JoinPath path = new JoinPath(type, result.toArray(new JoinKey[result.size()]));
 			path.setDescription(joinDesc, field.getAnnotation(OrderBy.class));
 			if (joinDesc != null && joinDesc.filterCondition().length() > 0) {
-				JoinKey joinExpress = getJoinExpress(target, joinDesc.filterCondition().trim());
+				JoinKey joinExpress = getJoinExpress(thisMeta,target, joinDesc.filterCondition().trim());
 				if (joinExpress != null)
 					path.addJoinKey(joinExpress);
 			}
@@ -1007,7 +1010,7 @@ public final class MetaHolder {
 			JoinPath path = new JoinPath(type, result.toArray(new JoinKey[result.size()]));
 			path.setDescription(joinDesc, orderBy);
 			if (joinDesc != null && joinDesc.filterCondition().length() > 0) {
-				JoinKey joinExpress = getJoinExpress(target, joinDesc.filterCondition().trim());
+				JoinKey joinExpress = getJoinExpress(meta,target, joinDesc.filterCondition().trim());
 				if (joinExpress != null)
 					path.addJoinKey(joinExpress);
 			}
@@ -1016,20 +1019,30 @@ public final class MetaHolder {
 		return null;
 	}
 
-	private static JoinKey getJoinExpress(ITableMetadata targetMeta, String exp) {
+	private static JoinKey getJoinExpress(ITableMetadata thisMeta,ITableMetadata targetMeta, String exp) {
 		try {
 			Expression ex = DbUtils.parseBinaryExpression(exp);
 			if (ex instanceof BinaryExpression) {
 				BinaryExpression bin = (BinaryExpression) ex;
 				String left = bin.getLeftExpression().toString().trim();
-				ColumnMapping leftF = targetMeta.findField(left);// 假定左边的是字段
+				Field leftF = parseField(left,thisMeta,targetMeta);
+				
 				JoinKey key;
 				if (leftF == null) {
 					key = new JoinKey(null, null, new FBIField(bin, ReadOnlyQuery.getEmptyQuery(targetMeta)));// 建立一个函数Field
 				} else {
 					String oper = bin.getStringExpression();
-					Object value = new FBIField(bin.getRightExpression().toString(), ReadOnlyQuery.getEmptyQuery(targetMeta));
-					key = new JoinKey(leftF.field(), Operator.valueOfKey(oper), value);
+					Expression right=bin.getRightExpression();
+					Field rightF = null;
+					if(right.getType()==ExpressionType.column || right.getType()==ExpressionType.function) {
+						rightF = parseField(right.toString(),thisMeta,targetMeta);	
+					}
+					if(rightF==null) {
+						key = new JoinKey(leftF, Operator.valueOfKey(oper), new SqlExpression(right.toString()));
+					}else {
+						key = new JoinKey(leftF, Operator.valueOfKey(oper), rightF);
+					}
+
 				}
 				return key;
 			} else {
@@ -1037,6 +1050,37 @@ public final class MetaHolder {
 			}
 		} catch (ParseException e) {
 			throw new RuntimeException("Unknown expression config on class:" + targetMeta.getThisType().getName() + ": " + exp);
+		}
+	}
+
+	private static Field parseField(String keyword,ITableMetadata thisMeta,ITableMetadata target) {
+		ITableMetadata meta = null;
+		if(keyword.startsWith("this$")) {
+			keyword=keyword.substring(5);
+			meta=thisMeta;
+		}else if(keyword.startsWith("that$")) {
+			keyword=keyword.substring(5);
+			meta=target;
+		}
+		if(meta!=null) {
+			ColumnMapping columnDef = meta.findField(keyword);// 假定左边的是字段
+			if(columnDef!=null) {
+				return columnDef.field();
+			}else {
+				FBIField field=new FBIField(keyword, ReadOnlyQuery.getEmptyQuery(meta));
+				field.setBindBase(true);;
+				return field;
+			}
+		}else {
+			ColumnMapping columnDef = target.findField(keyword);
+			if(columnDef!=null) {
+				return columnDef.field();
+			}
+			columnDef = thisMeta.findField(keyword);
+			if(columnDef!=null) {
+				return columnDef.field();
+			}
+			return null;
 		}
 	}
 

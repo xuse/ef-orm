@@ -40,7 +40,7 @@ import jef.database.query.function.TemplateFunction;
 import jef.database.query.function.VarArgsSQLFunction;
 import jef.database.support.RDBMS;
 import jef.tools.StringUtils;
-import jef.tools.collection.CollectionUtil;
+import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
 
 /**
@@ -52,7 +52,7 @@ import jef.tools.string.JefStringReader;
 public class DerbyDialect extends AbstractDialect {
 	
 	public DerbyDialect() {
-		features = CollectionUtil.identityHashSet();
+		features = CollectionUtils.identityHashSet();
 		features.addAll(Arrays.asList(
 				Feature.USER_AS_SCHEMA, 
 				Feature.BATCH_GENERATED_KEY_ONLY_LAST, 
@@ -182,7 +182,7 @@ public class DerbyDialect extends AbstractDialect {
 		// registerColumnType( Types.BOOLEAN, "boolean" );
 		// }
 		
-		typeNames.put(Types.BOOLEAN, "boolean", 0);
+		typeNames.put(Types.BOOLEAN, "boolean", 0,"bool");
 		//Derby中，Float是double的同义词
 		typeNames.put(Types.FLOAT, "double", Types.DOUBLE);
 	}

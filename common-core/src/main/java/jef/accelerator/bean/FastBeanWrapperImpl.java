@@ -3,7 +3,6 @@ package jef.accelerator.bean;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collection;
-import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
@@ -101,22 +100,22 @@ public final class FastBeanWrapperImpl extends BeanWrapper{
 		return accessor.getProperty(name);
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked"})
 	@Override
 	public <T extends Annotation> T getAnnotationOnField(String name, Class<T> clz) {
-		IdentityHashMap<Class,Annotation> map=accessor.getAnnotationOnField(name);
+		Map<Class<?>,Annotation> map=accessor.getAnnotationOnField(name);
 		return map==null?null:(T)map.get(clz);
 	}
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked"})
 	@Override
 	public <T extends Annotation> T getAnnotationOnGetter(String name, Class<T> clz) {
-		IdentityHashMap<Class,Annotation> map=accessor.getAnnotationOnGetter(name);
+		Map<Class<?>,Annotation> map=accessor.getAnnotationOnGetter(name);
 		return map==null?null:(T)map.get(clz);
 	}
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked" })
 	@Override
 	public <T extends Annotation> T getAnnotationOnSetter(String name, Class<T> clz) {
-		IdentityHashMap<Class,Annotation> map=accessor.getAnnotationOnSetter(name);
+		Map<Class<?>,Annotation> map=accessor.getAnnotationOnSetter(name);
 		return map==null?null:(T)map.get(clz);
 	}
 

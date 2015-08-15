@@ -23,8 +23,10 @@ import jef.common.log.LogUtil;
 import jef.jre5support.ProcessUtil;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
-import jef.tools.collection.CollectionUtil;
+import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.ClassEx;
+
+import com.google.common.base.Function;
 
 /**
  * 这个Bean封装了JDK的OperatingSystemMXBean,可以根据SUN JDK(及其兼容)，IBM JDK等 提供与JDK平台无关的扩展接口
@@ -46,7 +48,11 @@ public class OperatingSystemMXBean implements java.lang.management.OperatingSyst
 	private OperatingSystemMXBean() {
 		bean = ManagementFactory.getOperatingSystemMXBean();
 		ClassEx cw = new ClassEx(bean.getClass());
-		List<String> result = CollectionUtil.getPropertyValues(cw.getAllInterfaces(), "getName", String.class);
+		List<String> result = CollectionUtils.extract(cw.getAllInterfaces(), new Function<Class<?>,String>(){
+			public String apply(Class<?> input) {
+				return input.getName();
+			}
+		});
 		if (result.contains("com.sun.management.UnixOperatingSystemMXBean")) {
 			initSunJDKBean(cw);
 		} else if (result.contains("com.sun.management.OperatingSystemMXBean")) {

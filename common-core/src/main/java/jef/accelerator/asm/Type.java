@@ -206,9 +206,6 @@ public class Type {
         this.len = len;
     }
 
-    public boolean isPrimitive(){
-    	return sort!=OBJECT && sort!=ARRAY;
-    }
     /**
      * Returns the Java type corresponding to the given type descriptor.
      * 
@@ -404,8 +401,8 @@ public class Type {
      * @return the size of the arguments of the method (plus one for the
      *         implicit this argument), argSize, and the size of its return
      *         value, retSize, packed into a single int i =
-     *         <tt>(argSize << 2) | retSize</tt> (argSize is therefore equal to
-     *         <tt>i >> 2</tt>, and retSize to <tt>i & 0x03</tt>).
+     *         <tt>(argSize &lt;&lt; 2) | retSize</tt> (argSize is therefore equal to
+     *         <tt>i &gt;&gt; 2</tt>, and retSize to <tt>i &amp; 0x03</tt>).
      */
     public static int getArgumentsAndReturnSizes(final String desc) {
         int n = 1;
@@ -559,11 +556,11 @@ public class Type {
         case DOUBLE:
             return "double";
         case ARRAY:
-            StringBuffer b = new StringBuffer(getElementType().getClassName());
+            StringBuilder sb = new StringBuilder(getElementType().getClassName());
             for (int i = getDimensions(); i > 0; --i) {
-                b.append("[]");
+                sb.append("[]");
             }
-            return b.toString();
+            return sb.toString();
         case OBJECT:
             return new String(buf, off, len).replace('/', '.');
         default:
@@ -609,9 +606,10 @@ public class Type {
      * 
      * @return the size of the arguments (plus one for the implicit this
      *         argument), argSize, and the size of the return value, retSize,
-     *         packed into a single int i = <tt>(argSize << 2) | retSize</tt>
-     *         (argSize is therefore equal to <tt>i >> 2</tt>, and retSize to
-     *         <tt>i & 0x03</tt>).
+     *         packed into a single
+     *         int i = <tt>(argSize &lt;&lt; 2) | retSize</tt>
+     *         (argSize is therefore equal to <tt>i &gt;&gt; 2</tt>,
+     *         and retSize to <tt>i &amp; 0x03</tt>).
      */
     public int getArgumentsAndReturnSizes() {
         return getArgumentsAndReturnSizes(getDescriptor());
@@ -894,5 +892,9 @@ public class Type {
     @Override
     public String toString() {
         return getDescriptor();
+    }
+    
+    public boolean isPrimitive(){
+    	return sort!=OBJECT && sort!=ARRAY;
     }
 }

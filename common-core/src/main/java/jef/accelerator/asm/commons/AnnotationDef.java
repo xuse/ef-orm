@@ -9,18 +9,21 @@ import java.util.Map.Entry;
 import jef.accelerator.asm.AnnotationVisitor;
 import jef.tools.Assert;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
 public class AnnotationDef extends AnnotationVisitor{
 	private boolean end=false;
 	
-	public AnnotationDef(String desc) {
-		super();
+	public AnnotationDef(int api,String desc) {
+		super(api);
 		this.desc=desc;
 	}
 	protected boolean visible;
 	protected String desc;
 	protected Map<String,Object> attrs=new HashMap<String,Object>();
 	protected List<String[]> enums=new ArrayList<String[]>();
-	protected Map<String,AnnotationDef> annotations=new HashMap<String,AnnotationDef>();
+	protected Multimap<String,AnnotationDef> annotations=ArrayListMultimap.create();
 	protected Map<String,AnnotationDef> arrays=new HashMap<String,AnnotationDef>();
 	
 
@@ -36,14 +39,14 @@ public class AnnotationDef extends AnnotationVisitor{
 
 	@Override
 	public AnnotationVisitor visitAnnotation(String name, String desc) {
-		AnnotationDef ann=new AnnotationDef(desc);
+		AnnotationDef ann=new AnnotationDef(api,desc);
 		annotations.put(name, ann);
 		return ann;
 	}
 
 	@Override
 	public AnnotationVisitor visitArray(String name) {
-		AnnotationDef ann=new AnnotationDef(name);
+		AnnotationDef ann=new AnnotationDef(api,name);
 		arrays.put(name, ann);
 		return ann;
 	}
@@ -61,11 +64,11 @@ public class AnnotationDef extends AnnotationVisitor{
 		for(String[] enu:enums){
 			to.visitEnum(enu[0], enu[1], enu[2]);
 		}
-		for(Entry<String,AnnotationDef> e: annotations.entrySet()){
+		for(Entry<String,AnnotationDef> e: annotations.entries()){
 			AnnotationVisitor too=to.visitAnnotation(e.getKey(), e.getValue().desc);
 			e.getValue().inject(too);
 		}
-		for(Entry<String,AnnotationDef> e: arrays.entrySet()){
+		for(Map.Entry<String, AnnotationDef> e: arrays.entrySet()){
 			AnnotationVisitor too=to.visitArray(e.getKey());
 			e.getValue().inject(too);
 		}

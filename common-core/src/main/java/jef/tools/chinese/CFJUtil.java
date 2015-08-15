@@ -34,7 +34,7 @@ import org.apache.commons.lang.StringUtils;
  * 但是简体字转换到繁体是不推荐的做法。因为简体字将很多繁体字合并了，
  * 反向转换时不可能根据上下文的含义来决定使用哪个字，因此可能会转换到别字上
  * <p>
- * Usega:<pre>
+ * Usage:<pre>
  * CFJUtil.getInstance().fan2jan("中華民國"); //返回 "中华民国"
  * </pre>
  * @author Jiyi

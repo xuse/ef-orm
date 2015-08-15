@@ -40,7 +40,7 @@ import jef.tools.ResourceUtils;
 import jef.tools.StringUtils;
 import jef.tools.TextFileCallback;
 import jef.tools.ThreadUtils;
-import jef.tools.collection.CollectionUtil;
+import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.CloneUtils;
 import jef.tools.resource.ResourceLoader;
 import jef.tools.string.RandomData;
@@ -186,15 +186,15 @@ public class JefTest extends Assert {
 	public void testListSize() {
 		List<String> l = new ArrayList<String>();
 		System.out.println(l);
-		CollectionUtil.setElement(l, 0, "value0");
+		CollectionUtils.setElement(l, 0, "value0");
 		System.out.println(l);
-		CollectionUtil.setElement(l, 1, "value1");
+		CollectionUtils.setElement(l, 1, "value1");
 		System.out.println(l);
-		CollectionUtil.setElement(l, 3, "value3");
+		CollectionUtils.setElement(l, 3, "value3");
 		System.out.println(l);
-		CollectionUtil.setElement(l, 5, "value5");
+		CollectionUtils.setElement(l, 5, "value5");
 		System.out.println(l);
-		CollectionUtil.setElement(l, 4, "value4");
+		CollectionUtils.setElement(l, 4, "value4");
 		System.out.println(l);
 	}
 	

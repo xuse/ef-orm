@@ -3,7 +3,7 @@ package jef.database.dialect.type;
 import java.lang.annotation.Annotation;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.IdentityHashMap;
+import java.util.Map;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -68,7 +68,7 @@ public class VarcharEnumMapping extends AColumnMapping {
 	public void init(Field field, String columnName, ColumnType type, ITableMetadata meta) {
 		super.init(field, columnName, type, meta);
 		BeanAccessor ba = meta.getContainerAccessor();
-		IdentityHashMap<Class,Annotation> map=ba.getAnnotationOnField(field.name());
+		Map<Class<?>,Annotation> map=ba.getAnnotationOnField(field.name());
 		Enumerated anno = map==null?null:(Enumerated)map.get(Enumerated.class);
 		if (anno != null) {
 			this.isOrdinal = anno.value() == EnumType.ORDINAL;

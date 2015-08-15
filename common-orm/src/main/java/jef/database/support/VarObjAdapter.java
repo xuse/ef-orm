@@ -26,8 +26,8 @@ import jef.database.VarObject;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.tools.ArrayUtils;
-import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.ClassEx;
+import jef.tools.reflect.ConvertUtils;
 
 /**
  * 使SimpleMap对象支持JAXB序列化和反序列化
@@ -84,7 +84,7 @@ public class VarObjAdapter extends XmlAdapter<VarAttribute[], VarObject> {
 		}
 		try {
 			Class clz = Class.forName(dataType);
-			return BeanUtils.toProperType(value, new ClassEx(clz), null);
+			return ConvertUtils.toProperType(value, new ClassEx(clz), null);
 		} catch (ClassNotFoundException e) {
 			throw new IllegalArgumentException(e);
 		}

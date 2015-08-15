@@ -7,7 +7,7 @@ import jef.database.DbFunction;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.support.RDBMS;
-import jef.tools.collection.CollectionUtil;
+import jef.tools.collection.CollectionUtils;
 
 /**
  * GBase的dialect
@@ -30,7 +30,7 @@ public class GBaseDialect extends AbstractDialect {
 	protected static final int DEFAULT_PORT = 5258;
 
 	public GBaseDialect() {
-		features = CollectionUtil.identityHashSet();
+		features = CollectionUtils.identityHashSet();
 		features.addAll(Arrays.asList(
 				Feature.AUTOINCREMENT_MUSTBE_PK
 				));

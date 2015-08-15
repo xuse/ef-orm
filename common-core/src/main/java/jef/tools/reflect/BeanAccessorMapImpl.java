@@ -4,7 +4,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.Map;
 
 import jef.accelerator.bean.BeanAccessor;
@@ -34,11 +33,13 @@ public final class BeanAccessorMapImpl extends BeanAccessor{
 		return ((Map)bean).get(name);
 	}
 
+	@SuppressWarnings("unchecked")
 	public boolean setProperty(Object bean, String name, Object v) {
 		((Map)bean).put(name,v);
 		return true;
 	}
-
+	
+	@SuppressWarnings("unchecked")
 	public void copy(Object o1, Object o2) {
 		Map m1=(Map)o1;
 		Map m2=(Map)o2;
@@ -54,22 +55,22 @@ public final class BeanAccessorMapImpl extends BeanAccessor{
 		throw new UnsupportedOperationException();
 	}
 
-	public IdentityHashMap<Class, Annotation> getAnnotationOnField(String name) {
+	public Map<Class<?>, Annotation> getAnnotationOnField(String name) {
 		return null;
 	}
 
-	public IdentityHashMap<Class, Annotation> getAnnotationOnGetter(String name) {
+	public Map<Class<?>, Annotation> getAnnotationOnGetter(String name) {
 		return null;
 	}
 
-	public IdentityHashMap<Class, Annotation> getAnnotationOnSetter(String name) {
+	public Map<Class<?>, Annotation> getAnnotationOnSetter(String name) {
 		return null;
 	}
 
-	public void initAnnotations(IdentityHashMap<Class, Annotation>[] field, IdentityHashMap<Class, Annotation>[] getter, IdentityHashMap<Class, Annotation>[] setter) {
+	public void initAnnotations(Map<Class<?>, Annotation>[] field, Map<Class<?>, Annotation>[] getter, Map<Class<?>, Annotation>[] setter) {
 	}
 
-	public void initNthGenericType(int index, Class raw, Type type, int total, String fieldName) {
+	public void initNthGenericType(int index, Class<?> raw, Type type, int total, String fieldName) {
 	}
 
 	@Override
@@ -80,5 +81,21 @@ public final class BeanAccessorMapImpl extends BeanAccessor{
 	@Override
 	public Class<?> getType() {
 		return Map.class;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Map<String, Object> convert(Object obj) {
+		return (Map)obj;
+	}
+
+	@Override
+	public Object fromMap(Map<String, Object> map) {
+		return map;
+	}
+
+	@Override
+	public Object fromMap2(Map<String, Object> map) {
+		return map;
 	}
 }

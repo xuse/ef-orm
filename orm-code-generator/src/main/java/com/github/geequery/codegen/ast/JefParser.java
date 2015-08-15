@@ -22,7 +22,7 @@ import java.util.List;
 
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
-import jef.tools.collection.CollectionUtil;
+import jef.tools.collection.CollectionUtils;
 
 public class JefParser implements JavaUnitParser{
 	private static final char[] LEFT_TRIM=" \t\n\r".toCharArray();
@@ -76,8 +76,8 @@ public class JefParser implements JavaUnitParser{
 		
 		//jianghy3 2012.08.29 Bug #55696 解决思路：先保留原有的，再根据本次配置信息删除/修改。
 		List<AnnotationExpr> annos = type.getAnnotations();
-		if(!CollectionUtil.isEmpty(annos)){
-			java.addAnnotation(parseAnnoExprToString(CollectionUtil.toArray(annos, AnnotationExpr.class)));
+		if(!CollectionUtils.isEmpty(annos)){
+			java.addAnnotation(parseAnnoExprToString(annos.toArray(new AnnotationExpr[annos.size()])));
 		}
 		
 		

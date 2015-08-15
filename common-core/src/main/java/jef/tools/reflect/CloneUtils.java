@@ -15,7 +15,6 @@
  */
 package jef.tools.reflect;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,15 +44,15 @@ public class CloneUtils {
 	 * 常用的克隆策略，预定义好。
 	 */
 	static {
-		BEAN_CLONERS.put(ArrayList.class, new Cloner._ArrayList());
-		BEAN_CLONERS.put(Arrays.asList().getClass(), new Cloner._ArrayList());
+		BEAN_CLONERS.put(ArrayList.class, Cloner._ArrayList);
+		BEAN_CLONERS.put(Arrays.asList().getClass(), Cloner._ArrayList);
 		BEAN_CLONERS.put(LinkedList.class, new Cloner._OtherCollection(LinkedList.class));
 
-		BEAN_CLONERS.put(HashSet.class, new Cloner._HashSet());
+		BEAN_CLONERS.put(HashSet.class, Cloner._HashSet);
 		BEAN_CLONERS.put(TreeSet.class, new Cloner._OtherCollection(TreeSet.class));
 
-		BEAN_CLONERS.put(HashMap.class, new Cloner._HashMap());
-		BEAN_CLONERS.put(SimpleMap.class, new Cloner._HashMap());
+		BEAN_CLONERS.put(HashMap.class, Cloner._HashMap);
+		BEAN_CLONERS.put(SimpleMap.class, Cloner._HashMap);
 		BEAN_CLONERS.put(ConcurrentHashMap.class, new Cloner._OtherMap(ConcurrentHashMap.class));
 		BEAN_CLONERS.put(TreeMap.class, new Cloner._OtherMap(TreeMap.class));
 
@@ -99,6 +98,8 @@ public class CloneUtils {
 			return cloner;
 		if (isStateLessType(clz)) {//
 			cloner = Cloner.RAW;
+		} else if(clz.isArray()){
+			cloner = Cloner._Array;
 		} else if (Collection.class.isAssignableFrom(clz)) {// 按未知集合类型处理
 			cloner = new Cloner._OtherCollection(clz);
 		} else if (Map.class.isAssignableFrom(clz)) {// 按未知Map类型处理
@@ -115,59 +116,53 @@ public class CloneUtils {
 	 * 
 	 * @param obj
 	 *            要拷贝的对象
+	 * @return 拷贝后的对象，那么除非属性继承了{@link DeepCloneable}接口，否则不会深拷贝。
+	 */
+	public static Object clone(Object obj) {
+		return clone(obj, false);
+	}
+	
+	/**
+	 * 克隆
+	 * 
+	 * @param obj
+	 *            要拷贝的对象
 	 * @param deep
 	 *            对象内的属性是否深拷贝。如果为true则尝试递归向下深拷贝。如为false，那么除非属性继承了
 	 *            {@link DeepCloneable}接口，否则不会深拷贝。
 	 * @return 拷贝后的对象
 	 */
 	public static Object clone(Object obj, boolean deep) {
-		Cloner copier = getCloner(obj.getClass());
-		return copier.clone(obj, deep);
+		return _clone(obj, deep?Integer.MAX_VALUE:1);
 	}
-
-	/**
-	 * 克隆
-	 * 
-	 * @param obj
-	 *            要拷贝的对象
-	 * @return 拷贝后的对象，那么除非属性继承了{@link DeepCloneable}接口，否则不会深拷贝。
-	 */
-	public static Object clone(Object obj) {
-		Cloner copier = getCloner(obj.getClass());
-		return copier.clone(obj, false);
-	}
-
-	static final Converter clone_cvt_safe = new Converter() {
-		@SuppressWarnings("rawtypes")
-		public Object convert(Object pojo, Class fieldType, Object fieldName) {
-			return _clone(pojo, false);
-		}
-	};
-
-	static final Converter clone_cvt_deep = new Converter() {
-		@SuppressWarnings("rawtypes")
-		public Object convert(Object pojo, Class fieldType, Object fieldName) {
-			return _clone(pojo, true);
-		}
-	};
-
-	private static Object _clone(Object bean, boolean deep) {
+	
+	static Object _clone(Object bean, int restLevel) {
 		if (bean == null) {
 			return null;
 		}
-		if (deep || bean instanceof DeepCloneable) {
-			return CloneUtils.clone(bean, deep);
+		if (restLevel>0 || bean instanceof DeepCloneable) {
+			return getCloner(bean.getClass()).clone(bean, restLevel-1);
+		}else{
+			return bean;
 		}
-		Class<?> clz = bean.getClass();
-		Cloner cl = BEAN_CLONERS.get(bean.getClass());
-		if (cl != null) {
-			return cl.clone(bean, deep);
-		}
-		if (clz.isArray()) { // 数组是会膨胀的类型，无法穷举，因此特殊处理。
-			return cloneArray(bean, deep);
-		}
-		return bean;
 	}
+	
+	static final Converter clone_cvt_dummy = new Converter() {
+		public Object convert(Object pojo, Class fieldType, Object fieldName) {
+			return pojo;
+		}
+	};
+
+	static final class CloneConvert implements Converter {
+		private int restLevel;
+		CloneConvert(int restLevel){
+			this.restLevel=restLevel;
+		}
+		@SuppressWarnings("rawtypes")
+		public Object convert(Object pojo, Class fieldType, Object fieldName) {
+			return _clone(pojo, restLevel);
+		}
+	};
 
 	public static boolean isStateLessType(Class<?> cls) {
 		if (cls.isPrimitive())
@@ -181,19 +176,5 @@ public class CloneUtils {
 		return false;
 	}
 
-	private static Object cloneArray(Object obj, boolean deep) {
-		int len = Array.getLength(obj);
-		Class<?> priType = obj.getClass().getComponentType();
-		Object clone = Array.newInstance(priType, len);
-
-		if (priType.isPrimitive()) {
-			System.arraycopy(obj, 0, clone, 0, len);
-			return clone;
-		}
-		for (int i = 0; i < len; i++) {
-			Array.set(clone, i, _clone(Array.get(obj, i), deep));
-		}
-		return clone;
-	}
 
 }

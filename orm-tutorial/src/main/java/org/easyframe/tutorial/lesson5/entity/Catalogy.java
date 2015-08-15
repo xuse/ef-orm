@@ -10,13 +10,12 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import jef.database.DataObject;
-import jef.database.annotation.JoinDescription;
-import jef.database.annotation.JoinType;
 
 @Entity
 public class Catalogy extends DataObject {
+	private static final long serialVersionUID = 1L;
 
-    @Id
+	@Id
     @GeneratedValue
     private int id;
     

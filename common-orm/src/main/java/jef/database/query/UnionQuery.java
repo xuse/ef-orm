@@ -32,6 +32,7 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 	private List<OrderField> orderBy = new ArrayList<OrderField>();
 	private boolean isAll = true;
 	private Transformer t;
+	private boolean cacheable = true;
 	
 	UnionQuery(List<ConditionQuery> ts,ITableMetadata meta){
 		this.querys=ts;
@@ -298,5 +299,12 @@ public class UnionQuery<T> implements ComplexQuery,TypedQuery<T> {
 	public boolean isSelectCustomized() {
 		return false;
 	}
-	
+
+	public boolean isCacheable() {
+		return cacheable;
+	}
+
+	public void setCacheable(boolean cacheable) {
+		this.cacheable = cacheable;
+	}
 }

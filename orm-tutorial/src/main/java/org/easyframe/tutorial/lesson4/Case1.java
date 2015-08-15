@@ -17,7 +17,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class Case1 extends org.junit.Assert{
-	private static DbClient db = new DbClientBuilder().build();
+	private static DbClient db ;
 	private static int firstId;
 	/**
 	 * 准备
@@ -25,7 +25,9 @@ public class Case1 extends org.junit.Assert{
 	 */
 	@BeforeClass
 	public static void setup() throws SQLException {
-		ORMConfig.getInstance().setDebugMode(true);
+//		ORMConfig.getInstance().setCacheLevel2(500);
+//		ORMConfig.getInstance().setDebugMode(true);
+		db = new DbClientBuilder().build();
 		db.dropTable(Person.class, School.class,DataDict.class);
 		db.createTable(Person.class, School.class,DataDict.class);
 
@@ -164,27 +166,46 @@ public class Case1 extends org.junit.Assert{
 	 */
 	@Test
 	public void testGetFieldFromManyToOne() throws SQLException{
+		//FIXME ，当不使用外连接时，FileCondition无效的问题。
+		ORMConfig.getInstance().setCacheDebug(true);
+		
 		//准备数据
 		Person p1=new Person();
 		p1.setName("孟德");
 		p1.setGender('M'); //男性为M 女性为F
+		p1.setDictType("USER");
 		
 		Person p2=new Person();
 		p2.setName("貂蝉");
 		p2.setGender('F');
+		p2.setDictType("USER");
+		
 		db.insert(p1);
 		db.insert(p2);
 		
-		
-		//查出数据
-		Query<Person> query=QB.create(Person.class);
-		query.addCondition(QB.notNull(Person.Field.gender));
-		query.orderByAsc(Person.Field.gender);
-		List<Person> p=db.select(query);
-		System.out.println(p.get(0).getGenderName());
-		System.out.println(p.get(1).getGenderName());
-		assertEquals("女人", p.get(0).getGenderName());
-		assertEquals("男人", p.get(1).getGenderName());
+		{
+			//查出数据
+			Query<Person> query=QB.create(Person.class);
+			query.setCascadeViaOuterJoin(true);
+			query.addCondition(QB.notNull(Person.Field.gender));
+			query.orderByAsc(Person.Field.gender);
+			List<Person> p=db.select(query);
+			
+			assertEquals("女人", p.get(0).getGenderName());
+			assertEquals("男人", p.get(1).getGenderName());			
+		}
+		{
+			Query<Person> query=QB.create(Person.class);
+			query.setCacheable(false);
+			query.setCascadeViaOuterJoin(true);
+			query.addCondition(QB.notNull(Person.Field.gender));
+			query.orderByAsc(Person.Field.gender);
+			List<Person> p=db.select(query);
+
+			assertEquals("女人", p.get(0).getGenderName());
+			assertEquals("男人", p.get(1).getGenderName());
+		}
+
 	}
 	
 

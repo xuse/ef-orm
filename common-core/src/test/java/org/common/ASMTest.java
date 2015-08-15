@@ -52,7 +52,7 @@ public class ASMTest extends ClassLoader implements Opcodes {
 	public void readClassTest() throws Exception{
 		
 		ClassReader reader=new ClassReader("org.common.ASMTest");
-		reader.accept(new ClassVisitor(){
+		reader.accept(new ClassVisitor(Opcodes.ASM5){
 
 			@Override
 			public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {

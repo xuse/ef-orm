@@ -8,6 +8,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
@@ -27,7 +28,7 @@ public class Person extends DataObject {
 	private Integer id;
 
 	@Column(name = "person_name", length = 20, nullable = false)
-	@Indexed(unique=true)
+	@Indexed(unique = true)
 	private String name;
 
 	@Column(name = "current_school_id", columnDefinition = "integer")
@@ -35,44 +36,69 @@ public class Person extends DataObject {
 	/**
 	 * 性别,男为M 女为F
 	 */
-	@Column(name="gender",columnDefinition="char(1)",length=1)
+	@Column(name = "gender", columnDefinition = "char(1)", length = 1)
 	private Character gender;
-	
+
 	/**
 	 * 学校映射
 	 */
 	@ManyToOne(targetEntity = School.class)
 	@JoinColumn(name = "currentSchoolId", referencedColumnName = "id")
 	private School currentSchool;
-	
-	/**  
+  
+	/**
 	 * 性别的显示名称“男”“女”
 	 */
-	@ManyToOne(targetEntity=DataDict.class)
-	@JoinColumn(name="gender",referencedColumnName="value")
-	@JoinDescription(filterCondition="type='USER.GENDER'")  //在引用时还要增加过滤条件
+	// @ManyToOne(targetEntity=DataDict.class)
+	// @JoinColumn(name="gender",referencedColumnName="value")
+	// @JoinDescription(filterCondition="type='USER.GENDER'") //在引用时还要增加过滤条件
+	// @FieldOfTargetEntity("text")
+	// private String genderName;
+
+	@Column(name = "dt")
+	private String dictType;
+
+	/**
+	 * 性别的显示名称“男”“女”
+	 */
+	@ManyToOne(targetEntity = DataDict.class)
+	@JoinColumns(@JoinColumn(name = "gender", referencedColumnName = "value"))
+	//此处用了一个特殊的用法，即关联关系不是静态的，而是取决于一个和当前表字段有关的表达式的，这种用法要求这个字段必须是
+	//一对一或多对一的，并且是在两表外连接时才能正常使用的查询。
+	//为了方式全局参数对这一关联关系产生影响，必须使用setCascadeViaOuterJoin(true)才能确保这一点
+	@JoinDescription(filterCondition="this$dictType+'.GENDER'=that$type") 
 	@FieldOfTargetEntity("text")
-	private String genderName;
+	public String genderName;
+
+	//是否启用缓存开关。。。
 	
 	/**
 	 * 创建时间
 	 */
-	@GeneratedValue(generator="created")
+	@GeneratedValue(generator = "created")
 	private Date created;
-	
+
 	public enum Field implements jef.database.Field {
-		id, name, currentSchoolId,gender,created
+		id, name, currentSchoolId, gender, created, dictType
 	}
 
 	public Person() {
 	}
 
 	public Person(int id) {
-		this.id=id;
+		this.id = id;
 	}
 
 	public Integer getId() {
 		return id;
+	}
+
+	public String getDictType() {
+		return dictType;
+	}
+
+	public void setDictType(String dictType) {
+		this.dictType = dictType;
 	}
 
 	public void setId(Integer id) {
@@ -98,7 +124,6 @@ public class Person extends DataObject {
 	public School getCurrentSchool() {
 		return currentSchool;
 	}
-
 	public void setCurrentSchool(School currentSchool) {
 		this.currentSchool = currentSchool;
 	}
@@ -118,19 +143,16 @@ public class Person extends DataObject {
 	public void setGenderName(String genderName) {
 		this.genderName = genderName;
 	}
-	
+
 	public Date getCreated() {
 		return created;
 	}
-
 	public void setCreated(Date created) {
 		this.created = created;
 	}
-
+ 
 	@Override
 	public String toString() {
-		return id+" :"+ name+" "+gender;
+		return id + " :" + name + " " + gender;
 	}
-	
-	
 }

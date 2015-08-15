@@ -7,18 +7,20 @@ import java.io.StringWriter;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import jef.accelerator.asm.ClassReader;
 import jef.common.log.LogUtil;
-import jef.common.wrapper.Holder;
+import jef.database.DbClient;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
-import jef.database.Session;
+import jef.database.ORMConfig;
 import jef.database.annotation.EasyEntity;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.type.AutoIncrementMapping;
@@ -148,6 +150,7 @@ public class QuerableEntityScanner {
 		Set<String> classes = cs.scan(packageNames);
 
 		// 循环所有扫描到的类
+		Map<ITableMetadata, Boolean> tasks = new HashMap<>();
 		for (String s : classes) {
 			try {
 				// 读取类
@@ -171,12 +174,13 @@ public class QuerableEntityScanner {
 				// 加载或初始化
 				Class<?> clz = loadClass(cl, s);
 				if (clz != null) {
-					registeEntity(clz);
+					registeEntity(clz, tasks);
 				}
 			} catch (IOException e) {
 				LogUtil.exception(e);
 			}
 		}
+		processInit(tasks);
 	}
 
 	private Class<?> loadClass(ClassLoader cl, String s) {
@@ -194,9 +198,11 @@ public class QuerableEntityScanner {
 		if (cl == null) {
 			cl = this.getClass().getClassLoader();
 		}
+		Map<ITableMetadata, Boolean> tasks = new HashMap<>();
 		try {
 			Class<?> c = cl.loadClass(name);
-			registeEntity(c);
+			registeEntity(c, tasks);
+			processInit(tasks);
 			return true;
 		} catch (Exception e) {
 			LogUtil.exception(e);
@@ -204,7 +210,40 @@ public class QuerableEntityScanner {
 		}
 	}
 
-	private void registeEntity(Class<?> c) {
+	private void processInit(Map<ITableMetadata, Boolean> tasks) {
+		boolean manual = ORMConfig.getInstance().isManualSequence();
+		ORMConfig.getInstance().setManualSequence(true);
+		try {
+			for (Entry<ITableMetadata, Boolean> entry : tasks.entrySet()) {
+				boolean isNew = entry.getValue();
+				ITableMetadata meta = entry.getKey();
+				// 初始化表中的数据
+				if (isNew && initDataAfterCreate) {
+					URL url = meta.getThisType().getResource(meta.getThisType().getSimpleName() + ".init.json");
+					if (url != null) {
+						try {
+							initData(url, meta,false);
+						} catch (IOException e1) {
+							LogUtil.exception(e1);
+						}
+					}
+				} else if (!isNew && initDataIfTableExists) {
+					URL url = meta.getThisType().getResource(meta.getThisType().getSimpleName() + ".init.json");
+					if (url != null) {
+						try {
+							initData(url, meta,true);
+						} catch (IOException e1) {
+							LogUtil.exception(e1);
+						}
+					}
+				}
+			}
+		} finally {
+			ORMConfig.getInstance().setManualSequence(manual);
+		}
+	}
+
+	private void registeEntity(Class<?> c, Map<ITableMetadata, Boolean> tasks) {
 		try {
 			ITableMetadata meta = MetaHolder.getMeta(c);// 用initMeta变为强制初始化。getMeta更优雅一点
 			if (meta != null) {
@@ -216,53 +255,63 @@ public class QuerableEntityScanner {
 			final boolean create = createTable && (ee == null || ee.create());
 			final boolean refresh = alterTable && (ee == null || ee.refresh());
 			if (entityManagerFactory != null && (create || refresh)) {
-				doTableDDL(meta, create, refresh);
+				doTableDDL(meta, create, refresh, tasks);
 			}
 		} catch (Throwable e) {
 			LogUtil.error("EntityScanner:[Failure]" + StringUtils.exceptionStack(e));
 		}
 	}
 
-	private void doTableDDL(ITableMetadata meta, final boolean create, final boolean refresh) throws SQLException {
-		final Holder<Boolean> isTableExist = new Holder<Boolean>(true);
-		final Holder<Boolean> isNewTable = new Holder<Boolean>(false);
-		entityManagerFactory.getDefault().refreshTable(meta, new MetadataEventListener() {
-			public void onTableFinished(ITableMetadata meta, String tablename) {
-			}
+	private void doTableDDL(ITableMetadata meta, final boolean create, final boolean refresh, Map<ITableMetadata, Boolean> tasks) throws SQLException {
+		// 不管是否存在，总之先创建一次
+		boolean exist = true;
+		boolean isNew = false;
 
-			public boolean onTableCreate(ITableMetadata meta, String tablename) {
-				isNewTable.set(create);
-				isTableExist.set(create);
-				return create;
-			}
+		DbClient client = entityManagerFactory.getDefault();
+		if (create) {
+			isNew = client.createTable(meta) > 0;
+		} else {
+			exist = client.existTable(meta.getTableName(true));
+		}
 
-			public boolean onSqlExecuteError(SQLException e, String tablename, String sql, List<String> sqls, int n) {
-				LogUtil.error("[ALTER-TABLE]. SQL:[{}] ERROR.\nMessage:[{}]", sql, e.getMessage());
-				return true;
-			}
-
-			public boolean onCompareColumns(String tablename, List<Column> columns, Map<Field, ColumnMapping> defined) {
-				return refresh;
-			}
-
-			public boolean onColumnsCompared(String tablename, ITableMetadata meta, Map<String, ColumnType> insert, List<ColumnModification> changed, List<String> delete) {
-				if (!allowDropColumn) {
-					delete.clear();
+		if (exist) {
+			client.refreshTable(meta, new MetadataEventListener() {
+				public void onTableFinished(ITableMetadata meta, String tablename) {
 				}
-				return true;
-			}
 
-			public void onAlterSqlFinished(String tablename, String sql, List<String> sqls, int n, long cost) {
-			}
+				public boolean onTableCreate(ITableMetadata meta, String tablename) {
+					return create;
+				}
 
-			public boolean beforeTableRefresh(ITableMetadata meta, String table) {
-				return true;
-			}
+				public boolean onSqlExecuteError(SQLException e, String tablename, String sql, List<String> sqls, int n) {
+					LogUtil.error("[ALTER-TABLE]. SQL:[{}] ERROR.\nMessage:[{}]", sql, e.getMessage());
+					return true;
+				}
 
-			public void beforeAlterTable(String tablename, ITableMetadata meta, StatementExecutor conn, List<String> sql) {
-			}
-		});
-		if (!isTableExist.get()) {
+				public boolean onCompareColumns(String tablename, List<Column> columns, Map<Field, ColumnMapping> defined) {
+					return refresh;
+				}
+
+				public boolean onColumnsCompared(String tablename, ITableMetadata meta, Map<String, ColumnType> insert, List<ColumnModification> changed, List<String> delete) {
+					if (!allowDropColumn) {
+						delete.clear();
+					}
+					return true;
+				}
+
+				public void onAlterSqlFinished(String tablename, String sql, List<String> sqls, int n, long cost) {
+				}
+
+				public boolean beforeTableRefresh(ITableMetadata meta, String table) {
+					return true;
+				}
+
+				public void beforeAlterTable(String tablename, ITableMetadata meta, StatementExecutor conn, List<String> sql) {
+				}
+			});
+		}
+
+		if (!exist) {
 			return;
 		}
 		// 检查Sequence
@@ -278,44 +327,14 @@ public class QuerableEntityScanner {
 				}
 			}
 		}
+		tasks.put(meta, isNew);
 
-		// 初始化表中的数据
-		if (isNewTable.get() && initDataAfterCreate) {
-			URL url = meta.getThisType().getResource(meta.getThisType().getSimpleName() + ".init.json");
-			if (url != null) {
-				try {
-					initData(url, meta);
-				} catch (IOException e1) {
-					LogUtil.exception(e1);
-				}
-			}
-		} else if (!isNewTable.get() && initDataIfTableExists) {
-			URL url = meta.getThisType().getResource(meta.getThisType().getSimpleName() + ".init.json");
-			if (url != null) {
-				try {
-					mergeData(url, meta);
-				} catch (IOException e1) {
-					LogUtil.exception(e1);
-				}
-			}
-		}
-		// 检查并添加索引
-		if (checkIndex) {
-			// TODO
-		}
 	}
 
 	public static class InitDataModel {
-		private boolean cascade;
+		public boolean cascade;
+		public boolean merge;
 		private List<?> data;
-
-		public boolean isCascade() {
-			return cascade;
-		}
-
-		public void setCascade(boolean cascade) {
-			this.cascade = cascade;
-		}
 
 		public List<?> getData() {
 			return data;
@@ -328,6 +347,8 @@ public class QuerableEntityScanner {
 		public void set(String key, String value) {
 			if ("cascade".equals(key)) {
 				this.cascade = StringUtils.toBoolean(value, false);
+			} else if ("merge".equals(key)) {
+				this.merge = StringUtils.toBoolean(value, false);
 			} else {
 				LogUtil.warn("Unknown key in file init.json: {}", key);
 			}
@@ -341,19 +362,33 @@ public class QuerableEntityScanner {
 	 * 
 	 * @param meta
 	 */
-	private void initData(URL url, ITableMetadata meta) throws IOException {
+	private void initData(URL url, ITableMetadata meta, boolean merge) throws IOException {
 		LogUtil.info("init data for table {}", meta.getTableName(true));
 		InitDataModel model = parseData(url, meta);
-		try {
-			if (model.isCascade()) {
+		if (merge || model.merge) {
+			JefEntityManager em = (JefEntityManager) entityManagerFactory.createEntityManager();
+			if (model.cascade) {
 				for (Object o : model.getData()) {
-					entityManagerFactory.getDefault().insertCascade((IQueryableEntity) o);
+					em.mergeCascade(o);
 				}
 			} else {
-				entityManagerFactory.getDefault().batchInsert(model.getData());
+				for (Object o : model.getData()) {
+					em.merge(o);
+				}
 			}
-		} catch (SQLException e) {
-			throw DbUtils.toRuntimeException(e);
+			em.close();
+		} else {
+			try {
+				if (model.cascade) {
+					for (Object o : model.getData()) {
+						entityManagerFactory.getDefault().insertCascade((IQueryableEntity) o);
+					}
+				} else {
+					entityManagerFactory.getDefault().batchInsert(model.getData());
+				}
+			} catch (SQLException e) {
+				throw DbUtils.toRuntimeException(e);
+			}
 		}
 	}
 
@@ -385,22 +420,6 @@ public class QuerableEntityScanner {
 			throw new IllegalArgumentException(url.toString() + " is a invalid json file", e);
 		}
 		return result;
-	}
-
-	private void mergeData(URL url, ITableMetadata meta) throws IOException {
-		LogUtil.info("merge data for table {}", meta.getTableName(true));
-		InitDataModel results = parseData(url, meta);
-		JefEntityManager em = (JefEntityManager) entityManagerFactory.createEntityManager();
-		if (results.isCascade()) {
-			for (Object o : results.getData()) {
-				em.mergeCascade(o);
-			}
-		} else {
-			for (Object o : results.getData()) {
-				em.merge(o);
-			}
-		}
-
 	}
 
 	private String[] getClassNames() {

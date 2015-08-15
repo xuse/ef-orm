@@ -22,6 +22,7 @@ import jef.tools.reflect.ClassEx;
 import jef.tools.reflect.FieldAccessor;
 import jef.tools.reflect.GenericUtils;
 import jef.tools.reflect.Property;
+import jef.tools.reflect.ConvertUtils;
 
 public class KvEntensionProperty implements Property {
 	private String kColumn;
@@ -106,7 +107,7 @@ public class KvEntensionProperty implements Property {
 	private Object fixValue(String key,String text) {
 		ColumnMapping mapping=extensionMeta.getColumnDef(extensionMeta.getField(key));
 		if(mapping==null)return text;
-		return BeanUtils.toProperType(text, new ClassEx(mapping.getFieldType()), null);
+		return ConvertUtils.toProperType(text, new ClassEx(mapping.getFieldType()), null);
 	}
 
 	@Override

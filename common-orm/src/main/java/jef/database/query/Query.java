@@ -134,13 +134,6 @@ public interface Query<T extends IQueryableEntity> extends TypedQuery<T>,JoinEle
 
 	/**
 	 * 设置：是否尝试用外连接的方式，一次性查出级联关系
-	 * @deprecated Please use  {@link #setCascadeViaOuterJoin(boolean)}，方法已经改名，此方法仅为向下兼容保留
-	 * @param cascadeViaOuterJoin 如果为true，将尽量合并数据库查询来减少操作次数。
-	 */
-	public void setAutoOuterJoin(boolean cascadeViaOuterJoin);
-	
-	/**
-	 * 设置：是否尝试用外连接的方式，一次性查出级联关系
 	 * @param cascadeViaOuterJoin 如果为true，将尽量合并数据库查询来减少操作次数。
 	 */
 	public void setCascadeViaOuterJoin(boolean cascadeViaOuterJoin);
@@ -155,11 +148,17 @@ public interface Query<T extends IQueryableEntity> extends TypedQuery<T>,JoinEle
 	 * @see jef.database.wrapper.populator.Transformer#setLoadVsOne(boolean)
 	 */
 	public void setCascade(boolean cascade);
+	
 
+	/**
+	 * 是否查询全部记录
+	 * @return
+	 */
 	boolean isAll();
 
 	/**
 	 * 查询条件生成器
+	 * <strong>试验性功能。<strong>
 	 * @return Terms
 	 * @see Terms
 	 */
