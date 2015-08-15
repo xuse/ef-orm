@@ -40,6 +40,8 @@ import org.apache.commons.lang.ObjectUtils;
 
 public class JpqlExpression implements Expression,LazyQueryBindField {
 	protected Query<?> instance;
+	
+	protected boolean bindBase;
 
 	protected Expression st;
 
@@ -98,7 +100,15 @@ public class JpqlExpression implements Expression,LazyQueryBindField {
 			st.accept(new JPQLSelectConvert(profile));
 			result=st.toString();
 		}else{
-			String alias=context==null?null:context.getAliasOf(instance);
+			String alias;
+			if(context==null) {
+				//TODO 从目前来看 context==null的情况应该几乎没有了
+				alias=null;
+			}else  if(bindBase && context.queries.get(0).getQuery().getMeta()==instance.getMeta()) {
+				alias=context.queries.get(0).getAlias();
+			}else {
+				alias=context.getAliasOf(instance);
+			}
 			ColumnAliasApplier convert=new ColumnAliasApplier(alias,profile);
 			st.accept(convert);
 			result=st.toString();
@@ -206,4 +216,13 @@ public class JpqlExpression implements Expression,LazyQueryBindField {
 	public ExpressionType getType() {
 		return ExpressionType.complex;
 	}
+
+	public boolean isBindBase() {
+		return bindBase;
+	}
+
+	public void setBindBase(boolean bindBase) {
+		this.bindBase = bindBase;
+	}
+	
 }

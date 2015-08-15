@@ -110,4 +110,17 @@ public interface ConditionQuery{
 	 * @return
 	 */
 	boolean isSelectCustomized();
+	
+
+	/**
+	 * 默认cacheable=true，此时全局缓存开关开启则会尽量使用缓存，如果确定某个查询操作不希望用缓存，则可以设置为false
+	 * @param cacheAble
+	 */
+	void setCacheable(boolean cacheAble);
+	
+	/**
+	 * 查询是否允许使用查询缓存。
+	 * @return
+	 */
+	boolean isCacheable();
 }

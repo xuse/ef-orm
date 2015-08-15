@@ -37,6 +37,7 @@ public abstract class AbstractQuery<T extends IQueryableEntity> implements Query
 	private int maxResult;
 	private int fetchSize;
 	private int queryTimeout;
+	private boolean cacheable =true;
 
 	public void setMaxResult(int size) {
 		this.maxResult = size;
@@ -60,10 +61,6 @@ public abstract class AbstractQuery<T extends IQueryableEntity> implements Query
 
 	public int getQueryTimeout() {
 		return queryTimeout;
-	}
-
-	public void setAutoOuterJoin(boolean cascadeOuterJoin) {
-		setCascadeViaOuterJoin(cascadeOuterJoin);
 	}
 
 	public Query<T> orderByAsc(Field... ascFields) {
@@ -136,5 +133,14 @@ public abstract class AbstractQuery<T extends IQueryableEntity> implements Query
 	@Override
 	public Terms terms() {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void setCacheable(boolean cacheable) {
+		this.cacheable=cacheable;
+	}
+
+	public boolean isCacheable() {
+		return cacheable;
 	}
 }

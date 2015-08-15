@@ -20,6 +20,7 @@ public abstract class AbstractJoinImpl implements Join{
 	private int maxResult;
 	private int fetchSize;
 	private int timeout;
+	private boolean cacheable=true;
 	private Transformer t;
 	
 	//调用prepare后，查询进入实例阶段
@@ -192,5 +193,13 @@ public abstract class AbstractJoinImpl implements Join{
 	
 	public void setResultTransformer(Transformer t){
 		this.t=t;
+	}
+
+	public boolean isCacheable() {
+		return cacheable;
+	}
+
+	public void setCacheable(boolean cacheable) {
+		this.cacheable = cacheable;
 	}
 }

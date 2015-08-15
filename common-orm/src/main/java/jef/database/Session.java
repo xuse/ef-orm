@@ -1597,7 +1597,7 @@ public abstract class Session{
 			return Collections.EMPTY_LIST;
 		
 		Transformer transformer = queryObj.getResultTransformer();
-		boolean noCache=queryObj.isSelectCustomized() || range!=null;
+		boolean noCache=!queryObj.isCacheable()|| queryObj.isSelectCustomized() || range!=null;
 		
 		// 缓存命中
 		List resultList = noCache?null:getCache().load(sql.getCacheKey());

@@ -107,6 +107,7 @@ final class CascadeLoaderTask implements LazyLoadTask {
 			}
 		}
 		String isManyToMany=this.keyOfJoinTable;
+		@SuppressWarnings("unchecked")
 		List<IQueryableEntity> subs = db.innerSelect(finalQuery, null, filters, option);		
 		if(isManyToMany!=null) {
 			List<? extends IQueryableEntity> old=subs;

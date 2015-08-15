@@ -517,7 +517,9 @@ public final class DbUtils {
 				select.merge((AbstractEntityMappingProvider) queryObj.getSelectItems());
 				j.setSelectItems(select);
 			}
+			//TODO 其实cacheable, Transformer, attribute都是Query在转换时需要保持不变的属性，可以设法抽取到公共类中。
 			j.setResultTransformer(queryObj.getResultTransformer());
+			j.setCacheable(queryObj.isCacheable());
 			// FilterCondition合并
 			if (queryObj.getFilterCondition() != null) {
 				for (QueryAlias qa : j.allElements()) {
@@ -1052,18 +1054,22 @@ public final class DbUtils {
 				hasValue = true;
 		}
 		// 辅助过滤条件，不作为hasValue标记
-		for (JoinKey r : rs.getJoinExpression()) {
-			Field f = r.getLeft();
+		for (JoinKey condition : rs.getJoinExpression()) {
+			Field f = condition.getLeft();
 			if (f == null) {
 				continue;
 			}
 			if (f instanceof SqlExpression) {
-				query.addCondition(r);
+				query.addCondition(condition);
+				continue;
+			}
+			if (f instanceof JpqlExpression) {
+				query.addCondition(condition);
 				continue;
 			}
 			ITableMetadata meta = DbUtils.getTableMeta(f);
 			if (meta == query.getMeta()) {
-				query.addCondition(r);
+				query.addCondition(condition);
 			}
 		}
 		if (filters != null) {
