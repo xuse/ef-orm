@@ -524,7 +524,7 @@ public final class TableMetadata extends AbstractMetadata {
 
 	@Override
 	public Collection<ColumnMapping> getExtendedColumns() {
-		return extendMeta.getColumnSchema();
+		return extendMeta==null?Collections.EMPTY_LIST:extendMeta.getColumnSchema();
 	}
 
 	@Override
