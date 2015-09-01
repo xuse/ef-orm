@@ -42,11 +42,10 @@ import jef.database.support.MultipleDatabaseOperateException;
 import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
-import jef.tools.reflect.NopBeanWrapper;
 import jef.tools.reflect.ConvertUtils;
+import jef.tools.reflect.NopBeanWrapper;
 
-import org.apache.commons.lang.ObjectUtils;
-
+import com.google.common.base.Objects;
 import com.google.common.collect.Multimap;
 
 /**
@@ -396,7 +395,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 					if(term!=null){
 						Class<?> clz=instance.getPropertyRawType(field);
 						if(clz.isPrimitive()){//如果是缺省值，当做null处理。
-							if(ObjectUtils.equals(term, ConvertUtils.defaultValueOfPrimitive(clz))){//如果是和原生值一样
+							if(Objects.equal(term, ConvertUtils.defaultValueOfPrimitive(clz))){//如果是和原生值一样
 								IQueryableEntity qq=(IQueryableEntity)instance.getWrapped();
 								Field fld=meta.getField(field);
 								if(!(qq).isUsed(fld)){
@@ -636,10 +635,10 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		}
 	}
 
-	private static KeyFunction[] NUM_FUNS = new KeyFunction[] { KeyFunction.DAY, KeyFunction.HH24, KeyFunction.MODULUS, KeyFunction.MONTH, KeyFunction.YEAR, KeyFunction.YEAR_LAST2, KeyFunction.YEAR_MONTH };
+	private static KeyFunction[] NUM_FUNCS = new KeyFunction[] { KeyFunction.DAY, KeyFunction.HH24, KeyFunction.MODULUS, KeyFunction.MONTH, KeyFunction.YEAR, KeyFunction.YEAR_LAST2, KeyFunction.YEAR_MONTH };
 
 	public static boolean isNumberFun(PartitionKey key) {
-		if (ArrayUtils.contains(NUM_FUNS, key.function())) {
+		if (ArrayUtils.contains(NUM_FUNCS, key.function())) {
 			return true;
 		}
 		if (ModulusFunction.class.isAssignableFrom(key.functionClass())) {

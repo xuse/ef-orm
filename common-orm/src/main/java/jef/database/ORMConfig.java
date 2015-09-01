@@ -195,8 +195,12 @@ public class ORMConfig implements ORMConfigMBean {
 	public String wrapt = "";
 
 	private boolean checkSqlFunctions;
+	
+	
+	private String partitionBucketRange;
 
 	private void init() {
+		partitionBucketRange=JefConfiguration.get(DbCfg.PARTITION_BUCKET_RANGE);
 		showStringLength = JefConfiguration.getBoolean(DbCfg.DB_ENCODING_SHOWLENGTH, false);
 		setDbEncoding(JefConfiguration.get(DbCfg.DB_ENCODING, Charset.defaultCharset().name()));
 		globalMaxResults = JefConfiguration.getInt(DbCfg.DB_MAX_RESULTS_LIMIT, 0);
@@ -605,6 +609,14 @@ public class ORMConfig implements ORMConfigMBean {
 		}
 	}
 	
+	public String getPartitionBucketRange() {
+		return partitionBucketRange;
+	}
+
+	public void setPartitionBucketRange(String partitionBucketRange) {
+		this.partitionBucketRange = partitionBucketRange;
+	}
+
 	public boolean isGenerateBySequenceAndIdentityToAUTO() {
 		return generateBySequenceAndIdentityToAUTO;
 	}

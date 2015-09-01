@@ -50,6 +50,7 @@ import jef.tools.reflect.GenericUtils;
 import org.apache.commons.lang.ObjectUtils;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Multimap;
@@ -677,7 +678,7 @@ public final class CollectionUtils {
 			Iterator<?> iterator = iterable.iterator();
 			while (iterator.hasNext()) {
 				Object candidate = iterator.next();
-				if (ObjectUtils.equals(candidate, element)) {
+				if (Objects.equal(candidate, element)) {
 					return true;
 				}
 			}
@@ -698,7 +699,7 @@ public final class CollectionUtils {
 		if (enumeration != null) {
 			while (enumeration.hasMoreElements()) {
 				Object candidate = enumeration.nextElement();
-				if (ObjectUtils.equals(candidate, element)) {
+				if (Objects.equal(candidate, element)) {
 					return true;
 				}
 			}
@@ -833,7 +834,7 @@ public final class CollectionUtils {
 		public Boolean apply(T input) {
 			try {
 				Object v = field.get(input);
-				return ObjectUtils.equals(v, value);
+				return Objects.equal(v, value);
 			} catch (IllegalArgumentException e) {
 				throw new IllegalAccessError(e.getMessage());
 			}

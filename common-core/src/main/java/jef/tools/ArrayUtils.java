@@ -33,9 +33,10 @@ import jef.common.EnumerationWrapper;
 import jef.common.IntList;
 import jef.common.LongList;
 
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
+
+import com.google.common.base.Objects;
 
 /**
  * 数组工具
@@ -780,7 +781,7 @@ public class ArrayUtils extends org.apache.commons.lang.ArrayUtils {
 		if (a1.length != a2.length)
 			return false;
 		for (int n = 0; n < a1.length; n++) {
-			if (!ObjectUtils.equals(a1[n], a2[n])) {
+			if (!Objects.equal(a1[n], a2[n])) {
 				return false;
 			}
 		}

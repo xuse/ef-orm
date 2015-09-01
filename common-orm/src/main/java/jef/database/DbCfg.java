@@ -425,6 +425,17 @@ public enum DbCfg implements ConfigItem {
 	 * 在分库分表下执行查询、删除、更新操作时过滤掉哪些数据库中不存在的表。默认开启。
 	 */
 	PARTITION_FILTER_ABSENT_TABLES,
+	
+	/**
+	 * 当使用HashMod1024Mapping对字段进行分表分库处理时的计算规则。
+	 * 配置方法为
+	 * {@code 0-255:DB1,256-767:DB2,768-1023:DB3}
+	 * 表示当对字符串取hash后，除以1024的余数为0~255范围时
+	 * 
+	 */
+	PARTITION_BUCKET_RANGE,
+	
+	
 	/**
 	 * 在一次in条件中允许出现的最多参数数量。缺省500。有部分批量查询接口，可以自动将传入的条件转为 in (?,?,?,..)这样的语句，该参数可用于控制in条件最大的元素个数。
 	 */

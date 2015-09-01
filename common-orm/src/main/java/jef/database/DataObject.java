@@ -18,9 +18,10 @@ import jef.database.meta.MetaHolder;
 import jef.database.query.Query;
 import jef.database.query.QueryImpl;
 
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+
+import com.google.common.base.Objects;
 
 /**
  * 抽象类，用于实现所有Entity默认的各种方法
@@ -127,7 +128,7 @@ public abstract class DataObject implements IQueryableEntity {
 		String fieldName = field.name();
 		if (updateValueMap == null)
 			updateValueMap = new TreeMap<Field, Object>(cmp);
-		if (force || !ObjectUtils.equals(ba.getProperty(this,fieldName), newValue)) {
+		if (force || !Objects.equal(ba.getProperty(this,fieldName), newValue)) {
 			updateValueMap.put(field, newValue);
 		}
 		return;

@@ -15,6 +15,7 @@ import jef.tools.StringUtils;
 
 import org.apache.commons.lang.ObjectUtils;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
@@ -91,7 +92,7 @@ public class InMemoryStartWithConnectBy implements InMemoryProcessor{
 		}
 		switch(startWithOperator){
 		case EQUALS:
-			return ObjectUtils.equals(obj, startWithValue);
+			return Objects.equal(obj, startWithValue);
 		case GREAT:
 			return ObjectUtils.compare((Comparable)obj, (Comparable)startWithValue)>0;
 		case GREAT_EQUALS:
@@ -122,7 +123,7 @@ public class InMemoryStartWithConnectBy implements InMemoryProcessor{
 			return s1.startsWith(s2);
 		}
 		case NOT_EQUALS:
-			return !ObjectUtils.equals(obj, startWithValue);
+			return !Objects.equal(obj, startWithValue);
 		case NOT_IN:{
 			List<Object> values=(List<Object>)startWithValue;
 			return !values.contains(obj);

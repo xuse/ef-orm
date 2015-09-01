@@ -24,7 +24,7 @@ import jef.database.query.ReadOnlyQuery;
 import jef.database.query.ReferenceType;
 import jef.tools.Assert;
 
-import org.apache.commons.lang.ObjectUtils;
+import com.google.common.base.Objects;
 
 /**
  * 关于多表操作的三个概念设计
@@ -160,10 +160,10 @@ public class Reference{
 	public boolean equals(Object obj) {
 		if(!(obj instanceof Reference))return false;
 		Reference o=(Reference)obj;
-		if(!ObjectUtils.equals(this.fromType, o.fromType))return false;
-		if(!ObjectUtils.equals(this.targetType, o.targetType))return false;
+		if(!Objects.equal(this.fromType, o.fromType))return false;
+		if(!Objects.equal(this.targetType, o.targetType))return false;
 		if(this.type!=o.type)return false;
-		if(!ObjectUtils.equals(this.hint, o.hint))return false;
+		if(!Objects.equal(this.hint, o.hint))return false;
 		return true;
 	}
 	

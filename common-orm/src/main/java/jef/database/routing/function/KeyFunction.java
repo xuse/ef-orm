@@ -23,6 +23,11 @@ package jef.database.routing.function;
 public enum KeyFunction {
 	
 	/**
+	 * 对文本取Hash值，然后求余数
+	 */
+	HASH_MOD1024_RANGE,
+	
+	/**
 	 * 10求余。参数由functionConstructorParams确定
 	 */
 	MODULUS, //取余

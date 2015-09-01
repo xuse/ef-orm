@@ -9,8 +9,9 @@ import jef.database.meta.ITableMetadata;
 import jef.database.meta.Reference;
 import jef.tools.Assert;
 
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+
+import com.google.common.base.Objects;
 
 /**
  * 能绑定到一个SQL中查询表上的Field描述。
@@ -175,7 +176,7 @@ public class RefField implements Field,LazyQueryBindField{
 			return false;
 		}
 		RefField rhs=(RefField)obj;
-		if(!ObjectUtils.equals(field, rhs.field)){
+		if(!Objects.equal(field, rhs.field)){
 			return false;
 		}
 		if(instance==null && rhs.instance==null){
@@ -183,7 +184,7 @@ public class RefField implements Field,LazyQueryBindField{
 		}else if(instance==null || rhs.instance==null){
 			return false;
 		}
-		if(!ObjectUtils.equals(instance.getType(), rhs.instance.getType())){
+		if(!Objects.equal(instance.getType(), rhs.instance.getType())){
 			return false;
 		}
 		return true;

@@ -23,7 +23,7 @@ import java.util.NoSuchElementException;
 
 import jef.tools.collection.CollectionUtils;
 
-import org.apache.commons.lang.ObjectUtils;
+import com.google.common.base.Objects;
 
 /**
  * 断言工具类，用于检查
@@ -155,7 +155,7 @@ public class Assert {
 	 * @param obj2
 	 */
 	public static void equals(Object obj1, Object obj2) {
-		if (!ObjectUtils.equals(obj1, obj2))
+		if (!Objects.equal(obj1, obj2))
 			throw new RuntimeException("Expect "+obj1+" but get "+ obj2);
 	}
 
@@ -166,7 +166,7 @@ public class Assert {
 	 * @param string
 	 */
 	public static void equals(Object obj1, Object obj2, String string) {
-		if (!ObjectUtils.equals(obj1, obj2))
+		if (!Objects.equal(obj1, obj2))
 			throw new RuntimeException(string);
 	}
 	
@@ -176,7 +176,7 @@ public class Assert {
 	 * @param obj2
 	 */
 	public static void notEquals(Object obj1, Object obj2) {
-		if (ObjectUtils.equals(obj1, obj2))
+		if (Objects.equal(obj1, obj2))
 			throw new RuntimeException();
 	}
 
@@ -187,7 +187,7 @@ public class Assert {
 	 * @param string
 	 */
 	public static void notEquals(Object obj1, Object obj2, String string) {
-		if (ObjectUtils.equals(obj1, obj2))
+		if (Objects.equal(obj1, obj2))
 			throw new RuntimeException(string);
 	}
 
