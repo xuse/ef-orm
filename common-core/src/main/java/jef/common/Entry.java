@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.ObjectUtils;
+import jef.tools.StringUtils;
 
 import com.google.common.base.Objects;
 
@@ -37,7 +37,7 @@ public class Entry<K,V> implements Serializable,java.util.Map.Entry<K,V>{
 	private V value;
 
 	public String toString() {
-		return ObjectUtils.toString(key)+":"+ObjectUtils.toString(value);
+		return StringUtils.toString(key)+":"+StringUtils.toString(value);
 	}
 
 	public K getKey() {

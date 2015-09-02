@@ -311,11 +311,11 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 		return null;
 	}
 
-	public Object getMin() {
+	public T getMin() {
 		return min;
 	}
 
-	public Object getMax() {
+	public T getMax() {
 		return max;
 	}
 
@@ -353,5 +353,9 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 			
 		}
 		return set;
+	}
+
+	public void setMax(T max) {
+		this.max = max;
 	}
 }

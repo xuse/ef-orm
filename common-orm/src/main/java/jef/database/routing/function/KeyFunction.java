@@ -15,6 +15,8 @@
  */
 package jef.database.routing.function;
 
+import jef.database.annotation.PartitionKey;
+
 /**
  * 描述一个对指定类型的函数操作，用来将不同的值转化为分表时的表名后缀
  * @author Administrator
@@ -23,7 +25,32 @@ package jef.database.routing.function;
 public enum KeyFunction {
 	
 	/**
-	 * 对文本取Hash值，然后求余数
+	 * 对文本取Hash值，然后按1024取模。按照余数的分布来选择到不同的分区上。<p>
+	 * 对应类为：jef.database.routing.function.HashMod1024MappingFunction.HashMod1024MappingFunction<br>
+	 * <h3>算法机制</h3>
+	 * 将文本截断后，计算其HashCode并按1024取模。从而得到一个范围为0~1023的整数。
+	 * 然后根据实现划定的范围，将这个整数映射到一个表名/库名上。
+	 * 
+	 * <h3>配置方法一</h3>
+	 * 支持properties参数:<br>
+	 * <code>
+	 * 	partition.bucket.range = 0:DB1,256:DB2,512:DB3,768:DB4
+	 * </code><br>
+	 * 上述配置等效于<br>
+	 * <code>
+	 * 	partition.bucket.range = 0-255:DB1,256-511:DB2,512-767:DB3,768-1023:DB4
+	 * </code>
+	 * 上例中，可以控制将0~1023的小片分别平均分到四个表/库中。
+	 * 
+	 * <h3>配置方法2</h3>
+	 * 使用Annotation中的functionConstructorParams.
+	 * <code><pre>@PartitionKey(
+	 *		field="field",
+	 *		function=KeyFunction.HASH_MOD1024_RANGE,
+	 *		functionConstructorParams= {"0:DB1,256:DB2,512:DB3,768:DB4","10"}
+	 *	) 	
+	 * </pre></code>
+	 * 使用注解也可以指定该对象的分区范围，第二个参数“10”还可以指定计算hashCode的文本长度。
 	 */
 	HASH_MOD1024_RANGE,
 	

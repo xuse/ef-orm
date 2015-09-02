@@ -355,7 +355,11 @@ public final class TableMetadata extends AbstractMetadata {
 			if(value.functionConstructorParams().length==0 || StringUtils.isEmpty(value.functionConstructorParams()[0])){
 				return new HashMod1024MappingFunction();	
 			}else {
-				return new HashMod1024MappingFunction(value.functionConstructorParams()[0]);
+				int num=0;
+				if(value.functionConstructorParams().length>1){
+					num=StringUtils.toInt(value.functionConstructorParams()[1],0);
+				}
+				return new HashMod1024MappingFunction(value.functionConstructorParams()[0],num);
 			}
 		case MONTH:
 			return AbstractDateFunction.MONTH;

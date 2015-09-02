@@ -840,4 +840,17 @@ public final class CollectionUtils {
 			}
 		}
 	}
+	
+	/**
+	 * 获得集合的最后一个元素
+	 * @param collection
+	 * @return
+	 */
+	public static <T> T last(List<T> collection) {
+		if(collection==null || collection.isEmpty()) {
+			return null;
+		}
+		return collection.get(collection.size()-1);
+		
+	}
 }

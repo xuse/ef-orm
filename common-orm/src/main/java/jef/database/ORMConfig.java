@@ -200,7 +200,7 @@ public class ORMConfig implements ORMConfigMBean {
 	private String partitionBucketRange;
 
 	private void init() {
-		partitionBucketRange=JefConfiguration.get(DbCfg.PARTITION_BUCKET_RANGE);
+		partitionBucketRange=JefConfiguration.get(DbCfg.PARTITION_BUCKET_RANGE,"0-1023:");
 		showStringLength = JefConfiguration.getBoolean(DbCfg.DB_ENCODING_SHOWLENGTH, false);
 		setDbEncoding(JefConfiguration.get(DbCfg.DB_ENCODING, Charset.defaultCharset().name()));
 		globalMaxResults = JefConfiguration.getInt(DbCfg.DB_MAX_RESULTS_LIMIT, 0);

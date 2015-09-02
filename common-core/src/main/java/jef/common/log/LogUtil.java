@@ -22,7 +22,6 @@ import jef.tools.StringUtils;
 import jef.tools.XMLUtils;
 import jef.tools.io.StringBuilderWriter;
 
-import org.apache.commons.lang.ObjectUtils;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Node;
 
@@ -33,7 +32,7 @@ import org.w3c.dom.Node;
  */
 public class LogUtil {
 	public static List<Writer> otherStream;
-	private static org.slf4j.Logger log = LoggerFactory.getLogger("JEF");
+	private static org.slf4j.Logger log = LoggerFactory.getLogger("GeeQuery");
 	
 	//是否将输出改为日志形式输出
 	public static boolean commonDebugAdapter = JefConfiguration.getBoolean(Item.COMMON_DEBUG_ADAPTER, false);
@@ -334,10 +333,10 @@ public class LogUtil {
 			Iterator<Map.Entry> iter=map.entrySet().iterator();
 			if(iter.hasNext()){
 				Map.Entry e=iter.next();
-				sb.append(StringUtils.rightPad(ObjectUtils.toString(e.getKey()), 18)).append('\t').append(toString(e.getValue()));
+				sb.append(StringUtils.rightPad(StringUtils.toString(e.getKey()), 18)).append('\t').append(toString(e.getValue()));
 				for (;iter.hasNext();) {
 					e=iter.next();
-					sb.append('\n').append(StringUtils.rightPad(ObjectUtils.toString(e.getKey()), 18)).append('\t').append(toString(e.getValue()));
+					sb.append('\n').append(StringUtils.rightPad(StringUtils.toString(e.getKey()), 18)).append('\t').append(toString(e.getValue()));
 				}
 			}
 		} else if (o instanceof Node) {
@@ -349,11 +348,11 @@ public class LogUtil {
 			}
 		} else if (o instanceof Entry<?, ?>) {
 			Entry<?, ?> e = (Entry<?, ?>) o;
-			sb.append(StringUtils.rightPad(ObjectUtils.toString(e.getKey()), 18)).append('\t').append(toString(e.getValue()));
+			sb.append(StringUtils.rightPad(StringUtils.toString(e.getKey()), 18)).append('\t').append(toString(e.getValue()));
 		} else if (o instanceof Throwable) {
 			StringUtils.exceptionSummary((Throwable) o, sb);
 		} else {
-			sb.append(ObjectUtils.toString(o));
+			sb.append(StringUtils.toString(o));
 		}
 	}
 
@@ -421,7 +420,7 @@ public class LogUtil {
 				throw new RuntimeException(e);
 			}
 		}else{
-			return ObjectUtils.toString(object);
+			return StringUtils.toString(object);
 		}
 	}
 
