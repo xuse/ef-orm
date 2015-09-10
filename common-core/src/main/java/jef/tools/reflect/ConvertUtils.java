@@ -456,7 +456,8 @@ public final class ConvertUtils {
 		}
 
 		if (clz.isEnum()) {
-			EnumConverter<?> ec = new EnumConverter<>(clz.getWrappered().asSubclass(Enum.class));
+			@SuppressWarnings({ "rawtypes", "unchecked" })
+			EnumConverter ec = new EnumConverter(clz.getWrappered().asSubclass(Enum.class));
 			CACHE.put(clz.getWrappered(), new Node<Converter<?>>(ec));
 			return ec.apply(value);
 		} else if (clz.isArray()) {

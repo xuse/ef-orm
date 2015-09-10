@@ -150,7 +150,7 @@ public class QuerableEntityScanner {
 		Set<String> classes = cs.scan(packageNames);
 
 		// 循环所有扫描到的类
-		Map<ITableMetadata, Boolean> tasks = new HashMap<>();
+		Map<ITableMetadata, Boolean> tasks = new HashMap<ITableMetadata, Boolean>();
 		for (String s : classes) {
 			try {
 				// 读取类
@@ -198,7 +198,7 @@ public class QuerableEntityScanner {
 		if (cl == null) {
 			cl = this.getClass().getClassLoader();
 		}
-		Map<ITableMetadata, Boolean> tasks = new HashMap<>();
+		Map<ITableMetadata, Boolean> tasks = new HashMap<ITableMetadata, Boolean>();
 		try {
 			Class<?> c = cl.loadClass(name);
 			registeEntity(c, tasks);

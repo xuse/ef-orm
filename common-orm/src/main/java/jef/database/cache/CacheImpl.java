@@ -75,7 +75,7 @@ public class CacheImpl implements Cache {
 	 * 定时失效机制如何添加：拟添加在第三层 清洗规则中，可以以任意一级为条件进行清洗
 	 * 
 	 */
-	private final Map<String, Map<KeyDimension, DimCache>> cache = new ConcurrentHashMap<>();
+	private final Map<String, Map<KeyDimension, DimCache>> cache = new ConcurrentHashMap<String, Map<KeyDimension, DimCache>>();
 
 	/**
 	 * 构造
