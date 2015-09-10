@@ -28,6 +28,11 @@ import jef.tools.reflect.UnsafeUtils;
  * 
  */
 public abstract class ThreadUtils {
+	public static final int WAIT_INTERRUPTED = 0;
+	public static final int WAIT_TIMEOUT = -1;
+	public static final int WAIT_NOTIFIED = 1;
+
+	
 
 	/**
 	 * 让出指定对象的锁，并且挂起当前线程。只有当—— <li>1. 有别的线程notify了对象，并且锁没有被其他线程占用。</li> <li>2
@@ -51,15 +56,18 @@ public abstract class ThreadUtils {
 	 * 调用对象的wait方法，并设置超时时间
 	 * @param obj 锁所在的对象
 	 * @param timeout 超时时间，单位毫秒
-	 * @return  超时或正常等待完成返回true。异常退出返回false。
+	 * @return  超时返回 {@link #WAIT_TIMEOUT};
+	 * 正常唤醒{@link #WAIT_NOTIFIED};
+	 * 异常打断{@link #WAIT_INTERRUPTED }
 	 */
-	public static final boolean doWait(Object obj, long timeout) {
+	public static final int doWait(Object obj, long timeout) {
 		synchronized (obj) {
 			try {
+				long expectTimeout = System.currentTimeMillis() + timeout;
 				obj.wait(timeout);
-				return true;
+				return System.currentTimeMillis() >= expectTimeout ? WAIT_TIMEOUT : WAIT_NOTIFIED;
 			} catch (InterruptedException e) {
-				return false;
+				return WAIT_INTERRUPTED;
 			}
 		}
 	}

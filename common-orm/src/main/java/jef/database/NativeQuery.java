@@ -292,12 +292,12 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		return this;
 	}
 
-	/**
-	 * 从SQL语句加上返回类型构造
+	/*
+	 * 从SQL语句加上返回类型 构造
 	 * 
-	 * @param db
-	 * @param sql
-	 * @param resultClass
+	 * @param db 目标数据库
+	 * @param sql SQL语句
+	 * @param resultClass 查询转换器
 	 */
 	NativeQuery(OperateTarget db, String sql, Transformer t) {
 		if (StringUtils.isEmpty(sql)) {
@@ -309,6 +309,9 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		resultTransformer.addStrategy(PopulateStrategy.PLAIN_MODE);
 	}
 
+	/*
+	 * 构造
+	 */
 	NativeQuery(OperateTarget db, NamedQueryConfig config, Transformer t) {
 		this.db = db;
 		this.resultTransformer = t;
@@ -377,7 +380,8 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	/**
 	 * 以迭代器模式返回查询结果
 	 * 
-	 * @return
+	 * @return 结果迭代器
+	 * @see ResultIterator
 	 */
 	public ResultIterator<X> getResultIterator() {
 		TransformerIteratrAdapter<X> r = new TransformerIteratrAdapter<X>(resultTransformer, this.db);
@@ -412,7 +416,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 * @param forCount
 	 *            如果是count场合，那么返回true。count场合可以去除排序并执行一些SQL变化以优化查询速度。
 	 * @return 返回结果
-	 * @throws SQLException
+	 * @throws SQLException 数据库异常
 	 */
 	private <T> T doQuery(ResultSetExtractor<T> extractor, boolean forCount) throws SQLException {
 		SqlAndParameter sqlContext = config.getSqlAndParams(db, this);
@@ -433,7 +437,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 * 
 	 * @param range
 	 *            结果集范围。一个含头含尾的区间。
-	 * @return this
+	 * @return this 
 	 * @see IntRange
 	 * @see #getResultList()
 	 * @see #getResultIterator()
@@ -442,7 +446,22 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	public void setRange(IntRange range) {
 		this.range = range;
 	}
-
+	
+	
+	/**
+	 * 设置查询结果的条数限制，即分页 包含了{@link #setMaxResults(int)}和
+	 * {@link #setFirstResult(int)}的功能<br>
+	 * 这一设置会影响 {@link #getResultList()} {@link #getResultIterator()} 的结果。 <br>
+	 * 这一设置不影响 {@link #getResultCount()}的结果
+	 * @param start 结果集范围。相当于SQL中的offset(从0开始)
+	 * @param limit 限定结果条数。相当于SQL中的limit。
+	 */
+	public void setRange(int start,int limit) {
+		this.range = new IntRange(start+1,start+limit);
+	}
+	
+	
+	
 	/**
 	 * 当确认返回结果只有一条时，使用此方法得到结果。 如果查询条数>1，不会抛出异常，而是返回第一条结果。
 	 * 
@@ -527,7 +546,8 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	/**
 	 * 获取当前的结果拼装策略
 	 * 
-	 * @return
+	 * @return populate strategy
+	 * @see PopulateStrategy
 	 */
 	public PopulateStrategy[] getStrategies() {
 		return resultTransformer.getStrategy();
@@ -546,6 +566,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 
 	/**
 	 * 获取当前设置的最大结果设置
+	 * @return 查询最大返回结果集
 	 */
 	public int getMaxResults() {
 		if (range != null)
@@ -575,7 +596,10 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	}
 
 	/**
+	 * JPA Method<br/>
 	 * 得到目前的开始偏移（即分页时要跳过的记录数）。从0开始
+	 * @return offset值
+	 * 
 	 */
 	public int getFirstResult() {
 		if (range == null)
@@ -583,6 +607,10 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		return range.getStart() - 1;
 	}
 
+	/**
+	 * JPA规范方法
+	 * {@inheritDoc}
+	 */
 	public NativeQuery<X> setHint(String hintName, Object value) {
 		hint.put(hintName, value);
 		if (QueryHints.START_LIMIT.equals(hintName)) {
@@ -594,22 +622,27 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		}
 		return this;
 	}
-
+	
+	
+	/**
+	 * JPA规范方法
+	 * {@inheritDoc}
+	 */
 	public Map<String, Object> getHints() {
 		return Collections.unmodifiableMap(hint);
 	}
 
 	/**
 	 * 目前不支持的JPA方法 抛出异常
-	 * 
-	 * @deprecated
+	 * @deprecated throws UnsupportedOperationException
 	 */
 	public <X> X unwrap(Class<X> cls) {
 		throw new UnsupportedOperationException();
 	}
 
 	/**
-	 * 设置查询的绑定变量参数
+	 * JPA规范方法
+	 * {@inheritDoc}
 	 */
 	public <T> NativeQuery<X> setParameter(Parameter<T> param, T value) {
 		if (param.getPosition() != null) {
@@ -621,7 +654,8 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	}
 
 	/**
-	 * 设置查询的绑定变量参数
+	 * JPA规范方法
+	 * {@inheritDoc}
 	 */
 	public NativeQuery<X> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
 		setParameter(param, value);
@@ -629,7 +663,8 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	}
 
 	/**
-	 * 设置查询的绑定变量参数
+	 * JPA规范方法
+	 * {@inheritDoc}
 	 */
 	public NativeQuery<X> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
 		setParameter(param, value);
@@ -637,21 +672,28 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	}
 
 	/**
-	 * 设置查询的绑定变量参数
+	 * JPA规范方法
+	 * {@inheritDoc}
 	 */
 	public NativeQuery<X> setParameter(String name, Calendar value, TemporalType temporalType) {
 		return setParameter(name, value);
 	}
 
 	/**
-	 * 设置查询的绑定变量参数
+	 * JPA规范方法
+	 * {@inheritDoc}
 	 */
 	public NativeQuery<X> setParameter(String name, Date value, TemporalType temporalType) {
 		return setParameter(name, value);
 	}
 
 	/**
+	 * JPA规范方法
+	 * {@inheritDoc}
+	 * <p>
 	 * 设置查询的绑定变量参数
+	 * @param name 参数名
+	 * @param value 参数值
 	 */
 	public NativeQuery<X> setParameter(String name, Object value) {
 		if (StringUtils.isNotEmpty(name)) {
@@ -667,6 +709,9 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 
 	/**
 	 * 设置查询的绑定变量参数
+	 * @param position 位置(序号)
+	 * @param value 参数值
+	 * @return 当前NativeQuery本身
 	 */
 	public NativeQuery<X> setParameter(int position, Object value) {
 		JpqlParameter p = config.getParams(db).get(Integer.valueOf(position));
@@ -678,42 +723,12 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		return this;
 	}
 
-	/*
-	 * 
-	 */
-	private Object processValue(JpqlParameter p, Object value) {
-		JpqlDataType type = p.getDataType();
-		if (value instanceof String) {
-			if (type != null) {
-				value = toProperType(type, (String) value);
-			}
-		} else if ((value instanceof java.util.Date)) {
-			Class<?> clz = value.getClass();
-			if (clz == java.sql.Time.class || clz == java.sql.Timestamp.class || clz == java.sql.Time.class) {
-				// do nothing
-			} else if (type == JpqlDataType.TIMESTAMP) {
-				value = new java.sql.Timestamp(((java.util.Date) value).getTime());
-			} else {
-				value = new java.sql.Date(((java.util.Date) value).getTime());
-			}
-		}
-		// 如果是动态SQL片段类型且参数值是数组类型，则将数组转换成1个String值。
-		else if (JpqlDataType.SQL.equals(type) && value instanceof Object[]) {
-			value = new SqlExpression(StringUtils.join((Object[]) value));
-		} else if (value != null) {
-			if (type == JpqlDataType.STRING) {
-				value = String.valueOf(value);
-			}
-		}
-		return value;
-	}
-
 	/**
 	 * 设置参数的值，传入的参数类型为String，
 	 * 
-	 * @param name
-	 * @param value
-	 * @return
+	 * @param name 参数名
+	 * @param value  参数值
+	 * @return 当前NativeQuery本身
 	 */
 	public NativeQuery<X> setParameterByString(String name, String value) {
 		if (StringUtils.isNotEmpty(name)) {
@@ -733,9 +748,9 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	/**
 	 * 设置参数的值，传入的参数类型为String[]
 	 * 
-	 * @param name
-	 * @param value
-	 * @return
+	 * @param name 参数名
+	 * @param value 参数值
+	 * @return 当前NativeQuery本身
 	 */
 	public NativeQuery<X> setParameterByString(String name, String[] value) {
 		if (StringUtils.isNotEmpty(name)) {
@@ -751,13 +766,41 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		}
 		return this;
 	}
+	
+	
+	/**
+	 * 设置参数，如果被设置的值为空字符串或null，则不设置
+	 * @param name 参数名
+	 * @param value 参数值
+	 * @return 当前NativeQuery本身
+	 */
+	public NativeQuery<X> setNotEmptyParameter(String name, String value) {
+		if(!StringUtils.isEmpty(value)){
+			setParameterByString(name, value);
+		}
+		return this;
+	}
+	
+	/**
+	 * 设置参数，如果被设置的对象为null，则不设置
+	 * @param name 参数名
+	 * @param value 参数值
+	 * @return 当前NativeQuery本身
+	 */
+	public NativeQuery<X> setNotNullParameter(String name, Object value) {
+		if(value!=null){
+			setParameter(name, value);
+		}
+		return this;
+	}
+	
 
 	/**
 	 * 设置参数的值，传入的参数类型为String，
 	 * 
-	 * @param name
-	 * @param value
-	 * @return
+	 * @param name  参数名
+	 * @param value 参数值
+	 * @return 当前NativeQuery本身
 	 */
 	public NativeQuery<X> setParameterByString(int position, String value) {
 		JpqlParameter p = config.getParams(db).get(position);
@@ -775,8 +818,8 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	/**
 	 * 设置参数的值，传入的参数类型为String[]
 	 * 
-	 * @param name
-	 * @param value
+	 * @param name  参数名
+	 * @param value 参数值
 	 * @return
 	 */
 	public NativeQuery<X> setParameterByString(int position, String[] value) {
@@ -791,6 +834,15 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		nameParams.put(Integer.valueOf(position), v);
 		return this;
 	}
+
+	/**
+	 * 设置参数的值
+	 */
+	public NativeQuery<X> setParameter(int position, Calendar value, TemporalType temporalType) {
+		return setParameter(position, fixTemporal(value.getTime(),temporalType));
+	}
+	
+	
 
 	/*
 	 * 将参数按照命名查询中的类型提示转换为合适的类型
@@ -807,6 +859,302 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		}
 		return result;
 	}
+
+
+	
+
+	/**
+	 * 以Map形式设置参数的值
+	 * 
+	 * @param params 所有参数的Map
+	 * @return this
+	 */
+	public NativeQuery<X> setParameterMap(Map<String, Object> params) {
+		if (params == null)
+			return this;
+		for (String key : params.keySet()) {
+			setParameter(key, params.get(key));
+		}
+		return this;
+	}
+
+	/**
+	 * JPA规范方法
+	 * {@inheritDoc}
+	 */
+	public NativeQuery<X> setParameter(int position, Date value, TemporalType temporalType) {
+		return setParameter(position, value);
+	}
+
+	/**
+	 * JPA规范方法
+	 * {@inheritDoc}
+	 */
+	public Set<Parameter<?>> getParameters() {
+		Set<Parameter<?>> result = new HashSet<Parameter<?>>();
+		for (JpqlParameter jp : config.getParams(this.db).values()) {
+			result.add(jp);
+		}
+		return result;
+	}
+
+	/**
+	 * JPA规范方法
+	 * {@inheritDoc}
+	 */
+	public Parameter<?> getParameter(String name) {
+		JpqlParameter param = config.getParams(db).get(name);
+		if (param == null) {
+			throw new NoSuchElementException(name);
+		}
+		return param;
+	}
+
+	/**
+	 * JPA规范方法
+	 * {@inheritDoc}
+	 */
+	public <X> Parameter<X> getParameter(String name, Class<X> type) {
+		JpqlParameter param = config.getParams(db).get(name);
+		if (param == null || param.getParameterType() != type) {
+			throw new NoSuchElementException(name);
+		}
+		return param;
+	}
+
+	/**
+	 * JPA规范方法，获得指定的参数
+	 * {@inheritDoc}
+	 */
+	public Parameter<?> getParameter(int position) {
+		JpqlParameter param = config.getParams(db).get(position);
+		if (param == null) {
+			throw new NoSuchElementException(String.valueOf(position));
+		}
+		return param;
+	}
+
+	/**
+	 * JPA规范方法，获得指定的参数
+	 * {@inheritDoc}
+	 */
+	public <X> Parameter<X> getParameter(int position, Class<X> type) {
+		JpqlParameter param = config.getParams(db).get(position);
+		if (param == null || param.getParameterType() != type) {
+			throw new NoSuchElementException(String.valueOf(position));
+		}
+		return param;
+	}
+
+	/**
+	 *  JPA规范方法，目前相关特性未实现，总是返回false
+	 * {@inheritDoc} 
+	 */
+	public boolean isBound(Parameter<?> param) {
+		return false;
+	}
+
+	/**
+	 * JPA规范方法，得到参数的值
+	 * {@inheritDoc}
+	 */
+	public Object getParameterValue(String name) {
+		return nameParams.get(name);
+	}
+
+	/**
+	 * JPA规范方法，得到参数的值
+	 * {@inheritDoc}
+	 */
+	public Object getParameterValue(int position) {
+		return nameParams.get(position);
+	}
+
+	/**
+	 * JPA规范方法，得到参数的值
+	 * {@inheritDoc}
+	 */
+	public <T> T getParameterValue(Parameter<T> param) {
+		if (param.getPosition() != null && param.getPosition() > -1) {
+			return (T) getParameterValue(param.getPosition());
+		} else {
+			return (T) getParameterValue(param.getName());
+		}
+	}
+
+	/**
+	 * JPA规范方法。
+	 * {@inheritDoc}
+	 * 设置FlushType 目前JEF未实现相关特性，该方法可以调用，但对数据库操作无实际影响
+	 * 
+	 */
+	public javax.persistence.TypedQuery<X> setFlushMode(FlushModeType flushMode) {
+		this.flushType = flushMode;
+		return this;
+	}
+
+	/**
+	 * JPA规范方法。
+	 * {@inheritDoc}
+	 * 返回FlushMode 目前JEF未实现相关特性，该方法可以调用，但对数据库操作无实际影响
+	 */
+	public FlushModeType getFlushMode() {
+		return flushType;
+	}
+
+	/**
+	 * JPA规范方法。
+	 * {@inheritDoc}
+	 * 设置lockMode 目前JEF未实现相关特性，该方法可以调用，但对数据库操作无实际影响
+	 */
+	public javax.persistence.TypedQuery<X> setLockMode(LockModeType lockMode) {
+		this.lock = lockMode;
+		return this;
+	}
+
+	/**
+	 * JPA规范方法。
+	 * {@inheritDoc}
+	 * 返回LockMode 目前JEF未实现相关特性，该方法可以调用，但对数据库操作无实际影响
+	 */
+	public LockModeType getLockMode() {
+		return lock;
+	}
+
+	/**
+	 * 设置是否为Native查询， 
+	 * @param isNative SQL即为Native,JPQL则不是
+	 */
+	public void setIsNative(boolean isNative) {
+		this.config.setType(isNative ? NamedQueryConfig.TYPE_SQL : NamedQueryConfig.TYPE_JPQL);
+	}
+
+	/**
+	 * JPA规范方法。对于以名称为key的参数，获取其参数值
+	 * {@inheritDoc}
+	 * 
+	 * @param  参数名
+	 * @return 参数值
+	 */
+	public Object getNamedParam(String name) {
+		if (this.nameParams == null)
+			return null;
+		return nameParams.get(name);
+	}
+
+	/**
+	 * JPA规范方法。对于以序号排列的参数，获取其第index个参数的值
+	 * {@inheritDoc}
+	 * @param index 参数序号
+	 * @return 参数值
+	 */
+	public Object getIndexedParam(int index) {
+		if (this.nameParams == null)
+			return null;
+		return nameParams.get(index);
+	}
+
+	/**
+	 * 对于命名查询，获取其tag
+	 * 
+	 * @return Tag
+	 */
+	public String getTag() {
+		return config.getTag();
+	}
+
+	/**
+	 * 得到查询所在的数据库操作对象
+	 * 
+	 * @return 数据库操作对象
+	 */
+	public OperateTarget getDb() {
+		return db;
+	}
+
+	/**
+	 * JPA规范方法。查询指定的参数是否已经设置过值
+	 * @param key 检查某个位置是否已经设置过参数
+	 * 
+	 */
+	public boolean containsParam(Object key) {
+		return nameParams.containsKey(key);
+	}
+
+	/**
+	 * 设置一个字段的列值转换器。 当查询返回对象是Var/VarObject/Map等不确定类型的容器时，字段的值将使用JDBC驱动默认返回的对象类型。<br>
+	 * 这种情况下，可能不能准确预期返回的数据类型。（比如数值在某些数据库上是Integer,某些数据库上是BigDecimal，
+	 * Boolean类型的返回结果就更为不确定了。）<br>
+	 * 使用这个接口可以明确指定特定列返回的数据类型。 <h3>举例</h3> <code><pre>
+	 * NativeQuery<Var> query=db.createNativeQuery("select 1 as bool_column from dual",Var.class);
+	 * 
+	 * //指定列bool_column以Boolean格式读取。如果不指定，那么该列值将被转换为Integer.
+	 * query.setColumnAccessor("bool_column", ColumnMappings.BOOLEAN);
+	 * Boolean flag=query.getSingleResult().get("bool_column");
+	 * </pre></code>
+	 * 
+	 * 
+	 * @param name 列名
+	 * @param accessor 结果转换器
+	 * @deprecated 使用难度大，后续考虑用别的形式封装
+	 */
+	public void setColumnAccessor(String name, ResultSetAccessor accessor) {
+		resultTransformer.ignoreColumn(name);
+		resultTransformer.addMapper(new DefaultMapperAccessorAdapter(name, accessor));
+	}
+
+	/**
+	 * 获得结果集的转换配置
+	 * 
+	 * @return
+	 */
+	public Transformer getResultTransformer() {
+		return resultTransformer;
+	}
+
+	/**
+	 * 清除之前设置过的所有参数。 <br>
+	 * 此方法当一个NativeQuery被重复使用时十分有用。
+	 */
+	public void clearParameters() {
+		nameParams.clear();
+		hint.clear();
+	}
+
+	/**
+	 * 清除指定的参数
+	 * @param name 参数名
+	 */
+	public void clearParameter(String name) {
+		nameParams.remove(name);
+	}
+
+	/**
+	 * 清除指定的参数
+	 * @param index 序号
+	 */
+	public void clearParameter(int index) {
+		nameParams.remove(index);
+	}
+
+	/**
+	 * 得到所有的参数名称
+	 * 
+	 * @return 所有参数的名称
+	 */
+	public List<String> getParameterNames() {
+		List<String> result = new ArrayList<String>();
+		for (Object o : config.getParams(db).keySet()) {
+			result.add(String.valueOf(o));
+		}
+		return result;
+	}
+	
+	@Override
+	public String toString() {
+		return config.toString();
+	}
+
 
 	/*
 	 * 转换String为合适的参数类型
@@ -848,225 +1196,51 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			return value;
 		}
 	}
-
-	/**
-	 * 设置参数的值
-	 */
-	public NativeQuery<X> setParameter(int position, Calendar value, TemporalType temporalType) {
-		return setParameter(position, value);
-	}
-
-	/**
-	 * 以Map形式设置参数的值
-	 * 
-	 * @param params
-	 * @return
-	 */
-	public NativeQuery<X> setParameterMap(Map<String, Object> params) {
-		if (params == null)
-			return this;
-		for (String key : params.keySet()) {
-			setParameter(key, params.get(key));
+	
+	private Object processValue(JpqlParameter p, Object value) {
+		JpqlDataType type = p.getDataType();
+		if (value instanceof String) {
+			if (type != null) {
+				value = toProperType(type, (String) value);
+			}
+		} else if ((value instanceof java.util.Date)) {
+			Class<?> clz = value.getClass();
+			if (clz == java.sql.Time.class || clz == java.sql.Timestamp.class || clz == java.sql.Time.class) {
+				// do nothing
+			} else if (type == JpqlDataType.TIMESTAMP) {
+				value = new java.sql.Timestamp(((java.util.Date) value).getTime());
+			} else {
+				value = new java.sql.Date(((java.util.Date) value).getTime());
+			}
 		}
-		return this;
-	}
-
-	/**
-	 * 设置参数的值
-	 */
-	public NativeQuery<X> setParameter(int position, Date value, TemporalType temporalType) {
-		return setParameter(position, value);
-	}
-
-	public Set<Parameter<?>> getParameters() {
-		Set<Parameter<?>> result = new HashSet<Parameter<?>>();
-		for (JpqlParameter jp : config.getParams(this.db).values()) {
-			result.add(jp);
+		// 如果是动态SQL片段类型且参数值是数组类型，则将数组转换成1个String值。
+		else if (JpqlDataType.SQL.equals(type) && value instanceof Object[]) {
+			value = new SqlExpression(StringUtils.join((Object[]) value));
+		} else if (value != null) {
+			if (type == JpqlDataType.STRING) {
+				value = String.valueOf(value);
+			}
 		}
-		return result;
+		return value;
 	}
 
-	public Parameter<?> getParameter(String name) {
-		JpqlParameter param = config.getParams(db).get(name);
-		if (param == null) {
-			throw new NoSuchElementException(name);
-		}
-		return param;
-	}
-
-	public <X> Parameter<X> getParameter(String name, Class<X> type) {
-		JpqlParameter param = config.getParams(db).get(name);
-		if (param == null || param.getParameterType() != type) {
-			throw new NoSuchElementException(name);
-		}
-		return param;
-	}
-
-	public Parameter<?> getParameter(int position) {
-		JpqlParameter param = config.getParams(db).get(position);
-		if (param == null) {
-			throw new NoSuchElementException(String.valueOf(position));
-		}
-		return param;
-	}
-
-	public <X> Parameter<X> getParameter(int position, Class<X> type) {
-		JpqlParameter param = config.getParams(db).get(position);
-		if (param == null || param.getParameterType() != type) {
-			throw new NoSuchElementException(String.valueOf(position));
-		}
-		return param;
-	}
-
-	/**
-	 * JPA接口，目前相关特性未实现，总是返回false
-	 */
-	public boolean isBound(Parameter<?> param) {
-		return false;
-	}
-
-	/**
-	 * 得到参数的值
-	 */
-	public Object getParameterValue(String name) {
-		return nameParams.get(name);
-	}
-
-	/**
-	 * 得到参数的值
-	 */
-	public Object getParameterValue(int position) {
-		return nameParams.get(position);
-	}
-
-	/**
-	 * 得到参数的值
-	 */
-	public <T> T getParameterValue(Parameter<T> param) {
-		if (param.getPosition() != null && param.getPosition() > -1) {
-			return (T) getParameterValue(param.getPosition());
-		} else {
-			return (T) getParameterValue(param.getName());
+	private Object fixTemporal(Date time, TemporalType temporalType) {
+		if(time==null)return time;
+		switch(temporalType){
+		case DATE:
+			if(time instanceof java.sql.Date)return time;
+			return new java.sql.Date(time.getTime());
+		case TIME:
+			if(time instanceof java.sql.Time)return time;
+			return new java.sql.Time(time.getTime());
+		case TIMESTAMP:
+			if(time instanceof java.sql.Timestamp)return time;
+			return new java.sql.Timestamp(time.getTime());
+		default:
+			return time;
 		}
 	}
-
-	/**
-	 * 设置FlushType 目前JEF未实现相关特性，该方法可以调用，但对数据库操作无实际影响
-	 */
-	public javax.persistence.TypedQuery<X> setFlushMode(FlushModeType flushMode) {
-		this.flushType = flushMode;
-		return this;
-	}
-
-	/**
-	 * 返回FlushMode 目前JEF未实现相关特性，该方法可以调用，但对数据库操作无实际影响
-	 */
-	public FlushModeType getFlushMode() {
-		return flushType;
-	}
-
-	/**
-	 * 设置lockMode 目前JEF未实现相关特性，该方法可以调用，但对数据库操作无实际影响
-	 */
-	public javax.persistence.TypedQuery<X> setLockMode(LockModeType lockMode) {
-		this.lock = lockMode;
-		return this;
-	}
-
-	/**
-	 * 返回LockMode 目前JEF未实现相关特性，该方法可以调用，但对数据库操作无实际影响
-	 */
-	public LockModeType getLockMode() {
-		return lock;
-	}
-
-	/**
-	 * 设置是否为Native查询， SQL即为Native,JPQL则不是
-	 * 
-	 * @param isNative
-	 */
-	public void setIsNative(boolean isNative) {
-		this.config.setType(isNative ? NamedQueryConfig.TYPE_SQL : NamedQueryConfig.TYPE_JPQL);
-	}
-
-	/**
-	 * 对于以名称为key的参数，获取其参数值
-	 */
-	public Object getNamedParam(String name) {
-		if (this.nameParams == null)
-			return null;
-		return nameParams.get(name);
-	}
-
-	/**
-	 * 对于以序号排列的参数，获取其第index个参数的值
-	 */
-	public Object getIndexedParam(int index) {
-		if (this.nameParams == null)
-			return null;
-		return nameParams.get(index);
-	}
-
-	/**
-	 * 对于命名查询，获取其tag
-	 * 
-	 * @return
-	 */
-	public String getTag() {
-		return config.getTag();
-	}
-
-	/**
-	 * 得到查询所在的dbclient对象
-	 * 
-	 * @return
-	 */
-	public OperateTarget getDb() {
-		return db;
-	}
-
-	/**
-	 * 查询指定的参数是否已经设置过值
-	 */
-	public boolean containsParam(Object key) {
-		return nameParams.containsKey(key);
-	}
-
-	/**
-	 * 设置一个字段的列值转换器。 当查询返回对象是Var/VarObject/Map等不确定类型的容器时，字段的值将使用JDBC驱动默认返回的对象类型。<br>
-	 * 这种情况下，可能不能准确预期返回的数据类型。（比如数值在某些数据库上是Integer,某些数据库上是BigDecimal，
-	 * Boolean类型的返回结果就更为不确定了。）<br>
-	 * 使用这个接口可以明确指定特定列返回的数据类型。 <h3>举例</h3> <code><pre>
-	 * NativeQuery<Var> query=db.createNativeQuery("select 1 as bool_column from dual",Var.class);
-	 * 
-	 * //指定列bool_column以Boolean格式读取。如果不指定，那么该列值将被转换为Integer.
-	 * query.setColumnAccessor("bool_column", ColumnMappings.BOOLEAN);
-	 * Boolean flag=query.getSingleResult().get("bool_column");
-	 * </pre></code>
-	 * 
-	 * 
-	 * @param name
-	 * @param accessor
-	 */
-	public void setColumnAccessor(String name, ResultSetAccessor accessor) {
-		resultTransformer.ignoreColumn(name);
-		resultTransformer.addMapper(new DefaultMapperAccessorAdapter(name, accessor));
-	}
-
-	/**
-	 * 获得结果集的转换配置
-	 * 
-	 * @return
-	 */
-	public Transformer getResultTransformer() {
-		return resultTransformer;
-	}
-
-	@Override
-	public String toString() {
-		return config.toString();
-	}
-
+	
 	private static final class DefaultMapperAccessorAdapter extends Mapper<Object> {
 		private int n;
 		private String name;
@@ -1089,44 +1263,5 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 			Assert.notNull(columnDesc);
 			this.n = columnDesc.getN();
 		}
-	}
-
-	/**
-	 * 清除之前设置过的所有参数。 此方法当一个NativeQuery被重复使用时十分有用。
-	 */
-	public void clearParameters() {
-		nameParams.clear();
-		hint.clear();
-	}
-
-	/**
-	 * 清除指定的参数
-	 * 
-	 * @param name
-	 */
-	public void clearParameter(String name) {
-		nameParams.remove(name);
-	}
-
-	/**
-	 * 清除指定的参数
-	 * 
-	 * @param index
-	 */
-	public void clearParameter(int index) {
-		nameParams.remove(index);
-	}
-
-	/**
-	 * 得到所有的参数名称
-	 * 
-	 * @return
-	 */
-	public List<String> getParameterNames() {
-		List<String> result = new ArrayList<String>();
-		for (Object o : config.getParams(db).keySet()) {
-			result.add(String.valueOf(o));
-		}
-		return result;
 	}
 }

@@ -14,6 +14,8 @@ import jef.database.meta.ITableMetadata;
 import jef.http.client.support.CommentEntry;
 import jef.tools.ArrayUtils;
 
+import org.springframework.util.Assert;
+
 public abstract class SelectItemProvider implements ISelectItemProvider {
 	//单表请求
 	protected Query<?> table;
@@ -28,6 +30,7 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 	protected SelectItemProvider(String schema,Query<?> table){
 		this.schema=schema;
 		this.table=table;
+		Assert.notNull(schema);
 	}
 	
 	public IReferenceAllTable getReferenceObj() {
@@ -123,6 +126,7 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 						
 						CommentEntry entry=new CommentEntry();
 						String name=f.getColumnName(profile,true);
+						Assert.notNull(name);
 						entry.setKey(new StringBuilder(schema.length()+1+name.length()).append(schema).append('.').append(name).toString());
 						if(referenceObj==null){
 							entry.setValue(AliasProvider.DEFAULT.getSelectedAliasOf(f, profile, schema));	

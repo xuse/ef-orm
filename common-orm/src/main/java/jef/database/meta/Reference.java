@@ -229,7 +229,7 @@ public class Reference{
 			for(Reference rr:getTargetType().getRefFieldsByRef().keySet()){
 				if(isReverse(rr)){
 					//出现多个反向关联，由于JoinDesc的限定条件存在，正向关联被分化，当反向关联查找时，会出现重复的关联。
-					//这种情况下，如果正向关联是多个的
+					//该问题发生了，看看有没有什么办法更准确的判断反响关联
 					if(!reverse.isEmpty()){
 						throw new IllegalArgumentException();
 					}
