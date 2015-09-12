@@ -22,8 +22,28 @@ public interface Query<T extends IQueryableEntity> extends TypedQuery<T>,JoinEle
 	 * 在对象中你可以创建{@link javax.persistence.OneToOne OneToOne} {@link javax.persistence.OneToMany OneToMany}
 	 * {@link javax.persistence.ManyToOne ManyToOne}
 	 * {@link javax.persistence.ManyToMany ManyToMany}等引用关系。
-	 * 查询时这会产生级联查询，来加载关联的对象，在这里添加的条件，可被用于过滤这些级联的对象。
-	 * 无论是即时加载还是延迟加载时都会生效。
+	 * 查询时这会产生级联查询来加载关联的对象。在这里添加的条件，可被用于过滤<strong>级联的对象</strong>。(注意：是级联引用的指向对象，不是当前对象)<br>
+	 * <h3>举例来说：</h3>
+	 * <pre><code>
+	 *    Student student=new Student();
+	 *    student.getQuery().addCondition(QB.eq(Student.Field.id, 1));
+	 * 	  student.getQuery().addCascadeCondition( QB.eq(Lesson.Field.name, "语文"));
+	 *    Student student=session.load(student);
+	 *    //在上例中，无论学生是否有语文课成绩记录，都不影响查询ID=1的学生。
+	 *    //然而
+	 *    student.getLessons(); //此处得到的Lesson中只会有'语文'
+	 *    </code></pre>
+	 * 总结来说——CascadeCondition只会影响到级联对象的选择，永远不会影响当前对象的选择。
+	 * <br>
+	 * 
+	 * <h3>为何使用</h3>
+	 * 一般来说，仅在一对多的时候使用。在上例中，如果一个学生对应的课程记录有数千条，而我们每次只需要统计学生“语数外”的成绩时，
+	 * 将其他课程的成绩查出来显然是十分浪费的。因此我们可以用CascadeCondition进一步缩小一对多查询的选择返回，防止因为一对多关系被滥用造成的性能下降
+	 * 
+	 * <h3>其他</h3>
+	 * 这一特性是即时加载还是延迟加载时都会生效。当用于对一级联时，如果不是左外连接，启用此特性将造成原本一次查出（使用外连接）的结果，被拆成两次查询。
+	 * 
+	 * 
 	 * @param conditions 
 	 * @return 当前Query对象
 	 * @since 1.1
@@ -34,10 +54,28 @@ public interface Query<T extends IQueryableEntity> extends TypedQuery<T>,JoinEle
 	/**
 	 * 添加级联对象过滤条件
 	 * 在对象中你可以创建{@link javax.persistence.OneToOne OneToOne} {@link javax.persistence.OneToMany OneToMany}
-	 * {@link javax.persistence.ManyToOne ManyToOne}}
+	 * {@link javax.persistence.ManyToOne ManyToOne}
 	 * {@link javax.persistence.ManyToMany ManyToMany}等引用关系。
-	 * 查询时这会产生级联查询，来加载关联的对象，在这里添加的条件，可被用于过滤这些级联的对象。
-	 * 无论是即时加载还是延迟加载时都会生效。
+	 * 查询时这会产生级联查询来加载关联的对象。在这里添加的条件，可被用于过滤<strong>级联的对象</strong>。(注意：是级联引用的指向对象，不是当前对象)<br>
+	 * <h3>举例来说：</h3>
+	 * <pre><code>
+	 *    Student student=new Student();
+	 *    student.getQuery().addCondition(QB.eq(Student.Field.id, 1));
+	 * 	  student.getQuery().addCascadeCondition( QB.eq(Lesson.Field.name, "语文"));
+	 *    Student student=session.load(student);
+	 *    //在上例中，无论学生是否有语文课成绩记录，都不影响查询ID=1的学生。
+	 *    //然而
+	 *    student.getLessons(); //此处得到的Lesson中只会有'语文'
+	 *    </code></pre>
+	 * 总结来说——CascadeCondition只会影响到级联对象的选择，永远不会影响当前对象的选择。
+	 * <br>
+	 * 
+	 * <h3>为何使用</h3>
+	 * 一般来说，仅在一对多的时候使用。在上例中，如果一个学生对应的课程记录有数千条，而我们每次只需要统计学生“语数外”的成绩时，
+	 * 将其他课程的成绩查出来显然是十分浪费的。因此我们可以用CascadeCondition进一步缩小一对多查询的选择返回，防止因为一对多关系被滥用造成的性能下降
+	 * 
+	 * <h3>其他</h3>
+	 * 这一特性是即时加载还是延迟加载时都会生效。当用于对一级联时，如果不是左外连接，启用此特性将造成原本一次查出（使用外连接）的结果，被拆成两次查询。
 	 * @param refName 发生关系的字段名, 比如A -> B有多条路径的引用关系。用这个名称可以区分出是哪一条引用关系，可以指定间接级联关系，如 member.info
 	 * @param conditions
 	 * @return 当前Query对象
