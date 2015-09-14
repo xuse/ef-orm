@@ -21,7 +21,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * 将原来自己编写Xpath解析等功能移动到这里。
+ * 自行实现的Xpath计算
+ *TODO 需要修改部分功能，进一步兼容W3C的Xpath实现
  * 
  * @author jiyi
  * 

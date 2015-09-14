@@ -43,10 +43,10 @@ public class IOUtilsTest {
 
 	@Test
 	public void test1() throws IOException {
-		Map<String, String> o = IOUtils.loadProperties(this.getClass().getResource("/a.properties"));
+		Map<String, String> o = IOUtils.loadProperties(this.getClass().getResource("/a.properties"),true);
 		LogUtil.show(o);
 		System.out.println("===== output =====");
-		IOUtils.storeProperties(new PrintWriter(System.out), o, true);
+		IOUtils.storeProperties(new PrintWriter(System.out), o, true,true);
 	}
 
 	@Test

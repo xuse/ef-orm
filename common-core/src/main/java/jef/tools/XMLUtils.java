@@ -1302,7 +1302,7 @@ public class XMLUtils {
 		if (!e.hasAttribute(attributeName))
 			return null;
 		String text = e.getAttribute(attributeName);
-		return (text == null) ? null : StringEscapeUtils.unescapeHtml(text.trim());
+		return (text == null) ? null : StringEscapeUtils.unescapeXml(text.trim());
 	}
 
 	/**
