@@ -561,6 +561,17 @@ public abstract class DateUtils {
 			return false;
 		return org.apache.commons.lang.time.DateUtils.isSameDay(d1, d2);
 	}
+	
+	
+	/**
+	 * 是否同一个月内
+	 * @param d1 日期1
+	 * @param d2 日期2
+	 * @return
+	 */
+	public static boolean isSameMonth(Date d1, Date d2) {
+		return truncate(d1, Calendar.MONTH).getTime()==truncate(d2,Calendar.MONTH).getTime();
+	}
 
 	/**
 	 * 得到年份
@@ -938,7 +949,7 @@ public abstract class DateUtils {
 	 * @param minute 分(0-59)
 	 * @param second 秒(0-59)
 	 * @return Date
-	 * @deprecated Use {@link #getDate(int, int, int, int, int, int)} instead.
+	 * @deprecated Use {@link #get(int, int, int, int, int, int)} instead.
 	 */
 	public static final Date getDate(int year, int month, int date, int hour, int minute, int second) {
 		return get(year,month,date,hour,minute,second);
@@ -1087,7 +1098,7 @@ public abstract class DateUtils {
 	 * 月份遍历器
 	 * 指定两个日期，遍历两个日期间的所有月份。（包含开始时间和结束时间所在的月份）
 	 * @param includeStart
-	 * @param excludeEnd
+	 * @param includeEnd
 	 * @return
 	 */
 	public static Iterable<Date> monthIterator(Date includeStart, Date includeEnd) {

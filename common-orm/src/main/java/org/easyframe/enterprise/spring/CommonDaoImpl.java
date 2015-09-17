@@ -456,7 +456,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	}
 
 	@SuppressWarnings("unchecked")
-	public List<?> findByKey(ITableMetadata meta, String propertyName, Object value) {
+	public List<?> findByField(ITableMetadata meta, String propertyName, Object value) {
 		if (meta == null || propertyName == null)
 			return null;
 		ColumnMapping field = meta.findField(propertyName);
@@ -474,6 +474,14 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		} catch (SQLException e) {
 			throw new PersistenceException();
 		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> List<T> findByField(Class<T> meta, String propertyName, Object value) {
+		if (meta == null || propertyName == null)
+			return null;
+		return (List<T>) findByField(MetaHolder.getMeta(meta),propertyName,value);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -620,7 +628,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	}
 
 	@Override
-	public List<?> findByKeys(ITableMetadata meta, String propertyName, List<? extends Serializable> value) {
+	public List<?> findByField(ITableMetadata meta, String propertyName, List<? extends Serializable> value) {
 		Field field = meta.getField(propertyName);
 		if (field == null) {
 			throw new IllegalArgumentException("There's no property named " + propertyName + " in type of " + meta.getName());
@@ -628,7 +636,92 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		try {
 			return (List<?>) getSession().batchLoadByField(field, value);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
+	@Override
+	public <T> T load(Class<T> entityClass, Serializable... id) {
+		try {
+			return getSession().load(entityClass, id);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
+	@Override
+	public <T extends IQueryableEntity> List<T> find(Query<T> data) {
+		try {
+			return getSession().select(data);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
+
+	@Override
+	public <T> T loadByField(ITableMetadata meta, String field, Serializable value) {
+		if(meta==null || field==null) {
+			return null;
+		}
+		ColumnMapping def=meta.findField(field);
+		if(def==null) {
+			throw new IllegalArgumentException("There's no field ["+field+"] in "+meta.getName());
+		}
+		try {
+			return getSession().loadByField(def.field(), value);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
+	@Override
+	public <T> T loadByField(Class<T> clz, String field, Serializable value) {
+		if(clz==null || field==null) {
+			return null;
+		}
+		ITableMetadata meta=MetaHolder.getMeta(clz);
+		ColumnMapping def=meta.findField(field);
+		if(def==null) {
+			throw new IllegalArgumentException("There's no field ["+field+"] in "+clz.getName());
+		}
+		try {
+			return getSession().loadByField(def.field(), value);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
+	@Override
+	public <T> int removeByField(Class<T> clz, String field, Serializable value) {
+		if(clz==null || field==null) {
+			return 0;
+		}
+		ITableMetadata meta=MetaHolder.getMeta(clz);
+		ColumnMapping def=meta.findField(field);
+		if(def==null) {
+			throw new IllegalArgumentException("There's no field ["+field+"] in "+clz.getName());
+		}
+		try {
+			return getSession().deleteByField(def.field(), value);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
+	@Override
+	public int removeByField(ITableMetadata meta, String field, Serializable value) {
+		if(meta==null || field==null) {
+			return 0;
+		}
+		ColumnMapping def=meta.findField(field);
+		if(def==null) {
+			throw new IllegalArgumentException("There's no field ["+field+"] in "+meta.getName());
+		}
+		try {
+			return getSession().deleteByField(def.field(), value);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 }

@@ -11,6 +11,7 @@ import jef.database.NamedQueryConfig;
 import jef.database.NativeQuery;
 import jef.database.Session;
 import jef.database.meta.ITableMetadata;
+import jef.database.query.Query;
 import jef.database.wrapper.ResultIterator;
 
 /**
@@ -90,6 +91,25 @@ public interface CommonDao{
 	 */
 	<T> List<T> find(T data);
 	
+	
+	/**
+	 * 根据主键查询
+	 * @param type 类
+	 * @param id 主键
+	 * @return 
+	 * @since 1.10
+	 */
+	<T> T load(Class<T> type,Serializable... id);
+	
+	
+	/**
+	 * 查询数据
+	 * @param data 查询请求
+	 * @return 结果
+	 * @since 1.10
+	 */
+	<T extends IQueryableEntity> List<T> find(Query<T> data);
+	
 	/**
 	 * 查找对象并且返回遍历器
 	 * @param obj 查询请求
@@ -106,7 +126,7 @@ public interface CommonDao{
 	 * 根据样例查找
 	 * @param entity 查询条件
 	 * @param property 作为查询条件的字段名。当不指定properties时，首先检查entity当中是否设置了主键，如果有主键按主键删除，否则按所有非空字段作为匹配条件。
-	 * @return
+	 * @return 查询结果
 	 */
 	<T> List<T> findByExample(T entity,String... properties);
 	
@@ -302,13 +322,22 @@ public interface CommonDao{
 	<T> T loadByPrimaryKey(ITableMetadata meta, Object id);
 	
 	/**
+	 * 根据某个指定字段进行查找
+	 * @param meta
+	 * @param propertyName
+	 * @param value
+	 * @return
+	 */
+	<T> List<T> findByField(Class<T> meta, String propertyName, Object value);
+	
+	/**
 	 * 根据某个指定属性的值查找
 	 * @param meta 数据库表的元模型. {@linkplain ITableMetadata 什么是元模型}
 	 * @param propertyName
 	 * @param value
 	 * @return  查询结果
 	 */
-	List<?> findByKey(ITableMetadata meta, String propertyName, Object value);
+	List<?> findByField(ITableMetadata meta, String propertyName, Object value);
 	
 	/**
 	 * 根据指定的字段批量查找记录
@@ -317,15 +346,16 @@ public interface CommonDao{
 	 * @param value, 要查找的记录的字段值（多个）
 	 * @return
 	 */
-	List<?> findByKeys(ITableMetadata meta, String propertyName, List<? extends Serializable> value);
+	List<?> findByField(ITableMetadata meta, String propertyName, List<? extends Serializable> value);
 	
 	/**
 	 * 使用已知的属性查找一个结果
 	 * @param meta 数据库表的元模型. {@linkplain ITableMetadata 什么是元模型}
+	 * @param field
 	 * @param id
 	 * @return  查询结果
 	 */
-	<T>  T loadByKey(ITableMetadata meta,String field,Serializable id);
+	<T>  T loadByField(ITableMetadata meta,String field,Serializable id);
 	
 	/**
 	 * 根据指定的字段值读取单个记录
@@ -334,28 +364,28 @@ public interface CommonDao{
 	 * @param id
 	 * @return  查询结果
 	 */
-	<T> T loadByKey(Class<T> meta,String field,Serializable key);
+	<T> T loadByField(Class<T> meta,String field,Serializable key);
 	
 	/**
 	 * 根据指定的字段值删除记录 
 	 * @param meta 数据库表的元模型. {@linkplain ITableMetadata 什么是元模型}
 	 * @param field
-	 * @param key
+	 * @param value
 	 * @return 影响记录行数
 	 */
-	<T> int removeByKey(Class<T> meta,String field,Serializable key);
+	<T> int removeByField(Class<T> meta,String field,Serializable value);
 	
 	/**
 	 * 根据指定的字段值删除记录
 	 * @param meta 数据库表的元模型. {@linkplain ITableMetadata 什么是元模型}
 	 * @param field
-	 * @param key
+	 * @param value
 	 * @return  影响记录行数
 	 */
-	int removeByKey(ITableMetadata meta,String field,Serializable key);
+	int removeByField(ITableMetadata meta,String field,Serializable value);
 	
 	/**
-	 * 得到当前的JEF Session
+	 * 得到当前的数据库操作Session
 	 */
 	Session getSession();
 	

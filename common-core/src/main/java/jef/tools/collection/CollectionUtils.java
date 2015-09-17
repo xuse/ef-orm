@@ -263,6 +263,7 @@ public final class CollectionUtils {
 	 * @return
 	 */
 	public static <T, A> Multimap<A, T> group(Collection<T> collection, Function<T, A> function) {
+		Assert.notNull(collection);
 		Multimap<A, T> result = ArrayListMultimap.create();
 		for (T value : collection) {
 			A attrib = function.apply(value);
