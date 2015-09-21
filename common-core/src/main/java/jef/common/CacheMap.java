@@ -29,15 +29,12 @@ public class CacheMap<K, V> extends LinkedHashMap<K, V> {
 	private static final long serialVersionUID = 2428383992533927687L;
 	private static final float DEFAULT_LOAD_FACTOR = 1f;
 	
-	//<B>关于使用互斥锁而不是读写锁的原因</B>
-	//一般来说读写锁可以允许并发读取访问，因此效率更高，但是此处不使用读写锁而使用互斥锁是因为：
-	//1、由于缓存表在每次get操作时要记录访问顺序(accessOrder = true)，修改内部链表结构，因此即使是get操作也是不应当并发的。
-	//这个类作为缓存，为了防止将最近访问过的对象清除出去，所以要记录访问顺序
-	//2、读写锁结构更复杂，锁闭本身开销可能更大。实测发现使用读写锁的读锁，比普通锁稍慢。
-	//3、如果不使用按访问顺序排序方式，则可以考虑使用读写锁以提高吞吐量。
-	//4、测试表明，在Map的多线程同步方式上，synchronized 关键字非常慢，比使用锁慢了两个数量级。
-	//因此如果考虑重新实现addEntry方法，将recordAccess方法加上synchronized关键字，可能会更慢，不适合采用此方法
-	//5、Map同步时ConcurrentHashMap 是最快的，因为它将存储分成多块使用多个锁。综合上述对锁的分析，此处决定使用互斥锁。
+	/**
+	 *<B>关于使用互斥锁而不是读写锁的原因</B>
+	 * 这个类作为缓存，为了防止将最近访问过的对象清除出去，所以要记录访问顺序
+	 * 由于缓存表在每次get操作时要记录访问顺序(accessOrder = true)，修改内部链表结构，因此即使是get操作也是不应当并发的。
+	 * 
+	 */
 	private final Lock lock = new ReentrantLock();
 	
 	private final int maxCapacity;

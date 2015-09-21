@@ -53,6 +53,20 @@ public abstract class ThreadUtils {
 	}
 
 	/**
+	 * 等待CountDownLatch数据清零
+	 * @param cl
+	 * @return
+	 */
+	public static final boolean doAwait(CountDownLatch cl) {
+		try {
+			cl.await();
+			return true;
+		} catch (InterruptedException e) {
+			return false;
+		}
+	}
+	
+	/**
 	 * 调用对象的wait方法，并设置超时时间
 	 * @param obj 锁所在的对象
 	 * @param timeout 超时时间，单位毫秒

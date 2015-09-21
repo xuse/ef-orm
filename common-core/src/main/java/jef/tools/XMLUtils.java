@@ -815,7 +815,7 @@ public class XMLUtils {
 				t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
 			}
 		} catch (Exception tce) {
-			assert (false);
+			throw new IOException(tce);
 		}
 		DOMSource doms = new DOMSource(node);
 		try {
