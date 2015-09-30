@@ -52,6 +52,7 @@ import jef.database.annotation.PartitionTable;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.routing.function.AbstractDateFunction;
+import jef.database.routing.function.HashMod1024MappingFunction;
 import jef.database.routing.function.MapFunction;
 import jef.database.routing.function.ModulusFunction;
 import jef.database.routing.function.RawFunc;
@@ -350,6 +351,16 @@ public final class TableMetadata extends AbstractMetadata {
 			}else{
 				return new ModulusFunction(value.functionConstructorParams()[0]);
 			}
+		case HASH_MOD1024_RANGE:
+			if(value.functionConstructorParams().length==0 || StringUtils.isEmpty(value.functionConstructorParams()[0])){
+				return new HashMod1024MappingFunction();	
+			}else {
+				int num=0;
+				if(value.functionConstructorParams().length>1){
+					num=StringUtils.toInt(value.functionConstructorParams()[1],0);
+				}
+				return new HashMod1024MappingFunction(value.functionConstructorParams()[0],num);
+			}
 		case MONTH:
 			return AbstractDateFunction.MONTH;
 		case YEAR:
@@ -524,7 +535,7 @@ public final class TableMetadata extends AbstractMetadata {
 
 	@Override
 	public Collection<ColumnMapping> getExtendedColumns() {
-		return extendMeta.getColumnSchema();
+		return extendMeta==null?Collections.EMPTY_LIST:extendMeta.getColumnSchema();
 	}
 
 	@Override

@@ -27,8 +27,9 @@ import jef.database.query.JoinElement;
 import jef.database.query.Query;
 import jef.tools.ArrayUtils;
 
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+
+import com.google.common.base.Objects;
 
 /**
  * 描述两表间的一组关系
@@ -235,10 +236,10 @@ public class JoinPath {
 			return false;
 		}
 		
-		if (!ObjectUtils.equals(this.orderBy, o.orderBy)) {
+		if (!Objects.equal(this.orderBy, o.orderBy)) {
 			return false;
 		}
-		return ObjectUtils.equals(this.description, o.description);
+		return Objects.equal(this.description, o.description);
 	}
 
 	@Override

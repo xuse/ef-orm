@@ -12,7 +12,7 @@ import jef.database.annotation.PartitionFunction;
 import jef.tools.DateUtils;
 import jef.tools.support.LangUtils;
 
-import org.apache.commons.lang.ObjectUtils;
+import com.google.common.base.Objects;
 
 /*
  * 对应SQL条件
@@ -146,7 +146,7 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 
 	// 取两个点中较大的那个
 	private Entry<T, Boolean> max(T v1, Boolean c1, T v2, Boolean c2, int nullSupport, boolean closeFirst) {
-		if (ObjectUtils.equals(v1, v2)) {
+		if (Objects.equal(v1, v2)) {
 			if (closeFirst) {// 当值相等时，取闭区间
 				return new jef.common.Entry<T, Boolean>(v1, c1 || c2);
 			} else {
@@ -164,7 +164,7 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 
 	// 取两个点中较小的那个
 	private Entry<T, Boolean> min(T v1, boolean c1, T v2, boolean c2, int nullSupport, boolean closeFirst) {
-		if (ObjectUtils.equals(v1, v2)) {
+		if (Objects.equal(v1, v2)) {
 			if (closeFirst) {// 当值相等时，取闭区间
 				return new jef.common.Entry<T, Boolean>(v1, c1 || c2);
 			} else { // 当值相等时，取开区间
@@ -303,7 +303,7 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 	public T isPoint() {
 		if (max == null || min == null)
 			return null;
-		if (ObjectUtils.equals(max, min)) {
+		if (Objects.equal(max, min)) {
 			if (this.isLeftCloseSpan && this.isRightCloseSpan) {
 				return min;
 			}
@@ -311,11 +311,11 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 		return null;
 	}
 
-	public Object getMin() {
+	public T getMin() {
 		return min;
 	}
 
-	public Object getMax() {
+	public T getMax() {
 		return max;
 	}
 
@@ -353,5 +353,9 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 			
 		}
 		return set;
+	}
+
+	public void setMax(T max) {
+		this.max = max;
 	}
 }

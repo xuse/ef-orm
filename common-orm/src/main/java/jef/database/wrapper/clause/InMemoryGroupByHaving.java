@@ -17,6 +17,8 @@ import jef.tools.StringUtils;
 
 import org.apache.commons.lang.ObjectUtils;
 
+import com.google.common.base.Objects;
+
 public class InMemoryGroupByHaving implements InMemoryProcessor {
 	GroupByItem[] keys;
 	GroupByItem[] values;
@@ -80,7 +82,7 @@ public class InMemoryGroupByHaving implements InMemoryProcessor {
 		Object obj=row.getArrayObject(ele.getIndex());
 		switch(ele.havingCondOperator){
 		case EQUALS:
-			return ObjectUtils.equals(obj, ele.havingCondValue);
+			return Objects.equal(obj, ele.havingCondValue);
 		case GREAT:
 			return ObjectUtils.compare((Comparable)obj, (Comparable)ele.havingCondValue)>0;
 		case GREAT_EQUALS:
@@ -109,7 +111,7 @@ public class InMemoryGroupByHaving implements InMemoryProcessor {
 			return s1.startsWith(s2);
 		}
 		case NOT_EQUALS:
-			return !ObjectUtils.equals(obj, ele.havingCondValue);
+			return !Objects.equal(obj, ele.havingCondValue);
 		case NOT_IN:{
 			List<Object> values=(List<Object>)ele.havingCondValue;
 			return !values.contains(obj);

@@ -375,7 +375,7 @@ public abstract class ColumnType {
 
 		@Override
 		protected boolean compare(ColumnType type, DatabaseDialect profile) {
-			if(type instanceof Varchar) {
+			if(!(type instanceof Varchar)) {
 				return false;
 			}
 			Varchar rhs = (Varchar) type;

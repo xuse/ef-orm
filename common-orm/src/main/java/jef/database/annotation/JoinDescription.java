@@ -22,6 +22,10 @@ public @interface JoinDescription {
 	
 	/**
 	 * 可以设定连接ON条件中的过滤条件
+	 * <br>
+	 * 1.10版本后，可以使用 this$ that$来指代当前表的字段和右侧表的字段。例如——
+	 * this$dictType+'.GENDER'=that$type 
+	 * 但这种用法限制要求外连接查询时使用。仅供特例使用，一般用户请勿使用此功能。
 	 * @return
 	 */
 	String filterCondition() default "";

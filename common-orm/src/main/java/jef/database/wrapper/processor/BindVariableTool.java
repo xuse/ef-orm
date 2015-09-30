@@ -82,7 +82,7 @@ public final class BindVariableTool {
 					Object obj = setWhereVariable(field, da, count, context);
 					actualWhereParams[n++] = obj;
 				} catch (SQLException ex) {
-					LogUtil.error("Error while setting [{}] into bean [{}], error type={}" ,field.name(),da.getClass().getName(),ex.getClass().getName());
+					LogUtil.error("Error while setting [{}], error type={}" ,field.name(),ex.getClass().getName());
 					throw ex;
 				}
 			}

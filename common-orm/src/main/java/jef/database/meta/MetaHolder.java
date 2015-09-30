@@ -90,6 +90,7 @@ import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.meta.AnnotationProvider.ClassAnnotationProvider;
 import jef.database.meta.AnnotationProvider.FieldAnnotationProvider;
 import jef.database.meta.extension.EfPropertiesExtensionProvider;
+import jef.database.query.JpqlExpression;
 import jef.database.query.ReadOnlyQuery;
 import jef.database.query.SqlExpression;
 import jef.database.support.EntityNotEnhancedException;
@@ -1038,7 +1039,7 @@ public final class MetaHolder {
 						rightF = parseField(right.toString(),thisMeta,targetMeta);	
 					}
 					if(rightF==null) {
-						key = new JoinKey(leftF, Operator.valueOfKey(oper), new SqlExpression(right.toString()));
+						key = new JoinKey(leftF, Operator.valueOfKey(oper), new JpqlExpression(right.toString()));
 					}else {
 						key = new JoinKey(leftF, Operator.valueOfKey(oper), rightF);
 					}

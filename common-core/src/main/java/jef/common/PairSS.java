@@ -1,6 +1,6 @@
 package jef.common;
 
-import org.apache.commons.lang.ObjectUtils;
+import com.google.common.base.Objects;
 
 /**
  * 轻量级容器
@@ -52,10 +52,10 @@ public class PairSS {
 	public boolean equals(Object obj) {
 		if (obj instanceof PairSS) {
 			PairSS rhs = (PairSS) obj;
-			if (!ObjectUtils.equals(this.first, rhs.first)) {
+			if (!Objects.equal(this.first, rhs.first)) {
 				return false;
 			}
-			if (!ObjectUtils.equals(this.second, rhs.second)) {
+			if (!Objects.equal(this.second, rhs.second)) {
 				return false;
 			}
 			return true;

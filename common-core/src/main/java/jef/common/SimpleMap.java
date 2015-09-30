@@ -15,7 +15,7 @@ import javax.xml.bind.annotation.XmlElement;
 import jef.common.annotation.ObjectName;
 import jef.tools.ArrayUtils;
 
-import org.apache.commons.lang.ObjectUtils;
+import com.google.common.base.Objects;
 
 /**
  * 用List实现的最简单的Map，目标是占用内存最小，不考虑性能，事实上元素不多的情况下性能不是什么问题。
@@ -87,7 +87,7 @@ public class SimpleMap<K, V> extends AbstractMap<K, V> implements Map<K, V>, Ser
 	public V put(K key, V value) {
 		int index = -1;
 		for (int i = 0; i < entries.size(); i++) {
-			if (ObjectUtils.equals(entries.get(i).getKey(), key)) {
+			if (Objects.equal(entries.get(i).getKey(), key)) {
 				index = i;
 				break;
 			}

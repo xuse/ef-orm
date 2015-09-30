@@ -14,6 +14,8 @@ import jef.database.meta.ITableMetadata;
 import jef.http.client.support.CommentEntry;
 import jef.tools.ArrayUtils;
 
+import org.springframework.util.Assert;
+
 public abstract class SelectItemProvider implements ISelectItemProvider {
 	//单表请求
 	protected Query<?> table;
@@ -98,7 +100,7 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 				ITableMetadata meta=table.getMeta();
 				for (ColumnMapping f : meta.getColumns()) {
 					CommentEntry entry=new CommentEntry();
-					entry.setKey(schema.concat(".").concat(f.getColumnName(profile, true)));
+					entry.setKey(concatSchema(f.getColumnName(profile, true)));
 					entry.setValue(aliasProvider.getSelectedAliasOf(f, profile, schema));	
 					result.add(entry);
 				}	
@@ -123,7 +125,8 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 						
 						CommentEntry entry=new CommentEntry();
 						String name=f.getColumnName(profile,true);
-						entry.setKey(new StringBuilder(schema.length()+1+name.length()).append(schema).append('.').append(name).toString());
+						Assert.notNull(name);
+						entry.setKey(concatSchema(name));
 						if(referenceObj==null){
 							entry.setValue(AliasProvider.DEFAULT.getSelectedAliasOf(f, profile, schema));	
 						}else{
@@ -147,6 +150,12 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 		}
 		return result.toArray(new CommentEntry[result.size()]);
 	}
+	
+	private String concatSchema(String name) {
+		if(schema==null)return name;
+		return new StringBuilder(schema.length()+1+name.length()).append(schema).append('.').append(name).toString();
+	}
+
 	public Query<?> getTableDef() {
 		return table;
 	}

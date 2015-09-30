@@ -77,6 +77,14 @@ public class BaseDao {
 	
 	/**
 	 * 获得JEF的操作Session
+	 * @return
+	 */
+	public Session getNonTransactionalSession() {
+		return jefEmf.getDefault();
+	}
+	
+	/**
+	 * 获得JEF的操作Session
 	 * @deprecated use method {@link #getSession()} instead.
 	 * @return
 	 */

@@ -24,7 +24,7 @@ import jef.database.query.ReadOnlyQuery;
 import jef.database.query.ReferenceType;
 import jef.tools.Assert;
 
-import org.apache.commons.lang.ObjectUtils;
+import com.google.common.base.Objects;
 
 /**
  * 关于多表操作的三个概念设计
@@ -160,10 +160,10 @@ public class Reference{
 	public boolean equals(Object obj) {
 		if(!(obj instanceof Reference))return false;
 		Reference o=(Reference)obj;
-		if(!ObjectUtils.equals(this.fromType, o.fromType))return false;
-		if(!ObjectUtils.equals(this.targetType, o.targetType))return false;
+		if(!Objects.equal(this.fromType, o.fromType))return false;
+		if(!Objects.equal(this.targetType, o.targetType))return false;
 		if(this.type!=o.type)return false;
-		if(!ObjectUtils.equals(this.hint, o.hint))return false;
+		if(!Objects.equal(this.hint, o.hint))return false;
 		return true;
 	}
 	
@@ -229,7 +229,7 @@ public class Reference{
 			for(Reference rr:getTargetType().getRefFieldsByRef().keySet()){
 				if(isReverse(rr)){
 					//出现多个反向关联，由于JoinDesc的限定条件存在，正向关联被分化，当反向关联查找时，会出现重复的关联。
-					//这种情况下，如果正向关联是多个的
+					//该问题发生了，看看有没有什么办法更准确的判断反响关联
 					if(!reverse.isEmpty()){
 						throw new IllegalArgumentException();
 					}

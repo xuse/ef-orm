@@ -68,78 +68,79 @@ public class JefEntityManager implements EntityManager {
 		this.parent = (JefEntityManagerFactory) parent;
 		this.properties = properties;
 	}
-	
-	public JefEntityManager(EntityManagerFactory parent, Map properties,TransactionalSession session) {
-		this.parent=(JefEntityManagerFactory) parent;
-		this.properties=properties;
-		this.tx=new JefEntityTransaction(this,session);
-		
+
+	public JefEntityManager(EntityManagerFactory parent, Map properties, TransactionalSession session) {
+		this.parent = (JefEntityManagerFactory) parent;
+		this.properties = properties;
+		this.tx = new JefEntityTransaction(this, session);
+
 	}
 
 	public void persist(Object entity) {
-		if(entity instanceof IQueryableEntity){
-			doMerge((IQueryableEntity)entity, false);	
-		}else{
-			ITableMetadata meta=MetaHolder.getMeta(entity.getClass());
-			PojoWrapper wrapper=meta.transfer(entity,false);
-			doMerge(wrapper, false);	
+		if (entity instanceof IQueryableEntity) {
+			doMerge((IQueryableEntity) entity, false);
+		} else {
+			ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
+			PojoWrapper wrapper = meta.transfer(entity, false);
+			doMerge(wrapper, false);
 		}
 	}
 
 	@SuppressWarnings("unchecked")
 	public <T> T merge(T entity) {
-		if(entity instanceof IQueryableEntity){
-			return (T)doMerge((IQueryableEntity)entity, false);
-		}else{
-			ITableMetadata meta=MetaHolder.getMeta(entity.getClass());
-			PojoWrapper wrapper=meta.transfer(entity,false);
-			wrapper=doMerge(wrapper, false);
-			return (T)wrapper.get();
+		if (entity instanceof IQueryableEntity) {
+			return (T) doMerge((IQueryableEntity) entity, false);
+		} else {
+			ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
+			PojoWrapper wrapper = meta.transfer(entity, false);
+			wrapper = doMerge(wrapper, false);
+			return (T) wrapper.get();
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public <T> T mergeCascade(T entity) {
-		if(entity instanceof IQueryableEntity){
-			return (T)doMerge((IQueryableEntity)entity, true);
-		}else{
-			ITableMetadata meta=MetaHolder.getMeta(entity.getClass());
-			PojoWrapper wrapper=meta.transfer(entity,false);
-			wrapper=doMerge(wrapper, true);
-			return (T)wrapper.get();
+		if (entity instanceof IQueryableEntity) {
+			return (T) doMerge((IQueryableEntity) entity, true);
+		} else {
+			ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
+			PojoWrapper wrapper = meta.transfer(entity, false);
+			wrapper = doMerge(wrapper, true);
+			return (T) wrapper.get();
 		}
 	}
 
 	public void remove(Object entity) {
-			try {
-				if(entity instanceof IQueryableEntity){
-					IQueryableEntity data = (IQueryableEntity) entity;
-					getSession().deleteCascade(data);	
-				}else{
-					ITableMetadata meta=MetaHolder.getMeta(entity.getClass());
-					PojoWrapper wrapper=meta.transfer(entity,true);
-					getSession().deleteCascade(wrapper);
-				}					
-			} catch (SQLException e) {
-				throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
-			}	
+		try {
+			if (entity instanceof IQueryableEntity) {
+				IQueryableEntity data = (IQueryableEntity) entity;
+				getSession().deleteCascade(data);
+			} else {
+				ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
+				PojoWrapper wrapper = meta.transfer(entity, true);
+				getSession().deleteCascade(wrapper);
+			}
+		} catch (SQLException e) {
+			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+		}
 	}
 
 	@SuppressWarnings("unchecked")
 	public <T> T find(Class<T> entityClass, Object primaryKey) {
-		if(primaryKey==null)return null;
+		if (primaryKey == null)
+			return null;
 		try {
 			Object obj = entityClass.newInstance();
-			if(obj instanceof IQueryableEntity){
-				IQueryableEntity data=(IQueryableEntity)obj;
+			if (obj instanceof IQueryableEntity) {
+				IQueryableEntity data = (IQueryableEntity) obj;
 				DbUtils.setPrimaryKeyValue(data, primaryKey);
-				return (T) getSession().load(data);	
-			}else{
-				ITableMetadata meta=MetaHolder.getMeta(entityClass);
-				PojoWrapper data=meta.transfer(obj,false);
+				return (T) getSession().load(data);
+			} else {
+				ITableMetadata meta = MetaHolder.getMeta(entityClass);
+				PojoWrapper data = meta.transfer(obj, false);
 				DbUtils.setPrimaryKeyValue(data, primaryKey);
-				data=getSession().load(data);
-				return data==null?null:(T)data.get(); 	
+				data = getSession().load(data);
+				return data == null ? null : (T) data.get();
 			}
 		} catch (SQLException e) {
 			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
@@ -449,9 +450,9 @@ public class JefEntityManager implements EntityManager {
 
 	private <T extends IQueryableEntity> T doMerge(T entity, boolean flag) {
 		try {
-			if(flag){
+			if (flag) {
 				return getSession().mergeCascade(entity);
-			}else{
+			} else {
 				return getSession().merge(entity);
 			}
 		} catch (SQLException e) {
@@ -468,7 +469,7 @@ public class JefEntityManager implements EntityManager {
 		if (close)
 			throw new RuntimeException("the " + this.toString() + " has been closed!");
 		if (tx != null && tx.isActive()) {
-			return (Session)tx.get();
+			return (Session) tx.get();
 		} else {
 			return parent.getDefault();
 		}

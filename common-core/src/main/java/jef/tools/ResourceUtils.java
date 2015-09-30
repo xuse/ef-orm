@@ -436,7 +436,7 @@ public class ResourceUtils {
 		List<URL> res = getResources(name);
 		Map<String, String> result = new LinkedHashMap<String, String>();
 		for (URL u : res) {
-			IOUtils.loadProperties(IOUtils.getReader(u, charset), result);
+			IOUtils.loadProperties(IOUtils.getReader(u, charset), result,false);
 		}
 		return result;
 	}

@@ -27,7 +27,7 @@ import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
 
-import org.apache.commons.lang.ObjectUtils;
+import com.google.common.base.Objects;
 
 final class CascadeUtil {
 	static int deleteWithRefInTransaction(IQueryableEntity source, Session trans, int minPriority) throws SQLException {
@@ -206,7 +206,7 @@ final class CascadeUtil {
 			for (JoinKey jk : jp.getJoinKeys()) {
 				Object parentKey = bean.getPropertyValue(jk.getLeft().name());
 				Object subKey = bwSub.getPropertyValue(jk.getRightAsField().name());
-				if (!ObjectUtils.equals(parentKey, subKey)) {
+				if (!Objects.equal(parentKey, subKey)) {
 					bwSub.setPropertyValue(jk.getRightAsField().name(), parentKey);
 				}
 			}
@@ -216,7 +216,7 @@ final class CascadeUtil {
 			for (JoinKey jk : jp.getJoinKeys()) {
 				Object subKey = bwSub.getPropertyValue(jk.getRightAsField().name());
 				Object parentKey = bean.getPropertyValue(jk.getLeft().name());
-				if (!ObjectUtils.equals(parentKey, subKey)) {
+				if (!Objects.equal(parentKey, subKey)) {
 					bean.setPropertyValue(jk.getLeft().name(), subKey);
 				}
 			}
@@ -248,7 +248,7 @@ final class CascadeUtil {
 			for (Entry<String, Object> e : map.entrySet()) {
 				Object newValue = e.getValue();
 				Object oldValue = bwSub.getPropertyValue(e.getKey());
-				if (!ObjectUtils.equals(oldValue, newValue)) {
+				if (!Objects.equal(oldValue, newValue)) {
 					bwSub.setPropertyValue(e.getKey(), newValue);
 				}
 			}
@@ -350,7 +350,7 @@ final class CascadeUtil {
 		for (JoinKey jk : jp.getJoinKeys()) {
 			Object newValue = bwSub.getPropertyValue(jk.getRightAsField().name());
 			Object oldValue = bean.getPropertyValue(jk.getLeft().name());
-			if (!ObjectUtils.equals(oldValue, newValue)) {
+			if (!Objects.equal(oldValue, newValue)) {
 				bean.setPropertyValue(jk.getLeft().name(), newValue);
 			}
 		}
@@ -384,7 +384,7 @@ final class CascadeUtil {
 			for (Entry<String, Object> e : map.entrySet()) {
 				Object newValue = e.getValue();
 				Object oldValue = bwSub.getPropertyValue(e.getKey());
-				if (!ObjectUtils.equals(oldValue, newValue)) {
+				if (!Objects.equal(oldValue, newValue)) {
 					bwSub.setPropertyValue(e.getKey(), newValue);
 				}
 			}

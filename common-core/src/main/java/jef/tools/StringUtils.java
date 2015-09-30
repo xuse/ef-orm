@@ -1876,7 +1876,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	}
 
 	/**
-	 * useful
+	 * 将字符串按指定的key一分为2
 	 * 
 	 * @param source
 	 * @param key

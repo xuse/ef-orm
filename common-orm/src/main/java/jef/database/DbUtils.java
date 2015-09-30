@@ -114,7 +114,7 @@ import jef.tools.reflect.GenericUtils;
 import jef.tools.security.cplus.TripleDES;
 import jef.tools.string.CharUtils;
 
-import org.apache.commons.lang.ObjectUtils;
+import com.google.common.base.Objects;
 
 public final class DbUtils {
 
@@ -1145,7 +1145,7 @@ public final class DbUtils {
 			if (removePkUpdate && obj.getUpdateValueMap().containsKey(field)) {//
 				Map<Field, Object> map = obj.getUpdateValueMap();
 				Object v = map.get(field);
-				if (ObjectUtils.equals(value, v)) {
+				if (Objects.equal(value, v)) {
 					map.remove(field);
 				}
 			}
@@ -1163,7 +1163,7 @@ public final class DbUtils {
 	 * @return the object who is able to update.
 	 */
 	public static <T extends IQueryableEntity> T compareToUpdateMap(T changedObj, T oldObj) {
-		Assert.isTrue(ObjectUtils.equals(getPrimaryKeyValue(changedObj), getPKValueSafe(oldObj)), "For consistence, the two parameter must hava equally primary keys.");
+		Assert.isTrue(Objects.equal(getPrimaryKeyValue(changedObj), getPKValueSafe(oldObj)), "For consistence, the two parameter must hava equally primary keys.");
 		BeanWrapper bean1 = BeanWrapper.wrap(changedObj);
 		ITableMetadata m = MetaHolder.getMeta(oldObj);
 		boolean dynamic = ORMConfig.getInstance().isDynamicUpdate();
@@ -1190,7 +1190,7 @@ public final class DbUtils {
 	 * @return the object who is able to update.
 	 */
 	public static <T extends IQueryableEntity> T compareToNewUpdateMap(T changedObj, T oldObj) {
-		Assert.isTrue(ObjectUtils.equals(getPrimaryKeyValue(changedObj), getPKValueSafe(oldObj)), "For consistence, the two parameter must hava equally primary keys.");
+		Assert.isTrue(Objects.equal(getPrimaryKeyValue(changedObj), getPKValueSafe(oldObj)), "For consistence, the two parameter must hava equally primary keys.");
 		BeanWrapper beanNew = BeanWrapper.wrap(changedObj);
 		BeanWrapper beanOld = BeanWrapper.wrap(oldObj);
 		ITableMetadata m = MetaHolder.getMeta(oldObj);
@@ -1211,7 +1211,7 @@ public final class DbUtils {
 			}
 			Object valueNew = beanNew.getPropertyValue(field.name());
 			Object valueOld = beanOld.getPropertyValue(field.name());
-			if (!ObjectUtils.equals(valueNew, valueOld)) {
+			if (!Objects.equal(valueNew, valueOld)) {
 				changedObj.prepareUpdate(field, valueNew, true);
 			}
 		}

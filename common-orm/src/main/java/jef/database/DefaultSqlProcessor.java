@@ -199,7 +199,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 	}
 
 	private String generateWhereClause0(Query<?> q, SqlContext context, boolean removePKUpdate, List<Condition> conds, DatabaseDialect profile) {
-		if (q.isAll())
+		if (q.isAll() && conds.isEmpty())
 			return "";
 		if (conds.isEmpty()) {
 			IQueryableEntity instance = q.getInstance();
@@ -267,7 +267,8 @@ public class DefaultSqlProcessor implements SqlProcessor {
 	private BindSql generateWhereCondition(Query<?> q, SqlContext context, List<Condition> conditions, boolean removePKUpdate, DatabaseDialect profile) {
 		List<BindVariableDescription> params = new ArrayList<BindVariableDescription>();
 		IQueryableEntity obj = q.getInstance();
-		if (q.isAll())
+		//这里必须用双条件判断，因为Join当中的RefCondition是额外增加的条件，如果去除将造成RefCondition丢失。
+		if (q.isAll() && conditions.isEmpty())
 			return new BindSql("", params);
 
 		if (conditions.isEmpty()) {

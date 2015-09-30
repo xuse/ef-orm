@@ -27,4 +27,11 @@ public class PairIS {
 	public void setSecond(String second) {
 		this.second = second;
 	}
+
+	@Override
+	public String toString() {
+		return first+":"+second;
+	}
+	
+	
 }

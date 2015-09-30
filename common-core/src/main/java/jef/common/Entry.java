@@ -20,7 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.ObjectUtils;
+import jef.tools.StringUtils;
+
+import com.google.common.base.Objects;
 
 /**
  * 描述由两个值构成的值对
@@ -35,7 +37,7 @@ public class Entry<K,V> implements Serializable,java.util.Map.Entry<K,V>{
 	private V value;
 
 	public String toString() {
-		return ObjectUtils.toString(key)+":"+ObjectUtils.toString(value);
+		return StringUtils.toString(key)+":"+StringUtils.toString(value);
 	}
 
 	public K getKey() {
@@ -82,8 +84,8 @@ public class Entry<K,V> implements Serializable,java.util.Map.Entry<K,V>{
 	@Override
 	public boolean equals(Object obj) {
 		if(obj instanceof Entry){
-			if(!ObjectUtils.equals(((Entry) obj).getKey(), key))return false;
-			if(!ObjectUtils.equals(((Entry) obj).getValue(), value))return false;
+			if(!Objects.equal(((Entry) obj).getKey(), key))return false;
+			if(!Objects.equal(((Entry) obj).getValue(), value))return false;
 			return true;
 		}else{
 			return false;

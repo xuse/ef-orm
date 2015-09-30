@@ -32,7 +32,9 @@ public class InitDataExporter {
 	public void export(@SuppressWarnings("rawtypes") Class clz){
 		try {
 			export(clz, false);
-		}catch(SQLException|IOException e) {
+		}catch(SQLException e) {
+			throw new RuntimeException(e);
+		}catch(IOException e){
 			throw new RuntimeException(e);
 		}
 	}

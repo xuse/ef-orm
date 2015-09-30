@@ -1,7 +1,8 @@
 package jef.common;
 
-import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+
+import com.google.common.base.Objects;
 
 /**
  * 轻量级容器
@@ -46,10 +47,10 @@ public class Pair<F,S> {
 	public boolean equals(Object obj) {
 		if(obj instanceof Pair){
 			Pair<?,?> rhs=(Pair<?,?>)obj;
-			if(!ObjectUtils.equals(first, rhs.first)){
+			if(!Objects.equal(first, rhs.first)){
 				return false;
 			}
-			return ObjectUtils.equals(this.second, rhs.second);
+			return Objects.equal(this.second, rhs.second);
 		}
 		return super.equals(obj);
 	}

@@ -484,7 +484,8 @@ public class XMLUtils {
 	 * @throws IOException
 	 *             读写错误
 	 */
-	public static Document loadDocument(InputStream in, String charSet, boolean ignorComments, boolean namespaceAware) throws SAXException, IOException {
+	public static Document loadDocument(InputStream in, String charSet, boolean ignorComments, boolean namespaceAware) throws SAXException,
+			IOException {
 		DocumentBuilder db = REUSABLE_BUILDER.get().getDocumentBuilder(ignorComments, namespaceAware);
 		InputSource is = null;
 		// 解析流来获取charset
@@ -556,7 +557,8 @@ public class XMLUtils {
 	 */
 	public static DocumentFragment parseHTML(Reader in) throws SAXException, IOException {
 		if (parser == null)
-			throw new UnsupportedOperationException("HTML parser module not loaded, to activate this feature, you must add JEF common-ioc.jar to classpath");
+			throw new UnsupportedOperationException(
+					"HTML parser module not loaded, to activate this feature, you must add JEF common-ioc.jar to classpath");
 		InputSource source;
 		source = new InputSource(in);
 		synchronized (parser) {
@@ -636,7 +638,8 @@ public class XMLUtils {
 	 */
 	public static DocumentFragment parseHTML(InputStream in, String charSet) throws SAXException, IOException {
 		if (parser == null)
-			throw new UnsupportedOperationException("HTML parser module not loaded, to activate this feature, you must add JEF common-ioc.jar to classpath");
+			throw new UnsupportedOperationException(
+					"HTML parser module not loaded, to activate this feature, you must add JEF common-ioc.jar to classpath");
 		InputSource source;
 		if (charSet != null) {
 			source = new InputSource(new XmlFixedReader(new InputStreamReader(in, charSet)));
@@ -712,7 +715,7 @@ public class XMLUtils {
 	 * @throws IOException
 	 *             读写错误
 	 */
-	public static void output(Node node, OutputStream os, String encoding) throws IOException {
+	public static void output(Node node, OutputStream os, String encoding) {
 		output(node, os, encoding, 4, null);
 	}
 
@@ -743,9 +746,14 @@ public class XMLUtils {
 	 * @throws IOException
 	 *             读写错误
 	 */
-	public static void output(Node node, OutputStream os, String encoding, int warpLine, Boolean xmlDeclare) throws IOException {
-		StreamResult sr = new StreamResult(encoding == null ? new OutputStreamWriter(os) : new OutputStreamWriter(os, encoding));
-		output(node, sr, encoding, warpLine, xmlDeclare);
+	public static void output(Node node, OutputStream os, String encoding, int warpLine, Boolean xmlDeclare){
+		try {
+			StreamResult sr = new StreamResult(encoding == null ? new OutputStreamWriter(os) : new OutputStreamWriter(os, encoding));
+			output(node, sr, encoding, warpLine, xmlDeclare);	
+		}catch(IOException e) {
+			throw new RuntimeException(e);
+		}
+		
 	}
 
 	/**
@@ -768,9 +776,14 @@ public class XMLUtils {
 	}
 
 	private static void output(Node node, StreamResult sr, String encoding, int indent, Boolean XmlDeclarion) throws IOException {
+		if(node.getNodeType()==Node.ATTRIBUTE_NODE) {
+			sr.getWriter().write(node.getNodeValue());
+			sr.getWriter().flush();
+			return;
+		}
+		
 		TransformerFactory tf = TransformerFactory.newInstance();
 		Transformer t = null;
-
 		try {
 			if (indent > 0) {
 				try {
@@ -802,7 +815,7 @@ public class XMLUtils {
 				t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
 			}
 		} catch (Exception tce) {
-			assert (false);
+			throw new IOException(tce);
 		}
 		DOMSource doms = new DOMSource(node);
 		try {
@@ -1302,7 +1315,7 @@ public class XMLUtils {
 		if (!e.hasAttribute(attributeName))
 			return null;
 		String text = e.getAttribute(attributeName);
-		return (text == null) ? null : StringEscapeUtils.unescapeHtml(text.trim());
+		return (text == null) ? null : StringEscapeUtils.unescapeXml(text.trim());
 	}
 
 	/**
@@ -1814,8 +1827,6 @@ public class XMLUtils {
 		}
 	}
 
-	
-
 	/**
 	 * NodeList转换为数组
 	 * 
@@ -2230,10 +2241,8 @@ public class XMLUtils {
 	 *            DOM节点
 	 * @param out
 	 *            输出流
-	 * @throws IOException
-	 *             读写错误
 	 */
-	public static void printNode(Node node, OutputStream out) throws IOException {
+	public static void printNode(Node node, OutputStream out) {
 		output(node, out, null, 4, null);
 	}
 
@@ -2250,6 +2259,9 @@ public class XMLUtils {
 	 * @return 转换后的XML文本
 	 */
 	public static String toString(Node node, String charset, Boolean xmlHeader) {
+		if(node.getNodeType()==Node.ATTRIBUTE_NODE) {
+			return node.getNodeValue();
+		}
 		StringWriter sw = new StringWriter(4096);
 		StreamResult sr = new StreamResult(sw);
 		try {
@@ -2277,8 +2289,10 @@ public class XMLUtils {
 	/**
 	 * 设置XSD Schema
 	 * 
-	 * @param node  DOM节点
-	 * @param schemaURL 设置的XSD的URL
+	 * @param node
+	 *            DOM节点
+	 * @param schemaURL
+	 *            设置的XSD的URL
 	 */
 	public static void setXsdSchema(Node node, String schemaURL) {
 		Document doc;
@@ -2382,7 +2396,7 @@ public class XMLUtils {
 		innerSearchByAttribute(node, attribName, keyword, result, findFirst);
 		return result.toArray(new Element[0]);
 	}
-	
+
 	private static Element appendBean(Node parent, Object bean, Class<?> type, Boolean asAttrib, String tagName) {
 		if (type == null) {
 			if (bean == null) {
@@ -2411,12 +2425,12 @@ public class XMLUtils {
 			return collection;
 		} else if (Map.class.isAssignableFrom(type)) {
 			Element map = addElement(parent, tagName);
-			for(Entry<?,?> e: ((Map<?,?>)bean).entrySet()){
-				Element entry=XMLUtils.addElement(map, "entry");
-				Element key=XMLUtils.addElement(entry, "key");
-				appendBean(key,e.getKey(),null,asAttrib,null);
-				Element value=XMLUtils.addElement(entry, "value");
-				appendBean(value,e.getValue(),null,asAttrib,null);
+			for (Entry<?, ?> e : ((Map<?, ?>) bean).entrySet()) {
+				Element entry = XMLUtils.addElement(map, "entry");
+				Element key = XMLUtils.addElement(entry, "key");
+				appendBean(key, e.getKey(), null, asAttrib, null);
+				Element value = XMLUtils.addElement(entry, "value");
+				appendBean(value, e.getValue(), null, asAttrib, null);
 			}
 			return map;
 		} else if (CharSequence.class.isAssignableFrom(type)) {

@@ -98,6 +98,7 @@ final class CascadeLoaderTask implements LazyLoadTask {
 		if(!db.isOpen()){
 			throw new SQLException("try to load field "+refs.get(0).getName()+" but the session was already closed!");
 		}
+		LogUtil.debug("processing Cascadeload [{}]",this.refs.get(0).getReference());
 		BeanWrapper bean = BeanWrapper.wrap(obj);
 		if (DbUtils.appendRefCondition(bean, joinPath, query, currentFilter) == false)
 			return;

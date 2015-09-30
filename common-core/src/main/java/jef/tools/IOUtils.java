@@ -49,6 +49,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import jef.codegen.support.OverWrittenMode;
 import jef.common.BigDataBuffer;
@@ -57,7 +58,11 @@ import jef.common.SimpleException;
 import jef.common.log.LogUtil;
 import jef.jre5support.ProcessUtil;
 import jef.tools.TextFileCallback.Dealwith;
+import jef.tools.collection.CollectionUtils;
 import jef.tools.io.UnicodeReader;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Multimap;
 
 public class IOUtils {
 	private static final int DEFAULT_BUFFER_SIZE = 4096;
@@ -134,8 +139,12 @@ public class IOUtils {
 	 * @return 文件中的键值对信息。
 	 */
 	public static Map<String, String> loadProperties(URL in) {
+		return loadProperties(in, false);
+	}
+
+	public static Map<String, String> loadProperties(URL in, boolean supportSection) {
 		Map<String, String> result = new LinkedHashMap<String, String>();
-		loadProperties(getReader(in, null), result);
+		loadProperties(getReader(in, null), result, supportSection);
 		return result;
 	}
 
@@ -152,13 +161,39 @@ public class IOUtils {
 	 * 因此，建议在加载.properties文件时，不要使用JDK中的{@link java.util.Properties}。
 	 * <s>彻底淘汰落后的java.util.Properties</s>
 	 * 
-	 * @param file
+	 * @param in
 	 *            要读取的数据流。注意读取完成后流会被关闭。
 	 * @return 文件中的键值对信息。
 	 */
 	public static Map<String, String> loadProperties(Reader in) {
+		return loadProperties(in, false);
+	}
+
+	/**
+	 * 获得配置文件的项目。配置文件用= :等分隔对，语法同properties文件
+	 * <p>
+	 * 使用此方法可以代替使用JDK中的{@link java.util.Properties}工具。因为Properties操作中往往有以下不便
+	 * <ol>
+	 * <li>在遍历时，由于Properties继承了Map&lt;Object,Object&gt;泛型，不得不编写强制类型转换的代码。</li>
+	 * <li>Properties继承了Hashtable性能低下，此外如果getProperty(null)还会抛出异常。</li>
+	 * <li>Properties中的数据是乱序的，无法保持原先在文件中出现的顺序</li>
+	 * <li>Properties保留了基于InputStream的接口，使用时容易出现编码错误</li>
+	 * </ol>
+	 * 因此，建议在加载.properties文件时，不要使用JDK中的{@link java.util.Properties}。
+	 * <s>彻底淘汰落后的java.util.Properties</s>
+	 * 
+	 * @param in
+	 *            要读取的数据流。注意读取完成后流会被关闭。
+	 * @param supportSection
+	 *            支持分节。window下有一种很类似properties格式的配置文件INI。INI文件中可以使用[section]
+	 *            对配置划分小节。开启此开关后，解析时会将当前节名称和配置名拼在一起。 形成 {@code 节名|配置名}的格式。
+	 * 
+	 * 
+	 * @return 文件中的键值对信息。
+	 */
+	public static Map<String, String> loadProperties(Reader in, boolean supportSection) {
 		Map<String, String> result = new LinkedHashMap<String, String>();
-		loadProperties(in, result);
+		loadProperties(in, result, supportSection);
 		return result;
 	}
 
@@ -173,13 +208,61 @@ public class IOUtils {
 	 *            true表示保存完后关闭输出流，false则保持不变
 	 */
 	public static void storeProperties(Writer writer, Map<String, String> map, boolean closeWriter) {
+		storeProperties(writer, map, closeWriter, false);
+
+	}
+
+	/**
+	 * 将Map内的数据保存成properties文件
+	 * 
+	 * @param writer
+	 *            要输出的流
+	 * @param map
+	 *            要保存的键值对信息
+	 * @param closeWriter
+	 *            true表示保存完后关闭输出流，false则保持不变
+	 * @param sectionSupport
+	 *            支持分节写入
+	 */
+	public static void storeProperties(Writer writer, Map<String, String> map, boolean closeWriter, boolean sectionSupport) {
 		try {
-			
-			for (Map.Entry<String, String> entry : map.entrySet()) {
-				writer.write(saveConvert(entry.getKey(), true));
-				writer.write('=');
-				writer.write(saveConvert(entry.getValue(), false));
-				writer.write(StringUtils.CRLF_STR);
+
+			if (sectionSupport) {
+				Multimap<String, Map.Entry<String, String>> sections = CollectionUtils.group(map.entrySet(),
+						new Function<Map.Entry<String, String>, String>() {
+							public String apply(Entry<String, String> input) {
+								int sectionLen = input.getKey().indexOf('|');
+								return sectionLen == -1 ? "" : input.getKey().substring(0, sectionLen);
+							}
+						});
+				boolean hasNoSecLine=false;
+				for (Map.Entry<String, String> entry : sections.removeAll("")) {
+					writer.write(saveConvert(entry.getKey(), true));
+					writer.write('=');
+					writer.write(saveConvert(entry.getValue(), false));
+					writer.write(StringUtils.CRLF_STR);
+					hasNoSecLine=true;
+				}
+				if (!sections.isEmpty()) {
+					if(hasNoSecLine)writer.write(StringUtils.CRLF_STR);
+					for (String section : sections.keySet()) {
+						writer.write("[" + section + "]\r\n");
+						for (Map.Entry<String, String> entry : sections.get(section)) {
+							writer.write(saveConvert(entry.getKey().substring(section.length() + 1), true));
+							writer.write('=');
+							writer.write(saveConvert(entry.getValue(), false));
+							writer.write(StringUtils.CRLF_STR);
+						}
+						writer.write(StringUtils.CRLF_STR);
+					}
+				}
+			} else {
+				for (Map.Entry<String, String> entry : map.entrySet()) {
+					writer.write(saveConvert(entry.getKey(), true));
+					writer.write('=');
+					writer.write(saveConvert(entry.getValue(), false));
+					writer.write(StringUtils.CRLF_STR);
+				}
 			}
 			writer.flush();
 		} catch (IOException e1) {
@@ -868,8 +951,6 @@ public class IOUtils {
 		}
 		return total;
 	}
-	
-	
 
 	/**
 	 * 流之间拷贝
@@ -888,28 +969,34 @@ public class IOUtils {
 	public static long copy(InputStream in, OutputStream out, boolean inClose, boolean outClose) throws IOException {
 		return copy(in, out, inClose, outClose, new byte[DEFAULT_BUFFER_SIZE]);
 	}
-	
+
 	/**
 	 * 流之间拷贝
-	 * @param in 输入
-	 * @param out 输出
-	 * @param inClose 关闭输入流
-	 * @param outClose 关闭输出流
+	 * 
+	 * @param in
+	 *            输入
+	 * @param out
+	 *            输出
+	 * @param inClose
+	 *            关闭输入流
+	 * @param outClose
+	 *            关闭输出流
 	 * @return
 	 * @throws IOException
 	 */
 	public static long copy(Reader in, Writer out, boolean inClose, boolean outClose) throws IOException {
 		return copy(in, out, inClose, outClose, new char[DEFAULT_BUFFER_SIZE]);
 	}
-	
 
 	/**
 	 * 流之间拷贝
 	 * 
-	 * @param in 输入
-	 * @param out 输出
-	 * @param pClose 
-	 *            关闭输出流? 
+	 * @param in
+	 *            输入
+	 * @param out
+	 *            输出
+	 * @param pClose
+	 *            关闭输出流?
 	 * @return 拷贝长度
 	 * @throws IOException
 	 */
@@ -920,8 +1007,10 @@ public class IOUtils {
 	/**
 	 * 流之间拷贝
 	 * 
-	 * @param in 输入
-	 * @param out 输出
+	 * @param in
+	 *            输入
+	 * @param out
+	 *            输出
 	 * @param closeOutStream
 	 *            关闭输出流? (输入流默认关闭)
 	 * @return
@@ -934,7 +1023,8 @@ public class IOUtils {
 	/**
 	 * 将Reader内容读取到内存中的charArray
 	 * 
-	 * @param reader 输入
+	 * @param reader
+	 *            输入
 	 * @return
 	 * @throws IOException
 	 */
@@ -2219,7 +2309,7 @@ public class IOUtils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static BufferedWriter getWriter(File target, String charSet){
+	public static BufferedWriter getWriter(File target, String charSet) {
 		return getWriter(target, charSet, false);
 	}
 
@@ -2454,9 +2544,6 @@ public class IOUtils {
 		return getRelativepath(s1, s2);
 	}
 
-
-	
-
 	/**
 	 * 将ByteBuffer对象脱壳，得到byte[]
 	 * 
@@ -2561,7 +2648,8 @@ public class IOUtils {
 		byte[] first3Bytes = new byte[3];
 		try {
 			boolean checked = false;
-			BufferedInputStream bis = new BufferedInputStream((file instanceof URLFile) ? ((URLFile) file).getInputStream() : new FileInputStream(file));
+			BufferedInputStream bis = new BufferedInputStream((file instanceof URLFile) ? ((URLFile) file).getInputStream() : new FileInputStream(
+					file));
 			bis.mark(0);
 			int read = bis.read(first3Bytes, 0, 3);
 			if (read == -1) {
@@ -2774,7 +2862,16 @@ public class IOUtils {
 		}
 	}
 
-	private static void load0(LineReader lr, Map<String, String> map) throws IOException {
+	/*
+	 * Jiyi 2015-9-14日修改。为了兼容windows应用ini的结构（带小节） 故将小节用 | 符号添加在每个key前方
+	 * 
+	 * @param lr
+	 * 
+	 * @param map
+	 * 
+	 * @throws IOException
+	 */
+	private static void load0(LineReader lr, Map<String, String> map, boolean supportSection) throws IOException {
 		char[] convtBuf = new char[1024];
 		int limit;
 		int keyLen;
@@ -2782,6 +2879,7 @@ public class IOUtils {
 		char c;
 		boolean hasSep;
 		boolean precedingBackslash;
+		String currentSection = null;
 
 		while ((limit = lr.readLine()) >= 0) {
 			c = 0;
@@ -2821,7 +2919,15 @@ public class IOUtils {
 			}
 			String key = loadConvert(lr.lineBuf, 0, keyLen, convtBuf);
 			String value = loadConvert(lr.lineBuf, valueStart, limit - valueStart, convtBuf);
-			map.put(key, value);
+			if (supportSection && value.length() == 0 && key.charAt(0) == '[' && key.charAt(key.length() - 1) == ']') {
+				currentSection = key.length() > 2 ? key.substring(1, key.length() - 1) : null;
+			} else {
+				if (currentSection == null) {
+					map.put(key, value);
+				} else {
+					map.put(currentSection + "|" + key, value);
+				}
+			}
 		}
 	}
 
@@ -2959,15 +3065,15 @@ public class IOUtils {
 		}
 		return outBuffer.toString();
 	}
-	
+
 	/*
 	 * 内部使用,properties文件读取
 	 */
-	static final void loadProperties(Reader in, Map<String, String> map) {
+	static final void loadProperties(Reader in, Map<String, String> map, boolean supportSecion) {
 		if (in == null)
 			return;
 		try {
-			load0(new LineReader(in), map);
+			load0(new LineReader(in), map, supportSecion);
 		} catch (Exception e1) {
 			LogUtil.exception(e1);
 		} finally {

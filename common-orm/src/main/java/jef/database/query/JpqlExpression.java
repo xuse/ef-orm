@@ -36,7 +36,7 @@ import jef.database.jsqlparser.visitor.VisitorAdapter;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 
-import org.apache.commons.lang.ObjectUtils;
+import com.google.common.base.Objects;
 
 public class JpqlExpression implements Expression,LazyQueryBindField {
 	protected Query<?> instance;
@@ -197,9 +197,9 @@ public class JpqlExpression implements Expression,LazyQueryBindField {
 		if (obj == null || !JpqlExpression.class.isAssignableFrom(obj.getClass()))
 			return false;
 		JpqlExpression o = (JpqlExpression) obj;
-		if (!ObjectUtils.equals(this.instance, o.instance))
+		if (!Objects.equal(this.instance, o.instance))
 			return false;
-		if (!ObjectUtils.equals(this.st, o.st))
+		if (!Objects.equal(this.st, o.st))
 			return false;
 		return true;
 	}

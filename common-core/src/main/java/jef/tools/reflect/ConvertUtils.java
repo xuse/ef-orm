@@ -355,7 +355,7 @@ public final class ConvertUtils {
 			Object array = Array.newInstance(clz, values.length);// 创建数组容器
 			int i = 0;
 			for (Object o : values) {
-				Array.set(array, i, toProperType(ObjectUtils.toString(o), cex, null));
+				Array.set(array, i, toProperType(StringUtils.toString(o), cex, null));
 				i++;
 			}
 			return array;
@@ -456,7 +456,8 @@ public final class ConvertUtils {
 		}
 
 		if (clz.isEnum()) {
-			EnumConverter<?> ec = new EnumConverter<>(clz.getWrappered().asSubclass(Enum.class));
+			@SuppressWarnings({ "rawtypes", "unchecked" })
+			EnumConverter ec = new EnumConverter(clz.getWrappered().asSubclass(Enum.class));
 			CACHE.put(clz.getWrappered(), new Node<Converter<?>>(ec));
 			return ec.apply(value);
 		} else if (clz.isArray()) {
@@ -536,7 +537,7 @@ public final class ConvertUtils {
 				return result;
 		}
 
-		return toProperType(ObjectUtils.toString(value), container, oldValue);
+		return toProperType(StringUtils.toString(value), container, oldValue);
 	}
 
 	private static Object process(Node<Converter<?>> cs, Object value) {
@@ -615,7 +616,7 @@ public final class ConvertUtils {
 		Object array = Array.newInstance(arrType.getWrappered(), values.size());// 创建数组容器
 		int i = 0;
 		for (Object o : values) {
-			ArrayUtils.set(array, i, toProperType(ObjectUtils.toString(o), arrType, null));
+			ArrayUtils.set(array, i, toProperType(StringUtils.toString(o), arrType, null));
 			i++;
 		}
 		return array;
@@ -694,7 +695,7 @@ public final class ConvertUtils {
 		try {
 			Collection l = (Collection) CollectionUtils.createContainerInstance(c, 0);
 			for (Object o : values) {
-				l.add(ConvertUtils.toProperType(ObjectUtils.toString(o), cType, findElementInstance(oldValue)));
+				l.add(ConvertUtils.toProperType(StringUtils.toString(o), cType, findElementInstance(oldValue)));
 			}
 			return l;
 		} catch (Exception e) {

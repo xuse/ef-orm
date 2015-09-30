@@ -112,7 +112,7 @@ public class JavaScriptUtil {
 	public static String[] toStringArray(NativeArray nv) {
 		String[] result = new String[(int) nv.getLength()];
 		for (int i = 0; i < result.length; i++) {
-			result[i] = ObjectUtils.toString(nv.get(i, null));
+			result[i] = StringUtils.toString(nv.get(i, null));
 		}
 		return result;
 	}
@@ -133,7 +133,7 @@ public class JavaScriptUtil {
 			if (obj instanceof Number) {
 				result[i] = ((Number) obj).intValue();
 			} else {
-				result[i] = StringUtils.toInt(ObjectUtils.toString(obj), 0);
+				result[i] = StringUtils.toInt(StringUtils.toString(obj), 0);
 			}
 		}
 		return result;

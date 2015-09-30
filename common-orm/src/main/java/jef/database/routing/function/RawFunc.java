@@ -12,7 +12,7 @@ import jef.tools.StringUtils;
 import jef.tools.string.CharUtils;
 import jef.tools.string.StringIterator;
 
-import org.apache.commons.lang.ObjectUtils;
+import com.google.common.base.Objects;
 
 /**
  * 描述针对分表的维度，不是一个可度量的维度，而是直接将这个字符串拼到表名中
@@ -45,7 +45,7 @@ public final class RawFunc implements PartitionFunction<Object>{
 			} else {
 				return Collections.EMPTY_LIST;
 			}
-		} else if (ObjectUtils.equals(min, max)) {
+		} else if (Objects.equal(min, max)) {
 			return Arrays.asList(min);
 		} else {
 			// 范围丢失
