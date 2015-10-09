@@ -363,8 +363,6 @@ public class JefEntityManager implements EntityManager {
 		tx = null;
 		close = true;
 		parent = null;
-		// if(LogUtil.debug)LogUtil.debug("[JPA DEBUG]:closing entity manager: "+this+" at "+
-		// Thread.currentThread().getId());
 	}
 
 	public boolean isOpen() {

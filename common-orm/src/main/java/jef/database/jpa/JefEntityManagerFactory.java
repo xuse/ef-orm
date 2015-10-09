@@ -39,7 +39,7 @@ public class JefEntityManagerFactory implements EntityManagerFactory {
 	@SuppressWarnings("rawtypes")
 	public EntityManager createEntityManager(Map map) {
 		EntityManager result = new JefEntityManager(this, map);
-		log.trace("[JPA DEBUG]:creating EntityManager:{} at {}", result, Thread.currentThread());
+		log.debug("[JPA DEBUG]:creating EntityManager:{} at {}", result, Thread.currentThread());
 		return result;
 	}
 

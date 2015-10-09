@@ -86,6 +86,7 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 		t = new Transformer(type);
 		t.setLoadVsOne(type.isUseOuterJoin());
 		t.setLoadVsMany(true);
+		this.cacheable=type.isCacheable();
 	}
 
 	public QueryImpl(T p, String key) {
@@ -96,6 +97,7 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 		t = new Transformer(type);
 		t.setLoadVsOne(type.isUseOuterJoin());
 		t.setLoadVsMany(true);
+		this.cacheable=type.isCacheable();
 	}
 
 	public void setOrderBy(boolean asc, Field... orderbys) {
@@ -448,7 +450,6 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 
 	@Override
 	public boolean isSelectCustomized() {
-		if(!type.isCacheable())return true;
 		PopulateStrategy[] s=t.getStrategy();
 		if(s!=null && s.length>0)return true;
 		return selected instanceof SelectsImpl;

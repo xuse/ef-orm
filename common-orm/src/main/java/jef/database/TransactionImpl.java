@@ -138,6 +138,7 @@ public class TransactionImpl extends Transaction {
 			this.deadline = System.currentTimeMillis() + timeout * 1000;
 		}
 		this.isJpa=parent.getTxType() == TransactionMode.JPA;
+		log.info("[JPA DEBUG]:Transaction {} started ,mode is {}.", this,parent.getTxType());
 	}
 
 	/**

@@ -58,6 +58,7 @@ public final class ReadOnlyQuery<T extends IQueryableEntity> extends AbstractQue
 		this.type=clz;
 		this.instance=ins;
 		t = new Transformer(type);
+		this.cacheable=type.isCacheable();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -191,6 +192,6 @@ public final class ReadOnlyQuery<T extends IQueryableEntity> extends AbstractQue
 
 	@Override
 	public boolean isSelectCustomized() {
-		return !type.isCacheable();
+		return false;
 	}
 }
