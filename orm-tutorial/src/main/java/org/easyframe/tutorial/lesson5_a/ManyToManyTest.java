@@ -74,12 +74,22 @@ public class ManyToManyTest extends org.junit.Assert {
 			System.out.println("====2");
 			System.out.println(u.getRoleNames());
 		}
+		//脏数据测试
+		{
+			db.delete(Role.class, role.getId());
+			
+			u = db.load(User.class, userId);
+			assertEquals(1, u.getRoles().size());
+			System.out.println(u.getRoleNames());
+		}
 		
+		
+		//删除测试
 		u=new User();
 		u.setId(userId);
 		db.deleteCascade(u);
 		{
-			assertEquals(2, db.count(QB.create(Role.class)));
+			assertEquals(1, db.count(QB.create(Role.class)));
 			assertEquals(0, db.count(QB.create(User.class)));
 			
 			TupleMetadata meta=MetaHolder.getDynamicMeta("user_roles");

@@ -39,7 +39,7 @@ public class Case1 {
 		dao.insert(foo);  //插入一条记录
 		
 		//从数据库查询这条记录
-		Foo loaded=dao.loadByKey(Foo.class, "id", foo.getId());
+		Foo loaded=dao.loadByField(Foo.class, "id", foo.getId());
 		System.out.println(loaded.getName());
 		
 		//更新这条记录
@@ -48,7 +48,7 @@ public class Case1 {
 		
 		
 		//删除这条记录
-		dao.removeByKey(Foo.class, "id", foo.getId());
+		dao.removeByField(Foo.class, "id", foo.getId());
 		List<Foo> allrecords=dao.find(new Foo());
 		Assert.assertTrue(allrecords.isEmpty());
 		

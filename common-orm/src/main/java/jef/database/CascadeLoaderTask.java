@@ -115,7 +115,11 @@ final class CascadeLoaderTask implements LazyLoadTask {
 			subs=new ArrayList<IQueryableEntity>();
 			for(IQueryableEntity d: old) {
 				IQueryableEntity realObj=(IQueryableEntity) ((VarObject)d).get(isManyToMany);
-				subs.add(realObj);
+				if(realObj==null) {
+					LogUtil.warn("Missing right record connect to {}, where {}",this.targetTableMeta.getTableName(false),query);
+				}else {
+					subs.add(realObj);
+				}
 			}
 		}
 		

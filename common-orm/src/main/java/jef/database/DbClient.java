@@ -1037,4 +1037,8 @@ public class DbClient extends Session implements SessionFactory {
 	public Session getSession() {
 		return this;
 	}
+	
+	public void flush() {
+		getCache().evictAll();
+	}
 }

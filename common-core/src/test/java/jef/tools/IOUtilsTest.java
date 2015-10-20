@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.util.Map;
+import java.util.Properties;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -43,11 +44,22 @@ public class IOUtilsTest {
 
 	@Test
 	public void test1() throws IOException {
-		Map<String, String> o = IOUtils.loadProperties(this.getClass().getResource("/a.properties"),true);
+		Map<String, String> o = IOUtils.loadProperties(this.getClass().getResource("/a.properties"),null);
 		LogUtil.show(o);
 		System.out.println("===== output =====");
-		IOUtils.storeProperties(new PrintWriter(System.out), o, true,true);
+		IOUtils.storeProperties(new PrintWriter(System.out), o, true,null,0);
 	}
+	
+	
+	@Test
+	public void test2() throws IOException {
+		
+		Properties pp=new Properties();
+		pp.load(this.getClass().getResource("/a.properties").openStream());
+		
+		LogUtil.show(pp);
+	}
+
 
 	@Test
 	public void testExtract() throws IOException {
