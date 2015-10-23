@@ -142,7 +142,7 @@ public class IOUtils {
 		return loadProperties(in, false);
 	}
 
-	public static Map<String, String> loadProperties(URL in, boolean supportSection) {
+	public static Map<String, String> loadProperties(URL in, Boolean supportSection) {
 		Map<String, String> result = new LinkedHashMap<String, String>();
 		loadProperties(getReader(in, null), result, supportSection);
 		return result;
@@ -191,7 +191,7 @@ public class IOUtils {
 	 * 
 	 * @return 文件中的键值对信息。
 	 */
-	public static Map<String, String> loadProperties(Reader in, boolean supportSection) {
+	public static Map<String, String> loadProperties(Reader in, Boolean supportSection) {
 		Map<String, String> result = new LinkedHashMap<String, String>();
 		loadProperties(in, result, supportSection);
 		return result;
@@ -208,7 +208,7 @@ public class IOUtils {
 	 *            true表示保存完后关闭输出流，false则保持不变
 	 */
 	public static void storeProperties(Writer writer, Map<String, String> map, boolean closeWriter) {
-		storeProperties(writer, map, closeWriter, false);
+		storeProperties(writer, map, closeWriter, false, 0);
 
 	}
 
@@ -223,8 +223,26 @@ public class IOUtils {
 	 *            true表示保存完后关闭输出流，false则保持不变
 	 * @param sectionSupport
 	 *            支持分节写入
+	 * @param 转义处理：1，正常KV均转义处理  0。KEY处理value不处理。 -1 KV均不处理 
+	 *       
 	 */
-	public static void storeProperties(Writer writer, Map<String, String> map, boolean closeWriter, boolean sectionSupport) {
+	public static void storeProperties(Writer writer, Map<String, String> map, boolean closeWriter, Boolean sectionSupport,int saveConvert) {
+		
+		if(sectionSupport==null) {
+			int limit=3;
+			sectionSupport=true;
+			for(Entry<String,String> entry: map.entrySet()) {
+				limit--;
+				String key=entry.getKey();
+				if(key.indexOf('|')==-1) {
+					sectionSupport=false;
+					break;
+				}
+				if(limit<0) {
+					break;
+				}
+			}
+		}
 		try {
 
 			if (sectionSupport) {
@@ -237,9 +255,9 @@ public class IOUtils {
 						});
 				boolean hasNoSecLine=false;
 				for (Map.Entry<String, String> entry : sections.removeAll("")) {
-					writer.write(saveConvert(entry.getKey(), true));
+					writer.write(saveConvert(entry.getKey(), true, saveConvert));
 					writer.write('=');
-					writer.write(saveConvert(entry.getValue(), false));
+					writer.write(saveConvert(entry.getValue(), false,saveConvert));
 					writer.write(StringUtils.CRLF_STR);
 					hasNoSecLine=true;
 				}
@@ -248,9 +266,9 @@ public class IOUtils {
 					for (String section : sections.keySet()) {
 						writer.write("[" + section + "]\r\n");
 						for (Map.Entry<String, String> entry : sections.get(section)) {
-							writer.write(saveConvert(entry.getKey().substring(section.length() + 1), true));
+							writer.write(saveConvert(entry.getKey().substring(section.length() + 1), true,saveConvert));
 							writer.write('=');
-							writer.write(saveConvert(entry.getValue(), false));
+							writer.write(saveConvert(entry.getValue(), false,saveConvert));
 							writer.write(StringUtils.CRLF_STR);
 						}
 						writer.write(StringUtils.CRLF_STR);
@@ -258,9 +276,9 @@ public class IOUtils {
 				}
 			} else {
 				for (Map.Entry<String, String> entry : map.entrySet()) {
-					writer.write(saveConvert(entry.getKey(), true));
+					writer.write(saveConvert(entry.getKey(), true,saveConvert));
 					writer.write('=');
-					writer.write(saveConvert(entry.getValue(), false));
+					writer.write(saveConvert(entry.getValue(), false,saveConvert));
 					writer.write(StringUtils.CRLF_STR);
 				}
 			}
@@ -2871,7 +2889,7 @@ public class IOUtils {
 	 * 
 	 * @throws IOException
 	 */
-	private static void load0(LineReader lr, Map<String, String> map, boolean supportSection) throws IOException {
+	private static void load0(LineReader lr, Map<String, String> map, Boolean supportSection) throws IOException {
 		char[] convtBuf = new char[1024];
 		int limit;
 		int keyLen;
@@ -2919,7 +2937,10 @@ public class IOUtils {
 			}
 			String key = loadConvert(lr.lineBuf, 0, keyLen, convtBuf);
 			String value = loadConvert(lr.lineBuf, valueStart, limit - valueStart, convtBuf);
-			if (supportSection && value.length() == 0 && key.charAt(0) == '[' && key.charAt(key.length() - 1) == ']') {
+			if(supportSection==null) {
+				supportSection=isSection(key);
+			}
+			if (supportSection && value.length() == 0 && isSection(key)) {
 				currentSection = key.length() > 2 ? key.substring(1, key.length() - 1) : null;
 			} else {
 				if (currentSection == null) {
@@ -2929,6 +2950,13 @@ public class IOUtils {
 				}
 			}
 		}
+	}
+
+	private static boolean isSection(String key) {
+		if(key==null || key.length()<2) {
+			return false;
+		}
+		return key.charAt(0) == '[' && key.charAt(key.length() - 1) == ']';
 	}
 
 	/*
@@ -3009,7 +3037,12 @@ public class IOUtils {
 		return new String(out, 0, outLen);
 	}
 
-	private static String saveConvert(String theString, boolean escapeSpace) {
+	private static String saveConvert(String theString, boolean isKey,int option) {
+		if(isKey && option<0) {
+			return theString;
+		}else if(isKey==false && option<1) {
+			return theString;
+		}
 		int len = theString.length();
 		int bufLen = len * 2;
 		if (bufLen < 0) {
@@ -3032,7 +3065,7 @@ public class IOUtils {
 			}
 			switch (aChar) {
 			case ' ':
-				if (x == 0 || escapeSpace)
+				if (x == 0 || isKey)
 					outBuffer.append('\\');
 				outBuffer.append(' ');
 				break;
@@ -3069,7 +3102,7 @@ public class IOUtils {
 	/*
 	 * 内部使用,properties文件读取
 	 */
-	static final void loadProperties(Reader in, Map<String, String> map, boolean supportSecion) {
+	static final void loadProperties(Reader in, Map<String, String> map, Boolean supportSecion) {
 		if (in == null)
 			return;
 		try {

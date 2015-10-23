@@ -81,9 +81,9 @@ public class ServiceRequired extends BaseDao{
 		System.out.println("method33333333333");
 		commondao.loadByPrimaryKey(meta,100);
 		System.out.println("method444444444");
-		commondao.findByKey(meta,"name","str1123");
+		commondao.loadByField(meta,"name","str1123");
 		System.out.println("method5");
-		commondao.findByKey(meta,"name","str1");
+		commondao.loadByField(meta,"name","str1");
 		
 		
 		

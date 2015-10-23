@@ -40,4 +40,8 @@ public class DbClientInfo implements DbClientInfoMBean {
 	public void checkNamedQueryUpdate() {
 		db.checkNamedQueryUpdate();
 	}
+
+	public void clearGlobalCache() {
+		db.flush();
+	}
 }

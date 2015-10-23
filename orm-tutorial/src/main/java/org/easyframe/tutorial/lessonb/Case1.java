@@ -46,7 +46,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests{
 		}
 		{
 			//根据ID删除
-			commonDao.removeByKey(Foo.class, "id", 1);
+			commonDao.removeByField(Foo.class, "id", 1);
 		}
 	}
 	

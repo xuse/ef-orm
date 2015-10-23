@@ -60,6 +60,7 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 		if(type.getPKFields().size()>pks.length){
 			throw new IllegalArgumentException("The primark key count is not match input value:"+type.getPKFields().size()+">"+pks.length);
 		}
+		this.cacheable=type.isCacheable();
 		t=new Transformer(type);
 		t.setLoadVsOne(type.isUseOuterJoin());
 		t.setLoadVsMany(true);
@@ -71,6 +72,7 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	public PKQuery(ITableMetadata meta, List<Serializable> pkValueSafe, IQueryableEntity obj) {
 		this.type=meta;
 		this.instance=(T) obj;
+		this.cacheable=type.isCacheable();
 		t=new Transformer(type);
 		pkValues=pkValueSafe;
 		context= new SqlContext("t", this);
@@ -249,7 +251,6 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 
 	@Override
 	public boolean isSelectCustomized() {
-		if(!type.isCacheable())return true;
 		PopulateStrategy[] s=t.getStrategy();
 		if(s!=null && s.length>0)return true;
 		return false;

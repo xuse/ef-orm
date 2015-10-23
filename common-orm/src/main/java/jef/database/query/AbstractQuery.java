@@ -37,7 +37,7 @@ public abstract class AbstractQuery<T extends IQueryableEntity> implements Query
 	private int maxResult;
 	private int fetchSize;
 	private int queryTimeout;
-	private boolean cacheable =true;
+	protected boolean cacheable =true;
 
 	public void setMaxResult(int size) {
 		this.maxResult = size;

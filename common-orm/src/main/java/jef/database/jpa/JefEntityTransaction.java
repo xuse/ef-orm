@@ -49,7 +49,6 @@ public class JefEntityTransaction implements EntityTransaction {
 			throw new IllegalStateException("Can not open a transaction twice on a EntityTransaction..");
 		}
 		trans = parent.parent.getDefault().startTransaction();
-		log.trace("[JPA DEBUG]:Transaction {}, started at {}", trans, parent);
 	}
 	
 
