@@ -1,8 +1,17 @@
 /*
- * JEF - Copyright 2009-2010 Jiyi (mr.jiyi@gmail.com) Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
- * compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required by applicable law or agreed
- * to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
- * implied. See the License for the specific language governing permissions and limitations under the License.
+ * JEF - Copyright 2009-2010 Jiyi (mr.jiyi@gmail.com)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 package jef.database.dialect;
 
@@ -69,9 +78,7 @@ import jef.tools.StringUtils;
  * 
  */
 public abstract class AbstractDialect implements DatabaseDialect {
-	
 	private static final ViolatedConstraintNameExtracter EXTRACTER = new ViolatedConstraintNameExtracter() {
-		
 		public String extractConstraintName(SQLException sqle) {
 			return null;
 		}
@@ -108,7 +115,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	 * 各种Boolean特性
 	 */
 	protected Set<Feature> features;
-	
+
 	// 缺省的函数注册掉
 	public AbstractDialect() {
 		for (FunctionMapping m : DEFAULT_FUNCTIONS) {
@@ -116,7 +123,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 			this.functionsIndex.put(m.getStardard(), m);
 		}
 		
-		// 注册缺省的数据类型
+		//注册缺省的数据类型
 		typeNames.put(Types.BLOB, "blob", 0);
 		typeNames.put(Types.CLOB, "clob", 0);
 		typeNames.put(Types.CHAR, "char($l)", 0);
@@ -134,7 +141,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		typeNames.put(Types.TIME, "time", 0);
 		typeNames.put(Types.TIMESTAMP, "timestamp", 0);
 	}
-	
+
 	static {
 		// 五个基本统计函数
 		DEFAULT_FUNCTIONS.add(new FunctionMapping(new StandardSQLFunction("avg"), Func.avg, 0));
@@ -154,29 +161,34 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		DEFAULT_FUNCTIONS.add(new FunctionMapping(new StandardSQLFunction("abs"), Func.abs, 0));
 		DEFAULT_FUNCTIONS.add(new FunctionMapping(new StandardSQLFunction("sign"), Func.sign, 0));
 	}
-	
+
 	protected static final String QUOT = "'";
-	
+
 	protected void setProperty(DbProperty key, String value) {
 		properties.put(key, value);
 	}
-	
+
 	/**
 	 * 注册函数，该函数为数据库原生支持的。
 	 * 
-	 * @param func 要支持的数据库函数
-	 * @param synonyms 其他要支持的别名
+	 * @param func
+	 *            要支持的数据库函数
+	 * @param synonyms
+	 *            其他要支持的别名
 	 */
 	protected void registerNative(DbFunction func, String... synonyms) {
 		registerNative(func, new StandardSQLFunction(func.name()), synonyms);
 	}
-	
+
 	/**
 	 * 注册函数，该函数为数据库原生支持的
 	 * 
-	 * @param func 要支持的数据库函数
-	 * @param function 函数实现
-	 * @param synonyms 其他要支持的别名
+	 * @param func
+	 *            要支持的数据库函数
+	 * @param function
+	 *            函数实现
+	 * @param synonyms
+	 *            其他要支持的别名
 	 */
 	protected void registerNative(DbFunction func, SQLFunction function, String... synonyms) {
 		FunctionMapping mapping = new FunctionMapping(function, func, FunctionMapping.MATCH_FULL);
@@ -198,22 +210,26 @@ public abstract class AbstractDialect implements DatabaseDialect {
 			this.functions.put(n, mapping);
 		}
 	}
-	
+
 	/**
 	 * 注册函数，该函数为数据库原生支持的
 	 * 
-	 * @param function 函数实现
-	 * @param synonyms 其他要支持的别名
+	 * @param function
+	 *            函数实现
+	 * @param synonyms
+	 *            其他要支持的别名
 	 */
 	protected void registerNative(SQLFunction function, String... synonyms) {
 		registerNative(null, function, synonyms);
 	}
-	
+
 	/**
 	 * 注册虚拟函数，该函数名和数据库本地函数不同，但用法相似（或一样）。 实际使用时虚拟函数名将被替换为本地函数名
 	 * 
-	 * @param func 虚拟函数名
-	 * @param nativeName 本地函数名
+	 * @param func
+	 *            虚拟函数名
+	 * @param nativeName
+	 *            本地函数名
 	 */
 	protected void registerAlias(DbFunction func, String nativeName) {
 		FunctionMapping fm = functions.get(nativeName);
@@ -224,12 +240,14 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		this.functions.put(func.name(), mapping);
 		this.functionsIndex.put(func, mapping);
 	}
-	
+
 	/**
 	 * 注册虚拟函数，该函数名和数据库本地函数不同，但用法相似（或一样）。 实际使用时虚拟函数名将被替换为本地函数名
 	 * 
-	 * @param func 虚拟函数名
-	 * @param nativeName 本地函数名
+	 * @param func
+	 *            虚拟函数名
+	 * @param nativeName
+	 *            本地函数名
 	 */
 	protected void registerAlias(String func, String nativeName) {
 		FunctionMapping fm = functions.get(nativeName);
@@ -239,13 +257,16 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		FunctionMapping mapping = new FunctionMapping(fm.getFunction(), null, FunctionMapping.MATCH_NAME_CHANGE);
 		this.functions.put(func, mapping);
 	}
-	
+
 	/**
 	 * 注册一个函数的兼容实现
 	 * 
-	 * @param func 要注册的函数
-	 * @param function 函数实现
-	 * @param synonyms 该实现的其他可用名称
+	 * @param func
+	 *            要注册的函数
+	 * @param function
+	 *            函数实现
+	 * @param synonyms
+	 *            该实现的其他可用名称
 	 * 
 	 */
 	protected void registerCompatible(DbFunction func, SQLFunction function, String... synonyms) {
@@ -262,7 +283,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 			this.functions.put(s, mapping);
 		}
 	}
-	
+
 	public String getFunction(DbFunction func, Object... params) {
 		FunctionMapping mapping = this.getFunctionsByEnum().get(func);
 		if (mapping == null) {
@@ -275,7 +296,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 			List<Expression> exps = new ArrayList<Expression>();
 			for (Object s : params) {
 				if (s instanceof Expression) {
-					exps.add((Expression)s);
+					exps.add((Expression) s);
 				} else {
 					exps.add(new SqlExpression(String.valueOf(s)));
 				}
@@ -288,53 +309,53 @@ public abstract class AbstractDialect implements DatabaseDialect {
 			return ex.toString();
 		}
 	}
-	
+
 	public Map<String, FunctionMapping> getFunctions() {
 		return functions;
 	}
-	
+
 	public Map<DbFunction, FunctionMapping> getFunctionsByEnum() {
 		return functionsIndex;
 	}
-	
+
 	public String getDefaultSchema() {
 		return null;
 	}
-	
+
 	public void processConnectProperties(DataSourceInfo dsw) {
 	}
-	
+
 	public boolean containKeyword(String name) {
 		return keywords.contains(name);
 	}
-	
+
 	public String getProperty(DbProperty key) {
 		return properties.get(key);
 	}
-	
+
 	public String getProperty(DbProperty key, String defaultValue) {
 		String value = properties.get(key);
 		return value == null ? defaultValue : value;
 	}
 	
+
 	@Override
 	public int getPropertyInt(DbProperty key) {
-		String s = properties.get(key);
-		if (StringUtils.isEmpty(s)) {
+		String s=properties.get(key);
+		if(StringUtils.isEmpty(s)){
 			return 0;
 		}
 		return Integer.parseInt(s);
 	}
-	
 	@Override
 	public long getPropertyLong(DbProperty key) {
-		String s = properties.get(key);
-		if (StringUtils.isEmpty(s)) {
+		String s=properties.get(key);
+		if(StringUtils.isEmpty(s)){
 			return 0;
 		}
 		return Long.parseLong(s);
 	}
-	
+
 	/**
 	 * 产生用于建表的SQL语句
 	 * 
@@ -342,38 +363,38 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	public String getCreationComment(ColumnType column, boolean flag) {
 		// 特殊情况先排除
 		if (column instanceof ColumnType.AutoIncrement) {
-			ColumnType.AutoIncrement cType = (ColumnType.AutoIncrement)column;
-			GenerationType type = cType.getGenerationType(this, true);
-			if (type == GenerationType.IDENTITY) {
-				return getComment(cType, flag);
-			} else {
-				column = cType.toNormalType();
+			ColumnType.AutoIncrement cType=(ColumnType.AutoIncrement) column;
+			GenerationType type=cType.getGenerationType(this, true);
+			if(type==GenerationType.IDENTITY){
+				return getComment(cType,flag);				
+			}else{
+				column=cType.toNormalType();
 			}
 		}
 		Type def = null;
-		int rawSqlType = column.getSqlType();
-		if (column instanceof TypeDefImpl) {
-			String name = ((TypeDefImpl)column).getName();
-			if (name != null) {
-				def = new Type(rawSqlType, name);
+		int rawSqlType=column.getSqlType();
+		if(column instanceof TypeDefImpl){
+			String name=((TypeDefImpl) column).getName();
+			if(name!=null){
+				def=new Type(rawSqlType,name);	
 			}
 		}
 		// 按事先注册的类型进行建表
-		if (def == null) {
+		if(def==null){
 			if (column instanceof SqlTypeSized) {
-				SqlTypeSized type = (SqlTypeSized)column;
+				SqlTypeSized type = (SqlTypeSized) column;
 				def = typeNames.get(rawSqlType, type.getLength(), type.getPrecision(), type.getScale());
 			} else {
 				def = typeNames.get(rawSqlType);
-			}
+			}			
 		}
-		
+
 		if (!flag) {
 			return def.getName();
 		}
 		StringBuilder sb = new StringBuilder(def.getName());
 		if (column.defaultValue != null)
-			sb.append(" default ").append(toDefaultString0(column.defaultValue, rawSqlType, def.getSqlType()));
+			sb.append(" default ").append(toDefaultString0(column.defaultValue, rawSqlType,def.getSqlType()));
 		if (column.nullable) {
 			if (has(Feature.COLUMN_DEF_ALLOW_NULL)) {
 				sb.append(" null");
@@ -385,13 +406,14 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	}
 	
 	@Override
-	public int getImplementationSqlType(int typecode) {
+	public int getImplementationSqlType(int typecode){
 		return typeNames.get(typecode).getSqlType();
 	}
-	
+
 	/**
-	 * 关于自增字段的定义 部分数据库只支持其中一种。但是，有By Default的，要尽量使用BY DEFAULT关键字 本来是hsql不支持by default,造成自增字段不支持人工设置。/GENERATED ALWAYS AS IDENTITY /GENERATED BY DEFAULT AS
-	 * IDENTITY
+	 * 关于自增字段的定义 部分数据库只支持其中一种。但是，有By Default的，要尽量使用BY DEFAULT关键字 本来是hsql不支持by
+	 * default,造成自增字段不支持人工设置。/GENERATED ALWAYS AS IDENTITY /GENERATED BY DEFAULT
+	 * AS IDENTITY
 	 * 
 	 * @param column
 	 * @param flag
@@ -409,159 +431,159 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		}
 		return sb.toString();
 	}
-	
+
+
 	public boolean checkPKLength(ColumnType type) {
 		return true;
 	}
-	
+
 	public String toDefaultString(Object defaultValue, int sqlType) {
-		return toDefaultString0(defaultValue, sqlType, sqlType);
+		return toDefaultString0(defaultValue,sqlType,sqlType);
 	}
-	
+
 	private String toDefaultString0(Object defaultValue, int sqlType, int changeTo) {
 		if (defaultValue == null) {
 			return null;
 		}
-		if (sqlType == Types.BOOLEAN) {
-			if (!(defaultValue instanceof Boolean)) {
-				String s = String.valueOf(defaultValue);
-				defaultValue = StringUtils.toBoolean(s, false);
+		if (sqlType== Types.BOOLEAN){
+			if(!(defaultValue instanceof Boolean)){
+				String s=String.valueOf(defaultValue);
+				defaultValue=StringUtils.toBoolean(s,false);	
 			}
 		}
 		if (defaultValue instanceof Boolean) {
-			return toBooleanSqlParam((java.lang.Boolean)defaultValue, changeTo);
-		} else if (defaultValue instanceof DbFunction) {
-			return this.getFunction((DbFunction)defaultValue);
+			return toBooleanSqlParam((java.lang.Boolean) defaultValue, changeTo);
+		}else if (defaultValue instanceof DbFunction) {
+			return this.getFunction((DbFunction) defaultValue);
 		} else if (defaultValue instanceof SqlExpression) {
 			return defaultValue.toString();
 		}
 		if (defaultValue instanceof Number) {
 			return defaultValue.toString();
 		} else if (defaultValue instanceof String) {
-			String s = (String)defaultValue;
+			String s=(String)defaultValue;
 			if (s.length() == 0)
 				return null;
-			return "'" + (String)defaultValue + "'";
+			return "'" + (String) defaultValue + "'";
 		} else {
 			return "'" + String.valueOf(defaultValue) + "'";
 		}
 	}
-	
+
 	private String toBooleanSqlParam(Boolean defaultValue, int sqlType) {
-		switch (sqlType) {
-			case Types.BOOLEAN:
-				return String.valueOf(defaultValue);
-			case Types.VARCHAR:
-			case Types.CHAR:
-				return defaultValue ? "'1'" : "'0'";
-			case Types.NUMERIC:
-			case Types.INTEGER:
-			case Types.TINYINT:
-			case Types.SMALLINT:
-			case Types.BIT:
-				return defaultValue ? "1" : "0";
-			default:
-				return String.valueOf(defaultValue);
+		switch(sqlType){
+		case Types.BOOLEAN:
+			return String.valueOf(defaultValue); 
+		case Types.VARCHAR:	
+		case Types.CHAR:
+			return defaultValue?"'1'":"'0'";
+		case Types.NUMERIC:
+		case Types.INTEGER:
+		case Types.TINYINT:
+		case Types.SMALLINT:
+		case Types.BIT:
+			return defaultValue?"1":"0";
+		default:
+			return String.valueOf(defaultValue); 
 		}
 	}
-	
+
 	public CachedRowSet newCacheRowSetInstance() throws SQLException {
 		return new jef.database.jdbc.rowset.CachedRowSetImpl();
 	}
-	
+
 	/**
 	 * 将数据库定义的字段类型映射到JEF的字段类型上
 	 */
 	public ColumnType getProprtMetaFromDbType(jef.database.meta.Column column) {
 		int type = column.getDataTypeCode();
-		if (type == -9999) {
-			type = judgeTypeCode(column.getDataType());
+		if(type==-9999) {
+			type=judgeTypeCode(column.getDataType());
 		}
 		
 		switch (type) {
-			case Types.TINYINT:
-			case Types.SMALLINT:
-			case Types.INTEGER:
-			case Types.BIGINT:
-				int size = column.getColumnSize();
-				if (size > 30)
-					size = column.getDecimalDigit();
-				if ("AUTOINCREMENT".equalsIgnoreCase(column.getColumnDef()))
-					return new ColumnType.AutoIncrement(size);
-				if (column.getColumnDef() != null && column.getColumnDef().startsWith("GENERATED")) {
-					return new ColumnType.AutoIncrement(size);
-				} else {
-					return new ColumnType.Int(size);
-				}
-			case Types.DECIMAL:
-			case Types.NUMERIC:
-			case Types.DOUBLE:
-			case Types.FLOAT:
-			case Types.REAL:
-				if (column.getColumnSize() == 0)
-					column.setColumnSize(12);
-				if (column.getDecimalDigit() == 0)
-					column.setDecimalDigit(4);
-				return new ColumnType.Double(column.getColumnSize(), column.getDecimalDigit());
-			case Types.BIT:
-			case Types.BOOLEAN:
-				return new ColumnType.Boolean();
-			case Types.VARBINARY:
-			case Types.BINARY:
-			case Types.LONGVARBINARY:
-			case Types.BLOB:
-				return new ColumnType.Blob();
-			case Types.DATE:
-				return new ColumnType.Date();
-			case Types.TIME:
-			case Types.TIMESTAMP:
-				return new ColumnType.TimeStamp();
-			case Types.CHAR:
-			case Types.NCHAR:
-				return new ColumnType.Char(column.getColumnSize());
-			case Types.VARCHAR:
-			case Types.NVARCHAR:
-			case Types.LONGVARCHAR:
-			case Types.LONGNVARCHAR:
-				if (column.getColumnSize() > 4000) {
-					return new ColumnType.Clob();
-				} else {
-					if ("GUID".equals(column.getColumnDef())) {
-						return new ColumnType.GUID();
-					} else {
-						return new Varchar(column.getColumnSize());
-					}
-				}
-			case Types.OTHER: // Varbit in PG and nvarchar2 in oracle returns OTHER,
-				              // seems they can all mapping to String value in
-				              // java..
-				return new Varchar(column.getColumnSize());
-			case Types.SQLXML:
-				return new ColumnType.XML();
-			case Types.CLOB:
-			case Types.NCLOB:
+		case Types.TINYINT:
+		case Types.SMALLINT:
+		case Types.INTEGER:
+		case Types.BIGINT:
+			int size = column.getColumnSize();
+			if (size > 30)
+				size = column.getDecimalDigit();
+			if ("AUTOINCREMENT".equalsIgnoreCase(column.getColumnDef()))
+				return new ColumnType.AutoIncrement(size);
+			if (column.getColumnDef() != null && column.getColumnDef().startsWith("GENERATED")) {
+				return new ColumnType.AutoIncrement(size);
+			} else {
+				return new ColumnType.Int(size);
+			}
+		case Types.DECIMAL:
+		case Types.NUMERIC:
+		case Types.DOUBLE:
+		case Types.FLOAT:
+		case Types.REAL:
+			if (column.getColumnSize() == 0)
+				column.setColumnSize(12);
+			if (column.getDecimalDigit() == 0)
+				column.setDecimalDigit(4);
+			return new ColumnType.Double(column.getColumnSize(), column.getDecimalDigit());
+		case Types.BIT:
+		case Types.BOOLEAN:
+			return new ColumnType.Boolean();
+		case Types.VARBINARY:
+		case Types.BINARY:
+		case Types.LONGVARBINARY:
+		case Types.BLOB:
+			return new ColumnType.Blob();
+		case Types.DATE:
+			return new ColumnType.Date();
+		case Types.TIME:
+		case Types.TIMESTAMP:
+			return new ColumnType.TimeStamp();
+		case Types.CHAR:
+		case Types.NCHAR:
+			return new ColumnType.Char(column.getColumnSize());
+		case Types.VARCHAR:
+		case Types.NVARCHAR:
+		case Types.LONGVARCHAR:
+		case Types.LONGNVARCHAR:
+			if (column.getColumnSize() > 4000) {
 				return new ColumnType.Clob();
-				//
-				// case Types.DISTINCT:
-				// case Types.NULL:
-				// case Types.ARRAY:
-				// case Types.STRUCT:
-				// case Types.DATALINK:
-				// case Types.JAVA_OBJECT:
-				// case Types.REF:
-				// case Types.ROWID:
-			default:
-				throw new RuntimeException("Unknown data type " + column.getDataType() + " " + type + "  " + column);
+			} else {
+				if ("GUID".equals(column.getColumnDef())) {
+					return new ColumnType.GUID();
+				} else {
+					return new Varchar(column.getColumnSize());
+				}
+			}
+		case Types.OTHER: // Varbit in PG and nvarchar2 in oracle returns OTHER,
+							// seems they can all mapping to String value in
+							// java..
+			return new Varchar(column.getColumnSize());
+		case Types.SQLXML:
+			return new ColumnType.XML();
+		case Types.CLOB:
+		case Types.NCLOB:
+			return new ColumnType.Clob();
+			//
+			// case Types.DISTINCT:
+			// case Types.NULL:
+			// case Types.ARRAY:
+			// case Types.STRUCT:
+			// case Types.DATALINK:
+			// case Types.JAVA_OBJECT:
+			// case Types.REF:
+			// case Types.ROWID:
+		default:
+			throw new RuntimeException("Unknown data type " + column.getDataType() + " " + type + "  " + column);
 		}
 	}
-	
+
 	private int judgeTypeCode(String dataType) {
-		Integer i = this.typeNames.getTypeNameCodes().get(dataType);
-		if (i != null)
-			return i;
-		throw new IllegalArgumentException("Unknown data type of [" + getName().name() + "]:" + dataType);
+		Integer i=this.typeNames.getTypeNameCodes().get(dataType);
+		if(i!=null)return i;
+		throw new IllegalArgumentException("Unknown data type of ["+getName().name()+"]:"+dataType);
 	}
-	
+
 	/**
 	 * 像Oracle，其Catlog是不用的，那么返回null mySQL没有Schema，每个database是一个catlog，那么返回值
 	 * 
@@ -571,7 +593,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	public String getCatlog(String schema) {
 		return null;
 	}
-	
+
 	/**
 	 * 对于表名前缀的XX. MYSQL是作为catlog的，不是作为schema的
 	 * 
@@ -581,15 +603,15 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	public String getSchema(String schema) {
 		return schema;
 	}
-	
+
 	public boolean notHas(Feature feature) {
 		return !features.contains(feature);
 	}
-	
+
 	public boolean has(Feature feature) {
 		return features.contains(feature);
 	}
-	
+
 	public String generateUrl(String host, int port, String pathOrName) {
 		StringBuilder sb = new StringBuilder("jdbc:");
 		sb.append(getName() + ":");
@@ -598,79 +620,77 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		String url = sb.toString();
 		return url;
 	}
-	
+
 	public String getObjectNameToUse(String name) {
 		return name;
 	}
-	
+
 	public String getColumnNameToUse(String name) {
 		return name;
 	}
-	
 	public String getColumnNameToUse(AColumnMapping name) {
 		return name.rawColumnName;
 	}
-	
+
 	@Override
 	public List<SequenceInfo> getSequenceInfo(DbMetaData conn, String schema, String seqName) {
 		return null;
 	}
-	
+
 	public java.sql.Timestamp toTimestampSqlParam(Date timestamp) {
 		return DateUtils.toSqlTimeStamp(timestamp);
 	}
-	
+
 	public String[] getOtherVersionSql() {
 		return ArrayUtils.EMPTY_STRING_ARRAY;
 	}
-	
+
 	public boolean isIOError(SQLException se) {
 		return false;
 	}
-	
+
 	public void processIntervalExpression(BinaryExpression parent, Interval interval) {
 	}
-	
+
 	public void processIntervalExpression(Function func, Interval interval) {
 	}
-	
+
 	public String getSqlDateExpression(Date value) {
 		return AColumnMapping.wrapSqlStr(DateUtils.formatDate(value));
 	}
-	
+
 	public String getSqlTimeExpression(Date value) {
 		return AColumnMapping.wrapSqlStr(DateFormats.TIME_ONLY.get().format(value));
 	}
-	
+
 	public String getSqlTimestampExpression(Date value) {
 		return AColumnMapping.wrapSqlStr(DateFormats.DATE_TIME_CS.get().format(value));
 	}
-	
+
 	public long getColumnAutoIncreamentValue(AutoIncrementMapping mapping, JDBCTarget db) {
-		throw new UnsupportedOperationException(mapping.getMeta().getName() + "." + mapping.fieldName() + " is auto-increament, but the database '"
-		        + this.getName() + "' doesn't support fetching the next AutoIncreament value.");
+		throw new UnsupportedOperationException(mapping.getMeta().getName() + "." + mapping.fieldName() + " is auto-increament, but the database '" + this.getName() + "' doesn't support fetching the next AutoIncreament value.");
 	}
-	
+
 	public Statement wrap(Statement stmt, boolean isInJpaTx) throws SQLException {
 		return stmt;
 	}
-	
+
 	public PreparedStatement wrap(PreparedStatement stmt, boolean isInJpaTx) throws SQLException {
 		return stmt;
 	}
-	
+
 	public void addKeyword(String... keys) {
 		for (String s : keys) {
 			keywords.add(s);
 		}
 	}
-	
+
 	public void toExtremeInsert(InsertSqlClause sql) {
 	}
-	
+
 	public void init(OperateTarget asOperateTarget) {
 	}
-	
+
 	/**
 	 * 在数据库初始化时检查一些用于模拟函数的存储过程是否已经创建。如果没有则自动运行脚本创建。
 	 * 
@@ -704,7 +724,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 			throw ex;
 		}
 	}
-	
+
 	/**
 	 * 从指定的资源文件中加载关键字列表
 	 * 
@@ -714,7 +734,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		InputStream in = this.getClass().getResourceAsStream(path);
 		if (in == null) {
 			in = AbstractDialect.class.getResourceAsStream(path);
-		}	
+		}
 		if (in == null) {
 			throw new NullPointerException("Resource not found:" + path);
 		}
@@ -733,7 +753,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 			IOUtils.closeQuietly(reader);
 		}
 	}
-	
+
 	/**
 	 * 根据RDBMS名称获得数据库方言
 	 * 
@@ -748,7 +768,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		profile = lookupDialect(dbmsName);
 		return profile;
 	}
-	
+
 	private synchronized static DatabaseDialect lookupDialect(String dbmsName) {
 		Map<String, String> dialectMappings = initDialectMapping();
 		String classname = dialectMappings.remove(dbmsName);
@@ -757,7 +777,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		}
 		try {
 			Class<?> c = Class.forName(classname);
-			DatabaseDialect result = (DatabaseDialect)c.newInstance();
+			DatabaseDialect result = (DatabaseDialect) c.newInstance();
 			ITEMS.put(dbmsName, result);
 			return result;
 		} catch (RuntimeException e) {
@@ -767,7 +787,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 			throw new IllegalArgumentException("the Dialect class can't be created:" + classname);
 		}
 	}
-	
+
 	private static Map<String, String> initDialectMapping() {
 		URL url = AbstractDialect.class.getResource("/META-INF/dialect-mapping.properties");
 		if (url == null) {
@@ -786,17 +806,17 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		}
 		return config;
 	}
-	
-	static ParserFactory DEFAULT_PARSER = new ParserFactory.Default();
-	
+
+	static ParserFactory DEFAULT_PARSER=new ParserFactory.Default();
 	@Override
 	public ParserFactory getParserFactory() {
 		return DEFAULT_PARSER;
 	}
-	
+
 	@Override
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
 		return EXTRACTER;
 	}
+	
 	
 }
