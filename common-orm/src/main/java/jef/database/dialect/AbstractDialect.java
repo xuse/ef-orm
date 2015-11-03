@@ -733,6 +733,9 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	protected void loadKeywords(String path) {
 		InputStream in = this.getClass().getResourceAsStream(path);
 		if (in == null) {
+			in = AbstractDialect.class.getResourceAsStream(path);
+		}
+		if (in == null) {
 			throw new NullPointerException("Resource not found:" + path);
 		}
 		BufferedReader reader = IOUtils.getReader(in, "US-ASCII");
