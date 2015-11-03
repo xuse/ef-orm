@@ -91,7 +91,9 @@ public abstract class AbstractMetadata implements ITableMetadata {
 					Class<? extends ColumnType> type2 = field2.get().getClass();
 					Boolean b1 = (type1 == ColumnType.Blob.class || type1 == ColumnType.Clob.class);
 					Boolean b2 = (type2 == ColumnType.Blob.class || type2 == ColumnType.Clob.class);
-					return b1.compareTo(b2);
+					int result = b1.compareTo(b2);
+					//在分库分表的情况下，IdentityHashMap.value的内容每一次都不一致，导致建的表的字段顺序也不一致。在select * 并使用union时会出错
+					return result==0?field1.fieldName().compareTo(field2.fieldName()):result;
 				}
 			});
 			metaFields = Arrays.asList(fields);
