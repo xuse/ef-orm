@@ -72,18 +72,18 @@ final class CascadeLoaderTask implements LazyLoadTask {
 			if (desc.maxRows() > 0) {
 				query.setMaxResult(desc.maxRows());
 			}
-
+		}
+		if (StringUtils.isNotEmpty(joinPath.getOrderBy())) {
 			orders = new ArrayList<OrderField>();
-			if (StringUtils.isNotEmpty(joinPath.getOrderBy())) {
-				OrderBy order = DbUtils.parseOrderBy(joinPath.getOrderBy());
-				for (OrderByElement ele : order.getOrderByElements()) {
-					ColumnMapping field = targetTableMeta.findField(ele.getExpression().toString());
-					if (field != null) {
-						orders.add(new OrderField(field.field(), ele.isAsc()));
-					}
+			OrderBy order = DbUtils.parseOrderBy(joinPath.getOrderBy());
+			for (OrderByElement ele : order.getOrderByElements()) {
+				ColumnMapping field = targetTableMeta.findField(ele.getExpression().toString());
+				if (field != null) {
+					orders.add(new OrderField(field.field(), ele.isAsc()));
 				}
 			}
 		}
+		
 		// 计算查询目标的引用关系
 		finalQuery = query;
 		option = QueryOption.createFrom(query);
