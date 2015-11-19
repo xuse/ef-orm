@@ -44,7 +44,7 @@ public class TransactionImpl extends Transaction {
 	 * 为了将这种内部自动生成的事务和用户事务加以区别，所以通过这个字符串表名事务的类别。 并且可以体现在日志中。
 	 */
 	TransactionFlag innerFlag;
-	
+
 	private boolean isJpa;
 
 	public void setReadonly(boolean flag) {
@@ -124,21 +124,21 @@ public class TransactionImpl extends Transaction {
 		this.updatep = parent.updatep;
 		this.deletep = parent.deletep;
 		if (noCache || !ORMConfig.getInstance().isCacheLevel1()) {
-			//没有自己的缓存
+			// 没有自己的缓存
 			cache = parent.getCache();
-		} else if(parent.getCache().isDummy()){
-			//自己有缓存，上级无缓存
-			cache = new CacheImpl(rProcessor, selectp, 0,"L1");
+		} else if (parent.getCache().isDummy()) {
+			// 自己有缓存，上级无缓存
+			cache = new CacheImpl(rProcessor, selectp, 0, "L1");
 		} else {
-			//两级缓存都启用的情况下
-			cache=new CacheChain(new CacheImpl(rProcessor, selectp, 0,"L1"),parent.getCache());
+			// 两级缓存都启用的情况下
+			cache = new CacheChain(new CacheImpl(rProcessor, selectp, 0, "L1"), parent.getCache());
 		}
 		getListener().newTransaction(this);
 		if (timeout > 0) {
 			this.deadline = System.currentTimeMillis() + timeout * 1000;
 		}
-		this.isJpa=parent.getTxType() == TransactionMode.JPA;
-		log.info("[JPA DEBUG]:Transaction {} started ,mode is {}.", this,parent.getTxType());
+		this.isJpa = parent.getTxType() == TransactionMode.JPA;
+		log.debug("[JPA DEBUG]:Transaction {} started ,mode is {}.", this, parent.getTxType());
 	}
 
 	/**
@@ -215,8 +215,7 @@ public class TransactionImpl extends Transaction {
 			long start = System.currentTimeMillis();
 			conn.rollback();
 			dirty = false;
-			if (ORMConfig.getInstance().isDebugMode())
-				log.info("[JPA DEBUG]:Transaction {} rollback. cost {}ms.", this, (System.currentTimeMillis() - start));
+			log.debug("[JPA DEBUG]:Transaction {} rollback. cost {}ms.", this, (System.currentTimeMillis() - start));
 			getListener().postRollback(this);
 		}
 	}
@@ -227,8 +226,7 @@ public class TransactionImpl extends Transaction {
 			long start = System.currentTimeMillis();
 			conn.commit();
 			dirty = false;
-			if (ORMConfig.getInstance().isDebugMode())
-				log.info("[JPA DEBUG]:Transaction {} commited. cost {}ms.", this, System.currentTimeMillis() - start);
+			log.debug("[JPA DEBUG]:Transaction {} commited. cost {}ms.", this, System.currentTimeMillis() - start);
 			getListener().postCommit(this);
 		}
 	}
@@ -242,7 +240,7 @@ public class TransactionImpl extends Transaction {
 				if (!autoCommit && parent.getTxType() != TransactionMode.JTA) {
 					conn.setAutoCommit(true);
 				}
-				//注意，readOnly必须在AutoCommit设置完成后才能设置，因为在Postgres上，autocommit=false时，认为是在事务中，而事务中不允许修改readOnly属性
+				// 注意，readOnly必须在AutoCommit设置完成后才能设置，因为在Postgres上，autocommit=false时，认为是在事务中，而事务中不允许修改readOnly属性
 				if (readOnly) {
 					conn.setReadOnly(false);
 				}
