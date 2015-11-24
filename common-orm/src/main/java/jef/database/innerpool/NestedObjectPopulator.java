@@ -7,11 +7,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.util.Assert;
+
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.Entry;
+import jef.database.DbUtils;
 import jef.database.IQueryableEntity;
 import jef.database.jdbc.result.IResultSet;
+import jef.database.meta.ITableMetadata;
+import jef.database.meta.MetaHolder;
 import jef.database.wrapper.populator.IPopulator;
 import jef.tools.FunctionProperty;
 import jef.tools.reflect.BeanWrapper;
@@ -90,6 +95,10 @@ public class NestedObjectPopulator implements IPopulator {
 		if (flag) {
 			if (subDo instanceof IQueryableEntity) {
 				((IQueryableEntity) subDo).startUpdate();
+				//TODO 
+				//Jiyi 2015/11/24临时性增加，因为在项目中发现会存在空对象被外连接方式加载情况，为进一步跟踪此问题，添加相应断言代码
+				//问题调试完成后需要删除
+				ensureNotNull((IQueryableEntity) subDo);
 			}
 			for(Entry<Property,BeanAccessor> entry: accessPath){
 				Object v=entry.getKey().get(raw);
@@ -101,6 +110,9 @@ public class NestedObjectPopulator implements IPopulator {
 			}
 			lastAccessor.set(raw, subDo);
 		}
+	}
+	private void ensureNotNull(IQueryableEntity subDo) {
+		Assert.notNull(DbUtils.getPrimaryKeyValue(subDo));
 	}
 	@SuppressWarnings("rawtypes")
 	static class ToSetFunction implements Function<Object,Object>{
