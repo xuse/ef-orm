@@ -112,7 +112,7 @@ public class CloneUtils {
 	}
 
 	/**
-	 * 克隆
+	 * 深拷贝 (被动式，仅对DeepCloneable接口的类进行深拷贝)
 	 * 
 	 * @param obj
 	 *            要拷贝的对象
@@ -123,7 +123,27 @@ public class CloneUtils {
 	}
 	
 	/**
-	 * 克隆
+	 * 带泛型的深拷贝(被动式，仅对DeepCloneable接口的类进行深拷贝)
+	 * @param obj
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> T clone2(T obj) {
+		return (T)clone(obj, false);
+	}
+	
+	/**
+	 * 带泛型的深拷贝(主动式，对一切类都尽可能尝试深拷贝)
+	 * @param obj
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> T deepClone(T obj) {
+		return (T)clone(obj, true);
+	}
+	
+	/**
+	 * 深拷贝
 	 * 
 	 * @param obj
 	 *            要拷贝的对象

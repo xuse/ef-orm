@@ -232,7 +232,7 @@ public class ORMConfig implements ORMConfigMBean {
 		checkUpdateForNamedQueries = JefConfiguration.getBoolean(DbCfg.DB_NAMED_QUERY_UPDATE, debugMode);
 		checkSqlFunctions = JefConfiguration.getBoolean(DbCfg.DB_CHECK_SQL_FUNCTIONS, true);
 		filterAbsentTables = JefConfiguration.getBoolean(DbCfg.PARTITION_FILTER_ABSENT_TABLES, true);
-		partitionCreateTableInneed = JefConfiguration.getBoolean(DbCfg.PARTITION_FILTER_ABSENT_TABLES, true);
+		partitionCreateTableInneed = JefConfiguration.getBoolean(DbCfg.PARTITION_CREATE_TABLE_INNEED, true);
 		partitionInMemoryMaxRows = JefConfiguration.getInt(DbCfg.PARTITION_INMEMORY_MAXROWS, 0);
 		autoCreateSequence = JefConfiguration.getBoolean(DbCfg.AUTO_SEQUENCE_CREATION, true);
 		maxInConditions = JefConfiguration.getInt(DbCfg.DB_MAX_IN_CONDITIONS, 500);

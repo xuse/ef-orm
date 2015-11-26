@@ -40,6 +40,7 @@ public final class ColumnMappings {
 	public static final ResultSetAccessor INT = new ResultIntAccessor();
 	public static final ResultSetAccessor LONG = new ResultLongAccessor();
 	public static final ResultSetAccessor DOUBLE = new ResultDoubleAccessor();
+	public static final ResultSetAccessor CHARACTER = new ResultCharacterAccessor(null);
 	public static final ResultSetAccessor FLOAT = new ResultFloatAccessor();
 	public static final ResultSetAccessor BOOLEAN = new ResultBooleanAccessor();
 	public static final ResultSetAccessor CHAR_BOOLEAN = new CharBooleanAccessor();
@@ -126,27 +127,26 @@ public final class ColumnMappings {
 	private static final Map<Class<?>, ResultSetAccessor> FAST_ACCESSOR_MAP_PRIMTIVE = new IdentityHashMap<Class<?>, ResultSetAccessor>();
 	private static final Map<Class<?>, ResultSetAccessor> FAST_ACCESSOR_MAP = new IdentityHashMap<Class<?>, ResultSetAccessor>();
 	static {
-		ResultSetAccessor C = new ResultCharacterAccessor((char) 0);
 		FAST_ACCESSOR_MAP_PRIMTIVE.put(Integer.TYPE, I);
 		FAST_ACCESSOR_MAP_PRIMTIVE.put(Long.TYPE, J);
 		FAST_ACCESSOR_MAP_PRIMTIVE.put(Float.TYPE, F);
 		FAST_ACCESSOR_MAP_PRIMTIVE.put(Double.TYPE, D);
 		FAST_ACCESSOR_MAP_PRIMTIVE.put(Boolean.TYPE, Z);
-		FAST_ACCESSOR_MAP_PRIMTIVE.put(Character.TYPE, C);
+		FAST_ACCESSOR_MAP_PRIMTIVE.put(Character.TYPE, new ResultCharacterAccessor((char)0));
 
 		FAST_ACCESSOR_MAP.put(Integer.TYPE, INT);
 		FAST_ACCESSOR_MAP.put(Long.TYPE, LONG);
 		FAST_ACCESSOR_MAP.put(Float.TYPE, FLOAT);
 		FAST_ACCESSOR_MAP.put(Double.TYPE, DOUBLE);
 		FAST_ACCESSOR_MAP.put(Boolean.TYPE, BOOLEAN);
-		FAST_ACCESSOR_MAP.put(Character.TYPE, C);
+		FAST_ACCESSOR_MAP.put(Character.TYPE, CHARACTER);
 
 		FAST_ACCESSOR_MAP.put(Integer.class, INT);
 		FAST_ACCESSOR_MAP.put(Long.class, LONG);
 		FAST_ACCESSOR_MAP.put(Float.class, FLOAT);
 		FAST_ACCESSOR_MAP.put(Double.class, DOUBLE);
 		FAST_ACCESSOR_MAP.put(Boolean.class, BOOLEAN);
-		FAST_ACCESSOR_MAP.put(Character.class, new ResultCharacterAccessor(null));
+		FAST_ACCESSOR_MAP.put(Character.class, CHARACTER);
 
 		FAST_ACCESSOR_MAP.put(String.class, STRING);
 		FAST_ACCESSOR_MAP.put(java.util.Date.class, TIMESTAMP);
