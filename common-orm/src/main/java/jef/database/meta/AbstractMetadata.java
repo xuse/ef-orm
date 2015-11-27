@@ -1,4 +1,4 @@
-package jef.database.meta;
+﻿package jef.database.meta; 
  
 import java.io.Serializable;
 import java.util.ArrayList;
