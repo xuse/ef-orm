@@ -7,11 +7,16 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.util.Assert;
+
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.Entry;
+import jef.database.DbUtils;
 import jef.database.IQueryableEntity;
 import jef.database.jdbc.result.IResultSet;
+import jef.database.meta.ITableMetadata;
+import jef.database.meta.MetaHolder;
 import jef.database.wrapper.populator.IPopulator;
 import jef.tools.FunctionProperty;
 import jef.tools.reflect.BeanWrapper;
@@ -102,6 +107,7 @@ public class NestedObjectPopulator implements IPopulator {
 			lastAccessor.set(raw, subDo);
 		}
 	}
+
 	@SuppressWarnings("rawtypes")
 	static class ToSetFunction implements Function<Object,Object>{
 		@SuppressWarnings("unchecked")

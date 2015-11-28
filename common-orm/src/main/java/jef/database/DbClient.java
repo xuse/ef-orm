@@ -319,8 +319,7 @@ public class DbClient extends Session implements SessionFactory {
 		this.ds = ds;
 		this.connPool = PoolService.getPool(ds,min, max, txType);
 		Assert.notNull(connPool);
-		if (ORMConfig.getInstance().isDebugMode())
-			LogUtil.info("Init DB Connection:" + connPool.getInfo(null));
+		LogUtil.info("Init DB Connection:" + connPool.getInfo(null));
 		afterPoolReady();
 	}
 

@@ -15,9 +15,13 @@
  */
 package jef.database.jsqlparser.expression;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.query.SqlExpression;
 
 
 /**
@@ -28,6 +32,19 @@ public class Column implements Expression {
 	private String tableAlias;
     private String columnName = "";
 
+    private final static Set<String> FUNCTION_COLUMN=new HashSet<String>();
+    private final static Set<String> VALUE_COLUMN=new HashSet<String>();
+    
+    static {
+    	FUNCTION_COLUMN.add("current_timestamp");
+    	FUNCTION_COLUMN.add("current_date");
+    	FUNCTION_COLUMN.add("current_time");
+    	FUNCTION_COLUMN.add("sysdate");
+    	VALUE_COLUMN.add("true");
+    	VALUE_COLUMN.add("false");
+    }
+    
+    
     public Column() {
     }
 
@@ -100,8 +117,12 @@ public class Column implements Expression {
 	}
     
     public static Expression getExpression(String columnName){
-    	if("sysdate".equals(columnName) || columnName.equals("current_timestamp") || columnName.equals("current_date")||columnName.equals("current_time")){
+    	String checkName=columnName.toLowerCase();
+    	if(FUNCTION_COLUMN.contains(checkName)){
     		return new Function(columnName);
+    	}
+    	if(VALUE_COLUMN.contains(checkName)){
+    		return new SqlExpression(columnName);
     	}
     	return new Column(null,columnName);
     }
