@@ -806,8 +806,10 @@ public class XMLUtils {
 			}
 			if (node instanceof Document) {
 				Document doc = (Document) node;
-				t.setOutputProperty(javax.xml.transform.OutputKeys.DOCTYPE_PUBLIC, doc.getDoctype().getPublicId());
-				t.setOutputProperty(javax.xml.transform.OutputKeys.DOCTYPE_SYSTEM, doc.getDoctype().getSystemId());
+				if(doc.getDoctype()!=null) {
+					t.setOutputProperty(javax.xml.transform.OutputKeys.DOCTYPE_PUBLIC, doc.getDoctype().getPublicId());
+					t.setOutputProperty(javax.xml.transform.OutputKeys.DOCTYPE_SYSTEM, doc.getDoctype().getSystemId());	
+				}
 			}
 			if (XmlDeclarion) {
 				t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
