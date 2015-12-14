@@ -24,11 +24,18 @@ import jef.database.wrapper.ResultIterator;
  */
 public interface CommonDao{
 	/**
-	 * 插入记录
+	 * 插入记录(不带级联)
 	 * @param entity 要插入的记录
 	 * @return 插入后的记录
 	 */
 	<T> T insert(T entity);
+	
+	/**
+	 * 插入记录（带级联的插入记录）
+	 * @param entity
+	 * @return
+	 */
+	<T> T insertCascade(T entity);
 
 	/**
 	 * 在记录已经存在的情况下更新，否则插入记录
@@ -46,7 +53,7 @@ public interface CommonDao{
 	<T> T merge(T entity);
 
 	/**
-	 * 删除记录
+	 * 删除记录(不带级联)
 	 * 
 	 * @param entity 待删除对象（模板）.
 	 * <ul>
@@ -54,7 +61,17 @@ public interface CommonDao{
 	 * <li>如果设置了主键值，按主键查询，否则——</li>
 	 * <li>按所有设置过值的字段作为条件查询。</li></ul>
 	 */
-	void remove(Object entity);
+	int remove(Object entity);
+	
+	/**
+	 * 删除记录(带级联)
+	 * @param entity
+	 * <ul>
+	 * <li>如果对象是{@link IQueryableEntity}设置了Query条件，按query条件查询。 否则——</li>
+	 * <li>如果设置了主键值，按主键查询，否则——</li>
+	 * <li>按所有设置过值的字段作为条件查询。</li></ul>
+	 */
+	int removeCascade(Object entity);
 	
 	/**
 	 * 根据模板的对象删除记录。
@@ -150,11 +167,18 @@ public interface CommonDao{
 	
 	
 	/**
-	 * 更新记录
+	 * 更新记录(不带级联)
 	 * @param entity 要更新的对象
 	 * @return 影响的记录条数
 	 */
 	<T> int update(T entity);
+	
+	/**
+	 * 更新记录（带级联）
+	 * @param entity
+	 * @return
+	 */
+	<T> int updateCascade(T entity);
 	
 	/**
 	 * 更新记录

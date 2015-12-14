@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.persistence.PersistenceException;
-
 import jef.common.log.LogUtil;
 import jef.common.wrapper.Page;
 import jef.database.Condition.Operator;
@@ -48,8 +46,36 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		return super.getEntityManager().merge(entity);
 	}
 
-	public void remove(Object entity) {
-		super.getEntityManager().remove(entity);
+	public int remove(Object entity) {
+		if (entity == null)
+			return 0;
+		try {
+			if (entity instanceof IQueryableEntity) {
+				return getSession().delete((IQueryableEntity) entity);
+			} else {
+				ITableMetadata meta = MetaHolder.getMeta(entity);
+				PojoWrapper pojo = meta.transfer(entity, true);
+				return getSession().delete(pojo);
+			}
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+	
+	public int removeCascade(Object entity) {
+		if (entity == null)
+			return 0;
+		try {
+			if (entity instanceof IQueryableEntity) {
+				return getSession().deleteCascade((IQueryableEntity) entity);
+			} else {
+				ITableMetadata meta = MetaHolder.getMeta(entity);
+				PojoWrapper pojo = meta.transfer(entity, true);
+				return getSession().deleteCascade(pojo);
+			}
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
 	}
 
 	/**
@@ -87,7 +113,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				return getSession().delete(q);
 			}
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -95,7 +121,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		try {
 			return getSession().load(entityClass, primaryKey);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -104,7 +130,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		try {
 			return getSession().batchLoad(entityClass, primaryKey);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -125,10 +151,28 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				return PojoWrapper.unwrapList(result);
 			}
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
+	public <T> int updateCascade(T entity) {
+		if (entity == null)
+			return 0;
+		try {
+			if (entity instanceof IQueryableEntity) {
+				return getSession().updateCascade((IQueryableEntity) entity);
+			} else {
+				ITableMetadata meta = MetaHolder.getMeta(entity);
+				PojoWrapper pojo = meta.transfer(entity, true);
+				return getSession().updateCascade(pojo);
+			}
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+	
+	
+	
 	public <T> int update(T entity) {
 		if (entity == null)
 			return 0;
@@ -141,8 +185,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				return getSession().update(pojo);
 			}
 		} catch (SQLException e) {
-			LogUtil.exception(e);
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -178,7 +221,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			return getSession().update(qq.getInstance());
 		} catch (SQLException e) {
 			LogUtil.exception(e);
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -217,12 +260,28 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			}
 			return getSession().update(qq.getInstance());
 		} catch (SQLException e) {
-			LogUtil.exception(e);
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
 	public <T> T insert(T entity) {
+		if (entity == null)
+			return null;
+		try {
+			if (entity instanceof IQueryableEntity) {
+				getSession().insert((IQueryableEntity) entity);
+			} else {
+				ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
+				getSession().insert(meta.transfer(entity, false));
+			}
+			return entity;
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+	
+	
+	public <T> T insertCascade(T entity) {
 		if (entity == null)
 			return null;
 		try {
@@ -251,7 +310,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				return vw == null ? null : (T) vw.get();
 			}
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -270,7 +329,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				return PojoWrapper.unwrapPage(page);
 			}
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -280,7 +339,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			query.setParameterMap(params);
 			return getSession().pageSelect(query, limit).setOffset(start).getPageData();
 		} catch (Exception ex) {
-			throw new PersistenceException(ex);
+			throw DbUtils.toRuntimeException(ex);
 		}
 	}
 
@@ -290,7 +349,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			query.setParameterMap(params);
 			return getSession().pageSelect(query, limit).setOffset(start).getPageData();
 		} catch (Exception ex) {
-			throw new PersistenceException(ex);
+			throw DbUtils.toRuntimeException(ex);
 		}
 	}
 
@@ -301,7 +360,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 
 			return nQuery.getResultList();
 		} catch (Exception ex) {
-			throw new PersistenceException(ex);
+			throw DbUtils.toRuntimeException(ex);
 		}
 	}
 
@@ -313,7 +372,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			PagingIterator<T> i = getSession().pageSelect(query, limit);
 			return i.setOffset(start).getPageData();
 		} catch (Exception ex) {
-			throw new PersistenceException(ex);
+			throw DbUtils.toRuntimeException(ex);
 		}
 	}
 
@@ -324,7 +383,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			query.setParameterMap(params);
 			return query.getResultList();
 		} catch (Exception ex) {
-			throw new PersistenceException(ex);
+			throw DbUtils.toRuntimeException(ex);
 		}
 	}
 
@@ -336,7 +395,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			PagingIterator<T> i = getSession().pageSelect(query, limit);
 			return i.setOffset(start).getPageData();
 		} catch (Exception ex) {
-			throw new PersistenceException(ex);
+			throw DbUtils.toRuntimeException(ex);
 		}
 	}
 
@@ -359,7 +418,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				return PojoWrapper.unwrapList(getSession().select(q));
 			}
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -422,7 +481,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		try {
 			getSession().executeBatchDeletion(objs);
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -432,7 +491,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		try {
 			this.getSession().delete(QB.create(meta));
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -451,7 +510,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			}
 
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -472,7 +531,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				return getSession().select(q);
 			}
 		} catch (SQLException e) {
-			throw new PersistenceException();
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 	
@@ -498,7 +557,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		try {
 			o = getSession().load(query.getInstance());
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 		if (o == null)
 			return null;
@@ -529,7 +588,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		try {
 			return getSession().delete(query);
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -545,7 +604,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		try {
 			return getSession().delete(query);
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -566,7 +625,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				return PojoWrapper.unwrapIterator(result);
 			}
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
