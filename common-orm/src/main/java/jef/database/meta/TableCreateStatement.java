@@ -32,8 +32,10 @@ public class TableCreateStatement {
 		TableDef tableDef = new TableDef();
 		tableDef.escapedTablename = DbUtils.escapeColumn(profile, tablename);
 		Map<String,String> comments=meta.getColumnComments();
-		
-		tableDef.tableComment=comments.get("#TABLE");
+
+		if(profile.has(Feature.SUPPORT_COMMENT)) {
+			tableDef.tableComment=comments.get("#TABLE");	
+		}
 		for (ColumnMapping column : meta.getColumns()) {
 			String c=comments.get(column.fieldName());
 			processField(column, tableDef, profile,c);
@@ -82,7 +84,7 @@ public class TableCreateStatement {
 			}
 		}
 		sb.append(profile.getCreationComment(vType, true));
-		if(StringUtils.isNotEmpty(comment)) {
+		if(profile.has(Feature.SUPPORT_COMMENT) && StringUtils.isNotEmpty(comment)) {
 			result.ccmments.add(new PairSS(escapedColumnName,comment));
 		}
 	}
