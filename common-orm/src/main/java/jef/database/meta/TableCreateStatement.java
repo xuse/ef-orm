@@ -3,8 +3,10 @@ package jef.database.meta;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import jef.common.PairIS;
+import jef.common.PairSS;
 import jef.database.DbUtils;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.ColumnType.AutoIncrement;
@@ -29,8 +31,12 @@ public class TableCreateStatement {
 	public void addTableMeta(String tablename, ITableMetadata meta, DatabaseDialect profile) {
 		TableDef tableDef = new TableDef();
 		tableDef.escapedTablename = DbUtils.escapeColumn(profile, tablename);
+		Map<String,String> comments=meta.getColumnComments();
+		
+		tableDef.tableComment=comments.get("#TABLE");
 		for (ColumnMapping column : meta.getColumns()) {
-			processField(column, tableDef, profile);
+			String c=comments.get(column.fieldName());
+			processField(column, tableDef, profile,c);
 		}
 		if (!tableDef.NoPkConstraint && !meta.getPKFields().isEmpty()) {
 			tableDef.addPkConstraint(meta.getPKFields(), profile, tablename);
@@ -38,12 +44,13 @@ public class TableCreateStatement {
 		this.tables.add(tableDef);
 	}
 
-	private void processField(ColumnMapping entry, TableDef result, DatabaseDialect profile) {
+	private void processField(ColumnMapping entry, TableDef result, DatabaseDialect profile,String comment) {
 		StringBuilder sb = result.getColumnDef();
 		if (sb.length() > 0)
 			sb.append(",\n");
-
-		sb.append("    ").append(entry.getColumnName(profile, true)).append(" ");
+		String escapedColumnName=entry.getColumnName(profile, true);
+		sb.append("    ").append(escapedColumnName).append(" ");
+		
 		ColumnType vType = entry.get();
 		if (entry.isPk()) {
 			vType.setNullable(false);
@@ -75,6 +82,9 @@ public class TableCreateStatement {
 			}
 		}
 		sb.append(profile.getCreationComment(vType, true));
+		if(StringUtils.isNotEmpty(comment)) {
+			result.ccmments.add(new PairSS(escapedColumnName,comment));
+		}
 	}
 
 	private void addSequence(String seq, int precision) {
@@ -96,6 +106,16 @@ public class TableCreateStatement {
 		 * 列定义
 		 */
 		private final StringBuilder columnDefinition = new StringBuilder();
+
+		/**
+		 * 表备注
+		 */
+		private String tableComment;
+
+		/**
+		 * 各个字段备注
+		 */
+		private List<PairSS> ccmments = new ArrayList<PairSS>();
 
 		private boolean NoPkConstraint;
 
@@ -125,6 +145,21 @@ public class TableCreateStatement {
 			sb.append("    constraint " + pkName + " primary key(" + StringUtils.join(columns, ',') + ")");
 		}
 
+		public void addTableComment(List<String> result) {
+			if (StringUtils.isNotEmpty(tableComment)) {
+				result.add("comment on table " + escapedTablename + " is '" + tableComment.replace("'", "''") + "'");
+			}
+		}
+
+		public void addColumnComment(List<String> result) {
+			for (PairSS column : ccmments) {
+				String comment=column.getSecond();
+				if (StringUtils.isNotEmpty(comment)) {
+					result.add("comment on column " + escapedTablename +"."+column.first+ " is '" + comment.replace("'", "''") + "'");	
+				}
+			}
+		}
+
 	}
 
 	public List<String> getTableSQL() {
@@ -141,5 +176,14 @@ public class TableCreateStatement {
 
 	public List<PairIS> getSequences() {
 		return sequences;
+	}
+
+	public List<String> getComments() {
+		List<String> result = new ArrayList<String>();
+		for (TableDef table : tables) {
+			table.addTableComment(result);
+			table.addColumnComment(result);
+		}
+		return result;
 	}
 }

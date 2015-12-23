@@ -129,7 +129,7 @@ public class XMLUtils {
 				}
 			} catch (Exception e) {
 				// 没有将common-net包依赖进来，无法使用HTML解析功能
-				LogUtil.warn("The JEF-HTML parser engine not found, HTMLParser feature will be disabled. Import easyframe 'common-misc' library to the classpath to activate this feature.");
+				LogUtil.warn("The EF-HTML parser engine not found, HTMLParser feature will be disabled. Import easyframe 'common-misc' library to the classpath to activate this feature.");
 			}
 		} catch (Exception e) {
 			// xerces版本过旧，不支持进行HTML解析

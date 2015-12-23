@@ -2,6 +2,7 @@ package jef.database.meta;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import jef.accelerator.bean.BeanAccessor;
 import jef.common.Entry;
@@ -162,5 +163,10 @@ public class TemplateMetadata extends AbstractMetadata {
 	@Override
 	public ColumnMapping getExtendedColumnDef(String field) {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
+	}
+	
+	@Override
+	public Map<String,String> getColumnComments() {
+		return wrapped.getColumnComments();
 	}
 }
