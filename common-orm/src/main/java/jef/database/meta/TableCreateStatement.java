@@ -31,11 +31,10 @@ public class TableCreateStatement {
 	public void addTableMeta(String tablename, ITableMetadata meta, DatabaseDialect profile) {
 		TableDef tableDef = new TableDef();
 		tableDef.escapedTablename = DbUtils.escapeColumn(profile, tablename);
+		tableDef.profile=profile;
 		Map<String,String> comments=meta.getColumnComments();
 
-		if(profile.has(Feature.SUPPORT_COMMENT)) {
-			tableDef.tableComment=comments.get("#TABLE");	
-		}
+		tableDef.tableComment=comments.get("#TABLE");	
 		for (ColumnMapping column : meta.getColumns()) {
 			String c=comments.get(column.fieldName());
 			processField(column, tableDef, profile,c);
@@ -117,6 +116,10 @@ public class TableCreateStatement {
 		 * 表备注
 		 */
 		private String tableComment;
+		/**
+		 * 数据库类型
+		 */
+		private DatabaseDialect profile;
 
 		/**
 		 * 各个字段备注
@@ -129,6 +132,9 @@ public class TableCreateStatement {
 			String sql = "create table " + escapedTablename + "(\n" + columnDefinition + "\n)";
 			if (charSetFix != null) {
 				sql = sql + charSetFix;
+			}
+			if(StringUtils.isNotEmpty(tableComment) && profile.has(Feature.SUPPORT_INLINE_COMMENT)) {
+				sql=sql+" comment '"+tableComment.replace("'", "''")+"'";
 			}
 			return sql;
 		}
@@ -152,7 +158,7 @@ public class TableCreateStatement {
 		}
 
 		public void addTableComment(List<String> result) {
-			if (StringUtils.isNotEmpty(tableComment)) {
+			if (StringUtils.isNotEmpty(tableComment) && profile.has(Feature.SUPPORT_COMMENT)) {
 				result.add("comment on table " + escapedTablename + " is '" + tableComment.replace("'", "''") + "'");
 			}
 		}
