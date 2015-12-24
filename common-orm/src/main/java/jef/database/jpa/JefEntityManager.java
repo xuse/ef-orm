@@ -134,12 +134,12 @@ public class JefEntityManager implements EntityManager {
 			if (obj instanceof IQueryableEntity) {
 				IQueryableEntity data = (IQueryableEntity) obj;
 				DbUtils.setPrimaryKeyValue(data, primaryKey);
-				return (T) getSession().load(data);
+				return (T) getSession().load(data,true);
 			} else {
 				ITableMetadata meta = MetaHolder.getMeta(entityClass);
 				PojoWrapper data = meta.transfer(obj, false);
 				DbUtils.setPrimaryKeyValue(data, primaryKey);
-				data = getSession().load(data);
+				data = getSession().load(data,true);
 				return data == null ? null : (T) data.get();
 			}
 		} catch (SQLException e) {
@@ -172,7 +172,7 @@ public class JefEntityManager implements EntityManager {
 			} else {
 				data.getQuery().setAllRecordsCondition();
 			}
-			return (T) getSession().load(data);
+			return (T) getSession().load(data,true);
 		} catch (SQLException e) {
 			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		} catch (InstantiationException e) {
@@ -231,7 +231,7 @@ public class JefEntityManager implements EntityManager {
 	public void refresh(Object entity) {
 		if (entity instanceof IQueryableEntity) {
 			try {
-				IQueryableEntity newObj = this.getSession().load((IQueryableEntity) entity);
+				IQueryableEntity newObj = this.getSession().load((IQueryableEntity) entity,true);
 				newObj.stopUpdate();
 				BeanUtils.copyProperties(newObj, entity);
 			} catch (SQLException e) {
@@ -243,7 +243,7 @@ public class JefEntityManager implements EntityManager {
 	public void refresh(Object entity, Map<String, Object> properties) {
 		if (entity instanceof IQueryableEntity) {
 			try {
-				IQueryableEntity newObj = this.getSession().load((IQueryableEntity) entity);
+				IQueryableEntity newObj = this.getSession().load((IQueryableEntity) entity,true);
 				newObj.stopUpdate();
 				BeanUtils.copyProperties(newObj, entity);
 			} catch (SQLException e) {
@@ -271,7 +271,7 @@ public class JefEntityManager implements EntityManager {
 	public boolean contains(Object entity) {
 		if (entity instanceof IQueryableEntity) {
 			try {
-				IQueryableEntity newObj = this.getSession().load((IQueryableEntity) entity);
+				IQueryableEntity newObj = this.getSession().load((IQueryableEntity) entity,true);
 				return newObj != null;
 			} catch (SQLException e) {
 				throw new PersistenceException(e);

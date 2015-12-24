@@ -28,6 +28,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceException;
 
 import jef.common.log.LogUtil;
@@ -100,7 +101,7 @@ import org.easyframe.enterprise.spring.TransactionMode;
  * @see Transaction
  * @see #getSqlTemplate(String)
  */
-public abstract class Session{
+public abstract class Session {
 	// 这六个值在初始化的时候赋值
 	protected SqlProcessor rProcessor;
 	protected InsertProcessor insertp;
@@ -454,47 +455,50 @@ public abstract class Session{
 		T old = null;
 		entity.getQuery().setCascade(false);
 		if (DbUtils.getPrimaryKeyValue(entity) == null) {
-			old = load(entity);
+			old = load(entity, true);
 			if (old != null) {
 				return old;
 			}
 		} else {
-			old = load(entity);
+			old = load(entity, true);
 			if (old != null) {
 				DbUtils.compareToUpdateMap(entity, old);
 				update(old);
 				return old;
 			}
 		}
-		//如果旧数据不存在
+		// 如果旧数据不存在
 		insert(entity);
 		return entity;
 	}
-	
+
 	/**
 	 * 合并记录——记录如果已经存在，则比较并更新；如果不存在则新增。（带级联操作）
-	 * @param entity  要合并的记录数据
+	 * 
+	 * @param entity
+	 *            要合并的记录数据
 	 * @return 如果插入返回对象本身，如果是更新则返回旧记录的值
-	 * @throws SQLException  如果数据库操作错误，抛出。
+	 * @throws SQLException
+	 *             如果数据库操作错误，抛出。
 	 */
 	public <T extends IQueryableEntity> T mergeCascade(T entity) throws SQLException {
 		T old = null;
 		if (DbUtils.getPrimaryKeyValue(entity) == null) {
-			old = load(entity);
+			old = load(entity, true);
 			if (old != null) {
 				entity.clearUpdate();
 				updateCascade(entity);
 				return old;
 			}
 		} else {
-			old = load(entity);
+			old = load(entity, true);
 			if (old != null) {
 				DbUtils.compareToNewUpdateMap(entity, old);// 之所以是将对比结果放到新对象中，是为了能将新对象中级联关系也保存到数据库中。
 				updateCascade(entity);
 				return old;
 			}
 		}
-		//如果旧数据不存在
+		// 如果旧数据不存在
 		insertCascade(entity);
 		return entity;
 	}
@@ -1138,23 +1142,46 @@ public abstract class Session{
 	}
 
 	/**
+	 * 查出单个对象。如果结果不唯一抛出NonUniqueResultException。
+	 * 
+	 * @param obj
+	 *            查询条件
+	 * @return 使用传入的对象进行查询，结果返回记录的第一条。如未查到返回null。。
+	 * @throws SQLException
+	 *             如果数据库操作错误，抛出。
+	 * @throws NonUniqueResultException
+	 *             结果不唯一
+	 */
+	public <T extends IQueryableEntity> T load(T obj) throws SQLException {
+		return load(obj, true);
+
+	}
+
+	/**
 	 * 查出单个对象
 	 * 
 	 * @param obj
 	 *            查询条件
+	 * @param unique
+	 *            true要求查询结果必须唯一。false允许结果不唯一，但仅取第一条。
 	 * @return 使用传入的对象进行查询，结果返回记录的第一条。如未查到返回null
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
+	 * @throws NonUniqueResultException
+	 *             当unique为true且查询结果不唯一时。
 	 */
 	@SuppressWarnings("unchecked")
-	public <T extends IQueryableEntity> T load(T obj) throws SQLException {
+	public <T extends IQueryableEntity> T load(T obj, boolean unique) throws SQLException {
 		Assert.notNull(obj);
 		Query<T> q = (Query<T>) obj.getQuery();
 		QueryOption option = QueryOption.createMax1Option(q);
 
 		List<T> l = typedSelect(q, null, option);
-		if (l.isEmpty())
+		if (l.isEmpty()) {
 			return null;
+		} else if (l.size() > 1 && unique) {
+			throw new NonUniqueResultException("Result is not unique.");
+		}
 		return l.get(0);
 	}
 
@@ -1177,27 +1204,53 @@ public abstract class Session{
 		query.addCondition(field, Operator.EQUALS, value);
 		return typedSelect(query, null, QueryOption.DEFAULT);
 	}
-	
+
+	/**
+	 * 按指定的字段的值加载记录<br>
+	 * 如果查询结果不唯一，抛出NonUniqueResultException异常
+	 * 
+	 * @param field
+	 *            作为查询条件的字段
+	 * @param value
+	 *            要查询的值
+	 * @return 符合条件的记录
+	 * @throws SQLException
+	 *             如果数据库操作错误，抛出。
+	 * @throws NonUniqueResultException
+	 *             结果不唯一
+	 */
+	public <T extends IQueryableEntity> T loadByField(jef.database.Field field, Object value) throws SQLException {
+		return loadByField(field, value,true);
+		
+	}
 	/**
 	 * 按指定的字段的值加载记录<br>
 	 * 如果指定的字段不是主键，也只返回第一条数据。
 	 * 
 	 * @param field
 	 *            作为查询条件的字段
-	 * @param values
+	 * @param value
 	 *            要查询的值
+	 * @param unique
+	 *            是否要求结果唯一，为true时如结果不唯一将抛出NonUniqueResultException异常
+	 * 
 	 * @return 符合条件的记录
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
+	 * @throws NonUniqueResultException
+	 *             结果不唯一
 	 */
-	
-	public <T extends IQueryableEntity> T loadByField(jef.database.Field field, Object value) throws SQLException {
+	public <T extends IQueryableEntity> T loadByField(jef.database.Field field, Object value, boolean unique) throws SQLException {
 		ITableMetadata meta = DbUtils.getTableMeta(field);
 		@SuppressWarnings("unchecked")
 		Query<T> query = meta.newInstance().getQuery();
 		query.addCondition(field, Operator.EQUALS, value);
-		List<T>  list=typedSelect(query, null, QueryOption.DEFAULT_MAX1);
-		if(list.isEmpty())return null;
+		List<T> list = typedSelect(query, null, QueryOption.DEFAULT_MAX1);
+		if (list.isEmpty()) {
+			return null;
+		} else if (list.size() > 1 && unique) {
+			throw new NonUniqueResultException();
+		}
 		return list.get(0);
 	}
 
@@ -1337,6 +1390,25 @@ public abstract class Session{
 		}
 		return result;
 	}
+	
+	/**
+	 * 执行数据库查询。并将结果转换为期望的对象。查询结果不唯一抛出NonUniqueResultException
+	 * @param queryObj
+	 *            查询
+	 * @param resultClz
+	 *            单条记录返回结果类型
+	 * @return 查询结果将只返回第一条。如果查询结果数量为0，那么将返回null
+	 * 
+	 * @throws SQLException
+	 *             如果数据库操作错误，抛出。
+	 * @throws NonUniqueResultException
+	 *             结果不唯一
+	 * 
+	 */
+	public <T> T loadAs(ConditionQuery queryObj, Class<T> resultClz) throws SQLException {
+		return loadAs(queryObj, resultClz,true);
+	}
+	
 
 	/**
 	 * 执行数据库查询。并将结果转换为期望的对象。
@@ -1345,15 +1417,35 @@ public abstract class Session{
 	 *            查询
 	 * @param resultClz
 	 *            单条记录返回结果类型
-	 * 
+	 * @param unique
+	 *            要求查询结果唯一。为true时如果查询结果不唯一抛出NonUniqueResultException
 	 * @return 查询结果将只返回第一条。如果查询结果数量为0，那么将返回null
 	 * 
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
+	 * @throws NonUniqueResultException
+	 *             结果不唯一
+	 * 
 	 */
-	public <T> T loadAs(ConditionQuery queryObj, Class<T> resultClz) throws SQLException {
+	public <T> T loadAs(ConditionQuery queryObj, Class<T> resultClz, boolean unique) throws SQLException {
 		queryObj.getResultTransformer().setResultType(resultClz);
-		return load(queryObj);
+		return load(queryObj, unique);
+	}
+
+	/**
+	 * 查询并指定返回结果。要求查询结果必须唯一。
+	 * 
+	 * @param queryObj
+	 *            查询
+	 * @return 查询结果将只返回第一条。如果查询结果数量为0，那么将返回null。
+	 * 
+	 * @throws SQLException
+	 *             如果数据库操作错误，抛出。
+	 * @throws NonUniqueResultException
+	 *             结果不唯一
+	 */
+	public <T> T load(ConditionQuery queryObj) throws SQLException {
+		return load(queryObj, true);
 	}
 
 	/**
@@ -1361,13 +1453,17 @@ public abstract class Session{
 	 * 
 	 * @param queryObj
 	 *            查询
+	 * @param unique
+	 *            要求查询结果是否唯一。为true时，查询结果不唯一将抛出异常。为false时，查询结果不唯一仅取第一条。
 	 * 
-	 * @return 查询结果将只返回第一条。如果查询结果数量为0，那么将返回null
+	 * @return 查询结果将只返回第一条。如果查询结果数量为0，那么将返回null。
 	 * 
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
+	 * @throws NonUniqueResultException
+	 *             结果不唯一
 	 */
-	public <T> T load(ConditionQuery queryObj) throws SQLException {
+	public <T> T load(ConditionQuery queryObj, boolean unique) throws SQLException {
 		Assert.notNull(queryObj);
 		QueryOption option;
 		Map<Reference, List<Condition>> filters = null;
@@ -1387,8 +1483,11 @@ public abstract class Session{
 		}
 		@SuppressWarnings("unchecked")
 		List<T> l = innerSelect(queryObj, null, filters, option);
-		if (l.isEmpty())
+		if (l.isEmpty()) {
 			return null;
+		} else if (l.size() > 1 && unique) {
+			throw new NonUniqueResultException("Result is not unique.");
+		}
 		T result = l.get(0);
 		if (ORMConfig.getInstance().isDebugMode()) {
 			LogUtil.show("Result:" + result);
@@ -1573,7 +1672,8 @@ public abstract class Session{
 		long parse = System.currentTimeMillis();
 		selectp.processSelect(sql, this, queryObj, rs, option, 1);
 		long dbselect = System.currentTimeMillis();
-		LogUtil.show(StringUtils.concat("Result: Iterator", "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms) |", getTransactionId(null)));
+		LogUtil.show(StringUtils.concat("Result: Iterator", "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse),
+				"ms) |", getTransactionId(null)));
 		EntityMappingProvider mapping = DbUtils.getMappingProvider(queryObj);
 		Transformer transformer = queryObj.getResultTransformer();
 		IResultSet irs = rs.toProperResultSet(null, transformer.getStrategy());
@@ -1595,12 +1695,12 @@ public abstract class Session{
 		QueryClause sql = selectp.toQuerySql(queryObj, range, true);
 		if (sql.isEmpty())
 			return Collections.EMPTY_LIST;
-		
+
 		Transformer transformer = queryObj.getResultTransformer();
-		boolean noCache=!queryObj.isCacheable()|| queryObj.isSelectCustomized() || range!=null;
-		
+		boolean noCache = !queryObj.isCacheable() || queryObj.isSelectCustomized() || range != null;
+
 		// 缓存命中
-		List resultList = noCache?null:getCache().load(sql.getCacheKey());
+		List resultList = noCache ? null : getCache().load(sql.getCacheKey());
 		if (resultList == null) {
 			ResultSetContainer rs = new ResultSetContainer(option.cacheResultset && !option.holdResult);// 只有当非读写模式并且开启结果缓存才缓存结果集
 			long parse = System.currentTimeMillis();
@@ -1610,8 +1710,9 @@ public abstract class Session{
 				EntityMappingProvider mapping = DbUtils.getMappingProvider(queryObj);
 				resultList = populateResultSet(rs.toProperResultSet(filters, transformer.getStrategy()), mapping, transformer);
 				if (debugMode) {
-					LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(resultList.size()), "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbselect),
-							"ms) max:", option.toString(), " |", getTransactionId(null)));
+					LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(resultList.size()), "\t Time cost([ParseSQL]:", String.valueOf(parse - start),
+							"ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbselect), "ms) max:",
+							option.toString(), " |", getTransactionId(null)));
 				}
 			} finally {
 				if (option.holdResult) {
@@ -1620,7 +1721,7 @@ public abstract class Session{
 					rs.close();
 				}
 			}
-			
+
 			// Jiyi modified 2014-11-4 如果查询结果为空，不缓存
 			// 目的是减少CacheKey的计算，这部分计算有一定开销，权衡之下，缓存空结果意义不大。
 			if (!noCache && !option.holdResult && !resultList.isEmpty()) {
@@ -1645,7 +1746,7 @@ public abstract class Session{
 			}
 
 			for (Map.Entry<Reference, List<AbstractRefField>> entry : map.entrySet()) {
-				//如果是缓存命中的情况，依然要重新更新缓存中的级联对象
+				// 如果是缓存命中的情况，依然要重新更新缓存中的级联对象
 				CascadeUtil.fillOneVsManyReference(resultList, entry, filters == null ? Collections.EMPTY_MAP : filters, this);
 			}
 		}
@@ -1783,7 +1884,8 @@ public abstract class Session{
 		if (debugMode) {
 			long dbAccess = System.currentTimeMillis() - parse; // 数据库查询时间
 			parse = parse - start; // 解析SQL时间
-			LogUtil.show(StringUtils.concat("Total Count:", String.valueOf(total), "\t Time cost([ParseSQL]:", String.valueOf(parse), "ms, [DbAccess]:", String.valueOf(dbAccess), "ms) |", getTransactionId(null)));
+			LogUtil.show(StringUtils.concat("Total Count:", String.valueOf(total), "\t Time cost([ParseSQL]:", String.valueOf(parse), "ms, [DbAccess]:", String.valueOf(dbAccess),
+					"ms) |", getTransactionId(null)));
 		}
 		return total;
 	}
@@ -1880,9 +1982,9 @@ public abstract class Session{
 	 * <strong>注意：在多库操作下，这一方法不支持对每条记录单独分组并计算路由。</strong>
 	 * 
 	 * @param meta
-	 *    	要删除的数据类
+	 *            要删除的数据类
 	 * @param pkValues
-	 *           主键值列表。复合主键不支持。如需批量删除复合主键的类请用{@link #batchDelete(List)}
+	 *            主键值列表。复合主键不支持。如需批量删除复合主键的类请用{@link #batchDelete(List)}
 	 * @return 实际删除数量
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
@@ -2150,8 +2252,8 @@ public abstract class Session{
 	 *            DB_DYNAMIC_INSERT}
 	 *            功能，那么模板中插入数据库的字段就是后续任务中插入数据库的字段。后续数据库中其他字段即使赋值了也不会入库。
 	 * 
-	 * @param dynamic 是否跳过未赋值的字段。
-	 *            强制指定表名，也就是说template当中的表名无效。（传入的表名支持Schema重定向）
+	 * @param dynamic
+	 *            是否跳过未赋值的字段。 强制指定表名，也就是说template当中的表名无效。（传入的表名支持Schema重定向）
 	 * @return Batch操作句柄
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
@@ -2650,7 +2752,7 @@ public abstract class Session{
 		getListener().beforeUpdate(obj, this);
 		int count = updatep.processUpdate(this, obj, updateClause, whereClause, sites, parseCost);
 		if (count > 0) {
-			String tableName=myTableName == null ? query.getMeta().getTableName(false) : myTableName;
+			String tableName = myTableName == null ? query.getMeta().getTableName(false) : myTableName;
 			getCache().onUpdate(tableName, whereClause.getSql(), CacheImpl.toParamList(whereClause.getBind()));
 		}
 		getListener().afterUpdate(obj, count, this);
@@ -2688,7 +2790,8 @@ public abstract class Session{
 	}
 
 	/**
-	 * @param minPriority 一般性级联操作的优先级是0，KV表扩展时的级联操作是5
+	 * @param minPriority
+	 *            一般性级联操作的优先级是0，KV表扩展时的级联操作是5
 	 */
 	private int updateCascade0(IQueryableEntity obj, int minPriority) throws SQLException {
 		if ((this instanceof Transaction) || getTxType() != TransactionMode.JPA) {

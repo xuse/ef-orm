@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.NonUniqueResultException;
+
 import jef.common.wrapper.Page;
 import jef.database.DbClient;
 import jef.database.IQueryableEntity;
@@ -159,11 +161,24 @@ public interface CommonDao{
 	
 
 	/**
-	 * 根据主键查询一条记录。
+	 * 查询一条记录，如果结果不唯一则抛出异常
+	 * 
 	 * @param data
+	 * @param unique
+	 *            要求查询结果是否唯一。为true时，查询结果不唯一将抛出异常。为false时，查询结果不唯一仅取第一条。
+	 * @throws NonUniqueResultException
+	 *             结果不唯一
 	 * @return 查询结果
 	 */	
 	<T> T load(T data);
+	
+	/**
+	 * 根据查询查询一条记录
+	 * @param entity
+	 * @param unique true表示结果必须唯一，false则允许结果不唯一但仅获取第一条记录
+	 * @return
+	 */
+	public <T> T load(T entity, boolean unique); 
 	
 	
 	/**
@@ -375,20 +390,51 @@ public interface CommonDao{
 	/**
 	 * 使用已知的属性查找一个结果
 	 * @param meta 数据库表的元模型. {@linkplain ITableMetadata 什么是元模型}
-	 * @param field
+	 * @param field 字段名
+	 * @param unique
+	 *            true要求查询结果必须唯一。false允许结果不唯一，但仅取第一条。
 	 * @param id
 	 * @return  查询结果
+	 * @throws NonUniqueResultException
+	 *             结果不唯一
 	 */
-	<T>  T loadByField(ITableMetadata meta,String field,Serializable id);
+	<T>  T loadByField(ITableMetadata meta,String field,Serializable id,boolean unique);
+	
+	
+	/**
+	 * 根据指定的字段查找单条记录。如果结果不唯一抛出NonUniqueResultException
+	 * @param field 条件字段
+	 * @param value 条件值
+	 * @return 查询结果
+	 * @throws NonUniqueResultException
+	 *             结果不唯一 
+	 */
+	<T extends IQueryableEntity> T loadByField(jef.database.Field field, Object value);
+	
+	/**
+	 * 根据指定的字段查找单条记录。
+	 * @param field 条件字段
+	 * @param value 条件值
+	 * @param unique 是否要求结果唯一。为true时如果结果不唯一会抛出NonUniqueResultException
+	 * @return 查询结果
+	 * @throws NonUniqueResultException
+	 *             结果不唯一
+	 */
+	<T extends IQueryableEntity> T loadByField(jef.database.Field field, Object value, boolean unique);
+	
 	
 	/**
 	 * 根据指定的字段值读取单个记录
 	 * @param meta 数据库表的元模型. {@linkplain ITableMetadata 什么是元模型}
+	 * @param unique
+	 *            true要求查询结果必须唯一。false允许结果不唯一，但仅取第一条。
 	 * @param field
 	 * @param id
 	 * @return  查询结果
+	 * @throws NonUniqueResultException
+	 *             结果不唯一
 	 */
-	<T> T loadByField(Class<T> meta,String field,Serializable key);
+	<T> T loadByField(Class<T> meta,String field,Serializable key,boolean unique);
 	
 	/**
 	 * 根据指定的字段值删除记录 

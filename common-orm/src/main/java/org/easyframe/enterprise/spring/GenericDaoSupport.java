@@ -194,11 +194,11 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	 * @see com.ailk.easyframe.web.common.dal.IDaoCrudSupport#load(jef.database.
 	 * IQueryableEntity)
 	 */
-	public T load(T entity) {
+	public T load(T entity,boolean unique) {
 		try {
-			return getSession().load(entity);
+			return getSession().load(entity,unique);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -210,9 +210,9 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	public T get(Serializable key) {
 		PKQuery<T> query = new PKQuery<T>(meta, key);
 		try {
-			return getSession().load(query);
+			return getSession().load(query,true);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -235,10 +235,10 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	 * com.ailk.easyframe.web.common.dal.IDaoCrudSupport#loadWithoutCascade(
 	 * jef.database.IQueryableEntity)
 	 */
-	public T loadCascade(T entity) {
+	public T loadCascade(T entity,boolean unique) {
 		try {
 			entity.getQuery().setCascade(true);
-			return getSession().load(entity);
+			return getSession().load(entity,unique);
 		} catch (SQLException e) {
 			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}
@@ -471,7 +471,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		return query.getResultList();
 	}
 
-	public T loadByField(String fieldname, Serializable id) {
+	public T loadByField(String fieldname, Serializable id,boolean unique) {
 		Field field = meta.getField(fieldname);
 		if (field == null) {
 			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
@@ -480,7 +480,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		T q = (T) meta.newInstance();
 		q.getQuery().addCondition(field, id);
 		try {
-			return getSession().load(q);
+			return getSession().load(q,unique);
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
 		}
