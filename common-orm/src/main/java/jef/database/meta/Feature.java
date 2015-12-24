@@ -213,5 +213,10 @@ public enum Feature {
 	/**
 	 * 支持COMMENT ON TABLE/COLUMN IS ''语法
 	 */
-	SUPPORT_COMMENT
+	SUPPORT_COMMENT,
+	
+	/**
+	 * MYSQL语法，建表时语句在字段上直接加COMMENT语句
+	 */
+	SUPPORT_INLINE_COMMENT
 }

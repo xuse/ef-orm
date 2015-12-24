@@ -84,8 +84,12 @@ public class TableCreateStatement {
 			}
 		}
 		sb.append(profile.getCreationComment(vType, true));
-		if(profile.has(Feature.SUPPORT_COMMENT) && StringUtils.isNotEmpty(comment)) {
-			result.ccmments.add(new PairSS(escapedColumnName,comment));
+		if(StringUtils.isNotEmpty(comment)) {
+			if(profile.has(Feature.SUPPORT_COMMENT)) {
+				result.ccmments.add(new PairSS(escapedColumnName,comment));
+			}else if(profile.has(Feature.SUPPORT_INLINE_COMMENT)) {
+				sb.append(" comment '"+comment.replace("'", "''")+"'");
+			}
 		}
 	}
 
