@@ -64,6 +64,9 @@ public final class LazyLoadProcessor {
 	public List<LazyLoadTask> getTasks() {
 		return tasks;
 	}
+	public Map<String,Integer> getOnFields(){
+		return onFields;
+	}
 	@Override
 	public String toString() {
 		StringBuilder sb=new StringBuilder();

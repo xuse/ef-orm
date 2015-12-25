@@ -115,7 +115,7 @@ public interface CommonDao{
 	 * 根据主键查询
 	 * @param type 类
 	 * @param id 主键
-	 * @return 
+	 * @return 查询结果 
 	 * @since 1.10
 	 */
 	<T> T load(Class<T> type,Serializable... id);
@@ -175,8 +175,10 @@ public interface CommonDao{
 	/**
 	 * 根据查询查询一条记录
 	 * @param entity
-	 * @param unique true表示结果必须唯一，false则允许结果不唯一但仅获取第一条记录
-	 * @return
+	 * @param unique true表示结果必须唯一，false则允许结果不唯一仅获取第一条记录
+	 * @return 查询结果
+	 * @throws NonUniqueResultException
+	 *             结果不唯一
 	 */
 	public <T> T load(T entity, boolean unique); 
 	
@@ -204,7 +206,7 @@ public interface CommonDao{
 	<T> int updateByProperty(T entity,String... property);
 	
 	/**
-	 * 更新记录
+	 * 根据指定的几个字段作为条件来更新记录
 	 * @param entity 要更新的对象
 	 * @param setValues 要设置的属性和值
 	 * @param property where字段值
@@ -257,7 +259,7 @@ public interface CommonDao{
 	<T> Page<T> findAndPageByNq(String nqName, ITableMetadata meta,Map<String, Object> params, int start,int limit);
 	
 	/**
-	 * 执行命名查询
+	 * 使用命名查询执行（更新/创建/删除）等操作
 	 * {@linkplain NamedQueryConfig 什么是命名查询}
 	 * @param nqName 命名查询名称
 	 * @param params sql参数
@@ -267,7 +269,7 @@ public interface CommonDao{
 	
 
 	/**
-	 * 执行指定的SQL查询
+	 * 执行指定的SQL（更新/创建/删除）等操作
 	 * @param sql SQL语句,可使用 {@linkplain NativeQuery 增强的SQL (参见什么是E-SQL条目)}。
 	 * @param param
 	 * @return 查询结果
@@ -324,7 +326,7 @@ public interface CommonDao{
 	 * @param params     绑定变量参数
 	 * @param start      起始记录行，第一条记录从0开始。
 	 * @param limit		  每页记录数
-	 * @return
+	 * @return 查询结果
 	 */
 	<T> Page<T> findAndPageByQuery(String sql,Class<T> retutnType, Map<String, Object> params,int start,int limit);
 	
@@ -348,9 +350,11 @@ public interface CommonDao{
 	<T> T loadByPrimaryKey(Class<T> entityClass,  Serializable primaryKey);
 	
 	/**
-	 * 根据主键的值批量加载记录
+	 * 根据主键的值批量加载记录 (不支持复合主键)
+	 * @param entityClass 实体类
+	 * @param values 多个主键值
 	 */
-	<T> List<T> loadByPrimaryKeys(Class<T> entityClass, List<? extends Serializable> primaryKey);
+	<T> List<T> loadByPrimaryKeys(Class<T> entityClass, List<? extends Serializable> values);
 	
 	/**
 	 * 根据主键的值加载一条记录

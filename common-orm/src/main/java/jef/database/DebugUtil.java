@@ -40,7 +40,7 @@ public class DebugUtil {
 		}
 	}
 
-	public ILazyLoadContext getLazy(DataObject o) {
+	public static ILazyLoadContext getLazy(DataObject o) {
 		return o.lazyload;
 	}
 

@@ -1,6 +1,7 @@
 package jef.orm.multitable3;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 import jef.database.DbClient;
 import jef.database.QB;
@@ -36,10 +37,43 @@ private DbClient db;
 	public void prepareData() throws SQLException {
 		db.createTable(Factor.class,
 				Names.class);
+		db.createTable(Factor2.class,Role.class,Sub1.class);
 	}
 	
 	@Test
 	public void case1() throws SQLException {
 		db.select(QB.create(Factor.class));
+	}
+	
+	@Test
+	public void addData() throws SQLException {
+		Role r1=new Role("Role1");
+		Role r2=new Role("Role2");
+		{
+			Factor2 f=new Factor2();
+			f.setRoles(new ArrayList<Role>());
+			f.getRoles().add(r1);
+			f.getRoles().add(r2);
+			f.setSub1(new ArrayList<Sub1>());
+			
+			Sub1 s1=new Sub1("Sub1-1");
+			Sub1 s2=new Sub1("Sub1-2");
+			f.getSub1().add(s1);
+			f.getSub1().add(s2);
+			
+			db.insertCascade(f);	
+		}
+		
+		
+		System.out.println("=====================================");
+		Factor2 f2=db.load(Factor2.class,1);
+		f2.setRoles(null);
+//		f2.getRoles().clear();
+//		f2.getRoles().add(r1);
+		db.updateCascade(f2);
+		
+		
+		
+		
 	}
 }
