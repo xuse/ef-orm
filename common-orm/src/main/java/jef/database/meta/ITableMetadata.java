@@ -326,4 +326,6 @@ public interface ITableMetadata {
 	
 	public boolean isUseOuterJoin();
 	
+	public Map<String,String> getColumnComments();
+	
 }

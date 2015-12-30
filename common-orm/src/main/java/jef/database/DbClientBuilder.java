@@ -612,7 +612,8 @@ public class DbClientBuilder {
 			qe.setInitDataAfterCreate(this.initDataAfterCreate);
 			qe.setInitDataIfTableExists(this.initDataIfTableExists);
 			qe.setEntityManagerFactory(sf);
-			qe.registeEntity(annotatedClasses);
+			if(annotatedClasses!=null)
+				qe.registeEntity(annotatedClasses);
 			if (packagesToScan != null) {
 				String joined = StringUtils.join(packagesToScan, ',');
 				qe.setPackageNames(joined);

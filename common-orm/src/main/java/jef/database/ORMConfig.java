@@ -220,7 +220,7 @@ public class ORMConfig implements ORMConfigMBean {
 		useOuterJoin = JefConfiguration.getBoolean(DbCfg.DB_USE_OUTER_JOIN, true);
 		keepTxForPG = JefConfiguration.getBoolean(DbCfg.DB_KEEP_TX_FOR_POSTGRESQL, true);
 		manualSequence = JefConfiguration.getBoolean(DbCfg.DB_SUPPORT_MANUAL_GENERATE, false);
-		allowEmptyQuery = JefConfiguration.getBoolean(DbCfg.ALLOW_EMPTY_QUERY, false);
+		allowEmptyQuery = JefConfiguration.getBoolean(DbCfg.ALLOW_EMPTY_QUERY, true);
 		enableLazyLoad = JefConfiguration.getBoolean(DbCfg.DB_ENABLE_LAZY_LOAD, true);
 		enableLazyLob = JefConfiguration.getBoolean(DbCfg.DB_LOB_LAZY_LOAD, false);
 		cacheLevel1 = JefConfiguration.getBoolean(DbCfg.CACHE_LEVEL_1, false);

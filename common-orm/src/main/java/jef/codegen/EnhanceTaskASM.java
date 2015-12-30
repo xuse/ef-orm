@@ -201,6 +201,8 @@ public class EnhanceTaskASM {
 					return mv;
 				if (enumFields.contains(fieldName) && nonStaticFields.contains(fieldName)) {
 					return new SetterVisitor(mv, fieldName, typeName, types[0]);
+				}else if(lobAndRefFields.contains(fieldName)) {
+					return new SetterVisitor2(mv, fieldName, typeName);
 				}
 				return mv;
 			}
@@ -288,6 +290,33 @@ public class EnhanceTaskASM {
 		}
 	}
 
+	static class SetterVisitor2 extends MethodVisitor implements Opcodes {
+		private String name;
+		private String typeName;
+
+		public SetterVisitor2(MethodVisitor mv, String name, String typeName) {
+			super(Opcodes.ASM5,mv);
+			this.name = name;
+			this.typeName = typeName;
+		}
+
+		// 去除本地变量表。否则生成的类用jd-gui反编译时，添加的代码段无法正常反编译
+		@Override
+		public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
+		}
+
+		public void visitCode() {
+			mv.visitIntInsn(ALOAD,0);
+			mv.visitLdcInsn(name);
+			mv.visitMethodInsn(INVOKEVIRTUAL, typeName, "beforeSet", "(Ljava/lang/String;)V",false);
+			super.visitCode();
+		}
+
+		@Override
+		public void visitMaxs(int maxStack, int maxLocals) {
+			mv.visitMaxs(4, maxLocals);
+		}
+	}
 	//
 	// public void setBinaryData_x(byte[]);
 	// Code:

@@ -87,10 +87,10 @@ public class POJODaoSupport<T> extends BaseDao{
 			return null;
 		try {
 			if (entity instanceof IQueryableEntity) {
-				return (T) getSession().load((IQueryableEntity) entity);
+				return (T) getSession().load((IQueryableEntity) entity,true);
 			} else {
 				ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
-				PojoWrapper vw = getSession().load(meta.transfer(entity, true));
+				PojoWrapper vw = getSession().load(meta.transfer(entity, true),true);
 				return vw == null ? null : (T) vw.get();
 			}
 		} catch (SQLException e) {

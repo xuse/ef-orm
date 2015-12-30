@@ -103,7 +103,7 @@ public class StringUtilsTest extends org.junit.Assert {
 
 	@Test
 	public void testSplitLast123() {
-		String s = "usertname.txt.bat";
+		String s = "u";
 		{
 			System.out.println(StringUtils.getSHA256(s));
 		}
@@ -121,5 +121,11 @@ public class StringUtilsTest extends org.junit.Assert {
 		String sql="update TEST_ENTITY set DOUBLEFIELD2 = ?, FOLATFIELD2 = ?, BOOLFIELD = ?, CREATE_TIME = ?, FLOATFIELD = ?, LONGFIELD2 = ?, DOUBLEFIELD = ?, FIELD_1 = ?, FIELD_2 = ?, BINARYDATA = ?, INT_FIELD_1 = ?, INT_FIELD_2 = ?, LONGFIELD = ?, DATEFIELD = ?, BOOLFIELD2 = ? where LONGFIELD2=?\r\naa";
 		Pattern p=Pattern.compile("update TEST_ENTITY set.+",Pattern.MULTILINE );
 		System.out.println(p.matcher(sql).matches());
+	}
+	
+	@Test
+	public void testSkip() {
+		String s=StringUtils.generateGuid();
+		System.out.println(s);
 	}
 }

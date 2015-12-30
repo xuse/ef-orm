@@ -6,10 +6,12 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.persistence.FetchType;
 
@@ -84,6 +86,34 @@ final class CascadeUtil {
 		}
 		return count;
 	}
+	
+	/**
+	 * 目的是清理掉对象内的延迟加载上下文，并将延迟加载未处理的字段记录下来
+	 * 
+	 * 修改原因：算法优化——对于没有调用过延迟加载的关系，认为是无需参加级联操作的关系。
+	 * 修改前：没有调用过的延迟加载，在级联触发之前会自动调用，从而先加载，然后再次加载，并且进行比对，比对后发现没有修改过，然后什么也不做。
+	 * 改用这种优化算法后，对于没有触发的延迟加载最少可以省去两次查询操作。
+	 * @param obj
+	 * @return
+	 */
+	private static Set<String> clearLazy(DataObject obj) {
+//		return Collections.emptySet();
+		Set<String> unloaded;
+		if(obj.lazyload!=null) {
+			unloaded=new HashSet<String>();
+			Map<String,Integer> fields=obj.lazyload.getProcessor().getOnFields();
+			for(String s:fields.keySet()) {
+				if(obj.lazyload.needLoad(s)>-1) {//将尚未执行过延迟加载的字段记录下来，后续忽略更新
+					unloaded.add(s);
+				}
+			}
+		}else {
+			unloaded=Collections.emptySet();
+		}
+		obj.clearQuery();
+		return unloaded;
+	}
+	
 
 	/*
 	 * smartMode: 智能模式，当开启后自动忽略掉那些没有set过的property
@@ -95,9 +125,11 @@ final class CascadeUtil {
 		ITableMetadata meta = MetaHolder.getMeta(list.get(0));
 		for (IQueryableEntity obj : list) {
 			// 在维护端操作之前
-			obj.clearQuery();//目的是清理掉对象内的延迟加载上下文
+			Set<String> lazyloadSkip=clearLazy((DataObject)obj);
 			BeanWrapper bean = BeanWrapper.wrap(obj);
 			for (AbstractRefField f : meta.getRefFieldsByName().values()) {
+				if(lazyloadSkip.contains(f.getName()))
+					continue;
 				// 无需执行级联操作
 				if (!f.canInsert() || f.getPriority() < minPriority) {
 					continue;
@@ -143,10 +175,12 @@ final class CascadeUtil {
 
 	static int updateWithRefInTransaction(IQueryableEntity obj, Session trans, int minPriority) throws SQLException {
 		Collection<AbstractRefField> refs = MetaHolder.getMeta(obj).getRefFieldsByName().values();
-		obj.clearQuery();//目的是清理掉对象内的延迟加载上下文
+		Set<String> lazyloadSkip=clearLazy((DataObject)obj);
 		int result = 0;
 		// 在维护端操作之前
 		for (AbstractRefField f : refs) {
+			if(lazyloadSkip.contains(f.getName()))
+				continue;
 			if (!f.canUpdate() || f.getPriority() < minPriority) {
 				continue;
 			}
@@ -162,6 +196,8 @@ final class CascadeUtil {
 		// 维护端操作之后
 		for (AbstractRefField f : refs) {
 			// 无需执行级联操作
+			if(lazyloadSkip.contains(f.getName()))
+				continue;
 			if (!f.canUpdate() || f.getPriority() < minPriority) {
 				continue;
 			}

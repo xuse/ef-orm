@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.persistence.PersistenceException;
-
 import jef.common.log.LogUtil;
 import jef.common.wrapper.Page;
 import jef.database.Condition.Operator;
@@ -48,8 +46,36 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		return super.getEntityManager().merge(entity);
 	}
 
-	public void remove(Object entity) {
-		super.getEntityManager().remove(entity);
+	public int remove(Object entity) {
+		if (entity == null)
+			return 0;
+		try {
+			if (entity instanceof IQueryableEntity) {
+				return getSession().delete((IQueryableEntity) entity);
+			} else {
+				ITableMetadata meta = MetaHolder.getMeta(entity);
+				PojoWrapper pojo = meta.transfer(entity, true);
+				return getSession().delete(pojo);
+			}
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
+	public int removeCascade(Object entity) {
+		if (entity == null)
+			return 0;
+		try {
+			if (entity instanceof IQueryableEntity) {
+				return getSession().deleteCascade((IQueryableEntity) entity);
+			} else {
+				ITableMetadata meta = MetaHolder.getMeta(entity);
+				PojoWrapper pojo = meta.transfer(entity, true);
+				return getSession().deleteCascade(pojo);
+			}
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
 	}
 
 	/**
@@ -87,7 +113,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				return getSession().delete(q);
 			}
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -95,7 +121,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		try {
 			return getSession().load(entityClass, primaryKey);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -104,7 +130,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		try {
 			return getSession().batchLoad(entityClass, primaryKey);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -125,7 +151,23 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				return PojoWrapper.unwrapList(result);
 			}
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
+	public <T> int updateCascade(T entity) {
+		if (entity == null)
+			return 0;
+		try {
+			if (entity instanceof IQueryableEntity) {
+				return getSession().updateCascade((IQueryableEntity) entity);
+			} else {
+				ITableMetadata meta = MetaHolder.getMeta(entity);
+				PojoWrapper pojo = meta.transfer(entity, true);
+				return getSession().updateCascade(pojo);
+			}
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -141,8 +183,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				return getSession().update(pojo);
 			}
 		} catch (SQLException e) {
-			LogUtil.exception(e);
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -178,7 +219,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			return getSession().update(qq.getInstance());
 		} catch (SQLException e) {
 			LogUtil.exception(e);
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -217,12 +258,27 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			}
 			return getSession().update(qq.getInstance());
 		} catch (SQLException e) {
-			LogUtil.exception(e);
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
 	public <T> T insert(T entity) {
+		if (entity == null)
+			return null;
+		try {
+			if (entity instanceof IQueryableEntity) {
+				getSession().insert((IQueryableEntity) entity);
+			} else {
+				ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
+				getSession().insert(meta.transfer(entity, false));
+			}
+			return entity;
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
+	public <T> T insertCascade(T entity) {
 		if (entity == null)
 			return null;
 		try {
@@ -238,20 +294,24 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public <T> T load(T entity) {
+		return load(entity, true);
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> T load(T entity, boolean unique) {
 		if (entity == null)
 			return null;
 		try {
 			if (entity instanceof IQueryableEntity) {
-				return (T) getSession().load((IQueryableEntity) entity);
+				return (T) getSession().load((IQueryableEntity) entity, unique);
 			} else {
 				ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
-				PojoWrapper vw = getSession().load(meta.transfer(entity, true));
+				PojoWrapper vw = getSession().load(meta.transfer(entity, true), unique);
 				return vw == null ? null : (T) vw.get();
 			}
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -270,7 +330,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				return PojoWrapper.unwrapPage(page);
 			}
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -280,7 +340,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			query.setParameterMap(params);
 			return getSession().pageSelect(query, limit).setOffset(start).getPageData();
 		} catch (Exception ex) {
-			throw new PersistenceException(ex);
+			throw DbUtils.toRuntimeException(ex);
 		}
 	}
 
@@ -290,7 +350,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			query.setParameterMap(params);
 			return getSession().pageSelect(query, limit).setOffset(start).getPageData();
 		} catch (Exception ex) {
-			throw new PersistenceException(ex);
+			throw DbUtils.toRuntimeException(ex);
 		}
 	}
 
@@ -301,7 +361,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 
 			return nQuery.getResultList();
 		} catch (Exception ex) {
-			throw new PersistenceException(ex);
+			throw DbUtils.toRuntimeException(ex);
 		}
 	}
 
@@ -313,7 +373,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			PagingIterator<T> i = getSession().pageSelect(query, limit);
 			return i.setOffset(start).getPageData();
 		} catch (Exception ex) {
-			throw new PersistenceException(ex);
+			throw DbUtils.toRuntimeException(ex);
 		}
 	}
 
@@ -324,7 +384,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			query.setParameterMap(params);
 			return query.getResultList();
 		} catch (Exception ex) {
-			throw new PersistenceException(ex);
+			throw DbUtils.toRuntimeException(ex);
 		}
 	}
 
@@ -336,7 +396,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			PagingIterator<T> i = getSession().pageSelect(query, limit);
 			return i.setOffset(start).getPageData();
 		} catch (Exception ex) {
-			throw new PersistenceException(ex);
+			throw DbUtils.toRuntimeException(ex);
 		}
 	}
 
@@ -359,7 +419,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				return PojoWrapper.unwrapList(getSession().select(q));
 			}
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -422,7 +482,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		try {
 			getSession().executeBatchDeletion(objs);
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -432,7 +492,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		try {
 			this.getSession().delete(QB.create(meta));
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -444,14 +504,14 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			if (meta.getType() == EntityType.POJO) {
 				IQueryableEntity bean = meta.newInstance();
 				DbUtils.setPrimaryKeyValue(bean, id);
-				PojoWrapper wrapper = (PojoWrapper) getSession().load(bean);
+				PojoWrapper wrapper = (PojoWrapper) getSession().load(bean,true);
 				return (T) wrapper.get();
 			} else {
 				return (T) getSession().load(meta, (Serializable) id);
 			}
 
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -472,83 +532,17 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				return getSession().select(q);
 			}
 		} catch (SQLException e) {
-			throw new PersistenceException();
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> List<T> findByField(Class<T> meta, String propertyName, Object value) {
 		if (meta == null || propertyName == null)
 			return null;
-		return (List<T>) findByField(MetaHolder.getMeta(meta),propertyName,value);
+		return (List<T>) findByField(MetaHolder.getMeta(meta), propertyName, value);
 	}
-
-	@SuppressWarnings("unchecked")
-	public <T> T loadByKey(ITableMetadata meta, String fieldname, Serializable key) {
-		if (meta == null || fieldname == null)
-			return null;
-		Field field = meta.getField(fieldname);
-		if (field == null) {
-			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
-		}
-		Query<?> query = QB.create(meta);
-		query.addCondition(field, key);
-		Object o;
-		try {
-			o = getSession().load(query.getInstance());
-		} catch (SQLException e) {
-			throw new PersistenceException(e);
-		}
-		if (o == null)
-			return null;
-		if (meta.getType() == EntityType.POJO) {
-			return (T) ((PojoWrapper) o).get();
-		} else {
-			return (T) o;
-		}
-	}
-
-	public <T> T loadByKey(Class<T> type, String fieldname, Serializable key) {
-		if (type == null || fieldname == null)
-			return null;
-		ITableMetadata meta = MetaHolder.getMeta(type);
-		return loadByKey(meta, fieldname, key);
-	}
-
-	public <T> int removeByKey(Class<T> type, String fieldname, Serializable key) {
-		if (type == null || fieldname == null)
-			return 0;
-		ITableMetadata meta = MetaHolder.getMeta(type);
-		Field field = meta.getField(fieldname);
-		if (field == null) {
-			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
-		}
-		Query<?> query = QB.create(meta);
-		query.addCondition(field, key);
-		try {
-			return getSession().delete(query);
-		} catch (SQLException e) {
-			throw new PersistenceException(e);
-		}
-	}
-
-	public int removeByKey(ITableMetadata meta, String fieldname, Serializable key) {
-		if (meta == null || fieldname == null)
-			return 0;
-		Field field = meta.getField(fieldname);
-		if (field == null) {
-			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
-		}
-		Query<?> query = QB.create(meta);
-		query.addCondition(field, key);
-		try {
-			return getSession().delete(query);
-		} catch (SQLException e) {
-			throw new PersistenceException(e);
-		}
-	}
-
 	@SuppressWarnings("unchecked")
 	public <T> ResultIterator<T> iterate(T obj) {
 		if (obj == null)
@@ -566,7 +560,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				return PojoWrapper.unwrapIterator(result);
 			}
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -609,7 +603,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 
 	public <T> int batchDelete(List<T> entities, Boolean doGroup) {
 		try {
-			return	getSession().executeBatchDeletion(entities, doGroup);
+			return getSession().executeBatchDeletion(entities, doGroup);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -658,35 +652,54 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		}
 	}
 
-
 	@Override
-	public <T> T loadByField(ITableMetadata meta, String field, Serializable value) {
-		if(meta==null || field==null) {
+	public <T> T loadByField(ITableMetadata meta, String field, Serializable value,boolean unique) {
+		if (meta == null || field == null) {
 			return null;
 		}
-		ColumnMapping def=meta.findField(field);
-		if(def==null) {
-			throw new IllegalArgumentException("There's no field ["+field+"] in "+meta.getName());
+		ColumnMapping def = meta.findField(field);
+		if (def == null) {
+			throw new IllegalArgumentException("There's no field [" + field + "] in " + meta.getName());
 		}
 		try {
-			return getSession().loadByField(def.field(), value);
+			return getSession().loadByField(def.field(), value,unique);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
 	@Override
-	public <T> T loadByField(Class<T> clz, String field, Serializable value) {
-		if(clz==null || field==null) {
+	public <T extends IQueryableEntity> T loadByField(Field field, Object value) {
+		try {
+			return getSession().loadByField(field, value);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+	
+	
+
+	@Override
+	public <T extends IQueryableEntity> T loadByField(Field field, Object value, boolean unique) {
+		try {
+			return getSession().loadByField(field, value,unique);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
+	@Override
+	public <T> T loadByField(Class<T> clz, String field, Serializable value,boolean unique) {
+		if (clz == null || field == null) {
 			return null;
 		}
-		ITableMetadata meta=MetaHolder.getMeta(clz);
-		ColumnMapping def=meta.findField(field);
-		if(def==null) {
-			throw new IllegalArgumentException("There's no field ["+field+"] in "+clz.getName());
+		ITableMetadata meta = MetaHolder.getMeta(clz);
+		ColumnMapping def = meta.findField(field);
+		if (def == null) {
+			throw new IllegalArgumentException("There's no field [" + field + "] in " + clz.getName());
 		}
 		try {
-			return getSession().loadByField(def.field(), value);
+			return getSession().loadByField(def.field(), value,unique);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -694,13 +707,13 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 
 	@Override
 	public <T> int removeByField(Class<T> clz, String field, Serializable value) {
-		if(clz==null || field==null) {
+		if (clz == null || field == null) {
 			return 0;
 		}
-		ITableMetadata meta=MetaHolder.getMeta(clz);
-		ColumnMapping def=meta.findField(field);
-		if(def==null) {
-			throw new IllegalArgumentException("There's no field ["+field+"] in "+clz.getName());
+		ITableMetadata meta = MetaHolder.getMeta(clz);
+		ColumnMapping def = meta.findField(field);
+		if (def == null) {
+			throw new IllegalArgumentException("There's no field [" + field + "] in " + clz.getName());
 		}
 		try {
 			return getSession().deleteByField(def.field(), value);
@@ -709,14 +722,31 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		}
 	}
 
+	public int removeByKey(ITableMetadata meta, String fieldname, Serializable key) {
+		if (meta == null || fieldname == null)
+			return 0;
+		Field field = meta.getField(fieldname);
+		if (field == null) {
+			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
+		}
+		Query<?> query = QB.create(meta);
+		query.addCondition(field, key);
+		try {
+			return getSession().delete(query);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
+
 	@Override
 	public int removeByField(ITableMetadata meta, String field, Serializable value) {
-		if(meta==null || field==null) {
+		if (meta == null || field == null) {
 			return 0;
 		}
-		ColumnMapping def=meta.findField(field);
-		if(def==null) {
-			throw new IllegalArgumentException("There's no field ["+field+"] in "+meta.getName());
+		ColumnMapping def = meta.findField(field);
+		if (def == null) {
+			throw new IllegalArgumentException("There's no field [" + field + "] in " + meta.getName());
 		}
 		try {
 			return getSession().deleteByField(def.field(), value);

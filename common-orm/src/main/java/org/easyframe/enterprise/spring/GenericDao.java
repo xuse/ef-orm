@@ -86,20 +86,23 @@ public interface GenericDao<T extends IQueryableEntity> {
 	 * 
 	 * @param entity
 	 *            查询对象模板
+	 * @param unique
+	 * 			是否要求结果唯一
 	 * @return 查询结果
 	 */
-	public T load(T entity);
+	public T load(T entity, boolean unique);
 
 	/**
 	 * 载入一条记录(带级联)
 	 * 
 	 * @param entity
 	 *            查询对象模板
+	 * @param unique 是否要求结果唯一
 	 * @return 查询结果
 	 * @since 1.7.0
 	 * 
 	 */
-	public T loadCascade(T entity);
+	public T loadCascade(T entity, boolean unique);
 
 	/**
 	 * 根据示例的对象删除记录
@@ -338,7 +341,7 @@ public interface GenericDao<T extends IQueryableEntity> {
 	 *            条件字段值
 	 * @return 符合条件的结果。如果查询到多条记录，也只返回第一条
 	 */
-	public T loadByField(String field, Serializable value);
+	public T loadByField(String field, Serializable value,boolean unique);
 
 	/**
 	 * 根据单个的字段条件查找结果

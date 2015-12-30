@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.NonUniqueResultException;
+
 import jef.common.wrapper.Page;
 import jef.database.DbClient;
 import jef.database.IQueryableEntity;
@@ -24,11 +26,18 @@ import jef.database.wrapper.ResultIterator;
  */
 public interface CommonDao{
 	/**
-	 * 插入记录
+	 * 插入记录(不带级联)
 	 * @param entity 要插入的记录
 	 * @return 插入后的记录
 	 */
 	<T> T insert(T entity);
+	
+	/**
+	 * 插入记录（带级联的插入记录）
+	 * @param entity
+	 * @return
+	 */
+	<T> T insertCascade(T entity);
 
 	/**
 	 * 在记录已经存在的情况下更新，否则插入记录
@@ -46,7 +55,7 @@ public interface CommonDao{
 	<T> T merge(T entity);
 
 	/**
-	 * 删除记录
+	 * 删除记录(不带级联)
 	 * 
 	 * @param entity 待删除对象（模板）.
 	 * <ul>
@@ -54,7 +63,17 @@ public interface CommonDao{
 	 * <li>如果设置了主键值，按主键查询，否则——</li>
 	 * <li>按所有设置过值的字段作为条件查询。</li></ul>
 	 */
-	void remove(Object entity);
+	int remove(Object entity);
+	
+	/**
+	 * 删除记录(带级联)
+	 * @param entity
+	 * <ul>
+	 * <li>如果对象是{@link IQueryableEntity}设置了Query条件，按query条件查询。 否则——</li>
+	 * <li>如果设置了主键值，按主键查询，否则——</li>
+	 * <li>按所有设置过值的字段作为条件查询。</li></ul>
+	 */
+	int removeCascade(Object entity);
 	
 	/**
 	 * 根据模板的对象删除记录。
@@ -96,7 +115,7 @@ public interface CommonDao{
 	 * 根据主键查询
 	 * @param type 类
 	 * @param id 主键
-	 * @return 
+	 * @return 查询结果 
 	 * @since 1.10
 	 */
 	<T> T load(Class<T> type,Serializable... id);
@@ -142,19 +161,41 @@ public interface CommonDao{
 	
 
 	/**
-	 * 根据主键查询一条记录。
+	 * 查询一条记录，如果结果不唯一则抛出异常
+	 * 
 	 * @param data
+	 * @param unique
+	 *            要求查询结果是否唯一。为true时，查询结果不唯一将抛出异常。为false时，查询结果不唯一仅取第一条。
+	 * @throws NonUniqueResultException
+	 *             结果不唯一
 	 * @return 查询结果
 	 */	
 	<T> T load(T data);
 	
+	/**
+	 * 根据查询查询一条记录
+	 * @param entity
+	 * @param unique true表示结果必须唯一，false则允许结果不唯一仅获取第一条记录
+	 * @return 查询结果
+	 * @throws NonUniqueResultException
+	 *             结果不唯一
+	 */
+	public <T> T load(T entity, boolean unique); 
+	
 	
 	/**
-	 * 更新记录
+	 * 更新记录(不带级联)
 	 * @param entity 要更新的对象
 	 * @return 影响的记录条数
 	 */
 	<T> int update(T entity);
+	
+	/**
+	 * 更新记录（带级联）
+	 * @param entity
+	 * @return
+	 */
+	<T> int updateCascade(T entity);
 	
 	/**
 	 * 更新记录
@@ -165,7 +206,7 @@ public interface CommonDao{
 	<T> int updateByProperty(T entity,String... property);
 	
 	/**
-	 * 更新记录
+	 * 根据指定的几个字段作为条件来更新记录
 	 * @param entity 要更新的对象
 	 * @param setValues 要设置的属性和值
 	 * @param property where字段值
@@ -218,7 +259,7 @@ public interface CommonDao{
 	<T> Page<T> findAndPageByNq(String nqName, ITableMetadata meta,Map<String, Object> params, int start,int limit);
 	
 	/**
-	 * 执行命名查询
+	 * 使用命名查询执行（更新/创建/删除）等操作
 	 * {@linkplain NamedQueryConfig 什么是命名查询}
 	 * @param nqName 命名查询名称
 	 * @param params sql参数
@@ -228,7 +269,7 @@ public interface CommonDao{
 	
 
 	/**
-	 * 执行指定的SQL查询
+	 * 执行指定的SQL（更新/创建/删除）等操作
 	 * @param sql SQL语句,可使用 {@linkplain NativeQuery 增强的SQL (参见什么是E-SQL条目)}。
 	 * @param param
 	 * @return 查询结果
@@ -285,7 +326,7 @@ public interface CommonDao{
 	 * @param params     绑定变量参数
 	 * @param start      起始记录行，第一条记录从0开始。
 	 * @param limit		  每页记录数
-	 * @return
+	 * @return 查询结果
 	 */
 	<T> Page<T> findAndPageByQuery(String sql,Class<T> retutnType, Map<String, Object> params,int start,int limit);
 	
@@ -309,9 +350,11 @@ public interface CommonDao{
 	<T> T loadByPrimaryKey(Class<T> entityClass,  Serializable primaryKey);
 	
 	/**
-	 * 根据主键的值批量加载记录
+	 * 根据主键的值批量加载记录 (不支持复合主键)
+	 * @param entityClass 实体类
+	 * @param values 多个主键值
 	 */
-	<T> List<T> loadByPrimaryKeys(Class<T> entityClass, List<? extends Serializable> primaryKey);
+	<T> List<T> loadByPrimaryKeys(Class<T> entityClass, List<? extends Serializable> values);
 	
 	/**
 	 * 根据主键的值加载一条记录
@@ -351,20 +394,51 @@ public interface CommonDao{
 	/**
 	 * 使用已知的属性查找一个结果
 	 * @param meta 数据库表的元模型. {@linkplain ITableMetadata 什么是元模型}
-	 * @param field
+	 * @param field 字段名
+	 * @param unique
+	 *            true要求查询结果必须唯一。false允许结果不唯一，但仅取第一条。
 	 * @param id
 	 * @return  查询结果
+	 * @throws NonUniqueResultException
+	 *             结果不唯一
 	 */
-	<T>  T loadByField(ITableMetadata meta,String field,Serializable id);
+	<T>  T loadByField(ITableMetadata meta,String field,Serializable id,boolean unique);
+	
+	
+	/**
+	 * 根据指定的字段查找单条记录。如果结果不唯一抛出NonUniqueResultException
+	 * @param field 条件字段
+	 * @param value 条件值
+	 * @return 查询结果
+	 * @throws NonUniqueResultException
+	 *             结果不唯一 
+	 */
+	<T extends IQueryableEntity> T loadByField(jef.database.Field field, Object value);
+	
+	/**
+	 * 根据指定的字段查找单条记录。
+	 * @param field 条件字段
+	 * @param value 条件值
+	 * @param unique 是否要求结果唯一。为true时如果结果不唯一会抛出NonUniqueResultException
+	 * @return 查询结果
+	 * @throws NonUniqueResultException
+	 *             结果不唯一
+	 */
+	<T extends IQueryableEntity> T loadByField(jef.database.Field field, Object value, boolean unique);
+	
 	
 	/**
 	 * 根据指定的字段值读取单个记录
 	 * @param meta 数据库表的元模型. {@linkplain ITableMetadata 什么是元模型}
+	 * @param unique
+	 *            true要求查询结果必须唯一。false允许结果不唯一，但仅取第一条。
 	 * @param field
 	 * @param id
 	 * @return  查询结果
+	 * @throws NonUniqueResultException
+	 *             结果不唯一
 	 */
-	<T> T loadByField(Class<T> meta,String field,Serializable key);
+	<T> T loadByField(Class<T> meta,String field,Serializable key,boolean unique);
 	
 	/**
 	 * 根据指定的字段值删除记录 

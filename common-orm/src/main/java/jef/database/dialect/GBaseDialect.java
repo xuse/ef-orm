@@ -32,7 +32,8 @@ public class GBaseDialect extends AbstractDialect {
 	public GBaseDialect() {
 		features = CollectionUtils.identityHashSet();
 		features.addAll(Arrays.asList(
-				Feature.AUTOINCREMENT_MUSTBE_PK
+				Feature.AUTOINCREMENT_MUSTBE_PK,
+				Feature.SUPPORT_COMMENT
 				));
 		setProperty(DbProperty.ADD_COLUMN, "ADD COLUMN");
 		setProperty(DbProperty.MODIFY_COLUMN, "ALTER");

@@ -1,20 +1,5 @@
 package com.github.geequery.codegen.ast;
 
-import japa.parser.JavaParser;
-import japa.parser.ParseException;
-import japa.parser.ast.CompilationUnit;
-import japa.parser.ast.TypeParameter;
-import japa.parser.ast.body.BodyDeclaration;
-import japa.parser.ast.body.ClassOrInterfaceDeclaration;
-import japa.parser.ast.body.ConstructorDeclaration;
-import japa.parser.ast.body.FieldDeclaration;
-import japa.parser.ast.body.MethodDeclaration;
-import japa.parser.ast.body.Parameter;
-import japa.parser.ast.body.VariableDeclarator;
-import japa.parser.ast.expr.AnnotationExpr;
-import japa.parser.ast.type.ClassOrInterfaceType;
-import japa.parser.ast.visitor.DumpVisitor;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -23,6 +8,21 @@ import java.util.List;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
+
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParseException;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.TypeParameter;
+import com.github.javaparser.ast.body.BodyDeclaration;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.ConstructorDeclaration;
+import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
+import com.github.javaparser.ast.visitor.DumpVisitor;
 
 public class JefParser implements JavaUnitParser{
 	private static final char[] LEFT_TRIM=" \t\n\r".toCharArray();

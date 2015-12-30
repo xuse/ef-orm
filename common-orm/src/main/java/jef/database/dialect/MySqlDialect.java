@@ -95,7 +95,7 @@ public class MySqlDialect extends AbstractDialect {
 	public MySqlDialect() {
 		// 在MYSQL中 ||是逻辑运算符
 		features = CollectionUtils.identityHashSet();
-		features.addAll(Arrays.asList(Feature.DBNAME_AS_SCHEMA, Feature.ALTER_FOR_EACH_COLUMN, Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD, Feature.SUPPORT_LIMIT, Feature.COLUMN_DEF_ALLOW_NULL));
+		features.addAll(Arrays.asList(Feature.DBNAME_AS_SCHEMA, Feature.SUPPORT_INLINE_COMMENT,Feature.ALTER_FOR_EACH_COLUMN, Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD, Feature.SUPPORT_LIMIT, Feature.COLUMN_DEF_ALLOW_NULL));
 		setProperty(DbProperty.ADD_COLUMN, "ADD");
 		setProperty(DbProperty.MODIFY_COLUMN, "MODIFY");
 		setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");

@@ -1618,6 +1618,7 @@ public class DbMetaData {
 				for (PairIS seq : sqls.getSequences()) {
 					createSequence0(null, seq.second, 1, StringUtils.toLong(StringUtils.repeat('9', seq.first), Long.MAX_VALUE), exe,true);
 				}
+				exe.executeSql(sqls.getComments());
 				// 创建外键约束等
 				exe.executeSql(sqls.getOtherContraints());
 				// create indexes

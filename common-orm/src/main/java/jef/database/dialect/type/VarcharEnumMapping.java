@@ -32,7 +32,7 @@ public class VarcharEnumMapping extends AColumnMapping {
 		if(isOrdinal) {
 			return String.valueOf(((Enum<?>)value).ordinal());
 		}else {
-			return value.toString();
+			return ((Enum<?>)value).name();
 		}
 	}
 

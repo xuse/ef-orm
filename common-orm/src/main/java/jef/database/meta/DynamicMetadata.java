@@ -567,4 +567,10 @@ public class DynamicMetadata extends AbstractMetadata {
 	public ColumnMapping getExtendedColumnDef(String field) {
 		return schemaMap.get(getField(field));
 	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Map<String,String> getColumnComments() {
+		return Collections.EMPTY_MAP;
+	}
 }

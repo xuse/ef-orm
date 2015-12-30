@@ -187,6 +187,11 @@ public abstract class DataObject implements IQueryableEntity {
 		return new HashCodeBuilder().append(query).append(_recordUpdate).append(updateValueMap).toHashCode();
 	}
 
+	protected final void beforeSet(String fieldname) {
+		if (lazyload == null)
+			return;
+		lazyload.markProcessed(fieldname);
+	}
 	/*
 	 * 处理延迟加载的字段
 	 */

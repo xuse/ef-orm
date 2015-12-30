@@ -194,6 +194,7 @@ public class QuerableEntityScanner {
 	}
 
 	public boolean registeEntity(String... names) {
+		if(names==null)return true;
 		ClassLoader cl = Thread.currentThread().getContextClassLoader();
 		if (cl == null) {
 			cl = this.getClass().getClassLoader();

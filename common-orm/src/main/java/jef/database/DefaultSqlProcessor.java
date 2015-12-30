@@ -289,7 +289,7 @@ public class DefaultSqlProcessor implements SqlProcessor {
 		if (sb.length() > 0 || ORMConfig.getInstance().isAllowEmptyQuery()) {
 			return new BindSql(sb.toString(), params);
 		} else {
-			throw new NoResultException("Illegal usage of Query object, must including any condition in query.");
+			throw new NoResultException("Illegal usage of Query object, must including any condition in query:"+q.getInstance().getClass());
 		}
 	}
 
