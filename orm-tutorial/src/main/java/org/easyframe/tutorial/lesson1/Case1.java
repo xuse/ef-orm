@@ -39,7 +39,7 @@ public class Case1 {
 		dao.insert(foo);  //插入一条记录
 		
 		//从数据库查询这条记录
-		Foo loaded=dao.loadByField(Foo.class, "id", foo.getId());
+		Foo loaded=dao.loadByField(Foo.class, "id", foo.getId(),true);
 		System.out.println(loaded.getName());
 		
 		//更新这条记录

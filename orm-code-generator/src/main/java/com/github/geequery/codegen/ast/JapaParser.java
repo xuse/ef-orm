@@ -1,22 +1,5 @@
 package com.github.geequery.codegen.ast;
 
-import japa.parser.JavaParser;
-import japa.parser.ParseException;
-import japa.parser.ast.Comment;
-import japa.parser.ast.CompilationUnit;
-import japa.parser.ast.ImportDeclaration;
-import japa.parser.ast.TypeParameter;
-import japa.parser.ast.body.BodyDeclaration;
-import japa.parser.ast.body.ClassOrInterfaceDeclaration;
-import japa.parser.ast.body.FieldDeclaration;
-import japa.parser.ast.body.MethodDeclaration;
-import japa.parser.ast.body.Parameter;
-import japa.parser.ast.body.VariableDeclarator;
-import japa.parser.ast.expr.AnnotationExpr;
-import japa.parser.ast.expr.NameExpr;
-import japa.parser.ast.stmt.Statement;
-import japa.parser.ast.type.ClassOrInterfaceType;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -25,6 +8,23 @@ import java.util.List;
 
 import jef.tools.Assert;
 import jef.tools.StringUtils;
+
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParseException;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.ImportDeclaration;
+import com.github.javaparser.ast.TypeParameter;
+import com.github.javaparser.ast.body.BodyDeclaration;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.body.VariableDeclarator;
+import com.github.javaparser.ast.comments.Comment;
+import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.stmt.Statement;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
 
 public class JapaParser implements JavaUnitParser{
 	public JavaUnit parse(File file,String charset) {

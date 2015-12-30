@@ -1402,7 +1402,7 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 * @throws NonUniqueResultException
-	 *             结果不唯一
+	 *             结果不唯一，如不想接收到异常，请用{@link #loadAs(ConditionQuery, Class, boolean)}
 	 * 
 	 */
 	public <T> T loadAs(ConditionQuery queryObj, Class<T> resultClz) throws SQLException {

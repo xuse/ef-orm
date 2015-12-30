@@ -1,13 +1,13 @@
 package com.github.geequery.codegen.ast;
 
-import japa.parser.ast.Comment;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
+
+import com.github.javaparser.ast.comments.Comment;
 
 
 public class DefaultJavaElement implements JavaElement{

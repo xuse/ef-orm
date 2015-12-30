@@ -13,7 +13,7 @@ public final class ReferenceObject extends AbstractRefField implements IReferenc
 	
 	public ReferenceObject(Property fName, Reference ref,CascadeConfig config) {
 		super(fName, ref,config);
-		lazyLob=ORMConfig.getInstance().isEnableLazyLoad() && this.reference.getTargetType().getLobFieldNames()!=null;
+		lazyLob=ORMConfig.getInstance().isEnableLazyLob() && this.reference.getTargetType().getLobFieldNames()!=null;
 	}
 
 	public boolean isSingleColumn() {
