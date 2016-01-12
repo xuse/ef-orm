@@ -1180,7 +1180,7 @@ public abstract class Session {
 		if (l.isEmpty()) {
 			return null;
 		} else if (l.size() > 1 && unique) {
-			throw new NonUniqueResultException("Result is not unique.");
+			throw new NonUniqueResultException("Result is not unique."+q);
 		}
 		return l.get(0);
 	}
@@ -1486,7 +1486,7 @@ public abstract class Session {
 		if (l.isEmpty()) {
 			return null;
 		} else if (l.size() > 1 && unique) {
-			throw new NonUniqueResultException("Result is not unique.");
+			throw new NonUniqueResultException("Result is not unique."+queryObj);
 		}
 		T result = l.get(0);
 		if (ORMConfig.getInstance().isDebugMode()) {
