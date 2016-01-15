@@ -45,6 +45,8 @@ public final class ColumnMappings {
 	public static final ResultSetAccessor BOOLEAN = new ResultBooleanAccessor();
 	public static final ResultSetAccessor CHAR_BOOLEAN = new CharBooleanAccessor();
 	public static final ResultSetAccessor DATE = new ResultDateAccessor();
+	public static final ResultSetAccessor SHORT = new ResultShortAccessor();
+	public static final ResultSetAccessor BYTE = new ResultByteAccessor();
 	public static final ResultSetAccessor TIME = new ResultTimeAccessor();
 	public static final ResultSetAccessor TIMESTAMP = new ResultTimestampAccessor();
 	public static final ResultSetAccessor ROWID = new ResultRowidAccessor();
@@ -84,21 +86,21 @@ public final class ColumnMappings {
 			return Types.INTEGER == type || Types.SMALLINT == type || Types.TINYINT == type || Types.BIGINT == type || Types.NUMERIC == type;
 		}
 	};
+	
+	
 	/**
-	 * Accessor of primitive boolean.
+	 * Accessor of primitive short.
 	 */
-	public static final ResultSetAccessor Z = new ResultSetAccessor() {
+	public static final ResultSetAccessor S = new ResultSetAccessor() {
 		public Object jdbcGet(IResultSet rs, int n) throws SQLException {
-			return rs.getBoolean(n);
+			return rs.getShort(n);
 		}
 
 		public boolean applyFor(int type) {
-			return true;// Types.INTEGER==type || Types.SMALLINT==type
-						// ||Types.TINYINT==type ||Types.BIGINT==type ||
-						// Types.BOOLEAN==type||Types.NUMERIC==type
-						// ||Types.BIT==type;
+			return Types.SMALLINT == type || Types.TINYINT == type || Types.NUMERIC == type;
 		}
 	};
+	
 	/**
 	 * Accessor of primitive float.
 	 */
@@ -123,6 +125,36 @@ public final class ColumnMappings {
 			return Types.FLOAT == type || Types.DOUBLE == type || Types.DECIMAL == type || Types.NUMERIC == type;
 		}
 	};
+	
+	/**
+	 * Accessor of primitive boolean.
+	 */
+	public static final ResultSetAccessor Z = new ResultSetAccessor() {
+		public Object jdbcGet(IResultSet rs, int n) throws SQLException {
+			return rs.getBoolean(n);
+		}
+
+		public boolean applyFor(int type) {
+			return true;// Types.INTEGER==type || Types.SMALLINT==type
+						// ||Types.TINYINT==type ||Types.BIGINT==type ||
+						// Types.BOOLEAN==type||Types.NUMERIC==type
+						// ||Types.BIT==type;
+		}
+	};
+	
+	/**
+	 * Accessor of primitive byte.
+	 */
+	public static final ResultSetAccessor B = new ResultSetAccessor() {
+		public Object jdbcGet(IResultSet rs, int n) throws SQLException {
+			return rs.getByte(n);
+		}
+
+		public boolean applyFor(int type) {
+			return true;
+		}
+	};
+
 
 	private static final Map<Class<?>, ResultSetAccessor> FAST_ACCESSOR_MAP_PRIMTIVE = new IdentityHashMap<Class<?>, ResultSetAccessor>();
 	private static final Map<Class<?>, ResultSetAccessor> FAST_ACCESSOR_MAP = new IdentityHashMap<Class<?>, ResultSetAccessor>();
@@ -130,8 +162,10 @@ public final class ColumnMappings {
 		FAST_ACCESSOR_MAP_PRIMTIVE.put(Integer.TYPE, I);
 		FAST_ACCESSOR_MAP_PRIMTIVE.put(Long.TYPE, J);
 		FAST_ACCESSOR_MAP_PRIMTIVE.put(Float.TYPE, F);
+		FAST_ACCESSOR_MAP_PRIMTIVE.put(Short.TYPE, S);
 		FAST_ACCESSOR_MAP_PRIMTIVE.put(Double.TYPE, D);
 		FAST_ACCESSOR_MAP_PRIMTIVE.put(Boolean.TYPE, Z);
+		FAST_ACCESSOR_MAP_PRIMTIVE.put(Byte.TYPE, B);
 		FAST_ACCESSOR_MAP_PRIMTIVE.put(Character.TYPE, new ResultCharacterAccessor((char)0));
 
 		FAST_ACCESSOR_MAP.put(Integer.TYPE, INT);
@@ -139,6 +173,8 @@ public final class ColumnMappings {
 		FAST_ACCESSOR_MAP.put(Float.TYPE, FLOAT);
 		FAST_ACCESSOR_MAP.put(Double.TYPE, DOUBLE);
 		FAST_ACCESSOR_MAP.put(Boolean.TYPE, BOOLEAN);
+		FAST_ACCESSOR_MAP.put(Short.TYPE, SHORT);
+		FAST_ACCESSOR_MAP.put(Byte.TYPE, BYTE);
 		FAST_ACCESSOR_MAP.put(Character.TYPE, CHARACTER);
 
 		FAST_ACCESSOR_MAP.put(Integer.class, INT);
@@ -146,6 +182,8 @@ public final class ColumnMappings {
 		FAST_ACCESSOR_MAP.put(Float.class, FLOAT);
 		FAST_ACCESSOR_MAP.put(Double.class, DOUBLE);
 		FAST_ACCESSOR_MAP.put(Boolean.class, BOOLEAN);
+		FAST_ACCESSOR_MAP.put(Short.class, SHORT);
+		FAST_ACCESSOR_MAP.put(Byte.class, BYTE);
 		FAST_ACCESSOR_MAP.put(Character.class, CHARACTER);
 
 		FAST_ACCESSOR_MAP.put(String.class, STRING);
