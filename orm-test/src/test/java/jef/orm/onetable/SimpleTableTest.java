@@ -272,7 +272,7 @@ public class SimpleTableTest extends org.junit.Assert {
 	public void testConstraintViolationException2() throws SQLException {
 		ORMConfig.getInstance().setManualSequence(true);
 		CommonDao dao = new CommonDaoImpl(db);
-		CaAsset obj = db.load(QB.create(CaAsset.class));
+		CaAsset obj = db.load(QB.create(CaAsset.class),false);
 		obj.setAssetId(obj.getAssetId());
 		try {
 			dao.insert(obj);
