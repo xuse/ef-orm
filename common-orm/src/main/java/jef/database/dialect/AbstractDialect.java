@@ -394,7 +394,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		}
 		StringBuilder sb = new StringBuilder(def.getName());
 		if (column.defaultValue != null)
-			sb.append(" default ").append(toDefaultString0(column.defaultValue, rawSqlType,def.getSqlType()));
+			sb.append(" default ").append(toDefaultString(column.defaultValue, rawSqlType,def.getSqlType()));
 		if (column.nullable) {
 			if (has(Feature.COLUMN_DEF_ALLOW_NULL)) {
 				sb.append(" null");
@@ -437,11 +437,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		return true;
 	}
 
-	public String toDefaultString(Object defaultValue, int sqlType) {
-		return toDefaultString0(defaultValue,sqlType,sqlType);
-	}
-
-	private String toDefaultString0(Object defaultValue, int sqlType, int changeTo) {
+	public String toDefaultString(Object defaultValue, int sqlType, int changeTo) {
 		if (defaultValue == null) {
 			return null;
 		}

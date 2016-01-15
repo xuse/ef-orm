@@ -92,7 +92,7 @@ public interface DatabaseDialect {
 	 * @param sqlType
 	 * @return
 	 */
-	String toDefaultString(Object defaultValue, int sqlType);
+	String toDefaultString(Object defaultValue, int sqlType,int changeTo);
 
 	/**
 	 * 得到用于缓存结果的resultSet的实例(备注，Oracle需要特别的容器)
