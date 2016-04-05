@@ -57,6 +57,21 @@ public class ClassEx {
 	 * context
 	 */
 	private ClassEx instanceClz;
+	
+	
+	/**
+	 * 装箱
+	 * @param clz
+	 * @return
+	 */
+	public static ClassEx valueOf(Class<?> clz) {
+		return new ClassEx(clz);
+	}
+	
+	
+	public Class<?> classValue(){
+		return this.cls;
+	}
 
 	public ClassEx(Type type) {
 		this.genericType = type;
@@ -698,7 +713,7 @@ public class ClassEx {
 	public Class<?>[] getAllInterfaces() {
 		LinkedHashSet<Class<?>> intf = new LinkedHashSet<Class<?>>();
 		Class<?> c = cls;
-		while (c != Object.class) {
+		while (c != Object.class && c!=null) {
 			for (Class<?> ic : c.getInterfaces()) {
 				intf.add(ic);
 			}

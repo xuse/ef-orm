@@ -93,7 +93,8 @@ public final class CollectionUtils {
 	 *            数组
 	 * @param keyExtractor
 	 *            键值提取函数
-	 * @return 在每个元素中提取键值后，形成Map，如果多个对象返回相同的key，那么会互相覆盖。如果不希望互相覆盖，请使用{@linkplain #group(Collection, Function)}
+	 * @return 在每个元素中提取键值后，形成Map，如果多个对象返回相同的key，那么会互相覆盖。如果不希望互相覆盖，请使用
+	 *         {@linkplain #group(Collection, Function)}
 	 */
 	public static <K, V> Map<K, V> toMap(V[] array, Function<V, K> keyExtractor) {
 		if (array == null || array.length == 0)
@@ -205,26 +206,33 @@ public final class CollectionUtils {
 	}
 
 	/**
-	 * 转换，和{@link #extract(Collection, Function)}基本一样，区别在于extract是立即计算，transform是延迟计算的。
-	 * @param collection 集合对象
-	 * @param extractor 提取函数
+	 * 转换，和{@link #extract(Collection, Function)}
+	 * 基本一样，区别在于extract是立即计算，transform是延迟计算的。
+	 * 
+	 * @param collection
+	 *            集合对象
+	 * @param extractor
+	 *            提取函数
 	 * @return 提取后形成的集合
 	 */
 	public static <T, A> Collection<T> transform(Collection<A> collection, Function<A, T> extractor) {
 		return Collections2.transform(collection, extractor);
 	}
-	
-	
+
 	/**
-	 * 转换，和{@link #extract(Collection, Function)}基本一样，区别在于extract是立即计算，transform是延迟计算的。
-	 * @param array 数组
-	 * @param extractor 提取函数
+	 * 转换，和{@link #extract(Collection, Function)}
+	 * 基本一样，区别在于extract是立即计算，transform是延迟计算的。
+	 * 
+	 * @param array
+	 *            数组
+	 * @param extractor
+	 *            提取函数
 	 * @return 提取后形成的集合
 	 */
 	public static <T, A> Collection<T> transform(A[] array, Function<A, T> extractor) {
 		return Collections2.transform(Arrays.asList(array), extractor);
 	}
-	
+
 	/**
 	 * 对Map对象进行翻转（键值互换），Key变为Value,Value变为key
 	 * 
@@ -242,7 +250,8 @@ public final class CollectionUtils {
 	 * 
 	 * @param <K>
 	 * @param <V>
-	 * @param map 要反转的Map
+	 * @param map
+	 *            要反转的Map
 	 * @return A new Multimap that reverse key and value
 	 */
 	public static <K, V> Multimap<V, K> inverse(Map<K, V> map) {
@@ -252,15 +261,15 @@ public final class CollectionUtils {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * 对列表进行分组
+	 * 对集合进行分组
 	 * 
 	 * @param collection
 	 *            要分组的集合
 	 * @param function
 	 *            获取分组Key的函数
-	 * @return
+	 * @return 分组后的集合，每个Key可对应多个Value值。
 	 */
 	public static <T, A> Multimap<A, T> group(Collection<T> collection, Function<T, A> function) {
 		Assert.notNull(collection);
@@ -273,9 +282,34 @@ public final class CollectionUtils {
 	}
 
 	/**
+	 * 将集合转换为Map (相当于创建快速查找元素的索引。)
+	 * 
+	 * @param collection
+	 * @param function
+	 * @return 索引后的集合，相同键值的记录将发生叠加（仅保留最后的一个）
+	 */
+	public static <T, A> Map<A, T> index(Collection<T> collection, Function<T, A> function) {
+		Assert.notNull(collection);
+		Map<A, T> result = new HashMap<A, T>(collection.size());
+		// int removed=0;
+		for (T value : collection) {
+			A attrib = function.apply(value);
+			// T old=
+			result.put(attrib, value);
+			// if(old!=null) {
+			// removed++;
+			// }
+		}
+		return result;
+	}
+
+	/**
 	 * 在集合中查找符合条件的首个元素
-	 * @param collection 集合
-	 * @param filter   过滤器
+	 * 
+	 * @param collection
+	 *            集合
+	 * @param filter
+	 *            过滤器
 	 * @return
 	 */
 	public static <T> T findFirst(Collection<T> collection, Function<T, Boolean> filter) {
@@ -292,9 +326,12 @@ public final class CollectionUtils {
 	/**
 	 * 根据字段名称和字段值查找第一个记录
 	 * 
-	 * @param collection 集合
-	 * @param fieldname  字段名
-	 * @param value      查找值
+	 * @param collection
+	 *            集合
+	 * @param fieldname
+	 *            字段名
+	 * @param value
+	 *            查找值
 	 * @return
 	 */
 	public static <T> T findFirst(Collection<T> collection, String fieldname, Object value) {
@@ -346,71 +383,73 @@ public final class CollectionUtils {
 		}
 		return list;
 	}
-	
-	
+
 	/**
 	 * 将数组或Enumation转换为Collection
+	 * 
 	 * @param data
 	 * @param type
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> Collection<T> toCollection(Object data,Class<T> type){
+	public static <T> Collection<T> toCollection(Object data, Class<T> type) {
 		if (data == null)
 			return null;
-		if(data instanceof Collection) {
+		if (data instanceof Collection) {
 			return ((Collection<T>) data);
-		}else if(data.getClass().isArray()) {
-			if(data.getClass().getComponentType().isPrimitive()) {
-				int len=Array.getLength(data);
-				List<T> result=new ArrayList<T>(len);
-				for(int i=0;i<len;i++) {
+		} else if (data.getClass().isArray()) {
+			if (data.getClass().getComponentType().isPrimitive()) {
+				int len = Array.getLength(data);
+				List<T> result = new ArrayList<T>(len);
+				for (int i = 0; i < len; i++) {
 					result.add((T) Array.get(data, i));
 				}
-			}else {
-				return Arrays.asList((T[])data);
+			} else {
+				return Arrays.asList((T[]) data);
 			}
-		}else if(data instanceof Enumeration) {
-			Enumeration<T> e=(Enumeration<T>)data;
-			List<T> result=new ArrayList<T>();
-			for(;e.hasMoreElements();) {
+		} else if (data instanceof Enumeration) {
+			Enumeration<T> e = (Enumeration<T>) data;
+			List<T> result = new ArrayList<T>();
+			for (; e.hasMoreElements();) {
 				result.add(e.nextElement());
 			}
 			return result;
 		}
-		throw new IllegalArgumentException("The input type "+data.getClass()+" can not convert to Collection.");
+		throw new IllegalArgumentException("The input type " + data.getClass() + " can not convert to Collection.");
 	}
-	
 
 	/**
 	 * 检查传入的对象类型，并尝试获取其遍历器句柄
-	 * @param data 要判断的对象
-	 * @param clz  
+	 * 
+	 * @param data
+	 *            要判断的对象
+	 * @param clz
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> Iterator<T> iterator(Object data,Class<T> clz) {
+	public static <T> Iterator<T> iterator(Object data, Class<T> clz) {
 		if (data == null)
 			return null;
-		if(data instanceof Collection) {
+		if (data instanceof Collection) {
 			return ((Collection<T>) data).iterator();
-		}else if(data.getClass().isArray()) {
+		} else if (data.getClass().isArray()) {
 			return new ArrayIterator<T>(data);
-		}else if(data instanceof Enumeration) {
-			return new EnumerationIterator<T>((Enumeration<T>)data);
+		} else if (data instanceof Enumeration) {
+			return new EnumerationIterator<T>((Enumeration<T>) data);
 		}
 		return null;
 	}
-	
+
 	/**
 	 * 将传入的对象转换为可遍历的对象。
+	 * 
 	 * @param data
 	 * @return
 	 */
 	public static <E> Iterator<E> iterator(Enumeration<E> data) {
 		return new EnumerationIterator<E>(data);
 	}
-	
+
 	/**
 	 * 判断指定的类型是否为数组或集合类型
 	 * 
@@ -486,8 +525,6 @@ public final class CollectionUtils {
 		// 不是集合/数组。或者集合数组内的泛型参数不是Class而是泛型变量、泛型边界等其他复杂泛型
 		return null;
 	}
-
-
 
 	/**
 	 * 获取List当中的值
@@ -790,7 +827,6 @@ public final class CollectionUtils {
 		return Collections.newSetFromMap(new IdentityHashMap<E, Boolean>());
 	}
 
-
 	/**
 	 * Iterator wrapping an Enumeration.
 	 */
@@ -841,17 +877,18 @@ public final class CollectionUtils {
 			}
 		}
 	}
-	
+
 	/**
 	 * 获得集合的最后一个元素
+	 * 
 	 * @param collection
 	 * @return
 	 */
 	public static <T> T last(List<T> collection) {
-		if(collection==null || collection.isEmpty()) {
+		if (collection == null || collection.isEmpty()) {
 			return null;
 		}
-		return collection.get(collection.size()-1);
-		
+		return collection.get(collection.size() - 1);
+
 	}
 }
