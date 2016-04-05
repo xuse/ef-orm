@@ -2,6 +2,7 @@ package jef.orm.onetable.model;
 
 import java.util.Date;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -20,6 +21,7 @@ import jef.database.annotation.Comment;
  */
 @Entity
 @Table(name = "ca_asset")
+@Cacheable
 public class CaAsset extends DataObject {
 
 	/**

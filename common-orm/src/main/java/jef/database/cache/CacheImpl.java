@@ -9,6 +9,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
+
 import jef.database.DbUtils;
 import jef.database.IQueryableEntity;
 import jef.database.ORMConfig;
@@ -30,11 +35,6 @@ import jef.database.query.SqlContext;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.processor.BindVariableDescription;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
 
 /**
  * The default level 1 Cache implementation.
@@ -326,7 +326,6 @@ public class CacheImpl implements Cache {
 	 */
 	private void refreshCache(Map<KeyDimension, DimCache> tableCache, CacheKey key, IQueryableEntity obj) {
 		DimCache cache = tableCache.remove(key.getDimension());
-
 		for (DimCache other : tableCache.values()) {
 			// 其他维度一律失效。必须用此种方法，才能清除掉串门的缓存
 			other.clear();
