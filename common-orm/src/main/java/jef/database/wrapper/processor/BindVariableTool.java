@@ -8,9 +8,9 @@ import java.util.Map;
 
 import jef.common.log.LogUtil;
 import jef.database.Condition;
+import jef.database.Condition.Operator;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
-import jef.database.Condition.Operator;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.BindVariableField;
@@ -20,7 +20,7 @@ import jef.database.query.Query;
 import jef.tools.reflect.BeanWrapper;
 
 public final class BindVariableTool {
-	private static Object NOT_FOUND = new Object();
+	private static final Object NOT_FOUND = new Object();
 
 	/**
 	 * 
@@ -194,6 +194,12 @@ public final class BindVariableTool {
 			result = variableDesc.getBindedVar();
 		}
 		if (result == NOT_FOUND) {
+			//因为发生了TupleField在批操作过程中发生变化，造成无法定位这一特殊BUG，此处针对这一特定场景进行检测，用来提供更为实用的信息。
+			for (Condition c : conds) {
+				if (c.getField().name().equals(variableDesc.getField().name()) && c.getOperator() == variableDesc.getOper()) {
+					throw new IllegalArgumentException(variableDesc + " has a match condition but belongs to another table metadata."+c.getField()+" <> "+ variableDesc.getField());		
+				}
+			}
 			throw new IllegalArgumentException(variableDesc + "'s value not found in a batch update query.");
 		}
 		if (variableDesc.getCallback() == null) {// 非条件容器

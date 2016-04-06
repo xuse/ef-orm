@@ -12,6 +12,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -22,6 +23,7 @@ import javax.management.ReflectionException;
 
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
+import jef.common.SimpleException;
 import jef.common.log.LogUtil;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
@@ -44,7 +46,8 @@ public class BeanUtils {
 	}
 
 	/**
-	 * 将bean的可读属性变为map（不递归）
+	 * 将bean的可读属性变为map（不递归）<br>
+	 * 使用ASM快速访问器实现。只会访问 field / getter /setter俱全的完整属性。如果要访问仅有getter的属性，请用{@link #describeByGetter(Object)}
 	 * 
 	 * @param obj
 	 * @return 对应的Map
@@ -54,6 +57,49 @@ public class BeanUtils {
 			return Collections.emptyMap();
 		BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(obj.getClass());
 		return ba.convert(obj);
+	}
+	
+	/**
+	 * 将bean的可读属性变为map（不递归）
+	 * 根据方法中所有public的getter方法来访问Bean。
+	 * @param obj
+	 * @return
+	 */
+	public static Map<String,Object> describeByGetter(Object obj){
+		if (obj == null)
+			return Collections.emptyMap();
+		Map<String,Object> map=new HashMap<String,Object>();
+		for(Method method: obj.getClass().getMethods()) {
+			if(Modifier.isStatic(method.getModifiers())) {
+				continue;
+			}
+			if(method.getParameterTypes().length>0) {
+				continue;
+			}
+			String name=method.getName();
+			String property;
+			if(name.startsWith("get") && name.length()>3) {
+				property=StringUtils.uncapitalize(name.substring(3));
+			}else if(name.startsWith("is") && name.length()>2) {
+				if(method.getReturnType()==Boolean.class ||method.getReturnType()==boolean.class) {
+					property=StringUtils.uncapitalize(name.substring(2));
+				}else {
+					continue;
+				}
+			}else {
+				continue;
+			}
+			try {
+				map.put(property, method.invoke(obj));
+			} catch (IllegalArgumentException e) {
+				throw new SimpleException("Error accessing method "+ method.toString(),e);
+			} catch (IllegalAccessException e) {
+				throw new SimpleException("Error accessing method "+ method.toString(),e);
+			} catch (InvocationTargetException e) {
+				throw new SimpleException("Error accessing method "+ method.toString(),e.getTargetException());
+			}
+		}
+		return map;
 	}
 
 	/**

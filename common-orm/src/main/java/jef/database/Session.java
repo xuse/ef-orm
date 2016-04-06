@@ -1180,7 +1180,7 @@ public abstract class Session {
 		if (l.isEmpty()) {
 			return null;
 		} else if (l.size() > 1 && unique) {
-			throw new NonUniqueResultException("Result is not unique.");
+			throw new NonUniqueResultException("Result is not unique." + q);
 		}
 		return l.get(0);
 	}
@@ -1220,9 +1220,10 @@ public abstract class Session {
 	 *             结果不唯一
 	 */
 	public <T extends IQueryableEntity> T loadByField(jef.database.Field field, Object value) throws SQLException {
-		return loadByField(field, value,true);
-		
+		return loadByField(field, value, true);
+
 	}
+
 	/**
 	 * 按指定的字段的值加载记录<br>
 	 * 如果指定的字段不是主键，也只返回第一条数据。
@@ -1390,9 +1391,10 @@ public abstract class Session {
 		}
 		return result;
 	}
-	
+
 	/**
 	 * 执行数据库查询。并将结果转换为期望的对象。查询结果不唯一抛出NonUniqueResultException
+	 * 
 	 * @param queryObj
 	 *            查询
 	 * @param resultClz
@@ -1402,13 +1404,13 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 * @throws NonUniqueResultException
-	 *             结果不唯一，如不想接收到异常，请用{@link #loadAs(ConditionQuery, Class, boolean)}
+	 *             结果不唯一，如不想接收到异常，请用
+	 *             {@link #loadAs(ConditionQuery, Class, boolean)}
 	 * 
 	 */
 	public <T> T loadAs(ConditionQuery queryObj, Class<T> resultClz) throws SQLException {
-		return loadAs(queryObj, resultClz,true);
+		return loadAs(queryObj, resultClz, true);
 	}
-	
 
 	/**
 	 * 执行数据库查询。并将结果转换为期望的对象。
@@ -1486,7 +1488,7 @@ public abstract class Session {
 		if (l.isEmpty()) {
 			return null;
 		} else if (l.size() > 1 && unique) {
-			throw new NonUniqueResultException("Result is not unique.");
+			throw new NonUniqueResultException("Result is not unique." + queryObj);
 		}
 		T result = l.get(0);
 		if (ORMConfig.getInstance().isDebugMode()) {
@@ -2359,6 +2361,18 @@ public abstract class Session {
 		batch.extreme = extreme;
 		batch.parseTime = System.nanoTime() - start;
 		return batch;
+	}
+
+	
+	/**
+	 * 用传入的Query作为条件，将数据库中的记录更为为对象中的值
+	 * @param query
+	 * @param entities
+	 * @throws SQLException
+	 */
+	public final <T extends IQueryableEntity> void batchUpdateBy(Query<T> query, List<T> entities) throws SQLException {
+		
+
 	}
 
 	/**

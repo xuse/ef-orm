@@ -205,8 +205,8 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	}
 
 	@Override
-	public String toDefaultString(Object defaultValue, int sqlType) {
-		return dialect.toDefaultString(defaultValue, sqlType);
+	public String toDefaultString(Object defaultValue, int sqlType, int changeTo) {
+		return dialect.toDefaultString(defaultValue, sqlType,changeTo);
 	}
 
 	@Override

@@ -188,8 +188,12 @@ public class PostgreSqlDialect extends AbstractDialect {
 		typeNames.put(Types.SMALLINT, "int2", 0);
 		typeNames.put(Types.INTEGER, "int4", 0);
 		typeNames.put(Types.BIGINT, "int8", 0);
-		typeNames.put(Types.FLOAT, "float4", 0);
-		typeNames.put(Types.DOUBLE, "float8", 0);
+		
+		typeNames.put(Types.FLOAT, 6, "float4", 0);
+		typeNames.put(Types.FLOAT, 15,"float8", Types.DOUBLE);
+		typeNames.put(Types.FLOAT, 38,"numeric($p, $s)", Types.NUMERIC);
+		typeNames.put(Types.DOUBLE, 15,"float8", 0);
+		typeNames.put(Types.DOUBLE, 38,"numeric($p, $s)", Types.NUMERIC);
 		typeNames.put(Types.NUMERIC, "numeric($p, $s)", 0);
 	}
 

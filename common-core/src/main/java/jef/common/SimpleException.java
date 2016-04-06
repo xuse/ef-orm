@@ -21,7 +21,7 @@ public class SimpleException extends RuntimeException {
 		super(message);
 	}
 	
-	public SimpleException(Exception e){
+	public SimpleException(Throwable e){
 		super(e);
 	}
 	

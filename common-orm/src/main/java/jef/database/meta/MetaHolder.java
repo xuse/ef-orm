@@ -1147,7 +1147,7 @@ public final class MetaHolder {
 			}
 			Assert.isTrue(length > 0, "The char column length must greater than 0!");
 			return new ColumnType.Char(length).setNullable(nullable).defaultIs(defaultExpression);
-		} else if ("NUMBER".equals(def) || "INT".equals(def) || "INTEGER".equals(def)) {
+		} else if ("NUMBER".equals(def) || "INT".equals(def) || "INTEGER".equals(def)||"NUMERIC".equals(def)) {
 			if (precision == 0 && (length > 0 && length < 100)) {
 				precision = length;
 			}
@@ -1186,7 +1186,7 @@ public final class MetaHolder {
 			}
 			return new TypeDefImpl(def, cm.getSqlType(), field.getType());
 		} else {
-			throw new IllegalArgumentException("Unknow column Def:" + def);
+			throw new IllegalArgumentException("Unknow column Definition[" + def +"] in entity "+ field.getDeclaringClass());
 			// return new ColumnType.Unknown(def).setNullable(nullable);
 		}
 	}

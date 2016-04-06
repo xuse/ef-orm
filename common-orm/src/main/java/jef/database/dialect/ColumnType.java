@@ -178,8 +178,8 @@ public abstract class ColumnType {
 		// 对自增类型的数据不检查缺省值(兼容PG)
 		if (!(this instanceof AutoIncrement)) {
 			// 检查缺省值
-			String a1 = profile.toDefaultString(oldType.defaultValue, oldType.getSqlType());
-			String a2 = profile.toDefaultString(newType.defaultValue, newType.getSqlType());
+			String a1 = profile.toDefaultString(oldType.defaultValue, oldType.getSqlType(),oldType.getSqlType());
+			String a2 = profile.toDefaultString(newType.defaultValue, newType.getSqlType(),newType.getSqlType());
 			// 非字符串比较情况下全部按小写处理
 			if (a1 != null && !a1.startsWith("'")) {
 				a1 = StringUtils.lowerCase(a1);

@@ -152,6 +152,7 @@ public abstract class SelectItemProvider implements ISelectItemProvider {
 	}
 	
 	private String concatSchema(String name) {
+		Assert.notNull(name);
 		if(schema==null)return name;
 		return new StringBuilder(schema.length()+1+name.length()).append(schema).append('.').append(name).toString();
 	}

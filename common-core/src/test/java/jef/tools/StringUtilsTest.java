@@ -1,11 +1,15 @@
 package jef.tools;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
 import jef.common.log.LogUtil;
+import jef.tools.string.StringComparator;
 import jef.tools.string.StringSpliter;
 import jef.tools.string.Substring;
 
@@ -127,5 +131,30 @@ public class StringUtilsTest extends org.junit.Assert {
 	public void testSkip() {
 		String s=StringUtils.generateGuid();
 		System.out.println(s);
+		
+		System.out.println(StringUtils.getMD5(s));
+		System.out.println(StringUtils.getSHA1(s));
+		System.out.println(StringUtils.getSHA256(s));
+	}
+	
+
+	/**
+	 * 测试案例
+	 * 
+	 * @param args
+	 */
+	@Test
+	public  void stringSort() {
+		String s1 = "V1.01.1b";
+		String s2 = "V1.1.10";
+		String s3 = "version1000";
+		String s4 = "version999";
+		String s5 = "10x0888version1";
+		String s6 = "10x1111111111111111111111111111111111111111111111111111111version1";
+		String s7 = "10x222222222222222222222222222222222222222222222222222222222version10";
+		String s8 = "10x1999version9";
+		List<String> list = Arrays.asList(s1, s2, s3, s4, s5, s6, s7, s8);
+		Collections.sort(list, StringComparator.INSTANCE);
+		assertEquals(list, Arrays.asList(s5,s6,s8,s7,s1,s2,s4,s3));
 	}
 }
