@@ -31,6 +31,8 @@ import java.util.Map;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceException;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.Condition.Operator;
@@ -83,8 +85,6 @@ import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
-
-import org.easyframe.enterprise.spring.TransactionMode;
 
 /**
  * 描述一个事务(会话)的数据库操作句柄，提供了各种操作数据库的方法供用户使用。
@@ -1219,7 +1219,7 @@ public abstract class Session {
 	 * @throws NonUniqueResultException
 	 *             结果不唯一
 	 */
-	public <T extends IQueryableEntity> T loadByField(jef.database.Field field, Object value) throws SQLException {
+	public Object loadByField(jef.database.Field field, Object value) throws SQLException {
 		return loadByField(field, value, true);
 
 	}
@@ -1241,18 +1241,22 @@ public abstract class Session {
 	 * @throws NonUniqueResultException
 	 *             结果不唯一
 	 */
-	public <T extends IQueryableEntity> T loadByField(jef.database.Field field, Object value, boolean unique) throws SQLException {
+	public Object loadByField(jef.database.Field field, Object value, boolean unique) throws SQLException {
 		ITableMetadata meta = DbUtils.getTableMeta(field);
 		@SuppressWarnings("unchecked")
-		Query<T> query = meta.newInstance().getQuery();
+		Query<?> query = meta.newInstance().getQuery();
 		query.addCondition(field, Operator.EQUALS, value);
-		List<T> list = typedSelect(query, null, QueryOption.DEFAULT_MAX1);
+		List<?> list = typedSelect(query, null, QueryOption.DEFAULT_MAX1);
 		if (list.isEmpty()) {
 			return null;
 		} else if (list.size() > 1 && unique) {
 			throw new NonUniqueResultException();
 		}
-		return list.get(0);
+		if(meta.getType()==EntityType.POJO){
+			return ((PojoWrapper)list.get(0)).get();
+		}else{
+			return list.get(0);
+		}
 	}
 
 	/**
@@ -1479,9 +1483,9 @@ public abstract class Session {
 				}
 				filters = qq.getFilterCondition();
 			}
-			option = QueryOption.createFrom((JoinElement) queryObj);
+			option = QueryOption.createFrom(queryObj);
 		} else {
-			option = QueryOption.DEFAULT_MAX1;
+			option =queryObj.getMaxResult()>0? QueryOption.createFrom(queryObj):QueryOption.DEFAULT_MAX1;	
 		}
 		@SuppressWarnings("unchecked")
 		List<T> l = innerSelect(queryObj, null, filters, option);

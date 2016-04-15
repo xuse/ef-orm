@@ -662,7 +662,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			throw new IllegalArgumentException("There's no field [" + field + "] in " + meta.getName());
 		}
 		try {
-			return getSession().loadByField(def.field(), value,unique);
+			return (T) getSession().loadByField(def.field(), value,unique);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -671,7 +671,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	@Override
 	public <T extends IQueryableEntity> T loadByField(Field field, Object value) {
 		try {
-			return getSession().loadByField(field, value);
+			return (T) getSession().loadByField(field, value);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -682,7 +682,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	@Override
 	public <T extends IQueryableEntity> T loadByField(Field field, Object value, boolean unique) {
 		try {
-			return getSession().loadByField(field, value,unique);
+			return (T) getSession().loadByField(field, value,unique);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -699,7 +699,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			throw new IllegalArgumentException("There's no field [" + field + "] in " + clz.getName());
 		}
 		try {
-			return getSession().loadByField(def.field(), value,unique);
+			return (T) getSession().loadByField(def.field(), value,unique);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}

@@ -2005,7 +2005,7 @@ public class DbMetaData {
 		if (pattern == null) {
 			sql = "DROP INDEX " + index.getIndexName();
 		} else {
-			sql = "DROP INDEX " + String.format(pattern, index.getIndexName(), index.getTableSchema());
+			sql = "DROP INDEX " + String.format(pattern, index.getIndexName(), index.getTableName());
 		}
 		StatementExecutor exe = createExecutor();
 		try {
