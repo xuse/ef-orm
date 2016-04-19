@@ -344,6 +344,7 @@ public class Case1 extends org.junit.Assert {
 			select.sqlExpression("'3'").as("grade");
 			select.column(Person.Field.created).as("dateOfBirth");
 			query.getResultTransformer().setResultType(Student.class);
+			query.setMaxResult(1);
 			Student st = db.load(query);
 		}
 	}

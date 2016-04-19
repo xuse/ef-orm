@@ -1483,10 +1483,8 @@ public abstract class Session {
 				}
 				filters = qq.getFilterCondition();
 			}
-			option = QueryOption.createFrom(queryObj);
-		} else {
-			option =queryObj.getMaxResult()>0? QueryOption.createFrom(queryObj):QueryOption.DEFAULT_MAX1;	
 		}
+		option =queryObj.getMaxResult()>0? QueryOption.createFrom(queryObj):QueryOption.DEFAULT_MAX1;	
 		@SuppressWarnings("unchecked")
 		List<T> l = innerSelect(queryObj, null, filters, option);
 		if (l.isEmpty()) {

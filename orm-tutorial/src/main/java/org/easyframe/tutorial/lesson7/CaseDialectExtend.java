@@ -6,6 +6,7 @@ import jef.codegen.EntityEnhancer;
 import jef.database.DbClient;
 import jef.database.DbClientBuilder;
 import jef.database.ORMConfig;
+import jef.database.support.RDBMS;
 
 import org.easyframe.tutorial.lesson4.entity.Person;
 import org.junit.AfterClass;
@@ -32,11 +33,13 @@ public class CaseDialectExtend {
 	 */
 	@Test
 	public void testExtendDialact() throws SQLException {
-		String sql = "select atan2(12, 1) from t_person";
-		System.out.println(db.createNativeQuery(sql).getResultList());
+		if(db.getMetaData(null).getProfile().getName()==RDBMS.derby){
+			String sql = "select atan2(12, 1) from t_person";
+			System.out.println(db.createNativeQuery(sql).getResultList());
 
-		sql = "select ifnull(gender, 'F') from t_person";
-		System.out.println(db.createNativeQuery(sql).getResultList());
+			sql = "select ifnull(gender, 'F') from t_person";
+			System.out.println(db.createNativeQuery(sql).getResultList());	
+		}
 	}
 	
 	@AfterClass

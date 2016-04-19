@@ -77,7 +77,7 @@ public class JDataSource extends AbstractDataSource {
 	}
 
 	/**
-	 * @deprecated
+	 * Return the dbclient 
 	 * @return
 	 */
 	public DbClient getDbClient() {

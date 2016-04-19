@@ -81,6 +81,11 @@ public enum DbProperty {
 	 */
 	MAX_SEQUENCE_VALUE,
 	
+	/**
+	 * Drop Foreign key的语句模板
+	 */
+	DROP_FK_PATTERN
+	
 	//Derby支持一下函数来获得当前环境
 //	CURRENT ISOLATION
 //

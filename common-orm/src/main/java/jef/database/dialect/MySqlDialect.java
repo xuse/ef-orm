@@ -107,6 +107,7 @@ public class MySqlDialect extends AbstractDialect {
 		setProperty(DbProperty.INDEX_LENGTH_LIMIT_FIX, "255");
 		setProperty(DbProperty.INDEX_LENGTH_CHARESET_FIX, "charset=latin5");
 		setProperty(DbProperty.DROP_INDEX_TABLE_PATTERN, "%1$s ON %2$s");
+		setProperty(DbProperty.DROP_FK_PATTERN, "alter table %1$s drop foreign key %2$s");
 		
 		loadKeywords("mysql_keywords.properties");
 		registerNative(new StandardSQLFunction("ascii"));
@@ -270,7 +271,12 @@ public class MySqlDialect extends AbstractDialect {
 	
 	protected String getComment(AutoIncrement column, boolean flag) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("INT UNSIGNED");
+		//sb.append("INT UNSIGNED");
+		//2016-4-19日从 int unsigned改为int，因为当一个表主键被另一个表作为外键引用时，双方类型必须完全一样。
+		//实际测试发现，由于一般建表时普通int字段不会处理为 int unsigned，造成外键创建失败。所以此处暂时为int
+		sb.append("INT ");
+		
+		
 		if (flag) {
 			if (!column.nullable)
 				sb.append(" not null");

@@ -508,6 +508,9 @@ public final class DbUtils {
 		// 拼装出带连接的查询请求
 		AbstractJoinImpl j = DbUtils.getJoin(queryObj, map, ArrayUtils.asList(otherQuery), excludeRef);
 		if (j != null) {
+			j.setFetchSize(queryObj.getFetchSize());
+			j.setMaxResult(queryObj.getMaxResult());
+			j.setQueryTimeout(queryObj.getQueryTimeout());
 			if (queryObj.getSelectItems() != null) {
 				List<QueryAlias> qs = j.allElements();
 				for (int i = 0; i < qs.size(); i++) {

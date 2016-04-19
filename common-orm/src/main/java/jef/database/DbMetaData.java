@@ -2333,7 +2333,11 @@ public class DbMetaData {
 	}
 
 	private void dropConstraint0(String tablename, String constraintName, StatementExecutor exe) throws SQLException {
-		String sql = String.format(DROP_CONSTRAINT_SQL, tablename, constraintName);
+		String template=getProfile().getProperty(DbProperty.DROP_FK_PATTERN);
+		if(StringUtils.isEmpty(template)){
+			template=DROP_CONSTRAINT_SQL;
+		}
+		String sql = String.format(template, tablename, constraintName);
 		exe.executeSql(sql);
 	}
 
@@ -2349,6 +2353,7 @@ public class DbMetaData {
 	private void dropAllForeignKey0(String tablename, Boolean referenceBy, StatementExecutor exe) throws SQLException {
 		if (referenceBy == null || referenceBy == Boolean.TRUE) {
 			for (ForeignKey fk : getForeignKeyReferenceTo(tablename)) {
+				
 				dropConstraint0(fk.getFromTable(), fk.getName(), exe);
 			}
 		}
