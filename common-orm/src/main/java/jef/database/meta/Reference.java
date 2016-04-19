@@ -18,13 +18,11 @@ package jef.database.meta;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Objects;
+
 import jef.database.annotation.JoinType;
-import jef.database.query.Query;
-import jef.database.query.ReadOnlyQuery;
 import jef.database.query.ReferenceType;
 import jef.tools.Assert;
-
-import com.google.common.base.Objects;
 
 /**
  * 关于多表操作的三个概念设计
@@ -188,10 +186,13 @@ public class Reference{
 	}
 
 	public void setHint(JoinPath hint) {
-		Query<?> leftq=ReadOnlyQuery.getEmptyQuery(this.fromType);
-		Query<?> rightq=ReadOnlyQuery.getEmptyQuery(this.targetType);
-		JoinPath path=hint.accept(leftq, rightq);
-		Assert.notNull(path);
+//		Query<?> leftq=ReadOnlyQuery.getEmptyQuery(this.fromType);
+//		Query<?> rightq=ReadOnlyQuery.getEmptyQuery(this.targetType);
+//		JoinPath path=hint.accept(leftq, rightq);
+		JoinPath path=hint.accept(this.fromType, this.targetType);
+		if(path==null){
+			throw new IllegalArgumentException("The join key is invalid." + hint.toString());
+		}
 		this.hint = hint;
 	}
 	

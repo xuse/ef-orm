@@ -34,7 +34,9 @@ import org.easyframe.tutorial.lessona.entity.Device;
 import org.easyframe.tutorial.lessona.entity.OperateLog;
 import org.easyframe.tutorial.lessona.entity.Person2;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 /**
  * 
@@ -44,6 +46,7 @@ import org.junit.Test;
  * 
  */
 @SuppressWarnings("rawtypes")
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class Case2 extends org.junit.Assert {
 	private static DbClient db;
 	private static boolean doinit = true;
