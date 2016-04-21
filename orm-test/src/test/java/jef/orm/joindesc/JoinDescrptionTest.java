@@ -30,13 +30,6 @@ import org.junit.runner.RunWith;
  @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 public class JoinDescrptionTest {
-
-	@BeforeClass
-	public static void test() {
-		EntityEnhancer en = new EntityEnhancer();
-		en.enhance();
-	}
-
 	@DatabaseInit
 	public void init() throws SQLException {
 		db.dropTable(Student.class);

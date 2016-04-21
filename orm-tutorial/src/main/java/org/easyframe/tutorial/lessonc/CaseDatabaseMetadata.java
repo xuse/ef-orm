@@ -33,7 +33,6 @@ public class CaseDatabaseMetadata {
 
 	@BeforeClass
 	public static void setup() throws SQLException{
-		new EntityEnhancer().enhance("org.easyframe.tutorial");
 		db = new DbClientBuilder().build();
 		db.dropTable(Student.class,StudentToLesson.class,LessonInfo.class);
 		db.createTable(Student.class,StudentToLesson.class,LessonInfo.class);

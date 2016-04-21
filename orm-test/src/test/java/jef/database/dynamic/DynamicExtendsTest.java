@@ -34,9 +34,6 @@ import org.junit.runner.RunWith;
 public class DynamicExtendsTest extends org.junit.Assert{
 	private DbClient db;
 
-	public DynamicExtendsTest() throws SQLException {
-		new EntityEnhancer().enhance("jef.database.dynamic");
-	}
 	@DatabaseInit
 	public void setup() throws SQLException{
 		db.dropTable(Status.class);

@@ -37,8 +37,6 @@ public class ExistsTest extends org.junit.Assert{
 	@DatabaseInit
 	public void prepare() throws Exception {
 		try{
-			EntityEnhancer en=new EntityEnhancer();
-			en.enhance("jef.orm.exists");
 			db.dropTable(TableA.class);
 			db.dropTable(TableB.class);
 			

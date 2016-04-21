@@ -103,10 +103,6 @@ public class EntityEnhancerTest {
 	 */
 	@Test
 	public void testInnerClass()throws Exception {
-		EntityEnhancer e = new EntityEnhancer();
-		e.setOut(System.out);
-//		e.setRoot(new File("./"));
-		e.enhance("jef.codegen");
 		System.out.println(MetaHolder.getMeta(NoFieldParent.class));
 		System.out.println(MetaHolder.getMeta(ExtendsNoFIeldClass.class)); //此处如果仅输出一个列，是不对的
 		System.out.println(MetaHolder.getMeta(FieldParent.class));

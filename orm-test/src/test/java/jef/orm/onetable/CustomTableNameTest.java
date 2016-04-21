@@ -39,12 +39,6 @@ public class CustomTableNameTest extends org.junit.Assert {
 	
 	private DbClient db;
 	
-	@BeforeClass
-	public static void setup(){
-		EntityEnhancer en=new EntityEnhancer();
-		en.enhance("jef.orm.onetable.model");
-	}
-	
 	/**
 	* Use CustomTable name, not the defaultname in table model.
 	 * @throws SQLException

@@ -42,7 +42,6 @@ public class RoutingJdbcTest {
 	 */
 	@BeforeClass
 	public static void setup() throws SQLException {
-		new EntityEnhancer().enhance("org.easyframe.tutorial.lessona");
 		MetaHolder.getMeta(Device.class);
 		MetaHolder.getMeta(Person2.class);
 		ORMConfig.getInstance().setFilterAbsentTables(true);

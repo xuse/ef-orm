@@ -49,12 +49,6 @@ import org.junit.runner.RunWith;
 public class CascadeModel2Test extends org.junit.Assert{
 	private DbClient db;
 	
-	@BeforeClass
-	public static void setUp() throws SQLException{
-		EntityEnhancer en=new EntityEnhancer();
-		en.enhance("jef.orm.multitable2.model");
-	}
-	
 	@DatabaseInit
 	public void prepareData() throws SQLException {
 		db.dropTable(Root.class,Parent.class,Child.class,Leaf.class,EnumationTable.class);

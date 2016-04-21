@@ -91,8 +91,6 @@ public class NativeQueryTest extends org.junit.Assert {
 		ORMConfig.getInstance().setSelectTimeout(20);
 		ORMConfig.getInstance().setUpdateTimeout(20);
 		ORMConfig.getInstance().setDeleteTimeout(20);
-		EntityEnhancer en = new EntityEnhancer();
-		en.enhance("jef.orm.multitable2");
 	}
 
 	@DatabaseInit

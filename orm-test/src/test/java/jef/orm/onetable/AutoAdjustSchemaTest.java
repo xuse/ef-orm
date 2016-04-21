@@ -42,8 +42,6 @@ public class AutoAdjustSchemaTest {
 
 	@DatabaseInit
 	public void init() {
-		EntityEnhancer en = new EntityEnhancer();
-		en.enhance("jef.orm");
 //		ORMConfig.getInstance().setSchemaMapping("AILK2:,JIYI:pomelo");
 		try {
 			dropTable();

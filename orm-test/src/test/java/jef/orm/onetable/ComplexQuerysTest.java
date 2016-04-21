@@ -49,12 +49,6 @@ public class ComplexQuerysTest {
 
 	private DbClient db;
 
-	@BeforeClass
-	public static void setUp() {
-		EntityEnhancer en = new EntityEnhancer();
-		en.enhance("jef.orm");
-	}
-
 	@DatabaseInit
 	public void init() {
 		try {

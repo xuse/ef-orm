@@ -56,13 +56,6 @@ import org.junit.runner.RunWith;
 	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 public class CascadeTableTest extends MultiTableTestBase {
-
-	@BeforeClass
-	public static void setUp() throws SQLException {
-		EntityEnhancer en = new EntityEnhancer();
-		en.enhance("jef.orm");
-	}
-
 	@DatabaseInit
 	public void prepareData() throws SQLException {
 		dropTable();

@@ -33,14 +33,6 @@ import org.junit.runner.RunWith;
 })
 public class SpecialCases extends org.junit.Assert{
 	
-	
-	@BeforeClass
-	public static void setup(){
-		EntityEnhancer en=new EntityEnhancer();
-		en.enhance("jef.orm.multitable2.model","jef.orm.reference.model");
-	}
-	
-	
 	//TODO 增加测试案例关于 rowid, 增加案例关于getFunction
 	// ===== 关于rowid的支持 ==============
 	// 1、除非配置db.enable.rowid=false，否则在Oracle环境下总是会启用rowid特性。

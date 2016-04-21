@@ -41,11 +41,6 @@ public class DynamicAndStaticTableTest  extends org.junit.Assert {
 	private DbClient db;
 	private TupleMetadata GroupTable;
 	
-	@BeforeClass
-	public static void setup(){
-		EntityEnhancer en=new EntityEnhancer();
-		en.enhance("jef.database.dynamic");
-	}
 	/**
 	 * 添加了@DatabaseInit注解的方法将在每次连接到数据库后执行。
 	 * @throws SQLException
