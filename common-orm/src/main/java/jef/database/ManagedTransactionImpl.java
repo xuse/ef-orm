@@ -26,9 +26,8 @@ public class ManagedTransactionImpl extends Transaction{
 		this.conn=new Conn(connection);
 	}
 	static final class Conn extends AbstractJDBCConnection implements IConnection{
-		private Connection conn;
-		public Conn(Connection conn2) {
-			this.conn=conn2;
+		Conn(Connection conn) {
+			this.conn=conn;
 		}
 
 		@Override
@@ -104,7 +103,6 @@ public class ManagedTransactionImpl extends Transaction{
 			throw new PersistenceException(e);
 		}
 	}
-
 
 	@Override
 	public int getIsolationLevel() {

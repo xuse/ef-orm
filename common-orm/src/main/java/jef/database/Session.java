@@ -1219,7 +1219,7 @@ public abstract class Session {
 	 * @throws NonUniqueResultException
 	 *             结果不唯一
 	 */
-	public Object loadByField(jef.database.Field field, Object value) throws SQLException {
+	public <T> T loadByField(jef.database.Field field, Object value) throws SQLException {
 		return loadByField(field, value, true);
 
 	}
@@ -1241,9 +1241,9 @@ public abstract class Session {
 	 * @throws NonUniqueResultException
 	 *             结果不唯一
 	 */
-	public Object loadByField(jef.database.Field field, Object value, boolean unique) throws SQLException {
+	@SuppressWarnings("unchecked")
+	public <T> T loadByField(jef.database.Field field, Object value, boolean unique) throws SQLException {
 		ITableMetadata meta = DbUtils.getTableMeta(field);
-		@SuppressWarnings("unchecked")
 		Query<?> query = meta.newInstance().getQuery();
 		query.addCondition(field, Operator.EQUALS, value);
 		List<?> list = typedSelect(query, null, QueryOption.DEFAULT_MAX1);
@@ -1253,9 +1253,9 @@ public abstract class Session {
 			throw new NonUniqueResultException();
 		}
 		if(meta.getType()==EntityType.POJO){
-			return ((PojoWrapper)list.get(0)).get();
+			return (T)((PojoWrapper)list.get(0)).get();
 		}else{
-			return list.get(0);
+			return (T)list.get(0);
 		}
 	}
 

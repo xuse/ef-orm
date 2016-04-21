@@ -78,8 +78,6 @@ public class SimpleTableTest extends org.junit.Assert {
 		ORMConfig.getInstance().setSelectTimeout(20);
 		ORMConfig.getInstance().setUpdateTimeout(20);
 		ORMConfig.getInstance().setDeleteTimeout(20);
-		EntityEnhancer en = new EntityEnhancer();
-		en.enhance("jef.orm.onetable.model");
 	}
 
 	@DatabaseInit

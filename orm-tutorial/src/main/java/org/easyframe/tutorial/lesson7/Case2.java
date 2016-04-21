@@ -37,7 +37,6 @@ public class Case2 {
 	 */
 	@BeforeClass
 	public static void setup() throws SQLException{
-		new EntityEnhancer().enhance("org.easyframe.tutorial");
 		//准备多个数据源
 		Map<String,DataSource> datasources=new HashMap<String,DataSource>();
 		datasources.put("datasource1", new SimpleDataSource("jdbc:derby:./db;create=true",null,null));

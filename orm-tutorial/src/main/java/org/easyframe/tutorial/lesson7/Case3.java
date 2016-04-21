@@ -25,7 +25,6 @@ public class Case3 {
 
 	@BeforeClass
 	public static void setup() throws SQLException {
-		new EntityEnhancer().enhance("org.easyframe.tutorial");
 		//****************************************************
 		//*  请先将此处的URL配置成一个可以连接的MYSQL数据库地址 *
 		//****************************************************

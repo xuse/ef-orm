@@ -51,8 +51,6 @@ public class NamedQueryTest {
 	@DatabaseInit
 	public void setUp() {
 		try {
-			EntityEnhancer en=new EntityEnhancer();
-			en.enhance();
 			// clear table
 			db.dropTable(Leaf.class);
 			db.dropTable(Child.class);

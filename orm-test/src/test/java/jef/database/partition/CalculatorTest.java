@@ -49,7 +49,6 @@ public class CalculatorTest extends org.junit.Assert{
 
 	@BeforeClass
 	public static void setup() throws SecurityException, NoSuchMethodException {
-		new EntityEnhancer().enhance("jef.orm");
 		config.setAppender("_");
 		config.setKeySeparator("_");
 		PartitionKeyImpl[] keys = new PartitionKeyImpl[] { new PartitionKeyImpl("id", 1) };

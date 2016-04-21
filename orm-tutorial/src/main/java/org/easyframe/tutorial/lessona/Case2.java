@@ -58,7 +58,6 @@ public class Case2 extends org.junit.Assert {
 	 */
 	@BeforeClass
 	public static void setup() throws SQLException {
-		new EntityEnhancer().enhance("org.easyframe.tutorial.lessona");
 		// 准备多个数据源
 		Map<String, DataSource> datasources = new HashMap<String, DataSource>();
 		// 创建三个数据库。。。

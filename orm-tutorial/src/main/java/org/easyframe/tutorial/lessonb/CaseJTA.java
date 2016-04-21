@@ -20,7 +20,6 @@ import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
  * @author jiyi
  *
  */
-@Ignore
 @ContextConfiguration(locations = { "classpath:spring/spring-test-jta.xml" })
 public class CaseJTA extends AbstractJUnit4SpringContextTests {
 	@Autowired
