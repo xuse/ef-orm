@@ -5,11 +5,11 @@ import java.sql.SQLException;
 
 import javax.persistence.PersistenceException;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+
 import jef.database.cache.CacheDummy;
 import jef.database.innerpool.AbstractJDBCConnection;
 import jef.database.innerpool.IConnection;
-
-import org.easyframe.enterprise.spring.TransactionMode;
 
 public class ManagedTransactionImpl extends Transaction{
 	
@@ -57,6 +57,10 @@ public class ManagedTransactionImpl extends Transaction{
 			return conn.toString();
 		}
 		
+		public boolean isClosed() throws SQLException{
+			return conn==null || conn.isClosed();
+		}
+		
 		
 	}
 
@@ -79,6 +83,14 @@ public class ManagedTransactionImpl extends Transaction{
 
 	@Override
 	public void setRollbackOnly(boolean b) {
+	}
+
+	public boolean isOpen() {
+		try {
+			return !conn.isClosed();
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
 	}
 
 	@Override

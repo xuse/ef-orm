@@ -190,6 +190,10 @@ public class TransactionImpl extends Transaction {
 		}
 	}
 
+	public boolean isOpen() {
+		return parent != null;
+	}
+
 	public boolean isAutoCommit() {
 		return autoCommit;
 	}
