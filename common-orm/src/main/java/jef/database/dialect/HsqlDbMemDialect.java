@@ -411,7 +411,7 @@ public class HsqlDbMemDialect extends AbstractDialect {
 						seq.setSchema(rs.getString(2));
 						seq.setName(rs.getString(3));
 						seq.setMinValue(rs.getLong(4));
-						seq.setMaxValue(rs.getLong(5));
+//						seq.setMaxValue(rs.getLong(5));
 						seq.setStartValue(rs.getLong(6));
 						seq.setStep(rs.getInt(7));
 						seq.setCurrentValue(rs.getLong(8));

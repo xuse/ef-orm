@@ -353,7 +353,7 @@ public class OracleDialect extends AbstractDialect {
 						seq.setSchema(rs.getString(1));
 						seq.setName(rs.getString(2));
 						seq.setMinValue(rs.getLong(3));
-						seq.setMaxValue(rs.getLong(4));
+//						seq.setMaxValue(rs.getLong(4));
 						seq.setStep(rs.getInt(5));
 						seq.setCacheSize(rs.getInt(6));
 						seq.setCurrentValue(rs.getLong(7));
