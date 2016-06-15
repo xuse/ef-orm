@@ -2220,16 +2220,17 @@ public abstract class Session {
 		T t = entities.get(0);
 		Batch batch;
 		if (t instanceof IQueryableEntity) {
-			batch = startBatchInsert((IQueryableEntity)t, null, false, true);	
+			batch = startBatchInsert((IQueryableEntity)t, null, false, true);
+			if (group != null)
+				batch.setGroupForPartitionTable(group);
+			batch.execute(entities);
 		} else {
 			List<PojoWrapper> list = PojoWrapper.wrap(entities, false);
 			batch = startBatchInsert(list.get(0), null, false, true);
+			if (group != null)
+				batch.setGroupForPartitionTable(group);
+			batch.execute(list);
 		}
-		
-		if (group != null)
-			batch.setGroupForPartitionTable(group);
-		batch.execute(entities);
-
 	}
 
 	/**
