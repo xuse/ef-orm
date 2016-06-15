@@ -81,13 +81,9 @@ final class ProcessHandlerImpl2 implements ProcessHandler {
 	}
 
 	public void kill() {
-		if (proc.isAlive()) {
+//		if (proc.isAlive()) {
 			proc.destroy();
-		}
-	}
-
-	public boolean isAlive() {
-		return proc.isAlive();
+//		}
 	}
 
 	/**

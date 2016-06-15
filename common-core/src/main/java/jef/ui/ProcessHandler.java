@@ -18,11 +18,11 @@ public interface ProcessHandler {
 	 */
 	int waitfor();
 
-	/**
-	 * 判断进程是否还在执行
-	 * @return
-	 */
-	boolean isAlive();
+//	/**
+//	 * 判断进程是否还在执行
+//	 * @return
+//	 */
+//	boolean isAlive();
 
 	/**
 	 * 杀掉这个进程
