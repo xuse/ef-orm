@@ -35,7 +35,7 @@ public class LogUtil {
 	private static org.slf4j.Logger log = LoggerFactory.getLogger("GeeQuery");
 	
 	//是否将输出改为日志形式输出
-	public static boolean commonDebugAdapter = JefConfiguration.getBoolean(Item.COMMON_DEBUG_ADAPTER, false);
+	public static boolean commonDebugAdapter = JefConfiguration.getBoolean(Item.COMMON_DEBUG_ADAPTER, true);
 	//是否为调试模式
 	public static boolean debug = JefConfiguration.getBoolean(Item.DB_DEBUG, false);
 	

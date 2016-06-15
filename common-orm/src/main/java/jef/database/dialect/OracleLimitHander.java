@@ -9,7 +9,7 @@ public class OracleLimitHander implements LimitHandler {
 
 	public BindSql toPageSQL(String sql, int[] range) {
 		if(range[0]==0){
-			return new BindSql("select tb__.* from (\n"+sql+") tb__ where rownum <= 15");
+			return new BindSql("select tb__.* from (\n"+sql+") tb__ where rownum <= "+range[1]);
 		}else{
 			sql = ORACLE_PAGE1 + sql;
 			String limit = ORACLE_PAGE2.replace("%start%", String.valueOf(range[0]));
