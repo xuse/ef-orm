@@ -28,11 +28,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import javax.sql.DataSource;
 
-import jef.database.innerpool.IPool;
-import jef.database.innerpool.PoolService;
-import jef.database.innerpool.SimplePooledDatasource;
-import jef.tools.ThreadUtils;
-
 import org.apache.commons.dbcp.BasicDataSource;
 import org.junit.Before;
 import org.junit.Test;
@@ -46,6 +41,11 @@ import com.alibaba.druid.mock.MockDriver;
 import com.alibaba.druid.pool.DruidDataSource;
 import com.jolbox.bonecp.BoneCPDataSource;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
+
+import jef.database.innerpool.IPool;
+import jef.database.innerpool.PoolService;
+import jef.database.innerpool.SimplePooledDatasource;
+import jef.tools.ThreadUtils;
 
 /**
  * TestOnBo 类Case1.java的实现描述：TODO 类实现描述
