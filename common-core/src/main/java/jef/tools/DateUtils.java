@@ -47,6 +47,7 @@ public abstract class DateUtils {
 
 	/**
 	 * 转换为java.sql.Date
+	 * 
 	 * @param d
 	 * @return
 	 */
@@ -55,19 +56,22 @@ public abstract class DateUtils {
 			return null;
 		return new java.sql.Date(d.getTime());
 	}
-	
+
 	/**
 	 * 转换为Sql的Time对象（不含日期）
+	 * 
 	 * @param date
 	 * @return
 	 */
 	public static java.sql.Time toSqlTime(Date date) {
-		if(date==null)return null;
+		if (date == null)
+			return null;
 		return new java.sql.Time(date.getTime());
 	}
 
 	/**
 	 * 转换为java.sql.timestamp
+	 * 
 	 * @param d
 	 * @return
 	 */
@@ -79,6 +83,7 @@ public abstract class DateUtils {
 
 	/**
 	 * 从java.sql.Date转换到java.util.Date
+	 * 
 	 * @param d
 	 * @return
 	 */
@@ -90,6 +95,7 @@ public abstract class DateUtils {
 
 	/**
 	 * 格式化日期为中式格式
+	 * 
 	 * @param d
 	 * @return
 	 */
@@ -98,9 +104,10 @@ public abstract class DateUtils {
 			return "";
 		return DateFormats.DATE_CS.get().format(d);
 	}
-	
+
 	/**
 	 * 格式化日期（中式）格式化后的日期带有“今天”等形式
+	 * 
 	 * @param d
 	 * @return
 	 */
@@ -118,9 +125,10 @@ public abstract class DateUtils {
 		}
 		return DateFormats.DATE_CS.get().format(d);
 	}
-	
+
 	/**
 	 * 格式化日期+时间,格式化后的日期带有“今天”等形式
+	 * 
 	 * @param d
 	 * @return
 	 */
@@ -141,6 +149,7 @@ public abstract class DateUtils {
 
 	/**
 	 * 格式化为日期+时间（中式）
+	 * 
 	 * @param d
 	 * @return
 	 */
@@ -152,6 +161,7 @@ public abstract class DateUtils {
 
 	/**
 	 * 从dos系统格式的时间数字转换到Java时间
+	 * 
 	 * @param dostime
 	 * @return
 	 */
@@ -169,9 +179,10 @@ public abstract class DateUtils {
 		date.set(year, month - 1, day, hour, minute, second);
 		return date.getTime();
 	}
-	
+
 	/**
 	 * 时间单位
+	 * 
 	 * @author Administrator
 	 */
 	public static enum TimeUnit {
@@ -187,42 +198,88 @@ public abstract class DateUtils {
 			return ms;
 		}
 	}
-	
+
 	/**
-	 * 截断时间
-	 * @param d  时间
-	 * @param field 要保留到的field. Calendar类的常量
+	 * 取得截断后日期/时间。注意这个方法不会修改传入的日期时间值，而是创建一个新的对象并返回。
+	 * 
+	 * @param d
+	 *            时间
+	 * @param field
+	 *            要保留到的field. Calendar类的常量
 	 * @return 截断后的时间
 	 */
-	public final static Date truncate(Date d, int field) {
+	public final static void truncate(Date d, int field) {
+		d.setTime(org.apache.commons.lang.time.DateUtils.truncate(d, field).getTime());
+	}
+
+	/**
+	 * 取得截断后日期/时间。
+	 * 
+	 * @param d
+	 *            时间
+	 * @param field
+	 *            要保留到的field. Calendar类的常量
+	 * @return 截断后的时间
+	 */
+	public final static Date getTruncated(Date d, int field) {
 		return org.apache.commons.lang.time.DateUtils.truncate(d, field);
 	}
 
 	/**
-	 * 截断时间
-	 * @param date 时间
-	 * @param field 要保留到的field. Calendar类的常量
+	 * 取得截断后的日期/时间。注意这个方法不会修改传入的日期时间值，而是创建一个新的对象并返回。
+	 * 
+	 * @param date
+	 *            时间
+	 * @param field
+	 *            要保留到的field. Calendar类的常量
 	 * @return 截断后的时间
 	 */
-	public final static Calendar truncate(Calendar date, int field) {
-		return org.apache.commons.lang.time.DateUtils.truncate(date, field);
-    }
-	
+	public final static void truncate(Calendar date, int field) {
+		date.setTimeInMillis(org.apache.commons.lang.time.DateUtils.truncate(date, field).getTimeInMillis());
+	}
+
 	/**
-	 * 去除 时分秒，剩下纯日期
-	 * 和{@link #dayBegin(Date)}相同
-	 * @param d 时间
+	 * 取得截断后的日期/时间。
+	 * 
+	 * @param date
+	 *            时间
+	 * @param field
+	 *            要保留到的field. Calendar类的常量
+	 * @return 截断后的时间
+	 */
+	public final static Calendar getTruncated(Calendar date, int field) {
+		return org.apache.commons.lang.time.DateUtils.truncate(date, field);
+	}
+
+	/**
+	 * 取得截断后的日期。注意这个方法不会修改传入的日期时间值，而是创建一个新的对象并返回。 和{@link #dayBegin(Date)}相同
+	 * 
+	 * @param d
+	 *            时间
 	 * @return 仅日期
 	 * @see #dayBegin(Date)
 	 */
-	public final static Date truncate(Date d) {
+	public final static void truncate(Date d) {
+		d.setTime(org.apache.commons.lang.time.DateUtils.truncate(d, Calendar.DATE).getTime());
+	}
+
+	/**
+	 * 取得截断后的日期。注意这个方法不会修改传入的日期时间值，而是创建一个新的对象并返回。 和{@link #dayBegin(Date)}相同
+	 * 
+	 * @param d
+	 *            时间
+	 * @return 仅日期
+	 * @see #dayBegin(Date)
+	 */
+	public final static Date getTruncated(Date d) {
 		return org.apache.commons.lang.time.DateUtils.truncate(d, Calendar.DATE);
 	}
 
-
 	/**
 	 * 获取天开始的瞬间时间点
+	 * 
 	 * @param d
+	 *            时间点
 	 * @return 仅日期
 	 * @see #truncate(Date)
 	 */
@@ -237,10 +294,12 @@ public abstract class DateUtils {
 		d = org.apache.commons.lang.time.DateUtils.truncate(d, Calendar.DATE);
 		return new Date(d.getTime() + MILLISECONDS_IN_DAY - 1);
 	}
-	
+
 	/**
 	 * 去除 天以后的部分，仅保留年和月，实际上就是当月的开始时间
-	 * @param d 时间
+	 * 
+	 * @param d
+	 *            时间
 	 * @return 时间的年和月部分，指向该月的开始
 	 */
 	public static final Date monthBegin(Date date) {
@@ -248,7 +307,8 @@ public abstract class DateUtils {
 	}
 
 	/**
-	 * 得到当月结束的时间点 
+	 * 得到当月结束的时间点
+	 * 
 	 * @param date
 	 * @return 当月的最后1毫秒
 	 */
@@ -257,33 +317,37 @@ public abstract class DateUtils {
 			return null;
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(date);
-		calendar.set(Calendar.DATE, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));//设置为当月的最后一天
-		calendar=org.apache.commons.lang.time.DateUtils.truncate(calendar, Calendar.DATE);//去除时分秒
-		Date d=calendar.getTime();
-		d.setTime(d.getTime()+MILLISECONDS_IN_DAY-1);							//调整到当天的最后1毫秒
+		calendar.set(Calendar.DATE, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));// 设置为当月的最后一天
+		calendar = org.apache.commons.lang.time.DateUtils.truncate(calendar, Calendar.DATE);// 去除时分秒
+		Date d = calendar.getTime();
+		d.setTime(d.getTime() + MILLISECONDS_IN_DAY - 1); // 调整到当天的最后1毫秒
 		return d;
 	}
-	
+
 	/**
 	 * 返回当月的最后一天
+	 * 
 	 * @param date
 	 * @return 当月的最后一天
 	 */
-	public static final Date lastDayOfMonth(Date date){
+	public static final Date lastDayOfMonth(Date date) {
 		if (date == null)
 			return null;
 		Calendar calendar = Calendar.getInstance();
 		calendar.setTime(date);
-		calendar.set(Calendar.DATE, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));//设置为当月的最后一天
-		calendar=org.apache.commons.lang.time.DateUtils.truncate(calendar, Calendar.DATE);//去除时分秒
+		calendar.set(Calendar.DATE, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));// 设置为当月的最后一天
+		calendar = org.apache.commons.lang.time.DateUtils.truncate(calendar, Calendar.DATE);// 去除时分秒
 		return calendar.getTime();
 	}
 
 	/**
 	 * 判断是否为某个整时间（天、时、分、秒）
+	 * 
 	 * @param d
-	 * @param unit 单位
-	 * @param zone 时区：不同时区的 整“天”是不一样的（即当地的零时）
+	 * @param unit
+	 *            单位
+	 * @param zone
+	 *            时区：不同时区的 整“天”是不一样的（即当地的零时）
 	 * @return
 	 */
 	public static boolean isOnTime(Date d, TimeUnit unit, TimeZone zone) {
@@ -293,8 +357,8 @@ public abstract class DateUtils {
 	}
 
 	/**
-	 * 判断是否为某个整时间（天、时、分、秒）
-	 * 取系统缺省时区
+	 * 判断是否为某个整时间（天、时、分、秒） 取系统缺省时区
+	 * 
 	 * @param d
 	 * @param unit
 	 * @return
@@ -315,8 +379,8 @@ public abstract class DateUtils {
 	}
 
 	/**
-	 * 用指定的模板格式化日期时间
-	 * 这里不知道传入的Format是否线程安全，因此还是同步一次
+	 * 用指定的模板格式化日期时间 这里不知道传入的Format是否线程安全，因此还是同步一次
+	 * 
 	 * @param d
 	 * @param format
 	 * @return
@@ -340,8 +404,8 @@ public abstract class DateUtils {
 	}
 
 	/**
-	 * 用指定的模板格式化日期时间
-	 * 直接传入ThreadLocal对象，确保了线程安全
+	 * 用指定的模板格式化日期时间 直接传入ThreadLocal对象，确保了线程安全
+	 * 
 	 * @param d
 	 * @param format
 	 * @return
@@ -354,6 +418,7 @@ public abstract class DateUtils {
 
 	/**
 	 * 用指定的模板格式化到“当天”
+	 * 
 	 * @param d
 	 * @param dateF
 	 * @param timeF
@@ -382,6 +447,7 @@ public abstract class DateUtils {
 
 	/**
 	 * 用默认的格式（中式日期）解析
+	 * 
 	 * @param s
 	 * @return
 	 * @throws ParseException
@@ -391,12 +457,14 @@ public abstract class DateUtils {
 			return null;
 		return DateFormats.DATE_CS.get().parse(s);
 	}
-	
+
 	/**
 	 * 用默认的格式（中式日期时间）解析
+	 * 
 	 * @param s
 	 * @return
-	 * @throws ParseException 解析失败抛出
+	 * @throws ParseException
+	 *             解析失败抛出
 	 */
 	public static Date parseDateTime(String s) throws ParseException {
 		if (StringUtils.isBlank(s))
@@ -406,13 +474,15 @@ public abstract class DateUtils {
 
 	/**
 	 * 用默认的格式（中式日期时间）解析
+	 * 
 	 * @param s
 	 * @param defaultValue
 	 * @return
-	 * @throws ParseException 如果未指定缺省值，解析失败时抛出
+	 * @throws ParseException
+	 *             如果未指定缺省值，解析失败时抛出
 	 */
-	
-	public static Date parseDateTime(String s, Date defaultValue){
+
+	public static Date parseDateTime(String s, Date defaultValue) {
 		if (StringUtils.isBlank(s))
 			return null;
 		try {
@@ -424,6 +494,7 @@ public abstract class DateUtils {
 
 	/**
 	 * 解析日期时间 非法则抛出异常
+	 * 
 	 * @param s
 	 * @param format
 	 * @return
@@ -445,28 +516,25 @@ public abstract class DateUtils {
 			return null;
 		return format.parse(s);
 	}
-	
+
 	/**
-	 * 自动解析(猜测)日期格式               (某些特殊场景下可能解释错误)
-	 * 支持:中式日期、中式日期时间 yyyy-mm-dd
-	 *      美式日期、美式日期时间 MM/dd/yyyy HH:mm:ss
-	 *      8位数字日期   yyyyMMdd
-	 *      14位数字日期时间  yyyyMMddHHmmss
-	 *      12位数字时间：yyyyMMddHHmm无秒数
-	 *      毫秒数
+	 * 自动解析(猜测)日期格式 (某些特殊场景下可能解释错误) 支持:中式日期、中式日期时间 yyyy-mm-dd 美式日期、美式日期时间
+	 * MM/dd/yyyy HH:mm:ss 8位数字日期 yyyyMMdd 14位数字日期时间 yyyyMMddHHmmss
+	 * 12位数字时间：yyyyMMddHHmm无秒数 毫秒数
+	 * 
 	 * @param dateStr
 	 * @return 尽可能的猜测并解析时间。如果无法解析则返回null。
 	 */
 	public static Date autoParse(String dateStr) {
 		try {
-			int indexOfDash=dateStr.indexOf('-');
-			if ( indexOfDash> 0) {// 按中式日期格式化(注意，首位为‘-’可能是负数日期，此处不应处理)
-				if(indexOfDash==2){//尝试修复仅有两位数的年
-					int year=StringUtils.toInt(dateStr.substring(0,indexOfDash), -1);
-					if(year>=50){//当年份只有两位数时，只能猜测是19xx年还是20xx年。
-						dateStr="19"+dateStr;
-					}else if(year>=0){
-						dateStr="20"+dateStr;
+			int indexOfDash = dateStr.indexOf('-');
+			if (indexOfDash > 0) {// 按中式日期格式化(注意，首位为‘-’可能是负数日期，此处不应处理)
+				if (indexOfDash == 2) {// 尝试修复仅有两位数的年
+					int year = StringUtils.toInt(dateStr.substring(0, indexOfDash), -1);
+					if (year >= 50) {// 当年份只有两位数时，只能猜测是19xx年还是20xx年。
+						dateStr = "19" + dateStr;
+					} else if (year >= 0) {
+						dateStr = "20" + dateStr;
 					}
 				}
 				if (dateStr.indexOf(':') > -1) {// 带时间
@@ -482,12 +550,12 @@ public abstract class DateUtils {
 				}
 			} else if (dateStr.length() == 8 && StringUtils.isNumeric(dateStr) && (dateStr.startsWith("19") || dateStr.startsWith("20"))) {// 按8位数字格式化
 				return DateFormats.DATE_SHORT.get().parse(dateStr);
-			} else if (dateStr.length() == 14 && StringUtils.isNumeric(dateStr)&& (dateStr.startsWith("19") || dateStr.startsWith("20"))) {// 按14位数字格式化yyyyMMDDHHMMSS
+			} else if (dateStr.length() == 14 && StringUtils.isNumeric(dateStr) && (dateStr.startsWith("19") || dateStr.startsWith("20"))) {// 按14位数字格式化yyyyMMDDHHMMSS
 				return DateFormats.DATE_TIME_SHORT_14.get().parse(dateStr);
-			} else if (dateStr.length() == 12 && StringUtils.isNumeric(dateStr)&& (dateStr.startsWith("19") || dateStr.startsWith("20"))) {// 按12位数字格式化yyyyMMDDHHMM
-				return DateFormats.DATE_TIME_SHORT_12.get().parse(dateStr);				
+			} else if (dateStr.length() == 12 && StringUtils.isNumeric(dateStr) && (dateStr.startsWith("19") || dateStr.startsWith("20"))) {// 按12位数字格式化yyyyMMDDHHMM
+				return DateFormats.DATE_TIME_SHORT_12.get().parse(dateStr);
 			} else if (StringUtils.isNumericOrMinus(dateStr)) {
-				long value=Long.valueOf(dateStr).longValue();
+				long value = Long.valueOf(dateStr).longValue();
 				return new Date(value);
 			} else {
 				return null;
@@ -496,12 +564,11 @@ public abstract class DateUtils {
 			return null;
 		}
 	}
-	
 
 	/**
 	 * 解析日期 非法返回指定缺省值
-	 * @return 如果输入为空白字符串，返回defaultValue
-	 *  如果解析中出现异常，返回defaultValue
+	 * 
+	 * @return 如果输入为空白字符串，返回defaultValue 如果解析中出现异常，返回defaultValue
 	 * @throws不会抛出ParseException
 	 */
 	public static Date parse(String s, DateFormat format, Date defaultValue) {
@@ -514,11 +581,11 @@ public abstract class DateUtils {
 			return defaultValue;
 		}
 	}
-	
+
 	/**
 	 * 解析日期 非法返回指定缺省值
-	 * @return 如果输入为空白字符串，返回defaultValue
-	 *  如果解析中出现异常，返回defaultValue
+	 * 
+	 * @return 如果输入为空白字符串，返回defaultValue 如果解析中出现异常，返回defaultValue
 	 * @throws不会抛出ParseException
 	 */
 	public static Date parse(String s, ThreadLocal<DateFormat> format, Date defaultValue) {
@@ -534,8 +601,8 @@ public abstract class DateUtils {
 
 	/**
 	 * 解析日期 非法返回指定缺省值
-	 * @return 如果输入为空白字符串，返回defaultValue
-	 *  如果解析中出现异常，返回defaultValue
+	 * 
+	 * @return 如果输入为空白字符串，返回defaultValue 如果解析中出现异常，返回defaultValue
 	 * @throws不会抛出ParseException
 	 */
 	public static Date parse(String s, String format, Date defaultValue) throws ParseException {
@@ -550,6 +617,7 @@ public abstract class DateUtils {
 
 	/**
 	 * return true if the date 1 and date 2 is on the same day
+	 * 
 	 * @param d1
 	 * @param d2
 	 * @return
@@ -561,20 +629,23 @@ public abstract class DateUtils {
 			return false;
 		return org.apache.commons.lang.time.DateUtils.isSameDay(d1, d2);
 	}
-	
-	
+
 	/**
 	 * 是否同一个月内
-	 * @param d1 日期1
-	 * @param d2 日期2
+	 * 
+	 * @param d1
+	 *            日期1
+	 * @param d2
+	 *            日期2
 	 * @return
 	 */
 	public static boolean isSameMonth(Date d1, Date d2) {
-		return truncate(d1, Calendar.MONTH).getTime()==truncate(d2,Calendar.MONTH).getTime();
+		return getTruncated(d1, Calendar.MONTH).getTime() == getTruncated(d2, Calendar.MONTH).getTime();
 	}
 
 	/**
 	 * 得到年份
+	 * 
 	 * @param d
 	 * @return
 	 */
@@ -588,6 +659,7 @@ public abstract class DateUtils {
 
 	/**
 	 * 得到月份 (1~12)
+	 * 
 	 * @param d
 	 * @return 月份，范围 [1,12]。
 	 */
@@ -598,9 +670,10 @@ public abstract class DateUtils {
 		c.setTime(d);
 		return c.get(Calendar.MONTH) + 1;
 	}
-	
+
 	/**
 	 * 得到当月时的天数
+	 * 
 	 * @param d
 	 * @return
 	 */
@@ -614,79 +687,94 @@ public abstract class DateUtils {
 
 	/**
 	 * 得到当天是星期几
+	 * 
 	 * @param d
 	 * @return 0: 周日,1~6 周一到周六
-	 * 注意返回值和Calendar定义的sunday等常量不同，而是星期一返回数字1。这是为更符合中国人的习惯。
-	 * 如果传入null，那么返回-1表示无效。
+	 *         注意返回值和Calendar定义的sunday等常量不同，而是星期一返回数字1。这是为更符合中国人的习惯。
+	 *         如果传入null，那么返回-1表示无效。
 	 */
 	public static int getWeekDay(Date d) {
 		if (d == null)
 			return -1;
 		final Calendar c = new GregorianCalendar();
 		c.setTime(d);
-		return c.get(Calendar.DAY_OF_WEEK)-1;
+		return c.get(Calendar.DAY_OF_WEEK) - 1;
 	}
-	
+
 	/**
 	 * 返回传入日期所在周的第一天。<br>
-	 * 按天主教习惯，星期天 作为每周的第一天<p>
-	 * A Week is Sunday ~ Saturday<p>
+	 * 按天主教习惯，星期天 作为每周的第一天
+	 * <p>
+	 * A Week is Sunday ~ Saturday
+	 * <p>
 	 * 
 	 * @param date
-	 * @return The first day of the week. Note: only the date was adjusted. time is kept as original.
+	 * @return The first day of the week. Note: only the date was adjusted. time
+	 *         is kept as original.
 	 */
-	public static Date weekBeginUS(Date date){
-		return toWeekDayUS(date,0);
+	public static Date weekBeginUS(Date date) {
+		return toWeekDayUS(date, 0);
 	}
-	
+
 	/**
-	 * 返回传入日期所在周的最后一天。
-	 * 按天主教习惯，星期六 作为每周的最后一天<p>
-	 * A Week is Sunday ~ Saturday<p>
+	 * 返回传入日期所在周的最后一天。 按天主教习惯，星期六 作为每周的最后一天
+	 * <p>
+	 * A Week is Sunday ~ Saturday
+	 * <p>
 	 * 
 	 * @param date
-	 * @return The last day of the week. Note: only the date was adjusted. time is kept as original.
+	 * @return The last day of the week. Note: only the date was adjusted. time
+	 *         is kept as original.
 	 */
-	public static Date weekEndUS(Date date){
-		return toWeekDayUS(date,6);
+	public static Date weekEndUS(Date date) {
+		return toWeekDayUS(date, 6);
 	}
-	
+
 	/**
 	 * 返回传入日期所在周的第一天。<br>
-	 * 按中国和大部分欧洲习惯，星期一 作为每周的第一天<p>
-	 * A Week is Monday ~ Sunday<p>
+	 * 按中国和大部分欧洲习惯，星期一 作为每周的第一天
+	 * <p>
+	 * A Week is Monday ~ Sunday
+	 * <p>
 	 * 
 	 * @param date
-	 * @return The first day of the week. Note: only the date was adjusted. time is kept as original.
+	 * @return The first day of the week. Note: only the date was adjusted. time
+	 *         is kept as original.
 	 */
-	public static Date weekBegin(Date date){
-		return toWeekDayCS(date,1);
+	public static Date weekBegin(Date date) {
+		return toWeekDayCS(date, 1);
 	}
-	
+
 	/**
 	 * 返回传入日期所在周的最后一天。<br>
-	 * 按中国和大部分欧洲习惯，星期天 作为每周的最后一天<p>
-	 * A Week is Monday ~ Sunday<p>
+	 * 按中国和大部分欧洲习惯，星期天 作为每周的最后一天
+	 * <p>
+	 * A Week is Monday ~ Sunday
+	 * <p>
+	 * 
 	 * @param date
-	 * @return The last day of the week. Note: only the date was adjusted. time is kept as original.
+	 * @return The last day of the week. Note: only the date was adjusted. time
+	 *         is kept as original.
 	 */
-	public static Date weekEnd(Date date){
-		return toWeekDayCS(date,7);
+	public static Date weekEnd(Date date) {
+		return toWeekDayCS(date, 7);
 	}
 
 	private static Date toWeekDayCS(Date date, int expect) {
-		int day=getWeekDay(date);
-		if(day==0)day=7;
-		return adjustDate(date, 0,0,expect-day);
+		int day = getWeekDay(date);
+		if (day == 0)
+			day = 7;
+		return adjustDate(date, 0, 0, expect - day);
 	}
 
 	private static Date toWeekDayUS(Date date, int expect) {
-		int day=getWeekDay(date);
-		return adjustDate(date,0,0, expect-day);
+		int day = getWeekDay(date);
+		return adjustDate(date, 0, 0, expect - day);
 	}
-	
+
 	/**
 	 * 得到小时数：24小时制
+	 * 
 	 * @param d
 	 * @return 24小时制的小时数
 	 */
@@ -697,9 +785,10 @@ public abstract class DateUtils {
 		c.setTime(d);
 		return c.get(Calendar.HOUR_OF_DAY);
 	}
-	
+
 	/**
 	 * 获得该时间的分数
+	 * 
 	 * @param d
 	 * @return
 	 */
@@ -710,9 +799,10 @@ public abstract class DateUtils {
 		c.setTime(d);
 		return c.get(Calendar.MINUTE);
 	}
-	
+
 	/**
 	 * 获得该时间的秒数
+	 * 
 	 * @param d
 	 * @return
 	 */
@@ -726,39 +816,41 @@ public abstract class DateUtils {
 
 	/**
 	 * 以数组的形式，返回年、月、日三个值
+	 * 
 	 * @param d
 	 * @return int[]{year, month, day}，其中month的范围是1~12。
 	 * 
 	 */
-	public static int[] getYMD(Date d){
-		int[] ymd=new int[3];
+	public static int[] getYMD(Date d) {
+		int[] ymd = new int[3];
 		if (d == null)
 			return ymd;
 		final Calendar c = new GregorianCalendar();
 		c.setTime(d);
-		ymd[0]=c.get(Calendar.YEAR);
-		ymd[1]=c.get(Calendar.MONTH)+1;
-		ymd[2]=c.get(Calendar.DAY_OF_MONTH);
+		ymd[0] = c.get(Calendar.YEAR);
+		ymd[1] = c.get(Calendar.MONTH) + 1;
+		ymd[2] = c.get(Calendar.DAY_OF_MONTH);
 		return ymd;
 	}
-	
+
 	/**
 	 * 以数组的形式，返回时、分、秒 三个值
+	 * 
 	 * @param d
 	 * @return
 	 */
-	public static int[] getHMS(Date d){
-		int[] hms=new int[3];
+	public static int[] getHMS(Date d) {
+		int[] hms = new int[3];
 		if (d == null)
 			return hms;
 		final Calendar c = new GregorianCalendar();
 		c.setTime(d);
-		hms[0]=c.get(Calendar.HOUR_OF_DAY);
-		hms[1]=c.get(Calendar.MINUTE);
-		hms[2]=c.get(Calendar.SECOND);
+		hms[0] = c.get(Calendar.HOUR_OF_DAY);
+		hms[1] = c.get(Calendar.MINUTE);
+		hms[2] = c.get(Calendar.SECOND);
 		return hms;
 	}
-	
+
 	/**
 	 * 在指定日期上减去1毫秒
 	 * 
@@ -826,10 +918,15 @@ public abstract class DateUtils {
 	/**
 	 * 
 	 * 在原日期上增加指定的 年、月、日数 。这个方法不会修改传入的Date对象，而是一个新的Date对象
-	 * @param date 原日期时间
-	 * @param year 增加的年（可为负数）
-	 * @param month 增加的月（可为负数）
-	 * @param day 增加的日（可为负数）
+	 * 
+	 * @param date
+	 *            原日期时间
+	 * @param year
+	 *            增加的年（可为负数）
+	 * @param month
+	 *            增加的月（可为负数）
+	 * @param day
+	 *            增加的日（可为负数）
 	 * @return 调整后的日期（新的日期对象）
 	 */
 	public static Date adjustDate(Date date, int year, int month, int day) {
@@ -842,11 +939,16 @@ public abstract class DateUtils {
 	}
 
 	/**
-	 * 在原日期上增加指定的  时、分、秒数 。这个方法不会修改传入的Date对象，而是一个新的Date对象
-	 * @param date 原日期时间
-	 * @param hour 增加的时（可为负数）
-	 * @param minute 增加的分（可为负数）
-	 * @param second 增加的秒（可为负数）
+	 * 在原日期上增加指定的 时、分、秒数 。这个方法不会修改传入的Date对象，而是一个新的Date对象
+	 * 
+	 * @param date
+	 *            原日期时间
+	 * @param hour
+	 *            增加的时（可为负数）
+	 * @param minute
+	 *            增加的分（可为负数）
+	 * @param second
+	 *            增加的秒（可为负数）
 	 * @return 调整后的日期时间（新的日期对象）
 	 */
 	public static Date adjustTime(Date date, int hour, int minute, int second) {
@@ -860,8 +962,11 @@ public abstract class DateUtils {
 
 	/**
 	 * 在原日期上调整指定的毫秒并返回新对象。这个方法不会修改传入的Date对象，而是一个新的Date对象。
-	 * @param date 原日期时间
-	 * @param mills 毫秒数（可为负数） 
+	 * 
+	 * @param date
+	 *            原日期时间
+	 * @param mills
+	 *            毫秒数（可为负数）
 	 * @return 调整后的日期时间（新的日期对象）
 	 * 
 	 */
@@ -882,11 +987,12 @@ public abstract class DateUtils {
 	 * @deprecated use {@link #get(int, int, int)} instead.
 	 */
 	public static final Date getDate(int year, int month, int date) {
-		return get(year,month,date);
+		return get(year, month, date);
 	}
-	
+
 	/**
 	 * 获取一个日期对象(java.util.Date)
+	 * 
 	 * @param year
 	 *            格式为：2004
 	 * @param month
@@ -897,24 +1003,26 @@ public abstract class DateUtils {
 	 */
 	public static final Date get(int year, int month, int date) {
 		Calendar calendar = Calendar.getInstance();
-		calendar.set(year, month - 1, date,0,0,0);
+		calendar.set(year, month - 1, date, 0, 0, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
 		return calendar.getTime();
 	}
+
 	/**
 	 * 获取一个日期对象(java.sql.Date)
+	 * 
 	 * @param year
 	 * @param month
 	 * @param date
 	 * @return
 	 */
-	public static final java.sql.Date getSqlDate(int year, int month, int date){
+	public static final java.sql.Date getSqlDate(int year, int month, int date) {
 		Calendar calendar = Calendar.getInstance();
-		calendar.set(year, month - 1, date,0,0,0);
+		calendar.set(year, month - 1, date, 0, 0, 0);
 		calendar.set(Calendar.MILLISECOND, 0);
 		return new java.sql.Date(calendar.getTime().getTime());
 	}
-	
+
 	/**
 	 * 获取一个时间对象
 	 * 
@@ -924,9 +1032,12 @@ public abstract class DateUtils {
 	 *            从1开始
 	 * @param date
 	 *            从1开始
-	 * @param hour 小时(0-24)
-	 * @param minute 分(0-59)
-	 * @param second 秒(0-59)
+	 * @param hour
+	 *            小时(0-24)
+	 * @param minute
+	 *            分(0-59)
+	 * @param second
+	 *            秒(0-59)
 	 * @return Date
 	 */
 	public static final Date get(int year, int month, int date, int hour, int minute, int second) {
@@ -935,7 +1046,7 @@ public abstract class DateUtils {
 		calendar.set(Calendar.MILLISECOND, 0);
 		return calendar.getTime();
 	}
-	
+
 	/**
 	 * 获取一个时间对象
 	 * 
@@ -945,14 +1056,17 @@ public abstract class DateUtils {
 	 *            从1开始
 	 * @param date
 	 *            从1开始
-	 * @param hour 小时(0-24)
-	 * @param minute 分(0-59)
-	 * @param second 秒(0-59)
+	 * @param hour
+	 *            小时(0-24)
+	 * @param minute
+	 *            分(0-59)
+	 * @param second
+	 *            秒(0-59)
 	 * @return Date
 	 * @deprecated Use {@link #get(int, int, int, int, int, int)} instead.
 	 */
 	public static final Date getDate(int year, int month, int date, int hour, int minute, int second) {
-		return get(year,month,date,hour,minute,second);
+		return get(year, month, date, hour, minute, second);
 	}
 
 	/**
@@ -963,13 +1077,14 @@ public abstract class DateUtils {
 	 * @return
 	 */
 	public static final int daySubtract(Date a, Date b) {
-		int offset=TimeZone.getDefault().getRawOffset();
-		int date = (int) (((a.getTime()+offset) / MILLISECONDS_IN_DAY - (b.getTime()+offset) / MILLISECONDS_IN_DAY));
+		int offset = TimeZone.getDefault().getRawOffset();
+		int date = (int) (((a.getTime() + offset) / MILLISECONDS_IN_DAY - (b.getTime() + offset) / MILLISECONDS_IN_DAY));
 		return date;
 	}
 
 	/**
 	 * 返回两个时间相差多少秒
+	 * 
 	 * @param a
 	 * @param b
 	 * @return
@@ -977,9 +1092,10 @@ public abstract class DateUtils {
 	public static final long secondSubtract(Date a, Date b) {
 		return ((a.getTime() - b.getTime()) / 1000);
 	}
-	
+
 	/**
 	 * 得到当月包含的天数
+	 * 
 	 * @param date
 	 * @return 2月返回28或29，1月返回31
 	 */
@@ -993,6 +1109,7 @@ public abstract class DateUtils {
 
 	/**
 	 * 格式化时间段
+	 * 
 	 * @param second
 	 * @return
 	 */
@@ -1009,20 +1126,21 @@ public abstract class DateUtils {
 	 * @return
 	 */
 	public static String formatTimePeriod(long second, TimeUnit maxUnit, Locale locale) {
-		if(locale==null)locale=Locale.getDefault();
+		if (locale == null)
+			locale = Locale.getDefault();
 		if (maxUnit == null) {
 			maxUnit = TimeUnit.DAY;
 			if (second < SECONDS_IN_DAY)
 				maxUnit = TimeUnit.HOUR;
 			if (second < SECONDS_IN_HOUR)
 				maxUnit = TimeUnit.MINUTE;
-			if(second< SECONDS_IN_MINITE)
-				maxUnit=TimeUnit.SECOND;
+			if (second < SECONDS_IN_MINITE)
+				maxUnit = TimeUnit.SECOND;
 		}
 		StringBuilder sb = new StringBuilder();
 		if (maxUnit.ms >= TimeUnit.DAY.ms) {
-			int days=(int)(second / SECONDS_IN_DAY);
-			if(days>0){
+			int days = (int) (second / SECONDS_IN_DAY);
+			if (days > 0) {
 				sb.append(days);
 				if (Locale.US == locale) {
 					sb.append("days ");
@@ -1033,54 +1151,56 @@ public abstract class DateUtils {
 			}
 		}
 		if (maxUnit.ms >= TimeUnit.HOUR.ms) {
-			int hours=(int)(second / SECONDS_IN_HOUR);
-			if(hours>0){
+			int hours = (int) (second / SECONDS_IN_HOUR);
+			if (hours > 0) {
 				sb.append(hours);
 				if (Locale.US == locale) {
 					sb.append("hours ");
 				} else {
 					sb.append("小时");
 				}
-				second = second - SECONDS_IN_HOUR * hours;	
+				second = second - SECONDS_IN_HOUR * hours;
 			}
 		}
 		if (maxUnit.ms >= TimeUnit.MINUTE.ms) {
-			int min=(int)(second / SECONDS_IN_MINITE);
-			if(min>0){
+			int min = (int) (second / SECONDS_IN_MINITE);
+			if (min > 0) {
 				sb.append(min);
 				if (Locale.US == locale) {
 					sb.append("minutes ");
 				} else {
 					sb.append("分");
 				}
-				second = second - SECONDS_IN_MINITE * min;	
+				second = second - SECONDS_IN_MINITE * min;
 			}
 		}
-		if(second>0){
+		if (second > 0) {
 			if (Locale.US == locale) {
 				sb.append(second).append("seconds");
 			} else {
 				sb.append(second).append("秒");
-			}	
+			}
 		}
 		return sb.toString();
 	}
 
 	/**
 	 * 返回“昨天”的同一时间
+	 * 
 	 * @return
 	 */
 	public static Date yesterday() {
 		return futureDay(-1);
 	}
-	
+
 	/**
 	 * 返回未来多少天的同一时间
+	 * 
 	 * @param i
 	 * @return
 	 */
 	public static Date futureDay(int i) {
-		return new Date(System.currentTimeMillis() + (long)MILLISECONDS_IN_DAY * i);
+		return new Date(System.currentTimeMillis() + (long) MILLISECONDS_IN_DAY * i);
 	}
 
 	/**
@@ -1095,8 +1215,8 @@ public abstract class DateUtils {
 	}
 
 	/**
-	 * 月份遍历器
-	 * 指定两个日期，遍历两个日期间的所有月份。（包含开始时间和结束时间所在的月份）
+	 * 月份遍历器 指定两个日期，遍历两个日期间的所有月份。（包含开始时间和结束时间所在的月份）
+	 * 
 	 * @param includeStart
 	 * @param includeEnd
 	 * @return
@@ -1106,56 +1226,63 @@ public abstract class DateUtils {
 	}
 
 	/**
-	 * 日遍历器
-	 * 指定两个时间，遍历两个日期间的所有天。（包含开始时间和结束时间所在的天）
-	 * @param includeStart the begin date.(include)
-	 * @param excludeEnd   the end date(include)
-	 * @return A Iterable object that can iterate the date. 
+	 * 日遍历器 指定两个时间，遍历两个日期间的所有天。（包含开始时间和结束时间所在的天）
+	 * 
+	 * @param includeStart
+	 *            the begin date.(include)
+	 * @param excludeEnd
+	 *            the end date(include)
+	 * @return A Iterable object that can iterate the date.
 	 */
 	public static Iterable<Date> dayIterator(final Date includeStart, final Date includeEnd) {
 		return new TimeIterable(includeStart, includeEnd, Calendar.DATE).setIncludeEndDate(true);
 	}
+
 	/**
 	 * 返回今天
+	 * 
 	 * @return the begin of today.
 	 */
-	public static Date today(){
+	public static Date today() {
 		return org.apache.commons.lang.time.DateUtils.truncate(new Date(), Calendar.DATE);
 	}
-	
+
 	/**
 	 * 返回今天
+	 * 
 	 * @return
 	 */
-	public static java.sql.Date sqlToday(){
+	public static java.sql.Date sqlToday() {
 		return new java.sql.Date(org.apache.commons.lang.time.DateUtils.truncate(new Date(), Calendar.DATE).getTime());
 	}
-	
+
 	/**
 	 * 返回现在
+	 * 
 	 * @return
 	 */
-	public static java.sql.Timestamp sqlNow(){
+	public static java.sql.Timestamp sqlNow() {
 		return new java.sql.Timestamp(System.currentTimeMillis());
 	}
-	
+
 	/**
 	 * 返回现在时间
+	 * 
 	 * @return the current date time.
 	 */
-	public static Date now(){
+	public static Date now() {
 		return new Date();
 	}
-	
+
 	/**
 	 * 指定时间是否为一天的开始
+	 * 
 	 * @param date
 	 * @return true if the date is the begin of day.
 	 */
 	public static boolean isDayBegin(Date date) {
-		Date d1= org.apache.commons.lang.time.DateUtils.truncate(date, Calendar.DATE);
-		return d1.getTime()==date.getTime();
+		Date d1 = org.apache.commons.lang.time.DateUtils.truncate(date, Calendar.DATE);
+		return d1.getTime() == date.getTime();
 	}
-	
-	
+
 }
