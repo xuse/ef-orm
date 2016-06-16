@@ -135,10 +135,10 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 替换最后一个出现
 	 * 
-	 * @param text
-	 * @param searchString
-	 * @param replacement
-	 * @return
+	 * @param text 传入字符串
+	 * @param searchString 查找字符串
+	 * @param replacement 要替换为字符串
+	 * @return 替换后的字符串
 	 */
 	public static String replaceLast(String text, char searchString, char replacement) {
 		if (isEmpty(text))

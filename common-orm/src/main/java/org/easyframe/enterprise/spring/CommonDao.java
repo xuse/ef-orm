@@ -480,6 +480,13 @@ public interface CommonDao{
 	<T> int batchInsert(List<T> entities);
 	
 	/**
+	 * 批量插入，使用extreme模式插入
+	 * @param entities  要写入的对象列表
+	 * @return 影响记录行数
+	 */
+	<T> int extremeInsert(List<T> entities);
+	
+	/**
 	 * 批量插入
 	 * @param entities  要写入的对象列表
 	 * @param doGroup  是否对每条记录重新分组。{@linkplain jef.database.Batch#isGroupForPartitionTable 什么是重新分组}

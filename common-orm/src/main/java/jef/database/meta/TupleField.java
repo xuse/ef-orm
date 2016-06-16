@@ -1,8 +1,6 @@
 package jef.database.meta;
 
-import jef.database.DbUtils;
 import jef.database.MetadataContainer;
-import jef.database.dialect.DatabaseDialect;
 
 @SuppressWarnings("serial")
 public class TupleField implements jef.database.Field, MetadataContainer {

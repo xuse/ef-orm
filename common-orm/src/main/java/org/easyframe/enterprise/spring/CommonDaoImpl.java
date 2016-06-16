@@ -504,7 +504,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			if (meta.getType() == EntityType.POJO) {
 				IQueryableEntity bean = meta.newInstance();
 				DbUtils.setPrimaryKeyValue(bean, id);
-				PojoWrapper wrapper = (PojoWrapper) getSession().load(bean,true);
+				PojoWrapper wrapper = (PojoWrapper) getSession().load(bean, true);
 				return (T) wrapper.get();
 			} else {
 				return (T) getSession().load(meta, (Serializable) id);
@@ -543,6 +543,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			return null;
 		return (List<T>) findByField(MetaHolder.getMeta(meta), propertyName, value);
 	}
+
 	@SuppressWarnings("unchecked")
 	public <T> ResultIterator<T> iterate(T obj) {
 		if (obj == null)
@@ -586,6 +587,15 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 
 	public <T> int batchInsert(List<T> entities) {
 		return batchInsert(entities, null);
+	}
+
+	public <T> int extremeInsert(List<T> entities) {
+		try {
+			getSession().extremeInsert(entities, null);
+			return entities.size();
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
 	}
 
 	public <T> int batchInsert(List<T> entities, Boolean doGroup) {
@@ -653,7 +663,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	}
 
 	@Override
-	public <T> T loadByField(ITableMetadata meta, String field, Serializable value,boolean unique) {
+	public <T> T loadByField(ITableMetadata meta, String field, Serializable value, boolean unique) {
 		if (meta == null || field == null) {
 			return null;
 		}
@@ -662,7 +672,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			throw new IllegalArgumentException("There's no field [" + field + "] in " + meta.getName());
 		}
 		try {
-			return (T) getSession().loadByField(def.field(), value,unique);
+			return (T) getSession().loadByField(def.field(), value, unique);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -676,20 +686,18 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			throw DbUtils.toRuntimeException(e);
 		}
 	}
-	
-	
 
 	@Override
 	public <T extends IQueryableEntity> T loadByField(Field field, Object value, boolean unique) {
 		try {
-			return (T) getSession().loadByField(field, value,unique);
+			return (T) getSession().loadByField(field, value, unique);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
 	@Override
-	public <T> T loadByField(Class<T> clz, String field, Serializable value,boolean unique) {
+	public <T> T loadByField(Class<T> clz, String field, Serializable value, boolean unique) {
 		if (clz == null || field == null) {
 			return null;
 		}
@@ -699,7 +707,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			throw new IllegalArgumentException("There's no field [" + field + "] in " + clz.getName());
 		}
 		try {
-			return (T) getSession().loadByField(def.field(), value,unique);
+			return (T) getSession().loadByField(def.field(), value, unique);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -737,7 +745,6 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			throw DbUtils.toRuntimeException(e);
 		}
 	}
-
 
 	@Override
 	public int removeByField(ITableMetadata meta, String field, Serializable value) {

@@ -225,7 +225,8 @@ public abstract class Session {
 	 * 
 	 * <h3>使用示例</h3>
 	 * 
-	 * <pre><code>NativeQuery&lt;ResultWrapper&gt; query = db.createNamedQuery("unionQuery-1", ResultWrapper.class);
+	 * <pre>
+	 * <code>NativeQuery&lt;ResultWrapper&gt; query = db.createNamedQuery("unionQuery-1", ResultWrapper.class);
 	 *List<ResultWrapper> result = query.getResultList();
 	 *
 	 *配置在named-queries.xml中的SQL语句
@@ -234,17 +235,19 @@ public abstract class Session {
 	 *select * from(
 	 *(select upper(t1.person_name) AS name, T1.gender, '1' AS GRADE, T2.NAME AS SCHOOLNAME
 	 *	from T_PERSON T1
- 	 *	inner join SCHOOL T2 ON T1.CURRENT_SCHOOL_ID=T2.ID)	 
- 	 *  union 
- 	 *(select t.NAME,t.GENDER,t.GRADE,'Unknown' AS SCHOOLNAME from STUDENT t)) a
+	 *	inner join SCHOOL T2 ON T1.CURRENT_SCHOOL_ID=T2.ID)	 
+	 *  union 
+	 *(select t.NAME,t.GENDER,t.GRADE,'Unknown' AS SCHOOLNAME from STUDENT t)) a
 	 *]]&gt;
 	 *&lt;/query&gt;</code>
 	 * 
 	 * <pre>
 	 * 即使用本方法返回的NativeQuery对象上，可以执行和该SQL语句相关的各种操作。
 	 * 
-	 * @param name           数据库中或者文件中配置的命名查询的名称
-	 * @param resultWrapper  想要的查询结果包装类型
+	 * @param name
+	 *            数据库中或者文件中配置的命名查询的名称
+	 * @param resultWrapper
+	 *            想要的查询结果包装类型
 	 * @return 查询对象(NativeQuery)
 	 * @see NativeQuery
 	 */
@@ -340,12 +343,10 @@ public abstract class Session {
 	 *            参数的类型，用法如下：
 	 *            <ul>
 	 *            <li>凡是入参，直接传入类型，如String.class， Long.class</li>
-	 *            <li>
-	 *            出参，单个的写作OutParam.typeOf(type)，例如OutParam.typeOf(Integer.class)
-	 *            </li>
-	 *            <li>
-	 *            出参，以游标形式返回多个的写作OutParam.listOf(type)，例如OutParam.listOf(Entity
-	 *            .class)</li>
+	 *            <li>出参，单个的写作OutParam.typeOf(type)，例如OutParam.typeOf(Integer.
+	 *            class)</li>
+	 *            <li>出参，以游标形式返回多个的写作OutParam.listOf(type)，例如OutParam.listOf(
+	 *            Entity .class)</li>
 	 *            </ul>
 	 * @return 调用对象NativeCall
 	 * @throws SQLException
@@ -364,12 +365,10 @@ public abstract class Session {
 	 *            参数的类型，用法如下
 	 *            <ul>
 	 *            <li>凡是入参，直接传入类型，如String.class， Long.class</li>
-	 *            <li>
-	 *            出参，单个的写作OutParam.typeOf(type)，例如OutParam.typeOf(Integer.class)
-	 *            </li>
-	 *            <li>
-	 *            出参，以游标形式返回多个的写作OutParam.listOf(type)，例如OutParam.listOf(Entity
-	 *            .class)</li>
+	 *            <li>出参，单个的写作OutParam.typeOf(type)，例如OutParam.typeOf(Integer.
+	 *            class)</li>
+	 *            <li>出参，以游标形式返回多个的写作OutParam.listOf(type)，例如OutParam.listOf(
+	 *            Entity .class)</li>
 	 *            </ul>
 	 * @return 调用对象NativeCall
 	 * @throws SQLException
@@ -892,7 +891,8 @@ public abstract class Session {
 	}
 
 	/**
-	 * 遍历器模式查找，一般用于超大结果集的返回。 <h3>作用</h3> 当结果集超大时，如果用List<T>返回，内存占用很大甚至会溢出。<br>
+	 * 遍历器模式查找，一般用于超大结果集的返回。
+	 * <h3>作用</h3> 当结果集超大时，如果用List<T>返回，内存占用很大甚至会溢出。<br>
 	 * JDBC设计时考虑到这个问题，因此其返回的ResultSet对象只是查询结果视图的一段，用户向后滚动结果集时，数据库才将需要的数据传到客户端。
 	 * 如果客户端不缓存整个结果集，那么前面已经滚动过的结果数据就被释放。
 	 * <p>
@@ -975,7 +975,8 @@ public abstract class Session {
 	}
 
 	/**
-	 * 遍历器模式查找，一般用于超大结果集的返回。 <h3>作用</h3> 当结果集超大时，如果用List<T>返回，内存占用很大甚至会溢出。<br>
+	 * 遍历器模式查找，一般用于超大结果集的返回。
+	 * <h3>作用</h3> 当结果集超大时，如果用List<T>返回，内存占用很大甚至会溢出。<br>
 	 * JDBC设计时考虑到这个问题，因此其返回的ResultSet对象只是查询结果视图的一段，用户向后滚动结果集时，数据库才将需要的数据传到客户端。
 	 * 如果客户端不缓存整个结果集，那么前面已经滚动过的结果数据就被释放。
 	 * <p>
@@ -1059,8 +1060,9 @@ public abstract class Session {
 	 * 
 	 * <h3>实现原理</h3> RecordHolder对象，是JDBC ResultSet的封装<br>
 	 * 实质对用JDBC中ResultSet的updateRow,deleteRow,insertRow等方法，<br>
-	 * 该操作模型需要持有ResultSet对象，因此注意使用完毕后要close()方法关闭结果集。 <h3>注意事项</h3>
-	 * RecordHolder对象需要手动关闭。如果不关闭将造成数据库游标泄露。 <h3>使用示例</h3>
+	 * 该操作模型需要持有ResultSet对象，因此注意使用完毕后要close()方法关闭结果集。
+	 * <h3>注意事项</h3> RecordHolder对象需要手动关闭。如果不关闭将造成数据库游标泄露。
+	 * <h3>使用示例</h3>
 	 * 
 	 * 
 	 * @param obj
@@ -1083,7 +1085,8 @@ public abstract class Session {
 	}
 
 	/**
-	 * 返回一个可以更新操作的结果数据集合 实质对用JDBC中ResultSet的updateRow,deleteRow,insertRow等方法，<br>
+	 * 返回一个可以更新操作的结果数据集合 实质对用JDBC中ResultSet的updateRow,deleteRow,insertRow等方法，
+	 * <br>
 	 * 该操作模型需要持有ResultSet对象，因此注意使用完毕后要close()方法关闭结果集<br>
 	 * 
 	 * RecordsHolder可以对选择出来结果集进行更新、删除、新增三种操作，操作完成后调用commit方法<br>
@@ -1252,10 +1255,10 @@ public abstract class Session {
 		} else if (list.size() > 1 && unique) {
 			throw new NonUniqueResultException();
 		}
-		if(meta.getType()==EntityType.POJO){
-			return (T)((PojoWrapper)list.get(0)).get();
-		}else{
-			return (T)list.get(0);
+		if (meta.getType() == EntityType.POJO) {
+			return (T) ((PojoWrapper) list.get(0)).get();
+		} else {
+			return (T) list.get(0);
 		}
 	}
 
@@ -1484,7 +1487,7 @@ public abstract class Session {
 				filters = qq.getFilterCondition();
 			}
 		}
-		option =queryObj.getMaxResult()>0? QueryOption.createFrom(queryObj):QueryOption.DEFAULT_MAX1;	
+		option = queryObj.getMaxResult() > 0 ? QueryOption.createFrom(queryObj) : QueryOption.DEFAULT_MAX1;
 		@SuppressWarnings("unchecked")
 		List<T> l = innerSelect(queryObj, null, filters, option);
 		if (l.isEmpty()) {
@@ -1676,8 +1679,7 @@ public abstract class Session {
 		long parse = System.currentTimeMillis();
 		selectp.processSelect(sql, this, queryObj, rs, option, 1);
 		long dbselect = System.currentTimeMillis();
-		LogUtil.show(StringUtils.concat("Result: Iterator", "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse),
-				"ms) |", getTransactionId(null)));
+		LogUtil.show(StringUtils.concat("Result: Iterator", "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms) |", getTransactionId(null)));
 		EntityMappingProvider mapping = DbUtils.getMappingProvider(queryObj);
 		Transformer transformer = queryObj.getResultTransformer();
 		IResultSet irs = rs.toProperResultSet(null, transformer.getStrategy());
@@ -1714,9 +1716,8 @@ public abstract class Session {
 				EntityMappingProvider mapping = DbUtils.getMappingProvider(queryObj);
 				resultList = populateResultSet(rs.toProperResultSet(filters, transformer.getStrategy()), mapping, transformer);
 				if (debugMode) {
-					LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(resultList.size()), "\t Time cost([ParseSQL]:", String.valueOf(parse - start),
-							"ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbselect), "ms) max:",
-							option.toString(), " |", getTransactionId(null)));
+					LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(resultList.size()), "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms, [Populate]:",
+							String.valueOf(System.currentTimeMillis() - dbselect), "ms) max:", option.toString(), " |", getTransactionId(null)));
 				}
 			} finally {
 				if (option.holdResult) {
@@ -1888,8 +1889,7 @@ public abstract class Session {
 		if (debugMode) {
 			long dbAccess = System.currentTimeMillis() - parse; // 数据库查询时间
 			parse = parse - start; // 解析SQL时间
-			LogUtil.show(StringUtils.concat("Total Count:", String.valueOf(total), "\t Time cost([ParseSQL]:", String.valueOf(parse), "ms, [DbAccess]:", String.valueOf(dbAccess),
-					"ms) |", getTransactionId(null)));
+			LogUtil.show(StringUtils.concat("Total Count:", String.valueOf(total), "\t Time cost([ParseSQL]:", String.valueOf(parse), "ms, [DbAccess]:", String.valueOf(dbAccess), "ms) |", getTransactionId(null)));
 		}
 		return total;
 	}
@@ -2213,13 +2213,24 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public final <T extends IQueryableEntity> void extremeInsert(List<T> entities, Boolean group) throws SQLException {
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public final <T> void extremeInsert(List<T> entities, Boolean group) throws SQLException {
 		if (entities.isEmpty())
 			return;
-		Batch<T> batch = startBatchInsert(entities.get(0), null, false, true);
-		if (group != null)
-			batch.setGroupForPartitionTable(group);
-		batch.execute(entities);
+		T t = entities.get(0);
+		Batch batch;
+		if (t instanceof IQueryableEntity) {
+			batch = startBatchInsert((IQueryableEntity)t, null, false, true);
+			if (group != null)
+				batch.setGroupForPartitionTable(group);
+			batch.execute(entities);
+		} else {
+			List<PojoWrapper> list = PojoWrapper.wrap(entities, false);
+			batch = startBatchInsert(list.get(0), null, false, true);
+			if (group != null)
+				batch.setGroupForPartitionTable(group);
+			batch.execute(list);
+		}
 	}
 
 	/**
@@ -2365,15 +2376,14 @@ public abstract class Session {
 		return batch;
 	}
 
-	
 	/**
 	 * 用传入的Query作为条件，将数据库中的记录更为为对象中的值
+	 * 
 	 * @param query
 	 * @param entities
 	 * @throws SQLException
 	 */
 	public final <T extends IQueryableEntity> void batchUpdateBy(Query<T> query, List<T> entities) throws SQLException {
-		
 
 	}
 
@@ -2484,7 +2494,8 @@ public abstract class Session {
 	}
 
 	/**
-	 * 在数据库中查询得到表达式的值 <h3>Example.</h3>
+	 * 在数据库中查询得到表达式的值
+	 * <h3>Example.</h3>
 	 * 
 	 * <pre>
 	 * <code>
@@ -2511,7 +2522,8 @@ public abstract class Session {
 	}
 
 	/**
-	 * 在数据库中查询得到函数表达式的值 <h3>Example.</h3>
+	 * 在数据库中查询得到函数表达式的值
+	 * <h3>Example.</h3>
 	 * 
 	 * @param func
 	 *            函数种类
@@ -2579,8 +2591,8 @@ public abstract class Session {
 		 * <b>关于PLAIN_MODE的用法</b>
 		 * 正常情况下，检测到查询结果是DataObject的子类时，就会采用嵌套法(NESTED)拼装结果，比如
 		 * 这种情况下将结果集作为立体结构，将不同表选出的字段作为不同的实体的属性。如:<br>
-		 * <li>Person.name <-> 'T1__name'</li> <li>Person.school.id <-> 'T2__id'
-		 * </li>
+		 * <li>Person.name <-> 'T1__name'</li>
+		 * <li>Person.school.id <-> 'T2__id'</li>
 		 * <p>
 		 * 嵌套法拼装时，会忽略没有绑定到数据库表的字段的拼装（即非数据元模型中定义的字段）。
 		 * 如果我们要将结果集中的列直接按名称对应到实体上，那么就需要使用PLAIN_MODE.

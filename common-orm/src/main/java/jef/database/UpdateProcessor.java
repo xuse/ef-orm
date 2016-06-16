@@ -323,8 +323,8 @@ public abstract class UpdateProcessor {
 	}
 
 	/**
-	 * 更新前，将所有LLOB字段都移动到最后去
-	 * 
+	 * 更新前，将所有LOB字段都移动到最后去。之前碰到一个BUG(Oracle)可能和驱动有关，LOB
+	 * 不在最后，更新会出错。
 	 * @param fields
 	 * @param meta
 	 */

@@ -297,18 +297,6 @@ public class MySqlDialect extends AbstractDialect {
 	 * current_timestamp on update current_timestamp
 	 */
 
-
-	/**
-	 * MYSQL中，表名是全转小写的，列名才是保持大小写的，先做小写处理，如果有处理列名的场合，改为调用
-	 * {@link #getColumnNameToUse(String)}
-	 */
-	@Override
-	public String getObjectNameToUse(String name) {
-		if(name==null || name.length()==0)return null;
-		if(name.charAt(0)=='`')return name;
-		return name.toLowerCase();
-	}
-	
 	
 
 	@Override

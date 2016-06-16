@@ -1,5 +1,6 @@
 package jef.tools;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -8,14 +9,24 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
+import org.junit.Test;
+
 import jef.common.log.LogUtil;
 import jef.tools.string.StringComparator;
 import jef.tools.string.StringSpliter;
 import jef.tools.string.Substring;
 
-import org.junit.Test;
-
 public class StringUtilsTest extends org.junit.Assert {
+
+	@Test
+	public void stringTokens() {
+		String command = "cmd \"c:\\program files\\aaa\\bbb.exe\" /s /t \"file name\"";
+		StringTokenizer st = new StringTokenizer(command);
+		String[] cmdarray = new String[st.countTokens()];
+		for (int i = 0; st.hasMoreTokens(); i++)
+			cmdarray[i] = st.nextToken();
+		LogUtil.show(cmdarray);
+	}
 
 	@Test
 	public void testSubstring() {
@@ -121,22 +132,22 @@ public class StringUtilsTest extends org.junit.Assert {
 	}
 
 	@Test
-	public void testStringRegexp(){
-		String sql="update TEST_ENTITY set DOUBLEFIELD2 = ?, FOLATFIELD2 = ?, BOOLFIELD = ?, CREATE_TIME = ?, FLOATFIELD = ?, LONGFIELD2 = ?, DOUBLEFIELD = ?, FIELD_1 = ?, FIELD_2 = ?, BINARYDATA = ?, INT_FIELD_1 = ?, INT_FIELD_2 = ?, LONGFIELD = ?, DATEFIELD = ?, BOOLFIELD2 = ? where LONGFIELD2=?\r\naa";
-		Pattern p=Pattern.compile("update TEST_ENTITY set.+",Pattern.MULTILINE );
+	public void testStringRegexp() {
+		String sql = "update TEST_ENTITY set DOUBLEFIELD2 = ?, FOLATFIELD2 = ?, BOOLFIELD = ?, CREATE_TIME = ?, FLOATFIELD = ?, LONGFIELD2 = ?, DOUBLEFIELD = ?, FIELD_1 = ?, FIELD_2 = ?, BINARYDATA = ?, INT_FIELD_1 = ?, INT_FIELD_2 = ?, LONGFIELD = ?, DATEFIELD = ?, BOOLFIELD2 = ? where LONGFIELD2=?\r\naa";
+		Pattern p = Pattern.compile("update TEST_ENTITY set.+", Pattern.MULTILINE);
 		System.out.println(p.matcher(sql).matches());
 	}
-	
+
 	@Test
-	public void testSkip() {
-		String s=StringUtils.generateGuid();
+	public void testSkip() throws IOException {
+		System.out.println(StringUtils.fromHexUnicodeString("\u200b"));
+		String s = StringUtils.generateGuid();
 		System.out.println(s);
-		
+
 		System.out.println(StringUtils.getMD5(s));
 		System.out.println(StringUtils.getSHA1(s));
 		System.out.println(StringUtils.getSHA256(s));
 	}
-	
 
 	/**
 	 * 测试案例
@@ -144,7 +155,7 @@ public class StringUtilsTest extends org.junit.Assert {
 	 * @param args
 	 */
 	@Test
-	public  void stringSort() {
+	public void stringSort() {
 		String s1 = "V1.01.1b";
 		String s2 = "V1.1.10";
 		String s3 = "version1000";
@@ -155,6 +166,6 @@ public class StringUtilsTest extends org.junit.Assert {
 		String s8 = "10x1999version9";
 		List<String> list = Arrays.asList(s1, s2, s3, s4, s5, s6, s7, s8);
 		Collections.sort(list, StringComparator.INSTANCE);
-		assertEquals(list, Arrays.asList(s5,s6,s8,s7,s1,s2,s4,s3));
+		assertEquals(list, Arrays.asList(s5, s6, s8, s7, s1, s2, s4, s3));
 	}
 }
