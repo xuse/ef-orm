@@ -29,8 +29,8 @@ import jef.database.query.PKQuery;
 import jef.database.wrapper.clause.BindSql;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
-import jef.tools.reflect.Property;
 import jef.tools.reflect.ConvertUtils;
+import jef.tools.reflect.Property;
 
 /**
  * 抽象类用于简化Tablemeta的实现
@@ -58,6 +58,33 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	protected final Map<Reference, List<AbstractRefField>> refFieldsByRef = new HashMap<Reference, List<AbstractRefField>>();// 记录所有的引用字段，按引用关系
 	protected boolean cacheable;
 	protected boolean useOuterJoin = true;
+	
+	/**
+	 * 列排序器，用这个排序器确保列的输出顺序如下
+	 * 1、LOB字段总是排在最后。(由于一些数据库驱动问题，这样做能提高操作的成功率，对性能也有少量帮助)
+	 * 2、按类定义中的枚举顺序排序，如果是TupleField，则直接按照字段名的ASCII顺序排列。
+	 */
+	private static final Comparator<ColumnMapping> COLUMN_COMPARATOR=new Comparator<ColumnMapping>() {
+		public int compare(ColumnMapping field1, ColumnMapping field2) {
+			Class<? extends ColumnType> type1 = field1.get().getClass();
+			Class<? extends ColumnType> type2 = field2.get().getClass();
+			Boolean b1 = (type1 == ColumnType.Blob.class || type1 == ColumnType.Clob.class);
+			Boolean b2 = (type2 == ColumnType.Blob.class || type2 == ColumnType.Clob.class);
+			int result = b1.compareTo(b2);
+			if(result==0){
+				Field f1=field1.field();
+				Field f2=field2.field();
+				// 在分库分表的情况下，IdentityHashMap.value的内容每一次都不一致，导致建的表的字段顺序也不一致。在select * 并使用union时会出错
+				//Advice by Nihf
+				if(f1 instanceof Enum<?> && f2 instanceof Enum<?>){
+					return Integer.compare(((Enum<?>)f1).ordinal(), ((Enum<?>)f2).ordinal());
+				}else{
+					return f1.name().compareTo(f2.name());
+				}
+			}
+			return result; 
+		}
+	};
 
 	public Field[] getLobFieldNames() {
 		return lobNames;
@@ -85,15 +112,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		if (metaFields == null) {
 			Collection<ColumnMapping> map = this.getColumnSchema();
 			ColumnMapping[] fields = map.toArray(new ColumnMapping[map.size()]);
-			Arrays.sort(fields, new Comparator<ColumnMapping>() {
-				public int compare(ColumnMapping field1, ColumnMapping field2) {
-					Class<? extends ColumnType> type1 = field1.get().getClass();
-					Class<? extends ColumnType> type2 = field2.get().getClass();
-					Boolean b1 = (type1 == ColumnType.Blob.class || type1 == ColumnType.Clob.class);
-					Boolean b2 = (type2 == ColumnType.Blob.class || type2 == ColumnType.Clob.class);
-					return b1.compareTo(b2);
-				}
-			});
+			Arrays.sort(fields, COLUMN_COMPARATOR);
 			metaFields = Arrays.asList(fields);
 		}
 		return metaFields;
