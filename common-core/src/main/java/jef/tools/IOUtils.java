@@ -61,13 +61,17 @@ import jef.tools.TextFileCallback.Dealwith;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.io.UnicodeReader;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Function;
 import com.google.common.collect.Multimap;
 
 public class IOUtils {
 	private static final int DEFAULT_BUFFER_SIZE = 4096;
 	private static final File[] EMPTY = new File[0];
-
+	private static final Logger log=LoggerFactory.getLogger(IOUtils.class);
+	
 	/**
 	 * 关闭指定的对象，不会抛出异常
 	 * 
@@ -1717,6 +1721,7 @@ public class IOUtils {
 			for (File f : source.listFiles()) {
 				File target = strategy.getTargetFile(f, newFile);
 				if (target != null) {
+					log.debug("Coping [{}] to [{}]",f,target);
 					copyFile(f, target, strategy);
 				}
 			}

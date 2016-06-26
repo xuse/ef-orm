@@ -102,10 +102,11 @@ public class CopyStrategy {
 	 */
 	public static class MergeStrategy extends CopyStrategy {
 		private FileComparator comparator;
-		private int normalCount;		//不冲突的文件数，（在源有而目标没有的文件）
-		private int duplicateCount;	//两边完全相同的文件数。
+		private int normalCount;		//不冲突的文件数，（在源有而目标没有的文件）复制。
+		private int duplicateCount;	    //两边完全相同的文件数。
 		private int conflictCount;		//两边冲突的文件数
 		private int deleteSuccessCount;//在两边完全相同时，如果是move指令，则会删除源文件夹中的重复文件，这里记录成功删除的数量
+		private int mergeFailure;      //在源是目录而目标是文件，或者源为文件目标为目录，此时无法实现合并
 		
 		private boolean isMove=true;
 
@@ -129,7 +130,9 @@ public class CopyStrategy {
 			File f = new File(targetFolder, file.getName());
 			if (f.isFile()) {
 				if(file.isDirectory()){
-					throw new IllegalArgumentException("the target " + f.getPath() + " has exist, and is not folder.");
+					System.out.println("the target " + f.getPath() + " has exist, and is not folder.");
+					mergeFailure++;
+					return null;
 				}
 				if (comparator.equals(file, f)) { //源于目标相同文件
 					duplicateCount++;
@@ -146,10 +149,12 @@ public class CopyStrategy {
 					conflictCount++;
 					return null;//版本不同，不覆盖
 				}
-			}else if (file.isFile()){
+			}else if (f.exists() && file.isFile()){
 				System.out.println("Target is directory and source is a file:"+file.getAbsolutePath());
-				normalCount++;
+				mergeFailure++;
 				return null;
+			}else{
+				normalCount++;
 			}
 			return f;
 		}
@@ -191,11 +196,12 @@ public class CopyStrategy {
 		}
 		public String getSummary(){
 			StringBuilder sb=new StringBuilder();
-			sb.append(isMove?"MoveFiles":"CopyFiles:").append(this.normalCount).append("\r\n");
-			sb.append("DuplicateFiles:").append(this.duplicateCount);
+			sb.append(isMove?"Moved:":"Copyed:").append(this.normalCount).append("\r\n");
+			sb.append("Duplicate:").append(this.duplicateCount);
 			if(isMove){
 				sb.append(" Deleted:").append(this.deleteSuccessCount);
 			}
+			sb.append(" MergeFailure:").append(this.mergeFailure);
 			sb.append("\r\n");
 			sb.append("ConflictFiles:").append(this.conflictCount);
 			return sb.toString();
