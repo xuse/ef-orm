@@ -905,7 +905,7 @@ public final class DbUtils {
 		} else if (container == Array.class) {
 			return subs.toArray();
 		} else if (container == Map.class) {
-			Cascade cascade = config.getAsMap();
+			Cascade cascade = config.getCascadeInfo();
 			if (cascade == null) {
 				throw new SQLException("@Cascade annotation is required for Map mapping " + config.toString());
 			}
