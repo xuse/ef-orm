@@ -5,7 +5,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-import jef.common.log.LogUtil;
 import jef.database.DbClient;
 import jef.database.DbMetaData;
 import jef.database.DbMetaData.ObjectType;
@@ -168,7 +167,7 @@ public class MetadataTest extends org.junit.Assert{
 			Assert.assertTrue(exist);
 
 			dropSequence(seqName);
-			Assert.assertFalse(meta.exists(ObjectType.SEQUENCE, seqName));	
+			Assert.assertTrue(meta.exists(ObjectType.SEQUENCE, seqName));	
 		}
 	}
 

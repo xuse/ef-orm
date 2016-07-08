@@ -60,7 +60,7 @@ public class PostgreSqlDialect extends AbstractDialect {
 	public PostgreSqlDialect() {
 		features = CollectionUtils.identityHashSet();
 		features.addAll(Arrays.asList(Feature.ALTER_FOR_EACH_COLUMN, Feature.COLUMN_ALTERATION_SYNTAX, Feature.SUPPORT_CONCAT, Feature.SUPPORT_SEQUENCE, Feature.SUPPORT_LIMIT, Feature.AI_TO_SEQUENCE_WITHOUT_DEFAULT,
-				Feature.SUPPORT_COMMENT));
+				Feature.SUPPORT_COMMENT,Feature.TABLE_CASE_SENSTIVE));
 
 		loadKeywords("postgresql_keywords.properties");
 

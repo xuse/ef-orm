@@ -221,11 +221,7 @@ public enum Feature {
 	SUPPORT_INLINE_COMMENT,
 	
 	/**
-	 * 额外增加一次DROP操作，防止出现误判表。(尚未支持)
+	 * 凡是可能表名大小写敏感的
 	 */
-	DROP_LOWER,
-	/**
-	 * 额外增加一次DROP操作，防止出现误判表。(尚未支持)
-	 */
-	DROP_UPPER,
+	TABLE_CASE_SENSTIVE,
 }

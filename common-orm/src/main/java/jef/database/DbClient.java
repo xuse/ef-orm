@@ -428,7 +428,7 @@ public class DbClient extends Session implements SessionFactory {
 	 * <p>
 	 * 
 	 * If there are multiple datasources , use {@link #getMetaData(String)} then
-	 * call {@link DbMetaData#existTable(String)} to check.
+	 * call {@link DbMetaData#getExistTable(String)} to check.
 	 * 
 	 * @param tableName
 	 *            支持Schema重定向

@@ -35,104 +35,93 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
- * 这个测试案例描述各种单表操作的分表计算办法
- * 1、目前实现的： 使用
+ * 这个测试案例描述各种单表操作的分表计算办法 1、目前实现的： 使用
+ * 
  * @author Administrator
  * 
- * 
- * 分表路由功能改进计划：
- * 1、单表分表 (OK)
- * 2、单表分表支持多库...
- * 3、多表连接的分表
- * （多表连接情况下）
- * 4、多表连接的支持多库……
- * 
- *
  */
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({
-// @DataSource(name="oracle",url="${oracle.url}",user="${oracle.user}",password="${oracle.password}"),
-// @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
-// @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
-// @DataSource(name = "derby", url = "jdbc:derby:./db;create=true"),
-// @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
- @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db?date_string_format=yyyy-MM-dd HH:mm:ss"),
-// @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
- 
- 
- 
+		// @DataSource(name="oracle",url="${oracle.url}",user="${oracle.user}",password="${oracle.password}"),
+		// @DataSource(name = "mysql", url = "${mysql.url}", user =
+		// "${mysql.user}", password = "${mysql.password}"),
+		// @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
+		// @DataSource(name = "derby", url = "jdbc:derby:./db;create=true"),
+		 @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
+		@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db?date_string_format=yyyy-MM-dd HH:mm:ss"),
+		// @DataSource(name = "sqlserver", url =
+		// "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
+
 })
 public class PartitionTest extends org.junit.Assert {
 	private DbClient db;
-	
-	public static class A{
+
+	public static class A {
 		Class<?> clz;
 	}
-	
+
 	@Test
 	public void main1() {
-		A a=new A();
-		a.clz=int.class;
-		String aa=JsonUtil.toJsonWithoutQuot(a);
+		A a = new A();
+		a.clz = int.class;
+		String aa = JsonUtil.toJsonWithoutQuot(a);
 		System.out.println(aa);
-		A b=JsonUtil.toObject(aa,A.class);
-		
-		PartitionTable object=PartitionEntity.class.getAnnotation(PartitionTable.class);
-		PartitionTableImpl my=PartitionTableImpl.create(object);
-		String data=JsonUtil.toJsonWithoutQuot(my);
+		A b = JsonUtil.toObject(aa, A.class);
+
+		PartitionTable object = PartitionEntity.class.getAnnotation(PartitionTable.class);
+		PartitionTableImpl my = PartitionTableImpl.create(object);
+		String data = JsonUtil.toJsonWithoutQuot(my);
 		System.out.println(data);
-		
-		PartitionTable rr=JsonUtil.toObject(data,PartitionTableImpl.class);
+
+		PartitionTable rr = JsonUtil.toObject(data, PartitionTableImpl.class);
 		System.out.println(rr);
 	}
 
 	@DatabaseInit
 	public void createTables() throws SQLException {
-		try{
+		try {
 			db.dropTable(PartitionEntity.class);
 			db.createTable(PartitionEntity.class);
-			
+
 			PartitionEntity p = new PartitionEntity();
 			p.setDateField(DateUtils.get(2012, 3, 1));
 			p.setName("Zxa");
 			db.dropTable(p);
 			db.createTable(p);
-	
-//			p.setDateField(DateUtils.get(2012, 3, 2));
-//			p.setName("XX");
-//			db.dropTable(p);
-//			db.createTable(p);
-//			
-//			p.setDateField(DateUtils.get(2012, 4, 1));
-//			p.setName("a");
-//			db.dropTable(p);
-//			db.createTable(p);
-//	
-//			p.setDateField(DateUtils.get(2012, 5, 1));
-//			p.setName("A");
-//			db.dropTable(p);
-//			db.createTable(p);
-//	
-//			p.setDateField(DateUtils.get(2012, 6, 1));
-//			p.setName("XXX");
-//			db.dropTable(p);
-//			db.createTable(p);
-//	
-//			p.setDateField(DateUtils.get(2012, 7, 1));
-//			p.setName(null);
-//			db.dropTable(p);
-//			db.createTable(p);
+
+			// p.setDateField(DateUtils.get(2012, 3, 2));
+			// p.setName("XX");
+			// db.dropTable(p);
+			// db.createTable(p);
+			//
+			// p.setDateField(DateUtils.get(2012, 4, 1));
+			// p.setName("a");
+			// db.dropTable(p);
+			// db.createTable(p);
+			//
+			// p.setDateField(DateUtils.get(2012, 5, 1));
+			// p.setName("A");
+			// db.dropTable(p);
+			// db.createTable(p);
+			//
+			// p.setDateField(DateUtils.get(2012, 6, 1));
+			// p.setName("XXX");
+			// db.dropTable(p);
+			// db.createTable(p);
+			//
+			// p.setDateField(DateUtils.get(2012, 7, 1));
+			// p.setName(null);
+			// db.dropTable(p);
+			// db.createTable(p);
 		} catch (Exception e) {
 			LogUtil.exception(e);
 		}
 	}
 
 	/**
-	 * @测试对象
-	 * 测试当  简单条件，between构成的Range条件时判断查询的表
+	 * @测试对象 测试当 简单条件，between构成的Range条件时判断查询的表
 	 * 
-	 * @预期结果
-	 * 查询03,04,05,06四张分表
+	 * @预期结果 查询03,04,05,06四张分表
 	 * @throws SQLException
 	 */
 	@Test
@@ -147,11 +136,9 @@ public class PartitionTest extends org.junit.Assert {
 
 	/**
 	 * 
- 	 * @测试对象
-	 * 测试当 IN条件下时判断查询的表
+	 * @测试对象 测试当 IN条件下时判断查询的表
 	 * 
-	 * @预期结果
-	 * 查询03,06表
+	 * @预期结果 查询03,06表
 	 * @throws SQLException
 	 */
 	@Test
@@ -162,24 +149,22 @@ public class PartitionTest extends org.junit.Assert {
 		q.addOrderBy(false, PartitionEntity.Field.name);
 		db.select(q);
 	}
-	
+
 	@Test
 	public void testGroup() throws SQLException {
 		System.out.println("===================== testDimensionIn 03,06=======================");
 		Query<PartitionEntity> q = QB.create(PartitionEntity.class);
-		Selects items=QB.selectFrom(q);
+		Selects items = QB.selectFrom(q);
 		items.column(PartitionEntity.Field.longField).group().as("longField");
 		items.column(PartitionEntity.Field.intField).count().as("intField");
-		List<PartitionEntity> result=db.select(q);
-		
+		List<PartitionEntity> result = db.select(q);
+
 	}
 
 	/**
-	 * @测试对象
-	 * 测试当 三个普通eq条件用OR拼装 时判断查询的表
+	 * @测试对象 测试当 三个普通eq条件用OR拼装 时判断查询的表
 	 * 
-	 * @预期结果
-	 * 查询03,05,06表
+	 * @预期结果 查询03,05,06表
 	 * @throws SQLException
 	 */
 	@Test
@@ -199,11 +184,9 @@ public class PartitionTest extends org.junit.Assert {
 	}
 
 	/**
-	 * @测试对象
-	 * 测试当 对于大于和小于构成的区间 时判断查询的表
+	 * @测试对象 测试当 对于大于和小于构成的区间 时判断查询的表
 	 * 
-	 * @预期结果
-	 * 查询03,04,05,06表
+	 * @预期结果 查询03,04,05,06表
 	 * @throws SQLException
 	 */
 	@Test
@@ -211,17 +194,15 @@ public class PartitionTest extends org.junit.Assert {
 		System.out.println("===================== testDimensionSpan 3,4,5,6=======================");
 		Query<PartitionEntity> q = QB.create(PartitionEntity.class);
 		q.addCondition(PartitionEntity.Field.dateField, Operator.GREAT_EQUALS, DateUtils.get(2012, 3, 1));
-		q.addCondition(PartitionEntity.Field.dateField, Operator.LESS, DateUtils.get(2012, 6,2));
+		q.addCondition(PartitionEntity.Field.dateField, Operator.LESS, DateUtils.get(2012, 6, 2));
 		q.addOrderBy(false, PartitionEntity.Field.name);
 		db.select(q);
 	}
 
 	/**
-	 * @测试对象
-	 * 较复杂的维度解析，一个 IN条件 AND 一个<的开区间Range条件
+	 * @测试对象 较复杂的维度解析，一个 IN条件 AND 一个<的开区间Range条件
 	 * 
-	 * @预期结果
-	 * 查询03表
+	 * @预期结果 查询03表
 	 * 
 	 * @throws SQLException
 	 */
@@ -234,17 +215,16 @@ public class PartitionTest extends org.junit.Assert {
 		q.addOrderBy(false, PartitionEntity.Field.name);
 		db.select(q);
 	}
+
 	/**
-	 * @测试对象
-	 * 和上例一样，不同的是会将所有的有效区间都去掉，某种意义上分区条件构成的一个永远为false的表达式。
-	 * 这种情况下，不存在任何能匹配用户查询条件的表。为了查询能够正确执行，我们使用基础表（即不带分表后缀的表做查询）
+	 * @测试对象 和上例一样，不同的是会将所有的有效区间都去掉，某种意义上分区条件构成的一个永远为false的表达式。
+	 *       这种情况下，不存在任何能匹配用户查询条件的表。为了查询能够正确执行，我们使用基础表（即不带分表后缀的表做查询）
 	 * 
-	 * @预期结果
-	 * 查询基础表
+	 * @预期结果 查询基础表
 	 * 
-	 * 错误，变化为查询全部实际存在的表……
+	 *       错误，变化为查询全部实际存在的表……
 	 * 
-	 * 由于代码修改，造成基表都没有创建。。。。此时出错
+	 *       由于代码修改，造成基表都没有创建。。。。此时出错
 	 * @throws SQLException
 	 */
 	@Test
@@ -257,7 +237,6 @@ public class PartitionTest extends org.junit.Assert {
 		db.select(q);
 	}
 
-	
 	/**
 	 * 较复杂的维度解析，一个 IN条件 OR 一个Between的Range条件
 	 * 
@@ -268,8 +247,8 @@ public class PartitionTest extends org.junit.Assert {
 		System.out.println("===================== testSpan 03,05,06,07=======================");
 		Query<PartitionEntity> q = QB.create(PartitionEntity.class);
 		q.addCondition(QB.or(QB.in(PartitionEntity.Field.dateField, new Date[] { DateUtils.get(2012, 3, 1), DateUtils.get(2012, 6, 1) }), QB.between(PartitionEntity.Field.dateField, DateUtils.get(2012, 5, 1), DateUtils.get(2012, 7, 1))));
-		q.addCondition(PartitionEntity.Field.intField,Operator.GREAT,14);
-		q.addCondition(PartitionEntity.Field.intField,Operator.LESS,17);
+		q.addCondition(PartitionEntity.Field.intField, Operator.GREAT, 14);
+		q.addCondition(PartitionEntity.Field.intField, Operator.LESS, 17);
 		q.addOrderBy(false, PartitionEntity.Field.name);
 		db.select(q);
 	}
@@ -307,88 +286,90 @@ public class PartitionTest extends org.junit.Assert {
 		System.out.println(g + " OR " + i + " = " + g.mergeOr(i));
 		System.out.println(h + " OR " + i + " = " + h.mergeOr(i));
 	}
-	
+
 	/**
-	 * 当批操作时
-	 * 批会对结果自动分组，然后将数据分别查到不同的表里去
+	 * 当批操作时 批会对结果自动分组，然后将数据分别查到不同的表里去
+	 * 
 	 * @throws SQLException
 	 */
 	@Test
-	public void testPartitionBatchInsert() throws SQLException{
+	public void testPartitionBatchInsert() throws SQLException {
 		db.createTable(PartitionEntity.class);
-		
-		List<PartitionEntity> batch=new ArrayList<PartitionEntity>();
+
+		List<PartitionEntity> batch = new ArrayList<PartitionEntity>();
 		PartitionEntity p = new PartitionEntity();
 		p.setDateField(DateUtils.get(2012, 3, 1));
 		p.setName("张三");
 		batch.add(p);
-		
+
 		p = new PartitionEntity();
 		p.setDateField(DateUtils.get(2012, 5, 1));
 		p.setName("王五");
 		batch.add(p);
-		
+
 		p = new PartitionEntity();
 		p.setDateField(DateUtils.get(2012, 4, 10));
 		p.setName("李四");
 		batch.add(p);
-		
+
 		p = new PartitionEntity();
 		p.setDateField(DateUtils.get(2012, 5, 20));
 		p.setName("前五");
 		batch.add(p);
-		
+
 		p = new PartitionEntity();
 		p.setDateField(DateUtils.get(2012, 3, 8));
 		p.setName("赵三");
 		batch.add(p);
-		
-		//这个开关可以关闭分组插入
-//		batch.setGroupForPartitionTable(false);
+
+		// 这个开关可以关闭分组插入
+		// batch.setGroupForPartitionTable(false);
 		db.batchInsert(batch);
 	}
-	
+
 	/**
-	 * 调用count方法，覆盖多张表的场合
-	 * 当分为多张表的时候，采用多个count语句查询，然后将结果相加
+	 * 调用count方法，覆盖多张表的场合 当分为多张表的时候，采用多个count语句查询，然后将结果相加
+	 * 
 	 * @throws SQLException
 	 */
 	@Test
-	public void testCountAll() throws SQLException{
+	public void testCountAll() throws SQLException {
 		System.out.println("======================testCountAll========================");
 		db.count(QB.create(PartitionEntity.class));
 	}
-	
+
 	/**
-	 * 查询记录覆盖多张表的场合
-	 * 直接用union All一次查询所有表得出结果
+	 * 查询记录覆盖多张表的场合 直接用union All一次查询所有表得出结果
+	 * 
 	 * @throws SQLException
 	 */
 	@Test
-	public void testSelectAll() throws SQLException{
+	public void testSelectAll() throws SQLException {
 		System.out.println("======================testSelectAll========================");
 		db.selectAll(PartitionEntity.class);
 	}
-	
-	
+
 	/**
 	 * 分表扫描器测试。分表扫描器能自动检查数据库中的所有子表。
+	 * 
 	 * @throws SQLException
 	 */
 	@Test
-	public void testPartitionMetadata() throws SQLException{
+	public void testPartitionMetadata() throws SQLException {
+		db.dropTable(PartitionEntity.class);
+		db.createTable(PartitionEntity.class);
 		System.out.println("======================testPartitionMetadata========================");
-		long start=System.nanoTime();
-		PartitionResult[] result=	db.getSubTableNames(MetaHolder.getMeta(PartitionEntity.class));
-		System.out.println("1."+(System.nanoTime()-start));
+		long start = System.nanoTime();
+		PartitionResult[] result = db.getSubTableNames(MetaHolder.getMeta(PartitionEntity.class));
+		System.out.println("1." + (System.nanoTime() - start));
 		LogUtil.show(result);
-		assertTrue(result.length>0);
-		//第二次查询分表元数据，根据缓存，在刷新期内不会再访问数据库。
-		start=System.nanoTime();
+		assertEquals(12,result[0].tableSize());
+		// 第二次查询分表元数据，根据缓存，在刷新期内不会再访问数据库。
+		start = System.nanoTime();
 		db.getSubTableNames(MetaHolder.getMeta(PartitionEntity.class));
-		System.out.println("2."+(System.nanoTime()-start));
+		System.out.println("2." + (System.nanoTime() - start));
 	}
-	
+
 	/**
 	 * 分表环境下，对查询列指定别名的场景测试
 	 * 
@@ -399,7 +380,7 @@ public class PartitionTest extends org.junit.Assert {
 		ORMConfig.getInstance().setFilterAbsentTables(false);
 		testPartitionBatchInsert(); // prepare data
 
-		ORMConfig.getInstance().cacheDebug=true;
+		ORMConfig.getInstance().cacheDebug = true;
 		Query<PartitionEntity> q = QB.create(PartitionEntity.class);
 		Selects items = QB.selectFrom(q);
 		items.column(PartitionEntity.Field.id).as("id");
@@ -414,7 +395,7 @@ public class PartitionTest extends org.junit.Assert {
 			LogUtil.show(obj.toString());
 			org.junit.Assert.assertTrue(obj.getDateField() != null);
 		}
-		
+
 		// 再测试下使用UnionQuery的场景
 		UnionQuery<PartitionEntity> unionQuery = QB.unionAll(PartitionEntity.class, q);
 		unionQuery.getResultTransformer().setStrategy(PopulateStrategy.SKIP_COLUMN_ANNOTATION);
@@ -456,8 +437,7 @@ public class PartitionTest extends org.junit.Assert {
 		testPartitionBatchInsert(); // prepare data
 
 		PartitionEntity entity = new PartitionEntity();
-		entity.getQuery().addCondition(QB.between(PartitionEntity.Field.dateField,
-				DateUtils.get(2012, 3, 1), DateUtils.get(2012, 6, 1)));
+		entity.getQuery().addCondition(QB.between(PartitionEntity.Field.dateField, DateUtils.get(2012, 3, 1), DateUtils.get(2012, 6, 1)));
 
 		Selects selectItems1 = QB.selectFrom(entity.getQuery());
 		selectItems1.column(PartitionEntity.Field.id).as("id");
@@ -476,8 +456,7 @@ public class PartitionTest extends org.junit.Assert {
 	}
 
 	/**
-	 * 分表环境下，2表关联并分页查询时，对查询列指定别名的场景测试；
-	 * 同时测试当查询结果需要映射到带有@Column的实体类的场景。
+	 * 分表环境下，2表关联并分页查询时，对查询列指定别名的场景测试； 同时测试当查询结果需要映射到带有@Column的实体类的场景。
 	 * 
 	 * @throws SQLException
 	 */
@@ -488,7 +467,7 @@ public class PartitionTest extends org.junit.Assert {
 
 		// prepare data for NonPartitionEntity
 		db.createTable(NonPartitionEntity.class);
-		List<NonPartitionEntity> batch=new ArrayList<NonPartitionEntity>();
+		List<NonPartitionEntity> batch = new ArrayList<NonPartitionEntity>();
 		NonPartitionEntity p = new NonPartitionEntity();
 		p.setDateField(DateUtils.get(2012, 3, 1));
 		p.setName("张三");
@@ -515,15 +494,14 @@ public class PartitionTest extends org.junit.Assert {
 		batch.add(p);
 
 		// 这个开关可以关闭分组插入
-		db.batchInsert(batch,false);
+		db.batchInsert(batch, false);
 
 		// prepare data for NonPartitionEntity finished
 		NonPartitionEntity entity1 = new NonPartitionEntity();
 		entity1.getQuery().addCondition(NonPartitionEntity.Field.intField, 0);
 
 		PartitionEntity entity = new PartitionEntity();
-		entity.getQuery().addCondition(QB.between(PartitionEntity.Field.dateField,
-				DateUtils.get(2012, 3, 1), DateUtils.get(2012, 6, 1)));
+		entity.getQuery().addCondition(QB.between(PartitionEntity.Field.dateField, DateUtils.get(2012, 3, 1), DateUtils.get(2012, 6, 1)));
 
 		Selects selectItems1 = QB.selectFrom(entity1.getQuery());
 		selectItems1.column(NonPartitionEntity.Field.id).as("id");
@@ -539,40 +517,37 @@ public class PartitionTest extends org.junit.Assert {
 		selectItems2.column(PartitionEntity.Field.intField).as("intField");
 		selectItems2.column(PartitionEntity.Field.longField).as("longField");
 
-		UnionQuery<NonPartitionEntity> unionQuery =
-				QB.unionAll(NonPartitionEntity.class, entity1.getQuery(), entity.getQuery());
+		UnionQuery<NonPartitionEntity> unionQuery = QB.unionAll(NonPartitionEntity.class, entity1.getQuery(), entity.getQuery());
 		unionQuery.addOrderBy(false, new FBIField("dateField"));
 		unionQuery.getResultTransformer().setStrategy(PopulateStrategy.SKIP_COLUMN_ANNOTATION);
-		PagingIterator<NonPartitionEntity> page =
-				db.pageSelect(unionQuery, NonPartitionEntity.class, 4);
-		
+		PagingIterator<NonPartitionEntity> page = db.pageSelect(unionQuery, NonPartitionEntity.class, 4);
+
 		List<NonPartitionEntity> list = page.next();
 		for (NonPartitionEntity obj : list) {
 			LogUtil.show(obj.toString());
 			org.junit.Assert.assertTrue(obj.getDateField() != null);
 		}
-		
+
 		// 再测试下查询结果映射到不带有@Column的实体类的场景
-		UnionQuery<PartitionEntityResult> unionQuery2 =
-				QB.unionAll(PartitionEntityResult.class, entity1.getQuery(), entity.getQuery());
-		PagingIterator<PartitionEntityResult> page2 =
-				db.pageSelect(unionQuery2, PartitionEntityResult.class, 4);
+		UnionQuery<PartitionEntityResult> unionQuery2 = QB.unionAll(PartitionEntityResult.class, entity1.getQuery(), entity.getQuery());
+		PagingIterator<PartitionEntityResult> page2 = db.pageSelect(unionQuery2, PartitionEntityResult.class, 4);
 		List<PartitionEntityResult> list2 = page2.next();
 		for (PartitionEntityResult obj : list2) {
 			LogUtil.show(obj.toString());
 			org.junit.Assert.assertTrue(obj.getDateField() != null);
 		}
 	}
+
 	@Test
-	@IgnoreOn({"oracle","postgresql"})
+	@IgnoreOn({ "oracle", "postgresql" })
 	public void jsonLoad() throws IOException {
 		System.out.println("=====================================1");
-		String s=IOUtils.asString(this.getClass().getResource("resource.txt"),"GBK");
+		String s = IOUtils.asString(this.getClass().getResource("resource.txt"), "GBK");
 		System.out.println(s);
-		PartitionTableImpl table=JsonUtil.toObject(s,PartitionTableImpl.class);
+		PartitionTableImpl table = JsonUtil.toObject(s, PartitionTableImpl.class);
 		System.out.println(table.key());
-		
-		String s2=JsonUtil.toJson(table);
+
+		String s2 = JsonUtil.toJson(table);
 		System.out.println("=====================================");
 		System.out.println(s2);
 	}
