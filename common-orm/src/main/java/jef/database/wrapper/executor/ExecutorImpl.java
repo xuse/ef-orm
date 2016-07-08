@@ -9,6 +9,8 @@ import java.util.List;
 
 import javax.persistence.PersistenceException;
 
+import org.springframework.util.Assert;
+
 import jef.database.DbUtils;
 import jef.database.DebugUtil;
 import jef.database.ORMConfig;
@@ -16,12 +18,8 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
 import jef.database.jdbc.result.CloseableResultSet;
-import jef.database.jdbc.result.ResultSetWrapper;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.processor.BindVariableContext;
-import jef.database.wrapper.processor.BindVariableTool;
-
-import org.springframework.util.Assert;
 
 public class ExecutorImpl implements StatementExecutor{
 	IConnection conn;
@@ -124,7 +122,7 @@ public class ExecutorImpl implements StatementExecutor{
 			ps = conn.prepareStatement(sql);
 			if (params.length > 0) {
 				BindVariableContext context = new BindVariableContext(ps, profile, sb);
-				BindVariableTool.setVariables(context, Arrays.asList(params));
+				context.setVariables(Arrays.asList(params));
 			}
 			int total = ps.executeUpdate();
 			sb.append("\nExecuted:",total).append("\t |",txId);

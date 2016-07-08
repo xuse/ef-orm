@@ -35,7 +35,11 @@ import org.easyframe.enterprise.spring.TransactionMode;
 
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
+import jef.database.Batch.DeletePOJO;
 import jef.database.Condition.Operator;
+import jef.database.NativeBatch.NativeDelete;
+import jef.database.NativeBatch.NativeInsert;
+import jef.database.NativeBatch.NativeUpdate;
 import jef.database.Transaction.TransactionFlag;
 import jef.database.cache.Cache;
 import jef.database.cache.CacheImpl;
@@ -1973,7 +1977,7 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public final <T extends IQueryableEntity> int batchDelete(Class<?> clz, List<? extends Serializable> keys) throws SQLException {
+	public final <T> int batchDelete(Class<?> clz, List<? extends Serializable> keys) throws SQLException {
 		ITableMetadata meta = MetaHolder.getMeta(clz);
 		return batchDelete(meta, keys);
 	}
@@ -1993,7 +1997,7 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public final <T extends IQueryableEntity> int batchDelete(ITableMetadata meta, List<? extends Serializable> pkValues) throws SQLException {
+	public final int batchDelete(ITableMetadata meta, List<? extends Serializable> pkValues) throws SQLException {
 		if (pkValues.isEmpty())
 			return 0;
 		if (meta.getPKFields().size() != 1) {
@@ -2031,7 +2035,7 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果没有主键或者数据库操作错误，抛出SQLException。
 	 */
-	public final <T extends IQueryableEntity> int batchDelete(List<T> entities) throws SQLException {
+	public final <T> int batchDelete(List<T> entities) throws SQLException {
 		return batchDelete(entities, false);
 	}
 
@@ -2054,7 +2058,7 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果没有主键或者数据库操作错误，抛出SQLException。
 	 */
-	public final <T extends IQueryableEntity> int batchDelete(List<T> entities, boolean group) throws SQLException {
+	public final <T> int batchDelete(List<T> entities, boolean group) throws SQLException {
 		if (entities.isEmpty())
 			return 0;
 
@@ -2064,8 +2068,8 @@ public abstract class Session {
 		}
 		// 位于批当中的绑定变量
 		long start = System.nanoTime();
-		Batch.Delete<T> batch = new Batch.Delete<T>(this, meta);
-		PKQuery<T> query = new PKQuery<T>(meta, DbUtils.getPKValueSafe(entities.get(0)), meta.newInstance());
+		DeletePOJO<T> batch = new Batch.DeletePOJO<T>(this, meta);
+		PKQuery<?> query = new PKQuery(meta, DbUtils.getPKValueSafe(entities.get(0)), meta.newInstance());
 		BindSql wherePart = rProcessor.toPrepareWhereSql(query, new SqlContext(null, query), false, getProfile(null));
 		for (BindVariableDescription bind : wherePart.getBind()) {
 			bind.setInBatch(true);
@@ -2126,7 +2130,7 @@ public abstract class Session {
 			bind.setInBatch(true);
 		}
 		ITableMetadata meta = MetaHolder.getMeta(template);
-		Batch.Delete<T> batch = new Batch.Delete<T>(this, meta);
+		NativeDelete<T> batch = new NativeDelete<T>(this, meta);
 		batch.setWherePart(wherePart);
 		batch.forceTableName = MetaHolder.toSchemaAdjustedName(tableName);
 		batch.parseTime = System.nanoTime() - start;
@@ -2307,7 +2311,7 @@ public abstract class Session {
 	public final <T extends IQueryableEntity> Batch<T> startBatchInsert(T template, String tableName, boolean dynamic, boolean extreme) throws SQLException {
 		long start = System.nanoTime();
 		ITableMetadata meta = MetaHolder.getMeta(template);
-		Batch.Insert<T> b = new Batch.Insert<T>(this, meta);
+		NativeInsert<T> b = new NativeInsert<T>(this, meta);
 		InsertSqlClause insertPart = insertp.toInsertSqlBatch((IQueryableEntity) template, tableName, dynamic, extreme, null);
 		b.setInsertPart(insertPart);
 		b.setForceTableName(tableName);
@@ -2367,7 +2371,7 @@ public abstract class Session {
 			bind.setInBatch(true);
 		}
 		ITableMetadata meta = MetaHolder.getMeta(template);
-		Batch.Update<T> batch = new Batch.Update<T>(this, meta);
+		NativeUpdate<T> batch = new NativeUpdate<T>(this, meta);
 		batch.forceTableName = MetaHolder.toSchemaAdjustedName(tableName);
 		batch.setUpdatePart(updatePart);
 		batch.setWherePart(wherePart);

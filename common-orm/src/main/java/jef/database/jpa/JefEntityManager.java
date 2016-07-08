@@ -36,6 +36,7 @@ import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.metamodel.Metamodel;
 
 import jef.common.log.LogUtil;
+import jef.database.DbClient;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
@@ -520,5 +521,13 @@ public class JefEntityManager implements EntityManager {
 	@Override
 	public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
 		throw new UnsupportedOperationException();
+	}
+	
+	public MetaProvider getMetadataModel(){
+		return parent;
+	}
+	
+	public DbClient getDbClient(){
+		return parent==null? null:parent.getDefault();
 	}
 }

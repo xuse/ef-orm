@@ -218,5 +218,14 @@ public enum Feature {
 	/**
 	 * MYSQL语法，建表时语句在字段上直接加COMMENT语句
 	 */
-	SUPPORT_INLINE_COMMENT
+	SUPPORT_INLINE_COMMENT,
+	
+	/**
+	 * 额外增加一次DROP操作，防止出现误判表。(尚未支持)
+	 */
+	DROP_LOWER,
+	/**
+	 * 额外增加一次DROP操作，防止出现误判表。(尚未支持)
+	 */
+	DROP_UPPER,
 }

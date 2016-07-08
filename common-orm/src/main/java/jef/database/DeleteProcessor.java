@@ -17,7 +17,6 @@ import jef.database.support.SqlLog;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.executor.DbTask;
 import jef.database.wrapper.processor.BindVariableContext;
-import jef.database.wrapper.processor.BindVariableTool;
 
 /**
  * 基本数据库操作
@@ -139,7 +138,7 @@ public abstract class DeleteProcessor {
 						psmt.setQueryTimeout(deleteTimeout);
 					}
 					BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
-					BindVariableTool.setVariables(obj.getQuery(), null, where.getBind(), context);
+					context.setVariables(obj.getQuery(), null, where.getBind());
 					psmt.execute();
 					count += psmt.getUpdateCount();
 				} catch (SQLException e) {

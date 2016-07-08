@@ -42,6 +42,8 @@ import java.util.regex.Pattern;
 import javax.persistence.PersistenceException;
 import javax.sql.DataSource;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+
 import jef.common.Entry;
 import jef.common.PairIS;
 import jef.common.SimpleMap;
@@ -87,15 +89,12 @@ import jef.database.wrapper.populator.ResultPopulatorImpl;
 import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.processor.BindVariableContext;
-import jef.database.wrapper.processor.BindVariableTool;
 import jef.http.client.support.CommentEntry;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
-
-import org.easyframe.enterprise.spring.TransactionMode;
 
 /*
  *  ====Oracle约束===== 约束包括： 主键、外键（引用）、唯一约束、检查约束
@@ -1804,7 +1803,7 @@ public class DbMetaData {
 			st = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 			if (objs != null) {
 				BindVariableContext context = new BindVariableContext(st, profile, debug);
-				BindVariableTool.setVariables(context, objs);
+				context.setVariables(objs);
 			}
 			if (maxReturn > 0)
 				st.setMaxRows(maxReturn);

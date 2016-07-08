@@ -48,7 +48,6 @@ import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
 import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.processor.BindVariableContext;
-import jef.database.wrapper.processor.BindVariableTool;
 import jef.tools.StringUtils;
 
 /**
@@ -260,7 +259,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		try {
 			psmt = db.prepareStatement(sql.first, lazyProcessor, false);
 			BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
-			BindVariableTool.setVariables(context, sql.second);
+			context.setVariables(sql.second);
 			rst.apply(psmt);
 			rs = psmt.executeQuery();
 			mrs.add(rs, psmt, db);
@@ -547,7 +546,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		try {
 			psmt = db.prepareStatement(sql.first, isReverse, false);
 			BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
-			BindVariableTool.setVariables(context, sql.second);
+			context.setVariables(sql.second);
 			if (fetchSize > 0) {
 				psmt.setFetchSize(fetchSize);
 			}

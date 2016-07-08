@@ -1,7 +1,6 @@
 package jef.database.support;
 
 import jef.database.Session;
-import jef.database.IQueryableEntity;
 import jef.database.Transaction;
 
 /**
@@ -16,16 +15,16 @@ public class DefaultDbOperListener implements DbOperatorListener{
 		return instance;
 	}
 	
-	public void beforeDelete(IQueryableEntity obj, Session db) {
+	public void beforeDelete(Object obj, Session db) {
 	}
 
-	public void afterDelete(IQueryableEntity obj, int n, Session db) {
+	public void afterDelete(Object obj, int n, Session db) {
 	}
 
-	public void beforeUpdate(IQueryableEntity obj, Session db) {
+	public void beforeUpdate(Object obj, Session db) {
 	}
 
-	public void afterUpdate(IQueryableEntity obj, int n, Session db) {
+	public void afterUpdate(Object obj, int n, Session db) {
 	}
 
 	public void newTransaction(Transaction transaction) {
@@ -34,10 +33,10 @@ public class DefaultDbOperListener implements DbOperatorListener{
 	public void tracsactionClose(Transaction transaction){
 	}
 
-	public void afterInsert(IQueryableEntity obj, Session abstractDbClient) {
+	public void afterInsert(Object obj, Session abstractDbClient) {
 	}
 
-	public void beforeInseret(IQueryableEntity obj, Session abstractDbClient) {
+	public void beforeInseret(Object obj, Session abstractDbClient) {
 	}
 
 	public void beforeSqlExecute(String sql, Object... params) {

@@ -1,7 +1,6 @@
 package jef.database.support;
 
 import jef.database.Session;
-import jef.database.IQueryableEntity;
 import jef.database.Transaction;
 
 /**
@@ -15,7 +14,7 @@ public interface DbOperatorListener {
 	 * @param obj 请求
 	 * @param db  所操作的事务或db
 	 */
-	void beforeDelete(IQueryableEntity obj,Session db);
+	void beforeDelete(Object obj,Session db);
 
 	/**
 	 * 当一个对象被删除后执行
@@ -23,14 +22,14 @@ public interface DbOperatorListener {
 	 * @param n  操作记录条数
 	 * @param db 所操作的事务或db
 	 */
-	void afterDelete(IQueryableEntity obj, int n,Session db);
+	void afterDelete(Object obj, int n,Session db);
 
 	/**
 	 * 当对象更新前执行
 	 * @param obj 请求
 	 * @param db
 	 */
-	void beforeUpdate(IQueryableEntity obj,Session db);
+	void beforeUpdate(Object obj,Session db);
 
 	/**
 	 * 当对象更新后执行
@@ -38,7 +37,7 @@ public interface DbOperatorListener {
 	 * @param n   更新条数
 	 * @param db
 	 */
-	void afterUpdate(IQueryableEntity obj, int n,Session db);
+	void afterUpdate(Object obj, int n,Session db);
 
 	/**
 	 * 当一个新的事务开启时执行
@@ -81,14 +80,14 @@ public interface DbOperatorListener {
 	 * @param obj
 	 * @param abstractDbClient
 	 */
-	void beforeInseret(IQueryableEntity obj, Session abstractDbClient);
+	void beforeInseret(Object obj, Session abstractDbClient);
 	
 	/**
 	 * 当对象插入数据库后执行
 	 * @param obj
 	 * @param abstractDbClient
 	 */
-	void afterInsert(IQueryableEntity obj, Session abstractDbClient);
+	void afterInsert(Object obj, Session abstractDbClient);
 
 	/**
 	 * 在SQL语句执行之前

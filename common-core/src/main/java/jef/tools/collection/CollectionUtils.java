@@ -517,6 +517,32 @@ public class CollectionUtils {
 	}
 
 	/**
+	 * 将Enumeration转换为一个新的List
+	 * @param data
+	 * @return 转换后的List
+	 */
+	public static <E> List<E> toList(Enumeration<E> data){
+		List<E> result=new ArrayList<E>();
+		for(;data.hasMoreElements();){
+			result.add(data.nextElement());
+		}
+		return result;
+	}
+	
+	/**
+	 * 将Iterable转换为List
+	 * @param data
+	 * @return 转换后的List
+	 */
+	public static <E> List<E> toList(Iterable<E> data){
+		List<E> result=new ArrayList<E>();
+		for(Iterator<E> iter=data.iterator();iter.hasNext();){
+			result.add(iter.next());
+		}
+		return result;
+	}
+	
+	/**
 	 * 将传入的对象转换为可遍历的对象。
 	 * 
 	 * @param data

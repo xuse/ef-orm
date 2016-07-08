@@ -39,6 +39,14 @@ import jef.database.query.function.VarArgsSQLFunction;
 import jef.database.support.RDBMS;
 import jef.tools.collection.CollectionUtils;
 
+
+/**
+ * SQLite驱动方言，部分特性需要在驱动字符串后加上
+ * ?date_string_format=yyyy-MM-dd HH:mm:ss
+ * 
+ * @author jiyi
+ *
+ */
 public class SqliteDialect extends AbstractDialect {
 	public SqliteDialect() {
 		features = CollectionUtils.identityHashSet();

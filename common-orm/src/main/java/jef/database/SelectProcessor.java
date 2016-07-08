@@ -39,7 +39,6 @@ import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.clause.SelectPart;
 import jef.database.wrapper.executor.DbTask;
 import jef.database.wrapper.processor.BindVariableContext;
-import jef.database.wrapper.processor.BindVariableTool;
 import jef.http.client.support.CommentEntry;
 import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
@@ -240,7 +239,7 @@ public abstract class SelectProcessor {
 			try {
 				psmt = db.prepareStatement(sql.getSql(), sql.getRsLaterProcessor(), option.holdResult);
 				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
-				BindVariableTool.setVariables(queryObj, null, sql.getBind(), context);
+				context.setVariables(queryObj, null, sql.getBind());
 				option.setSizeFor(psmt);
 				rs = psmt.executeQuery();
 				rs2.add(rs, psmt, db);
@@ -361,7 +360,7 @@ public abstract class SelectProcessor {
 
 				psmt.setQueryTimeout(ORMConfig.getInstance().getSelectTimeout());
 				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
-				BindVariableTool.setVariables(null, null, bsql.getBind(), context);
+				context.setVariables(null, null, bsql.getBind());
 				rs = psmt.executeQuery();
 				if (rs.next()) {
 					currentCount = rs.getInt(1);

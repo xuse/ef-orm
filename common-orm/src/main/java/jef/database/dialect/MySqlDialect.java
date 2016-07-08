@@ -90,6 +90,9 @@ import jef.tools.string.JefStringReader;
  * 
  * MySQL的四种BLOB类型 类型 大小(单位：字节) TinyBlob 最大 255 Blob 最大 65K MediumBlob 最大 16M
  * LongBlob 最大 4G
+ * 
+ * 
+ * 遗留问题：MySQL能不能做成表名大小写不敏感的。目前是敏感的。这造成大小写不一致会认为是两张表。
  */
 public class MySqlDialect extends AbstractDialect {
 	public MySqlDialect() {
