@@ -7,7 +7,6 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -236,50 +235,6 @@ public final class BindVariableContext {
 				count++;
 				try {
 					Object obj = setWhereVariable(field, da, count);
-					actualWhereParams[n++] = obj;
-				} catch (SQLException ex) {
-					LogUtil.error("Error while setting [{}], error type={}", field.name(), ex.getClass().getName());
-					throw ex;
-				}
-			}
-			return Arrays.asList(actualWhereParams);
-		}
-		return null;
-	}
-
-	/**
-	 */
-	@SuppressWarnings("unchecked")
-	public List<Object> setVariablesInBatch(Object obj, ITableMetadata meta, List<Field> writeFields, List<BindVariableDescription> whereFiels) throws SQLException {
-		int count = 0;
-		// 更新值绑定
-		BeanWrapper bean = BeanWrapper.wrap(obj, BeanWrapper.FAST);
-		if (writeFields != null) {
-			for (Field field : writeFields) {
-				count++;
-				if (field instanceof BindVariableField) {
-					Object value = ((BindVariableField) field).value;
-					psmt.setObject(count, value);
-					this.log(count, "", value);
-					continue;
-				}
-				ColumnMapping cType = meta.getColumnDef(field);
-				try {
-					setUpdateMapValue(Collections.EMPTY_MAP, field, cType, count, bean);
-				} catch (SQLException ex) {
-					LogUtil.error("Error while setting [{}] into bean [{}] for {}", field.name(), meta.getThisType(), cType.getClass().getName());
-					throw ex;
-				}
-			}
-		}
-		// 条件绑定
-		if (whereFiels != null) {
-			Object[] actualWhereParams = new Object[whereFiels.size()];
-			int n = 0;
-			for (BindVariableDescription field : whereFiels) {
-				count++;
-				try {
-					this.setValueInPsmt(count, bean.getPropertyValue(field.getField().name()));
 					actualWhereParams[n++] = obj;
 				} catch (SQLException ex) {
 					LogUtil.error("Error while setting [{}], error type={}", field.name(), ex.getClass().getName());

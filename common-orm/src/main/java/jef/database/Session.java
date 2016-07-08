@@ -33,15 +33,13 @@ import javax.persistence.PersistenceException;
 
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
-import jef.database.Batch.DeletePOJO;
+import jef.common.wrapper.Page;
 import jef.database.Condition.Operator;
-import jef.database.NativeBatch.NativeDelete;
-import jef.database.NativeBatch.NativeInsert;
-import jef.database.NativeBatch.NativeUpdate;
 import jef.database.Transaction.TransactionFlag;
 import jef.database.cache.Cache;
 import jef.database.cache.CacheImpl;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
 import jef.database.innerpool.MetadataService;
@@ -896,8 +894,7 @@ public abstract class Session {
 	}
 
 	/**
-	 * 遍历器模式查找，一般用于超大结果集的返回。
-	 * <h3>作用</h3> 当结果集超大时，如果用List<T>返回，内存占用很大甚至会溢出。<br>
+	 * 遍历器模式查找，一般用于超大结果集的返回。 <h3>作用</h3> 当结果集超大时，如果用List<T>返回，内存占用很大甚至会溢出。<br>
 	 * JDBC设计时考虑到这个问题，因此其返回的ResultSet对象只是查询结果视图的一段，用户向后滚动结果集时，数据库才将需要的数据传到客户端。
 	 * 如果客户端不缓存整个结果集，那么前面已经滚动过的结果数据就被释放。
 	 * <p>
@@ -980,8 +977,7 @@ public abstract class Session {
 	}
 
 	/**
-	 * 遍历器模式查找，一般用于超大结果集的返回。
-	 * <h3>作用</h3> 当结果集超大时，如果用List<T>返回，内存占用很大甚至会溢出。<br>
+	 * 遍历器模式查找，一般用于超大结果集的返回。 <h3>作用</h3> 当结果集超大时，如果用List<T>返回，内存占用很大甚至会溢出。<br>
 	 * JDBC设计时考虑到这个问题，因此其返回的ResultSet对象只是查询结果视图的一段，用户向后滚动结果集时，数据库才将需要的数据传到客户端。
 	 * 如果客户端不缓存整个结果集，那么前面已经滚动过的结果数据就被释放。
 	 * <p>
@@ -1065,9 +1061,8 @@ public abstract class Session {
 	 * 
 	 * <h3>实现原理</h3> RecordHolder对象，是JDBC ResultSet的封装<br>
 	 * 实质对用JDBC中ResultSet的updateRow,deleteRow,insertRow等方法，<br>
-	 * 该操作模型需要持有ResultSet对象，因此注意使用完毕后要close()方法关闭结果集。
-	 * <h3>注意事项</h3> RecordHolder对象需要手动关闭。如果不关闭将造成数据库游标泄露。
-	 * <h3>使用示例</h3>
+	 * 该操作模型需要持有ResultSet对象，因此注意使用完毕后要close()方法关闭结果集。 <h3>注意事项</h3>
+	 * RecordHolder对象需要手动关闭。如果不关闭将造成数据库游标泄露。 <h3>使用示例</h3>
 	 * 
 	 * 
 	 * @param obj
@@ -1090,8 +1085,7 @@ public abstract class Session {
 	}
 
 	/**
-	 * 返回一个可以更新操作的结果数据集合 实质对用JDBC中ResultSet的updateRow,deleteRow,insertRow等方法，
-	 * <br>
+	 * 返回一个可以更新操作的结果数据集合 实质对用JDBC中ResultSet的updateRow,deleteRow,insertRow等方法， <br>
 	 * 该操作模型需要持有ResultSet对象，因此注意使用完毕后要close()方法关闭结果集<br>
 	 * 
 	 * RecordsHolder可以对选择出来结果集进行更新、删除、新增三种操作，操作完成后调用commit方法<br>
@@ -1160,7 +1154,7 @@ public abstract class Session {
 	 * @throws NonUniqueResultException
 	 *             结果不唯一
 	 */
-	public <T extends IQueryableEntity> T load(T obj) throws SQLException {
+	public <T> T load(T obj) throws SQLException {
 		return load(obj, true);
 
 	}
@@ -1179,11 +1173,20 @@ public abstract class Session {
 	 *             当unique为true且查询结果不唯一时。
 	 */
 	@SuppressWarnings("unchecked")
-	public <T extends IQueryableEntity> T load(T obj, boolean unique) throws SQLException {
+	public <T> T load(T obj, boolean unique) throws SQLException {
 		Assert.notNull(obj);
-		Query<T> q = (Query<T>) obj.getQuery();
-		QueryOption option = QueryOption.createMax1Option(q);
+		if (obj instanceof IQueryableEntity) {
+			return (T) innerLoad0((IQueryableEntity) obj, unique);
+		} else {
+			PojoWrapper vw = innerLoad0(MetaHolder.getMeta(obj.getClass()).transfer(obj, true), unique);
+			return vw == null ? null : (T) vw.get();
+		}
+	}
 
+	private <T extends IQueryableEntity> T innerLoad0(T obj, boolean unique) throws SQLException {
+		@SuppressWarnings("unchecked")
+		Query<T> q = obj.getQuery();
+		QueryOption option = QueryOption.createMax1Option(q);
 		List<T> l = typedSelect(q, null, option);
 		if (l.isEmpty()) {
 			return null;
@@ -1191,6 +1194,58 @@ public abstract class Session {
 			throw new NonUniqueResultException("Result is not unique." + q);
 		}
 		return l.get(0);
+	}
+
+	/**
+	 * 根据样例查找
+	 * @param entity 查询条件
+	 * @param property 作为查询条件的字段名。当不指定properties时，首先检查entity当中是否设置了主键，如果有主键按主键删除，否则按所有非空字段作为匹配条件。
+	 * @return 查询结果
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> List<T> selectByExample(T entity, String... propertyName) throws SQLException {
+		if (entity instanceof IQueryableEntity) {
+			return select(DbUtils.populateExampleConditions((IQueryableEntity) entity, propertyName), null);
+		} else {
+			ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
+			Query<PojoWrapper> q;
+			if (propertyName.length == 0) {
+				q = (Query<PojoWrapper>) meta.transfer(entity, true).getQuery();
+			} else {
+				q = DbUtils.populateExampleConditions(meta.transfer(entity, false), propertyName);
+			}
+			return PojoWrapper.unwrapList(select(q));
+		}
+	}
+
+	/**
+	 * 根据字段查询
+	 * @param meta 表元数据
+	 * @param propertyName 字段名
+	 * @param value 字段值
+	 * @return 查询结果
+	 * @throws SQLException
+	 */
+	@SuppressWarnings("unchecked")
+	public List<?> selectByField(ITableMetadata meta, String propertyName, Object value) throws SQLException {
+		if (meta == null || propertyName == null)
+			return null;
+		ColumnMapping field = meta.findField(propertyName);
+		if (field == null) {
+			throw new IllegalArgumentException("There's no property named " + propertyName + " in type of " + meta.getName());
+		}
+		Query<?> q = QB.create(meta);
+		q.addCondition(field.field(), Operator.EQUALS, value);
+		if (meta.getType() == EntityType.POJO) {
+			return PojoWrapper.unwrapList(select((Query<PojoWrapper>) q));
+		} else {
+			return select(q);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public <T> List<T> selectByField(Class<T> meta, String propertyName, Object value) throws SQLException {
+		return (List<T>) selectByField(MetaHolder.getMeta(meta), propertyName, value);
 	}
 
 	/**
@@ -1206,9 +1261,10 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 */
 	@SuppressWarnings("unchecked")
-	public <T extends IQueryableEntity> List<T> selectByField(jef.database.Field field, Object value) throws SQLException {
+	public <T> List<T> selectByField(jef.database.Field field, Object value) throws SQLException {
 		ITableMetadata meta = DbUtils.getTableMeta(field);
-		Query<T> query = meta.newInstance().getQuery();
+		@SuppressWarnings("rawtypes")
+		Query query = QB.create(meta);
 		query.addCondition(field, Operator.EQUALS, value);
 		return typedSelect(query, null, QueryOption.DEFAULT);
 	}
@@ -1265,6 +1321,49 @@ public abstract class Session {
 		} else {
 			return (T) list.get(0);
 		}
+	}
+
+	/**
+	 * 按指定的字段查询记录
+	 * 
+	 * @param type
+	 *            实体类型
+	 * @param field
+	 *            字段名
+	 * @param value
+	 *            查询值
+	 * @return 查询结果
+	 * @throws SQLException
+	 */
+	public <T> T loadByField(Class<T> type, String field, Object value) throws SQLException {
+		ITableMetadata meta = MetaHolder.getMeta(type);
+		return loadByField(meta, field, value, true);
+	}
+
+	/**
+	 * 按指定的字段查询记录
+	 * 
+	 * @param meta
+	 *            实体类型
+	 * @param field
+	 *            字段名
+	 * @param value
+	 *            查询值
+	 * @param unique
+	 *            是否唯一
+	 * @return 查询结果
+	 * @throws SQLException
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> T loadByField(ITableMetadata meta, String field, Object value, boolean unique) throws SQLException {
+		if (meta == null || field == null) {
+			return null;
+		}
+		ColumnMapping def = meta.findField(field);
+		if (def == null) {
+			throw new IllegalArgumentException("There's no field [" + field + "] in " + meta.getName());
+		}
+		return (T) loadByField(def.field(), value, unique);
 	}
 
 	/**
@@ -1653,6 +1752,27 @@ public abstract class Session {
 		return result;
 	}
 
+	/**
+	 * 
+	 * @param entity
+	 * @param start
+	 * @param limit
+	 * @return
+	 * @throws SQLException
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> Page<T> selectPage(T entity, int start, int limit) throws SQLException {
+		if (entity instanceof IQueryableEntity) {
+			return (Page<T>) pageSelect((IQueryableEntity) entity, limit).setOffset(start).getPageData();
+		} else {
+			ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
+			PojoWrapper vw = meta.transfer(entity, true);
+			Page<PojoWrapper> page = pageSelect(vw, limit).setOffset(start).getPageData();
+			return PojoWrapper.unwrapPage(page);
+		}
+
+	}
+
 	/*
 	 * 查询实现，解析查询对象，将单表对象解析为Join查询
 	 */
@@ -1684,7 +1804,8 @@ public abstract class Session {
 		long parse = System.currentTimeMillis();
 		selectp.processSelect(sql, this, queryObj, rs, option, 1);
 		long dbselect = System.currentTimeMillis();
-		LogUtil.show(StringUtils.concat("Result: Iterator", "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms) |", getTransactionId(null)));
+		LogUtil.show(StringUtils.concat("Result: Iterator", "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse),
+				"ms) |", getTransactionId(null)));
 		EntityMappingProvider mapping = DbUtils.getMappingProvider(queryObj);
 		Transformer transformer = queryObj.getResultTransformer();
 		IResultSet irs = rs.toProperResultSet(null, transformer.getStrategy());
@@ -1721,8 +1842,9 @@ public abstract class Session {
 				EntityMappingProvider mapping = DbUtils.getMappingProvider(queryObj);
 				resultList = populateResultSet(rs.toProperResultSet(filters, transformer.getStrategy()), mapping, transformer);
 				if (debugMode) {
-					LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(resultList.size()), "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms, [Populate]:",
-							String.valueOf(System.currentTimeMillis() - dbselect), "ms) max:", option.toString(), " |", getTransactionId(null)));
+					LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(resultList.size()), "\t Time cost([ParseSQL]:", String.valueOf(parse - start),
+							"ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbselect), "ms) max:",
+							option.toString(), " |", getTransactionId(null)));
 				}
 			} finally {
 				if (option.holdResult) {
@@ -1894,7 +2016,8 @@ public abstract class Session {
 		if (debugMode) {
 			long dbAccess = System.currentTimeMillis() - parse; // 数据库查询时间
 			parse = parse - start; // 解析SQL时间
-			LogUtil.show(StringUtils.concat("Total Count:", String.valueOf(total), "\t Time cost([ParseSQL]:", String.valueOf(parse), "ms, [DbAccess]:", String.valueOf(dbAccess), "ms) |", getTransactionId(null)));
+			LogUtil.show(StringUtils.concat("Total Count:", String.valueOf(total), "\t Time cost([ParseSQL]:", String.valueOf(parse), "ms, [DbAccess]:", String.valueOf(dbAccess),
+					"ms) |", getTransactionId(null)));
 		}
 		return total;
 	}
@@ -2059,6 +2182,7 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果没有主键或者数据库操作错误，抛出SQLException。
 	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public final <T> int batchDelete(List<T> entities, boolean group) throws SQLException {
 		if (entities.isEmpty())
 			return 0;
@@ -2067,19 +2191,26 @@ public abstract class Session {
 		if (meta.getPKFields().isEmpty()) {
 			throw new SQLException("The type " + meta.getTableName(false) + " has no primary key, can not execute batch remove by primarykey");
 		}
-		// 位于批当中的绑定变量
+
+		List<? extends IQueryableEntity> data;
+		if (meta.getType() == EntityType.POJO) {
+			data = PojoWrapper.wrap(entities, false);
+		} else {
+			data = (List<? extends IQueryableEntity>) entities;
+		}
 		long start = System.nanoTime();
-		DeletePOJO<T> batch = new Batch.DeletePOJO<T>(this, meta);
-		PKQuery<?> query = new PKQuery(meta, DbUtils.getPKValueSafe(entities.get(0)), meta.newInstance());
+
+		PKQuery<?> query = new PKQuery(meta, DbUtils.getPKValueSafe((IQueryableEntity) data.get(0)), meta.newInstance());
 		BindSql wherePart = rProcessor.toPrepareWhereSql(query, new SqlContext(null, query), false, getProfile(null));
 		for (BindVariableDescription bind : wherePart.getBind()) {
 			bind.setInBatch(true);
 		}
-		batch.setWherePart(wherePart);
+
+		Batch.Delete batch = new Batch.Delete(this, meta, wherePart);
 		batch.parseTime = System.nanoTime() - start;
 		batch.pkMpode = true;
 		batch.setGroupForPartitionTable(group);
-		return batch.execute(entities);
+		return batch.execute(data);
 	}
 
 	/**
@@ -2131,8 +2262,7 @@ public abstract class Session {
 			bind.setInBatch(true);
 		}
 		ITableMetadata meta = MetaHolder.getMeta(template);
-		NativeDelete<T> batch = new NativeDelete<T>(this, meta);
-		batch.setWherePart(wherePart);
+		Batch.Delete<T> batch = new Batch.Delete<T>(this, meta, wherePart);
 		batch.forceTableName = MetaHolder.toSchemaAdjustedName(tableName);
 		batch.parseTime = System.nanoTime() - start;
 		return batch;
@@ -2225,7 +2355,7 @@ public abstract class Session {
 		T t = entities.get(0);
 		Batch batch;
 		if (t instanceof IQueryableEntity) {
-			batch = startBatchInsert((IQueryableEntity)t, null, false, true);
+			batch = startBatchInsert((IQueryableEntity) t, null, false, true);
 			if (group != null)
 				batch.setGroupForPartitionTable(group);
 			batch.execute(entities);
@@ -2312,7 +2442,7 @@ public abstract class Session {
 	public final <T extends IQueryableEntity> Batch<T> startBatchInsert(T template, String tableName, boolean dynamic, boolean extreme) throws SQLException {
 		long start = System.nanoTime();
 		ITableMetadata meta = MetaHolder.getMeta(template);
-		NativeInsert<T> b = new NativeInsert<T>(this, meta);
+		Batch.Insert<T> b = new Batch.Insert<T>(this, meta);
 		InsertSqlClause insertPart = insertp.toInsertSqlBatch((IQueryableEntity) template, tableName, dynamic, extreme, null);
 		b.setInsertPart(insertPart);
 		b.setForceTableName(tableName);
@@ -2372,7 +2502,7 @@ public abstract class Session {
 			bind.setInBatch(true);
 		}
 		ITableMetadata meta = MetaHolder.getMeta(template);
-		NativeUpdate<T> batch = new NativeUpdate<T>(this, meta);
+		Batch.Update<T> batch = new Batch.Update<T>(this, meta);
 		batch.forceTableName = MetaHolder.toSchemaAdjustedName(tableName);
 		batch.setUpdatePart(updatePart);
 		batch.setWherePart(wherePart);
@@ -2403,7 +2533,7 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public final <T extends IQueryableEntity> void batchUpdate(List<T> entities) throws SQLException {
+	public final <T> void batchUpdate(List<T> entities) throws SQLException {
 		batchUpdate(entities, null, null);
 	}
 
@@ -2499,8 +2629,7 @@ public abstract class Session {
 	}
 
 	/**
-	 * 在数据库中查询得到表达式的值
-	 * <h3>Example.</h3>
+	 * 在数据库中查询得到表达式的值 <h3>Example.</h3>
 	 * 
 	 * <pre>
 	 * <code>
@@ -2527,8 +2656,7 @@ public abstract class Session {
 	}
 
 	/**
-	 * 在数据库中查询得到函数表达式的值
-	 * <h3>Example.</h3>
+	 * 在数据库中查询得到函数表达式的值 <h3>Example.</h3>
 	 * 
 	 * @param func
 	 *            函数种类
@@ -2596,8 +2724,8 @@ public abstract class Session {
 		 * <b>关于PLAIN_MODE的用法</b>
 		 * 正常情况下，检测到查询结果是DataObject的子类时，就会采用嵌套法(NESTED)拼装结果，比如
 		 * 这种情况下将结果集作为立体结构，将不同表选出的字段作为不同的实体的属性。如:<br>
-		 * <li>Person.name <-> 'T1__name'</li>
-		 * <li>Person.school.id <-> 'T2__id'</li>
+		 * <li>Person.name <-> 'T1__name'</li> <li>Person.school.id <-> 'T2__id'
+		 * </li>
 		 * <p>
 		 * 嵌套法拼装时，会忽略没有绑定到数据库表的字段的拼装（即非数据元模型中定义的字段）。
 		 * 如果我们要将结果集中的列直接按名称对应到实体上，那么就需要使用PLAIN_MODE.
@@ -2669,9 +2797,11 @@ public abstract class Session {
 	protected final OperateTarget wrapTarget(String dbName, int mustTx) throws SQLException {
 		if (mustTx > 0 && this instanceof DbClient) {// 如果不是在事务中，那么就用一个内嵌事务将其包裹住，作用是在resultSet的生命周期内，该连接不会被归还。并且也预防了基于线程的连接模型中，该连接被本线程的其他SQL操作再次取用然后释放回池
 			Transaction tx = new TransactionImpl((DbClient) this, TransactionFlag.ResultHolder, mustTx == 1);
-			OperateTarget target=new OperateTarget(tx, dbName);
-			if(target.getProfile().getName()==RDBMS.sqlite){
-				tx.setReadonly(false);//The new Driver (3.8.11) do not support setReadOnly() while connection is created. 
+			OperateTarget target = new OperateTarget(tx, dbName);
+			if (target.getProfile().getName() == RDBMS.sqlite) {
+				tx.setReadonly(false);// The new Driver (3.8.11) do not support
+										// setReadOnly() while connection is
+										// created.
 			}
 			return target;
 		} else {

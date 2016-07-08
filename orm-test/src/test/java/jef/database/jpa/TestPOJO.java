@@ -4,16 +4,20 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.easyframe.enterprise.spring.CommonDao;
-import org.easyframe.enterprise.spring.CommonDaoImpl;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
+import javax.persistence.Id;
 
 import jef.common.wrapper.Page;
 import jef.database.DbClient;
 import jef.database.DbClientBuilder;
 import jef.database.meta.MetaHolder;
+
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.easyframe.enterprise.spring.CommonDao;
+import org.easyframe.enterprise.spring.CommonDaoImpl;
+import org.junit.Assert;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestPOJO {
@@ -28,8 +32,13 @@ public class TestPOJO {
 		
 	}
 	
-	
+	/**
+	 * 实体类
+	 * @author jiyi
+	 *
+	 */
 	public static class PojoFoo{
+		@Id
 		private int id;
 		private String name;
 		public int getId() {
@@ -43,6 +52,9 @@ public class TestPOJO {
 		}
 		public void setName(String name) {
 			this.name = name;
+		}
+		public String toString() {
+			return ToStringBuilder.reflectionToString(this);
 		}
 	}
 	
@@ -90,12 +102,62 @@ public class TestPOJO {
 		
 		PojoFoo foo=new PojoFoo();
 		foo.setId(1);
-		dao.load(foo);
+		foo=dao.load(foo);
+		Assert.assertNotNull(foo);
 		
-		dao.findByExample(foo);
 		
-		Page<PojoFoo> result=dao.findAndPage(foo, 3, 8);
+		List<PojoFoo> foos=dao.findByExample(foo);
+		Assert.assertEquals(1, foos.size());
+		
+		Page<PojoFoo> result=dao.findAndPage(new PojoFoo(), 3, 8);
 		System.out.println(result);
+		Assert.assertEquals(8, result.getList().size());
+		
+		for(PojoFoo bean: result.getList()){
+			bean.setName("修改"+bean.getName());
+		}
+		dao.batchUpdate(result.getList());
+		
+		List<PojoFoo> pojo=dao.findByField(PojoFoo.class, "name", "修改四十九6");
+		System.out.println(pojo);
+		
+		dao.batchDelete(result.getList());
 	}
 	
+	@Test
+	public void test3() throws SQLException{
+		DbClient session=dao.getNoTransactionSession();
+		session.truncate(MetaHolder.getMeta(PojoFoo.class));
+		
+		List<PojoFoo> ps=new ArrayList<PojoFoo>();
+		for(int i=0;i<50;i++){
+			PojoFoo foo=new PojoFoo();
+			foo.setId(i);
+			foo.setName("四十九"+i);
+			ps.add(foo);
+		}
+		session.batchInsert(ps);
+		
+		PojoFoo foo=new PojoFoo();
+		foo.setId(1);
+		foo=session.load(foo);
+		Assert.assertNotNull(foo);
+		
+		List<PojoFoo> foos=session.selectByExample(foo);
+		Assert.assertEquals(1, foos.size());
+		
+		Page<PojoFoo> result=session.selectPage(new PojoFoo(), 3, 8);
+		System.out.println(result);
+		Assert.assertEquals(8, result.getList().size());
+		
+		for(PojoFoo bean: result.getList()){
+			bean.setName("修改"+bean.getName());
+		}
+		session.batchUpdate(result.getList());
+		
+		List<PojoFoo> pojo=session.selectByField(PojoFoo.class, "name", "修改四十九6");
+		System.out.println(pojo);
+		
+		session.batchDelete(result.getList());
+	}
 }

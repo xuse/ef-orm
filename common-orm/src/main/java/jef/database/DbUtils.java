@@ -682,7 +682,7 @@ public final class DbUtils {
 	}
 
 	// 从实体中获取主键的值，这里的实体都必须是已经从数据库中选择出来的，因此无需校验主键值是否合法
-	public static List<Serializable> getPKValueSafe(Object data) {
+	public static List<Serializable> getPKValueSafe(IQueryableEntity data) {
 		ITableMetadata meta = MetaHolder.getMeta(data);
 		if (meta.getPKFields().isEmpty())
 			return null;
