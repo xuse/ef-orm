@@ -4,14 +4,18 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.easyframe.enterprise.spring.CommonDao;
+import org.easyframe.enterprise.spring.CommonDaoImpl;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runners.MethodSorters;
+
 import jef.common.wrapper.Page;
 import jef.database.DbClient;
 import jef.database.DbClientBuilder;
+import jef.database.meta.MetaHolder;
 
-import org.easyframe.enterprise.spring.CommonDao;
-import org.easyframe.enterprise.spring.CommonDaoImpl;
-import org.junit.Test;
-
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestPOJO {
 	DbClient db;
 	CommonDao dao;
@@ -73,7 +77,8 @@ public class TestPOJO {
 	}
 	
 	@Test
-	public void test2(){
+	public void test2() throws SQLException{
+		dao.getNoTransactionSession().truncate(MetaHolder.getMeta(PojoFoo.class));
 		List<PojoFoo> ps=new ArrayList<PojoFoo>();
 		for(int i=0;i<50;i++){
 			PojoFoo foo=new PojoFoo();
@@ -84,6 +89,7 @@ public class TestPOJO {
 		dao.batchInsert(ps);
 		
 		PojoFoo foo=new PojoFoo();
+		foo.setId(1);
 		dao.load(foo);
 		
 		dao.findByExample(foo);

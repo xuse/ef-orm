@@ -65,7 +65,7 @@ import org.junit.runners.MethodSorters;
 	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), 
 	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
 	@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"), 
-	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db?date_string_format=yyyy-MM-dd HH:mm:ss"),
 	@DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}")
 	}
 )
@@ -241,7 +241,7 @@ public class SimpleTableTest extends org.junit.Assert {
 	 */
 	@Test
 	public void testConstraintViolationException() throws SQLException {
-		CaAsset obj = db.load(QB.create(CaAsset.class));
+		CaAsset obj = db.load(QB.create(CaAsset.class),false);
 		obj.setAssetId(obj.getAssetId());
 		Transaction tx = db.startTransaction();
 		try {

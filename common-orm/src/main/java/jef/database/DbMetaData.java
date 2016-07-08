@@ -1626,6 +1626,7 @@ public class DbMetaData {
 				exe.close();
 			}
 			created = true;
+			clearTableMetadataCache(meta);
 		}
 		if (meta.getExtendsTable() != null) {
 			this.createTable(meta.getExtendsTable(), null);
@@ -2390,7 +2391,8 @@ public class DbMetaData {
 	 * @return true if the cache was flushed.
 	 */
 	public boolean clearTableMetadataCache(ITableMetadata meta) {
-		return subtableCache.remove(meta) != null;
+		String baseName=getProfile().getObjectNameToUse(meta.getTableName(true));
+		return subtableCache.remove(baseName) != null;
 	}
 
 	protected boolean hasRemarkFeature() {
