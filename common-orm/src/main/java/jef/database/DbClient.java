@@ -265,7 +265,9 @@ public class DbClient extends Session implements SessionFactory {
 
 	protected String getTransactionId(String key) {
 		StringBuilder sb = new StringBuilder();
-		sb.append('[').append(getProfile(key).getName()).append(':').append(getDbName(key)).append('@').append(Thread.currentThread().getId()).append(']');
+		//2016/7/8 优化，Map hash查找仅发生一次。
+		ConnectInfo info=connPool.getInfo(key);
+		sb.append('[').append(info.profile.getName()).append(':').append(info.dbname).append('@').append(Thread.currentThread().getId()).append(']');
 		return sb.toString();
 	}
 

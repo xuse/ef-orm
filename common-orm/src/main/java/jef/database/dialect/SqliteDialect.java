@@ -18,6 +18,8 @@ package jef.database.dialect;
 import java.io.File;
 import java.sql.SQLException;
 
+import org.apache.commons.lang.StringUtils;
+
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.dialect.ColumnType.AutoIncrement;
@@ -205,6 +207,7 @@ public class SqliteDialect extends AbstractDialect {
 			throw new IllegalArgumentException(url);
 		}
 		String dbpath = url.substring(12);
+		dbpath=StringUtils.substringBefore(dbpath, "?");
 		File file = new File(dbpath);
 		connectInfo.setDbname(file.getName());
 		connectInfo.setHost("");
