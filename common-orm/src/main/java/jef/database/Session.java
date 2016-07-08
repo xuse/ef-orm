@@ -31,8 +31,6 @@ import java.util.Map;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceException;
 
-import org.easyframe.enterprise.spring.TransactionMode;
-
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.Batch.DeletePOJO;
@@ -74,6 +72,7 @@ import jef.database.query.TypedQuery;
 import jef.database.routing.PartitionResult;
 import jef.database.support.DbOperatorListener;
 import jef.database.support.MultipleDatabaseOperateException;
+import jef.database.support.RDBMS;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.CountClause;
@@ -89,6 +88,8 @@ import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
+
+import org.easyframe.enterprise.spring.TransactionMode;
 
 /**
  * 描述一个事务(会话)的数据库操作句柄，提供了各种操作数据库的方法供用户使用。
@@ -2668,7 +2669,11 @@ public abstract class Session {
 	protected final OperateTarget wrapTarget(String dbName, int mustTx) throws SQLException {
 		if (mustTx > 0 && this instanceof DbClient) {// 如果不是在事务中，那么就用一个内嵌事务将其包裹住，作用是在resultSet的生命周期内，该连接不会被归还。并且也预防了基于线程的连接模型中，该连接被本线程的其他SQL操作再次取用然后释放回池
 			Transaction tx = new TransactionImpl((DbClient) this, TransactionFlag.ResultHolder, mustTx == 1);
-			return new OperateTarget(tx, dbName);
+			OperateTarget target=new OperateTarget(tx, dbName);
+			if(target.getProfile().getName()==RDBMS.sqlite){
+				tx.setReadonly(false);//The new Driver (3.8.11) do not support setReadOnly() while connection is created. 
+			}
+			return target;
 		} else {
 			return new OperateTarget(this, dbName);
 		}

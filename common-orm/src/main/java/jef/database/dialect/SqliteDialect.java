@@ -224,7 +224,7 @@ public class SqliteDialect extends AbstractDialect {
 		@Override
 		public String extractConstraintName(SQLException sqle) {
 			String message = sqle.getMessage();
-			if (message.startsWith("[SQLITE_CONSTRAINT]")) {
+			if (message.startsWith("[SQLITE_CONSTRAINT]") || message.startsWith("UNIQUE constraint")) {
 				return message;
 			} else if ("PRIMARY KEY must be unique".equals(message)) {
 				return message;

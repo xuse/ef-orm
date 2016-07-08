@@ -162,12 +162,10 @@ public class MetadataTest extends org.junit.Assert{
 		if(meta.supportsSequence()){
 			String seqName = "seq_test_for_exist";
 			createSequence(null, seqName);
-
-			boolean exist = meta.exists(ObjectType.SEQUENCE, seqName);
-			Assert.assertTrue(exist);
+			Assert.assertTrue(meta.exists(ObjectType.SEQUENCE, seqName));
 
 			dropSequence(seqName);
-			Assert.assertTrue(meta.exists(ObjectType.SEQUENCE, seqName));	
+			Assert.assertFalse(meta.exists(ObjectType.SEQUENCE, seqName));	
 		}
 	}
 

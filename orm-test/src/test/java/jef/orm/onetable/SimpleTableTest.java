@@ -9,7 +9,6 @@ import java.util.List;
 
 import javax.persistence.EntityExistsException;
 
-import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.Condition;
@@ -736,12 +735,13 @@ public class SimpleTableTest extends org.junit.Assert {
 		t3.setAssetId(max + 2);
 		t3.setNormal("bb");
 		db.insert(t3);
-		CaAsset t4 = new CaAsset();
-		t4.setNormal("cc");
-		db.insert(t4);
 
 		t2 = db.load(t2);
 		t3 = db.load(t3);
+		
+		db.delete(t2);
+		db.delete(t3);
+		
 	}
 
 	@IgnoreOn(allButExcept="hsqldb")
@@ -1004,6 +1004,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		CaAsset ca = db.load(CaAsset.class, 12);
 		List<CaAsset> ca1 = db.selectByField(CaAsset.Field.acctId, 12);
 		Integer[] a = new Integer[501];
+		ORMConfig.getInstance().setDebugMode(false);
 		for (int i = 0; i < 501; i++) {
 			a[i] = i + 1;
 		}
@@ -1011,6 +1012,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		List<CaAsset> list1 = db.batchLoad(CaAsset.class, Arrays.asList(a));
 
 		List<CaAsset> list2 = db.batchLoadByField(CaAsset.Field.acctId, Arrays.asList(a));
+		ORMConfig.getInstance().setDebugMode(true);
 	}
 
 	/**
