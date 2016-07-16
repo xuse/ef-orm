@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 
 import javax.persistence.NamedAttributeNode;
 
-import com.github.geequery.springdata.repository.query.JpaQueryMethod;
+import com.github.geequery.springdata.repository.query.GqQueryMethod;
 
 /**
  * Annotation to configure the JPA 2.1 {@link javax.persistence.EntityGraph}s that should be used on repository methods.

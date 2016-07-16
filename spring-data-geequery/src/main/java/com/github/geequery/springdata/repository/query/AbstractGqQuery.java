@@ -33,12 +33,6 @@ import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.util.Assert;
 
 import com.github.geequery.springdata.repository.EntityGraph;
-import com.github.geequery.springdata.repository.query.JpaQueryExecution.CollectionExecution;
-import com.github.geequery.springdata.repository.query.JpaQueryExecution.ModifyingExecution;
-import com.github.geequery.springdata.repository.query.JpaQueryExecution.PagedExecution;
-import com.github.geequery.springdata.repository.query.JpaQueryExecution.ProcedureExecution;
-import com.github.geequery.springdata.repository.query.JpaQueryExecution.SingleEntityExecution;
-import com.github.geequery.springdata.repository.query.JpaQueryExecution.SlicedExecution;
 
 /**
  * Abstract base class to implement {@link RepositoryQuery}s.
@@ -46,19 +40,19 @@ import com.github.geequery.springdata.repository.query.JpaQueryExecution.SlicedE
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
-public abstract class AbstractJpaQuery implements RepositoryQuery {
+public abstract class AbstractGqQuery implements RepositoryQuery {
 
-	private final JpaQueryMethod method;
+	private final GqQueryMethod method;
 	private final EntityManager em;
 
 	/**
-	 * Creates a new {@link AbstractJpaQuery} from the given {@link JpaQueryMethod}.
+	 * Creates a new {@link AbstractJpaQuery} from the given {@link GqQueryMethod}.
 	 * 
 	 * @param method
 	 * @param resultFactory
 	 * @param em
 	 */
-	public AbstractJpaQuery(JpaQueryMethod method, EntityManager em) {
+	public AbstractGqQuery(GqQueryMethod method, EntityManager em) {
 
 		Assert.notNull(method);
 		Assert.notNull(em);
@@ -71,7 +65,7 @@ public abstract class AbstractJpaQuery implements RepositoryQuery {
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.query.RepositoryQuery#getQueryMethod()
 	 */
-	public JpaQueryMethod getQueryMethod() {
+	public GqQueryMethod getQueryMethod() {
 		return method;
 	}
 
@@ -89,7 +83,7 @@ public abstract class AbstractJpaQuery implements RepositoryQuery {
 	 * @see org.springframework.data.repository.query.RepositoryQuery#execute(java.lang.Object[])
 	 */
 	public Object execute(Object[] parameters) {
-		return doExecute(getExecution(), parameters);
+		return doExecute(parameters);
 	}
 
 	/**
@@ -97,35 +91,17 @@ public abstract class AbstractJpaQuery implements RepositoryQuery {
 	 * @param values
 	 * @return
 	 */
-	private Object doExecute(JpaQueryExecution execution, Object[] values) {
-
-		Object result = execution.execute(this, values);
+	private Object doExecute(Object[] values) {
+		//TODO
+//		Object result = execution.execute(this, values);
 
 		ParametersParameterAccessor accessor = new ParametersParameterAccessor(method.getParameters(), values);
 		ResultProcessor withDynamicProjection = method.getResultProcessor().withDynamicProjection(accessor);
 
-		return withDynamicProjection.processResult(result, TupleConverter.INSTANCE);
+	//	return withDynamicProjection.processResult(result, TupleConverter.INSTANCE);
+		return null;
 	}
 
-	protected JpaQueryExecution getExecution() {
-
-		if (method.isStreamQuery()) {
-//			return new StreamExecution();
-			throw new UnsupportedOperationException();
-		} else if (method.isProcedureQuery()) {
-			return new ProcedureExecution();
-		} else if (method.isCollectionQuery()) {
-			return new CollectionExecution();
-		} else if (method.isSliceQuery()) {
-			return new SlicedExecution(method.getParameters());
-		} else if (method.isPageQuery()) {
-			return new PagedExecution(method.getParameters());
-		} else if (method.isModifyingQuery()) {
-			return method.getClearAutomatically() ? new ModifyingExecution(method, em) : new ModifyingExecution(method, null);
-		} else {
-			return new SingleEntityExecution();
-		}
-	}
 
 	/**
 	 * Applies the declared query hints to the given query.
@@ -133,7 +109,7 @@ public abstract class AbstractJpaQuery implements RepositoryQuery {
 	 * @param query
 	 * @return
 	 */
-	protected <T extends Query> T applyHints(T query, JpaQueryMethod method) {
+	protected <T extends Query> T applyHints(T query, GqQueryMethod method) {
 
 		for (QueryHint hint : method.getHints()) {
 			applyQueryHint(query, hint);
@@ -157,13 +133,13 @@ public abstract class AbstractJpaQuery implements RepositoryQuery {
 	}
 
 	/**
-	 * Applies the {@link LockModeType} provided by the {@link JpaQueryMethod} to the given {@link Query}.
+	 * Applies the {@link LockModeType} provided by the {@link GqQueryMethod} to the given {@link Query}.
 	 * 
 	 * @param query must not be {@literal null}.
 	 * @param method must not be {@literal null}.
 	 * @return
 	 */
-	private Query applyLockMode(Query query, JpaQueryMethod method) {
+	private Query applyLockMode(Query query, GqQueryMethod method) {
 
 		LockModeType lockModeType = method.getLockModeType();
 		return lockModeType == null ? query : query.setLockMode(lockModeType);
@@ -178,17 +154,17 @@ public abstract class AbstractJpaQuery implements RepositoryQuery {
 	}
 
 	/**
-	 * Configures the {@link javax.persistence.EntityGraph} to use for the given {@link JpaQueryMethod} if the
+	 * Configures the {@link javax.persistence.EntityGraph} to use for the given {@link GqQueryMethod} if the
 	 * {@link EntityGraph} annotation is present.
 	 * 
 	 * @param query must not be {@literal null}.
 	 * @param method must not be {@literal null}.
 	 * @return
 	 */
-	private Query applyEntityGraphConfiguration(Query query, JpaQueryMethod method) {
+	private Query applyEntityGraphConfiguration(Query query, GqQueryMethod method) {
 
 		Assert.notNull(query, "Query must not be null!");
-		Assert.notNull(method, "JpaQueryMethod must not be null!");
+		Assert.notNull(method, "GqQueryMethod must not be null!");
 
 		Map<String, Object> hints = Jpa21Utils.tryGetFetchGraphHints(em, method.getEntityGraph(),
 				getQueryMethod().getEntityInformation().getJavaType());

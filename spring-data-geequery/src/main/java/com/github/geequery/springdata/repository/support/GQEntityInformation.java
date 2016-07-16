@@ -17,20 +17,20 @@ package com.github.geequery.springdata.repository.support;
 
 import java.io.Serializable;
 
+import jef.database.dialect.type.ColumnMapping;
+
 import org.springframework.data.repository.core.EntityInformation;
 
 import com.github.geequery.springdata.repository.query.JpaEntityMetadata;
 
-import jef.database.dialect.type.ColumnMapping;
-
 /**
- * Extension of {@link EntityInformation} to capture additional JPA specific information about entities.
+ * Extension of {@link EntityInformation} to capture additional JPA specific
+ * information about entities.
  * 
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
-public interface JpaEntityInformation<T, ID extends Serializable> extends EntityInformation<T, ID>,
-		JpaEntityMetadata<T> {
+public interface GQEntityInformation<T,ID extends Serializable> extends EntityInformation<T, ID>, JpaEntityMetadata<T> {
 
 	/**
 	 * Returns the id attribute of the entity.
@@ -47,8 +47,9 @@ public interface JpaEntityInformation<T, ID extends Serializable> extends Entity
 	boolean hasCompositeId();
 
 	/**
-	 * Returns the attribute names of the id attributes. If the entity has a composite id, then all id attribute names are
-	 * returned. If the entity has a single id attribute then this single attribute name is returned.
+	 * Returns the attribute names of the id attributes. If the entity has a
+	 * composite id, then all id attribute names are returned. If the entity has
+	 * a single id attribute then this single attribute name is returned.
 	 * 
 	 * @return
 	 */

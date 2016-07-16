@@ -27,7 +27,7 @@ import javax.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Import;
-import com.github.geequery.springdata.repository.support.JpaRepositoryFactoryBean;
+import com.github.geequery.springdata.repository.support.GqRepositoryFactoryBean;
 import org.springframework.data.repository.config.DefaultRepositoryBaseClass;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
@@ -104,11 +104,11 @@ public @interface EnableJpaRepositories {
 
 	/**
 	 * Returns the {@link FactoryBean} class to be used for each repository instance. Defaults to
-	 * {@link JpaRepositoryFactoryBean}.
+	 * {@link GqRepositoryFactoryBean}.
 	 * 
 	 * @return
 	 */
-	Class<?> repositoryFactoryBeanClass() default JpaRepositoryFactoryBean.class;
+	Class<?> repositoryFactoryBeanClass() default GqRepositoryFactoryBean.class;
 
 	/**
 	 * Configure the repository base class to be used to create repository proxies for this particular configuration.

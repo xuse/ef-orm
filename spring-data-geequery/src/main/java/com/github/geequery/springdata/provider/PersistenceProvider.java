@@ -27,13 +27,13 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Query;
 import javax.persistence.metamodel.Metamodel;
 
-import org.springframework.data.util.CloseableIterator;
-import org.springframework.util.Assert;
-import org.springframework.util.ConcurrentReferenceHashMap;
-
 import jef.database.DbUtils;
 import jef.database.IQueryableEntity;
 import jef.database.jpa.JefEntityManagerFactory;
+
+import org.springframework.data.util.CloseableIterator;
+import org.springframework.util.Assert;
+import org.springframework.util.ConcurrentReferenceHashMap;
 
 /**
  * Enumeration representing persistence providers to be used.
@@ -41,7 +41,7 @@ import jef.database.jpa.JefEntityManagerFactory;
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
-public enum PersistenceProvider implements QueryExtractor, ProxyIdAccessor {
+public enum PersistenceProvider implements ProxyIdAccessor {
 
 	GEEQUERY(//
 			Arrays.asList(GQ_ENTITY_MANAGER_INTERFACE), //
@@ -211,5 +211,9 @@ public enum PersistenceProvider implements QueryExtractor, ProxyIdAccessor {
 
 	public CloseableIterator<Object> executeQueryWithResultStream(Query jpaQuery) {
 		throw new UnsupportedOperationException("Streaming results is not implement for this PersistenceProvider: " + name());
+	}
+
+	public static PersistenceProvider fromEntityManager(EntityManager em) {
+		return PersistenceProvider.GEEQUERY;
 	}
 }

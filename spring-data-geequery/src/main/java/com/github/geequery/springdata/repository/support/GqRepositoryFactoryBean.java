@@ -20,40 +20,50 @@ import java.io.Serializable;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import jef.database.jpa.JefEntityManagerFactory;
+
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
 import org.springframework.data.repository.core.support.TransactionalRepositoryFactoryBeanSupport;
 import org.springframework.util.Assert;
 
-import jef.database.jpa.JefEntityManagerWithoutTx;
-
 /**
- * Special adapter for Springs {@link org.springframework.beans.factory.FactoryBean} interface to allow easy setup of
- * repository factories via Spring configuration.
+ * Special adapter for Springs
+ * {@link org.springframework.beans.factory.FactoryBean} interface to allow easy
+ * setup of repository factories via Spring configuration.
  * 
  * @author Oliver Gierke
  * @author Eberhard Wolff
- * @param <T> the type of the repository
+ * @param <T>
+ *            the type of the repository
  */
-public class JpaRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable> extends
-		TransactionalRepositoryFactoryBeanSupport<T, S, ID> {
+public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable> extends TransactionalRepositoryFactoryBeanSupport<T, S, ID> {
 
-	private JefEntityManagerWithoutTx entityManager;
+	// private JefEntityManagerFactory emf;
+	private EntityManager em;
 
 	/**
 	 * The {@link EntityManager} to be used.
 	 * 
-	 * @param entityManager the entityManager to set
+	 * @param entityManager
+	 *            the entityManager to set
 	 */
 	@PersistenceContext
-	public void setEntityManager(JefEntityManagerWithoutTx entityManager) {
-		this.entityManager = entityManager;
+	public void setEntityManager(EntityManager entityManager) {
+		this.em = entityManager;
+		// this.emf = (JefEntityManagerFactory)
+		// entityManager.getEntityManagerFactory();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport#setMappingContext(org.springframework.data.mapping.context.MappingContext)
+	 * 
+	 * @see
+	 * org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport
+	 * #
+	 * setMappingContext(org.springframework.data.mapping.context.MappingContext
+	 * )
 	 */
 	@Override
 	public void setMappingContext(MappingContext<?, ?> mappingContext) {
@@ -68,7 +78,7 @@ public class JpaRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends
 	 */
 	@Override
 	protected RepositoryFactorySupport doCreateRepositoryFactory() {
-		return createRepositoryFactory(entityManager);
+		return createRepositoryFactory(em);
 	}
 
 	/**
@@ -77,8 +87,8 @@ public class JpaRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends
 	 * @param entityManager
 	 * @return
 	 */
-	protected RepositoryFactorySupport createRepositoryFactory(JefEntityManagerWithoutTx entityManager) {
-		return new JpaRepositoryFactory(entityManager);
+	protected RepositoryFactorySupport createRepositoryFactory(EntityManager emf) {
+		return new JpaRepositoryFactory(emf);
 	}
 
 	/*
@@ -89,8 +99,7 @@ public class JpaRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends
 	 */
 	@Override
 	public void afterPropertiesSet() {
-
-		Assert.notNull(entityManager, "EntityManager must not be null!");
+		Assert.notNull(em, "EntityManager must not be null!");
 		super.afterPropertiesSet();
 	}
 }

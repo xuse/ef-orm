@@ -29,12 +29,6 @@ import javax.persistence.QueryHint;
 
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
-import com.github.geequery.springdata.provider.QueryExtractor;
-import com.github.geequery.springdata.repository.EntityGraph;
-import com.github.geequery.springdata.repository.Lock;
-import com.github.geequery.springdata.repository.Modifying;
-import com.github.geequery.springdata.repository.Query;
-import com.github.geequery.springdata.repository.QueryHints;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.Parameter;
@@ -43,6 +37,12 @@ import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import com.github.geequery.springdata.repository.EntityGraph;
+import com.github.geequery.springdata.repository.Lock;
+import com.github.geequery.springdata.repository.Modifying;
+import com.github.geequery.springdata.repository.Query;
+import com.github.geequery.springdata.repository.QueryHints;
+
 /**
  * JPA specific extension of {@link QueryMethod}.
  * 
@@ -50,11 +50,13 @@ import org.springframework.util.StringUtils;
  * @author Thomas Darimont
  * @author Christoph Strobl
  */
-public class JpaQueryMethod extends QueryMethod {
+public class GqQueryMethod extends QueryMethod {
 
-	// @see JPA 2.0 Specification 2.2 Persistent Fields and Properties Page 23 - Top paragraph.
+	// @see JPA 2.0 Specification 2.2 Persistent Fields and Properties Page 23 -
+	// Top paragraph.
 	private static final Set<Class<?>> NATIVE_ARRAY_TYPES;
-	private static final StoredProcedureAttributeSource storedProcedureAttributeSource = StoredProcedureAttributeSource.INSTANCE;
+	// private static final StoredProcedureAttributeSource
+	// storedProcedureAttributeSource = StoredProcedureAttributeSource.INSTANCE;
 
 	static {
 
@@ -67,31 +69,27 @@ public class JpaQueryMethod extends QueryMethod {
 		NATIVE_ARRAY_TYPES = Collections.unmodifiableSet(types);
 	}
 
-	private final QueryExtractor extractor;
 	private final Method method;
-
-	private StoredProcedureAttributes storedProcedureAttributes;
 
 	/**
 	 * Creates a {@link JpaQueryMethod}.
 	 * 
-	 * @param method must not be {@literal null}
-	 * @param extractor must not be {@literal null}
-	 * @param metadata must not be {@literal null}
+	 * @param method
+	 *            must not be {@literal null}
+	 * @param extractor
+	 *            must not be {@literal null}
+	 * @param metadata
+	 *            must not be {@literal null}
 	 */
-	public JpaQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
-			QueryExtractor extractor) {
+	public GqQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory factory) {
 
 		super(method, metadata, factory);
 
 		Assert.notNull(method, "Method must not be null!");
-		Assert.notNull(extractor, "Query extractor must not be null!");
 
 		this.method = method;
-		this.extractor = extractor;
 
-		Assert.isTrue(!(isModifyingQuery() && getParameters().hasSpecialParameter()),
-				String.format("Modifying method must not contain %s!", Parameters.TYPES));
+		Assert.isTrue(!(isModifyingQuery() && getParameters().hasSpecialParameter()), String.format("Modifying method must not contain %s!", Parameters.TYPES));
 		assertParameterNamesInAnnotatedQuery();
 	}
 
@@ -109,18 +107,19 @@ public class JpaQueryMethod extends QueryMethod {
 				continue;
 			}
 
-			if (!annotatedQuery.contains(String.format(":%s", parameter.getName()))
-					&& !annotatedQuery.contains(String.format("#%s", parameter.getName()))) {
-				throw new IllegalStateException(
-						String.format("Using named parameters for method %s but parameter '%s' not found in annotated query '%s'!",
-								method, parameter.getName(), annotatedQuery));
+			if (!annotatedQuery.contains(String.format(":%s", parameter.getName())) && !annotatedQuery.contains(String.format("#%s", parameter.getName()))) {
+				throw new IllegalStateException(String.format("Using named parameters for method %s but parameter '%s' not found in annotated query '%s'!", method,
+						parameter.getName(), annotatedQuery));
 			}
 		}
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryMethod#getEntityInformation()
+	 * 
+	 * @see
+	 * org.springframework.data.repository.query.QueryMethod#getEntityInformation
+	 * ()
 	 */
 	@Override
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -140,7 +139,8 @@ public class JpaQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Returns all {@link QueryHint}s annotated at this class. Note, that {@link QueryHints}
+	 * Returns all {@link QueryHint}s annotated at this class. Note, that
+	 * {@link QueryHints}
 	 * 
 	 * @return
 	 */
@@ -180,8 +180,8 @@ public class JpaQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Returns whether the potentially configured {@link QueryHint}s shall be applied when triggering the count query for
-	 * pagination.
+	 * Returns whether the potentially configured {@link QueryHint}s shall be
+	 * applied when triggering the count query for pagination.
 	 * 
 	 * @return
 	 */
@@ -189,16 +189,6 @@ public class JpaQueryMethod extends QueryMethod {
 
 		QueryHints hints = AnnotatedElementUtils.findMergedAnnotation(method, QueryHints.class);
 		return hints != null ? hints.forCounting() : false;
-	}
-
-	/**
-	 * Returns the {@link QueryExtractor}.
-	 * 
-	 * @return
-	 */
-	QueryExtractor getQueryExtractor() {
-
-		return extractor;
 	}
 
 	/**
@@ -212,8 +202,9 @@ public class JpaQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Returns the query string declared in a {@link Query} annotation or {@literal null} if neither the annotation found
-	 * nor the attribute was specified.
+	 * Returns the query string declared in a {@link Query} annotation or
+	 * {@literal null} if neither the annotation found nor the attribute was
+	 * specified.
 	 * 
 	 * @return
 	 */
@@ -224,8 +215,9 @@ public class JpaQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Returns the countQuery string declared in a {@link Query} annotation or {@literal null} if neither the annotation
-	 * found nor the attribute was specified.
+	 * Returns the countQuery string declared in a {@link Query} annotation or
+	 * {@literal null} if neither the annotation found nor the attribute was
+	 * specified.
 	 * 
 	 * @return
 	 */
@@ -236,8 +228,9 @@ public class JpaQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Returns the count query projection string declared in a {@link Query} annotation or {@literal null} if neither the
-	 * annotation found nor the attribute was specified.
+	 * Returns the count query projection string declared in a {@link Query}
+	 * annotation or {@literal null} if neither the annotation found nor the
+	 * attribute was specified.
 	 * 
 	 * @return
 	 * @since 1.6
@@ -257,9 +250,11 @@ public class JpaQueryMethod extends QueryMethod {
 		return getAnnotationValue("nativeQuery", Boolean.class).booleanValue();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryMethod#getNamedQueryName()
+	 * 
+	 * @see
+	 * org.springframework.data.repository.query.QueryMethod#getNamedQueryName()
 	 */
 	@Override
 	public String getNamedQueryName() {
@@ -269,7 +264,8 @@ public class JpaQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Returns the name of the {@link NamedQuery} that shall be used for count queries.
+	 * Returns the name of the {@link NamedQuery} that shall be used for count
+	 * queries.
 	 * 
 	 * @return
 	 */
@@ -289,8 +285,8 @@ public class JpaQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Returns the {@link Query} annotation's attribute casted to the given type or default value if no annotation
-	 * available.
+	 * Returns the {@link Query} annotation's attribute casted to the given type
+	 * or default value if no annotation available.
 	 * 
 	 * @param attribute
 	 * @param type
@@ -312,27 +308,34 @@ public class JpaQueryMethod extends QueryMethod {
 		return targetType.cast(AnnotationUtils.getValue(annotation, attribute));
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryMethod#createParameters(java.lang.reflect.Method)
+	 * 
+	 * @see
+	 * org.springframework.data.repository.query.QueryMethod#createParameters
+	 * (java.lang.reflect.Method)
 	 */
 	@Override
 	protected JpaParameters createParameters(Method method) {
 		return new JpaParameters(method);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryMethod#getParameters()
+	 * 
+	 * @see
+	 * org.springframework.data.repository.query.QueryMethod#getParameters()
 	 */
 	@Override
 	public JpaParameters getParameters() {
 		return (JpaParameters) super.getParameters();
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.QueryMethod#isCollectionQuery()
+	 * 
+	 * @see
+	 * org.springframework.data.repository.query.QueryMethod#isCollectionQuery()
 	 */
 	@Override
 	public boolean isCollectionQuery() {
@@ -340,7 +343,8 @@ public class JpaQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * Return {@literal true} if the method contains a {@link Procedure} annotation.
+	 * Return {@literal true} if the method contains a {@link Procedure}
+	 * annotation.
 	 * 
 	 * @return
 	 */
@@ -348,18 +352,4 @@ public class JpaQueryMethod extends QueryMethod {
 		return AnnotationUtils.findAnnotation(method, Procedure.class) != null;
 	}
 
-	/**
-	 * Returns a new {@link StoredProcedureAttributes} representing the stored procedure meta-data for this
-	 * {@link JpaQueryMethod}.
-	 * 
-	 * @return
-	 */
-	StoredProcedureAttributes getProcedureAttributes() {
-
-		if (storedProcedureAttributes == null) {
-			this.storedProcedureAttributes = storedProcedureAttributeSource.createFrom(method, getEntityInformation());
-		}
-
-		return storedProcedureAttributes;
-	}
 }

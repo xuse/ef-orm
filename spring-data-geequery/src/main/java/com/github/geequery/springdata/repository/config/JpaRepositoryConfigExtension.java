@@ -15,7 +15,9 @@
  */
 package com.github.geequery.springdata.repository.config;
 
-import static com.github.geequery.springdata.repository.config.BeanDefinitionNames.*;
+import static com.github.geequery.springdata.repository.config.BeanDefinitionNames.EM_BEAN_DEFINITION_REGISTRAR_POST_PROCESSOR_BEAN_NAME;
+import static com.github.geequery.springdata.repository.config.BeanDefinitionNames.JPA_CONTEXT_BEAN_NAME;
+import static com.github.geequery.springdata.repository.config.BeanDefinitionNames.JPA_MAPPING_CONTEXT_BEAN_NAME;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
@@ -36,16 +38,17 @@ import org.springframework.context.annotation.AnnotationConfigUtils;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor;
-import com.github.geequery.springdata.repository.JpaRepository;
-import com.github.geequery.springdata.repository.support.DefaultJpaContext;
-import com.github.geequery.springdata.repository.support.EntityManagerBeanDefinitionRegistrarPostProcessor;
-import com.github.geequery.springdata.repository.support.JpaRepositoryFactoryBean;
 import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport;
 import org.springframework.data.repository.config.RepositoryConfigurationSource;
 import org.springframework.data.repository.config.XmlRepositoryConfigurationSource;
 import org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcessor;
 import org.springframework.util.StringUtils;
+
+import com.github.geequery.springdata.repository.GqRepository;
+import com.github.geequery.springdata.repository.support.DefaultJpaContext;
+import com.github.geequery.springdata.repository.support.EntityManagerBeanDefinitionRegistrarPostProcessor;
+import com.github.geequery.springdata.repository.support.GqRepositoryFactoryBean;
 
 /**
  * JPA specific configuration extension parsing custom attributes from the XML namespace and
@@ -80,7 +83,7 @@ public class JpaRepositoryConfigExtension extends RepositoryConfigurationExtensi
 	 * @see org.springframework.data.repository.config14.RepositoryConfigurationExtension#getRepositoryInterface()
 	 */
 	public String getRepositoryFactoryClassName() {
-		return JpaRepositoryFactoryBean.class.getName();
+		return GqRepositoryFactoryBean.class.getName();
 	}
 
 	/* 
@@ -108,7 +111,7 @@ public class JpaRepositoryConfigExtension extends RepositoryConfigurationExtensi
 	 */
 	@Override
 	protected Collection<Class<?>> getIdentifyingTypes() {
-		return Collections.<Class<?>> singleton(JpaRepository.class);
+		return Collections.<Class<?>> singleton(GqRepository.class);
 	}
 
 	/* 
