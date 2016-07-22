@@ -22,7 +22,7 @@ import org.springframework.data.repository.core.EntityMetadata;
  * 
  * @author Oliver Gierke
  */
-public interface JpaEntityMetadata<T> extends EntityMetadata<T> {
+public interface GqEntityMetadata<T> extends EntityMetadata<T> {
 
 	/**
 	 * Returns the name of the entity.

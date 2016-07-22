@@ -17,15 +17,19 @@ package com.github.geequery.springdata.repository.query;
 
 import java.lang.reflect.Method;
 
+import jef.database.NativeQuery;
 import jef.database.jpa.JefEntityManagerFactory;
+import jef.tools.StringUtils;
 
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.data.repository.query.QueryLookupStrategy;
-import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.orm.jpa.EntityManagerProxy;
+
+import com.github.geequery.springdata.provider.PersistenceProvider;
 
 /**
  * Query lookup strategy to execute finders.
@@ -33,17 +37,46 @@ import org.springframework.data.repository.query.RepositoryQuery;
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
-public final class GqQueryLookupStrategy implements QueryLookupStrategy{
+public final class GqQueryLookupStrategy implements QueryLookupStrategy {
+	private final EntityManagerProxy em;
+	private final Key key;
+	private final EvaluationContextProvider provider;
+	private final JefEntityManagerFactory emf;
 
-	public GqQueryLookupStrategy(JefEntityManagerFactory emf, Key key, EvaluationContextProvider evaluationContextProvider) {
-		// TODO Auto-generated constructor stub
+	public GqQueryLookupStrategy(EntityManagerProxy em, Key key, EvaluationContextProvider evaluationContextProvider) {
+		this.em = em;
+		this.key = key;
+		this.provider = evaluationContextProvider;
+		this.emf = (JefEntityManagerFactory) em.getEntityManagerFactory();
 	}
 
 	@Override
-	public RepositoryQuery resolveQuery(Method method, RepositoryMetadata metadata, ProjectionFactory factory, NamedQueries namedQueries) {
-		// TODO Auto-generated method stub
-		return null;
+	public RepositoryQuery resolveQuery(Method m, RepositoryMetadata metadata, ProjectionFactory factory, NamedQueries namedQueries) {
+		GqQueryMethod method = new GqQueryMethod(m, metadata, factory);
+		// boolean flag = m.isCollectionQuery();
+		// flag = m.isModifyingQuery();
+		// flag = m.isNativeQuery();
+		// flag = m.isPageQuery();
+		// flag = m.isProcedureQuery();
+		// flag = m.isSliceQuery();
+		// flag = m.isQueryForEntity();
+		// flag = m.isStreamQuery();
+		//
+		String qName = method.getNamedQueryName();
+		String qSql = method.getAnnotatedQuery();
+		if (method.isStreamQuery()) {
+			throw new UnsupportedOperationException();
+		} else if (method.isProcedureQuery()) {
+			return new GqProcedureQuery(method, em);
+		} else if (StringUtils.isNotEmpty(qSql)) {
+			throw new UnsupportedOperationException();
+		}
+		if (emf.getDefault().hasNamedQuery(qName)) {
+			NativeQuery<?> q = (NativeQuery<?>) em.getTargetEntityManager().createNamedQuery(qName);
+			return new GqNativeQuery(method, em, q);
+		} else {
+			return new PartTreeGqQuery(method, em, PersistenceProvider.GEEQUERY);
+		}
 	}
 
-	
 }

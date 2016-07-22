@@ -21,7 +21,7 @@ import javax.persistence.Query;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import com.github.geequery.springdata.repository.query.JpaParameters.JpaParameter;
+import com.github.geequery.springdata.repository.query.GqParameters.JpaParameter;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
@@ -36,7 +36,7 @@ import org.springframework.util.Assert;
  */
 public class ParameterBinder {
 
-	private final JpaParameters parameters;
+	private final GqParameters parameters;
 	private final ParameterAccessor accessor;
 	private final Object[] values;
 
@@ -46,7 +46,7 @@ public class ParameterBinder {
 	 * @param parameters must not be {@literal null}.
 	 * @param values must not be {@literal null}.
 	 */
-	public ParameterBinder(JpaParameters parameters, Object[] values) {
+	public ParameterBinder(GqParameters parameters, Object[] values) {
 
 		Assert.notNull(parameters);
 		Assert.notNull(values);
@@ -58,7 +58,7 @@ public class ParameterBinder {
 		this.accessor = new ParametersParameterAccessor(parameters, this.values);
 	}
 
-	ParameterBinder(JpaParameters parameters) {
+	ParameterBinder(GqParameters parameters) {
 		this(parameters, new Object[0]);
 	}
 
@@ -174,7 +174,7 @@ public class ParameterBinder {
 	 * 
 	 * @return
 	 */
-	JpaParameters getParameters() {
+	GqParameters getParameters() {
 		return parameters;
 	}
 

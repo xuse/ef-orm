@@ -25,7 +25,6 @@ import java.util.List;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.ParameterExpression;
 
-import com.github.geequery.springdata.provider.PersistenceProvider;
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
@@ -35,6 +34,8 @@ import org.springframework.expression.Expression;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
+
+import com.github.geequery.springdata.provider.PersistenceProvider;
 
 /**
  * Helper class to allow easy creation of {@link ParameterMetadata}s.

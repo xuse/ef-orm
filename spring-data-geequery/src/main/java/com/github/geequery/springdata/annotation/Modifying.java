@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2016 the original author or authors.
+ * Copyright 2008-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,42 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.geequery.springdata.repository.query;
+package com.github.geequery.springdata.annotation;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation to declare JPA 2.1 stored procedure mappings directly on repository methods.
+ * Indicates a method should be regarded as modifying query.
  * 
- * @author Thomas Darimont
  * @author Oliver Gierke
  * @author Christoph Strobl
- * @since 1.6
  */
-@Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Procedure {
+@Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+@Documented
+public @interface Modifying {
 
 	/**
-	 * The name of the procedure in the database, defaults to {@code ""}. Short form for {@link #procedureName()}.
+	 * Defines whether we should clear the underlying persistence context after executing the modifying query.
+	 * 
+	 * @return
 	 */
-	String value() default "";
-
-	/**
-	 * The name of the procedure in the database, defaults to {@code ""}.
-	 */
-	String procedureName() default "";
-
-	/**
-	 * The name of the procedure in the EntityManager - defaults to {@code ""}.
-	 */
-	String name() default "";
-
-	/**
-	 * The name of the outputParameter, defaults to {@code ""}.
-	 */
-	String outputParameterName() default "";
+	boolean clearAutomatically() default false;
 }

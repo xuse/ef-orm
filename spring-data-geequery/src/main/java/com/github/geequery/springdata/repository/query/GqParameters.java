@@ -22,8 +22,10 @@ import java.util.List;
 import javax.persistence.TemporalType;
 
 import org.springframework.core.MethodParameter;
-import com.github.geequery.springdata.repository.Temporal;
-import com.github.geequery.springdata.repository.query.JpaParameters.JpaParameter;
+
+import com.github.geequery.springdata.annotation.Temporal;
+import com.github.geequery.springdata.repository.query.GqParameters.JpaParameter;
+
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
 
@@ -32,18 +34,18 @@ import org.springframework.data.repository.query.Parameters;
  * 
  * @author Thomas Darimont
  */
-public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
+public class GqParameters extends Parameters<GqParameters, JpaParameter> {
 
 	/**
-	 * Creates a new {@link JpaParameters} instance from the given {@link Method}.
+	 * Creates a new {@link GqParameters} instance from the given {@link Method}.
 	 * 
 	 * @param method must not be {@literal null}.
 	 */
-	public JpaParameters(Method method) {
+	public GqParameters(Method method) {
 		super(method);
 	}
 
-	private JpaParameters(List<JpaParameter> parameters) {
+	private GqParameters(List<JpaParameter> parameters) {
 		super(parameters);
 	}
 
@@ -61,8 +63,8 @@ public class JpaParameters extends Parameters<JpaParameters, JpaParameter> {
 	 * @see org.springframework.data.repository.query.Parameters#createFrom(java.util.List)
 	 */
 	@Override
-	protected JpaParameters createFrom(List<JpaParameter> parameters) {
-		return new JpaParameters(parameters);
+	protected GqParameters createFrom(List<JpaParameter> parameters) {
+		return new GqParameters(parameters);
 	}
 
 	/**

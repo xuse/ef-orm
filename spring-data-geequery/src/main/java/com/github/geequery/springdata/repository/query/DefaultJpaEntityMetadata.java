@@ -22,12 +22,12 @@ import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
- * Default implementation for {@link JpaEntityMetadata}.
+ * Default implementation for {@link GqEntityMetadata}.
  * 
  * @author Oliver Gierke
  * @author Christoph Strobl
  */
-public class DefaultJpaEntityMetadata<T> implements JpaEntityMetadata<T> {
+public class DefaultJpaEntityMetadata<T> implements GqEntityMetadata<T> {
 
 	private final Class<T> domainType;
 

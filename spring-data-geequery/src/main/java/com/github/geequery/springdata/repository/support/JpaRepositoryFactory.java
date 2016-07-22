@@ -125,7 +125,7 @@ public class JpaRepositoryFactory extends RepositoryFactorySupport {
 	 */
 	@Override
 	protected QueryLookupStrategy getQueryLookupStrategy(Key key, EvaluationContextProvider evaluationContextProvider) {
-		return new GqQueryLookupStrategy(emf, key, evaluationContextProvider);
+		return new GqQueryLookupStrategy(em, key, evaluationContextProvider);
 	}
 
 	@SuppressWarnings("unchecked")

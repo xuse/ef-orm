@@ -33,9 +33,11 @@ import org.springframework.aop.interceptor.ExposeInvocationInterceptor;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
-import com.github.geequery.springdata.repository.EntityGraph;
-import com.github.geequery.springdata.repository.Lock;
-import com.github.geequery.springdata.repository.QueryHints;
+
+import com.github.geequery.springdata.annotation.EntityGraph;
+import com.github.geequery.springdata.annotation.Lock;
+import com.github.geequery.springdata.annotation.QueryHints;
+
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.support.RepositoryProxyPostProcessor;
 import org.springframework.transaction.support.TransactionSynchronizationManager;

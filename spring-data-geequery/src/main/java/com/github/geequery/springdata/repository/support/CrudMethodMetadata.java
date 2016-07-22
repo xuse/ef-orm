@@ -20,7 +20,7 @@ import java.util.Map;
 
 import javax.persistence.LockModeType;
 
-import com.github.geequery.springdata.repository.EntityGraph;
+import com.github.geequery.springdata.annotation.EntityGraph;
 
 /**
  * Interface to abstract {@link CrudMethodMetadata} that provide the {@link LockModeType} to be used for query

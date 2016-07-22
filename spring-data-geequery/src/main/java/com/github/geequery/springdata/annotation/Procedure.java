@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2013 the original author or authors.
+ * Copyright 2014-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,32 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.geequery.springdata.repository;
+package com.github.geequery.springdata.annotation;
 
-import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import javax.persistence.LockModeType;
-
 /**
- * Annotation used to specify the {@link LockModeType} to be used when executing the query. It will be evaluated when
- * using {@link Query} on a query method or if you derive the query from the method name.
+ * Annotation to declare JPA 2.1 stored procedure mappings directly on repository methods.
  * 
- * @author Aleksander Blomskøld
+ * @author Thomas Darimont
  * @author Oliver Gierke
+ * @author Christoph Strobl
+ * @since 1.6
  */
 @Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
-@Documented
-public @interface Lock {
+public @interface Procedure {
 
 	/**
-	 * The {@link LockModeType} to be used when executing the annotated query or CRUD method.
-	 * 
-	 * @return
+	 * The name of the procedure in the database, defaults to {@code ""}. Short form for {@link #procedureName()}.
 	 */
-	LockModeType value();
+	String value() default "";
+
+	/**
+	 * The name of the procedure in the database, defaults to {@code ""}.
+	 */
+	String procedureName() default "";
+
+	/**
+	 * The name of the procedure in the EntityManager - defaults to {@code ""}.
+	 */
+	String name() default "";
+
+	/**
+	 * The name of the outputParameter, defaults to {@code ""}.
+	 */
+	String outputParameterName() default "";
 }

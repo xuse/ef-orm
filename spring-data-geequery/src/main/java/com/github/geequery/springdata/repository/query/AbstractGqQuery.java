@@ -15,24 +15,17 @@
  */
 package com.github.geequery.springdata.repository.query;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
-import javax.persistence.Query;
-import javax.persistence.QueryHint;
-import javax.persistence.Tuple;
-import javax.persistence.TupleElement;
-import javax.persistence.TypedQuery;
 
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.data.repository.query.ParametersParameterAccessor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.util.Assert;
 
-import com.github.geequery.springdata.repository.EntityGraph;
+import com.github.geequery.springdata.repository.query.GqQueryExecution.ModifyingExecution;
+import com.github.geequery.springdata.repository.query.GqQueryExecution.PagedExecution;
+import com.github.geequery.springdata.repository.query.GqQueryExecution.SingleEntityExecution;
 
 /**
  * Abstract base class to implement {@link RepositoryQuery}s.
@@ -46,14 +39,14 @@ public abstract class AbstractGqQuery implements RepositoryQuery {
 	private final EntityManager em;
 
 	/**
-	 * Creates a new {@link AbstractJpaQuery} from the given {@link GqQueryMethod}.
+	 * Creates a new {@link AbstractJpaQuery} from the given
+	 * {@link GqQueryMethod}.
 	 * 
 	 * @param method
 	 * @param resultFactory
 	 * @param em
 	 */
 	public AbstractGqQuery(GqQueryMethod method, EntityManager em) {
-
 		Assert.notNull(method);
 		Assert.notNull(em);
 
@@ -61,10 +54,6 @@ public abstract class AbstractGqQuery implements RepositoryQuery {
 		this.em = em;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.RepositoryQuery#getQueryMethod()
-	 */
 	public GqQueryMethod getQueryMethod() {
 		return method;
 	}
@@ -78,165 +67,60 @@ public abstract class AbstractGqQuery implements RepositoryQuery {
 		return em;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.RepositoryQuery#execute(java.lang.Object[])
-	 */
-	public Object execute(Object[] parameters) {
-		return doExecute(parameters);
-	}
-
-	/**
-	 * @param execution
-	 * @param values
-	 * @return
-	 */
-	private Object doExecute(Object[] values) {
-		//TODO
-//		Object result = execution.execute(this, values);
-
-		ParametersParameterAccessor accessor = new ParametersParameterAccessor(method.getParameters(), values);
-		ResultProcessor withDynamicProjection = method.getResultProcessor().withDynamicProjection(accessor);
-
-	//	return withDynamicProjection.processResult(result, TupleConverter.INSTANCE);
-		return null;
-	}
-
-
-	/**
-	 * Applies the declared query hints to the given query.
-	 * 
-	 * @param query
-	 * @return
-	 */
-	protected <T extends Query> T applyHints(T query, GqQueryMethod method) {
-
-		for (QueryHint hint : method.getHints()) {
-			applyQueryHint(query, hint);
-		}
-
-		return query;
-	}
-
-	/**
-	 * Protected to be able to customize in sub-classes.
-	 * 
-	 * @param query must not be {@literal null}.
-	 * @param hint must not be {@literal null}.
-	 */
-	protected <T extends Query> void applyQueryHint(T query, QueryHint hint) {
-
-		Assert.notNull(query, "Query must not be null!");
-		Assert.notNull(hint, "QueryHint must not be null!");
-
-		query.setHint(hint.name(), hint.value());
-	}
-
-	/**
-	 * Applies the {@link LockModeType} provided by the {@link GqQueryMethod} to the given {@link Query}.
-	 * 
-	 * @param query must not be {@literal null}.
-	 * @param method must not be {@literal null}.
-	 * @return
-	 */
-	private Query applyLockMode(Query query, GqQueryMethod method) {
-
-		LockModeType lockModeType = method.getLockModeType();
-		return lockModeType == null ? query : query.setLockMode(lockModeType);
-	}
-
-	protected ParameterBinder createBinder(Object[] values) {
-		return new ParameterBinder(getQueryMethod().getParameters(), values);
-	}
-
-	protected Query createQuery(Object[] values) {
-		return applyLockMode(applyEntityGraphConfiguration(applyHints(doCreateQuery(values), method), method), method);
-	}
-
-	/**
-	 * Configures the {@link javax.persistence.EntityGraph} to use for the given {@link GqQueryMethod} if the
-	 * {@link EntityGraph} annotation is present.
-	 * 
-	 * @param query must not be {@literal null}.
-	 * @param method must not be {@literal null}.
-	 * @return
-	 */
-	private Query applyEntityGraphConfiguration(Query query, GqQueryMethod method) {
-
-		Assert.notNull(query, "Query must not be null!");
-		Assert.notNull(method, "GqQueryMethod must not be null!");
-
-		Map<String, Object> hints = Jpa21Utils.tryGetFetchGraphHints(em, method.getEntityGraph(),
-				getQueryMethod().getEntityInformation().getJavaType());
-
-		for (Map.Entry<String, Object> hint : hints.entrySet()) {
-			query.setHint(hint.getKey(), hint.getValue());
-		}
-
-		return query;
-	}
-
-	protected Query createCountQuery(Object[] values) {
-		Query countQuery = doCreateCountQuery(values);
-		return method.applyHintsToCountQuery() ? applyHints(countQuery, method) : countQuery;
-	}
-
-	/**
-	 * Creates a {@link Query} instance for the given values.
-	 * 
-	 * @param values must not be {@literal null}.
-	 * @return
-	 */
-	protected abstract Query doCreateQuery(Object[] values);
-
-	/**
-	 * Creates a {@link TypedQuery} for counting using the given values.
-	 * 
-	 * @param values must not be {@literal null}.
-	 * @return
-	 */
-	protected abstract Query doCreateCountQuery(Object[] values);
-
-	private static enum TupleConverter implements Converter<Object, Object> {
-
-		INSTANCE;
-
-		/* 
-		 * (non-Javadoc)
-		 * @see org.springframework.core.convert.converter.Converter#convert(java.lang.Object)
-		 */
-		@Override
-		public Object convert(Object source) {
-
-			if (!(source instanceof Tuple)) {
-				return source;
-			}
-
-			Tuple tuple = (Tuple) source;
-			Map<String, Object> result = new HashMap<String, Object>();
-
-			for (TupleElement<?> element : tuple.getElements()) {
-
-				String alias = element.getAlias();
-
-				if (alias == null || isIndexAsString(alias)) {
-					throw new IllegalStateException("No aliases found in result tuple! Make sure your query defines aliases!");
-				}
-
-				result.put(element.getAlias(), tuple.get(element));
-			}
-
-			return result;
-		}
-
-		private static boolean isIndexAsString(String source) {
-
-			try {
-				Integer.parseInt(source);
-				return true;
-			} catch (NumberFormatException o_O) {
-				return false;
-			}
+	protected GqQueryExecution getExecution() {
+		if (method.isProcedureQuery()) {
+			throw new UnsupportedOperationException();
+		} else if (method.isCollectionQuery()) {
+			return new PagedExecution(method.getParameters());
+		} else if (method.isPageQuery()) {
+			return new PagedExecution(method.getParameters());
+		} else if (method.isModifyingQuery()) {
+			return method.getClearAutomatically() ? new ModifyingExecution(method, em) : new ModifyingExecution(method, null);
+		} else {
+			return new SingleEntityExecution();
 		}
 	}
+
+	public Object execute(Object[] values) {
+		GqQueryExecution execution = getExecution();
+		Object result = execution.execute(this, values);
+		// ParametersParameterAccessor accessor = new
+		// ParametersParameterAccessor(method.getParameters(), values);
+		// ResultProcessor withDynamicProjection =
+		// method.getResultProcessor().withDynamicProjection(accessor);
+		// return withDynamicProjection.processResult(result,
+		// TupleConverter.INSTANCE);
+		return result;
+	}
+
+	protected abstract List<?> getResultList(Object[] values, Pageable page);
+
+	protected abstract Object getSingleResult(Object[] values);
+
+	protected abstract int executeUpdate(Object[] values);
+
+	protected abstract int executeDelete(Object[] values);
+
+	protected abstract long getResultCount(Object[] values);
+
+	// /**
+	// * Protected to be able to customize in sub-classes.
+	// *
+	// * @param query
+	// * must not be {@literal null}.
+	// * @param hint
+	// * must not be {@literal null}.
+	// */
+	// protected <T extends Query> void applyQueryHint(T query, QueryHint hint)
+	// {
+	//
+	// Assert.notNull(query, "Query must not be null!");
+	// Assert.notNull(hint, "QueryHint must not be null!");
+	//
+	// query.setHint(hint.name(), hint.value());
+	// }
+
+	// protected ParameterBinder createBinder(Object[] values) {
+	// return new ParameterBinder(getQueryMethod().getParameters(), values);
+	// }
 }

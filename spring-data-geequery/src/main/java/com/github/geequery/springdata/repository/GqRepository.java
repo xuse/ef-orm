@@ -21,16 +21,19 @@ import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.QueryByExampleExecutor;
 
+import com.github.geequery.springdata.annotation.Query;
 import com.github.geequery.springdata.repository.support.IdValues;
 
 /**
- * GQ specific extension of {@link org.springframework.data.repository.Repository}.
+ * GQ specific extension of
+ * {@link org.springframework.data.repository.Repository}.
  *
+ * TODO IdValues后续要修改成其他支持
+ * 
  * @author Jiyi
  */
 @NoRepositoryBean
-public interface GqRepository<T>
-		extends PagingAndSortingRepository<T, IdValues>, QueryByExampleExecutor<T> {
+public interface GqRepository<T> extends PagingAndSortingRepository<T, IdValues>, QueryByExampleExecutor<T> {
 	/**
 	 * Flushes all pending changes to the database.
 	 */
@@ -45,8 +48,9 @@ public interface GqRepository<T>
 	<S extends T> S saveAndFlush(S entity);
 
 	/**
-	 * Deletes the given entities in a batch which means it will create a single {@link Query}. Assume that we will clear
-	 * the {@link javax.persistence.EntityManager} after the call.
+	 * Deletes the given entities in a batch which means it will create a single
+	 * {@link Query}. Assume that we will clear the
+	 * {@link javax.persistence.EntityManager} after the call.
 	 * 
 	 * @param entities
 	 */
@@ -60,7 +64,8 @@ public interface GqRepository<T>
 	/**
 	 * Returns a reference to the entity with the given identifier.
 	 * 
-	 * @param id must not be {@literal null}.
+	 * @param id
+	 *            must not be {@literal null}.
 	 * @return a reference to the entity with the given identifier.
 	 * @see EntityManager#getReference(Class, Object)
 	 */

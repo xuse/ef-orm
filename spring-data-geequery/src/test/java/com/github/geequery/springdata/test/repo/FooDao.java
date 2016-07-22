@@ -1,13 +1,12 @@
 package com.github.geequery.springdata.test.repo;
 
-import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
 
-import com.github.geequery.springdata.repository.Query;
+import com.github.geequery.springdata.annotation.Query;
+import com.github.geequery.springdata.repository.GqRepository;
 import com.github.geequery.springdata.test.entity.Foo;
 
-public interface FooDao extends Repository<Foo, Integer> {
-	public Foo save(Foo foo);
+public interface FooDao extends GqRepository<Foo> {
 
 	/**
 	 * 此处适应Spring-date-JPA中的自定义查询方式 后续考虑增加一个注解可不依赖Spring-data-jpa

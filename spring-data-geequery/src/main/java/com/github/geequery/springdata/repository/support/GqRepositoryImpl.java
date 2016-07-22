@@ -50,6 +50,7 @@ import com.github.geequery.springdata.repository.JpaSpecificationExecutor;
 @Repository
 @Transactional(readOnly = true)
 public class GqRepositoryImpl<T> implements GqRepository<T>, JpaSpecificationExecutor<T> {
+	
 	private MetamodelInformation<T> meta;
 	//这是Spring的SharedEntityManager的代理，只可从中提取EMF，不可直接转换，因此这个EM上携带了基于线程的事务上下文
 	private EntityManager em;
