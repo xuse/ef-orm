@@ -112,7 +112,7 @@ public final class OrderField implements Serializable {
 			columnName = DbUtils.toColumnName(field, profile, alias);//
 		} else if (field instanceof FBIField) {
 			FBIField fbi = (FBIField) field;
-			columnName = StringUtils.upperCase(fbi.toSqlAndBindAttribs(context, profile));
+			columnName = fbi.toSqlAndBindAttribs(context, profile);
 		} else if (field instanceof SqlExpression) {
 			columnName = field.name();
 		} else {

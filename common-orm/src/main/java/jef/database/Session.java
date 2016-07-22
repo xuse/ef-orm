@@ -85,6 +85,7 @@ import jef.script.javascript.Var;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.JefConfiguration;
+import jef.tools.PageLimit;
 import jef.tools.StringUtils;
 
 import org.easyframe.enterprise.spring.TransactionMode;
@@ -806,7 +807,7 @@ public abstract class Session {
 	public <T extends IQueryableEntity> List<T> select(T obj, IntRange range) throws SQLException {
 		Query<T> query = (Query<T>) obj.getQuery();
 		QueryOption option = QueryOption.createFrom(query);
-		return typedSelect(query, range, option);
+		return typedSelect(query, PageLimit.parse(range), option);
 	}
 
 	/**
@@ -830,13 +831,13 @@ public abstract class Session {
 			if (queryObj instanceof Query<?>) {
 				Query<?> simpleQuery = (Query<?>) queryObj;
 				JoinElement element = DbUtils.toReferenceJoinQuery(simpleQuery, null);
-				return this.innerSelect(element, range, simpleQuery.getFilterCondition(), option);
+				return this.innerSelect(element, PageLimit.parse(range), simpleQuery.getFilterCondition(), option);
 			} else {
-				return this.innerSelect(queryObj, range, null, option);
+				return this.innerSelect(queryObj, PageLimit.parse(range), null, option);
 			}
 		} else {
 			option = QueryOption.DEFAULT;
-			return this.innerSelect(queryObj, range, null, option);
+			return this.innerSelect(queryObj, PageLimit.parse(range), null, option);
 		}
 	}
 
@@ -873,7 +874,7 @@ public abstract class Session {
 			option = QueryOption.DEFAULT;
 		}
 
-		return this.innerSelect(queryObj, range, null, option);
+		return this.innerSelect(queryObj, PageLimit.parse(range), null, option);
 	}
 
 	/**
@@ -946,7 +947,7 @@ public abstract class Session {
 			option = QueryOption.DEFAULT;
 			query = queryObj;
 		}
-		return innerIteratedSelect(query, range, option);
+		return innerIteratedSelect(query, PageLimit.parse(range), option);
 	}
 
 	/**
@@ -1024,7 +1025,7 @@ public abstract class Session {
 		} else {
 			option = QueryOption.DEFAULT;
 		}
-		return innerIteratedSelect(queryObj, range, option);
+		return innerIteratedSelect(queryObj, PageLimit.parse(range), option);
 	}
 
 	/**
@@ -1048,11 +1049,11 @@ public abstract class Session {
 		// 预处理
 		Transformer t = query.getResultTransformer();
 		if (!t.isLoadVsOne() || query.getMeta().getRefFieldsByName().isEmpty()) {
-			return innerIteratedSelect(query, range, option);
+			return innerIteratedSelect(query, PageLimit.parse(range), option);
 		}
 		// 拼装出带连接的查询请求
 		JoinElement q = DbUtils.toReferenceJoinQuery(query, null);
-		return innerIteratedSelect(q, range, option);
+		return innerIteratedSelect(q, PageLimit.parse(range), option);
 	}
 
 	/**
@@ -1132,7 +1133,7 @@ public abstract class Session {
 			at.setAliasType(AllTableColumns.AliasMode.RAWNAME);
 		}
 		@SuppressWarnings("unchecked")
-		List<T> objs = innerSelect(query, range, query.getFilterCondition(), option);
+		List<T> objs = innerSelect(query, PageLimit.parse(range), query.getFilterCondition(), option);
 		RecordsHolder<T> result = new RecordsHolder<T>(query.getMeta());
 		ResultSetContainer rawrs = option.getRs();
 		if (rawrs.size() > 1) {
@@ -1777,7 +1778,7 @@ public abstract class Session {
 	 * 查询实现，解析查询对象，将单表对象解析为Join查询
 	 */
 	@SuppressWarnings("unchecked")
-	protected final <T extends IQueryableEntity> List<T> typedSelect(Query<T> queryObj, IntRange range, QueryOption option) throws SQLException {
+	protected final <T extends IQueryableEntity> List<T> typedSelect(Query<T> queryObj, PageLimit range, QueryOption option) throws SQLException {
 		// 预处理
 		Transformer t = queryObj.getResultTransformer();
 		if (!t.isLoadVsOne() || queryObj.getMeta().getRefFieldsByName().isEmpty()) {
@@ -1789,8 +1790,8 @@ public abstract class Session {
 	}
 
 	@SuppressWarnings("unchecked")
-	final <T> ResultIterator<T> innerIteratedSelect(ConditionQuery queryObj, IntRange range, QueryOption option) throws SQLException {
-		if (range != null && range.size() <= 0) {
+	final <T> ResultIterator<T> innerIteratedSelect(ConditionQuery queryObj, PageLimit range, QueryOption option) throws SQLException {
+		if (range != null && range.getLimit() <= 0) {
 			return new ResultIterator.Impl<T>(new ArrayList<T>().iterator(), null);
 		}
 
@@ -1814,9 +1815,9 @@ public abstract class Session {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	final List innerSelect(ConditionQuery queryObj, IntRange range, Map<Reference, List<Condition>> filters, QueryOption option) throws SQLException {
+	final List innerSelect(ConditionQuery queryObj, PageLimit range, Map<Reference, List<Condition>> filters, QueryOption option) throws SQLException {
 		boolean debugMode = ORMConfig.getInstance().isDebugMode();
-		if (range != null && range.size() <= 0) {
+		if (range != null && range.getLimit() <= 0) {
 			if (debugMode)
 				LogUtil.show("Query has limit to no range. return empty list. " + range);
 			return Collections.EMPTY_LIST;

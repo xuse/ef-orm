@@ -3,8 +3,8 @@ package jef.database.routing.sql;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import jef.common.wrapper.IntRange;
 import jef.database.wrapper.populator.ResultSetExtractor;
+import jef.tools.PageLimit;
 
 public interface QueryablePlan extends ExecutionPlan{
 	public boolean mustGetAllResultsToCount();
@@ -13,5 +13,5 @@ public interface QueryablePlan extends ExecutionPlan{
 
 	public long getCount(SqlAndParameter parse,int maxSize,int fetchSize) throws SQLException;
 	
-	<T> T doQuery(SqlAndParameter parse,ResultSetExtractor<T> extractor, boolean forCount,IntRange range) throws SQLException;
+	<T> T doQuery(SqlAndParameter parse,ResultSetExtractor<T> extractor, boolean forCount,PageLimit range) throws SQLException;
 }

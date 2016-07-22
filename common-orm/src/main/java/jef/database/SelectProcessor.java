@@ -11,7 +11,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import jef.common.Entry;
 import jef.common.log.LogUtil;
-import jef.common.wrapper.IntRange;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.jdbc.result.ResultSetContainer;
@@ -41,6 +40,7 @@ import jef.database.wrapper.executor.DbTask;
 import jef.database.wrapper.processor.BindVariableContext;
 import jef.http.client.support.CommentEntry;
 import jef.tools.ArrayUtils;
+import jef.tools.PageLimit;
 import jef.tools.StringUtils;
 
 public abstract class SelectProcessor {
@@ -66,7 +66,7 @@ public abstract class SelectProcessor {
 	 *            带排序
 	 * @return
 	 */
-	public abstract QueryClause toQuerySql(ConditionQuery obj, IntRange range, boolean withOrder);
+	public abstract QueryClause toQuerySql(ConditionQuery obj, PageLimit range, boolean withOrder);
 
 	/**
 	 * 形成count的语句 可以返回多个count语句，意味着要执行上述全部语句，然后累加
@@ -106,7 +106,7 @@ public abstract class SelectProcessor {
 			super(db, parent);
 		}
 
-		public QueryClause toQuerySql(ConditionQuery obj, IntRange range, boolean order) {
+		public QueryClause toQuerySql(ConditionQuery obj, PageLimit range, boolean order) {
 			QueryClause clause = obj.toQuerySql(this, obj.prepare(), order);
 			clause.setPageRange(range);
 			return clause;
@@ -219,7 +219,7 @@ public abstract class SelectProcessor {
 			super(db, parent);
 		}
 
-		public QueryClause toQuerySql(ConditionQuery obj, IntRange range, boolean order) {
+		public QueryClause toQuerySql(ConditionQuery obj, PageLimit range, boolean order) {
 			QueryClause result = obj.toPrepareQuerySql(this, obj.prepare(), order);
 			result.setPageRange(range);
 			return result;
