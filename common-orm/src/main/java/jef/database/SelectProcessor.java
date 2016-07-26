@@ -7,7 +7,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import jef.common.Entry;
 import jef.common.log.LogUtil;
@@ -77,7 +77,7 @@ public abstract class SelectProcessor {
 
 	protected abstract void processSelect0(OperateTarget db, QueryClause sql, PartitionResult site, ConditionQuery queryObj, ResultSetContainer rs, QueryOption option, SqlLog debug) throws SQLException;
 
-	protected abstract int processCount0(OperateTarget db, BindSql bindSqls,SqlLog debug) throws SQLException;
+	protected abstract long processCount0(OperateTarget db, BindSql bindSqls,SqlLog debug) throws SQLException;
 
 	protected DbClient db;
 	public SqlProcessor parent;
@@ -177,7 +177,7 @@ public abstract class SelectProcessor {
 		}
 
 		@Override
-		protected int processCount0(OperateTarget db, BindSql sql,SqlLog log) throws SQLException {
+		protected long processCount0(OperateTarget db, BindSql sql,SqlLog log) throws SQLException {
 			Statement st = null;
 			try {
 				st = db.createStatement();
@@ -185,13 +185,13 @@ public abstract class SelectProcessor {
 				if (selectTimeout > 0)
 					st.setQueryTimeout(selectTimeout);
 				ResultSet rs = null;
-				int result;
+				long result;
 				try {
 					String str=sql.getSql();
 					log.append(str ).append(db);
 					rs = st.executeQuery(str);
 					rs.next();
-					result = rs.getInt(1);
+					result = rs.getLong(1);
 					log.append("\tCount=" , result);
 				} catch (SQLException e) {
 					DbUtils.processError(e, sql.getSql(), db);
@@ -348,13 +348,13 @@ public abstract class SelectProcessor {
 		}
 
 		@Override
-		protected int processCount0(OperateTarget db, BindSql bsql,SqlLog sb) throws SQLException {
-			int total = 0;
+		protected long processCount0(OperateTarget db, BindSql bsql,SqlLog sb) throws SQLException {
+			long total = 0;
 			PreparedStatement psmt = null;
 			String sql = bsql.getSql();
 			ResultSet rs = null;
 			sb.append(sql).append(db);
-			int currentCount = 0;
+			long currentCount = 0;
 			try {
 				psmt = db.prepareStatement(sql);
 
@@ -363,7 +363,7 @@ public abstract class SelectProcessor {
 				context.setVariables(null, null, bsql.getBind());
 				rs = psmt.executeQuery();
 				if (rs.next()) {
-					currentCount = rs.getInt(1);
+					currentCount = rs.getLong(1);
 					sb.append("\tCount=").append(currentCount);
 					total += currentCount;
 				}
@@ -422,8 +422,7 @@ public abstract class SelectProcessor {
 	}
 
 	/**
-	 * 返回SQL的Select列部分,本来JDBC规定接口ResultsetMetadata中可以getTableName(int
-	 * columnIndex)来获得某个列的表名 但是大多数JDBC驱动都没有实现，返回的是""。 为此，需要对所有字段进行唯一化编码处理
+	 * 返回SQL的Select列部分,本来JDBC规定接口ResultsetMetadata中可以getTableName(int columnIndex)来获得某个列的表名 但是大多数JDBC驱动都没有实现，返回的是""。 为此，需要对所有字段进行唯一化编码处理
 	 */
 	public static SelectPart toSelectSql(SqlContext context, GroupClause group, DatabaseDialect profile) {
 		boolean groupMode = group.isNotEmpty();
@@ -469,9 +468,9 @@ public abstract class SelectProcessor {
 		}
 	}
 
-	int processCount(Session session, CountClause sqls) throws SQLException {
+	long processCount(Session session, CountClause sqls) throws SQLException {
 		if (sqls.getSqls().size() >= ORMConfig.getInstance().getParallelSelect()) {
-			final AtomicInteger total = new AtomicInteger();
+			final AtomicLong total = new AtomicLong();
 			List<DbTask> tasks = new ArrayList<DbTask>();
 			for (final Map.Entry<String, List<BindSql>> sql : sqls.getSqls().entrySet()) {
 				final SqlLog debug = ORMConfig.getInstance().newLogger();
@@ -488,7 +487,7 @@ public abstract class SelectProcessor {
 			DbUtils.parallelExecute(tasks);
 			return total.get();
 		} else {
-			int total = 0;
+			long total = 0;
 			final SqlLog debug = ORMConfig.getInstance().newLogger();
 			for (Map.Entry<String, List<BindSql>> sql : sqls.getSqls().entrySet()) {
 				OperateTarget target = session.selectTarget(sql.getKey());

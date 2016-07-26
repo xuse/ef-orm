@@ -184,7 +184,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			return getSession().deleteCascade(entity);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 

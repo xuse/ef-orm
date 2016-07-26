@@ -76,7 +76,7 @@ final public class PagingIteratorObjImpl<T> extends PagingIterator<T> {
 		page.setRowsPerPage(pageSize);
 	}
 
-	private int getTotal(ConditionQuery j) throws SQLException {
+	private long getTotal(ConditionQuery j) throws SQLException {
 		CountClause countResult = db.selectp.toCountSql(j);
 		return db.selectp.processCount(db, countResult);
 	}
@@ -126,7 +126,7 @@ final public class PagingIteratorObjImpl<T> extends PagingIterator<T> {
 				// 拼装出带连接的查询请求
 				j = DbUtils.getJoin(query, map, ArrayUtils.asList(query.getOtherQueryProvider()), null);
 			}
-			int total = getTotal(j);
+			long total = getTotal(j);
 			page.setTotal(total);
 			return total;
 		} else {

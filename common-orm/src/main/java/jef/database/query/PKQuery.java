@@ -120,7 +120,9 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 		List<BindVariableDescription> bind = new ArrayList<BindVariableDescription>(size);
 		
 		Iterator<ColumnMapping> pkfields=type.getPKFields().iterator();
-		
+		if(!pkfields.hasNext()){
+			throw new IllegalArgumentException("The entity ["+type.getName()+"] has no primary key.");
+		}
 		int n=0;
 		ColumnMapping field=pkfields.next();
 		sb.append(field.getColumnName(profile, true)).append("= ?");

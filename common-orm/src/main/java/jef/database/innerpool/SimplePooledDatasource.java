@@ -348,6 +348,6 @@ public final class SimplePooledDatasource extends AbstractDataSource implements 
 		int total=freeConns.size();
 		Iterator<PooledImpl> iter=new I(freeConns.iterator());
 		int invalid=PoolService.doCheck(this.testSQL, iter);
-		LogUtil.info("Checked [{}]. total:{},  invalid:{}", this, total, invalid);
+		LogUtil.debug("Checked [{}]. total:{},  invalid:{}", this, total, invalid);
 	}
 }

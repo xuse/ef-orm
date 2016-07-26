@@ -46,32 +46,16 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	}
 
 	public int remove(Object entity) {
-		if (entity == null)
-			return 0;
 		try {
-			if (entity instanceof IQueryableEntity) {
-				return getSession().delete((IQueryableEntity) entity);
-			} else {
-				ITableMetadata meta = MetaHolder.getMeta(entity);
-				PojoWrapper pojo = meta.transfer(entity, true);
-				return getSession().delete(pojo);
-			}
+			return getSession().delete(entity);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
 	public int removeCascade(Object entity) {
-		if (entity == null)
-			return 0;
 		try {
-			if (entity instanceof IQueryableEntity) {
-				return getSession().deleteCascade((IQueryableEntity) entity);
-			} else {
-				ITableMetadata meta = MetaHolder.getMeta(entity);
-				PojoWrapper pojo = meta.transfer(entity, true);
-				return getSession().deleteCascade(pojo);
-			}
+			return getSession().deleteCascade(entity);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -158,13 +142,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		if (entity == null)
 			return 0;
 		try {
-			if (entity instanceof IQueryableEntity) {
-				return getSession().updateCascade((IQueryableEntity) entity);
-			} else {
-				ITableMetadata meta = MetaHolder.getMeta(entity);
-				PojoWrapper pojo = meta.transfer(entity, true);
-				return getSession().updateCascade(pojo);
-			}
+			return getSession().updateCascade(entity);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -174,13 +152,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		if (entity == null)
 			return 0;
 		try {
-			if (entity instanceof IQueryableEntity) {
-				return getSession().update((IQueryableEntity) entity);
-			} else {
-				ITableMetadata meta = MetaHolder.getMeta(entity);
-				PojoWrapper pojo = meta.transfer(entity, true);
-				return getSession().update(pojo);
-			}
+			return getSession().update(entity);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -262,15 +234,8 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	}
 
 	public <T> T insert(T entity) {
-		if (entity == null)
-			return null;
 		try {
-			if (entity instanceof IQueryableEntity) {
-				getSession().insert((IQueryableEntity) entity);
-			} else {
-				ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
-				getSession().insert(meta.transfer(entity, false));
-			}
+			getSession().insert(entity);
 			return entity;
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
@@ -278,15 +243,8 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	}
 
 	public <T> T insertCascade(T entity) {
-		if (entity == null)
-			return null;
 		try {
-			if (entity instanceof IQueryableEntity) {
-				getSession().insertCascade((IQueryableEntity) entity);
-			} else {
-				ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
-				getSession().insertCascade(meta.transfer(entity, false));
-			}
+			getSession().insertCascade(entity);
 			return entity;
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
@@ -385,7 +343,10 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.easyframe.enterprise.spring.CommonDao#findByExample(java.lang.Object, java.lang.String[])
+	 * 
+	 * @see
+	 * org.easyframe.enterprise.spring.CommonDao#findByExample(java.lang.Object,
+	 * java.lang.String[])
 	 */
 	public <T> List<T> findByExample(T entity, String... propertyName) {
 		if (entity == null) {
