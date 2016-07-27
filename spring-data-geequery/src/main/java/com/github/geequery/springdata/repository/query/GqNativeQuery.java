@@ -25,10 +25,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.RepositoryQuery;
 
 /**
- * Implementation of {@link RepositoryQuery} based on {@link javax.persistence.NamedQuery}s.
+ * TODO 目前的NativeQuery中的绑定了Session的，实际上传入的EM是一个ProxyEM，
+ * 因此实际执行的时候需要从当时的线程上下文中获得真实的EM再进行查询执行才可以。
  * 
- * @author Oliver Gierke
- * @author Thomas Darimont
  */
 final class GqNativeQuery extends AbstractGqQuery {
 	

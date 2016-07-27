@@ -53,7 +53,6 @@ public class MetamodelInformation<T> extends AbstractEntityInformation<T, IdValu
 	
 	private final IdMetadata<T> idMetadata;
 	private final SingularAttribute<? super T, ?> versionAttribute;
-	private final MetaProvider metamodel;
 	private final String entityName;
 
 	/**
@@ -68,7 +67,6 @@ public class MetamodelInformation<T> extends AbstractEntityInformation<T, IdValu
 	public MetamodelInformation(Class<T> domainClass, MetaProvider metamodel) {
 		super(domainClass);
 		Assert.notNull(metamodel);
-		this.metamodel = metamodel;
 		AbstractMetadata type = metamodel.managedType(domainClass);
 		if (type == null) {
 			throw new IllegalArgumentException("The given domain class can not be found in the given Metamodel!");
@@ -77,6 +75,10 @@ public class MetamodelInformation<T> extends AbstractEntityInformation<T, IdValu
 		this.entityName = type.getName();
 		this.idMetadata = new IdMetadata<T>(type);
 		this.versionAttribute = null;
+	}
+
+	public ITableMetadata getMetadata() {
+		return metadata;
 	}
 
 

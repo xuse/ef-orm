@@ -15,6 +15,8 @@
  */
 package com.github.geequery.springdata.repository;
 
+import java.io.Serializable;
+
 import javax.persistence.EntityManager;
 
 import org.springframework.data.repository.NoRepositoryBean;
@@ -22,18 +24,16 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.QueryByExampleExecutor;
 
 import com.github.geequery.springdata.annotation.Query;
-import com.github.geequery.springdata.repository.support.IdValues;
 
 /**
  * GQ specific extension of
  * {@link org.springframework.data.repository.Repository}.
  *
- * TODO IdValues后续要修改成其他支持
  * 
  * @author Jiyi
  */
 @NoRepositoryBean
-public interface GqRepository<T> extends PagingAndSortingRepository<T, IdValues>, QueryByExampleExecutor<T> {
+public interface GqRepository<T, ID extends Serializable> extends PagingAndSortingRepository<T, ID>, QueryByExampleExecutor<T> {
 	/**
 	 * Flushes all pending changes to the database.
 	 */
@@ -69,5 +69,5 @@ public interface GqRepository<T> extends PagingAndSortingRepository<T, IdValues>
 	 * @return a reference to the entity with the given identifier.
 	 * @see EntityManager#getReference(Class, Object)
 	 */
-	T getOne(IdValues id);
+	T getOne(ID id);
 }
