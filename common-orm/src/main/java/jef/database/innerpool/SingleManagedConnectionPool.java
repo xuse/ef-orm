@@ -293,7 +293,7 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool, DataS
 	public synchronized void doCheck() {
 		int total = freeConns.size();
 		int invalid = PoolService.doCheck(this.testSQL, freeConns.iterator());
-		LogUtil.info("Checked [{}]. total:{},  invalid:{}", this, total, invalid);
+		LogUtil.debug("Checked [{}]. total:{},  invalid:{}", this, total, invalid);
 	}
 
 	public boolean isMultipleRdbms() {

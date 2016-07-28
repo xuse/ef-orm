@@ -85,6 +85,7 @@ import jef.script.javascript.Var;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.JefConfiguration;
+import jef.tools.PageLimit;
 import jef.tools.StringUtils;
 
 import org.easyframe.enterprise.spring.TransactionMode;
@@ -426,7 +427,16 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 * @see {@link #update(IQueryableEntity)}
 	 */
-	public int updateCascade(IQueryableEntity obj) throws SQLException {
+	public int updateCascade(Object entity) throws SQLException {
+		if (entity == null)
+			return 0;
+		IQueryableEntity obj;
+		if (entity instanceof IQueryableEntity) {
+			obj = (IQueryableEntity) entity;
+		} else {
+			ITableMetadata meta = MetaHolder.getMeta(entity);
+			obj = meta.transfer(entity, true);
+		}
 		return updateCascade0(obj, 0);
 	}
 
@@ -440,8 +450,18 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public int deleteCascade(IQueryableEntity obj) throws SQLException {
-		return deleteCascade0(obj, 0);
+	public int deleteCascade(Object entity) throws SQLException {
+		if (entity == null)
+			return 0;
+		IQueryableEntity obj;
+		if (entity instanceof IQueryableEntity) {
+			obj = (IQueryableEntity) entity;
+			return deleteCascade0(obj, 0);
+		} else {
+			ITableMetadata meta = MetaHolder.getMeta(entity);
+			obj = meta.transfer(entity, true);
+			return delete(obj.getQuery());
+		}
 	}
 
 	/**
@@ -514,7 +534,7 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public void insertCascade(IQueryableEntity obj) throws SQLException {
+	public void insertCascade(Object obj) throws SQLException {
 		insertCascade0(obj, ORMConfig.getInstance().isDynamicInsert(), 0);
 	}
 
@@ -531,7 +551,7 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public void insertCascade(IQueryableEntity obj, boolean dynamic) throws SQLException {
+	public void insertCascade(Object obj, boolean dynamic) throws SQLException {
 		insertCascade0(obj, dynamic, 0);
 	}
 
@@ -544,7 +564,7 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public void insert(IQueryableEntity obj) throws SQLException {
+	public void insert(Object obj) throws SQLException {
 		insert(obj, null, ORMConfig.getInstance().isDynamicInsert());
 	}
 
@@ -593,14 +613,22 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public void insert(IQueryableEntity obj, String myTableName, boolean dynamic) throws SQLException {
-		ITableMetadata meta = MetaHolder.getMeta(obj);
+	public void insert(Object entity, String myTableName, boolean dynamic) throws SQLException {
+		if(entity==null)
+			return;
+		ITableMetadata meta = MetaHolder.getMeta(entity);
 		if (meta.getExtendsTable() != null) {
 			if (myTableName != null) {
 				throw new UnsupportedOperationException();// 暂不支持扩展表时定制表名
 			}
-			insertCascade0(obj, dynamic, 5);
+			insertCascade0(entity, dynamic, 5);
 			return;
+		}
+		IQueryableEntity obj;
+		if (entity instanceof IQueryableEntity) {
+			obj = (IQueryableEntity) entity;
+		} else {
+			obj = meta.transfer(entity, false);
 		}
 		insert0(obj, myTableName, dynamic);
 	}
@@ -670,7 +698,16 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public int delete(IQueryableEntity obj) throws SQLException {
+	public int delete(Object entity) throws SQLException {
+		if (entity == null)
+			return 0;
+		IQueryableEntity obj;
+		if (entity instanceof IQueryableEntity) {
+			obj = (IQueryableEntity) entity;
+		} else {
+			ITableMetadata meta = MetaHolder.getMeta(entity);
+			obj = meta.transfer(entity, true);
+		}
 		return delete(obj.getQuery());
 	}
 
@@ -700,7 +737,7 @@ public abstract class Session {
 	 * @throws SQLException
 	 * @see {@link #updateCascade(IQueryableEntity)}
 	 */
-	public int update(IQueryableEntity obj) throws SQLException {
+	public int update(Object obj) throws SQLException {
 		int n = update(obj, null);
 		return n;
 	}
@@ -717,15 +754,24 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 * @see #update(IQueryableEntity)
 	 */
-	public int update(IQueryableEntity obj, String myTableName) throws SQLException {
-		ITableMetadata meta = MetaHolder.getMeta(obj);
+	public int update(Object entity, String myTableName) throws SQLException {
+		if (entity == null)
+			return 0;
+		ITableMetadata meta = MetaHolder.getMeta(entity);
+		IQueryableEntity obj;
+		if (entity instanceof IQueryableEntity) {
+			obj = (IQueryableEntity) entity;
+		} else {
+			obj = meta.transfer(entity, true);
+		}
 		if (meta.getExtendsTable() != null) {
 			if (myTableName != null) {
 				throw new UnsupportedOperationException();// 暂不支持扩展表时定制表名
 			}
 			return updateCascade0(obj, 5);
+		} else {
+			return update0(obj, myTableName);
 		}
-		return update0(obj, myTableName);
 	}
 
 	/**
@@ -806,7 +852,7 @@ public abstract class Session {
 	public <T extends IQueryableEntity> List<T> select(T obj, IntRange range) throws SQLException {
 		Query<T> query = (Query<T>) obj.getQuery();
 		QueryOption option = QueryOption.createFrom(query);
-		return typedSelect(query, range, option);
+		return typedSelect(query, PageLimit.parse(range), option);
 	}
 
 	/**
@@ -830,13 +876,13 @@ public abstract class Session {
 			if (queryObj instanceof Query<?>) {
 				Query<?> simpleQuery = (Query<?>) queryObj;
 				JoinElement element = DbUtils.toReferenceJoinQuery(simpleQuery, null);
-				return this.innerSelect(element, range, simpleQuery.getFilterCondition(), option);
+				return this.innerSelect(element, PageLimit.parse(range), simpleQuery.getFilterCondition(), option);
 			} else {
-				return this.innerSelect(queryObj, range, null, option);
+				return this.innerSelect(queryObj, PageLimit.parse(range), null, option);
 			}
 		} else {
 			option = QueryOption.DEFAULT;
-			return this.innerSelect(queryObj, range, null, option);
+			return this.innerSelect(queryObj, PageLimit.parse(range), null, option);
 		}
 	}
 
@@ -873,7 +919,7 @@ public abstract class Session {
 			option = QueryOption.DEFAULT;
 		}
 
-		return this.innerSelect(queryObj, range, null, option);
+		return this.innerSelect(queryObj, PageLimit.parse(range), null, option);
 	}
 
 	/**
@@ -946,7 +992,7 @@ public abstract class Session {
 			option = QueryOption.DEFAULT;
 			query = queryObj;
 		}
-		return innerIteratedSelect(query, range, option);
+		return innerIteratedSelect(query, PageLimit.parse(range), option);
 	}
 
 	/**
@@ -1024,7 +1070,7 @@ public abstract class Session {
 		} else {
 			option = QueryOption.DEFAULT;
 		}
-		return innerIteratedSelect(queryObj, range, option);
+		return innerIteratedSelect(queryObj, PageLimit.parse(range), option);
 	}
 
 	/**
@@ -1048,11 +1094,11 @@ public abstract class Session {
 		// 预处理
 		Transformer t = query.getResultTransformer();
 		if (!t.isLoadVsOne() || query.getMeta().getRefFieldsByName().isEmpty()) {
-			return innerIteratedSelect(query, range, option);
+			return innerIteratedSelect(query, PageLimit.parse(range), option);
 		}
 		// 拼装出带连接的查询请求
 		JoinElement q = DbUtils.toReferenceJoinQuery(query, null);
-		return innerIteratedSelect(q, range, option);
+		return innerIteratedSelect(q, PageLimit.parse(range), option);
 	}
 
 	/**
@@ -1132,7 +1178,7 @@ public abstract class Session {
 			at.setAliasType(AllTableColumns.AliasMode.RAWNAME);
 		}
 		@SuppressWarnings("unchecked")
-		List<T> objs = innerSelect(query, range, query.getFilterCondition(), option);
+		List<T> objs = innerSelect(query, PageLimit.parse(range), query.getFilterCondition(), option);
 		RecordsHolder<T> result = new RecordsHolder<T>(query.getMeta());
 		ResultSetContainer rawrs = option.getRs();
 		if (rawrs.size() > 1) {
@@ -1198,8 +1244,12 @@ public abstract class Session {
 
 	/**
 	 * 根据样例查找
-	 * @param entity 查询条件
-	 * @param property 作为查询条件的字段名。当不指定properties时，首先检查entity当中是否设置了主键，如果有主键按主键删除，否则按所有非空字段作为匹配条件。
+	 * 
+	 * @param entity
+	 *            查询条件
+	 * @param property
+	 *            作为查询条件的字段名。当不指定properties时，首先检查entity当中是否设置了主键，如果有主键按主键删除，
+	 *            否则按所有非空字段作为匹配条件。
 	 * @return 查询结果
 	 */
 	@SuppressWarnings("unchecked")
@@ -1220,9 +1270,13 @@ public abstract class Session {
 
 	/**
 	 * 根据字段查询
-	 * @param meta 表元数据
-	 * @param propertyName 字段名
-	 * @param value 字段值
+	 * 
+	 * @param meta
+	 *            表元数据
+	 * @param propertyName
+	 *            字段名
+	 * @param value
+	 *            字段值
 	 * @return 查询结果
 	 * @throws SQLException
 	 */
@@ -1777,7 +1831,7 @@ public abstract class Session {
 	 * 查询实现，解析查询对象，将单表对象解析为Join查询
 	 */
 	@SuppressWarnings("unchecked")
-	protected final <T extends IQueryableEntity> List<T> typedSelect(Query<T> queryObj, IntRange range, QueryOption option) throws SQLException {
+	protected final <T extends IQueryableEntity> List<T> typedSelect(Query<T> queryObj, PageLimit range, QueryOption option) throws SQLException {
 		// 预处理
 		Transformer t = queryObj.getResultTransformer();
 		if (!t.isLoadVsOne() || queryObj.getMeta().getRefFieldsByName().isEmpty()) {
@@ -1789,8 +1843,8 @@ public abstract class Session {
 	}
 
 	@SuppressWarnings("unchecked")
-	final <T> ResultIterator<T> innerIteratedSelect(ConditionQuery queryObj, IntRange range, QueryOption option) throws SQLException {
-		if (range != null && range.size() <= 0) {
+	final <T> ResultIterator<T> innerIteratedSelect(ConditionQuery queryObj, PageLimit range, QueryOption option) throws SQLException {
+		if (range != null && range.getLimit() <= 0) {
 			return new ResultIterator.Impl<T>(new ArrayList<T>().iterator(), null);
 		}
 
@@ -1814,9 +1868,9 @@ public abstract class Session {
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	final List innerSelect(ConditionQuery queryObj, IntRange range, Map<Reference, List<Condition>> filters, QueryOption option) throws SQLException {
+	final List innerSelect(ConditionQuery queryObj, PageLimit range, Map<Reference, List<Condition>> filters, QueryOption option) throws SQLException {
 		boolean debugMode = ORMConfig.getInstance().isDebugMode();
-		if (range != null && range.size() <= 0) {
+		if (range != null && range.getLimit() <= 0) {
 			if (debugMode)
 				LogUtil.show("Query has limit to no range. return empty list. " + range);
 			return Collections.EMPTY_LIST;
@@ -1998,6 +2052,23 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 */
 	public final int count(ConditionQuery obj) throws SQLException {
+		long total = countLong(obj);
+		if (total > Integer.MAX_VALUE) {
+			throw new IllegalArgumentException("Result count too big, please use method 'countLong()'");
+		}
+		return (int) total;
+	}
+
+	/**
+	 * 查询符合条件的记录条数
+	 * 
+	 * @param obj
+	 *            查询请求
+	 * @return 记录条数
+	 * @throws SQLException
+	 *             如果数据库操作错误，抛出。
+	 */
+	public final long countLong(ConditionQuery obj) throws SQLException {
 		long start = System.currentTimeMillis(); // 开始时间
 		long parse = 0; // 解析时间
 		boolean debugMode = ORMConfig.getInstance().isDebugMode();
@@ -2012,7 +2083,7 @@ public abstract class Session {
 		CountClause sqls = selectp.toCountSql(obj);
 
 		parse = System.currentTimeMillis();
-		int total = selectp.processCount(this, sqls);
+		long total = selectp.processCount(this, sqls);
 		if (debugMode) {
 			long dbAccess = System.currentTimeMillis() - parse; // 数据库查询时间
 			parse = parse - start; // 解析SQL时间
@@ -3002,7 +3073,16 @@ public abstract class Session {
 		}
 	}
 
-	private void insertCascade0(IQueryableEntity obj, boolean dynamic, int minPriority) throws SQLException {
+	private void insertCascade0(Object entity, boolean dynamic, int minPriority) throws SQLException {
+		if (entity == null)
+			return;
+		IQueryableEntity obj;
+		if (entity instanceof IQueryableEntity) {
+			obj = (IQueryableEntity) entity;
+		} else {
+			ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
+			obj = meta.transfer(entity, false);
+		}
 		if ((this instanceof Transaction) || getTxType() != TransactionMode.JPA) {
 			CascadeUtil.insertWithRefInTransaction(Arrays.asList(obj), this, dynamic, minPriority);
 		} else if (this instanceof DbClient) {
@@ -3011,7 +3091,6 @@ public abstract class Session {
 				CascadeUtil.insertWithRefInTransaction(Arrays.asList(obj), trans, dynamic, minPriority);
 				trans.commit(true);
 			} catch (SQLException e) {
-				// LogUtil.exception(e);
 				trans.rollback(true);
 				throw e;
 			} catch (RuntimeException e) {

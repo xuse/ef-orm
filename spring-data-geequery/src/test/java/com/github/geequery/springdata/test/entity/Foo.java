@@ -1,12 +1,17 @@
 package com.github.geequery.springdata.test.entity;
 
 import java.util.Date;
+
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 @Entity
 public class Foo extends jef.database.DataObject {
 	private static final long serialVersionUID = 1L;
 
+	@Id
+	@GeneratedValue
 	private int id;
 
 	private String name;
@@ -14,8 +19,15 @@ public class Foo extends jef.database.DataObject {
 	private String remark;
 
 	private Date birthDay;
-	
+
 	private int age;
+
+	public Foo() {
+	}
+
+	public Foo(String string) {
+		this.name = string;
+	}
 
 	public int getId() {
 		return id;
@@ -58,6 +70,12 @@ public class Foo extends jef.database.DataObject {
 	}
 
 	public enum Field implements jef.database.Field {
-		id, name, remark, birthDay,age
+		id, name, remark, birthDay, age
 	}
+
+	@Override
+	public String toString() {
+		return id + ":" + name;
+	}
+
 }

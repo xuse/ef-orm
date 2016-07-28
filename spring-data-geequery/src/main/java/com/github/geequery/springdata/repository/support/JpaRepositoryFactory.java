@@ -28,6 +28,7 @@ import org.springframework.data.repository.core.support.RepositoryFactorySupport
 import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
+import org.springframework.orm.jpa.EntityManagerProxy;
 import org.springframework.util.Assert;
 
 import com.github.geequery.springdata.repository.GqRepository;
@@ -82,7 +83,7 @@ public class JpaRepositoryFactory extends RepositoryFactorySupport {
 	 */
 	@Override
 	protected Object getTargetRepository(RepositoryInformation information) {
-		GqRepository<?> repository = getTargetRepository(information, em);
+		GqRepository<?,?> repository = getTargetRepository(information, em);
 		// repository.setRepositoryMethodMetadata(crudMethodMetadataPostProcessor.getCrudMethodMetadata());
 		return repository;
 	}
@@ -97,7 +98,7 @@ public class JpaRepositoryFactory extends RepositoryFactorySupport {
 	 * @see #getTargetRepository(RepositoryMetadata)
 	 * @return
 	 */
-	protected <T, ID extends Serializable> GqRepository<?> getTargetRepository(RepositoryInformation information, EntityManager entityManager) {
+	protected <T, ID extends Serializable> GqRepository<T,ID> getTargetRepository(RepositoryInformation information, EntityManager entityManager) {
 		EntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType());
 		return getTargetRepositoryViaReflection(information, entityInformation, entityManager);
 	}
@@ -125,7 +126,7 @@ public class JpaRepositoryFactory extends RepositoryFactorySupport {
 	 */
 	@Override
 	protected QueryLookupStrategy getQueryLookupStrategy(Key key, EvaluationContextProvider evaluationContextProvider) {
-		return new GqQueryLookupStrategy(emf, key, evaluationContextProvider);
+		return new GqQueryLookupStrategy((EntityManagerProxy) em, key, evaluationContextProvider);
 	}
 
 	@SuppressWarnings("unchecked")

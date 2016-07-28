@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2016 the original author or authors.
+ * Copyright 2008-2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.github.geequery.springdata.repository;
+package com.github.geequery.springdata.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -21,21 +21,33 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import javax.persistence.QueryHint;
+
 /**
- * Indicates a method should be regarded as modifying query.
+ * Wrapper annotation to allow {@link QueryHint} annotations to be bound to methods. It will be evaluated when using
+ * {@link Query} on a query method or if you derive the query from the method name. If you rely on named queries either
+ * use the XML or annotation based way to declare {@link QueryHint}s in combination with the actual named query
+ * declaration.
  * 
  * @author Oliver Gierke
- * @author Christoph Strobl
  */
-@Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
+@Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface Modifying {
+public @interface QueryHints {
 
 	/**
-	 * Defines whether we should clear the underlying persistence context after executing the modifying query.
+	 * The {@link QueryHint}s to apply when the query will be executed.
 	 * 
 	 * @return
 	 */
-	boolean clearAutomatically() default false;
+	QueryHint[] value() default {};
+
+	/**
+	 * Defines whether the configured {@link QueryHint}s shall be applied for count queries during pagination as well.
+	 * Defaults to {@literal true}.
+	 * 
+	 * @return
+	 */
+	boolean forCounting() default true;
 }

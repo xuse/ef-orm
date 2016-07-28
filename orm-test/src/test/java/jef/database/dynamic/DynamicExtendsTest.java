@@ -236,8 +236,9 @@ public class DynamicExtendsTest extends org.junit.Assert{
 			System.out.println(res);
 
 			Query<DynaResource> q = QB.create(DynaResource.class,"桌子");
-			q.terms().gt("width", 100).or().gt("height", 100);
-			q.terms().not().in("type", new String[] { "CRICLE", "BOX" });
+			q.terms()
+			.gt("width", 100).or().gt("height", 100)
+			.and().not().in("type", new String[] { "CRICLE", "BOX" });
 			System.out.println(q.getConditions());
 			db.select(q);
 		}

@@ -18,8 +18,9 @@ package com.github.geequery.springdata.repository.query;
 import java.util.Arrays;
 import java.util.List;
 
-import com.github.geequery.springdata.repository.EntityGraph;
-import com.github.geequery.springdata.repository.EntityGraph.EntityGraphType;
+import com.github.geequery.springdata.annotation.EntityGraph;
+import com.github.geequery.springdata.annotation.EntityGraph.EntityGraphType;
+
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -29,7 +30,7 @@ import org.springframework.util.StringUtils;
  * @author Thomas Darimont
  * @since 1.6
  */
-public class JpaEntityGraph {
+public class GqEntityGraph {
 
 	private static String[] EMPTY_ATTRIBUTE_PATHS = {};
 
@@ -38,25 +39,25 @@ public class JpaEntityGraph {
 	private final List<String> attributePaths;
 
 	/**
-	 * Creates an {@link JpaEntityGraph}.
+	 * Creates an {@link GqEntityGraph}.
 	 * 
 	 * @param entityGraph must not be {@literal null}.
 	 * @param nameFallback must not be {@literal null} or empty.
 	 */
-	public JpaEntityGraph(EntityGraph entityGraph, String nameFallback) {
+	public GqEntityGraph(EntityGraph entityGraph, String nameFallback) {
 		this(StringUtils.hasText(entityGraph.value()) ? entityGraph.value() : nameFallback, entityGraph.type(), entityGraph
 				.attributePaths());
 	}
 
 	/**
-	 * Creates an {@link JpaEntityGraph} with the given name, {@link EntityGraphType} and attribute paths.
+	 * Creates an {@link GqEntityGraph} with the given name, {@link EntityGraphType} and attribute paths.
 	 * 
 	 * @param name must not be {@literal null} or empty.
 	 * @param type must not be {@literal null}.
 	 * @param attributePaths may be {@literal null}.
 	 * @since 1.9
 	 */
-	public JpaEntityGraph(String name, EntityGraphType type, String[] attributePaths) {
+	public GqEntityGraph(String name, EntityGraphType type, String[] attributePaths) {
 
 		Assert.hasText(name, "The name of an EntityGraph must not be null or empty!");
 		Assert.notNull(type, "FetchGraphType must not be null!");
@@ -85,7 +86,7 @@ public class JpaEntityGraph {
 	}
 
 	/**
-	 * Returns the attribute node names to be used for this {@link JpaEntityGraph}.
+	 * Returns the attribute node names to be used for this {@link GqEntityGraph}.
 	 * 
 	 * @return
 	 * @since 1.9
@@ -95,7 +96,7 @@ public class JpaEntityGraph {
 	}
 
 	/**
-	 * Return {@literal true} if this {@link JpaEntityGraph} needs to be generated on-the-fly.
+	 * Return {@literal true} if this {@link GqEntityGraph} needs to be generated on-the-fly.
 	 * 
 	 * @return
 	 * @since 1.9

@@ -528,6 +528,8 @@ public class JefEntityManager implements EntityManager {
 	}
 	
 	public DbClient getDbClient(){
-		return parent==null? null:parent.getDefault();
+		if (close)
+			throw new RuntimeException("the " + this.toString() + " has been closed!");
+		return parent.getDefault();
 	}
 }

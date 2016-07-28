@@ -15,12 +15,13 @@
  */
 package com.github.geequery.springdata.repository.query;
 
-import javax.persistence.EntityManager;
-import javax.persistence.Query;
-import javax.persistence.TypedQuery;
+import java.util.List;
 
-import org.springframework.data.repository.query.Parameters;
-import org.springframework.data.repository.query.QueryCreationException;
+import javax.persistence.EntityManager;
+
+import jef.database.NativeQuery;
+
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.RepositoryQuery;
 
 /**
@@ -29,13 +30,12 @@ import org.springframework.data.repository.query.RepositoryQuery;
  * @author Oliver Gierke
  * @author Thomas Darimont
  */
-final class NamedQuery extends AbstractGqQuery {
+final class GqProcedureQuery extends AbstractGqQuery {
 
 	/**
-	 * Creates a new {@link NamedQuery}.
+	 * Creates a new {@link GqProcedureQuery}.
 	 */
-	private NamedQuery(GqQueryMethod method, EntityManager em) {
-
+	GqProcedureQuery(GqQueryMethod method, EntityManager em) {
 		super(method, em);
 
 //		this.queryName = method.getNamedQueryName();
@@ -66,16 +66,46 @@ final class NamedQuery extends AbstractGqQuery {
 	}
 
 	@Override
-	protected Query doCreateQuery(Object[] values) {
+	protected List<?> getResultList(Object[] values, Pageable page) {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	protected Query doCreateCountQuery(Object[] values) {
+	protected Object getSingleResult(Object[] values) {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	protected int executeUpdate(Object[] values) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	protected int executeDelete(Object[] values) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	protected long getResultCount(Object[] values) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+//	@Override
+//	protected NativeQuery<?> doCreateQuery(Object[] values) {
+//		throw new UnsupportedOperationException();
+////		return null;
+//	}
+//
+//	@Override
+//	protected NativeQuery<?> doCreateCountQuery(Object[] values) {
+//		throw new UnsupportedOperationException();
+////		return null;
+//	}
 
 
 }
