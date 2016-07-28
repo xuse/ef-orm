@@ -17,11 +17,11 @@ package jef.database.wrapper.clause;
 
 import java.util.List;
 
-import jef.common.wrapper.IntRange;
 import jef.database.jdbc.result.ResultSetContainer;
 import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.routing.sql.InMemoryOperateProvider;
 import jef.database.wrapper.processor.BindVariableDescription;
+import jef.tools.PageLimit;
 
 /**
  * 描述一个绑定变量的SQL语句
@@ -85,7 +85,7 @@ public final class BindSql implements InMemoryOperateProvider{
 	}
 
 	@Override
-	public void parepareInMemoryProcess(IntRange range, ResultSetContainer rs) {
+	public void parepareInMemoryProcess(PageLimit range, ResultSetContainer rs) {
 		throw new UnsupportedOperationException();
 	}
 }

@@ -7,9 +7,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
-import jef.codegen.EntityEnhancer;
 import jef.database.DbUtils;
 import jef.database.annotation.PartitionKeyImpl;
 import jef.database.annotation.PartitionTable;
@@ -32,6 +32,7 @@ import jef.database.routing.sql.SqlAnalyzer;
 import jef.database.support.MultipleDatabaseOperateException;
 import jef.orm.onetable.model.TestEntity;
 import jef.orm.partition.PartitionEntity;
+import jef.tools.DateUtils;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -123,7 +124,7 @@ public class CalculatorTest extends org.junit.Assert{
 			inv.invoke(meta, config);
 			PartitionResult[] result = calc.toTableNames(meta, supportor,2);
 			System.out.println(Arrays.asList(result));
-			assertEquals("[TEST_ENTITY_2015,TEST_ENTITY]",Arrays.toString(result));
+			assertEquals("[TEST_ENTITY_"+DateUtils.getYear(new Date())+",TEST_ENTITY]",Arrays.toString(result));
 			assertEquals(GenerationResolution.TABLE, meta.getFirstAutoincrementDef().getGenerationType(profile));
 		}
 		{

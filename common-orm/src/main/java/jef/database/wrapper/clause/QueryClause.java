@@ -15,10 +15,10 @@
  */
 package jef.database.wrapper.clause;
 
-import jef.common.wrapper.IntRange;
 import jef.database.cache.CacheKeyProvider;
 import jef.database.routing.PartitionResult;
 import jef.database.routing.sql.InMemoryOperateProvider;
+import jef.tools.PageLimit;
 
 public interface QueryClause extends SqlClause, CacheKeyProvider, InMemoryOperateProvider {
 	BindSql getSql(PartitionResult site);
@@ -40,7 +40,7 @@ public interface QueryClause extends SqlClause, CacheKeyProvider, InMemoryOperat
 
 	void setOrderbyPart(OrderClause orderClause);
 
-	void setPageRange(IntRange range);
+	void setPageRange(PageLimit range);
 
 	boolean isMultiDatabase();
 

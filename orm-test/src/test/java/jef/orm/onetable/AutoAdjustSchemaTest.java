@@ -3,7 +3,11 @@ package jef.orm.onetable;
 import java.sql.SQLException;
 import java.util.List;
 
-import jef.codegen.EntityEnhancer;
+import org.apache.commons.lang.RandomStringUtils;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import jef.database.DbClient;
 import jef.database.ORMConfig;
 import jef.database.test.DataSource;
@@ -14,11 +18,6 @@ import jef.orm.multitable2.model.EnumationTable;
 import jef.orm.multitable2.model.Root;
 import jef.tools.string.RandomData;
 
-import org.apache.commons.lang.RandomStringUtils;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 /**
  * Schema重定向单元测试类
  * 
@@ -27,12 +26,12 @@ import org.junit.runner.RunWith;
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({
 	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-//		@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
-//		@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
-//		@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"),
-//		@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"),
-//		@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
-//		@DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}") 
+		@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
+		@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
+		@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"),
+		@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"),
+		@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db?date_string_format=yyyy-MM-dd HH:mm:ss"),
+		@DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}") 
 	})
 public class AutoAdjustSchemaTest {
 

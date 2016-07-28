@@ -17,7 +17,6 @@ package jef.database.wrapper.clause;
 
 import java.util.List;
 
-import jef.common.wrapper.IntRange;
 import jef.database.ORMConfig;
 import jef.database.cache.CacheImpl;
 import jef.database.cache.CacheKey;
@@ -30,6 +29,7 @@ import jef.database.routing.PartitionResult;
 import jef.database.routing.sql.SqlAnalyzer;
 import jef.database.wrapper.processor.BindVariableDescription;
 import jef.tools.Assert;
+import jef.tools.PageLimit;
 
 /**
  * 必要Part五部分， 4+1
@@ -59,7 +59,7 @@ public class QueryClauseImpl implements QueryClause {
 	// 绑定变量
 	private List<BindVariableDescription> bind;
 	// 范围
-	private IntRange pageRange;
+	private PageLimit pageRange;
 
 	private DatabaseDialect profile;
 
@@ -71,11 +71,11 @@ public class QueryClauseImpl implements QueryClause {
 		this.tables = partitionResults;
 	}
 
-	public IntRange getPageRange() {
+	public PageLimit getPageRange() {
 		return pageRange;
 	}
 
-	public void setPageRange(IntRange pageRange) {
+	public void setPageRange(PageLimit pageRange) {
 		this.pageRange = pageRange;
 	}
 
@@ -211,10 +211,10 @@ public class QueryClauseImpl implements QueryClause {
 		if (pageRange != null) {
 			if(isMultiDatabase()){
 				if(grouphavingPart==null || !grouphavingPart.isNotEmpty()){
-					return profile.getLimitHandler().toPageSQL(sql, new int[]{0,pageRange.getEnd()}, union);
+					return profile.getLimitHandler().toPageSQL(sql, new int[]{0,pageRange.getEndAsInt()}, union);
 				}
 			}else{
-				return profile.getLimitHandler().toPageSQL(sql, pageRange.toStartLimitSpan(), union);
+				return profile.getLimitHandler().toPageSQL(sql, pageRange.toArray(), union);
 			}
 		}
 		return new BindSql(sql);
@@ -256,7 +256,7 @@ public class QueryClauseImpl implements QueryClause {
 	}
 
 	@Override
-	public void parepareInMemoryProcess(IntRange range, ResultSetContainer rs) {
+	public void parepareInMemoryProcess(PageLimit range, ResultSetContainer rs) {
 		if (getOrderbyPart().isNotEmpty()) {
 			rs.setInMemoryOrder(getOrderbyPart().parseAsSelectOrder(getSelectPart(), rs.getColumns()));
 		}

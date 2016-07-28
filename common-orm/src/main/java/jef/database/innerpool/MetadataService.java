@@ -20,7 +20,6 @@ public interface MetadataService {
 
 	/**
 	 * 得到数据简要表
-	 * 
 	 * @return
 	 */
 	DatabaseDialect getProfile(String dbkey);

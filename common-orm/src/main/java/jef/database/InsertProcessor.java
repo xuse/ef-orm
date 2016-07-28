@@ -18,7 +18,6 @@ import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.processor.AutoIncreatmentCallBack;
 import jef.database.wrapper.processor.AutoIncreatmentCallBack.OracleRowidKeyCallback;
 import jef.database.wrapper.processor.BindVariableContext;
-import jef.database.wrapper.processor.BindVariableTool;
 import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
@@ -193,7 +192,7 @@ abstract class InsertProcessor {
 					psmt = callback.doPrepareStatement(db, sql);
 				}
 				BindVariableContext context = new BindVariableContext(psmt, profile, sb);
-				BindVariableTool.setInsertVariables(obj, sqls.getFields(), context);
+				context.setInsertVariables(obj, sqls.getFields());
 				psmt.execute();
 				sb.append("\nInsert:1\tTime cost([ParseSQL]:", parse - start).append("ms, [DbAccess]:", System.currentTimeMillis() - parse).append("ms)").append(db);
 

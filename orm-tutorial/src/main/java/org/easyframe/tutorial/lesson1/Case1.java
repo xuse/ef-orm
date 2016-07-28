@@ -19,40 +19,38 @@ public class Case1 {
 	 * 大家平时操作ORM框架都是使用了一个Dao对象的，因此这里也使用了一个通用的DAO对象。
 	 */
 	@Test
-	public void simpleTest() throws SQLException{
-		//模拟Spring的初始化
-		SessionFactoryBean sessionFactory=new SessionFactoryBean();
+	public void simpleTest() throws SQLException {
+		// 模拟Spring的初始化
+		SessionFactoryBean sessionFactory = new SessionFactoryBean();
 		sessionFactory.setDataSource("jdbc:derby:./db;create=true", null, null);
 		sessionFactory.afterPropertiesSet();
-		CommonDao dao=new CommonDaoImpl(sessionFactory.getObject());
-		
-		
-		//创建表
+		CommonDao dao = new CommonDaoImpl(sessionFactory.getObject());
+
+		// 创建表
 		dao.getNoTransactionSession().dropTable(Foo.class);
-		dao.getNoTransactionSession().createTable(Foo.class); 
-		
-		//增加记录
-		Foo foo=new Foo();
+		dao.getNoTransactionSession().createTable(Foo.class);
+
+		// 增加记录
+		Foo foo = new Foo();
 		foo.setId(1);
 		foo.setName("Hello,World!");
 		foo.setCreated(new Date());
-		dao.insert(foo);  //插入一条记录
-		
-		//从数据库查询这条记录
-		Foo loaded=dao.loadByField(Foo.class, "id", foo.getId(),true);
+		dao.insert(foo); // 插入一条记录
+
+		// 从数据库查询这条记录
+		Foo loaded = dao.loadByField(Foo.class, "id", foo.getId(), true);
 		System.out.println(loaded.getName());
-		
-		//更新这条记录
+
+		// 更新这条记录
 		loaded.setName("EF-ORM is very simple.");
 		dao.update(loaded);
-		
-		
-		//删除这条记录
+
+		// 删除这条记录
 		dao.removeByField(Foo.class, "id", foo.getId());
-		List<Foo> allrecords=dao.find(new Foo());
+		List<Foo> allrecords = dao.find(new Foo());
 		Assert.assertTrue(allrecords.isEmpty());
-		
-		//删除表
+
+		// 删除表
 		dao.getNoTransactionSession().dropTable(Foo.class);
 	}
 }

@@ -203,7 +203,7 @@ public class JoinKey extends Condition {
 			} else if (value instanceof Field && value instanceof Enum) {
 				meta = DbUtils.getTableMeta((Field) value);
 			}
-			return meta==null || meta==obj;
+			return meta==null || meta==obj || meta.getThisType().isAssignableFrom(obj.getThisType());
 		}
 	}
 
@@ -213,9 +213,9 @@ public class JoinKey extends Condition {
 		} else if (field == null) {// 纯表达式
 			return true;
 		} else {
-			// 这里从Field获得meta,但有风险，实际用的meta可能是这个meta的子类。
+			// 这里从Field获得meta,但有风险，有可能会得到实际用的left的一个父类Meta
 			ITableMetadata meta = DbUtils.getTableMeta(this.field);
-			return meta == null || meta == left;
+			return meta == null || meta == left || meta.getThisType().isAssignableFrom(left.getThisType());
 		}
 	}
 

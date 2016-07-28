@@ -33,8 +33,7 @@ public abstract class AbstractRefField implements ISelectProvider {
 	 */
 	private Property field;
 
-	// TODO 对Map类映射的支持。需要重新测试一下，或许可以让现有的属性扩展变得更简单
-	private Cascade asMap;
+	private Cascade cascadeInfo;
 
 	/**
 	 * 优先级。默认大家都是0
@@ -46,7 +45,7 @@ public abstract class AbstractRefField implements ISelectProvider {
 		this.field = fieldAccessor;
 		this.reference = ref;
 		this.sourceFieldType = fieldAccessor.getType();
-		this.asMap = config.getAsMap();
+		this.cascadeInfo = config.getAsMap();
 		setCascade(config.getCascade());
 		this.fetch = config.getFetch();
 	}
@@ -147,18 +146,23 @@ public abstract class AbstractRefField implements ISelectProvider {
 	public boolean canInsert() {
 		return canInsert;
 	}
-	public Cascade getAsMap() {
-		return asMap;
+
+	public Cascade getCascadeInfo() {
+		return cascadeInfo;
 	}
 
-	public void setAsMap(Cascade asMap) {
-		this.asMap = asMap;
+	public void setCascadeInfo(Cascade cascadeInfo) {
+		this.cascadeInfo = cascadeInfo;
 	}
 
 	public Property getField() {
 		return field;
 	}
 
+	/**
+	 * @return sourceFieldType
+	 * @see #sourceFieldType
+	 */
 	public Class<?> getSourceFieldType() {
 		return sourceFieldType;
 	}

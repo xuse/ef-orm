@@ -215,6 +215,18 @@ public class DbClient extends Session implements SessionFactory {
 		}
 		return selectTarget(MetaHolder.getMappingSite(nc.getTag())).createNativeQuery(nc, resultMeta);
 	}
+	
+	/**
+	 * 检测一个命名查询是否存在
+	 * @param name
+	 * @return
+	 */
+	public boolean hasNamedQuery(String name){
+		if (namedQueries == null)
+			initNQ();
+		NQEntry nc = namedQueries.get(name);
+		return nc!=null;
+	}
 
 	/**
 	 * 增加一个数据库操作监听器 操作监听器是可以为各种数据库操作编写事件的一个自定义的类。
@@ -265,7 +277,9 @@ public class DbClient extends Session implements SessionFactory {
 
 	protected String getTransactionId(String key) {
 		StringBuilder sb = new StringBuilder();
-		sb.append('[').append(getProfile(key).getName()).append(':').append(getDbName(key)).append('@').append(Thread.currentThread().getId()).append(']');
+		//2016/7/8 优化，Map hash查找仅发生一次。
+		ConnectInfo info=connPool.getInfo(key);
+		sb.append('[').append(info.profile.getName()).append(':').append(info.dbname).append('@').append(Thread.currentThread().getId()).append(']');
 		return sb.toString();
 	}
 
@@ -428,7 +442,7 @@ public class DbClient extends Session implements SessionFactory {
 	 * <p>
 	 * 
 	 * If there are multiple datasources , use {@link #getMetaData(String)} then
-	 * call {@link DbMetaData#existTable(String)} to check.
+	 * call {@link DbMetaData#getExistTable(String)} to check.
 	 * 
 	 * @param tableName
 	 *            支持Schema重定向

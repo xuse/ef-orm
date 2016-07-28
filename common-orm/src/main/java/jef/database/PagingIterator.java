@@ -20,11 +20,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.persistence.PersistenceException;
-
-import jef.common.wrapper.IntRange;
 import jef.common.wrapper.Page;
-import jef.database.support.MultipleDatabaseOperateException;
 import jef.database.wrapper.populator.Transformer;
 import jef.tools.PageInfo;
 
@@ -108,7 +104,7 @@ public abstract class PagingIterator<T> implements Iterator<List<T>> {
 	 * @return
 	 */
 	public int getCurrentPage() {
-		return page.getCurPage();
+		return page.getCurrentPage();
 	}
 
 	/**
@@ -155,7 +151,7 @@ public abstract class PagingIterator<T> implements Iterator<List<T>> {
 	 */
 	public List<T> getRecordsInPage(int pageNum) {
 		calcPage();
-		int old=page.getCurPage();
+		int old=page.getCurrentPage();
 		page.setCurPage(pageNum);
 		try {
 			return doQuery(true);
@@ -173,7 +169,7 @@ public abstract class PagingIterator<T> implements Iterator<List<T>> {
 	public List<T> next() {
 		calcPage();
 		try {
-			if (page.getCurrentRecordRange().size() <= 0) {
+			if (page.getCurrentRecordRange().getLimit() <= 0) {
 				return Collections.EMPTY_LIST;
 			}
 			return doQuery(true);
@@ -181,7 +177,7 @@ public abstract class PagingIterator<T> implements Iterator<List<T>> {
 			throw new RuntimeException(e);
 		} finally {
 			if (!page.gotoNext()) {
-				lastPage = page.getCurPage() - 1;
+				lastPage = page.getCurrentPage() - 1;
 			}
 		}
 	}
@@ -205,7 +201,7 @@ public abstract class PagingIterator<T> implements Iterator<List<T>> {
 	public boolean hasNext() {
 		calcPage();
 		if (lastPage > -1) {
-			return page.getCurPage() < lastPage;
+			return page.getCurrentPage() < lastPage;
 		}
 		return page.hasNext();
 	}
@@ -244,8 +240,8 @@ public abstract class PagingIterator<T> implements Iterator<List<T>> {
 
 	// 如果在不获取总数的情况下任意（顺序）翻页，当翻到全空的一页时，就知道前一页就是最后一页，从而能够计算出总数了，防止继续翻页
 	protected void recordEmpty() {
-		if (lastPage < 0 || page.getCurPage() < lastPage) {
-			lastPage = page.getCurPage() - 1;// 记录
+		if (lastPage < 0 || page.getCurrentPage() < lastPage) {
+			lastPage = page.getCurrentPage() - 1;// 记录
 		}
 	}
 }
