@@ -16,8 +16,6 @@
 package com.github.geequery.springdata.repository.config;
 
 import static com.github.geequery.springdata.repository.config.BeanDefinitionNames.EM_BEAN_DEFINITION_REGISTRAR_POST_PROCESSOR_BEAN_NAME;
-import static com.github.geequery.springdata.repository.config.BeanDefinitionNames.JPA_CONTEXT_BEAN_NAME;
-import static com.github.geequery.springdata.repository.config.BeanDefinitionNames.JPA_MAPPING_CONTEXT_BEAN_NAME;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
@@ -57,13 +55,8 @@ import com.github.geequery.springdata.repository.support.GqRepositoryFactoryBean
  * {@link PersistenceUnit} annotated properties and methods) as well as
  * {@link PersistenceExceptionTranslationPostProcessor} to enable exception translation of persistence specific
  * exceptions into Spring's {@link DataAccessException} hierarchy.
- * 
- * @author Oliver Gierke
- * @author Eberhard Wolff
- * @author Gil Markham
- * @author Thomas Darimont
  */
-public class JpaRepositoryConfigExtension extends RepositoryConfigurationExtensionSupport {
+public class GqRepositoryConfigExtension extends RepositoryConfigurationExtensionSupport {
 
 	private static final Class<?> PAB_POST_PROCESSOR = PersistenceAnnotationBeanPostProcessor.class;
 	private static final String DEFAULT_TRANSACTION_MANAGER_BEAN_NAME = "transactionManager";
@@ -125,7 +118,7 @@ public class JpaRepositoryConfigExtension extends RepositoryConfigurationExtensi
 		builder.addPropertyValue("transactionManager",
 				transactionManagerRef == null ? DEFAULT_TRANSACTION_MANAGER_BEAN_NAME : transactionManagerRef);
 		builder.addPropertyValue("entityManager", getEntityManagerBeanDefinitionFor(source, source.getSource()));
-		builder.addPropertyReference("mappingContext", JPA_MAPPING_CONTEXT_BEAN_NAME);
+//		builder.addPropertyReference("mappingContext", JPA_MAPPING_CONTEXT_BEAN_NAME);
 	}
 
 	/* 
@@ -169,8 +162,8 @@ public class JpaRepositoryConfigExtension extends RepositoryConfigurationExtensi
 		registerIfNotAlreadyRegistered(new RootBeanDefinition(EntityManagerBeanDefinitionRegistrarPostProcessor.class),
 				registry, EM_BEAN_DEFINITION_REGISTRAR_POST_PROCESSOR_BEAN_NAME, source);
 
-		registerIfNotAlreadyRegistered(new RootBeanDefinition(JpaMetamodelMappingContextFactoryBean.class), registry,
-				JPA_MAPPING_CONTEXT_BEAN_NAME, source);
+//		registerIfNotAlreadyRegistered(new RootBeanDefinition(JpaMetamodelMappingContextFactoryBean.class), registry,
+//				JPA_MAPPING_CONTEXT_BEAN_NAME, source);
 
 		registerIfNotAlreadyRegistered(new RootBeanDefinition(PAB_POST_PROCESSOR), registry,
 				AnnotationConfigUtils.PERSISTENCE_ANNOTATION_PROCESSOR_BEAN_NAME, source);
@@ -180,7 +173,7 @@ public class JpaRepositoryConfigExtension extends RepositoryConfigurationExtensi
 		RootBeanDefinition contextDefinition = new RootBeanDefinition(DefaultJpaContext.class);
 		contextDefinition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_CONSTRUCTOR);
 
-		registerIfNotAlreadyRegistered(contextDefinition, registry, JPA_CONTEXT_BEAN_NAME, source);
+//		registerIfNotAlreadyRegistered(contextDefinition, registry, JPA_CONTEXT_BEAN_NAME, source);
 	}
 
 	/**

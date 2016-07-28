@@ -6,6 +6,9 @@ import java.util.Set;
 
 import javax.persistence.metamodel.Metamodel;
 
+import jef.database.jpa.JefEntityManagerFactory;
+import jef.database.meta.ITableMetadata;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.beans.factory.FactoryBean;
@@ -15,9 +18,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
 import com.github.geequery.springdata.mapping.JpaMetamodelMappingContext;
-
-import jef.database.jpa.JefEntityManagerFactory;
-import jef.database.meta.ITableMetadata;
 
 /**
  * {@link FactoryBean} to setup {@link JpaMetamodelMappingContext} instances from Spring configuration.

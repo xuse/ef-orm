@@ -21,6 +21,9 @@ import java.util.Set;
 
 import javax.persistence.metamodel.Metamodel;
 
+import jef.database.jpa.JefEntityManagerFactory;
+import jef.database.meta.AbstractMetadata;
+
 import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
@@ -28,9 +31,6 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 
 import com.github.geequery.springdata.provider.PersistenceProvider;
-
-import jef.database.jpa.JefEntityManagerFactory;
-import jef.database.meta.AbstractMetadata;
 
 /**
  * {@link MappingContext} implementation based on a Jpa {@link Metamodel}.

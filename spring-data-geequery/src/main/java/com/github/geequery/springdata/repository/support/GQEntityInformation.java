@@ -27,8 +27,7 @@ import com.github.geequery.springdata.repository.query.GqEntityMetadata;
  * Extension of {@link EntityInformation} to capture additional JPA specific
  * information about entities.
  * 
- * @author Oliver Gierke
- * @author Thomas Darimont
+ * @author Jiyi
  */
 public interface GQEntityInformation<T,ID extends Serializable> extends EntityInformation<T, ID>, GqEntityMetadata<T> {
 
