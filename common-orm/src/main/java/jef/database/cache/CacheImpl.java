@@ -476,4 +476,9 @@ public class CacheImpl implements Cache {
 	public long getMissCount() {
 		return miss.get();
 	}
+
+	@Override
+	public <T> T unwrap(Class<T> cls) {
+		return (T)this;
+	}
 }

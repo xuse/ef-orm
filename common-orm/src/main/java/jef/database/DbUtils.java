@@ -56,6 +56,8 @@ import javax.persistence.PersistenceException;
 import javax.persistence.QueryTimeoutException;
 import javax.sql.DataSource;
 
+import com.google.common.base.Objects;
+
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.log.LogUtil;
@@ -113,8 +115,6 @@ import jef.tools.reflect.BeanWrapper;
 import jef.tools.reflect.GenericUtils;
 import jef.tools.security.cplus.TripleDES;
 import jef.tools.string.CharUtils;
-
-import com.google.common.base.Objects;
 
 public final class DbUtils {
 
@@ -905,7 +905,7 @@ public final class DbUtils {
 		} else if (container == Array.class) {
 			return subs.toArray();
 		} else if (container == Map.class) {
-			Cascade cascade = config.getAsMap();
+			Cascade cascade = config.getCascadeInfo();
 			if (cascade == null) {
 				throw new SQLException("@Cascade annotation is required for Map mapping " + config.toString());
 			}

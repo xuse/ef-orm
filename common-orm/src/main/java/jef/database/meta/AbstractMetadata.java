@@ -39,13 +39,33 @@ import jef.tools.reflect.Property;
  * 
  */
 public abstract class AbstractMetadata implements ITableMetadata {
+	/**
+	 * schema of the table. (it is always the username in Oracle)
+	 */
 	protected String schema;
+	/**
+	 * name of the table.
+	 */
 	protected String tableName;
+	/**
+	 * Always operate the table in the named datasource.
+	 */
 	protected String bindDsName;
+	/**
+	 * Metadata of the columns autoincrement.
+	 */
 	private AutoIncrementMapping[] increMappings;
+	/**
+	 * Metadata of the data/time columns auto-update.
+	 */
 	private AbstractTimeMapping[] updateTimeMapping;
-
+	/** 
+	 *  The fields mapping to columns.
+	 */
 	protected List<ColumnMapping> metaFields;
+	/**
+	 * The field of LOB
+	 */
 	protected Field[] lobNames;
 
 	final List<jef.database.annotation.Index> indexMap = new ArrayList<jef.database.annotation.Index>(5);// 记录对应表的所有索引，当建表时使用可自动创建索引

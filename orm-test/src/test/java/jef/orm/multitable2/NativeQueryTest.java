@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.Holder;
 import jef.common.wrapper.IntRange;
@@ -79,7 +78,7 @@ import org.junit.runners.MethodSorters;
 	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"),
 	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
 	@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"),
-	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db?date_string_format=yyyy-MM-dd HH:mm:ss"),
 	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)

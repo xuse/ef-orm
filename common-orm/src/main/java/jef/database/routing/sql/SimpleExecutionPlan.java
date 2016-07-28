@@ -19,6 +19,7 @@ import jef.database.routing.jdbc.UpdateReturn;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.database.wrapper.populator.ResultSetExtractor;
+import jef.tools.PageLimit;
 import jef.tools.StringUtils;
 
 public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
@@ -142,7 +143,7 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 		return rawSQL;
 	}
 
-	private String toPageSql(SqlAndParameter context, String rawSQL, IntRange range) {
+	private String toPageSql(SqlAndParameter context, String rawSQL, PageLimit range) {
 		if (range == null && context.getLimit() == null) {
 			return rawSQL;
 		}
@@ -190,7 +191,7 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 				context.setNewLimit(range);
 			} else {
 				boolean isUnion = sb instanceof Union;
-				BindSql bs = this.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range.toStartLimitSpan(), isUnion);
+				BindSql bs = this.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range.toArray(), isUnion);
 				context.setReverseResultSet(bs.getRsLaterProcessor());
 				return bs.getSql();
 			}
@@ -199,7 +200,7 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 	}
 
 	@Override
-	public <T> T doQuery(SqlAndParameter sqlContext, ResultSetExtractor<T> extractor, boolean forCount, IntRange range) throws SQLException {
+	public <T> T doQuery(SqlAndParameter sqlContext, ResultSetExtractor<T> extractor, boolean forCount, PageLimit range) throws SQLException {
 		JDBCTarget db = this.db;
 		if (changeDataSource != null) {
 			db = db.getTarget(changeDataSource);

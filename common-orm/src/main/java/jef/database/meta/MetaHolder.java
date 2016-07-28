@@ -131,7 +131,7 @@ public final class MetaHolder {
 	// 站点映射
 	static Map<String, String> SITE_MAPPING;
 
-	// 元数据池
+	// 元数据池（包含标准Entity的元数据和POJO的元数据）
 	static final Map<Class<?>, AbstractMetadata> pool = new java.util.IdentityHashMap<Class<?>, AbstractMetadata>(32);
 	// 动态表元数据池
 	static final Map<String, TupleMetadata> dynPool = new java.util.HashMap<String, TupleMetadata>(32);
@@ -338,6 +338,11 @@ public final class MetaHolder {
 		return pool.values();
 	}
 
+	/**
+	 * 得到指定类的元数据。该类可以是一个标准的GeeQueryEntity，也可以是一个POJO。
+	 * @param clz
+	 * @return
+	 */
 	public static final AbstractMetadata getMetaOrTemplate(Class<?> clz) {
 		Assert.notNull(clz);
 		if (clz == VarObject.class) {

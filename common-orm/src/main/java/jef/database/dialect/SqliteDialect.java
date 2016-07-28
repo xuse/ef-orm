@@ -18,6 +18,8 @@ package jef.database.dialect;
 import java.io.File;
 import java.sql.SQLException;
 
+import org.apache.commons.lang.StringUtils;
+
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.dialect.ColumnType.AutoIncrement;
@@ -39,6 +41,14 @@ import jef.database.query.function.VarArgsSQLFunction;
 import jef.database.support.RDBMS;
 import jef.tools.collection.CollectionUtils;
 
+
+/**
+ * SQLite驱动方言，部分特性需要在驱动字符串后加上
+ * ?date_string_format=yyyy-MM-dd HH:mm:ss
+ * 
+ * @author jiyi
+ *
+ */
 public class SqliteDialect extends AbstractDialect {
 	public SqliteDialect() {
 		features = CollectionUtils.identityHashSet();
@@ -55,6 +65,7 @@ public class SqliteDialect extends AbstractDialect {
 		features.add(Feature.NOT_SUPPORT_KEYWORD_DEFAULT);
 		features.add(Feature.NOT_SUPPORT_ALTER_DROP_COLUMN);
 		features.add(Feature.ONE_COLUMN_IN_SINGLE_DDL);
+		features.add(Feature.TABLE_CASE_SENSTIVE);
 
 		setProperty(DbProperty.ADD_COLUMN, "ADD COLUMN");
 		setProperty(DbProperty.MODIFY_COLUMN, "MODIFY COLUMN");
@@ -196,6 +207,7 @@ public class SqliteDialect extends AbstractDialect {
 			throw new IllegalArgumentException(url);
 		}
 		String dbpath = url.substring(12);
+		dbpath=StringUtils.substringBefore(dbpath, "?");
 		File file = new File(dbpath);
 		connectInfo.setDbname(file.getName());
 		connectInfo.setHost("");
@@ -212,7 +224,7 @@ public class SqliteDialect extends AbstractDialect {
 		@Override
 		public String extractConstraintName(SQLException sqle) {
 			String message = sqle.getMessage();
-			if (message.startsWith("[SQLITE_CONSTRAINT]")) {
+			if (message.startsWith("[SQLITE_CONSTRAINT]") || message.startsWith("UNIQUE constraint")) {
 				return message;
 			} else if ("PRIMARY KEY must be unique".equals(message)) {
 				return message;

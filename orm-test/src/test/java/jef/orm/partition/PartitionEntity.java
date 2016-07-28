@@ -7,17 +7,19 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Table;
+
+import org.apache.commons.lang.builder.ToStringBuilder;
 
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
 import jef.database.routing.function.KeyFunction;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
-
 @PartitionTable(key = {
 		@PartitionKey(field = "intField", length = 2, function = KeyFunction.MODULUS, functionConstructorParams = { "3" }), 
 		@PartitionKey(field = "attr:dbkey", isDbName = true) })
 @Entity
+@Table(name="partitionentity")
 public class PartitionEntity extends jef.database.DataObject {
 	private static final long serialVersionUID = 1L;
 

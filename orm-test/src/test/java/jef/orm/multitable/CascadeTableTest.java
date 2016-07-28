@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.Condition;
@@ -26,6 +25,7 @@ import jef.database.query.Selects;
 import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
 import jef.database.test.DatabaseInit;
+import jef.database.test.IgnoreOn;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
 import jef.orm.multitable.model.Person;
 import jef.orm.multitable.model.School;
@@ -35,7 +35,6 @@ import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.RandomData;
 
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -52,7 +51,7 @@ import org.junit.runner.RunWith;
 	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
 	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), 
 	@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"),
-	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db?date_class=integer&date_string_format=yyyy-MM-dd HH:mm:ss"),
 	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 public class CascadeTableTest extends MultiTableTestBase {
@@ -232,6 +231,9 @@ public class CascadeTableTest extends MultiTableTestBase {
 	private void checkResult1(List<Person> result) {
 		assertEquals(2, result.size());
 		Person p1 = result.get(0);
+//		if(p1.getName().startsWith("儿子")){
+//			p1=result.get(1);
+//		}
 		assertTrue(p1.getName().startsWith("爸爸"));
 		assertTrue(p1.getScores().size() == 6);
 		assertEquals(80, CollectionUtils.findFirst(p1.getScores(), "subject", "英语").getScore());
@@ -267,6 +269,7 @@ public class CascadeTableTest extends MultiTableTestBase {
 		q.getQuery().addCondition(Person.Field.age, Operator.GREAT, 16);
 		q.getQuery().addCondition(School.Field.id, 2);// 凡是引用一个其他表的条件要用RefField包裹
 		q.getQuery().setCascadeViaOuterJoin(true);
+		q.getQuery().orderByAsc(Person.Field.id);
 		List<Person> result = db.select(q);
 		checkResult1(result);
 		System.out.println("=========== testConditionInOneObj End ==========");

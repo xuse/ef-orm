@@ -3,25 +3,25 @@ package jef.orm.multitable3;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
+import org.junit.BeforeClass;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import jef.database.DbClient;
 import jef.database.QB;
 import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
 import jef.database.test.DatabaseInit;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
-
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({
-//	 @DataSource(name="oracle",url="${oracle.url}",user="${oracle.user}",password="${oracle.password}"),
-//	 @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
-//	 @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
-//	 @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
+	 @DataSource(name="oracle",url="${oracle.url}",user="${oracle.user}",password="${oracle.password}"),
+	 @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
+	 @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
+	 @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
 	 @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-//	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
-//	 @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
+	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db?date_string_format=yyyy-MM-dd HH:mm:ss"),
+	 @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 public class TestCase1 extends org.junit.Assert{
 	

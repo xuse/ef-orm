@@ -388,7 +388,7 @@ public final class BeanWrapperImpl extends BeanWrapper {
 					this.setPropertyValue(info.getKey(), array);
 				} else if (List.class.isAssignableFrom(c.getWrappered())) {
 					List list = new ArrayList();
-					CollectionUtils.listSetAndExpand(list, index, value);
+					listSetAndExpand(list, index, value);
 					this.setPropertyValue(info.getKey(), list);
 				}
 			} else {
@@ -402,7 +402,7 @@ public final class BeanWrapperImpl extends BeanWrapper {
 					ClassEx cmpType=new ClassEx(c.getComponentType());
 					Object old = ConvertUtils.findElementInstance(o);
 					value = ConvertUtils.toProperType(value, cmpType, old);
-					CollectionUtils.listSetAndExpand((List) value, index, value);
+					listSetAndExpand((List) value, index, value);
 				}
 			}
 		} else {
@@ -450,11 +450,11 @@ public final class BeanWrapperImpl extends BeanWrapper {
 				}
 				return ArrayUtils.get(o, index);
 			} else if (o instanceof List) {
-				if (create && CollectionUtils.isIndexValid(o, index) == false) {
-					CollectionUtils.toFixedSize((List) o, (index < 0 ? -index : index + 1));
+				if (create && isIndexValid(o, index) == false) {
+					toFixedSize((List) o, (index < 0 ? -index : index + 1));
 					Object instance = ConvertUtils.createElementByElement(o);
 					if (instance != null)
-						CollectionUtils.listSet((List) o, index, instance);
+						listSet((List) o, index, instance);
 				}
 				List<?> l = (List<?>) o;
 				return index >= 0 ? l.get(index) : l.get(l.size() + index);
@@ -476,6 +476,89 @@ public final class BeanWrapperImpl extends BeanWrapper {
 		}
 	}
 
+
+	/**
+	 * 获取List当中的值
+	 * 
+	 * @param obj
+	 * @param index
+	 * @return
+	 */
+	@SuppressWarnings("rawtypes")
+	private static Object listGet(List obj, int index) {
+		int length = obj.size();
+		if (index < 0)
+			index += length;
+		return obj.get(index);
+	}
+
+	/**
+	 * 设置List当中的值
+	 * 
+	 * @param obj
+	 * @param index
+	 * @param value
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static void listSet(List obj, int index, Object value) {
+		int length = obj.size();
+		if (index < 0)
+			index += length;
+		obj.set(index, value);
+	}
+
+	/**
+	 * 检测索引是否有效 当序号为负数时，-1表示最后一个元素，-2表示倒数第二个，以此类推
+	 * @param obj
+	 * @param index
+	 * @return 如果下标有效则true
+	 */
+	private static boolean isIndexValid(Object obj, int index) {
+		int length = CollectionUtils.length(obj);
+		if (index < 0)
+			index += length;
+		return index >= 0 && index < length;
+	}
+	
+	/**
+	 * 设置List当中的值。如果超出下标，自动扩展List以适应
+	 * @param obj
+	 * @param index
+	 * @param value
+	 */
+	@SuppressWarnings("rawtypes")
+	private static void listSetAndExpand(List obj, int index, Object value) {
+		int length = obj.size();
+		if (index < 0 && index + length >= 0) {
+			index += length;
+		} else if (index < 0) {// 需要扩张
+			toFixedSize(obj, -index);
+		} else if (index >= length) {// 扩张
+			toFixedSize(obj, index + 1);
+		}
+		listSet(obj, index, value);
+	}
+
+	/**
+	 * 将list的大小调节为指定的大小 如果List长度大于制定的大小，后面的元素将被丢弃， 如果list小于指定大小，将会由null代替
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static void toFixedSize(List obj, int newsize) {
+		int len = obj.size();
+		if (newsize == len)
+			return;
+		if (newsize > len) {
+			for (int i = len; i < newsize; i++) {
+				obj.add(null);
+			}
+		} else {
+			for (int i = len; i > newsize; i--) {
+				obj.remove(i - 1);
+			}
+		}
+	}
+	
+	
 	private static jef.common.Entry<String, Integer> toKeyAndIndex(String name, int x, int y) {
 		try {
 			return new jef.common.Entry<String, Integer>(name.substring(0, x), Integer.parseInt(name.substring(x + 1, y)));
