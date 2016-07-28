@@ -17,12 +17,14 @@ package com.github.geequery.springdata.repository.query;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
-
 import jef.database.NativeQuery;
+import jef.database.Session;
+import jef.database.jpa.JefEntityManager;
 
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.orm.jpa.EntityManagerProxy;
+
+import com.github.geequery.springdata.repository.query.GqParameters.JpaParameter;
 
 /**
  * TODO 目前的NativeQuery中的绑定了Session的，实际上传入的EM是一个ProxyEM，
@@ -30,91 +32,69 @@ import org.springframework.data.repository.query.RepositoryQuery;
  * 
  */
 final class GqNativeQuery extends AbstractGqQuery {
-	
+
 	private NativeQuery<?> query;
 
+	private EntityManagerProxy pxy;
 	/**
 	 * Creates a new {@link GqNativeQuery}.
 	 */
-	GqNativeQuery(GqQueryMethod method, EntityManager em, NativeQuery<?> nq) {
+	GqNativeQuery(GqQueryMethod method, EntityManagerProxy em, NativeQuery<?> nq) {
 		super(method, em);
-
-//		this.queryName = method.getNamedQueryName();
-//		this.countQueryName = method.getNamedCountQueryName();
-//		this.extractor = method.getQueryExtractor();
-//		this.countProjection = method.getCountQueryProjection();
-//
-//		Parameters<?, ?> parameters = method.getParameters();
-//
-//		if (parameters.hasSortParameter()) {
-//			throw new IllegalStateException(String.format("Finder method %s is backed " + "by a NamedQuery and must "
-//					+ "not contain a sort parameter as we cannot modify the query! Use @Query instead!", method));
-//		}
-//
-//		this.namedCountQueryIsPresent = hasNamedQuery(em, countQueryName);
-//
-//		boolean weNeedToCreateCountQuery = !namedCountQueryIsPresent && method.getParameters().hasPageableParameter();
-//		boolean cantExtractQuery = !this.extractor.canExtractQuery();
-//
-//		if (weNeedToCreateCountQuery && cantExtractQuery) {
-//			throw QueryCreationException.create(method, CANNOT_EXTRACT_QUERY);
-//		}
-//
-//		if (parameters.hasPageableParameter()) {
-//			LOG.warn("Finder method {} is backed by a NamedQuery" + " but contains a Pageable parameter! Sorting delivered "
-//					+ "via this Pageable will not be applied!", method);
-//		}
+		this.query = nq;
+		this.pxy=em;
 	}
 
 	@Override
 	protected List<?> getResultList(Object[] values, Pageable page) {
-		if(page!=null){
+		NativeQuery<?> query = getThreadQuery();
+		if (page != null) {
 			query.setRange(page.getOffset(), page.getPageSize());
 		}
-		applyParamters(values);
+		applyParamters(query,values);
 		return query.getResultList();
-	}
-
-	private void applyParamters(Object[] values) {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	protected Object getSingleResult(Object[] values) {
-		// TODO Auto-generated method stub
-		return null;
+		NativeQuery<?> query = getThreadQuery();
+		applyParamters(query,values);
+		return query.getSingleResult();
 	}
 
 	@Override
 	protected int executeUpdate(Object[] values) {
-		// TODO Auto-generated method stub
-		return 0;
+		NativeQuery<?> query = getThreadQuery();
+		applyParamters(query,values);
+		return query.executeUpdate();
 	}
 
 	@Override
 	protected int executeDelete(Object[] values) {
-		// TODO Auto-generated method stub
-		return 0;
+		NativeQuery<?> query = getThreadQuery();
+		applyParamters(query,values);
+		return query.executeUpdate();
 	}
 
 	@Override
 	protected long getResultCount(Object[] values) {
-		// TODO Auto-generated method stub
-		return 0;
+		NativeQuery<?> query = getThreadQuery();
+		applyParamters(query,values);
+		return query.getResultCount();
 	}
 
-//	@Override
-//	protected NativeQuery<?> doCreateQuery(Object[] values) {
-//		throw new UnsupportedOperationException();
-////		return null;
-//	}
-//
-//	@Override
-//	protected NativeQuery<?> doCreateCountQuery(Object[] values) {
-//		throw new UnsupportedOperationException();
-////		return null;
-//	}
+	private void applyParamters(NativeQuery<?> query,Object[] values) {
+		GqParameters ps=getQueryMethod().getParameters();
+		int i=0;
+		for(JpaParameter p:ps){
+			query.setParameter(p.getName(), values[i++]);
+		}
+	}
 
+	private NativeQuery<?> getThreadQuery() {
+		JefEntityManager jem=(JefEntityManager) pxy.getTargetEntityManager();
+		Session session=jem.getSession();
+		return query.clone(session, null);
+	}
 
 }

@@ -2,6 +2,8 @@ package com.github.geequery.springdata.test.repo;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 
 import com.github.geequery.springdata.annotation.Query;
@@ -42,6 +44,14 @@ public interface FooDao extends GqRepository<Foo,Integer> {
 	 * @return
 	 */
 	public List<Foo> findByAgeOrderById(int age);
+	
+	/**
+	 * 根据Age查找并分页
+	 * @param age
+	 * @param page
+	 * @return
+	 */
+	public Page<Foo> findByAgeOrderById(int age,Pageable page);
 	
 	
 }

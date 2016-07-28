@@ -1305,7 +1305,13 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 * @param target
 	 * @return
 	 */
-	NativeQuery<X> clone(OperateTarget target) {
-		return new NativeQuery<X>(target == null ? this.db : target, this.config, this.resultTransformer);
+	public NativeQuery<X> clone(Session session,String dbKey) {
+		OperateTarget target = this.db;
+		if(session!=null){
+			target=session.selectTarget(dbKey==null? this.db.getDbkey(): dbKey);
+		}else if(dbKey!=null){
+			target=this.db.getTarget(dbKey);
+		}
+		return new NativeQuery<X>(target, this.config, this.resultTransformer);
 	}
 }

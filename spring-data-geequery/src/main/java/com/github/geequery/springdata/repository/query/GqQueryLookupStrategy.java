@@ -78,7 +78,7 @@ public final class GqQueryLookupStrategy implements QueryLookupStrategy {
 			NativeQuery<?> q = (NativeQuery<?>) emf.getDefault().createNamedQuery(qName);
 			return new GqNativeQuery(method, em, q);
 		} else {
-			return new PartTreeGqQuery(method, em, PersistenceProvider.GEEQUERY);
+			return new GqPartTreeQuery(method, em, PersistenceProvider.GEEQUERY);
 		}
 	}
 

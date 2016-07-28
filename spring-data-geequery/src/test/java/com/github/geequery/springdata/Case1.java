@@ -14,7 +14,6 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.github.geequery.springdata.test.entity.Foo;
 import com.github.geequery.springdata.test.repo.FooDao;
@@ -27,7 +26,6 @@ import com.github.geequery.springdata.test.repo.FooDao;
  *
  */
 @ContextConfiguration(locations = { "classpath:spring-test-case1.xml" })
-@Transactional
 public class Case1 extends AbstractJUnit4SpringContextTests {
 
 	@javax.annotation.Resource
@@ -64,28 +62,63 @@ public class Case1 extends AbstractJUnit4SpringContextTests {
 
 	@Test
 	public void test2() throws SQLException {
-//		commonDao.getNoTransactionSession().createTable(Foo.class);
+		// commonDao.getNoTransactionSession().createTable(Foo.class);
 		// =========================
-		List<Foo> list = new ArrayList<Foo>();
-		list.add(new Foo("张三"));
-		list.add(new Foo("李四"));
-		list.add(new Foo("王五"));
-		foodao.save(list);
+		{
+			List<Foo> list = new ArrayList<Foo>();
+			list.add(new Foo("张三"));
+			list.add(new Foo("李四"));
+			list.add(new Foo("王五"));
+			foodao.save(list);	
+		}
+		
 		// =========================
-		Foo foo = foodao.findByName("张三");
-		System.out.println(foo.getName());
-		System.out.println(foo.getId());
+		{
+			System.out.println("=== FindByName ===");
+			Foo foo = foodao.findByName("张三");
+			System.out.println(foo.getName());
+			System.out.println(foo.getId());	
+		}
 		// =========================
-		Page<Foo> p = foodao.findAll(new PageRequest(1, 3, new Sort(new Order(Direction.DESC, "id"))));
-		System.out.println(p.getTotalElements());
-		System.out.println("list=" + p.getContent());
-
+		{
+			System.out.println("=== FindByAgeOrderById ===");
+			List<Foo> fooList = foodao.findByAgeOrderById(1);
+			System.out.println(fooList);	
+		}
 		// =========================
-		List<Integer> id = Arrays.<Integer> asList(1, 3, 4, 5);
-		Iterable<Foo> foos = foodao.findAll(id);
-		System.out.println(foos.iterator().next());
+		{
+			System.out.println("=== FindByAge Page ===");
+			Page<Foo> fooPage = foodao.findByAgeOrderById(1, new PageRequest(1, 3));
+			System.out.println(fooPage.getContent());	
+		}
 		// =========================
-		foodao.deleteAll();
+		{
+			System.out.println("=== FindAll(page+sort) ===");
+			Page<Foo> p = foodao.findAll(new PageRequest(1, 3, new Sort(new Order(Direction.DESC, "id"))));
+			System.out.println(p.getTotalElements());
+			System.out.println("list=" + p.getContent());	
+		}
+		
+		// ==============================================
+		{
+			System.out.println("=== FindAll(sort) ===");
+			Iterable<Foo> iters = foodao.findAll(new Sort(new Order(Direction.DESC, "id")));
+			System.out.println("list=" + iters);	
+		}
+		// =========================
+		{
+			System.out.println("=== FindAll(?,?,?) ===");
+			List<Integer> id = Arrays.<Integer> asList(1, 3, 4, 5);
+			Iterable<Foo> foos = foodao.findAll(id);
+			if (foos.iterator().hasNext()) {
+				System.out.println(foos.iterator().next());
+			}	
+		}
+		
+		// =========================
+		{
+			System.out.println("=== DeleteAll() ===");
+			foodao.deleteAll();	
+		}
 	}
-
 }
