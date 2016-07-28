@@ -35,23 +35,23 @@ import com.github.geequery.springdata.repository.GqRepository;
 import com.github.geequery.springdata.repository.query.GqQueryLookupStrategy;
 
 /**
- * JPA specific generic repository factory.
+ * GeeQuery specific generic repository factory.
  * 
- * @author Oliver Gierke
+ * @author Jiyi
  */
-public class JpaRepositoryFactory extends RepositoryFactorySupport {
+public class GqRepositoryFactory extends RepositoryFactorySupport {
 
 	private final EntityManager em;
 	private final JefEntityManagerFactory emf;
 	private final CrudMethodMetadataPostProcessor crudMethodMetadataPostProcessor;
 
 	/**
-	 * Creates a new {@link JpaRepositoryFactory}.
+	 * Creates a new {@link GqRepositoryFactory}.
 	 * 
 	 * @param entityManager
 	 *            must not be {@literal null}
 	 */
-	public JpaRepositoryFactory(EntityManager entityManager) {
+	public GqRepositoryFactory(EntityManager entityManager) {
 		Assert.notNull(entityManager);
 		this.em = entityManager;
 		this.emf = (JefEntityManagerFactory) entityManager.getEntityManagerFactory();
@@ -129,10 +129,9 @@ public class JpaRepositoryFactory extends RepositoryFactorySupport {
 		return new GqQueryLookupStrategy((EntityManagerProxy) em, key, evaluationContextProvider);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public <T, ID extends Serializable> EntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
-		return (EntityInformation<T, ID>) new MetamodelInformation<T>(domainClass, emf);
+		return new MetamodelInformation<T,ID>(domainClass, emf);
 	}
 
 	// /*

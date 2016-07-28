@@ -20,8 +20,6 @@ import java.io.Serializable;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import jef.database.jpa.JefEntityManagerFactory;
-
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
@@ -88,7 +86,7 @@ public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends 
 	 * @return
 	 */
 	protected RepositoryFactorySupport createRepositoryFactory(EntityManager emf) {
-		return new JpaRepositoryFactory(emf);
+		return new GqRepositoryFactory(emf);
 	}
 
 	/*

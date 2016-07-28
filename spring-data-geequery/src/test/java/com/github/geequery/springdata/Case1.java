@@ -25,7 +25,7 @@ import com.github.geequery.springdata.test.repo.FooDao;
  * @author jiyi
  *
  */
-@ContextConfiguration(locations = { "classpath:spring-test-case1.xml" })
+@ContextConfiguration(locations = { "classpath:spring-test-data.xml" })
 public class Case1 extends AbstractJUnit4SpringContextTests {
 
 	@javax.annotation.Resource

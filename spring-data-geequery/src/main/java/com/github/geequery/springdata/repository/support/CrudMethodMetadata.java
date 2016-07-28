@@ -20,8 +20,6 @@ import java.util.Map;
 
 import javax.persistence.LockModeType;
 
-import com.github.geequery.springdata.annotation.EntityGraph;
-
 /**
  * Interface to abstract {@link CrudMethodMetadata} that provide the {@link LockModeType} to be used for query
  * execution.
@@ -44,14 +42,6 @@ public interface CrudMethodMetadata {
 	 * @return
 	 */
 	Map<String, Object> getQueryHints();
-
-	/**
-	 * Returns the {@link EntityGraph} to be used.
-	 * 
-	 * @return
-	 * @since 1.9
-	 */
-	EntityGraph getEntityGraph();
 
 	/**
 	 * Returns the {@link Method} to be used.

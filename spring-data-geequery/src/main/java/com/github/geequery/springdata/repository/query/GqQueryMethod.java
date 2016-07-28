@@ -26,6 +26,7 @@ import javax.persistence.NamedQuery;
 
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.data.jpa.repository.query.JpaQueryMethod;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.Parameter;
@@ -34,7 +35,6 @@ import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import com.github.geequery.springdata.annotation.EntityGraph;
 import com.github.geequery.springdata.annotation.Lock;
 import com.github.geequery.springdata.annotation.Modifying;
 import com.github.geequery.springdata.annotation.Procedure;
@@ -47,7 +47,6 @@ import com.github.geequery.springdata.annotation.Query;
  * @see Query
  * @see Modifying
  * @see Procedure
- * @see EntityGraph
  * 
  */
 public class GqQueryMethod extends QueryMethod {
@@ -147,18 +146,6 @@ public class GqQueryMethod extends QueryMethod {
 
 		Lock annotation = AnnotatedElementUtils.findMergedAnnotation(method, Lock.class);
 		return (LockModeType) AnnotationUtils.getValue(annotation);
-	}
-
-	/**
-	 * Returns the {@link EntityGraph} to be used for the query.
-	 * 
-	 * @return
-	 * @since 1.6
-	 */
-	GqEntityGraph getEntityGraph() {
-
-		EntityGraph annotation = AnnotatedElementUtils.findMergedAnnotation(method, EntityGraph.class);
-		return annotation == null ? null : new GqEntityGraph(annotation, getNamedQueryName());
 	}
 
 	/**
