@@ -107,6 +107,14 @@ public abstract class GqQueryExecution {
 		}
 	}
 
+	static class CollectionExecution extends GqQueryExecution {
+		@Override
+		protected Object doExecute(AbstractGqQuery repositoryQuery, Object[] values) {
+			return repositoryQuery.getResultList(values,null);
+		}
+	}
+
+	
 	/**
 	 * Executes a {@link AbstractStringBasedJpaQuery} to return a single entity.
 	 */
@@ -155,9 +163,9 @@ public abstract class GqQueryExecution {
 		}
 		@Override
 		protected Object doExecute(AbstractGqQuery jpaQuery, Object[] values) {
-			List<?> resultList = jpaQuery.getResultList(values, null);
-			jpaQuery.executeDelete(values);
-			return jpaQuery.getQueryMethod().isCollectionQuery() ? resultList : resultList.size();
+			return jpaQuery.executeDelete(values);
+//			List<?> resultList = jpaQuery.getResultList(values, null);
+//			return jpaQuery.getQueryMethod().isCollectionQuery() ? resultList : resultList.size();
 		}
 	}
 }

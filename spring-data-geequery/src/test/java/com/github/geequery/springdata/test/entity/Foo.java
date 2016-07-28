@@ -24,6 +24,7 @@ public class Foo extends jef.database.DataObject {
 
 	public Foo() {
 	}
+
 	public Foo(String string) {
 		this.name = string;
 	}
@@ -71,4 +72,10 @@ public class Foo extends jef.database.DataObject {
 	public enum Field implements jef.database.Field {
 		id, name, remark, birthDay, age
 	}
+
+	@Override
+	public String toString() {
+		return id + ":" + name;
+	}
+
 }

@@ -62,13 +62,25 @@ public class Case1 extends AbstractJUnit4SpringContextTests {
 
 	@Test
 	public void test2() throws SQLException {
-		// commonDao.getNoTransactionSession().createTable(Foo.class);
+		 commonDao.getNoTransactionSession().createTable(Foo.class);
 		// =========================
 		{
 			List<Foo> list = new ArrayList<Foo>();
 			list.add(new Foo("张三"));
 			list.add(new Foo("李四"));
 			list.add(new Foo("王五"));
+			list.add(new Foo("赵柳"));
+			list.add(new Foo("开发"));
+			list.add(new Foo("测试"));
+			list.add(new Foo("纠结"));
+			list.add(new Foo("刘备"));
+			list.add(new Foo("市场"));
+			list.add(new Foo("渠道"));
+			list.add(new Foo("销售"));
+			list.add(new Foo("赵日天"));
+			list.add(new Foo("叶良辰"));
+			list.add(new Foo("玛丽苏"));
+			list.add(new Foo("龙傲天"));
 			foodao.save(list);	
 		}
 		
@@ -82,21 +94,22 @@ public class Case1 extends AbstractJUnit4SpringContextTests {
 		// =========================
 		{
 			System.out.println("=== FindByAgeOrderById ===");
-			List<Foo> fooList = foodao.findByAgeOrderById(1);
+			List<Foo> fooList = foodao.findByAgeOrderById(0);
 			System.out.println(fooList);	
 		}
 		// =========================
 		{
 			System.out.println("=== FindByAge Page ===");
-			Page<Foo> fooPage = foodao.findByAgeOrderById(1, new PageRequest(1, 3));
-			System.out.println(fooPage.getContent());	
+			Page<Foo> fooPage = foodao.findByAgeOrderById(0, new PageRequest(1, 4));
+			System.out.println(fooPage.getTotalElements());
+			System.out.println(Arrays.toString(fooPage.getContent().toArray()));	
 		}
 		// =========================
 		{
 			System.out.println("=== FindAll(page+sort) ===");
-			Page<Foo> p = foodao.findAll(new PageRequest(1, 3, new Sort(new Order(Direction.DESC, "id"))));
+			Page<Foo> p = foodao.findAll(new PageRequest(0, 3, new Sort(new Order(Direction.DESC, "id"))));
 			System.out.println(p.getTotalElements());
-			System.out.println("list=" + p.getContent());	
+			System.out.println(Arrays.toString(p.getContent().toArray()));	
 		}
 		
 		// ==============================================
@@ -110,9 +123,41 @@ public class Case1 extends AbstractJUnit4SpringContextTests {
 			System.out.println("=== FindAll(?,?,?) ===");
 			List<Integer> id = Arrays.<Integer> asList(1, 3, 4, 5);
 			Iterable<Foo> foos = foodao.findAll(id);
-			if (foos.iterator().hasNext()) {
-				System.out.println(foos.iterator().next());
-			}	
+			System.out.println("list=" + foos);
+		}
+		
+		// =========================
+		{
+			System.out.println("=== getCountByAge ===");
+		}
+		
+		// =========================
+		{
+			System.out.println("=== updateAgeByName ===");
+		}
+		
+		// =========================
+		{
+			System.out.println("=== findByusername (NativeQuery) ===");
+		}
+		// =========================
+		{
+			System.out.println("=== findBysName (NativeQuery) ===");
+		}
+		// =========================
+		{
+			//多参数顺序测试否有问题
+			
+			
+		}
+		// =========================
+		{
+			//更新操作
+			
+		}
+		// =========================
+		{
+			//NativeQuery多参数是否有问题
 		}
 		
 		// =========================

@@ -23,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.util.Assert;
 
+import com.github.geequery.springdata.repository.query.GqQueryExecution.CollectionExecution;
 import com.github.geequery.springdata.repository.query.GqQueryExecution.ModifyingExecution;
 import com.github.geequery.springdata.repository.query.GqQueryExecution.PagedExecution;
 import com.github.geequery.springdata.repository.query.GqQueryExecution.SingleEntityExecution;
@@ -71,7 +72,7 @@ public abstract class AbstractGqQuery implements RepositoryQuery {
 		if (method.isProcedureQuery()) {
 			throw new UnsupportedOperationException();
 		} else if (method.isCollectionQuery()) {
-			return new PagedExecution(method.getParameters());
+			return new CollectionExecution();
 		} else if (method.isPageQuery()) {
 			return new PagedExecution(method.getParameters());
 		} else if (method.isModifyingQuery()) {
