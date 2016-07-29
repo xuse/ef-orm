@@ -46,11 +46,6 @@ import javax.persistence.PersistenceException;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ArrayListMultimap;
-
 import jef.accelerator.asm.Attribute;
 import jef.accelerator.asm.ClassReader;
 import jef.accelerator.asm.ClassVisitor;
@@ -71,6 +66,7 @@ import jef.database.PojoWrapper;
 import jef.database.Session;
 import jef.database.VarObject;
 import jef.database.annotation.Cascade;
+import jef.database.annotation.DateGenerateType;
 import jef.database.annotation.DynamicKeyValueExtension;
 import jef.database.annotation.DynamicTable;
 import jef.database.annotation.EasyEntity;
@@ -108,6 +104,11 @@ import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.BeanWrapper;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ArrayListMultimap;
 
 /**
  * 静态存放所有数据表元模型的存放类。
@@ -1130,6 +1131,7 @@ public final class MetaHolder {
 
 		GeneratedValue gv = fieldProvider.getAnnotation(javax.persistence.GeneratedValue.class);
 		GenerationType geType = gv == null ? null : gv.strategy();
+		boolean version=fieldProvider.getAnnotation(javax.persistence.Version.class)!=null;
 		if ("VARCHAR".equals(def) || "VARCHAR2".equals(def)) {
 			if (geType != null) {
 				if (geType == GenerationType.TABLE || geType == GenerationType.SEQUENCE) {
@@ -1165,7 +1167,9 @@ public final class MetaHolder {
 			} else if (scale > 0) {
 				return new ColumnType.Double(precision, scale).setNullable(nullable).defaultIs(defaultExpression);
 			} else {
-				return new ColumnType.Int(precision).setNullable(nullable).defaultIs(defaultExpression);
+				ColumnType.Int cType=new ColumnType.Int(precision);
+				cType.setVersion(version).setNullable(nullable).defaultIs(defaultExpression);
+				return cType;
 			}
 		} else if ("CLOB".equalsIgnoreCase(def)) {
 			return new ColumnType.Clob().setNullable(nullable).defaultIs(defaultExpression);
@@ -1178,7 +1182,11 @@ public final class MetaHolder {
 		} else if ("TIMESTAMP".equalsIgnoreCase(def)) {
 			Temporal temporal = fieldProvider.getAnnotation(Temporal.class);
 			TemporalType t = temporal == null ? TemporalType.TIMESTAMP : temporal.value();
-			return newDateTimeColumnDef(t, nullable, gv).defaultIs(defaultExpression);
+			ColumnType cType= newDateTimeColumnDef(t, nullable, gv).defaultIs(defaultExpression);
+			if(cType instanceof ColumnType.TimeStamp){
+				((ColumnType.TimeStamp) cType).setVersion(version);
+			}
+			return cType;
 		} else if ("BOOLEAN".equalsIgnoreCase(def)) {
 			return new ColumnType.Boolean().setNullable(nullable).defaultIs(defaultExpression);
 		} else if ("XML".equalsIgnoreCase(def)) {
@@ -1280,23 +1288,23 @@ public final class MetaHolder {
 		return ct;
 	}
 
-	private static int getDateGenerateType(GeneratedValue gv) {
+	private static DateGenerateType getDateGenerateType(GeneratedValue gv) {
 		String generated = gv == null ? null : gv.generator().toLowerCase();
 		if (generated != null) {
 			if ("created".equals(generated)) {
-				return 1;
+				return DateGenerateType.created;
 			} else if ("modified".equals(generated)) {
-				return 2;
-			} else if ("created-sys".equals(generated)) {
-				return 3;
-			} else if ("modified-sys".equals(generated)) {
-				return 4;
+				return DateGenerateType.modified;
+			} else if ("created-sys".equals(generated) || "created_sys".equals(generated)) {
+				return DateGenerateType.created_sys;
+			} else if ("modified-sys".equals(generated)|| "modified_sys".equals(generated)) {
+				return DateGenerateType.modified_sys;
 			} else if (generated.length() == 0) {
-				return 1;
+				return DateGenerateType.created;
 			}
 			throw new IllegalArgumentException("Unknown date generator [" + generated + "]");
 		}
-		return 0;
+		return null;
 	}
 
 	/**

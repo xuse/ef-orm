@@ -19,11 +19,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 
-import jef.common.log.LogUtil;
 import jef.database.Session.PopulateStrategy;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.support.SqlLog;
-import jef.tools.StringUtils;
 
 /**
  * 直接对JDBC结果集进行操作的转换器

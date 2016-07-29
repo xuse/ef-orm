@@ -343,7 +343,8 @@ public class DbClient extends Session implements SessionFactory {
 	private void afterPoolReady() throws SQLException {
 		// 初始化处理器
 		DatabaseDialect profile = this.getProfile(null);
-		this.rProcessor = new DefaultSqlProcessor(profile, this);
+		this.rProcessor = new SqlProcessor.NormalImpl(profile, this);
+		this.preProcessor = new SqlProcessor.PrepareImpl(profile, this);
 		this.selectp = SelectProcessor.get(profile, this);
 		this.insertp = InsertProcessor.get(profile, this);
 		this.updatep = UpdateProcessor.get(profile, this);
@@ -352,7 +353,7 @@ public class DbClient extends Session implements SessionFactory {
 		
 		//设置全局缓存
 		if(ORMConfig.getInstance().getCacheLevel2()>0) {
-			this.golbalCache=new CacheImpl(rProcessor, selectp, ORMConfig.getInstance().getCacheLevel2(),"GLOBAL");
+			this.golbalCache=new CacheImpl(preProcessor, selectp, ORMConfig.getInstance().getCacheLevel2(),"GLOBAL");
 		}else {
 			this.golbalCache=CacheDummy.getInstance();
 		}

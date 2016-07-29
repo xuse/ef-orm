@@ -17,23 +17,23 @@ public final class LobLazyLoadTask implements LazyLoadTask {
 	private String columnname;
 	private String fieldName;
 	private DatabaseDialect profile;
-	
-	public LobLazyLoadTask(ColumnMapping mtype, DatabaseDialect profile,String tableName) {
+
+	public LobLazyLoadTask(ColumnMapping mtype, DatabaseDialect profile, String tableName) {
 		this.mType = mtype;
-		this.tableName=profile.getObjectNameToUse(tableName);
-		this.columnname=mType.getColumnName(profile, true);
-		this.profile=profile;
-		this.fieldName=mtype.fieldName();
+		this.tableName = profile.getObjectNameToUse(tableName);
+		this.columnname = mType.getColumnName(profile, true);
+		this.profile = profile;
+		this.fieldName = mtype.fieldName();
 	}
 
 	public void process(Session db, Object o) throws SQLException {
 		IQueryableEntity obj = (IQueryableEntity) o;
-		String sql = "select " + columnname + " from " + tableName + db.rProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), false,profile);
+		String sql = "select " + columnname + " from " + tableName + db.rProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), null, profile);
 		ResultSet rs = db.getResultSet(sql, 10);
 		if (rs.next()) {
 			Object value = mType.jdbcGet(new ResultSetImpl(rs, profile), 1);
-			if(value!=null){
-				BeanWrapper bw=BeanWrapper.wrap(o,BeanWrapper.FAST);
+			if (value != null) {
+				BeanWrapper bw = BeanWrapper.wrap(o, BeanWrapper.FAST);
 				bw.setPropertyValue(fieldName, value);
 			}
 		}

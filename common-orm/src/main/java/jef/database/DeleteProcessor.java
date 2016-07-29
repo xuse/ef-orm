@@ -27,13 +27,14 @@ import jef.database.wrapper.processor.BindVariableContext;
 public abstract class DeleteProcessor {
 	abstract int processDelete0(OperateTarget db, IQueryableEntity obj, BindSql where, PartitionResult site,SqlLog sb) throws SQLException;
 
-	abstract BindSql toWhereClause(JoinElement joinElement, SqlContext context, boolean update, DatabaseDialect profile);
+	abstract BindSql toWhereClause(JoinElement joinElement, SqlContext context, DatabaseDialect profile);
 
+	@SuppressWarnings("deprecation")
 	static DeleteProcessor get(DatabaseDialect profile, DbClient parent) {
 		if (profile.has(Feature.NO_BIND_FOR_DELETE)) {
-			return new NormalImpl(parent);
+			return new NormalImpl(parent.rProcessor);
 		} else {
-			return new PreparedImpl(parent);
+			return new PreparedImpl(parent.preProcessor);
 		}
 	}
 
@@ -70,9 +71,9 @@ public abstract class DeleteProcessor {
 	}
 
 	private static final class NormalImpl extends DeleteProcessor {
-		private DbClient parent;
+		private SqlProcessor parent;
 
-		public NormalImpl(DbClient parent) {
+		public NormalImpl(SqlProcessor parent) {
 			this.parent = parent;
 		}
 
@@ -111,15 +112,15 @@ public abstract class DeleteProcessor {
 		}
 
 		@Override
-		BindSql toWhereClause(JoinElement joinElement, SqlContext context, boolean update, DatabaseDialect profile) {
-			return parent.rProcessor.toWhereClause(joinElement, context, update, profile);
+		BindSql toWhereClause(JoinElement joinElement, SqlContext context, DatabaseDialect profile) {
+			return parent.toWhereClause(joinElement, context, null, profile);
 		}
 	}
 
 	private static final class PreparedImpl extends DeleteProcessor {
-		private DbClient parent;
+		private SqlProcessor parent;
 
-		public PreparedImpl(DbClient parent) {
+		public PreparedImpl(SqlProcessor parent) {
 			this.parent = parent;
 		}
 
@@ -158,8 +159,8 @@ public abstract class DeleteProcessor {
 		}
 
 		@Override
-		BindSql toWhereClause(JoinElement joinElement, SqlContext context, boolean update, DatabaseDialect profile) {
-			return parent.rProcessor.toPrepareWhereSql(joinElement, context, update, profile);
+		BindSql toWhereClause(JoinElement joinElement, SqlContext context, DatabaseDialect profile) {
+			return parent.toWhereClause(joinElement, context, null, profile);
 		}
 	}
 }

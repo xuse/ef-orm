@@ -627,7 +627,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
 				if (t.getQuery().getConditions().isEmpty()) {
-					DbUtils.fillConditionFromField(t, t.getQuery(), true, pkMpode);
+					DbUtils.fillConditionFromField(t, t.getQuery(), null, pkMpode);
 				}
 				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ", i + 1).append('/').append(len));
 				List<Object> whereBind = context.setVariables(t.getQuery(), null, bindVar);

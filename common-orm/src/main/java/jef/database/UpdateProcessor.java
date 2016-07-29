@@ -11,11 +11,13 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jef.common.Entry;
+import jef.common.Pair;
 import jef.common.log.LogUtil;
+import jef.database.Session.UpdateContext;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.AbstractTimeMapping;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.dialect.type.VersionSupportColumn;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.Feature;
@@ -90,28 +92,30 @@ public abstract class UpdateProcessor {
 	 * @param profile
 	 * @return
 	 */
-	abstract BindSql toWhereClause(JoinElement joinElement, SqlContext context, boolean update, DatabaseDialect profile);
+	abstract Pair<BindSql,Boolean> toWhereClause(JoinElement joinElement, SqlContext context, UpdateContext update, DatabaseDialect profile);
 
+	@SuppressWarnings("deprecation")
 	static UpdateProcessor get(DatabaseDialect profile, DbClient db) {
 		if (profile.has(Feature.NO_BIND_FOR_UPDATE)) {
-			return new NormalImpl(db);
+			return new NormalImpl(db.rProcessor,db.preProcessor);
 		} else {
-			return new PreparedImpl(db);
+			return new PreparedImpl(db.preProcessor);
 		}
 	}
 
-	protected DbClient parent;
+	protected SqlProcessor processor;
 
-	UpdateProcessor(DbClient parent) {
-		this.parent = parent;
+	UpdateProcessor(SqlProcessor parent) {
+		this.processor = parent;
 	}
 
 	final static class NormalImpl extends UpdateProcessor {
 		private UpdateProcessor prepared;
+		
 
-		public NormalImpl(DbClient db) {
+		public NormalImpl(SqlProcessor db,SqlProcessor prepared) {
 			super(db);
-			prepared = new PreparedImpl(db);
+			this.prepared = new PreparedImpl(prepared);
 		}
 
 		int processUpdate0(OperateTarget db, IQueryableEntity obj, UpdateClause update, BindSql where, PartitionResult site, SqlLog log) throws SQLException {
@@ -148,7 +152,7 @@ public abstract class UpdateProcessor {
 		 */
 		@SuppressWarnings("unchecked")
 		public UpdateClause toUpdateClause(IQueryableEntity obj, PartitionResult[] prs, boolean dynamic) throws SQLException {
-			DatabaseDialect profile = getProfile(prs);
+			DatabaseDialect profile = processor.getProfile(prs);
 			UpdateClause result = new UpdateClause();
 			ITableMetadata meta = MetaHolder.getMeta(obj);
 			Map<Field, Object> map = obj.getUpdateValueMap();
@@ -159,9 +163,9 @@ public abstract class UpdateProcessor {
 				moveLobFieldsToLast(fields, meta);
 
 				// 增加时间戳自动更新的列
-				AbstractTimeMapping[] autoUpdateTime = meta.getUpdateTimeDef();
+				VersionSupportColumn[] autoUpdateTime = meta.getAutoUpdateColumnDef();
 				if (autoUpdateTime != null) {
-					for (AbstractTimeMapping tm : autoUpdateTime) {
+					for (VersionSupportColumn tm : autoUpdateTime) {
 						if (!map.containsKey(tm.field())) {
 							Object value = tm.getAutoUpdateValue(profile, obj);
 							if (value != null) {
@@ -195,13 +199,14 @@ public abstract class UpdateProcessor {
 		}
 
 		@Override
-		BindSql toWhereClause(JoinElement joinElement, SqlContext context, boolean update, DatabaseDialect profile) {
-			return parent.rProcessor.toWhereClause(joinElement, context, update, profile);
+		Pair<BindSql,Boolean> toWhereClause(JoinElement joinElement, SqlContext context, UpdateContext update, DatabaseDialect profile) {
+			BindSql sql = processor.toWhereClause(joinElement, context, update, profile);
+			return new Pair<BindSql,Boolean>(sql,null);
 		}
 	}
 
 	final static class PreparedImpl extends UpdateProcessor {
-		public PreparedImpl(DbClient db) {
+		public PreparedImpl(SqlProcessor db) {
 			super(db);
 		}
 
@@ -247,7 +252,7 @@ public abstract class UpdateProcessor {
 		 */
 		@SuppressWarnings("unchecked")
 		public UpdateClause toUpdateClauseBatch(IQueryableEntity obj, PartitionResult[] prs, boolean dynamic) {
-			DatabaseDialect profile = getProfile(prs);
+			DatabaseDialect profile = processor.getProfile(prs);
 			UpdateClause result = new UpdateClause();
 
 			Map<Field, Object> map = obj.getUpdateValueMap();
@@ -258,9 +263,9 @@ public abstract class UpdateProcessor {
 				moveLobFieldsToLast(fields, meta);
 
 				// 增加时间戳自动更新的列
-				AbstractTimeMapping[] autoUpdateTime = meta.getUpdateTimeDef();
+				VersionSupportColumn[] autoUpdateTime = meta.getAutoUpdateColumnDef();
 				if (autoUpdateTime != null) {
-					for (AbstractTimeMapping tm : autoUpdateTime) {
+					for (VersionSupportColumn tm : autoUpdateTime) {
 						if (!map.containsKey(tm.field())) {
 							tm.processAutoUpdate(profile, result);
 						}
@@ -316,8 +321,9 @@ public abstract class UpdateProcessor {
 		}
 
 		@Override
-		BindSql toWhereClause(JoinElement joinElement, SqlContext context, boolean update, DatabaseDialect profile) {
-			return parent.rProcessor.toPrepareWhereSql(joinElement, context, update, profile);
+		Pair<BindSql,Boolean> toWhereClause(JoinElement joinElement, SqlContext context, UpdateContext update, DatabaseDialect profile) {
+			BindSql sql =processor.toWhereClause(joinElement, context, update, profile);
+			return new Pair<BindSql,Boolean>(sql,null);
 		}
 	}
 
@@ -344,15 +350,9 @@ public abstract class UpdateProcessor {
 		});
 	}
 
-	@SuppressWarnings("deprecation")
-	protected DatabaseDialect getProfile(PartitionResult[] prs) {
-		if (prs == null || prs.length == 0) {
-			return parent.getProfile();
-		}
-		return this.parent.getProfile(prs[0].getDatabase());
-	}
-
-	// 将所有非主键字段作为update的值
+	/*
+	 * 在更新数据的时候，如果无法确定哪些字段作了修改，那么就将所有非主键字段作为update的值
+	 */
 	@SuppressWarnings("unchecked")
 	static java.util.Map.Entry<Field, Object>[] getAllFieldValues(ITableMetadata meta, Map<Field, Object> map, BeanWrapper wrapper, DatabaseDialect profile) {
 		List<Entry<Field, Object>> result = new ArrayList<Entry<Field, Object>>();
@@ -364,10 +364,10 @@ public abstract class UpdateProcessor {
 				if (vType.isPk()) {
 					continue;
 				}
-				if (vType instanceof AbstractTimeMapping) {
-					AbstractTimeMapping times = (AbstractTimeMapping) vType;
-					if (times.isForUpdate()) {
-						Object value = times.getAutoUpdateValue(profile, wrapper.getWrapped());
+				if (vType instanceof VersionSupportColumn) {
+					VersionSupportColumn timeColumn = (VersionSupportColumn) vType;
+					if (timeColumn.isUpdateAlways()) {
+						Object value = timeColumn.getAutoUpdateValue(profile, wrapper.getWrapped());
 						result.add(new Entry<Field, Object>(field, value));
 						continue;
 					}

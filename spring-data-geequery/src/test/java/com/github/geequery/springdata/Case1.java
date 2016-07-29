@@ -17,6 +17,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 
 import com.github.geequery.springdata.test.entity.Foo;
+import com.github.geequery.springdata.test.entity.VersionLog;
 import com.github.geequery.springdata.test.repo.FooDao;
 import com.github.geequery.springdata.test.repo.FooDao2;
 
@@ -197,5 +198,24 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			list.add(new Foo("龙傲天"));
 			foodao.save(list);	
 		}
+	}
+	
+	@Test
+	public void testVersionUpdateAndLock(){
+		int id;
+		{
+			VersionLog v=new VersionLog();
+			v.setName("叶问");
+			commonDao.insert(v);
+			id=v.getId();
+		}
+		{
+			VersionLog v=commonDao.load(VersionLog.class, id);
+			v.setName("叶问天");
+			commonDao.update(v);
+		}
+		
+		
+		
 	}
 }

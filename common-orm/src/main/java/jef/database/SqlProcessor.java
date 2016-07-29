@@ -15,59 +15,327 @@
  */
 package jef.database;
 
-import java.sql.SQLException;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
+import javax.persistence.NoResultException;
+
+import jef.database.Session.UpdateContext;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.innerpool.PartitionSupport;
+import jef.database.jsqlparser.parser.ParseException;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.meta.FBIField;
+import jef.database.meta.Feature;
+import jef.database.meta.ITableMetadata;
+import jef.database.meta.MetaHolder;
+import jef.database.query.AbstractJoinImpl;
 import jef.database.query.JoinElement;
+import jef.database.query.Query;
 import jef.database.query.SqlContext;
 import jef.database.routing.PartitionResult;
 import jef.database.wrapper.clause.BindSql;
+import jef.database.wrapper.processor.BindVariableDescription;
+import jef.tools.StringUtils;
+import jef.tools.reflect.BeanWrapper;
 
 /**
  * SQL语句生成器
+ * 
  * @author jiyi
  *
  */
-public interface SqlProcessor{
-	/**
-	 * 形成count语句
-	 * @param sql SQL语句
-	 */
-	public String toCountSql(String sql)  throws SQLException;
-	/**
-	 * 转换为Where子句 
-	 * @param obj
-	 * @param context SQL语句上下文
-	 * @param update  是否在更新时
-	 */
-	public BindSql toPrepareWhereSql(JoinElement obj,SqlContext context,boolean update,DatabaseDialect profile) ;
-	
+public abstract class SqlProcessor {
+	private DatabaseDialect profile;
+	private DbClient parent;
+
+	public SqlProcessor(DatabaseDialect profile, DbClient parent) {
+		this.profile = profile;
+		this.parent = parent;
+	}
+
+	private static Expression EXP_ROWID;
+	static {
+		try {
+			EXP_ROWID = DbUtils.parseExpression("ROWID");
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+	}
+
 	/**
 	 * 转换为Where子句
+	 * 
 	 * @param joinElement
-	 * @param context SQL语句上下文
+	 * @param context
+	 *            SQL语句上下文
+	 * @param update
+	 * @param profile
 	 * @return
 	 */
-	public BindSql toWhereClause(JoinElement joinElement,SqlContext context,boolean update,DatabaseDialect profile);
-	
-	
-	
-	/**
-	 *  收集结果数据中的数据，用需要的容器包装并返回
-	 *  @param subs
-	 *  @param container
-	 *  @param targetField
-	 *  @return
-	 */
-	public Object collectValueToContainer(List<? extends IQueryableEntity> subs, Class<?> container, String targetField);
+	public abstract BindSql toWhereClause(JoinElement joinElement, SqlContext context, UpdateContext update, DatabaseDialect profile);
+
 	/**
 	 * 获取数据库Dialect
+	 * 
 	 * @return
 	 * @deprecated
 	 */
-	public DatabaseDialect getProfile();
-	public DatabaseDialect getProfile(PartitionResult[] prs);
-	public PartitionSupport getPartitionSupport();
+	public DatabaseDialect getProfile() {
+		return profile;
+	}
+
+	public DatabaseDialect getProfile(PartitionResult[] prs) {
+		if (prs == null || prs.length == 0) {
+			return profile;
+		}
+		return this.parent.getProfile(prs[0].getDatabase());
+	}
+
+	public PartitionSupport getPartitionSupport() {
+		return parent.getPartitionSupport();
+	}
+
+	// 获得容器需要的值
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	static Object collectValueToContainer(List<? extends IQueryableEntity> records, Class<?> containerType, String targetField) {
+		Collection c = null;
+		if (containerType == Set.class) {
+			c = new HashSet();
+		} else if (containerType == List.class || containerType.isArray()) {
+			c = new ArrayList();
+		} else {
+			if (!records.isEmpty()) {
+				BeanWrapper bean = BeanWrapper.wrap(records.get(0));
+				return bean.getPropertyValue(targetField);
+			}
+			return null;
+			// throw new IllegalArgumentException(containerType +
+			// " is not a known collection type.");
+		}
+		for (IQueryableEntity d : records) {
+			BeanWrapper bean = BeanWrapper.wrap(d);
+			c.add(bean.getPropertyValue(targetField));
+		}
+		if (containerType.isArray()) {
+			return c.toArray((Object[]) Array.newInstance(containerType.getComponentType(), c.size()));
+		} else {
+			return c;
+		}
+	}
+
+	private static boolean checkPKCondition(List<Condition> conditions, ITableMetadata meta) {
+		List<ColumnMapping> pks = meta.getPKFields();
+		if (conditions.size() != pks.size())
+			return false;
+		for (Condition c : conditions) {
+			if (c.getOperator() != jef.database.Condition.Operator.EQUALS) {
+				return false;
+			}
+			if (!c.getField().getClass().isEnum()) {
+				return false;
+			}
+			if (!isFieldOfPK(c.getField(), pks)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	private static boolean isFieldOfPK(Field field, List<ColumnMapping> pks) {
+		for (ColumnMapping c : pks) {
+			if (field == c.field()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	static final class PrepareImpl extends SqlProcessor {
+		public PrepareImpl(DatabaseDialect profile, DbClient parent) {
+			super(profile, parent);
+		}
+
+		/**
+		 * 转换到绑定类Where字句
+		 */
+		public BindSql toWhereClause(JoinElement obj, SqlContext context, UpdateContext update, DatabaseDialect profile) {
+			BindSql result = toWhere1(obj, context, update, profile);
+			if (result.getSql().length() > 0) {
+				result.setSql(" where ".concat(result.getSql()));
+			}
+			return result;
+		}
+
+		private BindSql toWhere1(JoinElement query, SqlContext context, UpdateContext update, DatabaseDialect profile) {
+			if (query instanceof AbstractJoinImpl) {
+				List<BindVariableDescription> params = new ArrayList<BindVariableDescription>();
+				AbstractJoinImpl join = (AbstractJoinImpl) query;
+				StringBuilder sb = new StringBuilder();
+				for (Query<?> ele : join.elements()) {
+					BindSql result = toWhereElement1(ele, context.getContextOf(ele), ele.getConditions(), null, profile);
+					if (result.getBind() != null) {
+						params.addAll(result.getBind());
+					}
+					if (StringUtils.isEmpty(result.getSql())) {
+						continue;
+					}
+					if (sb.length() > 0) {
+						sb.append(" and ");
+					}
+					sb.append(result.getSql());
+				}
+				for (Map.Entry<Query<?>, List<Condition>> entry : join.getRefConditions().entrySet()) {
+					Query<?> q = entry.getKey();
+					BindSql result = toWhereElement1(q, context.getContextOf(q), entry.getValue(), null, profile);
+					if (result.getBind() != null) {
+						params.addAll(result.getBind());
+					}
+					if (StringUtils.isEmpty(result.getSql())) {
+						continue;
+					}
+					if (sb.length() > 0) {
+						sb.append(" and ");
+					}
+					sb.append(result.getSql());
+				}
+				return new BindSql(sb.toString(), params);
+			} else if (query instanceof Query<?>) {
+				return toWhereElement1((Query<?>) query, context, query.getConditions(), update, profile);
+			} else {
+				throw new IllegalArgumentException("Unknown Query class:" + query.getClass().getName());
+			}
+		}
+
+		/**
+		 * 
+		 * @param obj
+		 * @param context
+		 * @param removePKUpdate
+		 * @param profile
+		 * @param checkIsPK
+		 *            需要监测该条件是否恰好等于主键条件，如果是则返回true，如果为null则说明不需要检查
+		 * @return
+		 */
+		private BindSql toWhereElement1(Query<?> q, SqlContext context, List<Condition> conditions, UpdateContext update, DatabaseDialect profile) {
+			List<BindVariableDescription> params = new ArrayList<BindVariableDescription>();
+			IQueryableEntity obj = q.getInstance();
+			// 这里必须用双条件判断，因为Join当中的RefCondition是额外增加的条件，如果去除将造成RefCondition丢失。
+			if (q.isAll() && conditions.isEmpty())
+				return new BindSql("", params);
+
+			if (conditions.isEmpty()) {
+				if (getProfile().has(Feature.SELECT_ROW_NUM) && obj.rowid() != null) {
+					q.addCondition(new FBIField(EXP_ROWID, q), obj.rowid());
+				} else {// 自动将主键作为条件
+					DbUtils.fillConditionFromField(obj, q, update, false);
+				}
+			}
+			// 检查当前的查询条件是否为一个主键条件
+			if (update != null && update.checkIsPKCondition()) {
+				update.setIsPkQuery(checkPKCondition(conditions, q.getMeta()));
+			}
+
+			StringBuilder sb = new StringBuilder();
+			for (Condition c : conditions) {
+				if (sb.length() > 0)
+					sb.append(" and ");
+				sb.append(c.toPrepareSqlClause(params, q.getMeta(), context, this, obj, profile));
+			}
+
+			if (sb.length() > 0 || ORMConfig.getInstance().isAllowEmptyQuery()) {
+				return new BindSql(sb.toString(), params);
+			} else {
+				throw new NoResultException("Illegal usage of Query object, must including any condition in query:" + q.getInstance().getClass());
+			}
+		}
+	}
+
+	static class NormalImpl extends SqlProcessor {
+		NormalImpl(DatabaseDialect profile, DbClient parent) {
+			super(profile, parent);
+		}
+
+		/**
+		 * 转换到Where子句
+		 */
+		public BindSql toWhereClause(JoinElement obj, SqlContext context, UpdateContext update, DatabaseDialect profile) {
+			String sb = toWhere0(obj, context, update, profile);
+			if (sb.length() > 0) {
+				return new BindSql(" where " + sb);
+			} else {
+				return new BindSql(sb);
+			}
+		}
+
+		private String toWhere0(JoinElement obj, SqlContext context, UpdateContext update, DatabaseDialect profile) {
+			if (obj instanceof AbstractJoinImpl) {
+				AbstractJoinImpl join = (AbstractJoinImpl) obj;
+				StringBuilder sb = new StringBuilder();
+				for (Query<?> ele : join.elements()) {
+					String condStr = toWhereElement(ele, context.getContextOf(ele), ele.getConditions(), null, profile);
+					if (StringUtils.isEmpty(condStr)) {
+						continue;
+					}
+					if (sb.length() > 0) {
+						sb.append(" and ");
+					}
+					sb.append(condStr);
+				}
+				for (Map.Entry<Query<?>, List<Condition>> entry : join.getRefConditions().entrySet()) {
+					Query<?> q = entry.getKey();
+					String condStr = toWhereElement(q, context.getContextOf(q), entry.getValue(), null, profile);
+					if (StringUtils.isEmpty(condStr)) {
+						continue;
+					}
+					if (sb.length() > 0) {
+						sb.append(" and ");
+					}
+					sb.append(condStr);
+				}
+				return sb.toString();
+			} else if (obj instanceof Query<?>) {
+				return toWhereElement((Query<?>) obj, context, obj.getConditions(), update, profile);
+			} else {
+				throw new IllegalArgumentException("Unknown Query class:" + obj.getClass().getName());
+			}
+		}
+
+		private String toWhereElement(Query<?> q, SqlContext context, List<Condition> conditions, UpdateContext update, DatabaseDialect profile) {
+			if (q.isAll() && conditions.isEmpty())
+				return "";
+			if (conditions.isEmpty()) {
+				IQueryableEntity instance = q.getInstance();
+				if (profile.has(Feature.SELECT_ROW_NUM) && instance.rowid() != null) {
+					q.addCondition(new FBIField(EXP_ROWID, q), instance.rowid());
+				} else {// 自动将主键作为条件
+					DbUtils.fillConditionFromField(q.getInstance(), q, update, false);
+				}
+			}
+			// 检查当前的查询条件是否为一个主键条件
+			if (update != null && update.checkIsPKCondition()) {
+				update.setIsPkQuery(checkPKCondition(conditions, q.getMeta()));
+			}
+
+			ITableMetadata meta = MetaHolder.getMeta(q.getInstance());
+			StringBuilder sb = new StringBuilder();
+			for (Condition c : conditions) {
+				if (sb.length() > 0)
+					sb.append(" and ");
+				sb.append(c.toSqlClause(meta, context, this, q.getInstance(), profile)); // 递归的，当do是属于Join中的一部分时，需要为其增加前缀
+			}
+			if (sb.length() > 0 || ORMConfig.getInstance().isAllowEmptyQuery()) {
+				return sb.toString();
+			} else {
+				throw new NoResultException("Illegal usage of query:" + q.getClass().getName()
+						+ " object, must including any condition in query. or did you forget to set the primary key for the entity?");
+			}
+		}
+	}
 }

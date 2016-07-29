@@ -7,8 +7,10 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 
 /**
- * java类中的ENUM对应数据库中的INT
+ * Java类中的ENUM对应数据库中的INT
  * 按照枚举在类中定义的顺序，第一个枚举值为0.以此类推
+ * 
+ * INT <-> enum. ordinal()
  * 
  * @author jiyi
  *

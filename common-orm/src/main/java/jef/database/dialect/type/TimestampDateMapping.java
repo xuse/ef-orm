@@ -15,12 +15,12 @@ import jef.database.query.Func;
  *
  */
 public class TimestampDateMapping extends AbstractTimeMapping{
-	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect dialect) throws SQLException {
 		if(value==null){
 			st.setNull(index, java.sql.Types.TIMESTAMP);
 			return null;
 		}else{
-			Timestamp ts=session.toTimestampSqlParam((Date)value);
+			Timestamp ts=dialect.toTimestampSqlParam((Date)value);
 			st.setTimestamp(index, ts);
 			return ts;
 		}

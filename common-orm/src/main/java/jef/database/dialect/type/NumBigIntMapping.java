@@ -6,7 +6,12 @@ import java.sql.SQLException;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 
-public class NumBigIntMapping extends AColumnMapping {
+/**
+ * BIGINT <-> Integer.class
+ * @author jiyi
+ *
+ */
+public class NumBigIntMapping extends AbstractVersionNumberMapping {
 
 	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
@@ -36,5 +41,13 @@ public class NumBigIntMapping extends AColumnMapping {
 	@Override
 	protected Class<?> getDefaultJavaType() {
 		return Integer.class;
+	}
+	
+	@Override
+	Object increament(Object value) {
+		if (value == null)
+			return 1;
+		int i = ((Number) value).intValue();
+		return i + 1;
 	}
 }

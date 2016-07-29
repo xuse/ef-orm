@@ -94,32 +94,12 @@ public abstract class AbstractQuery<T extends IQueryableEntity> implements Query
 		PartitionResult[] prs = DbUtils.toTableNames(getInstance(), tableName, this, processor.getPartitionSupport());
 		DatabaseDialect profile = processor.getProfile(prs);
 
-		QueryClauseImpl clause = new QueryClauseImpl(profile);
-
 		GroupClause groupClause = SelectProcessor.toGroupAndHavingClause(this, context, profile);
-		clause.setGrouphavingPart(groupClause);
-
-		clause.setSelectPart(SelectProcessor.toSelectSql(context, groupClause, profile));
-		clause.setTables(type.getTableName(false),prs);
-		clause.setWherePart(processor.parent.toWhereClause(this, context, false, profile).getSql());
-		if (order)
-			clause.setOrderbyPart(SelectProcessor.toOrderClause(this, context, profile));
-		return clause;
-	}
-
-	@Override
-	public QueryClause toPrepareQuerySql(SelectProcessor processor, SqlContext context, boolean order) {
-		String tableName = (String) getAttribute(JoinElement.CUSTOM_TABLE_NAME);
-		if (tableName != null)
-			tableName = MetaHolder.toSchemaAdjustedName(tableName);
-		PartitionResult[] prs = DbUtils.toTableNames(getInstance(), tableName, this, processor.getPartitionSupport());
-
-		DatabaseDialect profile = processor.getProfile(prs);
-
-		GroupClause groupClause = SelectProcessor.toGroupAndHavingClause(this, context, profile);
-		BindSql whereResult = processor.parent.toPrepareWhereSql(this, context, false, profile);
-
+		BindSql whereResult=processor.parent.toWhereClause(this, context, null, profile);
+		
 		QueryClauseImpl result = new QueryClauseImpl(profile);
+		result.setGrouphavingPart(groupClause);
+
 		result.setSelectPart(SelectProcessor.toSelectSql(context, groupClause, profile));
 		result.setGrouphavingPart(groupClause);
 		result.setTables(type.getTableName(false),prs);

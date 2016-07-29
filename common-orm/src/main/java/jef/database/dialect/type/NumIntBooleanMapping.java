@@ -6,6 +6,12 @@ import java.sql.SQLException;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 
+/**
+ * 用数据库的Int类型来存储Java的boolean类型，=0时表示假，反之表示真
+ * Int <-> Boolean.class
+ * @author jiyi
+ *
+ */
 public class NumIntBooleanMapping extends AColumnMapping{
 	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){

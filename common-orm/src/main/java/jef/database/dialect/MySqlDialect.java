@@ -22,6 +22,7 @@ import java.util.Arrays;
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.ORMConfig;
+import jef.database.annotation.DateGenerateType;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.jsqlparser.expression.BinaryExpression;
@@ -249,24 +250,26 @@ public class MySqlDialect extends AbstractDialect {
 
 	@Override
 	public String getCreationComment(ColumnType column, boolean flag) {
-		int generateType = 0;
+		DateGenerateType generateType = null;
 		if (column instanceof SqlTypeDateTimeGenerated) {
-			// 1 创建时生成为sysdate 2更新时生成为sysdate 3创建时设置为为java系统时间  4为更新时设置为java系统时间
 			generateType = ((SqlTypeDateTimeGenerated) column).getGenerateType();
 			Object defaultValue = column.defaultValue;
-			if (generateType == 0 && (defaultValue == Func.current_date || defaultValue == Func.current_time || defaultValue == Func.now)) {
-				generateType = 1;
+			/*
+			 * 根据用户设置的defaultValue进行修正
+			 */
+			if (generateType == null && (defaultValue == Func.current_date || defaultValue == Func.current_time || defaultValue == Func.now)) {
+				generateType = DateGenerateType.created;
 			}
-			if(generateType==0 && defaultValue!=null){
+			if(generateType== null && defaultValue!=null){
 				String dStr = defaultValue.toString().toLowerCase();
 				if (dStr.startsWith("current") || dStr.startsWith("sys")) {
-					generateType = 1;	
+					generateType = DateGenerateType.created;	
 				}
 			}
 		}
-		if(generateType==1){
+		if(generateType==DateGenerateType.created){
 			return "datetime not null";
-		}else if(generateType==2){
+		}else if(generateType==DateGenerateType.modified){
 			return "timestamp not null default current_timestamp on update current_timestamp";
 		}
 		return super.getCreationComment(column, flag);

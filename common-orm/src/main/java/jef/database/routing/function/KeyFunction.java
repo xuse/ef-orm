@@ -15,7 +15,6 @@
  */
 package jef.database.routing.function;
 
-import jef.database.annotation.PartitionKey;
 
 /**
  * 描述一个对指定类型的函数操作，用来将不同的值转化为分表时的表名后缀

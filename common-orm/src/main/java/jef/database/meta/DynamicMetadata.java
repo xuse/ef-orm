@@ -254,7 +254,7 @@ public class DynamicMetadata extends AbstractMetadata {
 			lowerFields.remove(field.name().toLowerCase());
 		}
 		// increMappings
-		removeAutoIncAndTimeUpdatingField(field);
+		removeAutoIncAndAutoUpdatingField(field);
 		if (lobNames != null) {
 			lobNames = (Field[]) ArrayUtils.removeElement(lobNames, field);
 			if (lobNames.length == 0)

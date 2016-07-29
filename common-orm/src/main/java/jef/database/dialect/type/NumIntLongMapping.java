@@ -6,12 +6,18 @@ import java.sql.SQLException;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 
-public class NumIntLongMapping extends AColumnMapping{
+/**
+ * INT <-> java.lang.Long
+ * 
+ * @author jiyi
+ *
+ */
+public class NumIntLongMapping extends AbstractVersionNumberMapping {
 	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
-		if(value==null){
+		if (value == null) {
 			st.setNull(index, java.sql.Types.INTEGER);
-		}else{
-			st.setLong(index, ((Number)value).longValue());
+		} else {
+			st.setLong(index, ((Number) value).longValue());
 		}
 		return value;
 	}
@@ -24,16 +30,26 @@ public class NumIntLongMapping extends AColumnMapping{
 	protected String getSqlExpression(Object value, DatabaseDialect profile) {
 		return value.toString();
 	}
-	
+
 	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
-		Object obj=rs.getObject(n);
-		if(obj==null)return null;
-		if(obj instanceof Long)return obj;
-		return ((Number)obj).longValue();
+		Object obj = rs.getObject(n);
+		if (obj == null)
+			return null;
+		if (obj instanceof Long)
+			return obj;
+		return ((Number) obj).longValue();
 	}
 
 	@Override
 	protected Class<?> getDefaultJavaType() {
 		return Long.class;
+	}
+
+	@Override
+	Object increament(Object value) {
+		if (value == null)
+			return 1;
+		long i = ((Number) value).longValue();
+		return i + 1L;
 	}
 }

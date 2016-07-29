@@ -45,11 +45,12 @@ import jef.tools.StringUtils;
 
 public abstract class SelectProcessor {
 
+	@SuppressWarnings("deprecation")
 	static SelectProcessor get(DatabaseDialect profile, DbClient db) {
 		if (profile.has(Feature.NO_BIND_FOR_SELECT)) {
 			return new NormalImpl(db, db.rProcessor);
 		} else {
-			return new PreparedImpl(db, db.rProcessor);
+			return new PreparedImpl(db, db.preProcessor);
 		}
 	}
 
@@ -156,7 +157,7 @@ public abstract class SelectProcessor {
 				for (PartitionResult site : sites) {
 					List<String> tablenames = site.getTablesEscaped(db.getProfile(site.getDatabase()));
 					for (int i = 0; i < tablenames.size(); i++) {
-						BindSql sql = parent.toWhereClause(query, context, false, parent.getPartitionSupport().getProfile(site.getDatabase()));
+						BindSql sql = parent.toWhereClause(query, context, null, parent.getPartitionSupport().getProfile(site.getDatabase()));
 						result.addSql(site.getDatabase(), StringUtils.concat("select count(*) from ", tablenames.get(i), " t", sql.getSql()));
 					}
 				}
@@ -165,7 +166,7 @@ public abstract class SelectProcessor {
 				DatabaseDialect profile = getProfile();
 				Join join = (Join) obj;
 				SqlContext context = join.prepare();
-				result.addSql(null, "select count(*) from " + join.toTableDefinitionSql(parent, context, profile) + parent.toWhereClause(join, context, false, profile));
+				result.addSql(null, "select count(*) from " + join.toTableDefinitionSql(parent, context, profile) + parent.toWhereClause(join, context, null, profile));
 				return result;
 			} else if (obj instanceof ComplexQuery) {
 				ComplexQuery cq = (ComplexQuery) obj;
@@ -220,7 +221,7 @@ public abstract class SelectProcessor {
 		}
 
 		public QueryClause toQuerySql(ConditionQuery obj, PageLimit range, boolean order) {
-			QueryClause result = obj.toPrepareQuerySql(this, obj.prepare(), order);
+			QueryClause result = obj.toQuerySql(this, obj.prepare(), order);
 			result.setPageRange(range);
 			return result;
 		}
@@ -279,7 +280,7 @@ public abstract class SelectProcessor {
 					}
 				}
 
-				BindSql result = parent.toPrepareWhereSql(query, context, false, profile);
+				BindSql result = parent.toWhereClause(query, context, null, profile);
 				if (context.isDistinct()) {
 					String countStr = toSelectCountSql(context.getSelectsImpl(), context, groupClause.isNotEmpty());
 					for (PartitionResult site : sites) {
@@ -310,7 +311,7 @@ public abstract class SelectProcessor {
 				} else {
 					countStr = "select count(*) from ";
 				}
-				BindSql result = parent.toPrepareWhereSql(join, context, false, profile);
+				BindSql result = parent.toWhereClause(join, context, null, profile);
 				result.setSql(countStr + join.toTableDefinitionSql(parent, context, profile) + result.getSql() + groupClause);
 				cq.addSql(null, result);
 				return cq;

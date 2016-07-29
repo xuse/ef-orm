@@ -199,6 +199,7 @@ public class ORMConfig implements ORMConfigMBean {
 	
 	private String partitionBucketRange;
 
+	@SuppressWarnings("deprecation")
 	private void init() {
 		partitionBucketRange=JefConfiguration.get(DbCfg.PARTITION_BUCKET_RANGE,"0-1023:");
 		showStringLength = JefConfiguration.getBoolean(DbCfg.DB_ENCODING_SHOWLENGTH, false);

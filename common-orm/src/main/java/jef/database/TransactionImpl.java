@@ -119,6 +119,7 @@ public class TransactionImpl extends Transaction {
 		this.isolationLevel = isolationLevel;
 		this.readOnly = readOnly;
 		this.rProcessor = parent.rProcessor;
+		this.preProcessor = parent.preProcessor;
 		this.selectp = parent.selectp;
 		this.insertp = parent.insertp;
 		this.updatep = parent.updatep;

@@ -7,7 +7,12 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 import jef.tools.StringUtils;
 
-public class NumBigStringMapping extends AColumnMapping {
+/**
+ * BIGINT <-> String.class
+ * @author jiyi
+ *
+ */
+public class NumBigStringMapping extends AbstractVersionNumberMapping {
 
 	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if (StringUtils.isEmpty(value)) {
@@ -36,6 +41,14 @@ public class NumBigStringMapping extends AColumnMapping {
 
 	@Override
 	protected Class<?> getDefaultJavaType() {
-		return Integer.class;
+		return String.class;
+	}
+	
+	@Override
+	Object increament(Object value) {
+		if (value == null)
+			return 1;
+		int i = ((Number) value).intValue();
+		return String.valueOf(i + 1);
 	}
 }

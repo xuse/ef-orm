@@ -31,6 +31,7 @@ import java.util.Map;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.PersistenceException;
 
+import jef.common.Pair;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.common.wrapper.Page;
@@ -40,6 +41,7 @@ import jef.database.cache.Cache;
 import jef.database.cache.CacheImpl;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.dialect.type.VersionSupportColumn;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
 import jef.database.innerpool.MetadataService;
@@ -108,6 +110,7 @@ import org.easyframe.enterprise.spring.TransactionMode;
 public abstract class Session {
 	// 这六个值在初始化的时候赋值
 	protected SqlProcessor rProcessor;
+	protected SqlProcessor preProcessor;
 	protected InsertProcessor insertp;
 	protected UpdateProcessor updatep;
 	protected DeleteProcessor deletep;
@@ -741,7 +744,8 @@ public abstract class Session {
 		int n = update(obj, null);
 		return n;
 	}
-
+	
+	
 	/**
 	 * 更新对象，无级联操作，可以指定操作的表名
 	 * 
@@ -2272,7 +2276,7 @@ public abstract class Session {
 		long start = System.nanoTime();
 
 		PKQuery<?> query = new PKQuery(meta, DbUtils.getPKValueSafe((IQueryableEntity) data.get(0)), meta.newInstance());
-		BindSql wherePart = rProcessor.toPrepareWhereSql(query, new SqlContext(null, query), false, getProfile(null));
+		BindSql wherePart = preProcessor.toWhereClause(query, new SqlContext(null, query), null, getProfile(null));
 		for (BindVariableDescription bind : wherePart.getBind()) {
 			bind.setInBatch(true);
 		}
@@ -2328,7 +2332,7 @@ public abstract class Session {
 	public final <T extends IQueryableEntity> Batch<T> startBatchDelete(T template, String tableName) throws SQLException {
 		// 位于批当中的绑定变量
 		long start = System.nanoTime();
-		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), new SqlContext(null, template.getQuery()), false, getProfile(null));
+		BindSql wherePart = preProcessor.toWhereClause(template.getQuery(), new SqlContext(null, template.getQuery()), null, getProfile(null));
 		for (BindVariableDescription bind : wherePart.getBind()) {
 			bind.setInBatch(true);
 		}
@@ -2568,7 +2572,8 @@ public abstract class Session {
 		long start = System.nanoTime();
 		UpdateClause updatePart = updatep.toUpdateClauseBatch((IQueryableEntity) template, null, dynamic);
 		// 位于批当中的绑定变量
-		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), new SqlContext(null, template.getQuery()), true, getProfile(null));
+		UpdateContext context=new UpdateContext(template.getQuery().getMeta().getVersionColumn());
+		BindSql wherePart = preProcessor.toWhereClause(template.getQuery(), new SqlContext(null, template.getQuery()), context, getProfile(null));
 		for (BindVariableDescription bind : wherePart.getBind()) {
 			bind.setInBatch(true);
 		}
@@ -2957,7 +2962,7 @@ public abstract class Session {
 			DatabaseDialect profile = this.getProfile(sites[0].getDatabase());
 			getListener().beforeDelete(obj, this);
 
-			BindSql where = deletep.toWhereClause(query, new SqlContext(null, query), false, profile);
+			BindSql where = deletep.toWhereClause(query, new SqlContext(null, query), profile);
 			int count = deletep.processDelete(this, obj, where, sites, start);
 			if (count > 0) {
 				getCache().onDelete(myTableName == null ? query.getMeta().getTableName(false) : myTableName, where.getSql(), CacheImpl.toParamList(where.getBind()));
@@ -2966,6 +2971,21 @@ public abstract class Session {
 			return count;
 		} else {
 			return 0;
+		}
+	}
+	
+	static class UpdateContext{
+		VersionSupportColumn versionColumn;
+		
+		private Boolean isPkQuery;
+		public UpdateContext(VersionSupportColumn versionColumn) {
+			this.versionColumn=versionColumn;
+		}
+		public boolean checkIsPKCondition(){
+			return versionColumn!=null && isPkQuery==null;
+		}
+		public void setIsPkQuery(boolean flag){
+			this.isPkQuery=flag;
 		}
 	}
 
@@ -2980,7 +3000,10 @@ public abstract class Session {
 			return 0;
 		}
 		DatabaseDialect profile = getProfile(sites[0].getDatabase());
-		BindSql whereClause = updatep.toWhereClause(query, new SqlContext(null, query), true, profile);
+		
+		UpdateContext context=new UpdateContext(query.getMeta().getVersionColumn());
+		Pair<BindSql,Boolean> whereResult = updatep.toWhereClause(query, new SqlContext(null, query), context, profile);
+		BindSql whereClause=whereResult.first;
 		if (dynamic && !obj.needUpdate()) {// 重新检查一遍
 			return 0;
 		}
