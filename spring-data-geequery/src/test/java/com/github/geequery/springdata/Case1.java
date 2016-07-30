@@ -24,8 +24,10 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 
+import com.github.geequery.springdata.test.entity.ComplexFoo;
 import com.github.geequery.springdata.test.entity.Foo;
 import com.github.geequery.springdata.test.entity.VersionLog;
+import com.github.geequery.springdata.test.repo.ComplexFooDao;
 import com.github.geequery.springdata.test.repo.FooDao;
 import com.github.geequery.springdata.test.repo.FooDao2;
 
@@ -47,6 +49,9 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 
 	@javax.annotation.Resource
 	private FooDao2 foodao2;
+
+	@javax.annotation.Resource
+	private ComplexFooDao complex;
 
 	// @Test
 	// public void test1() throws SQLException{
@@ -120,14 +125,6 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 		}
 
 		{
-
-		}
-
-		{
-			System.out.println("=== updateAgeByName ===");
-		}
-
-		{
 			System.out.println("=== findByusername (NativeQuery) ===");
 		}
 		{
@@ -137,7 +134,6 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			System.out.println("=== DeleteAll() ===");
 			foodao.deleteAll();
 		}
-		// 测试复合主键的情况
 	}
 
 	@Test
@@ -155,11 +151,12 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 		}
 
 		{
-			// 多参数顺序测试否有问题
+			// 多参数顺序测试否有问题(已修复)
 			System.out.println("=== findByNameStartsWithAndAge ===");
 			List<Foo> foos = foodao2.findByNameStartsWithAndAge(0, "李");
 			System.out.println(foos);
 		}
+
 		{
 
 			// ====使用GQ NamedQueries
@@ -174,7 +171,35 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 		{
 			// NativeQuery多参数是否有问题
 		}
+	}
 
+	@Test
+	public void testComplexId() {
+		// 测试复合主键的情况
+		{
+			ComplexFoo cf = new ComplexFoo(1, 2);
+			cf.setMessage("test");
+			complex.save(cf);
+
+			cf = new ComplexFoo(2, 2);
+			cf.setMessage("1222234324");
+			complex.save(cf);
+		}
+		{
+			ComplexFoo cf = complex.findOne(new int[] { 1, 2 });
+			System.out.println(cf);
+			cf.setMessage("修改消息!");
+			complex.save(cf);
+		}
+		{
+			Iterable<ComplexFoo> list = complex.findAll(Arrays.asList(new int[] { 1, 2 }, new int[] { 2, 2 }));
+			for (ComplexFoo foo : list) {
+				System.out.println(foo);
+			}
+		}
+		{
+			complex.delete(new int[] { 1, 2 });
+		}
 	}
 
 	@Override
@@ -257,11 +282,11 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			v2.setName("更新2");
 			v3.setName("又被抢了，还能好好做朋友吗？");
 			v4.setName("更新4");
-			int count=commonDao.batchUpdate(Arrays.asList(v1, v2, v3, v4));
-			Assert.assertEquals(3, count); //该条记录没有更新
-			
-			v3=commonDao.load(v3);
-			Assert.assertEquals("再次抢先更新", v3.getName()); //该条记录没有更新
+			int count = commonDao.batchUpdate(Arrays.asList(v1, v2, v3, v4));
+			Assert.assertEquals(3, count); // 该条记录没有更新
+
+			v3 = commonDao.load(v3);
+			Assert.assertEquals("再次抢先更新", v3.getName()); // 该条记录没有更新
 			/**
 			 * 在Batch模式下，乐观锁可以阻止覆盖他人的记录（无法写入），但是无法检测出是哪一组记录因为冲突造成无法写入。
 			 * 因此只能确认不覆盖其他人的记录。
@@ -271,12 +296,12 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			 */
 		}
 	}
-	
+
 	/**
 	 * 演示悲观锁的使用
 	 */
 	@Test
-	public void testPessimisticLock(){
+	public void testPessimisticLock() {
 		int id;
 		{
 			VersionLog v = new VersionLog();
@@ -285,37 +310,37 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			id = v.getId();
 		}
 		{
-			Query<VersionLog> query=QB.create(VersionLog.class).addCondition(QB.between(VersionLog.Field.id, id-4, id));
-			RecordsHolder<VersionLog> records=commonDao.selectForUpdate(query);
-			try{
-				for(VersionLog version:records){
-					version.setName("此时:"+version.getName());
+			Query<VersionLog> query = QB.create(VersionLog.class).addCondition(QB.between(VersionLog.Field.id, id - 4, id));
+			RecordsHolder<VersionLog> records = commonDao.selectForUpdate(query);
+			try {
+				for (VersionLog version : records) {
+					version.setName("此时:" + version.getName());
 					version.setModified(new Date());
 				}
-				records.commit();	
-			}finally{
+				records.commit();
+			} finally {
 				records.close();
 			}
-			
+
 		}
 		{
-			Query<VersionLog> query=QB.create(VersionLog.class).addCondition(QB.between(VersionLog.Field.id, id-4, id));
-			List<VersionLog> records=commonDao.find(query);
-			for(VersionLog version: records){
+			Query<VersionLog> query = QB.create(VersionLog.class).addCondition(QB.between(VersionLog.Field.id, id - 4, id));
+			List<VersionLog> records = commonDao.find(query);
+			for (VersionLog version : records) {
 				System.out.println(version.getName());
 			}
 		}
-		
+
 	}
-	
+
 	/**
 	 * 特定场景下不需要加锁更新
 	 */
 	@Test
-	public void testUpdateWithoutLock(){
-		List<Foo> foos=commonDao.find(QB.create(Foo.class));
-		Foo foo=foos.get(0);
-		QB.fieldAdd(foo,Foo.Field.age, 100);
+	public void testUpdateWithoutLock() {
+		List<Foo> foos = commonDao.find(QB.create(Foo.class));
+		Foo foo = foos.get(0);
+		QB.fieldAdd(foo, Foo.Field.age, 100);
 		foo.setName("姓名也更新了");
 		commonDao.update(foo);
 	}

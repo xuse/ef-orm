@@ -2921,9 +2921,9 @@ public abstract class Session {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private List batchLoadByPK0(ITableMetadata meta, List<?> pkValues) throws SQLException {
+	private List batchLoadByPK0(ITableMetadata meta, List<? extends Serializable> pkValues) throws SQLException {
 		if (meta.getPKFields().size() != 1) {
-			throw new SQLException("Only supports [1] column as primary key, but " + meta.getSimpleName() + " has " + meta.getPKFields().size() + " columns.");
+			return batchLoadEachTimes(meta,pkValues);
 		}
 		if (meta.getType() == EntityType.POJO) {
 			Query<?> q = meta.newInstance().getQuery();
@@ -2934,6 +2934,14 @@ public abstract class Session {
 			q.addCondition(meta.getPKFields().get(0).field(), Operator.IN, pkValues);
 			return innerSelect(q, null, null, QueryOption.DEFAULT);
 		}
+	}
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private List batchLoadEachTimes(ITableMetadata meta, List<? extends Serializable> pkValues) throws SQLException {
+		List list=new ArrayList(pkValues.size());
+		for(Serializable id: pkValues){
+			list.add(load(meta, (Serializable[])id));
+		}
+		return list;
 	}
 
 	// 计算手工执行的各种SQL语句下缓存刷新问题
