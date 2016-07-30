@@ -8,7 +8,6 @@ import java.util.List;
 import jef.database.Condition.Operator;
 import jef.database.DbClient;
 import jef.database.NativeQuery;
-import jef.database.ORMConfig;
 import jef.database.QB;
 import jef.database.RecordHolder;
 import jef.database.RecordsHolder;
@@ -275,37 +274,41 @@ public class DynamicTableTest extends org.junit.Assert {
 		doInsert();
 		int max=doInsert();
 		RecordsHolder<VarObject> holder = db.selectForUpdate(QB.create(meta), null);
-		
-		int n = 0;
-		//更新数据
-		for (VarObject var : holder.get()) {
-			var.set("name", "更新字段" + n++);
-		}
-		
-		//插入一条记录
-		if(holder.supportsNewRecord()){
-			VarObject insert=holder.newRecord();
-//			insert.set("id", ++max);
-			insert.set("name", "新插入的记录");	
-		}
-		
-		holder.commit(false); // 提交，但不关闭结果集
-		
-		// 继续修改
-		for (VarObject var : holder.get()) {
-			holder.delete(var);
-		}
-		holder.commit();
-		List<VarObject> result = db.select(QB.create(meta));
-		System.out.println("Size=" + result.size());
-		assertEquals(result.size(), holder.supportsNewRecord()?1:0); //之前查出的记录全部被删除，只剩下新插入的记录卡了
+		try{
+			int n = 0;
+			//更新数据
+			for (VarObject var : holder.get()) {
+				var.set("name", "更新字段" + n++);
+			}
+			
+			//插入一条记录
+			if(holder.supportsNewRecord()){
+				VarObject insert=holder.newRecord();
+//				insert.set("id", ++max);
+				insert.set("name", "新插入的记录");	
+			}
+			
+			holder.commit(); // 提交，但不关闭结果集
+			
+			// 继续修改
+			for (VarObject var : holder.get()) {
+				holder.delete(var);
+			}
+			holder.commit();
+			List<VarObject> result = db.select(QB.create(meta));
+			System.out.println("Size=" + result.size());
+			assertEquals(result.size(), holder.supportsNewRecord()?1:0); //之前查出的记录全部被删除，只剩下新插入的记录卡了
 
-		//打印出操作后的全部记录
-		for (VarObject var : result) {
-			System.out.println(var.get("name"));
+			//打印出操作后的全部记录
+			for (VarObject var : result) {
+				System.out.println(var.get("name"));
+			}
+			//进一步测试：之前测试发现在Derby上，在执行完此次操作后执行insert操作，会出现主键冲突，因此加以测试
+			doInsert();	
+		}finally{
+			holder.close();
 		}
-		//进一步测试：之前测试发现在Derby上，在执行完此次操作后执行insert操作，会出现主键冲突，因此加以测试
-		doInsert();
+		
 	}
 
 	/**

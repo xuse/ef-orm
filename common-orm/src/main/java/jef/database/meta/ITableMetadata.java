@@ -14,9 +14,9 @@ import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.AbstractTimeMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.dialect.type.VersionSupportColumn;
 
 import com.google.common.collect.Multimap;
 
@@ -182,11 +182,17 @@ public interface ITableMetadata {
 	public AutoIncrementMapping getFirstAutoincrementDef();
 
 	/**
-	 * 需要自动维护记录更新时间的列定义
+	 * 需要自动维护数据的列定义（每次更新时自动刷新的列，例如版本或修改时间）
 	 * 
-	 * @return 需要自动维护记录更新时间的列定义
+	 * @return 需要自动维护记录更新的列定义
 	 */
-	public AbstractTimeMapping[] getUpdateTimeDef();
+	public VersionSupportColumn[] getAutoUpdateColumnDef();
+	
+	/**
+	 * 获得用于进行版本控制（防止并发修改冲突）的列定义
+	 * @return the VersionSupportColumn with version usage
+	 */
+	public VersionSupportColumn getVersionColumn();
 
 	/**
 	 * 获取被设置为主键的字段

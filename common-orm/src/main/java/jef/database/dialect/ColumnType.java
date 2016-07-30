@@ -27,6 +27,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.TableGenerator;
 
 import jef.database.ORMConfig;
+import jef.database.annotation.DateGenerateType;
 import jef.database.annotation.HiloGeneration;
 import jef.database.dialect.type.AutoGuidMapping;
 import jef.database.dialect.type.AutoIntMapping;
@@ -178,8 +179,8 @@ public abstract class ColumnType {
 		// 对自增类型的数据不检查缺省值(兼容PG)
 		if (!(this instanceof AutoIncrement)) {
 			// 检查缺省值
-			String a1 = profile.toDefaultString(oldType.defaultValue, oldType.getSqlType(),oldType.getSqlType());
-			String a2 = profile.toDefaultString(newType.defaultValue, newType.getSqlType(),newType.getSqlType());
+			String a1 = profile.toDefaultString(oldType.defaultValue, oldType.getSqlType(), oldType.getSqlType());
+			String a2 = profile.toDefaultString(newType.defaultValue, newType.getSqlType(), newType.getSqlType());
 			// 非字符串比较情况下全部按小写处理
 			if (a1 != null && !a1.startsWith("'")) {
 				a1 = StringUtils.lowerCase(a1);
@@ -375,7 +376,7 @@ public abstract class ColumnType {
 
 		@Override
 		protected boolean compare(ColumnType type, DatabaseDialect profile) {
-			if(!(type instanceof Varchar)) {
+			if (!(type instanceof Varchar)) {
 				return false;
 			}
 			Varchar rhs = (Varchar) type;
@@ -552,8 +553,9 @@ public abstract class ColumnType {
 	}
 
 	// Int 和BigInt，BigInt对应Long,默认10
-	public static class Int extends ColumnType implements SqlTypeSized {
+	public static class Int extends ColumnType implements SqlTypeSized, SqlTypeVersioned {
 		int precision = 8;
+		boolean isVersion;
 
 		public Int(int precision) {
 			if (precision > 0) {
@@ -656,18 +658,27 @@ public abstract class ColumnType {
 		public int getScale() {
 			return 0;
 		}
+
+		@Override
+		public boolean isVersion() {
+			return isVersion;
+		}
+
+		@Override
+		public ColumnType setVersion(boolean flag) {
+			this.isVersion = flag;
+			return this;
+		}
 	}
 
 	public static final class Date extends ColumnType implements SqlTypeDateTimeGenerated {
-		// 0 不自动生成 1 创建时生成为sysdate 2更新时生成为sysdate 3创建时设置为为java系统时间
-		// 4为更新时设置为java系统时间
-		private int generateType;
+		private DateGenerateType generateType;
 
-		public int getGenerateType() {
+		public DateGenerateType getGenerateType() {
 			return generateType;
 		}
 
-		public ColumnType setGenerateType(int generateType) {
+		public ColumnType setGenerateType(DateGenerateType generateType) {
 			this.generateType = generateType;
 			return this;
 		}
@@ -710,16 +721,15 @@ public abstract class ColumnType {
 		}
 	}
 
-	public static final class TimeStamp extends ColumnType implements SqlTypeDateTimeGenerated {
-		// 0 不自动生成 1 创建时生成为sysdate 2更新时生成为sysdate 3创建时设置为为java系统时间
-		// 4为更新时设置为java系统时间
-		private int generateType;
+	public static final class TimeStamp extends ColumnType implements SqlTypeDateTimeGenerated, SqlTypeVersioned {
+		private DateGenerateType generateType;
+		private boolean isVersion;
 
-		public int getGenerateType() {
+		public DateGenerateType getGenerateType() {
 			return generateType;
 		}
 
-		public ColumnType setGenerateType(int generated) {
+		public ColumnType setGenerateType(DateGenerateType generated) {
 			this.generateType = generated;
 			return this;
 		}
@@ -759,6 +769,17 @@ public abstract class ColumnType {
 		public int getSqlType() {
 			return Types.TIMESTAMP;
 		}
+
+		@Override
+		public boolean isVersion() {
+			return isVersion;
+		}
+
+		@Override
+		public ColumnType setVersion(boolean flag) {
+			this.isVersion = flag;
+			return this;
+		}
 	}
 
 	/**
@@ -794,13 +815,12 @@ public abstract class ColumnType {
 			init(GenerationType.AUTO, null, null, null);
 		}
 
-
 		public AutoIncrement(int i, GenerationType type, FieldAnnotationProvider fieldProvider) {
 			super(i);
 			TableGenerator tg = fieldProvider.getAnnotation(TableGenerator.class);
 			SequenceGenerator sg = fieldProvider.getAnnotation(SequenceGenerator.class);
 			HiloGeneration hilo = fieldProvider.getAnnotation(HiloGeneration.class);
-			init(type,tg,sg,hilo);
+			init(type, tg, sg, hilo);
 		}
 
 		private void init(GenerationType type, TableGenerator tg, SequenceGenerator sg, HiloGeneration hilo) {

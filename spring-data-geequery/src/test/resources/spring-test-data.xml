@@ -23,11 +23,12 @@
 	<bean id="dataSource" class="jef.database.datasource.SimpleDataSource"
 		p:url="${db.url}" />
 
-	<bean id="entityManagerFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean">
-		<property name="dataSource" ref="dataSource" />
-		<property name="packagesToScan" value="org.easyframe.tutorial" />
-		<property name="registeNonMappingTableAsDynamic" value="true"></property>
-	</bean>
+	<bean id="entityManagerFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean"
+		p:dataSource-ref="dataSource"
+		p:packagesToScan="com.github.geequery.springdata.test.entity"
+		p:registeNonMappingTableAsDynamic="true"
+		p:useSystemOut="true"
+	/>
 
 	<tx:annotation-driven transaction-manager="transactionManager"
 		proxy-target-class="true" />

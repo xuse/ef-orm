@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import javax.persistence.NonUniqueResultException;
+import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 
 import jef.common.log.LogUtil;
@@ -40,6 +41,7 @@ import jef.database.cache.Cache;
 import jef.database.cache.CacheImpl;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.dialect.type.VersionSupportColumn;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
 import jef.database.innerpool.MetadataService;
@@ -108,6 +110,7 @@ import org.easyframe.enterprise.spring.TransactionMode;
 public abstract class Session {
 	// 这六个值在初始化的时候赋值
 	protected SqlProcessor rProcessor;
+	protected SqlProcessor preProcessor;
 	protected InsertProcessor insertp;
 	protected UpdateProcessor updatep;
 	protected DeleteProcessor deletep;
@@ -741,7 +744,8 @@ public abstract class Session {
 		int n = update(obj, null);
 		return n;
 	}
-
+	
+	
 	/**
 	 * 更新对象，无级联操作，可以指定操作的表名
 	 * 
@@ -1181,12 +1185,20 @@ public abstract class Session {
 		List<T> objs = innerSelect(query, PageLimit.parse(range), query.getFilterCondition(), option);
 		RecordsHolder<T> result = new RecordsHolder<T>(query.getMeta());
 		ResultSetContainer rawrs = option.getRs();
-		if (rawrs.size() > 1) {
-			throw new UnsupportedOperationException("select from update operate can only support one table.");
+		try{
+			if (rawrs.size() > 1) {
+				throw new UnsupportedOperationException("select from update operate can only support one table.");
+			}
+			IResultSet rset = option.getRs().toProperResultSet(null);
+			result.init((ResultSetWrapper) rset, objs, rset.getProfile());
+			return result;	
+		}catch(RuntimeException t){
+			rawrs.close();//如果出现异常必须关闭，防止泄漏
+			throw t;
+		}catch(Error t){
+			rawrs.close();//如果出现异常必须关闭，防止泄漏
+			throw t;
 		}
-		IResultSet rset = option.getRs().toProperResultSet(null);
-		result.init((ResultSetWrapper) rset, objs, rset.getProfile());
-		return result;
 	}
 
 	/**
@@ -2272,7 +2284,7 @@ public abstract class Session {
 		long start = System.nanoTime();
 
 		PKQuery<?> query = new PKQuery(meta, DbUtils.getPKValueSafe((IQueryableEntity) data.get(0)), meta.newInstance());
-		BindSql wherePart = rProcessor.toPrepareWhereSql(query, new SqlContext(null, query), false, getProfile(null));
+		BindSql wherePart = preProcessor.toWhereClause(query, new SqlContext(null, query), null, getProfile(null));
 		for (BindVariableDescription bind : wherePart.getBind()) {
 			bind.setInBatch(true);
 		}
@@ -2328,7 +2340,7 @@ public abstract class Session {
 	public final <T extends IQueryableEntity> Batch<T> startBatchDelete(T template, String tableName) throws SQLException {
 		// 位于批当中的绑定变量
 		long start = System.nanoTime();
-		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), new SqlContext(null, template.getQuery()), false, getProfile(null));
+		BindSql wherePart = preProcessor.toWhereClause(template.getQuery(), new SqlContext(null, template.getQuery()), null, getProfile(null));
 		for (BindVariableDescription bind : wherePart.getBind()) {
 			bind.setInBatch(true);
 		}
@@ -2568,7 +2580,8 @@ public abstract class Session {
 		long start = System.nanoTime();
 		UpdateClause updatePart = updatep.toUpdateClauseBatch((IQueryableEntity) template, null, dynamic);
 		// 位于批当中的绑定变量
-		BindSql wherePart = rProcessor.toPrepareWhereSql(template.getQuery(), new SqlContext(null, template.getQuery()), true, getProfile(null));
+		UpdateContext context=new UpdateContext(template.getQuery().getMeta().getVersionColumn());
+		BindSql wherePart = preProcessor.toWhereClause(template.getQuery(), new SqlContext(null, template.getQuery()), context, getProfile(null));
 		for (BindVariableDescription bind : wherePart.getBind()) {
 			bind.setInBatch(true);
 		}
@@ -2908,9 +2921,9 @@ public abstract class Session {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private List batchLoadByPK0(ITableMetadata meta, List<?> pkValues) throws SQLException {
+	private List batchLoadByPK0(ITableMetadata meta, List<? extends Serializable> pkValues) throws SQLException {
 		if (meta.getPKFields().size() != 1) {
-			throw new SQLException("Only supports [1] column as primary key, but " + meta.getSimpleName() + " has " + meta.getPKFields().size() + " columns.");
+			return batchLoadEachTimes(meta,pkValues);
 		}
 		if (meta.getType() == EntityType.POJO) {
 			Query<?> q = meta.newInstance().getQuery();
@@ -2921,6 +2934,14 @@ public abstract class Session {
 			q.addCondition(meta.getPKFields().get(0).field(), Operator.IN, pkValues);
 			return innerSelect(q, null, null, QueryOption.DEFAULT);
 		}
+	}
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private List batchLoadEachTimes(ITableMetadata meta, List<? extends Serializable> pkValues) throws SQLException {
+		List list=new ArrayList(pkValues.size());
+		for(Serializable id: pkValues){
+			list.add(load(meta, (Serializable[])id));
+		}
+		return list;
 	}
 
 	// 计算手工执行的各种SQL语句下缓存刷新问题
@@ -2957,7 +2978,7 @@ public abstract class Session {
 			DatabaseDialect profile = this.getProfile(sites[0].getDatabase());
 			getListener().beforeDelete(obj, this);
 
-			BindSql where = deletep.toWhereClause(query, new SqlContext(null, query), false, profile);
+			BindSql where = deletep.toWhereClause(query, new SqlContext(null, query), profile);
 			int count = deletep.processDelete(this, obj, where, sites, start);
 			if (count > 0) {
 				getCache().onDelete(myTableName == null ? query.getMeta().getTableName(false) : myTableName, where.getSql(), CacheImpl.toParamList(where.getBind()));
@@ -2966,6 +2987,33 @@ public abstract class Session {
 			return count;
 		} else {
 			return 0;
+		}
+	}
+	
+	static class UpdateContext{
+		VersionSupportColumn versionColumn;
+		Object bean;
+		private Boolean isPkQuery;
+		
+		public UpdateContext(VersionSupportColumn versionColumn) {
+			this.versionColumn=versionColumn;
+		}
+		public boolean checkIsPKCondition(){
+			return versionColumn!=null && isPkQuery==null;
+		}
+		public void setIsPkQuery(boolean flag){
+			this.isPkQuery=flag;
+		}
+		public boolean needVersionCondition() {
+			return versionColumn!=null && isPkQuery!=null && isPkQuery.booleanValue();
+		}
+		public void appendVersionCondition(BindSql sql,SqlContext context,SqlProcessor processor,IQueryableEntity instance,DatabaseDialect profile) {
+			Object value=versionColumn.getFieldAccessor().get(instance);
+			if(value!=null){
+				Condition cond=QB.eq(versionColumn.field(),value);
+				String str=cond.toPrepareSqlClause(sql.getBind(), versionColumn.getMeta(), context, processor, instance, profile);
+				sql.setSql(sql.getSql()+" and "+str);
+			}
 		}
 	}
 
@@ -2980,7 +3028,9 @@ public abstract class Session {
 			return 0;
 		}
 		DatabaseDialect profile = getProfile(sites[0].getDatabase());
-		BindSql whereClause = updatep.toWhereClause(query, new SqlContext(null, query), true, profile);
+		
+		UpdateContext context=new UpdateContext(query.getMeta().getVersionColumn());
+		BindSql whereClause= updatep.toWhereClause(query, new SqlContext(null, query), context, profile);
 		if (dynamic && !obj.needUpdate()) {// 重新检查一遍
 			return 0;
 		}
@@ -2992,6 +3042,8 @@ public abstract class Session {
 		if (count > 0) {
 			String tableName = myTableName == null ? query.getMeta().getTableName(false) : myTableName;
 			getCache().onUpdate(tableName, whereClause.getSql(), CacheImpl.toParamList(whereClause.getBind()));
+		}else if(context.needVersionCondition()){//基于版本的乐观锁并发检测，记录没有成功更新
+			throw new OptimisticLockException("The row in database has been modified by others after the entity was loaded.",null,obj);
 		}
 		getListener().afterUpdate(obj, count, this);
 		return count;

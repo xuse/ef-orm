@@ -96,13 +96,13 @@ public interface ConditionQuery{
 	 */
 	QueryClause toQuerySql(SelectProcessor processor,SqlContext context,boolean order);
 	
-	/**
-	 * 内部使用：转换为查询语句(绑定)
-	 * @param processor
-	 * @param context
-	 * @return
-	 */
-	QueryClause toPrepareQuerySql(SelectProcessor processor, SqlContext context,boolean order);
+//	/**
+//	 * 内部使用：转换为查询语句(绑定)
+//	 * @param processor
+//	 * @param context
+//	 * @return
+//	 */
+//	QueryClause toPrepareQuerySql(SelectProcessor processor, SqlContext context,boolean order);
 	
 	/**
 	 * 该查询的Select部分是否经过了自定义。

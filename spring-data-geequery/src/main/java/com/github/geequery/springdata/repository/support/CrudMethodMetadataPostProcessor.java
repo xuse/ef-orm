@@ -33,16 +33,14 @@ import org.springframework.aop.interceptor.ExposeInvocationInterceptor;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
-
-import com.github.geequery.springdata.annotation.EntityGraph;
-import com.github.geequery.springdata.annotation.Lock;
-import com.github.geequery.springdata.annotation.QueryHints;
-
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.support.RepositoryProxyPostProcessor;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+
+import com.github.geequery.springdata.annotation.Lock;
+import com.github.geequery.springdata.annotation.QueryHints;
 
 /**
  * {@link RepositoryProxyPostProcessor} that sets up interceptors to read metadata information from the invoked method.
@@ -149,7 +147,6 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 
 		private final LockModeType lockModeType;
 		private final Map<String, Object> queryHints;
-		private final EntityGraph entityGraph;
 		private final Method method;
 
 		/**
@@ -163,12 +160,7 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 
 			this.lockModeType = findLockModeType(method);
 			this.queryHints = findQueryHints(method);
-			this.entityGraph = findEntityGraph(method);
 			this.method = method;
-		}
-
-		private static EntityGraph findEntityGraph(Method method) {
-			return AnnotatedElementUtils.findMergedAnnotation(method, EntityGraph.class);
 		}
 
 		private static LockModeType findLockModeType(Method method) {
@@ -214,15 +206,6 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 		@Override
 		public Map<String, Object> getQueryHints() {
 			return queryHints;
-		}
-
-		/* 
-		 * (non-Javadoc)
-		 * @see com.github.geequery.springdata.repository.support.CrudMethodMetadata#getEntityGraph()
-		 */
-		@Override
-		public EntityGraph getEntityGraph() {
-			return entityGraph;
 		}
 
 		/* 

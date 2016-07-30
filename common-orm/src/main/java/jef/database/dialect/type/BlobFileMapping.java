@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
@@ -35,6 +36,19 @@ public class BlobFileMapping extends AColumnMapping{
 		return value;
 	}
 
+	public void jdbcUpdate(ResultSet rs,String column, Object value, DatabaseDialect profile) throws SQLException {
+		File file=(File)value;
+		try {
+			if(profile.has(Feature.NOT_SUPPORT_SET_BINARY)){
+				rs.updateBytes(column, IOUtils.toByteArray(file));
+			}else{
+				rs.updateBinaryStream(column, IOUtils.getInputStream(file),file.length());
+			}
+		} catch (IOException e) {
+			throw new PersistenceException(e);
+		}
+	}
+	
 	public int getSqlType() {
 		return java.sql.Types.BLOB;
 	}

@@ -20,11 +20,10 @@ import org.springframework.data.repository.config.RepositoryBeanDefinitionParser
 import org.springframework.data.repository.config.RepositoryConfigurationExtension;
 
 /**
- * Simple namespace handler for {@literal repositories} namespace.
  * 
- * @author Oliver Gierke
+ * @author Jiyi
  */
-public class JpaRepositoryNameSpaceHandler extends NamespaceHandlerSupport {
+public class GqRepositoryNameSpaceHandler extends NamespaceHandlerSupport {
 
 	/*
 	 * (non-Javadoc)
@@ -32,11 +31,10 @@ public class JpaRepositoryNameSpaceHandler extends NamespaceHandlerSupport {
 	 * @see org.springframework.beans.factory.xml.NamespaceHandler#init()
 	 */
 	public void init() {
-
-		RepositoryConfigurationExtension extension = new JpaRepositoryConfigExtension();
+		RepositoryConfigurationExtension extension = new GqRepositoryConfigExtension();
 		RepositoryBeanDefinitionParser repositoryBeanDefinitionParser = new RepositoryBeanDefinitionParser(extension);
-
 		registerBeanDefinitionParser("repositories", repositoryBeanDefinitionParser);
-		registerBeanDefinitionParser("auditing", new AuditingBeanDefinitionParser());
+		//registerBeanDefinitionParser("auditing", new AuditingBeanDefinitionParser());
+		//审计相关功能后续再开发
 	}
 }

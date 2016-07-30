@@ -9,6 +9,11 @@ import jef.common.log.LogUtil;
 import jef.database.Session.PopulateStrategy;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.ResultSetImpl;
+import jef.database.jsqlparser.SelectToCountWrapper;
+import jef.database.jsqlparser.parser.ParseException;
+import jef.database.jsqlparser.statement.select.PlainSelect;
+import jef.database.jsqlparser.statement.select.Union;
+import jef.database.jsqlparser.visitor.SelectBody;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.populator.Transformer;
 import jef.tools.Assert;
@@ -51,7 +56,24 @@ final class PagingIteratorSqlImpl<T> extends PagingIterator<T> {
 
 	@Override
 	protected long doCount() throws SQLException {
-		return db.countBySql(db.getProcessor().toCountSql(querySql));
+		DatabaseDialect dialect = db.getProfile();
+		return db.countBySql(toCountSql(querySql, dialect));
+	}
+
+	private static String toCountSql(String sql, DatabaseDialect dialect) throws SQLException {
+		// 重新解析
+		try {
+			SelectBody select = DbUtils.parseNativeSelect(sql).getSelectBody();
+			SelectToCountWrapper sw;
+			if (select instanceof Union) {
+				sw = new SelectToCountWrapper((Union) select);
+			} else {
+				sw = new SelectToCountWrapper((PlainSelect) select, dialect);
+			}
+			return sw.toString();
+		} catch (ParseException e) {
+			throw new SQLException("Parser error:" + sql);
+		}
 	}
 
 	/*

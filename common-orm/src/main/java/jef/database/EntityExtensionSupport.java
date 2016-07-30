@@ -17,6 +17,7 @@ import jef.database.meta.extension.EfPropertiesExtensionProvider;
  * 
  */
 public abstract class EntityExtensionSupport extends DataObject implements MetadataContainer {
+	private static final long serialVersionUID = 5516138408171716254L;
 	private transient Map<String, Object> attributes;
 	// 扩展点信息
 	private ExtensionConfigFactory extensionFactory;

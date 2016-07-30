@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
@@ -15,12 +16,12 @@ import jef.database.query.Func;
  *
  */
 public class TimestampDateMapping extends AbstractTimeMapping{
-	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect dialect) throws SQLException {
 		if(value==null){
 			st.setNull(index, java.sql.Types.TIMESTAMP);
 			return null;
 		}else{
-			Timestamp ts=session.toTimestampSqlParam((Date)value);
+			Timestamp ts=dialect.toTimestampSqlParam((Date)value);
 			st.setTimestamp(index, ts);
 			return ts;
 		}
@@ -56,5 +57,11 @@ public class TimestampDateMapping extends AbstractTimeMapping{
 	@Override
 	protected Class<?> getDefaultJavaType() {
 		return Date.class;
+	}
+
+	@Override
+	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
+		Timestamp ts=dialect.toTimestampSqlParam((Date)value);
+		rs.updateTimestamp(columnIndex, ts);
 	}
 }

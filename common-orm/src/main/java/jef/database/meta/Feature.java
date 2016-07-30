@@ -191,26 +191,6 @@ public enum Feature {
 	EMPTY_CHAR_IS_NULL,
 	
 	/**
-	 * 查询语句不支持绑定变量
-	 * @deprecated 基本上已经没用了，现在没有哪个数据库不支持绑定变量的
-	 */
-	NO_BIND_FOR_SELECT, // 
-	/**
-	 * Update语句不支持绑定变量
-	 * @deprecated 基本上已经没用了，现在没有哪个数据库不支持绑定变量的
-	 */
-	NO_BIND_FOR_UPDATE, // 更新语句不支持绑定变量
-	/**
-	 * Insert语句不支持绑定变量
-	 * @deprecated 基本上已经没用了，现在没有哪个数据库不支持绑定变量的
-	 */
-	NO_BIND_FOR_INSERT, // 插入语句不支持绑定变量
-	/**
-	 * Delete语句不支持绑定变量
-	 * @deprecated 基本上已经没用了，现在没有哪个数据库不支持绑定变量的
-	 */
-	NO_BIND_FOR_DELETE, // 删除语句不支持绑定变量
-	/**
 	 * 支持COMMENT ON TABLE/COLUMN IS ''语法
 	 */
 	SUPPORT_COMMENT,

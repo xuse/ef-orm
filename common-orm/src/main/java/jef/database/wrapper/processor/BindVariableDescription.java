@@ -1,10 +1,9 @@
 package jef.database.wrapper.processor;
 
-import jef.database.Condition;
+import jef.database.Condition.Operator;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.VariableCallback;
-import jef.database.Condition.Operator;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.FBIField;
 import jef.database.meta.ITableMetadata;
@@ -46,7 +45,6 @@ public class BindVariableDescription{
 		this.meta=DbUtils.getTableMeta(field);
 	}
 	
-	@SuppressWarnings("rawtypes")
 	public ColumnMapping getColumnType(){
 		return meta==null?null:meta.getColumnDef(field); 
 	}

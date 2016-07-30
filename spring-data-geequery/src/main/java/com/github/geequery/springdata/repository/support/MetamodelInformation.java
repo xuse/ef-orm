@@ -46,12 +46,11 @@ import org.springframework.util.Assert;
  * 
  * @author Jiyi
  */
-public class MetamodelInformation<T> extends AbstractEntityInformation<T, IdValues> implements GQEntityInformation<T,IdValues> {
+public class MetamodelInformation<T,ID extends Serializable> extends AbstractEntityInformation<T, ID> implements GQEntityInformation<T,ID> {
 
 	private ITableMetadata metadata;
 
 	
-	private final IdMetadata<T> idMetadata;
 	private final SingularAttribute<? super T, ?> versionAttribute;
 	private final String entityName;
 
@@ -73,7 +72,6 @@ public class MetamodelInformation<T> extends AbstractEntityInformation<T, IdValu
 		}
 		this.metadata=	type;
 		this.entityName = type.getName();
-		this.idMetadata = new IdMetadata<T>(type);
 		this.versionAttribute = null;
 	}
 
@@ -101,8 +99,13 @@ public class MetamodelInformation<T> extends AbstractEntityInformation<T, IdValu
 	 * org.springframework.data.repository.core.EntityInformation#getId(java
 	 * .lang.Object)
 	 */
-	public IdValues getId(T entity) {
-		return new IdValues(DbUtils.getPKValueSafe((IQueryableEntity)entity).toArray());
+	@SuppressWarnings("unchecked")
+	public ID getId(T entity) {
+		if(metadata.getPKFields().size()==1){
+			return (ID)DbUtils.getPKValueSafe((IQueryableEntity)entity).get(0);
+		}else{
+			return (ID) DbUtils.getPKValueSafe((IQueryableEntity)entity);			
+		}
 	}
 
 	/*
@@ -111,8 +114,12 @@ public class MetamodelInformation<T> extends AbstractEntityInformation<T, IdValu
 	 * @see
 	 * org.springframework.data.repository.core.EntityInformation#getIdType()
 	 */
-	public Class<IdValues> getIdType() {
-		return IdValues.class;
+	@SuppressWarnings("unchecked")
+	public Class<ID> getIdType() {
+		if(metadata.getPKFields().size()==1){
+			return (Class<ID>) metadata.getPKFields().get(0).getFieldType();
+		}
+		return (Class<ID>) List.class;
 	}
 
 	/*
@@ -123,7 +130,11 @@ public class MetamodelInformation<T> extends AbstractEntityInformation<T, IdValu
 	 * #getIdAttribute()
 	 */
 	public ColumnMapping getIdAttribute() {
-		return idMetadata.getSimpleIdAttribute();
+		List<ColumnMapping> columns=metadata.getPKFields();
+		if(columns.size()!=1){
+			throw new UnsupportedOperationException();
+		}
+		return columns.get(0);
 	}
 
 	/*
@@ -134,25 +145,22 @@ public class MetamodelInformation<T> extends AbstractEntityInformation<T, IdValu
 	 * #hasCompositeId()
 	 */
 	public boolean hasCompositeId() {
-		return !idMetadata.hasSimpleId();
+		return metadata.getPKFields().size()>1;
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * com.github.geequery.springdata.repository.support.JpaEntityInformation
 	 * #getIdAttributeNames()
 	 */
 	public Iterable<String> getIdAttributeNames() {
-
-		List<String> attributeNames = new ArrayList<String>(idMetadata.attributes.size());
-
-		for (ColumnMapping attribute : idMetadata.attributes) {
-			attributeNames.add(attribute.fieldName());
+		List<ColumnMapping> columns=metadata.getPKFields();
+		List<String> result=new ArrayList<String>(columns.size());
+		for(ColumnMapping c:columns){
+			result.add(c.fieldName());
 		}
-
-		return attributeNames;
+		return result;
 	}
 
 	/*

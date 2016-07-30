@@ -46,11 +46,6 @@ import javax.persistence.PersistenceException;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ArrayListMultimap;
-
 import jef.accelerator.asm.Attribute;
 import jef.accelerator.asm.ClassReader;
 import jef.accelerator.asm.ClassVisitor;
@@ -71,6 +66,7 @@ import jef.database.PojoWrapper;
 import jef.database.Session;
 import jef.database.VarObject;
 import jef.database.annotation.Cascade;
+import jef.database.annotation.DateGenerateType;
 import jef.database.annotation.DynamicKeyValueExtension;
 import jef.database.annotation.DynamicTable;
 import jef.database.annotation.EasyEntity;
@@ -108,6 +104,11 @@ import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.BeanWrapper;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ArrayListMultimap;
 
 /**
  * 静态存放所有数据表元模型的存放类。
@@ -1130,6 +1131,7 @@ public final class MetaHolder {
 
 		GeneratedValue gv = fieldProvider.getAnnotation(javax.persistence.GeneratedValue.class);
 		GenerationType geType = gv == null ? null : gv.strategy();
+		boolean version=fieldProvider.getAnnotation(javax.persistence.Version.class)!=null;
 		if ("VARCHAR".equals(def) || "VARCHAR2".equals(def)) {
 			if (geType != null) {
 				if (geType == GenerationType.TABLE || geType == GenerationType.SEQUENCE) {
@@ -1165,7 +1167,9 @@ public final class MetaHolder {
 			} else if (scale > 0) {
 				return new ColumnType.Double(precision, scale).setNullable(nullable).defaultIs(defaultExpression);
 			} else {
-				return new ColumnType.Int(precision).setNullable(nullable).defaultIs(defaultExpression);
+				ColumnType.Int cType=new ColumnType.Int(precision);
+				cType.setVersion(version).setNullable(nullable).defaultIs(defaultExpression);
+				return cType;
 			}
 		} else if ("CLOB".equalsIgnoreCase(def)) {
 			return new ColumnType.Clob().setNullable(nullable).defaultIs(defaultExpression);
@@ -1174,11 +1178,12 @@ public final class MetaHolder {
 		} else if ("Date".equalsIgnoreCase(def)) {
 			Temporal temporal = fieldProvider.getAnnotation(Temporal.class);
 			TemporalType t = temporal == null ? TemporalType.DATE : temporal.value();
-			return newDateTimeColumnDef(t, nullable, gv).defaultIs(defaultExpression);
+			return newDateTimeColumnDef(t, nullable, gv,version).defaultIs(defaultExpression);
 		} else if ("TIMESTAMP".equalsIgnoreCase(def)) {
 			Temporal temporal = fieldProvider.getAnnotation(Temporal.class);
 			TemporalType t = temporal == null ? TemporalType.TIMESTAMP : temporal.value();
-			return newDateTimeColumnDef(t, nullable, gv).defaultIs(defaultExpression);
+			ColumnType cType= newDateTimeColumnDef(t, nullable, gv,version).defaultIs(defaultExpression);
+			return cType;
 		} else if ("BOOLEAN".equalsIgnoreCase(def)) {
 			return new ColumnType.Boolean().setNullable(nullable).defaultIs(defaultExpression);
 		} else if ("XML".equalsIgnoreCase(def)) {
@@ -1207,6 +1212,7 @@ public final class MetaHolder {
 		boolean nullable = c == null ? true : c.nullable();
 		GeneratedValue gv = fieldProvider.getAnnotation(javax.persistence.GeneratedValue.class);
 		GenerationType geType = gv == null ? null : gv.strategy();
+		boolean version=fieldProvider.getAnnotation(javax.persistence.Version.class)!=null;
 		if (geType != null && type == String.class) {
 			return new ColumnType.GUID();
 		} else if (geType != null && Number.class.isAssignableFrom(BeanUtils.toWrapperClass(type))) {
@@ -1218,9 +1224,9 @@ public final class MetaHolder {
 				return new ColumnType.Clob().setNullable(nullable);
 			return new ColumnType.Varchar(len > 0 ? len : 255).setNullable(nullable);
 		} else if (type == Integer.class) {
-			return new ColumnType.Int(precision).setNullable(nullable);
+			return new ColumnType.Int(precision).setVersion(version).setNullable(nullable);
 		} else if (type == Integer.TYPE) {
-			return new ColumnType.Int(precision).setNullable(nullable);
+			return new ColumnType.Int(precision).setVersion(version).setNullable(nullable);
 		} else if (type == Double.class) {
 			return new ColumnType.Double(precision, scale).setNullable(nullable);
 		} else if (type == Double.TYPE) {
@@ -1234,22 +1240,22 @@ public final class MetaHolder {
 		} else if (type == Boolean.TYPE) {
 			return new ColumnType.Boolean().notNull();
 		} else if (type == Long.class) {
-			return new ColumnType.Int(precision > 0 ? precision : 16).setNullable(nullable);
+			return new ColumnType.Int(precision > 0 ? precision : 16).setVersion(version).setNullable(nullable);
 		} else if (type == Long.TYPE) {
-			return new ColumnType.Int(precision > 0 ? precision : 16).setNullable(nullable);
+			return new ColumnType.Int(precision > 0 ? precision : 16).setVersion(version).setNullable(nullable);
 		} else if (type == Character.class) {
 			return new ColumnType.Char(1).setNullable(nullable);
 		} else if (type == Character.TYPE) {
 			return new ColumnType.Char(1).setNullable(nullable);
 		} else if (type == Date.class) {
 			Temporal t = fieldProvider.getAnnotation(Temporal.class);
-			return newDateTimeColumnDef(t == null ? TemporalType.TIMESTAMP : t.value(), nullable, gv);
+			return newDateTimeColumnDef(t == null ? TemporalType.TIMESTAMP : t.value(), nullable, gv, version);
 		} else if (type == java.sql.Date.class) {
-			return newDateTimeColumnDef(TemporalType.DATE, nullable, gv);
+			return newDateTimeColumnDef(TemporalType.DATE, nullable, gv, false);
 		} else if (type == java.sql.Timestamp.class) {
-			return newDateTimeColumnDef(TemporalType.TIMESTAMP, nullable, gv);
+			return newDateTimeColumnDef(TemporalType.TIMESTAMP, nullable, gv, version);
 		} else if (type == java.sql.Time.class) {
-			return newDateTimeColumnDef(TemporalType.TIME, nullable, gv);
+			return newDateTimeColumnDef(TemporalType.TIME, nullable, gv, false);
 		} else if (Enum.class.isAssignableFrom(type)) {
 			return new ColumnType.Varchar(len > 0 ? len : 32).setNullable(nullable);
 		} else if (type.isArray() && type.getComponentType() == Byte.TYPE) {
@@ -1261,7 +1267,7 @@ public final class MetaHolder {
 		}
 	}
 
-	private static ColumnType newDateTimeColumnDef(TemporalType temporalType, boolean nullable, GeneratedValue gv) {
+	private static ColumnType newDateTimeColumnDef(TemporalType temporalType, boolean nullable, GeneratedValue gv,boolean version) {
 		ColumnType ct;
 		switch (temporalType) {
 		case DATE:
@@ -1271,7 +1277,10 @@ public final class MetaHolder {
 			ct = new ColumnType.TimeStamp().setGenerateType(getDateGenerateType(gv));// FIXME
 			break;
 		case TIMESTAMP:
-			ct = new ColumnType.TimeStamp().setGenerateType(getDateGenerateType(gv));
+			ColumnType.TimeStamp ctt=new ColumnType.TimeStamp();
+			ctt.setVersion(version);
+			ctt.setGenerateType(getDateGenerateType(gv));
+			ct = ctt;
 			break;
 		default:
 			throw new UnsupportedOperationException();
@@ -1280,23 +1289,23 @@ public final class MetaHolder {
 		return ct;
 	}
 
-	private static int getDateGenerateType(GeneratedValue gv) {
+	private static DateGenerateType getDateGenerateType(GeneratedValue gv) {
 		String generated = gv == null ? null : gv.generator().toLowerCase();
 		if (generated != null) {
 			if ("created".equals(generated)) {
-				return 1;
+				return DateGenerateType.created;
 			} else if ("modified".equals(generated)) {
-				return 2;
-			} else if ("created-sys".equals(generated)) {
-				return 3;
-			} else if ("modified-sys".equals(generated)) {
-				return 4;
+				return DateGenerateType.modified;
+			} else if ("created-sys".equals(generated) || "created_sys".equals(generated)) {
+				return DateGenerateType.created_sys;
+			} else if ("modified-sys".equals(generated)|| "modified_sys".equals(generated)) {
+				return DateGenerateType.modified_sys;
 			} else if (generated.length() == 0) {
-				return 1;
+				return DateGenerateType.created;
 			}
 			throw new IllegalArgumentException("Unknown date generator [" + generated + "]");
 		}
-		return 0;
+		return null;
 	}
 
 	/**

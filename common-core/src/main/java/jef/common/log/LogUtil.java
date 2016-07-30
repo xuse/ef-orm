@@ -35,14 +35,14 @@ public class LogUtil {
 	private static org.slf4j.Logger log = LoggerFactory.getLogger("GeeQuery");
 	
 	//是否将输出改为日志形式输出
-	public static boolean commonDebugAdapter = JefConfiguration.getBoolean(Item.COMMON_DEBUG_ADAPTER, true);
+	public static boolean useSlf4j = JefConfiguration.getBoolean(Item.COMMON_DEBUG_ADAPTER, true);
 	//是否为调试模式
 	public static boolean debug = JefConfiguration.getBoolean(Item.DB_DEBUG, false);
 	
 	
 	//将标志输出替换，从而实现System.out.print重定向到日志。
 	static {
-		if(commonDebugAdapter){
+		if(useSlf4j){
 			boolean redirect = JefConfiguration.getBoolean(Item.SYSOUT_REDIRECT, false);
 			try {
 				//是否使用控制台输出重定向到到Logger的功能
@@ -136,7 +136,7 @@ public class LogUtil {
 	
 	public static void fatal(Object o) {
 		String msg=toString(o);
-		if(commonDebugAdapter){
+		if(useSlf4j){
 			log.error(msg);
 		}else{
 			System.err.println(msg);
@@ -146,7 +146,7 @@ public class LogUtil {
 
 
 	public static void error(Object o) {
-		if(commonDebugAdapter){
+		if(useSlf4j){
 			if(log.isErrorEnabled()){
 				String msg=toString(o);
 				log.error(msg);
@@ -189,7 +189,7 @@ public class LogUtil {
 	}
 	
 	public static void warn(Object o) {
-		if(commonDebugAdapter){
+		if(useSlf4j){
 			if(log.isWarnEnabled()){
 				String msg=toString(o);
 				log.warn(msg);
@@ -203,7 +203,7 @@ public class LogUtil {
 	}
 
 	public static void info(Object o) {
-		if(commonDebugAdapter){
+		if(useSlf4j){
 			if(log.isInfoEnabled()){
 				String msg=toString(o);
 				log.info(msg);
@@ -246,7 +246,7 @@ public class LogUtil {
 	}
 
 	public static void debug(Object o) {
-		if(commonDebugAdapter){
+		if(useSlf4j){
 			if(log.isDebugEnabled()){
 				String msg=toString(o);
 				log.error(msg);

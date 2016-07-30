@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -56,6 +57,16 @@ public interface ColumnMapping extends ResultSetAccessor,MetadataContainer {
 	 */
 	Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect dialect) throws SQLException;
 
+	/**
+	 * 为了支持悲观锁中的数据类型转换
+	 * @param rs
+	 * @param value
+	 * @param dialect
+	 * @return
+	 * @throws SQLException
+	 */
+	void jdbcUpdate(ResultSet rs, String columnIndex,Object value, DatabaseDialect dialect) throws SQLException;
+	
 	/**
 	 * 得到java类型
 	 * 

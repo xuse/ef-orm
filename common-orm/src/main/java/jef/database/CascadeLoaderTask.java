@@ -128,7 +128,7 @@ final class CascadeLoaderTask implements LazyLoadTask {
 
 			Class<?> container = refield.getSourceFieldType();
 			if (refield.isSingleColumn()) {// 引用字段填充
-				Object value = db.rProcessor.collectValueToContainer(subs, container, ((ReferenceField) refield).getTargetField().fieldName());
+				Object value = SqlProcessor.collectValueToContainer(subs, container, ((ReferenceField) refield).getTargetField().fieldName());
 				refield.getField().set(obj, value);
 			} else { // 全引用填充
 				Object value;

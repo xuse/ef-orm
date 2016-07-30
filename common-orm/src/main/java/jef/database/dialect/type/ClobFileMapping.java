@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.sql.Clob;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
@@ -66,5 +67,15 @@ public class ClobFileMapping extends AColumnMapping{
 	@Override
 	protected Class<?> getDefaultJavaType() {
 		return File.class;
+	}
+
+	@Override
+	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
+		File file=(File)value;
+		try {
+			rs.updateCharacterStream(columnIndex, IOUtils.getReader(file, null));//这个方法在JDBC4才支持。
+		} catch (IOException e) {
+			throw new PersistenceException(e);
+		}	
 	}
 }

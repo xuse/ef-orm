@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import jef.database.dialect.DatabaseDialect;
@@ -28,5 +29,10 @@ public class VarcharStringMapping extends AColumnMapping{
 	@Override
 	protected Class<?> getDefaultJavaType() {
 		return String.class;
+	}
+
+	@Override
+	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
+		rs.updateString(columnIndex, String.valueOf(value));
 	}
 }

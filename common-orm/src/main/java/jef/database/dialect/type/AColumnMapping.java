@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.lang.annotation.Annotation;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -18,8 +19,8 @@ import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
-import jef.tools.reflect.Property;
 import jef.tools.reflect.ConvertUtils;
+import jef.tools.reflect.Property;
 
 public abstract class AColumnMapping implements ColumnMapping {
 	/**
@@ -81,6 +82,10 @@ public abstract class AColumnMapping implements ColumnMapping {
 				unsavedValue = parseValue(containerType, value.value());
 			}	
 		}
+	}
+	
+	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
+		rs.updateObject(columnIndex, value);
 	}
 
 	private Object parseValue(Class<?> containerType, String value) {

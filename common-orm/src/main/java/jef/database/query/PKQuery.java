@@ -96,7 +96,7 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	}
 	
 	@Override
-	public QueryClause toPrepareQuerySql(SelectProcessor processor, SqlContext context, boolean order) {
+	public QueryClause toQuerySql(SelectProcessor processor, SqlContext context, boolean order) {
 		String tableName = (String) getAttribute(JoinElement.CUSTOM_TABLE_NAME);
 		if (tableName != null)
 			tableName = MetaHolder.toSchemaAdjustedName(tableName);

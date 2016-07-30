@@ -18,13 +18,14 @@ import jef.database.query.Query;
 import jef.tools.reflect.ClassEx;
 import jef.tools.reflect.GenericUtils;
 
+
+@SuppressWarnings("unchecked")
 public class POJODaoSupport<T> extends BaseDao {
 	protected Class<T> entityClass;
 
 	/**
 	 * 根据泛型参数构造
 	 */
-	@SuppressWarnings("unchecked")
 	public POJODaoSupport() {
 		Class<?> c = getClass();
 		c = ClassEx.getRealClass(c);
@@ -97,7 +98,6 @@ public class POJODaoSupport<T> extends BaseDao {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	public int removeByExample(T entity, String... properties) {
 		try {
 			if (entity instanceof IQueryableEntity) {

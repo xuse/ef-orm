@@ -72,7 +72,6 @@ public class HsqlDbMemDialect extends AbstractDialect {
 		features.add(Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD);
 		features.add(Feature.SUPPORT_SEQUENCE);
 		features.add(Feature.SUPPORT_COMMENT);
-
 	
 		if (JefConfiguration.getBoolean(DbCfg.DB_ENABLE_ROWID, false)) {
 			features.add(Feature.SELECT_ROW_NUM);

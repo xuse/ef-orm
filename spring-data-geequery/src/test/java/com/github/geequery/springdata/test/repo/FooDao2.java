@@ -1,0 +1,64 @@
+package com.github.geequery.springdata.test.repo;
+
+import java.util.Collection;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.RepositoryDefinition;
+import org.springframework.data.repository.query.Param;
+
+import com.github.geequery.springdata.annotation.Query;
+import com.github.geequery.springdata.test.entity.Foo;
+
+@RepositoryDefinition(domainClass = Foo.class, idClass = Integer.class)
+public interface FooDao2 {
+
+	/**
+	 * 此处适应Spring-date-JPA中的自定义查询方式 后续考虑增加一个注解可不依赖Spring-data-jpa
+	 * 
+	 * @param username
+	 * @return
+	 */
+	@Query(value = "select * from foo u where u.name like ?1", nativeQuery = true)
+	public Foo findByusername(String username);
+
+	/**
+	 * 此处是非Native方式，即E-SQL方式
+	 * @param name
+	 * @return
+	 */
+	@Query("select * from foo u where u.name=:name")
+	public Foo findBysName(@Param("name") String name);
+	
+
+	public List<Foo> findByNameLike(@Param("name") String name);
+	
+	public List<Foo> findByNameContainsAndAge(String name, int age);
+	
+	public List<Foo> findByNameStartsWithAndAge(@Param("age") int age,@Param("name") String name);
+	
+	/**
+	 * 根据Age查找
+	 * @param age
+	 * @return
+	 */
+	public List<Foo> findByAgeOrderById(int age);
+	
+	/**
+	 * 根据Age查找并分页
+	 * @param age
+	 * @param page
+	 * @return
+	 */
+	public Page<Foo> findByAgeOrderById(int age,Pageable page);
+	
+	/**
+	 * 使用in操作符
+	 * @param ages
+	 * @return
+	 */
+	public List<Foo> findByAgeIn(Collection<Integer> ages);
+	
+	
+}

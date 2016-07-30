@@ -18,6 +18,7 @@ package com.github.geequery.springdata.repository.query;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -40,6 +41,8 @@ import jef.database.query.SqlExpression;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.jpa.repository.query.AbstractJpaQuery;
+import org.springframework.data.jpa.repository.query.PartTreeJpaQuery;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.parser.Part;
@@ -50,6 +53,7 @@ import org.springframework.orm.jpa.EntityManagerProxy;
 import org.springframework.util.Assert;
 
 import com.github.geequery.springdata.provider.PersistenceProvider;
+import com.github.geequery.springdata.repository.query.GqParameters.JpaParameter;
 import com.github.geequery.springdata.repository.query.GqQueryExecution.DeleteExecution;
 
 /**
@@ -81,8 +85,9 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 		this.metadata = MetaHolder.getMeta(method.getEntityInformation().getJavaType());
 		this.tree = new PartTree(method.getName(), metadata.getThisType());
 		this.parameters = method.getParameters();
-//		boolean recreationRequired = parameters.hasDynamicProjection() || parameters.potentiallySortsDynamically();
-//		boolean isCount = tree.isCountProjection();
+		// boolean recreationRequired = parameters.hasDynamicProjection() ||
+		// parameters.potentiallySortsDynamically();
+		// boolean isCount = tree.isCountProjection();
 	}
 
 	@Override
@@ -93,22 +98,24 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 	private Query<?> createQuery(Object[] values, boolean withPageSort) {
 		Query<?> q = QB.create(metadata);
 		ParametersParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
-
 		Or or = new Or();
-		// tree.getSort()
+		int index = 0;
 		for (OrPart node : tree) {
 			And and = new And();
 			for (Part part : node) {
-				Object obj = values[part.getNumberOfArguments() - 1];
-				boolean required = part.getParameterRequired();
-				if (required) {
-					Assert.notNull(obj);
-				}
 				PropertyPath path = part.getProperty();
 				if (path.getOwningType().getType() != metadata.getThisType()) {
 					throw new IllegalArgumentException("PathType:" + path.getOwningType().getType() + "  metadata:" + metadata.getThisType());
 				}
-				ColumnMapping field = metadata.findField(path.getSegment());
+				String fieldName = path.getSegment();
+				ColumnMapping field = metadata.findField(fieldName);
+
+				Object obj = accessor.getBindableValue(getBindParamIndex(index++, fieldName));
+				boolean required = part.getParameterRequired();
+				if (required) {
+					Assert.notNull(obj);
+				}
+
 				if (field != null) {
 					add(and, part, field.field(), obj);
 				}
@@ -130,6 +137,24 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 				setSortToSpec(q, sort, metadata);
 		}
 		return q;
+	}
+
+	//FIXME It can be a Parameter binder to cache..
+	private int getBindParamIndex(int index,String fieldName) {
+		int i=0;
+		for(JpaParameter param: this.parameters){
+			if(param.getName()==null){
+				if(index==param.getIndex()){
+					return i;
+				}
+			}else{
+				if(fieldName.equals(param.getName())){
+					return i;
+				}
+			}
+			i++;
+		}
+		throw new NoSuchElementException("Can not found bind parameter '"+fieldName+"' in method "+this.getQueryMethod().getName());
 	}
 
 	private void add(And and, Part part, Field field, Object value) {
@@ -210,12 +235,12 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 		Query<?> q = createQuery(values, true);
 		IntRange range = (page == null) ? null : toRange(page);
 		try {
-			return getSession().select(q,range);
+			return getSession().select(q, range);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
 	}
-	
+
 	private IntRange toRange(Pageable pageable) {
 		return new IntRange(pageable.getOffset() + 1, pageable.getOffset() + pageable.getPageSize());
 	}

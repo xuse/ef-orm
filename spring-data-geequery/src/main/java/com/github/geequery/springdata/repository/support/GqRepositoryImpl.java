@@ -66,13 +66,13 @@ import com.github.geequery.springdata.repository.JpaSpecificationExecutor;
 @Transactional(readOnly = true)
 public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepository<T, ID>, JpaSpecificationExecutor<T> {
 
-	private MetamodelInformation<T> meta;
+	private MetamodelInformation<T, ID> meta;
 	// 这是Spring的SharedEntityManager的代理，只可从中提取EMF，不可直接转换，因此这个EM上携带了基于线程的事务上下文
 	private EntityManagerProxy em;
 
 	private final Query<?> q_all;
 
-	public GqRepositoryImpl(MetamodelInformation<T> meta, EntityManagerProxy emf) {
+	public GqRepositoryImpl(MetamodelInformation<T, ID> meta, EntityManagerProxy emf) {
 		this.meta = meta;
 		this.em = emf;
 		q_all = QB.create(meta.getMetadata());
@@ -263,7 +263,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	public Iterable<T> findAll(Iterable<ID> ids) {
 		Session s = getSession();
 		try {
-			return s.batchLoad(meta.getMetadata(), asList(ids));
+			return s.batchLoad(meta.getMetadata(), asIdList(ids));
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -362,18 +362,26 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	public void delete(ID id) {
 		Session s = getSession();
 		try {
-			s.delete(meta.getMetadata(), id);
+			s.delete(meta.getMetadata(), toId(id));
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
-	/////////////////////////////////////////////////////
-	
+	// ///////////////////////////////////////////////////
+
 	private <S> List<S> asList(Iterable<S> entities) {
 		List<S> list = new ArrayList<S>();
 		for (Iterator<S> iter = entities.iterator(); iter.hasNext();) {
 			list.add(iter.next());
+		}
+		return list;
+	}
+
+	private List<Serializable[]> asIdList(Iterable<ID> ids) {
+		List<Serializable[]> list = new ArrayList<Serializable[]>();
+		for (ID id : ids) {
+			list.add(toId(id));
 		}
 		return list;
 	}

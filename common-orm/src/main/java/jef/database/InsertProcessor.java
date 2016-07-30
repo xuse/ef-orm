@@ -27,11 +27,7 @@ abstract class InsertProcessor {
 	protected SqlProcessor parent;
 
 	static InsertProcessor get(DatabaseDialect profile, DbClient db) {
-		if (profile.has(Feature.NO_BIND_FOR_INSERT)) {
-			return new NormalImpl(db, db.rProcessor);
-		} else {
-			return new PreparedImpl(db, db.rProcessor);
-		}
+		return new PreparedImpl(db, db.rProcessor);
 	}
 
 	/**
@@ -157,7 +153,7 @@ abstract class InsertProcessor {
 
 		@Override
 		InsertSqlClause toInsertSqlBatch(IQueryableEntity obj, String tableName, boolean dynamic, boolean extreme, PartitionResult pr) throws SQLException {
-			DatabaseDialect profile = pr == null ? db.getProfile() : db.getProfile(pr.getDatabase());
+			DatabaseDialect profile = pr == null ? db.getProfile(null) : db.getProfile(pr.getDatabase());
 			List<String> cStr = new ArrayList<String>();// 字段列表
 			List<String> vStr = new ArrayList<String>();// 值列表
 			ITableMetadata meta = MetaHolder.getMeta(obj);

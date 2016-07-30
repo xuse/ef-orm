@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
@@ -17,7 +18,6 @@ import jef.database.jdbc.result.IResultSet;
 import jef.database.meta.Feature;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
-
 
 public class BlobObjectMapping extends AColumnMapping {
 	static int blobType;
@@ -46,10 +46,10 @@ public class BlobObjectMapping extends AColumnMapping {
 		} else if (value instanceof File) {
 			File file = (File) value;
 			try {
-				if(profile.has(Feature.NOT_SUPPORT_SET_BINARY)){
+				if (profile.has(Feature.NOT_SUPPORT_SET_BINARY)) {
 					st.setBytes(index, IOUtils.toByteArray(file));
-				}else{
-					st.setBinaryStream(index, IOUtils.getInputStream(file), file.length());	
+				} else {
+					st.setBinaryStream(index, IOUtils.getInputStream(file), file.length());
 				}
 			} catch (IOException e) {
 				throw new SQLException("Can not read file" + file, e);
@@ -58,7 +58,24 @@ public class BlobObjectMapping extends AColumnMapping {
 			throw new SQLException("Can not set to Blob for" + value.getClass().getName());
 		}
 		return value;
+	}
 
+	public void jdbcUpdate(ResultSet rs, String column, Object value, DatabaseDialect profile) throws SQLException {
+		if (value instanceof byte[]) {
+			byte[] data = (byte[]) value;
+			rs.updateBytes(column, data);
+		} else if (value instanceof File) {
+			File file = (File) value;
+			try {
+				if (profile.has(Feature.NOT_SUPPORT_SET_BINARY)) {
+					rs.updateBytes(column, IOUtils.toByteArray(file));
+				} else {
+					rs.updateBinaryStream(column, IOUtils.getInputStream(file), file.length());
+				}
+			} catch (IOException e) {
+				throw new SQLException("Can not read file" + file, e);
+			}
+		}
 	}
 
 	public int getSqlType() {
@@ -69,13 +86,13 @@ public class BlobObjectMapping extends AColumnMapping {
 		Object value = rs.getObject(n);
 		if (value == null)
 			return null;
-		try{
-			if(value instanceof byte[]){
-				return cast((byte[])value);
-			}else{
-				return cast((Blob)value);
-			}	
-		}catch(IOException e){
+		try {
+			if (value instanceof byte[]) {
+				return cast((byte[]) value);
+			} else {
+				return cast((Blob) value);
+			}
+		} catch (IOException e) {
 			throw new SQLException(e);
 		}
 	}
@@ -86,13 +103,13 @@ public class BlobObjectMapping extends AColumnMapping {
 			BigDataBuffer bf = new BigDataBuffer();
 			byte[] buffer = new byte[4096];
 			int res;
-			InputStream in=value.getBinaryStream();
+			InputStream in = value.getBinaryStream();
 			while ((res = in.read(buffer)) != -1) {
 				bf.write(buffer, 0, res);
 			}
 			return bf.getAsStream();
 		case 2:
-			return IOUtils.asString(value.getBinaryStream(),ORMConfig.getInstance().getDbEncoding(),true);
+			return IOUtils.asString(value.getBinaryStream(), ORMConfig.getInstance().getDbEncoding(), true);
 		case 3:
 			return IOUtils.toByteArray(value.getBinaryStream());
 		case 4:
@@ -106,7 +123,7 @@ public class BlobObjectMapping extends AColumnMapping {
 		case 1:
 			return new ByteArrayInputStream(value);
 		case 2:
-			return new String(value,ORMConfig.getInstance().getDbEncodingCharset());
+			return new String(value, ORMConfig.getInstance().getDbEncodingCharset());
 		case 3:
 			return value;
 		case 4:
