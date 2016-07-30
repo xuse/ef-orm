@@ -20,7 +20,6 @@ import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.VersionSupportColumn;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.visitor.Expression;
-import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.BindVariableField;
@@ -92,15 +91,10 @@ public abstract class UpdateProcessor {
 	 * @param profile
 	 * @return
 	 */
-	abstract Pair<BindSql,Boolean> toWhereClause(JoinElement joinElement, SqlContext context, UpdateContext update, DatabaseDialect profile);
+	abstract Pair<BindSql, Boolean> toWhereClause(JoinElement joinElement, SqlContext context, UpdateContext update, DatabaseDialect profile);
 
-	@SuppressWarnings("deprecation")
 	static UpdateProcessor get(DatabaseDialect profile, DbClient db) {
-		if (profile.has(Feature.NO_BIND_FOR_UPDATE)) {
-			return new NormalImpl(db.rProcessor,db.preProcessor);
-		} else {
-			return new PreparedImpl(db.preProcessor);
-		}
+		return new PreparedImpl(db.preProcessor);
 	}
 
 	protected SqlProcessor processor;
@@ -111,9 +105,8 @@ public abstract class UpdateProcessor {
 
 	final static class NormalImpl extends UpdateProcessor {
 		private UpdateProcessor prepared;
-		
 
-		public NormalImpl(SqlProcessor db,SqlProcessor prepared) {
+		public NormalImpl(SqlProcessor db, SqlProcessor prepared) {
 			super(db);
 			this.prepared = new PreparedImpl(prepared);
 		}
@@ -121,7 +114,7 @@ public abstract class UpdateProcessor {
 		int processUpdate0(OperateTarget db, IQueryableEntity obj, UpdateClause update, BindSql where, PartitionResult site, SqlLog log) throws SQLException {
 			int result = 0;
 			for (String tablename : site.getTables()) {
-				tablename=DbUtils.escapeColumn(db.getProfile(), tablename);
+				tablename = DbUtils.escapeColumn(db.getProfile(), tablename);
 				String sql = "update " + tablename + " set " + update.getSql() + where;
 				Statement st = null;
 				try {
@@ -199,9 +192,9 @@ public abstract class UpdateProcessor {
 		}
 
 		@Override
-		Pair<BindSql,Boolean> toWhereClause(JoinElement joinElement, SqlContext context, UpdateContext update, DatabaseDialect profile) {
+		Pair<BindSql, Boolean> toWhereClause(JoinElement joinElement, SqlContext context, UpdateContext update, DatabaseDialect profile) {
 			BindSql sql = processor.toWhereClause(joinElement, context, update, profile);
-			return new Pair<BindSql,Boolean>(sql,null);
+			return new Pair<BindSql, Boolean>(sql, null);
 		}
 	}
 
@@ -213,7 +206,7 @@ public abstract class UpdateProcessor {
 		int processUpdate0(OperateTarget db, IQueryableEntity obj, UpdateClause setValues, BindSql whereValues, PartitionResult site, SqlLog log) throws SQLException {
 			int result = 0;
 			for (String tablename : site.getTables()) {
-				tablename=DbUtils.escapeColumn(db.getProfile(), tablename);
+				tablename = DbUtils.escapeColumn(db.getProfile(), tablename);
 				String updateSql = StringUtils.concat("update ", tablename, " set ", setValues.getSql(), whereValues.getSql());
 				log.ensureCapacity(updateSql.length() + 150);
 				log.append(updateSql).append(db);
@@ -321,15 +314,15 @@ public abstract class UpdateProcessor {
 		}
 
 		@Override
-		Pair<BindSql,Boolean> toWhereClause(JoinElement joinElement, SqlContext context, UpdateContext update, DatabaseDialect profile) {
-			BindSql sql =processor.toWhereClause(joinElement, context, update, profile);
-			return new Pair<BindSql,Boolean>(sql,null);
+		Pair<BindSql, Boolean> toWhereClause(JoinElement joinElement, SqlContext context, UpdateContext update, DatabaseDialect profile) {
+			BindSql sql = processor.toWhereClause(joinElement, context, update, profile);
+			return new Pair<BindSql, Boolean>(sql, null);
 		}
 	}
 
 	/**
-	 * 更新前，将所有LOB字段都移动到最后去。之前碰到一个BUG(Oracle)可能和驱动有关，LOB
-	 * 不在最后，更新会出错。
+	 * 更新前，将所有LOB字段都移动到最后去。之前碰到一个BUG(Oracle)可能和驱动有关，LOB 不在最后，更新会出错。
+	 * 
 	 * @param fields
 	 * @param meta
 	 */
@@ -378,7 +371,8 @@ public abstract class UpdateProcessor {
 		return result.toArray(new Map.Entry[result.size()]);
 	}
 
-	public int processUpdate(Session session, final IQueryableEntity obj, final UpdateClause updateClause, final BindSql whereClause, PartitionResult[] sites, long parseCost) throws SQLException {
+	public int processUpdate(Session session, final IQueryableEntity obj, final UpdateClause updateClause, final BindSql whereClause, PartitionResult[] sites, long parseCost)
+			throws SQLException {
 		int total = 0;
 		long access = System.currentTimeMillis();
 		String dbName = null;
@@ -406,8 +400,9 @@ public abstract class UpdateProcessor {
 			}
 		}
 		if (ORMConfig.getInstance().debugMode) {
-			access = System.currentTimeMillis()-access;
-			LogUtil.show(StringUtils.concat("Updated:", String.valueOf(total), "\t Time cost([ParseSQL]:", String.valueOf(parseCost), "ms, [DbAccess]:", String.valueOf(access), "ms) |", dbName));
+			access = System.currentTimeMillis() - access;
+			LogUtil.show(StringUtils.concat("Updated:", String.valueOf(total), "\t Time cost([ParseSQL]:", String.valueOf(parseCost), "ms, [DbAccess]:", String.valueOf(access),
+					"ms) |", dbName));
 		}
 		return total;
 	}

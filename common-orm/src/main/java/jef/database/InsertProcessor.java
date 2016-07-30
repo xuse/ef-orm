@@ -26,13 +26,8 @@ abstract class InsertProcessor {
 	protected DbClient db;
 	protected SqlProcessor parent;
 
-	@SuppressWarnings("deprecation")
 	static InsertProcessor get(DatabaseDialect profile, DbClient db) {
-		if (profile.has(Feature.NO_BIND_FOR_INSERT)) {
-			return new NormalImpl(db, db.rProcessor);
-		} else {
-			return new PreparedImpl(db, db.rProcessor);
-		}
+		return new PreparedImpl(db, db.rProcessor);
 	}
 
 	/**
