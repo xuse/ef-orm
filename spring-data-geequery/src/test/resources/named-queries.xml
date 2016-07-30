@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SQL/JPQL 命名查询配置文件 -->
+<queries>
+	<query name = "selectByNameAndBirthDay" type="jpql" tag="dataSource" fetch-size="0" >
+	<![CDATA[
+		   select * from foo u where u.name like :name and u.birthday=:birth
+	]]>
+	</query>
+</queries>

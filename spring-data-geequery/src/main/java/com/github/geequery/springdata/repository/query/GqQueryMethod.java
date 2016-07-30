@@ -296,5 +296,4 @@ public class GqQueryMethod extends QueryMethod {
 	boolean getClearAutomatically() {
 		return getAnnotationValue("clearAutomatically", Modifying.class, Boolean.class);
 	}
-
 }

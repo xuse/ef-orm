@@ -484,10 +484,10 @@ public final class DbUtils {
 		try {
 			return parser.Statement();
 		} catch (ParseException e) {
-			LogUtil.show("ErrorSQL:" + sql);
+			LogUtil.error("ErrorSQL:" + sql);
 			throw e;
 		} catch (TokenMgrError e) {
-			LogUtil.show("ErrorSQL:" + sql);
+			LogUtil.error("ErrorSQL:" + sql);
 			throw e;
 		}
 	}

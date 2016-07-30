@@ -18,8 +18,6 @@ package com.github.geequery.springdata.repository.query;
 import java.util.List;
 
 import jef.database.NativeQuery;
-import jef.database.Session;
-import jef.database.jpa.JefEntityManager;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.orm.jpa.EntityManagerProxy;
@@ -92,9 +90,6 @@ final class GqNativeQuery extends AbstractGqQuery {
 	}
 
 	private NativeQuery<?> getThreadQuery() {
-		JefEntityManager jem=(JefEntityManager) pxy.getTargetEntityManager();
-		Session session=jem.getSession();
-		return query.clone(session, null);
+		return query.clone(getSession(), null);
 	}
-
 }

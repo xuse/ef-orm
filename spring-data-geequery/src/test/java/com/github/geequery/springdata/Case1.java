@@ -24,10 +24,8 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 
-import com.github.geequery.springdata.test.entity.ComplexFoo;
 import com.github.geequery.springdata.test.entity.Foo;
 import com.github.geequery.springdata.test.entity.VersionLog;
-import com.github.geequery.springdata.test.repo.ComplexFooDao;
 import com.github.geequery.springdata.test.repo.FooDao;
 import com.github.geequery.springdata.test.repo.FooDao2;
 
@@ -50,8 +48,8 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	@javax.annotation.Resource
 	private FooDao2 foodao2;
 
-	@javax.annotation.Resource
-	private ComplexFooDao complex;
+	// @javax.annotation.Resource
+	// private ComplexFooDao complex;
 
 	// @Test
 	// public void test1() throws SQLException{
@@ -123,12 +121,23 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			Iterable<Foo> foos = foodao.findAll(id);
 			System.out.println("list=" + foos);
 		}
+		{
+			System.out.println("=== findByNameLike ===");
+			List<Foo> foo = foodao.findByNameLike("%四");
+			System.out.println(foo);
+		}
 
 		{
-			System.out.println("=== findByusername (NativeQuery) ===");
+			System.out.println("=== findByNameContainsAndAge ===");
+			List<Foo> foos = foodao.findByNameContainsAndAge("李", 0);
+			System.out.println(foos);
 		}
+
 		{
-			System.out.println("=== findBysName (NativeQuery) ===");
+			// 多参数顺序测试否有问题(已修复)
+			System.out.println("=== findByNameStartsWithAndAge ===");
+			List<Foo> foos = foodao.findByNameStartsWithAndAge(0, "李");
+			System.out.println(foos);
 		}
 		{
 			System.out.println("=== DeleteAll() ===");
@@ -139,68 +148,50 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	@Test
 	public void testFooDao2() {
 		{
-			System.out.println("=== findByNameLike ===");
-			List<Foo> foo = foodao2.findByNameLike("%四");
-			System.out.println(foo);
-		}
-
-		{
-			System.out.println("=== findByNameContainsAndAge ===");
-			List<Foo> foos = foodao2.findByNameContainsAndAge("李", 0);
-			System.out.println(foos);
-		}
-
-		{
-			// 多参数顺序测试否有问题(已修复)
-			System.out.println("=== findByNameStartsWithAndAge ===");
-			List<Foo> foos = foodao2.findByNameStartsWithAndAge(0, "李");
-			System.out.println(foos);
-		}
-
-		{
-
-			// ====使用GQ NamedQueries
-
+//			Foo foo = foodao2.findBysName("张三");
+//			System.out.println(foo);
 		}
 		// =========================
 		{
-			// 更新操作
-
+			//设置了@Param后，这是按name进行绑定的NativeQuery，只要语句中用了:xxx格式，参数顺序随便改没问题。
+			List<Foo> foos = foodao2.findBySql(new Date(), "李四");
+			System.out.println(foos);
 		}
 		// =========================
 		{
-			// NativeQuery多参数是否有问题
+			// NativeQuery多参数并按 ？1 ？2 序号操作可能就有问题
 		}
 	}
 
-	@Test
-	public void testComplexId() {
-		// 测试复合主键的情况
-		{
-			ComplexFoo cf = new ComplexFoo(1, 2);
-			cf.setMessage("test");
-			complex.save(cf);
-
-			cf = new ComplexFoo(2, 2);
-			cf.setMessage("1222234324");
-			complex.save(cf);
-		}
-		{
-			ComplexFoo cf = complex.findOne(new int[] { 1, 2 });
-			System.out.println(cf);
-			cf.setMessage("修改消息!");
-			complex.save(cf);
-		}
-		{
-			Iterable<ComplexFoo> list = complex.findAll(Arrays.asList(new int[] { 1, 2 }, new int[] { 2, 2 }));
-			for (ComplexFoo foo : list) {
-				System.out.println(foo);
-			}
-		}
-		{
-			complex.delete(new int[] { 1, 2 });
-		}
-	}
+	// @Test
+	// public void testComplexId() {
+	// // 测试复合主键的情况
+	// {
+	// ComplexFoo cf = new ComplexFoo(1, 2);
+	// cf.setMessage("test");
+	// complex.save(cf);
+	//
+	// cf = new ComplexFoo(2, 2);
+	// cf.setMessage("1222234324");
+	// complex.save(cf);
+	// }
+	// {
+	// ComplexFoo cf = complex.findOne(new int[] { 1, 2 });
+	// System.out.println(cf);
+	// cf.setMessage("修改消息!");
+	// complex.save(cf);
+	// }
+	// {
+	// Iterable<ComplexFoo> list = complex.findAll(Arrays.asList(new int[] { 1,
+	// 2 }, new int[] { 2, 2 }));
+	// for (ComplexFoo foo : list) {
+	// System.out.println(foo);
+	// }
+	// }
+	// {
+	// complex.delete(new int[] { 1, 2 });
+	// }
+	// }
 
 	@Override
 	public void afterPropertiesSet() throws Exception {

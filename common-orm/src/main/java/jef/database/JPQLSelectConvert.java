@@ -28,14 +28,12 @@ import jef.database.jsqlparser.visitor.SelectItemVisitor;
 import jef.database.jsqlparser.visitor.VisitorAdapter;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-import jef.tools.Assert;
 
 /**
- * 将JPQL的SELECT语句解析为标准SQL
- * 目前其实并不是真正的JPQL支持，只能将查询中出现的字段名和类名更改为对应的表名和列名而已。
+ * 将JPQL的SELECT语句解析为标准SQL 目前其实并不是真正的JPQL支持，只能将查询中出现的字段名和类名更改为对应的表名和列名而已。
  * 因此实际上并不常用。
- * @author Administrator
- * 这个实现好像问题不少,尽量避免再用
+ * 
+ * @author Administrator 这个实现好像问题不少,尽量避免再用
  */
 public class JPQLSelectConvert extends VisitorAdapter {
 	private Map<String, Class<?>> aliasMap = new HashMap<String, Class<?>>();
@@ -44,29 +42,38 @@ public class JPQLSelectConvert extends VisitorAdapter {
 	public JPQLSelectConvert(DatabaseDialect profile) {
 		this.profile = profile;
 	}
-	static Map<String ,Class<?>> cache=new HashMap<String,Class<?>>();
+
+	static Map<String, Class<?>> cache = new HashMap<String, Class<?>>();
 
 	private SelectItemVisitor fromCollector = new SelectItemVisitor() {
 		private Class<?> parseSimpleName(String simpleEntityName) {
-			String key=simpleEntityName.toLowerCase();
-			Class<?> clz=cache.get(key);
-			if(clz==null){
-				for (ITableMetadata c : MetaHolder.getCachedModels()) {
-					if (c.getSimpleName().equalsIgnoreCase(simpleEntityName)) {
-						if(clz!=null){
-							throw new IllegalArgumentException("Duplicate class with same name:" + simpleEntityName+". between"+clz.getName()+" and "+c.getName());
-						}
-						clz=c.getThisType();
-					}
-				}
-				LogUtil.warn("the " + simpleEntityName + " does't match any known entity class.");
+			String key = simpleEntityName.toLowerCase();
+			Class<?> clz = cache.get(key);
+			if (clz == null) {
+				clz = findClass(simpleEntityName);
 			}
-			if(clz!=null){
-				cache.put(key, clz);
-			}
+			if (clz == null)
+				return null;
+			cache.put(key, clz);
 			return clz.asSubclass(IQueryableEntity.class);
 		}
-		
+
+		private Class<?> findClass(String simpleEntityName) {
+			for (ITableMetadata c : MetaHolder.getCachedModels()) {
+				if (c.getSimpleName().equalsIgnoreCase(simpleEntityName)) {
+					// if(clz!=null){
+					// throw new
+					// IllegalArgumentException("Duplicate class with same name:"
+					// +
+					// simpleEntityName+". between"+clz.getName()+" and "+c.getName());
+					// }
+					return c.getThisType();
+				}
+			}
+			LogUtil.warn("the " + simpleEntityName + " does't match any known entity class.");
+			return null;
+		}
+
 		public void visit(Table tableName) {
 			String t = tableName.getName();
 			Class<?> c;
@@ -79,7 +86,9 @@ public class JPQLSelectConvert extends VisitorAdapter {
 			} else {
 				c = parseSimpleName(t);
 			}
-			Assert.notNull(c, "Entity not found " + t);
+			if (c == null) {
+				throw new IllegalArgumentException("Entity not found in SQL: '" + t + "'");
+			}
 			tableName.setName(MetaHolder.getMeta(c.asSubclass(IQueryableEntity.class)).getTableName(true));
 			aliasMap.put(tableName.getAlias(), c);
 		}
@@ -94,13 +103,13 @@ public class JPQLSelectConvert extends VisitorAdapter {
 		}
 
 		public void visit(JpqlParameter tableClip) {
-			String tablename=tableClip.toString();
-			if("?".equals(tablename)){
+			String tablename = tableClip.toString();
+			if ("?".equals(tablename)) {
 				throw new RuntimeException("Not a valid table");
 			}
-			JpqlParser p=new JpqlParser(new StringReader(tablename));
+			JpqlParser p = new JpqlParser(new StringReader(tablename));
 			try {
-				FromItem item=p.FromItem();
+				FromItem item = p.FromItem();
 				item.accept(this);
 			} catch (ParseException e) {
 				LogUtil.exception(e);

@@ -24,7 +24,6 @@ import jef.tools.StringUtils;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryMetadata;
-import org.springframework.data.repository.query.EvaluationContextProvider;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.orm.jpa.EntityManagerProxy;
@@ -33,35 +32,19 @@ import com.github.geequery.springdata.provider.PersistenceProvider;
 
 /**
  * Query lookup strategy to execute finders.
- * 
- * @author Oliver Gierke
- * @author Thomas Darimont
  */
 public final class GqQueryLookupStrategy implements QueryLookupStrategy {
 	private final EntityManagerProxy em;
-	private final Key key;
-	private final EvaluationContextProvider provider;
 	private final JefEntityManagerFactory emf;
 
-	public GqQueryLookupStrategy(EntityManagerProxy em, Key key, EvaluationContextProvider evaluationContextProvider) {
+	public GqQueryLookupStrategy(EntityManagerProxy em) {
 		this.em = em;
-		this.key = key;
-		this.provider = evaluationContextProvider;
 		this.emf = (JefEntityManagerFactory) em.getEntityManagerFactory();
 	}
 
 	@Override
 	public RepositoryQuery resolveQuery(Method m, RepositoryMetadata metadata, ProjectionFactory factory, NamedQueries namedQueries) {
 		GqQueryMethod method = new GqQueryMethod(m, metadata, factory);
-		// boolean flag = m.isCollectionQuery();
-		// flag = m.isModifyingQuery();
-		// flag = m.isNativeQuery();
-		// flag = m.isPageQuery();
-		// flag = m.isProcedureQuery();
-		// flag = m.isSliceQuery();
-		// flag = m.isQueryForEntity();
-		// flag = m.isStreamQuery();
-		//
 		String qName = method.getNamedQueryName();
 		String qSql = method.getAnnotatedQuery();
 		if (method.isStreamQuery()) {
@@ -69,16 +52,24 @@ public final class GqQueryLookupStrategy implements QueryLookupStrategy {
 		} else if (method.isProcedureQuery()) {
 			return new GqProcedureQuery(method, em);
 		} else if (StringUtils.isNotEmpty(qSql)) {
-			JefEntityManagerFactory emf=(JefEntityManagerFactory) em.getEntityManagerFactory();
-			NativeQuery<?> q = (NativeQuery<?>) emf.getDefault().createNativeQuery(qSql);
+			JefEntityManagerFactory emf = (JefEntityManagerFactory) em.getEntityManagerFactory();
+			NativeQuery<?> q = (NativeQuery<?>) emf.getDefault().createNativeQuery(qSql,method.getReturnedObjectType());
 			return new GqNativeQuery(method, em, q);
 		}
 		if (emf.getDefault().hasNamedQuery(qName)) {
-			JefEntityManagerFactory emf=(JefEntityManagerFactory) em.getEntityManagerFactory();
-			NativeQuery<?> q = (NativeQuery<?>) emf.getDefault().createNamedQuery(qName);
+			JefEntityManagerFactory emf = (JefEntityManagerFactory) em.getEntityManagerFactory();
+			NativeQuery<?> q = (NativeQuery<?>) emf.getDefault().createNamedQuery(qName,method.getReturnedObjectType());
 			return new GqNativeQuery(method, em, q);
 		} else {
-			return new GqPartTreeQuery(method, em, PersistenceProvider.GEEQUERY);
+			if (qName.endsWith(".".concat(method.getName()))) {
+				try {
+					return new GqPartTreeQuery(method, em, PersistenceProvider.GEEQUERY);
+				} catch (Exception e) {
+					throw new IllegalArgumentException(method + ": " + e.getMessage(), e);
+				}
+			} else {
+				throw new IllegalArgumentException("Named query not found: '" + qName + "' in method" + method);
+			}
 		}
 	}
 

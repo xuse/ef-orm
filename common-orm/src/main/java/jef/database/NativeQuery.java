@@ -460,7 +460,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	public void setRange(IntRange range) {
 		this.range = PageLimit.parse(range);
 	}
-	
+
 	/**
 	 * 设置查询结果的条数限制，即分页 包含了{@link #setMaxResults(int)}和
 	 * {@link #setFirstResult(int)}的功能<br>
@@ -1302,16 +1302,22 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 
 	/**
 	 * 使用当前的Query配置创建一个新的NativeQuery对象
+	 * 
 	 * @param target
 	 * @return
 	 */
-	public NativeQuery<X> clone(Session session,String dbKey) {
+	public NativeQuery<X> clone(Session session, String dbKey) {
 		OperateTarget target = this.db;
-		if(session!=null){
-			target=session.selectTarget(dbKey==null? this.db.getDbkey(): dbKey);
-		}else if(dbKey!=null){
-			target=this.db.getTarget(dbKey);
+		if (session != null) {
+			target = session.selectTarget(dbKey == null ? this.db.getDbkey() : dbKey);
+		} else if (dbKey != null) {
+			target = this.db.getTarget(dbKey);
 		}
-		return new NativeQuery<X>(target, this.config, this.resultTransformer);
+		NativeQuery<X> result = new NativeQuery<X>(target, this.config, this.resultTransformer);
+		result.fetchSize=this.fetchSize;
+		result.flushType=this.flushType;
+		result.lock=this.lock;
+		result.routing=this.routing;
+		return result;
 	}
 }
