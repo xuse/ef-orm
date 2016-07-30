@@ -276,7 +276,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		if (mType instanceof VersionSupportColumn) {
 			VersionSupportColumn m = (VersionSupportColumn) mType;
 			if (m.isUpdateAlways()) {
-				autoUpdateColumns = ArrayUtils.addElement(autoUpdateColumns, m);
+				autoUpdateColumns = ArrayUtils.addElement(autoUpdateColumns, m, VersionSupportColumn.class);
 			}
 			if (m.isVersion()) {
 				if(this.versionColumn!=null){

@@ -29,9 +29,9 @@ import java.util.List;
 import java.util.Map;
 
 import javax.persistence.NonUniqueResultException;
+import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 
-import jef.common.Pair;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.common.wrapper.Page;
@@ -1185,12 +1185,20 @@ public abstract class Session {
 		List<T> objs = innerSelect(query, PageLimit.parse(range), query.getFilterCondition(), option);
 		RecordsHolder<T> result = new RecordsHolder<T>(query.getMeta());
 		ResultSetContainer rawrs = option.getRs();
-		if (rawrs.size() > 1) {
-			throw new UnsupportedOperationException("select from update operate can only support one table.");
+		try{
+			if (rawrs.size() > 1) {
+				throw new UnsupportedOperationException("select from update operate can only support one table.");
+			}
+			IResultSet rset = option.getRs().toProperResultSet(null);
+			result.init((ResultSetWrapper) rset, objs, rset.getProfile());
+			return result;	
+		}catch(RuntimeException t){
+			rawrs.close();//如果出现异常必须关闭，防止泄漏
+			throw t;
+		}catch(Error t){
+			rawrs.close();//如果出现异常必须关闭，防止泄漏
+			throw t;
 		}
-		IResultSet rset = option.getRs().toProperResultSet(null);
-		result.init((ResultSetWrapper) rset, objs, rset.getProfile());
-		return result;
 	}
 
 	/**
@@ -2976,8 +2984,9 @@ public abstract class Session {
 	
 	static class UpdateContext{
 		VersionSupportColumn versionColumn;
-		
+		Object bean;
 		private Boolean isPkQuery;
+		
 		public UpdateContext(VersionSupportColumn versionColumn) {
 			this.versionColumn=versionColumn;
 		}
@@ -2986,6 +2995,17 @@ public abstract class Session {
 		}
 		public void setIsPkQuery(boolean flag){
 			this.isPkQuery=flag;
+		}
+		public boolean needVersionCondition() {
+			return versionColumn!=null && isPkQuery!=null && isPkQuery.booleanValue();
+		}
+		public void appendVersionCondition(BindSql sql,SqlContext context,SqlProcessor processor,IQueryableEntity instance,DatabaseDialect profile) {
+			Object value=versionColumn.getFieldAccessor().get(instance);
+			if(value!=null){
+				Condition cond=QB.eq(versionColumn.field(),value);
+				String str=cond.toPrepareSqlClause(sql.getBind(), versionColumn.getMeta(), context, processor, instance, profile);
+				sql.setSql(sql.getSql()+" and "+str);
+			}
 		}
 	}
 
@@ -3002,8 +3022,7 @@ public abstract class Session {
 		DatabaseDialect profile = getProfile(sites[0].getDatabase());
 		
 		UpdateContext context=new UpdateContext(query.getMeta().getVersionColumn());
-		Pair<BindSql,Boolean> whereResult = updatep.toWhereClause(query, new SqlContext(null, query), context, profile);
-		BindSql whereClause=whereResult.first;
+		BindSql whereClause= updatep.toWhereClause(query, new SqlContext(null, query), context, profile);
 		if (dynamic && !obj.needUpdate()) {// 重新检查一遍
 			return 0;
 		}
@@ -3015,6 +3034,8 @@ public abstract class Session {
 		if (count > 0) {
 			String tableName = myTableName == null ? query.getMeta().getTableName(false) : myTableName;
 			getCache().onUpdate(tableName, whereClause.getSql(), CacheImpl.toParamList(whereClause.getBind()));
+		}else if(context.needVersionCondition()){//基于版本的乐观锁并发检测，记录没有成功更新
+			throw new OptimisticLockException("The row in database has been modified by others after the entity was loaded.",null,obj);
 		}
 		getListener().afterUpdate(obj, count, this);
 		return count;

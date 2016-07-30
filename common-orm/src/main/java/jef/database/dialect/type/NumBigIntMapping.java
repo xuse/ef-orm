@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import jef.database.dialect.DatabaseDialect;
@@ -49,5 +50,10 @@ public class NumBigIntMapping extends AbstractVersionNumberMapping {
 			return 1;
 		int i = ((Number) value).intValue();
 		return i + 1;
+	}
+
+	@Override
+	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
+		rs.updateInt(columnIndex, ((Number)value).intValue());
 	}
 }

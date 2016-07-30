@@ -207,7 +207,11 @@ public abstract class SqlProcessor {
 				}
 				return new BindSql(sb.toString(), params);
 			} else if (query instanceof Query<?>) {
-				return toWhereElement1((Query<?>) query, context, query.getConditions(), update, profile);
+				BindSql sql= toWhereElement1((Query<?>) query, context, query.getConditions(), update, profile);
+				if(update!=null && update.needVersionCondition()){
+					update.appendVersionCondition(sql,context,this,((Query<?>) query).getInstance(),profile);
+				}
+				return sql;
 			} else {
 				throw new IllegalArgumentException("Unknown Query class:" + query.getClass().getName());
 			}

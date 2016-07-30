@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import jef.database.dialect.DatabaseDialect;
@@ -21,7 +22,7 @@ public class NumIntEnumMapping extends AColumnMapping{
 		if(value==null){
 			st.setNull(index, java.sql.Types.INTEGER);
 		}else{
-			st.setInt(index, ((Enum)value).ordinal());
+			st.setInt(index, ((Enum<?>)value).ordinal());
 		}
 		return value;
 	}
@@ -32,7 +33,7 @@ public class NumIntEnumMapping extends AColumnMapping{
 
 	@Override
 	protected String getSqlExpression(Object value, DatabaseDialect profile) {
-		return String.valueOf(((Enum)value).ordinal());
+		return String.valueOf(((Enum<?>)value).ordinal());
 	}
 
 	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
@@ -45,5 +46,10 @@ public class NumIntEnumMapping extends AColumnMapping{
 	@Override
 	protected Class<?> getDefaultJavaType() {
 		return Enum.class;
+	}
+
+	@Override
+	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
+		rs.updateInt(columnIndex, ((Enum<?>)value).ordinal());
 	}
 }

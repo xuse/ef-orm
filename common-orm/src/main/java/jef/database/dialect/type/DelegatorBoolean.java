@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
@@ -16,11 +17,11 @@ public final class DelegatorBoolean extends AColumnMapping{
 	private AColumnMapping real;
 	private DatabaseDialect profile;
 	
-	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect profile) throws SQLException {
-		if(real==null || this.profile!=profile){
-			init(profile);
+	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect dialect) throws SQLException {
+		if(real==null || this.profile!=dialect){
+			init(dialect);
 		}
-		return real.jdbcSet(st, value, index, profile);
+		return real.jdbcSet(st, value, index, dialect);
 	}
 
 	private void init(DatabaseDialect profile) {
@@ -59,5 +60,13 @@ public final class DelegatorBoolean extends AColumnMapping{
 	@Override
 	protected Class<?> getDefaultJavaType() {
 		return Boolean.class;
+	}
+
+	@Override
+	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
+		if(real==null || this.profile!=dialect){
+			init(profile);
+		}
+		real.jdbcUpdate(rs, columnIndex, value, dialect);
 	}
 }

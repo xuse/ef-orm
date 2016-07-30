@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
@@ -22,6 +23,11 @@ public class BlobByteArrayMapping extends AColumnMapping{
 //			st.setBinaryStream(index, new ByteArrayInputStream(bb),(long)bb.length);
 		}
 		return value;
+	}
+	
+	public void jdbcUpdate(ResultSet rs,String column, Object value, DatabaseDialect dialect) throws SQLException {
+		byte[] bb=(byte[])value;
+		rs.updateBytes(column, bb);
 	}
 
 	public int getSqlType() {

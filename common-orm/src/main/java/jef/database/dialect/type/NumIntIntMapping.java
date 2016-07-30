@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import jef.database.dialect.DatabaseDialect;
@@ -20,6 +21,11 @@ public class NumIntIntMapping extends AbstractVersionNumberMapping {
 		return value;
 	}
 
+	@Override
+	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
+		rs.updateInt(columnIndex,  ((Number) value).intValue());
+	}
+	
 	public int getSqlType() {
 		return java.sql.Types.INTEGER;
 	}
@@ -50,4 +56,5 @@ public class NumIntIntMapping extends AbstractVersionNumberMapping {
 		int i = ((Number) value).intValue();
 		return i + 1;
 	}
+
 }

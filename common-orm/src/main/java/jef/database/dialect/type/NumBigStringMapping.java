@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import jef.database.dialect.DatabaseDialect;
@@ -50,5 +51,15 @@ public class NumBigStringMapping extends AbstractVersionNumberMapping {
 			return 1;
 		int i = ((Number) value).intValue();
 		return String.valueOf(i + 1);
+	}
+
+	@Override
+	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
+		String s=(String)value;
+		if(s.length()==0){
+			rs.updateNull(columnIndex);
+		}else{
+			rs.updateLong(columnIndex, Long.parseLong(s));
+		}
 	}
 }

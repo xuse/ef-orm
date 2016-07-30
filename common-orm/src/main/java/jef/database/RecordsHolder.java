@@ -2,6 +2,7 @@ package jef.database;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.persistence.PersistenceException;
@@ -44,7 +45,7 @@ import jef.tools.reflect.BeanWrapper;
  *
  * @param <T>
  */
-public final class RecordsHolder<T extends IQueryableEntity>{
+public final class RecordsHolder<T extends IQueryableEntity> implements Iterable<T>{
 	public static final int BEFORE_FIRST = -2;
 	public static final int AFTER_LAST = -3;
 	
@@ -204,7 +205,7 @@ public final class RecordsHolder<T extends IQueryableEntity>{
 	 * @param closeit 提交后关闭ResultSet
 	 * @throws SQLException
 	 */
-	public void commit(boolean closeit) throws SQLException{
+	private void commit(boolean closeit) throws SQLException{
 		ensureOpen();
 		moveTo(BEFORE_FIRST);
 		List<RecordHolder<T>> toInsert=new ArrayList<RecordHolder<T>>();
@@ -248,8 +249,12 @@ public final class RecordsHolder<T extends IQueryableEntity>{
 	 * 将修改提交(更新到数据库)
 	 * @throws SQLException
 	 */
-	public void commit() throws SQLException{
-		commit(true);
+	public void commit(){
+		try{
+			commit(false);
+		}catch(SQLException e){
+			throw DbUtils.toRuntimeException(e);
+		}
 	}
 	
 	private void update(T t, int index2) throws SQLException {
@@ -268,7 +273,9 @@ public final class RecordsHolder<T extends IQueryableEntity>{
 				if(value==null){
 					rs.updateNull(columnName);
 				}else{
-					rs.updateObject(columnName, value);
+					ColumnMapping column=this.meta.getColumnDef(f);
+					column.jdbcUpdate(rs, columnName,value, this.profile);
+//					rs.updateObject(columnName, value);
 				}
 				
 				
@@ -330,11 +337,6 @@ public final class RecordsHolder<T extends IQueryableEntity>{
 		}
 	}
 	
-//	@Override
-//	protected void finalize() throws Throwable {
-//		close();
-//	}
-
 	private void ensureOpen(){
 		if(rs==null){
 			throw new IllegalArgumentException("The result set has been closed.");
@@ -345,10 +347,20 @@ public final class RecordsHolder<T extends IQueryableEntity>{
 	 * 关闭ResultSet和statement
 	 * @throws SQLException
 	 */
-	public void close() throws SQLException{
+	public void close() {
 		if(rs!=null){
-			rs.close();
-			rs=null;
+			try{
+				rs.close();
+				rs=null;	
+			}catch(SQLException e){
+				throw DbUtils.toRuntimeException(e);
+			}
+			
 		}
+	}
+	@Override
+	public Iterator<T> iterator() {
+		ensureOpen();
+		return objs.iterator();
 	}
 }

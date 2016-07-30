@@ -18,6 +18,8 @@ import jef.database.NativeQuery;
 import jef.database.PagingIterator;
 import jef.database.PojoWrapper;
 import jef.database.QB;
+import jef.database.RecordHolder;
+import jef.database.RecordsHolder;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.jpa.JefEntityManagerFactory;
 import jef.database.meta.EntityType;
@@ -677,6 +679,32 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		}
 		try {
 			return getSession().deleteByField(def.field(), value);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
+	@Override
+	public <T extends IQueryableEntity> RecordsHolder<T> selectForUpdate(Query<T> query) {
+		try {
+			return getSession().selectForUpdate(query.getInstance());
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
+	@Override
+	public <T extends IQueryableEntity> RecordHolder<T> loadForUpdate(Query<T> query) {
+		try {
+			return getSession().loadForUpdate(query.getInstance());
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+	
+	public <T extends IQueryableEntity> RecordHolder<T> loadForUpdate(T query) {
+		try {
+			return getSession().loadForUpdate(query);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
