@@ -44,7 +44,7 @@ public final class GqQueryLookupStrategy implements QueryLookupStrategy {
 
 	@Override
 	public RepositoryQuery resolveQuery(Method m, RepositoryMetadata metadata, ProjectionFactory factory, NamedQueries namedQueries) {
-		GqQueryMethod method = new GqQueryMethod(m, metadata, factory);
+		GqQueryMethod method = new GqQueryMethod(m, metadata, factory, emf);
 		String qName = method.getNamedQueryName();
 		String qSql = method.getAnnotatedQuery();
 		if (method.isStreamQuery()) {

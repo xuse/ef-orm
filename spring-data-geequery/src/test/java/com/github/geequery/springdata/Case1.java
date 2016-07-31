@@ -148,18 +148,26 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	@Test
 	public void testFooDao2() {
 		{
-//			Foo foo = foodao2.findBysName("张三");
-//			System.out.println(foo);
+			// Foo foo = foodao2.findBysName("张三");
+			// System.out.println(foo);
 		}
 		// =========================
 		{
-			//设置了@Param后，这是按name进行绑定的NativeQuery，只要语句中用了:xxx格式，参数顺序随便改没问题。
-			List<Foo> foos = foodao2.findBySql(new Date(), "李四");
-			System.out.println(foos);
+			// 设置了@Param后，这是按name进行绑定的NativeQuery，只要语句中用了:xxx格式，参数顺序随便改没问题。
+//			List<Foo> foos = foodao2.findBySql(new Date(), "李四");
+//			System.out.println(foos);
 		}
 		// =========================
 		{
-			// NativeQuery多参数并按 ？1 ？2 序号操作可能就有问题
+//			List<Foo> foos = foodao2.findBySql2("李四", new Date());
+//			System.out.println(foos);
+			//没有设置@param参数时，SQL中需要写成 ?1 ?2 来分别表示第一个和第二个参数。
+			//TODO （注意观察一下原生JPA是用?0 ?1的还是从1开始的）
+			
+		}
+		{
+			List<Foo> foos=foodao2.findBySql3("李四", new Date());
+			
 		}
 	}
 

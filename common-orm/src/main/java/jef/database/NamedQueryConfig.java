@@ -116,9 +116,15 @@ public class NamedQueryConfig extends jef.database.DataObject {
 	@Column(name = "TAG")
 	private String tag;
 
+	/**
+	 * 备注信息
+	 */
 	@Column(name = "REMARK")
 	private String remark;
 
+	/**
+	 * fetchSize of Result. 
+	 */
 	@Column(name = "FETCH_SIZE", precision = 6)
 	private int fetchSize;
 

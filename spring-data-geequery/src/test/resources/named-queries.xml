@@ -6,4 +6,9 @@
 		   select * from foo u where u.name like :name and u.birthday=:birth
 	]]>
 	</query>
+	<query name = "selectByNameAndBirthDay2" type="jpql" fetch-size="0" >
+	<![CDATA[
+		   select * from foo u where u.name like ?1 and u.birthday=?2
+	]]>
+	</query>
 </queries>

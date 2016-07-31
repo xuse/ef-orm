@@ -6,6 +6,7 @@ import java.util.List;
 
 import jef.common.wrapper.Page;
 
+import org.junit.runners.Parameterized.Parameters;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.RepositoryDefinition;
 import org.springframework.data.repository.query.Param;
@@ -50,12 +51,12 @@ public interface FooDao2 {
 	public List<Foo> findBySql(@Param("birth") Date birthDay, @Param("name") String name);
 
 	/**
-	 * @Query("select * from foo where name like :name and age=:age")
+	 * @Query("select * from foo where name like ?1 and birthday=?2")
 	 * @param name
 	 * @param birthDay
 	 * @return
 	 */
-	@Query(name = "selectByNameAndBirthDay",nativeQuery=true)
+	@Query(name = "selectByNameAndBirthDay2",nativeQuery=true)
 	public List<Foo> findBySql2(String name, Date birthDay);
 
 	/**
@@ -64,8 +65,8 @@ public interface FooDao2 {
 	 * @param birthDay
 	 * @return
 	 */
-	@Query("select * from foo where name like :name and age=:age")
-	public List<Foo> findBySql3(String name, Date birthDay);
+	@Query(value="select * from foo where name like :name and age=:age",)
+	public List<Foo> findBySql3(@Param("name") String name, @Param("age") Date birthDay);
 
 	/**
 	 * @Query("select * from foo where name like :name and age=:age")

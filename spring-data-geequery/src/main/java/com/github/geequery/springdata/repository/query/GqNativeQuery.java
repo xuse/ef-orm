@@ -17,6 +17,8 @@ package com.github.geequery.springdata.repository.query;
 
 import java.util.List;
 
+import javax.persistence.Parameter;
+
 import jef.database.NativeQuery;
 
 import org.springframework.data.domain.Pageable;
@@ -34,13 +36,14 @@ final class GqNativeQuery extends AbstractGqQuery {
 	private NativeQuery<?> query;
 
 	private EntityManagerProxy pxy;
+
 	/**
 	 * Creates a new {@link GqNativeQuery}.
 	 */
 	GqNativeQuery(GqQueryMethod method, EntityManagerProxy em, NativeQuery<?> nq) {
 		super(method, em);
 		this.query = nq;
-		this.pxy=em;
+		this.pxy = em;
 	}
 
 	@Override
@@ -49,43 +52,49 @@ final class GqNativeQuery extends AbstractGqQuery {
 		if (page != null) {
 			query.setRange(page.getOffset(), page.getPageSize());
 		}
-		applyParamters(query,values);
+		applyParamters(query, values);
 		return query.getResultList();
 	}
 
 	@Override
 	protected Object getSingleResult(Object[] values) {
 		NativeQuery<?> query = getThreadQuery();
-		applyParamters(query,values);
+		applyParamters(query, values);
 		return query.getSingleResult();
 	}
 
 	@Override
 	protected int executeUpdate(Object[] values) {
 		NativeQuery<?> query = getThreadQuery();
-		applyParamters(query,values);
+		applyParamters(query, values);
 		return query.executeUpdate();
 	}
 
 	@Override
 	protected int executeDelete(Object[] values) {
 		NativeQuery<?> query = getThreadQuery();
-		applyParamters(query,values);
+		applyParamters(query, values);
 		return query.executeUpdate();
 	}
 
 	@Override
 	protected long getResultCount(Object[] values) {
 		NativeQuery<?> query = getThreadQuery();
-		applyParamters(query,values);
+		applyParamters(query, values);
 		return query.getResultCount();
 	}
 
-	private void applyParamters(NativeQuery<?> query,Object[] values) {
-		GqParameters ps=getQueryMethod().getParameters();
-		int i=0;
-		for(JpaParameter p:ps){
-			query.setParameter(p.getName(), values[i++]);
+	private void applyParamters(NativeQuery<?> query, Object[] values) {
+		GqParameters ps = getQueryMethod().getParameters();
+		int i = 0;
+		for (JpaParameter p : ps) {
+			if (p.getName() == null) {
+				//写在Query中的参数一般都是 ?1 ?2从1开始的，而方法的参数序号是从0开始的，因此+1
+				query.setParameter(p.getIndex()+1, values[i++]);
+			} else {
+				query.setParameter(p.getName(), values[i++]);
+
+			}
 		}
 	}
 
