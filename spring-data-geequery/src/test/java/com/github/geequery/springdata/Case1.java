@@ -78,6 +78,14 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	// commonDao.removeByField(Foo.class, "id", 1);
 	// }
 	// }
+	@Test
+	public void testx(){
+		// =========================
+		{
+			System.out.println("=== FindByName ===");
+			Foo foo = foodao.findByName("");
+		}
+	}
 
 	@Test
 	public void test2() throws SQLException {

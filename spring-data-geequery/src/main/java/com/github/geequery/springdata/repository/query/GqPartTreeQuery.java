@@ -19,6 +19,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import jef.common.PairIO;
 import jef.common.wrapper.IntRange;
 import jef.database.DbUtils;
 import jef.database.Field;
@@ -35,17 +36,14 @@ import jef.database.query.SqlExpression;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
-import org.springframework.data.jpa.repository.query.AbstractJpaQuery;
-import org.springframework.data.jpa.repository.query.PartTreeJpaQuery;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.repository.query.parser.PartTree.OrPart;
 import org.springframework.orm.jpa.EntityManagerProxy;
-import org.springframework.util.Assert;
 
-import com.github.geequery.springdata.provider.PersistenceProvider;
+import com.github.geequery.springdata.annotation.IgnoreIf;
 import com.github.geequery.springdata.repository.query.GqParameters.GqParameter;
 import com.github.geequery.springdata.repository.query.GqQueryExecution.DeleteExecution;
 
@@ -72,7 +70,7 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 	 * @param em
 	 *            must not be {@literal null}.
 	 */
-	public GqPartTreeQuery(GqQueryMethod method, EntityManagerProxy em, PersistenceProvider persistenceProvider) {
+	public GqPartTreeQuery(GqQueryMethod method, EntityManagerProxy em) {
 		super(method, em);
 		this.em = em;
 		this.metadata = MetaHolder.getMeta(method.getEntityInformation().getJavaType());
@@ -102,15 +100,13 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 				}
 				String fieldName = path.getSegment();
 				ColumnMapping field = metadata.findField(fieldName);
-
-				Object obj = accessor.getBindableValue(getBindParamIndex(index++, fieldName));
-				boolean required = part.getParameterRequired();
-				if (required) {
-					Assert.notNull(obj);
-				}
-
+				PairIO<GqParameter> paramInfo=getBindParamIndex(index++, fieldName);
+				Object obj = accessor.getBindableValue(paramInfo.first);
 				if (field != null) {
-					add(and, part, field.field(), obj);
+					IgnoreIf ignore=paramInfo.second.getIgnoreIf();
+					if(ignore==null || !QueryUtils.isIgnore(ignore, obj)){
+						add(and, part, field.field(), obj);
+					}
 				}
 			}
 			or.addCondition(and);
@@ -133,16 +129,16 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 	}
 
 	//FIXME use Binder to optmize.
-	private int getBindParamIndex(int index,String fieldName) {
+	private PairIO<GqParameter> getBindParamIndex(int index,String fieldName) {
 		int i=0;
 		for(GqParameter param: this.parameters){
 			if(param.getName()==null){
 				if(index==param.getIndex()){
-					return i;
+					return new PairIO<GqParameter>(i,param);
 				}
 			}else{
 				if(fieldName.equals(param.getName())){
-					return i;
+					return new PairIO<GqParameter>(i,param);
 				}
 			}
 			i++;

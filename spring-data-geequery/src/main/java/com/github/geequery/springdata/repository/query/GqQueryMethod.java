@@ -27,7 +27,6 @@ import jef.database.jpa.JefEntityManagerFactory;
 
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.data.jpa.repository.query.JpaQueryMethod;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.Parameter;
@@ -53,11 +52,7 @@ import com.github.geequery.springdata.repository.support.MetamodelInformation;
  */
 public class GqQueryMethod extends QueryMethod {
 
-	// @see JPA 2.0 Specification 2.2 Persistent Fields and Properties Page 23 -
-	// Top paragraph.
 	private static final Set<Class<?>> NATIVE_ARRAY_TYPES;
-	// private static final StoredProcedureAttributeSource
-	// storedProcedureAttributeSource = StoredProcedureAttributeSource.INSTANCE;
 
 	static {
 
@@ -97,19 +92,14 @@ public class GqQueryMethod extends QueryMethod {
 	}
 
 	private void assertParameterNamesInAnnotatedQuery() {
-
 		String annotatedQuery = getAnnotatedQuery();
-
 		if (!QueryUtils.hasNamedParameter(annotatedQuery)) {
 			return;
 		}
-
 		for (Parameter parameter : getParameters()) {
-
 			if (!parameter.isNamedParameter()) {
 				continue;
 			}
-
 			if (!annotatedQuery.contains(String.format(":%s", parameter.getName())) && !annotatedQuery.contains(String.format("#%s", parameter.getName()))) {
 				throw new IllegalStateException(String.format("Using named parameters for method %s but parameter '%s' not found in annotated query '%s'!", method, parameter.getName(), annotatedQuery));
 			}

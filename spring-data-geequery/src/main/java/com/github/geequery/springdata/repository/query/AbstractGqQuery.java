@@ -25,7 +25,6 @@ import jef.database.Session;
 import jef.database.jpa.JefEntityManager;
 
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.query.AbstractJpaQuery;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.orm.jpa.EntityManagerFactoryUtils;
 import org.springframework.util.Assert;
