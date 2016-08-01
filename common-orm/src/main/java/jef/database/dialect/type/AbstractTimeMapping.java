@@ -17,6 +17,8 @@ import jef.database.query.Func;
 import jef.database.query.SqlExpression;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.UpdateClause;
+import jef.database.wrapper.processor.InsertStep;
+import jef.database.wrapper.processor.InsertStepAdapter;
 import jef.tools.reflect.Property;
 
 abstract class AbstractTimeMapping extends AColumnMapping implements VersionSupportColumn {
@@ -34,7 +36,7 @@ abstract class AbstractTimeMapping extends AColumnMapping implements VersionSupp
 		} else if (type instanceof ColumnType.Date) {
 			this.generated = ((ColumnType.Date) type).getGenerateType();
 		}
-		//根据缺省值修复
+		// 根据缺省值修复
 		Object defaultValue = type.defaultValue;
 		if (generated == null && (defaultValue == Func.current_date || defaultValue == Func.current_time || defaultValue == Func.now)) {
 			generated = DateGenerateType.created;
@@ -45,41 +47,34 @@ abstract class AbstractTimeMapping extends AColumnMapping implements VersionSupp
 				generated = DateGenerateType.created;
 			}
 		}
-		//修复不一致的逻辑，当该字段作为version字段时，必须每次自动更新
-		if(this.version){
-			if(generated==null){
-				generated=DateGenerateType.modified;
-			}else if(generated==DateGenerateType.created){
-				generated=DateGenerateType.modified;
-			}else if(generated==DateGenerateType.created_sys){
-				generated=DateGenerateType.modified_sys;
+		// 修复不一致的逻辑，当该字段作为version字段时，必须每次自动更新
+		if (this.version) {
+			if (generated == null) {
+				generated = DateGenerateType.modified;
+			} else if (generated == DateGenerateType.created) {
+				generated = DateGenerateType.modified;
+			} else if (generated == DateGenerateType.created_sys) {
+				generated = DateGenerateType.modified_sys;
 			}
 		}
-		//获得Accessor
+		// 获得Accessor
 		BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(meta.getContainerType());
 		accessor = ba.getProperty(field.name());
 	}
 
-	@Override
-	public void processInsert(Object value, InsertSqlClause result, List<String> cStr, List<String> vStr, boolean smart, IQueryableEntity obj) throws SQLException {
-		if (!obj.isUsed(field) && generated != null) {
-			if (isJavaSysdate()) {
-				value = getCurrentValue();
-				accessor.set(obj, value);
-			} else {
-				cStr.add(getColumnName(result.profile, true));
-				vStr.add(getFunctionString(result.profile));
-				return;
+	final InsertStep STEP = new InsertStepAdapter() {
+		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
+			for(IQueryableEntity q: data){
+				accessor.set(q, getCurrentValue());
 			}
 		}
-		super.processInsert(value, result, cStr, vStr, smart, obj);
-	}
+	};
 
 	@Override
 	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean smart) throws SQLException {
 		if (!obj.isUsed(field) && generated != null) {
 			if (isJavaSysdate()) {
-				accessor.set(obj, getCurrentValue());
+				result.getCallback().addProcessor(STEP);
 			} else {
 				cStr.add(getColumnName(result.profile, true));
 				vStr.add(getFunctionString(result.profile));

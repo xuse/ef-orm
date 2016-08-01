@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.LockModeType;
 import javax.persistence.NamedQuery;
 
 import jef.database.jpa.JefEntityManagerFactory;
@@ -37,7 +36,6 @@ import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import com.github.geequery.springdata.annotation.Lock;
 import com.github.geequery.springdata.annotation.Modifying;
 import com.github.geequery.springdata.annotation.Procedure;
 import com.github.geequery.springdata.annotation.Query;
@@ -140,17 +138,6 @@ public class GqQueryMethod extends QueryMethod {
 	public boolean isModifyingQuery() {
 
 		return null != AnnotationUtils.findAnnotation(method, Modifying.class);
-	}
-
-	/**
-	 * Returns the {@link LockModeType} to be used for the query.
-	 * 
-	 * @return
-	 */
-	LockModeType getLockModeType() {
-
-		Lock annotation = AnnotatedElementUtils.findMergedAnnotation(method, Lock.class);
-		return (LockModeType) AnnotationUtils.getValue(annotation);
 	}
 
 	/**

@@ -14,7 +14,7 @@ import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.UpdateClause;
 import jef.tools.reflect.Property;
 
-public abstract class AbstractVersionNumberMapping extends AColumnMapping implements VersionSupportColumn{
+public abstract class AbstractVersionNumberMapping extends AColumnMapping implements VersionSupportColumn {
 	private boolean version;
 	private Property accessor;
 
@@ -32,7 +32,7 @@ public abstract class AbstractVersionNumberMapping extends AColumnMapping implem
 	public void processInsert(Object value, InsertSqlClause result, List<String> cStr, List<String> vStr, boolean smart, IQueryableEntity obj) throws SQLException {
 		if (!obj.isUsed(field) && version) {
 			value = 1;
-			accessor.set(obj, value);//版本号总是从1开始
+			accessor.set(obj, value);// 版本号总是从1开始
 		}
 		super.processInsert(value, result, cStr, vStr, smart, obj);
 	}
@@ -40,26 +40,25 @@ public abstract class AbstractVersionNumberMapping extends AColumnMapping implem
 	@Override
 	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean dynamic) throws SQLException {
 		if (!obj.isUsed(field) && version) {
-			accessor.set(obj, 1);//版本号总是从1开始
+			accessor.set(obj, 1);// 版本号总是从1开始
 		}
 		super.processPreparedInsert(obj, cStr, vStr, result, dynamic);
+	}
+
+	@Override
+	public void processAutoUpdate(DatabaseDialect profile, UpdateClause result) {
+		String columnName = getColumnName(profile, true);
+		result.addEntry(columnName, columnName + "+1");
 	}
 
 	@Override
 	public boolean isVersion() {
 		return version;
 	}
-	
-
-	@Override
-	public void processAutoUpdate(DatabaseDialect profile, UpdateClause result) {
-		String columnName = getColumnName(profile, true);
-		result.addEntry(columnName, columnName+"+1");
-	}
 
 	@Override
 	public Object getAutoUpdateValue(DatabaseDialect profile, Object bean) {
-		Object value=accessor.get(bean);
+		Object value = accessor.get(bean);
 		value = increament(value);
 		accessor.set(bean, value);
 		return value;
@@ -71,5 +70,5 @@ public abstract class AbstractVersionNumberMapping extends AColumnMapping implem
 	public boolean isUpdateAlways() {
 		return version;
 	}
-	
+
 }

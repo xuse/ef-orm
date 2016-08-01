@@ -23,19 +23,8 @@ import javax.persistence.LockModeType;
 /**
  * Interface to abstract {@link CrudMethodMetadata} that provide the {@link LockModeType} to be used for query
  * execution.
- * 
- * @author Oliver Gierke
- * @author Thomas Darimont
  */
 public interface CrudMethodMetadata {
-
-	/**
-	 * Returns the {@link LockModeType} to be used.
-	 * 
-	 * @return
-	 */
-	LockModeType getLockModeType();
-
 	/**
 	 * Returns all query hints to be applied to queries executed for the CRUD method.
 	 * 

@@ -37,7 +37,6 @@ import jef.database.support.SqlLog;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.UpdateClause;
-import jef.database.wrapper.processor.AutoIncreatmentCallBack;
 import jef.database.wrapper.processor.BindVariableContext;
 import jef.database.wrapper.processor.BindVariableDescription;
 import jef.tools.StringUtils;
@@ -474,8 +473,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			String sql = toSql(tablename);
 			if (ORMConfig.getInstance().isDebugMode())
 				LogUtil.show(sql + " | " + dbName);
-			AutoIncreatmentCallBack callback = insertPart.getCallback();
-			PreparedStatement p = callback == null ? db.prepareStatement(sql) : callback.doPrepareStatement(db, sql);
+			PreparedStatement p = insertPart.getCallback().doPrepareStatement(db, sql);
 			try {
 				long dbAccess = doCommit(p, db, objs);
 				return dbAccess;
