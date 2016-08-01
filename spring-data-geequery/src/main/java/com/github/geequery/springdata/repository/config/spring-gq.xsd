@@ -31,19 +31,4 @@
 			</xsd:complexContent>
 		</xsd:complexType>
 	</xsd:element>
-
-	<xsd:element name="auditing">
-		<xsd:annotation>
-			<xsd:appinfo>
-				<tool:annotation>
-					<tool:exports
-						type="com.github.geequery.springdata.domain.support.AuditingEntityListener" />
-					<tool:exports type="org.springframework.data.auditing.AuditingHandler" />
-				</tool:annotation>
-			</xsd:appinfo>
-		</xsd:annotation>
-		<xsd:complexType>
-			<xsd:attributeGroup ref="repository:auditing-attributes" />
-		</xsd:complexType>
-	</xsd:element>
 </xsd:schema>

@@ -15,7 +15,6 @@
  */
 package com.github.geequery.springdata.repository.config;
 
-import static com.github.geequery.springdata.repository.config.BeanDefinitionNames.EM_BEAN_DEFINITION_REGISTRAR_POST_PROCESSOR_BEAN_NAME;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
@@ -36,6 +35,7 @@ import org.springframework.context.annotation.AnnotationConfigUtils;
 import org.springframework.core.annotation.AnnotationAttributes;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport;
 import org.springframework.data.repository.config.RepositoryConfigurationSource;
@@ -44,7 +44,6 @@ import org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcesso
 import org.springframework.util.StringUtils;
 
 import com.github.geequery.springdata.repository.GqRepository;
-import com.github.geequery.springdata.repository.support.DefaultGqContext;
 import com.github.geequery.springdata.repository.support.EntityManagerBeanDefinitionRegistrarPostProcessor;
 import com.github.geequery.springdata.repository.support.GqRepositoryFactoryBean;
 
@@ -148,6 +147,7 @@ public class GqRepositoryConfigExtension extends RepositoryConfigurationExtensio
 		}
 	}
 
+	public static final String EM_BEAN_DEFINITION_REGISTRAR_POST_PROCESSOR_BEAN_NAME = "emBeanDefinitionRegistrarPostProcessor";
 	/* 
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#registerBeansForRoot(org.springframework.beans.factory.support.BeanDefinitionRegistry, org.springframework.data.repository.config.RepositoryConfigurationSource)
@@ -170,8 +170,8 @@ public class GqRepositoryConfigExtension extends RepositoryConfigurationExtensio
 
 		// Register bean definition for DefaultJpaContext
 
-		RootBeanDefinition contextDefinition = new RootBeanDefinition(DefaultGqContext.class);
-		contextDefinition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_CONSTRUCTOR);
+//		RootBeanDefinition contextDefinition = new RootBeanDefinition(DefaultGqContext.class);
+//		contextDefinition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_CONSTRUCTOR);
 
 //		registerIfNotAlreadyRegistered(contextDefinition, registry, JPA_CONTEXT_BEAN_NAME, source);
 	}

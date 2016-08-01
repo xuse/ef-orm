@@ -28,7 +28,7 @@ import jef.database.query.ConditionQuery;
  * 
  * @author Oliver Gierke
  */
-public interface JpaSpecificationExecutor<T> {
+public interface GeeQueryExecutor<T> {
 
 	/**
 	 * Returns a single entity matching the given {@link Specification}.

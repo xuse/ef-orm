@@ -45,7 +45,6 @@ import org.springframework.data.repository.query.parser.PartTree.OrPart;
 import org.springframework.orm.jpa.EntityManagerProxy;
 import org.springframework.util.Assert;
 
-import com.github.geequery.springdata.provider.PersistenceProvider;
 import com.github.geequery.springdata.repository.query.GqParameters.GqParameter;
 import com.github.geequery.springdata.repository.query.GqQueryExecution.DeleteExecution;
 
@@ -72,7 +71,7 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 	 * @param em
 	 *            must not be {@literal null}.
 	 */
-	public GqPartTreeQuery(GqQueryMethod method, EntityManagerProxy em, PersistenceProvider persistenceProvider) {
+	public GqPartTreeQuery(GqQueryMethod method, EntityManagerProxy em) {
 		super(method, em);
 		this.em = em;
 		this.metadata = MetaHolder.getMeta(method.getEntityInformation().getJavaType());

@@ -15,8 +15,9 @@
  */
 package com.github.geequery.springdata.util;
 
-import static java.util.Arrays.*;
-import static org.springframework.beans.factory.BeanFactoryUtils.*;
+import static java.util.Arrays.asList;
+import static org.springframework.beans.factory.BeanFactoryUtils.beanNamesForTypeIncludingAncestors;
+import static org.springframework.beans.factory.BeanFactoryUtils.transformedBeanName;
 
 import java.util.ArrayList;
 import java.util.Collection;

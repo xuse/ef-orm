@@ -48,7 +48,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.github.geequery.springdata.repository.GqRepository;
-import com.github.geequery.springdata.repository.JpaSpecificationExecutor;
+import com.github.geequery.springdata.repository.GeeQueryExecutor;
 
 /**
  * Default implementation of the
@@ -64,7 +64,7 @@ import com.github.geequery.springdata.repository.JpaSpecificationExecutor;
  */
 @Repository
 @Transactional(readOnly = true)
-public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepository<T, ID>, JpaSpecificationExecutor<T> {
+public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepository<T, ID>, GeeQueryExecutor<T> {
 
 	private MetamodelInformation<T, ID> meta;
 	// 这是Spring的SharedEntityManager的代理，只可从中提取EMF，不可直接转换，因此这个EM上携带了基于线程的事务上下文

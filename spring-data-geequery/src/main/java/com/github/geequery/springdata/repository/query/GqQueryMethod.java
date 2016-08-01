@@ -15,11 +15,14 @@
  */
 package com.github.geequery.springdata.repository.query;
 
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.persistence.NamedQuery;
 
@@ -97,24 +100,26 @@ public class GqQueryMethod extends QueryMethod {
 	}
 
 	private void assertParameterNamesInAnnotatedQuery() {
-
 		String annotatedQuery = getAnnotatedQuery();
-
-		if (!QueryUtils.hasNamedParameter(annotatedQuery)) {
+		if (!hasNamedParameter(annotatedQuery)) {
 			return;
 		}
-
 		for (Parameter parameter : getParameters()) {
-
 			if (!parameter.isNamedParameter()) {
 				continue;
 			}
-
 			if (!annotatedQuery.contains(String.format(":%s", parameter.getName())) && !annotatedQuery.contains(String.format("#%s", parameter.getName()))) {
 				throw new IllegalStateException(String.format("Using named parameters for method %s but parameter '%s' not found in annotated query '%s'!", method, parameter.getName(), annotatedQuery));
 			}
 		}
 	}
+	public static boolean hasNamedParameter(String query) {
+		return StringUtils.hasText(query) && NAMED_PARAMETER.matcher(query).find();
+	}
+	
+	private static final String IDENTIFIER = "[\\p{Lu}\\P{InBASIC_LATIN}\\p{Alnum}._$]+";
+	private static final Pattern NAMED_PARAMETER = Pattern.compile(":" + IDENTIFIER + "|\\#" + IDENTIFIER,
+			CASE_INSENSITIVE);
 
 	/*
 	 * (non-Javadoc)

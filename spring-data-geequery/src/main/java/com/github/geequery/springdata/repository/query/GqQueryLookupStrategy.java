@@ -28,8 +28,6 @@ import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.orm.jpa.EntityManagerProxy;
 
-import com.github.geequery.springdata.provider.PersistenceProvider;
-
 /**
  * Query lookup strategy to execute finders.
  */
@@ -63,7 +61,7 @@ public final class GqQueryLookupStrategy implements QueryLookupStrategy {
 		} else {
 			if (qName.endsWith(".".concat(method.getName()))) {
 				try {
-					return new GqPartTreeQuery(method, em, PersistenceProvider.GEEQUERY);
+					return new GqPartTreeQuery(method, em);
 				} catch (Exception e) {
 					throw new IllegalArgumentException(method + ": " + e.getMessage(), e);
 				}

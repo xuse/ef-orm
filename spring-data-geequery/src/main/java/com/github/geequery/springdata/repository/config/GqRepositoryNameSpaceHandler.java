@@ -34,7 +34,5 @@ public class GqRepositoryNameSpaceHandler extends NamespaceHandlerSupport {
 		RepositoryConfigurationExtension extension = new GqRepositoryConfigExtension();
 		RepositoryBeanDefinitionParser repositoryBeanDefinitionParser = new RepositoryBeanDefinitionParser(extension);
 		registerBeanDefinitionParser("repositories", repositoryBeanDefinitionParser);
-		//registerBeanDefinitionParser("auditing", new AuditingBeanDefinitionParser());
-		//审计相关功能后续再开发
 	}
 }

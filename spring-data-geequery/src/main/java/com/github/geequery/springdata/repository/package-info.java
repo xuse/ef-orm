@@ -1,5 +1,5 @@
 /**
- * Interfaces and annotations for JPA specific repositories.
+ * Interfaces and annotations for GeeQuery specific repositories.
  */
 package com.github.geequery.springdata.repository;
 
