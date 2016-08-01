@@ -1,5 +1,10 @@
 package com.github.geequery.springdata.annotation;
 
+/**
+ * 配置@IgnoreIf 使用，用来描述一个表示无条件的参数值
+ * @author Jiyi
+ *
+ */
 public enum ParamIs {
 	/**
 	 * 为空字符串时，该参数不作为查询条件使用

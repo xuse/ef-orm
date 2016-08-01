@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 import org.springframework.data.annotation.QueryAnnotation;
 
 /**
- * 完全按照JPA的定义对方法的请求参数进行描述，后续考虑直接引入Spring-JPA，使用spring-data-jpa的注同名注解。
+ * 注解，描述一个查询请求语言
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
@@ -33,7 +33,7 @@ import org.springframework.data.annotation.QueryAnnotation;
 public @interface Query {
 
 	/**
-	 * Defines the JPA query to be executed when the annotated method is called.
+	 * Defines the GeeQuery query to be executed when the annotated method is called.
 	 */
 	String value() default "";
 

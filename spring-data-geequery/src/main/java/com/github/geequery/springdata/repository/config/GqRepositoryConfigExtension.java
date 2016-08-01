@@ -24,18 +24,12 @@ import java.util.Locale;
 
 import javax.persistence.Entity;
 import javax.persistence.MappedSuperclass;
-import javax.persistence.PersistenceContext;
-import javax.persistence.PersistenceUnit;
 
-import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.context.annotation.AnnotationConfigUtils;
 import org.springframework.core.annotation.AnnotationAttributes;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
 import org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport;
 import org.springframework.data.repository.config.RepositoryConfigurationSource;
@@ -44,17 +38,8 @@ import org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcesso
 import org.springframework.util.StringUtils;
 
 import com.github.geequery.springdata.repository.GqRepository;
-import com.github.geequery.springdata.repository.support.EntityManagerBeanDefinitionRegistrarPostProcessor;
 import com.github.geequery.springdata.repository.support.GqRepositoryFactoryBean;
 
-/**
- * JPA specific configuration extension parsing custom attributes from the XML namespace and
- * {@link EnableJpaRepositories} annotation. Also, it registers bean definitions for a
- * {@link PersistenceAnnotationBeanPostProcessor} (to trigger injection into {@link PersistenceContext}/
- * {@link PersistenceUnit} annotated properties and methods) as well as
- * {@link PersistenceExceptionTranslationPostProcessor} to enable exception translation of persistence specific
- * exceptions into Spring's {@link DataAccessException} hierarchy.
- */
 public class GqRepositoryConfigExtension extends RepositoryConfigurationExtensionSupport {
 
 	private static final Class<?> PAB_POST_PROCESSOR = PersistenceAnnotationBeanPostProcessor.class;
@@ -67,7 +52,7 @@ public class GqRepositoryConfigExtension extends RepositoryConfigurationExtensio
 	 */
 	@Override
 	public String getModuleName() {
-		return "JPA";
+		return "GeeQuery";
 	}
 
 	/* 
@@ -92,7 +77,6 @@ public class GqRepositoryConfigExtension extends RepositoryConfigurationExtensio
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtensionSupport#getIdentifyingAnnotations()
 	 */
 	@Override
-	@SuppressWarnings("unchecked")
 	protected Collection<Class<? extends Annotation>> getIdentifyingAnnotations() {
 		return Arrays.asList(Entity.class, MappedSuperclass.class);
 	}
@@ -116,8 +100,6 @@ public class GqRepositoryConfigExtension extends RepositoryConfigurationExtensio
 		String transactionManagerRef = source.getAttribute("transactionManagerRef");
 		builder.addPropertyValue("transactionManager",
 				transactionManagerRef == null ? DEFAULT_TRANSACTION_MANAGER_BEAN_NAME : transactionManagerRef);
-		builder.addPropertyValue("entityManager", getEntityManagerBeanDefinitionFor(source, source.getSource()));
-//		builder.addPropertyReference("mappingContext", JPA_MAPPING_CONTEXT_BEAN_NAME);
 	}
 
 	/* 
@@ -159,48 +141,10 @@ public class GqRepositoryConfigExtension extends RepositoryConfigurationExtensio
 
 		Object source = config.getSource();
 
-		registerIfNotAlreadyRegistered(new RootBeanDefinition(EntityManagerBeanDefinitionRegistrarPostProcessor.class),
-				registry, EM_BEAN_DEFINITION_REGISTRAR_POST_PROCESSOR_BEAN_NAME, source);
-
-//		registerIfNotAlreadyRegistered(new RootBeanDefinition(JpaMetamodelMappingContextFactoryBean.class), registry,
-//				JPA_MAPPING_CONTEXT_BEAN_NAME, source);
-
 		registerIfNotAlreadyRegistered(new RootBeanDefinition(PAB_POST_PROCESSOR), registry,
 				AnnotationConfigUtils.PERSISTENCE_ANNOTATION_PROCESSOR_BEAN_NAME, source);
 
-		// Register bean definition for DefaultJpaContext
-
 //		RootBeanDefinition contextDefinition = new RootBeanDefinition(DefaultGqContext.class);
 //		contextDefinition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_CONSTRUCTOR);
-
-//		registerIfNotAlreadyRegistered(contextDefinition, registry, JPA_CONTEXT_BEAN_NAME, source);
-	}
-
-	/**
-	 * Creates an anonymous factory to extract the actual {@link javax.persistence.EntityManager} from the
-	 * {@link javax.persistence.EntityManagerFactory} bean name reference.
-	 * 
-	 * @param entityManagerFactoryBeanName
-	 * @param source
-	 * @return
-	 */
-	private static AbstractBeanDefinition getEntityManagerBeanDefinitionFor(RepositoryConfigurationSource config,
-			Object source) {
-
-		BeanDefinitionBuilder builder = BeanDefinitionBuilder
-				.rootBeanDefinition("org.springframework.orm.jpa.SharedEntityManagerCreator");
-		builder.setFactoryMethod("createSharedEntityManager");
-		builder.addConstructorArgReference(getEntityManagerBeanRef(config));
-
-		AbstractBeanDefinition bean = builder.getRawBeanDefinition();
-		bean.setSource(source);
-
-		return bean;
-	}
-
-	private static String getEntityManagerBeanRef(RepositoryConfigurationSource config) {
-
-		String entityManagerFactoryRef = config == null ? null : config.getAttribute("entityManagerFactoryRef");
-		return entityManagerFactoryRef == null ? "entityManagerFactory" : entityManagerFactoryRef;
 	}
 }

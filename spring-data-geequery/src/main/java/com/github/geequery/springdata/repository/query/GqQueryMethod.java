@@ -15,14 +15,11 @@
  */
 package com.github.geequery.springdata.repository.query;
 
-import static java.util.regex.Pattern.CASE_INSENSITIVE;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import javax.persistence.NamedQuery;
 
@@ -30,7 +27,6 @@ import jef.database.jpa.JefEntityManagerFactory;
 
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.data.jpa.repository.query.JpaQueryMethod;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.Parameter;
@@ -56,11 +52,7 @@ import com.github.geequery.springdata.repository.support.MetamodelInformation;
  */
 public class GqQueryMethod extends QueryMethod {
 
-	// @see JPA 2.0 Specification 2.2 Persistent Fields and Properties Page 23 -
-	// Top paragraph.
 	private static final Set<Class<?>> NATIVE_ARRAY_TYPES;
-	// private static final StoredProcedureAttributeSource
-	// storedProcedureAttributeSource = StoredProcedureAttributeSource.INSTANCE;
 
 	static {
 
@@ -101,7 +93,7 @@ public class GqQueryMethod extends QueryMethod {
 
 	private void assertParameterNamesInAnnotatedQuery() {
 		String annotatedQuery = getAnnotatedQuery();
-		if (!hasNamedParameter(annotatedQuery)) {
+		if (!QueryUtils.hasNamedParameter(annotatedQuery)) {
 			return;
 		}
 		for (Parameter parameter : getParameters()) {
@@ -113,13 +105,6 @@ public class GqQueryMethod extends QueryMethod {
 			}
 		}
 	}
-	public static boolean hasNamedParameter(String query) {
-		return StringUtils.hasText(query) && NAMED_PARAMETER.matcher(query).find();
-	}
-	
-	private static final String IDENTIFIER = "[\\p{Lu}\\P{InBASIC_LATIN}\\p{Alnum}._$]+";
-	private static final Pattern NAMED_PARAMETER = Pattern.compile(":" + IDENTIFIER + "|\\#" + IDENTIFIER,
-			CASE_INSENSITIVE);
 
 	/*
 	 * (non-Javadoc)

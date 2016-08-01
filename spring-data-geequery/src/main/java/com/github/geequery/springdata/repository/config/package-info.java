@@ -1,5 +1,5 @@
 /**
- * Classes for JPA namespace configuration.
+ * Classes for GeeQuery namespace configuration.
  */
 package com.github.geequery.springdata.repository.config;
 

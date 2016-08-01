@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 
+import com.github.geequery.springdata.annotation.IgnoreIf;
+import com.github.geequery.springdata.annotation.ParamIs;
 import com.github.geequery.springdata.repository.GqRepository;
 import com.github.geequery.springdata.test.entity.Foo;
 
@@ -17,7 +19,7 @@ public interface FooDao extends GqRepository<Foo, Integer> {
 	 * @param name
 	 * @return
 	 */
-	public Foo findByName(@Param("name") String name);
+	public Foo findByName(@Param("name") @IgnoreIf(ParamIs.Empty) String name);
 
 	public List<Foo> findByNameLike(@Param("name") String name);
 
