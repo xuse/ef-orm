@@ -24,8 +24,10 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 
+import com.github.geequery.springdata.test.entity.ComplexFoo;
 import com.github.geequery.springdata.test.entity.Foo;
 import com.github.geequery.springdata.test.entity.VersionLog;
+import com.github.geequery.springdata.test.repo.ComplexFooDao;
 import com.github.geequery.springdata.test.repo.FooDao;
 import com.github.geequery.springdata.test.repo.FooDao2;
 
@@ -48,8 +50,8 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	@javax.annotation.Resource
 	private FooDao2 foodao2;
 
-	// @javax.annotation.Resource
-	// private ComplexFooDao complex;
+	@javax.annotation.Resource
+	private ComplexFooDao complex;
 
 	// @Test
 	// public void test1() throws SQLException{
@@ -148,58 +150,88 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	@Test
 	public void testFooDao2() {
 		{
-			// Foo foo = foodao2.findBysName("张三");
-			// System.out.println(foo);
+			 Foo foo = foodao2.findBysName("张三");
+			 System.out.println(foo);
 		}
 		// =========================
 		{
 			// 设置了@Param后，这是按name进行绑定的NativeQuery，只要语句中用了:xxx格式，参数顺序随便改没问题。
-//			List<Foo> foos = foodao2.findBySql(new Date(), "李四");
-//			System.out.println(foos);
+			// List<Foo> foos = foodao2.findBySql(new Date(), "李四");
+			// System.out.println(foos);
 		}
 		// =========================
 		{
-//			List<Foo> foos = foodao2.findBySql2("李四", new Date());
-//			System.out.println(foos);
-			//没有设置@param参数时，SQL中需要写成 ?1 ?2 来分别表示第一个和第二个参数。
-			//TODO （注意观察一下原生JPA是用?0 ?1的还是从1开始的）
-			
+			// List<Foo> foos = foodao2.findBySql2("李四", new Date());
+			// System.out.println(foos);
+			// 没有设置@param参数时，SQL中需要写成 ?1 ?2 来分别表示第一个和第二个参数。
+			// TODO （注意观察一下原生JPA是用?0 ?1的还是从1开始的）
+
 		}
 		{
-			List<Foo> foos=foodao2.findBySql3("李四", new Date());
-			
+			// Foo foo=foodao2.findBySql3("李四", 0);
+			// System.out.println(foo);
+		}
+		{
+//			Foo foo = foodao2.findBySql4(0, "李四");
+//			System.out.println(foo);
+		}
+		{
+			 Page<Foo> page=(Page<Foo>) foodao2.findBySql5(0, null,new PageRequest(1, 4));
+			 System.out.println(page.getTotalElements());
+			 System.out.println(page.getContent());			 
+		}
+		{
+			List<Foo> result=foodao2.findBySql6(0, "张", new Sort(new Order(Direction.DESC, "id")));
+			System.out.println(result);
+		}
+		{
+			Page<Foo> page=foodao2.findBySql7(0, "", new PageRequest(3,5));
+			System.out.println(page.getContent());
+		}
+		{
+			Foo foo=foodao2.findByusername("张");
+			System.out.println(foo);
+		}
+		{
+			int ii=foodao2.insertInto("狂四", 333, "测试", new Date());
+			System.out.println(ii);
+			ii=foodao2.insertInto2("六河", 555, "测试", new Date());
+			System.out.println(ii);
+		}
+		{
+			int ii= foodao2.updateFooSetAgeByAgeAndId(new Date(), 12, 2);
+			System.out.println(ii);
 		}
 	}
 
-	// @Test
-	// public void testComplexId() {
-	// // 测试复合主键的情况
-	// {
-	// ComplexFoo cf = new ComplexFoo(1, 2);
-	// cf.setMessage("test");
-	// complex.save(cf);
-	//
-	// cf = new ComplexFoo(2, 2);
-	// cf.setMessage("1222234324");
-	// complex.save(cf);
-	// }
-	// {
-	// ComplexFoo cf = complex.findOne(new int[] { 1, 2 });
-	// System.out.println(cf);
-	// cf.setMessage("修改消息!");
-	// complex.save(cf);
-	// }
-	// {
-	// Iterable<ComplexFoo> list = complex.findAll(Arrays.asList(new int[] { 1,
-	// 2 }, new int[] { 2, 2 }));
-	// for (ComplexFoo foo : list) {
-	// System.out.println(foo);
-	// }
-	// }
-	// {
-	// complex.delete(new int[] { 1, 2 });
-	// }
-	// }
+	@Test
+	public void testComplexId() {
+		// 测试复合主键的情况
+		{
+			ComplexFoo cf = new ComplexFoo(1, 2);
+			cf.setMessage("test");
+			complex.save(cf);
+
+			cf = new ComplexFoo(2, 2);
+			cf.setMessage("1222234324");
+			complex.save(cf);
+		}
+		{
+			ComplexFoo cf = complex.findOne(new int[] { 1, 2 });
+			System.out.println(cf);
+			cf.setMessage("修改消息!");
+			complex.save(cf);
+		}
+		{
+			Iterable<ComplexFoo> list = complex.findAll(Arrays.asList(new int[] { 1, 2 }, new int[] { 2, 2 }));
+			for (ComplexFoo foo : list) {
+				System.out.println(foo);
+			}
+		}
+		{
+			complex.delete(new int[] { 1, 2 });
+		}
+	}
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
@@ -211,14 +243,14 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			list.add(new Foo("张三"));
 			list.add(new Foo("李四"));
 			list.add(new Foo("王五"));
-			list.add(new Foo("赵柳"));
-			list.add(new Foo("开发"));
+			list.add(new Foo("张昕"));
+			list.add(new Foo("张鑫"));
 			list.add(new Foo("测试"));
-			list.add(new Foo("纠结"));
-			list.add(new Foo("刘备"));
-			list.add(new Foo("市场"));
-			list.add(new Foo("渠道"));
-			list.add(new Foo("销售"));
+			list.add(new Foo("张三丰"));
+			list.add(new Foo("李元吉"));
+			list.add(new Foo("李渊"));
+			list.add(new Foo("李建成"));
+			list.add(new Foo("李世民"));
 			list.add(new Foo("赵日天"));
 			list.add(new Foo("叶良辰"));
 			list.add(new Foo("玛丽苏"));

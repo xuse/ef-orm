@@ -606,7 +606,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		JDBCTarget db = context.db.getTarget(site.getDatabase());
 		long count = 0;
 		for (String sql : sqls) {
-			count += db.innerSelectBySql(sql, ResultSetExtractor.GET_FIRST_LONG, context.params, null);
+			count += db.innerSelectBySql(sql, ResultSetExtractor.COUNT_EXTRACTER, context.params, null);
 		}
 		// for (String table : site.getTables()) {
 		// String sql = getSql(table);

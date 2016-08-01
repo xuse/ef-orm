@@ -87,7 +87,7 @@ public interface ResultSetExtractor<T> {
 	 */
 	void appendLog(SqlLog log,T result);
 
-	public static final ResultSetExtractor<Long> GET_FIRST_LONG = new AbstractResultSetTransformer<Long>() {
+	public static final ResultSetExtractor<Long> COUNT_EXTRACTER = new AbstractResultSetTransformer<Long>() {
 		public Long transformer(IResultSet rs) throws SQLException {
 			if (rs.next()) {
 				return rs.getLong(1);
@@ -99,12 +99,8 @@ public interface ResultSetExtractor<T> {
 		@Override
 		public void appendLog(SqlLog log, Long result) {
 			if(result!=null){
-				log.append("Count:",result);
+				log.append(" Count:",result);
 			}
-//			if (debug) {
-//				long dbAccess = System.currentTimeMillis();
-//				LogUtil.show(StringUtils.concat("Count:", String.valueOf(total), "\t ([DbAccess]:", String.valueOf(dbAccess - start), "ms) |", db.getTransactionId()));
-//			}
 		}
 		
 		

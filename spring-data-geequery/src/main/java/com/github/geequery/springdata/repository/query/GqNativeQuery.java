@@ -16,15 +16,20 @@
 package com.github.geequery.springdata.repository.query;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
-import javax.persistence.Parameter;
+import javax.persistence.PersistenceException;
 
 import jef.database.NativeQuery;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.orm.jpa.EntityManagerProxy;
 
-import com.github.geequery.springdata.repository.query.GqParameters.JpaParameter;
+import com.github.geequery.springdata.annotation.IgnoreIf;
+import com.github.geequery.springdata.repository.query.GqParameters.GqParameter;
 
 /**
  * TODO 目前的NativeQuery中的绑定了Session的，实际上传入的EM是一个ProxyEM，
@@ -34,8 +39,7 @@ import com.github.geequery.springdata.repository.query.GqParameters.JpaParameter
 final class GqNativeQuery extends AbstractGqQuery {
 
 	private NativeQuery<?> query;
-
-	private EntityManagerProxy pxy;
+	private Logger log = LoggerFactory.getLogger(this.getClass());
 
 	/**
 	 * Creates a new {@link GqNativeQuery}.
@@ -43,7 +47,6 @@ final class GqNativeQuery extends AbstractGqQuery {
 	GqNativeQuery(GqQueryMethod method, EntityManagerProxy em, NativeQuery<?> nq) {
 		super(method, em);
 		this.query = nq;
-		this.pxy = em;
 	}
 
 	@Override
@@ -51,9 +54,16 @@ final class GqNativeQuery extends AbstractGqQuery {
 		NativeQuery<?> query = getThreadQuery();
 		if (page != null) {
 			query.setRange(page.getOffset(), page.getPageSize());
+			assertNoSort(page.getSort());
 		}
 		applyParamters(query, values);
 		return query.getResultList();
+	}
+
+	private void assertNoSort(Sort sort) {
+		if (sort != null) {
+			log.warn("The input parameter Sort [" + sort + "]can not be set into a SQL Query, and was ignored.");
+		}
 	}
 
 	@Override
@@ -87,14 +97,63 @@ final class GqNativeQuery extends AbstractGqQuery {
 	private void applyParamters(NativeQuery<?> query, Object[] values) {
 		GqParameters ps = getQueryMethod().getParameters();
 		int i = 0;
-		for (JpaParameter p : ps) {
-			if (p.getName() == null) {
-				//写在Query中的参数一般都是 ?1 ?2从1开始的，而方法的参数序号是从0开始的，因此+1
-				query.setParameter(p.getIndex()+1, values[i++]);
-			} else {
-				query.setParameter(p.getName(), values[i++]);
-
+		for (GqParameter p : ps) {
+			Object obj = values[i++];
+			if (p.isSpecialParameter()) {
+				if(Sort.class.isAssignableFrom(p.getType())){
+					assertNoSort((Sort)obj);
+				}
+				continue;
 			}
+			
+			if (p.getIgnoreIf() != null && isIgnore(p.getIgnoreIf(), obj)) {
+				continue;
+			}
+			if (p.isNamedParameter()) {
+				try {
+					query.setParameter(p.getName(), obj);
+				} catch (NoSuchElementException e) {
+					throw new PersistenceException("The parameter [:" + p.getName() + "] is not defined in the query '" + super.getQueryMethod().getName()
+							+ "', please make sure there is \":name\" expression in the Query.", e);
+				}
+			} else {
+				try {
+					// 写在Query中的参数一般都是 ?1 ?2从1开始的，而方法的参数序号是从0开始的，因此+1
+					query.setParameter(p.getIndex() + 1, obj);
+				} catch (NoSuchElementException e) {
+					throw new PersistenceException("The parameter [?" + (p.getIndex() + 1) + "] is not defined in the query '" + super.getQueryMethod().getName()
+							+ "', please make sure that using @Param(\"name\") to mapping parameter into query.", e);
+				}
+			}
+		}
+	}
+
+	private boolean isIgnore(IgnoreIf ignoreIf, Object obj) {
+		switch (ignoreIf.value()) {
+		case Empty:
+			return obj == null || String.valueOf(obj).length() == 0;
+		case Negative:
+			if (obj instanceof Number) {
+				return ((Number) obj).longValue() < 0;
+			} else {
+				throw new IllegalArgumentException("can not calcuate is 'NEGATIVE' on parameter which is not a number.");
+			}
+		case Null:
+			return obj == null;
+		case Zero:
+			if (obj instanceof Number) {
+				return ((Number) obj).longValue() == 0;
+			} else {
+				throw new IllegalArgumentException("can not calcuate is 'IS_ZERO' on parameter which is not a number.");
+			}
+		case ZeroOrNagative:
+			if (obj instanceof Number) {
+				return ((Number) obj).longValue() <= 0;
+			} else {
+				throw new IllegalArgumentException("can not calcuate is 'IS_ZERO_OR_NEGATIVE' on parameter which is not a number.");
+			}
+		default:
+			throw new IllegalArgumentException("Unknown ignoreIf type:" + ignoreIf.value());
 		}
 	}
 

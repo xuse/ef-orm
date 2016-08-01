@@ -21,7 +21,7 @@ import javax.persistence.Query;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import com.github.geequery.springdata.repository.query.GqParameters.JpaParameter;
+import com.github.geequery.springdata.repository.query.GqParameters.GqParameter;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
@@ -92,7 +92,7 @@ public class ParameterBinder {
 		int bindableParameterIndex = 0;
 		int queryParameterPosition = 1;
 
-		for (JpaParameter parameter : parameters) {
+		for (GqParameter parameter : parameters) {
 
 			if (canBindParameter(parameter)) {
 
@@ -111,7 +111,7 @@ public class ParameterBinder {
 	 * @param parameter
 	 * @return
 	 */
-	protected boolean canBindParameter(JpaParameter parameter) {
+	protected boolean canBindParameter(GqParameter parameter) {
 		return parameter.isBindable();
 	}
 
@@ -123,7 +123,7 @@ public class ParameterBinder {
 	 * @param value
 	 * @param position
 	 */
-	protected void bind(Query query, JpaParameter parameter, Object value, int position) {
+	protected void bind(Query query, GqParameter parameter, Object value, int position) {
 
 		if (parameter.isTemporalParameter()) {
 			if (hasNamedParameter(query) && parameter.isNamedParameter()) {

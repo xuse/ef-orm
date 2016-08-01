@@ -46,7 +46,7 @@ import org.springframework.orm.jpa.EntityManagerProxy;
 import org.springframework.util.Assert;
 
 import com.github.geequery.springdata.provider.PersistenceProvider;
-import com.github.geequery.springdata.repository.query.GqParameters.JpaParameter;
+import com.github.geequery.springdata.repository.query.GqParameters.GqParameter;
 import com.github.geequery.springdata.repository.query.GqQueryExecution.DeleteExecution;
 
 /**
@@ -135,7 +135,7 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 	//FIXME use Binder to optmize.
 	private int getBindParamIndex(int index,String fieldName) {
 		int i=0;
-		for(JpaParameter param: this.parameters){
+		for(GqParameter param: this.parameters){
 			if(param.getName()==null){
 				if(index==param.getIndex()){
 					return i;

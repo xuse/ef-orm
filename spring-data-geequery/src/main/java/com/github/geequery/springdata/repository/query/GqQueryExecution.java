@@ -99,7 +99,7 @@ public abstract class GqQueryExecution {
 			long total = repositoryQuery.getResultCount(values);
 			ParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
 			Pageable pageable = accessor.getPageable();
-			if (total==0L) {
+			if (pageable.getOffset()>=total) {
 				return new PageImpl<Object>(Collections.emptyList(), pageable, total);
 			}
 			List<?> content=repositoryQuery.getResultList(values,pageable);

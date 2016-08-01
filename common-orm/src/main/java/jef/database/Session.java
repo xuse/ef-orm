@@ -188,7 +188,12 @@ public abstract class Session {
 	 * 
 	 * @return true is current is in a JPA transaction.
 	 */
-	protected abstract boolean isJpaTx();
+	abstract boolean isJpaTx();
+
+	/*
+	 * 当前是否处理多数据库路由场景中
+	 */
+	abstract boolean isRoutingDataSource();
 
 	/**
 	 * 关闭数据库事务。<br>
@@ -617,7 +622,7 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 */
 	public void insert(Object entity, String myTableName, boolean dynamic) throws SQLException {
-		if(entity==null)
+		if (entity == null)
 			return;
 		ITableMetadata meta = MetaHolder.getMeta(entity);
 		if (meta.getExtendsTable() != null) {
@@ -744,8 +749,7 @@ public abstract class Session {
 		int n = update(obj, null);
 		return n;
 	}
-	
-	
+
 	/**
 	 * 更新对象，无级联操作，可以指定操作的表名
 	 * 
@@ -1185,18 +1189,18 @@ public abstract class Session {
 		List<T> objs = innerSelect(query, PageLimit.parse(range), query.getFilterCondition(), option);
 		RecordsHolder<T> result = new RecordsHolder<T>(query.getMeta());
 		ResultSetContainer rawrs = option.getRs();
-		try{
+		try {
 			if (rawrs.size() > 1) {
 				throw new UnsupportedOperationException("select from update operate can only support one table.");
 			}
 			IResultSet rset = option.getRs().toProperResultSet(null);
 			result.init((ResultSetWrapper) rset, objs, rset.getProfile());
-			return result;	
-		}catch(RuntimeException t){
-			rawrs.close();//如果出现异常必须关闭，防止泄漏
+			return result;
+		} catch (RuntimeException t) {
+			rawrs.close();// 如果出现异常必须关闭，防止泄漏
 			throw t;
-		}catch(Error t){
-			rawrs.close();//如果出现异常必须关闭，防止泄漏
+		} catch (Error t) {
+			rawrs.close();// 如果出现异常必须关闭，防止泄漏
 			throw t;
 		}
 	}
@@ -2580,7 +2584,7 @@ public abstract class Session {
 		long start = System.nanoTime();
 		UpdateClause updatePart = updatep.toUpdateClauseBatch((IQueryableEntity) template, null, dynamic);
 		// 位于批当中的绑定变量
-		UpdateContext context=new UpdateContext(template.getQuery().getMeta().getVersionColumn());
+		UpdateContext context = new UpdateContext(template.getQuery().getMeta().getVersionColumn());
 		BindSql wherePart = preProcessor.toWhereClause(template.getQuery(), new SqlContext(null, template.getQuery()), context, getProfile(null));
 		for (BindVariableDescription bind : wherePart.getBind()) {
 			bind.setInBatch(true);
@@ -2923,7 +2927,7 @@ public abstract class Session {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private List batchLoadByPK0(ITableMetadata meta, List<? extends Serializable> pkValues) throws SQLException {
 		if (meta.getPKFields().size() != 1) {
-			return batchLoadEachTimes(meta,pkValues);
+			return batchLoadEachTimes(meta, pkValues);
 		}
 		if (meta.getType() == EntityType.POJO) {
 			Query<?> q = meta.newInstance().getQuery();
@@ -2935,11 +2939,12 @@ public abstract class Session {
 			return innerSelect(q, null, null, QueryOption.DEFAULT);
 		}
 	}
+
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private List batchLoadEachTimes(ITableMetadata meta, List<? extends Serializable> pkValues) throws SQLException {
-		List list=new ArrayList(pkValues.size());
-		for(Serializable id: pkValues){
-			list.add(load(meta, (Serializable[])id));
+		List list = new ArrayList(pkValues.size());
+		for (Serializable id : pkValues) {
+			list.add(load(meta, (Serializable[]) id));
 		}
 		return list;
 	}
@@ -2989,30 +2994,34 @@ public abstract class Session {
 			return 0;
 		}
 	}
-	
-	static class UpdateContext{
+
+	static class UpdateContext {
 		VersionSupportColumn versionColumn;
 		Object bean;
 		private Boolean isPkQuery;
-		
+
 		public UpdateContext(VersionSupportColumn versionColumn) {
-			this.versionColumn=versionColumn;
+			this.versionColumn = versionColumn;
 		}
-		public boolean checkIsPKCondition(){
-			return versionColumn!=null && isPkQuery==null;
+
+		public boolean checkIsPKCondition() {
+			return versionColumn != null && isPkQuery == null;
 		}
-		public void setIsPkQuery(boolean flag){
-			this.isPkQuery=flag;
+
+		public void setIsPkQuery(boolean flag) {
+			this.isPkQuery = flag;
 		}
+
 		public boolean needVersionCondition() {
-			return versionColumn!=null && isPkQuery!=null && isPkQuery.booleanValue();
+			return versionColumn != null && isPkQuery != null && isPkQuery.booleanValue();
 		}
-		public void appendVersionCondition(BindSql sql,SqlContext context,SqlProcessor processor,IQueryableEntity instance,DatabaseDialect profile) {
-			Object value=versionColumn.getFieldAccessor().get(instance);
-			if(value!=null){
-				Condition cond=QB.eq(versionColumn.field(),value);
-				String str=cond.toPrepareSqlClause(sql.getBind(), versionColumn.getMeta(), context, processor, instance, profile);
-				sql.setSql(sql.getSql()+" and "+str);
+
+		public void appendVersionCondition(BindSql sql, SqlContext context, SqlProcessor processor, IQueryableEntity instance, DatabaseDialect profile) {
+			Object value = versionColumn.getFieldAccessor().get(instance);
+			if (value != null) {
+				Condition cond = QB.eq(versionColumn.field(), value);
+				String str = cond.toPrepareSqlClause(sql.getBind(), versionColumn.getMeta(), context, processor, instance, profile);
+				sql.setSql(sql.getSql() + " and " + str);
 			}
 		}
 	}
@@ -3028,9 +3037,9 @@ public abstract class Session {
 			return 0;
 		}
 		DatabaseDialect profile = getProfile(sites[0].getDatabase());
-		
-		UpdateContext context=new UpdateContext(query.getMeta().getVersionColumn());
-		BindSql whereClause= updatep.toWhereClause(query, new SqlContext(null, query), context, profile);
+
+		UpdateContext context = new UpdateContext(query.getMeta().getVersionColumn());
+		BindSql whereClause = updatep.toWhereClause(query, new SqlContext(null, query), context, profile);
 		if (dynamic && !obj.needUpdate()) {// 重新检查一遍
 			return 0;
 		}
@@ -3042,8 +3051,8 @@ public abstract class Session {
 		if (count > 0) {
 			String tableName = myTableName == null ? query.getMeta().getTableName(false) : myTableName;
 			getCache().onUpdate(tableName, whereClause.getSql(), CacheImpl.toParamList(whereClause.getBind()));
-		}else if(context.needVersionCondition()){//基于版本的乐观锁并发检测，记录没有成功更新
-			throw new OptimisticLockException("The row in database has been modified by others after the entity was loaded.",null,obj);
+		} else if (context.needVersionCondition()) {// 基于版本的乐观锁并发检测，记录没有成功更新
+			throw new OptimisticLockException("The row in database has been modified by others after the entity was loaded.", null, obj);
 		}
 		getListener().afterUpdate(obj, count, this);
 		return count;

@@ -1,23 +1,24 @@
 package com.github.geequery.springdata.test.repo;
 
-import java.awt.print.Pageable;
 import java.util.Date;
 import java.util.List;
 
-import jef.common.wrapper.Page;
-
-import org.junit.runners.Parameterized.Parameters;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.RepositoryDefinition;
 import org.springframework.data.repository.query.Param;
 
+import com.github.geequery.springdata.annotation.IgnoreIf;
 import com.github.geequery.springdata.annotation.Modifying;
+import com.github.geequery.springdata.annotation.ParamIs;
 import com.github.geequery.springdata.annotation.Query;
 import com.github.geequery.springdata.test.entity.Foo;
 
 /**
  * 此处适应Spring-date-JPA中的自定义查询方式 后续考虑增加一个注解可不依赖Spring-data-jpa
  * Query换成spring-JPA中的Query。
+ * 
  * @author Administrator
  *
  */
@@ -25,11 +26,12 @@ import com.github.geequery.springdata.test.entity.Foo;
 public interface FooDao2 {
 
 	/**
-	 * @Query(value = "select * from foo u where u.name like ?1", nativeQuery = true)
+	 * @Query(value = "select * from foo u where u.name like ?1", nativeQuery =
+	 *              true)
 	 * @param username
 	 * @return
 	 */
-	@Query(value = "select * from foo u where u.name like ?1", nativeQuery = true)
+	@Query(value = "select * from foo u where u.name like ?1<string$>", nativeQuery = true)
 	public Foo findByusername(String username);
 
 	/**
@@ -56,7 +58,7 @@ public interface FooDao2 {
 	 * @param birthDay
 	 * @return
 	 */
-	@Query(name = "selectByNameAndBirthDay2",nativeQuery=true)
+	@Query(name = "selectByNameAndBirthDay2", nativeQuery = true)
 	public List<Foo> findBySql2(String name, Date birthDay);
 
 	/**
@@ -65,8 +67,8 @@ public interface FooDao2 {
 	 * @param birthDay
 	 * @return
 	 */
-	@Query(value="select * from foo where name like :name and age=:age",)
-	public List<Foo> findBySql3(@Param("name") String name, @Param("age") Date birthDay);
+	@Query(value = "select * from foo where name like :name and age=:age")
+	public Foo findBySql3(@Param("name") String name, @Param("age") int age);
 
 	/**
 	 * @Query("select * from foo where name like :name and age=:age")
@@ -74,9 +76,9 @@ public interface FooDao2 {
 	 * @param name
 	 * @return
 	 */
-	@Query("select * from foo where name like :name and age=:age")
-	public List<Foo> findBySql4(Date birthDay, String name);
-	
+	@Query("select * from foo where name like ?2 and age=?1")
+	public Foo findBySql4(int birthDay, String name);
+
 	/**
 	 * @Query("select * from foo where name like :name and age=:age")
 	 * @param birthDay
@@ -85,8 +87,8 @@ public interface FooDao2 {
 	 * @return
 	 */
 	@Query("select * from foo where name like :name and age=:age")
-	public Page<Foo> findBySql5(Date birthDay, String name,Pageable page);
-	
+	public Page<Foo> findBySql5(@Param("age") @IgnoreIf(ParamIs.Zero) int age, @Param(value = "name") @IgnoreIf(ParamIs.Null) String name, Pageable page);
+
 	/**
 	 * @Query("select * from foo")
 	 * @param age
@@ -94,38 +96,49 @@ public interface FooDao2 {
 	 * @param sort
 	 * @return
 	 */
-	@Query("select * from foo")
-	public Page<Foo> findBySql6(int age, String name,Sort sort);
-	
+	@Query("select * from foo where age=?1 and name like ?2<$string$>")
+	public List<Foo> findBySql6(int age, String name, Sort sort);
+
 	/**
-	 * (value="select * from foo where age=?1 and name like ?2",nativeQuery=true) 
+	 * (value="select * from foo where age=?1 and name like ?2",nativeQuery=true
+	 * )
+	 * 
 	 * @param age
 	 * @param name
 	 * @param sort
 	 * @return
 	 */
-	@Query(value="select * from foo where age=?1 and name like ?2",nativeQuery=true)
-	public Page<Foo> findBySql7(int age, String name,Sort sort);
-	
+	@Query(value = "select * from foo where age=?1 and name like ?2<$string$>", nativeQuery = true)
+	public Page<Foo> findBySql7(int age, @IgnoreIf(ParamIs.Empty) String name, Pageable page);
+
 	/**
-	 * insert into foo(remark,name,age,birthday) values (:remark,:name,:age,:birthday)
+	 * insert into foo(remark,name,age,birthday) values
+	 * (:remark,:name,:age,:birthday)
+	 * 
 	 * @param name
 	 * @param age
 	 * @param remark
 	 * @param birthDay
 	 */
 	@Modifying
-	@Query("insert into foo(remark,name,age,birthday) values (:remark,:name,:age,:birthday)")
-	public void insertInto(String name, int age,String remark,Date birthDay);
-	
+	@Query("insert into foo(remark,name,age,birthday) values (?3, ?1, ?2, ?4)")
+	public int insertInto(String name, int age, String remark, Date birthDay);
+
+	@Modifying
+	@Query("insert into foo(remark,name,age,birthday) values (:remark, :name, :age, :birthday)")
+	public int insertInto2(@Param("name") String name, @Param("age") int age, @Param("remark") String remark, @Param("birthday") Date birthDay);
+
 	/**
 	 * update foo set age=age+1,birthDay=:birth where age=:age and id=:id
+	 * 
 	 * @param birthDay
 	 * @param age
 	 * @param id
 	 */
 	@Modifying
 	@Query("update foo set age=age+1,birthDay=:birth where age=:age and id=:id")
-	public void updateFooSetAgeByAgeAndId(Date birthDay,int age, int id);
-	
+	public int updateFooSetAgeByAgeAndId(@Param("birth")Date birth, 
+			@Param("age")int age, 
+			@Param("id") int id);
+
 }

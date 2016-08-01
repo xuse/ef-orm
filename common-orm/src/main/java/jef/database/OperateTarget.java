@@ -350,8 +350,10 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 			} else {
 				t = rst.transformer(new ResultSetWrapper(this, st, rs));
 			}
-			rst.appendLog(sb, t);
-			sb.append("\tTime cost([DbAccess]:", dbAccessed - start).append("ms, [Populate]:", System.currentTimeMillis() - dbAccessed).append("ms").append(this);
+//			if(session.isRoutingDataSource()){
+				rst.appendLog(sb, t);
+				sb.append("\tTime cost([DbAccess]:", dbAccessed - start).append("ms, [Populate]:", System.currentTimeMillis() - dbAccessed).append("ms").append(this);	
+//			}
 			return t;
 		} catch (SQLException e) {
 			DbUtils.processError(e, sql, this);
@@ -425,7 +427,7 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 
 	public long countBySql(String countSql, Object... params) throws SQLException {
 		long start = System.currentTimeMillis();
-		Long num = innerSelectBySql(countSql, ResultSetExtractor.GET_FIRST_LONG, Arrays.asList(params), null);
+		Long num = innerSelectBySql(countSql, ResultSetExtractor.COUNT_EXTRACTER, Arrays.asList(params), null);
 		if (ORMConfig.getInstance().isDebugMode()) {
 			long dbAccess = System.currentTimeMillis();
 			LogUtil.show(StringUtils.concat("Count:", String.valueOf(num), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", getTransactionId()));

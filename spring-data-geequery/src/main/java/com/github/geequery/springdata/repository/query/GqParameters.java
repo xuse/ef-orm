@@ -22,82 +22,95 @@ import java.util.List;
 import javax.persistence.TemporalType;
 
 import org.springframework.core.MethodParameter;
-
-import com.github.geequery.springdata.annotation.Temporal;
-import com.github.geequery.springdata.repository.query.GqParameters.JpaParameter;
-
 import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
 
+import com.github.geequery.springdata.annotation.IgnoreIf;
+import com.github.geequery.springdata.annotation.Temporal;
+import com.github.geequery.springdata.repository.query.GqParameters.GqParameter;
+
 /**
- * Custom extension of {@link Parameters} discovering additional query parameter annotations.
+ * Custom extension of {@link Parameters} discovering additional query parameter
+ * annotations.
  * 
  * @author Thomas Darimont
  */
-public class GqParameters extends Parameters<GqParameters, JpaParameter> {
+public class GqParameters extends Parameters<GqParameters, GqParameter> {
 
 	/**
-	 * Creates a new {@link GqParameters} instance from the given {@link Method}.
+	 * Creates a new {@link GqParameters} instance from the given {@link Method}
+	 * .
 	 * 
-	 * @param method must not be {@literal null}.
+	 * @param method
+	 *            must not be {@literal null}.
 	 */
 	public GqParameters(Method method) {
 		super(method);
 	}
 
-	private GqParameters(List<JpaParameter> parameters) {
+	private GqParameters(List<GqParameter> parameters) {
 		super(parameters);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.Parameters#createParameter(org.springframework.core.MethodParameter)
+	 * 
+	 * @see
+	 * org.springframework.data.repository.query.Parameters#createParameter(
+	 * org.springframework.core.MethodParameter)
 	 */
 	@Override
-	protected JpaParameter createParameter(MethodParameter parameter) {
-		return new JpaParameter(parameter);
+	protected GqParameter createParameter(MethodParameter parameter) {
+		return new GqParameter(parameter);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.query.Parameters#createFrom(java.util.List)
+	 * 
+	 * @see
+	 * org.springframework.data.repository.query.Parameters#createFrom(java.
+	 * util.List)
 	 */
 	@Override
-	protected GqParameters createFrom(List<JpaParameter> parameters) {
+	protected GqParameters createFrom(List<GqParameter> parameters) {
 		return new GqParameters(parameters);
 	}
 
 	/**
-	 * Custom {@link Parameter} implementation adding parameters of type {@link Temporal} to the special ones.
+	 * Custom {@link Parameter} implementation adding parameters of type
+	 * {@link Temporal} to the special ones.
 	 * 
 	 * @author Thomas Darimont
 	 * @author Oliver Gierke
 	 */
-	static class JpaParameter extends Parameter {
+	static class GqParameter extends Parameter {
 
 		private final Temporal annotation;
 		private TemporalType temporalType;
+		private IgnoreIf ignoreIf;
 
 		/**
-		 * Creates a new {@link JpaParameter}.
+		 * Creates a new {@link GqParameter}.
 		 * 
-		 * @param parameter must not be {@literal null}.
+		 * @param parameter
+		 *            must not be {@literal null}.
 		 */
-		JpaParameter(MethodParameter parameter) {
+		GqParameter(MethodParameter parameter) {
 
 			super(parameter);
 
 			this.annotation = parameter.getParameterAnnotation(Temporal.class);
+			this.ignoreIf = parameter.getParameterAnnotation(IgnoreIf.class);
 			this.temporalType = null;
 
 			if (!isDateParameter() && hasTemporalParamAnnotation()) {
-				throw new IllegalArgumentException(Temporal.class.getSimpleName()
-						+ " annotation is only allowed on Date parameter!");
+				throw new IllegalArgumentException(Temporal.class.getSimpleName() + " annotation is only allowed on Date parameter!");
 			}
 		}
 
-		/* 
+		/*
 		 * (non-Javadoc)
+		 * 
 		 * @see org.springframework.data.repository.query.Parameter#isBindable()
 		 */
 		@Override
@@ -106,14 +119,16 @@ public class GqParameters extends Parameters<GqParameters, JpaParameter> {
 		}
 
 		/**
-		 * @return {@literal true} if this parameter is of type {@link Date} and has an {@link Temporal} annotation.
+		 * @return {@literal true} if this parameter is of type {@link Date} and
+		 *         has an {@link Temporal} annotation.
 		 */
 		public boolean isTemporalParameter() {
 			return isDateParameter() && hasTemporalParamAnnotation();
 		}
 
 		/**
-		 * @return the {@link TemporalType} on the {@link Temporal} annotation of the given {@link Parameter}.
+		 * @return the {@link TemporalType} on the {@link Temporal} annotation
+		 *         of the given {@link Parameter}.
 		 */
 		public TemporalType getTemporalType() {
 
@@ -130,6 +145,10 @@ public class GqParameters extends Parameters<GqParameters, JpaParameter> {
 
 		private boolean isDateParameter() {
 			return getType().equals(Date.class);
+		}
+
+		public IgnoreIf getIgnoreIf() {
+			return ignoreIf;
 		}
 	}
 }
