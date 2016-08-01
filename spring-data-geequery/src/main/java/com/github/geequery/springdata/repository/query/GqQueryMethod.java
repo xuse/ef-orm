@@ -21,11 +21,13 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.LockModeType;
 import javax.persistence.NamedQuery;
+
+import jef.database.jpa.JefEntityManagerFactory;
 
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.data.jpa.repository.query.JpaQueryMethod;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.Parameter;
@@ -34,15 +36,16 @@ import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
-import com.github.geequery.springdata.annotation.Lock;
 import com.github.geequery.springdata.annotation.Modifying;
 import com.github.geequery.springdata.annotation.Procedure;
 import com.github.geequery.springdata.annotation.Query;
+import com.github.geequery.springdata.repository.support.MetamodelInformation;
 
 /**
  * GQ specific extension of {@link QueryMethod}.
  * 
- * supports more Annotations on method.. 
+ * supports more Annotations on method..
+ * 
  * @see Query
  * @see Modifying
  * @see Procedure
@@ -69,6 +72,8 @@ public class GqQueryMethod extends QueryMethod {
 
 	private final Method method;
 
+	private final JefEntityManagerFactory emf;
+
 	/**
 	 * Creates a {@link JpaQueryMethod}.
 	 * 
@@ -79,14 +84,14 @@ public class GqQueryMethod extends QueryMethod {
 	 * @param metadata
 	 *            must not be {@literal null}
 	 */
-	public GqQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory factory) {
+	public GqQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory factory, JefEntityManagerFactory emf) {
 
 		super(method, metadata, factory);
 
 		Assert.notNull(method, "Method must not be null!");
 
 		this.method = method;
-
+		this.emf = emf;
 		Assert.isTrue(!(isModifyingQuery() && getParameters().hasSpecialParameter()), String.format("Modifying method must not contain %s!", Parameters.TYPES));
 		assertParameterNamesInAnnotatedQuery();
 	}
@@ -106,8 +111,7 @@ public class GqQueryMethod extends QueryMethod {
 			}
 
 			if (!annotatedQuery.contains(String.format(":%s", parameter.getName())) && !annotatedQuery.contains(String.format("#%s", parameter.getName()))) {
-				throw new IllegalStateException(String.format("Using named parameters for method %s but parameter '%s' not found in annotated query '%s'!", method,
-						parameter.getName(), annotatedQuery));
+				throw new IllegalStateException(String.format("Using named parameters for method %s but parameter '%s' not found in annotated query '%s'!", method, parameter.getName(), annotatedQuery));
 			}
 		}
 	}
@@ -122,7 +126,7 @@ public class GqQueryMethod extends QueryMethod {
 	@Override
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public GqEntityMetadata<?> getEntityInformation() {
-		return new DefaultJpaEntityMetadata(getDomainClass());
+		return new MetamodelInformation(getDomainClass(), emf);
 	}
 
 	/**
@@ -134,17 +138,6 @@ public class GqQueryMethod extends QueryMethod {
 	public boolean isModifyingQuery() {
 
 		return null != AnnotationUtils.findAnnotation(method, Modifying.class);
-	}
-
-	/**
-	 * Returns the {@link LockModeType} to be used for the query.
-	 * 
-	 * @return
-	 */
-	LockModeType getLockModeType() {
-
-		Lock annotation = AnnotatedElementUtils.findMergedAnnotation(method, Lock.class);
-		return (LockModeType) AnnotationUtils.getValue(annotation);
 	}
 
 	/**
@@ -164,7 +157,7 @@ public class GqQueryMethod extends QueryMethod {
 	 * @return
 	 */
 	String getAnnotatedQuery() {
-		String query = getAnnotationValue("value",Query.class, String.class);
+		String query = getAnnotationValue("value", Query.class, String.class);
 		return StringUtils.hasText(query) ? query : null;
 	}
 
@@ -176,7 +169,7 @@ public class GqQueryMethod extends QueryMethod {
 	 * @return
 	 */
 	String getCountQuery() {
-		String countQuery = getAnnotationValue("countQuery",Query.class,String.class);
+		String countQuery = getAnnotationValue("countQuery", Query.class, String.class);
 		return StringUtils.hasText(countQuery) ? countQuery : null;
 	}
 
@@ -190,7 +183,7 @@ public class GqQueryMethod extends QueryMethod {
 	 */
 	String getCountQueryProjection() {
 
-		String countProjection = getAnnotationValue("countProjection", Query.class,String.class);
+		String countProjection = getAnnotationValue("countProjection", Query.class, String.class);
 		return StringUtils.hasText(countProjection) ? countProjection : null;
 	}
 
@@ -200,7 +193,7 @@ public class GqQueryMethod extends QueryMethod {
 	 * @return
 	 */
 	boolean isNativeQuery() {
-		return getAnnotationValue("nativeQuery", Query.class,Boolean.class).booleanValue();
+		return getAnnotationValue("nativeQuery", Query.class, Boolean.class).booleanValue();
 	}
 
 	/*
@@ -211,25 +204,30 @@ public class GqQueryMethod extends QueryMethod {
 	 */
 	@Override
 	public String getNamedQueryName() {
-		String annotatedName = getAnnotationValue("name", Query.class,String.class);
+		String annotatedName = getAnnotationValue("name", Query.class, String.class);
 		return StringUtils.hasText(annotatedName) ? annotatedName : super.getNamedQueryName();
 	}
 
 	/**
 	 * Returns the name of the {@link NamedQuery} that shall be used for count
 	 * queries.
+	 * 
 	 * @return
 	 */
 	String getNamedCountQueryName() {
-		String annotatedName = getAnnotationValue("countName", Query.class,String.class);
+		String annotatedName = getAnnotationValue("countName", Query.class, String.class);
 		return StringUtils.hasText(annotatedName) ? annotatedName : getNamedQueryName() + ".count";
 	}
 
 	/**
 	 * 获得指定指定注解的字段值
-	 * @param attribute 需要获得的注解字段名
-	 * @param annotationType 注解类型
-	 * @param targetType 返回值类型
+	 * 
+	 * @param attribute
+	 *            需要获得的注解字段名
+	 * @param annotationType
+	 *            注解类型
+	 * @param targetType
+	 *            返回值类型
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -241,13 +239,14 @@ public class GqQueryMethod extends QueryMethod {
 
 		return targetType.cast(AnnotationUtils.getValue(annotation, attribute));
 	}
-	
+
 	/**
 	 * 获得方法上的有效注解
+	 * 
 	 * @param annotationType
 	 * @return
 	 */
-	public <T extends Annotation> T getAnnotation(Class<T> annotationType){
+	public <T extends Annotation> T getAnnotation(Class<T> annotationType) {
 		return AnnotatedElementUtils.findMergedAnnotation(method, annotationType);
 	}
 
@@ -287,7 +286,7 @@ public class GqQueryMethod extends QueryMethod {
 	public boolean isProcedureQuery() {
 		return AnnotationUtils.findAnnotation(method, Procedure.class) != null;
 	}
-	
+
 	/**
 	 * Returns whether we should clear automatically for modifying queries.
 	 * 
@@ -296,5 +295,4 @@ public class GqQueryMethod extends QueryMethod {
 	boolean getClearAutomatically() {
 		return getAnnotationValue("clearAutomatically", Modifying.class, Boolean.class);
 	}
-
 }

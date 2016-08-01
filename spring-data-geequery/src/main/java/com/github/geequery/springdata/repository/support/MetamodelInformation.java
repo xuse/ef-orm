@@ -17,10 +17,7 @@ package com.github.geequery.springdata.repository.support;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.SingularAttribute;
@@ -195,35 +192,7 @@ public class MetamodelInformation<T,ID extends Serializable> extends AbstractEnt
 		return versionValue == null;
 	}
 
-	/**
-	 * Simple value object to encapsulate id specific metadata.
-	 * 
-	 * @author Oliver Gierke
-	 * @author Thomas Darimont
-	 */
-	private static class IdMetadata<T> implements Iterable<ColumnMapping> {
-		private final AbstractMetadata type;
-		private final Set<ColumnMapping> attributes;
-
-		public IdMetadata(AbstractMetadata source) {
-			this.type = source;
-			Set<ColumnMapping> set = new LinkedHashSet<ColumnMapping>();
-			for (ColumnMapping mapping : source.getPKFields()) {
-				set.add(mapping);
-			}
-			this.attributes = set;
-		}
-
-		public boolean hasSimpleId() {
-			return attributes.size() == 1;
-		}
-
-		public ColumnMapping getSimpleIdAttribute() {
-			return attributes.iterator().next();
-		}
-
-		public Iterator<ColumnMapping> iterator() {
-			return attributes.iterator();
-		}
+	public boolean isComplexPK() {
+		return this.metadata.getPKFields().size()>1;
 	}
 }

@@ -250,4 +250,11 @@ public abstract class Transaction extends Session implements TransactionalSessio
 	public void rollback() {
 		rollback(false);
 	}
+
+	@Override
+	boolean isRoutingDataSource() {
+		return this.parent.isRoutingDataSource();
+	}
+	
+	
 }

@@ -88,7 +88,7 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 		}
 		String sql = paramHolder.statement.toString();
 		long start = System.currentTimeMillis();
-		long total = db.innerSelectBySql(sql, ResultSetExtractor.GET_FIRST_LONG, paramHolder.params, paramHolder);
+		long total = db.innerSelectBySql(sql, ResultSetExtractor.COUNT_EXTRACTER, paramHolder.params, paramHolder);
 		total = (maxSize > 0 && maxSize < total) ? maxSize : total;
 		if (debug) {
 			long dbAccess = System.currentTimeMillis();

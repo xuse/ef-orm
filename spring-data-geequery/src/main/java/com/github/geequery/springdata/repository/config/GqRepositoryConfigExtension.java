@@ -44,7 +44,7 @@ import org.springframework.orm.jpa.support.PersistenceAnnotationBeanPostProcesso
 import org.springframework.util.StringUtils;
 
 import com.github.geequery.springdata.repository.GqRepository;
-import com.github.geequery.springdata.repository.support.DefaultJpaContext;
+import com.github.geequery.springdata.repository.support.DefaultGqContext;
 import com.github.geequery.springdata.repository.support.EntityManagerBeanDefinitionRegistrarPostProcessor;
 import com.github.geequery.springdata.repository.support.GqRepositoryFactoryBean;
 
@@ -170,7 +170,7 @@ public class GqRepositoryConfigExtension extends RepositoryConfigurationExtensio
 
 		// Register bean definition for DefaultJpaContext
 
-		RootBeanDefinition contextDefinition = new RootBeanDefinition(DefaultJpaContext.class);
+		RootBeanDefinition contextDefinition = new RootBeanDefinition(DefaultGqContext.class);
 		contextDefinition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_CONSTRUCTOR);
 
 //		registerIfNotAlreadyRegistered(contextDefinition, registry, JPA_CONTEXT_BEAN_NAME, source);

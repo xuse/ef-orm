@@ -378,10 +378,16 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 		return list;
 	}
 
-	private List<Serializable[]> asIdList(Iterable<ID> ids) {
-		List<Serializable[]> list = new ArrayList<Serializable[]>();
-		for (ID id : ids) {
-			list.add(toId(id));
+	private List<Serializable> asIdList(Iterable<ID> ids) {
+		List<Serializable> list = new ArrayList<Serializable>();
+		if(this.meta.isComplexPK()){
+			for (ID id : ids) {
+				list.add(toId(id));
+			}	
+		}else{
+			for (ID id : ids) {
+				list.add(id);
+			}
 		}
 		return list;
 	}

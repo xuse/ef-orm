@@ -16,12 +16,8 @@
 package com.github.geequery.springdata.repository.query;
 
 import java.sql.SQLException;
-import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 
 import jef.common.wrapper.IntRange;
 import jef.database.DbUtils;
@@ -29,9 +25,7 @@ import jef.database.Field;
 import jef.database.IConditionField.And;
 import jef.database.IConditionField.Or;
 import jef.database.QB;
-import jef.database.Session;
 import jef.database.dialect.type.ColumnMapping;
-import jef.database.jpa.JefEntityManager;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.ConditionQuery;
@@ -48,12 +42,11 @@ import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.repository.query.parser.PartTree.OrPart;
-import org.springframework.orm.jpa.EntityManagerFactoryUtils;
 import org.springframework.orm.jpa.EntityManagerProxy;
 import org.springframework.util.Assert;
 
 import com.github.geequery.springdata.provider.PersistenceProvider;
-import com.github.geequery.springdata.repository.query.GqParameters.JpaParameter;
+import com.github.geequery.springdata.repository.query.GqParameters.GqParameter;
 import com.github.geequery.springdata.repository.query.GqQueryExecution.DeleteExecution;
 
 /**
@@ -139,10 +132,10 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 		return q;
 	}
 
-	//FIXME It can be a Parameter binder to cache..
+	//FIXME use Binder to optmize.
 	private int getBindParamIndex(int index,String fieldName) {
 		int i=0;
-		for(JpaParameter param: this.parameters){
+		for(GqParameter param: this.parameters){
 			if(param.getName()==null){
 				if(index==param.getIndex()){
 					return i;
@@ -297,17 +290,4 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 			throw DbUtils.toRuntimeException(e);
 		}
 	}
-
-	private Session getSession() {
-		EntityManagerFactory emf = em.getEntityManagerFactory();
-		EntityManager em = EntityManagerFactoryUtils.doGetTransactionalEntityManager(emf, null);
-		if (em == null) { // 当无事务时。Spring返回null
-			em = emf.createEntityManager(null, Collections.EMPTY_MAP);
-		}
-		if (em instanceof JefEntityManager) {
-			return ((JefEntityManager) em).getSession();
-		}
-		throw new IllegalArgumentException(em.getClass().getName());
-	}
-
 }

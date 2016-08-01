@@ -15,12 +15,19 @@
  */
 package com.github.geequery.springdata.repository.query;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+
+import jef.database.Session;
+import jef.database.jpa.JefEntityManager;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.query.AbstractJpaQuery;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.orm.jpa.EntityManagerFactoryUtils;
 import org.springframework.util.Assert;
 
 import com.github.geequery.springdata.repository.query.GqQueryExecution.CollectionExecution;
@@ -31,8 +38,7 @@ import com.github.geequery.springdata.repository.query.GqQueryExecution.SingleEn
 /**
  * Abstract base class to implement {@link RepositoryQuery}s.
  * 
- * @author Oliver Gierke
- * @author Thomas Darimont
+ * Jiyi
  */
 public abstract class AbstractGqQuery implements RepositoryQuery {
 
@@ -59,15 +65,6 @@ public abstract class AbstractGqQuery implements RepositoryQuery {
 		return method;
 	}
 
-	/**
-	 * Returns the {@link EntityManager}.
-	 * 
-	 * @return will never be {@literal null}.
-	 */
-	protected EntityManager getEntityManager() {
-		return em;
-	}
-
 	protected GqQueryExecution getExecution() {
 		if (method.isProcedureQuery()) {
 			throw new UnsupportedOperationException();
@@ -84,14 +81,7 @@ public abstract class AbstractGqQuery implements RepositoryQuery {
 
 	public Object execute(Object[] values) {
 		GqQueryExecution execution = getExecution();
-		Object result = execution.execute(this, values);
-		// ParametersParameterAccessor accessor = new
-		// ParametersParameterAccessor(method.getParameters(), values);
-		// ResultProcessor withDynamicProjection =
-		// method.getResultProcessor().withDynamicProjection(accessor);
-		// return withDynamicProjection.processResult(result,
-		// TupleConverter.INSTANCE);
-		return result;
+		return execution.execute(this, values);
 	}
 
 	protected abstract List<?> getResultList(Object[] values, Pageable page);
@@ -104,24 +94,15 @@ public abstract class AbstractGqQuery implements RepositoryQuery {
 
 	protected abstract long getResultCount(Object[] values);
 
-	// /**
-	// * Protected to be able to customize in sub-classes.
-	// *
-	// * @param query
-	// * must not be {@literal null}.
-	// * @param hint
-	// * must not be {@literal null}.
-	// */
-	// protected <T extends Query> void applyQueryHint(T query, QueryHint hint)
-	// {
-	//
-	// Assert.notNull(query, "Query must not be null!");
-	// Assert.notNull(hint, "QueryHint must not be null!");
-	//
-	// query.setHint(hint.name(), hint.value());
-	// }
-
-	// protected ParameterBinder createBinder(Object[] values) {
-	// return new ParameterBinder(getQueryMethod().getParameters(), values);
-	// }
+	protected Session getSession() {
+		EntityManagerFactory emf = em.getEntityManagerFactory();
+		EntityManager em = EntityManagerFactoryUtils.doGetTransactionalEntityManager(emf, null);
+		if (em == null) { // 当无事务时。Spring返回null
+			em = emf.createEntityManager(null, Collections.EMPTY_MAP);
+		}
+		if (em instanceof JefEntityManager) {
+			return ((JefEntityManager) em).getSession();
+		}
+		throw new IllegalArgumentException(em.getClass().getName());
+	}
 }

@@ -1025,7 +1025,7 @@ public class DbClient extends Session implements SessionFactory {
 		return namedQueryTablename;
 	}
 
-	protected boolean isJpaTx() {
+	 boolean isJpaTx() {
 		return false;
 	}
 

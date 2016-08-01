@@ -123,12 +123,23 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			Iterable<Foo> foos = foodao.findAll(id);
 			System.out.println("list=" + foos);
 		}
+		{
+			System.out.println("=== findByNameLike ===");
+			List<Foo> foo = foodao.findByNameLike("%四");
+			System.out.println(foo);
+		}
 
 		{
-			System.out.println("=== findByusername (NativeQuery) ===");
+			System.out.println("=== findByNameContainsAndAge ===");
+			List<Foo> foos = foodao.findByNameContainsAndAge("李", 0);
+			System.out.println(foos);
 		}
+
 		{
-			System.out.println("=== findBysName (NativeQuery) ===");
+			// 多参数顺序测试否有问题(已修复)
+			System.out.println("=== findByNameStartsWithAndAge ===");
+			List<Foo> foos = foodao.findByNameStartsWithAndAge(0, "李");
+			System.out.println(foos);
 		}
 		{
 			System.out.println("=== DeleteAll() ===");
@@ -139,37 +150,57 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	@Test
 	public void testFooDao2() {
 		{
-			System.out.println("=== findByNameLike ===");
-			List<Foo> foo = foodao2.findByNameLike("%四");
+			Foo foo = foodao2.findBysName("张三");
 			System.out.println(foo);
 		}
-
+		// =========================
 		{
-			System.out.println("=== findByNameContainsAndAge ===");
-			List<Foo> foos = foodao2.findByNameContainsAndAge("李", 0);
+			// 设置了@Param后，这是按name进行绑定的NativeQuery，只要语句中用了:xxx格式，参数顺序随便改没问题。
+			List<Foo> foos = foodao2.findBySql(new Date(), "李四");
 			System.out.println(foos);
-		}
-
-		{
-			// 多参数顺序测试否有问题(已修复)
-			System.out.println("=== findByNameStartsWithAndAge ===");
-			List<Foo> foos = foodao2.findByNameStartsWithAndAge(0, "李");
-			System.out.println(foos);
-		}
-
-		{
-
-			// ====使用GQ NamedQueries
-
 		}
 		// =========================
 		{
-			// 更新操作
+			List<Foo> foos = foodao2.findBySql2("李四", new Date());
+			System.out.println(foos);
+			// 没有设置@param参数时，SQL中需要写成 ?1 ?2 来分别表示第一个和第二个参数。
+			// TODO （注意观察一下原生JPA是用?0 ?1的还是从1开始的）
 
 		}
-		// =========================
 		{
-			// NativeQuery多参数是否有问题
+			Foo foo = foodao2.findBySql3("李四", 0);
+			System.out.println(foo);
+		}
+		{
+			Foo foo = foodao2.findBySql4(0, "李四");
+			System.out.println(foo);
+		}
+		{
+			Page<Foo> page = (Page<Foo>) foodao2.findBySql5(0, null, new PageRequest(1, 4));
+			System.out.println(page.getTotalElements());
+			System.out.println(page.getContent());
+		}
+		{
+			List<Foo> result = foodao2.findBySql6(0, "张", new Sort(new Order(Direction.DESC, "id")));
+			System.out.println(result);
+		}
+		{
+			Page<Foo> page = foodao2.findBySql7(0, "", new PageRequest(3, 5));
+			System.out.println(page.getContent());
+		}
+		{
+			Foo foo = foodao2.findByusername("张");
+			System.out.println(foo);
+		}
+		{
+			int ii = foodao2.insertInto("狂四", 333, "测试", new Date());
+			System.out.println(ii);
+			ii = foodao2.insertInto2("六河", 555, "测试", new Date());
+			System.out.println(ii);
+		}
+		{
+			int ii = foodao2.updateFooSetAgeByAgeAndId(new Date(), 12, 2);
+			System.out.println(ii);
 		}
 	}
 
@@ -204,28 +235,39 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 
 	@Override
 	public void afterPropertiesSet() throws Exception {
-		commonDao.getNoTransactionSession().dropTable(Foo.class);
-		commonDao.getNoTransactionSession().createTable(Foo.class);
-		commonDao.getNoTransactionSession().truncate(VersionLog.class);
+		commonDao.getNoTransactionSession().dropTable(Foo.class, VersionLog.class);
+		commonDao.getNoTransactionSession().createTable(Foo.class, VersionLog.class);
 		{
 			List<Foo> list = new ArrayList<Foo>();
 			list.add(new Foo("张三"));
 			list.add(new Foo("李四"));
 			list.add(new Foo("王五"));
-			list.add(new Foo("赵柳"));
-			list.add(new Foo("开发"));
+			list.add(new Foo("张昕"));
+			list.add(new Foo("张鑫"));
 			list.add(new Foo("测试"));
-			list.add(new Foo("纠结"));
-			list.add(new Foo("刘备"));
-			list.add(new Foo("市场"));
-			list.add(new Foo("渠道"));
-			list.add(new Foo("销售"));
+			list.add(new Foo("张三丰"));
+			list.add(new Foo("李元吉"));
+			list.add(new Foo("李渊"));
+			list.add(new Foo("李建成"));
+			list.add(new Foo("李世民"));
 			list.add(new Foo("赵日天"));
 			list.add(new Foo("叶良辰"));
 			list.add(new Foo("玛丽苏"));
 			list.add(new Foo("龙傲天"));
 			foodao.save(list);
 		}
+		{
+			VersionLog v1 = new VersionLog();
+			v1.setName("一见钟情");
+			VersionLog v2 = new VersionLog();
+			v2.setName("两两相依");
+			VersionLog v3 = new VersionLog();
+			v3.setName("三生三世");
+			VersionLog v4 = new VersionLog();
+			v4.setName("四海为家");
+			commonDao.batchInsert(Arrays.asList(v1, v2, v3, v4));
+		}
+
 	}
 
 	@Test(expected = OptimisticLockException.class)

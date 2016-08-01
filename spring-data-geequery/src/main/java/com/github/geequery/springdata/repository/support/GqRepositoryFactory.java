@@ -126,7 +126,7 @@ public class GqRepositoryFactory extends RepositoryFactorySupport {
 	 */
 	@Override
 	protected QueryLookupStrategy getQueryLookupStrategy(Key key, EvaluationContextProvider evaluationContextProvider) {
-		return new GqQueryLookupStrategy((EntityManagerProxy) em, key, evaluationContextProvider);
+		return new GqQueryLookupStrategy((EntityManagerProxy) em);
 	}
 
 	@Override

@@ -17,13 +17,9 @@ package com.github.geequery.springdata.repository.support;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
-import javax.persistence.LockModeType;
-import javax.persistence.QueryHint;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -31,16 +27,12 @@ import org.springframework.aop.TargetSource;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.aop.interceptor.ExposeInvocationInterceptor;
 import org.springframework.beans.factory.BeanClassLoaderAware;
-import org.springframework.core.annotation.AnnotatedElementUtils;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.support.RepositoryProxyPostProcessor;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
-import com.github.geequery.springdata.annotation.Lock;
-import com.github.geequery.springdata.annotation.QueryHints;
 
 /**
  * {@link RepositoryProxyPostProcessor} that sets up interceptors to read metadata information from the invoked method.
@@ -140,12 +132,9 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 	/**
 	 * Default implementation of {@link CrudMethodMetadata} that will inspect the backing method for annotations.
 	 * 
-	 * @author Oliver Gierke
-	 * @author Thomas Darimont
 	 */
 	private static class DefaultCrudMethodMetadata implements CrudMethodMetadata {
 
-		private final LockModeType lockModeType;
 		private final Map<String, Object> queryHints;
 		private final Method method;
 
@@ -157,46 +146,12 @@ class CrudMethodMetadataPostProcessor implements RepositoryProxyPostProcessor, B
 		public DefaultCrudMethodMetadata(Method method) {
 
 			Assert.notNull(method, "Method must not be null!");
-
-			this.lockModeType = findLockModeType(method);
 			this.queryHints = findQueryHints(method);
 			this.method = method;
 		}
 
-		private static LockModeType findLockModeType(Method method) {
-
-			Lock annotation = AnnotatedElementUtils.findMergedAnnotation(method, Lock.class);
-			return annotation == null ? null : (LockModeType) AnnotationUtils.getValue(annotation);
-		}
-
 		private static Map<String, Object> findQueryHints(Method method) {
-
-			Map<String, Object> queryHints = new HashMap<String, Object>();
-			QueryHints queryHintsAnnotation = AnnotatedElementUtils.findMergedAnnotation(method, QueryHints.class);
-
-			if (queryHintsAnnotation != null) {
-
-				for (QueryHint hint : queryHintsAnnotation.value()) {
-					queryHints.put(hint.name(), hint.value());
-				}
-			}
-
-			QueryHint queryHintAnnotation = AnnotationUtils.findAnnotation(method, QueryHint.class);
-
-			if (queryHintAnnotation != null) {
-				queryHints.put(queryHintAnnotation.name(), queryHintAnnotation.value());
-			}
-
-			return Collections.unmodifiableMap(queryHints);
-		}
-
-		/* 
-		 * (non-Javadoc)
-		 * @see com.github.geequery.springdata.repository.support.CrudMethodMetadata#getLockModeType()
-		 */
-		@Override
-		public LockModeType getLockModeType() {
-			return lockModeType;
+			return Collections.emptyMap();
 		}
 
 		/* 
