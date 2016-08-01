@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLXML;
 
@@ -36,5 +37,14 @@ public class XmlStringMapping extends AColumnMapping{
 	@Override
 	protected Class<?> getDefaultJavaType() {
 		return String.class;
+	}
+
+	@Override
+	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
+//		SQLXML xml=st.getConnection().createSQLXML();
+//		xml.setString(String.valueOf(value));
+//		rs.updateSQLXML(columnIndex, xml);
+		rs.updateObject(columnIndex, value);
+		
 	}
 }

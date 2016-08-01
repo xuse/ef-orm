@@ -20,18 +20,23 @@ import java.sql.Savepoint;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.FlushModeType;
 import javax.persistence.LockModeType;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
+import javax.persistence.StoredProcedureQuery;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.metamodel.Metamodel;
 
 import jef.common.log.LogUtil;
+import jef.database.DbClient;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
@@ -300,16 +305,6 @@ public class JefEntityManager implements EntityManager {
 
 	public <T> TypedQuery<T> createQuery(CriteriaQuery<T> criteriaQuery) {
 		throw new UnsupportedOperationException();
-		// TODO 2013-11 为了提高单元测试覆盖率，暂将这部分分支去除
-		// try {
-		// jef.database.jpa2.criteria.CriteriaQueryImpl<T>
-		// q=(jef.database.jpa2.criteria.CriteriaQueryImpl<T>)criteriaQuery;
-		// return new NativeQuery<T>(new
-		// OperateTarget(getSession(),q.getDbKey()),
-		// q.render(null).getQueryString(), q.getResultType());
-		// } catch (SQLException e) {
-		// throw new PersistenceException(e.getMessage()+" "+e.getSQLState(),e);
-		// }
 	}
 
 	public <T> TypedQuery<T> createQuery(String qlString, Class<T> resultClass) {
@@ -353,7 +348,7 @@ public class JefEntityManager implements EntityManager {
 	}
 
 	public Object getDelegate() {
-		return getSession();
+		return this;
 	}
 
 	public void close() {
@@ -471,5 +466,70 @@ public class JefEntityManager implements EntityManager {
 		} else {
 			return parent.getDefault();
 		}
+	}
+
+	@Override
+	public Query createQuery(CriteriaUpdate updateQuery) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Query createQuery(CriteriaDelete deleteQuery) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public StoredProcedureQuery createNamedStoredProcedureQuery(String name) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public StoredProcedureQuery createStoredProcedureQuery(String procedureName) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, Class... resultClasses) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public boolean isJoinedToTransaction() {
+		return false;
+	}
+
+	@Override
+	public <T> EntityGraph<T> createEntityGraph(Class<T> rootType) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public EntityGraph<?> createEntityGraph(String graphName) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public EntityGraph<?> getEntityGraph(String graphName) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
+		throw new UnsupportedOperationException();
+	}
+	
+	public MetaProvider getMetadataModel(){
+		return parent;
+	}
+	
+	public DbClient getDbClient(){
+		if (close)
+			throw new RuntimeException("the " + this.toString() + " has been closed!");
+		return parent.getDefault();
 	}
 }

@@ -59,6 +59,7 @@ import javax.sql.DataSource;
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.log.LogUtil;
+import jef.database.Session.UpdateContext;
 import jef.database.annotation.Cascade;
 import jef.database.annotation.JoinType;
 import jef.database.datasource.DataSourceInfo;
@@ -139,7 +140,8 @@ public final class DbUtils {
 
 	static {
 		int processorCount = Runtime.getRuntime().availableProcessors();
-		es = new ThreadPoolExecutor(processorCount*2, processorCount * 4, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(processorCount * 4), Executors.defaultThreadFactory(), new CallerRunsPolicy());
+		es = new ThreadPoolExecutor(processorCount * 2, processorCount * 4, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(processorCount * 4),
+				Executors.defaultThreadFactory(), new CallerRunsPolicy());
 	}
 
 	/**
@@ -226,7 +228,8 @@ public final class DbUtils {
 		for (Reference reference : from.getRefFieldsByRef().keySet()) {
 			if (reference.getTargetType() == target) {
 				if (ref != null) {
-					throw new IllegalArgumentException("There's more than one reference to [" + target.getSimpleName() + "] in type [" + from.getSimpleName() + "],please assign the reference field name.");
+					throw new IllegalArgumentException("There's more than one reference to [" + target.getSimpleName() + "] in type [" + from.getSimpleName()
+							+ "],please assign the reference field name.");
 				}
 				ref = reference;
 			}
@@ -481,10 +484,10 @@ public final class DbUtils {
 		try {
 			return parser.Statement();
 		} catch (ParseException e) {
-			LogUtil.show("ErrorSQL:" + sql);
+			LogUtil.error("ErrorSQL:" + sql);
 			throw e;
 		} catch (TokenMgrError e) {
-			LogUtil.show("ErrorSQL:" + sql);
+			LogUtil.error("ErrorSQL:" + sql);
 			throw e;
 		}
 	}
@@ -520,7 +523,8 @@ public final class DbUtils {
 				select.merge((AbstractEntityMappingProvider) queryObj.getSelectItems());
 				j.setSelectItems(select);
 			}
-			//TODO 其实cacheable, Transformer, attribute都是Query在转换时需要保持不变的属性，可以设法抽取到公共类中。
+			// TODO 其实cacheable, Transformer,
+			// attribute都是Query在转换时需要保持不变的属性，可以设法抽取到公共类中。
 			j.setResultTransformer(queryObj.getResultTransformer());
 			j.setCacheable(queryObj.isCacheable());
 			// FilterCondition合并
@@ -701,10 +705,9 @@ public final class DbUtils {
 	 * @param field
 	 * @param feature
 	 * @param tableAlias
-	 * @return
-	 * @deprecated use
-	 *             {@linkplain #toColumnName(ColumnMapping, DatabaseDialect, String)}
-	 *             instead
+	 * @return // * @deprecated use // *
+	 *         {@linkplain #toColumnName(ColumnMapping, DatabaseDialect, String)}
+	 *         // * instead
 	 */
 	public static String toColumnName(Field field, DatabaseDialect feature, String tableAlias) {
 		if (field instanceof MetadataContainer) {
@@ -905,7 +908,7 @@ public final class DbUtils {
 		} else if (container == Array.class) {
 			return subs.toArray();
 		} else if (container == Map.class) {
-			Cascade cascade = config.getAsMap();
+			Cascade cascade = config.getCascadeInfo();
 			if (cascade == null) {
 				throw new SQLException("@Cascade annotation is required for Map mapping " + config.toString());
 			}
@@ -1087,12 +1090,19 @@ public final class DbUtils {
 	 * 
 	 * @param obj
 	 * @param query
+	 * @param isUpdate
+	 *            当isUpdate为true时，当填充主键条件时，会从updateMap中去除这些字段，
+	 *            避免出现where和set中都对主键进行操作
+	 * @param force
 	 * @return
 	 */
-	protected static void fillConditionFromField(IQueryableEntity obj, Query<?> query, boolean removePkUpdate, boolean force) {
+	protected static void fillConditionFromField(IQueryableEntity obj, Query<?> query, UpdateContext update, boolean force) {
 		Assert.isTrue(query.getConditions().isEmpty());
 		ITableMetadata meta = query.getMeta();
-		if (fillPKConditions(obj, meta, query, removePkUpdate, force)) {
+		boolean isUpdate = update != null;
+		if (fillPKConditions(obj, meta, query, isUpdate, force)) {
+			if (isUpdate)
+				update.setIsPkQuery(true);
 			return;
 		}
 		populateExampleConditions(obj);
@@ -1132,7 +1142,7 @@ public final class DbUtils {
 	 * 
 	 * @return
 	 */
-	protected static boolean fillPKConditions(IQueryableEntity obj, ITableMetadata meta, Query<?> query, boolean removePkUpdate, boolean force) {
+	protected static boolean fillPKConditions(IQueryableEntity obj, ITableMetadata meta, Query<?> query, boolean isUpdate, boolean force) {
 		if (meta.getPKFields().isEmpty())
 			return false;
 		if (!force) {
@@ -1141,12 +1151,12 @@ public final class DbUtils {
 					return false;
 			}
 		}
+		Map<Field, Object> map = obj.getUpdateValueMap();
 		for (ColumnMapping mapping : meta.getPKFields()) {
 			Object value = mapping.getFieldAccessor().get(obj);
 			Field field = mapping.field();
 			query.addCondition(field, value);
-			if (removePkUpdate && obj.getUpdateValueMap().containsKey(field)) {//
-				Map<Field, Object> map = obj.getUpdateValueMap();
+			if (isUpdate && map.containsKey(field)) {//
 				Object v = map.get(field);
 				if (Objects.equal(value, v)) {
 					map.remove(field);
@@ -1197,16 +1207,16 @@ public final class DbUtils {
 		BeanWrapper beanNew = BeanWrapper.wrap(changedObj);
 		BeanWrapper beanOld = BeanWrapper.wrap(oldObj);
 		ITableMetadata m = MetaHolder.getMeta(oldObj);
-		
-		Map<Field,Object> used=null;
+
+		Map<Field, Object> used = null;
 		boolean dynamic = ORMConfig.getInstance().isDynamicUpdate();
-		if(dynamic){
-			used=new HashMap<Field,Object>(changedObj.getUpdateValueMap());
+		if (dynamic) {
+			used = new HashMap<Field, Object>(changedObj.getUpdateValueMap());
 		}
 		changedObj.getUpdateValueMap().clear();
 		for (ColumnMapping mType : m.getColumns()) {
 			Field field = mType.field();
-			if (mType.isPk()){
+			if (mType.isPk()) {
 				continue;
 			}
 			if (dynamic && !used.containsKey(field)) {// 智能更新下，发现字段未被设过值，就不予更新
@@ -1222,8 +1232,7 @@ public final class DbUtils {
 	}
 
 	/**
-	 * 将指定对象中除了主键以外的所有字段都作为需要update的字段。（标记为'已修改的'）
-	 * <br>
+	 * 将指定对象中除了主键以外的所有字段都作为需要update的字段。（标记为'已修改的'） <br>
 	 * 这个方法实际操作时：即除了主键以外的所有字段都放置到updateMap中去
 	 * 
 	 * @param <T>
@@ -1400,6 +1409,7 @@ public final class DbUtils {
 
 	/**
 	 * 将异常包装为RuntimeException
+	 * 
 	 * @param e
 	 * @return
 	 */
@@ -1407,8 +1417,8 @@ public final class DbUtils {
 		String s = e.getSQLState();
 		if (e instanceof SQLIntegrityConstraintViolationException) {
 			return new EntityExistsException(e);
-		}else if (e instanceof SQLTimeoutException) {
-			return new QueryTimeoutException(s,e);
+		} else if (e instanceof SQLTimeoutException) {
+			return new QueryTimeoutException(s, e);
 		}
 		return new PersistenceException(s, e);
 	}
@@ -1432,7 +1442,7 @@ public final class DbUtils {
 				throw (Error) e;
 			}
 			if (e instanceof SQLException) {
-				return toRuntimeException((SQLException)e);
+				return toRuntimeException((SQLException) e);
 			}
 			return new IllegalStateException(e);
 		}
@@ -1489,23 +1499,24 @@ public final class DbUtils {
 		s.setPassword(password);
 		return s;
 	}
-	
+
 	/**
 	 * 得到继承上级所指定的泛型类型
+	 * 
 	 * @param subclass
 	 * @param superclass
 	 * @return
 	 */
-	public static Type[] getTypeParameters(Class<?> subclass,Class<?> superclass) {
-		if(superclass==null){//在没有指定父类的情况下，默认选择第一个接口
-			if(subclass.getSuperclass()==Object.class && subclass.getInterfaces().length>0){
-				superclass=subclass.getInterfaces()[0];	
-			}else{
-				superclass=subclass.getSuperclass();	
+	public static Type[] getTypeParameters(Class<?> subclass, Class<?> superclass) {
+		if (superclass == null) {// 在没有指定父类的情况下，默认选择第一个接口
+			if (subclass.getSuperclass() == Object.class && subclass.getInterfaces().length > 0) {
+				superclass = subclass.getInterfaces()[0];
+			} else {
+				superclass = subclass.getSuperclass();
 			}
 		}
-		Type type= GenericUtils.getSuperType(null, subclass,superclass);
-		if(type instanceof ParameterizedType){
+		Type type = GenericUtils.getSuperType(null, subclass, superclass);
+		if (type instanceof ParameterizedType) {
 			return ((ParameterizedType) type).getActualTypeArguments();
 		}
 		throw new RuntimeException("Can not get the generic param type for class:" + subclass.getName());

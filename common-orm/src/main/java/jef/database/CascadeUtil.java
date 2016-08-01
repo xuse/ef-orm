@@ -551,7 +551,7 @@ final class CascadeUtil {
 			}
 			return list;
 		} else if (obj instanceof Map) {
-			Cascade cascade = ref.getAsMap();
+			Cascade cascade = ref.getCascadeInfo();
 
 			if (cascade == null || StringUtils.isEmpty(cascade.valueOfMap())) {
 				Collection<T> collection = ((Map) obj).values();

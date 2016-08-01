@@ -5,7 +5,6 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-import jef.common.log.LogUtil;
 import jef.database.DbClient;
 import jef.database.DbMetaData;
 import jef.database.DbMetaData.ObjectType;
@@ -28,7 +27,7 @@ import org.junit.runner.RunWith;
 	 @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
 	 @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
 	 @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db?date_string_format=yyyy-MM-dd HH:mm:ss"),
 	 @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 public class MetadataTest extends org.junit.Assert{
@@ -163,9 +162,7 @@ public class MetadataTest extends org.junit.Assert{
 		if(meta.supportsSequence()){
 			String seqName = "seq_test_for_exist";
 			createSequence(null, seqName);
-
-			boolean exist = meta.exists(ObjectType.SEQUENCE, seqName);
-			Assert.assertTrue(exist);
+			Assert.assertTrue(meta.exists(ObjectType.SEQUENCE, seqName));
 
 			dropSequence(seqName);
 			Assert.assertFalse(meta.exists(ObjectType.SEQUENCE, seqName));	

@@ -22,6 +22,7 @@ import java.util.Arrays;
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.ORMConfig;
+import jef.database.annotation.DateGenerateType;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.jsqlparser.expression.BinaryExpression;
@@ -90,12 +91,15 @@ import jef.tools.string.JefStringReader;
  * 
  * MySQL的四种BLOB类型 类型 大小(单位：字节) TinyBlob 最大 255 Blob 最大 65K MediumBlob 最大 16M
  * LongBlob 最大 4G
+ * 
+ * 
+ * 遗留问题：MySQL能不能做成表名大小写不敏感的。目前是敏感的。这造成大小写不一致会认为是两张表。
  */
 public class MySqlDialect extends AbstractDialect {
 	public MySqlDialect() {
 		// 在MYSQL中 ||是逻辑运算符
 		features = CollectionUtils.identityHashSet();
-		features.addAll(Arrays.asList(Feature.DBNAME_AS_SCHEMA, Feature.SUPPORT_INLINE_COMMENT,Feature.ALTER_FOR_EACH_COLUMN, Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD, Feature.SUPPORT_LIMIT, Feature.COLUMN_DEF_ALLOW_NULL));
+		features.addAll(Arrays.asList(Feature.DBNAME_AS_SCHEMA, Feature.SUPPORT_INLINE_COMMENT,Feature.ALTER_FOR_EACH_COLUMN, Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD, Feature.SUPPORT_LIMIT, Feature.COLUMN_DEF_ALLOW_NULL,Feature.TABLE_CASE_SENSTIVE));
 		setProperty(DbProperty.ADD_COLUMN, "ADD");
 		setProperty(DbProperty.MODIFY_COLUMN, "MODIFY");
 		setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");
@@ -246,24 +250,26 @@ public class MySqlDialect extends AbstractDialect {
 
 	@Override
 	public String getCreationComment(ColumnType column, boolean flag) {
-		int generateType = 0;
+		DateGenerateType generateType = null;
 		if (column instanceof SqlTypeDateTimeGenerated) {
-			// 1 创建时生成为sysdate 2更新时生成为sysdate 3创建时设置为为java系统时间  4为更新时设置为java系统时间
 			generateType = ((SqlTypeDateTimeGenerated) column).getGenerateType();
 			Object defaultValue = column.defaultValue;
-			if (generateType == 0 && (defaultValue == Func.current_date || defaultValue == Func.current_time || defaultValue == Func.now)) {
-				generateType = 1;
+			/*
+			 * 根据用户设置的defaultValue进行修正
+			 */
+			if (generateType == null && (defaultValue == Func.current_date || defaultValue == Func.current_time || defaultValue == Func.now)) {
+				generateType = DateGenerateType.created;
 			}
-			if(generateType==0 && defaultValue!=null){
+			if(generateType== null && defaultValue!=null){
 				String dStr = defaultValue.toString().toLowerCase();
 				if (dStr.startsWith("current") || dStr.startsWith("sys")) {
-					generateType = 1;	
+					generateType = DateGenerateType.created;	
 				}
 			}
 		}
-		if(generateType==1){
+		if(generateType==DateGenerateType.created){
 			return "datetime not null";
-		}else if(generateType==2){
+		}else if(generateType==DateGenerateType.modified){
 			return "timestamp not null default current_timestamp on update current_timestamp";
 		}
 		return super.getCreationComment(column, flag);

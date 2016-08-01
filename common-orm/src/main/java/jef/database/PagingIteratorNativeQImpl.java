@@ -3,9 +3,9 @@ package jef.database;
 import java.sql.SQLException;
 import java.util.List;
 
-import jef.common.wrapper.IntRange;
 import jef.tools.Assert;
 import jef.tools.PageInfo;
+import jef.tools.PageLimit;
 
 final class PagingIteratorNativeQImpl<T> extends PagingIterator<T>{
 	private NativeQuery<T> nativeQuery;//3使用NativeQuery的情况
@@ -25,8 +25,8 @@ final class PagingIteratorNativeQImpl<T> extends PagingIterator<T>{
 
 	protected List<T> doQuery(boolean pageFlag) throws SQLException {
 		calcPage();
-		IntRange range=page.getCurrentRecordRange();
-		if(range.getStart()==1 && range.getEnd().intValue()==page.getTotal()){
+		PageLimit range=page.getCurrentRecordRange();
+		if(range.getStart()==1 && range.getEndAsInt()==page.getTotal()){
 			pageFlag=false;
 		}
 		if(pageFlag)

@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.Date;
@@ -49,5 +50,10 @@ public class TimestampTsMapping extends AbstractTimeMapping{
 	@Override
 	protected Class<?> getDefaultJavaType() {
 		return java.sql.Timestamp.class;
+	}
+
+	@Override
+	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
+		rs.updateTimestamp(columnIndex, (Timestamp)value);
 	}
 }

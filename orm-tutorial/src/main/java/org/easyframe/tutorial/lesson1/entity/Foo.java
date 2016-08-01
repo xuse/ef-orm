@@ -3,7 +3,9 @@ package org.easyframe.tutorial.lesson1.entity;
 import java.util.Date;
 
 import javax.persistence.Id;
+import javax.persistence.Table;
 
+@Table(name="UNKNOWN")
 public class Foo {
 	@Id
 	private int id;

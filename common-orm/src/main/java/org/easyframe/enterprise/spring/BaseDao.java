@@ -1,5 +1,7 @@
 package org.easyframe.enterprise.spring;
 
+import java.util.Collections;
+
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -46,13 +48,13 @@ public class BaseDao {
 		case JTA:
 			em=EntityManagerFactoryUtils.doGetTransactionalEntityManager(entityManagerFactory,null);
 			if(em==null){ //当无事务时。Spring返回null
-				em=entityManagerFactory.createEntityManager(null);
+				em=entityManagerFactory.createEntityManager(null,Collections.EMPTY_MAP);
 			}	
 			break;
 		case JDBC:
 			ConnectionHolder conn=(ConnectionHolder)TransactionSynchronizationManager.getResource(jefEmf.getDefault().getDataSource());
 			if(conn==null){//基于数据源的Spring事务
-				em=entityManagerFactory.createEntityManager(null);
+				em=entityManagerFactory.createEntityManager(null,Collections.EMPTY_MAP);
 			}else{
 				ManagedTransactionImpl session=new ManagedTransactionImpl(jefEmf.getDefault(),conn.getConnection());
 				em= new JefEntityManager(entityManagerFactory,null,session);

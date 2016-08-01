@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import jef.database.dialect.DatabaseDialect;
@@ -17,8 +18,14 @@ public class CharBooleanMapping extends AColumnMapping{
 			st.setString(index, str);
 			return str;
 		}
-		
 	}
+
+	@Override
+	public void jdbcUpdate(ResultSet rs, String columnLabel, Object value, DatabaseDialect dialect) throws SQLException {
+		String str=((Boolean)value)?"1":"0";
+		rs.updateString(columnLabel, str);
+	}
+	
 
 	public int getSqlType() {
 		return java.sql.Types.CHAR;
@@ -46,4 +53,5 @@ public class CharBooleanMapping extends AColumnMapping{
 	protected Class<?> getDefaultJavaType() {
 		return Boolean.class;
 	}
+
 }

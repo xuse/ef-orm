@@ -40,6 +40,7 @@ public class SQLServer2000Dialect extends AbstractDialect {
 		features.add(Feature.NOT_SUPPORT_KEYWORD_DEFAULT);
 		features.add(Feature.BATCH_GENERATED_KEY_BY_FUNCTION);
 		features.add(Feature.SUPPORT_COMMENT);
+		features.add(Feature.TABLE_CASE_SENSTIVE);
 		
 		// features.add(Feature.NO_BIND_FOR_INSERT);
 		// features.add(Feature.NO_BIND_FOR_SELECT);

@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
@@ -56,6 +57,16 @@ public interface ColumnMapping extends ResultSetAccessor,MetadataContainer {
 	 */
 	Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect dialect) throws SQLException;
 
+	/**
+	 * 为了支持悲观锁中的数据类型转换
+	 * @param rs
+	 * @param value
+	 * @param dialect
+	 * @return
+	 * @throws SQLException
+	 */
+	void jdbcUpdate(ResultSet rs, String columnIndex,Object value, DatabaseDialect dialect) throws SQLException;
+	
 	/**
 	 * 得到java类型
 	 * 
@@ -141,24 +152,24 @@ public interface ColumnMapping extends ResultSetAccessor,MetadataContainer {
 	 */
 	String getSqlStr(Object value, DatabaseDialect profile);
 
-	/**
-	 * (框架使用)当执行插入时(非绑定变量)，该字段的处理拼到InsertSqlResult对象上去，形成SQL语句的逻辑
-	 * 
-	 * @param value
-	 *            对象值
-	 * @param result
-	 *            InsertSqlResult,拼凑中的SQL语句描述
-	 * @param cStr
-	 *            column的SQL部分
-	 * @param vStr
-	 *            value的SQL部分
-	 * @param dynamic
-	 *            是否dynamic模式插入，dynamic模式下没有设置过的字段不出现在SQL语句中，从而可以使用数据库中的默认值
-	 * @param obj
-	 *            被插入数据库的对象
-	 * @throws SQLException
-	 */
-	void processInsert(Object value, InsertSqlClause result, List<String> cStr, List<String> vStr, boolean dynamic, IQueryableEntity obj) throws SQLException;
+//	/**
+//	 * (框架使用)当执行插入时(非绑定变量)，该字段的处理拼到InsertSqlResult对象上去，形成SQL语句的逻辑
+//	 * 
+//	 * @param value
+//	 *            对象值
+//	 * @param result
+//	 *            InsertSqlResult,拼凑中的SQL语句描述
+//	 * @param cStr
+//	 *            column的SQL部分
+//	 * @param vStr
+//	 *            value的SQL部分
+//	 * @param dynamic
+//	 *            是否dynamic模式插入，dynamic模式下没有设置过的字段不出现在SQL语句中，从而可以使用数据库中的默认值
+//	 * @param obj
+//	 *            被插入数据库的对象
+//	 * @throws SQLException
+//	 */
+//	void processInsert(Object value, InsertSqlClause result, List<String> cStr, List<String> vStr, boolean dynamic, IQueryableEntity obj) throws SQLException;
 
 	/**
 	 * (框架使用)当执行插入时(绑定变量)，该字段的处理拼到InsertSqlResult对象上去，形成SQL语句的逻辑

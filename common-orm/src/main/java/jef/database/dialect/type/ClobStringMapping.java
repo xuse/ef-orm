@@ -5,6 +5,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.sql.Clob;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
@@ -15,7 +16,6 @@ import jef.tools.IOUtils;
 public class ClobStringMapping extends AColumnMapping{
 	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
-			
 			st.setNull(index, session.getImplementationSqlType(Types.CLOB));
 		}else{
 			String str=(String)value;
@@ -55,5 +55,11 @@ public class ClobStringMapping extends AColumnMapping{
 	@Override
 	protected Class<?> getDefaultJavaType() {
 		return String.class;
+	}
+
+	@Override
+	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
+		String str=(String)value;
+		rs.updateCharacterStream(columnIndex, new StringReader(str), str.length());
 	}
 }

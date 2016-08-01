@@ -79,6 +79,8 @@ import com.github.javaparser.ast.body.ModifierSet;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+
+@SuppressWarnings("rawtypes")
 public final class TableMetadata extends AbstractMetadata {
 
 	/**
@@ -103,6 +105,12 @@ public final class TableMetadata extends AbstractMetadata {
 	private final Map<Field, String> fieldToColumn = new IdentityHashMap<Field, String>();// 提供Field到列名的转换
 	private final Map<String, String> lowerColumnToFieldName = new HashMap<String, String>();// 提供Column名称到Field的转换，不光包括元模型字段，也包括了非元模型字段但标注了Column的字段(key全部存小写)
 
+	/**
+	 * 标准实体的构造
+	 * 
+	 * @param clz
+	 * @param annos
+	 */
 	TableMetadata(Class<? extends IQueryableEntity> clz, AnnotationProvider annos) {
 		this.containerType = clz;
 		this.containerAccessor = FastBeanWrapperImpl.getAccessorFor(clz);
@@ -111,6 +119,13 @@ public final class TableMetadata extends AbstractMetadata {
 		initByAnno(clz, annos);
 	}
 
+	/**
+	 * POJO类实体的构造
+	 * 
+	 * @param varClz
+	 * @param clz
+	 * @param annos
+	 */
 	TableMetadata(Class<PojoWrapper> varClz, Class<?> clz, AnnotationProvider annos) {
 		this.containerType = varClz;
 		this.containerAccessor = FastBeanWrapperImpl.getAccessorFor(varClz);
@@ -245,8 +260,7 @@ public final class TableMetadata extends AbstractMetadata {
 		fieldToColumn.put(field, columnName);
 		String lastFieldName = lowerColumnToFieldName.put(columnName.toLowerCase(), field.name());
 		if (lastFieldName != null && !field.name().equals(lastFieldName)) {
-			throw new IllegalArgumentException(String.format("The field [%s] and [%s] in [%s] have a duplicate column name [%s].", lastFieldName, field.name(),
-					containerType.getName(), columnName));
+			throw new IllegalArgumentException(String.format("The field [%s] and [%s] in [%s] have a duplicate column name [%s].", lastFieldName, field.name(), containerType.getName(), columnName));
 		}
 
 		if (isPk) {
@@ -517,13 +531,6 @@ public final class TableMetadata extends AbstractMetadata {
 
 	}
 
-	//
-	//
-	// public boolean isAssignableFrom(ITableMetadata type) {
-	// return this == type ||
-	// this.containerType.isAssignableFrom(type.getThisType());
-	// }
-
 	public boolean containsMeta(ITableMetadata type) {
 		if (type == this)
 			return true;
@@ -562,9 +569,9 @@ public final class TableMetadata extends AbstractMetadata {
 
 	@Override
 	public Map<String, String> getColumnComments() {
-		//先根据源码解析来获取注解
+		// 先根据源码解析来获取注解
 		Map<String, String> result = getFromSource();
-		//再分析注解中的备注信息
+		// 再分析注解中的备注信息
 		{
 			Comment comment = thisType.getAnnotation(Comment.class);
 			if (comment != null) {
@@ -577,16 +584,21 @@ public final class TableMetadata extends AbstractMetadata {
 				continue;
 			}
 			Comment comment = field.getAnnotation(Comment.class);
-			if (comment!=null) {
+			if (comment != null) {
 				result.put(column.fieldName(), comment.value());
 			}
 		}
 		return result;
 	}
 
+	/**
+	 * 尝试从源码的注释中获得列的注解信息
+	 * 
+	 * @return
+	 */
 	private Map<String, String> getFromSource() {
 		Map<String, String> result = new HashMap<String, String>();
-		Class<?> type=thisType;
+		Class<?> type = thisType;
 		URL url = this.getClass().getResource("/" + type.getName().replace('.', '/') + ".java");
 		if (url == null) {
 			url = getFixedPathSource(type);
@@ -640,6 +652,12 @@ public final class TableMetadata extends AbstractMetadata {
 		return s.replaceAll("\\s*\\*", "").trim();
 	}
 
+	/**
+	 * 在开发环境的标准Maven目录场景情况下，寻找到源代码，实现注解信息读取
+	 * 
+	 * @param type
+	 * @return
+	 */
 	private URL getFixedPathSource(Class type) {
 		String clzPath = "/" + type.getName().replace('.', '/') + ".class";
 		URL url = this.getClass().getResource(clzPath);

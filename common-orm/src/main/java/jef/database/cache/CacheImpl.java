@@ -9,11 +9,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
-
 import jef.database.DbUtils;
 import jef.database.IQueryableEntity;
 import jef.database.ORMConfig;
@@ -36,6 +31,11 @@ import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.processor.BindVariableDescription;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ImmutableList;
+
 /**
  * The default level 1 Cache implementation.
  * 
@@ -44,7 +44,7 @@ import jef.database.wrapper.processor.BindVariableDescription;
  */
 @SuppressWarnings("rawtypes")
 public class CacheImpl implements Cache {
-	SqlProcessor sqlP;
+	SqlProcessor preparedSqlProcessor;
 	SelectProcessor selectp;
 	private ORMConfig config = ORMConfig.getInstance();
 	private static Logger logger = LoggerFactory.getLogger(CacheImpl.class);
@@ -88,11 +88,11 @@ public class CacheImpl implements Cache {
 	 *            缓存过期事件
 	 */
 	public CacheImpl(SqlProcessor sql, SelectProcessor selectp, int expireInterval, String name) {
-		this.sqlP = sql;
+		this.preparedSqlProcessor = sql;
 		this.selectp = selectp;
 		this.expireInterval = expireInterval;
 		this.name = name;
-		this.profile = sqlP.getProfile();
+		this.profile = preparedSqlProcessor.getProfile();
 	}
 
 	public boolean contains(Class cls, Object primaryKey) {
@@ -288,7 +288,7 @@ public class CacheImpl implements Cache {
 			evict(ir.getCacheKey());
 			return;
 		}
-		BindSql sql = sqlP.toPrepareWhereSql(obj.getQuery(), new SqlContext(null, obj.getQuery()), false, null);
+		BindSql sql = preparedSqlProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), null, null);
 		obj.clearQuery();
 		DimCache dc = tableCache.get(KeyDimension.forSingleTable(baseTableName, sql.getSql(), null, profile));
 		if (dc == null)
@@ -475,5 +475,10 @@ public class CacheImpl implements Cache {
 
 	public long getMissCount() {
 		return miss.get();
+	}
+
+	@Override
+	public <T> T unwrap(Class<T> cls) {
+		return (T)this;
 	}
 }

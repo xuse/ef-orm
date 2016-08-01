@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -76,5 +77,14 @@ public class DateStringMapping extends AbstractTimeMapping{
 	@Override
 	protected Class<?> getDefaultJavaType() {
 		return String.class;
+	}
+
+	@Override
+	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
+		try {
+			rs.updateDate(columnIndex, new java.sql.Date(format.get().parse((String)value).getTime()));
+		} catch (ParseException e) {
+			throw new PersistenceException((String)value,e);
+		}
 	}
 }

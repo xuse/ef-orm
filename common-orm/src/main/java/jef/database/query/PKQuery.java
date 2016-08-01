@@ -96,7 +96,7 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	}
 	
 	@Override
-	public QueryClause toPrepareQuerySql(SelectProcessor processor, SqlContext context, boolean order) {
+	public QueryClause toQuerySql(SelectProcessor processor, SqlContext context, boolean order) {
 		String tableName = (String) getAttribute(JoinElement.CUSTOM_TABLE_NAME);
 		if (tableName != null)
 			tableName = MetaHolder.toSchemaAdjustedName(tableName);
@@ -120,7 +120,9 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 		List<BindVariableDescription> bind = new ArrayList<BindVariableDescription>(size);
 		
 		Iterator<ColumnMapping> pkfields=type.getPKFields().iterator();
-		
+		if(!pkfields.hasNext()){
+			throw new IllegalArgumentException("The entity ["+type.getName()+"] has no primary key.");
+		}
 		int n=0;
 		ColumnMapping field=pkfields.next();
 		sb.append(field.getColumnName(profile, true)).append("= ?");

@@ -2,7 +2,6 @@ package jef.database;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -11,14 +10,15 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jef.common.Entry;
+import jef.common.PairSO;
 import jef.common.log.LogUtil;
+import jef.database.Session.UpdateContext;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.AbstractTimeMapping;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.dialect.type.VersionSupportColumn;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.visitor.Expression;
-import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.BindVariableField;
@@ -34,7 +34,6 @@ import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.UpdateClause;
 import jef.database.wrapper.executor.DbTask;
 import jef.database.wrapper.processor.BindVariableContext;
-import jef.database.wrapper.processor.BindVariableTool;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
@@ -91,125 +90,121 @@ public abstract class UpdateProcessor {
 	 * @param profile
 	 * @return
 	 */
-	abstract BindSql toWhereClause(JoinElement joinElement, SqlContext context, boolean update, DatabaseDialect profile);
+	abstract BindSql toWhereClause(JoinElement joinElement, SqlContext context, UpdateContext update, DatabaseDialect profile);
 
 	static UpdateProcessor get(DatabaseDialect profile, DbClient db) {
-		if (profile.has(Feature.NO_BIND_FOR_UPDATE)) {
-			return new NormalImpl(db);
-		} else {
-			return new PreparedImpl(db);
-		}
+		return new PreparedImpl(db.preProcessor);
 	}
 
-	protected DbClient parent;
+	protected SqlProcessor processor;
 
-	UpdateProcessor(DbClient parent) {
-		this.parent = parent;
+	UpdateProcessor(SqlProcessor parent) {
+		this.processor = parent;
 	}
 
-	final static class NormalImpl extends UpdateProcessor {
-		private UpdateProcessor prepared;
-
-		public NormalImpl(DbClient db) {
-			super(db);
-			prepared = new PreparedImpl(db);
-		}
-
-		int processUpdate0(OperateTarget db, IQueryableEntity obj, UpdateClause update, BindSql where, PartitionResult site, SqlLog log) throws SQLException {
-			int result = 0;
-			for (String tablename : site.getTables()) {
-				tablename=DbUtils.escapeColumn(db.getProfile(), tablename);
-				String sql = "update " + tablename + " set " + update.getSql() + where;
-				Statement st = null;
-				try {
-					st = db.createStatement();
-					int updateTimeout = ORMConfig.getInstance().getUpdateTimeout();
-					if (updateTimeout > 0)
-						st.setQueryTimeout(updateTimeout);
-					int currentUpdateCount = st.executeUpdate(sql);
-					result += currentUpdateCount;
-					obj.applyUpdate();
-				} catch (SQLException e) {
-					DbUtils.processError(e, tablename, db);
-					db.releaseConnection();
-					throw e;
-				} finally {
-					log.append(sql).append(db);
-					log.output();
-					if (st != null)
-						st.close();
-				}
-			}
-			db.releaseConnection();
-			return result;
-		}
-
-		/**
-		 * 转换成Update字句
-		 */
-		@SuppressWarnings("unchecked")
-		public UpdateClause toUpdateClause(IQueryableEntity obj, PartitionResult[] prs, boolean dynamic) throws SQLException {
-			DatabaseDialect profile = getProfile(prs);
-			UpdateClause result = new UpdateClause();
-			ITableMetadata meta = MetaHolder.getMeta(obj);
-			Map<Field, Object> map = obj.getUpdateValueMap();
-
-			Map.Entry<Field, Object>[] fields;
-			if (dynamic) {
-				fields = map.entrySet().toArray(new Map.Entry[map.size()]);
-				moveLobFieldsToLast(fields, meta);
-
-				// 增加时间戳自动更新的列
-				AbstractTimeMapping[] autoUpdateTime = meta.getUpdateTimeDef();
-				if (autoUpdateTime != null) {
-					for (AbstractTimeMapping tm : autoUpdateTime) {
-						if (!map.containsKey(tm.field())) {
-							Object value = tm.getAutoUpdateValue(profile, obj);
-							if (value != null) {
-								result.addEntry(tm.getColumnName(profile, true), tm.getSqlStr(value, profile));
-							}
-						}
-					}
-				}
-			} else {
-				fields = getAllFieldValues(meta, map, BeanWrapper.wrap(obj), profile);
-			}
-
-			// 其他列
-			for (Map.Entry<Field, Object> entry : fields) {
-				Field field = entry.getKey();
-				Object value = entry.getValue();
-				ColumnMapping vType = meta.getColumnDef(field);
-
-				if (value == null) {
-					result.addEntry(vType.getColumnName(profile, true), "null");
-				} else {
-					result.addEntry(vType.getColumnName(profile, true), vType.getSqlStr(value, profile));
-				}
-			}
-			return result;
-		}
-
-		@Override
-		UpdateClause toUpdateClauseBatch(IQueryableEntity obj, PartitionResult[] prs, boolean dynamic) throws SQLException {
-			return prepared.toUpdateClauseBatch(obj, prs, dynamic);
-		}
-
-		@Override
-		BindSql toWhereClause(JoinElement joinElement, SqlContext context, boolean update, DatabaseDialect profile) {
-			return parent.rProcessor.toWhereClause(joinElement, context, update, profile);
-		}
-	}
+//	final static class NormalImpl extends UpdateProcessor {
+//		private UpdateProcessor prepared;
+//
+//		public NormalImpl(SqlProcessor db, SqlProcessor prepared) {
+//			super(db);
+//			this.prepared = new PreparedImpl(prepared);
+//		}
+//
+//		int processUpdate0(OperateTarget db, IQueryableEntity obj, UpdateClause update, BindSql where, PartitionResult site, SqlLog log) throws SQLException {
+//			int result = 0;
+//			for (String tablename : site.getTables()) {
+//				tablename = DbUtils.escapeColumn(db.getProfile(), tablename);
+//				String sql = "update " + tablename + " set " + update.getSql() + where;
+//				Statement st = null;
+//				try {
+//					st = db.createStatement();
+//					int updateTimeout = ORMConfig.getInstance().getUpdateTimeout();
+//					if (updateTimeout > 0)
+//						st.setQueryTimeout(updateTimeout);
+//					int currentUpdateCount = st.executeUpdate(sql);
+//					result += currentUpdateCount;
+//					obj.applyUpdate();
+//				} catch (SQLException e) {
+//					DbUtils.processError(e, tablename, db);
+//					db.releaseConnection();
+//					throw e;
+//				} finally {
+//					log.append(sql).append(db);
+//					log.output();
+//					if (st != null)
+//						st.close();
+//				}
+//			}
+//			db.releaseConnection();
+//			return result;
+//		}
+//
+//		/**
+//		 * 转换成Update字句
+//		 */
+//		@SuppressWarnings("unchecked")
+//		public UpdateClause toUpdateClause(IQueryableEntity obj, PartitionResult[] prs, boolean dynamic) throws SQLException {
+//			DatabaseDialect profile = processor.getProfile(prs);
+//			UpdateClause result = new UpdateClause();
+//			ITableMetadata meta = MetaHolder.getMeta(obj);
+//			Map<Field, Object> map = obj.getUpdateValueMap();
+//
+//			Map.Entry<Field, Object>[] fields;
+//			if (dynamic) {
+//				fields = map.entrySet().toArray(new Map.Entry[map.size()]);
+//				moveLobFieldsToLast(fields, meta);
+//
+//				// 增加时间戳自动更新的列
+//				VersionSupportColumn[] autoUpdateTime = meta.getAutoUpdateColumnDef();
+//				if (autoUpdateTime != null) {
+//					for (VersionSupportColumn tm : autoUpdateTime) {
+//						if (!map.containsKey(tm.field())) {
+//							Object value = tm.getAutoUpdateValue(profile, obj);
+//							if (value != null) {
+//								result.addEntry(tm.getColumnName(profile, true), tm.getSqlStr(value, profile));
+//							}
+//						}
+//					}
+//				}
+//			} else {
+//				fields = getAllFieldValues(meta, map, BeanWrapper.wrap(obj), profile);
+//			}
+//
+//			// 其他列
+//			for (Map.Entry<Field, Object> entry : fields) {
+//				Field field = entry.getKey();
+//				Object value = entry.getValue();
+//				ColumnMapping vType = meta.getColumnDef(field);
+//
+//				if (value == null) {
+//					result.addEntry(vType.getColumnName(profile, true), "null");
+//				} else {
+//					result.addEntry(vType.getColumnName(profile, true), vType.getSqlStr(value, profile));
+//				}
+//			}
+//			return result;
+//		}
+//
+//		@Override
+//		UpdateClause toUpdateClauseBatch(IQueryableEntity obj, PartitionResult[] prs, boolean dynamic) throws SQLException {
+//			return prepared.toUpdateClauseBatch(obj, prs, dynamic);
+//		}
+//
+//		@Override
+//		BindSql toWhereClause(JoinElement joinElement, SqlContext context, UpdateContext update, DatabaseDialect profile) {
+//			return processor.toWhereClause(joinElement, context, update, profile);
+//		}
+//	}
 
 	final static class PreparedImpl extends UpdateProcessor {
-		public PreparedImpl(DbClient db) {
+		public PreparedImpl(SqlProcessor db) {
 			super(db);
 		}
 
 		int processUpdate0(OperateTarget db, IQueryableEntity obj, UpdateClause setValues, BindSql whereValues, PartitionResult site, SqlLog log) throws SQLException {
 			int result = 0;
 			for (String tablename : site.getTables()) {
-				tablename=DbUtils.escapeColumn(db.getProfile(), tablename);
+				tablename = DbUtils.escapeColumn(db.getProfile(), tablename);
 				String updateSql = StringUtils.concat("update ", tablename, " set ", setValues.getSql(), whereValues.getSql());
 				log.ensureCapacity(updateSql.length() + 150);
 				log.append(updateSql).append(db);
@@ -221,7 +216,7 @@ public abstract class UpdateProcessor {
 						psmt.setQueryTimeout(updateTimeout);
 					}
 					BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log);
-					BindVariableTool.setVariables(obj.getQuery(), setValues.getVariables(), whereValues.getBind(), context);
+					context.setVariables(obj.getQuery(), setValues.getVariables(), whereValues.getBind());
 					psmt.execute();
 					int currentUpdateCount = psmt.getUpdateCount();
 					result += currentUpdateCount;
@@ -248,7 +243,7 @@ public abstract class UpdateProcessor {
 		 */
 		@SuppressWarnings("unchecked")
 		public UpdateClause toUpdateClauseBatch(IQueryableEntity obj, PartitionResult[] prs, boolean dynamic) {
-			DatabaseDialect profile = getProfile(prs);
+			DatabaseDialect profile = processor.getProfile(prs);
 			UpdateClause result = new UpdateClause();
 
 			Map<Field, Object> map = obj.getUpdateValueMap();
@@ -259,9 +254,9 @@ public abstract class UpdateProcessor {
 				moveLobFieldsToLast(fields, meta);
 
 				// 增加时间戳自动更新的列
-				AbstractTimeMapping[] autoUpdateTime = meta.getUpdateTimeDef();
+				VersionSupportColumn[] autoUpdateTime = meta.getAutoUpdateColumnDef();
 				if (autoUpdateTime != null) {
-					for (AbstractTimeMapping tm : autoUpdateTime) {
+					for (VersionSupportColumn tm : autoUpdateTime) {
 						if (!map.containsKey(tm.field())) {
 							tm.processAutoUpdate(profile, result);
 						}
@@ -299,7 +294,11 @@ public abstract class UpdateProcessor {
 					JpqlExpression je = (JpqlExpression) value;
 					if (!je.isBind())
 						je.setBind(obj.getQuery());
-					result.addEntry(columnName, je.toSqlAndBindAttribs(null, profile));
+					PairSO<List<BindVariableField>> entry =je.toSqlAndBindAttribs2(new SqlContext(null, obj.getQuery()), profile);
+					result.addEntry(columnName, entry.first);
+					for(BindVariableField binder: entry.second){
+						result.addField(binder);
+					}
 				} else if (value instanceof jef.database.Field) {// FBI
 																	// Field不可能在此
 					String setColumn = meta.getColumnName((Field) value, profile, true);
@@ -317,14 +316,14 @@ public abstract class UpdateProcessor {
 		}
 
 		@Override
-		BindSql toWhereClause(JoinElement joinElement, SqlContext context, boolean update, DatabaseDialect profile) {
-			return parent.rProcessor.toPrepareWhereSql(joinElement, context, update, profile);
+		BindSql toWhereClause(JoinElement joinElement, SqlContext context, UpdateContext update, DatabaseDialect profile) {
+			return processor.toWhereClause(joinElement, context, update, profile);
 		}
 	}
 
 	/**
-	 * 更新前，将所有LOB字段都移动到最后去。之前碰到一个BUG(Oracle)可能和驱动有关，LOB
-	 * 不在最后，更新会出错。
+	 * 更新前，将所有LOB字段都移动到最后去。之前碰到一个BUG(Oracle)可能和驱动有关，LOB 不在最后，更新会出错。
+	 * 
 	 * @param fields
 	 * @param meta
 	 */
@@ -345,15 +344,9 @@ public abstract class UpdateProcessor {
 		});
 	}
 
-	@SuppressWarnings("deprecation")
-	protected DatabaseDialect getProfile(PartitionResult[] prs) {
-		if (prs == null || prs.length == 0) {
-			return parent.getProfile();
-		}
-		return this.parent.getProfile(prs[0].getDatabase());
-	}
-
-	// 将所有非主键字段作为update的值
+	/*
+	 * 在更新数据的时候，如果无法确定哪些字段作了修改，那么就将所有非主键字段作为update的值
+	 */
 	@SuppressWarnings("unchecked")
 	static java.util.Map.Entry<Field, Object>[] getAllFieldValues(ITableMetadata meta, Map<Field, Object> map, BeanWrapper wrapper, DatabaseDialect profile) {
 		List<Entry<Field, Object>> result = new ArrayList<Entry<Field, Object>>();
@@ -365,10 +358,10 @@ public abstract class UpdateProcessor {
 				if (vType.isPk()) {
 					continue;
 				}
-				if (vType instanceof AbstractTimeMapping) {
-					AbstractTimeMapping times = (AbstractTimeMapping) vType;
-					if (times.isForUpdate()) {
-						Object value = times.getAutoUpdateValue(profile, wrapper.getWrapped());
+				if (vType instanceof VersionSupportColumn) {
+					VersionSupportColumn timeColumn = (VersionSupportColumn) vType;
+					if (timeColumn.isUpdateAlways()) {
+						Object value = timeColumn.getAutoUpdateValue(profile, wrapper.getWrapped());
 						result.add(new Entry<Field, Object>(field, value));
 						continue;
 					}
@@ -379,7 +372,8 @@ public abstract class UpdateProcessor {
 		return result.toArray(new Map.Entry[result.size()]);
 	}
 
-	public int processUpdate(Session session, final IQueryableEntity obj, final UpdateClause updateClause, final BindSql whereClause, PartitionResult[] sites, long parseCost) throws SQLException {
+	public int processUpdate(Session session, final IQueryableEntity obj, final UpdateClause updateClause, final BindSql whereClause, PartitionResult[] sites, long parseCost)
+			throws SQLException {
 		int total = 0;
 		long access = System.currentTimeMillis();
 		String dbName = null;
@@ -407,8 +401,9 @@ public abstract class UpdateProcessor {
 			}
 		}
 		if (ORMConfig.getInstance().debugMode) {
-			access = System.currentTimeMillis()-access;
-			LogUtil.show(StringUtils.concat("Updated:", String.valueOf(total), "\t Time cost([ParseSQL]:", String.valueOf(parseCost), "ms, [DbAccess]:", String.valueOf(access), "ms) |", dbName));
+			access = System.currentTimeMillis() - access;
+			LogUtil.show(StringUtils.concat("Updated:", String.valueOf(total), "\t Time cost([ParseSQL]:", String.valueOf(parseCost), "ms, [DbAccess]:", String.valueOf(access),
+					"ms) |", dbName));
 		}
 		return total;
 	}

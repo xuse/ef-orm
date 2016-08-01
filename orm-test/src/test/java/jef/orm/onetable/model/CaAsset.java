@@ -33,7 +33,7 @@ public class CaAsset extends DataObject {
 	 * Asset ID
 	 */
 	@Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE) 
+    @GeneratedValue() 
 	@Column(name = "asset_id", precision = 6, columnDefinition = "NUMBER", nullable = false)
 	private int assetId;
 

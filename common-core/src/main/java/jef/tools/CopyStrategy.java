@@ -110,9 +110,16 @@ public class CopyStrategy {
 		
 		private boolean isMove=true;
 
+		/**
+		 * 构造
+		 */
 		public MergeStrategy() {
 			this(FileComparator.LENGTH_SKIP);
 		}
+		/**
+		 * 构造 
+		 * @param compare 传入一个指定的文件比较器
+		 */
 		public MergeStrategy(FileComparator compare) {
 			super();
 			this.comparator = compare;

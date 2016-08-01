@@ -22,7 +22,6 @@ import jef.database.innerpool.IUserManagedPool;
 import jef.database.jdbc.result.CloseableResultSet;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.processor.BindVariableContext;
-import jef.database.wrapper.processor.BindVariableTool;
 import jef.tools.StringUtils;
 import jef.tools.ThreadUtils;
 
@@ -236,7 +235,7 @@ public class ExecutorJTAImpl implements Runnable, StatementExecutor {
 			ps = conn.prepareStatement(sql);
 			if (params.length > 0) {
 				BindVariableContext context = new BindVariableContext(ps, profile, sb);
-				BindVariableTool.setVariables(context, Arrays.asList(params));
+				context.setVariables(Arrays.asList(params));
 			}
 			int total = ps.executeUpdate();
 			sb.append("\nExecuted:", total).append("\t |", txId);

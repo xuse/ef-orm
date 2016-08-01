@@ -48,7 +48,7 @@ import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
 import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.processor.BindVariableContext;
-import jef.database.wrapper.processor.BindVariableTool;
+import jef.tools.PageLimit;
 import jef.tools.StringUtils;
 
 /**
@@ -95,7 +95,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		return false;
 	}
 
-	public void parepareInMemoryProcess(IntRange range, ResultSetContainer rs) {
+	public void parepareInMemoryProcess(PageLimit range, ResultSetContainer rs) {
 		PlainSelect st = context.statement;
 		ColumnMeta meta = rs.getColumns();
 		if (st.getGroupByColumnReferences() != null && !st.getGroupByColumnReferences().isEmpty()) {
@@ -108,8 +108,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 			rs.setInMemoryOrder(processOrder(st.getSelectItems(), st.getOrderBy(), meta));
 		}
 		if (range != null) {
-			int[] ints = range.toStartLimitSpan();
-			rs.setInMemoryPage(processPage(meta, ints[0], ints[1]));
+			rs.setInMemoryPage(processPage(meta, range.getStartAsInt(), range.getLimit()));
 		} else if (st.getLimit() != null && st.getLimit().isValid()) {// 此处容错产生效果
 			Limit limit = st.getLimit();
 			rs.setInMemoryPage(processPage(meta, (int) limit.getOffset(), (int) limit.getRowCount()));
@@ -221,7 +220,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 	}
 
 	@Override
-	public <T> T doQuery(SqlAndParameter sqlContext, ResultSetExtractor<T> extractor, boolean forCount, IntRange range) throws SQLException {
+	public <T> T doQuery(SqlAndParameter sqlContext, ResultSetExtractor<T> extractor, boolean forCount, PageLimit range) throws SQLException {
 		long start = System.currentTimeMillis();
 		String rawSQL = sqlContext.statement.toString();
 		T result;
@@ -260,7 +259,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		try {
 			psmt = db.prepareStatement(sql.first, lazyProcessor, false);
 			BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
-			BindVariableTool.setVariables(context, sql.second);
+			context.setVariables(sql.second);
 			rst.apply(psmt);
 			rs = psmt.executeQuery();
 			mrs.add(rs, psmt, db);
@@ -269,7 +268,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		}
 	}
 
-	private <T> T executeMultiQuery(boolean noOrder, final ResultSetExtractor<T> rst, final InMemoryOperateProvider sqlContext, IntRange range) throws SQLException {
+	private <T> T executeMultiQuery(boolean noOrder, final ResultSetExtractor<T> rst, final InMemoryOperateProvider sqlContext, PageLimit range) throws SQLException {
 		final ORMConfig config = ORMConfig.getInstance();
 		final ResultSetContainer mrs = new ResultSetContainer(config.isCacheResultset());
 		if (getSites().length >= config.getParallelSelect()) {
@@ -313,7 +312,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		}
 	}
 
-	private String toPageSql(SqlAndParameter context, String rawSQL, IntRange range) {
+	private String toPageSql(SqlAndParameter context, String rawSQL, PageLimit range) {
 		if (range == null && context.getLimit() == null) {
 			return rawSQL;
 		}
@@ -361,7 +360,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 				context.setNewLimit(range);
 			} else {
 				boolean isUnion = sb instanceof Union;
-				BindSql bs = this.context.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range.toStartLimitSpan(), isUnion);
+				BindSql bs = this.context.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range.toArray(), isUnion);
 				context.setReverseResultSet(bs.getRsLaterProcessor());
 				return bs.getSql();
 			}
@@ -547,7 +546,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		try {
 			psmt = db.prepareStatement(sql.first, isReverse, false);
 			BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
-			BindVariableTool.setVariables(context, sql.second);
+			context.setVariables(sql.second);
 			if (fetchSize > 0) {
 				psmt.setFetchSize(fetchSize);
 			}
@@ -607,7 +606,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		JDBCTarget db = context.db.getTarget(site.getDatabase());
 		long count = 0;
 		for (String sql : sqls) {
-			count += db.innerSelectBySql(sql, ResultSetExtractor.GET_FIRST_LONG, context.params, null);
+			count += db.innerSelectBySql(sql, ResultSetExtractor.COUNT_EXTRACTER, context.params, null);
 		}
 		// for (String table : site.getTables()) {
 		// String sql = getSql(table);

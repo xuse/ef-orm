@@ -21,9 +21,6 @@ import java.util.Collection;
 
 import javax.persistence.PersistenceException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import jef.database.cache.Cache;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.IConnection;
@@ -34,6 +31,9 @@ import jef.database.meta.MetaHolder;
 import jef.database.support.DbOperatorListener;
 import jef.database.support.SavepointNotSupportedException;
 import jef.tools.StringUtils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 事务状态下的数据库连接封装。
@@ -220,9 +220,12 @@ public abstract class Transaction extends Session implements TransactionalSessio
 		} else {
 			sb.append('[').append(innerFlag.name());
 		}
-		sb.append(StringUtils.toFixLengthString(this.hashCode(), 8)).append('@');
-		sb.append(parent != null ? parent.getDbName(dbkey) : parentName);
-		sb.append('@').append(Thread.currentThread().getId()).append(']');
+		if(isReadonly()){
+			sb.append("(R)");	
+		}
+		sb.append(StringUtils.toFixLengthString(this.hashCode(), 8)).append('@')
+		.append(parent != null ? parent.getDbName(dbkey) : parentName)
+		.append('@').append(Thread.currentThread().getId()).append(']');
 		return sb.toString();
 	}
 
@@ -247,4 +250,11 @@ public abstract class Transaction extends Session implements TransactionalSessio
 	public void rollback() {
 		rollback(false);
 	}
+
+	@Override
+	boolean isRoutingDataSource() {
+		return this.parent.isRoutingDataSource();
+	}
+	
+	
 }

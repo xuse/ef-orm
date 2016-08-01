@@ -47,7 +47,6 @@ import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.processor.BindVariableContext;
-import jef.database.wrapper.processor.BindVariableTool;
 import jef.tools.MathUtils;
 import jef.tools.StringUtils;
 
@@ -257,7 +256,7 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 			for (int i = 0; i < params.length; i++) {
 				session.getListener().beforeSqlExecute(sql, params[i]);
 				BindVariableContext context = new BindVariableContext(st, getProfile(), log);
-				BindVariableTool.setVariables(context, params[i]);
+				context.setVariables(params[i]);
 				st.addBatch();
 				if (log.isDebug()) {
 					log.output();
@@ -304,7 +303,7 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 			st.setQueryTimeout(ORMConfig.getInstance().getUpdateTimeout());
 			if (!ps.isEmpty()) {
 				BindVariableContext context = new BindVariableContext(st, getProfile(), sb);
-				BindVariableTool.setVariables(context, ps);
+				context.setVariables(ps);
 			}
 			total = st.executeUpdate();
 			result = new UpdateReturn(total);
@@ -338,7 +337,7 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 			st = prepareStatement(sql, isReverse, false);
 
 			BindVariableContext context = new BindVariableContext(st, getProfile(), sb);
-			BindVariableTool.setVariables(context, objs);
+			context.setVariables(objs);
 			rst.apply(st);
 			rs = st.executeQuery();
 			long dbAccessed = System.currentTimeMillis();
@@ -351,8 +350,10 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 			} else {
 				t = rst.transformer(new ResultSetWrapper(this, st, rs));
 			}
-			rst.appendLog(sb, t);
-			sb.append("\tTime cost([DbAccess]:", dbAccessed - start).append("ms, [Populate]:", System.currentTimeMillis() - dbAccessed).append("ms").append(this);
+//			if(session.isRoutingDataSource()){
+				rst.appendLog(sb, t);
+				sb.append("\tTime cost([DbAccess]:", dbAccessed - start).append("ms, [Populate]:", System.currentTimeMillis() - dbAccessed).append("ms").append(this);	
+//			}
 			return t;
 		} catch (SQLException e) {
 			DbUtils.processError(e, sql, this);
@@ -426,7 +427,7 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 
 	public long countBySql(String countSql, Object... params) throws SQLException {
 		long start = System.currentTimeMillis();
-		Long num = innerSelectBySql(countSql, ResultSetExtractor.GET_FIRST_LONG, Arrays.asList(params), null);
+		Long num = innerSelectBySql(countSql, ResultSetExtractor.COUNT_EXTRACTER, Arrays.asList(params), null);
 		if (ORMConfig.getInstance().isDebugMode()) {
 			long dbAccess = System.currentTimeMillis();
 			LogUtil.show(StringUtils.concat("Count:", String.valueOf(num), "\t [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", getTransactionId()));

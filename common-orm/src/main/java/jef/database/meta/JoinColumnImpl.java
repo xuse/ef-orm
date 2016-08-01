@@ -2,6 +2,7 @@ package jef.database.meta;
 
 import java.lang.annotation.Annotation;
 
+import javax.persistence.ForeignKey;
 import javax.persistence.JoinColumn;
 
 public class JoinColumnImpl implements javax.persistence.JoinColumn {
@@ -78,5 +79,11 @@ public class JoinColumnImpl implements javax.persistence.JoinColumn {
 		String col = this.referencedColumnName;
 		this.referencedColumnName = this.name;
 		this.name = col;
+	}
+
+	@Override
+	public ForeignKey foreignKey() {
+		//TODO
+		return null;
 	}
 }

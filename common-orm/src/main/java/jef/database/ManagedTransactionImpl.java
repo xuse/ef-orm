@@ -16,7 +16,8 @@ public class ManagedTransactionImpl extends Transaction{
 	public ManagedTransactionImpl(DbClient parent,Connection connection) {
 		super();
 		this.parent = parent;
-		rProcessor = parent.rProcessor;
+		this.rProcessor = parent.rProcessor;
+		this.preProcessor=parent.preProcessor;
 		this.selectp = parent.selectp;
 		this.insertp = parent.insertp;
 		this.updatep=parent.updatep;

@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -55,5 +56,11 @@ public class CharTimestampMapping extends AColumnMapping{
 	@Override
 	protected Class<?> getDefaultJavaType() {
 		return java.sql.Timestamp.class;
+	}
+
+	@Override
+	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
+		String s=format.get().format((Date)value);
+		rs.updateString(columnIndex,s);
 	}
 }

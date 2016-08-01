@@ -54,7 +54,7 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 	private boolean cascadeViaOuterJoin = ORMConfig.getInstance()
 			.isUseOuterJoin();
 
-	final List<Condition> conditions = new ArrayList<Condition>(6);
+	final List<Condition> conditions = new ArrayList<Condition>(4);
 	/**
 	 * 当使用延迟过滤条件时，存储这些条件
 	 */

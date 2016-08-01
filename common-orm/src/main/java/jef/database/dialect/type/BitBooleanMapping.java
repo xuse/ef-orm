@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import jef.database.dialect.DatabaseDialect;
@@ -16,6 +17,11 @@ public class BitBooleanMapping extends AColumnMapping{
 			st.setBoolean(index, (Boolean)value);
 			return value;
 		}
+	}
+	
+	@Override
+	public void jdbcUpdate(ResultSet rs,String column, Object value, DatabaseDialect dialect) throws SQLException {
+		rs.updateBoolean(column, (Boolean)value);
 	}
 
 	@Override
