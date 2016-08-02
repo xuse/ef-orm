@@ -287,6 +287,18 @@ public final class RecordsHolder<T extends IQueryableEntity> implements Iterable
 			throw DbUtils.toRuntimeException(e);
 		}
 	}
+	
+	/**
+	 * 将修改提交到数据库
+	 * @return
+	 */
+	public int commitAndClose() {
+		try {
+			return commit(true);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
 
 	private void update(T t, int index2) throws SQLException {
 		if (index2 < 0 || index2 >= size()) {

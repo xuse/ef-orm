@@ -633,26 +633,29 @@ public class NativeQueryTest extends org.junit.Assert {
 		System.out.println("==============================================");
 		{
 			Transaction session = db.startTransaction();
-			/**
-			 * 当绑定多组不同的表达式时，是否可以正确处理二元表达式自动省略
-			 */
-			String sql = "delete from ROOT where 1=1 and (THE_NAME=:val or THE_NAME =:val2)";
-			NativeQuery<String> nq = session.createNativeQuery(sql, String.class);
-			nq.setParameter("val", "545454bbbb");
-			int a = nq.executeUpdate();
-			System.out.println(a);
+			try{
+				/**
+				 * 当绑定多组不同的表达式时，是否可以正确处理二元表达式自动省略
+				 */
+				String sql = "delete from ROOT where 1=1 and (THE_NAME=:val or THE_NAME =:val2)";
+				NativeQuery<String> nq = session.createNativeQuery(sql, String.class);
+				nq.setParameter("val", "545454bbbb");
+				int a = nq.executeUpdate();
+				System.out.println(a);
 
-			nq.setParameter("val", "545454aaa");
-			nq.setParameter("val2", "vvv2");
-			a = nq.executeUpdate();
-			System.out.println(a);
+				nq.setParameter("val", "545454aaa");
+				nq.setParameter("val2", "vvv2");
+				a = nq.executeUpdate();
+				System.out.println(a);
 
-			// 清除之前设置过的参数。
-			nq.clearParameters();
-			a = nq.executeUpdate();
-			System.out.println(a);
+				// 清除之前设置过的参数。
+				nq.clearParameters();
+				a = nq.executeUpdate();
+				System.out.println(a);				
+			}finally{
+				session.close();	
+			}
 
-			session.close();
 		}
 
 	}
@@ -871,13 +874,16 @@ public class NativeQueryTest extends org.junit.Assert {
 			holder.commit();
 			holder.close();
 		}
-
-		RecordHolder<Root> holder2 = db.loadForUpdate(new Root(1));
+		Transaction trans=db.startTransaction();
+		RecordHolder<Root> holder2 = trans.loadForUpdate(new Root(1));
 		if (holder2 != null) {
 			LogUtil.show(holder.get());
 			holder2.delete();// 删除
-			holder.close();
+			holder.close(); //此处的Holder写错了。应该为holder2，关闭holder造成锁表泄漏。
 		}
+		trans.close();		//好在上面的ResultSet是在事务里的，此处事务关闭，顺便将之前泄漏的结果集给关闭了
+		//结论——悲观锁使用非常危险，一个小小的笔误就会引起严重的泄漏事故。
+		System.out.println("=================");
 	}
 
 	/**
@@ -906,28 +912,33 @@ public class NativeQueryTest extends org.junit.Assert {
 	@IgnoreOn({"sqlite","sqlserver"})
 	public void testSelectForUpdate() throws SQLException {
 		RecordsHolder<Root> holder = db.selectForUpdate(QB.create(Root.class).getInstance());
-		int n = 0;
-		for (Root r : holder.get()) {
-			n++;
-			r.setName("更新第" + n + "条。"); // 修改对象中的值
+		int size;
+		try{
+			int n = 0;
+			for (Root r : holder.get()) {
+				n++;
+				r.setName("更新第" + n + "条。"); // 修改对象中的值
+			}
+			size = holder.size();
+			assertTrue(size > 0);
+			System.out.println("count:" + n);
+
+			Root rootOld = holder.get().get(holder.size() - 1);
+			System.out.println("To DELTET " + rootOld.getId());
+			holder.delete(holder.size() - 1); // 删除结果集中的最后一条记录。
+			size--;
+
+			if (holder.supportsNewRecord()) {
+				Root root = holder.newRecord(); // 创建一条新纪录
+				root.setName("新插入的记录");
+				size++;
+			}
+
+			holder.commit(); // 提交上述修改（更新、删除、添加）	
+		}finally{
+			holder.close();
 		}
-		int size = holder.size();
-		assertTrue(size > 0);
-		System.out.println("count:" + n);
-
-		Root rootOld = holder.get().get(holder.size() - 1);
-		System.out.println("To DELTET " + rootOld.getId());
-		holder.delete(holder.size() - 1); // 删除结果集中的最后一条记录。
-		size--;
-
-		if (holder.supportsNewRecord()) {
-			Root root = holder.newRecord(); // 创建一条新纪录
-			root.setName("新插入的记录");
-			size++;
-		}
-
-		holder.commit(); // 提交上述修改（更新、删除、添加）
-		holder.close();
+		
 
 		List<Root> newResult = db.select(QB.create(Root.class));
 		assertEquals(size, newResult.size());
