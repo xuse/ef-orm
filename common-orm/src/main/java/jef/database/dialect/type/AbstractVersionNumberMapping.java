@@ -12,11 +12,21 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.UpdateClause;
+import jef.database.wrapper.processor.InsertStep;
+import jef.database.wrapper.processor.InsertStepAdapter;
 import jef.tools.reflect.Property;
 
 public abstract class AbstractVersionNumberMapping extends AColumnMapping implements VersionSupportColumn {
 	private boolean version;
 	private Property accessor;
+
+	final InsertStep STEP = new InsertStepAdapter() {
+		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
+			for (IQueryableEntity q : data) {
+				accessor.set(q, 1);
+			}
+		}
+	};
 
 	@Override
 	public void init(Field field, String columnName, ColumnType type, ITableMetadata meta) {
@@ -29,18 +39,9 @@ public abstract class AbstractVersionNumberMapping extends AColumnMapping implem
 	}
 
 	@Override
-	public void processInsert(Object value, InsertSqlClause result, List<String> cStr, List<String> vStr, boolean smart, IQueryableEntity obj) throws SQLException {
-		if (!obj.isUsed(field) && version) {
-			value = 1;
-			accessor.set(obj, value);// 版本号总是从1开始
-		}
-		super.processInsert(value, result, cStr, vStr, smart, obj);
-	}
-
-	@Override
 	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean dynamic) throws SQLException {
 		if (!obj.isUsed(field) && version) {
-			accessor.set(obj, 1);// 版本号总是从1开始
+			result.getCallback().addProcessor(STEP);
 		}
 		super.processPreparedInsert(obj, cStr, vStr, result, dynamic);
 	}

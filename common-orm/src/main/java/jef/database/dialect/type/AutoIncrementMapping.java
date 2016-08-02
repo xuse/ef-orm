@@ -229,7 +229,6 @@ public abstract class AutoIncrementMapping extends AColumnMapping {
 		return datasource == null ? "" : datasource;
 	}
 
-	@Override
 	public void processInsert(Object value, InsertSqlClause result, List<String> cStr, List<String> vStr, boolean smart, IQueryableEntity obj) throws SQLException {
 		DatabaseDialect profile = result.profile;
 		Field field = this.field;

@@ -39,7 +39,6 @@ public class AutoGuidMapping extends VarcharStringMapping {
 		accessor = ba.getProperty(field.name());
 	}
 
-	@Override
 	public void processInsert(Object value, InsertSqlClause result, List<String> cStr, List<String> vStr, boolean smart, IQueryableEntity obj) throws SQLException {
 		String columnName = this.getColumnName(result.profile,true);
 		String key;
