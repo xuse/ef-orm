@@ -28,14 +28,20 @@ import jef.common.wrapper.IntRange;
 import jef.database.DbClient;
 import jef.database.DbUtils;
 import jef.database.Field;
+import jef.database.PojoWrapper;
 import jef.database.QB;
+import jef.database.RecordHolder;
 import jef.database.Session;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.jpa.JefEntityManager;
+import jef.database.meta.EntityType;
+import jef.database.meta.ITableMetadata;
 import jef.database.query.ConditionQuery;
+import jef.database.query.PKQuery;
 import jef.database.query.Query;
 import jef.database.query.SqlExpression;
 import jef.tools.ArrayUtils;
+import jef.tools.Assert;
 
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
@@ -47,8 +53,8 @@ import org.springframework.orm.jpa.EntityManagerProxy;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.github.geequery.springdata.repository.GqRepository;
 import com.github.geequery.springdata.repository.GeeQueryExecutor;
+import com.github.geequery.springdata.repository.GqRepository;
 
 /**
  * Default implementation of the
@@ -269,10 +275,6 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 		}
 	}
 
-	@Override
-	public void flush() {
-	}
-
 	// /////////////////////////////以此为界，读方法在上，写方法在下///////////////////////////////////
 
 	@Override
@@ -331,12 +333,6 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 
 	@Override
 	@Transactional
-	public <S extends T> S saveAndFlush(S entity) {
-		return save(entity);
-	}
-
-	@Override
-	@Transactional
 	public void deleteInBatch(Iterable<T> entities) {
 		Session s = getSession();
 		try {
@@ -380,11 +376,11 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 
 	private List<Serializable> asIdList(Iterable<ID> ids) {
 		List<Serializable> list = new ArrayList<Serializable>();
-		if(this.meta.isComplexPK()){
+		if (this.meta.isComplexPK()) {
 			for (ID id : ids) {
 				list.add(toId(id));
-			}	
-		}else{
+			}
+		} else {
 			for (ID id : ids) {
 				list.add(id);
 			}
@@ -441,5 +437,41 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 
 	private IntRange toRange(Pageable pageable) {
 		return new IntRange(pageable.getOffset() + 1, pageable.getOffset() + pageable.getPageSize());
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@Override
+	@Transactional
+	public boolean lockItAndUpdate(ID id, Update<T> update) {
+		Assert.notNull(update);
+		ITableMetadata meta=this.meta.getMetadata();
+		try{
+			if (meta.getType() == EntityType.POJO) {
+				PKQuery<PojoWrapper> query = new PKQuery<PojoWrapper>(meta, toId(id));
+				RecordHolder<PojoWrapper> result = getSession().loadForUpdate(query.getInstance());
+				if(result ==null )return false;
+				try{
+					PojoWrapper pojo=result.get();
+					update.setValue((T)pojo.get());
+					pojo.refresh();
+					return result.commit();	
+				}finally{
+					result.close();
+				}
+			} else {
+				PKQuery query = new PKQuery(meta,  toId(id));
+				RecordHolder<?> result = getSession().loadForUpdate(query.getInstance());
+				if(result ==null )return false;
+				try{
+					update.setValue((T)result.get());
+					return result.commit();	
+				}finally{
+					result.close();
+				}
+			}	
+		}catch(SQLException e){
+			throw DbUtils.toRuntimeException(e);
+		}
+		
 	}
 }

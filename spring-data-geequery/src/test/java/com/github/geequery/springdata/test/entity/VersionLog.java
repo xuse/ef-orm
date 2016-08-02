@@ -18,9 +18,8 @@ public class VersionLog extends jef.database.DataObject {
     private String name;
 
     @GeneratedValue(generator = "modified-sys")
-    @Version
     private Date modified;
-    
+    @Version
     private int version;
 
     public int getId() {
