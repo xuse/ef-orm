@@ -24,6 +24,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.QueryByExampleExecutor;
 
 import com.github.geequery.springdata.annotation.Query;
+import com.github.geequery.springdata.repository.support.Update;
 
 /**
  * GQ specific extension of
@@ -34,19 +35,6 @@ import com.github.geequery.springdata.annotation.Query;
  */
 @NoRepositoryBean
 public interface GqRepository<T, ID extends Serializable> extends PagingAndSortingRepository<T, ID>, QueryByExampleExecutor<T> {
-	/**
-	 * Flushes all pending changes to the database.
-	 */
-	void flush();
-
-	/**
-	 * Saves an entity and flushes changes instantly.
-	 * 
-	 * @param entity
-	 * @return the saved entity
-	 */
-	<S extends T> S saveAndFlush(S entity);
-
 	/**
 	 * Deletes the given entities in a batch which means it will create a single
 	 * {@link Query}. Assume that we will clear the
@@ -70,4 +58,13 @@ public interface GqRepository<T, ID extends Serializable> extends PagingAndSorti
 	 * @see EntityManager#getReference(Class, Object)
 	 */
 	T getOne(ID id);
+	
+	
+	/**
+	 * 悲观锁更新
+	 * 使用此方法将到数据库中查询一条记录并加锁，然后用Update的回调方法修改查询结果。
+	 * 最后写入到数据库中。
+	 * 
+	 */
+	boolean lockItAndUpdate(ID id,Update<T> update);
 }

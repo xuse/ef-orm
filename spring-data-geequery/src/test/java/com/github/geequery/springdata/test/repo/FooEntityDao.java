@@ -23,7 +23,7 @@ import com.github.geequery.springdata.test.entity.Foo;
  *
  */
 @RepositoryDefinition(domainClass = Foo.class, idClass = Integer.class)
-public interface FooDao2 {
+public interface FooEntityDao {
 
 	/**
 	 * @Query(value = "select * from foo u where u.name like ?1", nativeQuery =
@@ -76,7 +76,7 @@ public interface FooDao2 {
 	 * @param name
 	 * @return
 	 */
-	@Query("select * from foo where name like ?2 and age=?1")
+	@Query("select * from foo where name like ?2<string$> and age=?1")
 	public Foo findBySql4(int birthDay, String name);
 
 	/**
@@ -90,7 +90,7 @@ public interface FooDao2 {
 	public Page<Foo> findBySql5(@Param("age") @IgnoreIf(ParamIs.Zero) int age, @Param(value = "name") @IgnoreIf(ParamIs.Null) String name, Pageable page);
 
 	/**
-	 * @Query("select * from foo")
+	 * @Query("select * from foo where age=?1 and name like ?2<$string$>")
 	 * @param age
 	 * @param name
 	 * @param sort
@@ -98,6 +98,9 @@ public interface FooDao2 {
 	 */
 	@Query("select * from foo where age=?1 and name like ?2<$string$>")
 	public List<Foo> findBySql6(int age, String name, Sort sort);
+
+	@Query("select * from foo where age=?1 and name like ?2<$string$> order by ?3<sql>")
+	public List<Foo> findBySql62(@IgnoreIf(ParamIs.Zero) int age, @IgnoreIf(ParamIs.Empty) String name, String orderField);
 
 	/**
 	 * (value="select * from foo where age=?1 and name like ?2",nativeQuery=true
@@ -137,8 +140,6 @@ public interface FooDao2 {
 	 */
 	@Modifying
 	@Query("update foo set age=age+1,birthDay=:birth where age=:age and id=:id")
-	public int updateFooSetAgeByAgeAndId(@Param("birth")Date birth, 
-			@Param("age")int age, 
-			@Param("id") int id);
+	public int updateFooSetAgeByAgeAndId(@Param("birth") Date birth, @Param("age") int age, @Param("id") int id);
 
 }

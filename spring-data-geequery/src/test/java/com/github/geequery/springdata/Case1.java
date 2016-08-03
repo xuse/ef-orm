@@ -16,6 +16,7 @@ import org.easyframe.enterprise.spring.CommonDao;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -24,12 +25,14 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 
+import com.github.geequery.springdata.repository.support.Update;
 import com.github.geequery.springdata.test.entity.ComplexFoo;
 import com.github.geequery.springdata.test.entity.Foo;
 import com.github.geequery.springdata.test.entity.VersionLog;
 import com.github.geequery.springdata.test.repo.ComplexFooDao;
 import com.github.geequery.springdata.test.repo.FooDao;
-import com.github.geequery.springdata.test.repo.FooDao2;
+import com.github.geequery.springdata.test.repo.FooEntityDao;
+import com.github.geequery.springdata.test.repo.ICustomComplexDao;
 
 /**
  * 与Spring集成的示例。 本示例使用的xml作为Spring配置。参见
@@ -48,7 +51,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	private FooDao foodao;
 
 	@javax.annotation.Resource
-	private FooDao2 foodao2;
+	private FooEntityDao foodao2;
 
 	@javax.annotation.Resource
 	private ComplexFooDao complex;
@@ -80,11 +83,9 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	// }
 	@Test
 	public void testx(){
-		// =========================
-		{
-			System.out.println("=== FindByName ===");
-			Foo foo = foodao.findByName("");
-		}
+		System.out.println("=== findBySql63() ====");
+		List<Foo> result = foodao2.findBySql62(0, "张", "id desc");
+		System.out.println(result);
 	}
 
 	@Test
@@ -102,6 +103,20 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			System.out.println("=== FindByAgeOrderById ===");
 			List<Foo> fooList = foodao.findByAgeOrderById(0);
 			System.out.println(fooList);
+			
+			int id=fooList.get(0).getId();
+			boolean updated=foodao.lockItAndUpdate(id,new Update<Foo>(){
+				@Override
+				public void setValue(Foo value) {
+					value.setName("李四");
+					value.setRemark("悲观锁定");
+					
+				}
+			});
+			if(updated){
+				Foo u=foodao.findOne(id);
+				Assert.assertEquals("悲观锁定",u.getRemark());
+			}
 		}
 		// =========================
 		{
@@ -158,38 +173,68 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	@Test
 	public void testFooDao2() {
 		{
+			/**
+			 * 最基本的@Query查询，注意需要@Param来绑定参数 
+			 */
 			Foo foo = foodao2.findBysName("张三");
 			System.out.println(foo);
 		}
 		// =========================
 		{
-			// 设置了@Param后，这是按name进行绑定的NativeQuery，只要语句中用了:xxx格式，参数顺序随便改没问题。
+			/**
+			 * 1 @Query(name='xxx')可以从预定义的命名查询中获得一个配置好的查询语句
+			 * 2 如果使用 @Param 对应 :name，那么方法的参数先后顺序可以随意修改。反之，如果是 ?1 ?2方式进行参数绑定，则方法参数顺序有要求。
+			 */
+			// 
 			List<Foo> foos = foodao2.findBySql(new Date(), "李四");
 			System.out.println(foos);
 		}
 		// =========================
 		{
+			/**
+			 *  没有设置@param参数时， ?1 ?2 来分别表示第一个和第二个参数。此时方法参数顺序有要求。
+			 */
 			List<Foo> foos = foodao2.findBySql2("李四", new Date());
 			System.out.println(foos);
-			// 没有设置@param参数时，SQL中需要写成 ?1 ?2 来分别表示第一个和第二个参数。
-			// TODO （注意观察一下原生JPA是用?0 ?1的还是从1开始的）
 
 		}
 		{
-			Foo foo = foodao2.findBySql3("李四", 0);
+			/**
+			 * 单纯的Like运算符不会在查询子条件 李四上增加通配符。因此需要自己传入通配符 %李%
+			 */
+			System.out.println("=== findBySql3() ====");
+			Foo foo = foodao2.findBySql3("李", 0);
 			System.out.println(foo);
 		}
 		{
-			Foo foo = foodao2.findBySql4(0, "李四");
+			/**
+			 * 用?1 ?2绑定时，顺序要注意。 如果在SQL语句中指定LIKE的查询方式是 ‘匹配头部’，那么查询就能符合期望
+			 */
+			System.out.println("=== findBySql4() ====");
+			Foo foo = foodao2.findBySql4(0, "李");
 			System.out.println(foo);
 		}
 		{
+			/**
+			 * 1、SQL语句查询支持分页功能
+			 * 2、传入null可以表示忽略对应的查询条件吗（动态SQL）? 默认情况下是不可以的，但是使用 @IgnoreIf()注解可以化不可能为可能
+			 */
 			Page<Foo> page = (Page<Foo>) foodao2.findBySql5(0, null, new PageRequest(1, 4));
 			System.out.println(page.getTotalElements());
 			System.out.println(page.getContent());
 		}
 		{
+			/**
+			 * 1、like <$string$>的用法
+			 * 2、顺序不能用Spring-data的方法传入并使用。
+			 * 但是可以换一种方法
+			 */
+			System.out.println("=== findBySql6() ====");
 			List<Foo> result = foodao2.findBySql6(0, "张", new Sort(new Order(Direction.DESC, "id")));
+			System.out.println(result);
+			
+			System.out.println("=== findBySql62() ====");
+			result = foodao2.findBySql62(0, "张", "id desc");
 			System.out.println(result);
 		}
 		{
@@ -393,5 +438,14 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 		QB.fieldAdd(foo, Foo.Field.age, 100);
 		foo.setName("姓名也更新了");
 		commonDao.update(foo);
+	}
+	
+	@Autowired
+	private ICustomComplexDao complex2;
+	
+	@Test
+	public void testCustom(){
+		ComplexFoo cf = new ComplexFoo(1, 2);
+		complex2.someCustomMethod(cf);
 	}
 }

@@ -1486,7 +1486,7 @@ JpqlParameter CaseJPQLParameter():
 	"?"
 	(
 	  name=<S_INTEGER>
-      [LOOKAHEAD(2) "<" type=<S_IDENTIFIER> ">"      {
+      [LOOKAHEAD(2) "<" (type=<S_IDENTIFIER>|type=<K_SQL>) ">"      {
                typeStr=type.image;      }]
 	)          
     { 

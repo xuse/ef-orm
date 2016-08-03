@@ -31,9 +31,7 @@ import org.springframework.orm.jpa.EntityManagerProxy;
 import com.github.geequery.springdata.repository.query.GqParameters.GqParameter;
 
 /**
- * TODO 目前的NativeQuery中的绑定了Session的，实际上传入的EM是一个ProxyEM，
- * 因此实际执行的时候需要从当时的线程上下文中获得真实的EM再进行查询执行才可以。
- * 
+ * 基于Query的Spring-data查询
  */
 final class GqNativeQuery extends AbstractGqQuery {
 
