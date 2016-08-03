@@ -30,15 +30,11 @@ import org.springframework.util.Assert;
  * Special adapter for Springs
  * {@link org.springframework.beans.factory.FactoryBean} interface to allow easy
  * setup of repository factories via Spring configuration.
- * 
- * @author Oliver Gierke
- * @author Eberhard Wolff
  * @param <T>
  *            the type of the repository
  */
 public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable> extends TransactionalRepositoryFactoryBeanSupport<T, S, ID> {
 
-	// private JefEntityManagerFactory emf;
 	private EntityManager em;
 
 	/**
@@ -50,8 +46,6 @@ public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends 
 	@PersistenceContext
 	public void setEntityManager(EntityManager entityManager) {
 		this.em = entityManager;
-		// this.emf = (JefEntityManagerFactory)
-		// entityManager.getEntityManagerFactory();
 	}
 
 	/*

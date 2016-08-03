@@ -14,6 +14,8 @@ import jef.database.meta.TableMetadata;
 import jef.database.wrapper.ResultIterator;
 import jef.tools.Assert;
 
+import org.apache.commons.lang.ObjectUtils;
+
 @SuppressWarnings("serial")
 public final class PojoWrapper extends DataObject implements Map<String, Object>, MetadataContainer {
 	private TableMetadata meta;
@@ -217,5 +219,14 @@ public final class PojoWrapper extends DataObject implements Map<String, Object>
 		}
 	}
 
-	
+	public void refresh() {
+		PojoWrapper newObj=this.meta.transfer(this.entity, false);
+		for(Map.Entry<String, Object> entry: newObj.entrySet()){
+			Object o=this.get(entry.getKey());
+			Object n=entry.getValue();
+			if(!ObjectUtils.equals(o, n)){
+				this.set(entry.getKey(), n);
+			}
+		}
+	}
 }

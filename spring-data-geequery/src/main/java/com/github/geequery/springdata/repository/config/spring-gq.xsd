@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<xsd:schema xmlns="http://www.springframework.org/schema/data/jpa"
+<xsd:schema xmlns="http://www.springframework.org/schema/data/gq"
 	xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:tool="http://www.springframework.org/schema/tool"
 	xmlns:context="http://www.springframework.org/schema/context"
 	xmlns:repository="http://www.springframework.org/schema/data/repository"
@@ -29,21 +29,6 @@
 					</xsd:attribute>
 				</xsd:extension>
 			</xsd:complexContent>
-		</xsd:complexType>
-	</xsd:element>
-
-	<xsd:element name="auditing">
-		<xsd:annotation>
-			<xsd:appinfo>
-				<tool:annotation>
-					<tool:exports
-						type="com.github.geequery.springdata.domain.support.AuditingEntityListener" />
-					<tool:exports type="org.springframework.data.auditing.AuditingHandler" />
-				</tool:annotation>
-			</xsd:appinfo>
-		</xsd:annotation>
-		<xsd:complexType>
-			<xsd:attributeGroup ref="repository:auditing-attributes" />
 		</xsd:complexType>
 	</xsd:element>
 </xsd:schema>

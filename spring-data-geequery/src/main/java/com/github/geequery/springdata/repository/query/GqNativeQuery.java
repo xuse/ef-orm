@@ -28,13 +28,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.orm.jpa.EntityManagerProxy;
 
-import com.github.geequery.springdata.annotation.IgnoreIf;
 import com.github.geequery.springdata.repository.query.GqParameters.GqParameter;
 
 /**
- * TODO 目前的NativeQuery中的绑定了Session的，实际上传入的EM是一个ProxyEM，
- * 因此实际执行的时候需要从当时的线程上下文中获得真实的EM再进行查询执行才可以。
- * 
+ * 基于Query的Spring-data查询
  */
 final class GqNativeQuery extends AbstractGqQuery {
 
@@ -106,7 +103,7 @@ final class GqNativeQuery extends AbstractGqQuery {
 				continue;
 			}
 			
-			if (p.getIgnoreIf() != null && isIgnore(p.getIgnoreIf(), obj)) {
+			if (p.getIgnoreIf() != null && QueryUtils.isIgnore(p.getIgnoreIf(), obj)) {
 				continue;
 			}
 			if (p.isNamedParameter()) {
@@ -125,35 +122,6 @@ final class GqNativeQuery extends AbstractGqQuery {
 							+ "', please make sure that using @Param(\"name\") to mapping parameter into query.", e);
 				}
 			}
-		}
-	}
-
-	private boolean isIgnore(IgnoreIf ignoreIf, Object obj) {
-		switch (ignoreIf.value()) {
-		case Empty:
-			return obj == null || String.valueOf(obj).length() == 0;
-		case Negative:
-			if (obj instanceof Number) {
-				return ((Number) obj).longValue() < 0;
-			} else {
-				throw new IllegalArgumentException("can not calcuate is 'NEGATIVE' on parameter which is not a number.");
-			}
-		case Null:
-			return obj == null;
-		case Zero:
-			if (obj instanceof Number) {
-				return ((Number) obj).longValue() == 0;
-			} else {
-				throw new IllegalArgumentException("can not calcuate is 'IS_ZERO' on parameter which is not a number.");
-			}
-		case ZeroOrNagative:
-			if (obj instanceof Number) {
-				return ((Number) obj).longValue() <= 0;
-			} else {
-				throw new IllegalArgumentException("can not calcuate is 'IS_ZERO_OR_NEGATIVE' on parameter which is not a number.");
-			}
-		default:
-			throw new IllegalArgumentException("Unknown ignoreIf type:" + ignoreIf.value());
 		}
 	}
 

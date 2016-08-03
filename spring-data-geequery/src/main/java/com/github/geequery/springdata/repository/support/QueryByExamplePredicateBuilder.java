@@ -16,14 +16,10 @@
 package com.github.geequery.springdata.repository.support;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Predicate;
-import javax.persistence.metamodel.Attribute.PersistentAttributeType;
 import javax.persistence.metamodel.SingularAttribute;
 
 import jef.database.Field;
@@ -50,19 +46,8 @@ import org.springframework.util.StringUtils;
  * matching strategies configured on the {@link Example}. Ignored paths are no
  * matter of their actual value not considered. <br />
  *
- * @author Christoph Strobl
- * @author Mark Paluch
- * @since 1.10
  */
 public class QueryByExamplePredicateBuilder {
-
-	private static final Set<PersistentAttributeType> ASSOCIATION_TYPES;
-
-	static {
-		ASSOCIATION_TYPES = new HashSet<PersistentAttributeType>(Arrays.asList(PersistentAttributeType.MANY_TO_MANY, PersistentAttributeType.MANY_TO_ONE,
-				PersistentAttributeType.ONE_TO_MANY, PersistentAttributeType.ONE_TO_ONE));
-	}
-
 	/**
 	 * Extract the {@link Predicate} representing the {@link Example}.
 	 *

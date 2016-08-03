@@ -21,12 +21,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation to declare JPA 2.1 stored procedure mappings directly on repository methods.
+ * Annotation to declare GeeQuery stored procedure mappings directly on repository methods.
  * 
- * @author Thomas Darimont
- * @author Oliver Gierke
- * @author Christoph Strobl
- * @since 1.6
  */
 @Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)

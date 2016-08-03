@@ -14,7 +14,6 @@ import jef.database.annotation.UnsavedValue;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.visitor.Expression;
-import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.Assert;
@@ -213,23 +212,6 @@ public abstract class AColumnMapping implements ColumnMapping {
 	 *            不为null，不为Expression
 	 */
 	protected abstract String getSqlExpression(Object value, DatabaseDialect profile);
-
-	public void processInsert(Object value, InsertSqlClause result, List<String> cStr, List<String> vStr, boolean smart, IQueryableEntity obj) throws SQLException {
-		String columnName = getColumnName(result.profile, true);
-		if (value == null) {
-			if (result.profile.has(Feature.NOT_SUPPORT_KEYWORD_DEFAULT)) {// 必须使用默认的方法(即不插入)来描述缺省值
-			} else {
-				cStr.add(columnName);// 为空表示不指定，使用缺省值
-				vStr.add("DEFAULT");
-			}
-			return;
-		}
-		if (smart && !obj.isUsed(field)) {
-			return;
-		}
-		cStr.add(columnName);
-		vStr.add(getSqlStr(value, result.profile));
-	}
 
 	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean dynamic) throws SQLException {
 		if (dynamic && !obj.isUsed(field)) {

@@ -11,8 +11,6 @@
 	http://www.springframework.org/schema/context/spring-context-3.0.xsd 
 	http://www.springframework.org/schema/aop 
 	http://www.springframework.org/schema/aop/spring-aop-3.0.xsd 
-	http://www.springframework.org/schema/util 
-	http://www.springframework.org/schema/util/spring-util-3.0.xsd
 	http://www.springframework.org/schema/tx 
 	http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
 	http://geequery.github.io/data/gq  
@@ -20,30 +18,37 @@
 
 	<context:property-placeholder location="classpath:jef.properties" />
 
+	<!-- 定义DataSource -->
 	<bean id="dataSource" class="jef.database.datasource.SimpleDataSource"
 		p:url="${db.url}" />
 
+	<!-- 定义GeeQuery SessionFactory -->
 	<bean id="entityManagerFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean"
-		p:dataSource-ref="dataSource"
-		p:packagesToScan="com.github.geequery.springdata.test.entity"
-		p:registeNonMappingTableAsDynamic="true"
-		p:useSystemOut="true"
-	/>
+		p:dataSource-ref="dataSource" p:packagesToScan="com.github.geequery.springdata.test.entity"
+		p:registeNonMappingTableAsDynamic="true" p:useSystemOut="true" />
 
-	<tx:annotation-driven transaction-manager="transactionManager"
-		proxy-target-class="true" />
-	<aop:aspectj-autoproxy />
-
+	<!-- 定义事务和事务切面 -->
 	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
 		<property name="entityManagerFactory" ref="entityManagerFactory" />
 		<property name="jpaDialect">
 			<bean class="org.easyframe.enterprise.spring.JefJpaDialect" />
 		</property>
 	</bean>
+	<tx:annotation-driven transaction-manager="transactionManager"
+		proxy-target-class="true" />
+	<aop:aspectj-autoproxy />
 
-	<bean id="commonDao" class="org.easyframe.enterprise.spring.CommonDaoImpl" />
-
+	<!-- 【醒目】 这就是：Spring Data 的配置，简单吧 -->
 	<gq:repositories base-package="com.github.geequery.springdata.test.repo"
 		entity-manager-factory-ref="entityManagerFactory"
-		transaction-manager-ref="transactionManager" />
+		transaction-manager-ref="transactionManager">
+		
+	</gq:repositories>
+	<gq:repositories base-package="com.github.geequery.springdata.test.repo.impl"
+		repository-impl-postfix="Impl">
+		
+	</gq:repositories>
+
+	<bean id="commonDao" class="org.easyframe.enterprise.spring.CommonDaoImpl" />
+	<bean class="com.github.geequery.springdata.test.repo.impl.CustomComplexDaoImpl"/>
 </beans> 

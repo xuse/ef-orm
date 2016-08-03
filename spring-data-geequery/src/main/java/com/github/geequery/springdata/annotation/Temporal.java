@@ -28,8 +28,6 @@ import javax.persistence.TemporalType;
  * Annotation to declare an appropriate {@code TemporalType} on query method parameters. Note that this annotation can
  * only be used on parameters of type {@link Date}.
  * 
- * @author Thomas Darimont
- * @author Oliver Gierke
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
