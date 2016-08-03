@@ -126,6 +126,6 @@ final class GqNativeQuery extends AbstractGqQuery {
 	}
 
 	private NativeQuery<?> getThreadQuery() {
-		return query.clone(getSession(), null);
+		return query.rebind(getSession(), null);
 	}
 }

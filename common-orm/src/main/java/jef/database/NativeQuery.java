@@ -35,6 +35,7 @@ import javax.persistence.PersistenceException;
 import javax.persistence.TemporalType;
 
 import jef.common.wrapper.IntRange;
+import jef.database.NamedQueryConfig.ParameterMetadata;
 import jef.database.OperateTarget.TransformerAdapter;
 import jef.database.OperateTarget.TransformerIteratrAdapter;
 import jef.database.Session.PopulateStrategy;
@@ -42,7 +43,6 @@ import jef.database.dialect.type.ResultSetAccessor;
 import jef.database.jdbc.GenerateKeyReturnOper;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.jsqlparser.expression.JpqlDataType;
-import jef.database.jsqlparser.expression.JpqlParameter;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.query.ParameterProvider;
@@ -729,7 +729,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 */
 	public NativeQuery<X> setParameter(String name, Object value) throws NoSuchElementException {
 		if (StringUtils.isNotEmpty(name)) {
-			JpqlParameter p = config.getParams(db).get(name);
+			ParameterMetadata p = config.getParams(db).get(name);
 			if (p == null) {
 				throw new NoSuchElementException("the parameter [" + name + "] doesn't exist in the query:" + config.getName());
 			}
@@ -751,7 +751,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 *             该参数未在查询语句中定义
 	 */
 	public NativeQuery<X> setParameter(int position, Object value) {
-		JpqlParameter p = config.getParams(db).get(Integer.valueOf(position));
+		ParameterMetadata p = config.getParams(db).get(Integer.valueOf(position));
 		if (p == null) {
 			throw new NoSuchElementException("the parameter [" + position + "] doesn't exist in the named query:" + config.getName());
 		}
@@ -773,13 +773,13 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 */
 	public NativeQuery<X> setParameterByString(String name, String value) {
 		if (StringUtils.isNotEmpty(name)) {
-			JpqlParameter p = config.getParams(db).get(name);
+			ParameterMetadata p = config.getParams(db).get(name);
 			if (p == null) {
 				throw new NoSuchElementException("the parameter [" + name + "] doesn't exist in the named query." + config.getName());
 			}
 			Object v = value;
 			if (p.getDataType() != null) {
-				v = toProperType(p.getDataType(), value);
+				v = toProperType(p.getDataType(), value, p);
 			}
 			this.nameParams.put(name, v);
 		}
@@ -799,7 +799,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 */
 	public NativeQuery<X> setParameterByString(String name, String[] value) {
 		if (StringUtils.isNotEmpty(name)) {
-			JpqlParameter p = config.getParams(db).get(name);
+			ParameterMetadata p = config.getParams(db).get(name);
 			if (p == null) {
 				throw new NoSuchElementException("the parameter [" + name + "] doesn't exist in the named query.");
 			}
@@ -856,13 +856,13 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 *             该参数未在查询语句中定义
 	 */
 	public NativeQuery<X> setParameterByString(int position, String value) {
-		JpqlParameter p = config.getParams(db).get(position);
+		ParameterMetadata p = config.getParams(db).get(position);
 		if (p == null) {
 			throw new NoSuchElementException("the parameter [" + position + "] doesn't exist in the named query.");
 		}
 		Object v = value;
 		if (p.getDataType() != null) {
-			v = toProperType(p.getDataType(), value);
+			v = toProperType(p.getDataType(), value, p);
 		}
 		nameParams.put(Integer.valueOf(position), v);
 		return this;
@@ -880,7 +880,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 *             该参数未在查询语句中定义
 	 */
 	public NativeQuery<X> setParameterByString(int position, String[] value) {
-		JpqlParameter p = config.getParams(db).get(position);
+		ParameterMetadata p = config.getParams(db).get(position);
 		if (p == null) {
 			throw new NoSuchElementException("the parameter [" + position + "] doesn't exist in the named query.");
 		}
@@ -910,7 +910,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 
 		Object[] result = new Object[value.length];
 		for (int i = 0; i < value.length; i++) {
-			result[i] = toProperType(type, value[i]);
+			result[i] = toProperType(type, value[i], null);
 		}
 		return result;
 	}
@@ -943,62 +943,66 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 */
 	public Set<Parameter<?>> getParameters() {
 		Set<Parameter<?>> result = new HashSet<Parameter<?>>();
-		for (JpqlParameter jp : config.getParams(this.db).values()) {
-			result.add(jp);
+		for (ParameterMetadata jp : config.getParams(this.db).values()) {
+			result.add(jp.param);
 		}
 		return result;
 	}
 
 	/**
 	 * JPA规范方法 {@inheritDoc}
+	 * 
 	 * @throws NoSuchElementException
 	 *             该参数未在查询语句中定义
 	 */
 	public Parameter<?> getParameter(String name) {
-		JpqlParameter param = config.getParams(db).get(name);
+		ParameterMetadata param = config.getParams(db).get(name);
 		if (param == null) {
 			throw new NoSuchElementException(name);
 		}
-		return param;
+		return param.param;
 	}
 
 	/**
 	 * JPA规范方法 {@inheritDoc}
+	 * 
 	 * @throws NoSuchElementException
 	 *             该参数未在查询语句中定义
 	 */
 	public <X> Parameter<X> getParameter(String name, Class<X> type) {
-		JpqlParameter param = config.getParams(db).get(name);
-		if (param == null || param.getParameterType() != type) {
+		ParameterMetadata param = config.getParams(db).get(name);
+		if (param == null || param.param.getParameterType() != type) {
 			throw new NoSuchElementException(name);
 		}
-		return param;
+		return param.param;
 	}
 
 	/**
 	 * JPA规范方法，获得指定的参数 {@inheritDoc}
+	 * 
 	 * @throws NoSuchElementException
 	 *             该参数未在查询语句中定义
 	 */
 	public Parameter<?> getParameter(int position) {
-		JpqlParameter param = config.getParams(db).get(position);
+		ParameterMetadata param = config.getParams(db).get(position);
 		if (param == null) {
 			throw new NoSuchElementException(String.valueOf(position));
 		}
-		return param;
+		return param.param;
 	}
 
 	/**
 	 * JPA规范方法，获得指定的参数 {@inheritDoc}
+	 * 
 	 * @throws NoSuchElementException
 	 *             该参数未在查询语句中定义
 	 */
 	public <X> Parameter<X> getParameter(int position, Class<X> type) {
-		JpqlParameter param = config.getParams(db).get(position);
-		if (param == null || param.getParameterType() != type) {
+		ParameterMetadata param = config.getParams(db).get(position);
+		if (param == null || param.param.getParameterType() != type) {
 			throw new NoSuchElementException(String.valueOf(position));
 		}
-		return param;
+		return param.param;
 	}
 
 	/**
@@ -1217,7 +1221,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 * 
 	 * @return
 	 */
-	private Object toProperType(JpqlDataType type, String value) {
+	private Object toProperType(JpqlDataType type, String value, ParameterMetadata p) {
 		switch (type) {
 		case DATE:
 			return DateUtils.toSqlDate(DateUtils.autoParse(value));
@@ -1238,10 +1242,13 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		case SQL:
 			return new SqlExpression(value);
 		case $STRING:
+			value = ensureIsEscape(p, value);
 			return "%".concat(value);
 		case STRING$:
+			value = ensureIsEscape(p, value);
 			return value.concat("%");
 		case $STRING$:
+			value = ensureIsEscape(p, value);
 			StringBuilder sb = new StringBuilder(value.length() + 2);
 			return sb.append('%').append(value).append('%').toString();
 		default:
@@ -1249,11 +1256,23 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		}
 	}
 
-	private Object processValue(JpqlParameter p, Object value) {
+	private static final String[] ESCAPE_SEARCH = new String[] { "%", "_" };
+	private static final String[] ESCAPE_REPLACE = new String[] { "/%", "/_" };
+
+	private String ensureIsEscape(ParameterMetadata p, String value) {
+		if (p == null)
+			return value;
+		if (p.escape) {
+			return StringUtils.replaceEach(value, ESCAPE_SEARCH, ESCAPE_REPLACE);
+		}
+		return value;
+	}
+
+	private Object processValue(ParameterMetadata p, Object value) {
 		JpqlDataType type = p.getDataType();
 		if (value instanceof String) {
 			if (type != null) {
-				value = toProperType(type, (String) value);
+				value = toProperType(type, (String) value, p);
 			}
 		} else if ((value instanceof java.util.Date)) {
 			Class<?> clz = value.getClass();
@@ -1327,7 +1346,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 * @param target
 	 * @return
 	 */
-	public NativeQuery<X> clone(Session session, String dbKey) {
+	public NativeQuery<X> rebind(Session session, String dbKey) {
 		OperateTarget target = this.db;
 		if (session != null) {
 			target = session.selectTarget(dbKey == null ? this.db.getDbkey() : dbKey);
@@ -1340,5 +1359,17 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		result.lock = this.lock;
 		result.routing = this.routing;
 		return result;
+	}
+
+	/**
+	 * 通过更换ResultTransformer中的结果返回类型，将当前NativeQuery<X>转为NativeQuery<T> <br>
+	 * 注意这一操作不会创建新的NativeQuery对象，而是将当前对象的类型进行了转换。
+	 * 
+	 * @param type
+	 * @return this
+	 */
+	public <T> NativeQuery<T> asTypeOf(Class<T> type) {
+		this.resultTransformer.setResultType(type);
+		return (NativeQuery<T>) this;
 	}
 }
