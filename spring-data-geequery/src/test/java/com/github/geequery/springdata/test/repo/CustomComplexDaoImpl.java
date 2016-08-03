@@ -1,16 +1,11 @@
-package com.github.geequery.springdata.test.repo.impl;
+package com.github.geequery.springdata.test.repo;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import org.springframework.stereotype.Repository;
-
 import com.github.geequery.springdata.test.entity.ComplexFoo;
-import com.github.geequery.springdata.test.entity.Foo;
-import com.github.geequery.springdata.test.repo.ICustomComplexDao;
 
-@Repository
-public class CustomComplexDaoImpl implements ICustomComplexDao{
+public class CustomComplexDaoImpl implements CustomComplexDao{
 	@PersistenceContext
 	private EntityManager em;
 	

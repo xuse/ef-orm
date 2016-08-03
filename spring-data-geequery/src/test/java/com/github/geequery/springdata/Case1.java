@@ -32,7 +32,7 @@ import com.github.geequery.springdata.test.entity.VersionLog;
 import com.github.geequery.springdata.test.repo.ComplexFooDao;
 import com.github.geequery.springdata.test.repo.FooDao;
 import com.github.geequery.springdata.test.repo.FooEntityDao;
-import com.github.geequery.springdata.test.repo.ICustomComplexDao;
+import com.github.geequery.springdata.test.repo.CustomComplexDao;
 
 /**
  * 与Spring集成的示例。 本示例使用的xml作为Spring配置。参见
@@ -441,7 +441,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	}
 	
 	@Autowired
-	private ICustomComplexDao complex2;
+	private CustomComplexDao complex2;
 	
 	@Test
 	public void testCustom(){
