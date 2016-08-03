@@ -51,4 +51,6 @@ public interface FooDao extends GqRepository<Foo, Integer> {
 	 * @return
 	 */
 	public List<Foo> findByAgeIn(Collection<Integer> ages);
+	
+//	public List<Foo> updateAgeById(int age,int id);
 }

@@ -16,6 +16,7 @@ import org.easyframe.enterprise.spring.CommonDao;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -30,7 +31,8 @@ import com.github.geequery.springdata.test.entity.Foo;
 import com.github.geequery.springdata.test.entity.VersionLog;
 import com.github.geequery.springdata.test.repo.ComplexFooDao;
 import com.github.geequery.springdata.test.repo.FooDao;
-import com.github.geequery.springdata.test.repo.FooDao2;
+import com.github.geequery.springdata.test.repo.FooEntityDao;
+import com.github.geequery.springdata.test.repo.ICustomComplexDao;
 
 /**
  * 与Spring集成的示例。 本示例使用的xml作为Spring配置。参见
@@ -49,7 +51,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	private FooDao foodao;
 
 	@javax.annotation.Resource
-	private FooDao2 foodao2;
+	private FooEntityDao foodao2;
 
 	@javax.annotation.Resource
 	private ComplexFooDao complex;
@@ -436,5 +438,14 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 		QB.fieldAdd(foo, Foo.Field.age, 100);
 		foo.setName("姓名也更新了");
 		commonDao.update(foo);
+	}
+	
+	@Autowired
+	private ICustomComplexDao complex2;
+	
+	@Test
+	public void testCustom(){
+		ComplexFoo cf = new ComplexFoo(1, 2);
+		complex2.someCustomMethod(cf);
 	}
 }

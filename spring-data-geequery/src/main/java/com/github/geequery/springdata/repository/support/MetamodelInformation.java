@@ -116,7 +116,7 @@ public class MetamodelInformation<T,ID extends Serializable> extends AbstractEnt
 		if(metadata.getPKFields().size()==1){
 			return (Class<ID>) metadata.getPKFields().get(0).getFieldType();
 		}
-		return (Class<ID>) List.class;
+		return (Class)Object.class;
 	}
 
 	/*

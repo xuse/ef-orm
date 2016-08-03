@@ -23,7 +23,7 @@ import com.github.geequery.springdata.test.entity.Foo;
  *
  */
 @RepositoryDefinition(domainClass = Foo.class, idClass = Integer.class)
-public interface FooDao2 {
+public interface FooEntityDao {
 
 	/**
 	 * @Query(value = "select * from foo u where u.name like ?1", nativeQuery =
