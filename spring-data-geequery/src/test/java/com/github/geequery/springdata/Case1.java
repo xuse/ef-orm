@@ -86,6 +86,9 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 		System.out.println("=== findBySql63() ====");
 		List<Foo> result = foodao2.findBySql62(0, "张", "id desc");
 		System.out.println(result);
+		
+		ComplexFoo cf = new ComplexFoo(1, 2);
+		complex2.someCustomMethod(cf);
 	}
 
 	@Test

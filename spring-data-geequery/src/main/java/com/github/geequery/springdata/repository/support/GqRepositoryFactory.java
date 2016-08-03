@@ -83,7 +83,7 @@ public class GqRepositoryFactory extends RepositoryFactorySupport {
 	 */
 	@Override
 	protected Object getTargetRepository(RepositoryInformation information) {
-		GqRepository<?,?> repository = getTargetRepository(information, em);
+		GqRepository<?, ?> repository = getTargetRepository(information, em);
 		// repository.setRepositoryMethodMetadata(crudMethodMetadataPostProcessor.getCrudMethodMetadata());
 		return repository;
 	}
@@ -98,7 +98,7 @@ public class GqRepositoryFactory extends RepositoryFactorySupport {
 	 * @see #getTargetRepository(RepositoryMetadata)
 	 * @return
 	 */
-	protected <T, ID extends Serializable> GqRepository<T,ID> getTargetRepository(RepositoryInformation information, EntityManager entityManager) {
+	protected <T, ID extends Serializable> GqRepository<T, ID> getTargetRepository(RepositoryInformation information, EntityManager entityManager) {
 		EntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType());
 		return getTargetRepositoryViaReflection(information, entityInformation, entityManager);
 	}
@@ -131,7 +131,7 @@ public class GqRepositoryFactory extends RepositoryFactorySupport {
 
 	@Override
 	public <T, ID extends Serializable> EntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
-		return new MetamodelInformation<T,ID>(domainClass, emf);
+		return new MetamodelInformation<T, ID>(domainClass, emf);
 	}
 
 	// /*

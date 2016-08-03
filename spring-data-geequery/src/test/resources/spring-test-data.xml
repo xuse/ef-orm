@@ -44,10 +44,5 @@
 		transaction-manager-ref="transactionManager">
 		
 	</gq:repositories>
-	<gq:repositories base-package="com.github.geequery.springdata.test.repo"
-		repository-impl-postfix="Impl">
-		
-	</gq:repositories>
-
 	<bean id="commonDao" class="org.easyframe.enterprise.spring.CommonDaoImpl" />
 </beans> 
