@@ -294,7 +294,7 @@ public class DynamicTableTest extends org.junit.Assert {
 			for (VarObject var : holder.get()) {
 				holder.delete(var);
 			}
-			holder.commit();
+			holder.commitAndClose();
 			List<VarObject> result = db.select(QB.create(meta));
 			System.out.println("Size=" + result.size());
 			assertEquals(result.size(), holder.supportsNewRecord()?1:0); //之前查出的记录全部被删除，只剩下新插入的记录卡了

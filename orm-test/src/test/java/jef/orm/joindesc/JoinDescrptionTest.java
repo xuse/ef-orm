@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import jef.database.DbClient;
+import jef.database.ORMConfig;
 import jef.database.Session;
 import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
@@ -32,6 +33,9 @@ import org.junit.runners.MethodSorters;
 public class JoinDescrptionTest {
 	@DatabaseInit
 	public void init() throws SQLException {
+		ORMConfig.getInstance().setSelectTimeout(20);
+		ORMConfig.getInstance().setUpdateTimeout(20);
+		ORMConfig.getInstance().setDeleteTimeout(20);
 		db.dropTable(Student.class);
 		db.createTable(Student.class);
 		db.refreshTable(Lesson.class);
