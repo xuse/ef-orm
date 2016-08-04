@@ -8,6 +8,7 @@ import java.util.List;
 
 import javax.persistence.OptimisticLockException;
 
+import jef.database.ORMConfig;
 import jef.database.QB;
 import jef.database.RecordsHolder;
 import jef.database.query.Query;
@@ -16,7 +17,6 @@ import org.easyframe.enterprise.spring.CommonDao;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -32,17 +32,17 @@ import com.github.geequery.springdata.test.entity.VersionLog;
 import com.github.geequery.springdata.test.repo.ComplexFooDao;
 import com.github.geequery.springdata.test.repo.FooDao;
 import com.github.geequery.springdata.test.repo.FooEntityDao;
-import com.github.geequery.springdata.test.repo.CustomComplexDao;
 
 /**
  * 与Spring集成的示例。 本示例使用的xml作为Spring配置。参见
  * src/main/resources/spring/spring-test-case1.xml
  * 
  * @author jiyi
- *
+ * 
  */
 @ContextConfiguration(locations = { "classpath:spring-test-data.xml" })
-public class Case1 extends AbstractJUnit4SpringContextTests implements InitializingBean {
+public class Case1 extends AbstractJUnit4SpringContextTests implements
+		InitializingBean {
 
 	@javax.annotation.Resource
 	private CommonDao commonDao;
@@ -56,93 +56,66 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	@javax.annotation.Resource
 	private ComplexFooDao complex;
 
-	// @Test
-	// public void test1() throws SQLException{
-	// commonDao.getNoTransactionSession().dropTable(Foo.class);
-	// commonDao.getNoTransactionSession().createTable(Foo.class);
-	// {
-	// Foo foo=new Foo();
-	// foo.setName("Hello!");
-	// commonDao.batchInsert(Arrays.asList(foo));
-	// }
-	// {
-	// Foo foo=new Foo();
-	// foo.setAge(3);
-	// foo.setName("Hello!");
-	// //update MY_FOO set age=3 where name='Hello!'
-	// commonDao.updateByProperty(foo, "name");
-	// }
-	// {
-	// Foo foo=commonDao.loadByPrimaryKey(Foo.class, 1);
-	// System.out.println(foo.getName());
-	// }
-	// {
-	// //根据ID删除
-	// commonDao.removeByField(Foo.class, "id", 1);
-	// }
-	// }
+	/**
+	 * 使用方法名来定义查询的案例
+	 * 
+	 * @throws SQLException
+	 */
 	@Test
-	public void testx(){
-		System.out.println("=== findBySql63() ====");
-		List<Foo> result = foodao2.findBySql62(0, "张", "id desc");
-		System.out.println(result);
-		
-		ComplexFoo cf = new ComplexFoo(1, 2);
-		complex2.someCustomMethod(cf);
-	}
-
-	@Test
-	public void test2() throws SQLException {
-
-		// =========================
+	public void testFooDAO() throws SQLException {
+		// =============== 单字段查找 ==========
 		{
 			System.out.println("=== FindByName ===");
 			Foo foo = foodao.findByName("张三");
 			System.out.println(foo.getName());
 			System.out.println(foo.getId());
 		}
-		// =========================
+		// =============查找，带排序============
 		{
 			System.out.println("=== FindByAgeOrderById ===");
 			List<Foo> fooList = foodao.findByAgeOrderById(0);
 			System.out.println(fooList);
-			
-			int id=fooList.get(0).getId();
-			boolean updated=foodao.lockItAndUpdate(id,new Update<Foo>(){
+
+			int id = fooList.get(0).getId();
+			// =============== 使用悲观锁更新 ==================
+			boolean updated = foodao.lockItAndUpdate(id, new Update<Foo>() {
 				@Override
 				public void setValue(Foo value) {
 					value.setName("李四");
 					value.setRemark("悲观锁定");
-					
+
 				}
 			});
-			if(updated){
-				Foo u=foodao.findOne(id);
-				Assert.assertEquals("悲观锁定",u.getRemark());
+			if (updated) {
+				Foo u = foodao.findOne(id);
+				Assert.assertEquals("悲观锁定", u.getRemark());
 			}
 		}
-		// =========================
+		// ==============使用分页，固定排序===========
 		{
 			System.out.println("=== FindByAge Page ===");
-			Page<Foo> fooPage = foodao.findByAgeOrderById(0, new PageRequest(1, 4));
+			Page<Foo> fooPage = foodao.findByAgeOrderById(0, new PageRequest(1,
+					4));
 			System.out.println(fooPage.getTotalElements());
 			System.out.println(Arrays.toString(fooPage.getContent().toArray()));
 		}
-		// =========================
+		// ==============分页+传入排序参数===========
 		{
 			System.out.println("=== FindAll(page+sort) ===");
-			Page<Foo> p = foodao.findAll(new PageRequest(0, 3, new Sort(new Order(Direction.DESC, "id"))));
+			Page<Foo> p = foodao.findAll(new PageRequest(0, 3, new Sort(
+					new Order(Direction.DESC, "id"))));
 			System.out.println(p.getTotalElements());
 			System.out.println(Arrays.toString(p.getContent().toArray()));
 		}
 
-		// ==============================================
+		// ===================不分页，传入排序参数===========================
 		{
 			System.out.println("=== FindAll(sort) ===");
-			Iterable<Foo> iters = foodao.findAll(new Sort(new Order(Direction.DESC, "id")));
+			Iterable<Foo> iters = foodao.findAll(new Sort(new Order(
+					Direction.DESC, "id")));
 			System.out.println("list=" + iters);
 		}
-		// =========================
+		// ===========查询多个ID的记录==============
 		{
 			System.out.println("=== FindAll(?,?,?) ===");
 			List<Integer> id = Arrays.<Integer> asList(1, 3, 4, 5);
@@ -150,24 +123,28 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			System.out.println("list=" + foos);
 		}
 		{
+			// =========== 在方法中携带运算符 like ===========
 			System.out.println("=== findByNameLike ===");
 			List<Foo> foo = foodao.findByNameLike("%四");
 			System.out.println(foo);
 		}
 
 		{
+			// 在方法中携带运算符 contains，并加上另一个条件
+			// 如果入参顺序和方法名中的一致，可以不加注解
 			System.out.println("=== findByNameContainsAndAge ===");
 			List<Foo> foos = foodao.findByNameContainsAndAge("李", 0);
 			System.out.println(foos);
 		}
 
 		{
-			// 多参数顺序测试否有问题(已修复)
+			// 多参数顺序测试否有问题
 			System.out.println("=== findByNameStartsWithAndAge ===");
 			List<Foo> foos = foodao.findByNameStartsWithAndAge(0, "李");
 			System.out.println(foos);
 		}
 		{
+			// 删除全部
 			System.out.println("=== DeleteAll() ===");
 			foodao.deleteAll();
 		}
@@ -177,25 +154,32 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	public void testFooDao2() {
 		{
 			/**
-			 * 最基本的@Query查询，注意需要@Param来绑定参数 
+			 * 最基本的@Query查询，注意需要@Param来绑定参数
 			 */
 			Foo foo = foodao2.findBysName("张三");
+			System.out.println(foo);
+		}
+		{
+			/**
+			 * Like查询，不使用@Param来绑定
+			 */
+			Foo foo = foodao2.findByusername("张");
 			System.out.println(foo);
 		}
 		// =========================
 		{
 			/**
-			 * 1 @Query(name='xxx')可以从预定义的命名查询中获得一个配置好的查询语句
-			 * 2 如果使用 @Param 对应 :name，那么方法的参数先后顺序可以随意修改。反之，如果是 ?1 ?2方式进行参数绑定，则方法参数顺序有要求。
+			 * 1 @Query(name='xxx')可以从预定义的命名查询中获得一个配置好的查询语句 2 如果使用 @Param 对应
+			 * :name，那么方法的参数先后顺序可以随意修改。反之，如果是 ?1 ?2方式进行参数绑定，则方法参数顺序有要求。
 			 */
-			// 
+			//
 			List<Foo> foos = foodao2.findBySql(new Date(), "李四");
 			System.out.println(foos);
 		}
 		// =========================
 		{
 			/**
-			 *  没有设置@param参数时， ?1 ?2 来分别表示第一个和第二个参数。此时方法参数顺序有要求。
+			 * 没有设置@param参数时， ?1 ?2 来分别表示第一个和第二个参数。此时方法参数顺序有要求。
 			 */
 			List<Foo> foos = foodao2.findBySql2("李四", new Date());
 			System.out.println(foos);
@@ -219,47 +203,59 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 		}
 		{
 			/**
-			 * 1、SQL语句查询支持分页功能
-			 * 2、传入null可以表示忽略对应的查询条件吗（动态SQL）? 默认情况下是不可以的，但是使用 @IgnoreIf()注解可以化不可能为可能
+			 * 1、SQL语句查询支持分页功能 2、传入null可以表示忽略对应的查询条件吗（动态SQL）? 默认情况下是不可以的，但是使用
+			 * 
+			 * @IgnoreIf()注解可以化不可能为可能
 			 */
-			Page<Foo> page = (Page<Foo>) foodao2.findBySql5(0, null, new PageRequest(1, 4));
+			Page<Foo> page = (Page<Foo>) foodao2.findBySql5(0, null,
+					new PageRequest(1, 4));
 			System.out.println(page.getTotalElements());
 			System.out.println(page.getContent());
 		}
 		{
 			/**
-			 * 1、like <$string$>的用法
-			 * 2、顺序不能用Spring-data的方法传入并使用。
-			 * 但是可以换一种方法
+			 * 1、like <$string$>的用法 2、顺序不能用Spring-data的方法传入并使用。 但是可以换一种方法
 			 */
 			System.out.println("=== findBySql6() ====");
-			List<Foo> result = foodao2.findBySql6(0, "张", new Sort(new Order(Direction.DESC, "id")));
+			List<Foo> result = foodao2.findBySql6(0, "张", new Sort(new Order(
+					Direction.DESC, "id")));
 			System.out.println(result);
-			
-			System.out.println("=== findBySql62() ====");
+
+			System.out.println("=== findBySql6-2() ====");
 			result = foodao2.findBySql62(0, "张", "id desc");
 			System.out.println(result);
 		}
 		{
-			Page<Foo> page = foodao2.findBySql7(0, "", new PageRequest(3, 5));
+			/**
+			 * 1、条件自动省略 2、如果条件中带有 % _等特殊符号，会自动转义
+			 */
+			Page<Foo> page = foodao2.findBySql7(0, "李%", new PageRequest(3, 5));
+			System.out.println(page.getContent());
+
+			page = foodao2.findBySql7(0, "", new PageRequest(3, 5));
 			System.out.println(page.getContent());
 		}
 		{
-			Foo foo = foodao2.findByusername("张");
-			System.out.println(foo);
+			/**
+			 * 使用SQL语句插入记录
+			 */
+			int ii = foodao2.insertInto("六河", 333, "测试", new Date());
+			System.out.println(ii);
+			ii = foodao2.insertInto2("狂四", 555, "测试", new Date());
+			System.out.println(ii);
 		}
 		{
-			int ii = foodao2.insertInto("狂四", 333, "测试", new Date());
-			System.out.println(ii);
-			ii = foodao2.insertInto2("六河", 555, "测试", new Date());
-			System.out.println(ii);
-		}
-		{
+			/**
+			 * 使用SQL语句来update
+			 */
 			int ii = foodao2.updateFooSetAgeByAgeAndId(new Date(), 12, 2);
 			System.out.println(ii);
 		}
 	}
 
+	/**
+	 * 当有复合主键时
+	 */
 	@Test
 	public void testComplexId() {
 		// 测试复合主键的情况
@@ -279,7 +275,8 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			complex.save(cf);
 		}
 		{
-			Iterable<ComplexFoo> list = complex.findAll(Arrays.asList(new int[] { 1, 2 }, new int[] { 2, 2 }));
+			Iterable<ComplexFoo> list = complex.findAll(Arrays.asList(
+					new int[] { 1, 2 }, new int[] { 2, 2 }));
 			for (ComplexFoo foo : list) {
 				System.out.println(foo);
 			}
@@ -289,43 +286,9 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 		}
 	}
 
-	@Override
-	public void afterPropertiesSet() throws Exception {
-		commonDao.getNoTransactionSession().dropTable(Foo.class, VersionLog.class);
-		commonDao.getNoTransactionSession().createTable(Foo.class, VersionLog.class);
-		{
-			List<Foo> list = new ArrayList<Foo>();
-			list.add(new Foo("张三"));
-			list.add(new Foo("李四"));
-			list.add(new Foo("王五"));
-			list.add(new Foo("张昕"));
-			list.add(new Foo("张鑫"));
-			list.add(new Foo("测试"));
-			list.add(new Foo("张三丰"));
-			list.add(new Foo("李元吉"));
-			list.add(new Foo("李渊"));
-			list.add(new Foo("李建成"));
-			list.add(new Foo("李世民"));
-			list.add(new Foo("赵日天"));
-			list.add(new Foo("叶良辰"));
-			list.add(new Foo("玛丽苏"));
-			list.add(new Foo("龙傲天"));
-			foodao.save(list);
-		}
-		{
-			VersionLog v1 = new VersionLog();
-			v1.setName("一见钟情");
-			VersionLog v2 = new VersionLog();
-			v2.setName("两两相依");
-			VersionLog v3 = new VersionLog();
-			v3.setName("三生三世");
-			VersionLog v4 = new VersionLog();
-			v4.setName("四海为家");
-			commonDao.batchInsert(Arrays.asList(v1, v2, v3, v4));
-		}
-
-	}
-
+	/**
+	 * 锁案例1-1： 乐观锁
+	 */
 	@Test(expected = OptimisticLockException.class)
 	public void testVersionUpdateAndOptLock() {
 		int id;
@@ -357,6 +320,9 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 
 	}
 
+	/**
+	 * 锁案例1-2：批量更新模式下的乐观锁
+	 */
 	@Test
 	public void testVersionAndOptLockInBatch() {
 		int id;
@@ -396,7 +362,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	}
 
 	/**
-	 * 演示悲观锁的使用
+	 * 锁案例2：悲观锁的使用
 	 */
 	@Test
 	public void testPessimisticLock() {
@@ -408,8 +374,10 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			id = v.getId();
 		}
 		{
-			Query<VersionLog> query = QB.create(VersionLog.class).addCondition(QB.between(VersionLog.Field.id, id - 4, id));
-			RecordsHolder<VersionLog> records = commonDao.selectForUpdate(query);
+			Query<VersionLog> query = QB.create(VersionLog.class).addCondition(
+					QB.between(VersionLog.Field.id, id - 4, id));
+			RecordsHolder<VersionLog> records = commonDao
+					.selectForUpdate(query);
 			try {
 				for (VersionLog version : records) {
 					version.setName("此时:" + version.getName());
@@ -422,7 +390,8 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 
 		}
 		{
-			Query<VersionLog> query = QB.create(VersionLog.class).addCondition(QB.between(VersionLog.Field.id, id - 4, id));
+			Query<VersionLog> query = QB.create(VersionLog.class).addCondition(
+					QB.between(VersionLog.Field.id, id - 4, id));
 			List<VersionLog> records = commonDao.find(query);
 			for (VersionLog version : records) {
 				System.out.println(version.getName());
@@ -432,7 +401,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	}
 
 	/**
-	 * 特定场景下不需要加锁更新
+	 * 锁案例3：特定场景下不需要加锁更新
 	 */
 	@Test
 	public void testUpdateWithoutLock() {
@@ -442,13 +411,85 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 		foo.setName("姓名也更新了");
 		commonDao.update(foo);
 	}
-	
-	@Autowired
-	private CustomComplexDao complex2;
-	
+
+	/**
+	 * 使用自行实现的扩展方法
+	 */
 	@Test
-	public void testCustom(){
+	public void testCustom() {
 		ComplexFoo cf = new ComplexFoo(1, 2);
-		complex2.someCustomMethod(cf);
+		complex.someCustomMethod(cf);
+	}
+
+	/**
+	 * 在使用Spring-data的同时，传统的commondao/Session等方式操作依然可以正常使用
+	 * 
+	 * @throws SQLException
+	 */
+	@Test
+	public void test1() throws SQLException {
+		commonDao.getNoTransactionSession().dropTable(Foo.class);
+		commonDao.getNoTransactionSession().createTable(Foo.class);
+		{
+			Foo foo = new Foo();
+			foo.setName("Hello!");
+			commonDao.batchInsert(Arrays.asList(foo));
+		}
+		{
+			Foo foo = new Foo();
+			foo.setAge(3);
+			foo.setName("Hello!");
+			// update MY_FOO set age=3 where name='Hello!'
+			commonDao.updateByProperty(foo, "name");
+		}
+		{
+			Foo foo = commonDao.loadByPrimaryKey(Foo.class, 1);
+			System.out.println(foo.getName());
+		}
+		{
+			// 根据ID删除
+			commonDao.removeByField(Foo.class, "id", 1);
+		}
+	}
+
+	@Override
+	public void afterPropertiesSet() throws Exception {
+		ORMConfig.getInstance().setDebugMode(false);
+		commonDao.getNoTransactionSession().dropTable(Foo.class,
+				VersionLog.class);
+		commonDao.getNoTransactionSession().createTable(Foo.class,
+				VersionLog.class);
+		{
+			List<Foo> list = new ArrayList<Foo>();
+			list.add(new Foo("张三"));
+			list.add(new Foo("李四"));
+			list.add(new Foo("王五"));
+			list.add(new Foo("张昕"));
+			list.add(new Foo("张鑫"));
+			list.add(new Foo("测试"));
+			list.add(new Foo("张三丰"));
+			list.add(new Foo("李元吉"));
+			list.add(new Foo("李渊"));
+			list.add(new Foo("李建成"));
+			list.add(new Foo("李世民"));
+			list.add(new Foo("赵日天"));
+			list.add(new Foo("叶良辰"));
+			list.add(new Foo("玛丽苏"));
+			list.add(new Foo("龙傲天"));
+			foodao.save(list);
+		}
+		{
+			VersionLog v1 = new VersionLog();
+			v1.setName("一见钟情");
+			VersionLog v2 = new VersionLog();
+			v2.setName("两两相依");
+			VersionLog v3 = new VersionLog();
+			v3.setName("三生三世");
+			VersionLog v4 = new VersionLog();
+			v4.setName("四海为家");
+			commonDao.batchInsert(Arrays.asList(v1, v2, v3, v4));
+		}
+		ORMConfig.getInstance().setDebugMode(true);
+		System.out.println("============= 下面案例正式开始 ===========");
 	}
 }
