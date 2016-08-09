@@ -13,9 +13,9 @@ import javax.persistence.PersistenceException;
 
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
+import jef.database.DbMetaData;
 import jef.database.DbUtils;
 import jef.database.ORMConfig;
-import jef.database.OperateTarget;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.ColumnType.Clob;
 import jef.database.dialect.ColumnType.Varchar;
@@ -202,8 +202,8 @@ public class PostgreSqlDialect extends AbstractDialect {
 	}
 
 	@Override
-	public void init(OperateTarget db) {
-		super.init(db);
+	public void accept(DbMetaData db) {
+		super.accept(db);
 		try {
 			ensureUserFunction(this.functions.get("timestampdiff"), db);
 		} catch (SQLException e) {

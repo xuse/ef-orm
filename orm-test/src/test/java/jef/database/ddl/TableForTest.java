@@ -7,21 +7,20 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.Lob;
 import javax.persistence.Table;
-
-import com.github.geequery.orm.annotation.Index;
-import com.github.geequery.orm.annotation.Indexes;
+import javax.persistence.UniqueConstraint;
 
 import jef.database.annotation.EasyEntity;
 import jef.database.annotation.Indexed;
 
-@Table(name = "TABLE_FOR_TEST")
+@Table(name = "TABLE_FOR_TEST",indexes={
+		@Index(columnList="id,name desc",name="IDX_DEFAULT_TEST",unique=true)  //单独再定义一个复合索引		
+},uniqueConstraints={@UniqueConstraint(
+		columnNames={"code","name"})})
 @Entity
 @EasyEntity(checkEnhanced=false)
-@Indexes({
-	@Index(fields={"id","name desc"},name="IDX_DEFAULT_TEST",definition="unique")  //单独再定义一个复合索引
-})
 public class TableForTest extends jef.database.DataObject {
 	private static final long serialVersionUID = 1L;
 	@GeneratedValue(strategy=GenerationType.AUTO)

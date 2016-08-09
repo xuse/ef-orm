@@ -147,10 +147,10 @@ public final class TableMetadata extends AbstractMetadata {
 				tableName = table.name();
 			}
 			for(javax.persistence.Index index: table.indexes()){
-				this.indexMap.add(IndexDef.create(index));
+				this.indexes.add(IndexDef.create(index));
 			}
 			for(javax.persistence.UniqueConstraint unique: table.uniqueConstraints()){
-				
+				this.uniques.add(unique);
 			}
 		}
 		if (tableName == null) {
@@ -233,7 +233,7 @@ public final class TableMetadata extends AbstractMetadata {
 	}
 
 	public List<IndexDef> getIndexDefinition() {
-		return indexMap;
+		return indexes;
 	}
 
 	public List<Field> getPKField() {

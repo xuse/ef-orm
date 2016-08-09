@@ -80,6 +80,53 @@ public class Index {
 	 * </UL>
 	 */
 	private int type;
+	
+	/**
+	 * 描述索引的用途
+	 */
+	public enum Usage{
+		/**
+		 * 主键产生的索引
+		 */
+		PK,
+		/**
+		 * 外键产生的索引
+		 */
+		FK,
+		/**
+		 * Unique约束产生的索引
+		 */
+		UNIQUE,
+		/**
+		 * 独立索引
+		 */
+		INDEX
+	}
+	/*
+	 * 索引的用途
+	 * 一般来说有大部分数据库有四种约束 PK FK UNIQUE CHECK (NOT NULL & DEFAULT不算)，前三种都会产生Index。
+	 * 一个索引能否直接删除，取决于其是属于约束。 问题是现在无法判断一个Index究竟属于谁。
+	 * 由于JDBC不支持直接获得Index的类型，也不支持获得数据库CONSTRAINT。因此我们只能用获得Index的方法
+	 * 来间接的获得UNIQUE。此时如何判定INDEX是一个独立的INDEX还是一个隶属于表的CONSTRAINT。是个麻烦的问题。
+	 *
+	 * 在MySQL上，Unique index等同于UNIQUE CONSTRAINT。MySQL上的Constraint增加的索引，除了PK外都可以drop index删除。
+	 * 在ORALCE/Derby/Postgres上，UNIQIE index是UNIQUE CONSTRAINT的一个组成部分，不能直接删除
+	 * 
+	 * 因此，究竟是一个独立索引，还是一个附属于约束 (PK.FK.UNIQUE)的索引，这是个问题。
+	 * 怎么才能判断出来呢？
+	 * 相对来说，PK FK 比较好判断。
+	 * 
+	 * 复杂的方法不是没有，对于MySQL可以用
+	 * show create table得到建表语句，然后解析可以得到所有约束——反正除了主键受保护，别的随便删
+	 * ORACLE麻烦一点，查系统表，或者用select table_name,dbms_metadata.get_ddl('TABLE','TABLEMASTER')from user_tables where table_name='TABLEMASTER'; 
+
+	 * 得到建表语句。PG需要查系统表pg_constraint。
+	 * Derby？
+	 * MSSQL ？
+	 * 
+	 * 要么先不支持。反正索引如果删不掉那就是约束。
+	 */
+	//private Usage usage;
 
 	@Override
 	public String toString() {

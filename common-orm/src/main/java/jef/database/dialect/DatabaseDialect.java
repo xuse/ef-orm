@@ -27,7 +27,6 @@ import javax.sql.rowset.CachedRowSet;
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.DbMetaData;
-import jef.database.OperateTarget;
 import jef.database.datasource.DataSourceInfo;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
@@ -369,7 +368,7 @@ public interface DatabaseDialect {
 	 * 
 	 * @param db
 	 */
-	void init(OperateTarget db);
+	void accept(DbMetaData db);
 
 	/**
 	 * 将插入语句转化为最快操作的语句

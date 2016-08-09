@@ -78,7 +78,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	 * 记录对应表的所有索引，当建表时使用可自动创建索引
 	 * Revised 2016-8 JPA 2.1规范中增加的@Table的indexes属性和Index注解，因此删除EF原先自己设计的Index注解，改用标准的JPA注解
 	 */
-	final List<IndexDef> indexMap = new ArrayList<IndexDef>(5);
+	final List<IndexDef> indexes = new ArrayList<IndexDef>(5);
 	
 	/**
 	 * 记录对应表所有Unqie约束.当建表时可自动创建约束
@@ -421,6 +421,10 @@ public abstract class AbstractMetadata implements ITableMetadata {
 
 	public void setUseOuterJoin(boolean useOuterJoin) {
 		this.useOuterJoin = useOuterJoin;
+	}
+	
+	public List<javax.persistence.UniqueConstraint> getUniques() {
+		return uniques;
 	}
 
 	public VersionSupportColumn getVersionColumn() {

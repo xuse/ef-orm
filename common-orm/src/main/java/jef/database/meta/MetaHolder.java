@@ -736,7 +736,7 @@ public final class MetaHolder {
 				IndexDef indexDef=new IndexDef(i.name(),new String[] { i.desc() ? field.name() + " desc" : field.name() });
 				indexDef.setUnique(i.unique());
 				indexDef.setDefinition(i.definition());
-				meta.indexMap.add(indexDef);
+				meta.indexes.add(indexDef);
 			}
 		}
 	}

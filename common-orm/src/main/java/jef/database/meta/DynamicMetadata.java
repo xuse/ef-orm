@@ -112,7 +112,7 @@ public class DynamicMetadata extends AbstractMetadata {
 		}
 		this.refFieldsByName.putAll(parent.getRefFieldsByName());
 		this.refFieldsByRef.putAll(parent.getRefFieldsByRef());
-		this.indexMap.addAll(parent.getIndexDefinition());
+		this.indexes.addAll(parent.getIndexDefinition());
 
 	}
 
@@ -453,7 +453,7 @@ public class DynamicMetadata extends AbstractMetadata {
 	public void addIndex(String[] fields, String comment) {
 		IndexDef def=new IndexDef("",fields);
 		def.setDefinition(comment);
-		indexMap.add(def);
+		indexes.add(def);
 	}
 
 	/**
@@ -473,7 +473,7 @@ public class DynamicMetadata extends AbstractMetadata {
 	}
 
 	public List<IndexDef> getIndexDefinition() {
-		return indexMap;
+		return indexes;
 	}
 
 	public PartitionTable getPartition() {

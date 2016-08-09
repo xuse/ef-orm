@@ -41,7 +41,6 @@ import jef.common.log.LogUtil;
 import jef.database.DbCfg;
 import jef.database.DbFunction;
 import jef.database.DbMetaData;
-import jef.database.OperateTarget;
 import jef.database.datasource.DataSourceInfo;
 import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.type.AColumnMapping;
@@ -687,7 +686,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	public void toExtremeInsert(InsertSqlClause sql) {
 	}
 
-	public void init(OperateTarget asOperateTarget) {
+	public void accept(DbMetaData dbMetadata) {
 	}
 
 	/**
@@ -697,8 +696,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	 * @param db
 	 * @throws SQLException
 	 */
-	protected static void ensureUserFunction(FunctionMapping mapping, OperateTarget db) throws SQLException {
-		DbMetaData meta = db.getMetaData();
+	protected static void ensureUserFunction(FunctionMapping mapping, DbMetaData meta) throws SQLException {
 		boolean flag = true;
 		for (String name : mapping.requiresUserFunction()) {
 			if (meta.checkedFunctions.contains(name)) {

@@ -21,7 +21,7 @@ import java.util.Arrays;
 
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
-import jef.database.OperateTarget;
+import jef.database.DbMetaData;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.jsqlparser.expression.LongValue;
 import jef.database.meta.DbProperty;
@@ -230,8 +230,8 @@ public class DerbyDialect extends AbstractDialect {
 	}
 	
 	@Override
-	public void init(OperateTarget db) {
-		super.init(db);
+	public void accept(DbMetaData db) {
+		super.accept(db);
 		try {
 			ensureUserFunction(this.functions.get("trunc"), db);
 		} catch (SQLException e) {

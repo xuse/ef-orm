@@ -23,7 +23,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,11 +73,13 @@ import jef.database.meta.ITableMetadata;
 import jef.database.meta.Index;
 import jef.database.meta.Index.IndexItem;
 import jef.database.meta.MetaHolder;
+import jef.database.meta.MetadataFeature;
 import jef.database.meta.PrimaryKey;
 import jef.database.meta.SequenceInfo;
 import jef.database.meta.TableCreateStatement;
 import jef.database.meta.TableInfo;
 import jef.database.query.DefaultPartitionCalculator;
+import jef.database.query.Func;
 import jef.database.support.MetadataEventListener;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.executor.ExecutorImpl;
@@ -103,8 +104,7 @@ import org.easyframe.enterprise.spring.TransactionMode;
  * 
  * 外键必须确保在被引用的表上是唯一的。否则不能创建。 因此外键必然要么引用表的主键、要么引用表的唯一约束键。 外键必然有索引。也必然有键.
  * 
- * 所有约束都可以通过disable和enable命令启用和禁用 ALTER TABLE products disable CONSTRAINT
- * fk_supplier;
+ * 所有约束都可以通过disable和enable命令启用和禁用 ALTER TABLE products disable CONSTRAINT fk_supplier;
  * 
  * 主键、唯一约束一定有索引。其他约束不一定有索引
  * 
@@ -163,20 +163,12 @@ public class DbMetaData {
 	 */
 	private final Map<String, Set<String>> subtableCache = new ConcurrentHashMap<String, Set<String>>();
 
-	// 运行时缓存
-	private String[] tableTypes;
-	/**
-	 * 记录数据库是否支持恢复点
-	 */
-	private Boolean supportsSavepoints;
-
-	private int jdbcVersion;
-
-	private long dbTimeDelta;
+	private MetadataFeature feature;
 
 	private DdlGenerator ddlGenerator;
 
 	private DataSource ds;
+	private long dbTimeDelta;
 
 	private IUserManagedPool parent;
 
@@ -213,17 +205,19 @@ public class DbMetaData {
 		this.subtableCacheExpireTime = System.currentTimeMillis() + subtableInterval;
 		this.parent = parent;
 		info = DbUtils.tryAnalyzeInfo(ds, false);
+		Connection con = null;
+		try {
+			con = getConnection(false);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
 		try {
 			if (info == null) {
-				Connection con = getConnection(false);
-				try {
-					info = DbUtils.tryAnalyzeInfo(con);
-				} finally {
-					releaseConnection(con);
-				}
+				info = DbUtils.tryAnalyzeInfo(con);
 			}
 			DatabaseDialect profile = info.profile;
 			Assert.notNull(profile);
+			// 基本的固定属性分析.定位当前Metadata基本信息
 			if (profile.has(Feature.USER_AS_SCHEMA)) {
 				this.schema = profile.getObjectNameToUse(StringUtils.trimToNull(info.getUser()));
 			} else if (profile.has(Feature.DBNAME_AS_SCHEMA)) {
@@ -231,9 +225,35 @@ public class DbMetaData {
 			}
 			if (this.schema == null)
 				schema = profile.getDefaultSchema();
+			// SQL生成器
 			this.ddlGenerator = new DdlGeneratorImpl(profile);
+			// 初始化数据库信息
+			this.feature = new MetadataFeature(con.getMetaData());
+			// 反向修正
+			profile.accept(this);
+			// 计算时间差
+			calcTimeDelta(con, profile);
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
+		} finally {
+			releaseConnection(con);
+		}
+	}
+
+	private long calcTimeDelta(Connection conn, DatabaseDialect dialect) {
+		String template = dialect.getProperty(DbProperty.SELECT_EXPRESSION);
+		String exps = dialect.getFunction(Func.current_timestamp);
+		String sql;
+		if (template == null) {
+			sql = "SELECT " + exps;
+		} else {
+			sql = String.format(template, exps);
+		}
+		try {
+			Date date = select0(conn, sql, ResultSetExtractor.GET_FIRST_TIMESTAMP, 1, null);
+			return date.getTime() - System.currentTimeMillis();
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -276,8 +296,7 @@ public class DbMetaData {
 	 * @return 当前数据库时间
 	 */
 	public Date getCurrentTime() {
-		return new Date(System.currentTimeMillis() + dbTimeDelta);
-
+		return new Date(System.currentTimeMillis() + this.dbTimeDelta);
 	}
 
 	/**
@@ -596,7 +615,7 @@ public class DbMetaData {
 		tableName = info.profile.getObjectNameToUse(tableName);
 		column = info.profile.getColumnNameToUse(column);
 		Connection conn = getConnection(false);
-		Collection<Index> indexes=getIndexes(tableName);
+		Collection<Index> indexes = getIndexes(tableName);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		String schema = this.schema;
 		int n = tableName.indexOf('.');
@@ -632,7 +651,7 @@ public class DbMetaData {
 		tableName = info.profile.getObjectNameToUse(tableName);
 
 		Connection conn = getConnection(needRemark);
-		Collection<Index> indexes=getIndexes(tableName);
+		Collection<Index> indexes = getIndexes(tableName);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 
 		String schema = this.schema;
@@ -647,7 +666,7 @@ public class DbMetaData {
 			rs = databaseMetaData.getColumns(null, schema, tableName, "%");
 			while (rs.next()) {
 				Column column = new Column();
-				populateColumn(column, rs, tableName,indexes);
+				populateColumn(column, rs, tableName, indexes);
 				list.add(column);
 			}
 		} finally {
@@ -657,7 +676,7 @@ public class DbMetaData {
 		return list;
 	}
 
-	private void populateColumn(Column column, ResultSet rs, String tableName,Collection<Index> indexes) throws SQLException {
+	private void populateColumn(Column column, ResultSet rs, String tableName, Collection<Index> indexes) throws SQLException {
 		/*
 		 * Notice: Oracle非常变态，当调用rs.getString("COLUMN_DEF")会经常抛出
 		 * "Stream is already closed" Exception。 百思不得其解，google了半天有人提供了回避这个问题的办法
@@ -675,11 +694,11 @@ public class DbMetaData {
 		column.setNullable(rs.getString("IS_NULLABLE").equalsIgnoreCase("YES"));
 		column.setRemarks(rs.getString("REMARKS"));// 这个操作容易出问题，一定要最后操作
 		column.setTableName(tableName);
-		
-		if(indexes!=null){
-			//根据索引，计算该列是否为unique
-			for(Index index:indexes){
-				if(index.isUnique() && index.isOnSingleColumn(column.getColumnName())){
+
+		if (indexes != null) {
+			// 根据索引，计算该列是否为unique
+			for (Index index : indexes) {
+				if (index.isUnique() && index.isOnSingleColumn(column.getColumnName())) {
 					column.setUnique(true);
 					break;
 				}
@@ -761,7 +780,8 @@ public class DbMetaData {
 
 				String asc = rs.getString("ASC_OR_DESC");
 				Boolean isAsc = (asc == null ? true : asc.startsWith("A"));
-				index.addColumn(cName, isAsc);
+				int order=rs.getInt("ORDINAL_POSITION");
+				index.addColumn(cName, isAsc,order);
 			}
 			return map.values();
 		} finally {
@@ -1264,13 +1284,8 @@ public class DbMetaData {
 	 * @throws SQLException
 	 *             if thrown by the JDBC driver
 	 */
-	public boolean supportsSavepoints() throws SQLException {
-		if (supportsSavepoints == null) {
-			Connection conn = getConnection(false);
-			supportsSavepoints = conn.getMetaData().supportsSavepoints();
-			releaseConnection(conn);
-		}
-		return supportsSavepoints.booleanValue();
+	public boolean supportsSavepoints() {
+		return feature.supportsSavepoints();
 	}
 
 	/**
@@ -1291,87 +1306,7 @@ public class DbMetaData {
 	 * @return 返回1234的大版本号，如果无法获知返回-1
 	 */
 	public int getJdbcVersion() {
-		if (jdbcVersion == 0) {
-			try {
-				jdbcVersion = caclJdbcVersion();
-			} catch (SQLException e) {
-				jdbcVersion = -1;
-			}
-		}
-		return jdbcVersion;
-	}
-
-	private int caclJdbcVersion() throws SQLException {
-		Connection conn = this.getConnection(false);
-		try {
-			if (testJdbc4(conn))
-				return 4;
-			if (testJdbc3(conn))
-				return 3;
-			if (testJdbc2(conn))
-				return 2;
-			return 1;
-		} catch (Exception e) {
-			LogUtil.exception(e);
-		} finally {
-			releaseConnection(conn);
-		}
-		return -1;
-	}
-
-	private boolean testJdbc2(Connection conn) {
-		try {
-			Statement st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
-			DbUtils.close(st);
-		} catch (SQLException e) {
-			LogUtil.exception(e);
-		} catch (AbstractMethodError e) {
-			return false;
-		}
-		return true;
-	}
-
-	private boolean testJdbc3(Connection conn) {
-		Statement st = null;
-		try {
-			st = conn.createStatement();
-			st.getGeneratedKeys();
-		} catch (SQLFeatureNotSupportedException e) {
-			return false;
-		} catch (AbstractMethodError e) {
-			return false;
-		} catch (SQLException e) {
-		} finally {
-			DbUtils.close(st);
-		}
-		return true;
-	}
-
-	private boolean testJdbc4(Connection conn) {
-		try {
-			conn.isValid(1);
-			return true;
-		} catch (AbstractMethodError e) {
-			return false;
-		} catch (SQLException e) {
-		}
-		try {
-			Statement st = conn.createStatement();
-			DbUtils.close(st);
-			st.isClosed();
-			return true;
-		} catch (AbstractMethodError e) {
-			return false;
-		} catch (SQLException e) {
-		}
-		try {
-			conn.createBlob();
-			return true;
-		} catch (AbstractMethodError e) {
-			return false;
-		} catch (SQLException e) {
-			return false;
-		}
+		return feature.getJdbcVersion();
 	}
 
 	/**
@@ -1381,22 +1316,7 @@ public class DbMetaData {
 	 * @throws SQLException
 	 */
 	public String[] getTableTypes() throws SQLException {
-		if (tableTypes == null) {
-			List<String> type = new ArrayList<String>();
-			Connection conn = getConnection(false);
-			ResultSet rs = null;
-			try {
-				rs = conn.getMetaData().getTableTypes();
-				while (rs.next()) {
-					type.add(rs.getString(1));
-				}
-			} finally {
-				DbUtils.close(rs);
-			}
-
-			this.tableTypes = type.toArray(new String[type.size()]);
-		}
-		return tableTypes;
+		return feature.getTableTypes();
 	}
 
 	/**
@@ -1749,8 +1669,7 @@ public class DbMetaData {
 		if (schema != null) {
 			sequenceName = schema + "." + sequenceName;
 		}
-		String sequenceSql = StringUtils.concat("create sequence ", sequenceName, " minvalue " + min + " maxvalue ", String.valueOf(max), " start with ", String.valueOf(start),
-				" increment by 1");
+		String sequenceSql = StringUtils.concat("create sequence ", sequenceName, " minvalue " + min + " maxvalue ", String.valueOf(max), " start with ", String.valueOf(start), " increment by 1");
 		executor.executeSql(sequenceSql);
 	}
 
@@ -1842,13 +1761,21 @@ public class DbMetaData {
 	 * @throws SQLException
 	 */
 	public final <T> T selectBySql(String sql, ResultSetExtractor<T> rst, int maxReturn, List<?> objs) throws SQLException {
+		Connection conn = getConnection(false);
+		try {
+			return select0(conn, sql, rst, maxReturn, objs);
+		} finally {
+			releaseConnection(conn);
+		}
+	}
+
+	private <T> T select0(Connection conn, String sql, ResultSetExtractor<T> rst, int maxReturn, List<?> objs) throws SQLException {
 		// 这个方法是不支持使用非自动关闭的ResultSet的。
 		if (!rst.autoClose()) {
 			throw new UnsupportedOperationException();
 		}
 		PreparedStatement st = null;
 		ResultSet rs = null;
-		Connection conn = getConnection(false);
 		DatabaseDialect profile = getProfile();
 		SqlLog debug = ORMConfig.getInstance().newLogger();
 		try {
@@ -1870,7 +1797,6 @@ public class DbMetaData {
 			DbUtils.close(rs);
 			DbUtils.close(st);
 			debug.output();
-			releaseConnection(conn);
 		}
 	}
 
@@ -1927,7 +1853,7 @@ public class DbMetaData {
 	public void dropAllConstraint(String tablename) throws SQLException {
 		dropAllForeignKey(tablename);// 删除外键
 		dropPrimaryKey(tablename);
-		
+
 	}
 
 	/**
@@ -2046,9 +1972,9 @@ public class DbMetaData {
 			exe.close();
 		}
 	}
-	
-	public void dropIndex(String tableName,String indexName) throws SQLException {
-		Index index=new Index();
+
+	public void dropIndex(String tableName, String indexName) throws SQLException {
+		Index index = new Index();
 		index.setIndexName(indexName);
 		index.setTableName(tableName);
 		dropIndex(index);
@@ -2222,13 +2148,13 @@ public class DbMetaData {
 		List<TableInfo> tables;
 		if (info.profile.has(Feature.TABLE_CASE_SENSTIVE)) {
 			tables = new ArrayList<TableInfo>();
-			String lower=tableName.toLowerCase();
-			String upper=tableName.toUpperCase();
+			String lower = tableName.toLowerCase();
+			String upper = tableName.toUpperCase();
 			tables.addAll(getDatabaseObject(ObjectType.TABLE, this.schema, tableName, Operator.MATCH_START, false));
-			if(!lower.equals(tableName)){
-				tables.addAll(getDatabaseObject(ObjectType.TABLE, this.schema, lower, Operator.MATCH_START, false));	
+			if (!lower.equals(tableName)) {
+				tables.addAll(getDatabaseObject(ObjectType.TABLE, this.schema, lower, Operator.MATCH_START, false));
 			}
-			if(!upper.equals(tableName)){
+			if (!upper.equals(tableName)) {
 				tables.addAll(getDatabaseObject(ObjectType.TABLE, this.schema, upper, Operator.MATCH_START, false));
 			}
 		} else {
@@ -2262,9 +2188,9 @@ public class DbMetaData {
 					suffixRegexp.append("+");
 				}
 			}
-			suffix = Pattern.compile(suffixRegexp.toString(),Pattern.CASE_INSENSITIVE);
+			suffix = Pattern.compile(suffixRegexp.toString(), Pattern.CASE_INSENSITIVE);
 		} else {
-			suffix = Pattern.compile(tableNameWithoutSchema.concat("(_?[0-9_]{1,4})+"),Pattern.CASE_INSENSITIVE);
+			suffix = Pattern.compile(tableNameWithoutSchema.concat("(_?[0-9_]{1,4})+"), Pattern.CASE_INSENSITIVE);
 		}
 		Set<String> result = new HashSet<String>();
 		String schema = meta.getSchema();
@@ -2275,8 +2201,7 @@ public class DbMetaData {
 				if (subColumns.size() == baseColumnCount) {
 					result.add(fullTableName.toUpperCase());
 				} else {
-					LogUtil.info("The table [" + fullTableName + "](" + subColumns.size() + ") seems like a subtable of [" + tableName + "], but their columns are not match.\n"
-							+ subColumns);
+					LogUtil.info("The table [" + fullTableName + "](" + subColumns.size() + ") seems like a subtable of [" + tableName + "], but their columns are not match.\n" + subColumns);
 				}
 			}
 		}
@@ -2410,7 +2335,7 @@ public class DbMetaData {
 	private void dropConstraint0(String tablename, String constraintName, StatementExecutor exe) throws SQLException {
 		exe.executeSql(ddlGenerator.getDropConstraintSql(tablename, constraintName));
 	}
-	
+
 	/*
 	 * 删除指定表的外键
 	 * 
