@@ -10,6 +10,7 @@ import jef.common.Entry;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.PojoWrapper;
+import jef.database.annotation.IndexDef;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
@@ -206,7 +207,7 @@ public interface ITableMetadata {
 	 * 
 	 * @return 索引的定义
 	 */
-	public List<jef.database.annotation.Index> getIndexDefinition();
+	public List<IndexDef> getIndexDefinition();
 
 	// ///////////////////////引用关联查询相关////////////////////
 	/**

@@ -125,11 +125,13 @@ public class TableCreateStatement {
 		 * 各个字段备注
 		 */
 		private List<PairSS> ccmments = new ArrayList<PairSS>();
-
+		/**
+		 * 没有主键约束
+		 */
 		private boolean NoPkConstraint;
 
 		public String getTableSQL() {
-			String sql = "create table " + escapedTablename + "(\n" + columnDefinition + "\n)";
+			String sql = "CREATE TABLE " + escapedTablename + "(\n" + columnDefinition + "\n)";
 			if (charSetFix != null) {
 				sql = sql + charSetFix;
 			}
@@ -154,12 +156,12 @@ public class TableCreateStatement {
 				tablename = StringUtils.substringAfter(tablename, ".");
 			}
 			String pkName = profile.getObjectNameToUse("PK_" + tablename);
-			sb.append("    constraint " + pkName + " primary key(" + StringUtils.join(columns, ',') + ")");
+			sb.append("    CONSTRAINT " + pkName + " PRIMARY KEY(" + StringUtils.join(columns, ',') + ")");
 		}
 
 		public void addTableComment(List<String> result) {
 			if (StringUtils.isNotEmpty(tableComment) && profile.has(Feature.SUPPORT_COMMENT)) {
-				result.add("comment on table " + escapedTablename + " is '" + tableComment.replace("'", "''") + "'");
+				result.add("COMMENT ON TABLE " + escapedTablename + " IS '" + tableComment.replace("'", "''") + "'");
 			}
 		}
 

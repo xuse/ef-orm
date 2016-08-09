@@ -10,10 +10,11 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 
+import com.github.geequery.orm.annotation.Index;
+import com.github.geequery.orm.annotation.Indexes;
+
 import jef.database.annotation.EasyEntity;
-import jef.database.annotation.Index;
 import jef.database.annotation.Indexed;
-import jef.database.annotation.Indexes;
 
 @Table(name = "TABLE_FOR_TEST")
 @Entity

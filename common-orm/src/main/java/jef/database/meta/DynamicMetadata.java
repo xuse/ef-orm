@@ -23,7 +23,7 @@ import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.PojoWrapper;
 import jef.database.VarObject;
-import jef.database.annotation.Index;
+import jef.database.annotation.IndexDef;
 import jef.database.annotation.JoinType;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
@@ -37,7 +37,6 @@ import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanAccessorMapImpl;
-import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.Property;
 
 import com.google.common.collect.Multimap;
@@ -452,12 +451,9 @@ public class DynamicMetadata extends AbstractMetadata {
 	 *            索引修饰,如"unique"，"bitmap"。无修饰传入null或""均可。
 	 */
 	public void addIndex(String[] fields, String comment) {
-		Map<String, Object> data = new HashMap<String, Object>(4);
-		data.put("fields", fields);
-		data.put("definition", StringUtils.toString(comment));
-		data.put("name", "");
-		jef.database.annotation.Index index = BeanUtils.asAnnotation(jef.database.annotation.Index.class, data);
-		indexMap.add(index);
+		IndexDef def=new IndexDef("",fields);
+		def.setDefinition(comment);
+		indexMap.add(def);
 	}
 
 	/**
@@ -476,7 +472,7 @@ public class DynamicMetadata extends AbstractMetadata {
 		return type == this;
 	}
 
-	public List<Index> getIndexDefinition() {
+	public List<IndexDef> getIndexDefinition() {
 		return indexMap;
 	}
 

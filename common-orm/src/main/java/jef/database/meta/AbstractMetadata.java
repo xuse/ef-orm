@@ -17,6 +17,7 @@ import jef.common.log.LogUtil;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
+import jef.database.annotation.IndexDef;
 import jef.database.cache.KeyDimension;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
@@ -73,7 +74,17 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	 */
 	protected Field[] lobNames;
 
-	final List<jef.database.annotation.Index> indexMap = new ArrayList<jef.database.annotation.Index>(5);// 记录对应表的所有索引，当建表时使用可自动创建索引
+	/**
+	 * 记录对应表的所有索引，当建表时使用可自动创建索引
+	 * Revised 2016-8 JPA 2.1规范中增加的@Table的indexes属性和Index注解，因此删除EF原先自己设计的Index注解，改用标准的JPA注解
+	 */
+	final List<IndexDef> indexMap = new ArrayList<IndexDef>(5);
+	
+	/**
+	 * 记录对应表所有Unqie约束.当建表时可自动创建约束
+	 */
+	final List<javax.persistence.UniqueConstraint> uniques=new ArrayList<javax.persistence.UniqueConstraint>(5);
+	
 	protected final Map<Field, ColumnMapping> schemaMap = new IdentityHashMap<Field, ColumnMapping>();
 	protected Map<String, Field> fields = new HashMap<String, Field>(10, 0.6f);
 	protected Map<String, Field> lowerFields = new HashMap<String, Field>(10, 0.6f);

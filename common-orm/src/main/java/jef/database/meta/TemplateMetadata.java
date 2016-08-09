@@ -9,7 +9,7 @@ import jef.common.Entry;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.PojoWrapper;
-import jef.database.annotation.Index;
+import jef.database.annotation.IndexDef;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
@@ -75,7 +75,7 @@ public class TemplateMetadata extends AbstractMetadata {
 	}
 
 	@Override
-	public List<Index> getIndexDefinition() {
+	public List<IndexDef> getIndexDefinition() {
 		return wrapped.getIndexDefinition();
 	}
 

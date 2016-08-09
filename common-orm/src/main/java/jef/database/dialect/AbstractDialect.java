@@ -397,10 +397,13 @@ public abstract class AbstractDialect implements DatabaseDialect {
 			sb.append(" default ").append(toDefaultString(column.defaultValue, rawSqlType,def.getSqlType()));
 		if (column.nullable) {
 			if (has(Feature.COLUMN_DEF_ALLOW_NULL)) {
-				sb.append(" null");
+				sb.append(" NULL");
 			}
 		} else {
-			sb.append(" not null");
+			sb.append(" NOT NULL");
+		}
+		if(column.unique){
+			sb.append(" UNIQUE");
 		}
 		return sb.toString();
 	}

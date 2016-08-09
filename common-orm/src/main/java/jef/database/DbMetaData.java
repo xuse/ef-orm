@@ -62,6 +62,7 @@ import jef.database.meta.AbstractMetadata;
 import jef.database.meta.Column;
 import jef.database.meta.ColumnChange;
 import jef.database.meta.ColumnModification;
+import jef.database.meta.DataType;
 import jef.database.meta.DbProperty;
 import jef.database.meta.DdlGenerator;
 import jef.database.meta.DdlGeneratorImpl;
@@ -97,23 +98,22 @@ import jef.tools.StringUtils;
 import org.easyframe.enterprise.spring.TransactionMode;
 
 /*
+ * constraint
  *  ====Oracle约束===== 约束包括： 主键、外键（引用）、唯一约束、检查约束
  * 
- * 外键必须确保在被引用的表上是唯一的。否则不能创建。 因此外键必然要么引用表的主键、要么引用表的唯一约束键。 外键必然有索引。也必然有键
+ * 外键必须确保在被引用的表上是唯一的。否则不能创建。 因此外键必然要么引用表的主键、要么引用表的唯一约束键。 外键必然有索引。也必然有键.
  * 
  * 所有约束都可以通过disable和enable命令启用和禁用 ALTER TABLE products disable CONSTRAINT
  * fk_supplier;
  * 
  * 主键、唯一约束一定有索引。其他约束不一定有索引
  * 
- * 除了由唯一约束创建的索引，还有其他非唯一的索引。
+ * 索引可以创建在唯一约束列上，还可以创建在其他非唯一的列上。
  * 也可以创建唯一约束的索引，但是唯一约束索引虽然能起到唯一约束的作用，但是却不能作为唯一约束那样建立外键引用。
  * 
  * alter table person add constraint FK_PERSON foreign key (schoolId) references
  * School(id); alter table person add constraint FK_PERSON foreign key
  * (parentid) references person(id);
- * 
- * 判断序列是否存在
  * 
  * ==== 注释 ==== 1\Derby目前还不支持数据库对象注释 2\普通注释语法：Oracle Eg. COMMENT ON TABLE
  * EMPLOYEE IS 'Reflects first quarter 2000 reorganization' COMMENT ON COLUMN
@@ -126,7 +126,8 @@ import org.easyframe.enterprise.spring.TransactionMode;
  * 5\同一张表上也能建立外键 alter table person add constraint FK_PERSON_PARENT foreign key
  * (parentid) references person(id);
  * 
- * 6、多字段也能建议外键
+ * 6、多字段也能建立外键
+ * 
  */
 /**
  * 对于数据库元数据的访问封装
@@ -595,8 +596,8 @@ public class DbMetaData {
 		tableName = info.profile.getObjectNameToUse(tableName);
 		column = info.profile.getColumnNameToUse(column);
 		Connection conn = getConnection(false);
+		Collection<Index> indexes=getIndexes(tableName);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
-
 		String schema = this.schema;
 		int n = tableName.indexOf('.');
 		if (n > 0) {// 尝试从表名中计算schema
@@ -609,7 +610,7 @@ public class DbMetaData {
 			Column result = null;
 			if (rs.next()) {
 				result = new Column();
-				populateColumn(result, rs, tableName);
+				populateColumn(result, rs, tableName, indexes);
 			}
 			return result;
 		} finally {
@@ -631,6 +632,7 @@ public class DbMetaData {
 		tableName = info.profile.getObjectNameToUse(tableName);
 
 		Connection conn = getConnection(needRemark);
+		Collection<Index> indexes=getIndexes(tableName);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 
 		String schema = this.schema;
@@ -645,7 +647,7 @@ public class DbMetaData {
 			rs = databaseMetaData.getColumns(null, schema, tableName, "%");
 			while (rs.next()) {
 				Column column = new Column();
-				populateColumn(column, rs, tableName);
+				populateColumn(column, rs, tableName,indexes);
 				list.add(column);
 			}
 		} finally {
@@ -655,7 +657,7 @@ public class DbMetaData {
 		return list;
 	}
 
-	private void populateColumn(Column column, ResultSet rs, String tableName) throws SQLException {
+	private void populateColumn(Column column, ResultSet rs, String tableName,Collection<Index> indexes) throws SQLException {
 		/*
 		 * Notice: Oracle非常变态，当调用rs.getString("COLUMN_DEF")会经常抛出
 		 * "Stream is already closed" Exception。 百思不得其解，google了半天有人提供了回避这个问题的办法
@@ -665,13 +667,24 @@ public class DbMetaData {
 		String defaultVal = rs.getString("COLUMN_DEF");
 		column.setColumnDef(StringUtils.trimToNull(defaultVal));// Oracle会在后面加上换行等怪字符。
 		column.setColumnName(rs.getString("COLUMN_NAME"));
+		column.setOrdinal(rs.getInt("ORDINAL_POSITION"));
 		column.setColumnSize(rs.getInt("COLUMN_SIZE"));
 		column.setDecimalDigit(rs.getInt("DECIMAL_DIGITS"));
 		column.setDataType(rs.getString("TYPE_NAME"));
 		column.setDataTypeCode(rs.getInt("DATA_TYPE"));
-		column.setNullAble(rs.getString("IS_NULLABLE").equalsIgnoreCase("YES"));
+		column.setNullable(rs.getString("IS_NULLABLE").equalsIgnoreCase("YES"));
 		column.setRemarks(rs.getString("REMARKS"));// 这个操作容易出问题，一定要最后操作
 		column.setTableName(tableName);
+		
+		if(indexes!=null){
+			//根据索引，计算该列是否为unique
+			for(Index index:indexes){
+				if(index.isUnique() && index.isOnSingleColumn(column.getColumnName())){
+					column.setUnique(true);
+					break;
+				}
+			}
+		}
 	}
 
 	/**
@@ -848,20 +861,15 @@ public class DbMetaData {
 	/**
 	 * 得到数据库支持的所有数据类型
 	 * 
-	 * @return List<String> 数据类型
+	 * @return List<DataType> 数据类型
 	 */
-	public List<String> getSupportDataType() throws SQLException {
+	public List<DataType> getSupportDataType() throws SQLException {
 		Connection conn = getConnection(false);
 		ResultSet rs = null;
 		try {
 			DatabaseMetaData databaseMetaData = conn.getMetaData();
-			List<String> list = new ArrayList<String>();
 			rs = databaseMetaData.getTypeInfo();
-			while (rs.next()) {
-				String typeName = rs.getString("TYPE_NAME");
-				list.add(typeName);
-			}
-			return list;
+			return ResultPopulatorImpl.instance.toPlainJavaObject(new ResultSetImpl(rs, getProfile()), DATATYPE_TRANSFORMER);
 		} finally {
 			DbUtils.close(rs);
 			releaseConnection(conn);
@@ -963,13 +971,13 @@ public class DbMetaData {
 	 * 
 	 * <p>
 	 * 当外键无法保持时的规则动作（注意大部分数据库都仅支持importedKeyRestrict）
-	 * <ol>
+	 * <ul>
 	 * <li>{@link DatabaseMetaData#importedKeyNoAction} - 不允许被引用的记录删除或更新</li>
 	 * <li>{@link DatabaseMetaData#importedKeyCascade} - 删除引用外键的记录</li>
 	 * <li>{@link DatabaseMetaData#importedKeySetNull} - 将引用外键的列值改为null</li>
 	 * <li>{@link DatabaseMetaData#importedKeyRestrict} - 同importedKeyNoAction</li>
 	 * <li>{@link DatabaseMetaData#importedKeySetDefault} - 将引用外键的列值改为其缺省值</li>
-	 * </ol>
+	 * </ul>
 	 * 
 	 * @param fromField
 	 *            外键位于该列上
@@ -1020,7 +1028,7 @@ public class DbMetaData {
 	}
 
 	/**
-	 * 获取指定表中被其他表引用的外键
+	 * 获取指定表中被其他表引用的外键。
 	 * 
 	 * @param tableName
 	 *            被引用外键的表
@@ -1874,7 +1882,7 @@ public class DbMetaData {
 	 */
 
 	/**
-	 * 删除表中的约束
+	 * 删除表中的约束:包括外键
 	 * 
 	 * @param tablename
 	 *            表名，支持Schema重定向
@@ -1919,6 +1927,7 @@ public class DbMetaData {
 	public void dropAllConstraint(String tablename) throws SQLException {
 		dropAllForeignKey(tablename);// 删除外键
 		dropPrimaryKey(tablename);
+		
 	}
 
 	/**
@@ -2036,6 +2045,13 @@ public class DbMetaData {
 		} finally {
 			exe.close();
 		}
+	}
+	
+	public void dropIndex(String tableName,String indexName) throws SQLException {
+		Index index=new Index();
+		index.setIndexName(indexName);
+		index.setTableName(tableName);
+		dropIndex(index);
 	}
 
 	/**
@@ -2192,8 +2208,6 @@ public class DbMetaData {
 	public String toString() {
 		return this.getTransactionId();
 	}
-
-	private static final String DROP_CONSTRAINT_SQL = "alter table %1$s drop constraint %2$s";
 
 	/*
 	 * 计算分表 通过基表的名称，查找出分表名(全部大写)
@@ -2394,14 +2408,9 @@ public class DbMetaData {
 	}
 
 	private void dropConstraint0(String tablename, String constraintName, StatementExecutor exe) throws SQLException {
-		String template = getProfile().getProperty(DbProperty.DROP_FK_PATTERN);
-		if (StringUtils.isEmpty(template)) {
-			template = DROP_CONSTRAINT_SQL;
-		}
-		String sql = String.format(template, tablename, constraintName);
-		exe.executeSql(sql);
+		exe.executeSql(ddlGenerator.getDropConstraintSql(tablename, constraintName));
 	}
-
+	
 	/*
 	 * 删除指定表的外键
 	 * 
@@ -2444,6 +2453,7 @@ public class DbMetaData {
 	}
 
 	private final static Transformer FK_TRANSFORMER = new Transformer(ForeignKey.class);
+	private final static Transformer DATATYPE_TRANSFORMER = new Transformer(DataType.class);
 
 	/**
 	 * 分库分表后，当前数据库中的分表信息扫描/检测后是存放在缓存中的，使用此方法可以清除某张表的分表缓存， 这样下次使用时会到数据库中进行扫描。

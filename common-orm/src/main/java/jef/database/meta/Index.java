@@ -330,5 +330,16 @@ public class Index {
 			return tableSchema+"."+tableName;
 		}
 	}
+
+	public boolean isOnSingleColumn(String columnName) {
+		if(columnName==null)return false;
+		if(this.columns.size()!=1)return false;
+		for(IndexItem item: this.columns){
+			if(columnName.equals(item.column)){
+				return true;
+			}
+		}
+		return false;
+	}
 }
 

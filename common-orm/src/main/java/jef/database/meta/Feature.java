@@ -162,6 +162,7 @@ public enum Feature {
 	NOT_SUPPORT_FOREIGN_KEY,
 	/**
 	 * 不支持在Like语句中使用Escape语句作为转义
+	 * (暂无数据库有此特性)
 	 */
 	NOT_SUPPORT_LIKE_ESCAPE, 
 	/**
@@ -169,19 +170,22 @@ public enum Feature {
 	 */
 	NOT_SUPPORT_KEYWORD_DEFAULT, 
 	/**
-	 * 不支持获取用户函数
+	 * 不支持获取用户函数(SQLite)
 	 */
 	NOT_SUPPORT_USER_FUNCTION,
 	/**
 	 * SQLite操作Blob时，不支持setBinaryStream，必须用setBytes
+	 * (SQLite)
 	 */
 	NOT_SUPPORT_SET_BINARY,
 	/**
-	 * SQLite特性，不支持修改表删除字段
+	 * 不支持修改表删除字段
+	 * (SQLite)
 	 */
 	NOT_SUPPORT_ALTER_DROP_COLUMN,
 	/**
 	 * Union语句上每个子句两边加上括号
+	 * (Derby)
 	 */
 	UNION_WITH_BUCK,
 	

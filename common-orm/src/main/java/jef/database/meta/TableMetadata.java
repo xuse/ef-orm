@@ -50,8 +50,8 @@ import jef.database.IQueryableEntity;
 import jef.database.OperateTarget;
 import jef.database.PojoWrapper;
 import jef.database.annotation.BindDataSource;
-import jef.database.annotation.Comment;
 import jef.database.annotation.EasyEntity;
+import jef.database.annotation.IndexDef;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
@@ -69,6 +69,7 @@ import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.FieldEx;
 
 import com.alibaba.fastjson.util.IOUtils;
+import com.github.geequery.orm.annotation.Comment;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.CompilationUnit;
@@ -144,6 +145,12 @@ public final class TableMetadata extends AbstractMetadata {
 			}
 			if (table.name().length() > 0) {
 				tableName = table.name();
+			}
+			for(javax.persistence.Index index: table.indexes()){
+				this.indexMap.add(IndexDef.create(index));
+			}
+			for(javax.persistence.UniqueConstraint unique: table.uniqueConstraints()){
+				
 			}
 		}
 		if (tableName == null) {
@@ -225,7 +232,7 @@ public final class TableMetadata extends AbstractMetadata {
 		return containerType;
 	}
 
-	public List<jef.database.annotation.Index> getIndexDefinition() {
+	public List<IndexDef> getIndexDefinition() {
 		return indexMap;
 	}
 
@@ -287,26 +294,6 @@ public final class TableMetadata extends AbstractMetadata {
 		if (type.isLob()) {
 			lobNames = ArrayUtils.addElement(lobNames, field, jef.database.Field.class);
 		}
-	}
-
-	/**
-	 * 添加一个索引定义。仅用于自动建表，不会对其作特殊的判断和处理。
-	 * 
-	 * @param fields
-	 * @param comment
-	 * @deprecated 向下兼容保留
-	 */
-	public void putIndex(Field[] fields, String comment) {
-		Map<String, Object> data = new HashMap<String, Object>(4);
-		String[] fieldnames = new String[fields.length];
-		for (int i = 0; i < fields.length; i++) {
-			fieldnames[i] = fields[i].name();
-		}
-		data.put("fields", fieldnames);
-		data.put("definition", StringUtils.toString(comment));
-		data.put("name", "");
-		jef.database.annotation.Index index = BeanUtils.asAnnotation(jef.database.annotation.Index.class, data);
-		indexMap.add(index);
 	}
 
 	/*

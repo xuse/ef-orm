@@ -23,6 +23,7 @@ import jef.tools.StringUtils;
 
 
 public class Column{
+	private int ordinal;
 	private String tableName;
 	private String columnName;
 	private String remarks;
@@ -35,6 +36,11 @@ public class Column{
 	private int decimalDigit;
 	private boolean nullable;
 	private String columnDef;
+	/**
+	 * 是否unique，数据库支持 unique index和 unique constraint两种方式实现。
+	 * 当然，在大部分些数据库上其实是同一种实现方式。
+	 */
+	private boolean unique;
 	
 	public ColumnType toColumnType(DatabaseDialect profile){
 		ColumnType ct=profile.getProprtMetaFromDbType(this);
@@ -58,10 +64,10 @@ public class Column{
 	public void setDataTypeCode(int dataTypeCode) {
 		this.dataTypeCode = dataTypeCode;
 	}
-	public boolean isNullAble() {
+	public boolean isNullable() {
 		return nullable;
 	}
-	public void setNullAble(boolean nullAble) {
+	public void setNullable(boolean nullAble) {
 		this.nullable = nullAble;
 	}
 	public String getColumnName() {
@@ -100,12 +106,30 @@ public class Column{
 	public void setColumnDef(String columnDef) {
 		this.columnDef = columnDef;
 	}
+	public int getOrdinal() {
+		return ordinal;
+	}
+	public void setOrdinal(int ordinal) {
+		this.ordinal = ordinal;
+	}
+	public boolean isUnique() {
+		return unique;
+	}
+
+	public void setUnique(boolean unique) {
+		this.unique = unique;
+	}
 
 	@Override
 	public String toString() {
 		StringBuilder sb=new StringBuilder(columnName);
-		sb.append("  ").append(this.dataType);
+		sb.append(" ").append(this.dataType);
+		if(!this.nullable){
+			sb.append(" not null");
+		}
+		if(unique){
+			sb.append(" unique");
+		}
 		return sb.toString();
 	}
-	
 }

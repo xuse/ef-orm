@@ -95,12 +95,21 @@ import jef.tools.StringUtils;
  */
 public abstract class ColumnType {
 	protected boolean nullable = true;
+	protected boolean unique = false;
 
 	public Object defaultValue;
 
 	public String toString() {
 		Map<String, Object> map = toJpaAnnonation();
 		return String.valueOf(map.get("columnDefinition"));
+	}
+
+	public boolean isUnique() {
+		return unique;
+	}
+
+	public void setUnique(boolean unique) {
+		this.unique = unique;
 	}
 
 	/**
@@ -894,7 +903,7 @@ public abstract class ColumnType {
 
 		public Int toNormalType() {
 			Int i = new ColumnType.Int(precision);
-			i.notNull();
+			i.nullable = false;
 			return i;
 		}
 	}
@@ -934,7 +943,7 @@ public abstract class ColumnType {
 		}
 
 		public ColumnType toNormalType() {
-			return new ColumnType.Varchar(36).notNull();
+			return new ColumnType.Varchar(36).setNullable(false);
 		}
 	}
 

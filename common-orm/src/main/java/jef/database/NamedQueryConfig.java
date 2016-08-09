@@ -40,6 +40,7 @@ import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.SelectBody;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.jsqlparser.visitor.VisitorAdapter;
+import jef.database.meta.Feature;
 import jef.database.meta.MetaHolder;
 import jef.database.query.ParameterProvider;
 import jef.database.query.ParameterProvider.MapProvider;
@@ -154,13 +155,18 @@ public class NamedQueryConfig extends jef.database.DataObject {
 		Object parent;
 		boolean escape;
 
-		ParameterMetadata(JpqlParameter p, Object parent) {
+		ParameterMetadata(DatabaseDialect dialect, JpqlParameter p, Object parent) {
 			this.param = p;
 			this.parent = parent;
-			if(parent instanceof LikeExpression){
-				if(p.getDataType()!=null && p.getDataType().ordinal()>9){
-					((LikeExpression) parent).setEscape("/");
-					escape=true;
+			if (parent instanceof LikeExpression) {
+				if (dialect.has(Feature.NOT_SUPPORT_LIKE_ESCAPE)) {
+					escape = false;
+					((LikeExpression) parent).setEscape(null);
+				} else {
+					if (p.getDataType() != null && p.getDataType().ordinal() > 9) {
+						((LikeExpression) parent).setEscape("/");
+						escape = true;
+					}
 				}
 			}
 		}
@@ -174,7 +180,7 @@ public class NamedQueryConfig extends jef.database.DataObject {
 	 * 解析SQL语句，改写
 	 */
 	private static DialectCase analy(String sql, int type, OperateTarget db) throws SQLException {
-		final DatabaseDialect profile = db.getProfile();
+		final DatabaseDialect dialect = db.getProfile();
 		try {
 			Statement st = DbUtils.parseStatement(sql);
 			final Map<Object, ParameterMetadata> params = new HashMap<Object, ParameterMetadata>();
@@ -182,7 +188,7 @@ public class NamedQueryConfig extends jef.database.DataObject {
 			st.accept(new VisitorAdapter() {
 				@Override
 				public void visit(JpqlParameter param) {
-					params.put(param.getKey(), new ParameterMetadata(param, visitPath.getFirst()));
+					params.put(param.getKey(), new ParameterMetadata(dialect, param, visitPath.getFirst()));
 				}
 
 				@Override
@@ -194,8 +200,8 @@ public class NamedQueryConfig extends jef.database.DataObject {
 							table.setSchemaName(newSchema);
 						}
 					}
-					if (profile.containKeyword(table.getName())) {
-						table.setName(DbUtils.escapeColumn(profile, table.getName()));
+					if (dialect.containKeyword(table.getName())) {
+						table.setName(DbUtils.escapeColumn(dialect, table.getName()));
 					}
 				}
 
@@ -208,18 +214,18 @@ public class NamedQueryConfig extends jef.database.DataObject {
 							c.setSchema(newSchema);
 						}
 					}
-					if (profile.containKeyword(c.getColumnName())) {
-						c.setColumnName(DbUtils.escapeColumn(profile, c.getColumnName()));
+					if (dialect.containKeyword(c.getColumnName())) {
+						c.setColumnName(DbUtils.escapeColumn(dialect, c.getColumnName()));
 					}
 				}
 
 			});
 			// 进行本地语言转化
-			SqlFunctionlocalization localization = new SqlFunctionlocalization(profile, db);
+			SqlFunctionlocalization localization = new SqlFunctionlocalization(dialect, db);
 			st.accept(localization);
 
 			if (type == TYPE_JPQL)
-				st.accept(new JPQLSelectConvert(profile));
+				st.accept(new JPQLSelectConvert(dialect));
 
 			DialectCase result = new DialectCase();
 			result.statement = st;

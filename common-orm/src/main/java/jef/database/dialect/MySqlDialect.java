@@ -268,9 +268,9 @@ public class MySqlDialect extends AbstractDialect {
 			}
 		}
 		if(generateType==DateGenerateType.created){
-			return "datetime not null";
+			return "datetime NOT NULL";
 		}else if(generateType==DateGenerateType.modified){
-			return "timestamp not null default current_timestamp on update current_timestamp";
+			return "timestamp NOT NULL DEFAULT current_timestamp ON UPDATE current_timestamp";
 		}
 		return super.getCreationComment(column, flag);
 	}
@@ -285,7 +285,7 @@ public class MySqlDialect extends AbstractDialect {
 		
 		if (flag) {
 			if (!column.nullable)
-				sb.append(" not null");
+				sb.append(" NOT NULL");
 		}
 		sb.append(" AUTO_INCREMENT");
 		return sb.toString();
