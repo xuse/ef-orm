@@ -18,6 +18,8 @@ import jef.database.DbUtils;
 import jef.database.DebugUtil;
 import jef.database.ORMConfig;
 import jef.database.dialect.ColumnType.Char;
+import jef.database.dialect.handler.LimitHandler;
+import jef.database.dialect.handler.LimitOffsetLimitHandler;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.exception.JDBCExceptionHelper;

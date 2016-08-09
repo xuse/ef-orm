@@ -2,10 +2,16 @@ package jef.database.dialect;
 
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
+import jef.database.dialect.handler.LimitHandler;
 import jef.database.meta.DbProperty;
 import jef.database.support.RDBMS;
 import jef.tools.string.JefStringReader;
 
+/**
+ * The dialect of IBM DB2
+ * TODO not finished.
+ *
+ */
 public class Db2Dialect extends AbstractDialect{
 
 	public Db2Dialect() {
@@ -38,6 +44,7 @@ public class Db2Dialect extends AbstractDialect{
 		String dbname=reader.readToken('?',';','/');
 		connectInfo.setHost(host);
 		connectInfo.setDbname(dbname);
+		reader.close();
 	}
 
 	@Override

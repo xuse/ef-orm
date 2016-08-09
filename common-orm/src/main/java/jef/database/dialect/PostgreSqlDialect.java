@@ -19,6 +19,8 @@ import jef.database.ORMConfig;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.ColumnType.Clob;
 import jef.database.dialect.ColumnType.Varchar;
+import jef.database.dialect.handler.LimitHandler;
+import jef.database.dialect.handler.LimitOffsetLimitHandler;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.exception.JDBCExceptionHelper;

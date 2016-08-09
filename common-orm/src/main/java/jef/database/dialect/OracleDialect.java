@@ -38,6 +38,8 @@ import jef.database.datasource.DataSourceInfo;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.ColumnType.Varchar;
+import jef.database.dialect.handler.LimitHandler;
+import jef.database.dialect.handler.OracleLimitHander;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.exception.JDBCExceptionHelper;
 import jef.database.exception.TemplatedViolatedConstraintNameExtracter;
@@ -452,6 +454,7 @@ public class OracleDialect extends AbstractDialect {
 				connectInfo.setDbname(dbname);
 			}
 		}
+		reader.close();
 	}
 
 	@Override

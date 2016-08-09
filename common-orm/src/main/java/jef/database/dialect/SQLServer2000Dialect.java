@@ -4,6 +4,9 @@ import java.sql.Types;
 
 import jef.database.ConnectInfo;
 import jef.database.dialect.ColumnType.AutoIncrement;
+import jef.database.dialect.handler.LimitHandler;
+import jef.database.dialect.handler.SQL2000LimitHandler;
+import jef.database.dialect.handler.SQL2000LimitHandlerSlowImpl;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.ParserFactory;
 import jef.database.jdbc.statement.UnionJudgement;
@@ -243,6 +246,7 @@ public class SQLServer2000Dialect extends AbstractDialect {
 			String dbname = reader.readToken(' ', ';', ':');
 			connectInfo.setDbname(dbname);
 		}
+		reader.close();
 	}
 	
 	private final LimitHandler limit=generateLimitHander();

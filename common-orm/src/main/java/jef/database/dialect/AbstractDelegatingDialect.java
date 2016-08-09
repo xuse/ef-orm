@@ -14,6 +14,7 @@ import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.DbMetaData;
 import jef.database.datasource.DataSourceInfo;
+import jef.database.dialect.handler.LimitHandler;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ParserFactory;

@@ -13,14 +13,11 @@ import javax.sql.DataSource;
 import jef.common.Callback;
 import jef.common.pool.PoolStatus;
 import jef.database.ConnectInfo;
-import jef.database.DbCfg;
 import jef.database.DbMetaData;
 import jef.database.DbUtils;
 import jef.database.ORMConfig;
 import jef.database.datasource.IRoutingDataSource;
 import jef.database.dialect.DatabaseDialect;
-import jef.tools.JefConfiguration;
-import jef.tools.support.JefBase64;
 
 import org.easyframe.enterprise.spring.TransactionMode;
 
