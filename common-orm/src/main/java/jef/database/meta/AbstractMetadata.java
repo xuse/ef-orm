@@ -180,7 +180,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		if (fld instanceof JpqlExpression) {
 			throw new UnsupportedOperationException();
 		}
-		String name = profile.getColumnNameToUse(fld.name());
+		String name = profile.getObjectNameToUse(fld.name());
 		return escape ? DbUtils.escapeColumn(profile, name) : name;
 	}
 

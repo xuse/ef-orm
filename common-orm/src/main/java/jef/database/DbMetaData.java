@@ -212,6 +212,7 @@ public class DbMetaData {
 		this.subtableInterval = JefConfiguration.getInt(DbCfg.DB_PARTITION_REFRESH, 3600) * 1000;
 		this.subtableCacheExpireTime = System.currentTimeMillis() + subtableInterval;
 		this.parent = parent;
+		LogUtil.debug("init database metadata of "+ds);
 		info = DbUtils.tryAnalyzeInfo(ds, false);
 		Connection con = null;
 		try {
@@ -241,14 +242,21 @@ public class DbMetaData {
 			profile.accept(this);
 			// 计算时间差
 			calcTimeDelta(con, profile);
+			if(Math.abs(dbTimeDelta)>30000){
+				//数据库时间和当前系统时间差距在30秒以上时，警告
+				LogUtil.warn("The time of thie machine is [{}], and database is [{}]. Please adjust date time via any NTP server.",new Date(), getCurrentTime());
+			}else{
+				LogUtil.debug("The time between database and this machine is {}ms.",this.dbTimeDelta);
+			}
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
 		} finally {
+			LogUtil.debug("finish init database metadata of "+ds);
 			releaseConnection(con);
 		}
 	}
 
-	private long calcTimeDelta(Connection conn, DatabaseDialect dialect) {
+	private void calcTimeDelta(Connection conn, DatabaseDialect dialect) {
 		String template = dialect.getProperty(DbProperty.SELECT_EXPRESSION);
 		String exps = dialect.getFunction(Func.current_timestamp);
 		String sql;
@@ -259,7 +267,7 @@ public class DbMetaData {
 		}
 		try {
 			Date date = select0(conn, sql, ResultSetExtractor.GET_FIRST_TIMESTAMP, 1, null);
-			return date.getTime() - System.currentTimeMillis();
+			dbTimeDelta = date.getTime() - System.currentTimeMillis();
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -551,7 +559,7 @@ public class DbMetaData {
 			schema = objectName.substring(0, n);
 			objectName = objectName.substring(n + 1);
 		}
-		if (this.getProfile().has(Feature.TABLE_CASE_SENSTIVE)) {
+		if (this.getProfile().isCaseSensitive()) {
 			String upper = objectName.toUpperCase();
 			String lower = objectName.toLowerCase();
 			if (innerExists(type, schema, objectName)) {
@@ -621,7 +629,7 @@ public class DbMetaData {
 	 */
 	public Column getColumn(String tableName, String column) throws SQLException {
 		tableName = info.profile.getObjectNameToUse(tableName);
-		column = info.profile.getColumnNameToUse(column);
+		column = info.profile.getObjectNameToUse(column);
 		Connection conn = getConnection(false);
 		Collection<Index> indexes = getIndexes(tableName);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
@@ -1794,6 +1802,7 @@ public class DbMetaData {
 				BindVariableContext context = new BindVariableContext(st, profile, debug);
 				context.setVariables(objs);
 			}
+			//注意 MySQL低版本会有BUG 当limit为=1时会报错
 			if (maxReturn > 0)
 				st.setMaxRows(maxReturn);
 			rs = st.executeQuery();
@@ -2154,7 +2163,7 @@ public class DbMetaData {
 			baseColumnCount = meta.getColumns().size();
 		}
 		List<TableInfo> tables;
-		if (info.profile.has(Feature.TABLE_CASE_SENSTIVE)) {
+		if (info.profile.isCaseSensitive()) {
 			tables = new ArrayList<TableInfo>();
 			String lower = tableName.toLowerCase();
 			String upper = tableName.toUpperCase();

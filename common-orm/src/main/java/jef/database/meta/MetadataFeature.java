@@ -15,11 +15,6 @@ import jef.database.DbUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 public class MetadataFeature {
-
-	/**
-	 * 即DatabaseMetaData#supportsMixedCaseIdentifiers() 实际情况是返回当前数据库的对象名是否大小写敏感。
-	 */
-	private boolean caseSensitive;
 	/**
 	 * 存入数据库时变大小写变化,如Oracle始终变大写
 	 */
@@ -30,10 +25,6 @@ public class MetadataFeature {
 	 * 因此一般来说加了引号以后，数据库对象都变为混合大小写
 	 */
 	private Case quotedCase;
-	/**
-	 * 在加了引号后，大部分数据库都变为Mixed大小写敏感。除了个别数据库不支持引号用法。
-	 */
-	private boolean caseSensitiveIfQuoted;
 
 	/**
 	 * 引号字符串
@@ -43,7 +34,7 @@ public class MetadataFeature {
 	 * 支持的表类型
 	 */
 	private String[] tableTypes;
-	
+
 	/**
 	 * 数据库是否支持恢复点
 	 */
@@ -70,14 +61,6 @@ public class MetadataFeature {
 		this.quotedCase = quotedCase;
 	}
 
-	public boolean isCaseSensitive() {
-		return caseSensitive;
-	}
-
-	public boolean isCaseSensitiveIfQuoted() {
-		return caseSensitiveIfQuoted;
-	}
-
 	public boolean isSupportsSavepoints() {
 		return supportsSavepoints;
 	}
@@ -90,36 +73,26 @@ public class MetadataFeature {
 		this.quoteChar = quoteChar;
 	}
 
-	public void setSupportMixedQuoted(boolean supportMixedQuoted) {
-		this.caseSensitiveIfQuoted = supportMixedQuoted;
-	}
-
 	public boolean supportsSavepoints() {
 		return this.supportsSavepoints;
 	}
 
 	public MetadataFeature(DatabaseMetaData metadata) throws SQLException {
-		this.caseSensitive = metadata.supportsMixedCaseIdentifiers();
-		this.caseSensitiveIfQuoted = metadata.supportsMixedCaseQuotedIdentifiers();
 		this.quoteChar = metadata.getIdentifierQuoteString();
-		if (metadata.storesUpperCaseIdentifiers()) {
+		if (metadata.supportsMixedCaseIdentifiers() || metadata.storesMixedCaseIdentifiers()) {
+			this.defaultCase = Case.MIXED_SENSITIVE;
+		} else if (metadata.storesUpperCaseIdentifiers()) {
 			this.defaultCase = Case.UPPER;
 		} else if (metadata.storesLowerCaseIdentifiers()) {
 			this.defaultCase = Case.LOWER;
-		} else if (metadata.storesMixedCaseIdentifiers()) {
-			this.defaultCase = Case.MIXED;
 		} else {
 			throw new SQLException("The database driver " + metadata.getClass().getName() + " not support JDBC case feature.");
 		}
-		if (metadata.storesUpperCaseQuotedIdentifiers()) {
-			this.quotedCase = Case.UPPER;
-		} else if (metadata.storesLowerCaseQuotedIdentifiers()) {
-			this.quotedCase = Case.LOWER;
-		} else if (metadata.storesMixedCaseQuotedIdentifiers()) {
-			this.quotedCase = Case.MIXED;
+		// 增加引号后。有三种情况 1、变为大小写敏感（大部分数据） 2、不支持引号（SQLITE）3、自动转小写（MYSQL开启对应开关后）
+		if (metadata.supportsMixedCaseQuotedIdentifiers()) {// 大小写敏感
+			this.quotedCase = Case.MIXED_SENSITIVE;
 		} else {
-//			throw new SQLException("The database driver " + metadata.getClass().getName() + " not support JDBC case feature.");
-			this.quotedCase = Case.MIXED;
+			this.quotedCase = this.defaultCase;
 		}
 		supportsSavepoints = metadata.supportsSavepoints();
 		try {
@@ -224,7 +197,4 @@ public class MetadataFeature {
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this);
 	}
-	
-	
-
 }

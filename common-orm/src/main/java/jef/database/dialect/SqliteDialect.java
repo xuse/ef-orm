@@ -67,7 +67,6 @@ public class SqliteDialect extends AbstractDialect {
 		features.add(Feature.NOT_SUPPORT_KEYWORD_DEFAULT);
 		features.add(Feature.NOT_SUPPORT_ALTER_DROP_COLUMN);
 		features.add(Feature.ONE_COLUMN_IN_SINGLE_DDL);
-		features.add(Feature.TABLE_CASE_SENSTIVE);
 
 		setProperty(DbProperty.ADD_COLUMN, "ADD COLUMN");
 		setProperty(DbProperty.MODIFY_COLUMN, "MODIFY COLUMN");

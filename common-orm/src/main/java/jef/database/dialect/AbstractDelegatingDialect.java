@@ -100,11 +100,6 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	}
 
 	@Override
-	public String getColumnNameToUse(String name) {
-		return dialect.getColumnNameToUse(name);
-	}
-
-	@Override
 	public Timestamp toTimestampSqlParam(Date timestamp) {
 		return dialect.toTimestampSqlParam(timestamp);
 	}
@@ -247,5 +242,10 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	@Override
 	public List<SequenceInfo> getSequenceInfo(DbMetaData conn, String schema, String seqName) {
 		return dialect.getSequenceInfo(conn, schema, seqName);
+	}
+
+	@Override
+	public boolean isCaseSensitive() {
+		return dialect.isCaseSensitive();
 	}
 }

@@ -26,8 +26,6 @@ import jef.database.support.RDBMS;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
 
-import org.apache.commons.lang.StringUtils;
-
 /**
  * Dialect for SQL Server 2000 and before..
  * 
@@ -43,8 +41,6 @@ public class SQLServer2000Dialect extends AbstractDialect {
 		features.add(Feature.NOT_SUPPORT_KEYWORD_DEFAULT);
 		features.add(Feature.BATCH_GENERATED_KEY_BY_FUNCTION);
 		features.add(Feature.SUPPORT_COMMENT);
-		features.add(Feature.TABLE_CASE_SENSTIVE);
-		
 		// features.add(Feature.NO_BIND_FOR_INSERT);
 		// features.add(Feature.NO_BIND_FOR_SELECT);
 
@@ -190,24 +186,6 @@ public class SQLServer2000Dialect extends AbstractDialect {
 
 	public RDBMS getName() {
 		return RDBMS.sqlserver;
-	}
-
-	/**
-	 * SQL Server的表名列名大小写由服务端的排序规则决定。 这里根据一般性习惯统统转为小写处理
-	 */
-	@Override
-	public String getObjectNameToUse(String name) {
-		return StringUtils.lowerCase(name);
-	}
-
-	/**
-	 * SQL Server的表名列名大小写由服务端的排序规则决定。 这里根据一般性习惯统统转为小写处理
-	 * 
-	 * 关键是看ResultSet获取有没有问题
-	 */
-	@Override
-	public String getColumnNameToUse(String name) {
-		return StringUtils.lowerCase(name);
 	}
 
 	@Override

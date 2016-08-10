@@ -24,7 +24,6 @@ import jef.database.ConnectInfo;
 import jef.database.DbMetaData;
 import jef.database.dialect.handler.DerbyLimitHandler;
 import jef.database.dialect.handler.LimitHandler;
-import jef.database.dialect.type.AColumnMapping;
 import jef.database.jsqlparser.expression.LongValue;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
@@ -216,21 +215,6 @@ public class DerbyDialect extends AbstractDialect {
 		return RDBMS.derby;
 	}
 
-	@Override
-	public String getObjectNameToUse(String name) {
-		return StringUtils.upperCase(name);
-	}
-
-	@Override
-	public String getColumnNameToUse(String name) {
-		return StringUtils.upperCase(name);
-	}
-	
-	@Override
-	public String getColumnNameToUse(AColumnMapping name) {
-		return name.upperColumnName();
-	}
-	
 	@Override
 	public void accept(DbMetaData db) {
 		super.accept(db);

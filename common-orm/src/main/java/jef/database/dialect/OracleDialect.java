@@ -40,7 +40,6 @@ import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.handler.LimitHandler;
 import jef.database.dialect.handler.OracleLimitHander;
-import jef.database.dialect.type.AColumnMapping;
 import jef.database.exception.JDBCExceptionHelper;
 import jef.database.exception.TemplatedViolatedConstraintNameExtracter;
 import jef.database.exception.ViolatedConstraintNameExtracter;
@@ -295,29 +294,6 @@ public class OracleDialect extends AbstractDialect {
 		return RDBMS.oracle;
 	}
 
-	@Override
-	public String getObjectNameToUse(String name) {
-		if (name == null || name.length() == 0)
-			return null;
-		if (name.charAt(0) == '"')
-			return name;
-		return name.toUpperCase();
-	}
-
-	@Override
-	public String getColumnNameToUse(String name) {
-		if (name == null || name.length() == 0)
-			return null;
-		if (name.charAt(0) == '"')
-			return name;
-		return name.toUpperCase();
-	}
-
-	@Override
-	public String getColumnNameToUse(AColumnMapping name) {
-		return name.upperColumnName();
-	}
-
 	/**
 	 * 由于暂不考虑支持Oracle TIMESTAMP到毫秒这个特性，因此在查询时需要对TIMESTAMP进行truncate处理，
 	 * 以避免因多了几个毫秒而导致查不到数据的问题。
@@ -540,7 +516,6 @@ public class OracleDialect extends AbstractDialect {
 	}
 
 	private static ViolatedConstraintNameExtracter EXTRACTER_8 = new TemplatedViolatedConstraintNameExtracter() {
-
 		/**
 		 * Extract the name of the violated constraint from the given
 		 * SQLException.
@@ -564,7 +539,6 @@ public class OracleDialect extends AbstractDialect {
 	};
 
 	private static ViolatedConstraintNameExtracter EXTRACTER_9 = new TemplatedViolatedConstraintNameExtracter() {
-
 		/**
 		 * Extract the name of the violated constraint from the given
 		 * SQLException.
@@ -588,4 +562,8 @@ public class OracleDialect extends AbstractDialect {
 
 	};
 
+	@Override
+	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
+		return EXTRACTER_9;
+	}
 }

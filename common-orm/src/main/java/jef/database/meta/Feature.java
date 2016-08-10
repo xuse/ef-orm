@@ -203,9 +203,4 @@ public enum Feature {
 	 * MYSQL语法，建表时语句在字段上直接加COMMENT语句
 	 */
 	SUPPORT_INLINE_COMMENT,
-	
-	/**
-	 * 凡是可能表名大小写敏感的
-	 */
-	TABLE_CASE_SENSTIVE,
 }

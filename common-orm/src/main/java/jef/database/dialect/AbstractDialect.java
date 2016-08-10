@@ -52,6 +52,7 @@ import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.meta.Case;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.meta.FunctionMapping;
@@ -77,13 +78,13 @@ import jef.tools.StringUtils;
  * 
  */
 public abstract class AbstractDialect implements DatabaseDialect {
-	private static final ViolatedConstraintNameExtracter EXTRACTER = new ViolatedConstraintNameExtracter() {
+	private static final ViolatedConstraintNameExtracter EXTRACTER_DUMMY = new ViolatedConstraintNameExtracter() {
 		public String extractConstraintName(SQLException sqle) {
 			return null;
 		}
 	};
 	/**
-	 * 所有已经构建的Dialect
+	 * 所有已经构建的Dialect，缓存
 	 */
 	private static final Map<String, DatabaseDialect> ITEMS = new HashMap<String, DatabaseDialect>();
 	/**
@@ -99,11 +100,11 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	 */
 	protected final TypeNames typeNames = new TypeNames();
 	/**
-	 * 函数
+	 * 函数索引
 	 */
 	protected Map<String, FunctionMapping> functions = new HashMap<String, FunctionMapping>();
 	/**
-	 * 函数
+	 * 函数索引
 	 */
 	protected Map<DbFunction, FunctionMapping> functionsIndex = new HashMap<DbFunction, FunctionMapping>();
 	/**
@@ -115,6 +116,12 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	 */
 	protected Set<Feature> features;
 
+	/**
+	 * case Handler
+	 */
+	private Case caseHandler = Case.MIXED_SENSITIVE;
+	private char quoteChar;
+	
 	// 缺省的函数注册掉
 	public AbstractDialect() {
 		for (FunctionMapping m : DEFAULT_FUNCTIONS) {
@@ -620,14 +627,12 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	}
 
 	public String getObjectNameToUse(String name) {
-		return name;
+		if(name==null||name.length()==0)return null;
+		if(name.charAt(0)==quoteChar)return name;
+		return caseHandler.getObjectNameToUse(name);
 	}
-
-	public String getColumnNameToUse(String name) {
-		return name;
-	}
-	public String getColumnNameToUse(AColumnMapping name) {
-		return name.rawColumnName;
+	public String getColumnNameToUse(AColumnMapping column) {
+		return caseHandler.getObjectNameToUse(column);
 	}
 
 	@Override
@@ -685,8 +690,13 @@ public abstract class AbstractDialect implements DatabaseDialect {
 
 	public void toExtremeInsert(InsertSqlClause sql) {
 	}
-
+	
 	public void accept(DbMetaData dbMetadata) {
+		this.caseHandler=dbMetadata.getFeature().getDefaultCase();
+		String q=dbMetadata.getFeature().getQuoteChar();
+		if(q.length()>0){
+			quoteChar=q.charAt(0);
+		}
 	}
 
 	/**
@@ -812,8 +822,11 @@ public abstract class AbstractDialect implements DatabaseDialect {
 
 	@Override
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
-		return EXTRACTER;
+		return EXTRACTER_DUMMY;
 	}
-	
-	
+
+	@Override
+	public boolean isCaseSensitive() {
+		return caseHandler.isCaseSensitive();
+	}
 }
