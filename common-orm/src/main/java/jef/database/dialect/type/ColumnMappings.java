@@ -1,5 +1,6 @@
 package jef.database.dialect.type;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Date;
@@ -189,7 +190,7 @@ public final class ColumnMappings {
 
 		FAST_ACCESSOR_MAP.put(String.class, STRING);
 		FAST_ACCESSOR_MAP.put(java.util.Date.class, TIMESTAMP);
-		FAST_ACCESSOR_MAP.put(java.util.Date.class, BIGDECIMAL);
+		FAST_ACCESSOR_MAP.put(BigDecimal.class, BIGDECIMAL);
 		FAST_ACCESSOR_MAP.put(java.sql.Date.class, DATE);
 		FAST_ACCESSOR_MAP.put(java.sql.Time.class, TIME);
 		FAST_ACCESSOR_MAP.put(java.sql.Timestamp.class, TIMESTAMP);
