@@ -17,17 +17,35 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 public class MetadataFeature {
 
 	/**
+	 * 即DatabaseMetaData#supportsMixedCaseIdentifiers() 实际情况是返回当前数据库的对象名是否大小写敏感。
+	 */
+	private boolean caseSensitive;
+	/**
 	 * 存入数据库时变大小写变化,如Oracle始终变大写
 	 */
 	private Case defaultCase;
-	private boolean supportMixed;
-	private Case quotedCase;
-	private boolean supportMixedQuoted;
-	private String quoteChar;
-	// 运行时缓存
-	private String[] tableTypes;
+
 	/**
-	 * 记录数据库是否支持恢复点
+	 * 大部分数据库都支持用引号来标注数据库对象。主要用途 1、让数据库认识到这是一个对象名而不是数据库关键字 2、保留原先的大小写
+	 * 因此一般来说加了引号以后，数据库对象都变为混合大小写
+	 */
+	private Case quotedCase;
+	/**
+	 * 在加了引号后，大部分数据库都变为Mixed大小写敏感。除了个别数据库不支持引号用法。
+	 */
+	private boolean caseSensitiveIfQuoted;
+
+	/**
+	 * 引号字符串
+	 */
+	private String quoteChar;
+	/**
+	 * 支持的表类型
+	 */
+	private String[] tableTypes;
+	
+	/**
+	 * 数据库是否支持恢复点
 	 */
 	private boolean supportsSavepoints;
 
@@ -44,14 +62,6 @@ public class MetadataFeature {
 		this.defaultCase = defaultCase;
 	}
 
-	public boolean isSupportMixed() {
-		return supportMixed;
-	}
-
-	public void setSupportMixed(boolean supportMixed) {
-		this.supportMixed = supportMixed;
-	}
-
 	public Case getQuotedCase() {
 		return quotedCase;
 	}
@@ -60,8 +70,16 @@ public class MetadataFeature {
 		this.quotedCase = quotedCase;
 	}
 
-	public boolean isSupportMixedQuoted() {
-		return supportMixedQuoted;
+	public boolean isCaseSensitive() {
+		return caseSensitive;
+	}
+
+	public boolean isCaseSensitiveIfQuoted() {
+		return caseSensitiveIfQuoted;
+	}
+
+	public boolean isSupportsSavepoints() {
+		return supportsSavepoints;
 	}
 
 	public String getQuoteChar() {
@@ -73,7 +91,7 @@ public class MetadataFeature {
 	}
 
 	public void setSupportMixedQuoted(boolean supportMixedQuoted) {
-		this.supportMixedQuoted = supportMixedQuoted;
+		this.caseSensitiveIfQuoted = supportMixedQuoted;
 	}
 
 	public boolean supportsSavepoints() {
@@ -81,8 +99,8 @@ public class MetadataFeature {
 	}
 
 	public MetadataFeature(DatabaseMetaData metadata) throws SQLException {
-		this.supportMixed = metadata.supportsMixedCaseIdentifiers();
-		this.supportMixedQuoted = metadata.supportsMixedCaseQuotedIdentifiers();
+		this.caseSensitive = metadata.supportsMixedCaseIdentifiers();
+		this.caseSensitiveIfQuoted = metadata.supportsMixedCaseQuotedIdentifiers();
 		this.quoteChar = metadata.getIdentifierQuoteString();
 		if (metadata.storesUpperCaseIdentifiers()) {
 			this.defaultCase = Case.UPPER;
@@ -100,6 +118,7 @@ public class MetadataFeature {
 		} else if (metadata.storesMixedCaseQuotedIdentifiers()) {
 			this.quotedCase = Case.MIXED;
 		} else {
+//			throw new SQLException("The database driver " + metadata.getClass().getName() + " not support JDBC case feature.");
 			this.quotedCase = Case.MIXED;
 		}
 		supportsSavepoints = metadata.supportsSavepoints();

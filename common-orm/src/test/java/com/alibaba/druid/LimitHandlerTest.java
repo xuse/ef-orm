@@ -1,13 +1,13 @@
 package com.alibaba.druid;
 
-import jef.database.dialect.DerbyLimitHandler;
-import jef.database.dialect.LimitHandler;
-import jef.database.dialect.LimitOffsetLimitHandler;
-import jef.database.dialect.MySqlLimitHandler;
-import jef.database.dialect.OracleLimitHander;
-import jef.database.dialect.SQL2000LimitHandler;
-import jef.database.dialect.SQL2005LimitHandler;
 import jef.database.dialect.SQLServer2005Dialect;
+import jef.database.dialect.handler.DerbyLimitHandler;
+import jef.database.dialect.handler.LimitHandler;
+import jef.database.dialect.handler.LimitOffsetLimitHandler;
+import jef.database.dialect.handler.MySqlLimitHandler;
+import jef.database.dialect.handler.OracleLimitHander;
+import jef.database.dialect.handler.SQL2000LimitHandler;
+import jef.database.dialect.handler.SQL2005LimitHandler;
 import jef.database.wrapper.clause.BindSql;
 import junit.framework.Assert;
 

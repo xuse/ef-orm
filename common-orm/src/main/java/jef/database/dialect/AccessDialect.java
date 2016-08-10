@@ -17,6 +17,7 @@ package jef.database.dialect;
 
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
+import jef.database.dialect.handler.LimitHandler;
 import jef.database.meta.DbProperty;
 import jef.database.support.RDBMS;
 

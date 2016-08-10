@@ -157,17 +157,25 @@ public class DbMetaData {
 	 * 下次缓存过期时间
 	 */
 	private long subtableCacheExpireTime;
-
 	/**
 	 * 根据扫描得到的所有表的情况
 	 */
 	private final Map<String, Set<String>> subtableCache = new ConcurrentHashMap<String, Set<String>>();
-
+	/**
+	 * 当前数据库的支持特性
+	 */
 	private MetadataFeature feature;
-
+	/**
+	 * DDL计算器
+	 */
 	private DdlGenerator ddlGenerator;
-
+	/**
+	 * 数据源
+	 */
 	private DataSource ds;
+	/**
+	 * 时间偏移量
+	 */
 	private long dbTimeDelta;
 
 	private IUserManagedPool parent;

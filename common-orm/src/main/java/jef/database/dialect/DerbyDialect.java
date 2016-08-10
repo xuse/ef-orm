@@ -22,6 +22,8 @@ import java.util.Arrays;
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.DbMetaData;
+import jef.database.dialect.handler.DerbyLimitHandler;
+import jef.database.dialect.handler.LimitHandler;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.jsqlparser.expression.LongValue;
 import jef.database.meta.DbProperty;
@@ -262,6 +264,7 @@ public class DerbyDialect extends AbstractDialect {
 			connectInfo.setHost(reader.readToken('/', ' '));
 			connectInfo.setDbname(reader.readToken(';'));
 		}
+		reader.close();
 	}
 
 	private final LimitHandler limit=new DerbyLimitHandler();

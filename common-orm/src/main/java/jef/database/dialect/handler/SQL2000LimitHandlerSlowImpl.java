@@ -1,4 +1,4 @@
-package jef.database.dialect;
+package jef.database.dialect.handler;
 
 import javax.persistence.PersistenceException;
 

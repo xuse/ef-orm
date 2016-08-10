@@ -1,4 +1,4 @@
-package jef.database.dialect;
+package jef.database.dialect.handler;
 
 import jef.database.jdbc.statement.UnionJudgement;
 import jef.database.jdbc.statement.UnionJudgementDruidMySQLImpl;

@@ -23,6 +23,8 @@ import org.apache.commons.lang.StringUtils;
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.dialect.ColumnType.AutoIncrement;
+import jef.database.dialect.handler.LimitHandler;
+import jef.database.dialect.handler.LimitOffsetLimitHandler;
 import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;

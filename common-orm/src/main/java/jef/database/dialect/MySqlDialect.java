@@ -24,6 +24,8 @@ import jef.database.ConnectInfo;
 import jef.database.ORMConfig;
 import jef.database.annotation.DateGenerateType;
 import jef.database.dialect.ColumnType.AutoIncrement;
+import jef.database.dialect.handler.LimitHandler;
+import jef.database.dialect.handler.MySqlLimitHandler;
 import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
@@ -390,6 +392,7 @@ public class MySqlDialect extends AbstractDialect {
 		String dbname = reader.readToken(new char[] { '?', ' ', ';' });
 		connectInfo.setHost(host);
 		connectInfo.setDbname(dbname);
+		reader.close();
 	}
 
 	private final static int[] IO_ERROR_CODE = { 1158, 1159, 1160, 1161, 2001, 2002, 2003, 2004, 2006, 2013, 2024, 2025, 2026 };
