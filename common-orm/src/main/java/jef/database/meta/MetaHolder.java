@@ -18,6 +18,7 @@ package jef.database.meta;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -1115,6 +1116,8 @@ public final class MetaHolder {
 			return new ColumnType.Char(1).setNullable(nullable);
 		} else if (type == Character.TYPE) {
 			return new ColumnType.Char(1).setNullable(nullable);
+		} else if (type == BigDecimal.class) {
+			return new ColumnType.Double(16,6).setNullable(nullable);
 		} else if (type == Date.class) {
 			Temporal t = fieldProvider.getAnnotation(Temporal.class);
 			return ColumnTypeBuilder.newDateTimeColumnDef(t == null ? TemporalType.TIMESTAMP : t.value(), gv, version).setNullable(nullable);

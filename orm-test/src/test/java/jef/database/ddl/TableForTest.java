@@ -1,5 +1,6 @@
 package jef.database.ddl;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -31,6 +32,8 @@ public class TableForTest extends jef.database.DataObject {
 	@Column(length=64)
     private String name;
 
+	@Column(columnDefinition="number(18,8)",name="FLOAT_NUMBER")
+	private BigDecimal floatNumber;
 	/**
 	 * 指定列有索引
 	 */
@@ -153,7 +156,15 @@ public class TableForTest extends jef.database.DataObject {
         this.data = data;
     }
 
-    public enum Field implements jef.database.Field {
-        id, name, code, amount, expireTime, data,created,createdSys,modified,modifiedSys
+    public BigDecimal getFloatNumber() {
+		return floatNumber;
+	}
+
+	public void setFloatNumber(BigDecimal floatNumber) {
+		this.floatNumber = floatNumber;
+	}
+
+	public enum Field implements jef.database.Field {
+        id, name, code, amount, expireTime, data,created,createdSys,modified,modifiedSys,floatNumber
     }
 }

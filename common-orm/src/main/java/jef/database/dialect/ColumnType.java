@@ -16,6 +16,7 @@
 package jef.database.dialect;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,6 +55,7 @@ import jef.database.dialect.type.DateSDateMapping;
 import jef.database.dialect.type.DateStringMapping;
 import jef.database.dialect.type.DelegatorBoolean;
 import jef.database.dialect.type.NumBigDateMapping;
+import jef.database.dialect.type.NumBigDecimalMapping;
 import jef.database.dialect.type.NumBigIntMapping;
 import jef.database.dialect.type.NumBigLongMapping;
 import jef.database.dialect.type.NumBigStringMapping;
@@ -518,6 +520,9 @@ public abstract class ColumnType {
 		@Override
 		public ColumnMapping getMappingType(Class<?> fieldType) {
 			boolean isBig = (precision >= 18);
+			if(fieldType==BigDecimal.class){
+				return new NumBigDecimalMapping();
+			}
 			if (isBig) {
 				if (fieldType == java.lang.Double.class || fieldType == java.lang.Double.TYPE || fieldType == Object.class) {
 					return new NumDoubleDoubleMapping();
