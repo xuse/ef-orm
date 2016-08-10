@@ -2420,6 +2420,10 @@ public class DbMetaData {
 		return getProfile().has(Feature.SUPPORT_SEQUENCE);
 	}
 
+	public MetadataFeature getFeature() {
+		return feature;
+	}
+	
 	// @Override
 	// protected boolean processCheck(Connection conn) {
 	// DatabaseDialect dialect = getProfile();

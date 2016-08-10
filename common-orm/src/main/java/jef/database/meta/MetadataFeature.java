@@ -12,6 +12,8 @@ import java.util.List;
 import jef.common.log.LogUtil;
 import jef.database.DbUtils;
 
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 public class MetadataFeature {
 
 	/**
@@ -198,5 +200,12 @@ public class MetadataFeature {
 	public int getJdbcVersion() {
 		return jdbcVersion;
 	}
+
+	@Override
+	public String toString() {
+		return ToStringBuilder.reflectionToString(this);
+	}
+	
+	
 
 }
