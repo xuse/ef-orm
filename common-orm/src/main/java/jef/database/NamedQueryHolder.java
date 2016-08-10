@@ -220,7 +220,7 @@ final class NamedQueryHolder {
 				if(StringUtils.isNotEmpty(namespace)){
 					name=namespace+"."+name;
 				}
-				NamedQueryConfig nq = new NamedQueryConfig(name, sql, type, size);
+				NamedQueryConfig nq = new NamedQueryConfig(name, sql, "JPQL".equalsIgnoreCase(type), size);
 				nq.setTag(XMLUtils.attrib(e, "tag"));
 				RDBMS dialect = processName(nq);
 				put0(result, nq, dialect, file.getAbsolutePath());

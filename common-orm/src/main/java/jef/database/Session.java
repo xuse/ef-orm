@@ -484,12 +484,7 @@ public abstract class Session {
 	public <T extends IQueryableEntity> T merge(T entity) throws SQLException {
 		T old = null;
 		entity.getQuery().setCascade(false);
-		if (DbUtils.getPrimaryKeyValue(entity) == null) {
-			old = load(entity, true);
-			if (old != null) {
-				return old;
-			}
-		} else {
+		if (DbUtils.getPrimaryKeyValue(entity) != null) {
 			old = load(entity, true);
 			if (old != null) {
 				DbUtils.compareToUpdateMap(entity, old);

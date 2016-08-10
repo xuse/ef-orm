@@ -31,7 +31,7 @@ public interface FooEntityDao {
 	 * @param username
 	 * @return
 	 */
-	@Query(value = "select * from foo u where u.name like ?1<string$>", nativeQuery = true)
+	@Query(value = "select * from foo u where u.name like ?1<string$>")
 	public Foo findByusername(String username);
 
 	/**
@@ -40,7 +40,7 @@ public interface FooEntityDao {
 	 * @param name
 	 * @return
 	 */
-	@Query("select * from foo u where u.name=:name")
+	@Query(value="select * from foo u where u.name=:name",nativeQuery=false)
 	public Foo findBysName(@Param("name") String name);
 
 	/**
@@ -111,7 +111,7 @@ public interface FooEntityDao {
 	 * @param sort
 	 * @return
 	 */
-	@Query(value = "select * from foo where age=?1 and name like ?2<$string$>", nativeQuery = true)
+	@Query(value = "select * from foo where age=?1 and name like ?2<$string$>")
 	public Page<Foo> findBySql7(int age, @IgnoreIf(ParamIs.Empty) String name, Pageable page);
 
 	/**

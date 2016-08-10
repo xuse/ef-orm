@@ -16,6 +16,8 @@ import javax.persistence.Id;
 import jef.common.Entry;
 import jef.database.annotation.EasyEntity;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.jsqlparser.JPQLConvert;
+import jef.database.jsqlparser.JPQLSelectConvert;
 import jef.database.jsqlparser.RemovedDelayProcess;
 import jef.database.jsqlparser.SelectToCountWrapper;
 import jef.database.jsqlparser.SqlFunctionlocalization;
@@ -33,9 +35,13 @@ import jef.database.jsqlparser.expression.operators.relational.MinorThan;
 import jef.database.jsqlparser.expression.operators.relational.MinorThanEquals;
 import jef.database.jsqlparser.expression.operators.relational.NotEqualsTo;
 import jef.database.jsqlparser.parser.ParseException;
+import jef.database.jsqlparser.statement.delete.Delete;
+import jef.database.jsqlparser.statement.insert.Insert;
 import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.PlainSelect;
+import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.statement.select.Union;
+import jef.database.jsqlparser.statement.update.Update;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.SelectBody;
 import jef.database.jsqlparser.visitor.Statement;
@@ -224,8 +230,18 @@ public class NamedQueryConfig extends jef.database.DataObject {
 			SqlFunctionlocalization localization = new SqlFunctionlocalization(dialect, db);
 			st.accept(localization);
 
-			if (type == TYPE_JPQL)
-				st.accept(new JPQLSelectConvert(dialect));
+			if (type == TYPE_JPQL){
+				if(st instanceof Select){
+					st.accept(new JPQLSelectConvert(dialect));
+				}else if(st instanceof Insert){
+					st.accept(new JPQLConvert(dialect));
+				}else if(st instanceof Update){
+					st.accept(new JPQLConvert(dialect));
+				}else if(st instanceof Delete){
+					st.accept(new JPQLConvert(dialect));
+				}
+				
+			}
 
 			DialectCase result = new DialectCase();
 			result.statement = st;
@@ -247,16 +263,12 @@ public class NamedQueryConfig extends jef.database.DataObject {
 	public NamedQueryConfig() {
 	};
 
-	public NamedQueryConfig(String name, String sql, String type, int fetchSize) {
+	public NamedQueryConfig(String name, String sql, boolean isJpql, int fetchSize) {
 		stopUpdate();
 		this.rawsql = sql;
 		this.name = name;
 		this.fetchSize = fetchSize;
-		if ("jpql".equalsIgnoreCase(type)) {
-			this.type = TYPE_JPQL;
-		} else {
-			this.type = TYPE_SQL;
-		}
+		this.type = isJpql ? TYPE_JPQL : TYPE_SQL;
 	}
 
 	/**

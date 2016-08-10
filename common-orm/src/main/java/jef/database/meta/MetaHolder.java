@@ -1140,6 +1140,8 @@ public final class MetaHolder {
 
 	/**
 	 * 逆向查找元模型
+	 * @param schema
+	 * @param table
 	 */
 	public static AbstractMetadata lookup(String schema, String table) {
 		String key = (schema + "." + table).toUpperCase();

@@ -303,22 +303,22 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		return this;
 	}
 
-	/*
+	/**
 	 * 从SQL语句加上返回类型 构造
 	 * 
 	 * @param db 目标数据库
 	 * 
 	 * @param sql SQL语句
-	 * 
-	 * @param resultClass 查询转换器
+	 * @param t 查询转换器
+	 * @param isJpql
 	 */
-	NativeQuery(OperateTarget db, String sql, Transformer t) {
+	NativeQuery(OperateTarget db, String sql, Transformer t,boolean isJpql) {
 		if (StringUtils.isEmpty(sql)) {
 			throw new IllegalArgumentException("Please don't input an empty SQL.");
 		}
 		this.db = db;
 		this.resultTransformer = t;
-		this.config = new NamedQueryConfig("", sql, null, 0);
+		this.config = new NamedQueryConfig("", sql, isJpql, 0);
 		resultTransformer.addStrategy(PopulateStrategy.PLAIN_MODE);
 	}
 

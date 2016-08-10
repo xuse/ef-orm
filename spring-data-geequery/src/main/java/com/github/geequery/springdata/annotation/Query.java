@@ -38,21 +38,6 @@ public @interface Query {
 	String value() default "";
 
 	/**
-	 * Defines a special count query that shall be used for pagination queries to lookup the total number of elements for
-	 * a page. If non is configured we will derive the count query from the method name.
-	 */
-	String countQuery() default "";
-
-	/**
-	 * Defines the projection part of the count query that is generated for pagination. If neither {@link #countQuery()}
-	 * not {@link #countProjection()} is configured we will derive the count query from the method name.
-	 * 
-	 * @return
-	 * @since 1.6
-	 */
-	String countProjection() default "";
-
-	/**
 	 * Configures whether the given query is a native one. Defaults to {@literal false}.
 	 */
 	boolean nativeQuery() default false;
@@ -62,13 +47,4 @@ public @interface Query {
 	 * {@code $ domainClass}.${queryMethodName}} will be used.
 	 */
 	String name() default "";
-
-	/**
-	 * Returns the name of the {@link javax.persistence.NamedQuery} to be used to execute count queries when pagination is
-	 * used. Will default to the named query name configured suffixed by {@code .count}.
-	 * 
-	 * @see #name()
-	 * @return
-	 */
-	String countName() default "";
 }

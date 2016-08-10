@@ -51,7 +51,12 @@ public final class GqQueryLookupStrategy implements QueryLookupStrategy {
 			return new GqProcedureQuery(method, em);
 		} else if (StringUtils.isNotEmpty(qSql)) {
 			JefEntityManagerFactory emf = (JefEntityManagerFactory) em.getEntityManagerFactory();
-			NativeQuery<?> q = (NativeQuery<?>) emf.getDefault().createNativeQuery(qSql,method.getReturnedObjectType());
+			NativeQuery<?> q;
+			if(method.isNativeQuery()){
+				q= (NativeQuery<?>) emf.getDefault().createNativeQuery(qSql,method.getReturnedObjectType());
+			}else{
+				q= (NativeQuery<?>) emf.getDefault().createQuery(qSql,method.getReturnedObjectType());
+			}
 			return new GqNativeQuery(method, em, q);
 		}
 		if (emf.getDefault().hasNamedQuery(qName)) {
