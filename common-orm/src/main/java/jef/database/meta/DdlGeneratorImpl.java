@@ -10,10 +10,10 @@ import java.util.Set;
 
 import jef.common.SimpleSet;
 import jef.database.Field;
-import jef.database.annotation.IndexDef;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Index.IndexItem;
+import jef.database.meta.def.IndexDef;
 import jef.database.support.RDBMS;
 import jef.tools.StringUtils;
 

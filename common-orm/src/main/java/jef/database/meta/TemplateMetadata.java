@@ -9,12 +9,12 @@ import jef.common.Entry;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.PojoWrapper;
-import jef.database.annotation.IndexDef;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.AnnotationProvider.ClassAnnotationProvider;
+import jef.database.meta.def.IndexDef;
 
 import com.google.common.collect.Multimap;
 

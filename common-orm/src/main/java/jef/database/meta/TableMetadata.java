@@ -51,12 +51,13 @@ import jef.database.OperateTarget;
 import jef.database.PojoWrapper;
 import jef.database.annotation.BindDataSource;
 import jef.database.annotation.EasyEntity;
-import jef.database.annotation.IndexDef;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.meta.def.IndexDef;
+import jef.database.meta.def.UniqueConstraintDef;
 import jef.database.routing.function.AbstractDateFunction;
 import jef.database.routing.function.HashMod1024MappingFunction;
 import jef.database.routing.function.MapFunction;
@@ -150,7 +151,7 @@ public final class TableMetadata extends AbstractMetadata {
 				this.indexes.add(IndexDef.create(index));
 			}
 			for(javax.persistence.UniqueConstraint unique: table.uniqueConstraints()){
-				this.uniques.add(unique);
+				this.uniques.add(new UniqueConstraintDef(unique));
 			}
 		}
 		if (tableName == null) {

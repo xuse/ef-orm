@@ -17,13 +17,14 @@ import jef.common.log.LogUtil;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
-import jef.database.annotation.IndexDef;
 import jef.database.cache.KeyDimension;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.VersionSupportColumn;
+import jef.database.meta.def.IndexDef;
+import jef.database.meta.def.UniqueConstraintDef;
 import jef.database.query.DbTable;
 import jef.database.query.JpqlExpression;
 import jef.database.query.PKQuery;
@@ -83,7 +84,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	/**
 	 * 记录对应表所有Unqie约束.当建表时可自动创建约束
 	 */
-	final List<javax.persistence.UniqueConstraint> uniques=new ArrayList<javax.persistence.UniqueConstraint>(5);
+	final List<UniqueConstraintDef> uniques=new ArrayList<UniqueConstraintDef>(5);
 	
 	protected final Map<Field, ColumnMapping> schemaMap = new IdentityHashMap<Field, ColumnMapping>();
 	protected Map<String, Field> fields = new HashMap<String, Field>(10, 0.6f);
@@ -423,7 +424,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		this.useOuterJoin = useOuterJoin;
 	}
 	
-	public List<javax.persistence.UniqueConstraint> getUniques() {
+	public List<UniqueConstraintDef> getUniques() {
 		return uniques;
 	}
 

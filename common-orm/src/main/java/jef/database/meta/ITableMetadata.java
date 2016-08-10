@@ -10,7 +10,6 @@ import jef.common.Entry;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.PojoWrapper;
-import jef.database.annotation.IndexDef;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
@@ -18,6 +17,8 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.VersionSupportColumn;
+import jef.database.meta.def.IndexDef;
+import jef.database.meta.def.UniqueConstraintDef;
 
 import com.google.common.collect.Multimap;
 
@@ -213,7 +214,7 @@ public interface ITableMetadata {
 	 * 得到所有的unique约束
 	 * @return
 	 */
-	List<javax.persistence.UniqueConstraint> getUniques();
+	List<UniqueConstraintDef> getUniques();
 	
 
 	// ///////////////////////引用关联查询相关////////////////////

@@ -1,4 +1,4 @@
-package jef.database.annotation;
+package jef.database.meta.def;
 
 import java.util.ArrayList;
 import java.util.List;

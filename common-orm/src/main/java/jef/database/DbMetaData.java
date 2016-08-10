@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -78,6 +79,7 @@ import jef.database.meta.PrimaryKey;
 import jef.database.meta.SequenceInfo;
 import jef.database.meta.TableCreateStatement;
 import jef.database.meta.TableInfo;
+import jef.database.meta.def.UniqueConstraintDef;
 import jef.database.query.DefaultPartitionCalculator;
 import jef.database.query.Func;
 import jef.database.support.MetadataEventListener;
@@ -212,7 +214,7 @@ public class DbMetaData {
 		this.subtableInterval = JefConfiguration.getInt(DbCfg.DB_PARTITION_REFRESH, 3600) * 1000;
 		this.subtableCacheExpireTime = System.currentTimeMillis() + subtableInterval;
 		this.parent = parent;
-		LogUtil.debug("init database metadata of "+ds);
+		LogUtil.debug("init database metadata of " + ds);
 		info = DbUtils.tryAnalyzeInfo(ds, false);
 		Connection con = null;
 		try {
@@ -242,16 +244,16 @@ public class DbMetaData {
 			profile.accept(this);
 			// 计算时间差
 			calcTimeDelta(con, profile);
-			if(Math.abs(dbTimeDelta)>30000){
-				//数据库时间和当前系统时间差距在30秒以上时，警告
-				LogUtil.warn("The time of thie machine is [{}], and database is [{}]. Please adjust date time via any NTP server.",new Date(), getCurrentTime());
-			}else{
-				LogUtil.debug("The time between database and this machine is {}ms.",this.dbTimeDelta);
+			if (Math.abs(dbTimeDelta) > 30000) {
+				// 数据库时间和当前系统时间差距在30秒以上时，警告
+				LogUtil.warn("The time of thie machine is [{}], and database is [{}]. Please adjust date time via any NTP server.", new Date(), getCurrentTime());
+			} else {
+				LogUtil.debug("The time between database and this machine is {}ms.", this.dbTimeDelta);
 			}
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
 		} finally {
-			LogUtil.debug("finish init database metadata of "+ds);
+			LogUtil.debug("finish init database metadata of " + ds);
 			releaseConnection(con);
 		}
 	}
@@ -733,7 +735,105 @@ public class DbMetaData {
 	 */
 	public Collection<Index> getIndexes(Class<?> type) throws SQLException {
 		ITableMetadata meta = MetaHolder.getMeta(type);
-		return getIndexes(meta.getTableName(true));
+		String tableName = meta.getTableName(true);
+		PrimaryKey pk = getPrimaryKey(tableName);
+		Collection<Index> indexes = getIndexes(tableName);
+		for (Iterator<Index> iter = indexes.iterator(); iter.hasNext();) {
+			Index index = iter.next();
+			if(!index.isUnique()){
+				continue;
+			}
+			if (isPrimaryKey(pk, index)) {
+				iter.remove();
+				continue;
+			}
+			if(index.getColumns().size()==1){
+				if(isUniqueColumn(index, meta.getColumns())){
+					iter.remove();
+					continue;
+				}
+			}
+			if(isUniqueConstraint(index,meta)){
+				iter.remove();
+				continue;
+			}
+		}
+		return indexes;
+	}
+
+	/**
+	 * 得到所有的unique约束。过滤掉了主键和非唯一的索引。 但是进一步的区分 unique index和 constraint是比较困难的。
+	 * 此处使用Entity元数据定义中的注解来分析并加以区分，可能不一定准确。 但大部分场合下是有效的。
+	 * 
+	 * @param type
+	 * @return
+	 * @throws SQLException
+	 */
+	public Collection<Index> getUnique(Class<?> type) throws SQLException {
+		ITableMetadata meta = MetaHolder.getMeta(type);
+		Collection<Index> indexes = getUnique(meta.getTableName(true));
+		List<Index> result = new ArrayList<Index>();
+		for (Index index : indexes) {
+			if (index.getColumns().size() == 1 && isUniqueColumn(index, meta.getColumns())) {
+				result.add(index);
+				continue;
+			}
+			if (isUniqueConstraint(index, meta)) {
+				result.add(index);
+			}
+		}
+		return result;
+	}
+
+	private boolean isUniqueConstraint(Index index, ITableMetadata meta) {
+		DatabaseDialect dialect = this.getProfile();
+		for (UniqueConstraintDef unique : meta.getUniques()) {
+			List<String> columns = unique.toColumnNames(meta, dialect);
+			if (ArrayUtils.equals(columns.toArray(new String[columns.size()]), index.getColumnNames())) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean isUniqueColumn(Index index, Collection<ColumnMapping> columns) {
+		for (ColumnMapping c : columns) {
+			String columnName = c.getColumnName(getProfile(), false);
+			if (index.getColumnNames()[0].equals(columnName)) {
+				return c.get().isUnique();
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * 得到所有的unique约束。过滤掉了主键和非唯一的索引。 但是进一步的区分 unique index和 constraint是比较困难的。
+	 * 此处返回的两种都有，对于MySQL，两者并没有本质的差别。 但对于其他数据库，两者是有差别的。目前暂时无法区分
+	 * 
+	 * @param tableName
+	 *            表名
+	 * @return 具有唯一约束的键
+	 * @throws SQLException
+	 */
+	public Collection<Index> getUnique(String tableName) throws SQLException {
+		Collection<Index> indexes = getIndexes(tableName);
+		PrimaryKey pk = this.getPrimaryKey(tableName);
+		for (Iterator<Index> iter = indexes.iterator(); iter.hasNext();) {
+			Index index = iter.next();
+			if (!index.isUnique()) {
+				iter.remove();
+				continue;
+			}
+			if (isPrimaryKey(pk, index)) {
+				iter.remove();
+				continue;
+			}
+		}
+		return indexes;
+	}
+
+	private boolean isPrimaryKey(PrimaryKey pk, Index index) {
+		return ArrayUtils.equals(pk.getColumns(), index.getColumnNames());
 	}
 
 	/**
@@ -796,8 +896,8 @@ public class DbMetaData {
 
 				String asc = rs.getString("ASC_OR_DESC");
 				Boolean isAsc = (asc == null ? true : asc.startsWith("A"));
-				int order=rs.getInt("ORDINAL_POSITION");
-				index.addColumn(cName, isAsc,order);
+				int order = rs.getInt("ORDINAL_POSITION");
+				index.addColumn(cName, isAsc, order);
 			}
 			return map.values();
 		} finally {
@@ -1802,7 +1902,7 @@ public class DbMetaData {
 				BindVariableContext context = new BindVariableContext(st, profile, debug);
 				context.setVariables(objs);
 			}
-			//注意 MySQL低版本会有BUG 当limit为=1时会报错
+			// 注意 MySQL低版本会有BUG 当limit为=1时会报错
 			if (maxReturn > 0)
 				st.setMaxRows(maxReturn);
 			rs = st.executeQuery();
@@ -2440,7 +2540,7 @@ public class DbMetaData {
 	public MetadataFeature getFeature() {
 		return feature;
 	}
-	
+
 	// @Override
 	// protected boolean processCheck(Connection conn) {
 	// DatabaseDialect dialect = getProfile();

@@ -5,8 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.UniqueConstraint;
-
 import jef.common.PairIS;
 import jef.common.PairSS;
 import jef.database.DbUtils;
@@ -16,6 +14,7 @@ import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.meta.def.UniqueConstraintDef;
 import jef.tools.StringUtils;
 
 import org.apache.commons.lang.RandomStringUtils;
@@ -46,7 +45,7 @@ public class TableCreateStatement {
 		if (!tableDef.NoPkConstraint && !meta.getPKFields().isEmpty()) {
 			tableDef.addPkConstraint(meta.getPKFields(), dialect, tablename);
 		}
-		for(UniqueConstraint unique: meta.getUniques()){
+		for(UniqueConstraintDef unique: meta.getUniques()){
 			tableDef.addUniqueConstraint(unique,meta,dialect);
 		}
 		this.tables.add(tableDef);
@@ -148,18 +147,8 @@ public class TableCreateStatement {
 			return sql;
 		}
 
-		public void addUniqueConstraint(UniqueConstraint unique,ITableMetadata meta, DatabaseDialect dialect) {
-			List<String> columns=new ArrayList<String>(unique.columnNames().length);
-			for(int i=0;i<unique.columnNames().length;i++){
-				String name=unique.columnNames()[i];
-				for(String s: StringUtils.split(name, ',')){//为了容错，这个很有可能配错
-					ColumnMapping column=meta.findField(s);
-					if(column!=null){
-						columns.add(column.getColumnName(dialect, true));
-					}	
-				}
-			}
-			
+		public void addUniqueConstraint(UniqueConstraintDef unique,ITableMetadata meta, DatabaseDialect dialect) {
+			List<String> columns=unique.toColumnNames(meta, dialect);
 			StringBuilder sb = getColumnDef();
 			sb.append(",\n");
 			String cname=unique.name();
