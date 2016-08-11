@@ -397,7 +397,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			try {
 				for (VersionLog version : records) {
 					version.setName("此时:" + version.getName());
-					version.setModified(System.currentTimeMillis());
+//					version.setModified(System.currentTimeMillis());
 				}
 				records.commit();
 			} finally {
