@@ -147,6 +147,8 @@ public class RoutingDummyConnectionPool implements IRoutingConnectionPool{
 			meta=new DbMetaData(ds,this,key);
 			metadatas.put(key, meta);
 		}
+		// 反向修正
+		meta.getProfile().accept(meta);
 		return meta;
 	}
 

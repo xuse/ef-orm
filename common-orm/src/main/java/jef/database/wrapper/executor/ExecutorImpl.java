@@ -9,8 +9,6 @@ import java.util.List;
 
 import javax.persistence.PersistenceException;
 
-import org.springframework.util.Assert;
-
 import jef.database.DbUtils;
 import jef.database.DebugUtil;
 import jef.database.ORMConfig;
@@ -21,6 +19,8 @@ import jef.database.jdbc.result.CloseableResultSet;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.processor.BindVariableContext;
 
+import org.springframework.util.Assert;
+
 public class ExecutorImpl implements StatementExecutor{
 	IConnection conn;
 	Statement st;
@@ -29,11 +29,11 @@ public class ExecutorImpl implements StatementExecutor{
 	private String txId;
 	private DatabaseDialect profile;
 
-	public ExecutorImpl(IUserManagedPool parent, String dbkey, String txId) {
+	public ExecutorImpl(IUserManagedPool parent, String dbkey, String txId, DatabaseDialect dialect) {
 		this.parent = parent;
 		this.dbkey = dbkey;
 		this.txId = txId;
-		this.profile = parent.getProfile(dbkey);
+		this.profile = dialect;
 		try {
 			init();
 		} catch (SQLException e) {

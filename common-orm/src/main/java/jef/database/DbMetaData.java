@@ -240,8 +240,6 @@ public class DbMetaData {
 			this.ddlGenerator = new DdlGeneratorImpl(profile);
 			// 初始化数据库信息
 			this.feature = new MetadataFeature(con.getMetaData());
-			// 反向修正
-			profile.accept(this);
 			// 计算时间差
 			calcTimeDelta(con, profile);
 			if (Math.abs(dbTimeDelta) > 30000) {
@@ -1729,9 +1727,9 @@ public class DbMetaData {
 	 */
 	private StatementExecutor createExecutor() {
 		if (parent.getTransactionMode() == TransactionMode.JTA) {
-			return new ExecutorJTAImpl(parent, dbkey, getTransactionId());
+			return new ExecutorJTAImpl(parent, dbkey, getTransactionId(),getProfile());
 		} else {
-			return new ExecutorImpl(parent, dbkey, getTransactionId());
+			return new ExecutorImpl(parent, dbkey, getTransactionId(), getProfile());
 		}
 	}
 
@@ -2539,6 +2537,11 @@ public class DbMetaData {
 
 	public MetadataFeature getFeature() {
 		return feature;
+	}
+
+	public void init() {
+		// TODO Auto-generated method stub
+		
 	}
 
 	// @Override

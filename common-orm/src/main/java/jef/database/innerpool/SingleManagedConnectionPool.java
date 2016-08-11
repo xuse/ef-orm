@@ -90,6 +90,7 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool, DataS
 		this.max = max;
 		freeConns = new LinkedBlockingQueue<ReentrantConnection>(max);
 		this.metadata = new DbMetaData(ds, this, null);
+		metadata.getProfile().accept(metadata);
 		PoolReleaseThread.getInstance().addPool(this);
 		PoolCheckThread.getInstance().addPool(this);
 	}
