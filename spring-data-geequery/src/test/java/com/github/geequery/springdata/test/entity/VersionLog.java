@@ -14,8 +14,9 @@ public class VersionLog extends jef.database.DataObject {
     private int id;
 
     private String name;
+    
     @Version
-    @GeneratedValue(generator = "modified-sys")
+    @GeneratedValue(generator = "modified-nano")
     private long modified;
   
     private int version;

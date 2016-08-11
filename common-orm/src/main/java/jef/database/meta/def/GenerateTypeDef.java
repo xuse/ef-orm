@@ -33,6 +33,8 @@ public class GenerateTypeDef {
 				return DateGenerateType.created_sys;
 			} else if ("modified-sys".equals(generated) || "modified_sys".equals(generated)) {
 				return DateGenerateType.modified_sys;
+			} else if ("modified-nano".equals(generated) || "modified_nano".equals(generated)) {
+				return DateGenerateType.modified_nano;
 			} else if (generated.length() == 0) {
 				return DateGenerateType.created;
 			}

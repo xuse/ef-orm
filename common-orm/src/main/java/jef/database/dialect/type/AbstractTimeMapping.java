@@ -36,6 +36,9 @@ abstract class AbstractTimeMapping extends AColumnMapping implements VersionSupp
 		} else if (type instanceof ColumnType.Date) {
 			this.generated = ((ColumnType.Date) type).getGenerateType();
 		}
+		if(generated==DateGenerateType.modified_nano){
+			throw new UnsupportedOperationException("the genrator 'modified_nano' only supports java datatype long <-> number in database.");
+		}
 		// 根据缺省值修复
 		Object defaultValue = type.defaultValue;
 		if (generated == null && (defaultValue == Func.current_date || defaultValue == Func.current_time || defaultValue == Func.now)) {

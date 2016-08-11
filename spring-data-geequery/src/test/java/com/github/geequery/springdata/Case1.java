@@ -39,8 +39,9 @@ import com.github.geequery.springdata.test.repo.FooEntityDao;
  * 
  * 1\save 报错 (OK) 2、排序无效(OK) 3、自定义列名无效(OK，应当想办法支持Native)
  * 
- * 4、MySQL下的时间精度造成版本无效
- * 5、考虑使用毫秒数或纳秒数 6 考虑使用GUID作为版本
+ * 4、MySQL下的时间精度造成版本无效 
+ * 5、考虑使用毫秒数 
+ * 6 考虑使用GUID作为版本
  * 
  * @author jiyi
  * 

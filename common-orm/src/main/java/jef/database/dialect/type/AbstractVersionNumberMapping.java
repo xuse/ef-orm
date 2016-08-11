@@ -15,6 +15,7 @@ import jef.database.query.BindVariableField;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.UpdateClause;
 import jef.database.wrapper.processor.InsertStepAdapter;
+import jef.tools.Assert;
 import jef.tools.reflect.Property;
 
 public abstract class AbstractVersionNumberMapping extends AColumnMapping implements VersionSupportColumn {
@@ -26,33 +27,42 @@ public abstract class AbstractVersionNumberMapping extends AColumnMapping implem
 
 	private static abstract class Processor extends InsertStepAdapter {
 		abstract void update(String columnName, UpdateClause update);
+
+		abstract Object getNextValue(Object current);
 	}
 
 	private static class InsertTime extends Processor {
+		private Property accessor;
+		private AbstractVersionNumberMapping parent;
+		private DateGenerateType dateType;
 		InsertTime(AbstractVersionNumberMapping parent) {
 			this.parent = parent;
 			this.accessor = parent.accessor;
+			this.dateType=parent.dateType;
+			Assert.notNull(dateType);
+			Assert.notNull(accessor);
 		}
-		private Property accessor;
-		private AbstractVersionNumberMapping parent;
 		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
 			for (IQueryableEntity q : data) {
-				accessor.set(q, parent.transfer(System.currentTimeMillis()));
+				accessor.set(q, parent.transfer(dateType.generateLong()));
 			}
 		}
 		void update(String columnName, UpdateClause result) {
-			result.addEntry(columnName, new BindVariableField(parent.transfer(System.currentTimeMillis())));
+			result.addEntry(columnName, new BindVariableField(parent.transfer(dateType.generateLong())));
+		}
+		Object getNextValue(Object current) {
+			return parent.transfer(dateType.generateLong());
 		}
 	};
 
 	private static class InsertNum extends Processor {
+		private Property accessor;
+		private AbstractVersionNumberMapping parent;
 		InsertNum(AbstractVersionNumberMapping parent) {
 			this.parent = parent;
 			this.accessor = parent.accessor;
+			Assert.notNull(accessor);
 		}
-		private Property accessor;
-		private AbstractVersionNumberMapping parent;
-
 		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
 			for (IQueryableEntity q : data) {
 				accessor.set(q, parent.transfer(1L));
@@ -61,9 +71,10 @@ public abstract class AbstractVersionNumberMapping extends AColumnMapping implem
 		void update(String columnName, UpdateClause result) {
 			result.addEntry(columnName, columnName + "+1");
 		}
+		Object getNextValue(Object current) {
+			return parent.increament(current);
+		}
 	};
-
-	protected abstract Object transfer(long n);
 
 	@Override
 	public void init(Field field, String columnName, ColumnType type, ITableMetadata meta) {
@@ -103,13 +114,14 @@ public abstract class AbstractVersionNumberMapping extends AColumnMapping implem
 	@Override
 	public Object getAutoUpdateValue(DatabaseDialect profile, Object bean) {
 		Object value = accessor.get(bean);
-		value = increament(value);
+		value = STEP.getNextValue(value);
 		accessor.set(bean, value);
 		return value;
 	}
 
 	abstract Object increament(Object value);
-
+	protected abstract Object transfer(long n);
+	
 	@Override
 	public boolean isUpdateAlways() {
 		return version;
