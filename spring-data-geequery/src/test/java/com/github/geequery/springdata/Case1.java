@@ -37,7 +37,7 @@ import com.github.geequery.springdata.test.repo.FooEntityDao;
  * 与Spring集成的示例。 本示例使用的xml作为Spring配置。参见
  * src/main/resources/spring/spring-test-case1.xml
  * 
- * 1\save 报错 (OK) 2、排序无效(OK) 3、自定义列名无效(OK，默认是JPQL，应当想办法支持Native)
+ * 1\save 报错 (OK) 2、排序无效(OK) 3、自定义列名无效(OK，应当想办法支持Native)
  * 
  * 4、MySQL下的时间精度造成版本无效
  * 5、考虑使用毫秒数或纳秒数 6 考虑使用GUID作为版本
@@ -396,7 +396,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			try {
 				for (VersionLog version : records) {
 					version.setName("此时:" + version.getName());
-					version.setModified(new Date());
+					version.setModified(System.currentTimeMillis());
 				}
 				records.commit();
 			} finally {

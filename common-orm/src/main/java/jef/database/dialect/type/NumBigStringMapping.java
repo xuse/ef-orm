@@ -62,4 +62,9 @@ public class NumBigStringMapping extends AbstractVersionNumberMapping {
 			rs.updateLong(columnIndex, Long.parseLong(s));
 		}
 	}
+
+	@Override
+	protected Object transfer(long n) {
+		return String.valueOf(n);
+	}
 }

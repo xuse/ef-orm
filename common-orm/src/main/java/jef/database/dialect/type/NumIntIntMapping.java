@@ -57,4 +57,9 @@ public class NumIntIntMapping extends AbstractVersionNumberMapping {
 		return i + 1;
 	}
 
+	@Override
+	protected Object transfer(long n) {
+		return (int)n;
+	}
+
 }

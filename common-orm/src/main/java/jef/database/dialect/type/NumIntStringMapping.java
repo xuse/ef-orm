@@ -56,4 +56,9 @@ public class NumIntStringMapping  extends AbstractVersionNumberMapping{
 		return String.valueOf(i+1);
 	}
 
+
+	@Override
+	protected Object transfer(long n) {
+		return String.valueOf(n);
+	}
 }

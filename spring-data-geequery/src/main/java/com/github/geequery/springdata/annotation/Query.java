@@ -38,9 +38,9 @@ public @interface Query {
 	String value() default "";
 
 	/**
-	 * Configures whether the given query is a native one. Defaults to {@literal false}.
+	 * Configures whether the given query is a native one. Defaults to {@literal true}.
 	 */
-	boolean nativeQuery() default false;
+	boolean nativeQuery() default true;
 
 	/**
 	 * The named query to be used. If not defined, a {@link javax.persistence.NamedQuery} with name of

@@ -520,7 +520,7 @@ public abstract class ColumnType {
 		@Override
 		public ColumnMapping getMappingType(Class<?> fieldType) {
 			boolean isBig = (precision >= 18);
-			if(fieldType==BigDecimal.class){
+			if (fieldType == BigDecimal.class) {
 				return new NumBigDecimalMapping();
 			}
 			if (isBig) {
@@ -567,9 +567,10 @@ public abstract class ColumnType {
 	}
 
 	// Int 和BigInt，BigInt对应Long,默认10
-	public static class Int extends ColumnType implements SqlTypeSized, SqlTypeVersioned {
+	public static class Int extends ColumnType implements SqlTypeSized, SqlTypeVersioned, SqlTypeDateTimeGenerated {
 		int precision = 8;
 		boolean isVersion;
+		private DateGenerateType generateType;
 
 		public Int(int precision) {
 			if (precision > 0) {
@@ -681,6 +682,17 @@ public abstract class ColumnType {
 		@Override
 		public ColumnType setVersion(boolean flag) {
 			this.isVersion = flag;
+			return this;
+		}
+
+		@Override
+		public DateGenerateType getGenerateType() {
+			return generateType;
+		}
+
+		@Override
+		public ColumnType setGenerateType(DateGenerateType dateGenerateType) {
+			this.generateType = dateGenerateType;
 			return this;
 		}
 	}

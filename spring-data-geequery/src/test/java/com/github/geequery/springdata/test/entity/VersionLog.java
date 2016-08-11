@@ -1,7 +1,5 @@
 package com.github.geequery.springdata.test.entity;
 
-import java.util.Date;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -16,10 +14,10 @@ public class VersionLog extends jef.database.DataObject {
     private int id;
 
     private String name;
-
-    @GeneratedValue(generator = "modified-sys")
-    private Date modified;
     @Version
+    @GeneratedValue(generator = "modified-sys")
+    private long modified;
+  
     private int version;
 
     public int getId() {
@@ -38,15 +36,15 @@ public class VersionLog extends jef.database.DataObject {
         this.name = name;
     }
 
-    public Date getModified() {
-        return modified;
-    }
+    public long getModified() {
+		return modified;
+	}
 
-    public void setModified(Date modified) {
-        this.modified = modified;
-    }
+	public void setModified(long modified) {
+		this.modified = modified;
+	}
 
-    public int getVersion() {
+	public int getVersion() {
 		return version;
 	}
 

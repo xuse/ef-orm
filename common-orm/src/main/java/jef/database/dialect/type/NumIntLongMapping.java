@@ -58,4 +58,9 @@ public class NumIntLongMapping extends AbstractVersionNumberMapping {
 		long i = ((Number) value).longValue();
 		return i + 1L;
 	}
+
+	@Override
+	protected Object transfer(long n) {
+		return n;
+	}
 }

@@ -3,13 +3,11 @@ package jef.database.meta;
 import java.util.List;
 
 import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import jef.database.DbUtils;
-import jef.database.annotation.DateGenerateType;
 import jef.database.annotation.Parameter;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.TypeDefImpl;
@@ -17,6 +15,7 @@ import jef.database.dialect.type.ColumnMapping;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.create.ColumnDefinition;
 import jef.database.meta.AnnotationProvider.FieldAnnotationProvider;
+import jef.database.meta.def.GenerateTypeDef;
 import jef.database.query.SqlExpression;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
@@ -91,12 +90,7 @@ public class ColumnTypeBuilder {
 	/**
 	 * 自增
 	 */
-	private GeneratedValue generatedValue;
-	/**
-	 * 自增类型
-	 */
-	private GenerationType generationType;
-
+	private GenerateTypeDef generatedValue;
 	public ColumnTypeBuilder(Column col, java.lang.reflect.Field field, FieldAnnotationProvider fieldProvider) {
 		this.col = col;
 		this.field = field;
@@ -111,8 +105,8 @@ public class ColumnTypeBuilder {
 		nullable = col.nullable();
 		unique = col.unique();
 
-		generatedValue = fieldProvider.getAnnotation(javax.persistence.GeneratedValue.class);
-		generationType = generatedValue == null ? null : generatedValue.strategy();
+		
+		generatedValue = GenerateTypeDef.create(fieldProvider.getAnnotation(javax.persistence.GeneratedValue.class));
 		version = fieldProvider.getAnnotation(javax.persistence.Version.class) != null;
 
 		ColumnDefinition c;
@@ -158,7 +152,8 @@ public class ColumnTypeBuilder {
 
 	private ColumnType create() {
 		if ("VARCHAR".equals(def) || "VARCHAR2".equals(def)) {
-			if (generationType != null) {
+			if (generatedValue != null && generatedValue.isKeyGeneration()) {
+				GenerationType generationType=generatedValue.getGeType();
 				if (generationType == GenerationType.TABLE || generationType == GenerationType.SEQUENCE) {
 					return new ColumnType.AutoIncrement(length, generationType, fieldProvider);
 				} else {
@@ -169,7 +164,8 @@ public class ColumnTypeBuilder {
 			Assert.isTrue(length > 0, "The length of a varchar column must greater than 0!");
 			return new ColumnType.Varchar(length);
 		} else if ("CHAR".equalsIgnoreCase(def)) {
-			if (generationType != null) {
+			if (generatedValue != null  && generatedValue.isKeyGeneration()) {
+				GenerationType generationType=generatedValue.getGeType();
 				if (generationType == GenerationType.TABLE || generationType == GenerationType.SEQUENCE) {
 					return new ColumnType.AutoIncrement(length, generationType, fieldProvider);
 				} else {
@@ -223,8 +219,8 @@ public class ColumnTypeBuilder {
 			precision = length;
 		}
 
-		if (generationType != null) {
-			return new ColumnType.AutoIncrement(precision, generationType, fieldProvider);
+		if (generatedValue != null && generatedValue.isKeyGeneration()) {
+			return new ColumnType.AutoIncrement(precision, generatedValue.getGeType(), fieldProvider);
 		} else if (scale > 0) {
 			return new ColumnType.Double(precision, scale).setNullable(nullable).defaultIs(defaultExpression);
 		} else {
@@ -241,19 +237,19 @@ public class ColumnTypeBuilder {
 		return defaultValue;
 	}
 
-	static ColumnType newDateTimeColumnDef(TemporalType temporalType, GeneratedValue gv, boolean version) {
+	static ColumnType newDateTimeColumnDef(TemporalType temporalType, GenerateTypeDef gv, boolean version) {
 		ColumnType ct;
 		switch (temporalType) {
 		case DATE:
-			ct = new ColumnType.Date().setGenerateType(getDateGenerateType(gv));
+			ct = new ColumnType.Date().setGenerateType(gv==null?null:gv.getDateGenerate());
 			break;
 		case TIME:
-			ct = new ColumnType.TimeStamp().setGenerateType(getDateGenerateType(gv));// FIXME
+			ct = new ColumnType.TimeStamp().setGenerateType(gv==null?null:gv.getDateGenerate());// FIXME
 			break;
 		case TIMESTAMP:
 			ColumnType.TimeStamp ctt = new ColumnType.TimeStamp();
 			ctt.setVersion(version);
-			ctt.setGenerateType(getDateGenerateType(gv));
+			ctt.setGenerateType(gv==null?null:gv.getDateGenerate());
 			ct = ctt;
 			break;
 		default:
@@ -262,24 +258,7 @@ public class ColumnTypeBuilder {
 		return ct;
 	}
 
-	private static DateGenerateType getDateGenerateType(GeneratedValue gv) {
-		String generated = gv == null ? null : gv.generator().toLowerCase();
-		if (generated != null) {
-			if ("created".equals(generated)) {
-				return DateGenerateType.created;
-			} else if ("modified".equals(generated)) {
-				return DateGenerateType.modified;
-			} else if ("created-sys".equals(generated) || "created_sys".equals(generated)) {
-				return DateGenerateType.created_sys;
-			} else if ("modified-sys".equals(generated) || "modified_sys".equals(generated)) {
-				return DateGenerateType.modified_sys;
-			} else if (generated.length() == 0) {
-				return DateGenerateType.created;
-			}
-			throw new IllegalArgumentException("Unknown date generator [" + generated + "]");
-		}
-		return null;
-	}
+	
 
 	static void applyParams(Parameter[] parameters, ColumnMapping type) {
 		if (parameters == null || parameters.length == 0)
