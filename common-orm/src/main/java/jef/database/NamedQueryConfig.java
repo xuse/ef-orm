@@ -16,6 +16,8 @@ import javax.persistence.Id;
 import jef.common.Entry;
 import jef.database.annotation.EasyEntity;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.jsqlparser.JPQLConvert;
+import jef.database.jsqlparser.JPQLSelectConvert;
 import jef.database.jsqlparser.RemovedDelayProcess;
 import jef.database.jsqlparser.SelectToCountWrapper;
 import jef.database.jsqlparser.SqlFunctionlocalization;
@@ -33,13 +35,18 @@ import jef.database.jsqlparser.expression.operators.relational.MinorThan;
 import jef.database.jsqlparser.expression.operators.relational.MinorThanEquals;
 import jef.database.jsqlparser.expression.operators.relational.NotEqualsTo;
 import jef.database.jsqlparser.parser.ParseException;
+import jef.database.jsqlparser.statement.delete.Delete;
+import jef.database.jsqlparser.statement.insert.Insert;
 import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.PlainSelect;
+import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.statement.select.Union;
+import jef.database.jsqlparser.statement.update.Update;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.SelectBody;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.jsqlparser.visitor.VisitorAdapter;
+import jef.database.meta.Feature;
 import jef.database.meta.MetaHolder;
 import jef.database.query.ParameterProvider;
 import jef.database.query.ParameterProvider.MapProvider;
@@ -154,13 +161,18 @@ public class NamedQueryConfig extends jef.database.DataObject {
 		Object parent;
 		boolean escape;
 
-		ParameterMetadata(JpqlParameter p, Object parent) {
+		ParameterMetadata(DatabaseDialect dialect, JpqlParameter p, Object parent) {
 			this.param = p;
 			this.parent = parent;
-			if(parent instanceof LikeExpression){
-				if(p.getDataType()!=null && p.getDataType().ordinal()>9){
-					((LikeExpression) parent).setEscape("/");
-					escape=true;
+			if (parent instanceof LikeExpression) {
+				if (dialect.has(Feature.NOT_SUPPORT_LIKE_ESCAPE)) {
+					escape = false;
+					((LikeExpression) parent).setEscape(null);
+				} else {
+					if (p.getDataType() != null && p.getDataType().ordinal() > 9) {
+						((LikeExpression) parent).setEscape("/");
+						escape = true;
+					}
 				}
 			}
 		}
@@ -174,7 +186,7 @@ public class NamedQueryConfig extends jef.database.DataObject {
 	 * 解析SQL语句，改写
 	 */
 	private static DialectCase analy(String sql, int type, OperateTarget db) throws SQLException {
-		final DatabaseDialect profile = db.getProfile();
+		final DatabaseDialect dialect = db.getProfile();
 		try {
 			Statement st = DbUtils.parseStatement(sql);
 			final Map<Object, ParameterMetadata> params = new HashMap<Object, ParameterMetadata>();
@@ -182,7 +194,7 @@ public class NamedQueryConfig extends jef.database.DataObject {
 			st.accept(new VisitorAdapter() {
 				@Override
 				public void visit(JpqlParameter param) {
-					params.put(param.getKey(), new ParameterMetadata(param, visitPath.getFirst()));
+					params.put(param.getKey(), new ParameterMetadata(dialect, param, visitPath.getFirst()));
 				}
 
 				@Override
@@ -194,8 +206,8 @@ public class NamedQueryConfig extends jef.database.DataObject {
 							table.setSchemaName(newSchema);
 						}
 					}
-					if (profile.containKeyword(table.getName())) {
-						table.setName(DbUtils.escapeColumn(profile, table.getName()));
+					if (dialect.containKeyword(table.getName())) {
+						table.setName(DbUtils.escapeColumn(dialect, table.getName()));
 					}
 				}
 
@@ -208,18 +220,28 @@ public class NamedQueryConfig extends jef.database.DataObject {
 							c.setSchema(newSchema);
 						}
 					}
-					if (profile.containKeyword(c.getColumnName())) {
-						c.setColumnName(DbUtils.escapeColumn(profile, c.getColumnName()));
+					if (dialect.containKeyword(c.getColumnName())) {
+						c.setColumnName(DbUtils.escapeColumn(dialect, c.getColumnName()));
 					}
 				}
 
 			});
 			// 进行本地语言转化
-			SqlFunctionlocalization localization = new SqlFunctionlocalization(profile, db);
+			SqlFunctionlocalization localization = new SqlFunctionlocalization(dialect, db);
 			st.accept(localization);
 
-			if (type == TYPE_JPQL)
-				st.accept(new JPQLSelectConvert(profile));
+			if (type == TYPE_JPQL){
+				if(st instanceof Select){
+					st.accept(new JPQLSelectConvert(dialect));
+				}else if(st instanceof Insert){
+					st.accept(new JPQLConvert(dialect));
+				}else if(st instanceof Update){
+					st.accept(new JPQLConvert(dialect));
+				}else if(st instanceof Delete){
+					st.accept(new JPQLConvert(dialect));
+				}
+				
+			}
 
 			DialectCase result = new DialectCase();
 			result.statement = st;
@@ -241,16 +263,12 @@ public class NamedQueryConfig extends jef.database.DataObject {
 	public NamedQueryConfig() {
 	};
 
-	public NamedQueryConfig(String name, String sql, String type, int fetchSize) {
+	public NamedQueryConfig(String name, String sql, boolean isJpql, int fetchSize) {
 		stopUpdate();
 		this.rawsql = sql;
 		this.name = name;
 		this.fetchSize = fetchSize;
-		if ("jpql".equalsIgnoreCase(type)) {
-			this.type = TYPE_JPQL;
-		} else {
-			this.type = TYPE_SQL;
-		}
+		this.type = isJpql ? TYPE_JPQL : TYPE_SQL;
 	}
 
 	/**

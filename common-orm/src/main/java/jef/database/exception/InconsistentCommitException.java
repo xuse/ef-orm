@@ -1,4 +1,4 @@
-package jef.database.innerpool;
+package jef.database.exception;
 
 import java.sql.SQLException;
 import java.util.Collection;
@@ -16,6 +16,8 @@ import jef.tools.StringUtils;
  *
  */
 public class InconsistentCommitException extends SQLException{
+	private static final long serialVersionUID = 3095533496988117255L;
+
 	private  List<String> succeed;
 	
 	private SimpleMap<String,SQLException> exceptions;

@@ -31,6 +31,7 @@ import jef.database.annotation.JoinType;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+
 /**
  * JEF-ORM 演示用例
  * 

@@ -403,7 +403,7 @@ public final class DbUtils {
 
 	public static ColumnDefinition parseColumnDef(String def) throws ParseException {
 		String sql = StringUtils.concat("create table A (B ", def, ")");
-		JpqlParser parser = new JpqlParser(new StringReader(sql));
+		StSqlParser parser = new StSqlParser(new StringReader(sql));
 		CreateTable ct = parser.CreateTable();
 		return ct.getColumnDefinitions().get(0);
 	}

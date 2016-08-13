@@ -16,6 +16,7 @@
 package jef.database.dialect;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,6 +55,7 @@ import jef.database.dialect.type.DateSDateMapping;
 import jef.database.dialect.type.DateStringMapping;
 import jef.database.dialect.type.DelegatorBoolean;
 import jef.database.dialect.type.NumBigDateMapping;
+import jef.database.dialect.type.NumBigDecimalMapping;
 import jef.database.dialect.type.NumBigIntMapping;
 import jef.database.dialect.type.NumBigLongMapping;
 import jef.database.dialect.type.NumBigStringMapping;
@@ -95,12 +97,21 @@ import jef.tools.StringUtils;
  */
 public abstract class ColumnType {
 	protected boolean nullable = true;
+	protected boolean unique = false;
 
 	public Object defaultValue;
 
 	public String toString() {
 		Map<String, Object> map = toJpaAnnonation();
 		return String.valueOf(map.get("columnDefinition"));
+	}
+
+	public boolean isUnique() {
+		return unique;
+	}
+
+	public void setUnique(boolean unique) {
+		this.unique = unique;
 	}
 
 	/**
@@ -509,6 +520,9 @@ public abstract class ColumnType {
 		@Override
 		public ColumnMapping getMappingType(Class<?> fieldType) {
 			boolean isBig = (precision >= 18);
+			if (fieldType == BigDecimal.class) {
+				return new NumBigDecimalMapping();
+			}
 			if (isBig) {
 				if (fieldType == java.lang.Double.class || fieldType == java.lang.Double.TYPE || fieldType == Object.class) {
 					return new NumDoubleDoubleMapping();
@@ -553,9 +567,10 @@ public abstract class ColumnType {
 	}
 
 	// Int 和BigInt，BigInt对应Long,默认10
-	public static class Int extends ColumnType implements SqlTypeSized, SqlTypeVersioned {
+	public static class Int extends ColumnType implements SqlTypeSized, SqlTypeVersioned, SqlTypeDateTimeGenerated {
 		int precision = 8;
 		boolean isVersion;
+		private DateGenerateType generateType;
 
 		public Int(int precision) {
 			if (precision > 0) {
@@ -667,6 +682,17 @@ public abstract class ColumnType {
 		@Override
 		public ColumnType setVersion(boolean flag) {
 			this.isVersion = flag;
+			return this;
+		}
+
+		@Override
+		public DateGenerateType getGenerateType() {
+			return generateType;
+		}
+
+		@Override
+		public ColumnType setGenerateType(DateGenerateType dateGenerateType) {
+			this.generateType = dateGenerateType;
 			return this;
 		}
 	}
@@ -894,7 +920,7 @@ public abstract class ColumnType {
 
 		public Int toNormalType() {
 			Int i = new ColumnType.Int(precision);
-			i.notNull();
+			i.nullable = false;
 			return i;
 		}
 	}
@@ -934,7 +960,7 @@ public abstract class ColumnType {
 		}
 
 		public ColumnType toNormalType() {
-			return new ColumnType.Varchar(36).notNull();
+			return new ColumnType.Varchar(36).setNullable(false);
 		}
 	}
 

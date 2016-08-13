@@ -57,9 +57,9 @@ public class SelectExpression extends SingleColumnSelect {
 	public String getSelectedAlias(String tableAlias, DatabaseDialect profile) {
 		if(alias==null){
 			alias="C".concat(RandomStringUtils.randomNumeric(12));
-			return profile.getColumnNameToUse(alias);
+			return profile.getObjectNameToUse(alias);
 		}else{
-			return DbUtils.escapeColumn(profile, profile.getColumnNameToUse(alias));
+			return DbUtils.escapeColumn(profile, profile.getObjectNameToUse(alias));
 		}
 	}
 

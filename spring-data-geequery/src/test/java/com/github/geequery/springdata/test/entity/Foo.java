@@ -2,6 +2,7 @@ package com.github.geequery.springdata.test.entity;
 
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -14,10 +15,13 @@ public class Foo extends jef.database.DataObject {
 	@GeneratedValue
 	private int id;
 
+	@Column(name="NAME_A")
 	private String name;
 
+	@Column(name="REMARK_A")
 	private String remark;
 
+	@Column(name="BIRTHDAY_A")
 	private Date birthDay;
 
 	private int age;

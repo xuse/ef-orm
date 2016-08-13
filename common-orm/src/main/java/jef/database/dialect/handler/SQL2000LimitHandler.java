@@ -1,4 +1,4 @@
-package jef.database.dialect;
+package jef.database.dialect.handler;
 
 import java.io.IOException;
 import java.util.Iterator;

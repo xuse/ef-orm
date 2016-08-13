@@ -24,7 +24,6 @@ import jef.database.meta.FBIField;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.TupleField;
 import jef.tools.Assert;
-import jef.tools.StringUtils;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
@@ -101,24 +100,22 @@ public final class OrderField implements Serializable {
 
 	// 返回两个String,第一个是在OrderBy中的现实
 	public String toString(DatabaseDialect profile, SqlContext context) {
-		String columnName = null;
 		if (field instanceof RefField) {
 			Assert.notNull(context);
 			RefField ref = (RefField) field;
 			String alias = context.getAliasOf(ref.getInstanceQuery(context));
-			columnName = DbUtils.toColumnName(ref.getField(), profile, alias);// 无法支持分库排序
+			return DbUtils.toColumnName(ref.getField(), profile, alias);// 无法支持分库排序
 		} else if (field instanceof Enum || field instanceof TupleField) {
 			String alias = context == null ? null : context.getCurrentAliasAndCheck(field);
-			columnName = DbUtils.toColumnName(field, profile, alias);//
+			return DbUtils.toColumnName(field, profile, alias);//
 		} else if (field instanceof FBIField) {
 			FBIField fbi = (FBIField) field;
-			columnName = fbi.toSqlAndBindAttribs(context, profile);
+			return fbi.toSqlAndBindAttribs(context, profile);
 		} else if (field instanceof SqlExpression) {
-			columnName = field.name();
+			return field.name();
 		} else {
 			throw new IllegalArgumentException("The field type " + field.getClass().getName() + " is invalid!");
 		}
-		return columnName;
 	}
 
 	/**

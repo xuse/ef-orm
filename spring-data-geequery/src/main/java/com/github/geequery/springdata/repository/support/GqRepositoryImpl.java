@@ -89,7 +89,12 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 		Session s = getSession();
 		try {
 			long total = s.count(q_all);
-			List<T> result = s.select(q_all, toRange(pageable));
+			Query<?> q=this.q_all;
+			if(pageable.getSort()!=null){
+				q=QB.create(meta.getMetadata());
+				setSortToSpec(q, pageable.getSort());
+			}
+			List<T> result = s.select(q, toRange(pageable));
 			return new PageImpl<T>(result, pageable, total);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
@@ -404,6 +409,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	}
 
 	private void setSortToSpec(ConditionQuery spec, Sort sort) {
+		if(sort==null)return;
 		for (Order order : sort) {
 			Field field;
 			ColumnMapping column = this.meta.getMetadata().findField(order.getProperty());

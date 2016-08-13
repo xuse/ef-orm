@@ -18,6 +18,7 @@ package jef.database.meta;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -30,8 +31,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
 import javax.persistence.JoinTable;
@@ -66,34 +65,30 @@ import jef.database.PojoWrapper;
 import jef.database.Session;
 import jef.database.VarObject;
 import jef.database.annotation.Cascade;
-import jef.database.annotation.DateGenerateType;
 import jef.database.annotation.DynamicKeyValueExtension;
 import jef.database.annotation.DynamicTable;
 import jef.database.annotation.EasyEntity;
 import jef.database.annotation.FieldOfTargetEntity;
 import jef.database.annotation.Indexed;
-import jef.database.annotation.Indexes;
 import jef.database.annotation.JoinDescription;
 import jef.database.annotation.JoinType;
 import jef.database.annotation.NoForceEnhance;
-import jef.database.annotation.Parameter;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.ColumnType.GUID;
-import jef.database.dialect.TypeDefImpl;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.ColumnMappings;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.parser.ParseException;
-import jef.database.jsqlparser.statement.create.ColumnDefinition;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.meta.AnnotationProvider.ClassAnnotationProvider;
 import jef.database.meta.AnnotationProvider.FieldAnnotationProvider;
+import jef.database.meta.def.GenerateTypeDef;
+import jef.database.meta.def.IndexDef;
 import jef.database.meta.extension.EfPropertiesExtensionProvider;
 import jef.database.query.JpqlExpression;
 import jef.database.query.ReadOnlyQuery;
-import jef.database.query.SqlExpression;
 import jef.database.support.EntityNotEnhancedException;
 import jef.database.support.QuerableEntityScanner;
 import jef.tools.ArrayUtils;
@@ -103,7 +98,6 @@ import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.BeanUtils;
-import jef.tools.reflect.BeanWrapper;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,8 +132,8 @@ public final class MetaHolder {
 	static final Map<String, TupleMetadata> dynPool = new java.util.HashMap<String, TupleMetadata>(32);
 	// 反向查找表
 	private static final Map<String, AbstractMetadata> inverseMapping = new HashMap<String, AbstractMetadata>();
-	
-	private static Logger log=LoggerFactory.getLogger(MetaHolder.class);
+
+	private static Logger log = LoggerFactory.getLogger(MetaHolder.class);
 
 	// 初始化分表规则加载器
 	static {
@@ -152,7 +146,7 @@ public final class MetaHolder {
 				partitionLoader = new DefaultPartitionStrategyLoader();
 			}
 		} catch (Exception e) {
-			log.error("PARTITION_STRATEGY_LOADER error",e);
+			log.error("PARTITION_STRATEGY_LOADER error", e);
 		}
 		try {
 			String clz = JefConfiguration.get(DbCfg.CUSTOM_METADATA_LOADER);
@@ -163,7 +157,7 @@ public final class MetaHolder {
 				config = new DefaultMetaLoader();
 			}
 		} catch (Exception e) {
-			log.error("CUSTOM_METADATA_LOADER error",e);
+			log.error("CUSTOM_METADATA_LOADER error", e);
 		}
 		try {
 			SCHEMA_MAPPING = StringUtils.toMap(JefConfiguration.get(DbCfg.SCHEMA_MAPPING), ",", ":", 1);
@@ -173,7 +167,7 @@ public final class MetaHolder {
 				LogUtil.info("Database mapping: " + SITE_MAPPING);
 			}
 		} catch (Exception e) {
-			log.error("SCHEMA_MAPPING error",e);
+			log.error("SCHEMA_MAPPING error", e);
 		}
 	}
 
@@ -341,6 +335,7 @@ public final class MetaHolder {
 
 	/**
 	 * 得到指定类的元数据。该类可以是一个标准的GeeQueryEntity，也可以是一个POJO。
+	 * 
 	 * @param clz
 	 * @return
 	 */
@@ -536,13 +531,6 @@ public final class MetaHolder {
 			}
 		}
 		metaFields.check();
-		// 计算复合索引
-		Indexes indexes = annos.getAnnotation(Indexes.class);
-		if (indexes != null) {
-			for (jef.database.annotation.Index index : indexes.value()) {
-				meta.indexMap.add(index);
-			}
-		}
 		return meta;
 	}
 
@@ -707,7 +695,7 @@ public final class MetaHolder {
 			if (mappingHint != null) {
 				type = BeanUtils.newInstance(mappingHint.value());
 				try {
-					applyParams(mappingHint.parameters(), type);
+					ColumnTypeBuilder.applyParams(mappingHint.parameters(), type);
 				} catch (Exception e) {
 					throw new IllegalArgumentException("@Type annotation on field " + processingClz + "." + field + " is invalid", e);
 				}
@@ -719,16 +707,16 @@ public final class MetaHolder {
 			ColumnType ct;
 			try {
 				if (c == null || StringUtils.isEmpty(c.columnDefinition())) {// 在没有Annonation的情况下,根据Field类型默认生成元数�?
-					ct = defaultColumnTypeByJava(fa, c, fieldType);
+					ct = parseJavaFieldType(fa, c, fieldType);
 				} else {
-					ct = createTypeByAnnotation(c, f, annos);
+					ct = parseAnnotatedType(c, f, annos);
 				}
 			} catch (Exception e) {
 				throw new PersistenceException(processingClz + " has invalid field/column " + f.getName(), e);
 			}
 
 			if (isPK)
-				ct.notNull();
+				ct.setNullable(false);
 
 			try {
 				String columnName = getColumnName(field, c);
@@ -745,26 +733,12 @@ public final class MetaHolder {
 			// 设置索引
 			Indexed i = fa.getAnnotation(Indexed.class);// 单列索引
 			if (i != null) {
-				Map<String, Object> data = new HashMap<String, Object>(4);
-				data.put("fields", new String[] { i.desc() ? field.name() + " desc" : field.name() });
-				data.put("unique", i.unique());
-				data.put("definition", i.definition());
-				data.put("name", i.name());
-				meta.indexMap.add(BeanUtils.asAnnotation(jef.database.annotation.Index.class, data));
+				IndexDef indexDef = new IndexDef(i.name(), new String[] { i.desc() ? field.name() + " desc" : field.name() });
+				indexDef.setUnique(i.unique());
+				indexDef.setDefinition(i.definition());
+				meta.indexes.add(indexDef);
 			}
 		}
-	}
-
-	private static void applyParams(Parameter[] parameters, ColumnMapping type) {
-		if (parameters == null || parameters.length == 0)
-			return;
-		BeanWrapper bw = BeanWrapper.wrap(type);
-		for (Parameter p : parameters) {
-			if (bw.isWritableProperty(p.name())) {
-				bw.setPropertyValueByString(p.name(), p.value());
-			}
-		}
-
 	}
 
 	private static String getColumnName(Field field, Column a) {
@@ -1095,128 +1069,22 @@ public final class MetaHolder {
 		}
 	}
 
-	private static ColumnType createTypeByAnnotation(Column col, java.lang.reflect.Field field, ClassAnnotationProvider annos) throws ParseException {
-		ColumnDefinition c = DbUtils.parseColumnDef(col.columnDefinition().toUpperCase());
-		String def = c.getColDataType().getDataType();
-		SqlExpression defaultExpression = null;
-		boolean nullable = col.nullable();
-		List<String> params = c.getColDataType().getArgumentsStringList();
-		String[] typeArgs = params == null ? ArrayUtils.EMPTY_STRING_ARRAY : params.toArray(new String[params.size()]);
-		if (c.getColumnSpecStrings() != null) {
-			for (int i = 0; i < c.getColumnSpecStrings().size(); i++) {
-				String s = c.getColumnSpecStrings().get(i);
-				if ("not".equalsIgnoreCase(s)) {
-					i++;
-					String s1 = c.getColumnSpecStrings().get(i);
-					if ("null".equalsIgnoreCase(s1)) {
-						nullable = false;
-					}
-				} else if ("null".equalsIgnoreCase(s)) {
-					nullable = true;
-				} else {
-					if ("default".equalsIgnoreCase(s)) {
-						String ex = c.getColumnSpecStrings().get(++i);
-						if (ex.length() > 0) {
-							defaultExpression = new SqlExpression(ex);
-						}
-					}
-				}
-			}
-		}
-		int length = col.length();
-		int precision = col.precision();
-		int scale = col.scale();
-		// //////////////////////////////////////////////
-		FieldAnnotationProvider fieldProvider = annos.forField(field);
-
-		GeneratedValue gv = fieldProvider.getAnnotation(javax.persistence.GeneratedValue.class);
-		GenerationType geType = gv == null ? null : gv.strategy();
-		boolean version=fieldProvider.getAnnotation(javax.persistence.Version.class)!=null;
-		if ("VARCHAR".equals(def) || "VARCHAR2".equals(def)) {
-			if (geType != null) {
-				if (geType == GenerationType.TABLE || geType == GenerationType.SEQUENCE) {
-					return new ColumnType.AutoIncrement(length, geType, fieldProvider);
-				} else {
-					return new ColumnType.GUID();
-				}
-			}
-			if (typeArgs.length > 0) {
-				length = StringUtils.toInt(typeArgs[0], length);
-			}
-			Assert.isTrue(length > 0);
-			return new ColumnType.Varchar(length).setNullable(nullable).defaultIs(defaultExpression);
-		} else if ("CHAR".equalsIgnoreCase(def)) {
-			if (geType != null) {
-				if (geType == GenerationType.TABLE || geType == GenerationType.SEQUENCE) {
-					return new ColumnType.AutoIncrement(length, geType, fieldProvider);
-				} else {
-					return new ColumnType.GUID();
-				}
-			}
-			if (typeArgs.length > 0) {
-				length = StringUtils.toInt(typeArgs[0], length);
-			}
-			Assert.isTrue(length > 0, "The char column length must greater than 0!");
-			return new ColumnType.Char(length).setNullable(nullable).defaultIs(defaultExpression);
-		} else if ("NUMBER".equals(def) || "INT".equals(def) || "INTEGER".equals(def) || "NUMERIC".equals(def)) {
-			if (precision == 0 && (length > 0 && length < 100)) {
-				precision = length;
-			}
-			if (geType != null) {
-				return new ColumnType.AutoIncrement(precision, geType, fieldProvider);
-			} else if (scale > 0) {
-				return new ColumnType.Double(precision, scale).setNullable(nullable).defaultIs(defaultExpression);
-			} else {
-				ColumnType.Int cType=new ColumnType.Int(precision);
-				cType.setVersion(version).setNullable(nullable).defaultIs(defaultExpression);
-				return cType;
-			}
-		} else if ("CLOB".equalsIgnoreCase(def)) {
-			return new ColumnType.Clob().setNullable(nullable).defaultIs(defaultExpression);
-		} else if ("BLOB".equalsIgnoreCase(def)) {
-			return new ColumnType.Blob().setNullable(nullable).defaultIs(defaultExpression);
-		} else if ("Date".equalsIgnoreCase(def)) {
-			Temporal temporal = fieldProvider.getAnnotation(Temporal.class);
-			TemporalType t = temporal == null ? TemporalType.DATE : temporal.value();
-			return newDateTimeColumnDef(t, nullable, gv,version).defaultIs(defaultExpression);
-		} else if ("TIMESTAMP".equalsIgnoreCase(def)) {
-			Temporal temporal = fieldProvider.getAnnotation(Temporal.class);
-			TemporalType t = temporal == null ? TemporalType.TIMESTAMP : temporal.value();
-			ColumnType cType= newDateTimeColumnDef(t, nullable, gv,version).defaultIs(defaultExpression);
-			return cType;
-		} else if ("BOOLEAN".equalsIgnoreCase(def)) {
-			return new ColumnType.Boolean().setNullable(nullable).defaultIs(defaultExpression);
-		} else if ("XML".equalsIgnoreCase(def)) {
-			return new ColumnType.XML().setNullable(nullable);
-		} else if ("BIT".equalsIgnoreCase(def)) {
-			return new ColumnType.Boolean().setNullable(nullable);
-		} else if (fieldProvider.getAnnotation(jef.database.annotation.Type.class) != null) {
-			jef.database.annotation.Type t = fieldProvider.getAnnotation(jef.database.annotation.Type.class);
-			ColumnMapping cm = BeanUtils.newInstance(t.value());
-			try {
-				applyParams(t.parameters(), cm);
-			} catch (Exception e) {
-				throw new IllegalArgumentException("@Type annotation on field " + field + " is invalid", e);
-			}
-			return new TypeDefImpl(def, cm.getSqlType(), field.getType());
-		} else {
-			throw new IllegalArgumentException("Unknow column Definition[" + def + "] in entity " + field.getDeclaringClass());
-			// return new ColumnType.Unknown(def).setNullable(nullable);
-		}
+	private static ColumnType parseAnnotatedType(Column col, java.lang.reflect.Field field, ClassAnnotationProvider annos) {
+		return new ColumnTypeBuilder(col, field, annos.forField(field)).build();
 	}
 
-	private static ColumnType defaultColumnTypeByJava(FieldAnnotationProvider fieldProvider, Column c, Class<?> type) {
+	private static ColumnType parseJavaFieldType(FieldAnnotationProvider fieldProvider, Column c, Class<?> type) {
 		int len = c == null ? 0 : c.length();
 		int precision = c == null ? 0 : c.precision();
 		int scale = c == null ? 0 : c.scale();
 		boolean nullable = c == null ? true : c.nullable();
-		GeneratedValue gv = fieldProvider.getAnnotation(javax.persistence.GeneratedValue.class);
-		GenerationType geType = gv == null ? null : gv.strategy();
-		boolean version=fieldProvider.getAnnotation(javax.persistence.Version.class)!=null;
-		if (geType != null && type == String.class) {
+		GenerateTypeDef geType = GenerateTypeDef.create(fieldProvider.getAnnotation(javax.persistence.GeneratedValue.class));
+
+		boolean version = fieldProvider.getAnnotation(javax.persistence.Version.class) != null;
+		if (geType != null && geType.isKeyGeneration() && type == String.class) {
 			return new ColumnType.GUID();
-		} else if (geType != null && Number.class.isAssignableFrom(BeanUtils.toWrapperClass(type))) {
-			return new ColumnType.AutoIncrement(precision, geType, fieldProvider);
+		} else if (geType != null && geType.isKeyGeneration() && Number.class.isAssignableFrom(BeanUtils.toWrapperClass(type))) {
+			return new ColumnType.AutoIncrement(precision, geType.getGeType(), fieldProvider);
 		}
 		Lob lob = fieldProvider.getAnnotation(Lob.class);
 		if (type == String.class) {
@@ -1238,24 +1106,26 @@ public final class MetaHolder {
 		} else if (type == Boolean.class) {
 			return new ColumnType.Boolean().setNullable(nullable);
 		} else if (type == Boolean.TYPE) {
-			return new ColumnType.Boolean().notNull();
+			return new ColumnType.Boolean().setNullable(false);
 		} else if (type == Long.class) {
-			return new ColumnType.Int(precision > 0 ? precision : 16).setVersion(version).setNullable(nullable);
+			return createLong(precision,version,nullable,geType);
 		} else if (type == Long.TYPE) {
-			return new ColumnType.Int(precision > 0 ? precision : 16).setVersion(version).setNullable(nullable);
+			return  createLong(precision,version,nullable,geType);
 		} else if (type == Character.class) {
 			return new ColumnType.Char(1).setNullable(nullable);
 		} else if (type == Character.TYPE) {
 			return new ColumnType.Char(1).setNullable(nullable);
+		} else if (type == BigDecimal.class) {
+			return new ColumnType.Double(16, 6).setNullable(nullable);
 		} else if (type == Date.class) {
 			Temporal t = fieldProvider.getAnnotation(Temporal.class);
-			return newDateTimeColumnDef(t == null ? TemporalType.TIMESTAMP : t.value(), nullable, gv, version);
+			return ColumnTypeBuilder.newDateTimeColumnDef(t == null ? TemporalType.TIMESTAMP : t.value(), geType, version).setNullable(nullable);
 		} else if (type == java.sql.Date.class) {
-			return newDateTimeColumnDef(TemporalType.DATE, nullable, gv, false);
+			return ColumnTypeBuilder.newDateTimeColumnDef(TemporalType.DATE, geType, false).setNullable(nullable);
 		} else if (type == java.sql.Timestamp.class) {
-			return newDateTimeColumnDef(TemporalType.TIMESTAMP, nullable, gv, version);
+			return ColumnTypeBuilder.newDateTimeColumnDef(TemporalType.TIMESTAMP, geType, version).setNullable(nullable);
 		} else if (type == java.sql.Time.class) {
-			return newDateTimeColumnDef(TemporalType.TIME, nullable, gv, false);
+			return ColumnTypeBuilder.newDateTimeColumnDef(TemporalType.TIME, geType, false).setNullable(nullable);
 		} else if (Enum.class.isAssignableFrom(type)) {
 			return new ColumnType.Varchar(len > 0 ? len : 32).setNullable(nullable);
 		} else if (type.isArray() && type.getComponentType() == Byte.TYPE) {
@@ -1267,49 +1137,18 @@ public final class MetaHolder {
 		}
 	}
 
-	private static ColumnType newDateTimeColumnDef(TemporalType temporalType, boolean nullable, GeneratedValue gv,boolean version) {
-		ColumnType ct;
-		switch (temporalType) {
-		case DATE:
-			ct = new ColumnType.Date().setGenerateType(getDateGenerateType(gv));
-			break;
-		case TIME:
-			ct = new ColumnType.TimeStamp().setGenerateType(getDateGenerateType(gv));// FIXME
-			break;
-		case TIMESTAMP:
-			ColumnType.TimeStamp ctt=new ColumnType.TimeStamp();
-			ctt.setVersion(version);
-			ctt.setGenerateType(getDateGenerateType(gv));
-			ct = ctt;
-			break;
-		default:
-			throw new UnsupportedOperationException();
-		}
-		ct.setNullable(nullable);
-		return ct;
-	}
-
-	private static DateGenerateType getDateGenerateType(GeneratedValue gv) {
-		String generated = gv == null ? null : gv.generator().toLowerCase();
-		if (generated != null) {
-			if ("created".equals(generated)) {
-				return DateGenerateType.created;
-			} else if ("modified".equals(generated)) {
-				return DateGenerateType.modified;
-			} else if ("created-sys".equals(generated) || "created_sys".equals(generated)) {
-				return DateGenerateType.created_sys;
-			} else if ("modified-sys".equals(generated)|| "modified_sys".equals(generated)) {
-				return DateGenerateType.modified_sys;
-			} else if (generated.length() == 0) {
-				return DateGenerateType.created;
-			}
-			throw new IllegalArgumentException("Unknown date generator [" + generated + "]");
-		}
-		return null;
+	private static ColumnType createLong(int precision, boolean version, boolean nullable,GenerateTypeDef gType) {
+		ColumnType.Int i = new ColumnType.Int(precision > 0 ? precision : 16);
+		i.setGenerateType(gType==null?null:gType.getDateGenerate());
+		i.setVersion(version).setNullable(nullable);
+		return i;
 	}
 
 	/**
 	 * 逆向查找元模型
+	 * 
+	 * @param schema
+	 * @param table
 	 */
 	public static AbstractMetadata lookup(String schema, String table) {
 		String key = (schema + "." + table).toUpperCase();

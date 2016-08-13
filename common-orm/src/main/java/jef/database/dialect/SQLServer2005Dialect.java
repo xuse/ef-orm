@@ -19,6 +19,9 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import jef.database.ConnectInfo;
+import jef.database.dialect.handler.LimitHandler;
+import jef.database.dialect.handler.SQL2005LimitHandler;
+import jef.database.dialect.handler.SQL2005LimitHandlerSlowImpl;
 import jef.database.exception.JDBCExceptionHelper;
 import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.jdbc.statement.UnionJudgement;
@@ -62,6 +65,7 @@ public class SQLServer2005Dialect extends SQLServer2000Dialect{
 			String dbname=reader.readToken(' ',';',':');
 			connectInfo.setDbname(dbname);
 		}
+		reader.close();
 	}
 	
 	@Override

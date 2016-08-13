@@ -64,7 +64,7 @@ public interface GqRepository<T, ID extends Serializable> extends PagingAndSorti
 	 * 悲观锁更新
 	 * 使用此方法将到数据库中查询一条记录并加锁，然后用Update的回调方法修改查询结果。
 	 * 最后写入到数据库中。
-	 * 
+	 * @return 如果没查到数据，或者数据没有发生任何变化，返回false
 	 */
 	boolean lockItAndUpdate(ID id,Update<T> update);
 }

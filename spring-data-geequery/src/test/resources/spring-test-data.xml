@@ -20,7 +20,10 @@
 
 	<!-- 定义DataSource -->
 	<bean id="dataSource" class="jef.database.datasource.SimpleDataSource"
-		p:url="${db.url}" />
+		p:url="${db.url}"
+		p:user="root"
+		p:password="admin" 
+		/>
 
 	<!-- 定义GeeQuery SessionFactory -->
 	<bean id="entityManagerFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean"

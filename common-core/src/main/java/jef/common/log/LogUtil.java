@@ -249,7 +249,7 @@ public class LogUtil {
 		if(useSlf4j){
 			if(log.isDebugEnabled()){
 				String msg=toString(o);
-				log.error(msg);
+				log.debug(msg);
 				showToOnthers(msg, true);
 			}
 		}else if(debug){

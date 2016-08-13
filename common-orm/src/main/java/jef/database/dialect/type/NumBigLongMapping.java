@@ -55,4 +55,9 @@ public class NumBigLongMapping extends AbstractVersionNumberMapping{
 	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
 		rs.updateLong(columnIndex, ((Number)value).longValue());
 	}
+
+	@Override
+	protected Object transfer(long n) {
+		return n;
+	}
 }

@@ -23,6 +23,8 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.VersionSupportColumn;
+import jef.database.meta.def.IndexDef;
+import jef.database.meta.def.UniqueConstraintDef;
 import jef.database.query.DbTable;
 import jef.database.query.JpqlExpression;
 import jef.database.query.PKQuery;
@@ -73,7 +75,17 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	 */
 	protected Field[] lobNames;
 
-	final List<jef.database.annotation.Index> indexMap = new ArrayList<jef.database.annotation.Index>(5);// 记录对应表的所有索引，当建表时使用可自动创建索引
+	/**
+	 * 记录对应表的所有索引，当建表时使用可自动创建索引
+	 * Revised 2016-8 JPA 2.1规范中增加的@Table的indexes属性和Index注解，因此删除EF原先自己设计的Index注解，改用标准的JPA注解
+	 */
+	final List<IndexDef> indexes = new ArrayList<IndexDef>(5);
+	
+	/**
+	 * 记录对应表所有Unqie约束.当建表时可自动创建约束
+	 */
+	final List<UniqueConstraintDef> uniques=new ArrayList<UniqueConstraintDef>(5);
+	
 	protected final Map<Field, ColumnMapping> schemaMap = new IdentityHashMap<Field, ColumnMapping>();
 	protected Map<String, Field> fields = new HashMap<String, Field>(10, 0.6f);
 	protected Map<String, Field> lowerFields = new HashMap<String, Field>(10, 0.6f);
@@ -169,7 +181,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		if (fld instanceof JpqlExpression) {
 			throw new UnsupportedOperationException();
 		}
-		String name = profile.getColumnNameToUse(fld.name());
+		String name = profile.getObjectNameToUse(fld.name());
 		return escape ? DbUtils.escapeColumn(profile, name) : name;
 	}
 
@@ -410,6 +422,10 @@ public abstract class AbstractMetadata implements ITableMetadata {
 
 	public void setUseOuterJoin(boolean useOuterJoin) {
 		this.useOuterJoin = useOuterJoin;
+	}
+	
+	public List<UniqueConstraintDef> getUniques() {
+		return uniques;
 	}
 
 	public VersionSupportColumn getVersionColumn() {

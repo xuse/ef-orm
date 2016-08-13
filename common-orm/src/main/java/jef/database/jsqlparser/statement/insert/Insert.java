@@ -20,7 +20,6 @@ import java.util.List;
 import jef.database.jsqlparser.Util;
 import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.parser.Token;
-import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.visitor.FromItem;
 import jef.database.jsqlparser.visitor.ItemsList;
 import jef.database.jsqlparser.visitor.Statement;

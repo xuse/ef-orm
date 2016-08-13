@@ -370,7 +370,7 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 
 	// ///////////////////////////////SqlTemplate /////////////////////////
 	public <T> NativeQuery<T> createNativeQuery(String sqlString, Class<T> clz) {
-		return new NativeQuery<T>(this, sqlString, new Transformer(clz));
+		return new NativeQuery<T>(this, sqlString, new Transformer(clz),false);
 	}
 
 	<T> NativeQuery<T> createNativeQuery(NQEntry nc, Class<T> resultClz) {
@@ -378,7 +378,7 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 	}
 
 	public <T> NativeQuery<T> createNativeQuery(String sqlString, ITableMetadata meta) {
-		NativeQuery<T> q = new NativeQuery<T>(this, sqlString, new Transformer(meta));
+		NativeQuery<T> q = new NativeQuery<T>(this, sqlString, new Transformer(meta),false);
 		return q;
 	}
 
@@ -396,7 +396,7 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 	}
 
 	public <T> NativeQuery<T> createQuery(String jpql, Class<T> resultClass) throws SQLException {
-		NativeQuery<T> query = new NativeQuery<T>(this, jpql, new Transformer(resultClass));
+		NativeQuery<T> query = new NativeQuery<T>(this, jpql, new Transformer(resultClass),true);
 		query.setIsNative(false);
 		return query;
 	}

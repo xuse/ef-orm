@@ -1,5 +1,6 @@
 package jef.database.dialect.type;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Date;
@@ -45,6 +46,7 @@ public final class ColumnMappings {
 	public static final ResultSetAccessor BOOLEAN = new ResultBooleanAccessor();
 	public static final ResultSetAccessor CHAR_BOOLEAN = new CharBooleanAccessor();
 	public static final ResultSetAccessor DATE = new ResultDateAccessor();
+	public static final ResultSetAccessor BIGDECIMAL = new ResultBigDecimalAccessor();
 	public static final ResultSetAccessor SHORT = new ResultShortAccessor();
 	public static final ResultSetAccessor BYTE = new ResultByteAccessor();
 	public static final ResultSetAccessor TIME = new ResultTimeAccessor();
@@ -188,6 +190,7 @@ public final class ColumnMappings {
 
 		FAST_ACCESSOR_MAP.put(String.class, STRING);
 		FAST_ACCESSOR_MAP.put(java.util.Date.class, TIMESTAMP);
+		FAST_ACCESSOR_MAP.put(BigDecimal.class, BIGDECIMAL);
 		FAST_ACCESSOR_MAP.put(java.sql.Date.class, DATE);
 		FAST_ACCESSOR_MAP.put(java.sql.Time.class, TIME);
 		FAST_ACCESSOR_MAP.put(java.sql.Timestamp.class, TIMESTAMP);

@@ -483,17 +483,28 @@ public abstract class Session {
 	 */
 	public <T extends IQueryableEntity> T merge(T entity) throws SQLException {
 		T old = null;
-		entity.getQuery().setCascade(false);
-		if (DbUtils.getPrimaryKeyValue(entity) == null) {
-			old = load(entity, true);
-			if (old != null) {
+		@SuppressWarnings("unchecked")
+		Query<T> q = entity.getQuery();
+		q.setCascade(false);
+		ITableMetadata meta = q.getMeta();
+		if (meta.getPKFields().isEmpty()) {
+			q.setMaxResult(2);
+			List<T> list = select(q);
+			if (list.size() == 1) {
+				old = list.get(0);
+				DbUtils.compareToUpdateMap(entity, old);
+				if (old.needUpdate())
+					update(old);
+				entity.clearQuery();
 				return old;
 			}
-		} else {
+		} else if (DbUtils.getPrimaryKeyValue(entity) != null) {
 			old = load(entity, true);
+			entity.clearQuery();
 			if (old != null) {
 				DbUtils.compareToUpdateMap(entity, old);
-				update(old);
+				if (old.needUpdate())
+					update(old);
 				return old;
 			}
 		}
@@ -513,14 +524,11 @@ public abstract class Session {
 	 */
 	public <T extends IQueryableEntity> T mergeCascade(T entity) throws SQLException {
 		T old = null;
-		if (DbUtils.getPrimaryKeyValue(entity) == null) {
-			old = load(entity, true);
-			if (old != null) {
-				entity.clearUpdate();
-				updateCascade(entity);
-				return old;
-			}
-		} else {
+		ITableMetadata meta = MetaHolder.getMeta(entity);
+		// 无主键匹配法
+		if (meta.getPKFields().isEmpty()) {
+			throw new UnsupportedOperationException("Do not support merge operate on table without primary key.");
+		} else if (DbUtils.getPrimaryKeyValue(entity) != null) {
 			old = load(entity, true);
 			if (old != null) {
 				DbUtils.compareToNewUpdateMap(entity, old);// 之所以是将对比结果放到新对象中，是为了能将新对象中级联关系也保存到数据库中。
@@ -1874,8 +1882,7 @@ public abstract class Session {
 		long parse = System.currentTimeMillis();
 		selectp.processSelect(sql, this, queryObj, rs, option, 1);
 		long dbselect = System.currentTimeMillis();
-		LogUtil.show(StringUtils.concat("Result: Iterator", "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse),
-				"ms) |", getTransactionId(null)));
+		LogUtil.show(StringUtils.concat("Result: Iterator", "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms) |", getTransactionId(null)));
 		EntityMappingProvider mapping = DbUtils.getMappingProvider(queryObj);
 		Transformer transformer = queryObj.getResultTransformer();
 		IResultSet irs = rs.toProperResultSet(null, transformer.getStrategy());
@@ -1912,9 +1919,8 @@ public abstract class Session {
 				EntityMappingProvider mapping = DbUtils.getMappingProvider(queryObj);
 				resultList = populateResultSet(rs.toProperResultSet(filters, transformer.getStrategy()), mapping, transformer);
 				if (debugMode) {
-					LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(resultList.size()), "\t Time cost([ParseSQL]:", String.valueOf(parse - start),
-							"ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbselect), "ms) max:",
-							option.toString(), " |", getTransactionId(null)));
+					LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(resultList.size()), "\t Time cost([ParseSQL]:", String.valueOf(parse - start), "ms, [DbAccess]:", String.valueOf(dbselect - parse), "ms, [Populate]:",
+							String.valueOf(System.currentTimeMillis() - dbselect), "ms) max:", option.toString(), " |", getTransactionId(null)));
 				}
 			} finally {
 				if (option.holdResult) {
@@ -2103,8 +2109,7 @@ public abstract class Session {
 		if (debugMode) {
 			long dbAccess = System.currentTimeMillis() - parse; // 数据库查询时间
 			parse = parse - start; // 解析SQL时间
-			LogUtil.show(StringUtils.concat("Total Count:", String.valueOf(total), "\t Time cost([ParseSQL]:", String.valueOf(parse), "ms, [DbAccess]:", String.valueOf(dbAccess),
-					"ms) |", getTransactionId(null)));
+			LogUtil.show(StringUtils.concat("Total Count:", String.valueOf(total), "\t Time cost([ParseSQL]:", String.valueOf(parse), "ms, [DbAccess]:", String.valueOf(dbAccess), "ms) |", getTransactionId(null)));
 		}
 		return total;
 	}

@@ -8,7 +8,9 @@ public enum DbProperty {
 	
 	/**
 	 * 开销最小的查询SQL语句，用于检测数据库心跳，如果没有这样的语句，返回null
-	 * @deprecated 目前采用了JDBC 4.0中的isValid方法来检查连接心跳，因此这个参数最近没什么用。
+	 * {@code
+	 * 目前采用了JDBC 4.0中的isValid方法来检查连接心跳，因此这个参数最近没什么用。
+	 * }
 	 */
 	CHECK_SQL,
 	/**

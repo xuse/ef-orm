@@ -31,7 +31,7 @@ public interface FooEntityDao {
 	 * @param username
 	 * @return
 	 */
-	@Query(value = "select * from foo u where u.name like ?1<string$>", nativeQuery = true)
+	@Query(value = "select * from foo u where u.name like ?1<string$>",nativeQuery=false)
 	public Foo findByusername(String username);
 
 	/**
@@ -40,7 +40,7 @@ public interface FooEntityDao {
 	 * @param name
 	 * @return
 	 */
-	@Query("select * from foo u where u.name=:name")
+	@Query(value="select * from foo u where u.name=:name",nativeQuery=false)
 	public Foo findBysName(@Param("name") String name);
 
 	/**
@@ -67,7 +67,7 @@ public interface FooEntityDao {
 	 * @param birthDay
 	 * @return
 	 */
-	@Query(value = "select * from foo where name like :name and age=:age")
+	@Query(value = "select * from foo where name like :name and age=:age",nativeQuery=false)
 	public Foo findBySql3(@Param("name") String name, @Param("age") int age);
 
 	/**
@@ -76,7 +76,7 @@ public interface FooEntityDao {
 	 * @param name
 	 * @return
 	 */
-	@Query("select * from foo where name like ?2<string$> and age=?1")
+	@Query(value="select * from foo where name like ?2<string$> and age=?1",nativeQuery=false)
 	public Foo findBySql4(int birthDay, String name);
 
 	/**
@@ -96,10 +96,11 @@ public interface FooEntityDao {
 	 * @param sort
 	 * @return
 	 */
-	@Query("select * from foo where age=?1 and name like ?2<$string$>")
+	@Query(value="select * from foo where age=?1 and name like ?2<$string$>",nativeQuery=false)
 	public List<Foo> findBySql6(int age, String name, Sort sort);
 
-	@Query("select * from foo where age=?1 and name like ?2<$string$> order by ?3<sql>")
+	@Query(value="select * from foo where age=?1 and name like ?2<$string$> order by ?3<sql>"
+			,nativeQuery=false)
 	public List<Foo> findBySql62(@IgnoreIf(ParamIs.Zero) int age, @IgnoreIf(ParamIs.Empty) String name, String orderField);
 
 	/**
@@ -111,7 +112,7 @@ public interface FooEntityDao {
 	 * @param sort
 	 * @return
 	 */
-	@Query(value = "select * from foo where age=?1 and name like ?2<$string$>", nativeQuery = true)
+	@Query(value = "select * from foo where age=?1 and name like ?2<$string$>",nativeQuery=false)
 	public Page<Foo> findBySql7(int age, @IgnoreIf(ParamIs.Empty) String name, Pageable page);
 
 	/**
@@ -124,11 +125,11 @@ public interface FooEntityDao {
 	 * @param birthDay
 	 */
 	@Modifying
-	@Query("insert into foo(remark,name,age,birthday) values (?3, ?1, ?2, ?4)")
+	@Query(value="insert into foo(remark,name,age,birthday) values (?3, ?1, ?2, ?4)",nativeQuery=false)
 	public int insertInto(String name, int age, String remark, Date birthDay);
 
 	@Modifying
-	@Query("insert into foo(remark,name,age,birthday) values (:remark, :name, :age, :birthday)")
+	@Query(value="insert into foo(remark,name,age,birthday) values (:remark, :name, :age, :birthday)",nativeQuery=false)
 	public int insertInto2(@Param("name") String name, @Param("age") int age, @Param("remark") String remark, @Param("birthday") Date birthDay);
 
 	/**
@@ -139,7 +140,7 @@ public interface FooEntityDao {
 	 * @param id
 	 */
 	@Modifying
-	@Query("update foo set age=age+1,birthDay=:birth where age=:age and id=:id")
+	@Query(value="update foo set age=age+1,birthDay=:birth where age=:age and id=:id",nativeQuery=false)
 	public int updateFooSetAgeByAgeAndId(@Param("birth") Date birth, @Param("age") int age, @Param("id") int id);
 
 }

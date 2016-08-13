@@ -13,8 +13,8 @@ import javax.sql.rowset.CachedRowSet;
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.DbMetaData;
-import jef.database.OperateTarget;
 import jef.database.datasource.DataSourceInfo;
+import jef.database.dialect.handler.LimitHandler;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ParserFactory;
@@ -97,11 +97,6 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	@Override
 	public String getObjectNameToUse(String name) {
 		return dialect.getObjectNameToUse(name);
-	}
-
-	@Override
-	public String getColumnNameToUse(String name) {
-		return dialect.getColumnNameToUse(name);
 	}
 
 	@Override
@@ -195,8 +190,8 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	}
 
 	@Override
-	public void init(OperateTarget asOperateTarget) {
-		dialect.init(asOperateTarget);
+	public void accept(DbMetaData asOperateTarget) {
+		dialect.accept(asOperateTarget);
 	}
 
 	@Override
@@ -247,5 +242,10 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	@Override
 	public List<SequenceInfo> getSequenceInfo(DbMetaData conn, String schema, String seqName) {
 		return dialect.getSequenceInfo(conn, schema, seqName);
+	}
+
+	@Override
+	public boolean isCaseSensitive() {
+		return dialect.isCaseSensitive();
 	}
 }

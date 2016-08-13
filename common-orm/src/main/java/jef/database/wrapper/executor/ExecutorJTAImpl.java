@@ -51,13 +51,13 @@ public class ExecutorJTAImpl implements Runnable, StatementExecutor {
 	 * @param dbkey
 	 * @param txId
 	 */
-	public ExecutorJTAImpl(IUserManagedPool parent, String dbkey, String txId) {
+	public ExecutorJTAImpl(IUserManagedPool parent, String dbkey, String txId, DatabaseDialect dialect) {
 		LogUtil.debug("The sqlExecutor {} was starting.",this);
 		this.parent = parent;
 		this.dbkey = dbkey;
 		this.txId = txId;
 		this.cl = new CountDownLatch(1); // 初始化检测器
-		this.profile = parent.getProfile(dbkey);
+		this.profile = dialect;
 		DbUtils.es.execute(this);
 		ThreadUtils.await(cl);// 等待连接在新线程中初始化完成后，构造方法才退出。
 		cl = null;

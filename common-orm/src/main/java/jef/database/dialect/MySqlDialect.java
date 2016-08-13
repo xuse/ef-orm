@@ -24,6 +24,8 @@ import jef.database.ConnectInfo;
 import jef.database.ORMConfig;
 import jef.database.annotation.DateGenerateType;
 import jef.database.dialect.ColumnType.AutoIncrement;
+import jef.database.dialect.handler.LimitHandler;
+import jef.database.dialect.handler.MySqlLimitHandler;
 import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
@@ -99,7 +101,7 @@ public class MySqlDialect extends AbstractDialect {
 	public MySqlDialect() {
 		// 在MYSQL中 ||是逻辑运算符
 		features = CollectionUtils.identityHashSet();
-		features.addAll(Arrays.asList(Feature.DBNAME_AS_SCHEMA, Feature.SUPPORT_INLINE_COMMENT,Feature.ALTER_FOR_EACH_COLUMN, Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD, Feature.SUPPORT_LIMIT, Feature.COLUMN_DEF_ALLOW_NULL,Feature.TABLE_CASE_SENSTIVE));
+		features.addAll(Arrays.asList(Feature.DBNAME_AS_SCHEMA, Feature.SUPPORT_INLINE_COMMENT,Feature.ALTER_FOR_EACH_COLUMN, Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD, Feature.SUPPORT_LIMIT, Feature.COLUMN_DEF_ALLOW_NULL));
 		setProperty(DbProperty.ADD_COLUMN, "ADD");
 		setProperty(DbProperty.MODIFY_COLUMN, "MODIFY");
 		setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");
@@ -268,9 +270,9 @@ public class MySqlDialect extends AbstractDialect {
 			}
 		}
 		if(generateType==DateGenerateType.created){
-			return "datetime not null";
+			return "datetime NOT NULL";
 		}else if(generateType==DateGenerateType.modified){
-			return "timestamp not null default current_timestamp on update current_timestamp";
+			return "timestamp NOT NULL DEFAULT current_timestamp ON UPDATE current_timestamp";
 		}
 		return super.getCreationComment(column, flag);
 	}
@@ -285,7 +287,7 @@ public class MySqlDialect extends AbstractDialect {
 		
 		if (flag) {
 			if (!column.nullable)
-				sb.append(" not null");
+				sb.append(" NOT NULL");
 		}
 		sb.append(" AUTO_INCREMENT");
 		return sb.toString();
@@ -390,6 +392,7 @@ public class MySqlDialect extends AbstractDialect {
 		String dbname = reader.readToken(new char[] { '?', ' ', ';' });
 		connectInfo.setHost(host);
 		connectInfo.setDbname(dbname);
+		reader.close();
 	}
 
 	private final static int[] IO_ERROR_CODE = { 1158, 1159, 1160, 1161, 2001, 2002, 2003, 2004, 2006, 2013, 2024, 2025, 2026 };

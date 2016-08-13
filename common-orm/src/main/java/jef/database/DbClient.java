@@ -420,7 +420,6 @@ public class DbClient extends Session implements SessionFactory {
 			if (showVersion) {
 				LogUtil.show(meta.getDbVersion());
 			}
-			meta.getProfile().init(session.selectTarget(key));
 		}
 	}
 

@@ -37,12 +37,17 @@ import com.github.geequery.springdata.test.repo.FooEntityDao;
  * 与Spring集成的示例。 本示例使用的xml作为Spring配置。参见
  * src/main/resources/spring/spring-test-case1.xml
  * 
+ * 1\save 报错 (OK) 2、排序无效(OK) 3、自定义列名无效(OK，应当想办法支持Native)
+ * 
+ * 4、MySQL下的时间精度造成版本无效 
+ * 5、考虑使用毫秒数 
+ * 6 考虑使用GUID作为版本
+ * 
  * @author jiyi
  * 
  */
 @ContextConfiguration(locations = { "classpath:spring-test-data.xml" })
-public class Case1 extends AbstractJUnit4SpringContextTests implements
-		InitializingBean {
+public class Case1 extends AbstractJUnit4SpringContextTests implements InitializingBean {
 
 	@javax.annotation.Resource
 	private CommonDao commonDao;
@@ -56,8 +61,16 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements
 	@javax.annotation.Resource
 	private ComplexFooDao complex;
 
+	@Test
+	public void testCase1() {
+		Foo foo = new Foo();
+		foo.setAge(1);
+		foo.setName("咋呼呼");
+		foodao.save(foo);
+	}
+
 	/**
-	 * 使用方法名来定义查询的案例
+	 * 使用方法名来定义查询的案例.
 	 * 
 	 * @throws SQLException
 	 */
@@ -94,16 +107,14 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements
 		// ==============使用分页，固定排序===========
 		{
 			System.out.println("=== FindByAge Page ===");
-			Page<Foo> fooPage = foodao.findByAgeOrderById(0, new PageRequest(1,
-					4));
+			Page<Foo> fooPage = foodao.findByAgeOrderById(0, new PageRequest(1, 4));
 			System.out.println(fooPage.getTotalElements());
 			System.out.println(Arrays.toString(fooPage.getContent().toArray()));
 		}
 		// ==============分页+传入排序参数===========
 		{
 			System.out.println("=== FindAll(page+sort) ===");
-			Page<Foo> p = foodao.findAll(new PageRequest(0, 3, new Sort(
-					new Order(Direction.DESC, "id"))));
+			Page<Foo> p = foodao.findAll(new PageRequest(0, 3, new Sort(new Order(Direction.DESC, "age"))));
 			System.out.println(p.getTotalElements());
 			System.out.println(Arrays.toString(p.getContent().toArray()));
 		}
@@ -111,8 +122,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements
 		// ===================不分页，传入排序参数===========================
 		{
 			System.out.println("=== FindAll(sort) ===");
-			Iterable<Foo> iters = foodao.findAll(new Sort(new Order(
-					Direction.DESC, "id")));
+			Iterable<Foo> iters = foodao.findAll(new Sort(new Order(Direction.DESC, "id")));
 			System.out.println("list=" + iters);
 		}
 		// ===========查询多个ID的记录==============
@@ -147,6 +157,17 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements
 			// 删除全部
 			System.out.println("=== DeleteAll() ===");
 			foodao.deleteAll();
+		}
+	}
+
+	@Test
+	public void testAbc() {
+		{
+			/**
+			 * 最基本的@Query查询，注意需要@Param来绑定参数
+			 */
+			Foo foo = foodao2.findBysName("张三");
+			System.out.println(foo);
 		}
 	}
 
@@ -207,8 +228,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements
 			 * 
 			 * @IgnoreIf()注解可以化不可能为可能
 			 */
-			Page<Foo> page = (Page<Foo>) foodao2.findBySql5(0, null,
-					new PageRequest(1, 4));
+			Page<Foo> page = (Page<Foo>) foodao2.findBySql5(0, null, new PageRequest(1, 4));
 			System.out.println(page.getTotalElements());
 			System.out.println(page.getContent());
 		}
@@ -217,8 +237,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements
 			 * 1、like <$string$>的用法 2、顺序不能用Spring-data的方法传入并使用。 但是可以换一种方法
 			 */
 			System.out.println("=== findBySql6() ====");
-			List<Foo> result = foodao2.findBySql6(0, "张", new Sort(new Order(
-					Direction.DESC, "id")));
+			List<Foo> result = foodao2.findBySql6(0, "张", new Sort(new Order(Direction.DESC, "id")));
 			System.out.println(result);
 
 			System.out.println("=== findBySql6-2() ====");
@@ -275,8 +294,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements
 			complex.save(cf);
 		}
 		{
-			Iterable<ComplexFoo> list = complex.findAll(Arrays.asList(
-					new int[] { 1, 2 }, new int[] { 2, 2 }));
+			Iterable<ComplexFoo> list = complex.findAll(Arrays.asList(new int[] { 1, 2 }, new int[] { 2, 2 }));
 			for (ComplexFoo foo : list) {
 				System.out.println(foo);
 			}
@@ -374,14 +392,12 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements
 			id = v.getId();
 		}
 		{
-			Query<VersionLog> query = QB.create(VersionLog.class).addCondition(
-					QB.between(VersionLog.Field.id, id - 4, id));
-			RecordsHolder<VersionLog> records = commonDao
-					.selectForUpdate(query);
+			Query<VersionLog> query = QB.create(VersionLog.class).addCondition(QB.between(VersionLog.Field.id, id - 4, id));
+			RecordsHolder<VersionLog> records = commonDao.selectForUpdate(query);
 			try {
 				for (VersionLog version : records) {
 					version.setName("此时:" + version.getName());
-					version.setModified(new Date());
+//					version.setModified(System.currentTimeMillis());
 				}
 				records.commit();
 			} finally {
@@ -390,8 +406,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements
 
 		}
 		{
-			Query<VersionLog> query = QB.create(VersionLog.class).addCondition(
-					QB.between(VersionLog.Field.id, id - 4, id));
+			Query<VersionLog> query = QB.create(VersionLog.class).addCondition(QB.between(VersionLog.Field.id, id - 4, id));
 			List<VersionLog> records = commonDao.find(query);
 			for (VersionLog version : records) {
 				System.out.println(version.getName());
@@ -455,10 +470,8 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements
 	@Override
 	public void afterPropertiesSet() throws Exception {
 		ORMConfig.getInstance().setDebugMode(false);
-		commonDao.getNoTransactionSession().dropTable(Foo.class,
-				VersionLog.class);
-		commonDao.getNoTransactionSession().createTable(Foo.class,
-				VersionLog.class);
+		commonDao.getNoTransactionSession().dropTable(Foo.class, VersionLog.class);
+		commonDao.getNoTransactionSession().createTable(Foo.class, VersionLog.class);
 		{
 			List<Foo> list = new ArrayList<Foo>();
 			list.add(new Foo("张三"));

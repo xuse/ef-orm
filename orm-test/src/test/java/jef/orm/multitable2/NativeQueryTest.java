@@ -146,7 +146,7 @@ public class NativeQueryTest extends org.junit.Assert {
 			db.batchInsert(Arrays.asList(enums));
 		}
 
-		NamedQueryConfig config = new NamedQueryConfig("test_sql_in", "select count(*) from Person_table where id in (:names<int>)", "SQL", 0);
+		NamedQueryConfig config = new NamedQueryConfig("test_sql_in", "select count(*) from Person_table where id in (:names<int>)", false, 0);
 		if (db.load(config) != null) {
 			db.delete(config);
 		}

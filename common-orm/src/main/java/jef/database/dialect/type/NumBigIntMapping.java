@@ -56,4 +56,9 @@ public class NumBigIntMapping extends AbstractVersionNumberMapping {
 	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
 		rs.updateInt(columnIndex, ((Number)value).intValue());
 	}
+
+	@Override
+	protected Object transfer(long n) {
+		return (int)n;
+	}
 }

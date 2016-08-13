@@ -21,8 +21,9 @@ import java.util.Arrays;
 
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
-import jef.database.OperateTarget;
-import jef.database.dialect.type.AColumnMapping;
+import jef.database.DbMetaData;
+import jef.database.dialect.handler.DerbyLimitHandler;
+import jef.database.dialect.handler.LimitHandler;
 import jef.database.jsqlparser.expression.LongValue;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
@@ -215,23 +216,8 @@ public class DerbyDialect extends AbstractDialect {
 	}
 
 	@Override
-	public String getObjectNameToUse(String name) {
-		return StringUtils.upperCase(name);
-	}
-
-	@Override
-	public String getColumnNameToUse(String name) {
-		return StringUtils.upperCase(name);
-	}
-	
-	@Override
-	public String getColumnNameToUse(AColumnMapping name) {
-		return name.upperColumnName();
-	}
-	
-	@Override
-	public void init(OperateTarget db) {
-		super.init(db);
+	public void accept(DbMetaData db) {
+		super.accept(db);
 		try {
 			ensureUserFunction(this.functions.get("trunc"), db);
 		} catch (SQLException e) {
@@ -262,6 +248,7 @@ public class DerbyDialect extends AbstractDialect {
 			connectInfo.setHost(reader.readToken('/', ' '));
 			connectInfo.setDbname(reader.readToken(';'));
 		}
+		reader.close();
 	}
 
 	private final LimitHandler limit=new DerbyLimitHandler();
