@@ -15,17 +15,15 @@ import jef.database.routing.PartitionResult;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.processor.BindVariableContext;
-import jef.database.wrapper.processor.InsertStep;
 import jef.database.wrapper.processor.InsertStep.OracleRowidKeyCallback;
 import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
 
 abstract class InsertProcessor {
 	protected DbClient db;
-	protected SqlProcessor parent;
 
 	static InsertProcessor get(DatabaseDialect profile, DbClient db) {
-		return new PreparedImpl(db, db.rProcessor);
+		return new PreparedImpl(db);
 	}
 
 	/**
@@ -60,14 +58,13 @@ abstract class InsertProcessor {
 	 * @param parentDbClient
 	 * @param rProcessor
 	 */
-	InsertProcessor(DbClient parentDbClient, SqlProcessor rProcessor) {
+	InsertProcessor(DbClient parentDbClient) {
 		this.db = parentDbClient;
-		this.parent = rProcessor;
 	}
 
 	static final class PreparedImpl extends InsertProcessor {
-		PreparedImpl(DbClient parentDbClient, SqlProcessor rProcessor) {
-			super(parentDbClient, rProcessor);
+		PreparedImpl(DbClient parentDbClient) {
+			super(parentDbClient);
 		}
 
 		@Override

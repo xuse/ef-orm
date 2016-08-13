@@ -110,7 +110,6 @@ import org.easyframe.enterprise.spring.TransactionMode;
  */
 public abstract class Session {
 	// 这六个值在初始化的时候赋值
-	protected SqlProcessor rProcessor;
 	protected SqlProcessor preProcessor;
 	protected InsertProcessor insertp;
 	protected UpdateProcessor updatep;

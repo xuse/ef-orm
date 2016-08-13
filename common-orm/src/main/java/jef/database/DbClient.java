@@ -343,7 +343,6 @@ public class DbClient extends Session implements SessionFactory {
 	private void afterPoolReady() throws SQLException {
 		// 初始化处理器
 		DatabaseDialect profile = this.getProfile(null);
-		this.rProcessor = new SqlProcessor.NormalImpl(profile, this);
 		this.preProcessor = new SqlProcessor.PrepareImpl(profile, this);
 		this.selectp = SelectProcessor.get(profile, this);
 		this.insertp = InsertProcessor.get(profile, this);

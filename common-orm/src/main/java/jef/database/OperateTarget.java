@@ -95,10 +95,6 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 		this.profile = session.getProfile(key);
 	}
 
-	public SqlProcessor getProcessor() {
-		return session.rProcessor;
-	}
-
 	public DatabaseDialect getProfile() {
 		return profile;
 	}
