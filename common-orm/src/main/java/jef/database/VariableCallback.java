@@ -1,14 +1,13 @@
 package jef.database;
 
 
-import java.util.List;
-
 import jef.database.Condition.Operator;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.SqlContext;
+import jef.database.wrapper.clause.SqlBuilder;
 import jef.database.wrapper.processor.BindVariableDescription;
 import jef.tools.StringUtils;
 
@@ -69,7 +68,7 @@ public interface VariableCallback {
 			}
 		}
 
-		public String toPrepareSql(List<BindVariableDescription> fields,
+		public String toPrepareSql(SqlBuilder builder,
 				ITableMetadata meta, DatabaseDialect dialect, SqlContext context,
 				IQueryableEntity instance) {
 			// 只要使用了绑定变量方式获取，那么一定要做转义
@@ -86,7 +85,7 @@ public interface VariableCallback {
 			BindVariableDescription bind = new BindVariableDescription(field,
 					operator, value);
 			bind.setCallback(this);
-			fields.add(bind);
+			builder.addBind(bind);
 			return sb.toString();
 		}
 

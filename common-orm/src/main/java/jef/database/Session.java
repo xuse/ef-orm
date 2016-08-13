@@ -78,6 +78,7 @@ import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.CountClause;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.QueryClause;
+import jef.database.wrapper.clause.SqlBuilder;
 import jef.database.wrapper.clause.UpdateClause;
 import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.database.wrapper.populator.ResultPopulatorImpl;
@@ -3021,12 +3022,13 @@ public abstract class Session {
 			return versionColumn != null && isPkQuery != null && isPkQuery.booleanValue();
 		}
 
-		public void appendVersionCondition(BindSql sql, SqlContext context, SqlProcessor processor, IQueryableEntity instance, DatabaseDialect profile) {
+		public void appendVersionCondition(SqlBuilder builder, SqlContext context, SqlProcessor processor, IQueryableEntity instance, DatabaseDialect profile) {
 			Object value = versionColumn.getFieldAccessor().get(instance);
 			if (value != null) {
 				Condition cond = QB.eq(versionColumn.field(), value);
-				String str = cond.toPrepareSqlClause(sql.getBind(), versionColumn.getMeta(), context, processor, instance, profile);
-				sql.setSql(sql.getSql() + " and " + str);
+				builder.startSection(" and ");
+				cond.toPrepareSqlClause(builder,versionColumn.getMeta(), context, processor, instance, profile);
+				builder.endSection();
 			}
 		}
 	}

@@ -48,8 +48,9 @@ public final class BindSql implements InMemoryOperateProvider{
 	public String getSql() {
 		return sql;
 	}
-	public void setSql(String sql) {
+	public BindSql setSql(String sql) {
 		this.sql = sql;
+		return this;
 	}
 	/**
 	 * 得到绑定变量描述

@@ -41,6 +41,7 @@ import jef.database.query.Query;
 import jef.database.query.SqlContext;
 import jef.database.routing.PartitionResult;
 import jef.database.wrapper.clause.BindSql;
+import jef.database.wrapper.clause.SqlBuilder;
 import jef.database.wrapper.processor.BindVariableDescription;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
@@ -166,52 +167,33 @@ public abstract class SqlProcessor {
 		 * 转换到绑定类Where字句
 		 */
 		public BindSql toWhereClause(JoinElement obj, SqlContext context, UpdateContext update, DatabaseDialect profile) {
-			BindSql result = toWhere1(obj, context, update, profile);
-			if (result.getSql().length() > 0) {
-				result.setSql(" where ".concat(result.getSql()));
+			SqlBuilder builder=new SqlBuilder();
+			toWhere1(builder,obj, context, update, profile);
+			if (builder.sqlLength() > 0) {
+				builder.addBefore(" where ");
 			}
-			return result;
+			return builder.build();
 		}
 
-		private BindSql toWhere1(JoinElement query, SqlContext context, UpdateContext update, DatabaseDialect profile) {
+		private void toWhere1(SqlBuilder builder,JoinElement query, SqlContext context, UpdateContext update, DatabaseDialect profile) {
 			if (query instanceof AbstractJoinImpl) {
-				List<BindVariableDescription> params = new ArrayList<BindVariableDescription>();
 				AbstractJoinImpl join = (AbstractJoinImpl) query;
-				StringBuilder sb = new StringBuilder();
 				for (Query<?> ele : join.elements()) {
-					BindSql result = toWhereElement1(ele, context.getContextOf(ele), ele.getConditions(), null, profile);
-					if (result.getBind() != null) {
-						params.addAll(result.getBind());
-					}
-					if (StringUtils.isEmpty(result.getSql())) {
-						continue;
-					}
-					if (sb.length() > 0) {
-						sb.append(" and ");
-					}
-					sb.append(result.getSql());
+					builder.startSection(" and ");
+					toWhereElement1(builder,ele, context.getContextOf(ele), ele.getConditions(), null, profile);
+					builder.endSection();
 				}
 				for (Map.Entry<Query<?>, List<Condition>> entry : join.getRefConditions().entrySet()) {
 					Query<?> q = entry.getKey();
-					BindSql result = toWhereElement1(q, context.getContextOf(q), entry.getValue(), null, profile);
-					if (result.getBind() != null) {
-						params.addAll(result.getBind());
-					}
-					if (StringUtils.isEmpty(result.getSql())) {
-						continue;
-					}
-					if (sb.length() > 0) {
-						sb.append(" and ");
-					}
-					sb.append(result.getSql());
+					builder.startSection(" and ");
+					toWhereElement1(builder, q, context.getContextOf(q), entry.getValue(), null, profile);
+					builder.endSection();
 				}
-				return new BindSql(sb.toString(), params);
 			} else if (query instanceof Query<?>) {
-				BindSql sql= toWhereElement1((Query<?>) query, context, query.getConditions(), update, profile);
+				toWhereElement1(builder,(Query<?>) query, context, query.getConditions(), update, profile);
 				if(update!=null && update.needVersionCondition()){
-					update.appendVersionCondition(sql,context,this,((Query<?>) query).getInstance(),profile);
+					update.appendVersionCondition(builder,context,this,((Query<?>) query).getInstance(),profile);
 				}
-				return sql;
 			} else {
 				throw new IllegalArgumentException("Unknown Query class:" + query.getClass().getName());
 			}
@@ -227,12 +209,11 @@ public abstract class SqlProcessor {
 		 *            需要监测该条件是否恰好等于主键条件，如果是则返回true，如果为null则说明不需要检查
 		 * @return
 		 */
-		private BindSql toWhereElement1(Query<?> q, SqlContext context, List<Condition> conditions, UpdateContext update, DatabaseDialect profile) {
-			List<BindVariableDescription> params = new ArrayList<BindVariableDescription>();
+		private void toWhereElement1(SqlBuilder builder,Query<?> q, SqlContext context, List<Condition> conditions, UpdateContext update, DatabaseDialect profile) {
 			IQueryableEntity obj = q.getInstance();
 			// 这里必须用双条件判断，因为Join当中的RefCondition是额外增加的条件，如果去除将造成RefCondition丢失。
 			if (q.isAll() && conditions.isEmpty())
-				return new BindSql("", params);
+				return;
 
 			if (conditions.isEmpty()) {
 				if (getProfile().has(Feature.SELECT_ROW_NUM) && obj.rowid() != null) {
@@ -248,13 +229,12 @@ public abstract class SqlProcessor {
 
 			StringBuilder sb = new StringBuilder();
 			for (Condition c : conditions) {
-				if (sb.length() > 0)
-					sb.append(" and ");
-				sb.append(c.toPrepareSqlClause(params, q.getMeta(), context, this, obj, profile));
+				builder.startSection(" and ");
+				c.toPrepareSqlClause(builder, q.getMeta(), context, this, obj, profile);
 			}
 
 			if (sb.length() > 0 || ORMConfig.getInstance().isAllowEmptyQuery()) {
-				return new BindSql(sb.toString(), params);
+				return;
 			} else {
 				throw new NoResultException("Illegal usage of Query object, must including any condition in query:" + q.getInstance().getClass());
 			}

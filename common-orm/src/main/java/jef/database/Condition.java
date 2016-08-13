@@ -35,6 +35,7 @@ import jef.database.query.LazyQueryBindField;
 import jef.database.query.RefField;
 import jef.database.query.SqlContext;
 import jef.database.query.SqlExpression;
+import jef.database.wrapper.clause.SqlBuilder;
 import jef.database.wrapper.processor.BindVariableDescription;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
@@ -251,31 +252,33 @@ public class Condition implements Serializable{
 	 *产生用于批处理的Update语句的Where字句中的sql语句，形如 xx=?   等等 xx is null
 	 *预处理若干复杂的Field类型 
 	 */
-	public String toPrepareSqlClause(
-			List<BindVariableDescription> fields,
+	public void toPrepareSqlClause(
+			SqlBuilder builder,
 			ITableMetadata meta,
 			SqlContext context,
 			SqlProcessor processor,
 			IQueryableEntity instance,DatabaseDialect profile) {
 		//特殊Field条件 
 		if(field instanceof IConditionField){
-			return ((IConditionField)field).toPrepareSql(fields,meta,processor,context,instance,profile);
+			 ((IConditionField)field).toPrepareSql(builder,meta,processor,context,instance,profile);
+			 return;
 		}else if(field instanceof LazyQueryBindField){
 			LazyQueryBindField ref=(LazyQueryBindField) field;
 			ITableMetadata refMeta=ref.getInstanceQuery(context).getMeta();
 			SqlContext    refContext=context.getContextOf(ref.getInstanceQuery(context));
 			if(ref instanceof RefField){
-				return toPrepareSqlClause(fields,refMeta,refContext,processor,ref.getInstanceQuery(context).getInstance(),((RefField)ref).getField(),profile);	
+				toPrepareSqlClause(builder,refMeta,refContext,processor,ref.getInstanceQuery(context).getInstance(),((RefField)ref).getField(),profile);
+				return;
 			}
 		}
-		return toPrepareSqlClause(fields,meta,context,processor,instance,field,profile); 
+		toPrepareSqlClause(builder,meta,context,processor,instance,field,profile); 
 	}
 	
 	/**
 	 * 实际生成条件 
 	 * @return
 	 */
-	private String toPrepareSqlClause(List<BindVariableDescription> fields,
+	private void toPrepareSqlClause(SqlBuilder builder,
 			ITableMetadata meta, SqlContext context,
 			SqlProcessor processor, IQueryableEntity instance, Field rawField,DatabaseDialect profile) {
 		//当value为Field的时候……
@@ -284,12 +287,14 @@ public class Condition implements Serializable{
 		}
 		//表达式对象无需绑定变量
 		if((value instanceof Expression)||value instanceof RefField){
-			return toSqlClause(meta,context,processor,instance,profile);
+			builder.append(toSqlClause(meta,context,processor,instance,profile));
+			return;
 		}
 		//Like条件下
 		if(ArrayUtils.contains(Like.LIKE_OPERATORS, operator)){
 			Like like=new Like(rawField,operator,value);
-			return like.toPrepareSql(fields, meta, profile,context, instance);
+			like.toPrepareSql(builder, meta, profile,context, instance);
+			return;
 		}
 		//其他简单条件情况下
 		if(operator==null ||rawField==null){
@@ -311,7 +316,7 @@ public class Condition implements Serializable{
 			}
 		}
 		StringBuilder sb=new StringBuilder();
-		String[] spOpers;
+		
 		String columnName;
 		if(rawField instanceof JpqlExpression){
 			columnName=((JpqlExpression) rawField).toSqlAndBindAttribs(context, profile);
@@ -321,56 +326,67 @@ public class Condition implements Serializable{
 		
 		if(operator==Operator.IS_NULL){
 			sb.append(columnName).append(" is null");
+			return;
 		}else if (operator==Operator.IS_NOT_NULL){
 			sb.append(columnName).append(" is not null");
-		}else if ((spOpers=getInBetweenOper(operator))!=null){
-			String oper=spOpers[0];
-			String div=spOpers[1];
-			String tailer=spOpers[2];
-			//修改，支持String
-			if(value instanceof CharSequence){
-				String[] value1=StringUtils.split(value.toString(), ',');
-				for(int i=0;i<value1.length;i++){
-					value1[i]=value1[i].trim();
-				}
-				value=value1;
+			return;
+		}
+		if (getInBetweenOper(operator)!=null){
+			processBetween(builder,columnName,rawField,profile,meta,context,processor,instance);
+			return;
+		}else{
+			builder.append(columnName,operator.oper,"?");
+			builder.addBind(new BindVariableDescription(rawField,operator,value));
+		}
+	}
+
+	private void processBetween(SqlBuilder builder,String columnName,Field rawField,DatabaseDialect profile
+			,ITableMetadata meta, SqlContext context,
+			SqlProcessor processor, IQueryableEntity instance) {
+		String[] spOpers=getInBetweenOper(operator);
+		String oper=spOpers[0];
+		String div=spOpers[1];
+		String tailer=spOpers[2];
+		//修改，支持String
+		if(value instanceof CharSequence){
+			String[] value1=StringUtils.split(value.toString(), ',');
+			for(int i=0;i<value1.length;i++){
+				value1[i]=value1[i].trim();
 			}
-			if(CollectionUtils.isArrayOrCollection(value.getClass())){
-				int len=CollectionUtils.length(value);
-				if(operator==Operator.BETWEEN_L_L && len!=2){//无效的BETWEEN操作
-					throw new RuntimeException("The between operator must have 2 params");
-				}
-				if(len==0){
-					if(Operator.IN==operator){//对于空集合的IN条件为永假
-						sb.append("1=2");	
-					}else if(Operator.NOT_IN==operator){//对于空集合的NOT IN条件为永真
-						sb.append("1=1");
-					}
-				}else{
-					sb.append(columnName).append(oper);
-					int n=0;
-					for(Iterator<Object> iter=CollectionUtils.iterator(value,Object.class);iter.hasNext();){
-						Object o=iter.next();
-						if(n>0)sb.append(div);
-						if(o instanceof Field){
-							Condition c=get((Field)o,null,null);
-							sb.append(c.toSqlClause(meta, context, processor, instance,profile));
-						}else{
-							sb.append('?');
-							fields.add(new BindVariableDescription(rawField,operator,o));
-						}
-						n++;
-					}
-					sb.append(tailer);
+			value=value1;
+		}
+		if(CollectionUtils.isArrayOrCollection(value.getClass())){
+			int len=CollectionUtils.length(value);
+			if(operator==Operator.BETWEEN_L_L && len!=2){//无效的BETWEEN操作
+				throw new RuntimeException("The between operator must have 2 params");
+			}
+			if(len==0){
+				if(Operator.IN==operator){//对于空集合的IN条件为永假
+					builder.append("1=2");	
+				}else if(Operator.NOT_IN==operator){//对于空集合的NOT IN条件为永真
+					builder.append("1=1");
 				}
 			}else{
-				throw new RuntimeException("Error param, the value of in operator must be a array or string :" + value.getClass().getName());				
+				builder.append(columnName,oper);
+				int n=0;
+				for(Iterator<Object> iter=CollectionUtils.iterator(value,Object.class);iter.hasNext();){
+					Object o=iter.next();
+					if(n>0)builder.append(div);
+					if(o instanceof Field){
+						Condition c=get((Field)o,null,null);
+						builder.append(c.toSqlClause(meta, context, processor, instance,profile));
+					}else{
+						builder.append("?");
+						builder.addBind(new BindVariableDescription(rawField,operator,o));
+					}
+					n++;
+				}
+				builder.append(tailer);
 			}
 		}else{
-			sb.append(columnName).append(operator.oper).append("?");	
-			fields.add(new BindVariableDescription(rawField,operator,value));
+			throw new RuntimeException("Error param, the value of in operator must be a array or string :" + value.getClass().getName());				
 		}
-		return sb.toString();
+	
 	}
 
 	private static final String[] IN_OPER=new String[]{" in (",", ",")"};
