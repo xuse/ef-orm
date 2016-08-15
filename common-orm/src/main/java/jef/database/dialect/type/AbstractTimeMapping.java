@@ -12,13 +12,13 @@ import jef.database.annotation.DateGenerateType;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.ITableMetadata;
-import jef.database.query.BindVariableField;
 import jef.database.query.Func;
 import jef.database.query.SqlExpression;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.UpdateClause;
 import jef.database.wrapper.processor.InsertStep;
 import jef.database.wrapper.processor.InsertStepAdapter;
+import jef.database.wrapper.variable.ConstantVariable;
 import jef.tools.reflect.Property;
 
 abstract class AbstractTimeMapping extends AColumnMapping implements VersionSupportColumn {
@@ -100,7 +100,7 @@ abstract class AbstractTimeMapping extends AColumnMapping implements VersionSupp
 	public void processAutoUpdate(DatabaseDialect profile, UpdateClause result) {
 		String columnName = getColumnName(profile, true);
 		if (isJavaSysdate()) {
-			result.addEntry(columnName, new BindVariableField(getCurrentSqlValue()));
+			result.addEntry(columnName, new ConstantVariable(getCurrentSqlValue()));
 		} else {
 			result.addEntry(columnName, getFunctionString(profile));
 		}

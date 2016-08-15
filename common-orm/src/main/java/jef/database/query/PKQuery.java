@@ -32,7 +32,7 @@ import jef.database.wrapper.clause.GroupClause;
 import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.clause.QueryClauseImpl;
 import jef.database.wrapper.populator.Transformer;
-import jef.database.wrapper.processor.BindVariableDescription;
+import jef.database.wrapper.variable.BindVariableDescription;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 

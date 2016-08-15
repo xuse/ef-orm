@@ -37,8 +37,8 @@ import jef.database.support.SqlLog;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.UpdateClause;
-import jef.database.wrapper.processor.BindVariableContext;
-import jef.database.wrapper.processor.BindVariableDescription;
+import jef.database.wrapper.variable.BindVariableContext;
+import jef.database.wrapper.variable.BindVariableDescription;
 import jef.tools.StringUtils;
 
 /**

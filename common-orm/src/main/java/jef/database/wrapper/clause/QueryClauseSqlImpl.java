@@ -22,7 +22,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.ResultSetContainer;
 import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.routing.PartitionResult;
-import jef.database.wrapper.processor.BindVariableDescription;
+import jef.database.wrapper.variable.BindVariableDescription;
 import jef.tools.PageLimit;
 
 public class QueryClauseSqlImpl implements QueryClause {

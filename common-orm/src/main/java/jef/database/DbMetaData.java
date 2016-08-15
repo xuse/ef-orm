@@ -90,7 +90,7 @@ import jef.database.wrapper.executor.StatementExecutor;
 import jef.database.wrapper.populator.ResultPopulatorImpl;
 import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.populator.Transformer;
-import jef.database.wrapper.processor.BindVariableContext;
+import jef.database.wrapper.variable.BindVariableContext;
 import jef.http.client.support.CommentEntry;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;

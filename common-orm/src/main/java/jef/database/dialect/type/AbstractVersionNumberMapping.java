@@ -15,6 +15,7 @@ import jef.database.query.BindVariableField;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.UpdateClause;
 import jef.database.wrapper.processor.InsertStepAdapter;
+import jef.database.wrapper.variable.ConstantVariable;
 import jef.tools.Assert;
 import jef.tools.reflect.Property;
 
@@ -48,7 +49,7 @@ public abstract class AbstractVersionNumberMapping extends AColumnMapping implem
 			}
 		}
 		void update(String columnName, UpdateClause result) {
-			result.addEntry(columnName, new BindVariableField(parent.transfer(dateType.generateLong())));
+			result.addEntry(columnName, new ConstantVariable(parent.transfer(dateType.generateLong())));
 		}
 		Object getNextValue(Object current) {
 			return parent.transfer(dateType.generateLong());

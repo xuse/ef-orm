@@ -1,4 +1,4 @@
-package jef.database.wrapper.processor;
+package jef.database.wrapper.variable;
 
 import jef.database.Condition.Operator;
 import jef.database.DbUtils;

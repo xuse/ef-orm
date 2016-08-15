@@ -27,7 +27,7 @@ import jef.database.jdbc.result.ResultSetContainer;
 import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.routing.PartitionResult;
 import jef.database.routing.sql.SqlAnalyzer;
-import jef.database.wrapper.processor.BindVariableDescription;
+import jef.database.wrapper.variable.BindVariableDescription;
 import jef.tools.Assert;
 import jef.tools.PageLimit;
 

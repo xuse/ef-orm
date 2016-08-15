@@ -36,7 +36,7 @@ import jef.database.query.RefField;
 import jef.database.query.SqlContext;
 import jef.database.query.SqlExpression;
 import jef.database.wrapper.clause.SqlBuilder;
-import jef.database.wrapper.processor.BindVariableDescription;
+import jef.database.wrapper.variable.BindVariableDescription;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.StringUtils;

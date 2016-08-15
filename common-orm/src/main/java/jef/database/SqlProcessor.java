@@ -42,7 +42,7 @@ import jef.database.query.SqlContext;
 import jef.database.routing.PartitionResult;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.SqlBuilder;
-import jef.database.wrapper.processor.BindVariableDescription;
+import jef.database.wrapper.variable.BindVariableDescription;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
 

@@ -33,7 +33,10 @@ import jef.database.support.SqlLog;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.UpdateClause;
 import jef.database.wrapper.executor.DbTask;
-import jef.database.wrapper.processor.BindVariableContext;
+import jef.database.wrapper.variable.BindVariableContext;
+import jef.database.wrapper.variable.ConstantVariable;
+import jef.database.wrapper.variable.UpdateVairable;
+import jef.database.wrapper.variable.Variable;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
@@ -281,7 +284,7 @@ public abstract class UpdateProcessor {
 								if (fieldInExpress.getValue().size() > 0) {
 									sql = fieldInExpress.getKey();
 									for (Object v : fieldInExpress.getValue()) {
-										result.addField(new BindVariableField(v));
+										result.addField(new ConstantVariable(v));
 									}
 								}
 							} catch (ParseException e1) {
@@ -294,9 +297,9 @@ public abstract class UpdateProcessor {
 					JpqlExpression je = (JpqlExpression) value;
 					if (!je.isBind())
 						je.setBind(obj.getQuery());
-					PairSO<List<BindVariableField>> entry =je.toSqlAndBindAttribs2(new SqlContext(null, obj.getQuery()), profile);
+					PairSO<List<Variable>> entry =je.toSqlAndBindAttribs2(new SqlContext(null, obj.getQuery()), profile);
 					result.addEntry(columnName, entry.first);
-					for(BindVariableField binder: entry.second){
+					for(Variable binder: entry.second){
 						result.addField(binder);
 					}
 				} else if (value instanceof jef.database.Field) {// FBI
@@ -304,7 +307,7 @@ public abstract class UpdateProcessor {
 					String setColumn = meta.getColumnName((Field) value, profile, true);
 					result.addEntry(columnName, setColumn);
 				} else {
-					result.addEntry(columnName, field);
+					result.addEntry(columnName, new UpdateVairable(field));
 				}
 			}
 			return result;

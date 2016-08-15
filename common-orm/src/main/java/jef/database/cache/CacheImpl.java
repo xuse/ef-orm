@@ -29,7 +29,7 @@ import jef.database.meta.MetaHolder;
 import jef.database.query.SqlContext;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.QueryClause;
-import jef.database.wrapper.processor.BindVariableDescription;
+import jef.database.wrapper.variable.BindVariableDescription;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

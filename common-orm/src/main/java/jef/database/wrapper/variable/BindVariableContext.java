@@ -1,4 +1,4 @@
-package jef.database.wrapper.processor;
+package jef.database.wrapper.variable;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -9,17 +9,13 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import jef.common.log.LogUtil;
 import jef.database.Condition;
 import jef.database.Condition.Operator;
-import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
-import jef.database.meta.ITableMetadata;
-import jef.database.query.BindVariableField;
 import jef.database.query.ConditionQuery;
 import jef.database.query.JoinElement;
 import jef.database.query.Query;
@@ -51,7 +47,7 @@ public final class BindVariableContext {
 	// psmt.setObject(count, value,type,length);
 	// }
 
-	private Object setValueInPsmt(int count, Object value) throws SQLException {
+	protected Object setValueInPsmt(int count, Object value) throws SQLException {
 		if (value != null) {
 			if ((value instanceof File)) {
 				File file = (File) value;
@@ -84,7 +80,7 @@ public final class BindVariableContext {
 	 * @param cType
 	 * @throws SQLException
 	 */
-	private Object setValueInPsmt(int count, Object value, ColumnMapping cType) throws SQLException {
+	protected Object setValueInPsmt(int count, Object value, ColumnMapping cType) throws SQLException {
 		if (cType == null) {
 			if (value.getClass() == java.util.Date.class) {
 				value = db.toTimestampSqlParam((Date) value);
@@ -105,22 +101,6 @@ public final class BindVariableContext {
 		INSERT, UPDATE, DELETE, SELECT
 	}
 
-	private void setUpdateMapValue(Map<Field, Object> updateMap, Field field, ColumnMapping cType, int count, BeanWrapper bean) throws SQLException {
-		if (updateMap.containsKey(field)) {
-			Object value = updateMap.get(field);
-			try {
-				value = this.setValueInPsmt(count, value, cType);
-			} catch (ClassCastException e) {
-				e.printStackTrace();
-				throw new SQLException("The query param type error, field=" + field.name() + ":" + e.getMessage());
-			}
-			this.log(count, field, value);
-		} else {
-			Object value = bean.getPropertyValue(field.name());
-			value = this.setValueInPsmt(count, value, cType);
-			this.log(count, field, value);
-		}
-	}
 
 	private Object setWhereVariable(BindVariableDescription variableDesc, ConditionQuery query, int count) throws SQLException {
 		Collection<Condition> conds = null;
@@ -203,27 +183,20 @@ public final class BindVariableContext {
 	 * @return 如果有where部分，返回where实际使用的参数
 	 * @throws SQLException
 	 */
-	public List<Object> setVariables(ConditionQuery da, List<Field> writeFields, List<BindVariableDescription> whereFiels) throws SQLException {
+	public List<Object> setVariables(ConditionQuery da, List<Variable> writeFields, List<BindVariableDescription> whereFiels) throws SQLException {
 		int count = 0;
 		// 更新值绑定
 		if (writeFields != null) {
 			Query<?> query = (Query<?>) da;
-			ITableMetadata meta = query.getMeta();
 			BeanWrapper bean = BeanWrapper.wrap(query.getInstance(), BeanWrapper.FAST);
-			for (Field field : writeFields) {
-				count++;
-				if (field instanceof BindVariableField) {
-					Object value = ((BindVariableField) field).value;
-					psmt.setObject(count, value);
-					this.log(count, "", value);
-					continue;
-				}
-				ColumnMapping cType = meta.getColumnDef(field);
+			for (Variable field : writeFields) {
 				try {
-					setUpdateMapValue(query.getInstance().getUpdateValueMap(), field, cType, count, bean);
+					Object value=field.jdbcSet(this, ++count, bean, query);
+					this.log(count, field.name(), value);
 				} catch (SQLException ex) {
-					LogUtil.error("Error while setting [{}] into bean [{}] for {}", field.name(), query.getType(), cType.getClass().getName());
-					throw ex;
+					throw new SQLException("The query param type error, field=" + field.name() + " into bean "+query.getType(), ex);
+				} catch (ClassCastException e) {
+					throw new SQLException("The query param type error, field=" + field.name() + " into bean "+query.getType() ,e);
 				}
 			}
 		}

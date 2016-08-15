@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import jef.database.jdbc.statement.ResultSetLaterProcess;
-import jef.database.wrapper.processor.BindVariableDescription;
+import jef.database.wrapper.variable.BindVariableDescription;
 
 public class SqlBuilder {
 	private ResultSetLaterProcess afterProcessor;

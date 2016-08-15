@@ -18,7 +18,7 @@ import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.clause.QueryClauseImpl;
 import jef.database.wrapper.clause.QueryClauseSqlImpl;
 import jef.database.wrapper.populator.Transformer;
-import jef.database.wrapper.processor.BindVariableDescription;
+import jef.database.wrapper.variable.BindVariableDescription;
 import jef.tools.StringUtils;
 
 import org.apache.commons.lang.RandomStringUtils;

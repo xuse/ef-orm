@@ -5,24 +5,23 @@ import java.util.Iterator;
 import java.util.List;
 
 import jef.common.PairSS;
-import jef.database.Field;
-import jef.database.query.BindVariableField;
+import jef.database.wrapper.variable.Variable;
 
 public class UpdateClause {
 	private final List<PairSS> entries = new ArrayList<PairSS>();
 	
-	private List<Field> variables = new ArrayList<Field>();
+	private List<Variable> variables = new ArrayList<Variable>();
 	
 	public void addEntry(String column,String update){
 		entries.add(new PairSS(column,update));
 	}
 	
-	public void addEntry(String column,Field field){
+	public void addEntry(String column,Variable field){
 		entries.add(new PairSS(column,"?"));
 		variables.add(field);
 	}
 
-	public void addField(BindVariableField bindVariableField) {
+	public void addField(Variable bindVariableField) {
 		variables.add(bindVariableField);
 	}
 
@@ -40,7 +39,7 @@ public class UpdateClause {
 		return sb.toString();
 	}
 
-	public List<Field> getVariables() {
+	public List<Variable> getVariables() {
 		return variables;
 	}
 }
