@@ -54,7 +54,6 @@ import jef.database.annotation.EasyEntity;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
-import jef.database.dialect.ColumnType;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.def.IndexDef;
 import jef.database.meta.def.UniqueConstraintDef;
@@ -428,24 +427,6 @@ public final class TableMetadata extends AbstractMetadata {
 
 	void setSchema(String schema) {
 		this.schema = schema;
-	}
-
-	// 会将LOB移动到最后
-	public List<ColumnMapping> getColumns() {
-		if (metaFields == null) {
-			ColumnMapping[] fields = schemaMap.values().toArray(new ColumnMapping[schemaMap.size()]);
-			Arrays.sort(fields, new Comparator<ColumnMapping>() {
-				public int compare(ColumnMapping field1, ColumnMapping field2) {
-					Class<? extends ColumnType> type1 = field1.get().getClass();
-					Class<? extends ColumnType> type2 = field1.get().getClass();
-					Boolean b1 = (type1 == ColumnType.Blob.class || type1 == ColumnType.Clob.class);
-					Boolean b2 = (type2 == ColumnType.Blob.class || type2 == ColumnType.Clob.class);
-					return b1.compareTo(b2);
-				}
-			});
-			metaFields = Arrays.asList(fields);
-		}
-		return metaFields;
 	}
 
 	/**
