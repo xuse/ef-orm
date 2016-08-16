@@ -34,7 +34,6 @@ import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.FBIField;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
-import jef.database.meta.MetaHolder;
 import jef.database.query.AbstractJoinImpl;
 import jef.database.query.JoinElement;
 import jef.database.query.Query;
@@ -42,8 +41,6 @@ import jef.database.query.SqlContext;
 import jef.database.routing.PartitionResult;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.SqlBuilder;
-import jef.database.wrapper.variable.BindVariableDescription;
-import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
 
 /**
@@ -169,7 +166,7 @@ public abstract class SqlProcessor {
 		public BindSql toWhereClause(JoinElement obj, SqlContext context, UpdateContext update, DatabaseDialect profile) {
 			SqlBuilder builder=new SqlBuilder();
 			toWhere1(builder,obj, context, update, profile);
-			if (builder.sqlLength() > 0) {
+			if (!builder.isEmpty()) {
 				builder.addBefore(" where ");
 			}
 			return builder.build();
@@ -227,13 +224,13 @@ public abstract class SqlProcessor {
 				update.setIsPkQuery(checkPKCondition(conditions, q.getMeta()));
 			}
 
-			StringBuilder sb = new StringBuilder();
 			for (Condition c : conditions) {
 				builder.startSection(" and ");
 				c.toPrepareSqlClause(builder, q.getMeta(), context, this, obj, profile);
+				builder.endSection();
 			}
 
-			if (sb.length() > 0 || ORMConfig.getInstance().isAllowEmptyQuery()) {
+			if (!builder.isEmpty() || ORMConfig.getInstance().isAllowEmptyQuery()) {
 				return;
 			} else {
 				throw new NoResultException("Illegal usage of Query object, must including any condition in query:" + q.getInstance().getClass());

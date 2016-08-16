@@ -1,7 +1,6 @@
 package jef.database.wrapper.clause;
 
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -10,7 +9,7 @@ import jef.database.wrapper.variable.BindVariableDescription;
 
 public class SqlBuilder {
 	private ResultSetLaterProcess afterProcessor;
-	protected final Deque<Section> section = new LinkedList<Section>();
+	protected final LinkedList<Section> section = new LinkedList<Section>();
 	private Section root;
 
 	static class Section {
@@ -21,6 +20,11 @@ public class SqlBuilder {
 		Section(String name) {
 			this.name = name;
 		}
+
+		@Override
+		public String toString() {
+			return name + "[" + sb.toString() + "]";
+		}
 	}
 
 	public SqlBuilder() {
@@ -29,6 +33,9 @@ public class SqlBuilder {
 	}
 
 	public BindSql build() {
+		if (this.section.size() > 1) {
+			throw new IllegalStateException();
+		}
 		BindSql result = new BindSql(root.sb.toString(), root.bind);
 		result.setReverseResult(afterProcessor);
 		return result;
@@ -39,50 +46,58 @@ public class SqlBuilder {
 	}
 
 	public int sectionLength() {
-		Section sec = section.getLast();
+		Section sec = section.peek();
 		return sec.sb.length();
 	}
 
 	public void addBefore(String add) {
-		Section sec = section.getLast();
+		Section sec = section.peek();
 		String old = sec.sb.toString();
 		sec.sb.setLength(0);
 		sec.sb.append(add).append(old);
 	}
 
 	public void append(String append) {
-		Section sec = section.getLast();
+		Section sec = section.peek();
 		sec.sb.append(append);
 	}
 
 	public void append(String... append) {
-		Section sec = section.getLast();
+		Section sec = section.peek();
 		for (String a : append) {
 			sec.sb.append(a);
 		}
 	}
 
 	public void startSection(String name) {
-		section.add(new Section(name));
+		section.push(new Section(name));
 	}
 
 	public void endSection() {
-		Section sec = section.peekLast();
-		Section current = section.getLast();
-		if (sec.sb.length() > 0) {
-			current.sb.append(sec.name);
-			current.sb.append(sec.sb);
-			current.bind.addAll(sec.bind);
+		Section sec = section.pop();
+		Section current = section.peek();
+		if (sec.sb.length() == 0) {
+			return;
 		}
+		if (current.sb.length() > 0) {
+			current.sb.append(sec.name);
+		}
+		current.sb.append(sec.sb);
+		current.bind.addAll(sec.bind);
 	}
 
 	public void addBind(BindVariableDescription bind) {
-		Section sec = section.getLast();
+		Section sec = section.peek();
 		sec.bind.add(bind);
 	}
 
 	public void addAllBind(List<BindVariableDescription> bind) {
-		Section sec = section.getLast();
+		Section sec = section.peek();
 		sec.bind.addAll(bind);
+	}
+
+	public boolean isEmpty() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

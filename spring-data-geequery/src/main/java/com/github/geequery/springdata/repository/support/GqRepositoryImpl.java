@@ -19,10 +19,12 @@ import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 
 import jef.common.wrapper.IntRange;
 import jef.database.DbClient;
@@ -49,6 +51,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.orm.jpa.EntityManagerFactoryUtils;
 import org.springframework.orm.jpa.EntityManagerProxy;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,7 +72,6 @@ import com.github.geequery.springdata.repository.GqRepository;
  *            the type of the entity's identifier
  */
 @Repository
-@Transactional(readOnly = true)
 public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepository<T, ID>, GeeQueryExecutor<T> {
 
 	private MetamodelInformation<T, ID> meta;
@@ -89,9 +91,9 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 		Session s = getSession();
 		try {
 			long total = s.count(q_all);
-			Query<?> q=this.q_all;
-			if(pageable.getSort()!=null){
-				q=QB.create(meta.getMetadata());
+			Query<?> q = this.q_all;
+			if (pageable.getSort() != null) {
+				q = QB.create(meta.getMetadata());
 				setSortToSpec(q, pageable.getSort());
 			}
 			List<T> result = s.select(q, toRange(pageable));
@@ -409,7 +411,8 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	}
 
 	private void setSortToSpec(ConditionQuery spec, Sort sort) {
-		if(sort==null)return;
+		if (sort == null)
+			return;
 		for (Order order : sort) {
 			Field field;
 			ColumnMapping column = this.meta.getMetadata().findField(order.getProperty());
@@ -427,8 +430,15 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	}
 
 	private Session getSession() {
-		JefEntityManager jem = (JefEntityManager) em.getTargetEntityManager();
-		return jem.getSession();
+		EntityManagerFactory emf = em.getEntityManagerFactory();
+		EntityManager em = EntityManagerFactoryUtils.doGetTransactionalEntityManager(emf, null);
+		if (em == null) { // 当无事务时。Spring返回null
+			em = emf.createEntityManager(null, Collections.EMPTY_MAP);
+		}
+		if (em instanceof JefEntityManager) {
+			return ((JefEntityManager) em).getSession();
+		}
+		throw new IllegalArgumentException(em.getClass().getName());
 	}
 
 	private DbClient getNoTransactionSession() {
@@ -450,34 +460,36 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	@Transactional
 	public boolean lockItAndUpdate(ID id, Update<T> update) {
 		Assert.notNull(update);
-		ITableMetadata meta=this.meta.getMetadata();
-		try{
+		ITableMetadata meta = this.meta.getMetadata();
+		try {
 			if (meta.getType() == EntityType.POJO) {
 				PKQuery<PojoWrapper> query = new PKQuery<PojoWrapper>(meta, toId(id));
 				RecordHolder<PojoWrapper> result = getSession().loadForUpdate(query.getInstance());
-				if(result ==null )return false;
-				try{
-					PojoWrapper pojo=result.get();
-					update.setValue((T)pojo.get());
+				if (result == null)
+					return false;
+				try {
+					PojoWrapper pojo = result.get();
+					update.setValue((T) pojo.get());
 					pojo.refresh();
-					return result.commit();	
-				}finally{
+					return result.commit();
+				} finally {
 					result.close();
 				}
 			} else {
-				PKQuery query = new PKQuery(meta,  toId(id));
+				PKQuery query = new PKQuery(meta, toId(id));
 				RecordHolder<?> result = getSession().loadForUpdate(query.getInstance());
-				if(result ==null )return false;
-				try{
-					update.setValue((T)result.get());
-					return result.commit();	
-				}finally{
+				if (result == null)
+					return false;
+				try {
+					update.setValue((T) result.get());
+					return result.commit();
+				} finally {
 					result.close();
 				}
-			}	
-		}catch(SQLException e){
+			}
+		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
-		
+
 	}
 }
