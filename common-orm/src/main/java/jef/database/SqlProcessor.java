@@ -77,7 +77,7 @@ public abstract class SqlProcessor {
 	 * @param profile
 	 * @return
 	 */
-	public abstract BindSql toWhereClause(JoinElement joinElement, SqlContext context, UpdateContext update, DatabaseDialect profile);
+	public abstract BindSql toWhereClause(JoinElement joinElement, SqlContext context, UpdateContext update, DatabaseDialect profile,boolean isBatch);
 
 	/**
 	 * 获取数据库Dialect
@@ -163,33 +163,33 @@ public abstract class SqlProcessor {
 		/**
 		 * 转换到绑定类Where字句
 		 */
-		public BindSql toWhereClause(JoinElement obj, SqlContext context, UpdateContext update, DatabaseDialect profile) {
+		public BindSql toWhereClause(JoinElement obj, SqlContext context, UpdateContext update, DatabaseDialect profile, boolean batch) {
 			SqlBuilder builder=new SqlBuilder();
-			toWhere1(builder,obj, context, update, profile);
-			if (!builder.isEmpty()) {
+			toWhere1(builder,obj, context, update, profile,batch);
+			if (builder.isNotEmpty()) {
 				builder.addBefore(" where ");
 			}
 			return builder.build();
 		}
 
-		private void toWhere1(SqlBuilder builder,JoinElement query, SqlContext context, UpdateContext update, DatabaseDialect profile) {
+		private void toWhere1(SqlBuilder builder,JoinElement query, SqlContext context, UpdateContext update, DatabaseDialect profile, boolean batch) {
 			if (query instanceof AbstractJoinImpl) {
 				AbstractJoinImpl join = (AbstractJoinImpl) query;
 				for (Query<?> ele : join.elements()) {
 					builder.startSection(" and ");
-					toWhereElement1(builder,ele, context.getContextOf(ele), ele.getConditions(), null, profile);
+					toWhereElement1(builder,ele, context.getContextOf(ele), ele.getConditions(), null, profile, batch);
 					builder.endSection();
 				}
 				for (Map.Entry<Query<?>, List<Condition>> entry : join.getRefConditions().entrySet()) {
 					Query<?> q = entry.getKey();
 					builder.startSection(" and ");
-					toWhereElement1(builder, q, context.getContextOf(q), entry.getValue(), null, profile);
+					toWhereElement1(builder, q, context.getContextOf(q), entry.getValue(), null, profile, batch);
 					builder.endSection();
 				}
 			} else if (query instanceof Query<?>) {
-				toWhereElement1(builder,(Query<?>) query, context, query.getConditions(), update, profile);
+				toWhereElement1(builder,(Query<?>) query, context, query.getConditions(), update, profile,batch);
 				if(update!=null && update.needVersionCondition()){
-					update.appendVersionCondition(builder,context,this,((Query<?>) query).getInstance(),profile);
+					update.appendVersionCondition(builder,context,this,((Query<?>) query).getInstance(),profile, batch);
 				}
 			} else {
 				throw new IllegalArgumentException("Unknown Query class:" + query.getClass().getName());
@@ -206,7 +206,7 @@ public abstract class SqlProcessor {
 		 *            需要监测该条件是否恰好等于主键条件，如果是则返回true，如果为null则说明不需要检查
 		 * @return
 		 */
-		private void toWhereElement1(SqlBuilder builder,Query<?> q, SqlContext context, List<Condition> conditions, UpdateContext update, DatabaseDialect profile) {
+		private void toWhereElement1(SqlBuilder builder,Query<?> q, SqlContext context, List<Condition> conditions, UpdateContext update, DatabaseDialect profile, boolean batch) {
 			IQueryableEntity obj = q.getInstance();
 			// 这里必须用双条件判断，因为Join当中的RefCondition是额外增加的条件，如果去除将造成RefCondition丢失。
 			if (q.isAll() && conditions.isEmpty())
@@ -226,11 +226,11 @@ public abstract class SqlProcessor {
 
 			for (Condition c : conditions) {
 				builder.startSection(" and ");
-				c.toPrepareSqlClause(builder, q.getMeta(), context, this, obj, profile);
+				c.toPrepareSqlClause(builder, q.getMeta(), context, this, obj, profile, batch);
 				builder.endSection();
 			}
 
-			if (!builder.isEmpty() || ORMConfig.getInstance().isAllowEmptyQuery()) {
+			if (builder.isNotEmpty() || ORMConfig.getInstance().isAllowEmptyQuery()) {
 				return;
 			} else {
 				throw new NoResultException("Illegal usage of Query object, must including any condition in query:" + q.getInstance().getClass());

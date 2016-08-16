@@ -28,7 +28,8 @@ public final class LobLazyLoadTask implements LazyLoadTask {
 
 	public void process(Session db, Object o) throws SQLException {
 		IQueryableEntity obj = (IQueryableEntity) o;
-		String sql = "select " + columnname + " from " + tableName + db.preProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), null, profile);
+		String sql = "select " + columnname + " from " + tableName + db.preProcessor.toWhereClause(
+				obj.getQuery(), new SqlContext(null, obj.getQuery()), null, profile,false);
 		ResultSet rs = db.getResultSet(sql, 10);
 		if (rs.next()) {
 			Object value = mType.jdbcGet(new ResultSetImpl(rs, profile), 1);

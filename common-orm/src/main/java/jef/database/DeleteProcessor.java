@@ -105,7 +105,7 @@ public abstract class DeleteProcessor {
 
 		@Override
 		BindSql toWhereClause(JoinElement joinElement, SqlContext context, DatabaseDialect profile) {
-			return parent.toWhereClause(joinElement, context, null, profile);
+			return parent.toWhereClause(joinElement, context, null, profile,false);
 		}
 	}
 }

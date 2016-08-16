@@ -236,7 +236,7 @@ final class JoinImpl2 extends AbstractJoinImpl {
 	 * 
 	 * @return
 	 */
-	public String toTableDefinitionSql(SqlProcessor processor, SqlContext context, DatabaseDialect profile) {
+	public String toTableDefinitionSql(SqlProcessor processor, SqlContext context, DatabaseDialect profile, boolean batch) {
 		StringBuilder sb = new StringBuilder(64);
 		toTableDefSql(sb, context.queries.get(0), processor, context);
 		// sb.append(' ');
@@ -249,7 +249,7 @@ final class JoinImpl2 extends AbstractJoinImpl {
 			QueryAlias right = context.queries.get(i + 1);
 			toTableDefSql(sb, right, processor, context);
 			sb.append(" ON ");
-			relations.toOnExpression(sb, context, right, processor, profile);
+			relations.toOnExpression(sb, context, right, processor, profile, batch);
 		}
 		return sb.toString();
 	}
@@ -349,8 +349,8 @@ final class JoinImpl2 extends AbstractJoinImpl {
 		QueryClauseImpl result = new QueryClauseImpl(profile);
 
 		result.setSelectPart(SelectProcessor.toSelectSql(context, groupClause, profile));
-		result.setTableDefinition(toTableDefinitionSql(processor.parent, context, profile));
-		BindSql whereResult = processor.parent.toWhereClause(this, context, null, profile);
+		result.setTableDefinition(toTableDefinitionSql(processor.parent, context, profile,false));
+		BindSql whereResult = processor.parent.toWhereClause(this, context, null, profile, false);
 
 		result.setWherePart(whereResult.getSql());
 		result.setBind(whereResult.getBind());

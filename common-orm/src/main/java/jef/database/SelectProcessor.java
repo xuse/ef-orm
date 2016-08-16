@@ -159,7 +159,7 @@ public abstract class SelectProcessor {
 					}
 				}
 
-				BindSql result = parent.toWhereClause(query, context, null, profile);
+				BindSql result = parent.toWhereClause(query, context, null, profile,false);
 				if (context.isDistinct()) {
 					String countStr = toSelectCountSql(context.getSelectsImpl(), context, groupClause.isNotEmpty());
 					for (PartitionResult site : sites) {
@@ -190,8 +190,8 @@ public abstract class SelectProcessor {
 				} else {
 					countStr = "select count(*) from ";
 				}
-				BindSql result = parent.toWhereClause(join, context, null, profile);
-				result.setSql(countStr + join.toTableDefinitionSql(parent, context, profile) + result.getSql() + groupClause);
+				BindSql result = parent.toWhereClause(join, context, null, profile, false);
+				result.setSql(countStr + join.toTableDefinitionSql(parent, context, profile,false) + result.getSql() + groupClause);
 				cq.addSql(null, result);
 				return cq;
 			} else if (obj instanceof ComplexQuery) {

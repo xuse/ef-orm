@@ -6,22 +6,16 @@ import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
 import jef.common.log.LogUtil;
-import jef.database.Condition;
-import jef.database.Condition.Operator;
 import jef.database.IQueryableEntity;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.query.ConditionQuery;
-import jef.database.query.JoinElement;
-import jef.database.query.Query;
 import jef.database.support.SqlLog;
 import jef.tools.IOUtils;
-import jef.tools.reflect.BeanWrapper;
 
 public final class BindVariableContext {
 	private PreparedStatement psmt;
@@ -92,80 +86,11 @@ public final class BindVariableContext {
 		return value;
 	}
 
-	private static final Object NOT_FOUND = new Object();
-
 	/**
 	 * 
 	 */
 	public enum SqlType {
 		INSERT, UPDATE, DELETE, SELECT
-	}
-
-
-	private Object setWhereVariable(BindVariableDescription variableDesc, ConditionQuery query, int count) throws SQLException {
-		Collection<Condition> conds = null;
-		IQueryableEntity obj = null;
-		if (query != null) {
-			if (query instanceof JoinElement) {
-				conds = ((JoinElement) query).getConditions();
-				if (query instanceof Query<?>) {
-					obj = ((Query<?>) query).getInstance();
-				}
-			}
-		}
-		Object value = getWhereVariable(conds, variableDesc, obj);
-		try {
-			value = this.setValueInPsmt(count, value, variableDesc.getColumnType());
-		} catch (Exception e) {
-			String field = variableDesc.getField().name();
-			ColumnMapping colType = variableDesc.getColumnType();
-			throw new SQLException("The query param type error, field=" + field + " type=" + (colType == null ? "" : colType.getClass().getSimpleName()) + "\n" + e.getClass().getName() + ":" + e.getMessage());
-		}
-		this.log(count, variableDesc.getField(), value);
-		return value;
-	}
-
-	/**
-	 * 从conditionList或者bean当中获取指定的field的绑定参数值
-	 * 
-	 * @param conds
-	 *            条件列表
-	 * @param bean
-	 *            实例
-	 * @param variableDesc
-	 *            要获取的具体值的匹配条件标记
-	 * @return
-	 */
-	private static Object getWhereVariable(Collection<Condition> conds, BindVariableDescription variableDesc, IQueryableEntity obj) {
-		Object result = NOT_FOUND;
-		if (variableDesc.isInBatch()) {// 批操作的情况下
-			for (Condition c : conds) {
-				if (c.getField() == variableDesc.getField() && c.getOperator() == variableDesc.getOper()) {
-					result = c.getValue();
-					break;
-				}
-			}
-			if (result == NOT_FOUND && obj != null && variableDesc.getOper() == Operator.EQUALS) {
-				BeanWrapper bean = BeanWrapper.wrap(obj, BeanWrapper.FAST);
-				result = bean.getPropertyValue(variableDesc.getField().name());
-			}
-		} else {
-			result = variableDesc.getBindedVar();
-		}
-		if (result == NOT_FOUND) {
-			// 因为发生了TupleField在批操作过程中发生变化，造成无法定位这一特殊BUG，此处针对这一特定场景进行检测，用来提供更为实用的信息。
-			for (Condition c : conds) {
-				if (c.getField().name().equals(variableDesc.getField().name()) && c.getOperator() == variableDesc.getOper()) {
-					throw new IllegalArgumentException(variableDesc + " has a match condition but belongs to another table metadata." + c.getField() + " <> " + variableDesc.getField());
-				}
-			}
-			throw new IllegalArgumentException(variableDesc + "'s value not found in a batch update query.");
-		}
-		if (variableDesc.getCallback() == null) {// 非条件容器
-			return result;
-		} else {
-			return variableDesc.getCallback().process(result);
-		}
 	}
 
 	/**
@@ -183,36 +108,23 @@ public final class BindVariableContext {
 	 * @return 如果有where部分，返回where实际使用的参数
 	 * @throws SQLException
 	 */
-	public List<Object> setVariables(ConditionQuery da, List<Variable> writeFields, List<BindVariableDescription> whereFiels) throws SQLException {
+	public List<Object> setVariables(ConditionQuery da, List<Variable> writeFields, List<Variable> whereFiels) throws SQLException {
 		int count = 0;
 		// 更新值绑定
 		if (writeFields != null) {
-			Query<?> query = (Query<?>) da;
-			BeanWrapper bean = BeanWrapper.wrap(query.getInstance(), BeanWrapper.FAST);
 			for (Variable field : writeFields) {
-				try {
-					Object value=field.jdbcSet(this, ++count, bean, query);
-					this.log(count, field.name(), value);
-				} catch (SQLException ex) {
-					throw new SQLException("The query param type error, field=" + field.name() + " into bean "+query.getType(), ex);
-				} catch (ClassCastException e) {
-					throw new SQLException("The query param type error, field=" + field.name() + " into bean "+query.getType() ,e);
-				}
+				Object value = field.jdbcSet(this, ++count, da);
+				this.log(count, field.name(), value);
 			}
 		}
 		// 条件绑定
 		if (whereFiels != null) {
 			Object[] actualWhereParams = new Object[whereFiels.size()];
 			int n = 0;
-			for (BindVariableDescription field : whereFiels) {
-				count++;
-				try {
-					Object obj = setWhereVariable(field, da, count);
-					actualWhereParams[n++] = obj;
-				} catch (SQLException ex) {
-					LogUtil.error("Error while setting [{}], error type={}", field.name(), ex.getClass().getName());
-					throw ex;
-				}
+			for (Variable field : whereFiels) {
+				Object value = field.jdbcSet(this, ++count, da);
+				this.log(count, field.name(), value);
+				actualWhereParams[n++] = value;
 			}
 			return Arrays.asList(actualWhereParams);
 		}

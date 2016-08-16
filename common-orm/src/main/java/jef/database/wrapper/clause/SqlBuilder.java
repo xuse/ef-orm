@@ -5,7 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import jef.database.jdbc.statement.ResultSetLaterProcess;
-import jef.database.wrapper.variable.BindVariableDescription;
+import jef.database.wrapper.variable.Variable;
 
 public class SqlBuilder {
 	private ResultSetLaterProcess afterProcessor;
@@ -15,7 +15,7 @@ public class SqlBuilder {
 	static class Section {
 		private String name;
 		private final StringBuilder sb = new StringBuilder();
-		private final List<BindVariableDescription> bind = new ArrayList<BindVariableDescription>();
+		private final List<Variable> bind = new ArrayList<Variable>();
 
 		Section(String name) {
 			this.name = name;
@@ -30,19 +30,6 @@ public class SqlBuilder {
 	public SqlBuilder() {
 		root = new Section("");
 		section.add(root);
-	}
-
-	public BindSql build() {
-		if (this.section.size() > 1) {
-			throw new IllegalStateException();
-		}
-		BindSql result = new BindSql(root.sb.toString(), root.bind);
-		result.setReverseResult(afterProcessor);
-		return result;
-	}
-
-	public int sqlLength() {
-		return root.sb.length();
 	}
 
 	public int sectionLength() {
@@ -86,18 +73,30 @@ public class SqlBuilder {
 		current.bind.addAll(sec.bind);
 	}
 
-	public void addBind(BindVariableDescription bind) {
+	public void addBind(Variable bind) {
 		Section sec = section.peek();
 		sec.bind.add(bind);
 	}
 
-	public void addAllBind(List<BindVariableDescription> bind) {
+	public void addAllBind(List<Variable> bind) {
 		Section sec = section.peek();
 		sec.bind.addAll(bind);
 	}
+	
+	public BindSql build() {
+		if (this.section.size() > 1) {
+			throw new IllegalStateException();
+		}
+		BindSql result = new BindSql(root.sb.toString(), root.bind);
+		result.setReverseResult(afterProcessor);
+		return result;
+	}
 
-	public boolean isEmpty() {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean isNotEmpty() {
+		if (this.section.size() > 1) {
+			throw new IllegalStateException();
+		}
+		return root.sb.length()>0;
+		
 	}
 }

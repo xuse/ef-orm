@@ -83,7 +83,6 @@ import jef.database.wrapper.clause.UpdateClause;
 import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.database.wrapper.populator.ResultPopulatorImpl;
 import jef.database.wrapper.populator.Transformer;
-import jef.database.wrapper.variable.BindVariableDescription;
 import jef.script.javascript.Var;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
@@ -2293,11 +2292,7 @@ public abstract class Session {
 		long start = System.nanoTime();
 
 		PKQuery<?> query = new PKQuery(meta, DbUtils.getPKValueSafe((IQueryableEntity) data.get(0)), meta.newInstance());
-		BindSql wherePart = preProcessor.toWhereClause(query, new SqlContext(null, query), null, getProfile(null));
-		for (BindVariableDescription bind : wherePart.getBind()) {
-			bind.setInBatch(true);
-		}
-
+		BindSql wherePart = preProcessor.toWhereClause(query, new SqlContext(null, query), null, getProfile(null),true);
 		Batch.Delete batch = new Batch.Delete(this, meta, wherePart);
 		batch.parseTime = System.nanoTime() - start;
 		batch.pkMpode = true;
@@ -2349,10 +2344,7 @@ public abstract class Session {
 	public final <T extends IQueryableEntity> Batch<T> startBatchDelete(T template, String tableName) throws SQLException {
 		// 位于批当中的绑定变量
 		long start = System.nanoTime();
-		BindSql wherePart = preProcessor.toWhereClause(template.getQuery(), new SqlContext(null, template.getQuery()), null, getProfile(null));
-		for (BindVariableDescription bind : wherePart.getBind()) {
-			bind.setInBatch(true);
-		}
+		BindSql wherePart = preProcessor.toWhereClause(template.getQuery(), new SqlContext(null, template.getQuery()), null, getProfile(null),true);
 		ITableMetadata meta = MetaHolder.getMeta(template);
 		Batch.Delete<T> batch = new Batch.Delete<T>(this, meta, wherePart);
 		batch.forceTableName = MetaHolder.toSchemaAdjustedName(tableName);
@@ -2590,10 +2582,7 @@ public abstract class Session {
 		UpdateClause updatePart = updatep.toUpdateClauseBatch((IQueryableEntity) template, null, dynamic);
 		// 位于批当中的绑定变量
 		UpdateContext context = new UpdateContext(template.getQuery().getMeta().getVersionColumn());
-		BindSql wherePart = preProcessor.toWhereClause(template.getQuery(), new SqlContext(null, template.getQuery()), context, getProfile(null));
-		for (BindVariableDescription bind : wherePart.getBind()) {
-			bind.setInBatch(true);
-		}
+		BindSql wherePart = preProcessor.toWhereClause(template.getQuery(), new SqlContext(null, template.getQuery()), context, getProfile(null),true);
 		ITableMetadata meta = MetaHolder.getMeta(template);
 		Batch.Update<T> batch = new Batch.Update<T>(this, meta);
 		batch.forceTableName = MetaHolder.toSchemaAdjustedName(tableName);
@@ -3021,12 +3010,14 @@ public abstract class Session {
 			return versionColumn != null && isPkQuery != null && isPkQuery.booleanValue();
 		}
 
-		public void appendVersionCondition(SqlBuilder builder, SqlContext context, SqlProcessor processor, IQueryableEntity instance, DatabaseDialect profile) {
+		public void appendVersionCondition(SqlBuilder builder, SqlContext context, SqlProcessor processor, IQueryableEntity instance, DatabaseDialect profile, boolean batch) {
 			Object value = versionColumn.getFieldAccessor().get(instance);
 			if (value != null) {
 				Condition cond = QB.eq(versionColumn.field(), value);
 				builder.startSection(" and ");
-				cond.toPrepareSqlClause(builder,versionColumn.getMeta(), context, processor, instance, profile);
+				//FIXME 此处有误,在BatchUpdate中，应当是产生一个始终从对象取值的Variable，而不是生成一个常量条件。
+				//由Condition转换而成的SQL绑定语句中，都是常量这是不对的。
+				cond.toPrepareSqlClause(builder,versionColumn.getMeta(), context, processor, instance, profile ,batch);
 				builder.endSection();
 			}
 		}

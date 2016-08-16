@@ -58,10 +58,10 @@ public final class SqlExpression implements Expression,IConditionField{
 	public List<Condition> getConditions() {
 		return Arrays.asList();
 	}
-	public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance,DatabaseDialect profile) {
+	public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance,DatabaseDialect profile, boolean batch) {
 		return sql;
 	}
-	public void toPrepareSql(SqlBuilder fields, ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance,DatabaseDialect profile) {
+	public void toPrepareSql(SqlBuilder fields, ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance,DatabaseDialect profile,boolean batch) {
 		fields.append(sql);
 	}
 	public void appendTo(StringBuilder sb) {

@@ -21,7 +21,6 @@ import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-import jef.database.query.BindVariableField;
 import jef.database.query.JoinElement;
 import jef.database.query.JpqlExpression;
 import jef.database.query.ParameterProvider.MapProvider;
@@ -320,7 +319,7 @@ public abstract class UpdateProcessor {
 
 		@Override
 		BindSql toWhereClause(JoinElement joinElement, SqlContext context, UpdateContext update, DatabaseDialect profile) {
-			return processor.toWhereClause(joinElement, context, update, profile);
+			return processor.toWhereClause(joinElement, context, update, profile, false);
 		}
 	}
 
