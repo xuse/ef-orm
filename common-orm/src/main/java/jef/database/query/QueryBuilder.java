@@ -590,6 +590,7 @@ public class QueryBuilder {
 	 * @see #on(Field, String)
 	 * @see #on(Field, Operator, Object)
 	 * @see #on(Query, Field, Query, Field)
+	 * @deprecated see https://github.com/GeeQuery/ef-orm/issues/46
 	 */
 	public static Join innerJoinWithRef(Query<?> left, Query<?> right, JoinKey... keys) {
 		JoinElement jl = DbUtils.toReferenceJoinQuery(left, null);
@@ -691,6 +692,7 @@ public class QueryBuilder {
 	 * @param keys
 	 *            连接路径，可省略。一般在编程中QB.on()方法来构造
 	 * @return Join查询对象
+	 * @deprecated see https://github.com/GeeQuery/ef-orm/issues/46
 	 */
 	public static Join leftJoinWithRef(Query<?> left, Query<?> right, JoinKey... keys) {
 		JoinElement jl = DbUtils.toReferenceJoinQuery(left, null);
@@ -708,6 +710,7 @@ public class QueryBuilder {
 	 * @param keys
 	 *            连接路径。一般在编程中QB.on()方法来构造
 	 * @return Join查询对象
+	 * @deprecated see https://github.com/GeeQuery/ef-orm/issues/46
 	 */
 	public static Join rightJoinWithRef(Query<?> left, Query<?> right, JoinKey... keys) {
 		JoinElement jl = DbUtils.toReferenceJoinQuery(left, null);
@@ -725,6 +728,7 @@ public class QueryBuilder {
 	 * @param keys
 	 *            连接路径。一般在编程中QB.on()方法来构造
 	 * @return Join查询对象
+	 * @deprecated see https://github.com/GeeQuery/ef-orm/issues/46
 	 */
 	public static Join outerJoinWithRef(Query<?> left, Query<?> right, JoinKey... keys) {
 		JoinElement jl = DbUtils.toReferenceJoinQuery(left, null);
