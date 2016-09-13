@@ -38,7 +38,7 @@ public interface IQueryableEntity extends Queryable, Serializable,Cloneable {
 	String rowid();
 	
 	/**
-	 * 指定rowid
+	 * 指定rowid (Oracle)
 	 * @param rowid
 	 */
 	void bindRowid(String rowid);
@@ -54,9 +54,16 @@ public interface IQueryableEntity extends Queryable, Serializable,Cloneable {
 
 	/**
 	 * 判断该字段是否被赋值过
+	 * @return 该字段是否赋值过
 	 */
 	boolean isUsed(Field field);
 	
+	/**
+	 * 将某个字段标记为是否赋值过
+	 * @param field 字段
+	 * @param flag true表示这个字段赋值过，false表示没有
+	 */
+	void touchUsedFlag(Field field,boolean flag);
 	/**
 	 * 清除对象中的Query对象，包括延迟加载的钩子等等
 	 */

@@ -40,6 +40,24 @@ public interface ColumnMapping extends ResultSetAccessor,MetadataContainer {
 	Object getUnsavedValue();
 	
 	/**
+	 * 是否显式的使用@UnsavedValue注解
+	 * @return
+	 */
+	boolean isUnsavedValueDeclared();
+	
+	/**
+	 * 该字段不参与插入
+	 * @return
+	 */
+	boolean isNotInsert();
+	
+	/**
+	 * 该字段不参与更新
+	 * @return
+	 */
+	boolean isNotUpdate();
+	
+	/**
 	 * 设置绑定变量
 	 * 
 	 * @param st

@@ -115,6 +115,8 @@ import jef.tools.reflect.GenericUtils;
 import jef.tools.security.cplus.TripleDES;
 import jef.tools.string.CharUtils;
 
+import org.apache.commons.lang.ObjectUtils;
+
 import com.google.common.base.Objects;
 
 public final class DbUtils {
@@ -140,8 +142,7 @@ public final class DbUtils {
 
 	static {
 		int processorCount = Runtime.getRuntime().availableProcessors();
-		es = new ThreadPoolExecutor(processorCount * 2, processorCount * 4, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(processorCount * 4),
-				Executors.defaultThreadFactory(), new CallerRunsPolicy());
+		es = new ThreadPoolExecutor(processorCount * 2, processorCount * 4, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(processorCount * 4), Executors.defaultThreadFactory(), new CallerRunsPolicy());
 	}
 
 	/**
@@ -228,8 +229,7 @@ public final class DbUtils {
 		for (Reference reference : from.getRefFieldsByRef().keySet()) {
 			if (reference.getTargetType() == target) {
 				if (ref != null) {
-					throw new IllegalArgumentException("There's more than one reference to [" + target.getSimpleName() + "] in type [" + from.getSimpleName()
-							+ "],please assign the reference field name.");
+					throw new IllegalArgumentException("There's more than one reference to [" + target.getSimpleName() + "] in type [" + from.getSimpleName() + "],please assign the reference field name.");
 				}
 				ref = reference;
 			}
@@ -1114,17 +1114,39 @@ public final class DbUtils {
 	private static boolean isValidPKValue(IQueryableEntity obj, ITableMetadata meta, ColumnMapping field) {
 		Class<?> type = field.getFieldAccessor().getType();
 		Object value = field.getFieldAccessor().get(obj);
-		if (type.isPrimitive()) {
+		if (field.isUnsavedValueDeclared()) {
+			return ObjectUtils.notEqual(field.getUnsavedValue(), value); 
+		} else if (type.isPrimitive()) {
 			if (field.getUnsavedValue().equals(value)) {
 				if (meta.getPKFields().size() == 1 && !obj.isUsed(field.field()))
 					return false;
 			}
+			return true;
 		} else {
-			if (value == null) {
-				return false;
-			}
+			return value != null; 
 		}
-		return true;
+	}
+	
+	/**
+	 * 判定一个从对象中值是否为有效的数据。
+	 * 剔除两种情形
+	 * 1、用户显式指定的非数据库有效值
+	 * 2、当原生类型时，且无任何证据表明用户对该字段值进行的赋值
+	 * @param value
+	 * @param field
+	 * @param isUsed
+	 * @return
+	 */
+	public static boolean isUnvalidValue(Object value,ColumnMapping field,boolean isUsed){
+		if (field.isUnsavedValueDeclared()) {
+			return ObjectUtils.equals(field.getUnsavedValue(), value);
+		}
+		//辅助逻辑，后面看要不要去除此逻辑
+		//当字段无标记，并且等于原生值的primitive类型时，视作无效值
+		if(!isUsed && field.getFieldAccessor().getType().isPrimitive()){
+			return field.getUnsavedValue().equals(value);
+		}
+		return false;
 	}
 
 	/*

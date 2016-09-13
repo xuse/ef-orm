@@ -31,6 +31,7 @@ import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.meta.AbstractMetadata;
 import jef.database.meta.ITableMetadata;
@@ -41,11 +42,7 @@ import jef.database.routing.function.ModulusFunction;
 import jef.database.support.MultipleDatabaseOperateException;
 import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
-import jef.tools.reflect.BeanWrapper;
-import jef.tools.reflect.ConvertUtils;
-import jef.tools.reflect.NopBeanWrapper;
 
-import com.google.common.base.Objects;
 import com.google.common.collect.Multimap;
 
 /**
@@ -60,7 +57,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		DatabaseDialect profile = processor.getProfile(null);
 		List<DbTable> result;
 		if (meta.getPartition() != null && instance != null) {// 分区表，并且具备分区条件
-			Set<DbTable> r = getPartitionTables(meta, getPartitionFieldValues(meta,BeanWrapper.wrap(instance), q), profile);
+			Set<DbTable> r = getPartitionTables(meta, getPartitionFieldValues(meta,instance, q), profile);
 			if (r.isEmpty()) {
 				return processor.getSubTableNames(meta); //返回一切可能
 			}else{
@@ -99,7 +96,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 					return ArrayUtils.addElement(results, meta.getBaseTable(profile).toPartitionResult());
 				}
 			} else {
-				Set<DbTable> tempResult = getPartitionTables(meta, getPartitionFieldValues(meta, NopBeanWrapper.getInstance(), null), profile);
+				Set<DbTable> tempResult = getPartitionTables(meta, getPartitionFieldValues(meta, null, null), profile);
 				if (!tempResult.isEmpty()) {
 					if (opType==2) {
 						DbTable table=meta.getBaseTable(profile);
@@ -124,7 +121,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		DatabaseDialect profile = processor.getProfile(null);
 		DbTable result;
 		if (meta.getPartition() != null && instance != null) {// 认为是分区表的场合
-			Set<DbTable> tbs = getPartitionTables(meta, getPartitionFieldValues(meta, BeanWrapper.wrap(instance), q), profile);
+			Set<DbTable> tbs = getPartitionTables(meta, getPartitionFieldValues(meta, instance, q), profile);
 			if (tbs.isEmpty()) { // 没有返回的情况，返回基表
 				return meta.getBaseTable(profile).toPartitionResult();
 			} else if (tbs.size() != 1) {
@@ -366,7 +363,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static Map<String, Dimension> getPartitionFieldValues(ITableMetadata meta, BeanWrapper instance, Query<?> q) {
+	public static Map<String, Dimension> getPartitionFieldValues(ITableMetadata meta, IQueryableEntity instance, Query<?> q) {
 		Entry<PartitionKey, PartitionFunction>[] keys=meta.getEffectPartitionKeys();
 		// 获取分表向量
 		Map<String, Dimension> fieldVal = new HashMap<String, Dimension>();
@@ -386,26 +383,22 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 					obj = RangeDimension.EMPTY_RANGE;
 				}
 			} else {
-				if (q != null && !q.isAll()) {
-					obj = findConditionValuesByName(q.getConditions(), field, false);
+				Field fld=meta.getField(field);
+				if(fld==null){
+					throw new IllegalArgumentException("The field ["+field+"] not exists in "+meta.getName());
 				}
-				if (obj == null){
-					Object term=instance.getPropertyValue(field);
-					// 当相等条件时
-					if(term!=null){
-						Class<?> clz=instance.getPropertyRawType(field);
-						if(clz.isPrimitive()){//如果是缺省值，当做null处理。
-							if(Objects.equal(term, ConvertUtils.defaultValueOfPrimitive(clz))){//如果是和原生值一样
-								IQueryableEntity qq=(IQueryableEntity)instance.getWrapped();
-								Field fld=meta.getField(field);
-								if(!(qq).isUsed(fld)){
-									term=null;
-								}
-							}
-						}	
+				if (q != null && !q.isAll()) {
+					obj = findConditionValuesByName(q.getConditions(), fld, false);
+				}
+				if (obj == null && instance!=null){
+					ColumnMapping column=meta.getColumnDef(fld);
+					Object term=column.getFieldAccessor().get(instance);
+					if(term!=null){					//排除原生值的干扰
+						if(DbUtils.isUnvalidValue(term, column,instance.isUsed(fld))){
+							term=null;
+						}
 					}
 					obj = new RangeDimension((Comparable) term);
-					
 				}
 			}
 			fieldVal.put(field, obj);
@@ -422,11 +415,11 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 * @param field
 	 * @return
 	 */
-	public static Dimension findConditionValuesByName(QueryImpl<?> q, String field) {
+	public static Dimension findConditionValuesByName(QueryImpl<?> q, Field field) {
 		return findConditionValuesByName(q.conditions, field, false);
 	}
 
-	private static Dimension findConditionValuesByName(Iterable<Condition> conditions, String field, boolean isOr) {
+	private static Dimension findConditionValuesByName(Iterable<Condition> conditions, Field field, boolean isOr) {
 		Dimension result = null;
 		for (Condition c : conditions) {
 			Dimension d = findDimensionByName(field, c);
@@ -445,7 +438,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private static Dimension findDimensionByName(String field, Condition c) {
+	private static Dimension findDimensionByName(Field field, Condition c) {
 		Field f = c.getField();
 		if (f instanceof IConditionField) {
 			if (f instanceof Not) {

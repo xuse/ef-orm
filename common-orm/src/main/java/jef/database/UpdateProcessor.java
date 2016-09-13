@@ -102,100 +102,6 @@ public abstract class UpdateProcessor {
 		this.processor = parent;
 	}
 
-//	final static class NormalImpl extends UpdateProcessor {
-//		private UpdateProcessor prepared;
-//
-//		public NormalImpl(SqlProcessor db, SqlProcessor prepared) {
-//			super(db);
-//			this.prepared = new PreparedImpl(prepared);
-//		}
-//
-//		int processUpdate0(OperateTarget db, IQueryableEntity obj, UpdateClause update, BindSql where, PartitionResult site, SqlLog log) throws SQLException {
-//			int result = 0;
-//			for (String tablename : site.getTables()) {
-//				tablename = DbUtils.escapeColumn(db.getProfile(), tablename);
-//				String sql = "update " + tablename + " set " + update.getSql() + where;
-//				Statement st = null;
-//				try {
-//					st = db.createStatement();
-//					int updateTimeout = ORMConfig.getInstance().getUpdateTimeout();
-//					if (updateTimeout > 0)
-//						st.setQueryTimeout(updateTimeout);
-//					int currentUpdateCount = st.executeUpdate(sql);
-//					result += currentUpdateCount;
-//					obj.applyUpdate();
-//				} catch (SQLException e) {
-//					DbUtils.processError(e, tablename, db);
-//					db.releaseConnection();
-//					throw e;
-//				} finally {
-//					log.append(sql).append(db);
-//					log.output();
-//					if (st != null)
-//						st.close();
-//				}
-//			}
-//			db.releaseConnection();
-//			return result;
-//		}
-//
-//		/**
-//		 * 转换成Update字句
-//		 */
-//		@SuppressWarnings("unchecked")
-//		public UpdateClause toUpdateClause(IQueryableEntity obj, PartitionResult[] prs, boolean dynamic) throws SQLException {
-//			DatabaseDialect profile = processor.getProfile(prs);
-//			UpdateClause result = new UpdateClause();
-//			ITableMetadata meta = MetaHolder.getMeta(obj);
-//			Map<Field, Object> map = obj.getUpdateValueMap();
-//
-//			Map.Entry<Field, Object>[] fields;
-//			if (dynamic) {
-//				fields = map.entrySet().toArray(new Map.Entry[map.size()]);
-//				moveLobFieldsToLast(fields, meta);
-//
-//				// 增加时间戳自动更新的列
-//				VersionSupportColumn[] autoUpdateTime = meta.getAutoUpdateColumnDef();
-//				if (autoUpdateTime != null) {
-//					for (VersionSupportColumn tm : autoUpdateTime) {
-//						if (!map.containsKey(tm.field())) {
-//							Object value = tm.getAutoUpdateValue(profile, obj);
-//							if (value != null) {
-//								result.addEntry(tm.getColumnName(profile, true), tm.getSqlStr(value, profile));
-//							}
-//						}
-//					}
-//				}
-//			} else {
-//				fields = getAllFieldValues(meta, map, BeanWrapper.wrap(obj), profile);
-//			}
-//
-//			// 其他列
-//			for (Map.Entry<Field, Object> entry : fields) {
-//				Field field = entry.getKey();
-//				Object value = entry.getValue();
-//				ColumnMapping vType = meta.getColumnDef(field);
-//
-//				if (value == null) {
-//					result.addEntry(vType.getColumnName(profile, true), "null");
-//				} else {
-//					result.addEntry(vType.getColumnName(profile, true), vType.getSqlStr(value, profile));
-//				}
-//			}
-//			return result;
-//		}
-//
-//		@Override
-//		UpdateClause toUpdateClauseBatch(IQueryableEntity obj, PartitionResult[] prs, boolean dynamic) throws SQLException {
-//			return prepared.toUpdateClauseBatch(obj, prs, dynamic);
-//		}
-//
-//		@Override
-//		BindSql toWhereClause(JoinElement joinElement, SqlContext context, UpdateContext update, DatabaseDialect profile) {
-//			return processor.toWhereClause(joinElement, context, update, profile);
-//		}
-//	}
-
 	final static class PreparedImpl extends UpdateProcessor {
 		public PreparedImpl(SqlProcessor db) {
 			super(db);
@@ -268,6 +174,10 @@ public abstract class UpdateProcessor {
 
 			for (Map.Entry<Field, Object> e : fields) {
 				Field field = e.getKey();
+				ColumnMapping column=meta.getColumnDef(field);
+				if(column!=null && column.isNotUpdate()){
+					continue;
+				}
 				Object value = e.getValue();
 				String columnName = meta.getColumnName(field, profile, true);
 				if (value instanceof SqlExpression) {

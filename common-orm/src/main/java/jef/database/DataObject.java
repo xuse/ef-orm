@@ -108,6 +108,27 @@ public abstract class DataObject implements IQueryableEntity {
 
 	/*
 	 * (non-Javadoc)
+	 * @see jef.database.IQueryableEntity#touchUsedFlag(jef.database.Field, boolean)
+	 */
+	public void touchUsedFlag(Field field, boolean flag) {
+		if(flag){
+			if (updateValueMap == null)
+				updateValueMap = new TreeMap<Field, Object>(cmp);
+			if(updateValueMap.containsKey(field)){
+				return;
+			}
+			ITableMetadata meta = MetaHolder.getMeta(this);
+			BeanAccessor ba = meta.getContainerAccessor();
+			updateValueMap.put(field, ba.getProperty(this, field.name()));
+		}else{
+			if (updateValueMap != null){
+				updateValueMap.remove(field);
+			}
+		}
+	}
+	
+	/*
+	 * (non-Javadoc)
 	 * 
 	 * @see jef.database.query.UpdateAble#prepareUpdate(jef.database.Field,
 	 * java.lang.Object)

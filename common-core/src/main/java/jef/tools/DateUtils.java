@@ -518,10 +518,16 @@ public abstract class DateUtils {
 	}
 
 	/**
-	 * 自动解析(猜测)日期格式 (某些特殊场景下可能解释错误) 支持:中式日期、中式日期时间 yyyy-mm-dd 美式日期、美式日期时间
-	 * MM/dd/yyyy HH:mm:ss 8位数字日期 yyyyMMdd 14位数字日期时间 yyyyMMddHHmmss
-	 * 12位数字时间：yyyyMMddHHmm无秒数 毫秒数
-	 * 
+	 * 自动解析(猜测)日期格式 (某些特殊场景下可能解释错误) 支持:
+	 * <ol>
+	 * <li>中式日期(yyyy-MM-dd)</li>
+	 * <li>中式日期时间 yyyy-mm-dd</li>
+	 * <li>美式日期(MM/dd/yyyy)</li>
+	 * <li>美式日期时间(MM/dd/yyyy HH:mm:ss)</li>
+	 * <li>8位数字日期 (yyyyMMdd)</li>
+	 * <li>14位数字日期时间(yyyyMMddHHmmss)</li>
+	 * <li>12位数字时间(yyyyMMddHHmm)</li>
+	 * </ol>
 	 * @param dateStr
 	 * @return 尽可能的猜测并解析时间。如果无法解析则返回null。
 	 */
