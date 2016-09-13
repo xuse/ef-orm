@@ -53,29 +53,14 @@ import com.google.common.collect.Multimap;
  */
 public final class DefaultPartitionCalculator implements PartitionCalculator {
 
-	public PartitionResult[] toTableNames(AbstractMetadata meta, IQueryableEntity instance, Query<?> q, PartitionSupport processor,boolean doFileter) {
+	public PartitionResult[] toTableNames(AbstractMetadata meta, IQueryableEntity instance, Query<?> q, PartitionSupport processor, boolean doFileter) {
 		DatabaseDialect profile = processor.getProfile(null);
 		List<DbTable> result;
 		if (meta.getPartition() != null && instance != null) {// 分区表，并且具备分区条件
-			Set<DbTable> r = getPartitionTables(meta, getPartitionFieldValues(meta,instance, q), profile);
+			Set<DbTable> r = getPartitionTables(meta, getPartitionFieldValues(meta, instance, q), profile);
 			if (r.isEmpty()) {
-				return processor.getSubTableNames(meta); //返回一切可能
-			}else{
-				result = analyzeRegexpResults(r, processor, meta, profile);
-				return toPartitionResult(result, processor, doFileter, meta);
-			}
-		}
-		return meta.getBaseTable(profile).toPartitionResults();
-	}
-	
-	public PartitionResult[] toTableNames(AbstractMetadata meta, Map<String,Dimension> val, PartitionSupport processor,boolean doFileter) {
-		DatabaseDialect profile = processor.getProfile(null);
-		List<DbTable> result;
-		if (meta.getPartition() != null && val != null) {// 分区表，并且具备分区条件
-			Set<DbTable> r = getPartitionTables(meta, val, profile);
-			if (r.isEmpty()) {
-				return processor.getSubTableNames(meta); //返回一切可能
-			}else{
+				return processor.getSubTableNames(meta); // 返回一切可能
+			} else {
 				result = analyzeRegexpResults(r, processor, meta, profile);
 				return toPartitionResult(result, processor, doFileter, meta);
 			}
@@ -83,7 +68,22 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		return meta.getBaseTable(profile).toPartitionResults();
 	}
 
-	//0基表 1 不含基表  2 分表+基表 3 数据库中的存在表（不含基表） 4所有存在的表
+	public PartitionResult[] toTableNames(AbstractMetadata meta, Map<String, Dimension> val, PartitionSupport processor, boolean doFileter) {
+		DatabaseDialect profile = processor.getProfile(null);
+		List<DbTable> result;
+		if (meta.getPartition() != null && val != null) {// 分区表，并且具备分区条件
+			Set<DbTable> r = getPartitionTables(meta, val, profile);
+			if (r.isEmpty()) {
+				return processor.getSubTableNames(meta); // 返回一切可能
+			} else {
+				result = analyzeRegexpResults(r, processor, meta, profile);
+				return toPartitionResult(result, processor, doFileter, meta);
+			}
+		}
+		return meta.getBaseTable(profile).toPartitionResults();
+	}
+
+	// 0基表 1 不含基表 2 分表+基表 3 数据库中的存在表（不含基表） 4所有存在的表
 	public PartitionResult[] toTableNames(AbstractMetadata meta, PartitionSupport processor, int opType) {
 		DatabaseDialect profile = processor.getProfile(null);
 		List<DbTable> result;
@@ -98,8 +98,8 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 			} else {
 				Set<DbTable> tempResult = getPartitionTables(meta, getPartitionFieldValues(meta, null, null), profile);
 				if (!tempResult.isEmpty()) {
-					if (opType==2) {
-						DbTable table=meta.getBaseTable(profile);
+					if (opType == 2) {
+						DbTable table = meta.getBaseTable(profile);
 						tempResult.add(table);
 					}
 					result = analyzeRegexpResults(tempResult, processor, meta, profile);
@@ -125,7 +125,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 			if (tbs.isEmpty()) { // 没有返回的情况，返回基表
 				return meta.getBaseTable(profile).toPartitionResult();
 			} else if (tbs.size() != 1) {
-				throw new MultipleDatabaseOperateException("Can not determine which database or table to operate.(one table only)."+tbs);
+				throw new MultipleDatabaseOperateException("Can not determine which database or table to operate.(one table only)." + tbs);
 			} else {
 				result = tbs.iterator().next();
 				if (result.isTbRegexp && result.isDbRegexp) {// 正则表达式，意味着由于某个分表维度没有设置，变成宽松匹配。这里无法获得实际存在表推算，因此直接退化为基表
@@ -143,8 +143,8 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		}
 
 	}
-	
-	public PartitionResult toTableName(AbstractMetadata meta, Map<String,Dimension> val,PartitionSupport processor) {
+
+	public PartitionResult toTableName(AbstractMetadata meta, Map<String, Dimension> val, PartitionSupport processor) {
 		DatabaseDialect profile = processor.getProfile(null);
 		DbTable result;
 		if (meta.getPartition() != null && val != null) {// 认为是分区表的场合
@@ -152,7 +152,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 			if (tbs.isEmpty()) { // 没有返回的情况，返回基表
 				return meta.getBaseTable(profile).toPartitionResult();
 			} else if (tbs.size() != 1) {
-				throw new MultipleDatabaseOperateException("Can not determine which database or table to operate.(one table only)."+tbs);
+				throw new MultipleDatabaseOperateException("Can not determine which database or table to operate.(one table only)." + tbs);
 			} else {
 				result = tbs.iterator().next();
 				if (result.isTbRegexp && result.isDbRegexp) {// 正则表达式，意味着由于某个分表维度没有设置，变成宽松匹配。这里无法获得实际存在表推算，因此直接退化为基表
@@ -264,11 +264,11 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 * @return true/false 即当前匹配是否为一个正则表达式
 	 *         什么情况下会返回正则表达式？就是当维度值obj为null的情况下，无法根据维度值来计算表名后缀。
 	 *         这样的话就将可能出现的字符串用正则表达式的方式返回上一层，上一层可以根据当前数据库的实际情况来计算出能匹配上这个正则表达式的表名
-	 *         
-	 *         
-	 *         
-	 *         
-	 *         
+	 * 
+	 * 
+	 * 
+	 * 
+	 * 
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private boolean appendSuffix(Object obj, PartitionKey key, PartitionFunction func, StringBuilder sb, DatabaseDialect profile, String regexp) {
@@ -288,19 +288,19 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 				}
 				return true;
 			}
-		} else if(obj instanceof RegexpDimension){
-			String baseExp=((RegexpDimension) obj).getBaseExp();
-			//<0 无穷 ==0刚好 >0不足
-			int leftLen=-1; //剩余可变长度
-			if(key.length()>0){
-				leftLen=key.length()-baseExp.length();
-				if(leftLen<0){
-					baseExp = baseExp.substring(0,key.length());
-					leftLen=0;//刚好
+		} else if (obj instanceof RegexpDimension) {
+			String baseExp = ((RegexpDimension) obj).getBaseExp();
+			// <0 无穷 ==0刚好 >0不足
+			int leftLen = -1; // 剩余可变长度
+			if (key.length() > 0) {
+				leftLen = key.length() - baseExp.length();
+				if (leftLen < 0) {
+					baseExp = baseExp.substring(0, key.length());
+					leftLen = 0;// 刚好
 				}
 			}
 			sb.append(baseExp);
-			if(leftLen!=0){
+			if (leftLen != 0) {
 				if (isNumberFun(key)) {
 					sb.append("\\d");
 				} else {
@@ -310,7 +310,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 					sb.append("{" + leftLen + "}");
 				} else {
 					sb.append("+");
-				}	
+				}
 			}
 			return true;
 		} else {
@@ -321,10 +321,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	}
 
 	/*
-	 * 完成以下两步运算——
-	 * 1 维度展开
-	 * 2 维度交叉
-	 * 计算一切可能的分表组合 即当查询中包含的维度之间取笛卡尔积,来确保每种情况下的分表组合都被计算到
+	 * 完成以下两步运算—— 1 维度展开 2 维度交叉 计算一切可能的分表组合 即当查询中包含的维度之间取笛卡尔积,来确保每种情况下的分表组合都被计算到
 	 * 当查询条件中存在多个维度时，实质上构成了一个n维矢量空间，每个维度上的矢量进行组合，得到所有可能的复合矢量。
 	 */
 	private List<Map<String, Object>> toDimensionVectors(Map<String, Dimension> metaDimension, @SuppressWarnings("rawtypes") Multimap<String, PartitionFunction> fieldKeyFn) {
@@ -364,7 +361,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public static Map<String, Dimension> getPartitionFieldValues(ITableMetadata meta, IQueryableEntity instance, Query<?> q) {
-		Entry<PartitionKey, PartitionFunction>[] keys=meta.getEffectPartitionKeys();
+		Entry<PartitionKey, PartitionFunction>[] keys = meta.getEffectPartitionKeys();
 		// 获取分表向量
 		Map<String, Dimension> fieldVal = new HashMap<String, Dimension>();
 		for (Entry<PartitionKey, PartitionFunction> entry : keys) {
@@ -383,19 +380,22 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 					obj = RangeDimension.EMPTY_RANGE;
 				}
 			} else {
-				Field fld=meta.getField(field);
-				if(fld==null){
-					throw new IllegalArgumentException("The field ["+field+"] not exists in "+meta.getName());
+				Field fld = meta.getField(field);
+				if (fld == null) {
+					throw new IllegalArgumentException("The field [" + field + "] not exists in " + meta.getName());
 				}
 				if (q != null && !q.isAll()) {
 					obj = findConditionValuesByName(q.getConditions(), fld, false);
 				}
-				if (obj == null && instance!=null){
-					ColumnMapping column=meta.getColumnDef(fld);
-					Object term=column.getFieldAccessor().get(instance);
-					if(term!=null){					//排除原生值的干扰
-						if(DbUtils.isUnvalidValue(term, column,instance.isUsed(fld))){
-							term=null;
+				if (obj == null) {
+					Object term = null;
+					ColumnMapping column = meta.getColumnDef(fld);
+					if (instance != null) {
+						term = column.getFieldAccessor().get(instance);
+						if (term != null) { // 排除原生值的干扰
+							if (DbUtils.isUnvalidValue(term, column, instance.isUsed(fld))) {
+								term = null;
+							}
 						}
 					}
 					obj = new RangeDimension((Comparable) term);
@@ -405,8 +405,6 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 		}
 		return fieldVal;
 	}
-	
-
 
 	/**
 	 * 根据一个分表字段名称查找属于该字段的维度
@@ -588,9 +586,9 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 */
 	private PartitionResult[] toPartitionResult(List<DbTable> result, PartitionSupport support, boolean filter, ITableMetadata tmeta) {
 		Map<String, List<String>> map = new HashMap<String, List<String>>();
-		boolean singleSite= ORMConfig.getInstance().isSingleSite();
+		boolean singleSite = ORMConfig.getInstance().isSingleSite();
 		for (DbTable dt : result) {
-			String dbName = singleSite? "" : dt.dbName;
+			String dbName = singleSite ? "" : dt.dbName;
 			if (filter && !support.isExist(dbName, dt.table, tmeta)) {
 				continue;
 			}

@@ -79,7 +79,7 @@ public abstract class AbstractVersionNumberMapping extends AColumnMapping implem
 	@Override
 	public void init(Field field, String columnName, ColumnType type, ITableMetadata meta) {
 		super.init(field, columnName, type, meta);
-		BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(meta.getContainerType());
+		BeanAccessor ba = meta.getContainerAccessor();
 		accessor = ba.getProperty(field.name());
 		if (type instanceof ColumnType.Int) {
 			this.version = ((ColumnType.Int) type).isVersion();

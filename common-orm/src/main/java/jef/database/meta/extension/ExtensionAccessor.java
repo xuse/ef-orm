@@ -175,7 +175,12 @@ public final class ExtensionAccessor extends BeanAccessor implements ExtensionMo
 
 	@Override
 	public Map<Class<?>, Annotation> getAnnotationOnField(String name) {
-		return accessor.getAnnotationOnField(name);
+		Property pp = extProperties.get(name);
+		if(pp==null){
+			return accessor.getAnnotationOnField(name);
+		}else{
+			return null;
+		}
 	}
 
 	@Override

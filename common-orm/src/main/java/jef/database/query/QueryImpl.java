@@ -175,8 +175,9 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 	public Query<T> addCondition(Condition condition) {
 		if(condition.getOperator()==Operator.EQUALS && condition.getField().getClass().isEnum()){
 			ColumnMapping column=type.getColumnDef(condition.getField());
-			if(DbUtils.isUnvalidValue(condition.getValue(), column, true)){
+			if(column!=null && DbUtils.isUnvalidValue(condition.getValue(), column, true)){
 				//无效条件，不接受
+				//注意有可能传入别的表的Field，此时Column为null
 				//实验性功能，2016-9-12添加，目的是拒绝一些由于WEB传输产生的无效条件
 				return this;
 			}
