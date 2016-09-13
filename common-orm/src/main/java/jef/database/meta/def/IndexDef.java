@@ -66,6 +66,7 @@ public class IndexDef {
 	}
 
 	public void setDefinition(String definition) {
+		if(definition==null)return;
 		String[] defs = StringUtils.split(definition);
 		List<String> result = new ArrayList<String>(defs.length);
 		for (String s : defs) {
