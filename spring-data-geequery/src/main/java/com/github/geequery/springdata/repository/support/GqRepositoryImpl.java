@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -28,6 +29,7 @@ import jef.common.wrapper.IntRange;
 import jef.database.DbClient;
 import jef.database.DbUtils;
 import jef.database.Field;
+import jef.database.IQueryableEntity;
 import jef.database.PojoWrapper;
 import jef.database.QB;
 import jef.database.RecordHolder;
@@ -36,6 +38,7 @@ import jef.database.dialect.type.ColumnMapping;
 import jef.database.jpa.JefEntityManager;
 import jef.database.meta.EntityType;
 import jef.database.meta.ITableMetadata;
+import jef.database.meta.MetaHolder;
 import jef.database.query.ConditionQuery;
 import jef.database.query.PKQuery;
 import jef.database.query.Query;
@@ -112,6 +115,51 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 		}
 	}
 
+	@Override
+	public List<T> findByExample(T example,String... fields) {
+		Session s = getSession();
+		try {
+			return s.selectByExample(example, fields);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<T> find(T obj) {
+		if (obj == null)
+			return Collections.emptyList();
+		try {
+			if (obj instanceof IQueryableEntity) {
+				return (List<T>) getSession().select((IQueryableEntity) obj);
+			} else {
+				ITableMetadata meta = MetaHolder.getMeta(obj);
+				PojoWrapper pojo = meta.transfer(obj, true);
+				if (!pojo.hasQuery() && pojo.getUpdateValueMap().isEmpty()) {
+					pojo.getQuery().setAllRecordsCondition();
+				}
+				List<PojoWrapper> result = getSession().select(pojo);
+				return PojoWrapper.unwrapList(result);
+			}
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+	
+	public T load(T entity) {
+		return load(entity, true);
+	}
+	
+	public T load(T entity, boolean unique) {
+		if (entity == null)
+			return null;
+		try {
+			return getSession().load(entity, unique);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+	
 	@SuppressWarnings("unchecked")
 	@Override
 	public <S extends T> S findOne(Example<S> example) {
@@ -480,4 +528,5 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 		}
 		
 	}
+
 }
