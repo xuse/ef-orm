@@ -180,8 +180,12 @@ public class ColumnTypeBuilder {
 			this.scale = getParamInt(1, scale);
 			return createNumberType();
 		} else if ("DOUBLE".equals(def)) {
-			if(this.precision<1)precision=15;
-			if(this.scale<1)scale=15;
+			if(this.precision<1)precision=16;
+			if(this.scale<1)scale=8;
+			return createNumberType();
+		} else if ("FLOAT".equals(def)) {
+			if(this.precision<1)precision=12;
+			if(this.scale<1)scale=6;
 			return createNumberType();
 		} else if ("INT".equals(def) || "INTEGER".equals(def)) {
 			return createNumberType();

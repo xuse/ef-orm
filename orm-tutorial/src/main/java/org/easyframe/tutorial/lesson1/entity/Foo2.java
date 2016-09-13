@@ -2,6 +2,7 @@ package org.easyframe.tutorial.lesson1.entity;
 
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Lob;
@@ -15,6 +16,9 @@ public class Foo2 extends jef.database.DataObject {
     private String name;
 
     private Date created;
+    
+    @Column(name="volume",columnDefinition="FLOAT")
+    private double volume;
     
     @Lob
     private String comments;
@@ -43,9 +47,15 @@ public class Foo2 extends jef.database.DataObject {
         this.created = created;
     }
     
-    
+    public double getVolume() {
+		return volume;
+	}
 
-    public String getComments() {
+	public void setVolume(double volume) {
+		this.volume = volume;
+	}
+
+	public String getComments() {
 		return comments;
 	}
 
@@ -56,6 +66,6 @@ public class Foo2 extends jef.database.DataObject {
 
 
 	public enum Field implements jef.database.Field {
-        id, name, created,comments
+        id, name, created,comments, volume
     }
 }
