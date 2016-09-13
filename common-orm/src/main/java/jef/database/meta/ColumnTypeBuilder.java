@@ -179,6 +179,10 @@ public class ColumnTypeBuilder {
 			this.precision = getParamInt(0, precision);
 			this.scale = getParamInt(1, scale);
 			return createNumberType();
+		} else if ("DOUBLE".equals(def)) {
+			if(this.precision<1)precision=15;
+			if(this.scale<1)scale=15;
+			return createNumberType();
 		} else if ("INT".equals(def) || "INTEGER".equals(def)) {
 			return createNumberType();
 		} else if ("CLOB".equalsIgnoreCase(def)) {
