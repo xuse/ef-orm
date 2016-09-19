@@ -393,7 +393,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 					if (instance != null) {
 						term = column.getFieldAccessor().get(instance);
 						if (term != null) { // 排除原生值的干扰
-							if (DbUtils.isUnvalidValue(term, column, instance.isUsed(fld))) {
+							if (DbUtils.isInvalidValue(term, column, instance.isUsed(fld))) {
 								term = null;
 							}
 						}

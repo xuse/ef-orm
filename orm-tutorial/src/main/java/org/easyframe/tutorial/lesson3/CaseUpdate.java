@@ -6,7 +6,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import jef.codegen.EntityEnhancer;
 import jef.database.Condition.Operator;
 import jef.database.DbClient;
 import jef.database.DbClientBuilder;
@@ -168,24 +167,6 @@ public class CaseUpdate {
 
 		// 如果需要记录字段修改记录，可以直接获取oldSt.getUpdateValueMap()来记录。
 		db.update(oldSt); // 只有数值不同的字段被更新。
-	}
-
-	// 案例:比较更新Map 2
-	@Test
-	public void testUpdate_Compare2() throws SQLException {
-		// 获得新的st对象
-		Student newSt = new Student();
-		newSt.setId(1);
-		newSt.setDateOfBirth(new Date());
-		newSt.setGender("M");
-		newSt.setName("李四");
-
-		// 从数据库中获得旧的st对象
-		Student oldSt = db.load(Student.class, 1);
-
-		DbUtils.compareToNewUpdateMap(newSt, oldSt);
-
-		db.update(newSt); // 只有数值不同的字段被更新。
 	}
 
 	@Test

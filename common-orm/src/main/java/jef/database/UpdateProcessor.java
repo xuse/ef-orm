@@ -171,7 +171,8 @@ public abstract class UpdateProcessor {
 			} else {
 				fields = getAllFieldValues(meta, map, BeanWrapper.wrap(obj), profile);
 			}
-
+			boolean safeMerge=ORMConfig.getInstance().isSafeMerge();
+					
 			for (Map.Entry<Field, Object> e : fields) {
 				Field field = e.getKey();
 				ColumnMapping column=meta.getColumnDef(field);
@@ -214,6 +215,9 @@ public abstract class UpdateProcessor {
 					String setColumn = meta.getColumnName((Field) value, profile, true);
 					result.addEntry(columnName, setColumn);
 				} else {
+					if(safeMerge && DbUtils.isInvalidValue(value, column, true)){
+						continue;
+					}
 					result.addEntry(columnName, field);
 				}
 			}

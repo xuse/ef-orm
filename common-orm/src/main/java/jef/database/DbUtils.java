@@ -1115,7 +1115,7 @@ public final class DbUtils {
 		Class<?> type = field.getFieldAccessor().getType();
 		Object value = field.getFieldAccessor().get(obj);
 		if (field.isUnsavedValueDeclared()) {
-			return ObjectUtils.notEqual(field.getUnsavedValue(), value); 
+			return ObjectUtils.notEqual(field.getUnsavedValue(), value);
 		} else if (type.isPrimitive()) {
 			if (field.getUnsavedValue().equals(value)) {
 				if (meta.getPKFields().size() == 1 && !obj.isUsed(field.field()))
@@ -1123,27 +1123,25 @@ public final class DbUtils {
 			}
 			return true;
 		} else {
-			return value != null; 
+			return value != null;
 		}
 	}
-	
+
 	/**
-	 * 判定一个从对象中值是否为有效的数据。
-	 * 剔除两种情形
-	 * 1、用户显式指定的非数据库有效值
-	 * 2、当原生类型时，且无任何证据表明用户对该字段值进行的赋值
+	 * 判定一个从对象中值是否为有效的数据。 剔除两种情形 1、用户显式指定的非数据库有效值 2、当原生类型时，且无任何证据表明用户对该字段值进行的赋值
+	 * 
 	 * @param value
 	 * @param field
 	 * @param isUsed
-	 * @return
+	 * @return 如果是无效值 返回true
 	 */
-	public static boolean isUnvalidValue(Object value,ColumnMapping field,boolean isUsed){
+	public static boolean isInvalidValue(Object value, ColumnMapping field, boolean isUsed) {
 		if (field.isUnsavedValueDeclared()) {
 			return ObjectUtils.equals(field.getUnsavedValue(), value);
 		}
-		//辅助逻辑，后面看要不要去除此逻辑
-		//当字段无标记，并且等于原生值的primitive类型时，视作无效值
-		if(!isUsed && field.getFieldAccessor().getType().isPrimitive()){
+		// 辅助逻辑，后面看要不要去除此逻辑
+		// 当字段无标记，并且等于原生值的primitive类型时，视作无效值
+		if (!isUsed && field.getFieldAccessor().getType().isPrimitive()) {
 			return field.getUnsavedValue().equals(value);
 		}
 		return false;
@@ -1186,71 +1184,6 @@ public final class DbUtils {
 			}
 		}
 		return true;
-	}
-
-	/**
-	 * 通过比较两个对象，在旧对象中准备更新Map
-	 * 
-	 * @param <T>
-	 * @param changedObj
-	 * @param oldObj
-	 * @throws SQLException
-	 * @return the object who is able to update.
-	 */
-	public static <T extends IQueryableEntity> T compareToUpdateMap(T changedObj, T oldObj) {
-		Assert.isTrue(Objects.equal(getPrimaryKeyValue(changedObj), getPKValueSafe(oldObj)), "For consistence, the two parameter must hava equally primary keys.");
-		BeanWrapper bean1 = BeanWrapper.wrap(changedObj);
-		ITableMetadata m = MetaHolder.getMeta(oldObj);
-		boolean dynamic = ORMConfig.getInstance().isDynamicUpdate();
-		for (ColumnMapping mType : m.getColumns()) {
-			if (mType.isPk())
-				continue;
-			Field field = mType.field();
-			if (dynamic && !changedObj.isUsed(field)) {// 智能更新下，发现字段未被设过值，就不予更新
-				continue;
-			}
-			Object value1 = bean1.getPropertyValue(field.name());
-			oldObj.prepareUpdate(field, value1);// 本身就会通过比较，不更新没变的字段
-		}
-		return oldObj;
-	}
-
-	/**
-	 * 通过比较两个对象，在新对象中准备更新Map
-	 * 
-	 * @param <T>
-	 * @param changedObj
-	 * @param oldObj
-	 * @throws SQLException
-	 * @return the object who is able to update.
-	 */
-	public static <T extends IQueryableEntity> T compareToNewUpdateMap(T changedObj, T oldObj) {
-		Assert.isTrue(Objects.equal(getPrimaryKeyValue(changedObj), getPKValueSafe(oldObj)), "For consistence, the two parameter must hava equally primary keys.");
-		BeanWrapper beanNew = BeanWrapper.wrap(changedObj);
-		BeanWrapper beanOld = BeanWrapper.wrap(oldObj);
-		ITableMetadata m = MetaHolder.getMeta(oldObj);
-
-		Map<Field, Object> used = null;
-		boolean dynamic = ORMConfig.getInstance().isDynamicUpdate();
-		if (dynamic) {
-			used = new HashMap<Field, Object>(changedObj.getUpdateValueMap());
-		}
-		changedObj.getUpdateValueMap().clear();
-		for (ColumnMapping mType : m.getColumns()) {
-			Field field = mType.field();
-			if (mType.isPk()) {
-				continue;
-			}
-			if (dynamic && !used.containsKey(field)) {// 智能更新下，发现字段未被设过值，就不予更新
-				continue;
-			}
-			Object valueNew = beanNew.getPropertyValue(field.name());
-			Object valueOld = beanOld.getPropertyValue(field.name());
-			if (!Objects.equal(valueNew, valueOld)) {
-				changedObj.prepareUpdate(field, valueNew, true);
-			}
-		}
-		return changedObj;
 	}
 
 	/**
@@ -1542,5 +1475,36 @@ public final class DbUtils {
 			return ((ParameterizedType) type).getActualTypeArguments();
 		}
 		throw new RuntimeException("Can not get the generic param type for class:" + subclass.getName());
+	}
+
+	/**
+	 * 通过比较两个对象，在旧对象中准备更新Map
+	 * 
+	 * @param <T>
+	 * @param changedObj
+	 * @param oldObj
+	 * @throws SQLException
+	 * @return the object who is able to update.
+	 */
+	public static <T extends IQueryableEntity> T compareToUpdateMap(T changedObj, T oldObj) {
+		Assert.isTrue(Objects.equal(DbUtils.getPrimaryKeyValue(changedObj), DbUtils.getPKValueSafe(oldObj)), "For consistence, the two parameter must hava equally primary keys.");
+		ITableMetadata m = MetaHolder.getMeta(oldObj);
+		boolean safeMerge = ORMConfig.getInstance().isSafeMerge();
+
+		for (ColumnMapping mType : m.getColumns()) {
+			if (mType.isPk())
+				continue;
+			Field field = mType.field();
+			Object value = mType.getFieldAccessor().get(changedObj);
+			//安全更新下，发现字段数值无效，跳过
+			if (safeMerge && DbUtils.isInvalidValue(value, mType, changedObj.isUsed(field))) {
+				continue;
+			}
+			Object oldValue=mType.getFieldAccessor().get(oldObj);
+			if(!ObjectUtils.equals(value, oldValue)){
+				oldObj.prepareUpdate(field, value);
+			}
+		}
+		return oldObj;
 	}
 }

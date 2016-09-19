@@ -115,6 +115,10 @@ public class ORMConfig implements ORMConfigMBean {
 	 */
 	private boolean dynamicUpdate;
 	/**
+	 * 安全的对比更新
+	 */
+	private boolean safeMerge;
+	/**
 	 * 外连接一次查询出关系
 	 */
 	private boolean useOuterJoin;
@@ -218,6 +222,7 @@ public class ORMConfig implements ORMConfigMBean {
 		specifyAllColumnName = JefConfiguration.getBoolean(DbCfg.DB_SPECIFY_ALLCOLUMN_NAME, false);
 		dynamicInsert = JefConfiguration.getBoolean(DbCfg.DB_DYNAMIC_INSERT, false);
 		dynamicUpdate = JefConfiguration.getBoolean(DbCfg.DB_DYNAMIC_UPDATE, true);
+		safeMerge = JefConfiguration.getBoolean(DbCfg.DB_SAFE_MERGE, false);
 		useOuterJoin = JefConfiguration.getBoolean(DbCfg.DB_USE_OUTER_JOIN, true);
 		keepTxForPG = JefConfiguration.getBoolean(DbCfg.DB_KEEP_TX_FOR_POSTGRESQL, true);
 		manualSequence = JefConfiguration.getBoolean(DbCfg.DB_SUPPORT_MANUAL_GENERATE, false);
@@ -632,6 +637,14 @@ public class ORMConfig implements ORMConfigMBean {
 		}else{
 			return SqlLog.DUMMY;
 		}
+	}
+
+	public boolean isSafeMerge() {
+		return safeMerge;
+	}
+
+	public void setSafeMerge(boolean safeMerge) {
+		this.safeMerge = safeMerge;
 	}
 
 	/**
