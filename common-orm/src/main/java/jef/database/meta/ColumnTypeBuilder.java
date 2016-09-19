@@ -1,9 +1,13 @@
 package jef.database.meta;
 
+import java.io.File;
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.GenerationType;
+import javax.persistence.Lob;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
@@ -98,6 +102,8 @@ public class ColumnTypeBuilder {
 		init();
 	}
 
+	
+	
 	private void init() {
 		length = col.length();
 		precision = col.precision();
@@ -149,7 +155,81 @@ public class ColumnTypeBuilder {
 		ct.setUnique(unique);
 		return ct.setNullable(nullable).defaultIs(defaultExpression);
 	}
+	
+	static ColumnType parseJavaFieldType(Column c, Class<?> type,FieldAnnotationProvider fieldProvider) {
+		int len = c == null ? 0 : c.length();
+		int precision = c == null ? 0 : c.precision();
+		int scale = c == null ? 0 : c.scale();
+		boolean nullable = c == null ? true : c.nullable();
+		GenerateTypeDef geType = GenerateTypeDef.create(fieldProvider.getAnnotation(javax.persistence.GeneratedValue.class));
 
+		boolean version = fieldProvider.getAnnotation(javax.persistence.Version.class) != null;
+		if (geType != null && geType.isKeyGeneration() && type == String.class) {
+			return new ColumnType.GUID();
+		} else if (geType != null && geType.isKeyGeneration() && Number.class.isAssignableFrom(BeanUtils.toWrapperClass(type))) {
+			return new ColumnType.AutoIncrement(precision, geType.getGeType(), fieldProvider);
+		}
+		Lob lob = fieldProvider.getAnnotation(Lob.class);
+		if (type == String.class) {
+			if (lob != null)
+				return new ColumnType.Clob().setNullable(nullable);
+			return new ColumnType.Varchar(len > 0 ? len : 255).setNullable(nullable);
+		} else if (type == Integer.class) {
+			return new ColumnType.Int(precision).setVersion(version).setNullable(nullable);
+		} else if (type == Integer.TYPE) {
+			return new ColumnType.Int(precision).setVersion(version).setNullable(nullable);
+		} else if (type == Double.class) {
+			return new ColumnType.Double(precision, scale).setNullable(nullable);
+		} else if (type == Double.TYPE) {
+			return new ColumnType.Double(precision, scale).setNullable(nullable);
+		} else if (type == Float.class) {
+			return new ColumnType.Double(precision, scale).setNullable(nullable);
+		} else if (type == Float.TYPE) {
+			return new ColumnType.Double(precision, scale).setNullable(nullable);
+		} else if (type == Boolean.class) {
+			return new ColumnType.Boolean().setNullable(nullable);
+		} else if (type == Boolean.TYPE) {
+			return new ColumnType.Boolean().setNullable(false);
+		} else if (type == Long.class) {
+			return createLong(precision,version,nullable,geType);
+		} else if (type == Long.TYPE) {
+			return  createLong(precision,version,nullable,geType);
+		} else if (type == Character.class) {
+			return new ColumnType.Char(1).setNullable(nullable);
+		} else if (type == Character.TYPE) {
+			return new ColumnType.Char(1).setNullable(nullable);
+		} else if (type == BigDecimal.class) {
+			return new ColumnType.Double(16, 6).setNullable(nullable);
+		} else if (type == Date.class) {
+			Temporal t = fieldProvider.getAnnotation(Temporal.class);
+			return ColumnTypeBuilder.newDateTimeColumnDef(t == null ? TemporalType.TIMESTAMP : t.value(), geType, version).setNullable(nullable);
+		} else if (type == java.sql.Date.class) {
+			return ColumnTypeBuilder.newDateTimeColumnDef(TemporalType.DATE, geType, false).setNullable(nullable);
+		} else if (type == java.sql.Timestamp.class) {
+			return ColumnTypeBuilder.newDateTimeColumnDef(TemporalType.TIMESTAMP, geType, version).setNullable(nullable);
+		} else if (type == java.sql.Time.class) {
+			return ColumnTypeBuilder.newDateTimeColumnDef(TemporalType.TIME, geType, false).setNullable(nullable);
+		} else if (Enum.class.isAssignableFrom(type)) {
+			return new ColumnType.Varchar(len > 0 ? len : 32).setNullable(nullable);
+		} else if (type.isArray() && type.getComponentType() == Byte.TYPE) {
+			return new ColumnType.Blob().setNullable(nullable);
+		} else if (type == File.class) {
+			return new ColumnType.Blob().setNullable(nullable);
+		} else {
+			throw new IllegalArgumentException("Java type " + type.getName() + " can't mapping to a Db column type by default");
+		}
+	}
+
+
+	
+
+	private static ColumnType createLong(int precision, boolean version, boolean nullable,GenerateTypeDef gType) {
+		ColumnType.Int i = new ColumnType.Int(precision > 0 ? precision : 16);
+		i.setGenerateType(gType==null?null:gType.getDateGenerate());
+		i.setVersion(version).setNullable(nullable);
+		return i;
+	}
+	
 	private ColumnType create() {
 		if ("VARCHAR".equals(def) || "VARCHAR2".equals(def)) {
 			if (generatedValue != null && generatedValue.isKeyGeneration()) {

@@ -15,16 +15,13 @@
  */
 package jef.database.meta;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
-import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +31,6 @@ import javax.persistence.Column;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
 import javax.persistence.JoinTable;
-import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NoResultException;
@@ -42,8 +38,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.OrderBy;
 import javax.persistence.PersistenceException;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
 
 import jef.accelerator.asm.Attribute;
 import jef.accelerator.asm.ClassReader;
@@ -84,7 +78,6 @@ import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.meta.AnnotationProvider.ClassAnnotationProvider;
 import jef.database.meta.AnnotationProvider.FieldAnnotationProvider;
-import jef.database.meta.def.GenerateTypeDef;
 import jef.database.meta.def.IndexDef;
 import jef.database.meta.extension.EfPropertiesExtensionProvider;
 import jef.database.query.JpqlExpression;
@@ -655,40 +648,13 @@ public final class MetaHolder {
 			}
 			Field field = fieldss.get(0);
 			if (field instanceof Enum) {
-				/*
-				 * 必须至少有一个meta field的定义类==
-				 * processingClz。这样才能保证这个属性被增强过。否则不能保证该属性被增强过。
-				 * 
-				 * 因为目前增强算法都只按当前类的enum Field中的枚举来增强属性。不会去增强父类中的属性。
-				 * 所以如果在父类中定义属性而在子类中定义元模型来使用。这个属性就会有未被增强的风险。
-				 * 
-				 * 增加这样的检查逻辑，有利于用户在复杂继承关系下，确保父类的元模型不缺失，从而安全的使用。
-				 * 
-				 * 关于为什么不作增强父类的功能： a 父类可能在JAR包中，不能直接修改。 b
-				 * 如果在子类中通过覆盖方法来实现，也有问题，因为ASM中去解析父类并查找同名方法较为复杂
-				 * 。在增强前，不能调用类实现反射，因此相当于要自行用ASM实现父子类解析的JAVA逻辑，太麻烦了…… c
-				 * 此外，如果父类本身也定义了该元模型
-				 * ，子类覆盖父类元模型，此时也很悲剧——子类生成一个增强过的方法覆盖父类方法，而父类本身又做了增强
-				 * ，此时延迟加载和等植入代码将被执行两遍。
-				 * 因此，我们还是要尽可能避免这种父类定义属性，子类定义元模型的方式。即元模型要定义在各自的类里，子类可以覆盖父类的。
-				 */
-				boolean isEnhancedProperty = false;
-				for (Field ff : fieldss) {
-					Class<?> cc = ff.getClass().getDeclaringClass();
-					if (cc == processingClz) {
-						isEnhancedProperty = true;
-						break;
-					}
-				}
-				if (!isEnhancedProperty) {
-					throw new IllegalArgumentException("Field [" + field.name() + "] may be not enhanced. Please add the enum Field [" + field.name() + "] into " + processingClz.getName());
-				}
+				assertFieldEnhanced(field,fieldss,processingClz);
 			}
 
 			FieldAnnotationProvider fa = annos.forField(f);
-
 			// 在得到了元模型的情况下
 			boolean isPK = fa.getAnnotation(javax.persistence.Id.class) != null;
+			
 			jef.database.annotation.Type mappingHint = fa.getAnnotation(jef.database.annotation.Type.class);
 			ColumnMapping type = null;
 			Class<?> fieldType;
@@ -707,9 +673,9 @@ public final class MetaHolder {
 			ColumnType ct;
 			try {
 				if (c == null || StringUtils.isEmpty(c.columnDefinition())) {// 在没有Annonation的情况下,根据Field类型默认生成元数�?
-					ct = parseJavaFieldType(fa, c, fieldType);
+					ct = ColumnTypeBuilder.parseJavaFieldType(c, fieldType,fa);
 				} else {
-					ct = parseAnnotatedType(c, f, annos);
+					ct = new ColumnTypeBuilder(c, f, fa).build();
 				}
 			} catch (Exception e) {
 				throw new PersistenceException(processingClz + " has invalid field/column " + f.getName(), e);
@@ -738,6 +704,38 @@ public final class MetaHolder {
 				indexDef.setDefinition(i.definition());
 				meta.indexes.add(indexDef);
 			}
+		}
+	}
+
+	private static void assertFieldEnhanced(Field field, List<Field> fieldss,Class<?> processingClz) {
+
+		/*
+		 * 必须至少有一个meta field的定义类==
+		 * processingClz。这样才能保证这个属性被增强过。否则不能保证该属性被增强过。
+		 * 
+		 * 因为目前增强算法都只按当前类的enum Field中的枚举来增强属性。不会去增强父类中的属性。
+		 * 所以如果在父类中定义属性而在子类中定义元模型来使用。这个属性就会有未被增强的风险。
+		 * 
+		 * 增加这样的检查逻辑，有利于用户在复杂继承关系下，确保父类的元模型不缺失，从而安全的使用。
+		 * 
+		 * 关于为什么不作增强父类的功能： a 父类可能在JAR包中，不能直接修改。 b
+		 * 如果在子类中通过覆盖方法来实现，也有问题，因为ASM中去解析父类并查找同名方法较为复杂
+		 * 。在增强前，不能调用类实现反射，因此相当于要自行用ASM实现父子类解析的JAVA逻辑，太麻烦了…… c
+		 * 此外，如果父类本身也定义了该元模型
+		 * ，子类覆盖父类元模型，此时也很悲剧——子类生成一个增强过的方法覆盖父类方法，而父类本身又做了增强
+		 * ，此时延迟加载和等植入代码将被执行两遍。
+		 * 因此，我们还是要尽可能避免这种父类定义属性，子类定义元模型的方式。即元模型要定义在各自的类里，子类可以覆盖父类的。
+		 */
+		boolean isEnhancedProperty = false;
+		for (Field ff : fieldss) {
+			Class<?> cc = ff.getClass().getDeclaringClass();
+			if (cc == processingClz) {
+				isEnhancedProperty = true;
+				break;
+			}
+		}
+		if (!isEnhancedProperty) {
+			throw new IllegalArgumentException("Field [" + field.name() + "] may be not enhanced. Please add the enum Field [" + field.name() + "] into " + processingClz.getName());
 		}
 	}
 
@@ -1069,80 +1067,6 @@ public final class MetaHolder {
 		}
 	}
 
-	private static ColumnType parseAnnotatedType(Column col, java.lang.reflect.Field field, ClassAnnotationProvider annos) {
-		return new ColumnTypeBuilder(col, field, annos.forField(field)).build();
-	}
-
-	private static ColumnType parseJavaFieldType(FieldAnnotationProvider fieldProvider, Column c, Class<?> type) {
-		int len = c == null ? 0 : c.length();
-		int precision = c == null ? 0 : c.precision();
-		int scale = c == null ? 0 : c.scale();
-		boolean nullable = c == null ? true : c.nullable();
-		GenerateTypeDef geType = GenerateTypeDef.create(fieldProvider.getAnnotation(javax.persistence.GeneratedValue.class));
-
-		boolean version = fieldProvider.getAnnotation(javax.persistence.Version.class) != null;
-		if (geType != null && geType.isKeyGeneration() && type == String.class) {
-			return new ColumnType.GUID();
-		} else if (geType != null && geType.isKeyGeneration() && Number.class.isAssignableFrom(BeanUtils.toWrapperClass(type))) {
-			return new ColumnType.AutoIncrement(precision, geType.getGeType(), fieldProvider);
-		}
-		Lob lob = fieldProvider.getAnnotation(Lob.class);
-		if (type == String.class) {
-			if (lob != null)
-				return new ColumnType.Clob().setNullable(nullable);
-			return new ColumnType.Varchar(len > 0 ? len : 255).setNullable(nullable);
-		} else if (type == Integer.class) {
-			return new ColumnType.Int(precision).setVersion(version).setNullable(nullable);
-		} else if (type == Integer.TYPE) {
-			return new ColumnType.Int(precision).setVersion(version).setNullable(nullable);
-		} else if (type == Double.class) {
-			return new ColumnType.Double(precision, scale).setNullable(nullable);
-		} else if (type == Double.TYPE) {
-			return new ColumnType.Double(precision, scale).setNullable(nullable);
-		} else if (type == Float.class) {
-			return new ColumnType.Double(precision, scale).setNullable(nullable);
-		} else if (type == Float.TYPE) {
-			return new ColumnType.Double(precision, scale).setNullable(nullable);
-		} else if (type == Boolean.class) {
-			return new ColumnType.Boolean().setNullable(nullable);
-		} else if (type == Boolean.TYPE) {
-			return new ColumnType.Boolean().setNullable(false);
-		} else if (type == Long.class) {
-			return createLong(precision,version,nullable,geType);
-		} else if (type == Long.TYPE) {
-			return  createLong(precision,version,nullable,geType);
-		} else if (type == Character.class) {
-			return new ColumnType.Char(1).setNullable(nullable);
-		} else if (type == Character.TYPE) {
-			return new ColumnType.Char(1).setNullable(nullable);
-		} else if (type == BigDecimal.class) {
-			return new ColumnType.Double(16, 6).setNullable(nullable);
-		} else if (type == Date.class) {
-			Temporal t = fieldProvider.getAnnotation(Temporal.class);
-			return ColumnTypeBuilder.newDateTimeColumnDef(t == null ? TemporalType.TIMESTAMP : t.value(), geType, version).setNullable(nullable);
-		} else if (type == java.sql.Date.class) {
-			return ColumnTypeBuilder.newDateTimeColumnDef(TemporalType.DATE, geType, false).setNullable(nullable);
-		} else if (type == java.sql.Timestamp.class) {
-			return ColumnTypeBuilder.newDateTimeColumnDef(TemporalType.TIMESTAMP, geType, version).setNullable(nullable);
-		} else if (type == java.sql.Time.class) {
-			return ColumnTypeBuilder.newDateTimeColumnDef(TemporalType.TIME, geType, false).setNullable(nullable);
-		} else if (Enum.class.isAssignableFrom(type)) {
-			return new ColumnType.Varchar(len > 0 ? len : 32).setNullable(nullable);
-		} else if (type.isArray() && type.getComponentType() == Byte.TYPE) {
-			return new ColumnType.Blob().setNullable(nullable);
-		} else if (type == File.class) {
-			return new ColumnType.Blob().setNullable(nullable);
-		} else {
-			throw new IllegalArgumentException("Java type " + type.getName() + " can't mapping to a Db column type by default");
-		}
-	}
-
-	private static ColumnType createLong(int precision, boolean version, boolean nullable,GenerateTypeDef gType) {
-		ColumnType.Int i = new ColumnType.Int(precision > 0 ? precision : 16);
-		i.setGenerateType(gType==null?null:gType.getDateGenerate());
-		i.setVersion(version).setNullable(nullable);
-		return i;
-	}
 
 	/**
 	 * 逆向查找元模型
