@@ -203,6 +203,12 @@ public class EnhanceTaskASM {
 					return new SetterVisitor(mv, fieldName, typeName, types[0]);
 				}else if(lobAndRefFields.contains(fieldName)) {
 					return new SetterVisitor2(mv, fieldName, typeName);
+				}else{
+					String altFieldName="is"+StringUtils.capitalize(fieldName);
+		//特定情况，当boolean类型并且field名称是isXXX，setter是setXXX()
+					 if(enumFields.contains(altFieldName)){
+						 return new SetterVisitor(mv, altFieldName, typeName, types[0]);
+					 }
 				}
 				return mv;
 			}

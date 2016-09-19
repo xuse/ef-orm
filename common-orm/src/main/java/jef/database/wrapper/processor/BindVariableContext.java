@@ -287,7 +287,7 @@ public final class BindVariableContext {
 				value = this.setValueInPsmt(count, value, field);
 				this.log(count, field, value);
 			} catch (ClassCastException e) {
-				throw new SQLException("The query param type error, field=" + field.fieldName() + ":" + e.getMessage());
+				throw new SQLException("The query param type error, field=" + field.fieldName() ,e);
 			}
 		}
 	}

@@ -234,7 +234,7 @@ public class MySqlDialect extends AbstractDialect {
 		registerCompatible(Func.decode, new EmuDecodeWithIf());
 		registerCompatible(Func.translate, new EmuTranslateByReplace());
 		registerCompatible(Func.str, new TemplateFunction("str", "cast(%s as char)"));
-
+		typeNames.put(Types.BOOLEAN,"BIT(1)", 0);
 		typeNames.put(Types.BLOB,"mediumblob", 0);
 		typeNames.put(Types.BLOB, 255, "tinyblob", 0);
 		typeNames.put(Types.BLOB, 65535, "blob", 0);

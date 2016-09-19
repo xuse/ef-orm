@@ -211,6 +211,11 @@ public enum DbCfg implements ConfigItem {
 	 */
 	DB_DYNAMIC_UPDATE,
 	/**
+	 * 在使用对比等手段更新数据时,防止将null等有未赋值等嫌疑的数据更新到数据库中。
+	 * 默认关闭
+	 */
+	DB_SAFE_MERGE,
+	/**
 	 * 动态插入方式，不设值的字段不插入（也可以以表为单位进行配置）
 	 */
 	DB_DYNAMIC_INSERT,			//

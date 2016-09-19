@@ -543,7 +543,7 @@ public abstract class ColumnType {
 
 		@Override
 		public int getSqlType() {
-			if (precision >= 18) {
+			if (precision >= 12 || precision + scale >= 16) {
 				return Types.DOUBLE;
 			} else {
 				return Types.FLOAT;

@@ -43,4 +43,8 @@ public class UpdateClause {
 	public List<Field> getVariables() {
 		return variables;
 	}
+	
+	public boolean isEmpty(){
+		return entries.isEmpty();
+	}
 }

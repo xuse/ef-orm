@@ -28,6 +28,7 @@ public class Case2 {
 	public void simpleTest() throws SQLException{
 		ORMConfig.getInstance().setEnableLazyLob(true);
 		DbClient db=new DbClientBuilder().build();
+		db.dropTable(Foo2.class);
 		//创建表
 		db.createTable(Foo2.class); 
 		

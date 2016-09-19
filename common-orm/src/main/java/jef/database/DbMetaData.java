@@ -667,9 +667,7 @@ public class DbMetaData {
 		tableName = info.profile.getObjectNameToUse(tableName);
 
 		Connection conn = getConnection(needRemark);
-		Collection<Index> indexes = getIndexes(tableName);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
-
 		String schema = this.schema;
 		int n = tableName.indexOf('.');
 		if (n > 0) {// 尝试从表名中计算schema
@@ -678,9 +676,15 @@ public class DbMetaData {
 		}
 		ResultSet rs = null;
 		List<Column> list = new ArrayList<Column>();
+		Collection<Index> indexes=null;
 		try {
 			rs = databaseMetaData.getColumns(null, schema, tableName, "%");
 			while (rs.next()) {
+				if(indexes==null){
+					//非常渣的Oracle驱动，如果表还不存在时，使用getIndexInfo()会报表不存在的错误（驱动尝试去分析表，不知道为啥要这么做）。
+					//因此不确定表是否存在时，不去查询索引信息。
+					indexes = getIndexes(tableName);
+				}
 				Column column = new Column();
 				populateColumn(column, rs, tableName, indexes);
 				list.add(column);

@@ -150,6 +150,10 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.easyframe.enterprise.spring.CommonDao#update(java.lang.Object)
+	 */
 	public <T> int update(T entity) {
 		if (entity == null)
 			return 0;
@@ -160,6 +164,10 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.easyframe.enterprise.spring.CommonDao#updateByProperty(java.lang.Object, java.lang.String[])
+	 */
 	public <T> int updateByProperty(T entity, String... property) {
 		if (entity == null)
 			return 0;
@@ -196,6 +204,10 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		}
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see org.easyframe.enterprise.spring.CommonDao#update(java.lang.Object, java.util.Map, java.lang.String[])
+	 */
 	public <T> int update(T entity, Map<String, Object> setValues, String... property) {
 		try {
 			IQueryableEntity ent;

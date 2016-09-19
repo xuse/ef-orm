@@ -209,14 +209,14 @@ public interface CommonDao{
 	<T> int updateByProperty(T entity,String... property);
 	
 	/**
-	 * 根据指定的几个字段作为条件来更新记录
-	 * @param entity 要更新的对象
-	 * @param setValues 要设置的属性和值
-	 * @param property where字段值
-	 * @return 影响的记录条数
+	 * 带有附加条件的记录更新
+	 * @param entity 实体仅作WHERE条件使用
+	 * @param setValues 要更新哪些字段的Map
+	 * @param property 哪些字段用作Where条件
+	 * @return
 	 */
 	<T> int update(T entity,Map<String,Object> setValues,String... property);
-
+	
 	/**
 	 * 执行命名查询
 	 * {@linkplain NamedQueryConfig 什么是命名查询}

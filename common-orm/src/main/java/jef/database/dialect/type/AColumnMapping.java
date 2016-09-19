@@ -1,10 +1,13 @@
 package jef.database.dialect.type;
 
 import java.lang.annotation.Annotation;
+import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+
+import javax.persistence.Column;
 
 import jef.accelerator.bean.BeanAccessor;
 import jef.database.DbUtils;
@@ -17,6 +20,7 @@ import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.Assert;
+import jef.tools.DateUtils;
 import jef.tools.StringUtils;
 import jef.tools.reflect.ConvertUtils;
 import jef.tools.reflect.Property;
@@ -39,7 +43,11 @@ public abstract class AColumnMapping implements ColumnMapping {
 	private boolean pk;
 	protected transient DatabaseDialect bindedProfile;
 	protected Property fieldAccessor;
+
+	private boolean unsavedValueDeclared;
 	private Object unsavedValue;
+	private boolean notInsert;
+	private boolean notUpdate;
 
 	public AColumnMapping() {
 		this.clz = getDefaultJavaType();
@@ -72,17 +80,21 @@ public abstract class AColumnMapping implements ColumnMapping {
 		if (clz.isAssignableFrom(containerType)) {
 			this.clz = containerType;
 		}
-		if(containerType.isPrimitive()) {
-			Map<Class<?>,Annotation> map=ba.getAnnotationOnField(field.name());
-			UnsavedValue value = map==null?null:(UnsavedValue)map.get(UnsavedValue.class);
-			if (value == null) {
-				unsavedValue = ConvertUtils.defaultValueOfPrimitive(containerType);
-			} else {
-				unsavedValue = parseValue(containerType, value.value());
-			}	
+		Map<Class<?>, Annotation> map = ba.getAnnotationOnField(field.name());
+		UnsavedValue unsaveValue = map == null ? null : (UnsavedValue) map.get(UnsavedValue.class);
+		if (unsaveValue != null) {
+			unsavedValueDeclared = true;
+			unsavedValue = parseValue(containerType, unsaveValue.value());
+		} else if (containerType.isPrimitive()) {
+			unsavedValue = ConvertUtils.defaultValueOfPrimitive(containerType);
+		}
+		Column column = map == null ? null : (Column) map.get(Column.class);
+		if (column != null) {
+			this.notInsert = !column.insertable();
+			this.notUpdate = !column.updatable();
 		}
 	}
-	
+
 	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
 		rs.updateObject(columnIndex, value);
 	}
@@ -112,11 +124,18 @@ public abstract class AColumnMapping implements ColumnMapping {
 			case 228:
 				return StringUtils.toDouble(value, 0d);
 			case 201:
-				if(value.length()==0)return (char)0;
+				if (value.length() == 0)
+					return (char) 0;
 				return value.charAt(0);
 			case 237:
 				return StringUtils.toInt(value, 0);
 			}
+		} else if ("null".equalsIgnoreCase(value)) {
+			return null;
+		} else if (String.class == containerType) {
+			return value;
+		} else if (Date.class == containerType) {
+			return DateUtils.autoParse(value);
 		}
 		return null;
 	}
@@ -240,6 +259,26 @@ public abstract class AColumnMapping implements ColumnMapping {
 		return this.fieldName;
 	}
 
+	public boolean isNotInsert() {
+		return notInsert;
+	}
+
+	public boolean isNotUpdate() {
+		return notUpdate;
+	}
+
+	/**
+	 * 用户是否通过注解配置了UnsavedValue
+	 * 
+	 * @return
+	 */
+	public boolean isUnsavedValueDeclared() {
+		return unsavedValueDeclared;
+	}
+
+	/**
+	 * 获得UnsavedValue。 UnsavedValue是系统认为不会存入数据库的一种值。 如果显式声明 用于判断主键无效、查询条件无效等情况
+	 */
 	@Override
 	public Object getUnsavedValue() {
 		return unsavedValue;

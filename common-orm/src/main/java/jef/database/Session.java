@@ -531,7 +531,7 @@ public abstract class Session {
 		} else if (DbUtils.getPrimaryKeyValue(entity) != null) {
 			old = load(entity, true);
 			if (old != null) {
-				DbUtils.compareToNewUpdateMap(entity, old);// 之所以是将对比结果放到新对象中，是为了能将新对象中级联关系也保存到数据库中。
+				CascadeUtil.compareToNewUpdateMap(entity, old);// 之所以是将对比结果放到新对象中，是为了能将新对象中级联关系也保存到数据库中。
 				updateCascade(entity);
 				return old;
 			}
@@ -540,7 +540,7 @@ public abstract class Session {
 		insertCascade(entity);
 		return entity;
 	}
-
+	
 	/**
 	 * 插入数据（带级联）<br>
 	 * 如果和其他表具有1VS1、1VSN的关系，那么插入时会自动维护其他表中的数据。这些操作包括了Insert或者update.
@@ -3033,7 +3033,6 @@ public abstract class Session {
 
 	protected int update0(IQueryableEntity obj, String myTableName) throws SQLException {
 		myTableName = MetaHolder.toSchemaAdjustedName(myTableName);
-		boolean dynamic = ORMConfig.getInstance().isDynamicUpdate();
 
 		Query<?> query = obj.getQuery();
 		long parseCost = System.currentTimeMillis();
@@ -3045,12 +3044,15 @@ public abstract class Session {
 
 		UpdateContext context = new UpdateContext(query.getMeta().getVersionColumn());
 		BindSql whereClause = updatep.toWhereClause(query, new SqlContext(null, query), context, profile);
-		if (dynamic && !obj.needUpdate()) {// 重新检查一遍
+		if (ORMConfig.getInstance().isSafeMerge() && !obj.needUpdate()) {// 重新检查一遍
 			return 0;
 		}
 
-		UpdateClause updateClause = updatep.toUpdateClause(obj, sites, dynamic);
+		UpdateClause updateClause = updatep.toUpdateClause(obj, sites, ORMConfig.getInstance().isDynamicUpdate());
 		parseCost = System.currentTimeMillis() - parseCost;
+		if(updateClause.isEmpty()){
+			return 0;
+		}
 		getListener().beforeUpdate(obj, this);
 		int count = updatep.processUpdate(this, obj, updateClause, whereClause, sites, parseCost);
 		if (count > 0) {

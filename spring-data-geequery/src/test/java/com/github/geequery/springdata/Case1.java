@@ -134,6 +134,8 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 		}
 		{
 			// =========== 在方法中携带运算符 like ===========
+			System.out.println("=== countByNameLike ===");
+			System.out.println(foodao.countByNameLike("%四"));
 			System.out.println("=== findByNameLike ===");
 			List<Foo> foo = foodao.findByNameLike("%四");
 			System.out.println(foo);

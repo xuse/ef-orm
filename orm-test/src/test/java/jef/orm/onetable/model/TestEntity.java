@@ -28,7 +28,7 @@ public class TestEntity extends jef.database.DataObject {
     private Date dateField;
 	
 	@Column(name="create_time",columnDefinition="TimeStamp")
-	@GeneratedValue
+	@GeneratedValue(generator="created")
     private Date createTime;
 
 	@Lob

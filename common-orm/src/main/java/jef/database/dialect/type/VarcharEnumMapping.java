@@ -24,7 +24,9 @@ public class VarcharEnumMapping extends AColumnMapping {
 		if (value == null) {
 			st.setNull(index, java.sql.Types.VARCHAR);
 		} else {
-			st.setString(index, toString(value));
+			String result = toString(value);	
+			st.setString(index, result);
+			value=result;
 		}
 		return value;
 	}

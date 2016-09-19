@@ -15,7 +15,6 @@ import jef.database.routing.PartitionResult;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.processor.BindVariableContext;
-import jef.database.wrapper.processor.InsertStep;
 import jef.database.wrapper.processor.InsertStep.OracleRowidKeyCallback;
 import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
@@ -86,6 +85,8 @@ abstract class InsertProcessor {
 			result.profile = profile;
 			result.setTableNames(pr);
 			for (ColumnMapping entry : meta.getColumns()) {
+				if(entry.isNotInsert())
+					continue;
 				entry.processPreparedInsert(obj, cStr, vStr, result, dynamic);
 			}
 			if (profile.has(Feature.SELECT_ROW_NUM) && !extreme) {

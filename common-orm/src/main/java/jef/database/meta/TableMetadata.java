@@ -65,6 +65,7 @@ import jef.database.routing.function.RawFunc;
 import jef.tools.ArrayUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
+import jef.tools.reflect.BeanAccessorMapImpl;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.FieldEx;
 
@@ -129,7 +130,8 @@ public final class TableMetadata extends AbstractMetadata {
 	 */
 	TableMetadata(Class<PojoWrapper> varClz, Class<?> clz, AnnotationProvider annos) {
 		this.containerType = varClz;
-		this.containerAccessor = FastBeanWrapperImpl.getAccessorFor(varClz);
+		this.containerAccessor = new BeanAccessorMapImpl(clz);
+		
 		this.thisType = clz;
 		this.pojoAccessor = FastBeanWrapperImpl.getAccessorFor(clz);
 		this.pkFields = Collections.emptyList();
