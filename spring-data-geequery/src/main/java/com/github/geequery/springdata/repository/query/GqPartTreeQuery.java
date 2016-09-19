@@ -22,6 +22,8 @@ import java.util.NoSuchElementException;
 
 import jef.common.PairIO;
 import jef.common.wrapper.IntRange;
+import jef.database.Condition;
+import jef.database.Condition.Operator;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.IConditionField.And;
@@ -46,6 +48,7 @@ import org.springframework.orm.jpa.EntityManagerProxy;
 
 import com.github.geequery.springdata.annotation.IgnoreIf;
 import com.github.geequery.springdata.repository.query.GqParameters.GqParameter;
+import com.github.geequery.springdata.repository.query.GqQueryExecution.CountExecution;
 import com.github.geequery.springdata.repository.query.GqQueryExecution.DeleteExecution;
 
 /**
@@ -74,22 +77,29 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 	public GqPartTreeQuery(GqQueryMethod method, EntityManagerProxy em) {
 		super(method, em);
 		this.em = em;
-		this.metadata = MetaHolder.getMeta(method.getEntityInformation().getJavaType());
+		this.metadata = MetaHolder.getMeta(method.getEntityInformation()
+				.getJavaType());
 		this.tree = new PartTree(method.getName(), metadata.getThisType());
 		this.parameters = method.getParameters();
 		// boolean recreationRequired = parameters.hasDynamicProjection() ||
 		// parameters.potentiallySortsDynamically();
-		// boolean isCount = tree.isCountProjection();
 	}
 
 	@Override
 	protected GqQueryExecution getExecution() {
-		return this.tree.isDelete() ? new DeleteExecution(em) : super.getExecution();
+		if(tree.isDelete()){
+			return new DeleteExecution();
+		}
+		if(tree.isCountProjection()){
+			return new CountExecution();
+		}
+		return super.getExecution();
 	}
 
 	private Query<?> createQuery(Object[] values, boolean withPageSort) {
 		Query<?> q = QB.create(metadata);
-		ParametersParameterAccessor accessor = new ParametersParameterAccessor(parameters, values);
+		ParametersParameterAccessor accessor = new ParametersParameterAccessor(
+				parameters, values);
 		Or or = new Or();
 		int index = 0;
 		for (OrPart node : tree) {
@@ -97,15 +107,18 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 			for (Part part : node) {
 				PropertyPath path = part.getProperty();
 				if (path.getOwningType().getType() != metadata.getThisType()) {
-					throw new IllegalArgumentException("PathType:" + path.getOwningType().getType() + "  metadata:" + metadata.getThisType());
+					throw new IllegalArgumentException("PathType:"
+							+ path.getOwningType().getType() + "  metadata:"
+							+ metadata.getThisType());
 				}
 				String fieldName = path.getSegment();
 				ColumnMapping field = metadata.findField(fieldName);
-				PairIO<GqParameter> paramInfo=getBindParamIndex(index++, fieldName);
+				PairIO<GqParameter> paramInfo = getBindParamIndex(index++,
+						fieldName);
 				Object obj = accessor.getBindableValue(paramInfo.first);
 				if (field != null) {
-					IgnoreIf ignore=paramInfo.second.getIgnoreIf();
-					if(ignore==null || !QueryUtils.isIgnore(ignore, obj)){
+					IgnoreIf ignore = paramInfo.second.getIgnoreIf();
+					if (ignore == null || !QueryUtils.isIgnore(ignore, obj)) {
 						add(and, part, field.field(), obj);
 					}
 				}
@@ -129,22 +142,23 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 		return q;
 	}
 
-	//FIXME use Binder to optmize.
-	private PairIO<GqParameter> getBindParamIndex(int index,String fieldName) {
-		int i=0;
-		for(GqParameter param: this.parameters){
-			if(param.getName()==null){
-				if(index==param.getIndex()){
-					return new PairIO<GqParameter>(i,param);
+	// FIXME use Binder to optmize.
+	private PairIO<GqParameter> getBindParamIndex(int index, String fieldName) {
+		int i = 0;
+		for (GqParameter param : this.parameters) {
+			if (param.getName() == null) {
+				if (index == param.getIndex()) {
+					return new PairIO<GqParameter>(i, param);
 				}
-			}else{
-				if(fieldName.equals(param.getName())){
-					return new PairIO<GqParameter>(i,param);
+			} else {
+				if (fieldName.equals(param.getName())) {
+					return new PairIO<GqParameter>(i, param);
 				}
 			}
 			i++;
 		}
-		throw new NoSuchElementException("Can not found bind parameter '"+fieldName+"' in method "+this.getQueryMethod().getName());
+		throw new NoSuchElementException("Can not found bind parameter '"
+				+ fieldName + "' in method " + this.getQueryMethod().getName());
 	}
 
 	private void add(And and, Part part, Field field, Object value) {
@@ -154,8 +168,30 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 			and.addCondition(QB.eq(field, value));
 			break;
 		case BETWEEN:
-			// and.addCondition(QB.between(field, begin, end));
-			throw new UnsupportedOperationException();
+			if (value instanceof Collection<?>) {
+				Object[] objs = ((Collection<?>) value).toArray();
+				assertTwObjects(objs.length);
+				and.addCondition(Condition.get(field, Operator.BETWEEN_L_L,
+						objs));
+			} else if (value instanceof int[]) {
+				int[] objs = (int[]) value;
+				assertTwObjects(objs.length);
+				and.addCondition(Condition.get(field, Operator.BETWEEN_L_L,
+						new Object[] { objs[0], objs[1] }));
+			} else if (value instanceof long[]) {
+				long[] objs = (long[]) value;
+				assertTwObjects(objs.length);
+				and.addCondition(Condition.get(field, Operator.BETWEEN_L_L,
+						new Object[] { objs[0], objs[1] }));
+			} else if (value instanceof Object[]) {
+				Object[] objs = (Object[]) value;
+				assertTwObjects(objs.length);
+				and.addCondition(Condition.get(field, Operator.BETWEEN_L_L,
+						objs));
+			} else {
+				throw new IllegalArgumentException(
+						"The condition value of IN must be a 'Collection' or 'Object[]'");
+			}
 		case ENDING_WITH:
 			and.addCondition(QB.matchEnd(field, String.valueOf(value)));
 			break;
@@ -172,16 +208,17 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 			and.addCondition(QB.ge(field, value));
 			break;
 		case IN:
-			if(value instanceof Collection<?>){
-				and.addCondition(QB.in(field, (Collection<?>) value));	
-			}else if(value instanceof int[]){
+			if (value instanceof Collection<?>) {
+				and.addCondition(QB.in(field, (Collection<?>) value));
+			} else if (value instanceof int[]) {
 				and.addCondition(QB.in(field, (int[]) value));
-			}else if(value instanceof long[]){
+			} else if (value instanceof long[]) {
 				and.addCondition(QB.in(field, (long[]) value));
-			}else if(value instanceof Object[]){
+			} else if (value instanceof Object[]) {
 				and.addCondition(QB.in(field, (Object[]) value));
-			}else{
-				throw new IllegalArgumentException("The condition value of IN must be a 'Collection' or 'Object[]'");
+			} else {
+				throw new IllegalArgumentException(
+						"The condition value of IN must be a 'Collection' or 'Object[]'");
 			}
 			break;
 		case IS_NOT_NULL:
@@ -230,6 +267,14 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 		}
 	}
 
+	private void assertTwObjects(int length) {
+		if (length != 2) {
+			throw new IllegalArgumentException(
+					"The condition of BETWEEN must be 2 elements. but ["
+							+ length + "]");
+		}
+	}
+
 	@Override
 	protected List<?> getResultList(Object[] values, Pageable page) {
 		Query<?> q = createQuery(values, true);
@@ -242,10 +287,12 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 	}
 
 	private IntRange toRange(Pageable pageable) {
-		return new IntRange(pageable.getOffset() + 1, pageable.getOffset() + pageable.getPageSize());
+		return new IntRange(pageable.getOffset() + 1, pageable.getOffset()
+				+ pageable.getPageSize());
 	}
 
-	private void setSortToSpec(ConditionQuery spec, Sort sort, ITableMetadata meta) {
+	private void setSortToSpec(ConditionQuery spec, Sort sort,
+			ITableMetadata meta) {
 		for (Order order : sort) {
 			Field field;
 			ColumnMapping column = meta.findField(order.getProperty());

@@ -22,6 +22,8 @@ public interface FooDao extends GqRepository<Foo, Integer> {
 	public Foo findByName(@Param("name") @IgnoreIf(ParamIs.Empty) String name);
 
 	public List<Foo> findByNameLike(@Param("name") String name);
+	
+	public int countByNameLike(@Param("name") String name);
 
 	public List<Foo> findByNameContainsAndAge(String name, int age);
 

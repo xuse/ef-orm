@@ -157,15 +157,17 @@ public abstract class GqQueryExecution {
 	 * @since 1.6
 	 */
 	static class DeleteExecution extends GqQueryExecution {
-		private final EntityManager em;
-		public DeleteExecution(EntityManager em) {
-			this.em = em;
-		}
 		@Override
 		protected Object doExecute(AbstractGqQuery jpaQuery, Object[] values) {
 			return jpaQuery.executeDelete(values);
 //			List<?> resultList = jpaQuery.getResultList(values, null);
 //			return jpaQuery.getQueryMethod().isCollectionQuery() ? resultList : resultList.size();
+		}
+	}
+	static class CountExecution extends GqQueryExecution {
+		@Override
+		protected Object doExecute(AbstractGqQuery jpaQuery, Object[] values) {
+			return jpaQuery.getResultCount(values);
 		}
 	}
 }
