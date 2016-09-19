@@ -672,11 +672,7 @@ public final class MetaHolder {
 			Column c = fa.getAnnotation(Column.class);
 			ColumnType ct;
 			try {
-				if (c == null || StringUtils.isEmpty(c.columnDefinition())) {// 在没有Annonation的情况下,根据Field类型默认生成元数�?
-					ct = ColumnTypeBuilder.parseJavaFieldType(c, fieldType,fa);
-				} else {
-					ct = new ColumnTypeBuilder(c, f, fa).build();
-				}
+				ct = new ColumnTypeBuilder(c, f, fieldType, fa).build();
 			} catch (Exception e) {
 				throw new PersistenceException(processingClz + " has invalid field/column " + f.getName(), e);
 			}

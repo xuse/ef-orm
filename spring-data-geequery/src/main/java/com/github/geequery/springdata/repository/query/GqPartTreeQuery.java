@@ -16,6 +16,7 @@
 package com.github.geequery.springdata.repository.query;
 
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -171,7 +172,17 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 			and.addCondition(QB.ge(field, value));
 			break;
 		case IN:
-			and.addCondition(QB.in(field, (Object[]) value));
+			if(value instanceof Collection<?>){
+				and.addCondition(QB.in(field, (Collection<?>) value));	
+			}else if(value instanceof int[]){
+				and.addCondition(QB.in(field, (int[]) value));
+			}else if(value instanceof long[]){
+				and.addCondition(QB.in(field, (long[]) value));
+			}else if(value instanceof Object[]){
+				and.addCondition(QB.in(field, (Object[]) value));
+			}else{
+				throw new IllegalArgumentException("The condition value of IN must be a 'Collection' or 'Object[]'");
+			}
 			break;
 		case IS_NOT_NULL:
 			and.addCondition(QB.notNull(field));
