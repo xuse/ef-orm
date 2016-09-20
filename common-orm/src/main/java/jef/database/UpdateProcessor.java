@@ -126,7 +126,7 @@ public abstract class UpdateProcessor {
 					psmt.execute();
 					int currentUpdateCount = psmt.getUpdateCount();
 					result += currentUpdateCount;
-					obj.applyUpdate();
+					obj.clearUpdate();
 				} catch (SQLException e) {
 					DbUtils.processError(e, tablename, db);
 					db.releaseConnection();

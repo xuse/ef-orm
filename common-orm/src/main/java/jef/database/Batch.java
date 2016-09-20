@@ -222,14 +222,13 @@ public abstract class Batch<T extends IQueryableEntity> {
 					long dbAccess = innerCommit(groupObj, target.first, tablename, dbName);
 					total += executeResult;
 					if (debugMode) {
-						LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Group executed:", String.valueOf(groupObj.size()), ". affect ",
-								String.valueOf(executeResult), " record(s) on [" + entry.getKey() + "]\t Time cost([ParseSQL]:", String.valueOf(parseTime / 1000),
-								"us, [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", dbName));
+						LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Group executed:", String.valueOf(groupObj.size()), ". affect ", String.valueOf(executeResult), " record(s) on [" + entry.getKey() + "]\t Time cost([ParseSQL]:",
+								String.valueOf(parseTime / 1000), "us, [DbAccess]:", String.valueOf(dbAccess - start), "ms) |", dbName));
 					}
 				}
 				if (debugMode) {
-					LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed:", String.valueOf(objs.size()), ". affect ", String.valueOf(total),
-							" record(s) and ", String.valueOf(data.size()), " tables. |  @", String.valueOf(Thread.currentThread().getId())));
+					LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed:", String.valueOf(objs.size()), ". affect ", String.valueOf(total), " record(s) and ", String.valueOf(data.size()), " tables. |  @",
+							String.valueOf(Thread.currentThread().getId())));
 				}
 			} else {// 不分组
 				long start = System.currentTimeMillis();
@@ -246,8 +245,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 				String dbName = parent.getTransactionId(null);
 				long dbAccess = innerCommit(objs, site, tablename, dbName);
 				if (debugMode) {
-					LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed total:", String.valueOf(objs.size()), ". affect ",
-							String.valueOf(executeResult), " record(s)\t Time cost([ParseSQL]:", String.valueOf(parseTime / 1000), "us, [DbAccess]:",
+					LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed total:", String.valueOf(objs.size()), ". affect ", String.valueOf(executeResult), " record(s)\t Time cost([ParseSQL]:", String.valueOf(parseTime / 1000), "us, [DbAccess]:",
 							String.valueOf(dbAccess - start), "ms) |", dbName));
 				}
 			}
@@ -524,18 +522,10 @@ public abstract class Batch<T extends IQueryableEntity> {
 		protected void callEventListenerAfter(List<T> listValue) {
 			Session parent = this.parent;
 			DbOperatorListener listener = parent.getListener();
-			if (extreme) {
-				for (T t : listValue) {
-					t.clearUpdate();
-					listener.afterUpdate(t, 1, parent);
-				}
-			} else {
-				for (T t : listValue) {
-					t.applyUpdate();
-					listener.afterUpdate(t, 1, parent);
-				}
+			for (T t : listValue) {
+				t.clearUpdate();
+				listener.afterUpdate(t, 1, parent);
 			}
-
 		}
 
 		public void setUpdatePart(UpdateClause updatePart) {

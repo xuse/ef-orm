@@ -31,12 +31,6 @@ public interface Queryable {
 	public void clearUpdate();
 	
 	/**
-	 * 将UpdateValueMap中的值更新到实体字段中取（如果不相等）同时清除掉updateValueMap中的值
-	 * @deprecated
-	 */
-	void applyUpdate();
-	
-	/**
 	 * 获取目前的updateMap
 	 */
 	Map<Field, Object> getUpdateValueMap();
