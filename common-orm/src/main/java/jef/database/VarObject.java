@@ -155,7 +155,7 @@ public final class VarObject extends DataObject implements Map<String, Object>,M
 		Field field = meta.getField(key);
 		if (field != null) {
 			if (_recordUpdate) {
-				super.prepareUpdate(field, value, true);
+				super.prepareUpdate(field, value);
 			}
 		}
 		return map.put(key, value);

@@ -227,7 +227,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				if (field == null) {
 					throw new IllegalArgumentException(entry.getKey() + " not found database field in entity " + meta.getName());
 				}
-				ent.prepareUpdate(field.field(), entry.getValue(), true);
+				ent.prepareUpdate(field.field(), entry.getValue());
 			}
 			if (property.length == 0) {
 				return update(entity);

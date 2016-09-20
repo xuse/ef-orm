@@ -202,7 +202,7 @@ public class EnhanceTaskASM {
 				if (enumFields.contains(fieldName) && nonStaticFields.contains(fieldName)) {
 					return new SetterVisitor(mv, fieldName, typeName, types[0]);
 				}else if(lobAndRefFields.contains(fieldName)) {
-					return new SetterVisitor2(mv, fieldName, typeName);
+					return new SetterOfClearLazyload(mv, fieldName, typeName);
 				}else{
 					String altFieldName="is"+StringUtils.capitalize(fieldName);
 		//特定情况，当boolean类型并且field名称是isXXX，setter是setXXX()
@@ -296,11 +296,11 @@ public class EnhanceTaskASM {
 		}
 	}
 
-	static class SetterVisitor2 extends MethodVisitor implements Opcodes {
+	static class SetterOfClearLazyload extends MethodVisitor implements Opcodes {
 		private String name;
 		private String typeName;
 
-		public SetterVisitor2(MethodVisitor mv, String name, String typeName) {
+		public SetterOfClearLazyload(MethodVisitor mv, String name, String typeName) {
 			super(Opcodes.ASM5,mv);
 			this.name = name;
 			this.typeName = typeName;
@@ -333,9 +333,8 @@ public class EnhanceTaskASM {
 	// 8: getstatic #128; //Field
 	// jef/orm/onetable/model/TestEntity$Field.binaryData:Ljef/orm/onetable/model/TestEntity$Field;
 	// 11: aload_1
-	// 12: iconst_1
 	// 13: invokevirtual #133; //Method
-	// prepareUpdate:(Ljef/database/Field;Ljava/lang/Object;Z)V
+	// prepareUpdate:(Ljef/database/Field;Ljava/lang/Object;)V
 	// 16: aload_0
 	// 17: aload_1
 	// 18: putfield #121; //Field binaryData:[B
@@ -373,9 +372,7 @@ public class EnhanceTaskASM {
 			} else {
 				mv.visitIntInsn(ALOAD,1);
 			}
-			mv.visitInsn(ICONST_1);
-			mv.visitMethodInsn(INVOKEVIRTUAL, typeName, "prepareUpdate", "(Ljef/database/Field;Ljava/lang/Object;Z)V",false);
-
+			mv.visitMethodInsn(INVOKEVIRTUAL, typeName, "prepareUpdate", "(Ljef/database/Field;Ljava/lang/Object;)V",false);
 			mv.visitLabel(norecord);
 			super.visitCode();
 

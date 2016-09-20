@@ -795,7 +795,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		List<CaAsset> list = db.selectAll(CaAsset.class);
 
 		CaAsset t1 = list.get(0);
-		t1.prepareUpdate(CaAsset.Field.assetType, 1, true);
+		t1.prepareUpdate(CaAsset.Field.assetType, 1);
 
 		db.batchUpdate(list);
 

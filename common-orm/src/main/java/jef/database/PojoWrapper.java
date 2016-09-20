@@ -37,11 +37,11 @@ public final class PojoWrapper extends DataObject implements Map<String, Object>
 			Object value = wrapperAccessor.getProperty(entity, s);
 			if (wrapperAccessor.getPropertyType(s).isPrimitive()) {
 				if(!isDefaultValueOfPromitiveType(wrapperAccessor.getPropertyType(s),value)){
-					this.prepareUpdate(meta.getField(s), value, true);
+					this.prepareUpdate(meta.getField(s), value);
 				}
 			}else{
 				if (value != null) {
-					this.prepareUpdate(meta.getField(s), value, true);
+					this.prepareUpdate(meta.getField(s), value);
 				}
 			}
 		}

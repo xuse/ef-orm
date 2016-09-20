@@ -135,7 +135,7 @@ public abstract class DataObject implements IQueryableEntity {
 
 
 	/**
-	 * @deprecated
+	 * @deprecated will be removed in ths next release.
 	 */
 	public final void prepareUpdate(Field field, Object newValue, boolean force) {
 		prepareUpdate(field, newValue);	
