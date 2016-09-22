@@ -5,14 +5,12 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import javax.persistence.PersistenceException;
 import javax.xml.bind.annotation.XmlTransient;
 
 import jef.accelerator.bean.BeanAccessor;
-import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.Query;
@@ -135,32 +133,10 @@ public abstract class DataObject implements IQueryableEntity {
 
 
 	/**
-	 * @deprecated
+	 * @deprecated will be removed in ths next release.
 	 */
 	public final void prepareUpdate(Field field, Object newValue, boolean force) {
 		prepareUpdate(field, newValue);	
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see jef.database.query.UpdateAble#applyUpdate()
-	 */
-	public final void applyUpdate() {
-		if (updateValueMap == null)
-			return;
-
-		ITableMetadata meta = MetaHolder.getMeta(this);
-		BeanAccessor ba = meta.getContainerAccessor();
-
-		for (Entry<Field, Object> entry : updateValueMap.entrySet()) {
-			Object newValue = entry.getValue();
-			if (newValue instanceof Expression || newValue instanceof jef.database.Field) {
-				continue;
-			}
-			ba.setProperty(this, entry.getKey().name(), newValue);
-		}
-		clearUpdate();
 	}
 
 	/*

@@ -36,7 +36,7 @@ abstract class AbstractTimeMapping extends AColumnMapping implements VersionSupp
 		} else if (type instanceof ColumnType.Date) {
 			this.generated = ((ColumnType.Date) type).getGenerateType();
 		}
-		if(generated==DateGenerateType.modified_nano){
+		if (generated == DateGenerateType.modified_nano) {
 			throw new UnsupportedOperationException("the genrator 'modified_nano' only supports java datatype long <-> number in database.");
 		}
 		// 根据缺省值修复
@@ -67,11 +67,16 @@ abstract class AbstractTimeMapping extends AColumnMapping implements VersionSupp
 
 	final InsertStep STEP = new InsertStepAdapter() {
 		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
-			for(IQueryableEntity q: data){
+			for (IQueryableEntity q : data) {
 				accessor.set(q, getCurrentValue());
 			}
 		}
 	};
+
+	@Override
+	public boolean isGenerated() {
+		return generated != null;
+	}
 
 	@Override
 	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean smart) throws SQLException {

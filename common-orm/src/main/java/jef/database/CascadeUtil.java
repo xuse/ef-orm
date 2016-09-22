@@ -418,7 +418,11 @@ final class CascadeUtil {
 			if (mType.isPk()) {
 				continue;
 			}
-			if (safeMerge && !used.containsKey(field)) {// 智能更新下，发现字段未被设过值，就不予更新
+			boolean notUsed=!used.containsKey(field);
+			if(mType.isGenerated() && notUsed){
+				continue;
+			}
+			if (safeMerge && notUsed) {// 智能更新下，发现字段未被设过值，就不予更新
 				continue;
 			}
 			Object valueNew = mType.getFieldAccessor().get(changedObj);

@@ -283,4 +283,8 @@ public abstract class AColumnMapping implements ColumnMapping {
 	public Object getUnsavedValue() {
 		return unsavedValue;
 	}
+
+	public boolean isGenerated() {
+		return false;
+	}
 }

@@ -4,7 +4,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 import jef.accelerator.bean.BeanAccessor;
-import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.annotation.DateGenerateType;
@@ -127,4 +126,8 @@ public abstract class AbstractVersionNumberMapping extends AColumnMapping implem
 		return version;
 	}
 
+	@Override
+	public boolean isGenerated() {
+		return version;
+	}
 }

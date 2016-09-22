@@ -1496,8 +1496,13 @@ public final class DbUtils {
 				continue;
 			Field field = mType.field();
 			Object value = mType.getFieldAccessor().get(changedObj);
+
+			boolean used=changedObj.isUsed(field);
+			if(mType.isGenerated() && !used){
+				continue;
+			}
 			//安全更新下，发现字段数值无效，跳过
-			if (safeMerge && DbUtils.isInvalidValue(value, mType, changedObj.isUsed(field))) {
+			if (safeMerge && DbUtils.isInvalidValue(value, mType, used)) {
 				continue;
 			}
 			Object oldValue=mType.getFieldAccessor().get(oldObj);

@@ -930,7 +930,7 @@ public class QueryBuilder {
 	 *            自增值
 	 */
 	public static void fieldAdd(IQueryableEntity entity, Field field, double i) {
-		entity.prepareUpdate(field, new JpqlExpression(field.name() + " + :amount_"),true);
+		entity.prepareUpdate(field, new JpqlExpression(field.name() + " + :amount_"));
 		entity.getQuery().setAttribute("amount_", i);
 	}
 }
