@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.persistence.EntityManagerFactory;
+
 import jef.common.log.LogUtil;
 import jef.common.wrapper.Page;
 import jef.database.DbClient;
@@ -69,7 +71,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	public CommonDaoImpl() {
 	}
 
-	public CommonDaoImpl(JefEntityManagerFactory emf) {
+	public CommonDaoImpl(EntityManagerFactory emf) {
 		this.setEntityManagerFactory(emf);
 	}
 

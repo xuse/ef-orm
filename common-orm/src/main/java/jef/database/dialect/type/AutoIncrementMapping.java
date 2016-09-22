@@ -81,6 +81,11 @@ public abstract class AutoIncrementMapping extends AColumnMapping {
 		return sequenceName[0];
 	}
 
+	@Override
+	public boolean isGenerated() {
+		return true;
+	}
+
 	/**
 	 * 返回Sequence的名称
 	 * 
