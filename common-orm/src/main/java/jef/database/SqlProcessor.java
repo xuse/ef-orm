@@ -187,9 +187,15 @@ public abstract class SqlProcessor {
 					builder.endSection();
 				}
 			} else if (query instanceof Query<?>) {
-				toWhereElement1(builder,(Query<?>) query, context, query.getConditions(), update, profile,batch);
+				Query<?> q=(Query<?>) query; 
+				toWhereElement1(builder,q, context, query.getConditions(), update, profile,batch);
 				if(update!=null && update.needVersionCondition()){
 					update.appendVersionCondition(builder,context,this,((Query<?>) query).getInstance(),profile, batch);
+				}
+				if (builder.isNotEmpty() || ORMConfig.getInstance().isAllowEmptyQuery()) {
+					return;
+				} else {
+					throw new NoResultException("Illegal usage of Query object, must including any condition in query:" + q.getInstance().getClass());
 				}
 			} else {
 				throw new IllegalArgumentException("Unknown Query class:" + query.getClass().getName());
@@ -228,12 +234,6 @@ public abstract class SqlProcessor {
 				builder.startSection(" and ");
 				c.toPrepareSqlClause(builder, q.getMeta(), context, this, obj, profile, batch);
 				builder.endSection();
-			}
-
-			if (builder.isNotEmpty() || ORMConfig.getInstance().isAllowEmptyQuery()) {
-				return;
-			} else {
-				throw new NoResultException("Illegal usage of Query object, must including any condition in query:" + q.getInstance().getClass());
 			}
 		}
 	}
