@@ -38,6 +38,8 @@ import jef.database.jsqlparser.visitor.ExpressionVisitor;
 import jef.database.jsqlparser.visitor.VisitorAdapter;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
+import jef.database.wrapper.variable.ConstantVariable;
+import jef.database.wrapper.variable.Variable;
 
 import com.google.common.base.Objects;
 
@@ -73,11 +75,11 @@ public class JpqlExpression implements Expression, LazyQueryBindField {
 	 * 1 #toSqlAndBindAttribs 不支持使用绑定变量，采用新的函数，逐渐代替旧的函数 2
 	 * 最终替代旧的#toSqlAndBindAttrib方法
 	 */
-	public PairSO<List<BindVariableField>> toSqlAndBindAttribs2(final SqlContext context, final DatabaseDialect profile) {
+	public PairSO<List<Variable>> toSqlAndBindAttribs2(final SqlContext context, final DatabaseDialect profile) {
 		// 本地化
 		st.accept(new SqlFunctionlocalization(profile, null));
 		// 属性提供
-		final List<BindVariableField> binder =new ArrayList<BindVariableField>();
+		final List<Variable> binder =new ArrayList<Variable>();
 		if (context != null) {
 			@SuppressWarnings("unchecked")
 			final Map<String, Object> attribs = context.attribute == null ? Collections.EMPTY_MAP : context.attribute;
@@ -95,7 +97,7 @@ public class JpqlExpression implements Expression, LazyQueryBindField {
 						}
 					} else {
 						parameter.setResolved(1);
-						binder.add(new BindVariableField(obj));
+						binder.add(new ConstantVariable(obj));
 						//原地解析(没有使用绑定变量)
 //						if (obj instanceof Number) {
 //							parameter.setResolved(String.valueOf(obj));
@@ -126,7 +128,7 @@ public class JpqlExpression implements Expression, LazyQueryBindField {
 			result = st.toString();
 			convert.undo();
 		}
-		return new PairSO<List<BindVariableField>>(result, binder);
+		return new PairSO<List<Variable>>(result, binder);
 	}
 
 	/**

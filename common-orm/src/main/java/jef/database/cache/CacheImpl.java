@@ -29,7 +29,7 @@ import jef.database.meta.MetaHolder;
 import jef.database.query.SqlContext;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.QueryClause;
-import jef.database.wrapper.processor.BindVariableDescription;
+import jef.database.wrapper.variable.Variable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,13 +112,13 @@ public class CacheImpl implements Cache {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static List<Object> toParamList(List<BindVariableDescription> bind) {
+	public static List<Object> toParamList(List<Variable> bind) {
 		if (bind == null)
 			return Collections.EMPTY_LIST;
 		Object[] array = new Object[bind.size()];
 		int n = 0;
-		for (BindVariableDescription b : bind) {
-			array[n++] = b.getBindedVar();
+		for (Variable b : bind) {
+			array[n++] = b.getConstantValue();
 		}
 		return Arrays.asList(array);
 	}
@@ -288,7 +288,7 @@ public class CacheImpl implements Cache {
 			evict(ir.getCacheKey());
 			return;
 		}
-		BindSql sql = preparedSqlProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), null, null);
+		BindSql sql = preparedSqlProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), null, null,false);
 		obj.clearQuery();
 		DimCache dc = tableCache.get(KeyDimension.forSingleTable(baseTableName, sql.getSql(), null, profile));
 		if (dc == null)

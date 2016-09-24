@@ -17,7 +17,7 @@ import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
 import jef.database.jdbc.result.CloseableResultSet;
 import jef.database.support.SqlLog;
-import jef.database.wrapper.processor.BindVariableContext;
+import jef.database.wrapper.variable.BindVariableContext;
 
 import org.springframework.util.Assert;
 

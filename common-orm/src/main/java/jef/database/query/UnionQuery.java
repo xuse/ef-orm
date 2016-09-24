@@ -18,7 +18,7 @@ import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.clause.QueryClauseImpl;
 import jef.database.wrapper.clause.QueryClauseSqlImpl;
 import jef.database.wrapper.populator.Transformer;
-import jef.database.wrapper.processor.BindVariableDescription;
+import jef.database.wrapper.variable.Variable;
 import jef.tools.StringUtils;
 
 import org.apache.commons.lang.RandomStringUtils;
@@ -189,7 +189,7 @@ public class UnionQuery<T> implements ComplexQuery, TypedQuery<T> {
 	}
 
 	private BindSql toPrepareQuerySql0(SelectProcessor processor, SqlContext context, boolean isCount) {
-		List<BindVariableDescription> binds = new ArrayList<BindVariableDescription>();
+		List<Variable> binds = new ArrayList<Variable>();
 		List<String> sqls = new ArrayList<String>(size());
 		boolean withBuck = processor.getProfile().has(Feature.UNION_WITH_BUCK);
 

@@ -1,15 +1,16 @@
 package jef.database;
 
 
-import java.util.List;
-
 import jef.database.Condition.Operator;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.SqlContext;
-import jef.database.wrapper.processor.BindVariableDescription;
+import jef.database.wrapper.clause.SqlBuilder;
+import jef.database.wrapper.variable.BatchQueryBindVariable;
+import jef.database.wrapper.variable.ConstantVariable;
+import jef.database.wrapper.variable.Variable;
 import jef.tools.StringUtils;
 
 /**
@@ -69,9 +70,9 @@ public interface VariableCallback {
 			}
 		}
 
-		public String toPrepareSql(List<BindVariableDescription> fields,
+		public String toPrepareSql(SqlBuilder builder,
 				ITableMetadata meta, DatabaseDialect dialect, SqlContext context,
-				IQueryableEntity instance) {
+				IQueryableEntity instance,boolean batch) {
 			// 只要使用了绑定变量方式获取，那么一定要做转义
 			escape = !dialect.has(
 					Feature.NOT_SUPPORT_LIKE_ESCAPE);
@@ -83,10 +84,13 @@ public interface VariableCallback {
 			if (escape) {
 				sb.append(ESCAPE_CLAUSE);
 			}
-			BindVariableDescription bind = new BindVariableDescription(field,
-					operator, value);
-			bind.setCallback(this);
-			fields.add(bind);
+			Variable bind;
+			if(batch){
+				bind = new BatchQueryBindVariable(field,operator, this);
+			}else{
+				bind = new ConstantVariable(field.name()+operator, this.process(value));
+			}
+			builder.addBind(bind);
 			return sb.toString();
 		}
 
