@@ -21,7 +21,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import jef.common.log.LogUtil;
-import jef.database.VariableCallback.Like;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.ColumnMappings;
@@ -36,8 +35,8 @@ import jef.database.query.RefField;
 import jef.database.query.SqlContext;
 import jef.database.query.SqlExpression;
 import jef.database.wrapper.clause.SqlBuilder;
-import jef.database.wrapper.variable.BatchQueryBindVariable;
 import jef.database.wrapper.variable.ConstantVariable;
+import jef.database.wrapper.variable.QueryLookupVariable;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
@@ -318,7 +317,7 @@ public class Condition implements Serializable {
 		} else {
 			builder.append(columnName, operator.oper, "?");
 			if (batch) {
-				builder.addBind(new BatchQueryBindVariable(rawField, operator));
+				builder.addBind(new QueryLookupVariable(rawField, operator));
 			} else {
 				builder.addBind(new ConstantVariable(rawField.name() + operator, value));
 			}
@@ -363,7 +362,7 @@ public class Condition implements Serializable {
 					} else {
 						builder.append("?");
 						if (batch) {
-							builder.addBind(new BatchQueryBindVariable(rawField, operator));
+							builder.addBind(new QueryLookupVariable(rawField, operator));
 						} else {
 							builder.addBind(new ConstantVariable(rawField.name() + operator, o));
 						}

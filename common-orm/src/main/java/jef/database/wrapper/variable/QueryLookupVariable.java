@@ -10,7 +10,7 @@ import jef.database.Condition.Operator;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
-import jef.database.VariableCallback;
+import jef.database.VariableConverter;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.FBIField;
 import jef.database.meta.ITableMetadata;
@@ -25,19 +25,19 @@ import jef.tools.reflect.BeanWrapper;
  * 描述字段加条件用于匹配绑定变量参数
  * 每个实例对应一个SQL中的问号，通过List来确定其在绑定SQL中的序号
  */
-public class BatchQueryBindVariable extends Variable {
+public class QueryLookupVariable extends Variable {
 	private Field field;// 这个Field可以描述一个实际的条件路径
 	private Operator oper; // 操作符
 	private ITableMetadata meta;
 	private static final Object NOT_FOUND = new Object();
-	private VariableCallback callback;
+	private VariableConverter callback;
 
-	public BatchQueryBindVariable(Field field, Operator oper, VariableCallback callback) {
+	public QueryLookupVariable(Field field, Operator oper, VariableConverter callback) {
 		this(field, oper);
 		this.callback = callback;
 	}
 
-	public BatchQueryBindVariable(Field field, Operator oper) {
+	public QueryLookupVariable(Field field, Operator oper) {
 		Class<?> clz = field.getClass();
 		if (clz == TupleField.class) {
 			this.meta = ((TupleField) field).getMeta();
@@ -55,11 +55,11 @@ public class BatchQueryBindVariable extends Variable {
 		return meta == null ? null : meta.getColumnDef(field);
 	}
 
-	public VariableCallback getCallback() {
+	public VariableConverter getCallback() {
 		return callback;
 	}
 
-	public void setCallback(VariableCallback callback) {
+	public void setCallback(VariableConverter callback) {
 		this.callback = callback;
 	}
 
@@ -85,32 +85,28 @@ public class BatchQueryBindVariable extends Variable {
 	@Override
 	Object jdbcSet(BindVariableContext context, int index, ConditionQuery query) {
 		try {
-			return setWhereVariable(context, query, index);
+			Collection<Condition> conds = null;
+			IQueryableEntity obj = null;
+			if (query != null) {
+				if (query instanceof JoinElement) {
+					conds = ((JoinElement) query).getConditions();
+					if (query instanceof Query<?>) {
+						obj = ((Query<?>) query).getInstance();
+					}
+				}
+			}
+			Object value = getWhereVariable(conds, obj);
+			try {
+				value = context.setValueInPsmt(index, value, getColumnType());
+			} catch (Exception e) {
+				String field = getField().name();
+				ColumnMapping colType = getColumnType();
+				throw new SQLException("The query param type error, field=" + field + " type=" + (colType == null ? "" : colType.getClass().getSimpleName()) + "\n" + e.getClass().getName() + ":" + e.getMessage());
+			}
+			return value;
 		} catch (SQLException ex) {
 			throw new PersistenceException("Error while setting [+field.name()+], error type=" + ex.getClass().getName(), ex);
 		}
-	}
-
-	private Object setWhereVariable(BindVariableContext context, ConditionQuery query, int count) throws SQLException {
-		Collection<Condition> conds = null;
-		IQueryableEntity obj = null;
-		if (query != null) {
-			if (query instanceof JoinElement) {
-				conds = ((JoinElement) query).getConditions();
-				if (query instanceof Query<?>) {
-					obj = ((Query<?>) query).getInstance();
-				}
-			}
-		}
-		Object value = getWhereVariable(conds, obj);
-		try {
-			value = context.setValueInPsmt(count, value, getColumnType());
-		} catch (Exception e) {
-			String field = getField().name();
-			ColumnMapping colType = getColumnType();
-			throw new SQLException("The query param type error, field=" + field + " type=" + (colType == null ? "" : colType.getClass().getSimpleName()) + "\n" + e.getClass().getName() + ":" + e.getMessage());
-		}
-		return value;
 	}
 
 	/**

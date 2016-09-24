@@ -36,10 +36,6 @@ public final class BindVariableContext {
 		logMessage.append(count, fieldName, value);
 	}
 
-	// public void setObject(int count, Object value,int type,int length) throws
-	// SQLException {
-	// psmt.setObject(count, value,type,length);
-	// }
 
 	protected Object setValueInPsmt(int count, Object value) throws SQLException {
 		if (value != null) {
