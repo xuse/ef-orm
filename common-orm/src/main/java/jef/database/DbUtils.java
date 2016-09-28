@@ -703,11 +703,13 @@ public final class DbUtils {
 	 * 将field转换为列名（包含表的别名）
 	 * 
 	 * @param field
+	 *            字段
 	 * @param feature
+	 *            数据库方言
 	 * @param tableAlias
-	 * @return // * @deprecated use // *
-	 *         {@linkplain #toColumnName(ColumnMapping, DatabaseDialect, String)}
-	 *         // * instead
+	 *            所在表的别名
+	 * @return 可以在SQL中使用的列名
+	 * @deprecated use {@linkplain #toColumnName(ColumnMapping, DatabaseDialect, String)} instead
 	 */
 	public static String toColumnName(Field field, DatabaseDialect feature, String tableAlias) {
 		if (field instanceof MetadataContainer) {
@@ -724,19 +726,18 @@ public final class DbUtils {
 
 	/**
 	 * 代替上面的方法，性能更好,也更安全
-	 * 
-	 * @param targetField
-	 * @param profile
-	 * @param tableAlias
-	 * @return
+	 * @param column 列定义
+	 * @param profile 数据库方言
+	 * @param tableAlias 列所在的表的别名
+	 * @return 使用在SQL中的列名称
 	 */
-	public static String toColumnName(ColumnMapping fld, DatabaseDialect profile, String alias) {
+	public static String toColumnName(ColumnMapping column, DatabaseDialect profile, String alias) {
 		if (alias != null) {
 			StringBuilder sb = new StringBuilder();
-			sb.append(alias).append('.').append(fld.getColumnName(profile, true));
+			sb.append(alias).append('.').append(column.getColumnName(profile, true));
 			return sb.toString();
 		} else {
-			return fld.getColumnName(profile, true);
+			return column.getColumnName(profile, true);
 		}
 	}
 
@@ -1024,9 +1025,8 @@ public final class DbUtils {
 
 	/**
 	 * 得到列的完整定义
-	 * 
-	 * @param field
-	 * @return
+	 * @param field 列的枚举对象
+	 * @return 完整的字段到数据库列的映射信息。
 	 */
 	public static ColumnMapping toColumnMapping(Field field) {
 		if (field instanceof ColumnMapping) {
@@ -1497,16 +1497,16 @@ public final class DbUtils {
 			Field field = mType.field();
 			Object value = mType.getFieldAccessor().get(changedObj);
 
-			boolean used=changedObj.isUsed(field);
-			if(mType.isGenerated() && !used){
+			boolean used = changedObj.isUsed(field);
+			if (mType.isGenerated() && !used) {
 				continue;
 			}
-			//安全更新下，发现字段数值无效，跳过
+			// 安全更新下，发现字段数值无效，跳过
 			if (safeMerge && DbUtils.isInvalidValue(value, mType, used)) {
 				continue;
 			}
-			Object oldValue=mType.getFieldAccessor().get(oldObj);
-			if(!ObjectUtils.equals(value, oldValue)){
+			Object oldValue = mType.getFieldAccessor().get(oldObj);
+			if (!ObjectUtils.equals(value, oldValue)) {
 				oldObj.prepareUpdate(field, value);
 			}
 		}

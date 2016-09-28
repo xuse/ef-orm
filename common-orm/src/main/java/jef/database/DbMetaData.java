@@ -228,18 +228,12 @@ public class DbMetaData {
 			}
 			DatabaseDialect profile = info.profile;
 			Assert.notNull(profile);
-			// 基本的固定属性分析.定位当前Metadata基本信息
-			if (profile.has(Feature.USER_AS_SCHEMA)) {
-				this.schema = profile.getObjectNameToUse(StringUtils.trimToNull(info.getUser()));
-			} else if (profile.has(Feature.DBNAME_AS_SCHEMA)) {
-				this.schema = profile.getObjectNameToUse(StringUtils.trimToNull(info.getDbname()));
-			}
-			if (this.schema == null)
-				schema = profile.getDefaultSchema();
 			// SQL生成器
 			this.ddlGenerator = new DdlGeneratorImpl(profile);
 			// 初始化数据库信息
 			this.feature = new MetadataFeature(con.getMetaData());
+			// 基本的固定属性分析.定位当前Metadata基本信息
+			calcSchema(feature, profile);
 			// 计算时间差
 			calcTimeDelta(con, profile);
 			if (Math.abs(dbTimeDelta) > 30000) {
@@ -253,6 +247,20 @@ public class DbMetaData {
 		} finally {
 			LogUtil.debug("finish init database metadata of " + ds);
 			releaseConnection(con);
+		}
+	}
+
+	private void calcSchema(MetadataFeature feature,DatabaseDialect profile) {
+		String schema=null;
+		if (profile.has(Feature.USER_AS_SCHEMA)) {
+			schema = StringUtils.trimToNull(info.getUser());
+		} else if (profile.has(Feature.DBNAME_AS_SCHEMA)) {
+			schema = StringUtils.trimToNull(info.getDbname());
+		}
+		if(schema!=null){
+			this.schema=feature.getDefaultCase().getObjectNameToUse(schema);
+		}else{
+			this.schema = profile.getDefaultSchema();
 		}
 	}
 
@@ -676,13 +684,13 @@ public class DbMetaData {
 		}
 		ResultSet rs = null;
 		List<Column> list = new ArrayList<Column>();
-		Collection<Index> indexes=null;
+		Collection<Index> indexes = null;
 		try {
 			rs = databaseMetaData.getColumns(null, schema, tableName, "%");
 			while (rs.next()) {
-				if(indexes==null){
-					//非常渣的Oracle驱动，如果表还不存在时，使用getIndexInfo()会报表不存在的错误（驱动尝试去分析表，不知道为啥要这么做）。
-					//因此不确定表是否存在时，不去查询索引信息。
+				if (indexes == null) {
+					// 非常渣的Oracle驱动，如果表还不存在时，使用getIndexInfo()会报表不存在的错误（驱动尝试去分析表，不知道为啥要这么做）。
+					// 因此不确定表是否存在时，不去查询索引信息。
 					indexes = getIndexes(tableName);
 				}
 				Column column = new Column();
@@ -742,20 +750,20 @@ public class DbMetaData {
 		Collection<Index> indexes = getIndexes(tableName);
 		for (Iterator<Index> iter = indexes.iterator(); iter.hasNext();) {
 			Index index = iter.next();
-			if(!index.isUnique()){
+			if (!index.isUnique()) {
 				continue;
 			}
 			if (isPrimaryKey(pk, index)) {
 				iter.remove();
 				continue;
 			}
-			if(index.getColumns().size()==1){
-				if(isUniqueColumn(index, meta.getColumns())){
+			if (index.getColumns().size() == 1) {
+				if (isUniqueColumn(index, meta.getColumns())) {
 					iter.remove();
 					continue;
 				}
 			}
-			if(isUniqueConstraint(index,meta)){
+			if (isUniqueConstraint(index, meta)) {
 				iter.remove();
 				continue;
 			}
@@ -1731,7 +1739,7 @@ public class DbMetaData {
 	 */
 	private StatementExecutor createExecutor() {
 		if (parent.getTransactionMode() == TransactionMode.JTA) {
-			return new ExecutorJTAImpl(parent, dbkey, getTransactionId(),getProfile());
+			return new ExecutorJTAImpl(parent, dbkey, getTransactionId(), getProfile());
 		} else {
 			return new ExecutorImpl(parent, dbkey, getTransactionId(), getProfile());
 		}
@@ -2545,7 +2553,7 @@ public class DbMetaData {
 
 	public void init() {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	// @Override
