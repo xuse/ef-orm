@@ -268,7 +268,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	@IgnoreOn({"sqlite","sqlserver"})
+	@IgnoreOn({"sqlite","sqlserver","mysql"})
 	public void testaSelectForUpdate() throws SQLException {
 		doInsert();
 		doInsert();
