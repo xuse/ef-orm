@@ -204,7 +204,6 @@ public class PartitionTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	@IgnoreOn(allButExcept="postgresql")
 	public void testDimensionInWithRange() throws SQLException {
 		System.out.println("===================== testSpan 03=======================");
 		Query<PartitionEntity> q = QB.create(PartitionEntity.class);
