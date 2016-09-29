@@ -6,7 +6,7 @@
 	<parent>
 		<artifactId>ef-orm</artifactId>
 		<groupId>org.easyframe</groupId>
-		<version>1.11.5-SNAPSHOT</version>
+		<version>1.11.5.RELEASE</version>
 	</parent>
 	<artifactId>common-core</artifactId>
 	<name>common-core</name>
