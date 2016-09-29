@@ -153,11 +153,11 @@ public class QuerableEntityScanner {
 		Map<ITableMetadata, Boolean> tasks = new HashMap<ITableMetadata, Boolean>();
 		for (String s : classes) {
 			try {
-				// 读取类
 				ClassReader cr = getClassInfo(cl,s);
+				if( cr==null)//NOT found class
+					continue;
 				// 根据父类判断
 				if(isEntiyClz(cl,parents,cr.getSuperName())){
-					// 加载或初始化
 					Class<?> clz = loadClass(cl, s);
 					if (clz != null) {
 						registeEntity(clz, tasks);
@@ -179,6 +179,9 @@ public class QuerableEntityScanner {
 		}
 		// 读取类
 		ClassReader cr = getClassInfo(cl,superName);
+		if(cr==null){
+			return false;
+		}
 		return isEntiyClz(cl,parents, cr.getSuperName());
 	}
 

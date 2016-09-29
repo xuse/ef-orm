@@ -38,6 +38,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.OrderBy;
 import javax.persistence.PersistenceException;
+import javax.persistence.Transient;
 
 import jef.accelerator.asm.Attribute;
 import jef.accelerator.asm.ClassReader;
@@ -618,6 +619,11 @@ public final class MetaHolder {
 			}
 		}
 
+		/**
+		 * 由于用户可能在父子类中反复定义同一个Field的元模型，因此此处返回的是列表
+		 * @param name
+		 * @return
+		 */
 		List<jef.database.Field> remove(String name) {
 			if (isTuple) {
 				return Collections.<Field> singletonList(new TupleField(parent, name));
@@ -641,8 +647,9 @@ public final class MetaHolder {
 			if (meta.getField(f.getName()) != null) { // 当子类父类中有同名field时，跳过父类的field
 				continue;
 			}
+			FieldAnnotationProvider fa = annos.forField(f);
 			List<Field> fieldss = metaModel.remove(f.getName());
-			if (fieldss.isEmpty()) {
+			if (fieldss.isEmpty() || fa.getAnnotation(Transient.class)!=null) {
 				unprocessedField.add(f);
 				continue;
 			}
@@ -651,7 +658,7 @@ public final class MetaHolder {
 				assertFieldEnhanced(field,fieldss,processingClz);
 			}
 
-			FieldAnnotationProvider fa = annos.forField(f);
+	
 			// 在得到了元模型的情况下
 			boolean isPK = fa.getAnnotation(javax.persistence.Id.class) != null;
 			
