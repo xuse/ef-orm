@@ -319,7 +319,7 @@ public class Condition implements Serializable {
 			if (batch) {
 				builder.addBind(new QueryLookupVariable(rawField, operator));
 			} else {
-				builder.addBind(new ConstantVariable(rawField.name() + operator, value));
+				builder.addBind(new ConstantVariable(rawField.name() + operator, value, meta.getColumnDef(rawField)));
 			}
 
 		}
@@ -364,7 +364,8 @@ public class Condition implements Serializable {
 						if (batch) {
 							builder.addBind(new QueryLookupVariable(rawField, operator));
 						} else {
-							builder.addBind(new ConstantVariable(rawField.name() + operator, o));
+							
+							builder.addBind(new ConstantVariable(rawField.name() + operator, o,meta.getColumnDef(rawField)));
 						}
 					}
 					n++;

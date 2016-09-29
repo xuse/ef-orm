@@ -82,7 +82,7 @@ public class Like implements VariableConverter {
 		if(batch){
 			bind = new QueryLookupVariable(field,operator, this);
 		}else{
-			bind = new ConstantVariable(field.name()+operator, this.process(value));
+			bind = new ConstantVariable(field.name()+operator, this.process(value), meta.getColumnDef(field));
 		}
 		builder.addBind(bind);
 		return sb.toString();

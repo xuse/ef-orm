@@ -37,7 +37,7 @@ public final class BindVariableContext {
 	}
 
 
-	protected Object setValueInPsmt(int count, Object value) throws SQLException {
+	private Object setValueInPsmt(int count, Object value) throws SQLException {
 		if (value != null) {
 			if ((value instanceof File)) {
 				File file = (File) value;
