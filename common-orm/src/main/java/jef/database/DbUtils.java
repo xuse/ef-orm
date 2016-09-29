@@ -755,7 +755,9 @@ public final class DbUtils {
 	 * @deprecated 不够安全
 	 */
 	public static String getColumnName(ITableMetadata meta, Field fld, String alias, DatabaseDialect profile) {
-		if (alias != null) {
+		if (alias == null) {
+			return meta.getColumnName(fld, profile, true);
+		} else {
 			if (fld instanceof JpqlExpression) {
 				throw new UnsupportedOperationException();
 			} else {
@@ -763,8 +765,6 @@ public final class DbUtils {
 				sb.append(alias).append('.').append(meta.getColumnName(fld, profile, true));
 				return sb.toString();
 			}
-		} else {
-			return meta.getColumnName(fld, profile, true);
 		}
 	}
 

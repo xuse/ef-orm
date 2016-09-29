@@ -64,19 +64,19 @@ public class Like implements VariableConverter {
 		}
 	}
 
-	public String toPrepareSql(SqlBuilder builder,
+	public void toPrepareSql(SqlBuilder builder,
 			ITableMetadata meta, DatabaseDialect dialect, SqlContext context,
 			IQueryableEntity instance,boolean batch) {
 		// 只要使用了绑定变量方式获取，那么一定要做转义
 		escape = !dialect.has(
 				Feature.NOT_SUPPORT_LIKE_ESCAPE);
 
-		StringBuilder sb = new StringBuilder();
+		
 		String alias = context == null ? null : context.getCurrentAliasAndCheck(field);
-		String columnName = DbUtils.toColumnName(field, dialect, alias);
-		sb.append(columnName).append(name()).append("?");
+		String columnName = DbUtils.getColumnName(meta,field, alias,dialect);
+		builder.append(columnName,name(),"?");
 		if (escape) {
-			sb.append(ESCAPE_CLAUSE);
+			builder.append(ESCAPE_CLAUSE);
 		}
 		Variable bind;
 		if(batch){
@@ -85,7 +85,6 @@ public class Like implements VariableConverter {
 			bind = new ConstantVariable(field.name()+operator, this.process(value), meta.getColumnDef(field));
 		}
 		builder.addBind(bind);
-		return sb.toString();
 	}
 
 	public String toSql(ITableMetadata meta, DatabaseDialect dialect,

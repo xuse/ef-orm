@@ -165,14 +165,15 @@ public abstract class SelectProcessor {
 					for (PartitionResult site : sites) {
 						for (String table : site.getTablesEscaped(db.getProfile(site.getDatabase()))) {
 							String sql = StringUtils.concat(countStr, table, " t", result.getSql(), groupClause.toString());
-							cq.addSql(site.getDatabase(), result.setSql(sql));
+							cq.addSql(site.getDatabase(), new BindSql(sql, result.getBind()));
+							
 						}
 					}
 				} else {
 					for (PartitionResult site : sites) {
 						for (String table : site.getTablesEscaped(db.getProfile(site.getDatabase()))) {
 							String sql = StringUtils.concat("select count(*) from ", table, " t", result.getSql(), groupClause.toString());
-							cq.addSql(site.getDatabase(), result.setSql(sql));
+							cq.addSql(site.getDatabase(), new BindSql(sql, result.getBind()));
 						}
 					}
 				}
