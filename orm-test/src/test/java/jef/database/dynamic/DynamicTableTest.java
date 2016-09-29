@@ -266,9 +266,10 @@ public class DynamicTableTest extends org.junit.Assert {
 	 * 测试选出记录，并直接在游标上修改 (多条)
 	 * 包括在游标上直接创建新记录， 以及删除就记录
 	 * @throws SQLException
+	 * MySQL测试去除，See #73
 	 */
 	@Test
-	@IgnoreOn({"sqlite","sqlserver"})
+	@IgnoreOn({"sqlite","sqlserver","mysql"})
 	public void testaSelectForUpdate() throws SQLException {
 		doInsert();
 		doInsert();

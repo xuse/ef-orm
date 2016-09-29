@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import jef.common.SimpleSet;
+import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
@@ -150,7 +151,7 @@ public class DdlGeneratorImpl implements DdlGenerator {
 				for (ColumnModification entry : changed) {
 					if (complexSyntax) {// complex operate here
 						for (ColumnChange change : entry.getChanges()) {// 要针对每种Change单独实现SQL语句,目前已知Derby和postgresql是这样的，而且两者的语法有少量差别，这里尽量用兼容写法
-							sqls.add(toChangeColumnSql(tableName, entry.getFrom().getColumnName(), change, profile));
+							sqls.add(toChangeColumnSql(tableName, DbUtils.escapeColumn(profile, entry.getFrom().getColumnName()), change, profile));
 						}
 					} else {
 						// 简单语法时
@@ -241,7 +242,7 @@ public class DdlGeneratorImpl implements DdlGenerator {
 					sb.append(profile.getProperty(DbProperty.MODIFY_COLUMN)).append(' ');
 				}
 			}
-			sb.append(entry.getFrom().getColumnName()).append(' ');
+			sb.append(DbUtils.escapeColumn(profile, entry.getFrom().getColumnName())).append(' ');
 			sb.append(profile.getCreationComment(entry.getNewColumn(), true));
 			n++;
 		}

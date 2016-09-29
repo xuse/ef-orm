@@ -37,8 +37,8 @@ import jef.database.support.SqlLog;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.UpdateClause;
-import jef.database.wrapper.processor.BindVariableContext;
-import jef.database.wrapper.processor.BindVariableDescription;
+import jef.database.wrapper.variable.BindVariableContext;
+import jef.database.wrapper.variable.Variable;
 import jef.tools.StringUtils;
 
 /**
@@ -538,7 +538,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 
 		@Override
 		protected void processJdbcParams(PreparedStatement psmt, List<T> listValue, OperateTarget db) throws SQLException {
-			List<BindVariableDescription> bindVar = wherePart.getBind();
+			List<Variable> bindVar = wherePart.getBind();
 			int len = listValue.size();
 			SqlLog log = ORMConfig.getInstance().newLogger(this.extreme);
 			int maxLog = ORMConfig.getInstance().getMaxBatchLog();
@@ -608,7 +608,6 @@ public abstract class Batch<T extends IQueryableEntity> {
 
 		@Override
 		protected void processJdbcParams(PreparedStatement psmt, List<T> listValue, OperateTarget db) throws SQLException {
-			List<BindVariableDescription> bindVar = wherePart.getBind();
 			int len = listValue.size();
 			SqlLog log = ORMConfig.getInstance().newLogger(this.extreme);
 			int maxLog = ORMConfig.getInstance().getMaxBatchLog();
@@ -618,7 +617,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 					DbUtils.fillConditionFromField(t, t.getQuery(), null, pkMpode);
 				}
 				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ", i + 1).append('/').append(len));
-				List<Object> whereBind = context.setVariables(t.getQuery(), null, bindVar);
+				List<Object> whereBind = context.setVariables(t.getQuery(), null, wherePart.getBind());
 				String baseTableName = (forceTableName == null ? meta.getTableName(false) : forceTableName);
 				parent.getCache().onDelete(baseTableName, wherePart.getSql(), whereBind);
 

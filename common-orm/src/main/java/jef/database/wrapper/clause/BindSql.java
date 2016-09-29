@@ -20,7 +20,7 @@ import java.util.List;
 import jef.database.jdbc.result.ResultSetContainer;
 import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.routing.sql.InMemoryOperateProvider;
-import jef.database.wrapper.processor.BindVariableDescription;
+import jef.database.wrapper.variable.Variable;
 import jef.tools.PageLimit;
 
 /**
@@ -30,14 +30,14 @@ import jef.tools.PageLimit;
  */
 public final class BindSql implements InMemoryOperateProvider{
 	private String sql;
-	private List<BindVariableDescription> bind;
+	private List<Variable> bind;
 	private ResultSetLaterProcess isReverseResultSet;
 	
 	public BindSql(String sql){
 		this.sql=sql;
 	}
 	
-	public BindSql(String sql,List<BindVariableDescription> bind){
+	public BindSql(String sql,List<Variable> bind){
 		this.sql=sql;
 		this.bind=bind;
 	}
@@ -48,17 +48,18 @@ public final class BindSql implements InMemoryOperateProvider{
 	public String getSql() {
 		return sql;
 	}
-	public void setSql(String sql) {
+	public BindSql setSql(String sql) {
 		this.sql = sql;
+		return this;
 	}
 	/**
 	 * 得到绑定变量描述
 	 * @return 绑定变量描述
 	 */
-	public List<BindVariableDescription> getBind() {
+	public List<Variable> getBind() {
 		return bind;
 	}
-	public BindSql setBind(List<BindVariableDescription> bind) {
+	public BindSql setBind(List<Variable> bind) {
 		this.bind = bind;
 		return this;
 	}

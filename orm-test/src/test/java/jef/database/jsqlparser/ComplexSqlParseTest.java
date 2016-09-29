@@ -47,6 +47,14 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	}
 
 	@Test
+	public void strange() throws ParseException {
+		String source = "SELECT ID,TITLE,PARENT_ID FROM PORTAL_DOCUMENT WHERE DOC_CATE_ID IN (:lv2Ids<int>)";
+		Statement re = jef.database.DbUtils.parseStatement(source);
+	}
+	
+	
+
+	@Test
 	public void bindVars() throws ParseException {
 		String source = "select * from foo where age=?1 and name like ?2<$string$> \norder by ?3<sql>";
 		Statement re = jef.database.DbUtils.parseStatement(source);

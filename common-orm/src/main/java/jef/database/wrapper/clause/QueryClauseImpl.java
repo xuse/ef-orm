@@ -27,7 +27,7 @@ import jef.database.jdbc.result.ResultSetContainer;
 import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.routing.PartitionResult;
 import jef.database.routing.sql.SqlAnalyzer;
-import jef.database.wrapper.processor.BindVariableDescription;
+import jef.database.wrapper.variable.Variable;
 import jef.tools.Assert;
 import jef.tools.PageLimit;
 
@@ -57,7 +57,7 @@ public class QueryClauseImpl implements QueryClause {
 	// 排序
 	private OrderClause orderbyPart = OrderClause.DEFAULT;
 	// 绑定变量
-	private List<BindVariableDescription> bind;
+	private List<Variable> bind;
 	// 范围
 	private PageLimit pageRange;
 
@@ -119,7 +119,7 @@ public class QueryClauseImpl implements QueryClause {
 		this.tableDefinition = tableDefinition;
 	}
 
-	public void setBind(List<BindVariableDescription> bind) {
+	public void setBind(List<Variable> bind) {
 		this.bind = bind;
 	}
 
@@ -174,7 +174,7 @@ public class QueryClauseImpl implements QueryClause {
 			site = this.tables[0];
 		}
 		StringBuilder sb = new StringBuilder(200);
-		List<BindVariableDescription> bind = this.bind;
+		List<Variable> bind = this.bind;
 		boolean moreTable = site.tableSize() > 1;
 		for (int i = 0; i < site.tableSize(); i++) {
 			if (i > 0) {

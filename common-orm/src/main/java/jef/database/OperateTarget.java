@@ -46,7 +46,7 @@ import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.populator.Transformer;
-import jef.database.wrapper.processor.BindVariableContext;
+import jef.database.wrapper.variable.BindVariableContext;
 import jef.tools.MathUtils;
 import jef.tools.StringUtils;
 
@@ -93,10 +93,6 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 		this.session = tx;
 		this.dbkey = key;
 		this.profile = session.getProfile(key);
-	}
-
-	public SqlProcessor getProcessor() {
-		return session.rProcessor;
 	}
 
 	public DatabaseDialect getProfile() {

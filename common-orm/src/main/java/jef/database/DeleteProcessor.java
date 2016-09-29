@@ -13,7 +13,7 @@ import jef.database.routing.PartitionResult;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.executor.DbTask;
-import jef.database.wrapper.processor.BindVariableContext;
+import jef.database.wrapper.variable.BindVariableContext;
 
 /**
  * 基本数据库操作
@@ -105,7 +105,7 @@ public abstract class DeleteProcessor {
 
 		@Override
 		BindSql toWhereClause(JoinElement joinElement, SqlContext context, DatabaseDialect profile) {
-			return parent.toWhereClause(joinElement, context, null, profile);
+			return parent.toWhereClause(joinElement, context, null, profile,false);
 		}
 	}
 }

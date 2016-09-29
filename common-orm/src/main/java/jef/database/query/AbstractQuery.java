@@ -33,11 +33,10 @@ public abstract class AbstractQuery<T extends IQueryableEntity> implements Query
 	@Transient
 	transient ITableMetadata type;
 
-
 	private int maxResult;
 	private int fetchSize;
 	private int queryTimeout;
-	protected boolean cacheable =true;
+	protected boolean cacheable = true;
 
 	public void setMaxResult(int size) {
 		this.maxResult = size;
@@ -95,14 +94,14 @@ public abstract class AbstractQuery<T extends IQueryableEntity> implements Query
 		DatabaseDialect profile = processor.getProfile(prs);
 
 		GroupClause groupClause = SelectProcessor.toGroupAndHavingClause(this, context, profile);
-		BindSql whereResult=processor.parent.toWhereClause(this, context, null, profile);
-		
+		BindSql whereResult = processor.parent.toWhereClause(this, context, null, profile, false);
+
 		QueryClauseImpl result = new QueryClauseImpl(profile);
 		result.setGrouphavingPart(groupClause);
 
 		result.setSelectPart(SelectProcessor.toSelectSql(context, groupClause, profile));
 		result.setGrouphavingPart(groupClause);
-		result.setTables(type.getTableName(false),prs);
+		result.setTables(type.getTableName(false), prs);
 		result.setWherePart(whereResult.getSql());
 		result.setBind(whereResult.getBind());
 		if (order)
@@ -117,7 +116,7 @@ public abstract class AbstractQuery<T extends IQueryableEntity> implements Query
 
 	@Override
 	public void setCacheable(boolean cacheable) {
-		this.cacheable=cacheable;
+		this.cacheable = cacheable;
 	}
 
 	public boolean isCacheable() {

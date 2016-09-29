@@ -2,11 +2,13 @@ package com.github.geequery.springdata.test.entity;
 
 import java.util.Date;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 @Entity
+@Cacheable
 public class ComplexFoo extends jef.database.DataObject {
 	private static final long serialVersionUID = 5239860603423609583L;
 

@@ -14,6 +14,10 @@ import jef.database.meta.MetaHolder;
 import jef.database.routing.PartitionResult;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.clause.InsertSqlClause;
+<<<<<<< HEAD
+import jef.database.wrapper.processor.BindVariableContext;
+=======
+>>>>>>> cc24d228a075113a72cb3c0146a46ace8590630f
 import jef.database.wrapper.processor.InsertStep.OracleRowidKeyCallback;
 import jef.database.wrapper.variable.BindVariableContext;
 import jef.tools.ArrayUtils;

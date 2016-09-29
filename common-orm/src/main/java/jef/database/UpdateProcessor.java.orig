@@ -217,10 +217,14 @@ public abstract class UpdateProcessor {
 					String setColumn = meta.getColumnName((Field) value, profile, true);
 					result.addEntry(columnName, setColumn);
 				} else {
+<<<<<<< HEAD
 					if(safeMerge && DbUtils.isInvalidValue(value, column, true)){
 						continue;
 					}
+					result.addEntry(columnName, field);
+=======
 					result.addEntry(columnName, new UpdateVairable(field));
+>>>>>>> cc24d228a075113a72cb3c0146a46ace8590630f
 				}
 			}
 			return result;

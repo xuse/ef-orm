@@ -3,14 +3,12 @@ package jef.database;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 import jef.common.Entry;
-import jef.common.log.LogUtil;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.jdbc.result.ResultSetContainer;
@@ -37,7 +35,7 @@ import jef.database.wrapper.clause.OrderClause;
 import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.clause.SelectPart;
 import jef.database.wrapper.executor.DbTask;
-import jef.database.wrapper.processor.BindVariableContext;
+import jef.database.wrapper.variable.BindVariableContext;
 import jef.http.client.support.CommentEntry;
 import jef.tools.ArrayUtils;
 import jef.tools.PageLimit;
@@ -71,8 +69,7 @@ public abstract class SelectProcessor {
 	 */
 	public abstract CountClause toCountSql(ConditionQuery obj) throws SQLException;
 
-	protected abstract void processSelect0(OperateTarget db, QueryClause sql, PartitionResult site, ConditionQuery queryObj, ResultSetContainer rs, QueryOption option, SqlLog debug)
-			throws SQLException;
+	protected abstract void processSelect0(OperateTarget db, QueryClause sql, PartitionResult site, ConditionQuery queryObj, ResultSetContainer rs, QueryOption option, SqlLog debug) throws SQLException;
 
 	protected abstract long processCount0(OperateTarget db, BindSql bindSqls, SqlLog debug) throws SQLException;
 
@@ -97,121 +94,6 @@ public abstract class SelectProcessor {
 		return db.getPartitionSupport();
 	}
 
-	final static class NormalImpl extends SelectProcessor {
-
-		NormalImpl(DbClient db, SqlProcessor parent) {
-			super(db, parent);
-		}
-
-		public QueryClause toQuerySql(ConditionQuery obj, PageLimit range, boolean order) {
-			QueryClause clause = obj.toQuerySql(this, obj.prepare(), order);
-			clause.setPageRange(range);
-			return clause;
-		}
-
-		protected void processSelect0(OperateTarget db, QueryClause sql, PartitionResult site, ConditionQuery queryObj, ResultSetContainer rs2, QueryOption option, SqlLog debug)
-				throws SQLException {
-			Statement st = null;
-			ResultSet rs = null;
-			BindSql bindSql = sql.getSql(site);
-			if (option.holdResult && db.getProfile().has(Feature.TYPE_FORWARD_ONLY)) {
-				throw new UnsupportedOperationException("The database " + db.getProfile() + " can not support your 'selectForUpdate' operation.");
-			}
-			try {
-				st = db.createStatement(bindSql.getRsLaterProcessor(), option.holdResult);
-				option.setSizeFor(st);
-				rs = st.executeQuery(bindSql.toString());
-				rs2.add(rs, st, db);
-				// 提前将连接归还连接池，用于接下来的查询，但是标记这个连接上还有未完成的查询结果集，因此不允许关闭这个连接。
-			} catch (SQLException e) {
-				DbUtils.close(rs);
-				DbUtils.close(st);
-				DbUtils.processError(e, ArrayUtils.toString(sql.getTables(), true), db);
-				db.releaseConnection();
-				throw e;
-			} catch (RuntimeException e) {
-				DbUtils.close(rs);
-				DbUtils.close(st);
-				db.releaseConnection();
-				throw e;
-			} finally {
-				if (ORMConfig.getInstance().isDebugMode())
-					LogUtil.show(sql + " | " + db.getTransactionId()); // 每个site的查询语句会合并为一条
-				// db.releaseConnection();
-			}
-		}
-
-		@Override
-		public CountClause toCountSql(ConditionQuery obj) throws SQLException {
-			CountClause result = new CountClause();
-			if (obj instanceof Query<?>) {
-				Query<?> query = (Query<?>) obj;
-				String myTableName = (String) query.getAttribute("_table_name");
-				myTableName = MetaHolder.toSchemaAdjustedName(myTableName);
-
-				PartitionResult[] sites = DbUtils.toTableNames(query.getInstance(), myTableName, query, db.getPartitionSupport());
-				SqlContext context = query.prepare();
-				for (PartitionResult site : sites) {
-					List<String> tablenames = site.getTablesEscaped(db.getProfile(site.getDatabase()));
-					for (int i = 0; i < tablenames.size(); i++) {
-						BindSql sql = parent.toWhereClause(query, context, null, parent.getPartitionSupport().getProfile(site.getDatabase()));
-						result.addSql(site.getDatabase(), StringUtils.concat("select count(*) from ", tablenames.get(i), " t", sql.getSql()));
-					}
-				}
-				return result;
-			} else if (obj instanceof Join) {
-				DatabaseDialect profile = getProfile();
-				Join join = (Join) obj;
-				SqlContext context = join.prepare();
-				result.addSql(null, "select count(*) from " + join.toTableDefinitionSql(parent, context, profile) + parent.toWhereClause(join, context, null, profile));
-				return result;
-			} else if (obj instanceof ComplexQuery) {
-				ComplexQuery cq = (ComplexQuery) obj;
-				cq.prepare();
-				return cq.toCountSql(this);
-			} else {
-				throw new IllegalArgumentException();
-			}
-		}
-
-		@Override
-		protected long processCount0(OperateTarget db, BindSql sql, SqlLog log) throws SQLException {
-			Statement st = null;
-			try {
-				st = db.createStatement();
-				int selectTimeout = ORMConfig.getInstance().getSelectTimeout();
-				if (selectTimeout > 0)
-					st.setQueryTimeout(selectTimeout);
-				ResultSet rs = null;
-				long result;
-				try {
-					String str = sql.getSql();
-					log.append(str).append(db);
-					rs = st.executeQuery(str);
-					rs.next();
-					result = rs.getLong(1);
-					log.append("\tCount=", result);
-				} catch (SQLException e) {
-					DbUtils.processError(e, sql.getSql(), db);
-					throw e;
-				} finally {
-					log.output();
-					if (rs != null)
-						rs.close();
-				}
-				return result;
-			} finally {
-				try {
-					if (st != null)
-						st.close();
-				} catch (SQLException e) {
-					LogUtil.exception(e);
-				}
-				db.releaseConnection();
-			}
-		}
-	}
-
 	final static class PreparedImpl extends SelectProcessor {
 		PreparedImpl(DbClient db, SqlProcessor parent) {
 			super(db, parent);
@@ -223,8 +105,7 @@ public abstract class SelectProcessor {
 			return result;
 		}
 
-		protected void processSelect0(OperateTarget db, QueryClause sqlResult, PartitionResult site, ConditionQuery queryObj, ResultSetContainer rs2, QueryOption option, SqlLog sb)
-				throws SQLException {
+		protected void processSelect0(OperateTarget db, QueryClause sqlResult, PartitionResult site, ConditionQuery queryObj, ResultSetContainer rs2, QueryOption option, SqlLog sb) throws SQLException {
 			// 计算查询结果集参数
 			if (option.holdResult && db.getProfile().has(Feature.TYPE_FORWARD_ONLY)) {
 				throw new UnsupportedOperationException("The database " + db.getProfile() + " can not support your 'selectForUpdate' operation.");
@@ -278,13 +159,14 @@ public abstract class SelectProcessor {
 					}
 				}
 
-				BindSql result = parent.toWhereClause(query, context, null, profile);
+				BindSql result = parent.toWhereClause(query, context, null, profile,false);
 				if (context.isDistinct()) {
 					String countStr = toSelectCountSql(context.getSelectsImpl(), context, groupClause.isNotEmpty());
 					for (PartitionResult site : sites) {
 						for (String table : site.getTablesEscaped(db.getProfile(site.getDatabase()))) {
 							String sql = StringUtils.concat(countStr, table, " t", result.getSql(), groupClause.toString());
 							cq.addSql(site.getDatabase(), new BindSql(sql, result.getBind()));
+							
 						}
 					}
 				} else {
@@ -309,8 +191,8 @@ public abstract class SelectProcessor {
 				} else {
 					countStr = "select count(*) from ";
 				}
-				BindSql result = parent.toWhereClause(join, context, null, profile);
-				result.setSql(countStr + join.toTableDefinitionSql(parent, context, profile) + result.getSql() + groupClause);
+				BindSql result = parent.toWhereClause(join, context, null, profile, false);
+				result.setSql(countStr + join.toTableDefinitionSql(parent, context, profile,false) + result.getSql() + groupClause);
 				cq.addSql(null, result);
 				return cq;
 			} else if (obj instanceof ComplexQuery) {
@@ -440,8 +322,7 @@ public abstract class SelectProcessor {
 		return rs;
 	}
 
-	void processSelect(final QueryClause sql, final Session session, final ConditionQuery queryObj, final ResultSetContainer rs, final QueryOption option, int mustTx)
-			throws SQLException {
+	void processSelect(final QueryClause sql, final Session session, final ConditionQuery queryObj, final ResultSetContainer rs, final QueryOption option, int mustTx) throws SQLException {
 		if (sql.isMultiDatabase()) {
 			if (sql.getTables().length >= ORMConfig.getInstance().getParallelSelect()) {// 启用并行查询
 				List<DbTask> tasks = new ArrayList<DbTask>();
