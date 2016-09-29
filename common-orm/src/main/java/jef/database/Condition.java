@@ -295,7 +295,6 @@ public class Condition implements Serializable {
 				throw new IllegalArgumentException("The value of condition [" + field + " " + operator.getKey() + " (...)] must not be null!");
 			}
 		}
-		StringBuilder sb = new StringBuilder();
 
 		String columnName;
 		if (rawField instanceof JpqlExpression) {
@@ -305,10 +304,10 @@ public class Condition implements Serializable {
 		}
 
 		if (operator == Operator.IS_NULL) {
-			sb.append(columnName).append(" is null");
+			builder.append(columnName," IS NULL");
 			return;
 		} else if (operator == Operator.IS_NOT_NULL) {
-			sb.append(columnName).append(" is not null");
+			builder.append(columnName," IS NOT NULL");
 			return;
 		}
 		if (getInBetweenOper(operator) != null) {
