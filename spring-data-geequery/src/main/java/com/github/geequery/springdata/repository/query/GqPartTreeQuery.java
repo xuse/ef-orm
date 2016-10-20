@@ -249,6 +249,7 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 			throw new UnsupportedOperationException();
 		case NEGATING_SIMPLE_PROPERTY:
 			and.addCondition(QB.not(QB.eq(field, value)));
+			break;
 		case AFTER:
 			throw new UnsupportedOperationException();
 		case BEFORE:
@@ -259,7 +260,6 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 			throw new UnsupportedOperationException();
 		case REGEX:
 			throw new UnsupportedOperationException();
-
 		case EXISTS:
 			throw new UnsupportedOperationException();
 		case FALSE:
