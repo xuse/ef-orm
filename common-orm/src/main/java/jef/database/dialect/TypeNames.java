@@ -25,7 +25,7 @@ public class TypeNames {
 	public Type get(int typecode) {
 		Type result = defaults.get(typecode);
 		if (result == null)
-			throw new IllegalArgumentException("No Dialect mapping for JDBC type: " + typecode);
+			throw new IllegalArgumentException("No data mapping for JDBC type: " + typecode);
 		return result;
 	}
 

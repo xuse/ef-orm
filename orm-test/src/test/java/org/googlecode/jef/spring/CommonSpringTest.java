@@ -43,7 +43,7 @@ public class CommonSpringTest {
 	public void test2() throws SQLException{
 		TupleMetadata table=new TupleMetadata("h_test");
 		table.addColumn("id", new ColumnType.AutoIncrement(8));
-		table.addColumn("data", new TypeDefImpl("hstore", Types.OTHER,String.class).setMappingClz(HstoreMapMapping.class));
+		table.addColumn("data", new TypeDefImpl("hstore", Types.OTHER).javaType(String.class).mapping(HstoreMapMapping.class));
 		dao.getNoTransactionSession().createTable(table);
 		
 		
