@@ -2,6 +2,7 @@ package jef.database.meta;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.sql.Types;
 import java.util.Date;
 import java.util.List;
 
@@ -15,7 +16,6 @@ import javax.persistence.TemporalType;
 
 import jef.database.DbUtils;
 import jef.database.annotation.Parameter;
-import jef.database.annotation.Type;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.TypeDefImpl;
 import jef.database.dialect.type.ColumnMapping;
@@ -103,6 +103,11 @@ public class ColumnTypeBuilder {
 	 * 自增
 	 */
 	private GenerateTypeDef generatedValue;
+	
+	/**
+	 * 自定义的映射
+	 */
+	private ColumnMapping customType;
 
 	public ColumnTypeBuilder(Column col, java.lang.reflect.Field field,
 			Class<?> treatJavaType, FieldAnnotationProvider fieldProvider) {
@@ -170,17 +175,27 @@ public class ColumnTypeBuilder {
 
 	public ColumnType build() {
 		ColumnType result;
-		if (fieldProvider.getAnnotation(jef.database.annotation.Type.class) != null) {
-			jef.database.annotation.Type t = fieldProvider
-					.getAnnotation(jef.database.annotation.Type.class);
-			result = createByCustomer(t);
-		} else if (this.def == null) {
+		if (customType != null) {
+			int sqlType=customType.getSqlType();
+			if(lob){
+				if(isCharType(sqlType)){
+					sqlType=Types.CLOB;
+				}else{
+					sqlType=Types.BLOB;
+				}
+			}
+			result = new TypeDefImpl(def, sqlType).javaType(field.getType()).spec(length, precision, scale);
+		}else if (this.def == null) {
 			result = createDefault();
 		} else {
 			result = createByDef();
 		}
-		result.setUnique(unique);
+		result.setUnique(unique);	
 		return result.setNullable(nullable).defaultIs(defaultExpression);
+	}
+
+	private boolean isCharType(int sqlType) {
+		return sqlType==Types.CHAR || sqlType==Types.VARCHAR || sqlType==Types.CLOB;
 	}
 
 	private ColumnType createDefault() {
@@ -245,17 +260,6 @@ public class ColumnTypeBuilder {
 					+ javaType.getName()
 					+ " can't mapping to a Db column type by default");
 		}
-	}
-
-	private ColumnType createByCustomer(Type t) {
-		ColumnMapping cm = BeanUtils.newInstance(t.value());
-		try {
-			applyParams(t.parameters(), cm);
-		} catch (Exception e) {
-			throw new IllegalArgumentException("@Type annotation on field "
-					+ field + " is invalid", e);
-		}
-		return new TypeDefImpl(def, cm.getSqlType(), field.getType());
 	}
 
 	@Deprecated
@@ -400,5 +404,10 @@ public class ColumnTypeBuilder {
 				bw.setPropertyValueByString(p.name(), p.value());
 			}
 		}
+	}
+
+	public ColumnTypeBuilder withCustomType(ColumnMapping type) {
+		this.customType=type;
+		return this;
 	}
 }
