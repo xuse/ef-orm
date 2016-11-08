@@ -656,13 +656,13 @@ public final class MetaHolder {
 			// 在得到了元模型的情况下
 			boolean isPK = fa.getAnnotation(javax.persistence.Id.class) != null;
 			
-			jef.database.annotation.Type mappingHint = fa.getAnnotation(jef.database.annotation.Type.class);
+			jef.database.annotation.Type customType = fa.getAnnotation(jef.database.annotation.Type.class);
 			ColumnMapping type = null;
 			Class<?> fieldType;
-			if (mappingHint != null) {
-				type = BeanUtils.newInstance(mappingHint.value());
+			if (customType != null) {
+				type = BeanUtils.newInstance(customType.value());
 				try {
-					ColumnTypeBuilder.applyParams(mappingHint.parameters(), type);
+					ColumnTypeBuilder.applyParams(customType.parameters(), type);
 				} catch (Exception e) {
 					throw new IllegalArgumentException("@Type annotation on field " + processingClz + "." + field + " is invalid", e);
 				}
@@ -673,7 +673,7 @@ public final class MetaHolder {
 			Column c = fa.getAnnotation(Column.class);
 			ColumnType ct;
 			try {
-				ct = new ColumnTypeBuilder(c, f, fieldType, fa).build();
+				ct = new ColumnTypeBuilder(c, f, fieldType, fa).withCustomType(type).build();
 			} catch (Exception e) {
 				throw new PersistenceException(processingClz + " has invalid field/column " + f.getName(), e);
 			}
