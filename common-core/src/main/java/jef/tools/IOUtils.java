@@ -683,9 +683,12 @@ public class IOUtils {
 	 * @param path
 	 */
 	public static void createFolder(String path) {
-		File file = new File(path);
+		createFolder(new File(path));
+	}
+	
+	public static void createFolder(File file) {
 		if (file.exists() && file.isFile()) {
-			throw new RuntimeException("Duplicate name file exist. can't create directory " + path);
+			throw new RuntimeException("Duplicate name file exist. can't create directory " + file.getPath());
 		} else if (!file.exists()) {
 			file.mkdirs();
 		}
