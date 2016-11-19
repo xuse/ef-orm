@@ -1,11 +1,18 @@
 package org.easyframe.tutorial.lesson1.entity;
 
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Lob;
+
+import jef.database.annotation.Type;
+import jef.database.dialect.extension.ObjectJsonMapping;
+
+import com.github.geequery.orm.annotation.Comment;
 
 @Entity
 public class Foo2 extends jef.database.DataObject {
@@ -22,6 +29,12 @@ public class Foo2 extends jef.database.DataObject {
     
     @Lob
     private String comments;
+    
+    @Column(name = "groups")
+	@Lob
+	@Type(ObjectJsonMapping.class)
+	@Comment("应用模板的服务(组件)分组,对应模板的group组,格式:{\"g1\":[\"mysql\",\"wordpress\"]}")
+	private Map<String, List<String>> groups;
 
     public int getId() {
         return id;
@@ -63,9 +76,17 @@ public class Foo2 extends jef.database.DataObject {
 		this.comments = comments;
 	}
 
+	public Map<String, List<String>> getGroups() {
+		return groups;
+	}
+
+	public void setGroups(Map<String, List<String>> groups) {
+		this.groups = groups;
+	}
+
 
 
 	public enum Field implements jef.database.Field {
-        id, name, created,comments, volume
+        id, name, created,comments, volume,groups
     }
 }
