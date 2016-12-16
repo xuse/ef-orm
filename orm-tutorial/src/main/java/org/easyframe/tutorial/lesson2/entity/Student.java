@@ -10,6 +10,8 @@ import javax.persistence.Id;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+import jef.database.annotation.UnsavedValue;
+
 @Entity
 public class Student extends jef.database.DataObject {
 	/**
@@ -22,6 +24,7 @@ public class Student extends jef.database.DataObject {
     /**
      * 姓名
      */
+    @UnsavedValue(UnsavedValue.NullOrEmpty)
     private String name;
 
     /**

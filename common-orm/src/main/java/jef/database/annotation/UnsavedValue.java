@@ -18,4 +18,10 @@ import java.lang.annotation.Target;
 @Retention(RUNTIME)
 public @interface UnsavedValue {
 	String value();
+	
+	String NullOrEmpty="null+";
+	
+	String MinusNumber="<0";
+	
+	String ZeroAndMinus="<=0";
 }

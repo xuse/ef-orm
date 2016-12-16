@@ -22,6 +22,7 @@ import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.Assert;
 import jef.tools.DateUtils;
 import jef.tools.StringUtils;
+import jef.tools.collection.ElementFilter;
 import jef.tools.reflect.ConvertUtils;
 import jef.tools.reflect.Property;
 
@@ -45,7 +46,7 @@ public abstract class AColumnMapping implements ColumnMapping {
 	protected Property fieldAccessor;
 
 	private boolean unsavedValueDeclared;
-	private Object unsavedValue;
+	private ElementFilter<Object> unsavedValue;
 	private boolean notInsert;
 	private boolean notUpdate;
 
@@ -62,6 +63,62 @@ public abstract class AColumnMapping implements ColumnMapping {
 	public boolean isPk() {
 		return pk;
 	}
+
+	private static class ConstantFilter implements ElementFilter<Object> {
+		private Object object1;
+
+		ConstantFilter(Object obj) {
+			this.object1 = obj;
+		}
+
+		public boolean apply(Object object2) {
+			if (object1 == object2) {
+				return true;
+			}
+			if ((object1 == null) || (object2 == null)) {
+				return false;
+			}
+			return object1.equals(object2);
+		}
+	}
+
+	private static final ElementFilter<Object> Null = new ElementFilter<Object>() {
+		public boolean apply(Object obj) {
+			return obj == null;
+		}
+	};
+
+	private static final ElementFilter<Object> NullOrEmpty = new ElementFilter<Object>() {
+		public boolean apply(Object obj) {
+			if (obj == null)
+				return true;
+			return String.valueOf(obj).length() == 0;
+		}
+	};
+
+	private static final ElementFilter<Object> MinusNumber = new ElementFilter<Object>() {
+		public boolean apply(Object obj) {
+			if (obj == null)
+				return true;
+			if (obj instanceof Number) {
+				return ((Number) obj).longValue() < 0;
+			} else {
+				return false;
+			}
+		}
+	};
+
+	private static final ElementFilter<Object> ZeroAndMinus = new ElementFilter<Object>() {
+		public boolean apply(Object obj) {
+			if (obj == null)
+				return true;
+			if (obj instanceof Number) {
+				return ((Number) obj).longValue() <= 0;
+			} else {
+				return false;
+			}
+		}
+	};
 
 	public void init(Field field, String columnName, ColumnType type, ITableMetadata meta) {
 		this.field = field;
@@ -86,7 +143,7 @@ public abstract class AColumnMapping implements ColumnMapping {
 			unsavedValueDeclared = true;
 			unsavedValue = parseValue(containerType, unsaveValue.value());
 		} else if (containerType.isPrimitive()) {
-			unsavedValue = ConvertUtils.defaultValueOfPrimitive(containerType);
+			unsavedValue = new ConstantFilter(ConvertUtils.defaultValueOfPrimitive(containerType));
 		}
 		Column column = map == null ? null : (Column) map.get(Column.class);
 		if (column != null) {
@@ -95,11 +152,12 @@ public abstract class AColumnMapping implements ColumnMapping {
 		}
 	}
 
-	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
+	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect)
+			throws SQLException {
 		rs.updateObject(columnIndex, value);
 	}
 
-	private Object parseValue(Class<?> containerType, String value) {
+	private ElementFilter<Object> parseValue(Class<?> containerType, String value) {
 		// int 226
 		// short 215
 		// long 221
@@ -108,36 +166,45 @@ public abstract class AColumnMapping implements ColumnMapping {
 		// double 228
 		// char 201
 		// byte 237
+		Object condition = null;
 		if (containerType.isPrimitive()) {
 			String s = containerType.getName();
 			switch (s.charAt(1) + s.charAt(2)) {
 			case 226:
-				return StringUtils.toInt(value, 0);
+				condition = StringUtils.toInt(value, 0);
 			case 215:
-				return StringUtils.toInt(value, 0);
+				condition = StringUtils.toInt(value, 0);
 			case 221:
-				return StringUtils.toLong(value, 0L);
+				condition = StringUtils.toLong(value, 0L);
 			case 222:
-				return StringUtils.toBoolean(value, false);
+				condition = StringUtils.toBoolean(value, false);
 			case 219:
-				return StringUtils.toFloat(value, 0f);
+				condition = StringUtils.toFloat(value, 0f);
 			case 228:
-				return StringUtils.toDouble(value, 0d);
+				condition = StringUtils.toDouble(value, 0d);
 			case 201:
-				if (value.length() == 0)
-					return (char) 0;
-				return value.charAt(0);
+				if (value.length() == 0) {
+					condition = (char) 0;
+				} else {
+					condition = value.charAt(0);
+				}
 			case 237:
-				return StringUtils.toInt(value, 0);
+				condition = (byte) StringUtils.toInt(value, 0);
 			}
 		} else if ("null".equalsIgnoreCase(value)) {
-			return null;
+			return Null;
+		} else if (UnsavedValue.MinusNumber.equals(value)) {
+			return MinusNumber;
+		} else if (UnsavedValue.ZeroAndMinus.equals(value)) {
+			return ZeroAndMinus;
+		} else if (UnsavedValue.NullOrEmpty.equals(value)) {
+			return NullOrEmpty;
 		} else if (String.class == containerType) {
-			return value;
+			condition = value;
 		} else if (Date.class == containerType) {
-			return DateUtils.autoParse(value);
+			condition = DateUtils.autoParse(value);
 		}
-		return null;
+		return condition == null ? Null : new ConstantFilter(condition);
 	}
 
 	public String fieldName() {
@@ -232,7 +299,8 @@ public abstract class AColumnMapping implements ColumnMapping {
 	 */
 	protected abstract String getSqlExpression(Object value, DatabaseDialect profile);
 
-	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean dynamic) throws SQLException {
+	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr,
+			InsertSqlClause result, boolean dynamic) throws SQLException {
 		if (dynamic && !obj.isUsed(field)) {
 			return;
 		}
@@ -277,11 +345,11 @@ public abstract class AColumnMapping implements ColumnMapping {
 	}
 
 	/**
-	 * 获得UnsavedValue。 UnsavedValue是系统认为不会存入数据库的一种值。 如果显式声明 用于判断主键无效、查询条件无效等情况
+	 * 判断是否为UnsavedValue。 UnsavedValue是系统认为不会存入数据库的一种值。 如果显式声明 用于判断主键无效、查询条件无效等情况
 	 */
 	@Override
-	public Object getUnsavedValue() {
-		return unsavedValue;
+	public boolean isUnsavedValue(Object object) {
+		return unsavedValue.apply(object);
 	}
 
 	public boolean isGenerated() {
