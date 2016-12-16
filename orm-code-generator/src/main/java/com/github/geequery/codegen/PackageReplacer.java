@@ -15,15 +15,6 @@
  */
 package com.github.geequery.codegen;
 
-import japa.parser.JavaParser;
-import japa.parser.ParseException;
-import japa.parser.ast.CompilationUnit;
-import japa.parser.ast.ImportDeclaration;
-import japa.parser.ast.PackageDeclaration;
-import japa.parser.ast.expr.NameExpr;
-import japa.parser.ast.type.ClassOrInterfaceType;
-import japa.parser.ast.visitor.VoidVisitorAdapter;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -32,6 +23,15 @@ import jef.common.wrapper.Holder;
 import jef.tools.IOUtils;
 
 import org.apache.commons.lang.StringUtils;
+
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParseException;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.ImportDeclaration;
+import com.github.javaparser.ast.PackageDeclaration;
+import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.type.ClassOrInterfaceType;
+import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 
 /**
  * 对指定源文件夹下的Java文件的包名进行替换。 将package定义替换，将import替换，将内部代码中对类的引用的全称替换。

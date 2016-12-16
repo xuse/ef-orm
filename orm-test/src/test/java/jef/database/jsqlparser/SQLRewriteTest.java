@@ -3,15 +3,16 @@ package jef.database.jsqlparser;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
+import org.junit.Test;
+
 import jef.database.DbUtils;
-import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.AbstractDialect;
+import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.visitor.Statement;
-
-import org.apache.commons.lang.StringUtils;
-import org.junit.Test;
+import jef.database.support.RDBMS;
 
 /**
  * 测试在不同数据库下的兼容性
@@ -24,6 +25,7 @@ public class SQLRewriteTest extends org.junit.Assert {
 	private DatabaseDialect derby = AbstractDialect.getProfile("derby");
 	private DatabaseDialect mysql = AbstractDialect.getProfile("mysql");
 	private DatabaseDialect postgres = AbstractDialect.getProfile("postgresql");
+	private DatabaseDialect hsql = AbstractDialect.getProfile(RDBMS.hsqldb.name());
 
 	@Test
 	public void test1() throws ParseException {
@@ -135,6 +137,10 @@ public class SQLRewriteTest extends org.junit.Assert {
 			System.out.println("================ Derby:");
 			System.out.println(StringUtils.join(toDerby(sqls),"\r\n"));
 		}
+//		{
+//			System.out.println("================ HSQL:");
+//			System.out.println(StringUtils.join(toHsql(sqls),"\r\n"));
+//		}
 		
 	}
 
@@ -155,6 +161,17 @@ public class SQLRewriteTest extends org.junit.Assert {
 		for (String sql : sqls) {
 			Statement st = DbUtils.parseStatement(sql);
 			st.accept(new SqlFunctionlocalization(derby,null));
+			result[n++] = st.toString();
+		}
+		return Arrays.asList(result);
+	}
+	
+	private List<String> toHsql(String... sqls) throws ParseException {
+		String[] result = new String[sqls.length];
+		int n = 0;
+		for (String sql : sqls) {
+			Statement st = DbUtils.parseStatement(sql);
+			st.accept(new SqlFunctionlocalization(hsql,null));
 			result[n++] = st.toString();
 		}
 		return Arrays.asList(result);

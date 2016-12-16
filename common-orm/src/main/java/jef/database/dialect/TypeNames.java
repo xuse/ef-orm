@@ -25,7 +25,7 @@ public class TypeNames {
 	public Type get(int typecode) {
 		Type result = defaults.get(typecode);
 		if (result == null)
-			throw new IllegalArgumentException("No Dialect mapping for JDBC type: " + typecode);
+			throw new IllegalArgumentException("No data mapping for JDBC type: " + typecode);
 		return result;
 	}
 
@@ -33,8 +33,8 @@ public class TypeNames {
 	 * 返回该SQL类型在此数据库中的描述类型
 	 * @param typecode 要求的sql类型
 	 * @param size  大小
-	 * @param precision 数值长度 
-	 * @param scale     精度
+	 * @param precision 数值长度 (精度)
+	 * @param scale     小数位数
 	 * @return PairIS，first表示在当前数据库中的实现SQL类型，second表示字段类型描述文字
 	 */
 	public Type get(int typecode, int size, int precision, int scale) {

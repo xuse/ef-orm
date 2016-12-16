@@ -22,7 +22,10 @@ import java.util.Arrays;
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.ORMConfig;
+import jef.database.annotation.DateGenerateType;
 import jef.database.dialect.ColumnType.AutoIncrement;
+import jef.database.dialect.handler.LimitHandler;
+import jef.database.dialect.handler.MySqlLimitHandler;
 import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
@@ -90,12 +93,15 @@ import jef.tools.string.JefStringReader;
  * 
  * MySQL的四种BLOB类型 类型 大小(单位：字节) TinyBlob 最大 255 Blob 最大 65K MediumBlob 最大 16M
  * LongBlob 最大 4G
+ * 
+ * 
+ * 遗留问题：MySQL能不能做成表名大小写不敏感的。目前是敏感的。这造成大小写不一致会认为是两张表。
  */
 public class MySqlDialect extends AbstractDialect {
 	public MySqlDialect() {
 		// 在MYSQL中 ||是逻辑运算符
 		features = CollectionUtils.identityHashSet();
-		features.addAll(Arrays.asList(Feature.DBNAME_AS_SCHEMA, Feature.ALTER_FOR_EACH_COLUMN, Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD, Feature.SUPPORT_LIMIT, Feature.COLUMN_DEF_ALLOW_NULL));
+		features.addAll(Arrays.asList(Feature.DBNAME_AS_SCHEMA, Feature.SUPPORT_INLINE_COMMENT,Feature.ALTER_FOR_EACH_COLUMN, Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD, Feature.SUPPORT_LIMIT, Feature.COLUMN_DEF_ALLOW_NULL));
 		setProperty(DbProperty.ADD_COLUMN, "ADD");
 		setProperty(DbProperty.MODIFY_COLUMN, "MODIFY");
 		setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");
@@ -107,6 +113,7 @@ public class MySqlDialect extends AbstractDialect {
 		setProperty(DbProperty.INDEX_LENGTH_LIMIT_FIX, "255");
 		setProperty(DbProperty.INDEX_LENGTH_CHARESET_FIX, "charset=latin5");
 		setProperty(DbProperty.DROP_INDEX_TABLE_PATTERN, "%1$s ON %2$s");
+		setProperty(DbProperty.DROP_FK_PATTERN, "alter table %1$s drop foreign key %2$s");
 		
 		loadKeywords("mysql_keywords.properties");
 		registerNative(new StandardSQLFunction("ascii"));
@@ -227,7 +234,7 @@ public class MySqlDialect extends AbstractDialect {
 		registerCompatible(Func.decode, new EmuDecodeWithIf());
 		registerCompatible(Func.translate, new EmuTranslateByReplace());
 		registerCompatible(Func.str, new TemplateFunction("str", "cast(%s as char)"));
-
+		typeNames.put(Types.BOOLEAN,"BIT(1)", 0);
 		typeNames.put(Types.BLOB,"mediumblob", 0);
 		typeNames.put(Types.BLOB, 255, "tinyblob", 0);
 		typeNames.put(Types.BLOB, 65535, "blob", 0);
@@ -245,35 +252,42 @@ public class MySqlDialect extends AbstractDialect {
 
 	@Override
 	public String getCreationComment(ColumnType column, boolean flag) {
-		int generateType = 0;
+		DateGenerateType generateType = null;
 		if (column instanceof SqlTypeDateTimeGenerated) {
-			// 1 创建时生成为sysdate 2更新时生成为sysdate 3创建时设置为为java系统时间  4为更新时设置为java系统时间
 			generateType = ((SqlTypeDateTimeGenerated) column).getGenerateType();
 			Object defaultValue = column.defaultValue;
-			if (generateType == 0 && (defaultValue == Func.current_date || defaultValue == Func.current_time || defaultValue == Func.now)) {
-				generateType = 1;
+			/*
+			 * 根据用户设置的defaultValue进行修正
+			 */
+			if (generateType == null && (defaultValue == Func.current_date || defaultValue == Func.current_time || defaultValue == Func.now)) {
+				generateType = DateGenerateType.created;
 			}
-			if(generateType==0 && defaultValue!=null){
+			if(generateType== null && defaultValue!=null){
 				String dStr = defaultValue.toString().toLowerCase();
 				if (dStr.startsWith("current") || dStr.startsWith("sys")) {
-					generateType = 1;	
+					generateType = DateGenerateType.created;	
 				}
 			}
 		}
-		if(generateType==1){
-			return "datetime not null";
-		}else if(generateType==2){
-			return "timestamp not null default current_timestamp on update current_timestamp";
+		if(generateType==DateGenerateType.created){
+			return "datetime NOT NULL";
+		}else if(generateType==DateGenerateType.modified){
+			return "timestamp NOT NULL DEFAULT current_timestamp ON UPDATE current_timestamp";
 		}
 		return super.getCreationComment(column, flag);
 	}
 	
 	protected String getComment(AutoIncrement column, boolean flag) {
 		StringBuilder sb = new StringBuilder();
-		sb.append("INT UNSIGNED");
+		//sb.append("INT UNSIGNED");
+		//2016-4-19日从 int unsigned改为int，因为当一个表主键被另一个表作为外键引用时，双方类型必须完全一样。
+		//实际测试发现，由于一般建表时普通int字段不会处理为 int unsigned，造成外键创建失败。所以此处暂时为int
+		sb.append("INT ");
+		
+		
 		if (flag) {
 			if (!column.nullable)
-				sb.append(" not null");
+				sb.append(" NOT NULL");
 		}
 		sb.append(" AUTO_INCREMENT");
 		return sb.toString();
@@ -291,18 +305,6 @@ public class MySqlDialect extends AbstractDialect {
 	 * current_timestamp on update current_timestamp
 	 */
 
-
-	/**
-	 * MYSQL中，表名是全转小写的，列名才是保持大小写的，先做小写处理，如果有处理列名的场合，改为调用
-	 * {@link #getColumnNameToUse(String)}
-	 */
-	@Override
-	public String getObjectNameToUse(String name) {
-		if(name==null || name.length()==0)return null;
-		if(name.charAt(0)=='`')return name;
-		return name.toLowerCase();
-	}
-	
 	
 
 	@Override
@@ -390,6 +392,7 @@ public class MySqlDialect extends AbstractDialect {
 		String dbname = reader.readToken(new char[] { '?', ' ', ';' });
 		connectInfo.setHost(host);
 		connectInfo.setDbname(dbname);
+		reader.close();
 	}
 
 	private final static int[] IO_ERROR_CODE = { 1158, 1159, 1160, 1161, 2001, 2002, 2003, 2004, 2006, 2013, 2024, 2025, 2026 };

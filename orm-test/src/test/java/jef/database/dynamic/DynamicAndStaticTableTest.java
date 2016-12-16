@@ -33,7 +33,7 @@ import org.junit.runner.RunWith;
 	 @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
 	 @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
 	 @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db?date_string_format=yyyy-MM-dd HH:mm:ss"),
 	 @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 	 
 })
@@ -41,11 +41,6 @@ public class DynamicAndStaticTableTest  extends org.junit.Assert {
 	private DbClient db;
 	private TupleMetadata GroupTable;
 	
-	@BeforeClass
-	public static void setup(){
-		EntityEnhancer en=new EntityEnhancer();
-		en.enhance("jef.database.dynamic");
-	}
 	/**
 	 * 添加了@DatabaseInit注解的方法将在每次连接到数据库后执行。
 	 * @throws SQLException

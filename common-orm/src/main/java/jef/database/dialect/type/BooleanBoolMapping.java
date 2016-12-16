@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import jef.database.dialect.DatabaseDialect;
@@ -33,5 +34,10 @@ public class BooleanBoolMapping extends AColumnMapping{
 	@Override
 	protected Class<?> getDefaultJavaType() {
 		return Boolean.class;
+	}
+
+	@Override
+	public void jdbcUpdate(ResultSet rs, String columnLabel, Object value, DatabaseDialect dialect) throws SQLException {
+		rs.updateBoolean(columnLabel, ((Boolean)value).booleanValue());
 	}
 }

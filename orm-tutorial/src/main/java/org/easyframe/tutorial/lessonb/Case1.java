@@ -1,6 +1,7 @@
 package org.easyframe.tutorial.lessonb;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 
 import jef.database.ORMConfig;
 
@@ -31,7 +32,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests{
 		{
 			Foo foo=new Foo();
 			foo.setName("Hello!");
-			commonDao.insert(foo);	
+			commonDao.extremeInsert(Arrays.asList(foo));	
 		}
 		{
 			Foo foo=new Foo();

@@ -9,7 +9,6 @@ import java.util.List;
 
 import javax.persistence.EntityExistsException;
 
-import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.database.Condition;
@@ -59,9 +58,16 @@ import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
-@DataSourceContext({ @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"), @DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
-		@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-		@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"), @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"), @DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}") })
+@DataSourceContext({ 
+	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"), 
+	@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
+	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), 
+	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
+	@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"), 
+	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db?date_string_format=yyyy-MM-dd HH:mm:ss"),
+	@DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}")
+	}
+)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class SimpleTableTest extends org.junit.Assert {
 	private DbClient db;
@@ -71,8 +77,6 @@ public class SimpleTableTest extends org.junit.Assert {
 		ORMConfig.getInstance().setSelectTimeout(20);
 		ORMConfig.getInstance().setUpdateTimeout(20);
 		ORMConfig.getInstance().setDeleteTimeout(20);
-		EntityEnhancer en = new EntityEnhancer();
-		en.enhance("jef.orm.onetable.model");
 	}
 
 	@DatabaseInit
@@ -236,7 +240,7 @@ public class SimpleTableTest extends org.junit.Assert {
 	 */
 	@Test
 	public void testConstraintViolationException() throws SQLException {
-		CaAsset obj = db.load(QB.create(CaAsset.class));
+		CaAsset obj = db.load(QB.create(CaAsset.class),false);
 		obj.setAssetId(obj.getAssetId());
 		Transaction tx = db.startTransaction();
 		try {
@@ -265,7 +269,7 @@ public class SimpleTableTest extends org.junit.Assert {
 	public void testConstraintViolationException2() throws SQLException {
 		ORMConfig.getInstance().setManualSequence(true);
 		CommonDao dao = new CommonDaoImpl(db);
-		CaAsset obj = db.load(QB.create(CaAsset.class));
+		CaAsset obj = db.load(QB.create(CaAsset.class),false);
 		obj.setAssetId(obj.getAssetId());
 		try {
 			dao.insert(obj);
@@ -731,12 +735,13 @@ public class SimpleTableTest extends org.junit.Assert {
 		t3.setAssetId(max + 2);
 		t3.setNormal("bb");
 		db.insert(t3);
-		CaAsset t4 = new CaAsset();
-		t4.setNormal("cc");
-		db.insert(t4);
 
 		t2 = db.load(t2);
 		t3 = db.load(t3);
+		
+		db.delete(t2);
+		db.delete(t3);
+		
 	}
 
 	@IgnoreOn(allButExcept="hsqldb")
@@ -790,7 +795,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		List<CaAsset> list = db.selectAll(CaAsset.class);
 
 		CaAsset t1 = list.get(0);
-		t1.prepareUpdate(CaAsset.Field.assetType, 1, true);
+		t1.prepareUpdate(CaAsset.Field.assetType, 1);
 
 		db.batchUpdate(list);
 
@@ -999,6 +1004,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		CaAsset ca = db.load(CaAsset.class, 12);
 		List<CaAsset> ca1 = db.selectByField(CaAsset.Field.acctId, 12);
 		Integer[] a = new Integer[501];
+		ORMConfig.getInstance().setDebugMode(false);
 		for (int i = 0; i < 501; i++) {
 			a[i] = i + 1;
 		}
@@ -1006,6 +1012,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		List<CaAsset> list1 = db.batchLoad(CaAsset.class, Arrays.asList(a));
 
 		List<CaAsset> list2 = db.batchLoadByField(CaAsset.Field.acctId, Arrays.asList(a));
+		ORMConfig.getInstance().setDebugMode(true);
 	}
 
 	/**

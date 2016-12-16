@@ -13,13 +13,14 @@ import javax.persistence.PersistenceException;
 
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
+import jef.database.DbMetaData;
 import jef.database.DbUtils;
 import jef.database.ORMConfig;
-import jef.database.OperateTarget;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.ColumnType.Clob;
 import jef.database.dialect.ColumnType.Varchar;
-import jef.database.dialect.type.AColumnMapping;
+import jef.database.dialect.handler.LimitHandler;
+import jef.database.dialect.handler.LimitOffsetLimitHandler;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.exception.JDBCExceptionHelper;
 import jef.database.exception.TemplatedViolatedConstraintNameExtracter;
@@ -59,7 +60,8 @@ public class PostgreSqlDialect extends AbstractDialect {
 
 	public PostgreSqlDialect() {
 		features = CollectionUtils.identityHashSet();
-		features.addAll(Arrays.asList(Feature.ALTER_FOR_EACH_COLUMN, Feature.COLUMN_ALTERATION_SYNTAX, Feature.SUPPORT_CONCAT, Feature.SUPPORT_SEQUENCE, Feature.SUPPORT_LIMIT, Feature.AI_TO_SEQUENCE_WITHOUT_DEFAULT));
+		features.addAll(Arrays.asList(Feature.ALTER_FOR_EACH_COLUMN, Feature.COLUMN_ALTERATION_SYNTAX, Feature.SUPPORT_CONCAT, Feature.SUPPORT_SEQUENCE, Feature.SUPPORT_LIMIT, Feature.AI_TO_SEQUENCE_WITHOUT_DEFAULT,
+				Feature.SUPPORT_COMMENT));
 
 		loadKeywords("postgresql_keywords.properties");
 
@@ -187,8 +189,12 @@ public class PostgreSqlDialect extends AbstractDialect {
 		typeNames.put(Types.SMALLINT, "int2", 0);
 		typeNames.put(Types.INTEGER, "int4", 0);
 		typeNames.put(Types.BIGINT, "int8", 0);
-		typeNames.put(Types.FLOAT, "float4", 0);
-		typeNames.put(Types.DOUBLE, "float8", 0);
+		
+		typeNames.put(Types.FLOAT, 6, "float4", 0);
+		typeNames.put(Types.FLOAT, 15,"float8", Types.DOUBLE);
+		typeNames.put(Types.FLOAT, 38,"numeric($p, $s)", Types.NUMERIC);
+		typeNames.put(Types.DOUBLE, 15,"float8", 0);
+		typeNames.put(Types.DOUBLE, 38,"numeric($p, $s)", Types.NUMERIC);
 		typeNames.put(Types.NUMERIC, "numeric($p, $s)", 0);
 	}
 
@@ -197,8 +203,8 @@ public class PostgreSqlDialect extends AbstractDialect {
 	}
 
 	@Override
-	public void init(OperateTarget db) {
-		super.init(db);
+	public void accept(DbMetaData db) {
+		super.accept(db);
 		try {
 			ensureUserFunction(this.functions.get("timestampdiff"), db);
 		} catch (SQLException e) {
@@ -217,35 +223,6 @@ public class PostgreSqlDialect extends AbstractDialect {
 			LogUtil.show(url);
 		}
 		return url;
-	}
-
-	/**
-	 * PostgreSQL 无论建表SQL中的表名是大写还是小写，最终DB中的表名都是小写； 而列名是区分大小写的； <br>
-	 * 为了避免大小写引起的问题，一律转成小写。
-	 * 
-	 * @param name
-	 */
-	@Override
-	public String getObjectNameToUse(String name) {
-		if (name == null || name.length()==0)
-			return null;
-		if (name.charAt(0) == '"')
-			return name;
-		return name.toLowerCase();
-	}
-
-	@Override
-	public String getColumnNameToUse(String name) {
-		if (name == null || name.length()==0)
-			return null;
-		if (name.charAt(0) == '"')
-			return name;
-		return name.toLowerCase();
-	}
-
-	@Override
-	public String getColumnNameToUse(AColumnMapping name) {
-		return name.lowerColumnName();
 	}
 
 	@Override

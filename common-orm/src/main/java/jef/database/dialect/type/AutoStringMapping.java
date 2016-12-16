@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import jef.accelerator.bean.AbstractFastProperty;
@@ -33,6 +34,12 @@ public final class AutoStringMapping extends AutoIncrementMapping {
 			st.setLong(index, n.longValue());
 		}
 		return value;
+	}
+	
+	@Override
+	public void jdbcUpdate(ResultSet rs,String column, Object value, DatabaseDialect dialect) throws SQLException {
+		Number n = Long.parseLong((String) value);
+		rs.updateLong(column, n.longValue());
 	}
 
 

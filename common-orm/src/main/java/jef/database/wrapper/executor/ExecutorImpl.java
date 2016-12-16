@@ -16,10 +16,8 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
 import jef.database.jdbc.result.CloseableResultSet;
-import jef.database.jdbc.result.ResultSetWrapper;
 import jef.database.support.SqlLog;
-import jef.database.wrapper.processor.BindVariableContext;
-import jef.database.wrapper.processor.BindVariableTool;
+import jef.database.wrapper.variable.BindVariableContext;
 
 import org.springframework.util.Assert;
 
@@ -31,11 +29,11 @@ public class ExecutorImpl implements StatementExecutor{
 	private String txId;
 	private DatabaseDialect profile;
 
-	public ExecutorImpl(IUserManagedPool parent, String dbkey, String txId) {
+	public ExecutorImpl(IUserManagedPool parent, String dbkey, String txId, DatabaseDialect dialect) {
 		this.parent = parent;
 		this.dbkey = dbkey;
 		this.txId = txId;
-		this.profile = parent.getProfile(dbkey);
+		this.profile = dialect;
 		try {
 			init();
 		} catch (SQLException e) {
@@ -124,7 +122,7 @@ public class ExecutorImpl implements StatementExecutor{
 			ps = conn.prepareStatement(sql);
 			if (params.length > 0) {
 				BindVariableContext context = new BindVariableContext(ps, profile, sb);
-				BindVariableTool.setVariables(context, Arrays.asList(params));
+				context.setVariables(Arrays.asList(params));
 			}
 			int total = ps.executeUpdate();
 			sb.append("\nExecuted:",total).append("\t |",txId);

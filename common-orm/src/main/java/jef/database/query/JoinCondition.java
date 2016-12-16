@@ -40,7 +40,7 @@ public class JoinCondition {
 		}
 	}
 
-	public void toOnExpression(StringBuilder sb, SqlContext sqlContext,QueryAlias right,SqlProcessor processor,DatabaseDialect profile) {
+	public void toOnExpression(StringBuilder sb, SqlContext sqlContext,QueryAlias right,SqlProcessor processor,DatabaseDialect profile,boolean batch) {
 
 		ITableMetadata meta=MetaHolder.getMeta(right.getQuery().getInstance());
 		sqlContext=sqlContext.getContextOf(right.getQuery()); 
@@ -68,7 +68,7 @@ public class JoinCondition {
 					keys.add(code);
 				}
 			}else{
-				keys.add(key.toSqlClause(meta, sqlContext, processor, left==null?null:left.getInstance(),profile));	
+				keys.add(key.toSqlClause(meta, sqlContext, processor, left==null?null:left.getInstance(),profile,batch));	
 			}
 		}
 		sb.append(StringUtils.join(keys, " and "));

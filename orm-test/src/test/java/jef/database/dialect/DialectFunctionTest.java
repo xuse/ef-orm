@@ -42,19 +42,13 @@ import org.junit.runner.RunWith;
  @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
  @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
  @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
- @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
- @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
+ @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}"),
+ @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db?date_string_format=yyyy-MM-dd HH:mm:ss")//
 })
 
 public class DialectFunctionTest extends org.junit.Assert {
 	private DbClient db;
 	private TupleMetadata tuple;
-
-	@BeforeClass
-	public static void enhance() {
-		EntityEnhancer en = new EntityEnhancer();
-		en.enhance("jef.orm.onetable.model");
-	}
 
 	public DialectFunctionTest() {
 		tuple = new TupleMetadata("tuple_table");

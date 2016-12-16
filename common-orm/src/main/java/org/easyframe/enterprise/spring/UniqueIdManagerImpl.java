@@ -95,7 +95,7 @@ public class UniqueIdManagerImpl implements UniqueIdManager,InitializingBean{
 	private long getNextLong(ITableMetadata meta) throws SQLException {
 		AutoIncrementMapping mapping=meta.getFirstAutoincrementDef();
 		DbClient client=getDbClient();
-		DatabaseDialect profile=client.getProfile();
+		DatabaseDialect profile=client.getProfile(null);
 		Sequence holder = client.getSqlTemplate(mapping.getSequenceDataSource(profile)).getSequence(meta.getFirstAutoincrementDef());
 		return holder.next();
 	}

@@ -43,7 +43,7 @@ public final class SequenceManager {
 	 */
 
 	protected SequenceManager(DbClient parent) {
-		this.parent=parent;
+		this.parent = parent;
 	}
 
 	/**
@@ -73,7 +73,7 @@ public final class SequenceManager {
 					if (datasource != null) {// 必须绑定DataSource
 						client = (OperateTarget) client.getSession().getSqlTemplate(StringUtils.trimToNull(datasource));
 					}
-					String columnName=fieldDef.getColumnName(profile, true);
+					String columnName = fieldDef.getColumnName(profile, true);
 					if (type == GenerationType.SEQUENCE) {
 						s = createSequence(name, client, a.getPrecision(), fieldDef.getMeta().getTableName(true), columnName, a.getSeqGenerator());
 					} else if (type == GenerationType.TABLE) {
@@ -85,17 +85,18 @@ public final class SequenceManager {
 		}
 		return s;
 	}
-	
+
 	/**
 	 * 获取Sequence，无论什么数据库都可以获取Sequence。如果是原生支持Sequence的数据库，会返回原生的实现；如果非原生支持，
 	 * 会返回用数据表的模拟实现。
+	 * 
 	 * @param fieldDef
 	 * @param dbKey
 	 * @return
 	 * @throws SQLException
 	 */
 	public Sequence getSequence(AutoIncrementMapping fieldDef, String dbKey) throws SQLException {
-		return getSequence(fieldDef,parent.selectTarget(dbKey));
+		return getSequence(fieldDef, parent.selectTarget(dbKey));
 	}
 
 	/**
@@ -114,8 +115,8 @@ public final class SequenceManager {
 			synchronized (holders) {
 				s = holders.get(seqName);
 				if (s == null) {// 双重检查锁定: 防止被多线程的情况下初始化多次
-					if(client==null){
-						client=this.parent.selectTarget(null);
+					if (client == null) {
+						client = this.parent.selectTarget(null);
 					}
 					if (client.getProfile().has(Feature.SUPPORT_SEQUENCE)) {
 						s = createSequence(seqName, client, length, null, null, null);
@@ -171,13 +172,14 @@ public final class SequenceManager {
 		if (StringUtils.isEmpty(table) || StringUtils.isEmpty(key)) {
 			throw new IllegalArgumentException();
 		}
-		if(sqlTemplate.getMetaData().exists(ObjectType.TABLE, table)){
+		table = sqlTemplate.getMetaData().getExists(ObjectType.TABLE, table);
+		if (table != null) {
 			String sql = "delete from " + table + " where T=?";
 			int i = sqlTemplate.executeSql(sql, key);
-			return i > 0;	
+			return i > 0;
 		}
 		return false;
-		
+
 	}
 
 	private Sequence wrapForHilo(AbstractSequence s, HiloGeneration hilo) {
@@ -196,9 +198,9 @@ public final class SequenceManager {
 	private Sequence createTable(String name, OperateTarget client, int length, String tableName, String columnName, TableGenerator config) {
 		String pname = JefConfiguration.get(DbCfg.DB_GLOBAL_SEQUENCE_TABLE);
 		if (StringUtils.isEmpty(pname)) {
-			return new SeqTableImpl(client, name, config, tableName, columnName,this);
+			return new SeqTableImpl(client, name, config, tableName, columnName, this);
 		} else {
-			return new AdvSeqTableImpl(client, name, config, tableName, columnName,this);
+			return new AdvSeqTableImpl(client, name, config, tableName, columnName, this);
 		}
 	}
 
@@ -211,7 +213,7 @@ public final class SequenceManager {
 				seqName = config.schema().trim() + "." + seqName;
 			}
 		}
-		return new SequenceNativeImpl(seqName, client, columnSize, tableName, columnName, initValue,this);
+		return new SequenceNativeImpl(seqName, client, columnSize, tableName, columnName, initValue, this);
 	}
 
 	/**
@@ -243,8 +245,8 @@ public final class SequenceManager {
 		 * 
 		 * @throws SQLException
 		 */
-		SeqTableImpl(OperateTarget target, String seqTable, TableGenerator config, String rawTableName, String rawColumnName,SequenceManager parent) {
-			super(target,parent);
+		SeqTableImpl(OperateTarget target, String seqTable, TableGenerator config, String rawTableName, String rawColumnName, SequenceManager parent) {
+			super(target, parent);
 			Assert.notNull(target);
 			this.table = seqTable;
 			this.rawTable = rawTableName;
@@ -258,7 +260,7 @@ public final class SequenceManager {
 			this.valueStep = JefConfiguration.getInt(DbCfg.SEQUENCE_BATCH_SIZE, 20);// 每次取一批
 			if (valueStep < 1)
 				valueStep = config == null ? 20 : config.allocationSize();
-			if(target!=null){
+			if (target != null) {
 				tryInit();
 			}
 		}
@@ -303,14 +305,17 @@ public final class SequenceManager {
 		@Override
 		protected boolean doInit(DbClient session, String dbKey) throws SQLException {
 			DbMetaData meta = session.getMetaData(dbKey);
-			if (!meta.exists(ObjectType.TABLE, table)) {
+			String tableExists = meta.getExists(ObjectType.TABLE, table);
+			if (tableExists == null) {
 				if (ORMConfig.getInstance().isAutoCreateSequence()) {
 					int start = 0;
 					meta.createTable(seqtable, table);
-					meta.executeSql("INSERT INTO " + table + " VALUES(?)",start);	
-				}else{
+					meta.executeSql("INSERT INTO " + this.table + " VALUES(?)", start);
+				} else {
 					throw new PersistenceException("Table for sequence " + table + " does not exist on " + meta + "!");
 				}
+			}else{
+				this.table=tableExists;
 			}
 			return true;
 		}
@@ -329,8 +334,8 @@ public final class SequenceManager {
 		static {
 			seqtable = new TupleMetadata(publicTableName);
 			seqtable.addColumn("V", new ColumnType.Int(12));
-			seqtable.addColumn("T","T", new ColumnType.Varchar(64),true);
-			
+			seqtable.addColumn("T", "T", new ColumnType.Varchar(64), true);
+
 		}
 		private String table;
 		private String key;
@@ -349,15 +354,15 @@ public final class SequenceManager {
 		 * 
 		 * @param tableName 表名
 		 */
-		AdvSeqTableImpl(OperateTarget target, String key, TableGenerator config, String rawTable, String rawColumn,SequenceManager parent) {
-			super(target,parent);
+		AdvSeqTableImpl(OperateTarget target, String key, TableGenerator config, String rawTable, String rawColumn, SequenceManager parent) {
+			super(target, parent);
 			Assert.notNull(target);
 			this.table = publicTableName;
 			this.key = key;
 
 			this.rawTable = rawTable;
 			this.rawColumn = rawColumn;
-			this.initValue = config==null?0:config.initialValue();
+			this.initValue = config == null ? 0 : config.initialValue();
 
 			this.valueStep = JefConfiguration.getInt(DbCfg.SEQUENCE_BATCH_SIZE, 20);
 			if (valueStep < 1)
@@ -365,7 +370,7 @@ public final class SequenceManager {
 
 			this.update = "UPDATE " + table + " SET V=? WHERE V=? AND T='" + key + "'";
 			this.select = "SELECT V FROM " + table + " WHERE T='" + key + "'";
-			if(target!=null){
+			if (target != null) {
 				tryInit();
 			}
 		}
@@ -410,12 +415,16 @@ public final class SequenceManager {
 		@Override
 		protected boolean doInit(DbClient session, String dbKey) throws SQLException {
 			DbMetaData meta = session.getMetaData(dbKey);
-			if (!meta.exists(ObjectType.TABLE, table)) {
-				if(ORMConfig.getInstance().isAutoCreateSequence()){
+			String exists=meta.getExists(ObjectType.TABLE, this.table);
+			if (exists==null) {
+				if (ORMConfig.getInstance().isAutoCreateSequence()) {
 					meta.createTable(seqtable, table);
-				}else{
+				} else {
 					throw new PersistenceException("Table for sequence " + table + " does not exist on " + meta + "!");
 				}
+			}else{
+				this.table=exists;
+				
 			}
 			return true;
 		}
@@ -424,6 +433,7 @@ public final class SequenceManager {
 			return false;
 		}
 	}
+
 	/**
 	 * 从结果中获得单个LONG值
 	 */
@@ -436,8 +446,8 @@ public final class SequenceManager {
 			}
 		}
 	};
-	
-	public void close(){
+
+	public void close() {
 		this.clearHolders();
 	}
 }

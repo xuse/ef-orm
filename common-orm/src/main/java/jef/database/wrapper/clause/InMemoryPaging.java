@@ -4,9 +4,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import jef.common.wrapper.IntRange;
 import jef.database.jdbc.rowset.CachedRowSetImpl;
 import jef.database.jdbc.rowset.Row;
+import jef.tools.PageLimit;
 
 /**
  * 在内存中实现结果集分页
@@ -22,8 +22,8 @@ public class InMemoryPaging{
 		this.limit=limit;
 	}
 	
-	public InMemoryPaging(IntRange range) {
-		int[] data=range.toStartLimitSpan();
+	public InMemoryPaging(PageLimit range) {
+		int[] data=range.toArray();
 		this.start=data[0];
 		this.limit=data[1];
 	}

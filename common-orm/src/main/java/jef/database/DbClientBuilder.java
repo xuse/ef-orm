@@ -612,7 +612,8 @@ public class DbClientBuilder {
 			qe.setInitDataAfterCreate(this.initDataAfterCreate);
 			qe.setInitDataIfTableExists(this.initDataIfTableExists);
 			qe.setEntityManagerFactory(sf);
-			qe.registeEntity(annotatedClasses);
+			if(annotatedClasses!=null)
+				qe.registeEntity(annotatedClasses);
 			if (packagesToScan != null) {
 				String joined = StringUtils.join(packagesToScan, ',');
 				qe.setPackageNames(joined);
@@ -689,11 +690,23 @@ public class DbClientBuilder {
 		return ORMConfig.getInstance().isCacheLevel1();
 	}
 	
+	/**
+	 * 
+	 * @param cache
+	 * @return this
+	 * @see DbCfg#CACHE_LEVEL_1
+	 */
 	public DbClientBuilder setCacheLevel1(boolean cache) {
 		ORMConfig.getInstance().setCacheLevel1(cache);
 		return this;
 	}
 	
+	/**
+	 * 获得全局缓存的生存时间，单位秒。
+	 * 全局缓存是类似于一级缓存的一个存储结构，可以自动分析数据库操作关联性并进行数据刷新。
+	 * @return 秒数
+	 * @see DbCfg#CACHE_GLOBAL_EXPIRE_TIME
+	 */
 	public int getGlobalCacheLiveTime() {
 		return ORMConfig.getInstance().getCacheLevel2();
 	}
@@ -702,11 +715,16 @@ public class DbClientBuilder {
 	 * 设置全局缓存的生存时间，单位秒。
 	 * 全局缓存是类似于一级缓存的一个存储结构，可以自动分析数据库操作关联性并进行数据刷新。
 	 * @param second
-	 * @return
+	 * @return this
+	 * @see DbCfg#CACHE_GLOBAL_EXPIRE_TIME
 	 */
 	public DbClientBuilder setGlobalCacheLiveTime(int second) {
 		ORMConfig.getInstance().setCacheLevel2(second);
 		return this;
 	}
 	
+	public DbClientBuilder setUseSystemOut(boolean flag){
+		LogUtil.useSlf4j=!flag;
+		return this;
+	}
 }

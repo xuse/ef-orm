@@ -49,7 +49,7 @@ public class MetaColumn {
     	c.setDataType(StringUtils.upperCase(type));
     	c.setDataTypeCode(-9999);
     	c.setDecimalDigit(precision);
-    	c.setNullAble(!mandatory);
+    	c.setNullable(!mandatory);
     	c.setRemarks(comment);
     	c.setTableName(parentTable);
     	if(StringUtils.isNotEmpty(this.defaultVal)){

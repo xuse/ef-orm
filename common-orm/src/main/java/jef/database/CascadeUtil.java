@@ -6,14 +6,17 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.persistence.FetchType;
 
 import jef.database.annotation.Cascade;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.AbstractRefField;
 import jef.database.meta.ISelectProvider;
 import jef.database.meta.ITableMetadata;
@@ -45,7 +48,7 @@ final class CascadeUtil {
 			Reference ref = f.getReference();
 			if (ref.getType() == ReferenceType.ONE_TO_MANY || ref.getType() == ReferenceType.ONE_TO_ONE) {
 				delrefs.add(ref);
-			}else if(ref.getHint()!=null && ref.getHint().getRelationTable()!=null) {
+			} else if (ref.getHint() != null && ref.getHint().getRelationTable() != null) {
 				delrefs.add(ref);
 			}
 		}
@@ -75,14 +78,43 @@ final class CascadeUtil {
 		int count = 0;
 		for (IQueryableEntity obj : objs) {
 			for (Reference ref : refs) {
-				//前面已经检查过，无需再次检查
-//				if (ref.getType() == ReferenceType.ONE_TO_MANY || ref.getType() == ReferenceType.ONE_TO_ONE) {
-					BeanWrapper bean = BeanWrapper.wrap(obj);
-					count += doDeleteRef(trans, bean, ref);
-//				}
+				// 前面已经检查过，无需再次检查
+				// if (ref.getType() == ReferenceType.ONE_TO_MANY ||
+				// ref.getType() == ReferenceType.ONE_TO_ONE) {
+				BeanWrapper bean = BeanWrapper.wrap(obj);
+				count += doDeleteRef(trans, bean, ref);
+				// }
 			}
 		}
 		return count;
+	}
+
+	/**
+	 * 目的是清理掉对象内的延迟加载上下文，并将延迟加载未处理的字段记录下来
+	 * 
+	 * 修改原因：算法优化——对于没有调用过延迟加载的关系，认为是无需参加级联操作的关系。
+	 * 修改前：没有调用过的延迟加载，在级联触发之前会自动调用，从而先加载，然后再次加载，并且进行比对，比对后发现没有修改过，然后什么也不做。
+	 * 改用这种优化算法后，对于没有触发的延迟加载最少可以省去两次查询操作。
+	 * 
+	 * @param obj
+	 * @return
+	 */
+	private static Set<String> clearLazy(DataObject obj) {
+		// return Collections.emptySet();
+		Set<String> unloaded;
+		if (obj.lazyload != null) {
+			unloaded = new HashSet<String>();
+			Map<String, Integer> fields = obj.lazyload.getProcessor().getOnFields();
+			for (String s : fields.keySet()) {
+				if (obj.lazyload.needLoad(s) > -1) {// 将尚未执行过延迟加载的字段记录下来，后续忽略更新
+					unloaded.add(s);
+				}
+			}
+		} else {
+			unloaded = Collections.emptySet();
+		}
+		obj.clearQuery();
+		return unloaded;
 	}
 
 	/*
@@ -95,9 +127,11 @@ final class CascadeUtil {
 		ITableMetadata meta = MetaHolder.getMeta(list.get(0));
 		for (IQueryableEntity obj : list) {
 			// 在维护端操作之前
-			obj.clearQuery();//目的是清理掉对象内的延迟加载上下文
+			Set<String> lazyloadSkip = clearLazy((DataObject) obj);
 			BeanWrapper bean = BeanWrapper.wrap(obj);
 			for (AbstractRefField f : meta.getRefFieldsByName().values()) {
+				if (lazyloadSkip.contains(f.getName()))
+					continue;
 				// 无需执行级联操作
 				if (!f.canInsert() || f.getPriority() < minPriority) {
 					continue;
@@ -123,7 +157,8 @@ final class CascadeUtil {
 
 				Reference ref = f.getReference();
 				Object value = f.getField().get(obj);
-				if(value==null)continue;
+				if (value == null)
+					continue;
 				// 其他几种情况，维护子表
 				switch (ref.getType()) {
 				case ONE_TO_ONE:
@@ -143,10 +178,12 @@ final class CascadeUtil {
 
 	static int updateWithRefInTransaction(IQueryableEntity obj, Session trans, int minPriority) throws SQLException {
 		Collection<AbstractRefField> refs = MetaHolder.getMeta(obj).getRefFieldsByName().values();
-		obj.clearQuery();//目的是清理掉对象内的延迟加载上下文
+		Set<String> lazyloadSkip = clearLazy((DataObject) obj);
 		int result = 0;
 		// 在维护端操作之前
 		for (AbstractRefField f : refs) {
+			if (lazyloadSkip.contains(f.getName()))
+				continue;
 			if (!f.canUpdate() || f.getPriority() < minPriority) {
 				continue;
 			}
@@ -162,6 +199,8 @@ final class CascadeUtil {
 		// 维护端操作之后
 		for (AbstractRefField f : refs) {
 			// 无需执行级联操作
+			if (lazyloadSkip.contains(f.getName()))
+				continue;
 			if (!f.canUpdate() || f.getPriority() < minPriority) {
 				continue;
 			}
@@ -226,15 +265,19 @@ final class CascadeUtil {
 	/**
 	 * 对多关系，无论是一对多还是多对多，目前都是先插入父表，再插入子表的……因此其实都是反向模式
 	 * 
-	 * @param trans 事务
-	 * @param value 级联对象
-	 * @param bean 父对象反射包装
-	 * @param f 引用关系
+	 * @param trans
+	 *            事务
+	 * @param value
+	 *            级联对象
+	 * @param bean
+	 *            父对象反射包装
+	 * @param f
+	 *            引用关系
 	 * @throws SQLException
 	 */
 	private static void doInsertRefN(Session trans, Object value, BeanWrapper bean, AbstractRefField f) throws SQLException {
 		Reference ref = f.getReference();
-		
+
 		Map<String, Object> map = new HashMap<String, Object>();
 		for (JoinKey jk : ref.toJoinPath().getJoinKeys()) {
 			if (bean.isReadableProperty(jk.getLeft().name())) {
@@ -260,46 +303,50 @@ final class CascadeUtil {
 	/**
 	 * 对多关系，无论是一对多还是多对多，目前都是先插入父表，再插入子表的……因此其实都是反向模式
 	 * 
-	 * @param trans 事务
-	 * @param value 级联对象
-	 * @param bean 父对象反射包装
-	 * @param f 引用关系
+	 * @param trans
+	 *            事务
+	 * @param value
+	 *            级联对象
+	 * @param bean
+	 *            父对象反射包装
+	 * @param f
+	 *            引用关系
 	 * @throws SQLException
 	 */
 	private static void doInsertRefNN(Session trans, Object value, BeanWrapper bean, AbstractRefField f) throws SQLException {
 		Reference ref = f.getReference();
-		if(ref.getHint()!=null && ref.getHint().getRelationTable()==null) {
-			doInsertRefN(trans,value,bean,f);
+		if (ref.getHint() != null && ref.getHint().getRelationTable() == null) {
+			doInsertRefN(trans, value, bean, f);
 			return;
 		}
-		//对于用过中间表的多对多关系，其级联对象关联位于一张隐含的表中，和当前对象的单表字段没有关系。
-		//故修改数值一致性操作省略
+		// 对于用过中间表的多对多关系，其级联对象关联位于一张隐含的表中，和当前对象的单表字段没有关系。
+		// 故修改数值一致性操作省略
 		Collection<? extends IQueryableEntity> list = castToList(value, f);
-		//目标表处理
-		checkAndInsert(trans,list,true);
-		//关系表处理
-		List<VarObject> relations=generateRelationData(ref,list,bean);
-				
-		checkAndInsert(trans,relations,false);
+		// 目标表处理
+		checkAndInsert(trans, list, true);
+		// 关系表处理
+		List<VarObject> relations = generateRelationData(ref, list, bean);
+
+		checkAndInsert(trans, relations, false);
 	}
-	
+
 	/**
 	 * 产生关系表数据
 	 */
-	private static List<VarObject> generateRelationData(Reference ref,Collection<? extends IQueryableEntity> list,BeanWrapper bean ) {
-		List<VarObject> relations=new ArrayList<VarObject>();
-		JoinPath path=ref.getHint();
-		TupleMetadata meta=path.getRelationTable();
-		JoinPath path2=path.getRelationToTarget();
-		for(IQueryableEntity d:list) {
-			VarObject obj=meta.newInstance();
-			//主对象赋值
-			for(JoinKey jk:path.getJoinKeys()) {
+	private static List<VarObject> generateRelationData(Reference ref, Collection<? extends IQueryableEntity> list, BeanWrapper bean) {
+		List<VarObject> relations = new ArrayList<VarObject>();
+		JoinPath path = ref.getHint();
+		TupleMetadata meta = path.getRelationTable();
+		JoinPath path2 = path.getRelationToTarget();
+		for (IQueryableEntity d : list) {
+			VarObject obj = meta.newInstance();
+			// 主对象赋值
+			for (JoinKey jk : path.getJoinKeys()) {
 				obj.put(jk.getRightAsField().name(), bean.getPropertyValue(jk.getLeft().name()));
 			}
-			//级联对象赋值
-			BeanWrapper sub=BeanWrapper.wrap(d);
-			for(JoinKey jk:path2.getJoinKeys()) {
+			// 级联对象赋值
+			BeanWrapper sub = BeanWrapper.wrap(d);
+			for (JoinKey jk : path2.getJoinKeys()) {
 				obj.put(jk.getLeft().name(), sub.getPropertyValue(jk.getRightAsField().name()));
 			}
 			relations.add(obj);
@@ -309,9 +356,9 @@ final class CascadeUtil {
 
 	private static int doDeleteRef(Session trans, BeanWrapper bean, Reference ref) throws SQLException {
 		IQueryableEntity rObj;
-		if(ref.getHint()!=null && ref.getHint().getRelationTable()!=null) {
-			rObj=ref.getHint().getRelationTable().newInstance();
-		}else {
+		if (ref.getHint() != null && ref.getHint().getRelationTable() != null) {
+			rObj = ref.getHint().getRelationTable().newInstance();
+		} else {
 			rObj = ref.getTargetType().newInstance();
 		}
 		for (JoinKey r : ref.toJoinPath().getJoinKeys()) {
@@ -355,6 +402,39 @@ final class CascadeUtil {
 			}
 		}
 	}
+
+	static <T extends IQueryableEntity> T compareToNewUpdateMap(T changedObj, T oldObj) {
+		Assert.isTrue(Objects.equal(DbUtils.getPrimaryKeyValue(changedObj), DbUtils.getPKValueSafe(oldObj)), "For consistence, the two parameter must hava equally primary keys.");
+		ITableMetadata m = MetaHolder.getMeta(oldObj);
+
+		Map<Field, Object> used = null;
+		boolean safeMerge = ORMConfig.getInstance().isSafeMerge();
+		if (safeMerge) {
+			used = new HashMap<Field, Object>(changedObj.getUpdateValueMap());
+		}
+		changedObj.getUpdateValueMap().clear();
+		for (ColumnMapping mType : m.getColumns()) {
+			Field field = mType.field();
+			if (mType.isPk()) {
+				continue;
+			}
+			boolean notUsed=!used.containsKey(field);
+			if(mType.isGenerated() && notUsed){
+				continue;
+			}
+			if (safeMerge && notUsed) {// 智能更新下，发现字段未被设过值，就不予更新
+				continue;
+			}
+			Object valueNew = mType.getFieldAccessor().get(changedObj);
+			Object valueOld =mType.getFieldAccessor().get(oldObj);
+			if (!Objects.equal(valueNew, valueOld)) {
+				changedObj.prepareUpdate(field, valueNew, true);
+			}
+		}
+		return changedObj;
+	}
+
+	
 
 	private static void doUpdateRefN(Session trans, Object value, BeanWrapper bean, AbstractRefField f, boolean doDeletion) throws SQLException {
 		// 2011-12-22:refactor logic, avoid to use delete-insert algorithm.
@@ -413,41 +493,49 @@ final class CascadeUtil {
 			}
 		}
 	}
-	
+
 	/**
 	 * 多对多的更新操作
-	 * @param trans 事务 
-	 * @param value 级联对象
-	 * @param bean 父对象
-	 * @param f 引用字段
-	 * @param b 是否执行删除
-	 * @throws SQLException 
+	 * 
+	 * @param trans
+	 *            事务
+	 * @param value
+	 *            级联对象
+	 * @param bean
+	 *            父对象
+	 * @param f
+	 *            引用字段
+	 * @param b
+	 *            是否执行删除
+	 * @throws SQLException
 	 */
 	private static void doUpdateRefNN(Session trans, Object value, BeanWrapper bean, AbstractRefField f) throws SQLException {
 		Reference ref = f.getReference();
-		if(ref.getHint()!=null && ref.getHint().getRelationTable()==null) {
-			doUpdateRefN(trans,value,bean,f,false);
+		if (ref.getHint() != null && ref.getHint().getRelationTable() == null) {
+			doUpdateRefN(trans, value, bean, f, false);
 			return;
 		}
-		//检查目标表
-		//对于用过中间表的多对多关系，其级联对象关联位于一张隐含的表中，和当前对象的单表字段没有关系。
-		//故修改数值一致性操作省略
+		// 检查目标表
+		// 对于用过中间表的多对多关系，其级联对象关联位于一张隐含的表中，和当前对象的单表字段没有关系。
+		// 故修改数值一致性操作省略
 		Collection<? extends IQueryableEntity> list = castToList(value, f);
-		//目标表处理
-		checkAndInsert(trans,list,true);
-		
-		//维护关系表
-		List<VarObject> relations=generateRelationData(ref,list,bean);
-		doDeleteRef(trans,bean,ref);
+		// 目标表处理
+		checkAndInsert(trans, list, true);
+
+		// 维护关系表
+		List<VarObject> relations = generateRelationData(ref, list, bean);
+		doDeleteRef(trans, bean, ref);
 		trans.batchInsert(relations);
 	}
 
-
 	/**
 	 * 按主键去检查每条字表记录，有的就更新，没有的就插入
+	 * 
 	 * @param trans
-	 * @param subs 级联对象
-	 * @param doUpdate 执行更新
+	 * @param subs
+	 *            级联对象
+	 * @param doUpdate
+	 *            执行更新
 	 * @throws SQLException
 	 */
 	private static void checkAndInsert(Session trans, Collection<? extends IQueryableEntity> subs, boolean doUpdate) throws SQLException {
@@ -496,7 +584,8 @@ final class CascadeUtil {
 			Collection<?> collection = (Collection<?>) obj;
 			List<T> list = new ArrayList<T>();
 			for (Object o : collection) {
-				if(o==null)continue;
+				if (o == null)
+					continue;
 				if (c.getThisType().isAssignableFrom(o.getClass())) {
 					list.add((T) o);
 				} else {
@@ -515,7 +604,7 @@ final class CascadeUtil {
 			}
 			return list;
 		} else if (obj instanceof Map) {
-			Cascade cascade = ref.getAsMap();
+			Cascade cascade = ref.getCascadeInfo();
 
 			if (cascade == null || StringUtils.isEmpty(cascade.valueOfMap())) {
 				Collection<T> collection = ((Map) obj).values();

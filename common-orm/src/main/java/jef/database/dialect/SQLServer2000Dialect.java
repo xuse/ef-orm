@@ -4,6 +4,9 @@ import java.sql.Types;
 
 import jef.database.ConnectInfo;
 import jef.database.dialect.ColumnType.AutoIncrement;
+import jef.database.dialect.handler.LimitHandler;
+import jef.database.dialect.handler.SQL2000LimitHandler;
+import jef.database.dialect.handler.SQL2000LimitHandlerSlowImpl;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.ParserFactory;
 import jef.database.jdbc.statement.UnionJudgement;
@@ -23,8 +26,6 @@ import jef.database.support.RDBMS;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
 
-import org.apache.commons.lang.StringUtils;
-
 /**
  * Dialect for SQL Server 2000 and before..
  * 
@@ -39,7 +40,7 @@ public class SQLServer2000Dialect extends AbstractDialect {
 		features.add(Feature.CONCAT_IS_ADD);
 		features.add(Feature.NOT_SUPPORT_KEYWORD_DEFAULT);
 		features.add(Feature.BATCH_GENERATED_KEY_BY_FUNCTION);
-		
+		features.add(Feature.SUPPORT_COMMENT);
 		// features.add(Feature.NO_BIND_FOR_INSERT);
 		// features.add(Feature.NO_BIND_FOR_SELECT);
 
@@ -187,24 +188,6 @@ public class SQLServer2000Dialect extends AbstractDialect {
 		return RDBMS.sqlserver;
 	}
 
-	/**
-	 * SQL Server的表名列名大小写由服务端的排序规则决定。 这里根据一般性习惯统统转为小写处理
-	 */
-	@Override
-	public String getObjectNameToUse(String name) {
-		return StringUtils.lowerCase(name);
-	}
-
-	/**
-	 * SQL Server的表名列名大小写由服务端的排序规则决定。 这里根据一般性习惯统统转为小写处理
-	 * 
-	 * 关键是看ResultSet获取有没有问题
-	 */
-	@Override
-	public String getColumnNameToUse(String name) {
-		return StringUtils.lowerCase(name);
-	}
-
 	@Override
 	public String getColumnNameToUse(AColumnMapping name) {
 		return name.lowerColumnName();
@@ -241,6 +224,7 @@ public class SQLServer2000Dialect extends AbstractDialect {
 			String dbname = reader.readToken(' ', ';', ':');
 			connectInfo.setDbname(dbname);
 		}
+		reader.close();
 	}
 	
 	private final LimitHandler limit=generateLimitHander();

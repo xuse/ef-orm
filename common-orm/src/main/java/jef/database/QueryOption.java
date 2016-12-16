@@ -26,7 +26,7 @@ public final class QueryOption implements Cloneable {
 		} catch (CloneNotSupportedException e) {
 			e.printStackTrace();
 		}
-		DEFAULT_MAX1.maxResult=1;
+		DEFAULT_MAX1.maxResult=2;
 		DEFAULT_MAX1.fetchSize=0;
 	}
 	private Map<String,ResultSetAccessor> mapper;

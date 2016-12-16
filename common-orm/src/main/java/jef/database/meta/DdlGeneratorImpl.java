@@ -9,10 +9,12 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import jef.common.SimpleSet;
+import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Index.IndexItem;
+import jef.database.meta.def.IndexDef;
 import jef.database.support.RDBMS;
 import jef.tools.StringUtils;
 
@@ -58,10 +60,10 @@ public class DdlGeneratorImpl implements DdlGenerator {
 			tableschema=tablename.substring(0,n);
 			tablename=tablename.substring(n+1);
 		}
-		for (jef.database.annotation.Index index : meta.getIndexDefinition()) {
+		for (IndexDef index : meta.getIndexDefinition()) {
 			List<Field> fields=new ArrayList<Field>();
 			List<IndexItem> columns=new ArrayList<IndexItem>();
-			for (String fieldname : index.fields()) {
+			for (String fieldname : index.getColumns()) {
 				boolean asc=true;
 				if(fieldname.toLowerCase().endsWith(" desc")){
 					asc=false;
@@ -78,11 +80,11 @@ public class DdlGeneratorImpl implements DdlGenerator {
 				fields.add(field);
 			}
 			
-			String indexName=index.name();
+			String indexName=index.getName();
 			if(StringUtils.isEmpty(indexName)){
 				StringBuilder iNameBuilder = new StringBuilder();
 				iNameBuilder.append("IDX_").append(StringUtils.truncate(StringUtils.removeChars(tablename, '_'), 14));
-				int maxField = ((28 - iNameBuilder.length()) / index.fields().length) - 1;
+				int maxField = ((28 - iNameBuilder.length()) / index.getColumns().length) - 1;
 				if (maxField < 1)
 					maxField = 1;				
 				for(Field field: fields){
@@ -105,9 +107,9 @@ public class DdlGeneratorImpl implements DdlGenerator {
 			Index indexobj=new Index(indexName);
 			indexobj.setTableSchema(tableschema);
 			indexobj.setTableName(tablename);
-			indexobj.setUnique(index.unique());
-			indexobj.setUserDefinition(index.definition());
-			if(index.clustered()){
+			indexobj.setUnique(index.isUnique());
+			indexobj.setUserDefinition(index.getDefinition());
+			if(index.isClustered()){
 				indexobj.setType(DatabaseMetaData.tableIndexClustered);
 			}
 			for(IndexItem c:columns){
@@ -149,7 +151,7 @@ public class DdlGeneratorImpl implements DdlGenerator {
 				for (ColumnModification entry : changed) {
 					if (complexSyntax) {// complex operate here
 						for (ColumnChange change : entry.getChanges()) {// 要针对每种Change单独实现SQL语句,目前已知Derby和postgresql是这样的，而且两者的语法有少量差别，这里尽量用兼容写法
-							sqls.add(toChangeColumnSql(tableName, entry.getFrom().getColumnName(), change, profile));
+							sqls.add(toChangeColumnSql(tableName, DbUtils.escapeColumn(profile, entry.getFrom().getColumnName()), change, profile));
 						}
 					} else {
 						// 简单语法时
@@ -240,7 +242,7 @@ public class DdlGeneratorImpl implements DdlGenerator {
 					sb.append(profile.getProperty(DbProperty.MODIFY_COLUMN)).append(' ');
 				}
 			}
-			sb.append(entry.getFrom().getColumnName()).append(' ');
+			sb.append(DbUtils.escapeColumn(profile, entry.getFrom().getColumnName())).append(' ');
 			sb.append(profile.getCreationComment(entry.getNewColumn(), true));
 			n++;
 		}
@@ -287,5 +289,15 @@ public class DdlGeneratorImpl implements DdlGenerator {
 		}
 		sb.append(BRUKETS_RIGHT);
 		return sb.toString();
+	}
+	private static final String DROP_CONSTRAINT_SQL = "alter table %1$s drop constraint %2$s";
+
+	@Override
+	public String getDropConstraintSql(String tablename, String constraintName) {
+		String template = this.profile.getProperty(DbProperty.DROP_FK_PATTERN);
+		if (StringUtils.isEmpty(template)) {
+			template = DROP_CONSTRAINT_SQL;
+		}
+		return String.format(template, tablename, constraintName);
 	}
 }

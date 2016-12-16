@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -39,13 +40,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
-
-import jef.common.wrapper.ArrayIterator;
-import jef.tools.ArrayUtils;
-import jef.tools.Assert;
-import jef.tools.reflect.ClassEx;
-import jef.tools.reflect.FieldEx;
-import jef.tools.reflect.GenericUtils;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.apache.commons.lang.ObjectUtils;
 
@@ -55,37 +51,32 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Multimap;
 
+import jef.common.wrapper.ArrayIterator;
+import jef.tools.ArrayUtils;
+import jef.tools.Assert;
+import jef.tools.reflect.ClassEx;
+import jef.tools.reflect.FieldEx;
+import jef.tools.reflect.GenericUtils;
+
 /**
  * 集合操作工具类 v2.0
  * 
+ * @author Joe
  */
-public final class CollectionUtils {
+public class CollectionUtils {
+	/**
+	 * 常量，用于获得一个空的SortedMap
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static final SortedMap EMPTY_SORTEDMAP = Collections.unmodifiableSortedMap(new TreeMap());
+
 	private CollectionUtils() {
 	}
 
-	/**
-	 * 在List中的指定位置插入元素。如果超出当前长度，则将list扩展到指定长度。
-	 * 
-	 * @param list
-	 *            List
-	 * @param index
-	 *            序号
-	 * @param value
-	 *            值
-	 */
-	public static <T> void setElement(List<T> list, int index, T value) {
-		if (index == list.size()) {
-			list.add(value);
-		} else if (index > list.size()) {
-			for (int i = list.size(); i < index; i++) {
-				list.add(null);
-			}
-			list.add(value);
-		} else {
-			list.set(index, value);
-		}
+	public static final class C extends CollectionUtils{
 	}
 
+	
 	/**
 	 * 将数组转换为Map。（Map不保证顺序）
 	 * 
@@ -93,12 +84,33 @@ public final class CollectionUtils {
 	 *            数组
 	 * @param keyExtractor
 	 *            键值提取函数
-	 * @return 在每个元素中提取键值后，形成Map，如果多个对象返回相同的key，那么会互相覆盖。如果不希望互相覆盖，请使用{@linkplain #group(Collection, Function)}
+	 * @return 在每个元素中提取键值后，形成Map，如果多个对象返回相同的key，那么会互相覆盖。如果不希望互相覆盖，请使用
+	 *         {@linkplain #group(Collection, Function)}
 	 */
 	public static <K, V> Map<K, V> toMap(V[] array, Function<V, K> keyExtractor) {
 		if (array == null || array.length == 0)
 			return Collections.emptyMap();
 		Map<K, V> result = new HashMap<K, V>(array.length);
+		for (V value : array) {
+			K key = keyExtractor.apply(value);
+			result.put(key, value);
+		}
+		return result;
+	}
+
+	/**
+	 * 将数组转换为Map。（Map按Key排序）
+	 * @param array   数组
+	 * @param keyExtractor 键值提取函数
+	 * @param comp 键值比较器
+	 * @return 在每个元素中提取键值后，形成Map，如果多个对象返回相同的key，那么会互相覆盖。如果不希望互相覆盖，请使用
+	 *         {@linkplain #group(Collection, Function)}
+	 */
+	@SuppressWarnings("unchecked")
+	public static <K, V> SortedMap<K, V> toSortedMap(V[] array, Function<V, K> keyExtractor, Comparator<K> comp) {
+		if (array == null || array.length == 0)
+			return EMPTY_SORTEDMAP;
+		SortedMap<K, V> result = new TreeMap<K, V>(comp);
 		for (V value : array) {
 			K key = keyExtractor.apply(value);
 			result.put(key, value);
@@ -113,12 +125,32 @@ public final class CollectionUtils {
 	 *            集合
 	 * @param keyExtractor
 	 *            键值提取函数
-	 * @return 在每个元素中提取键值后，形成Map
+	 * @return 在每个元素中提取键值后，形成Map。相同键值的记录将发生叠加（仅保留最后的一个）
 	 */
 	public static <K, V> Map<K, V> toMap(Collection<V> collection, Function<V, K> keyExtractor) {
 		if (collection == null || collection.isEmpty())
 			return Collections.emptyMap();
 		Map<K, V> result = new HashMap<K, V>(collection.size());
+		for (V value : collection) {
+			K key = keyExtractor.apply(value);
+			result.put(key, value);
+		}
+		return result;
+	}
+	
+	/**
+	 * 将集合转换为Map。（Map按Key排序）
+	 * @param collection   集合
+	 * @param keyExtractor 键值提取函数
+	 * @param comp 键值比较器
+	 * @return 在每个元素中提取键值后，形成Map，如果多个对象返回相同的key，那么会互相覆盖。如果不希望互相覆盖，请使用
+	 *         {@linkplain #group(Collection, Function)}
+	 */
+	@SuppressWarnings("unchecked")
+	public static <K, V> SortedMap<K, V> toSortedMap(Collection<V> collection, Function<V, K> keyExtractor, Comparator<K> comp) {
+		if (collection == null || collection.size() == 0)
+			return EMPTY_SORTEDMAP;
+		SortedMap<K, V> result = new TreeMap<K, V>(comp);
 		for (V value : collection) {
 			K key = keyExtractor.apply(value);
 			result.put(key, value);
@@ -205,28 +237,36 @@ public final class CollectionUtils {
 	}
 
 	/**
-	 * 转换，和{@link #extract(Collection, Function)}基本一样，区别在于extract是立即计算，transform是延迟计算的。
-	 * @param collection 集合对象
-	 * @param extractor 提取函数
+	 * 转换，和{@link #extract(Collection, Function)}
+	 * 基本一样，区别在于extract是立即计算，transform是延迟计算的。
+	 * 
+	 * @param collection
+	 *            集合对象
+	 * @param extractor
+	 *            提取函数
 	 * @return 提取后形成的集合
 	 */
 	public static <T, A> Collection<T> transform(Collection<A> collection, Function<A, T> extractor) {
 		return Collections2.transform(collection, extractor);
 	}
-	
-	
+
 	/**
-	 * 转换，和{@link #extract(Collection, Function)}基本一样，区别在于extract是立即计算，transform是延迟计算的。
-	 * @param array 数组
-	 * @param extractor 提取函数
+	 * 转换，和{@link #extract(Collection, Function)}
+	 * 基本一样，区别在于extract是立即计算，transform是延迟计算的。
+	 * 
+	 * @param array
+	 *            数组
+	 * @param extractor
+	 *            提取函数
 	 * @return 提取后形成的集合
 	 */
 	public static <T, A> Collection<T> transform(A[] array, Function<A, T> extractor) {
 		return Collections2.transform(Arrays.asList(array), extractor);
 	}
-	
+
 	/**
-	 * 对Map对象进行翻转（键值互换），Key变为Value,Value变为key
+	 * 对Map对象进行翻转（键值互换），Key变为Value,Value变为key。
+	 * 由于value值不能保证唯一，因此转换后的是一个{@link Multimap}。
 	 * 
 	 * 比如 有一个记录学生考试成绩的Map
 	 * 
@@ -242,7 +282,8 @@ public final class CollectionUtils {
 	 * 
 	 * @param <K>
 	 * @param <V>
-	 * @param map 要反转的Map
+	 * @param map
+	 *            要反转的Map
 	 * @return A new Multimap that reverse key and value
 	 */
 	public static <K, V> Multimap<V, K> inverse(Map<K, V> map) {
@@ -252,15 +293,15 @@ public final class CollectionUtils {
 		}
 		return result;
 	}
-	
+
 	/**
-	 * 对列表进行分组
+	 * 对集合进行分组
 	 * 
 	 * @param collection
 	 *            要分组的集合
 	 * @param function
 	 *            获取分组Key的函数
-	 * @return
+	 * @return 分组后的集合，每个Key可对应多个Value值。
 	 */
 	public static <T, A> Multimap<A, T> group(Collection<T> collection, Function<T, A> function) {
 		Assert.notNull(collection);
@@ -272,10 +313,14 @@ public final class CollectionUtils {
 		return result;
 	}
 
+
 	/**
 	 * 在集合中查找符合条件的首个元素
-	 * @param collection 集合
-	 * @param filter   过滤器
+	 * 
+	 * @param collection
+	 *            集合
+	 * @param filter
+	 *            过滤器
 	 * @return
 	 */
 	public static <T> T findFirst(Collection<T> collection, Function<T, Boolean> filter) {
@@ -292,10 +337,13 @@ public final class CollectionUtils {
 	/**
 	 * 根据字段名称和字段值查找第一个记录
 	 * 
-	 * @param collection 集合
-	 * @param fieldname  字段名
-	 * @param value      查找值
-	 * @return
+	 * @param collection
+	 *            集合
+	 * @param fieldname
+	 *            字段名
+	 * @param value
+	 *            查找值
+	 * @return 查找到的元素
 	 */
 	public static <T> T findFirst(Collection<T> collection, String fieldname, Object value) {
 		if (collection == null || collection.isEmpty())
@@ -316,12 +364,12 @@ public final class CollectionUtils {
 	 *            字段
 	 * @param value
 	 *            值
-	 * @return
+	 * @return 过滤后的集合
 	 */
-	public static <T> List<T> filter(Collection<T> collection, String fieldname, Object value) {
+	public static <T> List<T> getFiltered(Collection<T> collection, String fieldname, Object value) {
+		if(collection.isEmpty())return Collections.emptyList();
 		Class<?> clz = collection.iterator().next().getClass();
-		FieldValueFilter<T> f = new FieldValueFilter<T>(clz, fieldname, value);
-		return filter(collection, f);
+		return getFiltered(collection, new FieldValueFilter<T>(clz, fieldname, value));
 	}
 
 	/**
@@ -335,7 +383,7 @@ public final class CollectionUtils {
 	 *            过滤器
 	 * @return
 	 */
-	public static <T> List<T> filter(Collection<T> collection, Function<T, Boolean> filter) {
+	public static <T> List<T> getFiltered(Collection<T> collection, Function<T, Boolean> filter) {
 		List<T> list = new ArrayList<T>();
 		if (collection == null || collection.isEmpty())
 			return list;
@@ -347,70 +395,163 @@ public final class CollectionUtils {
 		return list;
 	}
 	
-	
+	/**
+	 * 在集合中查找符合条件的元素
+	 * 
+	 * @param <T>
+	 *            泛型
+	 * @param collection
+	 *            集合
+	 * @param filter
+	 *            过滤器
+	 * @return
+	 */
+	public static <T> void filter(Collection<T> collection, Function<T, Boolean> filter) {
+		for (Iterator<T> iter = collection.iterator(); iter.hasNext();) {
+			T e = iter.next();
+			if (!Boolean.TRUE.equals(filter.apply(e))) {
+				iter.remove();
+			}
+		}
+	}
+
+	/**
+	 * 对Map进行过滤，获得一个新的Map. 如果传入的是有序Map，新Map会保留原来的顺序。
+	 * 
+	 * @param map
+	 *            要处理的Map
+	 * @param filter
+	 *            过滤器
+	 * @return 过滤后的新Map
+	 */
+	public static <K, V> Map<K, V> getFiltered(Map<K, V> map, Function<Map.Entry<K, V>, Boolean> filter) {
+		Map<K, V> result;
+		if (map instanceof SortedMap) {
+			result = new TreeMap<K, V>(((SortedMap<K, V>) map).comparator());
+		} else {
+			result = new HashMap<K, V>(map.size());
+		}
+		for (Map.Entry<K, V> e : map.entrySet()) {
+			Boolean b = filter.apply(e);
+			if (Boolean.TRUE.equals(b)) {
+				result.put(e.getKey(), e.getValue());
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * 对Map进行过滤，当filter返回true时，元素被保留。反之被删除。<br>
+	 * 注意，如果传入的Map类型不支持Iterator.remove()方式移除元素，将抛出异常。(
+	 * 一般是UnsupportedOperationException)
+	 * 
+	 * @param map
+	 *            要处理的Map
+	 * @param filter
+	 *            Function，用于指定哪些元素要保留
+	 * @throws UnsupportedOperationException
+	 */
+	public static <K, V> void filter(Map<K, V> map, Function<Map.Entry<K, V>, Boolean> filter) {
+		for (Iterator<Map.Entry<K, V>> iter = map.entrySet().iterator(); iter.hasNext();) {
+			Map.Entry<K, V> e = iter.next();
+			if (!Boolean.TRUE.equals(filter.apply(e))) {
+				iter.remove();
+			}
+		}
+	}
+
 	/**
 	 * 将数组或Enumation转换为Collection
+	 * 
 	 * @param data
 	 * @param type
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> Collection<T> toCollection(Object data,Class<T> type){
+	public static <T> Collection<T> toCollection(Object data, Class<T> type) {
 		if (data == null)
 			return null;
-		if(data instanceof Collection) {
+		if (data instanceof Collection) {
 			return ((Collection<T>) data);
-		}else if(data.getClass().isArray()) {
-			if(data.getClass().getComponentType().isPrimitive()) {
-				int len=Array.getLength(data);
-				List<T> result=new ArrayList<T>(len);
-				for(int i=0;i<len;i++) {
+		} else if (data.getClass().isArray()) {
+			if (data.getClass().getComponentType().isPrimitive()) {
+				int len = Array.getLength(data);
+				List<T> result = new ArrayList<T>(len);
+				for (int i = 0; i < len; i++) {
 					result.add((T) Array.get(data, i));
 				}
-			}else {
-				return Arrays.asList((T[])data);
+			} else {
+				return Arrays.asList((T[]) data);
 			}
-		}else if(data instanceof Enumeration) {
-			Enumeration<T> e=(Enumeration<T>)data;
-			List<T> result=new ArrayList<T>();
-			for(;e.hasMoreElements();) {
+		} else if (data instanceof Enumeration) {
+			Enumeration<T> e = (Enumeration<T>) data;
+			List<T> result = new ArrayList<T>();
+			for (; e.hasMoreElements();) {
 				result.add(e.nextElement());
 			}
 			return result;
 		}
-		throw new IllegalArgumentException("The input type "+data.getClass()+" can not convert to Collection.");
+		throw new IllegalArgumentException("The input type " + data.getClass() + " can not convert to Collection.");
 	}
-	
 
 	/**
 	 * 检查传入的对象类型，并尝试获取其遍历器句柄
-	 * @param data 要判断的对象
-	 * @param clz  
+	 * 
+	 * @param data
+	 *            要判断的对象
+	 * @param clz
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T> Iterator<T> iterator(Object data,Class<T> clz) {
+	public static <T> Iterator<T> iterator(Object data, Class<T> clz) {
 		if (data == null)
 			return null;
-		if(data instanceof Collection) {
+		if (data instanceof Collection) {
 			return ((Collection<T>) data).iterator();
-		}else if(data.getClass().isArray()) {
+		} else if (data.getClass().isArray()) {
 			return new ArrayIterator<T>(data);
-		}else if(data instanceof Enumeration) {
-			return new EnumerationIterator<T>((Enumeration<T>)data);
+		} else if (data instanceof Enumeration) {
+			return new EnumerationIterator<T>((Enumeration<T>) data);
 		}
 		return null;
+	}
+
+	/**
+	 * 将Enumeration转换为一个新的List
+	 * @param data
+	 * @return 转换后的List
+	 */
+	public static <E> List<E> toList(Enumeration<E> data){
+		List<E> result=new ArrayList<E>();
+		for(;data.hasMoreElements();){
+			result.add(data.nextElement());
+		}
+		return result;
+	}
+	
+	/**
+	 * 将Iterable转换为List
+	 * @param data
+	 * @return 转换后的List
+	 */
+	public static <E> List<E> toList(Iterable<E> data){
+		List<E> result=new ArrayList<E>();
+		for(Iterator<E> iter=data.iterator();iter.hasNext();){
+			result.add(iter.next());
+		}
+		return result;
 	}
 	
 	/**
 	 * 将传入的对象转换为可遍历的对象。
+	 * 
 	 * @param data
 	 * @return
 	 */
 	public static <E> Iterator<E> iterator(Enumeration<E> data) {
 		return new EnumerationIterator<E>(data);
 	}
-	
+
 	/**
 	 * 判断指定的类型是否为数组或集合类型
 	 * 
@@ -487,38 +628,6 @@ public final class CollectionUtils {
 		return null;
 	}
 
-
-
-	/**
-	 * 获取List当中的值
-	 * 
-	 * @param obj
-	 * @param index
-	 * @return
-	 */
-	@SuppressWarnings("rawtypes")
-	public static Object listGet(List obj, int index) {
-		int length = obj.size();
-		if (index < 0)
-			index += length;
-		return obj.get(index);
-	}
-
-	/**
-	 * 设置List当中的值
-	 * 
-	 * @param obj
-	 * @param index
-	 * @param value
-	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static void listSet(List obj, int index, Object value) {
-		int length = obj.size();
-		if (index < 0)
-			index += length;
-		obj.set(index, value);
-	}
-
 	/**
 	 * 得到数组或集合类型的长度
 	 * 
@@ -532,48 +641,6 @@ public final class CollectionUtils {
 		}
 		Assert.isTrue(obj instanceof Collection);
 		return ((Collection) obj).size();
-	}
-
-	/**
-	 * 检测索引是否有效 当序号为负数时，-1表示最后一个元素，-2表示倒数第二个，以此类推
-	 */
-	public static boolean isIndexValid(Object obj, int index) {
-		int length = length(obj);
-		if (index < 0)
-			index += length;
-		return index >= 0 && index < length;
-	}
-
-	@SuppressWarnings("rawtypes")
-	public static void listSetAndExpand(List obj, int index, Object value) {
-		int length = obj.size();
-		if (index < 0 && index + length >= 0) {
-			index += length;
-		} else if (index < 0) {// 需要扩张
-			toFixedSize(obj, -index);
-		} else if (index >= length) {// 扩张
-			toFixedSize(obj, index + 1);
-		}
-		listSet(obj, index, value);
-	}
-
-	/**
-	 * 将list的大小调节为指定的大小 如果List长度大于制定的大小，后面的元素将被丢弃， 如果list小于指定大小，将会由null代替
-	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static void toFixedSize(List obj, int newsize) {
-		int len = obj.size();
-		if (newsize == len)
-			return;
-		if (newsize > len) {
-			for (int i = len; i < newsize; i++) {
-				obj.add(null);
-			}
-		} else {
-			for (int i = len; i > newsize; i--) {
-				obj.remove(i - 1);
-			}
-		}
 	}
 
 	/**
@@ -790,7 +857,6 @@ public final class CollectionUtils {
 		return Collections.newSetFromMap(new IdentityHashMap<E, Boolean>());
 	}
 
-
 	/**
 	 * Iterator wrapping an Enumeration.
 	 */
@@ -841,17 +907,41 @@ public final class CollectionUtils {
 			}
 		}
 	}
-	
+
 	/**
 	 * 获得集合的最后一个元素
+	 * 
 	 * @param collection
 	 * @return
 	 */
 	public static <T> T last(List<T> collection) {
-		if(collection==null || collection.isEmpty()) {
+		if (collection == null || collection.isEmpty()) {
 			return null;
 		}
-		return collection.get(collection.size()-1);
-		
+		return collection.get(collection.size() - 1);
+
+	}
+
+	/**
+	 * 在List中的指定位置插入元素。如果超出当前长度，则将list扩展到指定长度。
+	 * 
+	 * @param list
+	 *            List
+	 * @param index
+	 *            序号
+	 * @param value
+	 *            值
+	 */
+	public static <T> void setElement(List<T> list, int index, T value) {
+		if (index == list.size()) {
+			list.add(value);
+		} else if (index > list.size()) {
+			for (int i = list.size(); i < index; i++) {
+				list.add(null);
+			}
+			list.add(value);
+		} else {
+			list.set(index, value);
+		}
 	}
 }

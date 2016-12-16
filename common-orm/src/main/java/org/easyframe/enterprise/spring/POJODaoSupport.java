@@ -18,13 +18,14 @@ import jef.database.query.Query;
 import jef.tools.reflect.ClassEx;
 import jef.tools.reflect.GenericUtils;
 
-public class POJODaoSupport<T> extends BaseDao{
+
+@SuppressWarnings("unchecked")
+public class POJODaoSupport<T> extends BaseDao {
 	protected Class<T> entityClass;
 
 	/**
 	 * 根据泛型参数构造
 	 */
-	@SuppressWarnings("unchecked")
 	public POJODaoSupport() {
 		Class<?> c = getClass();
 		c = ClassEx.getRealClass(c);
@@ -38,7 +39,7 @@ public class POJODaoSupport<T> extends BaseDao{
 		}
 		this.entityClass = (Class<T>) type;
 	}
-	
+
 	public T insert(T entity) {
 		if (entity == null)
 			return null;
@@ -76,7 +77,6 @@ public class POJODaoSupport<T> extends BaseDao{
 		super.getEntityManager().remove(entity);
 	}
 
-
 	public T merge(T entity) {
 		super.getEntityManager().remove(entity);
 		return entity;
@@ -87,10 +87,10 @@ public class POJODaoSupport<T> extends BaseDao{
 			return null;
 		try {
 			if (entity instanceof IQueryableEntity) {
-				return (T) getSession().load((IQueryableEntity) entity);
+				return (T) getSession().load((IQueryableEntity) entity, true);
 			} else {
 				ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
-				PojoWrapper vw = getSession().load(meta.transfer(entity, true));
+				PojoWrapper vw = getSession().load(meta.transfer(entity, true), true);
 				return vw == null ? null : (T) vw.get();
 			}
 		} catch (SQLException e) {
@@ -98,8 +98,7 @@ public class POJODaoSupport<T> extends BaseDao{
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	public int removeByExample(T entity,String... properties) {
+	public int removeByExample(T entity, String... properties) {
 		try {
 			if (entity instanceof IQueryableEntity) {
 				return getSession().delete(DbUtils.populateExampleConditions((IQueryableEntity) entity, properties));

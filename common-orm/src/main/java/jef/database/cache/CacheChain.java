@@ -172,4 +172,9 @@ public final class CacheChain implements Cache{
 		return total;
 	}
 
+	@Override
+	public <T> T unwrap(Class<T> cls) {
+		return this.chains[0].unwrap(cls);
+	}
+
 }

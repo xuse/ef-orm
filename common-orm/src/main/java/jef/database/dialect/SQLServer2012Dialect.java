@@ -1,5 +1,7 @@
 package jef.database.dialect;
 
+import jef.database.dialect.handler.DerbyLimitHandler;
+import jef.database.dialect.handler.LimitHandler;
 import jef.database.meta.Feature;
 import jef.database.query.Func;
 import jef.database.query.function.StandardSQLFunction;

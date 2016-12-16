@@ -1,5 +1,7 @@
 package jef.database.meta;
 
+import java.math.BigDecimal;
+
 /**
  * 数据库中的序列信息
  * @author jiyi
@@ -12,7 +14,7 @@ public class SequenceInfo {
 	private long startValue;
 	private int step;
 	private int cacheSize;
-	private long maxValue;
+//	private BigDecimal maxValue;
 	private long minValue;
 	/**
 	 * 下一次调用nextval将要得到的值。注意，不是上一次调用得到的值
@@ -59,13 +61,13 @@ public class SequenceInfo {
 		this.step = step;
 	}
 
-	public long getMaxValue() {
-		return maxValue;
-	}
+//	public BigDecimal getMaxValue() {
+//		return maxValue;
+//	}
 
-	public void setMaxValue(long maxValue) {
-		this.maxValue = maxValue;
-	}
+//	public void setMaxValue(BigDecimal maxValue) {
+//		this.maxValue = maxValue;
+//	}
 
 	public long getMinValue() {
 		return minValue;

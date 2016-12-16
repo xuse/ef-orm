@@ -40,7 +40,7 @@ public class DebugUtil {
 		}
 	}
 
-	public ILazyLoadContext getLazy(DataObject o) {
+	public static ILazyLoadContext getLazy(DataObject o) {
 		return o.lazyload;
 	}
 
@@ -162,7 +162,7 @@ public class DebugUtil {
 		if (StringUtils.isEmpty(column))
 			return false;
 		boolean has = false;
-		tableName = db.getProfile().getColumnNameToUse(tableName);
+		tableName = db.getProfile().getObjectNameToUse(tableName);
 		IConnection conn = DebugUtil.getConnection(db);
 		try {
 			DatabaseMetaData databaseMetaData = conn.getMetaData();

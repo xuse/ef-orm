@@ -16,9 +16,12 @@ import javax.persistence.Id;
 import jef.common.Entry;
 import jef.database.annotation.EasyEntity;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.jsqlparser.JPQLConvert;
+import jef.database.jsqlparser.JPQLSelectConvert;
 import jef.database.jsqlparser.RemovedDelayProcess;
 import jef.database.jsqlparser.SelectToCountWrapper;
 import jef.database.jsqlparser.SqlFunctionlocalization;
+import jef.database.jsqlparser.expression.JpqlDataType;
 import jef.database.jsqlparser.expression.JpqlParameter;
 import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.expression.operators.relational.Between;
@@ -32,13 +35,18 @@ import jef.database.jsqlparser.expression.operators.relational.MinorThan;
 import jef.database.jsqlparser.expression.operators.relational.MinorThanEquals;
 import jef.database.jsqlparser.expression.operators.relational.NotEqualsTo;
 import jef.database.jsqlparser.parser.ParseException;
+import jef.database.jsqlparser.statement.delete.Delete;
+import jef.database.jsqlparser.statement.insert.Insert;
 import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.PlainSelect;
+import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.statement.select.Union;
+import jef.database.jsqlparser.statement.update.Update;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.SelectBody;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.jsqlparser.visitor.VisitorAdapter;
+import jef.database.meta.Feature;
 import jef.database.meta.MetaHolder;
 import jef.database.query.ParameterProvider;
 import jef.database.query.ParameterProvider.MapProvider;
@@ -116,9 +124,15 @@ public class NamedQueryConfig extends jef.database.DataObject {
 	@Column(name = "TAG")
 	private String tag;
 
+	/**
+	 * 备注信息
+	 */
 	@Column(name = "REMARK")
 	private String remark;
 
+	/**
+	 * fetchSize of Result.
+	 */
 	@Column(name = "FETCH_SIZE", precision = 6)
 	private int fetchSize;
 
@@ -134,27 +148,53 @@ public class NamedQueryConfig extends jef.database.DataObject {
 		this.fromDb = fromDb;
 	}
 
-	private static class DialectCase {
+	private static final class DialectCase {
 		Statement statement;
 		jef.database.jsqlparser.statement.select.Select count;
-		Map<Object, JpqlParameter> params;
+		Map<Object, ParameterMetadata> params;
 		RemovedDelayProcess delays;
 		public Limit countLimit;
+	}
+
+	static final class ParameterMetadata {
+		JpqlParameter param;
+		Object parent;
+		boolean escape;
+
+		ParameterMetadata(DatabaseDialect dialect, JpqlParameter p, Object parent) {
+			this.param = p;
+			this.parent = parent;
+			if (parent instanceof LikeExpression) {
+				if (dialect.has(Feature.NOT_SUPPORT_LIKE_ESCAPE)) {
+					escape = false;
+					((LikeExpression) parent).setEscape(null);
+				} else {
+					if (p.getDataType() != null && p.getDataType().ordinal() > 9) {
+						((LikeExpression) parent).setEscape("/");
+						escape = true;
+					}
+				}
+			}
+		}
+
+		final JpqlDataType getDataType() {
+			return param.getDataType();
+		}
 	}
 
 	/*
 	 * 解析SQL语句，改写
 	 */
 	private static DialectCase analy(String sql, int type, OperateTarget db) throws SQLException {
-		final DatabaseDialect profile = db.getProfile();
+		final DatabaseDialect dialect = db.getProfile();
 		try {
 			Statement st = DbUtils.parseStatement(sql);
-			final Map<Object, JpqlParameter> params = new HashMap<Object, JpqlParameter>();
+			final Map<Object, ParameterMetadata> params = new HashMap<Object, ParameterMetadata>();
 			// Schema重定向处理：将SQL语句中的schema替换为映射后的schema
 			st.accept(new VisitorAdapter() {
 				@Override
 				public void visit(JpqlParameter param) {
-					params.put(param.getKey(), param);
+					params.put(param.getKey(), new ParameterMetadata(dialect, param, visitPath.getFirst()));
 				}
 
 				@Override
@@ -166,8 +206,8 @@ public class NamedQueryConfig extends jef.database.DataObject {
 							table.setSchemaName(newSchema);
 						}
 					}
-					if (profile.containKeyword(table.getName())) {
-						table.setName(DbUtils.escapeColumn(profile, table.getName()));
+					if (dialect.containKeyword(table.getName())) {
+						table.setName(DbUtils.escapeColumn(dialect, table.getName()));
 					}
 				}
 
@@ -180,24 +220,34 @@ public class NamedQueryConfig extends jef.database.DataObject {
 							c.setSchema(newSchema);
 						}
 					}
-					if (profile.containKeyword(c.getColumnName())) {
-						c.setColumnName(DbUtils.escapeColumn(profile, c.getColumnName()));
+					if (dialect.containKeyword(c.getColumnName())) {
+						c.setColumnName(DbUtils.escapeColumn(dialect, c.getColumnName()));
 					}
 				}
 
 			});
 			// 进行本地语言转化
-			SqlFunctionlocalization localization = new SqlFunctionlocalization(profile, db);
+			SqlFunctionlocalization localization = new SqlFunctionlocalization(dialect, db);
 			st.accept(localization);
 
-			if (type == TYPE_JPQL)
-				st.accept(new JPQLSelectConvert(profile));
+			if (type == TYPE_JPQL){
+				if(st instanceof Select){
+					st.accept(new JPQLSelectConvert(dialect));
+				}else if(st instanceof Insert){
+					st.accept(new JPQLConvert(dialect));
+				}else if(st instanceof Update){
+					st.accept(new JPQLConvert(dialect));
+				}else if(st instanceof Delete){
+					st.accept(new JPQLConvert(dialect));
+				}
+				
+			}
 
 			DialectCase result = new DialectCase();
 			result.statement = st;
 			result.params = params;
-			if(localization.delayLimit!=null || localization.delayStartWith!=null){
-				result.delays=new RemovedDelayProcess(localization.delayLimit,localization.delayStartWith);
+			if (localization.delayLimit != null || localization.delayStartWith != null) {
+				result.delays = new RemovedDelayProcess(localization.delayLimit, localization.delayStartWith);
 			}
 			return result;
 		} catch (ParseException e) {
@@ -213,16 +263,12 @@ public class NamedQueryConfig extends jef.database.DataObject {
 	public NamedQueryConfig() {
 	};
 
-	public NamedQueryConfig(String name, String sql, String type, int fetchSize) {
+	public NamedQueryConfig(String name, String sql, boolean isJpql, int fetchSize) {
 		stopUpdate();
 		this.rawsql = sql;
 		this.name = name;
 		this.fetchSize = fetchSize;
-		if ("jpql".equalsIgnoreCase(type)) {
-			this.type = TYPE_JPQL;
-		} else {
-			this.type = TYPE_SQL;
-		}
+		this.type = isJpql ? TYPE_JPQL : TYPE_SQL;
 	}
 
 	/**
@@ -232,7 +278,7 @@ public class NamedQueryConfig extends jef.database.DataObject {
 	 * @return
 	 * @throws SQLException
 	 */
-	public Map<Object, JpqlParameter> getParams(OperateTarget db) {
+	public Map<Object, ParameterMetadata> getParams(OperateTarget db) {
 		DialectCase dc;
 		try {
 			dc = getDialectCase(db);
@@ -252,21 +298,21 @@ public class NamedQueryConfig extends jef.database.DataObject {
 	 */
 	public SqlAndParameter getSqlAndParams(OperateTarget db, ParameterProvider prov) throws SQLException {
 		DialectCase dc = getDialectCase(db);
-		SqlAndParameter result= applyParam(dc.statement, prov);
+		SqlAndParameter result = applyParam(dc.statement, prov);
 		result.setInMemoryClause(dc.delays);
 		return result;
 	}
 
 	private DialectCase getDialectCase(OperateTarget db) throws SQLException {
 		DatabaseDialect profile = db.getProfile();
-		if(datas==null){
-			//当使用testNamedQueryConfigedInDb案例时，由于使用Unsafe方式构造对象，故构造器方法未运行造成datas为null;
-			 datas= new IdentityHashMap<DatabaseDialect, DialectCase>();
+		if (datas == null) {
+			// 当使用testNamedQueryConfigedInDb案例时，由于使用Unsafe方式构造对象，故构造器方法未运行造成datas为null;
+			datas = new IdentityHashMap<DatabaseDialect, DialectCase>();
 		}
 		DialectCase dc = datas.get(profile);
 		if (dc == null) {
 			synchronized (datas) {
-				if((dc=datas.get(profile))==null){
+				if ((dc = datas.get(profile)) == null) {
 					dc = analy(this.rawsql, this.type, db);
 					datas.put(profile, dc);
 				}
@@ -300,16 +346,16 @@ public class NamedQueryConfig extends jef.database.DataObject {
 				jef.database.jsqlparser.statement.select.Select ctst = new jef.database.jsqlparser.statement.select.Select();
 				ctst.setSelectBody(body);
 				dc.count = ctst;
-				if(dc.delays!=null && dc.delays.limit!=null){
-					dc.countLimit=dc.delays.limit;
-				}else{
-					dc.countLimit=body.getRemovedLimit();
+				if (dc.delays != null && dc.delays.limit != null) {
+					dc.countLimit = dc.delays.limit;
+				} else {
+					dc.countLimit = body.getRemovedLimit();
 				}
 			} else {
 				throw new IllegalArgumentException();
 			}
 		}
-		SqlAndParameter result= applyParam(dc.count, prov);
+		SqlAndParameter result = applyParam(dc.count, prov);
 		result.setInMemoryClause(dc.delays);
 		result.setLimit(dc.countLimit);
 		return result;
@@ -465,7 +511,7 @@ public class NamedQueryConfig extends jef.database.DataObject {
 	public static SqlAndParameter applyParam(Statement st, final ParameterProvider prov) {
 		final List<Object> params = new ArrayList<Object>();
 		st.accept(new ParamApplier(prov, params));
-		return new SqlAndParameter(st, params,prov);
+		return new SqlAndParameter(st, params, prov);
 	}
 
 	public String getName() {

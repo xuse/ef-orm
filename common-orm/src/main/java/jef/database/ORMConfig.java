@@ -115,6 +115,10 @@ public class ORMConfig implements ORMConfigMBean {
 	 */
 	private boolean dynamicUpdate;
 	/**
+	 * 安全的对比更新
+	 */
+	private boolean safeMerge;
+	/**
 	 * 外连接一次查询出关系
 	 */
 	private boolean useOuterJoin;
@@ -199,6 +203,7 @@ public class ORMConfig implements ORMConfigMBean {
 	
 	private String partitionBucketRange;
 
+	@SuppressWarnings("deprecation")
 	private void init() {
 		partitionBucketRange=JefConfiguration.get(DbCfg.PARTITION_BUCKET_RANGE,"0-1023:");
 		showStringLength = JefConfiguration.getBoolean(DbCfg.DB_ENCODING_SHOWLENGTH, false);
@@ -217,10 +222,11 @@ public class ORMConfig implements ORMConfigMBean {
 		specifyAllColumnName = JefConfiguration.getBoolean(DbCfg.DB_SPECIFY_ALLCOLUMN_NAME, false);
 		dynamicInsert = JefConfiguration.getBoolean(DbCfg.DB_DYNAMIC_INSERT, false);
 		dynamicUpdate = JefConfiguration.getBoolean(DbCfg.DB_DYNAMIC_UPDATE, true);
+		safeMerge = JefConfiguration.getBoolean(DbCfg.DB_SAFE_MERGE, false);
 		useOuterJoin = JefConfiguration.getBoolean(DbCfg.DB_USE_OUTER_JOIN, true);
 		keepTxForPG = JefConfiguration.getBoolean(DbCfg.DB_KEEP_TX_FOR_POSTGRESQL, true);
 		manualSequence = JefConfiguration.getBoolean(DbCfg.DB_SUPPORT_MANUAL_GENERATE, false);
-		allowEmptyQuery = JefConfiguration.getBoolean(DbCfg.ALLOW_EMPTY_QUERY, false);
+		allowEmptyQuery = JefConfiguration.getBoolean(DbCfg.ALLOW_EMPTY_QUERY, true);
 		enableLazyLoad = JefConfiguration.getBoolean(DbCfg.DB_ENABLE_LAZY_LOAD, true);
 		enableLazyLob = JefConfiguration.getBoolean(DbCfg.DB_LOB_LAZY_LOAD, false);
 		cacheLevel1 = JefConfiguration.getBoolean(DbCfg.CACHE_LEVEL_1, false);
@@ -631,6 +637,14 @@ public class ORMConfig implements ORMConfigMBean {
 		}else{
 			return SqlLog.DUMMY;
 		}
+	}
+
+	public boolean isSafeMerge() {
+		return safeMerge;
+	}
+
+	public void setSafeMerge(boolean safeMerge) {
+		this.safeMerge = safeMerge;
 	}
 
 	/**

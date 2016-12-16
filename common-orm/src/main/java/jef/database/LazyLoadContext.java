@@ -38,6 +38,16 @@ final class LazyLoadContext implements ILazyLoadContext {
 		}
 		return id;
 	}
+	
+	@Override
+	public void markProcessed(String field) {
+		int id=processor.getTaskId(field);
+		if(id==-1)return;
+		if(loaded==null){
+			loaded=new BitSet(processor.size());
+		}
+		loaded.set(id,true);
+	}
 
 	public boolean process(DataObject dataObject, int id) throws SQLException {
 		if(!loaded.get(id)){
@@ -56,6 +66,4 @@ final class LazyLoadContext implements ILazyLoadContext {
 	public String toString() {
 		return processor.toString();
 	}
-	
-	
 }

@@ -15,7 +15,12 @@
  */
 package jef.database.meta;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.SQLException;
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -49,8 +54,9 @@ import jef.database.annotation.EasyEntity;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
-import jef.database.dialect.ColumnType;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.meta.def.IndexDef;
+import jef.database.meta.def.UniqueConstraintDef;
 import jef.database.routing.function.AbstractDateFunction;
 import jef.database.routing.function.HashMod1024MappingFunction;
 import jef.database.routing.function.MapFunction;
@@ -59,8 +65,20 @@ import jef.database.routing.function.RawFunc;
 import jef.tools.ArrayUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
+import jef.tools.reflect.BeanAccessorMapImpl;
 import jef.tools.reflect.BeanUtils;
+import jef.tools.reflect.FieldEx;
 
+import com.alibaba.fastjson.util.IOUtils;
+import com.github.geequery.orm.annotation.Comment;
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParseException;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.BodyDeclaration;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.body.ModifierSet;
+import com.github.javaparser.ast.body.TypeDeclaration;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
@@ -72,52 +90,69 @@ public final class TableMetadata extends AbstractMetadata {
 	 */
 	private Class<?> thisType;
 	private BeanAccessor pojoAccessor;
-	
+
 	private Class<? extends IQueryableEntity> containerType;
 	BeanAccessor containerAccessor;
 
 	// ///////////////分表配置信息//////////////////////
 	private PartitionTable partition;// 分表策略
-	
-	//记录在每个字段上的函数，用来进行分表估算的时的采样
+
+	// 记录在每个字段上的函数，用来进行分表估算的时的采样
 	private Multimap<String, PartitionFunction> partitionFuncs;
-	
-	
+
 	private Entry<PartitionKey, PartitionFunction>[] effectPartitionKeys;
 
 	private List<ColumnMapping> pkFields;// 记录主键列
 
-
 	private final Map<Field, String> fieldToColumn = new IdentityHashMap<Field, String>();// 提供Field到列名的转换
 	private final Map<String, String> lowerColumnToFieldName = new HashMap<String, String>();// 提供Column名称到Field的转换，不光包括元模型字段，也包括了非元模型字段但标注了Column的字段(key全部存小写)
 
+	/**
+	 * 标准实体的构造
+	 * 
+	 * @param clz
+	 * @param annos
+	 */
 	TableMetadata(Class<? extends IQueryableEntity> clz, AnnotationProvider annos) {
 		this.containerType = clz;
-		this.containerAccessor=FastBeanWrapperImpl.getAccessorFor(clz);
+		this.containerAccessor = FastBeanWrapperImpl.getAccessorFor(clz);
 		this.thisType = clz;
 		this.pkFields = Collections.emptyList();
 		initByAnno(clz, annos);
 	}
 
+	/**
+	 * POJO类实体的构造
+	 * 
+	 * @param varClz
+	 * @param clz
+	 * @param annos
+	 */
 	TableMetadata(Class<PojoWrapper> varClz, Class<?> clz, AnnotationProvider annos) {
 		this.containerType = varClz;
-		this.containerAccessor=FastBeanWrapperImpl.getAccessorFor(varClz);
+		this.containerAccessor = new BeanAccessorMapImpl(clz);
+		
 		this.thisType = clz;
 		this.pojoAccessor = FastBeanWrapperImpl.getAccessorFor(clz);
 		this.pkFields = Collections.emptyList();
-		initByAnno(clz,annos);
+		initByAnno(clz, annos);
 	}
-	
 
 	protected void initByAnno(Class<?> thisType, AnnotationProvider annos) {
 		// schema初始化
-		Table table=annos.getAnnotation(javax.persistence.Table.class);
+		Table table = annos.getAnnotation(javax.persistence.Table.class);
 		if (table != null) {
 			if (table.schema().length() > 0) {
 				schema = MetaHolder.getMappingSchema(table.schema());// 重定向
 			}
 			if (table.name().length() > 0) {
 				tableName = table.name();
+			}
+			for(javax.persistence.Index index: table.indexes()){
+				this.indexes.add(IndexDef.create(index));
+			}
+			for(javax.persistence.UniqueConstraint unique: table.uniqueConstraints()){
+				this.uniques.add(new UniqueConstraintDef(unique));
 			}
 		}
 		if (tableName == null) {
@@ -129,17 +164,17 @@ public final class TableMetadata extends AbstractMetadata {
 				tableName = thisType.getSimpleName();
 			}
 		}
-		BindDataSource bindDs=annos.getAnnotation(BindDataSource.class);
+		BindDataSource bindDs = annos.getAnnotation(BindDataSource.class);
 		if (bindDs != null) {
 			this.bindDsName = MetaHolder.getMappingSite(StringUtils.trimToNull(bindDs.value()));
 		}
-		
-		Cacheable cache=annos.getAnnotation(Cacheable.class);
+
+		Cacheable cache = annos.getAnnotation(Cacheable.class);
 		this.cacheable = cache != null && cache.value();
-		
-		EasyEntity entity=annos.getAnnotation(EasyEntity.class);
-		if(entity!=null) {
-			this.useOuterJoin=entity.useOuterJoin();
+
+		EasyEntity entity = annos.getAnnotation(EasyEntity.class);
+		if (entity != null) {
+			this.useOuterJoin = entity.useOuterJoin();
 		}
 	}
 
@@ -169,18 +204,18 @@ public final class TableMetadata extends AbstractMetadata {
 		for (Entry<PartitionKey, PartitionFunction> entry : getEffectPartitionKeys()) {
 			PartitionKey key = entry.getKey();
 			String field = key.field();
-			if(entry.getValue() instanceof AbstractDateFunction){
-				Collection<PartitionFunction> olds=fieldKeyFn.get(field);
-				if(olds!=null){
-					for(PartitionFunction<?> old:olds){
-						if (old instanceof AbstractDateFunction){
+			if (entry.getValue() instanceof AbstractDateFunction) {
+				Collection<PartitionFunction> olds = fieldKeyFn.get(field);
+				if (olds != null) {
+					for (PartitionFunction<?> old : olds) {
+						if (old instanceof AbstractDateFunction) {
 							int oldLevel = ((AbstractDateFunction) old).getTimeLevel();
 							int level = ((AbstractDateFunction) entry.getValue()).getTimeLevel();// 取最小的时间单位
 							if (level < oldLevel) {
 								fieldKeyFn.remove(field, old);
-								break;//可以合并
-							}else{
-								continue;//无需合并
+								break;// 可以合并
+							} else {
+								continue;// 无需合并
 							}
 						}
 					}
@@ -199,12 +234,12 @@ public final class TableMetadata extends AbstractMetadata {
 		return containerType;
 	}
 
-	public List<jef.database.annotation.Index> getIndexDefinition() {
-		return indexMap;
+	public List<IndexDef> getIndexDefinition() {
+		return indexes;
 	}
 
 	public List<Field> getPKField() {
-		return new AbstractList<Field>(){
+		return new AbstractList<Field>() {
 			@Override
 			public Field get(int index) {
 				return pkFields.get(index).field();
@@ -220,66 +255,47 @@ public final class TableMetadata extends AbstractMetadata {
 	public List<ColumnMapping> getPKFields() {
 		return pkFields;
 	}
+
 	/**
 	 * 将一个Java Field加入到列定义中
 	 * 
 	 * @param field
 	 * @param column
 	 */
-	public void putJavaField(Field field, ColumnMapping type, String columnName,boolean isPk) {
+	public void putJavaField(Field field, ColumnMapping type, String columnName, boolean isPk) {
 		fields.put(field.name(), field);
 		lowerFields.put(field.name().toLowerCase(), field);
-	
+
 		fieldToColumn.put(field, columnName);
-		String lastFieldName=lowerColumnToFieldName.put(columnName.toLowerCase(), field.name());
-		if(lastFieldName!=null && !field.name().equals(lastFieldName)){
-			throw new IllegalArgumentException(String.format("The field [%s] and [%s] in [%s] have a duplicate column name [%s].",lastFieldName,field.name(),containerType.getName(),columnName));
+		String lastFieldName = lowerColumnToFieldName.put(columnName.toLowerCase(), field.name());
+		if (lastFieldName != null && !field.name().equals(lastFieldName)) {
+			throw new IllegalArgumentException(String.format("The field [%s] and [%s] in [%s] have a duplicate column name [%s].", lastFieldName, field.name(), containerType.getName(), columnName));
 		}
-	
+
 		if (isPk) {
 			type.setPk(true);
 			List<ColumnMapping> newPks = new ArrayList<ColumnMapping>(pkFields);
 			newPks.add(type);
 			Collections.sort(newPks, new Comparator<ColumnMapping>() {
 				public int compare(ColumnMapping o1, ColumnMapping o2) {
-					Integer i1=-1;
-					Integer i2=-1;
-					if(o1 instanceof Enum){
-						i1=((Enum<?>) o1.field()).ordinal();
+					Integer i1 = -1;
+					Integer i2 = -1;
+					if (o1 instanceof Enum) {
+						i1 = ((Enum<?>) o1.field()).ordinal();
 					}
-					if(o2 instanceof Enum){
-						i2=((Enum<?>) o2.field()).ordinal();
+					if (o2 instanceof Enum) {
+						i2 = ((Enum<?>) o2.field()).ordinal();
 					}
 					return i1.compareTo(i2);
 				}
 			});
-			this.pkFields = Arrays.<ColumnMapping>asList(newPks.toArray(new ColumnMapping[newPks.size()]));
+			this.pkFields = Arrays.<ColumnMapping> asList(newPks.toArray(new ColumnMapping[newPks.size()]));
 		}
 		schemaMap.put(field, type);
 		super.updateAutoIncrementAndUpdate(type);
 		if (type.isLob()) {
 			lobNames = ArrayUtils.addElement(lobNames, field, jef.database.Field.class);
 		}
-	}
-
-	/**
-	 * 添加一个索引定义。仅用于自动建表，不会对其作特殊的判断和处理。
-	 * 
-	 * @param fields
-	 * @param comment
-	 * @deprecated 向下兼容保留
-	 */
-	public void putIndex(Field[] fields, String comment) {
-		Map<String, Object> data = new HashMap<String, Object>(4);
-		String[] fieldnames = new String[fields.length];
-		for (int i = 0; i < fields.length; i++) {
-			fieldnames[i] = fields[i].name();
-		}
-		data.put("fields", fieldnames);
-		data.put("definition", StringUtils.toString(comment));
-		data.put("name", "");
-		jef.database.annotation.Index index = BeanUtils.asAnnotation(jef.database.annotation.Index.class, data);
-		indexMap.add(index);
 	}
 
 	/*
@@ -290,17 +306,17 @@ public final class TableMetadata extends AbstractMetadata {
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("Entity: [").append(containerType.getName()).append("]\n");
-		for (ColumnMapping m:schemaMap.values()) {
-			String fname=m.fieldName();
+		for (ColumnMapping m : schemaMap.values()) {
+			String fname = m.fieldName();
 			sb.append("  ").append(fname);
-			StringUtils.repeat(sb, ' ', 10-fname.length());
+			StringUtils.repeat(sb, ' ', 10 - fname.length());
 			sb.append('\t').append(m.get());
 			sb.append("\n");
 		}
-		sb.setLength(sb.length()-1);
+		sb.setLength(sb.length() - 1);
 		return sb.toString();
 	}
-	
+
 	/**
 	 * 获取当前生效的分区策略
 	 * 注意生效的策略默认等同于Annotation上的策略，但是实际上如果配置了/partition-conf.properties后
@@ -346,20 +362,20 @@ public final class TableMetadata extends AbstractMetadata {
 		case HH24:
 			return AbstractDateFunction.HH24;
 		case MODULUS:
-			if(value.functionConstructorParams().length==0 || StringUtils.isEmpty(value.functionConstructorParams()[0])){
+			if (value.functionConstructorParams().length == 0 || StringUtils.isEmpty(value.functionConstructorParams()[0])) {
 				return ModulusFunction.getDefault();
-			}else{
+			} else {
 				return new ModulusFunction(value.functionConstructorParams()[0]);
 			}
 		case HASH_MOD1024_RANGE:
-			if(value.functionConstructorParams().length==0 || StringUtils.isEmpty(value.functionConstructorParams()[0])){
-				return new HashMod1024MappingFunction();	
-			}else {
-				int num=0;
-				if(value.functionConstructorParams().length>1){
-					num=StringUtils.toInt(value.functionConstructorParams()[1],0);
+			if (value.functionConstructorParams().length == 0 || StringUtils.isEmpty(value.functionConstructorParams()[0])) {
+				return new HashMod1024MappingFunction();
+			} else {
+				int num = 0;
+				if (value.functionConstructorParams().length > 1) {
+					num = StringUtils.toInt(value.functionConstructorParams()[1], 0);
 				}
-				return new HashMod1024MappingFunction(value.functionConstructorParams()[0],num);
+				return new HashMod1024MappingFunction(value.functionConstructorParams()[0], num);
 			}
 		case MONTH:
 			return AbstractDateFunction.MONTH;
@@ -374,21 +390,20 @@ public final class TableMetadata extends AbstractMetadata {
 		case WEEKDAY:
 			return AbstractDateFunction.WEEKDAY;
 		case RAW:
-			return new RawFunc(value.defaultWhenFieldIsNull(),value.length());
+			return new RawFunc(value.defaultWhenFieldIsNull(), value.length());
 		case MAPPING:
-			if(value.functionConstructorParams().length==0){
+			if (value.functionConstructorParams().length == 0) {
 				throw new IllegalArgumentException("You must config the 'functionConstructorParams' while using funcuon Map");
 			}
-			int num=0;
-			if(value.functionConstructorParams().length>1){
-				num=StringUtils.toInt(value.functionConstructorParams()[1],0);
+			int num = 0;
+			if (value.functionConstructorParams().length > 1) {
+				num = StringUtils.toInt(value.functionConstructorParams()[1], 0);
 			}
-			return new MapFunction(value.functionConstructorParams()[0],num);
+			return new MapFunction(value.functionConstructorParams()[0], num);
 		default:
 			throw new IllegalArgumentException("Unknown KeyFunction:" + value.function());
 		}
 	}
-	
 
 	public Multimap<String, PartitionFunction> getMinUnitFuncForEachPartitionKey() {
 		return partitionFuncs;
@@ -414,24 +429,6 @@ public final class TableMetadata extends AbstractMetadata {
 
 	void setSchema(String schema) {
 		this.schema = schema;
-	}
-
-	// 会将LOB移动到最后
-	public List<ColumnMapping> getColumns() {
-		if (metaFields == null) {
-			ColumnMapping[] fields = schemaMap.values().toArray(new ColumnMapping[schemaMap.size()]);
-			Arrays.sort(fields, new Comparator<ColumnMapping>() {
-				public int compare(ColumnMapping field1, ColumnMapping field2) {
-					Class<? extends ColumnType> type1 = field1.get().getClass();
-					Class<? extends ColumnType> type2 = field1.get().getClass();
-					Boolean b1 = (type1 == ColumnType.Blob.class || type1 == ColumnType.Clob.class);
-					Boolean b2 = (type2 == ColumnType.Blob.class || type2 == ColumnType.Clob.class);
-					return b1.compareTo(b2);
-				}
-			});
-			metaFields = Arrays.asList(fields);
-		}
-		return metaFields;
 	}
 
 	/**
@@ -487,33 +484,31 @@ public final class TableMetadata extends AbstractMetadata {
 		if (p.getClass() == this.thisType) {
 			return new PojoWrapper(p, pojoAccessor, this, isQuery);
 		} else {
-			throw new IllegalArgumentException(p.getClass()+" != " + this.thisType);
+			throw new IllegalArgumentException(p.getClass() + " != " + this.thisType);
 		}
 	}
 
 	public EntityType getType() {
-		return this.containerType==PojoWrapper.class?EntityType.POJO:EntityType.NATIVE;
+		return this.containerType == PojoWrapper.class ? EntityType.POJO : EntityType.NATIVE;
 	}
-	
+
 	private List<Class> parents;
+
 	public void addParent(Class<?> processingClz) {
-		if(parents==null){
-			parents=new ArrayList<Class>(3);
+		if (parents == null) {
+			parents = new ArrayList<Class>(3);
 		}
 		parents.add(processingClz);
-		
+
 	}
-//	
-//
-//	public boolean isAssignableFrom(ITableMetadata type) {
-//		return this == type || this.containerType.isAssignableFrom(type.getThisType());
-//	}
-	
+
 	public boolean containsMeta(ITableMetadata type) {
-		if(type==this)return true;
-		if(parents==null)return false;
-		for(Class clz:parents){
-			if(type.getThisType()==clz){
+		if (type == this)
+			return true;
+		if (parents == null)
+			return false;
+		for (Class clz : parents) {
+			if (type.getThisType() == clz) {
 				return true;
 			}
 		}
@@ -524,7 +519,7 @@ public final class TableMetadata extends AbstractMetadata {
 	public BeanAccessor getContainerAccessor() {
 		return containerAccessor;
 	}
-	
+
 	TupleMetadata extendMeta;
 	TupleMetadata extendContainer;
 
@@ -535,11 +530,128 @@ public final class TableMetadata extends AbstractMetadata {
 
 	@Override
 	public Collection<ColumnMapping> getExtendedColumns() {
-		return extendMeta==null?Collections.EMPTY_LIST:extendMeta.getColumnSchema();
+		return extendMeta == null ? Collections.<ColumnMapping> emptyList() : extendMeta.getColumnSchema();
 	}
 
 	@Override
 	public ColumnMapping getExtendedColumnDef(String field) {
 		return extendMeta.getColumnDef(extendMeta.getField(field));
+	}
+
+	@Override
+	public Map<String, String> getColumnComments() {
+		// 先根据源码解析来获取注解
+		Map<String, String> result = getFromSource();
+		// 再分析注解中的备注信息
+		{
+			Comment comment = thisType.getAnnotation(Comment.class);
+			if (comment != null) {
+				result.put("#TABLE", comment.value());
+			}
+		}
+		for (ColumnMapping column : this.getColumns()) {
+			FieldEx field = BeanUtils.getField(thisType, column.fieldName());
+			if (field == null) {
+				continue;
+			}
+			Comment comment = field.getAnnotation(Comment.class);
+			if (comment != null) {
+				result.put(column.fieldName(), comment.value());
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * 尝试从源码的注释中获得列的注解信息
+	 * 
+	 * @return
+	 */
+	private Map<String, String> getFromSource() {
+		Map<String, String> result = new HashMap<String, String>();
+		Class<?> type = thisType;
+		URL url = this.getClass().getResource("/" + type.getName().replace('.', '/') + ".java");
+		if (url == null) {
+			url = getFixedPathSource(type);
+		}
+
+		if (url == null)
+			return result;
+		try {
+			InputStream in = url.openStream();
+			try {
+				CompilationUnit unit = JavaParser.parse(in, "UTF-8");
+				if (unit.getTypes().isEmpty())
+					return result;
+				TypeDeclaration typed = unit.getTypes().get(0);
+				if (typed instanceof ClassOrInterfaceDeclaration) {
+					ClassOrInterfaceDeclaration clz = (ClassOrInterfaceDeclaration) typed;
+					String table = getContent(clz.getComment());
+					if (table != null)
+						result.put("#TABLE", table);
+					for (BodyDeclaration body : typed.getMembers()) {
+						if (body instanceof FieldDeclaration) {
+							FieldDeclaration field = (FieldDeclaration) body;
+							if (ModifierSet.isStatic(field.getModifiers())) {
+								continue;
+							}
+							if (field.getVariables().size() > 1) {
+								continue;
+							}
+							String name = field.getVariables().get(0).getId().getName();
+							String javaDoc = getContent(field.getComment());
+							if (javaDoc != null)
+								result.put(name, javaDoc);
+						}
+					}
+				}
+			} finally {
+				IOUtils.close(in);
+			}
+		} catch (ParseException e) {
+			LogUtil.exception(e);
+		} catch (IOException e) {
+			LogUtil.exception(e);
+		}
+		return result;
+	}
+
+	private String getContent(com.github.javaparser.ast.comments.Comment comment) {
+		if (comment == null)
+			return null;
+		String s = comment.getContent();
+		return s.replaceAll("\\s*\\*", "").trim();
+	}
+
+	/**
+	 * 在开发环境的标准Maven目录场景情况下，寻找到源代码，实现注解信息读取
+	 * 
+	 * @param type
+	 * @return
+	 */
+	private URL getFixedPathSource(Class type) {
+		String clzPath = "/" + type.getName().replace('.', '/') + ".class";
+		URL url = this.getClass().getResource(clzPath);
+		if (url == null)
+			return null;
+		String path = url.getPath();
+		path = path.substring(0, path.length() - clzPath.length());
+		File source = null;
+		if (path.endsWith("/target/test-classes")) {
+			source = new File(path.substring(0, path.length() - 20), "src/test/java");
+		} else if (path.endsWith("/target/classes")) {
+			source = new File(path.substring(0, path.length() - 15), "src/main/java");
+		}
+		if (source == null)
+			return null;
+		File java = new File(source, type.getName().replace('.', '/') + ".java");
+		if (java.exists())
+			try {
+				return java.toURI().toURL();
+			} catch (MalformedURLException e) {
+				LogUtil.exception(e);
+				return null;
+			}
+		return null;
 	}
 }

@@ -4,6 +4,8 @@ import java.util.Arrays;
 
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
+import jef.database.dialect.handler.LimitHandler;
+import jef.database.dialect.handler.LimitOffsetLimitHandler;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.support.RDBMS;
@@ -32,7 +34,8 @@ public class GBaseDialect extends AbstractDialect {
 	public GBaseDialect() {
 		features = CollectionUtils.identityHashSet();
 		features.addAll(Arrays.asList(
-				Feature.AUTOINCREMENT_MUSTBE_PK
+				Feature.AUTOINCREMENT_MUSTBE_PK,
+				Feature.SUPPORT_COMMENT
 				));
 		setProperty(DbProperty.ADD_COLUMN, "ADD COLUMN");
 		setProperty(DbProperty.MODIFY_COLUMN, "ALTER");

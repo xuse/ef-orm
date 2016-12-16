@@ -17,26 +17,26 @@ package jef.database.wrapper.clause;
 
 import java.util.List;
 
-import jef.common.wrapper.IntRange;
 import jef.database.cache.CacheKey;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.ResultSetContainer;
 import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.routing.PartitionResult;
-import jef.database.wrapper.processor.BindVariableDescription;
+import jef.database.wrapper.variable.Variable;
+import jef.tools.PageLimit;
 
 public class QueryClauseSqlImpl implements QueryClause {
 	private String body;
 	private OrderClause orderbyPart;
-	private List<BindVariableDescription> bind;
-	private IntRange pageRange;
+	private List<Variable> bind;
+	private PageLimit pageRange;
 	private boolean isUnion;
 
-	public IntRange getPageRange() {
+	public PageLimit getPageRange() {
 		return pageRange;
 	}
 
-	public void setPageRange(IntRange pageRange) {
+	public void setPageRange(PageLimit pageRange) {
 		this.pageRange = pageRange;
 	}
 
@@ -56,11 +56,11 @@ public class QueryClauseSqlImpl implements QueryClause {
 		this.orderbyPart = orderbyPart;
 	}
 
-	public List<BindVariableDescription> getBind() {
+	public List<Variable> getBind() {
 		return bind;
 	}
 
-	public void setBind(List<BindVariableDescription> bind) {
+	public void setBind(List<Variable> bind) {
 		this.bind = bind;
 	}
 
@@ -84,7 +84,7 @@ public class QueryClauseSqlImpl implements QueryClause {
 
 	private BindSql withPage(String sql) {
 		if (pageRange != null) {
-			return profile.getLimitHandler().toPageSQL(sql, pageRange.toStartLimitSpan(), isUnion);
+			return profile.getLimitHandler().toPageSQL(sql, pageRange.toArray(), isUnion);
 		}
 		return new BindSql(sql);
 	}
@@ -127,7 +127,7 @@ public class QueryClauseSqlImpl implements QueryClause {
 	}
 
 	@Override
-	public void parepareInMemoryProcess(IntRange range, ResultSetContainer rs) {
+	public void parepareInMemoryProcess(PageLimit range, ResultSetContainer rs) {
 	}
 
 	@Override

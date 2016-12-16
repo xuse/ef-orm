@@ -19,11 +19,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
 
-import jef.common.log.LogUtil;
 import jef.database.Session.PopulateStrategy;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.support.SqlLog;
-import jef.tools.StringUtils;
 
 /**
  * 直接对JDBC结果集进行操作的转换器
@@ -89,7 +87,7 @@ public interface ResultSetExtractor<T> {
 	 */
 	void appendLog(SqlLog log,T result);
 
-	public static final ResultSetExtractor<Long> GET_FIRST_LONG = new AbstractResultSetTransformer<Long>() {
+	public static final ResultSetExtractor<Long> COUNT_EXTRACTER = new AbstractResultSetTransformer<Long>() {
 		public Long transformer(IResultSet rs) throws SQLException {
 			if (rs.next()) {
 				return rs.getLong(1);
@@ -101,12 +99,8 @@ public interface ResultSetExtractor<T> {
 		@Override
 		public void appendLog(SqlLog log, Long result) {
 			if(result!=null){
-				log.append("Count:",result);
+				log.append(" Count:",result);
 			}
-//			if (debug) {
-//				long dbAccess = System.currentTimeMillis();
-//				LogUtil.show(StringUtils.concat("Count:", String.valueOf(total), "\t ([DbAccess]:", String.valueOf(dbAccess - start), "ms) |", db.getTransactionId()));
-//			}
 		}
 		
 		

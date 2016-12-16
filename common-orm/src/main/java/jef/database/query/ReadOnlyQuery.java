@@ -23,40 +23,25 @@ import jef.database.wrapper.populator.Transformer;
  * @param <T>
  */
 public final class ReadOnlyQuery<T extends IQueryableEntity> extends AbstractQuery<T> {
-	static private final Map<ITableMetadata, Query<?>> cacheOfQuery=new java.util.IdentityHashMap<ITableMetadata, Query<?>>(32);
-	
+	private static final long serialVersionUID = 1L;
 	/**
 	 * 结果转换器
 	 */
 	protected final Transformer t;
 	
 	
-	public static Query<?> getEmptyQuery(ITableMetadata cls) {
-		Query<?> q=cacheOfQuery.get(cls);
-		if(q!=null)return q;
-		return putEmptyQuery(cls);
-	}
-
 	@SuppressWarnings("rawtypes")
-	private static synchronized Query<?> putEmptyQuery(ITableMetadata cls) {
-		Query<?> q=cacheOfQuery.get(cls);
-		if(q!=null)return q;
-		try {
-			DataObject e=(DataObject)cls.newInstance();
-			@SuppressWarnings("unchecked")
-			ReadOnlyQuery<?> rq=new ReadOnlyQuery(e,cls);
-			DebugUtil.bindQuery(e, rq);
-			cacheOfQuery.put(cls, rq);
-			return rq;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		}
+	public static Query<?> getEmptyQuery(ITableMetadata cls) {
+		return new ReadOnlyQuery(cls);
 	}
 	
 	
-	public ReadOnlyQuery(T ins,ITableMetadata clz){
+	@SuppressWarnings("unchecked")
+	public ReadOnlyQuery(ITableMetadata clz){
 		this.type=clz;
-		this.instance=ins;
+		DataObject data=(DataObject) clz.newInstance();
+		DebugUtil.bindQuery(data, this);
+		this.instance=(T)data;
 		t = new Transformer(type);
 		this.cacheable=type.isCacheable();
 	}

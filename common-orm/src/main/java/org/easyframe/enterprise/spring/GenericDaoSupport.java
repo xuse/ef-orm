@@ -18,6 +18,8 @@ import jef.database.IQueryableEntity;
 import jef.database.NativeQuery;
 import jef.database.PagingIterator;
 import jef.database.PagingIteratorObjImpl;
+import jef.database.RecordHolder;
+import jef.database.RecordsHolder;
 import jef.database.meta.AbstractMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.PKQuery;
@@ -30,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 框架提供的基本数据库操作实现<br>
  * 
  * 考虑到一般项目命名习惯等因素，建议有需要的同学自行继承BaseDao来编写通用的DAO，本类可当做是参考实现。
+ * 
  * @param <T>
  */
 @Transactional
@@ -93,7 +96,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 			getSession().insert(entity);
 			return entity;
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -105,7 +108,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 			getSession().insertCascade(entity);
 			return entity;
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -131,7 +134,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			return getSession().update(entity);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -146,7 +149,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			return getSession().updateCascade(entity);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -161,7 +164,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			return getSession().delete(entity);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -184,7 +187,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			return getSession().deleteCascade(entity);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -194,11 +197,11 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	 * @see com.ailk.easyframe.web.common.dal.IDaoCrudSupport#load(jef.database.
 	 * IQueryableEntity)
 	 */
-	public T load(T entity) {
+	public T load(T entity, boolean unique) {
 		try {
-			return getSession().load(entity);
+			return getSession().load(entity, unique);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -210,9 +213,9 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	public T get(Serializable key) {
 		PKQuery<T> query = new PKQuery<T>(meta, key);
 		try {
-			return getSession().load(query);
+			return getSession().load(query, true);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -235,12 +238,12 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	 * com.ailk.easyframe.web.common.dal.IDaoCrudSupport#loadWithoutCascade(
 	 * jef.database.IQueryableEntity)
 	 */
-	public T loadCascade(T entity) {
+	public T loadCascade(T entity, boolean unique) {
 		try {
 			entity.getQuery().setCascade(true);
-			return getSession().load(entity);
+			return getSession().load(entity, unique);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -255,7 +258,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			return getSession().select(DbUtils.populateExampleConditions(entity), null);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -269,7 +272,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			return getSession().select(entity);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -280,7 +283,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			return getSession().select(entity);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -289,7 +292,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 			entity.getQuery().setCascade(true);
 			return getSession().select(entity);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -312,7 +315,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 			p.setList(data);
 			return p;
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -335,7 +338,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 			p.setList(data);
 			return p;
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -374,8 +377,8 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 			p.setList(data);
 
 			return p;
-		} catch (SQLException ex) {
-			throw new PersistenceException(ex.getMessage() + " " + ex.getSQLState(), ex);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -409,7 +412,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			getSession().batchInsert(entities);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 		return entities.size();
 	}
@@ -418,7 +421,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			getSession().batchInsert(entities, group);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 		return entities.size();
 	}
@@ -427,7 +430,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			getSession().executeBatchDeletion(entities);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 		return entities.size();
 	}
@@ -436,7 +439,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			getSession().executeBatchDeletion(entities, group);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 		return entities.size();
 	}
@@ -445,7 +448,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			getSession().batchUpdate(entities);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 		return entities.size();
 	}
@@ -454,7 +457,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			getSession().batchUpdate(entities, group);
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+			throw DbUtils.toRuntimeException(e);
 		}
 		return entities.size();
 	}
@@ -471,7 +474,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		return query.getResultList();
 	}
 
-	public T loadByField(String fieldname, Serializable id) {
+	public T loadByField(String fieldname, Serializable id, boolean unique) {
 		Field field = meta.getField(fieldname);
 		if (field == null) {
 			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
@@ -480,9 +483,9 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		T q = (T) meta.newInstance();
 		q.getQuery().addCondition(field, id);
 		try {
-			return getSession().load(q);
+			return getSession().load(q, unique);
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -494,7 +497,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			return getSession().selectByField(field, id);
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -506,7 +509,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			return getSession().deleteByField(field, key);
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -515,7 +518,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			return getSession().batchLoad(meta, pkValues);
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -524,7 +527,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			return getSession().batchDelete(meta, pkValues);
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -537,7 +540,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			return getSession().batchLoadByField(field, values);
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -550,7 +553,25 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		try {
 			return getSession().batchDeleteByField(field, values);
 		} catch (SQLException e) {
-			throw new PersistenceException(e);
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
+	@Override
+	public RecordsHolder<T> selectForUpdate(T query) {
+		try {
+			return getSession().selectForUpdate(query);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
+	@Override
+	public RecordHolder<T> loadForUpdate(T query) {
+		try {
+			return getSession().loadForUpdate(query);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
 		}
 	}
 

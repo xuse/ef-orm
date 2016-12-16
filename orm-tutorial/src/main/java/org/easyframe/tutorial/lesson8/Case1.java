@@ -8,7 +8,15 @@ import java.util.List;
 
 import javax.persistence.Column;
 
-import jef.codegen.EntityEnhancer;
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.easyframe.tutorial.lesson2.entity.Student;
+import org.easyframe.tutorial.lesson4.entity.DataDict;
+import org.easyframe.tutorial.lesson4.entity.Person;
+import org.easyframe.tutorial.lesson4.entity.School;
+import org.easyframe.tutorial.lesson5.entity.Item;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 import jef.common.Entry;
 import jef.common.wrapper.Holder;
 import jef.database.DbClient;
@@ -25,15 +33,6 @@ import jef.database.wrapper.populator.Mapper;
 import jef.database.wrapper.populator.Mappers;
 import jef.database.wrapper.populator.Transformer;
 import jef.tools.DateUtils;
-
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.easyframe.tutorial.lesson2.entity.Student;
-import org.easyframe.tutorial.lesson4.entity.DataDict;
-import org.easyframe.tutorial.lesson4.entity.Person;
-import org.easyframe.tutorial.lesson4.entity.School;
-import org.easyframe.tutorial.lesson5.entity.Item;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 /**
  * 演示 指定查询结果的装配方法，从而让数据库查询结果转换为需要的类型。
@@ -328,9 +327,13 @@ public class Case1 extends org.junit.Assert {
 			Query<Person> q = QB.create(Person.class);
 			Selects sel = QB.selectFrom(q);
 			sel.columns(Person.Field.id, Person.Field.name, Person.Field.gender);
-			q.getResultTransformer().setResultType(String[].class);
-			String[] result = db.load(q);
-			System.out.println(Arrays.toString(result));
+//			下面等同于 q.getResultTransformer().setResultType();之后再select
+			List<String[]> results = db.selectAs(q,String[].class);
+			if(results.size()>0){
+				String[] result=results.get(0);
+				//按顺序输出 ID, NAME, GENDER三个字段
+				System.out.println(Arrays.toString(result));
+			}
 		}
 		{
 			Query<Person> query = QB.create(Person.class);
@@ -341,6 +344,7 @@ public class Case1 extends org.junit.Assert {
 			select.sqlExpression("'3'").as("grade");
 			select.column(Person.Field.created).as("dateOfBirth");
 			query.getResultTransformer().setResultType(Student.class);
+			query.setMaxResult(1);
 			Student st = db.load(query);
 		}
 	}
@@ -412,8 +416,11 @@ public class Case1 extends org.junit.Assert {
 				}
 			}
 		});
-		PersonResult result = db.loadAs(q,PersonResult.class);
-		System.out.println(result.getPersonName()+"出生于"+result.getBirthday()+" 今年"+result.getAge()+"岁");
+		List<PersonResult> results = db.selectAs(q,PersonResult.class);
+		if(results.size()>0){
+			PersonResult result = results.get(0);
+			System.out.println(result.getPersonName()+"出生于"+result.getBirthday()+" 今年"+result.getAge()+"岁");
+		}
 	}
 	
 	

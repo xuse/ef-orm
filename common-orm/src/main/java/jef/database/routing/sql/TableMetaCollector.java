@@ -21,11 +21,12 @@ import jef.database.jsqlparser.statement.update.Update;
 import jef.database.jsqlparser.visitor.FromItem;
 import jef.database.jsqlparser.visitor.SelectBody;
 import jef.database.jsqlparser.visitor.StatementVisitor;
+import jef.database.meta.AbstractMetadata;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-import jef.database.meta.AbstractMetadata;
 
 public final class TableMetaCollector extends Holder<AbstractMetadata> implements StatementVisitor {
+	private static final long serialVersionUID = 1L;
 	private boolean breakProcess;
 	private final List<Table> modificationPoints=new ArrayList<Table>();
 

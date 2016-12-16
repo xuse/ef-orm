@@ -42,7 +42,7 @@ import org.junit.runner.RunWith;
 	 @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
 	 @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
 	 @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db?date_string_format=yyyy-MM-dd HH:mm:ss"),
 	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 public class NamedQueryTest {
@@ -51,8 +51,6 @@ public class NamedQueryTest {
 	@DatabaseInit
 	public void setUp() {
 		try {
-			EntityEnhancer en=new EntityEnhancer();
-			en.enhance();
 			// clear table
 			db.dropTable(Leaf.class);
 			db.dropTable(Child.class);

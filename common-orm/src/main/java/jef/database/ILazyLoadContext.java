@@ -15,5 +15,15 @@ public interface ILazyLoadContext {
 	 */
 	boolean process(DataObject dataObject, int fieldname)throws SQLException;
 	
+	/**
+	 * 获取处理器
+	 * @return
+	 */
 	LazyLoadProcessor getProcessor();
+	
+	/**
+	 * 直接标记为无需加载
+	 * @param id
+	 */
+	void markProcessed(String field);
 }

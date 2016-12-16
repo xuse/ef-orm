@@ -2,18 +2,19 @@ package jef.database.meta;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import jef.accelerator.bean.BeanAccessor;
 import jef.common.Entry;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.PojoWrapper;
-import jef.database.annotation.Index;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.AnnotationProvider.ClassAnnotationProvider;
+import jef.database.meta.def.IndexDef;
 
 import com.google.common.collect.Multimap;
 
@@ -74,7 +75,7 @@ public class TemplateMetadata extends AbstractMetadata {
 	}
 
 	@Override
-	public List<Index> getIndexDefinition() {
+	public List<IndexDef> getIndexDefinition() {
 		return wrapped.getIndexDefinition();
 	}
 
@@ -162,5 +163,10 @@ public class TemplateMetadata extends AbstractMetadata {
 	@Override
 	public ColumnMapping getExtendedColumnDef(String field) {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
+	}
+	
+	@Override
+	public Map<String,String> getColumnComments() {
+		return wrapped.getColumnComments();
 	}
 }

@@ -14,7 +14,19 @@ public interface ORMConfigMBean {
 	 * @return {@link DbCfg#DB_ENABLE_LAZY_LOAD}
 	 */
 	boolean isEnableLazyLoad();
+	
+	/**
+	 * LOB字段延迟加载
+	 * @return
+	 */
+	boolean isEnableLazyLob();
 
+	/**
+	 * LOB字段延迟加载开关
+	 * @param enableLazyLob
+	 */
+	public void setEnableLazyLob(boolean enableLazyLob);
+	
 	/**
 	 * 修改配置
 	 * @param enableLazyLoad {@link DbCfg#DB_ENABLE_LAZY_LOAD}

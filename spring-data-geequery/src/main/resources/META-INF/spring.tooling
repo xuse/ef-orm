@@ -1,0 +1,4 @@
+# Tooling related information for the JPA namespace
+#http\://www.springframework.org/schema/data/gq@name=GeeQuery Namespace
+#http\://www.springframework.org/schema/data/gq@prefix=gq
+#http\://www.springframework.org/schema/data/gq@icon=org/springframework/jdbc/config/spring-jdbc.gif

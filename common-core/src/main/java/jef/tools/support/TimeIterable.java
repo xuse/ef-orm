@@ -53,8 +53,8 @@ public final class TimeIterable implements Iterable<Date> {
 	}
 
 	public TimeIterable(Date start, Date end, int unit) {
-		this.start = DateUtils.truncate(start,unit);
-		this.last = DateUtils.truncate(end,unit).getTime();
+		this.start = DateUtils.getTruncated(start,unit);
+		this.last = DateUtils.getTruncated(end,unit).getTime();
 		this.unit = unit;
 	}
 

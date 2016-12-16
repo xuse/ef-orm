@@ -29,7 +29,7 @@ import jef.database.meta.MetaHolder;
 import jef.database.query.SqlContext;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.QueryClause;
-import jef.database.wrapper.processor.BindVariableDescription;
+import jef.database.wrapper.variable.Variable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,7 +44,7 @@ import com.google.common.collect.ImmutableList;
  */
 @SuppressWarnings("rawtypes")
 public class CacheImpl implements Cache {
-	SqlProcessor sqlP;
+	SqlProcessor preparedSqlProcessor;
 	SelectProcessor selectp;
 	private ORMConfig config = ORMConfig.getInstance();
 	private static Logger logger = LoggerFactory.getLogger(CacheImpl.class);
@@ -88,11 +88,11 @@ public class CacheImpl implements Cache {
 	 *            缓存过期事件
 	 */
 	public CacheImpl(SqlProcessor sql, SelectProcessor selectp, int expireInterval, String name) {
-		this.sqlP = sql;
+		this.preparedSqlProcessor = sql;
 		this.selectp = selectp;
 		this.expireInterval = expireInterval;
 		this.name = name;
-		this.profile = sqlP.getProfile();
+		this.profile = preparedSqlProcessor.getProfile();
 	}
 
 	public boolean contains(Class cls, Object primaryKey) {
@@ -112,13 +112,13 @@ public class CacheImpl implements Cache {
 	}
 
 	@SuppressWarnings("unchecked")
-	public static List<Object> toParamList(List<BindVariableDescription> bind) {
+	public static List<Object> toParamList(List<Variable> bind) {
 		if (bind == null)
 			return Collections.EMPTY_LIST;
 		Object[] array = new Object[bind.size()];
 		int n = 0;
-		for (BindVariableDescription b : bind) {
-			array[n++] = b.getBindedVar();
+		for (Variable b : bind) {
+			array[n++] = b.getConstantValue();
 		}
 		return Arrays.asList(array);
 	}
@@ -288,7 +288,7 @@ public class CacheImpl implements Cache {
 			evict(ir.getCacheKey());
 			return;
 		}
-		BindSql sql = sqlP.toPrepareWhereSql(obj.getQuery(), new SqlContext(null, obj.getQuery()), false, null);
+		BindSql sql = preparedSqlProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), null, null,false);
 		obj.clearQuery();
 		DimCache dc = tableCache.get(KeyDimension.forSingleTable(baseTableName, sql.getSql(), null, profile));
 		if (dc == null)
@@ -326,7 +326,6 @@ public class CacheImpl implements Cache {
 	 */
 	private void refreshCache(Map<KeyDimension, DimCache> tableCache, CacheKey key, IQueryableEntity obj) {
 		DimCache cache = tableCache.remove(key.getDimension());
-
 		for (DimCache other : tableCache.values()) {
 			// 其他维度一律失效。必须用此种方法，才能清除掉串门的缓存
 			other.clear();
@@ -476,5 +475,10 @@ public class CacheImpl implements Cache {
 
 	public long getMissCount() {
 		return miss.get();
+	}
+
+	@Override
+	public <T> T unwrap(Class<T> cls) {
+		return (T)this;
 	}
 }

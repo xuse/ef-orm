@@ -200,7 +200,7 @@ public final class SelectColumn extends SingleColumnSelect{
 	}
 //	生成选择语句时生成列名别，null表示无别名
 	public String getSelectedAlias(String tableAlias,DatabaseDialect profile) {
-		return DbUtils.escapeColumn(profile,profile.getColumnNameToUse(alias));
+		return DbUtils.escapeColumn(profile,profile.getObjectNameToUse(alias));
 	}
 
 	@Override

@@ -16,6 +16,12 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
+
+/**
+ * 关于新增特性，三表关联（多对多）中间表自动实现
+ * @author jiyi
+ *
+ */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ManyToManyTest extends org.junit.Assert {
 	private static DbClient db;

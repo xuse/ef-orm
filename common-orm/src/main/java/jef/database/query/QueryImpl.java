@@ -34,6 +34,7 @@ import jef.database.IQueryableEntity;
 import jef.database.ORMConfig;
 import jef.database.Session.PopulateStrategy;
 import jef.database.annotation.JoinType;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.AbstractMetadata;
 import jef.database.meta.AbstractRefField;
 import jef.database.meta.EntityType;
@@ -54,7 +55,7 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 	private boolean cascadeViaOuterJoin = ORMConfig.getInstance()
 			.isUseOuterJoin();
 
-	final List<Condition> conditions = new ArrayList<Condition>(6);
+	final List<Condition> conditions = new ArrayList<Condition>(4);
 	/**
 	 * 当使用延迟过滤条件时，存储这些条件
 	 */
@@ -172,6 +173,15 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 	 * @see jef.database.query.Query#addCondition(jef.database.Condition)
 	 */
 	public Query<T> addCondition(Condition condition) {
+		if(condition.getOperator()==Operator.EQUALS && condition.getField().getClass().isEnum()){
+			ColumnMapping column=type.getColumnDef(condition.getField());
+			if(column!=null && DbUtils.isInvalidValue(condition.getValue(), column, true)){
+				//无效条件，不接受
+				//注意有可能传入别的表的Field，此时Column为null
+				//实验性功能，2016-9-12添加，目的是拒绝一些由于WEB传输产生的无效条件
+				return this;
+			}
+		}
 		if (!conditions.contains(condition))
 			conditions.add(condition);
 		allRecords = false;

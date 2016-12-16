@@ -34,7 +34,9 @@ import org.easyframe.tutorial.lessona.entity.Device;
 import org.easyframe.tutorial.lessona.entity.OperateLog;
 import org.easyframe.tutorial.lessona.entity.Person2;
 import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 /**
  * 
@@ -44,6 +46,7 @@ import org.junit.Test;
  * 
  */
 @SuppressWarnings("rawtypes")
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class Case2 extends org.junit.Assert {
 	private static DbClient db;
 	private static boolean doinit = true;
@@ -55,7 +58,6 @@ public class Case2 extends org.junit.Assert {
 	 */
 	@BeforeClass
 	public static void setup() throws SQLException {
-		new EntityEnhancer().enhance("org.easyframe.tutorial.lessona");
 		// 准备多个数据源
 		Map<String, DataSource> datasources = new HashMap<String, DataSource>();
 		// 创建三个数据库。。。

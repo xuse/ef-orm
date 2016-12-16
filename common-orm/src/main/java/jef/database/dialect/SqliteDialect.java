@@ -18,8 +18,13 @@ package jef.database.dialect;
 import java.io.File;
 import java.sql.SQLException;
 
+import org.apache.commons.lang.StringUtils;
+
 import jef.database.ConnectInfo;
+import jef.database.DbFunction;
 import jef.database.dialect.ColumnType.AutoIncrement;
+import jef.database.dialect.handler.LimitHandler;
+import jef.database.dialect.handler.LimitOffsetLimitHandler;
 import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
@@ -38,6 +43,14 @@ import jef.database.query.function.VarArgsSQLFunction;
 import jef.database.support.RDBMS;
 import jef.tools.collection.CollectionUtils;
 
+
+/**
+ * SQLite驱动方言，部分特性需要在驱动字符串后加上
+ * ?date_string_format=yyyy-MM-dd HH:mm:ss
+ * 
+ * @author jiyi
+ *
+ */
 public class SqliteDialect extends AbstractDialect {
 	public SqliteDialect() {
 		features = CollectionUtils.identityHashSet();
@@ -45,7 +58,7 @@ public class SqliteDialect extends AbstractDialect {
 		features.add(Feature.AUTOINCREMENT_MUSTBE_PK);
 		features.add(Feature.TYPE_FORWARD_ONLY);
 		features.add(Feature.BATCH_GENERATED_KEY_ONLY_LAST);
-		
+
 		features.add(Feature.NOT_SUPPORT_TRUNCATE);
 		features.add(Feature.NOT_SUPPORT_FOREIGN_KEY);
 		features.add(Feature.NOT_SUPPORT_USER_FUNCTION);
@@ -54,7 +67,7 @@ public class SqliteDialect extends AbstractDialect {
 		features.add(Feature.NOT_SUPPORT_KEYWORD_DEFAULT);
 		features.add(Feature.NOT_SUPPORT_ALTER_DROP_COLUMN);
 		features.add(Feature.ONE_COLUMN_IN_SINGLE_DDL);
-		
+
 		setProperty(DbProperty.ADD_COLUMN, "ADD COLUMN");
 		setProperty(DbProperty.MODIFY_COLUMN, "MODIFY COLUMN");
 		setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");
@@ -64,14 +77,14 @@ public class SqliteDialect extends AbstractDialect {
 		setProperty(DbProperty.GET_IDENTITY_FUNCTION, "select last_insert_rowid()");
 
 		registerCompatible(Func.concat, new VarArgsSQLFunction("", "||", ""));
-		
+
 		registerNative(Scientific.soundex);
 		registerNative(Func.coalesce);
 		registerNative(Func.locate);
 		registerNative(Func.ceil);
 		registerNative(Func.floor);
 		registerNative(Func.round);
-		
+
 		registerNative(Func.length);
 		registerNative(Func.lower);
 		registerNative(Func.upper);
@@ -82,26 +95,32 @@ public class SqliteDialect extends AbstractDialect {
 		registerNative(Func.replace);
 		registerAlias("lcase", "lower");
 		registerAlias("ucase", "upper");
-		
+
 		registerNative(new StandardSQLFunction("substr"));
 		registerAlias(Func.substring, "substr");
 		loadKeywords("mysql_keywords.properties");
-/*
- * FIXME 关于SQLite取当前时区的问题
- * 今天早上（8点以前）测试日期isSameDay方法不通过。原因是SQLITE查询当前时间返回的不是本地时间而是GMT时间，因此在8点以前GMT时间日期为昨天。而期望是按本地时区传出日期。
- * 遂将current_timestamp函数重写为"datetime(CURRENT_TIMESTAMP,'localtime'),测试案例能通过。
- * 
- * 然而很快发现，当创建表的时候， default值必须用current_timestamp。如果是函数表达式则建表出错。
- * 目前还没想好怎么解决，此处先不改。
- * 2014-7-21
- */
-		registerCompatible(Func.mod, new TemplateFunction("mod","(%1$s %% %2$s)"));
-		registerNative(Func.current_timestamp,new NoArgSQLFunction("current_timestamp", false), "now", "sysdate");
+		/*
+		 * 1) 关于SQLite取当前时区的问题
+		 * 是SQLITE查询当前时间返回的不是本地时间而是GMT时间，因此使用current_timestamp或者now()查出的时间不正确。
+		 * 遂将current_timestamp函数重写为"datetime('now','localtime'),测试案例能通过。
+		 * 然而很快发现，当创建表的时候， default值用函数表达式则建表出错。目前还没想好怎么解决，此处先不改。 
+		 * 	2014-7-21
+		 * 
+		 * 2) 今天用Sqlite驱动3.8.11.2测试，发现原来的default不支持是误解，只要在函数两边加上括号()，就可以在default值中使用函数。
+		 * 但是随后发现新的问题。由于使用datetime('now','localtime')会将日期格式化成 yyyy-MM-dd HH:mm:ss。
+		 * 但默认的Sqlite日期格式为 yyyy-MM-dd HH:mm:ss.SSS。这造成该张表的数据无法读出（从ResultSet中get时获取抛出异常），
+		 * 目前解决办法是——在jdbc url中增加   ?date_string_format=yyyy-MM-dd HH:mm:ss。
+		 *  a)该方法仅对 3.8以后的版本有效
+		 *  TODO b)Document it into FAQ.
+		 * 2016-1-12
+		 * 
+		 */
+		registerCompatible(Func.current_timestamp, new NoArgSQLFunction("datetime('now','localtime')", false), "now", "sysdate");
 		registerAlias(Func.now, "current_timestamp");
-		registerNative(Func.current_time, new NoArgSQLFunction("current_time",false));
-		registerNative(Func.current_date, new NoArgSQLFunction("current_date",false));
-		
-		registerCompatible(Func.locate, new TransformFunction("locate", "instr",new int[]{2,1}));// 用instr来模拟locate参数相反
+		registerNative(Func.current_time, new NoArgSQLFunction("current_time", false));
+		registerNative(Func.current_date, new NoArgSQLFunction("current_date", false));
+		registerCompatible(Func.mod, new TemplateFunction("mod", "(%1$s %% %2$s)"));
+		registerCompatible(Func.locate, new TransformFunction("locate", "instr", new int[] { 2, 1 }));// 用instr来模拟locate参数相反
 		registerNative(new StandardSQLFunction("instr"));
 		registerNative(new StandardSQLFunction("ifnull"));
 		registerAlias(Func.nvl, "ifnull");
@@ -122,9 +141,10 @@ public class SqliteDialect extends AbstractDialect {
 		registerNative(new StandardSQLFunction("unicode"));
 		registerNative(new StandardSQLFunction("total"));
 		registerNative(new StandardSQLFunction("total_changes"));
+		registerNative(new StandardSQLFunction("datetime"));
 		registerNative(Func.date);
 		registerNative(Func.time);
-		
+
 		/**
 		 * Functions define in extension-function.c
 		 */
@@ -133,28 +153,27 @@ public class SqliteDialect extends AbstractDialect {
 		registerNative(new StandardSQLFunction("padc"));
 		registerNative(new StandardSQLFunction("strfilter"));
 		registerNative(Func.cast, new CastFunction());
-		
+
 		registerCompatible(Func.str, new TemplateFunction("str", "cast(%s as char)"));
 		registerCompatible(Func.lpad, new EmuLRpadOnSqlite(true));
 		registerCompatible(Func.rpad, new EmuLRpadOnSqlite(false));
 
-		registerCompatible(Func.year, new TemplateFunction("year","strftime('%%Y',%s)"));
-		registerCompatible(Func.month, new TemplateFunction("year","strftime('%%m',%s)"));
-		registerCompatible(Func.day, new TemplateFunction("year","strftime('%%d',%s)"));
-		registerCompatible(Func.hour, new TemplateFunction("year","strftime('%%H',%s)"));
-		registerCompatible(Func.minute, new TemplateFunction("year","strftime('%%M',%s)"));
-		registerCompatible(Func.second, new TemplateFunction("year","strftime('%%S',%s)"));
-		
+		registerCompatible(Func.year, new TemplateFunction("year", "strftime('%%Y',%s)"));
+		registerCompatible(Func.month, new TemplateFunction("year", "strftime('%%m',%s)"));
+		registerCompatible(Func.day, new TemplateFunction("year", "strftime('%%d',%s)"));
+		registerCompatible(Func.hour, new TemplateFunction("year", "strftime('%%H',%s)"));
+		registerCompatible(Func.minute, new TemplateFunction("year", "strftime('%%M',%s)"));
+		registerCompatible(Func.second, new TemplateFunction("year", "strftime('%%S',%s)"));
+
 		registerCompatible(Func.datediff, new TemplateFunction("datediff", "cast(julianday(%1$s) - julianday(%2$s) as integer)"));
 		registerCompatible(Func.adddate, new TemplateFunction("adddate", "datetime(%1$s,'localtime','%2$s day')"));
 		registerCompatible(Func.subdate, new TemplateFunction("subdate", "datetime(%1$s,'localtime','-%2$s day')"));
 		registerCompatible(Func.add_months, new TemplateFunction("add_months", "datetime(%1$s,'localtime','%2$s month')"));
-		
-		registerCompatible(Func.timestampdiff, new EmuJDBCTimestampFunction(Func.timestampdiff,this));
-		registerCompatible(Func.timestampadd, new EmuJDBCTimestampFunction(Func.timestampadd,this));
-		registerCompatible(Func.trunc, new TemplateFunction("trunc","cast(%s as integer)"));//FIXME: the minus value -10.5 will be floor to -11.
-		
-		
+
+		registerCompatible(Func.timestampdiff, new EmuJDBCTimestampFunction(Func.timestampdiff, this));
+		registerCompatible(Func.timestampadd, new EmuJDBCTimestampFunction(Func.timestampadd, this));
+		registerCompatible(Func.trunc, new TemplateFunction("trunc", "cast(%s as integer)"));//FIXME: the minus value -10.5 will be floor to -11.
+
 		registerCompatible(Func.lengthb, new TemplateFunction("rpad", "length(hex(%s))/2"));
 		registerCompatible(Func.translate, new EmuTranslateByReplace());
 		registerCompatible(Func.decode, new EmuDecodeWithCase());
@@ -189,34 +208,43 @@ public class SqliteDialect extends AbstractDialect {
 			throw new IllegalArgumentException(url);
 		}
 		String dbpath = url.substring(12);
+		dbpath=StringUtils.substringBefore(dbpath, "?");
 		File file = new File(dbpath);
 		connectInfo.setDbname(file.getName());
 		connectInfo.setHost("");
 	}
 
-	private final LimitHandler limit=new LimitOffsetLimitHandler();
+	private final LimitHandler limit = new LimitOffsetLimitHandler();
+
 	@Override
 	public LimitHandler getLimitHandler() {
 		return limit;
 	}
-	
-	private static ViolatedConstraintNameExtracter EXTRACTER=new ViolatedConstraintNameExtracter(){
+
+	private static ViolatedConstraintNameExtracter EXTRACTER = new ViolatedConstraintNameExtracter() {
 		@Override
 		public String extractConstraintName(SQLException sqle) {
-			String message=sqle.getMessage();
-			if(message.startsWith("[SQLITE_CONSTRAINT]")){
+			String message = sqle.getMessage();
+			if (message.startsWith("[SQLITE_CONSTRAINT]") || message.startsWith("UNIQUE constraint")) {
 				return message;
-			}else if("PRIMARY KEY must be unique".equals(message)){
+			} else if ("PRIMARY KEY must be unique".equals(message)) {
 				return message;
 			}
 			return null;
 		}
 	};
+
 	@Override
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
 		return EXTRACTER;
 	}
-	
-	
+
+	@Override
+	public String toDefaultString(Object defaultValue, int sqlType, int changeTo) {
+		if (defaultValue instanceof DbFunction) {
+			return "("+this.getFunction((DbFunction) defaultValue)+")";
+		}
+		return super.toDefaultString(defaultValue, sqlType, changeTo);
+	}
 
 }

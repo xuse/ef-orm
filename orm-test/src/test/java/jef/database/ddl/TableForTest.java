@@ -1,5 +1,6 @@
 package jef.database.ddl;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -7,20 +8,20 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.Lob;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import jef.database.annotation.EasyEntity;
-import jef.database.annotation.Index;
 import jef.database.annotation.Indexed;
-import jef.database.annotation.Indexes;
 
-@Table(name = "TABLE_FOR_TEST")
+@Table(name = "TABLE_FOR_TEST",indexes={
+		@Index(columnList="id,name desc",name="IDX_DEFAULT_TEST",unique=true)  //单独再定义一个复合索引		
+},uniqueConstraints={@UniqueConstraint(
+		columnNames={"code","name"})})
 @Entity
 @EasyEntity(checkEnhanced=false)
-@Indexes({
-	@Index(fields={"id","name desc"},name="IDX_DEFAULT_TEST",definition="unique")  //单独再定义一个复合索引
-})
 public class TableForTest extends jef.database.DataObject {
 	private static final long serialVersionUID = 1L;
 	@GeneratedValue(strategy=GenerationType.AUTO)
@@ -31,6 +32,8 @@ public class TableForTest extends jef.database.DataObject {
 	@Column(length=64)
     private String name;
 
+	@Column(columnDefinition="number(18,8)",name="FLOAT_NUMBER")
+	private BigDecimal floatNumber;
 	/**
 	 * 指定列有索引
 	 */
@@ -153,7 +156,15 @@ public class TableForTest extends jef.database.DataObject {
         this.data = data;
     }
 
-    public enum Field implements jef.database.Field {
-        id, name, code, amount, expireTime, data,created,createdSys,modified,modifiedSys
+    public BigDecimal getFloatNumber() {
+		return floatNumber;
+	}
+
+	public void setFloatNumber(BigDecimal floatNumber) {
+		this.floatNumber = floatNumber;
+	}
+
+	public enum Field implements jef.database.Field {
+        id, name, code, amount, expireTime, data,created,createdSys,modified,modifiedSys,floatNumber
     }
 }

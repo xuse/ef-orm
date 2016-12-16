@@ -70,4 +70,8 @@ public final class CacheDummy  implements Cache{
 	public long getMissCount() {
 		return 0L;
 	}
+	@Override
+	public <T> T unwrap(Class<T> cls) {
+		return (T) this;
+	}
 }

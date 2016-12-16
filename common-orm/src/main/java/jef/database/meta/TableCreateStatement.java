@@ -3,8 +3,10 @@ package jef.database.meta;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import jef.common.PairIS;
+import jef.common.PairSS;
 import jef.database.DbUtils;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.ColumnType.AutoIncrement;
@@ -12,7 +14,10 @@ import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.meta.def.UniqueConstraintDef;
 import jef.tools.StringUtils;
+
+import org.apache.commons.lang.RandomStringUtils;
 
 /**
  * 建表任务操作
@@ -26,46 +31,55 @@ public class TableCreateStatement {
 	 */
 	private final List<TableDef> tables = new ArrayList<TableDef>();
 
-	public void addTableMeta(String tablename, ITableMetadata meta, DatabaseDialect profile) {
+	public void addTableMeta(String tablename, ITableMetadata meta, DatabaseDialect dialect) {
 		TableDef tableDef = new TableDef();
-		tableDef.escapedTablename = DbUtils.escapeColumn(profile, tablename);
+		tableDef.escapedTablename = DbUtils.escapeColumn(dialect, tablename);
+		tableDef.profile=dialect;
+		Map<String,String> comments=meta.getColumnComments();
+
+		tableDef.tableComment=comments.get("#TABLE");	
 		for (ColumnMapping column : meta.getColumns()) {
-			processField(column, tableDef, profile);
+			String c=comments.get(column.fieldName());
+			processField(column, tableDef, dialect,c);
 		}
 		if (!tableDef.NoPkConstraint && !meta.getPKFields().isEmpty()) {
-			tableDef.addPkConstraint(meta.getPKFields(), profile, tablename);
+			tableDef.addPkConstraint(meta.getPKFields(), dialect, tablename);
+		}
+		for(UniqueConstraintDef unique: meta.getUniques()){
+			tableDef.addUniqueConstraint(unique,meta,dialect);
 		}
 		this.tables.add(tableDef);
 	}
 
-	private void processField(ColumnMapping entry, TableDef result, DatabaseDialect profile) {
+	private void processField(ColumnMapping entry, TableDef result, DatabaseDialect dialect,String comment) {
 		StringBuilder sb = result.getColumnDef();
 		if (sb.length() > 0)
 			sb.append(",\n");
-
-		sb.append("    ").append(entry.getColumnName(profile, true)).append(" ");
+		String escapedColumnName=entry.getColumnName(dialect, true);
+		sb.append("    ").append(escapedColumnName).append(" ");
+		
 		ColumnType vType = entry.get();
 		if (entry.isPk()) {
 			vType.setNullable(false);
 			if (vType instanceof Varchar) {
 				Varchar vcType = (Varchar) vType;
-				int check = profile.getPropertyInt(DbProperty.INDEX_LENGTH_LIMIT);
+				int check = dialect.getPropertyInt(DbProperty.INDEX_LENGTH_LIMIT);
 				if (check > 0 && vcType.getLength() > check) {
-					throw new IllegalArgumentException("The varchar column in " + profile.getName() + " will not be indexed if length is >" + check);
+					throw new IllegalArgumentException("The varchar column in " + dialect.getName() + " will not be indexed if length is >" + check);
 				}
-				check = profile.getPropertyInt(DbProperty.INDEX_LENGTH_LIMIT_FIX);
+				check = dialect.getPropertyInt(DbProperty.INDEX_LENGTH_LIMIT_FIX);
 				if (check > 0 && vcType.getLength() > check) {
-					result.charSetFix = profile.getProperty(DbProperty.INDEX_LENGTH_CHARESET_FIX);
+					result.charSetFix = dialect.getProperty(DbProperty.INDEX_LENGTH_CHARESET_FIX);
 				}
 			}
 		}
 		if (entry instanceof AutoIncrementMapping) {
-			if (profile.has(Feature.AUTOINCREMENT_NEED_SEQUENCE)) {
+			if (dialect.has(Feature.AUTOINCREMENT_NEED_SEQUENCE)) {
 				int precision = ((AutoIncrement) vType).getPrecision();
-				addSequence(((AutoIncrementMapping) entry).getSequenceName(profile), precision);
+				addSequence(((AutoIncrementMapping) entry).getSequenceName(dialect), precision);
 
 			}
-			if (profile.has(Feature.AUTOINCREMENT_MUSTBE_PK)) { // 在一些数据库上，只有主键才能自增，并且此时不能再单独设置主键.
+			if (dialect.has(Feature.AUTOINCREMENT_MUSTBE_PK)) { // 在一些数据库上，只有主键才能自增，并且此时不能再单独设置主键.
 				result.NoPkConstraint = true;
 			}
 		}
@@ -74,7 +88,14 @@ public class TableCreateStatement {
 				vType = ((AutoIncrement) vType).toNormalType();
 			}
 		}
-		sb.append(profile.getCreationComment(vType, true));
+		sb.append(dialect.getCreationComment(vType, true));
+		if(StringUtils.isNotEmpty(comment)) {
+			if(dialect.has(Feature.SUPPORT_COMMENT)) {
+				result.ccmments.add(new PairSS(escapedColumnName,comment));
+			}else if(dialect.has(Feature.SUPPORT_INLINE_COMMENT)) {
+				sb.append(" comment '"+comment.replace("'", "''")+"'");
+			}
+		}
 	}
 
 	private void addSequence(String seq, int precision) {
@@ -97,14 +118,46 @@ public class TableCreateStatement {
 		 */
 		private final StringBuilder columnDefinition = new StringBuilder();
 
+		/**
+		 * 表备注
+		 */
+		private String tableComment;
+		/**
+		 * 数据库类型
+		 */
+		private DatabaseDialect profile;
+
+		/**
+		 * 各个字段备注
+		 */
+		private List<PairSS> ccmments = new ArrayList<PairSS>();
+		/**
+		 * 没有主键约束
+		 */
 		private boolean NoPkConstraint;
 
 		public String getTableSQL() {
-			String sql = "create table " + escapedTablename + "(\n" + columnDefinition + "\n)";
+			String sql = "CREATE TABLE " + escapedTablename + "(\n" + columnDefinition + "\n)";
 			if (charSetFix != null) {
 				sql = sql + charSetFix;
 			}
+			if(StringUtils.isNotEmpty(tableComment) && profile.has(Feature.SUPPORT_INLINE_COMMENT)) {
+				sql=sql+" comment '"+tableComment.replace("'", "''")+"'";
+			}
 			return sql;
+		}
+
+		public void addUniqueConstraint(UniqueConstraintDef unique,ITableMetadata meta, DatabaseDialect dialect) {
+			List<String> columns=unique.toColumnNames(meta, dialect);
+			StringBuilder sb = getColumnDef();
+			sb.append(",\n");
+			String cname=unique.name();
+			if(StringUtils.isEmpty(cname)){
+				cname="UC_"+RandomStringUtils.randomAlphanumeric(8).toUpperCase();
+			}
+			sb.append("    CONSTRAINT ").append(cname).append(" UNIQUE (");
+			StringUtils.joinTo(columns, ",", sb);
+			sb.append(')');
 		}
 
 		public StringBuilder getColumnDef() {
@@ -122,7 +175,22 @@ public class TableCreateStatement {
 				tablename = StringUtils.substringAfter(tablename, ".");
 			}
 			String pkName = profile.getObjectNameToUse("PK_" + tablename);
-			sb.append("    constraint " + pkName + " primary key(" + StringUtils.join(columns, ',') + ")");
+			sb.append("    CONSTRAINT " + pkName + " PRIMARY KEY(" + StringUtils.join(columns, ',') + ")");
+		}
+
+		public void addTableComment(List<String> result) {
+			if (StringUtils.isNotEmpty(tableComment) && profile.has(Feature.SUPPORT_COMMENT)) {
+				result.add("COMMENT ON TABLE " + escapedTablename + " IS '" + tableComment.replace("'", "''") + "'");
+			}
+		}
+
+		public void addColumnComment(List<String> result) {
+			for (PairSS column : ccmments) {
+				String comment=column.getSecond();
+				if (StringUtils.isNotEmpty(comment)) {
+					result.add("comment on column " + escapedTablename +"."+column.first+ " is '" + comment.replace("'", "''") + "'");	
+				}
+			}
 		}
 
 	}
@@ -141,5 +209,14 @@ public class TableCreateStatement {
 
 	public List<PairIS> getSequences() {
 		return sequences;
+	}
+
+	public List<String> getComments() {
+		List<String> result = new ArrayList<String>();
+		for (TableDef table : tables) {
+			table.addTableComment(result);
+			table.addColumnComment(result);
+		}
+		return result;
 	}
 }
