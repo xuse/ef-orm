@@ -1138,7 +1138,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 */
 	public static String getCRC(InputStream in) {
 		CRC32 crc32 = new CRC32();
-		byte[] b = new byte[4096];
+		byte[] b = new byte[8192];
 		int len = 0;
 		try {
 			while ((len = in.read(b)) != -1) {
