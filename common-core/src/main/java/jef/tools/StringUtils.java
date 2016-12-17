@@ -791,28 +791,28 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	}
 
 	/**
-	 * 返回字串，如果查找的字串不存在则返回全部
+	 * 返回字串，如果查找的字串不存在则返回全部<br>
 	 * 和substringAfterLast方法不同，substringAfterLast方法在查找不到时返回空串
 	 * 
-	 * @param source
-	 * @param rev
+	 * @param source 源字符串
+	 * @param keyword 查找字
 	 * @return
 	 */
-	public static String substringAfterLastIfExist(String source, String rev) {
+	public static String substringAfterLastIfExist(String source, String keyword) {
 		if (source == null)
 			return source;
-		int n = source.lastIndexOf(rev);
+		int n = source.lastIndexOf(keyword);
 		if (n == -1)
 			return source;
-		return source.substring(n + rev.length());
+		return source.substring(n + keyword.length());
 	}
 
 	/**
 	 * 在StringBuilder或各种Appendable中重复添加某个字符串若干次
 	 * 
-	 * @param sb
-	 * @param str
-	 * @param n
+	 * @param sb 源
+	 * @param str 要重复添加的字符串
+	 * @param n 重复次数
 	 */
 	public static void repeat(Appendable sb, CharSequence str, int n) {
 		if (n <= 0)
@@ -829,8 +829,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 在StringBuilder或各种Appendable中重复添加某个字符串若干次
 	 * 
-	 * @param sb
-	 * @param str
+	 * @param sb 源
+	 * @param str 要添加的字符
 	 * @param n 重复次数，如果传入小于等于0的值，不作处理
 	 */
 	public static void repeat(Appendable sb, char str, int n) {
