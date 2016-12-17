@@ -25,6 +25,7 @@ import jef.common.log.LogUtil;
 import jef.tools.ArrayUtils;
 import jef.tools.ClassScanner;
 import jef.tools.IOUtils;
+import jef.tools.StringUtils;
 import jef.tools.URLFile;
 
 /**
@@ -111,7 +112,7 @@ public class EntityEnhancer {
 
 	private boolean enhance(File f,String cls) throws IOException, Exception {
 		EnhanceTaskASM enhancer=new EnhanceTaskASM(null,roots);
-		File sub = new File(f.getParentFile(), cls.replace('.', '/').concat("$Field.class"));
+		File sub = new File(f.getParentFile(), StringUtils.substringAfterLastIfExist(cls, ".").concat("$Field.class"));
 		byte[] result=enhancer.doEnhance(cls, IOUtils.toByteArray(f), (sub.exists()?IOUtils.toByteArray(sub):null));
 		if(result!=null){
 			if(result.length==0){
