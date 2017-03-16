@@ -1,4 +1,4 @@
-package jef.json;
+package com.alibaba.fastjson.serializer;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -10,39 +10,26 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 
+import javax.xml.datatype.XMLGregorianCalendar;
+
+import jef.json.JSONCustom;
 import jef.tools.Assert;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONAware;
 import com.alibaba.fastjson.JSONStreamAware;
-import com.alibaba.fastjson.serializer.AppendableSerializer;
-import com.alibaba.fastjson.serializer.ArraySerializer;
-import com.alibaba.fastjson.serializer.AutowiredObjectSerializer;
-import com.alibaba.fastjson.serializer.CalendarCodec;
-import com.alibaba.fastjson.serializer.CharsetCodec;
-import com.alibaba.fastjson.serializer.ClobSeriliazer;
-import com.alibaba.fastjson.serializer.CollectionSerializer;
-import com.alibaba.fastjson.serializer.DateSerializer;
-import com.alibaba.fastjson.serializer.EnumSerializer;
-import com.alibaba.fastjson.serializer.EnumerationSeriliazer;
-import com.alibaba.fastjson.serializer.ExceptionSerializer;
-import com.alibaba.fastjson.serializer.JSONAwareSerializer;
-import com.alibaba.fastjson.serializer.JSONSerializable;
-import com.alibaba.fastjson.serializer.JSONSerializableSerializer;
-import com.alibaba.fastjson.serializer.JSONStreamAwareSerializer;
-import com.alibaba.fastjson.serializer.ListSerializer;
-import com.alibaba.fastjson.serializer.MapSerializer;
-import com.alibaba.fastjson.serializer.ObjectSerializer;
-import com.alibaba.fastjson.serializer.SerializeConfig;
-import com.alibaba.fastjson.serializer.TimeZoneCodec;
+import com.alibaba.fastjson.annotation.JSONType;
 import com.alibaba.fastjson.util.ServiceLoader;
+import com.alibaba.fastjson.util.TypeUtils;
 
 /**
  * 对FastJSON的SerializeConfig稍作改变，以支持JSON/XML互转等一些功能。
+ * 
  * @author jiyi
  *
  */
@@ -54,6 +41,7 @@ public class SerializeConfigEx extends SerializeConfig {
 
 	/**
 	 * 对传入类型和子类都生效的序列化器
+	 * 
 	 * @param class1
 	 * @param nodeSer
 	 */
@@ -103,39 +91,51 @@ public class SerializeConfigEx extends SerializeConfig {
 
 		if (writer == null) {
 			if (Map.class.isAssignableFrom(clazz)) {
-				put(clazz, MapSerializer.instance);
-			} else if (List.class.isAssignableFrom(clazz)) {
-				put(clazz, ListSerializer.instance);
-			} else if (Collection.class.isAssignableFrom(clazz)) {
-				put(clazz, CollectionSerializer.instance);
-			} else if (Date.class.isAssignableFrom(clazz)) {
-				put(clazz, DateSerializer.instance);
-			} else if (JSONAware.class.isAssignableFrom(clazz)) {
-				put(clazz, JSONAwareSerializer.instance);
-			} else if (JSONSerializable.class.isAssignableFrom(clazz)) {
-				put(clazz, JSONSerializableSerializer.instance);
-			} else if (JSONStreamAware.class.isAssignableFrom(clazz)) {
-				put(clazz, JSONStreamAwareSerializer.instance);
-			} else if (clazz.isEnum() || (clazz.getSuperclass() != null && clazz.getSuperclass().isEnum())) {
-				put(clazz, EnumSerializer.instance);
-			} else if (clazz.isArray()) {
-				Class<?> componentType = clazz.getComponentType();
-				ObjectSerializer compObjectSerializer = getObjectWriter(componentType);
-				put(clazz, new ArraySerializer(componentType, compObjectSerializer));
-			} else if (Throwable.class.isAssignableFrom(clazz)) {
-				put(clazz, new ExceptionSerializer(clazz));
-			} else if (TimeZone.class.isAssignableFrom(clazz)) {
-				put(clazz, TimeZoneCodec.instance);
-			} else if (Appendable.class.isAssignableFrom(clazz)) {
-				put(clazz, AppendableSerializer.instance);
-			} else if (Charset.class.isAssignableFrom(clazz)) {
-				put(clazz, CharsetCodec.instance);
-			} else if (Enumeration.class.isAssignableFrom(clazz)) {
-				put(clazz, EnumerationSeriliazer.instance);
-			} else if (Calendar.class.isAssignableFrom(clazz)) {
-				put(clazz, CalendarCodec.instance);
-			} else if (Clob.class.isAssignableFrom(clazz)) {
-				put(clazz, ClobSeriliazer.instance);
+                put(clazz, MapSerializer.instance);
+            } else if (List.class.isAssignableFrom(clazz)) {
+                put(clazz, ListSerializer.instance);
+            } else if (Collection.class.isAssignableFrom(clazz)) {
+                put(clazz, CollectionCodec.instance);
+            } else if (Date.class.isAssignableFrom(clazz)) {
+                put(clazz, DateCodec.instance);
+            } else if (JSONAware.class.isAssignableFrom(clazz)) {
+                put(clazz, JSONAwareSerializer.instance);
+            } else if (JSONSerializable.class.isAssignableFrom(clazz)) {
+                put(clazz, JSONSerializableSerializer.instance);
+            } else if (JSONStreamAware.class.isAssignableFrom(clazz)) {
+                put(clazz, MiscCodec.instance);
+            } else if (clazz.isEnum() || (clazz.getSuperclass() != null && clazz.getSuperclass().isEnum())) {
+                JSONType jsonType = clazz.getAnnotation(JSONType.class);
+                if (jsonType != null && jsonType.serializeEnumAsJavaBean()) {
+                    put(clazz, createJavaBeanSerializer0(clazz));
+                } else {
+                    put(clazz, EnumSerializer.instance);
+                }
+            } else if (clazz.isArray()) {
+                Class<?> componentType = clazz.getComponentType();
+                ObjectSerializer compObjectSerializer = getObjectWriter(componentType);
+                put(clazz, new ArraySerializer(componentType, compObjectSerializer));
+            } else if (Throwable.class.isAssignableFrom(clazz)) {
+                SerializeBeanInfo beanInfo = TypeUtils.buildBeanInfo(clazz, null, propertyNamingStrategy);
+                beanInfo.features |= SerializerFeature.WriteClassName.mask;
+                put(clazz, new JavaBeanSerializer(beanInfo));
+            } else if (TimeZone.class.isAssignableFrom(clazz) || Map.Entry.class.isAssignableFrom(clazz)) {
+                put(clazz, MiscCodec.instance);
+            } else if (Appendable.class.isAssignableFrom(clazz)) {
+                put(clazz, AppendableSerializer.instance);
+            } else if (Charset.class.isAssignableFrom(clazz)) {
+                put(clazz, ToStringSerializer.instance);
+            } else if (Enumeration.class.isAssignableFrom(clazz)) {
+                put(clazz, EnumerationSerializer.instance);
+            } else if (Calendar.class.isAssignableFrom(clazz) //
+                    || XMLGregorianCalendar.class.isAssignableFrom(clazz)) {
+                put(clazz, CalendarCodec.instance);
+            } else if (Clob.class.isAssignableFrom(clazz)) {
+                put(clazz, ClobSeriliazer.instance);
+            } else if (TypeUtils.isPath(clazz)) {
+                put(clazz, ToStringSerializer.instance);
+            } else if (Iterator.class.isAssignableFrom(clazz)) {
+                put(clazz, MiscCodec.instance);
 			} else {
 				boolean isCglibProxy = false;
 				boolean isJavassistProxy = false;
@@ -158,9 +158,9 @@ public class SerializeConfigEx extends SerializeConfig {
 				}
 
 				if (Proxy.isProxyClass(clazz)) {
-					put(clazz, createJavaBeanSerializer(clazz));
+					put(clazz, createJavaBeanSerializer0(clazz));
 				} else {
-					put(clazz, createJavaBeanSerializer(clazz));
+					put(clazz, createJavaBeanSerializer0(clazz));
 				}
 			}
 			writer = get(clazz);
@@ -168,9 +168,17 @@ public class SerializeConfigEx extends SerializeConfig {
 		return writer;
 	}
 
+	private ObjectSerializer createJavaBeanSerializer0(Class<?> clazz) {
+		SerializeBeanInfo beanInfo = TypeUtils.buildBeanInfo(clazz, null, propertyNamingStrategy);
+		if (beanInfo.fields.length == 0 && Iterable.class.isAssignableFrom(clazz)) {
+			return MiscCodec.instance;
+		}
+		return createJavaBeanSerializer(beanInfo);
+	}
+
 	@Override
-	public ObjectSerializer createJavaBeanSerializer(Class<?> clazz) {
-		JSONCustom annotation = clazz.getAnnotation(JSONCustom.class);
+	public ObjectSerializer createJavaBeanSerializer(SerializeBeanInfo clazz) {
+		JSONCustom annotation = clazz.beanType.getAnnotation(JSONCustom.class);
 		if (annotation != null && annotation.serializer() != Void.class) {
 			return getCustomSerializer(annotation.serializer());
 		}

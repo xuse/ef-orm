@@ -3,7 +3,6 @@ package jef.tools;
 import java.util.Date;
 import java.util.Map.Entry;
 
-import jef.json.SerializeConfigEx;
 import jef.json.XmlJsonSerializer;
 
 import org.w3c.dom.Document;
@@ -14,6 +13,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.ObjectSerializer;
+import com.alibaba.fastjson.serializer.SerializeConfigEx;
 
 /**
  * 提供Json和XML的互相转换
