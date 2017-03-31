@@ -37,7 +37,7 @@ public interface ColumnMapping extends ResultSetAccessor,MetadataContainer {
 	 * 得到默认未设置或修饰过的值
 	 * @return
 	 */
-	Object getUnsavedValue();
+	boolean isUnsavedValue(Object value);
 	
 	/**
 	 * 是否显式的使用@UnsavedValue注解

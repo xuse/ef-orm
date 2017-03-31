@@ -47,17 +47,16 @@ import org.springframework.util.Assert;
  */
 public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable> extends TransactionalRepositoryFactoryBeanSupport<T, S, ID> implements ApplicationContextAware {
 
+	protected GqRepositoryFactoryBean(Class<? extends T> repositoryInterface) {
+		super(repositoryInterface);
+		this.repositoryInterface = repositoryInterface;
+	}
+
 	private EntityManager em;
 	private ConfigurableApplicationContext context;
 	private Class<?> repositoryInterface;
-	
-	private static Logger log=LoggerFactory.getLogger(GqRepositoryFactoryBean.class);
 
-	@Override
-	public void setRepositoryInterface(Class<? extends T> repositoryInterface) {
-		super.setRepositoryInterface(repositoryInterface);
-		this.repositoryInterface = repositoryInterface;
-	}
+	private static Logger log = LoggerFactory.getLogger(GqRepositoryFactoryBean.class);
 
 	/**
 	 * The {@link EntityManager} to be used.
@@ -107,50 +106,53 @@ public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends 
 
 	/*
 	 * (non-Javadoc)
+	 * 
 	 * @see
 	 * org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
 	 */
 	@Override
 	public void afterPropertiesSet() {
 		Assert.notNull(em, "EntityManager must not be null!");
-		Object custom=generateCustomImplementation();
-		if(custom!=null	)this.setCustomImplementation(custom);
+		Object custom = generateCustomImplementation();
+		if (custom != null)
+			this.setCustomImplementation(custom);
 		super.afterPropertiesSet();
 
 	}
 
 	/*
-	 * FIXME 土法炼钢：看spring-data源码，由于使用太多容器注入特性，没法发现CustomImplementation对象是从哪里创建出来的。
+	 * FIXME
+	 * 土法炼钢：看spring-data源码，由于使用太多容器注入特性，没法发现CustomImplementation对象是从哪里创建出来的。
 	 * （虽然说做个案例 DEBUG一下应该能跟出来，但最近实在没时间……）
 	 * 所以这里简单粗暴的将自定义的扩展Repository构造出来用了再说。以后有时间还是要修改得更优雅一点。
 	 */
 	private Object generateCustomImplementation() {
-		for(Class<?> clz:repositoryInterface.getInterfaces()){
-			if(Repository.class.isAssignableFrom(clz)){
+		for (Class<?> clz : repositoryInterface.getInterfaces()) {
+			if (Repository.class.isAssignableFrom(clz)) {
 				continue;
-			}else if(clz.getAnnotation(RepositoryDefinition.class)!=null){
+			} else if (clz.getAnnotation(RepositoryDefinition.class) != null) {
 				continue;
 			}
-			ClassEx implClz=ClassEx.forName(clz.getName()+"Impl");
-			if(implClz==null){
-				log.error("Lack of implementation of class: "+clz.getName());
+			ClassEx implClz = ClassEx.forName(clz.getName() + "Impl");
+			if (implClz == null) {
+				log.error("Lack of implementation of class: " + clz.getName());
 			}
-			try{
-				Object obj=implClz.newInstance();
-				for(FieldEx field: implClz.getDeclaredFields()){
-					if(field.getAnnotation(PersistenceContext.class)!=null){
+			try {
+				Object obj = implClz.newInstance();
+				for (FieldEx field : implClz.getDeclaredFields()) {
+					if (field.getAnnotation(PersistenceContext.class) != null) {
 						field.set(obj, em);
 					}
 				}
-				if(obj instanceof ApplicationContextAware){
+				if (obj instanceof ApplicationContextAware) {
 					((ApplicationContextAware) obj).setApplicationContext(context);
 				}
-				if(obj instanceof InitializingBean){
+				if (obj instanceof InitializingBean) {
 					((InitializingBean) obj).afterPropertiesSet();
 				}
 				return obj;
-			}catch(Exception ex){
-				log.error("",ex);
+			} catch (Exception ex) {
+				log.error("", ex);
 				return null;
 			}
 		}

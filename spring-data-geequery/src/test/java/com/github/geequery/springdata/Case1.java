@@ -333,7 +333,6 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 				v.setName("啥，已经被人更新了，那我不是写不进去了！");
 				commonDao.update(v);
 			} catch (OptimisticLockException e) {
-				e.printStackTrace();
 				throw e;
 			}
 		}

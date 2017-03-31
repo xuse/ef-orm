@@ -131,7 +131,7 @@ public class UrlResource extends AbstractFileResolvingResource {
 	 * This implementation returns the underlying URL reference.
 	 */
 	@Override
-	public URL getURL() throws IOException {
+	public URL getURL(){
 		return this.url;
 	}
 
@@ -283,6 +283,12 @@ public class UrlResource extends AbstractFileResolvingResource {
 			pathElements.add(0, TOP_PATH);
 		}
 		return prefix + StringUtils.join(pathElements, FOLDER_SEPARATOR);
+	}
+
+	@Override
+	public boolean isFile() {
+		String p=url.getProtocol();
+		return p.startsWith(ResourceUtils.URL_PROTOCOL_VFS)||"file".equals(p);
 	}
 
 }
