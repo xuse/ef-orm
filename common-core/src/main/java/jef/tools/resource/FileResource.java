@@ -122,4 +122,9 @@ public class FileResource extends Resource implements IResource {
 	public String toString() {
 		return getDescription();
 	}
+
+	@Override
+	public boolean isFile() {
+		return true;
+	}
 }

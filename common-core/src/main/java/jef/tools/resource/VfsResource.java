@@ -34,12 +34,12 @@ public class VfsResource extends AbstractResource {
 	}
 
 	@Override
-	public URL getURL() throws IOException {
+	public URL getURL(){
 		try {
 			return VfsUtils.getURL(this.resource);
 		}
 		catch (Exception ex) {
-			throw new IOException("Failed to obtain URL for file " + this.resource, ex);
+			throw new RuntimeException("Failed to obtain URL for file " + this.resource, ex);
 		}
 	}
 
@@ -99,6 +99,12 @@ public class VfsResource extends AbstractResource {
 	@Override
 	public int hashCode() {
 		return this.resource.hashCode();
+	}
+
+
+	@Override
+	public boolean isFile() {
+		return true;
 	}
 
 }

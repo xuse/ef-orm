@@ -58,10 +58,10 @@ public class EntityEnhancerTest {
 			}
 		}, 0);
 		
-		 byte[] bytes=asm.doEnhance(reader.getClassName(), writer.toByteArray(),IOUtils.toByteArray(url));
+		 byte[] bytes=asm.doEnhance( writer.toByteArray(),IOUtils.toByteArray(url));
 		 assertNotNull(bytes);
 		 
-		 byte[] bytes2=asm.doEnhance(reader.getClassName(), bytes,IOUtils.toByteArray(url));
+		 byte[] bytes2=asm.doEnhance(bytes,IOUtils.toByteArray(url));
 		 assertTrue(bytes2.length==0);
 		 
 	}

@@ -212,7 +212,7 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 	 * @see org.springframework.core.io.DefaultResourceLoader
 	 */
 	public PathMatchingResourcePatternResolver() {
-		this.resourceLoader = new ClasspathLoader();
+		this.resourceLoader = new ClasspathLoader(false);
 	}
 
 	/**
@@ -226,7 +226,7 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 	 * @see org.springframework.core.io.DefaultResourceLoader
 	 */
 	public PathMatchingResourcePatternResolver(ClassLoader classLoader) {
-		this.resourceLoader = new ClasspathLoader(false,classLoader);
+		this.resourceLoader = classLoader==null? new ClasspathLoader(false):new ClasspathLoader(false,classLoader);
 	}
 
 	/**

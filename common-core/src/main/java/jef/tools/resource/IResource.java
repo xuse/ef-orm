@@ -81,7 +81,7 @@ public interface IResource {
 	 *             if the resource cannot be resolved as URL, i.e. if the
 	 *             resource is not available as descriptor
 	 */
-	URL getURL() throws IOException;
+	URL getURL();
 
 	/**
 	 * Return a URI handle for this resource.
@@ -149,5 +149,7 @@ public interface IResource {
 	 * @see java.lang.Object#toString()
 	 */
 	String getDescription();
+
+	boolean isFile();
 
 }

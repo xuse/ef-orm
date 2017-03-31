@@ -27,6 +27,7 @@ import jef.tools.ClassScanner;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 import jef.tools.URLFile;
+import jef.tools.resource.IResource;
 
 /**
  * JEF中的Entity静态增强任务类
@@ -70,16 +71,11 @@ public class EntityEnhancer {
 		}
 		int n = 0;
 		for (File root : roots) {
-			String[] clss = ClassScanner.listClassNameInPackage(root, pkgNames, true, true, false);
-			for (String cls : clss) {
-				RegexpNameFilter filter = new RegexpNameFilter(includePattern, excludePatter);
-				if (!filter.accept(cls)) {
+			IResource[] clss = ClassScanner.listClassNameInPackage(root, pkgNames, true);
+			for (IResource cls : clss) {
+				if(!cls.isFile()){
 					continue;
 				}
-				if (cls.startsWith("org.apache")||cls.startsWith("javax."))
-					continue;
-				if(cls.endsWith("$Field"))
-					continue;
 				try {
 					if(processEnhance(root,cls)){
 						n++;
@@ -113,7 +109,7 @@ public class EntityEnhancer {
 	private boolean enhance(File f,String cls) throws IOException, Exception {
 		EnhanceTaskASM enhancer=new EnhanceTaskASM(null,roots);
 		File sub = new File(f.getParentFile(), StringUtils.substringAfterLastIfExist(cls, ".").concat("$Field.class"));
-		byte[] result=enhancer.doEnhance(cls, IOUtils.toByteArray(f), (sub.exists()?IOUtils.toByteArray(sub):null));
+		byte[] result=enhancer.doEnhance(IOUtils.toByteArray(f), (sub.exists()?IOUtils.toByteArray(sub):null));
 		if(result!=null){
 			if(result.length==0){
 				out.println(cls + " is already enhanced.");
@@ -126,15 +122,24 @@ public class EntityEnhancer {
 		return false;
 	}
 
-	private boolean processEnhance(File root,String cls) throws Exception {
+	private boolean processEnhance(File root,IResource cls) throws Exception {
 		EnhanceTaskASM enhancer=new EnhanceTaskASM(root,roots);
-		File f = new File(root, cls.replace('.', '/').concat(".class"));
-		File sub = new File(root, cls.replace('.', '/').concat("$Field.class"));
+		File f = cls.getFile();
+		File sub = new File(IOUtils.removeExt(f.getAbsolutePath()).concat("$Field.class"));
 		if (!f.exists()) {
-			out.println("class file " + f.getAbsolutePath() + " is not found");
+//			out.println("class file " + f.getAbsolutePath() + " is not found");
 			return false;
 		}
-		byte[] result=enhancer.doEnhance(cls, IOUtils.toByteArray(f), (sub.exists()?IOUtils.toByteArray(sub):null));
+//		RegexpNameFilter filter = new RegexpNameFilter(includePattern, excludePatter);
+//		if (!filter.accept(cls)) {
+//			continue;
+//		}
+//		if (cls.startsWith("org.apache")||cls.startsWith("javax."))
+//			continue;
+//		if(cls.endsWith("$Field"))
+//			continue;
+		
+		byte[] result=enhancer.doEnhance(IOUtils.toByteArray(f), (sub.exists()?IOUtils.toByteArray(sub):null));
 		if(result!=null){
 			if(result.length==0){
 				out.println(cls + " is already enhanced.");

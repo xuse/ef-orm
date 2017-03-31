@@ -600,14 +600,18 @@ public class IOUtils {
 	}
 
 	/**
-	 * 得到文件的扩展名（小写如果没有则返回空字符串）
+	 * 得到文件的扩展名（小写如果没有则返回空字符串）。如果传入的文件名包含路径，分析时会考虑最后一个\或/字符后满的部分才作为文件名。
 	 * 
 	 * @param fileName
 	 * @return
 	 */
 	public static String getExtName(String fileName) {
+		int dashIndex1=fileName.lastIndexOf('/');
+		int dashIndex2=fileName.lastIndexOf('\\');
+		int dash=Math.max(dashIndex1, dashIndex2);//获得最后一个斜杠的位置
+		
 		int pos = fileName.lastIndexOf(".");
-		if (pos > -1) {
+		if(pos>-1 && pos>dash){
 			return fileName.substring(pos + 1).toLowerCase();
 		} else {
 			return "";
@@ -615,13 +619,20 @@ public class IOUtils {
 	}
 
 	/**
-	 * 得到文件名除去扩展名的部分
-	 * 
+	 * 得到文件名除去扩展名的部分。如果传入的文件名包含路径，分析时会考虑最后一个\或/字符后满的部分才作为文件名。
+	 * 去除扩展名后返回包含路径的部分。
 	 * @param fileName
 	 * @return
 	 */
 	public static String removeExt(String fileName) {
-		return StringUtils.substringBeforeLast(fileName, ".");
+		int dashIndex1=fileName.lastIndexOf('/');
+		int dashIndex2=fileName.lastIndexOf('\\');
+		int dash=Math.max(dashIndex1, dashIndex2);//获得最后一个斜杠的位置
+		int pos=fileName.lastIndexOf('.');
+		if(pos>-1 && pos>dash){
+			return fileName.substring(0,pos);
+		}
+		return fileName;
 	}
 
 	/**
