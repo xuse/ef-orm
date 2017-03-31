@@ -212,7 +212,7 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 	 * @see org.springframework.core.io.DefaultResourceLoader
 	 */
 	public PathMatchingResourcePatternResolver() {
-		this.resourceLoader = new ClasspathLoader();
+		this.resourceLoader = new ClasspathLoader(false);
 	}
 
 	/**
@@ -225,8 +225,8 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 	 *            time of actual resource access
 	 * @see org.springframework.core.io.DefaultResourceLoader
 	 */
-	public PathMatchingResourcePatternResolver(ClassLoader[] classLoader) {
-		this.resourceLoader = new ClasspathLoader(false,classLoader);
+	public PathMatchingResourcePatternResolver(ClassLoader classLoader) {
+		this.resourceLoader = classLoader == null ? new ClasspathLoader(false) : new ClasspathLoader(false, classLoader);
 	}
 
 	/**
@@ -268,7 +268,6 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 		return this.pathMatcher;
 	}
 
-
 	public IResource[] getResources(String locationPattern) throws IOException {
 		Assert.notNull(locationPattern, "Location pattern must not be null");
 		if (locationPattern.startsWith(CLASSPATH_ALL_URL_PREFIX)) {
@@ -289,11 +288,11 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 				return findPathMatchingResources(locationPattern);
 			} else {
 				// a single resource with the given name
-				URL url=getResourceLoader().getResource(locationPattern);
-				if(url!=null){
+				URL url = getResourceLoader().getResource(locationPattern);
+				if (url != null) {
 					return new IResource[] { new UrlResource(url) };
-				}else{
-					return new IResource[0]; 
+				} else {
+					return new IResource[0];
 				}
 			}
 		}
@@ -370,9 +369,7 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 				result.addAll(doFindPathMatchingFileResources(rootDirResource, subPattern));
 			}
 		}
-		if (logger.isDebugEnabled()) {
-			logger.debug("Resolved location pattern [" + locationPattern + "] to resources " + result);
-		}
+		logger.debug("Resolved location pattern [{}] to resources {}", locationPattern, result);
 		return result.toArray(new IResource[result.size()]);
 	}
 
@@ -577,9 +574,9 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 		}
 
 		try {
-			if (logger.isDebugEnabled()) {
-				logger.debug("Looking for matching resources in jar file [" + jarFileUrl + "]");
-			}
+//			if (logger.isDebugEnabled()) {
+//				logger.debug("Looking for matching resources in jar file [" + jarFileUrl + "]");
+//			}
 			if (!"".equals(rootEntryPath) && !rootEntryPath.endsWith("/")) {
 				// Root entry path must end with slash to allow for proper
 				// matching.
@@ -668,9 +665,9 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 	 * @see org.springframework.util.PatternMatcher
 	 */
 	protected Set<IResource> doFindMatchingFileSystemResources(File rootDir, String subPattern) throws IOException {
-		if (logger.isDebugEnabled()) {
-			logger.debug("Looking for matching resources in directory tree [" + rootDir.getPath() + "]");
-		}
+//		if (logger.isDebugEnabled()) {
+//			logger.debug("Looking for matching resources in directory tree [" + rootDir.getPath() + "]");
+//		}
 		Set<File> matchingFiles = retrieveMatchingFiles(rootDir, subPattern);
 		Set<IResource> result = new LinkedHashSet<IResource>(matchingFiles.size());
 		for (File file : matchingFiles) {

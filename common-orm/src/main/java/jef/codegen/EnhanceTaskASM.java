@@ -49,7 +49,7 @@ public class EnhanceTaskASM {
 	 * @return 返回null表示不需要增强，返回byte[0]表示该类已经增强，返回其他数据为增强后的class
 	 * @throws Exception
 	 */
-	public byte[] doEnhance(String className, byte[] classdata, byte[] fieldEumData) throws Exception {
+	public byte[] doEnhance(byte[] classdata, byte[] fieldEumData) throws Exception {
 		Assert.notNull(classdata);
 		List<String> enumFields = parseEnumFields(fieldEumData);
 		try {

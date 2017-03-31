@@ -4,8 +4,9 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import jef.tools.reflect.ClassLoaderUtil;
 import jef.tools.resource.IResource;
@@ -51,22 +52,30 @@ public class ClassScanner {
 	 *            是否递归搜索子包
 	 * @return Set
 	 */
-	public Set<String> scan(String[] packages) {
+	public IResource[] scan(String... packages) {
 		URLClassLoader cl = rootClasspath == null ? null : new URLClassLoader(new URL[] { rootClasspath });
-
-		Set<String> classes = new LinkedHashSet<String>();
-		for (String packageName : packages) {
-			IResource[] res = ResourceUtils.findResources(cl,"classpath*:"+ packageName.replace('.', '/') + "/*.class");
-			for (IResource r : res) {
-				String name = r.getFilename();
-				name = name.substring(0, name.length() - 6);
-				if (name.indexOf('$') > -1 && excludeInnerClass) {
-					continue;
-				}
-				classes.add(packageName + "." + name);
-			}
+		if(packages.length==0){
+			packages=new String[]{""};
 		}
-		return classes;
+		List<IResource> result = new ArrayList<IResource>();
+		for (String packageName : packages) {
+			if(packageName==null){
+				continue;
+			}
+			String keystr;
+			if(StringUtils.isBlank(packageName)){
+				keystr="classpath*:"+ "**/*.class";
+				return ResourceUtils.findResources(cl,keystr);
+			}
+			
+			keystr="classpath*:"+ packageName.replace('.', '/') + "/*.class";
+			IResource[] res = ResourceUtils.findResources(cl,keystr);
+			if(packages.length==1){
+				return res;
+			}
+			result.addAll(Arrays.asList(res));
+		}
+		return result.toArray(new IResource[result.size()]);
 	}
 
 	/**
@@ -82,22 +91,20 @@ public class ClassScanner {
 			rootClasspath = rootCls.getResource("/");
 	}
 	
-	public static String[] listClassNameInPackage(Class<?> rootCls, String[] pkgNames, boolean includeInner) {
+	public static IResource[] listClassNameInPackage(Class<?> rootCls, String[] pkgNames, boolean includeInner) {
 		ClassScanner cs = new ClassScanner().excludeInnerClass(!includeInner);
 		cs.setRootBySameUrlClass(rootCls);
-		Set<String> result = cs.scan(pkgNames);
-		return result.toArray(new String[result.size()]);
+		return cs.scan(pkgNames);
 	}
 	
-	public static String[] listClassNameInPackage(File root, String[] pkgNames, boolean includeInner) {
+	public static IResource[] listClassNameInPackage(File root, String[] pkgNames, boolean includeInner) {
 		ClassScanner cs=new ClassScanner().excludeInnerClass(!includeInner);
 		try {
 			cs.rootClasspath(root.toURI().toURL());
 		} catch (MalformedURLException e) {
 			throw new RuntimeException(e.getMessage());
 		}
-		Set<String> result=cs.scan(pkgNames);
-		return result.toArray(new String[result.size()]);
+		return cs.scan(pkgNames);
 	}
 	
 }

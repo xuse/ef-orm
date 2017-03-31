@@ -60,7 +60,7 @@ public class JefClassLoader extends URLClassLoader {
 		EnhanceTaskASM task=new EnhanceTaskASM(null,null);
 		byte[] enhanced;
 		try{
-			enhanced=task.doEnhance(name, IOUtils.toByteArray(u1), u2==null?null:IOUtils.toByteArray(u2));
+			enhanced=task.doEnhance(IOUtils.toByteArray(u1), u2==null?null:IOUtils.toByteArray(u2));
 		} catch (Exception e) {
 			LogUtil.exception(e);
 			throw new ClassNotFoundException(name);

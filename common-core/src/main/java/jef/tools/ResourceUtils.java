@@ -436,7 +436,7 @@ public class ResourceUtils {
 		List<URL> res = getResources(name);
 		Map<String, String> result = new LinkedHashMap<String, String>();
 		for (URL u : res) {
-			IOUtils.loadProperties(IOUtils.getReader(u, charset), result, false);
+			IOUtils.loadProperties(IOUtils.getReader(u, charset), result,false);
 		}
 		return result;
 	}
@@ -465,33 +465,40 @@ public class ResourceUtils {
 			return res.openStream();
 		return null;
 	}
-
+	
 	/**
 	 * 查找符合Pattern的所有资源
-	 * 
 	 * @param locationPattern
 	 * @return
 	 * @throws IOException
 	 */
-	public static IResource[] findResources(String locationPattern)  {
-		ResourcePatternResolver rl = new PathMatchingResourcePatternResolver();
+	public static IResource[] findResources(String locationPattern) {
+		ResourcePatternResolver rl= new PathMatchingResourcePatternResolver();
 		try {
 			return rl.getResources(locationPattern);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
+	
+	
 
-	public static IResource[] findResources(ClassLoader loader, String locationPattern) {
-		ResourcePatternResolver rl = loader == null ? new PathMatchingResourcePatternResolver() :
-			new PathMatchingResourcePatternResolver(new ClassLoader[] { loader });
+	/**
+	 * 查找符合Pattern的所有资源
+	 * @param locationPattern
+	 * @return
+	 * @throws IOException
+	 */
+	public static IResource[] findResources(ClassLoader cl,String locationPattern) {
+		ResourcePatternResolver rl= new PathMatchingResourcePatternResolver(cl);
 		try {
 			return rl.getResources(locationPattern);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
 	}
-
+	
+	
 	/**
 	 * 
 	 * @param string
