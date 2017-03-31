@@ -69,7 +69,7 @@ public class EntityEnhancer {
 		}
 		int n = 0;
 		for (File root : roots) {
-			String[] clss = ClassScanner.listClassNameInPackage(root, pkgNames, true, true, false);
+			String[] clss = ClassScanner.listClassNameInPackage(root, pkgNames,  true);
 			for (String cls : clss) {
 				RegexpNameFilter filter = new RegexpNameFilter(includePattern, excludePatter);
 				if (!filter.accept(cls)) {

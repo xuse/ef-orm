@@ -225,7 +225,7 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 	 *            time of actual resource access
 	 * @see org.springframework.core.io.DefaultResourceLoader
 	 */
-	public PathMatchingResourcePatternResolver(ClassLoader classLoader) {
+	public PathMatchingResourcePatternResolver(ClassLoader[] classLoader) {
 		this.resourceLoader = new ClasspathLoader(false,classLoader);
 	}
 
