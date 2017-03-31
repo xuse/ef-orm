@@ -9,11 +9,8 @@ import jef.tools.ClassScanner;
 import jef.tools.InitDataExporter;
 import jef.tools.resource.IResource;
 
-import org.junit.Ignore;
-
 import com.github.geequery.orm.annotation.InitializeData;
 
-@Ignore
 public class DbExporter {
 
 	/**

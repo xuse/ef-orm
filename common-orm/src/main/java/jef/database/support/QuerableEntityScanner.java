@@ -159,7 +159,7 @@ public class QuerableEntityScanner {
 					continue;
 				// 根据父类判断
 				if(isEntiyClz(cl,parents,cr.getSuperName())){
-					Class<?> clz = loadClass(cl, cr.getClassName());
+					Class<?> clz = loadClass(cl, cr.getClassName().replace('/', '.'));
 					if (clz != null) {
 						registeEntity(clz, tasks);
 					}
