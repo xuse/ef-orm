@@ -25,6 +25,7 @@ import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.database.datasource.MapDataSourceLookup;
 import jef.database.datasource.RoutingDataSource;
+import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.AbstractDialect;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jpa.JefEntityManagerFactory;
@@ -174,7 +175,7 @@ public class DbClientBuilder {
 	 */
 	public DbClientBuilder() {
 	}
-
+	
 	/**
 	 * 构造
 	 * 
@@ -334,6 +335,18 @@ public class DbClientBuilder {
 	 */
 	public DbClientBuilder setDataSource(DataSource dataSource) {
 		this.dataSource = dataSource;
+		return this;
+	}
+	
+	/**
+	 * 设置数据源
+	 * @param url
+	 * @param user
+	 * @param password
+	 * @return
+	 */
+	public DbClientBuilder setDataSource(String url,String user,String password) {
+		this.dataSource= new SimpleDataSource(url, user, password);
 		return this;
 	}
 
@@ -726,5 +739,9 @@ public class DbClientBuilder {
 	public DbClientBuilder setUseSystemOut(boolean flag){
 		LogUtil.useSlf4j=!flag;
 		return this;
+	}
+
+	public static DbClientBuilder newBuilder() {
+		return new DbClientBuilder();
 	}
 }
