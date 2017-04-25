@@ -289,7 +289,7 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 				return findPathMatchingResources(locationPattern);
 			} else {
 				// a single resource with the given name
-				URL url=getResourceLoader().getResource(locationPattern);
+				URL url=getResourceLoader().getResource(locationPattern.substring(prefixEnd));
 				if(url!=null){
 					return new IResource[] { new UrlResource(url) };
 				}else{

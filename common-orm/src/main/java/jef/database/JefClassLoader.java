@@ -27,6 +27,7 @@ import jef.common.log.LogUtil;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 import jef.tools.reflect.UnsafeUtils;
+import jef.tools.resource.ClasspathLoader;
 
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +58,7 @@ public class JefClassLoader extends URLClassLoader {
 		if(u1==null){
 			throw new ClassNotFoundException(name);
 		}
-		EnhanceTaskASM task=new EnhanceTaskASM(null,null);
+		EnhanceTaskASM task=new EnhanceTaskASM(new ClasspathLoader());
 		byte[] enhanced;
 		try{
 			enhanced=task.doEnhance(IOUtils.toByteArray(u1), u2==null?null:IOUtils.toByteArray(u2));

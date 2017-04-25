@@ -34,7 +34,6 @@ public class EntityEnhancerTest {
 	public void testEntityEnhancer() {
 		EntityEnhancer e = new EntityEnhancer();
 		e.setOut(System.out);
-		e.setRoot(new File("./"));
 		e.setExcludePatter(new String[] { "java.lang.*" });
 		e.setIncludePattern("javax.xml");
 		e.getExcludePatter();

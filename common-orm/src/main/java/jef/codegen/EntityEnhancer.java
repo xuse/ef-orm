@@ -20,101 +20,107 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URL;
 
-import jef.codegen.support.RegexpNameFilter;
-import jef.common.log.LogUtil;
-import jef.tools.ArrayUtils;
 import jef.tools.ClassScanner;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 import jef.tools.URLFile;
+import jef.tools.resource.ClasspathLoader;
 import jef.tools.resource.IResource;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
- * JEF中的Entity静态增强任务类
- * <h3>作用</h3>
- * 这个类中提供了{@link #enhance(String...)}方法，可以对当前classpath下的Entity类进行字节码增强。
+ * JEF中的Entity静态增强任务类 <h3>作用</h3> 这个类中提供了{@link #enhance(String...)}
+ * 方法，可以对当前classpath下的Entity类进行字节码增强。
  * 
  * 
- * @author jiyi 
+ * @author jiyi
  * @Date 2011-4-6
  */
 public class EntityEnhancer {
 	private String includePattern;
 	private String[] excludePatter;
-	private File[] roots;
+	private URL[] roots;
 	PrintStream out = System.out;
-
+	private EnhanceTaskASM enhancer;
+	private static final Logger log = LoggerFactory.getLogger(EntityEnhancer.class);
 
 	public void setOut(PrintStream out) {
 		this.out = out;
 	}
 
+	public EntityEnhancer() {
+		enhancer = new EnhanceTaskASM(new ClasspathLoader());
+	}
+
 	/**
 	 * 在当前的classpath目录下扫描Entity类(.clsss文件)，使用字节码增强修改这些class文件。
+	 * 
 	 * @param pkgNames
 	 */
 	public void enhance(final String... pkgNames) {
-		if (roots == null || roots.length == 0) {
-				StackTraceElement[] eles = Thread.currentThread().getStackTrace();
-			StackTraceElement last = eles[1];
-			try {
-				Class<?> clz=Class.forName(last.getClassName());
-				roots = IOUtils.urlToFile(ArrayUtils.toArray(clz.getClassLoader().getResources("."), URL.class));
-			} catch (IOException e) {
-				LogUtil.exception(e);
-			} catch (ClassNotFoundException e) {
-				//do nothing
-			}
-		}
-		if(roots==null){
-			return;
-		}
 		int n = 0;
-		for (File root : roots) {
-			IResource[] clss = ClassScanner.listClassNameInPackage(root, pkgNames, true);
+		if (roots == null || roots.length == 0) {
+			IResource[] clss = ClassScanner.listClassNameInPackage(null, pkgNames, true);
 			for (IResource cls : clss) {
-				if(!cls.isFile()){
-					continue;
-				}
-				try {
-					if(processEnhance(root,cls)){
-						n++;
+				if (cls.isFile()) {
+					try {
+						if (processEnhance(cls)) {
+							n++;
+						}
+					} catch (Exception e) {
+						log.error("Enhance error: {}", cls, e);
+						continue;
 					}
-				} catch (Exception e) {
-					LogUtil.exception(e);
-					LogUtil.error("Enhance error: " + cls + ": " + e.getMessage());
-					continue;
+				}
+			}
+		} else {
+			for (URL root : roots) {
+				IResource[] clss = ClassScanner.listClassNameInPackage(root, pkgNames, true);
+				for (IResource cls : clss) {
+					if (!cls.isFile()) {
+						continue;
+					}
+					try {
+						if (processEnhance(cls)) {
+							n++;
+						}
+					} catch (Exception e) {
+						log.error("Enhance error: {}", cls, e);
+						continue;
+					}
 				}
 			}
 		}
-
 		out.println(n + " classes enhanced.");
 	}
+
 	public boolean enhanceClass(String string) {
-		URL url=this.getClass().getClassLoader().getResource(string.replace('.', '/')+".class");
-		if(url==null){
-			throw new IllegalArgumentException("not found "+string);
+		URL url = this.getClass().getClassLoader().getResource(string.replace('.', '/') + ".class");
+		if (url == null) {
+			throw new IllegalArgumentException("not found " + string);
 		}
-		URLFile file=new URLFile(url);
-		if(!file.isLocalFile()){
-			throw new IllegalArgumentException("not a local file."+string);
+		URLFile file = new URLFile(url);
+		if (!file.isLocalFile()) {
+			throw new IllegalArgumentException("not a local file." + string);
 		}
 		try {
-			return enhance(file.getLocalFile(),string);
+			return enhance(file.getLocalFile(), string);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 	}
 
-	private boolean enhance(File f,String cls) throws IOException, Exception {
-		EnhanceTaskASM enhancer=new EnhanceTaskASM(null,roots);
+	private boolean enhance(File f, String cls) throws IOException, Exception {
+		EnhanceTaskASM enhancer = new EnhanceTaskASM(null);
 		File sub = new File(f.getParentFile(), StringUtils.substringAfterLastIfExist(cls, ".").concat("$Field.class"));
-		byte[] result=enhancer.doEnhance(IOUtils.toByteArray(f), (sub.exists()?IOUtils.toByteArray(sub):null));
-		if(result!=null){
-			if(result.length==0){
+		byte[] result = enhancer.doEnhance(IOUtils.toByteArray(f), (sub.exists() ? IOUtils.toByteArray(sub) : null));
+		if (result != null) {
+			if (result.length == 0) {
 				out.println(cls + " is already enhanced.");
-			}else{
-				IOUtils.saveAsFile(f,result);
+			} else {
+				IOUtils.saveAsFile(f, result);
 				out.println("enhanced class:" + cls);// 增强完成
 				return true;
 			}
@@ -122,29 +128,18 @@ public class EntityEnhancer {
 		return false;
 	}
 
-	private boolean processEnhance(File root,IResource cls) throws Exception {
-		EnhanceTaskASM enhancer=new EnhanceTaskASM(root,roots);
+	private boolean processEnhance(IResource cls) throws Exception {
 		File f = cls.getFile();
 		File sub = new File(IOUtils.removeExt(f.getAbsolutePath()).concat("$Field.class"));
 		if (!f.exists()) {
-//			out.println("class file " + f.getAbsolutePath() + " is not found");
 			return false;
 		}
-//		RegexpNameFilter filter = new RegexpNameFilter(includePattern, excludePatter);
-//		if (!filter.accept(cls)) {
-//			continue;
-//		}
-//		if (cls.startsWith("org.apache")||cls.startsWith("javax."))
-//			continue;
-//		if(cls.endsWith("$Field"))
-//			continue;
-		
-		byte[] result=enhancer.doEnhance(IOUtils.toByteArray(f), (sub.exists()?IOUtils.toByteArray(sub):null));
-		if(result!=null){
-			if(result.length==0){
+		byte[] result = enhancer.doEnhance(IOUtils.toByteArray(f), (sub.exists() ? IOUtils.toByteArray(sub) : null));
+		if (result != null) {
+			if (result.length == 0) {
 				out.println(cls + " is already enhanced.");
-			}else{
-				IOUtils.saveAsFile(f,result);
+			} else {
+				IOUtils.saveAsFile(f, result);
 				out.println("enhanced class:" + cls);// 增强完成
 				return true;
 			}
@@ -154,6 +149,7 @@ public class EntityEnhancer {
 
 	/**
 	 * 设置类名Pattern
+	 * 
 	 * @return
 	 */
 	public String getIncludePattern() {
@@ -172,13 +168,5 @@ public class EntityEnhancer {
 	public EntityEnhancer setExcludePatter(String[] excludePatter) {
 		this.excludePatter = excludePatter;
 		return this;
-	}
-
-	public File[] getRoot() {
-		return roots;
-	}
-
-	public void setRoot(File... roots) {
-		this.roots = roots;
 	}
 }

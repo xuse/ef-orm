@@ -1,7 +1,5 @@
 package jef.tools;
 
-import java.io.File;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -53,24 +51,27 @@ public class ClassScanner {
 	 * @return Set
 	 */
 	public IResource[] scan(String... packages) {
-		URLClassLoader cl = rootClasspath == null ? null : new URLClassLoader(new URL[] { rootClasspath });
-		if(packages.length==0){
-			packages=new String[]{""};
+		// 这里设置父classloader为null
+		URLClassLoader cl = rootClasspath == null ? null : new URLClassLoader(new URL[] { rootClasspath }, null);
+		if (packages.length == 0) {
+			packages = new String[] { "" };
 		}
 		List<IResource> result = new ArrayList<IResource>();
+		String prifix = rootClasspath == null ? "classpath*:" : "classpath:";
+
 		for (String packageName : packages) {
-			if(packageName==null){
+			if (packageName == null) {
 				continue;
 			}
 			String keystr;
-			if(StringUtils.isBlank(packageName)){
-				keystr="classpath*:"+ "**/*.class";
-				return ResourceUtils.findResources(cl,keystr);
+			if (StringUtils.isBlank(packageName)) {
+				keystr = prifix + "**/*.class";
+				return ResourceUtils.findResources(cl, keystr);
 			}
-			
-			keystr="classpath*:"+ packageName.replace('.', '/') + "/*.class";
-			IResource[] res = ResourceUtils.findResources(cl,keystr);
-			if(packages.length==1){
+
+			keystr = prifix + packageName.replace('.', '/') + "/*.class";
+			IResource[] res = ResourceUtils.findResources(cl, keystr);
+			if (packages.length == 1) {
 				return res;
 			}
 			result.addAll(Arrays.asList(res));
@@ -90,21 +91,11 @@ public class ClassScanner {
 		if (rootClasspath == null)
 			rootClasspath = rootCls.getResource("/");
 	}
-	
-	public static IResource[] listClassNameInPackage(Class<?> rootCls, String[] pkgNames, boolean includeInner) {
+
+	public static IResource[] listClassNameInPackage(URL root, String[] pkgNames, boolean includeInner) {
 		ClassScanner cs = new ClassScanner().excludeInnerClass(!includeInner);
-		cs.setRootBySameUrlClass(rootCls);
+		cs.rootClasspath(root);
 		return cs.scan(pkgNames);
 	}
-	
-	public static IResource[] listClassNameInPackage(File root, String[] pkgNames, boolean includeInner) {
-		ClassScanner cs=new ClassScanner().excludeInnerClass(!includeInner);
-		try {
-			cs.rootClasspath(root.toURI().toURL());
-		} catch (MalformedURLException e) {
-			throw new RuntimeException(e.getMessage());
-		}
-		return cs.scan(pkgNames);
-	}
-	
+
 }
