@@ -243,9 +243,9 @@ public class PostgreSqlDialect extends AbstractDialect {
 		// }
 		// }else{
 		if (column.getSqlType() == Types.BIGINT) {
-			return flag ? "serial8 not null" : "serial8";
+			return flag ? "bigserial not null" : "bigserial";
 		} else {
-			return flag ? "serial4 not null" : "serial4";
+			return flag ? "serial not null" : "serial";
 		}
 		// }
 	}

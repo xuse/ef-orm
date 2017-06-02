@@ -23,12 +23,16 @@ import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
+import java.security.Permission;
+import java.security.PermissionCollection;
 import java.security.PrivateKey;
 import java.security.Provider;
 import java.security.Provider.Service;
@@ -43,6 +47,7 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -815,5 +820,55 @@ public class EncrypterUtil {
 		} catch (UnsupportedEncodingException e) {
 			throw new IllegalArgumentException(e.getMessage());
 		}
+	}
+	
+	/**
+	 * 知道这是在干什么用的就用，不知道的就别用了。
+	 * @return
+	 */
+	public static boolean removeCryptographyRestrictions() {
+		if (!isRestrictedCryptography()) {
+			return false;
+		}
+		try {
+			/*
+			 * Do the following, but with reflection to bypass access checks:
+			 * 
+			 * JceSecurity.isRestricted = false;
+			 * JceSecurity.defaultPolicy.perms.clear();
+			 * JceSecurity.defaultPolicy.add(CryptoAllPermission.INSTANCE);
+			 */
+			final Class<?> jceSecurity = Class.forName("javax.crypto.JceSecurity");
+			final Class<?> cryptoPermissions = Class.forName("javax.crypto.CryptoPermissions");
+			final Class<?> cryptoAllPermission = Class.forName("javax.crypto.CryptoAllPermission");
+
+			final Field isRestrictedField = jceSecurity.getDeclaredField("isRestricted");
+			isRestrictedField.setAccessible(true);
+			final Field modifiersField = Field.class.getDeclaredField("modifiers");
+			modifiersField.setAccessible(true);
+			modifiersField.setInt(isRestrictedField, isRestrictedField.getModifiers() & ~Modifier.FINAL);
+			isRestrictedField.set(null, false);
+
+			final Field defaultPolicyField = jceSecurity.getDeclaredField("defaultPolicy");
+			defaultPolicyField.setAccessible(true);
+			final PermissionCollection defaultPolicy = (PermissionCollection) defaultPolicyField.get(null);
+
+			final Field perms = cryptoPermissions.getDeclaredField("perms");
+			perms.setAccessible(true);
+			((Map<?, ?>) perms.get(defaultPolicy)).clear();
+
+			final Field instance = cryptoAllPermission.getDeclaredField("INSTANCE");
+			instance.setAccessible(true);
+			defaultPolicy.add((Permission) instance.get(null));
+			return true;
+		} catch (final Exception e) {
+			LogUtil.error("Failed to remove cryptography restrictions", e);
+			return false;
+		}
+	}
+
+	
+	private static boolean isRestrictedCryptography() {
+		return "Java(TM) SE Runtime Environment".equals(System.getProperty("java.runtime.name"));
 	}
 }
