@@ -1,6 +1,5 @@
 package jef.codegen;
 
-import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,13 +25,14 @@ import jef.accelerator.asm.commons.FieldExtDef;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
+import jef.tools.resource.ResourceLoader;
 
 import org.apache.commons.lang.ArrayUtils;
 
 public class EnhanceTaskASM {
-	private File root;
+	private ResourceLoader root;
 
-	public EnhanceTaskASM(File root, File[] roots) {
+	public EnhanceTaskASM(ResourceLoader root) {
 		super();
 		this.root = root;
 	}
@@ -42,7 +42,6 @@ public class EnhanceTaskASM {
 
 	/**
 	 * 
-	 * @param className
 	 * @param classdata
 	 * @param fieldEumData
 	 *            允许传入null
@@ -232,18 +231,8 @@ public class EnhanceTaskASM {
 		try {
 			URL url = ClassLoader.getSystemResource(superName + ".class");
 			if (url == null && root!=null) {
-				File parent = null;
-				if (root.exists()) {
-					parent = new File(root, superName + ".class");
-				}
-//				if(!parent.exists()){
-//					for(File roo:roots){
-//						parent = new File(roo, superName + ".class");
-//						if(parent.exists())break;
-//					}
-//				}
-				if(parent.exists()){
-					url=parent.toURI().toURL();
+				if (root!=null) {
+					url=root.getResource(superName + ".class");
 				}
 			}
 			if(url==null){ //父类找不到，无法准确判断

@@ -59,8 +59,6 @@ public class EnhanceMojo extends AbstractMojo {
 			this.getLog().info("Easybuilder enhance entity classes working path is: " + workPath);
 
 			EntityEnhancer en = new EntityEnhancer();
-
-			en.setRoot(new File(workPath));
 			en.enhance();
 
 			this.getLog().info("Easybuilder enhance entity classes total use " + (System.currentTimeMillis() - time) + "ms");
@@ -75,7 +73,6 @@ public class EnhanceMojo extends AbstractMojo {
 		try {
 			workPath = workPath.replace('\\', '/');
 			EntityEnhancer en = new EntityEnhancer();
-			en.setRoot(new File(workPath));
 			en.enhance();
 		} catch (Exception e) {
 			LogUtil.error(e);
