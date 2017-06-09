@@ -1,13 +1,10 @@
 package jef.database.datasource;
 
-import javax.sql.ConnectionPoolDataSource;
 import javax.sql.DataSource;
 
-import jef.common.log.LogUtil;
 import jef.database.DbUtils;
-import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.AbstractDialect;
-import jef.tools.StringUtils;
+import jef.database.dialect.DatabaseDialect;
 
 /**
  * DataSource工具类
@@ -16,58 +13,7 @@ import jef.tools.StringUtils;
  * 
  */
 public class DataSources {
-	private static String[] DataSourceClz = { "org.logicalcobwebs.proxool.ProxoolDataSource", "com.mchange.v2.c3p0.ComboPooledDataSource", "org.apache.commons.dbcp.BasicDataSource", "org.springframework.jdbc.datasource.AbstractDriverBasedDataSource",
-			"com.alibaba.druid.pool.DruidAbstractDataSource", "com.jolbox.bonecp.BoneCPDataSource", "org.apache.tomcat.jdbc.pool.DataSource" };
-
-	private static String[] adapterClz = { "jef.database.datasource.ProxoolDataSourceWrapper", "jef.database.datasource.C3p0DataSourceWrapper", "jef.database.datasource.DbcpDataSourceWrapper", "jef.database.datasource.DriverManagerDataSourceWrapper",
-			"jef.database.datasource.DruidDataSourceWrapper", "jef.database.datasource.BoneCpWrapper", "jef.database.datasource.TomcatCpWrapper" };
-
 	private DataSources() {
-	}
-
-	/**
-	 * 将给出的DataSource包装为DataSourceWrapper对象
-	 * DataSourceWrapper对象能够提供各种DataSource配置信息的获取和修改 这个功能目前能识别Spring,Apache
-	 * DBCP,c3p0,Druid, Proxool等若干框架的DataSource
-	 * 
-	 * @param datasource
-	 * @return 如果无法包装将返回null
-	 * @see DataSourceWrapper
-	 * @see DataSourceInfo
-	 */
-	public static DataSourceWrapper wrapFor(DataSource datasource) {
-		Class<? extends DataSource> iface = datasource.getClass();
-		if (datasource instanceof DataSourceWrapper) {
-			return (DataSourceWrapper) datasource;
-		}
-		
-		for (int index=0;index<DataSourceClz.length;index++) {
-			try {
-				String s=DataSourceClz[index];
-				if (isAssiableFrom(iface, s)) {
-					Class<?> c = Class.forName(adapterClz[index]);
-					DataSourceWrapper wrapper = (DataSourceWrapper) c.newInstance();
-					wrapper.setWrappedDataSource(datasource);
-					return wrapper;
-				}
-			} catch (NoClassDefFoundError e) {
-				// 不用任何输出
-			} catch (ClassNotFoundException e) {
-				// 不用任何输出
-			} catch (Exception e) {
-				LogUtil.exception(e);
-			}
-		}
-		if (System.getProperty("no.refelcting.datasource.wrapper") == null) {
-			try {
-				RefectingHackDataSourceWrapper w = new RefectingHackDataSourceWrapper(datasource);
-				LogUtil.warn(StringUtils.concat("Unknown datasource type:", datasource.getClass().getName(), " Using refelcting datasource wrapper to access it. "));
-				return w;
-			} catch (Exception e) {
-				LogUtil.warn("wrap as RefectingHackDataSourceWrapper error:{}",e.getMessage());
-			}
-		}
-		return null;
 	}
 
 	private static boolean isAssiableFrom(Class<? extends DataSource> iface, String s) {
@@ -90,19 +36,6 @@ public class DataSources {
 			}
 		}
 		return null;
-	}
-
-	public static boolean isPool(DataSource ds) {
-		if (ds instanceof ConnectionPoolDataSource) {// 如果是JDK标准的连接池直接返回true
-			return true;
-		}
-
-		DataSourceWrapper dsw = DataSources.wrapFor(ds);
-
-		if (dsw == null) {// 無法包裝就認為不是池
-			return false;
-		}
-		return dsw.isConnectionPool();
 	}
 
 	/**

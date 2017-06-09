@@ -2,6 +2,7 @@ package jef.database.datasource;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.sql.DataSource;
@@ -47,5 +48,12 @@ public class MapDataSourceLookup implements DataSourceLookup{
 
 	public Collection<String> getAvailableKeys() {
 		return Collections.unmodifiableCollection(datasources.keySet());
+	}
+	
+	public void put(String key,DataSource ds){
+	    if(datasources==null){
+	        datasources=new HashMap<String,DataSource>();
+	    }
+	    datasources.put(key, ds);
 	}
 }

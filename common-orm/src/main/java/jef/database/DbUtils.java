@@ -63,8 +63,6 @@ import jef.database.Session.UpdateContext;
 import jef.database.annotation.Cascade;
 import jef.database.annotation.JoinType;
 import jef.database.datasource.DataSourceInfo;
-import jef.database.datasource.DataSourceWrapper;
-import jef.database.datasource.DataSources;
 import jef.database.datasource.IRoutingDataSource;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.DatabaseDialect;
@@ -288,8 +286,8 @@ public final class DbUtils {
 				return tryAnalyzeInfo(e.getValue(), updateDataSourceProperties);
 			}
 		}
-		DataSourceWrapper dsw = DataSources.wrapFor(ds);
-		if (dsw != null) {
+		if (ds instanceof DataSourceInfo ) {
+		    DataSourceInfo dsw=(DataSourceInfo)ds;
 			ConnectInfo info = new ConnectInfo();
 			DbUtils.processDataSourceOfEnCrypted(dsw);
 

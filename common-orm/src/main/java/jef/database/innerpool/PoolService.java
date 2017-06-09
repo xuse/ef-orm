@@ -7,7 +7,6 @@ import javax.sql.DataSource;
 
 import jef.common.log.LogUtil;
 import jef.database.DbCfg;
-import jef.database.datasource.DataSources;
 import jef.database.datasource.IRoutingDataSource;
 import jef.database.datasource.SimpleDataSource;
 import jef.tools.JefConfiguration;
@@ -16,6 +15,7 @@ import jef.tools.StringUtils;
 import org.easyframe.enterprise.spring.TransactionMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 public class PoolService {
 	private static Logger log = LoggerFactory.getLogger(PoolService.class);
@@ -29,38 +29,20 @@ public class PoolService {
 	 * @return
 	 */
 	public static IUserManagedPool getPool(DataSource ds, int min,int max,TransactionMode txMode) {
-		String noPoolStr = JefConfiguration.get(DbCfg.DB_NO_POOL, "auto");
 		if(txMode==TransactionMode.JDBC || txMode==TransactionMode.JTA){
 			max=0;
 		}
-		boolean auto = "auto".equalsIgnoreCase(noPoolStr) && max>0;
-		boolean noPool = StringUtils.toBoolean(noPoolStr, false) || max==0 ;
 		if(min==0){
 			min = JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL, 3);
 		}
 		IUserManagedPool result;
-		
 		if (ds instanceof IRoutingDataSource) {
 			IRoutingDataSource rds = (IRoutingDataSource) ds;
-			if (auto && !noPool) {
-				result= new RoutingManagedConnectionPool(rds, max, min, auto);
-			} else {
-				result= new RoutingDummyConnectionPool(rds);
-			}
-		} else {
-			if (auto) {
-				noPool = DataSources.isPool(ds);
-				if (noPool) {
-					log.info("There is Connection-Pool in datasource {}, EF-Inner Pool was disabled.", ds.getClass());
-				} else {
-					log.info("There is NO Connection-Pool detected in datasource {}, EF-Inner Pool was enabled.", ds.getClass());
-				}
-			}
-			if (noPool) {
-				result= new SingleDummyConnectionPool(ds);
-			} else {
-				result= new SingleManagedConnectionPool(ds, min, max);
-			}
+			result= new RoutingDummyConnectionPool(rds);
+		} else if(ds instanceof DriverManagerDataSource||ds instanceof SimpleDataSource){
+            result= new SingleManagedConnectionPool(ds, min, max);
+        } else{ 
+			result= new SingleDummyConnectionPool(ds);
 		}
 		return result.setTransactionMode(txMode);
 	}

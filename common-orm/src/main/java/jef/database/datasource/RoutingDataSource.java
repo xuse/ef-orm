@@ -26,9 +26,6 @@ import jef.tools.Assert;
 public class RoutingDataSource extends AbstractDataSource implements IRoutingDataSource{
 	//查找器1
 	protected DataSourceLookup dataSourceLookup;
-	//查找器2：由于查找器返回的数据会经过解密处理，因此查找器找到的结果一定要缓存不能丢弃，否则下次再查找时会反复解密，引起出错
-	protected DataSourceInfoLookup dataSourceInfoLookup;
-	
 	//缓存已经查找到结果
 	protected Map<String, DataSource> resolvedDataSources=new CopyOnWriteMap<String, DataSource>();
 	//记录使用过的第一个数据源作为缺省的
@@ -44,13 +41,6 @@ public class RoutingDataSource extends AbstractDataSource implements IRoutingDat
 	 * 空构造
 	 */
 	public RoutingDataSource(){
-	}
-	/**
-	 * 构造
-	 * @param lookup
-	 */
-	public RoutingDataSource(DataSourceInfoLookup lookup){
-		this.dataSourceInfoLookup=lookup;
 	}
 	/**
 	 * 构造
@@ -147,19 +137,6 @@ public class RoutingDataSource extends AbstractDataSource implements IRoutingDat
 				return resolvedDefaultDataSource;
 			}
 		}
-		if(dataSourceInfoLookup!=null && dataSourceInfoLookup!=dataSourceLookup){
-			String defaultKey=dataSourceInfoLookup.getDefaultKey(); //计算缺省数据源
-			if(defaultKey!=null){
-				LogUtil.info("Lookup key is null, using the default datasource:"+defaultKey);
-				ds=resolvedDataSources.get(defaultKey);
-				if(ds==null){
-					ds=lookup(defaultKey);
-				}
-				resolvedDefaultDataSource = new jef.common.Entry<String,DataSource>(defaultKey,ds);//记录缺省数据源
-				return resolvedDefaultDataSource;
-			}
-			
-		}
 		//无法计算和找到缺省数据源，将之前首次使用的数据源当作缺省数据源返回（可能为null）
 		return firstReturnDataSource;
 	}
@@ -173,12 +150,6 @@ public class RoutingDataSource extends AbstractDataSource implements IRoutingDat
 		if(dataSourceLookup!=null){
 			ds=dataSourceLookup.getDataSource(lookupKey);
 			if(ds!=null)ds=checkDatasource(ds);
-		}
-		if(dataSourceInfoLookup!=null && dataSourceInfoLookup!=dataSourceLookup){		//因为有些类同时实现了两个接口，因此如果是同一对象就不要反复查找了
-			DataSourceInfo dsi=dataSourceInfoLookup.getDataSourceInfo(lookupKey);
-			if(dsi!=null){
-				ds=createDataSource(dsi);
-			}
 		}
 		if(ds!=null){
 			resolvedDataSources.put(lookupKey, ds);
@@ -238,9 +209,6 @@ public class RoutingDataSource extends AbstractDataSource implements IRoutingDat
 		if(dataSourceLookup!=null){
 			s.addAll(dataSourceLookup.getAvailableKeys());
 		}
-		if(dataSourceInfoLookup!=null){
-			s.addAll(dataSourceInfoLookup.getAvailableKeys());
-		}
 		return s.size()<2;
 	}
 
@@ -252,9 +220,6 @@ public class RoutingDataSource extends AbstractDataSource implements IRoutingDat
 		Set<String> set=new HashSet<String>(resolvedDataSources.keySet());
 		if(dataSourceLookup!=null)
 			set.addAll(dataSourceLookup.getAvailableKeys());
-		if(dataSourceInfoLookup!=null && dataSourceInfoLookup!=dataSourceLookup){
-			set.addAll(dataSourceInfoLookup.getAvailableKeys());
-		}
 		return set;
 	}
 
@@ -267,9 +232,6 @@ public class RoutingDataSource extends AbstractDataSource implements IRoutingDat
 		this.dataSourceLookup = dataSourceLookup;
 	}
 
-	public void setDataSourceInfoLookup(DataSourceInfoLookup dataSourceInfoLookup) {
-		this.dataSourceInfoLookup = dataSourceInfoLookup;
-	}
 	public void setCallback(Callback<String, SQLException> callback) {
 		this.callback = callback;
 	}

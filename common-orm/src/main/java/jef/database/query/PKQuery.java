@@ -137,7 +137,7 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	}
 
 	public EntityMappingProvider getSelectItems() {
-		return context;
+		return null;//context;
 	}
 
 	public void setSelectItems(Selects select) {

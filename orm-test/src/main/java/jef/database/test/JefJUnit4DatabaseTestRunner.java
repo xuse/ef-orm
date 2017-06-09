@@ -15,9 +15,9 @@ import jef.database.DbCfg;
 import jef.database.DbClient;
 import jef.database.DbClientBuilder;
 import jef.database.DbUtils;
-import jef.database.datasource.DataSourceInfoImpl;
-import jef.database.datasource.MapDataSourceInfoLookup;
+import jef.database.datasource.MapDataSourceLookup;
 import jef.database.datasource.RoutingDataSource;
+import jef.database.datasource.SimpleDataSource;
 import jef.database.meta.MetaHolder;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
@@ -158,14 +158,11 @@ public class JefJUnit4DatabaseTestRunner extends BlockJUnit4ClassRunner {
 			inject=true;
 		} else if (isRouting) {
 			if (routingDbClient == null) {
-				MapDataSourceInfoLookup lookup = new MapDataSourceInfoLookup();
+				MapDataSourceLookup lookup = new MapDataSourceLookup();
 				for (Entry<String, Object> entry : connections.entrySet()) {
 					if (entry.getValue() instanceof DataSource) {
 						DataSource ds = (DataSource) entry.getValue();
-						DataSourceInfoImpl dsi = new DataSourceInfoImpl(ds.url());
-						dsi.setUser(ds.user());
-						dsi.setPassword(ds.password());
-						lookup.add(ds.name(), dsi);
+						lookup.put(ds.name(), new SimpleDataSource(ds.url(),ds.user(),ds.password()));
 					}
 				}
 				RoutingDataSource rds = new RoutingDataSource(lookup);

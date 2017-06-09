@@ -3,7 +3,6 @@ package org.jef.mavenplugin.goal;
 import java.io.File;
 
 import jef.codegen.EntityEnhancer;
-import jef.common.log.LogUtil;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -60,25 +59,11 @@ public class EnhanceMojo extends AbstractMojo {
 
 			EntityEnhancer en = new EntityEnhancer();
 
-			en.setRoot(new File(workPath));
 			en.enhance();
 
 			this.getLog().info("Easybuilder enhance entity classes total use " + (System.currentTimeMillis() - time) + "ms");
 		} catch (Exception e) {
 			this.getLog().error(e);
-		}
-	}
-
-	//TEST
-	public static void main(String[] args) {
-		String workPath = "D:/account-receivable-1.0.8-20111214.085530-31-api";
-		try {
-			workPath = workPath.replace('\\', '/');
-			EntityEnhancer en = new EntityEnhancer();
-			en.setRoot(new File(workPath));
-			en.enhance();
-		} catch (Exception e) {
-			LogUtil.error(e);
 		}
 	}
 
