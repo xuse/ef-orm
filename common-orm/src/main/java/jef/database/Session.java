@@ -2692,11 +2692,15 @@ public abstract class Session {
 		} else {
 			dyna = dynamic.booleanValue();
 		}
-		for (int i = 0; i < 3; i++) {
+		for (int i = 0; i < 3 && i<entities.size(); i++) {
 			template = entities.get(i);
 			if (!dyna || template.needUpdate()) {
 				break;
 			}
+		}
+		if(template == null){
+		    //没有需要更新的对象
+		    return 0;
 		}
 		if (!template.needUpdate()) {
 			dyna = false;
