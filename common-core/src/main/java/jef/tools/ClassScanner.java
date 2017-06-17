@@ -69,7 +69,7 @@ public class ClassScanner {
 				return ResourceUtils.findResources(cl, keystr);
 			}
 
-			keystr = prifix + packageName.replace('.', '/') + "/*.class";
+			keystr = prifix + packageName.replace('.', '/') + "/**/*.class";
 			IResource[] res = ResourceUtils.findResources(cl, keystr);
 			if (packages.length == 1) {
 				return res;
