@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 
 import org.springframework.core.convert.ConversionService;
@@ -129,14 +130,14 @@ public abstract class GqQueryExecution {
 	 * Executes a modifying query such as an update, insert or delete.
 	 */
 	static class ModifyingExecution extends GqQueryExecution {
-		private final EntityManager em;
+		private final EntityManagerFactory em;
 		/**
 		 * Creates an execution that automatically clears the given {@link EntityManager} after execution if the given
 		 * {@link EntityManager} is not {@literal null}.
 		 * 
 		 * @param em
 		 */
-		public ModifyingExecution(GqQueryMethod method, EntityManager em) {
+		public ModifyingExecution(GqQueryMethod method, EntityManagerFactory em) {
 			Class<?> returnType = method.getReturnType();
 
 			boolean isVoid = void.class.equals(returnType) || Void.class.equals(returnType);
