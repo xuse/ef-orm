@@ -19,6 +19,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 import jef.tools.ClassScanner;
 import jef.tools.IOUtils;
@@ -41,7 +43,7 @@ import org.slf4j.LoggerFactory;
 public class EntityEnhancer {
 	private String includePattern;
 	private String[] excludePatter;
-	private URL[] roots;
+	private List<URL> roots;
 	PrintStream out = System.out;
 	private EnhanceTaskASM enhancer;
 	private static final Logger log = LoggerFactory.getLogger(EntityEnhancer.class);
@@ -53,6 +55,17 @@ public class EntityEnhancer {
 	public EntityEnhancer() {
 		enhancer = new EnhanceTaskASM(new ClasspathLoader());
 	}
+	
+	public EntityEnhancer addRoot(URL url){
+	    if(url!=null){
+	        if(roots==null){
+	            roots=new ArrayList<URL>();
+	        }
+	        roots.add(url);    
+	    }
+	    return this;
+	}
+	
 
 	/**
 	 * 在当前的classpath目录下扫描Entity类(.clsss文件)，使用字节码增强修改这些class文件。
@@ -61,7 +74,7 @@ public class EntityEnhancer {
 	 */
 	public void enhance(final String... pkgNames) {
 		int n = 0;
-		if (roots == null || roots.length == 0) {
+		if (roots == null || roots.size() == 0) {
 			IResource[] clss = ClassScanner.listClassNameInPackage(null, pkgNames, true);
 			for (IResource cls : clss) {
 				if (cls.isFile()) {

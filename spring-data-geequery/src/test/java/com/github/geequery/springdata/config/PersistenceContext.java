@@ -29,7 +29,7 @@ public class PersistenceContext {
         return ds;
     }
 
-    @Bean(name = {"emf1","entityManagerFactory"})
+    @Bean(name = {"emf1"})
     EntityManagerFactory entityManagerFactory(@Qualifier("ds1") DataSource dataSource, Environment env) {
         SessionFactoryBean bean = new org.easyframe.enterprise.spring.SessionFactoryBean();
         bean.setDataSource(dataSource);
