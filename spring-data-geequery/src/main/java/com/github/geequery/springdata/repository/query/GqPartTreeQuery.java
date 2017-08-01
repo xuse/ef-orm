@@ -20,6 +20,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import javax.persistence.EntityManagerFactory;
+
 import jef.common.PairIO;
 import jef.common.wrapper.IntRange;
 import jef.database.Condition;
@@ -44,7 +46,6 @@ import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.PartTree;
 import org.springframework.data.repository.query.parser.PartTree.OrPart;
-import org.springframework.orm.jpa.EntityManagerProxy;
 
 import com.github.geequery.springdata.annotation.IgnoreIf;
 import com.github.geequery.springdata.repository.query.GqParameters.GqParameter;
@@ -62,7 +63,7 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 	private final ITableMetadata metadata;
 	private final PartTree tree;
 	private final GqParameters parameters;
-	private final EntityManagerProxy em;
+	private final EntityManagerFactory em;
 
 	/**
 	 * Creates a new {@link PartTreeJpaQuery}.
@@ -74,7 +75,7 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 	 * @param em
 	 *            must not be {@literal null}.
 	 */
-	public GqPartTreeQuery(GqQueryMethod method, EntityManagerProxy em) {
+	public GqPartTreeQuery(GqQueryMethod method, EntityManagerFactory em) {
 		super(method, em);
 		this.em = em;
 		this.metadata = MetaHolder.getMeta(method.getEntityInformation()

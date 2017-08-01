@@ -26,18 +26,15 @@ import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.orm.jpa.EntityManagerProxy;
 
 /**
  * Query lookup strategy to execute finders.
  */
 public final class GqQueryLookupStrategy implements QueryLookupStrategy {
-	private final EntityManagerProxy em;
 	private final JefEntityManagerFactory emf;
 
-	public GqQueryLookupStrategy(EntityManagerProxy em) {
-		this.em = em;
-		this.emf = (JefEntityManagerFactory) em.getEntityManagerFactory();
+	public GqQueryLookupStrategy(JefEntityManagerFactory em) {
+		this.emf =em;
 	}
 
 	@Override
@@ -48,25 +45,23 @@ public final class GqQueryLookupStrategy implements QueryLookupStrategy {
 		if (method.isStreamQuery()) {
 			throw new UnsupportedOperationException();
 		} else if (method.isProcedureQuery()) {
-			return new GqProcedureQuery(method, em);
+			return new GqProcedureQuery(method, emf);
 		} else if (StringUtils.isNotEmpty(qSql)) {
-			JefEntityManagerFactory emf = (JefEntityManagerFactory) em.getEntityManagerFactory();
 			NativeQuery<?> q;
 			if(method.isNativeQuery()){
 				q= (NativeQuery<?>) emf.getDefault().createNativeQuery(qSql,method.getReturnedObjectType());
 			}else{
 				q= (NativeQuery<?>) emf.getDefault().createQuery(qSql,method.getReturnedObjectType());
 			}
-			return new GqNativeQuery(method, em, q);
+			return new GqNativeQuery(method, emf, q);
 		}
 		if (emf.getDefault().hasNamedQuery(qName)) {
-			JefEntityManagerFactory emf = (JefEntityManagerFactory) em.getEntityManagerFactory();
 			NativeQuery<?> q = (NativeQuery<?>) emf.getDefault().createNamedQuery(qName,method.getReturnedObjectType());
-			return new GqNativeQuery(method, em, q);
+			return new GqNativeQuery(method, emf, q);
 		} else {
 			if (qName.endsWith(".".concat(method.getName()))) {
 				try {
-					return new GqPartTreeQuery(method, em);
+					return new GqPartTreeQuery(method, emf);
 				} catch (Exception e) {
 					throw new IllegalArgumentException(method + ": " + e.getMessage(), e);
 				}

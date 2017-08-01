@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 
 import jef.common.wrapper.IntRange;
 import jef.database.DbClient;
@@ -37,6 +36,7 @@ import jef.database.RecordHolder;
 import jef.database.Session;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.jpa.JefEntityManager;
+import jef.database.jpa.JefEntityManagerFactory;
 import jef.database.meta.EntityType;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
@@ -53,13 +53,12 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
-import org.springframework.orm.jpa.EntityManagerFactoryUtils;
-import org.springframework.orm.jpa.EntityManagerProxy;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.github.geequery.springdata.repository.GeeQueryExecutor;
 import com.github.geequery.springdata.repository.GqRepository;
+import com.github.geequery.springdata.repository.query.QueryUtils;
 
 /**
  * Default implementation of the
@@ -78,11 +77,11 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 
 	private MetamodelInformation<T, ID> meta;
 	// 这是Spring的SharedEntityManager的代理，只可从中提取EMF，不可直接转换，因此这个EM上携带了基于线程的事务上下文
-	private EntityManagerProxy em;
+	private JefEntityManagerFactory em;
 
 	private final Query<?> q_all;
 
-	public GqRepositoryImpl(MetamodelInformation<T, ID> meta, EntityManagerProxy emf) {
+	public GqRepositoryImpl(MetamodelInformation<T, ID> meta, JefEntityManagerFactory emf) {
 		this.meta = meta;
 		this.em = emf;
 		q_all = QB.create(meta.getMetadata());
@@ -477,25 +476,15 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	}
 
 	private Session getSession() {
-		EntityManagerFactory emf = em.getEntityManagerFactory();
-		EntityManager em = EntityManagerFactoryUtils.doGetTransactionalEntityManager(emf, null);
-		if (em == null) { // 当无事务时。Spring返回null
-			em = emf.createEntityManager(null, Collections.EMPTY_MAP);
-		}
-		if (em instanceof JefEntityManager) {
-			return ((JefEntityManager) em).getSession();
-		}
-		throw new IllegalArgumentException(em.getClass().getName());
+		return ((JefEntityManager)QueryUtils.getEntityManager(em)).getSession();
 	}
 
 	private DbClient getNoTransactionSession() {
-		JefEntityManager jem = (JefEntityManager) em.getTargetEntityManager();
-		return jem.getDbClient();
+		return em.getDefault();
 	}
 
 	private EntityManager getEntityManager() {
-		EntityManager jem = em.getTargetEntityManager();
-		return jem;
+		return QueryUtils.getEntityManager(em);
 	}
 
 	private IntRange toRange(Pageable pageable) {
