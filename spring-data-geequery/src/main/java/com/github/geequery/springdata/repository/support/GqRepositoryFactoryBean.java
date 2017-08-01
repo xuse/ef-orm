@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2008-2014 the original author or authors.
  *
@@ -48,103 +47,104 @@ import com.github.geequery.springdata.repository.query.QueryUtils;
  * @param <T>
  *            the type of the repository
  */
-public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable> extends TransactionalRepositoryFactoryBeanSupport<T, S, ID> implements ApplicationContextAware {
+public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable> extends TransactionalRepositoryFactoryBeanSupport<T, S, ID>
+        implements ApplicationContextAware {
 
-	protected GqRepositoryFactoryBean(Class<? extends T> repositoryInterface) {
-        super(repositoryInterface);
-    }
+
 
     private ConfigurableApplicationContext context;
-	private Class<?> repositoryInterface;
-	
-	private String namedQueryLocation;
-	private String entityManagerFactoryRef;
-	private String repositoryImplementationPostfix;
-	
-	
-	
-	private static Logger log=LoggerFactory.getLogger(GqRepositoryFactoryBean.class);
+    private Class<?> repositoryInterface;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport
-	 * #
-	 * setMappingContext(org.springframework.data.mapping.context.MappingContext
-	 * )
-	 */
-	@Override
-	public void setMappingContext(MappingContext<?, ?> mappingContext) {
-		super.setMappingContext(mappingContext);
-	}
+    private String namedQueryLocation;
+    private String entityManagerFactoryRef;
+    private String repositoryImplementationPostfix;
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.springframework.data.repository.support.
-	 * TransactionalRepositoryFactoryBeanSupport#doCreateRepositoryFactory()
-	 */
-	@Override
-	protected RepositoryFactorySupport doCreateRepositoryFactory() {
-	    EntityManagerFactory emf=context.getBean(entityManagerFactoryRef,EntityManagerFactory.class);
-	    return new GqRepositoryFactory((JefEntityManagerFactory)emf);
-	}
+    private static Logger log = LoggerFactory.getLogger(GqRepositoryFactoryBean.class);
 
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport
+     * #
+     * setMappingContext(org.springframework.data.mapping.context.MappingContext
+     * )
+     */
+    @Override
+    public void setMappingContext(MappingContext<?, ?> mappingContext) {
+        super.setMappingContext(mappingContext);
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * @see
-	 * org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-	 */
-	@Override
-	public void afterPropertiesSet() {
-		Object custom=generateCustomImplementation();
-		if(custom!=null	)this.setCustomImplementation(custom);
-		super.afterPropertiesSet();
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.data.repository.support.
+     * TransactionalRepositoryFactoryBeanSupport#doCreateRepositoryFactory()
+     */
+    @Override
+    protected RepositoryFactorySupport doCreateRepositoryFactory() {
+        EntityManagerFactory emf = context.getBean(entityManagerFactoryRef, EntityManagerFactory.class);
+        return new GqRepositoryFactory((JefEntityManagerFactory) emf);
+    }
 
-	}
+    protected GqRepositoryFactoryBean(Class<? extends T> repositoryInterface) {
+        super(repositoryInterface);
+        this.repositoryInterface=repositoryInterface;
+    }
 
-	private Object generateCustomImplementation() {
-	    EntityManagerFactory emf=context.getBean(entityManagerFactoryRef,EntityManagerFactory.class);
-		for(Class<?> clz:repositoryInterface.getInterfaces()){
-			if(Repository.class.isAssignableFrom(clz)){
-				continue;
-			}else if(clz.getAnnotation(RepositoryDefinition.class)!=null){
-				continue;
-			}
-			ClassEx implClz=ClassEx.forName(clz.getName()+repositoryImplementationPostfix);
-			if(implClz==null){
-				log.error("Lack of implementation of class: "+clz.getName());
-			}
-			try{
-				Object obj=implClz.newInstance();
-				for(FieldEx field: implClz.getDeclaredFields()){
-					if(field.getAnnotation(PersistenceContext.class)!=null){
-						field.set(obj, QueryUtils.getEntityManager((JefEntityManagerFactory) emf));
-					}
-				}
-				if(obj instanceof ApplicationContextAware){
-					((ApplicationContextAware) obj).setApplicationContext(context);
-				}
-				if(obj instanceof InitializingBean){
-					((InitializingBean) obj).afterPropertiesSet();
-				}
-				return obj;
-			}catch(Exception ex){
-				log.error("",ex);
-				return null;
-			}
-		}
-		return null;
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+     */
+    @Override
+    public void afterPropertiesSet() {
+        Object custom = generateCustomImplementation();
+        if (custom != null)
+            this.setCustomImplementation(custom);
+        super.afterPropertiesSet();
 
+    }
 
+    private Object generateCustomImplementation() {
+        EntityManagerFactory emf = context.getBean(entityManagerFactoryRef, EntityManagerFactory.class);
+        for (Class<?> clz : repositoryInterface.getInterfaces()) {
+            if (Repository.class.isAssignableFrom(clz)) {
+                continue;
+            } else if (clz.getAnnotation(RepositoryDefinition.class) != null) {
+                continue;
+            }
+            ClassEx implClz = ClassEx.forName(clz.getName() + repositoryImplementationPostfix);
+            if (implClz == null) {
+                log.error("Lack of implementation of class: " + clz.getName());
+            }
+            try {
+                Object obj = implClz.newInstance();
+                for (FieldEx field : implClz.getDeclaredFields()) {
+                    if (field.getAnnotation(PersistenceContext.class) != null) {
+                        field.set(obj, QueryUtils.getEntityManager((JefEntityManagerFactory) emf));
+                    }
+                }
+                if (obj instanceof ApplicationContextAware) {
+                    ((ApplicationContextAware) obj).setApplicationContext(context);
+                }
+                if (obj instanceof InitializingBean) {
+                    ((InitializingBean) obj).afterPropertiesSet();
+                }
+                return obj;
+            } catch (Exception ex) {
+                log.error("", ex);
+                return null;
+            }
+        }
+        return null;
+    }
 
     @Override
-	public void setApplicationContext(ApplicationContext context) throws BeansException {
-		this.context = (ConfigurableApplicationContext) context;
-	}
+    public void setApplicationContext(ApplicationContext context) throws BeansException {
+        this.context = (ConfigurableApplicationContext) context;
+    }
 
     public void setNamedQueryLocation(String namedQueryLocation) {
         this.namedQueryLocation = namedQueryLocation;
@@ -157,6 +157,4 @@ public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends 
     public void setRepositoryImplementationPostfix(String repositoryImplementationPostfix) {
         this.repositoryImplementationPostfix = repositoryImplementationPostfix;
     }
-	
 }
->>>>>>> 支持当配置了多个EMF时，Spring-data的数据源区分。
