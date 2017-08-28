@@ -39,7 +39,7 @@ public class SerializeConfigEx extends SerializeConfig {
 			JSONCustom annotation = clazz.getAnnotation(JSONCustom.class);
 			if (annotation != null && annotation.serializer() != Void.class) {
 				ObjectSerializer os= createCustomSerializer(annotation.serializer());
-				putInternal(clazz,os);
+				put(clazz,os);
 				return os;
 			}
 		}
