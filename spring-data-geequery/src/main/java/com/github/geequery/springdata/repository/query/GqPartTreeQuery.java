@@ -261,7 +261,6 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 			throw new UnsupportedOperationException();
 		case REGEX:
 			throw new UnsupportedOperationException();
-
 		case EXISTS:
 			throw new UnsupportedOperationException();
 		case FALSE:

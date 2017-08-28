@@ -737,9 +737,9 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 	 *             if directory contents could not be retrieved
 	 */
 	protected void doRetrieveMatchingFiles(String fullPattern, File dir, Set<File> result) throws IOException {
-		if (logger.isDebugEnabled()) {
-			logger.debug("Searching directory [" + dir.getAbsolutePath() + "] for files matching pattern [" + fullPattern + "]");
-		}
+//		if (logger.isDebugEnabled()) {
+//			logger.debug("Searching directory [" + dir.getAbsolutePath() + "] for files matching pattern [" + fullPattern + "]");
+//		}
 		File[] dirContents = dir.listFiles();
 		if (dirContents == null) {
 			if (logger.isWarnEnabled()) {
