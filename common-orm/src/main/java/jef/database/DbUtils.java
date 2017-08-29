@@ -1143,7 +1143,7 @@ public final class DbUtils {
 			return !field.isUnsavedValue(value);
 		} else if (type.isPrimitive()) {
 			if (field.isUnsavedValue(value)) {
-				if (meta.getPKFields().size() == 1 && !obj.isUsed(field.field()))
+				if (!obj.isUsed(field.field()))
 					return false;
 			}
 			return true;

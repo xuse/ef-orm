@@ -172,24 +172,33 @@ public abstract class AColumnMapping implements ColumnMapping {
 			switch (s.charAt(1) + s.charAt(2)) {
 			case 226:
 				condition = StringUtils.toInt(value, 0);
+				break;
 			case 215:
 				condition = StringUtils.toInt(value, 0);
+				break;
 			case 221:
 				condition = StringUtils.toLong(value, 0L);
+				break;
 			case 222:
 				condition = StringUtils.toBoolean(value, false);
+				break;
 			case 219:
 				condition = StringUtils.toFloat(value, 0f);
+				break;
 			case 228:
 				condition = StringUtils.toDouble(value, 0d);
+				break;
 			case 201:
 				if (value.length() == 0) {
 					condition = (char) 0;
 				} else {
 					condition = value.charAt(0);
 				}
+				break;
 			case 237:
 				condition = (byte) StringUtils.toInt(value, 0);
+				break;
+			default:
 			}
 		} else if ("null".equalsIgnoreCase(value)) {
 			return Null;
