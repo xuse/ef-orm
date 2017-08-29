@@ -129,6 +129,7 @@ public abstract class AColumnMapping implements ColumnMapping {
 				return value.charAt(0);
 			case 237:
 				return StringUtils.toInt(value, 0);
+			default:
 			}
 		} else if ("null".equalsIgnoreCase(value)) {
 			return null;
