@@ -19,6 +19,10 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Arrays;
 
+import com.mysema.query.sql.DB2Templates;
+import com.mysema.query.sql.DerbyTemplates;
+import com.mysema.query.sql.SQLTemplates;
+
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.DbMetaData;
@@ -256,4 +260,11 @@ public class DerbyDialect extends AbstractDialect {
 	public LimitHandler getLimitHandler() {
 		return limit;
 	}
+	
+    private final SQLTemplates queryDslDialect = new DerbyTemplates();
+
+    @Override
+    public SQLTemplates getQueryDslDialect() {
+        return queryDslDialect;
+    }
 }

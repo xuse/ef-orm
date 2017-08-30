@@ -10,6 +10,8 @@ import java.util.Map.Entry;
 
 import javax.persistence.EntityManagerFactory;
 
+import com.mysema.query.sql.SQLQuery;
+
 import jef.common.log.LogUtil;
 import jef.common.wrapper.Page;
 import jef.database.DbClient;
@@ -723,4 +725,10 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			throw DbUtils.toRuntimeException(e);
 		}
 	}
+	
+
+    @Override
+    public SQLQuery q() {
+        return getSession().q();
+    }
 }

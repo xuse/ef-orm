@@ -19,6 +19,8 @@ import jef.database.meta.ITableMetadata;
 import jef.database.query.Query;
 import jef.database.wrapper.ResultIterator;
 
+import com.mysema.query.sql.SQLQuery;
+
 /**
  * 通用Dao接口（非泛型），和泛型的{@link GenericDao}相对
  * 
@@ -583,4 +585,14 @@ public interface CommonDao{
 	 * @see RecordHolder
 	 */
 	<T extends IQueryableEntity> RecordHolder<T> loadForUpdate(T query);
+	
+	
+	
+	
+	/**
+	 * 获得一个QueryDSL查询对象
+	 * @return SQLQuery
+	 * @see SQLQuery
+	 */
+	SQLQuery q();
 }

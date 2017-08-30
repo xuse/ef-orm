@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.easyframe</groupId>
@@ -14,12 +15,13 @@
 		<module>orm-test</module>
 		<module>jef-maven-plugin</module>
 		<module>orm-code-generator</module>
-    <module>spring-data-geequery</module>
-  </modules>
+		<module>spring-data-geequery</module>
+	</modules>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<springframework.version>3.2.5.RELEASE</springframework.version>
 		<springframework.security.version>3.1.4.RELEASE</springframework.security.version>
+		<querydsl.version>3.7.4</querydsl.version>
 		<slf4j.version>1.7.21</slf4j.version>
 	</properties>
 	<dependencies>
@@ -102,9 +104,7 @@
 					<charset>UTF-8</charset>
 					<docencoding>UTF-8</docencoding>
 					<show>public</show>
-					<!--
-					<additionalparam>-Xdoclint:none</additionalparam>
-					-->
+					<!-- <additionalparam>-Xdoclint:none</additionalparam> -->
 				</configuration>
 				<executions>
 					<execution>

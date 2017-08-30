@@ -47,6 +47,9 @@ import jef.tools.ArrayUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
 
+import com.mysema.query.sql.MySQLTemplates;
+import com.mysema.query.sql.SQLTemplates;
+
 /**
  * MySQL 特性
  * <p>
@@ -452,5 +455,12 @@ public class MySqlDialect extends AbstractDialect {
 		}
 		
 	};
+	
+	private final SQLTemplates queryDslDialect = new MySQLTemplates();
+
+    @Override
+    public SQLTemplates getQueryDslDialect() {
+        return queryDslDialect;
+    }
 	
 }

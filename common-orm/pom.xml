@@ -27,11 +27,6 @@
 			<artifactId>geronimo-jpa_2.1_spec</artifactId>
 			<version>1.0-alpha-1</version>
 		</dependency>
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>17.0</version>
-		</dependency>
 		<!-- JTA dependencies -->
 		<!-- <dependency> <groupId>com.atomikos</groupId> <artifactId>transactions-jdbc</artifactId> 
 			<version>3.8.0</version> <scope>provided</scope> </dependency> <dependency> 
@@ -127,6 +122,16 @@
 			<artifactId>tomcat-jdbc</artifactId>
 			<version>7.0.47</version>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.mysema.querydsl</groupId>
+			<artifactId>querydsl-sql</artifactId>
+			<version>${querydsl.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.mysema.querydsl</groupId>
+			<artifactId>querydsl-codegen</artifactId>
+			<version>${querydsl.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.jolbox</groupId>

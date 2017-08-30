@@ -5,6 +5,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
+import com.mysema.query.sql.SQLQuery;
+
 import jef.common.wrapper.Page;
 import jef.database.IQueryableEntity;
 import jef.database.NamedQueryConfig;
@@ -439,4 +441,12 @@ public interface GenericDao<T extends IQueryableEntity> {
 	 * @see RecordHolder
 	 */
 	RecordHolder<T> loadForUpdate(T obj);
+	
+	   
+    /**
+     * 获得一个QueryDSL查询对象
+     * @return SQLQuery
+     * @see SQLQuery
+     */
+    SQLQuery q();
 }

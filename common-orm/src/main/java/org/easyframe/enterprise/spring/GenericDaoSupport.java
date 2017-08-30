@@ -28,6 +28,8 @@ import jef.tools.reflect.GenericUtils;
 
 import org.springframework.transaction.annotation.Transactional;
 
+import com.mysema.query.sql.SQLQuery;
+
 /**
  * 框架提供的基本数据库操作实现<br>
  * 
@@ -575,4 +577,8 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		}
 	}
 
+    @Override
+    public SQLQuery q() {
+        return getSession().q();
+    }
 }

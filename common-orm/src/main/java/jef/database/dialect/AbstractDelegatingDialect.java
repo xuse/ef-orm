@@ -10,6 +10,8 @@ import java.util.Map;
 
 import javax.sql.rowset.CachedRowSet;
 
+import com.mysema.query.sql.SQLTemplates;
+
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.DbMetaData;
@@ -248,4 +250,9 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	public boolean isCaseSensitive() {
 		return dialect.isCaseSensitive();
 	}
+
+    @Override
+    public SQLTemplates getQueryDslDialect() {
+        return dialect.getQueryDslDialect();
+    }
 }
