@@ -32,6 +32,7 @@ import jef.database.IConditionField.And;
 import jef.database.IConditionField.Or;
 import jef.database.QB;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.jpa.JefEntityManagerFactory;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.ConditionQuery;
@@ -43,10 +44,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.PropertyPath;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
-import org.springframework.data.repository.query.parser.Part;
 import org.springframework.data.repository.query.parser.PartTree;
-import org.springframework.data.repository.query.parser.PartTree.OrPart;
 
+import com.github.geequery.springdata.annotation.FindBy;
 import com.github.geequery.springdata.annotation.IgnoreIf;
 import com.github.geequery.springdata.repository.query.GqParameters.GqParameter;
 import com.github.geequery.springdata.repository.query.GqQueryExecution.CountExecution;
@@ -61,7 +61,7 @@ import com.github.geequery.springdata.repository.query.GqQueryExecution.DeleteEx
 public class GqPartTreeQuery extends AbstractGqQuery {
 
 	private final ITableMetadata metadata;
-	private final PartTree tree;
+	private final GqPartTree tree;
 	private final GqParameters parameters;
 	private final EntityManagerFactory em;
 
@@ -72,21 +72,30 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 	 *            must not be {@literal null}.
 	 * @param factory
 	 *            must not be {@literal null}.
-	 * @param em
+	 * @param emf
 	 *            must not be {@literal null}.
 	 */
-	public GqPartTreeQuery(GqQueryMethod method, EntityManagerFactory em) {
-		super(method, em);
-		this.em = em;
+	public GqPartTreeQuery(GqQueryMethod method, EntityManagerFactory emf) {
+		super(method, emf);
+		this.em = emf;
 		this.metadata = MetaHolder.getMeta(method.getEntityInformation()
 				.getJavaType());
-		this.tree = new PartTree(method.getName(), metadata.getThisType());
+		this.tree = new GqPartTree(method.getName(), metadata.getThisType());
 		this.parameters = method.getParameters();
 		// boolean recreationRequired = parameters.hasDynamicProjection() ||
 		// parameters.potentiallySortsDynamically();
 	}
 
-	@Override
+	public GqPartTreeQuery(GqQueryMethod method, JefEntityManagerFactory emf,FindBy findBy) {
+        super(method, emf);
+        this.em = emf;
+        this.metadata = MetaHolder.getMeta(method.getEntityInformation()
+                .getJavaType());
+        this.tree = new GqPartTree(findBy, metadata.getThisType());
+        this.parameters = method.getParameters();
+    }
+
+    @Override
 	protected GqQueryExecution getExecution() {
 		if(tree.isDelete()){
 			return new DeleteExecution();
@@ -103,9 +112,9 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 				parameters, values);
 		Or or = new Or();
 		int index = 0;
-		for (OrPart node : tree) {
+		for (GqOrPart node : tree) {
 			And and = new And();
-			for (Part part : node) {
+			for (GqPart part : node) {
 				PropertyPath path = part.getProperty();
 				if (path.getOwningType().getType() != metadata.getThisType()) {
 					throw new IllegalArgumentException("PathType:"
@@ -162,7 +171,7 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 				+ fieldName + "' in method " + this.getQueryMethod().getName());
 	}
 
-	private void add(And and, Part part, Field field, Object value) {
+	private void add(And and, GqPart part, Field field, Object value) {
 
 		switch (part.getType()) {
 		case SIMPLE_PROPERTY:

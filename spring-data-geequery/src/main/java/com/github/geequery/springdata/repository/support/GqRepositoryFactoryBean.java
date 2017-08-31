@@ -21,6 +21,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceContext;
 
 import jef.database.jpa.JefEntityManagerFactory;
+import jef.tools.StringUtils;
 import jef.tools.reflect.ClassEx;
 import jef.tools.reflect.FieldEx;
 
@@ -47,106 +48,105 @@ import com.github.geequery.springdata.repository.query.QueryUtils;
  * @param <T>
  *            the type of the repository
  */
-public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable> extends TransactionalRepositoryFactoryBeanSupport<T, S, ID> implements ApplicationContextAware {
+public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable> extends TransactionalRepositoryFactoryBeanSupport<T, S, ID>
+        implements ApplicationContextAware {
 
-	private ConfigurableApplicationContext context;
-	private Class<?> repositoryInterface;
-	
-	private String namedQueryLocation;
-	private String entityManagerFactoryRef;
-	private String repositoryImplementationPostfix;
-	
-	
-	
-	private static Logger log=LoggerFactory.getLogger(GqRepositoryFactoryBean.class);
+    private ConfigurableApplicationContext context;
+    private Class<?> repositoryInterface;
 
-	@Override
-	public void setRepositoryInterface(Class<? extends T> repositoryInterface) {
-		super.setRepositoryInterface(repositoryInterface);
-		this.repositoryInterface = repositoryInterface;
-	}
+    private String namedQueryLocation;
+    private String entityManagerFactoryRef;
+    private String repositoryImplementationPostfix = "Impl";
 
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport
-	 * #
-	 * setMappingContext(org.springframework.data.mapping.context.MappingContext
-	 * )
-	 */
-	@Override
-	public void setMappingContext(MappingContext<?, ?> mappingContext) {
-		super.setMappingContext(mappingContext);
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.springframework.data.repository.support.
-	 * TransactionalRepositoryFactoryBeanSupport#doCreateRepositoryFactory()
-	 */
-	@Override
-	protected RepositoryFactorySupport doCreateRepositoryFactory() {
-	    EntityManagerFactory emf=context.getBean(entityManagerFactoryRef,EntityManagerFactory.class);
-	    return new GqRepositoryFactory((JefEntityManagerFactory)emf);
-	}
-
-
-	/*
-	 * (non-Javadoc)
-	 * @see
-	 * org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
-	 */
-	@Override
-	public void afterPropertiesSet() {
-		Object custom=generateCustomImplementation();
-		if(custom!=null	)this.setCustomImplementation(custom);
-		super.afterPropertiesSet();
-
-	}
-
-	private Object generateCustomImplementation() {
-	    EntityManagerFactory emf=context.getBean(entityManagerFactoryRef,EntityManagerFactory.class);
-		for(Class<?> clz:repositoryInterface.getInterfaces()){
-			if(Repository.class.isAssignableFrom(clz)){
-				continue;
-			}else if(clz.getAnnotation(RepositoryDefinition.class)!=null){
-				continue;
-			}
-			ClassEx implClz=ClassEx.forName(clz.getName()+repositoryImplementationPostfix);
-			if(implClz==null){
-				log.error("Lack of implementation of class: "+clz.getName());
-			}
-			try{
-				Object obj=implClz.newInstance();
-				for(FieldEx field: implClz.getDeclaredFields()){
-					if(field.getAnnotation(PersistenceContext.class)!=null){
-						field.set(obj, QueryUtils.getEntityManager((JefEntityManagerFactory) emf));
-					}
-				}
-				if(obj instanceof ApplicationContextAware){
-					((ApplicationContextAware) obj).setApplicationContext(context);
-				}
-				if(obj instanceof InitializingBean){
-					((InitializingBean) obj).afterPropertiesSet();
-				}
-				return obj;
-			}catch(Exception ex){
-				log.error("",ex);
-				return null;
-			}
-		}
-		return null;
-	}
-
-
+    private static Logger log = LoggerFactory.getLogger(GqRepositoryFactoryBean.class);
 
     @Override
-	public void setApplicationContext(ApplicationContext context) throws BeansException {
-		this.context = (ConfigurableApplicationContext) context;
-	}
+    public void setRepositoryInterface(Class<? extends T> repositoryInterface) {
+        super.setRepositoryInterface(repositoryInterface);
+        this.repositoryInterface = repositoryInterface;
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.springframework.data.repository.core.support.RepositoryFactoryBeanSupport
+     * #
+     * setMappingContext(org.springframework.data.mapping.context.MappingContext
+     * )
+     */
+    @Override
+    public void setMappingContext(MappingContext<?, ?> mappingContext) {
+        super.setMappingContext(mappingContext);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.springframework.data.repository.support.
+     * TransactionalRepositoryFactoryBeanSupport#doCreateRepositoryFactory()
+     */
+    @Override
+    protected RepositoryFactorySupport doCreateRepositoryFactory() {
+        EntityManagerFactory emf = context.getBean(entityManagerFactoryRef, EntityManagerFactory.class);
+        return new GqRepositoryFactory((JefEntityManagerFactory) emf);
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.springframework.beans.factory.InitializingBean#afterPropertiesSet()
+     */
+    @Override
+    public void afterPropertiesSet() {
+        Object custom = generateCustomImplementation();
+        if (custom != null)
+            this.setCustomImplementation(custom);
+        super.afterPropertiesSet();
+
+    }
+
+    private Object generateCustomImplementation() {
+        EntityManagerFactory emf = context.getBean(entityManagerFactoryRef, EntityManagerFactory.class);
+        for (Class<?> clz : repositoryInterface.getInterfaces()) {
+            if (Repository.class.isAssignableFrom(clz)) {
+                continue;
+            } else if (clz.getAnnotation(RepositoryDefinition.class) != null) {
+                continue;
+            }
+            String implementation=clz.getName() + StringUtils.trimToEmpty(repositoryImplementationPostfix);
+            ClassEx implClz = ClassEx.forName(implementation);
+            if (implClz == null) {
+                log.error("Lack of implementation of class: " + clz.getName());
+                throw new IllegalArgumentException("Lack of implementation of class: " + implementation);
+            }
+            try {
+                Object obj = implClz.newInstance();
+                for (FieldEx field : implClz.getDeclaredFields()) {
+                    if (field.getAnnotation(PersistenceContext.class) != null) {
+                        field.set(obj, QueryUtils.getEntityManager((JefEntityManagerFactory) emf));
+                    }
+                }
+                if (obj instanceof ApplicationContextAware) {
+                    ((ApplicationContextAware) obj).setApplicationContext(context);
+                }
+                if (obj instanceof InitializingBean) {
+                    ((InitializingBean) obj).afterPropertiesSet();
+                }
+                return obj;
+            } catch (Exception ex) {
+                log.error("", ex);
+                return null;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext context) throws BeansException {
+        this.context = (ConfigurableApplicationContext) context;
+    }
 
     public void setNamedQueryLocation(String namedQueryLocation) {
         this.namedQueryLocation = namedQueryLocation;
@@ -157,7 +157,8 @@ public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends 
     }
 
     public void setRepositoryImplementationPostfix(String repositoryImplementationPostfix) {
-        this.repositoryImplementationPostfix = repositoryImplementationPostfix;
+        if (repositoryImplementationPostfix != null)
+            this.repositoryImplementationPostfix = repositoryImplementationPostfix;
     }
-	
+
 }

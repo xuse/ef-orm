@@ -35,6 +35,7 @@ import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
+import com.github.geequery.springdata.annotation.FindBy;
 import com.github.geequery.springdata.annotation.Modifying;
 import com.github.geequery.springdata.annotation.Procedure;
 import com.github.geequery.springdata.annotation.Query;
@@ -186,6 +187,15 @@ public class GqQueryMethod extends QueryMethod {
 		return getAnnotationValue("nativeQuery", Query.class, Boolean.class).booleanValue();
 	}
 
+	/**
+	 * Retuerns the @FindBy Annotaion
+	 * 
+	 * @return
+	 */
+	public FindBy getFindByAnnotation(){
+	   return AnnotatedElementUtils.findMergedAnnotation(method, FindBy.class);
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * 

@@ -483,7 +483,19 @@ public abstract class Session {
      * @throws SQLException
      *             如果数据库操作错误，抛出。
      */
-    public <T extends IQueryableEntity> T merge(T entity) throws SQLException {
+    @SuppressWarnings("unchecked")
+    public <T> T merge(T entity) throws SQLException {
+        if (entity instanceof IQueryableEntity) {
+            return (T) merge0((IQueryableEntity) entity);
+        } else {
+            ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
+            PojoWrapper wrapper = meta.transfer(entity, false);
+            wrapper = merge0(wrapper);
+            return (T) wrapper.get();
+        }
+    }
+
+    private final <T extends IQueryableEntity> T merge0(T entity) throws SQLException {
         T old = null;
         @SuppressWarnings("unchecked")
         Query<T> q = entity.getQuery();
@@ -524,7 +536,19 @@ public abstract class Session {
      * @throws SQLException
      *             如果数据库操作错误，抛出。
      */
-    public <T extends IQueryableEntity> T mergeCascade(T entity) throws SQLException {
+    @SuppressWarnings("unchecked")
+    public <T> T mergeCascade(T entity) throws SQLException {
+        if (entity instanceof IQueryableEntity) {
+            return (T) mergeCascade0((IQueryableEntity) entity);
+        } else {
+            ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
+            PojoWrapper wrapper = meta.transfer(entity, false);
+            wrapper = mergeCascade0(wrapper);
+            return (T) wrapper.get();
+        }
+    }
+
+    private <T extends IQueryableEntity> T mergeCascade0(T entity) throws SQLException {
         T old = null;
         ITableMetadata meta = MetaHolder.getMeta(entity);
         // 无主键匹配法
@@ -1564,7 +1588,7 @@ public abstract class Session {
      * @throws SQLException
      *             如果数据库操作错误，抛出。
      */
-    public final <T extends IQueryableEntity> List<T> batchLoadByField(jef.database.Field field, List<?> values) throws SQLException {
+    public final <T> List<T> batchLoadByField(jef.database.Field field, List<?> values) throws SQLException {
         int MAX_IN_CONDITIONS = ORMConfig.getInstance().getMaxInConditions();
         if (values.size() < MAX_IN_CONDITIONS)
             return batchLoadByField0(field, values);
@@ -2913,7 +2937,7 @@ public abstract class Session {
     }
 
     @SuppressWarnings("unchecked")
-    private <T extends IQueryableEntity> List<T> batchLoadByField0(Field field, List<?> values) throws SQLException {
+    private <T> List<T> batchLoadByField0(Field field, List<?> values) throws SQLException {
         ITableMetadata meta = DbUtils.getTableMeta(field);
         Query<?> q = meta.newInstance().getQuery();
         q.addCondition(field, Operator.IN, values);
@@ -3201,6 +3225,7 @@ public abstract class Session {
 
     /**
      * QueryDSL支持，返回一个QueryDSL的查询对象，可以使用QueryDSL进行数据库操作
+     * 
      * @return SQLQuery
      * @see com.mysema.query.sql.SQLQuery
      */

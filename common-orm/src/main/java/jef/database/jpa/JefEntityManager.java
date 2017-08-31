@@ -82,37 +82,28 @@ public class JefEntityManager implements EntityManager {
 	}
 
 	public void persist(Object entity) {
-		if (entity instanceof IQueryableEntity) {
-			doMerge((IQueryableEntity) entity, false);
-		} else {
-			ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
-			PojoWrapper wrapper = meta.transfer(entity, false);
-			doMerge(wrapper, false);
-		}
+	    try {
+            getSession().merge(entity);
+        } catch (SQLException e) {
+            throw DbUtils.toRuntimeException(e);
+        }
 	}
 
-	@SuppressWarnings("unchecked")
 	public <T> T merge(T entity) {
-		if (entity instanceof IQueryableEntity) {
-			return (T) doMerge((IQueryableEntity) entity, false);
-		} else {
-			ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
-			PojoWrapper wrapper = meta.transfer(entity, false);
-			wrapper = doMerge(wrapper, false);
-			return (T) wrapper.get();
-		}
+	    try {
+            return getSession().merge(entity);
+        } catch (SQLException e) {
+            throw DbUtils.toRuntimeException(e);
+        }
+		
 	}
 
-	@SuppressWarnings("unchecked")
 	public <T> T mergeCascade(T entity) {
-		if (entity instanceof IQueryableEntity) {
-			return (T) doMerge((IQueryableEntity) entity, true);
-		} else {
-			ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
-			PojoWrapper wrapper = meta.transfer(entity, false);
-			wrapper = doMerge(wrapper, true);
-			return (T) wrapper.get();
-		}
+	    try {
+            return getSession().mergeCascade(entity);
+        } catch (SQLException e) {
+           throw DbUtils.toRuntimeException(e);
+        }
 	}
 
 	public void remove(Object entity) {
@@ -126,7 +117,7 @@ public class JefEntityManager implements EntityManager {
 				getSession().deleteCascade(wrapper);
 			}
 		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
+		    throw DbUtils.toRuntimeException(e);
 		}
 	}
 
@@ -438,18 +429,6 @@ public class JefEntityManager implements EntityManager {
 			} catch (SQLException e) {
 				throw DbUtils.toRuntimeException(e);
 			}
-		}
-	}
-
-	private <T extends IQueryableEntity> T doMerge(T entity, boolean flag) {
-		try {
-			if (flag) {
-				return getSession().mergeCascade(entity);
-			} else {
-				return getSession().merge(entity);
-			}
-		} catch (SQLException e) {
-			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
