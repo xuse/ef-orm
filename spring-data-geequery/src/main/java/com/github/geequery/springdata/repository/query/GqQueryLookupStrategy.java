@@ -27,48 +27,54 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.RepositoryQuery;
 
+import com.github.geequery.springdata.annotation.FindBy;
+
 /**
  * Query lookup strategy to execute finders.
  */
 public final class GqQueryLookupStrategy implements QueryLookupStrategy {
-	private final JefEntityManagerFactory emf;
+    private final JefEntityManagerFactory emf;
 
-	public GqQueryLookupStrategy(JefEntityManagerFactory em) {
-		this.emf =em;
-	}
+    public GqQueryLookupStrategy(JefEntityManagerFactory em) {
+        this.emf = em;
+    }
 
-	@Override
-	public RepositoryQuery resolveQuery(Method m, RepositoryMetadata metadata, ProjectionFactory factory, NamedQueries namedQueries) {
-		GqQueryMethod method = new GqQueryMethod(m, metadata, factory, emf);
-		String qName = method.getNamedQueryName();
-		String qSql = method.getAnnotatedQuery();
-		if (method.isStreamQuery()) {
-			throw new UnsupportedOperationException();
-		} else if (method.isProcedureQuery()) {
-			return new GqProcedureQuery(method, emf);
-		} else if (StringUtils.isNotEmpty(qSql)) {
-			NativeQuery<?> q;
-			if(method.isNativeQuery()){
-				q= (NativeQuery<?>) emf.getDefault().createNativeQuery(qSql,method.getReturnedObjectType());
-			}else{
-				q= (NativeQuery<?>) emf.getDefault().createQuery(qSql,method.getReturnedObjectType());
-			}
-			return new GqNativeQuery(method, emf, q);
-		}
-		if (emf.getDefault().hasNamedQuery(qName)) {
-			NativeQuery<?> q = (NativeQuery<?>) emf.getDefault().createNamedQuery(qName,method.getReturnedObjectType());
-			return new GqNativeQuery(method, emf, q);
-		} else {
-			if (qName.endsWith(".".concat(method.getName()))) {
-				try {
-					return new GqPartTreeQuery(method, emf);
-				} catch (Exception e) {
-					throw new IllegalArgumentException(method + ": " + e.getMessage(), e);
-				}
-			} else {
-				throw new IllegalArgumentException("Named query not found: '" + qName + "' in method" + method);
-			}
-		}
-	}
+    @Override
+    public RepositoryQuery resolveQuery(Method m, RepositoryMetadata metadata, ProjectionFactory factory, NamedQueries namedQueries) {
+        GqQueryMethod method = new GqQueryMethod(m, metadata, factory, emf);
+        String qName = method.getNamedQueryName();
+        String qSql = method.getAnnotatedQuery();
+        if (method.isStreamQuery()) {
+            throw new UnsupportedOperationException();
+        } else if (method.isProcedureQuery()) {
+            return new GqProcedureQuery(method, emf);
+        } else if (StringUtils.isNotEmpty(qSql)) {
+            NativeQuery<?> q;
+            if (method.isNativeQuery()) {
+                q = (NativeQuery<?>) emf.getDefault().createNativeQuery(qSql, method.getReturnedObjectType());
+            } else {
+                q = (NativeQuery<?>) emf.getDefault().createQuery(qSql, method.getReturnedObjectType());
+            }
+            return new GqNativeQuery(method, emf, q);
+        }
+        FindBy findBy = method.getFindByAnnotation();
+        if (findBy != null) {
+            return new GqPartTreeQuery(method, emf, findBy);
+        } else if (emf.getDefault().hasNamedQuery(qName)) {
+            NativeQuery<?> q = (NativeQuery<?>) emf.getDefault().createNamedQuery(qName, method.getReturnedObjectType());
+            return new GqNativeQuery(method, emf, q);
+        } else {
+            if (qName.endsWith(".".concat(method.getName()))) {
+                try {
+                    return new GqPartTreeQuery(method, emf);
+                } catch (Exception e) {
+                    throw new IllegalArgumentException(method + ": " + e.getMessage(), e);
+                }
+            } else {
+                throw new IllegalArgumentException("Named query not found: '" + qName + "' in method" + method);
+            }
+        }
+
+    }
 
 }

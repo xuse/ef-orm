@@ -47,6 +47,9 @@ import jef.tools.ArrayUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
 
+import com.mysema.query.sql.MySQLTemplates;
+import com.mysema.query.sql.SQLTemplates;
+
 /**
  * MySQL 特性
  * <p>
@@ -348,6 +351,11 @@ public class MySqlDialect extends AbstractDialect {
 		StringBuilder sb = new StringBuilder("jdbc:");
 		// jdbc:mysql://localhost:3306/allandb
 		// ??useUnicode=true&characterEncoding=UTF-8
+		  //新版本MySQL对0000-00-00加强了管理，要求增加参数
+	    //zeroDateTimeBehavior=convertToNull
+	    //zeroDateTimeBehavior=noDatetimeStringSync
+	    //zeroDateTimeBehavior=exception
+	    //zeroDateTimeBehavior=round
 		sb.append("mysql:");
 		sb.append("//").append(host).append(":").append(port <= 0 ? 3306 : port);
 		sb.append("/").append(pathOrName).append("?useUnicode=true&characterEncoding=UTF-8");//
@@ -447,5 +455,12 @@ public class MySqlDialect extends AbstractDialect {
 		}
 		
 	};
+	
+	private final SQLTemplates queryDslDialect = new MySQLTemplates();
+
+    @Override
+    public SQLTemplates getQueryDslDialect() {
+        return queryDslDialect;
+    }
 	
 }

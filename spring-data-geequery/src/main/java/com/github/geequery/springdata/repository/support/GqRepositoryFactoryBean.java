@@ -21,6 +21,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceContext;
 
 import jef.database.jpa.JefEntityManagerFactory;
+import jef.tools.StringUtils;
 import jef.tools.reflect.ClassEx;
 import jef.tools.reflect.FieldEx;
 
@@ -50,16 +51,19 @@ import com.github.geequery.springdata.repository.query.QueryUtils;
 public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends Serializable> extends TransactionalRepositoryFactoryBeanSupport<T, S, ID>
         implements ApplicationContextAware {
 
-
-
     private ConfigurableApplicationContext context;
     private Class<?> repositoryInterface;
 
     private String namedQueryLocation;
     private String entityManagerFactoryRef;
-    private String repositoryImplementationPostfix;
+    private String repositoryImplementationPostfix = "Impl";
 
     private static Logger log = LoggerFactory.getLogger(GqRepositoryFactoryBean.class);
+
+    protected GqRepositoryFactoryBean(Class<? extends T> repositoryInterface) {
+        super(repositoryInterface);
+        this.repositoryInterface=repositoryInterface;
+    }
 
     /*
      * (non-Javadoc)
@@ -87,11 +91,6 @@ public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends 
         return new GqRepositoryFactory((JefEntityManagerFactory) emf);
     }
 
-    protected GqRepositoryFactoryBean(Class<? extends T> repositoryInterface) {
-        super(repositoryInterface);
-        this.repositoryInterface=repositoryInterface;
-    }
-
     /*
      * (non-Javadoc)
      * 
@@ -115,9 +114,11 @@ public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends 
             } else if (clz.getAnnotation(RepositoryDefinition.class) != null) {
                 continue;
             }
-            ClassEx implClz = ClassEx.forName(clz.getName() + repositoryImplementationPostfix);
+            String implementation=clz.getName() + StringUtils.trimToEmpty(repositoryImplementationPostfix);
+            ClassEx implClz = ClassEx.forName(implementation);
             if (implClz == null) {
                 log.error("Lack of implementation of class: " + clz.getName());
+                throw new IllegalArgumentException("Lack of implementation of class: " + implementation);
             }
             try {
                 Object obj = implClz.newInstance();
@@ -155,6 +156,8 @@ public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends 
     }
 
     public void setRepositoryImplementationPostfix(String repositoryImplementationPostfix) {
-        this.repositoryImplementationPostfix = repositoryImplementationPostfix;
+        if (repositoryImplementationPostfix != null)
+            this.repositoryImplementationPostfix = repositoryImplementationPostfix;
     }
+
 }

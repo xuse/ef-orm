@@ -353,13 +353,13 @@ public abstract class AColumnMapping implements ColumnMapping {
 		return unsavedValueDeclared;
 	}
 
-	/**
-	 * 判断是否为UnsavedValue。 UnsavedValue是系统认为不会存入数据库的一种值。 如果显式声明 用于判断主键无效、查询条件无效等情况
-	 */
-	@Override
-	public boolean isUnsavedValue(Object object) {
-		return unsavedValue.apply(object);
-	}
+    /**
+     * 判断是否为UnsavedValue。 UnsavedValue是系统认为不会存入数据库的一种值。 如果显式声明 用于判断主键无效、查询条件无效等情况
+     */
+    @Override
+    public boolean isUnsavedValue(Object object) {
+        return unsavedValue.apply(object);
+    }
 
 	public boolean isGenerated() {
 		return false;

@@ -132,6 +132,10 @@ public interface FooEntityDao {
 	@Query(value="insert into foo(remark,name,age,birthday) values (:remark, :name, :age, :birthday)",nativeQuery=false)
 	public int insertInto2(@Param("name") String name, @Param("age") int age, @Param("remark") String remark, @Param("birthday") Date birthDay);
 
+	@Modifying
+	@Query(value="update foo set age=age+1,birthDay=?1 where age=?2 and id=?3",nativeQuery=false)
+	public int updateFooSetAgeByAgeAndId1(Date birth, int age, int id);
+	   
 	/**
 	 * update foo set age=age+1,birthDay=:birth where age=:age and id=:id
 	 * 
@@ -142,5 +146,8 @@ public interface FooEntityDao {
 	@Modifying
 	@Query(value="update foo set age=age+1,birthDay=:birth where age=:age and id=:id",nativeQuery=false)
 	public int updateFooSetAgeByAgeAndId(@Param("birth") Date birth, @Param("age") int age, @Param("id") int id);
+	
+	
+
 
 }

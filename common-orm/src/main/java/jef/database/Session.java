@@ -1,4 +1,4 @@
-/*
+﻿/*
  * JEF - Copyright 2009-2010 Jiyi (mr.jiyi@gmail.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -92,6 +92,8 @@ import jef.tools.StringUtils;
 
 import org.easyframe.enterprise.spring.TransactionMode;
 
+import com.mysema.query.sql.SQLQuery;
+
 /**
  * 描述一个事务(会话)的数据库操作句柄，提供了各种操作数据库的方法供用户使用。
  * <p>
@@ -129,11 +131,11 @@ public abstract class Session {
 	/**
 	 * 获取指定数据库的方言，支持从不同数据源中获取<br/>
 	 * 
-	 * @param key
+     * @param datasourceName
 	 *            数据源名称，如果单数据源的场合，可以传入null
 	 * @return 指定数据源的方言
 	 */
-	public abstract DatabaseDialect getProfile(String key);
+    public abstract DatabaseDialect getProfile(String datasourceName);
 
 	/*
 	 * 内部使用
@@ -294,13 +296,13 @@ public abstract class Session {
 	 * 
 	 * <tt>特点：支持不同的数据源<tt>
 	 * 
-	 * @param dbKey
+     * @param datasourceName
 	 *            数据源名称，如果单数据源的场合，可以传入null
 	 * @return SQL语句操作句柄
 	 * @see SqlTemplate
 	 */
-	public final SqlTemplate getSqlTemplate(String dbKey) {
-		return selectTarget(dbKey);
+    public final SqlTemplate getSqlTemplate(String datasourceName) {
+        return selectTarget(datasourceName);
 	}
 
 	protected abstract OperateTarget selectTarget(String dbKey);
@@ -480,7 +482,19 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public <T extends IQueryableEntity> T merge(T entity) throws SQLException {
+    @SuppressWarnings("unchecked")
+    public <T> T merge(T entity) throws SQLException {
+        if (entity instanceof IQueryableEntity) {
+            return (T) merge0((IQueryableEntity) entity);
+        } else {
+            ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
+            PojoWrapper wrapper = meta.transfer(entity, false);
+            wrapper = merge0(wrapper);
+            return (T) wrapper.get();
+        }
+    }
+
+    private final <T extends IQueryableEntity> T merge0(T entity) throws SQLException {
 		T old = null;
 		@SuppressWarnings("unchecked")
 		Query<T> q = entity.getQuery();
@@ -521,7 +535,19 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public <T extends IQueryableEntity> T mergeCascade(T entity) throws SQLException {
+    @SuppressWarnings("unchecked")
+    public <T> T mergeCascade(T entity) throws SQLException {
+        if (entity instanceof IQueryableEntity) {
+            return (T) mergeCascade0((IQueryableEntity) entity);
+        } else {
+            ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
+            PojoWrapper wrapper = meta.transfer(entity, false);
+            wrapper = mergeCascade0(wrapper);
+            return (T) wrapper.get();
+        }
+    }
+
+    private <T extends IQueryableEntity> T mergeCascade0(T entity) throws SQLException {
 		T old = null;
 		ITableMetadata meta = MetaHolder.getMeta(entity);
 		// 无主键匹配法
@@ -1561,7 +1587,7 @@ public abstract class Session {
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
-	public final <T extends IQueryableEntity> List<T> batchLoadByField(jef.database.Field field, List<?> values) throws SQLException {
+    public final <T> List<T> batchLoadByField(jef.database.Field field, List<?> values) throws SQLException {
 		int MAX_IN_CONDITIONS = ORMConfig.getInstance().getMaxInConditions();
 		if (values.size() < MAX_IN_CONDITIONS)
 			return batchLoadByField0(field, values);
@@ -2681,12 +2707,16 @@ public abstract class Session {
 		} else {
 			dyna = dynamic.booleanValue();
 		}
-		for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 3 && i < entities.size(); i++) {
 			template = entities.get(i);
 			if (!dyna || template.needUpdate()) {
 				break;
 			}
 		}
+        if (template == null) {
+            // 没有需要更新的对象
+            return 0;
+        }
 		if (!template.needUpdate()) {
 			dyna = false;
 		}
@@ -2892,7 +2922,7 @@ public abstract class Session {
 	}
 
 	@SuppressWarnings("unchecked")
-	private <T extends IQueryableEntity> List<T> batchLoadByField0(Field field, List<?> values) throws SQLException {
+    private <T> List<T> batchLoadByField0(Field field, List<?> values) throws SQLException {
 		ITableMetadata meta = DbUtils.getTableMeta(field);
 		Query<?> q = meta.newInstance().getQuery();
 		q.addCondition(field, Operator.IN, values);
@@ -3163,4 +3193,30 @@ public abstract class Session {
 	}
 
 	abstract PartitionSupport getPartitionSupport();
+
+    /**
+     * QueryDSL支持，返回一个QueryDSL的查询对象，可以使用QueryDSL进行数据库操作
+     * 
+     * @param datasourceName
+     *            数据源名称
+     * @return SQLQuery
+     * @see com.mysema.query.sql.SQLQuery
+     */
+    public SQLQuery sql(String datasourceName) {
+        try {
+            return new SQLQuery(this.getConnection(), this.getProfile(datasourceName).getQueryDslDialect());
+        } catch (SQLException e) {
+            throw DbUtils.toRuntimeException(e);
+        }
+    }
+
+    /**
+     * QueryDSL支持，返回一个QueryDSL的查询对象，可以使用QueryDSL进行数据库操作
+     * 
+     * @return SQLQuery
+     * @see com.mysema.query.sql.SQLQuery
+     */
+    public SQLQuery sql() {
+        return sql(null);
+    }
 }

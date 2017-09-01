@@ -11,6 +11,9 @@ import jef.database.meta.Feature;
 import jef.database.support.RDBMS;
 import jef.tools.collection.CollectionUtils;
 
+import com.mysema.query.sql.OracleTemplates;
+import com.mysema.query.sql.SQLTemplates;
+
 /**
  * GBase的dialect
  * <p>
@@ -101,4 +104,11 @@ public class GBaseDialect extends AbstractDialect {
 	public LimitHandler getLimitHandler() {
 		return limit;
 	}
+	
+    private final SQLTemplates queryDslDialect = new OracleTemplates();
+
+    @Override
+    public SQLTemplates getQueryDslDialect() {
+        return queryDslDialect;
+    }
 }

@@ -12,6 +12,7 @@ import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.clause.InsertSqlClause;
+import jef.tools.collection.ElementFilter;
 import jef.tools.reflect.Property;
 
 /**

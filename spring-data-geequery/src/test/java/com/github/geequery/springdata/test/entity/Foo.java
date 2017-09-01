@@ -6,6 +6,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 @Entity
 public class Foo extends jef.database.DataObject {
@@ -21,10 +23,17 @@ public class Foo extends jef.database.DataObject {
 	@Column(name="REMARK_A")
 	private String remark;
 
+	@Temporal(TemporalType.DATE)
 	@Column(name="BIRTHDAY_A")
 	private Date birthDay;
 
 	private int age;
+	
+	private String indexCode;
+	
+	@Temporal(TemporalType.TIMESTAMP)
+	@GeneratedValue(generator="modified")
+	private Date lastModified;
 
 	public Foo() {
 	}
@@ -73,8 +82,24 @@ public class Foo extends jef.database.DataObject {
 		this.age = age;
 	}
 
-	public enum Field implements jef.database.Field {
-		id, name, remark, birthDay, age
+	public String getIndexCode() {
+        return indexCode;
+    }
+
+    public void setIndexCode(String indexCode) {
+        this.indexCode = indexCode;
+    }
+
+    public Date getLastModified() {
+        return lastModified;
+    }
+
+    public void setLastModified(Date lastModified) {
+        this.lastModified = lastModified;
+    }
+
+    public enum Field implements jef.database.Field {
+		id, name, remark, birthDay, age, indexCode, lastModified
 	}
 
 	@Override

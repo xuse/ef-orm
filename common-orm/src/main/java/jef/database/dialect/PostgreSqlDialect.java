@@ -54,6 +54,9 @@ import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
 
+import com.mysema.query.sql.PostgresTemplates;
+import com.mysema.query.sql.SQLTemplates;
+
 public class PostgreSqlDialect extends AbstractDialect {
 	protected static final String JDBC_URL_FORMAT = "jdbc:postgresql://%1$s:%2$s/%3$s";
 	protected static final int DEFAULT_PORT = 5432;
@@ -590,4 +593,11 @@ public class PostgreSqlDialect extends AbstractDialect {
 			}
 		}
 	};
+	
+    private final SQLTemplates queryDslDialect = new PostgresTemplates();
+
+    @Override
+    public SQLTemplates getQueryDslDialect() {
+        return queryDslDialect;
+    }
 }
