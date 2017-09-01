@@ -272,5 +272,5 @@ public interface GqRepository<T, ID extends Serializable> extends PagingAndSorti
      * @return SQLQuery
      * @see SQLQuery
      */
-    SQLQuery q();
+    SQLQuery sql();
 }

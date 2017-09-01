@@ -728,7 +728,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	
 
     @Override
-    public SQLQuery q() {
-        return getSession().q();
+    public SQLQuery sql() {
+        return getSession().sql();
     }
 }

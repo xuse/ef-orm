@@ -673,8 +673,8 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
     }
 
     @Override
-    public SQLQuery q() {
-        return getSession().q();
+    public SQLQuery sql() {
+        return getSession().sql();
     }
 
     @Override

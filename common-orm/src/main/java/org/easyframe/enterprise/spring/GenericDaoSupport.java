@@ -582,8 +582,8 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	}
 
     @Override
-    public SQLQuery q() {
-        return getSession().q();
+    public SQLQuery sql() {
+        return getSession().sql();
     }
 
     @SuppressWarnings("unchecked")

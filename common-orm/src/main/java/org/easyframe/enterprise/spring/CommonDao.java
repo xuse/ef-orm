@@ -594,5 +594,5 @@ public interface CommonDao{
 	 * @return SQLQuery
 	 * @see SQLQuery
 	 */
-	SQLQuery q();
+	SQLQuery sql();
 }

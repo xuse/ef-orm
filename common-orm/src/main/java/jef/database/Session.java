@@ -3215,7 +3215,7 @@ public abstract class Session {
      * @return SQLQuery
      * @see com.mysema.query.sql.SQLQuery
      */
-    public SQLQuery q(String datasourceName) {
+    public SQLQuery sql(String datasourceName) {
         try {
             return new SQLQuery(this.getConnection(), this.getProfile(datasourceName).getQueryDslDialect());
         } catch (SQLException e) {
@@ -3229,7 +3229,7 @@ public abstract class Session {
      * @return SQLQuery
      * @see com.mysema.query.sql.SQLQuery
      */
-    public SQLQuery q() {
-        return q(null);
+    public SQLQuery sql() {
+        return sql(null);
     }
 }

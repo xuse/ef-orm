@@ -457,5 +457,5 @@ public interface GenericDao<T extends IQueryableEntity> {
      * @return SQLQuery
      * @see SQLQuery
      */
-    SQLQuery q();
+    SQLQuery sql();
 }
