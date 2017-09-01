@@ -60,10 +60,9 @@ public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends 
 
     private static Logger log = LoggerFactory.getLogger(GqRepositoryFactoryBean.class);
 
-    @Override
-    public void setRepositoryInterface(Class<? extends T> repositoryInterface) {
-        super.setRepositoryInterface(repositoryInterface);
-        this.repositoryInterface = repositoryInterface;
+    protected GqRepositoryFactoryBean(Class<? extends T> repositoryInterface) {
+        super(repositoryInterface);
+        this.repositoryInterface=repositoryInterface;
     }
 
     /*
