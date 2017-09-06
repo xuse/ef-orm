@@ -216,7 +216,11 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 
 	public void visit(InExpression inExpression) {
 		visitPath.push(inExpression);
-		inExpression.getLeftExpression().accept(this);
+		if(inExpression.getLeftExpression()!=null){
+		    for(Expression ex:inExpression.getLeftExpression()){
+	            ex.accept(this);
+	        }    
+		}
 		inExpression.getItemsList().accept(this);
 		visitPath.pop();
 	}

@@ -1074,12 +1074,16 @@ Expression SQLCondition():
 
 Expression InExpression() :
 {
+  Expression expr;
 	InExpression result = new InExpression();
 	ItemsList itemsList = null;
-	Expression leftExpression = null;
+	List leftExpression = new ArrayList();
 }
-{
-	leftExpression=SimpleExpression()
+{(
+    LOOKAHEAD(3)expr= SimpleExpression(){leftExpression.add(expr);} 
+ | 
+	"(" expr=SimpleExpression(){leftExpression.add(expr);} ("," expr=SimpleExpression() { leftExpression.add(expr); })* ")"
+)
     [<K_NOT> { result.setNot(true); } ] <K_IN> "(" (LOOKAHEAD(SubSelect()) itemsList=SubSelect() | itemsList=SimpleExpressionList() ) ")"
 	{ 
 		result.setLeftExpression(leftExpression);

@@ -1,7 +1,6 @@
 package jef.database.jsqlparser;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.sql.SQLException;
@@ -39,11 +38,16 @@ import com.alibaba.druid.sql.dialect.sqlserver.visitor.SQLServerOutputVisitor;
 
 public class ComplexSqlParseTest extends org.junit.Assert {
 	@Test
-	@Ignore
 	public void testParseAndPrint() throws IOException, ParseException {
-		String sql = IOUtils.asString(new File("d:/aaa.sql"), "US-ASCII");
-		jef.database.jsqlparser.visitor.Statement st = DbUtils.parseStatement(sql);
-		System.out.println(st);
+		String sql = IOUtils.asString(this.getClass().getResource("/aaa.sql"), "US-ASCII");
+		try{
+		    JpqlParser parser = new JpqlParser(new StringReader(sql));
+		    jef.database.jsqlparser.visitor.Statement st = parser.Statement();
+		    System.out.println(st);
+		}catch(ParseException e){
+		    e.printStackTrace();
+		    throw e;
+		}
 	}
 
 	@Test

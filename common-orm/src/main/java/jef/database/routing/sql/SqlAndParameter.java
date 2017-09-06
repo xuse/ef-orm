@@ -130,7 +130,7 @@ public class SqlAndParameter implements InMemoryOperateProvider {
 		case in:
 			op = Operator.IN;
 			InExpression in = (InExpression) startExpression;
-			leftColumn = getColumnId(in.getLeftExpression(), columns, maps);
+			leftColumn = getColumnId(in.getSingleLeftExpression(), columns, maps);
 			if (in.getItemsList() instanceof ExpressionList) {
 				List<Object> values = new ArrayList<Object>();
 				for (Expression ex : ((ExpressionList) in.getItemsList()).getExpressions()) {

@@ -134,7 +134,20 @@ public class DeParserAdapter implements SelectVisitor, ExpressionVisitor, Statem
 	}
 
 	public void visit(InExpression inExpression) {
-		inExpression.getLeftExpression().accept(this);
+	    List<Expression> leftExpression=inExpression.getLeftExpression();
+	    if(leftExpression!=null){
+            boolean isList=leftExpression.size()>1;
+            if(isList)sb.append('(');
+            Iterator<Expression> iter=leftExpression.iterator();
+            if(iter.hasNext()){
+                iter.next().appendTo(sb);
+            }
+            while(iter.hasNext()){
+                sb.append(',');
+                iter.next().appendTo(sb);
+            }
+            if(isList)sb.append(')');
+        }
 		if (inExpression.isNot())
 			sb.append(" NOT");
 		sb.append(" IN ");
