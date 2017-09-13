@@ -1,7 +1,6 @@
 package jef.accelerator.asm.commons;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.Collection;
 import java.util.Map;
 
 import jef.accelerator.asm.ASMUtils;
@@ -10,11 +9,14 @@ import jef.accelerator.asm.Attribute;
 import jef.accelerator.asm.FieldVisitor;
 import jef.tools.Assert;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
 
 public class FieldExtDef extends FieldVisitor {
 	private boolean end = false;
-	private Map<String, AnnotationDef> annotations = new HashMap<String, AnnotationDef>();
-	private Map<String, Attribute> attrs = new LinkedHashMap<String, Attribute>();
+	private Multimap<String, AnnotationDef> annotations = ArrayListMultimap.create();
+	private Multimap<String, Attribute> attrs = ArrayListMultimap.create();
 	private FieldExtCallback call;
 
 	public FieldExtDef(int api,FieldExtCallback call) {
@@ -55,7 +57,7 @@ public class FieldExtDef extends FieldVisitor {
 		for (Attribute attr : attrs.values()) {
 			to.visitAttribute(attr);
 		}
-		for (Map.Entry<String, AnnotationDef> e : annotations.entrySet()) {
+		for (Map.Entry<String, AnnotationDef> e : annotations.entries()) {
 			String desc = e.getKey();
 			boolean visible = e.getValue().visible;
 			AnnotationVisitor too = to.visitAnnotation(desc, visible);
@@ -64,16 +66,11 @@ public class FieldExtDef extends FieldVisitor {
 		to.visitEnd();
 	}
 
-	public AnnotationDef getAnnotation(String desc) {
+	public Collection<AnnotationDef> getAnnotation(String desc) {
 		return annotations.get(desc);
 	}
 
-	public AnnotationDef getAnnotation(Class<?> class1) {
-		return annotations.get(ASMUtils.getDesc(class1));
+	public Collection<AnnotationDef> getAnnotation(Class<?> clz) {
+		return annotations.get(ASMUtils.getDesc(clz));
 	}
-
-	public Attribute getAttribute(String type) {
-		return attrs.get(type);
-	}
-
 }

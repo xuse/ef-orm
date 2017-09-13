@@ -677,8 +677,7 @@ public class CollectionUtils {
 	}
 
 	/**
-	 * 两个集合对象的合并
-	 * 
+	 * 两个集合对象的合并，并去除重复对象
 	 * @param <T>
 	 * @param a
 	 *            集合A

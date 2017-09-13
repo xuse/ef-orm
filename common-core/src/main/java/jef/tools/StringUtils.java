@@ -1431,18 +1431,18 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将数组或列表拼成文本
 	 * 
-	 * @param ss
-	 * @param string
+     * @param array 要拼接的数组
+     * @param separator 元素间的分隔符
 	 * @return
 	 */
-	public static String join(int[] ss, String string) {
+	public static String join(int[] array, String separator) {
 		StringBuilder sb = new StringBuilder();
-		if (ss != null && ss.length > 0) {
+		if (array != null && array.length > 0) {
 			int n = 0;
-			sb.append(ss[n++]);
-			while (n < ss.length) {
-				sb.append(string);
-				sb.append(ss[n++]);
+			sb.append(array[n++]);
+			while (n < array.length) {
+				sb.append(separator);
+				sb.append(array[n++]);
 			}
 		}
 		return sb.toString();
@@ -1451,18 +1451,18 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将数组或列表拼成文本
 	 * 
-	 * @param ss
-	 * @param string
+     * @param array 要拼接的数组
+     * @param separator 元素间的分隔符
 	 * @return
 	 */
-	public static String join(float[] ss, String string) {
+	public static String join(float[] array, String separator) {
 		StringBuilder sb = new StringBuilder();
-		if (ss != null && ss.length > 0) {
+		if (array != null && array.length > 0) {
 			int n = 0;
-			sb.append(ss[n++]);
-			while (n < ss.length) {
-				sb.append(string);
-				sb.append(ss[n++]);
+			sb.append(array[n++]);
+			while (n < array.length) {
+				sb.append(separator);
+				sb.append(array[n++]);
 			}
 		}
 		return sb.toString();
@@ -1471,18 +1471,18 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将数组或列表拼成文本
 	 * 
-	 * @param ss
-	 * @param string
+     * @param array 要拼接的数组
+     * @param separator 元素间的分隔符
 	 * @return
 	 */
-	public static String join(double[] ss, String string) {
+	public static String join(double[] array, String separator) {
 		StringBuilder sb = new StringBuilder();
-		if (ss != null && ss.length > 0) {
+		if (array != null && array.length > 0) {
 			int n = 0;
-			sb.append(ss[n++]);
-			while (n < ss.length) {
-				sb.append(string);
-				sb.append(ss[n++]);
+			sb.append(array[n++]);
+			while (n < array.length) {
+				sb.append(separator);
+				sb.append(array[n++]);
 			}
 		}
 		return sb.toString();
@@ -1491,18 +1491,37 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 数组转文本
 	 * 
-	 * @param ss
-	 * @param string
+     * @param array 要拼接的数组
+     * @param separator 元素间的分隔符
 	 * @return
 	 */
-	public static String join(boolean[] ss, String string) {
+	public static String join(boolean[] array, String separator) {
 		StringBuilder sb = new StringBuilder();
-		if (ss != null && ss.length > 0) {
+		if (array != null && array.length > 0) {
 			int n = 0;
-			sb.append(ss[n++]);
-			while (n < ss.length) {
-				sb.append(string);
-				sb.append(ss[n++]);
+			sb.append(array[n++]);
+			while (n < array.length) {
+				sb.append(separator);
+				sb.append(array[n++]);
+			}
+		}
+		return sb.toString();
+	}
+
+	/**
+	 * 将数组或列表拼成文本
+     * @param array 要拼接的数组
+     * @param separator 元素间的分隔符
+	 * @return
+	 */
+	public static String join(long[] array, String separator) {
+		StringBuilder sb = new StringBuilder();
+		if (array != null && array.length > 0) {
+			int n = 0;
+			sb.append(array[n++]);
+			while (n < array.length) {
+				sb.append(separator);
+				sb.append(array[n++]);
 			}
 		}
 		return sb.toString();
@@ -1511,18 +1530,18 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将数组或列表拼成文本
 	 * 
-	 * @param ss
-	 * @param string
+     * @param array 要拼接的数组
+     * @param separator 元素间的分隔符
 	 * @return
 	 */
-	public static String join(long[] ss, String string) {
+	public static String join(short[] array, String separator) {
 		StringBuilder sb = new StringBuilder();
-		if (ss != null && ss.length > 0) {
+		if (array != null && array.length > 0) {
 			int n = 0;
-			sb.append(ss[n++]);
-			while (n < ss.length) {
-				sb.append(string);
-				sb.append(ss[n++]);
+			sb.append(array[n++]);
+			while (n < array.length) {
+				sb.append(separator);
+				sb.append(array[n++]);
 			}
 		}
 		return sb.toString();
@@ -1531,39 +1550,19 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将数组或列表拼成文本
 	 * 
-	 * @param ss
-	 * @param string
+	 * @param array 要拼接的数组
+	 * @param separator 元素间的分隔符
 	 * @return
 	 */
-	public static String join(short[] ss, String string) {
-		StringBuilder sb = new StringBuilder();
-		if (ss != null && ss.length > 0) {
-			int n = 0;
-			sb.append(ss[n++]);
-			while (n < ss.length) {
-				sb.append(string);
-				sb.append(ss[n++]);
-			}
-		}
-		return sb.toString();
-	}
-
-	/**
-	 * 将数组或列表拼成文本
-	 * 
-	 * @param ss
-	 * @param string
-	 * @return
-	 */
-	public static String join(char[] ss, String string) {
-		int len = ss == null ? 0 : ss.length;
-		StringBuilder sb = new StringBuilder(len + string.length() * (len - 1));
+	public static String join(char[] array, String separator) {
+		int len = array == null ? 0 : array.length;
+		StringBuilder sb = new StringBuilder(len + separator.length() * (len - 1));
 		if (len > 0) {
 			int n = 0;
-			sb.append(ss[n++]);
-			while (n < ss.length) {
-				sb.append(string);
-				sb.append(ss[n++]);
+			sb.append(array[n++]);
+			while (n < array.length) {
+				sb.append(separator);
+				sb.append(array[n++]);
 			}
 		}
 		return sb.toString();

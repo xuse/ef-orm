@@ -1,7 +1,6 @@
 package jef.accelerator.asm.commons;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -21,10 +20,10 @@ public class AnnotationDef extends AnnotationVisitor{
 	}
 	protected boolean visible;
 	protected String desc;
-	protected Map<String,Object> attrs=new HashMap<String,Object>();
 	protected List<String[]> enums=new ArrayList<String[]>();
+	protected Multimap<String,Object> attrs=ArrayListMultimap.create();
 	protected Multimap<String,AnnotationDef> annotations=ArrayListMultimap.create();
-	protected Map<String,AnnotationDef> arrays=new HashMap<String,AnnotationDef>();
+	protected Multimap<String,AnnotationDef> arrays=ArrayListMultimap.create();
 	
 
 	@Override
@@ -58,7 +57,7 @@ public class AnnotationDef extends AnnotationVisitor{
 	
 	public void inject(AnnotationVisitor to){
 		Assert.isTrue(end);
-		for(Entry<String,Object> e:attrs.entrySet()){
+		for(Entry<String,Object> e:attrs.entries()){
 			to.visit(e.getKey(), e.getValue());
 		}
 		for(String[] enu:enums){
@@ -68,7 +67,7 @@ public class AnnotationDef extends AnnotationVisitor{
 			AnnotationVisitor too=to.visitAnnotation(e.getKey(), e.getValue().desc);
 			e.getValue().inject(too);
 		}
-		for(Map.Entry<String, AnnotationDef> e: arrays.entrySet()){
+		for(Map.Entry<String, AnnotationDef> e: arrays.entries()){
 			AnnotationVisitor too=to.visitArray(e.getKey());
 			e.getValue().inject(too);
 		}

@@ -1,7 +1,9 @@
 package jef.codegen;
 
+import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.ManyToMany;
@@ -54,14 +56,14 @@ public class EnhanceTaskASM {
 		try {
 			ClassReader reader = new ClassReader(classdata);
 			byte[] data = enhanceClass(reader, enumFields);
-			// {
-			// DEBUG
-			// File file = new File("c:/asm/" +
-			// StringUtils.substringAfterLast(className, ".") + ".class");
-			// IOUtils.saveAsFile(file, data);
-			// System.out.println(file +
-			// " saved -- Enhanced class"+className);
-			// }
+			 {
+			 //DEBUG
+//			 File file = new File("c:/asm/" +
+//			 StringUtils.substringAfterLast(className, ".") + ".class");
+//			 IOUtils.saveAsFile(file, data);
+//			 System.out.println(file +
+//			 " saved -- Enhanced class"+className);
+			 }
 			return data;
 		} catch (EnhancedException e) {
 			return ArrayUtils.EMPTY_BYTE_ARRAY;
@@ -144,21 +146,19 @@ public class EnhanceTaskASM {
 					public void onFieldRead(FieldExtDef info) {
 						boolean contains = enumFields.contains(name);
 						if (contains) {
-							AnnotationDef annotation = info.getAnnotation("Ljavax/persistence/Lob;");
-							if (annotation != null) {
+							if (!info.getAnnotation("Ljavax/persistence/Lob;").isEmpty()) {
 								lobAndRefFields.add(name);
 							}
 						} else {
-							Object o = null;
-							if (o == null)
-								o = info.getAnnotation(OneToMany.class);
-							if (o == null)
+						    Collection<AnnotationDef> o = info.getAnnotation(OneToMany.class);
+							if (o.isEmpty())
 								o = info.getAnnotation(ManyToOne.class);
-							if (o == null)
+							if (o.isEmpty())
 								o = info.getAnnotation(ManyToMany.class);
-							if (o == null)
+							if (o.isEmpty())
 								o = info.getAnnotation(OneToOne.class);
-							if (o != null) {
+							//判断完成
+							if (!o.isEmpty()) {
 								lobAndRefFields.add(name);
 							}
 						}
