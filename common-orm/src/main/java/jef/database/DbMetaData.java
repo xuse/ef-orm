@@ -1795,7 +1795,8 @@ public class DbMetaData {
 		if (schema != null) {
 			sequenceName = schema + "." + sequenceName;
 		}
-		String sequenceSql = StringUtils.concat("create sequence ", sequenceName, " minvalue " + min + " maxvalue ", String.valueOf(max), " start with ", String.valueOf(start), " increment by 1");
+		String sequenceSql = StringUtils.concat("create sequence ", sequenceName, " minvalue " , String.valueOf(min) , 
+		        " maxvalue ", String.valueOf(max), " start with ", String.valueOf(start), " increment by 1");
 		executor.executeSql(sequenceSql);
 	}
 
