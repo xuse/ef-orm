@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.easyframe</groupId>
 		<artifactId>ef-orm</artifactId>
-		<version>1.11.8.FINAL</version>
+		<version>1.11.8-FINAL</version>
 	</parent>
 	<artifactId>common-orm</artifactId>
 	<name>common-orm</name>
@@ -124,13 +124,13 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.mysema.querydsl</groupId>
+			<groupId>com.querydsl</groupId>
 			<artifactId>querydsl-sql</artifactId>
 			<version>${querydsl.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>com.mysema.querydsl</groupId>
-			<artifactId>querydsl-codegen</artifactId>
+			<groupId>com.querydsl</groupId>
+			<artifactId>querydsl-sql-codegen</artifactId>
 			<version>${querydsl.version}</version>
 		</dependency>
 		<dependency>

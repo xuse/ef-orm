@@ -62,7 +62,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.github.geequery.springdata.repository.GeeQueryExecutor;
 import com.github.geequery.springdata.repository.GqRepository;
 import com.github.geequery.springdata.repository.query.QueryUtils;
-import com.mysema.query.sql.SQLQuery;
+import com.querydsl.sql.SQLQuery;
 
 /**
  * Default implementation of the

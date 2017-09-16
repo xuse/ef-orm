@@ -31,7 +31,7 @@ import org.springframework.data.repository.query.QueryByExampleExecutor;
 
 import com.github.geequery.springdata.annotation.Query;
 import com.github.geequery.springdata.repository.support.Update;
-import com.mysema.query.sql.SQLQuery;
+import com.querydsl.sql.SQLQuery;
 
 /**
  * GQ specific extension of

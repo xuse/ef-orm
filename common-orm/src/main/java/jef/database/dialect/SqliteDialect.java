@@ -43,8 +43,8 @@ import jef.tools.collection.CollectionUtils;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.mysema.query.sql.SQLTemplates;
-import com.mysema.query.sql.SQLiteTemplates;
+import com.querydsl.sql.SQLTemplates;
+import com.querydsl.sql.SQLiteTemplates;
 
 
 /**

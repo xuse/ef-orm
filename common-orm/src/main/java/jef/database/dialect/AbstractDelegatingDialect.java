@@ -10,8 +10,6 @@ import java.util.Map;
 
 import javax.sql.rowset.CachedRowSet;
 
-import com.mysema.query.sql.SQLTemplates;
-
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.DbMetaData;
@@ -32,6 +30,8 @@ import jef.database.meta.FunctionMapping;
 import jef.database.meta.SequenceInfo;
 import jef.database.support.RDBMS;
 import jef.database.wrapper.clause.InsertSqlClause;
+
+import com.querydsl.sql.SQLTemplates;
 
 /**
  * 

@@ -13,7 +13,7 @@ import jef.database.RecordHolder;
 import jef.database.RecordsHolder;
 
 import com.github.geequery.springdata.repository.support.Update;
-import com.mysema.query.sql.SQLQuery;
+import com.querydsl.sql.SQLQuery;
 
 /**
  * 泛型的通用Dao子类必须实现泛型

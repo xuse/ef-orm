@@ -11,8 +11,8 @@ import jef.database.meta.Feature;
 import jef.database.support.RDBMS;
 import jef.tools.collection.CollectionUtils;
 
-import com.mysema.query.sql.OracleTemplates;
-import com.mysema.query.sql.SQLTemplates;
+import com.querydsl.sql.OracleTemplates;
+import com.querydsl.sql.SQLTemplates;
 
 /**
  * GBase的dialect

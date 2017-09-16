@@ -19,10 +19,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Arrays;
 
-import com.mysema.query.sql.DB2Templates;
-import com.mysema.query.sql.DerbyTemplates;
-import com.mysema.query.sql.SQLTemplates;
-
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.DbMetaData;
@@ -47,6 +43,9 @@ import jef.database.support.RDBMS;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
+
+import com.querydsl.sql.DerbyTemplates;
+import com.querydsl.sql.SQLTemplates;
 
 /**
  * Derby的dialet，用于derby的嵌入式模式

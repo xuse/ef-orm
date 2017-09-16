@@ -92,7 +92,7 @@ import jef.tools.StringUtils;
 
 import org.easyframe.enterprise.spring.TransactionMode;
 
-import com.mysema.query.sql.SQLQuery;
+import com.querydsl.sql.SQLQuery;
 
 /**
  * 描述一个事务(会话)的数据库操作句柄，提供了各种操作数据库的方法供用户使用。

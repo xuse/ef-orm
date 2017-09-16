@@ -26,8 +26,8 @@ import jef.database.support.RDBMS;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
 
-import com.mysema.query.sql.SQLServerTemplates;
-import com.mysema.query.sql.SQLTemplates;
+import com.querydsl.sql.SQLServerTemplates;
+import com.querydsl.sql.SQLTemplates;
 
 /**
  * Dialect for SQL Server 2000 and before..

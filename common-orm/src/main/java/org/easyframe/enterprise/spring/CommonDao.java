@@ -19,7 +19,7 @@ import jef.database.meta.ITableMetadata;
 import jef.database.query.Query;
 import jef.database.wrapper.ResultIterator;
 
-import com.mysema.query.sql.SQLQuery;
+import com.querydsl.sql.SQLQuery;
 
 /**
  * 通用Dao接口（非泛型），和泛型的{@link GenericDao}相对

@@ -32,7 +32,7 @@ import jef.tools.reflect.GenericUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.github.geequery.springdata.repository.support.Update;
-import com.mysema.query.sql.SQLQuery;
+import com.querydsl.sql.SQLQuery;
 
 /**
  * 框架提供的基本数据库操作实现<br>

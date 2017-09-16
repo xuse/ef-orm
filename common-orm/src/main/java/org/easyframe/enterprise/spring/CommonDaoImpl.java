@@ -10,8 +10,6 @@ import java.util.Map.Entry;
 
 import javax.persistence.EntityManagerFactory;
 
-import com.mysema.query.sql.SQLQuery;
-
 import jef.common.log.LogUtil;
 import jef.common.wrapper.Page;
 import jef.database.DbClient;
@@ -33,6 +31,8 @@ import jef.database.query.Query;
 import jef.database.wrapper.ResultIterator;
 import jef.tools.Assert;
 import jef.tools.reflect.BeanWrapper;
+
+import com.querydsl.sql.SQLQuery;
 
 /**
  * 一个通用的DAO实现，涵盖了Session()对象中大部分数据库操作的方法。。<br>

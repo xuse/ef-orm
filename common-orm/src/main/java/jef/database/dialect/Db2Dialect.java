@@ -7,8 +7,8 @@ import jef.database.meta.DbProperty;
 import jef.database.support.RDBMS;
 import jef.tools.string.JefStringReader;
 
-import com.mysema.query.sql.DB2Templates;
-import com.mysema.query.sql.SQLTemplates;
+import com.querydsl.sql.DB2Templates;
+import com.querydsl.sql.SQLTemplates;
 
 /**
  * The dialect of IBM DB2 TODO not finished.

@@ -28,8 +28,8 @@ import jef.database.jdbc.statement.UnionJudgement;
 import jef.database.query.function.NoArgSQLFunction;
 import jef.tools.string.JefStringReader;
 
-import com.mysema.query.sql.SQLServer2005Templates;
-import com.mysema.query.sql.SQLTemplates;
+import com.querydsl.sql.SQLServer2005Templates;
+import com.querydsl.sql.SQLTemplates;
 
 /**
  * 
