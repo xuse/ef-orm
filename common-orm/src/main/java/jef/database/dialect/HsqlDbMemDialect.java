@@ -43,8 +43,8 @@ import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.ClassEx;
 
-import com.mysema.query.sql.HSQLDBTemplates;
-import com.mysema.query.sql.SQLTemplates;
+import com.querydsl.sql.HSQLDBTemplates;
+import com.querydsl.sql.SQLTemplates;
 
 /**
  * HSQLDB的dialect

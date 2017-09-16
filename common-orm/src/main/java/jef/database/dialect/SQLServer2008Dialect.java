@@ -2,8 +2,8 @@ package jef.database.dialect;
 
 import java.sql.Types;
 
-import com.mysema.query.sql.SQLServer2008Templates;
-import com.mysema.query.sql.SQLTemplates;
+import com.querydsl.sql.SQLServer2008Templates;
+import com.querydsl.sql.SQLTemplates;
 
 /**
  * SQL Server 2008

@@ -47,8 +47,8 @@ import jef.tools.ArrayUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
 
-import com.mysema.query.sql.MySQLTemplates;
-import com.mysema.query.sql.SQLTemplates;
+import com.querydsl.sql.MySQLTemplates;
+import com.querydsl.sql.SQLTemplates;
 
 /**
  * MySQL 特性

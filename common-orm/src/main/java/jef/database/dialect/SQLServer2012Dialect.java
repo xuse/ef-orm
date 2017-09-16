@@ -6,8 +6,8 @@ import jef.database.meta.Feature;
 import jef.database.query.Func;
 import jef.database.query.function.StandardSQLFunction;
 
-import com.mysema.query.sql.SQLServer2012Templates;
-import com.mysema.query.sql.SQLTemplates;
+import com.querydsl.sql.SQLServer2012Templates;
+import com.querydsl.sql.SQLTemplates;
 
 /**
  * SQL Server 2012

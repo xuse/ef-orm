@@ -82,8 +82,8 @@ import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
 
-import com.mysema.query.sql.OracleTemplates;
-import com.mysema.query.sql.SQLTemplates;
+import com.querydsl.sql.OracleTemplates;
+import com.querydsl.sql.SQLTemplates;
 
 /**
  * 修改列名Oracle：lter table bbb rename column nnnnn to hh int;

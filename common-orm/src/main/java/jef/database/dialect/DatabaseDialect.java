@@ -44,7 +44,7 @@ import jef.database.meta.SequenceInfo;
 import jef.database.support.RDBMS;
 import jef.database.wrapper.clause.InsertSqlClause;
 
-import com.mysema.query.sql.SQLTemplates;
+import com.querydsl.sql.SQLTemplates;
 
 /**
  * 这个类原本只用于SQL方言的转换，今后将逐渐代替dbmsprofile的作用
