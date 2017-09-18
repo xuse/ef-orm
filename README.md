@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-﻿# ef-orm
-===================================
-=======
 # GeeQuery
 ----
->>>>>>> 3a7ce895f1dabdcece14c96ccd131e45bc76dd98
 
 A Simple OR-Mapping framework on multiple databases.
 
