@@ -21,7 +21,7 @@ GeeQuery使用手册
 | 实体        | Entity        | Jave  EE   JPA | 一个实体就是用@Entity注解标注的一个类。这个类是一张数据库表的java映射。 |
 | 元模型       | Meta-model    | Jave  EE   JPA | 元数据模型，描述数据库表以及其对应的Java类的结构、映射关系等信息的对象模型。在Java中有对应的对象和类。 |
 | 增强        | Enhancement   | Jave  EE   JPA | 使用字节码技术对java类文件进行代码植入，从而实现Enity类一些高级行为的技术手段。 |
-| 查询        | Query         | EF-ORM         | 一项对数据库操作请求。请不要从字面含义理解为是select语句，查询也可以是一项数据update操作。  在EF-ORM中Criteria 和 本地化查询都是查询的主要形式，最终都对应某项数据库操作。 |
+| 查询        | Query         | EF-ORM         | 一项对数据库操作请求。请不要从字面含义理解为是select语句，查询也可以是一项数据update操作。在EF-ORM中Criteria 和本地化查询都是查询的主要形式，最终都对应某项数据库操作。 |
 | --        | Criteria  API | EF-ORM         | 原指JPA 2.0规范制定的一套用对象来实现复杂数据库查询的API。本文中指EF-ORM自身实现的类似功能的API。使用该API可以构造出查询对象（Criteria Query）来执行数据库查询。 |
 | 本地化查询     | --            | EF-ORM         | 使用SQL（或JPQL）进行的数据库操作。本地化查询包含NamedQuery、NativeQuery、NativeCall三种。 |
 | --        | NativeQuery   | EF-ORM         | 基于增强型SQL或JPQL语句的查询。                      |
@@ -57,7 +57,7 @@ EF-ORM是一个轻量，便捷的Java ORM框架。在经历了金融和电信等
 
 一谈ORM很多朋友都会自然性的和某H框架进行比较，从而发现这些ORM很多都只是功能简单的“玩具”。但是EF不是仅仅是一个玩具。某H框架支持的功能EF-ORM几乎都能支持，或者有替代的支持手段。
 
-**和某H****框架支持特性对比**
+**和某H框架支持特性对比**
 
 |                       | 某H框架                                     | EF-ORM                                   |
 | --------------------- | ---------------------------------------- | ---------------------------------------- |
@@ -90,35 +90,26 @@ EF-ORM是一个轻量，便捷的Java ORM框架。在经历了金融和电信等
 
  
 
-    上面是EF-ORM和H框架的一个简单对比。总结下来，EF-ORM的支持功能基本覆盖了大家耳熟目详的H框架，甚至在很多项上要更进一步。但EF-ORM和传统的如H框架,T框架，OpenJPA框架的设计思想是不同的，这些思想上的差异体现在——
+    	上面是EF-ORM和H框架的一个简单对比。总结下来，EF-ORM的支持功能基本覆盖了大家耳熟目详的H框架，甚至在很多项上要更进一步。但EF-ORM和传统的如H框架,T框架，OpenJPA框架的设计思想是不同的，这些思想上的差异体现在——
 
-l 更多考虑逆向工程数据库的各种场景。
+* 更多考虑逆向工程数据库的各种场景。
+* 要求操作者面向数据库来思维，面向对象的操作手段更多只是带来开发效率的提升和开发难度的降低。
+* 追求更高的性能。
+* 同时保留多表级联的关系型操作和单表的操作。能保留在关系型数据库的ER模型的基础上完整的操作数据库，而不是要求用户必须使用对象模型来操作数据库。
+* 兼容和保留以SQL为主的传统数据库操作方式，并使之能兼容多种不同的DBMS。在金融和电信领域，还有大量传统的以SQL（甚至是存储过程）为主的数据库使用方式。我们不可能让这些领域的应用完全改弦易帜到纯粹的对象型数据操作上。
+* 不但封装了DML操作，也封装了建表、建索引、ALTERTABLE、TRUNCATE等DDL操作。 
 
-l 要求操作者面向数据库来思维，面向对象的操作手段更多只是带来开发效率的提升和开发难度的降低。
 
-l 追求更高的性能。
-
-l 同时保留多表级联的关系型操作和单表的操作。能保留在关系型数据库的ER模型的基础上完整的操作数据库，而不是要求用户必须使用对象模型来操作数据库。
-
-l 兼容和保留以SQL为主的传统数据库操作方式，并使之能兼容多种不同的DBMS。在金融和电信领域，还有大量传统的以SQL（甚至是存储过程）为主的数据库使用方式。我们不可能让这些领域的应用完全改弦易帜到纯粹的对象型数据操作上。
-
-l 不但封装了DML操作，也封装了建表、建索引、ALTERTABLE、TRUNCATE等DDL操作。 
-
- 
 
 除此之外EF-ORM还有很多同类框架中很少具备的企业级应用特性
 
-l 分库分表 
+* 分库分表 
+* 分布式事务 JTA 
+* 多数据源与路由 
+* 多数据源支持
+* Oracle RAC FCF支持，Oracle RAC读写分离
 
-l 分布式事务 JTA 
 
-l 多数据源与路由 
-
-l 多数据源支持
-
-l Oracle RAC FCF支持，Oracle RAC读写分离
-
- 
 
 综上所述，EF-ORM可以是一个小玩具，但也是支撑大型项目中的企业级框架。
 
@@ -130,91 +121,102 @@ l Oracle RAC FCF支持，Oracle RAC读写分离
 
 EF-ORM是以轻量、易用为目的设计的开源关系型数据库ORM框架。其特点之一是：
 
-l  尽可能通过编译器检查数据库操作的正确性
+* 尽可能通过编译器检查数据库操作的正确性
 
-EF-ORM通过原生的元模型和内建的Criteria API来完成类型**安全**的动态查询。 这种查询优于传统的基于字符串的 Java Persistence Query Language(JPQL/HQL) 查询。本文假设您具备基础的 Java 语言编程知识，并了解常见的 JPA 使用，比如 EntityManagerFactory 或 EntityManager。首先我们来看JPQL / HQL 查询有什么缺陷？
+​       EF-ORM通过原生的元模型和内建的Criteria API来完成类型**安全**的动态查询。 这种查询优于传统的基于字符   串的 Java Persistence Query Language(JPQL/HQL) 查询。本文假设您具备基础的 Java 语言编程知识，并了解常见的 JPA 使用，比如 EntityManagerFactory 或 EntityManager。首先我们来看JPQL / HQL 查询有什么缺陷？
 
-某H框架引入了HQL；JPA 1.0也引进了 JPQL，它们都是强大的查询语言，它在很大程度上导致了各自框架的流行。不过，基于字符串并使用有限语法的JPQL 存在一些限制。要理解 JPQL 的主要限制之一，请查看清单 1 中的简单代码片段，它通过执行 JPQL 查询选择年龄大于 20 岁的 Person 列表：
+​       某H框架引入了HQL；JPA 1.0也引进了 JPQL，它们都是强大的查询语言，它在很大程度上导致了各自框架的流行。不过，基于字符串并使用有限语法的JPQL 存在一些限制。要理解 JPQL 的主要限制之一，请查看清单 1 中的简单代码片段，它通过执行 JPQL 查询选择年龄大于 20 岁的 Person 列表：
 
 清单 1. 一个简单（并且错误）的 JPQL 查询
 
+~~~java
+EntityManager em = ...; 
+String jpql = "select p from Person where p.age > 20"; 
+Query query = em.createQuery(jpql); 
+List result = query.getResultList(); 
+~~~
+
 但是这个简单的例子有一个验证的错误。该代码能够顺利通过编译，但将在运行时失败，因为该 JPQL 查询字符串的语法有误。清单 1 的第 2 行的正确语法为：
+
+~~~java
+String jpql = "select p from Person p where p.age > 20"; 
+~~~
 
 不幸的是，Java 编译器不能发现此类错误。在运行时，该错误才会出现并提示。
 
-这个例子几乎描述出了一切xxQL（包括SQL）带来的困境。因为我们总是无法轻易发现查询语句中的错误。无论是在语句初次编写后，还是在数据库结构变化后的维护过程中。
+​        这个例子几乎描述出了一切xxQL（包括SQL）带来的困境。因为我们总是无法轻易发现查询语句中的错误。无论是在语句初次编写后，还是在数据库结构变化后的维护过程中。
 
-而使用Criteria API来执行动态查询，将会安全得多，几乎任何错误都将会被编译器发现并无情的指出，码农可以放心的重构他们的代码乃至数据库，因为编译器会将一切笔误和疏忽指出。不要小看这样一个小小的进步，因为当您考量一个软件的成本会发现，绝大部分的软件成本都是在后期的维护和测试当中。
+​	而使用Criteria API来执行动态查询，将会安全得多，几乎任何错误都将会被编译器发现并无情的指出，码农可以放心的重构他们的代码乃至数据库，因为编译器会将一切笔误和疏忽指出。不要小看这样一个小小的进步，因为当您考量一个软件的成本会发现，绝大部分的软件成本都是在后期的维护和测试当中。
 
-l  内建的元模型
+* 内建的元模型
 
-JPA引入了meta-model这个概念。OpenJPA可以使用编译的处理器生成名为元模型的类。简单说来，元模型就是将数据表结构用Java类、字段、枚举等形式表现出来的静态结构。我们在代码使用元模型的常量来表示表和列，也就相当于将我们的查询让编译器来校验一遍。
+  JPA引入了meta-model这个概念。OpenJPA可以使用编译的处理器生成名为元模型的类。简单说来，元模型就是将数据表结构用Java类、字段、枚举等形式表现出来的静态结构。我们在代码使用元模型的常量来表示表和列，也就相当于将我们的查询让编译器来校验一遍。
 
-OpenJPA的元模型是依赖于编译时生成的一个奇特的类，比如Entity类A.java，那么生成一个名为A_.java的原模型类。EF-ORM的元模型则是利用了java的内部类机制。它需要在您的Entity中生成一个 枚举类型
+  OpenJPA的元模型是依赖于编译时生成的一个奇特的类，比如Entity类A.java，那么生成一个名为A_.java的原模型类。EF-ORM的元模型则是利用了java的内部类机制。它需要在您的Entity中生成一个 枚举类型。
 
-这个枚举就成为了该Entity的元模型描述。可以在构建查询的时候使用。
+  ~~~java
+  public enum Field implements jef.database.Field {
+    field1, field2, …..
+  }
+  ~~~
 
-l  Say ‘No’ to XML
+  这个枚举就成为了该Entity的元模型描述。可以在构建查询的时候使用。
 
-EF-ORM希望尽可能少的配置，以及由此带来的开发效率的提升。因此EF-ORM使用标准JPA注解方式来描述一个Entity。整个过程实现了零配置（如果您不把注解当做配置的话）。
+* Say ‘No’ to XML
+
+  EF-ORM希望尽可能少的配置，以及由此带来的开发效率的提升。因此EF-ORM使用标准JPA注解方式来描述一个Entity。整个过程实现了零配置（如果您不把注解当做配置的话）。
 
 ### 1.3.2.   比某H框架更灵活
 
-围绕H框架一直以来都有用性能和效率和灵活性的争论。人们在徘徊于这些问题的同时，往往忽视了H框架这些年来的巨大改进和性能优化。H框架其实提供了让人眼花缭乱的特性，以及优秀的性能。大多数围绕H框架的性能诟病，其实多是使用不当造成的。个人感觉，很多人在H框架的使用中存在以下的问题：
+​	围绕H框架一直以来都有用性能和效率和灵活性的争论。人们在徘徊于这些问题的同时，往往忽视了H框架这些年来的巨大改进和性能优化。H框架其实提供了让人眼花缭乱的特性，以及优秀的性能。大多数围绕H框架的性能诟病，其实多是使用不当造成的。个人感觉，很多人在H框架的使用中存在以下的问题：
 
-1 对于一级缓存等特性认识并不深刻，甚至有人为了避免麻烦，动辄flush，evict，性能不佳。
+​	1、 对于一级缓存等特性认识并不深刻，甚至有人为了避免麻烦，动辄flush，evict，性能不佳。
 
-2 对于HQL过度依赖，最终走回到拼凑HQL语句的路子上去，就像当初拼凑SQL一样。这十多年前那些拼凑SQL的代码有什么不同？ 除了开发者需要学习一种形似SQL的新查询语言以外，代码的可维护性和开发效率的提升又在哪里？
+​	2 、对于HQL过度依赖，最终走回到拼凑HQL语句的路子上去，就像当初拼凑SQL一样。这十多年前那些拼凑SQL的代码有什么不同？ 除了开发者需要学习一种形似SQL的新查询语言以外，代码的可维护性和开发效率的提升又在哪里？
 
-EF-ORM的出发点之一是更简单和直白的使用数据库。并不希望使用者认为自己是在操作一个“对象库”。而是将JDBC用更简练，更方便的手段来封装给用户使用。 
+​	EF-ORM的出发点之一是更简单和直白的使用数据库。并不希望使用者认为自己是在操作一个“对象库”。而是将JDBC用更简练，更方便的手段来封装给用户使用。 
 
- 
-
-​                                   
+  ![![img](file:///E:/User/ef-orm/manual/images/1.3.2-2.jpg?lastModify=1505715508)1.3.2-1](images\1.3.2-1.jpg) ![1.3.2-2](images\1.3.2-2.jpg)
 
  
 
-EF-ORM干的事情很简单，将SQL语句，或者和SQL语句直观对应的Query对象传给数据库执行操作；同时将查询结果的JDBC封装对象转换成用户需要的各种Object，至于不顾关系型数据库的特色把它封装成一个按主键操作的对象库更是想都没想过。EF-ORM提供的大部分API都可以直观的映射到传统JDBC的操作方式上，并没有虚拟出一个“Session”的对象库。也不存在什么“游离对象”“临时对象””持久对象”之类的概念；无需人工flush、evict。将数据库的一切特性和用法明明白白的展现在开发者面前。对于熟悉SQL的开发者和DBA来说，既保留了某H框架操作的高效，又没有“隔靴搔痒”的困惑。
+​	EF-ORM干的事情很简单，将SQL语句，或者和SQL语句直观对应的Query对象传给数据库执行操作；同时将查询结果的JDBC封装对象转换成用户需要的各种Object，至于不顾关系型数据库的特色把它封装成一个按主键操作的对象库更是想都没想过。EF-ORM提供的大部分API都可以直观的映射到传统JDBC的操作方式上，并没有虚拟出一个“Session”的对象库。也不存在什么“游离对象”“临时对象””持久对象”之类的概念；无需人工flush、evict。将数据库的一切特性和用法明明白白的展现在开发者面前。对于熟悉SQL的开发者和DBA来说，既保留了某H框架操作的高效，又没有“隔靴搔痒”的困惑。
 
-正是这个特点，使得EF-ORM对于熟悉SQL语句的开发者来说，学习成本非常低。
+​	正是这个特点，使得EF-ORM对于熟悉SQL语句的开发者来说，学习成本非常低。
 
- 
-
-EF-ORM原汁原味的保留了JDBC的高效特性，这会不会造成开发效率上的降低呢？众所周知，JDBC的开发效率和维护效率要低于各种ORM框架。事实上EF-ORM也汲取了JPA等持久化框架的优点，“拟态”出了某H框架能支持的几乎全部行为，提供了高效而实用的API。在表面上，EF-ORM像是一个完全的面向对象进行操作的ORM框架，实际上这些都是假象。EF-ORM本质上不支持任何对象操作，操作数据库只有两种方式——Query API、SQL。前者可以利用编译器发现大多数操作错误，减少开发者犯错误的可能。后者可以灵活的操作数据库，但保留了对象映射和多数据库兼容等特色。
-
- 
+​	EF-ORM原汁原味的保留了JDBC的高效特性，这会不会造成开发效率上的降低呢？众所周知，JDBC的开发效率和维护效率要低于各种ORM框架。事实上EF-ORM也汲取了JPA等持久化框架的优点，“拟态”出了某H框架能支持的几乎全部行为，提供了高效而实用的API。在表面上，EF-ORM像是一个完全的面向对象进行操作的ORM框架，实际上这些都是假象。EF-ORM本质上不支持任何对象操作，操作数据库只有两种方式——Query API、SQL。前者可以利用编译器发现大多数操作错误，减少开发者犯错误的可能。后者可以灵活的操作数据库，但保留了对象映射和多数据库兼容等特色。
 
 ### 1.3.3.   比○Batis框架更高效
 
-很多朋友在发现某H框架难以适应自己的项目后，最终都选择了○Batis框架作为项目的首选。○Batis也是一个非常优秀的框架。
+​	很多朋友在发现某H框架难以适应自己的项目后，最终都选择了○Batis框架作为项目的首选。○Batis也是一个非常优秀的框架。
 
-使用动态SQL语句是这个框架的大亮点，这给了开人人员灵活而强有力的武器来操作数据库。但是这也使在这个框架上开发的应用存在数据库移植性上的问题。此外，对象和表的映射关系维护过于繁琐等问题，也困扰着○Batis的使用者。○Batis使用者还需要记忆特定的一系列XML标签来帮助他们实现动态SQL的特性。而且这些也需要纯手工完成。
+​	使用动态SQL语句是这个框架的大亮点，这给了开人人员灵活而强有力的武器来操作数据库。但是这也使在这个框架上开发的应用存在数据库移植性上的问题。此外，对象和表的映射关系维护过于繁琐等问题，也困扰着○Batis的使用者。○Batis使用者还需要记忆特定的一系列XML标签来帮助他们实现动态SQL的特性。而且这些也需要纯手工完成。
 
-综上所述○Batis的开发效率，和H框架还是有明显的差距的，相对于某H框架这个全自动框架，大多数人认为○Batis更像是一个“半自动”的框架。
+​	综上所述○Batis的开发效率，和H框架还是有明显的差距的，相对于某H框架这个全自动框架，大多数人认为○Batis更像是一个“半自动”的框架。
 
-但是我认为最大的问题不在于开发效率，而在维护效率上。其过于原生的数据库操作方式，难以避免项目维护过程中的巨大成本。当数据库字段变化带来的修改工作虽然可以集中到少数几个XML文件中，但是依然会分散在文件的各处，并且你无法依靠Java编译器帮助你发现这些修改是否有错漏。在一个复杂的使用○Batis的项目中，变更数据库结构往往带来大量的CodeReview和测试工作，否则难以保证项目的稳定性。
+​	但是我认为最大的问题不在于开发效率，而在维护效率上。其过于原生的数据库操作方式，难以避免项目维护过程中的巨大成本。当数据库字段变化带来的修改工作虽然可以集中到少数几个XML文件中，但是依然会分散在文件的各处，并且你无法依靠Java编译器帮助你发现这些修改是否有错漏。在一个复杂的使用○Batis的项目中，变更数据库结构往往带来大量的CodeReview和测试工作，否则难以保证项目的稳定性。
 
-EF-ORM也有动态SQL的特性，但在一般性的项目中，使用CriteriaAPI和SQL的比例大约是8:2。能够不写SQL就能解决的问题，为什么还要写SQL语句呢。
+​	EF-ORM也有动态SQL的特性，但在一般性的项目中，使用CriteriaAPI和SQL的比例大约是8:2。能够不写SQL就能解决的问题，为什么还要写SQL语句呢。
 
 ### 1.3.4.   性能
 
-    得益于EF内部的动态反射框架和字节码技术，EF-ORM拥有优秀的性能，几乎接近于直接操作JDBC API。
+ 	得益于EF内部的动态反射框架和字节码技术，EF-ORM拥有优秀的性能，几乎接近于直接操作JDBC API。
 
-    在操作大量数据读写的的场合下，这一优势发挥得更为明显。
+ 	在操作大量数据读写的的场合下，这一优势发挥得更为明显。
 
-    用EF-ORM和某H框架进行的读写性能测试表明
+ 	用EF-ORM和某H框架进行的读写性能测试表明
 
-\* *
+​			 ![1.3.4](images\1.3.4.jpg)
 
- 
+
 
 EF的性能优势来源于
 
-1、 使用ASM而不是反射来构造对象
+​	1、 使用ASM而不是反射来构造对象
 
-2、 类的增强在编译期就已经完成。
+​	2、 类的增强在编译期就已经完成。
 
-3、 大量后期的优化和策略模式的应用。
+​	3、 大量后期的优化和策略模式的应用。
 
  
 
@@ -238,31 +240,128 @@ EF的性能优势来源于
 
 您可以直接下载本文的示例工程，也可以按后面的说明一步一步搭建此工程。
 
+<https://github.com/GeeQuery/ef-orm/tree/master/orm-tutorial>
+
 该示例工程中，包含了本文中的所有代码清单
 
 **自行创建**
 
 新建测试工程，然后将EF-ORM的包加入到工程。
 
-l  本文中的测试都采用Apache derby来进行，为了运行本文的案例，你需要下载一个derby.jar放到你的工程目录下。
-
-l 未使用Maven场合下
+* 本文中的测试都采用Apache derby来进行，为了运行本文的案例，你需要下载一个derby.jar放到你的工程目录下。
+* 未使用Maven场合下
 
 可以从Git直接构建
 
- 
+~~~
+git clone https://github.com/geequery/ef-orm.git
+cd ef-orm
+mvn install –Dmaven.test.skip=true
+~~~
 
 ### 1.1.3.   Hello World！
 
 代码示例
 
- 
-
 src/main/java/org/easyframe/tutorial/lesson1/entity/Foo.java
+
+~~~java
+package org.easyframe.tutorial.lesson1.entity;
+
+import java.util.Date;
+import javax.persistence.Id;
+
+public class Foo {
+	@Id
+	private int id;
+	private String name;
+	private Date created;
+
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}
+	public Date getCreated() {
+		return created;
+	}
+	public void setCreated(Date created) {
+		this.created = created;
+	}
+}
+~~~
 
 src/main/resources/jef.properties
 
+~~~
+db.type=derby
+db.filepath=./
+db.name=db
+#调试开启，所有SQL和参数都会打印到控制台上
+db.debug=true
+~~~
+
 src/main/java/org/easyframe/tutorial/lesson1/Case1.java
+
+~~~java
+package org.easyframe.tutorial.lesson1;
+
+import java.sql.SQLException;
+import java.util.Date;
+import java.util.List;
+import jef.database.DbClient;
+import jef.database.jpa.JefEntityManagerFactory;
+import jef.tools.reflect.BeanUtils;
+import org.easyframe.enterprise.spring.CommonDao;
+import org.easyframe.enterprise.spring.CommonDaoImpl;
+import org.easyframe.tutorial.lesson1.entity.Foo;
+import org.junit.Assert;
+import org.junit.Test;
+
+public class Case1 {
+	@Test
+	public void simpleTest() throws SQLException{
+		DbClient db=new DbClient();
+		JefEntityManagerFactory emf=new JefEntityManagerFactory(db);
+		CommonDao dao=new CommonDaoImpl();
+		 //模拟Spring自动注入
+		BeanUtils.setFieldValue(dao, "entityManagerFactory", emf);
+		
+		//1.创建表
+		dao.getNoTransactionSession().createTable(Foo.class); 
+		
+		Foo foo=new Foo();
+		foo.setId(1);
+		foo.setName("Hello,World!");
+		foo.setCreated(new Date());
+		dao.insert(foo);  //2.插入一条记录
+		
+		//3.从数据库查询这条记录
+		Foo loaded=dao.loadByKey(Foo.class, "id", foo.getId());
+		System.out.println(loaded.getName());
+		
+		//4. 更新这条记录
+		loaded.setName("EF-ORM is very simple.");
+		dao.update(loaded);
+				
+		//5.删除这条记录
+		dao.removeByKey(Foo.class, "id", foo.getId());
+//6.查所有记录，查不到
+		List<Foo> allrecords=dao.find(new Foo());
+		Assert.assertTrue(allrecords.isEmpty());
+		
+		//7. 删除表
+		dao.getNoTransactionSession().dropTable(Foo.class);
+	}
+}
+~~~
 
 上面这个案例，运行以后，注意观察控制台，将会打印出所有执行的SQL语句和耗时。您将会注意到，EF-ORM在这个案例中，顺序进行了——
 
@@ -272,117 +371,221 @@ src/main/java/org/easyframe/tutorial/lesson1/Case1.java
 
 ### 1.2.1.   EF-ORM的原生Entity
 
-在上面的Case1.java中，我们将会发现操作数据库是如此轻松的一件事。如果您有兴趣可以尝试在jef.properties中配置别的数据源，目前EF-ORM能完全支持的RDBMS参见附录二。
+​	在上面的Case1.java中，我们将会发现操作数据库是如此轻松的一件事。如果您有兴趣可以尝试在jef.properties中配置别的数据源，目前EF-ORM能完全支持的RDBMS参见附录二。
 
-在上面例子其实并不是EF-ORM的基本功能，其中使用到了EF-ORM的一个特殊功能，POJO-Support。事实上，EF-ORM中，会希望您用一个更复杂的对象来描述数据库实体而不是上例中的POJO，这样才能使用EF-ORM的全部特性和API。
+​	在上面例子其实并不是EF-ORM的基本功能，其中使用到了EF-ORM的一个特殊功能，POJO-Support。事实上，EF-ORM中，会希望您用一个更复杂的对象来描述数据库实体而不是上例中的POJO，这样才能使用EF-ORM的全部特性和API。
 
-我们再来一次。将刚才的Foo.java拷贝一份，名叫Foo2.java。除了类名变化外内容无需修改。然后我们在资源树上，文件上点右键，选择“Convert POJO to a JEF Entity ”。
+​	我们再来一次。将刚才的Foo.java拷贝一份，名叫Foo2.java。除了类名变化外内容无需修改。然后我们在资源树上，文件上点右键，选择“Convert POJO to a JEF Entity ”。
 
- 
+​                ![2-1.2.1](images\2-1.2.1.png)
 
 您将发现，类的代码变成了下面所示的内容
 
+~~~java
+package org.easyframe.tutorial.lesson1.entity;
+
+import java.util.Date;
+import javax.persistence.Id;
+import javax.persistence.Entity;
+
+@Entity
+public class Foo2 extends jef.database.DataObject {
+    @Id
+    private int id;
+    private String name;
+    private Date created;
+    public int getId() {
+        return id;
+    }
+    public void setId(int id) {
+        this.id = id;
+    }
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public Date getCreated() {
+        return created;
+    }
+    public void setCreated(Date created) {
+        this.created = created;
+    }
+    public enum Field implements jef.database.Field {
+        id, name, created
+    }
+}
+~~~
+
 插件会自动在类中插入一些代码，包括JPA实体定义的Annonation，由enum构成的EF-ORM数据元模型(Meta Model)。然后我们可以用更简洁的代码，来重复上面Case1.java的案例。
+
+~~~java
+package org.easyframe.tutorial.lesson1;
+
+import java.sql.SQLException;
+import java.util.Date;
+import java.util.List;
+import jef.codegen.EntityEnhancer;
+import jef.database.DbClient;
+import org.easyframe.tutorial.lesson1.entity.Foo2;
+import org.junit.Assert;
+import org.junit.Test;
+
+public class Case2 {
+	@Test
+	public void simpleTest() throws SQLException{
+		DbClient db=new DbClient();
+		new EntityEnhancer().enhance("org.easyframe.tutorial");
+		
+		//创建表
+		db.createTable(Foo2.class); 
+				
+		Foo2 foo=new Foo2();
+		foo.setId(1);
+		foo.setName("Hello,World!");
+		foo.setCreated(new Date());
+		db.insert(foo);  //插入一条记录
+		
+		//从数据库查询这条记录
+		Foo2 loaded=db.load(foo);
+		System.out.println(loaded.getName());
+		
+		//更新这条记录
+		loaded.setName("EF-ORM is very simple.");
+		db.update(loaded);
+		
+		//删除这条记录
+		db.delete(loaded);
+		List<Foo2> allrecords=db.selectAll(Foo2.class);
+		Assert.assertTrue(allrecords.isEmpty());
+		
+		//删除表
+		db.dropTable(Foo2.class);
+	}
+}
+~~~
 
 在Case2.java中，我们可以发现变化——所有的数据库操作都可以直接在DbClient对象上进行了。
 
 细心的同学可能会发现，update语句从原来的
 
-updateFOO set CREATED = ?, NAME = ? where ID=?
+~~~
+update FOO set CREATED = ?, NAME = ? where ID=?
+~~~
 
  变成了
 
-updateFOO2 set NAME = ? where ID=?
+~~~
+update FOO2 set NAME = ? where ID=?
+~~~
 
-这才是原生的EF-ORM的实现。事实上EF-ORM并不支持直接操作POJO类型的实体。所有EF-ORM中操作的Entity都必须实现jef.database.IQueryableEntity接口。这个接口提供了更多的方法，将各种复杂查询，更新操作等功能集成起来，比如上例中的update语句之所以被优化，就是因为EF-ORM检测到执行过setName方法，而其他字段并未执行过set方法。
+​	这才是原生的EF-ORM的实现。事实上EF-ORM并不支持直接操作POJO类型的实体。所有EF-ORM中操作的Entity都必须实现jef.database.IQueryableEntity接口。这个接口提供了更多的方法，将各种复杂查询，更新操作等功能集成起来，比如上例中的update语句之所以被优化，就是因为EF-ORM检测到执行过setName方法，而其他字段并未执行过set方法。
 
-上面的例子中，将POJO转换为原生的实体是使用JEF插件进行的，如果您熟练了，也可以自己编码。当然，更多的场合，您的实体是从数据库或PDM文件里导入的，这些场合下都会生成原生的实体。
+​	上面的例子中，将POJO转换为原生的实体是使用JEF插件进行的，如果您熟练了，也可以自己编码。当然，更多的场合，您的实体是从数据库或PDM文件里导入的，这些场合下都会生成原生的实体。
 
 ### 1.2.2.   POJO or Non POJO
 
-同学们可能会有很多吐槽，我们这里用问答的形式来讲述。
+​	同学们可能会有很多吐槽，我们这里用问答的形式来讲述。
 
-Q: 为什么要实现IQueryableEntity接口或继承DataObject，有什么用处？
+​	Q: 为什么要实现IQueryableEntity接口或继承DataObject，有什么用处？
 
-A: EF的设计的一个主要目的是提高开发效率，减少编码工作。为此，可以让开发者“零配置”“少编码”的操作数据库大部分功能。而数据库查询条件问题是所有框架都不能回避的一个问题，所以我经常在想——既然我们可以用向DAO传入一个Entity来实现插入操作，为什么就不能用同样的方法来描述一个不以主键为条件的update/select/delete操作？为什么DAO的接口参数老是变来变去？为什么很多应用中，自行设计开发类来描述各种业务查询条件才能传入DAO？为什么我们不能在数据访问层上花费更少的时间和精力?
+​	A: EF的设计的一个主要目的是提高开发效率，减少编码工作。为此，可以让开发者“零配置”“少编码”的操作数据库大部分功能。而数据库查询条件问题是所有框架都不能回避的一个问题，所以我经常在想——既然我们可以用向DAO传入一个Entity来实现插入操作，为什么就不能用同样的方法来描述一个不以主键为条件的update/select/delete操作？为什么DAO的接口参数老是变来变去？为什么很多应用中，自行设计开发类来描述各种业务查询条件才能传入DAO？为什么我们不能在数据访问层上花费更少的时间和精力?
 
-JPA1.0和早期的H框架，其思想是将关系型数据库抽象为对象池，这极大的限制了本来非常灵活的SQL语句的发挥空间。而本质上，当我们调用某H框架的session.get、session.load、session.delete时，我们是想传递一个以对象形式表达的数据库操作请求。只不过某H框架要求（并且限制）我们将其视作纯粹的“单个”对象而已。JPA 2.0为了弥补JPA1.0的不足，才将这种Query的思想引入为框架中的另一套查询体系——CriteriaAPI。事实上针对单个对象的get/load/persist/save/update/merge/saveOrUpdateAPI和Criteria API本来就为一体，只不过是历史的原因被人为割裂成为两套数据库操作API罢了。
+​	JPA1.0和早期的H框架，其思想是将关系型数据库抽象为对象池，这极大的限制了本来非常灵活的SQL语句的发挥空间。而本质上，当我们调用某H框架的session.get、session.load、session.delete时，我们是想传递一个以对象形式表达的数据库操作请求。只不过某H框架要求（并且限制）我们将其视作纯粹的“单个”对象而已。JPA 2.0为了弥补JPA1.0的不足，才将这种Query的思想引入为框架中的另一套查询体系——CriteriaAPI。事实上针对单个对象的get/load/persist/save/update/merge/saveOrUpdateAPI和Criteria API本来就为一体，只不过是历史的原因被人为割裂成为两套数据库操作API罢了。
 
-因此，我认为对于关系型数据库而言——Entity和Query是一体两面的事物，所谓Query，可以包含各种复杂的查询条件，甚至可以作为一个完整的SQL操作请求的描述。为此，EF彻底将Entity和Query绑在了一起。这种思想，使得——
+​	因此，我认为对于关系型数据库而言——Entity和Query是一体两面的事物，所谓Query，可以包含各种复杂的查询条件，甚至可以作为一个完整的SQL操作请求的描述。为此，EF彻底将Entity和Query绑在了一起。这种思想，使得——
 
-1.    开发人员需要编写的类更少。开发人员无需编写其他类来描述复杂的SQL查询条件。也无需编写代码将这些查询条件转换为SQL/HQL/JPQL。DAO层也不会有老要改来改去的接口和API，几乎可以做到零编码。
+​	1、开发人员需要编写的类更少。开发人员无需编写其他类来描述复杂的SQL查询条件。也无需编写代码将这些查询条件转换为SQL/HQL/JPQL。DAO层也不会有老要改来改去的接口和API，几乎可以做到零编码。
 
-2.    对单个对象进行CRUD的操作API现在和Criteria API合并在一起。Session对象可以直接提供原本要Criteria API才能提供实现的功能。API大大简化。
+​	2、	对单个对象进行CRUD的操作API现在和Criteria API合并在一起。Session对象可以直接提供原本要Criteria API才能提供实现的功能。API大大简化。
 
-3.    
-            IQueryableEntity允许你将一个实体直接变化为一个查询（Query），在很多时候可以用来完成复杂条件下的数据查询。比如 ‘in (?,?,?)’， ‘Between 1 and 10’之类的条件。
-            xxQL有着拼装语句可读性差、编译器无法检查、变更维护困难等问题，但是却广受开发人员欢迎。这多少有历史原因，也有Criteria API设计上过于复杂的因素。两者一方是极端灵活但维护困难，一方是严谨强大而学习和编写繁琐，两边都是极端。事实上JPA的几种数据查询方式存在青黄不接的问题。选择查询语言xxQL，项目面临后续维护困难，跨数据库移植性差；选择Criteria API，代码臃肿，操作繁琐，很多人望而却步。EF的设计思想是使人早日摆脱拼装SQL/HQL/JPQL的困扰，而是用（更精简易用的）Criteria API来操作数据库。
+​	3、IQueryableEntity允许你将一个实体直接变化为一个查询（Query），在很多时候可以用来完成复杂条件下的数据查询。比如 ‘in (?,?,?)’， ‘Between 1 and 10’之类的条件。xxQL有着拼装语句可读性差、编译器无法检查、变更维护困难等问题，但是却广受开发人员欢迎。这多少有历史原因，也有Criteria API设计上过于复杂的因素。两者一方是极端灵活但维护困难，一方是严谨强大而学习和编写繁琐，两边都是极端。事实上JPA的几种数据查询方式存在青黄不接的问题。选择查询语言xxQL，项目面临后续维护困难，跨数据库移植性差；选择Criteria API，代码臃肿，操作繁琐，很多人望而却步。EF的设计思想是使人早日摆脱拼装SQL/HQL/JPQL的困扰，而是用（更精简易用的）Criteria API来操作数据库。
 
-不再执着于POJO、还带来了另外一些方面的好处，比如继承DataObject类后可以实现对set方法调用的记录，判断一个字段有没有被赋值，用来优化查询、更新等操作。还有延迟加载特性需要每个entity中记录延迟加载的相关信息。
+​	不再执着于POJO、还带来了另外一些方面的好处，比如继承DataObject类后可以实现对set方法调用的记录，判断一个字段有没有被赋值，用来优化查询、更新等操作。还有延迟加载特性需要每个entity中记录延迟加载的相关信息。
 
-Q：哎~~我以前用过H框架和My框架都是用POJO映射记录的啊。
+​	Q：哎~~我以前用过H框架和My框架都是用POJO映射记录的啊。
 
-A：基于API的功能和易用性之间平衡，EF-ORM最终还是决定让所有的实体实现一个接口，好在这个接口倒无需编写任何代码，直接继承jef.database.DataObject就可以了。从使用者编写的代码来看，倒也能算是”伪POJO”，并不会增加开发的复杂性。
+​	A：基于API的功能和易用性之间平衡，EF-ORM最终还是决定让所有的实体实现一个接口，好在这个接口倒无需编写任何代码，直接继承jef.database.DataObject就可以了。从使用者编写的代码来看，倒也能算是”伪POJO”，并不会增加开发的复杂性。
 
-Q:继承DataObject对象后，实体变重了，会不会影响性能？
+​	Q:继承DataObject对象后，实体变重了，会不会影响性能？
 
-A:DataObject中的所有字段都是默认为null的，构造方法中不会对其进行初始化，因此对性能几乎没有影响。事实上和H框架的对比测试结果表明了这一点。
+​	A:DataObject中的所有字段都是默认为null的，构造方法中不会对其进行初始化，因此对性能几乎没有影响。事实上和H框架的对比测试结果表明了这一点。
 
-Q:Java的单继承结构决定了类只能继承一个父类，这会不会影响开发设计的灵活性？
+​	Q:Java的单继承结构决定了类只能继承一个父类，这会不会影响开发设计的灵活性？
 
-A:多个Entity依然可以互相继承，只不过是最顶层的Entity需要继承DataObject类。对灵活性的影响多少有一点，但并不明显。
+​	A:多个Entity依然可以互相继承，只不过是最顶层的Entity需要继承DataObject类。对灵活性的影响多少有一点，但并不明显。
 
-Q:如果我要将Entity使用反射拷贝到别的对象，或者转换为JSON/XML。那么这些父类中的属性不是会干扰我功能的正确性吗?
+​	Q:如果我要将Entity使用反射拷贝到别的对象，或者转换为JSON/XML。那么这些父类中的属性不是会干扰我功能的正确性吗?
 
-A:这个问题也考虑过了。父类DataObject中设计的方法，都是和POJO的getter/setter的格式有区别的，反射中一般不会认错。其次这些属性都是标记为transient的，大部分序列化框架（包含JDK内部序列化、Google Gson、FastJSON、JAXB等在序列化时都会忽略这些属性）。
+​	A:这个问题也考虑过了。父类DataObject中设计的方法，都是和POJO的getter/setter的格式有区别的，反射中一般不会认错。其次这些属性都是标记为transient的，大部分序列化框架（包含JDK内部序列化、Google Gson、FastJSON、JAXB等在序列化时都会忽略这些属性）。
 
-Q：但是前面也演示了直接使用POJO操作数据库，这样用不行吗？
+​	Q：但是前面也演示了直接使用POJO操作数据库，这样用不行吗？
 
-A:在小型项目中可以这样用，但这样做并没有发挥出EF-ORM的特色，事实上这样做性能较差，而且EF-ORM特色Criteria API也无法使用了。POJO的支持更多是为了兼容性的考虑，以及降低一些特定条件下的使用门槛设计的。支持POJO的API都集中在CommonDao上，这是在Spring集成下的一个通用DAO实现。实际上EF-ORM的核心API中都是不支持POJO的。
+​	A:在小型项目中可以这样用，但这样做并没有发挥出EF-ORM的特色，事实上这样做性能较差，而且EF-ORM特色Criteria API也无法使用了。POJO的支持更多是为了兼容性的考虑，以及降低一些特定条件下的使用门槛设计的。支持POJO的API都集中在CommonDao上，这是在Spring集成下的一个通用DAO实现。实际上EF-ORM的核心API中都是不支持POJO的。
 
-总之，POJO的问题就这样了，如果您有耐心继续向后阅读，就会明白为什么在这个地方做出如此的取舍，根本原因在于EF-ORM框架和JPA体系框架的设计思想的不同。
+​	总之，POJO的问题就这样了，如果您有耐心继续向后阅读，就会明白为什么在这个地方做出如此的取舍，根本原因在于EF-ORM框架和JPA体系框架的设计思想的不同。
 
 ### 1.2.3.   实体的增强
 
-细心的同学还会问，从上面的例子看，Foo2.java中setName()方法的代码中只有一个简单的赋值语句，没有任何监听器之类的设计，EF-ORM怎么可能监测到这个赋值语句被执行呢？
+​	细心的同学还会问，从上面的例子看，Foo2.java中setName()方法的代码中只有一个简单的赋值语句，没有任何监听器之类的设计，EF-ORM怎么可能监测到这个赋值语句被执行呢？
 
-这就必须解释，在OpenJPA和H框架中都有的增强（Enhancement）概念了。实际上在上面的例子中，我们执行了
+​	这就必须解释，在OpenJPA和H框架中都有的增强（Enhancement）概念了。实际上在上面的例子中，我们执行了
 
-这个调用实际上对我们编译后的Foo2.class文件进行了代码植入，这种植入称为增强。EF-ORM遵循Java EE 中的JPA规范，允许为实体类进行增强。增强的意思就是说在编译或者运行时修改实体类的一些行为，使得实体能支持更好的ORM特性。
+~~~java
+new EntityEnhancer().enhance("org.easyframe.tutorial");
+~~~
 
-关于实体增强，有兴趣的朋友可以阅读一下OpenJPA中的介绍：[http://openjpa.apache.org/entity-enhancement.html](http://openjpa.apache.org/entity-enhancement.html)
+​	这个调用实际上对我们编译后的Foo2.class文件进行了代码植入，这种植入称为增强。EF-ORM遵循Java EE 中的JPA规范，允许为实体类进行增强。增强的意思就是说在编译或者运行时修改实体类的一些行为，使得实体能支持更好的ORM特性。
 
-H框架中也有增强，以前H框架总是要依赖一个CGlib，现在则是离不开javassist，就是这个道理。
+​	关于实体增强，有兴趣的朋友可以阅读一下OpenJPA中的介绍：[http://openjpa.apache.org/entity-enhancement.html](http://openjpa.apache.org/entity-enhancement.html)
 
-和H框架在运行时动态执行增强不同，EF-ORM为了更好的性能，直接使用ASM(以前也用过Javassist)直接对磁盘上的静态类做增强。我们分三种情况描述EF-ORM是如何让增强操作不再困扰您的。
+​	H框架中也有增强，以前H框架总是要依赖一个CGlib，现在则是离不开javassist，就是这个道理。
+
+​	和H框架在运行时动态执行增强不同，EF-ORM为了更好的性能，直接使用ASM(以前也用过Javassist)直接对磁盘上的静态类做增强。我们分三种情况描述EF-ORM是如何让增强操作不再困扰您的。
 
 #### 1.2.3.1. 使用Maven构建时
 
 可以配置Maven-Plugin，使其在编译完后自动扫描编译路径并执行增强操作。jef-maven-plugin-1.9.0.RELEASE.jar在之前的下载包中可以下载到。
 
- 
+~~~
+<plugin>
+	<groupId>jef</groupId>
+	<artifactId>jef-maven-plugin</artifactId>
+	<version>1.9.0.RELEASE</version>
+	<executions>
+		<execution>
+			<goals>
+				<goal>enhance</goal>
+			</goals>
+		</execution>
+	</executions>
+</plugin>
+~~~
 
 #### 1.2.3.2. 在Eclipse中运行单元测试时
 
 Eclipse会经常自动构建，因此即使我们执行了手工增强，也不能保证当运行单元测试时，类已经做过增强，比较直接的办法就是和上面的例子一样，在单元测试的开始(@BeforeClass)，执行一次 
 
+~~~java
+new EntityEnhancer().enhance("org.easyframe.tutorial");   //参数是要增强的类的包名。可传入多个。
+~~~
+
 #### 1.2.3.3. 在开发调试时
 
-JEF插件可以支持在开发时动态增强实体，其原理和前面的三种方式不同，是动态的。通过使用自定义的ClassLoader，在类加载时自动增强类。
+​	JEF插件可以支持在开发时动态增强实体，其原理和前面的三种方式不同，是动态的。通过使用自定义的ClassLoader，在类加载时自动增强类。
 
-操作方式如下： 
+​	操作方式如下：  ![2-1.2.3.3-1](images\2-1.2.3.3-1.png)
 
-JEFApplication是运行指定类的Main方法。JEF Web Application则是启动一个内置的Jetty，然后自动查找WEB-INF目录，并按Java的Web开发规范，将工程发布出来。
+​	JEFApplication是运行指定类的Main方法。JEF Web Application则是启动一个内置的Jetty，然后自动查找WEB-INF目录，并按Java的Web开发规范，将工程发布出来。
 
-这两种方式都十分简单。使用这种方式运行的程序中的Entity都不需要手工增强，过程对开发人员透明，有利于编码时提高效率。
+​	这两种方式都十分简单。使用这种方式运行的程序中的Entity都不需要手工增强，过程对开发人员透明，有利于编码时提高效率。
 
-其中，Run As / JEF WebApplication中，您可以在Run Configuration界面中调整Context path和Web发布端口。
+​	其中，Run As / JEF WebApplication中，您可以在Run Configuration界面中调整Context path和Web发布端口。![2-1.2.3.3-2](images\2-1.2.3.3-2.png)
 
- 
+​	如果要用调试模式运行，启动时选择 ‘Debug As’即可。
 
-如果要用调试模式运行，启动时选择 ‘Debug As’即可。
-
-三种场景下，EF-ORM都提供了相应的增强操作支持。除了Eclipse中运行单元测试外，你都无需去关注增强操作的存在。
+​	三种场景下，EF-ORM都提供了相应的增强操作支持。除了Eclipse中运行单元测试外，你都无需去关注增强操作的存在。
 
 #### 1.2.3.4. 手工增强
 
@@ -390,15 +593,28 @@ JEFApplication是运行指定类的Main方法。JEF Web Application则是启动�
 
 我们在**工程**上点右键，上下文菜单中就有“Enhance JEF Entites“
 
- 
+​		 ![2-1.2.3.4-1](images\2-1.2.3.4-1.png)
 
 使用这里的Enhance EF-ORMEntities功能，默认会选中编译输出class文件夹，不用作任何修改直接点确定。
 
 然后可以看到控制台输出：
 
+~~~
+enhanced class:org.easyframe.tutorial.lesson1.entity.Foo2
+1 classes enhanced.
+~~~
+
 这就说明class文件已经被修改。
 
- 
+ *可能有同学会吐槽，说用某H**框架这么久，从来也不需要考虑什么增强不增强的问题。*
+
+*我要说，同学你out**了。请你看看某H**框架最近在干什么——*
+
+![2-1.2.3.4-2](images\2-1.2.3.4-2.png)
+
+*对性能的追求是无止境的，当你接触的项目规模越大，对性能的考虑就越重要。**某H框架**也不例外。*
+
+*EF-ORM是在2010年参考Open-JPA的做法，将增强设计成静态的。现在看来，静态增强代替动态增强是大势所趋。*
 
  
 
@@ -408,13 +624,18 @@ JEFApplication是运行指定类的Main方法。JEF Web Application则是启动�
 
 先选中我们要生成映射类的包。右键上下文菜单中有“Generate JEF Entity from Database“.
 
- 
+​	  ![2-1.3.1-1](images\2-1.3.1-1.png)
 
- 
-
- 
+​	 ![2-1.3.1-2](images\2-1.3.1-2.png)
 
 点确定后，出现检测到的数据库表名称，选择其中要映射的表。最后点击‘确定‘。
+
+~~~
+jdbc:oracle:thin:@10.10.12.31:1521:pocdb
+   Generating Class for table:ACCP_STAT_MONTH_ADJUST....
+   Generating Class for table:ACCP_TOPUP_BOOK....
+   Generating Class for table:ACCP_TOPUP_FREE_RES....
+~~~
 
 正常情况下EF-ORM生成的实体会自动判断数据库主键和主键生成策略。但不会对外键和多表关联操作进行生成，要使用级联功能，您需要按第四章进行操作。 
 
@@ -422,15 +643,13 @@ JEFApplication是运行指定类的Main方法。JEF Web Application则是启动�
 
 先选中我们要生成映射类的包。右键上下文菜单中有“Generate JEF Entity from PDM“.
 
- 
+​	  ![2-1.3.2-1](images\2-1.3.2-1.png)
 
 然后按提示步骤操作即可。
 
- 
-
 一个自动生成的实体可能如下所示：正常情况下所有的主键、表名、字段长度定义都已经以Annotation的形式标注出来。这意味着你可以用这个实体直接进行表的操作了。
 
- 
+  ![2-1.3.2-2](images\2-1.3.2-2.png)
 
 自动生成的实体中，关于自增主键的生成规则‘GeneratedValue’还有各种多表关系一般需要手工调整，手工修改JPA注解等介绍参见后文。
 
@@ -439,6 +658,88 @@ JEFApplication是运行指定类的Main方法。JEF Web Application则是启动�
 #### 1.3.3.1. 注解的使用
 
 除了上述两种导入方式外，您也可以直接编码来创建实体。请看下面这个代码例子中的注释信息
+
+~~~java
+package jef.orm.onetable.model;
+
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import jef.database.annotation.Index;
+import jef.database.annotation.Indexed;
+import jef.database.annotation.Indexes;
+import jef.database.DataObject;
+
+@Entity
+@Table(schema = "ad", name = "ca_asset")  //这里定义表所在的schema和名称，schema可不写
+@Indexes(
+	@Index(name = "IDX_DATE_TYPE", definition = "unique", fields = { "thedate", "assetType" })
+)   //EF-ORM特有注解，可以定义该表上的复合索引。建表时会自动创建索引。
+public class CaAsset extends DataObject {
+	/**
+	 * Asset ID
+	 */
+	@Id               //说明这个字段是主键字段
+     @GeneratedValue(strategy = GenerationType.IDENTITY) //使用列自增生成值，不支持列自增再Sequence
+	@Column(name = "asset_id", precision = 6, columnDefinition = "NUMBER", nullable = false)
+//定义该字段在数据库中的列名，number长度。是否可为null。
+     @SequenceGenerator(sequenceName="ca_asset_seq",name="ca_asset_seq") 
+//可以指定Sequence名称，但不建议定义，EF-ORM支持全局配置一个模板，来生成各个表的Sequence名称。
+	private int assetId;
+
+	/**
+	 * A unique identifier of account.
+	 */
+@Id               //重要,EF-ORM允许一个对象中有多个@Id字段，即复合主键。
+//在某些关系表上，业务键要比物理键实用的多。这个与标准JPA的做法不同。
+//EF-ORM更倾向支持传统的数据库设计，而不是用面向对象来代替数据库设计。
+//因此，如果您正在使用EF-ORM，请在该用业务键的时候大胆的用业务键，
+//不需要也不建议为每个表都生成一个物理主键。让更专业的DBA来设计数据库吧。
+	@Column(name = "acct_id", precision = 14, columnDefinition = "NUMBER")
+	private Long acctId;
+
+	/**
+	 * Asset type: 0- fund(account book), 1- credit limit, 2- bonus, 3- bank
+	 * capital, 4- free resource, 5 - cheque.
+	 */
+	@Column(name = "ASSET_TYPE", precision = 8, columnDefinition = "NUMBER")
+     @Indexed    //EF-ORM特有的注解，在建表时可以为这个列创建B树索引。
+	private Integer assetType;
+
+     @Column(name = "COMMENTS", length=512, columnDefinition = "varchar")
+	private String normal;
+
+     @Column(name = "CONTENT", columnDefinition=”clob”)
+@Lob               //CLOB字段一般映射为String，也可以映射为File, char[]等
+	private String content;
+
+@Lob    //byte[]构成的Lob会映射为BLOB（在某些数据库上为BYTEA）。BLOB在java中还可以映射为
+        //String, File等。
+     private byte[] photo;
+
+     @Column(name = "PRICE", precision =12,scale=8, columnDefinition = "number")
+//对于小数，precision=12 scale=8的意思是整数部分最多4位，小数部分最多8位。(和Oracle定义一致）
+//理解为整数部分最多12位的同学都去面壁！
+	private double price;
+	
+	@Column(name = "VALID_DATE",columnDefinition="Date")
+//注意，这里定义为Date时，精度为年月日，不含时分秒。定义为Timestamp时，精度到时分秒乃至毫秒。
+//操作Oracle数据库也遵守相同的规律。
+//Oracle同时具有Date和Timestamp两种类型，但和别的数据库不一样，其Date精度到秒。
+//此处我们沿用JDBC标准，Date精度到天。确保实现的可移植性。
+	private Date  thedate;
+	
+	public enum Field implements jef.database.Field {
+		acctId, assetId, assetType,thedate,normal,content
+	}
+    //getters and setters
+}
+~~~
 
 总结一下，
 
@@ -454,15 +755,13 @@ JEFApplication是运行指定类的Main方法。JEF Web Application则是启动�
 
 4、自增键的定义方法。需要指出的是，如果数据类型为String，而GenerationType=AUTO或IDENTITY时，会使用GUID生成主键，此时要求字段长度36位。
 
- 
-
     另外，上例中@Table(schema = "ad", name = "ca_asset") 中指定了表所在的Schema为ad，这项配置是可以在运行环境中被重新映射的，相关特性参见7.3.1节Schema重定向。
 
 #### 1.3.3.2. 映射关系和注解的省略
 
-许多时候注解可以省略，省略时，EF-ORM会根据默认的数据类型计算相应的数据库存储类型。事实上，columnDefinition也可以写成int, double, integer,varchar2等各种标准的SQL类型。因此，如果不指定Column类型，EF-ORM会默认的生成Column的类型如下
+​	许多时候注解可以省略，省略时，EF-ORM会根据默认的数据类型计算相应的数据库存储类型。事实上，columnDefinition也可以写成int, double, integer,varchar2等各种标准的SQL类型。因此，如果不指定Column类型，EF-ORM会默认的生成Column的类型如下
 
-| **Java****类型**     | **数据库类型**              |
+| **Java类型**         | **数据库类型**              |
 | ------------------ | ---------------------- |
 | String + @Lob      | CLOB                   |
 | String             | Varchar(255)           |
@@ -477,11 +776,11 @@ JEFApplication是运行指定类的Main方法。JEF Web Application则是启动�
 | byte[]             | BLOB                   |
 | Enum               | Varchar(32)            |
 
-                               表 1-1 映射关系
+                               						表 1-1 映射关系
 
-上表列举了您未定义Column注解时，java字段到数据库的映射关系。这也是建议您在实际使用注解时进行的映射方式。在实体加载时，EF-ORM会适配实体与数据库的映射关系，如果发现属于无法支持的映射（EF-ORM能兼容大部分不同数据类型的映射，包括从String到number等），那么会抛出异常，此时您需要修改java的映射字段类型。
+​	上表列举了您未定义Column注解时，java字段到数据库的映射关系。这也是建议您在实际使用注解时进行的映射方式。在实体加载时，EF-ORM会适配实体与数据库的映射关系，如果发现属于无法支持的映射（EF-ORM能兼容大部分不同数据类型的映射，包括从String到number等），那么会抛出异常，此时您需要修改java的映射字段类型。
 
-    值得注意的是EF-ORM支持您使用enum对象和varchar列发生映射，使用枚举类型有助于提高您应用系统的可理解性。
+   	 值得注意的是EF-ORM支持您使用enum对象和varchar列发生映射，使用枚举类型有助于提高您应用系统的可理解性。
 
  
 
@@ -489,75 +788,177 @@ JEFApplication是运行指定类的Main方法。JEF Web Application则是启动�
 
 ## 3.1. 基本单表操作
 
-本节介绍几种常用的单表查询方式，EF-ORM还支持更多复杂的查询，后面几节中还会继续描述。
+​	本节介绍几种常用的单表查询方式，EF-ORM还支持更多复杂的查询，后面几节中还会继续描述。
 
-在Hello,World!案例中，我们已经了解了实现单表基于主键进行增删改查操作的方法。我们来回顾一下，在此处和后面的代码清单中，我们都在session对象上操作数据库，这里的session对象可以理解为就是DbClient对象。，
+​	在Hello,World!案例中，我们已经了解了实现单表基于主键进行增删改查操作的方法。我们来回顾一下，在此处和后面的代码清单中，我们都在session对象上操作数据库，这里的session对象可以理解为就是DbClient对象。
 
-在上面的Foo对象中，其Id属性被标记为主键。当id属性有值时，load方法,update方法、delete方法都是按主键操作的。上面的操作，归纳起来就是插入记录、按主键加载、按主键更新、按主键删除。
+~~~java
+        Foo foo=new Foo();
+		foo.setId(1);
+		foo.setName("Hello,World!");
+		foo.setCreated(new Date());
+		//1.插入一条记录
+		session.insert(foo);  
+		
+		//2.从数据库查询这条记录
+		Foo loaded=session.load (foo);
+		System.out.println(loaded.getName());
+		
+		//3. 更新这条记录
+		loaded.setName("EF-ORM is very simple.");
+		session.update(loaded);
+				
+		//4.删除这条记录
+		session.delete(loaded);
+~~~
+
+​	在上面的Foo对象中，其Id属性被标记为主键。当id属性有值时，load方法,update方法、delete方法都是按主键操作的。上面的操作，归纳起来就是插入记录、按主键加载、按主键更新、按主键删除。
 
 ### 3.1.1.   复合主键
 
-当有复合主键的场景下，情况是完全一样的：
+​	当有复合主键的场景下，情况是完全一样的：
 
-在所有作为主键的列上增加@Id注解。
+​	在所有作为主键的列上增加@Id注解。
 
-代码src/main/java/org/easyframe/tutorial/lesson2/entity/StudentToLesson.java
+​	代码src/main/java/org/easyframe/tutorial/lesson2/entity/StudentToLesson.java
 
-** **
+~~~java
+package org.easyframe.tutorial.lesson2.entity;
+
+import java.util.Date;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+@Entity
+//描述学生和课程映射关系的表
+public class StudentToLesson extends jef.database.DataObject {
+    @Id
+    private int studentId;  //复合主键一
+    @Id
+    private int lessonId; //复合主键二
+    private Date createTime;
+    public enum Field implements jef.database.Field {
+        studentId, lessonId, createTime
+}
+//getter setter省略
+}
+~~~
 
 **调整复合主键顺序**
 
 在上例中，我们执行
 
+~~~java
+db.createTable(StudentToLesson.class);
+~~~
+
 建表时的定义是
+
+~~~
+create table STUDENT_TO_LESSON(
+    CREATETIME timestamp,
+    STUDENTID int not null,
+    LESSONID int not null,
+    constraint PK_STUDENTTOLESSON primary key(STUDENTID,LESSONID)
+)
+~~~
 
 在复合主键中studentId在前，lessonId在后，怎么样其调整为lessonId在前，studentId在后呢？ 
 
 对于1.8.0以下版本，方法是将lessonId的定义移动到studentId之前。
 
-1.8.0以后的版本，是在枚举的enumField中将lesseionId移动到studentId之前。
+1.8.0以后的版本，是在枚举的enum Field中将lesseionId移动到studentId之前。
 
- 
+> ​	 *1.8.0之前，EF-ORM是采用class.getDeclaredFields()方法来获取字段顺序的。而JDK也确实按照定义的顺序返回了这些字段，但是java虚拟机规范上说：“The elements in the array returned are not sorted and are not in anyparticular order.”也就是说，虚拟机规范不保证字段返回的顺序，因此这种调节方式可能无效。*
+>
+> ​	*1.8.0之后，改为使用enum中出现的顺序来排序字段。*
 
 有同学可能会问，你搞这个功能有什么意义呢？复合主键字段顺序的无论怎么变化其产生的约束效果是一样的。
 
-实际上这不一样。数据库会为复合主键创建一个同名的复合索引。在上例中，我们如果要查询某个学生(studentId)的课程选修情况，那么studentId列在前可以让我们无需再为studentId创建单独的索引。事实上Oracle DBA们往往会称其为“复合索引前导列”。精确控制复合主键的顺序可以改善你的数据库设计中的索引规划，而无故增加索引则会造成每次CRUD时无谓的开销。
-
- 
+​	实际上这不一样。数据库会为复合主键创建一个同名的复合索引。在上例中，我们如果要查询某个学生(studentId)的课程选修情况，那么studentId列在前可以让我们无需再为studentId创建单独的索引。事实上Oracle DBA们往往会称其为“复合索引前导列”。精确控制复合主键的顺序可以改善你的数据库设计中的索引规划，而无故增加索引则会造成每次CRUD时无谓的开销。
 
 **其他**
 
-使用过JPA的同学可能会说，EF-ORM这里的处理不规范啊，JPA规范中碰到复合主键都是必须定义一个@IdClass，要么作为一个独立类要么用@EmbeddedI嵌入对象中，你这种支持方法不是标准JPA的支持方式。
+​	使用过JPA的同学可能会说，EF-ORM这里的处理不规范啊，JPA规范中碰到复合主键都是必须定义一个@IdClass，要么作为一个独立类要么用@EmbeddedI嵌入对象中，你这种支持方法不是标准JPA的支持方式。
 
-我的回答是：JPA的规范在实际使用时问题很多。由于凭空增加了一个对象的关系，在实际编码时需要增加大量的非null判断、主键对象必须实现hashCode和equals方法、主键值设置时是替换主键对象还是更新主键对象方法不统一，操作起来问题很多。这种坏味道甚至影响了代码的健壮性。实际情况下，大部分JPA使用者和H框架使用者会主动的给表增加一个物理键，避免使用业务键（复合主键），但操作中又基本上使用业务键来增删改查，物理键几乎无用。这样的因素也将影响DBA对数据库的设计发挥。
+​	我的回答是：JPA的规范在实际使用时问题很多。由于凭空增加了一个对象的关系，在实际编码时需要增加大量的非null判断、主键对象必须实现hashCode和equals方法、主键值设置时是替换主键对象还是更新主键对象方法不统一，操作起来问题很多。这种坏味道甚至影响了代码的健壮性。实际情况下，大部分JPA使用者和H框架使用者会主动的给表增加一个物理键，避免使用业务键（复合主键），但操作中又基本上使用业务键来增删改查，物理键几乎无用。这样的因素也将影响DBA对数据库的设计发挥。
 
-因此，在EF-ORM中，不支持标准JPA的复合主键方式，而是采用上文所述的方式。就像传统关系型RDBMS表结构定义那样，为平铺的属性增加两个主键的标识即可，类似于在PowerDesigner中定义主键那样。我还是那么想，既然用了关系数据库，就要让关系数据库的优势体现出来。
+​	因此，在EF-ORM中，不支持标准JPA的复合主键方式，而是采用上文所述的方式。就像传统关系型RDBMS表结构定义那样，为平铺的属性增加两个主键的标识即可，类似于在PowerDesigner中定义主键那样。我还是那么想，既然用了关系数据库，就要让关系数据库的优势体现出来。
 
  
 
-### [3.1.2.   主键自增
+### 3.1.2.   主键自增
 
-#### [3.1.2.1. 自增值自动回写
+#### 3.1.2.1. 自增值自动回写
 
     正常情况下，执行插入操作后，数据库生成的自增值主键值都会被设回对象中，我们看下面的示例。
 
 src/main/java/org/easyframe/tutorial/lesson2/entity/Student.java
 
- 
+~~~java
+package org.easyframe.tutorial.lesson2.entity;
+
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Entity;
+
+@Entity
+public class Student extends jef.database.DataObject {
+	/**
+	 * 学号
+	 */
+    @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)    //使用GeneratedValue表示自增键值
+    private int id;
+    /**
+     * 姓名
+     */
+    private String name;
+    /**
+     * 年级
+     */
+    private String grade;
+    /**
+     * 性别 
+     */
+    private String gender;
+    public enum Field implements jef.database.Field {
+        id, name, grade, gender
+}
+   //getter setter省略
+}
+~~~
 
 src/main/java/org/easyframe/tutorial/lesson2/Case1.java
 
-    从上例可以发现，当insert方法执行后，自增值即被回写到对象中。每次调用Session中的操作方法，都是即时操作数据库的。再说一次，EF-ORM是JDBC的封装，目的是帮助用户更精确和更简便的操作关系数据库。所以不会有一个“对象池”的概念，将您所有操作记录下来，到最后再执行。
+~~~java
+@Test
+public void studentAutoIncreament() throws SQLException{
+  	db.createTable(Student.class);
+  	Student s=new Student();
+  	s.setName("Jhon Smith");
+ 	s.setGender("M");
+  	s.setGrade("2");
+  	db.insert(s);
 
-    此外，无论在何种数据库下、无论在单条还是batch模式下（Batch模式以后会讲到），插入操作生成的值都会被回写到对象中。
+  	Assert.assertTrue(s.getId()>0);
+  	System.out.println("自增键值为："+s.getId());
+}
+~~~
 
-    对于自增值的生成有很多用法，后文详细讲述。
+​	从上例可以发现，当insert方法执行后，自增值即被回写到对象中。每次调用Session中的操作方法，都是即时操作数据库的。再说一次，EF-ORM是JDBC的封装，目的是帮助用户更精确和更简便的操作关系数据库。所以不会有一个“对象池”的概念，将您所有操作记录下来，到最后再执行。
+​	此外，无论在何种数据库下、无论在单条还是batch模式下（Batch模式以后会讲到），插入操作生成的值都会被回写到对象中。
+​	对于自增值的生成有很多用法，后文详细讲述。
 
-#### [3.1.2.2. 四种JPA主键生成方式
+#### 3.1.2.2. 四种JPA主键生成方式
 
 EF-ORM支持JPA的主键生成方式。以下是JPA注解的实现方式
 
- 
+~~~java
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+private String id;
+~~~
 
 JPA注解中的GenerationType有四种，其用法如下
 
@@ -568,137 +969,156 @@ JPA注解中的GenerationType有四种，其用法如下
 | SEQUENCE | 使用Sequence。         | 使用Sequence生成自增值                          |
 | TABLE    | 使用Table模拟Sequence。  | 使用Table生成自增值                             |
 
- 
-
 如果不配置，那么会隐式使用Annotation的默认值AUTO。
 
 下面列举几种规则的用法和效果，嫌麻烦的可以直接跳转到3.1.2.6章看结论。
 
-#### [3.1.2.3. 配置的简化
+#### 3.1.2.3. 配置的简化
 
 上述四种配置的基础上，EF-ORM进行了一些配置的简化。形成了一套独有的规则。
 
-**1 . ****识别为GUID**
+**1 . 识别为GUID**
 
-当字段类型为String时，如果自增方式为Identity或Auto那么使用guid策略。 但如果为Sequence和Table，EF-ORM还是认为该字段属于自增值，数据库中会使用Int等数值类型，只不过在java类中自动转换为String。
+​	当字段类型为String时，如果自增方式为Identity或Auto那么使用guid策略。 但如果为Sequence和Table，EF-ORM还是认为该字段属于自增值，数据库中会使用Int等数值类型，只不过在java类中自动转换为String。
 
-** **
+**2. 识别为AUTO**
 
-**2.     ****识别为AUTO**
+​	当EF-ORM获得一个自增值的注解配置后，默认情况下会将Sequence和Identity两种方式忽略，理解为AUTO方式。因为Identity和Sequence方式都有跨数据库移植性差的问题，为了更好的支持数据库Native的自增实现方式， EF-ORM默认Identity和Sequence方式都等同于Auto。除非用户禁用Native支持功能，即在jef.properties中配置
 
-当EF-ORM获得一个自增值的注解配置后，默认情况下会将Sequence和Identity两种方式忽略，理解为AUTO方式。因为Identity和Sequence方式都有跨数据库移植性差的问题，为了更好的支持数据库Native的自增实现方式， EF-ORM默认Identity和Sequence方式都等同于Auto。除非用户禁用Native支持功能，即在jef.properties中配置
+~~~
+db.autoincrement.native=false
+~~~
 
- 
+**3. 按本地数据库能支持的方式实现自增**
 
-**3****、按本地数据库能支持的方式实现自增**
+​	对于AOTU类型，按 数据库列自增 > Sequence > Table这样的优先级，使用数据库能支持的方式实现自增。
 
-对于AOTU类型，按 数据库列自增 > Sequence > Table这样的优先级，使用数据库能支持的方式实现自增。
+​	对于Sequence类型，按 Sequence > Table这样的优先级，使用数据库能支持的方式实现自增。
 
-对于Sequence类型，按 Sequence > Table这样的优先级，使用数据库能支持的方式实现自增。
+​	对于Table类型，使用Table模拟Sequence方式实现自增。由于默认情况下数据库多少都会支持优先度更高的两种特性之一。所以Table方式会很少用到。
 
-对于Table类型，使用Table模拟Sequence方式实现自增。由于默认情况下数据库多少都会支持优先度更高的两种特性之一。所以Table方式会很少用到。
 
- 
-
-4、**不使用数据库列自增方式的场合******
+**4. 不使用数据库列自增方式的场合**
 
 以下两种情况下，EF-ORM会认为列自增特性不可使用
 
-l  数据库方言中指定不支持的，如Oracle，这是大家容易想到的。
+* 数据库方言中指定不支持的，如Oracle，这是大家容易想到的。
+* 对象开启了分库分表功能的，由于分库分表后列自增值不能保证唯一性，因此会认为不支持。
 
-l  对象开启了分库分表功能的，由于分库分表后列自增值不能保证唯一性，因此会认为不支持。
-
-#### [3.1.2.4. Sequence或Table下的其他配置
+#### 3.1.2.4. Sequence或Table下的其他配置
 
 可以用JPA注解@SequenceGenerator或@TableGenerator两者，为自增值设置Sequence名或表名。
 
 例如：
 
+~~~java
+	@GeneratedValue(strategy = GenerationType.TABLE)
+	@TableGenerator(name = "AA1", initialValue = 1, allocationSize = 10, valueColumnName = "TABLE", pkColumnValue = "SEQ_VALUE", table = "T_SEQ_1")
+	private int tableSeq;     //指定生成Sequence的表名为T_SEQ_1
+
+	@GeneratedValue(strategy = GenerationType.SEQUENCE)
+	@SequenceGenerator(name = "VVVV", sequenceName = "SEQ_A1", initialValue = 1000)
+	private int seq;          //指定SEQUENCE的名称为SEQ_A1
+~~~
+
     通过这种方式，您也可以让多张表共享一个Sequence或Table。
 
- 
+ 	需要注意的是，@SequenceGenerator仅在GenerateType为SEQUENCE时生效，@TableGenerator仅在GenerateType为TABLE时生效。这里的GenerateType不是指你注解里写的是什么，而是按照3.1.2.2的简化规则计算后生效。 也就是说，这两个注解不会影响EF-ORM用什么方式来实现自增，只会在确定自增方式之后，调整自增的实现参数。
+​	默认情况下，您都不需要配置这两项内容，EF-ORM全局配置参数中可以配置命名模板，会根据模板来计算Sequence的名称。如果您单独配置了Sequence的名称，那么会覆盖全局配置。但从项目实践看，我们更建议您使用模板的方式，全局性的命名Sequence。
+​	默认情况下，全局Sequence的名称为“%_SEQ”,其中%是表的名称。也就是说，名为”TABLE1”的表，其使用Sequence为”TABLE_SEQ”。
 
-需要注意的是，@SequenceGenerator仅在GenerateType为SEQUENCE时生效，@TableGenerator仅在GenerateType为TABLE时生效。这里的GenerateType不是指你注解里写的是什么，而是按照3.1.2.2的简化规则计算后生效。 也就是说，这两个注解不会影响EF-ORM用什么方式来实现自增，只会在确定自增方式之后，调整自增的实现参数。
+​	如果表的名称大于26个字符，会截取前26个字符。如果你有两张表名称达到或超过26个字符，并且前26个字符都是一样的，那么这两张表会公用同一个SEQUENCE。这是为了防止出现SEQUENCE名称大于30个字符，在Oracle下你无法创建大于30个字符的数据库对象。
+​	前面既然说了Sequence名称模板默认为”%_SEQ”，那也意味着您可以修改名称模板，比如您可以把它改为”S\_%” 。修改方法是jef.properties中。
 
-默认情况下，您都不需要配置这两项内容，EF-ORM全局配置参数中可以配置命名模板，会根据模板来计算Sequence的名称。如果您单独配置了Sequence的名称，那么会覆盖全局配置。但从项目实践看，我们更建议您使用模板的方式，全局性的命名Sequence。
+~~~
+sequence.name.pattern=S_% 
+~~~
 
-默认情况下，全局Sequence的名称为“%_SEQ”,其中%是表的名称。也就是说，名为”TABLE1”的表，其使用Sequence为”TABLE_SEQ”。
+​	对于Table模拟Sequence，也可以全局配置， 可以是全局一张表实现所有Table Sequence值。例如创建一张名为GLOBAL_SEQ_TABLE的表，要启用此功能，可以在jef.properties中
 
- 
-
-如果表的名称大于26个字符，会截取前26个字符。如果你有两张表名称达到或超过26个字符，并且前26个字符都是一样的，那么这两张表会公用同一个SEQUENCE。这是为了防止出现SEQUENCE名称大于30个字符，在Oracle下你无法创建大于30个字符的数据库对象。
-
-前面既然说了Sequence名称模板默认为”%_SEQ”，那也意味着您可以修改名称模板，比如您可以把它改为”S_%” 。修改方法是jef.properties中。
-
- 
-
-对于Table模拟Sequence，也可以全局配置， 可以是全局一张表实现所有Table Sequence值。例如创建一张名为GLOBAL_SEQ_TABLE的表，要启用此功能，可以在jef.properties中
-
- 
+~~~
+db.public.sequence.table=GOOBAL_SEQ_TABLE
+~~~
 
 综上所述，一般情况下，我们不需要使用@SequenceGenerator 和 @TableGenerator注解。
 
-#### [3.1.2.5. Sequence或Table的性能优化
+#### 3.1.2.5. Sequence或Table的性能优化
 
-**Hilo****算法**
+**Hilo算法**
 
-熟悉数据库的人都知道，大量数据并发插入时，频繁到数据库中去获取Seqence性能是很差的。
+​	熟悉数据库的人都知道，大量数据并发插入时，频繁到数据库中去获取Seqence性能是很差的。
+​	某H框架支持hilo算法来优化Sequence的取值性能，原理是对获得到的值乘以系数，将值的范围放大后自动填充范围内的值，从而一次访问数据库客户端能得到多个不重复的序列值。
+​	在EF-ORM中，将Hilo算法作为一种修饰器。当使用Table和Sequence两种方式，都可以添加Hilo算法的修饰。
+​	比如:
 
-某H框架支持hilo算法来优化Sequence的取值性能，原理是对获得到的值乘以系数，将值的范围放大后自动填充范围内的值，从而一次访问数据库客户端能得到多个不重复的序列值。
+~~~java
+@Id
+@GeneratedValue(strategy = GenerationType.SEQUENCE)
+@HiloGeneration(maxLo=20)
+private int idSeqHilo;
+~~~
 
-在EF-ORM中，将Hilo算法作为一种修饰器。当使用Table和Sequence两种方式，都可以添加Hilo算法的修饰。
+​	或者:
 
-比如
+~~~java
+@Id
+@GeneratedValue(strategy = GenerationType.TABLE)
+@HiloGeneration(maxLo=20)
+private int id;
+~~~
 
-或者
+​	其中maxLo的含义和H框架相同。每次都是生成value *(maxLo + 1) 到 value * (maxLo +2)范围内的值，算法此处不解释，请自行百度。
+​	@HiloGeneration仅对SEQUENCE和TABLE两种算法有效，如果按上一节的规则，最终使用数据库列自增方式，那么@HiloGenerator注解会失效。比如我们可以配置下面的自增主键：
 
-其中maxLo的含义和H框架相同。每次都是生成value *(maxLo + 1) 到 value * (maxLo +2)范围内的值，算法此处不解释，请自行百度。
+~~~java
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	@HiloGeneration(maxLo=20)
+	@SequenceGenerator(name = "S1", sequenceName = "S_TABLE1", initialValue = 1000)
+	@TableGenerator(name = "S2", valueColumnName = "TABLE", pkColumnValue = "SeqValue", table = "TABLE_SEQ_GOLBAL")
+	private int id;
+~~~
 
-   @HiloGeneration仅对SEQUENCE和TABLE两种算法有效，如果按上一节的规则，最终使用数据库列自增方式，那么@HiloGenerator注解会失效。比如我们可以配置下面的自增主键：
+​	上面的注解配置，在不同数据库下会产生不同的表现——
 
-上面的注解配置，在不同数据库下会产生不同的表现——
+​	在MySQL下，@HiloGeneration、@SequenceGenerator、@TableGenerator都不会生效。（使用自增列，故这些生成规则都无效）
 
-在MySQL下，@HiloGeneration、@SequenceGenerator、@TableGenerator都不会生效。（使用自增列，故这些生成规则都无效）
+​	在Oracle下，@HiloGenerator和@SequenceGenerator会生效。（Oracle下默认使用SEQUENCE）
 
-在Oracle下，@HiloGenerator和@SequenceGenerator会生效。（Oracle下默认使用SEQUENCE）
-
-如果这张表启用了分库分表功能，那么在Oracle下情况不变。而在MySQL下，因为MySQL不支持Sequence，最终实际上变为TABLE模式，此时@HiloGenerator和@TableGenerator即会生效。
-
- 
+​	如果这张表启用了分库分表功能，那么在Oracle下情况不变。而在MySQL下，因为MySQL不支持Sequence，最终实际上变为TABLE模式，此时@HiloGenerator和@TableGenerator即会生效。
 
 **步长跳跃**
 
-这是另一种优化方式，步长跳跃的意思就是让Sequence或Table中的值不是每次自增1，而是一次性跳好几个数值，然后由EF-ORM自动填补这中间的空白整数。也可以起到一次访问数据库获得多个序列值。
+​	这是另一种优化方式，步长跳跃的意思就是让Sequence或Table中的值不是每次自增1，而是一次性跳好几个数值，然后由EF-ORM自动填补这中间的空白整数。也可以起到一次访问数据库获得多个序列值。
+​	使用Hilo的情况，如果随意修改Hilo的参数，很有可能造成主键冲突。此外数据库中的序列值和表中的ID之间也很难对应起来。从数据库维护角度来看很不直观，因此EF-ORM更为推荐步长跳跃这种方式来优化序列值的获取。
+​	事实上，在使用TABLE方式时，EF-ORM已经用了这个方法一次性将表中的Value值加上较大的一个值。这个值就是 sequence.batch.size，默认20，也就是说一次访问数据库就获得20个序列值。
+​	而如果使用数据库原生的Sequence，那么如何优化呢？
+​	对于Oracle数据库，你可以直接将Sequence的步长调节为更大的值，例如40.
 
-使用Hilo的情况，如果随意修改Hilo的参数，很有可能造成主键冲突。此外数据库中的序列值和表中的ID之间也很难对应起来。从数据库维护角度来看很不直观，因此EF-ORM更为推荐步长跳跃这种方式来优化序列值的获取。
+~~~
+alter sequence TABLE1_SEQ increment by 40 cache 20;
+~~~
 
-事实上，在使用TABLE方式时，EF-ORM已经用了这个方法一次性将表中的Value值加上较大的一个值。这个值就是 sequence.batch.size，默认20，也就是说一次访问数据库就获得20个序列值。
+​	EF-ORM会在首次使用Sequence前，检查Sequence的步长，这是自动的。非Oracle下，EF-ORM不会主动检查步长。
 
-而如果使用数据库原生的Sequence，那么如何优化呢？
+​	如果在非Oracle数据下使用Sequence跳跃，例如Postgres，可以使用jef.properties参数
 
-对于Oracle数据库，你可以直接将Sequence的步长调节为更大的值，例如40.
+​	*#当设置为-1时，强制检查Sequence步长；0时仅检查Oracle步长；1时步长固定为1；其他>0数			值：步长固定为配置的值*   
 
- 
+~~~
+db.sequence.step=-1
+~~~
 
-EF-ORM会在首次使用Sequence前，检查Sequence的步长，这是自动的。非Oracle下，EF-ORM不会主动检查步长。
+​	当配置为>0的数值时，Sequence步长固定为指定值（不推荐这样做），因为这样配置时如果和数据库中的Sequence实际步长不匹配，可能出现错误。
+​	正常情况下，如果步长为5，selectX_SEQ.nextVal from dual如果返回结果=10，那么实际上EF-ORM会获得10,11,12,13,14这样五个值。再次调用后，数据库端的Sequence值=15，实际使用序列号到19为止。
+​	由于非Oracle数据库没有有效的Sequence步长检测机制，在非oracle上检测步长将消耗掉一个Sequence值。
+​	在Oracle上，如果数据库用户权限被严格限制，可能会无权限访问user_sequences视图，此时您需要将db.sequence.step配置为一个正数来避免自动检查步长。
 
-如果在非Oracle数据下使用Sequence跳跃，例如Postgres，可以使用jef.properties参数
-
- 
-
-当配置为>0的数值时，Sequence步长固定为指定值（不推荐这样做），因为这样配置时如果和数据库中的Sequence实际步长不匹配，可能出现错误。
-
-正常情况下，如果步长为5，selectX_SEQ.nextVal from dual如果返回结果=10，那么实际上EF-ORM会获得10,11,12,13,14这样五个值。再次调用后，数据库端的Sequence值=15，实际使用序列号到19为止。
-
-由于非Oracle数据库没有有效的Sequence步长检测机制，在非oracle上检测步长将消耗掉一个Sequence值。
-
-在Oracle上，如果数据库用户权限被严格限制，可能会无权限访问user_sequences视图，此时您需要将db.sequence.step配置为一个正数来避免自动检查步长。
-
-#### [3.1.2.6. 配置方法和总结
+#### 3.1.2.6. 配置方法和总结
 
 对前面的种种规则比较含糊的同学，直接看这一节就行了。
 
-| ** **                | **H****框架中的用法******                      | **EF-ORM****对应******                     | **EF-ORM****下特点******                    |
+|                      | **H框架中的用法**                              | **EF-ORM对应**                             | **EF-ORM下特点**                            |
 | -------------------- | ---------------------------------------- | ---------------------------------------- | ---------------------------------------- |
 | identity             | 数据库列自增特性，不支持Oracle。                      | @GeneratedValue(strategy = GenerationType.IDENTITY) | 在Oracle下自动转换为Sequence                    |
 | sequence             | 仅在支持SEQUENCE的数据库上可用，必须指定Name。如果没有指定则默认为全局唯一的’hibernate_sequence’。 | @GeneratedValue(strategy = GenerationType.SEQUENCE) | Oracle等支持Sequence的数据库下Sequence会自动命名、自动创建。  MySQL等不支持的数据库下自动转换为Identity或Table。 |
@@ -711,17 +1131,63 @@ EF-ORM会在首次使用Sequence前，检查Sequence的步长，这是自动的�
 
 结论，对于大部分情况，大家只要对自增主键配置
 
+~~~
+@Id
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+~~~
+
 就行了，别的啥都不用操心了。在常见数据库中，如果是在Oracle下发现获取Sequence不够快，那么可以按照3.1.2.5的方法进行优化。
 
-### [3.1.3.   查询操作
+### 3.1.3.   查询操作
 
-在了解了单表插入和主键自增后，我们来看其他操作。在类jef.databse.Session当中，有着
+​	在了解了单表插入和主键自增后，我们来看其他操作。在类jef.databse.Session当中，有着load(T entity)和select(T entity)方法。之前的例子中我们一直用这个方法来查询插入的记录。EF-ORM会按照对象中存在的主键进行查询。这是不是这个方法的唯一用法呢？除了这个方法之外，有没有其他方法按主键查询对象呢？
 
-load(T entity)和select(T entity)方法。之前的例子中我们一直用这个方法来查询插入的记录。EF-ORM会按照对象中存在的主键进行查询。这是不是这个方法的唯一用法呢？除了这个方法之外，有没有其他方法按主键查询对象呢？
+#### 3.1.3.1. 按主键或模板查询
 
-#### [3.1.3.1. 按主键或模板查询
+​	其实、前面用到的load方法和select方法并不仅仅是按照主键进行数据查询，它们其实是将传入对象当做一个模板来使用的，参见下面一组例子。
 
-其实、前面用到的load方法和select方法并不仅仅是按照主键进行数据查询，它们其实是将传入对象当做一个模板来使用的，参见下面一组例子。
+~~~java
+	@Test
+	public void testLoadAndSelect() throws SQLException{
+		//创建一个模板对象,当模板对象主键有值时，按模板对象的主键查询。
+		{
+			Student query=new Student();
+			query.setId(3); //id是主键。
+			Student st=db.load(query);	//按主键查询返回单条记录
+		}
+		//直接按主键查询,当对象为复合主键时,可传入多个键值。
+		//键值数量必须和复合主键的数量一致，顺序按field在emun Field中的出现顺序。
+		{
+			Student st=db.load(Student.class, 3);
+			StudentToLesson stl=db.load(StudentToLesson.class, 3, 1);
+		}
+		//load方法都是查询单值的，select方法可以查询多值
+		//创建一个模板对象,当模板对象的字段有值时，按这些字段查询
+		//类似于某H框架的 findByExample()。
+		{
+			Student query=new Student();
+			query.setGender("F");
+			query.setGrade("2");
+			List<Student> sts=db.select(query);//查出所有Gender='F' and grade='2'的记录。
+		}
+		//如果一个对象的复合主键没有全部赋值，那么也当做普通字段对待
+		//最终效果和findByExample()一样。
+		{
+			StudentToLesson query=new StudentToLesson();
+			query.setLessonId(1);
+			List<StudentToLesson> sts=db.select(query);//查出所有lessonId='1'的记录。
+			
+		}
+		//如果一个对象的主键都赋了值，非主键字段也赋值。那么非主键字段不会作为查询条件
+		//因为框架认为主键字段足够定位记录，所以非主键不用作查询条件。
+		{
+			Student query=new Student();
+			query.setGrade("1");
+			query.setId(12);
+			List<Student> sts=db.select(query); //查询条件为 id=12。grade不用作查询条件
+		}
+	}
+~~~
 
 从上面的例子，我们可以发现
 
@@ -733,17 +1199,35 @@ load(T entity)和select(T entity)方法。之前的例子中我们一直用这�
 
 4.     复合主键必须全部都赋值才认为主键就绪，否则也是将传入对象当做模板查询。
 
-#### [3.1.3.2. 更复杂的条件
+#### 3.1.3.2. 更复杂的条件
 
-按主键或模板查询能适应不少查询场景，但还远远不够。比如我们要查询所有姓名中带有”Jhon”字样的学生。用SQL语句表达的话，就是
+​	按主键或模板查询能适应不少查询场景，但还远远不够。比如我们要查询所有姓名中带有”Jhon”字样的学生。用SQL语句表达的话，就是
 
-对象Student看似无法描述这种带有运算符的条件。但不要忘了我们的Student已经实现了jef.database.IqueryableEntity接口，这使Student对象携带复杂的条件成为可能。
+~~~
+where name like ‘%Jhon%’
+~~~
+
+​	对象Student看似无法描述这种带有运算符的条件。但不要忘了我们的Student已经实现了jef.database.IqueryableEntity接口，这使Student对象携带复杂的条件成为可能。
 
 代码清单： src/main/java/org/easyframe/tutorial/lesson2/Case1.java
 
-在上例中，我们从Student对象中通过getQuery()得到一个Query对象，我们可以在这个Query对象上添加各种复杂条件。我们在后面的章节可以了解到，这里可以放入几乎SQL语句所能写出的所有查询条件和修饰，例如Order By等等。Query对象的出现，让我们意识到不仅仅是复杂条件可以被对象所描述。它会带来更多的灵活用法。
+~~~java
+@Test
+public void testSelect_Like() throws SQLException{
+    Student query=new Student();
+    //在Student对象中添加Like条件
+    query.getQuery().addCondition(
+    Student.Field.name,Operator.MATCH_ANY, "Jhon"
+    );
+    List<Student> sts=db.select(query);
 
-在Query对象中，我们可以添加条件，每个条件中可以包含运算符（Operator），在jef.database.Condition.Operator类中，定义了以下几种运算符
+    Assert.assertEquals(sts.size(), db.count(query.getQuery()));
+}
+~~~
+
+​	在上例中，我们从Student对象中通过getQuery()得到一个Query对象，我们可以在这个Query对象上添加各种复杂条件。我们在后面的章节可以了解到，这里可以放入几乎SQL语句所能写出的所有查询条件和修饰，例如Order By等等。Query对象的出现，让我们意识到不仅仅是复杂条件可以被对象所描述。它会带来更多的灵活用法。
+
+​	在Query对象中，我们可以添加条件，每个条件中可以包含运算符（Operator），在jef.database.Condition.Operator类中，定义了以下几种运算符
 
 | **运算符**          | **对应SQL**                   | **含义**    | **要求参数类型**                               |
 | ---------------- | --------------------------- | --------- | ---------------------------------------- |
@@ -762,256 +1246,452 @@ load(T entity)和select(T entity)方法。之前的例子中我们一直用这�
 | **IS_NULL**      | is null                     | 为NULL     | 无                                        |
 | **IS_NOT_NULL**  | is not null                 | 不为NULL    | 无                                        |
 
-这些运算符都可以通过addCondition方法加入到条件中。在传入参数时，注意部分运算符是只针对集合操作进行的，必须传入集合对象。
+​	这些运算符都可以通过addCondition方法加入到条件中。在传入参数时，注意部分运算符是只针对集合操作进行的，必须传入集合对象。
 
-部分操作仅针对文本，如果传入非String对象，将被强制转换为String对象处理。
+​	部分操作仅针对文本，如果传入非String对象，将被强制转换为String对象处理。
 
-## [3.2. 你不是在操作‘对象池’
+## 3.2. 你不是在操作‘对象池’
 
-前面的例子中EF-ORM表现得和H框架非常相似，但是前面已经讲过，EF-ORM是基于数据库和SQL的，它的API是对JDBC的封装。而H框架则是视图让你面对一个“对象池”（一级缓存），要求你**按主键**来操作每一个对象。而EF-ORM完全没有这个限制，getQuery()带来的是概念上的变化。
+​	前面的例子中EF-ORM表现得和H框架非常相似，但是前面已经讲过，EF-ORM是基于数据库和SQL的，它的API是对JDBC的封装。而H框架则是视图让你面对一个“对象池”（一级缓存），要求你**按主键**来操作每一个对象。而EF-ORM完全没有这个限制，getQuery()带来的是概念上的变化。
 
-下面是一个例子
+​	下面是一个例子
 
 代码清单：  src/main/java/org/easyframe/tutorial/lesson2/Case1.java
 
-上例中，两次数据库操作对应的SQL语句已经写在注释代码里了。
+~~~java
+@Test
+public void testUpdateAndDelete_WithLike() throws SQLException{
+      Student s=new Student();
+      s.setGender("F");
+      s.getQuery().addCondition(Student.Field.name,Operator.MATCH_ANY, "Mary");
 
-我们可以发现，同样是我们前几章介绍的update方法和delete方法，在有了Query对象后产生了不同于之前的效果。它们并不仅仅只能按主键更新或删除某条记录。事实上在上例中，Student这个对象并不代表任何一个“学生”，它就是一条完整SQL语句，一次完整的数据库操作请求。
+      db.update(s);
+      //相当于执行
+      //update STUDENT set GENDER = 'F' where NAME like '%Mary%'
 
-现在明白了IQueryableEntity的含义吗？每个Entity不仅仅是一条记录的载体，通过getQuery()方法，Entity同时也可以表现为一个SQL操作，这个操作并不仅仅限于单条记录。
+      s.getQuery().clearQuery();//清除查询条件
+      s.getQuery().addCondition(Student.Field.id,Operator.IN, new int[]{2,3,4});
+      db.delete(s);
+      //相当于执行
+      //delete from STUDENT where ID in (2, 3, 4)
+}
+~~~
 
-默认情况下，Entity并不对应任何Query，但如果您将其用于查询、更新、删除操作，或者调用其 getQuery()方法，就可以让一个Query对象和Entity绑定。通过getQuery()方法和Query的getInstance()方法，你可以在互相绑定的两个对象之间转来转去。如下图：
+​	上例中，两次数据库操作对应的SQL语句已经写在注释代码里了。
 
- 
+​	我们可以发现，同样是我们前几章介绍的update方法和delete方法，在有了Query对象后产生了不同于之前的效果。它们并不仅仅只能按主键更新或删除某条记录。事实上在上例中，Student这个对象并不代表任何一个“学生”，它就是一条完整SQL语句，一次完整的数据库操作请求。
 
-图3-1 Entity和Query的关系
+​	现在明白了IQueryableEntity的含义吗？每个Entity不仅仅是一条记录的载体，通过getQuery()方法，Entity同时也可以表现为一个SQL操作，这个操作并不仅仅限于单条记录。
+
+​	默认情况下，Entity并不对应任何Query，但如果您将其用于查询、更新、删除操作，或者调用其 getQuery()方法，就可以让一个Query对象和Entity绑定。通过getQuery()方法和Query的getInstance()方法，你可以在互相绑定的两个对象之间转来转去。如下图：
+
+​			 ![3.2-1](images\3.2-1.png)
+
+​					    图3-1 Entity和Query的关系
 
 这对对象，在不同的操作场景下，用法是这样的——
 
-| **场合****** | **处理规则******                             |
+| **场合**     | **处理规则**                                 |
 | ---------- | ---------------------------------------- |
 | **insert** | Query对象无效。总是将Entity当做一条待插入的记录。           |
 | **update** | Query部分是where条件，Entity中被设值的数据是update语句的set部分。  如果没有Query部分，那么Entity主键作为where条件，其他字段作为set部分。  如果Query部分和主键都没有，那么不构成一个update请求(抛出异常) |
 | **select** | Query部分是where条件  如果Query部分不存在，那么Entity主键作为where条件。  如果主键没有设值，那么Entity作为模板，按其他设了值的字段查询。  如果Entity和Query都没有设置任何值，那么不构成一个select请求（抛出异常） |
 | **delete** | 和select规则相同                              |
 
-也就是说，前面的例子中，我们传入对象，并且按主键实现update、delete操作时，其实并不是像H框架那样在操作对象池，而是传入了一个SQL请求，是在操作一个关系型数据库。
+​	也就是说，前面的例子中，我们传入对象，并且按主键实现update、delete操作时，其实并不是像H框架那样在操作对象池，而是传入了一个SQL请求，是在操作一个关系型数据库。
 
-看到这里大家应该已经明白为什么说EF-ORM和其他ORM不同的根本原因。EF-ORM的API，封装的其实是SQL操作。前面的基于对象主键的CRUD操作，其实是用SQL规则在模拟对象操作的一种“拟态”。
+​	看到这里大家应该已经明白为什么说EF-ORM和其他ORM不同的根本原因。EF-ORM的API，封装的其实是SQL操作。前面的基于对象主键的CRUD操作，其实是用SQL规则在模拟对象操作的一种“拟态”。
 
-这是EF-ORM和H框架的根本性不同。也正是因为这些不同，我们可以解决很多其他ORM中不够灵活的问题，可以高效的操作关系型数据库。比如
+​	这是EF-ORM和H框架的根本性不同。也正是因为这些不同，我们可以解决很多其他ORM中不够灵活的问题，可以高效的操作关系型数据库。比如
 
-等效于update set gender=’f’ where name=’Mary’。而在某H框架的API中，先不谈非主键是否可用作update条件的问题，即便是用主键做update条件，H框架也会提示你这是一个游离对象，不能直接做update。也就是说它规定了你只能先按主键查出对象(放入一级缓存)，再按主键写入到数据库里。试想如果我们要批量更新多条记录，对于这种场景循环逐条处理，效率会怎么样。
+~~~java
+Student s=new Student();’
+s.getQuery().addCondition(Student.Field.name,Operator.EQUALS, "Mary");
+s.setGender("F");
+db.update(s);
+~~~
 
-当然了某H框架还有法宝，用一种Query Language(HQL)来封装另一种Query Language(SQL)，这种想法也是挺有“创意”的。不过也不能老抓着人家的黑历史不放。事实上业界对于使用API和xQL来封装数据库操作的优劣早有定论。JSR 317 JPA 2.0规范中增加了Criteria API，其实是比xQL更方便并能提高软件可维护性的手段。H框架除了实现JPA 2.0规范以外，本身也有非常强大的Criteria API。个人认为H框架仍然是业界最好的ORM，没有之一。不过是觉得EF-ORM更适应在性能和数据规模有较高要求的行业而已。
+​	等效于update set gender=’f’ where name=’Mary’。而在某H框架的API中，先不谈非主键是否可用作update条件的问题，即便是用主键做update条件，H框架也会提示你这是一个游离对象，不能直接做update。也就是说它规定了你只能先按主键查出对象(放入一级缓存)，再按主键写入到数据库里。试想如果我们要批量更新多条记录，对于这种场景循环逐条处理，效率会怎么样。
 
-回归正题，在理解了Query的作用之后，我们可以看一下Query的简单用法。
+​	当然了某H框架还有法宝，用一种Query Language(HQL)来封装另一种Query Language(SQL)，这种想法也是挺有“创意”的。不过也不能老抓着人家的黑历史不放。事实上业界对于使用API和xQL来封装数据库操作的优劣早有定论。JSR 317 JPA 2.0规范中增加了Criteria API，其实是比xQL更方便并能提高软件可维护性的手段。H框架除了实现JPA 2.0规范以外，本身也有非常强大的Criteria API。个人认为H框架仍然是业界最好的ORM，没有之一。不过是觉得EF-ORM更适应在性能和数据规模有较高要求的行业而已。
 
- 
+​	回归正题，在理解了Query的作用之后，我们可以看一下Query的简单用法。
 
-### [3.2.1.   查询条件与字段排序
+### 3.2.1.   查询条件与字段排序
 
 查询免不了Order by, groupby, having等等。这里先说order by。
 
 代码清单：src/main/java/org/easyframe/tutorial/lesson2/Case1.java
 
+~~~java
+@Test
+public void testSelect_LikeAndEtc() throws SQLException {
+	Student s = new Student();
+	s.getQuery()
+		.addCondition(Student.Field.name, Operator.MATCH_ANY, "Jhon")   //name like ‘%Jhon%’
+		.addCondition(Student.Field.id, Operator.LESS, 100)            // id < 100
+		.orderByDesc(Student.Field.grade);                             //设置Order By 
+	List<Student> sts = db.select(s);
+
+	Assert.assertEquals(sts.size(), db.count(s.getQuery()));
+}
+~~~
+
 对应的SQL语句如下
 
- 
+~~~
+select t.* from STUDENT t where t.NAME like ? escape '/'  and t.ID<? order by t.GRADE DESC
+~~~
 
-那么，在这个案例中，我们如果增加一个条件，要求 student的grade=’3’，如何写呢？
+​	那么，在这个案例中，我们如果增加一个条件，要求 student的grade=’3’，如何写呢？
 
 代码清单：src/main/java/org/easyframe/tutorial/lesson2/Case1.java
+
+~~~java
+@Test
+public void testSelect_LikeAndEtc() throws SQLException{
+	Student s=new Student();
+	s.setGrade("3"); //希望增加一个条件
+	s.getQuery().addCondition(Student.Field.name,Operator.MATCH_ANY, "Jhon"); //name like ‘%Jhon%’
+	s.getQuery().addCondition(Student.Field.id,Operator.LESS, 100); // id < 100
+	s.getQuery().orderByDesc(Student.Field.grade);   //设置Order By 
+	List<Student> sts=db.select(s);
+		
+	Assert.assertEquals(sts.size(), db.count(s.getQuery()));
+}
+~~~
 
 上面的代码实际执行后，会发现无法达成预期目的。grade=’3’这个不会成为条件。
 
 从前面的“拟态“规则中我们可以推出
 
- 
-
-* *
-
 *当Query对象中有条件时，对象中的所有字段值将不再作为条件。*
-
-* *
-
-
 
 因此，在这个例子中，要增加一个条件，您必须这样写
 
-### [3.2.2.   更新主键列
+~~~java
+@Test
+public void testSelect_LikeAndEtc2() throws SQLException{
+	Student s=new Student();
+	//s.setGrade("3"); //在已经使用了Query对象中的情况下，此处设值不作为查询条件
 
-在其他的基于主键管理Entity的ORM中，使用API去更新对象的主键是不可能的，但是在基于SQL的EF-ORM中，这成为可能
+	//添加 grade='3'这个条件。当运算符为 = 时，中间的运算符可以省略不写。
+	s.getQuery().addCondition(Student.Field.grade,"3"); 
+		
+	s.getQuery().addCondition(Student.Field.name,Operator.MATCH_ANY, "Jhon");
+	s.getQuery().addCondition(Student.Field.id,Operator.LESS, 100);
+	List<Student> sts=db.select(s);
+		
+	Assert.assertEquals(sts.size(), db.count(s.getQuery()));
+}
+~~~
+
+### 3.2.2.   更新主键列
+
+​	在其他的基于主键管理Entity的ORM中，使用API去更新对象的主键是不可能的，但是在基于SQL的EF-ORM中，这成为可能。
 
 代码清单：src/main/java/org/easyframe/tutorial/lesson2/Case1.java
 
-上例中展示了旧的主键值作为条件，去替换新的主键值的用法。这是基于SQL封装框架的思想体现。
+~~~java
+@Test
+public void testUpdatePrimaryKey()  throws SQLException{
+	Student q=new Student();
+	q.setId(1);
+	q=db.load(q);
+		
+	q.getQuery().addCondition(Student.Field.id, q.getId());
+	q.setId(100);
+		
+	db.update(q); //将id（主键）修改为100
+	//SQL：update STUDENT set ID = 100 where ID= 1
+}
+~~~
 
-### [3.2.3.   特殊条件: AllRecordsCondition
+​	上例中展示了旧的主键值作为条件，去替换新的主键值的用法。这是基于SQL封装框架的思想体现。
+
+### 3.2.3.   特殊条件: AllRecordsCondition
 
 最简单的，我们可以这样查询出所有的学生
 
- 
+~~~java
+//查出全部学生
+List<Student> allStudents=db.selectAll(Student.class);
+~~~
 
-那么如果我们需要学生按照学号正序排列，这个selectAll的API就无法提供了。实际上，selectAll这个方法是可有可无的，它可以用普通的select()方法来代替。按照以前掌握的技巧，您可能会这样写
+​	那么如果我们需要学生按照学号正序排列，这个selectAll的API就无法提供了。实际上，selectAll这个方法是可有可无的，它可以用普通的select()方法来代替。按照以前掌握的技巧，您可能会这样写
 
-不过您会收到一个错误消息
+~~~java
+//按学号顺序查出全部学生
+Student st=new Student();
+st.getQuery().orderByAsc(Student.Field.id);
+List<Student> all=db.select(st);
+~~~
 
-您可能会问，我就是要查全部啊，怎么还要放条件到Query里去呢？
+​	不过您会收到一个错误消息
 
-在EF-ORM中，有一个特殊的条件，名叫 AllRecordsCondition，它是这样使用的。
+~~~
+Illegal usage of Query object, must including any condition in query.
+~~~
 
- 
+​	您可能会问，我就是要查全部啊，怎么还要放条件到Query里去呢？
+
+​	在EF-ORM中，有一个特殊的条件，名叫 AllRecordsCondition，它是这样使用的。
 
 代码清单：src/main/java/org/easyframe/tutorial/lesson2/Case2.java
 
-这里，通过setAllRecordsCondition()。指定了查询条件。
+~~~java
+@Test
+public void testAllRecords() throws SQLException{
+	Student st=new Student();
+	st.getQuery().setAllRecordsCondition();  //设置为查全部学生
+	st.getQuery().orderByAsc(Student.Field.id); //按学号排序
+	List<Student> all=db.select(st);
+	System.out.println("共有学生"+all.size());
+}
+~~~
 
-为什么这么设计？不传入任何条件，就查出全部记录，这不是很方便吗？
+​	这里，通过setAllRecordsCondition()。指定了查询条件。
 
-这个设计的本意是为了防止用户出现误用，我们假定这样一种场景：
+​	为什么这么设计？不传入任何条件，就查出全部记录，这不是很方便吗？
+
+​	这个设计的本意是为了防止用户出现误用，我们假定这样一种场景：
 用户在查询前，通过若干if分支对条件进行赋值。如果用户没有考虑到的一条分支下，没有产生任何有效条件，而此时数据库中有大约一千万条记录。
 
-大家可以想一想，是用户该次操作失败好一些呢，还是整个服务器因为内存溢出而退出要好一些？正是因为这种场景，我们希望开发人员在使用框架时想清楚，能不能承受将全部数据加载到内存的开销。
+​	大家可以想一想，是用户该次操作失败好一些呢，还是整个服务器因为内存溢出而退出要好一些？正是因为这种场景，我们希望开发人员在使用框架时想清楚，能不能承受将全部数据加载到内存的开销。
 
-这个API的设计有人喜欢有人不喜欢。不过您可以在jef.properties中加上一行，让无条件查询等效于查询全部记录。
+​	这个API的设计有人喜欢有人不喜欢。不过您可以在jef.properties中加上一行，让无条件查询等效于查询全部记录。
 
-### [3.2.4.   QueryBuilder的使用
+~~~
+allow.empty.query=true
+~~~
 
-在使用EF-ORM的查询API进行数据操作时，您必然会接触到一个工具类QueryBuilder。
+### 3.2.4.   QueryBuilder的使用
 
-QueryBuilder提供了很多基础方法，用来生成Condition、Query等。
-
-比如，前面我们都是用 一个Student对象来构造一个SQL操作的描述的。在了解了这个Student对象的本质，其实是一个SQL查询操作之后，我们可以换一个角度来看问题。
-
-这是前面出现过的代码（使用QueryBuilder之前）
-
+​	在使用EF-ORM的查询API进行数据操作时，您必然会接触到一个工具类QueryBuilder。QueryBuilder提供了很多基础方法，用来生成Condition、Query等。
+​	比如，前面我们都是用 一个Student对象来构造一个SQL操作的描述的。在了解了这个Student对象的本质，其实是一个SQL查询操作之后，我们可以换一个角度来看问题。
+​	这是前面出现过的代码（使用QueryBuilder之前）
 代码清单： src/main/java/org/easyframe/tutorial/lesson2/Case1.java
+
+~~~java
+@Test
+public void testSelect_LikeAndEtc2() throws SQLException{
+	Student s=new Student();
+	s.getQuery().addCondition(Student.Field.grade,"3"); 
+	s.getQuery().addCondition(Student.Field.name,Operator.MATCH_ANY, "Jhon");
+	s.getQuery().addCondition(Student.Field.id,Operator.LESS, 100);
+	s.getQuery().orderByDesc(Student.Field.grade);
+	List<Student> sts=db.select(s);
+		
+	Assert.assertEquals(sts.size(), db.count(s.getQuery()));
+}	
+~~~
 
 当改为使用QueryBuilder之后——
 
 代码清单： src/main/java/org/easyframe/tutorial/lesson2/Case1.java
 
-这样整个查询操作都以Query作为主体了。
+~~~java
+@Test
+public void testSelect_LikeAndEtc3() throws SQLException {
+	Query<Student> query = QueryBuilder.create(Student.class); 
 
-之前的所有条件运算符，都有在QueryBuilder中生成条件的方法
+	query.addCondition(QueryBuilder.eq(Student.Field.grade, "3"));
+	query.addCondition(QueryBuilder.matchAny(Student.Field.name, "Jhon"));
+		query.addCondition(QueryBuilder.lt(Student.Field.id, 100));
+		
+	query.orderByDesc(Student.Field.grade);
+	List<Student> sts = db.select(query);
 
-| **条件方法****** | **对应****Operator****中的运算符****** | **备注******  |
-| ------------ | ------------------------------- | ----------- |
-| eq()         | **EQUALS******                  | 等于          |
-| gt()         | **GREAT******                   | 大于          |
-| lt()         | **LESS******                    | 小于          |
-| ge()         | **GREAT_EQUALS******            | 等于          |
-| le()         | **LESS_EQUALS**                 | 小于等于        |
-| matchAny()   | **MATCH_ANY**                   | 匹配任意位置      |
-| matchStart() | **MATCH_START**                 | 匹配尾部        |
-| matchEnd()   | **MATCH_END**                   | 匹配尾部        |
-| in()         | **IN**                          | 属于          |
-| notin()      | **NOT_IN**                      | 不属于         |
-| ne()         | **NOT_EQUALS**                  | 不等于         |
-| between()    | **BETWEEN_L_L**                 | 介于..之间      |
-| isNull()     | **IS_NULL**                     | 为NULL       |
-| notNull()    | **IS_NOT_NULL**                 | 不为NULL      |
-| like()       | **无，可用SqlExpression()组合成条件**    | LIKE        |
-| or()         | **无**                           | 将多个条件以OR相连  |
-| and()        | **无**                           | 将多个条件以AND相连 |
-| not()        | **无**                           | 一个条件修饰为NOT  |
+	Assert.assertEquals(sts.size(), db.count(query));
+}
+~~~
 
- 
+​	这样整个查询操作都以Query作为主体了。
 
-QueryBuilder有13个字符，所以做了一个别名，我们可以将QueryBuilder简写为QB。QB和QueryBuilder使用上没有任何不同。例如，上面的示例还可以写成——
+​	之前的所有条件运算符，都有在QueryBuilder中生成条件的方法
 
-   
+| **条件方法**     | **对应Operator中的运算符**          | **备注**      |
+| ------------ | ---------------------------- | ----------- |
+| eq()         | **EQUALS**                   | 等于          |
+| gt()         | **GREAT**                    | 大于          |
+| lt()         | **LESS**                     | 小于          |
+| ge()         | **GREAT_EQUALS**             | 等于          |
+| le()         | **LESS_EQUALS**              | 小于等于        |
+| matchAny()   | **MATCH_ANY**                | 匹配任意位置      |
+| matchStart() | **MATCH_START**              | 匹配尾部        |
+| matchEnd()   | **MATCH_END**                | 匹配尾部        |
+| in()         | **IN**                       | 属于          |
+| notin()      | **NOT_IN**                   | 不属于         |
+| ne()         | **NOT_EQUALS**               | 不等于         |
+| between()    | **BETWEEN_L_L**              | 介于..之间      |
+| isNull()     | **IS_NULL**                  | 为NULL       |
+| notNull()    | **IS_NOT_NULL**              | 不为NULL      |
+| like()       | **无，可用SqlExpression()组合成条件** | LIKE        |
+| or()         | **无**                        | 将多个条件以OR相连  |
+| and()        | **无**                        | 将多个条件以AND相连 |
+| not()        | **无**                        | 一个条件修饰为NOT  |
 
-### [3.2.5.   Criteria API和查询语言
+​	QueryBuilder有13个字符，所以做了一个别名，我们可以将QueryBuilder简写为QB。QB和QueryBuilder使用上没有任何不同。例如，上面的示例还可以写成——
 
-    前面讲过，EF-ORM的API封装的其实是SQL操作。有朋友问：ORM框架顾名思义是将E-R的关系型结果转换为对象模型来操作，最好是映射成JDO一般，把大家从写SQL语句中解放出来。你怎么能把框架设计成这样？
+~~~java
+Query<Student> query = QB.create(Student.class);
 
-我的回答是：关系型数据库的设计有其经典的理论支持，也有众多的约束和性能局限，这些都是必须使用者去面对去解决的。如果完全像一个对象数据库操作，那么我们项目中根本不需要使用MySQL或是Oracle。NoSQL的数据存储满大街都是，对内存的使用率更高性能也更好。只满足主键操作的情况下，ORM根本连存在的意义都没有，redis,mongodb等大堆流行技术爱谁用谁。
+query.addCondition(QB.eq(Student.Field.grade, "3"));
+query.addCondition(QB.matchAny(Student.Field.name, "Jhon"));
+query.addCondition(QB.lt(Student.Field.id, 100));  
+~~~
 
-正是因为SQL和E-R思想的必要性，在实际项目中，使用H框架的人最后不过是从SQL中跳出，又掉进HQL里去。有什么被解放了？使用RDBMS的人，谁能不学习SQL，谁能不了解SQL?
+### 3.2.5.   Criteria API和查询语言
 
-SQL的思想（而不是语法）才是关系型数据存储的精髓，要在RDBMS上做出性能优秀的应用，不可能不掌握这种思想。正是因为这样，EF-ORM试图在保留SQL的思想、淡化SQL的语法的方向上封装JDBC。
+    	前面讲过，EF-ORM的API封装的其实是SQL操作。有朋友问：ORM框架顾名思义是将E-R的关系型结果转换为对象模型来操作，最好是映射成JDO一般，把大家从写SQL语句中解放出来。你怎么能把框架设计成这样？
 
-这包括了用JavaAPI代替查询语言解决SQL编译检查和开发效率的问题；用Java反射等特性解数据库行、列到数据对象的自动转换；使使用者更简单（而符合E-R关系）的方式操作数据库。
+​	我的回答是：关系型数据库的设计有其经典的理论支持，也有众多的约束和性能局限，这些都是必须使用者去面对去解决的。如果完全像一个对象数据库操作，那么我们项目中根本不需要使用MySQL或是Oracle。NoSQL的数据存储满大街都是，对内存的使用率更高性能也更好。只满足主键操作的情况下，ORM根本连存在的意义都没有，redis,mongodb等大堆流行技术爱谁用谁。
 
-因此，EF-ORM封装后提供给开发者的API，不是面向对象操作的API，依然是一套基于SQL思想的API，只不过其中面向转换等操作被自动化了。用通俗一点的说法，EF是披着某H框架的外皮，但骨子里是IBatis的思想。
+​	正是因为SQL和E-R思想的必要性，在实际项目中，使用H框架的人最后不过是从SQL中跳出，又掉进HQL里去。有什么被解放了？使用RDBMS的人，谁能不学习SQL，谁能不了解SQL?
 
-上面我们讲这套用于操作数据库的API，其实就是一直在说的Criteria API（非JPA标准的）。其实严格来说EF-ORM中只有两种数据库操作方式，即Criteria API和NativeQuery。之前所有模仿H框架的单记录操作都是用CriteriaAPI实现的，正如前文说的——“拟态”。
+​	SQL的思想（而不是语法）才是关系型数据存储的精髓，要在RDBMS上做出性能优秀的应用，不可能不掌握这种思想。正是因为这样，EF-ORM试图在保留SQL的思想、淡化SQL的语法的方向上封装JDBC。
 
- 
+​	这包括了用JavaAPI代替查询语言解决SQL编译检查和开发效率的问题；用Java反射等特性解数据库行、列到数据对象的自动转换；使使用者更简单（而符合E-R关系）的方式操作数据库。
 
-图3-2 EF-ORM的操作方式
+​	因此，EF-ORM封装后提供给开发者的API，不是面向对象操作的API，依然是一套基于SQL思想的API，只不过其中面向转换等操作被自动化了。用通俗一点的说法，EF是披着某H框架的外皮，但骨子里是IBatis的思想。
 
- 
+​	上面我们讲这套用于操作数据库的API，其实就是一直在说的Criteria API（非JPA标准的）。其实严格来说EF-ORM中只有两种数据库操作方式，即Criteria API和NativeQuery。之前所有模仿H框架的单记录操作都是用CriteriaAPI实现的，正如前文说的——“拟态”。
 
-另外的一个操作体系是NativeQuery，这将在第7章讲到。NativeQuery其实就是对SQL的直接封装和改良。用户直接提供SQL语句，EF-ORM负责对其进行管理、解析、动态改写、参数化等工作。
+ ![3.2.5-1](images\3.2.5-1.png)
 
-原生SQL则是可以让用户直接将SQL语句提交给数据库，EF-ORM不作任何处理，只不过允许其和其他操作处于同一个事务当中。这算不上是一种操作方式。
+​								图3-2 EF-ORM的操作方式
 
- 
+​	另外的一个操作体系是NativeQuery，这将在第7章讲到。NativeQuery其实就是对SQL的直接封装和改良。用户直接提供SQL语句，EF-ORM负责对其进行管理、解析、动态改写、参数化等工作。
 
-以JPA为代表的ORM应用， 最后都增加了Criteria API和xxQL的功能，来支持直接操作数据库表，这些都是与时俱进下不得不做出的改变，只是Criteria API来的有点晚，并且给人太多选择，实际上很多人已经走了弯路。而且个人觉得，JPA Criteria API设计得有点不接地气，虽然类型校验能力是很强，但是对开发者过于繁琐。比如——查询一张表里所有记录的条数：
+​	原生SQL则是可以让用户直接将SQL语句提交给数据库，EF-ORM不作任何处理，只不过允许其和其他操作处于同一个事务当中。这算不上是一种操作方式。
 
- 
+​	以JPA为代表的ORM应用， 最后都增加了Criteria API和xxQL的功能，来支持直接操作数据库表，这些都是与时俱进下不得不做出的改变，只是Criteria API来的有点晚，并且给人太多选择，实际上很多人已经走了弯路。而且个人觉得，JPA Criteria API设计得有点不接地气，虽然类型校验能力是很强，但是对开发者过于繁琐。比如——查询一张表里所有记录的条数：
 
 **SQL**
 
-评价：简单直接。
+~~~
+ select count(*) from product
+~~~
 
- 
+评价：简单直接。
 
 **JPA(Criteria API)**
 
+~~~java
+EntityManagerFactory emf = get EntityManagerFactory();
+//使用Spring得到当前线程所在事务的EntityManager.
+EntityManager em= EntityManagerFactoryUtils.getTransactionalEntityManager(emf);
+//构造查询
+CriteriaBuilder qb=emf.getCriteriaBuilder();
+CriteriaQuery<Long> q=qb.createQuery(Long.class);
+Root<Product> root=q.from(Product.class);
+q.select(qb.count(root));
+//查询
+return em.createQuery(q).getSingleResult().intValue();
+~~~
+
 评价：充满了专家组的风格，极其严谨的API，每个对象每个概念都一清二楚，显式声明数据类型和可校验。但是世界上大部分人都是懒人，不是专家。这样的API是不足以诱使人们放弃xxQL的。
 
- 
+​	某H框架的写法(Criteria API)就好了很多
 
-某H框架的写法(Criteria API)就好了很多
+~~~java
+Criteria crit = getSession().createCriteria(Users.class);
+crit.setProjection(Projections.rowCount());
+List list= crit.list();
+Long count = (Long)list.get(0);
+return count.intValue();
+~~~
 
 过渡到H框架的Criteria API也不错，不过对某H框架不熟的的同学请先学习什么叫“投影统计“。
 
- 
-
 EF-ORM写法则更为简单：
 
-没有完全按照JPA来设计API的重要原因之一就是，大部分开发人员对J2EE规范都是选择性遵循的，EJB的普及比起Spring来在国内已经落后得太多。更接地气的东西才更有存在的意义。
+~~~java
+session.count(QueryBuilder.create(Users.class));
+~~~
 
-# [4.    Query API单表操作
+​	没有完全按照JPA来设计API的重要原因之一就是，大部分开发人员对J2EE规范都是选择性遵循的，EJB的普及比起Spring来在国内已经落后得太多。更接地气的东西才更有存在的意义。
 
-前面的许多查询和更新示例，其实就是在使用Criteria API。这套API涵盖了实体操作。囊括了单表的各种SQL操作和多表下的操作。我们先了解还有哪些单表下的操作用法。
 
-注意：下面的例子都是在某些场景下，需要达到某个目的的API用法。
 
-但这些用法不是一成不变是，是可以随意组合的。此外，列出的也不是实现目的的唯一方法。
+# 4.   Query API单表操作
 
-请在理解其含义后灵活使用。
+​	前面的许多查询和更新示例，其实就是在使用Criteria API。这套API涵盖了实体操作。囊括了单表的各种SQL操作和多表下的操作。我们先了解还有哪些单表下的操作用法。
 
-## [4.1. 查询
+​	注意：下面的例子都是在某些场景下，需要达到某个目的的API用法。
 
-### [4.1.1.   查询条件的用法
+​	但这些用法不是一成不变是，是可以随意组合的。此外，列出的也不是实现目的的唯一方法。
+
+​	请在理解其含义后灵活使用。
+
+## 4.1. 查询
+
+### 4.1.1.   查询条件的用法
 
 我们先从一组示例来理解和使用CreteriaAPI的单表查询操作。
 
-#### [4.1.1.1. And Or Not
+#### 4.1.1.1. And Or Not
 
-在SQL条件中，我们经常会碰到这三种组合的场景。下面这个案例中组合使用了And Or Not三种条件连接。可以发现，Condition作为一个条件描述，可以互相嵌套，从而描述出And Or Not之间的顺序关系。
-
- 
+​	在SQL条件中，我们经常会碰到这三种组合的场景。下面这个案例中组合使用了And Or Not三种条件连接。可以发现，Condition作为一个条件描述，可以互相嵌套，从而描述出And Or Not之间的顺序关系。
 
 代码示例:src/main/java/org/easyframe/tutorial/lesson3/Case1.java
 
- 
+~~~java
+@Test
+public void testSelect_AndOrNot() throws SQLException {
+	Student st = new Student();
+		
+	//三个Like条件，或
+	Condition isLastNam_ZhaoQianSun =QueryBuilder.or(
+			QueryBuilder.matchStart(Student.Field.name, "赵"),
+			QueryBuilder.matchStart(Student.Field.name, "钱"),
+			QueryBuilder.matchStart(Student.Field.name, "孙")
+	);
+		
+	//或条件前面加上 NOT。
+	Condition isNot_ZhaoQianSun = QueryBuilder.not(isLastNam_ZhaoQianSun);
+		
+	//最终条件: 不姓'赵钱孙' 的女生。
+	st.getQuery().addCondition(QueryBuilder.and(
+			isNot_ZhaoQianSun,
+			QueryBuilder.eq(Student.Field.gender, "F")
+		)
+	);
+		
+	List<Student> students=db.select(st);
+	System.out.println("不姓'赵钱孙'三姓的女生:" + students.size());
+		
+	assertEquals(db.count(st.getQuery()), students.size());
+}
+~~~
 
 对应SQL语句为：
 
-   这里要指出的是，当使用Like语句时，为了支持传入的参数中存在 % _等SQL字符的场景，EF-ORM会自动进行转义。同时也能防止注入攻击。
+~~~
+select count(*) from STUDENT t
+    where (not (t.NAME like ? escape '/'  or t.NAME like ? escape '/'  or t.NAME like ? escape '/' ) and t.GENDER=?) 
+~~~
 
-   上面的写法还是稍显累赘，前面已经说过，QueryBuilder这个类可以省略写作QB。
+  	 这里要指出的是，当使用Like语句时，为了支持传入的参数中存在 % _等SQL字符的场景，EF-ORM会自动进行转义。同时也能防止注入攻击。
 
-   此外上例中的最外层的And嵌套可以省略。因为Query对象中可以填入多个Condition，这些Condition互相之间就是And关系。省略最外层的嵌套后，写法为——
+   	上面的写法还是稍显累赘，前面已经说过，QueryBuilder这个类可以省略写作QB。
 
- 
+  	 此外上例中的最外层的And嵌套可以省略。因为Query对象中可以填入多个Condition，这些Condition互相之间就是And关系。省略最外层的嵌套后，写法为——
+
+~~~java
+@Test
+public void testSelect_AndOrNot() throws SQLException {
+	Student st = new Student();
+	Condition isLastNam_ZhaoQianSun =QB.or(
+			QB.matchStart(Student.Field.name, "赵"),
+			QB.matchStart(Student.Field.name, "钱"),
+			QB.matchStart(Student.Field.name, "孙")
+	);
+	st.getQuery().addCondition(QB.not(isLastNam_ZhaoQianSun));
+	st.getQuery().addCondition(QB.eq(Student.Field.gender, "F"));
+	List<Student> students=db.select(st);
+}
+~~~
 
 #### 4.1.1.2. 使用函数或表达式作为条件
 
@@ -1019,65 +1699,137 @@ EF-ORM写法则更为简单：
 
 下面例子中，
 
- 
+~~~java
+@Test
+public void testSelect_Function() throws SQLException {
+	Student st = new Student();
+	st.getQuery().addCondition(new FBIField("concat(lower(gender) , grade)"),"f2");
+	List<Student> students=db.select(st);
+		
+	assertEquals(db.count(st.getQuery()), students.size());
+}
+~~~
 
 用FBIField可以对数据库中的字段进行函数运算。上例的条件实际执行SQL如下：
 
-FBIField这个词可能会引起吐槽。其实这个词和美国的FBI没有什么关系。由来是Oracle的Function based index。即函数列索引。许多数据库都不支持将用函数值来创建索引，而Oracle支持并且将这类索引命名为FBI。
+~~~
+select count(*) from STUDENT t where lower(gender)||grade= ‘f2’
+~~~
 
-由于在where条件中使用函数会造成数据库索引无效，是无法在数据量较大的表中使用的。即便是Oracle上也需要专门为此创建一个函数索引。这里用了FBIField的名称即来源于此。上例的这种用法仅限于数据量小的表使用。
+​	FBIField这个词可能会引起吐槽。其实这个词和美国的FBI没有什么关系。由来是Oracle的Function based index。即函数列索引。许多数据库都不支持将用函数值来创建索引，而Oracle支持并且将这类索引命名为FBI。
 
-仔细的同学还会发现，concat函数被转化为了lower(gender)||grade这样的表达式。这其实是EF-ORM后文要提到的一个特点——方言转换功能，EF-ORM会将用户填入的JPQL或SQL表达式用当前数据库方言重写，以适应不同数据库的语法差异。这一功能主要针对NativeQuery查询，不过在这里也能生效。
+​	由于在where条件中使用函数会造成数据库索引无效，是无法在数据量较大的表中使用的。即便是Oracle上也需要专门为此创建一个函数索引。这里用了FBIField的名称即来源于此。上例的这种用法仅限于数据量小的表使用。
 
-在上面的例子中还要注意，FBIField中的表达式是用java模型的字段名来描述的。这里的gender、grade都是java字段名，不是数据库列名。 EF-ORM在实际查询前会使用真正的数据库列名替换这些Java属性名。这个替换的规则需要FBIFIeld对象绑定到一个Entity上。在单表查询中这不成问题，框架能自动完成绑定，但是如果在多表查询中，可能就无法准确的绑定到特定的对象上，这时候就需要用到FBIField的另两个构造函数。
+​	仔细的同学还会发现，concat函数被转化为了lower(gender)||grade这样的表达式。这其实是EF-ORM后文要提到的一个特点——方言转换功能，EF-ORM会将用户填入的JPQL或SQL表达式用当前数据库方言重写，以适应不同数据库的语法差异。这一功能主要针对NativeQuery查询，不过在这里也能生效。
 
-这两个种构造函数可以让FBIField显式的绑定到一个查询Entity上。确保各个java属性能被正确的转换为SQL语句中的列名。
+​	在上面的例子中还要注意，FBIField中的表达式是用java模型的字段名来描述的。这里的gender、grade都是java字段名，不是数据库列名。 EF-ORM在实际查询前会使用真正的数据库列名替换这些Java属性名。这个替换的规则需要FBIFIeld对象绑定到一个Entity上。在单表查询中这不成问题，框架能自动完成绑定，但是如果在多表查询中，可能就无法准确的绑定到特定的对象上，这时候就需要用到FBIField的另两个构造函数。
 
-#### [4.1.1.3. 使用JPQLExpression
+~~~java
+FBIField(String, Query) 
+//或者
+FBIField(String, IQueryableEntity)
+~~~
 
-在Condition的Value部分，也允许自行编写表达式。EF-ORM提供了JpqlExpression和SqlExpression的类。
+​	这两个种构造函数可以让FBIField显式的绑定到一个查询Entity上。确保各个java属性能被正确的转换为SQL语句中的列名。
 
-JpqlExpression和SqlExpression都是指表达式。但两者用法上还是有所不同的。这两个表达式的作用都是将制定的文本包装为数据库的原生SQL片段，将这部分SQL嵌入到我们的Criteria API查询中去，可以更为灵活和方便。
+#### 4.1.1.3. 使用JPQLExpression
 
-   下面是JPQLExpression的两个例子
+​	在Condition的Value部分，也允许自行编写表达式。EF-ORM提供了JpqlExpression和SqlExpression的类。
+
+​	JpqlExpression和SqlExpression都是指表达式。但两者用法上还是有所不同的。这两个表达式的作用都是将制定的文本包装为数据库的原生SQL片段，将这部分SQL嵌入到我们的Criteria API查询中去，可以更为灵活和方便。
+
+   	下面是JPQLExpression的两个例子
 
 src/main/java/org/easyframe/tutorial/lesson3/Case1.java
 
- 
+~~~java
+@Test
+public void testSelect_JpqlExpression() throws SQLException {
+	Student st = new Student();
+	{
+		//案例一
+		st.getQuery().addCondition(Student.Field.gender, new JpqlExpression("upper(nvl('f','m'))"));
+		List<Student> students=db.select(st);
+		assertEquals(db.count(st.getQuery()), students.size());	
+	}
+	st.getQuery().clearQuery(); //清除上一个查询条件
+	{
+		//案例二: 查出出生日期最晚的学生
+		st.getQuery().addCondition(Student.Field.dateOfBirth, new JpqlExpression("(select max(dateOfBirth) from student)",st.getQuery()));
+		List<Student> students=db.select(st);
+		assertEquals(db.count(st.getQuery()), students.size());	
+	}
+}
+~~~
 
 上面的代码演示了两个例子，第一个例子很简单，使用数据库的upper和nvl函数。
+
+~~~
+select count(*) from STUDENT t where t.GENDER=upper(coalesce('f','m'))
+~~~
 
 Nvl函数是Oracle专用的，Derby不支持，这里EF-ORM将其自动改写为coalesce函数。
 
 第二个例子复杂一些了
 
-这严格意义上是一个多表查询。不过我们也能看出其特点
+~~~
+select t.* from STUDENT t where t.DATE_OF_BIRTH=(select max(t.DATE_OF_BIRTH) from student)
+~~~
 
-l  整个表达式被嵌入到where条件中的值的位置。
+​	这严格意义上是一个多表查询。不过我们也能看出其特点
 
-l  表达式中的java属性名’dateOfBirth’，被替换为了数据库列名 ‘DATE_OF_BIRTH’。
+* 整个表达式被嵌入到where条件中的值的位置。
+* 表达式中的java属性名’dateOfBirth’，被替换为了数据库列名 ‘DATE_OF_BIRTH’。
 
-其实就这是JPQLExpression的特点，和前面介绍的一样，EF-ORM会对JPQLExpression表达式进行解析和改写处理。这包括数据库方言适配和字段名称别名匹配。
+​	其实就这是JPQLExpression的特点，和前面介绍的一样，EF-ORM会对JPQLExpression表达式进行解析和改写处理。这包括数据库方言适配和字段名称别名匹配。
 
-从上面例子可以看出，表达式是一个强力的工具，灵活使用表达式能让EF-ORM简单的API发挥出预想意外的强大功能。
+​	从上面例子可以看出，表达式是一个强力的工具，灵活使用表达式能让EF-ORM简单的API发挥出预想意外的强大功能。
 
-#### [4.1.1.4. 使用SqlExpression
+#### 4.1.1.4. 使用SqlExpression
 
 上一节的案例二，也可以用SqlExpression来编写，写法上稍有不同
 
-生成的SQL语句和上例是一样的。
+~~~java
+@Test
+public void testSelect_SqlExpression() throws SQLException {
+	Student st = new Student();
+	//案例: 查出出生日期最晚的学生
+	st.getQuery().addCondition(Student.Field.dateOfBirth, new SqlExpression("(select max(date_of_birth) from student)"));
+	List<Student> students=db.select(st);
 
-SqlExpression相比JpqlExpression，是更接近SQL底层的表达式。EF-ORM不会对SqlExpression进行改写。也就是说，SqlExpression对象中的字符被直接输出到SQL语句当中，为此你需要保证其中的内容符合数据库的语法，并且用作参数的是数据库列名，而不是对象的属性名称。这里的列名date_of_birth 必须直接写成数据库里的字段名。如果写成 dataOfBirth那么肯定是要出错的。
+	assertEquals(db.count(st.getQuery()), students.size());	
+}
+~~~
 
-SqlExpression可以提供更为灵活的功能。比如SqlExpression可以直接作为Condition使用。
+​	生成的SQL语句和上例是一样的。
 
-当然，使用SqlExpression要兼容各种数据库，对开发者的SQL功底有一定的要求。
+​	SqlExpression相比JpqlExpression，是更接近SQL底层的表达式。EF-ORM不会对SqlExpression进行改写。也就是说，SqlExpression对象中的字符被直接输出到SQL语句当中，为此你需要保证其中的内容符合数据库的语法，并且用作参数的是数据库列名，而不是对象的属性名称。这里的列名date_of_birth 必须直接写成数据库里的字段名。如果写成 dataOfBirth那么肯定是要出错的。
 
-### [4.1.2.   使用Selects对象
+​	SqlExpression可以提供更为灵活的功能。比如SqlExpression可以直接作为Condition使用。
 
-#### [4.1.2.1. 定义查询的列
+~~~java
+@Test
+public void testSelect_SqlExpression2() throws SQLException {
+	Student st = new Student();
+	st.getQuery().addCondition(
+			new SqlExpression("{fn timestampdiff(SQL_TSI_DAY,date_of_birth,current_timestamp)} > 100")
+		
+		);
+	List<Student> students=db.select(st);
+	
+	assertEquals(db.count(st.getQuery()), students.size());	
+}
+~~~
 
-经常有DBA告诫开发人员说，在Select语句中，不要总是查t.*，而是需要那几个列就查哪几个列。
+​	当然，使用SqlExpression要兼容各种数据库，对开发者的SQL功底有一定的要求。
+
+
+
+### 4.1.2.   使用Selects对象
+
+#### 4.1.2.1. 定义查询的列
+
+​	经常有DBA告诫开发人员说，在Select语句中，不要总是查t.*，而是需要那几个列就查哪几个列。
 
 因此，我们在使用查询时，也可以指定要查的列。
 
