@@ -2,6 +2,7 @@ package jef.database.dialect.type;
 
 import java.lang.annotation.Annotation;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 
@@ -23,7 +24,9 @@ public class VarcharEnumMapping extends AColumnMapping {
 		if (value == null) {
 			st.setNull(index, java.sql.Types.VARCHAR);
 		} else {
-			st.setString(index, toString(value));
+			String result = toString(value);	
+			st.setString(index, result);
+			value=result;
 		}
 		return value;
 	}
@@ -73,6 +76,11 @@ public class VarcharEnumMapping extends AColumnMapping {
 		if (anno != null) {
 			this.isOrdinal = anno.value() == EnumType.ORDINAL;
 		}
+	}
+
+	@Override
+	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
+		rs.updateString(columnIndex, toString(value));
 	}
 
 }

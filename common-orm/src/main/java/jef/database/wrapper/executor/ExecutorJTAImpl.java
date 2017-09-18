@@ -21,8 +21,7 @@ import jef.database.innerpool.IConnection;
 import jef.database.innerpool.IUserManagedPool;
 import jef.database.jdbc.result.CloseableResultSet;
 import jef.database.support.SqlLog;
-import jef.database.wrapper.processor.BindVariableContext;
-import jef.database.wrapper.processor.BindVariableTool;
+import jef.database.wrapper.variable.BindVariableContext;
 import jef.tools.StringUtils;
 import jef.tools.ThreadUtils;
 
@@ -52,13 +51,13 @@ public class ExecutorJTAImpl implements Runnable, StatementExecutor {
 	 * @param dbkey
 	 * @param txId
 	 */
-	public ExecutorJTAImpl(IUserManagedPool parent, String dbkey, String txId) {
+	public ExecutorJTAImpl(IUserManagedPool parent, String dbkey, String txId, DatabaseDialect dialect) {
 		LogUtil.debug("The sqlExecutor {} was starting.",this);
 		this.parent = parent;
 		this.dbkey = dbkey;
 		this.txId = txId;
 		this.cl = new CountDownLatch(1); // 初始化检测器
-		this.profile = parent.getProfile(dbkey);
+		this.profile = dialect;
 		DbUtils.es.execute(this);
 		ThreadUtils.await(cl);// 等待连接在新线程中初始化完成后，构造方法才退出。
 		cl = null;
@@ -236,7 +235,7 @@ public class ExecutorJTAImpl implements Runnable, StatementExecutor {
 			ps = conn.prepareStatement(sql);
 			if (params.length > 0) {
 				BindVariableContext context = new BindVariableContext(ps, profile, sb);
-				BindVariableTool.setVariables(context, Arrays.asList(params));
+				context.setVariables(Arrays.asList(params));
 			}
 			int total = ps.executeUpdate();
 			sb.append("\nExecuted:", total).append("\t |", txId);

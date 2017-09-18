@@ -1,6 +1,7 @@
 package org.easyframe.enterprise.spring;
 
 import java.io.Serializable;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -11,6 +12,8 @@ import jef.database.DbClient;
 import jef.database.IQueryableEntity;
 import jef.database.NamedQueryConfig;
 import jef.database.NativeQuery;
+import jef.database.RecordHolder;
+import jef.database.RecordsHolder;
 import jef.database.Session;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.Query;
@@ -206,14 +209,14 @@ public interface CommonDao{
 	<T> int updateByProperty(T entity,String... property);
 	
 	/**
-	 * 根据指定的几个字段作为条件来更新记录
-	 * @param entity 要更新的对象
-	 * @param setValues 要设置的属性和值
-	 * @param property where字段值
-	 * @return 影响的记录条数
+	 * 带有附加条件的记录更新
+	 * @param entity 实体仅作WHERE条件使用
+	 * @param setValues 要更新哪些字段的Map
+	 * @param property 哪些字段用作Where条件
+	 * @return
 	 */
 	<T> int update(T entity,Map<String,Object> setValues,String... property);
-
+	
 	/**
 	 * 执行命名查询
 	 * {@linkplain NamedQueryConfig 什么是命名查询}
@@ -480,6 +483,13 @@ public interface CommonDao{
 	<T> int batchInsert(List<T> entities);
 	
 	/**
+	 * 批量插入，使用extreme模式插入
+	 * @param entities  要写入的对象列表
+	 * @return 影响记录行数
+	 */
+	<T> int extremeInsert(List<T> entities);
+	
+	/**
 	 * 批量插入
 	 * @param entities  要写入的对象列表
 	 * @param doGroup  是否对每条记录重新分组。{@linkplain jef.database.Batch#isGroupForPartitionTable 什么是重新分组}
@@ -488,7 +498,7 @@ public interface CommonDao{
 	<T> int batchInsert(List<T> entities,Boolean doGroup);
 
 	/**
-	 * 批量删除
+	 * 批量删除(按主键)
 	 * 
 	 * @param entities  要删除的对象列表
 	 * @return 影响记录行数
@@ -496,7 +506,7 @@ public interface CommonDao{
 	<T> int batchDelete(List<T> entities);
 	
 	/**
-	 * 批量删除
+	 * 批量删除(按主键)
 	 * @param entities  要删除的对象列表
 	 * @param doGroup  是否对每条记录重新分组。{@linkplain jef.database.Batch#isGroupForPartitionTable 什么是重新分组}
 	 * @return 影响记录行数
@@ -519,4 +529,58 @@ public interface CommonDao{
 	 */
 	<T>  int batchUpdate(List<T> entities,Boolean doGroup);
 	
+	/**
+	 * 返回一个可以更新操作的结果数据集合 实质对用JDBC中ResultSet的updateRow,deleteRow,insertRow等方法， <br>
+	 * 该操作模型需要持有ResultSet对象，因此注意使用完毕后要close()方法关闭结果集<br>
+	 * 
+	 * RecordsHolder可以对选择出来结果集进行更新、删除、新增三种操作，操作完成后调用commit方法<br>
+	 * 
+	 * @param obj
+	 *            查询请求
+	 * @return RecordsHolder对象，这是一个可供操作的数据库结果集句柄。注意使用完后一定要关闭。
+	 * @throws SQLException
+	 *             如果数据库操作错误，抛出。
+	 * @see RecordsHolder
+	 */
+	<T extends IQueryableEntity> RecordsHolder<T> selectForUpdate(Query<T> query);
+	
+	/**
+	 * 返回一个可以更新操作的结果数据{@link RecordHolder}<br>
+	 * 用户可以在这个RecordHolder上直接更新数据库中的数据，包括插入记录和删除记录<br>
+	 * 
+	 * <h3>实现原理</h3> RecordHolder对象，是JDBC ResultSet的封装<br>
+	 * 实质对用JDBC中ResultSet的updateRow,deleteRow,insertRow等方法，<br>
+	 * 该操作模型需要持有ResultSet对象，因此注意使用完毕后要close()方法关闭结果集。 <h3>注意事项</h3>
+	 * RecordHolder对象需要手动关闭。如果不关闭将造成数据库游标泄露。 <h3>使用示例</h3>
+	 * 
+	 * 
+	 * @param obj
+	 *            查询对象
+	 * @return 查询结果被放在RecordHolder对象中，用户可以直接在查询结果上修改数据。最后调用
+	 *         {@link RecordHolder#commit}方法提交到数据库。
+	 * @throws SQLException
+	 *             如果数据库操作错误，抛出。
+	 * @see RecordHolder
+	 */
+	<T extends IQueryableEntity> RecordHolder<T> loadForUpdate(Query<T> obj);
+	
+	/**
+	 * 返回一个可以更新操作的结果数据{@link RecordHolder}<br>
+	 * 用户可以在这个RecordHolder上直接更新数据库中的数据，包括插入记录和删除记录<br>
+	 * 
+	 * <h3>实现原理</h3> RecordHolder对象，是JDBC ResultSet的封装<br>
+	 * 实质对用JDBC中ResultSet的updateRow,deleteRow,insertRow等方法，<br>
+	 * 该操作模型需要持有ResultSet对象，因此注意使用完毕后要close()方法关闭结果集。 <h3>注意事项</h3>
+	 * RecordHolder对象需要手动关闭。如果不关闭将造成数据库游标泄露。 <h3>使用示例</h3>
+	 * 
+	 * 
+	 * @param obj
+	 *            查询对象
+	 * @return 查询结果被放在RecordHolder对象中，用户可以直接在查询结果上修改数据。最后调用
+	 *         {@link RecordHolder#commit}方法提交到数据库。
+	 * @throws SQLException
+	 *             如果数据库操作错误，抛出。
+	 * @see RecordHolder
+	 */
+	<T extends IQueryableEntity> RecordHolder<T> loadForUpdate(T query);
 }

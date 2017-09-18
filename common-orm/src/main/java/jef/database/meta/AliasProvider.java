@@ -34,7 +34,7 @@ public interface AliasProvider {
 	public static final AliasProvider DEFAULT=new AliasProvider(){
 		public String getSelectedAliasOf(ColumnMapping f, DatabaseDialect profile, String alias) {
 			String fieldName = f.fieldName();
-			return profile.getColumnNameToUse(StringUtils.isEmpty(alias) ?fieldName: StringUtils.concat(alias, SqlContext.DIVEDER, fieldName));
+			return profile.getObjectNameToUse(StringUtils.isEmpty(alias) ?fieldName: StringUtils.concat(alias, SqlContext.DIVEDER, fieldName));
 		}
 
 		@Override

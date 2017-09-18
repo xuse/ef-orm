@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import jef.database.Session;
 import jef.database.IQueryableEntity;
+import jef.database.Session;
 import jef.database.Transaction;
 
 public final class DbOperatorListenerContainer implements DbOperatorListener{

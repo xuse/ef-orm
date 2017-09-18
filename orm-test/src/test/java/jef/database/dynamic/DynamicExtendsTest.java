@@ -28,15 +28,12 @@ import org.junit.runner.RunWith;
 	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"),
 	@DataSource(name="derby",url="jdbc:derby:./db;create=true"),
 	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db?date_string_format=yyyy-MM-dd HH:mm:ss"),
 	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 public class DynamicExtendsTest extends org.junit.Assert{
 	private DbClient db;
 
-	public DynamicExtendsTest() throws SQLException {
-		new EntityEnhancer().enhance("jef.database.dynamic");
-	}
 	@DatabaseInit
 	public void setup() throws SQLException{
 		db.dropTable(Status.class);
@@ -239,8 +236,9 @@ public class DynamicExtendsTest extends org.junit.Assert{
 			System.out.println(res);
 
 			Query<DynaResource> q = QB.create(DynaResource.class,"桌子");
-			q.terms().gt("width", 100).or().gt("height", 100);
-			q.terms().not().in("type", new String[] { "CRICLE", "BOX" });
+			q.terms()
+			.gt("width", 100).or().gt("height", 100)
+			.and().not().in("type", new String[] { "CRICLE", "BOX" });
 			System.out.println(q.getConditions());
 			db.select(q);
 		}

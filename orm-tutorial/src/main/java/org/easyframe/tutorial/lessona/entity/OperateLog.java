@@ -7,6 +7,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Version;
 
 import jef.database.DataObject;
 import jef.database.annotation.PartitionKey;
@@ -23,8 +24,9 @@ import jef.database.routing.function.KeyFunction;
 		) 
 	})
 public class OperateLog extends DataObject {
+	private static final long serialVersionUID = 5867761162146442548L;
 
-    @Id
+	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 

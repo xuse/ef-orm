@@ -162,6 +162,7 @@ public enum Feature {
 	NOT_SUPPORT_FOREIGN_KEY,
 	/**
 	 * 不支持在Like语句中使用Escape语句作为转义
+	 * (暂无数据库有此特性)
 	 */
 	NOT_SUPPORT_LIKE_ESCAPE, 
 	/**
@@ -169,19 +170,22 @@ public enum Feature {
 	 */
 	NOT_SUPPORT_KEYWORD_DEFAULT, 
 	/**
-	 * 不支持获取用户函数
+	 * 不支持获取用户函数(SQLite)
 	 */
 	NOT_SUPPORT_USER_FUNCTION,
 	/**
 	 * SQLite操作Blob时，不支持setBinaryStream，必须用setBytes
+	 * (SQLite)
 	 */
 	NOT_SUPPORT_SET_BINARY,
 	/**
-	 * SQLite特性，不支持修改表删除字段
+	 * 不支持修改表删除字段
+	 * (SQLite)
 	 */
 	NOT_SUPPORT_ALTER_DROP_COLUMN,
 	/**
 	 * Union语句上每个子句两边加上括号
+	 * (Derby)
 	 */
 	UNION_WITH_BUCK,
 	
@@ -191,26 +195,6 @@ public enum Feature {
 	EMPTY_CHAR_IS_NULL,
 	
 	/**
-	 * 查询语句不支持绑定变量
-	 * @deprecated 基本上已经没用了，现在没有哪个数据库不支持绑定变量的
-	 */
-	NO_BIND_FOR_SELECT, // 
-	/**
-	 * Update语句不支持绑定变量
-	 * @deprecated 基本上已经没用了，现在没有哪个数据库不支持绑定变量的
-	 */
-	NO_BIND_FOR_UPDATE, // 更新语句不支持绑定变量
-	/**
-	 * Insert语句不支持绑定变量
-	 * @deprecated 基本上已经没用了，现在没有哪个数据库不支持绑定变量的
-	 */
-	NO_BIND_FOR_INSERT, // 插入语句不支持绑定变量
-	/**
-	 * Delete语句不支持绑定变量
-	 * @deprecated 基本上已经没用了，现在没有哪个数据库不支持绑定变量的
-	 */
-	NO_BIND_FOR_DELETE, // 删除语句不支持绑定变量
-	/**
 	 * 支持COMMENT ON TABLE/COLUMN IS ''语法
 	 */
 	SUPPORT_COMMENT,
@@ -218,5 +202,5 @@ public enum Feature {
 	/**
 	 * MYSQL语法，建表时语句在字段上直接加COMMENT语句
 	 */
-	SUPPORT_INLINE_COMMENT
+	SUPPORT_INLINE_COMMENT,
 }

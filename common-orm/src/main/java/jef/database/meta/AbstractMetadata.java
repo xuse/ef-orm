@@ -20,17 +20,19 @@ import jef.database.IQueryableEntity;
 import jef.database.cache.KeyDimension;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.AbstractTimeMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.dialect.type.VersionSupportColumn;
+import jef.database.meta.def.IndexDef;
+import jef.database.meta.def.UniqueConstraintDef;
 import jef.database.query.DbTable;
 import jef.database.query.JpqlExpression;
 import jef.database.query.PKQuery;
 import jef.database.wrapper.clause.BindSql;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
-import jef.tools.reflect.Property;
 import jef.tools.reflect.ConvertUtils;
+import jef.tools.reflect.Property;
 
 /**
  * 抽象类用于简化Tablemeta的实现
@@ -39,16 +41,51 @@ import jef.tools.reflect.ConvertUtils;
  * 
  */
 public abstract class AbstractMetadata implements ITableMetadata {
+	/**
+	 * schema of the table. (it is always the username in Oracle)
+	 */
 	protected String schema;
+	/**
+	 * name of the table.
+	 */
 	protected String tableName;
+	/**
+	 * Always operate the table in the named datasource.
+	 */
 	protected String bindDsName;
+	/**
+	 * Metadata of the columns autoincrement.
+	 */
 	private AutoIncrementMapping[] increMappings;
-	private AbstractTimeMapping[] updateTimeMapping;
+	/**
+	 * Metadata of the data/time columns auto-update.
+	 */
+	private VersionSupportColumn[] autoUpdateColumns;
 
+	/**
+	 * the columnOfVersionColumn
+	 */
+	private VersionSupportColumn versionColumn;
+	/**
+	 * The fields mapping to columns.
+	 */
 	protected List<ColumnMapping> metaFields;
+	/**
+	 * The field of LOB
+	 */
 	protected Field[] lobNames;
 
-	final List<jef.database.annotation.Index> indexMap = new ArrayList<jef.database.annotation.Index>(5);// 记录对应表的所有索引，当建表时使用可自动创建索引
+	/**
+	 * 记录对应表的所有索引，当建表时使用可自动创建索引
+	 * Revised 2016-8 JPA 2.1规范中增加的@Table的indexes属性和Index注解，因此删除EF原先自己设计的Index注解，改用标准的JPA注解
+	 */
+	final List<IndexDef> indexes = new ArrayList<IndexDef>(5);
+	
+	/**
+	 * 记录对应表所有Unqie约束.当建表时可自动创建约束
+	 */
+	final List<UniqueConstraintDef> uniques=new ArrayList<UniqueConstraintDef>(5);
+	
 	protected final Map<Field, ColumnMapping> schemaMap = new IdentityHashMap<Field, ColumnMapping>();
 	protected Map<String, Field> fields = new HashMap<String, Field>(10, 0.6f);
 	protected Map<String, Field> lowerFields = new HashMap<String, Field>(10, 0.6f);
@@ -58,6 +95,33 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	protected final Map<Reference, List<AbstractRefField>> refFieldsByRef = new HashMap<Reference, List<AbstractRefField>>();// 记录所有的引用字段，按引用关系
 	protected boolean cacheable;
 	protected boolean useOuterJoin = true;
+
+	/**
+	 * 列排序器，用这个排序器确保列的输出顺序如下 1、LOB字段总是排在最后。(由于一些数据库驱动问题，这样做能提高操作的成功率，对性能也有少量帮助)
+	 * 2、按类定义中的枚举顺序排序，如果是TupleField，则直接按照字段名的ASCII顺序排列。
+	 */
+	private static final Comparator<ColumnMapping> COLUMN_COMPARATOR = new Comparator<ColumnMapping>() {
+		public int compare(ColumnMapping field1, ColumnMapping field2) {
+			Class<? extends ColumnType> type1 = field1.get().getClass();
+			Class<? extends ColumnType> type2 = field2.get().getClass();
+			Boolean b1 = (type1 == ColumnType.Blob.class || type1 == ColumnType.Clob.class);
+			Boolean b2 = (type2 == ColumnType.Blob.class || type2 == ColumnType.Clob.class);
+			int result = b1.compareTo(b2);
+			if (result == 0) {
+				Field f1 = field1.field();
+				Field f2 = field2.field();
+				// 在分库分表的情况下，IdentityHashMap.value的内容每一次都不一致，导致建的表的字段顺序也不一致。在select
+				// * 并使用union时会出错
+				// Advice by Nihf
+				if (f1 instanceof Enum<?> && f2 instanceof Enum<?>) {
+					return Integer.compare(((Enum<?>) f1).ordinal(), ((Enum<?>) f2).ordinal());
+				} else {
+					return f1.name().compareTo(f2.name());
+				}
+			}
+			return result;
+		}
+	};
 
 	public Field[] getLobFieldNames() {
 		return lobNames;
@@ -85,15 +149,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		if (metaFields == null) {
 			Collection<ColumnMapping> map = this.getColumnSchema();
 			ColumnMapping[] fields = map.toArray(new ColumnMapping[map.size()]);
-			Arrays.sort(fields, new Comparator<ColumnMapping>() {
-				public int compare(ColumnMapping field1, ColumnMapping field2) {
-					Class<? extends ColumnType> type1 = field1.get().getClass();
-					Class<? extends ColumnType> type2 = field2.get().getClass();
-					Boolean b1 = (type1 == ColumnType.Blob.class || type1 == ColumnType.Clob.class);
-					Boolean b2 = (type2 == ColumnType.Blob.class || type2 == ColumnType.Clob.class);
-					return b1.compareTo(b2);
-				}
-			});
+			Arrays.sort(fields, COLUMN_COMPARATOR);
 			metaFields = Arrays.asList(fields);
 		}
 		return metaFields;
@@ -125,7 +181,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		if (fld instanceof JpqlExpression) {
 			throw new UnsupportedOperationException();
 		}
-		String name = profile.getColumnNameToUse(fld.name());
+		String name = profile.getObjectNameToUse(fld.name());
 		return escape ? DbUtils.escapeColumn(profile, name) : name;
 	}
 
@@ -205,11 +261,11 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		}
 	}
 
-	public AbstractTimeMapping[] getUpdateTimeDef() {
-		return updateTimeMapping;
+	public VersionSupportColumn[] getAutoUpdateColumnDef() {
+		return autoUpdateColumns;
 	}
 
-	protected void removeAutoIncAndTimeUpdatingField(Field oldField) {
+	protected void removeAutoIncAndAutoUpdatingField(Field oldField) {
 		if (increMappings != null) {
 			for (AutoIncrementMapping m : increMappings) {
 				if (m.field() == oldField) {
@@ -218,10 +274,10 @@ public abstract class AbstractMetadata implements ITableMetadata {
 				}
 			}
 		}
-		if (updateTimeMapping != null) {
-			for (AbstractTimeMapping m : updateTimeMapping) {
+		if (autoUpdateColumns != null) {
+			for (VersionSupportColumn m : autoUpdateColumns) {
 				if (m.field() == oldField) {
-					updateTimeMapping = (AbstractTimeMapping[]) ArrayUtils.removeElement(updateTimeMapping, m);
+					autoUpdateColumns = (VersionSupportColumn[]) ArrayUtils.removeElement(autoUpdateColumns, m);
 					break;
 				}
 			}
@@ -229,13 +285,18 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	}
 
 	protected void updateAutoIncrementAndUpdate(ColumnMapping mType) {
-		if (mType instanceof AbstractTimeMapping) {
-			AbstractTimeMapping m = (AbstractTimeMapping) mType;
-			if (m.isForUpdate()) {
-				updateTimeMapping = ArrayUtils.addElement(updateTimeMapping, m);
+		if (mType instanceof VersionSupportColumn) {
+			VersionSupportColumn m = (VersionSupportColumn) mType;
+			if (m.isUpdateAlways()) {
+				autoUpdateColumns = ArrayUtils.addElement(autoUpdateColumns, m, VersionSupportColumn.class);
+			}
+			if (m.isVersion()) {
+				if(this.versionColumn!=null){
+					throw new IllegalArgumentException("There can be only one version column in a entity, but" + this.getName()+" has more.");
+				}
+				this.versionColumn = m;
 			}
 		}
-
 		if (mType instanceof AutoIncrementMapping) {
 			increMappings = ArrayUtils.addElement(increMappings, (AutoIncrementMapping) mType);
 		}
@@ -363,6 +424,11 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		this.useOuterJoin = useOuterJoin;
 	}
 	
-	
+	public List<UniqueConstraintDef> getUniques() {
+		return uniques;
+	}
 
+	public VersionSupportColumn getVersionColumn() {
+		return versionColumn;
+	}
 }

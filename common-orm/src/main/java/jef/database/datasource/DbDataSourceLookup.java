@@ -51,7 +51,7 @@ import org.slf4j.LoggerFactory;
  * @author jiyi
  * 
  */
-public class DbDataSourceLookup implements DataSourceInfoLookup, DataSourceLookup {
+public class DbDataSourceLookup implements DataSourceLookup {
 	private Logger log = LoggerFactory.getLogger(this.getClass());
 
 	// 配置库的信息(和配置信息二选一)
@@ -71,8 +71,6 @@ public class DbDataSourceLookup implements DataSourceInfoLookup, DataSourceLooku
 	private String columnOfDriver;
 
 	private boolean ignoreCase=true;
-	// 配置如果也作为数据源之一，那么需要设置ID
-	private String datasourceIdOfconfigDB;
 	//允许用户指定缺省数据源的名称
 	protected String defaultDsName;
 	// 解密器
@@ -107,15 +105,6 @@ public class DbDataSourceLookup implements DataSourceInfoLookup, DataSourceLooku
 		Map<String, DataSourceInfo> result = new HashMap<String, DataSourceInfo>();
 		DataSource configDs = getConfigDS();
 		process(result, configDs, null);
-		// 将配置源也加入
-		if (StringUtils.isNotEmpty(datasourceIdOfconfigDB)) {
-			DataSourceInfo dsi = DataSources.wrapFor(configDs);
-			if (dsi != null) {
-				put(datasourceIdOfconfigDB.trim(), dsi,result);
-			} else {
-				log.warn("The Configuration datasource {} Can not be wrapped.",configDs.getClass());
-			}
-		}
 		this.cache=result;
 	}
 
@@ -337,16 +326,6 @@ public class DbDataSourceLookup implements DataSourceInfoLookup, DataSourceLooku
 		this.columnOfDriver = columnOfDriver;
 	}
 
-	/**
-	 * 如果配置数据源的库本身也作为数据库之一，那么需要为其设置一个DataSource的ID
-	 * 
-	 * @param datasourceIdOfconfigDB
-	 */
-	public void setDatasourceIdOfconfigDB(String datasourceIdOfconfigDB) {
-		this.datasourceIdOfconfigDB = StringUtils.trimToNull(datasourceIdOfconfigDB);
-	}
-
-	
 	public String getDefaultDsName() {
 		return defaultDsName;
 	}
@@ -361,10 +340,6 @@ public class DbDataSourceLookup implements DataSourceInfoLookup, DataSourceLooku
 		}
 		if (cache.size() == 1) {
 			return cache.keySet().iterator().next();
-		}
-		if(defaultDsName==null){
-			log.warn("You have not assign the default datasource name.");
-			defaultDsName=datasourceIdOfconfigDB;
 		}
 		return defaultDsName;
 	}

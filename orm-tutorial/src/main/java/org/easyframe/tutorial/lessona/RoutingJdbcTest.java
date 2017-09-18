@@ -11,8 +11,16 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import org.easyframe.tutorial.lessona.entity.Device;
+import org.easyframe.tutorial.lessona.entity.Person2;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runners.MethodSorters;
+
 import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
+import jef.database.DbClient;
 import jef.database.DbUtils;
 import jef.database.ORMConfig;
 import jef.database.datasource.MapDataSourceLookup;
@@ -22,11 +30,7 @@ import jef.database.routing.jdbc.JDataSource;
 import jef.tools.DateUtils;
 import jef.tools.string.RandomData;
 
-import org.easyframe.tutorial.lessona.entity.Device;
-import org.easyframe.tutorial.lessona.entity.Person2;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RoutingJdbcTest {
 
 	private static DataSource ds;
@@ -38,10 +42,9 @@ public class RoutingJdbcTest {
 	 */
 	@BeforeClass
 	public static void setup() throws SQLException {
-		new EntityEnhancer().enhance("org.easyframe.tutorial.lessona");
 		MetaHolder.getMeta(Device.class);
 		MetaHolder.getMeta(Person2.class);
-		
+		ORMConfig.getInstance().setFilterAbsentTables(true);
 		// 准备多个数据源
 		Map<String, DataSource> datasources = new HashMap<String, DataSource>();
 		// 创建三个数据库。。。
@@ -50,7 +53,13 @@ public class RoutingJdbcTest {
 		datasources.put("datasource3", new SimpleDataSource("jdbc:derby:./db3;create=true", null, null));
 		MapDataSourceLookup lookup = new MapDataSourceLookup(datasources);
 		lookup.setDefaultKey("datasource1");// 指定datasource1是默认的操作数据源
-		ds=new JDataSource(lookup); 
+		JDataSource jds=new JDataSource(lookup);
+		DbClient db=jds.getDbClient();
+		ds=jds;
+		db.dropTable(Device.class);
+		db.createTable(Person2.class,Device.class);
+		db.truncate(Person2.class);
+		db.truncate(Device.class);
 	}
 	
 	

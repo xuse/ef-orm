@@ -7,15 +7,16 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
-import jef.codegen.EntityEnhancer;
 import jef.database.DbUtils;
 import jef.database.annotation.PartitionKeyImpl;
 import jef.database.annotation.PartitionTable;
 import jef.database.annotation.PartitionTableImpl;
 import jef.database.dialect.AbstractDialect;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.dialect.MySqlDialect;
 import jef.database.dialect.type.AutoIncrementMapping.GenerationResolution;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.jsqlparser.parser.ParseException;
@@ -32,6 +33,7 @@ import jef.database.routing.sql.SqlAnalyzer;
 import jef.database.support.MultipleDatabaseOperateException;
 import jef.orm.onetable.model.TestEntity;
 import jef.orm.partition.PartitionEntity;
+import jef.tools.DateUtils;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -49,10 +51,9 @@ public class CalculatorTest extends org.junit.Assert{
 
 	@BeforeClass
 	public static void setup() throws SecurityException, NoSuchMethodException {
-		new EntityEnhancer().enhance("jef.orm");
 		config.setAppender("_");
 		config.setKeySeparator("_");
-		PartitionKeyImpl[] keys = new PartitionKeyImpl[] { new PartitionKeyImpl("id", 1) };
+		PartitionKeyImpl[] keys = new PartitionKeyImpl[] { new PartitionKeyImpl("intField2", 1) };
 		// keys[0].length=2;
 		config.setKey(keys);
 
@@ -75,7 +76,7 @@ public class CalculatorTest extends org.junit.Assert{
 		}
 
 		public DatabaseDialect getProfile(String dbkey) {
-			return AbstractDialect.getProfile("oracle");
+			return new MySqlDialect();
 		}
 
 		public void ensureTableExists(String db,String table,ITableMetadata meta) {
@@ -96,11 +97,11 @@ public class CalculatorTest extends org.junit.Assert{
 		DatabaseDialect profile = AbstractDialect.getProfile("mariadb");
 		{
 			((PartitionKeyImpl) config.key()[0]).function = KeyFunction.RAW;
-			((PartitionKeyImpl) config.key()[0]).defaultWhenFieldIsNull = "AA, BB, CC";
+			((PartitionKeyImpl) config.key()[0]).defaultWhenFieldIsNull = "aa, bb, cc";
 			inv.invoke(meta, config);
 			PartitionResult[] result = calc.toTableNames(meta, supportor,2);
 			System.out.println(Arrays.asList(result));
-			assertEquals("[TEST_ENTITY_AA,TEST_ENTITY_BB,TEST_ENTITY_CC,TEST_ENTITY]", Arrays.toString(result));
+			assertEquals("[test_entity_aa,test_entity_bb,test_entity_cc,test_entity]", Arrays.toString(result));
 			assertEquals(GenerationResolution.TABLE, meta.getFirstAutoincrementDef().getGenerationType(profile));
 		}
 		{
@@ -108,7 +109,7 @@ public class CalculatorTest extends org.junit.Assert{
 			inv.invoke(meta, config);
 			PartitionResult[] result = calc.toTableNames(meta, supportor,1);
 			System.out.println(Arrays.asList(result));
-			assertEquals("[TEST_ENTITY_0,TEST_ENTITY_1,TEST_ENTITY_2,TEST_ENTITY_3,TEST_ENTITY_4,TEST_ENTITY_5,TEST_ENTITY_6,TEST_ENTITY_7,TEST_ENTITY_8,TEST_ENTITY_9]", Arrays.toString(result));
+			assertEquals("[test_entity_0,test_entity_1,test_entity_2,test_entity_3,test_entity_4,test_entity_5,test_entity_6,test_entity_7,test_entity_8,test_entity_9]", Arrays.toString(result));
 			assertEquals(GenerationResolution.TABLE, meta.getFirstAutoincrementDef().getGenerationType(profile));
 		}
 		{
@@ -116,7 +117,7 @@ public class CalculatorTest extends org.junit.Assert{
 			inv.invoke(meta, config);
 			PartitionResult[] result = calc.toTableNames(meta, supportor,2);
 			System.out.println(Arrays.asList(result));
-			assertEquals("[TEST_ENTITY_1,TEST_ENTITY_2,TEST_ENTITY_3,TEST_ENTITY_4,TEST_ENTITY_5,TEST_ENTITY_6,TEST_ENTITY_7,TEST_ENTITY_8,TEST_ENTITY_9,TEST_ENTITY_10,TEST_ENTITY_11,TEST_ENTITY_12,TEST_ENTITY]", Arrays.toString(result));
+			assertEquals("[test_entity_1,test_entity_2,test_entity_3,test_entity_4,test_entity_5,test_entity_6,test_entity_7,test_entity_8,test_entity_9,test_entity_10,test_entity_11,test_entity_12,test_entity]", Arrays.toString(result));
 			assertEquals(GenerationResolution.TABLE, meta.getFirstAutoincrementDef().getGenerationType(profile));
 		}
 		{
@@ -124,7 +125,7 @@ public class CalculatorTest extends org.junit.Assert{
 			inv.invoke(meta, config);
 			PartitionResult[] result = calc.toTableNames(meta, supportor,2);
 			System.out.println(Arrays.asList(result));
-			assertEquals("[TEST_ENTITY_2015,TEST_ENTITY]",Arrays.toString(result));
+			assertEquals("[test_entity_"+DateUtils.getYear(new Date())+",test_entity]",Arrays.toString(result));
 			assertEquals(GenerationResolution.TABLE, meta.getFirstAutoincrementDef().getGenerationType(profile));
 		}
 		{
@@ -134,18 +135,18 @@ public class CalculatorTest extends org.junit.Assert{
 			inv.invoke(meta, config);
 			PartitionResult[] result = calc.toTableNames(meta, supportor,1);
 			System.out.println(Arrays.asList(result));
-			assertEquals("[TEST_ENTITY_1,TEST_ENTITY_2,TEST_ENTITY_3,TEST_ENTITY_4]", Arrays.toString(result));
+			assertEquals("[test_entity_1,test_entity_2,test_entity_3,test_entity_4]", Arrays.toString(result));
 			assertEquals(GenerationResolution.TABLE, meta.getFirstAutoincrementDef().getGenerationType(profile));
 		}
 	
 		{
 			System.out.println("==============双维度下，一个维度无法枚举，因此收缩=================");
-			PartitionKeyImpl[] keys = new PartitionKeyImpl[] { new PartitionKeyImpl("createTime", 1), new PartitionKeyImpl("id", 1) };
+			PartitionKeyImpl[] keys = new PartitionKeyImpl[] { new PartitionKeyImpl("createTime", 1), new PartitionKeyImpl("intField2", 1) };
 			keys[0].function = KeyFunction.MONTH;
 			config.setKey(keys);
 			inv.invoke(meta, config);
 			PartitionResult[] result = calc.toTableNames(meta, supportor,2);
-			assertEquals("[TEST_ENTITY]", Arrays.toString(result));
+			assertEquals("[test_entity]", Arrays.toString(result));
 			System.out.println(Arrays.asList(result));
 		}
 		

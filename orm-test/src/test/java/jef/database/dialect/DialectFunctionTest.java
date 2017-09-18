@@ -50,12 +50,6 @@ public class DialectFunctionTest extends org.junit.Assert {
 	private DbClient db;
 	private TupleMetadata tuple;
 
-	@BeforeClass
-	public static void enhance() {
-		EntityEnhancer en = new EntityEnhancer();
-		en.enhance("jef.orm.onetable.model");
-	}
-
 	public DialectFunctionTest() {
 		tuple = new TupleMetadata("tuple_table");
 		tuple.addColumn("id", new ColumnType.AutoIncrement(8));

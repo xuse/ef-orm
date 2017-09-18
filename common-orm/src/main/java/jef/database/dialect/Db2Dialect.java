@@ -2,46 +2,62 @@ package jef.database.dialect;
 
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
+import jef.database.dialect.handler.LimitHandler;
 import jef.database.meta.DbProperty;
 import jef.database.support.RDBMS;
 import jef.tools.string.JefStringReader;
 
-public class Db2Dialect extends AbstractDialect{
+import com.querydsl.sql.DB2Templates;
+import com.querydsl.sql.SQLTemplates;
 
-	public Db2Dialect() {
-		super();
-		setProperty(DbProperty.ADD_COLUMN, "ADD COLUMN");
-		setProperty(DbProperty.MODIFY_COLUMN, "MODIFY COLUMN");
-		setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");
-	}
+/**
+ * The dialect of IBM DB2 TODO not finished.
+ *
+ */
+public class Db2Dialect extends AbstractDialect {
 
-	public RDBMS getName() {
-		return RDBMS.db2;
-	}
+    public Db2Dialect() {
+        super();
+        setProperty(DbProperty.ADD_COLUMN, "ADD COLUMN");
+        setProperty(DbProperty.MODIFY_COLUMN, "MODIFY COLUMN");
+        setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");
+    }
 
-	public String getDriverClass(String url) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    public RDBMS getName() {
+        return RDBMS.db2;
+    }
 
-	public String getFunction(DbFunction function, Object... params) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    public String getDriverClass(String url) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	//jdbc:db2://aServer.myCompany.com:50002/name"
-	public void parseDbInfo(ConnectInfo connectInfo) {
-		JefStringReader reader=new JefStringReader(connectInfo.getUrl());
-		reader.consume("jdbc:db2:");
-		reader.omitChars('/');
-		String host=reader.readToken('/');
-		String dbname=reader.readToken('?',';','/');
-		connectInfo.setHost(host);
-		connectInfo.setDbname(dbname);
-	}
+    public String getFunction(DbFunction function, Object... params) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public LimitHandler getLimitHandler() {
-		throw new UnsupportedOperationException();
-	}
+    // jdbc:db2://aServer.myCompany.com:50002/name"
+    public void parseDbInfo(ConnectInfo connectInfo) {
+        JefStringReader reader = new JefStringReader(connectInfo.getUrl());
+        reader.consume("jdbc:db2:");
+        reader.omitChars('/');
+        String host = reader.readToken('/');
+        String dbname = reader.readToken('?', ';', '/');
+        connectInfo.setHost(host);
+        connectInfo.setDbname(dbname);
+        reader.close();
+    }
+
+    @Override
+    public LimitHandler getLimitHandler() {
+        throw new UnsupportedOperationException();
+    }
+
+    private final SQLTemplates queryDslDialect = new DB2Templates();
+
+    @Override
+    public SQLTemplates getQueryDslDialect() {
+        return queryDslDialect;
+    }
 }

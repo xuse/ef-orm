@@ -6,7 +6,7 @@ import javax.persistence.PersistenceException;
 
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
-import jef.database.OperateTarget;
+import jef.database.DbMetaData;
 
 /**
  * 自动检查和适配SQLServer不同版本的方言
@@ -60,9 +60,9 @@ public class SQLServerDialect extends AbstractDelegatingDialect {
 	 * 根据数据库版本信息判断当前数据库实际应该用哪个方言
 	 */
 	@Override
-	public void init(OperateTarget asOperateTarget) {
+	public void accept(DbMetaData meta) {
 		try{
-			String version=asOperateTarget.getMetaData().getDatabaseVersion();
+			String version=meta.getDatabaseVersion();
 			int index=version.indexOf('.');
 			if(index==-1){
 				return;
@@ -85,13 +85,13 @@ public class SQLServerDialect extends AbstractDelegatingDialect {
 			case 12:
 				//version 12= SQLServer 2014
 			case 13:
-				//???
+				//预留，按SQLServer2012
 			case 14:
-				//???
+				//预留，按SQLServer2012
 			case 15:
-				//???
+				//预留，按SQLServer2012
 			case 16:
-				//???
+				//预留，按SQLServer2012
 			case 17:
 				this.dialect=new SQLServer2012Dialect();
 				LogUtil.info("Determin SQL-Server Dialect to [{}]",dialect.getClass());
@@ -100,6 +100,6 @@ public class SQLServerDialect extends AbstractDelegatingDialect {
 		}catch(SQLException e){
 			throw new PersistenceException(e);
 		}
-		super.init(asOperateTarget);
+		super.accept(meta);
 	}
 }

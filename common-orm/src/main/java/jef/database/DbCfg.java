@@ -102,13 +102,11 @@ public enum DbCfg implements ConfigItem {
 	DB_BLOB_RETURN_TYPE,
 	
 	//////////////////内嵌连接池相关设置/////////////////
-	/**
-	 * 不使用内嵌的连接池，当DataSource自带连接池功能的时候使用此配置。一旦开启此配置，后续的连接池相关设定全部无效
-	 * 可以設置為  true. false auto 三種值
-	 */
-	DB_NO_POOL,
+	
 	/**
 	 * JEF内嵌连接池额定连接数,数字，默认值3
+	 * 
+	 * 自1.12开始内嵌连接池默认不再使用，仅当以非DataSource方式启动才会使用
 	 */
 	DB_CONNECTION_POOL,
 	/**
@@ -210,6 +208,11 @@ public enum DbCfg implements ConfigItem {
 	 * 如果关闭则更新时，对除了主键以外的字段全部做更新。
 	 */
 	DB_DYNAMIC_UPDATE,
+	/**
+	 * 在使用对比等手段更新数据时,防止将null等有未赋值等嫌疑的数据更新到数据库中。
+	 * 默认关闭
+	 */
+	DB_SAFE_MERGE,
 	/**
 	 * 动态插入方式，不设值的字段不插入（也可以以表为单位进行配置）
 	 */

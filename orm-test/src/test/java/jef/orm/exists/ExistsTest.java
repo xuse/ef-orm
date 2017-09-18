@@ -28,7 +28,7 @@ import org.junit.runner.RunWith;
 	 @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
 	 @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
 	 @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db?date_string_format=yyyy-MM-dd HH:mm:ss"),
 	 @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 public class ExistsTest extends org.junit.Assert{
@@ -37,8 +37,6 @@ public class ExistsTest extends org.junit.Assert{
 	@DatabaseInit
 	public void prepare() throws Exception {
 		try{
-			EntityEnhancer en=new EntityEnhancer();
-			en.enhance("jef.orm.exists");
 			db.dropTable(TableA.class);
 			db.dropTable(TableB.class);
 			

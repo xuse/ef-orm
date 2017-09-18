@@ -150,7 +150,20 @@ public class ExpressionDeParser implements ExpressionVisitor {
     }
 
     public void visit(InExpression inExpression) {
-        inExpression.getLeftExpression().accept(this);
+        List<Expression> leftExpression=inExpression.getLeftExpression();
+        if(leftExpression!=null){
+            boolean isList=leftExpression.size()>1;
+            if(isList)buffer.append('(');
+            Iterator<Expression> iter=leftExpression.iterator();
+            if(iter.hasNext()){
+                iter.next().accept(this);
+            }
+            while(iter.hasNext()){
+                buffer.append(',');
+                iter.next().accept(this);
+            }
+            if(isList)buffer.append(')');
+        }
         if (inExpression.isNot()) buffer.append(" NOT");
         buffer.append(" IN ");
         inExpression.getItemsList().accept(this);

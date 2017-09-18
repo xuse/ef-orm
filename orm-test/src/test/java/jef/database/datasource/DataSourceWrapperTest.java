@@ -3,23 +3,13 @@ package jef.database.datasource;
 import java.sql.SQLException;
 
 import javax.management.ReflectionException;
-import javax.sql.DataSource;
 
 import jef.database.ConnectInfo;
-import jef.database.DbUtils;
-import jef.database.datasource.DataSourceWrapper;
-import jef.database.datasource.DataSources;
 import jef.tools.reflect.BeanUtils;
 
 import org.junit.Test;
 
 public class DataSourceWrapperTest {
-	@Test
-	public void testWrapper() throws SQLException {
-		DataSource ds = DbUtils.createSimpleDataSource("aa", "aa", "aa");
-		DataSourceWrapper dw=DataSources.wrapFor(ds);
-		System.out.println(dw);
-	}
 	@Test
 	public void testParseUrl() throws SQLException, ReflectionException{
 		String[] x={

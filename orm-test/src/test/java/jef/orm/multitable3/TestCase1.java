@@ -2,6 +2,7 @@ package jef.orm.multitable3;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
 import jef.database.DbClient;
 import jef.database.QB;
@@ -18,9 +19,9 @@ import org.junit.runner.RunWith;
 //	 @DataSource(name="oracle",url="${oracle.url}",user="${oracle.user}",password="${oracle.password}"),
 //	 @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
 //	 @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
-//	 @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
-	 @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-//	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+	 @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
+//	 @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
+//	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db?date_string_format=yyyy-MM-dd HH:mm:ss"),
 //	 @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 public class TestCase1 extends org.junit.Assert{
@@ -49,6 +50,8 @@ private DbClient db;
 	public void addData() throws SQLException {
 		Role r1=new Role("Role1");
 		Role r2=new Role("Role2");
+		int id;
+		//插入多对多关系
 		{
 			Factor2 f=new Factor2();
 			f.setRoles(new ArrayList<Role>());
@@ -61,19 +64,36 @@ private DbClient db;
 			f.getSub1().add(s1);
 			f.getSub1().add(s2);
 			
-			db.insertCascade(f);	
+			db.insertCascade(f);
+			id=f.getId();
+		}
+		//查询多对多关系
+		System.out.println("===================查询多对多关系==================");
+		Factor2 f2=db.load(Factor2.class,id);
+		assertEquals(2, f2.getRoles().size());
+		assertEquals(2, f2.getSub1().size());
+		
+		//
+		System.out.println("===================使用pageselect查询多对多关系==================");
+		{
+			List<Factor2> list=db.pageSelect(QB.create(Factor2.class), Factor2.class, 4).next();
+			System.out.println(list);
+			System.out.println(list.get(0).getRoles());
 		}
 		
-		
-		System.out.println("=====================================");
-		Factor2 f2=db.load(Factor2.class,1);
-		f2.setRoles(null);
-//		f2.getRoles().clear();
-//		f2.getRoles().add(r1);
+		//清除后重添加一个
+		System.out.println("===================清除后重新添加一个==================");
+		f2.getRoles().clear();
+		f2.getRoles().add(r1);
 		db.updateCascade(f2);
+		f2=db.load(Factor2.class,id);
+		assertEquals(1, f2.getRoles().size());
 		
-		
-		
+		System.out.println("===================清空Role==================");
+		f2.setRoles(null);
+		db.updateCascade(f2);
+		f2=db.load(Factor2.class,id);
+		assertEquals(0, f2.getRoles().size());
 		
 	}
 }

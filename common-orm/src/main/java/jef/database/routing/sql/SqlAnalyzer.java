@@ -513,7 +513,7 @@ public class SqlAnalyzer {
 		}
 
 		private PairSO<Dimension> process(InExpression exp) {
-			if (exp.getLeftExpression().getType() != ExpressionType.column) {
+			if (exp.getSingleLeftExpression().getType() != ExpressionType.column) {
 				return null;
 			}
 			String field = this.getPartitionField((Column) exp.getLeftExpression());

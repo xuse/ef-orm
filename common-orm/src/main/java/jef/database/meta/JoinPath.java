@@ -152,6 +152,42 @@ public class JoinPath {
 	}
 
 	/**
+	 * 检查链接路径是否正确
+	 * @param fromType
+	 * @param targetType
+	 * @return
+	 */
+	public JoinPath accept(ITableMetadata left, ITableMetadata obj) {
+		if (relationTable != null) {
+			return pathAccept(obj);
+		}
+		if (joinKeys != null) {
+			for (int i = 0; i < joinKeys.length; i++) {
+				JoinKey jk = joinKeys[i];
+				int flag = jk.validate(left, obj);
+				if (flag == 0) {
+					return null;
+				} else if (flag == -1) {
+					joinKeys[i] = jk.flip();
+				}
+
+			}
+		}
+		if (joinExpression != null) {
+			for (int i = 0; i < joinExpression.length; i++) {
+				JoinKey jk = joinExpression[i];
+				int flag = jk.validate(left, obj);
+				if (flag == 0) {
+					return null;
+				} else if (flag == -1) {
+					joinExpression[i] = jk.flip();
+				}
+			}
+		}
+		return this;
+	}
+
+	/**
 	 * 这个方法用来检测当前连接路径是否满足left,right的连接需要
 	 * 
 	 * 要注意 1、这个方法只需对用户输入的条件进行检查，不能对系统自身Reference中存在的对象进行绑定操作
@@ -162,7 +198,7 @@ public class JoinPath {
 	 */
 	public JoinPath accept(JoinElement left, Query<?> obj) {
 		if (relationTable != null) {
-			return pathAccept(obj);
+			return pathAccept(obj.getMeta());
 		}
 
 		if (joinKeys != null) {
@@ -206,11 +242,10 @@ public class JoinPath {
 		}
 		return this;
 	}
-
-	private JoinPath pathAccept( Query<?> obj) {
-		// 先在当前表中查询已定义的可用引用关系。
+	
+	private JoinPath pathAccept(ITableMetadata obj) {
 		for (Reference ref : relationTable.getRefFieldsByRef().keySet()) {
-			if (ref.getThisType() == relationTable && ref.getTargetType() == obj.getMeta() && ref.getHint() != null) {
+			if (ref.getThisType() == relationTable && ref.getTargetType() == obj && ref.getHint() != null) {
 				return this;
 			}
 		}

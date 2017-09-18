@@ -37,6 +37,12 @@ public interface DdlGenerator {
 	 * @return
 	 */
 	List<String> toViewCreateClause();
+	
+	/**
+	 * 生成删除约束的语句
+	 * @return
+	 */
+	String getDropConstraintSql(String tableName,String contraintName);
 
 	
 }

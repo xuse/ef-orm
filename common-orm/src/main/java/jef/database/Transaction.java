@@ -91,10 +91,6 @@ public abstract class Transaction extends Session implements TransactionalSessio
 	void releaseConnection(IConnection conn) {
 	}
 
-	public boolean isOpen() {
-		return parent != null;
-	}
-
 	@Override
 	public <T> NativeQuery<T> createNamedQuery(String name, Class<T> resultWrapper) {
 		if (parent.namedQueries == null)
@@ -224,9 +220,12 @@ public abstract class Transaction extends Session implements TransactionalSessio
 		} else {
 			sb.append('[').append(innerFlag.name());
 		}
-		sb.append(StringUtils.toFixLengthString(this.hashCode(), 8)).append('@');
-		sb.append(parent != null ? parent.getDbName(dbkey) : parentName);
-		sb.append('@').append(Thread.currentThread().getId()).append(']');
+		if(isReadonly()){
+			sb.append("(R)");	
+		}
+		sb.append(StringUtils.toFixLengthString(this.hashCode(), 8)).append('@')
+		.append(parent != null ? parent.getDbName(dbkey) : parentName)
+		.append('@').append(Thread.currentThread().getId()).append(']');
 		return sb.toString();
 	}
 
@@ -251,4 +250,11 @@ public abstract class Transaction extends Session implements TransactionalSessio
 	public void rollback() {
 		rollback(false);
 	}
+
+	@Override
+	boolean isRoutingDataSource() {
+		return this.parent.isRoutingDataSource();
+	}
+	
+	
 }

@@ -15,7 +15,6 @@
  */
 package jef.database.meta;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.net.URL;
@@ -23,19 +22,15 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinColumns;
 import javax.persistence.JoinTable;
-import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.NoResultException;
@@ -43,8 +38,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.OrderBy;
 import javax.persistence.PersistenceException;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 
 import jef.accelerator.asm.Attribute;
 import jef.accelerator.asm.ClassReader;
@@ -71,28 +65,24 @@ import jef.database.annotation.DynamicTable;
 import jef.database.annotation.EasyEntity;
 import jef.database.annotation.FieldOfTargetEntity;
 import jef.database.annotation.Indexed;
-import jef.database.annotation.Indexes;
 import jef.database.annotation.JoinDescription;
 import jef.database.annotation.JoinType;
 import jef.database.annotation.NoForceEnhance;
-import jef.database.annotation.Parameter;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.ColumnType.GUID;
-import jef.database.dialect.TypeDefImpl;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.ColumnMappings;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.parser.ParseException;
-import jef.database.jsqlparser.statement.create.ColumnDefinition;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.meta.AnnotationProvider.ClassAnnotationProvider;
 import jef.database.meta.AnnotationProvider.FieldAnnotationProvider;
+import jef.database.meta.def.IndexDef;
 import jef.database.meta.extension.EfPropertiesExtensionProvider;
 import jef.database.query.JpqlExpression;
 import jef.database.query.ReadOnlyQuery;
-import jef.database.query.SqlExpression;
 import jef.database.support.EntityNotEnhancedException;
 import jef.database.support.QuerableEntityScanner;
 import jef.tools.ArrayUtils;
@@ -102,7 +92,9 @@ import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.BeanUtils;
-import jef.tools.reflect.BeanWrapper;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ArrayListMultimap;
 
@@ -128,12 +120,14 @@ public final class MetaHolder {
 	// 站点映射
 	static Map<String, String> SITE_MAPPING;
 
-	// 元数据池
+	// 元数据池（包含标准Entity的元数据和POJO的元数据）
 	static final Map<Class<?>, AbstractMetadata> pool = new java.util.IdentityHashMap<Class<?>, AbstractMetadata>(32);
 	// 动态表元数据池
 	static final Map<String, TupleMetadata> dynPool = new java.util.HashMap<String, TupleMetadata>(32);
 	// 反向查找表
 	private static final Map<String, AbstractMetadata> inverseMapping = new HashMap<String, AbstractMetadata>();
+
+	private static Logger log = LoggerFactory.getLogger(MetaHolder.class);
 
 	// 初始化分表规则加载器
 	static {
@@ -145,9 +139,8 @@ public final class MetaHolder {
 			if (partitionLoader == null) {
 				partitionLoader = new DefaultPartitionStrategyLoader();
 			}
-
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("PARTITION_STRATEGY_LOADER error", e);
 		}
 		try {
 			String clz = JefConfiguration.get(DbCfg.CUSTOM_METADATA_LOADER);
@@ -158,7 +151,7 @@ public final class MetaHolder {
 				config = new DefaultMetaLoader();
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("CUSTOM_METADATA_LOADER error", e);
 		}
 		try {
 			SCHEMA_MAPPING = StringUtils.toMap(JefConfiguration.get(DbCfg.SCHEMA_MAPPING), ",", ":", 1);
@@ -168,7 +161,7 @@ public final class MetaHolder {
 				LogUtil.info("Database mapping: " + SITE_MAPPING);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			log.error("SCHEMA_MAPPING error", e);
 		}
 	}
 
@@ -334,6 +327,12 @@ public final class MetaHolder {
 		return pool.values();
 	}
 
+	/**
+	 * 得到指定类的元数据。该类可以是一个标准的GeeQueryEntity，也可以是一个POJO。
+	 * 
+	 * @param clz
+	 * @return
+	 */
 	public static final AbstractMetadata getMetaOrTemplate(Class<?> clz) {
 		Assert.notNull(clz);
 		if (clz == VarObject.class) {
@@ -403,7 +402,6 @@ public final class MetaHolder {
 			if (m1 != null)
 				return m1; // 双重检查锁定
 		}
-		// System.err.println("正在解析类:" + clz);
 		if (IQueryableEntity.class.isAssignableFrom(clz)) {
 			// 计算动态扩展字段
 			DynamicTable dt = clz.getAnnotation(DynamicTable.class);
@@ -527,13 +525,6 @@ public final class MetaHolder {
 			}
 		}
 		metaFields.check();
-		// 计算复合索引
-		Indexes indexes = annos.getAnnotation(Indexes.class);
-		if (indexes != null) {
-			for (jef.database.annotation.Index index : indexes.value()) {
-				meta.indexMap.add(index);
-			}
-		}
 		return meta;
 	}
 
@@ -591,7 +582,6 @@ public final class MetaHolder {
 		if (!checkd.get()) {
 			throw new EntityNotEnhancedException(type.getName());
 		}
-		// System.out.println("You may not executing project with the default Jetty Console. this may disable the dynamic enhance feature. please make sure you have enhaced the entity staticly.");
 	}
 
 	static class MeteModelFields {
@@ -629,6 +619,11 @@ public final class MetaHolder {
 			}
 		}
 
+		/**
+		 * 由于用户可能在父子类中反复定义同一个Field的元模型，因此此处返回的是列表
+		 * @param name
+		 * @return
+		 */
 		List<jef.database.Field> remove(String name) {
 			if (isTuple) {
 				return Collections.<Field> singletonList(new TupleField(parent, name));
@@ -652,56 +647,30 @@ public final class MetaHolder {
 			if (meta.getField(f.getName()) != null) { // 当子类父类中有同名field时，跳过父类的field
 				continue;
 			}
+			FieldAnnotationProvider fa = annos.forField(f);
 			List<Field> fieldss = metaModel.remove(f.getName());
-			if (fieldss.isEmpty()) {
+			if (fieldss.isEmpty() || fa.getAnnotation(Transient.class)!=null) {
 				unprocessedField.add(f);
 				continue;
 			}
 			Field field = fieldss.get(0);
 			if (field instanceof Enum) {
-				/*
-				 * 必须至少有一个meta field的定义类==
-				 * processingClz。这样才能保证这个属性被增强过。否则不能保证该属性被增强过。
-				 * 
-				 * 因为目前增强算法都只按当前类的enum Field中的枚举来增强属性。不会去增强父类中的属性。
-				 * 所以如果在父类中定义属性而在子类中定义元模型来使用。这个属性就会有未被增强的风险。
-				 * 
-				 * 增加这样的检查逻辑，有利于用户在复杂继承关系下，确保父类的元模型不缺失，从而安全的使用。
-				 * 
-				 * 关于为什么不作增强父类的功能： a 父类可能在JAR包中，不能直接修改。 b
-				 * 如果在子类中通过覆盖方法来实现，也有问题，因为ASM中去解析父类并查找同名方法较为复杂
-				 * 。在增强前，不能调用类实现反射，因此相当于要自行用ASM实现父子类解析的JAVA逻辑，太麻烦了…… c
-				 * 此外，如果父类本身也定义了该元模型
-				 * ，子类覆盖父类元模型，此时也很悲剧——子类生成一个增强过的方法覆盖父类方法，而父类本身又做了增强
-				 * ，此时延迟加载和等植入代码将被执行两遍。
-				 * 因此，我们还是要尽可能避免这种父类定义属性，子类定义元模型的方式。即元模型要定义在各自的类里，子类可以覆盖父类的。
-				 */
-				boolean isEnhancedProperty = false;
-				for (Field ff : fieldss) {
-					Class<?> cc = ff.getClass().getDeclaringClass();
-					if (cc == processingClz) {
-						isEnhancedProperty = true;
-						break;
-					}
-				}
-				if (!isEnhancedProperty) {
-					throw new IllegalArgumentException("Field [" + field.name() + "] may be not enhanced. Please add the enum Field [" + field.name() + "] into " + processingClz.getName());
-				}
+				assertFieldEnhanced(field,fieldss,processingClz);
 			}
 
-			FieldAnnotationProvider fa = annos.forField(f);
-
+	
 			// 在得到了元模型的情况下
 			boolean isPK = fa.getAnnotation(javax.persistence.Id.class) != null;
-			jef.database.annotation.Type mappingHint = fa.getAnnotation(jef.database.annotation.Type.class);
+			
+			jef.database.annotation.Type customType = fa.getAnnotation(jef.database.annotation.Type.class);
 			ColumnMapping type = null;
 			Class<?> fieldType;
-			if (mappingHint != null) {
-				type = BeanUtils.newInstance(mappingHint.value());
+			if (customType != null) {
+				type = BeanUtils.newInstance(customType.value());
 				try {
-					applyParams(mappingHint.parameters(), type);
-				}catch(Exception e) {
-					throw new IllegalArgumentException("@Type annotation on field "+processingClz+"."+field+" is invalid",e);
+					ColumnTypeBuilder.applyParams(customType.parameters(), type);
+				} catch (Exception e) {
+					throw new IllegalArgumentException("@Type annotation on field " + processingClz + "." + field + " is invalid", e);
 				}
 				fieldType = type.getFieldType();
 			} else {
@@ -710,17 +679,13 @@ public final class MetaHolder {
 			Column c = fa.getAnnotation(Column.class);
 			ColumnType ct;
 			try {
-				if (c == null || StringUtils.isEmpty(c.columnDefinition())) {// 在没有Annonation的情况下,根据Field类型默认生成元数�?
-					ct = defaultColumnTypeByJava(fa, c, fieldType);
-				} else {
-					ct = createTypeByAnnotation(c, f, annos);
-				}
+				ct = new ColumnTypeBuilder(c, f, fieldType, fa).withCustomType(type).build();
 			} catch (Exception e) {
 				throw new PersistenceException(processingClz + " has invalid field/column " + f.getName(), e);
 			}
 
 			if (isPK)
-				ct.notNull();
+				ct.setNullable(false);
 
 			try {
 				String columnName = getColumnName(field, c);
@@ -737,25 +702,44 @@ public final class MetaHolder {
 			// 设置索引
 			Indexed i = fa.getAnnotation(Indexed.class);// 单列索引
 			if (i != null) {
-				Map<String, Object> data = new HashMap<String, Object>(4);
-				data.put("fields", new String[] { i.desc() ? field.name() + " desc" : field.name() });
-				data.put("unique", i.unique());
-				data.put("definition", i.definition());
-				data.put("name", i.name());
-				meta.indexMap.add(BeanUtils.asAnnotation(jef.database.annotation.Index.class, data));
+				IndexDef indexDef = new IndexDef(i.name(), new String[] { i.desc() ? field.name() + " desc" : field.name() });
+				indexDef.setUnique(i.unique());
+				indexDef.setDefinition(i.definition());
+				meta.indexes.add(indexDef);
 			}
 		}
 	}
 
-	private static void applyParams(Parameter[] parameters, ColumnMapping type) {
-		if(parameters==null || parameters.length==0)return;
-		BeanWrapper bw = BeanWrapper.wrap(type);
-		for (Parameter p : parameters) {
-			if (bw.isWritableProperty(p.name())) {
-				bw.setPropertyValueByString(p.name(), p.value());
+	private static void assertFieldEnhanced(Field field, List<Field> fieldss,Class<?> processingClz) {
+
+		/*
+		 * 必须至少有一个meta field的定义类==
+		 * processingClz。这样才能保证这个属性被增强过。否则不能保证该属性被增强过。
+		 * 
+		 * 因为目前增强算法都只按当前类的enum Field中的枚举来增强属性。不会去增强父类中的属性。
+		 * 所以如果在父类中定义属性而在子类中定义元模型来使用。这个属性就会有未被增强的风险。
+		 * 
+		 * 增加这样的检查逻辑，有利于用户在复杂继承关系下，确保父类的元模型不缺失，从而安全的使用。
+		 * 
+		 * 关于为什么不作增强父类的功能： a 父类可能在JAR包中，不能直接修改。 b
+		 * 如果在子类中通过覆盖方法来实现，也有问题，因为ASM中去解析父类并查找同名方法较为复杂
+		 * 。在增强前，不能调用类实现反射，因此相当于要自行用ASM实现父子类解析的JAVA逻辑，太麻烦了…… c
+		 * 此外，如果父类本身也定义了该元模型
+		 * ，子类覆盖父类元模型，此时也很悲剧——子类生成一个增强过的方法覆盖父类方法，而父类本身又做了增强
+		 * ，此时延迟加载和等植入代码将被执行两遍。
+		 * 因此，我们还是要尽可能避免这种父类定义属性，子类定义元模型的方式。即元模型要定义在各自的类里，子类可以覆盖父类的。
+		 */
+		boolean isEnhancedProperty = false;
+		for (Field ff : fieldss) {
+			Class<?> cc = ff.getClass().getDeclaringClass();
+			if (cc == processingClz) {
+				isEnhancedProperty = true;
+				break;
 			}
 		}
-
+		if (!isEnhancedProperty) {
+			throw new IllegalArgumentException("Field [" + field.name() + "] may be not enhanced. Please add the enum Field [" + field.name() + "] into " + processingClz.getName());
+		}
 	}
 
 	private static String getColumnName(Field field, Column a) {
@@ -782,11 +766,11 @@ public final class MetaHolder {
 
 	private static JoinPath processJoin(AbstractMetadata meta, ITableMetadata target, FieldAnnotationProvider annos, JoinTable jt) {
 		String table = jt.name();
-		LogUtil.info("创建从{}到{}的关系。",meta.getName(),target.getName());
+		LogUtil.info("创建从{}到{}的关系。", meta.getName(), target.getName());
 		// 计算生成关系表
 		TupleMetadata rt = getDynamicMeta(table);
 		JoinColumn[] jc1 = jt.joinColumns();
-		String thisName=meta.getName().replace('.', '_');
+		String thisName = meta.getName().replace('.', '_');
 		if (rt == null) {
 			rt = new TupleMetadata(table);
 			for (JoinColumn jc : jc1) {
@@ -808,14 +792,14 @@ public final class MetaHolder {
 			putDynamicMeta(rt);
 		}
 
-		AbstractRefField refs = rt.getRefFieldsByName().get(thisName+"_OBJ");
-		if(refs==null) {
+		AbstractRefField refs = rt.getRefFieldsByName().get(thisName + "_OBJ");
+		if (refs == null) {
 			JoinColumn[] jc2 = jt.inverseJoinColumns();
 			// 创建关系表到目标表的连接
 			JoinPath path2 = processJoin(rt, target, annos, jc2);
-			rt.addCascadeManyToOne(thisName+"_OBJ", target, path2);
+			rt.addCascadeManyToOne(thisName + "_OBJ", target, path2);
 		}
-		refs = rt.getRefFieldsByName().get(thisName+"_OBJ");
+		refs = rt.getRefFieldsByName().get(thisName + "_OBJ");
 		Assert.notNull(refs);
 
 		// 创建到关系表的连接
@@ -979,7 +963,7 @@ public final class MetaHolder {
 			JoinPath path = new JoinPath(type, result.toArray(new JoinKey[result.size()]));
 			path.setDescription(joinDesc, field.getAnnotation(OrderBy.class));
 			if (joinDesc != null && joinDesc.filterCondition().length() > 0) {
-				JoinKey joinExpress = getJoinExpress(thisMeta,target, joinDesc.filterCondition().trim());
+				JoinKey joinExpress = getJoinExpress(thisMeta, target, joinDesc.filterCondition().trim());
 				if (joinExpress != null)
 					path.addJoinKey(joinExpress);
 			}
@@ -1011,7 +995,7 @@ public final class MetaHolder {
 			JoinPath path = new JoinPath(type, result.toArray(new JoinKey[result.size()]));
 			path.setDescription(joinDesc, orderBy);
 			if (joinDesc != null && joinDesc.filterCondition().length() > 0) {
-				JoinKey joinExpress = getJoinExpress(meta,target, joinDesc.filterCondition().trim());
+				JoinKey joinExpress = getJoinExpress(meta, target, joinDesc.filterCondition().trim());
 				if (joinExpress != null)
 					path.addJoinKey(joinExpress);
 			}
@@ -1020,27 +1004,27 @@ public final class MetaHolder {
 		return null;
 	}
 
-	private static JoinKey getJoinExpress(ITableMetadata thisMeta,ITableMetadata targetMeta, String exp) {
+	private static JoinKey getJoinExpress(ITableMetadata thisMeta, ITableMetadata targetMeta, String exp) {
 		try {
 			Expression ex = DbUtils.parseBinaryExpression(exp);
 			if (ex instanceof BinaryExpression) {
 				BinaryExpression bin = (BinaryExpression) ex;
 				String left = bin.getLeftExpression().toString().trim();
-				Field leftF = parseField(left,thisMeta,targetMeta);
-				
+				Field leftF = parseField(left, thisMeta, targetMeta);
+
 				JoinKey key;
 				if (leftF == null) {
 					key = new JoinKey(null, null, new FBIField(bin, ReadOnlyQuery.getEmptyQuery(targetMeta)));// 建立一个函数Field
 				} else {
 					String oper = bin.getStringExpression();
-					Expression right=bin.getRightExpression();
+					Expression right = bin.getRightExpression();
 					Field rightF = null;
-					if(right.getType()==ExpressionType.column || right.getType()==ExpressionType.function) {
-						rightF = parseField(right.toString(),thisMeta,targetMeta);	
+					if (right.getType() == ExpressionType.column || right.getType() == ExpressionType.function) {
+						rightF = parseField(right.toString(), thisMeta, targetMeta);
 					}
-					if(rightF==null) {
+					if (rightF == null) {
 						key = new JoinKey(leftF, Operator.valueOfKey(oper), new JpqlExpression(right.toString()));
-					}else {
+					} else {
 						key = new JoinKey(leftF, Operator.valueOfKey(oper), rightF);
 					}
 
@@ -1054,244 +1038,44 @@ public final class MetaHolder {
 		}
 	}
 
-	private static Field parseField(String keyword,ITableMetadata thisMeta,ITableMetadata target) {
+	private static Field parseField(String keyword, ITableMetadata thisMeta, ITableMetadata target) {
 		ITableMetadata meta = null;
-		if(keyword.startsWith("this$")) {
-			keyword=keyword.substring(5);
-			meta=thisMeta;
-		}else if(keyword.startsWith("that$")) {
-			keyword=keyword.substring(5);
-			meta=target;
+		if (keyword.startsWith("this$")) {
+			keyword = keyword.substring(5);
+			meta = thisMeta;
+		} else if (keyword.startsWith("that$")) {
+			keyword = keyword.substring(5);
+			meta = target;
 		}
-		if(meta!=null) {
+		if (meta != null) {
 			ColumnMapping columnDef = meta.findField(keyword);// 假定左边的是字段
-			if(columnDef!=null) {
+			if (columnDef != null) {
 				return columnDef.field();
-			}else {
-				FBIField field=new FBIField(keyword, ReadOnlyQuery.getEmptyQuery(meta));
-				field.setBindBase(true);;
+			} else {
+				FBIField field = new FBIField(keyword, ReadOnlyQuery.getEmptyQuery(meta));
+				field.setBindBase(true);
+				;
 				return field;
 			}
-		}else {
+		} else {
 			ColumnMapping columnDef = target.findField(keyword);
-			if(columnDef!=null) {
+			if (columnDef != null) {
 				return columnDef.field();
 			}
 			columnDef = thisMeta.findField(keyword);
-			if(columnDef!=null) {
+			if (columnDef != null) {
 				return columnDef.field();
 			}
 			return null;
 		}
 	}
 
-	private static ColumnType createTypeByAnnotation(Column col, java.lang.reflect.Field field, ClassAnnotationProvider annos) throws ParseException {
-		ColumnDefinition c = DbUtils.parseColumnDef(col.columnDefinition().toUpperCase());
-		String def = c.getColDataType().getDataType();
-		SqlExpression defaultExpression = null;
-		boolean nullable = col.nullable();
-		List<String> params = c.getColDataType().getArgumentsStringList();
-		String[] typeArgs = params == null ? ArrayUtils.EMPTY_STRING_ARRAY : params.toArray(new String[params.size()]);
-		if (c.getColumnSpecStrings() != null) {
-			for (int i = 0; i < c.getColumnSpecStrings().size(); i++) {
-				String s = c.getColumnSpecStrings().get(i);
-				if ("not".equalsIgnoreCase(s)) {
-					i++;
-					String s1 = c.getColumnSpecStrings().get(i);
-					if ("null".equalsIgnoreCase(s1)) {
-						nullable = false;
-					}
-				} else if ("null".equalsIgnoreCase(s)) {
-					nullable = true;
-				} else {
-					if ("default".equalsIgnoreCase(s)) {
-						String ex = c.getColumnSpecStrings().get(++i);
-						if (ex.length() > 0) {
-							defaultExpression = new SqlExpression(ex);
-						}
-					}
-				}
-			}
-		}
-		int length = col.length();
-		int precision = col.precision();
-		int scale = col.scale();
-		// //////////////////////////////////////////////
-		FieldAnnotationProvider fieldProvider = annos.forField(field);
-
-		GeneratedValue gv = fieldProvider.getAnnotation(javax.persistence.GeneratedValue.class);
-		GenerationType geType = gv == null ? null : gv.strategy();
-		if ("VARCHAR".equals(def) || "VARCHAR2".equals(def)) {
-			if (geType != null) {
-				if (geType == GenerationType.TABLE || geType == GenerationType.SEQUENCE) {
-					return new ColumnType.AutoIncrement(length, geType, fieldProvider);
-				} else {
-					return new ColumnType.GUID();
-				}
-			}
-			if (typeArgs.length > 0) {
-				length = StringUtils.toInt(typeArgs[0], length);
-			}
-			Assert.isTrue(length > 0);
-			return new ColumnType.Varchar(length).setNullable(nullable).defaultIs(defaultExpression);
-		} else if ("CHAR".equalsIgnoreCase(def)) {
-			if (geType != null) {
-				if (geType == GenerationType.TABLE || geType == GenerationType.SEQUENCE) {
-					return new ColumnType.AutoIncrement(length, geType, fieldProvider);
-				} else {
-					return new ColumnType.GUID();
-				}
-			}
-			if (typeArgs.length > 0) {
-				length = StringUtils.toInt(typeArgs[0], length);
-			}
-			Assert.isTrue(length > 0, "The char column length must greater than 0!");
-			return new ColumnType.Char(length).setNullable(nullable).defaultIs(defaultExpression);
-		} else if ("NUMBER".equals(def) || "INT".equals(def) || "INTEGER".equals(def)) {
-			if (precision == 0 && (length > 0 && length < 100)) {
-				precision = length;
-			}
-			if (geType != null) {
-				return new ColumnType.AutoIncrement(precision, geType, fieldProvider);
-			} else if (scale > 0) {
-				return new ColumnType.Double(precision, scale).setNullable(nullable).defaultIs(defaultExpression);
-			} else {
-				return new ColumnType.Int(precision).setNullable(nullable).defaultIs(defaultExpression);
-			}
-		} else if ("CLOB".equalsIgnoreCase(def)) {
-			return new ColumnType.Clob().setNullable(nullable).defaultIs(defaultExpression);
-		} else if ("BLOB".equalsIgnoreCase(def)) {
-			return new ColumnType.Blob().setNullable(nullable).defaultIs(defaultExpression);
-		} else if ("Date".equalsIgnoreCase(def)) {
-			Temporal temporal = fieldProvider.getAnnotation(Temporal.class);
-			TemporalType t = temporal == null ? TemporalType.DATE : temporal.value();
-			return newDateTimeColumnDef(t, nullable, gv).defaultIs(defaultExpression);
-		} else if ("TIMESTAMP".equalsIgnoreCase(def)) {
-			Temporal temporal = fieldProvider.getAnnotation(Temporal.class);
-			TemporalType t = temporal == null ? TemporalType.TIMESTAMP : temporal.value();
-			return newDateTimeColumnDef(t, nullable, gv).defaultIs(defaultExpression);
-		} else if ("BOOLEAN".equalsIgnoreCase(def)) {
-			return new ColumnType.Boolean().setNullable(nullable).defaultIs(defaultExpression);
-		} else if ("XML".equalsIgnoreCase(def)) {
-			return new ColumnType.XML().setNullable(nullable);
-		} else if ("BIT".equalsIgnoreCase(def)) {
-			return new ColumnType.Boolean().setNullable(nullable);
-		} else if (fieldProvider.getAnnotation(jef.database.annotation.Type.class) != null) {
-			jef.database.annotation.Type t = fieldProvider.getAnnotation(jef.database.annotation.Type.class);
-			ColumnMapping cm = BeanUtils.newInstance(t.value());
-			try {
-				applyParams(t.parameters(), cm);
-			}catch(Exception e) {
-				throw new IllegalArgumentException("@Type annotation on field "+field+" is invalid",e);
-			}
-			return new TypeDefImpl(def, cm.getSqlType(), field.getType());
-		} else {
-			throw new IllegalArgumentException("Unknow column Def:" + def);
-			// return new ColumnType.Unknown(def).setNullable(nullable);
-		}
-	}
-
-	private static ColumnType defaultColumnTypeByJava(FieldAnnotationProvider fieldProvider, Column c, Class<?> type) {
-		int len = c == null ? 0 : c.length();
-		int precision = c == null ? 0 : c.precision();
-		int scale = c == null ? 0 : c.scale();
-		boolean nullable = c == null ? true : c.nullable();
-		GeneratedValue gv = fieldProvider.getAnnotation(javax.persistence.GeneratedValue.class);
-		GenerationType geType = gv == null ? null : gv.strategy();
-		if (geType != null && type == String.class) {
-			return new ColumnType.GUID();
-		} else if (geType != null && Number.class.isAssignableFrom(BeanUtils.toWrapperClass(type))) {
-			return new ColumnType.AutoIncrement(precision, geType, fieldProvider);
-		}
-		Lob lob = fieldProvider.getAnnotation(Lob.class);
-		if (type == String.class) {
-			if (lob != null)
-				return new ColumnType.Clob().setNullable(nullable);
-			return new ColumnType.Varchar(len > 0 ? len : 255).setNullable(nullable);
-		} else if (type == Integer.class) {
-			return new ColumnType.Int(precision).setNullable(nullable);
-		} else if (type == Integer.TYPE) {
-			return new ColumnType.Int(precision).setNullable(nullable);
-		} else if (type == Double.class) {
-			return new ColumnType.Double(precision, scale).setNullable(nullable);
-		} else if (type == Double.TYPE) {
-			return new ColumnType.Double(precision, scale).setNullable(nullable);
-		} else if (type == Float.class) {
-			return new ColumnType.Double(precision, scale).setNullable(nullable);
-		} else if (type == Float.TYPE) {
-			return new ColumnType.Double(precision, scale).setNullable(nullable);
-		} else if (type == Boolean.class) {
-			return new ColumnType.Boolean().setNullable(nullable);
-		} else if (type == Boolean.TYPE) {
-			return new ColumnType.Boolean().notNull();
-		} else if (type == Long.class) {
-			return new ColumnType.Int(precision > 0 ? precision : 16).setNullable(nullable);
-		} else if (type == Long.TYPE) {
-			return new ColumnType.Int(precision > 0 ? precision : 16).setNullable(nullable);
-		} else if (type == Character.class) {
-			return new ColumnType.Char(1).setNullable(nullable);
-		} else if (type == Character.TYPE) {
-			return new ColumnType.Char(1).setNullable(nullable);
-		} else if (type == Date.class) {
-			Temporal t = fieldProvider.getAnnotation(Temporal.class);
-			return newDateTimeColumnDef(t == null ? TemporalType.TIMESTAMP : t.value(), nullable, gv);
-		} else if (type == java.sql.Date.class) {
-			return newDateTimeColumnDef(TemporalType.DATE, nullable, gv);
-		} else if (type == java.sql.Timestamp.class) {
-			return newDateTimeColumnDef(TemporalType.TIMESTAMP, nullable, gv);
-		} else if (type == java.sql.Time.class) {
-			return newDateTimeColumnDef(TemporalType.TIME, nullable, gv);
-		} else if (Enum.class.isAssignableFrom(type)) {
-			return new ColumnType.Varchar(32).setNullable(nullable);
-		} else if (type.isArray() && type.getComponentType() == Byte.TYPE) {
-			return new ColumnType.Blob().setNullable(nullable);
-		} else if (type == File.class) {
-			return new ColumnType.Blob().setNullable(nullable);
-		} else {
-			throw new IllegalArgumentException("Java type " + type.getName() + " can't mapping to a Db column type by default");
-		}
-	}
-
-	private static ColumnType newDateTimeColumnDef(TemporalType temporalType, boolean nullable, GeneratedValue gv) {
-		ColumnType ct;
-		switch (temporalType) {
-		case DATE:
-			ct = new ColumnType.Date().setGenerateType(getDateGenerateType(gv));
-			break;
-		case TIME:
-			ct = new ColumnType.TimeStamp().setGenerateType(getDateGenerateType(gv));// FIXME
-			break;
-		case TIMESTAMP:
-			ct = new ColumnType.TimeStamp().setGenerateType(getDateGenerateType(gv));
-			break;
-		default:
-			throw new UnsupportedOperationException();
-		}
-		ct.setNullable(nullable);
-		return ct;
-	}
-
-	private static int getDateGenerateType(GeneratedValue gv) {
-		String generated = gv == null ? null : gv.generator().toLowerCase();
-		if (generated != null) {
-			if ("created".equals(generated)) {
-				return 1;
-			} else if ("modified".equals(generated)) {
-				return 2;
-			} else if ("created-sys".equals(generated)) {
-				return 3;
-			} else if ("modified-sys".equals(generated)) {
-				return 4;
-			} else if (generated.length() == 0) {
-				return 1;
-			}
-			throw new IllegalArgumentException("Unknown date generator [" + generated + "]");
-		}
-		return 0;
-	}
 
 	/**
 	 * 逆向查找元模型
+	 * 
+	 * @param schema
+	 * @param table
 	 */
 	public static AbstractMetadata lookup(String schema, String table) {
 		String key = (schema + "." + table).toUpperCase();

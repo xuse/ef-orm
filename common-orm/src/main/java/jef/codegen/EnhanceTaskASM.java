@@ -3,6 +3,7 @@ package jef.codegen;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javax.persistence.ManyToMany;
@@ -26,13 +27,14 @@ import jef.accelerator.asm.commons.FieldExtDef;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
+import jef.tools.resource.ResourceLoader;
 
 import org.apache.commons.lang.ArrayUtils;
 
 public class EnhanceTaskASM {
-	private File root;
+	private ResourceLoader root;
 
-	public EnhanceTaskASM(File root, File[] roots) {
+	public EnhanceTaskASM(ResourceLoader root) {
 		super();
 		this.root = root;
 	}
@@ -42,27 +44,26 @@ public class EnhanceTaskASM {
 
 	/**
 	 * 
-	 * @param className
 	 * @param classdata
 	 * @param fieldEumData
 	 *            允许传入null
 	 * @return 返回null表示不需要增强，返回byte[0]表示该类已经增强，返回其他数据为增强后的class
 	 * @throws Exception
 	 */
-	public byte[] doEnhance(String className, byte[] classdata, byte[] fieldEumData) throws Exception {
+	public byte[] doEnhance(byte[] classdata, byte[] fieldEumData) throws Exception {
 		Assert.notNull(classdata);
 		List<String> enumFields = parseEnumFields(fieldEumData);
 		try {
 			ClassReader reader = new ClassReader(classdata);
 			byte[] data = enhanceClass(reader, enumFields);
-			// {
-			// DEBUG
-			// File file = new File("c:/asm/" +
-			// StringUtils.substringAfterLast(className, ".") + ".class");
-			// IOUtils.saveAsFile(file, data);
-			// System.out.println(file +
-			// " saved -- Enhanced class"+className);
-			// }
+			 {
+			 //DEBUG
+//			 File file = new File("c:/asm/" +
+//			 StringUtils.substringAfterLast(className, ".") + ".class");
+//			 IOUtils.saveAsFile(file, data);
+//			 System.out.println(file +
+//			 " saved -- Enhanced class"+className);
+			 }
 			return data;
 		} catch (EnhancedException e) {
 			return ArrayUtils.EMPTY_BYTE_ARRAY;
@@ -145,21 +146,19 @@ public class EnhanceTaskASM {
 					public void onFieldRead(FieldExtDef info) {
 						boolean contains = enumFields.contains(name);
 						if (contains) {
-							AnnotationDef annotation = info.getAnnotation("Ljavax/persistence/Lob;");
-							if (annotation != null) {
+							if (!info.getAnnotation("Ljavax/persistence/Lob;").isEmpty()) {
 								lobAndRefFields.add(name);
 							}
 						} else {
-							Object o = null;
-							if (o == null)
-								o = info.getAnnotation(OneToMany.class);
-							if (o == null)
+						    Collection<AnnotationDef> o = info.getAnnotation(OneToMany.class);
+							if (o.isEmpty())
 								o = info.getAnnotation(ManyToOne.class);
-							if (o == null)
+							if (o.isEmpty())
 								o = info.getAnnotation(ManyToMany.class);
-							if (o == null)
+							if (o.isEmpty())
 								o = info.getAnnotation(OneToOne.class);
-							if (o != null) {
+							//判断完成
+							if (!o.isEmpty()) {
 								lobAndRefFields.add(name);
 							}
 						}
@@ -202,7 +201,13 @@ public class EnhanceTaskASM {
 				if (enumFields.contains(fieldName) && nonStaticFields.contains(fieldName)) {
 					return new SetterVisitor(mv, fieldName, typeName, types[0]);
 				}else if(lobAndRefFields.contains(fieldName)) {
-					return new SetterVisitor2(mv, fieldName, typeName);
+					return new SetterOfClearLazyload(mv, fieldName, typeName);
+				}else{
+					String altFieldName="is"+StringUtils.capitalize(fieldName);
+		//特定情况，当boolean类型并且field名称是isXXX，setter是setXXX()
+					 if(enumFields.contains(altFieldName)){
+						 return new SetterVisitor(mv, altFieldName, typeName, types[0]);
+					 }
 				}
 				return mv;
 			}
@@ -226,18 +231,8 @@ public class EnhanceTaskASM {
 		try {
 			URL url = ClassLoader.getSystemResource(superName + ".class");
 			if (url == null && root!=null) {
-				File parent = null;
-				if (root.exists()) {
-					parent = new File(root, superName + ".class");
-				}
-//				if(!parent.exists()){
-//					for(File roo:roots){
-//						parent = new File(roo, superName + ".class");
-//						if(parent.exists())break;
-//					}
-//				}
-				if(parent.exists()){
-					url=parent.toURI().toURL();
+				if (root!=null) {
+					url=root.getResource(superName + ".class");
 				}
 			}
 			if(url==null){ //父类找不到，无法准确判断
@@ -290,11 +285,11 @@ public class EnhanceTaskASM {
 		}
 	}
 
-	static class SetterVisitor2 extends MethodVisitor implements Opcodes {
+	static class SetterOfClearLazyload extends MethodVisitor implements Opcodes {
 		private String name;
 		private String typeName;
 
-		public SetterVisitor2(MethodVisitor mv, String name, String typeName) {
+		public SetterOfClearLazyload(MethodVisitor mv, String name, String typeName) {
 			super(Opcodes.ASM5,mv);
 			this.name = name;
 			this.typeName = typeName;
@@ -327,9 +322,8 @@ public class EnhanceTaskASM {
 	// 8: getstatic #128; //Field
 	// jef/orm/onetable/model/TestEntity$Field.binaryData:Ljef/orm/onetable/model/TestEntity$Field;
 	// 11: aload_1
-	// 12: iconst_1
 	// 13: invokevirtual #133; //Method
-	// prepareUpdate:(Ljef/database/Field;Ljava/lang/Object;Z)V
+	// prepareUpdate:(Ljef/database/Field;Ljava/lang/Object;)V
 	// 16: aload_0
 	// 17: aload_1
 	// 18: putfield #121; //Field binaryData:[B
@@ -367,9 +361,7 @@ public class EnhanceTaskASM {
 			} else {
 				mv.visitIntInsn(ALOAD,1);
 			}
-			mv.visitInsn(ICONST_1);
-			mv.visitMethodInsn(INVOKEVIRTUAL, typeName, "prepareUpdate", "(Ljef/database/Field;Ljava/lang/Object;Z)V",false);
-
+			mv.visitMethodInsn(INVOKEVIRTUAL, typeName, "prepareUpdate", "(Ljef/database/Field;Ljava/lang/Object;)V",false);
 			mv.visitLabel(norecord);
 			super.visitCode();
 

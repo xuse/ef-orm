@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import jef.common.wrapper.IntRange;
 import jef.database.Condition.Operator;
 import jef.database.jdbc.result.ResultSetContainer;
 import jef.database.jdbc.statement.ResultSetLaterProcess;
@@ -35,6 +34,7 @@ import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.clause.InMemoryStartWithConnectBy;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
+import jef.tools.PageLimit;
 import jef.tools.StringUtils;
 
 import com.alibaba.druid.proxy.jdbc.JdbcParameter;
@@ -130,7 +130,7 @@ public class SqlAndParameter implements InMemoryOperateProvider {
 		case in:
 			op = Operator.IN;
 			InExpression in = (InExpression) startExpression;
-			leftColumn = getColumnId(in.getLeftExpression(), columns, maps);
+			leftColumn = getColumnId(in.getSingleLeftExpression(), columns, maps);
 			if (in.getItemsList() instanceof ExpressionList) {
 				List<Object> values = new ArrayList<Object>();
 				for (Expression ex : ((ExpressionList) in.getItemsList()).getExpressions()) {
@@ -323,7 +323,7 @@ public class SqlAndParameter implements InMemoryOperateProvider {
 	}
 
 	@Override
-	public void parepareInMemoryProcess(IntRange range, ResultSetContainer mrs) {
+	public void parepareInMemoryProcess(PageLimit range, ResultSetContainer mrs) {
 		if(startWith!=null){
 			mrs.setInMemoryConnectBy(parseStartWith(mrs.getColumns()));
 		}
@@ -348,14 +348,13 @@ public class SqlAndParameter implements InMemoryOperateProvider {
 		return limit;
 	}
 
-	public void setNewLimit(IntRange range) {
+	public void setNewLimit(PageLimit range) {
 		if(range==null){
 			limit=null;
 		}else{
-			int[] values=range.toStartLimitSpan();
 			Limit limit=new Limit();
-			limit.setOffset(values[0]);
-			limit.setRowCount(values[1]);
+			limit.setOffset(range.getStart());
+			limit.setRowCount(range.getLimit());
 			this.limit=limit;
 		}
 	}

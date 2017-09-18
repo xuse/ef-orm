@@ -33,11 +33,10 @@ public abstract class AbstractQuery<T extends IQueryableEntity> implements Query
 	@Transient
 	transient ITableMetadata type;
 
-
 	private int maxResult;
 	private int fetchSize;
 	private int queryTimeout;
-	protected boolean cacheable =true;
+	protected boolean cacheable = true;
 
 	public void setMaxResult(int size) {
 		this.maxResult = size;
@@ -94,35 +93,15 @@ public abstract class AbstractQuery<T extends IQueryableEntity> implements Query
 		PartitionResult[] prs = DbUtils.toTableNames(getInstance(), tableName, this, processor.getPartitionSupport());
 		DatabaseDialect profile = processor.getProfile(prs);
 
-		QueryClauseImpl clause = new QueryClauseImpl(profile);
-
 		GroupClause groupClause = SelectProcessor.toGroupAndHavingClause(this, context, profile);
-		clause.setGrouphavingPart(groupClause);
-
-		clause.setSelectPart(SelectProcessor.toSelectSql(context, groupClause, profile));
-		clause.setTables(type.getTableName(false),prs);
-		clause.setWherePart(processor.parent.toWhereClause(this, context, false, profile).getSql());
-		if (order)
-			clause.setOrderbyPart(SelectProcessor.toOrderClause(this, context, profile));
-		return clause;
-	}
-
-	@Override
-	public QueryClause toPrepareQuerySql(SelectProcessor processor, SqlContext context, boolean order) {
-		String tableName = (String) getAttribute(JoinElement.CUSTOM_TABLE_NAME);
-		if (tableName != null)
-			tableName = MetaHolder.toSchemaAdjustedName(tableName);
-		PartitionResult[] prs = DbUtils.toTableNames(getInstance(), tableName, this, processor.getPartitionSupport());
-
-		DatabaseDialect profile = processor.getProfile(prs);
-
-		GroupClause groupClause = SelectProcessor.toGroupAndHavingClause(this, context, profile);
-		BindSql whereResult = processor.parent.toPrepareWhereSql(this, context, false, profile);
+		BindSql whereResult = processor.parent.toWhereClause(this, context, null, profile, false);
 
 		QueryClauseImpl result = new QueryClauseImpl(profile);
+		result.setGrouphavingPart(groupClause);
+
 		result.setSelectPart(SelectProcessor.toSelectSql(context, groupClause, profile));
 		result.setGrouphavingPart(groupClause);
-		result.setTables(type.getTableName(false),prs);
+		result.setTables(type.getTableName(false), prs);
 		result.setWherePart(whereResult.getSql());
 		result.setBind(whereResult.getBind());
 		if (order)
@@ -137,7 +116,7 @@ public abstract class AbstractQuery<T extends IQueryableEntity> implements Query
 
 	@Override
 	public void setCacheable(boolean cacheable) {
-		this.cacheable=cacheable;
+		this.cacheable = cacheable;
 	}
 
 	public boolean isCacheable() {

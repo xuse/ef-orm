@@ -1,9 +1,13 @@
 package jef.database.dialect.type;
 
 import java.lang.annotation.Annotation;
+import java.sql.Date;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+
+import javax.persistence.Column;
 
 import jef.accelerator.bean.BeanAccessor;
 import jef.database.DbUtils;
@@ -13,13 +17,14 @@ import jef.database.annotation.UnsavedValue;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jsqlparser.visitor.Expression;
-import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.Assert;
+import jef.tools.DateUtils;
 import jef.tools.StringUtils;
-import jef.tools.reflect.Property;
+import jef.tools.collection.ElementFilter;
 import jef.tools.reflect.ConvertUtils;
+import jef.tools.reflect.Property;
 
 public abstract class AColumnMapping implements ColumnMapping {
 	/**
@@ -39,7 +44,11 @@ public abstract class AColumnMapping implements ColumnMapping {
 	private boolean pk;
 	protected transient DatabaseDialect bindedProfile;
 	protected Property fieldAccessor;
-	private Object unsavedValue;
+
+	private boolean unsavedValueDeclared;
+	private ElementFilter<Object> unsavedValue;
+	private boolean notInsert;
+	private boolean notUpdate;
 
 	public AColumnMapping() {
 		this.clz = getDefaultJavaType();
@@ -54,6 +63,62 @@ public abstract class AColumnMapping implements ColumnMapping {
 	public boolean isPk() {
 		return pk;
 	}
+
+	private static class ConstantFilter implements ElementFilter<Object> {
+		private Object object1;
+
+		ConstantFilter(Object obj) {
+			this.object1 = obj;
+		}
+
+		public boolean apply(Object object2) {
+			if (object1 == object2) {
+				return true;
+			}
+			if ((object1 == null) || (object2 == null)) {
+				return false;
+			}
+			return object1.equals(object2);
+		}
+	}
+
+	private static final ElementFilter<Object> Null = new ElementFilter<Object>() {
+		public boolean apply(Object obj) {
+			return obj == null;
+		}
+	};
+
+	private static final ElementFilter<Object> NullOrEmpty = new ElementFilter<Object>() {
+		public boolean apply(Object obj) {
+			if (obj == null)
+				return true;
+			return String.valueOf(obj).length() == 0;
+		}
+	};
+
+	private static final ElementFilter<Object> MinusNumber = new ElementFilter<Object>() {
+		public boolean apply(Object obj) {
+			if (obj == null)
+				return true;
+			if (obj instanceof Number) {
+				return ((Number) obj).longValue() < 0;
+			} else {
+				return false;
+			}
+		}
+	};
+
+	private static final ElementFilter<Object> ZeroAndMinus = new ElementFilter<Object>() {
+		public boolean apply(Object obj) {
+			if (obj == null)
+				return true;
+			if (obj instanceof Number) {
+				return ((Number) obj).longValue() <= 0;
+			} else {
+				return false;
+			}
+		}
+	};
 
 	public void init(Field field, String columnName, ColumnType type, ITableMetadata meta) {
 		this.field = field;
@@ -72,18 +137,27 @@ public abstract class AColumnMapping implements ColumnMapping {
 		if (clz.isAssignableFrom(containerType)) {
 			this.clz = containerType;
 		}
-		if(containerType.isPrimitive()) {
-			Map<Class<?>,Annotation> map=ba.getAnnotationOnField(field.name());
-			UnsavedValue value = map==null?null:(UnsavedValue)map.get(UnsavedValue.class);
-			if (value == null) {
-				unsavedValue = ConvertUtils.defaultValueOfPrimitive(containerType);
-			} else {
-				unsavedValue = parseValue(containerType, value.value());
-			}	
+		Map<Class<?>, Annotation> map = ba.getAnnotationOnField(field.name());
+		UnsavedValue unsaveValue = map == null ? null : (UnsavedValue) map.get(UnsavedValue.class);
+		if (unsaveValue != null) {
+			unsavedValueDeclared = true;
+			unsavedValue = parseValue(containerType, unsaveValue.value());
+		} else if (containerType.isPrimitive()) {
+			unsavedValue = new ConstantFilter(ConvertUtils.defaultValueOfPrimitive(containerType));
+		}
+		Column column = map == null ? null : (Column) map.get(Column.class);
+		if (column != null) {
+			this.notInsert = !column.insertable();
+			this.notUpdate = !column.updatable();
 		}
 	}
 
-	private Object parseValue(Class<?> containerType, String value) {
+	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect)
+			throws SQLException {
+		rs.updateObject(columnIndex, value);
+	}
+
+	private ElementFilter<Object> parseValue(Class<?> containerType, String value) {
 		// int 226
 		// short 215
 		// long 221
@@ -92,29 +166,54 @@ public abstract class AColumnMapping implements ColumnMapping {
 		// double 228
 		// char 201
 		// byte 237
+		Object condition = null;
 		if (containerType.isPrimitive()) {
 			String s = containerType.getName();
 			switch (s.charAt(1) + s.charAt(2)) {
 			case 226:
-				return StringUtils.toInt(value, 0);
+				condition = StringUtils.toInt(value, 0);
+				break;
 			case 215:
-				return StringUtils.toInt(value, 0);
+				condition = StringUtils.toInt(value, 0);
+				break;
 			case 221:
-				return StringUtils.toLong(value, 0L);
+				condition = StringUtils.toLong(value, 0L);
+				break;
 			case 222:
-				return StringUtils.toBoolean(value, false);
+				condition = StringUtils.toBoolean(value, false);
+				break;
 			case 219:
-				return StringUtils.toFloat(value, 0f);
+				condition = StringUtils.toFloat(value, 0f);
+				break;
 			case 228:
-				return StringUtils.toDouble(value, 0d);
+				condition = StringUtils.toDouble(value, 0d);
+				break;
 			case 201:
-				if(value.length()==0)return (char)0;
-				return value.charAt(0);
+				if (value.length() == 0) {
+					condition = (char) 0;
+				} else {
+					condition = value.charAt(0);
+				}
+				break;
 			case 237:
-				return StringUtils.toInt(value, 0);
+				condition = (byte) StringUtils.toInt(value, 0);
+				break;
+			default:
 			}
+		} else if ("null".equalsIgnoreCase(value)) {
+			return Null;
+		} else if (UnsavedValue.MinusNumber.equals(value)) {
+			return MinusNumber;
+		} else if (UnsavedValue.ZeroAndMinus.equals(value)) {
+			return ZeroAndMinus;
+		} else if (UnsavedValue.NullOrEmpty.equals(value)) {
+			return NullOrEmpty;
+		} else if (String.class == containerType) {
+			condition = value;
+		} else if (Date.class == containerType) {
+			condition = DateUtils.autoParse(value);
 		}
-		return null;
+		return condition == null ? Null : new ConstantFilter(condition);
 	}
 
 	public String fieldName() {
@@ -209,24 +308,8 @@ public abstract class AColumnMapping implements ColumnMapping {
 	 */
 	protected abstract String getSqlExpression(Object value, DatabaseDialect profile);
 
-	public void processInsert(Object value, InsertSqlClause result, List<String> cStr, List<String> vStr, boolean smart, IQueryableEntity obj) throws SQLException {
-		String columnName = getColumnName(result.profile, true);
-		if (value == null) {
-			if (result.profile.has(Feature.NOT_SUPPORT_KEYWORD_DEFAULT)) {// 必须使用默认的方法(即不插入)来描述缺省值
-			} else {
-				cStr.add(columnName);// 为空表示不指定，使用缺省值
-				vStr.add("DEFAULT");
-			}
-			return;
-		}
-		if (smart && !obj.isUsed(field)) {
-			return;
-		}
-		cStr.add(columnName);
-		vStr.add(getSqlStr(value, result.profile));
-	}
-
-	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean dynamic) throws SQLException {
+	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr,
+			InsertSqlClause result, boolean dynamic) throws SQLException {
 		if (dynamic && !obj.isUsed(field)) {
 			return;
 		}
@@ -253,8 +336,32 @@ public abstract class AColumnMapping implements ColumnMapping {
 		return this.fieldName;
 	}
 
-	@Override
-	public Object getUnsavedValue() {
-		return unsavedValue;
+	public boolean isNotInsert() {
+		return notInsert;
+	}
+
+	public boolean isNotUpdate() {
+		return notUpdate;
+	}
+
+	/**
+	 * 用户是否通过注解配置了UnsavedValue
+	 * 
+	 * @return
+	 */
+	public boolean isUnsavedValueDeclared() {
+		return unsavedValueDeclared;
+	}
+
+    /**
+     * 判断是否为UnsavedValue。 UnsavedValue是系统认为不会存入数据库的一种值。 如果显式声明 用于判断主键无效、查询条件无效等情况
+     */
+    @Override
+    public boolean isUnsavedValue(Object object) {
+        return unsavedValue.apply(object);
+    }
+
+	public boolean isGenerated() {
+		return false;
 	}
 }

@@ -1,12 +1,18 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 
-public class NumBigLongMapping extends AColumnMapping{
+/**
+ * BIGINT <-> Long.class
+ * @author jiyi
+ *
+ */
+public class NumBigLongMapping extends AbstractVersionNumberMapping{
 	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		if(value==null){
 			st.setNull(index,getSqlType());
@@ -35,5 +41,23 @@ public class NumBigLongMapping extends AColumnMapping{
 	@Override
 	protected Class<?> getDefaultJavaType() {
 		return Long.class;
+	}
+	
+	@Override
+	Object increament(Object value) {
+		if (value == null)
+			return 1;
+		long i = ((Number) value).longValue();
+		return i + 1L;
+	}
+
+	@Override
+	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
+		rs.updateLong(columnIndex, ((Number)value).longValue());
+	}
+
+	@Override
+	protected Object transfer(long n) {
+		return n;
 	}
 }

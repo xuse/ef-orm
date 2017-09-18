@@ -59,24 +59,25 @@ public class QueryBuilder {
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T extends IQueryableEntity> Query<T> create(Class<T> clz) {
-		ITableMetadata meta=MetaHolder.getMeta(clz);
+		ITableMetadata meta = MetaHolder.getMeta(clz);
 		QueryImpl<T> query = (QueryImpl<T>) meta.newInstance().getQuery();
-		query.allRecords=true;
+		query.allRecords = true;
 		return query;
 	}
 
 	/**
 	 * 创建查询条件
+	 * 
 	 * @param clz
 	 * @return
 	 */
 	public static <T extends IQueryableEntity> Terms terms(Class<T> clz) {
 		return create(clz).terms();
 	}
-	
-	
+
 	/**
 	 * 针对动态表模板，创建指定KEY的查询
+	 * 
 	 * @param clz
 	 * @param key
 	 * @return
@@ -85,8 +86,8 @@ public class QueryBuilder {
 		T d;
 		try {
 			d = clz.newInstance();
-			QueryImpl<T> query =new QueryImpl<T>(d,key);
-			query.allRecords=true;
+			QueryImpl<T> query = new QueryImpl<T>(d, key);
+			query.allRecords = true;
 			return query;
 		} catch (InstantiationException e) {
 			throw new RuntimeException(e);
@@ -589,6 +590,7 @@ public class QueryBuilder {
 	 * @see #on(Field, String)
 	 * @see #on(Field, Operator, Object)
 	 * @see #on(Query, Field, Query, Field)
+	 * @deprecated see https://github.com/GeeQuery/ef-orm/issues/46
 	 */
 	public static Join innerJoinWithRef(Query<?> left, Query<?> right, JoinKey... keys) {
 		JoinElement jl = DbUtils.toReferenceJoinQuery(left, null);
@@ -690,6 +692,7 @@ public class QueryBuilder {
 	 * @param keys
 	 *            连接路径，可省略。一般在编程中QB.on()方法来构造
 	 * @return Join查询对象
+	 * @deprecated see https://github.com/GeeQuery/ef-orm/issues/46
 	 */
 	public static Join leftJoinWithRef(Query<?> left, Query<?> right, JoinKey... keys) {
 		JoinElement jl = DbUtils.toReferenceJoinQuery(left, null);
@@ -707,6 +710,7 @@ public class QueryBuilder {
 	 * @param keys
 	 *            连接路径。一般在编程中QB.on()方法来构造
 	 * @return Join查询对象
+	 * @deprecated see https://github.com/GeeQuery/ef-orm/issues/46
 	 */
 	public static Join rightJoinWithRef(Query<?> left, Query<?> right, JoinKey... keys) {
 		JoinElement jl = DbUtils.toReferenceJoinQuery(left, null);
@@ -724,6 +728,7 @@ public class QueryBuilder {
 	 * @param keys
 	 *            连接路径。一般在编程中QB.on()方法来构造
 	 * @return Join查询对象
+	 * @deprecated see https://github.com/GeeQuery/ef-orm/issues/46
 	 */
 	public static Join outerJoinWithRef(Query<?> left, Query<?> right, JoinKey... keys) {
 		JoinElement jl = DbUtils.toReferenceJoinQuery(left, null);
@@ -885,5 +890,47 @@ public class QueryBuilder {
 	 */
 	public static Field fieldOf(Query<?> q, String field) {
 		return new RefField(q, field);
+	}
+
+	/**
+	 * 用于在对象的更新字段表中产生一个自增（或自减）的更新描述 <h3>示例</h3>
+	 * {@code QB.fieldAdd(foo,Foo.Field.age, 100);}
+	 * <p>
+	 * 将会形成如下的SQL语句<br />
+	 * <code>
+	 * update foo set age = age + ? （实际执行时为 age = age + 100）
+	 * </code>
+	 * 
+	 * @param entity
+	 *            要更新的对象
+	 * @param field
+	 *            需要自增的字段
+	 * @param i
+	 *            自增值
+	 */
+	public static void fieldAdd(IQueryableEntity entity, Field field, int i) {
+		entity.prepareUpdate(field, new JpqlExpression(field.name() + " + :amount_"));
+		entity.getQuery().setAttribute("amount_", i);
+	}
+
+	/**
+	 * 用于在对象的更新字段表中产生一个自增（或自减）的更新描述 <h3>示例</h3>
+	 * {@code QB.fieldAdd(foo,Foo.Field.age, 100);}
+	 * <p>
+	 * 将会形成如下的SQL语句<br />
+	 * <code>
+	 * update foo set age = age + ? （实际执行时为 age = age + 100）
+	 * </code>
+	 * 
+	 * @param entity
+	 *            要更新的对象
+	 * @param field
+	 *            需要自增的字段
+	 * @param i
+	 *            自增值
+	 */
+	public static void fieldAdd(IQueryableEntity entity, Field field, double i) {
+		entity.prepareUpdate(field, new JpqlExpression(field.name() + " + :amount_"));
+		entity.getQuery().setAttribute("amount_", i);
 	}
 }

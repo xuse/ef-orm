@@ -4,7 +4,7 @@ db2/
 db3/
 target/
 
-# Mobile Tools for Java (J2ME)
+
 .settings
 .project
 .classpath
@@ -12,11 +12,7 @@ target/
 *.last
 *.123
 *.iml
-
-# Package Files #
 *.log
 *.bak
 test.db
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*

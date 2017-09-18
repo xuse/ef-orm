@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import jef.codegen.EntityEnhancer;
 import jef.database.DbClient;
 import jef.database.ORMConfig;
 import jef.database.Session;
@@ -15,9 +14,10 @@ import jef.database.test.DatabaseInit;
 import jef.database.test.IgnoreOn;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
 
-import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({
@@ -26,19 +26,16 @@ import org.junit.runner.RunWith;
  @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
  @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
  @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
- @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
+ @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db?date_string_format=yyyy-MM-dd HH:mm:ss"),
  @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class JoinDescrptionTest {
-
-	@BeforeClass
-	public static void test() {
-		EntityEnhancer en = new EntityEnhancer();
-		en.enhance();
-	}
-
 	@DatabaseInit
 	public void init() throws SQLException {
+		ORMConfig.getInstance().setSelectTimeout(20);
+		ORMConfig.getInstance().setUpdateTimeout(20);
+		ORMConfig.getInstance().setDeleteTimeout(20);
 		db.dropTable(Student.class);
 		db.createTable(Student.class);
 		db.refreshTable(Lesson.class);

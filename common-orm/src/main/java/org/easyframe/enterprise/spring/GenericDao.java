@@ -1,6 +1,7 @@
 package org.easyframe.enterprise.spring;
 
 import java.io.Serializable;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -8,6 +9,8 @@ import jef.common.wrapper.Page;
 import jef.database.IQueryableEntity;
 import jef.database.NamedQueryConfig;
 import jef.database.NativeQuery;
+import jef.database.RecordHolder;
+import jef.database.RecordsHolder;
 
 /**
  * 泛型的通用Dao子类必须实现泛型
@@ -87,7 +90,7 @@ public interface GenericDao<T extends IQueryableEntity> {
 	 * @param entity
 	 *            查询对象模板
 	 * @param unique
-	 * 			是否要求结果唯一
+	 *            是否要求结果唯一
 	 * @return 查询结果
 	 */
 	public T load(T entity, boolean unique);
@@ -97,7 +100,8 @@ public interface GenericDao<T extends IQueryableEntity> {
 	 * 
 	 * @param entity
 	 *            查询对象模板
-	 * @param unique 是否要求结果唯一
+	 * @param unique
+	 *            是否要求结果唯一
 	 * @return 查询结果
 	 * @since 1.7.0
 	 * 
@@ -341,7 +345,7 @@ public interface GenericDao<T extends IQueryableEntity> {
 	 *            条件字段值
 	 * @return 符合条件的结果。如果查询到多条记录，也只返回第一条
 	 */
-	public T loadByField(String field, Serializable value,boolean unique);
+	public T loadByField(String field, Serializable value, boolean unique);
 
 	/**
 	 * 根据单个的字段条件查找结果
@@ -373,15 +377,14 @@ public interface GenericDao<T extends IQueryableEntity> {
 	 */
 	public List<T> batchLoad(List<? extends Serializable> pkValues);
 
-	
 	/**
 	 * 按主键批量删除 (只支持单主键，不支持复合主键)
+	 * 
 	 * @param pkValues
 	 * @return
 	 */
 	public int batchDelete(List<? extends Serializable> pkValues);
-	
-	
+
 	/**
 	 * 根据单个字段的值读取记录（批量）
 	 * 
@@ -395,9 +398,45 @@ public interface GenericDao<T extends IQueryableEntity> {
 
 	/**
 	 * 根据单个字段的值删除记录（批量）
+	 * 
 	 * @param field
 	 * @param values
 	 * @return
 	 */
-	public int batchDeleteByField(String field,List<? extends Serializable> values);
+	public int batchDeleteByField(String field, List<? extends Serializable> values);
+
+	/**
+	 * 返回一个可以更新操作的结果数据集合 实质对用JDBC中ResultSet的updateRow,deleteRow,insertRow等方法， <br>
+	 * 该操作模型需要持有ResultSet对象，因此注意使用完毕后要close()方法关闭结果集<br>
+	 * 
+	 * RecordsHolder可以对选择出来结果集进行更新、删除、新增三种操作，操作完成后调用commit方法<br>
+	 * 
+	 * @param obj
+	 *            查询请求
+	 * @return RecordsHolder对象，这是一个可供操作的数据库结果集句柄。注意使用完后一定要关闭。
+	 * @throws SQLException
+	 *             如果数据库操作错误，抛出。
+	 * @see RecordsHolder
+	 */
+	RecordsHolder<T> selectForUpdate(T query);
+
+	/**
+	 * 返回一个可以更新操作的结果数据{@link RecordHolder}<br>
+	 * 用户可以在这个RecordHolder上直接更新数据库中的数据，包括插入记录和删除记录<br>
+	 * 
+	 * <h3>实现原理</h3> RecordHolder对象，是JDBC ResultSet的封装<br>
+	 * 实质对用JDBC中ResultSet的updateRow,deleteRow,insertRow等方法，<br>
+	 * 该操作模型需要持有ResultSet对象，因此注意使用完毕后要close()方法关闭结果集。 <h3>注意事项</h3>
+	 * RecordHolder对象需要手动关闭。如果不关闭将造成数据库游标泄露。 <h3>使用示例</h3>
+	 * 
+	 * 
+	 * @param obj
+	 *            查询对象
+	 * @return 查询结果被放在RecordHolder对象中，用户可以直接在查询结果上修改数据。最后调用
+	 *         {@link RecordHolder#commit}方法提交到数据库。
+	 * @throws SQLException
+	 *             如果数据库操作错误，抛出。
+	 * @see RecordHolder
+	 */
+	RecordHolder<T> loadForUpdate(T obj);
 }

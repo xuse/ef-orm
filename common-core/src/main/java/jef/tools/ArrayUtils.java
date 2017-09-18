@@ -180,6 +180,23 @@ public class ArrayUtils extends org.apache.commons.lang.ArrayUtils {
 		}
 		throw new IllegalArgumentException();
 	}
+	
+	/**
+	 * 将数组转换为指定类型的数组容器
+	 * @param obj
+	 * @param containerType
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> T[] toObject(Object obj,Class<T> containerType) {
+		Class<?> c = obj.getClass();
+		Assert.isTrue(c.isArray());
+		Class<?> priType = c.getComponentType();
+		if(priType==containerType){
+			return (T[])obj;
+		}
+		return cast(toObject(obj),containerType);
+	}
 
 	/**
 	 * 将由非原生八类型的数组转换为原生八类型的数组

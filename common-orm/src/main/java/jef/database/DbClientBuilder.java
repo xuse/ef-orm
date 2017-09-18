@@ -25,6 +25,7 @@ import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.database.datasource.MapDataSourceLookup;
 import jef.database.datasource.RoutingDataSource;
+import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.AbstractDialect;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jpa.JefEntityManagerFactory;
@@ -174,7 +175,7 @@ public class DbClientBuilder {
 	 */
 	public DbClientBuilder() {
 	}
-
+	
 	/**
 	 * 构造
 	 * 
@@ -334,6 +335,18 @@ public class DbClientBuilder {
 	 */
 	public DbClientBuilder setDataSource(DataSource dataSource) {
 		this.dataSource = dataSource;
+		return this;
+	}
+	
+	/**
+	 * 设置数据源
+	 * @param url
+	 * @param user
+	 * @param password
+	 * @return
+	 */
+	public DbClientBuilder setDataSource(String url,String user,String password) {
+		this.dataSource= new SimpleDataSource(url, user, password);
 		return this;
 	}
 
@@ -690,11 +703,23 @@ public class DbClientBuilder {
 		return ORMConfig.getInstance().isCacheLevel1();
 	}
 	
+	/**
+	 * 
+	 * @param cache
+	 * @return this
+	 * @see DbCfg#CACHE_LEVEL_1
+	 */
 	public DbClientBuilder setCacheLevel1(boolean cache) {
 		ORMConfig.getInstance().setCacheLevel1(cache);
 		return this;
 	}
 	
+	/**
+	 * 获得全局缓存的生存时间，单位秒。
+	 * 全局缓存是类似于一级缓存的一个存储结构，可以自动分析数据库操作关联性并进行数据刷新。
+	 * @return 秒数
+	 * @see DbCfg#CACHE_GLOBAL_EXPIRE_TIME
+	 */
 	public int getGlobalCacheLiveTime() {
 		return ORMConfig.getInstance().getCacheLevel2();
 	}
@@ -703,11 +728,20 @@ public class DbClientBuilder {
 	 * 设置全局缓存的生存时间，单位秒。
 	 * 全局缓存是类似于一级缓存的一个存储结构，可以自动分析数据库操作关联性并进行数据刷新。
 	 * @param second
-	 * @return
+	 * @return this
+	 * @see DbCfg#CACHE_GLOBAL_EXPIRE_TIME
 	 */
 	public DbClientBuilder setGlobalCacheLiveTime(int second) {
 		ORMConfig.getInstance().setCacheLevel2(second);
 		return this;
 	}
 	
+	public DbClientBuilder setUseSystemOut(boolean flag){
+		LogUtil.useSlf4j=!flag;
+		return this;
+	}
+
+	public static DbClientBuilder newBuilder() {
+		return new DbClientBuilder();
+	}
 }

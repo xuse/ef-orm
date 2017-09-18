@@ -14,9 +14,11 @@ import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.type.AbstractTimeMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.dialect.type.VersionSupportColumn;
+import jef.database.meta.def.IndexDef;
+import jef.database.meta.def.UniqueConstraintDef;
 
 import com.google.common.collect.Multimap;
 
@@ -91,7 +93,7 @@ public interface ITableMetadata {
 	 * @return 重定向后的数据源名称。
 	 * @see jef.database.annotation.BindDataSource
 	 */
-	public String getBindDsName();
+	String getBindDsName();
 
 	/**
 	 * 得到schema名称。 ORM允许用户使用Annotation @Table(schema="S1")
@@ -100,7 +102,7 @@ public interface ITableMetadata {
 	 * 
 	 * @return 重定向后的schema
 	 */
-	public String getSchema();
+	String getSchema();
 
 	/**
 	 * 返回表名
@@ -110,7 +112,7 @@ public interface ITableMetadata {
 	 * @return 返回表名，如果实体绑定了schema，并且withSchema为true,那么返回形如
 	 *         <code>schema.table</code>的名称
 	 */
-	public String getTableName(boolean withSchema);
+	String getTableName(boolean withSchema);
 
 	/**
 	 * 根据名称得到一个Field对象（大小写敏感）
@@ -120,7 +122,7 @@ public interface ITableMetadata {
 	 * @return Field对象(字段元模型)
 	 * 
 	 */
-	public Field getField(String fieldname);
+	Field getField(String fieldname);
 
 	/**
 	 * 根据数据库列名（小写的）获得field对象 注意传入的列名必须保持小写。
@@ -129,7 +131,7 @@ public interface ITableMetadata {
 	 *            数据库列名的小写
 	 * @return FIeld对象(字段元模型)
 	 */
-	public Field getFieldByLowerColumn(String columnInLowerCase);
+	Field getFieldByLowerColumn(String columnInLowerCase);
 	
 	/**
 	 * 返回所有的元模型字段和类型。这些字段的顺序会进行调整，Clob和Blob将会被放在最后。 这些字段的顺序一旦确定那么就是固定的。
@@ -138,7 +140,7 @@ public interface ITableMetadata {
 	 * 
 	 * @return
 	 */
-	public Collection<ColumnMapping> getColumns();
+	Collection<ColumnMapping> getColumns();
 	
 	/**
 	 * 获取字段的元数据定义
@@ -146,61 +148,74 @@ public interface ITableMetadata {
 	 * @return MappingType,包含了该字段的数据库列名、java字段名、类型等各种信息。
 	 * @see ColumnMapping
 	 */
-	public ColumnMapping getColumnDef(Field field);
+	ColumnMapping getColumnDef(Field field);
 	
 	/**
 	 * 得到扩展属性的存放表结构
 	 * @return
 	 */
-	public TupleMetadata getExtendsTable();
+	TupleMetadata getExtendsTable();
 
 	/**
 	 * 得到所有的扩展属性字段
 	 * @return
 	 */
-	public Collection<ColumnMapping> getExtendedColumns();
+	Collection<ColumnMapping> getExtendedColumns();
 	
 	/**
 	 * 得到指定名称的扩展属性字段
 	 * @param field
 	 * @return
 	 */
-	public ColumnMapping getExtendedColumnDef(String field);
+	ColumnMapping getExtendedColumnDef(String field);
 	
 	/**
 	 * 返回所有自增字段的定义，如果没有则返回空数组
 	 * 
 	 * @return 所有自增字段的定义
 	 */
-	public AutoIncrementMapping[] getAutoincrementDef();
+	AutoIncrementMapping[] getAutoincrementDef();
 	
 	/**
 	 * 返回第一个自增字段的定义，如果没有则返回null
 	 * 
 	 * @return 返回第一个自增字段的定义
 	 */
-	public AutoIncrementMapping getFirstAutoincrementDef();
+	AutoIncrementMapping getFirstAutoincrementDef();
 
 	/**
-	 * 需要自动维护记录更新时间的列定义
+	 * 需要自动维护数据的列定义（每次更新时自动刷新的列，例如版本或修改时间）
 	 * 
-	 * @return 需要自动维护记录更新时间的列定义
+	 * @return 需要自动维护记录更新的列定义
 	 */
-	public AbstractTimeMapping[] getUpdateTimeDef();
+	VersionSupportColumn[] getAutoUpdateColumnDef();
+	
+	/**
+	 * 获得用于进行版本控制（防止并发修改冲突）的列定义
+	 * @return the VersionSupportColumn with version usage
+	 */
+	VersionSupportColumn getVersionColumn();
 
 	/**
 	 * 获取被设置为主键的字段
 	 * 
 	 * @return
 	 */
-	public List<ColumnMapping> getPKFields();
+	List<ColumnMapping> getPKFields();
 
 	/**
 	 * 获取索引的元数据定义
 	 * 
 	 * @return 索引的定义
 	 */
-	public List<jef.database.annotation.Index> getIndexDefinition();
+	List<IndexDef> getIndexDefinition();
+	
+	/**
+	 * 得到所有的unique约束
+	 * @return
+	 */
+	List<UniqueConstraintDef> getUniques();
+	
 
 	// ///////////////////////引用关联查询相关////////////////////
 	/**
@@ -208,14 +223,14 @@ public interface ITableMetadata {
 	 * 
 	 * @return 关联关系字段
 	 */
-	public Map<Reference, List<AbstractRefField>> getRefFieldsByRef();
+	Map<Reference, List<AbstractRefField>> getRefFieldsByRef();
 
 	/**
 	 * 按照名称获得所有关联字段
 	 * 
 	 * @return 关联关系字段
 	 */
-	public Map<String, jef.database.meta.AbstractRefField> getRefFieldsByName();
+	Map<String, jef.database.meta.AbstractRefField> getRefFieldsByName();
 
 	// //////////////////////附加功能////////////////////
 
@@ -225,7 +240,7 @@ public interface ITableMetadata {
 	 * @param name
 	 * @return Field对象
 	 */
-	public ColumnMapping findField(String left);
+	ColumnMapping findField(String left);
 
 	/**
 	 * 不考虑表别名的情况返回列名
@@ -236,14 +251,14 @@ public interface ITableMetadata {
 	 *            当前数据库方言
 	 * @return 数据库列名
 	 */
-	public String getColumnName(Field field, DatabaseDialect profile, boolean escape);
+	String getColumnName(Field field, DatabaseDialect profile, boolean escape);
 
 	// /////////////////////////分区分库分表相关////////////////////
 
 	/**
 	 * 获得分表定义
 	 */
-	public PartitionTable getPartition();
+	PartitionTable getPartition();
 
 	/**
 	 * 获取当前生效的分区策略
@@ -253,7 +268,7 @@ public interface ITableMetadata {
 	 * @return 当前生效的分区策略
 	 */
 	@SuppressWarnings("rawtypes")
-	public Entry<PartitionKey, PartitionFunction>[] getEffectPartitionKeys();
+	Entry<PartitionKey, PartitionFunction>[] getEffectPartitionKeys();
 
 	/**
 	 * 获得每个字段上，最小单位的分表函数。 也就是说，其实一个字段上可以对应多个Key，例如有一个Date birthDay 然后KeyA
@@ -262,7 +277,7 @@ public interface ITableMetadata {
 	 * @return 最小单位的分表函数
 	 */
 	@SuppressWarnings("rawtypes")
-	public Multimap<String, PartitionFunction> getMinUnitFuncForEachPartitionKey();
+	Multimap<String, PartitionFunction> getMinUnitFuncForEachPartitionKey();
 
 	/**
 	 * 得到所有数据库字段的名称。（注意，不包含各种映射字段等非数据库字段的名称）
@@ -292,7 +307,7 @@ public interface ITableMetadata {
 	 * 在某些情况下个getContainerAccessor().newInstance()不同，因此getContainerAccessor应当仅用于存取字段值，不应用于创建实例
 	 * @return 创建的实例
 	 */
-	public IQueryableEntity newInstance();
+	IQueryableEntity newInstance();
 
 	// ///////////////////////////// 其他行为 //////////////////////////////
 	/**
@@ -322,10 +337,10 @@ public interface ITableMetadata {
 	///////////////基于KV表扩展的设计//////////////
 	
 	
-	public boolean isCacheable();
+	boolean isCacheable();
 	
-	public boolean isUseOuterJoin();
+	boolean isUseOuterJoin();
 	
-	public Map<String,String> getColumnComments();
+	Map<String,String> getColumnComments();
 	
 }

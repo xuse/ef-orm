@@ -26,17 +26,18 @@ import com.google.common.collect.MapMaker;
  * @author jiyi
  * 
  */
-final class SingleDummyConnectionPool implements IUserManagedPool{
+final class SingleDummyConnectionPool implements IUserManagedPool {
 	private DataSource ds;
 	final Map<Object, SingleConnection> map = new MapMaker().concurrencyLevel(12).weakKeys().makeMap();
 	private final AtomicLong pollCount = new AtomicLong();
 	private final AtomicLong offerCount = new AtomicLong();
 	private final DbMetaData metadata;
-	
-	
+
 	SingleDummyConnectionPool(DataSource ds) {
 		this.ds = ds;
-		this.metadata = new DbMetaData(ds, this,null);
+		this.metadata = new DbMetaData(ds, this, null);
+		// 反向修正
+		metadata.getProfile().accept(metadata);
 		PoolReleaseThread.getInstance().addPool(this);
 	}
 
@@ -127,11 +128,12 @@ final class SingleDummyConnectionPool implements IUserManagedPool{
 	public boolean isDummy() {
 		return true;
 	}
-	
+
 	private TransactionMode txMode;
+
 	@Override
 	public IUserManagedPool setTransactionMode(TransactionMode txMode) {
-		this.txMode=txMode;
+		this.txMode = txMode;
 		return this;
 	}
 

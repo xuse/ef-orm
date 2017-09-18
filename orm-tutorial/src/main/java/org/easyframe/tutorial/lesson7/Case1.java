@@ -6,7 +6,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import jef.codegen.EntityEnhancer;
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.easyframe.tutorial.lesson2.entity.Student;
+import org.easyframe.tutorial.lesson4.entity.Person;
+import org.easyframe.tutorial.lesson4.entity.School;
+import org.easyframe.tutorial.lesson5.entity.Item;
+import org.easyframe.tutorial.lesson7.entity.NodeTable;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 import jef.common.wrapper.IntRange;
 import jef.common.wrapper.Page;
 import jef.database.DbClient;
@@ -20,15 +28,6 @@ import jef.database.query.Func;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.populator.Transformer;
 import jef.tools.string.RandomData;
-
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.easyframe.tutorial.lesson2.entity.Student;
-import org.easyframe.tutorial.lesson4.entity.Person;
-import org.easyframe.tutorial.lesson4.entity.School;
-import org.easyframe.tutorial.lesson5.entity.Item;
-import org.easyframe.tutorial.lesson7.entity.NodeTable;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 /**
  * NativeQuery相关操作演示
@@ -423,7 +422,7 @@ public class Case1 extends org.junit.Assert {
 		}
 		// 执行原生SQL
 		{
-			sql = "insert into t_person(person_name,gender) values(?,?)";
+			sql = "insert into t_person(person_name,gender,created) values(?,?,current_timestamp)";
 			db.executeSql(sql, "曹操", "M");
 			db.executeSql(sql, "郭嘉", "M");
 			assertEquals(5, db.getSqlTemplate(null).countBySql("select count(*) from t_person"));

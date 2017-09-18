@@ -17,54 +17,19 @@ package jef.tools.reflect;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
-
-public final class MapWrapper extends BeanWrapper{
+public final class MapWrapper extends BeanWrapper {
 	@SuppressWarnings("rawtypes")
 	private Map obj;
-	private Collection<MapProperty> properties;
-//	private Type keyType=Object.class;
-	private static Type valueType=Object.class;
-	
-	static final class MapProperty implements Property{
-		private String name;
-		public String getName() {
-			return name;
-		}
-		MapProperty(String name){
-			this.name=name;
-		}
-		public boolean isReadable() {
-			return true;
-		}
-		public boolean isWriteable() {
-			return true;
-		}
-		@SuppressWarnings("rawtypes")
-		public Object get(Object obj) {
-			return ((Map)obj).get(name);
-		}
-		@SuppressWarnings({ "rawtypes", "unchecked" })
-		public void set(Object obj, Object value) {
-			((Map)obj).put(name, value);
-		}
-		public Class<?> getType() {
-			return GenericUtils.getRawClass(valueType);
-		}
-		public Type getGenericType() {
-			return valueType;
-		}
-	}
-	
+	private BeanAccessorMapImpl accessor=BeanAccessorMapImpl.INSTANCE;
+
 	@SuppressWarnings("rawtypes")
-	public MapWrapper(Map obj){
+	public MapWrapper(Map obj) {
 		super(obj);
-		this.obj=obj;
+		this.obj = obj;
 	}
 
 	@Override
@@ -84,12 +49,12 @@ public final class MapWrapper extends BeanWrapper{
 
 	@Override
 	public Type getPropertyType(String fieldName) {
-		return valueType;
+		return accessor.getGenericType(fieldName);
 	}
 
 	@Override
 	public Class<?> getPropertyRawType(String fieldName) {
-		return GenericUtils.getRawClass(valueType);
+		return accessor.getPropertyType(fieldName);
 	}
 
 	@Override
@@ -114,9 +79,9 @@ public final class MapWrapper extends BeanWrapper{
 	}
 
 	public String findPropertyIgnoreCase(String string) {
-		for(Object keystr:obj.keySet()){
-			String key=String.valueOf(keystr);
-			if(string.equalsIgnoreCase(key)){
+		for (Object keystr : obj.keySet()) {
+			String key = String.valueOf(keystr);
+			if (string.equalsIgnoreCase(key)) {
 				return key;
 			}
 		}
@@ -125,12 +90,12 @@ public final class MapWrapper extends BeanWrapper{
 
 	@Override
 	public Collection<String> getPropertyNames() {
-		String[] s=new String[obj.size()];
-		int n=0;
-		for(Object o:obj.keySet()){
-			s[n++]=String.valueOf(o);
+		String[] s = new String[obj.size()];
+		int n = 0;
+		for (Object o : obj.keySet()) {
+			s[n++] = String.valueOf(o);
 		}
-		return Arrays.asList(s); 
+		return Arrays.asList(s);
 	}
 
 	@Override
@@ -158,18 +123,11 @@ public final class MapWrapper extends BeanWrapper{
 
 	@Override
 	public Collection<? extends Property> getProperties() {
-		if(properties!=null)return properties;
-		Collection<String> names=this.getPropertyNames();
-		List<MapProperty> pps=new ArrayList<MapProperty>(names.size());
-		for(String s:names){
-			pps.add(new MapProperty(s));
-		}
-		properties=pps;
-		return properties;
+		return accessor.getProperties();
 	}
 
 	@Override
 	public Property getProperty(String name) {
-		return new MapProperty(name);
+		return accessor.getProperty(name);
 	}
 }

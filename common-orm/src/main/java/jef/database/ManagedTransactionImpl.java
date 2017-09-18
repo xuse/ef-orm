@@ -5,18 +5,18 @@ import java.sql.SQLException;
 
 import javax.persistence.PersistenceException;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+
 import jef.database.cache.CacheDummy;
 import jef.database.innerpool.AbstractJDBCConnection;
 import jef.database.innerpool.IConnection;
-
-import org.easyframe.enterprise.spring.TransactionMode;
 
 public class ManagedTransactionImpl extends Transaction{
 	
 	public ManagedTransactionImpl(DbClient parent,Connection connection) {
 		super();
 		this.parent = parent;
-		rProcessor = parent.rProcessor;
+		this.preProcessor=parent.preProcessor;
 		this.selectp = parent.selectp;
 		this.insertp = parent.insertp;
 		this.updatep=parent.updatep;
@@ -26,9 +26,8 @@ public class ManagedTransactionImpl extends Transaction{
 		this.conn=new Conn(connection);
 	}
 	static final class Conn extends AbstractJDBCConnection implements IConnection{
-		private Connection conn;
-		public Conn(Connection conn2) {
-			this.conn=conn2;
+		Conn(Connection conn) {
+			this.conn=conn;
 		}
 
 		@Override
@@ -58,6 +57,10 @@ public class ManagedTransactionImpl extends Transaction{
 			return conn.toString();
 		}
 		
+		public boolean isClosed() throws SQLException{
+			return conn==null || conn.isClosed();
+		}
+		
 		
 	}
 
@@ -82,6 +85,14 @@ public class ManagedTransactionImpl extends Transaction{
 	public void setRollbackOnly(boolean b) {
 	}
 
+	public boolean isOpen() {
+		try {
+			return !conn.isClosed();
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
 	@Override
 	public boolean isRollbackOnly() {
 		return false;
@@ -104,7 +115,6 @@ public class ManagedTransactionImpl extends Transaction{
 			throw new PersistenceException(e);
 		}
 	}
-
 
 	@Override
 	public int getIsolationLevel() {

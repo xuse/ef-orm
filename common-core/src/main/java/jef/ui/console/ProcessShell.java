@@ -18,56 +18,47 @@ package jef.ui.console;
 import java.io.File;
 
 import jef.common.log.LogUtil;
+import jef.ui.Commands;
 import jef.ui.ConsoleConversation;
-import jef.ui.ConsoleProcess;
 import jef.ui.ConsoleShell;
-import jef.ui.WinExecutor;
+import jef.ui.ProcessHandler;
 
-public class ProcessShell implements ConsoleShell{
-	ConsoleProcess process;
+public class ProcessShell implements ConsoleShell {
+	ProcessHandler process;
 	AbstractConsoleShell parent;
 
-	public ProcessShell(AbstractConsoleShell console,final String showitem, final File currentFolder) {
-		this.parent=console;
-		final Thread mainThread=Thread.currentThread();
-		Thread t=new Thread(){
-			
+	public ProcessShell(AbstractConsoleShell console, final String showitem, final File currentFolder) {
+		this.parent = console;
+		final Thread mainThread = Thread.currentThread();
+		Thread t = new Thread() {
 			public void run() {
-				process=WinExecutor.executeConsole(showitem, currentFolder);
-				int flag=-1;
-				try {
-					flag=process.waitFor();
-				} catch (InterruptedException e) {
-					LogUtil.exception(e);
-				}
-				unshell(flag,mainThread);
+				ProcessHandler flag = Commands.execute(showitem, null, currentFolder);
+				unshell(flag.waitfor(), mainThread);
 			}
 		};
 		t.start();
 	}
 
-	protected void unshell(int flag,Thread t) {
-		if(flag!=0 && flag!=1)LogUtil.show("Exit value:" + flag);
+	protected void unshell(int flag, Thread t) {
+		if (flag != 0 && flag != 1)
+			LogUtil.show("Exit value:" + flag);
 		parent.endSubShell(t);
 	}
 
-	
 	public void exit() {
 	}
 
-	
-	public String getInput(ConsoleConversation<?> consoleConversation, String msg,	String... validValues) {
+	public String getInput(ConsoleConversation<?> consoleConversation, String msg, String... validValues) {
 		throw new UnsupportedOperationException();
 	}
 
-	
 	public String getPrompt() {
 		return "cmd>";
 	}
 
-	
 	public ShellResult perform(String str, boolean showPrompt, String... params) {
-		if(process!=null)process.sendCommand(str);
+		if (process != null)
+			process.sendCommand(str);
 		return ShellResult.CONTINUE;
 	}
 

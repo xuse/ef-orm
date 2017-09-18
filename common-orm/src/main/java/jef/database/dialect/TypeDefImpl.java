@@ -51,24 +51,9 @@ public class TypeDefImpl extends ColumnType implements SqlTypeSized {
 	 * @param p
 	 * @param s
 	 */
-	public TypeDefImpl(String name, int sqlType, int length, int p, int s) {
+	public TypeDefImpl(String name, int sqlType) {
 		this.name = name;
 		this.sqlType = sqlType;
-		this.length = length;
-		this.precision = p;
-		this.scale = s;
-	}
-
-	/**
-	 * 构造
-	 * @param name
-	 * @param sqlType
-	 * @param javaType
-	 */
-	public TypeDefImpl(String name, int sqlType, Class<?> javaType) {
-		this.name = name;
-		this.sqlType = sqlType;
-		this.javaType = javaType;
 	}
 
 	/**
@@ -146,9 +131,21 @@ public class TypeDefImpl extends ColumnType implements SqlTypeSized {
 		this.scale = scale;
 		return this;
 	}
+	
+	public TypeDefImpl javaType(Class<?> javaType) {
+		this.javaType=javaType;
+		return this;
+	}
 
-	public TypeDefImpl setMappingClz(Class<? extends ColumnMapping> mappingClz) {
+	public TypeDefImpl mapping(Class<? extends ColumnMapping> mappingClz) {
 		this.mappingClz = mappingClz;
+		return this;
+	}
+	
+	public TypeDefImpl spec(int length,int p,int s){
+		this.length=length;
+		this.precision=p;
+		this.scale=s;
 		return this;
 	}
 }

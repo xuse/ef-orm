@@ -19,11 +19,17 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import jef.database.ConnectInfo;
+import jef.database.dialect.handler.LimitHandler;
+import jef.database.dialect.handler.SQL2005LimitHandler;
+import jef.database.dialect.handler.SQL2005LimitHandlerSlowImpl;
 import jef.database.exception.JDBCExceptionHelper;
 import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.jdbc.statement.UnionJudgement;
 import jef.database.query.function.NoArgSQLFunction;
 import jef.tools.string.JefStringReader;
+
+import com.querydsl.sql.SQLServer2005Templates;
+import com.querydsl.sql.SQLTemplates;
 
 /**
  * 
@@ -62,6 +68,7 @@ public class SQLServer2005Dialect extends SQLServer2000Dialect{
 			String dbname=reader.readToken(' ',';',':');
 			connectInfo.setDbname(dbname);
 		}
+		reader.close();
 	}
 	
 	@Override
@@ -104,5 +111,10 @@ public class SQLServer2005Dialect extends SQLServer2000Dialect{
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
 		return EXTRATER;
 	}
+	
+    //to be override
+    protected SQLTemplates generateQueryDslTemplates() {
+        return new SQLServer2005Templates();
+    }
 }
 

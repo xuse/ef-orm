@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import jef.database.Field;
@@ -23,6 +24,11 @@ public final class AutoLongMapping extends AutoIncrementMapping {
 			st.setLong(index, ((Number) value).longValue());
 		}
 		return value;
+	}
+	
+	@Override
+	public void jdbcUpdate(ResultSet rs,String column, Object value, DatabaseDialect dialect) throws SQLException {
+		rs.updateLong(column, ((Number) value).longValue());
 	}
 
 	public Object jdbcGet(IResultSet rs, int n) throws SQLException {

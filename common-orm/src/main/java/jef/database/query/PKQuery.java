@@ -32,7 +32,8 @@ import jef.database.wrapper.clause.GroupClause;
 import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.clause.QueryClauseImpl;
 import jef.database.wrapper.populator.Transformer;
-import jef.database.wrapper.processor.BindVariableDescription;
+import jef.database.wrapper.variable.ConstantVariable;
+import jef.database.wrapper.variable.Variable;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 
@@ -96,7 +97,7 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	}
 	
 	@Override
-	public QueryClause toPrepareQuerySql(SelectProcessor processor, SqlContext context, boolean order) {
+	public QueryClause toQuerySql(SelectProcessor processor, SqlContext context, boolean order) {
 		String tableName = (String) getAttribute(JoinElement.CUSTOM_TABLE_NAME);
 		if (tableName != null)
 			tableName = MetaHolder.toSchemaAdjustedName(tableName);
@@ -117,24 +118,26 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	public BindSql toPrepareWhereSql(SqlContext context, DatabaseDialect profile) {
 		int size=pkValues.size();
 		StringBuilder sb=new StringBuilder(128).append(" where ");
-		List<BindVariableDescription> bind = new ArrayList<BindVariableDescription>(size);
+		List<Variable> bind = new ArrayList<Variable>(size);
 		
 		Iterator<ColumnMapping> pkfields=type.getPKFields().iterator();
-		
+		if(!pkfields.hasNext()){
+			throw new IllegalArgumentException("The entity ["+type.getName()+"] has no primary key.");
+		}
 		int n=0;
 		ColumnMapping field=pkfields.next();
 		sb.append(field.getColumnName(profile, true)).append("= ?");
-		bind.add(new BindVariableDescription(field.field(), Operator.EQUALS, pkValues.get(n++)));
+		bind.add(new ConstantVariable(field.fieldName(),pkValues.get(n++),field));
 		while(pkfields.hasNext()){
 			field=pkfields.next();
 			sb.append(" and ").append(field.getColumnName(profile, true)).append("= ?");
-			bind.add(new BindVariableDescription(field.field(), Operator.EQUALS, pkValues.get(n++)));
+			bind.add(new ConstantVariable(field.fieldName(),pkValues.get(n++),field));
 		}
 		return new BindSql(sb.toString(), bind);
 	}
 
 	public EntityMappingProvider getSelectItems() {
-		return context;
+		return null;//context;
 	}
 
 	public void setSelectItems(Selects select) {

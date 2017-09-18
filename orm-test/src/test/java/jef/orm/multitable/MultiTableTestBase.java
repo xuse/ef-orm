@@ -7,6 +7,7 @@ import java.util.List;
 
 import jef.database.DbClient;
 import jef.database.meta.Feature;
+import jef.database.support.RDBMS;
 import jef.orm.multitable.model.Person;
 import jef.orm.multitable.model.PersonFriends;
 import jef.orm.multitable.model.School;
@@ -23,7 +24,6 @@ public abstract class MultiTableTestBase extends org.junit.Assert{
 		"insert into person_friends(pid,friendId,COMMENT) values (2,1,'2 has friend: 1')",
 		"insert into person_friends(pid,friendId,COMMENT) values (2,3,'2 has friend: 3')",
 		"insert into person_friends(pid,friendId,COMMENT) values (3,2,'3 has friend: 2')",
-		
 		"insert into score (score,pid,testtime,subject) values(50,1,current_date,'电脑')",
 		"insert into score (score,pid,testtime,subject) values(60,1,current_date,'语文')",
 		"insert into score (score,pid,testtime,subject) values(70,1,current_date,'算数')",
@@ -34,6 +34,24 @@ public abstract class MultiTableTestBase extends org.junit.Assert{
 		"insert into score (score,pid,testtime,subject)values(88,2,current_date,'算数')",
 		"insert into score (score,pid,testtime,subject)values(90,3,current_date,'语文')",
 		"insert into score (score,pid,testtime,subject)values(73,3,current_date,'算数')",
+	};
+	
+	private static String[] prepareSql_SQLITE=new String[]{
+		"insert into person_friends(pid,friendId,COMMENT) values (1,2,'1 has friend: 2')",
+		"insert into person_friends(pid,friendId,COMMENT) values (1,3,'1 has friend: 3')",
+		"insert into person_friends(pid,friendId,COMMENT) values (2,1,'2 has friend: 1')",
+		"insert into person_friends(pid,friendId,COMMENT) values (2,3,'2 has friend: 3')",
+		"insert into person_friends(pid,friendId,COMMENT) values (3,2,'3 has friend: 2')",
+		"insert into score (score,pid,testtime,subject) values(50,1,current_timestamp,'电脑')",
+		"insert into score (score,pid,testtime,subject) values(60,1,current_timestamp,'语文')",
+		"insert into score (score,pid,testtime,subject) values(70,1,current_timestamp,'算数')",
+		"insert into score (score,pid,testtime,subject) values(80,1,current_timestamp,'英语')",
+		"insert into score (score,pid,testtime,subject) values(90,1,current_timestamp,'物理')",
+		"insert into score (score,pid,testtime,subject) values(100,1,current_timestamp,'化学')",
+		"insert into score (score,pid,testtime,subject)values(60,2,current_timestamp,'语文')",
+		"insert into score (score,pid,testtime,subject)values(88,2,current_timestamp,'算数')",
+		"insert into score (score,pid,testtime,subject)values(90,3,current_timestamp,'语文')",
+		"insert into score (score,pid,testtime,subject)values(73,3,current_timestamp,'算数')",
 	};
 			
 			
@@ -55,10 +73,17 @@ public abstract class MultiTableTestBase extends org.junit.Assert{
 		s.setId(0);
 		s.setName("北平学校");
 		db.insert(s);
-
-		for(String sql:prepareSql){
-			db.createNativeQuery(sql).executeUpdate();
+		if(this.db.getProfile().getName()==RDBMS.sqlite){
+			//SQLite的处理方式比较怪，current_timestamp和current_date是以文本形式存储的，因此在从数据库读出时需要解析，而解析格式全局只支持一种。因此这两个函数很不好用。
+			for(String sql:prepareSql_SQLITE){
+				db.createNativeQuery(sql).executeUpdate();
+			}
+		}else{
+			for(String sql:prepareSql){
+				db.createNativeQuery(sql).executeUpdate();
+			}	
 		}
+		
 		
 		System.out.println("=========== initData End ============");
 	}

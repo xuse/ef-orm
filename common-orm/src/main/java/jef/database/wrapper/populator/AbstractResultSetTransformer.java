@@ -126,7 +126,7 @@ public abstract class AbstractResultSetTransformer<T> implements ResultSetExtrac
 		@Override
 		public void appendLog(SqlLog log, Long result) {
 			if(result!=null)
-				log.append("Count:",result);
+				log.append(" Count:",result);
 		}
 	}
 	

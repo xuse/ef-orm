@@ -27,8 +27,8 @@ import javax.sql.rowset.CachedRowSet;
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.DbMetaData;
-import jef.database.OperateTarget;
 import jef.database.datasource.DataSourceInfo;
+import jef.database.dialect.handler.LimitHandler;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ParserFactory;
@@ -43,6 +43,8 @@ import jef.database.meta.FunctionMapping;
 import jef.database.meta.SequenceInfo;
 import jef.database.support.RDBMS;
 import jef.database.wrapper.clause.InsertSqlClause;
+
+import com.querydsl.sql.SQLTemplates;
 
 /**
  * 这个类原本只用于SQL方言的转换，今后将逐渐代替dbmsprofile的作用
@@ -177,17 +179,6 @@ public interface DatabaseDialect {
 	 * @return
 	 */
 	String getObjectNameToUse(String name);
-
-	/**
-	 * @since 3.0 季怡2013-7新增，数据库对于表明和列名的大小写策略并不总是一致。因此今后要将列名处理的场合逐渐由原来的函数移到这里来实现
-	 * 
-	 * 季怡2013-7新增了{@link #getColumnNameIncase}
-	 * 目的是将列名的大小写策略和表/视图/schema名等策略区分开来。因为mysql似乎两者表现并不一致。
-	 * 
-	 * @param name
-	 * @return
-	 */
-	String getColumnNameToUse(String name);
 	
 	/**
 	 * 获得大小写正确的列名
@@ -369,7 +360,7 @@ public interface DatabaseDialect {
 	 * 
 	 * @param db
 	 */
-	void init(OperateTarget db);
+	void accept(DbMetaData db);
 
 	/**
 	 * 将插入语句转化为最快操作的语句
@@ -378,7 +369,29 @@ public interface DatabaseDialect {
 	 */
 	void toExtremeInsert(InsertSqlClause sql);
 	
+	/**
+	 * 获得SQL解析器。目前内置了两套解析器，一套是作者基于JavaCC自行编写的，性能较差，一套是直接使用Druid的SQL解析器.
+	 * Druid解析器是分不同的数据库语法的，因此要根据数据库类型来获得对应的解析器
+	 * @return
+	 */
 	ParserFactory getParserFactory();
 	
+	/**
+	 * 从异常信息中解析出约束冲突的信息。此处返回约束冲突的解析器
+	 * @return
+	 * @see ViolatedConstraintNameExtracter
+	 */
 	ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter();
+	
+	/**
+	 * 数据库对象是否为大小写敏感的
+	 * 一般来说对应引号中的表名列名都是大小写敏感的。此处仅指没有引号的情况下是否大小写敏感
+	 * @return
+	 */
+	boolean isCaseSensitive();
+	
+	/**
+	 * 当支持QueryDSL-SQL时，获得QueryDSL的Dialect
+	 */
+	SQLTemplates getQueryDslDialect();
 }

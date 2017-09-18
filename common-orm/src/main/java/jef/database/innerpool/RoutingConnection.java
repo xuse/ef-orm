@@ -27,6 +27,7 @@ import javax.sql.DataSource;
 
 import jef.common.SimpleMap;
 import jef.database.DbUtils;
+import jef.database.exception.InconsistentCommitException;
 import jef.tools.StringUtils;
 
 /**

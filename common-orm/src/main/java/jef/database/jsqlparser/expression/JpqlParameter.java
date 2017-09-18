@@ -86,6 +86,10 @@ public class JpqlParameter implements Expression,FromItem,Parameter {
 	public void setResolved(String text) {
 		resolved.set(text);
 	}
+	/**
+	 * 
+	 * @param resolved  -2 SQL片段 -1未解析 0单参数 >0数组参数
+	 */
 	public void setResolved(int resolved) {
 		this.resolved.set(resolved);
 	}

@@ -59,6 +59,7 @@ public class Case1 extends org.junit.Assert{
 	 */
 	@Test
 	public void testNonCascade() throws SQLException {
+		db.truncate(Person.class);
 		long t=System.currentTimeMillis();
 		Person p = new Person();
 		{

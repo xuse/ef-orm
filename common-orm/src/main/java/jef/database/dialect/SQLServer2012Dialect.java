@@ -1,8 +1,13 @@
 package jef.database.dialect;
 
+import jef.database.dialect.handler.DerbyLimitHandler;
+import jef.database.dialect.handler.LimitHandler;
 import jef.database.meta.Feature;
 import jef.database.query.Func;
 import jef.database.query.function.StandardSQLFunction;
+
+import com.querydsl.sql.SQLServer2012Templates;
+import com.querydsl.sql.SQLTemplates;
 
 /**
  * SQL Server 2012
@@ -61,6 +66,11 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect{
 	protected LimitHandler generateLimitHander() {
 		return new DerbyLimitHandler();
 	}
+	
+    //to be override
+    protected SQLTemplates generateQueryDslTemplates() {
+        return new SQLServer2012Templates();
+    }
 
 //	private final static String PAGE_SQL_2012 = " offset %start% row fetch next %next% rows only";
 //

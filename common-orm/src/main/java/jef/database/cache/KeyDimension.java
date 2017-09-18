@@ -82,7 +82,7 @@ public class KeyDimension {
 		this.affectedTables = null;
 
 		this.order = order == null ? "" : order;
-		this.hashCode = new HashCodeBuilder().append(where).append(affectedTables).append(order).toHashCode();
+		this.hashCode = new HashCodeBuilder().append(this.where).append(affectedTables).append(this.order).toHashCode();
 	}
 
 	/**
@@ -109,7 +109,7 @@ public class KeyDimension {
 		}
 
 		this.order = order == null ? "" : order;
-		this.hashCode = new HashCodeBuilder().append(where).append(affectedTables).append(order).toHashCode();
+		this.hashCode = new HashCodeBuilder().append(this.where).append(affectedTables).append(this.order).toHashCode();
 	}
 
 	public String getTableDefinition() {
@@ -134,7 +134,7 @@ public class KeyDimension {
 		this.affectedTables = null;
 		this.where = where2.toString();
 		this.order = order2 == null ? "" : order2.toString();
-		this.hashCode = where.hashCode() + order.hashCode();
+		this.hashCode = new HashCodeBuilder().append(where).append(affectedTables).append(order).toHashCode();
 	}
 
 	@Override

@@ -1,13 +1,15 @@
 package jef.database.meta;
 
+import java.lang.annotation.Annotation;
 import java.sql.DatabaseMetaData;
 
 import javax.persistence.Column;
+import javax.persistence.ConstraintMode;
+
+import org.apache.commons.lang.StringUtils;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.support.RDBMS;
-
-import org.apache.commons.lang.StringUtils;
 
 /**
  * 描述外键信息
@@ -15,7 +17,7 @@ import org.apache.commons.lang.StringUtils;
  * @author Administrator
  * 
  */
-public class ForeignKey {
+public class ForeignKey implements javax.persistence.ForeignKey{
 	// 删除被引用的记录引发的策略，默认为禁止删除，不同数据库的返回值常量不同
 	@Column(name = "FKTABLE_SCHEM")
 	private String fromSchema;
@@ -270,5 +272,25 @@ public class ForeignKey {
 		} else {
 			return fromTable;
 		}
+	}
+
+	@Override
+	public Class<? extends Annotation> annotationType() {
+		return javax.persistence.ForeignKey.class;
+	}
+
+	@Override
+	public String name() {
+		return this.name;
+	}
+
+	@Override
+	public ConstraintMode value() {
+		return ConstraintMode.CONSTRAINT;
+	}
+
+	@Override
+	public String foreignKeyDefinition() {
+		return this.toString();
 	}
 }

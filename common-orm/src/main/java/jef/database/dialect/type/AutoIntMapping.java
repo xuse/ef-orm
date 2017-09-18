@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import jef.accelerator.bean.AbstractFastProperty;
@@ -36,6 +37,10 @@ public final class AutoIntMapping extends AutoIncrementMapping {
 		return ((Number) obj).intValue();
 	}
 
+	public void jdbcUpdate(ResultSet rs,String column, Object value, DatabaseDialect dialect) throws SQLException {
+		rs.updateInt(column, ((Number) value).intValue());
+	}
+	
 	@Override
 	protected String getSqlExpression(Object value, DatabaseDialect profile) {
 		return value.toString();
@@ -71,4 +76,5 @@ public final class AutoIntMapping extends AutoIncrementMapping {
 	protected Class<?> getDefaultJavaType() {
 		return Integer.class;
 	}
+
 }

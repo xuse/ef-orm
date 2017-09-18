@@ -53,8 +53,8 @@ public final class ReferenceField extends AbstractRefField implements IReference
 	}
 
 	public String getSelectedAlias(String alias,DatabaseDialect profile) {
-		return 	new StringBuilder(36).append(profile.getColumnNameToUse(alias)).append(SqlContext.DIVEDER)
-			.append(profile.getColumnNameToUse(targetField.fieldName())).toString();
+		return 	new StringBuilder(36).append(profile.getObjectNameToUse(alias)).append(SqlContext.DIVEDER)
+			.append(profile.getObjectNameToUse(targetField.fieldName())).toString();
 	}
 	
 	@Override

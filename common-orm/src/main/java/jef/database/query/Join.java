@@ -77,7 +77,7 @@ public interface Join extends JoinElement{
 	 * @param context
 	 * @return
 	 */
-	String toTableDefinitionSql(SqlProcessor processor, SqlContext context,DatabaseDialect profile);
+	String toTableDefinitionSql(SqlProcessor processor, SqlContext context,DatabaseDialect profile, boolean batch);
 
 	
 	/**

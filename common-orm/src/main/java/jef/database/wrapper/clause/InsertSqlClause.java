@@ -23,13 +23,13 @@ import jef.database.Session;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.routing.PartitionResult;
-import jef.database.wrapper.processor.AutoIncreatmentCallBack;
+import jef.database.wrapper.processor.InsertWrapper;
 
 public class InsertSqlClause{
 	private String columnsPart;
 	private String valuesPart;
 	private PartitionResult table;
-	private AutoIncreatmentCallBack callback;
+	private final InsertWrapper callback = new InsertWrapper();
 	final List<ColumnMapping> fields;
 	private String insert="insert into ";
 	private String tailer="";
@@ -84,11 +84,8 @@ public class InsertSqlClause{
 	public void setTableNames(PartitionResult tableName) {
 		this.table = tableName;
 	}
-	public AutoIncreatmentCallBack getCallback() {
+	public InsertWrapper getCallback() {
 		return callback;
-	}
-	public void setCallback(AutoIncreatmentCallBack callback) {
-		this.callback = callback;
 	}
 	public void addField(ColumnMapping field) {
 		fields.add(field);

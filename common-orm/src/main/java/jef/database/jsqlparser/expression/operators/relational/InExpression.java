@@ -15,6 +15,9 @@
  */
 package jef.database.jsqlparser.expression.operators.relational;
 
+import java.util.Iterator;
+import java.util.List;
+
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
@@ -23,9 +26,10 @@ import jef.database.jsqlparser.visitor.ItemsList;
 import jef.database.jsqlparser.visitor.Notable;
 
 public class InExpression implements Expression,Ignorable,Notable {
-    private Expression leftExpression;
-  //变量绑定值是否为空
+    //变量绑定值是否为空
     private final ThreadLocal<Boolean> isEmpty = new ThreadLocal<Boolean>();
+    
+    private List<Expression> leftExpression;
     
     public boolean isEmpty() {
     	Boolean e=isEmpty.get();
@@ -39,7 +43,7 @@ public class InExpression implements Expression,Ignorable,Notable {
     public InExpression() {
     }
 
-    public InExpression(Expression leftExpression, ItemsList itemsList) {
+    public InExpression(List<Expression> leftExpression, ItemsList itemsList) {
         setLeftExpression(leftExpression);
         setItemsList(itemsList);
     }
@@ -48,7 +52,7 @@ public class InExpression implements Expression,Ignorable,Notable {
         return itemsList;
     }
 
-    public Expression getLeftExpression() {
+    public List<Expression> getLeftExpression() {
         return leftExpression;
     }
 
@@ -60,7 +64,7 @@ public class InExpression implements Expression,Ignorable,Notable {
         itemsList = list;
     }
 
-    public void setLeftExpression(Expression expression) {
+    public void setLeftExpression(List<Expression> expression) {
         leftExpression = expression;
     }
 
@@ -83,7 +87,19 @@ public class InExpression implements Expression,Ignorable,Notable {
     }
 
 	public void appendTo(StringBuilder sb) {
-		leftExpression.appendTo(sb);
+	    if(leftExpression!=null){
+	        boolean isList=leftExpression.size()>1;
+	        if(isList)sb.append('(');
+	        Iterator<Expression> iter=leftExpression.iterator();
+	        if(iter.hasNext()){
+	            iter.next().appendTo(sb);
+	        }
+	        while(iter.hasNext()){
+	            sb.append(',');
+	            iter.next().appendTo(sb);
+	        }
+	        if(isList)sb.append(')');
+	    }
 		sb.append(' ');
 		if(not)sb.append("NOT ");
 		sb.append("IN ");
@@ -93,4 +109,11 @@ public class InExpression implements Expression,Ignorable,Notable {
 	public ExpressionType getType() {
 		return ExpressionType.in;
 	}
+
+    public Expression getSingleLeftExpression() {
+        if(leftExpression!=null && leftExpression.size()>1){
+            throw new UnsupportedOperationException();
+        }
+        return leftExpression.get(0);
+    }
 }

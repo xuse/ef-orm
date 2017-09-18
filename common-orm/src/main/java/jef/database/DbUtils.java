@@ -59,11 +59,10 @@ import javax.sql.DataSource;
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.log.LogUtil;
+import jef.database.Session.UpdateContext;
 import jef.database.annotation.Cascade;
 import jef.database.annotation.JoinType;
 import jef.database.datasource.DataSourceInfo;
-import jef.database.datasource.DataSourceWrapper;
-import jef.database.datasource.DataSources;
 import jef.database.datasource.IRoutingDataSource;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.DatabaseDialect;
@@ -114,6 +113,8 @@ import jef.tools.reflect.GenericUtils;
 import jef.tools.security.cplus.TripleDES;
 import jef.tools.string.CharUtils;
 
+import org.apache.commons.lang.ObjectUtils;
+
 import com.google.common.base.Objects;
 
 public final class DbUtils {
@@ -139,7 +140,9 @@ public final class DbUtils {
 
 	static {
 		int processorCount = Runtime.getRuntime().availableProcessors();
-		es = new ThreadPoolExecutor(processorCount*2, processorCount * 4, 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(processorCount * 4), Executors.defaultThreadFactory(), new CallerRunsPolicy());
+		es = new ThreadPoolExecutor(processorCount * 2, processorCount * 4, 60L, TimeUnit.SECONDS,
+				new LinkedBlockingQueue<Runnable>(processorCount * 4), Executors.defaultThreadFactory(),
+				new CallerRunsPolicy());
 	}
 
 	/**
@@ -226,13 +229,15 @@ public final class DbUtils {
 		for (Reference reference : from.getRefFieldsByRef().keySet()) {
 			if (reference.getTargetType() == target) {
 				if (ref != null) {
-					throw new IllegalArgumentException("There's more than one reference to [" + target.getSimpleName() + "] in type [" + from.getSimpleName() + "],please assign the reference field name.");
+					throw new IllegalArgumentException("There's more than one reference to [" + target.getSimpleName()
+							+ "] in type [" + from.getSimpleName() + "],please assign the reference field name.");
 				}
 				ref = reference;
 			}
 		}
 		if (ref == null) {
-			throw new IllegalArgumentException("Target class " + target.getSimpleName() + "of fileter-condition is not referenced by " + from.getSimpleName());
+			throw new IllegalArgumentException("Target class " + target.getSimpleName()
+					+ "of fileter-condition is not referenced by " + from.getSimpleName());
 		}
 		return ref;
 	}
@@ -273,15 +278,16 @@ public final class DbUtils {
 				Collection<String> names = rds.getDataSourceNames();
 				if (!names.isEmpty()) {
 					String name = names.iterator().next();
-					LogUtil.warn("Can not determine default datasource name. choose [" + name + "] as default datasource.");
+					LogUtil.warn(
+							"Can not determine default datasource name. choose [" + name + "] as default datasource.");
 					return tryAnalyzeInfo(rds.getDataSource(name), updateDataSourceProperties);
 				}
 			} else {
 				return tryAnalyzeInfo(e.getValue(), updateDataSourceProperties);
 			}
 		}
-		DataSourceWrapper dsw = DataSources.wrapFor(ds);
-		if (dsw != null) {
+		if (ds instanceof DataSourceInfo ) {
+		    DataSourceInfo dsw=(DataSourceInfo)ds;
 			ConnectInfo info = new ConnectInfo();
 			DbUtils.processDataSourceOfEnCrypted(dsw);
 
@@ -400,7 +406,7 @@ public final class DbUtils {
 
 	public static ColumnDefinition parseColumnDef(String def) throws ParseException {
 		String sql = StringUtils.concat("create table A (B ", def, ")");
-		JpqlParser parser = new JpqlParser(new StringReader(sql));
+		StSqlParser parser = new StSqlParser(new StringReader(sql));
 		CreateTable ct = parser.CreateTable();
 		return ct.getColumnDefinitions().get(0);
 	}
@@ -481,10 +487,10 @@ public final class DbUtils {
 		try {
 			return parser.Statement();
 		} catch (ParseException e) {
-			LogUtil.show("ErrorSQL:" + sql);
+			LogUtil.error("ErrorSQL:" + sql);
 			throw e;
 		} catch (TokenMgrError e) {
-			LogUtil.show("ErrorSQL:" + sql);
+			LogUtil.error("ErrorSQL:" + sql);
 			throw e;
 		}
 	}
@@ -497,9 +503,11 @@ public final class DbUtils {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T extends IQueryableEntity> JoinElement toReferenceJoinQuery(Query<T> queryObj, List<Reference> excludeRef) {
+	public static <T extends IQueryableEntity> JoinElement toReferenceJoinQuery(Query<T> queryObj,
+			List<Reference> excludeRef) {
 		// 得到可以合并查询的引用关系
-		Map<Reference, List<AbstractRefField>> map = queryObj.isCascadeViaOuterJoin() ? DbUtils.getMergeAsOuterJoinRef(queryObj) : Collections.EMPTY_MAP;
+		Map<Reference, List<AbstractRefField>> map = queryObj.isCascadeViaOuterJoin()
+				? DbUtils.getMergeAsOuterJoinRef(queryObj) : Collections.EMPTY_MAP;
 		Query<?>[] otherQuery = queryObj.getOtherQueryProvider();
 
 		if (otherQuery.length == 0 && map.isEmpty()) {
@@ -508,6 +516,9 @@ public final class DbUtils {
 		// 拼装出带连接的查询请求
 		AbstractJoinImpl j = DbUtils.getJoin(queryObj, map, ArrayUtils.asList(otherQuery), excludeRef);
 		if (j != null) {
+			j.setFetchSize(queryObj.getFetchSize());
+			j.setMaxResult(queryObj.getMaxResult());
+			j.setQueryTimeout(queryObj.getQueryTimeout());
 			if (queryObj.getSelectItems() != null) {
 				List<QueryAlias> qs = j.allElements();
 				for (int i = 0; i < qs.size(); i++) {
@@ -517,7 +528,8 @@ public final class DbUtils {
 				select.merge((AbstractEntityMappingProvider) queryObj.getSelectItems());
 				j.setSelectItems(select);
 			}
-			//TODO 其实cacheable, Transformer, attribute都是Query在转换时需要保持不变的属性，可以设法抽取到公共类中。
+			// TODO 其实cacheable, Transformer,
+			// attribute都是Query在转换时需要保持不变的属性，可以设法抽取到公共类中。
 			j.setResultTransformer(queryObj.getResultTransformer());
 			j.setCacheable(queryObj.isCacheable());
 			// FilterCondition合并
@@ -696,9 +708,12 @@ public final class DbUtils {
 	 * 将field转换为列名（包含表的别名）
 	 * 
 	 * @param field
+	 *            字段
 	 * @param feature
+	 *            数据库方言
 	 * @param tableAlias
-	 * @return
+	 *            所在表的别名
+	 * @return 可以在SQL中使用的列名
 	 * @deprecated use
 	 *             {@linkplain #toColumnName(ColumnMapping, DatabaseDialect, String)}
 	 *             instead
@@ -719,18 +734,21 @@ public final class DbUtils {
 	/**
 	 * 代替上面的方法，性能更好,也更安全
 	 * 
-	 * @param targetField
+	 * @param column
+	 *            列定义
 	 * @param profile
+	 *            数据库方言
 	 * @param tableAlias
-	 * @return
+	 *            列所在的表的别名
+	 * @return 使用在SQL中的列名称
 	 */
-	public static String toColumnName(ColumnMapping fld, DatabaseDialect profile, String alias) {
+	public static String toColumnName(ColumnMapping column, DatabaseDialect profile, String alias) {
 		if (alias != null) {
 			StringBuilder sb = new StringBuilder();
-			sb.append(alias).append('.').append(fld.getColumnName(profile, true));
+			sb.append(alias).append('.').append(column.getColumnName(profile, true));
 			return sb.toString();
 		} else {
-			return fld.getColumnName(profile, true);
+			return column.getColumnName(profile, true);
 		}
 	}
 
@@ -748,7 +766,9 @@ public final class DbUtils {
 	 * @deprecated 不够安全
 	 */
 	public static String getColumnName(ITableMetadata meta, Field fld, String alias, DatabaseDialect profile) {
-		if (alias != null) {
+		if (alias == null) {
+			return meta.getColumnName(fld, profile, true);
+		} else {
 			if (fld instanceof JpqlExpression) {
 				throw new UnsupportedOperationException();
 			} else {
@@ -756,8 +776,6 @@ public final class DbUtils {
 				sb.append(alias).append('.').append(meta.getColumnName(fld, profile, true));
 				return sb.toString();
 			}
-		} else {
-			return meta.getColumnName(fld, profile, true);
 		}
 	}
 
@@ -772,7 +790,8 @@ public final class DbUtils {
 	 * 
 	 * @return
 	 */
-	protected static AbstractJoinImpl getJoin(Query<?> d, Map<Reference, List<AbstractRefField>> map, List<Query<?>> queryProvider, List<Reference> exclude) {
+	protected static AbstractJoinImpl getJoin(Query<?> d, Map<Reference, List<AbstractRefField>> map,
+			List<Query<?>> queryProvider, List<Reference> exclude) {
 		AbstractJoinImpl join = null;
 		// 处理默认需要的连接查询：该种关联只关联一级，不会递归关联。
 		for (Reference r : map.keySet()) {
@@ -840,7 +859,8 @@ public final class DbUtils {
 	/*
 	 * 递归检查field绑定情况(如果怕field是RefField……)
 	 */
-	private static void checkIfThereIsExQueryInRefField(Field field, AbstractEntityMappingProvider tmpContext, List<Query<?>> qt) {
+	private static void checkIfThereIsExQueryInRefField(Field field, AbstractEntityMappingProvider tmpContext,
+			List<Query<?>> qt) {
 		// 为了在RefField中省略默认的查询，所以要对所有条件树中的refField进行检查，将未指定的Query实例自动补全
 		if (field instanceof RefField) {
 			rebindRefField((RefField) field, tmpContext, qt);
@@ -857,7 +877,8 @@ public final class DbUtils {
 			for (Query<?> extQuery : qt) {
 				if (refQuery == extQuery) {
 					return;
-				} else if (refQuery.getType() == extQuery.getType() && refQuery.getConditions().equals(extQuery.getConditions())) {
+				} else if (refQuery.getType() == extQuery.getType()
+						&& refQuery.getConditions().equals(extQuery.getConditions())) {
 					// ref.rebind(extQuery,null);
 					return;
 				}
@@ -867,7 +888,8 @@ public final class DbUtils {
 	}
 
 	// 检查所有条件中的REFField(递归)
-	private static void processConditionField(IConditionField container, AbstractEntityMappingProvider tmpContext, List<Query<?>> qt) {
+	private static void processConditionField(IConditionField container, AbstractEntityMappingProvider tmpContext,
+			List<Query<?>> qt) {
 		for (Condition c : container.getConditions()) {
 			Field field = c.getField();
 			if (field instanceof IConditionField) {
@@ -887,7 +909,8 @@ public final class DbUtils {
 	 * @throws SQLException
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	protected static Object toProperContainerType(Collection<? extends IQueryableEntity> subs, Class<?> container, Class<?> bean, AbstractRefField config) throws SQLException {
+	protected static Object toProperContainerType(Collection<? extends IQueryableEntity> subs, Class<?> container,
+			Class<?> bean, AbstractRefField config) throws SQLException {
 		if (container.isAssignableFrom(subs.getClass())) {
 			return subs;
 		}
@@ -902,7 +925,7 @@ public final class DbUtils {
 		} else if (container == Array.class) {
 			return subs.toArray();
 		} else if (container == Map.class) {
-			Cascade cascade = config.getAsMap();
+			Cascade cascade = config.getCascadeInfo();
 			if (cascade == null) {
 				throw new SQLException("@Cascade annotation is required for Map mapping " + config.toString());
 			}
@@ -964,7 +987,8 @@ public final class DbUtils {
 	 *            需要排除的关联，为null表示默认方式。为空表示全部延迟加载
 	 * @return
 	 */
-	protected static Map<Reference, List<AbstractRefField>> getLazyLoadRef(ITableMetadata data, Collection<Reference> excludeReference) {
+	protected static Map<Reference, List<AbstractRefField>> getLazyLoadRef(ITableMetadata data,
+			Collection<Reference> excludeReference) {
 		// ==null时，对单关联使用外连接，对多关联使用延迟加载,上个版本的形式
 		// 应该逐渐淘汰的形式
 		if (excludeReference == null) {
@@ -987,7 +1011,8 @@ public final class DbUtils {
 			return data.getRefFieldsByRef();
 			// !!今后主流的形式,过滤掉已经合并加载的ref
 		} else {
-			Map<Reference, List<AbstractRefField>> result = new HashMap<Reference, List<AbstractRefField>>(data.getRefFieldsByRef());
+			Map<Reference, List<AbstractRefField>> result = new HashMap<Reference, List<AbstractRefField>>(
+					data.getRefFieldsByRef());
 			for (Reference ref : excludeReference) {
 				result.remove(ref);
 			}
@@ -1009,10 +1034,12 @@ public final class DbUtils {
 		if (field instanceof Enum) {
 			// FIXME 这个算法对原始功能是适用的，但当动态扩展等系列功能出现后，适用上有一定问题。
 			Class<?> c = field.getClass().getDeclaringClass();
-			Assert.isTrue(IQueryableEntity.class.isAssignableFrom(c), field + " is not a defined in a IQueryableEntity's meta-model.");
+			Assert.isTrue(IQueryableEntity.class.isAssignableFrom(c),
+					field + " is not a defined in a IQueryableEntity's meta-model.");
 			return MetaHolder.getMeta(c.asSubclass(IQueryableEntity.class));
 		} else {
-			throw new IllegalArgumentException("method 'getTableMeta' doesn't support field type of " + field.getClass());
+			throw new IllegalArgumentException(
+					"method 'getTableMeta' doesn't support field type of " + field.getClass());
 		}
 	}
 
@@ -1020,7 +1047,8 @@ public final class DbUtils {
 	 * 得到列的完整定义
 	 * 
 	 * @param field
-	 * @return
+	 *            列的枚举对象
+	 * @return 完整的字段到数据库列的映射信息。
 	 */
 	public static ColumnMapping toColumnMapping(Field field) {
 		if (field instanceof ColumnMapping) {
@@ -1029,7 +1057,8 @@ public final class DbUtils {
 			return ((MetadataContainer) field).getMeta().getColumnDef(field);
 		} else if (field instanceof Enum) {
 			Class<?> c = field.getClass().getDeclaringClass();
-			Assert.isTrue(IQueryableEntity.class.isAssignableFrom(c), field + " is not a defined in a IQueryableEntity's meta-model.");
+			Assert.isTrue(IQueryableEntity.class.isAssignableFrom(c),
+					field + " is not a defined in a IQueryableEntity's meta-model.");
 			ITableMetadata meta = MetaHolder.getMeta(c);
 			return meta.getColumnDef(field);
 		}
@@ -1044,7 +1073,8 @@ public final class DbUtils {
 	 * @param query
 	 * @return
 	 */
-	protected static boolean appendRefCondition(BeanWrapper bean, JoinPath rs, Query<?> query, List<Condition> filters) {
+	protected static boolean appendRefCondition(BeanWrapper bean, JoinPath rs, Query<?> query,
+			List<Condition> filters) {
 		query.clearQuery();
 		boolean hasValue = false;
 		for (JoinKey r : rs.getJoinKeys()) {
@@ -1084,12 +1114,20 @@ public final class DbUtils {
 	 * 
 	 * @param obj
 	 * @param query
+	 * @param isUpdate
+	 *            当isUpdate为true时，当填充主键条件时，会从updateMap中去除这些字段，
+	 *            避免出现where和set中都对主键进行操作
+	 * @param force
 	 * @return
 	 */
-	protected static void fillConditionFromField(IQueryableEntity obj, Query<?> query, boolean removePkUpdate, boolean force) {
+	protected static void fillConditionFromField(IQueryableEntity obj, Query<?> query, UpdateContext update,
+			boolean force) {
 		Assert.isTrue(query.getConditions().isEmpty());
 		ITableMetadata meta = query.getMeta();
-		if (fillPKConditions(obj, meta, query, removePkUpdate, force)) {
+		boolean isUpdate = update != null;
+		if (fillPKConditions(obj, meta, query, isUpdate, force)) {
+			if (isUpdate)
+				update.setIsPkQuery(true);
 			return;
 		}
 		populateExampleConditions(obj);
@@ -1101,17 +1139,37 @@ public final class DbUtils {
 	private static boolean isValidPKValue(IQueryableEntity obj, ITableMetadata meta, ColumnMapping field) {
 		Class<?> type = field.getFieldAccessor().getType();
 		Object value = field.getFieldAccessor().get(obj);
-		if (type.isPrimitive()) {
-			if (field.getUnsavedValue().equals(value)) {
-				if (meta.getPKFields().size() == 1 && !obj.isUsed(field.field()))
+		if (field.isUnsavedValueDeclared()) {
+			return !field.isUnsavedValue(value);
+		} else if (type.isPrimitive()) {
+			if (field.isUnsavedValue(value)) {
+				if (!obj.isUsed(field.field()))
 					return false;
 			}
+			return true;
 		} else {
-			if (value == null) {
-				return false;
-			}
+			return value != null;
 		}
-		return true;
+	}
+
+	/**
+	 * 判定一个从对象中值是否为有效的数据。 剔除两种情形 1、用户显式指定的非数据库有效值 2、当原生类型时，且无任何证据表明用户对该字段值进行的赋值
+	 * 
+	 * @param value
+	 * @param field
+	 * @param isUsed
+	 * @return 如果是无效值 返回true
+	 */
+	public static boolean isInvalidValue(Object value, ColumnMapping field, boolean isUsed) {
+		if (field.isUnsavedValueDeclared()) {
+			return field.isUnsavedValue(value);
+		}
+		// 辅助逻辑，后面看要不要去除此逻辑
+		// 当字段无标记，并且等于原生值的primitive类型时，视作无效值
+		if (!isUsed && field.getFieldAccessor().getType().isPrimitive()) {
+			return field.isUnsavedValue(value);
+		}
+		return false;
 	}
 
 	/*
@@ -1129,7 +1187,8 @@ public final class DbUtils {
 	 * 
 	 * @return
 	 */
-	protected static boolean fillPKConditions(IQueryableEntity obj, ITableMetadata meta, Query<?> query, boolean removePkUpdate, boolean force) {
+	protected static boolean fillPKConditions(IQueryableEntity obj, ITableMetadata meta, Query<?> query,
+			boolean isUpdate, boolean force) {
 		if (meta.getPKFields().isEmpty())
 			return false;
 		if (!force) {
@@ -1138,12 +1197,12 @@ public final class DbUtils {
 					return false;
 			}
 		}
+		Map<Field, Object> map = obj.getUpdateValueMap();
 		for (ColumnMapping mapping : meta.getPKFields()) {
 			Object value = mapping.getFieldAccessor().get(obj);
 			Field field = mapping.field();
 			query.addCondition(field, value);
-			if (removePkUpdate && obj.getUpdateValueMap().containsKey(field)) {//
-				Map<Field, Object> map = obj.getUpdateValueMap();
+			if (isUpdate && map.containsKey(field)) {//
 				Object v = map.get(field);
 				if (Objects.equal(value, v)) {
 					map.remove(field);
@@ -1154,73 +1213,7 @@ public final class DbUtils {
 	}
 
 	/**
-	 * 通过比较两个对象，在旧对象中准备更新Map
-	 * 
-	 * @param <T>
-	 * @param changedObj
-	 * @param oldObj
-	 * @throws SQLException
-	 * @return the object who is able to update.
-	 */
-	public static <T extends IQueryableEntity> T compareToUpdateMap(T changedObj, T oldObj) {
-		Assert.isTrue(Objects.equal(getPrimaryKeyValue(changedObj), getPKValueSafe(oldObj)), "For consistence, the two parameter must hava equally primary keys.");
-		BeanWrapper bean1 = BeanWrapper.wrap(changedObj);
-		ITableMetadata m = MetaHolder.getMeta(oldObj);
-		boolean dynamic = ORMConfig.getInstance().isDynamicUpdate();
-		for (ColumnMapping mType : m.getColumns()) {
-			if (mType.isPk())
-				continue;
-			Field field = mType.field();
-			if (dynamic && !changedObj.isUsed(field)) {// 智能更新下，发现字段未被设过值，就不予更新
-				continue;
-			}
-			Object value1 = bean1.getPropertyValue(field.name());
-			oldObj.prepareUpdate(field, value1);// 本身就会通过比较，不更新没变的字段
-		}
-		return oldObj;
-	}
-
-	/**
-	 * 通过比较两个对象，在新对象中准备更新Map
-	 * 
-	 * @param <T>
-	 * @param changedObj
-	 * @param oldObj
-	 * @throws SQLException
-	 * @return the object who is able to update.
-	 */
-	public static <T extends IQueryableEntity> T compareToNewUpdateMap(T changedObj, T oldObj) {
-		Assert.isTrue(Objects.equal(getPrimaryKeyValue(changedObj), getPKValueSafe(oldObj)), "For consistence, the two parameter must hava equally primary keys.");
-		BeanWrapper beanNew = BeanWrapper.wrap(changedObj);
-		BeanWrapper beanOld = BeanWrapper.wrap(oldObj);
-		ITableMetadata m = MetaHolder.getMeta(oldObj);
-		
-		Map<Field,Object> used=null;
-		boolean dynamic = ORMConfig.getInstance().isDynamicUpdate();
-		if(dynamic){
-			used=new HashMap<Field,Object>(changedObj.getUpdateValueMap());
-		}
-		changedObj.getUpdateValueMap().clear();
-		for (ColumnMapping mType : m.getColumns()) {
-			Field field = mType.field();
-			if (mType.isPk()){
-				continue;
-			}
-			if (dynamic && !used.containsKey(field)) {// 智能更新下，发现字段未被设过值，就不予更新
-				continue;
-			}
-			Object valueNew = beanNew.getPropertyValue(field.name());
-			Object valueOld = beanOld.getPropertyValue(field.name());
-			if (!Objects.equal(valueNew, valueOld)) {
-				changedObj.prepareUpdate(field, valueNew, true);
-			}
-		}
-		return changedObj;
-	}
-
-	/**
-	 * 将指定对象中除了主键以外的所有字段都作为需要update的字段。（标记为'已修改的'）
-	 * <br>
+	 * 将指定对象中除了主键以外的所有字段都作为需要update的字段。（标记为'已修改的'） <br>
 	 * 这个方法实际操作时：即除了主键以外的所有字段都放置到updateMap中去
 	 * 
 	 * @param <T>
@@ -1294,11 +1287,13 @@ public final class DbUtils {
 	 * @param needTranslate
 	 * @return
 	 */
-	public static PartitionResult[] toTableNames(IQueryableEntity obj, String customName, Query<?> q, PartitionSupport processor) {
+	public static PartitionResult[] toTableNames(IQueryableEntity obj, String customName, Query<?> q,
+			PartitionSupport processor) {
 		AbstractMetadata meta = q == null ? MetaHolder.getMeta(obj) : (AbstractMetadata) q.getMeta();
 		if (StringUtils.isNotEmpty(customName))
 			return new PartitionResult[] { new PartitionResult(customName).setDatabase(meta.getBindDsName()) };
-		PartitionResult[] result = partitionUtil.toTableNames(meta, obj, q, processor, ORMConfig.getInstance().isFilterAbsentTables());
+		PartitionResult[] result = partitionUtil.toTableNames(meta, obj, q, processor,
+				ORMConfig.getInstance().isFilterAbsentTables());
 		// if(ORMConfig.getInstance().isDebugMode()){
 		// LogUtil.show("Partitions:"+Arrays.toString(result));
 		// }
@@ -1338,7 +1333,8 @@ public final class DbUtils {
 	 * @param profile
 	 * @return
 	 */
-	public static PartitionResult toTableName(IQueryableEntity obj, String customName, Query<?> q, PartitionSupport profile) {
+	public static PartitionResult toTableName(IQueryableEntity obj, String customName, Query<?> q,
+			PartitionSupport profile) {
 		AbstractMetadata meta = obj == null ? (AbstractMetadata) q.getMeta() : MetaHolder.getMeta(obj);
 		if (StringUtils.isNotEmpty(customName))
 			return new PartitionResult(customName).setDatabase(meta.getBindDsName());
@@ -1397,6 +1393,7 @@ public final class DbUtils {
 
 	/**
 	 * 将异常包装为RuntimeException
+	 * 
 	 * @param e
 	 * @return
 	 */
@@ -1404,8 +1401,8 @@ public final class DbUtils {
 		String s = e.getSQLState();
 		if (e instanceof SQLIntegrityConstraintViolationException) {
 			return new EntityExistsException(e);
-		}else if (e instanceof SQLTimeoutException) {
-			return new QueryTimeoutException(s,e);
+		} else if (e instanceof SQLTimeoutException) {
+			return new QueryTimeoutException(s, e);
 		}
 		return new PersistenceException(s, e);
 	}
@@ -1429,7 +1426,7 @@ public final class DbUtils {
 				throw (Error) e;
 			}
 			if (e instanceof SQLException) {
-				return toRuntimeException((SQLException)e);
+				return toRuntimeException((SQLException) e);
 			}
 			return new IllegalStateException(e);
 		}
@@ -1450,7 +1447,8 @@ public final class DbUtils {
 			return StringUtils.upperCase(String.format(pattern, tblName));
 		} else {
 			String name = String.format(pattern, tblName);
-			return new StringBuilder(schema.length() + name.length() + 1).append(schema).append('.').append(name).toString().toUpperCase();
+			return new StringBuilder(schema.length() + name.length() + 1).append(schema).append('.').append(name)
+					.toString().toUpperCase();
 		}
 	}
 
@@ -1486,25 +1484,63 @@ public final class DbUtils {
 		s.setPassword(password);
 		return s;
 	}
-	
+
 	/**
 	 * 得到继承上级所指定的泛型类型
+	 * 
 	 * @param subclass
 	 * @param superclass
 	 * @return
 	 */
-	public static Type[] getTypeParameters(Class<?> subclass,Class<?> superclass) {
-		if(superclass==null){//在没有指定父类的情况下，默认选择第一个接口
-			if(subclass.getSuperclass()==Object.class && subclass.getInterfaces().length>0){
-				superclass=subclass.getInterfaces()[0];	
-			}else{
-				superclass=subclass.getSuperclass();	
+	public static Type[] getTypeParameters(Class<?> subclass, Class<?> superclass) {
+		if (superclass == null) {// 在没有指定父类的情况下，默认选择第一个接口
+			if (subclass.getSuperclass() == Object.class && subclass.getInterfaces().length > 0) {
+				superclass = subclass.getInterfaces()[0];
+			} else {
+				superclass = subclass.getSuperclass();
 			}
 		}
-		Type type= GenericUtils.getSuperType(null, subclass,superclass);
-		if(type instanceof ParameterizedType){
+		Type type = GenericUtils.getSuperType(null, subclass, superclass);
+		if (type instanceof ParameterizedType) {
 			return ((ParameterizedType) type).getActualTypeArguments();
 		}
 		throw new RuntimeException("Can not get the generic param type for class:" + subclass.getName());
+	}
+
+	/**
+	 * 通过比较两个对象，在旧对象中准备更新Map
+	 * 
+	 * @param <T>
+	 * @param changedObj
+	 * @param oldObj
+	 * @throws SQLException
+	 * @return the object who is able to update.
+	 */
+	public static <T extends IQueryableEntity> T compareToUpdateMap(T changedObj, T oldObj) {
+		Assert.isTrue(Objects.equal(DbUtils.getPrimaryKeyValue(changedObj), DbUtils.getPKValueSafe(oldObj)),
+				"For consistence, the two parameter must hava equally primary keys.");
+		ITableMetadata m = MetaHolder.getMeta(oldObj);
+		boolean safeMerge = ORMConfig.getInstance().isSafeMerge();
+
+		for (ColumnMapping mType : m.getColumns()) {
+			if (mType.isPk())
+				continue;
+			Field field = mType.field();
+			Object value = mType.getFieldAccessor().get(changedObj);
+
+			boolean used = changedObj.isUsed(field);
+			if (mType.isGenerated() && !used) {
+				continue;
+			}
+			// 安全更新下，发现字段数值无效，跳过
+			if (safeMerge && DbUtils.isInvalidValue(value, mType, used)) {
+				continue;
+			}
+			Object oldValue = mType.getFieldAccessor().get(oldObj);
+			if (!ObjectUtils.equals(value, oldValue)) {
+				oldObj.prepareUpdate(field, value);
+			}
+		}
+		return oldObj;
 	}
 }

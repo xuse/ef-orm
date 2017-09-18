@@ -21,9 +21,9 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import jef.tools.collection.CollectionUtils;
-
 import com.google.common.base.Objects;
+
+import jef.tools.collection.CollectionUtils;
 
 /**
  * 断言工具类，用于检查
@@ -516,6 +516,13 @@ public class Assert {
 	 */
 	public static void notEmpty(Collection collection) {
 		notEmpty(collection, "[Assertion failed] - this collection must not be empty: it must contain at least 1 element");
+	}
+	
+	public static void notEmpty(String s,String message) {
+		if(StringUtils.isEmpty(s)){
+			throw new IllegalArgumentException(message);
+		}
+		
 	}
 
 	/**

@@ -8,6 +8,7 @@ import org.easyframe.enterprise.spring.CommonDao;
 import org.easyframe.tutorial.lesson1.entity.Foo2;
 import org.easyframe.tutorial.lesson2.entity.Student;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;

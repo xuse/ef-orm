@@ -83,7 +83,7 @@ public class VarObjAdapter extends XmlAdapter<VarAttribute[], VarObject> {
 			return value;
 		}
 		try {
-			Class clz = Class.forName(dataType);
+			Class<?> clz = Class.forName(dataType);
 			return ConvertUtils.toProperType(value, new ClassEx(clz), null);
 		} catch (ClassNotFoundException e) {
 			throw new IllegalArgumentException(e);

@@ -4,9 +4,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
-import jef.common.wrapper.IntRange;
 import jef.database.DbClient;
 import jef.database.NativeQuery;
 import jef.database.QB;
@@ -25,7 +23,6 @@ import jef.orm.onetable.model.TestEntity;
 import jef.script.javascript.Var;
 import jef.tools.string.RandomData;
 
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -37,23 +34,17 @@ import org.junit.runner.RunWith;
  */
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({ 
-	@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"), 
 	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
 	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"),
 	@DataSource(name = "derby", url = "jdbc:derby:./db;create=true"),
 	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"), 
+	@DataSource(name = "sqlite", url = "jdbc:sqlite:test.db?date_string_format=yyyy-MM-dd HH:mm:ss"), 
+	@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"), 
 	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 public class ComplexQuerysTest {
 
 	private DbClient db;
-
-	@BeforeClass
-	public static void setUp() {
-		EntityEnhancer en = new EntityEnhancer();
-		en.enhance("jef.orm");
-	}
 
 	@DatabaseInit
 	public void init() {
@@ -176,7 +167,7 @@ public class ComplexQuerysTest {
 	@Test
 	public void testUnionSQL() throws SQLException{
 		NativeQuery<Foo> q=db.createNativeQuery("select id,name from foo union all select id,name from foo order by id",Foo.class);
-		q.setRange(new IntRange(6,10));
+		q.setRange(5,5);
 		q.getResultList();
 	}
 }

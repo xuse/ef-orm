@@ -34,7 +34,6 @@ public class EntityEnhancerTest {
 	public void testEntityEnhancer() {
 		EntityEnhancer e = new EntityEnhancer();
 		e.setOut(System.out);
-		e.setRoot(new File("./"));
 		e.setExcludePatter(new String[] { "java.lang.*" });
 		e.setIncludePattern("javax.xml");
 		e.getExcludePatter();
@@ -58,10 +57,10 @@ public class EntityEnhancerTest {
 			}
 		}, 0);
 		
-		 byte[] bytes=asm.doEnhance(reader.getClassName(), writer.toByteArray(),IOUtils.toByteArray(url));
+		 byte[] bytes=asm.doEnhance( writer.toByteArray(),IOUtils.toByteArray(url));
 		 assertNotNull(bytes);
 		 
-		 byte[] bytes2=asm.doEnhance(reader.getClassName(), bytes,IOUtils.toByteArray(url));
+		 byte[] bytes2=asm.doEnhance(bytes,IOUtils.toByteArray(url));
 		 assertTrue(bytes2.length==0);
 		 
 	}
@@ -103,10 +102,6 @@ public class EntityEnhancerTest {
 	 */
 	@Test
 	public void testInnerClass()throws Exception {
-		EntityEnhancer e = new EntityEnhancer();
-		e.setOut(System.out);
-//		e.setRoot(new File("./"));
-		e.enhance("jef.codegen");
 		System.out.println(MetaHolder.getMeta(NoFieldParent.class));
 		System.out.println(MetaHolder.getMeta(ExtendsNoFIeldClass.class)); //此处如果仅输出一个列，是不对的
 		System.out.println(MetaHolder.getMeta(FieldParent.class));

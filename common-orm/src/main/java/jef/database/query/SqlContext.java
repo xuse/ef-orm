@@ -53,6 +53,7 @@ public class SqlContext extends AbstractEntityMappingProvider  implements Entity
 		ac.setLazyLob(ORMConfig.getInstance().isEnableLazyLob());
 		qa.setFields(ac);
 		this.queries=Arrays.asList(qa);
+		this.attribute=query.getAttributes();
 	}
 	
 	public SqlContext(int current, List<QueryAlias> queries, Selects selected) {

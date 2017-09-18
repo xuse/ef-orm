@@ -38,7 +38,8 @@ import jef.database.datasource.DataSourceInfo;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.ColumnType.Varchar;
-import jef.database.dialect.type.AColumnMapping;
+import jef.database.dialect.handler.LimitHandler;
+import jef.database.dialect.handler.OracleLimitHander;
 import jef.database.exception.JDBCExceptionHelper;
 import jef.database.exception.TemplatedViolatedConstraintNameExtracter;
 import jef.database.exception.ViolatedConstraintNameExtracter;
@@ -81,24 +82,17 @@ import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
 
+import com.querydsl.sql.OracleTemplates;
+import com.querydsl.sql.SQLTemplates;
+
 /**
  * 修改列名Oracle：lter table bbb rename column nnnnn to hh int;
  */
 public class OracleDialect extends AbstractDialect {
 	public OracleDialect() {
 		features = CollectionUtils.identityHashSet();
-		features.addAll(Arrays.asList(
-				Feature.AUTOINCREMENT_NEED_SEQUENCE, 
-				Feature.USER_AS_SCHEMA, 
-				Feature.REMARK_META_FETCH, 
-				Feature.BRUKETS_FOR_ALTER_TABLE, 
-				Feature.SUPPORT_CONCAT,
-				Feature.SUPPORT_CONNECT_BY,
-				Feature.DROP_CASCADE,
-				Feature.SUPPORT_SEQUENCE,
-				Feature.EMPTY_CHAR_IS_NULL,
-				Feature.SUPPORT_COMMENT,
-				Feature.COLUMN_DEF_ALLOW_NULL));
+		features.addAll(Arrays.asList(Feature.AUTOINCREMENT_NEED_SEQUENCE, Feature.USER_AS_SCHEMA, Feature.REMARK_META_FETCH, Feature.BRUKETS_FOR_ALTER_TABLE, Feature.SUPPORT_CONCAT, Feature.SUPPORT_CONNECT_BY, Feature.DROP_CASCADE, Feature.SUPPORT_SEQUENCE,
+				Feature.EMPTY_CHAR_IS_NULL, Feature.SUPPORT_COMMENT, Feature.COLUMN_DEF_ALLOW_NULL));
 
 		super.loadKeywords("oracle_keywords.properties");
 		if (JefConfiguration.getBoolean(DbCfg.DB_ENABLE_ROWID, false)) {
@@ -112,16 +106,16 @@ public class OracleDialect extends AbstractDialect {
 		setProperty(DbProperty.SELECT_EXPRESSION, "SELECT %s FROM DUAL");
 		setProperty(DbProperty.WRAP_FOR_KEYWORD, "\"\"");
 		setProperty(DbProperty.OTHER_VERSION_SQL, "select 'USER_LANGUAGE',userenv('language') from dual");
-		
+
 		registerNative(Scientific.sinh);
 		registerNative(Scientific.cosh);
 		registerNative(Scientific.tanh);
 		registerNative(Scientific.exp);
 		registerNative(Scientific.ln);
-		registerNative(new StandardSQLFunction("log"));//Oracle can assign a log param.
+		registerNative(new StandardSQLFunction("log"));// Oracle can assign a
+														// log param.
 		registerNative(new StandardSQLFunction("stddev"));
-		
-		
+
 		registerNative(new StandardSQLFunction("variance"));
 
 		registerNative(Func.round);
@@ -141,24 +135,21 @@ public class OracleDialect extends AbstractDialect {
 		registerNative(Func.add_months);
 		registerAlias("lcase", "lower");
 		registerAlias("ucase", "upper");
-		
 
 		// Oracle的to_char有两种含义，具体如何转化需要根据传入参数来确定，单参数下是类型转换，双参数下是日期格式化
 		registerNative(new StandardSQLFunction("to_char"));
 		registerNative(new StandardSQLFunction("to_number"));
 		registerNative(new StandardSQLFunction("to_date"));
-		registerAlias(Func.date,"trunc");
-		registerCompatible(Func.time,new EmuOracleTime());
-		
+		registerAlias(Func.date, "trunc");
+		registerCompatible(Func.time, new EmuOracleTime());
+
 		registerNative(new NoArgSQLFunction("sysdate", false));
 		registerAlias(Func.current_timestamp, "sysdate");
-		registerAlias(Func.now,"sysdate");
-		
+		registerAlias(Func.now, "sysdate");
 
-		
 		registerNative(new NoArgSQLFunction("systimestamp", false));
 		registerCompatible(Func.current_time, new TemplateFunction("current_time", "(systimestamp-trunc(sysdate))"));
-		
+
 		registerNative(new StandardSQLFunction("last_day"));
 		registerNative(new NoArgSQLFunction("uid", false));
 		registerNative(new NoArgSQLFunction("user", false));
@@ -167,8 +158,7 @@ public class OracleDialect extends AbstractDialect {
 		registerNative(new NoArgSQLFunction("rownum", false));
 		registerNative(Func.length);
 		registerNative(Func.lengthb);
-		
-		
+
 		registerNative(new StandardSQLFunction("instr"));
 		registerNative(new StandardSQLFunction("instrb"));
 		registerNative(Func.lpad);
@@ -178,58 +168,59 @@ public class OracleDialect extends AbstractDialect {
 		registerAlias(Func.substring, "substr");
 		registerNative(new StandardSQLFunction("substrb"));
 		registerNative(Func.translate);
-		
 
 		// Multi-param numeric dialect functions...
 		registerNative(new StandardSQLFunction("atan2"));
-		
+
 		registerNative(Func.mod);
 		registerNative(Func.nvl);
 		registerNative(Func.nullif);
 		registerNative(Func.decode);
 		registerNative(new StandardSQLFunction("nvl2"));
-		
+
 		registerNative(Scientific.power);
-		
+
 		// Multi-param date dialect functions...
 		registerNative(new StandardSQLFunction("add_months"));
 		registerNative(new StandardSQLFunction("months_between"));
 		registerNative(new StandardSQLFunction("next_day"));
 		registerNative(new StandardSQLFunction("rollup"));
 		registerNative(new StandardSQLFunction("cube"));
-//		Oracle的GROUP BY语句除了最基本的语法外，还支持ROLLUP和CUBE语句。如果是ROLLUP(A, B, C)的话，首先会对(A、B、C)进行GROUP BY，然后对(A、B)进行GROUP BY，然后是(A)进行GROUP BY，
-//		最后对全表进行GROUP BY操作。如果是GROUP BY CUBE(A, B, C)，则首先会对(A、B、C)进行GROUP BY，然后依次是(A、B)，(A、C)，(A)，(B、C)，(B)，(C)，最后对全表进行GROUP BY操作。
-		
-// 用GROUP BY GROUPING SETS来代替GROUP BY CUBE。你可以应用来指定你感兴趣的总数组合。因为它不必计算它不需要集合（也不会产生太多结果），所以对SQL引擎来说更为高效。 
-//其格式为： 
-//		GROUP BY GROUPING SETS ((list), (list) ... ) 
+		// Oracle的GROUP BY语句除了最基本的语法外，还支持ROLLUP和CUBE语句。如果是ROLLUP(A, B,
+		// C)的话，首先会对(A、B、C)进行GROUP BY，然后对(A、B)进行GROUP BY，然后是(A)进行GROUP BY，
+		// 最后对全表进行GROUP BY操作。如果是GROUP BY CUBE(A, B, C)，则首先会对(A、B、C)进行GROUP
+		// BY，然后依次是(A、B)，(A、C)，(A)，(B、C)，(B)，(C)，最后对全表进行GROUP BY操作。
 
-		
+		// 用GROUP BY GROUPING SETS来代替GROUP BY
+		// CUBE。你可以应用来指定你感兴趣的总数组合。因为它不必计算它不需要集合（也不会产生太多结果），所以对SQL引擎来说更为高效。
+		// 其格式为：
+		// GROUP BY GROUPING SETS ((list), (list) ... )
+
 		registerCompatible(Func.current_date, new NoArgSQLFunction("trunc(sysdate)", false));
-		
+
 		registerCompatible(Func.concat, new VarArgsSQLFunction("", "||", ""));
 		registerCompatible(Func.coalesce, new EmuCoalesce_Nvl());
-		registerCompatible(Func.locate, new TransformFunction("locate", "instr",new int[]{2,1}));// 用instr来模拟locate参数相反
-		registerCompatible(Func.year, new EmuOracleExtract("year",false));
-		registerCompatible(Func.month, new EmuOracleExtract("month",false));
-		registerCompatible(Func.day, new EmuOracleExtract("day",false));
-		registerCompatible(Func.hour, new EmuOracleExtract("hour",true));
-		registerCompatible(Func.minute, new EmuOracleExtract("minute",true));
-		registerCompatible(Func.second, new EmuOracleExtract("second",true));
-		
-		registerCompatible(null,EmuOracleToDate.getInstance(),"timestamp");
+		registerCompatible(Func.locate, new TransformFunction("locate", "instr", new int[] { 2, 1 }));// 用instr来模拟locate参数相反
+		registerCompatible(Func.year, new EmuOracleExtract("year", false));
+		registerCompatible(Func.month, new EmuOracleExtract("month", false));
+		registerCompatible(Func.day, new EmuOracleExtract("day", false));
+		registerCompatible(Func.hour, new EmuOracleExtract("hour", true));
+		registerCompatible(Func.minute, new EmuOracleExtract("minute", true));
+		registerCompatible(Func.second, new EmuOracleExtract("second", true));
+
+		registerCompatible(null, EmuOracleToDate.getInstance(), "timestamp");
 		registerCompatible(Func.adddate, new EmuOracleDateAdd());
 		registerCompatible(Func.subdate, new EmuOracleDateSub());
 		registerCompatible(Func.timestampdiff, new EmuOracleTimeStampDiff());
 		registerCompatible(Func.timestampadd, new EmuOracleTimestampAdd());
 		registerCompatible(Func.cast, new EmuOracleCast());
-		
-		registerCompatible(Func.datediff, new TemplateFunction("datediff","trunc(%1$s-%2$s)"));
+
+		registerCompatible(Func.datediff, new TemplateFunction("datediff", "trunc(%1$s-%2$s)"));
 		registerAlias(Func.str, "to_char");
-		
-		typeNames.put(Types.VARCHAR, 4000,"varchar2($l)", 0);
-		typeNames.put(Types.VARCHAR, 1024*1024*1024*4,"clob", Types.CLOB);
-		
+
+		typeNames.put(Types.VARCHAR, 4000, "varchar2($l)", 0);
+		typeNames.put(Types.VARCHAR, 1024 * 1024 * 1024 * 4, "clob", Types.CLOB);
+
 		typeNames.put(Types.FLOAT, "number($p,$s)", 0);
 		typeNames.put(Types.DOUBLE, "number($p,$s)", 0);
 		typeNames.put(Types.NUMERIC, "number($p,$s)", 0);
@@ -237,7 +228,7 @@ public class OracleDialect extends AbstractDialect {
 		typeNames.put(Types.SMALLINT, "number($p)", 0);
 		typeNames.put(Types.INTEGER, "number($p)", 0);
 		typeNames.put(Types.BIGINT, "number($p)", 0);
-		
+
 		typeNames.put(Types.TIMESTAMP, "date", 0);
 		typeNames.put(Types.TIME, "date", 0);
 	}
@@ -246,9 +237,9 @@ public class OracleDialect extends AbstractDialect {
 		StringBuilder sb = new StringBuilder();
 		sb.append("number(" + column.precision + ")");
 		if (flag) {
-			if (column.nullable){
+			if (column.nullable) {
 				sb.append(" null");
-			}else{
+			} else {
 				sb.append(" not null");
 			}
 		}
@@ -296,7 +287,7 @@ public class OracleDialect extends AbstractDialect {
 		sb.append(":").append(pathOrName);
 
 		String url = sb.toString();
-		if(ORMConfig.getInstance().isDebugMode()){
+		if (ORMConfig.getInstance().isDebugMode()) {
 			LogUtil.show(url);
 		}
 		return url;
@@ -306,23 +297,6 @@ public class OracleDialect extends AbstractDialect {
 		return RDBMS.oracle;
 	}
 
-	@Override
-	public String getObjectNameToUse(String name) {
-		if(name==null || name.length()==0)return null;
-		if(name.charAt(0)=='"')return name;
-		return name.toUpperCase();
-	}
-
-	@Override
-	public String getColumnNameToUse(String name) {
-		if(name==null|| name.length()==0)return null;
-		if(name.charAt(0)=='"')return name;
-		return name.toUpperCase();
-	}
-	@Override
-	public String getColumnNameToUse(AColumnMapping name) {
-		return name.upperColumnName();
-	}
 	/**
 	 * 由于暂不考虑支持Oracle TIMESTAMP到毫秒这个特性，因此在查询时需要对TIMESTAMP进行truncate处理，
 	 * 以避免因多了几个毫秒而导致查不到数据的问题。
@@ -331,8 +305,8 @@ public class OracleDialect extends AbstractDialect {
 	public java.sql.Timestamp toTimestampSqlParam(Date timestamp) {
 		Calendar gval = Calendar.getInstance();
 		gval.setTime(timestamp);
-		int mills=gval.get(Calendar.MILLISECOND);
-		return new java.sql.Timestamp(timestamp.getTime()-mills);
+		int mills = gval.get(Calendar.MILLISECOND);
+		return new java.sql.Timestamp(timestamp.getTime() - mills);
 	}
 
 	/**
@@ -347,37 +321,36 @@ public class OracleDialect extends AbstractDialect {
 	@Override
 	public List<SequenceInfo> getSequenceInfo(DbMetaData conn, String schema, String seqName) {
 		String sql = "select sequence_owner,sequence_name,min_value,max_value,increment_by,cache_size,last_number from all_sequences where sequence_owner like ? and sequence_name like ?";
-		schema=StringUtils.isBlank(schema) ? "%" : schema.toUpperCase();
-		seqName=StringUtils.isBlank(seqName) ? "%" : seqName.toUpperCase();
+		schema = StringUtils.isBlank(schema) ? "%" : schema.toUpperCase();
+		seqName = StringUtils.isBlank(seqName) ? "%" : seqName.toUpperCase();
 		try {
 			return conn.selectBySql(sql, new AbstractResultSetTransformer<List<SequenceInfo>>() {
 				@Override
 				public List<SequenceInfo> transformer(IResultSet rs) throws SQLException {
-					List<SequenceInfo>  result=new ArrayList<SequenceInfo>();
-					if(rs.next()) {
-						SequenceInfo seq=new SequenceInfo();
+					List<SequenceInfo> result = new ArrayList<SequenceInfo>();
+					if (rs.next()) {
+						SequenceInfo seq = new SequenceInfo();
 						seq.setCatalog(null);
 						seq.setSchema(rs.getString(1));
 						seq.setName(rs.getString(2));
 						seq.setMinValue(rs.getLong(3));
-						seq.setMaxValue(rs.getLong(4));
+//						seq.setMaxValue(rs.getLong(4));
 						seq.setStep(rs.getInt(5));
 						seq.setCacheSize(rs.getInt(6));
 						seq.setCurrentValue(rs.getLong(7));
 						result.add(seq);
 					}
 					return result;
-					
+
 				}
-				
-			}, 0, Arrays.asList(schema,seqName));
+
+			}, 0, Arrays.asList(schema, seqName));
 		} catch (SQLException e) {
 			DebugUtil.setSqlState(e, sql);
-			LogUtil.exception(e);
+			LogUtil.error("Error while getting sequence info [{}.{}].", schema, seqName, e);
 		}
 		return null;
 	}
-
 
 	@Override
 	public boolean isIOError(SQLException se) {
@@ -388,7 +361,8 @@ public class OracleDialect extends AbstractDialect {
 			return true;
 		} else {
 			// 为了跟踪所有Oracle出现网络异常时的错误码，将错误码和异常信息打印出来。
-//			LogUtil.info("Oracle non-io Err:" + se.getErrorCode() + ":" + se.getMessage());
+			// LogUtil.info("Oracle non-io Err:" + se.getErrorCode() + ":" +
+			// se.getMessage());
 			return false;
 		}
 	}
@@ -459,55 +433,57 @@ public class OracleDialect extends AbstractDialect {
 				connectInfo.setDbname(dbname);
 			}
 		}
+		reader.close();
 	}
 
 	@Override
 	public void processIntervalExpression(BinaryExpression parent, Interval interval) {
-		if(interval.isPostgreMode()){
+		if (interval.isPostgreMode()) {
 			interval.toMySqlMode();
 		}
-		String unit=interval.getUnit().toLowerCase();
+		String unit = interval.getUnit().toLowerCase();
 		interval.toMySqlMode();
-		Expression value=interval.getValue();
-		if("day".equals(unit)){
-			replace(parent,interval,value);
-		}else if("hour".equals(unit)){
-			value=new Division(value,new LongValue(24));
-			value=new Parenthesis(value);
-			replace(parent,interval,value);
-		}else if("minute".equals(unit)){
-			value=new Division(value,new LongValue(1440));
-			value=new Parenthesis(value);
-			replace(parent,interval,value);
-		}else if("second".equals(unit)){
-			value=new Division(value,new LongValue(86400));
-			value=new Parenthesis(value);
-			replace(parent,interval,value);
-		}else if("month".equals(unit)){
-			if(parent.getLeftExpression()==interval){
-				parent.swap();//交换到右边
+		Expression value = interval.getValue();
+		if ("day".equals(unit)) {
+			replace(parent, interval, value);
+		} else if ("hour".equals(unit)) {
+			value = new Division(value, new LongValue(24));
+			value = new Parenthesis(value);
+			replace(parent, interval, value);
+		} else if ("minute".equals(unit)) {
+			value = new Division(value, new LongValue(1440));
+			value = new Parenthesis(value);
+			replace(parent, interval, value);
+		} else if ("second".equals(unit)) {
+			value = new Division(value, new LongValue(86400));
+			value = new Parenthesis(value);
+			replace(parent, interval, value);
+		} else if ("month".equals(unit)) {
+			if (parent.getLeftExpression() == interval) {
+				parent.swap();// 交换到右边
 			}
-			Function func=new Function("add_months",parent.getLeftExpression(),interval.getValue());
-			parent.rewrite=func;
-		}else if("year".equals(unit)){
-			if(parent.getLeftExpression()==interval){
-				parent.swap();//交换到右边
+			Function func = new Function("add_months", parent.getLeftExpression(), interval.getValue());
+			parent.rewrite = func;
+		} else if ("year".equals(unit)) {
+			if (parent.getLeftExpression() == interval) {
+				parent.swap();// 交换到右边
 			}
-			Expression right=new Multiplication(interval.getValue(),new LongValue(12));
-			Function func=new Function("add_months",parent.getLeftExpression(),right);
-			parent.rewrite=func;
-		}else{
-			throw new UnsupportedOperationException("The Oracle Dialect can't handle datetime unit ["+unit+"] for now.");
+			Expression right = new Multiplication(interval.getValue(), new LongValue(12));
+			Function func = new Function("add_months", parent.getLeftExpression(), right);
+			parent.rewrite = func;
+		} else {
+			throw new UnsupportedOperationException("The Oracle Dialect can't handle datetime unit [" + unit + "] for now.");
 		}
 	}
 
 	private void replace(BinaryExpression parent, Interval interval, Expression value) {
-		if(parent.getLeftExpression()==interval){
+		if (parent.getLeftExpression() == interval) {
 			parent.setLeftExpression(value);
-		}else{
+		} else {
 			parent.setRightExpression(value);
 		}
 	}
+
 	@Override
 	public String getSqlDateExpression(Date value) {
 		return "to_date(" + QUOT + DateUtils.formatDate(value) + QUOT + ",'YYYY-MM-DD')";
@@ -524,69 +500,80 @@ public class OracleDialect extends AbstractDialect {
 	}
 
 	public void addKeyword(String... keys) {
-		for(String s:keys){
+		for (String s : keys) {
 			this.keywords.add(s.toUpperCase());
 		}
 	}
 
 	@Override
 	public void toExtremeInsert(InsertSqlClause sql) {
-//		alter table xxx nologging
+		// alter table xxx nologging
 		sql.setInsert("insert /*+ APPEND */ into ");
 	}
-	
-	private LimitHandler limit=new OracleLimitHander();
+
+	private LimitHandler limit = new OracleLimitHander();
 
 	@Override
 	public LimitHandler getLimitHandler() {
 		return limit;
 	}
-	private static ViolatedConstraintNameExtracter EXTRACTER_8 = new TemplatedViolatedConstraintNameExtracter() {
 
+	private static ViolatedConstraintNameExtracter EXTRACTER_8 = new TemplatedViolatedConstraintNameExtracter() {
 		/**
-		 * Extract the name of the violated constraint from the given SQLException.
+		 * Extract the name of the violated constraint from the given
+		 * SQLException.
 		 *
-		 * @param sqle The exception that was the result of the constraint violation.
+		 * @param sqle
+		 *            The exception that was the result of the constraint
+		 *            violation.
 		 * @return The extracted constraint name.
 		 */
 		public String extractConstraintName(SQLException sqle) {
 			int errorCode = JDBCExceptionHelper.extractErrorCode(sqle);
-			if ( errorCode == 1 || errorCode == 2291 || errorCode == 2292 ) {
-				return extractUsingTemplate( "constraint (", ") violated", sqle.getMessage() );
-			}
-			else if ( errorCode == 1400 ) {
+			if (errorCode == 1 || errorCode == 2291 || errorCode == 2292) {
+				return extractUsingTemplate("constraint (", ") violated", sqle.getMessage());
+			} else if (errorCode == 1400) {
 				// simple nullability constraint
 				return null;
-			}
-			else {
+			} else {
 				return null;
 			}
 		}
 	};
-	
 
 	private static ViolatedConstraintNameExtracter EXTRACTER_9 = new TemplatedViolatedConstraintNameExtracter() {
-
 		/**
-		 * Extract the name of the violated constraint from the given SQLException.
+		 * Extract the name of the violated constraint from the given
+		 * SQLException.
 		 *
-		 * @param sqle The exception that was the result of the constraint violation.
+		 * @param sqle
+		 *            The exception that was the result of the constraint
+		 *            violation.
 		 * @return The extracted constraint name.
 		 */
 		public String extractConstraintName(SQLException sqle) {
 			int errorCode = JDBCExceptionHelper.extractErrorCode(sqle);
-			if ( errorCode == 1 || errorCode == 2291 || errorCode == 2292 ) {
-				return extractUsingTemplate( "constraint (", ") violated", sqle.getMessage() );
-			}
-			else if ( errorCode == 1400 ) {
+			if (errorCode == 1 || errorCode == 2291 || errorCode == 2292) {
+				return extractUsingTemplate("constraint (", ") violated", sqle.getMessage());
+			} else if (errorCode == 1400) {
 				// simple nullability constraint
 				return null;
-			}
-			else {
+			} else {
 				return null;
 			}
 		}
 
 	};
 
+	@Override
+	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
+		return EXTRACTER_9;
+	}
+	
+    private final SQLTemplates queryDslDialect = new OracleTemplates();
+
+    @Override
+    public SQLTemplates getQueryDslDialect() {
+        return queryDslDialect;
+    }
 }

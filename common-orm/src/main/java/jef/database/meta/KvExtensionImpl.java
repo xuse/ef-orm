@@ -34,7 +34,7 @@ public final class KvExtensionImpl extends AbstractExtensionConfig implements Ex
 			tuple.addColumn(m.fieldName(),m.rawColumnName(), ct,true);
 			joinkeys.add(new JoinKey(m.field(),tuple.getField(m.fieldName())));
 		}
-		tuple.addColumn(config.keyColumn(),config.keyColumn(), new ColumnType.Varchar(64).notNull(),true);
+		tuple.addColumn(config.keyColumn(),config.keyColumn(), new ColumnType.Varchar(64).setNullable(false),true);
 		tuple.addColumn(config.valueColumn(), new ColumnType.Varchar(4000));
 		this.kvTable=tuple;
 		this.joinPath=new JoinPath(JoinType.INNER,joinkeys.toArray(new JoinKey[joinkeys.size()]));

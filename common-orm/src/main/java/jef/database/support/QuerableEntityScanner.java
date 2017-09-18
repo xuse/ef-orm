@@ -37,6 +37,7 @@ import jef.tools.ArrayUtils;
 import jef.tools.ClassScanner;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
+import jef.tools.resource.IResource;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONException;
@@ -147,41 +148,65 @@ public class QuerableEntityScanner {
 
 		// 开始
 		ClassScanner cs = new ClassScanner();
-		Set<String> classes = cs.scan(packageNames);
+		IResource[] classes = cs.scan(packageNames);
 
 		// 循环所有扫描到的类
 		Map<ITableMetadata, Boolean> tasks = new HashMap<ITableMetadata, Boolean>();
-		for (String s : classes) {
+		for (IResource s : classes) {
 			try {
-				// 读取类
-				URL url = cl.getResource(s.replace('.', '/') + ".class");
-				if (url == null)
+				ClassReader cr = getClassInfo(cl,s);
+				if( cr==null)//NOT found class
 					continue;
-				InputStream stream = url.openStream();
-				if (stream == null) {
-					LogUtil.error("The class content [" + s + "] not found!");
-					continue;
-				}
-				ClassReader cr = new ClassReader(stream);
-				IOUtils.closeQuietly(stream);
-
 				// 根据父类判断
-				String superName = cr.getSuperName();
-				if (!ArrayUtils.contains(parents, superName)) {// 是实体
-					continue;
-				}
-
-				// 加载或初始化
-				Class<?> clz = loadClass(cl, s);
-				if (clz != null) {
-					registeEntity(clz, tasks);
-				}
+				if(isEntiyClz(cl,parents,cr.getSuperName())){
+					Class<?> clz = loadClass(cl, cr.getClassName().replace('/', '.'));
+					if (clz != null) {
+						registeEntity(clz, tasks);
+					}
+				};
 			} catch (IOException e) {
 				LogUtil.exception(e);
 			}
 		}
 		processInit(tasks);
 	}
+
+	private boolean isEntiyClz(ClassLoader cl ,String[] parents,String superName) throws IOException {
+		if("java/lang/Object".equals(superName)){
+			return false;
+		}
+		if (ArrayUtils.contains(parents, superName)) {// 是实体
+			return true;
+		}
+		// 读取类
+		ClassReader cr = getClassInfo(cl,superName);
+		if(cr==null){
+			return false;
+		}
+		return isEntiyClz(cl,parents, cr.getSuperName());
+	}
+
+	private ClassReader getClassInfo(ClassLoader cl,String s) throws IOException {
+		URL url = cl.getResource(s.replace('.', '/') + ".class");
+		if (url == null)
+			return null;
+		InputStream stream = url.openStream();
+		if (stream == null) {
+			LogUtil.error("The class content [" + s + "] not found!");
+			return null;
+		}
+		return new ClassReader(stream,true);
+	}
+	
+	private ClassReader getClassInfo(ClassLoader cl,IResource s) throws IOException {
+		InputStream stream = s.getInputStream();
+		if (stream == null) {
+			LogUtil.error("The class content [" + s + "] not found!");
+			return null;
+		}
+		return new ClassReader(stream,true);
+	}
+	
 
 	private Class<?> loadClass(ClassLoader cl, String s) {
 		try {

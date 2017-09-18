@@ -118,7 +118,7 @@ public class TransactionImpl extends Transaction {
 		this.parent = parent;
 		this.isolationLevel = isolationLevel;
 		this.readOnly = readOnly;
-		this.rProcessor = parent.rProcessor;
+		this.preProcessor = parent.preProcessor;
 		this.selectp = parent.selectp;
 		this.insertp = parent.insertp;
 		this.updatep = parent.updatep;
@@ -128,10 +128,10 @@ public class TransactionImpl extends Transaction {
 			cache = parent.getCache();
 		} else if (parent.getCache().isDummy()) {
 			// 自己有缓存，上级无缓存
-			cache = new CacheImpl(rProcessor, selectp, 0, "L1");
+			cache = new CacheImpl(preProcessor, selectp, 0, "L1");
 		} else {
 			// 两级缓存都启用的情况下
-			cache = new CacheChain(new CacheImpl(rProcessor, selectp, 0, "L1"), parent.getCache());
+			cache = new CacheChain(new CacheImpl(preProcessor, selectp, 0, "L1"), parent.getCache());
 		}
 		getListener().newTransaction(this);
 		if (timeout > 0) {
@@ -188,6 +188,10 @@ public class TransactionImpl extends Transaction {
 			if (close)
 				doClose();
 		}
+	}
+
+	public boolean isOpen() {
+		return parent != null;
 	}
 
 	public boolean isAutoCommit() {

@@ -1,6 +1,7 @@
 package jef.database.dialect.type;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.util.Date;
@@ -42,5 +43,11 @@ public class SqlTimeDateMapping extends AColumnMapping{
 	@Override
 	protected Class<?> getDefaultJavaType() {
 		return Date.class;
+	}
+
+	@Override
+	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
+		Time time=new java.sql.Time(((Date)value).getTime());
+		rs.updateTime(columnIndex, time);
 	}
 }

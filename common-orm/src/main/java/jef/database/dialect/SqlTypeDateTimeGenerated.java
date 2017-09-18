@@ -1,7 +1,9 @@
 package jef.database.dialect;
 
-public interface SqlTypeDateTimeGenerated {
-	int getGenerateType();
+import jef.database.annotation.DateGenerateType;
 
-	ColumnType setGenerateType(int dateGenerateType);
+public interface SqlTypeDateTimeGenerated {
+	DateGenerateType getGenerateType();
+
+	ColumnType setGenerateType(DateGenerateType dateGenerateType);
 }

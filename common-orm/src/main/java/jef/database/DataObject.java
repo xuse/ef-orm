@@ -5,14 +5,12 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import javax.persistence.PersistenceException;
 import javax.xml.bind.annotation.XmlTransient;
 
 import jef.accelerator.bean.BeanAccessor;
-import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.Query;
@@ -20,8 +18,6 @@ import jef.database.query.QueryImpl;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-
-import com.google.common.base.Objects;
 
 /**
  * 抽象类，用于实现所有Entity默认的各种方法
@@ -71,7 +67,7 @@ public abstract class DataObject implements IQueryableEntity {
 	 */
 	public final void clearQuery() {
 		query = null;
-		lazyload=null;
+		lazyload = null;
 	}
 
 	/*
@@ -109,58 +105,38 @@ public abstract class DataObject implements IQueryableEntity {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see jef.database.query.UpdateAble#prepareUpdate(jef.database.Field,
-	 * java.lang.Object)
+	 * @see jef.database.IQueryableEntity#touchUsedFlag(jef.database.Field,
+	 * boolean)
 	 */
-	public final void prepareUpdate(Field field, Object newValue) {
-		prepareUpdate(field, newValue, false);
+	public void touchUsedFlag(Field field, boolean flag) {
+		if (flag) {
+			if (updateValueMap == null)
+				updateValueMap = new TreeMap<Field, Object>(cmp);
+			if (updateValueMap.containsKey(field)) {
+				return;
+			}
+			ITableMetadata meta = MetaHolder.getMeta(this);
+			BeanAccessor ba = meta.getContainerAccessor();
+			updateValueMap.put(field, ba.getProperty(this, field.name()));
+		} else {
+			if (updateValueMap != null) {
+				updateValueMap.remove(field);
+			}
+		}
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see jef.database.query.UpdateAble#prepareUpdate(jef.database.Field,
-	 * java.lang.Object, boolean)
+	public final void prepareUpdate(Field field, Object newValue) {
+		if (updateValueMap == null)
+			updateValueMap = new TreeMap<Field, Object>(cmp);
+		updateValueMap.put(field, newValue);
+	}
+
+
+	/**
+	 * @deprecated will be removed in ths next release.
 	 */
 	public final void prepareUpdate(Field field, Object newValue, boolean force) {
-		ITableMetadata meta = MetaHolder.getMeta(this);
-		BeanAccessor ba = meta.getContainerAccessor();
-		String fieldName = field.name();
-		if (updateValueMap == null)
-			updateValueMap = new TreeMap<Field, Object>(cmp);
-		if (force || !Objects.equal(ba.getProperty(this,fieldName), newValue)) {
-			updateValueMap.put(field, newValue);
-		}
-		return;
-	}
-
-	void markUpdateFlag(Field field, Object newValue) {
-		if (updateValueMap == null) {
-			updateValueMap = new TreeMap<Field, Object>(cmp);
-			updateValueMap.put(field, newValue);
-		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see jef.database.query.UpdateAble#applyUpdate()
-	 */
-	public final void applyUpdate() {
-		if (updateValueMap == null)
-			return;
-
-		ITableMetadata meta = MetaHolder.getMeta(this);
-		BeanAccessor ba = meta.getContainerAccessor();
-		
-		for (Entry<Field, Object> entry : updateValueMap.entrySet()) {
-			Object newValue = entry.getValue();
-			if (newValue instanceof Expression || newValue instanceof jef.database.Field) {
-				continue;
-			}
-			ba.setProperty(this, entry.getKey().name(), newValue);
-		}
-		clearUpdate();
+		prepareUpdate(field, newValue);	
 	}
 
 	/*
@@ -192,6 +168,7 @@ public abstract class DataObject implements IQueryableEntity {
 			return;
 		lazyload.markProcessed(fieldname);
 	}
+
 	/*
 	 * 处理延迟加载的字段
 	 */

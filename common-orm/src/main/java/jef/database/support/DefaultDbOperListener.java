@@ -1,7 +1,7 @@
 package jef.database.support;
 
-import jef.database.Session;
 import jef.database.IQueryableEntity;
+import jef.database.Session;
 import jef.database.Transaction;
 
 /**

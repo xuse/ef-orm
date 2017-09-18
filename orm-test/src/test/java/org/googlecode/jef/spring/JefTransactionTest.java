@@ -4,7 +4,14 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import jef.codegen.EntityEnhancer;
+import org.googlecode.jef.spring.case2.ServiceRequired;
+import org.googlecode.jef.spring.entity.BindEntity1;
+import org.googlecode.jef.spring.entity.BindEntity2;
+import org.googlecode.jef.spring.entity.BindEntity3;
+import org.junit.Test;
+import org.springframework.context.ApplicationContext;
+import org.springframework.transaction.annotation.Propagation;
+
 import jef.common.log.LogUtil;
 import jef.database.DbClient;
 import jef.database.DbClientBuilder;
@@ -17,24 +24,7 @@ import jef.database.test.SpringTestBase;
 import jef.orm.multitable2.model.Root;
 import jef.tools.ArrayUtils;
 
-import org.googlecode.jef.spring.case2.ServiceRequired;
-import org.googlecode.jef.spring.entity.BindEntity1;
-import org.googlecode.jef.spring.entity.BindEntity2;
-import org.googlecode.jef.spring.entity.BindEntity3;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.springframework.context.ApplicationContext;
-import org.springframework.transaction.annotation.Propagation;
-
 public class JefTransactionTest extends SpringTestBase {
-	@BeforeClass
-	public static void enhanceEntity() {
-		EntityEnhancer en = new EntityEnhancer();
-		en.enhance("org.googlecode.jef.spring");
-		
-		
-	}
-
 	public void testCreateTables(ApplicationContext ctx) throws SQLException {
 		JefEntityManagerFactory factory = ctx.getBean(JefEntityManagerFactory.class);
 		DbClient client = factory.getDefault();

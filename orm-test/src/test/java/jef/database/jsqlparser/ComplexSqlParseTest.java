@@ -1,7 +1,6 @@
 package jef.database.jsqlparser;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.sql.SQLException;
@@ -39,13 +38,33 @@ import com.alibaba.druid.sql.dialect.sqlserver.visitor.SQLServerOutputVisitor;
 
 public class ComplexSqlParseTest extends org.junit.Assert {
 	@Test
-	@Ignore
 	public void testParseAndPrint() throws IOException, ParseException {
-		String sql = IOUtils.asString(new File("d:/aaa.sql"), "US-ASCII");
-		jef.database.jsqlparser.visitor.Statement st = DbUtils.parseStatement(sql);
-		System.out.println(st);
+		String sql = IOUtils.asString(this.getClass().getResource("/aaa.sql"), "US-ASCII");
+		try{
+		    JpqlParser parser = new JpqlParser(new StringReader(sql));
+		    jef.database.jsqlparser.visitor.Statement st = parser.Statement();
+		    System.out.println(st);
+		}catch(ParseException e){
+		    e.printStackTrace();
+		    throw e;
+		}
 	}
 
+	@Test
+	public void strange() throws ParseException {
+		String source = "SELECT ID,TITLE,PARENT_ID FROM PORTAL_DOCUMENT WHERE DOC_CATE_ID IN (:lv2Ids<int>)";
+		Statement re = jef.database.DbUtils.parseStatement(source);
+	}
+	
+	
+
+	@Test
+	public void bindVars() throws ParseException {
+		String source = "select * from foo where age=?1 and name like ?2<$string$> \norder by ?3<sql>";
+		Statement re = jef.database.DbUtils.parseStatement(source);
+	}
+	
+	
 	@Test
 	public void main1() throws ParseException {
 		String source = "select to_char(t.acct_id) name1,to_char(t.name) name2,to_char(t.account_status) name3,\nto_char( t.org_id) name4,to_char(t.so_nbr) name5,to_char(t.create_date) name6 from ca_account t where 1=1  or t.create_date =:operateTime or "

@@ -4,10 +4,15 @@ import java.util.Arrays;
 
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
+import jef.database.dialect.handler.LimitHandler;
+import jef.database.dialect.handler.LimitOffsetLimitHandler;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.support.RDBMS;
 import jef.tools.collection.CollectionUtils;
+
+import com.querydsl.sql.OracleTemplates;
+import com.querydsl.sql.SQLTemplates;
 
 /**
  * GBase的dialect
@@ -99,4 +104,11 @@ public class GBaseDialect extends AbstractDialect {
 	public LimitHandler getLimitHandler() {
 		return limit;
 	}
+	
+    private final SQLTemplates queryDslDialect = new OracleTemplates();
+
+    @Override
+    public SQLTemplates getQueryDslDialect() {
+        return queryDslDialect;
+    }
 }

@@ -88,8 +88,9 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool, DataS
 		this.ds = ds;
 		this.min = min;
 		this.max = max;
-		this.metadata = new DbMetaData(ds, this, null);
 		freeConns = new LinkedBlockingQueue<ReentrantConnection>(max);
+		this.metadata = new DbMetaData(ds, this, null);
+		metadata.getProfile().accept(metadata);
 		PoolReleaseThread.getInstance().addPool(this);
 		PoolCheckThread.getInstance().addPool(this);
 	}
@@ -293,7 +294,7 @@ final class SingleManagedConnectionPool implements IManagedConnectionPool, DataS
 	public synchronized void doCheck() {
 		int total = freeConns.size();
 		int invalid = PoolService.doCheck(this.testSQL, freeConns.iterator());
-		LogUtil.info("Checked [{}]. total:{},  invalid:{}", this, total, invalid);
+		LogUtil.debug("Checked [{}]. total:{},  invalid:{}", this, total, invalid);
 	}
 
 	public boolean isMultipleRdbms() {

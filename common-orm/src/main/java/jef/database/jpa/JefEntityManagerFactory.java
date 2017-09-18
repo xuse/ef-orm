@@ -1,26 +1,33 @@
 package jef.database.jpa;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
 import javax.persistence.Cache;
+import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceUnitUtil;
+import javax.persistence.Query;
+import javax.persistence.SynchronizationType;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.metamodel.Metamodel;
 import javax.sql.DataSource;
-
-import jef.database.DbCfg;
-import jef.database.DbClient;
-import jef.database.cache.CacheDummy;
-import jef.database.jmx.JefFacade;
-import jef.tools.JefConfiguration;
 
 import org.easyframe.enterprise.spring.TransactionMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JefEntityManagerFactory implements EntityManagerFactory {
+import jef.database.DbCfg;
+import jef.database.DbClient;
+import jef.database.cache.CacheDummy;
+import jef.database.jmx.JefFacade;
+import jef.database.meta.AbstractMetadata;
+import jef.database.meta.MetaHolder;
+import jef.tools.JefConfiguration;
+
+public class JefEntityManagerFactory implements EntityManagerFactory,MetaProvider {
 	/**
 	 * EMF名称
 	 */
@@ -33,11 +40,21 @@ public class JefEntityManagerFactory implements EntityManagerFactory {
 	private static Logger log = LoggerFactory.getLogger(JefEntityManagerFactory.class);
 
 	public EntityManager createEntityManager() {
-		return createEntityManager(null);
+		return createEntityManager(null, Collections.EMPTY_MAP);
 	}
 
 	@SuppressWarnings("rawtypes")
 	public EntityManager createEntityManager(Map map) {
+		return createEntityManager(SynchronizationType.SYNCHRONIZED, map);
+	}
+
+	@Override
+	public EntityManager createEntityManager(SynchronizationType synchronizationType) {
+		return createEntityManager(synchronizationType, Collections.EMPTY_MAP);
+	}
+
+	@Override
+	public EntityManager createEntityManager(SynchronizationType synchronizationType, @SuppressWarnings("rawtypes") Map map) {
 		EntityManager result = new JefEntityManager(this, map);
 		log.debug("[JPA DEBUG]:creating EntityManager:{} at {}", result, Thread.currentThread());
 		return result;
@@ -48,9 +65,7 @@ public class JefEntityManagerFactory implements EntityManagerFactory {
 	}
 
 	public CriteriaBuilder getCriteriaBuilder() {
-		// TODO 2013-11 为了提高单元测试覆盖率，暂将这部分分支去除
 		throw new UnsupportedOperationException();
-		// return cbuilder;
 	}
 
 	public Cache getCache() {
@@ -69,7 +84,7 @@ public class JefEntityManagerFactory implements EntityManagerFactory {
 	}
 
 	public Metamodel getMetamodel() {
-		throw new UnsupportedOperationException();
+		return null;
 	}
 
 	public boolean isOpen() {
@@ -101,5 +116,28 @@ public class JefEntityManagerFactory implements EntityManagerFactory {
 
 	public DbClient getDefault() {
 		return db;
+	}
+
+	@Override
+	public void addNamedQuery(String name, Query query) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public <T> T unwrap(Class<T> cls) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
+		throw new UnsupportedOperationException();
+	}
+
+	public Collection<AbstractMetadata> getEntityTypes() {
+		return MetaHolder.getCachedModels();
+	}
+
+	public AbstractMetadata managedType(Class<?> type) {
+		return MetaHolder.getMeta(type);
 	}
 }
