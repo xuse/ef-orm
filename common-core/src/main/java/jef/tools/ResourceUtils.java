@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 import jef.common.log.LogUtil;
+import jef.tools.ArrayUtils.Filter;
 import jef.tools.reflect.ClassUtils;
 import jef.tools.resource.ClassRelativeLoader;
 import jef.tools.resource.ClasspathLoader;
@@ -489,10 +490,21 @@ public class ResourceUtils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static IResource[] findResources(ClassLoader cl,String locationPattern) {
+	public static IResource[] findResources(ClassLoader cl,String locationPattern,boolean excludeInnerClass) {
 		ResourcePatternResolver rl= new PathMatchingResourcePatternResolver(cl);
 		try {
-			return rl.getResources(locationPattern);
+		    IResource[] res= rl.getResources(locationPattern);
+		    if(excludeInnerClass){
+		        List<IResource> list=ArrayUtils.filter(res, new Filter<IResource>(){
+                    public boolean accept(IResource o) {
+                        String s=o.getFilename();
+                        int dollor=s.indexOf('$');
+                        return dollor<=0; //当$位于第一个字符时，不认为是内部类
+                    }
+		        });
+		        res=list.toArray(new IResource[list.size()]);
+		    }
+			return res;
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

@@ -11,6 +11,11 @@ import jef.database.datasource.SimpleDataSource;
 
 import com.querydsl.sql.codegen.MetaDataExporter;
 
+/**
+ * 测试QueryDSL的代码生成功能
+ * @author jiyi
+ *
+ */
 public class Exporter {
     public static void main(String[] args) throws SQLException {
         DataSource ds=new SimpleDataSource("jdbc:derby:./db;create=true", null, null);

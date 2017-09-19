@@ -2503,4 +2503,12 @@ public class ClassReader {
             return new Handle(tag, owner, name, desc);
         }
     }
+
+    public String getJavaClassName() {
+        return getClassName().replace('/', '.');
+    }
+    
+    public String getJavaSuperName(){
+        return getSuperName().replace('/', '.');
+    }
 }

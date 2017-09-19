@@ -48,14 +48,14 @@ public class EntityEnhancerTest {
 		URL url=ClassLoader.getSystemResource("jef.orm.multitable.model.Person$Field".replace('.', '/') + ".class");
 		
 		ClassWriter writer = new ClassWriter(0);
-		reader.accept(new ClassVisitor(Opcodes.ASM5,writer){
-			@Override
-			public void visitAttribute(Attribute attr) {
-				if(!"jefd".equals(attr.type)){
-					super.visitAttribute(attr);
-				}
-			}
-		}, 0);
+//		reader.accept(new ClassVisitor(Opcodes.ASM5,writer){
+//			@Override
+//			public void visitAttribute(Attribute attr) {
+//				if(!"jefd".equals(attr.type)){
+//					super.visitAttribute(attr);
+//				}
+//			}
+//		}, 0);
 		
 		 byte[] bytes=asm.doEnhance( writer.toByteArray(),IOUtils.toByteArray(url));
 		 assertNotNull(bytes);
