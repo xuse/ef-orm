@@ -1781,9 +1781,9 @@ select t.* from STUDENT t where t.DATE_OF_BIRTH=(select max(t.DATE_OF_BIRTH) fro
 * 整个表达式被嵌入到where条件中的值的位置。
 * 表达式中的java属性名’dateOfBirth’，被替换为了数据库列名 ‘DATE_OF_BIRTH’。
 
-​	其实就这是JPQLExpression的特点，和前面介绍的一样，EF-ORM会对JPQLExpression表达式进行解析和改写处理。这包括数据库方言适配和字段名称别名匹配。
+  ​其实就这是JPQLExpression的特点，和前面介绍的一样，EF-ORM会对JPQLExpression表达式进行解析和改写处理。这包括数据库方言适配和字段名称别名匹配。
 
-​	从上面例子可以看出，表达式是一个强力的工具，灵活使用表达式能让EF-ORM简单的API发挥出预想意外的强大功能。
+  ​从上面例子可以看出，表达式是一个强力的工具，灵活使用表达式能让EF-ORM简单的API发挥出预想意外的强大功能。
 
 #### 4.1.1.4. 使用SqlExpression
 
@@ -1835,69 +1835,165 @@ public void testSelect_SqlExpression2() throws SQLException {
 
 src/main/java/org/easyframe/tutorial/lesson3/Case2.java
 
-当查询指定了若干列时，返回的对象中未指定选出的列都是null。只有选定的几个列的属性是有值的，因此查出的是一组“不完整”对象。
+~~~java
+@Test
+public void testSelect_selectFrom() throws SQLException{
+	Query<Student> query=QueryBuilder.create(Student.class);
+	query.addCondition(QueryBuilder.eq(Student.Field.gender, "F"));
+		
+	Selects selects=QueryBuilder.selectFrom(query);
+	selects.column(Student.Field.id);
+	selects.column(Student.Field.name);
+		
+	List<Student> students=db.select(query); //查询所有女生的学号和名字
+}
+~~~
 
-#### [4.1.2.2. 使用Distinct
+​	当查询指定了若干列时，返回的对象中未指定选出的列都是null。只有选定的几个列的属性是有值的，因此查出的是一组“不完整”对象。
 
-刚才说到，QueryBuilder可以从一个查询请求中提取出 Selects对象，Selects对象是一个操作SQL语句select部分的工具。它对应到SQL语句的select部分，是select部分的封装。
+#### 4.1.2.2. 使用Distinct
 
-使用selects工具，我们可以完成各种诸如列选择、distinct、group by、having、为列指定别名等各种操作。例如
+​	刚才说到，QueryBuilder可以从一个查询请求中提取出 Selects对象，Selects对象是一个操作SQL语句select部分的工具。它对应到SQL语句的select部分，是select部分的封装。
 
-src/main/java/org/easyframe/tutorial/lesson3/Case2.java
+​	使用selects工具，我们可以完成各种诸如列选择、distinct、group by、having、为列指定别名等各种操作。例如:
+
+ src/main/java/org/easyframe/tutorial/lesson3/Case2.java
+
+~~~java
+@Test
+public void testSelect_selectDistinct() throws SQLException{
+	Query<Student> query=QueryBuilder.create(Student.class);
+	Selects selects=QueryBuilder.selectFrom(query);
+	selects.setDistinct(true);
+	selects.column(Student.Field.name);
+		
+	//相当于 select distinct t.NAME from STUDENT t
+	List<Student> students=db.select(query);
+}
+~~~
 
 上例中，通过在selects中设置distinct=true，实现distinct的查询。
 
-#### [4.1.2.3. 使用Group和max/min
+#### 4.1.2.3. 使用Group和max/min
 
 src/main/java/org/easyframe/tutorial/lesson3/Case2.java
 
+~~~java
+@Test
+public void testSelect_selectGroup() throws SQLException{
+	Query<Student> query=QueryBuilder.create(Student.class);
+	Selects selects=QueryBuilder.selectFrom(query);
+		
+	selects.column(Student.Field.gender).group(); //按性别分组
+	selects.column(Student.Field.id).count();     //统计人数
+	selects.column(Student.Field.id).max();       //最大的学号
+	selects.column(Student.Field.id).min();       //最小的学号
+		
+	//上述查询的结果。无法再转换为Student对象返回了，这里将各个列按顺序形成数组返回。
+	List<String[]> stat=db.selectAs(query,String[].class); 
+	//相当于执行查询select t.GENDER, count(t.ID), max(t.ID), min(t.ID)  
+  	//				from STUDENT t  group by t.GENDER
+	for(Object[] result : stat){
+		System.out.print("M".equals(result[0])?"男生":"女生");
+		System.out.print(" 总数:"+result[1]+" 最大学号:" + result[2] + " 最小学号"+ result[3]);
+		System.out.println();	
+	}
+}
+~~~
+
 上例是Selects对象的进一步用法。通过Selects对象，可以指定SQL语句的group部分，同时可以执行count、sum、avg、max、min等通用的统计函数。
 
- 
+ 	上例中还要注意一个问题，即查询对象的返回问题。在这例中，查询对象无法转换为Student对象了，因此我们需要设置一个能存放这些字段的数据类型作为返回记录的容器。最基本的容器当然就是Map和数组了。此处我们用一个String[]作为返回值的容器。
 
-上例中还要注意一个问题，即查询对象的返回问题。在这例中，查询对象无法转换为Student对象了，因此我们需要设置一个能存放这些字段的数据类型作为返回记录的容器。最基本的容器当然就是Map和数组了。此处我们用一个String[]作为返回值的容器。
+​	关于如何传入合适的返回结果容器，以及结果转换过程的干预等等，可以参见第8章，高级查询特性。
 
-关于如何传入合适的返回结果容器，以及结果转换过程的干预等等，可以参见第8章，高级查询特性。
+ 	有朋友问，Oracle分析函数 partition by能不能用Query对象写出来。这个 是不支持的，因为这样的SQL语句只能在Oracle上使用，且在别的数据库上难以写出替代语句，因此此类语句建议您使用NativeQuery 来写。同时NativeQuery也无法自动将其改写为其他数据库兼容的语句，因此多数据库SQL方言也需要人工编写。
 
- 
-
-有朋友问，Oracle分析函数 partition by能不能用Query对象写出来。这个 是不支持的，因为这样的SQL语句只能在Oracle上使用，且在别的数据库上难以写出替代语句，因此此类语句建议您使用NativeQuery 来写。同时NativeQuery也无法自动将其改写为其他数据库兼容的语句，因此多数据库SQL方言也需要人工编写。
-
-#### [4.1.2.4. 使用Having
+#### 4.1.2.4. 使用Having
 
 上面的例子稍微改写一下，可以产生Having的语句
 
 src/main/java/org/easyframe/tutorial/lesson3/Case2.java
 
+~~~java
+@Test
+public void testSelect_groupHaving() throws SQLException{
+	Query<Student> query=QueryBuilder.create(Student.class);
+	Selects selects=QueryBuilder.selectFrom(query);
+		
+	selects.column(Student.Field.grade).group(); //按年级分组
+	//查出人数，同时添加一个Having条件，count(id)>2
+	selects.column(Student.Field.grade).count().having(Operator.GREAT, 2);    
+		
+	List<String[]> stat=db.selectAs(query,String[].class); 
+		for(Object[] result : stat){
+			System.out.print("年级:"+result[0]+" 人数:"+result[1]);
+			System.out.println();	
+	}
+}
+~~~
+
 上面的查询产生的SQL语句如下
+
+~~~
+select t.GRADE,count(t.GRADE)  from STUDENT t  group by t.GRADE having count(t.GRADE)>2
+~~~
 
 在count()后面，还可以用havingOnly。其效果是 count(id)将不作为select的一项出现，仅作为having子句的内容。
 
-#### [4.1.2.5. count的用法
+#### 4.1.2.5. count的用法
 
-在Session类当中，还有一个常用的方法 count();
+​	在Session类当中，还有一个常用的方法 count();
 
-count方法和select方法经常被拿在一起比较，当传入相同的查询请求时，select方法会查出全部数据，而count方法会将请求改写，用数据库的count函数去计算这个查询将返回多少条结果。
+​	count方法和select方法经常被拿在一起比较，当传入相同的查询请求时，select方法会查出全部数据，而count方法会将请求改写，用数据库的count函数去计算这个查询将返回多少条结果。
 
-比如下面这个例子——
-
-src/main/java/org/easyframe/tutorial/lesson3/Case2.java
-
-这个案例使用了同一个Query请求去执行count方法和select方法，前者使用了count distinct函数，查询不重复的名称数量，返回15。后者去查询，但只返回了一条结果，因为在请求中要求最多返回一条记录。
-
-从上面的例子来看，count方法总是通过改写一个“查询数据内容”的请求来得到数量。
-
- 
-
-再来看下面这个有点相似的例子
+​	比如下面这个例子——
 
 src/main/java/org/easyframe/tutorial/lesson3/Case2.java
 
-就count而言，两种方法产生的SQL语句是完全一样的，但两种查询的含义是不同的。第二个例子中，count语句是由使用者自行指定，作为一个返回的列上的函数操作出现的。这种方式是可以和group混用的。相当于使用者自定义了一条查count的SQL语句，同时这个Query对象也只能返回数值类型的结果。
+~~~java
+@Test
+public void testSelect_countDistinct() throws SQLException {
+	Query<Student> q = QB.create(Student.class);
 
-因此上面两端代码，虽然都实现了count distinct功能，但是使用的机制是不一样的，请仔细体会。
+	Selects items = QB.selectFrom(q);
+	items.column(Student.Field.name);
+	items.setDistinct(true);
+	q.setMaxResult(1);
 
- 
+	long total = db.count(q);// select count(distinct t.NAME) from STUDENT t
+
+	List<String> result=db.selectAs(q,String.class); // select distinct t.NAME from STUDENT t
+	System.out.println("总数为:"+ total +" 查出"+ result.size()+"条");
+}
+~~~
+
+​	这个案例使用了同一个Query请求去执行count方法和select方法，前者使用了count distinct函数，查询不重复的名称数量，返回15。后者去查询，但只返回了一条结果，因为在请求中要求最多返回一条记录。
+
+​	从上面的例子来看，count方法总是通过改写一个“查询数据内容”的请求来得到数量。
+
+​	再来看下面这个有点相似的例子
+
+src/main/java/org/easyframe/tutorial/lesson3/Case2.java
+
+~~~java
+@Test
+public void testSelect_countDistinct2() throws SQLException {
+	Query<Student> q = QB.create(Student.class);
+
+	Selects items = QB.selectFrom(q);
+	items.column(Student.Field.name).countDistinct();
+
+	Integer total=db.loadAs(q,Integer.class); // select count(distinct t.NAME) from STUDENT t
+	System.out.println("Count:"+  total);
+}
+~~~
+
+​	就count而言，两种方法产生的SQL语句是完全一样的，但两种查询的含义是不同的。第二个例子中，count语句是由使用者自行指定，作为一个返回的列上的函数操作出现的。这种方式是可以和group混用的。相当于使用者自定义了一条查count的SQL语句，同时这个Query对象也只能返回数值类型的结果。
+
+​	因此上面两端代码，虽然都实现了count distinct功能，但是使用的机制是不一样的，请仔细体会。
+
+
 
 API说明：将传入的普通查询请求转换为count语句的查询方法
 
@@ -1906,80 +2002,159 @@ API说明：将传入的普通查询请求转换为count语句的查询方法
 | jef.database.Session.count(ConditionQuery) | 将传入的查询请求（单表/多表）改写为count语句，然后求满足查询条件的记录总数。 |
 | jef.database.Session.count(IQueryableEntity,  String) | 根据传入的查询请求（单表），求符合条件记录总数。第二个参数可以强制指定表名。一般传入null即可。 |
 
-#### [4.1.2.6. 使用数据库函数
+#### 4.1.2.6. 使用数据库函数
 
 刚才我们已经在group中了解了常见统计函数的用法。我们在另一个案例中稍稍回顾一下
 
 src/main/java/org/easyframe/tutorial/lesson3/Case2.java
 
-上例中对统计列添加了别名，同时返回结果改用Map封装。
+~~~java
+@Test
+public void testSelect_function1() throws SQLException {
+	Query<Student> q = QB.create(Student.class);
 
- 
+	Selects items = QB.selectFrom(q);
+	items.column(Student.Field.id).min().as("min_id");
+	items.column(Student.Field.id).max().as("max_id");
+	items.column(Student.Field.id).sum().as("sub_id");
+	items.column(Student.Field.id).avg().as("avg_id");
+		
+	for(Map<String,Object> result:db.selectAs(q,Map.class)){
+		System.out.println(result);
+	}
+}
+//select min(t.ID) AS MIN_ID,  max(t.ID) AS MAX_ID, sum(t.ID) AS SUB_ID, avg(t.ID) AS AVG_ID 
+// from STUDENT t
+~~~
+
+上例中对统计列添加了别名，同时返回结果改用Map封装。
 
 那么是不是就只能用几个基本的统计函数了呢？再看下面的例子
 
 src/main/java/org/easyframe/tutorial/lesson3/Case2.java
 
+~~~java
+@Test
+public void testSelect_function2() throws SQLException {
+	Query<Student> q = QB.create(Student.class);
+
+	Selects items = QB.selectFrom(q);
+	//对姓名统一转大写
+	items.column(Student.Field.name).func(Func.upper);
+    //性别进行函数转换，decode是Oracle下的函数，注意观察其在Derby下的处理。
+    // 有兴趣的可以换成MySQL试一下。
+	items.column(Student.Field.gender).func(Func.decode, "?", "'M'" ,"'男'","'F'" ,"'女'");
+	//先对日期转文本，然后截取前面的部分
+	items.column(Student.Field.dateOfBirth).func(Func.str)
+			.func(Func.substring,"?","1","10");
+		
+	for(String[] result:db.selectAs(q,String[].class)){
+		System.out.println(Arrays.toString(result));
+	}
+}
+~~~
+
 在上面这个例子中，使用了三个不同的函数，对结果进行处理。
 
 此外，如果不是EF-ORM内部的标注函数，您可以可以直接输入函数名，比如在mySQL上，您可以这样用
 
- 
+~~~
+items.column(Student.Field.dateOfBirth).func("date_format","%Y-%M-%D");
+~~~
 
-上面的方法都是使用API创建的函数，还有一种用法，直接传入SQL表达式，这也是可以的。
+ 上面的方法都是使用API创建的函数，还有一种用法，直接传入SQL表达式，这也是可以的。
 
 看下面的例子。
 
-#### [4.1.2.7. 在查询项中使用SQL表达式
+#### 4.1.2.7. 在查询项中使用SQL表达式
 
 整个查询部分使用SQL表达式。
 
 src/main/java/org/easyframe/tutorial/lesson3/Case2.java
 
+~~~java
+@Test
+public void testSelect_sqlExpression() throws SQLException {
+	Query<Student> q = QB.create(Student.class);
+		
+	Selects select = QB.selectFrom(q);
+	select.columns("name,decode(gender,'F','女','M','男') as gender");;
+	for(Student result:db.select(q)){
+		System.out.println(result.getName()+" "+result.getGender());
+	}
+	//实际执行SQL:
+	// select t.NAME,
+	CASE WHEN GENDER = 'F' THEN '女' WHEN GENDER = 'M' THEN '男' END AS GENDER
+ 	from STUDENT t
+}
+~~~
+
 上面是最接近SQL的写法。相当于整个select部分都直接用SQL片段表达了。
 
- 
-
-还可以这样写——单个字段的函数使用表达式。
+ 还可以这样写——单个字段的函数使用表达式。
 
 src/main/java/org/easyframe/tutorial/lesson3/Case2.java
 
+~~~java
+@Test
+public void testSelect_sqlExpression2() throws SQLException {
+	Query<Student> q = QB.create(Student.class);
+		
+	Selects select = QB.selectFrom(q);
+	select.column(Student.Field.name);
+	select.sqlExpression("str(add_months(Date_Of_Birth,24))").as("BIRTH_ADD_24");
+	for(String[] result:db.selectAs(q,String[].class)){
+		System.out.println(Arrays.toString(result));
+	}
+}
+~~~
+
 单个字段使用表达式，为每个学生的出生日期增加24个月，SQL表达式后面也可以添加列别名等修饰。
 
-上面两个例子中传入的都是SQL表达式。因此注意列按数据库的名称。
+​	上面两个例子中传入的都是SQL表达式。因此注意列按数据库的名称。
 
-上面两例都对传入的SQL表达式进行了解析和改写。某些时候如不希望EF-ORM进行改写，可以使用rawExpression()方法
+​	上面两例都对传入的SQL表达式进行了解析和改写。某些时候如不希望EF-ORM进行改写，可以使用rawExpression()方法
 
- 
+~~~java
+//select.sqlExpression("str(add_months(Date_Of_Birth,24))");
+select.rawExpression("str(add_months(Date_Of_Birth,24))"); //不带重写功能的表达式
+~~~
 
-### [4.1.3.   分页
 
-一般来说，分页查询包含两方面的内容，一是获取总数，二是查询限定范围的结果数据。为了准确的限定结果范围，排序条件必不可少。
 
-EF-ORM对于分页的两步操作，总体上来将遵循以下建议。
+### 4.1.3.   分页
 
-关于总数的获取，我们可使用前文介绍的几种count方法（参见 4.1.2.5）。
+​	一般来说，分页查询包含两方面的内容，一是获取总数，二是查询限定范围的结果数据。为了准确的限定结果范围，排序条件必不可少。
 
-关于结果范围的限定，我们可以使用EF-ORM提供的几个API （参见4.1.3.1）。
+​	EF-ORM对于分页的两步操作，总体上来将遵循以下建议。
+
+	>*用户传入的Query对象或者是SQL语句中不要带有count / limit/ offset操作。可以传入不分页的普通的查询，由EF-ORM进行转化，根据需要自动转变为count语句、限定行范围的查询语句。*
+	>
+	>*这样做的原因*
+	>
+	>*1、希望应用开发者专注于业务本身，而不是分页细节。*
+	>
+	>*2、EF-ORM生成的分页语句能对开发人员屏蔽不同的数据库语法差异。*
+
+​	关于总数的获取，我们可使用前文介绍的几种count方法（参见 4.1.2.5）。
+
+​	关于结果范围的限定，我们可以使用EF-ORM提供的几个API （参见4.1.3.1）。
 
 EF-ORM还提供了将上述分页行为封装在一起的操作对象，可以——
 
-l  直接获取总数、总页数等分页信息。
-
-l  可从头到尾进行顺序翻页或跳转，获取当页数据。
+* 直接获取总数、总页数等分页信息。
+* 可从头到尾进行顺序翻页或跳转，获取当页数据。
 
 该对象名为PagingIterator的类。(参见4.1.3.2)。
 
-#### [4.1.3.1. 限定结果范围
+#### 4.1.3.1. 限定结果范围
 
-Session类中有以下几个方法，可以传入类型为IntRange的参数，这里的IntRange就可以用来限定结果范围。
-
- 
+​	Session类中有以下几个方法，可以传入类型为IntRange的参数，这里的IntRange就可以用来限定结果范围。
 
 | **方法**                                   | **用途说明**                                 |
 | ---------------------------------------- | ---------------------------------------- |
 | **Session.select(T,  IntRange)**         | 传入Entity形态的查询(单表/级联)，限定返回条数在IntRange区间范围内。 |
-| **Session.select(ConditionQuery,  IntRange)**  ** ** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。 |
+| **Session.select(ConditionQuery,  IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。 |
 | **Session.select(ConditionQuery,  Class, IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，结果转换为指定类型，限定返回条数在IntRange区间范围内。 |
 | **Session.selectForUpdate(Query,  IntRange)** | 传入Query形态的单表查询，可在结果集上直接更新记录。             |
 | **Session.iteratedSelect(T,  IntRange)** | 传入Entity形态的查询(单表/级联)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
@@ -1987,50 +2162,51 @@ Session类中有以下几个方法，可以传入类型为IntRange的参数，�
 | **Session.iteratedSelect(ConditionQuery,  IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
 | **Session.iteratedSelect(ConditionQuery,  Class, IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
 
-   可以发现，EF-ORM查询接口高度集中。主要分为几个系列： select系列是查询出List结果。iteratedSelect是查询出游标待遍历。还有一个load系列的方法是查出单条记录的。
+​	可以发现，EF-ORM查询接口高度集中。主要分为几个系列： select系列是查询出List结果。iteratedSelect是查询出游标待遍历。还有一个load系列的方法是查出单条记录的。
 
- 
+​	IntRange表示的是一个含头含尾的区间(闭区间)，和Java Collection中常见的前闭后开区间有所不同。比如表示第 1到10条记录。不是用new IntRange(0, 10)，而是用new IntRange(1, 10)。来表示，更为接近我们日常的口头语法。其实Java用习惯的人会更偏好前闭后开区间，以后可能会再考虑向下兼容的前提下支持。
 
-IntRange表示的是一个含头含尾的区间(闭区间)，和Java Collection中常见的前闭后开区间有所不同。比如表示第 1到10条记录。不是用new IntRange(0, 10)，而是用new IntRange(1, 10)。来表示，更为接近我们日常的口头语法。其实Java用习惯的人会更偏好前闭后开区间，以后可能会再考虑向下兼容的前提下支持。
-
-示例，查询返回11~20条记录
+​	示例，查询返回11~20条记录
 
 src/main/java/org/easyframe/tutorial/lesson3/Case3.java
 
-使用上述方法后，在不同的数据库下，框架会生成不同的分页语句。实现数据库分页。
+~~~java
+@Test
+public void test_IntRange() throws SQLException{
+	Query<Student> q = QB.create(Student.class);
+	List<Student> results=db.select(q,new IntRange(11, 20));//查询，返回第11到20条
 
-#### [4.1.3.2. 使用PagingIterator
+	int count=db.count(q);
+	assertEquals(count-10, results.size());
+}
+~~~
 
-Session的API方法中，除了select系列、iteratedSelect系列、load系列外，还有一套pageSelect系列的方法。
+​	使用上述方法后，在不同的数据库下，框架会生成不同的分页语句。实现数据库分页。
+
+#### 4.1.3.2. 使用PagingIterator
+
+​	Session的API方法中，除了select系列、iteratedSelect系列、load系列外，还有一套pageSelect系列的方法。
 
 | **方法**                                   | **作用**                                   |
 | ---------------------------------------- | ---------------------------------------- |
-| **Session.pageSelect(T,  int)**  ** **   | 传入Entity形态的查询(单表/级联) 和 分页大小              |
-| **Session.pageSelect(ConditionQuery,  int)**  ** ** | 传入Query形态的查询(单表、Union、Join均可)            |
-| **Session.pageSelect(ConditionQuery,  Class, int)**  ** ** | 传入Query形态的查询(单表、Union、Join均可)， 并指定返回结果类型 |
-| **Session.pageSelect(String,  Class, int)**  ** ** | 传入NativeQuery形态的查询，并指定返回结果类型。            |
+| **Session.pageSelect(T,  int)**          | 传入Entity形态的查询(单表/级联) 和 分页大小              |
+| **Session.pageSelect(ConditionQuery,  int)** | 传入Query形态的查询(单表、Union、Join均可)            |
+| **Session.pageSelect(ConditionQuery,  Class, int)** | 传入Query形态的查询(单表、Union、Join均可)， 并指定返回结果类型 |
+| **Session.pageSelect(String,  Class, int)** | 传入NativeQuery形态的查询，并指定返回结果类型。            |
 | **Session.pageSelect(String,  ITableMetadata, int)** | 传入NativeQuery形态的查询，并指定返回结果类型元数据（一般用来描述动态表的模型）。 |
 | **Session.pageSelect(NativeQuery,  int)** | 传入NativeQuery形态的查询，查询结果类型已经在NativeQuery中指定。一般为传入命名查询（NamedQuery）. |
 
-上面的后三个方法涉及了NativeQuery和NamedQuery，可参见第7章。
+​	上面的后三个方法涉及了NativeQuery和NamedQuery，可参见第7章。
 
-另外，还有pageSelectBySQL的方法，但该方法支持的是原生SQL，即EF-ORM不作任何解析和改写处理的SQL。此处先不介绍。
-
- 
+​	另外，还有pageSelectBySQL的方法，但该方法支持的是原生SQL，即EF-ORM不作任何解析和改写处理的SQL。此处先不介绍。
 
 pageSelect系列API的特点是——
 
-l  都返回PagingIterator对象，其中封装了分页逻辑
-
-l  最后一个int参数表示分页的大小
-
-l  都只需要传入查询数据的请求，框架会自动改写出count语句来查总数，当然传入 SQL或Criteria Query的对象的改写实现是不同的，不过这被封装在框架内部。
-
- 
+* 都返回PagingIterator对象，其中封装了分页逻辑
+* 最后一个int参数表示分页的大小
+* 都只需要传入查询数据的请求，框架会自动改写出count语句来查总数，当然传入 SQL或Criteria Query的对象的改写实现是不同的，不过这被封装在框架内部。
 
 当得到PagingIterator后，我们可以通过以下的API来实现分页操作
-
- 
 
 | **方法**                                   | **作用**                                   |
 | ---------------------------------------- | ---------------------------------------- |
@@ -2044,139 +2220,272 @@ l  都只需要传入查询数据的请求，框架会自动改写出count语�
 | **jef.database.PagingIterator.hasNext()** | 当前页后面是否还有数据。（实现Iterator接口）               |
 | **jef.database.PagingIterator.next()**   | 返回当前页数据，同时页码向后翻一页。（实现Iterator接口）         |
 
- 
 
- 
 
 我们用举例来看分页查询的用法
 
 src/main/java/org/easyframe/tutorial/lesson3/Case3.java
 
-注意PagingIterator对象是一个重量级的懒加载对象，其数据只有在被请求时才会去数据库查询。因此不适合作为DTO传递数据。要获得其实际信息，可用jef.database.PagingIterator.getPageData()方法。得到的Page对象较为适合作为DTO传输。
+~~~java
+@Test
+public void test_PageSelect() throws SQLException{
+	Student st=new Student();
+	st.getQuery().setAllRecordsCondition();
+	st.getQuery().orderByAsc(Student.Field.id);
+	int start=20;
+	int limit=10;
+		
+	//10是每页大小，20是记录偏移。记录偏移从0开始。下面的语句相当于查询21~30条记录
+	Page<Student> pagedata=	db.pageSelect(st, limit).setOffset(start).getPageData();
+}
+~~~
 
-    上面的例子中，我们直接从pageSelect返回的PagingIterator对象中得到了Page这个对象。
+​	注意PagingIterator对象是一个重量级的懒加载对象，其数据只有在被请求时才会去数据库查询。因此不适合作为DTO传递数据。要获得其实际信息，可用jef.database.PagingIterator.getPageData()方法。得到的Page对象较为适合作为DTO传输。
 
-   Page是一个适合于传输的POJO对象，其中只有两个属性
+    	上面的例子中，我们直接从pageSelect返回的PagingIterator对象中得到了Page这个对象。
 
-l  总数
+Page是一个适合于传输的POJO对象，其中只有两个属性
 
-l  当页的记录内容
+* 总数
+* 当页的记录内容
 
 事实上，分页经常用在Web界面显示上，需要从数据库获得的也就是这两个信息。
 
-使用PagingIterator一个特点是，其对于范围的限定和目前大多数Web前端框架一致，都是从0开始的。
+​	使用PagingIterator一个特点是，其对于范围的限定和目前大多数Web前端框架一致，都是从0开始的。
 
- 
+ 	PagingIterator对象要重量得多，其中封装了很多分页逻辑等。但最后发现Web服务一般是无状态服务，不可能持有PagingIterator很久 ，所以从实际业务看PagingIterator对象使用频率不高。需要了解PagingIterator还提供了哪些功能的，可以自行阅读API-DOC。
 
-PagingIterator对象要重量得多，其中封装了很多分页逻辑等。但最后发现Web服务一般是无状态服务，不可能持有PagingIterator很久 ，所以从实际业务看PagingIterator对象使用频率不高。需要了解PagingIterator还提供了哪些功能的，可以自行阅读API-DOC。
+### 4.1.4.   小结
 
- 
+​	总而言之，Criteria API各种组合下，用法十分灵活，在上面这些案例中，请体会每个方法的用法。更多的API，请参阅API-DOC
 
- 
+​	单表的Criteria API，能将一般项目中90%以上的常见SQL语句都表达出来。在多表情况下大约75%左右的SQL语句也都能表达出来。更复杂的SQL语句可能就要使用EF-ORM中的另一操作体系，NativeQuery了。
 
- 
+​	要设计一套易于使用，并且含义明确的查询API是相当困难的。JPA 标准Criteria API集合了众多专家的智慧才能这样严谨。EF-ORM中的这套API比较随意，很大程度上来自于众多用户的意见和想法而设计。所以——
 
-### [4.1.4.   小结
+​	如果有什么用法，你不确定是否可以支持，可联系作者或尝试阅读源码。
 
-总而言之，Criteria API各种组合下，用法十分灵活，在上面这些案例中，请体会每个方法的用法。更多的API，请参阅API-DOC
+​	如果有什么用法，你决定应该支持但却没能很支持，请联系作者。
 
-单表的Criteria API，能将一般项目中90%以上的常见SQL语句都表达出来。在多表情况下大约75%左右的SQL语句也都能表达出来。更复杂的SQL语句可能就要使用EF-ORM中的另一操作体系，NativeQuery了。
+## 4.2. 更新
 
-要设计一套易于使用，并且含义明确的查询API是相当困难的。JPA 标准Criteria API集合了众多专家的智慧才能这样严谨。EF-ORM中的这套API比较随意，很大程度上来自于众多用户的意见和想法而设计。所以——
+### 4.2.1.   基本操作
 
-如果有什么用法，你不确定是否可以支持，可联系作者或尝试阅读源码。
+​	前面我们已经讲过，update请求用到了Entity-Query这对对象。Entity中的值描述更新后的值，Query描述更新的Where条件。
 
-如果有什么用法，你决定应该支持但却没能很支持，请联系作者。
-
-## [4.2. 更新
-
-### [4.2.1.   基本操作
-
-前面我们已经讲过，update请求用到了Entity-Query这对对象。Entity中的值描述更新后的值，Query描述更新的Where条件。
-
-在3.2.2中，我们甚至更新了对象的主键列。那么我们先回顾一下基本的更新操作用法。
+​	在3.2.2中，我们甚至更新了对象的主键列。那么我们先回顾一下基本的更新操作用法。
 
 src/main/java/org/easyframe/tutorial/lesson3/CaseUpdate.java
 
-上面列出了三种更新的场景。第一种，先从数据库读出再更新。第二种，指定主键后直接更新指定的记录。第三种，按条件更新记录。
+~~~java
+public void testUpdate_Basic() throws SQLException{
+   {
+      //查出一条对象,更新该条记录.
+      Student st=	db.load(Student.class, 1);
+      st.setGender("M");
+      int updated=db.update(st);
+      //SQL: update STUDENT set GENDER = 'M' where ID=1
+	}
+	{
+     	//按主键随意更新一条记录
+      	Student st=new Student();
+      	st.setId(3);
+      	st.setGrade("M");
+      	int updated=db.update(st);
+      	//SQL: update STUDENT set GRADE = 'M' where ID=3
+	}
+	{
+		//按条件更新多条记录
+		Student st=new Student();
+		st.getQuery().addCondition(Student.Field.name,Operator.MATCH_ANY,"张");
+		st.setGender("M");
+		int updated=db.update(st);
+		//SQL: update STUDENT set GENDER = 'M' where NAME like '%张%' escape '/'
+	}
+}
+~~~
 
-这里比较有用的是每次update方法都返回一个数值，表示update操作影响到的记录数。如果为0，那么就没有记录被更新。
+​	上面列出了三种更新的场景。第一种，先从数据库读出再更新。第二种，指定主键后直接更新指定的记录。第三种，按条件更新记录。
 
-### [4.2.2.   更新操作Query的构成
+​	这里比较有用的是每次update方法都返回一个数值，表示update操作影响到的记录数。如果为0，那么就没有记录被更新。
 
-EF的更新操作有点“神奇”的地方是，它总是知道哪些字段被设过值、哪些字段没有设值。EF是如何做到这一点的呢，我们来看这段代码。
+### 4.2.2.   更新操作Query的构成
+
+​	EF的更新操作有点“神奇”的地方是，它总是知道哪些字段被设过值、哪些字段没有设值。EF是如何做到这一点的呢，我们来看这段代码。
 
 src/main/java/org/easyframe/tutorial/lesson3/CaseUpdate.java
+
+~~~java
+@Test
+public void testUpdate_QueryAndUpdateMap() throws SQLException{
+	Student st=new Student();
+	st.setId(1);
+	st.setGender("M");
+	
+	Map<Field,Object> updateMap=st.getUpdateValueMap();
+	System.out.println(updateMap);
+	//updateMap.clear();
+	int updated=db.update(st);
+} 
+~~~
 
 运行代码后，输出
 
+~~~
+{gender=M, id=1}
+~~~
+
 这就是实现的机制。
 
-每个实体都隐式扩充一个UpdateValueMap,用来存放需要更新的字段。每当我们调用方法startUpdate后，我们对实体的每个set操作都会被记录下来，放入到updateMap中去，当我们调用DbClient.update(T)方法时，只有这些修改过的字段才会被更新到数据库中去。
+​	每个实体都隐式扩充一个UpdateValueMap,用来存放需要更新的字段。每当我们调用方法startUpdate后，我们对实体的每个set操作都会被记录下来，放入到updateMap中去，当我们调用DbClient.update(T)方法时，只有这些修改过的字段才会被更新到数据库中去。
 
-当我们调用set方法， updateMap中记录下当前设置的值。由此也可以判断出哪些字段被赋过值。
+​	当我们调用set方法， updateMap中记录下当前设置的值。由此也可以判断出哪些字段被赋过值。
 
-EF在处理时，如果某个字段（主键）被挪作Where条件使用，那么它就被从updateMap中去除。因此你就不会看到这种SQL语句了——
+​	EF在处理时，如果某个字段（主键）被挪作Where条件使用，那么它就被从updateMap中去除。因此你就不会看到这种SQL语句了——
 
-我们来试一下，如果将这个Map清除会怎么样，我们将上面代码中注释掉的 updateMap.clear()语句重新恢复。然后运行，发现日志中输出下面的文字，然后什么也没发生。
+~~~sql
+update student set id=1, gender=’M’ where id=1
+~~~
 
-这就说明，由于updateMap中没有值，因此这就成了一个无效的update请求，框架自动忽略了这个请求。所以事实上，框架所做的——
+​	我们来试一下，如果将这个Map清除会怎么样，我们将上面代码中注释掉的 updateMap.clear()语句重新恢复。然后运行，发现日志中输出下面的文字，然后什么也没发生。
 
-不是在将数据库中的值更新为Entity中的值，而是将其更新为updateMap中的记录的值。
+~~~
+Student Update canceled...
+~~~
 
-利用这一点，我们可以写出更多灵活的更新语句来。
+​	这就说明，由于updateMap中没有值，因此这就成了一个无效的update请求，框架自动忽略了这个请求。所以事实上，框架所做的——
 
-### [4.2.3.   更多的更新用法
+​	不是在将数据库中的值更新为Entity中的值，而是将其更新为updateMap中的记录的值。
 
-#### [4.2.3.1. 并发环境下原子操作的更新
+​	利用这一点，我们可以写出更多灵活的更新语句来。
 
-这是一种基于数据库频繁操作的业务更新用法。
+### 4.2.3.   更多的更新用法
 
-业务是这样的，有一张用户账户余额表，用户可以消费从余额中扣款，也可以向其中充值。这些操作可能同时发生。
+#### 4.2.3.1. 并发环境下原子操作的更新
 
-我们在充值时，可以这样做。
+​	这是一种基于数据库频繁操作的业务更新用法。
 
-src/main/java/org/easyframe/tutorial/lesson3/CaseUpdate.java
+​	业务是这样的，有一张用户账户余额表，用户可以消费从余额中扣款，也可以向其中充值。这些操作可能同时发生。
 
-这看上去没什么问题。但我们想一想，如果在load出数据，到update开始之间，用户同时充值了100元并提交了。这会发生什么事？很显然，用户会杯具地发现，他充值的100元消失了。因为我们在load记录时没有锁表，update的时候数据被更新为充值前再扣款50元。基于性能考虑，即便在事务中，一般也不会在一个普通的select语句中锁表。
-
-何况锁表并不是解决问题的最好方法，在业务繁忙的系统中，我们应当尽可能提高系统的并行度，让充值和扣款能同时发生显然并不是一个坏主意。
-
-src/main/java/org/easyframe/tutorial/lesson3/CaseUpdate.java
-
-基于较小的调整，我们可以将更新请求改成这样。显然，只有当扣款前的数值和预期的一样的时候，扣款才会发生，否则会再到数据库中查询出最新的值，重新扣款。
-
-这种算法实际上是基于Compare And Swap(CAS)的一种乐观锁实现。但是很少人会在实际项目中这么写。何况我们码农处理多变的业务规则已经够烦心的了，还要考虑在开发时考虑设计乐观锁来?
-
-他们有更简单的理由。他们说，用一个很简单的SQL语句就能准确的扣款50元。
-
-没有比这更简单高效的用法了，只要操作一次数据库就可以完成任务。但是这给ORM提出了挑战，怎么样，能够用对象模型完成么？
-
-我们可以这样完成一个扣款的原子操作。
+​	我们在充值时，可以这样做。
 
 src/main/java/org/easyframe/tutorial/lesson3/CaseUpdate.java
 
-上例中，prepareUpdate()方法的作用，就是向updateValueMap中标记一个更新的表达式。而updateValueMap的存在，使得我们的Update请求可不仅仅将数据更新为一些字面常量，还可以更新为更多的SQL函数和表达式。
+~~~java
+@Test
+public void testUpdate_concurrent_error() throws SQLException {		// 准备
+	UserBalance u = new UserBalance();
+	u.setAmout(100); // 一开始用户账上有100元钱
+	db.insert(u);
+		
+	//开始
+	UserBalance ub=db.load(UserBalance.class,1);//第一步,先查出用户账上有多少钱
+	//... do some thing.
+	ub.setAmout(ub.getAmout()-50);//扣款50元
+	db.update(ub);//将数值更新为扣款后的数值。
+}
+~~~
 
-这种写法产生的SQL语句中的参数“50”没有使用绑定变量。对SQL语句绑定变量有严格要求的同学肯定会有意见。对于这些同学，可以这样写——
+​	这看上去没什么问题。但我们想一想，如果在load出数据，到update开始之间，用户同时充值了100元并提交了。这会发生什么事？很显然，用户会杯具地发现，他充值的100元消失了。因为我们在load记录时没有锁表，update的时候数据被更新为充值前再扣款50元。基于性能考虑，即便在事务中，一般也不会在一个普通的select语句中锁表。
 
- 
-
-这里我们可以看到，表达式中可以使用绑定变量占位符，这个也是EF-ORM查询语言的特点（参见7 本地化查询）。绑定变量的具体值可以通过Query对象中的Attribute属性传入。
-
-#### [4.2.3.2. 使用prepareUpdate方法
-
-prepareUpdate还可以产生更多的灵活用法。比如，将一个字段的值更新为另外一个字段，或者一个已知的数据库函数。
+​	何况锁表并不是解决问题的最好方法，在业务繁忙的系统中，我们应当尽可能提高系统的并行度，让充值和扣款能同时发生显然并不是一个坏主意。
 
 src/main/java/org/easyframe/tutorial/lesson3/CaseUpdate.java
 
-上例中，我们将todayAmount更新为表的另一个字段值相加，并将updateTime更新为数据库当前的时间。这体现了prepareUpdate的灵活用法。
+~~~java
+@Test
+public void testUpdate_Cas1() throws SQLException {
+	// 准备
+	UserBalance u = new UserBalance();
+	u.setAmout(100); // 一开始用户账上有100元钱
+	db.insert(u);
+		
+	//开始
+	int updated;
+	do{
+		UserBalance ub=db.load(UserBalance.class,1);//第一步,先查出用户账上有多少钱
+		ub.getQuery().addCondition(UserBalance.Field.id,ub.getId());
+		ub.getQuery().addCondition(UserBalance.Field.amout,ub.getAmout());
+		ub.setAmout(ub.getAmout()-50);//扣款50元
+		updated=db.update(ub);
+	}while(updated==0);
+}
+~~~
 
-当然，update中也可以使用JpqlExpression和SqlExpression。这两个对象在前面的Select中已经演示过了。
+​	基于较小的调整，我们可以将更新请求改成这样。显然，只有当扣款前的数值和预期的一样的时候，扣款才会发生，否则会再到数据库中查询出最新的值，重新扣款。
 
-update的Query部分则可以用前面select中演示过的大部分语法，包括And or等复杂条件的组合。
+​	这种算法实际上是基于Compare And Swap(CAS)的一种乐观锁实现。但是很少人会在实际项目中这么写。何况我们码农处理多变的业务规则已经够烦心的了，还要考虑在开发时考虑设计乐观锁来?
 
-最终，使用上述办法Entity能够表达出大部分的Update SQL语句的，体现了这个框架的目标——更简单的操作SQL，而不是用对象关系去代替数据库的E-R关系。
+​	他们有更简单的理由。他们说，用一个很简单的SQL语句就能准确的扣款50元。
+
+~~~sql
+ update userbalance set amount = amount - 50 where id=1
+~~~
+
+​	没有比这更简单高效的用法了，只要操作一次数据库就可以完成任务。但是这给ORM提出了挑战，怎么样，能够用对象模型完成么？
+
+​	我们可以这样完成一个扣款的原子操作。
+
+src/main/java/org/easyframe/tutorial/lesson3/CaseUpdate.java
+
+~~~java
+@Test
+public void testUpdate_atom() throws SQLException {
+	UserBalance ub = new UserBalance();
+	ub.setId(1);
+	ub.prepareUpdate(UserBalance.Field.amout, new JpqlExpression("amout-50"));
+	int updated = db.update(ub);
+}
+~~~
+
+​	上例中，prepareUpdate()方法的作用，就是向updateValueMap中标记一个更新的表达式。而updateValueMap的存在，使得我们的Update请求可不仅仅将数据更新为一些字面常量，还可以更新为更多的SQL函数和表达式。
+
+​	这种写法产生的SQL语句中的参数“50”没有使用绑定变量。对SQL语句绑定变量有严格要求的同学肯定会有意见。对于这些同学，可以这样写——
+
+~~~java
+@Test
+public void testUpdate_atom() throws SQLException {
+	UserBalance ub = new UserBalance();
+	ub.setId(1);
+	//扣款额为绑定变量
+	ub.prepareUpdate(UserBalance.Field.amout, new JpqlExpression("amout-:cost")); 
+	ub.getQuery().setAttribute("cost", 50);
+	int updated = db.update(ub);
+}
+~~~
+
+​	这里我们可以看到，表达式中可以使用绑定变量占位符，这个也是EF-ORM查询语言的特点（参见7 本地化查询）。绑定变量的具体值可以通过Query对象中的Attribute属性传入。
+
+#### 4.2.3.2. 使用prepareUpdate方法
+
+​	prepareUpdate还可以产生更多的灵活用法。比如，将一个字段的值更新为另外一个字段，或者一个已知的数据库函数。
+
+src/main/java/org/easyframe/tutorial/lesson3/CaseUpdate.java
+
+~~~java
+@Test
+public void testUpdate_MoreValues() throws SQLException {
+	UserBalance ub = new UserBalance();
+	ub.getQuery().setAllRecordsCondition();
+
+	// 将一个字段更新为另一个字段的值
+	ub.prepareUpdate(UserBalance.Field.todayAmount, UserBalance.Field.amout);
+	// 将updateTime更新为现在的值
+	ub.prepareUpdate(UserBalance.Field.updateTime, db.func(Func.now));
+	// 更新为另外两个字段相加
+	ub.prepareUpdate(UserBalance.Field.totalAmount, new JpqlExpression("todayAmount + amout"));
+		db.update(ub);
+} 
+//SQL: update USERBALANCE set TODAYAMOUNT = AMOUT, TOTALAMOUNT = TODAYAMOUNT + AMOUT, UPDATETIME //= current_timestamp
+~~~
+
+​	上例中，我们将todayAmount更新为表的另一个字段值相加，并将updateTime更新为数据库当前的时间。这体现了prepareUpdate的灵活用法。
+
+​	当然，update中也可以使用JpqlExpression和SqlExpression。这两个对象在前面的Select中已经演示过了。
+
+​	update的Query部分则可以用前面select中演示过的大部分语法，包括And or等复杂条件的组合。
+
+​	最终，使用上述办法Entity能够表达出大部分的Update SQL语句的，体现了这个框架的目标——更简单的操作SQL，而不是用对象关系去代替数据库的E-R关系。
 
 ### 4.2.4.   UpdateValueMap的一些特性
 
@@ -2184,13 +2493,26 @@ update的Query部分则可以用前面select中演示过的大部分语法，包
 
 src/main/java/org/easyframe/tutorial/lesson3/CaseUpdate.java
 
+~~~java
+@Test
+public void testUpdate_Writeback() throws SQLException{
+	Student st=db.load(Student.class,1);
+	st.prepareUpdate(Student.Field.id, 199);
+	int oldId=st.getId();
+	db.update(st);
+	System.out.println("Student的id从"+ oldId +" 更新为" + st.getId());
+}
+~~~
+
 上例代码运行后，出现信息
 
-这说明，在执行update操作的时候，更新的值会回写到对象中，覆盖旧值。这也使的对象具备同时描述更新前与更新后的值的能力。
+~~~
+Student的id从1 更新为199
+~~~
 
- 
+​	这说明，在执行update操作的时候，更新的值会回写到对象中，覆盖旧值。这也使的对象具备同时描述更新前与更新后的值的能力。
 
-同时上述案例也提供了另一种更新主键的操作方式。即使用对象中的主键值作为where条件，使用updateValueMap作为更新的语句。
+ 	同时上述案例也提供了另一种更新主键的操作方式。即使用对象中的主键值作为where条件，使用updateValueMap作为更新的语句。
 
 #### 4.2.4.2. 自动清空
 
@@ -2205,44 +2527,74 @@ src/main/java/org/easyframe/tutorial/lesson3/CaseUpdate.java
 | **startUpdate()** | 让对象开始记录每次的赋值操作。调用此方法后，向对象赋值会被记录到updateValueMap中。 |
 | **stopUpdate()**  | 让对象停止记录每次的赋值操作。调用此方法后，向对象赋值不会更新到updateValueMap中。 |
 
-要提到的是，对于从数据库中查询出来出来的实体，默认都已经执行了startUpdate’方法，此时对其做任何set操作都会被记录。因此我们可以直接在查出的数据上修改字段，然后直接更新到数据库。新构建的对象，也是出于startUpdate阶段的。因此大部分时候我们无需调用上述两个方法。
+​	要提到的是，对于从数据库中查询出来出来的实体，默认都已经执行了startUpdate’方法，此时对其做任何set操作都会被记录。因此我们可以直接在查出的数据上修改字段，然后直接更新到数据库。新构建的对象，也是出于startUpdate阶段的。因此大部分时候我们无需调用上述两个方法。
 
 #### 4.2.4.4. 通过对比形成updateValueMap
 
- 
-
-ER-ORM提供了一些其他的方法来生成更新请求。首先、update之前可以和数据库中的旧对象进行比较来生成updateValueMap。
+​	ER-ORM提供了一些其他的方法来生成更新请求。首先、update之前可以和数据库中的旧对象进行比较来生成updateValueMap。
 
 src/main/java/org/easyframe/tutorial/lesson3/CaseUpdate.java
 
-通过DbUtils.*compareToUpdateMap()*方法可以比较两个对象的修改内容。另外有一个DbUtils.*compareToNewUpdateMap**（）*方法。其区别是，前者是将对比后的updateValueMap生成在old对象中，后者生成在new对象中。生成在new对象中的update操作更为适合在级联场景下，将多个表的数据都update成新的状态。
+~~~java
+@Test
+public void testUpdate_Compare1() throws SQLException{
+	//获得新的st对象
+	Student newSt=new Student();
+	newSt.setId(1);
+	newSt.setDateOfBirth(new Date());
+	newSt.setGender("M");
+	newSt.setName("王五");
+	//从数据库中获得旧的st对象
+	Student oldSt=db.load(Student.class,1);
+		
+	//把修改过的值记录到oldSt的updateValueMap中,相等的值不记入
+	DbUtils.compareToUpdateMap(newSt, oldSt);
+		
+	//如果需要记录字段修改记录，可以直接获取oldSt.getUpdateValueMap()来记录。
+	db.update(oldSt); //只有数值不同的字段被更新。
+}
+~~~
 
- 
+​	通过DbUtils.*compareToUpdateMap()*方法可以比较两个对象的修改内容。另外有一个DbUtils.compareToNewUpdateMap() 方法。其区别是，前者是将对比后的updateValueMap生成在old对象中，后者生成在new对象中。生成在new对象中的update操作更为适合在级联场景下，将多个表的数据都update成新的状态。
 
-此外，当得到一个对象时，还可以将除了主键之外的全部数据都主动放置到updateValueMap中去。例如
+​	此外，当得到一个对象时，还可以将除了主键之外的全部数据都主动放置到updateValueMap中去。例如
 
 src/main/java/org/easyframe/tutorial/lesson3/CaseUpdate.java
+
+~~~java
+@Test
+public void testUpdate_fillValues() throws SQLException {
+	Student newSt = new Student();
+	newSt.stopUpdate();//不记录赋值操作
+	newSt.setId(1);
+	newSt.setDateOfBirth(new Date());
+	newSt.setGender("F");
+	newSt.setName("张三");
+	db.update(newSt);//由于未记录赋值变更，此处update操作无效。
+		
+	DbUtils.fillUpdateMap(newSt);//将主键以外所有字段都记录为变更。
+	db.update(newSt);//update有效
+}
+~~~
 
 某些时候，对象中的updateValueMap是空的。原因可能有——
 
-l  对象刚刚被执行过update操作，updateValueMap被清空
-
-l  直接从数据库中查出的对象，updateValueMap是空的。
-
-l  类不增强，失去记录赋值变更功能。
-
-l  调用过了stopUpdate()方法。
+* 对象刚刚被执行过update操作，updateValueMap被清空
+* 直接从数据库中查出的对象，updateValueMap是空的。
+* 类不增强，失去记录赋值变更功能。
+* 调用过了stopUpdate()方法。
 
 如同上例演示一般，第一次调用update方法是无效的。
-对于updateValueMap信息缺失的情况，可以用一个DbUtils.*fillUpdateMap()*方法，将对象中除主键外所有属性都标记到updateValueMap中去。因此，第二个update语句相当与更新除主键外的所有字段，就成功操作了。
+
+​	对于updateValueMap信息缺失的情况，可以用一个DbUtils.*fillUpdateMap()*方法，将对象中除主键外所有属性都标记到updateValueMap中去。因此，第二个update语句相当与更新除主键外的所有字段，就成功操作了。
 
 ## 4.3. 删除记录
 
 ### 4.3.1.   概述
 
-删除记录和查询记录是基本一样的。都是将Entity-Query当中的数据作为条件。因此几乎所有在单表select中的Query用法，都可以直接在delete查询中使用。反过来，delete中的用法也几乎都可以在select中使用。
+​	删除记录和查询记录是基本一样的。都是将Entity-Query当中的数据作为条件。因此几乎所有在单表select中的Query用法，都可以直接在delete查询中使用。反过来，delete中的用法也几乎都可以在select中使用。
 
-区别是select查询返回数据本身，delete操作则返回被删除的记录条数。
+​	区别是select查询返回数据本身，delete操作则返回被删除的记录条数。
 
 ### 4.3.2.   用法示例
 
@@ -2252,25 +2604,65 @@ l  调用过了stopUpdate()方法。
 
 代码： src/main/java/org/easyframe/tutorial/lesson3/CaseDelete.java
 
- 
+~~~java
+@Test
+public void testDelete_Basic() throws SQLException {
+	{// Case1. 删除从数据库加载出来的对象
+		Student st = db.load(Student.class, 1);
+		db.delete(st);
+	}
+
+	{ // Case2. 删除所有女生
+		Student st = new Student();
+		st.setGender("F");
+		db.delete(st);
+	}
+	{//Case3. 删除所有1980年以前出生的学生
+		Student st = new Student();
+	    st.getQuery().addCondition(Student.Field
+	                  .dateOfBirth,Operator.LESS,DateUtils.getDate(1980, 1, 1));
+		db.delete(st);
+	}
+}
+~~~
 
 #### 4.3.2.2. 使用Query对象
 
-在查询时，对Query对象的赋值操作对应于select语句中的where条件。以此类推，在删除时同样可以通过Query对象传递where条件。
+​	在查询时，对Query对象的赋值操作对应于select语句中的where条件。以此类推，在删除时同样可以通过Query对象传递where条件。
+
+~~~java
+public void testDelete_Basic2() throws SQLException {
+	{// Case1. Between条件,删除账户余额amout在-100到0之间的所有记录。
+		UserBalance ub=new UserBalance();
+		ub.getQuery().addCondition(QB.between(UserBalance.Field.amout, -100, 0));
+		db.delete(ub);
+	}
+	{ // Case2. 两个字段比较，删除todayAmount和 totalAmout相等的记录
+		UserBalance ub=new UserBalance();
+		ub.getQuery().addCondition(UserBalance.Field.todayAmount,UserBalance.Field.totalAmount);
+		db.delete(ub);
+	}
+	{//Case3. 删除按表达式条件删除
+		UserBalance ub=new UserBalance();
+		ub.getQuery().addCondition(new SqlExpression("todayAmount + 100< totalAmount"));
+		db.delete(ub);
+	}
+}  
+~~~
 
 上面例子都是将where条件写入到Query对象中，可对比等效的SQL语句。
 
+
+
 # 5.    级联操作
 
-级联操作，是指在多个对象建立固定的关联关系，EF-ORM在维护对象的记录时，会将这些关联表中的记录一起维护起来。 在查询数据的时候，也会将这些关联表的中相关记录一起查询出来。
+​	级联操作，是指在多个对象建立固定的关联关系，EF-ORM在维护对象的记录时，会将这些关联表中的记录一起维护起来。 在查询数据的时候，也会将这些关联表的中相关记录一起查询出来。
 
- 
+ 	当然上面说的是一般情况下，为了防止使用中通过关联查询获得过多的数据影响性能，现代的ORM框架大多都具备延迟加载特性（又名懒加载）。即只有当使用者请求到这部分数据时，才去数据库中查询。
 
-当然上面说的是一般情况下，为了防止使用中通过关联查询获得过多的数据影响性能，现代的ORM框架大多都具备延迟加载特性（又名懒加载）。即只有当使用者请求到这部分数据时，才去数据库中查询。
+​	级联操作除了广泛用于查询以外，还可用于插入、修改、删除等场景。
 
-级联操作除了广泛用于查询以外，还可用于插入、修改、删除等场景。
-
-关联关系根据JPA的定义，一般分为以下四种
+​	关联关系根据JPA的定义，一般分为以下四种
 
 | 类型   | 注解           | java对象定义                              |
 | ---- | ------------ | ------------------------------------- |
@@ -2279,47 +2671,183 @@ l  调用过了stopUpdate()方法。
 | 多对一  | @ ManyToOne  | T                                     |
 | 多对多  | @ ManyToMany | List<T> / Set<T>  /Collection<T>/ T[] |
 
-    在JPA中，这些关系都使用Annotation来标注。除此之外，EF-ORM还扩展了几个标注，用来支持一些常用的数据库操作的场景。
+​	在JPA中，这些关系都使用Annotation来标注。除此之外，EF-ORM还扩展了几个标注，用来支持一些常用的数据库操作的场景。
 
 ## 5.1. 基本操作
 
 ### 5.1.1.   使用注解描述级联关系
 
-我们通过案例来看，首先创建如下几个实体
+​	我们通过案例来看，首先创建如下几个实体
 
-EF-ORM支持JPA所定义的几个多表关联和级联操作（部分支持），这些定义包括：@OneToOne,@ManyToOne, @OneToMany, @ManyToMany。使用注解，我们可以在类上描绘出级联关系。例如
+​	EF-ORM支持JPA所定义的几个多表关联和级联操作（部分支持），这些定义包括：@OneToOne,@ManyToOne, @OneToMany, @ManyToMany。使用注解，我们可以在类上描绘出级联关系。例如
 
 src/main/java/org/easyframe/tutorial/lesson4/entity/School.java
 
- 
+~~~java
+/**
+ * 实体:学校
+ * 描述一个学校的ID和名称
+ */
+public class School extends DataObject{
+	@Column
+	@Id
+	@GeneratedValue(strategy=GenerationType.AUTO)
+	private int id;
+	
+	@Column(length=64,nullable=false)
+	private String name;
+	//元模型
+	public enum Field implements jef.database.Field{
+		id,name
+	}
+	public School(){}
+	public School(String name){
+		setName(name);
+	}
+	Getter Setter此处省略
+}
+~~~
 
 src/main/java/org/easyframe/tutorial/lesson4/entity/Person.java
+
+~~~java
+/**
+ * 实体:个人
+ * 描述一个学校的ID和名称
+ */
+@Entity
+@Table(name = "t_person")
+public class Person extends DataObject {
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	@Column
+	private Integer id;
+
+	@Column(name = "person_name", length = 80, nullable = false)
+	@Indexed(definition = "unique")
+	private String name;
+
+	/**
+	 * 当前学校ID
+	 */
+	@Column(name="CURRENT_SCHOOL_ID",columnDefinition="integer")
+	private int currentSchoolId;
+
+	/**
+	 * 将currentSchoolId字段和School表的id字段进行关联。从而扩展出关联对象school。
+	 */
+	@ManyToOne(targetEntity = School.class)
+	@JoinColumn(name = "currentSchoolId", referencedColumnName = "id")
+	private School currentSchool;
+
+	public enum Field implements jef.database.Field {
+		id, name, currentSchoolId
+	}
+
+	public Person() {}
+	public Person(int id) {
+		this.id=id;
+	}
+	Getter Setter此处省略
+}
+~~~
 
 接下来我们在后面的案例中演示这种配置的效果。
 
 ### 5.1.2.   单表操作方式的保留
 
-    在使用这个模型进行级联操作之前，我们先看一下，这个模型依然可以进行单表的操作。这意味着前面所看到的基于单表的Criteria API等各种单表用法在这个场景上依然可用。
+​	在使用这个模型进行级联操作之前，我们先看一下，这个模型依然可以进行单表的操作。这意味着前面所看到的基于单表的Criteria API等各种单表用法在这个场景上依然可用。
 
 src/main/java/org/easyframe/tutorial/lesson4/Case1.java
 
-执行上面的代码，可以看到执行的操作和前面的单表几乎一样。这个案例顺序执行了以下的SQL语句
+~~~java
+/**
+ * 级联描述是一种可以后续随时添加删除的扩展描述，原先的单表操作模型保持不变。
+ *
+ * @throws SQLException
+*/
+@Test
+public void testNonCascade() throws SQLException {
+	Person p = new Person();
+	{
+		p.setName("玄德");
+		p.setCurrentSchoolId(1);
 
-    可以发现，除了在查询对象之外，Insert,update,delete操作都没有去维护级联关系。 而查询对象时默认会尝试用左外连接的方式查出用户所属学校，相当于开启了级联功能。
+		// 虽然Person对象中配置了级联关系。
+		// 但在EF-ORM中，级联关系是在保证了单表模型完整可用的基础上,补充上去的一种附属描述
+		// 因此非级联操作一样可用.
+		db.insert(p);
+	}
+	//查出记录
+	p = db.load(p);
 
-当然，增删改操作下的级联关系是可以维护的，这在后面会讲到。
+	//单表更新
+	p.setCurrentSchoolId(2);
+	p.setName("云长");
+	db.update(p);
+		
+	//单表删除
+	db.delete(p);
+}
+~~~
 
- 
+​	执行上面的代码，可以看到执行的操作和前面的单表几乎一样。这个案例顺序执行了以下的SQL语句
 
-这里我们阐述EF-ORM对级联关系的理解和处理。在EF-ORM中，级联操作途径不会破坏原有单表操作途径。
+~~~sql
+insert into T_PERSON(CURRENT_SCHOOL_ID,ID,PERSON_NAME) values(?,DEFAULT,?)
+(1)currentSchoolId:	[1]
+(2)name:         	[玄德]
+
+select T1.CURRENT_SCHOOL_ID AS T1__CURRENTSCHOOLID,
+	T1.ID AS T1__ID,
+	T1.PERSON_NAME AS T1__NAME,
+	T2.NAME AS T2__NAME,
+	T2.ID AS T2__ID
+ from T_PERSON T1
+ left join SCHOOL T2 ON T1.CURRENT_SCHOOL_ID=T2.ID
+ where T1.ID=?
+(1)id:           	[1]
+
+
+update T_PERSON set CURRENT_SCHOOL_ID = ?, PERSON_NAME = ? where ID=?
+(1)currentSchoolId:	[2]
+(2)name:         	[云长]
+(3)id:           	[1]
+
+delete from T_PERSON where ID=?
+(1)id:           	[1]
+~~~
+
+​	可以发现，除了在查询对象之外，Insert,update,delete操作都没有去维护级联关系。 而查询对象时默认会尝试用左外连接的方式查出用户所属学校，相当于开启了级联功能。
+
+​	当然，增删改操作下的级联关系是可以维护的，这在后面会讲到。
+
+ 	这里我们阐述EF-ORM对级联关系的理解和处理。在EF-ORM中，级联操作途径不会破坏原有单表操作途径。
 
 级联关系是一种可以灵活的修改和变更的**附加关系模型**。之所以说它是“附加的”，是因为EF-ORM中，级联关系是在保证了单表模型完整可用的基础上，补充的一种关系描述。
 
-上例可以看出，补充上去的模型表现为这一段定义。无论类上有没有定义这个关系，都不影响这个这个类的单表操作。
+​	上例可以看出，补充上去的模型表现为这一段定义。无论类上有没有定义这个关系，都不影响这个这个类的单表操作。
 
- 
+~~~java
+/**
+* 将currentSchoolId字段和School表的id字段进行关联。从而扩展出关联对象school。
+*/
+@ManyToOne(targetEntity = School.class)
+@JoinColumn(name = "currentSchoolId", referencedColumnName = "id")
+private School currentSchool;
+~~~
 
-这种设计的补充描述如下：
+​	这种设计的补充描述如下：
+
+>**级联不破单表**
+>
+>​	*这种做法简单来说就是，“级联模型不破单表模型”，而是依附于单表模型。这和某H框架不一样，这类纯O-R映射试图抹去对象的单表设计，用关系属性直接代替数据库表的外键列。*
+>
+>​	*EF为什么要这样设计？因为级联关系在数据库设计时往往表现为表之间的外键。和数据库设计一样，这种外键关系是后来附加的，在用PowerDesign设计数据库的过程中，这表现为两个Entity的一根连线。在数据库设计中，我们可以在不改动Entity本身的情况下，变更它们之间的关系（连线）。为什么到了java代码中，变更关系就要以修改java字段属性对列的映射的方式来实现？*
+>
+>​	*这种反传统的设计，目的还是为了还关系数据库以本来面目，正向前面多次提到的那样。为业务操作提供更大的灵活性——即要照顾到级联场合下的高效，也要照顾到一些简单功能时的便捷。*
+>
+>​	*此外，随着应用规模的扩大，应用设计可能会扩展为使用分区、分表、分库等大数据用法。在分库分表后，级联操作几乎就无法使用了。考虑到适应数据规模伸缩性的因素，作了这样的设计。*
 
 ### 5.1.3.   级联操作的效果
 
@@ -2327,13 +2855,93 @@ src/main/java/org/easyframe/tutorial/lesson4/Case1.java
 
 src/main/java/org/easyframe/tutorial/lesson4/Case1.java
 
-这一次发现被执行的SQL语句多了不少，由于最后记录被删除了，所以下面解说一下每个步骤对应的SQL操作。
+~~~java
+@Test
+public void testCascade() throws SQLException{
+	School school=db.load(new School("天都中学"));
+	int personId;
+	{
+		Person p = new Person();		
+		p.setName("玄德");
+		p.setCurrentSchool(school);
 
-上面的例子，演示了级联操作的用法。还包括了混合了一次非级联更新操作。
+		db.insertCascade(p);
+		personId=p.getId();
+	}
+	{
+		//查出记录
+		Person p=db.load(new Person(personId));
+		System.out.println(p.getCurrentSchoolId()+":"+p.getCurrentSchool().getName());	
+		//可以看到级联对象：School被查出来了
+		assertEquals("天都中学",p.getCurrentSchool().getName());
+			
+		//更新为另一学校
+		p.setCurrentSchool(new School("天都外国语学校"));
+		//外国语学校是新增的，在更新语句执行之前会先做插入School表操作。
+		db.updateCascade(p);
+		System.out.println("天都外国语学校 = "
+			               +p.getCurrentSchoolId()+"="+p.getCurrentSchool().getId());
 
-    由于在Person中，同时存在 currentSchoolId和currentSchool两个字段，这两个字段将分别在单表操作和级联操作中使用。（即单表字段和级联描述字段同时存在）。
+		//再使用单表更新，更新回原来的学校
+		p.setCurrentSchoolId(school.getId());
+		db.update(p);
+			
+		//删除该学生
+		db.deleteCascade(p);
+	}
+}
+~~~
 
-某些场合下，人为操作可能使Person对象的currentSchoolId和currentSchool可能指向不同的关联记录。为了明确的区分当前用户是使用级联模型操作，还是单表模型操作，EF-ORM将级联插入、更新、删除的API和非级联下的API显式的分离。
+​	这一次发现被执行的SQL语句多了不少，由于最后记录被删除了，所以下面解说一下每个步骤对应的SQL操作。
+
+~~~sql
+select t.* from SCHOOL t where t.NAME=?
+(1)name:         	[天都中学]
+查出“天都中学”。对应代码中的: School school=db.load(new School("天都中学"));
+
+select t.* from SCHOOL t where t.ID=?
+(1)id:           	[1]
+insert into T_PERSON(CURRENT_SCHOOL_ID,ID,PERSON_NAME) values(?,DEFAULT,?)
+(1)currentSchoolId:	[1]
+(2)name:         	[玄德]
+级联插入，上面两句，对应代码中的db.insertCascade(p);，第一个select语句是在级联操作之前先检查“天都中学”是否存在，如果不存在会补充插入。
+
+select T1.CURRENT_SCHOOL_ID AS T1__CURRENTSCHOOLID,
+	T1.ID AS T1__ID,
+	T1.PERSON_NAME AS T1__NAME,
+	T2.NAME AS T2__NAME,
+	T2.ID AS T2__ID
+ from T_PERSON T1
+ left join SCHOOL T2 ON T1.CURRENT_SCHOOL_ID=T2.ID
+ where T1.ID=?
+(1)id:           	[1]
+级联查询，对应代码中的Person p=db.load(new Person(personId));
+
+insert into SCHOOL(NAME,ID) values(?,DEFAULT)
+(1)name:         	[天都外国语学校]
+update T_PERSON set CURRENT_SCHOOL_ID = ? where ID=?
+(1)currentSchoolId:	[4]
+(2)id:           	[1]
+级联更新，对应第一个db.updateCascade(p);//外国语学校是新增的，在更新语句执行之前会先做插入School表操作。
+
+update T_PERSON set CURRENT_SCHOOL_ID = ? where ID=?
+(1)currentSchoolId:	[1]
+(2)id:           	[1]
+非级联更新，对应代码中的db.update(p); 直接将schoolId更新为1.
+
+select t.* from T_PERSON t where t.ID=?
+(1)id:           	[1]
+delete from T_PERSON where ID=?
+(1)id:           	[1]
+级联删除，看似除了做了一次不需要的查询以外别的啥也没做。实际上，查询操作的目的是为了得到当前数据库中的Person记录的各个键值。如果这些键值中有需要去删除别的表中记录的键（例如 OneToMany）那么就会去删除别的表中的记录。
+本例中，Person到School是ManyToOne关系。这意味着School中的对象可能被其他记录所使用，因此不会去删除School表中的对象。
+~~~
+
+​	上面的例子，演示了级联操作的用法。还包括了混合了一次非级联更新操作。
+
+    	由于在Person中，同时存在 currentSchoolId和currentSchool两个字段，这两个字段将分别在单表操作和级联操作中使用。（即单表字段和级联描述字段同时存在）。
+
+​	某些场合下，人为操作可能使Person对象的currentSchoolId和currentSchool可能指向不同的关联记录。为了明确的区分当前用户是使用级联模型操作，还是单表模型操作，EF-ORM将级联插入、更新、删除的API和非级联下的API显式的分离。
 
 |      | 非级联操作    | 级联操作            |
 | ---- | -------- | --------------- |
@@ -2341,71 +2949,106 @@ src/main/java/org/easyframe/tutorial/lesson4/Case1.java
 | 更新记录 | update() | updateCascade() |
 | 删除记录 | delete() | deleteCascade() |
 
-                    表5-1 级联和非级联操作API的对比
+                  					  表5-1 级联和非级联操作API的对比
 
- 
+​	我们再看例子中的这几句。
 
-我们再看例子中的这几句。
+~~~java
+//更新为另一学校
+p.setCurrentSchool(new School("天都外国语学校"));
+//外国语学校是新增的，在更新语句执行之前会先做插入School表操作。
+db.updateCascade(p);
+System.out.println("天都外国语学校 = "+p.getCurrentSchoolId()+"= "+p.getCurrentSchool().getId());
+~~~
 
-显然，在设置新的School对象到Person上之后，person.getCurrentSchoolId() 属性依然指向旧的School记录。但是更新操作完成后。除了刚刚被插入数据库的School对象中的id字段更新为数据库主键之外， Person对象中的外键值也被正确的更新了。
+​	显然，在设置新的School对象到Person上之后，person.getCurrentSchoolId() 属性依然指向旧的School记录。但是更新操作完成后。除了刚刚被插入数据库的School对象中的id字段更新为数据库主键之外， Person对象中的外键值也被正确的更新了。
 
-也就是说，虽然过程中Person对象短暂的出现指向School对象不一致的问题，但是在级联操作完成后，ID指向将会被正确的维护。
+​	也就是说，虽然过程中Person对象短暂的出现指向School对象不一致的问题，但是在级联操作完成后，ID指向将会被正确的维护。
 
- 
+ 	通过分离的级联操作API，我们应该可以清楚的知道，插入数据库的值来自单表模型还是级联模型。
 
-通过分离的级联操作API，我们应该可以清楚的知道，插入数据库的值来自单表模型还是级联模型。
+ 	级联操作API分离的另外一个好处是，由于级联下不支持分库分表。因此API的分离更容易在分库分表时被掌握和控制。
 
- 
+​	最后，可能有人会问，select和load操作默认都是级联的。这能关闭吗？看下面这个例子
 
-级联操作API分离的另外一个好处是，由于级联下不支持分库分表。因此API的分离更容易在分库分表时被掌握和控制。
-
- 
-
-最后，可能有人会问，select和load操作默认都是级联的。这能关闭吗？看下面这个例子
+~~~java
+Person query=new Person();
+query.setId(personId);
+//设置为非级联查询
+query.getQuery().setCascade(false);
+p= db.load(query);
+System.out.println(p.getCurrentSchool());
+assertNull(p.getCurrentSchool()); 		//关闭级联开关后不做级联查询，所以School对象得不到了
+~~~
 
 因此，级联查询开关是可以关闭的。
 
 ## 5.2. 使用注解定义级联行为
 
- 
-
 这里说的注解即(Annotation)。
 
 ### 5.2.1.   仅引用级联对象的单个字段
 
-我们考虑这样一个场景——
+​	我们考虑这样一个场景——
 
-Person类中有一个gender的字段，描述用户性别，M表示男性，F表示女性。
+​	Person类中有一个gender的字段，描述用户性别，M表示男性，F表示女性。
 
-另外有一张DATA_DICT表，其中记录了M=男性 F=女性的对应关系。
+​	另外有一张DATA_DICT表，其中记录了M=男性 F=女性的对应关系。
 
-在查询时，我们希望查出”男”,”女”的属性。而不关心DATA_DICT表中的其他字段。
+​	在查询时，我们希望查出”男”,”女”的属性。而不关心DATA_DICT表中的其他字段。
 
-查询时，很多时候我们希望**只引用目标对象中的个别字段**，并不希望引用整个对象。实际上这种情况在业务中很常见。
+​	查询时，很多时候我们希望**只引用目标对象中的个别字段**，并不希望引用整个对象。实际上这种情况在业务中很常见。
 
-@FieldOfTargetEntity注解就是为这种场景设计的。
+​	@FieldOfTargetEntity注解就是为这种场景设计的。
 
-我们定义的DATA_DICT对象如下：
+​	我们定义的DATA_DICT对象如下：
 
-然后我们在Person对象中。定义一个“单字段”的引用字段。
+~~~java
+@Entity
+@Table(name="data_dict")
+public class DataDict extends DataObject {
+    @Id
+    @GeneratedValue
+    private int id;
+   
+    @Column(name="dict_type")
+    private String type;
 
- 
+    @Column(name="value")
+    private String value;
 
-上例中，我们指定了“只引用目标对象中的 text字段”。
+    @Column(name="text")
+    private String text;
+    
+	public enum Field implements jef.database.Field {
+        id, type, value, text
+     }
+//Getter setter方法略
+}
+~~~
 
-每次查询时，就像是访问Person表本身的属性一样。可以查出存储在另一张表中的用户性别的“男”，“女”这样的字样。
+​	然后我们在Person对象中。定义一个“单字段”的引用字段。
 
-   这种方式具有以下特点
+~~~java
+/**
+ * 性别的显示名称“男”“女”
+*/
+@ManyToOne(targetEntity=DataDict.class)
+@JoinColumn(name="gender",referencedColumnName="value")
+@FieldOfTargetEntity("text")
+private String genderName;
+~~~
 
-1、 由于引用的字段较少，性能会比引用整个对象高很多。
+​	上例中，我们指定了“只引用目标对象中的 text字段”。
 
-2、 因为引用描述的不是一个完整对象。因此这种引用方式只对查询生效，对插入、更新、删除不会产生影响。
+​	每次查询时，就像是访问Person表本身的属性一样。可以查出存储在另一张表中的用户性别的“男”，“女”这样的字样。
 
- 
+   	这种方式具有以下特点
+
+1. 由于引用的字段较少，性能会比引用整个对象高很多。
+2. 因为引用描述的不是一个完整对象。因此这种引用方式只对查询生效，对插入、更新、删除不会产生影响。
 
 本节总结如下
-
- 
 
 @FieldOfTargetEntity
 
@@ -2415,43 +3058,73 @@ Person类中有一个gender的字段，描述用户性别，M表示男性，F表
 | ----- | --------------------------------- |
 | value | String类型。字段名，表示仅引用目标entity中的指定字段。 |
 
- 
-
-我们建议在EF-ORM中使用单字段引用，不再引用整个对象，意味着查询效率的提高。此外，如果相同的引用关系（比如引用目标对象的两个字段），EF-ORM会合并处理（在SQL语句中指定引用的两个字段），因此不会造成多余的数据库查询。
+ 	我们建议在EF-ORM中使用单字段引用，不再引用整个对象，意味着查询效率的提高。此外，如果相同的引用关系（比如引用目标对象的两个字段），EF-ORM会合并处理（在SQL语句中指定引用的两个字段），因此不会造成多余的数据库查询。
 
 ### 5.2.2.   @JoinDescription、@OrderBy
 
 #### 5.2.2.1. 定义与作用
 
-   但是事实情况要比理想中的更为复杂，我们不会就为了存储一个 {M=男, F=女}这样的对应关系去设计一张表，现实中，往往会是这种情况——
+   	但是事实情况要比理想中的更为复杂，我们不会就为了存储一个 {M=男, F=女}这样的对应关系去设计一张表，现实中，往往会是这种情况——
 
-DATA_DICT表中另外有一个type字段，当type=’USER.GENDER’时，才表示性别的对应关系。当 type等于别的值时，这些记录表示别的对应关系。（比如 0=’在线’ 1=’离线’，这样的关系）。
+​	DATA_DICT表中另外有一个type字段，当type=’USER.GENDER’时，才表示性别的对应关系。当 type等于别的值时，这些记录表示别的对应关系。（比如 0=’在线’ 1=’离线’，这样的关系）。
 
-所以在orm-tutorial\src\main\java\org\easyframe\tutorial\lesson4\Case1.java中，示例要更复杂一些。对genderName的定义是这样的——
-
- 
+​	所以在orm-tutorial\src\main\java\org\easyframe\tutorial\lesson4\Case1.java中，示例要更复杂一些。对genderName的定义是这样的——
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson4/ntity/Person.java
 
-通过增加@JoinDescription这样的注解，为SQL中的Join关系增加了一个过滤条件。
+~~~java
+/**
+* 性别的显示名称“男”“女”
+ */
+@ManyToOne(targetEntity=DataDict.class)
+@JoinColumn(name="gender",referencedColumnName="value")
+@JoinDescription(filterCondition="type='USER.GENDER'")  //在引用时还要增加过滤条件	@FieldOfTargetEntity("text")
+private String genderName;
+~~~
 
-实际上查询的SQL语句变为(示意)
+​	通过增加@JoinDescription这样的注解，为SQL中的Join关系增加了一个过滤条件。
 
-这样就起到了过滤其他类型的对应关系的效果。
+​	实际上查询的SQL语句变为(示意)
 
- 
+~~~sql
+select  person.*, data_dict.text 
+from   person 
+       left join  data_dict on person.gender = data_dict.value and type=’USER.GENDER’
+where
+        ….
+~~~
+
+​	这样就起到了过滤其他类型的对应关系的效果。
 
 实际示例代码如下
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson4\Case1.java
 
- 
+~~~java
+public void testGetFieldFromManyToOne() throws SQLException{
+	//准备数据
+	Person p1=new Person();
+	p1.setName("孟德");
+	p1.setGender('M'); 
+	Person p2=new Person();
+	p2.setName("貂蝉");
+	p2.setGender('F');
+	db.insert(p1);
+	db.insert(p2);
+		
+	//查出数据
+	Query<Person> query=QB.create(Person.class);
+	query.addCondition(QB.notNull(Person.Field.gender));
+	query.orderByAsc(Person.Field.gender);
+	List<Person> p=db.select(query);
+	assertEquals("女人", p.get(0).getGenderName());
+	assertEquals("男人", p.get(1).getGenderName());
+}
+~~~
 
-上面介绍了@JoinDescription组合的用法。@JoinDescription用来描述多表关联关系时一些额外的特征与特性。
+​	上面介绍了@JoinDescription组合的用法。@JoinDescription用来描述多表关联关系时一些额外的特征与特性。
 
-虽然上面的例子中同时使用了@FieldOfTargetEntity和@JoinDescription，但两者各有各的作用，并不一定要组合使用。@JoinDescription和@FieldOfTargetEntity使用上没有必然联系。
-
- 
+​	虽然上面的例子中同时使用了@FieldOfTargetEntity和@JoinDescription，但两者各有各的作用，并不一定要组合使用。@JoinDescription和@FieldOfTargetEntity使用上没有必然联系。
 
 @ JoinDescription
 
@@ -2461,68 +3134,112 @@ orm-tutorial\src\main\java\org\easyframe\tutorial\lesson4\Case1.java
 | filterCondition | JPQL表达式，表示Join时额外的条件。表达式中可以包含参数变量。       |
 | maxRows         | 当对多连接时，限制结果记录数最大值。                       |
 
- 
-
 #### 5.2.2.2. 控制级联对象的排序和数量
 
-上表中提到了JoinDescription中的另外属性，我们举例说明
+​	上表中提到了JoinDescription中的另外属性，我们举例说明
 
-上例表示一个指向ExecutionLog的一对多引用。但是对应的ExecutionLog有很多条，我们只取**执行时间最近的****10****条**。之前的记录不会查出来。
+~~~java
+@OneToMany(targetEntity = ExecutionLog.class, fetch = FetchType.EAGER, cascade = CascadeType.REFRESH)
+@JoinColumn(name = "id", referencedColumnName = "taskId")
+@JoinDescription(maxRows = 10)
+@OrderBy("executeTime desc")
 
-JPA注解@OrderBy可以用于控制级联关系的排序。@OrderBy("execute_time desc")表示对于executeTime字段进行倒序排序。
+private List<ExecutionLog> lastExecutionLog; //最后10条Execution Log
+~~~
 
-如果maxRow=1，那么这个映射将只对应最后一条ExecutionLog。那么数据类型可以进一步简化——
+​	上例表示一个指向ExecutionLog的一对多引用。但是对应的ExecutionLog有很多条，我们只取**执行时间最近的10条**。之前的记录不会查出来。
 
- 
+​	JPA注解@OrderBy可以用于控制级联关系的排序。@OrderBy("execute_time desc")表示对于executeTime字段进行倒序排序。
 
-最后一条ExecutionLog是单值的，可以不使用集合类型。
+​	如果maxRow=1，那么这个映射将只对应最后一条ExecutionLog。那么数据类型可以进一步简化——
+
+~~~java
+@OneToMany(targetEntity = ExecutionLog.class, fetch = FetchType.EAGER, cascade = CascadeType.REFRESH)
+@JoinColumn(name = "id", referencedColumnName = "taskId")
+@JoinDescription(maxRows = 1)
+@OrderBy("executeTime desc")
+private ExecutionLog lastExecutionLog;   //最后一条Execution Log，不使用集合类型。
+~~~
+
+​	最后一条ExecutionLog是单值的，可以不使用集合类型。
 
 #### 5.2.2.3. 在FilterCondition中使用变量
 
-某些时候，我们希望FilterCondition中的表达式中出现的不是固定的常量，而是运行时得到的变量。
+​	某些时候，我们希望FilterCondition中的表达式中出现的不是固定的常量，而是运行时得到的变量。
 
-比如前面那个 “M=男 F=女”的转换例子，如果数据字段中的映射名称并不总是” USER.GENDER”，而是一个变化的值。那该怎么办呢？
+​	比如前面那个 “M=男 F=女”的转换例子，如果数据字段中的映射名称并不总是” USER.GENDER”，而是一个变化的值。那该怎么办呢？
 
- 
+~~~java
+/**
+* 性别的显示名称“男”“女”
+ */
+@ManyToOne(targetEntity=DataDict.class)
+@JoinColumn(name="gender",referencedColumnName="value")
+@JoinDescription(filterCondition="type=:dictType")  //将条件设置为变量
+@FieldOfTargetEntity("text")
+private String genderName;
+~~~
 
 在执行查询时——
+
+~~~java
+Query<Person> query=QB.create(Person.class);
+query.addCondition(QB.notNull(Person.Field.gender));
+query.orderByAsc(Person.Field.gender);
+query.setAttribute("dictType", "USER.GENDER");  //为FileterCondition中的变量赋值
+List<Person> p=db.select(query);
+~~~
 
 在运行时就会将其作为绑定变量处理。
 
 这种用法适用于以下两种场景——
 
-l  Join过滤条件中存在不确定的值时
-
-l  SQL语句中必须使用绑定变量时
+* Join过滤条件中存在不确定的值时
+* SQL语句中必须使用绑定变量时
 
 ### 5.2.3.   其他JPA注解的支持
 
-这一节，我们不介绍用法，而是针对级联时的操作行为进行一些分析
+​	这一节，我们不介绍用法，而是针对级联时的操作行为进行一些分析
 
-#### 5.2.3.1. 延迟加载
+#### 5.2.3.1. 延迟加载	
 
-我们修改一下Person.java，将Person.java中的currentSchool定义改成下面这样。
+​	我们修改一下Person.java，将Person.java中的currentSchool定义改成下面这样。
 
- 
+~~~
+/**
+* 学校映射
+*/
+@ManyToOne(targetEntity = School.class,fetch=FetchType.LAZY)  //显式指定该字段为延迟加载的。
+@JoinColumn(name = "currentSchoolId", referencedColumnName = "id")
+private School currentSchool;
+~~~
 
 再次运行下面的测试案例
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson4\Case1.java
 
-通过输出可以观察到，启用了Lazy的Fetch方法之后，Person对象从数据库中查出时，School对象是未赋值的。只有当调用了getCurrentSchool()之后，才会去数据库中加载School对象。
+~~~java
+@Test
+public void testLazyLoad() throws SQLException{
+	Person query=new Person();
+	query.setId(firstId);
+	Person p=db.load(query);
+	System.out.println("接下来观察调用get方法后，才会输出加载School的SQL语句。");
+	p.getCurrentSchool();
+	//请观察输出的SQL语句，
+}
+~~~
 
- 
+​	通过输出可以观察到，启用了Lazy的Fetch方法之后，Person对象从数据库中查出时，School对象是未赋值的。只有当调用了getCurrentSchool()之后，才会去数据库中加载School对象。
 
-在JPA定义中，fetch属性用于指定级联加载的行为。
+​	在JPA定义中，fetch属性用于指定级联加载的行为。
 
 | fetch属性取值       | 效果                                      |
 | --------------- | --------------------------------------- |
 | FetchType.EAGER | 饥渴的。查询时立刻加载级联对象                         |
 | FetchType.LAZY  | 懒惰的。只有当属性被使用时（调用get方法），才会去加载级联对象。（延迟加载） |
 
-JPA的四种级联关系中，默认的加载行为是不同的。
-
- 
+​	JPA的四种级联关系中，默认的加载行为是不同的。
 
 | 类型   | 注解           | 缺省的fetch行为 |
 | ---- | ------------ | ---------- |
@@ -2531,93 +3248,187 @@ JPA的四种级联关系中，默认的加载行为是不同的。
 | 多对一  | @ ManyToOne  | EAGER      |
 | 多对多  | @ ManyToMany | LAZY       |
 
-如果不使用延迟加载，EF-ORM也会使用“外连接获取”的方式来减少数据库操作次数。见下一节。
+​	如果不使用延迟加载，EF-ORM也会使用“外连接获取”的方式来减少数据库操作次数。见下一节。
 
 #### 5.2.3.2. 外连接获取
 
-从5.1.3的例子中，我们可以从日志观察到：当Person对象中有两个多对一的引用时，在查询Person时，实际SQL语句如下
+​	从5.1.3的例子中，我们可以从日志观察到：当Person对象中有两个多对一的引用时，在查询Person时，实际SQL语句如下
 
- 
+~~~sql
+select T1.ID			 as T1__ID,
+	  T1.PERSON_NAME	 as T1__NAME,
+	  T1.CURRENT_SCHOOL_ID as T1__CURRENTSCHOOLID,
+	  T1.GENDER			 as T1__GENDER,
+	  T2.TEXT			 as T2__TEXT,
+	  T3.NAME			 as T3__NAME,
+	  T3.ID				 as T3__ID
+ from T_PERSON T1
+   left join DATA_DICT T2 ON T1.GENDER=T2.VALUE and T2.DICT_TYPE='USER.GENDER'
+   left join SCHOOL T3 ON T1.CURRENT_SCHOOL_ID=T3.ID
+ where T1.ID=?  
+~~~
 
-也就是说，在查询Person表中的记录时，将对应的School对象和性别“男/女”的显示问题都一次性的查了出来。最后形成的是并不是一个简单的单表查询语句，而是一个多表联合的Join语句。为了防止Join无法连接的记录（比如未对应School的Person记录）被过滤，因此使用了左外连接(Left Join)。
+​	也就是说，在查询Person表中的记录时，将对应的School对象和性别“男/女”的显示问题都一次性的查了出来。最后形成的是并不是一个简单的单表查询语句，而是一个多表联合的Join语句。为了防止Join无法连接的记录（比如未对应School的Person记录）被过滤，因此使用了左外连接(Left Join)。
 
-一般来说，关联查询可以通过多次数据库查询完成，也可以用上面那样较为复杂的SQL语句一次性从数据库中查询得到，这种操作方式被称为外连接查询。
+​	一般来说，关联查询可以通过多次数据库查询完成，也可以用上面那样较为复杂的SQL语句一次性从数据库中查询得到，这种操作方式被称为外连接查询。
 
-这样想，如果查询出10个Person。如果不使用外连接，那么我们还需要执行10次SQL语句去获得每个Person对象的School。但使用外连接后，一次数据库操作就能代替原先11次操作。
+​	这样想，如果查询出10个Person。如果不使用外连接，那么我们还需要执行10次SQL语句去获得每个Person对象的School。但使用外连接后，一次数据库操作就能代替原先11次操作。
 
-外连接查询只能应用与ManyToOne和OneToOne的级联关系中，并能有效的减少数据库访问次数，在某些场合下具有较好的性能。由于JPA注解中OneToOne和ManyToOne的缺省FetchType都是EAGER，即不使用延迟加载。此时单次SQL操作性能更好，因此这也是EF-ORM的默认实现方式。
+​	外连接查询只能应用与ManyToOne和OneToOne的级联关系中，并能有效的减少数据库访问次数，在某些场合下具有较好的性能。由于JPA注解中OneToOne和ManyToOne的缺省FetchType都是EAGER，即不使用延迟加载。此时单次SQL操作性能更好，因此这也是EF-ORM的默认实现方式。
 
- 
-
-如果你希望沿用原先执行多次单表查询的方式，可以使用setCascadeViaOuterJoin(false)方法。如下——
+​	如果你希望沿用原先执行多次单表查询的方式，可以使用setCascadeViaOuterJoin(false)方法。如下——
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson4\Case1.java
 
- 
+~~~java
+@Test
+public void testNonOuterJoin() throws SQLException{
+	Person query=new Person();
+	query.setId(firstId);
+	query.getQuery().setCascadeViaOuterJoin(false); //改变默认行为，不使用外连接。
+	Person p=db.load(query);
+	p.getCurrentSchool();
+	p.getGenderName();
+	//请观察输出的SQL语句，
+}
+~~~
 
-除此之外，从5.2.3.1的内容也可以知道，使用JPA注解显式声明为LAZY，也可以使得级联关系从外连接转变为多次加载。
+​	除此之外，从5.2.3.1的内容也可以知道，使用JPA注解显式声明为LAZY，也可以使得级联关系从外连接转变为多次加载。
 
-因此我们总结如下
+​	因此我们总结如下
 
-1、当FetchType标记为LAZY时，所有级联 关系都通过多次的单表查询来实现。
+​        1、当FetchType标记为LAZY时，所有级联 关系都通过多次的单表查询来实现。
 
-2、当FetchType为EAGER时，OneToOne和ManyToOne可以优化为使用外连接单次查询。OneToMany和ManyToMany无法优化。
+​        2、当FetchType为EAGER时，OneToOne和ManyToOne可以优化为使用外连接单次查询。OneToMany和ManyToMany无法优化。
 
-3、如果调用setCascadeViaOuterJoin(**false**)方法，或者配置全局参数 db.use.outer.join=false（见附录一），那么EF-ORM将放弃使用外连接优化。此时性能问题依赖于一级缓存和延迟加载来解决。
+​        3、如果调用setCascadeViaOuterJoin(**false**)方法，或者配置全局参数 db.use.outer.join=false（见附录一），那么EF-ORM将放弃使用外连接优化。此时性能问题依赖于一级缓存和延迟加载来解决。
 
 #### 5.2.3.3. 级联方向
 
-EF-ORM中，级联关系是针对单个对象的辅助描述，因此所有的级联关系维护都是单向的。上面的例子中，如果我们删除 School表中的数据，不会引起Person数据的任何变化。
+​	EF-ORM中，级联关系是针对单个对象的辅助描述，因此所有的级联关系维护都是单向的。上面的例子中，如果我们删除 School表中的数据，不会引起Person数据的任何变化。
 
- 如果我们想要在删除School时，级联删除该School的所有学生，那么需要修改School.java这个类。
+​	 如果我们想要在删除School时，级联删除该School的所有学生，那么需要修改School.java这个类。
 
 修改后的School类如下
 
-当配置了从School到Person的关系后，如果级联删除School对象，则也会删除对应的Person对象。
+~~~java
+/**
+ * 实体:学校
+ * 描述一个学校的ID和名称
+ */
+public class School extends DataObject{
+	@Column
+	@Id
+	@GeneratedValue(strategy=GenerationType.AUTO)
+	private int id;
+	
+	@Column(length=64,nullable=false)
+	private String name;
 
-上面的配置中，    @JoinColumn注解可以省略。如果未配置Join的路径，EF-ORM会到目标对象中去查找反向关系。
+	public enum Field implements jef.database.Field{
+		id,name
+	}
+	@OneToMany
+	@JoinColumn(name="id",referencedColumnName="currentSchoolId")
+	private List<Person> persons;
+	//getter setter省略
+}	
+~~~
 
-因此最简的配法是
+​	当配置了从School到Person的关系后，如果级联删除School对象，则也会删除对应的Person对象。
 
- 
+上面的配置中，@JoinColumn注解可以省略。如果未配置Join的路径，EF-ORM会到目标对象中去查找反向关系。
+
+​	因此最简的配法是
+
+~~~java
+@OneToMany
+private List<Person> persons;
+~~~
 
 ### 5.2.4.   定制级联行为
 
 #### 5.2.4.1. 四种级联关系的行为
 
- 
+​	我们来了解EF-ORM在使用级联方法 (insertCascade()、 updateCascade() deleteCascade()等方法 )操作时，实际执行了什么动作。
 
-我们来了解EF-ORM在使用级联方法 (insertCascade()、 updateCascade() deleteCascade()等方法 )操作时，实际执行了什么动作。
+ 	在EF-ORM中，所有的四种级联关系，都是两表间的关系，不会出现第三张表，包括多对多(@ManyToMany )。事实上这也使ManyToMany的作用和OneToMany其实差不多，因此实用性不大。
 
- 
+​	这四种级联都对应一些简单的操作步骤，而且并没有提供太多的定制配置。对熟悉H框架的人来说，EF-ORM的级联行为和某H框架并不完全一致。EF-ORM希望设计出一些一刀切的简单规则来处理级联问题，从而降低ORM框架的使用难度。
 
-在EF-ORM中，所有的四种级联关系，都是两表间的关系，不会出现第三张表，包括多对多（@ManyToMany）。事实上这也使ManyToMany的作用和OneToMany其实差不多，因此实用性不大。
+​	一个典型的示例就是mappedby属性在EF-ORM中是无效的，EF-ORM也不会为OneToMany生成一张所谓中间表这样的设计。此外，下面的示例在某H框架中是不能删除子表对象的，但在EF-ORM中可以做到。
 
-这四种级联都对应一些简单的操作步骤，而且并没有提供太多的定制配置。对熟悉H框架的人来说，EF-ORM的级联行为和某H框架并不完全一致。EF-ORM希望设计出一些一刀切的简单规则来处理级联问题，从而降低ORM框架的使用难度。
-
-一个典型的示例就是mappedby属性在EF-ORM中是无效的，EF-ORM也不会为OneToMany生成一张所谓中间表这样的设计。此外，下面的示例在某H框架中是不能删除子表对象的，但在EF-ORM中可以做到。
-
-父表的定义
+​	父表的定义
 
  orm-tutorial/src/main/java/org/easyframe/tutorial/lesson5/entity/Catalogy.java
 
-这里顺便提一下——当使用主键和其他实体关联时，可以将@JoinColumn(name="id",referencedColumnName="catalogyId")简化为mappedBy="catalogyId"。两者是等效的。
+~~~java
+@Entity
+public class Catalogy extends DataObject {
+    @Id
+    @GeneratedValue
+    private int id;
 
- 子表的定义
+    private String name;
+
+    public enum Field implements jef.database.Field {
+        id, name
+    }
+    
+	@OneToMany(mappedBy="catalogyId")
+    //@JoinColumn(name="id",referencedColumnName="catalogyId")
+	private List<Item> items;
+
+	//getter setter省略
+}
+~~~
+
+​	这里顺便提一下——当使用主键和其他实体关联时，可以将@JoinColumn(name="id",referencedColumnName="catalogyId")简化为mappedBy="catalogyId"。两者是等效的。
+
+​	 子表的定义
 
 orm-tutorial/src/main/java/org/easyframe/tutorial/lesson5/entity/Item.java
+
+~~~java
+@Entity()
+public class Item extends DataObject {
+    @Id
+    @GeneratedValue
+    private int id;
+    private String name;
+    private int catalogyId;
+ 
+   public enum Field implements jef.database.Field {
+        id, name, catalogyId
+	}
+	//getter setter省略
+}
+~~~
 
 运行下面的代码——
 
 orm-tutorial/src/main/java/org/easyframe/tutorial/lesson5/Case1.java
 
- 
+~~~java
+public void testCascade() throws SQLException{
+	Catalogy c=new Catalogy(); //Catalogy表是父表
+	c.setId(1);
+	c=db.load(c);
 
-在EF-ORM中，四种级联关系在增、删、改的时候执行的动作是固定的，下表列出了四种不同级联情况下框架执行的操作。
+	assertNotNull(c);
+	assertEquals(4, c.getItems().size()); //Item表是子表
 
-    其中——当前对象指配置了级联关系的对象（如本例的Catalogy对象），关联对象指被引用的对象（本例的Item对象）。
+	c.setItems(null);
+	System.out.println("设置为null，调用级联更新，会删除子表记录");
+	Transaction tx=db.startTransaction();
+	tx.updateCascade(c);
+	tx.rollback();
+}
+~~~
 
- 
+​	在EF-ORM中，四种级联关系在增、删、改的时候执行的动作是固定的，下表列出了四种不同级联情况下框架执行的操作。
+
+    	其中——当前对象指配置了级联关系的对象（如本例的Catalogy对象），关联对象指被引用的对象（本例的Item对象）。
 
 | 关系类型       | insertCascade                            | updateCascade                            | deleteCascade        |
 | ---------- | ---------------------------------------- | ---------------------------------------- | -------------------- |
@@ -2626,24 +3437,45 @@ orm-tutorial/src/main/java/org/easyframe/tutorial/lesson5/Case1.java
 | ManyToOne  | 1 检查关联对象——  如为新对象则插入  如为旧对象且变化则更新;  2 插入当前对象。 | 1 检查关联对象——  如为新对象则插入  如为旧对象且变化则更新  不做级联删除  2 再更新当前对象 | 1 删除当前对象  不做级联删除。    |
 | ManyToMany | 1 插入当前对象。  2 检查关联对象——  如为新对象则插入  如为旧对象且变化则更新。 | 1 更新当前对象  2 检查关联对象——  如为新对象则插入  如为旧对象且变化则更新。  不做级联删除 | 1 删除当前对象  不做级联删除。    |
 
-  上表列出了四种不同的映射关系下的行为，可以发现基本上各个行为都只分为维护对象本身和维护级联关系两种。
-    上表中不同的行为特点是根据大量业务实际情况推导出的。例如：多对一这种关系不做级联删除，这也是考虑到大多数多对一的场景下，被引用的对象一般是公用的。
+  	上表列出了四种不同的映射关系下的行为，可以发现基本上各个行为都只分为维护对象本身和维护级联关系两种。
+    	上表中不同的行为特点是根据大量业务实际情况推导出的。例如：多对一这种关系不做级联删除，这也是考虑到大多数多对一的场景下，被引用的对象一般是公用的。
 
- 
+ 	另外要注意，级联操作是递归的。比如——
 
-  另外要注意，级联操作是递归的。比如——
+​	A对象@OneToMany到B对象， B对象OneToOne到C对象，在对A对象级联操作的同时，会按上述规则一直维护到C对象为止。如果是更多的对象参与级联，那么以此类推。
 
-A对象@OneToMany到B对象， B对象OneToOne到C对象，在对A对象级联操作的同时，会按上述规则一直维护到C对象为止。如果是更多的对象参与级联，那么以此类推。
+​	上述行为中ManyToMany和某H框架差别较大，正常情况下，我们维护多对多关系总是需要一张中间表。因此某H框架提供了隐含的中间表实现。即两个实体、一个关系，总共三张表。EF-ORM早期几个版本也是这样设计的，但是后续版本中去除了这种设计。
 
- 
+>*因为我们发现，自动维护的中间表不容易扩展。比如：多个考生参加多项课程的考试，获得分数*
+>
+>*这样一个典型的多对多关系。*
+>
+>*很显然，在关系表上我们需要增加 分数列、然后我们需要描述这个关系的创建时间——考试日期等等。*
+>
+>*从业务实践看，单纯的只有两个实体的主键构成的关系实用性很低，而且不利于后续的扩展。*
+>
+>*早期EF-ORM的设计还不是很清晰的时候，ManyToMany这种表面上是两表关系，实际上是三表关系的设计，极大的增加了框架的复杂度。为此，在权衡复杂度和实用性之后，EF-ORM在0.9版本中去除了这种设计。*
 
-上述行为中ManyToMany和某H框架差别较大，正常情况下，我们维护多对多关系总是需要一张中间表。因此某H框架提供了隐含的中间表实现。即两个实体、一个关系，总共三张表。EF-ORM早期几个版本也是这样设计的，但是后续版本中去除了这种设计。
+​	那么，如果我们碰到有类似于E-R-E这样的多对多关系时，该怎么做呢？更倾向于设计三个实体，（例如 学生、课程、考试）分别维持以下关系——
 
-那么，如果我们碰到有类似于E-R-E这样的多对多关系时，该怎么做呢？更倾向于设计三个实体，（例如 学生、课程、考试）分别维持以下关系——
+~~~java
+class 学生{
+	@OneToMany(target = 考试)
+}
+
+class 考试{
+	@ManyToOne(target= 课程)
+	@ManyToOne(target= 学生)
+}
+
+class 课程{
+	@OneToMany(target=考试)
+}
+~~~
 
 也就是说，多对多关系被拆分为两个一对多关系。
 
- 
+
 
 这是不是说EF-ORM中的@ManyToMany就没有用了呢？不是这样的，再举一个例子。
 
@@ -2661,29 +3493,32 @@ A对象@OneToMany到B对象， B对象OneToOne到C对象，在对A对象级联�
 | ---- | ---- | ---- | ---- | ---- |
 |      |      |      |      |      |
 
-在这两个实体中，我们就可以建立双向@ManyToMany的关系。从学生记录中，获得该学生所在班级的所有课程和任课教师。从教师担任的课程的记录中，获得该班级所有的学生记录。
+​	在这两个实体中，我们就可以建立双向@ManyToMany的关系。从学生记录中，获得该学生所在班级的所有课程和任课教师。从教师担任的课程的记录中，获得该班级所有的学生记录。
 
-我们怎么区分什么时候该使用@OneToMany什么时候使用@ManyToMany呢？可以遵循这样的原则：
+​	我们怎么区分什么时候该使用@OneToMany什么时候使用@ManyToMany呢？可以遵循这样的原则：
 
-l  当目标实体依赖于当前实体（强关联）时使用OneToMany；
-
-l  当目标实体相对独立     （弱关联）时使用ManyToMany。
+* 当目标实体依赖于当前实体（强关联）时使用OneToMany；
+* 当目标实体相对独立     （弱关联）时使用ManyToMany。
 
 弱关联情况下，级联操作将会使用一种较为保守的策略，来避免出现删除关联对象之类的误操作。
 
-关于这个ManyToMany的模型，可以参阅orm-tutorial/src/main/java/org/easyframe/tutorial/lesson5/Case1.java中的testManyToMany方法。本文不再赘述。
+​	关于这个ManyToMany的模型，可以参阅orm-tutorial/src/main/java/org/easyframe/tutorial/lesson5/
+
+Case1.java中的testManyToMany方法。本文不再赘述。
 
 #### 5.2.4.2. 使用注解限制级联关系的使用场合
 
-上面提到了，级联关系是递归维护的。而且要注意，一个对象中可能存在多种级联关系，而其级联对象中又可能有多种级联关系。在递归情况下，情形可能会变得相当复杂。如果没有很好的设计你的E-R关系，你可能会发现，一个简单的数据库操作可能会衍生出大量的级联操作语句。
+​	上面提到了，级联关系是递归维护的。而且要注意，一个对象中可能存在多种级联关系，而其级联对象中又可能有多种级联关系。在递归情况下，情形可能会变得相当复杂。如果没有很好的设计你的E-R关系，你可能会发现，一个简单的数据库操作可能会衍生出大量的级联操作语句。
 
-因此，JPA中可以限制级联关系的使用范围。使用JPA注解，使级联关系只在插入/更新/删除等一种或几种行为中生效。简而言之，我们可以让配置的级联关系只用于查询操作、或者只用于插入操作。
+​	因此，JPA中可以限制级联关系的使用范围。使用JPA注解，使级联关系只在插入/更新/删除等一种或几种行为中生效。简而言之，我们可以让配置的级联关系只用于查询操作、或者只用于插入操作。
 
- 
+​	在@OneToOne @OneToMany @ManyToOne @ManyToMany中，可以设置cascade属性如下
 
-在@OneToOne @OneToMany @ManyToOne @ManyToMany中，可以设置cascade属性如下
+~~~java
+@ManyToOne(targetEntity = School.class,cascade={CascadeType.MERGE,CascadeType.REFRESH})
+~~~
 
-cascade是一个多值属性，配置了以后，则表示此类操作要进行级联，否则就不作级联操作。例如上例配置该字段仅用于级联查询和级联插入更新，不用于级联删除。
+​	cascade是一个多值属性，配置了以后，则表示此类操作要进行级联，否则就不作级联操作。例如上例配置该字段仅用于级联查询和级联插入更新，不用于级联删除。
 
 | **CascadeType**     | **对应**    |
 | ------------------- | --------- |
@@ -2693,87 +3528,164 @@ cascade是一个多值属性，配置了以后，则表示此类操作要进行�
 | CascadeType.REFERSH | 允许级联查询    |
 | CascadeType.ALL     | 允许所有级联操作  |
 
- 
-
 ### 5.2.5.   级联条件CascadeCondition
 
-在级联查询中，我们还能在级联查询的对象上添加条件。请看下面这个例子：
+​	在级联查询中，我们还能在级联查询的对象上添加条件。请看下面这个例子：
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson4\Case1.java
 
-在这个例子中，使用addCascadeCondition()方法，在查询中增加了一个专门针对级联对象的过滤条件。在查询级联时中，只有带有”清华“字样的学校才会被查出。
+~~~java
+@Test
+public void testCascadeCondition() throws SQLException{
+	Query<Person> query=QB.create(Person.class);
+	query.addCondition(QB.eq(Person.Field.id,firstId));
+	query.addCascadeCondition(QB.matchAny(School.Field.name, "清华"));
+	db.select(query); 
+}
+~~~
+
+​	在这个例子中，使用addCascadeCondition()方法，在查询中增加了一个专门针对级联对象的过滤条件。在查询级联时中，只有带有”清华“字样的学校才会被查出。
 
 另一个例子是在多对多时
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson5\Case1.java
 
+~~~java
+@Test
+public void testCascadeCondition() throws SQLException {
+	{//无级联条件时
+		Student s1 = db.load(Student.class,1);
+		for(TeacherLesson t:s1.getLessons()){
+			System.out.println(t);
+		}	
+	}
+	{
+		Student st=new Student();
+		st.setId(1);
+		st.getQuery().addCascadeCondition(QB.in(TeacherLesson.Field.lessonName
+										, new String[]{"语文","化学"}));
+		for(TeacherLesson t:db.load(st).getLessons()){
+				System.out.println(t);
+		}	
+	}
+		
+}
+~~~
+
 可以发现，即使是在延迟加载的场景下，级联条件依旧会在查询时生效。
 
- 
-
-由于级联是递归的，即级联对象中我们还可以获得其他级联对象，因此过滤条件也不仅仅针对当前对象的，而是可以灵活的指定。我们再看复杂一点的例子
+​	由于级联是递归的，即级联对象中我们还可以获得其他级联对象，因此过滤条件也不仅仅针对当前对象的，而是可以灵活的指定。我们再看复杂一点的例子
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson5\Case1.java
 
- 
+~~~java
+/**
+ * 级联过滤条件也可以用于间接的引用中，
+ * 本例中， Cacalogy引用Item、Item引用ItemExtendIndo，通过指定引用字段，可以精确控制过滤条件要用于那个对象上。
+ */
+@Test
+public void testCascadeCondition2() throws SQLException {
+	Query<Catalogy> q = QB.create(Catalogy.class);
+	q.addCondition(QB.eq(Catalogy.Field.id, 1));
+     //指定过滤条件作用于 Catalogy的一个间接级联关系上
+	q.addCascadeCondition("items.itemExtInfos", QB.eq(ItemExtendInfo.Field.key, "拍摄地点"));
+	Catalogy c = db.load(q);
+	for (Item item : c.getItems()) {
+		System.out.print(item.getItemExtInfos());
+	}
+   //注意观察SQL语句
+}
+~~~
 
 Cascade条件一旦设置到一个查询中，无论级联操作是单次操作还是多次操作，都会生效。
 
 # 6.    Criteria API多表操作
 
-级联操作本质上是一种单表操作。所有的级联操作都可以以多次单表查询的方式来完成。
+​	级联操作本质上是一种单表操作。所有的级联操作都可以以多次单表查询的方式来完成。
 
-但前面的大多数级联操作都使用了自动外连接的功能，因此在查询时，实际上看到的是一个多表连接后的Join查询语句。这种SQL语句在EF-ORM内实现也是使用Criteria API来做到的。
+​	但前面的大多数级联操作都使用了自动外连接的功能，因此在查询时，实际上看到的是一个多表连接后的Join查询语句。这种SQL语句在EF-ORM内实现也是使用Criteria API来做到的。
 
-前面的单表Criteria API中大家可以理解，一个单表操作SQL语句可以被抽象后用一个Query对象表示。多表操作Criteria API的概念也差不多。一个多表查询的SQL语句被java抽象后，可以用一个Join对象或者一个UnionQuery对象表示。
+​	前面的单表Criteria API中大家可以理解，一个单表操作SQL语句可以被抽象后用一个Query对象表示。多表操作Criteria API的概念也差不多。一个多表查询的SQL语句被java抽象后，可以用一个Join对象或者一个UnionQuery对象表示。
 
-Join对象其实就是一个典型的Join的SQL语句在Java中的映射，一般来说标准的Join语句是
+​	Join对象其实就是一个典型的Join的SQL语句在Java中的映射，一般来说标准的Join语句是
 
-可以发现，一个Join语句是针对多个表（或者视图或查询结果）。每个表都可以有自己的where条件（或者没有条件）。表和表之间用 ON条件进行连接。
+~~~sql
+select  t1.*, t2.* … from TABLE1 t1,
+  left join TABLE2 t2 on t1.xx=t2.xx
+  left join TABLE3 t3 on t1.xx=t3.xx and t2.xx=t3.xx
+ where t1.xxx=条件 and t2.xxx=条件 and t3.xxx=条件
+~~~
 
-很多时候，我们在不太复杂的Join语句中，将On条件也放在where条件后面来写，这样写更方便，不过某些时候的计算顺序会和标准写法出现误差，造成一些计算结果不正确的问题。
+​	可以发现，一个Join语句是针对多个表（或者视图或查询结果）。每个表都可以有自己的where条件（或者没有条件）。表和表之间用 ON条件进行连接。
 
-在Java中，我们也将SQL语句映射为一个Join对象，其包含了多个Query对象，Query之间用 on 条件进行连接。on条件数量不定。
+​	很多时候，我们在不太复杂的Join语句中，将On条件也放在where条件后面来写，这样写更方便，不过某些时候的计算顺序会和标准写法出现误差，造成一些计算结果不正确的问题。
 
- 
+​	在Java中，我们也将SQL语句映射为一个Join对象，其包含了多个Query对象，Query之间用 on 条件进行连接。on条件数量不定。
 
- 
+ 							  ![6-1](images\6-1.png)
 
-图6-1 Join的构成
+​											图6-1 Join的构成 
 
- 
-
-上图可以看出，一个Join由多个单表的Query对象构成。我们在实际使用时，可以自由的组合各种Query，形成一个Join查询对象。这个模型实际上和我们编写的SQL是一样的。
-
- 
-
- 
+​	上图可以看出，一个Join由多个单表的Query对象构成。我们在实际使用时，可以自由的组合各种Query，形成一个Join查询对象。这个模型实际上和我们编写的SQL是一样的。
 
 ## 6.1. Join查询
 
 ### 6.1.1.   基本用法
 
-多表查询的主要场景都是Join查询。Join查询由多个单表的子查询构成，这点在前面已经叙述了。来看看实际用法。
+​	多表查询的主要场景都是Join查询。Join查询由多个单表的子查询构成，这点在前面已经叙述了。来看看实际用法。
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson6\Case1.java
 
+~~~java
+@Test
+public void testMultiTable() throws SQLException {
+	Query<Person> p = QB.create(Person.class);
+	Query<Item> i = QB.create(Item.class);
+	Join join = QB.innerJoin(p, i, QB.on(Person.Field.name, Item.Field.name));
+	// 不指定返回数据的类型时，Join查询默认返回Map对象。
+	Map<String, Object> o = db.load(join);
+	System.out.println(o);
+
+	// 如果指定返回“多个对象”，那么返回的Object[]中就包含了 Person对象和Item对象
+	{
+		Object[] objs = db.loadAs(join, Object[].class);
+		Person person = (Person) objs[0];
+		Item item = (Item) objs[1];
+
+		assertEquals(person.getName(), item.getName());
+		System.out.println(person);
+		System.out.println(item);
+	}
+	// 上面的join对象中只有两张表，还可以追加新的表进去
+	{
+		join.innerJoin(QB.create(Student.class), 
+				QB.on(Person.Field.name, Student.Field.name));
+		Object[] objs = db.loadAs(join, Object[].class);
+		Person person = (Person) objs[0];
+		Item item = (Item) objs[1];
+		Student student = (Student) objs[2];
+		assertEquals(person.getName(), item.getName());
+		assertEquals(item.getName(), student.getName());
+		System.out.println(student);
+	}
+}
+~~~
+
 从上例中，我们可以发现
 
-1、 可以用QueryBuilder.innerJoin()将两个Query对象拼接在一起形成内连接。形成Join对象后，join对象自带innerJoin方法，用于添加新的查询表。
+1. 可以用QueryBuilder.innerJoin()将两个Query对象拼接在一起形成内连接。形成Join对象后，join对象自带innerJoin方法，用于添加新的查询表。
 
-2、 使用QueryBuilder.on()可以指定Join时的连接键。
 
-3、 如果不指定Join查询的返回类型，那么会返回所有字段形成的Map，如果指定Join查询返回Object[]类型。那么会将所有参与查询的表的映射对象以数组的形式返回。
-Join场景下，查询结果返回的最常用形式是这两种。但其实EF-ORM也支持其他很多种结果转换形式。相关内容请参见8.1节 查询结果的返回。
+2. 使用QueryBuilder.on()可以指定Join时的连接键。
 
- 
+3. 如果不指定Join查询的返回类型，那么会返回所有字段形成的Map，如果指定Join查询返回Object[]类型。  那么会将所有参与查询的表的映射对象以数组的形式返回。
+
+     Join场景下，查询结果返回的最常用形式是这两种。但其实EF-ORM也支持其他很多种结果转换形式。相关内 容请  参见8.1节 查询结果的返回。
 
 在QueryBuilder中，有以下几个方法用于创建Join连接
 
- 
-
 | 方法                          | 效果                                       |
-| --------------------------- | ---------------------------------------- |
+| :-------------------------- | ---------------------------------------- |
 | **innerJoin(q1,q2)**        | 创建内连接                                    |
 | **leftJoin(q1,q2)**         | 创建左外连接                                   |
 | **rightJoin(q1,q2)**        | 创建右外连接                                   |
@@ -2783,45 +3695,53 @@ Join场景下，查询结果返回的最常用形式是这两种。但其实EF-O
 | **rightJoinWithRef(q1,q2)** | 先根据左侧Query对象的级联关系创建级联Join，然后再将其和右侧的对象右外连接。 |
 | **outerJoinWithRef(q1,q2)** | 先根据左侧Query对象的级联关系创建级联Join，然后再将其和右侧的对象全外连接。 |
 
-    在Join对象中，也有类似的方法。在连接查询中增加新的表。
+  	在Join对象中，也有类似的方法。在连接查询中增加新的表。
 
-在上述方法中，入参包括可选择的On条件，该条件指出了新参与查询的表通过哪些键和旧的表连接。使用 QueryBuilder.on()方法，可以为两个Query指定连接条件。
+​	在上述方法中，入参包括可选择的On条件，该条件指出了新参与查询的表通过哪些键和旧的表连接。使用 QueryBuilder.on()方法，可以为两个Query指定连接条件。
 
 ### 6.1.2.   使用Selects对象
 
-其实就EF-ORM的API设计来说，并没有明显的区分单表操作和多表操作，前面单表查询的各种用法，也都可以直接在多表查询中使用。本例中的Selects使用来控制查出的列就是一例。
+​	其实就EF-ORM的API设计来说，并没有明显的区分单表操作和多表操作，前面单表查询的各种用法，也都可以直接在多表查询中使用。本例中的Selects使用来控制查出的列就是一例。
 
-此外，单表查询中的 SQLExpression、JpqlExpression等特性都可以在多表查询中使用。
-
- 
+​	此外，单表查询中的 SQLExpression、JpqlExpression等特性都可以在多表查询中使用。
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson6\Case1.java
 
- 
+~~~java
+@Test
+public void testSelectFromJoin() throws SQLException{
+	Query<Person> p = QB.create(Person.class);
+	Query<Item> i = QB.create(Item.class);
+	Join join = QB.innerJoin(p, i, QB.on(Person.Field.name, Item.Field.name));
+		
+	Selects select=QB.selectFrom(join);
+	select.column(Person.Field.id).as("personid");
+	select.column(Item.Field.name).as("itemname");
+		
+	
+	List<Map<String,Object>> vars=db.select(join,null);
+	for(Map<String,Object> var:vars){
+		System.out.println(var);
+		//打印出 {itemname=张飞, personid=1}
+	}
+}
+~~~
 
-在上例中，我们可以发现，Query对象和Join对象都是JoinElement的子类，因此selectFrom方法对这两类对象都有效。
+​	在上例中，我们可以发现，Query对象和Join对象都是JoinElement的子类，因此selectFrom方法对这两类对象都有效。
 
-同样的，我们在之前单表查询中学习过的这些特性也都能够直接在Join查询中使用——
+​	同样的，我们在之前单表查询中学习过的这些特性也都能够直接在Join查询中使用——
 
-l  Distinct
-
-l  Group by
-
-l  Having
-
-l  Max() min() avg() count（）等
-
-l  函数的使用
+* Distinct    
+* Group by
+* Having
+* Max() min() avg() count() 等
+* 函数的使用
 
 这些都和在单表查询中没有什么区别。
 
 ### 6.1.3.   分页和总数
 
- 
-
-同样的，分页和总数的实现方法和单表查询的API也是一样的，下面是和分页与总数相关的几个API的用法。虽然在单表查询中已经介绍过了。
-
- 
+​	同样的，分页和总数的实现方法和单表查询的API也是一样的，下面是和分页与总数相关的几个API的用法。虽然在单表查询中已经介绍过了。
 
 **计算总数**
 
@@ -2831,102 +3751,186 @@ l  函数的使用
 
  
 
- 
-
-**传入IntRange****限制结果范围**
+**传入IntRange限制结果范围**
 
 | **方法**                                   | **用途说明**                                 |
 | ---------------------------------------- | ---------------------------------------- |
-| **Session.select(ConditionQuery,  IntRange)**  ** ** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。 |
+| **Session.select(ConditionQuery,  IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。 |
 | **Session.select(ConditionQuery,  Class, IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，结果转换为指定类型，限定返回条数在IntRange区间范围内。 |
 | **Session.iteratedSelect(TypedQuery,  IntRange)** | 传入Query形态的查询(单表/级联/Union)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
 | **Session.iteratedSelect(ConditionQuery,  IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
 | **Session.iteratedSelect(ConditionQuery,  Class, IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
 
- 
 
-**使用pageSelect****接口**，得到PageIterator对象。（参见4.1.3.2）
+
+**使用pageSelect接口**，得到PageIterator对象。（参见4.1.3.2）
 
 | **方法**                                   | **作用**                                   |
 | ---------------------------------------- | ---------------------------------------- |
-| **Session.pageSelect(ConditionQuery,  int)**  ** ** | 传入Query形态的查询(单表、Union、Join均可)            |
-| **Session.pageSelect(ConditionQuery,  Class, int)**  ** ** | 传入Query形态的查询(单表、Union、Join均可)， 并指定返回结果类型 |
-
- 
+| **Session.pageSelect(ConditionQuery,  int)** | 传入Query形态的查询(单表、Union、Join均可)            |
+| **Session.pageSelect(ConditionQuery,  Class, int)** | 传入Query形态的查询(单表、Union、Join均可)， 并指定返回结果类型 |
 
 用例子来描述： 下面的例子里使用了两种方法来实现
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson6\Case1.java
 
+~~~java
+public void testJoinWithPage()throws SQLException{
+	Query<Person> p = QB.create(Person.class);
+	Join join=QB.innerJoin(p, QB.create(Student.class), QB.on(Person.Field.gender, Student.Field.gender));
+	join.orderByDesc(Person.Field.id);
+	//方法1
+	{
+		int count=db.count(join);
+		List<Object[]> result=db.selectAs(join,Object[].class,new IntRange(4,8));//读取第4~第8条记录
+		System.out.println("总数:"+count);
+		for(Object[] objs:result){
+			System.out.println(Arrays.toString(objs));
+		}
+	}
+	//方法2
+	{
+		//使用分页查询，每页五条,从第四条开始读取
+		Page<Object[]> result=db.pageSelect(join, Object[].class,5).setOffset(3).getPageData(); 
+		System.out.println(result.getTotalCount());
+		for(Object[] objs:result.getList()){
+			System.out.println(Arrays.toString(objs));
+		}			
+	}
+}
+~~~
+
 ### 6.1.4.   条件容器的问题
 
-Join是由多个Query构成，而每个Query和Join对象本身都提供了addOrderBy等设置排序字段的方法。除此之外，每个Query对象都提供了addCondition方法，这产生了一个问题——即Join查询中的条件和排序应当设置到哪个对象容器中。如果我们在某个Query中设置了条件或者排序字段，然后再将其添加到一个Join对象中，还能正常生效吗？
+​	Join是由多个Query构成，而每个Query和Join对象本身都提供了addOrderBy等设置排序字段的方法。除此之外，每个Query对象都提供了addCondition方法，这产生了一个问题——即Join查询中的条件和排序应当设置到哪个对象容器中。如果我们在某个Query中设置了条件或者排序字段，然后再将其添加到一个Join对象中，还能正常生效吗？
 
-从设计目的讲，目前无论是直接加入到Join对象上，还是任意Query对象上的条件，都会在查询中生效。
+​	从设计目的讲，目前无论是直接加入到Join对象上，还是任意Query对象上的条件，都会在查询中生效。
 
-一种做法是，在构成Join的每个Query对象上添加条件和排序字段
+​	一种做法是，在构成Join的每个Query对象上添加条件和排序字段
+
+orm-tutorial\src\main\java\org\easyframe\tutorial\lesson6\Case1.java
+
+~~~java
+@Test
+public void testConditionAndOrder1()throws SQLException{
+	//两个Query对象，各自设置条件和顺序
+	Query<Person> p = QB.create(Person.class);
+	p.addCondition(Person.Field.gender, "M");
+	p.orderByAsc(Person.Field.id);
+		
+	Query<Student> s=QB.create(Student.class);
+	s.addCondition(Student.Field.dateOfBirth,Operator.IS_NOT_NULL,null);
+	s.orderByDesc(Student.Field.grade);
+		
+	Join join=QB.innerJoin(p,s , QB.on(Person.Field.gender, Student.Field.gender));
+	List<Map<String,Object>> result=db.select(join, null);
+}
+~~~
+
+​	另一种做法，在第一个Query上添加条件，在join中添加排序字段
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson6\Case1.java
 
- 
-
-另一种做法，在第一个Query上添加条件，在join中添加排序字段
-
-orm-tutorial\src\main\java\org\easyframe\tutorial\lesson6\Case1.java
+~~~java
+public void testConditionAndOrder2()throws SQLException{
+	//把条件集中在第一个Query上。
+	Query<Person> p = QB.create(Person.class);
+	p.addCondition(Person.Field.gender, "M");
+	p.orderByAsc(Person.Field.id);
+	p.addCondition(Student.Field.dateOfBirth,Operator.IS_NOT_NULL,null);
+		
+	Join join=QB.innerJoin(p, QB.create(Student.class) , 
+	                      QB.on(Person.Field.gender,   Student.Field.gender));
+	//join上也可以直接设置排序字段。
+	p.orderByDesc(Student.Field.grade);
+		
+	List<Map<String,Object>> result=db.select(join, null);
+}
+~~~
 
 上面两种代码实现，运行后可以发现最终效果是一样的。
 
-    也就是说：一般情况下，排序和Where条件可以放在Join的任意Query对象上。排序可以直接放在Join对象上。
+​	也就是说：一般情况下，排序和Where条件可以放在Join的任意Query对象上。排序可以直接放在Join对象上。
 
- 
+​	为什么要限制“一般情况下”？我们需要了解一下在查询时实际发生了什么。我们先来看上面的例子所产生的实际SQL语句。
 
-为什么要限制“一般情况下”？我们需要了解一下在查询时实际发生了什么。我们先来看上面的例子所产生的实际SQL语句。
+~~~sql
+select T1.ID                AS T1__ID,
+       T1.GENDER            AS T1__GENDER,
+       T1.PERSON_NAME       AS T1__NAME,
+       T1.CURRENT_SCHOOL_ID AS T1__CURRENTSCHOOLID,
+       T2.GRADE             AS T2__GRADE,
+       T2.NAME              AS T2__NAME,
+       T2.ID                AS T2__ID,
+       T2.DATE_OF_BIRTH     AS T2__DATEOFBIRTH,
+       T2.GENDER            AS T2__GENDER
+  from T_PERSON T1
+ inner join STUDENT T2 ON T1.GENDER = T2.GENDER
+ where T1.GENDER = ?
+   and T2.DATE_OF_BIRTH is not null
+ order by T1.ID ASC, T2.GRADE DESC
+~~~
 
- 
+​	首先，每个查询列（排序列）在查询语句中，都会添加该列所在表的别名（如T1.ID,中的T1为表T_PEERSON的别名）。这是因为不同的表可能有相同名称的列，所以必须用表别名来限定。因此我们可以理解，每个条件中的Field对象最终是必须要绑定到一个Query上去的。如果我们在每个Query上设置条件，那么这个绑定是由开发人员显式完成的。如果将条件和排序设置到其他Query中或者Join对象中，那么绑定的过程是由框架内部完成的。
 
-首先，每个查询列（排序列）在查询语句中，都会添加该列所在表的别名（如T1.ID,中的T1为表T_PEERSON的别名）。这是因为不同的表可能有相同名称的列，所以必须用表别名来限定。因此我们可以理解，每个条件中的Field对象最终是必须要绑定到一个Query上去的。如果我们在每个Query上设置条件，那么这个绑定是由开发人员显式完成的。如果将条件和排序设置到其他Query中或者Join对象中，那么绑定的过程是由框架内部完成的。
+​	我们将由用户完成的绑定称为显式绑定，由框架内部自动完成的称为隐式绑定。隐式绑定是根据每个Field所在的Entity类型来判定的，很显然某种情况下隐式绑定是不准确的（也是危险的），那就是在同一张表多次参与Join的时候。
 
-我们将由用户完成的绑定称为显式绑定，由框架内部自动完成的称为隐式绑定。隐式绑定是根据每个Field所在的Entity类型来判定的，很显然某种情况下隐式绑定是不准确的（也是危险的），那就是在同一张表多次参与Join的时候。
+​	因此，如果在Join中同一张表参与多次，我们更建议显式的指定每个条件和排序对应的Query。否则的话两种方法都可以，可以按个人喜好使用。
 
-因此，如果在Join中同一张表参与多次，我们更建议显式的指定每个条件和排序对应的Query。否则的话两种方法都可以，可以按个人喜好使用。
 
- 
-
- 
-
- 
 
 ## 6.2. Union查询
 
-    多表查询中，除了Join以外，还有一种特殊的请求类型，即Union Query。
+​	多表查询中，除了Join以外，还有一种特殊的请求类型，即Union Query。
 
-和SQL一样，多组查询（无论是Join的还是单表的， 只要选出的列的类型一样，就可以使用Union关系拼合成一个更大的结果集）。
+​	和SQL一样，多组查询（无论是Join的还是单表的， 只要选出的列的类型一样，就可以使用Union关系拼合成一个更大的结果集）。
 
-UnionQuery具有特定的使用意义。我们之所以用数据库来union两个结果集，而不是在java代码中拼合两个结果集，最大的原因是——
+​	UnionQuery具有特定的使用意义。我们之所以用数据库来union两个结果集，而不是在java代码中拼合两个结果集，最大的原因是——
 
-l  Union语句可以过滤重复行
-使用union关键字，让数据库在拼合两个结果集时，去除完全相同的行。这会造成数据库排序等一系列复杂的操作，因此DBA们经常告诫开发人员，在能使用union all的场合就不要使用union。
+* Union语句可以过滤重复行
 
-l  Union语句可以设置独立的排序条件
-除了构成Union查询的子查询可以对结果排序外，Union/Union All语句还可以对汇总后的结果集进行排序，确保汇总后的结果集按特定的顺序列出。
+  使用union关键字，让数据库在拼合两个结果集时，去除完全相同的行。这会造成数据库排序等一系列复杂的操作，因此DBA们经常告诫开发人员，在能使用union all的场合就不要使用union。
 
- 
+* Union语句可以设置独立的排序条件
+
+  除了构成Union查询的子查询可以对结果排序外，Union/Union All语句还可以对汇总后的结果集进行排序，确保汇总后的结果集按特定的顺序列出。
 
 因此，综上所述，我们在日常业务处理中，很难不使用union。
-
- 
 
 一个union查询的例子是这样的——
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson6\Case1.java
 
-上例中，在两个对象的查询语句中，补齐了各自缺少的字段以后，两个查询具有相同的返回结果格式。此时就可以用union语句将两个查询结果合并为一个。(Derby的Union实现较为特殊，结果集之间是按列序号而不是列名进行匹配的，因此要注意列的输出顺序)
+~~~java
+@Test
+public void testUnion() throws SQLException {
+	JoinElement p = QB.create(Person.class);
+	p=QB.innerJoin(p, QB.create(School.class));
+		
+	Selects select = QB.selectFrom(p);
+	select.clearSelectItems();
+	select.sqlExpression("upper(name) as name");
+	select.column(Person.Field.gender);
+	select.sqlExpression("'1'").as("grade");
+	select.column(School.Field.name).as("schoolName");
+		
+	Query<Student> s=QB.create(Student.class);
+	select = QB.selectFrom(s);
+	select.column(Student.Field.name);
+	select.column(Student.Field.gender);
+	select.column(Student.Field.grade);
+	select.sqlExpression("'Unknown'").as("schoolName");
+		
+	List<Map<String,Object>> result=db.select(QB.union(Map.class,p,s), null);
+	System.out.println(result);
+}
+~~~
 
- 
+​	上例中，在两个对象的查询语句中，补齐了各自缺少的字段以后，两个查询具有相同的返回结果格式。此时就可以用union语句将两个查询结果合并为一个。(Derby的Union实现较为特殊，结果集之间是按列序号而不是列名进行匹配的，因此要注意列的输出顺序)
 
-QueryBuilder可以用于生成union 查询。
+​	QueryBuilder可以用于生成union 查询。
 
-在SQL语句中，有 union 和 union all 两种合并方式。对应到QueryBuilder中的以下几个方法上。
+​	在SQL语句中，有 union 和 union all 两种合并方式。对应到QueryBuilder中的以下几个方法上。
 
 | 方法                                       | 作用                                       |
 | ---------------------------------------- | ---------------------------------------- |
@@ -2937,81 +3941,129 @@ QueryBuilder可以用于生成union 查询。
 | QueryBuilder.unionAll(Class<T>,  ConditionQuery...) | 将多个Query用 union all结合起来，查询的返回结果为指定的class |
 | QueryBuilder.unionAll(ITableMetadata,  ConditionQuery...) | 将多个Query用 union all结合起来，查询的返回结果为指定元模型对应的实体 |
 
-在使用union或unionAll方法时，需要传入一个类型，该类型为union查询最终要返回的结果容器。可以使用Map，也可以是任意对象。
+​	在使用union或unionAll方法时，需要传入一个类型，该类型为union查询最终要返回的结果容器。可以使用Map，也可以是任意对象。
 
- 
+​	关于排序
 
-关于排序
-
-UnionQuery可以有单独的排序列，这个排序列属于union query独有，和各个Query对象的排序之间没有关系。这也是union语句的固有特点。再看下面的示例——
+​	UnionQuery可以有单独的排序列，这个排序列属于union query独有，和各个Query对象的排序之间没有关系。这也是union语句的固有特点。再看下面的示例——
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson6\Case1.java
+
+~~~java
+@Test
+public void testUnion2() throws SQLException {
+	Query<Person> p = QB.create(Person.class);
+	p.orderByDesc(Person.Field.currentSchoolId);
+	Selects select = QB.selectFrom(p);
+	select.column(Person.Field.name).as("name");
+	select.column(Person.Field.gender);
+		
+	Query<Student> s=QB.create(Student.class);
+	s.orderByAsc(Student.Field.grade);
+	select = QB.selectFrom(s);
+	select.column(Student.Field.name);
+	select.column(Student.Field.gender);
+	List<Student> result=db.select(QB.union(Student.class,p,s).orderByAsc(Student.Field.name));
+	for(Student st:result){
+		System.out.println(st.getName()+":"+st.getGender());	
+	}
+}
+~~~
 
 执行上述代码，观察输出的SQL语句可以看到
 
-从SQL语句观察，可以发现各个子查询的排序列（Order By）和整个union语句的排序列其作用和定义是不同的。
+~~~sql
+(select t.PERSON_NAME AS NAME,
+	   t.GENDER
+ from T_PERSON t
+ order by t.CURRENT_SCHOOL_ID DESC)
+ union
+(select t.NAME,
+	   t.GENDER
+ from STUDENT t
+ order by t.GRADE ASC) order by NAME ASC 
+~~~
+
+​	从SQL语句观察，可以发现各个子查询的排序列（Order By）和整个union语句的排序列其作用和定义是不同的。
 
  
 
- 
+## 6.3. Exists条件和NotExists条件
 
-## [6.3. Exists条件和NotExists条件
+​	我们还有可能会需要写带有exists条件的SQL语句。一个例子是——
 
-我们还有可能会需要写带有exists条件的SQL语句。一个例子是——
+​	Q: 查出所有姓名在Student表中出现过的Person。
 
-Q: 查出所有姓名在Student表中出现过的Person。
+   	A: 
 
-   A: 
+~~~sql
+select t.*
+from T_PERSON t 　　
+where exists (select 1 from STUDENT et where t.PERSON_NAME = et.NAME)
+~~~
 
- 
+​	在这个例子中，exists带来了一个子查询，并且和父表发生了内连接。
 
-在这个例子中，exists带来了一个子查询，并且和父表发生了内连接。
-
-EF-ORM中，也能生成这样的查询——
+​	EF-ORM中，也能生成这样的查询——
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson6\Case1.java
 
-上面这个查询，将Exists作为一个特殊的条件进行处理。因此严格意义上面的查询语句是一个“单表查询”，因此级联功能依然会生效。为了使得生成的SQL更为简单，我们通过p.setCascade(**false**);语句关闭了级联功能。如果去掉这句语句，您将可以看到级联功能和exists共同生效的场景。
+~~~java
+@Test
+public void testExists() throws SQLException{
+	Query<Person> p=QB.create(Person.class);
+		
+	//级联功能生效的情况下，查询依然是正确的。此处为了输出更简单的SQL语句暂时关闭级联功能。
+	//您可以尝试开启级联功能进行查询
+	p.setCascade(false); 
+	p.addCondition(QB.exists(QB.create(Student.class), 
+				QB.on(Person.Field.name, Student.Field.name)));
+	System.out.println(db.select(p));
+}
+~~~
 
- 
+​	上面这个查询，将Exists作为一个特殊的条件进行处理。因此严格意义上面的查询语句是一个“单表查询”，因此级联功能依然会生效。为了使得生成的SQL更为简单，我们通过p.setCascade(**false**);语句关闭了级联功能。如果去掉这句语句，您将可以看到级联功能和exists共同生效的场景。
 
-那么现在我们把问题变一下——
+​	那么现在我们把问题变一下——
 
-Q: 查出所有姓名未出现在Student表中的Person。
+​	Q: 查出所有姓名未出现在Student表中的Person。
 
-问题很简单，把exists改为not exists就可以了。
+​	问题很简单，把exists改为not exists就可以了。
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson6\Case1.java
 
- 
+~~~java
+@Test
+public void testNotExists() throws SQLException{
+	Query<Person> p=QB.create(Person.class);
+		
+	p.addCondition(QB.notExists(QB.create(Student.class), 
+				QB.on(Person.Field.name, Student.Field.name)));
+	System.out.println(db.select(p));
+}
+~~~
 
-您可能已经发现，多表查询下是不支持级联功能的。而上面的Exists和Not Exists中都出现了级联功能，所以实际上这两个例子都是单表查询。放在这一章仅仅是因为人们的习惯而已。
+​	您可能已经发现，多表查询下是不支持级联功能的。而上面的Exists和Not Exists中都出现了级联功能，所以实际上这两个例子都是单表查询。放在这一章仅仅是因为人们的习惯而已。
 
- 
-
-多表下的API查询就介绍到这里。关于多表查询下返回结果有哪些格式、用什么容器返回结果，本章没有介绍。因为EF-ORM无论在单表/多表/NativeQuery下，都有统一的查询结果返回规则。所以这部分内容将在学习完NativeQuery以后的第八章再介绍。
+ 	多表下的API查询就介绍到这里。关于多表查询下返回结果有哪些格式、用什么容器返回结果，本章没有介绍。因为EF-ORM无论在单表/多表/NativeQuery下，都有统一的查询结果返回规则。所以这部分内容将在学习完NativeQuery以后的第八章再介绍。
 
 # 7.    本地化查询
 
 ## 7.1. 本地化查询是什么
 
-这里本地化查询即’NativeQuery’，是指利用SQL（或者JPQL）进行的数据库操作——不仅限于select，也可以执行insert、update、甚至create table as、truncate等DDL。
+​	这里本地化查询即’NativeQuery’，是指利用SQL（或者JPQL）进行的数据库操作——不仅限于select，也可以执行insert、update、甚至create table as、truncate等DDL。
 
-本地化查询让用户能根据临时拼凑的或者预先写好的SQL语句进行数据库查询，查询结果将被转换为用户需要的类型。
+​	本地化查询让用户能根据临时拼凑的或者预先写好的SQL语句进行数据库查询，查询结果将被转换为用户需要的类型。
 
-在EF-ORM中，NativeQuery也有SQL和JPQL两种语法。其中JPQL是JPA规范定义的查询语言。但JPQL因为模型差距较大，一直没有完全支持，目前提供的名称为JPQL的若干方法仅为向下兼容而保留，不推荐大家使用。
+​	在EF-ORM中，NativeQuery也有SQL和JPQL两种语法。其中JPQL是JPA规范定义的查询语言。但JPQL因为模型差距较大，一直没有完全支持，目前提供的名称为JPQL的若干方法仅为向下兼容而保留，不推荐大家使用。
 
-因此**本地化查询就是用****SQL****语句操作数据库的方法**。
+​	因此**本地化查询就是用SQL语句操作数据库的方法**。
 
- 
+​	您可能会问，如果是用SQL，那么我们直接用JDBC就好了，还用ORM框架做什么？
 
-您可能会问，如果是用SQL，那么我们直接用JDBC就好了，还用ORM框架做什么？
+​	事实上，NativeQuery中用的SQL，是被EF-ORM增强过的SQL，在语法特性上作了很多的补充。下面的表格中列出了所有在SQL上发生的增强，我们可以在下面的表格中查看到这些激动人心的功能。某种意义上讲，增强过的SQL是一种新的查询语言。我们也可以将其称为E-SQL(Enhanced SQL)。
 
-事实上，NativeQuery中用的SQL，是被EF-ORM增强过的SQL，在语法特性上作了很多的补充。下面的表格中列出了所有在SQL上发生的增强，我们可以在下面的表格中查看到这些激动人心的功能。某种意义上讲，增强过的SQL是一种新的查询语言。我们也可以将其称为E-SQL(Enhanced SQL)。
-
- 
-
-E-SQL语法作了哪些改进呢？ 
+E-SQL语法作了哪些**改进**呢？ 
 
 | 特性                | 说明                                       |
 | ----------------- | ---------------------------------------- |
@@ -3022,33 +4074,29 @@ E-SQL语法作了哪些改进呢？
 | 动态SQL功能：  自动省略    | 在SQL中，会自动扫描每个表达式的入参（占位符）是否被用到。如果某个参数未使用，那么该参数所在的表达式会被省略。例如  *select \* from t where id=:id and  name=:name*  中，如果name参数未传入，则and后面的整个条件表达式被略去。 |
 | 动态SQL功能：  SQL片段参数 | 在SQL占位符中可以声明一个占位符是SQL片段。这个片段可以在运行时根据传入的SQL参数自动应用。 |
 
-表 7-1 E-SQL的语法特性
+​									表 7-1 E-SQL的语法特性
 
-EF-ORM会对用户输入的SQL进行解析，改写，从而使得SQL语句的使用更加方便，EF-ORM将不同数据库DBMS下的SQL语句写法进行了兼容处理。 并且提供给上层统一的SQL写法。
+​	EF-ORM会对用户输入的SQL进行解析，改写，从而使得SQL语句的使用更加方便，EF-ORM将不同数据库DBMS下的SQL语句写法进行了兼容处理。 并且提供给上层统一的SQL写法。
 
- 
+​	除了在SQL语法上的增强以外，通过EF-ORM  NativeQuery操作和直接操作JDBC相比，还有以下优势：
 
-除了在SQL语法上的增强以外，通过EF-ORM  NativeQuery操作和直接操作JDBC相比，还有以下优势：
+| **特点**          | **NativeQuery**                          | **JDBC**                 |
+| --------------- | ---------------------------------------- | ------------------------ |
+| **对象返回**        | 转换为需要的对象。转换规则和Criteria API一致。            | ResultSet对象              |
+| **自定义返回对象转换映射** | 可以自定义ResultSet中字段返回的Mapping关系。           | --                       |
+| **性能调优**        | 可以指定fetch-size , max-result 等参数，进行性能调优   | JDBC提供各种性能调优的参数          |
+| **复用**          | 一个NativeQuery可携带不同的绑定变量参数值，反复多次使用。       | PreparedStatment对象可以反复使用 |
+| **一级缓存**        | 会刷新和维护一级缓存中的数据。  比如用API插入一个对象，一级缓存中即缓存了这个对象。  虽然用SQL语句去update这条记录。一级缓存中的该对象会被自动刷新。 | 无此功能                     |
+| **SQL自动选择**     | SQL改写功能不能解决一切跨库移植问题。用户可以对不兼容跨库的SQL写成多个版本，运行时自动选择。 | 无此功能                     |
+| **性能**          | SQL解析和改写需要花费0.3~0.6毫秒。其他操作基本和JDBC直接操作保持一致。  对象结果转换会额外花费一点时间，但采用了策略模式和ASM无反射框架，性能优于大多数同类框架。 | 原生方式，性能最佳                |
 
-| **特点**              | **NativeQuery**                          | **JDBC**                 |
-| ------------------- | ---------------------------------------- | ------------------------ |
-| **对象返回******        | 转换为需要的对象。转换规则和Criteria API一致。            | ResultSet对象              |
-| **自定义返回对象转换映射****** | 可以自定义ResultSet中字段返回的Mapping关系。           | --                       |
-| **性能调优******        | 可以指定fetch-size , max-result 等参数，进行性能调优   | JDBC提供各种性能调优的参数          |
-| **复用******          | 一个NativeQuery可携带不同的绑定变量参数值，反复多次使用。       | PreparedStatment对象可以反复使用 |
-| **一级缓存******        | 会刷新和维护一级缓存中的数据。  比如用API插入一个对象，一级缓存中即缓存了这个对象。  虽然用SQL语句去update这条记录。一级缓存中的该对象会被自动刷新。 | 无此功能                     |
-| **SQL****自动选择****** | SQL改写功能不能解决一切跨库移植问题。用户可以对不兼容跨库的SQL写成多个版本，运行时自动选择。 | 无此功能                     |
-| **性能******          | SQL解析和改写需要花费0.3~0.6毫秒。其他操作基本和JDBC直接操作保持一致。  对象结果转换会额外花费一点时间，但采用了策略模式和ASM无反射框架，性能优于大多数同类框架。 | 原生方式，性能最佳                |
+​					表 7-2 使用NativeQuery和直接使用JDBC的区别
 
-表 7-2 使用NativeQuery和直接使用JDBC的区别
-
- 
-
- 
-
- 
-
- 
+>*关于JPQL支持*
+>
+>​	*EF-ORM中，也可以用”JPQL“来构造NativeQuery，但并不推荐。因为EF并未实现JPQL的大部分功能。目前提供的JPQL功能其实只有将Java字段名替换为数据库列名的功能，离JPA规范的JPQL差距较大，而且由于设计理念等差异，要完整支持JPQL基本不可能。*
+>
+>​	*现有若干伪JPQL功能是早期遗留的产物，后来在对SQL的特性作了大量改进后，E-SQL成为EF-ORM主要的查询语言。JPQL方面暂无改进计划，因此不建议使用。*
 
  
 
@@ -3056,63 +4104,69 @@ EF-ORM会对用户输入的SQL进行解析，改写，从而使得SQL语句的�
 
 ### 7.2.1.   NamedQuery和NativeQuery
 
-NativeQuery的用法可以分为两类。一类是在java代码中直接传入E-SQL语句的；另外一类是事先将E-SQL编写在配置文件或者数据库中，运行时加载并解析，使用时按名称进行调用。这类SQL查询被称为NamedQuery。对应JPA规范当中的“命名查询”。
+​	NativeQuery的用法可以分为两类。一类是在java代码中直接传入E-SQL语句的；另外一类是事先将E-SQL编写在配置文件或者数据库中，运行时加载并解析，使用时按名称进行调用。这类SQL查询被称为NamedQuery。对应JPA规范当中的“命名查询”。
 
-命名查询也就是Named-Query，在某H框架和JPA中都有相关的功能定义。简单来说，命名查询就是将查询语句(SQL,HQL,JPQL等)事先编写好， 然后为其指定一个名称。在使用ORM框架时，取出事先解析好的查询，向其中填入绑定变量的参数，形成完整的查询。
+​	命名查询也就是Named-Query，在某H框架和JPA中都有相关的功能定义。简单来说，命名查询就是将查询语句(SQL,HQL,JPQL等)事先编写好， 然后为其指定一个名称。在使用ORM框架时，取出事先解析好的查询，向其中填入绑定变量的参数，形成完整的查询。
 
- 
+
 
 EF-ORM的命名查询和OpenJPA以及某H框架中的命名查询用法稍有些不同。
 
-l  命名查询默认定义在配置文件 named-queries.xml中。不支持使用Annotation等方法定义
+* 命名查询默认定义在配置文件 named-queries.xml中。不支持使用Annotation等方法定义
+* 命名查询也可以定义在数据库表中，数据库表的名称可由用户配置 
+* 命名查询可以支持 E-SQL和JPQL两种语法（后者特性未全部实现） 
+* 由于支持E-SQL，命名查询可以实现动态SQL语句的功能，可以模拟出与IBatis相似的用法。 
 
-l  命名查询也可以定义在数据库表中，数据库表的名称可由用户配置 
+​        为什么不使用JPA规范中的基于Annotation的方式来注册命名查询呢？因为考虑到ORM中一般只有跨表的复杂查询才会使用命名查询。而将一个多表的复杂查询注解在任何一个DAO上都是不合适的。分别注解在DAO上的SQL语句除了语法受限之外，还有以下缺点：
 
-l  命名查询可以支持 E-SQL和JPQL两种语法（后者特性未全部实现） 
-
-l  由于支持E-SQL，命名查询可以实现动态SQL语句的功能，可以模拟出与IBatis相似的用法。 
-
- 
-
-为什么不使用JPA规范中的基于Annotation的方式来注册命名查询呢？因为考虑到ORM中一般只有跨表的复杂查询才会使用命名查询。而将一个多表的复杂查询注解在任何一个DAO上都是不合适的。分别注解在DAO上的SQL语句除了语法受限之外，还有以下缺点：
-
-l  归属不明确，很难正确评判某个SQL语句应当属于某个DAO。而且不能被其他DAO使用？
-
-l  Java代码中写SQL涉及转义问题
-
-l  DAO太分散，不利于SQL语句的统一维护。
-
- 
+* 归属不明确，很难正确评判某个SQL语句应当属于某个DAO。而且不能被其他DAO使用？
+* Java代码中写SQL涉及转义问题
+* DAO太分散，不利于SQL语句的统一维护。
+* ​
 
 EF-ORM默认设计了两种方式来配置命名查询
 
-l  classpath下创建一个名为named-queries.xml的配置文件
+* classpath下创建一个名为named-queries.xml的配置文件
+* 存放在数据库中，表名可自定义，默认JEF_NAMED_QUERIES
 
-l  存放在数据库中，表名可自定义，默认JEF_NAMED_QUERIES
-
- 
-
-NativeQuery是在EF-ORM 1.05开始增加的功能。在1.6开始支持数据库配置，在1.6.7开始支持动态改写和SQL片段。
+​        NativeQuery是在EF-ORM 1.05开始增加的功能。在1.6开始支持数据库配置，在1.6.7开始支持动态改写和SQL片段。
 
 ### 7.2.2.   API和用法
 
 我们分别来看Named-Query和Native Query的使用
 
- 
-
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
 
-上面的例子中，两次查询使用的SQL语句是一样的，区别在于前者配置在named-queries.xml中，后者直接写在代码中。
+~~~java
+@Test
+public void testNativeQuery() {
+	// 方法1 NamedQuery
+	{
+		NativeQuery<ResultWrapper> query = db.createNamedQuery("unionQuery-1", ResultWrapper.class);
+		List<ResultWrapper> result = query.getResultList();
+		System.out.println(result);
+	}
+	// 方法2 直接传入SQL
+	{
+		String sql = "select * from((select upper(t1.person_name) AS name, T1.gender, '1' AS   		          		GRADE,"+ "T2.NAME AS SCHOOLNAME from T_PERSON T1 inner join SCHOOL T2 
+          			ON T1.CURRENT_SCHOOL_ID=T2.ID"+ ") union  (select t.NAME,t.GENDER,t.GRADE,
+   					'Unknown' AS SCHOOLNAME from STUDENT t  )) a";
+		NativeQuery<ResultWrapper> query = db.createNativeQuery(sql,	ResultWrapper.class);
+		List<ResultWrapper> result = query.getResultList();
+		System.out.println(result);
+	}
+}
+~~~
 
- 
+​	上面的例子中，两次查询使用的SQL语句是一样的，区别在于前者配置在named-queries.xml中，后者直接写在代码中。
 
-  
+>*实践建议：*
+>
+>​	*EF-ORM的SQL语句已经解决了动态化的问题（这点可在以后的例子中发现），在我看来，在代码中编写SQL语句带来的灵活性，远不如拼凑SQL带来的可读性和可维护性上的损失来得大。因此建议在使用时，尽可能多的使用命名查询，而少用拼凑SQL的查询。*
+>
+>​	*上面的方法一相比方法二还有一个性能上的优势。EF-ORM会对传入的SQL进行解析和重写，如果是命名查询，解析只进行一次，解析结果会缓存下来，而传入的SQL语句则必须每次解析和重写。*
 
-在上面的例子中，无论是createNamedQuery方法还是createNativeQuery方法，返回的对象都是名为NativeQuyery的对象。其行为和功能也完全一样。
-
- 
-
- 
+ 	在上面的例子中，无论是createNamedQuery方法还是createNativeQuery方法，返回的对象都是名为NativeQuyery的对象。其行为和功能也完全一样。
 
 下面是用于获得NativeQuery的方法API
 
@@ -3129,13 +4183,9 @@ orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
 
 上述方法都可以返回NativeQuery对象。
 
-   NativeQuery并不一定就是select语句。在NativeQuery中完全可以使用update delete insert等语句，甚至是create table等DDL语句。（当执行DDL时会造成事务被提交，需谨慎）。显然，在指定非Select操作时，传入一个返回结果类型是多此一举，可以指定NativeQuery返回的结果类型，也可以不指定。
+ 	NativeQuery并不一定就是select语句。在NativeQuery中完全可以使用update delete insert等语句，甚至是create table等DDL语句。（当执行DDL时会造成事务被提交，需谨慎）。显然，在指定非Select操作时，传入一个返回结果类型是多此一举，可以指定NativeQuery返回的结果类型，也可以不指定。
 
- 
-
-在得到了NativeQuery以后，我们有很多种用法去使用这个Query对象。这里先列举一下主要的方法。
-
- 
+​	在得到了NativeQuery以后，我们有很多种用法去使用这个Query对象。这里先列举一下主要的方法。
 
 | 方法                                       | 用途                                       |
 | ---------------------------------------- | ---------------------------------------- |
@@ -3171,25 +4221,41 @@ orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
 | **返回结果定义**                               |                                          |
 | NativeQuery.getResultTransformer()       | 得到ResultTransformer对象，可定义返回结果转换动作。       |
 
- 
+根据上述API，我们简单的使用如下——
 
-   根据上述API，我们简单的使用如下——
+~~~java
+@Test
+public void testQueryParams(){
+	String sql="select distinct(select grade from student s where s.name=person_name)                           grade,person_name,gender from t_person where id<:id";
+	NativeQuery<Map> query = db.createNativeQuery(sql,Map.class);
+	query.setParameter("id", 12);
+	//自动改写为count语句进行查询
+	System.out.println("预计查出"+query.getResultCount()+"条结果");
+	//查询多条结果
+	System.out.println(query.getResultList());
+		
+	//重新设置参数
+	System.out.println("=== 重新设置参数 ===");
+	query.setParameter("id", 2);
+	System.out.println("预计查出"+query.getResultCount()+"条结果");
+	System.out.println(query.getResultList());
+	//查出第一条结果
+	System.out.println(query.getSingleOnlyResult());
+}
+~~~
 
 注意观察输出的SQL语句，上面的案例中，演示了
 
-1、绑定变量参数用法
-
-2、Count语句在一些复杂情况下的转换逻辑
-
-3、通过重置参数，可以复用NativeQuery对象。
-
-4、仅返回单条结果的场景
+1. 绑定变量参数用法
+2. Count语句在一些复杂情况下的转换逻辑
+3. 通过重置参数，可以复用NativeQuery对象。
+4. 仅返回单条结果的场景
 
 ### 7.2.3.   命名查询的配置
 
-    上一节中，我们基本了解了NativeQuery对象的构造和使用。本节来介绍命名查询如何配置。
+​	上一节中，我们基本了解了NativeQuery对象的构造和使用。本节来介绍命名查询如何配置。
 
-前面说过，命名查询的配置方法有两种。我们先来看配置在文件中的场景。
+​	前面说过，命名查询的配置方法有两种。我们先来看配置在文件中的场景。
 
 #### 7.2.3.1. 配置在named-queries.xml中
 
@@ -3197,11 +4263,26 @@ orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
 
 named-queries.xml
 
-    上面就配置了两个命名查询，名称分别为“getUserById”以及”testIn”。
+~~~xml
+<queries>
+	<query name = "getUserById">
+	<![CDATA[
+		   select * from t_person where person_name=:name<string>
+	]]>
+	</query>
+	<query name = "testIn" type="sql" fetch-size="100" >
+	<![CDATA[
+		   select count(*) from Person_table where id in (:names<int>)
+	]]>
+	</query>
+</queries>
+~~~
 
-其中每个查询的SQL中，都有一个参数，参数在SQL中用绑定变量占位符表示。后面的参数使用in条件，使用时可以传入int数组。
+ 	上面就配置了两个命名查询，名称分别为“getUserById”以及”testIn”。
 
-     在query元素中，可以设置以下属性
+​	其中每个查询的SQL中，都有一个参数，参数在SQL中用绑定变量占位符表示。后面的参数使用in条件，使用时可以传入int数组。
+
+        在query元素中，可以设置以下属性
 
 | 属性名        | 作用                                   | 备注               |
 | ---------- | ------------------------------------ | ---------------- |
@@ -3211,17 +4292,19 @@ named-queries.xml
 | tag        | 当DbClient连接到多数据源时，可以指定该查询默认使用哪个数据源连接 | 可选               |
 | remark     | 备注信息，可不写                             | 可选               |
 
- 
-
-    最后，当classpath下有多个named-queries.xml时，所有配置均会生效。如果多个文件中配置的同名的查询，那么后面加载的会覆盖前面的。当覆盖现象发生时，日志中会输出警告。
+    	最后，当classpath下有多个named-queries.xml时，所有配置均会生效。如果多个文件中配置的同名的查询，那么后面加载的会覆盖前面的。当覆盖现象发生时，日志中会输出警告。
 
 #### 7.2.3.2. 配置在数据库中
 
-你可以将命名查询配置在指定的数据库表中。要启用此功能，需要在jef.properties配置 
+​	你可以将命名查询配置在指定的数据库表中。要启用此功能，需要在jef.properties配置 
 
-当EF-ORM初始化时，会自动检测这张表并加载数据，如果没有则会自动创建。表的结构是固定的(数据类型在不同的数据库上会自动转换为可支持的类型)
+~~~sql
+db.query.table.name=表名
+~~~
 
-命名查询数据表的结构是固定的，结构如下——
+​	当EF-ORM初始化时，会自动检测这张表并加载数据，如果没有则会自动创建。表的结构是固定的(数据类型在不同的数据库上会自动转换为可支持的类型)
+
+​	命名查询数据表的结构是固定的，结构如下——
 
 | **Column** | **Type**                            | **备注**                               |
 | ---------- | ----------------------------------- | ------------------------------------ |
@@ -3232,171 +4315,297 @@ named-queries.xml
 | FETCH_SIZE | number(6)  default 0                | 指定结果集每次获取批次大小                        |
 | REMARK     | varchar2(256)                       | 备注                                   |
 
-表7-3 命名查询的数据库表结构
+​						表7-3 命名查询的数据库表结构
 
-您可以同时使用文件配置和数据库配置命名查询。但如果出现同名的查询，数据库的配置会覆盖文件的配置。
+​	您可以同时使用文件配置和数据库配置命名查询。但如果出现同名的查询，数据库的配置会覆盖文件的配置。
 
 #### 7.2.3.3. 数据源绑定
 
-    由于EF-ORM是一种支持多数据源自动路由的ORM框架。因此在命名查询中，还可以在tag属性中指定偏好的数据源ID。这样，如果你在query://getUserByName这样的例子中请求数据时，即使不通过_dsname参数来指定数据源id，也可以到正确的数据库中查询数据。 
+​	由于EF-ORM是一种支持多数据源自动路由的ORM框架。因此在命名查询中，还可以在tag属性中指定偏好的数据源ID。这样，如果你在query://getUserByName这样的例子中请求数据时，即使不通过_dsname参数来指定数据源id，也可以到正确的数据库中查询数据。 
 
-   我们先配置两个命名查询，区别是一个指定了数据源，另一个未指定数据源。
+​	我们先配置两个命名查询，区别是一个指定了数据源，另一个未指定数据源。
 
 orm-tutorial\src\main\resources\named-queries.xml
 
- 
+~~~xml
+<query name="getUserById" tag="datasource2">
+<![CDATA[
+	   select * from t_person where person_name=:name<string>
+]]>
+</query>
+<query name="getUserById-not-bind-ds">
+<![CDATA[
+	   select * from t_person where person_name=:name<string>
+]]>
+</query>
+~~~
 
 然后编写代码如下——
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case2.java
 
-   从日志上可以观察到，第一次操作时，操作是在datasource2数据库上执行的，因此能正确查出。第二次操作时，操作在datasource1上执行，由于表不存在，因此抛出异常。
+~~~java
+@Test(expected=PersistenceException.class)
+public void testDataSourceBind() throws SQLException{
+	//Person对象所在的数据源为DataSource2		
+	//由于配置中指定默认数据源为datasource2，因此可以正常查出
+	List<Person> persons=db.createNamedQuery("getUserById",Person.class)
+               .setParameter("name", "张三").getResultList();
+	System.out.println(persons);
+	
+	//这个配置未指定绑定的数据源，因此会抛出异常
+	try{
+		List<Person> p2=db.createNamedQuery("getUserById-not-bind-ds",Person.class)
+                 .setParameter("name", "张三").getResultList();	
+	}catch(RuntimeException e){
+		e.printStackTrace();
+		throw e;
+	}
+}
+~~~
+
+​	从日志上可以观察到，第一次操作时，操作是在datasource2数据库上执行的，因此能正确查出。第二次操作时，操作在datasource1上执行，由于表不存在，因此抛出异常。
 
 #### 7.2.3.4. 动态更新命名查询配置
 
-   考虑到性能因素，NamedQuery在首次使用时从配置中加载SQL语句并解析，之后解析结果就缓存在内存中了。作为服务器运行来说，这一点没什么问题。但在Web应用开发中，用户如果修改了SQL语句，不得不重启服务才能调试。这就会给开发者造成一定困扰。为了解决配置刷新的问题，框架中增加了配置变更检测的功能。
+​	考虑到性能因素，NamedQuery在首次使用时从配置中加载SQL语句并解析，之后解析结果就缓存在内存中了。作为服务器运行来说，这一点没什么问题。但在Web应用开发中，用户如果修改了SQL语句，不得不重启服务才能调试。这就会给开发者造成一定困扰。为了解决配置刷新的问题，框架中增加了配置变更检测的功能。
 
-    在jef.properties中配置
+​	在jef.properties中配置
 
-开启更新检测功能后，每次获取命名查询都会检查配置文件是否修改，如果配置来自于数据库，也会加载数据库中的配置。在开发环境可以开启这个参数；考虑到性能，在生产环境建议关闭该参数。
+~~~properties
+db.named.query.update=true
+~~~
 
-当大量并发请求使用命名查询时，为了避免短时间重复检查更新，一旦检测过一次，10秒内不会再次检测。
+​	开启更新检测功能后，每次获取命名查询都会检查配置文件是否修改，如果配置来自于数据库，也会加载数据库中的配置。在开发环境可以开启这个参数；考虑到性能，在生产环境建议关闭该参数。
 
-一般情况下，我们无需配置该参数。因为该参数的默认值会保持和 db.debug 一致，一般来说开发时我们肯定会设置db.debug=true。而在对性能要求较高的生产环境，需要指定该参数为false。
+​	当大量并发请求使用命名查询时，为了避免短时间重复检查更新，一旦检测过一次，10秒内不会再次检测。
 
-命名查询自动更新的配置项可以在JMX的ORMConfigMBean中开启或关闭。JMX相关介绍请参阅13章。
+​	一般情况下，我们无需配置该参数。因为该参数的默认值会保持和 db.debug 一致，一般来说开发时我们肯定会设置db.debug=true。而在对性能要求较高的生产环境，需要指定该参数为false。
 
- 
+​	命名查询自动更新的配置项可以在JMX的ORMConfigMBean中开启或关闭。JMX相关介绍请参阅13章。
 
-除了自动检测更新机制外，还有手动刷新命名查询配置的功能。比如在生产环境，关闭自动检测配置更新功能后，可以手工进行更新检测。在DbClient中可以强制立刻检查命名查询的更新。
+​	除了自动检测更新机制外，还有手动刷新命名查询配置的功能。比如在生产环境，关闭自动检测配置更新功能后，可以手工进行更新检测。在DbClient中可以强制立刻检查命名查询的更新。
 
- 
+~~~
+DbClient.checkNamedQueryUpdate()
+~~~
 
-强制检测命名查询功能也可以在JMX的Bean中调用。DbClientInfoMBean中有checkNamedQueryUpdate()方法。
+​	强制检测命名查询功能也可以在JMX的Bean中调用。DbClientInfoMBean中有checkNamedQueryUpdate()方法。![7-7.2.3.4-1](images\7-7.2.3.4-1.png)
 
- 
 
- 
-
- 
-
-  
 
 ## 7.3. NativeQuery特性使用
 
- 
-
 ### 7.3.1.   Schema重定向
 
-Schema重定向多使用在Oracle数据库上。在Oracle上，数据库操作可以跨用户(Schema)访问。当跨Schema访问时，SQL语句中会带有用户名的前缀。（这样的应用虽然不多，但是在电信和金融系统中还是经常看到）。
+​	Schema重定向多使用在Oracle数据库上。在Oracle上，数据库操作可以跨用户(Schema)访问。当跨Schema访问时，SQL语句中会带有用户名的前缀。（这样的应用虽然不多，但是在电信和金融系统中还是经常看到）。
 
-  例如USERA用户下和USERB用户下都有一张名为TT的表。 我们可以在一个SQL语句中访问两个用户下的表
+​	例如USERA用户下和USERB用户下都有一张名为TT的表。 我们可以在一个SQL语句中访问两个用户下的表
 
-  当使用ORM进行此类映射时，一般用如下方式指定
+~~~sql
+select * from USERA.TT
+   union all
+select * from USERB.TT 
+~~~
 
-这样就带来一个问题，在某些场合，实际部署的数据库用户是未定的，在编程时开发人员无法确定今后系统将会以什么用户部署。如果将“USERA”硬编码到程序中，实际部署时数据库就只能建在USERA用户下，部署时缺乏灵活性。
+ 	当使用ORM进行此类映射时，一般用如下方式指定
 
-EF-ORM的Schema重定向功能对Query模型和SQL语句都有效。在开发时，用户根据设计中的虚拟Schema名编写代码，而在实际部署时，可以配置文件jef.properties指定虚拟schema对应到真实环境中的schema上。
+~~~java
+@Entity
+@Table(schema="USERA",name="TT")
+public class TT {
+	....
+}
+~~~
 
-例如，在jef.properties中配置
+​	这样就带来一个问题，在某些场合，实际部署的数据库用户是未定的，在编程时开发人员无法确定今后系统将会以什么用户部署。如果将“USERA”硬编码到程序中，实际部署时数据库就只能建在USERA用户下，部署时缺乏灵活性。
 
- 
+​	EF-ORM的Schema重定向功能对Query模型和SQL语句都有效。在开发时，用户根据设计中的虚拟Schema名编写代码，而在实际部署时，可以配置文件jef.properties指定虚拟schema对应到真实环境中的schema上。
+
+​	例如，在jef.properties中配置
+
+~~~properties
+schema.mapping=USERA:APP, USERB:APP
+~~~
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
 
-上例中的SQL语句本来是无法执行的，但是因为Schema重定向功能SQL语句在实际执行时，就变为 
+~~~java
+/* 
+ * SQL语句中的usera userb都是不存在的schema，通过jef.properties中的配置，被重定向到APP schema下
+ * @throws SQLException
+ */
+@Test
+public void testSchemaMapping() throws SQLException{
+	String sql="select * from usera.t_person union all select * from userb.t_person";
+	db.createNativeQuery(sql).getResultList();
+}
+~~~
 
-这样就能正常执行了。
+​	上例中的SQL语句本来是无法执行的，但是因为Schema重定向功能SQL语句在实际执行时，就变为 
 
- 
+~~~sql
+select * from app.t_person
+   union all
+select * from app.t_person 
+~~~
 
-使用schema重定向功能，可以解决开发和部署的 schema耦合问题，为测试、部署等带来更大的灵活性。
+​	这样就能正常执行了。
+
+​	使用schema重定向功能，可以解决开发和部署的 schema耦合问题，为测试、部署等带来更大的灵活性。
 
 一个特殊的配置方式是
 
-即不配置重定向后的schema，这个操作实际上会将原先制定的schema信息去除，相当于使用数据库连接的当前Schema。
+~~~properties
+schema.mapping=USERA:, USERB:
+~~~
 
- 
+​	即不配置重定向后的schema，这个操作实际上会将原先制定的schema信息去除，相当于使用数据库连接的当前Schema。
 
-最后，正如前文所述，重定向功能并不仅仅作用于本地化查询中，如果是在类的注解上配置了Schema，那么其映射会在所有Criteria API查询中也都会生效。
+​	最后，正如前文所述，重定向功能并不仅仅作用于本地化查询中，如果是在类的注解上配置了Schema，那么其映射会在所有Criteria API查询中也都会生效。
 
 ### 7.3.2.   数据库方言——语法格式整理
 
-    根据不同的数据库语法，EF-ORM会在执行SQL语句前根据本地方言对SQL进行修改，以适应当前数据库的需要。
+​	根据不同的数据库语法，EF-ORM会在执行SQL语句前根据本地方言对SQL进行修改，以适应当前数据库的需要。
 
-**例1**
+**例1**    
 
-在本例中||表示字符串相连，这在大部分数据库上执行都没有问题，但是如果在MySQL上执行就不行了，MySQL中||表示或关系，不表示字符串相加。因此，EF-ORM在MySQL上执行上述E-SQL语句时，实际在数据库上执行的语句变为
+~~~sql
+select t.id||t.name as u from t
+~~~
 
-这保证了SQL语句按大多数人的习惯在MYSQL上正常使用。
+​	在本例中||表示字符串相连，这在大部分数据库上执行都没有问题，但是如果在MySQL上执行就不行了，MySQL中||表示或关系，不表示字符串相加。因此，EF-ORM在MySQL上执行上述E-SQL语句时，实际在数据库上执行的语句变为
 
- 
+~~~sql
+select concat(t.id, t.name) as u from t //for MySQL
+~~~
+
+​	这保证了SQL语句按大多数人的习惯在MYSQL上正常使用。
 
 **例2**
 
-这句SQL语句在Oracle上是能正常运行的，但是在postgresql上就不行了。因为postgresql要求每个列的别名前都有as关键字。对于这种情况EF-ORM会自动为这样的SQL语句加上缺少的as关键字，从而保证SQL语句在Postgres上也能正常执行。 
+~~~sql
+select count(*) total from t
+~~~
 
- 
+​	这句SQL语句在Oracle上是能正常运行的，但是在postgresql上就不行了。因为postgresql要求每个列的别名前都有as关键字。对于这种情况EF-ORM会自动为这样的SQL语句加上缺少的as关键字，从而保证SQL语句在Postgres上也能正常执行。 
 
-上述修改过程是全自动的，无需人工干涉。EF-ORM会为所有传入本地化查询进行语法修正，以适应当前操作的数据库。
+~~~sql
+select count(*) as total from t    //for Postgresql
+~~~
 
-这些功能提高了SQL语句的兼容性，能对用户屏蔽数据库方言的差异，避免操作者因为使用了SQL而遇到数据库难以迁移的情况。 
+​	上述修改过程是全自动的，无需人工干涉。EF-ORM会为所有传入本地化查询进行语法修正，以适应当前操作的数据库。
 
-我们看一下orm-tutorial中的例子——
+​	这些功能提高了SQL语句的兼容性，能对用户屏蔽数据库方言的差异，避免操作者因为使用了SQL而遇到数据库难以迁移的情况。 
+
+​	我们看一下orm-tutorial中的例子——
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
 
-众所周知，Derby数据库中无法使用concat(a,b)的函数。所以经过方言转换会将其表示为
+~~~sql
+/**
+ * concat(person_name, gender) 在实际使用时会改写为 person_name||gender
+*/
+@Test
+public void testRewrite1() throws SQLException{
+	String sql="select concat(person_name, gender) from usera.t_person";
+	db.createNativeQuery(sql).getResultList();
+}
+~~~
 
-** **
+​	众所周知，Derby数据库中无法使用concat(a,b)的函数。所以经过方言转换会将其表示为
+
+~~~sql
+select person_name||gender from app.t_person 
+~~~
 
 **注意**
 
-并不是所有情况都能实现自动改写SQL，比如有些Oracle的使用者喜欢用+号来表示外连接，写成仅有Oracle能识别的外连接格式。
+​	并不是所有情况都能实现自动改写SQL，比如有些Oracle的使用者喜欢用+号来表示外连接，写成仅有Oracle能识别的外连接格式。
 
-目前EF-ORM还**不支持**将这种SQL语句改写为其他数据库支持的语法(今后可能会支持)。 因此如果要编写能跨数据库的SQL语句，还是要使用‘OUTER JOIN’这样标准的SQL语法。 
+~~~sql
+select t1.*,t2.* from t1,t2 where t1.id=t2.id(+)
+~~~
+
+​	目前EF-ORM还**不支持**将这种SQL语句改写为其他数据库支持的语法(今后可能会支持)。 因此如果要编写能跨数据库的SQL语句，还是要使用‘OUTER JOIN’这样标准的SQL语法。 
 
 ### 7.3.3.   数据库方言——函数转换
 
 #### 7.3.3.1. 示例
 
-在EF-ORM对SQL的解析和改写过程中，还能处理SQL语句当中的数据库函数问题。EF-ORM在为每个数据库建立的方言当中，都指定了常用函数的支持方式。在解析时，EF-ORM能够自动识别SQL语句中的函数，并将其转换为在当前数据库上能够使用的函数。
-
- 
+​	在EF-ORM对SQL的解析和改写过程中，还能处理SQL语句当中的数据库函数问题。EF-ORM在为每个数据库建立的方言当中，都指定了常用函数的支持方式。在解析时，EF-ORM能够自动识别SQL语句中的函数，并将其转换为在当前数据库上能够使用的函数。
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
 
-我们观察一下在Derby数据库时输出的实际SQL语句
+~~~sql
+@Test
+public void testRewrite2() throws SQLException{
+	Stringsql="selectreplace(person_name,'张','王')person_name,
+				decode(nvl(gender,'M'),'M','男','女') gender from t_person";
+	System.out.println(db.createNativeQuery(sql).getResultList());
+}
+~~~
 
-解说一下，上面作了处理的函数包括——
+​	我们观察一下在Derby数据库时输出的实际SQL语句
 
-nvl函数被转换为coalesce函数
+~~~sql
+select replace(person_name, '张', '王') AS person_name,
+       CASE
+         WHEN coalesce(gender, 'M') = 'M' 
+         THEN '男'
+         ELSE '女'
+       END AS gender
+from t_person
+~~~
 
-Decode函数被转换为 case ... When ... Then ... Else...语句。
+​	解说一下，上面作了处理的函数包括——
 
-Replace函数也是很特殊的——Derby本没有Replace函数，这里的replace函数其实是一个用户自定义的java函数。也是由EF-ORM自动注入的自定义函数。
+​	nvl函数被转换为coalesce函数
 
- 
+​	Decode函数被转换为 case ... When ... Then ... Else...语句。
+
+​	Replace函数也是很特殊的——Derby本没有Replace函数，这里的replace函数其实是一个用户自定义的java函数。也是由EF-ORM自动注入的自定义函数。
 
 再看一个例子
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
 
-上例涉及日期时间的计算，最终结果是一个日期天数。执行上面的代码，可以看到SQL语句变为
+~~~java
+@Test
+public void testRewrite3() throws SQLException{
+	//获得：当前日期减去1个月，和学生生日相差的天数。
+	String sql="select datediff(add_months(sysdate, -1), DATE_OF_BIRTH),DATE_OF_BIRTH 
+				from student";
+	System.out.println(db.createNativeQuery(sql).getResultList());
+		
+	//获得：在当前日期上加上1年
+	sql="select addDate(sysdate, INTERVAL 1 YEAR)  from student";
+	System.out.println(db.createNativeQuery(sql).getResultList());
+}
+~~~
 
-其中——
+​	上例涉及日期时间的计算，最终结果是一个日期天数。执行上面的代码，可以看到SQL语句变为
 
-datediff函数被转换为JDBC函数 timestampdiff
+~~~sql
+select {fn timestampdiff(SQL_TSI_DAY, DATE_OF_BIRTH, {fn timestampadd(SQL_TSI_MONTH, -1, 	current_timestamp) }) }, DATE_OF_BIRTH
+from student
 
-add_months和adddate函数被转换为JDBC函数timestampadd
+select {fn timestampadd(SQL_TSI_YEAR, 1, current_timestamp) } from student
+~~~
 
-Sysdate函数被转换为current_timestamp。
+​	其中——
 
-通过上面的转换过程，EF-ORM尽最大努力的保证查询的跨数据库兼容性。
+​	datediff函数被转换为JDBC函数 timestampdiff
+
+​	add_months和adddate函数被转换为JDBC函数timestampadd
+
+​	Sysdate函数被转换为current_timestamp。
+
+​	通过上面的转换过程，EF-ORM尽最大努力的保证查询的跨数据库兼容性。
 
 #### 7.3.3.2. 函数支持
 
-EF-ORM对函数支持的原则是，尽可能将常用函数提取出来，并保证其能在任何数据库上使用。
+​	EF-ORM对函数支持的原则是，尽可能将常用函数提取出来，并保证其能在任何数据库上使用。
 
 目前整理定义的常用函数被定义在两个枚举类中，其用法含义如下表所示
 
@@ -3481,71 +4690,110 @@ jef.database.query.Scientific
 | tan     | 正切函数                              |
 | tanh    | 双曲正切函数                            |
 
- 
+ 	常用函数中，某些函数并非来自于任何数据库的SQL函数中，而是EF-ORM定义的，比如str函数。
 
-常用函数中，某些函数并非来自于任何数据库的SQL函数中，而是EF-ORM定义的，比如str函数。
-
- 
-
-    除了上述被提取的常用函数外，数据库原生的各种函数和用户自定义的函数仍然能够被使用。但是EF-ORM无法保证包含这些函数的SQL语句被移植到别的RDBMS后还能继续使用。
+ 	除了上述被提取的常用函数外，数据库原生的各种函数和用户自定义的函数仍然能够被使用。但是EF-ORM无法保证包含这些函数的SQL语句被移植到别的RDBMS后还能继续使用。
 
 #### 7.3.3.3. 方言扩展
 
-函数的支持和改写规则定义是通过各个数据库方言来定义的。因此，要支持更多的函数，以及现有的一些不兼容的场景，可以通过扩展方言来实现。
+​	函数的支持和改写规则定义是通过各个数据库方言来定义的。因此，要支持更多的函数，以及现有的一些不兼容的场景，可以通过扩展方言来实现。
 
-方言扩展的方法是配置自定义的方言类。在jef.properties中，我们可以指定自定义方言配置文件，来覆盖EF-ORM内置的方言。
+​	方言扩展的方法是配置自定义的方言类。在jef.properties中，我们可以指定自定义方言配置文件，来覆盖EF-ORM内置的方言。
 
 jef.properties
 
-上面定义了自定义方言映射文件的名称是my_dialacts.properties，然后在my_dialacts.properties中配置自定义的方言映射。
+~~~properties
+#the custom dialect mapping file 
+db.dialect.config=my_dialects.properties
+~~~
 
-在见示例工程目录：orm-tutorial\src\main\resources\my_dialects.properties
+​	上面定义了自定义方言映射文件的名称是my_dialacts.properties，然后在my_dialacts.properties中配置自定义的方言映射。
 
-文件中，前面是要定义的数据库类型，后面是方言类。
+​	在见示例工程目录：orm-tutorial\src\main\resources\my_dialects.properties
 
-我们编写的自定义方言类如下。
+~~~properties
+derby=org.easyframe.tutorial.lessonc.DerbyExtendDialect
+~~~
+
+​	文件中，前面是要定义的数据库类型，后面是方言类。
+
+​	我们编写的自定义方言类如下。
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\dialect\DerbyExtendDialect.java
 
- 
+~~~java
+import jef.database.dialect.DerbyDialect;
 
-自定义方言可以控制数据库各种本地化行为，包括分页实现方式、数据类型等。这些实现可以参考EF-ORM内置的方言代码。
+public class DerbyExtendDialect extends DerbyDialect{
+	public DerbyExtendDialect() {
+		super();
+		//编写自己的方言逻辑
+		//....
+	}
 
- 
+   	//覆盖父类方法
+}
+~~~
 
-**示例1****：让Derby****支持反三角函数TAN2**
+​	自定义方言可以控制数据库各种本地化行为，包括分页实现方式、数据类型等。这些实现可以参考EF-ORM内置的方言代码。
 
-DERBY数据库支持反三角函数TAN2函数。但是因为方言中没有注册这个函数，因此我们在E-SQL中是无法使用的。
+**示例1：让Derby支持反三角函数TAN2**
 
- 
+​	DERBY数据库支持反三角函数TAN2函数。但是因为方言中没有注册这个函数，因此我们在E-SQL中是无法使用的。
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\CaseDialectExtend.java
 
-上面的代码会抛出异常信息
+~~~java
+@Test
+public void testExtendDialact() throws SQLException{
+	String sql="select atan2(12, 1) from t_person";
+	System.out.println(db.createNativeQuery(sql).getResultList());
+	……
+}
+~~~
 
-这个信息其实是不对的，Derby数据库支持该函数，而方言中遗漏了这个函数。现在我们可以在方言中补上注册
+​	上面的代码会抛出异常信息
+
+​	这个信息其实是不对的，Derby数据库支持该函数，而方言中遗漏了这个函数。现在我们可以在方言中补上注册
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lessonc\DerbyExtendDialect.java
 
+~~~java
+public DerbyExtendDialect() {
+	super();
+	registerNative(new StandardSQLFunction("atan2"));
+}
+~~~
+
 然后再运行上面的案例，可以发现案例能够正确运行。
 
- 
+**示例2：让Derby支持ifnull函数**
 
-**示例2****：让Derby****支持ifnull****函数**
+​	MySQL中有一个ifnull函数。返回参数中第一个非空值。
 
-MySQL中有一个ifnull函数。返回参数中第一个非空值。
+​	如果我们要在Derby上支持带有这个函数的SQL语句，要怎么写呢？我们可以在自定义方言的构造函数中，注册这样一个函数。
 
-如果我们要在Derby上支持带有这个函数的SQL语句，要怎么写呢？我们可以在自定义方言的构造函数中，注册这样一个函数。
+~~~java
+registerCompatible(null, new TemplateFunction("ifnull", "(CASE WHEN %1$s is null THEN %2$s ELSE 				%1$s END)"),"ifnull");
+~~~
 
-这个函数的作用是在实际运行时，用一组CASE WHEN... THEN... ELSE... 语句来代替原先的ifnull函数。
+​	这个函数的作用是在实际运行时，用一组CASE WHEN... THEN... ELSE... 语句来代替原先的ifnull函数。
 
 我们试一下
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\ DerbyExtendDialect.java
 
-可以发现，在注册ifnull函数之前，上面的SQL语句是无法运行的，而注册了函数之后，SQL语句就可以运行了。
+~~~java
+public void testExtendDialact() throws SQLException {
+	……
+	sql = "select ifnull(gender, 'F') from t_person";
+	System.out.println(db.createNativeQuery(sql).getResultList());
+}
+~~~
 
-EF-ORM中注册的函数有三种方式
+​	可以发现，在注册ifnull函数之前，上面的SQL语句是无法运行的，而注册了函数之后，SQL语句就可以运行了。
+
+​	EF-ORM中注册的函数有三种方式
 
 | 方法                   | 作用                                       |
 | -------------------- | ---------------------------------------- |
@@ -3557,31 +4805,32 @@ EF-ORM中注册的函数有三种方式
 
 E-SQL中表示参数变量有两种方式 : 
 
-l  :param-name　(如:id :name，用名称表示参数) 
-
-l  ?param-index　 (如 ?1 ?2，用序号表示参数)。 
-
- 
+* :param-name　(如:id :name，用名称表示参数) 
+* ?param-index　 (如 ?1 ?2，用序号表示参数)。 
 
 上述绑定变量占位符是和JPA规范完全一致的。
 
- 
-
 E-SQL中，绑定变量的参数类型可以声明也可以不声明。比如上例的
+
+~~~sql
+select count(*) from Person_table where id in (:ids<int>)
+~~~
 
 也可以写作
 
-但是如果不声明类型，那么如果传入的参数为List<String>，那么数据库是否能正常执行这个SQL语句取决于JDBC驱动能否支持。（因为数据库里的id字段是number类型而传入了string）。
+~~~sql
+select count(*) from Person_table where id in (:ids)
+~~~
 
-指定参数类型是一个好习惯，尤其是当参数来自于Web页面时，这个特性尤其实用。
+​	但是如果不声明类型，那么如果传入的参数为List<String>，那么数据库是否能正常执行这个SQL语句取决于JDBC驱动能否支持。（因为数据库里的id字段是number类型而传入了string）。
 
-很多时候我们从Web页面或者配置中得到的参数都是string类型的，而数据库操作的类型可能是int,date,boolean等类型。此时我们可以在Native Query语句中指定参数类型，使其可以自动转换。
+​	指定参数类型是一个好习惯，尤其是当参数来自于Web页面时，这个特性尤其实用。
 
-参数的类型有：date,timestamp,int,string,long,short,float,double,boolean。
+​	很多时候我们从Web页面或者配置中得到的参数都是string类型的，而数据库操作的类型可能是int,date,boolean等类型。此时我们可以在Native Query语句中指定参数类型，使其可以自动转换。
 
-参数可以为数组，如上例，可以用数组表示in条件参数中的列表。
+​	参数的类型有：date,timestamp,int,string,long,short,float,double,boolean。
 
- 
+​	参数可以为数组，如上例，可以用数组表示in条件参数中的列表。
 
 目前我们支持的参数类型包括(类型不区分大小写)：
 
@@ -3601,69 +4850,173 @@ E-SQL中，绑定变量的参数类型可以声明也可以不声明。比如上
 | $STRING   | 参数将被转换为string,并且前面加上%，一般用于like %xxx 的场合  |
 | SQL       | SQL片段。参数将直接作为SQL语句的一部分，而不是作为SQL语句的绑定变量处理（见后文例子） |
 
- 
-
-上面的STRING$、$STRING$、$STRING三种参数转换，其效果是将$符号替换为%，主要用于从WEB页面传输模糊匹配的查询条件到后台。使用该数据类型后，%号的添加交由框架自动处理，业务代码可以更为清晰简洁。看下面的例子
+​	上面的STRING$、$STRING$、$STRING三种参数转换，其效果是将$符号替换为%，主要用于从WEB页面传输模糊匹配的查询条件到后台。使用该数据类型后，%号的添加交由框架自动处理，业务代码可以更为清晰简洁。看下面的例子
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
 
- 
+~~~java
+/**
+* 绑定变量中使用Like条件
+*/
+@Test
+public void testLike(){
+	String sql ="select * from t_person where person_name like :name<$string$>";
+	System.out.println(db.createNativeQuery(sql).setParameter("name","张").getResultList());
+}
+~~~
 
 SQL类型是将参数作为SQL片段处理，该功能使用参见7.3.6节。
 
 ### 7.3.5.   动态SQL——表达式省略
 
-  EF-ORM可以根据未传入的参数，动态的省略某些SQL片段。这个特性往往用于某些参数不传场合下的动态条件，避免写大量的SQL。有点类似于IBatis的动态SQL功能。
+​	EF-ORM可以根据未传入的参数，动态的省略某些SQL片段。这个特性往往用于某些参数不传场合下的动态条件，避免写大量的SQL。有点类似于IBatis的动态SQL功能。
 
 我们先来看一个例子
 
+~~~java
+public void testDynamicSQL(){
+	//SQL语句中写了四个查询条件
+	String sql="select * from t_person where id=:id " +
+			"and person_name like :person_name<$string$> " +
+			"and currentSchoolId=:schoolId " +
+			"and gender=:gender";
+	NativeQuery<Person> query=db.createNativeQuery(sql,Person.class);
+	{
+		System.out.println("== 按ID查询 ==");
+		query.setParameter("id", 1);
+		Person p=query.getSingleResult();  //只传入ID时，其他三个条件消失
+		System.out.println(p.getId());
+		System.out.println(p);	
+	}
+	{
+		System.out.println("== 由于参数'ID'并未清除，所以变为 ID + NAME查询 ==");
+		query.setParameter("person_name", "张"); //传入ID和NAME时，其他两个条件消失
+		System.out.println(query.getResultList());
+	}
+	{
+		System.out.println("== 参数清除后，只传入NAME，按NAME查询 ==");
+		query.clearParameters();
+		query.setParameter("person_name", "张"); //只传入NAME时，其他三个条件消失
+		System.out.println(query.getResultList());
+	}
+	{
+		System.out.println("== 按NAME+GENDER查询 ==");
+		query.setParameter("gender", "F");  //传入GENDER和NAME时，其他两个条件消失
+		System.out.println(query.getResultList());
+	}
+	{
+		query.clearParameters();    //一个条件都不传入时，整个where子句全部消失
+		System.out.println(query.getResultList());
+	}
+}
+~~~
+
 上面列举了五种场合，每种场合都没有完整的传递四个WHERE条件。
 
-上述实现是基于SQL抽象词法树（AST）的。表达式省略功能的定义是，如果一个绑定变量参数条件（如 = > < in like等）一端无效，那么整个条件都无效。如果一个二元表达式（如and or等）的一端无效，那么就退化成剩余一端的表达式。基于这种规则，NativeQuery能够将未设值的条件从查询语句中去除。来满足动态SQL的常见需求。
+​	上述实现是基于SQL抽象词法树（AST）的。表达式省略功能的定义是，如果一个绑定变量参数条件（如 = > < in like等）一端无效，那么整个条件都无效。如果一个二元表达式（如and or等）的一端无效，那么就退化成剩余一端的表达式。基于这种规则，NativeQuery能够将未设值的条件从查询语句中去除。来满足动态SQL的常见需求。
 
- 
+>  **使用 绑定变量 + 动态SQL 开发Web应用的列表视图**
+>
+>
+>​       *这种常见需求一般发生在按条件查询中，比较典型的一个例子是用户Web界面上的搜索工具栏，当用户输入条件时，按条件搜索。当用户未输入条件时，该字段不作为搜索条件。使用动态SQL功能后，一个固定的SQL**语句就能满足整个视图的所有查询场景，极大的简化了视图查询的业务操作。*
+>​       *在一些传统应用中，开发者不得不使用许多IF分支去拼装SQL/HQL语句。为此产生了大量的重复编码。除此之外，还有一个丑陋的 1=1” 条件（写过这类代码的人应该知道我在说什么。）这种SQL除了消耗额外的数据库解析时间外，也令数据库优化变得更为困难。*
+>​       *配合上一节讲到的绑定变量类型自动转换功能，使用EF-ORM在开发此类Web应用时，只要一个SQL语句加上极少的代码，就能完成所需的业务逻辑。如果在Web控制层(Action)中进行少量封装后，基本可以做到后台逻辑开发零编码。*
+>
 
- 
-
- 
-
-    最后，还要澄清一点——什么叫“不传入参数”。实时上，不传入参数表示自从NativeQuery构造或上次清空参数之后，都没有调用过setParameter()方法来设置参数的值。将参数设置为””或者null并不表示不设置参数的值。下面的例子说明了这一点。
-
-orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
-
- 
-
-目前动态表达式省略可以用于两种场景，一是where条件，二是update语句中的set部分（见下面例子）。其他场合，如Insertinto语句中的列等不支持这种用法。
+ 	最后，还要澄清一点——什么叫“不传入参数”。实时上，不传入参数表示自从NativeQuery构造或上次清空参数之后，都没有调用过setParameter()方法来设置参数的值。将参数设置为””或者null并不表示不设置参数的值。下面的例子说明了这一点。
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
 
- 
+~~~java
+@Test
+public void testDynamicSQL3(){
+	String sql="select * from t_person where id not in (:ids)";
+	NativeQuery<Person>  query=db.createNativeQuery(sql,Person.class);
+	//将参数值设置为null，并不能起到清空参数的作用
+	query.setParameter("ids", null); 
+	System.out.println(query.getResultList());
+}
+~~~
+
+​	目前动态表达式省略可以用于两种场景，一是where条件，二是update语句中的set部分（见下面例子）。其他场合，如Insertinto语句中的列等不支持这种用法。
+
+orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
+
+~~~java
+/**
+ * 动态表达式省略——不仅仅是where条件可以省略，update中的赋值表达式也可以省略
+ */
+@Test
+public void testDynamicSQL4(){
+	String sql="update t_person set person_name=:new_name,  current_school_id=:
+	            new_schoold_id,gender=:new_gender where id=:id";
+	NativeQuery<Person>  query=db.createNativeQuery(sql,Person.class);
+	query.setParameter("new_name", "孟德");
+	query.setParameter("id", 1);
+	int count=query.executeUpdate();
+}
+~~~
 
 ### 7.3.6.   动态SQL片段
 
-    有一种特别的NativeQuery参数类型，<SQL>表示一个SQL片段。严格来说，这其实不是一种绑定变量的实现。凡是标记为<SQL>类型的变量，都是被直接加入到SQL语句中的。
+​	有一种特别的NativeQuery参数类型，<SQL>表示一个SQL片段。严格来说，这其实不是一种绑定变量的实现。凡是标记为<SQL>类型的变量，都是被直接加入到SQL语句中的。
 
 比如：
 
-   orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
+ orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
 
-    上面的例子中 :columns :orderby中被设置的值，都是SQL语句的一部分，通过这些动态的片段来重写SQL。第一次的查询，在Where条件没有任何输入的情况下where子句被省略。最后实际执行的SQL语句是这样——
+~~~java
+@Test
+public void testDynamicSqlExpression(){
+	String sql="select :columns<sql> from t_person where " +
+			"id in (:ids<int>) and person_name like :person_name<$string$> " +
+			"order by :orders<sql>";
+	
+	NativeQuery<Person> query=db.createNativeQuery(sql,Person.class);
+	//查询哪些列、按什么列排序，都是在查询创建以后动态指定的。
+	query.setParameter("columns", "id, person_name, gender");
+	query.setParameter("orders", "gender asc");
+	
+	System.out.println(query.getResultList());
+	
+	//动态SQL片段和动态表达式省略功能混合使用
+	query.setParameter("ids", new int[]{1,2,3});
+	query.setParameter("columns", "person_name, id + 1000 as id");
+	System.out.println(query.getResultList());
+}
+~~~
+
+​	上面的例子中 :columns :orderby中被设置的值，都是SQL语句的一部分，通过这些动态的片段来重写SQL。第一次的查询，在Where条件没有任何输入的情况下where子句被省略。最后实际执行的SQL语句是这样——
+
+~~~sql
+select id, person_name, gender from t_person order by gender asc
+~~~
 
 第二次查询，select表达式发生了一些变化，最后执行的SQL语句是这样——
 
- 
+~~~sql
+select person_name, id + 1000 as id from t_person where id IN (?,?,?) order by gender asc
+~~~
 
-    前面说了，在查询语句中也可以省略参数类型，比如上例，我们写作
+​	前面说了，在查询语句中也可以省略参数类型，比如上例，我们写作
 
-   此时，我们还能将orderBy当做是SQL片段，而不是运行时的绑定变量参数处理吗？
+~~~sql
+select :columns from t_person order by :orders
+~~~
+
+​	此时，我们还能将orderBy当做是SQL片段，而不是运行时的绑定变量参数处理吗？
 
 答案是可能的，只要我们传入的参数是SqlExpression对象，那么就会被当做是SQL片段，直接添加到SQL语句中。
 
+~~~java
+query.setParameter("orders", new SqlExpression("id desc"));
+~~~
+
 ### 7.3.7.   分页查询
 
-NativeQuery对象支持分页查询。除了之前7.2.2中我们了解到的getResultCount()方法和setRange()方法外，还有已经封装好的方法。在Session对象中，我们可以从NativeQuery对象得到PagingIterator对象。
+​	NativeQuery对象支持分页查询。除了之前7.2.2中我们了解到的getResultCount()方法和setRange()方法外，还有已经封装好的方法。在Session对象中，我们可以从NativeQuery对象得到PagingIterator对象。
 
-为了简化操作Session中还提供两个方法，直接将传入的SQL语句包装为NativeQuery，再从NativeQuery得到PagingIterator对象。
+​	为了简化操作Session中还提供两个方法，直接将传入的SQL语句包装为NativeQuery，再从NativeQuery得到PagingIterator对象。
 
 | 方法                                       | 返回值               | 用途                                       |
 | ---------------------------------------- | ----------------- | ---------------------------------------- |
@@ -3671,115 +5024,175 @@ NativeQuery对象支持分页查询。除了之前7.2.2中我们了解到的getR
 | Session.pageSelect(String,  Class<T>, int) | PagingIterator<T> | 将传入的SQL语句包装为NativeQuery，再从NativeQuery得到PagingIterator对象。 |
 | Session.pageSelect(String,  ITableMetadata, int) | PagingIterator<T> | 将传入的SQL语句包装为NativeQuery，再从NativeQuery得到PagingIterator对象。 |
 
- 
-
 上述API的实际用法如下
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
 
- 
+~~~java
+@Test
+public void testNativeQueryPage() throws SQLException{
+	//SQL语句中写了四个查询条件
+	String sql="select * from t_person where id=:id " +
+			"and person_name like :person_name<$string$> " +
+			"and currentSchoolId=:schoolId " +
+			"and gender=:gender";
+	NativeQuery<Person> query=db.createNativeQuery(sql,Person.class);
+	query.setParameter("gender", 'F');
+	
+	//每页5条，跳过最前面的2条记录
+	Page<Person> page=db.pageSelect(query, 5).setOffset(2).getPageData();
+	System.out.println("总共:"+page.getTotalCount()+" "+page.getList());
+}
+~~~
 
-PagingIteraor对象的用法在前面已经介绍过了。这个对象为所有不同的查询方式提供了统一的分页查询接口。
+​	PagingIteraor对象的用法在前面已经介绍过了。这个对象为所有不同的查询方式提供了统一的分页查询接口。
 
-NativeQuery分页应用的要点和前文一样——开发者无需关心COUNT语句和分页的写法，将这部分工作交给框架自行完成。
+​	NativeQuery分页应用的要点和前文一样——开发者无需关心COUNT语句和分页的写法，将这部分工作交给框架自行完成。
 
 ### 7.3.8.   为不同RDBMS分别编写SQL
 
-   为了让SQL语句能被各种数据库识别，EF-ORM会在SQL语句和数据库函数层面进行解析和重写，但这不可能解决一切问题。在命名查询中，还允许开发者为不同的RDBMS编写专门的SQL语句。在运行时根据当前数据库动态选择合适的SQL语句。
+​	为了让SQL语句能被各种数据库识别，EF-ORM会在SQL语句和数据库函数层面进行解析和重写，但这不可能解决一切问题。在命名查询中，还允许开发者为不同的RDBMS编写专门的SQL语句。在运行时根据当前数据库动态选择合适的SQL语句。
 
 一个实际的例子是这样——
 
-在上例中，名为”*test-tree*”的命名查询有了两句SQL，一句是Oracle专用的，一句是其他数据库通用的。
+~~~
+<query name = "test-tree#oracle" type="sql">
+	<![CDATA[
+		select * from t_person t 
+		START WITH t.id IN (:value)
+		CONNECT BY PRIOR t.id = t.parent_id
+		]]>
+</query>
+<query name = "test-tree" type="sql">
+	<![CDATA[
+		select * from t_person
+	]]>
+</query>
+~~~
+
+​	在上例中，名为”*test-tree*”的命名查询有了两句SQL，一句是Oracle专用的，一句是其他数据库通用的。
 
 一般来说，我们配置命名查询的名称是这样的，
 
-              在所有RDBMS上使用的语句
+~~~
+<query name = "test-tree" >
+~~~
 
-    但我们可以为查询名后面加上一个修饰——
+​		在所有RDBMS上使用的语句
 
- 
+但我们可以为查询名后面加上一个修饰——
 
-                   优先在Oracle上使用的语句
+~~~
+<query name = "test-tree"#oracle >
+~~~
 
-这个查询的名称依然是叫“test-tree”，但这个配置只会在特定的数据库(Oracle)上生效。
+                  优先在Oracle上使用的语句
 
-在运行时，如果当前数据库是oracle，那么会使用专用的SQL语句，如果当前数据库是其他的，那么会使用通用的SQL语句。由于编码时不确定会使用哪个SQL语句，所以在设置参数前可以用containsParam检查一下是否需要该参数。
+​	这个查询的名称依然是叫“test-tree”，但这个配置只会在特定的数据库(Oracle)上生效。
 
-一般情况下，我们的查询名称中不用带RDBMS类型。这意味着该SQL语句可以在所有数据库上生效。
+~~~java
+@Test
+public void testNativeQueryPage2() throws SQLException{
+    //查询名还是叫test-tree。#后面的是修饰，不是查询名称的一部分
+	NativeQuery<Person> query=db.createNamedQuery("test-tree");
+	if(query.containsParam("value")){ //检查SQL是否需要该参数
+		query.setParameter("value", 100);
+	}
+	System.out.println(query.getResultList());
+}
+~~~
 
-    当RDBMS下SQL写法差别较大时，开发者可以使用这种用法，针对性的为不同的数据库编写SQL语句。
+​	在运行时，如果当前数据库是oracle，那么会使用专用的SQL语句，如果当前数据库是其他的，那么会使用通用的SQL语句。由于编码时不确定会使用哪个SQL语句，所以在设置参数前可以用containsParam检查一下是否需要该参数。
+
+​	一般情况下，我们的查询名称中不用带RDBMS类型。这意味着该SQL语句可以在所有数据库上生效。
+
+       当RDBMS下SQL写法差别较大时，开发者可以使用这种用法，针对性的为不同的数据库编写SQL语句。
 
 ### 7.3.9.   对Oracle Hint的支持
 
-正常情况下，解析并重写后的SQL语句中的注释都会被除去。但是在Oracle数据库上，我们可能会用Oracle Hint的方式来提示优化器使用特定的执行计划，或者并行查询等。一个Oracle Hint的语法可能如下所述
+​	正常情况下，解析并重写后的SQL语句中的注释都会被除去。但是在Oracle数据库上，我们可能会用Oracle Hint的方式来提示优化器使用特定的执行计划，或者并行查询等。一个Oracle Hint的语法可能如下所述
 
- 
+~~~sql
+select /* + all_rows*/ * from dave;
+~~~
 
-基于抽象词法树的解析器对注释默认是忽略的，但为了支持Oracle Hint的用法，EF-ORM作了特别的处理，在特殊处理后，只有紧跟着SELECT  UPDATE  DELETE INSERT四个关键字的SQL注释可以被保留下来。一般情况下，Oracle Hint也就在这个位置上。
-
- 
+​	基于抽象词法树的解析器对注释默认是忽略的，但为了支持Oracle Hint的用法，EF-ORM作了特别的处理，在特殊处理后，只有紧跟着SELECT  UPDATE  DELETE INSERT四个关键字的SQL注释可以被保留下来。一般情况下，Oracle Hint也就在这个位置上。
 
 ### 7.3.10.   对Limit m,n / Limit n Offset n的支持
 
-    在PostgresSQL和MySQL中，都支持这种限定结果集范围的写法。这也是最简单的数据库分页实现方式。
+    	在PostgresSQL和MySQL中，都支持这种限定结果集范围的写法。这也是最简单的数据库分页实现方式。
 
-    我们首先来回顾一下SQL中Limit Offset的写法和几种变体：
+   	 我们首先来回顾一下SQL中Limit Offset的写法和几种变体：
 
-1、LIMIT nOFFSET m    跳过前m条记录，取n条记录。
+1. LIMIT nOFFSET m    跳过前m条记录，取n条记录。
 
-2、LIMITm,n             跳过前m条记录，取n条记录。(注意这种写法下 n,m的顺序是相反的)
+2. LIMITm,n             跳过前m条记录，取n条记录。(注意这种写法下 n,m的顺序是相反的)
 
-3、LIMIT ALLOFFSET m  跳过前m条记录，取所有条记录。
+3. LIMIT ALLOFFSET m  跳过前m条记录，取所有条记录。
 
-4、OFFSETm            跳过前m条记录，取所有条记录。(即省略LIMIT ALL部分)
+4. OFFSETm            跳过前m条记录，取所有条记录。(即省略LIMIT ALL部分)
 
-5、LIMIT nOFFSET 0     取n条记录。
+5. LIMIT nOFFSET 0     取n条记录。
 
-6、LIMIT n               取n条记录。(即省略 OFFSET 0部分)
+6. LIMIT n               取n条记录。(即省略 OFFSET 0部分)
 
-    以上就是LIMIT的SQL语法。
+      以上就是LIMIT的SQL语法。
 
- 
+​	在E-SQL中，如果用户传入的SQL语句是按照上述语法进行分页的，那么EF-ORM会将其改写成适合当前RDBMS的SQL语句。即——
 
-在E-SQL中，如果用户传入的SQL语句是按照上述语法进行分页的，那么EF-ORM会将其改写成适合当前RDBMS的SQL语句。即——
+​	在非Postgresql或MySQL上，也能正常进行结果集分页。
 
-在非Postgresql或MySQL上，也能正常进行结果集分页。
-
-在支持LIMIT语句的RDBMS上（如MySQL/Postgresql）上，LIMIT关键字将出现在SQL语句中。
+​	在支持LIMIT语句的RDBMS上（如MySQL/Postgresql）上，LIMIT关键字将出现在SQL语句中。
 
 ### 7.3.11.  对Start with ... Connect by的有限支持
 
-Oracle支持的递归查询是一个让其他数据库用户很“怨念”的功能。这种语法几乎无法在任何其他数据库上使用，然而其用途却无可替代，并且难以用其他函数模拟。除了Postgres也有类似的递归查询用法外，在其他数据库上只有通过复杂的存储过程了……这使得开发要支持多数据库的产品变得更为困难。
+​	Oracle支持的递归查询是一个让其他数据库用户很“怨念”的功能。这种语法几乎无法在任何其他数据库上使用，然而其用途却无可替代，并且难以用其他函数模拟。除了Postgres也有类似的递归查询用法外，在其他数据库上只有通过复杂的存储过程了……这使得开发要支持多数据库的产品变得更为困难。
 
-EF-ORM却可以在所有数据库上，在一定程度上支持这种操作。
-
- 
+​	EF-ORM却可以在所有数据库上，在一定程度上支持这种操作。
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
 
-上面的语句看似是不可能在Derby数据库上执行的，然而运行这个案例，你可以看见正确的结果。为什么呢？
+~~~java
+/**
+ * 在非Oracle数据库上支持递归查询
+ */
+@Test
+public void testStartWithConnectBy() throws SQLException {
+	//准备一些数据
+	db.truncate(NodeTable.class);
+	List<NodeTable> data=new ArrayList<NodeTable>();
+	data.add(new NodeTable(1,0,"-Root"));
+	data.add(new NodeTable(2,1,"水果"));
+	data.add(new NodeTable(5,2," 西瓜"));
+	data.add(new NodeTable(10,2," 葡萄"));		
+	data.add(new NodeTable(4,2," 苹果"));
+	data.add(new NodeTable(8,4,"  青涩的苹果"));
+	data.add(new NodeTable(12,4,"  我的小苹果"));
+	data.add(new NodeTable(3,1,"家电"));
+	data.add(new NodeTable(6,3," 电视机"));
+	data.add(new NodeTable(7,3," 洗衣机"));
+	data.add(new NodeTable(11,6,"  彩色电视机"));
+	db.batchInsert(data);
+		
+	String sql = "select * from nodetable t START WITH t.id IN (4,6) CONNECT BY PRIOR t.id = 					t.pid";
+	NativeQuery<NodeTable> query = db.createNativeQuery(sql, NodeTable.class);
+	List<NodeTable> result=query.getResultList();
+	for(NodeTable p:result){
+		System.out.println(p);
+	}
+}
+~~~
 
-这是因为EF-ORM 1.9.2以后，开始支持查询结果”后处理“。所谓“后处理”就是指对查询结果在内存中再进行过滤、排序等处理。这一功能本来是为了满足多数据库路由操作下的排序、group by、distinct等复杂操作而设计的，不过递归查询也得以从这个功能中获益。对于一些简单使用递归查询的场合，EF-ORM可以在内存中高效的模拟出递归效果。当然，在递归计算过程中需要占用一定的内存。
+​	上面的语句看似是不可能在Derby数据库上执行的，然而运行这个案例，你可以看见正确的结果。为什么呢？
 
-为什么说是”一定程度上支持这种操作“呢？因为目前对此类操作的支持限制还非常多，当前版本下，要使用内存计算模拟递归查询功能，有以下条件。
+​	这是因为EF-ORM 1.9.2以后，开始支持查询结果”后处理“。所谓“后处理”就是指对查询结果在内存中再进行过滤、排序等处理。这一功能本来是为了满足多数据库路由操作下的排序、group by、distinct等复杂操作而设计的，不过递归查询也得以从这个功能中获益。对于一些简单使用递归查询的场合，EF-ORM可以在内存中高效的模拟出递归效果。当然，在递归计算过程中需要占用一定的内存。
 
-1、start with... Connect by条件必须在顶层的select中，不能作为一个嵌套查询的内层。
+​	为什么说是”一定程度上支持这种操作“呢？因为目前对此类操作的支持限制还非常多，当前版本下，要使用内存计算模拟递归查询功能，有以下条件。
 
-2、Connect by的键值只允许一对。
-
-3、Start with条件和connect by的键值这些列都必须在查询的结果中。
-
-4、Start with目前还只支持一个条件，不支持AND OR。
-
- 
-
- 
-
- 
-
- 
-
- 
+1. start with... Connect by条件必须在顶层的select中，不能作为一个嵌套查询的内层。
+2. Connect by的键值只允许一对。
+3. Start with条件和connect by的键值这些列都必须在查询的结果中。
+4. Start with目前还只支持一个条件，不支持AND OR。
 
  
 
