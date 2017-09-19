@@ -5138,11 +5138,11 @@ select /* + all_rows*/ * from dave;
 
       以上就是LIMIT的SQL语法。
 
-​	在E-SQL中，如果用户传入的SQL语句是按照上述语法进行分页的，那么EF-ORM会将其改写成适合当前RDBMS的SQL语句。即——
+   ​在E-SQL中，如果用户传入的SQL语句是按照上述语法进行分页的，那么EF-ORM会将其改写成适合当前RDBMS的SQL语句。即——
 
-​	在非Postgresql或MySQL上，也能正常进行结果集分页。
+   ​在非Postgresql或MySQL上，也能正常进行结果集分页。
 
-​	在支持LIMIT语句的RDBMS上（如MySQL/Postgresql）上，LIMIT关键字将出现在SQL语句中。
+   ​在支持LIMIT语句的RDBMS上（如MySQL/Postgresql）上，LIMIT关键字将出现在SQL语句中。
 
 ### 7.3.11.  对Start with ... Connect by的有限支持
 
@@ -5174,7 +5174,7 @@ public void testStartWithConnectBy() throws SQLException {
 	data.add(new NodeTable(11,6,"  彩色电视机"));
 	db.batchInsert(data);
 		
-	String sql = "select * from nodetable t START WITH t.id IN (4,6) CONNECT BY PRIOR t.id = 					t.pid";
+	String sql = "select * from nodetable t START WITH t.id IN (4,6) CONNECT BY PRIOR t.id = t.pid";
 	NativeQuery<NodeTable> query = db.createNativeQuery(sql, NodeTable.class);
 	List<NodeTable> result=query.getResultList();
 	for(NodeTable p:result){
@@ -5194,7 +5194,7 @@ public void testStartWithConnectBy() throws SQLException {
 3. Start with条件和connect by的键值这些列都必须在查询的结果中。
 4. Start with目前还只支持一个条件，不支持AND OR。
 
- 
+
 
 ## 7.4. 存储过程调用
 
