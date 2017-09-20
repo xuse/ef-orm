@@ -30,6 +30,7 @@ import javax.persistence.TableGenerator;
 import jef.database.ORMConfig;
 import jef.database.annotation.DateGenerateType;
 import jef.database.annotation.HiloGeneration;
+import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoGuidMapping;
 import jef.database.dialect.type.AutoIntMapping;
 import jef.database.dialect.type.AutoLongMapping;
@@ -193,12 +194,12 @@ public abstract class ColumnType {
 			String a1 = profile.toDefaultString(oldType.defaultValue, oldType.getSqlType(), oldType.getSqlType());
 			String a2 = profile.toDefaultString(newType.defaultValue, newType.getSqlType(), newType.getSqlType());
 			// 非字符串比较情况下全部按小写处理
-			if (a1 != null && !a1.startsWith("'")) {
-				a1 = StringUtils.lowerCase(a1);
-			}
-			if (a2 != null && !a2.startsWith("'")) {
-				a2 = StringUtils.lowerCase(a2);
-			}
+//			if (a1 != null && !a1.startsWith("'")) {
+//				a1 = StringUtils.lowerCase(a1);
+//			}
+//			if (a2 != null && !a2.startsWith("'")) {
+//				a2 = StringUtils.lowerCase(a2);
+//			}
 			if (!StringUtils.equals(a1, a2)) {
 				ColumnChange chg;
 				if (StringUtils.isEmpty(a2)) {
@@ -305,7 +306,7 @@ public abstract class ColumnType {
 		protected void putAnnonation(Map<String, Object> map) {
 			String def = "char(" + length + ")";
 			if (defaultValue != null) {
-				def = def + " default " + String.valueOf(defaultValue);
+				def = def + " default " + quotWith(String.valueOf(defaultValue));
 			}
 			map.put("columnDefinition", def);
 			if (!nullable)
@@ -377,7 +378,7 @@ public abstract class ColumnType {
 		protected void putAnnonation(Map<String, Object> map) {
 			String def = "varchar(" + length + ")";
 			if (defaultValue != null) {
-				def = def + " default " + String.valueOf(defaultValue);
+				def = def + " default " + quotWith(String.valueOf(defaultValue));
 			}
 			map.put("columnDefinition", def);
 			if (!nullable)
@@ -385,7 +386,7 @@ public abstract class ColumnType {
 			map.put("length", length);
 		}
 
-		@Override
+        @Override
 		protected boolean compare(ColumnType type, DatabaseDialect profile) {
 			if (!(type instanceof Varchar)) {
 				return false;
@@ -1115,6 +1116,12 @@ public abstract class ColumnType {
 			return Types.SQLXML;
 		}
 	}
+    static String quotWith(String value) {
+        if(value.charAt(0)=='\'' && value.charAt(value.length()-1)=='\''){
+            return value;
+        }
+        return AColumnMapping.wrapSqlStr(value);
+    }
 
 	static ColumnChange createChange(ColumnType oldType, String rawType, ColumnType newType, DatabaseDialect profile) {
 		ColumnChange change = new ColumnChange(Change.CHG_DATATYPE);

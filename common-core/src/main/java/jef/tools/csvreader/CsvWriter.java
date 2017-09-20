@@ -29,6 +29,8 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
 
+import jef.tools.IOUtils;
+
 /**
  * A stream based writer for writing delimited text data to a file or a stream.
  */
@@ -462,6 +464,7 @@ public class CsvWriter {
 	private void checkInit() throws IOException {
 		if (!initialized) {
 			if (fileName != null) {
+			    IOUtils.ensureParentFolder(fileName);
 				outputStream = new BufferedWriter(new OutputStreamWriter(
 						new FileOutputStream(fileName), charset));
 			}

@@ -301,13 +301,22 @@ public class MySqlDialect extends AbstractDialect {
 		return keywords.contains(name.toLowerCase());
 	}
 
-	/**
+	@Override
+    public String toDefaultString(Object defaultValue, int sqlType, int changeTo) {
+	    String def=String.valueOf(defaultValue);
+	    if(sqlType==Types.BIT && def.startsWith("b'") && def.length()>2){
+	        char c=def.charAt(2);
+	        return String.valueOf(c);
+	    }
+        return super.toDefaultString(defaultValue, sqlType, changeTo);
+    }
+
+    /**
 	 * MYSQL的时间日期类型有三种，date datetime，timestamp
 	 * 
 	 * 其中 date time都只能设置默认值为常量，不能使用函数。 第一个timestamp则默认会变为not null default
 	 * current_timestamp on update current_timestamp
 	 */
-
 	
 
 	@Override

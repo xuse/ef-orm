@@ -706,9 +706,11 @@ public class IOUtils {
 	}
 
 	/**
-	 * 检查/创建文件在所的文件夹
+	 * 检查/创建文件在所的文件夹。
+	 * 如果该文件所在的文件夹已存在，什么也不做。
+	 * 如果该文件所在的文件夹不存在，则创建
 	 * 
-	 * @param file
+	 * @param file 要检查的路径
 	 */
 	public static void ensureParentFolder(File file) {
 		File f = file.getParentFile();

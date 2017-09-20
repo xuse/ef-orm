@@ -46,7 +46,7 @@ public class Column{
 		ColumnType ct=profile.getProprtMetaFromDbType(this);
 		ct.setNullable(nullable);
 		if(StringUtils.isNotEmpty(columnDef)){
-			ct.setDefault(new SqlExpression(columnDef));
+			ct.setDefault(new SqlExpression(profile.toDefaultString(columnDef,dataTypeCode,dataTypeCode)));
 		}
 		//System.out.println(this.dataType+" -> "+ ct.toString());
 		return ct;

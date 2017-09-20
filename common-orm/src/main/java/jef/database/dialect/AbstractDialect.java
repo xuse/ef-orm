@@ -469,9 +469,9 @@ public abstract class AbstractDialect implements DatabaseDialect {
 			String s=(String)defaultValue;
 			if (s.length() == 0)
 				return null;
-			return "'" + (String) defaultValue + "'";
+			return AColumnMapping.wrapSqlStr((String)defaultValue);
 		} else {
-			return "'" + String.valueOf(defaultValue) + "'";
+			return AColumnMapping.wrapSqlStr(String.valueOf(defaultValue));
 		}
 	}
 
