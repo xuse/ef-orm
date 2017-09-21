@@ -424,8 +424,8 @@ EF相较于这两个框架，其优势是------
 2.    针对分表和分库的情况加以区分，在同个数据库上的时候能利用SQL操作实现排序和聚合计算，对服务器的CPU和内存压力较小。而HibernateShard不区分这两种情况。
 
 3.    
-            优化的多库排序： 在多库排序时，能分析分表规则，当分表条件和排序条件一致时，直接将各个结果集按排序条件拼合。免去了排序的性能开销。
-            在必须重排序时，利用每个库各自的顺序，使用了内存占用较小的排序算法。
+               优化的多库排序： 在多库排序时，能分析分表规则，当分表条件和排序条件一致时，直接将各个结果集按排序条件拼合。免去了排序的性能开销。
+               在必须重排序时，利用每个库各自的顺序，使用了内存占用较小的排序算法。
 
 4.    EF-ORM中分区操作对用户基本透明，无需移植。而从hienrate移植到HibernateShard时的部分接口类需要调整。
 
@@ -437,7 +437,7 @@ EF相较于这两个框架，其优势是------
 
 8.    Hibernate shards不支持按时间或实际使用时建表。
 
-         ​
+            ​
 
 
 
@@ -449,7 +449,7 @@ EF-ORM其功能基本包含了Hibernate Shards / HiveDB。但还有一定不足-
 
 3.    Hibernate shards的诞生和发展周期更长，功能完善程度更高，包括相同维度切分的实体之间的级联关系等也都做了处理。
 
-         ​
+            ​
 
 
 
@@ -1495,9 +1495,9 @@ public class StudentDaoImpl extends GenericDaoSupport<Student> {
 org.easyframe.enterprise.spring.SessionFactoryBean这个Bean支持以下的配置参数：
 
 | 参数                              | 用途                                       | 备注或示例                                    |
-| ------------------------------- | ---------------------------------------- | ---------------------------------------- |
+| ------------------------------- | ---------------------------------------- | :--------------------------------------- |
 | dataSource                      | 指定一个数据源。                                 | javax.sql.DataSource的子类即可。               |
-| dataSources                     | map类型，指定多个数据源                            | \<property  name="dataSources">           \<map>                     \<entry  key="ds1" value-ref="ds1" />                     \<entry  key="ds2" value-ref="ds2" />          \</map>  \</property> |
+| dataSources                     | map类型，指定多个数据源                            | \<property  name="dataSources">  \<map> \<entry  key="ds1" value-ref="ds1" />                                                                                                                                 \<entry  key="ds2" value-ref="ds2" /> \</map>                                                                                                         \</property> |
 | defaultDatasource               | 多数据源时，指定缺省数据源                            | \<property  name="defaultDatasource" value="ds1"> |
 | packagesToScan                  | 配置包名，启动时会扫描这些包下的所有实体类并加载。                | \<property  name="packageToScan">\<list>      \<value>org.easyframe.test\</value>      \<value>org.easyframe.entity\</value>   \</list>\</property> |
 | annotatedClasses                | 配置类名，启动时会扫描这些类并加载                        | \<property  name="annotatedClasses">\<list>   \<value>org.easyframe.testp.jta.Product\</value>   \<value>org.easyframe.testp.jta.Users\</value>   \</list>\</property> |
