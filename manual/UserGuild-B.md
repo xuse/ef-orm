@@ -424,8 +424,8 @@ EF相较于这两个框架，其优势是------
 2.    针对分表和分库的情况加以区分，在同个数据库上的时候能利用SQL操作实现排序和聚合计算，对服务器的CPU和内存压力较小。而HibernateShard不区分这两种情况。
 
 3.    
-         优化的多库排序： 在多库排序时，能分析分表规则，当分表条件和排序条件一致时，直接将各个结果集按排序条件拼合。免去了排序的性能开销。
-         在必须重排序时，利用每个库各自的顺序，使用了内存占用较小的排序算法。
+            优化的多库排序： 在多库排序时，能分析分表规则，当分表条件和排序条件一致时，直接将各个结果集按排序条件拼合。免去了排序的性能开销。
+            在必须重排序时，利用每个库各自的顺序，使用了内存占用较小的排序算法。
 
 4.    EF-ORM中分区操作对用户基本透明，无需移植。而从hienrate移植到HibernateShard时的部分接口类需要调整。
 
@@ -437,7 +437,7 @@ EF相较于这两个框架，其优势是------
 
 8.    Hibernate shards不支持按时间或实际使用时建表。
 
-      ​
+         ​
 
 
 
@@ -449,7 +449,7 @@ EF-ORM其功能基本包含了Hibernate Shards / HiveDB。但还有一定不足-
 
 3.    Hibernate shards的诞生和发展周期更长，功能完善程度更高，包括相同维度切分的实体之间的级联关系等也都做了处理。
 
-      ​
+         ​
 
 
 
@@ -461,9 +461,9 @@ EF-ORM和上述框架共有的不足之处是------
 
 * **Alibaba TDDL**
 
-​	TDDL（Taobao DistributedData Layer）顾名思义，是淘宝网的分布式数据框架。它和众多的连接池一样，是一个封装为DataSource的中间框架，也能处理SQL语句的分析和路由。
+  ​TDDL（Taobao DistributedData Layer）顾名思义，是淘宝网的分布式数据框架。它和众多的连接池一样，是一个封装为DataSource的中间框架，也能处理SQL语句的分析和路由。
 
-​	应该说，TDDL和本框架之间关注内容和所属的层次是不同的，TDDL的处理是更为底层的：
+  ​应该说，TDDL和本框架之间关注内容和所属的层次是不同的，TDDL的处理是更为底层的：
 
 1. 是在JDBC规范下，以DataSource方式进行封装的。TDDL是对SQL语句进行分析和处理的，而不是Criteria对象上进行处理的。这使得TDDL能拦截一切数据库操作，但也使得复杂场景下的分库分表路由支持变得困难。路由条件的传递除了解析SQL之外，TDDL中还为此开了不少“后门”来传递路由条件。
 2. 数据路由只是TDDL的一部分功能，TDDL本身还提供了SQL重试、负载均衡等一系列提高可用性的模块。正如官方材料中说的，你可以使用TDDL的分库分表功能，也可以不使用。而仅仅使用其底层封装的高可用性模块。
@@ -501,9 +501,9 @@ TDDL 3.3.x的代码最终还是找到了，我也读过了，感觉官方开发�
 8. TDDL不支持 Having以及having内使用的其他聚合函数。
 9. 事务的有限支持。支持基于单库的事务，但不支持跨库进行事务。
 
-​	上述是从目前网上了解到的对开源版本的TDDL的一些对比。从流出的TDDL 3.3.x版本代码来看，上述许多功能应该是是已经支持的。但具体情况因缺少支持文档不明。
+   ​上述是从目前网上了解到的对开源版本的TDDL的一些对比。从流出的TDDL 3.3.x版本代码来看，上述许多功能应该是是已经支持的。但具体情况因缺少支持文档不明。
 
- 
+
 
 ## 10.2. 分库分表规则配置
 
@@ -798,7 +798,7 @@ UPDATE global_sequences SET V=? WHERE V=? AND T='OPERATELOG_SEQ'  |[derby:DB@1]
 1. 一次获取多个序号，上例中，一次SQL操作直接将序号递增20。即一次获取20个序号。
 2. CAS(ComapreAndSwap)操作。上例的UpdateSQL语句是支持并发的，一旦有多个SQL同时操作该表，能保证每个SQL都能正确获取序号值。
 
-​	EF-ORM中，用于调节Sequence获取行为的参数还有不少。比如TABLE方式，可以每个表一个TABLE，也可以全局公用一个TABLE。TABLE下的Sequence等也都可以调节。详见附录一 配置参数一览。
+   ​EF-ORM中，用于调节Sequence获取行为的参数还有不少。比如TABLE方式，可以每个表一个TABLE，也可以全局公用一个TABLE。TABLE下的Sequence等也都可以调节。详见附录一 配置参数一览。
 
 ### 10.3.4. 手动建表
 
@@ -1189,9 +1189,9 @@ public void testDeviceSelect() throws SQLException {}
 2. 框架可以识别利用 >、<、 between、in、not in、like等一切有关的条件来缩小查询范围。
 3. 框架可以对查询语句中的group、distinct、having、记录范围等因素识别并进行相应的处理。
 
-​	总的来说，对于分库分表下的查询操作，开发人员应当自行确定一些操作限制。因为SQL语句的写法是无穷的，变化也是无穷的，而框架能支持的操作场景是有限的。这是所有具备分库分表功能的框架都面临的问题。
+   ​总的来说，对于分库分表下的查询操作，开发人员应当自行确定一些操作限制。因为SQL语句的写法是无穷的，变化也是无穷的，而框架能支持的操作场景是有限的。这是所有具备分库分表功能的框架都面临的问题。
 
-​	复杂到框架无法支持的多库查询，一般的SQL开发人员自己也很难编写出来正确的查询来。反过来说，一个熟练的DBA做不到的SQL查询，框架也很难做出来。多库多表下的查询功能都是在不停的完善的，对任何一个框架都是如此。如果有什么需要支持的合理场景，也请联系作者，可以考虑将您的想法改进到这个框架当中。
+   ​复杂到框架无法支持的多库查询，一般的SQL开发人员自己也很难编写出来正确的查询来。反过来说，一个熟练的DBA做不到的SQL查询，框架也很难做出来。多库多表下的查询功能都是在不停的完善的，对任何一个框架都是如此。如果有什么需要支持的合理场景，也请联系作者，可以考虑将您的想法改进到这个框架当中。
 
 ### 10.3.11. 使用SQL语句插入、更新和删除时的路由 
 
@@ -1413,59 +1413,100 @@ partition.strategy.loader=自定义加载器类名
 
 ​	EF-ORM主要通过实现部分JPA接口和Spring集成。EF-ORM将被Spring认为是一个JPA实现一样提供支持。
 
+## 11.1. 典型配置（快速入门） 
 
+​	对于只想在自己的项目中快速使用EF-ORM，看本节就够了。后面的章节可以跳过。
 
-## [11.1.    典型配置（快速入门）](undefined)
+​	本节内容适合于熟悉Spring事务管理机制的同学，在面对日常单个数据库连接时，可以直接使用下面的典型配置并自行修改。
 
-对于只想在自己的项目中快速使用EF-ORM，看本节就够了。后面的章节可以跳过。
+~~~xml
+<bean id="dataSource" class="jef.database.datasource.SimpleDataSource"
+	p:url="jdbc:mysql://127.0.0.1:3306/cms?useUnicode=true" p:user="root" 
+	p:password="12345"/>
 
-本节内容适合于熟悉Spring事务管理机制的同学，在面对日常单个数据库连接时，可以直接使用下面的典型配置并自行修改。
+<bean id="entityManagerFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean">
+	<property name="dataSource" ref="dataSource" />
+</bean>
+<bean id="commonDao" class="org.easyframe.enterprise.spring.CommonDaoImpl" />
 
- 
+<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" />
+<aop:aspectj-autoproxy />
+<context:component-scan base-package="com.company.my.application"/>
+	
+<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+	<property name="entityManagerFactory" ref="entityManagerFactory" />
+	<property name="jpaDialect">
+		<bean class="org.easyframe.enterprise.spring.JefJpaDialect" />
+	</property>
+</bean>
+~~~
 
-上面这段配置，数据源、SessionFactory、TransactionManager、基于注解的事务声明都有了。然后在编写一个自己的DAO——
+​	上面这段配置，数据源、SessionFactory、TransactionManager、基于注解的事务声明都有了。然后在编写一个自己的DAO------
 
-在Dao中，使用super.getSession()方法可以得到当前事务中的Session对象进行数据库操作。
+~~~java
+package com.company.my.application;
 
-在Service中，使用@Transactional注解进行事务控制。（请参阅Spring官方文档）
+import org.easyframe.enterprise.spring.GenericDaoSupport;
+@Repository
+public class StudentDaoImpl extends GenericDaoSupport<Student> {
+	public void gradeUp(Collection<Integer> ids) {
+		Student st=new Student();
+		st.getQuery().addCondition(Student.Field.id, Operator.IN, ids);
+		st.prepareUpdate(Student.Field.grade, new JpqlExpression("grade+1"));
+		try {
+			//super.getSession()可以得到EF的Session对象
+			getSession().update(st);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+} 
+~~~
 
- 
+​	在Dao中，使用super.getSession()方法可以得到当前事务中的Session对象进行数据库操作。
+
+​	在Service中，使用@Transactional注解进行事务控制。（请参阅Spring官方文档）
 
 ## 11.2.     配置和使用
 
-### [11.2.1.   SessionFactory](undefined)的配置
+### 11.2.1. SessionFactory的配置 
 
-前面的所有例子中，EF的核心对象是一个DbClient对象。DbClient里封装了所有的数据库连接和对应的ORM操作逻辑。
+​	前面的所有例子中，EF的核心对象是一个DbClient对象。DbClient里封装了所有的数据库连接和对应的ORM操作逻辑。
 
-在JPA中，起到类似作用的对象是javax.persistence.EntityManagerFactory类，其地位就和某H框架的SessionFactory一样。
+​	在JPA中，起到类似作用的对象是javax.persistence.EntityManagerFactory类，其地位就和某H框架的SessionFactory一样。
 
- 代码 11-1 单数据源的EntityManagerFactory配置
+~~~xml
+	<!-- 配置数据源，可以带连接池也可以不带 -->
+	<bean id="dataSource" class="jef.database.datasource.SimpleDataSource"
+		p:url="${db.url}" p:username="${db.user}" p:password="${db.password}" />
 
- 
+	<bean id="entityManagerFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	<bean id="commonDao" class="org.easyframe.enterprise.spring.CommonDaoImpl" />
+~~~
 
-上面的配置中，用Spring的FactoryBean创建EntityManagerFactory对象。EntityManagerFactory是JPA规范中的数据操作句柄。其类似于某H框架和某batis的SessionFactory。
+​					 代码 11-1 单数据源的EntityManagerFactory配置 
 
-上面的配置，除了定义了EntityManagerFactory对象以外，还定义一个CommonDao对象，该对象实现了org.easyframe.enterprise.spring.CommonDao接口。其作用是仿照传统Dao习惯，提供一个能完成基本数据库操作的对象。具体用法参见11.1.4节。
+​	上面的配置中，用Spring的FactoryBean创建EntityManagerFactory对象。EntityManagerFactory是JPA规范中的数据操作句柄。其类似于某H框架和某batis的SessionFactory。
 
- 
-
- 
+​	上面的配置，除了定义了EntityManagerFactory对象以外，还定义一个CommonDao对象，该对象实现了org.easyframe.enterprise.spring.CommonDao接口。其作用是仿照传统Dao习惯，提供一个能完成基本数据库操作的对象。具体用法参见11.1.4节。
 
 org.easyframe.enterprise.spring.SessionFactoryBean这个Bean支持以下的配置参数：
 
 | 参数                              | 用途                                       | 备注或示例                                    |
 | ------------------------------- | ---------------------------------------- | ---------------------------------------- |
 | dataSource                      | 指定一个数据源。                                 | javax.sql.DataSource的子类即可。               |
-| dataSources                     | map类型，指定多个数据源                            | <property  name="dataSources">           <map>                     <entry  key="ds1" value-ref="ds1" />                     <entry  key="ds2" value-ref="ds2" />           </map>  </property> |
-| defaultDatasource               | 多数据源时，指定缺省数据源                            | <property  name="defaultDatasource" value="ds1"> |
-| packagesToScan                  | 配置包名，启动时会扫描这些包下的所有实体类并加载。                | <property  name="packageToScan"><list>      <value>org.easyframe.test</value>      <value>org.easyframe.entity</value>   </list></property> |
-| annotatedClasses                | 配置类名，启动时会扫描这些类并加载                        | <property  name="annotatedClasses"><list>   <value>org.easyframe.testp.jta.Product</value>   <value>org.easyframe.testp.jta.Users</value>   </list></property> |
-| createTable                     | boolean类型。当扫描到实体后，如果数据库中不存在，是否建表         | 默认true，可以关闭  <property  name="createTable" value="false" /> |
-| alterTable                      | boolean类型。当扫描到实体后，如果数据库中存在，是否修改表         | 默认true，可以关闭  <property  name="alterTable" value="false" /> |
-| allowDropColumn                 | boolean类型。当扫描到实体后，如果数据库中存在并且需要修改时，是否可以删除列 | 默认false，可以开启  <property  name="allowDropColumn" value="true" /> |
-| enhancePackages                 | 配置包名，启动时先对指定包下的实体进行一次增强，多个包用逗号分隔。        | 扫描增强只能对目录下的class文件生效，对ear/war/jar包中class无效。由于大部分J2EE容器都支持包方式部署，此功能只建议在单元测试时使用，不建议发布class未增强的包。  <property  name="enhancePackages" value="org.easyframe.tutorial"  /> |
-| dynamicTables                   | 配置数据库表名，启动时扫描这些表，生成动态表模型。表名之间逗号分隔        | 参见动态表相关功能说明。  <property  name="dynamicTables" value="EF_TABLE1,XX_TABLE2,TABLE3"  /> |
-| registeNonMappingTableAsDynamic | 对比当前数据库中存在的表，如果数据库中的表并未被任何实体所映射，那么生成这张表的动态表模型。 | 该功能可以将所有未被映射的表当做动态表，建立对应的动态元模型，参见动态表相关功能说明。默认false  <property  name="registeNonMappingTableAsDynamic" value="true" /> |
+| dataSources                     | map类型，指定多个数据源                            | \<property  name="dataSources">           \<map>                     \<entry  key="ds1" value-ref="ds1" />                     \<entry  key="ds2" value-ref="ds2" />          \</map>  \</property> |
+| defaultDatasource               | 多数据源时，指定缺省数据源                            | \<property  name="defaultDatasource" value="ds1"> |
+| packagesToScan                  | 配置包名，启动时会扫描这些包下的所有实体类并加载。                | \<property  name="packageToScan">\<list>      \<value>org.easyframe.test\</value>      \<value>org.easyframe.entity\</value>   \</list>\</property> |
+| annotatedClasses                | 配置类名，启动时会扫描这些类并加载                        | \<property  name="annotatedClasses">\<list>   \<value>org.easyframe.testp.jta.Product\</value>   \<value>org.easyframe.testp.jta.Users\</value>   \</list>\</property> |
+| createTable                     | boolean类型。当扫描到实体后，如果数据库中不存在，是否建表         | 默认true，可以关闭  \<property  name="createTable" value="false" /> |
+| alterTable                      | boolean类型。当扫描到实体后，如果数据库中存在，是否修改表         | 默认true，可以关闭  \<property  name="alterTable" value="false" /> |
+| allowDropColumn                 | boolean类型。当扫描到实体后，如果数据库中存在并且需要修改时，是否可以删除列 | 默认false，可以开启  \<property  name="allowDropColumn" value="true" /> |
+| enhancePackages                 | 配置包名，启动时先对指定包下的实体进行一次增强，多个包用逗号分隔。        | 扫描增强只能对目录下的class文件生效，对ear/war/jar包中class无效。由于大部分J2EE容器都支持包方式部署，此功能只建议在单元测试时使用，不建议发布class未增强的包。  \<property  name="enhancePackages" value="org.easyframe.tutorial"  /> |
+| dynamicTables                   | 配置数据库表名，启动时扫描这些表，生成动态表模型。表名之间逗号分隔        | 参见动态表相关功能说明。  \<property  name="dynamicTables" value="EF_TABLE1,XX_TABLE2,TABLE3"  /> |
+| registeNonMappingTableAsDynamic | 对比当前数据库中存在的表，如果数据库中的表并未被任何实体所映射，那么生成这张表的动态表模型。 | 该功能可以将所有未被映射的表当做动态表，建立对应的动态元模型，参见动态表相关功能说明。默认false  \<property  name="registeNonMappingTableAsDynamic" value="true" /> |
 
  
 
