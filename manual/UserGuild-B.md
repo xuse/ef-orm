@@ -144,14 +144,14 @@ update T_PERSON set PERSON_NAME = ? where PERSON_NAME=?
 
 | 方法                                       | 用途                                       |
 | ---------------------------------------- | ---------------------------------------- |
-| Session.batchDelete(List<T>)             | 按传入的操作，在数据库中进行批量删除。                      |
-| Session.batchDelete(List<T>,  Boolean)   | 按传入的操作，在数据库中进行批量删除。指定是否分组（为了支持分库分表）      |
-| Session.batchDeleteByPrimaryKey(List<T>) | 按传入的对象的主键，在数据库中进行批量删除。                   |
-| Session.batchInsert(List<T>)             | 将传入的实体批量插入到数据库。                          |
-| Session.batchInsert(List<T>,Boolean)     | 将传入的实体批量插入到数据库。指定是否分组（为了支持分库分表）          |
-| Session.batchInsertDynamic(List<T>,  Boolean) | 将传入的实体批量插入到数据库（dynamic=true）。指定是否分组（为了支持分库分表） |
-| Session.batchUpdate(List<T>)             | 按传入的操作，在数据库中进行批量更新。                      |
-| Session.batchUpdate(List<T>,  Boolean)   | 按传入的操作，在数据库中进行批量更新。指定是否分组（为了支持分库分表）      |
+| Session.batchDelete(List\<T>)            | 按传入的操作，在数据库中进行批量删除。                      |
+| Session.batchDelete(List\<T>,  Boolean)  | 按传入的操作，在数据库中进行批量删除。指定是否分组（为了支持分库分表）      |
+| Session.batchDeleteByPrimaryKey(List\<T>) | 按传入的对象的主键，在数据库中进行批量删除。                   |
+| Session.batchInsert(List\<T>)            | 将传入的实体批量插入到数据库。                          |
+| Session.batchInsert(List\<T>,Boolean)    | 将传入的实体批量插入到数据库。指定是否分组（为了支持分库分表）          |
+| Session.batchInsertDynamic(List\<T>,  Boolean) | 将传入的实体批量插入到数据库（dynamic=true）。指定是否分组（为了支持分库分表） |
+| Session.batchUpdate(List\<T>)            | 按传入的操作，在数据库中进行批量更新。                      |
+| Session.batchUpdate(List\<T>,  Boolean)  | 按传入的操作，在数据库中进行批量更新。指定是否分组（为了支持分库分表）      |
 | Session.startBatchDelete(T,  String)     | 高级接口。获得批操作的Batch对象。Batch对象可以让开发者更多的干预和调整batch操作的参数。 |
 | Session.startBatchInsert(T,  String, boolean) | 高级接口。获得批操作的Batch对象。Batch对象可以让开发者更多的干预和调整batch操作的参数。 |
 | Session.startBatchUpdate(T,  String)     | 高级接口。获得批操作的Batch对象。Batch对象可以让开发者更多的干预和调整batch操作的参数。 |
@@ -423,9 +423,9 @@ EF相较于这两个框架，其优势是------
 
 2.    针对分表和分库的情况加以区分，在同个数据库上的时候能利用SQL操作实现排序和聚合计算，对服务器的CPU和内存压力较小。而HibernateShard不区分这两种情况。
 
-3.    
-               优化的多库排序： 在多库排序时，能分析分表规则，当分表条件和排序条件一致时，直接将各个结果集按排序条件拼合。免去了排序的性能开销。
-               在必须重排序时，利用每个库各自的顺序，使用了内存占用较小的排序算法。
+3.    优化的多库排序： 在多库排序时，能分析分表规则，当分表条件和排序条件一致时，直接将各个结果集按排序条件拼合。免去了排序的性能开销。
+
+                        在必须重排序时，利用每个库各自的顺序，使用了内存占用较小的排序算法。
 
 4.    EF-ORM中分区操作对用户基本透明，无需移植。而从hienrate移植到HibernateShard时的部分接口类需要调整。
 
@@ -437,11 +437,10 @@ EF相较于这两个框架，其优势是------
 
 8.    Hibernate shards不支持按时间或实际使用时建表。
 
-            ​
 
 
 
-EF-ORM其功能基本包含了Hibernate Shards / HiveDB。但还有一定不足------
+​	EF-ORM其功能基本包含了Hibernate Shards / HiveDB。但还有一定不足------
 
 1.    没有提供并行查询策略。目前多次查询的场合都是顺序操作。
 
@@ -449,26 +448,29 @@ EF-ORM其功能基本包含了Hibernate Shards / HiveDB。但还有一定不足-
 
 3.    Hibernate shards的诞生和发展周期更长，功能完善程度更高，包括相同维度切分的实体之间的级联关系等也都做了处理。
 
-            ​
 
 
 
-EF-ORM和上述框架共有的不足之处是------
+​	EF-ORM和上述框架共有的不足之处是------
 
-1.     两者都绑定特定的ORM实现，前者绑定Hibernate，后者是EF-ORM的一部分。
+1.    两者都绑定特定的ORM实现，前者绑定Hibernate，后者是EF-ORM的一部分。
+
+      ​
 
 
 
 * **Alibaba TDDL**
 
-  ​TDDL（Taobao DistributedData Layer）顾名思义，是淘宝网的分布式数据框架。它和众多的连接池一样，是一个封装为DataSource的中间框架，也能处理SQL语句的分析和路由。
+  ​	TDDL（Taobao DistributedData Layer）顾名思义，是淘宝网的分布式数据框架。它和众多的连接池一样，是一个封装为DataSource的中间框架，也能处理SQL语句的分析和路由。
 
-  ​应该说，TDDL和本框架之间关注内容和所属的层次是不同的，TDDL的处理是更为底层的：
+  应该说，TDDL和本框架之间关注内容和所属的层次是不同的，TDDL的处理是更为底层的：
 
 1. 是在JDBC规范下，以DataSource方式进行封装的。TDDL是对SQL语句进行分析和处理的，而不是Criteria对象上进行处理的。这使得TDDL能拦截一切数据库操作，但也使得复杂场景下的分库分表路由支持变得困难。路由条件的传递除了解析SQL之外，TDDL中还为此开了不少“后门”来传递路由条件。
 2. 数据路由只是TDDL的一部分功能，TDDL本身还提供了SQL重试、负载均衡等一系列提高可用性的模块。正如官方材料中说的，你可以使用TDDL的分库分表功能，也可以不使用。而仅仅使用其底层封装的高可用性模块。
 
-TDDL目前最大问题是，其“开源程度”不高，所谓的“开源程度”问题，主要是指
+
+
+​	TDDL目前最大问题是，其“开源程度”不高，所谓的“开源程度”问题，主要是指
 
 1. Github上，该项目只有2012年更新过，仅有4次代码提交。而阿里内部，该软件的版本则一直在升级改进，但并未对外公开。
 2. TDDL升级改进的需求几乎均来自阿里内部，其开发团队几乎未对外部用户和开源社区做出什么响应。
@@ -1497,7 +1499,7 @@ org.easyframe.enterprise.spring.SessionFactoryBean这个Bean支持以下的配�
 | 参数                              | 用途                                       | 备注或示例                                    |
 | ------------------------------- | ---------------------------------------- | :--------------------------------------- |
 | dataSource                      | 指定一个数据源。                                 | javax.sql.DataSource的子类即可。               |
-| dataSources                     | map类型，指定多个数据源                            | \<property  name="dataSources">  \<map> \<entry  key="ds1" value-ref="ds1" />                                                                                                                                 \<entry  key="ds2" value-ref="ds2" /> \</map>                                                                                                         \</property> |
+| dataSources                     | map类型，指定多个数据源                            | \<property  name="dataSources">  \<map> \<entry  key="ds1" value-ref="ds1" />\<entry  key="ds2" value-ref="ds2" /> \</map>                                                                                                         \</property> |
 | defaultDatasource               | 多数据源时，指定缺省数据源                            | \<property  name="defaultDatasource" value="ds1"> |
 | packagesToScan                  | 配置包名，启动时会扫描这些包下的所有实体类并加载。                | \<property  name="packageToScan">\<list>      \<value>org.easyframe.test\</value>      \<value>org.easyframe.entity\</value>   \</list>\</property> |
 | annotatedClasses                | 配置类名，启动时会扫描这些类并加载                        | \<property  name="annotatedClasses">\<list>   \<value>org.easyframe.testp.jta.Product\</value>   \<value>org.easyframe.testp.jta.Users\</value>   \</list>\</property> |
@@ -1512,168 +1514,329 @@ org.easyframe.enterprise.spring.SessionFactoryBean这个Bean支持以下的配�
 
 ### 11.2.2.  多数据源的配置
 
-    前面提到EF-ORM原生支持分库分表，分库分表意味着EF-ORM要能支持多个数据库实例。
+​	前面提到EF-ORM原生支持分库分表，分库分表意味着EF-ORM要能支持多个数据库实例。
 
-最简单的多数据库下的配置如下
+​	最简单的多数据库下的配置如下
 
- 代码 11-2 多数据源的EntityManagerFactory配置
+~~~xml
 
- 
+	<!-- 配置多个数据源的DataSource，可以配置带连接池的DataSource，也可以配置不带连接池的DataSource
+      甚至可以混合使用（没必要的情况下不建议这么做） -->
+	<bean id="dataSource-1" class="jef.database.datasource.SimpleDataSource"
+		p:url="${db.url}" p:username="${db.user}" p:password="${db.password}" />
+	<bean id="dataSource-2" class="com.alibaba.druid.pool.DruidDataSource"
+		destroy-method="close" 
+		p:driverClassName="${db.driver2}"
+		p:url="${db.url2}" 
+		p:username="${db.user2}"
+		p:password="${db.password2}" 
+		p:initialSize=3 
+		p:minIdle=1 
+		p:maxIdle=20
+		p:maxActive=50
+		/>
+	<bean id="dataSource-3" class="org.apache.commons.dbcp.BasicDataSource"
+		destroy-method="close" 
+		p:driverClassName="${db.driver3}"
+		p:url="${db.url3}" 
+		p:username="${db.user3}"
+		p:password="${db.password3}" 
+		p:initialSize=3 
+		p:minIdle=1 
+		p:maxIdle=20
+		p:maxActive=50 
+		/>
+	<bean id="routingDS" class="jef.database.datasource.RoutingDataSource">
+		<property name="dataSourceLookup">
+			<bean class="jef.database.datasource.SpringBeansDataSourceLookup" />
+		</property>
+	</bean>
 
-多数据库下，需要声明一个RoutingDataSource对象。而RoutingDataSource中，可以配置一个DataSourceLookup对象。DataSourceLookup对象提供多个真正的数据源，通过配置不同的DataSourceLookup，可以实现从不同的地方读取数据源。
+	<bean id="entityManagerFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean">
+		<property name="dataSource" ref="routingDS" />
+	</bean>
+	<bean id="commonDao" class="org.easyframe.enterprise.spring.CommonDaoImpl" />
+~~~
 
-上面的配置方法中，定义了*dataSource-1,dataSource-2,dataSource-3*三个原始数据源，存放在Spring的ApplicationContext中。而对应的DataSourceLookup对象是SpringBeansDataSourceLookup，该对象可以从Spring上下文中查找所有的DataSource对象。
+ 						代码 11-2 多数据源的EntityManagerFactory配置
 
-框架提供了多个DataSourceLookup，用于在从不同的地方读取数据源配置。这些数据源获取器包括以下几种。
+​	多数据库下，需要声明一个RoutingDataSource对象。而RoutingDataSource中，可以配置一个DataSourceLookup对象。DataSourceLookup对象提供多个真正的数据源，通过配置不同的DataSourceLookup，可以实现从不同的地方读取数据源。
 
-#### URLJsonDataSourceLookup
+​	上面的配置方法中，定义了***dataSource-1,dataSource-2,dataSource-3***三个原始数据源，存放在Spring的ApplicationContext中。而对应的DataSourceLookup对象是SpringBeansDataSourceLookup，该对象可以从Spring上下文中查找所有的DataSource对象。
 
-使用HTTP访问一个URL，从该URL中获得数据源的配置信息。返回的数据源信息用JSON格式表示。参见下面的例子。
+​	框架提供了多个DataSourceLookup，用于在从不同的地方读取数据源配置。这些数据源获取器包括以下几种。
 
-如果我们HTTP GET [http://192.168.0.1/getdb](http://192.168.0.1/getdb)可以返回如下报文
+* **URLJsonDataSourceLookup**
 
-| [{          "id":  "ds1",          "url":  "jdbc:mysql://localhost:3306/test",          "user":  "root",          "password":  "123456",           "driverClassName": "org.gjt.mm.mysql.Driver"     },    {          "id":  "ds1",          "url":  "jdbc:mysql://localhost:3306/test2",          "user":  "root",          "password":  "123456",           "driverClassName": "org.gjt.mm.mysql.Driver"     }  ] |
-| ---------------------------------------- |
-| <bean class=*"jef.database.datasource.URLJsonDataSourceLookup"*       p:datasourceKeyFieldName=*"id*         p:urlFieldName=*"url"*       p:userFieldName=*"user"*       p:passwordFieldName=*"password"*       p:driverFieldName=*"driverClassName"*       p:location=*"http://192.168.0.1/getdb"*>        <property name=*"passwordDecryptor"*>             <!-- 自定义的数据库口令解密器 -->              <bean class=*"org.googlecode.jef.spring.MyPasswordDecryptor"*  />         </property>   </bean> |
+  ​使用HTTP访问一个URL，从该URL中获得数据源的配置信息。返回的数据源信息用JSON格式表示。参见下面的例子。
 
-使用上述配置，即可在需要数据库连接信息时，通过网络调用去获取数据库连接配置。
+  ​如果我们HTTP GET [http://192.168.0.1/getdb](http://192.168.0.1/getdb)可以返回如下报文
 
-#### DbDataSourceLookup
+~~~json
+[{
+        "id": "ds1",
+        "url": "jdbc:mysql://localhost:3306/test",
+        "user": "root",
+        "password": "123456",
+        "driverClassName": "org.gjt.mm.mysql.Driver"
+   },
+  {
+        "id": "ds1",
+        "url": "jdbc:mysql://localhost:3306/test2",
+        "user": "root",
+        "password": "123456",
+        "driverClassName": "org.gjt.mm.mysql.Driver"
+   }
+]
+~~~
 
-到数据库里去取数据源的配置信息。以此进行数据源的查找。
+~~~xml
+<bean class="jef.database.datasource.URLJsonDataSourceLookup"
+ 	p:datasourceKeyFieldName="id 
+ 	p:urlFieldName="url"
+ 	p:userFieldName="user"
+ 	p:passwordFieldName="password"
+ 	p:driverFieldName="driverClassName"
+ 	p:location="http://192.168.0.1/getdb">
+ 	 <property name="passwordDecryptor">
+ 		  <!-- 自定义的数据库口令解密器 -->
+		   <bean class="org.googlecode.jef.spring.MyPasswordDecryptor" />
+	  </property>
+ </bean>	
+~~~
 
-如果利用一个配置库来维护其他各种数据库的连接信息，那么系统会到这个数据库中去寻找数据源。数据库中配置数据源的表和其中的列名也可以配置。参见下面的示例。
+​	使用上述配置，即可在需要数据库连接信息时，通过网络调用去获取数据库连接配置。
 
-    使用上述配置，即可在需要数据库连接信息时，通过数据库查找去获取数据库连接配置。
+* **DbDataSourceLookup**
 
-#### JndiDatasourceLookup
+  ​到数据库里去取数据源的配置信息。以此进行数据源的查找。
 
-到JNDI上下文去找寻数据源配置。参见下面的示例。
+  ​如果利用一个配置库来维护其他各种数据库的连接信息，那么系统会到这个数据库中去寻找数据源。数据库中配置数据源的表和其中的列名也可以配置。参见下面的示例。
 
-使用上述配置，即可在需要数据库连接信息时，通过JNDI查找去获取数据库连接配置。
+~~~xml
+<bean class="jef.database.datasource.DbDataSourceLookup"
+ 	p:configDataSource-ref="dataSource" 
+ 	p:configDbTable="DATASOURCE_CONFIG"
+ 	p:whereCondition="enable='1'"
+ 	p:columnOfId="DATABASE_NAME"
+ 	p:columnOfUrl="JDBC_URL"
+ 	p:columnOfUser="DB_USER"
+ 	p:columnOfPassword="DB_PASSWORD"
+ 	p:columnOfDriver=""
+ 	p:datasourceIdOfconfigDB="" 
+ 	p:defaultDsName="" >
+ 	 <property name="passwordDecryptor">
+ 		  <!-- 自定义的数据库口令解密器 -->
+		   <bean class="org.googlecode.jef.spring.MyPasswordDecryptor" />
+	  </property>
+ </bean>	
+~~~
 
-#### MapDataSourceLookup
+ 	使用上述配置，即可在需要数据库连接信息时，通过数据库查找去获取数据库连接配置。
 
-从一个固定的Map对象中获取已经配置的数据源信息。在我们的一些示例代码中，有些直接就用Map来传入数据源配置。
+* **JndiDatasourceLookup**
 
-    在Spring配置中也可以用Map来传入多个数据源。
+  到JNDI上下文去找寻数据源配置。参见下面的示例。
 
-#### PropertiesDataSourceLookup
+~~~xml
+<bean class="jef.database.datasource.JndiDatasourceLookup"></bean>	
+~~~
 
-从一个classpath下的Properties文件中获取数据源配置信息。参见下面的示例。
+​	使用上述配置，即可在需要数据库连接信息时，通过JNDI查找去获取数据库连接配置。
 
- 
+* **MapDataSourceLookup**
+
+  从一个固定的Map对象中获取已经配置的数据源信息。在我们的一些示例代码中，有些直接就用Map来传入数据源配置。
+
+~~~java
+// 准备多个数据源
+Map<String, DataSource> datasources = new HashMap<String, DataSource>();
+datasources.put("datasource1", new SimpleDataSource("jdbc:derby:./db;create=true", null, null));
+datasources.put("datasource2", new SimpleDataSource("jdbc:derby:./db2;create=true", null, null));
+datasources.put("datasource3", new SimpleDataSource("jdbc:derby:./db3;create=true", null, null));
+MapDataSourceLookup lookup = new MapDataSourceLookup(datasources);
+lookup.setDefaultKey("datasource1");// 指定datasource1是默认的操作数据源
+// 构造一个带数据路由功能的DbClient
+db = new DbClient(new RoutingDataSource(lookup));
+~~~
+
+​	在Spring配置中也可以用Map来传入多个数据源。
+
+* **PropertiesDataSourceLookup**
+
+  从一个classpath下的Properties文件中获取数据源配置信息。参见下面的示例。
 
 [示例](undefined)[[季怡1\]](#_msocom_1) 
 
- 
+* **SpringBeansDataSourceLookup**
 
- 
+  ​从Spring上下文中获取所有数据源信息。配置如下。
 
- 
+~~~xml
+<bean class="jef.database.datasource.SpringBeansDataSourceLookup" />
+~~~
 
- 
-
- 
-
-#### SpringBeansDataSourceLookup
-
-    从Spring上下文中获取所有数据源信息。配置如下。
-
- 
-
- 
-
-上面提到的是EF提供的几种默认的DataSourceLookup，开发者也可以编写自己的DataSourceLookup。
-
- 
-
- 
-
- 
+​	上面提到的是EF提供的几种默认的DataSourceLookup，开发者也可以编写自己的DataSourceLookup。 
 
 [示例](undefined)[[季怡2\]](#_msocom_2) 
 
- 
+ ### 11.2.3.  JPA事务配置
 
- 
+​	大家都知道，Spring有七种事务传播级别。因为标准JPA只能支持其中六种，因此EF-ORM提供了相关的JPA方言以支持第七种。其中nested方式需要JDBC驱动支持SavePoint.
 
- 
+~~~xml
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory" />
+		<property name="jpaDialect">
+			<bean class="org.easyframe.enterprise.spring.JefJpaDialect" />
+		</property>
+	</bean>
 
- 
+	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" />
+	<aop:aspectj-autoproxy />
+~~~
 
- 
+                    					代码 11-3 Spring基于注解的声明式事务配置方法
 
-### [11.2.3.   JPA](undefined)事务配置
+​	Spring的事务配置有好多种方法，上面这种是纯注解的声明式事务，另一种流行的AOP拦截器配置方法如下
 
-大家都知道，Spring有七种事务传播级别。因为标准JPA只能支持其中六种，因此EF-ORM提供了相关的JPA方言以支持第七种。其中nested方式需要JDBC驱动支持SavePoint.
+~~~xml
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory" />
+		<property name="jpaDialect">
+			<bean class="org.easyframe.enterprise.spring.JefJpaDialect" />
+		</property>
+	</bean>
+	<tx:advice id="tx-advice-default transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="*" propagation="REQUIRED" />
+		</tx:attributes>
+	</tx:advice>
+	<tx:advice id="tx-always-new" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="*" propagation="REQUIRES_NEW" />
+		</tx:attributes>
+	</tx:advice>
+    <aop:config>
+        <aop:pointcut id="interceptorPointCuts"
+            expression="execution(* com.company.product.dao.*.*(..))" />
+        <aop:advisor advice-ref="tx-advice-defaul"
+            pointcut-ref="interceptorPointCuts" />        
+    </aop:config>
+~~~
 
-                    代码 11-3 Spring基于注解的声明式事务配置方法
+​					代码 11-4  Spring基于AOP拦截器的声明式事务配置方法
 
- 
+​	Spring事务配置方法还有很多种，但不管哪种配置方法，和ORM框架相关的就只有**“transactionManager”**对象。其他配置都只和Spring自身的事务实现机制有关。
 
- 
+​	上面的TransactionManager的配置方法和标准的JPA事务管理器配置方法区别之处在于，指定了一个jpaDialect对象，这是因为标准JPA实现因为接口和方法功能较弱，不足以实现Spring事务控制的所有选项。因此Spring提供了一种手段，由ORM提供一个事务控制的方言，Spring根据方言可以精确控制事务。JefJpaDialect的增加，使得EF-ORM能够支持Spring的事务管理的以下特性。（这些特性是标准JPA接口无法支持的)
 
-Spring的事务配置有好多种方法，上面这种是纯注解的声明式事务，另一种流行的AOP拦截器配置方法如下
+| Spring配置                 | **在Spring中的作用**                          | **效果**                                   |
+| ------------------------ | ---------------------------------------- | ---------------------------------------- |
+| **Propagation=“nested”** | Spring的7种事务传播级别之一,NESTED方法是启动一个和父事务相依的子事务，因为不是EJB标准的，因此JPA不支持。 | JPA接口中无SavePoint操作，因此无法支持NESTED传播行为，EF-ORM在JpaDIalect中支持了SavePoint，因此可以使用NESTED传播行为。  再加上JPA本身支持的其他6种传播行为，EF-ORM可以支持全部7种传播行为。 |
+| **isolation**            | 定义事务的四种隔离级别。                             | JPA接口不提供对数据库事务隔离级别的动态调整。也就无法支持Spring的事务隔离级别。但EF-ORM可以支持。 |
+| **read-only="true"**     | 指定事务为只读。该属性提示ORM框架和JDBC驱动进行优化，比如Hibernate下只读事务可以省去flush缓存操作。Oracle服务器原生支持readonly级别，可以不产生回滚段，不记录重做日志，甚至可以提供可重复读等特性。 | 在只读模式下，EF-ORM将对JDBC Connection进行readOnly进行设置，从而触发数据库和驱动的只读优化。当然并不是所有的数据库都支持只读优化。 |
+| **timeout**              | 事务超时时间，事务一旦超时，会被标记为rollbackOnly，抛出异常并终止处理。 | JPA原生接口不提供事务超时控制。EF-ORM可以通过方言支持。         |
 
-代码 11-4  Spring基于AOP拦截器的声明式事务配置方法
+### 11.2.4. 编写DAO
 
- 
+​	通过上面两节，我们在Spring中提供了EntityFactoryManager和事务管理。接下来就是编写自己的Dao对象了。EF-ORM提供了一个泛型DAO实现。
 
-Spring事务配置方法还有很多种，但不管哪种配置方法，和ORM框架相关的就只有“*transactionManager**”*对象。其他配置都只和Spring自身的事务实现机制有关。
+*  **继承GenericDaoSupport**
 
-上面的TransactionManager的配置方法和标准的JPA事务管理器配置方法区别之处在于，指定了一个jpaDialect对象，这是因为标准JPA实现因为接口和方法功能较弱，不足以实现Spring事务控制的所有选项。因此Spring提供了一种手段，由ORM提供一个事务控制的方言，Spring根据方言可以精确控制事务。JefJpaDialect的增加，使得EF-ORM能够支持Spring的事务管理的以下特性。（这些特性是标准JPA接口无法支持的)
+   EF-ORM提供了一个泛型的DAO实现。
 
-| **Spring****配置**                     | **在Spring****中的作用**                      | **效果**                                   |
-| ------------------------------------ | ---------------------------------------- | ---------------------------------------- |
-| **Propagation=****“****nested****”** | Spring的7种事务传播级别之一,NESTED方法是启动一个和父事务相依的子事务，因为不是EJB标准的，因此JPA不支持。 | JPA接口中无SavePoint操作，因此无法支持NESTED传播行为，EF-ORM在JpaDIalect中支持了SavePoint，因此可以使用NESTED传播行为。  再加上JPA本身支持的其他6种传播行为，EF-ORM可以支持全部7种传播行为。 |
-| **isolation**                        | 定义事务的四种隔离级别。                             | JPA接口不提供对数据库事务隔离级别的动态调整。也就无法支持Spring的事务隔离级别。但EF-ORM可以支持。 |
-| **read-only****=****"true"******     | 指定事务为只读。该属性提示ORM框架和JDBC驱动进行优化，比如Hibernate下只读事务可以省去flush缓存操作。Oracle服务器原生支持readonly级别，可以不产生回滚段，不记录重做日志，甚至可以提供可重复读等特性。 | 在只读模式下，EF-ORM将对JDBC Connection进行readOnly进行设置，从而触发数据库和驱动的只读优化。当然并不是所有的数据库都支持只读优化。 |
-| **timeout**                          | 事务超时时间，事务一旦超时，会被标记为rollbackOnly，抛出异常并终止处理。 | JPA原生接口不提供事务超时控制。EF-ORM可以通过方言支持。         |
+   * 接口类为org.easyframe.enterprise.spring.GenericDao\<T>
 
-### [11.2.4.   编写DAO](undefined)
 
-    通过上面两节，我们在Spring中提供了EntityFactoryManager和事务管理。接下来就是编写自己的Dao对象了。EF-ORM提供了一个泛型DAO实现。
-
-#### [继承GenericDaoSupport](undefined)
-
-EF-ORM提供了一个泛型的DAO实现。
-
-l  接口类为org.easyframe.enterprise.spring.GenericDao<T>
-
-l  实现类为org.easyframe.enterprise.spring.GenericDaoSupport<T>
+* 实现类为org.easyframe.enterprise.spring.GenericDaoSupport\<T>
 
 开发者的DAO可以直接继承GenericDaoSupport类。
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lessonb\StudentDao.java
 
-继承GenericDaoSupport后，该DAO就已经有了各种基本的持久化操作方法。
+~~~java
+/**
+ * 这个类实现了GenericDao<T>接口
+ */
+public class StudentDao extends GenericDaoSupport<Student>{
 
- 
+}
+~~~
 
- 
+​	继承GenericDaoSupport后，该DAO就已经有了各种基本的持久化操作方法。
+
+ ![11-11.2.4-1](images\11-11.2.4-1.png)
 
 如果需要自行添加方法，可以这样做
 
 接口orm-tutorial\src\main\java\org\easyframe\tutorial\lessonb\StudentDao.java
 
+~~~java
+public interface StudentDao extends GenericDao<Student>{
+	/**
+	 * 批量升级学生
+	 * @param ids
+	 */
+	public void gradeUp(Collection<Integer> ids);
+}
+~~~
+
 实现类orm-tutorial\src\main\java\org\easyframe\tutorial\lessonb\StudentDaoImpl.java
 
- 
+~~~java
+public class StudentDaoImpl extends GenericDaoSupport<Student> implements StudentDao{
+	public void gradeUp(Collection<Integer> ids) {
+		Student st=new Student();
+		st.getQuery().addCondition(Student.Field.id, Operator.IN, ids);
+		st.prepareUpdate(Student.Field.grade, new JpqlExpression("grade+1"));
+		try {
+			getSession().update(st);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+}
+~~~
 
-对于自行实现的方法，可以使用继承自BaseDao类的方法获得Session对象。
+​	对于自行实现的方法，可以使用继承自BaseDao类的方法获得Session对象。
 
-一般来说，GenericDao中已经包含了绝大多数日常所需的数据库操作。如果没有特殊操作，我们甚至不需要为某个Bean创建DAO，而是使用后文的CommonDao即可。    
+​	一般来说，GenericDao中已经包含了绝大多数日常所需的数据库操作。如果没有特殊操作，我们甚至不需要为某个Bean创建DAO，而是使用后文的CommonDao即可。    
 
-#### [继承BaseDao](undefined)
+* **继承BaseDao**
 
-   GenericDao继承了BaseDao。开发者也可以直接继承org.easyframe.enterprise.spring.BaseDao类来编写DAO。在DAO中，开发者可以使用标准的 JPA 方法来实现逻辑，也可以使用EF-ORM的Session对象来实现逻辑。
+  ​GenericDao继承了BaseDao。开发者也可以直接继承org.easyframe.enterprise.spring.BaseDao类来编写DAO。在DAO中，开发者可以使用标准的 JPA 方法来实现逻辑，也可以使用EF-ORM的Session对象来实现逻辑。
 
- 
+ orm-tutorial\src\main\java\org\easyframe\tutorial\lessonb\MyDao.java
 
-orm-tutorial\src\main\java\org\easyframe\tutorial\lessonb\MyDao.java
+~~~java
+public class MyDao extends BaseDao{
+	
+	/**
+	 * 使用标准JPA的方法来实现DAO
+	 */
+	public Student loadStudent(int id){
+		return getEntityManager().find(Student.class, id);
+	}
+	
+	/**
+	 * 使用EF-ORM的方法来实现DAO
+	 * @param name
+	 * @return
+	 */
+	public List<Student> findStudentByName(String name){
+		Student st=new Student();
+		st.getQuery().addCondition(QB.matchAny(Student.Field.name, name));
+		try {
+			return getSession().select(st);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+}
+~~~
 
-BaseDao基类中提供了以下方法
+​	BaseDao基类中提供了以下方法
 
 | 方法                 | 作用                                  | 说明                                       |
 | ------------------ | ----------------------------------- | ---------------------------------------- |
@@ -1681,225 +1844,432 @@ BaseDao基类中提供了以下方法
 | getSession()       | 得到jef.database.Session对象            | Session对象是EF-ORM操作数据库的基本类。前面所有例子中的DbClient和Transaction都是其子类。 |
 | getDbClient()      | 得到jef.database.DbClient对象           | 不建议使用。DbClient对象是无事务状态的Session。对其进行的任何操作都是直接提交到数据库的，不在Spring事务控制之下。 |
 
-要注意的是 getEntityManager()中得到的JPA对象javax.persistence.EntityManager中，EF-ORM并没有实现其全部方法。其中CriteriaBuilderCriteriaQuery相关的功能都会抛出UnSupportedOperationException.这部分功能请使用EF-ORM自己的Criteria API。
+​	要注意的是 getEntityManager()中得到的JPA对象javax.persistence.EntityManager中，EF-ORM并没有实现其全部方法。其中CriteriaBuilderCriteriaQuery相关的功能都会抛出UnSupportedOperationException.这部分功能请使用EF-ORM自己的Criteria API。
 
-### [11.2.5.   常用API](undefined)：CommonDao
+### 11.2.5. 常用API: CommonDao
 
-EF-ORM提供了CommonDao是基于Spring的Dao bean的通用接口，提供了以下方法(此处仅列举，详细请参阅API-DOC)
+​	EF-ORM提供了CommonDao是基于Spring的Dao bean的通用接口，提供了以下方法(此处仅列举，详细请参阅API-DOC)
 
-由于EF-ORM中的Entity可以携带Query对象，表示复杂的where条件和update条件，因此很多看似简单的接口，实际上能传入相当复杂的SQL查询对象，请不要低估其作用。
+​	由于EF-ORM中的Entity可以携带Query对象，表示复杂的where条件和update条件，因此很多看似简单的接口，实际上能传入相当复杂的SQL查询对象，请不要低估其作用。
 
-| **方法**                                   | **备注**                                   |      |      |
-| ---------------------------------------- | ---------------------------------------- | ---- | ---- |
-| **基础的查询、插入、更新、删除方法******                 |                                          |      |      |
-| T insert(T entity);                      | 相当于session.insert                        |      |      |
-| void remove(Object entity);              | 相当于session.delete()  支持单表CriteriaAPI     |      |      |
-| int update(T entity);                    | 相当于session.update()  支持单表CriteriaAPI     |      |      |
-| List<T> find(T data);                    | 相当于session.select()  支持单表CriteriaAPI     |      |      |
-| T load(T data);                          | 相当于session.load()  支持单表CriteriaAPI       |      |      |
-| <T> ResultIterator<T> iterate(T obj);    | 相当于session.iteratedSelect()  支持单表CriteriaAPI |      |      |
-| **byProperty/  byKey****系列******         |                                          |      |      |
-| void removeByProperty(ITableMetadata meta, String propertyName,  List<?> values); | 指定一个字段为条件，批量删除。                          |      |      |
-| int removeByKey(ITableMetadata meta,String field,Serializable  key); | 指定一个字段为条件，单次删除                           |      |      |
-| int removeByKey(Class<T> meta,String field,Serializable  key); | 指定一个字段为条件，单次删除                           |      |      |
-| T loadByKey(Class<T> meta,String field,Serializable key); | 指定一个字段为条件，加载单条                           |      |      |
-| T loadByKey(ITableMetadata meta,String field,Serializable id); | 指定一个字段为条件，加载单条                           |      |      |
-| List<?> findByKey(ITableMetadata meta, String  propertyName, Object value); | 指定一个字段为条件，加载多条                           |      |      |
-| **ByExample****系列******                  |                                          |      |      |
-| List<T> findByExample(T entity,String... properties); | 传入模板bean，可指定字段名，这些字段值作为where条件           |      |      |
-| int removeByExample(T entity,String... properties); | 传入模板bean，可指定字段名，这些字段值作为where条件           |      |      |
-| **By  PrimaryKey ******                  |                                          |      |      |
-| T loadByPrimaryKey(ITableMetadata meta, Object id); | 按主键加载                                    |      |      |
-| T loadByPrimaryKey(Class<T> entityClass, Object  primaryKey); | 按主键加载                                    |      |      |
-| **保存方法******                             |                                          |      |      |
-| void persist(Object entity);             | 对象存在时更新，不存在时插入                           |      |      |
-| T merge(T entity);                       | 对象存在时更新，不存在时插入                           |      |      |
-| **Update****方法******                     |                                          |      |      |
-| int updateByProperty(T entity,String... property); | 可传入多个字段名，这些字段的值作为where条件                 |      |      |
-| int update(T entity,Map<String,Object> setValues,String...  property); | 可传入多个字段名，这些字段的值作为where条件。可在map中指定要更新的值。  |      |      |
-| **Remove****方法**                         |                                          |      |      |
-| void removeAll(ITableMetadata meta);     | 删除全表记录                                   |      |      |
-| **批量操作系列**                               |                                          |      |      |
-| int batchUpdate(List<T> entities);       | 批量（按主键）更新                                |      |      |
-| int batchUpdate(List<T> entities,Boolean doGroup); | 批量（按主键）更新                                |      |      |
-| int batchRemove(List<T> entities);       | 批量删除                                     |      |      |
-| int batchRemove(List<T> entities,Boolean doGroup); | 批量删除                                     |      |      |
-| int batchInsert(List<T> entities);       | 批量插入                                     |      |      |
-| int batchInsert(List<T> entities,Boolean doGroup); | 批量插入                                     |      |      |
-| **命名查询NamedQuery******                   |                                          |      |      |
-| List<T> findByNq(String nqName, Class<T>  type,Map<String, Object> params); | 传入查询名称、返回类型、参数                           |      |      |
-| List<T> findByNq(String nqName, ITableMetadata  meta,Map<String, Object> params); | 传入查询名称、返回类型、参数                           |      |      |
-| int executeNq(String nqName,Map<String,Object> params); | 执行命名查询操作，传入查询名称，参数。                      |      |      |
-| **E-SQL****操作系列**                        |                                          |      |      |
-| List<T> findByQuery(String sql,Class<T> retutnType,  Map<String, Object> params); | 传入E-SQL语句查询结果                            |      |      |
-| List<T> findByQuery(String sql,ITableMetadata retutnType,  Map<String, Object> params); | 传入E-SQL语句，查询结果                           |      |      |
-| int executeQuery(String sql,Map<String,Object> param); | 传入E-SQL语句，执行                             |      |      |
-| <T> ResultIterator<T> iterateByQuery(String  sql,Class<T> returnType,Map<String,Object> params); | 传入E-SQL语句。查询并以遍历器返回。                     |      |      |
-| <T> ResultIterator<T> iterateByQuery(String sql,  ITableMetadata returnType, Map<String, Object> params); | 传入E-SQL语句。查询并以遍历器返回。                     |      |      |
-| **分页查询方法**                               |                                          |      |      |
-| Page<T> findAndPage(T data,int start,int limit); | 传入单表Criteria对象。分页查询                      |      |      |
-| Page<T> findAndPageByNq(String nqName, Class<T>  type,Map<String, Object> params, int start,int limit); | 传入命名查询名称，分页查询                            |      |      |
-| Page<T> findAndPageByNq(String nqName, ITableMetadata  meta,Map<String, Object> params, int start,int limit); | 传入命名查询名称，分页查询                            |      |      |
-| Page<T> findAndPageByQuery(String sql,Class<T>  retutnType, Map<String, Object> params,int start,int limit); | 传入E-SQL语句，分页查询                           |      |      |
-| Page<T> findAndPageByQuery(String sql,ITableMetadata  retutnType, Map<String, Object> params,int start,int limit); | 传入E-SQL语句，分页查询                           |      |      |
-| **其他**                                   |                                          |      |      |
-| Session getSession();                    | 得到的EF-ROM Session对象                      |      |      |
-| DbClient getNoTransactionSession();      | 得到当前无事务的操作Session                        |      |      |
-|                                          |                                          |      |      |
+| **方法**                                   | **备注**                                   |
+| ---------------------------------------- | ---------------------------------------- |
+| **基础的查询、插入、更新、删除方法**                     |                                          |
+| T insert(T entity);                      | 相当于session.insert                        |
+| void remove(Object entity);              | 相当于session.delete()  支持单表CriteriaAPI     |
+| int update(T entity);                    | 相当于session.update()  支持单表CriteriaAPI     |
+| List\<T> find(T data);                   | 相当于session.select()  支持单表CriteriaAPI     |
+| T load(T data);                          | 相当于session.load()  支持单表CriteriaAPI       |
+| \<T> ResultIterator\<T> iterate(T obj);  | 相当于session.iteratedSelect()  支持单表CriteriaAPI |
+| **byProperty/  byKey系列**                 |                                          |
+| void removeByProperty(ITableMetadata meta, String propertyName,  List<?> values); | 指定一个字段为条件，批量删除。                          |
+| int removeByKey(ITableMetadata meta,String field,Serializable  key); | 指定一个字段为条件，单次删除                           |
+| int removeByKey(Class\<T> meta,String field,Serializable  key); | 指定一个字段为条件，单次删除                           |
+| T loadByKey(Class\<T> meta,String field,Serializable key); | 指定一个字段为条件，加载单条                           |
+| T loadByKey(ITableMetadata meta,String field,Serializable id); | 指定一个字段为条件，加载单条                           |
+| List<?> findByKey(ITableMetadata meta, String  propertyName, Object value); | 指定一个字段为条件，加载多条                           |
+| **ByExample系列**                          |                                          |
+| List\<T> findByExample(T entity,String... properties); | 传入模板bean，可指定字段名，这些字段值作为where条件           |
+| int removeByExample(T entity,String... properties); | 传入模板bean，可指定字段名，这些字段值作为where条件           |
+| **By  PrimaryKey **                      |                                          |
+| T loadByPrimaryKey(ITableMetadata meta, Object id); | 按主键加载                                    |
+| T loadByPrimaryKey(Class\<T> entityClass, Object  primaryKey); | 按主键加载                                    |
+| **保存方法**                                 |                                          |
+| void persist(Object entity);             | 对象存在时更新，不存在时插入                           |
+| T merge(T entity);                       | 对象存在时更新，不存在时插入                           |
+| **Update方法**                             |                                          |
+| int updateByProperty(T entity,String... property); | 可传入多个字段名，这些字段的值作为where条件                 |
+| int update(T entity,Map\<String,Object> setValues,String...  property); | 可传入多个字段名，这些字段的值作为where条件。可在map中指定要更新的值。  |
+| **Remove方法**                             |                                          |
+| void removeAll(ITableMetadata meta);     | 删除全表记录                                   |
+| **批量操作系列**                               |                                          |
+| int batchUpdate(List\<T> entities);      | 批量（按主键）更新                                |
+| int batchUpdate(List\<T> entities,Boolean doGroup); | 批量（按主键）更新                                |
+| int batchRemove(List\<T> entities);      | 批量删除                                     |
+| int batchRemove(List\<T> entities,Boolean doGroup); | 批量删除                                     |
+| int batchInsert(List\<T> entities);      | 批量插入                                     |
+| int batchInsert(List\<T> entities,Boolean doGroup); | 批量插入                                     |
+| **命名查询NamedQuery**                       |                                          |
+| List\<T> findByNq(String nqName, Class\<T>  type,Map\<String, Object> params); | 传入查询名称、返回类型、参数                           |
+| List\<T> findByNq(String nqName, ITableMetadata  meta,Map\<String, Object> params); | 传入查询名称、返回类型、参数                           |
+| int executeNq(String nqName,Map\<String,Object> params); | 执行命名查询操作，传入查询名称，参数。                      |
+| **E-SQL操作系列**                            |                                          |
+| List\<T> findByQuery(String sql,Class\<T> retutnType,  Map\<String, Object> params); | 传入E-SQL语句查询结果                            |
+| List\<T> findByQuery(String sql,ITableMetadata retutnType,  Map\<String, Object> params); | 传入E-SQL语句，查询结果                           |
+| int executeQuery(String sql,Map\<String,Object> param); | 传入E-SQL语句，执行                             |
+| \<T> ResultIterator\<T> iterateByQuery(String  sql,Class\<T> returnType,Map\<String,Object> params); | 传入E-SQL语句。查询并以遍历器返回。                     |
+| \<T> ResultIterator\<T> iterateByQuery(String sql,  ITableMetadata returnType, Map\<String, Object> params); | 传入E-SQL语句。查询并以遍历器返回。                     |
+| **分页查询方法**                               |                                          |
+| Page\<T> findAndPage(T data,int start,int limit); | 传入单表Criteria对象。分页查询                      |
+| Page\<T> findAndPageByNq(String nqName, Class\<T>  type,Map\<String, Object> params, int start,int limit); | 传入命名查询名称，分页查询                            |
+| Page\<T> findAndPageByNq(String nqName, ITableMetadata  meta,Map\<String, Object> params, int start,int limit); | 传入命名查询名称，分页查询                            |
+| Page\<T> findAndPageByQuery(String sql,Class\<T>  retutnType, Map\<String, Object> params,int start,int limit); | 传入E-SQL语句，分页查询                           |
+| Page\<T> findAndPageByQuery(String sql,ITableMetadata  retutnType, Map\<String, Object> params,int start,int limit); | 传入E-SQL语句，分页查询                           |
+| **其他**                                   |                                          |
+| Session getSession();                    | 得到的EF-ROM Session对象                      |
+| DbClient getNoTransactionSession();      | 得到当前无事务的操作Session                        |
 
 从上面的API可以看出，配置命名查询配置，仅凭CommonDao已经可以完成大部分的数据库DAO操作。
 
- 
+>​	**DAO轻量化实践**
+>
+>​	*从个人开发实践看，随着ORM**框架封装性的提升，DAO**层越来越趋向轻量化。这里是个人的一点看法和建议。*
+>
+>​	*轻量化表现在*
+>
+>​	*1.在无需多种实现的情况下，DAO**无须设计接口类*
+>
+>​	*2. 无需为每个Entity创建DAO，大多数数据库操作在Service中直接获取CommonDao进行操作即可。*
+>
+>​	*为什么说，为每个Entity创建一个DAO这种做法过时了呢？*
+>
+>​	*实践表明，局限单表的操作都可以继承GenericDao自动获得，子类中几乎无需任何编码，甚至泛型都是不需要的，ORM能够根据传入的对象类型绑定到对应的数据表上。所以泛型的DAO仅仅是起到了增加了一些Bean类型校验的作用。为此付出的代价是，开发时还要控制不同DAO的依赖注入、还要控制bean使用对号入座的DAO**进行操作，这些都是多余的工作。*
+>
+>​	*此外，如果我们为每个Entity创建DAO，那么多表关联的操作应该放在哪个DAO里呢？ 事实上无论放在哪一个DAO中都不是那么合理的。*
+>
+>​	*所以，结合业务实践，个人建议在使用EF-ORM的时候，可以省略掉大部分Entity的对应的DAO。一些复杂数据库操作（基本上是涉及多表的），可以自行继承CommonDaoImpl，放在公共的DAO中。一般中小规模的应用，最后的DAO个数不会超过10个*
 
-### [11.2.6.   POJO](undefined)操作支持
 
-CommonDao中的方法还有一个特点，那就是可以支持POJO Bean。我们在最初的1.1.3示例中可以发现，无需继承jef.database.DataObject，我们可以直接使用单纯的POJO对象创建表、删除表、执行CRUD操作。
 
-   POJO支持是为了进一步简化ORM使用而在CommonDao中进行的特殊处理。因此CommonDao中所有的泛型T，都无需继承jef.database.DataObject。
+### 11.2.6.  POJO操作支持
 
- 
+​	CommonDao中的方法还有一个特点，那就是可以支持POJO Bean。我们在最初的1.1.3示例中可以发现，无需继承jef.database.DataObject，我们可以直接使用单纯的POJO对象创建表、删除表、执行CRUD操作。
 
-当我们定义POJO时，依然可以使用 @Id @Column @Table等基本的JPA注解。不过由于POJO Bean中不包含Query对象，因此在使用上基本只能按主键实现CRUD操作。
+​	POJO支持是为了进一步简化ORM使用而在CommonDao中进行的特殊处理。因此CommonDao中所有的泛型T，都无需继承jef.database.DataObject。
 
-CommonDao中设计了xxxxByProperty、xxxxByKey等系列的方法，也正是考虑到POJO对象中，无法准备的记录用户设置过值的字段，因此提供一个手工指定的补救办法。使用这两个系列的方法，可以更方便的操作POJO对象。例如
+ 	当我们定义POJO时，依然可以使用 @Id @Column @Table等基本的JPA注解。不过由于POJO Bean中不包含Query对象，因此在使用上基本只能按主键实现CRUD操作。
 
-我们定义一个POJO Entity
+​	CommonDao中设计了xxxxByProperty、xxxxByKey等系列的方法，也正是考虑到POJO对象中，无法准备的记录用户设置过值的字段，因此提供一个手工指定的补救办法。使用这两个系列的方法，可以更方便的操作POJO对象。例如
+
+​	我们定义一个POJO Entity
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lessonb\entity\Foo.java
 
-便可以对其进行各种操作了
+~~~java
+@Table(name="MY_FOO")
+public class Foo {
+	@Id
+	@GeneratedValue
+	private int id;
+	private String name;
+	private int age;
+//Getter Setter省略
+}
+~~~
 
-上面演示了对Foo对象进行建表、删表、增删改查操作。
+​	便可以对其进行各种操作了
 
- 
+~~~java
+	@Test
+	public void test1() throws SQLException{
+		commonDao.getNoTransactionSession().dropTable(Foo.class);
+		commonDao.getNoTransactionSession().createTable(Foo.class);
+		{
+			Foo foo=new Foo();
+			foo.setName("Hello!");
+			commonDao.insert(foo);	
+		}
+		{
+			Foo foo=new Foo();
+			foo.setAge(3);
+			foo.setName("飞");
+			//update MY_FOO set age=3 where name='Hello!'
+			commonDao.updateByProperty(foo, "name");
+		}
+		{
+			Foo foo=commonDao.loadByPrimaryKey(Foo.class, 1);
+			System.out.println(foo.getName());
+		}
+		{
+			//根据ID删除
+			commonDao.removeByKey(Foo.class, "id", 1);
+		}
+	}
+~~~
 
-最后，EF-ORM可以在一定程度上识别某H框架的配置文件，当做POJO Bean的注解来使用。这种做法可以在EF-ORM中直接使用某H框架的Bean定义。
+​	上面演示了对Foo对象进行建表、删表、增删改查操作。
 
- 
+ 	最后，EF-ORM可以在一定程度上识别某H框架的配置文件，当做POJO Bean的注解来使用。这种做法可以在EF-ORM中直接使用某H框架的Bean定义。
 
-比如我们创建不带任何注解的POJO类
+​	比如我们创建不带任何注解的POJO类
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lessonb\entity\PojoEntity.java
 
-然后我们配置一个XML文件去定义这个类的元数据
+~~~java
+public class PojoEntity {
+	private String name;
+	private Integer id;
+	private String comments;
+     //Getter Setter
+}
+~~~
+
+​	然后我们配置一个XML文件去定义这个类的元数据
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lessonb\entity\hbm\PojoEntity.hbm.xml
 
- 
+~~~xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<hibernate-mapping>
+	<class name="org.easyframe.tutorial.lessonb.entity.PojoEntity" table="Jef_pojo_table">
+		<id name="id">
+			<column name="id" length="5" />
+			<generator strategy="IDENTITY" />
+		</id>
+		<property name="name">
+			<column name="name" />
+		</property>
+		<property name="comments">
+			<column name="comments" />
+		</property>
+	</class>
+</hibernate-mapping>
+~~~
 
-只要通过指定class和某xml文件存在关联，EF-ORM就能够识别某H框架中的主要标签来读取元数据配置。
+​	只要通过指定class和某xml文件存在关联，EF-ORM就能够识别某H框架中的主要标签来读取元数据配置。
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lessonb\Case1.java
 
- 
+~~~java
+@Test
+public void test2() throws SQLException{
+	//读取指定路径下的某H框架配置文件。 %s表示类的SimpleName。%c表示类的全名。
+	ORMConfig.getInstance().setMetadataResourcePattern("hbm/%s.hbm.xml");
 
-有一项名为MetadataResourcePattern的全局参数配置，用于指定Entity类和某个XML文件之间的关联关系。
+	commonDao.getNoTransactionSession().dropTable(PojoEntity.class);
+	commonDao.getNoTransactionSession().createTable(PojoEntity.class);
+		
+	PojoEntity p=new PojoEntity();
+	p.setName("fsdfsfs");
+		
+	commonDao.insert(p);
+	System.out.println(p.getId());
+	commonDao.insert(p);
+	System.out.println(p.getId());
+	commonDao.insert(p);
+	System.out.println(p.getId());
+		
+		
+	PojoEntity pojo=commonDao.load(p);
+	System.out.println(pojo);
+		
+	pojo.setName("35677");
+	commonDao.update(pojo);
+		
+	System.out.println("===========================");
+		
+	PojoEntity cond=new PojoEntity();
+	cond.setId(12);
+	System.out.println(commonDao.find(cond));
+	commonDao.remove(cond);
+}
+~~~
 
-例如，所有的XML文件位于class path下的 /hbm目录中，其名称和类的SimpleName一致。此时可以在jef.properties中配置——
+​	有一项名为MetadataResourcePattern的全局参数配置，用于指定Entity类和某个XML文件之间的关联关系。
 
-其中 %s表示类的SimpleName；%c表示类的全名；
+​	例如，所有的XML文件位于class path下的 /hbm目录中，其名称和类的SimpleName一致。此时可以在jef.properties中配置------
 
-还可以用 %*表示匹配任意字符，一旦匹配为*，那么EF-ORM会查找所有满足条件的XML，然后根据XML中配置的class属性反向匹配到Entity上。
+~~~properties
+metadata.resource.pattern=/hbm/%s.hbm.xml
+~~~
 
-目前此功能仅支持某H框架中一些基本的单表字段描述，级联等描述目前还不支持。
+​	其中 %s表示类的SimpleName；%c表示类的全名；
 
- 
+​	还可以用 %\*表示匹配任意字符，一旦匹配为*，那么EF-ORM会查找所有满足条件的XML，然后根据XML中配置的class属性反向匹配到Entity上。
 
-## [11.3.    多数据源下的事务控制](undefined)
+​	目前此功能仅支持某H框架中一些基本的单表字段描述，级联等描述目前还不支持。
 
-在数据分库之后。下一个问题就接踵而至，这就是分布式事务的一致性问题。
 
-如果我们依旧使用Spring的JPA事务控制器，正常情况下，如果所有数据库都成功提交，那么事务可以保持一致，如下图所示——
 
- 
+## 11.3.    多数据源下的事务控制
 
-### [11.3.1.   JPA](undefined)事务（多重）
+​	在数据分库之后。下一个问题就接踵而至，这就是分布式事务的一致性问题。
 
-如果考虑到提交可能失败的场景，我们如果继续使用JPA事务管理器，我们将需要承担一定的风险。
+​	如果我们依旧使用Spring的JPA事务控制器，正常情况下，如果所有数据库都成功提交，那么事务可以保持一致，如下图所示------
+
+ ![11-11.3.-1](images\11-11.3.-1.png)
+
+### 11.3.1.   JPA事务（多重）
+
+​	如果考虑到提交可能失败的场景，我们如果继续使用JPA事务管理器，我们将需要承担一定的风险。
 
 **中断提交**
 
-当遭遇提交失败时，有两种行为策略。默认的是“中断提交”
+​	当遭遇提交失败时，有两种行为策略。默认的是“中断提交”
 
-因此，在默认情况下，当一个Spring事务结束时，EF会顺序提交A、B两个数据库的修改。如果发生提交失败，则中断提交任务。
+​	因此，在默认情况下，当一个Spring事务结束时，EF会顺序提交A、B两个数据库的修改。如果发生提交失败，则中断提交任务。
+
+ ![11-11.3.1.-1](images\11-11.3.1.-1.png)
 
  
 
-从上例看，也就是说，如果先提交 A库失败，那么A、B库都不提交。如果先提交A库成功，B库提交失败，那么A库的修改将会生效，而B库的修改不生效。
-
- 
+​	从上例看，也就是说，如果先提交 A库失败，那么A、B库都不提交。如果先提交A库成功，B库提交失败，那么A库的修改将会生效，而B库的修改不生效。
 
 **继续提交**
 
-此外，这一策略还可以变更。在jef.properties中配置：
+​	此外，这一策略还可以变更。在jef.properties中配置：
 
-开启上述配置后，那么在一个库提交失败后，整个提交过程将持续进行下去，直到所有能提交的变更都写入数据库位置。这种策略下，哪个连接先提交哪个后提交将不再产生影响。如下图所示
+~~~properties
+db.jpa.continue.commit.if.error =true
+~~~
 
- 
+​	开启上述配置后，那么在一个库提交失败后，整个提交过程将持续进行下去，直到所有能提交的变更都写入数据库位置。这种策略下，哪个连接先提交哪个后提交将不再产生影响。如下图所示  ![11-11.3.1.-2](images\11-11.3.1.-2.png)
 
-这种方式下，简单来说，如果我们的事务中用到了A、B两个数据库，事务提交时A、B数据库的修改单独提交，互不影响。
+​	这种方式下，简单来说，如果我们的事务中用到了A、B两个数据库，事务提交时A、B数据库的修改单独提交，互不影响。
 
- 
+​	无论使用上述哪种策略，都有可能会出现某些数据库提交成功、某些数据库提交失败的可能。因此，在没有跨库事务一致性要求的场合，我们依然可以用JPATransactionManager来管理事务，虽然这可能会造成上述两种场景的数据不一致，但如果您的系统业务上本身就没有这种严格的一致性要求时，JPA事务不失为是最简单的使用方法。
 
-无论使用上述哪种策略，都有可能会出现某些数据库提交成功、某些数据库提交失败的可能。因此，在没有跨库事务一致性要求的场合，我们依然可以用JPATransactionManager来管理事务，虽然这可能会造成上述两种场景的数据不一致，但如果您的系统业务上本身就没有这种严格的一致性要求时，JPA事务不失为是最简单的使用方法。
+​	在多库上使用JPA事务管理器时，每个数据库上的操作分别位于独立的事务中，相当于将Spring的事务划分为了多个独立的小型JPA事务。我们姑且用 “多重JPA事务”来称呼。
 
-在多库上使用JPA事务管理器时，每个数据库上的操作分别位于独立的事务中，相当于将Spring的事务划分为了多个独立的小型JPA事务。我们姑且用 “多重JPA事务”来称呼。
+​	如果出现了某些数据库被提交，某些数据库出错或未提交。此时框架将会抛出*jef.database.innerpool.InconsistentCommitException类。*该异常类标识着多个数据库的提交状态出现了不一致。该异常类中，可以获得哪些数据源提交成功，哪位未提交成功的信息。供开发者自行处理。
 
- 
+### 11.3.2.   JTA事务支持
 
-如果出现了某些数据库被提交，某些数据库出错或未提交。此时框架将会抛出*jef.database.innerpool.InconsistentCommitException**类。*该异常类标识着多个数据库的提交状态出现了不一致。该异常类中，可以获得哪些数据源提交成功，哪位未提交成功的信息。供开发者自行处理。
+​	上面的问题是不是无法避免的呢？不是， SpringFramework还支持JTA事务。使用J2EE的JTA规范，我们可以让EF-ORM在多数据库下支持分布式事务。
 
-### [11.3.2.   JTA](undefined)事务支持
+​	JTA是JavaEE技术规范之一，JTA允许应用程序执行分布式事务处理——在两个或多个网络计算机资源上访问并且更新数据。EF-ORM可以借助一些数据库JDBC驱动本身的XA功能，或者第三方的开源JTA框架实现分布式事务。
 
-上面的问题是不是无法避免的呢？不是， SpringFramework还支持JTA事务。使用J2EE的JTA规范，我们可以让EF-ORM在多数据库下支持分布式事务。
-
-JTA是JavaEE技术规范之一，JTA允许应用程序执行分布式事务处理——在两个或多个网络计算机资源上访问并且更新数据。EF-ORM可以借助一些数据库JDBC驱动本身的XA功能，或者第三方的开源JTA框架实现分布式事务。
-
-使用JTA事务后，刚才的流程即可变为下图所示，因此任何一个数据库提交错误情况下，都能确保数据库数据一致性。
+​	使用JTA事务后，刚才的流程即可变为下图所示，因此任何一个数据库提交错误情况下，都能确保数据库数据一致性。 ![11-11.3.2.-1](images\11-11.3.2.-1.png)
 
  
 
-目前ef-orm推荐使用atomikos作为JTA的事务支持框架。
+​	目前ef-orm推荐使用atomikos作为JTA的事务支持框架。
 关于JTA的介绍，可参见http://www.ibm.com/developerworks/cn/java/j-lo-jta/
 
 关于atomikos的介绍，可参见[http://www.atomikos.com/](http://www.atomikos.com/)
 
- 
+​	下面我们举例，用Spring + atomikos + EF-ORM实现分布式事务。
+​	首先，我们在pom.xml中，引入atomikos的包以及jta的API包。
 
-下面我们举例，用Spring + atomikos + EF-ORM实现分布式事务。
-首先，我们在pom.xml中，引入atomikos的包以及jta的API包。
+~~~xml
+	<dependency>
+		<groupId>com.atomikos</groupId>
+		<artifactId>transactions-jdbc</artifactId>
+		<version>3.9.3</version>
+	</dependency>
+	<dependency>
+		<groupId>com.atomikos</groupId>
+		<artifactId>transactions-jta</artifactId>
+		<version>3.9.3</version>
+	</dependency>
+	<dependency>
+		<groupId>javax.transaction</groupId>
+		<artifactId>jta</artifactId>
+		<version>1.1</version>
+	</dependency>
+~~~
 
-由于使用了atomikos，在Spring bean配置中，需要配置XA的数据源
+​	由于使用了atomikos，在Spring bean配置中，需要配置XA的数据源
 
-上例配置了两个JTA的数据源，一个是Oracle数据库,的一个是MySQL数据库。然后配置EF-ORM的SessionFactory
+~~~xml
+<bean id="ds1" class="com.atomikos.jdbc.AtomikosDataSourceBean"
+		init-method="init" destroy-method="close">
+		<property name="uniqueResourceName"><value>mysql/ds1</value>	</property>
+		<property name="xaDataSourceClassName">
+			<value>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</value>
+		</property>
+		<property name="xaProperties">
+			<props>
+				<prop key="URL">jdbc:mysql://localhost:3307/test</prop>
+				<prop key="user">root</prop>
+				<prop key="password">admin</prop>
+			</props>
+		</property>
+		<property name="poolSize"><value>3</value></property>
+		<property name="maxPoolSize"><value>30</value>	</property>
+	</bean>
+	<bean id="ds2" class="com.atomikos.jdbc.AtomikosDataSourceBean"
+		init-method="init" destroy-method="close">
+		<property name="uniqueResourceName"><value>oracle/ds2</value></property>
+		<property name="xaDataSourceClassName">
+			<value>oracle.jdbc.xa.client.OracleXADataSource</value>
+		</property>
+		<property name="xaProperties">
+			<props>
+				<prop key="URL">jdbc:oracle:thin:@pc-jiyi:1521:orcl</prop>
+				<prop key="user">pomelo</prop>
+				<prop key="password">pomelo</prop>
+			</props>
+		</property>
+		<property name="poolSize"><value>3</value></property>
+		<property name="maxPoolSize"><value>30</value>	</property>
+	</bean>
+~~~
 
-配置SessionFactoryBean，和前面的区别在于要将tranactionMode配置为”jta”。
+​	上例配置了两个JTA的数据源，一个是Oracle数据库,的一个是MySQL数据库。然后配置EF-ORM的SessionFactory
 
-然后配置Spring的声明式事务管理。
+~~~xml
+<bean id="sessionFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean" destroy-method="close">
+		<property name="transactionMode" value="jta"></property>
+		<property name="dataSources">
+			<map>
+				<entry key="ds1" value-ref="ds1" />
+				<entry key="ds2" value-ref="ds2" />
+			</map>
+		</property>
+		<property name="packagesToScan">
+			<list>
+				<value>com.github.xuse.easyframe.test </value>
+			</list>
+		</property>
+	</bean>
+~~~
 
-上述是Spring的事务策略和AOP配置。其中atomikos的连接池，事务超时等控制参数也可以配置，详情可参阅atomikos的官方文档。
+​	配置SessionFactoryBean，和前面的区别在于要将tranactionMode配置为”jta”。
 
-使用上述配置后，EF-ORM和Spring基本放弃了对事务控制，单个线程中的所有操作都在一个事务(UserTransaction)中。直到事务结束，连接关闭（被放回JTA连接池）时，所有数据才被提交。凡是位于上述切面中的save*或者delete*方法中，如果操作了多个数据库的数据，框架都会保证其数据一致性。
+​	然后配置Spring的声明式事务管理。
 
- 
+~~~xml
+<!--事务管理器，需要使用JtaTransactionManager -->
+<bean id="transactionManager"
+		class="org.springframework.transaction.jta.JtaTransactionManager">
+		<property name="userTransaction">
+			<bean class="com.atomikos.icatch.jta.UserTransactionImp"
+				p:transactionTimeout="300" />
+		</property>
+		<property name="transactionManager">
+			<bean class="com.atomikos.icatch.jta.UserTransactionManager"
+				init-method="init" destroy-method="close" p:forceShutdown="true" />
+		</property>
+</bean>
+<!-- 事务AOP切面，和标准的Spring配置方法没有区别 -->
+<tx:advice id="advice" transaction-manager="transactionManager">
+	<tx:attributes>
+		<tx:method name="save*" propagation="REQUIRED" />
+		<tx:method name="delete*" propagation="REQUIRED" />
+		<tx:method name="*" read-only="false" />
+	</tx:attributes>
+</tx:advice>
+<aop:config>
+	<aop:pointcut id="point"
+		expression=" execution(* com.github.easyframe.testp.jta.dao.Biz*.*(..))" />
+	<aop:advisor advice-ref="advice" pointcut-ref="point" />
+</aop:config>
+~~~
 
- 
+​	上述是Spring的事务策略和AOP配置。其中atomikos的连接池，事务超时等控制参数也可以配置，详情可参阅atomikos的官方文档。
+
+​	使用上述配置后，EF-ORM和Spring基本放弃了对事务控制，单个线程中的所有操作都在一个事务(UserTransaction)中。直到事务结束，连接关闭（被放回JTA连接池）时，所有数据才被提交。凡是位于上述切面中的save*或者delete*方法中，如果操作了多个数据库的数据，框架都会保证其数据一致性。
+
+>**在JTA模式下,EF-ORM作了哪些机制来适应JTA**
+>
+>​	*在启用JTA后，EF-ORM会禁用一些内部特性来满足JTA的要求，比如禁用内部连接池，禁用Postgres事务保持功能等。也不会在Connection上执行commit 、rollback、setReadOnly等操作。*
+>
+>​	*此外，启用了JTA后，DDL语句将不能和业务操作在同一个线程中运行，因此凡是涉及到建表、删表、创建Sequence等DDL操作时，EF-ORM都会创建一个新的线程，在独立连接上操作数据库。这些都是JTA事务模式下的特殊处理。*
 
 ## 11.4.     共享其他框架的事务
 
- 
+​	如果您将EF-ORM和其他ORM框架混合使用，那么就会碰到共享事务的问题。我们一般会希望在一个服务(Service)方法中，无论使用哪个框架来操作数据库，这些操作都位于一个事务中。
 
-如果您将EF-ORM和其他ORM框架混合使用，那么就会碰到共享事务的问题。我们一般会希望在一个服务(Service)方法中，无论使用哪个框架来操作数据库，这些操作都位于一个事务中。
+​	为了适应这种场景，EF-ORM中存在一个共享事务的模式，一旦启用后，EF-ORM将会放弃自己的事务控制和连接管理，而是到Spring的上下文中去查找其他框架所使用的连接对象，然后在该连接上进行数据库操作，从而保证多个框架操作同一个事务。
 
-为了适应这种场景，EF-ORM中存在一个共享事务的模式，一旦启用后，EF-ORM将会放弃自己的事务控制和连接管理，而是到Spring的上下文中去查找其他框架所使用的连接对象，然后在该连接上进行数据库操作，从而保证多个框架操作同一个事务。
+​	目前EF-ORM可以和以下三种框架共享事务。
 
-目前EF-ORM可以和以下三种框架共享事务。
-
-Hibernate 
-
-MyBatis
-
-Spring JdbcTemplate。
+* Hibernate 
+* MyBatis
+* Spring JdbcTemplate。
 
 下面具体说明具体的配置方法。
 
@@ -1907,129 +2277,223 @@ Spring JdbcTemplate。
 
 下面例子中配置了事务共享
 
- 
+~~~xml
+<!— 配置数据源 -->
+<bean id="dataSource"  class="jef.database.test.jdbc.DebugDataSource">
+</bean>
+<!— 配置Hibenrate 3 Session Factory-->
+<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+	<property name="configLocation" value="classpath:hibernate-perftest.cfg.xml" />
+	<property name="dataSource" ref="dataSource" />
+	<property name="lobHandler" ref="lobHandler" />
+</bean>
+<bean id="lobHandler" class="org.springframework.jdbc.support.lob.DefaultLobHandler"
+		lazy-init="true" />
+<!-- 事务管理器配置 -->
+<bean id="hibernateTxManager"
+	class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+	<property name="sessionFactory" ref="sessionFactory" />
+	<property name="dataSource" ref="dataSource" />
+</bean>
+
+<!-- JDBC TEMPLATE -->
+<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+	<property name="dataSource" ref="dataSource" />
+</bean>
+
+<!-- EF配置 -->
+<bean id="entityManagerFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean" destroy-method="close">
+	<property name="dataSource" ref="dataSource" />
+	<property name="transactionMode" value="JDBC" />
+</bean>
+
+<!— 此处仅介绍事务管理器配置，其他的事务策略、事务拦截器、事务切面等略，请自行百度 -->
+~~~
 
 上述配置的要点是
 
-1、 使用Hibernate的事务管理器。注意需要注入DataSource对象。
-
-2、 必须用同一个DataSource对象初始化JdbcTemplate， EF-ORM SessionFactory。
-
-3、 EF-ORM的*transactionMode*参数必须设置为jdbc 。
-
- 
+1. 使用Hibernate的事务管理器。注意需要注入DataSource对象。
+2. 必须用同一个DataSource对象初始化JdbcTemplate， EF-ORM SessionFactory。
+3. EF-ORM的**transactionMode**参数必须设置为jdbc 。
 
 ### 11.4.2.  MyBatis / JdbcTemplate
 
- 
+~~~xml
+<bean id="dataSource"  class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+<!— 此处定义数据源 -->
+</bean>
+<!— Spring JdbcTempate配置 -->
+<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+	<property name="dataSource" ref="dataSource" />
+</bean>
+<!— MyBatis配置，其他略 -->
+<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+     <property name="dataSource" ref="dataSource" /> 
+ </bean>
+
+<!-- 事务管理器配置 -->
+<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+    <property name="dataSource" ref="dataSource" />
+ </bean>
+	 
+ <!-- EF配置 -->
+<bean id="entityManagerFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean" destroy-method="close">
+	<property name="dataSource" ref="dataSource" />
+	<property name="transactionMode" value="jdbc" />
+</bean>
+
+<!— 此处仅介绍事务管理器配置，其他的事务策略、事务拦截器、事务切面等略，请自行百度 -->
+~~~
 
 上述配置的要点是
 
-1、 使用*org.springframework.jdbc.datasource.DataSourceTransactionManager*事务管理器。
-
-2、 必须用同一个DataSource对象初始化JdbcTemplate，MyBatis SessionFactory，EF-ORM SessionFactory。
-
-3、 EF-ORM的*transactionMode*参数必须设置为jdbc。
+1. 使用**org.springframework.jdbc.datasource.DataSourceTransactionManager**事务管理器。
+2. 必须用同一个DataSource对象初始化JdbcTemplate，MyBatis SessionFactory，EF-ORM SessionFactory。
+3. EF-ORM的**transactionMode**参数必须设置为jdbc。
 
 按上述要点配置后，即可确保三个框架的操作处于同一个事务中。
 
- 
+>  **扩展阅读：共享事务的原理**
+>
+>  	*Spring在设计时，考虑到了JdbcTemplate和Hibenrate共享事务的问题，会将Hibernate事务所使用的连接暴露出来，用ThreadLocal保存在一个静态变量中，这就为共享事务提供了可能。*
+>  	*对于Spring来说，在Hibernate中暴露出来的连接，和在使用MyBatis/JdbcTemplate时存放的事务连接是相同的，因此Hibernate和JdbcTemplate/MyBatis之间就可以共享事务。*
+>
+>  ​	*在启用JDBC的事务模式后，EF-ORM会禁用内部连接管理和事务管理。每次操作时，都去寻找Spring事务管理器所暴露出来的当前事务连接进行利用。相当与把自身的事务管理方式改得和 JdbcTemplate一样，因此也就能和上述两个框架一样，共享事务连接。*
 
- 
 
- 
 
-# [12.        动态表支持](undefined)
+# 12. 动态表支持
 
-## [12.1.     动态表支持](undefined)
+## 12.1. 动态表支持
 
-### [12.1.1.  动态表的返回（特殊）](undefined)
+### 12.1.1. 动态表的返回（特殊）
 
- 
-
-本节介绍不同数据返回的规则。下节介绍操作这些映射规则的API
-
- 
-
- 
+ 	本节介绍不同数据返回的规则。下节介绍操作这些映射规则的API
 
 API介绍
 
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
 动态表返回对象VartObject
-
- 
 
 1.8.0以上版本支持
 
-## [12.2.     扫描现存的数据库表作为动态表操作](undefined)
+## 12.2. 扫描现存的数据库表作为动态表操作
 
 1.8.2以上版本支持。
-
- 
 
 其他功能
 
 内置连接池
 
-# 13.        DB元数据与DDL操作
+# 13. DB元数据与DDL操作
 
-DB元数据，即数据库中的schema、table、view、function、procudure等数据库内建的各种数据结构和代码。
+​	DB元数据，即数据库中的schema、table、view、function、procudure等数据库内建的各种数据结构和代码。
 
-在EF-ORM中，提供了名为DbMetadata的API类来操作数据库的结构信息，初步了解可参见下文的例子。详情请参阅API文档。
+​	在EF-ORM中，提供了名为DbMetadata的API类来操作数据库的结构信息，初步了解可参见下文的例子。详情请参阅API文档。
 
-使用API来操作数据库结构的主要优点是，一般无需考虑不同的RDBMS的兼容性，因此可以使语句在各种数据库上通用。（但依然要受数据库本身支持的数据类型等限制）
+​	使用API来操作数据库结构的主要优点是，一般无需考虑不同的RDBMS的兼容性，因此可以使语句在各种数据库上通用。（但依然要受数据库本身支持的数据类型等限制）
 
-JDBC中，提供了名为DatabaseMetadata的元数据访问接口类。通过这个接口类可以获得大部分的数据库元数据信息。元数据访问接口类中的很多方法，都是在JDBC3或JDBC4中添加的，要想访问这些方法，请尽量使用满足JDBC4接口的驱动。
+​	JDBC中，提供了名为DatabaseMetadata的元数据访问接口类。通过这个接口类可以获得大部分的数据库元数据信息。元数据访问接口类中的很多方法，都是在JDBC3或JDBC4中添加的，要想访问这些方法，请尽量使用满足JDBC4接口的驱动。
 
- 
-
-## [13.1.    访问数据库](undefined)结构
+## 13.1.    访问数据库结构
 
 ### 13.1.1.  获取RDBMS版本号等基本信息
 
-下面的例子演示了如何获取数据库的名称、版本号、JDBC驱动名和版本号；还有数据库支持的函数、数据类型等信息。
+​	下面的例子演示了如何获取数据库的名称、版本号、JDBC驱动名和版本号；还有数据库支持的函数、数据类型等信息。
 
 src\main\java\org\easyframe\tutorial\lessonc\CaseDatabaseMetadata.java
 
-前面已经讲过EF-ORM中，一个session对象中可以封装多个数据源，因此在获取DbMetaData时，首先要指定数据源。如果传入数据源名称为null，那么就会获得第一个（默认的）数据源。
+~~~java
+	@Test
+	public void testDbInfo() throws SQLException {
+		// 当有多个数据源时，需要指定数据源的名称，如果只有一个数据源，那么传入null就行了。
+		DbMetaData meta = db.getMetaData(null);
+		Map<String, String> version = meta.getDbVersion();
+		for (String key : version.keySet()) {
+			System.out.println(key + ":" + version.get(key));
+		}
+		System.out.println("schema:" + meta.getCurrentSchema());
+		System.out.println("=== Functions ===");
+		System.out.println(meta.getAllBuildInFunctions());
+		System.out.println("=== DATA TYPES ===");
+		System.out.println(meta.getSupportDataType());
+	}
+~~~
 
-### [13.1.2.   获得表和字段结构信息](undefined)
+​	前面已经讲过EF-ORM中，一个session对象中可以封装多个数据源，因此在获取DbMetaData时，首先要指定数据源。如果传入数据源名称为null，那么就会获得第一个（默认的）数据源。
 
-下面的例子演示了如何获得数据库中有哪些表和视图，然后可以打印出一张表的各个列和每个列的类型信息。还有相关的索引、主键等信息。
+### 13.1.2.   获得表和字段结构信息
+
+​	下面的例子演示了如何获得数据库中有哪些表和视图，然后可以打印出一张表的各个列和每个列的类型信息。还有相关的索引、主键等信息。
 
 src\main\java\org\easyframe\tutorial\lessonc\CaseDatabaseMetadata.java
 
-运行上述案例，可以查看到数据库中第一张表的列、数据类型、索引、主键等详细信息。
+~~~java
+@Test
+public void testTableInfo() throws SQLException {
+	DbMetaData meta = db.getMetaData(null);
+	//查看数据库中的所有表
+	List<TableInfo> tables=meta.getTables();
+	System.out.println("=== There are "+ tables.size()+" tables in database. ===");
+	for(TableInfo info:tables){
+		System.out.println(info);
+	}
+		
+	//查看数据库中的所有视图
+	List<TableInfo> views=meta.getViews();
+	System.out.println("=== There are "+ views.size()+" views in database. ===");
+	for(TableInfo info:views){
+		System.out.println(info);
+	}
+		
+	//查看一张表的信息
+	if(tables.isEmpty())return;
+	String tableName=tables.get(0).getName();
+	List<Column> cs = meta.getColumns(tableName,true);
+	System.out.println("==== Table " + tableName + " has " + cs.size() + " columns. ====");
+	for (Column c : cs) {
+		System.out.println(c.getColumnName()+"\t"+c.getDataType() + "\t" + c.getColumnSize() + "\t" + c.getRemarks());
+	}
+ 	//表的主键
+	System.out.println("======= Table " + tableName + " Primary key ========");
+	System.out.println(meta.getPrimaryKey(tableName));
+	//一张表的索引
+	Collection<Index> is = meta.getIndexes(tableName);
+	System.out.println("==== Table " + tableName + " has " + is.size() + " indexes. ===");
+	for (Index i : is) {
+		System.out.println(i);
+	}
+}
+~~~
+
+​	运行上述案例，可以查看到数据库中第一张表的列、数据类型、索引、主键等详细信息。
 
 ### 13.1.3.  删表和建表
 
-前面的代码中，您可以已经看到了关于删除表和创建表的例子。在DbMetaData上也有相应的删表和建表方法。
+​	前面的代码中，您可以已经看到了关于删除表和创建表的例子。在DbMetaData上也有相应的删表和建表方法。
 
-       删除表时会主动删除相关的所有主外键、索引、约束。
+​	删除表时会主动删除相关的所有主外键、索引、约束。
 
        建表时会同时创建表上定义的索引(使用@Index 或者 @Indexed定义)，但不会创建外键。
 
 src\main\java\org\easyframe\tutorial\lessonc\CaseDatabaseMetadata.java
 
+~~~java
+@Test
+public void testTableDropCreate() throws SQLException{
+	DbMetaData meta = db.getMetaData(null);
+	//删除Student表
+	meta.dropTable(Student.class);
+	//创建Student表
+	meta.createTable(Student.class);
+}
+~~~
+
 注意——
 
-在删表时，如果表存在并成功删除则返回true；如果表不存在不会抛出异常，而是返回false。
+​	在删表时，如果表存在并成功删除则返回true；如果表不存在不会抛出异常，而是返回false。
 
-在建表时，如果表不存在并成功创建返回true；如果表已存在不会抛出异常，而是返回false。
+​	在建表时，如果表不存在并成功创建返回true；如果表已存在不会抛出异常，而是返回false。
 
 ### 13.1.4.  操作索引
 
@@ -2037,57 +2501,196 @@ src\main\java\org\easyframe\tutorial\lessonc\CaseDatabaseMetadata.java
 
 src\main\java\org\easyframe\tutorial\lessonc\CaseDatabaseMetadata.java
 
-### [13.1.5.   操作外键](undefined)
+~~~java
+@Test
+public void testIndexes() throws SQLException{
+	DbMetaData meta = db.getMetaData(null);
+	System.out.println("=== Indexes on table Student ===");
+	for(Index index: meta.getIndexes(Student.class)){
+		System.out.println(index);
+	}
+		
+	System.out.println("=== Now we try to create two indexes ===");
+	//创建单字段的unique索引
+	Index index1=meta.toIndexDescrption(Student.class, "name");
+	index1.setUnique(true);
+	meta.createIndex(index1);
+	//创建复合索引，其中Grade列倒序
+	Index index2=meta.toIndexDescrption(Student.class, "grade desc", "gender");
+	meta.createIndex(index2);
+	//打印出表上的所有索引
+	System.out.println("=== Indexes on table Student (After create)===");
+	for(Index index: meta.getIndexes(Student.class)){
+		System.out.println(index);
+	}
+	
+	System.out.println("=== Now we try to drop all indexes ===");
+	//删除所有索引
+	for(Index index: meta.getIndexes(Student.class)){
+		if(index.getIndexName().startsWith("IDX")){
+			meta.dropIndex(index);
+		}
+	}
+	//打印出表上的所有索引
+	System.out.println("=== Indexes on table Student (After drop)===");
+	for(Index index: meta.getIndexes(Student.class)){
+		System.out.println(index);
+	}
+}
+~~~
 
-我们可以访问数据库中表和表之间的外键，并且删除它们或者创建它们。下面的例子演示了创建外键、查询外键，删除外键等操作。
+### 13.1.5.   操作外键
 
- 
+​	我们可以访问数据库中表和表之间的外键，并且删除它们或者创建它们。下面的例子演示了创建外键、查询外键，删除外键等操作。
 
 src\main\java\org\easyframe\tutorial\lessonc\CaseDatabaseMetadata.java
 
- 
+~~~java
+@Test
+public void testForeignKeys() throws SQLException{
+	String tableName="STUDENT_TO_LESSON";
+	DbMetaData meta = db.getMetaData(null);
+		
+	//在表上面创建两个外键，分别引用Student表和LessonInfo表。
+	meta.createForeignKey(StudentToLesson.Field.studentId, Student.Field.id);
+	meta.createForeignKey(StudentToLesson.Field.lessionId, LessonInfo.Field.id);
+		
+	//打印目前表上的外键(应该看到两个外键)
+	System.out.println("=== Foreign keys on table ["+tableName+"] ===");
+	LogUtil.show(meta.getForeignKey(tableName));
+		
+	//打印引用到表Student的外键（应该看到一个外键）
+	System.out.println("=== Foreign keys on table [STUDENT] ===");
+	LogUtil.show(meta.getForeignKeyReferenceTo("STUDENT"));
+		
+	//打印引用到表LessonInfo的外键（应该看到一个外键）
+	System.out.println("=== Foreign keys on table [LESSON_INFO] ===");
+	LogUtil.show(meta.getForeignKeyReferenceTo("LESSON_INFO"));
+		
+	//删除表上的所有外键
+	System.out.println("=== Drop Foreign keys ===");
+	meta.dropAllForeignKey(tableName);
+		
+	//打印目前表上的外键(应该没有外键)
+	System.out.println("=== Foreign keys on table "+tableName+" ===");
+	LogUtil.show(meta.getForeignKey(tableName));
+}
+~~~
 
 ### 13.1.6.  访问自定义函数和存储过程
 
-我们可以访问数据库中的自定义函数和存储过程。不过DbMetaData没有提供方法去修改这些对象。
+​	我们可以访问数据库中的自定义函数和存储过程。不过DbMetaData没有提供方法去修改这些对象。
 
-下面的例子演示了如何查询数据库中的自定义函数和存储过程。（只能看到基本信息，无法看到具体的SQL代码）。
-
- 
+​	下面的例子演示了如何查询数据库中的自定义函数和存储过程。（只能看到基本信息，无法看到具体的SQL代码）。
 
 src\main\java\org\easyframe\tutorial\lessonc\CaseDatabaseMetadata.java
 
-要注意的是，查询存储过程和自定义函数是较高版本的JDBC驱动才能提供的方法。在一些不够主流的数据库上，getFunctions操作可能不支持。如果您使用的是主流数据库，请注意使用较高版本的JDBC驱动。
+~~~java
+@Test
+public void testFunctions() throws SQLException{
+	DbMetaData meta = db.getMetaData(null);
+	System.out.println("=== User Defined Functions ===");
+	//打印出所有函数
+	List<Function> functions=meta.getFunctions(null);
+	for(Function f: functions){
+		System.out.println(f);
+	}
+	//打印出所有存储过程
+	System.out.println("=== User Defined Procedures ===");
+	functions=meta.getProcedures(null);
+	for(Function f: functions){
+		System.out.println(f);
+	}		
+}
+~~~
 
-### [13.1.7.   修改已存在的表(Alter table)](undefined)
+​	要注意的是，查询存储过程和自定义函数是较高版本的JDBC驱动才能提供的方法。在一些不够主流的数据库上，getFunctions操作可能不支持。如果您使用的是主流数据库，请注意使用较高版本的JDBC驱动。
 
-修改表——ALTER TABLE语句，可能是不同的RDBMS之间差别最大的SQL语句了。对于修改表，框架提供的接口也会稍微复杂一些。
+### 13.1.7.   修改已存在的表(Alter table)
 
-修改表的功能被统一为refreshTable()方法，这个方法的作用的将数据库中的表结构和传入的表模型进行对比，并让数据库中的表和模型保持一致。
+​	修改表------ALTER TABLE语句，可能是不同的RDBMS之间差别最大的SQL语句了。对于修改表，框架提供的接口也会稍微复杂一些。
+
+​	修改表的功能被统一为refreshTable()方法，这个方法的作用的将数据库中的表结构和传入的表模型进行对比，并让数据库中的表和模型保持一致。
 
 src\main\java\org\easyframe\tutorial\lessonc\CaseAlterTable.java
 
- 
+~~~java
+/**
+* refreshTable的效果是检查并修改数据库中的表，使其和传入的实体模型保持一致。
+* 本例中，数据库中没有此表，因此变为建表操作。
+*/
+@Test
+public void testCreateTableSimple() throws SQLException{
+	db.dropTable(Student.class);
+	db.refreshTable(Student.class);
+}
+~~~
 
-  那么，如果Student表已经存在的情况下，就需要使用ALTER TABLE的方式来维护数据库结构了。再看下面这个例子。
+​	那么，如果Student表已经存在的情况下，就需要使用ALTER TABLE的方式来维护数据库结构了。再看下面这个例子。
 
 src\main\java\org\easyframe\tutorial\lessonc\CaseAlterTable.java
 
-  运行上述代码，就可以看到，框架会使用ALTER TABLE语句来修改已经存在的表，使其和模型保持一致。
+~~~java
+/**
+* 先用SQL语句直接建立一张类似的表。
+* 然后通过refresh方法，修改已存在的表。
+*/
+@Test
+public void testAlterTableSimple() throws SQLException{
+	//准备一张结构不同的表
+	db.dropTable(Student.class);
+	String sql="create table STUDENT(\n"+
+			   "ID int generated by default as identity  not null,\n"+
+			   "GENDER varchar(6),\n"+
+			   "NAME varchar(255),\n"+
+			   "DATE_OF_BIRTH timestamp,\n"+
+			   "constraint PK_STUDENT primary key(ID)\n"+
+		")";
+	db.executeSql(sql);
+
+	//开始刷新表
+	System.out.println("=== Begin refresh table ===");
+	db.refreshTable(Student.class);
+}
+~~~
+
+​	 运行上述代码，就可以看到，框架会使用ALTER TABLE语句来修改已经存在的表，使其和模型保持一致。
 
 ### 13.1.8.  监听和控制表的修改过程
 
-在修改表的过程中，我们可以传入一个事件监听器。事件监听器并不仅仅用于了解刷新表的过程，还可以直接控制这一过程。我们可以先尝试运行位于orm-tutorial中的例子，来观察这一事件。
-
- 
+​	在修改表的过程中，我们可以传入一个事件监听器。事件监听器并不仅仅用于了解刷新表的过程，还可以直接控制这一过程。我们可以先尝试运行位于orm-tutorial中的例子，来观察这一事件。
 
 src\main\java\org\easyframe\tutorial\lessonc\CaseAlterTable.java
 
-运行上述案例，使用者可以看到有一个桌面进度条弹出，进度条中显示了当前的工作进度，包括正在执行的比较工作或者数据库SQL语句。
+~~~java
+/**
+* 传入一个事件监听器，从而可以监测刷新操作的步骤
+* @see jef.database.support.MetadataEventListener
+*/
+@Test
+public void testAlterTableProgress() throws SQLException{
+	//准备一张结构不同的表
+	db.dropTable(Student.class);
+	String sql="create table STUDENT(\n"+
+			   "ID int generated by default as identity  not null,\n"+
+			   "GENDER varchar(6),\n"+
+			   "NAME varchar(128),\n"+
+			   "REV_NAME varchar(255),\n"+
+			   "DATE_OF_BIRTH timestamp,\n"+
+			   "constraint PK_STUDENT primary key(ID)\n"+
+		")";
+	db.executeSql(sql);
+		
+	System.out.println("=== Begin refresh table ===");
+	db.refreshTable(Student.class,new ProgressSample());
+}
+~~~
 
- 
+​	运行上述案例，使用者可以看到有一个桌面进度条弹出，进度条中显示了当前的工作进度，包括正在执行的比较工作或者数据库SQL语句。
 
- 
+ 事实上
+
+[此处应该插入一张流程图]()
 
 |                       |                 |      |
 | --------------------- | --------------- | ---- |
@@ -2100,87 +2703,143 @@ src\main\java\org\easyframe\tutorial\lessonc\CaseAlterTable.java
 | 在任何一句SQL执行失败后         |                 |      |
 | 在所有SQL都执行完成后          |                 |      |
 
- 
-
 按事件的时间顺序如下 
 
-  
+[缺失]()
 
-  
 
- 
+
+
+
+
 
 ### 13.1.9.  使用动态表模型来维护数据库结构
 
-在EF-ORM中支持了动态表模型，因此可以用编程接口来构造一个表模型，并且用这个表模型来维护数据库。
+​	在EF-ORM中支持了动态表模型，因此可以用编程接口来构造一个表模型，并且用这个表模型来维护数据库。
 
 src\main\java\org\easyframe\tutorial\lessonc\CaseAlterTable.java
 
- 
+~~~java
+@Test
+public void testAlterTupleTable() throws SQLException{
+	TupleMetadata model=new TupleMetadata("MY_TABLE");
+	model.addColumn("ID", new ColumnType.AutoIncrement(8));
+	model.addColumn("NAME", new ColumnType.Varchar(64));
+	model.addColumn("DATA", new ColumnType.Varchar(128));
+	model.addColumn("DOB", new ColumnType.TimeStamp().notNull()
+		.defaultIs(Func.current_timestamp));
+	model.addColumn("MODIFIED", new ColumnType.TimeStamp().notNull());
+	model.addColumn("CONTANT", new ColumnType.Clob());
+	
+	//第一次刷新，由于此时表还不存在，因此会创建 MY_TABLE
+	db.refreshTable(model, null);
+	
+	//修改模型字段
+	model.removeColumn("DATA");
+	model.updateColumn("NAME", new ColumnType.Varchar(128).notNull());
+	model.updateColumn("MODIFIED", new ColumnType.TimeStamp());
+	model.addColumn("DATA1", new ColumnType.Varchar(64));
+	model.addColumn("AGE", new ColumnType.Int(12));
+	//第二次刷新，修改MY_TABLE的字段
+	db.refreshTable(model, null);
+	System.out.println("=== begin drop ===");
+	db.dropTable(model);
+}
+~~~
 
-## [13.2.    其他功能](undefined)
+## 13.2. 其他功能
 
-### [13.2.1.   执行sql](undefined)脚本文件
-
- 
-
-# [14.        其他功能与特性](undefined)
-
-这里列举一些较难归类的，或者是框架最近新增的特性。这些特性往往能在针对性的环境下简化开发，解决开发中的疑难问题。
-
-## [14.1.    记录时间戳自动维护](undefined)
-
-   即自动维护每条记录的create-Time字段和update-time字段。
-
-我们可能有这种场景，当数据插入数据库时，希望在某个日期时间型字段中写入当前数据库时间。在每次数据更新时，希望在某个日期时间型字段中写入当前的数据库时间。这其实就是常用的日期时间维护操作。用对象关系映射很难实现这种功能。同时由于需要设置的是数据库时间而不是当前java环境时间，这也给功能的实现造成了一定困难。
-
-EF-ORM 1.9.1.RELEASE开始，原生支持此类操作。简单说来，在日期字段的注解上加上@GeneratedValue，则EF就会自动维护这些日期字段。
-
-一旦进行了上述配置，就会发现在insert或update语句中，会出现sysdate或current_timestamp等函数，直接获取数据库时间进行操作。
-
-不过这种方式下，数据库时间不会回写到插入或更新的对象中。您需要再执行一次查询操作，才能得到刚刚写入数据库的记录的时间。
-
-另外一种变通的方法是，在插入之前自动为字段赋值，此时的时间为当前java服务器的时间。这种方式下由于是先赋值再插入的，在操作完成后，可以从对象中获得刚才操作的时间。EF-ORM也支持这种方式。
-
-  使用以上注解后，数据记录的插入和更新时间就可以交由框架自动维护了。
-
- 
-
-## [14.2.    内置连接池](undefined)
-
-EF-ORM内置了一个稳定高效的连接池（但功能较弱）。正常情况下，EF-ORM会检测用户的DataSource是否使用了连接池。如果用户已经使用了连接池，那么EF-ORM不会启用内置连接池。如果检测到用户没有使用连接池，EF-ORM就会启用内置连接池。
-
-内置连接池可以在额定连接数到最大连接数之间变化。定期关闭那些闲置的过多的连接。内置连接池可以定期检查空闲连接的可用性。在取出的连接使用中，如果捕捉到SQLException，并且数据库方言判定这个Exception是由于网络断线等IO错误造成的，会强行触发连接池立刻检查，清除无效连接。并且连接池会不断尝试重新连接，试图从故障中恢复。
-
-EF-ORM启动时，都有一条info日志，如果启用内置连接池，日志如下
-
-如果没有启用连接池，日志如下
+### 13.2.1. 执行sql脚本文件
 
  
 
-大部分情况下，不需要您关心内置连接池是否开启。自动判断连接池能准确的识别DBCP, C3p0,proxool,Driuid,Tomcat cp, BoneCp等众多的连接池。如果您使用了较为冷僻的连接池造成两个连接池都被启用，您可以使用jef.properties参数（见附录一）强行关闭EF的内置连接池。
+# 14. 其他功能与特性
 
-内置连接池相关参数配置可见附录一的“内置连接池相关”部分。
+​	这里列举一些较难归类的，或者是框架最近新增的特性。这些特性往往能在针对性的环境下简化开发，解决开发中的疑难问题。
 
-EF内置连接池采用了无阻塞算法，并发下安全，存取非常高效，有定期心跳，拿取检查，脏连接丢弃等连接池的基本功能，但没有PreparedStament缓存等功能。也曾在某大型电信中稳定使用，但现在是连接池层出不穷的年代，c3p0和proxool等老牌连接池都在druid、jboss等连接池面前相形见绌。而内置连接池不是EF-ORM今后发展的目标，您在小型项目中或者快速原型的项目用用没什么问题，大型商业项目建议您还是用tomcatcp或者druid吧。
+## 14.1. 记录时间戳自动维护
 
-# [15.        JMX监控](undefined)
+​	即自动维护每条记录的create-Time字段和update-time字段。
 
-EF_ORM支持JMX监控。
+​	我们可能有这种场景，当数据插入数据库时，希望在某个日期时间型字段中写入当前数据库时间。在每次数据更新时，希望在某个日期时间型字段中写入当前的数据库时间。这其实就是常用的日期时间维护操作。用对象关系映射很难实现这种功能。同时由于需要设置的是数据库时间而不是当前java环境时间，这也给功能的实现造成了一定困难。
 
-目前EF-ORM提供两个JMX监控Bean，分别是DbClientInfo和ORMConfig。路径如下图。
+​	EF-ORM 1.9.1.RELEASE开始，原生支持此类操作。简单说来，在日期字段的注解上加上@GeneratedValue，则EF就会自动维护这些日期字段。
 
- 
+~~~java
+/**
+* 为一个日期列添加@GeneratedValue后，如果在插入时没有指定数据，
+* 将使用sysdate / current_timestamp填入(具体函数取决于使用的数据库)
+*/
+@GeneratedValue(generator="created")
+@Column(name="create_time")
+private Date created;
 
-## [15.1.    DbClientInfo](undefined)
+/**
+* 为一个日期列添加@GeneratedValue后，如果在插入或者更新时没有指定数据
+* 将使用sysdate / current_timestamp填入(具体函数取决于使用的数据库)
+*/
+@GeneratedValue(generator="modified")
+@Column(name="last_modified")
+private Date modified;
+~~~
+
+​	一旦进行了上述配置，就会发现在insert或update语句中，会出现sysdate或current_timestamp等函数，直接获取数据库时间进行操作。
+
+​	不过这种方式下，数据库时间不会回写到插入或更新的对象中。您需要再执行一次查询操作，才能得到刚刚写入数据库的记录的时间。
+
+​	另外一种变通的方法是，在插入之前自动为字段赋值，此时的时间为当前java服务器的时间。这种方式下由于是先赋值再插入的，在操作完成后，可以从对象中获得刚才操作的时间。EF-ORM也支持这种方式。
+
+~~~java
+@GeneratedValue(generator="created-sys")  //creatd-sys的意思是插入时取当前系统时间
+@Column(name="create_time")
+private Date created;
+
+@GeneratedValue(generator="modified-sys") //creatd-sys的意思是插入时或者更新时取当前系统时间
+@Column(name="last_modified")
+private Date modified;
+~~~
+
+ 	使用以上注解后，数据记录的插入和更新时间就可以交由框架自动维护了。
 
  
 
- 
+## 14.2. 内置连接池
 
-每个DbClient对象对应一个DbClientInfo的监控Bean。在一个进程中，如果有多个DbClient对象，那么也会有多个DbClientInfo的MXBean。
+​	EF-ORM内置了一个稳定高效的连接池（但功能较弱）。正常情况下，EF-ORM会检测用户的DataSource是否使用了连接池。如果用户已经使用了连接池，那么EF-ORM不会启用内置连接池。如果检测到用户没有使用连接池，EF-ORM就会启用内置连接池。
 
-DbClientInfo的五个属性都是只读属性。记录了当前的一些运行情况信息。
+​	内置连接池可以在额定连接数到最大连接数之间变化。定期关闭那些闲置的过多的连接。内置连接池可以定期检查空闲连接的可用性。在取出的连接使用中，如果捕捉到SQLException，并且数据库方言判定这个Exception是由于网络断线等IO错误造成的，会强行触发连接池立刻检查，清除无效连接。并且连接池会不断尝试重新连接，试图从故障中恢复。
+
+​	EF-ORM启动时，都有一条info日志，如果启用内置连接池，日志如下
+
+~~~
+There is NO Connection-Pool detected in data source class {DataSource类名}, EF-Inner Pool was enabled.
+~~~
+
+​	如果没有启用连接池，日志如下
+
+~~~
+There is Connection-Pool in data source {DataSource类名}, EF-Inner Pool was disabled.
+~~~
+
+​	大部分情况下，不需要您关心内置连接池是否开启。自动判断连接池能准确的识别DBCP, C3p0,proxool, Driuid, Tomcat cp, BoneCp等众多的连接池。如果您使用了较为冷僻的连接池造成两个连接池都被启用，您可以使用jef.properties参数（见附录一）强行关闭EF的内置连接池。
+
+​	内置连接池相关参数配置可见附录一的“内置连接池相关”部分。
+
+​	EF内置连接池采用了无阻塞算法，并发下安全，存取非常高效，有定期心跳，拿取检查，脏连接丢弃等连接池的基本功能，但没有PreparedStament缓存等功能。也曾在某大型电信中稳定使用，但现在是连接池层出不穷的年代，c3p0和proxool等老牌连接池都在druid、jboss等连接池面前相形见绌。而内置连接池不是EF-ORM今后发展的目标，您在小型项目中或者快速原型的项目用用没什么问题，大型商业项目建议您还是用tomcatcp或者druid吧。
+
+
+
+# 15. JMX监控
+
+​	EF_ORM支持JMX监控。
+
+​	目前EF-ORM提供两个JMX监控Bean，分别是DbClientInfo和ORMConfig。路径如下图。![15-15.-1](images\15-15.-1.png)
+
+## 15.1. DbClientInfo![15-15.1.-1](images\15-15.1.-1.png)
+
+ 	每个DbClient对象对应一个DbClientInfo的监控Bean。在一个进程中，如果有多个DbClient对象，那么也会有多个DbClientInfo的MXBean。
+
+​	DbClientInfo的五个属性都是只读属性。记录了当前的一些运行情况信息。
 
 | 属性                      | 含义                                       |
 | ----------------------- | ---------------------------------------- |
@@ -2192,205 +2851,268 @@ DbClientInfo的五个属性都是只读属性。记录了当前的一些运行�
 
  
 
- 
+## 15.2. ORMConfig
 
-## [15.2.    ORMConfig](undefined)
+![15-15.2.-1](images\15-15.2.-1.png)
 
- 
-
-ORMConfig记录框架的各项配置信息，每个进程中仅有一个ORMConfig的MXBean。
-
- 
+​	ORMConfig记录框架的各项配置信息，每个进程中仅有一个ORMConfig的MXBean。
 
 **支持动态参数调整**
 
-ORMConfig中的属性都是可读写的属性，即可以在运行过程中调整ORM的各项参数。包括调试日志、连接池大小等。这些参数大多数都和jef.properties中的参数对应。因此可以查看《附录一配置参数一览》或者API-DOC。
+​	ORMConfig中的属性都是可读写的属性，即可以在运行过程中调整ORM的各项参数。包括调试日志、连接池大小等。这些参数大多数都和jef.properties中的参数对应。因此可以查看《附录一配置参数一览》或者API-DOC。
 
-# [16.        保持数据库移植性的实践](undefined)
+
+
+# 16. 保持数据库移植性的实践
 
 本章内容暂缺，为保证章节号一致性，故保留本章标题。
 
-# [17.        性能调优指南](undefined)
 
-## [17.1.    性能日志](undefined)
+
+# 17. 性能调优指南
+
+## 17.1. 性能日志
 
 要了解性能问题所在，首先要能看懂EF-ORM输出的性能日志。
 
- 
-
 一个查询语句输出的日志可能是这样的
 
- 
+~~~sql
+select t.* from LEAF t | [hsqldb:TESTHSQLDB@1]
+Result Count:5	 Time cost([ParseSQL]:0ms, [DbAccess]:1ms, [Populate]:0ms) max:0/fetch:0/timeout:60 |[hsqldb:TESTHSQLDB@1]
+~~~
 
-在上面这段日志中，第一行打印出了SQL语句，竖线后面的是此时的环境描述。这部分信息包括三部分。               
+​	在上面这段日志中，第一行打印出了SQL语句，竖线后面的是此时的环境描述。这部分信息包括三部分。
 
-上面是当SQL语句在无事务情况下执行时的环境，当语句在事务下执行时：            
+~~~
+[hsqldb:TESTHSQLDB@1]
+数据库类型：数据库名@线程号
+~~~
 
-事务编号中的数字是一个随机编号，用于和日志上下文核对，可以跟踪事务的情况。
+​	上面是当SQL语句在无事务情况下执行时的环境，当语句在事务下执行时：     
 
-而性能相关的统计信息都在这一行中显示
+~~~
+[Tx22953873@ORCL@1
+事务编号@数据库名@线程
+~~~
+
+​	事务编号中的数字是一个随机编号，用于和日志上下文核对，可以跟踪事务的情况。
+
+​	而性能相关的统计信息都在这一行中显示
+
+~~~
+Result Count:5	 Time cost([ParseSQL]:0ms, [DbAccess]:1ms, [Populate]:0ms) max:0/fetch:0/timeout:60
+结果条数          耗时  （生成SQL语句耗时,执行SQL语句耗时，转换查询结果耗时）   性能参数信息
+~~~
 
 在上例中，查询出5条结果，耗时1ms，其中生成SQL语句和转换结果0ms，数据库查询1ms。
 
-l   ParseSQL:获取连接、生成SQL语句的时间。
+* ParseSQL:获取连接、生成SQL语句的时间。
+* DbAccesss:数据库解析SQL，执行查询的时间。
+* Populate: 将数据从ResultSet中逐条读出，形成Java对象的时间。
 
-l   DbAccesss:数据库解析SQL，执行查询的时间。
+​	当然并非所有的数据库操作都有这三个时间记录。比如您自行编写的SQL语句（NativeQuery）中不会有ParseSQL的统计，非select语句不会有Populate的统计。
 
-l Populate: 将数据从ResultSet中逐条读出，形成Java对象的时间。
+​	另外，上例中生成SQL语句和转换结果不可能真的不花费时间，因为统计是到毫秒的，因此500微秒以下的数值就被舍去了。
 
-当然并非所有的数据库操作都有这三个时间记录。比如您自行编写的SQL语句（NativeQuery）中不会有ParseSQL的统计，非select语句不会有Populate的统计。
+​	最后输出的是查询执行时都是三个性能相关的参数。
 
-    另外，上例中生成SQL语句和转换结果不可能真的不花费时间，因为统计是到毫秒的，因此500微秒以下的数值就被舍去了。
+​	Max: 返回结果最大数限制。0表示不限制
 
-最后输出的是查询执行时都是三个性能相关的参数。
+​	Fetch:取ResultSet的fetch-size大小。该参数会严重影响大量数据返回时的性能。
 
-Max: 返回结果最大数限制。0表示不限制
-
-Fetch:取ResultSet的fetch-size大小。该参数会严重影响大量数据返回时的性能。
-
-Timeout: 查询超时时间。单位秒。
+​	Timeout: 查询超时时间。单位秒。
 
 上面三个都是用户可以控制的性能相关参数，用来对照进行调优的。
 
- 
+ 	所有查询类语句，都会输出结果条数（COUNT类语句直接输出COUNT结果）。而非查询语句则会显示影响的记录数。看懂上述日志，可以帮助用户统计一笔交易中，数据库操作的耗时情况，帮助用户分析和定位性能故障。
 
-所有查询类语句，都会输出结果条数（COUNT类语句直接输出COUNT结果）。而非查询语句则会显示影响的记录数。看懂上述日志，可以帮助用户统计一笔交易中，数据库操作的耗时情况，帮助用户分析和定位性能故障。
+## 17.2. 级联性能
 
-## [17.2.    级联性能](undefined)
+​	前面已经讲过，EF-ORM在支持级联操作的基础上，还保留了单表操作的方式。此外还能控制单个查询语句中需要查询的字段等。首先我们可以考虑在应用场景上避免不当的数据操作。
 
-前面已经讲过，EF-ORM在支持级联操作的基础上，还保留了单表操作的方式。此外还能控制单个查询语句中需要查询的字段等。首先我们可以考虑在应用场景上避免不当的数据操作。
+​	此外EF-ORM中有若干参数可以辅助级联性能的调节。有以下两个全局参数。
 
- 
+| db.use.outer.join       | 使用外连接加载多对一和一对一关系。这种情况下，只需要一次查询，就可以将对一关系查询出来。默认开启。如果关闭，那么一对一或多对一级联操作将会通过多次单表查询来实现。 |
+| ----------------------- | ---------------------------------------- |
+| **db.enable.lazy.load** | **延迟加载开关，即关系数据只有当被使用到的时候才会去查询。由于默认情况下対一关系是一次性直接查出的，所以实际上会被延迟加载的只有一对多和多对多  关系。但如果关闭了外连接加载，那么一对一和多对一关系也会被延迟加载。** |
 
-此外EF-ORM中有若干参数可以辅助级联性能的调节。有以下两个全局参数。
+​	在查询数据时，我们可以精确控制每个查询是否采用外连接加载，是否要加载X対一关系，是否要加载X对多关系。下面的例子演示了这种用法。
 
-| db.use.outer.join   | 使用外连接加载多对一和一对一关系。这种情况下，只需要一次查询，就可以将对一关系查询出来。默认开启。如果关闭，那么一对一或多对一级联操作将会通过多次单表查询来实现。 |
-| ------------------- | ---------------------------------------- |
-| db.enable.lazy.load | 延迟加载开关，即关系数据只有当被使用到的时候才会去查询。由于默认情况下対一关系是一次性直接查出的，所以实际上会被延迟加载的只有一对多和多对多  关系。但如果关闭了外连接加载，那么一对一和多对一关系也会被延迟加载。 |
+~~~java
+Query<TestEntity> query = QB.create(TestEntity.class);
+query.getResultTransformer().setLoadVsMany(false); //不加载X对多关系
+query.getResultTransformer().setLoadVsOne(true);   //加载X対一关系
+query.setCascadeViaOuterJoin(false);             //设置不使用外连接方式获取X対一关系
+~~~
 
-在查询数据时，我们可以精确控制每个查询是否采用外连接加载，是否要加载X対一关系，是否要加载X对多关系。下面的例子演示了这种用法。
+​	因此每个查询语句，都可以控制其级联加载的范围，级联加载的方式。
 
-因此每个查询语句，都可以控制其级联加载的范围，级联加载的方式。
+​	如果不希望级联操作，还可以这样
 
-如果不希望级联操作，还可以这样
+~~~java
+Query<TestEntity> query = QB.create(TestEntity.class);
+query.setCascade(false);		
+~~~
 
 这和下面的操作是等效的
 
- 
+~~~java
+Query<TestEntity> query = QB.create(TestEntity.class);
+query.getResultTransformer().setLoadVsMany(false);
+query.getResultTransformer().setLoadVsOne(false);
+~~~
 
-两个参数的用法上，延迟加载的开启是较为推荐的。这能有效防止你使用级联操作获取过多的数据。大部分情况下，外连接开启也能有效减少数据库操作的次数，提高性能。同时外连接查询能降低对一级缓存的依赖，因为在一些快速查询中，维护缓存数据也有一定的耗时。如果您关闭了外连接查询，那么推荐您开启一级缓存。因为此时级联操作对一级缓存的依赖性大大增加了。
+​	两个参数的用法上，延迟加载的开启是较为推荐的。这能有效防止你使用级联操作获取过多的数据。大部分情况下，外连接开启也能有效减少数据库操作的次数，提高性能。同时外连接查询能降低对一级缓存的依赖，因为在一些快速查询中，维护缓存数据也有一定的耗时。如果您关闭了外连接查询，那么推荐您开启一级缓存。因为此时级联操作对一级缓存的依赖性大大增加了。
 
-## [17.3.    一级缓存与二级缓存](undefined)
+## 17.3. 一级缓存与二级缓存
 
-EF-ORM设计了一级缓存。一级缓存是以每个事务Session为生命周期维护的缓存，这部分缓存会将您操作过的对象和查询过的数据缓存在内容中。（特别大的数据不会被缓存）一级缓存能有效的减少对相同对象的查询，尤其是在一对多的级联关系查询中。
+​	EF-ORM设计了一级缓存。一级缓存是以每个事务Session为生命周期维护的缓存，这部分缓存会将您操作过的对象和查询过的数据缓存在内容中。（特别大的数据不会被缓存）一级缓存能有效的减少对相同对象的查询，尤其是在一对多的级联关系查询中。
 
-一级缓存默认不开启，开启一级缓存的方法是在jef,properties中配置
+​	一级缓存默认不开启，开启一级缓存的方法是在jef,properties中配置
 
-使用JMX可以在ORMConfigMBean中，通过设置CacheDebug属性为true，从而在日志中输出一级缓存的命中和更新信息，用于细节上的调试和分析。
+~~~properties
+cache.level.1=true
+~~~
+
+​	使用JMX可以在ORMConfigMBean中，通过设置CacheDebug属性为true，从而在日志中输出一级缓存的命中和更新信息，用于细节上的调试和分析。
 
 以下情况下，我们建议开启一级缓存：
 
-l  使用较多的级联操作。
+* 使用较多的级联操作。
+* db.use.outer.join=false时
 
-l  db.use.outer.join=false时
+​	相反，如果使用级联操作较少，同时也开启了db.use.outer.join的场合下，我们建议关闭一级缓存。因为基于SQL操作业务逻辑中，维护一级缓存反而会增加额外的内存和性能开销。
 
-相反，如果使用级联操作较少，同时也开启了db.use.outer.join的场合下，我们建议关闭一级缓存。因为基于SQL操作业务逻辑中，维护一级缓存反而会增加额外的内存和性能开销。
+​	EF-ORM没有内置的二级缓存。你可以使用诸如EHCache的第三方缓存框架，并通过Spring AOP等手段集成，此处不再赘述。
 
- 
+## 17.4. 结果集加载调优
 
-EF-ORM没有内置的二级缓存。你可以使用诸如EHCache的第三方缓存框架，并通过Spring AOP等手段集成，此处不再赘述。
+### 17.4.1. Fetch-size
 
-## [17.4.    结果集加载调优](undefined)
+​	即等同于JDBC中的fetch-size，描述了遍历结果集（ResultSet）时每次从数据库拉取的记录条数。设置为0则使用JDBC驱动默认值。过大则占用过多内存，过小则数据库通信次数很多，populate过程耗时很大。
 
-### [17.4.1.   Fetch-size](undefined)
+​	如果您返回5000条以上数据，建议加大fetch-size。
 
-即等同于JDBC中的fetch-size，描述了遍历结果集（ResultSet）时每次从数据库拉取的记录条数。设置为0则使用JDBC驱动默认值。过大则占用过多内存，过小则数据库通信次数很多，populate过程耗时很大。
+​	Fetch-size的全局设置：在jef.properties中
 
-如果您返回5000条以上数据，建议加大fetch-size。
+~~~properties
+#将全局的fetch-size设置为希望的值
+db.fetch.size=0
+~~~
 
-Fetch-size的全局设置：在jef.properties中
+​	针对单个查询设置fetch-size：所有的ConditionQuery对象，包括Query、Join、UnionQuery、NativeQuery都提供了setFetchSize(int)方法。
 
- 
+~~~java
+//设置NativeQuery的fetch-size
+NativeQuery<Foo> nq=db.createNativeQuery(sql, Foo.class);
+nq.setFetchSize(1000);
 
-针对单个查询设置fetch-size：所有的ConditionQuery对象，包括Query、Join、UnionQuery、NativeQuery都提供了setFetchSize(int)方法。
+//设置Query对象的fetch-size
+Query<Foo> q = QB.create(Foo.class)
+q.setFetchSize(1000);
+~~~
 
- 
+### 17.4.2. max-results
 
-### [17.4.2.   max-results](undefined)
+​	这个参数可以控制一个查询返回的最大结果数。事实上一个限制了最大结果数的查询逻辑上不一定正确，但是这能有效预防超出设计者预期数据规模时引起的OutOfMemory或者其他问题，而后者往往会影响整个系统中的所有交易，甚至引起服务器的故障。
 
-这个参数可以控制一个查询返回的最大结果数。事实上一个限制了最大结果数的查询逻辑上不一定正确，但是这能有效预防超出设计者预期数据规模时引起的OutOfMemory或者其他问题，而后者往往会影响整个系统中的所有交易，甚至引起服务器的故障。
+​	因此全局性的max-result设置往往作为一个数据规模的约束条件来使用，而针对单个查询的max-result设置则可以根据应用场景而灵活控制。
 
-因此全局性的max-result设置往往作为一个数据规模的约束条件来使用，而针对单个查询的max-result设置则可以根据应用场景而灵活控制。
+~~~properties
+#将全局的max-results设置为希望的值，0表示不限制
+db.max.results.limit=0
+~~~
 
- 
+~~~java
+//设置NativeQuery的max-result
+NativeQuery<Foo> nq=db.createNativeQuery(sql, Foo.class);
+nq.setMaxResults(200);
 
-### [17.4.3.   使用CachedRowSet](undefined)
+//设置Query对象的max-result
+Query<Foo> q = QB.create(Foo.class)
+q.setMaxResult(200);
+~~~
 
-这个参数目前只支持全局设置。其作用是在查出结果后，先将ResultSet的所有数据放在JDBC的CachedRowSet中，释放连接（仅对非事务操作，因为事务操作下连接被事务专用，在提交/回滚前不会放回连接池），然后再转换为java对象，最后释放CachedRowSet。这种操作方式具有以下特点
+### 17.4.3. 使用CachedRowSet
 
-l 它不能减少查询结果转换的总时间，因为原先转换结果该进行的操作一步也没有少。
+​	这个参数目前只支持全局设置。其作用是在查出结果后，先将ResultSet的所有数据放在JDBC的CachedRowSet中，释放连接（仅对非事务操作，因为事务操作下连接被事务专用，在提交/回滚前不会放回连接池），然后再转换为java对象，最后释放CachedRowSet。这种操作方式具有以下特点
 
-l 在非事务下，连接能更快的被释放。供其他业务使用。
-
-l 它会将从ResultSet中读取数据的时间计入DbAccess阶段，使得Populate阶段的时间仅剩下调用反射操作所耗的时间。此时用户可以更清楚的知道，转换结果操作的真实性能开销。也帮助用户了解在ResultSet上的IO通信是否值得增加fetch-size来优化。
+* 它不能减少查询结果转换的总时间，因为原先转换结果该进行的操作一步也没有少。
+* 在非事务下，连接能更快的被释放。供其他业务使用。
+* 它会将从ResultSet中读取数据的时间计入DbAccess阶段，使得Populate阶段的时间仅剩下调用反射操作所耗的时间。此时用户可以更清楚的知道，转换结果操作的真实性能开销。也帮助用户了解在ResultSet上的IO通信是否值得增加fetch-size来优化。
 
 调节是否开启此功能的 方法为，在jef.properties中
 
- 
+~~~properties
+#开启结果集缓存
+db.cache.resultset=true
+~~~
 
-## [17.5.    查询超时控制](undefined)
+## 17.5. 查询超时控制
 
-查询超时控制可以让一个SQL操作在执行一段时间后，如果无返回则抛出异常。这虽然会造成当前业务的失败，但是可以帮助您从以下几个方面改善程序的性能：
+​	查询超时控制可以让一个SQL操作在执行一段时间后，如果无返回则抛出异常。这虽然会造成当前业务的失败，但是可以帮助您从以下几个方面改善程序的性能：
 
-l 避免让个别不佳的SQL语句或超出开发者规模预期的查询拖慢整个系统。
-
-l  避免数据库崩溃
-
-l 发现锁表现象。（个别查询是因为锁表而被卡住，不主动查询数据库往往发现不了）
+* 避免让个别不佳的SQL语句或超出开发者规模预期的查询拖慢整个系统。
+* 避免数据库崩溃
+* 发现锁表现象。（个别查询是因为锁表而被卡住，不主动查询数据库往往发现不了）
 
 控制超时时间的参数设置方法为，在jef.properties中
 
- 
+~~~properties
+#设置查询操作超时时间（单位：秒）
+db.select.timeout=0
+#设置更新操作超时时间（单位：秒）
+db.update.timeout=0
+#设置删除操作超时时间（单位：秒）
+db.delete.timeout=0
+~~~
 
 目前尚未提供针对单个查询设置timeout的方法，后续版本中会增加相关API。
 
-## [17.6.    自增值获取性能问题](undefined)
+## 17.6. 自增值获取性能问题
 
- 
+​	很多时候插入不够快是因为Sequence自增值获取的性能开销造成，优化方法详见3.1.2.5。
 
-    很多时候插入不够快是因为Sequence自增值获取的性能开销造成，优化方法详见3.1.2.5。
+# 18. 常见问题 (FAQ)
 
-# [18.        常见问题 (FAQ)](undefined)
+### 18.1.1. JDBC驱动问题
 
-### [18.1.1.   JDBC](undefined)驱动问题
+​	EF-ORM在很多DDL处理和函数改写等特性上，使用了JDBC4的一些功能，因此也要求尽可能使用支持JDBC4的数据库驱动，比如Oracle驱动请使用ojdbc5或者ojdbc6。其他驱动选择也请尽可能用最新的。
 
-EF-ORM在很多DDL处理和函数改写等特性上，使用了JDBC4的一些功能，因此也要求尽可能使用支持JDBC4的数据库驱动，比如Oracle驱动请使用ojdbc5或者ojdbc6。其他驱动选择也请尽可能用最新的。
+### 18.1.2.  JDK7编译后的ASM兼容
 
-### [18.1.2.   JDK7](undefined)编译后的ASM兼容
+​	在1.8.0版本中，如果使用JDK7的编译版本编译了Entity，那么类在增强后无法在Java 7的版本下使用。这是因为JDK7使用了新版本的编译和类加载机制，将类型推断移到编译时进行，此时ASM修改后的类由于缺少类型推断信息故不能被JDK7加载。解决这个问题的办法是，在虚拟机启动参数中加上
 
-在1.8.0版本中，如果使用JDK7的编译版本编译了Entity，那么类在增强后无法在Java 7的版本下使用。这是因为JDK7使用了新版本的编译和类加载机制，将类型推断移到编译时进行，此时ASM修改后的类由于缺少类型推断信息故不能被JDK7加载。解决这个问题的办法是，在虚拟机启动参数中加上
+~~~
+-XX:-UseSplitVerifier
+~~~
 
-EF-ORM 1.8.8以后的版本，在实体增强时会将类版本降低到50(对应JDK6)，因此不会发生此错误。
+​	EF-ORM 1.8.8以后的版本，在实体增强时会将类版本降低到50(对应JDK6)，因此不会发生此错误。
 
-### [18.1.3.   数据库存储的口令加密](undefined)
+### 18.1.3. 数据库存储的口令加密
 
-可以配置加密后的数据库口令作为密码，EF-ORM在查询数据源时，会尝试解密。默认解密采用3DES算法，密钥可以在jef.properties中配置或者通过虚拟机启动参数指定。
+​	可以配置加密后的数据库口令作为密码，EF-ORM在查询数据源时，会尝试解密。默认解密采用3DES算法，密钥可以在jef.properties中配置或者通过虚拟机启动参数指定。
 
-### [18.1.4.   Oracle RAC](undefined)环境下的数据库连接
+### 18.1.4. Oracle RAC环境下的数据库连接
 
-默认在Oracle RAC下，使用Oracle驱动的FCF或者OCI驱动的TAF方式进行连接失效转移。（不明白什么是FCF和TAF的请自行百度）。这两种方式将会使用Oracle驱动的连接池，因此可以手工关闭EF-ORM的内建连接池。
+​	默认在Oracle RAC下，使用Oracle驱动的FCF或者OCI驱动的TAF方式进行连接失效转移。（不明白什么是FCF和TAF的请自行百度）。这两种方式将会使用Oracle驱动的连接池，因此可以手工关闭EF-ORM的内建连接池。
 
-实际上，使用JTA事务等场景下，也要关闭内置连接池，不过此时关闭内建连接池是自动进行的。
+~~~properties
+Db.no.pool=true
+~~~
 
-### [18.1.5.   某些正确的SQL](undefined)语句解析错误怎么办
+​	实际上，使用JTA事务等场景下，也要关闭内置连接池，不过此时关闭内建连接池是自动进行的。
 
-目前的词法分析器经过大量SQL语句的测试，都能正确解析。一个已知的问题是，JPQL参数名称不能取SQL关键字作为名称，比如”select * from t where id=:top” 、“update t set name=:desc”等，这些语句都会解析失败，因为top，desc等是SQL关键字。因此，如果碰到解析错误的SQL，尝试先改变一下JPQL参数的名称，是不是用到了SQL关键字。任何复合词都不是SQL关键字。
+### 18.1.5. 某些正确的SQL语句解析错误怎么办
 
-如果确实有解析不了的SQL语句，请用7.5节的方法，直接使用原生SQL语句。当然原生SQL语句不具备分库分表等高级功能，您需要自行处理。
+​	目前的词法分析器经过大量SQL语句的测试，都能正确解析。一个已知的问题是，JPQL参数名称不能取SQL关键字作为名称，比如”select * from t where id=:top” 、“update t set name=:desc”等，这些语句都会解析失败，因为top，desc等是SQL关键字。因此，如果碰到解析错误的SQL，尝试先改变一下JPQL参数的名称，是不是用到了SQL关键字。任何复合词都不是SQL关键字。
+
+​	如果确实有解析不了的SQL语句，请用7.5节的方法，直接使用原生SQL语句。当然原生SQL语句不具备分库分表等高级功能，您需要自行处理。
 
 ### 18.1.6.  使用Jackjson做JSON序列化怎么办
 
-Jackson是常见的JSON序列化工具，Jackson默认的序列化策略中会将DataObject中的Query，UpdateValueMap取出来进行序列化，这往往不是我们需要的。
+​	Jackson是常见的JSON序列化工具，Jackson默认的序列化策略中会将DataObject中的Query，UpdateValueMap取出来进行序列化，这往往不是我们需要的。
 
 为此，我们可以使用以下两种方法来避免出现这种情况——
 
@@ -2398,27 +3120,32 @@ Jackson是常见的JSON序列化工具，Jackson默认的序列化策略中会�
 
  Jackson 1.x
 
- 
+~~~json
+objectMapper.configure(Feature.REQUIRE_SETTERS_FOR_GETTERS, true);
+~~~
 
  Jackson 2.x
 
- 
-
- 
+~~~
+objectMapper.configure(MapperFeature.REQUIRE_SETTERS_FOR_GETTERS, true);
+~~~
 
 方法二：忽略掉不希望被序列化的字段
 
-       在Entity类上增加注解
+ 在Entity类上增加注解
 
- 
-
- 
+~~~
+@JsonIgnoreProperties({"query","updateValueMap"})
+public class MyClass{
+  …
+}
+~~~
 
 这两个方法任选其一，可以在Jackson下正常序列化Entity。
 
  
 
-# [19.        附录一 配置参数一览](undefined)
+# 19. 附录一 配置参数一览
 
 jef.properties中可配置的参数说明。
 
@@ -2502,43 +3229,30 @@ jef.properties中可配置的参数说明。
 | db.dialect.config              | 可以配置一个properties文件，文件中指定要覆盖哪些数据库方言和方言类的名称。通过此功能可以实现数据库方言覆盖。 |                  |
 | db.check.sql.functions         | 默认在执行NativeQuery会对SQL语句中所有的function进行检查，如果认为数据库不支持则将抛出异常。设为false可以关闭此检查。 | true             |
 
- 
+ 	注一：所有EF-ORM中的参数，都可以在启动虚拟机时用虚拟机参数覆盖，如-Ddb.debug=true，将会覆盖jef.properties中的db.debug=false的配置。
 
-注一：所有EF-ORM中的参数，都可以在启动虚拟机时用虚拟机参数覆盖，如-Ddb.debug=true，将会覆盖jef.properties中的db.debug=false的配置。
+# 20. 附录二 数据库兼容性说明
 
-# [20.        附录二 数据库兼容性说明](undefined)
+完全支持以下数据库------
 
-完全支持以下数据库——
+* Oracle 9.0以上版本、
+* MySQL 5.0以上版本
+* MariaDB 5.5测试通过。 10.x版本尚未测试。
+* Postgresql 8.2以上版本
+* Microsoft SQL Server 2003或以上
+* HSQLDB 2.0以上版本
+* Apache Derby 10.5以上版本
+* SQL ite（部分DDL该DBMS无法支持）
 
-l Oracle 9.0以上版本、
+部分支持------
 
-l MySQL 5.0以上版本
+* Gbase
 
-l MariaDB 5.5测试通过。 10.x版本尚未测试。
+计划支持------因时间或工作量因素，Dialect尚未编写的
 
-l Postgresql 8.2以上版本
-
-l Microsoft SQL Server 2003或以上
-
-l HSQLDB 2.0以上版本
-
-l Apache Derby 10.5以上版本
-
-l SQL ite（部分DDL该DBMS无法支持）
-
-部分支持——
-
-l Gbase
-
-计划支持——因时间或工作量因素，Dialect尚未编写的
-
-l IBM DB2
-
-l Sybase
-
-l MongoDB -JDBC
-
-------
+* IBM DB2
+* Sybase
+* MongoDB -JDBC
 
  [[季怡1\]](#_msoanchor_1)
 

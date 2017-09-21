@@ -36,9 +36,7 @@ GeeQuery使用手册
 
 EF-ORM是一个轻量，便捷的Java ORM框架。在经历了金融和电信等项目的锤炼后，具备了众多的企业级特性。
 
- 
-
-**主要特点 **
+**主要特点** 
 
 | 特点                  | 描述                                       |
 | ------------------- | ---------------------------------------- |
@@ -55,7 +53,7 @@ EF-ORM是一个轻量，便捷的Java ORM框架。在经历了金融和电信等
 
  
 
-一谈ORM很多朋友都会自然性的和某H框架进行比较，从而发现这些ORM很多都只是功能简单的“玩具”。但是EF不是仅仅是一个玩具。某H框架支持的功能EF-ORM几乎都能支持，或者有替代的支持手段。
+​	一谈ORM很多朋友都会自然性的和某H框架进行比较，从而发现这些ORM很多都只是功能简单的“玩具”。但是EF不是仅仅是一个玩具。某H框架支持的功能EF-ORM几乎都能支持，或者有替代的支持手段。
 
 **和某H框架支持特性对比**
 
@@ -90,14 +88,13 @@ EF-ORM是一个轻量，便捷的Java ORM框架。在经历了金融和电信等
 
  
 
-    	上面是EF-ORM和H框架的一个简单对比。总结下来，EF-ORM的支持功能基本覆盖了大家耳熟目详的H框架，甚至在很多项上要更进一步。但EF-ORM和传统的如H框架,T框架，OpenJPA框架的设计思想是不同的，这些思想上的差异体现在——
-
-* 更多考虑逆向工程数据库的各种场景。
-* 要求操作者面向数据库来思维，面向对象的操作手段更多只是带来开发效率的提升和开发难度的降低。
-* 追求更高的性能。
-* 同时保留多表级联的关系型操作和单表的操作。能保留在关系型数据库的ER模型的基础上完整的操作数据库，而不是要求用户必须使用对象模型来操作数据库。
-* 兼容和保留以SQL为主的传统数据库操作方式，并使之能兼容多种不同的DBMS。在金融和电信领域，还有大量传统的以SQL（甚至是存储过程）为主的数据库使用方式。我们不可能让这些领域的应用完全改弦易帜到纯粹的对象型数据操作上。
-* 不但封装了DML操作，也封装了建表、建索引、ALTERTABLE、TRUNCATE等DDL操作。 
+    	上面是EF-ORM和H框架的一个简单对比。总结下来，EF-ORM的支持功能基本覆盖了大家耳熟目详的H框架，甚至在很多项上要更进一步。但EF-ORM和传统的如H框架,T框架，OpenJPA框架的设计思想是不同的，这些思想上的差异体现在------
+* 更多考虑逆向工程数据库的各种场景。
+* 要求操作者面向数据库来思维，面向对象的操作手段更多只是带来开发效率的提升和开发难度的   降低。
+* 追求更高的性能。
+* 同时保留多表级联的关系型操作和单表的操作。能保留在关系型数据库的ER模型的基础上完整的操作数据库，而不是要求用户必须使用对象模型来操作数据库。
+* 兼容和保留以SQL为主的传统数据库操作方式，并使之能兼容多种不同的DBMS。在金融和电信领域，还有大量传统的以SQL（甚至是存储过程）为主的数据库使用方式。我们不可能让这些领域的应用完全改弦易帜到纯粹的对象型数据操作上。
+* 不但封装了DML操作，也封装了建表、建索引、ALTERTABLE、TRUNCATE等DDL操作。 
 
 
 
@@ -123,7 +120,7 @@ EF-ORM是以轻量、易用为目的设计的开源关系型数据库ORM框架�
 
 * 尽可能通过编译器检查数据库操作的正确性
 
-​       EF-ORM通过原生的元模型和内建的Criteria API来完成类型**安全**的动态查询。 这种查询优于传统的基于字符   串的 Java Persistence Query Language(JPQL/HQL) 查询。本文假设您具备基础的 Java 语言编程知识，并了解常见的 JPA 使用，比如 EntityManagerFactory 或 EntityManager。首先我们来看JPQL / HQL 查询有什么缺陷？
+  ​EF-ORM通过原生的元模型和内建的Criteria API来完成类型**安全**的动态查询。 这种查询优于传统的基于字符   串的 Java Persistence Query Language(JPQL/HQL) 查询。本文假设您具备基础的 Java 语言编程知识，并了解常见的 JPA 使用，比如 EntityManagerFactory 或 EntityManager。首先我们来看JPQL / HQL 查询有什么缺陷？
 
 ​       某H框架引入了HQL；JPA 1.0也引进了 JPQL，它们都是强大的查询语言，它在很大程度上导致了各自框架的流行。不过，基于字符串并使用有限语法的JPQL 存在一些限制。要理解 JPQL 的主要限制之一，请查看清单 1 中的简单代码片段，它通过执行 JPQL 查询选择年龄大于 20 岁的 Person 列表：
 
@@ -300,7 +297,7 @@ public class Foo {
 
 src/main/resources/jef.properties
 
-~~~
+~~~properties
 db.type=derby
 db.filepath=./
 db.name=db
@@ -353,7 +350,7 @@ public class Case1 {
 				
 		//5.删除这条记录
 		dao.removeByKey(Foo.class, "id", foo.getId());
-//6.查所有记录，查不到
+		//6.查所有记录，查不到
 		List<Foo> allrecords=dao.find(new Foo());
 		Assert.assertTrue(allrecords.isEmpty());
 		
@@ -363,7 +360,7 @@ public class Case1 {
 }
 ~~~
 
-上面这个案例，运行以后，注意观察控制台，将会打印出所有执行的SQL语句和耗时。您将会注意到，EF-ORM在这个案例中，顺序进行了——
+上面这个案例，运行以后，注意观察控制台，将会打印出所有执行的SQL语句和耗时。您将会注意到，EF-ORM在这个案例中，顺序进行了----
 
 建表、插入记录、查出记录、按主键更新记录、按主键删除记录、查所有记录、删除表等7次数据库操作。这就是EF-ORM的“Hello,World”。希望您一切顺利。
 
@@ -470,13 +467,13 @@ public class Case2 {
 
 细心的同学可能会发现，update语句从原来的
 
-~~~
+~~~sql
 update FOO set CREATED = ?, NAME = ? where ID=?
 ~~~
 
  变成了
 
-~~~
+~~~sql
 update FOO2 set NAME = ? where ID=?
 ~~~
 
@@ -492,15 +489,15 @@ update FOO2 set NAME = ? where ID=?
 
 ​	A: EF的设计的一个主要目的是提高开发效率，减少编码工作。为此，可以让开发者“零配置”“少编码”的操作数据库大部分功能。而数据库查询条件问题是所有框架都不能回避的一个问题，所以我经常在想——既然我们可以用向DAO传入一个Entity来实现插入操作，为什么就不能用同样的方法来描述一个不以主键为条件的update/select/delete操作？为什么DAO的接口参数老是变来变去？为什么很多应用中，自行设计开发类来描述各种业务查询条件才能传入DAO？为什么我们不能在数据访问层上花费更少的时间和精力?
 
-​	JPA1.0和早期的H框架，其思想是将关系型数据库抽象为对象池，这极大的限制了本来非常灵活的SQL语句的发挥空间。而本质上，当我们调用某H框架的session.get、session.load、session.delete时，我们是想传递一个以对象形式表达的数据库操作请求。只不过某H框架要求（并且限制）我们将其视作纯粹的“单个”对象而已。JPA 2.0为了弥补JPA1.0的不足，才将这种Query的思想引入为框架中的另一套查询体系——CriteriaAPI。事实上针对单个对象的get/load/persist/save/update/merge/saveOrUpdateAPI和Criteria API本来就为一体，只不过是历史的原因被人为割裂成为两套数据库操作API罢了。
+​	JPA1.0和早期的H框架，其思想是将关系型数据库抽象为对象池，这极大的限制了本来非常灵活的SQL语句的发挥空间。而本质上，当我们调用某H框架的session.get、session.load、session.delete时，我们是想传递一个以对象形式表达的数据库操作请求。只不过某H框架要求（并且限制）我们将其视作纯粹的“单个”对象而已。JPA 2.0为了弥补JPA1.0的不足，才将这种Query的思想引入为框架中的另一套查询体系------CriteriaAPI。事实上针对单个对象的get/load/persist/save/update/merge/saveOrUpdateAPI和Criteria API本来就为一体，只不过是历史的原因被人为割裂成为两套数据库操作API罢了。
 
-​	因此，我认为对于关系型数据库而言——Entity和Query是一体两面的事物，所谓Query，可以包含各种复杂的查询条件，甚至可以作为一个完整的SQL操作请求的描述。为此，EF彻底将Entity和Query绑在了一起。这种思想，使得——
+​	因此，我认为对于关系型数据库而言——Entity和Query是一体两面的事物，所谓Query，可以包含各种复杂的查询条件，甚至可以作为一个完整的SQL操作请求的描述。为此，EF彻底将Entity和Query绑在了一起。这种思想，使得------
 
-​	1、开发人员需要编写的类更少。开发人员无需编写其他类来描述复杂的SQL查询条件。也无需编写代码将这些查询条件转换为SQL/HQL/JPQL。DAO层也不会有老要改来改去的接口和API，几乎可以做到零编码。
+​	1. 开发人员需要编写的类更少。开发人员无需编写其他类来描述复杂的SQL查询条件。也无需编写代码将这些查询条件转换为SQL/HQL/JPQL。DAO层也不会有老要改来改去的接口和API，几乎可以做到零编码。
 
-​	2、	对单个对象进行CRUD的操作API现在和Criteria API合并在一起。Session对象可以直接提供原本要Criteria API才能提供实现的功能。API大大简化。
+​	2. 对单个对象进行CRUD的操作API现在和Criteria API合并在一起。Session对象可以直接提供原本要Criteria API才能提供实现的功能。API大大简化。
 
-​	3、IQueryableEntity允许你将一个实体直接变化为一个查询（Query），在很多时候可以用来完成复杂条件下的数据查询。比如 ‘in (?,?,?)’， ‘Between 1 and 10’之类的条件。xxQL有着拼装语句可读性差、编译器无法检查、变更维护困难等问题，但是却广受开发人员欢迎。这多少有历史原因，也有Criteria API设计上过于复杂的因素。两者一方是极端灵活但维护困难，一方是严谨强大而学习和编写繁琐，两边都是极端。事实上JPA的几种数据查询方式存在青黄不接的问题。选择查询语言xxQL，项目面临后续维护困难，跨数据库移植性差；选择Criteria API，代码臃肿，操作繁琐，很多人望而却步。EF的设计思想是使人早日摆脱拼装SQL/HQL/JPQL的困扰，而是用（更精简易用的）Criteria API来操作数据库。
+​	3. IQueryableEntity允许你将一个实体直接变化为一个查询（Query），在很多时候可以用来完成复杂条件下的数据查询。比如 ‘in (?,?,?)’， ‘Between 1 and 10’之类的条件。xxQL有着拼装语句可读性差、编译器无法检查、变更维护困难等问题，但是却广受开发人员欢迎。这多少有历史原因，也有Criteria API设计上过于复杂的因素。两者一方是极端灵活但维护困难，一方是严谨强大而学习和编写繁琐，两边都是极端。事实上JPA的几种数据查询方式存在青黄不接的问题。选择查询语言xxQL，项目面临后续维护困难，跨数据库移植性差；选择Criteria API，代码臃肿，操作繁琐，很多人望而却步。EF的设计思想是使人早日摆脱拼装SQL/HQL/JPQL的困扰，而是用（更精简易用的）Criteria API来操作数据库。
 
 ​	不再执着于POJO、还带来了另外一些方面的好处，比如继承DataObject类后可以实现对set方法调用的记录，判断一个字段有没有被赋值，用来优化查询、更新等操作。还有延迟加载特性需要每个entity中记录延迟加载的相关信息。
 
@@ -548,7 +545,7 @@ new EntityEnhancer().enhance("org.easyframe.tutorial");
 
 可以配置Maven-Plugin，使其在编译完后自动扫描编译路径并执行增强操作。jef-maven-plugin-1.9.0.RELEASE.jar在之前的下载包中可以下载到。
 
-~~~
+~~~xml
 <plugin>
 	<groupId>jef</groupId>
 	<artifactId>jef-maven-plugin</artifactId>
@@ -575,7 +572,7 @@ new EntityEnhancer().enhance("org.easyframe.tutorial");   //参数是要增强�
 
 ​	JEF插件可以支持在开发时动态增强实体，其原理和前面的三种方式不同，是动态的。通过使用自定义的ClassLoader，在类加载时自动增强类。
 
-​	操作方式如下：  ![2-1.2.3.3-1](images\2-1.2.3.3-1.png)
+​	操作方式如下：   ![2-1.2.3.3.-1](images\2-1.2.3.3.-1.png)
 
 ​	JEFApplication是运行指定类的Main方法。JEF Web Application则是启动一个内置的Jetty，然后自动查找WEB-INF目录，并按Java的Web开发规范，将工程发布出来。
 
@@ -606,7 +603,7 @@ enhanced class:org.easyframe.tutorial.lesson1.entity.Foo2
 
 这就说明class文件已经被修改。
 
- *可能有同学会吐槽，说用某H**框架这么久，从来也不需要考虑什么增强不增强的问题。*
+ *可能有同学会吐槽，说用某H框架这么久，从来也不需要考虑什么增强不增强的问题。*
 
 *我要说，同学你out**了。请你看看某H**框架最近在干什么——*
 
@@ -687,19 +684,19 @@ public class CaAsset extends DataObject {
 	@Id               //说明这个字段是主键字段
      @GeneratedValue(strategy = GenerationType.IDENTITY) //使用列自增生成值，不支持列自增再Sequence
 	@Column(name = "asset_id", precision = 6, columnDefinition = "NUMBER", nullable = false)
-//定义该字段在数据库中的列名，number长度。是否可为null。
+	//定义该字段在数据库中的列名，number长度。是否可为null。
      @SequenceGenerator(sequenceName="ca_asset_seq",name="ca_asset_seq") 
-//可以指定Sequence名称，但不建议定义，EF-ORM支持全局配置一个模板，来生成各个表的Sequence名称。
+	//可以指定Sequence名称，但不建议定义，EF-ORM支持全局配置一个模板，来生成各个表的Sequence名称。
 	private int assetId;
 
 	/**
 	 * A unique identifier of account.
 	 */
-@Id               //重要,EF-ORM允许一个对象中有多个@Id字段，即复合主键。
-//在某些关系表上，业务键要比物理键实用的多。这个与标准JPA的做法不同。
-//EF-ORM更倾向支持传统的数据库设计，而不是用面向对象来代替数据库设计。
-//因此，如果您正在使用EF-ORM，请在该用业务键的时候大胆的用业务键，
-//不需要也不建议为每个表都生成一个物理主键。让更专业的DBA来设计数据库吧。
+	@Id    //重要,EF-ORM允许一个对象中有多个@Id字段，即复合主键。
+	//在某些关系表上，业务键要比物理键实用的多。这个与标准JPA的做法不同。
+	//EF-ORM更倾向支持传统的数据库设计，而不是用面向对象来代替数据库设计。
+	//因此，如果您正在使用EF-ORM，请在该用业务键的时候大胆的用业务键，
+	//不需要也不建议为每个表都生成一个物理主键。让更专业的DBA来设计数据库吧。
 	@Column(name = "acct_id", precision = 14, columnDefinition = "NUMBER")
 	private Long acctId;
 
@@ -708,30 +705,30 @@ public class CaAsset extends DataObject {
 	 * capital, 4- free resource, 5 - cheque.
 	 */
 	@Column(name = "ASSET_TYPE", precision = 8, columnDefinition = "NUMBER")
-     @Indexed    //EF-ORM特有的注解，在建表时可以为这个列创建B树索引。
+    @Indexed    //EF-ORM特有的注解，在建表时可以为这个列创建B树索引。
 	private Integer assetType;
 
-     @Column(name = "COMMENTS", length=512, columnDefinition = "varchar")
+    @Column(name = "COMMENTS", length=512, columnDefinition = "varchar")
 	private String normal;
 
-     @Column(name = "CONTENT", columnDefinition=”clob”)
-@Lob               //CLOB字段一般映射为String，也可以映射为File, char[]等
+    @Column(name = "CONTENT", columnDefinition=”clob”)
+	@Lob            //CLOB字段一般映射为String，也可以映射为File, char[]等
 	private String content;
 
-@Lob    //byte[]构成的Lob会映射为BLOB（在某些数据库上为BYTEA）。BLOB在java中还可以映射为
-        //String, File等。
+	 @Lob    //byte[]构成的Lob会映射为BLOB（在某些数据库上为BYTEA）。BLOB在java中还可以映射为
+     //String, File等。
      private byte[] photo;
 
      @Column(name = "PRICE", precision =12,scale=8, columnDefinition = "number")
-//对于小数，precision=12 scale=8的意思是整数部分最多4位，小数部分最多8位。(和Oracle定义一致）
-//理解为整数部分最多12位的同学都去面壁！
+	//对于小数，precision=12 scale=8的意思是整数部分最多4位，小数部分最多8位。(和Oracle定义一致）
+	//理解为整数部分最多12位的同学都去面壁！
 	private double price;
 	
 	@Column(name = "VALID_DATE",columnDefinition="Date")
-//注意，这里定义为Date时，精度为年月日，不含时分秒。定义为Timestamp时，精度到时分秒乃至毫秒。
-//操作Oracle数据库也遵守相同的规律。
-//Oracle同时具有Date和Timestamp两种类型，但和别的数据库不一样，其Date精度到秒。
-//此处我们沿用JDBC标准，Date精度到天。确保实现的可移植性。
+	//注意，这里定义为Date时，精度为年月日，不含时分秒。定义为Timestamp时，精度到时分秒乃至毫秒。
+	//操作Oracle数据库也遵守相同的规律。
+	//Oracle同时具有Date和Timestamp两种类型，但和别的数据库不一样，其Date精度到秒。
+	//此处我们沿用JDBC标准，Date精度到天。确保实现的可移植性。
 	private Date  thedate;
 	
 	public enum Field implements jef.database.Field {
@@ -853,7 +850,7 @@ db.createTable(StudentToLesson.class);
 
 建表时的定义是
 
-~~~
+~~~sql
 create table STUDENT_TO_LESSON(
     CREATETIME timestamp,
     STUDENTID int not null,
@@ -924,7 +921,7 @@ public class Student extends jef.database.DataObject {
     private String gender;
     public enum Field implements jef.database.Field {
         id, name, grade, gender
-}
+	}
    //getter setter省略
 }
 ~~~
@@ -985,7 +982,7 @@ JPA注解中的GenerationType有四种，其用法如下
 
 ​	当EF-ORM获得一个自增值的注解配置后，默认情况下会将Sequence和Identity两种方式忽略，理解为AUTO方式。因为Identity和Sequence方式都有跨数据库移植性差的问题，为了更好的支持数据库Native的自增实现方式， EF-ORM默认Identity和Sequence方式都等同于Auto。除非用户禁用Native支持功能，即在jef.properties中配置
 
-~~~
+~~~properties
 db.autoincrement.native=false
 ~~~
 
@@ -1030,13 +1027,13 @@ db.autoincrement.native=false
 ​	如果表的名称大于26个字符，会截取前26个字符。如果你有两张表名称达到或超过26个字符，并且前26个字符都是一样的，那么这两张表会公用同一个SEQUENCE。这是为了防止出现SEQUENCE名称大于30个字符，在Oracle下你无法创建大于30个字符的数据库对象。
 ​	前面既然说了Sequence名称模板默认为”%_SEQ”，那也意味着您可以修改名称模板，比如您可以把它改为”S\_%” 。修改方法是jef.properties中。
 
-~~~
+~~~properties
 sequence.name.pattern=S_% 
 ~~~
 
 ​	对于Table模拟Sequence，也可以全局配置， 可以是全局一张表实现所有Table Sequence值。例如创建一张名为GLOBAL_SEQ_TABLE的表，要启用此功能，可以在jef.properties中
 
-~~~
+~~~properties
 db.public.sequence.table=GOOBAL_SEQ_TABLE
 ~~~
 
@@ -1095,7 +1092,7 @@ private int id;
 ​	而如果使用数据库原生的Sequence，那么如何优化呢？
 ​	对于Oracle数据库，你可以直接将Sequence的步长调节为更大的值，例如40.
 
-~~~
+~~~sql
 alter sequence TABLE1_SEQ increment by 40 cache 20;
 ~~~
 
@@ -1105,7 +1102,7 @@ alter sequence TABLE1_SEQ increment by 40 cache 20;
 
 ​	*#当设置为-1时，强制检查Sequence步长；0时仅检查Oracle步长；1时步长固定为1；其他>0数			值：步长固定为配置的值*   
 
-~~~
+~~~properties
 db.sequence.step=-1
 ~~~
 
@@ -1203,7 +1200,7 @@ db.sequence.step=-1
 
 ​	按主键或模板查询能适应不少查询场景，但还远远不够。比如我们要查询所有姓名中带有”Jhon”字样的学生。用SQL语句表达的话，就是
 
-~~~
+~~~sql
 where name like ‘%Jhon%’
 ~~~
 
@@ -1339,7 +1336,7 @@ public void testSelect_LikeAndEtc() throws SQLException {
 
 对应的SQL语句如下
 
-~~~
+~~~sql
 select t.* from STUDENT t where t.NAME like ? escape '/'  and t.ID<? order by t.GRADE DESC
 ~~~
 
@@ -1461,7 +1458,7 @@ public void testAllRecords() throws SQLException{
 
 ​	这个API的设计有人喜欢有人不喜欢。不过您可以在jef.properties中加上一行，让无条件查询等效于查询全部记录。
 
-~~~
+~~~properties
 allow.empty.query=true
 ~~~
 
@@ -1569,7 +1566,7 @@ query.addCondition(QB.lt(Student.Field.id, 100)); 
 
 **SQL**
 
-~~~
+~~~sql
  select count(*) from product
 ~~~
 
@@ -1667,7 +1664,7 @@ public void testSelect_AndOrNot() throws SQLException {
 
 对应SQL语句为：
 
-~~~
+~~~sql
 select count(*) from STUDENT t
     where (not (t.NAME like ? escape '/'  or t.NAME like ? escape '/'  or t.NAME like ? escape '/' ) and t.GENDER=?) 
 ~~~
@@ -1712,7 +1709,7 @@ public void testSelect_Function() throws SQLException {
 
 用FBIField可以对数据库中的字段进行函数运算。上例的条件实际执行SQL如下：
 
-~~~
+~~~sql
 select count(*) from STUDENT t where lower(gender)||grade= ‘f2’
 ~~~
 
@@ -1764,7 +1761,7 @@ public void testSelect_JpqlExpression() throws SQLException {
 
 上面的代码演示了两个例子，第一个例子很简单，使用数据库的upper和nvl函数。
 
-~~~
+~~~sql
 select count(*) from STUDENT t where t.GENDER=upper(coalesce('f','m'))
 ~~~
 
@@ -1772,7 +1769,7 @@ Nvl函数是Oracle专用的，Derby不支持，这里EF-ORM将其自动改写为
 
 第二个例子复杂一些了
 
-~~~
+~~~sql
 select t.* from STUDENT t where t.DATE_OF_BIRTH=(select max(t.DATE_OF_BIRTH) from student)
 ~~~
 
@@ -1935,7 +1932,7 @@ public void testSelect_groupHaving() throws SQLException{
 
 上面的查询产生的SQL语句如下
 
-~~~
+~~~sql
 select t.GRADE,count(t.GRADE)  from STUDENT t  group by t.GRADE having count(t.GRADE)>2
 ~~~
 
@@ -2058,7 +2055,7 @@ public void testSelect_function2() throws SQLException {
 
 此外，如果不是EF-ORM内部的标注函数，您可以可以直接输入函数名，比如在mySQL上，您可以这样用
 
-~~~
+~~~java
 items.column(Student.Field.dateOfBirth).func("date_format","%Y-%M-%D");
 ~~~
 
@@ -2128,13 +2125,13 @@ select.rawExpression("str(add_months(Date_Of_Birth,24))"); //不带重写功能�
 
 ​	EF-ORM对于分页的两步操作，总体上来将遵循以下建议。
 
-	>*用户传入的Query对象或者是SQL语句中不要带有count / limit/ offset操作。可以传入不分页的普通的查询，由EF-ORM进行转化，根据需要自动转变为count语句、限定行范围的查询语句。*
-	>
-	>*这样做的原因*
-	>
-	>*1、希望应用开发者专注于业务本身，而不是分页细节。*
-	>
-	>*2、EF-ORM生成的分页语句能对开发人员屏蔽不同的数据库语法差异。*
+>*用户传入的Query对象或者是SQL语句中不要带有count / limit/ offset操作。可以传入不分页的普通的查询，由EF-ORM进行转化，根据需要自动转变为count语句、限定行范围的查询语句。*
+>
+>*这样做的原因*
+>
+>*1.希望应用开发者专注于业务本身，而不是分页细节。*
+>
+>*2. EF-ORM生成的分页语句能对开发人员屏蔽不同的数据库语法差异。*
 
 ​	关于总数的获取，我们可使用前文介绍的几种count方法（参见 4.1.2.5）。
 
@@ -3205,7 +3202,7 @@ List<Person> p=db.select(query);
 
 ​	我们修改一下Person.java，将Person.java中的currentSchool定义改成下面这样。
 
-~~~
+~~~java
 /**
 * 学校映射
 */
@@ -3622,7 +3619,9 @@ select  t1.*, t2.* … from TABLE1 t1,
 
 ​	在Java中，我们也将SQL语句映射为一个Join对象，其包含了多个Query对象，Query之间用 on 条件进行连接。on条件数量不定。
 
- 							  ![6-1](images\6-1.png)
+
+
+ 			 ![6-1](images\6-1.png)
 
 ​											图6-1 Join的构成 
 
@@ -4148,9 +4147,7 @@ public void testNativeQuery() {
 	}
 	// 方法2 直接传入SQL
 	{
-		String sql = "select * from((select upper(t1.person_name) AS name, T1.gender, '1' AS   		          		GRADE,"+ "T2.NAME AS SCHOOLNAME from T_PERSON T1 inner join SCHOOL T2 
-          			ON T1.CURRENT_SCHOOL_ID=T2.ID"+ ") union  (select t.NAME,t.GENDER,t.GRADE,
-   					'Unknown' AS SCHOOLNAME from STUDENT t  )) a";
+		String sql = "select * from((select upper(t1.person_name) AS name, T1.gender, '1' AS GRADE,"+ "T2.NAME AS SCHOOLNAME from T_PERSON T1 inner join SCHOOL T2 ON T1.CURRENT_SCHOOL_ID=T2.ID"+ ") union  (select t.NAME,t.GENDER,t.GRADE,'Unknown' AS SCHOOLNAME from STUDENT t  )) a";
 		NativeQuery<ResultWrapper> query = db.createNativeQuery(sql,	ResultWrapper.class);
 		List<ResultWrapper> result = query.getResultList();
 		System.out.println(result);
@@ -4173,13 +4170,13 @@ public void testNativeQuery() {
 | 方法                                       | 用途                             |
 | ---------------------------------------- | ------------------------------ |
 | Session.createNamedQuery(String)         | 构造一个命名查询对象。不指定返回类型。            |
-| Session.createNamedQuery(String,  Class<T>) | 构造一个命名查询对象。指定返回类型为某class。      |
+| Session.createNamedQuery(String,  Class\<T>) | 构造一个命名查询对象。指定返回类型为某class。      |
 | Session.createNamedQuery(String,  ITableMetadata) | 构造一个命名查询对象。指定返回类型为某表元模型所对应的类。  |
 | Session.createNativeQuery(String)        | 构造一个SQL查询对象。不指定返回类型。           |
-| Session.createNativeQuery(String,  Class<T>) | 构造一个SQL查询对象。指定返回类型为某class。     |
+| Session.createNativeQuery(String,  Class\<T>) | 构造一个SQL查询对象。指定返回类型为某class。     |
 | Session.createNativeQuery(String,  ITableMetadata) | 构造一个SQL查询对象。指定返回类型为某表元模型所对应的类。 |
 | Session.createQuery(String)              | 构造一个JPQL查询对象。不指定返回类型。          |
-| Session.createQuery(String,Class<T>)     | 构造一个JPQL查询对象。指定返回类型为某class。    |
+| Session.createQuery(String,Class\<T>)    | 构造一个JPQL查询对象。指定返回类型为某class。    |
 
 上述方法都可以返回NativeQuery对象。
 
@@ -4212,7 +4209,7 @@ public void testNativeQuery() {
 | NativeQuery.setParameterByString(String,  String[]) | 设置绑定变量参数，传入String[]后根据变量类型自动转换           |
 | NativeQuery.setParameterByString(int,  String) | 设置绑定变量参数，传入String后根据变量类型自动转换             |
 | NativeQuery.setParameterByString(int,  String[]) | 设置绑定变量参数，传入String[]后根据变量类型自动转换           |
-| NativeQuery.setParameterMap(Map<String,  Object>) | 设置多组绑定变量参数                               |
+| NativeQuery.setParameterMap(Map\<String,  Object>) | 设置多组绑定变量参数                               |
 | NativeQuery.getParameterValue(String)    | 获得绑定变量参数                                 |
 | NativeQuery.getParameterValue(int)       | 获得绑定变量参数                                 |
 | NativeQuery.containsParam(Object)        | 检查某个绑定变量是否已经设置了参数                        |
@@ -4298,7 +4295,7 @@ named-queries.xml
 
 ​	你可以将命名查询配置在指定的数据库表中。要启用此功能，需要在jef.properties配置 
 
-~~~sql
+~~~properties
 db.query.table.name=表名
 ~~~
 
@@ -4574,8 +4571,7 @@ orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
 @Test
 public void testRewrite3() throws SQLException{
 	//获得：当前日期减去1个月，和学生生日相差的天数。
-	String sql="select datediff(add_months(sysdate, -1), DATE_OF_BIRTH),DATE_OF_BIRTH 
-				from student";
+	String sql="select datediff(add_months(sysdate, -1), DATE_OF_BIRTH),DATE_OF_BIRTH from student";
 	System.out.println(db.createNativeQuery(sql).getResultList());
 		
 	//获得：在当前日期上加上1年
@@ -5018,11 +5014,11 @@ query.setParameter("orders", new SqlExpression("id desc"));
 
 ​	为了简化操作Session中还提供两个方法，直接将传入的SQL语句包装为NativeQuery，再从NativeQuery得到PagingIterator对象。
 
-| 方法                                       | 返回值               | 用途                                       |
-| ---------------------------------------- | ----------------- | ---------------------------------------- |
-| Session.pageSelect(NativeQuery<T>,  int) | PagingIterator<T> | 从NativeQuery得到PagingIterator对象。          |
-| Session.pageSelect(String,  Class<T>, int) | PagingIterator<T> | 将传入的SQL语句包装为NativeQuery，再从NativeQuery得到PagingIterator对象。 |
-| Session.pageSelect(String,  ITableMetadata, int) | PagingIterator<T> | 将传入的SQL语句包装为NativeQuery，再从NativeQuery得到PagingIterator对象。 |
+| 方法                                       | 返回值                | 用途                                       |
+| ---------------------------------------- | ------------------ | ---------------------------------------- |
+| Session.pageSelect(NativeQuery\<T>,  int) | PagingIterator\<T> | 从NativeQuery得到PagingIterator对象。          |
+| Session.pageSelect(String,  Class\<T>, int) | PagingIterator\<T> | 将传入的SQL语句包装为NativeQuery，再从NativeQuery得到PagingIterator对象。 |
+| Session.pageSelect(String,  ITableMetadata, int) | PagingIterator\<T> | 将传入的SQL语句包装为NativeQuery，再从NativeQuery得到PagingIterator对象。 |
 
 上述API的实际用法如下
 
@@ -5055,7 +5051,7 @@ public void testNativeQueryPage() throws SQLException{
 
 一个实际的例子是这样——
 
-~~~
+~~~properties
 <query name = "test-tree#oracle" type="sql">
 	<![CDATA[
 		select * from t_person t 
@@ -5074,7 +5070,7 @@ public void testNativeQueryPage() throws SQLException{
 
 一般来说，我们配置命名查询的名称是这样的，
 
-~~~
+~~~properties
 <query name = "test-tree" >
 ~~~
 
@@ -5082,7 +5078,7 @@ public void testNativeQueryPage() throws SQLException{
 
 但我们可以为查询名后面加上一个修饰——
 
-~~~
+~~~properties
 <query name = "test-tree"#oracle >
 ~~~
 
@@ -5205,7 +5201,7 @@ public void testStartWithConnectBy() throws SQLException {
 * 支持匿名存储过程
 * 和其他操作处于一个事务中
 
-​	只要是数据库能支持的存储过程，EF-ORM都可以调用。存储过程调用过程会封装为一个NativeCall对象。使用该对象即可传入/取出存储过程的相关参数。对于游标类的传出参数，还可以直接转换为java bean。
+  ​只要是数据库能支持的存储过程，EF-ORM都可以调用。存储过程调用过程会封装为一个NativeCall对象。使用该对象即可传入/取出存储过程的相关参数。对于游标类的传出参数，还可以直接转换为java bean。
 
 ### 7.4.1.   使用存储过程
 
@@ -5405,11 +5401,11 @@ public void testProducre4() throws SQLException{
 * SQL解析和改写是一个复杂的过程，尽管经过很多努力优化，但是每个SQL的解析依然要花费0.05到1毫秒不等的时间。可能不满足追求性能极限的场合。
 * 一些过于复杂的，或者我们开发时没有测试到的SQL写法可能会解析错误。（请将解析错误的SQL语句发给我们，谢谢。）
 
-​	EF-ORM内置的SQL分析器能处理绝大多数数据库DDL和DML语句。包括各种建表、删表、truncate、Create Table as、Select嵌套、Oracle分析函数、Oracle树型关系选择语句等。但是RDBMS的多样性和SQL语句的复杂性使得完全解析多少有些难度，因此EF-ORM依然保留原生的，不经过任何改写的SQL查询方式，作为NativeQuery在碰到以下麻烦时的”逃生手段“。
+  ​EF-ORM内置的SQL分析器能处理绝大多数数据库DDL和DML语句。包括各种建表、删表、truncate、Create Table as、Select嵌套、Oracle分析函数、Oracle树型关系选择语句等。但是RDBMS的多样性和SQL语句的复杂性使得完全解析多少有些难度，因此EF-ORM依然保留原生的，不经过任何改写的SQL查询方式，作为NativeQuery在碰到以下麻烦时的”逃生手段“。
 
-​	原生SQL和NativeQuery不同，不进行解析和改写。直接用于数据库操作。
+  ​原生SQL和NativeQuery不同，不进行解析和改写。直接用于数据库操作。
 
-​	明显的影响，原生SQL中，绑定变量占位符和E-SQL不同，用一个问号表示，和我们直接操作JDBC时一样------
+  ​明显的影响，原生SQL中，绑定变量占位符和E-SQL不同，用一个问号表示，和我们直接操作JDBC时一样------
 
 ~~~sql
 select * from t_person where id=? and name like ?
@@ -5454,8 +5450,8 @@ public void testRawSQL() throws SQLException{
 | ---------------------------------------- | ---------------------------------------- |
 | Session.executeSql(String,  Object...)   | 执行指定的SQL语句                               |
 | Session.getResultSet(String,  int, Object...) | 根据SQL语句获得ResultSet对象                     |
-| Session.selectBySql(String,  Class<T>, Object...) | 根据SQL查询，返回指定的对象                          |
-| Session.loadBySql(String,  Class<T>, Object...) | 根据SQL查询，返回指定的对象（单行）                      |
+| Session.selectBySql(String,  Class\<T>, Object...) | 根据SQL查询，返回指定的对象                          |
+| Session.loadBySql(String,  Class\<T>, Object...) | 根据SQL查询，返回指定的对象（单行）                      |
 | Session.selectBySql(String,  Transformer, IntRange, Object...) | 根据SQL查询，传入自定义的结果转换器和分页信息                 |
 | Session.getSqlTemplate(String)           | 获得指定数据源下的SqlTemplate对象。SQLTempate是一个可以执行各种SQL和本地化查询的操作句柄。 |
 
@@ -5494,16 +5490,16 @@ db.getSqlTemplate("datasource1");//获得datasource1的SqlTemplate
 | 方法                                       | 作用                         |
 | ---------------------------------------- | -------------------------- |
 | getMetaData()                            | 获得数据源元数据操作句柄               |
-| createNativeQuery(String,  Class<T>)     | 创建本地化查询                    |
+| createNativeQuery(String,  Class\<T>)    | 创建本地化查询                    |
 | createNativeQuery(String,  ITableMetadata) | 创建本地化查询                    |
 | createNativeCall(String,  Type...)       | 创建存储过程调用。                  |
 | createAnonymousNativeCall(String,  Type...) | 创建匿名过程调用。                  |
-| pageSelectBySql(String,  Class<T>, int)  | 按原生SQL分页查询                 |
+| pageSelectBySql(String,  Class\<T>, int) | 按原生SQL分页查询                 |
 | pageSelectBySql(String,  ITableMetadata, int) | 按原生SQL分页查询                 |
 | countBySql(String,  Object...)           | 按SQL语句查出Long型的结果           |
 | executeSql(String,  Object...)           | 执行SQL语句                    |
-| loadBySql(String,  Class<T>, Object...)  | 按SQL语句查出指定类型结果（单条记录）       |
-| selectBySql(String,  Class<T>, Object...) | 按SQL语句查出指定类型结果             |
+| loadBySql(String,  Class\<T>, Object...) | 按SQL语句查出指定类型结果（单条记录）       |
+| selectBySql(String,  Class\<T>, Object...) | 按SQL语句查出指定类型结果             |
 | selectBySql(String,  Transformer, IntRange, Object...) | 按SQL语句查出指定类型结果(带分页范围)      |
 | iteratorBySql(String,  Transformer, int, int, Object...) | 按SQL语句查出指定类型结果，以遍历器形式返回。   |
 | executeSqlBatch(String,  List<?>...)     | 执行SQL语句，可以传入多组参数并在一个批次内执行。 |
@@ -5551,10 +5547,10 @@ values current_timestamp
 | 方法                                       | 用途                                |
 | ---------------------------------------- | --------------------------------- |
 | **Session****中的方法**                      |                                   |
-| getExpressionValue(String,  Class<T>)    | 传入SqlExpression对象，计算表达式的值。        |
+| getExpressionValue(String,  Class\<T>)   | 传入SqlExpression对象，计算表达式的值。        |
 | **SqlTempate****中的方法**                   |                                   |
-| getExpressionValue(String,  Class<T>, Object...) | 传入String对象。得到指定的SQL表达式的查询结果(无表查询) |
-| getExpressionValue(DbFunction,  Class<T>, String...) | 得到指定的SQL函数的查询结果(无表查询)             |
+| getExpressionValue(String,  Class\<T>, Object...) | 传入String对象。得到指定的SQL表达式的查询结果(无表查询) |
+| getExpressionValue(DbFunction,  Class\<T>, String...) | 得到指定的SQL函数的查询结果(无表查询)             |
 
  
 
@@ -6142,14 +6138,14 @@ Mappers工具类提供的方法如下
 
 | 方法                                       | 效果                                       |
 | ---------------------------------------- | ---------------------------------------- |
-| Mappers.toResultProperty(String,  Class<T>) | 将查询结果中的列转换为Class所指定的对象后，注入到结果类的属性中。      |
-| Mappers.toResultProperty(String,  Class<T>, String) | 将查询结果中的列转换为Class所指定的对象后，注入到结果类的属性中。  可以指定列的命名空间。（参见后文注解） |
+| Mappers.toResultProperty(String,  Class\<T>) | 将查询结果中的列转换为Class所指定的对象后，注入到结果类的属性中。      |
+| Mappers.toResultProperty(String,  Class\<T>, String) | 将查询结果中的列转换为Class所指定的对象后，注入到结果类的属性中。  可以指定列的命名空间。（参见后文注解） |
 | Mappers.toResultProperty(String,  ITableMetadata, String) | 将查询结果中的列转换为ITableMetadata所指定的对象后，注入到结果类的属性中。  可以指定列的命名空间。（参见后文注解） |
-| Mappers.toResultBean(Class<T>)           | 将查询结果中的列按指定类型Entity映射关系，直接注入到结果类中。（比如DO对象中配置映射关系，VO对象字段几乎一致但未配置映射关系，此时可以按DO对象的规则将属性注入到VO对象中） |
-| Mappers.toResultBean(Class<T>,  String)  | 将查询结果中的列按指定类型Entity映射关系，直接注入到结果类中。  可以指定列的命名空间。（参见后文注解） |
+| Mappers.toResultBean(Class\<T>)          | 将查询结果中的列按指定类型Entity映射关系，直接注入到结果类中。（比如DO对象中配置映射关系，VO对象字段几乎一致但未配置映射关系，此时可以按DO对象的规则将属性注入到VO对象中） |
+| Mappers.toResultBean(Class\<T>,  String) | 将查询结果中的列按指定类型Entity映射关系，直接注入到结果类中。  可以指定列的命名空间。（参见后文注解） |
 | Mappers.toResultBean(ITableMetadata,  String) | 将查询结果中的列按指定类型ITableMetadata映射关系，直接注入到结果类中。  可以指定列的命名空间。（参见后文注解） |
-| Mappers.toArrayElement(int,  Class<T>)   | 将查询结果中的列转换为Class所指定的对象后，注入到结果数组的指定位置上。（要求查询返回结果为数组） |
-| Mappers.toArrayElement(int,  Class<T>, String) | 将查询结果中的列转换为Class所指定的对象后，注入到结果数组的指定位置上。（要求查询返回结果为数组）  可以指定列的命名空间。（参见后文注解） |
+| Mappers.toArrayElement(int,  Class\<T>)  | 将查询结果中的列转换为Class所指定的对象后，注入到结果数组的指定位置上。（要求查询返回结果为数组） |
+| Mappers.toArrayElement(int,  Class\<T>, String) | 将查询结果中的列转换为Class所指定的对象后，注入到结果数组的指定位置上。（要求查询返回结果为数组）  可以指定列的命名空间。（参见后文注解） |
 | Mappers.toArrayElement(int,  ITableMetadata, String) | 将查询结果中的列转换为Class所指定的对象后，注入到结果数组的指定位置上。（要求查询返回结果为数组）  可以指定列的命名空间。（参见后文注解） |
 
 上面列举了9个生成BeanMapper对象的方法。
@@ -6311,5 +6307,5 @@ public final <T> ResultIterator<T> iteratorBySql(String sql,
 **注意事项**
 
 1. 请注意ResultIterator的关闭问题。正常情况下，当遍历完成后ResultIterator会自动关闭。但是我们希望在编程时，必须在finally块中显式关闭ResultIterator对象。因为这个对象不关闭，意味着JDBC ResultSet不关闭，数据库资源会很快耗尽的。
-2.  另外。在Session中有一个方法Session.getResultSet(String, int, Object...)。这个方法返回ResultSet对象，可能有人会误以为这就是JDBC驱动的原生结果集。可以实现流式操作。但实际上这个方法是对原生的Result的完整缓存。因此并不能用在超大结果集的返回上。
+2. 另外。在Session中有一个方法Session.getResultSet(String, int, Object...)。这个方法返回ResultSet对象，可能有人会误以为这就是JDBC驱动的原生结果集。可以实现流式操作。但实际上这个方法是对原生的Result的完整缓存。因此并不能用在超大结果集的返回上。
 
