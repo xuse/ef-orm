@@ -41,12 +41,12 @@ public class DataInitializer {
     private int tableInit;
     private int recordInit;
     private String extension = "." + JefConfiguration.get(DbCfg.INIT_DATA_EXTENSION, "txt");
-    private String charset = "UTF-8";
+    private String globalCharset = "UTF-8";
 
     public DataInitializer(DbClient session, boolean useTable, String charset) {
         this.session = session;
         if (charset != null)
-            this.charset = charset;
+            this.globalCharset = charset;
         DbMetaData meta = session.getMetaData(null);
         try {
             if (useTable) {
@@ -182,19 +182,6 @@ public class DataInitializer {
         return count;
     }
 
-    // public static void main(String[] args) throws IOException {
-    // CsvReader reader = new CsvReader(new InputStreamReader(new
-    // FileInputStream(
-    // "G:/Git/ef-orm/orm-code-generator/src/test/resources/com.github.geequery.codegen.entity.ProjectUser.csv"),
-    // "UTF-8"));
-    //
-    // ;
-    //
-    // System.out.println(reader.getHeaders());
-    //
-    // reader.close();
-    // }
-
     public final boolean isEnable() {
         return enable;
     }
@@ -208,12 +195,12 @@ public class DataInitializer {
      *            表是否刚刚创建
      */
     public final void initData(ITableMetadata meta, boolean isNew) {
-        String resName = "/" + meta.getThisType().getName() + extension;
+        String csvResouce = "/" + meta.getThisType().getName() + extension;
         boolean ensureResourceExists = false;
-        String charset = this.charset;
+        String charset = this.globalCharset;
         String tableName = meta.getTableName(false);
         boolean manualSequence = false;
-
+        String sqlResouce = "";
         InitializeData config = meta.getThisType().getAnnotation(InitializeData.class);
         if (config != null) {
             if (!config.enable()) {
@@ -221,15 +208,40 @@ public class DataInitializer {
                 return;
             }
             if (StringUtils.isNotEmpty(config.value())) {
-                resName = config.value();
+                csvResouce = config.value();
             }
             if (StringUtils.isNotEmpty(config.charset())) {
                 charset = config.charset();
             }
             ensureResourceExists = config.ensureFileExists();
             manualSequence = config.manualSequence();
+            sqlResouce = config.sqlFile();
         }
+        if (StringUtils.isEmpty(sqlResouce)) {
+            initCSVData(meta, isNew, csvResouce, manualSequence, ensureResourceExists, charset);
+        } else {
+            initSqlData(meta, isNew, sqlResouce, ensureResourceExists, charset);
+        }
+    }
 
+    private void initSqlData(ITableMetadata meta, boolean isNew, String resName, boolean ensureResourceExists, String charset) {
+        String tableName = meta.getTableName(false);
+        URL url = meta.getThisType().getResource(resName);
+        if (url == null) {
+            if (ensureResourceExists) {
+                throw new IllegalStateException("Resource of table [" + tableName + "] was not found:" + resName);
+            }
+            return;
+        }
+        try {
+            session.getMetaData(null).executeScriptFile(url);
+        } catch (SQLException e) {
+            throw DbUtils.toRuntimeException(e);
+        }
+    }
+
+    private void initCSVData(ITableMetadata meta, boolean isNew, String resName, boolean manualSequence, boolean ensureResourceExists, String charset) {
+        String tableName = meta.getTableName(false);
         URL url = meta.getThisType().getResource(resName);
         if (url != null) {
             if (isNew) {
@@ -257,6 +269,7 @@ public class DataInitializer {
         } else {
             log.debug("Data file was not found:{}", resName);
         }
+
     }
 
     /**
@@ -296,10 +309,10 @@ public class DataInitializer {
     }
 
     public String getCharset() {
-        return charset;
+        return globalCharset;
     }
 
     public void setCharset(String charset) {
-        this.charset = charset;
+        this.globalCharset = charset;
     }
 }

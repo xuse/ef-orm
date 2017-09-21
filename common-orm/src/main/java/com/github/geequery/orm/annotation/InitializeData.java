@@ -48,4 +48,11 @@ public @interface InitializeData {
      * 确认资源文件必需存在，如果资源不存在将抛出异常
      */
     boolean ensureFileExists() default true;
+
+    /**
+     * 支持指定一个SQL语句，执行该SQL来更新数据库。 一旦使用该功能，value()的CSV文件功能将失效。
+     * 
+     * @return
+     */
+    String sqlFile() default "";
 }
