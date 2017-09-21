@@ -3619,11 +3619,9 @@ select  t1.*, t2.* … from TABLE1 t1,
 
 ​	在Java中，我们也将SQL语句映射为一个Join对象，其包含了多个Query对象，Query之间用 on 条件进行连接。on条件数量不定。
 
+ ![6-1](images\6-1.png)
 
-
- 			 ![6-1](images\6-1.png)
-
-​											图6-1 Join的构成 
+图6-1 Join的构成 
 
 ​	上图可以看出，一个Join由多个单表的Query对象构成。我们在实际使用时，可以自由的组合各种Query，形成一个Join查询对象。这个模型实际上和我们编写的SQL是一样的。
 
