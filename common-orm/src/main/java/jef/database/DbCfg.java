@@ -447,5 +447,10 @@ public enum DbCfg implements ConfigItem {
 	/**
 	 * 启用数据初始化记录信息表 (AllowDataInitialize)
 	 */
-	USE_DATAINIT_FLAG_TABLE;
+	USE_DATAINIT_FLAG_TABLE,
+	
+	/**
+	 * 配置初始化数据的扩展名，默认扩展名为txt
+	 */
+	INIT_DATA_EXTENSION;
 }

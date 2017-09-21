@@ -478,7 +478,7 @@ public abstract class Session {
 	 * 
 	 * @param entity
 	 *            要合并的记录数据
-	 * @return 如果插入返回对象本身，如果是更新则返回旧记录的值
+	 * @return 如果插入返回对象本身，如果是更新则返回旧记录的值(如果插入，返回null;如果没修改，返回原对象;如果修改，返回旧对象。)
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
@@ -494,6 +494,11 @@ public abstract class Session {
         }
     }
 
+    /**
+     * @param entity
+     * @return
+     * @throws SQLException
+     */
     private final <T extends IQueryableEntity> T merge0(T entity) throws SQLException {
 		T old = null;
 		@SuppressWarnings("unchecked")
@@ -516,14 +521,17 @@ public abstract class Session {
 			entity.clearQuery();
 			if (old != null) {
 				DbUtils.compareToUpdateMap(entity, old);
-				if (old.needUpdate())
-					update(old);
-				return old;
+				if (old.needUpdate()){
+				    update(old);
+				    return old;
+				}else{
+				    return entity;
+				}
 			}
 		}
 		// 如果旧数据不存在
 		insert(entity);
-		return entity;
+		return null;
 	}
 
 	/**
@@ -563,7 +571,7 @@ public abstract class Session {
 		}
 		// 如果旧数据不存在
 		insertCascade(entity);
-		return entity;
+		return null;
 	}
 	
 	/**

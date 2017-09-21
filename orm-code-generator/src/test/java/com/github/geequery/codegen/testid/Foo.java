@@ -3,8 +3,13 @@ package com.github.geequery.codegen.testid;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
+
+import com.github.geequery.orm.annotation.InitializeData;
 
 @Entity
+@Table(name = "foo")
+@InitializeData(charset = "GB18030", value = "/test.txt")
 public class Foo extends jef.database.DataObject {
     @Id
     @GeneratedValue

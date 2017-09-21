@@ -154,14 +154,14 @@ public class DbClientBuilder {
     /**
      * 在建表后插入初始化数据
      * <p>
-     * EF-ORM允许用户在和class相同的位置创建一个 <i>class-name</i>.init.json的文件，记录了表中的初始化数据。
+     * EF-ORM允许用户在和class相同的位置创建一个 <i>class-name</i>.txt的文件，记录了表中的初始化数据。
      * 开启此选项后，在初始化建表时会插入这些数据。
      */
     private boolean initDataAfterCreate;
 
     /**
      * 如果表已经存在，检查初始化的必备数据是否已经存在于表中，如无则插入 EF-ORM允许用户在和class相同的位置创建一个
-     * <i>class-name</i>.init.json的文件，记录了表中的初始化数据。
+     * <i>class-name</i>.txt的文件，记录了表中的初始化数据。
      * 开启此选项后，在启动扫描表后会检查表中是否存在这些数据，如不存在或不一致会修改这些数据。
      */
     private boolean initDataIfTableExists;
@@ -170,6 +170,8 @@ public class DbClientBuilder {
      * 是否使用数据库初始化记录表
      */
     private boolean useDataInitTable = JefConfiguration.getBoolean(DbCfg.USE_DATAINIT_FLAG_TABLE, false);;
+
+    private String initDataCharset = "UTF-8";
 
     /**
      * 最终构造出来的对象实例
@@ -639,7 +641,7 @@ public class DbClientBuilder {
             qe.setCreateTable(createTable);
             qe.setInitDataAfterCreate(this.initDataAfterCreate);
             qe.setInitDataIfTableExists(this.initDataIfTableExists);
-            qe.setEntityManagerFactory(sf, this.useDataInitTable);
+            qe.setEntityManagerFactory(sf, this.useDataInitTable, this.initDataCharset);
             if (annotatedClasses != null)
                 qe.registeEntity(annotatedClasses);
             if (packagesToScan != null) {
@@ -783,5 +785,13 @@ public class DbClientBuilder {
 
     public static DbClientBuilder newBuilder() {
         return new DbClientBuilder();
+    }
+
+    public String getInitDataCharset() {
+        return initDataCharset;
+    }
+
+    public void setInitDataCharset(String initDataCharset) {
+        this.initDataCharset = initDataCharset;
     }
 }

@@ -11,14 +11,17 @@ import java.util.Date;
 import java.util.List;
 
 import jef.common.log.LogUtil;
+import jef.database.DbCfg;
 import jef.database.DbClient;
 import jef.database.DbMetaData;
 import jef.database.DbUtils;
 import jef.database.IQueryableEntity;
+import jef.database.ORMConfig;
 import jef.database.QB;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.jre5support.ProcessUtil;
+import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.csvreader.Codecs;
 import jef.tools.csvreader.CsvReader;
@@ -26,6 +29,8 @@ import jef.tools.reflect.Property;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.geequery.orm.annotation.InitializeData;
 
 public class DataInitializer {
     private DbClient session;
@@ -35,9 +40,13 @@ public class DataInitializer {
 
     private int tableInit;
     private int recordInit;
+    private String extension = "." + JefConfiguration.get(DbCfg.INIT_DATA_EXTENSION, "txt");
+    private String charset = "UTF-8";
 
-    public DataInitializer(DbClient session, boolean useTable) {
+    public DataInitializer(DbClient session, boolean useTable, String charset) {
         this.session = session;
+        if (charset != null)
+            this.charset = charset;
         DbMetaData meta = session.getMetaData(null);
         try {
             if (useTable) {
@@ -74,8 +83,8 @@ public class DataInitializer {
         enable = true;
     }
 
-    private List<IQueryableEntity> readData(ITableMetadata meta, URL url) throws UnsupportedEncodingException, IOException {
-        CsvReader reader = new CsvReader(new InputStreamReader(url.openStream(), "UTF-8"));
+    private List<IQueryableEntity> readData(ITableMetadata meta, URL url, String charset) throws UnsupportedEncodingException, IOException {
+        CsvReader reader = new CsvReader(new InputStreamReader(url.openStream(), charset));
         try {
             // 根据Header分析Property
             List<Property> props = new ArrayList<Property>();
@@ -96,12 +105,12 @@ public class DataInitializer {
             List<IQueryableEntity> result = new ArrayList<IQueryableEntity>();
             while (reader.readRecord()) {
                 IQueryableEntity obj = meta.newInstance();
-                obj.stopUpdate();
+                // obj.stopUpdate();
                 for (int i = 0; i < props.size(); i++) {
                     Property prop = props.get(i);
                     prop.set(obj, Codecs.fromString(reader.get(i), prop.getGenericType()));
                 }
-                obj.startUpdate();
+                // obj.startUpdate();
                 result.add(obj);
             }
             return result;
@@ -110,20 +119,28 @@ public class DataInitializer {
         }
     }
 
-    private int initData0(ITableMetadata meta, URL url) throws IOException {
+    private int initData0(ITableMetadata meta, URL url, String charset, boolean manualSequence) throws IOException {
         int count = 0;
-        List<IQueryableEntity> data = readData(meta, url);
-        for (int i = 0; i < data.size(); i += 500) {
-            int batchIndex = Math.min(i + 500, data.size());
-            try {
-                session.batchInsert(data.subList(i, batchIndex));
-                count += (batchIndex - i);
-            } catch (SQLIntegrityConstraintViolationException e1) {
-                // 主键冲突，改为逐条插入
-                count += insertOnebyone(data.subList(i, batchIndex));
-            } catch (SQLException e1) {
-                throw DbUtils.toRuntimeException(e1);
+        List<IQueryableEntity> data = readData(meta, url, charset);
+        boolean value = ORMConfig.getInstance().isManualSequence();
+        if (value != manualSequence)
+            ORMConfig.getInstance().setManualSequence(manualSequence);
+        try {
+            for (int i = 0; i < data.size(); i += 500) {
+                int batchIndex = Math.min(i + 500, data.size());
+                try {
+                    session.batchInsert(data.subList(i, batchIndex));
+                    count += (batchIndex - i);
+                } catch (SQLIntegrityConstraintViolationException e1) {
+                    // 主键冲突，改为逐条插入
+                    count += insertOnebyone(data.subList(i, batchIndex));
+                } catch (SQLException e1) {
+                    throw DbUtils.toRuntimeException(e1);
+                }
             }
+        } finally {
+            if (value != manualSequence)
+                ORMConfig.getInstance().setManualSequence(value);
         }
         return count;
     }
@@ -141,14 +158,25 @@ public class DataInitializer {
         return count;
     }
 
-    private int mergeData0(ITableMetadata meta, URL url) throws IOException {
+    private int mergeData0(ITableMetadata meta, URL url, String charset, boolean manualSequence) throws IOException {
         int count = 0;
-        for (IQueryableEntity e : readData(meta, url)) {
-            try {
-                session.merge(e);
-                count++;
-            } catch (SQLException e1) {
-                log.error("Insert error:{}", e, e1);
+        boolean value = ORMConfig.getInstance().isManualSequence();
+        if (value != manualSequence)
+            ORMConfig.getInstance().setManualSequence(manualSequence);
+        try {
+            for (IQueryableEntity e : readData(meta, url, charset)) {
+                try {
+                    IQueryableEntity result = session.merge(e);
+                    if (result == null || result != e) {
+                        count++;
+                    }
+                } catch (SQLException e1) {
+                    log.error("Insert error:{}", e, e1);
+                }
+            }
+        } finally {
+            if (value != manualSequence) {
+                ORMConfig.getInstance().setManualSequence(value);
             }
         }
         return count;
@@ -180,18 +208,40 @@ public class DataInitializer {
      *            表是否刚刚创建
      */
     public final void initData(ITableMetadata meta, boolean isNew) {
-        URL url = meta.getThisType().getResource("/" + meta.getThisType().getName() + ".csv");
+        String resName = "/" + meta.getThisType().getName() + extension;
+        boolean ensureResourceExists = false;
+        String charset = this.charset;
+        String tableName = meta.getTableName(false);
+        boolean manualSequence = false;
+
+        InitializeData config = meta.getThisType().getAnnotation(InitializeData.class);
+        if (config != null) {
+            if (!config.enable()) {
+                log.info("Table [{}] was's disabled on DataInitilalize feature by Annotation @InitializeData", tableName);
+                return;
+            }
+            if (StringUtils.isNotEmpty(config.value())) {
+                resName = config.value();
+            }
+            if (StringUtils.isNotEmpty(config.charset())) {
+                charset = config.charset();
+            }
+            ensureResourceExists = config.ensureFileExists();
+            manualSequence = config.manualSequence();
+        }
+
+        URL url = meta.getThisType().getResource(resName);
         if (url != null) {
             if (isNew) {
-                LogUtil.info("DataInitializer：table [{}] was created just now, begin insert data into database.", meta.getTableName(false));
+                log.info("Table [{}] was created just now, begin insert data into database.", tableName);
             } else {
-                LogUtil.info("DataInitializer：table [{}] already exists, begin merge data into database.", meta.getTableName(false));
+                log.info("Table [{}] already exists, begin merge data into database.", tableName);
             }
             try {
                 if (isNew) {
-                    recordInit += initData0(meta, url);
+                    recordInit += initData0(meta, url, charset, manualSequence);
                 } else {
-                    recordInit += mergeData0(meta, url);
+                    recordInit += mergeData0(meta, url, charset, manualSequence);
                 }
                 tableInit++;
             } catch (RuntimeException e) {
@@ -201,13 +251,18 @@ public class DataInitializer {
                 ex = e;
                 throw new IllegalStateException(e);
             }
+        } else if (ensureResourceExists) {
+            throw new IllegalStateException("Resource of table [" + tableName + "] was not found:" + resName);
+
+        } else {
+            log.debug("Data file was not found:{}", resName);
         }
     }
 
     /**
      * 记录初始化任务结果
      */
-    private void recordResult(Exception ex) {
+    private void recordResult(String message) {
         if (recordInit > 0) {
             try {
                 AllowDataInitialize record = session.load(QB.create(AllowDataInitialize.class), false);
@@ -216,11 +271,7 @@ public class DataInitializer {
                 record.prepareUpdate(AllowDataInitialize.Field.lastDataInitTime, new Date());
                 record.prepareUpdate(AllowDataInitialize.Field.lastDataInitUser,
                         ProcessUtil.getPid() + "@" + ProcessUtil.getHostname() + "(" + ProcessUtil.getLocalIp() + ") OS:" + ProcessUtil.getOSName());
-                if (ex == null) {
-                    record.prepareUpdate(AllowDataInitialize.Field.lastDataInitResult, "success. Tables init = " + tableInit + ", records = " + recordInit);
-                } else {
-                    record.prepareUpdate(AllowDataInitialize.Field.lastDataInitResult, StringUtils.truncate(ex.toString(), 300));
-                }
+                record.prepareUpdate(AllowDataInitialize.Field.lastDataInitResult, StringUtils.truncate(message, 300));
                 session.update(record);
             } catch (SQLException e) {
                 log.error("Record DataInitilizer Table failure! please check.", e);
@@ -231,9 +282,24 @@ public class DataInitializer {
     private Exception ex;
 
     public void finish() {
+        String message;
+        if (ex == null) {
+            message = "success. Tables init = " + tableInit + ", records = " + recordInit;
+        } else {
+            message = ex.toString();
+        }
         if (useTable) {
-            recordResult(ex);
+            recordResult(message);
+        } else {
+            log.info(message);
         }
     }
 
+    public String getCharset() {
+        return charset;
+    }
+
+    public void setCharset(String charset) {
+        this.charset = charset;
+    }
 }

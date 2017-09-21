@@ -91,10 +91,10 @@ public class QuerableEntityScanner {
     private JefEntityManagerFactory entityManagerFactory;
     /**
      * DataInit
+     * 
      * @return
      */
     private DataInitializer dataInitializer;
-    
 
     public String[] getPackageNames() {
         return packageNames;
@@ -245,13 +245,14 @@ public class QuerableEntityScanner {
             final boolean refresh = alterTable && (ee == null || ee.refresh());
             if (entityManagerFactory != null && (create || refresh)) {
                 boolean isCreated = doTableDDL(meta, create, refresh);
-                if(dataInitializer.isEnable()){
+                if (dataInitializer.isEnable()) {
                     if (isCreated && this.initDataAfterCreate) {
                         dataInitializer.initData(meta, true);
                     } else if (this.initDataIfTableExists) {
                         dataInitializer.initData(meta, false);
-                    } else{
-                        LogUtil.info("DataInitializer：table [{}] already exists and 'initDataIfTableExists' flag is off. No data will be merge into database.",meta.getTableName(false));
+                    } else {
+                        LogUtil.info("DataInitializer：table [{}] already exists and 'initDataIfTableExists' flag is off. No data will be merge into database.",
+                                meta.getTableName(false));
                     }
                 }
             }
@@ -259,7 +260,6 @@ public class QuerableEntityScanner {
             LogUtil.error("EntityScanner:[Failure]" + StringUtils.exceptionStack(e));
         }
     }
-
 
     /**
      * 
@@ -340,8 +340,6 @@ public class QuerableEntityScanner {
         return created;
     }
 
- 
-
     private String[] getClassNames() {
         List<String> clzs = new ArrayList<String>();
         for (int i = 0; i < implClasses.length; i++) {
@@ -362,9 +360,15 @@ public class QuerableEntityScanner {
         this.allowDropColumn = allowDropColumn;
     }
 
-    public void setEntityManagerFactory(JefEntityManagerFactory entityManagerFactory, boolean useTable) {
+    /**
+     * 设置数据库访问句柄
+     * @param entityManagerFactory 数据库客户端
+     * @param useTable 是否使用数据库记录表
+     * @param charset 数据文件编码
+     */
+    public void setEntityManagerFactory(JefEntityManagerFactory entityManagerFactory, boolean useTable, String charset) {
         this.entityManagerFactory = entityManagerFactory;
-        this.dataInitializer=new DataInitializer(entityManagerFactory.getDefault(),useTable);
+        this.dataInitializer = new DataInitializer(entityManagerFactory.getDefault(), useTable,charset);
     }
 
     public boolean isCreateTable() {
@@ -419,7 +423,7 @@ public class QuerableEntityScanner {
      * 完成类的注册和扫描。如果启用了数据初始化记录表，将会更新该表记录，下次启动不再初始化数据。
      */
     public void finish() {
-        if(dataInitializer!=null && dataInitializer.isEnable()){
+        if (dataInitializer != null && dataInitializer.isEnable()) {
             dataInitializer.finish();
         }
     }
