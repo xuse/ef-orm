@@ -174,7 +174,7 @@ public class NativeQueryTest extends org.junit.Assert {
 		db.createTable(TreeTable.class);
 		db.createTable(Person.class);
 		if(db.getProfile().getName()!=RDBMS.oracle && db.getProfile().getName()!=RDBMS.mysql ){
-			if(!db.existTable("dual")){
+			if(!db.existsTable("dual")){
 				db.executeSql("create table dual(X varchar(20))");
 			}
 			long count=db.getSqlTemplate(null).countBySql("select count(*) from dual");
@@ -977,7 +977,7 @@ public class NativeQueryTest extends org.junit.Assert {
 	public void testStartWith() throws Exception {
 		try {
 //			db.dropTable("sys_resource");
-			if (!db.existTable("sys_resource")) {
+			if (!db.existsTable("sys_resource")) {
 				db.createNamedQuery("testOracleTree_create").executeUpdate();
 				TupleMetadata tuple=MetaHolder.initMetadata(db, "sys_resource");
 				VarObject map=tuple.newInstance();

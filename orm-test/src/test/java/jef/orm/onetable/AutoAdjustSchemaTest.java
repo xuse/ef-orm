@@ -65,7 +65,7 @@ public class AutoAdjustSchemaTest {
 	@Test
 	public void testCRUD() throws SQLException {
 		
-		Assert.assertTrue(db.existTable(TABLE_NAME));
+		Assert.assertTrue(db.existsTable(TABLE_NAME));
 
 		Root root = RandomData.newInstance(Root.class);
 		db.insert(root, TABLE_NAME);

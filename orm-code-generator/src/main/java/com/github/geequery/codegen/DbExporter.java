@@ -1,6 +1,7 @@
 package com.github.geequery.codegen;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.HashSet;
 import java.util.Set;
@@ -29,10 +30,12 @@ public class DbExporter {
 
 	/**
 	 * 将数据库中的数据全部作为初始化数据导出到src/main/resources下。
+	 * @throws ClassNotFoundException 
+	 * @throws IOException 
 	 * 
 	 * @throws Exception
 	 */
-	public void doxport(DbClient client,String packageName, File output) throws Exception {
+	public void exportPackage(DbClient client,String packageName, File output) throws ClassNotFoundException, IOException{
 		ClassScanner cs = new ClassScanner();
 		IResource[] entities = cs.scan(packageName);
 		InitDataExporter exporter = new InitDataExporter(client, output);

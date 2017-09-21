@@ -445,7 +445,7 @@ public class DbClient extends Session implements SessionFactory {
      * 
      * 
      */
-    public boolean existTable(String tableName) throws SQLException {
+    public boolean existsTable(String tableName) throws SQLException {
         Assert.notNull(tableName);
         tableName = MetaHolder.toSchemaAdjustedName(tableName);
         return getMetaData(null).existTable(tableName);
@@ -459,7 +459,7 @@ public class DbClient extends Session implements SessionFactory {
      * @return 不存在的表名称
      * @throws SQLException
      */
-    public Collection<String> existTable(IQueryableEntity obj) throws SQLException {
+    public Collection<String> existsTable(IQueryableEntity obj) throws SQLException {
         PartitionResult[] result = DbUtils.toTableNames(obj, null, null, getPartitionSupport());
         List<String> s = new ArrayList<String>();
         for (PartitionResult pr : result) {

@@ -27,10 +27,10 @@ public class SqlServerTest {
 	@DatabaseInit
 	public void setup() throws SQLException {
 //		db = DbClientFactory.getDbClient("sqlserver", "10.7.52.152", 1433, "jiyi2", "sa", "Abc_123");
-		if(!db.existTable("dual_int")){
+		if(!db.existsTable("dual_int")){
 			db.executeSql("create table dual_int( X integer )");
 		}
-		if(!db.existTable("dual")){
+		if(!db.existsTable("dual")){
 			db.executeSql("create table dual_int( X char(1) )");
 		}
 	}

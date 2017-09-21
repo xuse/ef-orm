@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 
 /**
- * 
+ * 用于在geeQuery的反射框架中覆盖field的原始名称，改为一个新的字段名
  * @author jiyi
  *
  */

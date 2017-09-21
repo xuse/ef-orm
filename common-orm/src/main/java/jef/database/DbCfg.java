@@ -442,5 +442,10 @@ public enum DbCfg implements ConfigItem {
 	/**
 	 * 在一次in条件中允许出现的最多参数数量。缺省500。有部分批量查询接口，可以自动将传入的条件转为 in (?,?,?,..)这样的语句，该参数可用于控制in条件最大的元素个数。
 	 */
-	DB_MAX_IN_CONDITIONS;
+	DB_MAX_IN_CONDITIONS,
+	
+	/**
+	 * 启用数据初始化记录信息表 (AllowDataInitialize)
+	 */
+	USE_DATAINIT_FLAG_TABLE;
 }

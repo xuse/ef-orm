@@ -70,7 +70,7 @@ public class EntityEnhancer {
 	/**
 	 * 在当前的classpath目录下扫描Entity类(.clsss文件)，使用字节码增强修改这些class文件。
 	 * 
-	 * @param pkgNames
+	 * @param pkgNames 要增强的包名
 	 */
 	public void enhance(final String... pkgNames) {
 		int n = 0;
@@ -109,17 +109,22 @@ public class EntityEnhancer {
 		out.println(n + " classes enhanced.");
 	}
 
-	public boolean enhanceClass(String string) {
-		URL url = this.getClass().getClassLoader().getResource(string.replace('.', '/') + ".class");
+	/**
+	 * 增强制定名称的类
+	 * @param className 类全名
+	 * @return 是否进行增强
+	 */
+	public boolean enhanceClass(String className) {
+		URL url = this.getClass().getClassLoader().getResource(className.replace('.', '/') + ".class");
 		if (url == null) {
-			throw new IllegalArgumentException("not found " + string);
+			throw new IllegalArgumentException("not found " + className);
 		}
 		URLFile file = new URLFile(url);
 		if (!file.isLocalFile()) {
-			throw new IllegalArgumentException("not a local file." + string);
+			throw new IllegalArgumentException("not a local file." + className);
 		}
 		try {
-			return enhance(file.getLocalFile(), string);
+			return enhance(file.getLocalFile(), className);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

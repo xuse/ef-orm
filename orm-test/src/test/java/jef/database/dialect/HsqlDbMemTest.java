@@ -55,12 +55,12 @@ public class HsqlDbMemTest extends org.junit.Assert {
 	public void testExistTable() {
 		if(StringUtils.isNotEmpty(queryTable)){
 			try {
-				assertTrue(db.existTable(queryTable.toUpperCase()));
-				assertTrue(db.existTable(queryTable.toLowerCase()));
+				assertTrue(db.existsTable(queryTable.toUpperCase()));
+				assertTrue(db.existsTable(queryTable.toLowerCase()));
 
-				assertTrue(db.existTable("Test_Entity"));
-				assertTrue(db.existTable("test_entity"));
-				assertTrue(db.existTable("TEST_ENTITY"));
+				assertTrue(db.existsTable("Test_Entity"));
+				assertTrue(db.existsTable("test_entity"));
+				assertTrue(db.existsTable("TEST_ENTITY"));
 
 			} catch (SQLException e) {
 				fail(e.getMessage());

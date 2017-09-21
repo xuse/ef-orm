@@ -1,9 +1,7 @@
 package jef.database.support;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -15,15 +13,12 @@ import java.util.Set;
 import jef.accelerator.asm.ClassReader;
 import jef.common.log.LogUtil;
 import jef.database.DbClient;
-import jef.database.DbUtils;
 import jef.database.Field;
-import jef.database.IQueryableEntity;
 import jef.database.annotation.EasyEntity;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.AutoIncrementMapping.GenerationResolution;
 import jef.database.dialect.type.ColumnMapping;
-import jef.database.jpa.JefEntityManager;
 import jef.database.jpa.JefEntityManagerFactory;
 import jef.database.meta.Column;
 import jef.database.meta.ColumnModification;
@@ -32,12 +27,8 @@ import jef.database.meta.MetaHolder;
 import jef.database.wrapper.executor.StatementExecutor;
 import jef.tools.ArrayUtils;
 import jef.tools.ClassScanner;
-import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 import jef.tools.resource.IResource;
-
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONException;
 
 /**
  * 自动扫描工具，在构造时可以根据构造方法，自动的将继承DataObject的类检查出来，并载入
@@ -88,7 +79,7 @@ public class QuerableEntityScanner {
     /**
      * 当扫描到已经存在的表后，是否检查初始化数据。 一般在开发阶段开启
      */
-    private boolean initDataIfTableExists = false;
+    private boolean initDataIfTableExists = true;
 
     /**
      * 扫描包
@@ -98,6 +89,12 @@ public class QuerableEntityScanner {
      * EMF
      */
     private JefEntityManagerFactory entityManagerFactory;
+    /**
+     * DataInit
+     * @return
+     */
+    private DataInitializer dataInitializer;
+    
 
     public String[] getPackageNames() {
         return packageNames;
@@ -248,29 +245,21 @@ public class QuerableEntityScanner {
             final boolean refresh = alterTable && (ee == null || ee.refresh());
             if (entityManagerFactory != null && (create || refresh)) {
                 boolean isCreated = doTableDDL(meta, create, refresh);
-                if (isCreated && this.initDataAfterCreate) {
-                    initData(meta, true);
-                } else if (this.initDataIfTableExists) {
-                    initData(meta, false);
+                if(dataInitializer.isEnable()){
+                    if (isCreated && this.initDataAfterCreate) {
+                        dataInitializer.initData(meta, true);
+                    } else if (this.initDataIfTableExists) {
+                        dataInitializer.initData(meta, false);
+                    } else{
+                        LogUtil.info("DataInitializer：table [{}] already exists and 'initDataIfTableExists' flag is off. No data will be merge into database.",meta.getTableName(false));
+                    }
                 }
-
             }
         } catch (Throwable e) {
             LogUtil.error("EntityScanner:[Failure]" + StringUtils.exceptionStack(e));
         }
     }
 
-    private void initData(ITableMetadata meta, boolean isNew) {
-        DataInitializer init = new DataInitializer(entityManagerFactory.getDefault());
-        URL url = meta.getThisType().getResource(meta.getThisType().getSimpleName() + ".csv");
-        if (url != null) {
-            if (isNew) {
-                init.initData(meta, url);
-            } else {
-                init.mergeData(meta, url);
-            }
-        }
-    }
 
     /**
      * 
@@ -292,7 +281,7 @@ public class QuerableEntityScanner {
         if (create) {
             created = client.createTable(meta) > 0;
         } else {
-            exists = client.existTable(meta.getTableName(true));
+            exists = client.existsTable(meta.getTableName(true));
         }
         if (exists) {
             client.refreshTable(meta, new MetadataEventListener() {
@@ -373,8 +362,9 @@ public class QuerableEntityScanner {
         this.allowDropColumn = allowDropColumn;
     }
 
-    public void setEntityManagerFactory(JefEntityManagerFactory entityManagerFactory) {
+    public void setEntityManagerFactory(JefEntityManagerFactory entityManagerFactory, boolean useTable) {
         this.entityManagerFactory = entityManagerFactory;
+        this.dataInitializer=new DataInitializer(entityManagerFactory.getDefault(),useTable);
     }
 
     public boolean isCreateTable() {
@@ -423,5 +413,14 @@ public class QuerableEntityScanner {
 
     public void setCheckIndex(boolean checkIndex) {
         this.checkIndex = checkIndex;
+    }
+
+    /**
+     * 完成类的注册和扫描。如果启用了数据初始化记录表，将会更新该表记录，下次启动不再初始化数据。
+     */
+    public void finish() {
+        if(dataInitializer!=null && dataInitializer.isEnable()){
+            dataInitializer.finish();
+        }
     }
 }

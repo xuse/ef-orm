@@ -1703,9 +1703,9 @@ public abstract class Session {
 			throw new NonUniqueResultException("Result is not unique." + queryObj);
 		}
 		T result = l.get(0);
-		if (ORMConfig.getInstance().isDebugMode()) {
-			LogUtil.show("Result:" + result);
-		}
+//		if (ORMConfig.getInstance().isDebugMode()) {
+//			LogUtil.show("Result:" + result);
+//		}
 		return result;
 	}
 
