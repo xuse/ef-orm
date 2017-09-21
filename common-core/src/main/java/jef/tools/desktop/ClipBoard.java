@@ -21,7 +21,9 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
+import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * 剪贴板操作辅助类
@@ -54,6 +56,15 @@ public class ClipBoard{
         return null;  
     }
     
+
+	public static List<File> getFiles() throws UnsupportedFlavorException, IOException {
+		Transferable t = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);  
+        if (t != null && t.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {  
+            List<File> image = (List<File>)t.getTransferData(DataFlavor.javaFileListFlavor);  
+            return image;  
+        }  
+        return null;  
+	}  
     
   
     /*把图片写到剪贴板中*/  
@@ -86,5 +97,6 @@ public class ClipBoard{
             }  
             return image;  
         }  
-    }  
+    }
+
 }  
