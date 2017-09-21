@@ -2,12 +2,16 @@ package jef.database;
 
 import java.nio.charset.Charset;
 
+import jef.common.log.LogUtil;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.MetadataFacade;
+import jef.database.support.GqClassFileTransformer;
 import jef.database.support.SqlLog;
 import jef.jre5support.ProcessUtil;
 import jef.tools.JefConfiguration;
 import jef.tools.JefConfiguration.Item;
+
+import org.springframework.instrument.InstrumentationSavingAgent;
 
 /**
  * all configuration values of ORM.
@@ -245,9 +249,21 @@ public class ORMConfig implements ORMConfigMBean {
 		parallelSelect = JefConfiguration.getInt(DbCfg.PARTITION_PARALLEL, 3);
 		jpaContinueCommitIfError = JefConfiguration.getBoolean(DbCfg.DB_JPA_CONTINUE_COMMIT_IF_ERROR, false);
 		generateBySequenceAndIdentityToAUTO=JefConfiguration.getBoolean(DbCfg.DB_AUTOINCREMENT_NATIVE, false);
+		
+		if(InstrumentationSavingAgent.getInstrumentation()!=null){
+		    InstrumentationSavingAgent.getInstrumentation().addTransformer(new GqClassFileTransformer());
+		    LogUtil.info("Instrumentation ENABLED, classes will be runtime enhanced.");
+		    usingJavaAgent=true;
+		}else{
+		    LogUtil.warn("Instrumentation DISABLED.");
+		}
 	}
+	   /**
+     * 是否启用Spring-Instrumentation进行类动态转换
+     */
+	private volatile boolean usingJavaAgent;
 
-	public int getMaxInConditions() {
+    public int getMaxInConditions() {
 		return maxInConditions;
 	}
 
@@ -455,7 +471,7 @@ public class ORMConfig implements ORMConfigMBean {
 	}
 
 	public boolean isCheckEnhancement() {
-		return checkEnhancement;
+		return checkEnhancement && !usingJavaAgent;
 	}
 
 	public void setCheckEnhancement(boolean checkEnhancement) {

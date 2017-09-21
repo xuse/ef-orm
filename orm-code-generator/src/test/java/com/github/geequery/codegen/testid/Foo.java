@@ -14,9 +14,13 @@ public class Foo extends jef.database.DataObject {
     @Id
     @GeneratedValue
     private int id;
+    
+    private int ii;
 
     private String name;
-
+    
+    
+ 
     public int getId() {
         return id;
     }
