@@ -9,10 +9,10 @@ import org.easyframe.enterprise.spring.CommonDao;
 import org.easyframe.enterprise.spring.CommonDaoImpl;
 import org.easyframe.enterprise.spring.JefJpaDialect;
 import org.easyframe.enterprise.spring.SessionFactoryBean;
-import org.springframework.beans.factory.annotation.Autowire;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -30,6 +30,7 @@ public class PersistenceContext {
     }
 
     @Bean(name = {"emf1"})
+    @Primary
     EntityManagerFactory entityManagerFactory(@Qualifier("ds1") DataSource dataSource, Environment env) {
         SessionFactoryBean bean = new org.easyframe.enterprise.spring.SessionFactoryBean();
         bean.setDataSource(dataSource);
