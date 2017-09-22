@@ -44,9 +44,7 @@ public final class GqQueryLookupStrategy implements QueryLookupStrategy {
         GqQueryMethod method = new GqQueryMethod(m, metadata, factory, emf);
         String qName = method.getNamedQueryName();
         String qSql = method.getAnnotatedQuery();
-        if (method.isStreamQuery()) {
-            throw new UnsupportedOperationException();
-        } else if (method.isProcedureQuery()) {
+        if (method.isProcedureQuery()) {
             return new GqProcedureQuery(method, emf);
         } else if (StringUtils.isNotEmpty(qSql)) {
             NativeQuery<?> q;

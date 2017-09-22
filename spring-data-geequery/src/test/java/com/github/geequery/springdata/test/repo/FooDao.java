@@ -3,6 +3,7 @@ package com.github.geequery.springdata.test.repo;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -42,7 +43,7 @@ public interface FooDao extends GqRepository<Foo, Integer> {
 	        @Condition("indexCode"),
 	        @Condition("lastModified")
 	},orderBy="name desc",type=Logic.OR)
-	List<Foo> findByWhat(String name,int age,String term, Date birthDay, String indexCode,Date lastModified);
+	Stream<Foo> findByWhat(String name,int age,String term, Date birthDay, String indexCode,Date lastModified,String add);
 	
 	
 //	   @FindBy({

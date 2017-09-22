@@ -2,6 +2,7 @@ package com.github.geequery.springdata.test.repo;
 
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Stream;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -50,7 +51,7 @@ public interface FooEntityDao {
 	 * @return
 	 */
 	@Query(name = "selectByNameAndBirthDay")
-	public List<Foo> findBySql(@Param("birth") Date birthDay, @Param("name") String name);
+	public Stream<Foo> findBySql(@Param("birth") Date birthDay, @Param("name") String name);
 
 	/**
 	 * @Query("select * from foo where name like ?1 and birthday=?2")

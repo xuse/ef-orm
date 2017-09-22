@@ -48,7 +48,7 @@ public class VarcharEnumMapping extends AColumnMapping {
 		return super.wrapSqlStr(toString(value));
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public Object jdbcGet(IResultSet rs, int n) throws SQLException {
 		String s = rs.getString(n);
 		if (s == null || s.length() == 0)
@@ -58,7 +58,7 @@ public class VarcharEnumMapping extends AColumnMapping {
 			Enum<?>[] enums=clz.asSubclass(Enum.class).getEnumConstants(); 
 			return enums[cnt];
 		}else {
-			return Enum.valueOf(clz.asSubclass(Enum.class), s);
+			return Enum.valueOf((Class<Enum>)clz, s);
 		}
 	}
 

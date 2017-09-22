@@ -251,10 +251,10 @@ public class Codecs {
         if (type instanceof Class<?>) {
             Class<?> clz = (Class<?>) type;
             if (clz.isEnum()) {
-                return Enum.valueOf(clz.asSubclass(Enum.class), s);
+                return Enum.valueOf((Class<Enum>)clz, s);
             }
         }
-        Codec codec = CACHE.get(type);
+        Codec<?> codec = CACHE.get(type);
         if (codec == null) {
             return OTHER.fromString(s);
             // throw new

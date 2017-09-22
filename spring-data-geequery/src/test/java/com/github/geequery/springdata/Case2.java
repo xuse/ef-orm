@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.annotation.Resource;
 import javax.persistence.OptimisticLockException;
@@ -201,7 +202,7 @@ public class Case2 extends AbstractJUnit4SpringContextTests implements Initializ
 			 * :name，那么方法的参数先后顺序可以随意修改。反之，如果是 ?1 ?2方式进行参数绑定，则方法参数顺序有要求。
 			 */
 			//
-			List<Foo> foos = foodao2.findBySql(new Date(), "李四");
+			List<Foo> foos = foodao2.findBySql(new Date(), "李四").collect(Collectors.toList());
 			System.out.println(foos);
 		}
 		// =========================

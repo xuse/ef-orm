@@ -356,7 +356,7 @@ public class JXB {
 	}
 
 	// 将XML节点上的值写入到对象中
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private static void setValue(BeanWrapperImpl bean, String fieldName, Node sub, HashMap<String, Object> objects) throws InstantiationException, IllegalAccessException {
 		ClassEx c = new ClassEx(bean.getProperty(fieldName).getType());
 		String value = null;
@@ -396,7 +396,7 @@ public class JXB {
 		} else if (Short.class == c.getWrappered() || "short".equals(c.getName())) {
 			bean.setPropertyValue(fieldName, StringUtils.toInt(value, 0));
 		} else if (c.isEnum()) {
-			bean.setPropertyValue(fieldName, Enum.valueOf(c.getWrappered().asSubclass(Enum.class), value));
+			bean.setPropertyValue(fieldName, Enum.valueOf((Class<Enum>)c.getWrappered(), value));
 		} else {
 			Element detailNode = (Element) XMLUtils.first(sub, Node.ELEMENT_NODE);
 			if (detailNode != null) {

@@ -33,6 +33,7 @@ import com.github.geequery.springdata.repository.query.GqQueryExecution.Collecti
 import com.github.geequery.springdata.repository.query.GqQueryExecution.ModifyingExecution;
 import com.github.geequery.springdata.repository.query.GqQueryExecution.PagedExecution;
 import com.github.geequery.springdata.repository.query.GqQueryExecution.SingleEntityExecution;
+import com.github.geequery.springdata.repository.query.GqQueryExecution.StreamExecution;
 
 /**
  * Abstract base class to implement {@link RepositoryQuery}s.
@@ -69,6 +70,8 @@ public abstract class AbstractGqQuery implements RepositoryQuery {
 			throw new UnsupportedOperationException();
 		} else if (method.isCollectionQuery()) {
 			return new CollectionExecution();
+		} else if (method.isStreamQuery()) {
+		    return new StreamExecution(new CollectionExecution());
 		} else if (method.isPageQuery()) {
 			return new PagedExecution(method.getParameters());
 		} else if (method.isModifyingQuery()) {
