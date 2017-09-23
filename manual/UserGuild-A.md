@@ -2152,12 +2152,12 @@ EF-ORM还提供了将上述分页行为封装在一起的操作对象，可以�
 | ---------------------------------------- | ---------------------------------------- |
 | **Session.select(T,  IntRange)**         | 传入Entity形态的查询(单表/级联)，限定返回条数在IntRange区间范围内。 |
 | **Session.select(ConditionQuery,  IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。 |
-| **Session.select(ConditionQuery,  Class, IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，结果转换为指定类型，限定返回条数在IntRange区间范围内。 |
-| **Session.selectForUpdate(Query,  IntRange)** | 传入Query形态的单表查询，可在结果集上直接更新记录。             |
+| **Session.select(ConditionQuery,  Class\<T>, IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，结果转换为指定类型，限定返回条数在IntRange区间范围内。 |
+| **Session.selectForUpdate(Query\<T>,  IntRange)** | 传入Query形态的单表查询，可在结果集上直接更新记录。             |
 | **Session.iteratedSelect(T,  IntRange)** | 传入Entity形态的查询(单表/级联)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
-| **Session.iteratedSelect(TypedQuery,  IntRange)** | 传入Query形态的查询(单表/级联/Union)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
+| **Session.iteratedSelect(TypedQuery\<T>,  IntRange)** | 传入Query形态的查询(单表/级联/Union)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
 | **Session.iteratedSelect(ConditionQuery,  IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
-| **Session.iteratedSelect(ConditionQuery,  Class, IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
+| **Session.iteratedSelect(ConditionQuery\<T>,  Class, IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
 
 ​	可以发现，EF-ORM查询接口高度集中。主要分为几个系列： select系列是查询出List结果。iteratedSelect是查询出游标待遍历。还有一个load系列的方法是查出单条记录的。
 
@@ -2188,10 +2188,10 @@ public void test_IntRange() throws SQLException{
 | ---------------------------------------- | ---------------------------------------- |
 | **Session.pageSelect(T,  int)**          | 传入Entity形态的查询(单表/级联) 和 分页大小              |
 | **Session.pageSelect(ConditionQuery,  int)** | 传入Query形态的查询(单表、Union、Join均可)            |
-| **Session.pageSelect(ConditionQuery,  Class, int)** | 传入Query形态的查询(单表、Union、Join均可)， 并指定返回结果类型 |
-| **Session.pageSelect(String,  Class, int)** | 传入NativeQuery形态的查询，并指定返回结果类型。            |
+| **Session.pageSelect(ConditionQuery\<T>,  Class, int)** | 传入Query形态的查询(单表、Union、Join均可)， 并指定返回结果类型 |
+| **Session.pageSelect(String,  Class\<T>, int)** | 传入NativeQuery形态的查询，并指定返回结果类型。            |
 | **Session.pageSelect(String,  ITableMetadata, int)** | 传入NativeQuery形态的查询，并指定返回结果类型元数据（一般用来描述动态表的模型）。 |
-| **Session.pageSelect(NativeQuery,  int)** | 传入NativeQuery形态的查询，查询结果类型已经在NativeQuery中指定。一般为传入命名查询（NamedQuery）. |
+| **Session.pageSelect(NativeQuery\<T>,  int)** | 传入NativeQuery形态的查询，查询结果类型已经在NativeQuery中指定。一般为传入命名查询（NamedQuery）. |
 
 ​	上面的后三个方法涉及了NativeQuery和NamedQuery，可参见第7章。
 
@@ -2661,12 +2661,12 @@ public void testDelete_Basic2() throws SQLException {
 
 ​	关联关系根据JPA的定义，一般分为以下四种
 
-| 类型   | 注解           | java对象定义                              |
-| ---- | ------------ | ------------------------------------- |
-| 一对一  | @ OneToOne   | T                                     |
-| 一对多  | @ OneToMany  | List<T> / Set<T>  /Collection<T>/ T[] |
-| 多对一  | @ ManyToOne  | T                                     |
-| 多对多  | @ ManyToMany | List<T> / Set<T>  /Collection<T>/ T[] |
+| 类型   | 注解           | java对象定义                                 |
+| ---- | ------------ | ---------------------------------------- |
+| 一对一  | @ OneToOne   | T                                        |
+| 一对多  | @ OneToMany  | List\<T> / Set\<T>  /Collection\<T>/ T[] |
+| 多对一  | @ ManyToOne  | T                                        |
+| 多对多  | @ ManyToMany | List\<T> / Set\<T>  /Collection\<T>/ T[] |
 
 ​	在JPA中，这些关系都使用Annotation来标注。除此之外，EF-ORM还扩展了几个标注，用来支持一些常用的数据库操作的场景。
 
@@ -3753,10 +3753,10 @@ public void testSelectFromJoin() throws SQLException{
 | **方法**                                   | **用途说明**                                 |
 | ---------------------------------------- | ---------------------------------------- |
 | **Session.select(ConditionQuery,  IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。 |
-| **Session.select(ConditionQuery,  Class, IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，结果转换为指定类型，限定返回条数在IntRange区间范围内。 |
-| **Session.iteratedSelect(TypedQuery,  IntRange)** | 传入Query形态的查询(单表/级联/Union)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
+| **Session.select(ConditionQuery,  Class\<T>, IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，结果转换为指定类型，限定返回条数在IntRange区间范围内。 |
+| **Session.iteratedSelect(TypedQuery\<T>,  IntRange)** | 传入Query形态的查询(单表/级联/Union)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
 | **Session.iteratedSelect(ConditionQuery,  IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
-| **Session.iteratedSelect(ConditionQuery,  Class, IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
+| **Session.iteratedSelect(ConditionQuery\<T>,  Class, IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
 
 
 
@@ -3765,7 +3765,7 @@ public void testSelectFromJoin() throws SQLException{
 | **方法**                                   | **作用**                                   |
 | ---------------------------------------- | ---------------------------------------- |
 | **Session.pageSelect(ConditionQuery,  int)** | 传入Query形态的查询(单表、Union、Join均可)            |
-| **Session.pageSelect(ConditionQuery,  Class, int)** | 传入Query形态的查询(单表、Union、Join均可)， 并指定返回结果类型 |
+| **Session.pageSelect(ConditionQuery,  Class\<T>, int)** | 传入Query形态的查询(单表、Union、Join均可)， 并指定返回结果类型 |
 
 用例子来描述： 下面的例子里使用了两种方法来实现
 
@@ -3931,11 +3931,11 @@ public void testUnion() throws SQLException {
 
 | 方法                                       | 作用                                       |
 | ---------------------------------------- | ---------------------------------------- |
-| QueryBuilder.union(TypedQuery<T>...)     | 将多个Query用 union结合起来。                     |
-| QueryBuilder.union(Class<T>,  ConditionQuery...) | 将多个Query用 union结合起来，查询的返回结果为指定的class     |
+| QueryBuilder.union(TypedQuery\<T>...)    | 将多个Query用 union结合起来。                     |
+| QueryBuilder.union(Class\<T>,  ConditionQuery...) | 将多个Query用 union结合起来，查询的返回结果为指定的class     |
 | QueryBuilder.union(ITableMetadata,  ConditionQuery...) | 将多个Query用 union结合起来，查询的返回结果为指定元模型对应的实体   |
-| QueryBuilder.unionAll(TypedQuery<T>...)  | 将多个Query用 union all结合起来。                 |
-| QueryBuilder.unionAll(Class<T>,  ConditionQuery...) | 将多个Query用 union all结合起来，查询的返回结果为指定的class |
+| QueryBuilder.unionAll(TypedQuery\<T>...) | 将多个Query用 union all结合起来。                 |
+| QueryBuilder.unionAll(Class\<T>,  ConditionQuery...) | 将多个Query用 union all结合起来，查询的返回结果为指定的class |
 | QueryBuilder.unionAll(ITableMetadata,  ConditionQuery...) | 将多个Query用 union all结合起来，查询的返回结果为指定元模型对应的实体 |
 
 ​	在使用union或unionAll方法时，需要传入一个类型，该类型为union查询最终要返回的结果容器。可以使用Map，也可以是任意对象。
@@ -5732,6 +5732,14 @@ public void testResultType_otherDataObject2() throws SQLException {
 ~~~
 
 ​	上例中，采用三种写法，使Person表的数据能被注入到Student对象中去。其中值得注意的是Student对象中有一个名为dateOfBirth，数据库列为"DATE_OF_BIRTH"的字段。
+
+~~~java
+    /**
+     * 出生日期
+     */
+    @Column(name="DATE_OF_BIRTH")
+    private Date dateOfBirth;
+~~~
 
 ​	然而在上面的示例中，前两处用的是java名，在SQL语句中用的是数据库列名。这是因为CriteriaAPI中的column(xxx)实现上有一个特殊规则。当使用as()方法指定列在SQL中的别名是dateOfBirth时，同时还指定了这个列要注入到对象的dateOfBirth字段内。因此书写时可以按java field名称。
 
