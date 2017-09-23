@@ -18,6 +18,7 @@ package jef.database.dialect;
 import java.io.File;
 import java.math.BigDecimal;
 import java.sql.Types;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,6 +56,11 @@ import jef.database.dialect.type.DateDateMapping;
 import jef.database.dialect.type.DateSDateMapping;
 import jef.database.dialect.type.DateStringMapping;
 import jef.database.dialect.type.DelegatorBoolean;
+import jef.database.dialect.type.Instant_DateTime;
+import jef.database.dialect.type.LocalDateTime_TimeStamp;
+import jef.database.dialect.type.LocalDate_Date;
+import jef.database.dialect.type.LocalTime_TimeStamp;
+import jef.database.dialect.type.LocalYearMonth_Char;
 import jef.database.dialect.type.NumBigDateMapping;
 import jef.database.dialect.type.NumBigDecimalMapping;
 import jef.database.dialect.type.NumBigIntMapping;
@@ -330,6 +336,8 @@ public abstract class ColumnType {
 				return new CharEnumMapping();
 			} else if (fieldType == java.util.Date.class) {
 				return new CharDateMapping();
+			} else if (fieldType == java.time.YearMonth.class) {
+			    return new LocalYearMonth_Char();
 			} else if (fieldType == java.sql.Timestamp.class) {
 				return new CharTimestampMapping();
 			} else if (fieldType == Integer.class || fieldType == Integer.TYPE) {
@@ -734,6 +742,8 @@ public abstract class ColumnType {
 		public ColumnMapping getMappingType(Class<?> fieldType) {
 			if (fieldType == java.sql.Date.class) {
 				return new DateSDateMapping();
+			} else if (fieldType == LocalDate.class) {
+			    return new LocalDate_Date();
 			} else if (fieldType == java.util.Date.class || fieldType == Object.class) {
 				return new DateDateMapping();
 			} else if (fieldType == String.class) {
@@ -785,6 +795,12 @@ public abstract class ColumnType {
 		public ColumnMapping getMappingType(Class<?> fieldType) {
 			if (fieldType == java.sql.Timestamp.class) {
 				return new TimestampTsMapping();
+			} else if (fieldType == java.time.LocalDateTime.class) {
+			    return new LocalDateTime_TimeStamp();
+			} else if (fieldType == java.time.Instant.class) {
+			    return new Instant_DateTime();
+			} else if (fieldType == java.time.LocalTime.class) {
+			    return new LocalTime_TimeStamp();
 			} else if (fieldType == java.util.Date.class || fieldType == Object.class) {
 				return new TimestampDateMapping();
 			} else if (fieldType == java.lang.Long.class || fieldType == java.lang.Long.TYPE) {

@@ -1,5 +1,10 @@
 package jef.orm.onetable.model;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.YearMonth;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -14,40 +19,54 @@ import javax.persistence.Table;
 import jef.database.annotation.EasyEntity;
 
 @EasyEntity
-@Table(name="test_entity")
+@Table(name = "test_entity")
 public class TestEntity extends jef.database.DataObject {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	@Column(name="field_1")
-	private String field1;
+    @Column(name = "field_1")
+    private String field1;
 
-	@Column(name="field_2")
+    @Column(name = "field_2")
     private String field2;
 
-	@Column(name="dateField",columnDefinition="TimeStamp")
+    @Column(name = "dateField", columnDefinition = "TimeStamp")
     private Date dateField;
-	
-	@Column(name="create_time",columnDefinition="TimeStamp")
-	@GeneratedValue(generator="created")
+
+    @Column(name = "create_time", columnDefinition = "TimeStamp")
+    @GeneratedValue(generator = "created")
     private Date createTime;
 
-	@Lob
+    @Column(name="joda1",columnDefinition="DATE")
+    private LocalDate joda1;
+    
+    @Column(name="joda2",columnDefinition="DATETIME")
+    private LocalTime joda2;
+    
+    @Column(name="joda3",columnDefinition="DATETIME")
+    private LocalDateTime joda3;
+    
+    @Column(name="joda4",columnDefinition="DATETIME")
+    private Instant joda4;
+    
+    @Column(name="joda5",columnDefinition="CHAR(8)")
+    private YearMonth joda5;
+
+    @Lob
     private byte[] binaryData;
 
-    
     private boolean boolField;
 
     private Boolean boolField2;
 
-	@Column(name="int_field_1",columnDefinition="integer")
+    @Column(name = "int_field_1", columnDefinition = "integer")
     private int intFiled;
 
-	@Column(name="int_field_2",columnDefinition="integer")
+    @Column(name = "int_field_2", columnDefinition = "integer")
     private Integer intField2;
 
     @Id
-	@GeneratedValue(strategy=GenerationType.SEQUENCE)
-    @Column(precision=10,scale=5)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @Column(precision = 10, scale = 5)
     private long longField;
 
     private Long longField2;
@@ -61,36 +80,36 @@ public class TestEntity extends jef.database.DataObject {
     private Float folatField2;
 
     private List<TestEntity> tt1;
-    
+
     private TestEntity[] tt2;
-    
-    private Map<String,TestEntity> tt3;
-    
+
+    private Map<String, TestEntity> tt3;
+
     public List<TestEntity> getTt1() {
-		return tt1;
-	}
+        return tt1;
+    }
 
-	public void setTt1(List<TestEntity> tt1) {
-		this.tt1 = tt1;
-	}
+    public void setTt1(List<TestEntity> tt1) {
+        this.tt1 = tt1;
+    }
 
-	public TestEntity[] getTt2() {
-		return tt2;
-	}
+    public TestEntity[] getTt2() {
+        return tt2;
+    }
 
-	public void setTt2(TestEntity[] tt2) {
-		this.tt2 = tt2;
-	}
+    public void setTt2(TestEntity[] tt2) {
+        this.tt2 = tt2;
+    }
 
-	public Map<String, TestEntity> getTt3() {
-		return tt3;
-	}
+    public Map<String, TestEntity> getTt3() {
+        return tt3;
+    }
 
-	public void setTt3(Map<String, TestEntity> tt3) {
-		this.tt3 = tt3;
-	}
+    public void setTt3(Map<String, TestEntity> tt3) {
+        this.tt3 = tt3;
+    }
 
-	public String getField1() {
+    public String getField1() {
         return field1;
     }
 
@@ -100,7 +119,7 @@ public class TestEntity extends jef.database.DataObject {
 
     public String getField2() {
         return field2;
-    } 
+    }
 
     public void setField2(String field2) {
         this.field2 = field2;
@@ -203,17 +222,57 @@ public class TestEntity extends jef.database.DataObject {
     }
 
     public Date getCreateTime() {
-		return createTime;
-	}
+        return createTime;
+    }
 
-	public void setCreateTime(Date createTime) {
-		this.createTime = createTime;
-	}
+    public void setCreateTime(Date createTime) {
+        this.createTime = createTime;
+    }
+
+    public LocalDate getJoda1() {
+        return joda1;
+    }
+
+    public void setJoda1(LocalDate joda1) {
+        this.joda1 = joda1;
+    }
+
+    public LocalTime getJoda2() {
+        return joda2;
+    }
+
+    public void setJoda2(LocalTime joda2) {
+        this.joda2 = joda2;
+    }
+
+    public LocalDateTime getJoda3() {
+        return joda3;
+    }
+
+    public void setJoda3(LocalDateTime joda3) {
+        this.joda3 = joda3;
+    }
+
+    public Instant getJoda4() {
+        return joda4;
+    }
+
+    public void setJoda4(Instant joda4) {
+        this.joda4 = joda4;
+    }
+
+    public YearMonth getJoda5() {
+        return joda5;
+    }
+
+    public void setJoda5(YearMonth joda5) {
+        this.joda5 = joda5;
+    }
 
 
 
-	public enum Field implements jef.database.Field {
+    public enum Field implements jef.database.Field {
 
-        field1, field2, dateField, binaryData, boolField, boolField2, intFiled, intField2, longField, longField2, doubleField, doubleField2, floatField, folatField2,createTime
+        field1, field2, dateField, binaryData, boolField, boolField2, intFiled, intField2, longField, longField2, doubleField, doubleField2, floatField, folatField2, createTime, joda1, joda2, joda3, joda4, joda5
     }
 }
