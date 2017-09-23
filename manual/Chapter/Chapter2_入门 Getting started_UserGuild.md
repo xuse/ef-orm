@@ -1,4 +1,4 @@
-GeeQuery使用手册——Chapter-2 入门 Getting started
+GeeQuery使用手册——Chapter-2  入门 Getting started
 
 [TOC]
 

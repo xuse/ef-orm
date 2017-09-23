@@ -1,4 +1,4 @@
-GeeQuery使用手册——Chapter-1 EF-ORM概览
+GeeQuery使用手册——Chapter-1  EF-ORM概览
 
 [TOC]
 

@@ -1,4 +1,4 @@
-GeeQuery使用手册——Chapter-8   高级查询特性
+GeeQuery使用手册——Chapter-8  高级查询特性
 
 [TOC]
 

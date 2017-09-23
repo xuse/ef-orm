@@ -1,4 +1,4 @@
-GeeQuery使用手册——Chapter-3 基本操作与对象映射
+GeeQuery使用手册——Chapter-3  基本操作与对象映射
 
 [TOC]
 

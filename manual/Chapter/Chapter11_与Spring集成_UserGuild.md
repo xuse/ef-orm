@@ -1,4 +1,4 @@
-GeeQuery使用手册——Chapter-11   与Spring集成
+GeeQuery使用手册——Chapter-11  与Spring集成
 
 [TOC]
 

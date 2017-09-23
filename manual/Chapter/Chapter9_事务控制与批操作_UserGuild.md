@@ -1,4 +1,4 @@
-GeeQuery使用手册——Chapter-9   事务控制与批操作
+GeeQuery使用手册——Chapter-9  事务控制与批操作
 
 [TOC]
 
