@@ -34,7 +34,7 @@ EF-ORM主要通过实现部分JPA接口和Spring集成。EF-ORM将被Spring认�
 </bean>
 ~~~
 
-上面这段配置，数据源、SessionFactory、TransactionManager、基于注解的事务声明都有了。然后在编写一个自己的DAO------
+上面这段配置，数据源、SessionFactory、TransactionManager、基于注解的事务声明都有了。然后在编写一个自己的DAO——
 
 ~~~java
 package com.company.my.application;
@@ -392,7 +392,7 @@ public class StudentDaoImpl extends GenericDaoSupport<Student> implements Studen
 
 一般来说，GenericDao中已经包含了绝大多数日常所需的数据库操作。如果没有特殊操作，我们甚至不需要为某个Bean创建DAO，而是使用后文的CommonDao即可。    
 
-####* 继承BaseDao
+####*  继承BaseDao
 
 GenericDao继承了BaseDao。开发者也可以直接继承org.easyframe.enterprise.spring.BaseDao类来编写DAO。在DAO中，开发者可以使用标准的 JPA 方法来实现逻辑，也可以使用EF-ORM的Session对象来实现逻辑。
 
@@ -866,10 +866,10 @@ JTA是JavaEE技术规范之一，JTA允许应用程序执行分布式事务处�
 下面例子中配置了事务共享
 
 ~~~xml
-<!— 配置数据源 -->
+<!-- 配置数据源 -->
 <bean id="dataSource"  class="jef.database.test.jdbc.DebugDataSource">
 </bean>
-<!— 配置Hibenrate 3 Session Factory-->
+<!-- 配置Hibenrate 3 Session Factory-->
 <bean id="sessionFactory"
 		class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
 	<property name="configLocation" value="classpath:hibernate-perftest.cfg.xml" />
@@ -896,7 +896,7 @@ JTA是JavaEE技术规范之一，JTA允许应用程序执行分布式事务处�
 	<property name="transactionMode" value="JDBC" />
 </bean>
 
-<!— 此处仅介绍事务管理器配置，其他的事务策略、事务拦截器、事务切面等略，请自行百度 -->
+<!-- 此处仅介绍事务管理器配置，其他的事务策略、事务拦截器、事务切面等略，请自行百度 -->
 ~~~
 
 上述配置的要点是
