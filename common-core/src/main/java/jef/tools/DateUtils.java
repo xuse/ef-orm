@@ -1296,7 +1296,7 @@ public abstract class DateUtils {
         Date d1 = org.apache.commons.lang.time.DateUtils.truncate(date, Calendar.DATE);
         return d1.getTime() == date.getTime();
     }
-
+    
     /**
      * Convert to Instance
      * 
@@ -1351,27 +1351,57 @@ public abstract class DateUtils {
         return ts == null ? null : ts.toLocalDateTime();
     }
 
+    /**
+     * Converts LocalDate to Time (null safety)
+     * @param date LocalDate
+     * @return java.sql.Date
+     */
     public static java.sql.Date toSqlDate(LocalDate date) {
         return date == null ? null : java.sql.Date.valueOf(date);
     }
 
+    /**
+     * Converts LocalTime to Time (null safety)
+     * @param time LocalTime
+     * @return java.sql.Time
+     */
     public static java.sql.Time toSqlTime(LocalTime time) {
         return time == null ? null : java.sql.Time.valueOf(time);
     }
 
+    /**
+     * Converts LocalDateTime to Timestamp (null safety)
+     * @param time LocalDateTime
+     * @return Timestamp
+     */
     public static java.sql.Timestamp toSqlTimeStamp(LocalDateTime time) {
         return time == null ? null : java.sql.Timestamp.valueOf(time);
     }
 
+    /**
+     * Converts instant to Timestamp (null safety)
+     * @param instant Instant
+     * @return java.sql.Timestamp
+     */
     public static java.sql.Timestamp toSqlTimeStamp(Instant instant) {
         return instant == null ? null : java.sql.Timestamp.from(instant);
     }
 
-    public static Date fromInstant(Instant inst) {
-        return inst == null ? null : Date.from(inst);
+    /**
+     * Converts instant to JUD (null safety)
+     * @param instant
+     * @return java.util.Date
+     */
+    public static Date fromInstant(Instant instant) {
+        return instant == null ? null : Date.from(instant);
     }
 
-    public static Timestamp toSqlTimeStamp(LocalTime value) {
-        return value == null ? null : java.sql.Timestamp.valueOf(LocalDateTime.of(LocalDate.now(), value));
+    /**
+     * Converts LocalTime to Timestamp (null safety)
+     * @param localTime LocalTime
+     * @return Timestamp
+     */
+    public static Timestamp toSqlTimeStamp(LocalTime localTime) {
+        return localTime == null ? null : java.sql.Timestamp.valueOf(LocalDateTime.of(LocalDate.now(), localTime));
     }
 }
