@@ -324,7 +324,7 @@ public class StudentDao extends GenericDaoSupport<Student>{
 
 继承GenericDaoSupport后，该DAO就已经有了各种基本的持久化操作方法。
 
-  ![11.2.4](E:\User\ef-orm\manual\Chapter\images\11.2.4.png)
+ ![11.2.4](images/11.2.4.png)
 
 如果需要自行添加方法，可以这样做
 
@@ -643,7 +643,7 @@ metadata.resource.pattern=/hbm/%s.hbm.xml
 
 如果我们依旧使用Spring的JPA事务控制器，正常情况下，如果所有数据库都成功提交，那么事务可以保持一致，如下图所示------
 
- ![11.3.-1](E:\User\ef-orm\manual\Chapter\images\11.3.-1.png)
+ ![11.3.-1](images/11.3.-1.png)
 
 ### 11.3.1.  JPA事务（多重）
 
@@ -655,9 +655,9 @@ metadata.resource.pattern=/hbm/%s.hbm.xml
 
 因此，在默认情况下，当一个Spring事务结束时，EF会顺序提交A、B两个数据库的修改。如果发生提交失败，则中断提交任务。
 
- ![11.3.1.-1](E:\User\ef-orm\manual\Chapter\images\11.3.1.-1.png)
+ ![11.3.1.-1](images/11.3.1.-1.png)
 
- 
+
 
 从上例看，也就是说，如果先提交 A库失败，那么A、B库都不提交。如果先提交A库成功，B库提交失败，那么A库的修改将会生效，而B库的修改不生效。
 
@@ -671,7 +671,7 @@ db.jpa.continue.commit.if.error =true
 
 开启上述配置后，那么在一个库提交失败后，整个提交过程将持续进行下去，直到所有能提交的变更都写入数据库位置。这种策略下，哪个连接先提交哪个后提交将不再产生影响。如下图所示  
 
- ![11.3.1.-2](E:\User\ef-orm\manual\Chapter\images\11.3.1.-2.png)
+ ![11.3.1.-2](images/11.3.1.-2.png)
 
 这种方式下，简单来说，如果我们的事务中用到了A、B两个数据库，事务提交时A、B数据库的修改单独提交，互不影响。
 
@@ -689,7 +689,7 @@ JTA是JavaEE技术规范之一，JTA允许应用程序执行分布式事务处�
 
 使用JTA事务后，刚才的流程即可变为下图所示，因此任何一个数据库提交错误情况下，都能确保数据库数据一致性。
 
- ![11.3.2](E:\User\ef-orm\manual\Chapter\images\11.3.2.png)
+ ![11.3.2](images/11.3.2.png)
 
  目前ef-orm推荐使用atomikos作为JTA的事务支持框架。
 

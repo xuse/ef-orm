@@ -338,7 +338,7 @@ DbClient.checkNamedQueryUpdate()
 
 强制检测命名查询功能也可以在JMX的Bean中调用。DbClientInfoMBean中有checkNamedQueryUpdate()方法。
 
- ![7.2.3.4](E:\User\ef-orm\manual\Chapter\images\7.2.3.4.png)
+ ![7.2.3.4](images/7.2.3.4.png)
 
 ## 7.3.  NativeQuery特性使用
 

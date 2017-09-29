@@ -10,7 +10,7 @@ GeeQuery使用手册——Chapter-9  事务控制与批操作
 
  在EF-ORM中，事务操作是在一个名为Transaction的类上进行的。Transaction和DbClient上都可以操作数据库。它们的关系如下图所示：
 
- ![9.1](E:\User\ef-orm\manual\Chapter\images\9.1.png)
+ ![9.1](images/9.1.png)
 
 图9-1 DbClient和Transaction的关系
 

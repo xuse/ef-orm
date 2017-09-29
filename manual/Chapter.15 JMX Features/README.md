@@ -8,11 +8,11 @@ EF_ORM支持JMX监控。
 
 目前EF-ORM提供两个JMX监控Bean，分别是DbClientInfo和ORMConfig。路径如下图。
 
- ![15.](E:\User\ef-orm\manual\Chapter\images\15..png)
+ ![15.](images/15..png)
 
 ## 15.1.  DbClientInfo
 
- 	 ![15.1](E:\User\ef-orm\manual\Chapter\images\15.1.png)
+  ![15.1](images/15.1.png)
 
 每个DbClient对象对应一个DbClientInfo的监控Bean。在一个进程中，如果有多个DbClient对象，那么也会有多个DbClientInfo的MXBean。
 
@@ -28,7 +28,7 @@ DbClientInfo的五个属性都是只读属性。记录了当前的一些运行�
 
 ## 15.2.  ORMConfig
 
- ![15.2](E:\User\ef-orm\manual\Chapter\images\15.2.png)
+ ![15.2](images/15.2.png)
 
 ORMConfig记录框架的各项配置信息，每个进程中仅有一个ORMConfig的MXBean。
 
