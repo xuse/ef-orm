@@ -1,8 +1,8 @@
-GeeQuery使用手册——Chapter-1  EF-ORM概览
+GeeQuery使用手册——Chapter-1  Overview
 
 [TOC]
 
-# Chapter-1   EF-ORM概览
+# Chapter 1   Overview
 
 ## 1.1.  名词解释  
 
