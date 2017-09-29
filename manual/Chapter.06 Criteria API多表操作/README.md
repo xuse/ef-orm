@@ -25,7 +25,7 @@ select  t1.*, t2.* … from TABLE1 t1,
 
 在Java中，我们也将SQL语句映射为一个Join对象，其包含了多个Query对象，Query之间用 on 条件进行连接。on条件数量不定。
 
- ![6-1](E:\User\ef-orm\manual\Chapter\images\6-1.png)
+ ![6-1](images/6-1.png)
 
 图6-1 Join的构成 
 

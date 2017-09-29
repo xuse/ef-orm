@@ -508,7 +508,7 @@ public void testUpdateAndDelete_WithLike() throws SQLException{
 
 默认情况下，Entity并不对应任何Query，但如果您将其用于查询、更新、删除操作，或者调用其 getQuery()方法，就可以让一个Query对象和Entity绑定。通过getQuery()方法和Query的getInstance()方法，你可以在互相绑定的两个对象之间转来转去。如下图：
 
- ![3.2](E:\User\ef-orm\manual\Chapter\images\3.2.png)
+ ![3.2](images/3.2.png)
 
 图3-1 Entity和Query的关系
 
@@ -782,7 +782,7 @@ SQL的思想（而不是语法）才是关系型数据存储的精髓，要在RD
 
 上面我们讲这套用于操作数据库的API，其实就是一直在说的Criteria API（非JPA标准的）。其实严格来说EF-ORM中只有两种数据库操作方式，即Criteria API和NativeQuery。之前所有模仿H框架的单记录操作都是用CriteriaAPI实现的，正如前文说的——“拟态”。
 
- ![3.2.5](E:\User\ef-orm\manual\Chapter\images\3.2.5.png)
+ ![3.2.5](images/3.2.5.png)
 
 图3-2 EF-ORM的操作方式
 
