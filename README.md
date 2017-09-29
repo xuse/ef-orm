@@ -5,15 +5,15 @@ A Simple OR-Mapping framework on multiple databases.
 
 
 * 使用手册(中文)<br>
-http://geequery.github.io/ef-orm/manual/EF-ORM-user-guide.docx
-<br>
+  [打开](./manual/)<br>
+
 * 使用示例工程
-https://github.com/GeeQuery/ef-orm/tree/master/orm-tutorial
+  https://github.com/GeeQuery/ef-orm/tree/master/orm-tutorial
 
 EF-ORM是一个轻量，便捷的Java ORM框架。并且具备若干企业级的应用特性，如分库分表、JTA事务等。
 
 * 代码生成插件for eclipse（请在eclipse中Help/Install new software后输入地址并安装）
-http://geequery.github.io/plugins/1.3.x/
+  http://geequery.github.io/plugins/1.3.x/
 
 -----------
 ###特点一
@@ -27,12 +27,12 @@ EF的设计的一个主要目的是提高开发效率，减少编码工作，让
 
 1. 开发人员需要编写的类更少。开发人员无需编写其他类来描述复杂的SQL查询条件。也无需编写代码将这些查询条件转换为SQL/HQL/JPQL。DAO层也不会有老要改来改去的接口和API，几乎可以做到零编码。
 
-1. 对单个对象进行CRUD的操作API现在和Criteria API合并在一起。Session对象可以直接提供原本要Criteria API才能提供实现的功能。API大大简化。
+2. 对单个对象进行CRUD的操作API现在和Criteria API合并在一起。Session对象可以直接提供原本要Criteria API才能提供实现的功能。API大大简化。
 
-1. IQueryableEntity允许你将一个实体直接变化为一个查询（Query），在很多时候可以用来完成复杂条件下的数据查询。比如 ‘in (?,?,?)’， ‘Between 1 and 10’之类的条件。
-xxQL有着拼装语句可读性差、编译器无法检查、变更维护困难等问题，但是却广受开发人员欢迎。这多少有历史原因，也有Criteria API设计上过于复杂的因素。两者一方是极端灵活但维护困难，一方是严谨强大而学习和编写繁琐，两边都是极端。事实上JPA的几种数据查询方式存在青黄不接的问题。选择查询语言xxQL，项目面临后续维护困难，跨数据库移植性差；选择Criteria API，代码臃肿，操作繁琐，很多人望而却步。EF的设计思想是使人早日摆脱拼装SQL/HQL/JPQL的困扰，而是用（更精简易用的）Criteria API来操作数据库。
+3. IQueryableEntity允许你将一个实体直接变化为一个查询（Query），在很多时候可以用来完成复杂条件下的数据查询。比如 ‘in (?,?,?)’， ‘Between 1 and 10’之类的条件。
+  xxQL有着拼装语句可读性差、编译器无法检查、变更维护困难等问题，但是却广受开发人员欢迎。这多少有历史原因，也有Criteria API设计上过于复杂的因素。两者一方是极端灵活但维护困难，一方是严谨强大而学习和编写繁琐，两边都是极端。事实上JPA的几种数据查询方式存在青黄不接的问题。选择查询语言xxQL，项目面临后续维护困难，跨数据库移植性差；选择Criteria API，代码臃肿，操作繁琐，很多人望而却步。EF的设计思想是使人早日摆脱拼装SQL/HQL/JPQL的困扰，而是用（更精简易用的）Criteria API来操作数据库。
 
-1. 基于轻量级Criteria API的操作方式，使得对数据库的变更和重构变得非常轻松，解决了SQL语句多对软件维护和移植造成产生的不利影响。
+4. 基于轻量级Criteria API的操作方式，使得对数据库的变更和重构变得非常轻松，解决了SQL语句多对软件维护和移植造成产生的不利影响。
 
 * 阅读推荐：第3、4章
 
@@ -48,7 +48,7 @@ EF中除了Criteria API以外，可以直接使用“SQL语句”或者“SQL片
 
 * 阅读推荐：第7、8章
 
-   
+
 ###特点三，可能是业界最快的ORM框架.
 得益于ASM的动态代码生成技术，部分耗时操作通过动态代码固化为硬编码实现，EF-ORM的大部分操作性能要超过已知的其他框架。
      实际性能测试表明，EF的大部分操作都要快于Hiberante和MyBatis， 部分操作速度甚至数十倍于上述框架。
