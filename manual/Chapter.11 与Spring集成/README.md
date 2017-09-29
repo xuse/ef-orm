@@ -153,50 +153,9 @@ org.easyframe.enterprise.spring.SessionFactoryBean这个Bean支持以下的配�
 
 上面的配置方法中，定义了***dataSource-1,dataSource-2,dataSource-3***三个原始数据源，存放在Spring的ApplicationContext中。而对应的DataSourceLookup对象是SpringBeansDataSourceLookup，该对象可以从Spring上下文中查找所有的DataSource对象。
 
-框架提供了多个DataSourceLookup，用于在从不同的地方读取数据源配置。这些数据源获取器包括以下几种。
+框架提供了多个DataSourceLookup，用于在从不同的地方读取数据源配置，默认的数据源获取器包括以下四种。
 
-####* URLJsonDataSourceLookup
-
-使用HTTP访问一个URL，从该URL中获得数据源的配置信息。返回的数据源信息用JSON格式表示。参见下面的例子。
-
-如果我们HTTP GET [http://192.168.0.1/getdb](http://192.168.0.1/getdb)可以返回如下报文
-
-~~~json
-[{
-        "id": "ds1",
-        "url": "jdbc:mysql://localhost:3306/test",
-        "user": "root",
-        "password": "123456",
-        "driverClassName": "org.gjt.mm.mysql.Driver"
-   },
-  {
-        "id": "ds1",
-        "url": "jdbc:mysql://localhost:3306/test2",
-        "user": "root",
-        "password": "123456",
-        "driverClassName": "org.gjt.mm.mysql.Driver"
-   }
-]
-~~~
-
-~~~xml
-<bean class="jef.database.datasource.URLJsonDataSourceLookup"
- 	p:datasourceKeyFieldName="id 
- 	p:urlFieldName="url"
- 	p:userFieldName="user"
- 	p:passwordFieldName="password"
- 	p:driverFieldName="driverClassName"
- 	p:location="http://192.168.0.1/getdb">
- 	 <property name="passwordDecryptor">
- 		  <!-- 自定义的数据库口令解密器 -->
-		   <bean class="org.googlecode.jef.spring.MyPasswordDecryptor" />
-	  </property>
- </bean>	
-~~~
-
-使用上述配置，即可在需要数据库连接信息时，通过网络调用去获取数据库连接配置。
-
-#### * DbDataSourceLookup
+* **DbDataSourceLookup**
 
 到数据库里去取数据源的配置信息。以此进行数据源的查找。
 
@@ -223,7 +182,7 @@ org.easyframe.enterprise.spring.SessionFactoryBean这个Bean支持以下的配�
 
  使用上述配置，即可在需要数据库连接信息时，通过数据库查找去获取数据库连接配置。
 
-####* JndiDatasourceLookup
+* **JndiDatasourceLookup**
 
   到JNDI上下文去找寻数据源配置。参见下面的示例。
 
@@ -233,7 +192,7 @@ org.easyframe.enterprise.spring.SessionFactoryBean这个Bean支持以下的配�
 
 使用上述配置，即可在需要数据库连接信息时，通过JNDI查找去获取数据库连接配置。
 
-####* MapDataSourceLookup
+* **MapDataSourceLookup**
 
  从一个固定的Map对象中获取已经配置的数据源信息。在我们的一些示例代码中，有些直接就用Map来传入数据源配置。
 
@@ -249,25 +208,35 @@ lookup.setDefaultKey("datasource1");// 指定datasource1是默认的操作数据
 db = new DbClient(new RoutingDataSource(lookup));
 ~~~
 
-在Spring配置中也可以用Map来传入多个数据源。
+在Spring配置中也可以用Map来传入多个数据源。如下示例：
 
-####* PropertiesDataSourceLookup
+```xml
+<bean id="mapLookup" class="jef.database.datasource.MapDataSourceLookup">
+	<property name="datasources">
+		<map>
+			<entry key="ds1" value-ref="dataSource" />
+			<entry key="ds2" value-ref="dataSource2" />
+			<entry key="ds3" value-ref="dataSource2" />
+		</map>
+	</property>
+</bean>
+```
 
-  从一个classpath下的Properties文件中获取数据源配置信息。参见下面的示例。
+* **SpringBeansDataSourceLookup**
 
-[示例](undefined)[[季怡1\]](#_msocom_1) 
+  从Spring上下文中获取所有数据源信息。一般不用添加参数，配置完成后SpringContext中所有类型为DataSource的Bean都会作为数据源。
 
-####* SpringBeansDataSourceLookup
-
-  ​从Spring上下文中获取所有数据源信息。配置如下。
+配置如下：
 
 ~~~xml
-<bean class="jef.database.datasource.SpringBeansDataSourceLookup" />
+<bean name="ds1" class="package.XxxDataSource" />
+<bean name="ds2" class="package.XxxDataSource" />
+<!-- 以上可配置多个数据源 -->
+<bean name="multi-datasource" class="jef.database.datasource.SpringBeansDataSourceLookup" />
+<!-- 使用SpringBeansDataSourceLookup来整合多个DataSource bean-->
 ~~~
 
 上面提到的是EF提供的几种默认的DataSourceLookup，开发者也可以编写自己的DataSourceLookup。 
-
-[示例](undefined)[[季怡2\]](#_msocom_2) 
 
  ### 11.2.3.  JPA事务配置
 
@@ -285,7 +254,7 @@ db = new DbClient(new RoutingDataSource(lookup));
 	<aop:aspectj-autoproxy />
 ~~~
 
-                    					代码 11-3 Spring基于注解的声明式事务配置方法
+                    					**代码 11-3 Spring基于注解的声明式事务配置方法**
 
 Spring的事务配置有好多种方法，上面这种是纯注解的声明式事务，另一种流行的AOP拦截器配置方法如下
 
@@ -314,7 +283,7 @@ Spring的事务配置有好多种方法，上面这种是纯注解的声明式�
     </aop:config>
 ~~~
 
-​					代码 11-4  Spring基于AOP拦截器的声明式事务配置方法
+​				 	**代码 11-4  Spring基于AOP拦截器的声明式事务配置方法**
 
 Spring事务配置方法还有很多种，但不管哪种配置方法，和ORM框架相关的就只有**“transactionManager”**对象。其他配置都只和Spring自身的事务实现机制有关。
 
@@ -322,7 +291,7 @@ Spring事务配置方法还有很多种，但不管哪种配置方法，和ORM�
 
 | Spring配置                 | **在Spring中的作用**                          | **效果**                                   |
 | ------------------------ | ---------------------------------------- | ---------------------------------------- |
-| **Propagation=“nested”** | Spring的7种事务传播级别之一,NESTED方法是启动一个和父事务相依的子事务，因为不是EJB标准的，因此JPA不支持。 | JPA接口中无SavePoint操作，因此无法支持NESTED传播行为，EF-ORM在JpaDIalect中支持了SavePoint，因此可以使用NESTED传播行为。  再加上JPA本身支持的其他6种传播行为，EF-ORM可以支持全部7种传播行为。 |
+| **Propagation=“nested”** | Spring的7种事务传播级别之一,NESTED方法是启动一个和父事务相依的子事务，因为不是EJB标准的，因此JPA不支持。 | 由于标准JPA接口中无SavePoint操作，因此无法支持NESTED传播行为，EF-ORM在JpaDIalect中支持了SavePoint，因此可以使用NESTED传播行为。  再加上JPA本身支持的其他6种传播行为，EF-ORM可以支持全部7种传播行为。 |
 | **isolation**            | 定义事务的四种隔离级别。                             | JPA接口不提供对数据库事务隔离级别的动态调整。也就无法支持Spring的事务隔离级别。但EF-ORM可以支持。 |
 | **read-only="true"**     | 指定事务为只读。该属性提示ORM框架和JDBC驱动进行优化，比如Hibernate下只读事务可以省去flush缓存操作。Oracle服务器原生支持readonly级别，可以不产生回滚段，不记录重做日志，甚至可以提供可重复读等特性。 | 在只读模式下，EF-ORM将对JDBC Connection进行readOnly进行设置，从而触发数据库和驱动的只读优化。当然并不是所有的数据库都支持只读优化。 |
 | **timeout**              | 事务超时时间，事务一旦超时，会被标记为rollbackOnly，抛出异常并终止处理。 | JPA原生接口不提供事务超时控制。EF-ORM可以通过方言支持。         |

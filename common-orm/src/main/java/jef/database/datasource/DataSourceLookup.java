@@ -37,8 +37,6 @@ import javax.sql.DataSource;
  * @see MapDataSourceLookup
  * @see DbDataSourceLookup
  * @see JndiDatasourceLookup
- * @see PropertiesDataSourceLookup
- * @see URLJsonDataSourceInfoLookup
  * @see SpringBeansDataSourceLookup
  *  
  */
