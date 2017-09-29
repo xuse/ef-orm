@@ -131,7 +131,7 @@ EF相较于这两个框架，其优势是——
 
 3.    优化的多库排序： 在多库排序时，能分析分表规则，当分表条件和排序条件一致时，直接将各个结果集按排序条件拼合。免去了排序的性能开销。
 
-                  在必须重排序时，利用每个库各自的顺序，使用了内存占用较小的排序算法。
+              在必须重排序时，利用每个库各自的顺序，使用了内存占用较小的排序算法。
 
 4.    EF-ORM中分区操作对用户基本透明，无需移植。而从hienrate移植到HibernateShard时的部分接口类需要调整。
 
@@ -787,7 +787,7 @@ public void testCustomer() throws SQLException {
 
 分库分表对Batch模式也有一定的影响。由于分库分表后，不同库和表上的数据操作SQL语句是不一样的，因此框架必须对Batch中的对象进行分组，将同一张表里的记录划为一组，然后再对每组进行操作。
 
-orm-tutorial\src\main\java\org\easyframe\tutorial\lessona\Case2.java
+[Case2.java](../../orm-tutorial/src/main/java/org/easyframe/tutorial/lessona/Case2.java)
 
 ~~~java
 /**
@@ -864,7 +864,7 @@ db.extremeInsert(list, false);//不需要对每个传入数据进行路由计算
 
 那么，现在我们来看一看分库分表查询中最为复杂的情况。即路由条件不足，造成多库多表查询的情况。该案例较为复杂，也非常长，因此代码不全部贴出了。可以参见示例工程下的java代码。
 
-orm-tutorial\src\main\java\org\easyframe\tutorial\lessona\Case2.java
+[Case2.java](../../orm-tutorial/src/main/java/org/easyframe/tutorial/lessona/Case2.java)
 
 ~~~java
 /**
@@ -885,6 +885,9 @@ orm-tutorial\src\main\java\org\easyframe\tutorial\lessona\Case2.java
 */
 @Test
 public void testDeviceSelect() throws SQLException {}
+...
+  下略
+...
 ~~~
 
 该案例归纳情况如下——
