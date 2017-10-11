@@ -40,6 +40,7 @@ import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLDecoder;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
@@ -51,6 +52,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Multimap;
+
 import jef.codegen.support.OverWrittenMode;
 import jef.common.BigDataBuffer;
 import jef.common.JefSerializable;
@@ -61,17 +68,11 @@ import jef.tools.TextFileCallback.Dealwith;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.io.UnicodeReader;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Multimap;
-
 public class IOUtils {
 	private static final int DEFAULT_BUFFER_SIZE = 4096;
 	private static final File[] EMPTY = new File[0];
-	private static final Logger log=LoggerFactory.getLogger(IOUtils.class);
-	
+	private static final Logger log = LoggerFactory.getLogger(IOUtils.class);
+
 	/**
 	 * 关闭指定的对象，不会抛出异常
 	 * 
@@ -227,22 +228,23 @@ public class IOUtils {
 	 *            true表示保存完后关闭输出流，false则保持不变
 	 * @param sectionSupport
 	 *            支持分节写入
-	 * @param 转义处理：1，正常KV均转义处理  0。KEY处理value不处理。 -1 KV均不处理 
-	 *       
+	 * @param 转义处理：1，正常KV均转义处理
+	 *            0。KEY处理value不处理。 -1 KV均不处理
+	 * 
 	 */
-	public static void storeProperties(Writer writer, Map<String, String> map, boolean closeWriter, Boolean sectionSupport,int saveConvert) {
-		
-		if(sectionSupport==null) {
-			int limit=3;
-			sectionSupport=true;
-			for(Entry<String,String> entry: map.entrySet()) {
+	public static void storeProperties(Writer writer, Map<String, String> map, boolean closeWriter, Boolean sectionSupport, int saveConvert) {
+
+		if (sectionSupport == null) {
+			int limit = 3;
+			sectionSupport = true;
+			for (Entry<String, String> entry : map.entrySet()) {
 				limit--;
-				String key=entry.getKey();
-				if(key.indexOf('|')==-1) {
-					sectionSupport=false;
+				String key = entry.getKey();
+				if (key.indexOf('|') == -1) {
+					sectionSupport = false;
 					break;
 				}
-				if(limit<0) {
+				if (limit < 0) {
 					break;
 				}
 			}
@@ -250,29 +252,29 @@ public class IOUtils {
 		try {
 
 			if (sectionSupport) {
-				Multimap<String, Map.Entry<String, String>> sections = CollectionUtils.group(map.entrySet(),
-						new Function<Map.Entry<String, String>, String>() {
-							public String apply(Entry<String, String> input) {
-								int sectionLen = input.getKey().indexOf('|');
-								return sectionLen == -1 ? "" : input.getKey().substring(0, sectionLen);
-							}
-						});
-				boolean hasNoSecLine=false;
+				Multimap<String, Map.Entry<String, String>> sections = CollectionUtils.group(map.entrySet(), new Function<Map.Entry<String, String>, String>() {
+					public String apply(Entry<String, String> input) {
+						int sectionLen = input.getKey().indexOf('|');
+						return sectionLen == -1 ? "" : input.getKey().substring(0, sectionLen);
+					}
+				});
+				boolean hasNoSecLine = false;
 				for (Map.Entry<String, String> entry : sections.removeAll("")) {
 					writer.write(saveConvert(entry.getKey(), true, saveConvert));
 					writer.write('=');
-					writer.write(saveConvert(entry.getValue(), false,saveConvert));
+					writer.write(saveConvert(entry.getValue(), false, saveConvert));
 					writer.write(StringUtils.CRLF_STR);
-					hasNoSecLine=true;
+					hasNoSecLine = true;
 				}
 				if (!sections.isEmpty()) {
-					if(hasNoSecLine)writer.write(StringUtils.CRLF_STR);
+					if (hasNoSecLine)
+						writer.write(StringUtils.CRLF_STR);
 					for (String section : sections.keySet()) {
 						writer.write("[" + section + "]\r\n");
 						for (Map.Entry<String, String> entry : sections.get(section)) {
-							writer.write(saveConvert(entry.getKey().substring(section.length() + 1), true,saveConvert));
+							writer.write(saveConvert(entry.getKey().substring(section.length() + 1), true, saveConvert));
 							writer.write('=');
-							writer.write(saveConvert(entry.getValue(), false,saveConvert));
+							writer.write(saveConvert(entry.getValue(), false, saveConvert));
 							writer.write(StringUtils.CRLF_STR);
 						}
 						writer.write(StringUtils.CRLF_STR);
@@ -280,9 +282,9 @@ public class IOUtils {
 				}
 			} else {
 				for (Map.Entry<String, String> entry : map.entrySet()) {
-					writer.write(saveConvert(entry.getKey(), true,saveConvert));
+					writer.write(saveConvert(entry.getKey(), true, saveConvert));
 					writer.write('=');
-					writer.write(saveConvert(entry.getValue(), false,saveConvert));
+					writer.write(saveConvert(entry.getValue(), false, saveConvert));
 					writer.write(StringUtils.CRLF_STR);
 				}
 			}
@@ -606,12 +608,12 @@ public class IOUtils {
 	 * @return
 	 */
 	public static String getExtName(String fileName) {
-		int dashIndex1=fileName.lastIndexOf('/');
-		int dashIndex2=fileName.lastIndexOf('\\');
-		int dash=Math.max(dashIndex1, dashIndex2);//获得最后一个斜杠的位置
-		
+		int dashIndex1 = fileName.lastIndexOf('/');
+		int dashIndex2 = fileName.lastIndexOf('\\');
+		int dash = Math.max(dashIndex1, dashIndex2);// 获得最后一个斜杠的位置
+
 		int pos = fileName.lastIndexOf(".");
-		if(pos>-1 && pos>dash){
+		if (pos > -1 && pos > dash) {
 			return fileName.substring(pos + 1).toLowerCase();
 		} else {
 			return "";
@@ -619,18 +621,18 @@ public class IOUtils {
 	}
 
 	/**
-	 * 得到文件名除去扩展名的部分。如果传入的文件名包含路径，分析时会考虑最后一个\或/字符后满的部分才作为文件名。
-	 * 去除扩展名后返回包含路径的部分。
+	 * 得到文件名除去扩展名的部分。如果传入的文件名包含路径，分析时会考虑最后一个\或/字符后满的部分才作为文件名。 去除扩展名后返回包含路径的部分。
+	 * 
 	 * @param fileName
 	 * @return
 	 */
 	public static String removeExt(String fileName) {
-		int dashIndex1=fileName.lastIndexOf('/');
-		int dashIndex2=fileName.lastIndexOf('\\');
-		int dash=Math.max(dashIndex1, dashIndex2);//获得最后一个斜杠的位置
-		int pos=fileName.lastIndexOf('.');
-		if(pos>-1 && pos>dash){
-			return fileName.substring(0,pos);
+		int dashIndex1 = fileName.lastIndexOf('/');
+		int dashIndex2 = fileName.lastIndexOf('\\');
+		int dash = Math.max(dashIndex1, dashIndex2);// 获得最后一个斜杠的位置
+		int pos = fileName.lastIndexOf('.');
+		if (pos > -1 && pos > dash) {
+			return fileName.substring(0, pos);
 		}
 		return fileName;
 	}
@@ -696,7 +698,7 @@ public class IOUtils {
 	public static void createFolder(String path) {
 		createFolder(new File(path));
 	}
-	
+
 	public static void createFolder(File file) {
 		if (file.exists() && file.isFile()) {
 			throw new RuntimeException("Duplicate name file exist. can't create directory " + file.getPath());
@@ -706,11 +708,10 @@ public class IOUtils {
 	}
 
 	/**
-	 * 检查/创建文件在所的文件夹。
-	 * 如果该文件所在的文件夹已存在，什么也不做。
-	 * 如果该文件所在的文件夹不存在，则创建
+	 * 检查/创建文件在所的文件夹。 如果该文件所在的文件夹已存在，什么也不做。 如果该文件所在的文件夹不存在，则创建
 	 * 
-	 * @param file 要检查的路径
+	 * @param file
+	 *            要检查的路径
 	 */
 	public static void ensureParentFolder(File file) {
 		File f = file.getParentFile();
@@ -1194,7 +1195,7 @@ public class IOUtils {
 	 *             IO操作异常
 	 */
 	public static byte[] toByteArray(File file) throws IOException {
-		InputStream in = (file instanceof URLFile) ? ((URLFile) file).getInputStream() : new FileInputStream(file);
+		InputStream in = new FileInputStream(file);
 		try {
 			byte[] result = toByteArray(in, (int) file.length());
 			return result;
@@ -1623,7 +1624,7 @@ public class IOUtils {
 			if (!file.exists())
 				return -1;
 			// 创建文件输入流
-			FileInputStream fin = (file instanceof URLFile) ? ((URLFile) file).getInputStream() : new FileInputStream(file);
+			FileInputStream fin = new FileInputStream(file);
 			FileChannel fc1 = fin.getChannel();
 			int cnt = 0;// 存储每次读取的字节数
 			int nth = 1;
@@ -1737,7 +1738,7 @@ public class IOUtils {
 			for (File f : source.listFiles()) {
 				File target = strategy.getTargetFile(f, newFile);
 				if (target != null) {
-					log.debug("Coping [{}] to [{}]",f,target);
+					log.debug("Coping [{}] to [{}]", f, target);
 					copyFile(f, target, strategy);
 				}
 			}
@@ -1768,7 +1769,7 @@ public class IOUtils {
 				FileChannel out = null;
 				boolean flag = false;
 				try {
-					in = ((source instanceof URLFile) ? ((URLFile) source).getInputStream() : new FileInputStream(source)).getChannel();
+					in = new FileInputStream(source).getChannel();
 					out = new FileOutputStream(newFile).getChannel();
 					in.transferTo(0, source.length(), out);
 					flag = true;
@@ -2269,9 +2270,20 @@ public class IOUtils {
 		return "/".concat(fileName);
 	}
 
-	public static BufferedInputStream getInputStream(URL url) throws IOException {
-		URLConnection conn = url.openConnection();
-		return new BufferedInputStream(conn.getInputStream());
+	/**
+	 * 将URL的数据以BufferedInputStream的方式获取
+	 * 
+	 * @param url
+	 * @return BufferedInputStream
+	 */
+	public static BufferedInputStream getInputStream(URL url) {
+		try {
+			URLConnection conn = url.openConnection();
+			return new BufferedInputStream(conn.getInputStream());
+		} catch (IOException e) {
+			throw new IllegalArgumentException(e);
+		}
+
 	}
 
 	/**
@@ -2281,16 +2293,16 @@ public class IOUtils {
 	 *            要转换的URL，必须是file://协议，否则抛出异常。
 	 */
 	public static File urlToFile(URL url) {
-		if (url == null)
-			return null;
+		Assert.notNull(url);
+		String type = url.getProtocol().toLowerCase();
+		if (!"file".equals(type)) {
+			throw new UnsupportedOperationException("Can't convert URL of protocol " + url.getProtocol() + " to a File.");
+		}
 		try {
-			URLFile file = new URLFile(url);
-			if (file.isLocalFile())
-				return file.getLocalFile();
-			return file;
-		} catch (RuntimeException e) {
-			LogUtil.error(url.toString() + " is not a valid file:" + e.getMessage());
-			return null;
+			return new File(URLDecoder.decode(url.getPath(), "UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			// Never Happens
+			return new File(url.getPath());
 		}
 	}
 
@@ -2313,8 +2325,12 @@ public class IOUtils {
 	 * 
 	 * @Title: getInputStream
 	 */
-	public static BufferedInputStream getInputStream(File file) throws IOException {
-		return new BufferedInputStream((file instanceof URLFile) ? ((URLFile) file).getInputStream() : new FileInputStream(file));
+	public static BufferedInputStream getInputStream(File file) {
+		try {
+			return new BufferedInputStream((file instanceof URLFile) ? ((URLFile) file).getInputStream() : new FileInputStream(file));
+		} catch (IOException e) {
+			throw new IllegalArgumentException(e);
+		}
 	}
 
 	/**
@@ -2687,8 +2703,7 @@ public class IOUtils {
 		byte[] first3Bytes = new byte[3];
 		try {
 			boolean checked = false;
-			BufferedInputStream bis = new BufferedInputStream((file instanceof URLFile) ? ((URLFile) file).getInputStream() : new FileInputStream(
-					file));
+			BufferedInputStream bis = new BufferedInputStream((file instanceof URLFile) ? ((URLFile) file).getInputStream() : new FileInputStream(file));
 			bis.mark(0);
 			int read = bis.read(first3Bytes, 0, 3);
 			if (read == -1) {
@@ -2958,8 +2973,8 @@ public class IOUtils {
 			}
 			String key = loadConvert(lr.lineBuf, 0, keyLen, convtBuf);
 			String value = loadConvert(lr.lineBuf, valueStart, limit - valueStart, convtBuf);
-			if(supportSection==null) {
-				supportSection=isSection(key);
+			if (supportSection == null) {
+				supportSection = isSection(key);
 			}
 			if (supportSection && value.length() == 0 && isSection(key)) {
 				currentSection = key.length() > 2 ? key.substring(1, key.length() - 1) : null;
@@ -2974,7 +2989,7 @@ public class IOUtils {
 	}
 
 	private static boolean isSection(String key) {
-		if(key==null || key.length()<2) {
+		if (key == null || key.length() < 2) {
 			return false;
 		}
 		return key.charAt(0) == '[' && key.charAt(key.length() - 1) == ']';
@@ -3058,10 +3073,10 @@ public class IOUtils {
 		return new String(out, 0, outLen);
 	}
 
-	private static String saveConvert(String theString, boolean isKey,int option) {
-		if(isKey && option<0) {
+	private static String saveConvert(String theString, boolean isKey, int option) {
+		if (isKey && option < 0) {
 			return theString;
-		}else if(isKey==false && option<1) {
+		} else if (isKey == false && option < 1) {
 			return theString;
 		}
 		int len = theString.length();

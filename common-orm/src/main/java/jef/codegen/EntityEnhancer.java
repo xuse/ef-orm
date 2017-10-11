@@ -22,15 +22,14 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jef.tools.ClassScanner;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
-import jef.tools.URLFile;
 import jef.tools.resource.ClasspathLoader;
 import jef.tools.resource.IResource;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * JEF中的Entity静态增强任务类 <h3>作用</h3> 这个类中提供了{@link #enhance(String...)}
@@ -119,12 +118,8 @@ public class EntityEnhancer {
 		if (url == null) {
 			throw new IllegalArgumentException("not found " + className);
 		}
-		URLFile file = new URLFile(url);
-		if (!file.isLocalFile()) {
-			throw new IllegalArgumentException("not a local file." + className);
-		}
 		try {
-			return enhance(file.getLocalFile(), className);
+			return enhance(IOUtils.urlToFile(url), className);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}

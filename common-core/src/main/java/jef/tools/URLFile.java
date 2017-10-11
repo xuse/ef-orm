@@ -29,6 +29,7 @@ import jef.common.log.LogUtil;
  * 这个类就是当初试图让URL类的资源向File类靠拢而设计的。不管怎么说，这个类至少起到了一个本地缓存的作用。或许是今后对统一资源定位抽象设计进行改善的一个方法。
  * 
  * @author jiyi
+ * @deprecated 避免使用，当读取资源时间尽量使用URL或者Resource.
  *
  */
 public class URLFile extends File {

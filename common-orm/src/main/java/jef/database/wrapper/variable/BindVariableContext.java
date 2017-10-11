@@ -36,16 +36,11 @@ public final class BindVariableContext {
 		logMessage.append(count, fieldName, value);
 	}
 
-
 	private Object setValueInPsmt(int count, Object value) throws SQLException {
 		if (value != null) {
 			if ((value instanceof File)) {
 				File file = (File) value;
-				try {
-					psmt.setBinaryStream(count, IOUtils.getInputStream(file), file.length());
-				} catch (IOException e) {
-					throw new IllegalArgumentException();
-				}
+				psmt.setBinaryStream(count, IOUtils.getInputStream(file), file.length());
 				return value;
 			} else if (value instanceof byte[]) {
 				byte[] buf = (byte[]) value;
