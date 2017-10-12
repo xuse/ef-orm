@@ -1331,22 +1331,47 @@ public abstract class DateUtils {
         return time == null ? null : Date.from(LocalDateTime.of(LocalDate.now(), time).atZone(ZoneId.systemDefault()).toInstant());
     }
 
+    /**
+     * Converts LocalDateTime to java.util.Date (null safety)
+     * @param LocalDateTime
+     * @return java.util.Date
+     */
     public static Date fromLocalDateTime(LocalDateTime value) {
         return value == null ? null : Date.from(value.atZone(ZoneId.systemDefault()).toInstant());
     }
 
+    /**
+     * Converts java.sql.Date to LocalDate (null safety)
+     * @param java.sql.Date
+     * @return LocalDate
+     */
     public static LocalDate toLocalDate(java.sql.Date date) {
         return date == null ? null : date.toLocalDate();
     }
 
+    /**
+     * Converts Time to LocalTime (null safety)
+     * @param time
+     * @return LocalTime
+     */
     public static LocalTime toLocalTime(java.sql.Time time) {
         return time == null ? null : time.toLocalTime();
     }
 
+    /**
+     * Converts Timestamp to LocalTime (null safety)
+     * @param ts Timestamp
+     * @return LocalTime
+     */
     public static LocalTime toLocalTime(java.sql.Timestamp ts) {
         return ts == null ? null : ts.toLocalDateTime().toLocalTime();
     }
 
+    /**
+     * Converts Timestamp to LocalDateTime (null safety)
+     * @param ts Timestamp
+     * @return LocalDateTime
+     */
     public static LocalDateTime toLocalDateTime(java.sql.Timestamp ts) {
         return ts == null ? null : ts.toLocalDateTime();
     }

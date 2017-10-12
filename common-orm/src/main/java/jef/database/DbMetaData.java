@@ -79,6 +79,7 @@ import jef.database.meta.PrimaryKey;
 import jef.database.meta.SequenceInfo;
 import jef.database.meta.TableCreateStatement;
 import jef.database.meta.TableInfo;
+import jef.database.meta.def.IndexDef;
 import jef.database.meta.def.UniqueConstraintDef;
 import jef.database.query.DefaultPartitionCalculator;
 import jef.database.query.Func;
@@ -759,12 +760,12 @@ public class DbMetaData {
                 continue;
             }
             if (index.getColumns().size() == 1) {
-                if (isUniqueColumn(index, meta.getColumns())) {
+                if (isUniqueFromColumnAnnotation(index, meta.getColumns())) {
                     iter.remove();
                     continue;
                 }
             }
-            if (isUniqueConstraint(index, meta)) {
+            if (isUniqueFromClassAnnotation(index, meta)) {
                 iter.remove();
                 continue;
             }
@@ -776,27 +777,28 @@ public class DbMetaData {
      * 得到所有的unique约束。过滤掉了主键和非唯一的索引。 但是进一步的区分 unique index和 constraint是比较困难的。
      * 此处使用Entity元数据定义中的注解来分析并加以区分，可能不一定准确。 但大部分场合下是有效的。
      * 
-     * @param type
-     * @return
+     * @param meta / Metadata
+     * @return Collection of Index
      * @throws SQLException
      */
-    public Collection<Index> getUnique(Class<?> type) throws SQLException {
-        ITableMetadata meta = MetaHolder.getMeta(type);
-        Collection<Index> indexes = getUnique(meta.getTableName(true));
+    public Collection<Index> getUniqueConstraint(ITableMetadata meta) throws SQLException {
+        Collection<Index> indexes = getUniqueConstraint(meta.getTableName(true));
         List<Index> result = new ArrayList<Index>();
         for (Index index : indexes) {
-            if (index.getColumns().size() == 1 && isUniqueColumn(index, meta.getColumns())) {
+            //如果仅有一列，并且在列的定义上有Unique，那么就认为这是Unique约束
+            if (index.getColumns().size() == 1 && isUniqueFromColumnAnnotation(index, meta.getColumns())) {
                 result.add(index);
                 continue;
             }
-            if (isUniqueConstraint(index, meta)) {
+            //如果列定义和位于类注解上的Unique约束定义一致，那么也认为就是Unique约束
+            if (isUniqueFromClassAnnotation(index, meta)) {
                 result.add(index);
             }
         }
         return result;
     }
 
-    private boolean isUniqueConstraint(Index index, ITableMetadata meta) {
+    private boolean isUniqueFromClassAnnotation(Index index, ITableMetadata meta) {
         DatabaseDialect dialect = this.getProfile();
         for (UniqueConstraintDef unique : meta.getUniques()) {
             List<String> columns = unique.toColumnNames(meta, dialect);
@@ -807,7 +809,7 @@ public class DbMetaData {
         return false;
     }
 
-    private boolean isUniqueColumn(Index index, Collection<ColumnMapping> columns) {
+    private boolean isUniqueFromColumnAnnotation(Index index, Collection<ColumnMapping> columns) {
         for (ColumnMapping c : columns) {
             String columnName = c.getColumnName(getProfile(), false);
             if (index.getColumnNames()[0].equals(columnName)) {
@@ -826,7 +828,7 @@ public class DbMetaData {
      * @return 具有唯一约束的键
      * @throws SQLException
      */
-    public Collection<Index> getUnique(String tableName) throws SQLException {
+    public Collection<Index> getUniqueConstraint(String tableName) throws SQLException {
         Collection<Index> indexes = getIndexes(tableName);
         PrimaryKey pk = this.getPrimaryKey(tableName);
         for (Iterator<Index> iter = indexes.iterator(); iter.hasNext();) {
@@ -835,6 +837,7 @@ public class DbMetaData {
                 iter.remove();
                 continue;
             }
+            //过滤掉PK
             if (isPrimaryKey(pk, index)) {
                 iter.remove();
                 continue;
@@ -1553,8 +1556,8 @@ public class DbMetaData {
     public void refreshTable(ITableMetadata meta, String tablename, MetadataEventListener event) throws SQLException {
         DatabaseDialect profile = getProfile();
         tablename = profile.getObjectNameToUse(tablename);
-        boolean supportChangeDelete = profile.notHas(Feature.NOT_SUPPORT_ALTER_DROP_COLUMN);
-        if (!supportChangeDelete) {
+        boolean supportsChangeDelete = profile.notHas(Feature.NOT_SUPPORT_ALTER_DROP_COLUMN);
+        if (!supportsChangeDelete) {
             LogUtil.warn("Current database [{}] doesn't support alter table column.", profile.getName());
         }
 
@@ -1589,7 +1592,7 @@ public class DbMetaData {
         for (Column c : columns) {
             Field field = meta.getFieldByLowerColumn(c.getColumnName().toLowerCase());
             if (field == null) {
-                if (supportChangeDelete) {
+                if (supportsChangeDelete) {
                     delete.add(c.getColumnName());
                 }
                 continue;
@@ -1598,7 +1601,7 @@ public class DbMetaData {
                                                        // find
             // the column defined
             Assert.notNull(type);// 不应该发生
-            if (supportChangeDelete) {
+            if (supportsChangeDelete) {
                 List<ColumnChange> changes = type.get().isEqualTo(c, getProfile());
                 if (!changes.isEmpty()) {
                     changed.add(new ColumnModification(c, changes, type.get()));
@@ -1615,6 +1618,7 @@ public class DbMetaData {
             return;
         }
         List<String> altertables = ddlGenerator.toTableModifyClause(meta, tablename, insert, changed, delete);
+        altertables.addAll(compareIndexAndConstraints(meta, tablename));
         StatementExecutor exe = createExecutor();
         try {
             exe.setQueryTimeout(180);// 最多执行3分钟
@@ -1647,6 +1651,52 @@ public class DbMetaData {
         if (event != null) {
             event.onTableFinished(meta, tablename);
         }
+    }
+
+    private Collection<? extends String> compareIndexAndConstraints(ITableMetadata meta, String tablename) throws SQLException {
+        //计算主键变化
+        
+        
+        
+        List<String> sqls = new ArrayList<String>();
+        
+        //计算唯一性约束变化
+        //计算外键变化
+
+        // 先计算键和约束，再计算索引，因为键会影响索引，造成索引的判断困难。
+        // 计算要删除的约束
+
+        // 首先看四种约束中的主键还需不需要管理。
+
+        // 计算要添加的约束
+
+        // 计算要删除的索引
+        Collection<Index> indexes = getIndexes(tablename);
+        List<IndexDef> newIndexes = meta.getIndexDefinition();
+        for (Index index : indexes) {
+            if (isDupIndex(index, newIndexes)) {
+                continue;
+            }
+            // 还要确认当前索引不是某个约束或键的索引
+            if (isNotAConstraintIndex(index, meta)) {
+                sqls.add(ddlGenerator.deleteIndex(index));
+            }
+
+        }
+        // 计算要添加的索引
+        for (IndexDef def : newIndexes) {
+            sqls.add(ddlGenerator.addIndex(def,meta,tablename));
+        }
+
+        return sqls;
+    }
+    
+    private boolean isNotAConstraintIndex(Index index, ITableMetadata meta) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+    private boolean isDupIndex(Index index,  List<IndexDef> meta) {
+        return false;
     }
 
     /**
@@ -1731,7 +1781,7 @@ public class DbMetaData {
                 // 创建外键约束等
                 exe.executeSql(sqls.getOtherContraints());
                 // create indexes
-                exe.executeSql(ddlGenerator.toIndexClause(meta, tablename));
+                exe.executeSql(getIndexClausesOfTable(meta, tablename));
             } finally {
                 exe.close();
             }
@@ -1743,6 +1793,17 @@ public class DbMetaData {
         }
         // 额外创建表
         return created;
+    }
+    
+    /**
+     * 转换成索引创建语句
+     */
+    private List<String> getIndexClausesOfTable(ITableMetadata meta, String tablename) {
+        List<String> sqls = new ArrayList<String>();
+        for (IndexDef index : meta.getIndexDefinition()) {
+            sqls.add(ddlGenerator.addIndex(index, meta, tablename));
+        }
+        return sqls;
     }
 
     /*
@@ -1942,13 +2003,6 @@ public class DbMetaData {
     }
 
     /**
-     * 从databaseMetadata得到的数据表的信息（不光是表，可能包括表和视图等）
-     * 
-     * @author jiyi
-     * 
-     */
-
-    /**
      * 删除表中的约束:包括外键
      * 
      * @param tablename
@@ -1985,7 +2039,8 @@ public class DbMetaData {
     }
 
     /**
-     * 删除表的所有约束
+     * 删除表的所有约束，包括外键和主键。
+     * FIXME 但目前不能删除UNIQUE Constraint....
      * 
      * @param tablename
      *            表名(支持schema重定向)

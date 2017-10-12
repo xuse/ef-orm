@@ -8,6 +8,7 @@ import jef.database.DbClient;
 import jef.database.DbClientBuilder;
 import jef.database.DbMetaData;
 import jef.database.meta.Index;
+import jef.database.meta.MetaHolder;
 import jef.tools.collection.CollectionUtils;
 
 import org.junit.BeforeClass;
@@ -42,7 +43,7 @@ public class MetadataCase {
 		// System.out.println(meta.getPrimaryKey("TableMaster"));
 		// System.out.println(meta.getForeignKey("TableMaster"));
 		// System.out.println(meta.getForeignKeyReferenceTo("TableMaster"));
-		Collection<Index> index = meta.getUnique(TableMaster.class);
+		Collection<Index> index = meta.getUniqueConstraint(MetaHolder.getMeta(TableMaster.class));
 		index = CollectionUtils.toList(index);
 		LogUtil.show(index);
 		System.out.println("-----------------------");

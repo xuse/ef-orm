@@ -18,6 +18,7 @@ import jef.database.innerpool.IUserManagedPool;
 import jef.database.jdbc.result.CloseableResultSet;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.variable.BindVariableContext;
+import jef.tools.StringUtils;
 
 import org.springframework.util.Assert;
 
@@ -61,7 +62,6 @@ public class ExecutorImpl implements StatementExecutor{
 	
 
 	private void doSql(Statement st, String txId, String sql) throws SQLException {
-		Assert.notNull(sql);
 		SqlLog log=ORMConfig.getInstance().newLogger(sql.length()+60);
 		try {
 			long start=System.currentTimeMillis();
@@ -80,7 +80,9 @@ public class ExecutorImpl implements StatementExecutor{
 	@Override
 	public void executeSql(String... ddls) throws SQLException {
 		for(String sql:ddls){
-			doSql(st, txId, sql);
+		    if(StringUtils.isNotEmpty(sql)){
+		        doSql(st, txId, sql);
+		    }
 		}
 	}
 
