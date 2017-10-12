@@ -1,9 +1,12 @@
 package jef.tools;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.nio.channels.FileChannel;
 import java.util.Map;
 import java.util.Properties;
 
@@ -11,10 +14,12 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import jef.common.log.LogUtil;
-import jef.tools.support.JefBase64;
-
+import org.junit.Ignore;
 import org.junit.Test;
+
+import jef.common.log.LogUtil;
+import jef.tools.reflect.BeanUtils;
+import jef.tools.support.JefBase64;
 
 public class IOUtilsTest extends org.junit.Assert{
 	public static void main(String[] args) {
@@ -40,6 +45,29 @@ public class IOUtilsTest extends org.junit.Assert{
 		URL u = Thread.currentThread().getContextClassLoader().getResource("");
 		System.out.println(u);
 
+	}
+	
+	@Test
+	@Ignore
+	public void testChannelClose() throws IOException{
+		File source=new File("c:/bootmgr");
+		File newFile=new File("test.txt");
+		FileInputStream fin=new FileInputStream(source);
+		FileChannel in = fin.getChannel();
+		FileOutputStream fout=new FileOutputStream(newFile);
+		FileChannel out = fout.getChannel();
+		in.transferTo(0, source.length(), out);
+		in.close();
+		System.out.println("===============1================");
+		System.out.println(in.isOpen());
+		System.out.println(BeanUtils.getFieldValue(fin, "closed"));
+		System.out.println(BeanUtils.getFieldValue(fout, "closed"));
+		out.close();
+		System.out.println("===============2================");
+		System.out.println(out.isOpen());
+		System.out.println(BeanUtils.getFieldValue(fin, "closed"));
+		System.out.println(BeanUtils.getFieldValue(fout, "closed"));
+		
 	}
 
 	@Test

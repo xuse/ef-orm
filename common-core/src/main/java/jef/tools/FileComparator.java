@@ -18,14 +18,9 @@ public abstract class FileComparator {
 	public abstract boolean equals(File source, File target);
 
 	protected boolean compareFullContent(File source, File target) {
-		try {
-			String a = StringUtils.getCRC(IOUtils.getInputStream(source));
-			String b = StringUtils.getCRC(IOUtils.getInputStream(target));
-			return a.equals(b);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return false;
+		String a = StringUtils.getCRC(IOUtils.getInputStream(source));
+		String b = StringUtils.getCRC(IOUtils.getInputStream(target));
+		return a.equals(b);
 	}
 
 	protected boolean compareClips(File source, File target, long len) {

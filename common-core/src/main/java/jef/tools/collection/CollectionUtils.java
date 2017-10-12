@@ -75,6 +75,20 @@ public class CollectionUtils {
 
 	public static final class C extends CollectionUtils{
 	}
+	
+	/**
+	 * 将数组进行转换
+	 * @param source
+	 * @param function
+	 * @return
+	 */
+	public static <K, V> List<V> convert(List<K> source, Function<K, V> function) {
+		List<V> result = new ArrayList<V>(source.size());
+		for (int i = 0; i < source.size(); i++) {
+			result.add(function.apply(source.get(i)));
+		}
+		return result;
+	}
 
 	
 	/**
