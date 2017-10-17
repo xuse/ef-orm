@@ -203,4 +203,8 @@ public enum Feature {
 	 * MYSQL语法，建表时语句在字段上直接加COMMENT语句
 	 */
 	SUPPORT_INLINE_COMMENT,
+	/**
+	 * 使用系统表获得Constraint的信息
+	 */
+	GET_CONSTRAINT,
 }

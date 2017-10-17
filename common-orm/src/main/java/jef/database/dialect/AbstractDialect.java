@@ -19,6 +19,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.channels.UnsupportedAddressTypeException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -53,6 +54,7 @@ import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.Case;
+import jef.database.meta.Constraint;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.meta.FunctionMapping;
@@ -829,4 +831,11 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	public boolean isCaseSensitive() {
 		return caseHandler.isCaseSensitive();
 	}
+
+    @Override
+    public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String constraintName) {
+        throw new UnsupportedOperationException();
+    }
+	
+	
 }

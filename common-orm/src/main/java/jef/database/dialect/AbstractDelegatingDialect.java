@@ -24,6 +24,7 @@ import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
 import jef.database.meta.Column;
+import jef.database.meta.Constraint;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.meta.FunctionMapping;
@@ -254,5 +255,10 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
     @Override
     public SQLTemplates getQueryDslDialect() {
         return dialect.getQueryDslDialect();
+    }
+
+    @Override
+    public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String constraintName) {
+        return dialect.getConstraintInfo(conn, schema, constraintName);
     }
 }

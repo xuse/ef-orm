@@ -16,10 +16,12 @@ import javax.persistence.UniqueConstraint;
 import jef.database.annotation.EasyEntity;
 import jef.database.annotation.Indexed;
 
-@Table(name = "TABLE_FOR_TEST",indexes={
+@Table(name = "TABLE_FOR_TEST"
+,indexes={
 		@Index(columnList="id,name desc",name="IDX_DEFAULT_TEST",unique=true)  //单独再定义一个复合索引		
-},uniqueConstraints={@UniqueConstraint(
-		columnNames={"code","name"})})
+    },uniqueConstraints={@UniqueConstraint(
+		columnNames={"code","name"})}
+)
 @Entity
 @EasyEntity(checkEnhanced=false)
 public class TableForTest extends jef.database.DataObject {
