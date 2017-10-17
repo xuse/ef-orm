@@ -619,7 +619,7 @@ public class DbClientBuilder {
         } else if (dataSource != null) {
             sf = new JefEntityManagerFactory(dataSource, minPoolSize, maxPoolSize, transactionMode);
         } else {
-            RoutingDataSource rs = new RoutingDataSource(new MapDataSourceLookup(dataSources));
+            RoutingDataSource rs = new RoutingDataSource(new MapDataSourceLookup(dataSources).setDefaultKey(this.defaultDatasource));
             sf = new JefEntityManagerFactory(rs, minPoolSize, maxPoolSize, transactionMode);
         }
         if (namedQueryFile != null) {

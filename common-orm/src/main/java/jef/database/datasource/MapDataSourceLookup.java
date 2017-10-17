@@ -42,8 +42,9 @@ public class MapDataSourceLookup implements DataSourceLookup{
 		return defaultKey;
 	}
 
-	public void setDefaultKey(String defaultKey) {
+	public MapDataSourceLookup setDefaultKey(String defaultKey) {
 		this.defaultKey = defaultKey;
+		return this;
 	}
 
 	public Collection<String> getAvailableKeys() {
