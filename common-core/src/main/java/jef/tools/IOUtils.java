@@ -2579,11 +2579,11 @@ public class IOUtils {
 		if (breakCount == -1)
 			return file;
 		StringBuilder sb = new StringBuilder();
-		sb.append(StringUtils.repeat("../", f2.length - breakCount));
+		sb.append(StringUtils.repeat(".." + File.separator, f2.length - breakCount));
 		for (int i = breakCount; i < f1.length; i++) {
-			sb.append(f1[i] + "/");
+			sb.append(f1[i]).append(File.separatorChar);
 		}
-		sb.deleteCharAt(sb.length() - 1);
+		sb.setLength(sb.length()-1);
 		return sb.toString();
 	}
 

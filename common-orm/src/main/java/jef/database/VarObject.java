@@ -14,7 +14,12 @@ import jef.database.meta.ITableMetadata;
 import jef.database.support.VarObjAdapter;
 import jef.tools.Assert;
 
-@XmlJavaTypeAdapter(VarObjAdapter.class)
+/**
+ * 用来描述动态表结构的Entity
+ * @author Joey
+ *
+ */
+@XmlJavaTypeAdapter(VarObjAdapter.class) //使得该类能顺利通过JAXB的序列化 
 @EasyEntity(checkEnhanced = false, refresh = false)
 public final class VarObject extends DataObject implements Map<String, Object>,MetadataContainer {
 	private static final long serialVersionUID = 3915258646897359358L;
@@ -96,6 +101,12 @@ public final class VarObject extends DataObject implements Map<String, Object>,M
 		return (Collection<VarObject>) obj;
 	}
 
+	/**
+	 * 得到字段值，并转换为List<T>类型
+	 * @param key
+	 * @param clz
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public <T> List<T> getList(String key, Class<T> clz) {
 		Object obj = get(key);
@@ -116,6 +127,9 @@ public final class VarObject extends DataObject implements Map<String, Object>,M
 		return (Collection<T>) obj;
 	}
 
+	/**
+	 * 得到字段值
+	 */
 	public Object get(Object key) {
 		return map.get(key);
 	}

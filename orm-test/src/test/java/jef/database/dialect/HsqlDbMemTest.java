@@ -31,7 +31,7 @@ import org.junit.runner.RunWith;
  */
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({
-	@DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = "") })
+	@DataSource(name = "hsqldb", url = "${hsqldb.url}", user = "sa", password = "") })
 public class HsqlDbMemTest extends org.junit.Assert {
 
 	protected DbClient db;

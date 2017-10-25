@@ -75,11 +75,7 @@ public class QuerableEntityScanner {
     /**
      * 当创建新表后，是否同时初始化表中的数据
      */
-    private boolean initDataAfterCreate = true;
-    /**
-     * 当扫描到已经存在的表后，是否检查初始化数据。 一般在开发阶段开启
-     */
-    private boolean initDataIfTableExists = true;
+    private boolean initData = true;
 
     /**
      * 扫描包
@@ -246,9 +242,9 @@ public class QuerableEntityScanner {
             if (entityManagerFactory != null && (create || refresh)) {
                 boolean isCreated = doTableDDL(meta, create, refresh);
                 if (dataInitializer.isEnable()) {
-                    if (isCreated && this.initDataAfterCreate) {
+                    if (isCreated && initData) {
                         dataInitializer.initData(meta, true);
-                    } else if (this.initDataIfTableExists) {
+                    } else if (initData) {
                         dataInitializer.initData(meta, false);
                     } else {
                         LogUtil.info("DataInitializer：table [{}] already exists and 'initDataIfTableExists' flag is off. No data will be merge into database.",
@@ -395,24 +391,16 @@ public class QuerableEntityScanner {
         this.checkSequence = checkSequence;
     }
 
-    public void setInitDataAfterCreate(boolean initDataAfterCreate) {
-        this.initDataAfterCreate = initDataAfterCreate;
+    public void setInitData(boolean initData) {
+        this.initData = initData;
     }
 
-    public boolean isInitDataAfterCreate() {
-        return initDataAfterCreate;
+    public boolean isInitData() {
+        return initData;
     }
 
     public boolean isCheckIndex() {
         return checkIndex;
-    }
-
-    public boolean isInitDataIfTableExists() {
-        return initDataIfTableExists;
-    }
-
-    public void setInitDataIfTableExists(boolean initDataIfTableExists) {
-        this.initDataIfTableExists = initDataIfTableExists;
     }
 
     public void setCheckIndex(boolean checkIndex) {

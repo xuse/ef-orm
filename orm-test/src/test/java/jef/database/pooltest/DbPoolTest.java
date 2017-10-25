@@ -166,7 +166,7 @@ public class DbPoolTest {
      * 
      */
 	public static DbClient getDbClient() throws Exception {
-		DbClient dbClient = new DbClient(DbUtils.createSimpleDataSource("jdbc:derby:./db;create=true", "root", "root"));
+		DbClient dbClient = new DbClient(DbUtils.createSimpleDataSource("${derby.url}", "root", "root"));
 		return dbClient;
 	}
 

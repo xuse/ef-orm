@@ -94,7 +94,7 @@ public class CalculatorTest extends org.junit.Assert{
 
 	@Test
 	public void testTableResults() throws IllegalArgumentException, IllegalAccessException, InvocationTargetException {
-		DatabaseDialect profile = AbstractDialect.getProfile("mariadb");
+		DatabaseDialect profile = AbstractDialect.getDialect("mariadb");
 		{
 			((PartitionKeyImpl) config.key()[0]).function = KeyFunction.RAW;
 			((PartitionKeyImpl) config.key()[0]).defaultWhenFieldIsNull = "aa, bb, cc";

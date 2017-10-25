@@ -10,6 +10,8 @@ import java.util.Map;
 
 import javax.sql.rowset.CachedRowSet;
 
+import com.querydsl.sql.SQLTemplates;
+
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.DbMetaData;
@@ -32,15 +34,17 @@ import jef.database.meta.SequenceInfo;
 import jef.database.support.RDBMS;
 import jef.database.wrapper.clause.InsertSqlClause;
 
-import com.querydsl.sql.SQLTemplates;
-
 /**
  * 
  * @author jiyi
  *
  */
-public class AbstractDelegatingDialect implements DatabaseDialect{
+public abstract class AbstractDelegatingDialect implements DatabaseDialect {
 	protected DatabaseDialect dialect;
+	
+	protected AbstractDelegatingDialect(){
+		this.dialect = createDefaultDialect();
+	}
 
 	@Override
 	public RDBMS getName() {
@@ -66,6 +70,25 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	public ColumnType getProprtMetaFromDbType(Column dbTypeName) {
 		return dialect.getProprtMetaFromDbType(dbTypeName);
 	}
+
+	@Override
+	public final void accept(DbMetaData metadata) {
+		DatabaseDialect dialect = decideDialect(metadata);
+		if (dialect != null) {
+			this.dialect = dialect;
+		}
+		dialect.accept(metadata);
+	}
+
+	/*
+	 * 子类必须实现，在得到数据库的DatabaseMetadata后，根据驱动返回的数据库信息，获得一个匹配版本的方言
+	 */
+	protected abstract DatabaseDialect decideDialect(DbMetaData meta);
+
+	/*
+	 * 子类必须实现，在未得到数据库连接时假设一个特定版本的数据库方言
+	 */
+	protected abstract DatabaseDialect createDefaultDialect();
 
 	@Override
 	public boolean notHas(Feature feature) {
@@ -193,18 +216,13 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	}
 
 	@Override
-	public void accept(DbMetaData asOperateTarget) {
-		dialect.accept(asOperateTarget);
-	}
-
-	@Override
 	public void toExtremeInsert(InsertSqlClause sql) {
 		dialect.toExtremeInsert(sql);
 	}
 
 	@Override
 	public String toDefaultString(Object defaultValue, int sqlType, int changeTo) {
-		return dialect.toDefaultString(defaultValue, sqlType,changeTo);
+		return dialect.toDefaultString(defaultValue, sqlType, changeTo);
 	}
 
 	@Override
@@ -252,13 +270,13 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 		return dialect.isCaseSensitive();
 	}
 
-    @Override
-    public SQLTemplates getQueryDslDialect() {
-        return dialect.getQueryDslDialect();
-    }
+	@Override
+	public SQLTemplates getQueryDslDialect() {
+		return dialect.getQueryDslDialect();
+	}
 
-    @Override
-    public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String constraintName) {
-        return dialect.getConstraintInfo(conn, schema, constraintName);
-    }
+	@Override
+	public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String constraintName) {
+		return dialect.getConstraintInfo(conn, schema, constraintName);
+	}
 }

@@ -18,22 +18,22 @@ public class DbDialectTest {
 	 */
 	@Test
 	public void checkNormalFunctions(){
-		DatabaseDialect dialect=AbstractDialect.getProfile("oracle");
+		DatabaseDialect dialect=AbstractDialect.getDialect("oracle");
 		check(dialect);
 		
-		dialect=AbstractDialect.getProfile("derby");
+		dialect=AbstractDialect.getDialect("derby");
 		check(dialect);
 		
-		dialect=AbstractDialect.getProfile("mysql");
+		dialect=AbstractDialect.getDialect("mysql");
 		check(dialect);
 		
-		dialect=AbstractDialect.getProfile("postgresql");
+		dialect=AbstractDialect.getDialect("postgresql");
 		check(dialect);
 		
-		dialect=AbstractDialect.getProfile("hsqldb");
+		dialect=AbstractDialect.getDialect("hsqldb");
 		check(dialect);
 		
-		dialect=AbstractDialect.getProfile("sqlite");
+		dialect=AbstractDialect.getDialect("sqlite");
 		check(dialect);
 		
 		dialect=new SQLServer2000Dialect();

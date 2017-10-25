@@ -123,7 +123,7 @@ public final class SimpleDataSource extends AbstractDataSource implements DataSo
 			if (url.startsWith("jdbc:")) {
 				int m=url.indexOf(':',5);
 				String dbName = url.substring(5, m).trim();
-				DatabaseDialect profile = AbstractDialect.getProfile(dbName);
+				DatabaseDialect profile = AbstractDialect.getDialect(dbName);
 				if (profile == null) {
 					throw new IllegalArgumentException("the db type " + dbName + " not supported!");
 				}

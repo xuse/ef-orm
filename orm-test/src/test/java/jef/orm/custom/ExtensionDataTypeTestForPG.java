@@ -4,25 +4,33 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import jef.database.DbClient;
-import jef.database.DbClientBuilder;
-import jef.orm.onetable.model.Foo;
-
+import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import com.alibaba.fastjson.JSONObject;
 
-public class DatatypeTest {
+import jef.database.DbClient;
+import jef.database.test.DataSource;
+import jef.database.test.DataSourceContext;
+import jef.database.test.JefJUnit4DatabaseTestRunner;
+import jef.orm.onetable.model.Foo;
 
-	DbClient db = new DbClientBuilder().build();
+@RunWith(JefJUnit4DatabaseTestRunner.class)
+@DataSourceContext({
+		@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), })
+public class ExtensionDataTypeTestForPG {
+
+	protected DbClient db;
 
 	@Test
+	@Ignore
 	public void test1() throws SQLException {
-		db.dropTable(MyFoo.class);
-		db.createTable(MyFoo.class);
+		db.dropTable(EntWithHStoreAndJsonb.class);
+		db.createTable(EntWithHStoreAndJsonb.class);
 		System.out.println(db.getMetaData(null).getTable("myfoo"));
 
-		MyFoo m = new MyFoo();
+		EntWithHStoreAndJsonb m = new EntWithHStoreAndJsonb();
 		m.setId(1);
 		m.setName("test");
 		m.setData(Arrays.asList("aas", "bgbg", "der"));
@@ -44,7 +52,7 @@ public class DatatypeTest {
 		db.insert(m);
 
 		m.setId(m.getId());
-		MyFoo n = db.load(m);
+		EntWithHStoreAndJsonb n = db.load(m);
 		System.out.println(n.getJsonbField());
 		System.out.println(n.getData());
 		System.out.println(n.getHstoreField());
@@ -54,7 +62,7 @@ public class DatatypeTest {
 
 	@Test
 	public void test2() throws SQLException {
-//		db.dropTable(Foo.class);
+		// db.dropTable(Foo.class);
 		db.createTable(Foo.class);
 		Foo foo = new Foo();
 		foo.setName("dfdff");

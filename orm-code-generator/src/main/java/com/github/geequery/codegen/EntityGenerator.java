@@ -88,7 +88,7 @@ public class EntityGenerator {
     public JavaUnit generateSource(String tablename, String entityName, String tableComment) throws SQLException {
         if (profile == null) {
             LogUtil.warn("Db dialect not set,default dialect set to Oracle.");
-            profile = AbstractDialect.getProfile("oracle");
+            profile = AbstractDialect.getDialect("oracle");
         }
         tablename = profile.getObjectNameToUse(tablename);
         // System.out.println("   Generating Class for table:"+tablename+"....");

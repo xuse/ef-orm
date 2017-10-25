@@ -18,7 +18,7 @@ import com.querydsl.sql.codegen.MetaDataExporter;
  */
 public class Exporter {
     public static void main(String[] args) throws SQLException {
-        DataSource ds=new SimpleDataSource("jdbc:derby:./db;create=true", null, null);
+        DataSource ds=new SimpleDataSource("${derby.url}", null, null);
         Connection conn = null;
         try {
             conn = ds.getConnection();

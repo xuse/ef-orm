@@ -1,18 +1,18 @@
 package org.googlecode.jef.spring.case2;
 
-import java.io.Serializable;
 import java.util.List;
-
-import jef.database.jpa.JefEntityManager;
 
 import org.easyframe.enterprise.spring.CommonDaoImpl;
 import org.easyframe.enterprise.spring.GenericDaoSupport;
-import org.googlecode.jef.spring.JefTransactionTest.DbCall;
 import org.googlecode.jef.spring.entity.Tt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.github.geequery.test.spring.JefTransactionTest.DbCall;
+
+import jef.database.jpa.JefEntityManager;
 
 @Transactional(propagation=Propagation.REQUIRES_NEW)
 @Repository("TableManager")

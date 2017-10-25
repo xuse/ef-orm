@@ -33,8 +33,8 @@ import org.junit.runner.RunWith;
 	 @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
 	 @DataSource(name="oracle",url="${oracle.url}",user="${oracle.user}",password="${oracle.password}"),
 	 @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
-	 @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
-	 @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
+	 @DataSource(name="derby",url="${derby.url}"),
+	 @DataSource(name = "hsqldb", url = "${hsqldb.url}", user = "sa", password = ""),
 	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db"),
 	@DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
