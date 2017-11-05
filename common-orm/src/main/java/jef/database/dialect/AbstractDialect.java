@@ -769,7 +769,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	 * @param dbmsName
 	 * @return
 	 */
-	public static DatabaseDialect getProfile(String dbmsName) {
+	public static DatabaseDialect getDialect(String dbmsName) {
 		dbmsName = dbmsName.toLowerCase();
 		DatabaseDialect profile = ITEMS.get(dbmsName);
 		if (profile != null)

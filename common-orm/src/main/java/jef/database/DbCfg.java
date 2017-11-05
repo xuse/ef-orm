@@ -1,6 +1,7 @@
 package jef.database;
 
 import jef.common.Configuration.ConfigItem;
+import jef.database.meta.DefaultPartitionStrategyLoader;
 
 /**
  * 数据库配置的枚举
@@ -9,11 +10,12 @@ import jef.common.Configuration.ConfigItem;
  */
 public enum DbCfg implements ConfigItem {
 	/**
-	 * 数据库文本编码，当将String转为BLOB时，或者在计算字符串插入数据库后的长度时使用（java默认用unicode，中文英文都只占1个字符）
+	 * 数据库文本编码，当将String转为BLOB时、或者在计算字符串插入数据库后的长度时使用。
+	 * （java默认用unicode，中文英文都只占1个字符）
 	 */
 	DB_ENCODING,
 	/**
-	 * 在日志中，当文本过长的时候是不完全输出的，此时要输出文本的长度。可能影响性能
+	 * 在SQL日志中当中，如果参数是一个长文本，输出到日志可能影响性能。因此指定输出的最大长度。
 	 */
 	DB_ENCODING_SHOWLENGTH,
 	/**
@@ -48,9 +50,10 @@ public enum DbCfg implements ConfigItem {
 	DB_SINGLE_DATASOURCE,
 	/**
 	 * 分表和路由规则加载器类.默认会使用基于class的annotation加载器，也可以使用资源文件<br/>
-	 * 默认实现类：jef.database.meta.PartitionStrategyLoader$DefaultLoader<br/>
-	 * 使用者可以实现jef.database.meta.PartitionStrategyLoader编写自己的分表规则加载器。
+	 * 使用者可以实现{@link jef.database.meta.PartitionStrategyLoader}编写自己的分表规则加载器。
 	 * 甚至可以使用外部资源乃至数据库数据。
+	 * @see jef.database.meta.PartitionStrategyLoader
+	 * @see DefaultPartitionStrategyLoader
 	 */
 	PARTITION_STRATEGY_LOADER,
 	
@@ -221,10 +224,7 @@ public enum DbCfg implements ConfigItem {
 	 * 数据库启动时默认创建表
 	 */
 	DB_TABLES,
-	/**
-	 * 数据库启动时默认加载的类，用于加载一些全局配置
-	 */
-	DB_INIT_STATIC,
+
 	/**
 	 * true后禁止创建带remark标记的Oracle数据库连接。对于oracle而言，使用remark的连接性能很差。但要读取元数据注解必须使用此特性。<br>
 	 * 1.8.1.RELEASE以后，如果使用不使用内建连接池、或者使用内建连接池并且连接数大于3个，那么系统认为是在生产环境使用的大型应用，会自动关闭REMARK特性。
@@ -407,7 +407,6 @@ public enum DbCfg implements ConfigItem {
 	/**
 	 * 当分表维度缺失时，默认时间宽度。是一个表达式，例如 -3,1表示从当天算起时间维度为向前三个月到向后一个月
 	 * 分库分表场景下，如果使用时间作为分表维度，而查询数据而又未指定明确的时间时，将只查询该时段范围内的数据。
-	 * 
 	 */
 	PARTITION_DATE_SPAN,
 	/**
@@ -421,24 +420,23 @@ public enum DbCfg implements ConfigItem {
 	 */
 	PARTITION_INMEMORY_MAXROWS,
 	/**
-	 * 按需建表功能开关，默认开。开启按需建表功能后，在分库分表下执行插入操作时，会自动创建需要的表。
+	 * 按需建表功能开关，默认开。<br>
+	 * 开启按需建表功能后，在分库分表下执行插入操作时，会自动创建需要的表。
 	 */
 	PARTITION_CREATE_TABLE_INNEED,
 	/**
 	 * 在分库分表下执行查询、删除、更新操作时过滤掉哪些数据库中不存在的表。默认开启。
+	 * 定时刷新数据库中的表schema。
 	 */
 	PARTITION_FILTER_ABSENT_TABLES,
-	
 	/**
 	 * 当使用HashMod1024Mapping对字段进行分表分库处理时的计算规则。
 	 * 配置方法为
 	 * {@code 0-255:DB1,256-767:DB2,768-1023:DB3}
-	 * 表示当对字符串取hash后，除以1024的余数为0~255范围时
+	 * 表示当对字符串取hash后，除以1024后按余数形成从0-1023个虚拟节点（VNode），其中每个数据源对应哪些虚拟节点。
 	 * 
 	 */
 	PARTITION_BUCKET_RANGE,
-	
-	
 	/**
 	 * 在一次in条件中允许出现的最多参数数量。缺省500。有部分批量查询接口，可以自动将传入的条件转为 in (?,?,?,..)这样的语句，该参数可用于控制in条件最大的元素个数。
 	 */

@@ -3,21 +3,21 @@ package org.googlecode.jef.spring.case2;
 import java.util.Arrays;
 import java.util.List;
 
-import jef.database.jpa.JefEntityManager;
-import jef.database.meta.ITableMetadata;
-
 import org.easyframe.enterprise.spring.BaseDao;
 import org.easyframe.enterprise.spring.CommonDaoImpl;
-import org.googlecode.jef.spring.JefTransactionTest.DbCall;
 import org.googlecode.jef.spring.entity.Tt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.github.geequery.test.spring.JefTransactionTest.DbCall;
+
+import jef.database.jpa.JefEntityManager;
+import jef.database.meta.ITableMetadata;
+
 @Transactional(propagation=Propagation.REQUIRED)
 @Repository()
-@SuppressWarnings("unused")
 public class ServiceRequired extends BaseDao{
 	@Autowired
 	private ServiceMandatory serviceMandatory;

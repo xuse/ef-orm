@@ -5,6 +5,13 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
+
+import com.github.geequery.test.common.TestUtils;
+
 import jef.database.Condition.Operator;
 import jef.database.DbClient;
 import jef.database.NativeQuery;
@@ -27,11 +34,6 @@ import jef.database.test.JefJUnit4DatabaseTestRunner;
 import jef.orm.onetable.model.TestEntity;
 import jef.script.javascript.Var;
 
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
-
 /**
  * 这个类测试动态表的创建、单表操作、批操作、查询、删除、表修改等功能
  * 
@@ -43,16 +45,14 @@ import org.junit.runners.MethodSorters;
 	 @DataSource(name="oracle",url="${oracle.url}",user="${oracle.user}",password="${oracle.password}"),
 	 @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
 	 @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
-	 @DataSource(name="derby",url="jdbc:derby:./db;create=true"),
-	 @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = ""),
-	 @DataSource(name = "sqlite", url = "jdbc:sqlite:test.db?date_string_format=yyyy-MM-dd HH:mm:ss"),
+	 @DataSource(name="derby",url="${derby.url}"),
+	 @DataSource(name = "hsqldb", url = "${hsqldb.url}", user = "sa", password = ""),
+	 @DataSource(name = "sqlite", url = "${sqlite.url}"),
 	 @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class DynamicTableTest extends org.junit.Assert {
 	private DbClient db;
-	private TupleMetadata meta;
-	private TupleMetadata GroupTable;
 	
 	/**
 	 * 添加了@DatabaseInit注解的方法将在每次连接到数据库后执行。
@@ -60,11 +60,11 @@ public class DynamicTableTest extends org.junit.Assert {
 	 */
 	@DatabaseInit
 	public void prepareTable() throws SQLException {
-		db.dropTable(meta);
-		db.dropTable(GroupTable);
+		db.dropTable(TestUtils.URM_SERVICE);
+		db.dropTable(TestUtils.URM_GROUP);
 		
-		db.createTable(meta);
-		db.createTable(GroupTable);
+		db.createTable(TestUtils.URM_SERVICE);
+		db.createTable(TestUtils.URM_GROUP);
 	}
 	/**
 	 * 添加了@DatabaseDestroy註解的方法在每次数据库关闭时执行
@@ -72,24 +72,6 @@ public class DynamicTableTest extends org.junit.Assert {
 	@DatabaseDestroy
 	public void destoryTable(){
 		
-	}
-	
-	public DynamicTableTest(){
-		meta = new TupleMetadata("URM_SERVICE_1");
-		meta.addColumn("id", new ColumnType.AutoIncrement(8));
-		meta.addColumn("name", new ColumnType.Varchar(100));
-		meta.addColumn("pname", new ColumnType.Varchar(100));
-		meta.addColumn("flag", new ColumnType.Boolean());
-		meta.addColumn("photo", new ColumnType.Blob());
-		meta.addColumn("groupid", new ColumnType.Int(10));
-//		meta.addIndex("pname", "unique");
-//		meta.addIndex(new String[]{"groupid","pname","name","flag"}, "unique");
-		
-		GroupTable = new TupleMetadata("URM_GROUP");
-		GroupTable.addColumn("id", new ColumnType.AutoIncrement(8));
-		GroupTable.addColumn("serviceId", new ColumnType.Int(8));
-		GroupTable.addColumn("name", new ColumnType.Varchar(100));
-		GroupTable.addCascadeOneToMany("services", meta, QB.on(GroupTable.f("id"),meta.f("groupid")));
 	}
 	
 
@@ -100,7 +82,7 @@ public class DynamicTableTest extends org.junit.Assert {
 		meta.getAllColumnNames();
 		meta.getColumns();
 		meta.removeColumn("aa");
-		System.out.println(meta);
+		System.out.println(TestUtils.URM_SERVICE);
 	}
 	
 	
@@ -119,7 +101,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	}
 
 	private int doInsert() throws SQLException {
-		VarObject obj = new VarObject(meta);
+		VarObject obj = new VarObject(TestUtils.URM_SERVICE);
 		obj.put("name", "MyName is Jiyi");
 		obj.put("pname", "assa");
 		obj.put("flag", false);
@@ -140,25 +122,25 @@ public class DynamicTableTest extends org.junit.Assert {
 			file=null;
 			throw new IllegalArgumentException("测试用的本地文件没有找到！");
 		}
-		VarObject obj1 = meta.newInstance();
+		VarObject obj1 = TestUtils.URM_SERVICE.newInstance();
 		obj1.put("name", "My Name is Jiyi");
 		obj1.put("pname", "assa");
 		obj1.put("flag", false);
 		obj1.put("photo", file);
 
-		VarObject obj2 = meta.newInstance();
+		VarObject obj2 = TestUtils.URM_SERVICE.newInstance();
 		obj2.put("name", "My Name is Jiyi");
 		obj2.put("pname", "assa");
 		obj2.put("flag", false);
 		obj2.put("photo", file);
 
-		VarObject obj3 = meta.newInstance();
+		VarObject obj3 = TestUtils.URM_SERVICE.newInstance();
 		obj3.put("name", "My Name is Jiyi");
 		obj3.put("pname", "assa");
 		obj3.put("flag", false);
 		obj3.put("photo", file);
 
-		VarObject obj4 = meta.newInstance();
+		VarObject obj4 = TestUtils.URM_SERVICE.newInstance();
 		obj4.put("name", "My Name is Jiyi");
 		obj4.put("pname", "assa");
 		obj4.put("flag", false);
@@ -175,7 +157,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	public void test4Update() throws SQLException {
 		int id = doInsert();
 
-		VarObject obj1 = meta.newInstance();
+		VarObject obj1 = TestUtils.URM_SERVICE.newInstance();
 		obj1.set("id", id);
 		VarObject obj2 = db.load(obj1);
 		System.out.println(obj2);
@@ -191,7 +173,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	@Test
 	public void test5UpdateBatch() throws SQLException {
 		test2Insert();
-		List<VarObject> result = db.select(QB.create(meta));
+		List<VarObject> result = db.select(QB.create(TestUtils.URM_SERVICE));
 		System.out.println(result.size());
 		int n = 0;
 		for (VarObject element : result) {
@@ -208,11 +190,11 @@ public class DynamicTableTest extends org.junit.Assert {
 	@Test
 	public void test6Remove() throws SQLException {
 		test2Insert();
-		List<VarObject> result = db.select(QB.create(meta));
+		List<VarObject> result = db.select(QB.create(TestUtils.URM_SERVICE));
 		if (result.size() > 0) {
 			db.delete(result.get(0));
 		}
-		int deleted = db.delete(QB.create(meta));
+		int deleted = db.delete(QB.create(TestUtils.URM_SERVICE));
 		assertTrue(deleted > 0);
 	}
 
@@ -223,7 +205,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	@Test
 	public void test7RemoveBatch() throws SQLException {
 		test3InsertBatch();
-		List<VarObject> result = db.select(QB.create(meta));
+		List<VarObject> result = db.select(QB.create(TestUtils.URM_SERVICE));
 		db.executeBatchDeletion(result);
 
 	}
@@ -235,7 +217,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	@Test
 	public void test8SelectNativeQuery() throws SQLException {
 		test3InsertBatch();
-		NativeQuery<VarObject>  q= db.createNativeQuery("select * from URM_SERVICE_1", meta);
+		NativeQuery<VarObject>  q= db.createNativeQuery("select * from URM_SERVICE_1", TestUtils.URM_SERVICE);
 		List<VarObject> result = q.getResultList();
 		VarObject first=result.get(0);
 		System.out.println(first);
@@ -250,7 +232,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	@IgnoreOn(allButExcept="postgresql")
 	public void test9LoadForUpdate() throws SQLException {
 		int id = doInsert();
-		VarObject var = meta.newInstance();
+		VarObject var = TestUtils.URM_SERVICE.newInstance();
 		var.set("id", id);
 		RecordHolder<VarObject> holder = db.loadForUpdate(var);
 
@@ -274,7 +256,7 @@ public class DynamicTableTest extends org.junit.Assert {
 		doInsert();
 		doInsert();
 		int max=doInsert();
-		RecordsHolder<VarObject> holder = db.selectForUpdate(QB.create(meta), null);
+		RecordsHolder<VarObject> holder = db.selectForUpdate(QB.create(TestUtils.URM_SERVICE), null);
 		try{
 			int n = 0;
 			//更新数据
@@ -285,7 +267,7 @@ public class DynamicTableTest extends org.junit.Assert {
 			//插入一条记录
 			if(holder.supportsNewRecord()){
 				VarObject insert=holder.newRecord();
-//				insert.set("id", ++max);
+				insert.set("id", ++max);
 				insert.set("name", "新插入的记录");	
 			}
 			
@@ -296,7 +278,7 @@ public class DynamicTableTest extends org.junit.Assert {
 				holder.delete(var);
 			}
 			holder.commitAndClose();
-			List<VarObject> result = db.select(QB.create(meta));
+			List<VarObject> result = db.select(QB.create(TestUtils.URM_SERVICE));
 			System.out.println("Size=" + result.size());
 			assertEquals(result.size(), holder.supportsNewRecord()?1:0); //之前查出的记录全部被删除，只剩下新插入的记录卡了
 
@@ -319,10 +301,10 @@ public class DynamicTableTest extends org.junit.Assert {
 	@Test
 	@IgnoreOn({"sqlite","sqlserver"})
 	public void testbAlterTable_AddColumn() throws SQLException {
-		meta.addColumn("addColumn1", new ColumnType.Date());
-		meta.addColumn("addColumn2", new ColumnType.TimeStamp().notNull().defaultIs(Func.now));
+		TestUtils.URM_SERVICE.addColumn("addColumn1", new ColumnType.Date());
+		TestUtils.URM_SERVICE.addColumn("addColumn2", new ColumnType.TimeStamp().notNull().defaultIs(Func.now));
 		try {
-			db.refreshTable(meta,ps);
+			db.refreshTable(TestUtils.URM_SERVICE,ps);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw e;
@@ -332,10 +314,10 @@ public class DynamicTableTest extends org.junit.Assert {
 	@Test
 	@IgnoreOn(allButExcept="sqlite")
 	public void testcAlterTable_AddColumn_forSqlite() throws SQLException {
-		meta.addColumn("addColumn1", new ColumnType.Date());
-		meta.addColumn("addColumn2", new ColumnType.TimeStamp());
+		TestUtils.URM_SERVICE.addColumn("addColumn1", new ColumnType.Date());
+		TestUtils.URM_SERVICE.addColumn("addColumn2", new ColumnType.TimeStamp());
 		try {
-			db.refreshTable(meta,ps);
+			db.refreshTable(TestUtils.URM_SERVICE,ps);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw e;
@@ -348,10 +330,10 @@ public class DynamicTableTest extends org.junit.Assert {
 	 */
 	@Test
 	public void testdAlterTable_RemoveColumn() throws SQLException {
-		meta.removeColumn("flag");
-		meta.removeColumn("photo");
+		TestUtils.URM_SERVICE.removeColumn("flag");
+		TestUtils.URM_SERVICE.removeColumn("photo");
 		try {
-			db.refreshTable(meta,ps);
+			db.refreshTable(TestUtils.URM_SERVICE,ps);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw e;
@@ -368,10 +350,10 @@ public class DynamicTableTest extends org.junit.Assert {
 	 */
 	@Test
 	public void testeAlterTable_ChangeColumn() throws SQLException {
-		meta.updateColumn("flag1", new ColumnType.Boolean());
-		meta.updateColumn("name", new ColumnType.Varchar(200).notNull());
+		TestUtils.URM_SERVICE.updateColumn("flag1", new ColumnType.Boolean());
+		TestUtils.URM_SERVICE.updateColumn("name", new ColumnType.Varchar(200).notNull());
 		try {
-			db.refreshTable(meta,ps);
+			db.refreshTable(TestUtils.URM_SERVICE,ps);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			throw e;
@@ -386,8 +368,8 @@ public class DynamicTableTest extends org.junit.Assert {
 	public void testfFreeConditionQuery() throws SQLException{
 		this.prepareTable();
 		doInsert();
-		Query<VarObject> q=QB.create(meta);
-		q.addCondition(meta.f("name"), Operator.MATCH_START,"MyName");
+		Query<VarObject> q=QB.create(TestUtils.URM_SERVICE);
+		q.addCondition(TestUtils.URM_SERVICE.f("name"), Operator.MATCH_START,"MyName");
 		List<VarObject> list=db.select(q);
 		assertTrue(list.size()>0);
 		
@@ -399,26 +381,26 @@ public class DynamicTableTest extends org.junit.Assert {
 	 */
 	@Test
 	public void testg2TableJoin() throws SQLException{
-		db.truncate(meta);
-		db.truncate(GroupTable);
+		db.truncate(TestUtils.URM_SERVICE);
+		db.truncate(TestUtils.URM_GROUP);
 		//准备数据
 		try{
 			int key1=doInsert();
-			VarObject group=GroupTable.newInstance();
+			VarObject group=TestUtils.URM_GROUP.newInstance();
 			group.set("serviceId", key1);
 			group.set("name", "We are about to make all these cases be fine");
 			db.insert(group);
 			System.out.println(group.get("id"));//得到t2的自增主键
 			
 			//开始
-			Query<VarObject> t1=QB.create(meta);
-			Query<VarObject> t2=QB.create(GroupTable);
-			t2.addCondition(GroupTable.f("name"),Operator.MATCH_ANY ,"these cases");
-			Join join=QB.leftJoin(t1, t2, QB.on(meta.f("id"), GroupTable.f("serviceId")));
+			Query<VarObject> t1=QB.create(TestUtils.URM_SERVICE);
+			Query<VarObject> t2=QB.create(TestUtils.URM_GROUP);
+			t2.addCondition(TestUtils.URM_GROUP.f("name"),Operator.MATCH_ANY ,"these cases");
+			Join join=QB.leftJoin(t1, t2, QB.on(TestUtils.URM_SERVICE.f("id"), TestUtils.URM_GROUP.f("serviceId")));
 			
 			Selects select=QB.selectFrom(join);
 			select.allColumns(t1);
-			select.column(GroupTable.f("id"));
+			select.column(TestUtils.URM_GROUP.f("id"));
 			select.sqlExpression("t1.name || t2.name").as("MyColumn");
 			List<Var> object=db.selectAs(join, Var.class);
 			assertTrue(object.size()>0);
@@ -439,15 +421,15 @@ public class DynamicTableTest extends org.junit.Assert {
 	 */
 	@Test
 	public void testhCascade1vN() throws SQLException{
-		db.delete(QB.create(meta));
+		db.delete(QB.create(TestUtils.URM_SERVICE));
 		int id;
 		{
 			/**
 			 * 级联插入
 			 */
-			VarObject group=GroupTable.newInstance();
+			VarObject group=TestUtils.URM_GROUP.newInstance();
 			group.set("name", "My Group 1");
-			group.set("services", Arrays.asList(meta.newInstance().set("name", "service1"),meta.newInstance().set("name", "service2")));
+			group.set("services", Arrays.asList(TestUtils.URM_SERVICE.newInstance().set("name", "service1"),TestUtils.URM_SERVICE.newInstance().set("name", "service2")));
 			db.insertCascade(group);
 			id=(Integer)group.get("id");
 			System.out.println("新插入的group对象id为:"+id);
@@ -458,7 +440,7 @@ public class DynamicTableTest extends org.junit.Assert {
 			/**
 			 * 级联查询
 			 */
-			VarObject group=db.load(GroupTable.newInstance().set("id", id));
+			VarObject group=db.load(TestUtils.URM_GROUP.newInstance().set("id", id));
 			assertEquals(id, group.get("id"));
 			@SuppressWarnings("unchecked")
 			List<VarObject> list=(List<VarObject>) group.get("services");
@@ -470,7 +452,7 @@ public class DynamicTableTest extends org.junit.Assert {
 			/**
 			 * 级联更新
 			 */
-			VarObject group=db.load(GroupTable.newInstance().set("id", id));
+			VarObject group=db.load(TestUtils.URM_GROUP.newInstance().set("id", id));
 			assertEquals(id, group.get("id"));
 			
 			group.set("name", "更新字段");
@@ -483,18 +465,18 @@ public class DynamicTableTest extends org.junit.Assert {
 			
 			list.remove(1);					//删除一个子表的记录
 			
-			list.add(meta.newInstance().set("name", "service3"));//新增一个子表的记录
+			list.add(TestUtils.URM_SERVICE.newInstance().set("name", "service3"));//新增一个子表的记录
 			/*
 			 * 这个操作会对应4个SQL操作，分别用来更新父表、更新子表、删除子表记录、插入子表记录
 			 */
 			db.updateCascade(group); //
 			
 			//检查数据
-			group=db.load(GroupTable.newInstance().set("id", id));
+			group=db.load(TestUtils.URM_GROUP.newInstance().set("id", id));
 			assertEquals("更新字段",group.get("name"));
 			assertEquals(123,group.get("serviceId"));
 			int count=0;
-			for(VarObject child: (List<VarObject>)group.get("services")){
+			for(VarObject child: group.getList("services", VarObject.class)){
 				count++;
 				if(child.get("name")==null){
 					assertNotNull(child.get("pname"));
@@ -510,11 +492,11 @@ public class DynamicTableTest extends org.junit.Assert {
 			/**
 			 * 级联删除，这个操作将删除子表中相关的2条记录。然后再删除父表中的记录
 			 */
-			db.deleteCascade(GroupTable.newInstance().set("id", id));
+			db.deleteCascade(TestUtils.URM_GROUP.newInstance().set("id", id));
 			//检查数据
-			VarObject group=db.load(GroupTable.newInstance().set("id", id));
+			VarObject group=db.load(TestUtils.URM_GROUP.newInstance().set("id", id));
 			assertNull(group);
-			int count=db.count(QB.create(meta));
+			int count=db.count(QB.create(TestUtils.URM_SERVICE));
 			assertEquals(0,count);
 		}
 		
@@ -526,8 +508,8 @@ public class DynamicTableTest extends org.junit.Assert {
 		TupleMetadata meta=new TupleMetadata("XXASD");
 		meta.addColumn("XXX", new ColumnType.Double(17, 12));
 		db.dropTable(TestEntity.class);
-		db.dropTable(meta);
-		db.createTable(meta);
+		db.dropTable(TestUtils.URM_SERVICE);
+		db.createTable(TestUtils.URM_SERVICE);
 		db.createTable(TestEntity.class);
 	}
 	

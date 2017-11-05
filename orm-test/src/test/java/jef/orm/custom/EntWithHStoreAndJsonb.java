@@ -8,13 +8,15 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
+import com.alibaba.fastjson.JSON;
+
 import jef.database.DataObject;
 import jef.database.annotation.Type;
 
-import com.alibaba.fastjson.JSON;
-
 @Entity()
-public class MyFoo extends DataObject {
+public class EntWithHStoreAndJsonb extends DataObject {
+	private static final long serialVersionUID = 709595314397725549L;
+
 	@Id
 	@GeneratedValue
 	private int id;

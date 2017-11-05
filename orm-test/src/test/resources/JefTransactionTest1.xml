@@ -33,6 +33,7 @@
 
 	<bean id="entityManagerFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean">
 		<property name="dataSource" ref="routingDS" />
+		<property name="dbInitHandler" value="com.github.geequery.test.spring.JefTransactionTest.InitTableCreater" />
 	</bean>
 
 	<bean id="commonDao" class="org.easyframe.enterprise.spring.CommonDaoImpl" />

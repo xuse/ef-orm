@@ -15,7 +15,7 @@ public class JDBCUtil {
 	public static boolean existTable(Connection conn,String table) throws SQLException{
 		DatabaseMetaData meta=conn.getMetaData();
 		String name=meta.getDatabaseProductName();
-		DatabaseDialect profile=AbstractDialect.getProfile(name);
+		DatabaseDialect profile=AbstractDialect.getDialect(name);
 		int n = table.indexOf('.');
 		String schema=null;
 		if (n > -1) {

@@ -15,28 +15,23 @@ import jef.database.DbMetaData;
  * 
  */
 public class SQLServerDialect extends AbstractDelegatingDialect {
+	private DatabaseDialect defaultDialect;
 
-	@Override
-	public String generateUrl(String host, int port, String pathOrName) {
-		if (this.dialect == null) {
-			createDefaultDialect();
-		}
-		return dialect.generateUrl(host, port, pathOrName);
-	}
-
-	private void createDefaultDialect() {
+	protected DatabaseDialect createDefaultDialect() {
 		DatabaseDialect dialect = new SQLServer2005Dialect();
 		try {
 			Class.forName(dialect.getDriverClass(""));
-			this.dialect = dialect; // 暂时先作为2005处理，后续根据版本号再升级为2012和2014
+			// 暂时先作为2005处理，后续根据版本号再升级为2012和2014
 		} catch (ClassNotFoundException e) {
 			dialect = new SQLServer2000Dialect();
 		}
+		this.defaultDialect = dialect;
+		return dialect;
 	}
 
 	@Override
 	public void parseDbInfo(ConnectInfo connectInfo) {
-		if (dialect == null) {
+		if (dialect == defaultDialect) {
 			if (connectInfo.getUrl().startsWith("jdbc:microsoft:")) {
 				dialect = new SQLServer2000Dialect();
 			} else {
@@ -48,58 +43,50 @@ public class SQLServerDialect extends AbstractDelegatingDialect {
 		super.parseDbInfo(connectInfo);
 	}
 
-	@Override
-	public String getDriverClass(String url) {
-		if (this.dialect == null) {
-			createDefaultDialect();
-		}
-		return super.getDriverClass(url);
-	}
-
 	/**
 	 * 根据数据库版本信息判断当前数据库实际应该用哪个方言
 	 */
 	@Override
-	public void accept(DbMetaData meta) {
-		try{
-			String version=meta.getDatabaseVersion();
-			int index=version.indexOf('.');
-			if(index==-1){
-				return;
+	protected DatabaseDialect decideDialect(DbMetaData meta) {
+		DatabaseDialect dialect = this.dialect;
+		try {
+			String version = meta.getDatabaseVersion();
+			int index = version.indexOf('.');
+			if (index == -1) {
+				return dialect;
 			}
-			int ver=Integer.parseInt(version.substring(0,index));
-			switch(ver){
+			int ver = Integer.parseInt(version.substring(0, index));
+			switch (ver) {
 			case 9:
-				if(!(dialect instanceof SQLServer2005Dialect)){
-					this.dialect=new SQLServer2005Dialect();
-					LogUtil.info("Determin SQL-Server Dialect to [{}]",dialect.getClass());
+				if (!(dialect instanceof SQLServer2005Dialect)) {
+					LogUtil.info("Determin SQL-Server Dialect to [{}]", dialect.getClass());
+					return new SQLServer2005Dialect();
 				}
 				break;
 			case 10:
-				//10.0=2008, 10.5=2008 R2
-				this.dialect=new SQLServer2008Dialect();
-				LogUtil.info("Determin SQL-Server Dialect to [{}]",dialect.getClass());
-				break;
+				// 10.0=2008, 10.5=2008 R2
+				LogUtil.info("Determin SQL-Server Dialect to [{}]", dialect.getClass());
+				return new SQLServer2008Dialect();
 			case 11:
-				//version 11= SQLServer 2012
+				// version 11= SQLServer 2012
 			case 12:
-				//version 12= SQLServer 2014
+				// version 12= SQLServer 2014
 			case 13:
-				//预留，按SQLServer2012
+				// 预留，按SQLServer2012
 			case 14:
-				//预留，按SQLServer2012
+				// 预留，按SQLServer2012
 			case 15:
-				//预留，按SQLServer2012
+				// 预留，按SQLServer2012
 			case 16:
-				//预留，按SQLServer2012
+				// 预留，按SQLServer2012
 			case 17:
-				this.dialect=new SQLServer2012Dialect();
-				LogUtil.info("Determin SQL-Server Dialect to [{}]",dialect.getClass());
-				break;
+			default:
+				LogUtil.info("Determin SQL-Server Dialect to [{}]", dialect.getClass());
+				return new SQLServer2012Dialect();
 			}
-		}catch(SQLException e){
+		} catch (SQLException e) {
 			throw new PersistenceException(e);
 		}
-		super.accept(meta);
+		return dialect;
 	}
 }

@@ -50,7 +50,7 @@ public class DataSources {
 	 * @return
 	 */
 	public static DataSource create(String dbType, String host, int port, String database, String user, String password) {
-		DatabaseDialect profile = AbstractDialect.getProfile(dbType);
+		DatabaseDialect profile = AbstractDialect.getDialect(dbType);
 		if (profile == null) {
 			throw new UnsupportedOperationException("The database {" + dbType + "} was not supported yet..");
 		}

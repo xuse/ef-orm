@@ -70,13 +70,6 @@ public class ConnectInfo {
 		return profile;
 	}
 	/**
-	 * 设置方言
-	 * @param profile
-	 */
-	public void setProfile(AbstractDialect profile) {
-		this.profile = profile;
-	}
-	/**
 	 * 获得数据库名
 	 * @return 数据库名
 	 */
@@ -155,7 +148,7 @@ public class ConnectInfo {
 		}
 		int end=url.indexOf(':',start+5);
 		String dbType=url.substring(start+5,end);
-		profile=AbstractDialect.getProfile(dbType); //传入时会自动转为小写
+		profile=AbstractDialect.getDialect(dbType); //传入时会自动转为小写
 		if(profile==null){
 			throw new PersistenceException("database not supported:"+dbType);
 		}

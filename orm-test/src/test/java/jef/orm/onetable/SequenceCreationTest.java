@@ -36,7 +36,7 @@ import org.junit.runner.RunWith;
 @DataSourceContext({
 // @DataSource(name="oracle",url="${oracle.url}",user="${oracle.user}",password="${oracle.password}"),
 // @DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), 
- @DataSource(name = "hsqldb", url = "jdbc:hsqldb:mem:testhsqldb", user = "sa", password = "")
+ @DataSource(name = "hsqldb", url = "${hsqldb.url}", user = "sa", password = "")
 })
 public class SequenceCreationTest extends org.junit.Assert{
 	

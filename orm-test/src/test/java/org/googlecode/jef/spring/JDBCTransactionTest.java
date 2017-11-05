@@ -1,22 +1,22 @@
 package org.googlecode.jef.spring;
 
-import java.sql.SQLException;
+import static org.junit.Assert.assertEquals;
 
-import jef.database.DbClient;
-import jef.database.datasource.DataSourceWrapper;
-import jef.database.datasource.DataSources;
-import jef.database.dialect.ColumnType;
-import jef.database.meta.TupleMetadata;
-import jef.database.test.SpringTestBase;
+import java.sql.SQLException;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.googlecode.jef.spring.case1.UserJdbcWithoutTransManagerService;
 import org.junit.Test;
-import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 
-@SuppressWarnings("deprecation")
-public class JDBCTransactionTest extends SpringTestBase{
+import jef.database.DbClient;
+import jef.database.dialect.ColumnType;
+import jef.database.meta.TupleMetadata;
+
+@ContextConfiguration(locations = { "classpath:testJdbcWithoutTransManager.xml" })
+public class JDBCTransactionTest extends AbstractJUnit4SpringContextTests{
 	
 	
 	/*
@@ -24,9 +24,8 @@ public class JDBCTransactionTest extends SpringTestBase{
 	 */
 	@Test
 	public void testJdbcWithoutTransManager() throws SQLException{
-		ApplicationContext ctx=super.initContext();
-		UserJdbcWithoutTransManagerService service = (UserJdbcWithoutTransManagerService) ctx.getBean("service1");
-		JdbcTemplate jdbcTemplate = (JdbcTemplate) ctx.getBean("jdbcTemplate");
+		UserJdbcWithoutTransManagerService service = (UserJdbcWithoutTransManagerService) applicationContext.getBean("service1");
+		JdbcTemplate jdbcTemplate = (JdbcTemplate) applicationContext.getBean("jdbcTemplate");
 		
 		BasicDataSource basicDataSource = (BasicDataSource) jdbcTemplate.getDataSource();
 		

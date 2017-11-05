@@ -19,7 +19,7 @@ import org.junit.Test;
 public class SavePointTest {
 	@Test
 	public void testMetadata() throws SQLException{
-		String url=AbstractDialect.getProfile("mysql").generateUrl("localhost", 3306, "test");
+		String url=AbstractDialect.getDialect("mysql").generateUrl("localhost", 3306, "test");
 		DataSource ds=DbUtils.createSimpleDataSource(url, "root", "admin");
 		System.out.println(url);
 		Connection conn=ds.getConnection();
@@ -42,7 +42,7 @@ public class SavePointTest {
 	
 	@Test
 	public void testSp() throws SQLException{
-		String url=AbstractDialect.getProfile("mysql").generateUrl("localhost", 3306, "test");
+		String url=AbstractDialect.getDialect("mysql").generateUrl("localhost", 3306, "test");
 		DataSource ds=DbUtils.createSimpleDataSource(url, "root", "admin");
 		Connection conn=ds.getConnection();
 		

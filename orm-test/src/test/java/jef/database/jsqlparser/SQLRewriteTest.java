@@ -21,11 +21,11 @@ import jef.database.support.RDBMS;
  * 
  */
 public class SQLRewriteTest extends org.junit.Assert {
-	private DatabaseDialect oracle = AbstractDialect.getProfile("oracle");
-	private DatabaseDialect derby = AbstractDialect.getProfile("derby");
-	private DatabaseDialect mysql = AbstractDialect.getProfile("mysql");
-	private DatabaseDialect postgres = AbstractDialect.getProfile("postgresql");
-	private DatabaseDialect hsql = AbstractDialect.getProfile(RDBMS.hsqldb.name());
+	private DatabaseDialect oracle = AbstractDialect.getDialect("oracle");
+	private DatabaseDialect derby = AbstractDialect.getDialect("derby");
+	private DatabaseDialect mysql = AbstractDialect.getDialect("mysql");
+	private DatabaseDialect postgres = AbstractDialect.getDialect("postgresql");
+	private DatabaseDialect hsql = AbstractDialect.getDialect(RDBMS.hsqldb.name());
 
 	@Test
 	public void test1() throws ParseException {
