@@ -99,6 +99,27 @@ public class IOUtils {
 			}
 		}
 	}
+	
+	/**
+	 * 获得制定文件/目录的大小
+	 * @param file 传入File，如果是文件直接返回文件大小，如果是目录返回目录中所有文件的大小。
+	 * @return size of the directory
+	 */
+	public static long getLength(File file) {
+		if (file.exists()) {
+			if (file.isFile()) {
+				return file.length();
+			} else {
+				long total = 0;
+				for (File child : file.listFiles()) {
+					total += getLength(child);
+				}
+				return total;
+			}
+		} else {
+			return 0;
+		}
+	}
 
 	/**
 	 * 在临时文件目录下创建一个目录并清空，如果不能正常操作就抛出权限不足的异常(在linux上经常出现)。<br>
@@ -2579,11 +2600,11 @@ public class IOUtils {
 		if (breakCount == -1)
 			return file;
 		StringBuilder sb = new StringBuilder();
-		sb.append(StringUtils.repeat("../", f2.length - breakCount));
+		sb.append(StringUtils.repeat(".." + File.separator, f2.length - breakCount));
 		for (int i = breakCount; i < f1.length; i++) {
-			sb.append(f1[i] + "/");
+			sb.append(f1[i]).append(File.separatorChar);
 		}
-		sb.deleteCharAt(sb.length() - 1);
+		sb.setLength(sb.length()-1);
 		return sb.toString();
 	}
 

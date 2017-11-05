@@ -73,11 +73,12 @@ public class CollectionUtils {
 	private CollectionUtils() {
 	}
 
-	public static final class C extends CollectionUtils{
+	public static final class C extends CollectionUtils {
 	}
-	
+
 	/**
 	 * 将数组进行转换
+	 * 
 	 * @param source
 	 * @param function
 	 * @return
@@ -90,7 +91,6 @@ public class CollectionUtils {
 		return result;
 	}
 
-	
 	/**
 	 * 将数组转换为Map。（Map不保证顺序）
 	 * 
@@ -101,7 +101,7 @@ public class CollectionUtils {
 	 * @return 在每个元素中提取键值后，形成Map，如果多个对象返回相同的key，那么会互相覆盖。如果不希望互相覆盖，请使用
 	 *         {@linkplain #group(Collection, Function)}
 	 */
-	public static <K, V> Map<K, V> toMap(V[] array, Function<V, K> keyExtractor) {
+	public static <K, V> Map<K, V> group(V[] array, Function<V, K> keyExtractor) {
 		if (array == null || array.length == 0)
 			return Collections.emptyMap();
 		Map<K, V> result = new HashMap<K, V>(array.length);
@@ -114,14 +114,18 @@ public class CollectionUtils {
 
 	/**
 	 * 将数组转换为Map。（Map按Key排序）
-	 * @param array   数组
-	 * @param keyExtractor 键值提取函数
-	 * @param comp 键值比较器
+	 * 
+	 * @param array
+	 *            数组
+	 * @param keyExtractor
+	 *            键值提取函数
+	 * @param comp
+	 *            键值比较器
 	 * @return 在每个元素中提取键值后，形成Map，如果多个对象返回相同的key，那么会互相覆盖。如果不希望互相覆盖，请使用
 	 *         {@linkplain #group(Collection, Function)}
 	 */
 	@SuppressWarnings("unchecked")
-	public static <K, V> SortedMap<K, V> toSortedMap(V[] array, Function<V, K> keyExtractor, Comparator<K> comp) {
+	public static <K, V> SortedMap<K, V> groupToSortedMap(V[] array, Function<V, K> keyExtractor, Comparator<K> comp) {
 		if (array == null || array.length == 0)
 			return EMPTY_SORTEDMAP;
 		SortedMap<K, V> result = new TreeMap<K, V>(comp);
@@ -133,35 +137,19 @@ public class CollectionUtils {
 	}
 
 	/**
-	 * 将Collection转换为Map。（Map不保证顺序）
+	 * 将集合转换为Map。（Map按Key排序）
 	 * 
 	 * @param collection
 	 *            集合
 	 * @param keyExtractor
 	 *            键值提取函数
-	 * @return 在每个元素中提取键值后，形成Map。相同键值的记录将发生叠加（仅保留最后的一个）
-	 */
-	public static <K, V> Map<K, V> toMap(Collection<V> collection, Function<V, K> keyExtractor) {
-		if (collection == null || collection.isEmpty())
-			return Collections.emptyMap();
-		Map<K, V> result = new HashMap<K, V>(collection.size());
-		for (V value : collection) {
-			K key = keyExtractor.apply(value);
-			result.put(key, value);
-		}
-		return result;
-	}
-	
-	/**
-	 * 将集合转换为Map。（Map按Key排序）
-	 * @param collection   集合
-	 * @param keyExtractor 键值提取函数
-	 * @param comp 键值比较器
+	 * @param comp
+	 *            键值比较器
 	 * @return 在每个元素中提取键值后，形成Map，如果多个对象返回相同的key，那么会互相覆盖。如果不希望互相覆盖，请使用
 	 *         {@linkplain #group(Collection, Function)}
 	 */
 	@SuppressWarnings("unchecked")
-	public static <K, V> SortedMap<K, V> toSortedMap(Collection<V> collection, Function<V, K> keyExtractor, Comparator<K> comp) {
+	public static <K, V> SortedMap<K, V> groupToSortedMap(Collection<V> collection, Function<V, K> keyExtractor, Comparator<K> comp) {
 		if (collection == null || collection.size() == 0)
 			return EMPTY_SORTEDMAP;
 		SortedMap<K, V> result = new TreeMap<K, V>(comp);
@@ -327,6 +315,33 @@ public class CollectionUtils {
 		return result;
 	}
 
+	/**
+	 * 将Collection转换为Map。（Map不保证顺序）
+	 * 
+	 * @param collection
+	 *            集合
+	 * @param keyExtractor
+	 *            键值提取函数
+	 * @param checkIsDup true时，如果出现重复的键值，将检查对应的value是否互相equal，如果equals则发生replace。否则抛出异常。
+	 * 为false时，不检查是否equal。直接新的value覆盖老的value。
+	 * 
+	 * @return 在每个元素中提取键值后，形成Map。相同键值的记录将发生叠加（仅保留最后的一个）
+	 */
+	public static <T, V> Map<T, V> groupWithReplace(Collection<V> collection, Function<V, T> keyExtractor, boolean checkIsDup) {
+		if (collection == null || collection.isEmpty())
+			return Collections.emptyMap();
+		Map<T, V> result = new HashMap<T, V>(collection.size());
+		for (V value : collection) {
+			T key = keyExtractor.apply(value);
+			V oldValue = result.put(key, value);
+			if (oldValue != null && checkIsDup) {
+				if (!oldValue.equals(value)) {
+					throw new IllegalStateException("Detect two different objects with a same key, and one object will be replaced in the map."+value+" to "+oldValue);
+				}
+			}
+		}
+		return result;
+	}
 
 	/**
 	 * 在集合中查找符合条件的首个元素
@@ -381,7 +396,8 @@ public class CollectionUtils {
 	 * @return 过滤后的集合
 	 */
 	public static <T> List<T> getFiltered(Collection<T> collection, String fieldname, Object value) {
-		if(collection.isEmpty())return Collections.emptyList();
+		if (collection.isEmpty())
+			return Collections.emptyList();
 		Class<?> clz = collection.iterator().next().getClass();
 		return getFiltered(collection, new FieldValueFilter<T>(clz, fieldname, value));
 	}
@@ -408,7 +424,7 @@ public class CollectionUtils {
 		}
 		return list;
 	}
-	
+
 	/**
 	 * 在集合中查找符合条件的元素
 	 * 
@@ -532,30 +548,32 @@ public class CollectionUtils {
 
 	/**
 	 * 将Enumeration转换为一个新的List
+	 * 
 	 * @param data
 	 * @return 转换后的List
 	 */
-	public static <E> List<E> toList(Enumeration<E> data){
-		List<E> result=new ArrayList<E>();
-		for(;data.hasMoreElements();){
+	public static <E> List<E> toList(Enumeration<E> data) {
+		List<E> result = new ArrayList<E>();
+		for (; data.hasMoreElements();) {
 			result.add(data.nextElement());
 		}
 		return result;
 	}
-	
+
 	/**
 	 * 将Iterable转换为List
+	 * 
 	 * @param data
 	 * @return 转换后的List
 	 */
-	public static <E> List<E> toList(Iterable<E> data){
-		List<E> result=new ArrayList<E>();
-		for(Iterator<E> iter=data.iterator();iter.hasNext();){
+	public static <E> List<E> toList(Iterable<E> data) {
+		List<E> result = new ArrayList<E>();
+		for (Iterator<E> iter = data.iterator(); iter.hasNext();) {
 			result.add(iter.next());
 		}
 		return result;
 	}
-	
+
 	/**
 	 * 将传入的对象转换为可遍历的对象。
 	 * 
@@ -692,6 +710,7 @@ public class CollectionUtils {
 
 	/**
 	 * 两个集合对象的合并，并去除重复对象
+	 * 
 	 * @param <T>
 	 * @param a
 	 *            集合A

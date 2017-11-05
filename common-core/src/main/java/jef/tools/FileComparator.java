@@ -2,6 +2,7 @@ package jef.tools;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
 
 import jef.common.log.LogUtil;
@@ -17,15 +18,40 @@ import jef.common.log.LogUtil;
 public abstract class FileComparator {
 	public abstract boolean equals(File source, File target);
 
-	protected boolean compareFullContent(File source, File target) {
+	protected boolean compareCrc(File source, File target) {
 		String a = StringUtils.getCRC(IOUtils.getInputStream(source));
 		String b = StringUtils.getCRC(IOUtils.getInputStream(target));
 		return a.equals(b);
 	}
 
+	protected boolean compareAll(File source, File target) {
+		byte[] buf1 = new byte[4096];
+		byte[] buf2 = new byte[4096];
+		InputStream in1 = IOUtils.getInputStream(source);
+		InputStream in2 = null;
+		try {
+			in2 = IOUtils.getInputStream(target);
+			int len1 = in1.read(buf1);
+			int len2 = in2.read(buf2);
+			while (len1 != -1 && len1 == len2) {
+				if (!compareBuffer(buf1, len1, buf2, len2)) {
+					return false;
+				}
+				len1 = in1.read(buf1);
+				len2 = in2.read(buf2);
+			}
+			return len1 == len2;
+		} catch (IOException e) {
+			throw new IllegalStateException(e);
+		} finally {
+			IOUtils.closeQuietly(in1);
+			IOUtils.closeQuietly(in2);
+		}
+	}
+
 	protected boolean compareClips(File source, File target, long len) {
 		if (len < 20480) {
-			return compareFullContent(source, target);
+			return compareCrc(source, target);
 		}
 		long skipsize = (len / 10) - 1024;
 		byte[] buf1 = new byte[1024];
@@ -84,7 +110,7 @@ public abstract class FileComparator {
 		public boolean equals(File source, File target) {
 			if (source.isFile() && target.isFile()) {
 				if (source.length() == target.length()) {
-					return compareFullContent(source, target);
+					return compareCrc(source, target);
 				}
 			}
 			return false;
@@ -105,7 +131,18 @@ public abstract class FileComparator {
 		}
 
 	};
-
+	public static FileComparator CONTENT = new FileComparator() {
+		@Override
+		public boolean equals(File source, File target) {
+			if (source.isFile() && target.isFile()) {
+				if (source.length() == target.length()) {
+					return compareAll(source, target);
+				}
+			}
+			return false;
+		}
+	};
+	
 	/**
 	 * 比较器，根据文件大小来选择使用哪种比较方式
 	 * 
@@ -128,7 +165,7 @@ public abstract class FileComparator {
 				long len = source.length();
 				if (len == target.length()) {
 					if (len > length) {
-						return compareFullContent(source, target);
+						return compareCrc(source, target);
 					} else {
 						return compareClips(source, target, len);
 					}
