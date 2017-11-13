@@ -153,7 +153,7 @@ public class ZipUtils {
 	 * @return
 	 */
 	public static boolean unzip(String zipFile, String unzipPath) {
-		return unzip(new File(zipFile), unzipPath, null);
+		return unzip(new File(zipFile), unzipPath, null,null);
 	}
 
 	/**
@@ -165,11 +165,11 @@ public class ZipUtils {
 	 *            解压路径
 	 * @throws IOException
 	 */
-	public static boolean unzip(File file, String unzipPath, EntryProcessor cd) {
+	public static boolean unzip(File file, String unzipPath, String charset,EntryProcessor cd) {
 		InputStream in = null;
 		try {
 			in = new BufferedInputStream(new VolumnChangeableInputStream(file));
-			unzip(in, unzipPath, null, cd);
+			unzip(in, unzipPath, charset, cd);
 			return true;
 		} catch (IOException e) {
 			LogUtil.exception(e);
@@ -568,7 +568,7 @@ public class ZipUtils {
 	 */
 	public static ArchiveSummary getZipArchiveSummary(File file) {
 		SummaryCollector sc = new SummaryCollector();
-		unzip(file, null, sc);
+		unzip(file, null,null, sc);
 		return sc.getSummary();
 	}
 	/**
