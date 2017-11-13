@@ -28,7 +28,6 @@ import jef.common.PairSS;
 import jef.common.log.LogUtil;
 import jef.database.cache.Cache;
 import jef.database.dialect.type.ColumnMapping;
-import jef.database.meta.AbstractMetadata;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.routing.PartitionResult;
@@ -256,9 +255,12 @@ public abstract class Batch<T extends IQueryableEntity> {
 		return executeResult;
 	}
 
+//	protected PartitionResult getTableName(T obj) {
+//		AbstractMetadata meta = MetaHolder.getMeta(obj);
+//		return meta.getBaseTable(parent.getPartitionSupport().getProfile(meta.getBindDsName())).toPartitionResult();
+//	}
 	protected PartitionResult getTableName(T obj) {
-		AbstractMetadata meta = MetaHolder.getMeta(obj);
-		return meta.getBaseTable(parent.getPartitionSupport().getProfile(meta.getBindDsName())).toPartitionResult();
+		return DbUtils.toTableName(obj, null, obj.getQuery(), parent.getPartitionSupport());
 	}
 
 	protected long innerCommit(List<T> objs, String site, String tablename, String dbName) throws SQLException {
@@ -479,6 +481,12 @@ public abstract class Batch<T extends IQueryableEntity> {
 				p.close();
 				db.releaseConnection();
 			}
+		}
+		
+
+		@Override
+		protected PartitionResult getTableName(T obj) {
+			return DbUtils.toTableName(obj, null, null, parent.getPartitionSupport());
 		}
 
 		@Override
