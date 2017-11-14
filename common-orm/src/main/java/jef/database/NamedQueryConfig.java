@@ -13,6 +13,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
+import com.github.geequery.orm.annotation.Comment;
+
 import jef.common.Entry;
 import jef.database.annotation.EasyEntity;
 import jef.database.dialect.DatabaseDialect;
@@ -101,6 +103,7 @@ import jef.tools.StringUtils;
 @EasyEntity(checkEnhanced = false)
 @Entity
 @javax.persistence.Table(name = "NAMED_QUERIES")
+@Comment("GeeQuery Named Queries")
 public class NamedQueryConfig extends jef.database.DataObject {
 	private static final long serialVersionUID = 1L;
 	public static final int TYPE_SQL = 0;
@@ -230,17 +233,17 @@ public class NamedQueryConfig extends jef.database.DataObject {
 			SqlFunctionlocalization localization = new SqlFunctionlocalization(dialect, db);
 			st.accept(localization);
 
-			if (type == TYPE_JPQL){
-				if(st instanceof Select){
+			if (type == TYPE_JPQL) {
+				if (st instanceof Select) {
 					st.accept(new JPQLSelectConvert(dialect));
-				}else if(st instanceof Insert){
+				} else if (st instanceof Insert) {
 					st.accept(new JPQLConvert(dialect));
-				}else if(st instanceof Update){
+				} else if (st instanceof Update) {
 					st.accept(new JPQLConvert(dialect));
-				}else if(st instanceof Delete){
+				} else if (st instanceof Delete) {
 					st.accept(new JPQLConvert(dialect));
 				}
-				
+
 			}
 
 			DialectCase result = new DialectCase();
