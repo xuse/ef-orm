@@ -532,6 +532,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	}
 
     @Override
+	@Transactional
     public int update(T entity) {
         try {
             return getSession().update(entity);
@@ -541,6 +542,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
     }
 
     @Override
+	@Transactional
     public int updateCascade(T entity) {
         try {
             return getSession().updateCascade(entity);
@@ -550,6 +552,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
     }
 
     @Override
+	@Transactional
     public int remove(T entity) {
         try {
             return getSession().delete(entity);
@@ -559,6 +562,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
     }
 
     @Override
+	@Transactional
     public int removeCascade(T entity) {
         try {
             return getSession().deleteCascade(entity);
@@ -568,6 +572,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
     }
 
     @Override
+	@Transactional
     public int removeByExample(T entity) {
         try {
             return getSession().delete(DbUtils.populateExampleConditions((IQueryableEntity)entity));
@@ -584,6 +589,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
     }
 
     @Override
+	@Transactional
     public int executeQuery(String sql, Map<String, Object> param) {
         NativeQuery<?> query = getSession().createNativeQuery(sql);
         query.setParameterMap(param);
@@ -627,6 +633,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
     }
 
     @Override
+	@Transactional
     public int deleteByField(String fieldName, Serializable value) {
         ITableMetadata meta=this.meta.getMetadata();
         Field field = meta.getField(fieldName);
@@ -650,6 +657,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
     }
 
     @Override
+	@Transactional
     public int batchDelete(List<? extends Serializable> pkValues) {
         try {
             return getSession().batchDelete(meta.getMetadata(), pkValues);
@@ -678,6 +686,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
     }
 
     @Override
+    @Transactional
     public T merge(T entity) {
         try {
             return getSession().merge(entity);
