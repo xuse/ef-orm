@@ -117,8 +117,8 @@ public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends 
             String implementation=clz.getName() + StringUtils.trimToEmpty(repositoryImplementationPostfix);
             ClassEx implClz = ClassEx.forName(implementation);
             if (implClz == null) {
-                log.error("Lack of implementation of class: " + clz.getName());
-                throw new IllegalArgumentException("Lack of implementation of class: " + implementation);
+                log.error("Lack of implementation class: " + clz.getName());
+                throw new IllegalArgumentException("Lack of implementation class: " + implementation);
             }
             try {
                 Object obj = implClz.newInstance();

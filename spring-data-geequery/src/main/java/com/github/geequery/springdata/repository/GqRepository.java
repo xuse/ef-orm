@@ -22,9 +22,9 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.NonUniqueResultException;
 
-import jef.database.NamedQueryConfig;
-import jef.database.NativeQuery;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.QueryByExampleExecutor;
@@ -32,6 +32,10 @@ import org.springframework.data.repository.query.QueryByExampleExecutor;
 import com.github.geequery.springdata.annotation.Query;
 import com.github.geequery.springdata.repository.support.Update;
 import com.querydsl.sql.SQLQuery;
+
+import jef.database.NamedQueryConfig;
+import jef.database.NativeQuery;
+import jef.database.query.ConditionQuery;
 
 /**
  * GQ specific extension of
@@ -273,4 +277,47 @@ public interface GqRepository<T, ID extends Serializable> extends PagingAndSorti
      * @see SQLQuery
      */
     SQLQuery sql();
+    
+
+	/**
+	 * Returns a single entity matching the given {@link ConditionQuery}.
+	 * 
+	 * @param spec
+	 * @return
+	 */
+	T load(ConditionQuery spec);
+
+	/**
+	 * Returns all entities matching the given {@link ConditionQuery}.
+	 * 
+	 * @param spec
+	 * @return
+	 */
+	List<T> find(ConditionQuery spec);
+
+	/**
+	 * Returns a {@link Page} of entities matching the given {@link ConditionQuery}.
+	 * 
+	 * @param spec
+	 * @param pageable
+	 * @return
+	 */
+	Page<T> find(ConditionQuery spec, Pageable pageable);
+
+	/**
+	 * Returns all entities matching the given {@link ConditionQuery} and {@link Sort}.
+	 * 
+	 * @param spec
+	 * @param sort
+	 * @return
+	 */
+	List<T> find(ConditionQuery spec, Sort sort);
+
+	/**
+	 * Returns the number of instances that the given {@link ConditionQuery} will return.
+	 * 
+	 * @param spec the {@link Specification} to count instances for
+	 * @return the number of instances
+	 */
+	long count(ConditionQuery spec);
 }

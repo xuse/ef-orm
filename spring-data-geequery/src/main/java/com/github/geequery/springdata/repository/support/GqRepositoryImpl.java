@@ -27,6 +27,19 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.github.geequery.springdata.repository.GqRepository;
+import com.github.geequery.springdata.repository.query.QueryUtils;
+import com.querydsl.sql.SQLQuery;
+
 import jef.common.wrapper.IntRange;
 import jef.database.DbClient;
 import jef.database.DbUtils;
@@ -50,20 +63,6 @@ import jef.database.query.SqlExpression;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Order;
-import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.github.geequery.springdata.repository.GeeQueryExecutor;
-import com.github.geequery.springdata.repository.GqRepository;
-import com.github.geequery.springdata.repository.query.QueryUtils;
-import com.querydsl.sql.SQLQuery;
-
 /**
  * Default implementation of the
  * {@link org.springframework.data.repository.CrudRepository} interface. This
@@ -78,7 +77,7 @@ import com.querydsl.sql.SQLQuery;
  */
 @Repository
 @Transactional(readOnly = true)
-public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepository<T, ID>, GeeQueryExecutor<T> {
+public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepository<T, ID> {
 
 	private MetamodelInformation<T, ID> meta;
 	// 这是Spring的SharedEntityManager的代理，只可从中提取EMF，不可直接转换，因此这个EM上携带了基于线程的事务上下文
@@ -168,13 +167,13 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	@SuppressWarnings("unchecked")
 	@Override
 	public <S extends T> S findOne(Example<S> example) {
-		return (S) findOne(toQuery(example));
+		return (S) load(toQuery(example));
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public <S extends T> Page<S> findAll(Example<S> example, Pageable pageable) {
-		return (Page<S>) findAll(toQuery(example), pageable);
+		return (Page<S>) find(toQuery(example), pageable);
 	}
 
 	@Override
@@ -198,7 +197,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	}
 
 	@Override
-	public T findOne(ConditionQuery spec) {
+	public T load(ConditionQuery spec) {
 		Session s = getSession();
 		try {
 			return s.load(spec);
@@ -208,7 +207,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	}
 
 	@Override
-	public List<T> findAll(ConditionQuery spec) {
+	public List<T> find(ConditionQuery spec) {
 		Session s = getSession();
 		try {
 			return s.select(spec, null);
@@ -218,7 +217,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	}
 
 	@Override
-	public Page<T> findAll(ConditionQuery spec, Pageable pageable) {
+	public Page<T> find(ConditionQuery spec, Pageable pageable) {
 		Session s = getSession();
 		try {
 			long count = s.countLong(spec);
@@ -231,7 +230,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	}
 
 	@Override
-	public List<T> findAll(ConditionQuery spec, Sort sort) {
+	public List<T> find(ConditionQuery spec, Sort sort) {
 		Session s = getSession();
 		try {
 			setSortToSpec(spec, sort);
