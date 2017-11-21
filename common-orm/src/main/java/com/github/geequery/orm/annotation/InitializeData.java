@@ -50,7 +50,7 @@ public @interface InitializeData {
     boolean ensureFileExists() default true;
 
     /**
-     * 支持指定一个SQL语句，执行该SQL来更新数据库。 一旦使用该功能，value()的CSV文件功能将失效。
+     * 支持指定一个SQL脚本文件，执行该SQL来更新数据库。 一旦使用该功能，value()的CSV文件功能将失效。
      * 
      * @return
      */
