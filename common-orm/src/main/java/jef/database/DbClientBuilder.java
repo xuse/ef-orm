@@ -21,9 +21,6 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.lang.StringUtils;
-import org.easyframe.enterprise.spring.TransactionMode;
-
 import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.database.datasource.MapDataSourceLookup;
@@ -37,14 +34,15 @@ import jef.database.support.DbInitHandler;
 import jef.database.support.QuerableEntityScanner;
 import jef.tools.JefConfiguration;
 
+import org.apache.commons.lang.StringUtils;
+import org.easyframe.enterprise.spring.TransactionMode;
+
 /**
  * 提供了创建DbClient的若干工厂方法
  * 
  * 
  */
 public class DbClientBuilder {
-	// 为了防止在单元测试中反复执行文件扫描。
-	private static long lastEnhanceTime;
 	/**
 	 * 多数据源。分库分表时可以使用。 在Spring配置时，可以使用这样的格式来配置
 	 * 
@@ -102,8 +100,9 @@ public class DbClientBuilder {
 	 * 指定对以下包内的实体做一次增强扫描。多个包名之间逗号分隔。<br>
 	 * 如果不配置此项，默认将对packagesToScan包下的类进行增强。<br>
 	 * 不过不想进行类增强扫描，可配置为"none"。
+	 * @deprecated
 	 */
-	private String enhancePackages;
+	private String enhancePackages = "none";
 
 	/**
 	 * 指定扫描若干包,配置示例如下—— <code><pre>
@@ -183,17 +182,6 @@ public class DbClientBuilder {
 	 * 空构造
 	 */
 	public DbClientBuilder() {
-	}
-
-	/**
-	 * 构造
-	 * 
-	 * @param 是否对classpath下的目录进行类增强
-	 */
-	public DbClientBuilder(boolean enhance) {
-		if (!enhance) {
-			this.setEnhancePackages("none");
-		}
 	}
 
 	/**
@@ -576,7 +564,7 @@ public class DbClientBuilder {
 
 	/**
 	 * 是否检查并增强实体。 注意，增强实体仅对目录中的class文件生效，对jar包中的class无效。
-	 * 
+	 * @deprecated 1.12开始，推荐使用instrument动态增强，不推荐这种做法
 	 * @param enhancePackages
 	 *            要扫描的包
 	 */
@@ -602,17 +590,20 @@ public class DbClientBuilder {
 			if (!enhancePackages.equalsIgnoreCase("none")) {
 				new EntityEnhancer().enhance(StringUtils.split(enhancePackages, ","));
 			}
-		} else if (packagesToScan != null) {
-			// if there is no enhances packages, try enhance 'package to Scan'
-			new EntityEnhancer().enhance(packagesToScan);
-		} else {
-			if (System.currentTimeMillis() - lastEnhanceTime > 30000) {
-				new EntityEnhancer().setExcludePatter(
-						new String[] { "java", "javax", "org.apache", "org.eclipse", "junit", "ant", "org.codehaus" })
-						.enhance();
-			}
-			lastEnhanceTime = System.currentTimeMillis();
 		}
+		
+		//不再主动增强类
+//		else if (packagesToScan != null) {
+//			// if there is no enhances packages, try enhance 'package to Scan'
+//			new EntityEnhancer().enhance(packagesToScan);
+//		} else {
+//			if (System.currentTimeMillis() - lastEnhanceTime > 30000) {
+//				new EntityEnhancer().setExcludePatter(
+//						new String[] { "java", "javax", "org.apache", "org.eclipse", "junit", "ant", "org.codehaus" })
+//						.enhance();
+//			}
+//			lastEnhanceTime = System.currentTimeMillis();
+//		}
 
 		JefEntityManagerFactory sf;
 		// check data sources.
