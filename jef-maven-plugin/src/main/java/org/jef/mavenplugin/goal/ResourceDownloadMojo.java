@@ -69,7 +69,7 @@ public class ResourceDownloadMojo extends AbstractMojo  {
 				this.getLog().info("下载资源包：" + url);
 				File file=IOUtils.saveAsTempFile(u.openStream());
 				this.getLog().info("正在解压资源["+ encodeVersion +"]到：" + unzipPath);
-				ZipUtils.unzip(file, unzipPath, null);//解压到/src/main/webapp下
+				ZipUtils.unzip(file, unzipPath,null, null);//解压到/src/main/webapp下
 			}
 			this.getLog().info("资源解压完成。");
 		} catch (MalformedURLException e) {
