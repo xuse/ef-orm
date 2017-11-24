@@ -10,8 +10,6 @@ import java.util.Map;
 
 import javax.sql.rowset.CachedRowSet;
 
-import com.querydsl.sql.SQLTemplates;
-
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.DbMetaData;
@@ -33,6 +31,8 @@ import jef.database.meta.FunctionMapping;
 import jef.database.meta.SequenceInfo;
 import jef.database.support.RDBMS;
 import jef.database.wrapper.clause.InsertSqlClause;
+
+import com.querydsl.sql.SQLTemplates;
 
 /**
  * 
@@ -77,11 +77,14 @@ public abstract class AbstractDelegatingDialect implements DatabaseDialect {
 		if (dialect != null) {
 			this.dialect = dialect;
 		}
-		dialect.accept(metadata);
+		this.dialect.accept(metadata);
 	}
 
 	/*
 	 * 子类必须实现，在得到数据库的DatabaseMetadata后，根据驱动返回的数据库信息，获得一个匹配版本的方言
+	 * 
+	 * 注意，如果认为当前默认方言无需更改，可能返回null。
+	 * 
 	 */
 	protected abstract DatabaseDialect decideDialect(DbMetaData meta);
 
