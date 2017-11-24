@@ -59,7 +59,6 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.github.geequery.springdata.repository.GeeQueryExecutor;
 import com.github.geequery.springdata.repository.GqRepository;
 import com.github.geequery.springdata.repository.query.QueryUtils;
 import com.querydsl.sql.SQLQuery;
@@ -78,7 +77,7 @@ import com.querydsl.sql.SQLQuery;
  */
 @Repository
 @Transactional(readOnly = true)
-public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepository<T, ID>, GeeQueryExecutor<T> {
+public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepository<T, ID> {
 
 	private MetamodelInformation<T, ID> meta;
 	// 这是Spring的SharedEntityManager的代理，只可从中提取EMF，不可直接转换，因此这个EM上携带了基于线程的事务上下文
@@ -696,5 +695,28 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
+	}
+
+	@Override
+	public <X extends IQueryableEntity> Page<X> find(Query<X> data, Pageable page) {
+		Assert.notNull(page);
+		setSortToSpec(data, page.getSort());
+		jef.common.wrapper.Page<X> p;
+		try {
+			p = getSession().pageSelect(data.getInstance(), page.getPageSize()).setOffset(page.getOffset()).getPageData();
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+		return new PageImpl<X>(p.getList(), page, p.getTotalCount());
+	}
+
+	@Override
+	public <X extends IQueryableEntity> List<X> find(Query<X> data, Sort sort) {
+		setSortToSpec(data, sort);
+		try {
+			return getSession().select(data);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		} 
 	}
 }

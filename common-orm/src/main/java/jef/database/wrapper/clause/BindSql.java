@@ -23,6 +23,8 @@ import jef.database.routing.sql.InMemoryOperateProvider;
 import jef.database.wrapper.processor.BindVariableDescription;
 import jef.tools.PageLimit;
 
+import org.apache.commons.lang.ArrayUtils;
+
 /**
  * 描述一个绑定变量的SQL语句
  * @author jiyi
@@ -87,5 +89,15 @@ public final class BindSql implements InMemoryOperateProvider{
 	@Override
 	public void parepareInMemoryProcess(PageLimit range, ResultSetContainer rs) {
 		throw new UnsupportedOperationException();
+	}
+
+	public Object[] getBindAsParamArray() {
+		if(bind==null)return ArrayUtils.EMPTY_OBJECT_ARRAY;
+		Object[] result=new Object[bind.size()];
+		for(int i=0;i<bind.size();i++){
+			BindVariableDescription b=bind.get(i);
+			result[i]=b.getBindedVar();
+		}
+		return result;
 	}
 }
