@@ -53,12 +53,12 @@ import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
 import jef.database.jsqlparser.visitor.Expression;
-import jef.database.meta.Case;
-import jef.database.meta.Constraint;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.meta.FunctionMapping;
-import jef.database.meta.SequenceInfo;
+import jef.database.meta.object.Case;
+import jef.database.meta.object.Constraint;
+import jef.database.meta.object.SequenceInfo;
 import jef.database.query.Func;
 import jef.database.query.Scientific;
 import jef.database.query.SqlExpression;
@@ -502,7 +502,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	/**
 	 * 将数据库定义的字段类型映射到JEF的字段类型上
 	 */
-	public ColumnType getProprtMetaFromDbType(jef.database.meta.Column column) {
+	public ColumnType getProprtMetaFromDbType(jef.database.meta.object.Column column) {
 		int type = column.getDataTypeCode();
 		if(type==-9999) {
 			type=judgeTypeCode(column.getDataType());
@@ -833,7 +833,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	}
 
     @Override
-    public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String constraintName) {
+    public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String constraintName) throws SQLException{
         throw new UnsupportedOperationException();
     }
 	

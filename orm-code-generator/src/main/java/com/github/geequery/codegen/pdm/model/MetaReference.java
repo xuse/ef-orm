@@ -21,7 +21,7 @@ import java.util.Collection;
 import java.util.Map.Entry;
 
 import jef.common.SimpleMap;
-import jef.database.meta.ForeignKey;
+import jef.database.meta.object.ForeignKey;
 
 /**
  *

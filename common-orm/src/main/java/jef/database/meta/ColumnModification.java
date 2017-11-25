@@ -4,6 +4,7 @@ import java.util.List;
 
 import jef.database.dialect.ColumnType;
 import jef.database.meta.ColumnChange.Change;
+import jef.database.meta.object.Column;
 
 /**
  * 描述在一个数据库列上，实际的模型和框架中的模型之间的差异

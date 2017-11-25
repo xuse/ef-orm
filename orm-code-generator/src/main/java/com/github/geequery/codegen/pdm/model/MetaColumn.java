@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import jef.database.meta.Column;
+import jef.database.meta.object.Column;
 
 import org.apache.commons.lang.StringUtils;
 

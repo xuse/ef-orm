@@ -18,9 +18,17 @@ public abstract class AbstractResultSetTransformer<T> implements ResultSetExtrac
 	
 	protected AbstractResultSetTransformer(){
 		ORMConfig config=ORMConfig.getInstance();
+		this.maxRows=config.getGlobalMaxResults();
 		this.fetchSize=config.getGlobalFetchSize();
 		this.queryTimeout=config.getSelectTimeout();
-		this.maxRows=config.getGlobalMaxResults();
+		
+	}
+	
+	protected AbstractResultSetTransformer(int maxRows){
+		this.maxRows=maxRows;
+		ORMConfig config=ORMConfig.getInstance();
+		this.fetchSize=config.getGlobalFetchSize();
+		this.queryTimeout=config.getSelectTimeout();
 	}
 	
 	public int getFetchSize() {

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jef.database.meta;
+package jef.database.meta.object;
 
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;

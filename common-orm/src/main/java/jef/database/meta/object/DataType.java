@@ -1,4 +1,4 @@
-package jef.database.meta;
+package jef.database.meta.object;
 
 import javax.persistence.Column;
 

@@ -8,11 +8,9 @@ import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.Arrays;
+import java.util.List;
 
 import javax.persistence.PersistenceException;
-
-import com.querydsl.sql.PostgreSQLTemplates;
-import com.querydsl.sql.SQLTemplates;
 
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
@@ -29,6 +27,7 @@ import jef.database.exception.JDBCExceptionHelper;
 import jef.database.exception.TemplatedViolatedConstraintNameExtracter;
 import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.jdbc.JDBCTarget;
+import jef.database.jdbc.result.IResultSet;
 import jef.database.jdbc.statement.DelegatingPreparedStatement;
 import jef.database.jdbc.statement.DelegatingStatement;
 import jef.database.jsqlparser.expression.BinaryExpression;
@@ -36,6 +35,7 @@ import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
+import jef.database.meta.object.Constraint;
 import jef.database.query.Func;
 import jef.database.query.Scientific;
 import jef.database.query.function.CastFunction;
@@ -53,9 +53,13 @@ import jef.database.query.function.StandardSQLFunction;
 import jef.database.query.function.TemplateFunction;
 import jef.database.query.function.VarArgsSQLFunction;
 import jef.database.support.RDBMS;
+import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
+
+import com.querydsl.sql.PostgreSQLTemplates;
+import com.querydsl.sql.SQLTemplates;
 
 /**
  * Postgres 9.4开始支持的若干类型
@@ -259,7 +263,7 @@ public class PostgreSql94Dialect extends AbstractDialect {
 		// }
 	}
 
-	public ColumnType getProprtMetaFromDbType(jef.database.meta.Column column) {
+	public ColumnType getProprtMetaFromDbType(jef.database.meta.object.Column column) {
 		if ("text".equals(column.getDataType())) {
 			return new Clob();
 		} else if ("money".equals(column.getDataType())) {
@@ -564,6 +568,38 @@ public class PostgreSql94Dialect extends AbstractDialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		return limit;
+	}
+	
+	/**
+	 *  Postgres系统表 select * from pg_constraint
+	 *   select * from pg_depend
+ *	"conname" 
+	 * @param conn
+	 * @param schema
+	 * @param constraintName
+	 * @return
+	 * @throws SQLException 
+	 */
+	@Override
+	public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String constraintName) throws SQLException {
+		conn.selectBySql("select * from pg_constraint", new AbstractResultSetTransformer<Constraint>(){
+			//conname	connamespace	
+			//contype	condeferrable	condeferred	convalidated	conrelid	contypid	conindid	
+			//confrelid	confupdtype	confdeltype	confmatchtype	conislocal	coninhcount	connoinherit	
+			//conkey	confkey	conpfeqop	conppeqop	conffeqop	conexclop	conbin	consrc
+
+			@Override
+			public Constraint transformer(IResultSet rs) throws SQLException {
+				Constraint c=new Constraint();
+//				c.setCatalog(catalog);
+				c.setName(rs.getString("conname"));
+				
+				return c;
+			}
+		}, null);
+		
+		
+		return super.getConstraintInfo(conn, schema, constraintName);
 	}
 
 	@Override

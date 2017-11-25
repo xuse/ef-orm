@@ -13,8 +13,9 @@ import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.meta.Index.IndexItem;
 import jef.database.meta.def.IndexDef;
+import jef.database.meta.object.Index;
+import jef.database.meta.object.Index.IndexItem;
 import jef.database.support.RDBMS;
 import jef.tools.StringUtils;
 

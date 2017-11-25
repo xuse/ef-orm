@@ -81,6 +81,8 @@ import jef.database.meta.AnnotationProvider.ClassAnnotationProvider;
 import jef.database.meta.AnnotationProvider.FieldAnnotationProvider;
 import jef.database.meta.def.IndexDef;
 import jef.database.meta.extension.EfPropertiesExtensionProvider;
+import jef.database.meta.object.PrimaryKey;
+import jef.database.meta.object.TableInfo;
 import jef.database.query.JpqlExpression;
 import jef.database.query.ReadOnlyQuery;
 import jef.database.support.EntityNotEnhancedException;
@@ -227,9 +229,9 @@ public final class MetaHolder {
 			throw new SQLException("The table " + tableName + " does not exit in database " + session.getNoTransactionSession().toString());
 		}
 		PrimaryKey pks = meta.getPrimaryKey(tableName);
-		List<jef.database.meta.Column> columns = meta.getColumns(tableName, false);
+		List<jef.database.meta.object.Column> columns = meta.getColumns(tableName, false);
 		TupleMetadata m = new TupleMetadata(tableName);
-		for (jef.database.meta.Column c : columns) {
+		for (jef.database.meta.object.Column c : columns) {
 			boolean isPk = (pks == null) ? false : pks.hasColumn(c.getColumnName());
 			// m.addColumn(c.getColumnName(), c.getColumnName(),
 			// c.toColumnType(meta.getProfile()), isPk);

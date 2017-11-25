@@ -26,10 +26,10 @@ import jef.database.exception.TemplatedViolatedConstraintNameExtracter;
 import jef.database.exception.ViolatedConstraintNameExtracter;
 import jef.database.jdbc.JDBCTarget;
 import jef.database.jdbc.result.IResultSet;
-import jef.database.meta.Column;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
-import jef.database.meta.SequenceInfo;
+import jef.database.meta.object.Column;
+import jef.database.meta.object.SequenceInfo;
 import jef.database.query.Func;
 import jef.database.query.Scientific;
 import jef.database.query.function.CastFunction;
@@ -405,7 +405,7 @@ public class HsqlDbMemDialect extends AbstractDialect {
 					return result;
 				}
 				
-			}, 0, Arrays.asList(schema,seqName));
+			}, Arrays.asList(schema,seqName));
 		} catch (SQLException e) {
 			DebugUtil.setSqlState(e, sql);
 			LogUtil.exception(e);

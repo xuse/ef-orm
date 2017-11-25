@@ -11,6 +11,7 @@ import java.util.List;
 
 import jef.common.log.LogUtil;
 import jef.database.DbUtils;
+import jef.database.meta.object.Case;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 

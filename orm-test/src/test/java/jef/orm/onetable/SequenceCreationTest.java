@@ -12,7 +12,7 @@ import jef.database.IQueryableEntity;
 import jef.database.jdbc.result.ResultSets;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-import jef.database.meta.TableInfo;
+import jef.database.meta.object.TableInfo;
 import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
 import jef.database.test.DatabaseInit;

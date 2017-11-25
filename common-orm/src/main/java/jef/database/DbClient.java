@@ -420,7 +420,7 @@ public class DbClient extends Session implements SessionFactory {
 	 * @param dbkey
 	 *            the name of datasource. input null to access the metadata of
 	 *            default datasource.
-	 * @return
+	 * @return the handler of database metadata.
 	 * @throws SQLException
 	 */
 	public DbMetaData getMetaData(String dbkey) {

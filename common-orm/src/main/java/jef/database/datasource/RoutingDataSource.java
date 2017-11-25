@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.Set;
 
 import javax.persistence.PersistenceException;
@@ -96,12 +97,11 @@ public class RoutingDataSource extends AbstractDataSource implements IRoutingDat
 		}
 	}
 	
-	/**
-	 * 返回DataSource
-	 * @param lookupKey
-	 * @return
+	/*
+	 * (non-Javadoc)
+	 * @see jef.database.datasource.IRoutingDataSource#getDataSource(java.lang.String)
 	 */
-	public DataSource getDataSource(String lookupKey){
+	public DataSource getDataSource(String lookupKey) throws NoSuchElementException{
 		DataSource dataSource = resolvedDataSources.get(lookupKey);
 		if (dataSource == null && lookupKey == null) {
 			throw new IllegalArgumentException("Can not lookup by empty Key");//不允许这样使用，这样做会造成上层无法得到default的key,从而会将null ,"" ,"DEFAULT"这种表示误认为是三个数据源，其实是同一个。
@@ -110,7 +110,7 @@ public class RoutingDataSource extends AbstractDataSource implements IRoutingDat
 			dataSource=lookup(lookupKey);
 		}
 		if (dataSource == null) {
-			throw new IllegalStateException("Cannot determine target DataSource for lookup key [" + lookupKey + "]");	
+			throw new NoSuchElementException("Cannot determine target DataSource for lookup key [" + lookupKey + "]");	
 		}
 		//记录第一次成功获取的datasource，留作备用
 		if(firstReturnDataSource==null)firstReturnDataSource=new jef.common.Entry<String,DataSource>(lookupKey,dataSource);

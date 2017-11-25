@@ -5,9 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 import jef.database.DbUtils;
-import jef.database.meta.Column;
-import jef.database.meta.ForeignKey;
-import jef.database.meta.PrimaryKey;
+import jef.database.meta.object.Column;
+import jef.database.meta.object.ForeignKey;
+import jef.database.meta.object.PrimaryKey;
 
 public class Metadata{
 	private PrimaryKey primaryKey;

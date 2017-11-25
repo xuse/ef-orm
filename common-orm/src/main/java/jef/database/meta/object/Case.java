@@ -1,4 +1,4 @@
-package jef.database.meta;
+package jef.database.meta.object;
 
 import jef.database.dialect.type.AColumnMapping;
 

@@ -27,7 +27,7 @@ import jef.database.DbMetaData.ObjectType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.AbstractSequence;
 import jef.database.meta.DbProperty;
-import jef.database.meta.SequenceInfo;
+import jef.database.meta.object.SequenceInfo;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 

@@ -59,28 +59,28 @@ import jef.database.innerpool.IUserManagedPool;
 import jef.database.jdbc.result.ResultSetImpl;
 import jef.database.jdbc.result.ResultSets;
 import jef.database.meta.AbstractMetadata;
-import jef.database.meta.Column;
 import jef.database.meta.ColumnChange;
 import jef.database.meta.ColumnModification;
-import jef.database.meta.DataType;
 import jef.database.meta.DbProperty;
 import jef.database.meta.DdlGenerator;
 import jef.database.meta.DdlGeneratorImpl;
 import jef.database.meta.FBIField;
 import jef.database.meta.Feature;
-import jef.database.meta.ForeignKey;
-import jef.database.meta.Function;
 import jef.database.meta.ITableMetadata;
-import jef.database.meta.Index;
-import jef.database.meta.Index.IndexItem;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.MetadataFeature;
-import jef.database.meta.PrimaryKey;
-import jef.database.meta.SequenceInfo;
 import jef.database.meta.TableCreateStatement;
-import jef.database.meta.TableInfo;
 import jef.database.meta.def.IndexDef;
 import jef.database.meta.def.UniqueConstraintDef;
+import jef.database.meta.object.Column;
+import jef.database.meta.object.DataType;
+import jef.database.meta.object.ForeignKey;
+import jef.database.meta.object.Function;
+import jef.database.meta.object.Index;
+import jef.database.meta.object.Index.IndexItem;
+import jef.database.meta.object.PrimaryKey;
+import jef.database.meta.object.SequenceInfo;
+import jef.database.meta.object.TableInfo;
 import jef.database.query.DefaultPartitionCalculator;
 import jef.database.query.Func;
 import jef.database.support.MetadataEventListener;
@@ -159,7 +159,7 @@ public class DbMetaData {
     /**
      * 下次缓存过期时间
      */
-    private long subtableCacheExpireTime;
+    private volatile long subtableCacheExpireTime;
     /**
      * 根据扫描得到的所有表的情况
      */
@@ -276,7 +276,7 @@ public class DbMetaData {
             sql = String.format(template, exps);
         }
         try {
-            Date date = select0(conn, sql, ResultSetExtractor.GET_FIRST_TIMESTAMP, 1, null);
+            Date date = select0(conn, sql, ResultSetExtractor.GET_FIRST_TIMESTAMP, null);
             dbTimeDelta = date.getTime() - System.currentTimeMillis();
         } catch (SQLException e) {
             throw DbUtils.toRuntimeException(e);
@@ -1961,16 +1961,16 @@ public class DbMetaData {
      * @return 转换后的结果集
      * @throws SQLException
      */
-    public final <T> T selectBySql(String sql, ResultSetExtractor<T> rst, int maxReturn, List<?> objs) throws SQLException {
+    public final <T> T selectBySql(String sql, ResultSetExtractor<T> rst,List<?> objs) throws SQLException {
         Connection conn = getConnection(false);
         try {
-            return select0(conn, sql, rst, maxReturn, objs);
+            return select0(conn, sql, rst, objs);
         } finally {
             releaseConnection(conn);
         }
     }
 
-    private <T> T select0(Connection conn, String sql, ResultSetExtractor<T> rst, int maxReturn, List<?> objs) throws SQLException {
+    private <T> T select0(Connection conn, String sql, ResultSetExtractor<T> rst, List<?> objs) throws SQLException {
         // 这个方法是不支持使用非自动关闭的ResultSet的。
         if (!rst.autoClose()) {
             throw new UnsupportedOperationException();
@@ -1988,8 +1988,7 @@ public class DbMetaData {
                 context.setVariables(objs);
             }
             // 注意 MySQL低版本会有BUG 当limit为=1时会报错
-            if (maxReturn > 0)
-                st.setMaxRows(maxReturn);
+            rst.apply(st);
             rs = st.executeQuery();
             return rst.transformer(new ResultSetImpl(rs, profile));
         } catch (SQLException e) {

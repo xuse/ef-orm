@@ -23,12 +23,12 @@ import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
-import jef.database.meta.Column;
-import jef.database.meta.Constraint;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.meta.FunctionMapping;
-import jef.database.meta.SequenceInfo;
+import jef.database.meta.object.Column;
+import jef.database.meta.object.Constraint;
+import jef.database.meta.object.SequenceInfo;
 import jef.database.support.RDBMS;
 import jef.database.wrapper.clause.InsertSqlClause;
 

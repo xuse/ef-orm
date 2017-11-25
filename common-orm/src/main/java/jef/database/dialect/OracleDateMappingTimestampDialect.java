@@ -7,7 +7,7 @@ package jef.database.dialect;
  *
  */
 public class OracleDateMappingTimestampDialect extends OracleDialect {
-	public ColumnType getProprtMetaFromDbType(jef.database.meta.Column column) {
+	public ColumnType getProprtMetaFromDbType(jef.database.meta.object.Column column) {
 		if("NUMBER".equals(column.getDataType())){
 			if(column.getDecimalDigit()>0){//小数
 				return new ColumnType.Double(column.getColumnSize(),column.getDecimalDigit());

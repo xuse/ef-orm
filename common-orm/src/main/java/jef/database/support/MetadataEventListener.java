@@ -8,9 +8,9 @@ import java.util.Map;
 import jef.database.Field;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.type.ColumnMapping;
-import jef.database.meta.Column;
 import jef.database.meta.ColumnModification;
 import jef.database.meta.ITableMetadata;
+import jef.database.meta.object.Column;
 import jef.database.wrapper.executor.StatementExecutor;
 
 /**

@@ -8,7 +8,7 @@ import java.util.List;
 import jef.common.JefException;
 import jef.database.DbClient;
 import jef.database.DbMetaData;
-import jef.database.meta.TableInfo;
+import jef.database.meta.object.TableInfo;
 
 import com.github.geequery.codegen.pdm.IMetaLoader;
 import com.github.geequery.codegen.pdm.PDMetaLoader;

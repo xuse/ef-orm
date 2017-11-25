@@ -10,6 +10,7 @@ import javax.swing.text.StyledEditorKit.ItalicAction;
 import jef.database.DbMetaData;
 import jef.database.dialect.ColumnType;
 import jef.database.meta.def.IndexDef;
+import jef.database.meta.object.Index;
 
 
 public interface DdlGenerator {

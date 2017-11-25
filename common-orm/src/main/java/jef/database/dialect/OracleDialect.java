@@ -54,7 +54,7 @@ import jef.database.jsqlparser.expression.operators.arithmetic.Multiplication;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
-import jef.database.meta.SequenceInfo;
+import jef.database.meta.object.SequenceInfo;
 import jef.database.query.Func;
 import jef.database.query.Scientific;
 import jef.database.query.function.EmuCoalesce_Nvl;
@@ -250,7 +250,7 @@ public class OracleDialect extends AbstractDialect {
 		return new oracle.jdbc.rowset.OracleCachedRowSet();
 	}
 
-	public ColumnType getProprtMetaFromDbType(jef.database.meta.Column column) {
+	public ColumnType getProprtMetaFromDbType(jef.database.meta.object.Column column) {
 		if ("NUMBER".equals(column.getDataType())) {
 			if (column.getDecimalDigit() > 0) {// 小数
 				return new ColumnType.Double(column.getColumnSize(), column.getDecimalDigit());
@@ -344,7 +344,7 @@ public class OracleDialect extends AbstractDialect {
 
 				}
 
-			}, 0, Arrays.asList(schema, seqName));
+			}, Arrays.asList(schema, seqName));
 		} catch (SQLException e) {
 			DebugUtil.setSqlState(e, sql);
 			LogUtil.error("Error while getting sequence info [{}.{}].", schema, seqName, e);

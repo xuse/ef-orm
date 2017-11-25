@@ -37,11 +37,11 @@ import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
-import jef.database.meta.Constraint;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.meta.FunctionMapping;
-import jef.database.meta.SequenceInfo;
+import jef.database.meta.object.Constraint;
+import jef.database.meta.object.SequenceInfo;
 import jef.database.support.RDBMS;
 import jef.database.wrapper.clause.InsertSqlClause;
 
@@ -111,7 +111,7 @@ public interface DatabaseDialect {
 	/**
 	 * 已知数据库中的字段类型，返回JEF对应的meta类型
 	 */
-	ColumnType getProprtMetaFromDbType(jef.database.meta.Column dbTypeName);
+	ColumnType getProprtMetaFromDbType(jef.database.meta.object.Column dbTypeName);
 
 	/**
 	 * 判断数据库是否不支持某项特性
@@ -209,7 +209,7 @@ public interface DatabaseDialect {
 	 * @param constraintName 允许为null。可以使用%
 	 * @return 约束的信息
 	 */
-	List<Constraint>   getConstraintInfo(DbMetaData conn,String schema,String constraintName);
+	List<Constraint>   getConstraintInfo(DbMetaData conn,String schema,String constraintName) throws SQLException;
 	
 	
 	/**

@@ -25,10 +25,13 @@ import jef.database.support.SqlLog;
 
 /**
  * 直接对JDBC结果集进行操作的转换器
+ * 需要实现please extends AbstractResultSetTransformer
  * 
  * @author jiyi
  * 
  * @param <T>
+ * @see AbstractResultSetTransformer
+ * 
  */
 public interface ResultSetExtractor<T> {
 	/**
@@ -87,42 +90,48 @@ public interface ResultSetExtractor<T> {
 	 */
 	void appendLog(SqlLog log,T result);
 
-	public static final ResultSetExtractor<Long> COUNT_EXTRACTER = new AbstractResultSetTransformer<Long>() {
+	/**
+	 * 结果集获取——获得第一行第一列的Long
+	 */
+	public static final ResultSetExtractor<Long> COUNT_EXTRACTER = new AbstractResultSetTransformer<Long>(1) {
 		public Long transformer(IResultSet rs) throws SQLException {
 			if (rs.next()) {
 				return rs.getLong(1);
 			} else {
-				throw new SQLException("Result incorrect.count result must not be empty.");
+				throw new SQLException("Result incorrect. Count result must not be empty.");
 			}
 		}
-
 		@Override
 		public void appendLog(SqlLog log, Long result) {
 			if(result!=null){
 				log.append(" Count:",result);
 			}
 		}
-		
-		
-	}.setMaxRows(1);
+	};
 
-	public static final ResultSetExtractor<Integer> GET_FIRST_INT = new AbstractResultSetTransformer<Integer>() {
+	/**
+	 * 结果集获取——获得第一行第一列的Integer
+	 */
+	public static final ResultSetExtractor<Integer> GET_FIRST_INT = new AbstractResultSetTransformer<Integer>(1) {
 		public Integer transformer(IResultSet rs) throws SQLException {
 			if (rs.next()) {
 				return rs.getInt(1);
 			} else {
-				throw new SQLException("Result incorrect.count result must not be empty.");
+				throw new SQLException("Result incorrect, must not be empty.");
 			}
 		}
-	}.setMaxRows(1);
+	};
 
-	public static final ResultSetExtractor<Date> GET_FIRST_TIMESTAMP = new AbstractResultSetTransformer<Date>() {
+	/**
+	 * 结果集获取——获得第一行第一列的Date
+	 */
+	public static final ResultSetExtractor<Date> GET_FIRST_TIMESTAMP = new AbstractResultSetTransformer<Date>(1) {
 		public Date transformer(IResultSet rs) throws SQLException {
 			if (rs.next()) {
 				java.sql.Timestamp ts = rs.getTimestamp(1);
 				return new java.util.Date(ts.getTime());
 			} else {
-				throw new SQLException("Result incorrect.count result must not be empty.");
+				throw new SQLException("Result incorrect, must not be empty.");
 			}
 		}
 	};

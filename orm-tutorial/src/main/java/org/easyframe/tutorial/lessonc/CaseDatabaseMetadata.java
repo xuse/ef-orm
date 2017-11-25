@@ -10,10 +10,10 @@ import jef.common.log.LogUtil;
 import jef.database.DbClient;
 import jef.database.DbClientBuilder;
 import jef.database.DbMetaData;
-import jef.database.meta.Column;
-import jef.database.meta.Function;
-import jef.database.meta.Index;
-import jef.database.meta.TableInfo;
+import jef.database.meta.object.Column;
+import jef.database.meta.object.Function;
+import jef.database.meta.object.Index;
+import jef.database.meta.object.TableInfo;
 
 import org.easyframe.tutorial.lesson2.entity.LessonInfo;
 import org.easyframe.tutorial.lesson2.entity.Student;

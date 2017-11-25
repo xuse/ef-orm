@@ -1,7 +1,7 @@
 package com.github.geequery.codegen;
 
 import jef.database.dialect.ColumnType;
-import jef.database.meta.Column;
+import jef.database.meta.object.Column;
 
 import com.github.geequery.codegen.ast.JavaField;
 import com.github.geequery.codegen.ast.JavaUnit;

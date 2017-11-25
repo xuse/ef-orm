@@ -7,8 +7,8 @@ import jef.common.log.LogUtil;
 import jef.database.DbClient;
 import jef.database.DbClientBuilder;
 import jef.database.DbMetaData;
-import jef.database.meta.Index;
 import jef.database.meta.MetaHolder;
+import jef.database.meta.object.Index;
 import jef.tools.collection.CollectionUtils;
 
 import org.junit.BeforeClass;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package jef.database.meta;
+package jef.database.meta.object;
 
 import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import jef.database.dialect.DatabaseDialect;
+import jef.database.meta.DbProperty;
 import jef.tools.StringUtils;
 
 

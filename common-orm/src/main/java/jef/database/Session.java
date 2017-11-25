@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -3202,6 +3203,21 @@ public abstract class Session {
 
 	abstract PartitionSupport getPartitionSupport();
 
+	/**
+	 * @return 得到数据库当前的时间。此方法不是去数据库查询，而是直接使用时差进行计算。
+	 */
+	public Date getCurrentTime(){
+		return getCurrentTime(null);
+	}
+	
+	/**
+	 * @param dataSourceName
+	 * @return 得到数据库当前的时间。此方法不是去数据库查询，而是直接使用时差进行计算。
+	 */
+	public Date getCurrentTime(String dataSourceName){
+		return this.getPool().getMetadata(dataSourceName).getCurrentTime();
+	}
+	
     /**
      * QueryDSL支持，返回一个QueryDSL的查询对象，可以使用QueryDSL进行数据库操作
      * 
