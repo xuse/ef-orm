@@ -204,7 +204,8 @@ public final class SequenceManager {
 		}
 	}
 
-	private Sequence createSequence(String seqName, OperateTarget client, int columnSize, String tableName, String columnName, SequenceGenerator config) throws SQLException {
+	private Sequence createSequence(String seqName, OperateTarget client, int columnSize, String tableName, String columnName, SequenceGenerator config)
+			throws SQLException {
 		int initValue = 1;
 		if (config != null) {
 			seqName = config.sequenceName();
@@ -285,8 +286,8 @@ public final class SequenceManager {
 		}
 
 		private long queryLast(DbMetaData conn) throws SQLException {
-			long value = conn.selectBySql(select, GET_LONG_OR_TABLE_NOT_EXIST, 1, Collections.EMPTY_LIST);
-			if (value == -9999L) {
+			long value = conn.selectBySql(select, GET_LONG_OR_TABLE_NOT_EXIST, Collections.EMPTY_LIST);
+			if (value == TABLE_NOT_EXISTS) {
 				long start = super.caclStartValue(conn, null, rawTable, rawColumn, initValue, 99999999999L);
 				conn.executeSql("INSERT INTO " + table + " VALUES(?)", start);
 				value = 0;
@@ -314,8 +315,8 @@ public final class SequenceManager {
 				} else {
 					throw new PersistenceException("Table for sequence " + table + " does not exist on " + meta + "!");
 				}
-			}else{
-				this.table=tableExists;
+			} else {
+				this.table = tableExists;
 			}
 			return true;
 		}
@@ -395,8 +396,8 @@ public final class SequenceManager {
 		}
 
 		private long queryLast(DbMetaData conn) throws SQLException {
-			long value = conn.selectBySql(select, GET_LONG_OR_TABLE_NOT_EXIST, 1, Collections.EMPTY_LIST);
-			if (value == -9999L) {
+			long value = conn.selectBySql(select, GET_LONG_OR_TABLE_NOT_EXIST, Collections.EMPTY_LIST);
+			if (value == TABLE_NOT_EXISTS) {
 				long start = super.caclStartValue(conn, null, rawTable, rawColumn, initValue, 99999999999L);
 				conn.executeSql("INSERT INTO " + table + "(V,T) VALUES(?,?)", start, key);
 				value = 0;
@@ -415,16 +416,16 @@ public final class SequenceManager {
 		@Override
 		protected boolean doInit(DbClient session, String dbKey) throws SQLException {
 			DbMetaData meta = session.getMetaData(dbKey);
-			String exists=meta.getExists(ObjectType.TABLE, this.table);
-			if (exists==null) {
+			String exists = meta.getExists(ObjectType.TABLE, this.table);
+			if (exists == null) {
 				if (ORMConfig.getInstance().isAutoCreateSequence()) {
 					meta.createTable(seqtable, table);
 				} else {
 					throw new PersistenceException("Table for sequence " + table + " does not exist on " + meta + "!");
 				}
-			}else{
-				this.table=exists;
-				
+			} else {
+				this.table = exists;
+
 			}
 			return true;
 		}
@@ -433,16 +434,18 @@ public final class SequenceManager {
 			return false;
 		}
 	}
+	
+	static final long TABLE_NOT_EXISTS = -9999L;
 
 	/**
 	 * 从结果中获得单个LONG值
 	 */
-	private static final ResultSetExtractor<Long> GET_LONG_OR_TABLE_NOT_EXIST = new AbstractResultSetTransformer<Long>() {
+	private static final ResultSetExtractor<Long> GET_LONG_OR_TABLE_NOT_EXIST = new AbstractResultSetTransformer<Long>(1) {
 		public Long transformer(IResultSet rs) throws SQLException {
 			if (rs.next()) {
 				return rs.getLong(1);
 			} else {
-				return -9999L;
+				return TABLE_NOT_EXISTS;
 			}
 		}
 	};
