@@ -27,19 +27,6 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Order;
-import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.github.geequery.springdata.repository.GqRepository;
-import com.github.geequery.springdata.repository.query.QueryUtils;
-import com.querydsl.sql.SQLQuery;
-
 import jef.common.wrapper.IntRange;
 import jef.database.DbClient;
 import jef.database.DbUtils;
@@ -62,6 +49,19 @@ import jef.database.query.Query;
 import jef.database.query.SqlExpression;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
+
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.github.geequery.springdata.repository.GqRepository;
+import com.github.geequery.springdata.repository.query.QueryUtils;
+import com.querydsl.sql.SQLQuery;
 
 /**
  * Default implementation of the
@@ -96,9 +96,9 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 		Session s = getSession();
 		try {
 			long total = s.count(q_all);
-			Query<?> q=this.q_all;
-			if(pageable.getSort()!=null){
-				q=QB.create(meta.getMetadata());
+			Query<?> q = this.q_all;
+			if (pageable.getSort() != null) {
+				q = QB.create(meta.getMetadata());
 				setSortToSpec(q, pageable.getSort());
 			}
 			List<T> result = s.select(q, toRange(pageable));
@@ -120,7 +120,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	}
 
 	@Override
-	public List<T> findByExample(T example,String... fields) {
+	public List<T> findByExample(T example, String... fields) {
 		Session s = getSession();
 		try {
 			return s.selectByExample(example, fields);
@@ -128,17 +128,17 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 			throw DbUtils.toRuntimeException(e);
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
-	public List<T> find(T obj) {
-		if (obj == null)
+	public List<T> find(T query) {
+		if (query == null)
 			return Collections.emptyList();
 		try {
-			if (obj instanceof IQueryableEntity) {
-				return (List<T>) getSession().select((IQueryableEntity) obj);
+			if (query instanceof IQueryableEntity) {
+				return (List<T>) getSession().select((IQueryableEntity) query);
 			} else {
-				ITableMetadata meta = MetaHolder.getMeta(obj);
-				PojoWrapper pojo = meta.transfer(obj, true);
+				ITableMetadata meta = MetaHolder.getMeta(query);
+				PojoWrapper pojo = meta.transfer(query, true);
 				if (!pojo.hasQuery() && pojo.getUpdateValueMap().isEmpty()) {
 					pojo.getQuery().setAllRecordsCondition();
 				}
@@ -149,11 +149,61 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 			throw DbUtils.toRuntimeException(e);
 		}
 	}
-	
+
+	@SuppressWarnings("unchecked")
+	public List<T> find(T query, Sort sort) {
+		if (query == null)
+			return Collections.emptyList();
+		try {
+			if (query instanceof IQueryableEntity) {
+				setSortToSpec(((IQueryableEntity) query).getQuery(), sort);
+				return (List<T>) getSession().select((IQueryableEntity) query);
+			} else {
+				ITableMetadata meta = MetaHolder.getMeta(query);
+				PojoWrapper pojo = meta.transfer(query, true);
+				if (!pojo.hasQuery() && pojo.getUpdateValueMap().isEmpty()) {
+					pojo.getQuery().setAllRecordsCondition();
+				}
+				setSortToSpec(pojo.getQuery(), sort);
+				List<PojoWrapper> result = getSession().select(pojo);
+				return PojoWrapper.unwrapList(result);
+			}
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Page<T> find(T query, Pageable pageable) {
+		try {
+			Session session = getSession();
+			if (query instanceof IQueryableEntity) {
+				Query<?> q = ((IQueryableEntity) query).getQuery();
+				long count = session.countLong(q);
+				setSortToSpec(q, pageable.getSort());
+				List<T> result=count==0? Collections.emptyList():(List<T>) session.select(q);
+				return new PageImpl<T>(result, pageable, count);
+			} else {
+				ITableMetadata meta = MetaHolder.getMeta(query);
+				PojoWrapper pojo = meta.transfer(query, true);
+				if (!pojo.hasQuery() && pojo.getUpdateValueMap().isEmpty()) {
+					pojo.getQuery().setAllRecordsCondition();
+				}
+				long count = session.countLong(pojo.getQuery());
+				setSortToSpec(pojo.getQuery(), pageable.getSort());
+				List<PojoWrapper> result = getSession().select(pojo);
+				return new PageImpl<T>(PojoWrapper.unwrapList(result), pageable, count);
+			}
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
 	public T load(T entity) {
 		return load(entity, true);
 	}
-	
+
 	public T load(T entity, boolean unique) {
 		if (entity == null)
 			return null;
@@ -162,18 +212,6 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
-	}
-	
-	@SuppressWarnings("unchecked")
-	@Override
-	public <S extends T> S findOne(Example<S> example) {
-		return (S) load(toQuery(example));
-	}
-
-	@SuppressWarnings("unchecked")
-	@Override
-	public <S extends T> Page<S> findAll(Example<S> example, Pageable pageable) {
-		return (Page<S>) find(toQuery(example), pageable);
 	}
 
 	@Override
@@ -217,6 +255,17 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	}
 
 	@Override
+	public List<T> find(ConditionQuery spec, Sort sort) {
+		Session s = getSession();
+		try {
+			setSortToSpec(spec, sort);
+			return s.selectAs(spec, meta.getJavaType());
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
+	@Override
 	public Page<T> find(ConditionQuery spec, Pageable pageable) {
 		Session s = getSession();
 		try {
@@ -224,17 +273,6 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 			setSortToSpec(spec, pageable.getSort());
 			List<T> result = s.select(spec, toRange(pageable));
 			return new PageImpl<T>(result, pageable, count);
-		} catch (SQLException e) {
-			throw DbUtils.toRuntimeException(e);
-		}
-	}
-
-	@Override
-	public List<T> find(ConditionQuery spec, Sort sort) {
-		Session s = getSession();
-		try {
-			setSortToSpec(spec, sort);
-			return s.selectAs(spec, meta.getJavaType());
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -290,6 +328,12 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 
 	@SuppressWarnings("unchecked")
 	@Override
+	public <S extends T> S findOne(Example<S> example) {
+		return (S) load(toQuery(example));
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
 	public <S extends T> List<S> findAll(Example<S> example) {
 		Session s = getSession();
 		try {
@@ -310,6 +354,12 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <S extends T> Page<S> findAll(Example<S> example, Pageable pageable) {
+		return (Page<S>) find(toQuery(example), pageable);
 	}
 
 	@Override
@@ -461,7 +511,8 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	}
 
 	private void setSortToSpec(ConditionQuery spec, Sort sort) {
-		if(sort==null)return;
+		if (sort == null)
+			return;
 		for (Order order : sort) {
 			Field field;
 			ColumnMapping column = this.meta.getMetadata().findField(order.getProperty());
@@ -479,7 +530,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	}
 
 	private Session getSession() {
-		return ((JefEntityManager)QueryUtils.getEntityManager(em)).getSession();
+		return ((JefEntityManager) QueryUtils.getEntityManager(em)).getSession();
 	}
 
 	private DbClient getNoTransactionSession() {
@@ -499,199 +550,200 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	@Transactional
 	public boolean lockItAndUpdate(ID id, Update<T> update) {
 		Assert.notNull(update);
-		ITableMetadata meta=this.meta.getMetadata();
-		try{
+		ITableMetadata meta = this.meta.getMetadata();
+		try {
 			if (meta.getType() == EntityType.POJO) {
 				PKQuery<PojoWrapper> query = new PKQuery<PojoWrapper>(meta, toId(id));
 				RecordHolder<PojoWrapper> result = getSession().loadForUpdate(query.getInstance());
-				if(result ==null )return false;
-				try{
-					PojoWrapper pojo=result.get();
-					update.setValue((T)pojo.get());
+				if (result == null)
+					return false;
+				try {
+					PojoWrapper pojo = result.get();
+					update.setValue((T) pojo.get());
 					pojo.refresh();
-					return result.commit();	
-				}finally{
+					return result.commit();
+				} finally {
 					result.close();
 				}
 			} else {
-				PKQuery query = new PKQuery(meta,  toId(id));
+				PKQuery query = new PKQuery(meta, toId(id));
 				RecordHolder<?> result = getSession().loadForUpdate(query.getInstance());
-				if(result ==null )return false;
-				try{
-					update.setValue((T)result.get());
-					return result.commit();	
-				}finally{
+				if (result == null)
+					return false;
+				try {
+					update.setValue((T) result.get());
+					return result.commit();
+				} finally {
 					result.close();
 				}
-			}	
-		}catch(SQLException e){
+			}
+		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
-		
+
 	}
 
-    @Override
+	@Override
 	@Transactional
-    public int update(T entity) {
-        try {
-            return getSession().update(entity);
-        } catch (SQLException e) {
-            throw DbUtils.toRuntimeException(e);
-        }
-    }
+	public int update(T entity) {
+		try {
+			return getSession().update(entity);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
 
-    @Override
+	@Override
 	@Transactional
-    public int updateCascade(T entity) {
-        try {
-            return getSession().updateCascade(entity);
-        } catch (SQLException e) {
-            throw DbUtils.toRuntimeException(e);
-        }
-    }
+	public int updateCascade(T entity) {
+		try {
+			return getSession().updateCascade(entity);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
 
-    @Override
+	@Override
 	@Transactional
-    public int remove(T entity) {
-        try {
-            return getSession().delete(entity);
-        } catch (SQLException e) {
-            throw DbUtils.toRuntimeException(e);
-        }
-    }
+	public int remove(T entity) {
+		try {
+			return getSession().delete(entity);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
 
-    @Override
+	@Override
 	@Transactional
-    public int removeCascade(T entity) {
-        try {
-            return getSession().deleteCascade(entity);
-        } catch (SQLException e) {
-            throw DbUtils.toRuntimeException(e);
-        }
-    }
+	public int removeCascade(T entity) {
+		try {
+			return getSession().deleteCascade(entity);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
 
-    @Override
+	@Override
 	@Transactional
-    public int removeByExample(T entity) {
-        try {
-            return getSession().delete(DbUtils.populateExampleConditions((IQueryableEntity)entity));
-        } catch (SQLException e) {
-            throw new PersistenceException(e);
-        }
-    }
+	public int removeByExample(T entity) {
+		try {
+			return getSession().delete(DbUtils.populateExampleConditions((IQueryableEntity) entity));
+		} catch (SQLException e) {
+			throw new PersistenceException(e);
+		}
+	}
 
-    @Override
-    public List<T> findByNq(String nqName, Map<String, Object> params) {
-        NativeQuery<T> nQuery = getSession().createNamedQuery(nqName, meta.getMetadata());
-        nQuery.setParameterMap(params);
-        return nQuery.getResultList();
-    }
+	@Override
+	public List<T> findByNq(String nqName, Map<String, Object> params) {
+		NativeQuery<T> nQuery = getSession().createNamedQuery(nqName, meta.getMetadata());
+		nQuery.setParameterMap(params);
+		return nQuery.getResultList();
+	}
 
-    @Override
+	@Override
 	@Transactional
-    public int executeQuery(String sql, Map<String, Object> param) {
-        NativeQuery<?> query = getSession().createNativeQuery(sql);
-        query.setParameterMap(param);
-        return query.executeUpdate();
-    }
+	public int executeQuery(String sql, Map<String, Object> param) {
+		NativeQuery<?> query = getSession().createNativeQuery(sql);
+		query.setParameterMap(param);
+		return query.executeUpdate();
+	}
 
-    @Override
-    public List<T> findByQuery(String sql, Map<String, Object> param) {
-        NativeQuery<T> query = getSession().createNativeQuery(sql, meta.getMetadata());
-        query.setParameterMap(param);
-        return query.getResultList();
-    }
+	@Override
+	public List<T> findByQuery(String sql, Map<String, Object> param) {
+		NativeQuery<T> query = getSession().createNativeQuery(sql, meta.getMetadata());
+		query.setParameterMap(param);
+		return query.getResultList();
+	}
 
-    @Override
-    public T loadByField(String fieldname, Serializable value, boolean unique) {
-        Field field = meta.getMetadata().getField(fieldname);
-        if (field == null) {
-            throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getMetadata().getName());
-        }
-        Query<?> q=QB.create(meta.getMetadata());
-        q.addCondition(field, value);
-        try {
-            return getSession().load(q, unique);
-        } catch (SQLException e) {
-            throw DbUtils.toRuntimeException(e);
-        }
-    }
+	@Override
+	public T loadByField(String fieldname, Serializable value, boolean unique) {
+		Field field = meta.getMetadata().getField(fieldname);
+		if (field == null) {
+			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getMetadata().getName());
+		}
+		Query<?> q = QB.create(meta.getMetadata());
+		q.addCondition(field, value);
+		try {
+			return getSession().load(q, unique);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
 
-    @Override
-    public List<T> findByField(String fieldname, Serializable value) {
-        ITableMetadata meta=this.meta.getMetadata();
-        Field field = meta.getField(fieldname);
-        if (field == null) {
-            throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
-        }
-        try {
-            return getSession().selectByField(field, value);
-        } catch (SQLException e) {
-            throw DbUtils.toRuntimeException(e);
-        }
-    }
+	@Override
+	public List<T> findByField(String fieldname, Serializable value) {
+		ITableMetadata meta = this.meta.getMetadata();
+		Field field = meta.getField(fieldname);
+		if (field == null) {
+			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
+		}
+		try {
+			return getSession().selectByField(field, value);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
 
-    @Override
+	@Override
 	@Transactional
-    public int deleteByField(String fieldName, Serializable value) {
-        ITableMetadata meta=this.meta.getMetadata();
-        Field field = meta.getField(fieldName);
-        if (field == null) {
-            throw new IllegalArgumentException("There's no property named " + fieldName + " in type of " + meta.getName());
-        }
-        try {
-            return getSession().deleteByField(field, value);
-        } catch (SQLException e) {
-            throw DbUtils.toRuntimeException(e);
-        }
-    }
+	public int deleteByField(String fieldName, Serializable value) {
+		ITableMetadata meta = this.meta.getMetadata();
+		Field field = meta.getField(fieldName);
+		if (field == null) {
+			throw new IllegalArgumentException("There's no property named " + fieldName + " in type of " + meta.getName());
+		}
+		try {
+			return getSession().deleteByField(field, value);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
 
-    @Override
-    public List<T> batchLoad(List<? extends Serializable> pkValues) {
-        try {
-            return getSession().batchLoad(meta.getMetadata(), pkValues);
-        } catch (SQLException e) {
-            throw DbUtils.toRuntimeException(e);
-        }
-    }
+	@Override
+	public List<T> batchLoad(List<? extends Serializable> pkValues) {
+		try {
+			return getSession().batchLoad(meta.getMetadata(), pkValues);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
 
-    @Override
+	@Override
 	@Transactional
-    public int batchDelete(List<? extends Serializable> pkValues) {
-        try {
-            return getSession().batchDelete(meta.getMetadata(), pkValues);
-        } catch (SQLException e) {
-            throw DbUtils.toRuntimeException(e);
-        }
-    }
+	public int batchDelete(List<? extends Serializable> pkValues) {
+		try {
+			return getSession().batchDelete(meta.getMetadata(), pkValues);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
 
-    @Override
-    public List<T> batchLoadByField(String fieldname, List<? extends Serializable> values) {
-        ITableMetadata meta=this.meta.getMetadata();
-        Field field = meta.getField(fieldname);
-        if (field == null) {
-            throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
-        }
-        try {
-            return getSession().batchLoadByField(field, values);
-        } catch (SQLException e) {
-            throw DbUtils.toRuntimeException(e);
-        }
-    }
+	@Override
+	public List<T> batchLoadByField(String fieldname, List<? extends Serializable> values) {
+		ITableMetadata meta = this.meta.getMetadata();
+		Field field = meta.getField(fieldname);
+		if (field == null) {
+			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
+		}
+		try {
+			return getSession().batchLoadByField(field, values);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
 
-    @Override
-    public SQLQuery sql() {
-        return getSession().sql();
-    }
+	@Override
+	public SQLQuery sql() {
+		return getSession().sql();
+	}
 
-    @Override
-    @Transactional
-    public T merge(T entity) {
-        try {
-            return getSession().merge(entity);
-        } catch (SQLException e) {
-            throw DbUtils.toRuntimeException(e);
-        }
-    }
-
+	@Override
+	@Transactional
+	public T merge(T entity) {
+		try {
+			return getSession().merge(entity);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
 }

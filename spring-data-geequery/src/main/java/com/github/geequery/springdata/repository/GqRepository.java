@@ -22,6 +22,10 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.NonUniqueResultException;
 
+import jef.database.NamedQueryConfig;
+import jef.database.NativeQuery;
+import jef.database.query.ConditionQuery;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -32,10 +36,6 @@ import org.springframework.data.repository.query.QueryByExampleExecutor;
 import com.github.geequery.springdata.annotation.Query;
 import com.github.geequery.springdata.repository.support.Update;
 import com.querydsl.sql.SQLQuery;
-
-import jef.database.NamedQueryConfig;
-import jef.database.NativeQuery;
-import jef.database.query.ConditionQuery;
 
 /**
  * GQ specific extension of
@@ -84,7 +84,7 @@ public interface GqRepository<T, ID extends Serializable> extends PagingAndSorti
     /**
      * 查询列表
      * 
-     * @param data
+     * @param query
      *            查询请求。
      *            <ul>
      *            <li>如果设置了Query条件，按query条件查询。 否则——</li>
@@ -93,7 +93,23 @@ public interface GqRepository<T, ID extends Serializable> extends PagingAndSorti
      *            </ul>
      * @return 结果
      */
-    List<T> find(T data);
+    List<T> find(T query);
+    
+    /**
+     * 根据查询请求查询
+     * @param query 请求
+     * @param sort 排序
+     * @return 结果
+     */
+    List<T> find(T query, Sort sort);
+    
+    /**
+     * 根据查询请求查询
+     * @param query 请求
+     * @param pageable 分页
+     * @return 结果
+     */
+    Page<T> find(T query, Pageable pageable);
 
     /**
      * 查询一条记录，如果结果不唯一则抛出异常
