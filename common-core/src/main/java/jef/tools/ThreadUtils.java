@@ -132,7 +132,6 @@ public abstract class ThreadUtils {
 			Thread.sleep(l);
 			return true;
 		} catch (InterruptedException e) {
-			LogUtil.exception(e);
 			return false;
 		}
 	}
