@@ -18,8 +18,8 @@ public interface ISelectProvider {
 	public static final int PROJECTION_AVG = 4;
 	public static final int PROJECTION_MAX = 10;
 	public static final int PROJECTION_MIN = 11;
-	public static final int PROJECTION_CUST_FUNC = 12;
 	//255以内的都是排他定义，255以上的附加位定义
+	public static final int PROJECTION_CUST_FUNC = 512;
 	public static final int PROJECTION_HAVING_NOT_SELECT = 1024;
 	public static final int PROJECTION_HAVING = 2048;
 	public static final int PROJECTION_GROUP = 4096;

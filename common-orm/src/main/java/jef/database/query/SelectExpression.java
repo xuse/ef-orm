@@ -1,5 +1,7 @@
 package jef.database.query;
 
+import java.util.Collections;
+
 import jef.database.Condition;
 import jef.database.Condition.Operator;
 import jef.database.DbUtils;
@@ -12,6 +14,7 @@ import org.apache.commons.lang.StringUtils;
 
 /**
  * 原生查询表达式，无需解析和改写
+ * 
  * @author jiyi
  *
  */
@@ -19,21 +22,23 @@ public class SelectExpression extends SingleColumnSelect {
 	private String alias;
 
 	protected String text;
-	public SelectExpression(String text){
-		this.text=text;
+
+	public SelectExpression(String text) {
+		this.text = text;
 	}
-	
+
 	@Override
 	public String toString() {
 		return text;
 	}
-	
+
 	public String getName() {
-		return alias==null?text:alias;
+		return alias == null ? text : alias;
 	}
 
 	/**
 	 * 指定别名
+	 * 
 	 * @param alias
 	 * @return
 	 */
@@ -41,36 +46,36 @@ public class SelectExpression extends SingleColumnSelect {
 		this.alias = alias;
 		return this;
 	}
-	
-	public String getSelectItem(DatabaseDialect profile, String tableAlias,SqlContext context) {
-		String[] from=new String[context.queries.size()];
-		String[] to=new String[context.queries.size()];
-		for(int i=0;i<context.queries.size();i++){
-			String f="$"+(i+1)+".";
-			String t=context.queries.get(i).getSchema()+".";
-			from[i]=f;
-			to[i]=t;
+
+	public String getSelectItem(DatabaseDialect dialect, String tableAlias, SqlContext context) {
+		String[] from = new String[context.queries.size()];
+		String[] to = new String[context.queries.size()];
+		for (int i = 0; i < context.queries.size(); i++) {
+			String f = "$" + (i + 1) + ".";
+			String t = context.queries.get(i).getSchema() + ".";
+			from[i] = f;
+			to[i] = t;
 		}
-		return StringUtils.replaceEach(tableAlias, from, to);
+		return super.applyProjection(StringUtils.replaceEach(tableAlias, from, to), Collections.emptyList(), dialect);
 	}
 
-	public String getSelectedAlias(String tableAlias, DatabaseDialect profile) {
-		if(alias==null){
-			alias="C".concat(RandomStringUtils.randomNumeric(12));
-			return profile.getObjectNameToUse(alias);
-		}else{
-			return DbUtils.escapeColumn(profile, profile.getObjectNameToUse(alias));
+	public String getSelectedAlias(String tableAlias, DatabaseDialect dialect) {
+		if (alias == null) {
+			alias = "C".concat(RandomStringUtils.randomNumeric(12));
+			return dialect.getObjectNameToUse(alias);
+		} else {
+			return DbUtils.escapeColumn(dialect, dialect.getObjectNameToUse(alias));
 		}
 	}
 
 	@Override
-	public HavingEle toHavingClause(DatabaseDialect profile, String tableAlias,SqlContext context) {
-		String sql = "(" + getSelectItem(profile,tableAlias,context) + ")";
-		HavingEle h=new HavingEle();
-		h.column=sql;
-		h.sql=Condition.toSql(sql, havingCondOperator, havingCondValue, profile, null, null);
-		h.havingCondOperator=this.havingCondOperator;
-		h.havingCondValue=this.havingCondValue;
+	public HavingEle toHavingClause(DatabaseDialect dialect, String tableAlias, SqlContext context) {
+		String sql = "(" + getSelectItem(dialect, tableAlias, context) + ")";
+		HavingEle h = new HavingEle();
+		h.column = sql;
+		h.sql = Condition.toSql(sql, havingCondOperator, havingCondValue, dialect, null, null);
+		h.havingCondOperator = this.havingCondOperator;
+		h.havingCondValue = this.havingCondValue;
 		return h;
 	}
 
@@ -114,4 +119,75 @@ public class SelectExpression extends SingleColumnSelect {
 	public String getResultAlias(String tableAlias, DatabaseDialect profile) {
 		return StringUtils.upperCase(alias);
 	}
+
+	/**
+	 * count(xxx)
+	 * 
+	 * @return
+	 */
+	public SelectExpression count() {
+		this.projection = (projection & 0xFF00) | PROJECTION_COUNT;
+		return this;
+	}
+
+	/**
+	 * 求和
+	 * 
+	 * @return
+	 */
+	public SelectExpression sum() {
+		this.projection = (projection & 0xFF00) | PROJECTION_SUM;
+		return this;
+	}
+
+	/**
+	 * 求平均数
+	 * 
+	 * @return
+	 */
+	public SelectExpression avg() {
+		this.projection = (projection & 0xFF00) | PROJECTION_AVG;
+		return this;
+	}
+
+	/**
+	 * 取最大值
+	 * 
+	 * @return
+	 */
+	public SelectExpression max() {
+		this.projection = (projection & 0xFF00) | PROJECTION_MAX;
+		return this;
+	}
+
+	/**
+	 * 取最小值
+	 * 
+	 * @return
+	 */
+	public SelectExpression min() {
+		this.projection = (projection & 0xFF00) | PROJECTION_MIN;
+		return this;
+	}
+
+	/**
+	 * 对应count(distinct xx)
+	 * 
+	 * @return
+	 */
+	public SelectExpression countDistinct() {
+		this.projection = (projection & 0xFF00) | PROJECTION_COUNT_DISTINCT;
+		return this;
+	}
+
+	/**
+	 * 指定按照此列进行 group by操作，同时选出此列
+	 * 
+	 * @return
+	 */
+	public SelectExpression group() {
+		this.projection = (projection & 0xFF00) | PROJECTION_GROUP;
+		return this;
+	}
+
 }

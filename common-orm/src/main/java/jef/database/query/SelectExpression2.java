@@ -1,5 +1,6 @@
 package jef.database.query;
 
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -23,17 +24,17 @@ final class SelectExpression2 extends SelectExpression {
 		this.defaultEx = defaultEx;
 	}
 
-	public String getSelectItem(DatabaseDialect profile, String tableAlias,SqlContext context) {
-		Expression localex=localExpressions.get(profile);
+	public String getSelectItem(DatabaseDialect dialect, String tableAlias,SqlContext context) {
+		Expression localex=localExpressions.get(dialect);
 		if(localex==null){
-			localex=createLocalEx(profile);
-			ColumnAliasApplier al=new ColumnAliasApplier(tableAlias,profile,context);
+			localex=createLocalEx(dialect);
+			ColumnAliasApplier al=new ColumnAliasApplier(tableAlias,dialect,context);
 			localex.accept(al);
 		}
-		return localex.toString();
+		return super.applyProjection(localex.toString(),Collections.emptyList(),dialect);
 	}
 
-	private Expression createLocalEx(DatabaseDialect profile) {
+	private Expression createLocalEx(DatabaseDialect dialect) {
 		Expression result;
 		if(defaultEx!=null){
 			result=defaultEx;
@@ -45,8 +46,8 @@ final class SelectExpression2 extends SelectExpression {
 				throw new IllegalArgumentException("Can not parser expression"+text);
 			}
 		}
-		result.accept(new SqlFunctionlocalization(profile,null)); //TODO，无法检查存储过程
-		localExpressions.put(profile, result);
+		result.accept(new SqlFunctionlocalization(dialect,null)); //TODO，无法检查存储过程
+		localExpressions.put(dialect, result);
 		return result;
 	}
 }
