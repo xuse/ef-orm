@@ -127,11 +127,11 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 		int n=0;
 		ColumnMapping field=pkfields.next();
 		sb.append(field.getColumnName(profile, true)).append("= ?");
-		bind.add(new ConstantVariable(field.fieldName(),pkValues.get(n++),field));
+		bind.add(new ConstantVariable(field.fieldName(),Operator.EQUALS,pkValues.get(n++),field));
 		while(pkfields.hasNext()){
 			field=pkfields.next();
 			sb.append(" and ").append(field.getColumnName(profile, true)).append("= ?");
-			bind.add(new ConstantVariable(field.fieldName(),pkValues.get(n++),field));
+			bind.add(new ConstantVariable(field.fieldName(),Operator.EQUALS,pkValues.get(n++),field));
 		}
 		return new BindSql(sb.toString(), bind);
 	}

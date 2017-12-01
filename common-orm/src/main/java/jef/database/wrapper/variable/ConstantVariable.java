@@ -4,6 +4,7 @@ import java.sql.SQLException;
 
 import javax.persistence.PersistenceException;
 
+import jef.database.Condition.Operator;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.query.ConditionQuery;
 
@@ -12,10 +13,14 @@ public class ConstantVariable extends Variable {
 	private Object value;
 	private ColumnMapping column;
 
-	public ConstantVariable(String fieldname, Object value, ColumnMapping column) {
-		this.field = fieldname;
+	public ConstantVariable(String fieldname, Operator op, Object value, ColumnMapping column) {
+		if(op==Operator.EQUALS){
+			this.field = fieldname;
+		}else{
+			this.field = fieldname +" "+ op.getKey();	
+		}
 		this.value = value;
-		this.column=column;
+		this.column = column;
 	}
 
 	public ConstantVariable(Object value) {
