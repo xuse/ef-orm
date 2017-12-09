@@ -604,7 +604,7 @@ public class ClassWriter extends ClassVisitor {
      *            of this class. See {@link #COMPUTE_MAXS},
      *            {@link #COMPUTE_FRAMES}.
      */
-    public ClassWriter(final int flags) {
+	public ClassWriter(final int flags) {
         super(Opcodes.ASM5);
         index = 1;
         pool = new ByteVector();

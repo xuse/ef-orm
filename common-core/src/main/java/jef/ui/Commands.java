@@ -77,7 +77,9 @@ public class Commands {
 			Assert.isTrue(Boolean.valueOf(folder.isDirectory()), "is not a Directory");
 		}
 		ProcessBuilder rt = new ProcessBuilder(toCmdArray(text, true));
-		rt.directory(folder);
+		if(folder!=null){
+			rt.directory(folder);
+		}
 		return new ProcessHandlerImpl(rt, transact);
 	}
 

@@ -89,4 +89,8 @@ public class Paginator<T> implements Iterable<List<T>> {
 	public void prevPage() {
 		p.gotoPrev();
 	}
+	
+	public PageLimit getPageLimit(){
+		return p.getCurrentRecordRange();
+	}
 }
