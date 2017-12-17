@@ -22,6 +22,19 @@ import java.util.NoSuchElementException;
 
 import javax.persistence.EntityManagerFactory;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.mapping.PropertyPath;
+import org.springframework.data.repository.query.ParametersParameterAccessor;
+import org.springframework.data.repository.query.parser.PartTree;
+
+import com.github.geequery.springdata.annotation.FindBy;
+import com.github.geequery.springdata.annotation.IgnoreIf;
+import com.github.geequery.springdata.repository.query.GqParameters.GqParameter;
+import com.github.geequery.springdata.repository.query.GqQueryExecution.CountExecution;
+import com.github.geequery.springdata.repository.query.GqQueryExecution.DeleteExecution;
+
 import jef.common.PairIO;
 import jef.common.wrapper.IntRange;
 import jef.database.Condition;
@@ -38,19 +51,7 @@ import jef.database.meta.MetaHolder;
 import jef.database.query.ConditionQuery;
 import jef.database.query.Query;
 import jef.database.query.SqlExpression;
-
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Order;
-import org.springframework.data.mapping.PropertyPath;
-import org.springframework.data.repository.query.ParametersParameterAccessor;
-import org.springframework.data.repository.query.parser.PartTree;
-
-import com.github.geequery.springdata.annotation.FindBy;
-import com.github.geequery.springdata.annotation.IgnoreIf;
-import com.github.geequery.springdata.repository.query.GqParameters.GqParameter;
-import com.github.geequery.springdata.repository.query.GqQueryExecution.CountExecution;
-import com.github.geequery.springdata.repository.query.GqQueryExecution.DeleteExecution;
+import jef.tools.PageLimit;
 
 /**
  * A {@link AbstractJpaQuery} implementation based on a {@link PartTree}.
@@ -288,7 +289,7 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 	@Override
 	protected List<?> getResultList(Object[] values, Pageable page) {
 		Query<?> q = createQuery(values, true);
-		IntRange range = (page == null) ? null : toRange(page);
+		PageLimit range = (page == null) ? null : toRange(page);
 		try {
 			return getSession().select(q, range);
 		} catch (SQLException e) {
@@ -296,9 +297,8 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 		}
 	}
 
-	private IntRange toRange(Pageable pageable) {
-		return new IntRange(pageable.getOffset() + 1, pageable.getOffset()
-				+ pageable.getPageSize());
+	private PageLimit toRange(Pageable pageable) {
+		return new PageLimit(pageable.getOffset() , pageable.getPageSize());
 	}
 
 	private void setSortToSpec(ConditionQuery spec, Sort sort,

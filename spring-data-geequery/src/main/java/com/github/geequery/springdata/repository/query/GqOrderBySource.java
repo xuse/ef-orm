@@ -12,7 +12,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.mapping.PropertyPath;
-import org.springframework.data.repository.query.parser.OrderBySource;
 import org.springframework.util.StringUtils;
 
 /**

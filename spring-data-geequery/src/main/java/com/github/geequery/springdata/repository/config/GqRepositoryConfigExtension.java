@@ -97,7 +97,7 @@ public class GqRepositoryConfigExtension extends RepositoryConfigurationExtensio
 	@Override
 	public void postProcess(BeanDefinitionBuilder builder, RepositoryConfigurationSource source) {
 
-		String transactionManagerRef = source.getAttribute("transactionManagerRef");
+		String transactionManagerRef = source.getAttribute("transactionManagerRef").get();
 		builder.addPropertyValue("transactionManager",
 				transactionManagerRef == null ? DEFAULT_TRANSACTION_MANAGER_BEAN_NAME : transactionManagerRef);
 		
@@ -128,7 +128,7 @@ public class GqRepositoryConfigExtension extends RepositoryConfigurationExtensio
 	@Override
 	public void postProcess(BeanDefinitionBuilder builder, XmlRepositoryConfigurationSource config) {
 
-		String enableDefaultTransactions = config.getAttribute(ENABLE_DEFAULT_TRANSACTIONS_ATTRIBUTE);
+		String enableDefaultTransactions = config.getAttribute(ENABLE_DEFAULT_TRANSACTIONS_ATTRIBUTE).get();
 
 		if (StringUtils.hasText(enableDefaultTransactions)) {
 			builder.addPropertyValue(ENABLE_DEFAULT_TRANSACTIONS_ATTRIBUTE, enableDefaultTransactions);
@@ -152,5 +152,11 @@ public class GqRepositoryConfigExtension extends RepositoryConfigurationExtensio
 
 //		RootBeanDefinition contextDefinition = new RootBeanDefinition(DefaultGqContext.class);
 //		contextDefinition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_CONSTRUCTOR);
+	}
+
+	@Override
+	public String getRepositoryFactoryBeanClassName() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

@@ -21,6 +21,9 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.lang.StringUtils;
+import org.easyframe.enterprise.spring.TransactionMode;
+
 import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.database.datasource.MapDataSourceLookup;
@@ -33,9 +36,6 @@ import jef.database.meta.MetaHolder;
 import jef.database.support.DbInitHandler;
 import jef.database.support.QuerableEntityScanner;
 import jef.tools.JefConfiguration;
-
-import org.apache.commons.lang.StringUtils;
-import org.easyframe.enterprise.spring.TransactionMode;
 
 /**
  * 提供了创建DbClient的若干工厂方法
@@ -304,8 +304,8 @@ public class DbClientBuilder {
 	 * 
 	 * @see TransactionMode
 	 */
-	public DbClientBuilder setTransactionMode(String txType) {
-		this.transactionMode = TransactionMode.valueOf(StringUtils.upperCase(txType));
+	public DbClientBuilder setTransactionMode(TransactionMode txType) {
+		this.transactionMode =txType;
 		return this;
 	}
 

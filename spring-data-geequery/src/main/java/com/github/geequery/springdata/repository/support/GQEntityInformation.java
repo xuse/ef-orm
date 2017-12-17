@@ -17,11 +17,11 @@ package com.github.geequery.springdata.repository.support;
 
 import java.io.Serializable;
 
-import jef.database.dialect.type.ColumnMapping;
-
 import org.springframework.data.repository.core.EntityInformation;
 
 import com.github.geequery.springdata.repository.query.GqEntityMetadata;
+
+import jef.database.dialect.type.ColumnMapping;
 
 /**
  * Extension of {@link EntityInformation} to capture additional JPA specific
@@ -29,7 +29,7 @@ import com.github.geequery.springdata.repository.query.GqEntityMetadata;
  * 
  * @author Jiyi
  */
-public interface GQEntityInformation<T,ID extends Serializable> extends EntityInformation<T, ID>, GqEntityMetadata<T> {
+public interface GQEntityInformation<T,ID> extends EntityInformation<T, ID>, GqEntityMetadata<T> {
 
 	/**
 	 * Returns the id attribute of the entity.

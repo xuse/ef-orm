@@ -9,8 +9,16 @@ import java.util.List;
 
 import javax.persistence.EntityExistsException;
 
+import org.easyframe.enterprise.spring.CommonDao;
+import org.easyframe.enterprise.spring.CommonDaoImpl;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
+
 import jef.common.log.LogUtil;
-import jef.common.wrapper.IntRange;
 import jef.database.Condition;
 import jef.database.Condition.Operator;
 import jef.database.DbClient;
@@ -45,17 +53,9 @@ import jef.orm.onetable.model.Keyword;
 import jef.orm.onetable.model.TestEntity;
 import jef.orm.onetable.model.TestEntitySon;
 import jef.tools.DateUtils;
+import jef.tools.PageLimit;
 import jef.tools.ThreadUtils;
 import jef.tools.string.RandomData;
-
-import org.easyframe.enterprise.spring.CommonDao;
-import org.easyframe.enterprise.spring.CommonDaoImpl;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({ 
@@ -510,7 +510,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		List<TestEntity> list = db.selectAll(TestEntity.class);
 		// 开始测试
 		int n = 0;
-		ResultIterator<TestEntity> iter = db.iteratedSelect(QB.create(TestEntity.class), null);
+		ResultIterator<TestEntity> iter = db.iteratedSelect(QB.create(TestEntity.class), (PageLimit)null);
 		try {
 			for (; iter.hasNext();) {
 				iter.next();
@@ -612,7 +612,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		int count = (int) page.getTotal();
 
 		System.out.println("=========== testPaging  End ==========");
-		List<TestEntity> entities = db.select(q, new IntRange(count - 1, count + 1));// 查出3条是错误的。只能查出两条
+		List<TestEntity> entities = db.select(q, new PageLimit(count - 1, 4));// 查出3条是错误的。只能查出两条
 		for (TestEntity e : entities) {
 			System.out.println(e);
 		}

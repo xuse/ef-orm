@@ -121,15 +121,15 @@ public class GqRepositoryFactory extends RepositoryFactorySupport {
      * QueryLookupStrategy.Key,
      * org.springframework.data.repository.query.EvaluationContextProvider)
      */
-    @Override
-    protected QueryLookupStrategy getQueryLookupStrategy(Key key, EvaluationContextProvider evaluationContextProvider) {
-        return new GqQueryLookupStrategy(emf);
-    }
+//    @Override
+//    protected QueryLookupStrategy getQueryLookupStrategy(Key key, EvaluationContextProvider evaluationContextProvider) {
+//        return new GqQueryLookupStrategy(emf);
+//    }
 
-    @Override
-    public <T, ID extends Serializable> EntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
-        return new MetamodelInformation<T, ID>(domainClass, emf);
-    }
+	@Override
+	public <T, ID> EntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
+		  return new MetamodelInformation<T, ID>(domainClass, emf);
+	}
 
     // /*
     // * (non-Javadoc)

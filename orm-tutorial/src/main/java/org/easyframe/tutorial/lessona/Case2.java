@@ -9,7 +9,15 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
-import jef.codegen.EntityEnhancer;
+import org.easyframe.tutorial.lessona.entity.Customer;
+import org.easyframe.tutorial.lessona.entity.Device;
+import org.easyframe.tutorial.lessona.entity.OperateLog;
+import org.easyframe.tutorial.lessona.entity.Person2;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runners.MethodSorters;
+
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.common.wrapper.Page;
@@ -26,17 +34,9 @@ import jef.database.query.Selects;
 import jef.database.query.SqlExpression;
 import jef.database.wrapper.ResultIterator;
 import jef.tools.DateUtils;
+import jef.tools.PageLimit;
 import jef.tools.ThreadUtils;
 import jef.tools.string.RandomData;
-
-import org.easyframe.tutorial.lessona.entity.Customer;
-import org.easyframe.tutorial.lessona.entity.Device;
-import org.easyframe.tutorial.lessona.entity.OperateLog;
-import org.easyframe.tutorial.lessona.entity.Person2;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runners.MethodSorters;
 
 /**
  * 
@@ -433,7 +433,7 @@ public class Case2 extends org.junit.Assert {
 			System.out.println("=====9. 跨数据库查询并带排序分页=====");
 			Query<Device> query = QB.create(Device.class);
 			query.orderByDesc(Device.Field.indexcode);
-			List<Device> results = db.select(query, new IntRange(11, 20));
+			List<Device> results = db.select(query, new PageLimit(10, 10));
 			for (Device ss : results) {
 				System.out.println(ss);
 			}

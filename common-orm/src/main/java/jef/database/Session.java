@@ -33,6 +33,10 @@ import javax.persistence.NonUniqueResultException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+
+import com.querydsl.sql.SQLQuery;
+
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.common.wrapper.Page;
@@ -90,10 +94,6 @@ import jef.tools.Assert;
 import jef.tools.JefConfiguration;
 import jef.tools.PageLimit;
 import jef.tools.StringUtils;
-
-import org.easyframe.enterprise.spring.TransactionMode;
-
-import com.querydsl.sql.SQLQuery;
 
 /**
  * 描述一个事务(会话)的数据库操作句柄，提供了各种操作数据库的方法供用户使用。
@@ -854,7 +854,7 @@ public abstract class Session {
 	 * </tt>
 	 * </pre>
 	 * <p>
-	 * 当需要指定结果范围（分页）时 {@link #select(IQueryableEntity, IntRange)}
+	 * 当需要指定结果范围（分页）时 {@link #select(IQueryableEntity, PageLimit)}
 	 * 
 	 * 
 	 * 
@@ -868,7 +868,7 @@ public abstract class Session {
 	 * @see Query
 	 */
 	public <T extends IQueryableEntity> List<T> select(T obj) throws SQLException {
-		return select(obj, null);
+		return select(obj, (PageLimit)null);
 	}
 
 	/**
@@ -884,7 +884,7 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 */
 	public <T> List<T> select(TypedQuery<T> queryObj) throws SQLException {
-		return select(queryObj, null);
+		return select(queryObj, (PageLimit)null);
 	}
 
 	/**
@@ -893,18 +893,18 @@ public abstract class Session {
 	 * @param obj
 	 *            查询对象，
 	 * @param range
-	 *            范围，含头含尾的区间，比如new IntRange(1,10)表示从第1条到第10条。
+	 *            范围，Start and limit
 	 * @return 查询结果
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
 	@SuppressWarnings("unchecked")
-	public <T extends IQueryableEntity> List<T> select(T obj, IntRange range) throws SQLException {
+	public <T extends IQueryableEntity> List<T> select(T obj, PageLimit range) throws SQLException {
 		Query<T> query = (Query<T>) obj.getQuery();
 		QueryOption option = QueryOption.createFrom(query);
-		return typedSelect(query, PageLimit.parse(range), option);
+		return typedSelect(query, range, option);
 	}
-
+	
 	/**
 	 * 根据拼装好的Query进行查询
 	 * 
@@ -919,22 +919,34 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> List<T> select(ConditionQuery queryObj, IntRange range) throws SQLException {
+	public <T> List<T> select(ConditionQuery queryObj, PageLimit range) throws SQLException {
 		QueryOption option;
 		if (queryObj instanceof JoinElement) {
 			option = QueryOption.createFrom((JoinElement) queryObj);
 			if (queryObj instanceof Query<?>) {
 				Query<?> simpleQuery = (Query<?>) queryObj;
 				JoinElement element = DbUtils.toReferenceJoinQuery(simpleQuery, null);
-				return this.innerSelect(element, PageLimit.parse(range), simpleQuery.getFilterCondition(), option);
+				return this.innerSelect(element, range, simpleQuery.getFilterCondition(), option);
 			} else {
-				return this.innerSelect(queryObj, PageLimit.parse(range), null, option);
+				return this.innerSelect(queryObj, range, null, option);
 			}
 		} else {
 			option = QueryOption.DEFAULT;
-			return this.innerSelect(queryObj, PageLimit.parse(range), null, option);
+			return this.innerSelect(queryObj, range, null, option);
 		}
 	}
+	
+//	/**
+//	 * 
+//	 * @param queryObj
+//	 * @param range
+//	 * @return
+//	 * @throws SQLException
+//	 */
+//	@Deprecated
+//	public <T> List<T> select(ConditionQuery queryObj, IntRange range) throws SQLException {
+//		return select(queryObj, PageLimit.parse(range));
+//	}
 
 	/**
 	 * 根据拼装好的Query进行查询。并将结果转换为期望的对象。
@@ -988,7 +1000,7 @@ public abstract class Session {
 	public <T> List<T> selectAs(ConditionQuery obj, Class<T> resultType) throws SQLException {
 		return selectAs(obj, resultType, null);
 	}
-
+	
 	/**
 	 * 遍历器模式查找，一般用于超大结果集的返回。 <h3>作用</h3> 当结果集超大时，如果用List<T>返回，内存占用很大甚至会溢出。<br>
 	 * JDBC设计时考虑到这个问题，因此其返回的ResultSet对象只是查询结果视图的一段，用户向后滚动结果集时，数据库才将需要的数据传到客户端。
@@ -1028,7 +1040,7 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 * @see ResultIterator
 	 */
-	public <T extends IQueryableEntity> ResultIterator<T> iteratedSelect(TypedQuery<T> queryObj, IntRange range) throws SQLException {
+	public <T extends IQueryableEntity> ResultIterator<T> iteratedSelect(TypedQuery<T> queryObj, PageLimit range) throws SQLException {
 		QueryOption option;
 		ConditionQuery query;
 		if (queryObj instanceof JoinElement) {
@@ -1042,7 +1054,7 @@ public abstract class Session {
 			option = QueryOption.DEFAULT;
 			query = queryObj;
 		}
-		return innerIteratedSelect(query, PageLimit.parse(range), option);
+		return innerIteratedSelect(query, range, option);
 	}
 
 	/**
@@ -1313,7 +1325,7 @@ public abstract class Session {
 	@SuppressWarnings("unchecked")
 	public <T> List<T> selectByExample(T entity, String... propertyName) throws SQLException {
 		if (entity instanceof IQueryableEntity) {
-			return select(DbUtils.populateExampleConditions((IQueryableEntity) entity, propertyName), null);
+			return select(DbUtils.populateExampleConditions((IQueryableEntity) entity, propertyName), (PageLimit)null);
 		} else {
 			ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
 			Query<PojoWrapper> q;
@@ -3243,4 +3255,25 @@ public abstract class Session {
     public SQLQuery sql() {
         return sql(null);
     }
+    
+
+	/**
+	 * 废弃，使用 {@link #iteratedSelect(TypedQuery, PageLimit)} 代替
+	 * @deprecated use {@link #iteratedSelect(TypedQuery, PageLimit)} instead.
+	 */
+	public <T extends IQueryableEntity> ResultIterator<T> iteratedSelect(TypedQuery<T> queryObj, IntRange range) throws SQLException {
+		return iteratedSelect(queryObj, PageLimit.parse(range));
+	}
+	/**
+	 * 废弃，使用{@link #select(IQueryableEntity, PageLimit)} 代替
+	 * @param obj
+	 * @param range
+	 * @return
+	 * @throws SQLException
+	 */
+	@Deprecated
+	public <T extends IQueryableEntity> List<T> select(T obj, IntRange range) throws SQLException {
+		return select(obj,PageLimit.parse(range));
+	}
+
 }

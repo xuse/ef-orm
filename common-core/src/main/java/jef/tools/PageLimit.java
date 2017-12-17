@@ -6,8 +6,13 @@ public final class PageLimit {
 	private long start;
 	private int limit;
 
-	public PageLimit(long start, int limit) {
-		this.start = start;
+	
+	/**
+	 * @param offset 从offset后面的记录读起
+	 * @param limit 每页条数
+	 */
+	public PageLimit(long offset, int limit) {
+		this.start = offset;
 		this.limit = limit;
 
 	}

@@ -10,6 +10,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.math.RandomUtils;
+import org.apache.commons.lang.time.DateUtils;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
+
 import jef.common.log.LogUtil;
 import jef.common.wrapper.Holder;
 import jef.common.wrapper.IntRange;
@@ -61,15 +69,8 @@ import jef.orm.multitable2.model.Root;
 import jef.orm.multitable2.model.TreeTable;
 import jef.orm.onetable.model.Foo;
 import jef.script.javascript.Var;
+import jef.tools.PageLimit;
 import jef.tools.string.RandomData;
-
-import org.apache.commons.lang.math.RandomUtils;
-import org.apache.commons.lang.time.DateUtils;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({
@@ -490,7 +491,7 @@ public class NativeQueryTest extends org.junit.Assert {
 		// select.column(t4, "desc").as("enumOfLeaf");
 		join.addOrderBy(true, new RefField(Root.Field.range));
 		join.getResultTransformer().setResultType(ResultContainer.class);
-		List<ResultContainer> map = db.select(join, new IntRange(1, 1));
+		List<ResultContainer> map = db.select(join, new PageLimit(0, 1));
 
 		System.out.println("===========result==============");
 		// LogUtil.show(map.get(0));
@@ -751,7 +752,7 @@ public class NativeQueryTest extends org.junit.Assert {
 		UnionQuery<ResultContainer> union = QB.unionAll(ResultContainer.class, join, union2);
 		union.addOrderBy(true, new FBIField("enumOfLeaf")); // 指定union后的排序列
 
-		List<ResultContainer> map = db.select(union, new IntRange(2, 10)); // 限定结果
+		List<ResultContainer> map = db.select(union, new PageLimit(1, 9	)); // 限定结果
 		LogUtil.show(map.get(0));
 	}
 

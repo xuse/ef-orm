@@ -7,7 +7,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.springframework.data.domain.Sort;
-import org.springframework.data.repository.query.parser.OrderBySource;
 import org.springframework.data.repository.query.parser.Part.Type;
 import org.springframework.data.repository.query.parser.PartTree.OrPart;
 import org.springframework.util.Assert;

@@ -22,17 +22,17 @@ import java.util.List;
 import javax.persistence.metamodel.Metamodel;
 import javax.persistence.metamodel.SingularAttribute;
 
+import org.springframework.beans.BeanWrapper;
+import org.springframework.data.repository.core.support.AbstractEntityInformation;
+import org.springframework.data.util.DirectFieldAccessFallbackBeanWrapper;
+import org.springframework.util.Assert;
+
 import jef.database.DbUtils;
 import jef.database.IQueryableEntity;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.jpa.MetaProvider;
 import jef.database.meta.AbstractMetadata;
 import jef.database.meta.ITableMetadata;
-
-import org.springframework.beans.BeanWrapper;
-import org.springframework.data.repository.core.support.AbstractEntityInformation;
-import org.springframework.data.util.DirectFieldAccessFallbackBeanWrapper;
-import org.springframework.util.Assert;
 
 /**
  * Implementation of
@@ -43,7 +43,7 @@ import org.springframework.util.Assert;
  * 
  * @author Jiyi
  */
-public class MetamodelInformation<T,ID extends Serializable> extends AbstractEntityInformation<T, ID> implements GQEntityInformation<T,ID> {
+public class MetamodelInformation<T,ID> extends AbstractEntityInformation<T, ID> implements GQEntityInformation<T,ID> {
 
 	private ITableMetadata metadata;
 

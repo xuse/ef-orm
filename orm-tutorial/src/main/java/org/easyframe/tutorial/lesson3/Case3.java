@@ -5,19 +5,18 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import jef.codegen.EntityEnhancer;
-import jef.common.wrapper.IntRange;
+import org.easyframe.tutorial.lesson2.entity.Student;
+import org.easyframe.tutorial.lesson2.entity.StudentToLesson;
+import org.junit.Test;
+
 import jef.common.wrapper.Page;
 import jef.database.DbClient;
 import jef.database.DbClientBuilder;
 import jef.database.ORMConfig;
 import jef.database.QB;
 import jef.database.query.Query;
+import jef.tools.PageLimit;
 import jef.tools.string.RandomData;
-
-import org.easyframe.tutorial.lesson2.entity.Student;
-import org.easyframe.tutorial.lesson2.entity.StudentToLesson;
-import org.junit.Test;
 
 public class Case3 extends org.junit.Assert {
 	DbClient db;
@@ -41,7 +40,7 @@ public class Case3 extends org.junit.Assert {
 		Query<Student> q = QB.create(Student.class);
 		
 		int count=db.count(q);
-		List<Student> results=db.select(q,new IntRange(11, 20));
+		List<Student> results=db.select(q,new PageLimit(10, 10));
 		assertEquals(count-10, results.size());
 	}
 	

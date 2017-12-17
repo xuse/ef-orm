@@ -108,7 +108,7 @@ final class GqNativeQuery extends AbstractGqQuery {
 			}
 			if (p.isNamedParameter()) {
 				try {
-					query.setParameter(p.getName(), obj);
+					query.setParameter(p.getName().get(), obj);
 				} catch (NoSuchElementException e) {
 					throw new PersistenceException("The parameter [:" + p.getName() + "] is not defined in the query '" + super.getQueryMethod().getName()
 							+ "', please make sure there is \":name\" expression in the Query.", e);

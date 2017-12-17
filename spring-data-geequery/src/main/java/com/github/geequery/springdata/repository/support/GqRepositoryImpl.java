@@ -23,11 +23,24 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 
-import jef.common.wrapper.IntRange;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.github.geequery.springdata.repository.GqRepository;
+import com.github.geequery.springdata.repository.query.QueryUtils;
+import com.querydsl.sql.SQLQuery;
+
 import jef.database.DbClient;
 import jef.database.DbUtils;
 import jef.database.Field;
@@ -49,19 +62,7 @@ import jef.database.query.Query;
 import jef.database.query.SqlExpression;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
-
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Order;
-import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.github.geequery.springdata.repository.GqRepository;
-import com.github.geequery.springdata.repository.query.QueryUtils;
-import com.querydsl.sql.SQLQuery;
+import jef.tools.PageLimit;
 
 /**
  * Default implementation of the
@@ -313,6 +314,12 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 		}
 	}
 
+
+	@Override
+	public Optional<T> findById(ID id) {
+		return Optional.of(getOne(id));
+	}
+	
 	@Override
 	public T getOne(ID id) {
 		if (id == null)
@@ -328,8 +335,8 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <S extends T> S findOne(Example<S> example) {
-		return (S) load(toQuery(example));
+	public <S extends T> Optional<S> findOne(Example<S> example) {
+		return Optional.of((S) load(toQuery(example)));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -362,18 +369,18 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 		return (Page<S>) find(toQuery(example), pageable);
 	}
 
+//	@Override
+//	public T findOne(ID id) {
+//		return getOne(id);
+//	}
+//
 	@Override
-	public T findOne(ID id) {
-		return getOne(id);
-	}
-
-	@Override
-	public boolean exists(ID id) {
+	public boolean existsById(ID id) {
 		return getOne(id) != null;
 	}
-
+	
 	@Override
-	public Iterable<T> findAll(Iterable<ID> ids) {
+	public Iterable<T> findAllById(Iterable<ID> ids) {
 		Session s = getSession();
 		try {
 			return s.batchLoad(meta.getMetadata(), asIdList(ids));
@@ -403,7 +410,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 
 	@Override
 	@Transactional
-	public void delete(Iterable<? extends T> entities) {
+	public void deleteAll(Iterable<? extends T> entities) {
 		Session s = getSession();
 		try {
 			for (T t : entities) {
@@ -427,7 +434,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 
 	@Override
 	@Transactional
-	public <S extends T> List<S> save(Iterable<S> entities) {
+	public <S extends T> List<S> saveAll(Iterable<S> entities) {
 		Session s = getSession();
 		try {
 			List<S> result = asList(entities);
@@ -462,7 +469,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 
 	@Override
 	@Transactional
-	public void delete(ID id) {
+	public void deleteById(ID id) {
 		Session s = getSession();
 		try {
 			s.delete(meta.getMetadata(), toId(id));
@@ -541,8 +548,8 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 		return QueryUtils.getEntityManager(em);
 	}
 
-	private IntRange toRange(Pageable pageable) {
-		return new IntRange(pageable.getOffset() + 1, pageable.getOffset() + pageable.getPageSize());
+	private PageLimit toRange(Pageable pageable) {
+		return new PageLimit(pageable.getOffset(), pageable.getPageSize());
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })

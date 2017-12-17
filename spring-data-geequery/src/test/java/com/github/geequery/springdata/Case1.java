@@ -9,12 +9,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.OptimisticLockException;
 
-import jef.database.ORMConfig;
-import jef.database.QB;
-import jef.database.RecordsHolder;
-import jef.database.query.Query;
-import jef.tools.DateUtils;
-
 import org.easyframe.enterprise.spring.CommonDao;
 import org.junit.Assert;
 import org.junit.Test;
@@ -34,6 +28,12 @@ import com.github.geequery.springdata.test.entity.VersionLog;
 import com.github.geequery.springdata.test.repo.ComplexFooDao;
 import com.github.geequery.springdata.test.repo.FooDao;
 import com.github.geequery.springdata.test.repo.FooEntityDao;
+
+import jef.database.ORMConfig;
+import jef.database.QB;
+import jef.database.RecordsHolder;
+import jef.database.query.Query;
+import jef.tools.DateUtils;
 
 /**
  * 与Spring集成的示例。 本示例使用的xml作为Spring配置。参见
@@ -107,7 +107,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
                 }
             });
             if (updated) {
-                Foo u = foodao.findOne(id);
+                Foo u = foodao.getOne(id);
                 Assert.assertEquals("悲观锁定", u.getRemark());
             }
         }
@@ -136,7 +136,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
         {
             System.out.println("=== FindAll(?,?,?) ===");
             List<Integer> id = Arrays.<Integer> asList(1, 3, 4, 5);
-            Iterable<Foo> foos = foodao.findAll(id);
+            Iterable<Foo> foos = foodao.findAllById(id);
             System.out.println("list=" + foos);
         }
         {
@@ -298,19 +298,19 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
             complex.save(cf);
         }
         {
-            ComplexFoo cf = complex.findOne(new int[] { 1, 2 });
+            ComplexFoo cf = complex.getOne(new int[] { 1, 2 });
             System.out.println(cf);
             cf.setMessage("修改消息!");
             complex.save(cf);
         }
         {
-            Iterable<ComplexFoo> list = complex.findAll(Arrays.asList(new int[] { 1, 2 }, new int[] { 2, 2 }));
+            Iterable<ComplexFoo> list = complex.findAllById(Arrays.asList(new int[] { 1, 2 }, new int[] { 2, 2 }));
             for (ComplexFoo foo : list) {
                 System.out.println(foo);
             }
         }
         {
-            complex.delete(new int[] { 1, 2 });
+            complex.deleteById(new int[] { 1, 2 });
         }
     }
 
@@ -499,7 +499,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
             list.add(new Foo("叶良辰"));
             list.add(new Foo("玛丽苏"));
             list.add(new Foo("龙傲天"));
-            foodao.save(list);
+            foodao.saveAll(list);
         }
         {
             VersionLog v1 = new VersionLog();

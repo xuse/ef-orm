@@ -10,19 +10,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
+
 import jef.common.log.LogUtil;
 import jef.database.Condition.Operator;
 import jef.database.query.Query;
 import jef.database.support.RDBMS;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
+import jef.tools.PageLimit;
 import jef.tools.StringUtils;
 import jef.tools.XMLUtils;
 import jef.tools.reflect.Enums;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
 
 final class NamedQueryHolder {
 	private DbClient parent;
@@ -104,7 +105,7 @@ final class NamedQueryHolder {
 				try {
 					Query<NamedQueryConfig> q = QB.create(NamedQueryConfig.class);
 					q.setCustomTableName(tablename);
-					List<NamedQueryConfig> dbQueries = parent.select(q, null);
+					List<NamedQueryConfig> dbQueries = parent.select(q, (PageLimit)null);
 					for (NamedQueryConfig qc : dbQueries) {
 						if (StringUtils.isEmpty(qc.getName())) {
 							continue;
@@ -189,7 +190,7 @@ final class NamedQueryHolder {
 				}
 				Query<NamedQueryConfig> q = QB.create(NamedQueryConfig.class);
 				q.setCustomTableName(tablename);
-				List<NamedQueryConfig> dbQueries = parent.select(q, null);
+				List<NamedQueryConfig> dbQueries = parent.select(q, (PageLimit)null);
 				for (NamedQueryConfig qc : dbQueries) {
 					if (StringUtils.isEmpty(qc.getName())) {
 						continue;

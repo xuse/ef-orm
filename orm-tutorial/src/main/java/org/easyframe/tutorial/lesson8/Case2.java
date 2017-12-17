@@ -3,14 +3,6 @@ package org.easyframe.tutorial.lesson8;
 import java.sql.SQLException;
 import java.util.Arrays;
 
-import jef.codegen.EntityEnhancer;
-import jef.database.DbClient;
-import jef.database.DbClientBuilder;
-import jef.database.ORMConfig;
-import jef.database.QB;
-import jef.database.query.Query;
-import jef.database.wrapper.ResultIterator;
-
 import org.easyframe.tutorial.lesson2.entity.Student;
 import org.easyframe.tutorial.lesson4.entity.DataDict;
 import org.easyframe.tutorial.lesson4.entity.Person;
@@ -18,6 +10,14 @@ import org.easyframe.tutorial.lesson4.entity.School;
 import org.easyframe.tutorial.lesson5.entity.Item;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import jef.database.DbClient;
+import jef.database.DbClientBuilder;
+import jef.database.ORMConfig;
+import jef.database.QB;
+import jef.database.query.Query;
+import jef.database.wrapper.ResultIterator;
+import jef.tools.PageLimit;
 
 public class Case2 extends org.junit.Assert {
 	private static DbClient db;
@@ -66,7 +66,7 @@ public class Case2 extends org.junit.Assert {
 	public void  testIteratedSelect() throws SQLException{
 		Query<Person> p=QB.create(Person.class);
 		p.setFetchSize(100);
-		ResultIterator<Person> results=db.iteratedSelect(p, null);
+		ResultIterator<Person> results=db.iteratedSelect(p, (PageLimit)null);
 		try{
 			for(;results.hasNext();){
 				Person person=results.next();

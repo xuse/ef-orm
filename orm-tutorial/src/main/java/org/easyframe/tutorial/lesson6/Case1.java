@@ -6,6 +6,13 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import org.easyframe.tutorial.lesson2.entity.Student;
+import org.easyframe.tutorial.lesson4.entity.Person;
+import org.easyframe.tutorial.lesson4.entity.School;
+import org.easyframe.tutorial.lesson5.entity.Item;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 import jef.common.wrapper.IntRange;
 import jef.common.wrapper.Page;
 import jef.database.Condition.Operator;
@@ -16,13 +23,7 @@ import jef.database.query.Join;
 import jef.database.query.JoinElement;
 import jef.database.query.Query;
 import jef.database.query.Selects;
-
-import org.easyframe.tutorial.lesson2.entity.Student;
-import org.easyframe.tutorial.lesson4.entity.Person;
-import org.easyframe.tutorial.lesson4.entity.School;
-import org.easyframe.tutorial.lesson5.entity.Item;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import jef.tools.PageLimit;
 
 public class Case1 extends org.junit.Assert {
 
@@ -246,7 +247,7 @@ public class Case1 extends org.junit.Assert {
 		select = QB.selectFrom(s);
 		select.column(Student.Field.name);
 		select.column(Student.Field.gender);
-		List<Student> result=db.select(QB.unionAll(Student.class,p,s).orderByAsc(Student.Field.name),new IntRange(2,6));
+		List<Student> result=db.select(QB.unionAll(Student.class,p,s).orderByAsc(Student.Field.name),new PageLimit(1,5));
 		for(Student st:result){
 			System.out.println(st.getName()+":"+st.getGender());	
 		}
