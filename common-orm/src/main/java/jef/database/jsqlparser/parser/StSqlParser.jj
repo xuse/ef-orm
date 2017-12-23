@@ -105,6 +105,7 @@ import jef.database.jsqlparser.statement.select.SubSelect;
 import jef.database.jsqlparser.statement.select.Top;
 import jef.database.jsqlparser.statement.select.Union;
 import jef.database.jsqlparser.statement.select.WithItem;
+import jef.database.jsqlparser.statement.select.WithPart;
 import jef.database.jsqlparser.statement.truncate.Truncate;
 import jef.database.jsqlparser.statement.update.Update;
 import jef.database.jsqlparser.expression.Interval;
@@ -160,6 +161,7 @@ TOKEN: /* SQL Keywords. prefixed with K_ to avoid name clashes */
 |   <K_SOME:"SOME">
 |   <K_FULL:"FULL">
 |   <K_WITH:"WITH">
+|   <K_RECURSIVE:"RECURSIVE">
 |   <K_TABLE:"TABLE">
 |   <K_WHERE:"WHERE">
 |   <K_USING:"USING">
@@ -477,7 +479,7 @@ Select Select():
 { 
 	Select select = new Select();
 	SelectBody selectBody = null;
-	List with = null; 
+	WithPart with = null; 
 }
 {
 	[ with=WithList() { select.setWithItemsList(with); } ]
@@ -553,15 +555,17 @@ this is not 100% right, since multiple UNION could have different ALL/DISTINCT c
 	}
 }
 
-List WithList():
+WithPart WithList():
 {
+    boolean flag = false; 
 	ArrayList withItemsList = new ArrayList();
 	WithItem with = null;
 }
 {
-	<K_WITH> with=WithItem() { withItemsList.add(with); } ("," with=WithItem() { withItemsList.add(with); } )*
+	<K_WITH> [<K_RECURSIVE> {  flag = true;	}]
+	with=WithItem() { withItemsList.add(with); } ("," with=WithItem() { withItemsList.add(with); } )*
  
- 	{ return withItemsList; }
+ 	{ return new WithPart(withItemsList, flag); }
 }
 
 WithItem WithItem():

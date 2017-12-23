@@ -83,6 +83,7 @@ import jef.database.jsqlparser.statement.select.SubJoin;
 import jef.database.jsqlparser.statement.select.SubSelect;
 import jef.database.jsqlparser.statement.select.Union;
 import jef.database.jsqlparser.statement.select.WithItem;
+import jef.database.jsqlparser.statement.select.WithPart;
 import jef.database.jsqlparser.statement.truncate.Truncate;
 import jef.database.jsqlparser.statement.update.Update;
 
@@ -401,13 +402,19 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 	public void visit(Select select) {
 		visitPath.push(select);
 		if(select.getWithItemsList()!=null){
-			for(WithItem with: select.getWithItemsList()){
-				with.accept(this);
-			}
+			select.getWithItemsList().accept(this);
 		}
 		if (select.getSelectBody() != null)
 			select.getSelectBody().accept(this);
 		visitPath.pop();
+	}
+	
+
+	@Override
+	public void visit(WithPart withPart) {
+		for(WithItem with: withPart.getWithItemsList()){
+			with.accept(this);
+		}
 	}
 
 	public void visit(Delete delete) {

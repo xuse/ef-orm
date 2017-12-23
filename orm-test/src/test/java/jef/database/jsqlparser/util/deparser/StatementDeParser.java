@@ -76,14 +76,8 @@ public class StatementDeParser implements StatementVisitor {
         selectDeParser.setBuffer(buffer);
         ExpressionDeParser expressionDeParser = new ExpressionDeParser(selectDeParser, buffer);
         selectDeParser.setExpressionVisitor(expressionDeParser);
-        if (select.getWithItemsList() != null && !select.getWithItemsList().isEmpty()) {
-            buffer.append("WITH ");
-            for (Iterator<WithItem> iter = select.getWithItemsList().iterator(); iter.hasNext(); ) {
-                WithItem withItem = iter.next();
-                buffer.append(withItem);
-                if (iter.hasNext()) buffer.append(",");
-                buffer.append(" ");
-            }
+        if (select.getWithItemsList() != null ) {
+        	select.getWithItemsList().accept(selectDeParser);
         }
         select.getSelectBody().accept(selectDeParser);
     }

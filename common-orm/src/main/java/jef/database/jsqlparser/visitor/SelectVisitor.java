@@ -18,6 +18,7 @@ package jef.database.jsqlparser.visitor;
 import jef.database.jsqlparser.statement.select.PlainSelect;
 import jef.database.jsqlparser.statement.select.Union;
 import jef.database.jsqlparser.statement.select.WithItem;
+import jef.database.jsqlparser.statement.select.WithPart;
 
 public interface SelectVisitor {
 
@@ -26,4 +27,6 @@ public interface SelectVisitor {
     public void visit(Union union);
     
     public void visit(WithItem with);
+    
+    public void visit(WithPart with);
 }

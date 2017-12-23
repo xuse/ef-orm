@@ -76,6 +76,7 @@ import jef.database.jsqlparser.statement.select.SubSelect;
 import jef.database.jsqlparser.statement.select.Top;
 import jef.database.jsqlparser.statement.select.Union;
 import jef.database.jsqlparser.statement.select.WithItem;
+import jef.database.jsqlparser.statement.select.WithPart;
 import jef.database.jsqlparser.statement.truncate.Truncate;
 import jef.database.jsqlparser.statement.update.Update;
 import jef.database.jsqlparser.expression.Interval;
@@ -90,7 +91,7 @@ public class JpqlParser implements JpqlParserConstants {
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_WITH:
     case K_SELECT:
-    case 87:
+    case 88:
       stm = Select();
       break;
     case K_UPDATE:
@@ -120,8 +121,8 @@ public class JpqlParser implements JpqlParserConstants {
       throw new ParseException();
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 84:
-      jj_consume_token(84);
+    case 85:
+      jj_consume_token(85);
       break;
     default:
       jj_la1[1] = jj_gen;
@@ -143,22 +144,22 @@ public class JpqlParser implements JpqlParserConstants {
     table = FromItem();
     jj_consume_token(K_SET);
     tableColumn = Column();
-    jj_consume_token(85);
+    jj_consume_token(86);
     value = SimpleExpression();
                                                                 update.addSet(tableColumn, value);
     label_1:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 86:
+      case 87:
         ;
         break;
       default:
         jj_la1[2] = jj_gen;
         break label_1;
       }
-      jj_consume_token(86);
+      jj_consume_token(87);
       tableColumn = Column();
-      jj_consume_token(85);
+      jj_consume_token(86);
       value = SimpleExpression();
                                                                             update.addSet(tableColumn,value);
     }
@@ -201,22 +202,22 @@ public class JpqlParser implements JpqlParserConstants {
     case K_SET:
       jj_consume_token(K_SET);
       tableColumn = Column();
-      jj_consume_token(85);
+      jj_consume_token(86);
       value = SimpleExpression();
                                                                                 columns.add(tableColumn); expList.add(value);
       label_2:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 86:
+        case 87:
           ;
           break;
         default:
           jj_la1[5] = jj_gen;
           break label_2;
         }
-        jj_consume_token(86);
+        jj_consume_token(87);
         tableColumn = Column();
-        jj_consume_token(85);
+        jj_consume_token(86);
         value = SimpleExpression();
                                                                                    columns.add(tableColumn); expList.add(value);
       }
@@ -224,54 +225,54 @@ public class JpqlParser implements JpqlParserConstants {
       break;
     case K_SELECT:
     case K_VALUES:
-    case 87:
+    case 88:
       if (jj_2_1(2)) {
-        jj_consume_token(87);
+        jj_consume_token(88);
         tableColumn = Column();
                                                               columns.add(tableColumn);
         label_3:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 86:
+          case 87:
             ;
             break;
           default:
             jj_la1[6] = jj_gen;
             break label_3;
           }
-          jj_consume_token(86);
+          jj_consume_token(87);
           tableColumn = Column();
                                                                                                                       columns.add(tableColumn);
         }
-        jj_consume_token(88);
+        jj_consume_token(89);
       } else {
         ;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_VALUES:
         jj_consume_token(K_VALUES);
-        jj_consume_token(87);
+        jj_consume_token(88);
         exp = PrimaryExpression();
                                                                           expList.add(exp);
         label_4:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 86:
+          case 87:
             ;
             break;
           default:
             jj_la1[7] = jj_gen;
             break label_4;
           }
-          jj_consume_token(86);
+          jj_consume_token(87);
           exp = PrimaryExpression();
                                                                                 expList.add(exp);
         }
-        jj_consume_token(88);
+        jj_consume_token(89);
                                                                                                              itemsList = new ExpressionList(expList);
         break;
       case K_SELECT:
-      case 87:
+      case 88:
                                           replace.setUseValues(false);
         itemsList = SubSelect();
         break;
@@ -314,62 +315,62 @@ public class JpqlParser implements JpqlParserConstants {
     }
     table = TableOrParameter();
     if (jj_2_2(2)) {
-      jj_consume_token(87);
+      jj_consume_token(88);
       tableColumn = Column();
                                               columns.add(tableColumn);
       label_5:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 86:
+        case 87:
           ;
           break;
         default:
           jj_la1[11] = jj_gen;
           break label_5;
         }
-        jj_consume_token(86);
+        jj_consume_token(87);
         tableColumn = Column();
                                                                                                       columns.add(tableColumn);
       }
-      jj_consume_token(88);
+      jj_consume_token(89);
     } else {
       ;
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_VALUES:
       jj_consume_token(K_VALUES);
-      jj_consume_token(87);
+      jj_consume_token(88);
       exp = SimpleExpression();
                                                          primaryExpList.add(exp);
       label_6:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 86:
+        case 87:
           ;
           break;
         default:
           jj_la1[12] = jj_gen;
           break label_6;
         }
-        jj_consume_token(86);
+        jj_consume_token(87);
         exp = SimpleExpression();
                                                                primaryExpList.add(exp);
       }
-      jj_consume_token(88);
+      jj_consume_token(89);
                                                                                                    itemsList = new ExpressionList(primaryExpList);
       break;
     case K_SELECT:
-    case 87:
+    case 88:
       if (jj_2_3(2)) {
-        jj_consume_token(87);
+        jj_consume_token(88);
       } else {
         ;
       }
                           insert.setUseValues(false);
       itemsList = SubSelect();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 88:
-        jj_consume_token(88);
+      case 89:
+        jj_consume_token(89);
         break;
       default:
         jj_la1[13] = jj_gen;
@@ -435,12 +436,12 @@ public class JpqlParser implements JpqlParserConstants {
         String name3 = null;
     name1 = RelObjectName();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 89:
-      jj_consume_token(89);
+    case 90:
+      jj_consume_token(90);
       name2 = RelObjectName();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 89:
-        jj_consume_token(89);
+      case 90:
+        jj_consume_token(90);
         name3 = RelObjectName();
         break;
       default:
@@ -469,12 +470,12 @@ public class JpqlParser implements JpqlParserConstants {
         String name3 = null;
     name1 = RelObjectName();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 89:
-      jj_consume_token(89);
+    case 90:
+      jj_consume_token(90);
       name2 = RelObjectName();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 89:
-        jj_consume_token(89);
+      case 90:
+        jj_consume_token(90);
         name3 = RelObjectName();
         break;
       default:
@@ -541,7 +542,7 @@ public class JpqlParser implements JpqlParserConstants {
       table = Table();
                        {if (true) return table;}
       break;
-    case 111:
+    case 112:
       table = sqlSegment();
                             {if (true) return table;}
       break;
@@ -560,11 +561,11 @@ public class JpqlParser implements JpqlParserConstants {
         String name3 = null;
     if (jj_2_5(3)) {
       name1 = RelObjectName();
-      jj_consume_token(89);
+      jj_consume_token(90);
       name2 = RelObjectName();
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 90:
-        jj_consume_token(90);
+      case 91:
+        jj_consume_token(91);
         name3 = RelObjectName();
         break;
       default:
@@ -578,8 +579,8 @@ public class JpqlParser implements JpqlParserConstants {
       case S_QUOTED_IDENTIFIER:
         name1 = RelObjectName();
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 90:
-          jj_consume_token(90);
+        case 91:
+          jj_consume_token(91);
           name3 = RelObjectName();
           break;
         default:
@@ -602,7 +603,7 @@ public class JpqlParser implements JpqlParserConstants {
   final public Select Select() throws ParseException {
         Select select = new Select();
         SelectBody selectBody = null;
-        List with = null;
+        WithPart with = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_WITH:
       with = WithList();
@@ -665,10 +666,10 @@ public class JpqlParser implements JpqlParserConstants {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case K_ON:
           jj_consume_token(K_ON);
-          jj_consume_token(87);
+          jj_consume_token(88);
           distinctOn = SelectItemsList();
                                                                            plainSelect.getDistinct().setOnSelectItems(distinctOn);
-          jj_consume_token(88);
+          jj_consume_token(89);
           break;
         default:
           jj_la1[29] = jj_gen;
@@ -784,11 +785,11 @@ public class JpqlParser implements JpqlParserConstants {
         PlainSelect select = null;
         ArrayList selects = new ArrayList();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 87:
-      jj_consume_token(87);
+    case 88:
+      jj_consume_token(88);
       select = PlainSelect();
                                                   selects.add(select);
-      jj_consume_token(88);
+      jj_consume_token(89);
       jj_consume_token(K_UNION);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_ALL:
@@ -812,10 +813,10 @@ public class JpqlParser implements JpqlParserConstants {
         jj_la1[42] = jj_gen;
         ;
       }
-      jj_consume_token(87);
+      jj_consume_token(88);
       select = PlainSelect();
                                                   selects.add(select);
-      jj_consume_token(88);
+      jj_consume_token(89);
       label_7:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -847,10 +848,10 @@ public class JpqlParser implements JpqlParserConstants {
           jj_la1[45] = jj_gen;
           ;
         }
-        jj_consume_token(87);
+        jj_consume_token(88);
         select = PlainSelect();
                                                                                                selects.add(select);
-        jj_consume_token(88);
+        jj_consume_token(89);
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_ORDER:
@@ -945,27 +946,37 @@ public class JpqlParser implements JpqlParserConstants {
     throw new Error("Missing return statement in function");
   }
 
-  final public List WithList() throws ParseException {
+  final public WithPart WithList() throws ParseException {
+    boolean flag = false;
         ArrayList withItemsList = new ArrayList();
         WithItem with = null;
     jj_consume_token(K_WITH);
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case K_RECURSIVE:
+      jj_consume_token(K_RECURSIVE);
+                                    flag = true;
+      break;
+    default:
+      jj_la1[54] = jj_gen;
+      ;
+    }
     with = WithItem();
-                                   withItemsList.add(with);
+                           withItemsList.add(with);
     label_9:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 86:
+      case 87:
         ;
         break;
       default:
-        jj_la1[54] = jj_gen;
+        jj_la1[55] = jj_gen;
         break label_9;
       }
-      jj_consume_token(86);
+      jj_consume_token(87);
       with = WithItem();
-                                                                                     withItemsList.add(with);
+                                                                             withItemsList.add(with);
     }
-          {if (true) return withItemsList;}
+          {if (true) return new WithPart(withItemsList, flag);}
     throw new Error("Missing return statement in function");
   }
 
@@ -977,21 +988,21 @@ public class JpqlParser implements JpqlParserConstants {
     name = RelObjectName();
                                 with.setName(name);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 87:
-      jj_consume_token(87);
-      selectItems = SelectItemsList();
+    case 88:
       jj_consume_token(88);
+      selectItems = SelectItemsList();
+      jj_consume_token(89);
                                                    with.setWithItemList(selectItems);
       break;
     default:
-      jj_la1[55] = jj_gen;
+      jj_la1[56] = jj_gen;
       ;
     }
     jj_consume_token(K_AS);
-    jj_consume_token(87);
+    jj_consume_token(88);
     selectBody = SelectBody();
                                          with.setSelectBody(selectBody);
-    jj_consume_token(88);
+    jj_consume_token(89);
            {if (true) return with;}
     throw new Error("Missing return statement in function");
   }
@@ -1004,14 +1015,14 @@ public class JpqlParser implements JpqlParserConstants {
     label_10:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 86:
+      case 87:
         ;
         break;
       default:
-        jj_la1[56] = jj_gen;
+        jj_la1[57] = jj_gen;
         break label_10;
       }
-      jj_consume_token(86);
+      jj_consume_token(87);
       selectItem = SelectItem();
                                                                                                 selectItemsList.add(selectItem);
     }
@@ -1029,12 +1040,12 @@ public class JpqlParser implements JpqlParserConstants {
         Expression expression = null;
         SubSelect subSelect = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 91:
-      jj_consume_token(91);
+    case 92:
+      jj_consume_token(92);
            selectItem = new AllColumns();
       break;
     default:
-      jj_la1[58] = jj_gen;
+      jj_la1[59] = jj_gen;
       if (jj_2_7(2147483647)) {
         selectItem = AllTableColumns();
       } else {
@@ -1048,16 +1059,16 @@ public class JpqlParser implements JpqlParserConstants {
         case S_IDENTIFIER:
         case S_CHAR_LITERAL:
         case S_QUOTED_IDENTIFIER:
-        case 87:
-        case 92:
-        case 102:
+        case 88:
+        case 93:
         case 103:
-        case 107:
-        case 109:
+        case 104:
+        case 108:
         case 110:
         case 111:
         case 112:
         case 113:
+        case 114:
           expression = SimpleExpression();
                                          selectExpressionItem = new SelectExpressionItem(); selectExpressionItem.setExpression(expression);
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -1068,13 +1079,13 @@ public class JpqlParser implements JpqlParserConstants {
                                           selectExpressionItem.setAlias(alias);
             break;
           default:
-            jj_la1[57] = jj_gen;
+            jj_la1[58] = jj_gen;
             ;
           }
                                                                                      selectItem = selectExpressionItem;
           break;
         default:
-          jj_la1[59] = jj_gen;
+          jj_la1[60] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -1087,8 +1098,8 @@ public class JpqlParser implements JpqlParserConstants {
   final public AllTableColumns AllTableColumns() throws ParseException {
         Table table = null;
     table = Table();
-    jj_consume_token(89);
-    jj_consume_token(91);
+    jj_consume_token(90);
+    jj_consume_token(92);
                 {if (true) return new AllTableColumns(table);}
     throw new Error("Missing return statement in function");
   }
@@ -1100,7 +1111,7 @@ public class JpqlParser implements JpqlParserConstants {
       jj_consume_token(K_AS);
       break;
     default:
-      jj_la1[60] = jj_gen;
+      jj_la1[61] = jj_gen;
       ;
     }
     retval = RelObjectName();
@@ -1114,14 +1125,14 @@ public class JpqlParser implements JpqlParserConstants {
     label_11:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 86:
+      case 87:
         ;
         break;
       default:
-        jj_la1[61] = jj_gen;
+        jj_la1[62] = jj_gen;
         break label_11;
       }
-      jj_consume_token(86);
+      jj_consume_token(87);
       Table();
     }
   }
@@ -1130,33 +1141,33 @@ public class JpqlParser implements JpqlParserConstants {
         FromItem fromItem = null;
         String alias = null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 87:
-      jj_consume_token(87);
+    case 88:
+      jj_consume_token(88);
       if (jj_2_8(2147483647)) {
         fromItem = SubJoin();
       } else {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case K_SELECT:
-        case 87:
+        case 88:
           fromItem = SubSelect();
           break;
         default:
-          jj_la1[62] = jj_gen;
+          jj_la1[63] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
       }
-      jj_consume_token(88);
+      jj_consume_token(89);
       break;
     case S_IDENTIFIER:
     case S_QUOTED_IDENTIFIER:
       fromItem = Table();
       break;
-    case 111:
+    case 112:
       fromItem = sqlSegment();
       break;
     default:
-      jj_la1[63] = jj_gen;
+      jj_la1[64] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -1168,7 +1179,7 @@ public class JpqlParser implements JpqlParserConstants {
                          fromItem.setAlias(alias);
       break;
     default:
-      jj_la1[64] = jj_gen;
+      jj_la1[65] = jj_gen;
       ;
     }
                 {if (true) return fromItem;}
@@ -1200,11 +1211,11 @@ public class JpqlParser implements JpqlParserConstants {
       case K_OUTER:
       case K_RIGHT:
       case K_NATURAL:
-      case 86:
+      case 87:
         ;
         break;
       default:
-        jj_la1[65] = jj_gen;
+        jj_la1[66] = jj_gen;
         break label_12;
       }
       join = JoinerExpression();
@@ -1243,13 +1254,13 @@ public class JpqlParser implements JpqlParserConstants {
                                 join.setNatural(true);
         break;
       default:
-        jj_la1[66] = jj_gen;
+        jj_la1[67] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
       break;
     default:
-      jj_la1[67] = jj_gen;
+      jj_la1[68] = jj_gen;
       ;
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -1265,25 +1276,25 @@ public class JpqlParser implements JpqlParserConstants {
                               join.setInner(true);
         break;
       default:
-        jj_la1[68] = jj_gen;
+        jj_la1[69] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
       break;
     default:
-      jj_la1[69] = jj_gen;
+      jj_la1[70] = jj_gen;
       ;
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_JOIN:
       jj_consume_token(K_JOIN);
       break;
-    case 86:
-      jj_consume_token(86);
+    case 87:
+      jj_consume_token(87);
                                join.setSimple(true);
       break;
     default:
-      jj_la1[70] = jj_gen;
+      jj_la1[71] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -1299,34 +1310,34 @@ public class JpqlParser implements JpqlParserConstants {
         break;
       case K_USING:
         jj_consume_token(K_USING);
-        jj_consume_token(87);
+        jj_consume_token(88);
         tableColumn = Column();
                                                        columns = new ArrayList(); columns.add(tableColumn);
         label_13:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 86:
+          case 87:
             ;
             break;
           default:
-            jj_la1[71] = jj_gen;
+            jj_la1[72] = jj_gen;
             break label_13;
           }
-          jj_consume_token(86);
+          jj_consume_token(87);
           tableColumn = Column();
                                                             columns.add(tableColumn);
         }
-        jj_consume_token(88);
+        jj_consume_token(89);
                     join.setUsingColumns(columns);
         break;
       default:
-        jj_la1[72] = jj_gen;
+        jj_la1[73] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
       break;
     default:
-      jj_la1[73] = jj_gen;
+      jj_la1[74] = jj_gen;
       ;
     }
         join.setRightItem(right);
@@ -1352,14 +1363,14 @@ public class JpqlParser implements JpqlParserConstants {
     label_14:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 86:
+      case 87:
         ;
         break;
       default:
-        jj_la1[74] = jj_gen;
+        jj_la1[75] = jj_gen;
         break label_14;
       }
-      jj_consume_token(86);
+      jj_consume_token(87);
       columnReference = SimpleExpression();
                                               columnReferences.add(columnReference);
     }
@@ -1382,7 +1393,7 @@ public class JpqlParser implements JpqlParserConstants {
 
       break;
     default:
-      jj_la1[75] = jj_gen;
+      jj_la1[76] = jj_gen;
       ;
     }
                 {if (true) return new StartWithExpression(startCond,connectCond);}
@@ -1407,14 +1418,14 @@ public class JpqlParser implements JpqlParserConstants {
     label_15:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 86:
+      case 87:
         ;
         break;
       default:
-        jj_la1[76] = jj_gen;
+        jj_la1[77] = jj_gen;
         break label_15;
       }
-      jj_consume_token(86);
+      jj_consume_token(87);
       orderByElement = OrderByElement();
                                                orderBy.add(orderByElement);
     }
@@ -1425,7 +1436,7 @@ public class JpqlParser implements JpqlParserConstants {
                              orderBy.setNullsLast(true);
       break;
     default:
-      jj_la1[77] = jj_gen;
+      jj_la1[78] = jj_gen;
       ;
     }
         {if (true) return orderBy;}
@@ -1449,13 +1460,13 @@ public class JpqlParser implements JpqlParserConstants {
                            orderByElement.setAsc(false);
         break;
       default:
-        jj_la1[78] = jj_gen;
+        jj_la1[79] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
       break;
     default:
-      jj_la1[79] = jj_gen;
+      jj_la1[80] = jj_gen;
       ;
     }
         orderByElement.setExpression(columnReference);
@@ -1475,29 +1486,29 @@ public class JpqlParser implements JpqlParserConstants {
                         token = jj_consume_token(S_INTEGER);
                                     limit.setOffset(Long.parseLong(token.image));
         break;
-      case 92:
-      case 111:
+      case 93:
+      case 112:
         exp = CaseJPQLParameter();
                                            limit.setOffsetJdbcParameter(exp);
         break;
       default:
-        jj_la1[80] = jj_gen;
+        jj_la1[81] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
-      jj_consume_token(86);
+      jj_consume_token(87);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case S_INTEGER:
         token = jj_consume_token(S_INTEGER);
                                     limit.setRowCount(Long.parseLong(token.image));
         break;
-      case 92:
-      case 111:
+      case 93:
+      case 112:
         exp = CaseJPQLParameter();
                                           limit.setRowCountJdbcParameter(exp);
         break;
       default:
-        jj_la1[81] = jj_gen;
+        jj_la1[82] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1511,8 +1522,8 @@ public class JpqlParser implements JpqlParserConstants {
                           token = jj_consume_token(S_INTEGER);
                                     limit.setRowCount(Long.parseLong(token.image));
           break;
-        case 92:
-        case 111:
+        case 93:
+        case 112:
           exp = CaseJPQLParameter();
                                           limit.setRowCountJdbcParameter(exp);
           break;
@@ -1521,7 +1532,7 @@ public class JpqlParser implements JpqlParserConstants {
                           limit.setLimitAll(true);
           break;
         default:
-          jj_la1[82] = jj_gen;
+          jj_la1[83] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -1533,19 +1544,19 @@ public class JpqlParser implements JpqlParserConstants {
             token = jj_consume_token(S_INTEGER);
                                                   limit.setOffset(Long.parseLong(token.image));
             break;
-          case 92:
-          case 111:
+          case 93:
+          case 112:
             exp = CaseJPQLParameter();
                                                                                                                               limit.setOffsetJdbcParameter(exp);
             break;
           default:
-            jj_la1[83] = jj_gen;
+            jj_la1[84] = jj_gen;
             jj_consume_token(-1);
             throw new ParseException();
           }
           break;
         default:
-          jj_la1[84] = jj_gen;
+          jj_la1[85] = jj_gen;
           ;
         }
         break;
@@ -1556,19 +1567,19 @@ public class JpqlParser implements JpqlParserConstants {
           token = jj_consume_token(S_INTEGER);
                                                       limit.setOffset(Long.parseLong(token.image));
           break;
-        case 92:
-        case 111:
+        case 93:
+        case 112:
           exp = CaseJPQLParameter();
                                                                                                                                   limit.setOffsetJdbcParameter(exp);
           break;
         default:
-          jj_la1[85] = jj_gen;
+          jj_la1[86] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
         break;
       default:
-        jj_la1[86] = jj_gen;
+        jj_la1[87] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1586,12 +1597,12 @@ public class JpqlParser implements JpqlParserConstants {
       token = jj_consume_token(S_INTEGER);
                                     top.setRowCount(Long.parseLong(token.image));
       break;
-    case 92:
-      jj_consume_token(92);
+    case 93:
+      jj_consume_token(93);
                       top.setRowCountJdbcParameter(true);
       break;
     default:
-      jj_la1[87] = jj_gen;
+      jj_la1[88] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -1605,18 +1616,18 @@ public class JpqlParser implements JpqlParserConstants {
       retval = OrExpression();
     } else {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 87:
-        jj_consume_token(87);
-        retval = Expression();
+      case 88:
         jj_consume_token(88);
+        retval = Expression();
+        jj_consume_token(89);
                                              retval = new Parenthesis(retval);
         break;
-      case 92:
-      case 111:
+      case 93:
+      case 112:
         retval = CaseJPQLParameter();
         break;
       default:
-        jj_la1[88] = jj_gen;
+        jj_la1[89] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1653,23 +1664,23 @@ public class JpqlParser implements JpqlParserConstants {
     } else {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_NOT:
-      case 87:
+      case 88:
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case K_NOT:
           jj_consume_token(K_NOT);
                         not = true;
           break;
         default:
-          jj_la1[89] = jj_gen;
+          jj_la1[90] = jj_gen;
           ;
         }
-        jj_consume_token(87);
-        left = OrExpression();
         jj_consume_token(88);
+        left = OrExpression();
+        jj_consume_token(89);
                                          left = new Parenthesis(left); if (not) { ((Parenthesis)left).setNot(); not = false; }
         break;
       default:
-        jj_la1[90] = jj_gen;
+        jj_la1[91] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1688,23 +1699,23 @@ public class JpqlParser implements JpqlParserConstants {
       } else {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case K_NOT:
-        case 87:
+        case 88:
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
           case K_NOT:
             jj_consume_token(K_NOT);
                                 not = true;
             break;
           default:
-            jj_la1[91] = jj_gen;
+            jj_la1[92] = jj_gen;
             ;
           }
-          jj_consume_token(87);
-          right = OrExpression();
           jj_consume_token(88);
+          right = OrExpression();
+          jj_consume_token(89);
                                                   right = new Parenthesis(right); if (not) { ((Parenthesis)right).setNot(); not = false; }
           break;
         default:
-          jj_la1[92] = jj_gen;
+          jj_la1[93] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -1724,11 +1735,11 @@ public class JpqlParser implements JpqlParserConstants {
       result = RegularCondition();
     } else {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 111:
+      case 112:
         result = sqlSegment();
         break;
       default:
-        jj_la1[93] = jj_gen;
+        jj_la1[94] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1749,7 +1760,7 @@ public class JpqlParser implements JpqlParserConstants {
                   prior=jef.database.jsqlparser.expression.BinaryExpression.Prior.LEFT;
       break;
     default:
-      jj_la1[94] = jj_gen;
+      jj_la1[95] = jj_gen;
       ;
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -1758,50 +1769,50 @@ public class JpqlParser implements JpqlParserConstants {
                 not = true;
       break;
     default:
-      jj_la1[95] = jj_gen;
+      jj_la1[96] = jj_gen;
       ;
     }
     leftExpression = ComparisonItem();
                                           result = leftExpression;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 93:
-      jj_consume_token(93);
-              result = new GreaterThan();
-      break;
     case 94:
       jj_consume_token(94);
-                result = new MinorThan();
-      break;
-    case 85:
-      jj_consume_token(85);
-                result = new EqualsTo();
+              result = new GreaterThan();
       break;
     case 95:
       jj_consume_token(95);
-                 result = new GreaterThanEquals();
+                result = new MinorThan();
+      break;
+    case 86:
+      jj_consume_token(86);
+                result = new EqualsTo();
       break;
     case 96:
       jj_consume_token(96);
-                 result = new MinorThanEquals();
+                 result = new GreaterThanEquals();
       break;
     case 97:
+      jj_consume_token(97);
+                 result = new MinorThanEquals();
+      break;
     case 98:
+    case 99:
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 97:
-        jj_consume_token(97);
-        break;
       case 98:
         jj_consume_token(98);
         break;
+      case 99:
+        jj_consume_token(99);
+        break;
       default:
-        jj_la1[96] = jj_gen;
+        jj_la1[97] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
                           result = new NotEqualsTo();
       break;
     default:
-      jj_la1[97] = jj_gen;
+      jj_la1[98] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -1811,7 +1822,7 @@ public class JpqlParser implements JpqlParserConstants {
                      prior=jef.database.jsqlparser.expression.BinaryExpression.Prior.RIGHT;
       break;
     default:
-      jj_la1[98] = jj_gen;
+      jj_la1[99] = jj_gen;
       ;
     }
     rightExpression = ComparisonItem();
@@ -1846,20 +1857,20 @@ public class JpqlParser implements JpqlParserConstants {
       case S_IDENTIFIER:
       case S_CHAR_LITERAL:
       case S_QUOTED_IDENTIFIER:
-      case 87:
-      case 92:
-      case 102:
+      case 88:
+      case 93:
       case 103:
-      case 107:
-      case 109:
+      case 104:
+      case 108:
       case 110:
       case 111:
       case 112:
       case 113:
+      case 114:
         result = LikeExpression();
         break;
       default:
-        jj_la1[99] = jj_gen;
+        jj_la1[100] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1878,28 +1889,28 @@ public class JpqlParser implements JpqlParserConstants {
                                          leftExpression.add(expr);
     } else {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 87:
-        jj_consume_token(87);
+      case 88:
+        jj_consume_token(88);
         expr = SimpleExpression();
                                     leftExpression.add(expr);
         label_18:
         while (true) {
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 86:
+          case 87:
             ;
             break;
           default:
-            jj_la1[100] = jj_gen;
+            jj_la1[101] = jj_gen;
             break label_18;
           }
-          jj_consume_token(86);
+          jj_consume_token(87);
           expr = SimpleExpression();
                                                                                               leftExpression.add(expr);
         }
-        jj_consume_token(88);
+        jj_consume_token(89);
         break;
       default:
-        jj_la1[101] = jj_gen;
+        jj_la1[102] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -1910,11 +1921,11 @@ public class JpqlParser implements JpqlParserConstants {
                result.setNot(true);
       break;
     default:
-      jj_la1[102] = jj_gen;
+      jj_la1[103] = jj_gen;
       ;
     }
     jj_consume_token(K_IN);
-    jj_consume_token(87);
+    jj_consume_token(88);
     if (jj_2_22(2147483647)) {
       itemsList = SubSelect();
     } else {
@@ -1928,25 +1939,25 @@ public class JpqlParser implements JpqlParserConstants {
       case S_IDENTIFIER:
       case S_CHAR_LITERAL:
       case S_QUOTED_IDENTIFIER:
-      case 87:
-      case 92:
-      case 102:
+      case 88:
+      case 93:
       case 103:
-      case 107:
-      case 109:
+      case 104:
+      case 108:
       case 110:
       case 111:
       case 112:
       case 113:
+      case 114:
         itemsList = SimpleExpressionList();
         break;
       default:
-        jj_la1[103] = jj_gen;
+        jj_la1[104] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
     }
-    jj_consume_token(88);
+    jj_consume_token(89);
                 result.setLeftExpression(leftExpression);
                 result.setItemsList(itemsList);
                 {if (true) return result;}
@@ -1965,7 +1976,7 @@ public class JpqlParser implements JpqlParserConstants {
                        result.setNot(true);
       break;
     default:
-      jj_la1[104] = jj_gen;
+      jj_la1[105] = jj_gen;
       ;
     }
     jj_consume_token(K_BETWEEN);
@@ -1990,7 +2001,7 @@ public class JpqlParser implements JpqlParserConstants {
                result.setNot(true);
       break;
     default:
-      jj_la1[105] = jj_gen;
+      jj_la1[106] = jj_gen;
       ;
     }
     jj_consume_token(K_LIKE);
@@ -2002,7 +2013,7 @@ public class JpqlParser implements JpqlParserConstants {
                                          result.setEscape((new StringValue(token.image)).getValue());
       break;
     default:
-      jj_la1[106] = jj_gen;
+      jj_la1[107] = jj_gen;
       ;
     }
                 result.setLeftExpression(leftExpression);
@@ -2022,7 +2033,7 @@ public class JpqlParser implements JpqlParserConstants {
                       result.setNot(true);
       break;
     default:
-      jj_la1[107] = jj_gen;
+      jj_la1[108] = jj_gen;
       ;
     }
     jj_consume_token(K_NULL);
@@ -2040,7 +2051,7 @@ public class JpqlParser implements JpqlParserConstants {
                result.setNot(true);
       break;
     default:
-      jj_la1[108] = jj_gen;
+      jj_la1[109] = jj_gen;
       ;
     }
     jj_consume_token(K_EXISTS);
@@ -2062,16 +2073,16 @@ public class JpqlParser implements JpqlParserConstants {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_AS:
       case K_FROM:
-      case 86:
+      case 87:
         ;
         break;
       default:
-        jj_la1[109] = jj_gen;
+        jj_la1[110] = jj_gen;
         break label_19;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 86:
-        jj_consume_token(86);
+      case 87:
+        jj_consume_token(87);
         break;
       case K_AS:
         jj_consume_token(K_AS);
@@ -2084,7 +2095,7 @@ public class JpqlParser implements JpqlParserConstants {
                         expressions.add(expr);
         break;
       default:
-        jj_la1[110] = jj_gen;
+        jj_la1[111] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -2113,18 +2124,18 @@ public class JpqlParser implements JpqlParserConstants {
                                         expressions.add(expr); retval.setBetween(" from ");
       break;
     default:
-      jj_la1[112] = jj_gen;
+      jj_la1[113] = jj_gen;
       label_20:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 86:
+        case 87:
           ;
           break;
         default:
-          jj_la1[111] = jj_gen;
+          jj_la1[112] = jj_gen;
           break label_20;
         }
-        jj_consume_token(86);
+        jj_consume_token(87);
         expr = SimpleExpression();
                                     expressions.add(expr);
       }
@@ -2153,20 +2164,20 @@ public class JpqlParser implements JpqlParserConstants {
     case S_IDENTIFIER:
     case S_CHAR_LITERAL:
     case S_QUOTED_IDENTIFIER:
-    case 87:
-    case 92:
-    case 102:
+    case 88:
+    case 93:
     case 103:
-    case 107:
-    case 109:
+    case 104:
+    case 108:
     case 110:
     case 111:
     case 112:
     case 113:
+    case 114:
       retval = SimpleExpression();
       break;
     default:
-      jj_la1[113] = jj_gen;
+      jj_la1[114] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -2178,9 +2189,9 @@ public class JpqlParser implements JpqlParserConstants {
         AllComparisonExpression retval = null;
         SubSelect subselect = null;
     jj_consume_token(K_ALL);
-    jj_consume_token(87);
-    subselect = SubSelect();
     jj_consume_token(88);
+    subselect = SubSelect();
+    jj_consume_token(89);
                                          retval = new AllComparisonExpression(subselect);
       {if (true) return retval;}
     throw new Error("Missing return statement in function");
@@ -2197,13 +2208,13 @@ public class JpqlParser implements JpqlParserConstants {
       jj_consume_token(K_SOME);
       break;
     default:
-      jj_la1[114] = jj_gen;
+      jj_la1[115] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
-    jj_consume_token(87);
-    subselect = SubSelect();
     jj_consume_token(88);
+    subselect = SubSelect();
+    jj_consume_token(89);
                                                       retval = new AnyComparisonExpression(subselect);
       {if (true) return retval;}
     throw new Error("Missing return statement in function");
@@ -2215,14 +2226,14 @@ public class JpqlParser implements JpqlParserConstants {
       retval = BitwiseAndOr();
     } else {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 87:
-        jj_consume_token(87);
-        retval = BitwiseAndOr();
+      case 88:
         jj_consume_token(88);
+        retval = BitwiseAndOr();
+        jj_consume_token(89);
                                                retval = new Parenthesis(retval);
         break;
       default:
-        jj_la1[115] = jj_gen;
+        jj_la1[116] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -2240,14 +2251,14 @@ public class JpqlParser implements JpqlParserConstants {
     label_21:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 99:
+      case 100:
         ;
         break;
       default:
-        jj_la1[116] = jj_gen;
+        jj_la1[117] = jj_gen;
         break label_21;
       }
-      jj_consume_token(99);
+      jj_consume_token(100);
       rightExpression = AdditiveExpression();
                         Concat binExp = new Concat();
                         binExp.setLeftExpression(leftExpression);
@@ -2273,16 +2284,16 @@ public class JpqlParser implements JpqlParserConstants {
         break label_22;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 100:
-        jj_consume_token(100);
-                                              result = new BitwiseOr();
-        break;
       case 101:
         jj_consume_token(101);
+                                              result = new BitwiseOr();
+        break;
+      case 102:
+        jj_consume_token(102);
                                               result = new BitwiseAnd();
         break;
       default:
-        jj_la1[117] = jj_gen;
+        jj_la1[118] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -2310,16 +2321,16 @@ public class JpqlParser implements JpqlParserConstants {
         break label_23;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 102:
-        jj_consume_token(102);
-                            result = new Addition();
-        break;
       case 103:
         jj_consume_token(103);
+                            result = new Addition();
+        break;
+      case 104:
+        jj_consume_token(104);
                                                                         result = new Subtraction();
         break;
       default:
-        jj_la1[118] = jj_gen;
+        jj_la1[119] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -2341,14 +2352,14 @@ public class JpqlParser implements JpqlParserConstants {
       leftExpression = BitwiseXor();
     } else {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 87:
-        jj_consume_token(87);
-        leftExpression = AdditiveExpression();
+      case 88:
         jj_consume_token(88);
+        leftExpression = AdditiveExpression();
+        jj_consume_token(89);
                                                          leftExpression = new Parenthesis(leftExpression);
         break;
       default:
-        jj_la1[119] = jj_gen;
+        jj_la1[120] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -2362,20 +2373,20 @@ public class JpqlParser implements JpqlParserConstants {
         break label_24;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 91:
-        jj_consume_token(91);
+      case 92:
+        jj_consume_token(92);
                             result = new Multiplication();
-        break;
-      case 104:
-        jj_consume_token(104);
-                                                                        result = new Division();
         break;
       case 105:
         jj_consume_token(105);
+                                                                        result = new Division();
+        break;
+      case 106:
+        jj_consume_token(106);
                                                                         result= new Mod();
         break;
       default:
-        jj_la1[120] = jj_gen;
+        jj_la1[121] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -2383,14 +2394,14 @@ public class JpqlParser implements JpqlParserConstants {
         rightExpression = BitwiseXor();
       } else {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 87:
-          jj_consume_token(87);
-          rightExpression = AdditiveExpression();
+        case 88:
           jj_consume_token(88);
+          rightExpression = AdditiveExpression();
+          jj_consume_token(89);
                                                                                                   rightExpression = new Parenthesis(rightExpression);
           break;
         default:
-          jj_la1[121] = jj_gen;
+          jj_la1[122] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -2413,14 +2424,14 @@ public class JpqlParser implements JpqlParserConstants {
     label_25:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 106:
+      case 107:
         ;
         break;
       default:
-        jj_la1[122] = jj_gen;
+        jj_la1[123] = jj_gen;
         break label_25;
       }
-      jj_consume_token(106);
+      jj_consume_token(107);
       rightExpression = PrimaryExpression();
                         BitwiseXor binExp = new BitwiseXor();
                         binExp.setLeftExpression(leftExpression);
@@ -2450,22 +2461,22 @@ public class JpqlParser implements JpqlParserConstants {
       case S_IDENTIFIER:
       case S_CHAR_LITERAL:
       case S_QUOTED_IDENTIFIER:
-      case 87:
-      case 92:
-      case 102:
+      case 88:
+      case 93:
       case 103:
-      case 107:
-      case 109:
+      case 104:
+      case 108:
       case 110:
       case 111:
       case 112:
       case 113:
+      case 114:
         value = PrimaryExpression();
         unit = jj_consume_token(S_IDENTIFIER);
                 {if (true) return new Interval(value,unit.image);}
         break;
       default:
-        jj_la1[123] = jj_gen;
+        jj_la1[124] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
@@ -2489,131 +2500,131 @@ public class JpqlParser implements JpqlParserConstants {
     case K_CASE:
       retval = CaseWhenExpression();
       break;
-    case 92:
-    case 111:
+    case 93:
+    case 112:
       retval = CaseJPQLParameter();
       break;
     default:
-      jj_la1[136] = jj_gen;
+      jj_la1[137] = jj_gen;
       if (jj_2_30(2147483647)) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 102:
         case 103:
+        case 104:
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 102:
-            jj_consume_token(102);
-            break;
           case 103:
             jj_consume_token(103);
+            break;
+          case 104:
+            jj_consume_token(104);
                                                            isInverse = true;
             break;
           default:
-            jj_la1[124] = jj_gen;
+            jj_la1[125] = jj_gen;
             jj_consume_token(-1);
             throw new ParseException();
           }
           break;
         default:
-          jj_la1[125] = jj_gen;
+          jj_la1[126] = jj_gen;
           ;
         }
         retval = Function();
       } else if (jj_2_31(2147483647)) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 102:
         case 103:
+        case 104:
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 102:
-            jj_consume_token(102);
-            break;
           case 103:
             jj_consume_token(103);
+            break;
+          case 104:
+            jj_consume_token(104);
                                                                     tmp = "-";
             break;
           default:
-            jj_la1[126] = jj_gen;
+            jj_la1[127] = jj_gen;
             jj_consume_token(-1);
             throw new ParseException();
           }
           break;
         default:
-          jj_la1[127] = jj_gen;
+          jj_la1[128] = jj_gen;
           ;
         }
         token = jj_consume_token(S_DOUBLE);
                                                                                                       retval = new DoubleValue(tmp+token.image);
       } else if (jj_2_32(2147483647)) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 102:
         case 103:
+        case 104:
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 102:
-            jj_consume_token(102);
-            break;
           case 103:
             jj_consume_token(103);
+            break;
+          case 104:
+            jj_consume_token(104);
                                                                             tmp = "-";
             break;
           default:
-            jj_la1[128] = jj_gen;
+            jj_la1[129] = jj_gen;
             jj_consume_token(-1);
             throw new ParseException();
           }
           break;
         default:
-          jj_la1[129] = jj_gen;
+          jj_la1[130] = jj_gen;
           ;
         }
         token = jj_consume_token(S_INTEGER);
                                                                                                                retval = new LongValue(tmp+token.image);
       } else if (jj_2_33(2)) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 102:
         case 103:
+        case 104:
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 102:
-            jj_consume_token(102);
-            break;
           case 103:
             jj_consume_token(103);
+            break;
+          case 104:
+            jj_consume_token(104);
                                       isInverse = true;
             break;
           default:
-            jj_la1[130] = jj_gen;
+            jj_la1[131] = jj_gen;
             jj_consume_token(-1);
             throw new ParseException();
           }
           break;
         default:
-          jj_la1[131] = jj_gen;
+          jj_la1[132] = jj_gen;
           ;
         }
         retval = ColumnOrFunc();
       } else if (jj_2_34(2)) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 102:
         case 103:
+        case 104:
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 102:
-            jj_consume_token(102);
-            break;
           case 103:
             jj_consume_token(103);
+            break;
+          case 104:
+            jj_consume_token(104);
                                      isInverse = true;
             break;
           default:
-            jj_la1[132] = jj_gen;
+            jj_la1[133] = jj_gen;
             jj_consume_token(-1);
             throw new ParseException();
           }
           break;
         default:
-          jj_la1[133] = jj_gen;
+          jj_la1[134] = jj_gen;
           ;
         }
-        jj_consume_token(87);
-        retval = PrimaryExpression();
         jj_consume_token(88);
+        retval = PrimaryExpression();
+        jj_consume_token(89);
                                                                                                retval = new Parenthesis(retval);
       } else {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -2621,54 +2632,54 @@ public class JpqlParser implements JpqlParserConstants {
           token = jj_consume_token(S_CHAR_LITERAL);
                                    retval = new StringValue(token.image);
           break;
-        case 87:
-        case 102:
+        case 88:
         case 103:
+        case 104:
           switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-          case 102:
           case 103:
+          case 104:
             switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-            case 102:
-              jj_consume_token(102);
-              break;
             case 103:
               jj_consume_token(103);
+              break;
+            case 104:
+              jj_consume_token(104);
                         isInverse = true;
               break;
             default:
-              jj_la1[134] = jj_gen;
+              jj_la1[135] = jj_gen;
               jj_consume_token(-1);
               throw new ParseException();
             }
             break;
           default:
-            jj_la1[135] = jj_gen;
+            jj_la1[136] = jj_gen;
             ;
           }
-          jj_consume_token(87);
-          retval = SubSelect();
           jj_consume_token(88);
+          retval = SubSelect();
+          jj_consume_token(89);
           break;
-        case 107:
-          jj_consume_token(107);
-          token = jj_consume_token(S_CHAR_LITERAL);
+        case 108:
           jj_consume_token(108);
-                                                  retval = new DateValue(token.image);
-          break;
-        case 109:
+          token = jj_consume_token(S_CHAR_LITERAL);
           jj_consume_token(109);
-          token = jj_consume_token(S_CHAR_LITERAL);
-          jj_consume_token(108);
-                                                  retval = new TimeValue(token.image);
+                                                  retval = new DateValue(token.image);
           break;
         case 110:
           jj_consume_token(110);
           token = jj_consume_token(S_CHAR_LITERAL);
-          jj_consume_token(108);
+          jj_consume_token(109);
+                                                  retval = new TimeValue(token.image);
+          break;
+        case 111:
+          jj_consume_token(111);
+          token = jj_consume_token(S_CHAR_LITERAL);
+          jj_consume_token(109);
                                                    retval = new TimestampValue(token.image);
           break;
         default:
-          jj_la1[137] = jj_gen;
+          jj_la1[138] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
@@ -2685,11 +2696,11 @@ public class JpqlParser implements JpqlParserConstants {
         Token name=null;
         Token type=null;
         JpqlParameter caseExp=null;
-    jj_consume_token(111);
+    jj_consume_token(112);
     name = jj_consume_token(S_IDENTIFIER);
-    jj_consume_token(94);
+    jj_consume_token(95);
     type = jj_consume_token(K_SQL);
-    jj_consume_token(93);
+    jj_consume_token(94);
         caseExp = new JpqlParameter(name.image,false,type.image);
         {if (true) return caseExp;}
     throw new Error("Missing return statement in function");
@@ -2701,11 +2712,11 @@ public class JpqlParser implements JpqlParserConstants {
         String typeStr=null;
         JpqlParameter caseExp=null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 92:
-      jj_consume_token(92);
+    case 93:
+      jj_consume_token(93);
       name = jj_consume_token(S_INTEGER);
       if (jj_2_35(2)) {
-        jj_consume_token(94);
+        jj_consume_token(95);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case S_IDENTIFIER:
           type = jj_consume_token(S_IDENTIFIER);
@@ -2714,11 +2725,11 @@ public class JpqlParser implements JpqlParserConstants {
           type = jj_consume_token(K_SQL);
           break;
         default:
-          jj_la1[138] = jj_gen;
+          jj_la1[139] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
-        jj_consume_token(93);
+        jj_consume_token(94);
                typeStr=type.image;
       } else {
         ;
@@ -2726,8 +2737,8 @@ public class JpqlParser implements JpqlParserConstants {
         caseExp = new JpqlParameter(name.image,true,typeStr);
         {if (true) return caseExp;}
       break;
-    case 111:
-      jj_consume_token(111);
+    case 112:
+      jj_consume_token(112);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case S_IDENTIFIER:
         name = jj_consume_token(S_IDENTIFIER);
@@ -2745,12 +2756,12 @@ public class JpqlParser implements JpqlParserConstants {
         name = jj_consume_token(K_WITH);
         break;
       default:
-        jj_la1[139] = jj_gen;
+        jj_la1[140] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
       if (jj_2_36(2)) {
-        jj_consume_token(94);
+        jj_consume_token(95);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case S_IDENTIFIER:
           type = jj_consume_token(S_IDENTIFIER);
@@ -2759,11 +2770,11 @@ public class JpqlParser implements JpqlParserConstants {
           type = jj_consume_token(K_SQL);
           break;
         default:
-          jj_la1[140] = jj_gen;
+          jj_la1[141] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
-        jj_consume_token(93);
+        jj_consume_token(94);
         typeStr=type.image;
       } else {
         ;
@@ -2772,7 +2783,7 @@ public class JpqlParser implements JpqlParserConstants {
         {if (true) return caseExp;}
       break;
     default:
-      jj_la1[141] = jj_gen;
+      jj_la1[142] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -2797,7 +2808,7 @@ public class JpqlParser implements JpqlParserConstants {
           ;
           break;
         default:
-          jj_la1[142] = jj_gen;
+          jj_la1[143] = jj_gen;
           break label_26;
         }
       }
@@ -2807,7 +2818,7 @@ public class JpqlParser implements JpqlParserConstants {
         elseExp = PrimaryExpression();
         break;
       default:
-        jj_la1[143] = jj_gen;
+        jj_la1[144] = jj_gen;
         ;
       }
       break;
@@ -2820,16 +2831,16 @@ public class JpqlParser implements JpqlParserConstants {
     case S_IDENTIFIER:
     case S_CHAR_LITERAL:
     case S_QUOTED_IDENTIFIER:
-    case 87:
-    case 92:
-    case 102:
+    case 88:
+    case 93:
     case 103:
-    case 107:
-    case 109:
+    case 104:
+    case 108:
     case 110:
     case 111:
     case 112:
     case 113:
+    case 114:
       switchExp = PrimaryExpression();
       label_27:
       while (true) {
@@ -2838,7 +2849,7 @@ public class JpqlParser implements JpqlParserConstants {
           ;
           break;
         default:
-          jj_la1[144] = jj_gen;
+          jj_la1[145] = jj_gen;
           break label_27;
         }
         clause = WhenThenValue();
@@ -2850,12 +2861,12 @@ public class JpqlParser implements JpqlParserConstants {
         elseExp = PrimaryExpression();
         break;
       default:
-        jj_la1[145] = jj_gen;
+        jj_la1[146] = jj_gen;
         ;
       }
       break;
     default:
-      jj_la1[146] = jj_gen;
+      jj_la1[147] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -2899,10 +2910,10 @@ public class JpqlParser implements JpqlParserConstants {
         Function function;
         Over over=null;
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 112:
-      jj_consume_token(112);
+    case 113:
+      jj_consume_token(113);
       function = internalFunction();
-      jj_consume_token(108);
+      jj_consume_token(109);
                                                     function.setEscaped(true);
       break;
     case K_REPLACE:
@@ -2910,12 +2921,12 @@ public class JpqlParser implements JpqlParserConstants {
     case S_QUOTED_IDENTIFIER:
       function = internalFunction();
       break;
-    case 113:
-      jj_consume_token(113);
+    case 114:
+      jj_consume_token(114);
       function = noArgFunction("@@");
       break;
     default:
-      jj_la1[147] = jj_gen;
+      jj_la1[148] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -2925,7 +2936,7 @@ public class JpqlParser implements JpqlParserConstants {
                   function.setOver(over);
       break;
     default:
-      jj_la1[148] = jj_gen;
+      jj_la1[149] = jj_gen;
       ;
     }
         {if (true) return function;}
@@ -2947,31 +2958,31 @@ public class JpqlParser implements JpqlParserConstants {
                  funcName = "REPLACE";
       break;
     default:
-      jj_la1[149] = jj_gen;
+      jj_la1[150] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 89:
-      jj_consume_token(89);
+    case 90:
+      jj_consume_token(90);
       tmp = RelObjectName();
                              funcName+= "." + tmp;
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 89:
-        jj_consume_token(89);
+      case 90:
+        jj_consume_token(90);
         tmp = RelObjectName();
                                                                                 funcName+= "." + tmp;
         break;
       default:
-        jj_la1[150] = jj_gen;
+        jj_la1[151] = jj_gen;
         ;
       }
       break;
     default:
-      jj_la1[151] = jj_gen;
+      jj_la1[152] = jj_gen;
       ;
     }
-    jj_consume_token(87);
+    jj_consume_token(88);
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
     case K_ALL:
     case K_NULL:
@@ -2984,17 +2995,17 @@ public class JpqlParser implements JpqlParserConstants {
     case S_IDENTIFIER:
     case S_CHAR_LITERAL:
     case S_QUOTED_IDENTIFIER:
-    case 87:
-    case 91:
+    case 88:
     case 92:
-    case 102:
+    case 93:
     case 103:
-    case 107:
-    case 109:
+    case 104:
+    case 108:
     case 110:
     case 111:
     case 112:
     case 113:
+    case 114:
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
       case K_ALL:
       case K_DISTINCT:
@@ -3008,13 +3019,13 @@ public class JpqlParser implements JpqlParserConstants {
                                                                   retval.setAllColumns(true);
           break;
         default:
-          jj_la1[152] = jj_gen;
+          jj_la1[153] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
         break;
       default:
-        jj_la1[153] = jj_gen;
+        jj_la1[154] = jj_gen;
         ;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -3027,33 +3038,33 @@ public class JpqlParser implements JpqlParserConstants {
       case S_IDENTIFIER:
       case S_CHAR_LITERAL:
       case S_QUOTED_IDENTIFIER:
-      case 87:
-      case 92:
-      case 102:
+      case 88:
+      case 93:
       case 103:
-      case 107:
-      case 109:
+      case 104:
+      case 108:
       case 110:
       case 111:
       case 112:
       case 113:
+      case 114:
         expressionList = SimpleExpressionList();
         break;
-      case 91:
-        jj_consume_token(91);
+      case 92:
+        jj_consume_token(92);
                                                                                                                                                 retval.setAllColumns(true);
         break;
       default:
-        jj_la1[154] = jj_gen;
+        jj_la1[155] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
       break;
     default:
-      jj_la1[155] = jj_gen;
+      jj_la1[156] = jj_gen;
       ;
     }
-    jj_consume_token(88);
+    jj_consume_token(89);
         retval.setParameters(expressionList);
             retval.setName(funcName);
             {if (true) return retval;}
@@ -3075,7 +3086,7 @@ public class JpqlParser implements JpqlParserConstants {
  List list;
  OrderBy order=null;
     jj_consume_token(K_OVER);
-    jj_consume_token(87);
+    jj_consume_token(88);
   over=new Over();
   list=new ArrayList();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -3087,20 +3098,20 @@ public class JpqlParser implements JpqlParserConstants {
       label_28:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 86:
+        case 87:
           ;
           break;
         default:
-          jj_la1[156] = jj_gen;
+          jj_la1[157] = jj_gen;
           break label_28;
         }
-        jj_consume_token(86);
+        jj_consume_token(87);
         name = Column();
                     list.add(name);
       }
       break;
     default:
-      jj_la1[157] = jj_gen;
+      jj_la1[158] = jj_gen;
       ;
     }
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -3109,10 +3120,10 @@ public class JpqlParser implements JpqlParserConstants {
    over.setOrderBy(order);
       break;
     default:
-      jj_la1[158] = jj_gen;
+      jj_la1[159] = jj_gen;
       ;
     }
-    jj_consume_token(88);
+    jj_consume_token(89);
       {if (true) return over;}
     throw new Error("Missing return statement in function");
   }
@@ -3154,12 +3165,12 @@ public class JpqlParser implements JpqlParserConstants {
       case S_INTEGER:
       case S_IDENTIFIER:
       case S_CHAR_LITERAL:
-      case 85:
-      case 87:
+      case 86:
+      case 88:
         ;
         break;
       default:
-        jj_la1[159] = jj_gen;
+        jj_la1[160] = jj_gen;
         break label_29;
       }
       CreateParameter();
@@ -3167,8 +3178,8 @@ public class JpqlParser implements JpqlParserConstants {
     jj_consume_token(K_TABLE);
     table = Table();
     switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-    case 87:
-      jj_consume_token(87);
+    case 88:
+      jj_consume_token(88);
       columnName = jj_consume_token(S_IDENTIFIER);
       colDataType = ColDataType();
                         columnSpecs = new ArrayList();
@@ -3182,12 +3193,12 @@ public class JpqlParser implements JpqlParserConstants {
         case S_INTEGER:
         case S_IDENTIFIER:
         case S_CHAR_LITERAL:
-        case 85:
-        case 87:
+        case 86:
+        case 88:
           ;
           break;
         default:
-          jj_la1[160] = jj_gen;
+          jj_la1[161] = jj_gen;
           break label_30;
         }
         parameter = CreateParameter();
@@ -3202,14 +3213,14 @@ public class JpqlParser implements JpqlParserConstants {
       label_31:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 86:
+        case 87:
           ;
           break;
         default:
-          jj_la1[161] = jj_gen;
+          jj_la1[162] = jj_gen;
           break label_31;
         }
-        jj_consume_token(86);
+        jj_consume_token(87);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
         case K_INDEX:
           tk = jj_consume_token(K_INDEX);
@@ -3243,12 +3254,12 @@ public class JpqlParser implements JpqlParserConstants {
             case S_INTEGER:
             case S_IDENTIFIER:
             case S_CHAR_LITERAL:
-            case 85:
-            case 87:
+            case 86:
+            case 88:
               ;
               break;
             default:
-              jj_la1[162] = jj_gen;
+              jj_la1[163] = jj_gen;
               break label_32;
             }
             parameter = CreateParameter();
@@ -3262,12 +3273,12 @@ public class JpqlParser implements JpqlParserConstants {
                                                 columnDefinitions.add(coldef);
           break;
         default:
-          jj_la1[163] = jj_gen;
+          jj_la1[164] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
       }
-      jj_consume_token(88);
+      jj_consume_token(89);
       label_33:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -3278,12 +3289,12 @@ public class JpqlParser implements JpqlParserConstants {
         case S_INTEGER:
         case S_IDENTIFIER:
         case S_CHAR_LITERAL:
-        case 85:
-        case 87:
+        case 86:
+        case 88:
           ;
           break;
         default:
-          jj_la1[164] = jj_gen;
+          jj_la1[165] = jj_gen;
           break label_33;
         }
         parameter = CreateParameter();
@@ -3305,7 +3316,7 @@ public class JpqlParser implements JpqlParserConstants {
                 {if (true) return createTable;}
       break;
     default:
-      jj_la1[165] = jj_gen;
+      jj_la1[166] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -3319,7 +3330,7 @@ public class JpqlParser implements JpqlParserConstants {
     tk = jj_consume_token(S_IDENTIFIER);
                               colDataType.setDataType(tk.image);
     if (jj_2_37(2)) {
-      jj_consume_token(87);
+      jj_consume_token(88);
       label_34:
       while (true) {
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -3328,7 +3339,7 @@ public class JpqlParser implements JpqlParserConstants {
           ;
           break;
         default:
-          jj_la1[166] = jj_gen;
+          jj_la1[167] = jj_gen;
           break label_34;
         }
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -3339,22 +3350,22 @@ public class JpqlParser implements JpqlParserConstants {
           tk = jj_consume_token(S_CHAR_LITERAL);
           break;
         default:
-          jj_la1[167] = jj_gen;
+          jj_la1[168] = jj_gen;
           jj_consume_token(-1);
           throw new ParseException();
         }
                                                                      argumentsStringList.add(tk.image);
         switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-        case 86:
-          jj_consume_token(86);
+        case 87:
+          jj_consume_token(87);
 
           break;
         default:
-          jj_la1[168] = jj_gen;
+          jj_la1[169] = jj_gen;
           ;
         }
       }
-      jj_consume_token(88);
+      jj_consume_token(89);
     } else {
       ;
     }
@@ -3396,15 +3407,15 @@ public class JpqlParser implements JpqlParserConstants {
       tk = jj_consume_token(S_DOUBLE);
                                         retval = tk.image;
       break;
-    case 85:
-      jj_consume_token(85);
+    case 86:
+      jj_consume_token(86);
                               retval = "=";
       break;
-    case 87:
+    case 88:
       retval = AList();
       break;
     default:
-      jj_la1[169] = jj_gen;
+      jj_la1[170] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -3415,7 +3426,7 @@ public class JpqlParser implements JpqlParserConstants {
   final public String AList() throws ParseException {
         StringBuffer retval = new StringBuffer("(");
         Token tk = null;
-    jj_consume_token(87);
+    jj_consume_token(88);
     label_35:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -3426,7 +3437,7 @@ public class JpqlParser implements JpqlParserConstants {
         ;
         break;
       default:
-        jj_la1[170] = jj_gen;
+        jj_la1[171] = jj_gen;
         break label_35;
       }
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
@@ -3443,22 +3454,22 @@ public class JpqlParser implements JpqlParserConstants {
         tk = jj_consume_token(S_IDENTIFIER);
         break;
       default:
-        jj_la1[171] = jj_gen;
+        jj_la1[172] = jj_gen;
         jj_consume_token(-1);
         throw new ParseException();
       }
                                                                                         retval.append(tk.image);
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 86:
-        jj_consume_token(86);
+      case 87:
+        jj_consume_token(87);
                                                                                                                          retval.append(",");
         break;
       default:
-        jj_la1[172] = jj_gen;
+        jj_la1[173] = jj_gen;
         ;
       }
     }
-    jj_consume_token(88);
+    jj_consume_token(89);
                 retval.append(")");
                 {if (true) return retval.toString();}
     throw new Error("Missing return statement in function");
@@ -3467,24 +3478,24 @@ public class JpqlParser implements JpqlParserConstants {
   final public List ColumnsNamesList() throws ParseException {
         List retval = new ArrayList();
         Token tk = null;
-    jj_consume_token(87);
+    jj_consume_token(88);
     tk = jj_consume_token(S_IDENTIFIER);
                                     retval.add(tk.image);
     label_36:
     while (true) {
       switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
-      case 86:
+      case 87:
         ;
         break;
       default:
-        jj_la1[173] = jj_gen;
+        jj_la1[174] = jj_gen;
         break label_36;
       }
-      jj_consume_token(86);
+      jj_consume_token(87);
       tk = jj_consume_token(S_IDENTIFIER);
                                           retval.add(tk.image);
     }
-    jj_consume_token(88);
+    jj_consume_token(89);
                 {if (true) return retval;}
     throw new Error("Missing return statement in function");
   }
@@ -3505,7 +3516,7 @@ public class JpqlParser implements JpqlParserConstants {
       tk = jj_consume_token(K_INDEX);
       break;
     default:
-      jj_la1[174] = jj_gen;
+      jj_la1[175] = jj_gen;
       jj_consume_token(-1);
       throw new ParseException();
     }
@@ -3519,7 +3530,7 @@ public class JpqlParser implements JpqlParserConstants {
         ;
         break;
       default:
-        jj_la1[175] = jj_gen;
+        jj_la1[176] = jj_gen;
         break label_37;
       }
       tk = jj_consume_token(S_IDENTIFIER);
@@ -3821,14 +3832,14 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3_36() {
-    if (jj_scan_token(94)) return true;
+    if (jj_scan_token(95)) return true;
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(79)) {
+    if (jj_scan_token(80)) {
     jj_scanpos = xsp;
-    if (jj_scan_token(70)) return true;
+    if (jj_scan_token(71)) return true;
     }
-    if (jj_scan_token(93)) return true;
+    if (jj_scan_token(94)) return true;
     return false;
   }
 
@@ -3849,16 +3860,16 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_157() {
-    if (jj_scan_token(111)) return true;
+    if (jj_scan_token(112)) return true;
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(79)) {
+    if (jj_scan_token(80)) {
     jj_scanpos = xsp;
-    if (jj_scan_token(68)) {
+    if (jj_scan_token(69)) {
+    jj_scanpos = xsp;
+    if (jj_scan_token(74)) {
     jj_scanpos = xsp;
     if (jj_scan_token(73)) {
-    jj_scanpos = xsp;
-    if (jj_scan_token(72)) {
     jj_scanpos = xsp;
     if (jj_scan_token(35)) return true;
     }
@@ -3871,7 +3882,7 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_223() {
-    if (jj_scan_token(103)) return true;
+    if (jj_scan_token(104)) return true;
     return false;
   }
 
@@ -3886,21 +3897,21 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3_35() {
-    if (jj_scan_token(94)) return true;
+    if (jj_scan_token(95)) return true;
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(79)) {
+    if (jj_scan_token(80)) {
     jj_scanpos = xsp;
-    if (jj_scan_token(70)) return true;
+    if (jj_scan_token(71)) return true;
     }
-    if (jj_scan_token(93)) return true;
+    if (jj_scan_token(94)) return true;
     return false;
   }
 
   private boolean jj_3R_178() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(102)) {
+    if (jj_scan_token(103)) {
     jj_scanpos = xsp;
     if (jj_3R_223()) return true;
     }
@@ -3923,7 +3934,7 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_156() {
-    if (jj_scan_token(92)) return true;
+    if (jj_scan_token(93)) return true;
     if (jj_scan_token(S_INTEGER)) return true;
     Token xsp;
     xsp = jj_scanpos;
@@ -3932,14 +3943,14 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_222() {
-    if (jj_scan_token(103)) return true;
+    if (jj_scan_token(104)) return true;
     return false;
   }
 
   private boolean jj_3R_177() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(102)) {
+    if (jj_scan_token(103)) {
     jj_scanpos = xsp;
     if (jj_3R_222()) return true;
     }
@@ -3947,24 +3958,24 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_148() {
-    if (jj_scan_token(87)) return true;
+    if (jj_scan_token(88)) return true;
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_195()) {
     jj_scanpos = xsp;
     if (jj_3R_196()) return true;
     }
-    if (jj_scan_token(88)) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
   private boolean jj_3R_221() {
-    if (jj_scan_token(103)) return true;
+    if (jj_scan_token(104)) return true;
     return false;
   }
 
   private boolean jj_3R_260() {
-    if (jj_scan_token(86)) return true;
+    if (jj_scan_token(87)) return true;
     if (jj_3R_83()) return true;
     return false;
   }
@@ -3987,7 +3998,7 @@ public class JpqlParser implements JpqlParserConstants {
   private boolean jj_3R_176() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(102)) {
+    if (jj_scan_token(103)) {
     jj_scanpos = xsp;
     if (jj_3R_221()) return true;
     }
@@ -3995,27 +4006,27 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_228() {
-    if (jj_scan_token(86)) return true;
+    if (jj_scan_token(87)) return true;
     if (jj_3R_227()) return true;
     return false;
   }
 
   private boolean jj_3R_161() {
-    if (jj_scan_token(111)) return true;
+    if (jj_scan_token(112)) return true;
     if (jj_scan_token(S_IDENTIFIER)) return true;
-    if (jj_scan_token(94)) return true;
+    if (jj_scan_token(95)) return true;
     if (jj_scan_token(K_SQL)) return true;
-    if (jj_scan_token(93)) return true;
+    if (jj_scan_token(94)) return true;
     return false;
   }
 
   private boolean jj_3R_127() {
-    if (jj_scan_token(103)) return true;
+    if (jj_scan_token(104)) return true;
     return false;
   }
 
   private boolean jj_3R_125() {
-    if (jj_scan_token(103)) return true;
+    if (jj_scan_token(104)) return true;
     return false;
   }
 
@@ -4031,16 +4042,16 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_139() {
-    if (jj_scan_token(110)) return true;
+    if (jj_scan_token(111)) return true;
     if (jj_scan_token(S_CHAR_LITERAL)) return true;
-    if (jj_scan_token(108)) return true;
+    if (jj_scan_token(109)) return true;
     return false;
   }
 
   private boolean jj_3R_77() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(102)) {
+    if (jj_scan_token(103)) {
     jj_scanpos = xsp;
     if (jj_3R_127()) return true;
     }
@@ -4056,16 +4067,16 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_138() {
-    if (jj_scan_token(109)) return true;
+    if (jj_scan_token(110)) return true;
     if (jj_scan_token(S_CHAR_LITERAL)) return true;
-    if (jj_scan_token(108)) return true;
+    if (jj_scan_token(109)) return true;
     return false;
   }
 
   private boolean jj_3R_75() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(102)) {
+    if (jj_scan_token(103)) {
     jj_scanpos = xsp;
     if (jj_3R_125()) return true;
     }
@@ -4073,23 +4084,23 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_137() {
-    if (jj_scan_token(107)) return true;
-    if (jj_scan_token(S_CHAR_LITERAL)) return true;
     if (jj_scan_token(108)) return true;
+    if (jj_scan_token(S_CHAR_LITERAL)) return true;
+    if (jj_scan_token(109)) return true;
     return false;
   }
 
   private boolean jj_3R_224() {
-    if (jj_scan_token(103)) return true;
+    if (jj_scan_token(104)) return true;
     return false;
   }
 
   private boolean jj_3R_74() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(102)) {
+    if (jj_scan_token(103)) {
     jj_scanpos = xsp;
-    if (jj_scan_token(103)) return true;
+    if (jj_scan_token(104)) return true;
     }
     return false;
   }
@@ -4102,9 +4113,9 @@ public class JpqlParser implements JpqlParserConstants {
   private boolean jj_3R_73() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(102)) {
+    if (jj_scan_token(103)) {
     jj_scanpos = xsp;
-    if (jj_scan_token(103)) return true;
+    if (jj_scan_token(104)) return true;
     }
     return false;
   }
@@ -4120,7 +4131,7 @@ public class JpqlParser implements JpqlParserConstants {
   private boolean jj_3R_179() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(102)) {
+    if (jj_scan_token(103)) {
     jj_scanpos = xsp;
     if (jj_3R_224()) return true;
     }
@@ -4131,9 +4142,9 @@ public class JpqlParser implements JpqlParserConstants {
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_179()) jj_scanpos = xsp;
-    if (jj_scan_token(87)) return true;
-    if (jj_3R_57()) return true;
     if (jj_scan_token(88)) return true;
+    if (jj_3R_57()) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
@@ -4148,9 +4159,9 @@ public class JpqlParser implements JpqlParserConstants {
   private boolean jj_3R_71() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(102)) {
+    if (jj_scan_token(103)) {
     jj_scanpos = xsp;
-    if (jj_scan_token(103)) return true;
+    if (jj_scan_token(104)) return true;
     }
     return false;
   }
@@ -4170,8 +4181,8 @@ public class JpqlParser implements JpqlParserConstants {
 
   private boolean jj_3R_42() {
     if (jj_3R_83()) return true;
-    if (jj_scan_token(89)) return true;
-    if (jj_scan_token(91)) return true;
+    if (jj_scan_token(90)) return true;
+    if (jj_scan_token(92)) return true;
     return false;
   }
 
@@ -4179,9 +4190,9 @@ public class JpqlParser implements JpqlParserConstants {
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_77()) jj_scanpos = xsp;
-    if (jj_scan_token(87)) return true;
-    if (jj_3R_78()) return true;
     if (jj_scan_token(88)) return true;
+    if (jj_3R_78()) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
@@ -4214,11 +4225,6 @@ public class JpqlParser implements JpqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_191() {
-    if (jj_scan_token(K_DISTINCT)) return true;
-    return false;
-  }
-
   private boolean jj_3R_132() {
     Token xsp;
     xsp = jj_scanpos;
@@ -4232,6 +4238,11 @@ public class JpqlParser implements JpqlParserConstants {
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_284()) jj_scanpos = xsp;
+    return false;
+  }
+
+  private boolean jj_3R_191() {
+    if (jj_scan_token(K_DISTINCT)) return true;
     return false;
   }
 
@@ -4260,13 +4271,8 @@ public class JpqlParser implements JpqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_186() {
-    if (jj_scan_token(K_DISTINCT)) return true;
-    return false;
-  }
-
   private boolean jj_3R_257() {
-    if (jj_scan_token(91)) return true;
+    if (jj_scan_token(92)) return true;
     return false;
   }
 
@@ -4280,6 +4286,11 @@ public class JpqlParser implements JpqlParserConstants {
     if (jj_3R_259()) return true;
     }
     }
+    return false;
+  }
+
+  private boolean jj_3R_186() {
+    if (jj_scan_token(K_DISTINCT)) return true;
     return false;
   }
 
@@ -4330,12 +4341,12 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_68() {
-    if (jj_scan_token(105)) return true;
+    if (jj_scan_token(106)) return true;
     return false;
   }
 
   private boolean jj_3R_67() {
-    if (jj_scan_token(104)) return true;
+    if (jj_scan_token(105)) return true;
     return false;
   }
 
@@ -4349,16 +4360,6 @@ public class JpqlParser implements JpqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_192() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_scan_token(12)) {
-    jj_scanpos = xsp;
-    if (jj_scan_token(64)) return true;
-    }
-    return false;
-  }
-
   private boolean jj_3R_246() {
     if (jj_3R_78()) return true;
     if (jj_scan_token(S_IDENTIFIER)) return true;
@@ -4366,9 +4367,19 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_70() {
-    if (jj_scan_token(87)) return true;
-    if (jj_3R_117()) return true;
     if (jj_scan_token(88)) return true;
+    if (jj_3R_117()) return true;
+    if (jj_scan_token(89)) return true;
+    return false;
+  }
+
+  private boolean jj_3R_192() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_scan_token(12)) {
+    jj_scanpos = xsp;
+    if (jj_scan_token(65)) return true;
+    }
     return false;
   }
 
@@ -4408,7 +4419,7 @@ public class JpqlParser implements JpqlParserConstants {
     xsp = jj_scanpos;
     if (jj_scan_token(12)) {
     jj_scanpos = xsp;
-    if (jj_scan_token(64)) return true;
+    if (jj_scan_token(65)) return true;
     }
     return false;
   }
@@ -4447,14 +4458,14 @@ public class JpqlParser implements JpqlParserConstants {
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_187()) jj_scanpos = xsp;
-    if (jj_scan_token(87)) return true;
-    if (jj_3R_140()) return true;
     if (jj_scan_token(88)) return true;
+    if (jj_3R_140()) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
   private boolean jj_3R_120() {
-    if (jj_scan_token(106)) return true;
+    if (jj_scan_token(107)) return true;
     if (jj_3R_78()) return true;
     return false;
   }
@@ -4464,13 +4475,13 @@ public class JpqlParser implements JpqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_144() {
-    if (jj_3R_189()) return true;
+  private boolean jj_3R_63() {
+    if (jj_scan_token(104)) return true;
     return false;
   }
 
-  private boolean jj_3R_63() {
-    if (jj_scan_token(103)) return true;
+  private boolean jj_3R_144() {
+    if (jj_3R_189()) return true;
     return false;
   }
 
@@ -4504,21 +4515,21 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_66() {
-    if (jj_scan_token(91)) return true;
+    if (jj_scan_token(92)) return true;
     return false;
   }
 
   private boolean jj_3R_81() {
-    if (jj_scan_token(87)) return true;
-    if (jj_3R_140()) return true;
     if (jj_scan_token(88)) return true;
+    if (jj_3R_140()) return true;
+    if (jj_scan_token(89)) return true;
     if (jj_scan_token(K_UNION)) return true;
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_141()) jj_scanpos = xsp;
-    if (jj_scan_token(87)) return true;
-    if (jj_3R_140()) return true;
     if (jj_scan_token(88)) return true;
+    if (jj_3R_140()) return true;
+    if (jj_scan_token(89)) return true;
     while (true) {
       xsp = jj_scanpos;
       if (jj_3R_142()) { jj_scanpos = xsp; break; }
@@ -4546,9 +4557,9 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_119() {
-    if (jj_scan_token(87)) return true;
-    if (jj_3R_117()) return true;
     if (jj_scan_token(88)) return true;
+    if (jj_3R_117()) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
@@ -4589,6 +4600,11 @@ public class JpqlParser implements JpqlParserConstants {
     return false;
   }
 
+  private boolean jj_3R_62() {
+    if (jj_scan_token(103)) return true;
+    return false;
+  }
+
   private boolean jj_3R_235() {
     if (jj_3R_188()) return true;
     return false;
@@ -4599,16 +4615,16 @@ public class JpqlParser implements JpqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_62() {
-    if (jj_scan_token(102)) return true;
+  private boolean jj_3R_254() {
+    if (jj_scan_token(K_ON)) return true;
+    if (jj_scan_token(88)) return true;
+    if (jj_3R_182()) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
-  private boolean jj_3R_254() {
-    if (jj_scan_token(K_ON)) return true;
-    if (jj_scan_token(87)) return true;
-    if (jj_3R_182()) return true;
-    if (jj_scan_token(88)) return true;
+  private boolean jj_3R_60() {
+    if (jj_scan_token(102)) return true;
     return false;
   }
 
@@ -4617,18 +4633,13 @@ public class JpqlParser implements JpqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_60() {
+  private boolean jj_3R_59() {
     if (jj_scan_token(101)) return true;
     return false;
   }
 
   private boolean jj_3R_233() {
     if (jj_3R_264()) return true;
-    return false;
-  }
-
-  private boolean jj_3R_59() {
-    if (jj_scan_token(100)) return true;
     return false;
   }
 
@@ -4650,6 +4661,16 @@ public class JpqlParser implements JpqlParserConstants {
     if (jj_3R_63()) return true;
     }
     if (jj_3R_64()) return true;
+    return false;
+  }
+
+  private boolean jj_3R_117() {
+    if (jj_3R_64()) return true;
+    Token xsp;
+    while (true) {
+      xsp = jj_scanpos;
+      if (jj_3_25()) { jj_scanpos = xsp; break; }
+    }
     return false;
   }
 
@@ -4678,16 +4699,6 @@ public class JpqlParser implements JpqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_117() {
-    if (jj_3R_64()) return true;
-    Token xsp;
-    while (true) {
-      xsp = jj_scanpos;
-      if (jj_3_25()) { jj_scanpos = xsp; break; }
-    }
-    return false;
-  }
-
   private boolean jj_3R_225() {
     if (jj_scan_token(K_DISTINCT)) return true;
     Token xsp;
@@ -4712,7 +4723,7 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_193() {
-    if (jj_scan_token(90)) return true;
+    if (jj_scan_token(91)) return true;
     if (jj_3R_40()) return true;
     return false;
   }
@@ -4732,11 +4743,6 @@ public class JpqlParser implements JpqlParserConstants {
     return false;
   }
 
-  private boolean jj_3_6() {
-    if (jj_3R_41()) return true;
-    return false;
-  }
-
   private boolean jj_3_24() {
     Token xsp;
     xsp = jj_scanpos;
@@ -4745,6 +4751,11 @@ public class JpqlParser implements JpqlParserConstants {
     if (jj_3R_60()) return true;
     }
     if (jj_3R_61()) return true;
+    return false;
+  }
+
+  private boolean jj_3_6() {
+    if (jj_3R_41()) return true;
     return false;
   }
 
@@ -4769,7 +4780,7 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_194() {
-    if (jj_scan_token(90)) return true;
+    if (jj_scan_token(91)) return true;
     if (jj_3R_40()) return true;
     return false;
   }
@@ -4785,7 +4796,7 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_170() {
-    if (jj_scan_token(99)) return true;
+    if (jj_scan_token(100)) return true;
     if (jj_3R_117()) return true;
     return false;
   }
@@ -4806,9 +4817,9 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_115() {
-    if (jj_scan_token(87)) return true;
-    if (jj_3R_58()) return true;
     if (jj_scan_token(88)) return true;
+    if (jj_3R_58()) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
@@ -4825,9 +4836,19 @@ public class JpqlParser implements JpqlParserConstants {
     return false;
   }
 
+  private boolean jj_3R_56() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_3R_114()) {
+    jj_scanpos = xsp;
+    if (jj_3R_115()) return true;
+    }
+    return false;
+  }
+
   private boolean jj_3_5() {
     if (jj_3R_40()) return true;
-    if (jj_scan_token(89)) return true;
+    if (jj_scan_token(90)) return true;
     if (jj_3R_40()) return true;
     Token xsp;
     xsp = jj_scanpos;
@@ -4845,18 +4866,8 @@ public class JpqlParser implements JpqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_56() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_3R_114()) {
-    jj_scanpos = xsp;
-    if (jj_3R_115()) return true;
-    }
-    return false;
-  }
-
   private boolean jj_3R_281() {
-    if (jj_scan_token(89)) return true;
+    if (jj_scan_token(90)) return true;
     if (jj_3R_40()) return true;
     return false;
   }
@@ -4868,28 +4879,28 @@ public class JpqlParser implements JpqlParserConstants {
     jj_scanpos = xsp;
     if (jj_scan_token(33)) return true;
     }
-    if (jj_scan_token(87)) return true;
-    if (jj_3R_57()) return true;
     if (jj_scan_token(88)) return true;
+    if (jj_3R_57()) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
   private boolean jj_3R_210() {
     if (jj_scan_token(K_ALL)) return true;
-    if (jj_scan_token(87)) return true;
-    if (jj_3R_57()) return true;
     if (jj_scan_token(88)) return true;
+    if (jj_3R_57()) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
   private boolean jj_3R_290() {
-    if (jj_scan_token(89)) return true;
+    if (jj_scan_token(90)) return true;
     if (jj_3R_40()) return true;
     return false;
   }
 
   private boolean jj_3R_126() {
-    if (jj_scan_token(89)) return true;
+    if (jj_scan_token(90)) return true;
     if (jj_3R_40()) return true;
     Token xsp;
     xsp = jj_scanpos;
@@ -4907,18 +4918,18 @@ public class JpqlParser implements JpqlParserConstants {
     return false;
   }
 
-  private boolean jj_3R_40() {
-    Token xsp;
-    xsp = jj_scanpos;
-    if (jj_scan_token(79)) {
-    jj_scanpos = xsp;
-    if (jj_scan_token(83)) return true;
-    }
+  private boolean jj_3R_163() {
+    if (jj_3R_210()) return true;
     return false;
   }
 
-  private boolean jj_3R_163() {
-    if (jj_3R_210()) return true;
+  private boolean jj_3R_40() {
+    Token xsp;
+    xsp = jj_scanpos;
+    if (jj_scan_token(80)) {
+    jj_scanpos = xsp;
+    if (jj_scan_token(84)) return true;
+    }
     return false;
   }
 
@@ -4936,7 +4947,7 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_245() {
-    if (jj_scan_token(86)) return true;
+    if (jj_scan_token(87)) return true;
     if (jj_3R_56()) return true;
     return false;
   }
@@ -4956,6 +4967,12 @@ public class JpqlParser implements JpqlParserConstants {
     return false;
   }
 
+  private boolean jj_3R_212() {
+    if (jj_scan_token(K_AS)) return true;
+    if (jj_3R_56()) return true;
+    return false;
+  }
+
   private boolean jj_3R_76() {
     if (jj_3R_40()) return true;
     Token xsp;
@@ -4965,17 +4982,11 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_276() {
-    if (jj_scan_token(89)) return true;
+    if (jj_scan_token(90)) return true;
     if (jj_3R_40()) return true;
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_290()) jj_scanpos = xsp;
-    return false;
-  }
-
-  private boolean jj_3R_212() {
-    if (jj_scan_token(K_AS)) return true;
-    if (jj_3R_56()) return true;
     return false;
   }
 
@@ -5044,7 +5055,7 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_166() {
-    if (jj_scan_token(86)) return true;
+    if (jj_scan_token(87)) return true;
     if (jj_3R_56()) return true;
     return false;
   }
@@ -5059,13 +5070,13 @@ public class JpqlParser implements JpqlParserConstants {
     return false;
   }
 
-  private boolean jj_3_3() {
-    if (jj_scan_token(87)) return true;
+  private boolean jj_3R_109() {
+    if (jj_3R_57()) return true;
     return false;
   }
 
-  private boolean jj_3R_109() {
-    if (jj_3R_57()) return true;
+  private boolean jj_3_3() {
+    if (jj_scan_token(88)) return true;
     return false;
   }
 
@@ -5093,7 +5104,7 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3_2() {
-    if (jj_scan_token(87)) return true;
+    if (jj_scan_token(88)) return true;
     if (jj_3R_38()) return true;
     return false;
   }
@@ -5116,20 +5127,20 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3_1() {
-    if (jj_scan_token(87)) return true;
+    if (jj_scan_token(88)) return true;
     if (jj_3R_38()) return true;
     return false;
   }
 
   private boolean jj_3R_107() {
-    if (jj_scan_token(87)) return true;
+    if (jj_scan_token(88)) return true;
     if (jj_3R_56()) return true;
     Token xsp;
     while (true) {
       xsp = jj_scanpos;
       if (jj_3R_166()) { jj_scanpos = xsp; break; }
     }
-    if (jj_scan_token(88)) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
@@ -5173,13 +5184,13 @@ public class JpqlParser implements JpqlParserConstants {
     xsp = jj_scanpos;
     if (jj_3R_108()) jj_scanpos = xsp;
     if (jj_scan_token(K_IN)) return true;
-    if (jj_scan_token(87)) return true;
+    if (jj_scan_token(88)) return true;
     xsp = jj_scanpos;
     if (jj_3R_109()) {
     jj_scanpos = xsp;
     if (jj_3R_110()) return true;
     }
-    if (jj_scan_token(88)) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
@@ -5230,9 +5241,9 @@ public class JpqlParser implements JpqlParserConstants {
   private boolean jj_3R_79() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(75)) {
+    if (jj_scan_token(76)) {
     jj_scanpos = xsp;
-    if (jj_scan_token(82)) return true;
+    if (jj_scan_token(83)) return true;
     }
     return false;
   }
@@ -5243,48 +5254,48 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3_37() {
-    if (jj_scan_token(87)) return true;
+    if (jj_scan_token(88)) return true;
     Token xsp;
     while (true) {
       xsp = jj_scanpos;
       if (jj_3R_79()) { jj_scanpos = xsp; break; }
     }
-    if (jj_scan_token(88)) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
   private boolean jj_3R_105() {
     Token xsp;
     xsp = jj_scanpos;
-    if (jj_scan_token(97)) {
+    if (jj_scan_token(98)) {
     jj_scanpos = xsp;
-    if (jj_scan_token(98)) return true;
+    if (jj_scan_token(99)) return true;
     }
     return false;
   }
 
   private boolean jj_3R_104() {
-    if (jj_scan_token(96)) return true;
+    if (jj_scan_token(97)) return true;
     return false;
   }
 
   private boolean jj_3R_103() {
-    if (jj_scan_token(95)) return true;
+    if (jj_scan_token(96)) return true;
     return false;
   }
 
   private boolean jj_3R_102() {
-    if (jj_scan_token(85)) return true;
+    if (jj_scan_token(86)) return true;
     return false;
   }
 
   private boolean jj_3R_101() {
-    if (jj_scan_token(94)) return true;
+    if (jj_scan_token(95)) return true;
     return false;
   }
 
   private boolean jj_3R_100() {
-    if (jj_scan_token(93)) return true;
+    if (jj_scan_token(94)) return true;
     return false;
   }
 
@@ -5385,9 +5396,9 @@ public class JpqlParser implements JpqlParserConstants {
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_244()) jj_scanpos = xsp;
-    if (jj_scan_token(87)) return true;
-    if (jj_3R_48()) return true;
     if (jj_scan_token(88)) return true;
+    if (jj_3R_48()) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
@@ -5431,9 +5442,9 @@ public class JpqlParser implements JpqlParserConstants {
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_205()) jj_scanpos = xsp;
-    if (jj_scan_token(87)) return true;
-    if (jj_3R_48()) return true;
     if (jj_scan_token(88)) return true;
+    if (jj_3R_48()) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
@@ -5457,7 +5468,7 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_252() {
-    if (jj_scan_token(91)) return true;
+    if (jj_scan_token(92)) return true;
     return false;
   }
 
@@ -5488,9 +5499,9 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_274() {
-    if (jj_scan_token(87)) return true;
-    if (jj_3R_242()) return true;
     if (jj_scan_token(88)) return true;
+    if (jj_3R_242()) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
@@ -5523,7 +5534,7 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_256() {
-    if (jj_scan_token(92)) return true;
+    if (jj_scan_token(93)) return true;
     return false;
   }
 
@@ -5637,7 +5648,7 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_249() {
-    if (jj_scan_token(89)) return true;
+    if (jj_scan_token(90)) return true;
     if (jj_3R_40()) return true;
     return false;
   }
@@ -5673,7 +5684,7 @@ public class JpqlParser implements JpqlParserConstants {
     jj_scanpos = xsp;
     if (jj_3R_45()) return true;
     }
-    if (jj_scan_token(86)) return true;
+    if (jj_scan_token(87)) return true;
     xsp = jj_scanpos;
     if (jj_3R_46()) {
     jj_scanpos = xsp;
@@ -5695,7 +5706,7 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_253() {
-    if (jj_scan_token(86)) return true;
+    if (jj_scan_token(87)) return true;
     if (jj_3R_38()) return true;
     return false;
   }
@@ -5710,13 +5721,13 @@ public class JpqlParser implements JpqlParserConstants {
 
   private boolean jj_3R_173() {
     if (jj_scan_token(K_OVER)) return true;
-    if (jj_scan_token(87)) return true;
+    if (jj_scan_token(88)) return true;
     Token xsp;
     xsp = jj_scanpos;
     if (jj_3R_219()) jj_scanpos = xsp;
     xsp = jj_scanpos;
     if (jj_3R_220()) jj_scanpos = xsp;
-    if (jj_scan_token(88)) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
@@ -5737,7 +5748,7 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_238() {
-    if (jj_scan_token(86)) return true;
+    if (jj_scan_token(87)) return true;
     if (jj_3R_237()) return true;
     return false;
   }
@@ -5789,7 +5800,7 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_217() {
-    if (jj_scan_token(89)) return true;
+    if (jj_scan_token(90)) return true;
     if (jj_3R_40()) return true;
     Token xsp;
     xsp = jj_scanpos;
@@ -5822,10 +5833,10 @@ public class JpqlParser implements JpqlParserConstants {
     }
     xsp = jj_scanpos;
     if (jj_3R_217()) jj_scanpos = xsp;
-    if (jj_scan_token(87)) return true;
+    if (jj_scan_token(88)) return true;
     xsp = jj_scanpos;
     if (jj_3R_218()) jj_scanpos = xsp;
-    if (jj_scan_token(88)) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
@@ -5852,15 +5863,15 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_123() {
-    if (jj_scan_token(113)) return true;
+    if (jj_scan_token(114)) return true;
     if (jj_3R_172()) return true;
     return false;
   }
 
   private boolean jj_3R_121() {
-    if (jj_scan_token(112)) return true;
+    if (jj_scan_token(113)) return true;
     if (jj_3R_171()) return true;
-    if (jj_scan_token(108)) return true;
+    if (jj_scan_token(109)) return true;
     return false;
   }
 
@@ -5870,7 +5881,7 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_285() {
-    if (jj_scan_token(86)) return true;
+    if (jj_scan_token(87)) return true;
     if (jj_3R_56()) return true;
     return false;
   }
@@ -5891,7 +5902,7 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_243() {
-    if (jj_scan_token(86)) return true;
+    if (jj_scan_token(87)) return true;
     if (jj_3R_38()) return true;
     return false;
   }
@@ -5923,20 +5934,20 @@ public class JpqlParser implements JpqlParserConstants {
   }
 
   private boolean jj_3R_154() {
-    if (jj_scan_token(86)) return true;
+    if (jj_scan_token(87)) return true;
     return false;
   }
 
   private boolean jj_3R_204() {
     if (jj_scan_token(K_USING)) return true;
-    if (jj_scan_token(87)) return true;
+    if (jj_scan_token(88)) return true;
     if (jj_3R_38()) return true;
     Token xsp;
     while (true) {
       xsp = jj_scanpos;
       if (jj_3R_243()) { jj_scanpos = xsp; break; }
     }
-    if (jj_scan_token(88)) return true;
+    if (jj_scan_token(89)) return true;
     return false;
   }
 
@@ -6106,7 +6117,7 @@ public class JpqlParser implements JpqlParserConstants {
   private Token jj_scanpos, jj_lastpos;
   private int jj_la;
   private int jj_gen;
-  final private int[] jj_la1 = new int[176];
+  final private int[] jj_la1 = new int[177];
   static private int[] jj_la1_0;
   static private int[] jj_la1_1;
   static private int[] jj_la1_2;
@@ -6118,16 +6129,16 @@ public class JpqlParser implements JpqlParserConstants {
       jj_la1_init_3();
    }
    private static void jj_la1_init_0() {
-      jj_la1_0 = new int[] {0x1000000,0x0,0x0,0x0,0x200000,0x0,0x0,0x0,0x0,0x10000,0x200000,0x0,0x0,0x0,0x0,0x20,0x0,0x0,0x0,0x0,0x0,0x0,0x20,0x0,0x0,0x0,0x0,0x0,0x0,0x800,0x1000,0x1000,0x40000,0x200000,0x0,0x0,0x0,0x0,0x0,0x0,0x8000000,0x1000,0x1000,0x0,0x1000,0x1000,0x0,0x0,0x1000,0x1000,0x0,0x1000,0x1000,0x0,0x0,0x0,0x0,0x20,0x0,0x20400000,0x20,0x0,0x0,0x0,0x20,0x6000000,0x4000000,0x4000000,0x0,0x0,0x2000000,0x0,0x800,0x800,0x0,0x0,0x0,0x0,0x120000,0x120000,0x0,0x0,0x1000,0x0,0x0,0x0,0x0,0x0,0x0,0x8000,0x8000,0x8000,0x8000,0x0,0x0,0x8000,0x0,0x0,0x0,0x20400000,0x0,0x0,0x8000,0x20400000,0x8000,0x8000,0x0,0x8000,0x8000,0x8000020,0x8000020,0x0,0x8000020,0x20405000,0x4000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x20400000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x20400000,0x0,0x0,0x0,0x0,0x0,0x40000000,0x0,0x40000000,0x0,0x60400000,0x0,0x0,0x0,0x0,0x0,0x1000,0x1000,0x20400000,0x20401000,0x0,0x0,0x0,0x408000,0x408000,0x0,0x408000,0x0,0x408000,0x20,0x0,0x0,0x0,0x408000,0x0,0x0,0x0,0x0,0x0,0x0,};
+      jj_la1_0 = new int[] {0x1000000,0x0,0x0,0x0,0x200000,0x0,0x0,0x0,0x0,0x10000,0x200000,0x0,0x0,0x0,0x0,0x20,0x0,0x0,0x0,0x0,0x0,0x0,0x20,0x0,0x0,0x0,0x0,0x0,0x0,0x800,0x1000,0x1000,0x40000,0x200000,0x0,0x0,0x0,0x0,0x0,0x0,0x8000000,0x1000,0x1000,0x0,0x1000,0x1000,0x0,0x0,0x1000,0x1000,0x0,0x1000,0x1000,0x0,0x0,0x0,0x0,0x0,0x20,0x0,0x20400000,0x20,0x0,0x0,0x0,0x20,0x6000000,0x4000000,0x4000000,0x0,0x0,0x2000000,0x0,0x800,0x800,0x0,0x0,0x0,0x0,0x120000,0x120000,0x0,0x0,0x1000,0x0,0x0,0x0,0x0,0x0,0x0,0x8000,0x8000,0x8000,0x8000,0x0,0x0,0x8000,0x0,0x0,0x0,0x20400000,0x0,0x0,0x8000,0x20400000,0x8000,0x8000,0x0,0x8000,0x8000,0x8000020,0x8000020,0x0,0x8000020,0x20405000,0x4000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x20400000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x20400000,0x0,0x0,0x0,0x0,0x0,0x40000000,0x0,0x40000000,0x0,0x60400000,0x0,0x0,0x0,0x0,0x0,0x1000,0x1000,0x20400000,0x20401000,0x0,0x0,0x0,0x408000,0x408000,0x0,0x408000,0x0,0x408000,0x20,0x0,0x0,0x0,0x408000,0x0,0x0,0x0,0x0,0x0,0x0,};
    }
    private static void jj_la1_init_1() {
-      jj_la1_1 = new int[] {0xa18e0008,0x0,0x0,0x20,0x0,0x0,0x0,0x0,0x2080000,0x2080000,0x0,0x0,0x0,0x0,0x2080000,0x0,0x20,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x8,0x80000,0x0,0x0,0x0,0x0,0x0,0x20,0x100,0x400000,0x0,0x4000,0x101000,0x0,0x0,0x0,0x80,0x0,0x0,0x4000,0x101000,0x0,0x0,0x80,0x0,0x0,0x80000,0x0,0x0,0x0,0x0,0x0,0x20000000,0x0,0x0,0x80000,0x0,0x0,0x10012804,0x10010004,0x10010004,0x2800,0x2800,0x0,0x0,0x40,0x40,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x100000,0x0,0x101000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x20000000,0x0,0x0,0x0,0x20000000,0x0,0x0,0x4000000,0x0,0x0,0x0,0x0,0x0,0x0,0x20000002,0x2,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x20000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x8,0x0,0x0,0x0,0x1,0x0,0x1,0x20000000,0x20000000,0x0,0x20000000,0x0,0x0,0x0,0x0,0x20000000,0x20000000,0x0,0x8000,0x4000,0x8000000,0x8000000,0x0,0x8000000,0x8000400,0x8000000,0x0,0x0,0x0,0x0,0x8000000,0x0,0x0,0x0,0x0,0x410,0x0,};
+      jj_la1_1 = new int[] {0x431c0008,0x0,0x0,0x40,0x0,0x0,0x0,0x0,0x4100000,0x4100000,0x0,0x0,0x0,0x0,0x4100000,0x0,0x40,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x8,0x100000,0x0,0x0,0x0,0x0,0x0,0x40,0x200,0x800000,0x0,0x8000,0x202000,0x0,0x0,0x0,0x100,0x0,0x0,0x8000,0x202000,0x0,0x0,0x100,0x0,0x0,0x100000,0x10,0x0,0x0,0x0,0x0,0x0,0x40000000,0x0,0x0,0x100000,0x0,0x0,0x20025004,0x20020004,0x20020004,0x5000,0x5000,0x0,0x0,0x80,0x80,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x200000,0x0,0x202000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x40000000,0x0,0x0,0x0,0x40000000,0x0,0x0,0x8000000,0x0,0x0,0x0,0x0,0x0,0x0,0x40000002,0x2,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x40000000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x8,0x0,0x0,0x0,0x1,0x0,0x1,0x40000000,0x40000000,0x0,0x40000000,0x0,0x0,0x0,0x0,0x40000000,0x40000000,0x0,0x10000,0x8000,0x10000000,0x10000000,0x0,0x10000000,0x10000800,0x10000000,0x0,0x0,0x0,0x0,0x10000000,0x0,0x0,0x0,0x0,0x820,0x0,};
    }
    private static void jj_la1_init_2() {
-      jj_la1_2 = new int[] {0x800000,0x100000,0x400000,0x0,0x0,0x400000,0x400000,0x400000,0x800000,0x800000,0x0,0x400000,0x400000,0x1000000,0x800000,0x88000,0x0,0x2000000,0x2000000,0x2000000,0x2000000,0x88000,0x88000,0x88000,0x4000000,0x4000000,0x88000,0x0,0x0,0x0,0x1,0x1,0x0,0x0,0x0,0x0,0x0,0x10,0x0,0x0,0x0,0x1,0x1,0x0,0x1,0x1,0x0,0x0,0x1,0x1,0x0,0x1,0x1,0x800000,0x400000,0x800000,0x400000,0x88000,0x8000000,0x108c8c20,0x0,0x400000,0x800000,0x888000,0x88000,0x400000,0x0,0x0,0x0,0x0,0x400000,0x400000,0x0,0x0,0x400000,0x4,0x400000,0x80,0x0,0x0,0x10000800,0x10000800,0x10000800,0x10000800,0x0,0x10000800,0x0,0x10000800,0x10800000,0x0,0x800000,0x0,0x800000,0x0,0x8,0x0,0x0,0xe0200000,0x8,0x108c8c20,0x400000,0x800000,0x0,0x108c8c20,0x0,0x0,0x0,0x0,0x0,0x400000,0x400000,0x400000,0x0,0x108c8c20,0x0,0x800000,0x0,0x0,0x0,0x800000,0x8000000,0x800000,0x0,0x108c8c20,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x10000020,0x840000,0x8040,0x8310,0x8040,0x10000000,0x0,0x0,0x0,0x0,0x108c8c20,0x88000,0x200,0x88000,0x2000000,0x2000000,0x1,0x1,0x188c8c20,0x188c8c21,0x400000,0x0,0x0,0xa48c00,0xa48c00,0x400000,0xa48c00,0x8000,0xa48c00,0x800000,0x40800,0x40800,0x400000,0xa48c00,0x48c00,0x48c00,0x400000,0x400000,0x8000,0x8000,};
+      jj_la1_2 = new int[] {0x1000001,0x200000,0x800000,0x0,0x0,0x800000,0x800000,0x800000,0x1000000,0x1000000,0x0,0x800000,0x800000,0x2000000,0x1000000,0x110000,0x0,0x4000000,0x4000000,0x4000000,0x4000000,0x110000,0x110000,0x110000,0x8000000,0x8000000,0x110000,0x0,0x0,0x0,0x2,0x2,0x0,0x0,0x0,0x0,0x0,0x20,0x0,0x0,0x0,0x2,0x2,0x0,0x2,0x2,0x0,0x0,0x2,0x2,0x0,0x2,0x2,0x1000000,0x0,0x800000,0x1000000,0x800000,0x110000,0x10000000,0x21191840,0x0,0x800000,0x1000000,0x1110000,0x110000,0x800000,0x0,0x0,0x0,0x0,0x800000,0x800000,0x0,0x0,0x800000,0x8,0x800000,0x100,0x0,0x0,0x20001000,0x20001000,0x20001000,0x20001000,0x0,0x20001000,0x0,0x20001000,0x21000000,0x0,0x1000000,0x0,0x1000000,0x0,0x10,0x0,0x0,0xc0400000,0x10,0x21191840,0x800000,0x1000000,0x0,0x21191840,0x0,0x0,0x0,0x0,0x0,0x800000,0x800000,0x800000,0x0,0x21191840,0x0,0x1000000,0x0,0x0,0x0,0x1000000,0x10000000,0x1000000,0x0,0x21191840,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x20000040,0x1080000,0x10080,0x10620,0x10080,0x20000000,0x0,0x0,0x0,0x0,0x21191840,0x110000,0x400,0x110000,0x4000000,0x4000000,0x2,0x2,0x31191840,0x31191842,0x800000,0x0,0x0,0x1491800,0x1491800,0x800000,0x1491800,0x10000,0x1491800,0x1000000,0x81000,0x81000,0x800000,0x1491800,0x91800,0x91800,0x800000,0x800000,0x10000,0x10000,};
    }
    private static void jj_la1_init_3() {
-      jj_la1_3 = new int[] {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x8000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x3e8c0,0x0,0x0,0x0,0x8000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x8000,0x8000,0x8000,0x8000,0x0,0x8000,0x0,0x0,0x8000,0x0,0x0,0x0,0x0,0x8000,0x0,0x0,0x6,0x7,0x0,0x3e8c0,0x0,0x0,0x0,0x3e8c0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x3e8c0,0x0,0x0,0x8,0x30,0xc0,0x0,0x300,0x0,0x400,0x3e8c0,0xc0,0xc0,0xc0,0xc0,0xc0,0xc0,0xc0,0xc0,0xc0,0xc0,0xc0,0xc0,0x8000,0x68c0,0x0,0x0,0x0,0x8000,0x0,0x0,0x0,0x0,0x3e8c0,0x30000,0x0,0x0,0x0,0x0,0x0,0x0,0x3e8c0,0x3e8c0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
+      jj_la1_3 = new int[] {0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x10000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x7d180,0x0,0x0,0x0,0x10000,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x10000,0x10000,0x10000,0x10000,0x0,0x10000,0x0,0x0,0x10000,0x0,0x0,0x0,0x0,0x10000,0x0,0x0,0xc,0xf,0x0,0x7d180,0x0,0x0,0x0,0x7d180,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x7d180,0x0,0x0,0x10,0x60,0x180,0x0,0x600,0x0,0x800,0x7d180,0x180,0x180,0x180,0x180,0x180,0x180,0x180,0x180,0x180,0x180,0x180,0x180,0x10000,0xd180,0x0,0x0,0x0,0x10000,0x0,0x0,0x0,0x0,0x7d180,0x60000,0x0,0x0,0x0,0x0,0x0,0x0,0x7d180,0x7d180,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,0x0,};
    }
   final private JJCalls[] jj_2_rtns = new JJCalls[37];
   private boolean jj_rescan = false;
@@ -6144,7 +6155,7 @@ public class JpqlParser implements JpqlParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 176; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 177; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -6159,7 +6170,7 @@ public class JpqlParser implements JpqlParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 176; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 177; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -6170,7 +6181,7 @@ public class JpqlParser implements JpqlParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 176; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 177; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -6181,7 +6192,7 @@ public class JpqlParser implements JpqlParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 176; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 177; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -6191,7 +6202,7 @@ public class JpqlParser implements JpqlParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 176; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 177; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -6201,7 +6212,7 @@ public class JpqlParser implements JpqlParserConstants {
     token = new Token();
     jj_ntk = -1;
     jj_gen = 0;
-    for (int i = 0; i < 176; i++) jj_la1[i] = -1;
+    for (int i = 0; i < 177; i++) jj_la1[i] = -1;
     for (int i = 0; i < jj_2_rtns.length; i++) jj_2_rtns[i] = new JJCalls();
   }
 
@@ -6313,12 +6324,12 @@ public class JpqlParser implements JpqlParserConstants {
   /** Generate ParseException. */
   public ParseException generateParseException() {
     jj_expentries.clear();
-    boolean[] la1tokens = new boolean[114];
+    boolean[] la1tokens = new boolean[115];
     if (jj_kind >= 0) {
       la1tokens[jj_kind] = true;
       jj_kind = -1;
     }
-    for (int i = 0; i < 176; i++) {
+    for (int i = 0; i < 177; i++) {
       if (jj_la1[i] == jj_gen) {
         for (int j = 0; j < 32; j++) {
           if ((jj_la1_0[i] & (1<<j)) != 0) {
@@ -6336,7 +6347,7 @@ public class JpqlParser implements JpqlParserConstants {
         }
       }
     }
-    for (int i = 0; i < 114; i++) {
+    for (int i = 0; i < 115; i++) {
       if (la1tokens[i]) {
         jj_expentry = new int[1];
         jj_expentry[0] = i;

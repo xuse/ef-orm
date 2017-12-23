@@ -71,12 +71,14 @@ import jef.database.jsqlparser.statement.select.SubSelect;
 import jef.database.jsqlparser.statement.select.Top;
 import jef.database.jsqlparser.statement.select.Union;
 import jef.database.jsqlparser.statement.select.WithItem;
+import jef.database.jsqlparser.statement.select.WithPart;
 import jef.database.jsqlparser.statement.truncate.Truncate;
 import jef.database.jsqlparser.statement.update.Update;
 import jef.tools.StringUtils;
 
 /**
  * 将AST重新组装成SQL的访问者，可通过修改访问者的行为来变化SQL的组装行为。
+ * 
  * @author jiyi
  *
  */
@@ -134,20 +136,22 @@ public class DeParserAdapter implements SelectVisitor, ExpressionVisitor, Statem
 	}
 
 	public void visit(InExpression inExpression) {
-	    List<Expression> leftExpression=inExpression.getLeftExpression();
-	    if(leftExpression!=null){
-            boolean isList=leftExpression.size()>1;
-            if(isList)sb.append('(');
-            Iterator<Expression> iter=leftExpression.iterator();
-            if(iter.hasNext()){
-                iter.next().appendTo(sb);
-            }
-            while(iter.hasNext()){
-                sb.append(',');
-                iter.next().appendTo(sb);
-            }
-            if(isList)sb.append(')');
-        }
+		List<Expression> leftExpression = inExpression.getLeftExpression();
+		if (leftExpression != null) {
+			boolean isList = leftExpression.size() > 1;
+			if (isList)
+				sb.append('(');
+			Iterator<Expression> iter = leftExpression.iterator();
+			if (iter.hasNext()) {
+				iter.next().appendTo(sb);
+			}
+			while (iter.hasNext()) {
+				sb.append(',');
+				iter.next().appendTo(sb);
+			}
+			if (isList)
+				sb.append(')');
+		}
 		if (inExpression.isNot())
 			sb.append(" NOT");
 		sb.append(" IN ");
@@ -437,8 +441,6 @@ public class DeParserAdapter implements SelectVisitor, ExpressionVisitor, Statem
 			plainSelect.getLimit().accept(this);
 		}
 	}
-	
-	
 
 	protected void writeGroupByAndHaving(PlainSelect plainSelect) {
 		if (plainSelect.getGroupByColumnReferences() != null) {
@@ -720,17 +722,25 @@ public class DeParserAdapter implements SelectVisitor, ExpressionVisitor, Statem
 	}
 
 	public void visit(Select select) {
-		if (select.getWithItemsList() != null && !select.getWithItemsList().isEmpty()) {
-			sb.append("WITH ");
-			for (Iterator<WithItem> iter = select.getWithItemsList().iterator(); iter.hasNext();) {
-				WithItem withItem = iter.next();
-				withItem.accept(this);
-				if (iter.hasNext())
-					sb.append(",");
-				sb.append(" ");
-			}
+		if (select.getWithItemsList() != null) {
+			select.getWithItemsList().accept(this);
 		}
 		select.getSelectBody().accept(this);
+	}
+
+	@Override
+	public void visit(WithPart with) {
+		sb.append("WITH ");
+		if (with.isRecursive()) {
+			sb.append("RECURSIVE ");
+		}
+		for (Iterator<WithItem> iter = with.getWithItemsList().iterator(); iter.hasNext();) {
+			WithItem withItem = iter.next();
+			withItem.accept(this);
+			if (iter.hasNext())
+				sb.append(",");
+			sb.append(" ");
+		}
 	}
 
 	public void visit(Truncate truncate) {
@@ -757,13 +767,13 @@ public class DeParserAdapter implements SelectVisitor, ExpressionVisitor, Statem
 
 	public void visit(WithItem with) {
 		sb.append(with.getName());
-    	if(with.getWithItemList() != null){
-    		sb.append(' ');
-    		Util.getStringList(sb,with.getWithItemList(), ",", true); 
-    	}
-    	sb.append(" AS (");
-    	with.getSelectBody().accept(this);
-    	sb.append(')');
+		if (with.getWithItemList() != null) {
+			sb.append(' ');
+			Util.getStringList(sb, with.getWithItemList(), ",", true);
+		}
+		sb.append(" AS (");
+		with.getSelectBody().accept(this);
+		sb.append(')');
 	}
 
 	@Override

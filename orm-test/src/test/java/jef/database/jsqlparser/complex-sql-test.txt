@@ -1,0 +1,7 @@
+/*石夏锋提出要支持PG的with RECURSIVE 语法
+*/
+with RECURSIVE tb as(
+select * from org_info where id = '0fcc5b332dbf41cebe48847b4c970142'
+    union all
+select b.* from tb a,org_info b where   b.parent = a.id
+)select * from tb;

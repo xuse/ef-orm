@@ -1,0 +1,14 @@
+SELECT ID,TITLE,PARENT_ID FROM PORTAL_DOCUMENT WHERE DOC_CATE_ID IN (:lv2Ids<int>);
+select * from foo where age=?1 and name like ?2<$string$> 
+order by ?3<sql>;
+select to_char(t.acct_id) name1,to_char(t.name) name2,to_char(t.account_status) name3,
+to_char( t.org_id) name4,to_char(t.so_nbr) name5,to_char(t.create_date) name6 from ca_account t where 1=1  or t.create_date =:operateTime or 
+:selectType<sql> = :selectValue;
+
+/*
+SQL server escape
+*/
+select [key],t.[top] from table1 t where t.[key]=1;
+
+  select :column from root where id in (:id<int>)  and id2=:id2 and name like :name and id3=:id3 and id4=:id4 order by :orderBy;
+  

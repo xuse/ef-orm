@@ -19,8 +19,8 @@ import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.jsqlparser.visitor.VisitorAdapter;
+import jef.tools.Assert;
 import jef.tools.IOUtils;
-import jef.tools.reflect.CloneUtils;
 
 import org.apache.commons.lang.StringUtils;
 import org.junit.Ignore;
@@ -32,60 +32,45 @@ import com.alibaba.druid.sql.dialect.mysql.parser.MySqlStatementParser;
 import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlOutputVisitor;
 import com.alibaba.druid.sql.dialect.oracle.parser.OracleStatementParser;
 import com.alibaba.druid.sql.dialect.oracle.visitor.OracleOutputVisitor;
+import com.alibaba.druid.sql.dialect.postgresql.parser.PGSQLStatementParser;
+import com.alibaba.druid.sql.dialect.postgresql.visitor.PGOutputVisitor;
 import com.alibaba.druid.sql.dialect.sqlserver.parser.SQLServerSelectParser;
 import com.alibaba.druid.sql.dialect.sqlserver.parser.SQLServerStatementParser;
 import com.alibaba.druid.sql.dialect.sqlserver.visitor.SQLServerOutputVisitor;
 
 public class ComplexSqlParseTest extends org.junit.Assert {
+
+	enum ParseType {
+		EF_SQL, EF_JPQL, DR_ORACLE, DR_MYSQL, DR_PG, DR_SQLSERVER
+	}
+
 	@Test
 	public void testParseAndPrint() throws IOException, ParseException {
 		String sql = IOUtils.asString(this.getClass().getResource("/aaa.sql"), "US-ASCII");
-		try{
-		    JpqlParser parser = new JpqlParser(new StringReader(sql));
-		    jef.database.jsqlparser.visitor.Statement st = parser.Statement();
-		    System.out.println(st);
-		}catch(ParseException e){
-		    e.printStackTrace();
-		    throw e;
+		try {
+			JpqlParser parser = new JpqlParser(new StringReader(sql));
+			jef.database.jsqlparser.visitor.Statement st = parser.Statement();
+			System.out.println(st);
+		} catch (ParseException e) {
+			e.printStackTrace();
+			throw e;
 		}
 	}
 
 	@Test
-	public void strange() throws ParseException {
-		String source = "SELECT ID,TITLE,PARENT_ID FROM PORTAL_DOCUMENT WHERE DOC_CATE_ID IN (:lv2Ids<int>)";
-		Statement re = jef.database.DbUtils.parseStatement(source);
-	}
-	
-	
-
-	@Test
-	public void bindVars() throws ParseException {
-		String source = "select * from foo where age=?1 and name like ?2<$string$> \norder by ?3<sql>";
-		Statement re = jef.database.DbUtils.parseStatement(source);
-	}
-	
-	
-	@Test
-	public void main1() throws ParseException {
-		String source = "select to_char(t.acct_id) name1,to_char(t.name) name2,to_char(t.account_status) name3,\nto_char( t.org_id) name4,to_char(t.so_nbr) name5,to_char(t.create_date) name6 from ca_account t where 1=1  or t.create_date =:operateTime or "
-				+ "\n:selectType<sql> = :selectValue";
-		Statement re = jef.database.DbUtils.parseStatement(source);
+	public void strange() throws ParseException, IOException {
+//		doParseFile("complex-jpql-test.txt",ParseType.EF_JPQL);
+		doParseFile("complex-sql-test.txt",ParseType.EF_SQL);
 	}
 
 	@Test
-	public void main2() throws ParseException {
+	public void parseSelect() throws ParseException {
 		Select ex = DbUtils.parseSelect("select * from D where not 1=2");
 		System.out.println(ex);
 	}
 
 	@Test
-	public void testSqlServerEscape() throws ParseException {
-		String source = "select [key],t.[top] from table1 t where t.[key]=1";
-		Statement re = jef.database.DbUtils.parseStatement(source);
-	}
-
-	@Test
-	public void testDruid() {
+	public void testDruidMSSQL() {
 		String sql = "select top 3 t.\"desc\",t.\"top\",t.\"percent\",t.comment,t.\"order\" from keyword t";
 		SQLServerSelectParser parser = new SQLServerSelectParser(sql);
 		SQLSelect select = parser.select();
@@ -112,11 +97,6 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 		System.out.println(select);
 	}
 
-	@Test
-	public void asdasdas() throws ParseException {
-		jef.database.jsqlparser.visitor.Statement st = DbUtils.parseStatement("  select :column from root where id in (:id<int>)  and id2=:id2 and name like :name and id3=:id3 and id4=:id4 order by :orderBy");
-		System.out.println(st);
-	}
 
 	@Test
 	public void testMySQLDate() throws ParseException {
@@ -309,7 +289,8 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	@Test
 	public void aaa5() throws ParseException {
 		String sql = "update (select a.start_time astarttime,b.job_ins_start_time bstarttime,a.status astatus,b.job_ins_status bstatus"
-				+ "from sd.so_job_ins_result a, test10.rdc_job_ins b where a.status not in (2, 4, -1, -2) and a.job_ins_id = b.job_ins_id  and a.job_ins_sequence = b.job_ins_sequence) " + "set astarttime = bstarttime, astatus = bstatus";
+				+ "from sd.so_job_ins_result a, test10.rdc_job_ins b where a.status not in (2, 4, -1, -2) and a.job_ins_id = b.job_ins_id  and a.job_ins_sequence = b.job_ins_sequence) "
+				+ "set astarttime = bstarttime, astatus = bstatus";
 
 		jef.database.jsqlparser.visitor.Statement st = DbUtils.parseStatement(sql);
 		System.out.println(st.toString());
@@ -358,7 +339,8 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	 */
 	@Test
 	public void testDistinctAndStartWith() throws SQLException, ParseException {
-		String strSql = "select DISTINCT * " + "	  from xg.sys_region rs" + "	 start with rs.region_code in (:privIDs<Long>)" + "	connect by PRIOR rs.priv_id = rs.parent_id";
+		String strSql = "select DISTINCT * " + "	  from xg.sys_region rs" + "	 start with rs.region_code in (:privIDs<Long>)"
+				+ "	connect by PRIOR rs.priv_id = rs.parent_id";
 
 		jef.database.jsqlparser.statement.select.Select select = DbUtils.parseSelect(strSql);
 		select.accept(new VisitorAdapter() {
@@ -379,25 +361,35 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 
 	@Test
 	public void testComplexSql() throws SQLException, ParseException, IOException {
-		doParseFile("complex-sqls.txt", 0);
-	}
-
-	@Test
-	public void testComplexSqlDruidOracle() throws SQLException, ParseException, IOException {
-		doParseFile("complex-sqls-oracle.txt", 2);
-	}
-
-	@Test
-	public void testComplexSqlDruidMySQL() throws SQLException, ParseException, IOException {
-		doParseFile("complex-sqls-mysql.txt", 3);
+		doParseFile("complex-sqls.txt", ParseType.EF_SQL);
 	}
 
 	@Test
 	public void testComplexE_Sql() throws SQLException, ParseException, IOException {
-		doParseFile("complex-e-sqls.txt", 1);
+		doParseFile("complex-jpqls.txt", ParseType.EF_JPQL);
 	}
 
-	private void doParseFile(String filename, int eSql) throws ParseException, IOException {
+	@Test
+	public void testComplexSqlDruidOracle() throws SQLException, ParseException, IOException {
+		doParseFile("complex-sqls-oracle.txt", ParseType.DR_ORACLE);
+	}
+
+	@Test
+	public void testComplexSqlDruidMySQL() throws SQLException, ParseException, IOException {
+		doParseFile("complex-sqls-mysql.txt", ParseType.DR_MYSQL);
+	}
+
+	@Test
+	public void testComplexSqlDruidPG() throws SQLException, ParseException, IOException {
+		doParseFile("complex-sqls-postgres.txt", ParseType.DR_PG);
+	}
+
+	@Test
+	public void testComplexSqlDruidMSSQL() throws SQLException, ParseException, IOException {
+		doParseFile("complex-sqls-mssql.txt", ParseType.DR_SQLSERVER);
+	}
+
+	private void doParseFile(String filename, ParseType eSql) throws ParseException, IOException {
 		StringBuilder sb = new StringBuilder();
 		BufferedReader reader = IOUtils.getReader(this.getClass().getResource(filename), "UTF-8");
 		String line;
@@ -439,10 +431,38 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	}
 
 	@Test
-	public void testComplexSqlPerformances() throws SQLException, ParseException, IOException {
+	public void performance0() throws Exception {
+		doPerformance("complex-sqls.txt", ParseType.EF_SQL);
+	}
+
+	@Test
+	public void performance1() throws Exception {
+		doPerformance("complex-jpqls.txt", ParseType.EF_JPQL);
+	}
+
+	@Test
+	public void performance2() throws Exception {
+		doPerformance("complex-sqls-mysql.txt", ParseType.DR_MYSQL);
+	}
+
+	@Test
+	public void performance3() throws Exception {
+		doPerformance("complex-sqls-oracle.txt", ParseType.DR_ORACLE);
+	}
+
+	@Test
+	public void performance4() throws Exception {
+		doPerformance("complex-sqls-pg.txt", ParseType.DR_PG);
+	}
+
+	/**
+	 * 性能测试
+	 */
+	public void doPerformance(String fileName, ParseType type) throws SQLException, ParseException, IOException {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < 5; i++) {
-			BufferedReader reader = IOUtils.getReader(this.getClass().getResource("complex-sqls.txt"), "UTF-8");
+			BufferedReader reader = IOUtils.getReader(this.getClass().getResource(fileName), "UTF-8");
+			Assert.notNull(reader);
 			String line;
 			boolean comment = false;
 			List<Long> cost = new ArrayList<Long>();// 记录每句SQL的解析时间
@@ -467,12 +487,12 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 					String sql = sb.toString();
 					sb.setLength(0);
 					if (StringUtils.isNotBlank(sql)) {
-						cost.add(countParseStSql(sql));
+						cost.add(countParseStSql(sql, type));
 					}
 				}
 			}
 			if (sb.length() > 0) {
-				cost.add(countParseStSql(sb.toString()));
+				cost.add(countParseStSql(sb.toString(), type));
 			}
 
 			long total = 0;
@@ -480,66 +500,12 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 				total += l;
 			}
 			System.out.println("测试完成，共计解析了" + cost.size() + "句SQL语句，总耗时" + total / 1000 + "us，各句耗时分别为——");
-			for (long l : cost) {
-				System.out.println(l / 1000 + "us");
+			for (int index = 0; index < cost.size(); index++) {
+				System.out.println(index + ".\t" + cost.get(index) / 1000 + "us");
 			}
 			sb.setLength(0);
 		}
 
-	}
-
-	@Test
-	public void testComplexSqlPerformances2() throws SQLException, ParseException, IOException {
-		StringBuilder sb = new StringBuilder();
-		for (int i = 0; i < 5; i++) {
-
-			BufferedReader reader = IOUtils.getReader(this.getClass().getResource("complex-e-sqls.txt"), "UTF-8");
-			String line;
-			boolean comment = false;
-			List<Long> cost = new ArrayList<Long>();// 记录每句SQL的解析时间
-			while ((line = reader.readLine()) != null) {
-				if (comment) {
-					if (line.endsWith("*/")) {
-						comment = false;
-					}
-					continue;
-				}
-				if (line.startsWith("/*")) {
-					comment = true;
-					continue;
-				}
-				if (line.length() == 0 || line.startsWith("--"))
-					continue;
-				if (sb.length() > 0)
-					sb.append('\n');
-				sb.append(line);
-				if (endsWith(line, ';')) {
-					sb.setLength(sb.length() - 1);
-					String sql = sb.toString();
-					sb.setLength(0);
-					try {
-						if (StringUtils.isNotBlank(sql)) {
-							cost.add(countParseJpql(sql));
-						}
-					} catch (Exception e) {
-						System.out.println(sql);
-					}
-
-				}
-			}
-			if (sb.length() > 0) {
-				cost.add(countParseStSql(sb.toString()));
-			}
-
-			long total = 0;
-			for (long l : cost) {
-				total += l;
-			}
-			System.out.println("测试完成，共计解析了" + cost.size() + "句SQL语句，总耗时" + total / 1000 + "us，各句耗时分别为——");
-			for (long l : cost) {
-				System.out.println(l / 1000 + "us");
-			}
-		}
 	}
 
 	@Test(expected = Exception.class)
@@ -550,25 +516,25 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	}
 
 	// 0 StSQL 1 Jpql 2 Druid Oracle 3 Druid MySQL
-	private void parseTest(String sql, int type) throws ParseException {
+	private void parseTest(String sql, ParseType type) throws ParseException {
 		System.out.println("===================== [RAW]  ==================");
 		System.out.println(sql);
 		System.out.println("-------------------- [PARSE] ------------------");
 		Object st;
 		switch (type) {
-		case 0: {
+		case EF_SQL: {
 			StSqlParser parser = new StSqlParser(new StringReader(sql));
 			st = parser.Statement();
 			System.out.println(st);
 			break;
 		}
-		case 1: {
+		case EF_JPQL: {
 			JpqlParser parser = new JpqlParser(new StringReader(sql));
 			st = parser.Statement();
 			System.out.println(st);
 			break;
 		}
-		case 2: {
+		case DR_ORACLE: {
 			OracleStatementParser parser = new OracleStatementParser(sql);
 			SQLStatement statementList = parser.parseStatement();
 			StringBuilder out = new StringBuilder();
@@ -577,7 +543,7 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 			System.out.println(out);
 			break;
 		}
-		case 3: {
+		case DR_MYSQL: {
 			MySqlStatementParser parser = new MySqlStatementParser(sql);
 			List<SQLStatement> statementList = parser.parseStatementList();
 			st = statementList.get(0);
@@ -587,10 +553,29 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 			System.out.println(out);
 			break;
 		}
+		case DR_PG: {
+			PGSQLStatementParser parser = new PGSQLStatementParser(sql);
+			List<SQLStatement> statementList = parser.parseStatementList();
+			st = statementList.get(0);
+			StringBuilder out = new StringBuilder();
+			PGOutputVisitor visitor = new PGOutputVisitor(out);
+			statementList.get(0).accept(visitor);
+			System.out.println(out);
+			break;
+		}
+		case DR_SQLSERVER: {
+			SQLServerStatementParser parser = new SQLServerStatementParser(sql);
+			List<SQLStatement> statementList = parser.parseStatementList();
+			st = statementList.get(0);
+			StringBuilder out = new StringBuilder();
+			SQLServerOutputVisitor visitor = new SQLServerOutputVisitor(out);
+			statementList.get(0).accept(visitor);
+			System.out.println(out);
+			break;
+		}
 		default:
 			throw new IllegalArgumentException();
 		}
-
 	}
 
 	/**
@@ -600,28 +585,48 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	 * @return
 	 * @throws ParseException
 	 */
-	private long countParseStSql(String sql) throws ParseException {
-		long start = System.nanoTime();
-		Statement st = new StSqlParser(new StringReader(sql)).Statement();
-		long cost = System.nanoTime() - start;
-		start = System.nanoTime();
-		Statement st1 = (Statement) CloneUtils.clone(st);
-		assertEquals(st.toString(), st1.toString());
-		System.out.println("拷贝耗时" + (System.nanoTime() - start) / 1000 + "us");
-		return cost;
-	}
-
-	/**
-	 * 返回用JPQL解析器解析的耗时（纳秒）
-	 * 
-	 * @param sql
-	 * @return
-	 * @throws ParseException
-	 */
-	private long countParseJpql(String sql) throws ParseException {
-		long start = System.nanoTime();
-		new JpqlParser(new StringReader(sql)).Statement();
-		return System.nanoTime() - start;
+	@SuppressWarnings("unused")
+	private long countParseStSql(String sql, ParseType type) throws ParseException {
+		switch (type) {
+		case DR_MYSQL: {
+			long start = System.nanoTime();
+			SQLStatement st = new MySqlStatementParser(sql).parseStatement();
+			return System.nanoTime() - start;
+		}
+		case DR_ORACLE: {
+			long start = System.nanoTime();
+			SQLStatement st = new OracleStatementParser(sql).parseStatement();
+			return System.nanoTime() - start;
+		}
+		case DR_PG: {
+			long start = System.nanoTime();
+			SQLStatement st = new PGSQLStatementParser(sql).parseStatement();
+			return System.nanoTime() - start;
+		}
+		case DR_SQLSERVER: {
+			long start = System.nanoTime();
+			SQLStatement st = new SQLServerStatementParser(sql).parseStatement();
+			return System.nanoTime() - start;
+		}
+		case EF_JPQL: {
+			long start = System.nanoTime();
+			new JpqlParser(new StringReader(sql)).Statement();
+			return System.nanoTime() - start;
+		}
+		case EF_SQL: {
+			long start = System.nanoTime();
+			Statement st = new StSqlParser(new StringReader(sql)).Statement();
+			return System.nanoTime() - start;
+		}
+		default:
+			throw new UnsupportedOperationException();
+		}
+		// start = System.nanoTime();
+		// Statement st1 = (Statement) CloneUtils.clone(st);
+		// assertEquals(st.toString(), st1.toString());
+		// System.out.println("拷贝耗时" + (System.nanoTime() - start) / 1000 +
+		// "us");
+		// return cost;
 	}
 
 	private boolean endsWith(String line, char key) {

@@ -73,101 +73,103 @@ public interface JpqlParserConstants {
   /** RegularExpression Id. */
   int K_WITH = 35;
   /** RegularExpression Id. */
-  int K_TABLE = 36;
+  int K_RECURSIVE = 36;
   /** RegularExpression Id. */
-  int K_WHERE = 37;
+  int K_TABLE = 37;
   /** RegularExpression Id. */
-  int K_USING = 38;
+  int K_WHERE = 38;
   /** RegularExpression Id. */
-  int K_UNION = 39;
+  int K_USING = 39;
   /** RegularExpression Id. */
-  int K_GROUP = 40;
+  int K_UNION = 40;
   /** RegularExpression Id. */
-  int K_BEGIN = 41;
+  int K_GROUP = 41;
   /** RegularExpression Id. */
-  int K_INDEX = 42;
+  int K_BEGIN = 42;
   /** RegularExpression Id. */
-  int K_INNER = 43;
+  int K_INDEX = 43;
   /** RegularExpression Id. */
-  int K_LIMIT = 44;
+  int K_INNER = 44;
   /** RegularExpression Id. */
-  int K_OUTER = 45;
+  int K_LIMIT = 45;
   /** RegularExpression Id. */
-  int K_ORDER = 46;
+  int K_OUTER = 46;
   /** RegularExpression Id. */
-  int K_PARTITION = 47;
+  int K_ORDER = 47;
   /** RegularExpression Id. */
-  int K_RIGHT = 48;
+  int K_PARTITION = 48;
   /** RegularExpression Id. */
-  int K_DELETE = 49;
+  int K_RIGHT = 49;
   /** RegularExpression Id. */
-  int K_CREATE = 50;
+  int K_DELETE = 50;
   /** RegularExpression Id. */
-  int K_SELECT = 51;
+  int K_CREATE = 51;
   /** RegularExpression Id. */
-  int K_OFFSET = 52;
+  int K_SELECT = 52;
   /** RegularExpression Id. */
-  int K_EXISTS = 53;
+  int K_OFFSET = 53;
   /** RegularExpression Id. */
-  int K_HAVING = 54;
+  int K_EXISTS = 54;
   /** RegularExpression Id. */
-  int K_INSERT = 55;
+  int K_HAVING = 55;
   /** RegularExpression Id. */
-  int K_UPDATE = 56;
+  int K_INSERT = 56;
   /** RegularExpression Id. */
-  int K_VALUES = 57;
+  int K_UPDATE = 57;
   /** RegularExpression Id. */
-  int K_ESCAPE = 58;
+  int K_VALUES = 58;
   /** RegularExpression Id. */
-  int K_PRIMARY = 59;
+  int K_ESCAPE = 59;
   /** RegularExpression Id. */
-  int K_NATURAL = 60;
+  int K_PRIMARY = 60;
   /** RegularExpression Id. */
-  int K_REPLACE = 61;
+  int K_NATURAL = 61;
   /** RegularExpression Id. */
-  int K_BETWEEN = 62;
+  int K_REPLACE = 62;
   /** RegularExpression Id. */
-  int K_TRUNCATE = 63;
+  int K_BETWEEN = 63;
   /** RegularExpression Id. */
-  int K_DISTINCT = 64;
+  int K_TRUNCATE = 64;
   /** RegularExpression Id. */
-  int K_INTERSECT = 65;
+  int K_DISTINCT = 65;
   /** RegularExpression Id. */
-  int K_CONNECT = 66;
+  int K_INTERSECT = 66;
   /** RegularExpression Id. */
-  int K_PRIOR = 67;
+  int K_CONNECT = 67;
   /** RegularExpression Id. */
-  int K_START = 68;
+  int K_PRIOR = 68;
   /** RegularExpression Id. */
-  int K_INTERVAL = 69;
+  int K_START = 69;
   /** RegularExpression Id. */
-  int K_SQL = 70;
+  int K_INTERVAL = 70;
   /** RegularExpression Id. */
-  int K_NULLS = 71;
+  int K_SQL = 71;
   /** RegularExpression Id. */
-  int K_LAST = 72;
+  int K_NULLS = 72;
   /** RegularExpression Id. */
-  int K_OVER = 73;
+  int K_LAST = 73;
   /** RegularExpression Id. */
-  int S_DOUBLE = 74;
+  int K_OVER = 74;
   /** RegularExpression Id. */
-  int S_INTEGER = 75;
+  int S_DOUBLE = 75;
   /** RegularExpression Id. */
-  int DIGIT = 76;
+  int S_INTEGER = 76;
   /** RegularExpression Id. */
-  int LINE_COMMENT = 77;
+  int DIGIT = 77;
   /** RegularExpression Id. */
-  int MULTI_LINE_COMMENT = 78;
+  int LINE_COMMENT = 78;
   /** RegularExpression Id. */
-  int S_IDENTIFIER = 79;
+  int MULTI_LINE_COMMENT = 79;
   /** RegularExpression Id. */
-  int LETTER = 80;
+  int S_IDENTIFIER = 80;
   /** RegularExpression Id. */
-  int SPECIAL_CHARS = 81;
+  int LETTER = 81;
   /** RegularExpression Id. */
-  int S_CHAR_LITERAL = 82;
+  int SPECIAL_CHARS = 82;
   /** RegularExpression Id. */
-  int S_QUOTED_IDENTIFIER = 83;
+  int S_CHAR_LITERAL = 83;
+  /** RegularExpression Id. */
+  int S_QUOTED_IDENTIFIER = 84;
 
   /** Lexical state. */
   int DEFAULT = 0;
@@ -210,6 +212,7 @@ public interface JpqlParserConstants {
     "\"SOME\"",
     "\"FULL\"",
     "\"WITH\"",
+    "\"RECURSIVE\"",
     "\"TABLE\"",
     "\"WHERE\"",
     "\"USING\"",
