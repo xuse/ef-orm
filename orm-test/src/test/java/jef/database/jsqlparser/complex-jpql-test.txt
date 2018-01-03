@@ -11,4 +11,5 @@ SQL server escape
 select [key],t.[top] from table1 t where t.[key]=1;
 
   select :column from root where id in (:id<int>)  and id2=:id2 and name like :name and id3=:id3 and id4=:id4 order by :orderBy;
-  
+
+select * from sys_resource rs start with rs.resource_id in (:value<int>) connect by PRIOR rs.resource_id = rs.parent_id;

@@ -5,6 +5,7 @@ import java.sql.SQLException;
 import java.util.Iterator;
 
 import jef.common.log.LogUtil;
+import jef.database.DbUtils;
 import jef.database.jdbc.result.IResultSet;
 
 /**
@@ -20,7 +21,7 @@ import jef.database.jdbc.result.IResultSet;
  */
 public interface ResultIterator<T> extends Iterator<T>, Closeable {
 	public void close();
-	
+
 	final class Impl<T> implements ResultIterator<T> {
 		private IResultSet rs;
 		private Iterator<T> iterateResultSet;
@@ -32,6 +33,7 @@ public interface ResultIterator<T> extends Iterator<T>, Closeable {
 
 		public boolean hasNext() {
 			boolean hasnext = iterateResultSet.hasNext();
+			//当遍历完最后一个元素后就关闭
 			if (!hasnext)
 				close();
 			return hasnext;
@@ -46,13 +48,7 @@ public interface ResultIterator<T> extends Iterator<T>, Closeable {
 		}
 
 		public void close() {
-			if (rs == null)
-				return;
-			try {
-				rs.close();
-			} catch (SQLException e) {
-				LogUtil.exception(e);
-			}
+			DbUtils.close(rs);
 			rs = null;
 		}
 	}

@@ -19,6 +19,8 @@ import jef.database.query.QueryImpl;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
+import com.alibaba.fastjson.annotation.JSONField;
+
 /**
  * 抽象类，用于实现所有Entity默认的各种方法
  * 
@@ -28,13 +30,23 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 @SuppressWarnings("serial")
 @XmlTransient
 public abstract class DataObject implements IQueryableEntity {
-	private transient Map<Field, Object> updateValueMap;
-	protected transient Query<?> query;
-	protected transient boolean _recordUpdate = true;
-	private transient String _rowid;
-	transient ILazyLoadContext lazyload;
-
+	/*
+	 * 用于与条件做排序
+	 * 为什么要对条件做排序？是为了避免让条件因为HashCode变化或者加入先后顺序变化而排序。最终引起SQL硬解析。
+	 * 比如 where name = ? and index = ? 和 where index = ? and name = ? 本质上是一个SQL条件，但是因为顺序不同变成了两个SQL语句。 
+	 */
 	private static final ConditionComparator cmp = new ConditionComparator();
+	
+	private transient String _rowid;
+	
+	@JSONField(serialize=false)
+	private transient Map<Field, Object> updateValueMap;
+	@JSONField(serialize=false)
+	protected transient Query<?> query;
+	@JSONField(serialize=false)
+	protected transient boolean _recordUpdate = true;
+	@JSONField(serialize=false)
+	transient ILazyLoadContext lazyload;
 
 	public final void startUpdate() {
 		_recordUpdate = true;

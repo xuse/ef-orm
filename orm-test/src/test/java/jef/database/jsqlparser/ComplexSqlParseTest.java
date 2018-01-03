@@ -58,8 +58,8 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	}
 
 	@Test
-	public void strange() throws ParseException, IOException {
-//		doParseFile("complex-jpql-test.txt",ParseType.EF_JPQL);
+	public void parseTest() throws ParseException, IOException {
+		doParseFile("complex-jpql-test.txt",ParseType.EF_JPQL);
 		doParseFile("complex-sql-test.txt",ParseType.EF_SQL);
 	}
 
@@ -231,7 +231,7 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 
 	@Test
 	public void aaa2() throws ParseException {
-		String sql = "select * from sys_resource rs start with rs.resource_id in (:value<int>) connect by PRIOR rs.resource_id = rs.parent_id";
+		String sql = "";
 		jef.database.jsqlparser.visitor.Statement st = DbUtils.parseStatement(sql);
 		// st.accept(new VisitorAdapter() {
 		// @Override

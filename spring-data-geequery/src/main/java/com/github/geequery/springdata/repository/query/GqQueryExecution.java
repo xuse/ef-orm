@@ -120,6 +120,7 @@ public abstract class GqQueryExecution {
         protected Object doExecute(AbstractGqQuery query, Object[] values) {
             @SuppressWarnings("rawtypes")
             Collection coll=(Collection) ce.doExecute(query, values);
+            //FIXME 由于底层对Stream还没有原生支持，使用这种方式仅仅在形势上满足的Stream的接口，但是没能体现流式非阻塞接口的优点。
             return coll.stream();
         }
     }

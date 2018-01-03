@@ -18,6 +18,8 @@ import javax.persistence.Table;
 
 import jef.database.annotation.EasyEntity;
 
+import com.alibaba.fastjson.annotation.JSONType;
+
 @EasyEntity
 @Table(name = "test_entity")
 public class TestEntity extends jef.database.DataObject {

@@ -9,15 +9,6 @@ import java.util.List;
 
 import javax.persistence.EntityExistsException;
 
-import org.easyframe.enterprise.spring.CommonDao;
-import org.easyframe.enterprise.spring.CommonDaoImpl;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
-
 import jef.common.log.LogUtil;
 import jef.database.Condition;
 import jef.database.Condition.Operator;
@@ -56,6 +47,18 @@ import jef.tools.DateUtils;
 import jef.tools.PageLimit;
 import jef.tools.ThreadUtils;
 import jef.tools.string.RandomData;
+
+import org.easyframe.enterprise.spring.CommonDao;
+import org.easyframe.enterprise.spring.CommonDaoImpl;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({ 
