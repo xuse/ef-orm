@@ -54,6 +54,11 @@ import jef.database.jsqlparser.expression.operators.arithmetic.Multiplication;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
+import jef.database.meta.object.Column;
+import jef.database.meta.object.Constraint;
+import jef.database.meta.object.ConstraintType;
+import jef.database.meta.object.ForeignKeyAction;
+import jef.database.meta.object.ForeignKeyMatchType;
 import jef.database.meta.object.SequenceInfo;
 import jef.database.query.Func;
 import jef.database.query.Scientific;
@@ -575,5 +580,89 @@ public class OracleDialect extends AbstractDialect {
     @Override
     public SQLTemplates getQueryDslDialect() {
         return queryDslDialect;
+    }
+    
+    @Override
+    public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String constraintName) throws SQLException{
+
+    	StringBuilder sb = new StringBuilder();
+    	sb.append("    SELECT a.*, b.column_name, c.table_name as ref_table, d.column_name as ref_column ");
+    	sb.append("      from user_constraints a ");
+    	sb.append(" left join user_cons_columns b");
+    	sb.append("        on a.constraint_name = b.constraint_name and a.owner = b.owner");
+    	sb.append(" left join user_constraints c ");
+    	sb.append("        on c.owner = a.r_owner and c.constraint_name = a.r_constraint_name");
+    	sb.append(" left join user_cons_columns d");
+    	sb.append("        on d.owner = c.owner and d.constraint_name = c.constraint_name and d.position = b.position");
+    	sb.append("     where a.owner like ? and a.constraint_name like ?");
+    	sb.append("  order by a.owner, a.constraint_name");
+    	schema = StringUtils.isBlank(schema) ? "%" : schema.toUpperCase();
+		constraintName = StringUtils.isBlank(constraintName) ? "%" : constraintName;
+		
+		List<Constraint> constraints = conn.selectBySql(sb.toString(), new AbstractResultSetTransformer<List<Constraint>>(){
+			
+			@Override
+			public List<Constraint> transformer(IResultSet rs) throws SQLException {
+				
+				List<Constraint> constraints = new ArrayList<Constraint>();
+				List<Column> columns = new ArrayList<Column>();
+				List<Column> refColumns = new ArrayList<Column>();
+				Constraint preCon = new Constraint(); // 上一条记录
+				
+				while(rs.next()){
+					
+					if(constraints.size() > 0){
+						preCon = constraints.get(constraints.size() - 1);
+					}
+					
+					boolean isSameConstraint = rs.getString("owner").equals(preCon.getSchema())
+							&& rs.getString("constraint_name").equals(preCon.getName());
+
+					if(!isSameConstraint){
+
+						columns = new ArrayList<Column>();
+						refColumns = new ArrayList<Column>();
+
+						Constraint c = new Constraint();
+						c.setCatalog(null);
+						c.setSchema(rs.getString("owner"));
+						c.setName(rs.getString("constraint_name"));
+						c.setType(ConstraintType.parseName(rs.getString("constraint_type")));
+						c.setDeferrable("DEFERRABLE".equals(rs.getString("deferrable")) ? true : false);
+						c.setInitiallyDeferrable("DEFERRED".equals(rs.getString("deferred")) ? true : false);
+						c.setTableCatalog(null);
+						c.setTableSchema(rs.getString("owner"));
+						c.setTableName(rs.getString("table_name"));
+						c.setMatchType(null);
+						c.setRefTableName(rs.getString("ref_table"));
+						c.setUpdateRule(null); // oracle没有这个规则
+						c.setDeleteRule(ForeignKeyAction.parseName(rs.getString("delete_rule")));
+						c.setEnabled("ENABLED".equals(rs.getString("status")) ? true : false);
+						c.setColumns(columns);
+						c.setRefColumns(refColumns);
+						constraints.add(c);
+					}
+					
+					// 有指定列的约束则添加到列表
+					if(StringUtils.isNotBlank(rs.getString("column_name"))){
+						Column column = new Column();
+						column.setColumnName(rs.getString("column_name"));
+						columns.add(column);
+					}
+					
+					// 是外键约束则添加到参照列表
+					if(StringUtils.isNotBlank(rs.getString("ref_column"))){
+						Column column = new Column();
+						column.setColumnName(rs.getString("ref_column"));
+						refColumns.add(column);
+					}
+				}
+				
+				return constraints;
+			}
+			
+		}, Arrays.asList(schema, constraintName));
+		
+    	return constraints;
     }
 }
