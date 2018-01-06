@@ -587,15 +587,15 @@ public class OracleDialect extends AbstractDialect {
 
     	StringBuilder sb = new StringBuilder();
     	sb.append("    SELECT a.*, b.column_name, c.table_name as ref_table, d.column_name as ref_column ");
-    	sb.append("      from user_constraints a ");
-    	sb.append(" left join user_cons_columns b");
-    	sb.append("        on a.constraint_name = b.constraint_name and a.owner = b.owner");
-    	sb.append(" left join user_constraints c ");
-    	sb.append("        on c.owner = a.r_owner and c.constraint_name = a.r_constraint_name");
-    	sb.append(" left join user_cons_columns d");
-    	sb.append("        on d.owner = c.owner and d.constraint_name = c.constraint_name and d.position = b.position");
-    	sb.append("     where a.owner like ? and a.constraint_name like ?");
-    	sb.append("  order by a.owner, a.constraint_name");
+    	sb.append("      FROM user_constraints a ");
+    	sb.append(" LEFT JOIN user_cons_columns b");
+    	sb.append("        ON a.constraint_name = b.constraint_name and a.owner = b.owner");
+    	sb.append(" LEFT JOIN user_constraints c ");
+    	sb.append("        ON c.owner = a.r_owner and c.constraint_name = a.r_constraint_name");
+    	sb.append(" LEFT JOIN user_cons_columns d");
+    	sb.append("        ON d.owner = c.owner and d.constraint_name = c.constraint_name and d.position = b.position");
+    	sb.append("     WHERE a.owner like ? and a.constraint_name like ?");
+    	sb.append("  ORDER BY a.owner, a.constraint_name");
     	schema = StringUtils.isBlank(schema) ? "%" : schema.toUpperCase();
 		constraintName = StringUtils.isBlank(constraintName) ? "%" : constraintName;
 		
@@ -628,8 +628,8 @@ public class OracleDialect extends AbstractDialect {
 						c.setSchema(rs.getString("owner"));
 						c.setName(rs.getString("constraint_name"));
 						c.setType(ConstraintType.parseName(rs.getString("constraint_type")));
-						c.setDeferrable("DEFERRABLE".equals(rs.getString("deferrable")) ? true : false);
-						c.setInitiallyDeferrable("DEFERRED".equals(rs.getString("deferred")) ? true : false);
+						c.setDeferrable("DEFERRABLE".equals(rs.getString("deferrable")));
+						c.setInitiallyDeferrable("DEFERRED".equals(rs.getString("deferred")));
 						c.setTableCatalog(null);
 						c.setTableSchema(rs.getString("owner"));
 						c.setTableName(rs.getString("table_name"));
@@ -637,7 +637,7 @@ public class OracleDialect extends AbstractDialect {
 						c.setRefTableName(rs.getString("ref_table"));
 						c.setUpdateRule(null); // oracle没有这个规则
 						c.setDeleteRule(ForeignKeyAction.parseName(rs.getString("delete_rule")));
-						c.setEnabled("ENABLED".equals(rs.getString("status")) ? true : false);
+						c.setEnabled("ENABLED".equals(rs.getString("status")));
 						c.setColumns(columns);
 						c.setRefColumns(refColumns);
 						constraints.add(c);

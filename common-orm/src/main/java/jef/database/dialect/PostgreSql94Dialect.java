@@ -604,7 +604,8 @@ public class PostgreSql94Dialect extends AbstractDialect {
 		sb.append("        ON rc.unique_constraint_catalog = ccu.constraint_catalog");
 		sb.append("       AND rc.unique_constraint_schema = ccu.constraint_schema");
 		sb.append("       AND rc.unique_constraint_name = ccu.constraint_name ");
-		sb.append(" WHERE tc.table_name not like 'pg_%' and tc.constraint_schema like ? and tc.constraint_name like ?");
+		sb.append("     WHERE tc.table_name not like 'pg_%' and tc.constraint_schema like ? and tc.constraint_name like ?");
+		sb.append("  ORDER BY tc.constraint_catalog, tc.constraint_schema, tc.constraint_name");
 
 		schema = StringUtils.isBlank(schema) ? "%" : schema.toLowerCase();
 		constraintName = StringUtils.isBlank(constraintName) ? "%" : constraintName.toLowerCase();
@@ -638,8 +639,8 @@ public class PostgreSql94Dialect extends AbstractDialect {
 						c.setSchema(rs.getString("constraint_schema"));
 						c.setName(rs.getString("constraint_name"));
 						c.setType(ConstraintType.parseFullName(rs.getString("constraint_type")));
-						c.setDeferrable(parseStringToBool(rs.getString("is_deferrable")));
-						c.setInitiallyDeferrable(parseStringToBool(rs.getString("initially_deferred")));
+						c.setDeferrable("YES".equals(rs.getString("is_deferrable")));
+						c.setInitiallyDeferrable("YES".equals(rs.getString("initially_deferred")));
 						c.setTableCatalog(rs.getString("table_catalog"));
 						c.setTableSchema(rs.getString("table_schema"));
 						c.setTableName(rs.getString("table_name"));
@@ -717,11 +718,4 @@ public class PostgreSql94Dialect extends AbstractDialect {
 		return queryDslDialect;
 	}
 	
-	private Boolean parseStringToBool(String expression){
-		if("YES".equals(expression)){
-			return true;
-		}else{
-			return false;
-		}
-	}
 }

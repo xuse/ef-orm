@@ -13,6 +13,8 @@ public enum ConstraintType {
 	R("R", "FOREIGN KEY"),  //Referential AKA Foreign Key
 	U("U", "UNIQUE"),  //Unique Key
 	F("F", "REF"), // Constraint that involves a REF column
+	H("H", "HASH"), // Hash expression
+	S("S", "SUPPLEMENTAL"), // Supplemental logging
 	V("V", "VIEW CHECK");  //Check Option on a view 
 	
 	String typeName;

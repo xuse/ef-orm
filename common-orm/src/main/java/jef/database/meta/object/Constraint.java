@@ -2,6 +2,8 @@ package jef.database.meta.object;
 
 import java.util.List;
 
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 /**
  * 描述一个数据库中的Constraint
  * 
@@ -182,27 +184,7 @@ public class Constraint {
 
 	@Override
 	public String toString() {
-		
-		StringBuilder sb = new StringBuilder();
-		sb.append("name:");
-		sb.append(catalog);
-		sb.append(".");
-		sb.append(schema);
-		sb.append(".");
-		sb.append(name);
-		sb.append(" column:[");
-		columns.forEach(c -> sb.append(c.getColumnName()).append(","));
-		sb.append("]");
-		sb.append(" reference column:[");
-		refColumns.forEach(c -> sb.append(c.getColumnName()).append(","));
-		sb.append("]");
-		sb.append(" deferrable:");
-		sb.append(deferrable);
-		sb.append(" initiallyDeferrable:");
-		sb.append(initiallyDeferrable);
-		sb.append(" type:");
-		sb.append(type);
-		return sb.toString();
+		return ToStringBuilder.reflectionToString(this);
 	}
 	
 }
