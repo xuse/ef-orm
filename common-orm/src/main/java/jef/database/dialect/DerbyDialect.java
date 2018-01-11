@@ -17,16 +17,22 @@ package jef.database.dialect;
 
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.DbMetaData;
 import jef.database.dialect.handler.DerbyLimitHandler;
 import jef.database.dialect.handler.LimitHandler;
+import jef.database.jdbc.result.IResultSet;
 import jef.database.jsqlparser.expression.LongValue;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
+import jef.database.meta.object.Constraint;
+import jef.database.meta.object.ConstraintType;
+import jef.database.meta.object.ForeignKeyAction;
 import jef.database.query.Func;
 import jef.database.query.Scientific;
 import jef.database.query.function.EmuDateAddSubByTimesatmpadd;
@@ -40,6 +46,7 @@ import jef.database.query.function.StandardSQLFunction;
 import jef.database.query.function.TemplateFunction;
 import jef.database.query.function.VarArgsSQLFunction;
 import jef.database.support.RDBMS;
+import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
@@ -265,5 +272,92 @@ public class DerbyDialect extends AbstractDialect {
     @Override
     public SQLTemplates getQueryDslDialect() {
         return queryDslDialect;
+    }
+    
+    @Override
+	public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String constraintName)
+			throws SQLException {
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append("    select con.*, fk.deleterule, fk.updaterule, tab.tablename, rtab.tablename as referenced_table_name, scm.schemaname");
+		sb.append("      from sys.sysconstraints con ");
+		sb.append(" left join sys.sysforeignkeys fk");
+		sb.append("        on con.constraintid = fk.constraintid");
+		sb.append(" left join sys.sysconstraints ref");
+		sb.append("        on fk.keyconstraintid = ref.constraintid");
+		sb.append(" left join sys.systables tab");
+		sb.append("        on con.tableid = tab.tableid");
+		sb.append(" left join sys.systables rtab");
+		sb.append("        on ref.tableid = rtab.tableid");
+		sb.append(" left join sys.sysschemas scm");
+		sb.append("        on con.schemaid = scm.schemaid");
+		sb.append("     where scm.schemaname like ? and con.constraintname like ?");
+		schema = StringUtils.isBlank(schema) ? "%" : schema;
+		constraintName = StringUtils.isBlank(constraintName) ? "%" : constraintName;
+		
+		List<Constraint> constraints = conn.selectBySql(sb.toString(), new AbstractResultSetTransformer<List<Constraint>>(){
+			
+			@Override
+			public List<Constraint> transformer(IResultSet rs) throws SQLException {
+				
+				List<Constraint> constraints = new ArrayList<Constraint>();
+				
+				while(rs.next()){
+
+						Constraint c = new Constraint();
+						c.setCatalog(null);
+						c.setSchema(rs.getString("schemaname"));
+						c.setName(rs.getString("constraintname"));
+						// 'F' in derby means foreign key constraint which equals 'R' in oracle
+						c.setType("F".equals(rs.getString("type")) ? ConstraintType.R : ConstraintType.parseName(rs.getString("type")));
+						c.setDeferrable(!"E".equals(rs.getString("state"))); // 'E' (not deferrable initially immediate)
+						c.setInitiallyDeferrable("e".equals(rs.getString("state"))); // 'e' (deferrable initially deferred)
+						c.setTableCatalog(null);
+						c.setTableSchema(rs.getString("schemaname"));
+						c.setTableName(rs.getString("tablename"));
+						c.setMatchType(null);
+						c.setRefTableName(rs.getString("referenced_table_name"));
+						c.setUpdateRule(parseForeignKeyAction(rs.getString("updaterule")));
+						c.setDeleteRule(parseForeignKeyAction(rs.getString("deleterule")));
+						c.setEnabled(true);
+						constraints.add(c);
+					}
+				
+				return constraints;
+			}
+			
+		}, Arrays.asList(schema, constraintName));
+		
+    	return constraints;
+	}
+    
+    /**
+     * Derby的外键更新策略名称转换
+     * @param action
+     * @return
+     */
+    private ForeignKeyAction parseForeignKeyAction(String action){
+    	
+    	if(StringUtils.isBlank(action)){
+    		return null;
+    	}
+    	
+    	switch(action){
+    	
+    	case "R" :
+    		return ForeignKeyAction.NO_ACTION;
+    		
+    	case "S" :
+    		return ForeignKeyAction.RESTRICT;
+    	
+    	case "U" :
+    		return ForeignKeyAction.SET_NULL;
+    		
+    	case "C" :
+    		return ForeignKeyAction.CASCADE;
+    		
+    	default:
+    		return ForeignKeyAction.NO_ACTION;
+    	}
     }
 }

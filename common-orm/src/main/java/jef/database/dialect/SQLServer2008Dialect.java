@@ -50,7 +50,7 @@ public class SQLServer2008Dialect extends SQLServer2005Dialect {
 	public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String constraintName)
 			throws SQLException {
 
-		StringBuilder sb = new StringBuilder(); // PG系统约束信息查询
+		StringBuilder sb = new StringBuilder(); // 系统约束信息查询
 		sb.append("    SELECT tc.*, kcu.column_name, rc.match_option,  rc.update_rule, rc.delete_rule, ");
 		sb.append("           ccu.table_name AS ref_table, ccu.column_name AS ref_column ");
 		sb.append("      FROM information_schema.table_constraints tc");

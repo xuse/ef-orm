@@ -44,4 +44,12 @@ public enum ConstraintType {
         }  
 		return null;
 	}
+
+	public String getTypeName() {
+		return typeName;
+	}
+
+	public String getTypeFullName() {
+		return typeFullName;
+	}
 }

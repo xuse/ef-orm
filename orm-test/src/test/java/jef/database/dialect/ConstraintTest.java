@@ -157,6 +157,74 @@ public class ConstraintTest {
 	}
 	
 	/**
+	 * 测试derby的约束
+	 */
+	@Test
+	public void testDerbyConstraint(){
+		
+		DbClient db=new DbClientBuilder().setDataSource("jdbc:derby:F:\\derby\\mydb;create=true", "", "").build();
+		DbMetaData meta=db.getMetaData(null);
+		DatabaseDialect dialect=AbstractDialect.getDialect("derby");
+		try {
+			
+			// 准备数据
+			this.prepareTestData(db);
+			
+			// 查询单个约束
+			List<Constraint> cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), "UQ_A");
+			cons.forEach(c -> System.out.println(c.toString()));
+						
+			// 查询schema下所有约束
+			cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), null);
+			cons.forEach(c -> System.out.println(c.toString()));
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally{
+			try{
+				db.close();
+				this.afterTest(db);
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	/**
+	 * 测试hsqldb的约束
+	 */
+	@Test
+	public void testHsqlConstraint(){
+		
+		DbClient db=new DbClientBuilder().setDataSource("jdbc:hsqldb:mem:testdb", "SA", "").build();
+		DbMetaData meta=db.getMetaData(null);
+		DatabaseDialect dialect=AbstractDialect.getDialect("hsqldb");
+		try {
+			
+			// 准备数据
+			this.prepareTestData(db);
+			
+			// 查询单个约束
+			List<Constraint> cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), "UQ_A");
+			cons.forEach(c -> System.out.println(c.toString()));
+						
+			// 查询schema下所有约束
+			cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), null);
+			cons.forEach(c -> System.out.println(c.toString()));
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}finally{
+			try{
+				db.close();
+				this.afterTest(db);
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		}
+	}
+	
+	/**
 	 * 准备测试用的表和约束
 	 * @param db
 	 * @throws SQLException
