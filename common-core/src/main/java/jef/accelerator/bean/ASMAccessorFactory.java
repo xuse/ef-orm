@@ -36,9 +36,12 @@ final class ASMAccessorFactory implements BeanAccessorFactory {
 		BeanAccessor ba = map.get(javaBean);
 		if (ba != null)
 			return ba;
-		ba = generateAccessor(javaBean);
 		synchronized (map) {
-			map.put(javaBean, ba);
+			ba = map.get(javaBean);
+			if(ba==null){
+				ba = generateAccessor(javaBean);
+				map.put(javaBean, ba);	
+			}
 		}
 		return ba;
 	}

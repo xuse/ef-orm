@@ -322,4 +322,18 @@ public class PerformanceTest {
 	}
 	
 	
+	
+	@Test
+	public void testConcurrent() throws InterruptedException{
+		for(int i=0;i<100;i++){
+			new Thread(() -> work()).start();; 
+		}
+		Thread.sleep(2000);
+	}
+	
+	
+	private void work(){
+		FastBeanWrapperImpl.getAccessorFor(PromotionPO.class);
+	}
+	
 }
