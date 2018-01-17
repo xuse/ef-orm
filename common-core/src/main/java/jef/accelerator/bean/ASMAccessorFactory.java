@@ -36,9 +36,12 @@ final class ASMAccessorFactory implements BeanAccessorFactory {
 		BeanAccessor ba = map.get(javaBean);
 		if (ba != null)
 			return ba;
-		ba = generateAccessor(javaBean);
 		synchronized (map) {
-			map.put(javaBean, ba);
+			ba = map.get(javaBean);
+			if (ba == null) {
+				ba = generateAccessor(javaBean);
+				map.put(javaBean, ba);
+			}
 		}
 		return ba;
 	}
@@ -63,11 +66,11 @@ final class ASMAccessorFactory implements BeanAccessorFactory {
 			if (isHashProperty) {
 				asm = new ASMHashGenerator(javaClz, clzName, fields, cl);
 			} else {
-				asm = new ASMSwitcherGenerator(javaClz, clzName, fields,cl);
+				asm = new ASMSwitcherGenerator(javaClz, clzName, fields, cl);
 			}
 			clzdata = asm.generate();
 			// DEBUG
-			//saveClass(clzdata, clzName);
+			// saveClass(clzdata, clzName);
 			cls = UnsafeUtils.defineClass(clzName, clzdata, 0, clzdata.length, cl);
 			if (cls == null) {
 				throw new RuntimeException("Dynamic class accessor for " + javaClz + " failure!");
@@ -90,7 +93,6 @@ final class ASMAccessorFactory implements BeanAccessorFactory {
 			throw new RuntimeException(e);
 		}
 	}
-
 
 	/*
 	 * 保存文件
@@ -147,7 +149,7 @@ final class ASMAccessorFactory implements BeanAccessorFactory {
 		MethodEx[] methods = cw.getMethods();
 		for (MethodEx m : methods) {
 			GeeField field = m.getAnnotation(GeeField.class);
-			if (field==null || field.ignore())
+			if (field == null || field.ignore())
 				continue;
 			String name = field.name();
 			if (result.containsKey(name))
