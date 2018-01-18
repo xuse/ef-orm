@@ -346,33 +346,46 @@ H框架中也有增强，以前H框架总是要依赖一个CGlib，现在则是�
 </plugin>
 ~~~
 
-#### 2.2.3.2.  在Eclipse中运行单元测试时  
+#### 2.2.3.2.  在开发调试时  
 
-Eclipse会经常自动构建，因此即使我们执行了手工增强，也不能保证当运行单元测试时，类已经做过增强，比较直接的办法就是和上面的例子一样，在单元测试的开始(@BeforeClass)，执行一次 
-
-~~~java
-new EntityEnhancer().enhance("org.easyframe.tutorial");   //参数是要增强的类的包名。可传入多个。
-~~~
-
-#### 2.2.3.3.  在开发调试时  
-
-JEF插件可以支持在开发时动态增强实体，其原理和前面的三种方式不同，是动态的。通过使用自定义的ClassLoader，在类加载时自动增强类。
+JEF插件可以支持在开发时动态增强实体，其原理和前面的三种方式不同，是动态的。通过使用Java-Instrument技术，在类加载时自动增强类。
 
 操作方式如下：   
 
+在运行的命令行上，增加参数
+
+```
+-javaagent:<spring-instrument_jar_location>
+```
+
+在运行时增加javaagent参数，并指定spring-instrument-(version).jar的路径。
+
+* spring-instrument版本并无精确要求，可以使用spring 3.x 4.x 5.x的任意一个版本。
+* spring-instrument的jar不需要添加到classpath或者pom.xml中去，对Java应用程序没有任何要求。
+
+**在不同的IDE中，命令行参数的配置方式可能是不同的**，但肯定都有，以Eclipse运行为例，见下图。
+
  ![2.2.3.3.-1](images/2.2.3.3.-1.png)
 
-JEFApplication是运行指定类的Main方法。JEF Web Application则是启动一个内置的Jetty，然后自动查找WEB-INF目录，并按Java的Web开发规范，将工程发布出来。
 
-这两种方式都十分简单。使用这种方式运行的程序中的Entity都不需要手工增强，过程对开发人员透明，有利于编码时提高效率。
 
-其中，Run As / JEF WebApplication中，您可以在Run Configuration界面中调整Context path和Web发布端口。
+> 这种方式称为运行时增强。（Runtime Enhancement）。
+>
+> OpenJPA中也有类似概念，方法基本一样，参见—— http://openjpa.apache.org/runtime-enhancement.html
 
- ![2.2.3.3-2](images/2.2.3.3-2.png)
+#### 2.2.3.3.  在运行单元测试时
 
-如果要用调试模式运行，启动时选择 ‘Debug As’即可。
+我们经常运行单元测试，很多时候针对单个方法执行单元测试，因此我们可能并无法保证每次运行单元测试的时候都加上-javaagent:<spring-instrument_jar_location>这条命令。
 
-三种场景下，EF-ORM都提供了相应的增强操作支持。除了Eclipse中运行单元测试外，你都无需去关注增强操作的存在。
+比较直接的办法就是和上面的例子一样，在单元测试的开始(@BeforeClass)，执行一次 
+
+```java
+new EntityEnhancer().enhance("org.easyframe.tutorial");   //参数是要增强的类的包名。可传入多个。
+```
+
+
+
+**上述三种场景下，EF-ORM都提供了相应的增强操作支持。**除了Eclipse中运行单元测试外，你都无需去关注增强操作的存在。
 
 #### 2.2.3.4.  手工增强  
 

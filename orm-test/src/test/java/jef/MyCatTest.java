@@ -11,12 +11,12 @@ import java.util.List;
 import jef.common.log.LogUtil;
 import jef.database.QB;
 import jef.database.query.Query;
-import jef.json.JsonUtil;
 import jef.orm.onetable.model.TestEntity;
 import jef.tools.DateUtils;
 
 import org.junit.Test;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
 public class MyCatTest {
@@ -26,9 +26,8 @@ public class MyCatTest {
 		Query<TestEntity> query = QB.create(TestEntity.class);
 		java.util.Date d = DateUtils.getDate(2012, 5, 1);
 		query.addCondition(QB.between(TestEntity.Field.dateField, DateUtils.dayBegin(d), DateUtils.dayEnd(d)));
-//		JSONObject o=(JSONObject) JSON.toJSON(query.getInstance());
-		JSONObject sd=JsonUtil.toJsonObject(query.getInstance());
-		System.out.println(sd);
+		JSONObject o=(JSONObject) JSON.toJSON(query.getInstance());
+		System.out.println(o);
 	}
 
     /**
