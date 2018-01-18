@@ -9,6 +9,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.Query;
 import jef.database.query.SqlContext;
+import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.processor.BindVariableDescription;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -322,7 +323,7 @@ public interface IConditionField extends jef.database.Field {
 			sb.append("select 1 from ").append(DbUtils.toTableName(query.getInstance(), null, query, processor.getPartitionSupport()));
 			sb.append(" et ");
 
-			sb.append(processor.toWhereClause(query, new SqlContext(context, "et", query), null, profile));
+			sb.append(processor.toWhereClause(query, new SqlContext(context, "et", query), null, profile).getSql());
 			sb.append(")");
 			return sb.toString();
 		}
@@ -333,7 +334,9 @@ public interface IConditionField extends jef.database.Field {
 			sb.append(name()).append("(");
 			sb.append("select 1 from ").append(DbUtils.toTableName(query.getInstance(), null, query, processor.getPartitionSupport()));
 			sb.append(" et ");
-			sb.append(processor.toWhereClause(query, new SqlContext(context, "et", query), null, profile));
+			BindSql inner=processor.toWhereClause(query, new SqlContext(context, "et", query), null, profile);
+			sb.append(inner.getSql());
+			fields.addAll(inner.getBind());
 			sb.append(")");
 			return sb.toString();
 		}
@@ -385,8 +388,7 @@ public interface IConditionField extends jef.database.Field {
 			sb.append(name()).append("(");
 			sb.append("select 1 from ").append(DbUtils.toTableName(query.getInstance(), null, query, processor.getPartitionSupport()));
 			sb.append(" et ");
-
-			sb.append(processor.toWhereClause(query, new SqlContext(context, "et", query), null, profile));
+			sb.append(processor.toWhereClause(query, new SqlContext(context, "et", query), null, profile).getSql());
 			sb.append(")");
 			return sb.toString();
 		}
@@ -397,7 +399,10 @@ public interface IConditionField extends jef.database.Field {
 			sb.append(name()).append("(");
 			sb.append("select 1 from ").append(DbUtils.toTableName(query.getInstance(), null, query, processor.getPartitionSupport()));
 			sb.append(" et ");
-			sb.append(processor.toWhereClause(query, new SqlContext(context, "et", query), null, profile));
+			
+			BindSql inner=processor.toWhereClause(query, new SqlContext(context, "et", query), null, profile);
+			sb.append(inner.getSql());
+			fields.addAll(inner.getBind());
 			sb.append(")");
 			return sb.toString();
 		}

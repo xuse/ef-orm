@@ -9,6 +9,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.jdbc.result.ResultSetImpl;
 import jef.database.query.SqlContext;
+import jef.database.wrapper.clause.BindSql;
 import jef.tools.reflect.BeanWrapper;
 
 public final class LobLazyLoadTask implements LazyLoadTask {
@@ -28,8 +29,9 @@ public final class LobLazyLoadTask implements LazyLoadTask {
 
 	public void process(Session db, Object o) throws SQLException {
 		IQueryableEntity obj = (IQueryableEntity) o;
-		String sql = "select " + columnname + " from " + tableName + db.rProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), null, profile);
-		ResultSet rs = db.getResultSet(sql, 10);
+		BindSql wherePart=db.rProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), null, profile);
+		String sql = "select " + columnname + " from " + tableName + wherePart.getSql();
+		ResultSet rs = db.getResultSet(sql, 10,wherePart.getBindAsParamArray());
 		if (rs.next()) {
 			Object value = mType.jdbcGet(new ResultSetImpl(rs, profile), 1);
 			if (value != null) {
