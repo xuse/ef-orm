@@ -477,23 +477,24 @@ import jef.database.DataObject;
 @Table(schema = "ad", name = "ca_asset")  //这里定义表所在的schema和名称，schema可不写
 @Indexes(
 	@Index(name = "IDX_DATE_TYPE", definition = "unique", fields = { "thedate", "assetType" })
-)   //EF-ORM特有注解，可以定义该表上的复合索引。建表时会自动创建索引。
+)
 public class CaAsset extends DataObject {
 	/**
 	 * Asset ID
 	 */
 	@Id               //说明这个字段是主键字段
 	@GeneratedValue(strategy = GenerationType.IDENTITY) //使用列自增生成值，不支持列自增再Sequence
-	@Column(name = "asset_id", precision = 6, columnDefinition = "NUMBER", nullable = false)
 	//定义该字段在数据库中的列名，number长度。是否可为null。
-	@SequenceGenerator(sequenceName="ca_asset_seq",name="ca_asset_seq") 
+	@Column(name = "asset_id", precision = 6, columnDefinition = "NUMBER", nullable = false)
 	//可以指定Sequence名称，但不建议定义，EF-ORM支持全局配置一个模板，来生成各个表的Sequence名称。
+	@SequenceGenerator(sequenceName="ca_asset_seq",name="ca_asset_seq") 
 	private int assetId;
 
 	/**
 	 * A unique identifier of account.
 	 */
-	@Id    //重要,EF-ORM允许一个对象中有多个@Id字段，即复合主键。
+	@Id
+    //重要,EF-ORM允许一个对象中有多个@Id字段，即复合主键。
 	//在某些关系表上，业务键要比物理键实用的多。这个与标准JPA的做法不同。
 	//EF-ORM更倾向支持传统的数据库设计，而不是用面向对象来代替数据库设计。
 	//因此，如果您正在使用EF-ORM，请在该用业务键的时候大胆的用业务键，
@@ -516,8 +517,9 @@ public class CaAsset extends DataObject {
 	@Lob            //CLOB字段一般映射为String，也可以映射为File, char[]等
 	private String content;
 
-	@Lob    //byte[]构成的Lob会映射为BLOB（在某些数据库上为BYTEA）。BLOB在java中还可以映射为
+	//byte[]构成的Lob会映射为BLOB（在某些数据库上为BYTEA）。BLOB在java中还可以映射为
 	//String, File等。
+    @Lob    
 	private byte[] photo;
 
 	@Column(name = "PRICE", precision =12,scale=8, columnDefinition = "number")
@@ -530,7 +532,7 @@ public class CaAsset extends DataObject {
 	//操作Oracle数据库也遵守相同的规律。
 	//Oracle同时具有Date和Timestamp两种类型，但和别的数据库不一样，其Date精度到秒。
 	//此处我们沿用JDBC标准，Date精度到天。确保实现的可移植性。
-	private Date  thedate;
+	private Date thedate;
 	
 	public enum Field implements jef.database.Field {
 		acctId, assetId, assetType,thedate,normal,content
@@ -559,22 +561,24 @@ public class CaAsset extends DataObject {
 
 许多时候注解可以省略，省略时，EF-ORM会根据默认的数据类型计算相应的数据库存储类型。事实上，columnDefinition也可以写成int, double, integer,varchar2等各种标准的SQL类型。因此，如果不指定Column类型，EF-ORM会默认的生成Column的类型如下
 
-| **Java类型**         | **数据库类型**              |
-| ------------------ | ---------------------- |
-| String + @Lob      | CLOB                   |
-| String             | Varchar(255)           |
-| Int / Integer      | Integer /  Number(8)   |
-| double/Double      | Double /  Number(16,6) |
-| float/Float        | Float /  Number(16,6)  |
-| boolean /Boolean   | Boolean / char(1)      |
-| Long / Long        | Bigint /  Number(16)   |
-| java.util.Date     | timestamp /  datetime  |
-| java.sql.Date      | Date                   |
-| java.sql.Timestamp | timestamp /  datetime  |
-| byte[]             | BLOB                   |
-| Enum               | Varchar(32)            |
+| **Java类型**                              | **数据库类型**              |
+| --------------------------------------- | ---------------------- |
+| String + @Lob                           | CLOB                   |
+| String                                  | Varchar(255)           |
+| Int / Integer                           | Integer /  Number(8)   |
+| double/Double                           | Double /  Number(16,6) |
+| float/Float                             | Float /  Number(16,6)  |
+| boolean /Boolean                        | Boolean / char(1)      |
+| Long / Long                             | Bigint /  Number(16)   |
+| java.util.Date / Instant /LocalDateTime | timestamp /  datetime  |
+| java.sql.Date / LocalDate               | Date                   |
+| java.sql.Timestamp                      | timestamp /  datetime  |
+| byte[]                                  | BLOB                   |
+| Enum                                    | varchar(32)            |
+| LocalTime                               | time / timestamp       |
+| YearMonth                               | char(7)                |
 
-                               						表 1-1 映射关系
+​					**表 1-1 映射关系**
 
 上表列举了您未定义Column注解时，java字段到数据库的映射关系。这也是建议您在实际使用注解时进行的映射方式。在实体加载时，EF-ORM会适配实体与数据库的映射关系，如果发现属于无法支持的映射（EF-ORM能兼容大部分不同数据类型的映射，包括从String到number等），那么会抛出异常，此时您需要修改java的映射字段类型。
 
