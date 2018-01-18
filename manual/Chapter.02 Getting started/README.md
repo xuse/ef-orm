@@ -494,7 +494,7 @@ public class CaAsset extends DataObject {
 	 * A unique identifier of account.
 	 */
 	@Id
-    //重要,EF-ORM允许一个对象中有多个@Id字段，即复合主键。
+	//重要,EF-ORM允许一个对象中有多个@Id字段，即复合主键。
 	//在某些关系表上，业务键要比物理键实用的多。这个与标准JPA的做法不同。
 	//EF-ORM更倾向支持传统的数据库设计，而不是用面向对象来代替数据库设计。
 	//因此，如果您正在使用EF-ORM，请在该用业务键的时候大胆的用业务键，
@@ -519,7 +519,7 @@ public class CaAsset extends DataObject {
 
 	//byte[]构成的Lob会映射为BLOB（在某些数据库上为BYTEA）。BLOB在java中还可以映射为
 	//String, File等。
-    @Lob    
+	@Lob    
 	private byte[] photo;
 
 	@Column(name = "PRICE", precision =12,scale=8, columnDefinition = "number")
