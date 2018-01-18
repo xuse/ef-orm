@@ -26,32 +26,70 @@ public class Constraint {
 
 	private String schema;
 
+	/**
+	 * 约束名
+	 */
 	private String name;
 
+	/**
+	 * 约束所在表的catalog
+	 */
 	private String tableCatalog;
-	
+	/**
+	 * 约束所在表所在schema
+	 */
 	private String tableSchema;
-	
+	/**
+	 * 约束所在表名
+	 */
 	private String tableName;
 
+	/**
+	 * 约束类型
+	 */
 	private ConstraintType type;
-
+	/**
+	 * 检测延迟
+	 */
 	private boolean deferrable;
-
+	/**
+	 * 检测延迟
+	 */
 	private boolean initiallyDeferrable;
 	
-	private List<Column> columns; // 约束字段列表
+	/**
+	 * 约束字段列表
+	 */
+	private List<Column> columns; // 
 	
-	private String refTableName; // 外键参照表
+	/**
+	 * 外键参照表
+	 */
+	private String refTableName; // 
 	
-	private List<Column> refColumns; // 外键参照字段列表
+	/**
+	 * 外键参照字段列表
+	 */
+	private List<Column> refColumns; // 
 	
+	/**
+	 * 外键更新规则
+	 */
 	private ForeignKeyAction updateRule; // 外键更新规则
 	
+	/**
+	 * 外键删除规则
+	 */
 	private ForeignKeyAction deleteRule; // 外键删除规则
 	
+	/**
+	 * 外键匹配类型
+	 */
 	private ForeignKeyMatchType matchType;
 	
+	/**
+	 * 约束是否启用
+	 */
 	private boolean enabled; // 是否启用
 
 	public String getCatalog() {

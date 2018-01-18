@@ -21,20 +21,51 @@ import jef.database.query.SqlExpression;
 import jef.tools.StringUtils;
 
 
-
+/**
+ * 描述一个列对象
+ *
+ */
 public class Column{
+	/**
+	 * 顺序
+	 */
 	private int ordinal;
+	/**
+	 * 表名
+	 */
 	private String tableName;
+	/**
+	 * 列名
+	 */
 	private String columnName;
+	/**
+	 * 备注
+	 */
 	private String remarks;
+	/**
+	 * 列的数据类型
+	 */
 	private String dataType;
 	/**
+	 * 列的数据类型：SQL常量
 	 * java.sql.Types中的常量之一
 	 */
 	private int dataTypeCode;
+	/**
+	 * 列宽
+	 */
 	private int columnSize;
+	/**
+	 * 十进制数位
+	 */
 	private int decimalDigit;
+	/**
+	 * 允许null
+	 */
 	private boolean nullable;
+	/**
+	 * 列的定制文字
+	 */
 	private String columnDef;
 	/**
 	 * 是否unique，数据库支持 unique index和 unique constraint两种方式实现。
@@ -42,6 +73,11 @@ public class Column{
 	 */
 	private boolean unique;
 	
+	/**
+	 * 将列的信息转换为EF内部的列数据类型表示
+	 * @param profile
+	 * @return
+	 */
 	public ColumnType toColumnType(DatabaseDialect profile){
 		ColumnType ct=profile.getProprtMetaFromDbType(this);
 		ct.setNullable(nullable);
