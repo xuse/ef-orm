@@ -17,22 +17,30 @@ package jef.database.dialect;
 
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
+import jef.database.DbMetaData;
 import jef.database.ORMConfig;
 import jef.database.annotation.DateGenerateType;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.handler.LimitHandler;
 import jef.database.dialect.handler.MySqlLimitHandler;
 import jef.database.exception.ViolatedConstraintNameExtracter;
+import jef.database.jdbc.result.IResultSet;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
 import jef.database.meta.object.Column;
+import jef.database.meta.object.Constraint;
+import jef.database.meta.object.ConstraintType;
+import jef.database.meta.object.ForeignKeyAction;
+import jef.database.meta.object.ForeignKeyMatchType;
 import jef.database.query.Func;
 import jef.database.query.Scientific;
 import jef.database.query.function.CastFunction;
@@ -43,7 +51,9 @@ import jef.database.query.function.NoArgSQLFunction;
 import jef.database.query.function.StandardSQLFunction;
 import jef.database.query.function.TemplateFunction;
 import jef.database.support.RDBMS;
+import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.tools.ArrayUtils;
+import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
 
@@ -471,5 +481,95 @@ public class MySqlDialect extends AbstractDialect {
     public SQLTemplates getQueryDslDialect() {
         return queryDslDialect;
     }
-	
+
+	@Override
+	public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String constraintName)
+			throws SQLException {
+		
+		StringBuilder sb = new StringBuilder();
+		sb.append("    SELECT kcu.*, tc.constraint_type, rc.update_rule, rc.delete_rule, rc.match_option");
+		sb.append("      FROM information_schema.key_column_usage kcu ");
+		sb.append("INNER JOIN information_schema.table_constraints tc");
+		sb.append("        ON tc.constraint_schema = kcu.constraint_schema");
+		sb.append("       AND tc.constraint_name = kcu.constraint_name");
+		sb.append("       AND tc.table_schema = kcu.constraint_schema");
+		sb.append("       AND tc.table_name = kcu.table_name");
+		sb.append(" LEFT JOIN information_schema.referential_constraints rc");
+		sb.append("        ON kcu.constraint_schema = rc.constraint_schema");
+		sb.append("       AND kcu.constraint_name = rc.constraint_name");
+		sb.append("       AND kcu.table_schema = rc.constraint_schema");
+		sb.append("       AND kcu.table_name = rc.table_name");
+		sb.append("     WHERE kcu.constraint_schema like ? and kcu.constraint_name like ?");
+		sb.append("  ORDER BY kcu.constraint_schema, kcu.table_name, kcu.constraint_name, kcu.ordinal_position");
+		schema = StringUtils.isBlank(schema) ? "%" : schema.toLowerCase();
+		constraintName = StringUtils.isBlank(constraintName) ? "%" : constraintName.toLowerCase();
+		
+		List<Constraint> constraints = conn.selectBySql(sb.toString(), new AbstractResultSetTransformer<List<Constraint>>(){
+			
+			@Override
+			public List<Constraint> transformer(IResultSet rs) throws SQLException {
+				
+				List<Constraint> constraints = new ArrayList<Constraint>();
+				List<Column> columns = new ArrayList<Column>();
+				List<Column> refColumns = new ArrayList<Column>();
+				Constraint preCon = new Constraint(); // 上一条记录
+				
+				while(rs.next()){
+					
+					if(constraints.size() > 0){
+						preCon = constraints.get(constraints.size() - 1);
+					}
+					
+					boolean isSameConstraint = rs.getString("constraint_schema").equals(preCon.getSchema())
+							&& rs.getString("constraint_name").equals(preCon.getName())
+							&& rs.getString("table_schema").equals(preCon.getTableSchema())
+							&& rs.getString("table_name").equals(preCon.getTableName());
+
+					if(!isSameConstraint){
+
+						columns = new ArrayList<Column>();
+						refColumns = new ArrayList<Column>();
+
+						Constraint c = new Constraint();
+						c.setCatalog(rs.getString("constraint_catalog"));
+						c.setSchema(rs.getString("constraint_schema"));
+						c.setName(rs.getString("constraint_name"));
+						c.setType(ConstraintType.parseFullName(rs.getString("constraint_type")));
+						c.setDeferrable(false);
+						c.setInitiallyDeferrable(false);
+						c.setTableCatalog(rs.getString("table_catalog"));
+						c.setTableSchema(rs.getString("table_schema"));
+						c.setTableName(rs.getString("table_name"));
+						c.setMatchType(ForeignKeyMatchType.parseName(rs.getString("match_option")));
+						c.setRefTableName(rs.getString("referenced_table_name"));
+						c.setUpdateRule(ForeignKeyAction.parseName(rs.getString("update_rule")));
+						c.setDeleteRule(ForeignKeyAction.parseName(rs.getString("delete_rule")));
+						c.setEnabled(true);
+						c.setColumns(columns);
+						c.setRefColumns(refColumns);
+						constraints.add(c);
+					}
+					
+					// 有指定列的约束则添加到列表
+					if(StringUtils.isNotBlank(rs.getString("column_name"))){
+						Column column = new Column();
+						column.setColumnName(rs.getString("column_name"));
+						columns.add(column);
+					}
+					
+					// 是外键约束则添加到参照列表
+					if(StringUtils.isNotBlank(rs.getString("referenced_column_name"))){
+						Column column = new Column();
+						column.setColumnName(rs.getString("referenced_column_name"));
+						refColumns.add(column);
+					}
+				}
+				
+				return constraints;
+			}
+			
+		}, Arrays.asList(schema, constraintName));
+		
+    	return constraints;
+	}
 }

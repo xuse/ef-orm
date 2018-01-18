@@ -1,5 +1,9 @@
 package jef.database.meta.object;
 
+import java.util.List;
+
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 /**
  * 描述一个数据库中的Constraint
  * 
@@ -18,20 +22,16 @@ package jef.database.meta.object;
  */
 public class Constraint {
 
-	@javax.persistence.Column(name = "CONSTRAINT_CATALOG")
 	private String catalog;
 
-	@javax.persistence.Column(name = "CONSTRAINT_SCHEMA")
 	private String schema;
 
-	@javax.persistence.Column(name = "CONSTRAINT_NAME")
 	private String name;
 
-	@javax.persistence.Column(name = "TABLE_CATALOP")
 	private String tableCatalog;
-	@javax.persistence.Column(name = "TABLE_SCHEMA")
+	
 	private String tableSchema;
-	@javax.persistence.Column(name = "TABLE_NAME")
+	
 	private String tableName;
 
 	private ConstraintType type;
@@ -39,6 +39,20 @@ public class Constraint {
 	private boolean deferrable;
 
 	private boolean initiallyDeferrable;
+	
+	private List<Column> columns; // 约束字段列表
+	
+	private String refTableName; // 外键参照表
+	
+	private List<Column> refColumns; // 外键参照字段列表
+	
+	private ForeignKeyAction updateRule; // 外键更新规则
+	
+	private ForeignKeyAction deleteRule; // 外键删除规则
+	
+	private ForeignKeyMatchType matchType;
+	
+	private boolean enabled; // 是否启用
 
 	public String getCatalog() {
 		return catalog;
@@ -111,4 +125,66 @@ public class Constraint {
 	public void setInitiallyDeferrable(boolean initiallyDeferrable) {
 		this.initiallyDeferrable = initiallyDeferrable;
 	}
+
+	public List<Column> getColumns() {
+		return columns;
+	}
+
+	public void setColumns(List<Column> columns) {
+		this.columns = columns;
+	}
+
+	public String getRefTableName() {
+		return refTableName;
+	}
+
+	public void setRefTableName(String refTableName) {
+		this.refTableName = refTableName;
+	}
+
+	public List<Column> getRefColumns() {
+		return refColumns;
+	}
+
+	public void setRefColumns(List<Column> refColumns) {
+		this.refColumns = refColumns;
+	}
+
+	public ForeignKeyAction getUpdateRule() {
+		return updateRule;
+	}
+
+	public void setUpdateRule(ForeignKeyAction updateRule) {
+		this.updateRule = updateRule;
+	}
+
+	public ForeignKeyAction getDeleteRule() {
+		return deleteRule;
+	}
+
+	public void setDeleteRule(ForeignKeyAction deleteRule) {
+		this.deleteRule = deleteRule;
+	}
+
+	public ForeignKeyMatchType getMatchType() {
+		return matchType;
+	}
+
+	public void setMatchType(ForeignKeyMatchType matchType) {
+		this.matchType = matchType;
+	}
+
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public void setEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
+
+	@Override
+	public String toString() {
+		return ToStringBuilder.reflectionToString(this);
+	}
+	
 }

@@ -7,10 +7,49 @@ package jef.database.meta.object;
  *
  */
 public enum ConstraintType {
-	C,  //Check on a table  Column
-	O,  //Read Only on a view  
-	P,  //Primary Key
-	R,  //Referential AKA Foreign Key
-	U,  //Unique Key
-	V  //Check Option on a view
+	C("C", "CHECK"),  //Check on a table  Column
+	O("O", "READ ONLY"),  //Read Only on a view  
+	P("P", "PRIMARY KEY"),  //Primary Key
+	R("R", "FOREIGN KEY"),  //Referential AKA Foreign Key
+	U("U", "UNIQUE"),  //Unique Key
+	F("F", "REF"), // Constraint that involves a REF column
+	H("H", "HASH"), // Hash expression
+	S("S", "SUPPLEMENTAL"), // Supplemental logging
+	V("V", "VIEW CHECK");  //Check Option on a view 
+	
+	String typeName;
+	String typeFullName;
+	
+	private ConstraintType(String typeName, String typeFullName){
+		this.typeName = typeName;
+		this.typeFullName = typeFullName;
+	}
+	
+	public static ConstraintType parseName(String name){
+		
+		for (ConstraintType a : ConstraintType.values()) {  
+            if (a.typeName.equals(name)) {  
+                return a;  
+            }  
+        }  
+		return null;
+	}
+	
+	public static ConstraintType parseFullName(String name){
+		
+		for (ConstraintType a : ConstraintType.values()) {  
+            if (a.typeFullName.equals(name)) {  
+                return a;  
+            }  
+        }  
+		return null;
+	}
+
+	public String getTypeName() {
+		return typeName;
+	}
+
+	public String getTypeFullName() {
+		return typeFullName;
+	}
 }
