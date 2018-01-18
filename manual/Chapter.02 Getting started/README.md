@@ -483,10 +483,10 @@ public class CaAsset extends DataObject {
 	 * Asset ID
 	 */
 	@Id               //说明这个字段是主键字段
-     @GeneratedValue(strategy = GenerationType.IDENTITY) //使用列自增生成值，不支持列自增再Sequence
+	@GeneratedValue(strategy = GenerationType.IDENTITY) //使用列自增生成值，不支持列自增再Sequence
 	@Column(name = "asset_id", precision = 6, columnDefinition = "NUMBER", nullable = false)
 	//定义该字段在数据库中的列名，number长度。是否可为null。
-     @SequenceGenerator(sequenceName="ca_asset_seq",name="ca_asset_seq") 
+	@SequenceGenerator(sequenceName="ca_asset_seq",name="ca_asset_seq") 
 	//可以指定Sequence名称，但不建议定义，EF-ORM支持全局配置一个模板，来生成各个表的Sequence名称。
 	private int assetId;
 
@@ -506,21 +506,21 @@ public class CaAsset extends DataObject {
 	 * capital, 4- free resource, 5 - cheque.
 	 */
 	@Column(name = "ASSET_TYPE", precision = 8, columnDefinition = "NUMBER")
-    @Indexed    //EF-ORM特有的注解，在建表时可以为这个列创建B树索引。
+	@Indexed    //EF-ORM特有的注解，在建表时可以为这个列创建B树索引。
 	private Integer assetType;
 
-    @Column(name = "COMMENTS", length=512, columnDefinition = "varchar")
+	@Column(name = "COMMENTS", length=512, columnDefinition = "varchar")
 	private String normal;
 
-    @Column(name = "CONTENT", columnDefinition=”clob”)
+	@Column(name = "CONTENT", columnDefinition=”clob”)
 	@Lob            //CLOB字段一般映射为String，也可以映射为File, char[]等
 	private String content;
 
-	 @Lob    //byte[]构成的Lob会映射为BLOB（在某些数据库上为BYTEA）。BLOB在java中还可以映射为
-     //String, File等。
-     private byte[] photo;
+	@Lob    //byte[]构成的Lob会映射为BLOB（在某些数据库上为BYTEA）。BLOB在java中还可以映射为
+	//String, File等。
+	private byte[] photo;
 
-     @Column(name = "PRICE", precision =12,scale=8, columnDefinition = "number")
+	@Column(name = "PRICE", precision =12,scale=8, columnDefinition = "number")
 	//对于小数，precision=12 scale=8的意思是整数部分最多4位，小数部分最多8位。(和Oracle定义一致）
 	//理解为整数部分最多12位的同学都去面壁！
 	private double price;
