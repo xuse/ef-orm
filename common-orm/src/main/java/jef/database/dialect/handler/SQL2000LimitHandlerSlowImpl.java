@@ -12,22 +12,23 @@ import jef.database.jsqlparser.statement.select.SubSelect;
 import jef.database.jsqlparser.statement.select.Top;
 import jef.database.jsqlparser.statement.select.Union;
 import jef.database.wrapper.clause.BindSql;
+import jef.tools.PageLimit;
 
 import org.apache.commons.lang.StringUtils;
 
 public class SQL2000LimitHandlerSlowImpl implements LimitHandler {
-	public BindSql toPageSQL(String sql, int[] offsetLimit) {
-		int offset=offsetLimit[0];
+	public BindSql toPageSQL(String sql, PageLimit offsetLimit) {
+		long offset=offsetLimit.getOffset();
 		if(offset==0){//没有offset可以简化处理
 			int indexDistinct=StringUtils.indexOfIgnoreCase(sql, "select distinct");
 			int index=StringUtils.indexOfIgnoreCase(sql, "select");
 			return new BindSql(new StringBuilder( sql.length() + 8 )
-			.append(sql).insert(index + (indexDistinct == index ? 15 : 6), " top " + offsetLimit[1] ).toString());
+			.append(sql).insert(index + (indexDistinct == index ? 15 : 6), " top " + offsetLimit.getLimit() ).toString());
 		}
 		return processToPageSQL(sql,offsetLimit);
 	}
 
-	protected BindSql processToPageSQL(String sql, int[] offsetLimit) {
+	protected BindSql processToPageSQL(String sql, PageLimit offsetLimit) {
 		try {
 			Select select = DbUtils.parseNativeSelect(sql);
 			if(select.getSelectBody() instanceof PlainSelect){
@@ -40,7 +41,7 @@ public class SQL2000LimitHandlerSlowImpl implements LimitHandler {
 		}
 	}
 
-	private BindSql toPage(int[] offsetLimit, Union union,String raw) {
+	private BindSql toPage(PageLimit offsetLimit, Union union,String raw) {
 		OrderBy order=union.getOrderBy();
 		if(order==null){
 			order=union.getLastPlainSelect().getOrderBy();
@@ -54,7 +55,7 @@ public class SQL2000LimitHandlerSlowImpl implements LimitHandler {
 		}
 		StringBuilder sb=new StringBuilder(raw.length()+40);
 		sb.append("select top ");
-		sb.append(offsetLimit[0]+offsetLimit[1]).append(" * from");
+		sb.append(offsetLimit.getEnd()).append(" * from");
 		SubSelect s=new SubSelect();
 		union.setOrderBy(null);
 		s.setSelectBody(union);
@@ -64,27 +65,27 @@ public class SQL2000LimitHandlerSlowImpl implements LimitHandler {
 		order.appendTo(sb);
 //		sb.append(") __ef_tmp2\n");
 //		order.reverseAppendTo(sb,"__ef_tmp2",null);
-		return new BindSql(sb.toString()).setReverseResult(new ResultSetLaterProcess(offsetLimit[0]));
+		return new BindSql(sb.toString()).setReverseResult(new ResultSetLaterProcess(offsetLimit.getOffset()));
 	}
 
-	private BindSql toPage(int[] offsetLimit, PlainSelect selectBody,String raw) {
+	private BindSql toPage(PageLimit offsetLimit, PlainSelect selectBody,String raw) {
 		OrderBy order=selectBody.getOrderBy();
 		if(order==null){
 			throw new UnsupportedOperationException("Select must have order to page");
 		}
-		selectBody.setTop(new Top(offsetLimit[0]+offsetLimit[1]));
+		selectBody.setTop(new Top(offsetLimit.getEnd()));
 		
 		StringBuilder sb=new StringBuilder(raw.length()+30);
 //		sb.append("select top ").append(offsetLimit[1]).append(" * from (");
 		selectBody.appendTo(sb);
 //		sb.append(") __ef_t");
 //		order.reverseAppendTo(sb,"__ef_t",selectBody.getSelectItems());
-		return new BindSql(sb.toString()).setReverseResult(new ResultSetLaterProcess(offsetLimit[0]));
+		return new BindSql(sb.toString()).setReverseResult(new ResultSetLaterProcess(offsetLimit.getOffset()));
 	}
 
 
 	@Override
-	public BindSql toPageSQL(String sql, int[] offsetLimit, boolean isUnion) {
+	public BindSql toPageSQL(String sql, PageLimit offsetLimit, boolean isUnion) {
 		return toPageSQL(sql, offsetLimit);
 	}
 

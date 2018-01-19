@@ -95,7 +95,7 @@ final public class PagingIteratorObjImpl<T> extends PagingIterator<T> {
 			option = QueryOption.DEFAULT;
 		}
 		PageLimit range = page.getCurrentRecordRange();
-		if (range.getStart() == 0 && range.getEnd() >= page.getTotal()) {
+		if (range.getOffset() == 0 && range.getEnd() >= page.getTotal()) {
 			range = null;
 		}
 		if (queryObj instanceof Query<?>) {

@@ -142,7 +142,7 @@ public class Case1 extends org.junit.Assert {
 		// 方法1
 		{
 			int count = db.count(join);
-			List<Object[]> result = db.selectAs(join, Object[].class, new IntRange(4, 8));
+			List<Object[]> result = db.selectAs(join, Object[].class, new PageLimit(3, 5));
 			System.out.println("总数:" + count);
 			for (Object[] objs : result) {
 				System.out.println(Arrays.toString(objs));

@@ -5,7 +5,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 import jef.common.log.LogUtil;
-import jef.common.wrapper.IntRange;
 import jef.database.ORMConfig;
 import jef.database.jdbc.GenerateKeyReturnOper;
 import jef.database.jdbc.JDBCTarget;
@@ -92,7 +91,8 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 		total = (maxSize > 0 && maxSize < total) ? maxSize : total;
 		if (debug) {
 			long dbAccess = System.currentTimeMillis();
-			LogUtil.show(StringUtils.concat("Count:", String.valueOf(total), "\t ([DbAccess]:", String.valueOf(dbAccess - start), "ms) |", db.getTransactionId()));
+			LogUtil.show(StringUtils.concat("Count:", String.valueOf(total), "\t ([DbAccess]:", String.valueOf(dbAccess - start), "ms) |",
+					db.getTransactionId()));
 		}
 		return total;
 	}
@@ -113,15 +113,15 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 	private String processPage(SqlAndParameter parse, Statement sql, String rawSQL) {
 		if (parse.getLimit() != null) {
 			Limit limit = parse.getLimit();
-			int offset = 0;
+			long offset = 0;
 			int rowcount = 0;
 			if (limit.getOffsetJdbcParameter() != null) {
 				Object obj = parse.getParamsMap().get(limit.getOffsetJdbcParameter());
 				if (obj instanceof Number) {
-					offset = ((Number) obj).intValue();
+					offset = ((Number) obj).longValue();
 				}
 			} else {
-				offset = (int) limit.getOffset();
+				offset = limit.getOffset();
 			}
 			if (limit.getRowCountJdbcParameter() != null) {
 				Object obj = parse.getParamsMap().get(limit.getRowCountJdbcParameter());
@@ -135,7 +135,7 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 			if (offset > 0 || rowcount > 0) {
 				parse.setNewLimit(null);
 				boolean isUnion = sql == null ? true : (((Select) sql).getSelectBody() instanceof Union);
-				BindSql bs = db.getProfile().getLimitHandler().toPageSQL(rawSQL, new int[] { offset, rowcount }, isUnion);
+				BindSql bs = db.getProfile().getLimitHandler().toPageSQL(rawSQL, new PageLimit(offset, rowcount), isUnion);
 				parse.setReverseResultSet(bs.getRsLaterProcessor());
 				return bs.getSql();
 			}
@@ -153,15 +153,15 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 
 		if (context.getLimit() != null) {
 			Limit limit = context.getLimit();
-			int offset = 0;
+			long offset = 0;
 			int rowcount = 0;
 			if (limit.getOffsetJdbcParameter() != null) {
 				Object obj = context.getParamsMap().get(limit.getOffsetJdbcParameter());
 				if (obj instanceof Number) {
-					offset = ((Number) obj).intValue();
+					offset = ((Number) obj).longValue();
 				}
 			} else {
-				offset = (int) limit.getOffset();
+				offset = limit.getOffset();
 			}
 			if (limit.getRowCountJdbcParameter() != null) {
 				Object obj = context.getParamsMap().get(limit.getRowCountJdbcParameter());
@@ -177,9 +177,9 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 				// Range如果null，相当于清空limit，Range如果非null，相当于变为后过滤
 				context.setNewLimit(range);
 
-				IntRange range1 = new IntRange(offset + 1, offset + rowcount);
+				PageLimit range1 = new PageLimit(offset, rowcount);
 				boolean isUnion = ((Select) sql).getSelectBody() instanceof Union;
-				BindSql bs = this.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range1.toStartLimitSpan(), isUnion);
+				BindSql bs = this.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range1, isUnion);
 				context.setReverseResultSet(bs.getRsLaterProcessor());
 				return bs.getSql();
 			}
@@ -191,7 +191,7 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 				context.setNewLimit(range);
 			} else {
 				boolean isUnion = sb instanceof Union;
-				BindSql bs = this.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range.toArray(), isUnion);
+				BindSql bs = this.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range, isUnion);
 				context.setReverseResultSet(bs.getRsLaterProcessor());
 				return bs.getSql();
 			}

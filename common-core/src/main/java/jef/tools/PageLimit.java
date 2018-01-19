@@ -2,27 +2,33 @@ package jef.tools;
 
 import jef.common.wrapper.IntRange;
 
+/**
+ * 描述offset和limit两个参数，用于分页
+ * 
+ * @author Joey
+ *
+ */
 public final class PageLimit {
-	private long start;
 	private int limit;
-
+	
+	private long offset;
 	
 	/**
 	 * @param offset 从offset后面的记录读起
 	 * @param limit 每页条数
 	 */
 	public PageLimit(long offset, int limit) {
-		this.start = offset;
+		this.offset = offset;
 		this.limit = limit;
 
 	}
 
-	public long getStart() {
-		return start;
+	public long getOffset() {
+		return offset;
 	}
 
-	public void setStart(long start) {
-		this.start = start;
+	public void setOffset(long offset) {
+		this.offset = offset;
 	}
 
 	public int getLimit() {
@@ -34,14 +40,18 @@ public final class PageLimit {
 	}
 
 	public int getStartAsInt() {
-		if (start > Integer.MAX_VALUE) {
-			throw new IllegalStateException("record offset too big: " + start);
+		if (offset > Integer.MAX_VALUE) {
+			throw new IllegalStateException("record offset too big: " + offset);
 		}
-		return (int) start;
+		return (int) offset;
 	}
 
+	/**
+	 * @deprecated 
+	 * @return
+	 */
 	public int getEndAsInt() {
-		long end = start + limit;
+		long end = offset + limit;
 		if (end > Integer.MAX_VALUE) {
 			throw new IllegalStateException("record number too big: " + end);
 		}
@@ -49,21 +59,25 @@ public final class PageLimit {
 	}
 
 	public long getEnd() {
-		return start + limit;
+		return offset + limit;
 	}
 
+	/**
+	 * @deprecated the offset may be a long value.
+	 * @return
+	 */
 	public int[] toArray() {
-		if (start > Integer.MAX_VALUE) {
-			throw new IllegalStateException("record offset too big: " + start);
+		if (offset > Integer.MAX_VALUE) {
+			throw new IllegalStateException("record offset too big: " + offset);
 		}
-		return new int[] { (int) start, limit };
+		return new int[] { (int) offset, limit };
 	}
 
 	public static PageLimit parse(IntRange range) {
 		if (range == null)
 			return null;
-		long start = range.getStart() - 1;
+		long offset = range.getStart() - 1;
 		int limit = range.size();
-		return new PageLimit(start, limit);
+		return new PageLimit(offset, limit);
 	}
 }

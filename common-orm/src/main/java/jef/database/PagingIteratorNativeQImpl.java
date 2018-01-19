@@ -26,7 +26,7 @@ final class PagingIteratorNativeQImpl<T> extends PagingIterator<T>{
 	protected List<T> doQuery(boolean pageFlag) throws SQLException {
 		calcPage();
 		PageLimit range=page.getCurrentRecordRange();
-		if(range.getStart()==1 && range.getEndAsInt()==page.getTotal()){
+		if(range.getOffset()==0 && range.getEnd()>=page.getTotal()){
 			pageFlag=false;
 		}
 		if(pageFlag)

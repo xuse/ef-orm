@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 
 import jef.common.log.LogUtil;
-import jef.common.wrapper.IntRange;
 import jef.database.Session.PopulateStrategy;
 import jef.database.Transaction.TransactionFlag;
 import jef.database.dialect.DatabaseDialect;
@@ -48,6 +47,7 @@ import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.variable.BindVariableContext;
 import jef.tools.MathUtils;
+import jef.tools.PageLimit;
 import jef.tools.StringUtils;
 
 /**
@@ -266,7 +266,8 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 			long dbAccess = System.currentTimeMillis();
 			int total = MathUtils.sum(result);
 
-			log.directLog(StringUtils.concat("Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms) |", getTransactionId()));
+			log.directLog(StringUtils.concat("Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms) |",
+					getTransactionId()));
 			// 执行回调
 			for (int i = 0; i < params.length; i++) {
 				session.getListener().afterSqlExecuted(sql, i < result.length ? result[i] : 1, params[i]);
@@ -316,7 +317,8 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 			DbUtils.close(st);
 			releaseConnection();
 		}
-		sb.directLog(StringUtils.concat("Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms) |", getTransactionId()));
+		sb.directLog(StringUtils.concat("Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms) |",
+				getTransactionId()));
 		session.getListener().afterSqlExecuted(sql, total, params);
 		return result;
 	}
@@ -346,10 +348,11 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 			} else {
 				t = rst.transformer(new ResultSetWrapper(this, st, rs));
 			}
-//			if(session.isRoutingDataSource()){
-				rst.appendLog(sb, t);
-				sb.append("\tTime cost([DbAccess]:", dbAccessed - start).append("ms, [Populate]:", System.currentTimeMillis() - dbAccessed).append("ms").append(this);	
-//			}
+			// if(session.isRoutingDataSource()){
+			rst.appendLog(sb, t);
+			sb.append("\tTime cost([DbAccess]:", dbAccessed - start).append("ms, [Populate]:", System.currentTimeMillis() - dbAccessed).append("ms")
+					.append(this);
+			// }
 			return t;
 		} catch (SQLException e) {
 			DbUtils.processError(e, sql, this);
@@ -366,7 +369,7 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 
 	// ///////////////////////////////SqlTemplate /////////////////////////
 	public <T> NativeQuery<T> createNativeQuery(String sqlString, Class<T> clz) {
-		return new NativeQuery<T>(this, sqlString, new Transformer(clz),false);
+		return new NativeQuery<T>(this, sqlString, new Transformer(clz), false);
 	}
 
 	<T> NativeQuery<T> createNativeQuery(NQEntry nc, Class<T> resultClz) {
@@ -374,7 +377,7 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 	}
 
 	public <T> NativeQuery<T> createNativeQuery(String sqlString, ITableMetadata meta) {
-		NativeQuery<T> q = new NativeQuery<T>(this, sqlString, new Transformer(meta),false);
+		NativeQuery<T> q = new NativeQuery<T>(this, sqlString, new Transformer(meta), false);
 		return q;
 	}
 
@@ -392,7 +395,7 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 	}
 
 	public <T> NativeQuery<T> createQuery(String jpql, Class<T> resultClass) throws SQLException {
-		NativeQuery<T> query = new NativeQuery<T>(this, jpql, new Transformer(resultClass),true);
+		NativeQuery<T> query = new NativeQuery<T>(this, jpql, new Transformer(resultClass), true);
 		query.setIsNative(false);
 		return query;
 	}
@@ -436,17 +439,18 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 	}
 
 	public final <T> List<T> selectBySql(String sql, Class<T> resultClz, Object... params) throws SQLException {
-		return selectBySql(sql, new Transformer(resultClz), null, params);
+		return selectBySql(sql, new Transformer(resultClz), (PageLimit) null, params);
 	}
 
-	public final <T> List<T> selectBySql(String sql, Transformer transformer, IntRange range, Object... params) throws SQLException {
-		BindSql bs = range == null ? new BindSql(sql) : getProfile().getLimitHandler().toPageSQL(sql, range.toStartLimitSpan());
+	public final <T> List<T> selectBySql(String sql, Transformer transformer, PageLimit range, Object... params) throws SQLException {
+		BindSql bs = range == null ? new BindSql(sql) : getProfile().getLimitHandler().toPageSQL(sql, range);
 		long start = System.currentTimeMillis();
 		TransformerAdapter<T> sqlTransformer = new TransformerAdapter<T>(transformer, this);
 		List<T> list = innerSelectBySql(bs.getSql(), sqlTransformer, Arrays.asList(params), bs);
 		if (ORMConfig.getInstance().isDebugMode()) {
 			long dbAccess = sqlTransformer.dbAccess;
-			LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(list.size()), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbAccess), "ms) |", getTransactionId()));
+			LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(list.size()), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start),
+					"ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbAccess), "ms) |", getTransactionId()));
 		}
 		return list;
 	}
@@ -458,7 +462,8 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 		List<T> result = innerSelectBySql(sql, rst, Arrays.asList(params), null);
 		if (ORMConfig.getInstance().isDebugMode()) {
 			long dbAccess = rst.dbAccess;
-			LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(result.size()), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbAccess), "ms) |", getTransactionId()));
+			LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(result.size()), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start),
+					"ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbAccess), "ms) |", getTransactionId()));
 		}
 		if (result.size() > 1) {
 			throw new IllegalArgumentException("得到多个结果:" + result.size());
@@ -476,7 +481,8 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 		return this.innerSelectBySql(sql, t, Arrays.asList(objs), null);
 	}
 
-	final <T> ResultIterator<T> iteratorBySql(String sql, Transformer transformers, int maxReturn, int fetchSize, InMemoryOperateProvider lazy, Object... objs) throws SQLException {
+	final <T> ResultIterator<T> iteratorBySql(String sql, Transformer transformers, int maxReturn, int fetchSize, InMemoryOperateProvider lazy, Object... objs)
+			throws SQLException {
 		TransformerIteratrAdapter<T> t = new TransformerIteratrAdapter<T>(transformers, this);
 		t.setMaxRows(maxReturn);
 		t.setFetchSize(fetchSize);
@@ -604,7 +610,7 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 		}
 		return session.selectTarget(database);
 	}
-	
+
 	public DatabaseDialect getDialectOf(String database) {
 		return session.getProfile(database);
 	}

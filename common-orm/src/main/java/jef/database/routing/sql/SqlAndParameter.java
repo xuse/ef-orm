@@ -353,7 +353,7 @@ public class SqlAndParameter implements InMemoryOperateProvider {
 			limit=null;
 		}else{
 			Limit limit=new Limit();
-			limit.setOffset(range.getStart());
+			limit.setOffset(range.getOffset());
 			limit.setRowCount(range.getLimit());
 			this.limit=limit;
 		}

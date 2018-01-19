@@ -624,7 +624,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		if (range == null) {
 			range = new PageLimit(startPosition, 5000000 - startPosition);
 		} else {
-			range.setStart(startPosition);
+			range.setOffset(startPosition);
 			;
 		}
 		return this;

@@ -10,14 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.math.RandomUtils;
-import org.apache.commons.lang.time.DateUtils;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
-
 import jef.common.log.LogUtil;
 import jef.common.wrapper.Holder;
 import jef.common.wrapper.IntRange;
@@ -71,6 +63,14 @@ import jef.orm.onetable.model.Foo;
 import jef.script.javascript.Var;
 import jef.tools.PageLimit;
 import jef.tools.string.RandomData;
+
+import org.apache.commons.lang.math.RandomUtils;
+import org.apache.commons.lang.time.DateUtils;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({
@@ -511,7 +511,7 @@ public class NativeQueryTest extends org.junit.Assert {
 	public void testSQL() throws SQLException {
 		String sql = "select T1.THE_NAME rootName,t1.code     code,  T1.ID1      rootId,T2.ID       id, T2.NAME     name, T3.descrption    enumOfRoot,"
 				+ "T4.descrption    enumOfLeaf from ROOT T1  INNER JOIN LEAF T2 ON T1.ID1 = T2.CHILDID   LEFT JOIN ENUMATIONTABLE T3 ON T1.Code = T3.code  and T3.TYPE = '1'  LEFT JOIN ENUMATIONTABLE T4 ON T2.Code = T4.code  and T4.TYPE = '2'";
-		List<ResultContainer> result = db.selectBySql(sql, new Transformer(ResultContainer.class), new IntRange(1, 10));
+		List<ResultContainer> result = db.selectBySql(sql, new Transformer(ResultContainer.class), new PageLimit(0, 10));
 		System.out.println("===========result==============");
 		if (result.size() > 0)
 			LogUtil.show(result.get(0));

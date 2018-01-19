@@ -1,13 +1,13 @@
 package jef.database.jdbc.statement;
 
 public class ResultSetLaterProcess {
-	private int skipResults;
+	private long skipResults;
 
-	public ResultSetLaterProcess(int i) {
+	public ResultSetLaterProcess(long i) {
 		this.skipResults = i;
 	}
 
-	public int getSkipResults() {
+	public long getSkipResults() {
 		return skipResults;
 	}
 }

@@ -36,11 +36,11 @@ public class Case3 extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	public void test_IntRange() throws SQLException{
+	public void test_Page() throws SQLException{
 		Query<Student> q = QB.create(Student.class);
 		
 		int count=db.count(q);
-		List<Student> results=db.select(q,new PageLimit(10, 10));
+		List<Student> results=db.select(q,new PageLimit(10, 10));//查询，返回第11到20条
 		assertEquals(count-10, results.size());
 	}
 	

@@ -83,10 +83,10 @@ final class PagingIteratorSqlImpl<T> extends PagingIterator<T> {
 		DatabaseDialect profile = db.getProfile();
 		calcPage();
 		PageLimit range = page.getCurrentRecordRange();
-		if (range.getStart() == 1 && range.getEnd() >= page.getTotal()) {
+		if (range.getOffset() == 0 && range.getEnd() >= page.getTotal()) {
 			pageFlag = false;
 		}
-		BindSql sql = pageFlag ? profile.getLimitHandler().toPageSQL(this.querySql, range.toArray()) : new BindSql(this.querySql);
+		BindSql sql = pageFlag ? profile.getLimitHandler().toPageSQL(this.querySql, range) : new BindSql(this.querySql);
 		boolean debug = ORMConfig.getInstance().isDebugMode();
 		if (debug)
 			LogUtil.show(sql);

@@ -11,7 +11,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import jef.common.PairSO;
 import jef.common.log.LogUtil;
-import jef.common.wrapper.IntRange;
 import jef.database.DbUtils;
 import jef.database.ORMConfig;
 import jef.database.OperateTarget.TransformerAdapter;
@@ -346,9 +345,9 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 				// Range如果null，相当于清空limit，Range如果非null，相当于变为后过滤
 				context.setNewLimit(range);
 
-				IntRange range1 = new IntRange(offset + 1, offset + rowcount);
+				PageLimit range1 = new PageLimit(offset, rowcount);
 				boolean isUnion = ((Select) sql).getSelectBody() instanceof Union;
-				BindSql bs = this.context.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range1.toStartLimitSpan(), isUnion);
+				BindSql bs = this.context.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range1, isUnion);
 				context.setReverseResultSet(bs.getRsLaterProcessor());
 				return bs.getSql();
 			}
@@ -360,7 +359,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 				context.setNewLimit(range);
 			} else {
 				boolean isUnion = sb instanceof Union;
-				BindSql bs = this.context.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range.toArray(), isUnion);
+				BindSql bs = this.context.db.getProfile().getLimitHandler().toPageSQL(rawSQL, range, isUnion);
 				context.setReverseResultSet(bs.getRsLaterProcessor());
 				return bs.getSql();
 			}
@@ -572,15 +571,15 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 	private String processPage(SqlAndParameter parse, Statement sql, String rawSQL) {
 		if (parse.getLimit() != null) {
 			Limit limit = parse.getLimit();
-			int offset = 0;
+			long offset = 0;
 			int rowcount = 0;
 			if (limit.getOffsetJdbcParameter() != null) {
 				Object obj = parse.getParamsMap().get(limit.getOffsetJdbcParameter());
 				if (obj instanceof Number) {
-					offset = ((Number) obj).intValue();
+					offset = ((Number) obj).longValue();
 				}
 			} else {
-				offset = (int) limit.getOffset();
+				offset = limit.getOffset();
 			}
 			if (limit.getRowCountJdbcParameter() != null) {
 				Object obj = parse.getParamsMap().get(limit.getRowCountJdbcParameter());
@@ -594,7 +593,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 			if (offset > 0 || rowcount > 0) {
 				parse.setNewLimit(null);
 				boolean isUnion = sql == null ? true : (((Select) sql).getSelectBody() instanceof Union);
-				BindSql bs = context.db.getProfile().getLimitHandler().toPageSQL(rawSQL, new int[] { offset, rowcount }, isUnion);
+				BindSql bs = context.db.getProfile().getLimitHandler().toPageSQL(rawSQL, new PageLimit( offset, rowcount), isUnion);
 				parse.setReverseResultSet(bs.getRsLaterProcessor());
 				return bs.getSql();
 			}

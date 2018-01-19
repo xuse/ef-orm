@@ -152,7 +152,7 @@ NativeQuery并不一定就是select语句。在NativeQuery中完全可以使用u
 | **结果范围限制（分页相关）**                         |                                          |
 | NativeQuery.setFirstResult(int)          | 设置查询结果的偏移，0表示不跳过记录。                      |
 | NativeQuery.getFirstResult()             | 返回查询结果的偏移，0表示不跳过记录                       |
-| NativeQuery.setRange(IntRange)           | 设置查询区间（含头含尾）                             |
+| NativeQuery.setRange(PageLimit)          | 设置查询区间（含Offset / Limit两个参数）              |
 | **绑定变量参数**                               |                                          |
 | NativeQuery.setParameter(String,  Object) | 设置绑定变量参数                                 |
 | NativeQuery.setParameter(int, Object)    | 设置绑定变量参数                                 |
@@ -1369,7 +1369,7 @@ public void testRawSQL() throws SQLException{
 		assertEquals(3, result.size());	
 	}
 	{ 	//限定结果范围——分页
-		List<Person> result=db.selectBySql(sql, new Transformer(Person.class), new IntRange(2,3));	
+		List<Person> result=db.selectBySql(sql, new Transformer(Person.class), new PageLimit(1,2));	
 		System.out.println(result);
 		assertEquals(2, result.size());
 	}
@@ -1396,7 +1396,7 @@ public void testRawSQL() throws SQLException{
 | Session.getResultSet(String,  int, Object...) | 根据SQL语句获得ResultSet对象                     |
 | Session.selectBySql(String,  Class\<T>, Object...) | 根据SQL查询，返回指定的对象                          |
 | Session.loadBySql(String,  Class\<T>, Object...) | 根据SQL查询，返回指定的对象（单行）                      |
-| Session.selectBySql(String,  Transformer, IntRange, Object...) | 根据SQL查询，传入自定义的结果转换器和分页信息                 |
+| Session.selectBySql(String,  Transformer, PageLimit, Object...) | 根据SQL查询，传入自定义的结果转换器和分页信息                 |
 | Session.getSqlTemplate(String)           | 获得指定数据源下的SqlTemplate对象。SQLTempate是一个可以执行各种SQL和本地化查询的操作句柄。 |
 
 Session对象中，凡是xxxxBySql()这样的方法，都是传入原生SQL语句的。同时这些方法都提供了可变参数，其中的Obejct... 对象就是绑定变量参数。使用时按顺序传入绑定变量就可以了。
@@ -1444,7 +1444,7 @@ SqlTemplate对象的使用。SqlTemplate中有很多方法是和本地化查询�
 | executeSql(String,  Object...)           | 执行SQL语句                    |
 | loadBySql(String,  Class\<T>, Object...) | 按SQL语句查出指定类型结果（单条记录）       |
 | selectBySql(String,  Class\<T>, Object...) | 按SQL语句查出指定类型结果             |
-| selectBySql(String,  Transformer, IntRange, Object...) | 按SQL语句查出指定类型结果(带分页范围)      |
+| selectBySql(String,  Transformer, PageLimit, Object...) | 按SQL语句查出指定类型结果(带分页范围)      |
 | iteratorBySql(String,  Transformer, int, int, Object...) | 按SQL语句查出指定类型结果，以遍历器形式返回。   |
 | executeSqlBatch(String,  List<?>...)     | 执行SQL语句，可以传入多组参数并在一个批次内执行。 |
 

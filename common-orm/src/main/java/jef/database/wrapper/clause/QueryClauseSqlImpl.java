@@ -84,7 +84,7 @@ public class QueryClauseSqlImpl implements QueryClause {
 
 	private BindSql withPage(String sql) {
 		if (pageRange != null) {
-			return profile.getLimitHandler().toPageSQL(sql, pageRange.toArray(), isUnion);
+			return profile.getLimitHandler().toPageSQL(sql, pageRange, isUnion);
 		}
 		return new BindSql(sql);
 	}

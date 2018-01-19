@@ -5,12 +5,12 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-import jef.common.wrapper.IntRange;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.SqlExpression;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.populator.Transformer;
+import jef.tools.PageLimit;
 
 /**
  * SQL操作工具类，这个对象指向单个特定的数据源。并且可以在这个数据源上执行各种SQL / JPQL/存储过程 相关的操作
@@ -219,7 +219,7 @@ public interface SqlTemplate {
 	 * @return   查询结果
 	 * @throws SQLException
 	 */
-	public <T> List<T> selectBySql(String sql, Transformer transformer, IntRange range, Object... params) throws SQLException;
+	public <T> List<T> selectBySql(String sql, Transformer transformer, PageLimit range, Object... params) throws SQLException;
 	
 	/**
 	 * 使用原生SQL查询，返回的遍历器,	 遍历器模式查找一般用于超大结果集的返回。

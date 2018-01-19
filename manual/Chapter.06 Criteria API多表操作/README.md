@@ -154,15 +154,17 @@ public void testSelectFromJoin() throws SQLException{
 
  
 
-**传入IntRange限制结果范围**
+**传入PageLimit限制结果范围**
+
+PageLimit对象包含offset和limit两个参数，其含义与在SQL中一致。
 
 | **方法**                                   | **用途说明**                                 |
 | ---------------------------------------- | ---------------------------------------- |
-| **Session.select(ConditionQuery,  IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。 |
-| **Session.select(ConditionQuery\<T>,  Class, IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，结果转换为指定类型，限定返回条数在IntRange区间范围内。 |
-| **Session.iteratedSelect(TypedQuery\<T>,  IntRange)** | 传入Query形态的查询(单表/级联/Union)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
-| **Session.iteratedSelect(ConditionQuery,  IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
-| **Session.iteratedSelect(ConditionQuery\<T>,  Class, IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
+| **Session.select(ConditionQuery,  PageLimit)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在PageLimit区间范围内。 |
+| **Session.select(ConditionQuery\<T>,  Class, PageLimit)** | 传入Query形态的查询(单表、Union、Join均可)，结果转换为指定类型，限定返回条数在PageLimit区间范围内。 |
+| **Session.iteratedSelect(TypedQuery\<T>,  PageLimit)** | 传入Query形态的查询(单表/级联/Union)，限定返回条数在PageLimit区间范围内。将游标封装为返回结果遍历器。 |
+| **Session.iteratedSelect(ConditionQuery,  PageLimit)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在PageLimit区间范围内。将游标封装为返回结果遍历器。 |
+| **Session.iteratedSelect(ConditionQuery\<T>,  Class, PageLimit)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在PageLimit区间范围内。将游标封装为返回结果遍历器。 |
 
 
 
@@ -185,7 +187,7 @@ public void testJoinWithPage()throws SQLException{
 	//方法1
 	{
 		int count=db.count(join);
-		List<Object[]> result=db.selectAs(join,Object[].class,new IntRange(4,8));//读取第4~第8条记录
+		List<Object[]> result=db.selectAs(join,Object[].class,new PageLimit(3,5));//读取第4~第8条记录
 		System.out.println("总数:"+count);
 		for(Object[] objs:result){
 			System.out.println(Arrays.toString(objs));

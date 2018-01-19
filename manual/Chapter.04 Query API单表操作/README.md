@@ -530,22 +530,22 @@ EF-ORM还提供了将上述分页行为封装在一起的操作对象，可以�
 
 #### 4.1.3.1.  限定结果范围
 
-Session类中有以下几个方法，可以传入类型为IntRange的参数，这里的IntRange就可以用来限定结果范围。
+Session类中有以下几个方法，可以传入类型为PageLimit的参数，这里的PageLimit就可以用来限定结果范围。
 
 | **方法**                                   | **用途说明**                                 |
 | ---------------------------------------- | ---------------------------------------- |
-| **Session.select(T,  IntRange)**         | 传入Entity形态的查询(单表/级联)，限定返回条数在IntRange区间范围内。 |
-| **Session.select(ConditionQuery,  IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。 |
-| **Session.select(ConditionQuery,  Class\<T>, IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，结果转换为指定类型，限定返回条数在IntRange区间范围内。 |
-| **Session.selectForUpdate(Query\<T>,  IntRange)** | 传入Query形态的单表查询，可在结果集上直接更新记录。             |
-| **Session.iteratedSelect(T,  IntRange)** | 传入Entity形态的查询(单表/级联)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
-| **Session.iteratedSelect(TypedQuery\<T>,  IntRange)** | 传入Query形态的查询(单表/级联/Union)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
-| **Session.iteratedSelect(ConditionQuery,  IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
-| **Session.iteratedSelect(ConditionQuery\<T>,  Class, IntRange)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在IntRange区间范围内。将游标封装为返回结果遍历器。 |
+| **Session.select(T,  PageLimit)**        | 传入Entity形态的查询(单表/级联)，限定返回条数在PageLimit区间范围内。 |
+| **Session.select(ConditionQuery,  PageLimit)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在PageLimit区间范围内。 |
+| **Session.select(ConditionQuery,  Class\<T>, PageLimit)** | 传入Query形态的查询(单表、Union、Join均可)，结果转换为指定类型，限定返回条数在PageLimit区间范围内。 |
+| **Session.selectForUpdate(Query\<T>,  PageLimit)** | 传入Query形态的单表查询，可在结果集上直接更新记录。             |
+| **Session.iteratedSelect(T,  PageLimit)** | 传入Entity形态的查询(单表/级联)，限定返回条数在PageLimit区间范围内。将游标封装为返回结果遍历器。 |
+| **Session.iteratedSelect(TypedQuery\<T>,  PageLimit)** | 传入Query形态的查询(单表/级联/Union)，限定返回条数在PageLimit区间范围内。将游标封装为返回结果遍历器。 |
+| **Session.iteratedSelect(ConditionQuery,  PageLimit)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在PageLimit区间范围内。将游标封装为返回结果遍历器。 |
+| **Session.iteratedSelect(ConditionQuery\<T>,  Class, PageLimit)** | 传入Query形态的查询(单表、Union、Join均可)，限定返回条数在PageLimit区间范围内。将游标封装为返回结果遍历器。 |
 
 可以发现，EF-ORM查询接口高度集中。主要分为几个系列： select系列是查询出List结果。iteratedSelect是查询出游标待遍历。还有一个load系列的方法是查出单条记录的。
 
-IntRange表示的是一个含头含尾的区间(闭区间)，和Java Collection中常见的前闭后开区间有所不同。比如表示第 1到10条记录。不是用new IntRange(0, 10)，而是用new IntRange(1, 10)。来表示，更为接近我们日常的口头语法。其实Java用习惯的人会更偏好前闭后开区间，以后可能会再考虑向下兼容的前提下支持。
+PageLimit包含offset和limit两个数值，前者表示需要跳过的记录数，后者表示限制结果条数。和SQL语法中的OFFSET/LIMIT关键字含义一致。
 
 示例，查询返回11~20条记录
 
@@ -553,11 +553,11 @@ src/main/java/org/easyframe/tutorial/lesson3/Case3.java
 
 ~~~java
 @Test
-public void test_IntRange() throws SQLException{
+public void test_Page() throws SQLException{
 	Query<Student> q = QB.create(Student.class);
-	List<Student> results=db.select(q,new IntRange(11, 20));//查询，返回第11到20条
-
+	
 	int count=db.count(q);
+	List<Student> results=db.select(q,new PageLimit(10, 10)); //查询，返回第11到20条
 	assertEquals(count-10, results.size());
 }
 ~~~

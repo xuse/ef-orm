@@ -7,6 +7,7 @@ import java.util.List;
 import jef.common.log.LogUtil;
 import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.wrapper.clause.BindSql;
+import jef.tools.PageLimit;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -28,17 +29,17 @@ import com.alibaba.druid.sql.dialect.sqlserver.visitor.SQLServerOutputVisitor;
 import com.alibaba.druid.sql.parser.ParserException;
 
 public class SQL2000LimitHandler implements LimitHandler {
-	public BindSql toPageSQL(String sql, int[] offsetLimit) {
-		int offset = offsetLimit[0];
+	public BindSql toPageSQL(String sql, PageLimit offsetLimit) {
+		long offset = offsetLimit.getOffset();
 		if (offset == 0) {// 没有offset可以简化处理
 			int indexDistinct = StringUtils.indexOfIgnoreCase(sql, "select distinct");
 			int index = StringUtils.indexOfIgnoreCase(sql, "select");
-			return new BindSql(new StringBuilder(sql.length() + 8).append(sql).insert(index + (indexDistinct == index ? 15 : 6), " top " + offsetLimit[1]).toString());
+			return new BindSql(new StringBuilder(sql.length() + 8).append(sql).insert(index + (indexDistinct == index ? 15 : 6), " top " + offsetLimit.getLimit()).toString());
 		}
 		return processToPageSQL(sql, offsetLimit);
 	}
 
-	private BindSql processToPageSQL(String sql, int[] offsetLimit) {
+	private BindSql processToPageSQL(String sql, PageLimit offsetLimit) {
 		SQLServerSelectParser parser = new SQLServerSelectParser(sql);
 		try{
 			SQLSelect select = parser.select();
@@ -53,13 +54,13 @@ public class SQL2000LimitHandler implements LimitHandler {
 		}
 	}
 	
-	protected BindSql toPage(int[] offsetLimit, SQLServerSelectQueryBlock selectBody, SQLSelect select, String raw) {
+	protected BindSql toPage(PageLimit offsetLimit, SQLServerSelectQueryBlock selectBody, SQLSelect select, String raw) {
 		SQLOrderBy order = select.getOrderBy();
 		if (order == null) {
 			throw new UnsupportedOperationException("Select must have order to page");
 		}
 		SQLServerTop top=new SQLServerTop();
-		top.setExpr(new SQLIntegerExpr(offsetLimit[0] + offsetLimit[1]));
+		top.setExpr(new SQLIntegerExpr(offsetLimit.getEnd()));
 		selectBody.setTop(top);
 		StringBuilder sb = new StringBuilder(raw.length() + 30);
 		//sb.append("SELECT TOP ").append(offsetLimit[1]).append(" * FROM (");
@@ -69,12 +70,12 @@ public class SQL2000LimitHandler implements LimitHandler {
 		//sb.append(") __ef_t");
 		
 		//appendOrderReverse(order,visitor, "__ef_t", selectBody.getSelectList());
-		return new BindSql(sb.toString()).setReverseResult(new ResultSetLaterProcess(offsetLimit[0]));
+		return new BindSql(sb.toString()).setReverseResult(new ResultSetLaterProcess(offsetLimit.getOffset()));
 	}
 
 	
 
-	protected BindSql toPage(int[] offsetLimit, SQLUnionQuery union,SQLSelect select, String raw) {
+	protected BindSql toPage(PageLimit offsetLimit, SQLUnionQuery union,SQLSelect select, String raw) {
 		SQLOrderBy order=removeOrder(union);
 		if(order==null){
 			throw new UnsupportedOperationException("Select must have order to page");
@@ -83,7 +84,7 @@ public class SQL2000LimitHandler implements LimitHandler {
 		StringBuilder sb = new StringBuilder(raw.length() + 40);
 //		sb.append("SELECT TOP ").append(offsetLimit[1]).append(" * FROM (\n");
 		sb.append("SELECT TOP ");
-		sb.append(offsetLimit[0] + offsetLimit[1]).append(" * FROM");
+		sb.append(offsetLimit.getEnd()).append(" * FROM");
 		SQLSubqueryTableSource s = new SQLSubqueryTableSource(select,"__ef_tmp1");
 		
 		SQLServerOutputVisitor visitor=new SQLServerOutputVisitor(sb);
@@ -93,7 +94,7 @@ public class SQL2000LimitHandler implements LimitHandler {
 		order.accept(visitor);
 //		sb.append(") __ef_tmp2\n");
 //		appendOrderReverse(order,visitor,"__ef_tmp2",null);
-		return new BindSql(sb.toString()).setReverseResult(new ResultSetLaterProcess(offsetLimit[0]));
+		return new BindSql(sb.toString()).setReverseResult(new ResultSetLaterProcess(offsetLimit.getOffset()));
 	}
 
 	private void appendOrderReverse(SQLOrderBy order, SQLServerOutputVisitor visitor,String tmpTableAlias,List<SQLSelectItem> items) {
@@ -171,7 +172,7 @@ public class SQL2000LimitHandler implements LimitHandler {
 
 
 	@Override
-	public BindSql toPageSQL(String sql, int[] offsetLimit, boolean isUnion) {
+	public BindSql toPageSQL(String sql, PageLimit offsetLimit, boolean isUnion) {
 		return toPageSQL(sql, offsetLimit);
 	}
 

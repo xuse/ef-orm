@@ -20,7 +20,7 @@ import jef.database.wrapper.populator.ColumnMeta;
  * 
  */
 final class LimitOffsetResultSet extends AbstractResultSet implements IResultSet{
-	private int offset;
+	private long offset;
 	private int limit;
 	private ResultSet rs;
 	/**
@@ -35,7 +35,7 @@ final class LimitOffsetResultSet extends AbstractResultSet implements IResultSet
 	 * @param offset
 	 * @param limit
 	 */
-	public LimitOffsetResultSet(ResultSet rs, int offset, int limit) {
+	public LimitOffsetResultSet(ResultSet rs, long offset, int limit) {
 		this.offset = offset;
 		this.limit = limit == 0 ? Integer.MAX_VALUE : limit;
 		this.rs = rs;
@@ -60,8 +60,8 @@ final class LimitOffsetResultSet extends AbstractResultSet implements IResultSet
 		}
 	}
 
-	private void skipOffset(ResultSet rs, int offset) throws SQLException {
-		for (int i = 0; i < offset; i++) {
+	private void skipOffset(ResultSet rs, long offset) throws SQLException {
+		for (long i = 0; i < offset; i++) {
 			if (!rs.next()) {
 				break;
 			}

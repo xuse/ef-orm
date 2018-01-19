@@ -1,6 +1,5 @@
 package com.alibaba.druid;
 
-import jef.database.dialect.SQLServer2005Dialect;
 import jef.database.dialect.handler.DerbyLimitHandler;
 import jef.database.dialect.handler.LimitHandler;
 import jef.database.dialect.handler.LimitOffsetLimitHandler;
@@ -9,6 +8,7 @@ import jef.database.dialect.handler.OracleLimitHander;
 import jef.database.dialect.handler.SQL2000LimitHandler;
 import jef.database.dialect.handler.SQL2005LimitHandler;
 import jef.database.wrapper.clause.BindSql;
+import jef.tools.PageLimit;
 import junit.framework.Assert;
 
 import org.junit.Test;
@@ -17,7 +17,7 @@ public class LimitHandlerTest {
 	String[] sqls = { "SELECT  \n" + "T.NAME AS PNAME, T1.NAME FROM 	parent T, 	child T1 WHERE	T.ID = T1.PARENTID order by t1.name",
 			"(select * from child t where t.code like 'code%') union all (select rootid as parentid,code,id,name from parent) union all (select * from child t) order by name " };
 
-	int[] pageParam = new int[] { 70, 10 };
+	PageLimit pageParam = new PageLimit( 70, 10);
 
 	@Test
 	public void testSql2000Impl() {
@@ -86,29 +86,29 @@ public class LimitHandlerTest {
 	@Test
 	public void testWhenOffsetIs0(){
 		LimitHandler lh=new OracleLimitHander();
-		BindSql sql=lh.toPageSQL(sqls[0],new int[]{0,15});
+		BindSql sql=lh.toPageSQL(sqls[0],new PageLimit(0,15));
 		System.out.println(sql.getSql());
 		
 		lh=new SQL2000LimitHandler();
-		sql=lh.toPageSQL(sqls[0],new int[]{0,15});
+		sql=lh.toPageSQL(sqls[0],new PageLimit(0,15));
 		System.out.println(sql.getSql());
 		
 		lh=new SQL2005LimitHandler();
-		sql=lh.toPageSQL(sqls[0],new int[]{0,15});
+		sql=lh.toPageSQL(sqls[0],new PageLimit(0,15));
 		System.out.println(sql.getSql());
 		
 		lh=new DerbyLimitHandler();
-		sql=lh.toPageSQL(sqls[0],new int[]{0,15});
+		sql=lh.toPageSQL(sqls[0],new PageLimit(0,15));
 		System.out.println(sql.getSql());
 		
 		
 		lh=new LimitOffsetLimitHandler();
-		sql=lh.toPageSQL(sqls[0],new int[]{0,15});
+		sql=lh.toPageSQL(sqls[0],new PageLimit(0,15));
 		System.out.println(sql.getSql());
 		
 
 		lh=new MySqlLimitHandler();
-		sql=lh.toPageSQL(sqls[0],new int[]{0,15});
+		sql=lh.toPageSQL(sqls[0],new PageLimit(0,15));
 		System.out.println(sql.getSql());
 		
 		

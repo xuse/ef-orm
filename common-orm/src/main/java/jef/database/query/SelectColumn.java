@@ -203,6 +203,11 @@ public final class SelectColumn extends SingleColumnSelect {
 		return this;
 	}
 
+	/**
+	 * 指定该查出的列写入到Java类当中的属性值
+	 * @param property javaBean的属性值
+	 * @return this
+	 */
 	public SelectColumn toField(String property) {
 		this.populateTo = property;
 		return this;

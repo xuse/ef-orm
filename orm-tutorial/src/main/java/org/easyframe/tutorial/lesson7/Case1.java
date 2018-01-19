@@ -6,15 +6,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.easyframe.tutorial.lesson2.entity.Student;
-import org.easyframe.tutorial.lesson4.entity.Person;
-import org.easyframe.tutorial.lesson4.entity.School;
-import org.easyframe.tutorial.lesson5.entity.Item;
-import org.easyframe.tutorial.lesson7.entity.NodeTable;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import jef.common.wrapper.IntRange;
 import jef.common.wrapper.Page;
 import jef.database.DbClient;
@@ -27,7 +18,17 @@ import jef.database.Transaction;
 import jef.database.query.Func;
 import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.populator.Transformer;
+import jef.tools.PageLimit;
 import jef.tools.string.RandomData;
+
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.easyframe.tutorial.lesson2.entity.Student;
+import org.easyframe.tutorial.lesson4.entity.Person;
+import org.easyframe.tutorial.lesson4.entity.School;
+import org.easyframe.tutorial.lesson5.entity.Item;
+import org.easyframe.tutorial.lesson7.entity.NodeTable;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  * NativeQuery相关操作演示
@@ -409,7 +410,7 @@ public class Case1 extends org.junit.Assert {
 		}
 		// 限定结果范围——分页
 		{
-			List<Person> result = db.selectBySql(sql, new Transformer(Person.class), new IntRange(2, 3));
+			List<Person> result = db.selectBySql(sql, new Transformer(Person.class), new PageLimit(1, 2));
 			System.out.println(result);
 			assertEquals(2, result.size());
 		}

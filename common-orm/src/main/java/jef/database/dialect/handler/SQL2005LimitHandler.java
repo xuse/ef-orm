@@ -1,6 +1,7 @@
 package jef.database.dialect.handler;
 
 import jef.database.wrapper.clause.BindSql;
+import jef.tools.PageLimit;
 
 import com.alibaba.druid.sql.ast.SQLOrderBy;
 import com.alibaba.druid.sql.ast.SQLOver;
@@ -28,7 +29,7 @@ public class SQL2005LimitHandler extends SQL2000LimitHandler {
 
 
 	@Override
-	protected BindSql toPage(int[] offsetLimit, SQLServerSelectQueryBlock selectBody, SQLSelect select, String raw) {
+	protected BindSql toPage(PageLimit offsetLimit, SQLServerSelectQueryBlock selectBody, SQLSelect select, String raw) {
 		SQLOrderBy order = select.getOrderBy();
 		if (order == null) {
 			order = defaultOrder;
@@ -47,14 +48,14 @@ public class SQL2005LimitHandler extends SQL2000LimitHandler {
 		visitor.setPrettyFormat(false);
 		select.accept(visitor);
 		sb.append(") _tmp1 WHERE __rn between ");
-		sb.append(offsetLimit[0] + 1).append(" and ").append(offsetLimit[0] + offsetLimit[1]);
+		sb.append(offsetLimit.getOffset() + 1).append(" and ").append(offsetLimit.getEnd());
 		return new BindSql(sb.toString());
 	}
 
 
 
 	@Override
-	protected BindSql toPage(int[] offsetLimit, SQLUnionQuery union, SQLSelect select, String raw) {
+	protected BindSql toPage(PageLimit offsetLimit, SQLUnionQuery union, SQLSelect select, String raw) {
 		SQLOrderBy order = super.removeOrder(union);
 		if(order==null){
 			order = defaultOrder;
@@ -68,7 +69,7 @@ public class SQL2005LimitHandler extends SQL2000LimitHandler {
 		sb.append(") AS __rn, _tmp1.* FROM (");
 		union.accept(visitor);
 		sb.append(") _tmp1) _tmp2 WHERE __rn BETWEEN ");
-		sb.append(offsetLimit[0] + 1).append(" and ").append(offsetLimit[0] + offsetLimit[1]);
+		sb.append(offsetLimit.getOffset() + 1).append(" and ").append(offsetLimit.getEnd());
 		return new BindSql(sb.toString());
 	}
 

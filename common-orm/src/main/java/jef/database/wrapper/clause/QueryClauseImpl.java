@@ -211,10 +211,10 @@ public class QueryClauseImpl implements QueryClause {
 		if (pageRange != null) {
 			if(isMultiDatabase()){
 				if(grouphavingPart==null || !grouphavingPart.isNotEmpty()){
-					return profile.getLimitHandler().toPageSQL(sql, new int[]{0,pageRange.getEndAsInt()}, union);
+					return profile.getLimitHandler().toPageSQL(sql, new PageLimit(0,pageRange.getEndAsInt()), union);
 				}
 			}else{
-				return profile.getLimitHandler().toPageSQL(sql, pageRange.toArray(), union);
+				return profile.getLimitHandler().toPageSQL(sql, pageRange, union);
 			}
 		}
 		return new BindSql(sql);
