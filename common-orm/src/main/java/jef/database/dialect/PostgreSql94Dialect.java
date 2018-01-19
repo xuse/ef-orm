@@ -711,6 +711,7 @@ public class PostgreSql94Dialect extends AbstractDialect {
 		}
 	};
 
+
 	private final SQLTemplates queryDslDialect = new PostgreSQLTemplates();
 
 	@Override

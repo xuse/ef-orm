@@ -19,7 +19,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.nio.channels.UnsupportedAddressTypeException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -42,6 +41,7 @@ import jef.common.log.LogUtil;
 import jef.database.DbCfg;
 import jef.database.DbFunction;
 import jef.database.DbMetaData;
+import jef.database.DbMetaData.ObjectType;
 import jef.database.datasource.DataSourceInfo;
 import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.type.AColumnMapping;
@@ -59,6 +59,7 @@ import jef.database.meta.FunctionMapping;
 import jef.database.meta.object.Case;
 import jef.database.meta.object.Constraint;
 import jef.database.meta.object.SequenceInfo;
+import jef.database.meta.object.TableInfo;
 import jef.database.query.Func;
 import jef.database.query.Scientific;
 import jef.database.query.SqlExpression;
@@ -123,28 +124,28 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	 */
 	private Case caseHandler = Case.MIXED_SENSITIVE;
 	private char quoteChar;
-	
+
 	// 缺省的函数注册掉
 	public AbstractDialect() {
 		for (FunctionMapping m : DEFAULT_FUNCTIONS) {
 			this.functions.put(m.getFunction().getName(), m);
 			this.functionsIndex.put(m.getStardard(), m);
 		}
-		
-		//注册缺省的数据类型
+
+		// 注册缺省的数据类型
 		typeNames.put(Types.BLOB, "blob", 0);
 		typeNames.put(Types.CLOB, "clob", 0);
 		typeNames.put(Types.CHAR, "char($l)", 0);
 		typeNames.put(Types.BOOLEAN, "char(1)", Types.CHAR);
 		typeNames.put(Types.VARCHAR, "varchar($l)", 0);
-		
+
 		typeNames.put(Types.FLOAT, "float", 0);
 		typeNames.put(Types.DOUBLE, "double", 0);
 		typeNames.put(Types.INTEGER, "int", 0);
 		typeNames.put(Types.TINYINT, "smallint", Types.SMALLINT);
 		typeNames.put(Types.SMALLINT, "smallint", 0);
 		typeNames.put(Types.BIGINT, "bigint", 0);
-		
+
 		typeNames.put(Types.DATE, "date", 0);
 		typeNames.put(Types.TIME, "time", 0);
 		typeNames.put(Types.TIMESTAMP, "timestamp", 0);
@@ -345,20 +346,20 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		String value = properties.get(key);
 		return value == null ? defaultValue : value;
 	}
-	
 
 	@Override
 	public int getPropertyInt(DbProperty key) {
-		String s=properties.get(key);
-		if(StringUtils.isEmpty(s)){
+		String s = properties.get(key);
+		if (StringUtils.isEmpty(s)) {
 			return 0;
 		}
 		return Integer.parseInt(s);
 	}
+
 	@Override
 	public long getPropertyLong(DbProperty key) {
-		String s=properties.get(key);
-		if(StringUtils.isEmpty(s)){
+		String s = properties.get(key);
+		if (StringUtils.isEmpty(s)) {
 			return 0;
 		}
 		return Long.parseLong(s);
@@ -371,30 +372,30 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	public String getCreationComment(ColumnType column, boolean flag) {
 		// 特殊情况先排除
 		if (column instanceof ColumnType.AutoIncrement) {
-			ColumnType.AutoIncrement cType=(ColumnType.AutoIncrement) column;
-			GenerationType type=cType.getGenerationType(this, true);
-			if(type==GenerationType.IDENTITY){
-				return getComment(cType,flag);				
-			}else{
-				column=cType.toNormalType();
+			ColumnType.AutoIncrement cType = (ColumnType.AutoIncrement) column;
+			GenerationType type = cType.getGenerationType(this, true);
+			if (type == GenerationType.IDENTITY) {
+				return getComment(cType, flag);
+			} else {
+				column = cType.toNormalType();
 			}
 		}
 		Type def = null;
-		int rawSqlType=column.getSqlType();
-		if(column instanceof TypeDefImpl){
-			String name=((TypeDefImpl) column).getName();
-			if(name!=null){
-				def=new Type(rawSqlType,name);	
+		int rawSqlType = column.getSqlType();
+		if (column instanceof TypeDefImpl) {
+			String name = ((TypeDefImpl) column).getName();
+			if (name != null) {
+				def = new Type(rawSqlType, name);
 			}
 		}
 		// 按事先注册的类型进行建表
-		if(def==null){
+		if (def == null) {
 			if (column instanceof SqlTypeSized) {
 				SqlTypeSized type = (SqlTypeSized) column;
 				def = typeNames.get(rawSqlType, type.getLength(), type.getPrecision(), type.getScale());
 			} else {
 				def = typeNames.get(rawSqlType);
-			}			
+			}
 		}
 
 		if (!flag) {
@@ -402,7 +403,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		}
 		StringBuilder sb = new StringBuilder(def.getName());
 		if (column.defaultValue != null)
-			sb.append(" default ").append(toDefaultString(column.defaultValue, rawSqlType,def.getSqlType()));
+			sb.append(" default ").append(toDefaultString(column.defaultValue, rawSqlType, def.getSqlType()));
 		if (column.nullable) {
 			if (has(Feature.COLUMN_DEF_ALLOW_NULL)) {
 				sb.append(" NULL");
@@ -410,14 +411,14 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		} else {
 			sb.append(" NOT NULL");
 		}
-		if(column.unique){
+		if (column.unique) {
 			sb.append(" UNIQUE");
 		}
 		return sb.toString();
 	}
-	
+
 	@Override
-	public int getImplementationSqlType(int typecode){
+	public int getImplementationSqlType(int typecode) {
 		return typeNames.get(typecode).getSqlType();
 	}
 
@@ -443,7 +444,6 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		return sb.toString();
 	}
 
-
 	public boolean checkPKLength(ColumnType type) {
 		return true;
 	}
@@ -452,15 +452,15 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		if (defaultValue == null) {
 			return null;
 		}
-		if (sqlType== Types.BOOLEAN){
-			if(!(defaultValue instanceof Boolean)){
-				String s=String.valueOf(defaultValue);
-				defaultValue=StringUtils.toBoolean(s,false);	
+		if (sqlType == Types.BOOLEAN) {
+			if (!(defaultValue instanceof Boolean)) {
+				String s = String.valueOf(defaultValue);
+				defaultValue = StringUtils.toBoolean(s, false);
 			}
 		}
 		if (defaultValue instanceof Boolean) {
 			return toBooleanSqlParam((java.lang.Boolean) defaultValue, changeTo);
-		}else if (defaultValue instanceof DbFunction) {
+		} else if (defaultValue instanceof DbFunction) {
 			return this.getFunction((DbFunction) defaultValue);
 		} else if (defaultValue instanceof SqlExpression) {
 			return defaultValue.toString();
@@ -468,30 +468,30 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		if (defaultValue instanceof Number) {
 			return defaultValue.toString();
 		} else if (defaultValue instanceof String) {
-			String s=(String)defaultValue;
+			String s = (String) defaultValue;
 			if (s.length() == 0)
 				return null;
-			return AColumnMapping.wrapSqlStr((String)defaultValue);
+			return AColumnMapping.wrapSqlStr((String) defaultValue);
 		} else {
 			return AColumnMapping.wrapSqlStr(String.valueOf(defaultValue));
 		}
 	}
 
 	private String toBooleanSqlParam(Boolean defaultValue, int sqlType) {
-		switch(sqlType){
+		switch (sqlType) {
 		case Types.BOOLEAN:
-			return String.valueOf(defaultValue); 
-		case Types.VARCHAR:	
+			return String.valueOf(defaultValue);
+		case Types.VARCHAR:
 		case Types.CHAR:
-			return defaultValue?"'1'":"'0'";
+			return defaultValue ? "'1'" : "'0'";
 		case Types.NUMERIC:
 		case Types.INTEGER:
 		case Types.TINYINT:
 		case Types.SMALLINT:
 		case Types.BIT:
-			return defaultValue?"1":"0";
+			return defaultValue ? "1" : "0";
 		default:
-			return String.valueOf(defaultValue); 
+			return String.valueOf(defaultValue);
 		}
 	}
 
@@ -504,10 +504,10 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	 */
 	public ColumnType getProprtMetaFromDbType(jef.database.meta.object.Column column) {
 		int type = column.getDataTypeCode();
-		if(type==-9999) {
-			type=judgeTypeCode(column.getDataType());
+		if (type == -9999) {
+			type = judgeTypeCode(column.getDataType());
 		}
-		
+
 		switch (type) {
 		case Types.TINYINT:
 		case Types.SMALLINT:
@@ -586,9 +586,10 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	}
 
 	private int judgeTypeCode(String dataType) {
-		Integer i=this.typeNames.getTypeNameCodes().get(dataType);
-		if(i!=null)return i;
-		throw new IllegalArgumentException("Unknown data type of ["+getName().name()+"]:"+dataType);
+		Integer i = this.typeNames.getTypeNameCodes().get(dataType);
+		if (i != null)
+			return i;
+		throw new IllegalArgumentException("Unknown data type of [" + getName().name() + "]:" + dataType);
 	}
 
 	/**
@@ -629,17 +630,26 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	}
 
 	public String getObjectNameToUse(String name) {
-		if(name==null||name.length()==0)return null;
-		if(name.charAt(0)==quoteChar)return name;
+		if (name == null || name.length() == 0)
+			return null;
+		if (name.charAt(0) == quoteChar)
+			return name;
 		return caseHandler.getObjectNameToUse(name);
 	}
+
 	public String getColumnNameToUse(AColumnMapping column) {
 		return caseHandler.getObjectNameToUse(column);
 	}
 
 	@Override
-	public List<SequenceInfo> getSequenceInfo(DbMetaData conn, String schema, String seqName) {
-		return null;
+	public List<SequenceInfo> getSequenceInfo(DbMetaData conn, String schema, String seqName) throws SQLException {
+		List<SequenceInfo> result = new ArrayList<SequenceInfo>(2);
+		for (TableInfo table : conn.getDatabaseObject(ObjectType.SEQUENCE, schema, conn.getProfile().getObjectNameToUse(seqName), null, false)) {
+			SequenceInfo e = new SequenceInfo();
+			e.setName(table.getName());
+			result.add(e);
+		}
+		return result;
 	}
 
 	public java.sql.Timestamp toTimestampSqlParam(Date timestamp) {
@@ -673,7 +683,8 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	}
 
 	public long getColumnAutoIncreamentValue(AutoIncrementMapping mapping, JDBCTarget db) {
-		throw new UnsupportedOperationException(mapping.getMeta().getName() + "." + mapping.fieldName() + " is auto-increament, but the database '" + this.getName() + "' doesn't support fetching the next AutoIncreament value.");
+		throw new UnsupportedOperationException(mapping.getMeta().getName() + "." + mapping.fieldName() + " is auto-increament, but the database '"
+				+ this.getName() + "' doesn't support fetching the next AutoIncreament value.");
 	}
 
 	public Statement wrap(Statement stmt, boolean isInJpaTx) throws SQLException {
@@ -692,12 +703,12 @@ public abstract class AbstractDialect implements DatabaseDialect {
 
 	public void toExtremeInsert(InsertSqlClause sql) {
 	}
-	
+
 	public void accept(DbMetaData dbMetadata) {
-		this.caseHandler=dbMetadata.getFeature().getDefaultCase();
-		String q=dbMetadata.getFeature().getQuoteChar();
-		if(q.length()>0){
-			quoteChar=q.charAt(0);
+		this.caseHandler = dbMetadata.getFeature().getDefaultCase();
+		String q = dbMetadata.getFeature().getQuoteChar();
+		if (q.length() > 0) {
+			quoteChar = q.charAt(0);
 		}
 	}
 
@@ -816,7 +827,8 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		return config;
 	}
 
-	static ParserFactory DEFAULT_PARSER=new ParserFactory.Default();
+	static ParserFactory DEFAULT_PARSER = new ParserFactory.Default();
+
 	@Override
 	public ParserFactory getParserFactory() {
 		return DEFAULT_PARSER;
@@ -832,10 +844,9 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		return caseHandler.isCaseSensitive();
 	}
 
-    @Override
-    public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String constraintName) throws SQLException{
-        throw new UnsupportedOperationException();
-    }
-	
-	
+	@Override
+	public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String constraintName) throws SQLException {
+		throw new UnsupportedOperationException();
+	}
+
 }

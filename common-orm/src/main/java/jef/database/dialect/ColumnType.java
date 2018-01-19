@@ -19,6 +19,7 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.sql.Types;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -421,6 +422,8 @@ public abstract class ColumnType {
 				return new VarcharDateMapping();
 			} else if (fieldType == java.sql.Timestamp.class) {
 				return new VarcharTimestampMapping();
+			}else if(fieldType == YearMonth.class){
+				return new jef.database.dialect.type.LocalYearMonth_Char();
 			}
 			throw new IllegalArgumentException("Varchar can not mapping to class " + fieldType.getName());
 		}

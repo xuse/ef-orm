@@ -200,7 +200,7 @@ public interface DatabaseDialect {
 	 * @param seqName 允许为null。可以使用%
 	 * @return 序列的信息
 	 */
-	List<SequenceInfo> getSequenceInfo(DbMetaData conn, String schema, String seqName);
+	List<SequenceInfo> getSequenceInfo(DbMetaData conn, String schema, String seqName)  throws SQLException;
 
 	/**
 	 * 根据数据库特性，从数据库系统表中返回约束信息，如果不支持返回null。如果不存在返回空列表

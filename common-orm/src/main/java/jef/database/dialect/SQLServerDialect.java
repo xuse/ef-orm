@@ -72,14 +72,13 @@ public class SQLServerDialect extends AbstractDelegatingDialect {
 			case 12:
 				// version 12= SQLServer 2014
 			case 13:
-				// 预留，按SQLServer2012
+				return new SQLServer2012Dialect();
 			case 14:
-				// 预留，按SQLServer2012
+				// version 14= SQLServer 2016
 			case 15:
-				// 预留，按SQLServer2012
 			case 16:
-				// 预留，按SQLServer2012
 			case 17:
+				return new SQLServer2016Dialect();
 			default:
 				LogUtil.info("Determin SQL-Server Dialect to [{}]", dialect.getClass());
 				return new SQLServer2012Dialect();

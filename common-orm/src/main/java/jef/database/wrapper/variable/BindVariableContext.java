@@ -2,7 +2,6 @@ package jef.database.wrapper.variable;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.IOException;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Arrays;

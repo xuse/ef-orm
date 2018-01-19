@@ -9,6 +9,7 @@ import java.util.List;
 
 import javax.persistence.EntityExistsException;
 
+import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.database.Condition;
 import jef.database.Condition.Operator;
@@ -62,12 +63,12 @@ import com.alibaba.fastjson.JSONObject;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({ 
-	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"), 
-	@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
-	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), 
-	@DataSource(name = "hsqldb", url = "${hsqldb.url}", user = "sa", password = ""),
-	@DataSource(name = "derby", url = "${derby.url}"), 
-	@DataSource(name = "sqlite", url = "${sqlite.url}"),
+//	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"), 
+//	@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
+//	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), 
+//	@DataSource(name = "hsqldb", url = "${hsqldb.url}", user = "sa", password = ""),
+//	@DataSource(name = "derby", url = "${derby.url}"), 
+//	@DataSource(name = "sqlite", url = "${sqlite.url}"),
 	@DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}")
 	}
 )
@@ -77,6 +78,7 @@ public class SimpleTableTest extends org.junit.Assert {
 
 	@BeforeClass
 	public static void setUp() {
+		new EntityEnhancer().enhance("jef.orm");
 		ORMConfig.getInstance().setSelectTimeout(20);
 		ORMConfig.getInstance().setUpdateTimeout(20);
 		ORMConfig.getInstance().setDeleteTimeout(20);

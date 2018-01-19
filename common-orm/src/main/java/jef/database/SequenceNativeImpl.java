@@ -80,8 +80,8 @@ final class SequenceNativeImpl extends AbstractSequence {
 	 * 
 	 * @throws SQLException
 	 */
-	SequenceNativeImpl(String name, OperateTarget target, int length, String table, String column, int initValue,SequenceManager parent) throws SQLException {
-		super(target,parent);
+	SequenceNativeImpl(String name, OperateTarget target, int length, String table, String column, int initValue, SequenceManager parent) throws SQLException {
+		super(target, parent);
 		initName(name);
 		this.length = length;
 		this.table = table;
@@ -94,12 +94,12 @@ final class SequenceNativeImpl extends AbstractSequence {
 
 	@Override
 	protected boolean doInit(DbClient session, String dbKey) throws SQLException {
-		DbMetaData meta=session.getMetaData(dbKey);
+		DbMetaData meta = session.getMetaData(dbKey);
 		ensureExists(meta, table, column, length, initValue);
 		this.selectSql = generateSQL(meta.getProfile());
 		if (exists) {
-			OperateTarget target=session.selectTarget(dbKey);
-			
+			OperateTarget target = session.selectTarget(dbKey);
+
 			this.step = calcStep(target, selectSql);
 			int cacheSize = getCacheSize();
 			if (cacheSize > 1)
@@ -142,7 +142,7 @@ final class SequenceNativeImpl extends AbstractSequence {
 		long max = StringUtils.toLong(StringUtils.repeat('9', length), Long.MAX_VALUE);
 		long start = caclStartValue(meta, schema, table, column, initValue, max);
 		try {
-			meta.createSequenceWithoutCheck(schema, sequence, start+1, max);
+			meta.createSequenceWithoutCheck(schema, sequence, start + 1, max);
 			exists = true;
 		} catch (SQLException e) {
 			LogUtil.error("Sequence [{}.{}] create error on database {}", schema, sequence, meta);
@@ -165,22 +165,27 @@ final class SequenceNativeImpl extends AbstractSequence {
 	 */
 	private int calcStep(OperateTarget client, String selectSql) {
 		int step = JefConfiguration.getInt(DbCfg.DB_SEQUENCE_STEP, 0);
-		//强制设定步长时，直接return
+		// 强制设定步长时，直接return
 		if (step > 0) {
 			return step;
 		}
-		
-		//尝试从数据库获取
-		List<SequenceInfo> info=client.getProfile().getSequenceInfo(client.getMetaData(), this.schema, this.sequence);
-		if(info!=null) {
-			if(info.isEmpty() || info.size()>1) {
-				throw new IllegalArgumentException("The sequence "+sequence+" was not correct in system_tables. size="+info.size());
-			}else if(info.get(0).getStep()>0){
-				return info.get(0).getStep();	
+
+		// 尝试从数据库获取
+		List<SequenceInfo> info;
+		try {
+			info = client.getProfile().getSequenceInfo(client.getMetaData(), this.schema, this.sequence);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+		if (info != null) {
+			if (info.isEmpty() || info.size() > 1) {
+				throw new IllegalArgumentException("The sequence " + sequence + " was not correct in system_tables. size=" + info.size());
+			} else if (info.get(0).getStep() > 0) {
+				return info.get(0).getStep();
 			}
 		}
-		
-		//无论数据库是否支持，强制计算步长
+
+		// 无论数据库是否支持，强制计算步长
 		if (step == -1) {
 			try {
 				long[] min_max = getSequenceStepByConsumeTwice(client, selectSql);
@@ -190,7 +195,7 @@ final class SequenceNativeImpl extends AbstractSequence {
 				throw new PersistenceException(e);
 			}
 		}
-		//修复数据
+		// 修复数据
 		if (step < 1)
 			step = 1;// 不允许出现0或者负数
 		return step;
@@ -237,7 +242,8 @@ final class SequenceNativeImpl extends AbstractSequence {
 		long result = 0;
 		try {
 			ps = target.prepareStatement(selectSql);
-			ps.setMaxRows(1);
+			//SQL Server的驱动很变态，如果设置MaxRows，在查询Sequence时就会报错。
+			//ps.setMaxRows(1);
 			long value = queryOnce(ps);
 			result = value; // 直接将选出的值作为sequence
 			// 向后取值（比如value=10, step=5, 那么实际有效的是10,11,12,13,14）
@@ -254,7 +260,8 @@ final class SequenceNativeImpl extends AbstractSequence {
 			target.releaseConnection();
 		}
 		if (ORMConfig.getInstance().isDebugMode()) {
-			LogUtil.info(StringUtils.concat(selectSql, " (fetch size=", String.valueOf(size), ")\t[Cost:", String.valueOf(System.currentTimeMillis() - start), "ms]|", target.getTransactionId()));
+			LogUtil.info(StringUtils.concat(selectSql, " (fetch size=", String.valueOf(size), ")\t[Cost:", String.valueOf(System.currentTimeMillis() - start),
+					"ms]|", target.getTransactionId()));
 		}
 		return result;
 	}
@@ -285,6 +292,6 @@ final class SequenceNativeImpl extends AbstractSequence {
 	}
 
 	public boolean isRawNative() {
-		return step==1;
+		return step == 1;
 	}
 }

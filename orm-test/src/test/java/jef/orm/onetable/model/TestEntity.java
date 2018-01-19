@@ -52,6 +52,10 @@ public class TestEntity extends jef.database.DataObject {
     
     @Column(name="joda5",columnDefinition="CHAR(8)")
     private YearMonth joda5;
+    
+    private LocalDateTime joda3a;
+    private Instant joda4a;
+    private YearMonth joda5a;
 
     @Lob
     private byte[] binaryData;
@@ -271,10 +275,35 @@ public class TestEntity extends jef.database.DataObject {
         this.joda5 = joda5;
     }
 
+    public LocalDateTime getJoda3a() {
+		return joda3a;
+	}
+
+	public void setJoda3a(LocalDateTime joda3a) {
+		this.joda3a = joda3a;
+	}
+
+	public Instant getJoda4a() {
+		return joda4a;
+	}
+
+	public void setJoda4a(Instant joda4a) {
+		this.joda4a = joda4a;
+	}
+
+	public YearMonth getJoda5a() {
+		return joda5a;
+	}
+
+	public void setJoda5a(YearMonth joda5a) {
+		this.joda5a = joda5a;
+	}
 
 
-    public enum Field implements jef.database.Field {
 
-        field1, field2, dateField, binaryData, boolField, boolField2, intFiled, intField2, longField, longField2, doubleField, doubleField2, floatField, folatField2, createTime, joda1, joda2, joda3, joda4, joda5
+	public enum Field implements jef.database.Field {
+
+        field1, field2, dateField, binaryData, boolField, boolField2, intFiled, intField2, longField, longField2, doubleField, doubleField2, floatField, folatField2, createTime, joda1, joda2, joda3, joda4, joda5,
+        joda3a,joda4a,joda5a
     }
 }

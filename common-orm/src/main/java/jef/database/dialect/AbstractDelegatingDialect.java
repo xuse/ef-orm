@@ -264,7 +264,7 @@ public abstract class AbstractDelegatingDialect implements DatabaseDialect {
 	}
 
 	@Override
-	public List<SequenceInfo> getSequenceInfo(DbMetaData conn, String schema, String seqName) {
+	public List<SequenceInfo> getSequenceInfo(DbMetaData conn, String schema, String seqName) throws SQLException{
 		return dialect.getSequenceInfo(conn, schema, seqName);
 	}
 
