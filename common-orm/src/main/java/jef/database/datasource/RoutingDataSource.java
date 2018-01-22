@@ -125,7 +125,7 @@ public class RoutingDataSource extends AbstractDataSource implements IRoutingDat
 		if(dataSourceLookup!=null){
 			String defaultKey=dataSourceLookup.getDefaultKey();		//计算缺省数据源
 			if(defaultKey!=null){
-				LogUtil.info("Lookup key is null, using the default datasource:"+defaultKey);
+				LogUtil.info("Lookup key is null, using the default datasource: {}",defaultKey);
 				ds=resolvedDataSources.get(defaultKey);
 				if(ds==null){
 					ds=lookup(defaultKey);

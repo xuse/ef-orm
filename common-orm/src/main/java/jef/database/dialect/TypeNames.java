@@ -79,6 +79,7 @@ public class TypeNames {
 	 * @param typecode
 	 * @param value
 	 * @param newSqlType
+	 * @param alias
 	 */
 	public void put(int typecode, String value, int newSqlType,String... alias) {
 		Type type=new Type(newSqlType==0?typecode:newSqlType, value);

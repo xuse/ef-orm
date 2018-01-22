@@ -22,21 +22,7 @@ import java.util.NoSuchElementException;
 
 import javax.persistence.EntityManagerFactory;
 
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Order;
-import org.springframework.data.mapping.PropertyPath;
-import org.springframework.data.repository.query.ParametersParameterAccessor;
-import org.springframework.data.repository.query.parser.PartTree;
-
-import com.github.geequery.springdata.annotation.FindBy;
-import com.github.geequery.springdata.annotation.IgnoreIf;
-import com.github.geequery.springdata.repository.query.GqParameters.GqParameter;
-import com.github.geequery.springdata.repository.query.GqQueryExecution.CountExecution;
-import com.github.geequery.springdata.repository.query.GqQueryExecution.DeleteExecution;
-
 import jef.common.PairIO;
-import jef.common.wrapper.IntRange;
 import jef.database.Condition;
 import jef.database.Condition.Operator;
 import jef.database.DbUtils;
@@ -52,6 +38,19 @@ import jef.database.query.ConditionQuery;
 import jef.database.query.Query;
 import jef.database.query.SqlExpression;
 import jef.tools.PageLimit;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.mapping.PropertyPath;
+import org.springframework.data.repository.query.ParametersParameterAccessor;
+import org.springframework.data.repository.query.parser.PartTree;
+
+import com.github.geequery.springdata.annotation.FindBy;
+import com.github.geequery.springdata.annotation.IgnoreIf;
+import com.github.geequery.springdata.repository.query.GqParameters.GqParameter;
+import com.github.geequery.springdata.repository.query.GqQueryExecution.CountExecution;
+import com.github.geequery.springdata.repository.query.GqQueryExecution.DeleteExecution;
 
 /**
  * A {@link AbstractJpaQuery} implementation based on a {@link PartTree}.
@@ -157,12 +156,12 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 	private PairIO<GqParameter> getBindParamIndex(int index, String fieldName) {
 		int i = 0;
 		for (GqParameter param : this.parameters) {
-			if (param.getName() == null) {
-				if (index == param.getIndex()) {
+			if (param.getName().isPresent()) {
+				if (fieldName.equals(param.getName().get())) {
 					return new PairIO<GqParameter>(i, param);
 				}
 			} else {
-				if (fieldName.equals(param.getName())) {
+				if (index == param.getIndex()) {
 					return new PairIO<GqParameter>(i, param);
 				}
 			}

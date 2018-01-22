@@ -21,9 +21,6 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.lang.StringUtils;
-import org.easyframe.enterprise.spring.TransactionMode;
-
 import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.database.datasource.MapDataSourceLookup;
@@ -36,6 +33,10 @@ import jef.database.meta.MetaHolder;
 import jef.database.support.DbInitHandler;
 import jef.database.support.QuerableEntityScanner;
 import jef.tools.JefConfiguration;
+
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
+import org.easyframe.enterprise.spring.TransactionMode;
 
 /**
  * 提供了创建DbClient的若干工厂方法
@@ -113,6 +114,11 @@ public class DbClientBuilder {
 	 * </pre></code>
 	 */
 	private String[] packagesToScan;
+	
+	/**
+	 * 对配置了包扫描的路径进行增强检查，方便单元测试
+	 */
+	private boolean enhanceScanPackages = true;
 
 	/**
 	 * 扫描已知的若干注解实体类，配置示例如下—— <code><pre>
@@ -591,7 +597,9 @@ public class DbClientBuilder {
 				new EntityEnhancer().enhance(StringUtils.split(enhancePackages, ","));
 			}
 		}
-		
+		if(enhanceScanPackages && ArrayUtils.isNotEmpty(this.packagesToScan)){
+			new EntityEnhancer().enhance(packagesToScan);
+		}
 		//不再主动增强类
 //		else if (packagesToScan != null) {
 //			// if there is no enhances packages, try enhance 'package to Scan'
@@ -641,7 +649,7 @@ public class DbClientBuilder {
 			if (packagesToScan != null) {
 				String joined = StringUtils.join(packagesToScan, ',');
 				qe.setPackageNames(joined);
-				LogUtil.info("Starting scan easyframe entity from package: " + joined);
+				LogUtil.info("Starting scan easyframe entity from package: {}" , joined);
 				qe.doScan();
 			}
 			qe.finish();
@@ -789,5 +797,13 @@ public class DbClientBuilder {
 
 	public void setDbInitHandler(String dbInitHandler) {
 		this.dbInitHandler = dbInitHandler;
+	}
+
+	public boolean isEnhanceScanPackages() {
+		return enhanceScanPackages;
+	}
+
+	public void setEnhanceScanPackages(boolean enhanceScanPackages) {
+		this.enhanceScanPackages = enhanceScanPackages;
 	}
 }

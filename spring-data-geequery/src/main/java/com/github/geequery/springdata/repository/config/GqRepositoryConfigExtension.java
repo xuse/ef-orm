@@ -55,13 +55,7 @@ public class GqRepositoryConfigExtension extends RepositoryConfigurationExtensio
 		return "GeeQuery";
 	}
 
-	/* 
-	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.config14.RepositoryConfigurationExtension#getRepositoryInterface()
-	 */
-	public String getRepositoryFactoryClassName() {
-		return GqRepositoryFactoryBean.class.getName();
-	}
+
 
 	/* 
 	 * (non-Javadoc)
@@ -103,9 +97,9 @@ public class GqRepositoryConfigExtension extends RepositoryConfigurationExtensio
 		
 //		Iterable<String> s1=source.getBasePackages();
 //		builder.addPropertyValue("transactionManagerRef",source.getAttribute("transactionManagerRef"));
-		builder.addPropertyValue("namedQueryLocation", source.getNamedQueryLocation());
-		builder.addPropertyValue("entityManagerFactoryRef",source.getAttribute("entityManagerFactoryRef"));
-		builder.addPropertyValue("repositoryImplementationPostfix", source.getAttribute("repositoryImplementationPostfix"));
+		builder.addPropertyValue("namedQueryLocation", source.getNamedQueryLocation().orElse(null));
+		builder.addPropertyValue("entityManagerFactoryRef",source.getAttribute("entityManagerFactoryRef").orElse(null));
+		builder.addPropertyValue("repositoryImplementationPostfix", source.getAttribute("repositoryImplementationPostfix").orElse("Impl"));
 	}
 
 	/* 
@@ -128,7 +122,7 @@ public class GqRepositoryConfigExtension extends RepositoryConfigurationExtensio
 	@Override
 	public void postProcess(BeanDefinitionBuilder builder, XmlRepositoryConfigurationSource config) {
 
-		String enableDefaultTransactions = config.getAttribute(ENABLE_DEFAULT_TRANSACTIONS_ATTRIBUTE).get();
+		String enableDefaultTransactions = config.getAttribute(ENABLE_DEFAULT_TRANSACTIONS_ATTRIBUTE).orElse(null);
 
 		if (StringUtils.hasText(enableDefaultTransactions)) {
 			builder.addPropertyValue(ENABLE_DEFAULT_TRANSACTIONS_ATTRIBUTE, enableDefaultTransactions);
@@ -156,7 +150,6 @@ public class GqRepositoryConfigExtension extends RepositoryConfigurationExtensio
 
 	@Override
 	public String getRepositoryFactoryBeanClassName() {
-		// TODO Auto-generated method stub
-		return null;
+		return GqRepositoryFactoryBean.class.getName();
 	}
 }

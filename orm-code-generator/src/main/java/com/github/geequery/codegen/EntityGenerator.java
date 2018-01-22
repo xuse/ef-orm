@@ -330,7 +330,7 @@ public class EntityGenerator {
             if (n >= maxTables)
                 break;
         }
-        LogUtil.show(n + " Class Mapping to Table are generated.");
+        LogUtil.info(n + " Class Mapping to Table are generated.");
 
     }
 

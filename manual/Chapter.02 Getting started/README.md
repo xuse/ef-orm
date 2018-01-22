@@ -17,30 +17,25 @@ GeeQuery使用手册——Chapter-2  入门 Getting started
 1. 在Eclipse的Update Site中增加站点[http://geequery.github.io/plugins/1.3.x/](http://geequery.github.io/plugins/1.3.x/)，
 2. 选择help \ Install new Software来安装JEF插件。
 
-### 2.1.2.  示例工程搭建
+### 2.1.2.  运行示例工程
 
-**直接下载**
+**下载并构建框架**
 
-您可以直接下载本文的示例工程，也可以按后面的说明一步一步搭建此工程。
-
-<https://github.com/GeeQuery/ef-orm/tree/master/orm-tutorial>
-
-该示例工程中，包含了本文中的所有代码清单
-
-**自行创建**
-
-新建测试工程，然后将EF-ORM的包加入到工程。
-
-- 本文中的测试都采用Apache derby来进行，为了运行本文的案例，你需要下载一个derby.jar放到你的工程目录下。
-- 未使用Maven场合下
-
-可以从Git直接构建
-
-~~~
+```
 git clone https://github.com/geequery/ef-orm.git
 cd ef-orm
 mvn install –Dmaven.test.skip=true
-~~~
+```
+
+**打开示例工程**
+
+位于刚才的ef-orm目录下。远程路径是——
+
+<https://github.com/GeeQuery/ef-orm/tree/master/orm-tutorial>
+
+该示例工程中，包含了本文中的所有代码清单。
+
+> 刚引入IDE (如Eclipse) 后，orm-tutorial项目上可能会有一个错误，该错误是由于引用了自制的maven插件，按上面的构建步骤运行 mvn install后，该错误即可消失。
 
 ### 2.1.3.  Hello World！
 

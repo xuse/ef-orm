@@ -101,7 +101,8 @@ public class GqQueryMethod extends QueryMethod {
 			if (!parameter.isNamedParameter()) {
 				continue;
 			}
-			if (!annotatedQuery.contains(String.format(":%s", parameter.getName())) && !annotatedQuery.contains(String.format("#%s", parameter.getName()))) {
+			String paramName=parameter.getName().orElse(null);
+			if (!annotatedQuery.contains(String.format(":%s", paramName)) && !annotatedQuery.contains(String.format("#%s", paramName))) {
 				throw new IllegalStateException(String.format("Using named parameters for method %s but parameter '%s' not found in annotated query '%s'!", method, parameter.getName(), annotatedQuery));
 			}
 		}

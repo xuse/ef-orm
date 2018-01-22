@@ -202,7 +202,13 @@ public class LogUtil {
 		}
 	}
 
-	public static void info(Object o) {
+	/**
+	 * 
+	 * @param o
+	 * @deprecated
+	 */
+	
+	public static void infox(Object o) {
 		if(useSlf4j){
 			if(log.isInfoEnabled()){
 				String msg=toString(o);
@@ -222,7 +228,7 @@ public class LogUtil {
 	 * @param objs
 	 */
 	public static void shows(Object... objs) {
-		info(objs);
+		infox(objs);
 	}
 
 	public static void show(ResultSet rs) {
@@ -242,7 +248,7 @@ public class LogUtil {
 	 * @param o
 	 */
 	public static void show(Object o) {
-		info(o);
+		infox(o);
 	}
 
 	public static void debug(Object o) {

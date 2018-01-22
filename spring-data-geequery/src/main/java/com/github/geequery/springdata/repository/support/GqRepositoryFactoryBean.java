@@ -16,6 +16,7 @@
 package com.github.geequery.springdata.repository.support;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceContext;
@@ -87,7 +88,12 @@ public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends 
      */
     @Override
     protected RepositoryFactorySupport doCreateRepositoryFactory() {
-        EntityManagerFactory emf = context.getBean(entityManagerFactoryRef, EntityManagerFactory.class);
+    	EntityManagerFactory emf;
+    	if(entityManagerFactoryRef==null){
+    		emf = context.getBean(EntityManagerFactory.class);
+    	}else{
+    		emf = context.getBean(entityManagerFactoryRef, EntityManagerFactory.class);
+    	}
         return new GqRepositoryFactory((JefEntityManagerFactory) emf);
     }
 

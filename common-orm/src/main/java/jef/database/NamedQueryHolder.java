@@ -10,10 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
-
 import jef.common.log.LogUtil;
 import jef.database.Condition.Operator;
 import jef.database.query.Query;
@@ -24,6 +20,10 @@ import jef.tools.PageLimit;
 import jef.tools.StringUtils;
 import jef.tools.XMLUtils;
 import jef.tools.reflect.Enums;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
 
 final class NamedQueryHolder {
 	private DbClient parent;
@@ -90,7 +90,7 @@ final class NamedQueryHolder {
 		for (Map.Entry<File, Long> e : loadedFiles.entrySet()) {
 			File file = e.getKey();
 			if (file.lastModified() > e.getValue()) {// 修改过了
-				LogUtil.show("refresh named queries in file <" + file.toString() + ">");
+				LogUtil.info("refresh named queries in file <{}>",  file);
 				loadFile(namedQueries, file);
 			}
 		}

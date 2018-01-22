@@ -16,6 +16,7 @@
 package com.github.geequery.springdata.repository.support;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 import javax.persistence.EntityManager;
 
@@ -40,108 +41,108 @@ import com.github.geequery.springdata.repository.query.GqQueryLookupStrategy;
  */
 public class GqRepositoryFactory extends RepositoryFactorySupport {
 
-    private final JefEntityManagerFactory emf;
-    private final CrudMethodMetadataPostProcessor crudMethodMetadataPostProcessor;
+	private final JefEntityManagerFactory emf;
+	private final CrudMethodMetadataPostProcessor crudMethodMetadataPostProcessor;
 
-    /**
-     * Creates a new {@link GqRepositoryFactory}.
-     * 
-     * @param entityManager
-     *            must not be {@literal null}
-     */
-    public GqRepositoryFactory(JefEntityManagerFactory entityManager) {
-        Assert.notNull(entityManager);
-        this.emf = entityManager;
-        this.crudMethodMetadataPostProcessor = new CrudMethodMetadataPostProcessor();
+	/**
+	 * Creates a new {@link GqRepositoryFactory}.
+	 * 
+	 * @param entityManager
+	 *            must not be {@literal null}
+	 */
+	public GqRepositoryFactory(JefEntityManagerFactory entityManager) {
+		Assert.notNull(entityManager);
+		this.emf = entityManager;
+		this.crudMethodMetadataPostProcessor = new CrudMethodMetadataPostProcessor();
 
-        addRepositoryProxyPostProcessor(crudMethodMetadataPostProcessor);
-    }
+		addRepositoryProxyPostProcessor(crudMethodMetadataPostProcessor);
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.repository.core.support.RepositoryFactorySupport
-     * #setBeanClassLoader(java.lang.ClassLoader)
-     */
-    @Override
-    public void setBeanClassLoader(ClassLoader classLoader) {
-        super.setBeanClassLoader(classLoader);
-        this.crudMethodMetadataPostProcessor.setBeanClassLoader(classLoader);
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.repository.core.support.RepositoryFactorySupport
+	 * #setBeanClassLoader(java.lang.ClassLoader)
+	 */
+	@Override
+	public void setBeanClassLoader(ClassLoader classLoader) {
+		super.setBeanClassLoader(classLoader);
+		this.crudMethodMetadataPostProcessor.setBeanClassLoader(classLoader);
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.repository.core.support.RepositoryFactorySupport
-     * #getTargetRepository(org.springframework.data.repository.core.
-     * RepositoryMetadata)
-     */
-    @Override
-    protected Object getTargetRepository(RepositoryInformation information) {
-        GqRepository<?, ?> repository = getTargetRepository(information, emf);
-        // repository.setRepositoryMethodMetadata(crudMethodMetadataPostProcessor.getCrudMethodMetadata());
-        return repository;
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.repository.core.support.RepositoryFactorySupport
+	 * #getTargetRepository(org.springframework.data.repository.core.
+	 * RepositoryMetadata)
+	 */
+	@Override
+	protected Object getTargetRepository(RepositoryInformation information) {
+		GqRepository<?, ?> repository = getTargetRepository(information, emf);
+		// repository.setRepositoryMethodMetadata(crudMethodMetadataPostProcessor.getCrudMethodMetadata());
+		return repository;
+	}
 
-    /**
-     * Callback to create a {@link JpaRepository} instance with the given
-     * {@link EntityManager}
-     * 
-     * @param <T>
-     * @param <ID>
-     * @param entityManager
-     * @see #getTargetRepository(RepositoryMetadata)
-     * @return
-     */
-    protected <T, ID extends Serializable> GqRepository<T, ID> getTargetRepository(RepositoryInformation information, JefEntityManagerFactory entityManager) {
-        EntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType());
-        return getTargetRepositoryViaReflection(information, entityInformation, entityManager);
-    }
+	/**
+	 * Callback to create a {@link JpaRepository} instance with the given
+	 * {@link EntityManager}
+	 * 
+	 * @param <T>
+	 * @param <ID>
+	 * @param entityManager
+	 * @see #getTargetRepository(RepositoryMetadata)
+	 * @return
+	 */
+	protected <T, ID extends Serializable> GqRepository<T, ID> getTargetRepository(RepositoryInformation information, JefEntityManagerFactory entityManager) {
+		EntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType());
+		return getTargetRepositoryViaReflection(information, entityInformation, entityManager);
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.repository.support.RepositoryFactorySupport#
-     * getRepositoryBaseClass()
-     */
-    @Override
-    protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
-        return GqRepositoryImpl.class;
-    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.repository.support.RepositoryFactorySupport#
+	 * getRepositoryBaseClass()
+	 */
+	@Override
+	protected Class<?> getRepositoryBaseClass(RepositoryMetadata metadata) {
+		return GqRepositoryImpl.class;
+	}
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.springframework.data.repository.core.support.RepositoryFactorySupport
-     * #getQueryLookupStrategy(org.springframework.data.repository.query.
-     * QueryLookupStrategy.Key,
-     * org.springframework.data.repository.query.EvaluationContextProvider)
-     */
-//    @Override
-//    protected QueryLookupStrategy getQueryLookupStrategy(Key key, EvaluationContextProvider evaluationContextProvider) {
-//        return new GqQueryLookupStrategy(emf);
-//    }
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * org.springframework.data.repository.core.support.RepositoryFactorySupport
+	 * #getQueryLookupStrategy(org.springframework.data.repository.query.
+	 * QueryLookupStrategy.Key,
+	 * org.springframework.data.repository.query.EvaluationContextProvider)
+	 */
+	@Override
+	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(Key key, EvaluationContextProvider evaluationContextProvider) {
+		return Optional.<QueryLookupStrategy> of(new GqQueryLookupStrategy(emf));
+	}
 
 	@Override
 	public <T, ID> EntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
-		  return new MetamodelInformation<T, ID>(domainClass, emf);
+		return new MetamodelInformation<T, ID>(domainClass, emf);
 	}
 
-    // /*
-    // * (non-Javadoc)
-    // *
-    // * @see
-    // * org.springframework.data.repository.support.RepositoryFactorySupport#
-    // * getEntityInformation(java.lang.Class)
-    // */
-    // @Override
-    // public <T, ID extends Serializable> GQEntityInformation<T>
-    // getEntityInformation(Class<T> domainClass) {
-    // return null;
-    // }
+	// /*
+	// * (non-Javadoc)
+	// *
+	// * @see
+	// * org.springframework.data.repository.support.RepositoryFactorySupport#
+	// * getEntityInformation(java.lang.Class)
+	// */
+	// @Override
+	// public <T, ID extends Serializable> GQEntityInformation<T>
+	// getEntityInformation(Class<T> domainClass) {
+	// return null;
+	// }
 
 }

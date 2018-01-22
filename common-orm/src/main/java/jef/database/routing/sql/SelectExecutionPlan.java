@@ -238,9 +238,9 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 			if (extractor.autoClose() && extractor instanceof TransformerAdapter) {// 普通方式
 				long dbAccess = ((TransformerAdapter<?>) extractor).dbAccess;
 				List<?> l = (List<?>) result;
-				LogUtil.show(StringUtils.concat("Result Count:", String.valueOf(l.size()), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbAccess), "ms) |", db.getTransactionId()));
+				LogUtil.info(StringUtils.concat("Result Count:", String.valueOf(l.size()), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms, [Populate]:", String.valueOf(System.currentTimeMillis() - dbAccess), "ms) |", db.getTransactionId()));
 			} else {// Iterate方式
-				LogUtil.show(StringUtils.concat("Result Iterator:", "\t Time cost([DbAccess]:", String.valueOf(System.currentTimeMillis() - start), "ms  |", db.getTransactionId()));
+				LogUtil.info(StringUtils.concat("Result Iterator:", "\t Time cost([DbAccess]:", String.valueOf(System.currentTimeMillis() - start), "ms  |", db.getTransactionId()));
 			}
 		}
 		return result;

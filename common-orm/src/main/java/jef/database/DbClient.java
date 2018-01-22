@@ -335,7 +335,7 @@ public class DbClient extends Session implements SessionFactory {
 		this.ds = ds;
 		this.connPool = PoolService.getPool(ds, min, max, txType);
 		Assert.notNull(connPool);
-		LogUtil.info("Init DB Connection:" + connPool.getInfo(null));
+		LogUtil.info("Init DB Connection: " + connPool.getInfo(null));
 		afterPoolReady();
 	}
 
@@ -397,7 +397,7 @@ public class DbClient extends Session implements SessionFactory {
 						Object o = c.newInstance();
 						if (o instanceof IQueryableEntity) {
 							if (session.createTable((IQueryableEntity) o)) {
-								LogUtil.show("JEF has created table " + tableName + " automaticlly.");
+								LogUtil.info("JEF has created table {} automaticlly.", tableName);
 							}
 						}
 					}
@@ -646,7 +646,7 @@ public class DbClient extends Session implements SessionFactory {
 		PartitionResult[] result = DbUtils.partitionUtil.toTableNames(meta, obj, obj.getQuery(), getPartitionSupport(),
 				false);
 		if (ORMConfig.getInstance().isDebugMode()) {
-			LogUtil.show("Partitions:" + Arrays.toString(result));
+			LogUtil.info("Partitions:" + Arrays.toString(result));
 		}
 		boolean ok = createTable0(meta, result) > 0;
 		return ok;

@@ -35,7 +35,7 @@ public class ZipFileResource extends FileResource {
 				throw new IllegalStateException(e);
 			}
 			this.file=tempFile;
-			LogUtil.info("The zipped resource is saved as:"+ tempFile.getAbsolutePath());
+			LogUtil.info("The zipped resource is saved as: {}", tempFile.getAbsolutePath());
 		}
 	}
 

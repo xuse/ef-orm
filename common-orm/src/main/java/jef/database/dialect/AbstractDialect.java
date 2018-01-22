@@ -138,6 +138,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		typeNames.put(Types.CHAR, "char($l)", 0);
 		typeNames.put(Types.BOOLEAN, "char(1)", Types.CHAR);
 		typeNames.put(Types.VARCHAR, "varchar($l)", 0);
+		typeNames.put(Types.BINARY, "binary", 0);
 
 		typeNames.put(Types.FLOAT, "float", 0);
 		typeNames.put(Types.DOUBLE, "double", 0);
@@ -149,6 +150,8 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		typeNames.put(Types.DATE, "date", 0);
 		typeNames.put(Types.TIME, "time", 0);
 		typeNames.put(Types.TIMESTAMP, "timestamp", 0);
+		typeNames.put(Types.DECIMAL, "decimal($p,$s)", 0);
+		typeNames.put(Types.NUMERIC, "decimal($p,$s)", 0);
 	}
 
 	static {
@@ -181,9 +184,9 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	 * 注册函数，该函数为数据库原生支持的。
 	 * 
 	 * @param func
-	 *            要支持的数据库函数
+	 *            ESQL中支持的数据库函数，实际DB中也使用同名函数
 	 * @param synonyms
-	 *            其他要支持的别名
+	 *            其他要支持的别名（ESQL中也支持这些函数，指向同一个函数实现）
 	 */
 	protected void registerNative(DbFunction func, String... synonyms) {
 		registerNative(func, new StandardSQLFunction(func.name()), synonyms);
@@ -193,11 +196,11 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	 * 注册函数，该函数为数据库原生支持的
 	 * 
 	 * @param func
-	 *            要支持的数据库函数
+	 *            ESQL中支持的数据库函数
 	 * @param function
-	 *            函数实现
+	 *            函数实现，可以指定不同的名称或模板
 	 * @param synonyms
-	 *            其他要支持的别名
+	 *            其他要支持的别名（这些别名也能在ESQL中正常使用，指向同一个函数对象。）
 	 */
 	protected void registerNative(DbFunction func, SQLFunction function, String... synonyms) {
 		FunctionMapping mapping = new FunctionMapping(function, func, FunctionMapping.MATCH_FULL);
@@ -224,7 +227,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	 * 注册函数，该函数为数据库原生支持的
 	 * 
 	 * @param function
-	 *            函数实现
+	 *            函数实现，含名称
 	 * @param synonyms
 	 *            其他要支持的别名
 	 */
@@ -235,6 +238,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	/**
 	 * 注册虚拟函数，该函数名和数据库本地函数不同，但用法相似（或一样）。 实际使用时虚拟函数名将被替换为本地函数名
 	 * 
+	 * 该方法其实不一定要用，可以用registerNative的别名功能
 	 * @param func
 	 *            虚拟函数名
 	 * @param nativeName
@@ -252,7 +256,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 
 	/**
 	 * 注册虚拟函数，该函数名和数据库本地函数不同，但用法相似（或一样）。 实际使用时虚拟函数名将被替换为本地函数名
-	 * 
+	 * 该方法其实不一定要用，可以用registerNative的别名功能
 	 * @param func
 	 *            虚拟函数名
 	 * @param nativeName

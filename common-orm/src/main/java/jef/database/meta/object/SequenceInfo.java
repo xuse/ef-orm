@@ -14,6 +14,7 @@ public class SequenceInfo {
 	private long startValue;
 	private int step;
 	private int cacheSize;
+	//无论是int还是long都不够。很容易溢出，不再获取
 //	private BigDecimal maxValue;
 	private long minValue;
 	/**

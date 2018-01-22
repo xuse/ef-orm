@@ -380,7 +380,7 @@ public class MySqlDialect extends AbstractDialect {
 		sb.append("/").append(pathOrName).append("?useUnicode=true&characterEncoding=UTF-8");//
 		String url = sb.toString();
 		if (ORMConfig.getInstance().isDebugMode()) {
-			LogUtil.show(url);
+			LogUtil.info(url);
 		}
 		return url;
 	}

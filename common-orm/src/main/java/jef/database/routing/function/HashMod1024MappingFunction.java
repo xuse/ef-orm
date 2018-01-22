@@ -32,13 +32,12 @@ public class HashMod1024MappingFunction implements PartitionFunction<String> {
 	private Collection<String> allResult;
 
 	private BigInteger mod = BigInteger.valueOf(1024);
-	
-	
+
 	public static void main(String[] args) {
-//		HashMod1024MappingFunction ss = new HashMod1024MappingFunction("0:DB1,256:DB2,512:DB3,768:DB4", 0);
+		// HashMod1024MappingFunction ss = new
+		// HashMod1024MappingFunction("0:DB1,256:DB2,512:DB3,768:DB4", 0);
 		HashMod1024MappingFunction ss = new HashMod1024MappingFunction("0-255:DB1,256-511:DB2,512-767:DB3,768-1023:DB4", 0);
-		
-		
+
 		System.out.println(ss.allModulus());
 		System.out.println("-------------------------");
 		System.out.println(ss.getResult(1));
@@ -72,11 +71,11 @@ public class HashMod1024MappingFunction implements PartitionFunction<String> {
 	 * @param digit
 	 */
 	public HashMod1024MappingFunction(String expression, int digit) {
-		if(StringUtils.isEmpty(expression)) {
-			expression=ORMConfig.getInstance().getPartitionBucketRange();
+		if (StringUtils.isEmpty(expression)) {
+			expression = ORMConfig.getInstance().getPartitionBucketRange();
 		}
 		this.maxLength = digit;
-		
+
 		List<PairSO<RangeDimension<Integer>>> ranges = new ArrayList<PairSO<RangeDimension<Integer>>>();
 		for (String s : StringUtils.split(expression, ",")) {
 			int index = s.lastIndexOf(':');
@@ -89,15 +88,15 @@ public class HashMod1024MappingFunction implements PartitionFunction<String> {
 			if (index > 0) { // 如果第一位就是-，认为是负号，不算分隔符
 				int start = StringUtils.toInt(s.substring(0, index), null);
 				int end = StringUtils.toInt(s.substring(index + 1), null);
-				addRange(start, end+1, value, ranges);
+				addRange(start, end + 1, value, ranges);
 			} else {
 				int start = StringUtils.toInt(s, null);
 				addRange(start, null, value, ranges);
 			}
 		}
 		checkLast(ranges);
-		for(PairSO<RangeDimension<Integer>> entry:ranges) {
-			LogUtil.info(entry.first+":"+entry.second);
+		for (PairSO<RangeDimension<Integer>> entry : ranges) {
+			LogUtil.info(entry.first + ":" + entry.second);
 		}
 		this.ranges = new int[ranges.size()];
 		this.results = new String[ranges.size()];
@@ -110,31 +109,31 @@ public class HashMod1024MappingFunction implements PartitionFunction<String> {
 	}
 
 	private void checkLast(List<PairSO<RangeDimension<Integer>>> ranges) {
-		RangeDimension<Integer> last=ranges.isEmpty()?null:ranges.get(ranges.size()-1).second;
-		if(last.getMax()==null) {
+		RangeDimension<Integer> last = ranges.isEmpty() ? null : ranges.get(ranges.size() - 1).second;
+		if (last.getMax() == null) {
 			last.setMax(1024);
 		}
-		if(last.getMax()!=1024) {
+		if (last.getMax() != 1024) {
 			throw new IllegalArgumentException();
 		}
 	}
 
 	@SuppressWarnings("unchecked")
 	private void addRange(int start, Integer end, String value, List<PairSO<RangeDimension<Integer>>> ranges) {
-		if (end!=null && end < start) {
+		if (end != null && end < start) {
 			throw new IllegalArgumentException();
 		}
-		RangeDimension<Integer> last=ranges.isEmpty()?null:ranges.get(ranges.size()-1).second;
-		if (last==null) {
-			ranges.add(new PairSO<RangeDimension<Integer>>(value,RangeDimension.createLC(start, end)));
+		RangeDimension<Integer> last = ranges.isEmpty() ? null : ranges.get(ranges.size() - 1).second;
+		if (last == null) {
+			ranges.add(new PairSO<RangeDimension<Integer>>(value, RangeDimension.createLC(start, end)));
 		} else {
-			if(last.getMax()==null) {
+			if (last.getMax() == null) {
 				last.setMax(start);
 			}
-			if(last.getMax()!=start) {
-				throw new IllegalArgumentException("The range ["+last.getMax()+"-"+start+"] was skipped.");
+			if (last.getMax() != start) {
+				throw new IllegalArgumentException("The range [" + last.getMax() + "-" + start + "] was skipped.");
 			}
-			ranges.add(new PairSO<RangeDimension<Integer>>(value,RangeDimension.createLC(start, end)));
+			ranges.add(new PairSO<RangeDimension<Integer>>(value, RangeDimension.createLC(start, end)));
 		}
 	}
 

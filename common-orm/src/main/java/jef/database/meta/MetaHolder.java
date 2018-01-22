@@ -160,7 +160,7 @@ public final class MetaHolder {
 			String configStr = JefConfiguration.get(DbCfg.DB_DATASOURCE_MAPPING);
 			SITE_MAPPING = StringUtils.toMap(configStr, ",", ":", -1);
 			if (!SITE_MAPPING.isEmpty()) {
-				LogUtil.info("Database mapping: " + SITE_MAPPING);
+				LogUtil.info("Database mapping: {}" , SITE_MAPPING);
 			}
 		} catch (Exception e) {
 			log.error("SCHEMA_MAPPING error", e);

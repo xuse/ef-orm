@@ -34,7 +34,7 @@ public class ZipUtilsTest {
 					return 5048576;
 				}
 			}, dir);
-			LogUtil.show("Ziped file:" + zipped.getPath());	
+			LogUtil.info("Ziped file: {}", zipped.getPath());	
 		}
 		
 		/**

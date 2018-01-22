@@ -43,7 +43,7 @@ public class PartitionMetadata implements PartitionSupport{
 		if(tables.contains(table.toUpperCase())){
 			return;
 		}
-		LogUtil.info("Creating table:" + table);
+		LogUtil.info("Creating table: {}" , table);
 		if(meta.createTable(tmeta, table)){
 			tables.add(table.toUpperCase());
 		}
