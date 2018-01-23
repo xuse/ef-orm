@@ -352,36 +352,6 @@ select A.*             ,
 		
 	}
 	
-	/**
-	 * 生成建表时的创建索引语句
-	 * @param profile
-	 * @return
-	 */
-	public String toCreateSqlInTableCreate(DatabaseDialect profile){
-		
-		StringBuilder sb = new StringBuilder(",\n ");
-		if(this.unique){
-			sb.append("UNIQUE ");
-		}
-		if(this.type==DatabaseMetaData.tableIndexClustered){
-			sb.append("CLUSTERED ");
-		}
-		if (StringUtils.isNotEmpty(userDefinition)) {
-			sb.append(userDefinition).append(' ');
-		}
-		sb.append("INDEX ");
-		sb.append(StringUtils.isEmpty(indexName)?generateName():indexName);
-		sb.append("(");
-		Iterator<IndexItem> iter=columns.iterator();
-		sb.append(iter.next());
-		for(;iter.hasNext();){
-			sb.append(',').append(iter.next());
-		}
-		sb.append(")");
-		sb.append(profile.getProperty(DbProperty.INDEX_USING_HASH, ""));
-		return sb.toString();
-	}
-
 	public String toCreateSql(DatabaseDialect profile) {
 		StringBuilder sb = new StringBuilder("CREATE ");
 		if(this.unique){

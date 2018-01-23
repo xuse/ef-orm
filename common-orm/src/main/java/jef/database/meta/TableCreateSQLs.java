@@ -1,27 +1,22 @@
 package jef.database.meta;
 
-import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.RandomStringUtils;
+
 import jef.common.PairIS;
 import jef.common.PairSS;
 import jef.database.DbUtils;
-import jef.database.Field;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ColumnMapping;
-import jef.database.meta.def.IndexDef;
 import jef.database.meta.def.UniqueConstraintDef;
-import jef.database.meta.object.Index;
-import jef.database.meta.object.Index.IndexItem;
 import jef.tools.StringUtils;
-
-import org.apache.commons.lang.RandomStringUtils;
 
 /**
  * 建表任务操作
@@ -52,10 +47,6 @@ public class TableCreateSQLs {
 		}
 		for(UniqueConstraintDef unique: meta.getUniques()){
 			tableDef.addUniqueConstraint(unique,meta,dialect);
-		}
-		// 添加索引创建语句
-		for(IndexDef index : meta.getIndexDefinition()){
-			tableDef.addIndex(index, tablename, meta, dialect);
 		}
 		this.tables.add(tableDef);
 	}
@@ -209,67 +200,6 @@ public class TableCreateSQLs {
 				}
 			}
 		}
-		
-		public void addIndex(IndexDef index, String tablename, ITableMetadata meta, DatabaseDialect dialect){
-	    	int n = tablename.indexOf('.');
-	        String tableschema = null;
-	        if (n > -1) {
-	            tableschema = tablename.substring(0, n);
-	            tablename = tablename.substring(n + 1);
-	        }
-	        
-	        List<Field> fields = new ArrayList<Field>();
-	        List<IndexItem> columns = new ArrayList<IndexItem>();
-	        for (String fieldname : index.getColumns()) {
-	            boolean asc = true;
-	            if (fieldname.toLowerCase().endsWith(" desc")) {
-	                asc = false;
-	                fieldname = fieldname.substring(0, fieldname.length() - 5).trim();
-	            }
-	            Field field = meta.getField(fieldname);
-	            if (field == null) {
-	                field = new FBIField(fieldname);
-	                columns.add(new IndexItem(fieldname, asc, 0));
-	            } else {
-	                String columnName = meta.getColumnName(field, profile, true);
-	                columns.add(new IndexItem(columnName, asc, 0));
-	            }
-	            fields.add(field);
-	        }
-	        String indexName = index.getName();
-	        if (StringUtils.isEmpty(indexName)) {
-	            StringBuilder iNameBuilder = new StringBuilder();
-	            iNameBuilder.append("IDX_").append(StringUtils.truncate(StringUtils.removeChars(tablename, '_'), 14));
-	            int maxField = ((28 - iNameBuilder.length()) / index.getColumns().length) - 1;
-	            if (maxField < 1)
-	                maxField = 1;
-	            for (Field field : fields) {
-	                iNameBuilder.append('_');
-	                if (field instanceof FBIField) {
-	                    iNameBuilder.append(StringUtils.truncate(StringUtils.randomString(), maxField));
-	                } else {
-	                    iNameBuilder.append(StringUtils.truncate(meta.getColumnDef(field).getColumnName(profile, false), maxField));
-	                }
-	            }
-	            indexName = iNameBuilder.toString();
-	        }
-	        if (indexName.length() > 30)
-	            indexName = indexName.substring(0, 30);
-
-	        Index indexobj = new Index(indexName);
-	        indexobj.setTableSchema(tableschema);
-	        indexobj.setTableName(tablename);
-	        indexobj.setUnique(index.isUnique());
-	        indexobj.setUserDefinition(index.getDefinition());
-	        if (index.isClustered()) {
-	            indexobj.setType(DatabaseMetaData.tableIndexClustered);
-	        }
-	        for (IndexItem c : columns) {
-	            indexobj.addColumn(c.column, c.asc);
-	        }
-	        StringBuilder sb = getColumnDef();
-			sb.append(indexobj.toCreateSqlInTableCreate(dialect)); // 添加到建表语句
-	    }
 	}
 
 	/**

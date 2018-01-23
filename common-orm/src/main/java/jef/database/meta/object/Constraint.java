@@ -7,6 +7,8 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 
 import com.google.common.base.Objects;
 
+import jef.tools.ArrayUtils;
+
 /**
  * 描述一个数据库中的Constraint
  * 
@@ -276,9 +278,9 @@ public class Constraint {
 		if(!Objects.equal(this.type, con.type))return false;
 		if(!Objects.equal(this.deferrable, con.deferrable))return false;
 		if(!Objects.equal(this.initiallyDeferred, con.initiallyDeferred))return false;
-		if(!Objects.equal(this.columns, con.columns))return false;
+		if(!ArrayUtils.equals(this.columns.toArray(), con.columns.toArray()))return false;
 		if(!Objects.equal(this.refTableName, con.refTableName))return false;
-		if(!Objects.equal(this.refColumns, con.refColumns))return false;
+		if(!ArrayUtils.equals(this.refColumns.toArray(), con.refColumns.toArray()))return false;
 		if(!Objects.equal(this.updateRule, con.updateRule))return false;
 		if(!Objects.equal(this.deleteRule, con.deleteRule))return false;
 		if(!Objects.equal(this.matchType, con.matchType))return false;

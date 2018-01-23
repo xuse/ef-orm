@@ -299,7 +299,7 @@ public class DdlGeneratorImpl implements DdlGenerator {
         return indexobj.toCreateSql(profile);
     }
 
-    private static final String DROP_INDEX_SQL = "alter table %1$s drop index %2$s";
+    private static final String DROP_INDEX_SQL = "drop index %2$s";
     
     public String deleteIndex(Index index) {
     	
@@ -393,8 +393,11 @@ public class DdlGeneratorImpl implements DdlGenerator {
     		
     	}else if(ConstraintType.U == con.getType()){
     		// 删除唯一键约束
-	    	sb.append(String.format(DROP_INDEX_SQL, con.getTableName(), con.getName()));
-	    	
+	    	if(RDBMS.mysql == profile.getName() || RDBMS.mariadb == profile.getName()){
+	    		sb.append(String.format(DROP_INDEX_SQL, con.getTableName(), con.getName()));
+    		}else{
+    			sb.append(String.format(DROP_CONSTRAINT_SQL, con.getTableName(), con.getName()));
+    		}
     	}else if(ConstraintType.P == con.getType()){
     		// 删除主键约束
     		if(RDBMS.mysql == profile.getName() || RDBMS.mariadb == profile.getName()){
