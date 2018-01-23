@@ -435,23 +435,32 @@ public class HsqlDbMemDialect extends AbstractDialect {
 			throws SQLException {
 
 		// 系统约束信息查询
-		String sql = "    SELECT tc.*, kcu.column_name, rc.match_option,  rc.update_rule, rc.delete_rule, "
-		            +"           ccu.table_name AS ref_table, ccu.column_name AS ref_column "
+		String sql = "    SELECT tc.*, ccu.column_name, rc.match_option,  rc.update_rule, rc.delete_rule, rccu.table_schema as ref_table_schema, "
+		            +"           rccu.table_name AS ref_table_name, rccu.column_name AS ref_column_name, cc.check_clause "
 		            +"      FROM information_schema.table_constraints tc"
+					+" LEFT JOIN information_schema.check_constraints cc"
+	                +"        ON cc.constraint_catalog = tc.constraint_catalog"
+					+"	     AND cc.constraint_schema = tc.constraint_schema"
+					+"	     AND cc.constraint_name = tc.constraint_name"
+					+" LEFT JOIN information_schema.constraint_column_usage ccu"
+					+"        ON tc.constraint_catalog = ccu.constraint_catalog"
+	                +"       AND tc.constraint_schema = ccu.constraint_schema"
+	                +"       AND tc.constraint_name = ccu.constraint_name "
 		            +" LEFT JOIN information_schema.key_column_usage kcu"
 		            +"        ON tc.constraint_catalog = kcu.constraint_catalog"
 		            +"       AND tc.constraint_schema = kcu.constraint_schema"
 		            +"       AND tc.constraint_name = kcu.constraint_name"
+					+"       AND ccu.column_name = kcu.column_name"
 		            +" LEFT JOIN information_schema.referential_constraints rc"
 		            +"        ON tc.constraint_catalog = rc.constraint_catalog"
 		            +"       AND tc.constraint_schema = rc.constraint_schema"
 		            +"       AND tc.constraint_name = rc.constraint_name"
-		            +" LEFT JOIN information_schema.constraint_column_usage ccu"
-		            +"        ON rc.unique_constraint_catalog = ccu.constraint_catalog"
-		            +"       AND rc.unique_constraint_schema = ccu.constraint_schema"
-		            +"       AND rc.unique_constraint_name = ccu.constraint_name "
+		            +" LEFT JOIN information_schema.constraint_column_usage rccu"
+		            +"        ON rc.unique_constraint_catalog = rccu.constraint_catalog"
+		            +"       AND rc.unique_constraint_schema = rccu.constraint_schema"
+		            +"       AND rc.unique_constraint_name = rccu.constraint_name "
 		            +"     WHERE tc.constraint_schema like ? and tc.table_name like ? and tc.constraint_name like ?"
-		            +"  ORDER BY tc.constraint_catalog, tc.constraint_schema, tc.constraint_name";
+		            +"  ORDER BY tc.constraint_catalog, tc.constraint_schema, tc.constraint_name, kcu.ordinal_position";
 
 		schema = StringUtils.isBlank(schema) ? "%" : schema;
 		tablename = StringUtils.isBlank(tablename) ? "%" : tablename;
@@ -492,10 +501,12 @@ public class HsqlDbMemDialect extends AbstractDialect {
 						c.setTableSchema(rs.getString("table_schema"));
 						c.setTableName(rs.getString("table_name"));
 						c.setMatchType(ForeignKeyMatchType.parseName(rs.getString("match_option")));
-						c.setRefTableName(rs.getString("ref_table"));
+						c.setRefTableSchema(rs.getString("ref_table_schema"));
+						c.setRefTableName(rs.getString("ref_table_name"));
 						c.setUpdateRule(ForeignKeyAction.parseName(rs.getString("update_rule")));
 						c.setDeleteRule(ForeignKeyAction.parseName(rs.getString("delete_rule")));
 						c.setEnabled(true); // 默认启用
+						c.setCheckClause(rs.getString("check_clause"));
 						c.setColumns(columns);
 						c.setRefColumns(refColumns);
 						constraints.add(c);
@@ -507,8 +518,8 @@ public class HsqlDbMemDialect extends AbstractDialect {
 					}
 					
 					// 是外键约束则添加到参照列表
-					if(StringUtils.isNotBlank(rs.getString("ref_column"))){
-						refColumns.add(rs.getString("ref_column"));
+					if(StringUtils.isNotBlank(rs.getString("ref_column_name"))){
+						refColumns.add(rs.getString("ref_column_name"));
 					}
 				}
 				

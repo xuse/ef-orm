@@ -42,6 +42,8 @@ import java.util.regex.Pattern;
 import javax.persistence.PersistenceException;
 import javax.sql.DataSource;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+
 import jef.common.Entry;
 import jef.common.PairIS;
 import jef.common.SimpleMap;
@@ -70,7 +72,6 @@ import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.MetadataFeature;
 import jef.database.meta.TableCreateSQLs;
-import jef.database.meta.TableCreateStatement;
 import jef.database.meta.def.IndexDef;
 import jef.database.meta.def.UniqueConstraintDef;
 import jef.database.meta.object.Column;
@@ -101,10 +102,6 @@ import jef.tools.Assert;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
-
-import org.easyframe.enterprise.spring.TransactionMode;
-
-import com.google.common.base.Objects;
 
 /*
  * constraint
@@ -1697,25 +1694,29 @@ public class DbMetaData {
 			}
 			
 			//计算唯一性约束变化
-			List<UniqueConstraintDef> uniqueDefsEntity = meta.getUniques(); // entity中定义的唯一性约束
-			List<Constraint> uniquesEntity = new ArrayList<Constraint>();
-			for (UniqueConstraintDef conDef : uniqueDefsEntity) { // 转换成Constraint对象
-				Constraint con = new Constraint();
-				con.setName(conDef.name());
-				con.setColumns(Arrays.asList(conDef.columnNames()));
-				con.setType(ConstraintType.U);
-				con.setTableName(tablename);
-				uniquesEntity.add(con);
-			}
-			
 			List<Constraint> constraintsDB = info.profile.getConstraintInfo(this, meta.getSchema(), tablename, null); // DB中定义的约束
-			List<Constraint> uniquesDB = new ArrayList<Constraint>();
-			for (Constraint con : constraintsDB) { // 筛选唯一性约束
-				if(ConstraintType.U.equals(con.getType())){
-					uniquesDB.add(con);
+			
+			if(constraintsDB != null){ // 返回null则表示当前数据库不支持获取约束
+				
+				List<UniqueConstraintDef> uniqueDefsEntity = meta.getUniques(); // entity中定义的唯一性约束
+				List<Constraint> uniquesEntity = new ArrayList<Constraint>();
+				for (UniqueConstraintDef conDef : uniqueDefsEntity) { // 转换成Constraint对象
+					Constraint con = new Constraint();
+					con.setName(conDef.name());
+					con.setColumns(Arrays.asList(conDef.columnNames()));
+					con.setType(ConstraintType.U);
+					con.setTableName(tablename);
+					uniquesEntity.add(con);
 				}
+				
+				List<Constraint> uniquesDB = new ArrayList<Constraint>();
+				for (Constraint con : constraintsDB) { // 筛选唯一性约束
+					if(ConstraintType.U.equals(con.getType())){
+						uniquesDB.add(con);
+					}
+				}
+				sqls.addAll(this.compareConstraints(uniquesEntity, uniquesDB)); // 比较两个约束列表，返回SQL语句
 			}
-			sqls.addAll(this.compareConstraints(uniquesEntity, uniquesDB)); // 比较两个约束列表，返回SQL语句
 		}
 
 		// 计算唯一性约束变化
@@ -1788,7 +1789,7 @@ public class DbMetaData {
 		return result;
     }
 
-	private boolean isNotAConstraintIndex(Index index, ITableMetadata meta) {
+	private boolean isNotAConstraintIndex(Index index, ITableMetadata meta) throws SQLException{
 		try {
 			// FIXME 判断方法有待确证
 			List<Constraint> cons = info.profile.getConstraintInfo(this, schema, meta.getTableName(false), index.getIndexName());
@@ -1797,9 +1798,8 @@ public class DbMetaData {
 			}
 			return true;
 		} catch (SQLException e) {
-			e.printStackTrace();
+			throw new SQLException("The execution of getConstraintInfo has failed.");
 		}
-		return false;
 	}
 
 	private boolean isDupIndex(Index index, List<IndexDef> meta) {
@@ -1921,13 +1921,14 @@ public class DbMetaData {
 	/**
 	 * 转换成索引创建语句
 	 */
-	private List<String> getIndexClausesOfTable(ITableMetadata meta, String tablename) {
+	// to be deleted
+	/*private List<String> getIndexClausesOfTable(ITableMetadata meta, String tablename) {
 		List<String> sqls = new ArrayList<String>();
 		for (IndexDef index : meta.getIndexDefinition()) {
 			sqls.add(ddlGenerator.addIndex(index, meta, tablename));
 		}
 		return sqls;
-	}
+	}*/
 
 	/*
 	 * 创建跨线程执行器。注意一定要在finally中关闭 DDLExecutor executor=createExecutor(); try{

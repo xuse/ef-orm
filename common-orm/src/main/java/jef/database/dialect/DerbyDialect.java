@@ -19,7 +19,15 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
+import org.apache.derby.catalog.IndexDescriptor;
+import org.apache.derby.catalog.ReferencedColumns;
+
+import com.querydsl.sql.DerbyTemplates;
+import com.querydsl.sql.SQLTemplates;
 
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
@@ -30,6 +38,7 @@ import jef.database.jdbc.result.IResultSet;
 import jef.database.jsqlparser.expression.LongValue;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
+import jef.database.meta.object.Column;
 import jef.database.meta.object.Constraint;
 import jef.database.meta.object.ConstraintType;
 import jef.database.meta.object.ForeignKeyAction;
@@ -50,9 +59,6 @@ import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
-
-import com.querydsl.sql.DerbyTemplates;
-import com.querydsl.sql.SQLTemplates;
 
 /**
  * Derby的dialet，用于derby的嵌入式模式
@@ -278,18 +284,33 @@ public class DerbyDialect extends AbstractDialect {
 	public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String tablename, String constraintName)
 			throws SQLException {
 		
-		String sql = "select con.*, fk.deleterule, fk.updaterule, tab.tablename, rtab.tablename as referenced_table_name, scm.schemaname"
+		String sql = "select con.*, fk.deleterule, fk.updaterule, tab.tablename, rtab.tablename as ref_table_name, rtab.tableid as ref_table_id,"
+				+"           scm.schemaname, rscm.schemaname as ref_table_schema, conglo.descriptor, rconglo.descriptor as ref_descriptor,"
+				+"           ck.checkdefinition as check_clause,ck.referencedcolumns"
 				+"      from sys.sysconstraints con "
 				+" left join sys.sysforeignkeys fk"
 				+"        on con.constraintid = fk.constraintid"
 				+" left join sys.sysconstraints ref"
 				+"        on fk.keyconstraintid = ref.constraintid"
+				+" left join sys.syschecks ck"
+		        +"        on con.constraintid = ck.constraintid"
 				+" left join sys.systables tab"
 				+"        on con.tableid = tab.tableid"
 				+" left join sys.systables rtab"
 				+"        on ref.tableid = rtab.tableid"
 				+" left join sys.sysschemas scm"
 				+"        on con.schemaid = scm.schemaid"
+				+" left join sys.sysschemas rscm"
+				+"        on ref.schemaid = rscm.schemaid"
+				+" left join sys.syskeys keys"
+				+"        on con.constraintid = keys.constraintid"
+				+" left join sys.sysconglomerates conglo"
+				+"        on keys.conglomerateid = conglo.conglomerateid"
+				+"        or fk.conglomerateid = conglo.conglomerateid"
+				+" left join sys.syskeys rkeys"
+				+"        on ref.constraintid = rkeys.constraintid"
+				+" left join sys.sysconglomerates rconglo"
+				+"        on rkeys.conglomerateid = rconglo.conglomerateid"
 				+"     where scm.schemaname like ? and tab.tablename like ? and con.constraintname like ?";
 		schema = StringUtils.isBlank(schema) ? "%" : schema;
 		tablename = StringUtils.isBlank(tablename) ? "%" : tablename;
@@ -316,10 +337,32 @@ public class DerbyDialect extends AbstractDialect {
 						c.setTableSchema(rs.getString("schemaname"));
 						c.setTableName(rs.getString("tablename"));
 						c.setMatchType(null);
-						c.setRefTableName(rs.getString("referenced_table_name"));
+						c.setRefTableSchema(rs.getString("ref_table_schema"));
+						c.setRefTableName(rs.getString("ref_table_name"));
 						c.setUpdateRule(parseForeignKeyAction(rs.getString("updaterule")));
 						c.setDeleteRule(parseForeignKeyAction(rs.getString("deleterule")));
 						c.setEnabled(true);
+						c.setCheckClause(rs.getString("check_clause"));
+						
+						if(ConstraintType.C == c.getType()){ // 检查约束的列信息需另取
+							
+							ReferencedColumns rcols = (ReferencedColumns)rs.getObject("referencedcolumns");
+							if(rcols != null){
+								int[] columnIndexes = rcols.getReferencedColumnPositions();
+								c.setColumns(transIntArrayToStringList(columnIndexes));
+							}
+						}else{
+							IndexDescriptor ids = (IndexDescriptor)rs.getObject("descriptor"); // 列坐标信息
+							if(ids != null){
+								int[] columnIndexes = ids.baseColumnPositions();
+								c.setColumns(transIntArrayToStringList(columnIndexes));
+							}
+							IndexDescriptor rids = (IndexDescriptor)rs.getObject("ref_descriptor"); // 参照列坐标信息
+							if(rids != null){
+								int[] refColumnIndexes = rids.baseColumnPositions();
+								c.setRefColumns(transIntArrayToStringList(refColumnIndexes));
+							}
+						}
 						constraints.add(c);
 					}
 				
@@ -328,8 +371,59 @@ public class DerbyDialect extends AbstractDialect {
 			
 		}, Arrays.asList(schema, tablename, constraintName));
 		
+		// 取得列信息
+		Map<String, List<Column>> tableMap = new HashMap<>();
+		for(Constraint c : constraints){
+			
+			if(c.getColumns() != null && c.getColumns().size() > 0){
+				String fullTableName = c.getTableSchema().concat(".").concat(c.getTableName()); // 带schema的表名
+				List<Column> columnList;
+				if(tableMap.containsKey(fullTableName)){
+					columnList = tableMap.get(fullTableName);
+				}else{
+					columnList = conn.getColumns(fullTableName);
+					tableMap.put(fullTableName, columnList);
+				}
+				List<String> columnIndexes = c.getColumns();
+				for (int i = 0; i < columnIndexes.size(); i++) {
+					// 重设约束对象里的列信息
+					columnIndexes.set(i, columnList.get(Integer.parseInt(columnIndexes.get(i)) - 1).getColumnName()); 
+				}
+			}
+			
+			if(c.getRefColumns() != null && c.getRefColumns().size() > 0){
+				String fullTableName = c.getRefTableSchema().concat(".").concat(c.getRefTableName()); // 带schema的参照表名
+				List<Column> columnList;
+				if(tableMap.containsKey(fullTableName)){
+					columnList = tableMap.get(fullTableName);
+				}else{
+					columnList = conn.getColumns(fullTableName);
+					tableMap.put(fullTableName, columnList);
+				}
+				List<String> columnIndexes = c.getRefColumns();
+				for (int i = 0; i < columnIndexes.size(); i++) {
+					columnIndexes.set(i, columnList.get(Integer.parseInt(columnIndexes.get(i)) - 1).getColumnName());
+				}
+			}
+		}
+		
 		return constraints;
 	}
+    
+    private List<String> transIntArrayToStringList(int[] array){
+    	
+    	List<String> result = new ArrayList<>();
+    	if(array.length == 0){
+    		return result;
+    	}
+    	
+    	for (int i = 0; i < array.length; i++) {
+			result.add(String.valueOf(array[i]));
+		}
+    	
+    	return result;
+    }
+    
     
     /**
      * Derby的外键更新策略名称转换
