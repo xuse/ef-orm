@@ -13,9 +13,9 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import jef.common.log.LogUtil;
-import jef.tools.ArrayUtils.Filter;
 import jef.tools.reflect.ClassUtils;
 import jef.tools.resource.ClassRelativeLoader;
 import jef.tools.resource.ClasspathLoader;
@@ -495,8 +495,8 @@ public class ResourceUtils {
 		try {
 		    IResource[] res= rl.getResources(locationPattern);
 		    if(excludeInnerClass){
-		        List<IResource> list=ArrayUtils.filter(res, new Filter<IResource>(){
-                    public boolean accept(IResource o) {
+		        List<IResource> list=ArrayUtils.filter(res, new Predicate<IResource>(){
+                    public boolean test(IResource o) {
                         String s=o.getFilename();
                         int dollor=s.indexOf('$');
                         return dollor<=0; //当$位于第一个字符时，不认为是内部类

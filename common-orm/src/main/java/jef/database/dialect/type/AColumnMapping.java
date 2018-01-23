@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import javax.persistence.Column;
 
@@ -22,7 +23,6 @@ import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.Assert;
 import jef.tools.DateUtils;
 import jef.tools.StringUtils;
-import jef.tools.collection.ElementFilter;
 import jef.tools.reflect.ConvertUtils;
 import jef.tools.reflect.Property;
 
@@ -46,7 +46,7 @@ public abstract class AColumnMapping implements ColumnMapping {
 	protected Property fieldAccessor;
 
 	private boolean unsavedValueDeclared;
-	private ElementFilter<Object> unsavedValue;
+	private Predicate<Object> unsavedValue;
 	private boolean notInsert;
 	private boolean notUpdate;
 
@@ -64,14 +64,14 @@ public abstract class AColumnMapping implements ColumnMapping {
 		return pk;
 	}
 
-	private static class ConstantFilter implements ElementFilter<Object> {
+	private static class ConstantFilter implements Predicate<Object> {
 		private Object object1;
 
 		ConstantFilter(Object obj) {
 			this.object1 = obj;
 		}
 
-		public boolean apply(Object object2) {
+		public boolean test(Object object2) {
 			if (object1 == object2) {
 				return true;
 			}
@@ -82,22 +82,22 @@ public abstract class AColumnMapping implements ColumnMapping {
 		}
 	}
 
-	private static final ElementFilter<Object> Null = new ElementFilter<Object>() {
-		public boolean apply(Object obj) {
+	private static final Predicate<Object> Null = new Predicate<Object>() {
+		public boolean test(Object obj) {
 			return obj == null;
 		}
 	};
 
-	private static final ElementFilter<Object> NullOrEmpty = new ElementFilter<Object>() {
-		public boolean apply(Object obj) {
+	private static final Predicate<Object> NullOrEmpty = new Predicate<Object>() {
+		public boolean test(Object obj) {
 			if (obj == null)
 				return true;
 			return String.valueOf(obj).length() == 0;
 		}
 	};
 
-	private static final ElementFilter<Object> MinusNumber = new ElementFilter<Object>() {
-		public boolean apply(Object obj) {
+	private static final Predicate<Object> MinusNumber = new Predicate<Object>() {
+		public boolean test(Object obj) {
 			if (obj == null)
 				return true;
 			if (obj instanceof Number) {
@@ -108,8 +108,8 @@ public abstract class AColumnMapping implements ColumnMapping {
 		}
 	};
 
-	private static final ElementFilter<Object> ZeroAndMinus = new ElementFilter<Object>() {
-		public boolean apply(Object obj) {
+	private static final Predicate<Object> ZeroAndMinus = new Predicate<Object>() {
+		public boolean test(Object obj) {
 			if (obj == null)
 				return true;
 			if (obj instanceof Number) {
@@ -157,7 +157,7 @@ public abstract class AColumnMapping implements ColumnMapping {
 		rs.updateObject(columnIndex, value);
 	}
 
-	private ElementFilter<Object> parseValue(Class<?> containerType, String value) {
+	private Predicate<Object> parseValue(Class<?> containerType, String value) {
 		// int 226
 		// short 215
 		// long 221
@@ -358,7 +358,7 @@ public abstract class AColumnMapping implements ColumnMapping {
      */
     @Override
     public boolean isUnsavedValue(Object object) {
-        return unsavedValue.apply(object);
+        return unsavedValue.test(object);
     }
 
 	public boolean isGenerated() {

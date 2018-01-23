@@ -7,6 +7,7 @@ import jef.database.DbUtils;
  * @author jiyi
  *
  */
+@FunctionalInterface
 public interface PasswordDecryptor  {
 	static final PasswordDecryptor DUMMY=new PasswordDecryptor(){
 		public String decrypt(String raw) {

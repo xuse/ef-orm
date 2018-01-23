@@ -5,6 +5,7 @@ package jef.accelerator.bean;
  * @author Administrator
  *
  */
+@FunctionalInterface
 public interface BeanAccessorFactory {
 	 BeanAccessor getBeanAccessor(Class<?> javaBean);
 }

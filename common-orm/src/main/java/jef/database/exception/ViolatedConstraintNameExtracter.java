@@ -7,6 +7,7 @@ import java.sql.SQLException;
  * violated constraint from a SQLException that is the result of that constraint
  * violation.
  */
+@FunctionalInterface
 public interface ViolatedConstraintNameExtracter {
 	/**
 	 * Extract the name of the violated constraint from the given SQLException.

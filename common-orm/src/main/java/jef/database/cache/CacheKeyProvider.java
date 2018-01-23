@@ -5,6 +5,7 @@ package jef.database.cache;
  * @author jiyi
  *
  */
+@FunctionalInterface
 public interface CacheKeyProvider {
 	CacheKey getCacheKey();
 }

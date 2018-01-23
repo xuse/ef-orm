@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.apache.commons.lang.builder.ToStringStyle;
@@ -733,23 +734,20 @@ public class ArrayUtils extends org.apache.commons.lang.ArrayUtils {
 	 * @param filter
 	 * @return
 	 */
-	public static <T> List<T> filter(T[] source, Filter<T> filter) {
+	public static <T> List<T> filter(T[] source, Predicate<T> filter) {
 		if (source == null)
 			return Collections.emptyList();
 		if (filter == null)
 			return Arrays.asList(source);
 		List<T> result = new ArrayList<T>(source.length);
 		for (T t : source) {
-			if (filter.accept(t)) {
+			if (filter.test(t)) {
 				result.add(t);
 			}
 		}
 		return result;
 	}
 
-	public interface Filter<T> {
-		boolean accept(T o);
-	}
 
 	/**
 	 * 从可枚举对象中选出需要的目标组成新的List
@@ -759,10 +757,10 @@ public class ArrayUtils extends org.apache.commons.lang.ArrayUtils {
 	 * @param filter
 	 * @return
 	 */
-	public static <T> List<T> doSelect(Iterable<T> list, Filter<T> filter) {
+	public static <T> List<T> doSelect(Iterable<T> list, Predicate<T> filter) {
 		ArrayList<T> result = new ArrayList<T>();
 		for (T o : list) {
-			if (filter.accept(o)) {
+			if (filter.test(o)) {
 				result.add(o);
 			}
 		}

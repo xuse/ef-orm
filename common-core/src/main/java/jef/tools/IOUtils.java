@@ -883,6 +883,7 @@ public class IOUtils {
 	 * @author Administrator
 	 * 
 	 */
+	@FunctionalInterface
 	public interface LineFilter {
 		/**
 		 * 过滤行
