@@ -54,11 +54,9 @@ import jef.database.jsqlparser.expression.operators.arithmetic.Multiplication;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
-import jef.database.meta.object.Column;
 import jef.database.meta.object.Constraint;
 import jef.database.meta.object.ConstraintType;
 import jef.database.meta.object.ForeignKeyAction;
-import jef.database.meta.object.ForeignKeyMatchType;
 import jef.database.meta.object.SequenceInfo;
 import jef.database.query.Func;
 import jef.database.query.Scientific;
@@ -583,30 +581,30 @@ public class OracleDialect extends AbstractDialect {
     }
     
     @Override
-    public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String constraintName) throws SQLException{
+    public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String tablename, String constraintName) throws SQLException{
 
-    	StringBuilder sb = new StringBuilder();
-    	sb.append("    SELECT a.*, b.column_name, c.table_name as ref_table, d.column_name as ref_column ");
-    	sb.append("      FROM user_constraints a ");
-    	sb.append(" LEFT JOIN user_cons_columns b");
-    	sb.append("        ON a.constraint_name = b.constraint_name and a.owner = b.owner");
-    	sb.append(" LEFT JOIN user_constraints c ");
-    	sb.append("        ON c.owner = a.r_owner and c.constraint_name = a.r_constraint_name");
-    	sb.append(" LEFT JOIN user_cons_columns d");
-    	sb.append("        ON d.owner = c.owner and d.constraint_name = c.constraint_name and d.position = b.position");
-    	sb.append("     WHERE a.owner like ? and a.constraint_name like ?");
-    	sb.append("  ORDER BY a.owner, a.constraint_name");
-    	schema = StringUtils.isBlank(schema) ? "%" : schema.toUpperCase();
+		String sql = "    SELECT a.*, b.column_name, c.owner as ref_table_schema, c.table_name as ref_table_name, d.column_name as ref_column_name "
+		            +"      FROM user_constraints a "
+		            +" LEFT JOIN user_cons_columns b"
+		            +"        ON a.constraint_name = b.constraint_name and a.owner = b.owner"
+		            +" LEFT JOIN user_constraints c "
+		            +"        ON c.owner = a.r_owner and c.constraint_name = a.r_constraint_name"
+		            +" LEFT JOIN user_cons_columns d"
+		            +"        ON d.owner = c.owner and d.constraint_name = c.constraint_name and d.position = b.position"
+		            +"     WHERE a.owner like ? and a.table_name like ? and a.constraint_name like ?"
+		            +"  ORDER BY a.owner, a.constraint_name,  b.position";
+		schema = StringUtils.isBlank(schema) ? "%" : schema.toUpperCase();
+		tablename = StringUtils.isBlank(tablename) ? "%" : tablename.toUpperCase();
 		constraintName = StringUtils.isBlank(constraintName) ? "%" : constraintName;
 		
-		List<Constraint> constraints = conn.selectBySql(sb.toString(), new AbstractResultSetTransformer<List<Constraint>>(){
+		List<Constraint> constraints = conn.selectBySql(sql, new AbstractResultSetTransformer<List<Constraint>>(){
 			
 			@Override
 			public List<Constraint> transformer(IResultSet rs) throws SQLException {
 				
 				List<Constraint> constraints = new ArrayList<Constraint>();
-				List<Column> columns = new ArrayList<Column>();
-				List<Column> refColumns = new ArrayList<Column>();
+				List<String> columns = new ArrayList<String>();
+				List<String> refColumns = new ArrayList<String>();
 				Constraint preCon = new Constraint(); // 上一条记录
 				
 				while(rs.next()){
@@ -620,21 +618,23 @@ public class OracleDialect extends AbstractDialect {
 
 					if(!isSameConstraint){
 
-						columns = new ArrayList<Column>();
-						refColumns = new ArrayList<Column>();
+						columns = new ArrayList<String>();
+						refColumns = new ArrayList<String>();
 
 						Constraint c = new Constraint();
+						c.setCheckClause(rs.getString("search_condition"));
 						c.setCatalog(null);
 						c.setSchema(rs.getString("owner"));
 						c.setName(rs.getString("constraint_name"));
 						c.setType(ConstraintType.parseName(rs.getString("constraint_type")));
 						c.setDeferrable("DEFERRABLE".equals(rs.getString("deferrable")));
-						c.setInitiallyDeferrable("DEFERRED".equals(rs.getString("deferred")));
+						c.setInitiallyDeferred("DEFERRED".equals(rs.getString("deferred")));
 						c.setTableCatalog(null);
 						c.setTableSchema(rs.getString("owner"));
 						c.setTableName(rs.getString("table_name"));
 						c.setMatchType(null);
-						c.setRefTableName(rs.getString("ref_table"));
+						c.setRefTableSchema(rs.getString("ref_table_schema"));
+						c.setRefTableName(rs.getString("ref_table_name"));
 						c.setUpdateRule(null); // oracle没有这个规则
 						c.setDeleteRule(ForeignKeyAction.parseName(rs.getString("delete_rule")));
 						c.setEnabled("ENABLED".equals(rs.getString("status")));
@@ -645,24 +645,20 @@ public class OracleDialect extends AbstractDialect {
 					
 					// 有指定列的约束则添加到列表
 					if(StringUtils.isNotBlank(rs.getString("column_name"))){
-						Column column = new Column();
-						column.setColumnName(rs.getString("column_name"));
-						columns.add(column);
+						columns.add(rs.getString("column_name"));
 					}
 					
 					// 是外键约束则添加到参照列表
-					if(StringUtils.isNotBlank(rs.getString("ref_column"))){
-						Column column = new Column();
-						column.setColumnName(rs.getString("ref_column"));
-						refColumns.add(column);
+					if(StringUtils.isNotBlank(rs.getString("ref_column_name"))){
+						refColumns.add(rs.getString("ref_column_name"));
 					}
 				}
 				
 				return constraints;
 			}
 			
-		}, Arrays.asList(schema, constraintName));
+		}, Arrays.asList(schema, tablename, constraintName));
 		
-    	return constraints;
+		return constraints;
     }
 }

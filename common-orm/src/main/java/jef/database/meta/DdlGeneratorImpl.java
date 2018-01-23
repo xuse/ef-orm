@@ -14,6 +14,8 @@ import jef.database.Field;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.def.IndexDef;
+import jef.database.meta.object.Constraint;
+import jef.database.meta.object.ConstraintType;
 import jef.database.meta.object.Index;
 import jef.database.meta.object.Index.IndexItem;
 import jef.database.support.RDBMS;
@@ -44,8 +46,8 @@ public class DdlGeneratorImpl implements DdlGenerator {
      * jef.database.SqlProcessor#toTableCreateClause(jef.database.DataObject,
      * java.lang.String)
      */
-    public TableCreateStatement toTableCreateClause(ITableMetadata meta, String tablename) {
-        TableCreateStatement result = new TableCreateStatement();
+    public TableCreateSQLs toTableCreateClause(ITableMetadata meta, String tablename) {
+        TableCreateSQLs result = new TableCreateSQLs();
         result.addTableMeta(tablename, meta, profile);
         return result;
     }
@@ -297,10 +299,126 @@ public class DdlGeneratorImpl implements DdlGenerator {
         return indexobj.toCreateSql(profile);
     }
 
+    private static final String DROP_INDEX_SQL = "alter table %1$s drop index %2$s";
+    
     public String deleteIndex(Index index) {
-        //TODO
-        return null;
+    	
+    	StringBuilder sb = new StringBuilder();
+    	// 特殊语句
+    	String dropIndexTablePattern = profile.getProperty(DbProperty.DROP_INDEX_TABLE_PATTERN);
+    	if(dropIndexTablePattern != null){
+    		sb.append("DROP INDEX " + String.format(dropIndexTablePattern, index.getIndexName(), index.getTableName()));
+    	}else{
+    		sb.append(String.format(DROP_INDEX_SQL, index.getTableName(), index.getIndexName()));
+    	}
+        return sb.toString();
     }
 
+    public String addConstraint(Constraint con){
+    	
+    	StringBuilder sb = new StringBuilder();
+		sb.append("ALTER TABLE ");
+		sb.append(con.getTableName());
+		sb.append(" ADD CONSTRAINT ");
+		sb.append(con.getName());
+		
+		if(ConstraintType.R == con.getType()){
+			// 外键约束
+			sb.append(" FOREIGN KEY");
+			sb.append("(");
+			sb.append(StringUtils.join(con.getColumns(), ","));
+			sb.append(")");
+			sb.append(" REFERENCES ");
+			sb.append(con.getRefTableSchema());
+			sb.append(".");
+			sb.append(con.getRefTableName());
+			sb.append("(");
+			sb.append(StringUtils.join(con.getRefColumns(), ","));
+			sb.append(")");
+			if(con.getMatchType() != null){ // 外键匹配模式
+				sb.append(" MATCH ");
+				sb.append(con.getMatchType().name());
+			}
+			if(con.getUpdateRule() != null){ // 外键更新时策略
+				sb.append(" ON UPDATE ");
+				sb.append(con.getUpdateRule().getName());
+			}
+			if(con.getDeleteRule() != null){ // 外键删除时策略
+				sb.append(" ON DELETE ");
+				sb.append(con.getDeleteRule().getName());
+			}
+			
+		}else if(ConstraintType.C == con.getType()){
+			// 检查约束
+			sb.append(" CHECK(");
+			sb.append(con.getCheckClause()); // 检查约束具体内容
+			sb.append(")");
+		}else{
+			
+			// 主键约束
+			if(ConstraintType.P == con.getType()){
+				sb.append(" PRIMARY KEY");
+				
+				// 唯一约束
+			}else if(ConstraintType.U == con.getType()){
+				sb.append(" UNIQUE");
+			}
+			sb.append("(");
+			sb.append(StringUtils.join(con.getColumns(), ","));
+			sb.append(")");
+		}
+		if(!con.isEnabled()){ // 创建时不启用(oracle)
+			sb.append(" DISABLE ");
+		}
+    	
+    	return sb.toString();
+    }
 
+    /**
+     * 生成删除约束的语句(与getDropConstraintSql有所不同)
+     * @param con 约束对象
+     * @return SQL语句
+     */
+    public String deleteConstraint(Constraint con){
+    	
+    	StringBuilder sb = new StringBuilder();
+    	
+    	// 删除外键约束
+    	if(ConstraintType.R == con.getType()){
+    		String fkDeleteTemplate = profile.getProperty(DbProperty.DROP_FK_PATTERN); 
+    		if(fkDeleteTemplate == null){
+    			fkDeleteTemplate = DROP_CONSTRAINT_SQL;
+    		}
+    		sb.append(String.format(fkDeleteTemplate, con.getTableName(), con.getName()));
+    		
+    	}else if(ConstraintType.U == con.getType()){
+    		// 删除唯一键约束
+	    	sb.append(String.format(DROP_INDEX_SQL, con.getTableName(), con.getName()));
+	    	
+    	}else if(ConstraintType.P == con.getType()){
+    		// 删除主键约束
+    		if(RDBMS.mysql == profile.getName() || RDBMS.mariadb == profile.getName()){
+    			// 如果是自增主键，先删除自增 TODO 
+    			sb.append(String.format(DROP_CONSTRAINT_SQL.replace("constraint", ""), con.getTableName(), "PRIMARY KEY"));
+    		}else{
+    			sb.append(String.format(DROP_CONSTRAINT_SQL, con.getTableName(), con.getName()));
+    		}
+    	}else{
+    		// 删除其他约束
+    		sb.append(String.format(DROP_CONSTRAINT_SQL, con.getTableName(), con.getName()));
+    	}
+    	return sb.toString();
+    }
+    
+    // not used
+    public String modifyPrimaryKey(Constraint conBefore, Constraint conAfter){
+    	StringBuilder sb = new StringBuilder();
+    	sb.append("ALTER TABLE ");
+    	sb.append(conBefore.getTableName());
+    	sb.append(" DROP PRIMARY KEY, ADD PRIMARY KEY");
+    	sb.append("(");
+		sb.append(StringUtils.join(conAfter.getColumns(), ","));
+		sb.append(")");
+    	return sb.toString();
+    }
 }

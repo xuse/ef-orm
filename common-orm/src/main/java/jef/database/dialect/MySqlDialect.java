@@ -483,35 +483,35 @@ public class MySqlDialect extends AbstractDialect {
     }
 
 	@Override
-	public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String constraintName)
+	public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String tablename, String constraintName)
 			throws SQLException {
 		
-		StringBuilder sb = new StringBuilder();
-		sb.append("    SELECT kcu.*, tc.constraint_type, rc.update_rule, rc.delete_rule, rc.match_option");
-		sb.append("      FROM information_schema.key_column_usage kcu ");
-		sb.append("INNER JOIN information_schema.table_constraints tc");
-		sb.append("        ON tc.constraint_schema = kcu.constraint_schema");
-		sb.append("       AND tc.constraint_name = kcu.constraint_name");
-		sb.append("       AND tc.table_schema = kcu.constraint_schema");
-		sb.append("       AND tc.table_name = kcu.table_name");
-		sb.append(" LEFT JOIN information_schema.referential_constraints rc");
-		sb.append("        ON kcu.constraint_schema = rc.constraint_schema");
-		sb.append("       AND kcu.constraint_name = rc.constraint_name");
-		sb.append("       AND kcu.table_schema = rc.constraint_schema");
-		sb.append("       AND kcu.table_name = rc.table_name");
-		sb.append("     WHERE kcu.constraint_schema like ? and kcu.constraint_name like ?");
-		sb.append("  ORDER BY kcu.constraint_schema, kcu.table_name, kcu.constraint_name, kcu.ordinal_position");
+		String sql = "    SELECT kcu.*, tc.constraint_type, rc.update_rule, rc.delete_rule, rc.match_option"
+		            +"      FROM information_schema.key_column_usage kcu "
+		            +"INNER JOIN information_schema.table_constraints tc"
+		            +"        ON tc.constraint_schema = kcu.constraint_schema"
+		            +"       AND tc.constraint_name = kcu.constraint_name"
+		            +"       AND tc.table_schema = kcu.constraint_schema"
+		            +"       AND tc.table_name = kcu.table_name"
+		            +" LEFT JOIN information_schema.referential_constraints rc"
+		            +"        ON kcu.constraint_schema = rc.constraint_schema"
+		            +"       AND kcu.constraint_name = rc.constraint_name"
+		            +"       AND kcu.table_schema = rc.constraint_schema"
+		            +"       AND kcu.table_name = rc.table_name"
+		            +"     WHERE kcu.constraint_schema like ? and kcu.table_name like ? and kcu.constraint_name like ?"
+		            +"  ORDER BY kcu.constraint_schema, kcu.table_name, kcu.constraint_name, kcu.ordinal_position";
 		schema = StringUtils.isBlank(schema) ? "%" : schema.toLowerCase();
+		tablename = StringUtils.isBlank(tablename) ? "%" : tablename.toLowerCase();
 		constraintName = StringUtils.isBlank(constraintName) ? "%" : constraintName.toLowerCase();
 		
-		List<Constraint> constraints = conn.selectBySql(sb.toString(), new AbstractResultSetTransformer<List<Constraint>>(){
+		List<Constraint> constraints = conn.selectBySql(sql, new AbstractResultSetTransformer<List<Constraint>>(){
 			
 			@Override
 			public List<Constraint> transformer(IResultSet rs) throws SQLException {
 				
 				List<Constraint> constraints = new ArrayList<Constraint>();
-				List<Column> columns = new ArrayList<Column>();
-				List<Column> refColumns = new ArrayList<Column>();
+				List<String> columns = new ArrayList<String>();
+				List<String> refColumns = new ArrayList<String>();
 				Constraint preCon = new Constraint(); // 上一条记录
 				
 				while(rs.next()){
@@ -527,8 +527,8 @@ public class MySqlDialect extends AbstractDialect {
 
 					if(!isSameConstraint){
 
-						columns = new ArrayList<Column>();
-						refColumns = new ArrayList<Column>();
+						columns = new ArrayList<String>();
+						refColumns = new ArrayList<String>();
 
 						Constraint c = new Constraint();
 						c.setCatalog(rs.getString("constraint_catalog"));
@@ -536,11 +536,12 @@ public class MySqlDialect extends AbstractDialect {
 						c.setName(rs.getString("constraint_name"));
 						c.setType(ConstraintType.parseFullName(rs.getString("constraint_type")));
 						c.setDeferrable(false);
-						c.setInitiallyDeferrable(false);
+						c.setInitiallyDeferred(false);
 						c.setTableCatalog(rs.getString("table_catalog"));
 						c.setTableSchema(rs.getString("table_schema"));
 						c.setTableName(rs.getString("table_name"));
 						c.setMatchType(ForeignKeyMatchType.parseName(rs.getString("match_option")));
+						c.setRefTableSchema(rs.getString("referenced_table_schema"));
 						c.setRefTableName(rs.getString("referenced_table_name"));
 						c.setUpdateRule(ForeignKeyAction.parseName(rs.getString("update_rule")));
 						c.setDeleteRule(ForeignKeyAction.parseName(rs.getString("delete_rule")));
@@ -552,24 +553,20 @@ public class MySqlDialect extends AbstractDialect {
 					
 					// 有指定列的约束则添加到列表
 					if(StringUtils.isNotBlank(rs.getString("column_name"))){
-						Column column = new Column();
-						column.setColumnName(rs.getString("column_name"));
-						columns.add(column);
+						columns.add(rs.getString("column_name"));
 					}
 					
 					// 是外键约束则添加到参照列表
 					if(StringUtils.isNotBlank(rs.getString("referenced_column_name"))){
-						Column column = new Column();
-						column.setColumnName(rs.getString("referenced_column_name"));
-						refColumns.add(column);
+						refColumns.add(rs.getString("referenced_column_name"));
 					}
 				}
 				
 				return constraints;
 			}
 			
-		}, Arrays.asList(schema, constraintName));
+		}, Arrays.asList(schema, tablename, constraintName));
 		
-    	return constraints;
+		return constraints;
 	}
 }

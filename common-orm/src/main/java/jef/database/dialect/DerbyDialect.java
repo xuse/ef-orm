@@ -275,27 +275,27 @@ public class DerbyDialect extends AbstractDialect {
     }
     
     @Override
-	public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String constraintName)
+	public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String tablename, String constraintName)
 			throws SQLException {
 		
-		StringBuilder sb = new StringBuilder();
-		sb.append("    select con.*, fk.deleterule, fk.updaterule, tab.tablename, rtab.tablename as referenced_table_name, scm.schemaname");
-		sb.append("      from sys.sysconstraints con ");
-		sb.append(" left join sys.sysforeignkeys fk");
-		sb.append("        on con.constraintid = fk.constraintid");
-		sb.append(" left join sys.sysconstraints ref");
-		sb.append("        on fk.keyconstraintid = ref.constraintid");
-		sb.append(" left join sys.systables tab");
-		sb.append("        on con.tableid = tab.tableid");
-		sb.append(" left join sys.systables rtab");
-		sb.append("        on ref.tableid = rtab.tableid");
-		sb.append(" left join sys.sysschemas scm");
-		sb.append("        on con.schemaid = scm.schemaid");
-		sb.append("     where scm.schemaname like ? and con.constraintname like ?");
+		String sql = "select con.*, fk.deleterule, fk.updaterule, tab.tablename, rtab.tablename as referenced_table_name, scm.schemaname"
+				+"      from sys.sysconstraints con "
+				+" left join sys.sysforeignkeys fk"
+				+"        on con.constraintid = fk.constraintid"
+				+" left join sys.sysconstraints ref"
+				+"        on fk.keyconstraintid = ref.constraintid"
+				+" left join sys.systables tab"
+				+"        on con.tableid = tab.tableid"
+				+" left join sys.systables rtab"
+				+"        on ref.tableid = rtab.tableid"
+				+" left join sys.sysschemas scm"
+				+"        on con.schemaid = scm.schemaid"
+				+"     where scm.schemaname like ? and tab.tablename like ? and con.constraintname like ?";
 		schema = StringUtils.isBlank(schema) ? "%" : schema;
+		tablename = StringUtils.isBlank(tablename) ? "%" : tablename;
 		constraintName = StringUtils.isBlank(constraintName) ? "%" : constraintName;
 		
-		List<Constraint> constraints = conn.selectBySql(sb.toString(), new AbstractResultSetTransformer<List<Constraint>>(){
+		List<Constraint> constraints = conn.selectBySql(sql, new AbstractResultSetTransformer<List<Constraint>>(){
 			
 			@Override
 			public List<Constraint> transformer(IResultSet rs) throws SQLException {
@@ -311,7 +311,7 @@ public class DerbyDialect extends AbstractDialect {
 						// 'F' in derby means foreign key constraint which equals 'R' in oracle
 						c.setType("F".equals(rs.getString("type")) ? ConstraintType.R : ConstraintType.parseName(rs.getString("type")));
 						c.setDeferrable(!"E".equals(rs.getString("state"))); // 'E' (not deferrable initially immediate)
-						c.setInitiallyDeferrable("e".equals(rs.getString("state"))); // 'e' (deferrable initially deferred)
+						c.setInitiallyDeferred("e".equals(rs.getString("state"))); // 'e' (deferrable initially deferred)
 						c.setTableCatalog(null);
 						c.setTableSchema(rs.getString("schemaname"));
 						c.setTableName(rs.getString("tablename"));
@@ -326,9 +326,9 @@ public class DerbyDialect extends AbstractDialect {
 				return constraints;
 			}
 			
-		}, Arrays.asList(schema, constraintName));
+		}, Arrays.asList(schema, tablename, constraintName));
 		
-    	return constraints;
+		return constraints;
 	}
     
     /**
@@ -337,27 +337,27 @@ public class DerbyDialect extends AbstractDialect {
      * @return
      */
     private ForeignKeyAction parseForeignKeyAction(String action){
-    	
-    	if(StringUtils.isBlank(action)){
-    		return null;
-    	}
-    	
-    	switch(action){
-    	
-    	case "R" :
-    		return ForeignKeyAction.NO_ACTION;
-    		
-    	case "S" :
-    		return ForeignKeyAction.RESTRICT;
-    	
-    	case "U" :
-    		return ForeignKeyAction.SET_NULL;
-    		
-    	case "C" :
-    		return ForeignKeyAction.CASCADE;
-    		
-    	default:
-    		return ForeignKeyAction.NO_ACTION;
-    	}
+		
+		if(StringUtils.isBlank(action)){
+			return null;
+		}
+		
+		switch(action){
+		
+		case "R" :
+			return ForeignKeyAction.NO_ACTION;
+			
+		case "S" :
+			return ForeignKeyAction.RESTRICT;
+		
+		case "U" :
+			return ForeignKeyAction.SET_NULL;
+			
+		case "C" :
+			return ForeignKeyAction.CASCADE;
+			
+		default:
+			return ForeignKeyAction.NO_ACTION;
+		}
     }
 }

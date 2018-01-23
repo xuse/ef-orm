@@ -849,8 +849,8 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	}
 
 	@Override
-	public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String constraintName) throws SQLException {
-		throw new UnsupportedOperationException();
+	public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String tableName, String constraintName) throws SQLException {
+		return null;
 	}
 
 }

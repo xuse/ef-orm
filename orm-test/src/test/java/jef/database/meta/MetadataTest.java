@@ -28,9 +28,10 @@ import org.junit.runner.RunWith;
 @DataSourceContext({
 	 @DataSource(name="oracle",url="${oracle.url}",user="${oracle.user}",password="${oracle.password}"),
 	 @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
+	 @DataSource(name= "h2", url="${h2.url}", user="SA", password=""),
 	 @DataSource(name="postgresql",url="${postgresql.url}",user="${postgresql.user}",password="${postgresql.password}"),
 	 @DataSource(name="derby",url="${derby.url}"),
-	 @DataSource(name = "hsqldb", url = "${hsqldb.url}", user = "sa", password = ""),
+	 @DataSource(name = "hsqldb", url = "${hsqldb.url}", user = "${h2.user}", password = ""),
 	 @DataSource(name = "sqlite", url = "${sqlite.url}"),
 	 @DataSource(name = "sqlserver", url = "${sqlserver.url}",user="${sqlserver.user}",password="${sqlserver.password}")
 })
@@ -45,10 +46,14 @@ public class MetadataTest extends org.junit.Assert{
 	
 	
 	@Test
-	public void testMetaData() throws Exception{
+	@IgnoreOn(allButExcept="h2")
+	public void testFetchTableAndColumns() throws Exception{
+		initSchema();
 		DbMetaData meta=db.getMetaData(null);
 		int i=0;
-		for(TableInfo e:meta.getTables()){
+		List<TableInfo> tables=meta.getTables();
+		System.out.println("There's "+tables.size()+" tables.");
+		for(TableInfo e:tables){
 			i++;
 			System.out.println(e.getName()+":"+e.getRemarks());
 			List<Column> columns=meta.getColumns(e.getName());

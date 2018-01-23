@@ -24,18 +24,25 @@ public @interface InitializeData {
     String value() default "";
 
     /**
-     * 禁用该表的自动初始化特性
+     * 启用该表的自动初始化特性，可配置成false禁用
      * 
      * @return
      */
     boolean enable() default true;
+    
+    /**
+     * 如果合并不是按主键进行，这里填写表的业务主键（name of java field）
+     * @return
+     */
+    String[] mergeKeys() default {};
 
     /**
-     * 自增键使用记录中的值，不使用数据库的自增编号
+     * 自增键使用记录中的值，不使用数据库的自增编号。
+     * 注意，某些数据库可能不支持此特性。
      * 
      * @return
      */
-    boolean manualSequence() default true;
+    boolean manualSequence() default false;
 
     /**
      * 数据文件的字符集 默认使用全局配置

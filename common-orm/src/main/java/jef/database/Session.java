@@ -489,48 +489,76 @@ public abstract class Session {
 	@SuppressWarnings("unchecked")
 	public <T> T merge(T entity) throws SQLException {
 		if (entity instanceof IQueryableEntity) {
-			return (T) merge0((IQueryableEntity) entity);
+			return (T) merge0((IQueryableEntity) entity, null);
 		} else {
 			ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
 			PojoWrapper wrapper = meta.transfer(entity, false);
-			wrapper = merge0(wrapper);
-			return (T) wrapper.get();
+			wrapper = merge0(wrapper, null);
+			return wrapper == null ? null : (T) wrapper.get();
+		}
+	}
+
+	/**
+	 * 合并记录——记录如果已经存在，则比较并更新；如果不存在则新增。（无级联操作）
+	 * 
+	 * @param entity
+	 *            要合并的记录数据
+	 * @param keys
+	 *            业务主键字段名
+	 * @return 如果插入返回对象本身，如果是更新则返回旧记录的值(如果插入，返回null;如果没修改，返回原对象;如果修改，返回旧对象。)
+	 * @throws SQLException
+	 *             如果数据库操作错误，抛出。
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> T merge(T entity, String[] keys) throws SQLException {
+		if (keys != null && keys.length == 0) {
+			keys = null;
+		}
+		if (entity instanceof IQueryableEntity) {
+			return (T) merge0((IQueryableEntity) entity, keys);
+		} else {
+			ITableMetadata meta = MetaHolder.getMeta(entity.getClass());
+			PojoWrapper wrapper = meta.transfer(entity, false);
+			wrapper = merge0(wrapper, keys);
+			return wrapper == null ? null : (T) wrapper.get();
 		}
 	}
 
 	/**
 	 * @param entity
-	 * @return
+	 * @return the old value.
 	 * @throws SQLException
 	 */
-	private final <T extends IQueryableEntity> T merge0(T entity) throws SQLException {
-		T old = null;
+	private final <T extends IQueryableEntity> T merge0(T entity, String[] keys) throws SQLException {
 		@SuppressWarnings("unchecked")
 		Query<T> q = entity.getQuery();
 		q.setCascade(false);
 		ITableMetadata meta = q.getMeta();
-		if (meta.getPKFields().isEmpty()) {
-			q.setMaxResult(2);
-			List<T> list = select(q);
-			if (list.size() == 1) {
-				old = list.get(0);
-				DbUtils.compareToUpdateMap(entity, old);
-				if (old.needUpdate())
-					update(old);
+		if (keys == null && meta.getPKFields().isEmpty()) {
+			throw new UnsupportedOperationException("The tables has no primark key, must assign compare keys.");
+		}
+
+		T old = null;
+		if (keys == null) {
+			if (DbUtils.getPrimaryKeyValue(entity) != null) {
+				old = load(entity, true);
 				entity.clearQuery();
-				return old;
 			}
-		} else if (DbUtils.getPrimaryKeyValue(entity) != null) {
-			old = load(entity, true);
+		} else {
+			for (String s : keys) {
+				ColumnMapping cdef = meta.getColumnDef(meta.getField(s));
+				q.addCondition(cdef.field(), cdef.getFieldAccessor().get(entity));
+			}
+			old = load(entity, false);
 			entity.clearQuery();
-			if (old != null) {
-				DbUtils.compareToUpdateMap(entity, old);
-				if (old.needUpdate()) {
-					update(old);
-					return old;
-				} else {
-					return entity;
-				}
+		}
+		if (old != null) {
+			DbUtils.compareToUpdateMap(entity, old);
+			if (old.needUpdate()) {
+				update(old);
+				return old;
+			} else {
+				return entity;
 			}
 		}
 		// 如果旧数据不存在

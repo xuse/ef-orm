@@ -36,7 +36,6 @@ import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
-import jef.database.meta.object.Column;
 import jef.database.meta.object.Constraint;
 import jef.database.meta.object.ConstraintType;
 import jef.database.meta.object.ForeignKeyAction;
@@ -586,37 +585,127 @@ public class PostgreSql94Dialect extends AbstractDialect {
 	 * @throws SQLException 
 	 */
 	@Override
-	public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String constraintName) throws SQLException {
+	public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String tablename, String constraintName) throws SQLException {
 		
-		StringBuilder sb = new StringBuilder(); // PG系统约束信息查询
-		sb.append("    SELECT tc.*, kcu.column_name, rc.match_option,  rc.update_rule, rc.delete_rule, ");
-		sb.append("           ccu.table_name AS ref_table, ccu.column_name AS ref_column ");
-		sb.append("      FROM information_schema.table_constraints tc");
-		sb.append(" LEFT JOIN information_schema.key_column_usage kcu");
-		sb.append("        ON tc.constraint_catalog = kcu.constraint_catalog");
-		sb.append("       AND tc.constraint_schema = kcu.constraint_schema");
-		sb.append("       AND tc.constraint_name = kcu.constraint_name");
-		sb.append(" LEFT JOIN information_schema.referential_constraints rc");
-		sb.append("        ON tc.constraint_catalog = rc.constraint_catalog");
-		sb.append("       AND tc.constraint_schema = rc.constraint_schema");
-		sb.append("       AND tc.constraint_name = rc.constraint_name");
-		sb.append(" LEFT JOIN information_schema.constraint_column_usage ccu");
-		sb.append("        ON rc.unique_constraint_catalog = ccu.constraint_catalog");
-		sb.append("       AND rc.unique_constraint_schema = ccu.constraint_schema");
-		sb.append("       AND rc.unique_constraint_name = ccu.constraint_name ");
-		sb.append("     WHERE tc.table_name not like 'pg_%' and tc.constraint_schema like ? and tc.constraint_name like ?");
-		sb.append("  ORDER BY tc.constraint_catalog, tc.constraint_schema, tc.constraint_name");
+		// to be deleted
+		String sql_bk = "    SELECT tc.*, kcu.column_name, rc.match_option,  rc.update_rule, rc.delete_rule, "
+		            +"           ccu.table_name AS ref_table, ccu.column_name AS ref_column "
+		            +"      FROM information_schema.table_constraints tc"
+		            +" LEFT JOIN information_schema.key_column_usage kcu"
+		            +"        ON tc.constraint_catalog = kcu.constraint_catalog"
+		            +"       AND tc.constraint_schema = kcu.constraint_schema"
+		            +"       AND tc.constraint_name = kcu.constraint_name"
+		            +" LEFT JOIN information_schema.referential_constraints rc"
+		            +"        ON tc.constraint_catalog = rc.constraint_catalog"
+		            +"       AND tc.constraint_schema = rc.constraint_schema"
+		            +"       AND tc.constraint_name = rc.constraint_name"
+		            +" LEFT JOIN information_schema.constraint_column_usage ccu"
+		            +"        ON rc.unique_constraint_catalog = ccu.constraint_catalog"
+		            +"       AND rc.unique_constraint_schema = ccu.constraint_schema"
+		            +"       AND rc.unique_constraint_name = ccu.constraint_name "
+		            +"     WHERE tc.table_name not like 'pg_%' and tc.constraint_schema like ? and tc.table_name like ? and tc.constraint_name like ?"
+		            +"  ORDER BY tc.constraint_catalog, tc.constraint_schema, tc.constraint_name";
+		// PG系统约束信息查询
+		String sql = "select a.*, att.attname as column_name, ratt.attname as ref_column_name from "
+				+"( "
+				+"    select  "
+				+"    current_database() as constraint_catalog, "
+				+"    con.conrelid, "
+				+"    cns.nspname as constraint_schema, "
+				+"    con.conname as constraint_name, "
+				+"    con.contype as constraint_type, "
+				+"    con.condeferrable as is_deferrable, "
+				+"    con.condeferred as initially_deferred, "
+				+"    (information_schema._pg_expandarray(con.conkey)).x as x, "
+				+"    (information_schema._pg_expandarray(con.conkey)).n as n, "
+				+"	( "
+				+"		case when con.contype = 'c'  "
+				+"		     then pg_get_constraintdef (con.oid) else '' end  "
+				+"	) as check_clause, "
+				+"    current_database() as table_catalog, "
+				+"    tns.nspname as table_schema, "
+				+"    r.relname as table_name, "
+				+"    rcon.conrelid as rconrelid, "
+				+"    rcon.conkey as rconkey, "
+				+"	( "
+				+"		case when rcon.oid is not null "
+				+"             then (information_schema._pg_expandarray(rcon.conkey)).x else 0 end "
+				+"	) as rx, "
+				+"	( "
+				+"		case when rcon.oid is not null "
+				+"			 then (information_schema._pg_expandarray(rcon.conkey)).n else 0 end "
+				+"	) as rn, "
+				+"    rtns.nspname as ref_table_schema, "
+				+"    rr.relname as ref_table_name, "
+				+"    ( "
+				+"        CASE con.confmatchtype "
+				+"            WHEN 'f' THEN 'FULL' "
+				+"            WHEN 'p' THEN 'PARTIAL' "
+				+"            WHEN 's' THEN 'NONE' "
+				+"            ELSE NULL "
+				+"        END) AS match_option, "
+				+"    ( "
+				+"        CASE con.confupdtype "
+				+"            WHEN 'c' THEN 'CASCADE' "
+				+"            WHEN 'n' THEN 'SET NULL' "
+				+"            WHEN 'd' THEN 'SET DEFAULT' "
+				+"            WHEN 'r' THEN 'RESTRICT' "
+				+"            WHEN 'a' THEN 'NO ACTION' "
+				+"            ELSE NULL "
+				+"        END) AS update_rule, "
+				+"    ( "
+				+"        CASE con.confdeltype "
+				+"            WHEN 'c' THEN 'CASCADE' "
+				+"            WHEN 'n' THEN 'SET NULL' "
+				+"            WHEN 'd' THEN 'SET DEFAULT' "
+				+"            WHEN 'r' THEN 'RESTRICT' "
+				+"            WHEN 'a' THEN 'NO ACTION' "
+				+"            ELSE NULL "
+				+"        END) AS delete_rule "
+				+"	from pg_constraint con "
+				+"	join pg_class r "
+				+"	  on con.conrelid = r.oid "
+				+"	join pg_namespace cns "
+				+"	  on con.connamespace = cns.oid "
+				+"	join pg_namespace tns "
+				+"	  on r.relnamespace = tns.oid "
+				+"	left join pg_depend d1 "
+				+"	  on con.oid = d1.objid "
+				+"	 and d1.refobjsubid = 0 "
+				+"	left join pg_depend d2 "
+				+"	  on d1.refobjid = d2.objid "
+				+"	 and d2.objsubid = 0 "
+				+"	 and d2.deptype = 'i' "
+				+"	left join pg_constraint rcon "
+				+"	  on d2.refobjid  = rcon.oid "
+				+"	left join pg_class rr "
+				+"	  on rr.oid = rcon.conrelid "
+				+"	left join pg_namespace rtns "
+				+"	  on rr.relnamespace = rtns.oid "
+				+"	where "
+				+"		 cns.nspname like ? "
+				+"	 and r.relname like ? "
+				+"	 and con.conname like ? "
+				+") a  "
+				+"left join pg_attribute att "
+				+"  on att.attrelid = a.conrelid "
+				+" and att.attnum = a.x "
+				+"left join pg_attribute ratt "
+				+"  on ratt.attrelid = a.rconrelid "
+				+" and ratt.attnum = a.rx "
+				+"order by a.n, a.rn  ";
 
 		schema = StringUtils.isBlank(schema) ? "%" : schema.toLowerCase();
+		tablename = StringUtils.isBlank(tablename) ? "%" : tablename.toLowerCase();
 		constraintName = StringUtils.isBlank(constraintName) ? "%" : constraintName.toLowerCase();
-		List<Constraint> constraints = conn.selectBySql(sb.toString(), new AbstractResultSetTransformer<List<Constraint>>(){
+		List<Constraint> constraints = conn.selectBySql(sql, new AbstractResultSetTransformer<List<Constraint>>(){
 
 			@Override
 			public List<Constraint> transformer(IResultSet rs) throws SQLException {
 				
 				List<Constraint> constraints = new ArrayList<Constraint>();
-				List<Column> columns = new ArrayList<Column>();
-				List<Column> refColumns = new ArrayList<Column>();
+				List<String> columns = new ArrayList<String>();
+				List<String> refColumns = new ArrayList<String>();
 				Constraint preCon = new Constraint(); // 上一条记录
 				
 				while(rs.next()){
@@ -631,23 +720,25 @@ public class PostgreSql94Dialect extends AbstractDialect {
 
 					if(!isSameConstraint){
 
-						columns = new ArrayList<Column>();
-						refColumns = new ArrayList<Column>();
+						columns = new ArrayList<String>();
+						refColumns = new ArrayList<String>();
 
 						Constraint c = new Constraint();
 						c.setCatalog(rs.getString("constraint_catalog"));
 						c.setSchema(rs.getString("constraint_schema"));
 						c.setName(rs.getString("constraint_name"));
 						c.setType(ConstraintType.parseFullName(rs.getString("constraint_type")));
-						c.setDeferrable("YES".equals(rs.getString("is_deferrable")));
-						c.setInitiallyDeferrable("YES".equals(rs.getString("initially_deferred")));
+						c.setDeferrable(rs.getBoolean("is_deferrable"));
+						c.setInitiallyDeferred(rs.getBoolean("initially_deferred"));
 						c.setTableCatalog(rs.getString("table_catalog"));
 						c.setTableSchema(rs.getString("table_schema"));
 						c.setTableName(rs.getString("table_name"));
 						c.setMatchType(ForeignKeyMatchType.parseName(rs.getString("match_option")));
-						c.setRefTableName(rs.getString("ref_table"));
+						c.setRefTableSchema(rs.getString("ref_table_schema"));
+						c.setRefTableName(rs.getString("ref_table_name"));
 						c.setUpdateRule(ForeignKeyAction.parseName(rs.getString("update_rule")));
 						c.setDeleteRule(ForeignKeyAction.parseName(rs.getString("delete_rule")));
+						c.setCheckClause(rs.getString("check_clause"));
 						c.setEnabled(true); // 默认启用
 						c.setColumns(columns);
 						c.setRefColumns(refColumns);
@@ -656,22 +747,18 @@ public class PostgreSql94Dialect extends AbstractDialect {
 					
 					// 有指定列的约束则添加到列表
 					if(StringUtils.isNotBlank(rs.getString("column_name"))){
-						Column column = new Column();
-						column.setColumnName(rs.getString("column_name"));
-						columns.add(column);
+						columns.add(rs.getString("column_name"));
 					}
 					
 					// 是外键约束则添加到参照列表
-					if(StringUtils.isNotBlank(rs.getString("ref_column"))){
-						Column column = new Column();
-						column.setColumnName(rs.getString("ref_column"));
-						refColumns.add(column);
+					if(StringUtils.isNotBlank(rs.getString("ref_column_name"))){
+						refColumns.add(rs.getString("ref_column_name"));
 					}
 				}
 				
 				return constraints;
 			}
-		}, Arrays.asList(schema, constraintName));
+		}, Arrays.asList(schema, tablename, constraintName));
 		
 		return constraints;
 	}

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.persistence.Entity;
+import javax.persistence.EntityManagerFactory;
 
 import jef.accelerator.asm.ASMUtils;
 import jef.accelerator.asm.AnnotationVisitor;
@@ -22,6 +23,7 @@ import jef.database.DbClient;
 import jef.database.QB;
 import jef.database.annotation.EasyEntity;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.jpa.JefEntityManagerFactory;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.Query;
@@ -47,17 +49,27 @@ public class InitDataExporter {
     private final Logger logger = LoggerFactory.getLogger(InitDataExporter.class);
     private DbClient session;
     private boolean deleteEmpty;
-    private File rootPath;
+    private File rootPath = new File(System.getProperty("user.dir"));
     private String extension = "." + JefConfiguration.get(DbCfg.INIT_DATA_EXTENSION, "txt");
     private String charset = "UTF-8";
 
+    /**
+     * @param emf EntityManagerFactory
+     *            数据库客户端
+     */
+    public InitDataExporter(EntityManagerFactory emf) {
+    	if(emf instanceof JefEntityManagerFactory){
+    		this.session=((JefEntityManagerFactory) emf).getDefault();
+    	}else{
+    		throw new UnsupportedOperationException();
+    	}
+    }
     /**
      * @param session
      *            数据库客户端
      */
     public InitDataExporter(DbClient session) {
         this.session = session;
-        this.rootPath = new File(System.getProperty("user.dir"));
     }
 
     /**

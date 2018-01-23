@@ -1,8 +1,11 @@
 package jef.database.meta.object;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
+
+import com.google.common.base.Objects;
 
 /**
  * 描述一个数据库中的Constraint
@@ -22,8 +25,14 @@ import org.apache.commons.lang.builder.ToStringBuilder;
  */
 public class Constraint {
 
+	/**
+	 * 约束的catalog
+	 */
 	private String catalog;
 
+	/**
+	 * 约束所在schema
+	 */
 	private String schema;
 
 	/**
@@ -35,15 +44,17 @@ public class Constraint {
 	 * 约束所在表的catalog
 	 */
 	private String tableCatalog;
+	
 	/**
 	 * 约束所在表所在schema
 	 */
 	private String tableSchema;
+	
 	/**
 	 * 约束所在表名
 	 */
 	private String tableName;
-
+	
 	/**
 	 * 约束类型
 	 */
@@ -55,32 +66,37 @@ public class Constraint {
 	/**
 	 * 检测延迟
 	 */
-	private boolean initiallyDeferrable;
+	private boolean initiallyDeferred;
 	
 	/**
 	 * 约束字段列表
 	 */
-	private List<Column> columns; // 
+	private List<String> columns = new ArrayList<String>();
+	
+	/**
+	 * 外键参照表所在schema
+	 */
+	private String refTableSchema;
 	
 	/**
 	 * 外键参照表
 	 */
-	private String refTableName; // 
+	private String refTableName;
 	
 	/**
 	 * 外键参照字段列表
 	 */
-	private List<Column> refColumns; // 
-	
+	private List<String> refColumns = new ArrayList<String>();
+
 	/**
 	 * 外键更新规则
 	 */
-	private ForeignKeyAction updateRule; // 外键更新规则
+	private ForeignKeyAction updateRule;
 	
 	/**
 	 * 外键删除规则
 	 */
-	private ForeignKeyAction deleteRule; // 外键删除规则
+	private ForeignKeyAction deleteRule;
 	
 	/**
 	 * 外键匹配类型
@@ -88,9 +104,14 @@ public class Constraint {
 	private ForeignKeyMatchType matchType;
 	
 	/**
+	 * 检查约束定义
+	 */
+	private String checkClause;
+	
+	/**
 	 * 约束是否启用
 	 */
-	private boolean enabled; // 是否启用
+	private boolean enabled = true;
 
 	public String getCatalog() {
 		return catalog;
@@ -156,19 +177,19 @@ public class Constraint {
 		this.deferrable = deferrable;
 	}
 
-	public boolean isInitiallyDeferrable() {
-		return initiallyDeferrable;
+	public boolean isInitiallyDeferred() {
+		return initiallyDeferred;
 	}
 
-	public void setInitiallyDeferrable(boolean initiallyDeferrable) {
-		this.initiallyDeferrable = initiallyDeferrable;
+	public void setInitiallyDeferred(boolean initiallyDeferred) {
+		this.initiallyDeferred = initiallyDeferred;
 	}
 
-	public List<Column> getColumns() {
+	public List<String> getColumns() {
 		return columns;
 	}
 
-	public void setColumns(List<Column> columns) {
+	public void setColumns(List<String> columns) {
 		this.columns = columns;
 	}
 
@@ -180,11 +201,11 @@ public class Constraint {
 		this.refTableName = refTableName;
 	}
 
-	public List<Column> getRefColumns() {
+	public List<String> getRefColumns() {
 		return refColumns;
 	}
 
-	public void setRefColumns(List<Column> refColumns) {
+	public void setRefColumns(List<String> refColumns) {
 		this.refColumns = refColumns;
 	}
 
@@ -220,9 +241,56 @@ public class Constraint {
 		this.enabled = enabled;
 	}
 
+	public String getRefTableSchema() {
+		return refTableSchema;
+	}
+
+	public void setRefTableSchema(String refTableSchema) {
+		this.refTableSchema = refTableSchema;
+	}
+
+	public String getCheckClause() {
+		return checkClause;
+	}
+
+	public void setCheckClause(String checkClause) {
+		this.checkClause = checkClause;
+	}
+
 	@Override
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this);
 	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if(obj == this) return true;
+		if(!(obj instanceof Constraint)) return false;
+		Constraint con = (Constraint)obj;
+//		if(!Objects.equal(this.catalog, con.catalog))return false;
+//		if(!Objects.equal(this.schema, con.schema))return false;
+		if(!Objects.equal(this.name, con.name))return false;
+//		if(!Objects.equal(this.tableCatalog, con.tableCatalog))return false;
+//		if(!Objects.equal(this.tableSchema, con.tableSchema))return false;
+		if(!Objects.equal(this.tableName, con.tableName))return false;
+		if(!Objects.equal(this.type, con.type))return false;
+		if(!Objects.equal(this.deferrable, con.deferrable))return false;
+		if(!Objects.equal(this.initiallyDeferred, con.initiallyDeferred))return false;
+		if(!Objects.equal(this.columns, con.columns))return false;
+		if(!Objects.equal(this.refTableName, con.refTableName))return false;
+		if(!Objects.equal(this.refColumns, con.refColumns))return false;
+		if(!Objects.equal(this.updateRule, con.updateRule))return false;
+		if(!Objects.equal(this.deleteRule, con.deleteRule))return false;
+		if(!Objects.equal(this.matchType, con.matchType))return false;
+		if(!Objects.equal(this.enabled, con.enabled))return false;
+		return true;
+	}
 	
+	@Override
+	public int hashCode() {
+		int result = 17;  
+		result = result * 31 + name.hashCode();  
+		result = result * 31 + tableName.hashCode();  
+		return result; 
+	}
 }

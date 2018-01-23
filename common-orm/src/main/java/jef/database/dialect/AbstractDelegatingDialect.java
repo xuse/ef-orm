@@ -279,7 +279,7 @@ public abstract class AbstractDelegatingDialect implements DatabaseDialect {
 	}
 
 	@Override
-	public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String constraintName) throws SQLException{
-		return dialect.getConstraintInfo(conn, schema, constraintName);
+	public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String tableName, String constraintName) throws SQLException{
+		return dialect.getConstraintInfo(conn, schema, tableName, constraintName);
 	}
 }

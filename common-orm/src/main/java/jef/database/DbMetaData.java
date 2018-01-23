@@ -69,10 +69,13 @@ import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.MetadataFeature;
+import jef.database.meta.TableCreateSQLs;
 import jef.database.meta.TableCreateStatement;
 import jef.database.meta.def.IndexDef;
 import jef.database.meta.def.UniqueConstraintDef;
 import jef.database.meta.object.Column;
+import jef.database.meta.object.Constraint;
+import jef.database.meta.object.ConstraintType;
 import jef.database.meta.object.DataType;
 import jef.database.meta.object.ForeignKey;
 import jef.database.meta.object.Function;
@@ -100,6 +103,8 @@ import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 
 import org.easyframe.enterprise.spring.TransactionMode;
+
+import com.google.common.base.Objects;
 
 /*
  * constraint
@@ -141,6 +146,7 @@ import org.easyframe.enterprise.spring.TransactionMode;
  * 
  */
 public class DbMetaData {
+
 	public final Set<String> checkedFunctions = new HashSet<String>();
 
 	private String dbkey;
@@ -1612,7 +1618,7 @@ public class DbMetaData {
 			return;
 		}
 		List<String> altertables = ddlGenerator.toTableModifyClause(meta, tablename, insert, changed, delete);
-		altertables.addAll(compareIndexAndConstraints(meta, tablename));
+		altertables.addAll(compareIndexAndConstraints(meta, tablename, true, true, event));
 		StatementExecutor exe = createExecutor();
 		try {
 			exe.setQueryTimeout(180);// 最多执行3分钟
@@ -1647,10 +1653,70 @@ public class DbMetaData {
 		}
 	}
 
-	private Collection<? extends String> compareIndexAndConstraints(ITableMetadata meta, String tablename) throws SQLException {
+	private Collection<? extends String> compareIndexAndConstraints(ITableMetadata meta, String tablename,
+			boolean modifyIndex, boolean modifyConstraint,
+			MetadataEventListener event) throws SQLException {
 		// 计算主键变化
-
 		List<String> sqls = new ArrayList<String>();
+		
+		if(modifyConstraint){
+			
+			//计算主键变化
+			List<ColumnMapping> pkFields = meta.getPKFields();
+			PrimaryKey pk = getPrimaryKey(tablename);
+			
+			String[] pkColumnsEntity = new String[pkFields.size()]; // entity中定义的主键
+			for (int n = 0; n < pkFields.size(); n++) {
+				pkColumnsEntity[n] = pkFields.get(n).getColumnName(info.profile, true);
+			}
+			
+			String[] pkColumnsDB = new String[0]; // DB中实际的主键
+			if(pk != null){
+				pkColumnsDB = pk.getColumns();
+			}
+			
+			if(!ArrayUtils.equals(pkColumnsEntity, pkColumnsDB)){
+				// 暂不支持修改主键 FIXME
+				if(pk != null){
+					LogUtil.warn("Modifying primary key is not supported yet. Please modify your table by yourself.");
+					/*Constraint con = new Constraint();
+					con.setName(pk.getName());
+					con.setTableName(tablename);
+					con.setType(ConstraintType.P);
+					con.setColumns(Arrays.asList(pkColumnsDB));
+					sqls.add(ddlGenerator.deleteConstraint(con));*/ // 先删除原主键约束
+				}else{
+					
+					Constraint con = new Constraint();
+					con.setTableName(tablename);
+					con.setName(info.profile.getObjectNameToUse("PK_" + tablename));
+					con.setType(ConstraintType.P);
+					con.setColumns(Arrays.asList(pkColumnsEntity));
+					sqls.add(ddlGenerator.addConstraint(con)); // 添加新主键约束
+				}
+			}
+			
+			//计算唯一性约束变化
+			List<UniqueConstraintDef> uniqueDefsEntity = meta.getUniques(); // entity中定义的唯一性约束
+			List<Constraint> uniquesEntity = new ArrayList<Constraint>();
+			for (UniqueConstraintDef conDef : uniqueDefsEntity) { // 转换成Constraint对象
+				Constraint con = new Constraint();
+				con.setName(conDef.name());
+				con.setColumns(Arrays.asList(conDef.columnNames()));
+				con.setType(ConstraintType.U);
+				con.setTableName(tablename);
+				uniquesEntity.add(con);
+			}
+			
+			List<Constraint> constraintsDB = info.profile.getConstraintInfo(this, meta.getSchema(), tablename, null); // DB中定义的约束
+			List<Constraint> uniquesDB = new ArrayList<Constraint>();
+			for (Constraint con : constraintsDB) { // 筛选唯一性约束
+				if(ConstraintType.U.equals(con.getType())){
+					uniquesDB.add(con);
+				}
+			}
+			sqls.addAll(this.compareConstraints(uniquesEntity, uniquesDB)); // 比较两个约束列表，返回SQL语句
+		}
 
 		// 计算唯一性约束变化
 		// 计算外键变化
@@ -1682,13 +1748,75 @@ public class DbMetaData {
 
 		return sqls;
 	}
+	
+	// 计算前后约束的增删改，返回增删SQL语句
+    private List<String> compareConstraints(List<Constraint> after, List<Constraint> before){
+		
+		List<String> result = new ArrayList<String>();
+		
+		if(after != null && after.size() > 0){
+			
+			if(before != null && before.size() > 0){
+			
+				for (int i = after.size() - 1; i >= 0 ; i-- ) {
+					Constraint conA = after.get(i);
+					
+					for (int j = 0; j < before.size(); j++) {
+						Constraint conB = before.get(j);
+						if(conA.getName().equals(conB.getName())){ // 同一个约束，判断是否有变更
+							if(conA.equals(conB)){ // 如果相同则两边都移除
+								after.remove(i);
+								before.remove(j);
+							}
+							break;
+						}
+					}
+				}
+			}
+		}
+		
+		// 先生成需要删除的约束的语句
+		for (Constraint con : before) {
+			result.add(ddlGenerator.deleteConstraint(con));
+		}
+		
+		// 再生成需要增加的约束的语句
+		for (Constraint con : after) {
+			result.add(ddlGenerator.addConstraint(con));
+		}
+		
+		return result;
+    }
 
 	private boolean isNotAConstraintIndex(Index index, ITableMetadata meta) {
-		// TODO Auto-generated method stub
+		try {
+			// FIXME 判断方法有待确证
+			List<Constraint> cons = info.profile.getConstraintInfo(this, schema, meta.getTableName(false), index.getIndexName());
+			if(cons != null && cons.size() > 0){
+				return false;
+			}
+			return true;
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 		return false;
 	}
 
 	private boolean isDupIndex(Index index, List<IndexDef> meta) {
+		
+		for(IndexDef idxDef : meta){
+			String[] indexColumns = new String[index.getColumns().size()];
+			for(int i = 0; i < indexColumns.length ; i++){
+				IndexItem idxItem = index.getColumns().get(i);
+				indexColumns[i] = idxItem.toString();
+			}
+			if((index.isUnique() == idxDef.isUnique())
+					&& (StringUtils.contains(index.getUserDefinition(), "clustered", true) == idxDef.isClustered())
+					&& (ArrayUtils.equals(indexColumns, idxDef.getColumns()))){
+				meta.remove(idxDef);
+				return true;
+			}
+		}
 		return false;
 	}
 
@@ -1761,7 +1889,7 @@ public class DbMetaData {
 		}
 		boolean created = false;
 		if (!existTable(tablename)) {
-			TableCreateStatement sqls = ddlGenerator.toTableCreateClause(meta, tablename);
+			TableCreateSQLs sqls = ddlGenerator.toTableCreateClause(meta, tablename);
 			StatementExecutor exe = createExecutor();
 			try {
 				// 建表
@@ -1772,9 +1900,11 @@ public class DbMetaData {
 				}
 				exe.executeSql(sqls.getComments());
 				// 创建外键约束等
-				exe.executeSql(sqls.getOtherContraints());
+				//FIXME  to be deleted.
+//				exe.executeSql(sqls.getOtherContraints());
+				//FIXME  to be deleted.
 				// create indexes
-				exe.executeSql(getIndexClausesOfTable(meta, tablename));
+//				exe.executeSql(getIndexClausesOfTable(meta, tablename));
 			} finally {
 				exe.close();
 			}
@@ -2645,4 +2775,5 @@ public class DbMetaData {
 	// return false;
 	// }
 	// }
+
 }

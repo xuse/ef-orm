@@ -1517,8 +1517,8 @@ public final class DbUtils {
 	 * @return the object who is able to update.
 	 */
 	public static <T extends IQueryableEntity> T compareToUpdateMap(T changedObj, T oldObj) {
-		Assert.isTrue(Objects.equal(DbUtils.getPrimaryKeyValue(changedObj), DbUtils.getPKValueSafe(oldObj)),
-				"For consistence, the two parameter must hava equally primary keys.");
+//		Assert.isTrue(Objects.equal(DbUtils.getPrimaryKeyValue(changedObj), DbUtils.getPKValueSafe(oldObj)),
+//				"For consistence, the two parameter must hava equally primary keys.");
 		ITableMetadata m = MetaHolder.getMeta(oldObj);
 		boolean safeMerge = ORMConfig.getInstance().isSafeMerge();
 

@@ -175,9 +175,17 @@ public class DbClientBuilder {
 	/**
 	 * 是否使用数据库初始化记录表
 	 */
-	private boolean initDataWithFlagInTable = JefConfiguration.getBoolean(DbCfg.USE_DATAINIT_FLAG_TABLE, false);;
-
+	private boolean useDataInitTable = JefConfiguration.getBoolean(DbCfg.USE_DATAINIT_FLAG_TABLE, false);;
+	
+	/**
+	 * 初始化数据编码
+	 */
 	private String initDataCharset = "UTF-8";
+	
+	/**
+	 * 初始化数据扩展名
+	 */
+	private String initDataExtension=JefConfiguration.get(DbCfg.INIT_DATA_EXTENSION, "txt");
 
 	/**
 	 * 最终构造出来的对象实例
@@ -643,7 +651,7 @@ public class DbClientBuilder {
 			qe.setAlterTable(alterTable);
 			qe.setCreateTable(createTable);
 			qe.setInitData(this.initData);
-			qe.setEntityManagerFactory(sf, this.initDataWithFlagInTable, this.initDataCharset);
+			qe.setEntityManagerFactory(sf, this.useDataInitTable, this.initDataCharset, this.initDataExtension);
 			if (annotatedClasses != null)
 				qe.registeEntity(annotatedClasses);
 			if (packagesToScan != null) {
@@ -763,7 +771,7 @@ public class DbClientBuilder {
 	 * @return whether use the datainit table or not.
 	 */
 	public boolean isUseDataInitTable() {
-		return initDataWithFlagInTable;
+		return useDataInitTable;
 	}
 
 	/**
@@ -775,7 +783,7 @@ public class DbClientBuilder {
 	 * @return this
 	 */
 	public DbClientBuilder setUseDataInitTable(boolean useDataInitTable) {
-		this.initDataWithFlagInTable = useDataInitTable;
+		this.useDataInitTable = useDataInitTable;
 		return this;
 	}
 
@@ -805,5 +813,13 @@ public class DbClientBuilder {
 
 	public void setEnhanceScanPackages(boolean enhanceScanPackages) {
 		this.enhanceScanPackages = enhanceScanPackages;
+	}
+
+	public String getInitDataExtension() {
+		return initDataExtension;
+	}
+
+	public void setInitDataExtension(String initDataExtension) {
+		this.initDataExtension = initDataExtension;
 	}
 }

@@ -33,11 +33,11 @@ public class ConstraintTest {
 			this.prepareTestData(db);
 						
 			// 查询单个约束
-			List<Constraint> cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), "UQ_A");
+			List<Constraint> cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), "A", "UQ_A");
 			cons.forEach(c -> System.out.println(c.toString()));
 			
 			// 查询schema下所有约束
-			cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), null);
+			cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), null, null);
 			cons.forEach(c -> System.out.println(c.toString()));
 			
 		} catch (SQLException e) {
@@ -70,11 +70,11 @@ public class ConstraintTest {
 			db.executeSql("create or replace view view_a2 as select id from A where id > 10 with read only constraint view_ck_2");
 			
 			// 查询单个约束
-			List<Constraint> cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), "UQ_A");
+			List<Constraint> cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), "A", "UQ_A");
 			cons.forEach(c -> System.out.println(c.toString()));
 			
 			// 查询schema下所有约束
-			cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), null);
+			cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), null, null);
 			cons.forEach(c -> System.out.println(c.toString()));
 			
 		} catch (SQLException e) {
@@ -103,11 +103,11 @@ public class ConstraintTest {
 			this.prepareTestData(db);
 			
 			// 查询单个约束
-			List<Constraint> cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), "UQ_A");
+			List<Constraint> cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), "A", "UQ_A");
 			cons.forEach(c -> System.out.println(c.toString()));
 			
 			// 查询schema下所有约束
-			cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), null);
+			cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), null, null);
 			cons.forEach(c -> System.out.println(c.toString()));
 			
 		} catch (SQLException e) {
@@ -137,11 +137,11 @@ public class ConstraintTest {
 			this.prepareTestData(db);
 			
 			// 查询单个约束
-			List<Constraint> cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), "UQ_A");
+			List<Constraint> cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), "A", "UQ_A");
 			cons.forEach(c -> System.out.println(c.toString()));
 			
 			// 查询schema下所有约束
-			cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), null);
+			cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), null, null);
 			cons.forEach(c -> System.out.println(c.toString()));
 			
 		} catch (SQLException e) {
@@ -171,11 +171,11 @@ public class ConstraintTest {
 			this.prepareTestData(db);
 			
 			// 查询单个约束
-			List<Constraint> cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), "UQ_A");
+			List<Constraint> cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), "A", "UQ_A");
 			cons.forEach(c -> System.out.println(c.toString()));
 						
 			// 查询schema下所有约束
-			cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), null);
+			cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), null, null);
 			cons.forEach(c -> System.out.println(c.toString()));
 			
 		} catch (SQLException e) {
@@ -205,11 +205,11 @@ public class ConstraintTest {
 			this.prepareTestData(db);
 			
 			// 查询单个约束
-			List<Constraint> cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), "UQ_A");
+			List<Constraint> cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), "A", "UQ_A");
 			cons.forEach(c -> System.out.println(c.toString()));
 						
 			// 查询schema下所有约束
-			cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), null);
+			cons = dialect.getConstraintInfo(meta, meta.getCurrentSchema(), null, null);
 			cons.forEach(c -> System.out.println(c.toString()));
 			
 		} catch (SQLException e) {
@@ -230,6 +230,13 @@ public class ConstraintTest {
 	 * @throws SQLException
 	 */
 	private void prepareTestData(DbClient db) throws SQLException{
+		
+		if(db.existsTable("B")){
+			db.executeSql("drop table B");
+		}
+		if(db.existsTable("A")){
+			db.executeSql("drop table A");
+		}
 		
 		// 创建表A，B
 		String tableA = "create table A(\n"+
@@ -266,8 +273,8 @@ public class ConstraintTest {
 	private void afterTest(DbClient db) throws SQLException{
 		
 		// 删除表A，B
-		db.executeSql("drop table B");
-		db.executeSql("drop table A");
+//		db.executeSql("drop table B");
+//		db.executeSql("drop table A");
 	}
 	
 }

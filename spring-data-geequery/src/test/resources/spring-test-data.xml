@@ -28,7 +28,7 @@
 	<!-- 定义GeeQuery SessionFactory -->
 	<bean id="entityManagerFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean"
 		p:dataSource-ref="dataSource" p:packagesToScan="com.github.geequery.springdata.test.entity"
-		p:registeNonMappingTableAsDynamic="true" p:useSystemOut="true" 
+		p:registeNonMappingTableAsDynamic="true" p:initData="true" 
 		/>
 
 	<!-- 定义事务和事务切面 -->

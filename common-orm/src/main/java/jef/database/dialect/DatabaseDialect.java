@@ -206,10 +206,11 @@ public interface DatabaseDialect {
 	 * 根据数据库特性，从数据库系统表中返回约束信息，如果不支持返回null。如果不存在返回空列表
 	 * @param conn 数据库访问句柄
 	 * @param schema 允许为null。可以使用%
+	 * @param tablename 允许为null。可以使用%
 	 * @param constraintName 允许为null。可以使用%
 	 * @return 约束的信息
 	 */
-	List<Constraint>   getConstraintInfo(DbMetaData conn,String schema,String constraintName) throws SQLException;
+	List<Constraint>   getConstraintInfo(DbMetaData conn,String schema, String tablename, String constraintName) throws SQLException;
 	
 	
 	/**

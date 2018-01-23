@@ -3,6 +3,7 @@ package jef.database.meta;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import jef.accelerator.bean.BeanAccessor;
 import jef.common.Entry;
@@ -39,11 +40,11 @@ public class TemplateMetadata extends AbstractMetadata {
 
 	@Override
 	public ColumnMapping getColumnDef(Field field) {
-		ColumnMapping result=schemaMap.get(field);
+		ColumnMapping result = schemaMap.get(field);
 		if (result != null) {
 			return result;
 		}
-		throw new UnsupportedOperationException("this is a abstract metadata template.");
+		throw new NoSuchElementException("this is no field [" + field + "] in metadata " + this.getName());
 	}
 
 	@Override
@@ -52,7 +53,7 @@ public class TemplateMetadata extends AbstractMetadata {
 		if (field != null) {
 			return field;
 		}
-		throw new UnsupportedOperationException("this is a abstract metadata template.");
+		throw new NoSuchElementException("this is no field [" + name + "] in metadata " + this.getName());
 	}
 
 	@Override
@@ -96,7 +97,8 @@ public class TemplateMetadata extends AbstractMetadata {
 
 	@Override
 	public IQueryableEntity newInstance() {
-//		throw new UnsupportedOperationException("this is a abstract metadata template.");
+		// throw new
+		// UnsupportedOperationException("this is a abstract metadata template.");
 		return wrapped.newInstance();
 	}
 
@@ -164,9 +166,9 @@ public class TemplateMetadata extends AbstractMetadata {
 	public ColumnMapping getExtendedColumnDef(String field) {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
-	
+
 	@Override
-	public Map<String,String> getColumnComments() {
+	public Map<String, String> getColumnComments() {
 		return wrapped.getColumnComments();
 	}
 }

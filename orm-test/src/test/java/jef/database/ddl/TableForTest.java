@@ -18,9 +18,9 @@ import jef.database.annotation.Indexed;
 
 @Table(name = "TABLE_FOR_TEST"
 ,indexes={
-		@Index(columnList="id,name desc",name="IDX_DEFAULT_TEST",unique=true)  //单独再定义一个复合索引		
-    },uniqueConstraints={@UniqueConstraint(
-		columnNames={"code","name"})}
+		@Index(columnList="id,expireTime desc",name="IDX_DEFAULT_TEST",unique=true)  //单独再定义一个复合索引		
+    },uniqueConstraints={@UniqueConstraint(name="UQ1_FOR_TEST", columnNames={"code","name"}),
+    		@UniqueConstraint(name="UQ2_FOR_TEST", columnNames={"amount"})}
 )
 @Entity
 @EasyEntity(checkEnhanced=false)

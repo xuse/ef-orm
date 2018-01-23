@@ -36,7 +36,7 @@ public class SqlServerTest {
 	}
 
 	@Test
-	public void test1234() throws SQLException {
+	public void testFetchDatabaseMetadata() throws SQLException {
 
 		DbMetaData meta = db.getMetaData(null);
 

@@ -410,7 +410,7 @@ public class H2Dialect extends AbstractDialect {
 		// }
 
 		features = CollectionUtils.identityHashSet();
-		features.addAll(Arrays.asList(Feature.USER_AS_SCHEMA, Feature.BATCH_GENERATED_KEY_ONLY_LAST, Feature.ONE_COLUMN_IN_SINGLE_DDL, Feature.SUPPORT_CONCAT,
+		features.addAll(Arrays.asList(Feature.BATCH_GENERATED_KEY_ONLY_LAST, Feature.ONE_COLUMN_IN_SINGLE_DDL, Feature.SUPPORT_CONCAT,
 				Feature.COLUMN_ALTERATION_SYNTAX, Feature.CASE_WITHOUT_SWITCH, Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD, Feature.UNION_WITH_BUCK));
 		loadKeywords("derby_keywords.properties");
 
@@ -529,8 +529,13 @@ public class H2Dialect extends AbstractDialect {
 		if (reader.matchNext("tcp://") > -1) {// 网络
 			reader.consume("tcp://");
 			connectInfo.setHost(reader.readToken('/', ' '));
-			reader.consume("~/");
-			connectInfo.setDbname(reader.readToken(';'));
+			if("mem:".equalsIgnoreCase(reader.nextString(4))){
+				reader.consume("mem:");
+				connectInfo.setDbname(reader.readToken(';'));
+			}else{
+				reader.consume("~/");
+				connectInfo.setDbname(reader.readToken(';'));	
+			}
 		} else {// 本地
 			String path = reader.readToken(';');
 			path.replace('\\', '/');
@@ -541,6 +546,11 @@ public class H2Dialect extends AbstractDialect {
 
 	}
 
+	@Override
+	public String getDefaultSchema() {
+		return "PUBLIC";
+	}
+	
 	@Override
 	public SQLTemplates getQueryDslDialect() {
 		return new H2Templates();
