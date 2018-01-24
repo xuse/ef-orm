@@ -1703,7 +1703,7 @@ public class DbMetaData {
 				for (UniqueConstraintDef conDef : uniqueDefsEntity) { // 转换成Constraint对象
 					Constraint con = new Constraint();
 					con.setName(conDef.name());
-					con.setColumns(Arrays.asList(conDef.columnNames()));
+					con.setColumns(conDef.toColumnNames(meta, info.profile));
 					con.setType(ConstraintType.U);
 					con.setTableName(tablename);
 					uniquesEntity.add(con);
@@ -1733,7 +1733,7 @@ public class DbMetaData {
 		Collection<Index> indexes = getIndexes(tablename);
 		List<IndexDef> newIndexes = meta.getIndexDefinition();
 		for (Index index : indexes) {
-			if (isDupIndex(index, newIndexes)) {
+			if (isDupIndex(index, newIndexes, meta)) {
 				continue;
 			}
 			// 还要确认当前索引不是某个约束或键的索引
@@ -1802,18 +1802,19 @@ public class DbMetaData {
 		}
 	}
 
-	private boolean isDupIndex(Index index, List<IndexDef> meta) {
+	private boolean isDupIndex(Index index, List<IndexDef> idxDefList, ITableMetadata meta) throws SQLException{
 		
-		for(IndexDef idxDef : meta){
+		for(IndexDef idxDef : idxDefList){
 			String[] indexColumns = new String[index.getColumns().size()];
 			for(int i = 0; i < indexColumns.length ; i++){
 				IndexItem idxItem = index.getColumns().get(i);
 				indexColumns[i] = idxItem.toString();
 			}
+			String[] indexColumnsDef = toIndexDescrption(meta, idxDef.getColumns()).getColumnNames();
 			if((index.isUnique() == idxDef.isUnique())
 					&& (StringUtils.contains(index.getUserDefinition(), "clustered", true) == idxDef.isClustered())
-					&& (ArrayUtils.equals(indexColumns, idxDef.getColumns()))){
-				meta.remove(idxDef);
+					&& (ArrayUtils.equals(indexColumns, indexColumnsDef))){
+				idxDefList.remove(idxDef);
 				return true;
 			}
 		}
@@ -1900,11 +1901,10 @@ public class DbMetaData {
 				}
 				exe.executeSql(sqls.getComments());
 				// 创建外键约束等
-				//FIXME  to be deleted.
+				// TODO
 //				exe.executeSql(sqls.getOtherContraints());
-				//FIXME  to be deleted.
 				// create indexes
-//				exe.executeSql(getIndexClausesOfTable(meta, tablename));
+				exe.executeSql(getIndexClausesOfTable(meta, tablename));
 			} finally {
 				exe.close();
 			}
@@ -1921,14 +1921,13 @@ public class DbMetaData {
 	/**
 	 * 转换成索引创建语句
 	 */
-	// to be deleted
-	/*private List<String> getIndexClausesOfTable(ITableMetadata meta, String tablename) {
+	private List<String> getIndexClausesOfTable(ITableMetadata meta, String tablename) {
 		List<String> sqls = new ArrayList<String>();
 		for (IndexDef index : meta.getIndexDefinition()) {
 			sqls.add(ddlGenerator.addIndex(index, meta, tablename));
 		}
 		return sqls;
-	}*/
+	}
 
 	/*
 	 * 创建跨线程执行器。注意一定要在finally中关闭 DDLExecutor executor=createExecutor(); try{
@@ -2260,6 +2259,7 @@ public class DbMetaData {
 		}
 		return indexobj;
 	}
+	
 
 	/**
 	 * 创建索引

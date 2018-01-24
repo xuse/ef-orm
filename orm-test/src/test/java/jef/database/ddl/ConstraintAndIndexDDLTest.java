@@ -4,84 +4,76 @@
 package jef.database.ddl;
 
 import java.sql.SQLException;
-import java.util.Date;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import jef.database.DbClient;
-import jef.database.DbClientBuilder;
+import jef.database.DbMetaData;
+import jef.database.dialect.DatabaseDialect;
+import jef.database.meta.object.Index;
+import jef.database.test.DataSource;
+import jef.database.test.DataSourceContext;
+import jef.database.test.JefJUnit4DatabaseTestRunner;
 
 /**
+ * 索引约束的DDL测试
  * @author qihongfei
  *
  */
+@RunWith(JefJUnit4DatabaseTestRunner.class)
+@DataSourceContext({ 
+		@DataSource(name = "oracle", url = "${oracle.url}", user = "system", password = "admin"),
+        @DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"),
+        @DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"),
+        @DataSource(name = "derby", url = "${derby.url}"),
+        @DataSource(name = "hsqldb", url = "${hsqldb.url}", user = "sa", password = ""),
+        @DataSource(name = "sqlite", url = "${sqlite.url}"),
+        @DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}") 
+})
 public class ConstraintAndIndexDDLTest {
 	
 	
-	private DbClient db=new DbClientBuilder().setDataSource("jdbc:mysql://localhost:3306/test?useUnicode=true&characterEncoding=UTF-8", "root", "admin").build();
-
-	@Test
-	public void testCreateTable() throws SQLException {
-		
-//		DbMetaData meta=db.getMetaData(null);
-//		DatabaseDialect dialect=AbstractDialect.getDialect("mysql");
-		
-		try {
-			db.dropTable(TableForTest.class);
-	        db.createTable(TableForTest.class);
-
-	        TableForTest tb = new TableForTest();
-	        tb.setAmount(10L);
-	        tb.setCode("123");
-	        tb.setData("sads".getBytes());
-	        db.insert(tb);
-	        System.out.println(tb.getModified());// 目前不会回写
-
-	        System.out.println("====================Step.2====================");
-	        tb.setName("修改");
-	        db.update(tb);
-
-	        tb = new TableForTest();
-	        tb.setAmount(12L);
-	        tb.setCode("124");
-	        tb.setData("sadssdd".getBytes());
-	        tb.setModified(new Date());
-	        db.insert(tb);
-	        System.out.println(tb.getModified()); // 事先获得
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}finally{
-			try{
-				db.close();
-			}catch(Exception e){
-				e.printStackTrace();
-			}
-		}
-	}
+	private DbClient db;
 	
+	// 测试修改表之前
 	@Test
 	public void beforeRefreshTable() throws SQLException {
 		
 		db.dropTable(TableForTest.class);
-        db.createTable(TableForTest.class);
+        db.createTable(TableForTest.class); // 测试新建表
         
-        db.executeSql("ALTER TABLE TABLE_FOR_TEST DROP INDEX UQ1_FOR_TEST");
+        DatabaseDialect dialect = db.getProfile(null);
+        DbMetaData meta = db.getMetaData(dialect.getName().name());
+        String tablename = "TABLE_FOR_TEST";
+        
+        // 删除UQ1_FOR_TEST
+        meta.dropConstraint(tablename, "UQ1_FOR_TEST"); 
+
+        // 添加UQ3_FOR_TEST
         db.executeSql("ALTER TABLE TABLE_FOR_TEST ADD CONSTRAINT UQ3_FOR_TEST UNIQUE(name)");
         
-        db.executeSql("ALTER TABLE TABLE_FOR_TEST DROP INDEX IDX_DEFAULT_TEST");
-        db.executeSql("ALTER TABLE TABLE_FOR_TEST ADD UNIQUE INDEX IDX_FOR_TEST (code, name desc)");
+        // 删除IDX_DEFAULT_TEST索引
+        Index index = new Index();
+        index.setTableName(tablename);
+        index.setIndexName("IDX_DEFAULT_TEST");
+        meta.dropIndex(index);
+
+        // 添加IDX_FOR_TEST(code, name desc)索引
+        index = new Index();
+        index.setTableName(tablename);
+        index.setIndexName("IDX_FOR_TEST");
+        index.setTableSchema(meta.getCurrentSchema());
+        index.setUnique(true);
+        index.addColumn("code", true);
+        index.addColumn("name", false);
+        meta.createIndex(index);
 	}
 	
+	// 测试修改表
 	@Test
 	public void refreshTable() throws SQLException {
 		db.refreshTable(TableForTest.class);
 	}
 	
-	
-	@Test
-	public void createTable() throws SQLException {
-		db.dropTable(TableForTest.class);
-		db.createTable(TableForTest.class);
-	}
 }
