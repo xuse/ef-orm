@@ -83,15 +83,15 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 	public void visit(Column tableColumn) {
 		String s = profile.getProperty(DbProperty.WRAP_FOR_KEYWORD);
 		if (s != null && profile.containKeyword(tableColumn.getColumnName())) {
-			Object obj=visitPath.getFirst();
-			if(obj instanceof ExpressionList){
-				if(!((ExpressionList) obj).getBetween().equals(",")){
-					//为了防止将 cast(xx as int)中的int加上引号。
+			Object obj = visitPath.getFirst();
+			if (obj instanceof ExpressionList) {
+				if (!((ExpressionList) obj).getBetween().equals(",")) {
+					// 为了防止将 cast(xx as int)中的int加上引号。
 					return;
 				}
 			}
-			String columnName=tableColumn.getColumnName();
-			StringBuilder sb=new StringBuilder(columnName.length()+2);
+			String columnName = tableColumn.getColumnName();
+			StringBuilder sb = new StringBuilder(columnName.length() + 2);
 			tableColumn.setColumnName(sb.append(s.charAt(0)).append(columnName).append(s.charAt(1)).toString());
 		}
 	}
@@ -123,7 +123,8 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 				}
 			}
 		}
-		mapping.rewrite(function);
+		if (mapping != null)
+			mapping.rewrite(function);
 	}
 
 	private void checkUserFunction(String funName) throws SQLException {
@@ -131,7 +132,7 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 			throw new IllegalArgumentException("database " + profile.getName() + " doesn't support function: " + funName + ".");
 		}
 		DbMetaData meta = db.getMetaData();
-		if (meta==null || meta.checkedFunctions.contains(funName)) {
+		if (meta == null || meta.checkedFunctions.contains(funName)) {
 			return;
 		}
 		if (meta.existsFunction(null, funName)) {
