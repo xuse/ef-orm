@@ -46,7 +46,7 @@ public class MetadataTest extends org.junit.Assert{
 	
 	
 	@Test
-	@IgnoreOn(allButExcept="h2")
+//	@IgnoreOn(allButExcept="h2")
 	public void testFetchTableAndColumns() throws Exception{
 		initSchema();
 		DbMetaData meta=db.getMetaData(null);

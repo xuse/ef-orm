@@ -214,7 +214,7 @@ public interface ITableMetadata {
 	 * 得到所有的unique约束
 	 * @return
 	 */
-	List<UniqueConstraintDef> getUniques();
+	List<UniqueConstraintDef> getUniqueDefinitions();
 	
 
 	// ///////////////////////引用关联查询相关////////////////////
@@ -236,6 +236,7 @@ public interface ITableMetadata {
 
 	/**
 	 * 根据名称得到一个Field对象（大小写不敏感）
+	 * 如果找不到将返回null(不抛出异常)
 	 * 
 	 * @param name
 	 * @return Field对象

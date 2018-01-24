@@ -124,12 +124,10 @@ public class DbClient extends Session implements SessionFactory {
 	 * @param timeout
 	 *            事务超时时间，单位秒
 	 * @param isolationLevel
-	 *            事务隔离级别
-	 *            <li>TRANSACTION_READ_COMMITTED =1</li>
-	 *            <li>TRANSACTION_READ_UNCOMMITTED = 2</li>
-	 *            <li>TRANSACTION_REPEATABLE_READ = 4</li>
-	 *            <li>TRANSACTION_SERIALIZABLE =8</li>
-	 *            <li>ISOLATION_DEFAULT = -1</li>
+	 *            事务隔离级别 <li>TRANSACTION_READ_COMMITTED =1</li> <li>
+	 *            TRANSACTION_READ_UNCOMMITTED = 2</li> <li>
+	 *            TRANSACTION_REPEATABLE_READ = 4</li> <li>
+	 *            TRANSACTION_SERIALIZABLE =8</li> <li>ISOLATION_DEFAULT = -1</li>
 	 * 
 	 * @param readOnly
 	 *            是否为只读事务。部分数据库支持只读事务。可以针对只读进行优化。具体优化哪些特性取决于数据库。
@@ -146,8 +144,7 @@ public class DbClient extends Session implements SessionFactory {
 	 *            数据源信息 如果datasource已经是一个连接池，那么不会再启动内嵌的连接池，否则会使用内建的连接池
 	 */
 	public DbClient(DataSource datasource) {
-		this(datasource, JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL, 3),
-				JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50), null);
+		this(datasource, JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL, 3), JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50), null);
 	}
 
 	/**
@@ -178,8 +175,7 @@ public class DbClient extends Session implements SessionFactory {
 	 * @deprecated use new DbClientBuilder().build() to create a new DbClient.
 	 */
 	public DbClient() {
-		this(getDefaultDataSource(), JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL, 3),
-				JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50), null);
+		this(getDefaultDataSource(), JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL, 3), JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50), null);
 	}
 
 	/*
@@ -279,8 +275,7 @@ public class DbClient extends Session implements SessionFactory {
 		StringBuilder sb = new StringBuilder();
 		// 2016/7/8 优化，Map hash查找仅发生一次。
 		ConnectInfo info = connPool.getInfo(key);
-		sb.append('[').append(info.profile.getName()).append(':').append(info.dbname).append('@')
-				.append(Thread.currentThread().getId()).append(']');
+		sb.append('[').append(info.profile.getName()).append(':').append(info.dbname).append('@').append(Thread.currentThread().getId()).append(']');
 		return sb.toString();
 	}
 
@@ -316,8 +311,7 @@ public class DbClient extends Session implements SessionFactory {
 
 	protected void finalize() throws Throwable {
 		if (connPool != null) {
-			LogUtil.show(
-					"Database will auto shut down at Java finalize thread. to avoid this message, you should manually close the DbClient.");
+			LogUtil.show("Database will auto shut down at Java finalize thread. to avoid this message, you should manually close the DbClient.");
 			close();
 		}
 		super.finalize();
@@ -628,8 +622,7 @@ public class DbClient extends Session implements SessionFactory {
 	 * @return true表示创建成功
 	 * @throws SQLException
 	 */
-	public boolean createTable(Class<? extends IQueryableEntity> clz, String tablename, String dbName)
-			throws SQLException {
+	public boolean createTable(Class<? extends IQueryableEntity> clz, String tablename, String dbName) throws SQLException {
 		return createTable(MetaHolder.getMeta(clz), tablename, dbName);
 	}
 
@@ -643,8 +636,7 @@ public class DbClient extends Session implements SessionFactory {
 	 */
 	public boolean createTable(IQueryableEntity obj) throws SQLException {
 		AbstractMetadata meta = MetaHolder.getMeta(obj);
-		PartitionResult[] result = DbUtils.partitionUtil.toTableNames(meta, obj, obj.getQuery(), getPartitionSupport(),
-				false);
+		PartitionResult[] result = DbUtils.partitionUtil.toTableNames(meta, obj, obj.getQuery(), getPartitionSupport(), false);
 		if (ORMConfig.getInstance().isDebugMode()) {
 			LogUtil.info("Partitions:" + Arrays.toString(result));
 		}
@@ -695,7 +687,7 @@ public class DbClient extends Session implements SessionFactory {
 	 * @throws SQLException
 	 */
 	public void refreshTable(Class<?> clz) throws SQLException {
-		refreshTable(MetaHolder.getMeta(clz), null);
+		refreshTable(MetaHolder.getMeta(clz), null, true, true);
 	}
 
 	/**
@@ -703,12 +695,29 @@ public class DbClient extends Session implements SessionFactory {
 	 * 
 	 * @param meta
 	 *            要更新的表的元数据
-	 * @param listener
+	 * @param event
 	 *            事件监听器，可以监听刷新过程的事件
+	 * @throws SQLException
+	 */
+	public void refreshTable(ITableMetadata meta, MetadataEventListener event) throws SQLException {
+		refreshTable(meta, event, true, true);
+	}
+
+	/**
+	 * 检查并修改数据库中的表，使其和传入的实体模型保持一致。
+	 * 
+	 * @param meta
+	 *            要更新的表的元数据
+	 * @param event
+	 *            事件监听器，可以监听刷新过程的事件
+	 * @param modifyConstraint
+	 *            更改约束
+	 * @param modifyIndexes
+	 *            更改索引
 	 * @throws SQLException
 	 * @see MetadataEventListener
 	 */
-	public void refreshTable(ITableMetadata meta, MetadataEventListener event) throws SQLException {
+	public void refreshTable(ITableMetadata meta, MetadataEventListener event, boolean modifyConstraint, boolean modifyIndexes) throws SQLException {
 		Assert.notNull(meta, "The table definition which your want to resresh must not null.");
 		ensureOpen();
 		PartitionResult[] results = DbUtils.toTableNames(meta, this.getPartitionSupport(), 4);
@@ -716,7 +725,7 @@ public class DbClient extends Session implements SessionFactory {
 			DbMetaData dbmeta = getPool().getMetadata(result.getDatabase());
 			for (String table : result.getTables()) {
 				if (event == null || event.beforeTableRefresh(meta, table)) {
-					dbmeta.refreshTable(meta, table, event);
+					dbmeta.refreshTable(meta, table, event, modifyConstraint, modifyIndexes);
 				}
 			}
 		}

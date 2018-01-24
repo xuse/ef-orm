@@ -45,7 +45,7 @@ public class TableCreateStatement {
 		if (!tableDef.NoPkConstraint && !meta.getPKFields().isEmpty()) {
 			tableDef.addPkConstraint(meta.getPKFields(), dialect, tablename);
 		}
-		for(UniqueConstraintDef unique: meta.getUniques()){
+		for(UniqueConstraintDef unique: meta.getUniqueDefinitions()){
 			tableDef.addUniqueConstraint(unique,meta,dialect);
 		}
 		this.tables.add(tableDef);
@@ -148,7 +148,7 @@ public class TableCreateStatement {
 		}
 
 		public void addUniqueConstraint(UniqueConstraintDef unique,ITableMetadata meta, DatabaseDialect dialect) {
-			List<String> columns=unique.toColumnNames(meta, dialect);
+			List<String> columns=unique.getColumnNames(meta, dialect);
 			StringBuilder sb = getColumnDef();
 			sb.append(",\n");
 			String cname=unique.name();

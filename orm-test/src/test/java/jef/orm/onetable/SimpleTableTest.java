@@ -64,9 +64,10 @@ import org.junit.runners.MethodSorters;
 	@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
 	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), 
 	@DataSource(name = "hsqldb", url = "${hsqldb.url}", user = "sa", password = ""),
-	@DataSource(name = "derby", url = "${derby.url}"), 
-//	@DataSource(name = "sqlite", url = "${sqlite.url}"),
-//	@DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}")
+	@DataSource(name = "derby", url = "${derby.url}"),
+	@DataSource(name = "h2", url = "${h2.url}",password="h2.user",user="h2.user"), 
+	@DataSource(name = "sqlite", url = "${sqlite.url}"),
+	@DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}")
 	}
 )
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -200,10 +201,10 @@ public class SimpleTableTest extends org.junit.Assert {
 		t3 = db.load(t3);
 		TestEntity t4_ = db.load(t4);
 
-		System.out.println("rowid:" + t1.rowid());
-		System.out.println("rowid:" + t2.rowid());
-		System.out.println("rowid:" + t3.rowid());
-		System.out.println("rowid:" + t4_.rowid());
+//		System.out.println("rowid:" + t1.rowid());
+//		System.out.println("rowid:" + t2.rowid());
+//		System.out.println("rowid:" + t3.rowid());
+//		System.out.println("rowid:" + t4_.rowid());
 
 		assertNotNull(t1);
 		assertNotNull(t2);

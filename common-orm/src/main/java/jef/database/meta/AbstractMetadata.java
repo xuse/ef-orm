@@ -424,7 +424,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		this.useOuterJoin = useOuterJoin;
 	}
 	
-	public List<UniqueConstraintDef> getUniques() {
+	public List<UniqueConstraintDef> getUniqueDefinitions() {
 		return uniques;
 	}
 
