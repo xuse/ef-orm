@@ -123,7 +123,8 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 				}
 			}
 		}
-		mapping.rewrite(function);
+		if(mapping!=null)
+			mapping.rewrite(function);
 	}
 
 	private void checkUserFunction(String funName) throws SQLException {
