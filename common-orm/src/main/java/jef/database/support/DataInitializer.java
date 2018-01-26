@@ -11,7 +11,6 @@ import java.util.Date;
 import java.util.List;
 
 import jef.common.log.LogUtil;
-import jef.database.DbCfg;
 import jef.database.DbClient;
 import jef.database.DbMetaData;
 import jef.database.DbUtils;
@@ -21,7 +20,6 @@ import jef.database.QB;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.jre5support.ProcessUtil;
-import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.csvreader.Codecs;
 import jef.tools.csvreader.CsvReader;
@@ -58,6 +56,7 @@ public class DataInitializer {
 				if (meta.existTable("allow_data_initialize")) {
 					session.refreshTable(AllowDataInitialize.class);
 					useTable = true;
+					LogUtil.info("Table [allow_data_initialize] was found, will turn [geequery.useDataInitTable=true] on.");			
 					checkEnableFlag();
 				}
 			}
