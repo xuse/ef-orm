@@ -265,19 +265,23 @@ public class QuerableEntityScanner {
 	 *            是否创建
 	 * @param refresh
 	 *            是否更新
-	 * @return
+	 * @return 是否完成了表的新建
 	 * @throws SQLException
 	 */
 	private boolean doTableDDL(ITableMetadata meta, final boolean doCreateTask, final boolean refresh) throws SQLException {
 		// 不管是否存在，总之先创建一次
 		DbClient client = entityManagerFactory.getDefault();
 
-		boolean created = false;
+		boolean newTable = false;
 		if (doCreateTask) {
-			created = client.createTable(meta) > 0;
+			newTable = client.createTable(meta) > 0;
 		}
-		boolean exists = created ? false : client.existsTable(meta.getTableName(true));
-		if (exists) {
+		boolean exists = newTable ? true : client.existsTable(meta.getTableName(true));
+		if (!exists) {
+			return false;
+		}
+
+		if (!newTable) {
 			client.refreshTable(meta, new MetadataEventListener() {
 				public void onTableFinished(ITableMetadata meta, String tablename) {
 				}
@@ -314,10 +318,6 @@ public class QuerableEntityScanner {
 				}
 			});
 		}
-
-		if (!exists) {
-			return false;
-		}
 		// 检查Sequence
 		if (checkSequence) {
 			for (ColumnMapping f : meta.getColumns()) {
@@ -331,7 +331,7 @@ public class QuerableEntityScanner {
 				}
 			}
 		}
-		return created;
+		return newTable;
 	}
 
 	private String[] getClassNames() {
