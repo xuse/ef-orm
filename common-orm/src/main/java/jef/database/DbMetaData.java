@@ -1848,7 +1848,7 @@ public class DbMetaData {
 			String[] indexColumns = new String[index.getColumns().size()];
 			for(int i = 0; i < indexColumns.length ; i++){
 				IndexItem idxItem = index.getColumns().get(i);
-				indexColumns[i] = idxItem.toString();
+				indexColumns[i] = idxItem.column;
 			}
 			
 			for(Constraint con : cons){
