@@ -693,7 +693,7 @@ public class PostgreSql94Dialect extends AbstractDialect {
 				+"left join pg_attribute ratt "
 				+"  on ratt.attrelid = a.rconrelid "
 				+" and ratt.attnum = a.rx "
-				+"order by a.n, a.rn  ";
+				+"order by a.constraint_schema, a.constraint_name, a.n, a.rn  ";
 
 		schema = StringUtils.isBlank(schema) ? "%" : schema.toLowerCase();
 		tablename = StringUtils.isBlank(tablename) ? "%" : tablename.toLowerCase();
@@ -727,7 +727,7 @@ public class PostgreSql94Dialect extends AbstractDialect {
 						c.setCatalog(rs.getString("constraint_catalog"));
 						c.setSchema(rs.getString("constraint_schema"));
 						c.setName(rs.getString("constraint_name"));
-						c.setType(ConstraintType.parseFullName(rs.getString("constraint_type")));
+						c.setType(ConstraintType.parseName(rs.getString("constraint_type")));
 						c.setDeferrable(rs.getBoolean("is_deferrable"));
 						c.setInitiallyDeferred(rs.getBoolean("initially_deferred"));
 						c.setTableCatalog(rs.getString("table_catalog"));

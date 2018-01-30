@@ -88,6 +88,7 @@ import jef.database.meta.object.TableInfo;
 import jef.database.query.DefaultPartitionCalculator;
 import jef.database.query.Func;
 import jef.database.support.MetadataEventListener;
+import jef.database.support.RDBMS;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.executor.ExecutorImpl;
 import jef.database.wrapper.executor.ExecutorJTAImpl;
@@ -1615,7 +1616,7 @@ public class DbMetaData {
 			return;
 		}
 		List<String> altertables = ddlGenerator.toTableModifyClause(meta, tablename, insert, changed, delete);
-		altertables.addAll(compareIndexAndConstraints(meta, tablename, true, true, event));
+		altertables.addAll(compareConstraints(meta, tablename, true, true, event));
 		StatementExecutor exe = createExecutor();
 		try {
 			exe.setQueryTimeout(180);// 最多执行3分钟
@@ -1645,12 +1646,50 @@ public class DbMetaData {
 		} finally {
 			exe.close();
 		}
-		if (event != null) {
-			event.onTableFinished(meta, tablename);
+		
+		// 等执行完了表和约束修改语句，再比较索引
+		altertables.clear();
+		altertables.addAll(compareIndexes(meta, tablename, true, true, event));
+		
+		if(altertables.size() > 0){
+			try {
+				exe = createExecutor();
+				exe.setQueryTimeout(180);// 最多执行3分钟
+				if (event != null) {
+					event.beforeAlterTable(tablename, meta, exe, altertables);
+				}
+				int n = 0;
+				for (String s : altertables) {
+					long start = System.currentTimeMillis();
+					boolean success = true;
+					try {
+						exe.executeSql(s);
+					} catch (SQLException e) {
+						success = false;
+						if (event == null || !event.onSqlExecuteError(e, tablename, s, Collections.unmodifiableList(altertables), n)) {
+							throw e;
+						}
+					}
+					if (success) {
+						long cost = System.currentTimeMillis() - start;
+						if (event != null) {
+							event.onAlterSqlFinished(tablename, s, Collections.unmodifiableList(altertables), n, cost);
+						}
+					}
+					n++;
+				}
+			} finally {
+				exe.close();
+			}
+			
+			if (event != null) {
+				event.onTableFinished(meta, tablename);
+			}
 		}
+		
 	}
 
-	private Collection<? extends String> compareIndexAndConstraints(ITableMetadata meta, String tablename,
+	private Collection<? extends String> compareConstraints(ITableMetadata meta, String tablename,
 			boolean modifyIndex, boolean modifyConstraint,
 			MetadataEventListener event) throws SQLException {
 		// 计算主键变化
@@ -1706,6 +1745,8 @@ public class DbMetaData {
 					con.setColumns(conDef.toColumnNames(meta, info.profile));
 					con.setType(ConstraintType.U);
 					con.setTableName(tablename);
+					con.setSchema(schema);
+					con.setTableSchema(schema);
 					uniquesEntity.add(con);
 				}
 				
@@ -1729,24 +1770,33 @@ public class DbMetaData {
 
 		// 计算要添加的约束
 
+		return sqls;
+	}
+	
+	private Collection<? extends String> compareIndexes(ITableMetadata meta, String tablename,
+			boolean modifyIndex, boolean modifyConstraint,
+			MetadataEventListener event) throws SQLException {
+		
+		List<String> sqls = new ArrayList<String>();
+		
 		// 计算要删除的索引
 		Collection<Index> indexes = getIndexes(tablename);
 		List<IndexDef> newIndexes = meta.getIndexDefinition();
+		List<Constraint> cons = info.profile.getConstraintInfo(this, schema, meta.getTableName(false), null);
 		for (Index index : indexes) {
 			if (isDupIndex(index, newIndexes, meta)) {
 				continue;
 			}
 			// 还要确认当前索引不是某个约束或键的索引
-			if (isNotAConstraintIndex(index, meta)) {
+			if (isNotAConstraintIndex(index, meta, cons)) {
 				sqls.add(ddlGenerator.deleteIndex(index));
 			}
-
 		}
 		// 计算要添加的索引
 		for (IndexDef def : newIndexes) {
 			sqls.add(ddlGenerator.addIndex(def, meta, tablename));
 		}
-
+		
 		return sqls;
 	}
 	
@@ -1764,7 +1814,8 @@ public class DbMetaData {
 					
 					for (int j = 0; j < before.size(); j++) {
 						Constraint conB = before.get(j);
-						if(conA.getName().equals(conB.getName())){ // 同一个约束，判断是否有变更
+						// 同一个约束，判断是否有变更
+						if(StringUtils.equals(conA.getSchema(), conB.getSchema()) && StringUtils.equals(conA.getName(), conB.getName())){ 
 							if(conA.equals(conB)){ // 如果相同则两边都移除
 								after.remove(i);
 								before.remove(j);
@@ -1789,17 +1840,33 @@ public class DbMetaData {
 		return result;
     }
 
-	private boolean isNotAConstraintIndex(Index index, ITableMetadata meta) throws SQLException{
-		try {
-			// FIXME 判断方法有待确证
-			List<Constraint> cons = info.profile.getConstraintInfo(this, schema, meta.getTableName(false), index.getIndexName());
-			if(cons != null && cons.size() > 0){
-				return false;
+	private boolean isNotAConstraintIndex(Index index, ITableMetadata meta, List<Constraint> cons) throws SQLException{
+		// FIXME 判断方法有待确证
+		if(cons != null && cons.size() > 0){
+			
+			String[] indexColumns = new String[index.getColumns().size()];
+			for(int i = 0; i < indexColumns.length ; i++){
+				IndexItem idxItem = index.getColumns().get(i);
+				indexColumns[i] = idxItem.toString();
 			}
-			return true;
-		} catch (SQLException e) {
-			throw new SQLException("The execution of getConstraintInfo has failed.");
+			
+			for(Constraint con : cons){
+				
+				if(ArrayUtils.equals(con.getColumns().toArray(), indexColumns)){
+					
+					if(RDBMS.derby != info.profile.getName()){
+						
+						if((con.getType() == ConstraintType.U || con.getType() == ConstraintType.P) == index.isUnique()
+								&& ArrayUtils.equals(con.getColumns().toArray(), indexColumns)){
+							return false;
+						}
+					}else{
+						return false; // derby不判断是否unique（derby创建唯一约束自动生成的索引不是unique的）
+					}
+				}
+			}
 		}
+		return true;
 	}
 
 	private boolean isDupIndex(Index index, List<IndexDef> idxDefList, ITableMetadata meta) throws SQLException{
