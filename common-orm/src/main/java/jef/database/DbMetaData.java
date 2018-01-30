@@ -1741,10 +1741,10 @@ public class DbMetaData {
 				List<Constraint> uniquesEntity = new ArrayList<Constraint>();
 				for (UniqueConstraintDef conDef : uniqueDefsEntity) { // 转换成Constraint对象
 					Constraint con = new Constraint();
-					con.setName(conDef.name());
+					con.setName(info.profile.getObjectNameToUse(conDef.name()));
 					con.setColumns(conDef.toColumnNames(meta, info.profile));
 					con.setType(ConstraintType.U);
-					con.setTableName(tablename);
+					con.setTableName(info.profile.getObjectNameToUse(tablename));
 					con.setSchema(schema);
 					con.setTableSchema(schema);
 					uniquesEntity.add(con);
@@ -1753,6 +1753,7 @@ public class DbMetaData {
 				List<Constraint> uniquesDB = new ArrayList<Constraint>();
 				for (Constraint con : constraintsDB) { // 筛选唯一性约束
 					if(ConstraintType.U.equals(con.getType())){
+						con.setName(info.profile.getObjectNameToUse(con.getName()));
 						uniquesDB.add(con);
 					}
 				}
