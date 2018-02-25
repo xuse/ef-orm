@@ -99,10 +99,12 @@ public class IOUtils {
 			}
 		}
 	}
-	
+
 	/**
 	 * 获得制定文件/目录的大小
-	 * @param file 传入File，如果是文件直接返回文件大小，如果是目录返回目录中所有文件的大小。
+	 * 
+	 * @param file
+	 *            传入File，如果是文件直接返回文件大小，如果是目录返回目录中所有文件的大小。
 	 * @return size of the directory
 	 */
 	public static long getLength(File file) {
@@ -905,7 +907,10 @@ public class IOUtils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static String[] readLines(File inName, String charset, LineFilter filter) throws IOException {
+	public static String[] readLines(URL inName, String charset, LineFilter filter) throws IOException {
+		if (inName == null) {
+			return new String[0];
+		}
 		BufferedReader is = getReader(inName, charset);
 		String line = null;
 		List<String> result = new ArrayList<String>();
@@ -1745,6 +1750,8 @@ public class IOUtils {
 	 * @see CopyStrategy
 	 */
 	public static boolean copyFile(File source, File newFile, CopyStrategy strategy) {
+		if (newFile == null)
+			return false;
 		if (!source.exists())
 			return false;
 		if (source.isDirectory()) {// 源为目录时
@@ -2205,8 +2212,7 @@ public class IOUtils {
 		if (file == null)
 			return null;
 		try {
-			InputStream is = file.openStream();
-			UnicodeReader isr = new UnicodeReader(is, charSet);
+			UnicodeReader isr = new UnicodeReader(file.openStream(), charSet);
 			return new BufferedReader(isr);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -2226,8 +2232,7 @@ public class IOUtils {
 		if (file == null)
 			return null;
 		InputStream is = (file instanceof URLFile) ? ((URLFile) file).getInputStream() : new FileInputStream(file);
-		UnicodeReader isr = new UnicodeReader(is, charSet);
-		return new BufferedReader(isr);
+		return new BufferedReader(new UnicodeReader(is, charSet));
 	}
 
 	/**
@@ -2605,7 +2610,7 @@ public class IOUtils {
 		for (int i = breakCount; i < f1.length; i++) {
 			sb.append(f1[i]).append(File.separatorChar);
 		}
-		sb.setLength(sb.length()-1);
+		sb.setLength(sb.length() - 1);
 		return sb.toString();
 	}
 

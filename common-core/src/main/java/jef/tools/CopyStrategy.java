@@ -24,14 +24,14 @@ public class CopyStrategy {
 	 * 复制策略，当文件内容不同时 覆盖已存在的文件： 1.跳过.开头的文件夹和文件 2.当文件不同时覆盖已存在的文件(根据文件大小和CRC判断)
 	 */
 	public static final CopyStrategy OVERWRITE_IF_DIFFERENT = new CopyStrategy() {
-		private FileComparator comparator=FileComparator.LENGTH_SKIP;
-		
+		private FileComparator comparator = FileComparator.LENGTH_SKIP;
+
 		public boolean canOverWritten(File file, File target) {
 			if (!file.exists())
 				return false;
 			if (!target.exists())
 				return true;
-			return !comparator.equals(file,target);
+			return !comparator.equals(file, target);
 		}
 	};
 
@@ -60,7 +60,7 @@ public class CopyStrategy {
 	 * @return File，要拷贝的目标文件，null将不拷贝源文件。
 	 */
 	public File getTargetFile(File file, File targetFolder) {
-		File target= new File(targetFolder, file.getName());
+		File target = new File(targetFolder, file.getName());
 		return target;
 	}
 
@@ -76,7 +76,7 @@ public class CopyStrategy {
 	public boolean canOverWritten(File source, File target) {
 		return false;
 	}
-	
+
 	/**
 	 * 如果源是一个文件而目标是一个目录，是否允许将源复制到目录下。
 	 * 
@@ -88,6 +88,7 @@ public class CopyStrategy {
 
 	/**
 	 * 返回true，表示是移动文件，源文件将被删除
+	 * 
 	 * @return
 	 */
 	public boolean isMove() {
@@ -102,13 +103,13 @@ public class CopyStrategy {
 	 */
 	public static class MergeStrategy extends CopyStrategy {
 		private FileComparator comparator;
-		private int normalCount;		//不冲突的文件数，（在源有而目标没有的文件）复制。
-		private int duplicateCount;	    //两边完全相同的文件数。
-		private int conflictCount;		//两边冲突的文件数
-		private int deleteSuccessCount;//在两边完全相同时，如果是move指令，则会删除源文件夹中的重复文件，这里记录成功删除的数量
-		private int mergeFailure;      //在源是目录而目标是文件，或者源为文件目标为目录，此时无法实现合并
-		
-		private boolean isMove=true;
+		private int normalCount; // 不冲突的文件数，（在源有而目标没有的文件）复制。
+		private int duplicateCount; // 两边完全相同的文件数。
+		private int conflictCount; // 两边冲突的文件数
+		private int deleteSuccessCount;// 在两边完全相同时，如果是move指令，则会删除源文件夹中的重复文件，这里记录成功删除的数量
+		private int mergeFailure; // 在源是目录而目标是文件，或者源为文件目标为目录，此时无法实现合并
+
+		private boolean isMove = true;
 
 		/**
 		 * 构造
@@ -116,9 +117,12 @@ public class CopyStrategy {
 		public MergeStrategy() {
 			this(FileComparator.LENGTH_SKIP);
 		}
+
 		/**
-		 * 构造 
-		 * @param compare 传入一个指定的文件比较器
+		 * 构造
+		 * 
+		 * @param compare
+		 *            传入一个指定的文件比较器
 		 */
 		public MergeStrategy(FileComparator compare) {
 			super();
@@ -127,40 +131,42 @@ public class CopyStrategy {
 
 		/**
 		 * 设置move模式
+		 * 
 		 * @param isMove
 		 */
 		public void setMove(boolean isMove) {
 			this.isMove = isMove;
 		}
+
 		@Override
 		public File getTargetFile(File file, File targetFolder) {
 			File f = new File(targetFolder, file.getName());
 			if (f.isFile()) {
-				if(file.isDirectory()){
+				if (file.isDirectory()) {
 					System.out.println("the target " + f.getPath() + " has exist, and is not folder.");
 					mergeFailure++;
 					return null;
 				}
-				if (comparator.equals(file, f)) { //源于目标相同文件
+				if (comparator.equals(file, f)) { // 源于目标相同文件
 					duplicateCount++;
-					if(isMove){					//Move的场合直接删除源文件。
+					if (isMove) { // Move的场合直接删除源文件。
 						if (file.delete()) {
 							deleteSuccessCount++;
 						} else {
 							System.out.println("删除" + file.getAbsolutePath() + "失败.");
-						}	
+						}
 					}
-					return null;//该文件无需复制
-				} else {						//源和目标不同文件
+					return null;// 该文件无需复制
+				} else { // 源和目标不同文件
 					System.out.println("文件" + file.getAbsolutePath() + " 已经存在不同版本！！(内容不同)");
 					conflictCount++;
-					return null;//版本不同，不覆盖
+					return null;// 版本不同，不覆盖
 				}
-			}else if (f.exists() && file.isFile()){
-				System.out.println("Target is directory and source is a file:"+file.getAbsolutePath());
+			} else if (f.exists() && file.isFile()) {
+				System.out.println("Target is directory and source is a file:" + file.getAbsolutePath());
 				mergeFailure++;
 				return null;
-			}else{
+			} else {
 				normalCount++;
 			}
 			return f;
@@ -172,15 +178,32 @@ public class CopyStrategy {
 		}
 
 		public boolean canOverWritten(File file, File target) {
-			throw new IllegalArgumentException();
+			if (comparator.equals(file, target)) { // 源于目标相同文件
+				duplicateCount++;
+				if (isMove) { // Move的场合直接删除源文件。
+					if (file.delete()) {
+						deleteSuccessCount++;
+					} else {
+						System.out.println("删除" + file.getAbsolutePath() + "失败.");
+					}
+				}
+				return false;
+			} else {
+				System.out.println("文件" + file.getAbsolutePath() + " 已经存在不同版本！！(内容不同)");
+				conflictCount++;
+				return false;
+			}
 		}
+
 		/**
 		 * 不冲突的文件数（在源有而目标没有的文件）
+		 * 
 		 * @return
 		 */
 		public int getNormalCount() {
 			return normalCount;
 		}
+
 		/**
 		 * 
 		 * @return 两边完全相同的文件数。
@@ -188,24 +211,28 @@ public class CopyStrategy {
 		public int getDuplicateCount() {
 			return duplicateCount;
 		}
+
 		/**
 		 * @return 两边冲突的文件数
 		 */
 		public int getConflictCount() {
 			return conflictCount;
 		}
+
 		/**
 		 * 在两边完全相同时，如果是move指令，成功删除的文件数
+		 * 
 		 * @return
 		 */
 		public int getDeleteSuccessCount() {
 			return deleteSuccessCount;
 		}
-		public String getSummary(){
-			StringBuilder sb=new StringBuilder();
-			sb.append(isMove?"Moved:":"Copyed:").append(this.normalCount).append("\r\n");
+
+		public String getSummary() {
+			StringBuilder sb = new StringBuilder();
+			sb.append(isMove ? "Moved:" : "Copyed:").append(this.normalCount).append("\r\n");
 			sb.append("Duplicate:").append(this.duplicateCount);
-			if(isMove){
+			if (isMove) {
 				sb.append(" Deleted:").append(this.deleteSuccessCount);
 			}
 			sb.append(" MergeFailure:").append(this.mergeFailure);

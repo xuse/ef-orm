@@ -92,7 +92,7 @@ public class ResourceDownloadMojo extends AbstractMojo  {
 		
 		String[] genConfStrs = null;
 		try {
-			genConfStrs = IOUtils.readLines(genConf, "UTF-8",null);
+			genConfStrs = IOUtils.readLine(genConf, "UTF-8",new int[0]);
 		} catch (IOException e) {
 			throw new MojoExecutionException(e.getMessage(), e);
 		}

@@ -27,20 +27,19 @@ public class IOUtilsTest extends org.junit.Assert{
 		String n2 = "asdas.yxy.txt";
 		String n3 = "fsdfs.TXT";
 		String n4 = "sdfmwsjfldsfds";
-		FileName f = new FileName(n1);
-		System.out.println(f.getMain());
+		FileName f = FileName.valueOf(n1);
+		System.out.println(f.getMainPart());
 		System.out.println(f.getExt());
 
-		f = new FileName(n2);
-		f.append("(part2)");
-		System.out.println(f.getMain());
+		f = FileName.valueOf(n2);
+		System.out.println(f.append("(part2)").get());
 
-		f = new FileName(n3);
-		System.out.println(f.getMain());
+		f = FileName.valueOf(n3);
+		System.out.println(f.getMainPart());
 		System.out.println(f.getExt());
 
-		f = new FileName(n4);
-		System.out.println(f.getMain());
+		f = FileName.valueOf(n4);
+		System.out.println(f.getMainPart());
 		System.out.println(f.getExt());
 		URL u = Thread.currentThread().getContextClassLoader().getResource("");
 		System.out.println(u);
