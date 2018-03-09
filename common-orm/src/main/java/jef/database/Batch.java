@@ -28,7 +28,6 @@ import jef.common.PairSS;
 import jef.common.log.LogUtil;
 import jef.database.cache.Cache;
 import jef.database.dialect.type.ColumnMapping;
-import jef.database.meta.AbstractMetadata;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.routing.PartitionResult;
@@ -39,6 +38,7 @@ import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.UpdateClause;
 import jef.database.wrapper.processor.BindVariableContext;
 import jef.database.wrapper.processor.BindVariableDescription;
+import jef.tools.Assert;
 import jef.tools.StringUtils;
 
 /**
@@ -452,6 +452,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			int maxLog = ORMConfig.getInstance().getMaxBatchLog();
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
+				Assert.notNull(t,"Batch list must not contain null element.");
 				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ", i + 1).append('/').append(len));
 				context.setInsertVariables(t, writeFields);
 				psmt.addBatch();
@@ -552,6 +553,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			int maxLog = ORMConfig.getInstance().getMaxBatchLog();
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
+				Assert.notNull(t,"Batch list must not contain null element.");
 				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ", i + 1).append('/').append(len));
 				List<Object> whereBind = context.setVariables(t.getQuery(), updatePart.getVariables(), bindVar);
 				psmt.addBatch();
@@ -622,6 +624,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			int maxLog = ORMConfig.getInstance().getMaxBatchLog();
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
+				Assert.notNull(t,"Batch list must not contain null element.");
 				if (t.getQuery().getConditions().isEmpty()) {
 					DbUtils.fillConditionFromField(t, t.getQuery(), null, pkMpode);
 				}

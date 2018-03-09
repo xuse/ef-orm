@@ -162,13 +162,21 @@ final class NamedQueryHolder {
 			return;
 		Map<String, NQEntry> result = new ConcurrentHashMap<String, NQEntry>();
 		boolean debugMode = ORMConfig.getInstance().isDebugMode();
-		String filename=parent.getNamedQueryFile();
+		String filename = parent.getNamedQueryFile();
 		if (StringUtils.isNotEmpty(filename)) {
 			try {
-				Enumeration<URL> urls=getClass().getClassLoader().getResources(filename);
+				LogUtil.info("Looking up named-query resource [{}]", filename);
+				//有人在Tomcat下将GeeQuery库异动到公共库目录，从而造成GeeQuery的ClassLoader无法加载到资源
+				ClassLoader cl=Thread.currentThread().getContextClassLoader();
+				if(cl==null){
+					cl=getClass().getClassLoader();
+				}
+				Enumeration<URL> urls = cl.getResources(filename);
+				int count = 0;
 				// Load from files
-				for (;urls.hasMoreElements();) {
-					URL queryFile =urls.nextElement();
+				for (; urls.hasMoreElements();) {
+					count++;
+					URL queryFile = urls.nextElement();
 					if (queryFile == null)
 						continue;
 					if (debugMode) {
@@ -177,6 +185,7 @@ final class NamedQueryHolder {
 					File file = IOUtils.urlToFile(queryFile);
 					loadFile(result, file);
 				}
+				LogUtil.info("Look up named-query resource [{}], found {} resource(s).", filename, count);
 			} catch (IOException e) {
 				LogUtil.exception(e);
 			}
@@ -210,15 +219,15 @@ final class NamedQueryHolder {
 		loadedFiles.put(file, file.lastModified());
 		try {
 			Document doc = XMLUtils.loadDocument(file);
-			String namespace=doc.getDocumentElement().getAttribute("namespace");
+			String namespace = doc.getDocumentElement().getAttribute("namespace");
 			for (Element e : XMLUtils.childElements(doc.getDocumentElement(), "query")) {
 				String name = XMLUtils.attrib(e, "name");
 				String type = XMLUtils.attrib(e, "type");
 				String sql = XMLUtils.nodeText(e);
 				int size = StringUtils.toInt(XMLUtils.attrib(e, "fetch-size"), 0);
-//				int max=StringUtils.toInt(XMLUtils.attrib(e, "max-rows"), 0);
-				if(StringUtils.isNotEmpty(namespace)){
-					name=namespace+"."+name;
+				// int max=StringUtils.toInt(XMLUtils.attrib(e, "max-rows"), 0);
+				if (StringUtils.isNotEmpty(namespace)) {
+					name = namespace + "." + name;
 				}
 				NamedQueryConfig nq = new NamedQueryConfig(name, sql, "JPQL".equalsIgnoreCase(type), size);
 				nq.setTag(XMLUtils.attrib(e, "tag"));
