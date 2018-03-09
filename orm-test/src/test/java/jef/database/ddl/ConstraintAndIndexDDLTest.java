@@ -12,6 +12,7 @@ import jef.database.DbClient;
 import jef.database.DbMetaData;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.object.Index;
+import jef.database.support.RDBMS;
 import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
@@ -28,7 +29,7 @@ import jef.database.test.JefJUnit4DatabaseTestRunner;
         @DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"),
         @DataSource(name = "derby", url = "${derby.url}"),
         @DataSource(name = "hsqldb", url = "${hsqldb.url}", user = "sa", password = ""),
-        @DataSource(name = "sqlite", url = "${sqlite.url}"),
+//        @DataSource(name = "sqlite", url = "${sqlite.url}"),
         @DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}") 
 })
 public class ConstraintAndIndexDDLTest {
@@ -48,10 +49,15 @@ public class ConstraintAndIndexDDLTest {
         String tablename = "TABLE_FOR_TEST";
         
         // 删除UQ1_FOR_TEST
-        meta.dropConstraint(tablename, "UQ1_FOR_TEST"); 
+        if(RDBMS.mysql == dialect.getName() || RDBMS.mariadb == dialect.getName()){
+        	db.executeSql("DROP INDEX UQ1_FOR_TEST ON TABLE_FOR_TEST");
+        }else{
+        	db.executeSql("ALTER TABLE TABLE_FOR_TEST DROP CONSTRAINT UQ1_FOR_TEST");
+        }
+//        meta.dropConstraint(tablename, "UQ1_FOR_TEST"); 
 
         // 添加UQ3_FOR_TEST
-        db.executeSql("ALTER TABLE TABLE_FOR_TEST ADD CONSTRAINT UQ3_FOR_TEST UNIQUE(name)");
+        db.executeSql("ALTER TABLE TABLE_FOR_TEST ADD CONSTRAINT UQ_ADDED UNIQUE(name)");
         
         // 删除IDX_DEFAULT_TEST索引
         Index index = new Index();
@@ -62,7 +68,7 @@ public class ConstraintAndIndexDDLTest {
         // 添加IDX_FOR_TEST(code, name desc)索引
         index = new Index();
         index.setTableName(tablename);
-        index.setIndexName("IDX_FOR_TEST");
+        index.setIndexName("IDX_ADDED");
         index.setTableSchema(meta.getCurrentSchema());
         index.setUnique(true);
         index.addColumn("code", true);

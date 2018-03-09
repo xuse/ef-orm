@@ -28,7 +28,7 @@ public enum ConstraintType {
 	public static ConstraintType parseName(String name){
 		
 		for (ConstraintType a : ConstraintType.values()) {  
-            if (a.typeName.equals(name)) {  
+            if (a.typeName.equalsIgnoreCase(name)) {  
                 return a;  
             }  
         }  
@@ -38,7 +38,7 @@ public enum ConstraintType {
 	public static ConstraintType parseFullName(String name){
 		
 		for (ConstraintType a : ConstraintType.values()) {  
-            if (a.typeFullName.equals(name)) {  
+            if (a.typeFullName.equalsIgnoreCase(name)) {  
                 return a;  
             }  
         }  

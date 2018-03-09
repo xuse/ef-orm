@@ -87,6 +87,7 @@ import jef.database.meta.object.TableInfo;
 import jef.database.query.DefaultPartitionCalculator;
 import jef.database.query.Func;
 import jef.database.support.MetadataEventListener;
+import jef.database.support.RDBMS;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.executor.ExecutorImpl;
 import jef.database.wrapper.executor.ExecutorJTAImpl;
@@ -1679,7 +1680,7 @@ public class DbMetaData {
 
 		// 计算主键变化
 		List<ColumnMapping> pkFields = meta.getPKFields();
-		PrimaryKey pk = getPrimaryKey(tablename);
+		PrimaryKey currentPk = getPrimaryKey(tablename);
 
 		String[] pkColumnsEntity = new String[pkFields.size()]; // entity中定义的主键
 		for (int n = 0; n < pkFields.size(); n++) {
@@ -1687,13 +1688,13 @@ public class DbMetaData {
 		}
 
 		String[] pkColumnsDB = new String[0]; // DB中实际的主键
-		if (pk != null) {
-			pkColumnsDB = pk.getColumns();
+		if (currentPk != null) {
+			pkColumnsDB = currentPk.getColumns();
 		}
 
 		if (!ArrayUtils.equals(pkColumnsEntity, pkColumnsDB)) {
 			// FIXME 暂不支持修改主键
-			if (pk != null) {
+			if (currentPk != null) {
 				LogUtil.warn("Primary key of table [{}] was changed from [{}] to [{}], automatically modifying is not supported yet. Please modify your table by yourself.");
 				/*
 				 * Constraint con = new Constraint(); con.setName(pk.getName());
@@ -1729,7 +1730,7 @@ public class DbMetaData {
 		// 该张表上全部的约束
 		List<Constraint> constraints = info.profile.getConstraintInfo(this, schema, tablename, null);
 		PrimaryKey pk = this.getPrimaryKey(tablename);
-		List<ForeignKey> referedKeys=getForeignKeyReferenceTo(tablename);
+		List<ForeignKey> referedKeys = getForeignKeyReferenceTo(tablename);
 
 		// 计算要删除的索引
 		Collection<Index> indexesDB = getIndexes(tablename);
@@ -1763,7 +1764,7 @@ public class DbMetaData {
 
 					for (int j = 0; j < before.size(); j++) {
 						Constraint conB = before.get(j);
-						if (conA.getName().equals(conB.getName())) { // 同一个约束，判断是否有变更
+						if (StringUtils.equals(conA.getSchema(), conB.getSchema()) && StringUtils.equals(conA.getName(), conB.getName())) { // 同一个约束，判断是否有变更
 							if (conA.equals(conB)) { // 如果相同则两边都移除
 								after.remove(i);
 								before.remove(j);
@@ -1800,25 +1801,24 @@ public class DbMetaData {
 		}
 		// Unique约束一致，不删除
 		for (Constraint c : constraints) {
-			if (c.getType() == ConstraintType.U || c.getType() == ConstraintType.P) {
+			// Derby为唯一约束生成的索引不带Unique标记，所以此处要放宽限制。
+			boolean isKey=(c.getType() == ConstraintType.U || c.getType() == ConstraintType.P);
+			if (RDBMS.derby == info.profile.getName() || isKey==index.isUnique()) {
 				if (index.getIndexName().equalsIgnoreCase(c.getName())) {
-					// TODO 这个判断究竟有没有意义，由约束而产生的索引和约束的名称是否会一样？要测试。
 					return true;
 				}
-				// FIXME 列相同就不删除？这样的话如果Unique约束的相同字段上再手工创建一条索引，这条索引将不会被删除。
-				// 这个规则可能也是有问题的。
-				if (ArrayUtils.equals(index.getColumnNames(), c.getColumns())) {
+				// 目前策略较为保守，如果列相同就不删除？这样的话如果Unique约束的相同字段上再手工创建一条索引，这条索引将不会被删除。
+				if (ArrayUtils.equals(index.getColumnNames(), c.getColumns().toArray(new String[c.getColumns().size()]))) {
 					return true;
 				}
 			}
 		}
-		//被引用的外键约束一致，不删除
-		//外键上的索引也不能删除，否则数据库效率极低，Oracle还会锁表。
-		//虽然我们不建议在数据库中创建外键，但如果真有人这么做了，也不能坑。
-		for(ForeignKey foreignKey:foreignKeys){
-			
-			
-		}
+		// 被引用的外键约束一致，不删除
+		// 外键上的索引也不能删除，否则数据库效率极低，Oracle还会锁表。
+		// 虽然我们不建议在数据库中创建外键，但如果真有人这么做了，也不能坑。
+		// for(ForeignKey foreignKey:foreignKeys){
+		// 后续再考虑支持
+		// }
 		return false;
 	}
 

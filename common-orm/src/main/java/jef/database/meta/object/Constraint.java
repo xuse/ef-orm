@@ -270,10 +270,10 @@ public class Constraint {
 		if(!(obj instanceof Constraint)) return false;
 		Constraint con = (Constraint)obj;
 //		if(!Objects.equal(this.catalog, con.catalog))return false;
-//		if(!Objects.equal(this.schema, con.schema))return false;
+		if(!Objects.equal(this.schema, con.schema))return false;
 		if(!Objects.equal(this.name, con.name))return false;
 //		if(!Objects.equal(this.tableCatalog, con.tableCatalog))return false;
-//		if(!Objects.equal(this.tableSchema, con.tableSchema))return false;
+		if(!Objects.equal(this.tableSchema, con.tableSchema))return false;
 		if(!Objects.equal(this.tableName, con.tableName))return false;
 		if(!Objects.equal(this.type, con.type))return false;
 		if(!Objects.equal(this.deferrable, con.deferrable))return false;

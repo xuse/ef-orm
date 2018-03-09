@@ -394,7 +394,8 @@ public class DdlGeneratorImpl implements DdlGenerator {
     	}else if(ConstraintType.U == con.getType()){
     		// 删除唯一键约束
 	    	if(RDBMS.mysql == profile.getName() || RDBMS.mariadb == profile.getName()){
-	    		sb.append(String.format(DROP_INDEX_SQL, con.getTableName(), con.getName()));
+	    		String dropIndexTablePattern = profile.getProperty(DbProperty.DROP_INDEX_TABLE_PATTERN);
+	    		sb.append("DROP INDEX " + String.format(dropIndexTablePattern, con.getName(), con.getTableName()));
     		}else{
     			sb.append(String.format(DROP_CONSTRAINT_SQL, con.getTableName(), con.getName()));
     		}
