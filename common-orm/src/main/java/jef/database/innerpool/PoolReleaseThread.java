@@ -32,8 +32,10 @@ public class PoolReleaseThread extends Thread{
 
 	public void addPool(IPool<?> ip){
 		pools.add(ip);
-		if(!isAlive() && alive){
-			start();	
+		synchronized (this) {
+			if(!isAlive() && alive){
+				start();	
+			}	
 		}
 	}
 	

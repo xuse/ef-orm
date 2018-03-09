@@ -38,12 +38,14 @@ final class PoolCheckThread extends Thread {
 		if (ORMConfig.getInstance().isDebugMode()) {
 			LogUtil.show("The [" + pool.toString() + "] was added into PoolCheck task queue.");
 		}
-		if (alive && !isAlive()) {
-			try {
-				start();
-			} catch (IllegalStateException e) {
-				LogUtil.warn("Start check thread error.", e);
-			}
+		synchronized (this) {
+			if (alive && !isAlive()) {
+				try {
+					start();
+				} catch (IllegalStateException e) {
+					LogUtil.warn("Start check thread error.", e);
+				}
+			}	
 		}
 	}
 
