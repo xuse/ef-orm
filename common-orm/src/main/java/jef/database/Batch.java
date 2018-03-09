@@ -38,6 +38,7 @@ import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.UpdateClause;
 import jef.database.wrapper.variable.BindVariableContext;
 import jef.database.wrapper.variable.Variable;
+import jef.tools.Assert;
 import jef.tools.StringUtils;
 
 /**
@@ -452,6 +453,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			int maxLog = ORMConfig.getInstance().getMaxBatchLog();
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
+				Assert.notNull(t,"Batch list must not contain null element.");
 				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ", i + 1).append('/').append(len));
 				context.setInsertVariables(t, writeFields);
 				psmt.addBatch();
@@ -552,6 +554,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			int maxLog = ORMConfig.getInstance().getMaxBatchLog();
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
+				Assert.notNull(t,"Batch list must not contain null element.");
 				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ", i + 1).append('/').append(len));
 				List<Object> whereBind = context.setVariables(t.getQuery(), updatePart.getVariables(), bindVar);
 				psmt.addBatch();
@@ -621,6 +624,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			int maxLog = ORMConfig.getInstance().getMaxBatchLog();
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
+				Assert.notNull(t,"Batch list must not contain null element.");
 				if (t.getQuery().getConditions().isEmpty()) {
 					DbUtils.fillConditionFromField(t, t.getQuery(), null, pkMpode);
 				}
