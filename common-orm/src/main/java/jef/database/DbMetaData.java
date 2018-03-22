@@ -65,13 +65,11 @@ import jef.database.meta.ColumnModification;
 import jef.database.meta.DbProperty;
 import jef.database.meta.DdlGenerator;
 import jef.database.meta.DdlGeneratorImpl;
-import jef.database.meta.FBIField;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.MetadataFeature;
 import jef.database.meta.TableCreateSQLs;
-import jef.database.meta.def.IndexDef;
 import jef.database.meta.def.UniqueConstraintDef;
 import jef.database.meta.object.Column;
 import jef.database.meta.object.Constraint;
@@ -80,7 +78,6 @@ import jef.database.meta.object.DataType;
 import jef.database.meta.object.ForeignKey;
 import jef.database.meta.object.Function;
 import jef.database.meta.object.Index;
-import jef.database.meta.object.Index.IndexItem;
 import jef.database.meta.object.PrimaryKey;
 import jef.database.meta.object.SequenceInfo;
 import jef.database.meta.object.TableInfo;
@@ -913,11 +910,9 @@ public class DbMetaData {
 					index.setType(rs.getInt("TYPE"));
 					map.put(indexName, index);
 				}
-
 				String asc = rs.getString("ASC_OR_DESC");
-				Boolean isAsc = (asc == null ? true : asc.startsWith("A"));
 				int order = rs.getInt("ORDINAL_POSITION");
-				index.addColumn(cName, isAsc, order);
+				index.addColumn(cName, asc == null ? true : asc.startsWith("A"), order);
 			}
 			return map.values();
 		} finally {
@@ -1734,9 +1729,10 @@ public class DbMetaData {
 
 		// 计算要删除的索引
 		Collection<Index> indexesDB = getIndexes(tablename);
-		List<IndexDef> newIndexes = meta.getIndexDefinition();
+		List<Index> newIndexes = meta.getIndexDefinition().stream().map(e -> Index.valueOf(e, meta, info.profile, tablename)).collect(Collectors.toList());
+
 		for (Index index : indexesDB) {
-			if (isDupIndex(index, newIndexes, meta)) {
+			if (newIndexes.remove(index)) {
 				continue;
 			}
 			// 还要确认当前索引不是某个约束或键的索引
@@ -1746,8 +1742,8 @@ public class DbMetaData {
 
 		}
 		// 由于在isDupIndex方法中删除了数据库中已匹配上的Index，列表中剩下的全部都是要新建的Index
-		for (IndexDef def : newIndexes) {
-			sqls.add(ddlGenerator.addIndex(def, meta, tablename));
+		for (Index def : newIndexes) {
+			sqls.add(def.toCreateSql(info.profile));
 		}
 		return sqls;
 	}
@@ -1802,8 +1798,8 @@ public class DbMetaData {
 		// Unique约束一致，不删除
 		for (Constraint c : constraints) {
 			// Derby为唯一约束生成的索引不带Unique标记，所以此处要放宽限制。
-			boolean isKey=(c.getType() == ConstraintType.U || c.getType() == ConstraintType.P);
-			if (RDBMS.derby == info.profile.getName() || isKey==index.isUnique()) {
+			boolean isKey = (c.getType() == ConstraintType.U || c.getType() == ConstraintType.P);
+			if (RDBMS.derby == info.profile.getName() || isKey == index.isUnique()) {
 				if (index.getIndexName().equalsIgnoreCase(c.getName())) {
 					return true;
 				}
@@ -1819,32 +1815,6 @@ public class DbMetaData {
 		// for(ForeignKey foreignKey:foreignKeys){
 		// 后续再考虑支持
 		// }
-		return false;
-	}
-
-	/**
-	 * 是否一条已经定义的Index，注意如果是一条已定义的Index，会从idxDefList中删除对应的Index
-	 * 
-	 * @param index
-	 * @param idxDefList
-	 * @param meta
-	 * @return
-	 * @throws SQLException
-	 */
-	private boolean isDupIndex(Index index, List<IndexDef> idxDefList, ITableMetadata meta) throws SQLException {
-		for (IndexDef idxDef : idxDefList) {
-			String[] indexColumns = new String[index.getColumns().size()];
-			for (int i = 0; i < indexColumns.length; i++) {
-				IndexItem idxItem = index.getColumns().get(i);
-				indexColumns[i] = idxItem.toString();
-			}
-			String[] indexColumnsDef = toIndexDescrption(meta, idxDef.getColumns()).getColumnNames();
-			if ((index.isUnique() == idxDef.isUnique()) && (StringUtils.contains(index.getUserDefinition(), "clustered", true) == idxDef.isClustered())
-					&& (ArrayUtils.equals(indexColumns, indexColumnsDef))) {
-				idxDefList.remove(idxDef);
-				return true;
-			}
-		}
 		return false;
 	}
 
@@ -1911,10 +1881,8 @@ public class DbMetaData {
 	 * @throws SQLException
 	 * @see {@link ITableMetadata}
 	 */
-	public boolean createTable(ITableMetadata meta, String tablename) throws SQLException {
-		if (tablename == null) {
-			tablename = meta.getTableName(true);
-		}
+	public boolean createTable(ITableMetadata meta, String table) throws SQLException {
+		final String tablename = StringUtils.isEmpty(table) ? meta.getTableName(true) : table;
 		boolean created = false;
 		if (!existTable(tablename)) {
 			TableCreateSQLs sqls = ddlGenerator.toTableCreateClause(meta, tablename);
@@ -1927,11 +1895,14 @@ public class DbMetaData {
 					createSequence0(null, seq.second, 1, StringUtils.toLong(StringUtils.repeat('9', seq.first), Long.MAX_VALUE), exe, true);
 				}
 				exe.executeSql(sqls.getComments());
-				// 创建外键约束等
-				// TODO
+				// TODO创建外键约束等
 				// exe.executeSql(sqls.getOtherContraints());
+				
 				// create indexes
-				exe.executeSql(getIndexClausesOfTable(meta, tablename));
+				exe.executeSql(meta.getIndexDefinition()
+						.stream()
+						.map(e -> Index.valueOf(e, meta, info.profile, tablename).toCreateSql(info.profile))
+						.collect(Collectors.toList()));
 			} finally {
 				exe.close();
 			}
@@ -1943,17 +1914,6 @@ public class DbMetaData {
 		}
 		// 额外创建表
 		return created;
-	}
-
-	/**
-	 * 转换成索引创建语句
-	 */
-	private List<String> getIndexClausesOfTable(ITableMetadata meta, String tablename) {
-		List<String> sqls = new ArrayList<String>();
-		for (IndexDef index : meta.getIndexDefinition()) {
-			sqls.add(ddlGenerator.addIndex(index, meta, tablename));
-		}
-		return sqls;
 	}
 
 	/*
@@ -2229,76 +2189,6 @@ public class DbMetaData {
 	}
 
 	/**
-	 * 将给定的参数转换成合法的Index描述对象
-	 * 
-	 * @param type
-	 *            实体类
-	 * @param columns
-	 *            索引的列
-	 * @return 索引的名称
-	 * @throws SQLException
-	 */
-	public Index toIndexDescrption(Class<?> type, String... columns) throws SQLException {
-		ITableMetadata meta = MetaHolder.getMeta(type);
-		return toIndexDescrption(meta, columns);
-	}
-
-	/**
-	 * 将给定的参数转换成合法的Index描述对象
-	 * 
-	 * @param meta
-	 *            表的元模型
-	 * @param columns
-	 *            索引的列
-	 * @return 索引名称
-	 * @throws SQLException
-	 */
-	public Index toIndexDescrption(ITableMetadata meta, String... columnes) throws SQLException {
-		List<Field> fields = new ArrayList<Field>();
-		List<IndexItem> columns = new ArrayList<IndexItem>();
-		for (String fieldname : columnes) {
-			boolean asc = true;
-			if (fieldname.toLowerCase().endsWith(" desc")) {
-				asc = false;
-				fieldname = fieldname.substring(0, fieldname.length() - 5).trim();
-			}
-			Field field = meta.getField(fieldname);
-			if (field == null) {
-				field = new FBIField(fieldname);
-				columns.add(new IndexItem(fieldname, asc, 0));
-			} else {
-				String columnName = meta.getColumnName(field, getProfile(), true);
-				columns.add(new IndexItem(columnName, asc, 0));
-			}
-			fields.add(field);
-		}
-		StringBuilder iNameBuilder = new StringBuilder();
-		iNameBuilder.append("IDX_").append(StringUtils.truncate(StringUtils.removeChars(meta.getTableName(false), '_'), 14));
-		int maxField = ((28 - iNameBuilder.length()) / columnes.length) - 1;
-		if (maxField < 1)
-			maxField = 1;
-		for (Field field : fields) {
-			iNameBuilder.append('_');
-			if (field instanceof FBIField) {
-				iNameBuilder.append(StringUtils.truncate(StringUtils.randomString(), maxField));
-			} else {
-				iNameBuilder.append(StringUtils.truncate(meta.getColumnDef(field).getColumnName(getProfile(), false), maxField));
-			}
-		}
-		String indexName = iNameBuilder.toString();
-		if (indexName.length() > 30)
-			indexName = indexName.substring(0, 30);
-
-		Index indexobj = new Index(indexName);
-		indexobj.setTableSchema(meta.getSchema());
-		indexobj.setTableName(meta.getTableName(false));
-		for (IndexItem c : columns) {
-			indexobj.addColumn(c.column, c.asc);
-		}
-		return indexobj;
-	}
-
-	/**
 	 * 创建索引
 	 * 
 	 * @param index
@@ -2306,22 +2196,19 @@ public class DbMetaData {
 	 */
 	public boolean createIndex(Index index) throws SQLException {
 		Collection<Index> indexs = getIndexes(index.getTableWithSchem());
-		index.generateName();
 		for (Index old : indexs) {
-			if (ArrayUtils.equals(old.getColumnNames(), index.getColumnNames())) {
+			if(old.equals(index)){
 				LogUtil.warn(index + " duplicate with old index " + old.getIndexName());
 				return false;
 			}
+			//名称重复
 			if (old.getIndexName().equalsIgnoreCase(index.getIndexName())) {
-				String name = "IDX" + StringUtils.removeChars(index.getTableName(), '_') + "_";
-				name += StringUtils.randomString();
-				index.setIndexName(name);
+				index.generateRandomName();
 			}
 		}
-		String sql = index.toCreateSql(getProfile());
 		StatementExecutor exe = createExecutor();
 		try {
-			exe.executeSql(sql);
+			exe.executeSql(index.toCreateSql(getProfile()));
 			return true;
 		} finally {
 			exe.close();

@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Map;
 
 import jef.database.dialect.ColumnType;
-import jef.database.meta.def.IndexDef;
 import jef.database.meta.object.Constraint;
 import jef.database.meta.object.Index;
 
@@ -59,15 +58,6 @@ public interface DdlGenerator {
      * @return SQL语句
      */
     String addConstraint(Constraint con);
-
-    /**
-     * 生成创建索引的语句
-     * @param def
-     * @param meta
-     * @param tableName
-     * @return
-     */
-    String addIndex(IndexDef def,ITableMetadata meta, String tableName);
     
     /**
      * 生成修改主键的语句(先删后加一个语句)

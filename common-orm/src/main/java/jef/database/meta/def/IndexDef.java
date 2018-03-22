@@ -8,9 +8,9 @@ import javax.persistence.Index;
 import org.apache.commons.lang.StringUtils;
 
 /**
- * Index描述
+ * Index描述。
+ * 注意：内部的colums都是Java中的字段名
  * 
- * @author publicxtgxrj10
  * 
  */
 public class IndexDef {
@@ -21,7 +21,8 @@ public class IndexDef {
 	 */
 	private String name;
 	/**
-	 * 索引的各个字段名称（是java字段名，不是列名）
+	 * 索引的各个字段名称（是java字段名，不是列名）。
+	 * 此外还可能有DESC等倒序关键字
 	 * 
 	 * @return
 	 */
@@ -45,6 +46,9 @@ public class IndexDef {
 	 */
 	private boolean clustered;
 
+	/**
+	 * @return The name of the index.
+	 */
 	public String getName() {
 		return name;
 	}
@@ -65,6 +69,16 @@ public class IndexDef {
 		return definition;
 	}
 
+	/**
+	 * 设置索引定义，可以设置多个用空格分隔的关键字。
+	 * 识别其中的关键字——
+	 * <ul>
+	 * <li><code>clustered</code></li>
+	 * <li><code>unique</code></li>
+	 * </ul>
+	 * (目前仅支持上述关键字，其余描述会被丢弃)
+	 * @param definition Other definitions of the index.
+	 */
 	public void setDefinition(String definition) {
 		if(definition==null)return;
 		String[] defs = StringUtils.split(definition);
@@ -95,7 +109,12 @@ public class IndexDef {
 		this.columns = columns;
 	}
 
-	public static IndexDef create(Index index) {
+	/**
+	 * 基于Annotation @{link javax.persistence.Index}转换为IndexDef对象
+	 * @param index
+	 * @return
+	 */
+	public static IndexDef valueOf(Index index) {
 		IndexDef def = new IndexDef(index.name(), StringUtils.split(index.columnList(), ","));
 		def.setUnique(index.unique());
 		return def;

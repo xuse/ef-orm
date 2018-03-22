@@ -1,6 +1,5 @@
 package jef.database.meta;
 
-import java.sql.DatabaseMetaData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -10,14 +9,11 @@ import java.util.Set;
 
 import jef.common.SimpleSet;
 import jef.database.DbUtils;
-import jef.database.Field;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.meta.def.IndexDef;
 import jef.database.meta.object.Constraint;
 import jef.database.meta.object.ConstraintType;
 import jef.database.meta.object.Index;
-import jef.database.meta.object.Index.IndexItem;
 import jef.database.support.RDBMS;
 import jef.tools.StringUtils;
 
@@ -237,67 +233,6 @@ public class DdlGeneratorImpl implements DdlGenerator {
         return String.format(template, tablename, constraintName);
     }
 
-
-    public String addIndex(IndexDef index, ITableMetadata meta,String tablename) {
-        int n = tablename.indexOf('.');
-        String tableschema = null;
-        if (n > -1) {
-            tableschema = tablename.substring(0, n);
-            tablename = tablename.substring(n + 1);
-        }
-        
-        List<Field> fields = new ArrayList<Field>();
-        List<IndexItem> columns = new ArrayList<IndexItem>();
-        for (String fieldname : index.getColumns()) {
-            boolean asc = true;
-            if (fieldname.toLowerCase().endsWith(" desc")) {
-                asc = false;
-                fieldname = fieldname.substring(0, fieldname.length() - 5).trim();
-            }
-            Field field = meta.getField(fieldname);
-            if (field == null) {
-                field = new FBIField(fieldname);
-                columns.add(new IndexItem(fieldname, asc, 0));
-            } else {
-                String columnName = meta.getColumnName(field, profile, true);
-                columns.add(new IndexItem(columnName, asc, 0));
-            }
-            fields.add(field);
-        }
-
-        String indexName = index.getName();
-        if (StringUtils.isEmpty(indexName)) {
-            StringBuilder iNameBuilder = new StringBuilder();
-            iNameBuilder.append("IDX_").append(StringUtils.truncate(StringUtils.removeChars(tablename, '_'), 14));
-            int maxField = ((28 - iNameBuilder.length()) / index.getColumns().length) - 1;
-            if (maxField < 1)
-                maxField = 1;
-            for (Field field : fields) {
-                iNameBuilder.append('_');
-                if (field instanceof FBIField) {
-                    iNameBuilder.append(StringUtils.truncate(StringUtils.randomString(), maxField));
-                } else {
-                    iNameBuilder.append(StringUtils.truncate(meta.getColumnDef(field).getColumnName(profile, false), maxField));
-                }
-            }
-            indexName = iNameBuilder.toString();
-        }
-        if (indexName.length() > 30)
-            indexName = indexName.substring(0, 30);
-
-        Index indexobj = new Index(indexName);
-        indexobj.setTableSchema(tableschema);
-        indexobj.setTableName(tablename);
-        indexobj.setUnique(index.isUnique());
-        indexobj.setUserDefinition(index.getDefinition());
-        if (index.isClustered()) {
-            indexobj.setType(DatabaseMetaData.tableIndexClustered);
-        }
-        for (IndexItem c : columns) {
-            indexobj.addColumn(c.column, c.asc);
-        }
-        return indexobj.toCreateSql(profile);
-    }
 
     private static final String DROP_INDEX_SQL = "drop index %2$s";
     

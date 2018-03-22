@@ -149,7 +149,7 @@ public final class TableMetadata extends AbstractMetadata {
 				tableName = table.name();
 			}
 			for(javax.persistence.Index index: table.indexes()){
-				this.indexes.add(IndexDef.create(index));
+				this.indexes.add(IndexDef.valueOf(index));
 			}
 			for(javax.persistence.UniqueConstraint unique: table.uniqueConstraints()){
 				this.uniques.add(new UniqueConstraintDef(unique));
