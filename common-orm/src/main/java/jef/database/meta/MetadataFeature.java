@@ -14,6 +14,7 @@ import jef.database.DbUtils;
 import jef.database.meta.object.Case;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.springframework.util.Assert;
 
 public class MetadataFeature {
 	/**
@@ -79,6 +80,7 @@ public class MetadataFeature {
 	}
 
 	public MetadataFeature(DatabaseMetaData metadata) throws SQLException {
+		Assert.notNull(metadata,"Not init");
 		this.quoteChar = metadata.getIdentifierQuoteString();
 		if (metadata.supportsMixedCaseIdentifiers() || metadata.storesMixedCaseIdentifiers()) {
 			this.defaultCase = Case.MIXED_SENSITIVE;

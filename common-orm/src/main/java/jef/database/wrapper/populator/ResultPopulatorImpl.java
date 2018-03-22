@@ -718,7 +718,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 	}
 	
 	private static ObjectPopulator fillPlain(BeanAccessor ba,boolean skipAnnataion,ColumnMeta columnMeta){
-		Map<String, ColumnDescription> map = new HashMap<String, ColumnDescription>();
+		Map<String, ColumnDescription> matched = new HashMap<String, ColumnDescription>();
 		for (String fieldName : ba.getPropertyNames()) {
 			javax.persistence.Column columnAnnotation = skipAnnataion ? null : getAnnotation(ba, fieldName, javax.persistence.Column.class);
 			String columnName;
@@ -730,10 +730,12 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 			ColumnDescription c = columnMeta.getByUpperName(columnName.toUpperCase());//findBySimpleName(columnName)
 			if (c != null) {
 				c.setAccessor(ColumnMappings.getAccessor(ba.getPropertyType(fieldName), null, c, true));
-				map.put(fieldName, c);
-
+				matched.put(fieldName, c);
 			}
 		}
-		return new ObjectPopulator(null, map);
+		if(matched.isEmpty()){
+			throw new PersistenceException("No column match any fields in result class ["+ba.getType().getName()+"]. Columns:"+ columnMeta.toString());
+		}
+		return new ObjectPopulator(null, matched);
 	}
 }

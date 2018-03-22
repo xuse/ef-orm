@@ -2930,7 +2930,7 @@ public abstract class Session {
 		if (transformers.isVarObject()) {
 			return (List<T>) ResultPopulatorImpl.instance.toJavaObject(this, rsw, mapping, transformers);
 		}
-		boolean plain = transformers.hasStrategy(PopulateStrategy.PLAIN_MODE) || (mapping == null && !IQueryableEntity.class.isAssignableFrom(returnClz));
+		boolean plain = transformers.hasStrategy(PopulateStrategy.PLAIN_MODE) || !IQueryableEntity.class.isAssignableFrom(returnClz);
 		if (plain) {
 			return (List<T>) ResultPopulatorImpl.instance.toPlainJavaObject(rsw, transformers);
 		}

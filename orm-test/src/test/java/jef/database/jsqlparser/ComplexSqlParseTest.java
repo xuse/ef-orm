@@ -1,6 +1,7 @@
 package jef.database.jsqlparser;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.StringReader;
 import java.sql.SQLException;
@@ -230,33 +231,6 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	}
 
 	@Test
-	public void aaa2() throws ParseException {
-		String sql = "";
-		jef.database.jsqlparser.visitor.Statement st = DbUtils.parseStatement(sql);
-		// st.accept(new VisitorAdapter() {
-		// @Override
-		// public void visit(JpqlParameter param) {
-		// System.out.println(param);
-		// }
-		//
-		// @Override
-		// public void visit(Column tableColumn) {
-		// // TODO Auto-generated method stub
-		// super.visit(tableColumn);
-		// System.out.println(tableColumn);
-		// }
-		//
-		// @Override
-		// public void visit(OrderByElement orderBy) {
-		// System.out.println("orderBy:----" + orderBy);
-		// }
-		//
-		// });
-
-		System.out.println(st.toString());
-	}
-
-	@Test
 	public void aaax() throws ParseException {
 		String s = "select decode(ID,1,'壹',2,'贰',3,'叁',4,'肆',5,'伍',6,'陆',7,'柒',8,'捌',9,'玖',str(ID)) as C from foo t1";
 		jef.database.jsqlparser.visitor.Statement st = DbUtils.parseStatement(s);
@@ -381,7 +355,7 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 
 	@Test
 	public void testComplexSqlDruidPG() throws SQLException, ParseException, IOException {
-		doParseFile("complex-sqls-postgres.txt", ParseType.DR_PG);
+		doParseFile("complex-sqls-pg.txt", ParseType.DR_PG);
 	}
 
 	@Test
@@ -392,6 +366,9 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	private void doParseFile(String filename, ParseType eSql) throws ParseException, IOException {
 		StringBuilder sb = new StringBuilder();
 		BufferedReader reader = IOUtils.getReader(this.getClass().getResource(filename), "UTF-8");
+		if(reader==null){
+			throw new FileNotFoundException(filename);
+		}
 		String line;
 		boolean comment = false;
 		int total = 0;

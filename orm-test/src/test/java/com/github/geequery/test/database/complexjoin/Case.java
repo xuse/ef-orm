@@ -3,6 +3,8 @@ package com.github.geequery.test.database.complexjoin;
 import java.sql.SQLException;
 import java.util.List;
 
+import javax.persistence.PersistenceException;
+
 import jef.database.DbClient;
 import jef.database.DbUtils;
 import jef.database.QB;
@@ -14,7 +16,7 @@ import org.junit.Test;
 public class Case {
 	DbClient db = new DbClient();
 
-	@Test
+	@Test(expected=PersistenceException.class)
 	public void test1() throws SQLException {
 //		db.createTable(OrgAreaRelation.class);
 //		db.createTable(OrgResourceRelation.class);
@@ -42,6 +44,8 @@ public class Case {
 		try {
 //			orgs = db.selectAs(join, Object[].class);
 			orgs = db.selectAs(join, Org.class);
+			
+//			orgs = db.selectAs(join, Org2.class);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
