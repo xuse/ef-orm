@@ -20,16 +20,19 @@ import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 import javax.persistence.PersistenceException;
 
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.Entry;
+import jef.database.DbUtils;
 import jef.database.DebugUtil;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
@@ -338,7 +341,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 				}
 				endPopulate(retObj);
 				return retObj;
-			} catch (Exception e) {
+			} catch (SQLException e) {
 				throw new RuntimeException(e);
 			} finally {
 				hasNext = rs.next();
@@ -459,7 +462,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 					prov.process(aw, rs);
 				}
 				return map;
-			} catch (Exception e) {
+			} catch (SQLException e) {
 				throw new RuntimeException(e);
 			} finally {
 				hasNext = rs.next();
@@ -535,9 +538,10 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 			boolean skipAnnataion = transformers.hasStrategy(PopulateStrategy.SKIP_COLUMN_ANNOTATION);
 			BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(retClz);
 			directPopulator = new ArrayList<ObjectPopulator>(schemas.length);
+			Set<ColumnMapping> populated=new HashSet<ColumnMapping>(meta.getColumns().size());
 			for (String schema : schemas) {
 				if(!transformers.hasIgnoreSchema(schema)){
-					directPopulator.add(fill(schema, defaultField, rs, columnNames, meta, skipAnnataion));
+					directPopulator.add(fill(schema, defaultField, rs, columnNames, meta, skipAnnataion, populated));
 				}
 			}
 			if (subObjects != null) {// 主对象拼装完毕后，拼装JOIN对象中指出的其他引用字段
@@ -587,8 +591,8 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 				}
 				endPopulate(retObj);
 				return retObj;
-			} catch (Exception e) {
-				throw new RuntimeException(e);
+			} catch (SQLException e) {
+				throw DbUtils.toRuntimeException(e);
 			} finally {
 				hasNext = rs.next();
 			}
@@ -611,7 +615,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 				ObjectPopulator op1;
 				List<LazyLoadTask> tasks = new ArrayList<LazyLoadTask>();
 				if(targetType.getType()!=EntityType.NATIVE || targetAccessor.getType()==targetType.getThisType()){
-					op1=fill(rp.getSchema(), allcolumns, rs, columns, targetType, false);
+					op1=fill(rp.getSchema(), allcolumns, rs, columns, targetType, false, null);
 					if (allcolumns.isLazyLob()) {
 						for (Field field : targetType.getLobFieldNames()) {
 							ColumnMapping mType=targetType.getColumnDef(field);
@@ -665,7 +669,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 	 * columns 数据库列
 	 * meta
 	 */
-	private static ObjectPopulator fill(String schema, AliasProvider fullRef, IResultSet rs, ColumnMeta columns, ITableMetadata meta, boolean skipColumn) {
+	private static ObjectPopulator fill(String schema, AliasProvider fullRef, IResultSet rs, ColumnMeta columns, ITableMetadata meta, boolean skipColumn, Set<ColumnMapping> populated) {
 		Map<String, ColumnDescription> data = new HashMap<String, ColumnDescription>();
 		DatabaseDialect profile = rs.getProfile();
 		// 这里要按照列名来拼装，不是默认全拼装
@@ -680,12 +684,17 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 			if (columnName != null) {
 				ColumnDescription columnDesc = columns.getByUpperName(columnName);
 				if (columnDesc == null) {
+					//没找到合适的列，可以认为是SQL语句中并未查询该列，保持该列不设置即可。
 //					if (schema == "")
 //						System.err.println("Warnning: populating object " + meta.getThisType() + " error," + schema + ":" + columnName + " not found in the selected columns");
 				}else{
-					ResultSetAccessor accessor = ColumnMappings.getAccessor(ft.getFieldAccessor().getType(), ft, columnDesc, false);
-					columnDesc.setAccessor(accessor);
-					data.put(f.name(), columnDesc);	
+					if(populated==null || populated.add(ft)){
+						ResultSetAccessor accessor = ColumnMappings.getAccessor(ft.getFieldAccessor().getType(), ft, columnDesc, false);
+						columnDesc.setAccessor(accessor);
+						data.put(f.name(), columnDesc);	
+					}else{
+						throw new PersistenceException("Ambiguous column will set to field ["+ft+"]. Hint: you can use Object[] as a result container to receive multiple tables in this join, or remove unsed select columns in the query.");
+					};
 				}
 			}
 		}
