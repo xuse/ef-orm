@@ -162,7 +162,7 @@ public class ConstraintTest {
 	@Test
 	public void testDerbyConstraint(){
 		
-		DbClient db=new DbClientBuilder().setDataSource("jdbc:derby:F:\\derby\\mydb;create=true", "", "").build();
+		DbClient db=new DbClientBuilder().setDataSource("jdbc:derby:db;create=true", "", "").build();
 		DbMetaData meta=db.getMetaData(null);
 		DatabaseDialect dialect=AbstractDialect.getDialect("derby");
 		try {
