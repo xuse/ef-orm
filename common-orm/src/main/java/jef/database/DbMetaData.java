@@ -1550,6 +1550,9 @@ public class DbMetaData {
 	 * @see MetadataEventListener 变更监听器
 	 */
 	public void refreshTable(ITableMetadata meta, String tablename, MetadataEventListener event) throws SQLException {
+		Assert.notNull(meta);
+		if (tablename == null)
+			tablename = meta.getTableName(true);
 		DatabaseDialect profile = getProfile();
 		tablename = profile.getObjectNameToUse(tablename);
 		boolean supportChangeDelete = profile.notHas(Feature.NOT_SUPPORT_ALTER_DROP_COLUMN);

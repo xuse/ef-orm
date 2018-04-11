@@ -17,8 +17,12 @@ import jef.database.annotation.HiloGeneration;
  * 
  * 
  * 一、JPA实现分为 Auto,Sequence, Identity, Table四种， AUTO的实现即为根据数据库 Identity >
- * Sequence > Table (由于数据库多少都支持前两个特性，所以实际上Table特性无效) 二、JEF设计中，标记为
- * IDentity和Sequence的默认都被处理为 AUTO. （设置为开关，默认开启） 三、如果关闭自动映射为Auto的功能，那么配成是什么就是什么。
+ * Sequence > Table (由于数据库多少都支持前两个特性，所以实际上Table特性无效) 
+ * 
+ * 二、JEF设计中，标记为
+ * IDentity和Sequence的默认都被处理为 AUTO. （设置为开关，默认开启） 
+ * 
+ * 三、如果关闭自动映射为Auto的功能，那么配成是什么就是什么。
  * 四、修饰： Step跳跃模式， Hilo模式。
  * 
  * @author Administrator
@@ -33,7 +37,7 @@ public class IdTestTable extends DataObject {
 	private int id;
 
 	@GeneratedValue(strategy = GenerationType.TABLE)
-	@TableGenerator(name = "AA1", initialValue = 1, allocationSize = 10, valueColumnName = "TABLE", pkColumnValue = "SeqValue", table = "AAA1")
+	@TableGenerator(name = "table-seq1", table = "AAA1" , allocationSize = 10, valueColumnName = "seq_value", pkColumnName="table_name",pkColumnValue = "key1")
 	private int tableSeq;
 
 	@GeneratedValue(strategy = GenerationType.TABLE)
@@ -48,10 +52,10 @@ public class IdTestTable extends DataObject {
 	@HiloGeneration
 	private int seqHilo;
 
-	@GeneratedValue(generator = "uuid")
+	//@GeneratedValue(generator = "uuid")
 	private String uuid;
 
-	@GeneratedValue(generator = "guid")
+	//@GeneratedValue(generator = "guid")
 	private String guid;
 
 	@GeneratedValue
