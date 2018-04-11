@@ -3,12 +3,14 @@ package jef.database;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 import javax.persistence.GenerationType;
 import javax.persistence.PersistenceException;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.TableGenerator;
 
+import jef.common.log.LogUtil;
 import jef.database.DbMetaData.ObjectType;
 import jef.database.annotation.HiloGeneration;
 import jef.database.dialect.ColumnType;
@@ -20,6 +22,7 @@ import jef.database.jdbc.result.IResultSet;
 import jef.database.meta.AbstractSequence;
 import jef.database.meta.Feature;
 import jef.database.meta.TupleMetadata;
+import jef.database.meta.object.Column;
 import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.tools.Assert;
@@ -195,13 +198,58 @@ public final class SequenceManager {
 		return s;
 	}
 
+	/**
+	 * @param name
+	 *            Sequence名称，用于唯一标识一个Sequence对象的标识符
+	 * @param client
+	 * @param length
+	 *            列的长度
+	 * @param tableName
+	 *            使用该Sequence实现自增列的表名
+	 * @param columnName
+	 *            使用该Sequence实现自增列的列名
+	 * @param config
+	 *            注解配置
+	 * @return
+	 */
 	private Sequence createTable(String name, OperateTarget client, int length, String tableName, String columnName, TableGenerator config) {
-		String pname = JefConfiguration.get(DbCfg.DB_GLOBAL_SEQUENCE_TABLE);
-		if (StringUtils.isEmpty(pname)) {
-			return new SeqTableImpl(client, name, config, tableName, columnName, this);
-		} else {
-			return new AdvSeqTableImpl(client, name, config, tableName, columnName, this);
+		TableGeneratorDef configData = new TableGeneratorDef();
+		boolean singleMode = false;
+		configData.name = name;
+		DatabaseDialect dialect = client.getProfile();
+
+		String globalDefaultTable = JefConfiguration.get(DbCfg.DB_GLOBAL_SEQUENCE_TABLE);
+		if (StringUtils.isNotEmpty(globalDefaultTable)) { // 如果配置了DB_GLOBAL_SEQUENCE_TABLE，那么优先度最高。
+			configData.table = escapeColumn(dialect, globalDefaultTable);
+		} else if (config != null && StringUtils.isNotEmpty(config.table())) {// 如果指定了表名，其次
+			configData.table = escapeColumn(dialect, config.table());
+		} else { // 啥也没配置，采用sequenceName作为表名
+			configData.table = escapeColumn(dialect, name);
+			singleMode = true;// 单独模式:即整张表仅为一个Sequence使用
 		}
+		if (config == null || config.pkColumnName() == null) {
+			if (singleMode) {
+				configData.pkColumnName = null;// 无需该列
+			} else {
+				configData.pkColumnName = "T";// 需要键值列
+			}
+		} else {
+			configData.pkColumnName = escapeColumn(dialect, StringUtils.trimToNull(config.pkColumnName()));
+		}
+		if (!singleMode) {
+			configData.pkColumnValue = escapeColumn(dialect, config == null ? name : config.pkColumnValue());
+		}
+		// 基本信息填入
+		configData.catalog = config == null ? null : config.catalog();
+		configData.schema = config == null ? null : config.schema();
+		configData.valueColumnName = config == null ? "V" : escapeColumn(dialect, config.valueColumnName());
+		configData.initialValue = config == null ? 0 : config.initialValue();
+		configData.allocationSize = config == null ? 0 : config.allocationSize();
+		return new AdvSeqTableImpl(configData, tableName, columnName, this, client);
+	}
+
+	private String escapeColumn(DatabaseDialect dialect, String globalDefaultTable) {
+		return DbUtils.escapeColumn(dialect, dialect.getObjectNameToUse(globalDefaultTable));
 	}
 
 	private Sequence createSequence(String seqName, OperateTarget client, int columnSize, String tableName, String columnName, SequenceGenerator config)
@@ -217,112 +265,39 @@ public final class SequenceManager {
 		return new SequenceNativeImpl(seqName, client, columnSize, tableName, columnName, initValue, this);
 	}
 
-	/**
-	 * 第一种SQL实现，每个Sequence一张表
-	 */
-	private static final class SeqTableImpl extends AbstractSequence {
-		static TupleMetadata seqtable;
-		static {
-			seqtable = new TupleMetadata("SEQ");
-			seqtable.addColumn("V", new ColumnType.Int(12));
-		}
-		private int valueStep;
+	private static class TableGeneratorDef {
+		private String name;
 		private String table;
+		private String catalog;
+		private String schema;
+		private String pkColumnName;
+		private String pkColumnValue;
+		private String valueColumnName;
+		private int initialValue;
+		private int allocationSize;
 
-		private String rawTable;
-		private String rawColumn;
-		private int initValue;
-
-		private long last = -1;
-		private String update;
-		private String select;
-
-		/*
-		 * @param rawSeqName Sequence表名称
-		 * 
-		 * @param tableName 表名
-		 * 
-		 * @param columnName 列名
-		 * 
-		 * @throws SQLException
-		 */
-		SeqTableImpl(OperateTarget target, String seqTable, TableGenerator config, String rawTableName, String rawColumnName, SequenceManager parent) {
-			super(target, parent);
-			Assert.notNull(target);
-			this.table = seqTable;
-			this.rawTable = rawTableName;
-			this.rawColumn = rawColumnName;
-			if (config != null)
-				this.initValue = config.initialValue();
-			String valueColumn = config == null ? "V" : config.valueColumnName();
-
-			this.update = "UPDATE " + table + " SET " + valueColumn + "=? WHERE " + valueColumn + "=?";
-			this.select = "SELECT " + valueColumn + " FROM " + table;
-			this.valueStep = JefConfiguration.getInt(DbCfg.SEQUENCE_BATCH_SIZE, 20);// 每次取一批
-			if (valueStep < 1)
-				valueStep = config == null ? 20 : config.allocationSize();
-			if (target != null) {
-				tryInit();
-			}
+		public String name() {
+			return name;
 		}
 
-		@Override
-		protected long getFirstAndPushOthers(int num, DbClient conn, String dbKey) throws SQLException {
-			DbMetaData meta = conn.getMetaData(dbKey);
-			if (last < 0) {
-				last = queryLast(meta);
-			}
-			long nextVal = last + valueStep;
-			int updated = conn.executeSql(update, nextVal, last);
-			while (updated == 0) { // 基于CAS操作的乐观锁,
-				last = queryLast(meta);
-				nextVal = last + valueStep;
-				updated = conn.executeSql(update, nextVal, last);
-			}
-			long result = last + 1;
-			super.pushRange(last + 2, nextVal);
-			last = nextVal;
-			return result;
-		}
-
-		private long queryLast(DbMetaData conn) throws SQLException {
-			long value = conn.selectBySql(select, GET_LONG_OR_TABLE_NOT_EXIST, Collections.EMPTY_LIST);
-			if (value == TABLE_NOT_EXISTS) {
-				long start = super.caclStartValue(conn, null, rawTable, rawColumn, initValue, 99999999999L);
-				conn.executeSql("INSERT INTO " + table + " VALUES(?)", start);
-				value = 0;
-			}
-			return value;
-		}
-
-		public boolean isTable() {
-			return true;
-		}
-
-		public String getName() {
+		public String table() {
 			return table;
 		}
 
-		@Override
-		protected boolean doInit(DbClient session, String dbKey) throws SQLException {
-			DbMetaData meta = session.getMetaData(dbKey);
-			String tableExists = meta.getExists(ObjectType.TABLE, table);
-			if (tableExists == null) {
-				if (ORMConfig.getInstance().isAutoCreateSequence()) {
-					int start = 0;
-					meta.createTable(seqtable, table);
-					meta.executeSql("INSERT INTO " + this.table + " VALUES(?)", start);
-				} else {
-					throw new PersistenceException("Table for sequence " + table + " does not exist on " + meta + "!");
-				}
-			} else {
-				this.table = tableExists;
-			}
-			return true;
+		public String pkColumnName() {
+			return pkColumnName;
 		}
 
-		public boolean isRawNative() {
-			return false;
+		public String pkColumnValue() {
+			return pkColumnValue;
+		}
+
+		public String valueColumnName() {
+			return valueColumnName;
+		}
+
+		public int initialValue() {
+			return initialValue;
 		}
 	}
 
@@ -330,22 +305,14 @@ public final class SequenceManager {
 	 * 第二种SQL实现，所有Sequence公用一张表
 	 */
 	private static final class AdvSeqTableImpl extends AbstractSequence {
-		static String publicTableName = StringUtils.trimToNull(JefConfiguration.get(DbCfg.DB_GLOBAL_SEQUENCE_TABLE, "JEF_SEQUENCES"));
-		static TupleMetadata seqtable;
-		static {
-			seqtable = new TupleMetadata(publicTableName);
-			seqtable.addColumn("V", new ColumnType.Int(12));
-			seqtable.addColumn("T", "T", new ColumnType.Varchar(64), true);
+		private static final String UPDATE = "UPDATE %table% SET %valueColumnName% = ? WHERE %valueColumnName% = ? AND %pkColumnName% = '%pkColumnValue%'";
+		private static final String SELECT = "SELECT %valueColumnName% FROM %table% WHERE %pkColumnName% = '%pkColumnValue%'";
 
-		}
-		private String table;
-		private String key;
-		private int valueStep;
-
+		private TableGeneratorDef config;
 		private String rawTable;
 		private String rawColumn;
-		private int initValue;
 
+		private int valueStep;
 		private String update;
 		private String select;
 		private long last = -1;
@@ -355,22 +322,27 @@ public final class SequenceManager {
 		 * 
 		 * @param tableName 表名
 		 */
-		AdvSeqTableImpl(OperateTarget target, String key, TableGenerator config, String rawTable, String rawColumn, SequenceManager parent) {
+		AdvSeqTableImpl(TableGeneratorDef config, String rawTable, String rawColumn, SequenceManager parent, OperateTarget target) {
 			super(target, parent);
 			Assert.notNull(target);
-			this.table = publicTableName;
-			this.key = key;
-
+			this.config = config;
 			this.rawTable = rawTable;
 			this.rawColumn = rawColumn;
-			this.initValue = config == null ? 0 : config.initialValue();
-
 			this.valueStep = JefConfiguration.getInt(DbCfg.SEQUENCE_BATCH_SIZE, 20);
+			if (config.allocationSize > 0) {
+				valueStep = config.allocationSize;
+			}
 			if (valueStep < 1)
 				valueStep = 20;
-
-			this.update = "UPDATE " + table + " SET V=? WHERE V=? AND T='" + key + "'";
-			this.select = "SELECT V FROM " + table + " WHERE T='" + key + "'";
+			if (config.pkColumnName() == null) {
+				this.update = "UPDATE " + config.table() + " SET " + config.valueColumnName() + "=? WHERE " + config.valueColumnName() + "=?";
+				this.select = "SELECT " + config.valueColumnName() + " FROM " + config.table();
+			} else {
+				this.update = StringUtils.replaceEach(UPDATE, new String[] { "%table%", "%valueColumnName%", "%pkColumnName%", "%pkColumnValue%" },
+						new String[] { config.table(), config.valueColumnName(), config.pkColumnName(), config.pkColumnValue().replace("'", "''") });
+				this.select = StringUtils.replaceEach(SELECT, new String[] { "%table%", "%valueColumnName%", "%pkColumnName%", "%pkColumnValue%" },
+						new String[] { config.table(), config.valueColumnName(), config.pkColumnName(), config.pkColumnValue().replace("'", "''") });
+			}
 			if (target != null) {
 				tryInit();
 			}
@@ -392,15 +364,21 @@ public final class SequenceManager {
 			long result = last + 1;
 			super.pushRange(last + 2, nextVal);
 			last = nextVal;
+			LogUtil.info("Fetch Table-Sequence {} for column [{}.{}], from {} to {}.", config.name, this.rawTable, this.rawColumn, result, nextVal);
 			return result;
 		}
 
 		private long queryLast(DbMetaData conn) throws SQLException {
 			long value = conn.selectBySql(select, GET_LONG_OR_TABLE_NOT_EXIST, Collections.EMPTY_LIST);
-			if (value == TABLE_NOT_EXISTS) {
-				long start = super.caclStartValue(conn, null, rawTable, rawColumn, initValue, 99999999999L);
-				conn.executeSql("INSERT INTO " + table + "(V,T) VALUES(?,?)", start, key);
-				value = 0;
+			if (value == -9999L) {// 没有该条记录
+				long start = super.caclStartValue(conn, null, rawTable, rawColumn, config.initialValue(), 99999999999L);
+				if (config.pkColumnName() == null) {
+					conn.executeSql("INSERT INTO " + config.table() + " VALUES(?)", start);
+				} else {
+					conn.executeSql("INSERT INTO " + config.table() + "(" + config.valueColumnName() + "," + config.pkColumnName() + ") VALUES(?,?)", start,
+							config.pkColumnValue());
+				}
+				value = start;
 			}
 			return value;
 		}
@@ -410,22 +388,32 @@ public final class SequenceManager {
 		}
 
 		public String getName() {
-			return key;
+			return config.name();
 		}
 
 		@Override
 		protected boolean doInit(DbClient session, String dbKey) throws SQLException {
 			DbMetaData meta = session.getMetaData(dbKey);
-			String exists = meta.getExists(ObjectType.TABLE, this.table);
+			String exists = meta.getExists(ObjectType.TABLE, config.table());
 			if (exists == null) {
 				if (ORMConfig.getInstance().isAutoCreateSequence()) {
-					meta.createTable(seqtable, table);
+					TupleMetadata tuple = new TupleMetadata(config.table());
+					tuple.addColumn(config.valueColumnName(), new ColumnType.Int(12));
+					if (config.pkColumnName() != null) {
+						tuple.addColumn(config.pkColumnName(), config.pkColumnName(), new ColumnType.Varchar(64), true);
+					}
+					meta.createTable(tuple, null);
 				} else {
-					throw new PersistenceException("Table for sequence " + table + " does not exist on " + meta + "!");
+					throw new PersistenceException("Table for sequence " + config.table() + " does not exist on " + meta + "!");
 				}
 			} else {
-				this.table = exists;
-
+				List<Column> columns = meta.getColumns(exists);
+				int expect = (config.pkColumnName() == null ? 1 : 2);
+				if (columns.size() != expect) {
+					throw new IllegalArgumentException("The sequence-table " + exists + " has " + columns.size() + " columns, but sequence " + this.config.name
+							+ " needs " + expect + " columns in table.");
+				}
+				config.table = exists;
 			}
 			return true;
 		}
@@ -434,18 +422,16 @@ public final class SequenceManager {
 			return false;
 		}
 	}
-	
-	static final long TABLE_NOT_EXISTS = -9999L;
 
 	/**
 	 * 从结果中获得单个LONG值
 	 */
-	private static final ResultSetExtractor<Long> GET_LONG_OR_TABLE_NOT_EXIST = new AbstractResultSetTransformer<Long>(1) {
+	private static final ResultSetExtractor<Long> GET_LONG_OR_TABLE_NOT_EXIST = new AbstractResultSetTransformer<Long>() {
 		public Long transformer(IResultSet rs) throws SQLException {
 			if (rs.next()) {
 				return rs.getLong(1);
 			} else {
-				return TABLE_NOT_EXISTS;
+				return -9999L;
 			}
 		}
 	};
