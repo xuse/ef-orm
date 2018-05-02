@@ -8,8 +8,7 @@ import javax.persistence.Index;
 import org.apache.commons.lang.StringUtils;
 
 /**
- * Index描述。
- * 注意：内部的colums都是Java中的字段名
+ * Index描述。 注意：内部的colums都是Java中的字段名
  * 
  * 
  */
@@ -21,8 +20,7 @@ public class IndexDef {
 	 */
 	private String name;
 	/**
-	 * 索引的各个字段名称（是java字段名，不是列名）。
-	 * 此外还可能有DESC等倒序关键字
+	 * 索引的各个字段名称（是java字段名，不是列名）。 此外还可能有DESC等倒序关键字
 	 * 
 	 * @return
 	 */
@@ -70,17 +68,19 @@ public class IndexDef {
 	}
 
 	/**
-	 * 设置索引定义，可以设置多个用空格分隔的关键字。
-	 * 识别其中的关键字——
+	 * 设置索引定义，可以设置多个用空格分隔的关键字。 识别其中的关键字——
 	 * <ul>
 	 * <li><code>clustered</code></li>
 	 * <li><code>unique</code></li>
 	 * </ul>
 	 * (目前仅支持上述关键字，其余描述会被丢弃)
-	 * @param definition Other definitions of the index.
+	 * 
+	 * @param definition
+	 *            Other definitions of the index.
 	 */
 	public void setDefinition(String definition) {
-		if(definition==null)return;
+		if (definition == null)
+			return;
 		String[] defs = StringUtils.split(definition);
 		List<String> result = new ArrayList<String>(defs.length);
 		for (String s : defs) {
@@ -104,6 +104,16 @@ public class IndexDef {
 		this.unique = unique;
 	}
 
+	public IndexDef(String... columns) {
+		this.columns = columns;
+	}
+
+	/**
+	 * @param name
+	 *            索引名称
+	 * @param columns
+	 *            索引列
+	 */
 	public IndexDef(String name, String[] columns) {
 		this.name = name;
 		this.columns = columns;
@@ -111,6 +121,7 @@ public class IndexDef {
 
 	/**
 	 * 基于Annotation @{link javax.persistence.Index}转换为IndexDef对象
+	 * 
 	 * @param index
 	 * @return
 	 */

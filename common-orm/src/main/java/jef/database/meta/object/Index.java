@@ -448,10 +448,10 @@ public class Index {
 
 	/**
 	 * 将IndexDef对象转换为Index对象
-	 * @param indexDef
-	 * @param meta
-	 * @param dialect
-	 * @param tablename
+	 * @param indexDef 索引定义
+	 * @param meta     所属的表
+	 * @param dialect  当前数据库方言，需要用方言转换为合适的列大小写以及是否需要加引号
+	 * @param tablename 可以传入null，如果表名不是默认的，需要传入
 	 * @return
 	 */
 	public static Index valueOf(IndexDef indexDef, ITableMetadata meta, DatabaseDialect dialect, String tablename) {
