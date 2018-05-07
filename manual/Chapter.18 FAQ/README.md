@@ -70,3 +70,31 @@ public class MyClass{
 ~~~
 
 这两个方法任选其一，可以在Jackson下正常序列化Entity。
+
+### 18.1.7 SQLite下JDBC驱动的日期时间字符串格式问题
+
+当使用JDBC连接SQLite数据库时，可能会碰到如下错误。
+
+````
+Caused by: java.text.ParseException: Unparseable date: "2018-05-04 09:35:38" does not match (\p{Nd}++)\Q-\E(\p{Nd}++)\Q-\E(\p{Nd}++)\Q \E(\p{Nd}++)\Q:\E(\p{Nd}++)\Q:\E(\p{Nd}++)\Q.\E(\p{Nd}++)
+        at org.sqlite.date.FastDateParser.parse(FastDateParser.java:299) ~[sqlite-jdbc-3.21.0.1.jar:na]
+        at org.sqlite.date.FastDateFormat.parse(FastDateFormat.java:490) ~[sqlite-jdbc-3.21.0.1.jar:na]
+        at org.sqlite.jdbc3.JDBC3ResultSet.getTimestamp(JDBC3ResultSet.java:529) ~[sqlite-jdbc-3.21.0.1.jar:na]
+        ... 45 common frames omitted Caused by: java.text.ParseException: Unparseable date: "2018-05-04 09:35:38" does not match (\p{Nd}++)\Q-\E(\p{Nd}++)\Q-\E(\p{Nd}++)\Q \E(\p{Nd}++)\Q:\E(\p{Nd}++)\Q:\E(\p{Nd}++)\Q.\E(\p{Nd}++)
+        at org.sqlite.date.FastDateParser.parse(FastDateParser.java:299) ~[sqlite-jdbc-3.21.0.1.jar:na]
+        at org.sqlite.date.FastDateFormat.parse(FastDateFormat.java:490) ~[sqlite-jdbc-3.21.0.1.jar:na]
+        at org.sqlite.jdbc3.JDBC3ResultSet.getTimestamp(JDBC3ResultSet.java:529) ~[sqlite-jdbc-3.21.0.1.jar:na]
+        ... 45 common frames omitted 
+
+````
+
+这是因为SQLite本身没有严格的日期时间数据类型，为了满足JDBC中对日期时间的框架使用的日期时间格式的要求，JDBC驱动按自己的默认格式对日期时间进行了解析后，转化为数字存储到数据库中的，因此我们需要将日期格式设置为符合我们习惯的方式。具体方法是在配置JDBC连接串(URL)的时候，加上日期格式的参数。如下所示——
+
+```
+jdbc:sqlite:xxx.db?date_string_format=yyyy-MM-dd HH:mm:ss
+```
+
+即可消除上述错误。
+
+
+

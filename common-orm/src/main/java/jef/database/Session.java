@@ -18,6 +18,7 @@ package jef.database;
 import java.io.Serializable;
 import java.io.StringReader;
 import java.lang.reflect.Type;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -32,6 +33,7 @@ import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import javax.inject.Provider;
 import javax.persistence.NonUniqueResultException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
@@ -96,7 +98,7 @@ import jef.tools.StringUtils;
 
 import org.easyframe.enterprise.spring.TransactionMode;
 
-import com.querydsl.sql.SQLQuery;
+import com.querydsl.sql.SQLQueryFactory;
 
 /**
  * 描述一个事务(会话)的数据库操作句柄，提供了各种操作数据库的方法供用户使用。
@@ -3251,13 +3253,20 @@ public abstract class Session {
 	 * @return SQLQuery
 	 * @see com.mysema.query.sql.SQLQuery
 	 */
-	public SQLQuery sql(String datasourceName) {
-		try {
-			return new SQLQuery(this.getConnection(), this.getProfile(datasourceName).getQueryDslDialect());
-		} catch (SQLException e) {
-			throw DbUtils.toRuntimeException(e);
-		}
+	public SQLQueryFactory sqlFactory(String datasourceName) {
+		return new SQLQueryFactory(this.getProfile(datasourceName).getQueryDslDialect(), PROVIDER);
 	}
+
+	private final Provider<Connection> PROVIDER = new Provider<Connection>() {
+		@Override
+		public Connection get() {
+			try {
+				return getConnection();
+			} catch (SQLException e) {
+				throw DbUtils.toRuntimeException(e);
+			}
+		}
+	};
 
 	/**
 	 * QueryDSL支持，返回一个QueryDSL的查询对象，可以使用QueryDSL进行数据库操作
@@ -3265,8 +3274,8 @@ public abstract class Session {
 	 * @return SQLQuery
 	 * @see com.mysema.query.sql.SQLQuery
 	 */
-	public SQLQuery sql() {
-		return sql(null);
+	public SQLQueryFactory sqlFactory() {
+		return sqlFactory(null);
 	}
 
 	// ////////////////////以下全部都是废弃方法//////////////////////
