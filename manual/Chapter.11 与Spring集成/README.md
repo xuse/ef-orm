@@ -903,6 +903,66 @@ JTA是JavaEE技术规范之一，JTA允许应用程序执行分布式事务处�
 <!— 此处仅介绍事务管理器配置，其他的事务策略、事务拦截器、事务切面等略，请自行百度 -->
 ~~~
 
+如果是Annotation方式的话，如下
+
+```java
+	@Bean
+	public DataSource dataSource() {
+		// implementation omitted. Note: must retuan a songleton DataSource.
+	}
+	/**
+	* MyBatis初始化
+	*/ 
+	@Bean
+	public SqlSessionFactory myBatis() throws Exception {
+		SqlSessionFactoryBean factoryBean = new SqlSessionFactoryBean();
+		factoryBean.setDataSource(dataSource());
+		return factoryBean.getObject();
+	}
+
+	/**
+	* 事务管理器
+	*/ 
+	@Bean
+	public PlatformTransactionManager transactionManager() {
+		return new DataSourceTransactionManager(dataSource());
+	}
+
+	/**
+	* GeeQuery初始化
+	*/
+	@Bean
+	public EntityManagerFactory entityManagerFactory(DataSource dataSource, Environment env) {
+		SessionFactoryBean bean = new org.easyframe.enterprise.spring.SessionFactoryBean();
+		bean.setDataSource(dataSource);
+		//bean.setPackagesToScan(...) //Your packages here
+		bean.afterPropertiesSet();
+		bean.setTransactionMode(TransactionMode.JDBC);
+		return bean.getObject();
+	}
+	/**
+	* QueryDSL 初始化
+	*/ 
+	@Bean
+	public com.querydsl.sql.Configuration querydslConfiguration() {
+		SQLTemplates templates = H2Templates.builder().build(); 
+		com.querydsl.sql.Configuration configuration = new Configuration(templates);
+		return configuration;
+	}
+	@Bean
+	public SQLQueryFactory queryFactory() {
+		Provider<Connection> provider = new SpringConnectionProvider(dataSource());
+		return new SQLQueryFactory(querydslConfiguration(), provider);
+	}
+
+	@Bean
+	public JdbcTemplate jdbcTemplate(DataSource datasource){
+    	return new JdbcTemplate(dataSource);
+	}
+```
+
+在这个例子里，由于大家共用了一个DataSource实例，因此MyBatis、QueryDSL、Spring JdbcTemplate等等框架就统一在一个事务里面了！
+
 上述配置的要点是
 
 1. 使用**org.springframework.jdbc.datasource.DataSourceTransactionManager**事务管理器。

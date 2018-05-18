@@ -106,7 +106,9 @@ public class HsqlDbMemDialect extends AbstractDialect {
 		registerNative(new StandardSQLFunction("week"));
 		registerNative(new StandardSQLFunction("extract"));
 		registerNative(new StandardSQLFunction("uuid"));
-
+		registerNative(new StandardSQLFunction("timestamp"));
+		
+		
 		registerAlias(Func.day, "days");
 		registerNative(Func.year);
 		registerNative(Func.month);

@@ -1,39 +1,41 @@
-GeeQuery使用手册——Chapter-7  本地化查询
+GeeQuery使用手册——Chapter-7  本地化查询(NativeQuery)
 
 [TOC]
 
-# Chapter-7  本地化查询
+# Chapter-7  本地化查询(NativeQuery)
 
 ## 7.1.  本地化查询是什么
 
-这里本地化查询即’NativeQuery’，是指利用SQL（或者JPQL）进行的数据库操作——不仅限于select，也可以执行insert、update、甚至create table as、truncate等DDL。
+这里本地化查询即’NativeQuery’，是指利用SQL（或者JPQL）进行的数据库操作——不仅限于select，也可以执行insert、update等DML、甚至create table as、truncate等DDL。
 
-本地化查询让用户能根据临时拼凑的或者预先写好的SQL语句进行数据库查询，查询结果将被转换为用户需要的类型。
+本地化查询让用户能根据临时拼凑的或者事先写在配置文件中的SQL语句进行数据库查询，查询结果将被转换为用户需要的类型。
 
-在EF-ORM中，NativeQuery也有SQL和JPQL两种语法。其中JPQL是JPA规范定义的查询语言。但JPQL因为模型差距较大，一直没有完全支持，目前提供的名称为JPQL的若干方法仅为向下兼容而保留，不推荐大家使用。
+在GeeQuery中，NativeQuery也有SQL和JPQL两种语法。其中JPQL是JPA规范定义的查询语言。但JPQL因为模型差距较大，一直没有完全支持，目前提供的名称为JPQL的若干方法仅为向下兼容而保留，不推荐大家使用。
 
 因此**本地化查询就是用SQL语句操作数据库的方法**。
 
 您可能会问，如果是用SQL，那么我们直接用JDBC就好了，还用ORM框架做什么？
 
-事实上，NativeQuery中用的SQL，是被EF-ORM增强过的SQL，在语法特性上作了很多的补充。下面的表格中列出了所有在SQL上发生的增强，我们可以在下面的表格中查看到这些激动人心的功能。某种意义上讲，增强过的SQL是一种新的查询语言。我们也可以将其称为E-SQL(Enhanced SQL)。
+事实上，NativeQuery中用的SQL，是被GeeQuery增强过的SQL，在语法特性上作了很多的补充。下面的表格中列出了所有在SQL上发生的增强，我们可以在下面的表格中查看到这些激动人心的功能。某种意义上讲，增强过的SQL是一种新的查询语言。我们也可以将其称为E-SQL(Enhanced SQL)。
 
 E-SQL语法作了哪些**改进**呢？ 
 
-| 特性                | 说明                                       |
-| ----------------- | ---------------------------------------- |
-| Schema重定向         | 在Oracle,PG等数据库下，我们可以跨Schema操作。Oracle数据库会为每个用户启用独立Schema，在SQL语句或对象建模中，我们可以指定Entity所属的Schema。 但是实际部署时schema名称如果发生变化，事先写好的程序就不能正常工作。  schema重定向不仅仅应用于CriteriaAPI中，在SQL语句中出现的Schema也会在改写过程中被替换为当前实际的Schema。 |
-| 数据库方言：  语法格式整理    | 对于SQL语句进行重写，将其表现为适应本地数据库的写法，比如 \|\| 运算符的使用。  又比如 as 关键字的使用。 |
-| 数据库方言：  函数转换      | 对于translate、delete、sysdate、decode、nullif等数据库函数，能自动转换为当前数据库能够支持的表达形式。 |
-| 增强的绑定变量           | 1、允许在语句中用占位符来描述变量。绑定变量占位符可以用 :名称 也可以用 ?序号 的形式。即JPQL语法的占位符。  2、绑定变量占位符中可以指定变量数据类型。这样，当传入String类型的参数时，能自动将其转换为绑定变量应当使用的类型，如java.sql.Date,、java.lang.Number等。 |
-| 动态SQL功能：  自动省略    | 在SQL中，会自动扫描每个表达式的入参（占位符）是否被用到。如果某个参数未使用，那么该参数所在的表达式会被省略。例如  *select \* from t where id=:id and  name=:name*  中，如果name参数未传入，则and后面的整个条件表达式被略去。 |
-| 动态SQL功能：  SQL片段参数 | 在SQL占位符中可以声明一个占位符是SQL片段。这个片段可以在运行时根据传入的SQL参数自动应用。 |
-
 ​									表 7-1 E-SQL的语法特性
 
-EF-ORM会对用户输入的SQL进行解析，改写，从而使得SQL语句的使用更加方便，EF-ORM将不同数据库DBMS下的SQL语句写法进行了兼容处理。 并且提供给上层统一的SQL写法。
+| 特性                       | 说明                                                         |
+| -------------------------- | ------------------------------------------------------------ |
+| Schema重定向               | 在Oracle,PG等数据库下，我们可以跨Schema操作。Oracle数据库会为每个用户启用独立Schema，在SQL语句或对象建模中，我们可以指定Entity所属的Schema。 但是实际部署时schema名称如果发生变化，事先写好的程序就不能正常工作。  schema重定向不仅仅应用于CriteriaAPI中，在SQL语句中出现的Schema也会在改写过程中被替换为当前实际的Schema。<br />**举例：** `select * from ud.user`<br />实际SQL：`select * from userdomain.user` |
+| 数据库方言：  语法格式整理 | 对于SQL语句进行重写，将其表现为适应本地数据库的写法。<br />**举例：**`select t1.first_name || t1.last_name full_name from user t1`<br />在MySQL上：`select concat(t1.first_name, t1.last_name) as full_name from user t1` |
+| 数据库方言：  函数转换     | 对于translate、delete、sysdate、decode、nullif等数据库函数，能自动转换为当前数据库能够支持的表达形式。<br />**举例：**`select sysdate,decode(empno,7369,'smith',7499,'allen',7521,'ward',7566,'jones','unknow') as name from emp`<br /><br />在MySQL上：`select current_timestamp,if(empno = 7369,'smith',if(empno = 7499,'allen',if(empno = 7521,'ward',if(empno = 7566,'jones','unknow')))) AS name from emp` |
+| 增强的绑定变量             | 1、允许在语句中用`?1`或`:param-name`两种占位符来描述绑定变量。<br />2、绑定变量占位符中可以指定变量数据类型。<br />当传入String类型的参数时，能自动将其转换为绑定变量应当使用的类型，如java.sql.Date,、java.lang.Number等。<br />**举例**：`select * from user where name like :name<$string$>`<br />当传入参数`name='张'`的时候，实际效果为<br />`select * from user where name like ?` (%张%) |
+| 动态SQL功能：  自动省略    | 在SQL中，会自动扫描每个表达式的入参（占位符）是否被用到。如果某个参数未使用，那么该参数所在的表达式会被省略。<br />**举例：**  *`select * from t where id=:id and name=:name` <br />如果name参数未传入：`select * from t where id=?` |
+| 动态SQL功能：  SQL片段参数 | 在SQL占位符中可以声明一个占位符是SQL片段。这个片段可以在运行时根据传入的SQL参数自动应用。<br />**举例：** `select * from user order by :order_string<sql>`<br />传入`order_string= "name asc, age desc" `<br />`select * from user order by name asc, age desc` |
 
-除了在SQL语法上的增强以外，通过EF-ORM  NativeQuery操作和直接操作JDBC相比，还有以下优势：
+GeeQuery会对用户输入的SQL进行解析，改写，从而使得SQL语句的使用更加方便，GeeQuery将不同数据库DBMS下的SQL语句写法进行了兼容处理。 并且提供给上层统一的SQL写法。
+
+除了在SQL语法上的增强以外，通过GeeQuery  NativeQuery操作和直接操作JDBC相比，还有以下优势：
+
+​					表 7-2 使用NativeQuery和直接使用JDBC的区别
 
 | **特点**          | **NativeQuery**                          | **JDBC**                 |
 | --------------- | ---------------------------------------- | ------------------------ |
@@ -45,13 +47,11 @@ EF-ORM会对用户输入的SQL进行解析，改写，从而使得SQL语句的�
 | **SQL自动选择**     | SQL改写功能不能解决一切跨库移植问题。用户可以对不兼容跨库的SQL写成多个版本，运行时自动选择。 | 无此功能                     |
 | **性能**          | SQL解析和改写需要花费0.3~0.6毫秒。其他操作基本和JDBC直接操作保持一致。  对象结果转换会额外花费一点时间，但采用了策略模式和ASM无反射框架，性能优于大多数同类框架。 | 原生方式，性能最佳                |
 
-​					表 7-2 使用NativeQuery和直接使用JDBC的区别
-
 >*关于JPQL支持*
 >
->​	*EF-ORM中，也可以用”JPQL“来构造NativeQuery，但并不推荐。因为EF并未实现JPQL的大部分功能。目前提供的JPQL功能其实只有将Java字段名替换为数据库列名的功能，离JPA规范的JPQL差距较大，而且由于设计理念等差异，要完整支持JPQL基本不可能。*
+>​	*GeeQuery中，也可以用”JPQL“来构造NativeQuery，但并不推荐。因为EF并未实现JPQL的大部分功能。目前提供的JPQL功能其实只有将Java字段名替换为数据库列名的功能，离JPA规范的JPQL差距较大，而且由于设计理念等差异，要完整支持JPQL基本不可能。*
 >
->​	*现有若干伪JPQL功能是早期遗留的产物，后来在对SQL的特性作了大量改进后，E-SQL成为EF-ORM主要的查询语言。JPQL方面暂无改进计划，因此不建议使用。* 
+>​	*现有若干伪JPQL功能是早期遗留的产物，后来在对SQL的特性作了大量改进后，E-SQL成为GeeQuery主要的查询语言。JPQL方面暂无改进计划，因此不建议使用。* 
 
 ## 7.2.  使用本地化查询
 
@@ -61,25 +61,19 @@ NativeQuery的用法可以分为两类。一类是在java代码中直接传入E-
 
 命名查询也就是Named-Query，在某H框架和JPA中都有相关的功能定义。简单来说，命名查询就是将查询语句(SQL,HQL,JPQL等)事先编写好， 然后为其指定一个名称。在使用ORM框架时，取出事先解析好的查询，向其中填入绑定变量的参数，形成完整的查询。
 
-EF-ORM的命名查询和OpenJPA以及某H框架中的命名查询用法稍有些不同。
+GeeQuery的命名查询和OpenJPA以及某H框架中的命名查询用法稍有些不同。
 
 * 命名查询默认定义在配置文件 named-queries.xml中。不支持使用Annotation等方法定义
 * 命名查询也可以定义在数据库表中，数据库表的名称可由用户配置 
 * 命名查询可以支持 E-SQL和JPQL两种语法（后者特性未全部实现） 
 * 由于支持E-SQL，命名查询可以实现动态SQL语句的功能，可以模拟出与IBatis相似的用法。 
 
-为什么不使用JPA规范中的基于Annotation的方式来注册命名查询呢？因为考虑到ORM中一般只有跨表的复杂查询才会使用命名查询。而将一个多表的复杂查询注解在任何一个DAO上都是不合适的。分别注解在DAO上的SQL语句除了语法受限之外，还有以下缺点：
-
-* 归属不明确，很难正确评判某个SQL语句应当属于某个DAO。而且不能被其他DAO使用？
-* Java代码中写SQL涉及转义问题
-* DAO太分散，不利于SQL语句的统一维护。
-
-EF-ORM默认设计了两种方式来配置命名查询
+GeeQuery默认设计了两种方式来配置命名查询
 
 * classpath下创建一个名为named-queries.xml的配置文件
 * 存放在数据库中，表名可自定义，默认JEF_NAMED_QUERIES
 
-NativeQuery是在EF-ORM 1.05开始增加的功能。在1.6开始支持数据库配置，在1.6.7开始支持动态改写和SQL片段。
+NativeQuery是在GeeQuery 1.05开始增加的功能。在1.6开始支持数据库配置，在1.6.7开始支持动态改写和SQL片段。
 
 ### 7.2.2.  API和用法
 
@@ -110,13 +104,13 @@ public void testNativeQuery() {
 
 >*实践建议：*
 >
->​	*EF-ORM的SQL语句已经解决了动态化的问题（这点可在以后的例子中发现），在我看来，在代码中编写SQL语句带来的灵活性，远不如拼凑SQL带来的可读性和可维护性上的损失来得大。因此建议在使用时，尽可能多的使用命名查询，而少用拼凑SQL的查询。*
+>​	*GeeQuery的SQL语句已经解决了动态化的问题（这点可在以后的例子中发现），在我看来在代码中编写SQL语句带来的灵活性，远不如拼凑SQL带来的可读性和可维护性上的损失来得大。因此建议在使用时，尽可能多的使用命名查询，而少用拼凑SQL的查询。*
 >
->​	*上面的方法一相比方法二还有一个性能上的优势。EF-ORM会对传入的SQL进行解析和重写，如果是命名查询，解析只进行一次，解析结果会缓存下来，而传入的SQL语句则必须每次解析和重写。*
+>​	*上面的方法一相比方法二还有一个性能上的优势。GeeQuery会对传入的SQL进行解析和重写，如果是命名查询，解析只进行一次，解析结果会缓存下来，而传入的SQL语句则必须每次解析和重写。*
 
 在上面的例子中，无论是createNamedQuery方法还是createNativeQuery方法，返回的对象都是名为NativeQuyery的对象。其行为和功能也完全一样。
 
-下面是用于获得NativeQuery的方法API
+​					**表 7-3 可以用以下方法获得NativeQuery对象**
 
 | 方法                                       | 用途                             |
 | ---------------------------------------- | ------------------------------ |
@@ -129,45 +123,44 @@ public void testNativeQuery() {
 | Session.createQuery(String)              | 构造一个JPQL查询对象。不指定返回类型。          |
 | Session.createQuery(String,Class\<T>)    | 构造一个JPQL查询对象。指定返回类型为某class。    |
 
-上述方法都可以返回NativeQuery对象。
-
-NativeQuery并不一定就是select语句。在NativeQuery中完全可以使用update delete insert等语句，甚至是create table等DDL语句。（当执行DDL时会造成事务被提交，需谨慎）。显然，在指定非Select操作时，传入一个返回结果类型是多此一举，可以指定NativeQuery返回的结果类型，也可以不指定。
+NativeQuery并不一定就是select语句。在NativeQuery中完全可以使用update delete insert等语句，甚至是create table等DDL语句。（当执行DDL时会造成事务被提交，需谨慎）。
 
 在得到了NativeQuery以后，我们有很多种用法去使用这个Query对象。这里先列举一下主要的方法。
+​					**表 7-4 可以在NativeQuery对象上执行以下操作**
 
-| 方法                                       | 用途                                       |
-| ---------------------------------------- | ---------------------------------------- |
-| **执行查询动作**                               |                                          |
-| NativeQuery.getResultList()              | 查询出由多行记录转换的对象列表                          |
-| NativeQuery.getSingleResult()            | 查询出单行记录转换的对象，如果有多行返回第一行                  |
-| NativeQuery.getResultCount()             | 将SQL改为count语句后查出结果总数                     |
-| NativeQuery.getResultIterator()          | 查询出多行记录，并用遍历器方式返回                        |
-| NativeQuery.executeUpdate()              | 执行SQL语句，返回影响的记录行数                        |
-| NativeQuery.getSingleOnlyResult()        | 和getSingleResult的区别是如果有多行则抛出异常           |
-| **性能参数**                                 |                                          |
-| NativeQuery.setMaxResults(int)           | 设置查询最大返回结果数                              |
-| NativeQuery.getMaxResults()              | 获取查询最大返回结果数                              |
-| NativeQuery.getFetchSize()               | 获取结果集加载批次大小                              |
-| NativeQuery.setFetchSize(int)            | 设置结果集加载批次大小                              |
-| **结果范围限制（分页相关）**                         |                                          |
-| NativeQuery.setFirstResult(int)          | 设置查询结果的偏移，0表示不跳过记录。                      |
-| NativeQuery.getFirstResult()             | 返回查询结果的偏移，0表示不跳过记录                       |
-| NativeQuery.setRange(PageLimit)          | 设置查询区间（含Offset / Limit两个参数）              |
-| **绑定变量参数**                               |                                          |
-| NativeQuery.setParameter(String,  Object) | 设置绑定变量参数                                 |
-| NativeQuery.setParameter(int, Object)    | 设置绑定变量参数                                 |
-| NativeQuery.setParameterByString(String,  String) | 设置绑定变量参数，传入String后根据变量类型自动转换             |
-| NativeQuery.setParameterByString(String,  String[]) | 设置绑定变量参数，传入String[]后根据变量类型自动转换           |
-| NativeQuery.setParameterByString(int,  String) | 设置绑定变量参数，传入String后根据变量类型自动转换             |
-| NativeQuery.setParameterByString(int,  String[]) | 设置绑定变量参数，传入String[]后根据变量类型自动转换           |
-| NativeQuery.setParameterMap(Map\<String,  Object>) | 设置多组绑定变量参数                               |
-| NativeQuery.getParameterValue(String)    | 获得绑定变量参数                                 |
-| NativeQuery.getParameterValue(int)       | 获得绑定变量参数                                 |
-| NativeQuery.containsParam(Object)        | 检查某个绑定变量是否已经设置了参数                        |
-| NativeQuery.clearParameters()            | 清除目前已经设入的绑定变量参数。当需要重复使用一个NativeQuery对象进行多次查询时，建议每次清空旧参数。 |
-| NativeQuery.getParameterNames()          | 获得查询中所有的绑定变量参数名                          |
-| **返回结果定义**                               |                                          |
-| NativeQuery.getResultTransformer()       | 得到ResultTransformer对象，可定义返回结果转换动作。       |
+| 方法                                                | 用途                                                         |
+| --------------------------------------------------- | ------------------------------------------------------------ |
+| **执行查询动作**                                    |                                                              |
+| NativeQuery.getResultList()                         | 查询出由多行记录转换的对象列表                               |
+| NativeQuery.getSingleResult()                       | 查询出单行记录转换的对象，如果有多行返回第一行               |
+| NativeQuery.getResultCount()                        | 将SQL改为count语句后查出结果总数                             |
+| NativeQuery.getResultIterator()                     | 查询出多行记录，并用遍历器方式返回                           |
+| NativeQuery.executeUpdate()                         | 执行SQL语句，返回影响的记录行数                              |
+| NativeQuery.getSingleOnlyResult()                   | 和getSingleResult的区别是如果有多行则抛出异常                |
+| **性能参数**                                        |                                                              |
+| NativeQuery.setMaxResults(int)                      | 设置查询最大返回结果数                                       |
+| NativeQuery.getMaxResults()                         | 获取查询最大返回结果数                                       |
+| NativeQuery.setFetchSize(int)                       | 设置结果集加载批次大小                                       |
+| NativeQuery.getFetchSize()                          | 获取结果集加载批次大小                                       |
+| **结果范围限制（分页相关）**                        |                                                              |
+| NativeQuery.setFirstResult(int)                     | 设置查询结果的偏移，0表示不跳过记录。                        |
+| NativeQuery.getFirstResult()                        | 返回查询结果的偏移，0表示不跳过记录                          |
+| NativeQuery.setRange(PageLimit)                     | 设置查询区间（含Offset / Limit两个参数）                     |
+| **设置变量参数**                                    |                                                              |
+| NativeQuery.setParameter(String,  Object)           | 设置变量参数（针对 : param-name写法）                        |
+| NativeQuery.setParameter(int, Object)               | 设置变量参数（针对 ?1, ?2写法）                              |
+| NativeQuery.setParameterByString(String,  String)   | 设置绑定变量参数，传入String后根据变量类型自动转换           |
+| NativeQuery.setParameterByString(String,  String[]) | 设置绑定变量参数，传入String[]后根据变量类型自动转换         |
+| NativeQuery.setParameterByString(int,  String)      | 设置绑定变量参数，传入String后根据变量类型自动转换           |
+| NativeQuery.setParameterByString(int,  String[])    | 设置绑定变量参数，传入String[]后根据变量类型自动转换         |
+| NativeQuery.setParameterMap(Map\<String,  Object>)  | 设置多组变量参数                                             |
+| NativeQuery.getParameterValue(String)               | 获得变量参数（针对 : param-name写法）                        |
+| NativeQuery.getParameterValue(int)                  | 获得变量参数（针对 ?1, ?2写法）                              |
+| NativeQuery.containsParam(Object)                   | 检查某个绑定变量是否已经设置了参数                           |
+| NativeQuery.clearParameters()                       | 清除目前已经设入的绑定变量参数。当需要重复使用一个NativeQuery对象进行多次查询时，建议每次清空旧参数。 |
+| NativeQuery.getParameterNames()                     | 获得查询中所有的绑定变量参数名                               |
+| **返回结果定义**                                    |                                                              |
+| NativeQuery.getResultTransformer()                  | 得到ResultTransformer对象，可定义返回结果转换动作。          |
 
 根据上述API，我们简单的使用如下——
 
@@ -199,7 +192,7 @@ public void testQueryParams(){
 3. 通过重置参数，可以复用NativeQuery对象。
 4. 仅返回单条结果的场景
 
-### 7.2.3.  命名查询的配置
+### 7.2.3.  配置命名查询
 
 上一节中，我们基本了解了NativeQuery对象的构造和使用。本节来介绍命名查询如何配置。
 
@@ -250,7 +243,7 @@ named-queries.xml
 db.query.table.name=表名
 ~~~
 
-当EF-ORM初始化时，会自动检测这张表并加载数据，如果没有则会自动创建。表的结构是固定的(数据类型在不同的数据库上会自动转换为可支持的类型)
+当GeeQuery初始化时，会自动检测这张表并加载数据，如果没有则会自动创建。表的结构是固定的(数据类型在不同的数据库上会自动转换为可支持的类型)
 
 命名查询数据表的结构是固定的，结构如下——
 
@@ -269,7 +262,7 @@ db.query.table.name=表名
 
 #### 7.2.3.3.  数据源绑定
 
-由于EF-ORM是一种支持多数据源自动路由的ORM框架。因此在命名查询中，还可以在tag属性中指定偏好的数据源ID。这样，如果你在query://getUserByName这样的例子中请求数据时，即使不通过_dsname参数来指定数据源id，也可以到正确的数据库中查询数据。 
+由于GeeQuery是一种支持多数据源自动路由的ORM框架。因此在命名查询中，还可以在tag属性中指定偏好的数据源ID。这样，如果你在query://getUserByName这样的例子中请求数据时，即使不通过_dsname参数来指定数据源id，也可以到正确的数据库中查询数据。 
 
 我们先配置两个命名查询，区别是一个指定了数据源，另一个未指定数据源。
 
@@ -340,7 +333,7 @@ DbClient.checkNamedQueryUpdate()
 
  ![7.2.3.4](images/7.2.3.4.png)
 
-## 7.3.  NativeQuery特性使用
+## 7.3.  特性详述
 
 ### 7.3.1.  Schema重定向
 
@@ -366,7 +359,7 @@ public class TT {
 
 这样就带来一个问题，在某些场合，实际部署的数据库用户是未定的，在编程时开发人员无法确定今后系统将会以什么用户部署。如果将“USERA”硬编码到程序中，实际部署时数据库就只能建在USERA用户下，部署时缺乏灵活性。
 
-EF-ORM的Schema重定向功能对Query模型和SQL语句都有效。在开发时，用户根据设计中的虚拟Schema名编写代码，而在实际部署时，可以配置文件jef.properties指定虚拟schema对应到真实环境中的schema上。
+GeeQuery的Schema重定向功能对Query模型和SQL语句都有效。在开发时，用户根据设计中的虚拟Schema名编写代码，而在实际部署时，可以配置文件jef.properties指定虚拟schema对应到真实环境中的schema上。
 
 例如，在jef.properties中配置
 
@@ -410,9 +403,164 @@ schema.mapping=USERA:, USERB:
 
 最后，正如前文所述，重定向功能并不仅仅作用于本地化查询中，如果是在类的注解上配置了Schema，那么其映射会在所有Criteria API查询中也都会生效。
 
-### 7.3.2.  数据库方言——语法格式整理
+### 7.3.2.  绑定变量占位符
 
-根据不同的数据库语法，EF-ORM会在执行SQL语句前根据本地方言对SQL进行修改，以适应当前数据库的需要。
+E-SQL中表示参数变量有两种方式 : 
+
+* :param-name　(如:id :name，用名称表示参数) 
+* ?param-index　 (如 ?1 ?2，用序号表示参数)。 
+
+上述绑定变量占位符是和JPA规范完全一致的。
+
+E-SQL中，绑定变量的参数类型可以声明也可以不声明。比如上例的
+
+~~~sql
+select count(*) from Person_table where id in (:ids<int>)
+~~~
+
+也可以写作
+
+~~~sql
+select count(*) from Person_table where id in (:ids)
+~~~
+
+但是如果不声明类型，那么如果传入的参数为List<String>，那么数据库是否能正常执行这个SQL语句取决于JDBC驱动能否支持。（因为数据库里的id字段是number类型而传入了string）。
+
+指定参数类型是一个好习惯，尤其是当参数来自于Web页面时，这个特性尤其实用。
+
+很多时候我们从Web页面或者配置中得到的参数都是string类型的，而数据库操作的类型可能是int,date,boolean等类型。此时我们可以在Native Query语句中指定参数类型，使其可以自动转换。
+
+参数的类型有：date,timestamp,int,string,long,short,float,double,boolean。
+
+参数可以为数组，如上例，可以用数组表示in条件参数中的列表。
+
+​                                                 **表 7-5 可用于变量的类型描述（不区分大小写）**
+
+| 类型名     | 效果                                                         |
+| ---------- | ------------------------------------------------------------ |
+| date       | 参数将被转换为java.sql.Date                                  |
+| timestamp  | 参数将被转换为java.sql.Timestamp                             |
+| int        | 参数将被转换为int                                            |
+| string     | 参数将被转换为string                                         |
+| long       | 参数将被转换为long                                           |
+| short      | 参数将被转换为short                                          |
+| float      | 参数将被转换为float                                          |
+| double     | 参数将被转换为double                                         |
+| boolean    | 参数将被转换为boolean                                        |
+| string$    | 参数将被转换为string,并且后面加上%，一般用于like xxx% 的场合 |
+| \$string\$ | 参数将被转换为string,并且两端加上%，一般用于like %xxx% 的场合 |
+| $string    | 参数将被转换为string,并且前面加上%，一般用于like %xxx 的场合 |
+| sql        | SQL片段。参数将直接作为SQL语句的一部分，而不是作为SQL语句的绑定变量处理（见后文例子）该功能使用参见7.3.6节。 |
+
+上面的string\$、\$string\$、\$string三种参数转换，其效果实际使用时$符号替换为%。
+
+orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
+
+~~~java
+/**
+* 绑定变量中使用Like条件
+*/
+@Test
+public void testLike(){
+	String sql ="select * from t_person where person_name like :name<$string$>";
+	System.out.println(db.createNativeQuery(sql).setParameter("name","张").getResultList());
+}
+~~~
+
+主要用于从WEB页面传输模糊匹配的查询条件到后台。%号的添加交由框架自动处理，业务代码可以更为清晰简洁。
+
+### 7.3.3.  动态SQL——表达式省略
+
+GeeQuery可以根据未传入的参数，动态的省略某些SQL片段。这个特性往往用于某些参数不传场合下的动态条件，避免写大量的SQL。有点类似于IBatis的动态SQL功能。
+
+我们先来看一个例子
+
+~~~java
+public void testDynamicSQL(){
+	//SQL语句中写了四个查询条件
+	String sql="select * from t_person where id=:id " +
+			"and person_name like :person_name<$string$> " +
+			"and currentSchoolId=:schoolId " +
+			"and gender=:gender";
+	NativeQuery<Person> query=db.createNativeQuery(sql,Person.class);
+	{
+		System.out.println("== 按ID查询 ==");
+		query.setParameter("id", 1);
+		Person p=query.getSingleResult();  //只传入ID时，其他三个条件消失
+		System.out.println(p.getId());
+		System.out.println(p);	
+	}
+	{
+		System.out.println("== 由于参数'ID'并未清除，所以变为 ID + NAME查询 ==");
+		query.setParameter("person_name", "张"); //传入ID和NAME时，其他两个条件消失
+		System.out.println(query.getResultList());
+	}
+	{
+		System.out.println("== 参数清除后，只传入NAME，按NAME查询 ==");
+		query.clearParameters();
+		query.setParameter("person_name", "张"); //只传入NAME时，其他三个条件消失
+		System.out.println(query.getResultList());
+	}
+	{
+		System.out.println("== 按NAME+GENDER查询 ==");
+		query.setParameter("gender", "F");  //传入GENDER和NAME时，其他两个条件消失
+		System.out.println(query.getResultList());
+	}
+	{
+		query.clearParameters();    //一个条件都不传入时，整个where子句全部消失
+		System.out.println(query.getResultList());
+	}
+}
+~~~
+
+上面列举了五种场合，每种场合都没有完整的传递四个WHERE条件。
+
+上述实现是基于SQL抽象词法树（AST）的。表达式省略功能的定义是，如果一个绑定变量参数条件（如 = > < in like等）一端无效，那么整个条件都无效。如果一个二元表达式（如and or等）的一端无效，那么就退化成剩余一端的表达式。基于这种规则，NativeQuery能够将未设值的条件从查询语句中去除。来满足动态SQL的常见需求。
+
+>  **使用 绑定变量 + 动态SQL 开发Web应用的列表视图**
+>
+>
+>​       *这种常见需求一般发生在按条件查询中，比较典型的一个例子是用户Web界面上的搜索工具栏，当用户输入条件时，按条件搜索。当用户未输入条件时，该字段不作为搜索条件。使用动态SQL功能后，一个固定的SQL**语句就能满足整个视图的所有查询场景，极大的简化了视图查询的业务操作。*
+>​       *在一些传统应用中，开发者不得不使用许多IF分支去拼装SQL/HQL语句。为此产生了大量的重复编码。除此之外，还有一个丑陋的 1=1” 条件（写过这类代码的人应该知道我在说什么。）这种SQL除了消耗额外的数据库解析时间外，也令数据库优化变得更为困难。*
+>​       *配合上一节讲到的绑定变量类型自动转换功能，使用GeeQuery在开发此类Web应用时，只要一个SQL语句加上极少的代码，就能完成所需的业务逻辑。如果在Web控制层(Action)中进行少量封装后，基本可以做到后台逻辑开发零编码。*
+>
+
+最后，还要澄清一点——什么叫“不传入参数”。实时上，不传入参数表示自从NativeQuery构造或上次清空参数之后，都没有调用过setParameter()方法来设置参数的值。将参数设置为””或者null并不表示不设置参数的值。下面的例子说明了这一点。
+
+orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
+
+~~~java
+@Test
+public void testDynamicSQL3(){
+	String sql="select * from t_person where id not in (:ids)";
+	NativeQuery<Person>  query=db.createNativeQuery(sql,Person.class);
+	//将参数值设置为null，并不能起到清空参数的作用
+	query.setParameter("ids", null); 
+	System.out.println(query.getResultList());
+}
+~~~
+
+目前动态表达式省略可以用于两种场景，一是where条件，二是update语句中的set部分（见下面例子）。其他场合，如Insertinto语句中的列等不支持这种用法。
+
+orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
+
+~~~java
+/**
+ * 动态表达式省略——不仅仅是where条件可以省略，update中的赋值表达式也可以省略
+ */
+@Test
+public void testDynamicSQL4(){
+	String sql="update t_person set person_name=:new_name,  current_school_id=:
+	            new_schoold_id,gender=:new_gender where id=:id";
+	NativeQuery<Person>  query=db.createNativeQuery(sql,Person.class);
+	query.setParameter("new_name", "孟德");
+	query.setParameter("id", 1);
+	int count=query.executeUpdate();
+}
+~~~
+### 7.3.4.  数据库方言——语法格式整理
+
+根据不同的数据库语法，GeeQuery会在执行SQL语句前根据本地方言对SQL进行修改，以适应当前数据库的需要。
 
 **例1**    
 
@@ -420,7 +568,7 @@ schema.mapping=USERA:, USERB:
 select t.id||t.name as u from t
 ~~~
 
-在本例中||表示字符串相连，这在大部分数据库上执行都没有问题，但是如果在MySQL上执行就不行了，MySQL中||表示或关系，不表示字符串相加。因此，EF-ORM在MySQL上执行上述E-SQL语句时，实际在数据库上执行的语句变为
+在本例中||表示字符串相连，这在大部分数据库上执行都没有问题，但是如果在MySQL上执行就不行了，MySQL中||表示或关系，不表示字符串相加。因此，GeeQuery在MySQL上执行上述E-SQL语句时，实际在数据库上执行的语句变为
 
 ~~~sql
 select concat(t.id, t.name) as u from t //for MySQL
@@ -434,13 +582,13 @@ select concat(t.id, t.name) as u from t //for MySQL
 select count(*) total from t
 ~~~
 
-这句SQL语句在Oracle上是能正常运行的，但是在postgresql上就不行了。因为postgresql要求每个列的别名前都有as关键字。对于这种情况EF-ORM会自动为这样的SQL语句加上缺少的as关键字，从而保证SQL语句在Postgres上也能正常执行。 
+这句SQL语句在Oracle上是能正常运行的，但是在postgresql上就不行了。因为postgresql要求每个列的别名前都有as关键字。对于这种情况GeeQuery会自动为这样的SQL语句加上缺少的as关键字，从而保证SQL语句在Postgres上也能正常执行。 
 
 ~~~sql
 select count(*) as total from t    //for Postgresql
 ~~~
 
-上述修改过程是全自动的，无需人工干涉。EF-ORM会为所有传入本地化查询进行语法修正，以适应当前操作的数据库。
+上述修改过程是全自动的，无需人工干涉。GeeQuery会为所有传入本地化查询进行语法修正，以适应当前操作的数据库。
 
 这些功能提高了SQL语句的兼容性，能对用户屏蔽数据库方言的差异，避免操作者因为使用了SQL而遇到数据库难以迁移的情况。 
 
@@ -473,13 +621,13 @@ select person_name||gender from app.t_person
 select t1.*,t2.* from t1,t2 where t1.id=t2.id(+)
 ~~~
 
-目前EF-ORM还**不支持**将这种SQL语句改写为其他数据库支持的语法(今后可能会支持)。 因此如果要编写能跨数据库的SQL语句，还是要使用‘OUTER JOIN’这样标准的SQL语法。 
+目前GeeQuery还**不支持**将这种SQL语句改写为其他数据库支持的语法(今后可能会支持)。 因此如果要编写能跨数据库的SQL语句，还是要使用‘OUTER JOIN’这样标准的SQL语法。 
 
-### 7.3.3.  数据库方言——函数转换
+### 7.3.5.  数据库方言——函数转换
 
 #### 7.3.3.1.  示例
 
-在EF-ORM对SQL的解析和改写过程中，还能处理SQL语句当中的数据库函数问题。EF-ORM在为每个数据库建立的方言当中，都指定了常用函数的支持方式。在解析时，EF-ORM能够自动识别SQL语句中的函数，并将其转换为在当前数据库上能够使用的函数。
+在GeeQuery对SQL的解析和改写过程中，还能处理SQL语句当中的数据库函数问题。GeeQuery在为每个数据库建立的方言当中，都指定了常用函数的支持方式。在解析时，GeeQuery能够自动识别SQL语句中的函数，并将其转换为在当前数据库上能够使用的函数。
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
 
@@ -510,7 +658,7 @@ nvl函数被转换为coalesce函数
 
 Decode函数被转换为 case ... When ... Then ... Else...语句。
 
-Replace函数也是很特殊的——Derby本没有Replace函数，这里的replace函数其实是一个用户自定义的java函数。也是由EF-ORM自动注入的自定义函数。
+Replace函数也是很特殊的——Derby本没有Replace函数，这里的replace函数其实是一个用户自定义的java函数。也是由GeeQuery自动注入的自定义函数。
 
 再看一个例子
 
@@ -546,11 +694,11 @@ add_months和adddate函数被转换为JDBC函数timestampadd
 
 Sysdate函数被转换为current_timestamp。
 
-通过上面的转换过程，EF-ORM尽最大努力的保证查询的跨数据库兼容性。
+通过上面的转换过程，GeeQuery尽最大努力的保证查询的跨数据库兼容性。
 
 #### 7.3.3.2.  函数支持
 
-EF-ORM对函数支持的原则是，尽可能将常用函数提取出来，并保证其能在任何数据库上使用。
+GeeQuery对函数支持的原则是，尽可能将常用函数提取出来，并保证其能在任何数据库上使用。
 
 目前整理定义的常用函数被定义在两个枚举类中，其用法含义如下表所示
 
@@ -635,15 +783,15 @@ jef.database.query.Scientific
 | tan     | 正切函数                              |
 | tanh    | 双曲正切函数                            |
 
-常用函数中，某些函数并非来自于任何数据库的SQL函数中，而是EF-ORM定义的，比如str函数。
+常用函数中，某些函数并非来自于任何数据库的SQL函数中，而是GeeQuery定义的，比如str函数。
 
- 除了上述被提取的常用函数外，数据库原生的各种函数和用户自定义的函数仍然能够被使用。但是EF-ORM无法保证包含这些函数的SQL语句被移植到别的RDBMS后还能继续使用。
+ 除了上述被提取的常用函数外，数据库原生的各种函数和用户自定义的函数仍然能够被使用。但是GeeQuery无法保证包含这些函数的SQL语句被移植到别的RDBMS后还能继续使用。
 
 #### 7.3.3.3.  方言扩展
 
 函数的支持和改写规则定义是通过各个数据库方言来定义的。因此，要支持更多的函数，以及现有的一些不兼容的场景，可以通过扩展方言来实现。
 
-方言扩展的方法是配置自定义的方言类。在jef.properties中，我们可以指定自定义方言配置文件，来覆盖EF-ORM内置的方言。
+方言扩展的方法是配置自定义的方言类。在jef.properties中，我们可以指定自定义方言配置文件，来覆盖GeeQuery内置的方言。
 
 jef.properties
 
@@ -680,7 +828,7 @@ public class DerbyExtendDialect extends DerbyDialect{
 }
 ~~~
 
-自定义方言可以控制数据库各种本地化行为，包括分页实现方式、数据类型等。这些实现可以参考EF-ORM内置的方言代码。
+自定义方言可以控制数据库各种本地化行为，包括分页实现方式、数据类型等。这些实现可以参考GeeQuery内置的方言代码。
 
 **示例1：让Derby支持反三角函数TAN2**
 
@@ -738,169 +886,13 @@ public void testExtendDialact() throws SQLException {
 
 可以发现，在注册ifnull函数之前，上面的SQL语句是无法运行的，而注册了函数之后，SQL语句就可以运行了。
 
-​EF-ORM中注册的函数有三种方式
+​GeeQuery中注册的函数有三种方式
 
 | 方法                   | 作用                                       |
 | -------------------- | ---------------------------------------- |
 | registerNative()     | 注册一个函数的本地实现。本地实现就是数据库原生支持的函数。比如 count() sum() avg()等函数。 |
 | registerAlias()      | 注册一个函数的替换实现。替换实现就是数据库虽然不支持指定的函数，但是有其他函数能兼容或者包含需要的函数功能。在实际执行时，函数名将被替换为本地函数名，但对参数等不作处理。 |
 | registerCompatible() | 注册一个函数的模拟实现。模拟实现就是完全改写整个函数的用法。从函数名称到参数，都会被重写。 |
-
-### 7.3.4.  绑定变量占位符
-
-E-SQL中表示参数变量有两种方式 : 
-
-* :param-name　(如:id :name，用名称表示参数) 
-* ?param-index　 (如 ?1 ?2，用序号表示参数)。 
-
-上述绑定变量占位符是和JPA规范完全一致的。
-
-E-SQL中，绑定变量的参数类型可以声明也可以不声明。比如上例的
-
-~~~sql
-select count(*) from Person_table where id in (:ids<int>)
-~~~
-
-也可以写作
-
-~~~sql
-select count(*) from Person_table where id in (:ids)
-~~~
-
-但是如果不声明类型，那么如果传入的参数为List<String>，那么数据库是否能正常执行这个SQL语句取决于JDBC驱动能否支持。（因为数据库里的id字段是number类型而传入了string）。
-
-指定参数类型是一个好习惯，尤其是当参数来自于Web页面时，这个特性尤其实用。
-
-很多时候我们从Web页面或者配置中得到的参数都是string类型的，而数据库操作的类型可能是int,date,boolean等类型。此时我们可以在Native Query语句中指定参数类型，使其可以自动转换。
-
-参数的类型有：date,timestamp,int,string,long,short,float,double,boolean。
-
-参数可以为数组，如上例，可以用数组表示in条件参数中的列表。
-
-目前我们支持的参数类型包括(类型不区分大小写)：
-
-| 类型名       | 效果                                       |
-| --------- | ---------------------------------------- |
-| DATE      | 参数将被转换为java.sql.Date                     |
-| TIMESTAMP | 参数将被转换为java.sql.Timestamp                |
-| INT       | 参数将被转换为int                               |
-| STRING    | 参数将被转换为string                            |
-| LONG      | 参数将被转换为long                              |
-| SHORT     | 参数将被转换为short                             |
-| FLOAT     | 参数将被转换为float                             |
-| DOUBLE    | 参数将被转换为double                            |
-| BOOLEAN   | 参数将被转换为boolean                           |
-| STRING$   | 参数将被转换为string,并且后面加上%，一般用于like xxx% 的场合  |
-| $STRING$  | 参数将被转换为string,并且两端加上%，一般用于like %xxx% 的场合 |
-| $STRING   | 参数将被转换为string,并且前面加上%，一般用于like %xxx 的场合  |
-| SQL       | SQL片段。参数将直接作为SQL语句的一部分，而不是作为SQL语句的绑定变量处理（见后文例子） |
-
-上面的STRING$、$STRING$、$STRING三种参数转换，其效果是将$符号替换为%，主要用于从WEB页面传输模糊匹配的查询条件到后台。使用该数据类型后，%号的添加交由框架自动处理，业务代码可以更为清晰简洁。看下面的例子
-
-orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
-
-~~~java
-/**
-* 绑定变量中使用Like条件
-*/
-@Test
-public void testLike(){
-	String sql ="select * from t_person where person_name like :name<$string$>";
-	System.out.println(db.createNativeQuery(sql).setParameter("name","张").getResultList());
-}
-~~~
-
-SQL类型是将参数作为SQL片段处理，该功能使用参见7.3.6节。
-
-### 7.3.5.  动态SQL——表达式省略
-
-EF-ORM可以根据未传入的参数，动态的省略某些SQL片段。这个特性往往用于某些参数不传场合下的动态条件，避免写大量的SQL。有点类似于IBatis的动态SQL功能。
-
-我们先来看一个例子
-
-~~~java
-public void testDynamicSQL(){
-	//SQL语句中写了四个查询条件
-	String sql="select * from t_person where id=:id " +
-			"and person_name like :person_name<$string$> " +
-			"and currentSchoolId=:schoolId " +
-			"and gender=:gender";
-	NativeQuery<Person> query=db.createNativeQuery(sql,Person.class);
-	{
-		System.out.println("== 按ID查询 ==");
-		query.setParameter("id", 1);
-		Person p=query.getSingleResult();  //只传入ID时，其他三个条件消失
-		System.out.println(p.getId());
-		System.out.println(p);	
-	}
-	{
-		System.out.println("== 由于参数'ID'并未清除，所以变为 ID + NAME查询 ==");
-		query.setParameter("person_name", "张"); //传入ID和NAME时，其他两个条件消失
-		System.out.println(query.getResultList());
-	}
-	{
-		System.out.println("== 参数清除后，只传入NAME，按NAME查询 ==");
-		query.clearParameters();
-		query.setParameter("person_name", "张"); //只传入NAME时，其他三个条件消失
-		System.out.println(query.getResultList());
-	}
-	{
-		System.out.println("== 按NAME+GENDER查询 ==");
-		query.setParameter("gender", "F");  //传入GENDER和NAME时，其他两个条件消失
-		System.out.println(query.getResultList());
-	}
-	{
-		query.clearParameters();    //一个条件都不传入时，整个where子句全部消失
-		System.out.println(query.getResultList());
-	}
-}
-~~~
-
-上面列举了五种场合，每种场合都没有完整的传递四个WHERE条件。
-
-上述实现是基于SQL抽象词法树（AST）的。表达式省略功能的定义是，如果一个绑定变量参数条件（如 = > < in like等）一端无效，那么整个条件都无效。如果一个二元表达式（如and or等）的一端无效，那么就退化成剩余一端的表达式。基于这种规则，NativeQuery能够将未设值的条件从查询语句中去除。来满足动态SQL的常见需求。
-
->  **使用 绑定变量 + 动态SQL 开发Web应用的列表视图**
->
->
->​       *这种常见需求一般发生在按条件查询中，比较典型的一个例子是用户Web界面上的搜索工具栏，当用户输入条件时，按条件搜索。当用户未输入条件时，该字段不作为搜索条件。使用动态SQL功能后，一个固定的SQL**语句就能满足整个视图的所有查询场景，极大的简化了视图查询的业务操作。*
->​       *在一些传统应用中，开发者不得不使用许多IF分支去拼装SQL/HQL语句。为此产生了大量的重复编码。除此之外，还有一个丑陋的 1=1” 条件（写过这类代码的人应该知道我在说什么。）这种SQL除了消耗额外的数据库解析时间外，也令数据库优化变得更为困难。*
->​       *配合上一节讲到的绑定变量类型自动转换功能，使用EF-ORM在开发此类Web应用时，只要一个SQL语句加上极少的代码，就能完成所需的业务逻辑。如果在Web控制层(Action)中进行少量封装后，基本可以做到后台逻辑开发零编码。*
->
-
-最后，还要澄清一点——什么叫“不传入参数”。实时上，不传入参数表示自从NativeQuery构造或上次清空参数之后，都没有调用过setParameter()方法来设置参数的值。将参数设置为””或者null并不表示不设置参数的值。下面的例子说明了这一点。
-
-orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
-
-~~~java
-@Test
-public void testDynamicSQL3(){
-	String sql="select * from t_person where id not in (:ids)";
-	NativeQuery<Person>  query=db.createNativeQuery(sql,Person.class);
-	//将参数值设置为null，并不能起到清空参数的作用
-	query.setParameter("ids", null); 
-	System.out.println(query.getResultList());
-}
-~~~
-
-目前动态表达式省略可以用于两种场景，一是where条件，二是update语句中的set部分（见下面例子）。其他场合，如Insertinto语句中的列等不支持这种用法。
-
-orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
-
-~~~java
-/**
- * 动态表达式省略——不仅仅是where条件可以省略，update中的赋值表达式也可以省略
- */
-@Test
-public void testDynamicSQL4(){
-	String sql="update t_person set person_name=:new_name,  current_school_id=:
-	            new_schoold_id,gender=:new_gender where id=:id";
-	NativeQuery<Person>  query=db.createNativeQuery(sql,Person.class);
-	query.setParameter("new_name", "孟德");
-	query.setParameter("id", 1);
-	int count=query.executeUpdate();
-}
-~~~
 
 ### 7.3.6.  动态SQL片段
 
@@ -996,7 +988,7 @@ NativeQuery分页应用的要点和前文一样——开发者无需关心COUNT�
 
 ### 7.3.8.  为不同RDBMS分别编写SQL
 
-为了让SQL语句能被各种数据库识别，EF-ORM会在SQL语句和数据库函数层面进行解析和重写，但这不可能解决一切问题。在命名查询中，还允许开发者为不同的RDBMS编写专门的SQL语句。在运行时根据当前数据库动态选择合适的SQL语句。
+为了让SQL语句能被各种数据库识别，GeeQuery会在SQL语句和数据库函数层面进行解析和重写，但这不可能解决一切问题。在命名查询中，还允许开发者为不同的RDBMS编写专门的SQL语句。在运行时根据当前数据库动态选择合适的SQL语句。
 
 一个实际的例子是这样——
 
@@ -1061,7 +1053,7 @@ public void testNativeQueryPage2() throws SQLException{
 select /* + all_rows*/ * from dave;
 ~~~
 
-基于抽象词法树的解析器对注释默认是忽略的，但为了支持Oracle Hint的用法，EF-ORM作了特别的处理，在特殊处理后，只有紧跟着SELECT  UPDATE  DELETE INSERT四个关键字的SQL注释可以被保留下来。一般情况下，Oracle Hint也就在这个位置上。
+基于抽象词法树的解析器对注释默认是忽略的，但为了支持Oracle Hint的用法，GeeQuery作了特别的处理，在特殊处理后，只有紧跟着SELECT  UPDATE  DELETE INSERT四个关键字的SQL注释可以被保留下来。一般情况下，Oracle Hint也就在这个位置上。
 
 ### 7.3.10.  对Limit m,n / Limit n Offset n的支持
 
@@ -1079,7 +1071,7 @@ select /* + all_rows*/ * from dave;
 
 以上就是LIMIT的SQL语法。
 
-​在E-SQL中，如果用户传入的SQL语句是按照上述语法进行分页的，那么EF-ORM会将其改写成适合当前RDBMS的SQL语句。即——
+​在E-SQL中，如果用户传入的SQL语句是按照上述语法进行分页的，那么GeeQuery会将其改写成适合当前RDBMS的SQL语句。即——
 
 在非Postgresql或MySQL上，也能正常进行结果集分页。
 
@@ -1089,7 +1081,7 @@ select /* + all_rows*/ * from dave;
 
 Oracle支持的递归查询是一个让其他数据库用户很“怨念”的功能。这种语法几乎无法在任何其他数据库上使用，然而其用途却无可替代，并且难以用其他函数模拟。除了Postgres也有类似的递归查询用法外，在其他数据库上只有通过复杂的存储过程了……这使得开发要支持多数据库的产品变得更为困难。
 
-EF-ORM却可以在所有数据库上，在一定程度上支持这种操作。
+GeeQuery却可以在所有数据库上，在一定程度上支持这种操作。
 
 orm-tutorial\src\main\java\org\easyframe\tutorial\lesson7\Case1.java
 
@@ -1126,7 +1118,7 @@ public void testStartWithConnectBy() throws SQLException {
 
 上面的语句看似是不可能在Derby数据库上执行的，然而运行这个案例，你可以看见正确的结果。为什么呢？
 
-这是因为EF-ORM 1.9.2以后，开始支持查询结果”后处理“。所谓“后处理”就是指对查询结果在内存中再进行过滤、排序等处理。这一功能本来是为了满足多数据库路由操作下的排序、group by、distinct等复杂操作而设计的，不过递归查询也得以从这个功能中获益。对于一些简单使用递归查询的场合，EF-ORM可以在内存中高效的模拟出递归效果。当然，在递归计算过程中需要占用一定的内存。
+这是因为GeeQuery 1.9.2以后，开始支持查询结果”后处理“。所谓“后处理”就是指对查询结果在内存中再进行过滤、排序等处理。这一功能本来是为了满足多数据库路由操作下的排序、group by、distinct等复杂操作而设计的，不过递归查询也得以从这个功能中获益。对于一些简单使用递归查询的场合，GeeQuery可以在内存中高效的模拟出递归效果。当然，在递归计算过程中需要占用一定的内存。
 
 为什么说是”一定程度上支持这种操作“呢？因为目前对此类操作的支持限制还非常多，当前版本下，要使用内存计算模拟递归查询功能，有以下条件。
 
@@ -1139,7 +1131,7 @@ public void testStartWithConnectBy() throws SQLException {
 
 ## 7.4.  存储过程调用
 
-使用EF-ORM封装后的存储过程调用，可以——
+使用GeeQuery封装后的存储过程调用，可以——
 
 * 指定存储过程的入参出参，并帮助用户传递。
 * 将存储过程传出的游标，映射为合适的java对象。
@@ -1147,7 +1139,7 @@ public void testStartWithConnectBy() throws SQLException {
 * 和其他操作处于一个事务中
 
 
-只要是数据库能支持的存储过程，EF-ORM都可以调用。存储过程调用过程会封装为一个NativeCall对象。使用该对象即可传入/取出存储过程的相关参数。对于游标类的传出参数，还可以直接转换为java bean。
+只要是数据库能支持的存储过程，GeeQuery都可以调用。存储过程调用过程会封装为一个NativeCall对象。使用该对象即可传入/取出存储过程的相关参数。对于游标类的传出参数，还可以直接转换为java bean。
 
 ### 7.4.1.  使用存储过程
 
@@ -1280,7 +1272,7 @@ END GET_ALL_USER;
 
 这里的游标类型就是t_person表。因此该存储过程相当于返回了一个在t_person表上的查询结果集。
 
-EF-ORM可以将游标类型的结果集重新映射为java对象。
+GeeQuery可以将游标类型的结果集重新映射为java对象。
 
 ~~~java
 @Test
@@ -1305,7 +1297,7 @@ public void testProducre3() throws SQLException{
 
 在Oracle中，还可以执行临时编写的未命名的匿名块。匿名块的语法和存储过程基本一致。
 
-对应到EF-ORM可以这样操作——
+对应到GeeQuery可以这样操作——
 
 ~~~java
 @Test
@@ -1332,20 +1324,20 @@ public void testProducre4() throws SQLException{
 }
 ~~~
 
-在上例中，用户临时定义了一个匿名块。EF-ORM中调用的方法为createAnonymousNativeCall()。该方法允许用户得到一个匿名块构成的NativeCall对象。匿名块的入参设置和出参获取和存储过程完全一样。
+在上例中，用户临时定义了一个匿名块。GeeQuery中调用的方法为createAnonymousNativeCall()。该方法允许用户得到一个匿名块构成的NativeCall对象。匿名块的入参设置和出参获取和存储过程完全一样。
 
 ## 7.5.  原生SQL使用
 
 ### 7.5.1.  使用原生SQL查询
 
-前面我们已经了解了EF-ORM对SQL的封装和改进。基于这种改进，我们使用E-SQL来享受改进所带来的优点——让SQL在各种RDBMS上运行；和业务代码更好的集成等等。
+前面我们已经了解了GeeQuery对SQL的封装和改进。基于这种改进，我们使用E-SQL来享受改进所带来的优点——让SQL在各种RDBMS上运行；和业务代码更好的集成等等。
 
 但是，麻烦必然伴随而来。SQL解析和改写器并不是总能完美的工作——
 
 * SQL解析和改写是一个复杂的过程，尽管经过很多努力优化，但是每个SQL的解析依然要花费0.05到1毫秒不等的时间。可能不满足追求性能极限的场合。
 * 一些过于复杂的，或者我们开发时没有测试到的SQL写法可能会解析错误。（**请将解析错误的SQL语句发给我们，谢谢。**）
 
-EF-ORM内置的SQL分析器能处理绝大多数数据库DDL和DML语句。包括各种建表、删表、truncate、Create Table as、Select嵌套、Oracle分析函数、Oracle树型关系选择语句等。但是RDBMS的多样性和SQL语句的复杂性使得完全解析多少有些难度，因此EF-ORM依然保留原生的，不经过任何改写的SQL查询方式，作为NativeQuery在碰到以下麻烦时的”逃生手段“。
+GeeQuery内置的SQL分析器能处理绝大多数数据库DDL和DML语句。包括各种建表、删表、truncate、Create Table as、Select嵌套、Oracle分析函数、Oracle树型关系选择语句等。但是RDBMS的多样性和SQL语句的复杂性使得完全解析多少有些难度，因此GeeQuery依然保留原生的，不经过任何改写的SQL查询方式，作为NativeQuery在碰到以下麻烦时的”逃生手段“。
 
 ​原生SQL和NativeQuery不同，不进行解析和改写。直接用于数据库操作。
 
@@ -1417,7 +1409,7 @@ Session对象中，凡是xxxxBySql()这样的方法，都是传入原生SQL语�
 
 ### 7.5.2.  SqlTemplate
 
-由于EF-ORM支持多数据源，因此要在特定数据源上执行SQL操作时，都要先获得对应的SqlTemplate对象。前面的各种示例中，都是在Session上直接操作本地化查询和SQL的，这种操作方式只会在默认数据源上操作。因此SQLTemplate除了提供更多原生SQL的操作方法以外，还是操作多数据源时必须使用的一个对象。
+由于GeeQuery支持多数据源，因此要在特定数据源上执行SQL操作时，都要先获得对应的SqlTemplate对象。前面的各种示例中，都是在Session上直接操作本地化查询和SQL的，这种操作方式只会在默认数据源上操作。因此SQLTemplate除了提供更多原生SQL的操作方法以外，还是操作多数据源时必须使用的一个对象。
 
 要获得一个数据源的SqlTemplate对象，可以使用——
 

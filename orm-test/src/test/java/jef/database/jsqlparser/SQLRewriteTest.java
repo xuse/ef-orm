@@ -3,9 +3,6 @@ package jef.database.jsqlparser;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
-import org.junit.Test;
-
 import jef.database.DbUtils;
 import jef.database.dialect.AbstractDialect;
 import jef.database.dialect.DatabaseDialect;
@@ -13,6 +10,9 @@ import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.support.RDBMS;
+
+import org.apache.commons.lang.StringUtils;
+import org.junit.Test;
 
 /**
  * 测试在不同数据库下的兼容性
@@ -98,6 +98,14 @@ public class SQLRewriteTest extends org.junit.Assert {
 	}
 	
 	@Test
+	public void testOtherFunctions() throws ParseException{
+		String[] sqls={
+				"select sysdate,decode(empno,7369,'smith',7499,'allen',7521,'ward',7566,'jones','unknow') as name from emp"
+		};
+		rewrite(sqls);
+	}
+	
+	@Test
 	public void testDateTimeOper4() throws ParseException{
 		String[] sqls={
 				"select year(sysdate),month(sysdate),day(sysdate),hour(current_timestamp),minute(current_time),second(now()) from dual",
@@ -137,10 +145,10 @@ public class SQLRewriteTest extends org.junit.Assert {
 			System.out.println("================ Derby:");
 			System.out.println(StringUtils.join(toDerby(sqls),"\r\n"));
 		}
-//		{
-//			System.out.println("================ HSQL:");
-//			System.out.println(StringUtils.join(toHsql(sqls),"\r\n"));
-//		}
+		{
+			System.out.println("================ HSQL:");
+			System.out.println(StringUtils.join(toHsql(sqls),"\r\n"));
+		}
 		
 	}
 
@@ -198,12 +206,4 @@ public class SQLRewriteTest extends org.junit.Assert {
 		}
 		return Arrays.asList(result);
 	}
-	
-	@Test
-	public void test123(){
-		String sql="dob,dob,str(add_month(dob,12)) as pname";
-//		Statement st = DbUtils.parseStatement(sql);
-		
-	}
-	
 }
