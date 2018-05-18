@@ -59,7 +59,7 @@ public class GeeQueryConfiuration {
 
 	@Bean
 	public SQLQueryFactory queryFactory() {
-		Provider<Connection> provider = new DataSourceProvider(dataSource());
+		Provider<Connection> provider = new SpringConnectionProvider(dataSource());
 		return new SQLQueryFactory(querydslConfiguration(), provider);
 	}
 }
