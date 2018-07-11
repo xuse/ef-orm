@@ -14,9 +14,13 @@ import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.jsqlparser.visitor.Expression;
+import jef.database.meta.AnnotationProvider;
 import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.tools.DateUtils;
+import jef.tools.reflect.BeanUtils;
+
+import org.springframework.util.StringUtils;
 
 /**
  * Java对数据库的各种数据类型映射方式
@@ -88,8 +92,7 @@ public final class ColumnMappings {
 			return Types.INTEGER == type || Types.SMALLINT == type || Types.TINYINT == type || Types.BIGINT == type || Types.NUMERIC == type;
 		}
 	};
-	
-	
+
 	/**
 	 * Accessor of primitive short.
 	 */
@@ -102,7 +105,7 @@ public final class ColumnMappings {
 			return Types.SMALLINT == type || Types.TINYINT == type || Types.NUMERIC == type;
 		}
 	};
-	
+
 	/**
 	 * Accessor of primitive float.
 	 */
@@ -127,7 +130,7 @@ public final class ColumnMappings {
 			return Types.FLOAT == type || Types.DOUBLE == type || Types.DECIMAL == type || Types.NUMERIC == type;
 		}
 	};
-	
+
 	/**
 	 * Accessor of primitive boolean.
 	 */
@@ -143,7 +146,7 @@ public final class ColumnMappings {
 						// ||Types.BIT==type;
 		}
 	};
-	
+
 	/**
 	 * Accessor of primitive byte.
 	 */
@@ -157,7 +160,44 @@ public final class ColumnMappings {
 		}
 	};
 
-
+	@SuppressWarnings({"rawtypes","unchecked"})
+	public static class EnumVarchar implements ResultSetAccessor {
+		Class<? extends Enum> enumClass;
+		EnumVarchar(Class<? extends Enum> enumClass){
+			this.enumClass=enumClass;
+		}
+		@Override
+		public Object jdbcGet(IResultSet rs, int n) throws SQLException {
+			String s=rs.getString(n);
+			if(StringUtils.isEmpty(s)){
+				return null;
+			}
+			return Enum.valueOf(enumClass, s);
+		}
+		@Override
+		public boolean applyFor(int type) {
+			return true;
+		}
+	}
+	@SuppressWarnings({"rawtypes","unchecked"})
+	public static class EnumNumber implements ResultSetAccessor {
+		Class<? extends Enum> enumClass;
+		EnumNumber(Class<? extends Enum> enumClass){
+			this.enumClass=enumClass;
+		}
+		@Override
+		public Object jdbcGet(IResultSet rs, int n) throws SQLException {
+			Object obj=rs.getObject(n);
+			if(obj==null)return null;
+			Enum<?>[] enums=enumClass.getEnumConstants(); 
+			return enums[rs.getInt(n)];
+		}
+		@Override
+		public boolean applyFor(int type) {
+			return true;
+		}
+	}
+	
 	private static final Map<Class<?>, ResultSetAccessor> FAST_ACCESSOR_MAP_PRIMTIVE = new IdentityHashMap<Class<?>, ResultSetAccessor>();
 	private static final Map<Class<?>, ResultSetAccessor> FAST_ACCESSOR_MAP = new IdentityHashMap<Class<?>, ResultSetAccessor>();
 	static {
@@ -168,7 +208,7 @@ public final class ColumnMappings {
 		FAST_ACCESSOR_MAP_PRIMTIVE.put(Double.TYPE, D);
 		FAST_ACCESSOR_MAP_PRIMTIVE.put(Boolean.TYPE, Z);
 		FAST_ACCESSOR_MAP_PRIMTIVE.put(Byte.TYPE, B);
-		FAST_ACCESSOR_MAP_PRIMTIVE.put(Character.TYPE, new ResultCharacterAccessor((char)0));
+		FAST_ACCESSOR_MAP_PRIMTIVE.put(Character.TYPE, new ResultCharacterAccessor((char) 0));
 
 		FAST_ACCESSOR_MAP.put(Integer.TYPE, INT);
 		FAST_ACCESSOR_MAP.put(Long.TYPE, LONG);
@@ -198,26 +238,11 @@ public final class ColumnMappings {
 		FAST_ACCESSOR_MAP.put(Object.class, RAW);
 	}
 
-	/**
-	 * 根据值得到ResultSetAccessor
-	 * 
-	 * @param javaType
-	 * @param ctype
-	 * @param c
-	 * @param allowPrmitive
-	 * @return
-	 */
-	public static ResultSetAccessor getAccessor(Class<?> javaType, ColumnMapping ctype, ColumnDescription c, boolean allowPrmitive) {
-		/*
-		 * 已知字段映射
-		 */
-		if (ctype != null) {
-			if (javaType == null || javaType == ctype.getFieldType() || javaType.isAssignableFrom(ctype.getFieldType())) {
-				return ctype;
-			}
-		}
+	
+	
+	public static ResultSetAccessor getAccessor(Class<?> javaType, ColumnDescription c, AnnotationProvider prov) {
 		ResultSetAccessor rsa;
-		if (allowPrmitive && javaType.isPrimitive()) {
+		if (javaType.isPrimitive()) {
 			rsa = FAST_ACCESSOR_MAP_PRIMTIVE.get(javaType);
 			if (rsa != null) {
 				return rsa;
@@ -241,12 +266,20 @@ public final class ColumnMappings {
 			case Types.NVARCHAR:
 			case Types.NCHAR:
 			case Types.VARCHAR:
-			case Types.CHAR:
+			case Types.CHAR: {
+				if(javaType.isEnum()){
+					return new EnumVarchar(javaType.asSubclass(Enum.class));
+				}
 				return StringType.getMappingType(javaType);
+			}
 			case Types.INTEGER:
 			case Types.SMALLINT:
-			case Types.TINYINT:
+			case Types.TINYINT:{
+				if(javaType.isEnum()){
+					return new EnumNumber(javaType.asSubclass(Enum.class));
+				}
 				return IntType.getMappingType(javaType);
+			}
 			case Types.BIGINT:
 				return LongType.getMappingType(javaType);
 			case Types.REAL:
@@ -278,11 +311,32 @@ public final class ColumnMappings {
 					LogUtil.warn("The result accessor [{}] was nor extractly match the column type[{}], but no better accessor was found.", rsa, c.getType());
 					return rsa;
 				}
-				throw new IllegalArgumentException("No Proper Accessor found! " + c+"expect java:"+javaType);
+				throw new IllegalArgumentException("No Proper Accessor found! " + c + "expect java:" + javaType);
 			}
 		} catch (IllegalArgumentException e) {
 			throw new IllegalArgumentException(c.toString(), e);
 		}
+	}
+
+	/**
+	 * 根据值得到ResultSetAccessor
+	 * 
+	 * @param javaType
+	 * @param ctype
+	 * @param c
+	 * @param allowPrmitive
+	 * @return
+	 */
+	public static ResultSetAccessor getAccessor(Class<?> javaType, ColumnMapping ctype, ColumnDescription c, boolean allowPrmitive) {
+		if (ctype != null) {
+			if (javaType == null || javaType == ctype.getFieldType() || javaType.isAssignableFrom(ctype.getFieldType())) {
+				return ctype;
+			}
+		}
+		if (javaType.isPrimitive() && !allowPrmitive) {
+			javaType = BeanUtils.toWrapperClass(javaType);
+		}
+		return getAccessor(javaType, c, null);
 	}
 
 	/**
