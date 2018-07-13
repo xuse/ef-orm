@@ -62,7 +62,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.github.geequery.springdata.repository.GqRepository;
 import com.github.geequery.springdata.repository.query.QueryUtils;
-import com.querydsl.sql.SQLQuery;
+import com.querydsl.sql.SQLQueryFactory;
 
 /**
  * Default implementation of the
@@ -739,8 +739,8 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	}
 
 	@Override
-	public SQLQuery sql() {
-		return getSession().sql();
+	public SQLQueryFactory sql() {
+		return getSession().sqlFactory();
 	}
 
 	@Override
