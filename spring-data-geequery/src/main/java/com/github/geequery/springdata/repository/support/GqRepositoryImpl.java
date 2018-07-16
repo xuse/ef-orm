@@ -60,9 +60,9 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.github.geequery.extension.querydsl.SQLQueryFactoryEx;
 import com.github.geequery.springdata.repository.GqRepository;
 import com.github.geequery.springdata.repository.query.QueryUtils;
-import com.querydsl.sql.SQLQueryFactory;
 
 /**
  * Default implementation of the
@@ -739,7 +739,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	}
 
 	@Override
-	public SQLQueryFactory sql() {
+	public SQLQueryFactoryEx sql() {
 		return getSession().sqlFactory();
 	}
 

@@ -98,7 +98,7 @@ import jef.tools.StringUtils;
 
 import org.easyframe.enterprise.spring.TransactionMode;
 
-import com.querydsl.sql.SQLQueryFactory;
+import com.github.geequery.extension.querydsl.SQLQueryFactoryEx;
 
 /**
  * 描述一个事务(会话)的数据库操作句柄，提供了各种操作数据库的方法供用户使用。
@@ -152,11 +152,6 @@ public abstract class Session {
 	 * 内部使用 得到数据库连接
 	 */
 	abstract IConnection getConnection() throws SQLException;
-
-	/*
-	 * 内部使用 释放（当前线程）连接
-	 */
-	abstract void releaseConnection(IConnection conn);
 
 	/*
 	 * 内部使用 得到数据库名
@@ -2078,7 +2073,7 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 */
 	public final <T> List<T> selectBySql(String sql, Class<T> resultClz, Object... params) throws SQLException {
-		return selectBySql(sql, new Transformer(resultClz), null, params);
+		return selectTarget(null).selectBySql(sql, new Transformer(resultClz), null, params);
 	}
 
 	/**
@@ -3253,8 +3248,8 @@ public abstract class Session {
 	 * @return SQLQuery
 	 * @see com.mysema.query.sql.SQLQuery
 	 */
-	public SQLQueryFactory sqlFactory(String datasourceName) {
-		return new SQLQueryFactory(this.getProfile(datasourceName).getQueryDslDialect(), PROVIDER);
+	public SQLQueryFactoryEx sqlFactory(String datasourceName) {
+		return new SQLQueryFactoryEx(this, datasourceName, PROVIDER);
 	}
 
 	private final Provider<Connection> PROVIDER = new Provider<Connection>() {
@@ -3274,7 +3269,7 @@ public abstract class Session {
 	 * @return SQLQuery
 	 * @see com.mysema.query.sql.SQLQuery
 	 */
-	public SQLQueryFactory sqlFactory() {
+	public SQLQueryFactoryEx sqlFactory() {
 		return sqlFactory(null);
 	}
 
@@ -3339,4 +3334,5 @@ public abstract class Session {
 		queryObj.getResultTransformer().setResultType(resultClz);
 		return iteratedSelect(queryObj, PageLimit.parse(range));
 	}
+
 }

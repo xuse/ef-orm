@@ -819,10 +819,6 @@ public class DbClient extends Session implements SessionFactory {
 		return conn;
 	}
 
-	protected void releaseConnection(IConnection conn) {
-		conn.close();
-	}
-
 	protected String getDbName(String dbKey) {
 		return connPool.getInfo(dbKey).getDbname();
 	}

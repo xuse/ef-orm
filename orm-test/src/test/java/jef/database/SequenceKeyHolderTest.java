@@ -173,9 +173,9 @@ public class SequenceKeyHolderTest {
 			rs.next();
 			return rs.getLong(1);
 		} finally {
-			rs.close();
-			ps.close();
-			db.releaseConnection(conn);
+			DbUtils.close(rs);
+			DbUtils.close(ps);
+			conn.close();
 		}
 	}
 }
