@@ -1,20 +1,5 @@
 package com.github.geequery.extension.querydsl;
 
-import com.querydsl.core.types.Expression;
-import com.querydsl.core.types.Path;
-import com.querydsl.core.types.PathMetadata;
-import com.querydsl.core.types.PathMetadataFactory;
-import com.querydsl.core.types.dsl.*;
-import com.querydsl.sql.ColumnMetadata;
-import com.querydsl.sql.RelationalPathBase;
-
-import jef.database.DataObject;
-import jef.database.Field;
-import jef.database.dialect.type.ColumnMapping;
-import jef.database.dialect.type.DelegatorBoolean;
-import jef.database.meta.AbstractMetadata;
-import jef.database.meta.MetaHolder;
-
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Types;
@@ -24,6 +9,35 @@ import java.time.LocalTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
+
+import jef.database.DataObject;
+import jef.database.Field;
+import jef.database.dialect.type.ColumnMapping;
+import jef.database.meta.AbstractMetadata;
+import jef.database.meta.MetaHolder;
+
+import com.querydsl.core.types.Expression;
+import com.querydsl.core.types.Path;
+import com.querydsl.core.types.PathMetadata;
+import com.querydsl.core.types.PathMetadataFactory;
+import com.querydsl.core.types.dsl.ArrayPath;
+import com.querydsl.core.types.dsl.BooleanPath;
+import com.querydsl.core.types.dsl.CollectionPath;
+import com.querydsl.core.types.dsl.ComparablePath;
+import com.querydsl.core.types.dsl.DatePath;
+import com.querydsl.core.types.dsl.DateTimePath;
+import com.querydsl.core.types.dsl.EnumPath;
+import com.querydsl.core.types.dsl.ListPath;
+import com.querydsl.core.types.dsl.MapPath;
+import com.querydsl.core.types.dsl.NumberPath;
+import com.querydsl.core.types.dsl.SetPath;
+import com.querydsl.core.types.dsl.SimpleExpression;
+import com.querydsl.core.types.dsl.SimplePath;
+import com.querydsl.core.types.dsl.StringPath;
+import com.querydsl.core.types.dsl.TimePath;
+import com.querydsl.sql.ColumnMetadata;
+import com.querydsl.sql.RelationalPathBase;
 
 /**
  * GeeQuery DataObject对应的QueryDSL模型.
@@ -61,18 +75,19 @@ public class SQLRelationalPath<T> extends RelationalPathBase<T> implements Clone
         this(tm, tm.getTableName(false));
     }
 
-    @SuppressWarnings("unchecked")
+	@SuppressWarnings("unchecked")
 	protected SQLRelationalPath(AbstractMetadata tm, String variable) {
         super((Class<T>) tm.getThisType(), PathMetadataFactory.forVariable(variable), tm.getSchema(),
                 tm.getTableName(false));
         init(tm);
     }
 
-    private void init(AbstractMetadata tm) {
+    @SuppressWarnings("unchecked")
+	private void init(AbstractMetadata tm) {
         this.clz = (Class<T>) tm.getThisType();
         for (ColumnMapping cm : tm.getColumns()) {
             if (cm.field() != null) {
-                Expression<?> path = getBeanMappingType(cm);
+                Expression<?> path = getBeanMappingType(cm.rawColumnName(),cm.getFieldType(),cm.getSqlType());
                 addMetadata(cm, (Path<?>) path);
                 map.put(cm.field(), path);
             }
@@ -111,7 +126,7 @@ public class SQLRelationalPath<T> extends RelationalPathBase<T> implements Clone
 
     protected void addMetadata(ColumnMapping cm, Path<?> path) {
         String columnName = cm.rawColumnName();
-        ColumnMetadata cmd = ColumnMetadata.named(columnName).ofType(getSqlType(cm));
+        ColumnMetadata cmd = ColumnMetadata.named(columnName).ofType(cm.getSqlType());
         addMetadata(path, cmd);
     }
 
@@ -121,8 +136,9 @@ public class SQLRelationalPath<T> extends RelationalPathBase<T> implements Clone
      * @param field
      * @return
      */
-    public <S> SimpleExpression<S> column(Field field) {
-        return expression(field);
+    @SuppressWarnings("unchecked")
+	public <S> SimpleExpression<S> column(Field field) {
+        return column(field, SimpleExpression.class);
     }
 
     /**
@@ -130,18 +146,19 @@ public class SQLRelationalPath<T> extends RelationalPathBase<T> implements Clone
      * @param <S>
      * @return
      */
-    public <S> SimpleExpression<S> expression(Field field) {
-        return column(field, SimpleExpression.class);
+    public <S> SimpleExpression<S> expression(String expression,Class<S> type) {
+        return super.createSimple(expression, type);
     }
-
+    
     /**
-     * @param field
-     * @param <P>
+     * 得到一个表达式对象
+     * @param expression
      * @return
      */
-    public <P> Path<P> path(Field field) {
-        return column(field, Path.class);
+    public SimpleExpression<?> expression(String expression) {
+        return super.createSimple(expression, Object.class);
     }
+
 
     public BooleanPath bool(Field field) {
         return column(field, BooleanPath.class);
@@ -151,36 +168,43 @@ public class SQLRelationalPath<T> extends RelationalPathBase<T> implements Clone
         return column(field, StringPath.class);
     }
 
-    public <T extends Number & Comparable<?>> NumberPath<T> number(Field field) {
+    @SuppressWarnings("unchecked")
+	public <P extends Number & Comparable<?>> NumberPath<P> number(Field field) {
         return column(field, NumberPath.class);
     }
 
-    public <T extends Enum<T>> EnumPath<T> enums(Field field) {
+    @SuppressWarnings("unchecked")
+	public <P extends Enum<P>> EnumPath<P> enums(Field field) {
         return column(field, EnumPath.class);
     }
 
-    public <T> SimplePath<T> simple(Field field) {
+    @SuppressWarnings("unchecked")
+    public <P> SimplePath<P> simple(Field field) {
         return column(field, SimplePath.class);
     }
 
+    @SuppressWarnings("unchecked")
     public <A, E> ArrayPath<A, E> array(Field field) {
         return column(field, ArrayPath.class);
     }
 
-    public <T extends Comparable> ComparablePath<T> comparable(Field field) {
+    @SuppressWarnings("unchecked")
+    public <P extends Comparable<P>> ComparablePath<P> comparable(Field field) {
         return column(field, ComparablePath.class);
     }
 
-    public <T extends Comparable> DatePath<T> date(Field field) {
+    @SuppressWarnings("unchecked")
+    public <P extends Comparable<P>> DatePath<P> date(Field field) {
         return column(field, DatePath.class);
     }
 
-
-    public <T extends Comparable> DateTimePath<T> dateTime(Field field) {
+    @SuppressWarnings("unchecked")
+    public <P extends Comparable<P>> DateTimePath<P> dateTime(Field field) {
         return column(field, DateTimePath.class);
     }
 
-    public <T extends Comparable> TimePath<T> time(Field field) {
+    @SuppressWarnings("unchecked")
+    public <P extends Comparable<P>> TimePath<P> time(Field field) {
         return column(field, TimePath.class);
     }
 
@@ -189,7 +213,8 @@ public class SQLRelationalPath<T> extends RelationalPathBase<T> implements Clone
      * @param field
      * @return
      */
-    private <E, Q extends SimpleExpression<? super E>> CollectionPath<E, Q> collection(Field field) {
+    @SuppressWarnings("unchecked")
+    protected <E, Q extends SimpleExpression<? super E>> CollectionPath<E, Q> collection(Field field) {
         return column(field, CollectionPath.class);
     }
 
@@ -198,7 +223,8 @@ public class SQLRelationalPath<T> extends RelationalPathBase<T> implements Clone
      * @param field
      * @return
      */
-    private <E, Q extends SimpleExpression<? super E>> SetPath<E, Q> set(Field field) {
+    @SuppressWarnings("unchecked")
+    protected <E, Q extends SimpleExpression<? super E>> SetPath<E, Q> set(Field field) {
         return column(field, SetPath.class);
     }
 
@@ -207,7 +233,8 @@ public class SQLRelationalPath<T> extends RelationalPathBase<T> implements Clone
      * @param field
      * @return
      */
-    private <E, Q extends SimpleExpression<? super E>> ListPath<E, Q> list(Field field) {
+    @SuppressWarnings("unchecked")
+    protected <E, Q extends SimpleExpression<? super E>> ListPath<E, Q> list(Field field) {
         return column(field, ListPath.class);
     }
 
@@ -216,44 +243,29 @@ public class SQLRelationalPath<T> extends RelationalPathBase<T> implements Clone
      * @param field
      * @return
      */
-    private <K, V, E extends SimpleExpression<? super V>> MapPath<K, V, E> map(Field field) {
+    @SuppressWarnings("unchecked")
+	protected <K, V, E extends SimpleExpression<? super V>> MapPath<K, V, E> map(Field field) {
         return column(field, MapPath.class);
     }
 
-    private <T> T column(Field field, Class<T> clz) {
+    @SuppressWarnings("unchecked")
+    private <P> P column(Field field, Class<P> clz) {
         Expression<?> path = map.get(field);
-        if (path == null) {
-            //字段不存在
-            throw new RuntimeException("field not exists!");
+        if (path == null) {//字段不存在
+            throw new NoSuchElementException("field not exists!");
         }
         if (clz != null) {
             if (clz.isAssignableFrom(path.getClass())) {
-                return (T) path;
+                return (P) path;
             } else {
                 //类型转换错误
                 throw new ClassCastException("field cast error!");
             }
         } else {
-            return (T) path;
+            return (P) path;
         }
     }
 
-    protected int getSqlType(ColumnMapping cm) {
-        int sqlType = 0;
-        if (cm.getClass() == DelegatorBoolean.class) {
-            sqlType = Types.BOOLEAN;
-        } else {
-            sqlType = cm.getSqlType();
-        }
-        return sqlType;
-    }
-
-    protected Expression<?> getBeanMappingType(ColumnMapping cm) {
-        Class<?> mirror = cm.getFieldType();
-        String columnName = cm.rawColumnName();
-        int sqlType = getSqlType(cm);
-        return getBeanMappingType(columnName, mirror, sqlType);
-    }
 
     protected Expression<?> getBeanMappingType(String columnName, Class<?> type, int sqlType) {
         Class<?> mirror = type;

@@ -589,7 +589,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 				.select(qaccount.column(Account.Field.accountName), qaccount.column(Account.Field.userId), qrole.column(Role.Field.roleName)).from(qaccount)
 				.join(qAccountRoleRelation).on(qaccount.string(Account.Field.accountName).eq(qAccountRoleRelation.string(AccountRoleRelation.Field.account)))
 				.join(qrole).on(qAccountRoleRelation.column(AccountRoleRelation.Field.roleId).eq(qrole.column(Role.Field.id)))
-				.where(qaccount.bool(Account.Field.dataValid).eq(true).and(qrole.column(Role.Field.roleName).in(roleCodes)));
+				.where(qaccount.column(Account.Field.dataValid).eq(true).and(qrole.string(Role.Field.roleName).in(roleCodes)));
 
 		List<AccountRoleCodeVO> result = query.fetchAs(AccountRoleCodeVO.class);
 		System.out.println(result);

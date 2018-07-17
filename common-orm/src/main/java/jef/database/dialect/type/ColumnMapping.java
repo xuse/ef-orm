@@ -99,7 +99,7 @@ public interface ColumnMapping extends ResultSetAccessor,MetadataContainer {
 	void jdbcUpdate(ResultSet rs, String columnIndex,Object value, DatabaseDialect dialect) throws SQLException;
 	
 	/**
-	 * 得到java类型
+	 * 得到java类型（丢失泛型）
 	 * 
 	 * @return java字段类型
 	 */
