@@ -22,10 +22,6 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 import javax.persistence.NonUniqueResultException;
 
-import jef.database.NamedQueryConfig;
-import jef.database.NativeQuery;
-import jef.database.query.ConditionQuery;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -36,6 +32,11 @@ import org.springframework.data.repository.query.QueryByExampleExecutor;
 import com.github.geequery.springdata.annotation.Query;
 import com.github.geequery.springdata.repository.support.Update;
 import com.querydsl.sql.SQLQuery;
+import com.querydsl.sql.SQLQueryFactory;
+
+import jef.database.NamedQueryConfig;
+import jef.database.NativeQuery;
+import jef.database.query.ConditionQuery;
 
 /**
  * GQ specific extension of
@@ -292,7 +293,7 @@ public interface GqRepository<T, ID extends Serializable> extends PagingAndSorti
      * @return SQLQuery
      * @see SQLQuery
      */
-    SQLQuery sql();
+    SQLQueryFactory sql();
     
 
 	/**

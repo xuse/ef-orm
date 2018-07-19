@@ -28,6 +28,19 @@ import java.util.Optional;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.github.geequery.springdata.repository.GqRepository;
+import com.github.geequery.springdata.repository.query.QueryUtils;
+import com.querydsl.sql.SQLQueryFactory;
+
 import jef.database.DbClient;
 import jef.database.DbUtils;
 import jef.database.Field;
@@ -50,19 +63,6 @@ import jef.database.query.SqlExpression;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.PageLimit;
-
-import org.springframework.data.domain.Example;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.Order;
-import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.github.geequery.springdata.repository.GqRepository;
-import com.github.geequery.springdata.repository.query.QueryUtils;
-import com.querydsl.sql.SQLQuery;
 
 /**
  * Default implementation of the
@@ -739,8 +739,8 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	}
 
 	@Override
-	public SQLQuery sql() {
-		return getSession().sql();
+	public SQLQueryFactory sql() {
+		return getSession().sqlFactory();
 	}
 
 	@Override
