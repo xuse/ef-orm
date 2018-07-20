@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import javax.persistence.EntityGraph;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 
@@ -57,12 +58,20 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.querydsl.QSort;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.github.geequery.extension.querydsl.QueryDSLTables;
 import com.github.geequery.extension.querydsl.SQLQueryFactoryEx;
+import com.github.geequery.extension.querydsl.SQLRelationalPath;
 import com.github.geequery.springdata.repository.GqRepository;
 import com.github.geequery.springdata.repository.query.QueryUtils;
+import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Predicate;
+import com.querydsl.core.types.dsl.PathBuilder;
+import com.querydsl.sql.SQLQuery;
+import com.querydsl.sql.SQLQueryFactory;
 
 /**
  * Default implementation of the
@@ -90,6 +99,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 		this.meta = meta;
 		this.em = emf;
 		q_all = QB.create(meta.getMetadata());
+		this.querydsl= new Querydsl(new PathBuilder(meta.getJavaType(), meta.getEntityName()));
 	}
 
 	@Override
@@ -739,10 +749,16 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	}
 
 	@Override
-	public SQLQueryFactoryEx sql() {
-		return getSession().sqlFactory();
+	public SQLQueryFactoryEx sqlFactoryEx() {
+		return getSession().sqlFactoryEx();
 	}
 
+	@Override
+	public SQLQueryFactory sqlFactory() {
+		return getSession().sqlFactory();
+	}
+	
+	
 	@Override
 	@Transactional
 	public T merge(T entity) {
@@ -751,5 +767,90 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
+	}
+
+	// /////////////////////////////////////////////////以下为支持QueryDSL的
+	/**
+	 * Returns {@link QueryHints} with the query hints based on the current
+	 * {@link CrudMethodMetadata} and potential {@link EntityGraph} information.
+	 *
+	 * @return
+	 */
+	// protected QueryHints getQueryHints() {
+	// return metadata == null ? NoHints.INSTANCE :
+	// DefaultQueryHints.of(entityInformation, metadata);
+	// }
+	//
+	//
+	protected SQLQuery<?> createQuery(Predicate... predicate) {
+		return getSession().sqlFactory().selectFrom(QueryDSLTables.relationalPathBase(this.meta.getMetadata())).where(predicate);
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Optional<T> findOne(Predicate predicate) {
+		T t = (T) getSession().sqlFactory().selectFrom(QueryDSLTables.relationalPathBase(this.meta.getMetadata())).where(predicate).fetchFirst();
+		return Optional.ofNullable(t);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public Iterable<T> findAll(Predicate predicate) {
+		return getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.relationalPathBase(this.meta.getMetadata())).where(predicate)
+				.fetch();
+	}
+
+	private final Querydsl querydsl;
+
+	@Override
+	public Iterable<T> findAll(Predicate predicate, Sort sort) {
+		SQLRelationalPath<T> path=(SQLRelationalPath<T>) QueryDSLTables.relationalPathBase(this.meta.getMetadata());
+		SQLQuery<T> q = getSession().sqlFactory().selectFrom(path)
+				.where(predicate);
+		querydsl.applySorting(sort, q);
+		return q.fetch();
+	}
+
+	@Override
+	public Iterable<T> findAll(Predicate predicate, OrderSpecifier<?>... orders) {
+		SQLQuery<T> q = getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata()))
+				.where(predicate);
+		QSort sort = new QSort(orders);
+		querydsl.applySorting(sort, q);
+		return q.fetch();
+	}
+
+	@Override
+	public Iterable<T> findAll(OrderSpecifier<?>... orders) {
+		SQLQuery<T> q = getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata()))
+				.where(new Predicate[0]);
+		QSort sort = new QSort(orders);
+		querydsl.applySorting(sort, q);
+		return q.fetch();
+	}
+
+	@Override
+	public Page<T> findAll(Predicate predicate, Pageable pageable) {
+		SQLQuery<T> q = getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata()))
+				.where(predicate);
+		long total = q.fetchCount();
+		q = getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata())).where(predicate);
+		querydsl.applyPagination(pageable, q);
+		return new PageImpl<T>(q.fetch(), pageable, total);
+	}
+
+	@Override
+	public long count(Predicate predicate) {
+		SQLQuery<T> q = getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata()))
+				.where(predicate);
+		return q.fetchCount();
+	}
+
+	@Override
+	public boolean exists(Predicate predicate) {
+		SQLQuery<T> q = getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata()))
+				.where(predicate);
+		T t = q.fetchFirst();
+		return t != null;
 	}
 }

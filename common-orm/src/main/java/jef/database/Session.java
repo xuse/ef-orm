@@ -98,7 +98,9 @@ import jef.tools.StringUtils;
 
 import org.easyframe.enterprise.spring.TransactionMode;
 
+import com.github.geequery.extension.querydsl.SQLQueryEx;
 import com.github.geequery.extension.querydsl.SQLQueryFactoryEx;
+import com.querydsl.sql.SQLQueryFactory;
 
 /**
  * 描述一个事务(会话)的数据库操作句柄，提供了各种操作数据库的方法供用户使用。
@@ -3248,8 +3250,8 @@ public abstract class Session {
 	 * @return SQLQuery
 	 * @see com.mysema.query.sql.SQLQuery
 	 */
-	public SQLQueryFactoryEx sqlFactory(String datasourceName) {
-		return new SQLQueryFactoryEx(this, datasourceName, PROVIDER);
+	public SQLQueryFactory sqlFactory(String datasourceName) {
+		return new SQLQueryFactory(this.getProfile(datasourceName).getQueryDslDialect(), PROVIDER);
 	}
 
 	private final Provider<Connection> PROVIDER = new Provider<Connection>() {
@@ -3269,8 +3271,16 @@ public abstract class Session {
 	 * @return SQLQuery
 	 * @see com.mysema.query.sql.SQLQuery
 	 */
-	public SQLQueryFactoryEx sqlFactory() {
+	public SQLQueryFactory sqlFactory() {
 		return sqlFactory(null);
+	}
+	
+	/**
+	 *  QueryDSL支持，返回一个QueryDSL的查询对象
+	 * @return
+	 */
+	public SQLQueryFactoryEx sqlFactoryEx(){
+		return new SQLQueryFactoryEx(this, null, PROVIDER);
 	}
 
 	// ////////////////////以下全部都是废弃方法//////////////////////

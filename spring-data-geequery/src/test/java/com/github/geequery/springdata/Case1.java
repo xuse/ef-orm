@@ -1,5 +1,7 @@
 package com.github.geequery.springdata;
 
+import java.io.File;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,6 +15,7 @@ import javax.persistence.OptimisticLockException;
 import jef.database.ORMConfig;
 import jef.database.QB;
 import jef.database.RecordsHolder;
+import jef.database.datasource.SimpleDataSource;
 import jef.database.query.Query;
 import jef.tools.DateUtils;
 import jef.tools.string.RandomData;
@@ -41,7 +44,9 @@ import com.github.geequery.springdata.test.entity.VersionLog;
 import com.github.geequery.springdata.test.repo.ComplexFooDao;
 import com.github.geequery.springdata.test.repo.FooDao;
 import com.github.geequery.springdata.test.repo.FooEntityDao;
+import com.querydsl.codegen.BeanSerializer;
 import com.querydsl.core.Tuple;
+import com.querydsl.sql.codegen.MetaDataExporter;
 
 /**
  * 与Spring集成的示例。 本示例使用的xml作为Spring配置。参见
@@ -122,14 +127,14 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 		// ==============使用分页，固定排序===========
 		{
 			System.out.println("=== FindByAge Page ===");
-			Page<Foo> fooPage = foodao.findByAgeOrderById(0, new PageRequest(1, 4));
+			Page<Foo> fooPage = foodao.findByAgeOrderById(0, PageRequest.of(1, 4));
 			System.out.println(fooPage.getTotalElements());
 			System.out.println(Arrays.toString(fooPage.getContent().toArray()));
 		}
 		// ==============分页+传入排序参数===========
 		{
 			System.out.println("=== FindAll(page+sort) ===");
-			Page<Foo> p = foodao.findAll(new PageRequest(0, 3, new Sort(new Order(Direction.DESC, "age"))));
+			Page<Foo> p = foodao.findAll(PageRequest.of(0, 3, Sort.by(new Order(Direction.DESC, "age"))));
 			System.out.println(p.getTotalElements());
 			System.out.println(Arrays.toString(p.getContent().toArray()));
 		}
@@ -137,7 +142,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 		// ===================不分页，传入排序参数===========================
 		{
 			System.out.println("=== FindAll(sort) ===");
-			Iterable<Foo> iters = foodao.findAll(new Sort(new Order(Direction.DESC, "id")));
+			Iterable<Foo> iters = foodao.findAll(Sort.by(new Order(Direction.DESC, "id")));
 			System.out.println("list=" + iters);
 		}
 		// ===========查询多个ID的记录==============
@@ -175,6 +180,118 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			System.out.println("=== DeleteAll() ===");
 			foodao.deleteAll();
 		}
+	}
+
+	@Test
+	public void queryDSLExport() throws SQLException {
+		SimpleDataSource source = new SimpleDataSource("jdbc:derby:./db;create=true", null, null);
+		Connection conn = source.getConnection();
+		MetaDataExporter exporter = new MetaDataExporter();
+		exporter.setPackageName("com.myproject.mydomain");
+		exporter.setTargetFolder(new File("target/generated-sources"));
+		exporter.setBeanSerializer(new BeanSerializer());
+		exporter.export(conn.getMetaData());
+		conn.close();
+	}
+
+	@Test
+	public void testFooDAOQueryDSL() throws SQLException {
+		// =============== 单字段查找 ==========
+		{
+			System.out.println("=== FindByName ===");
+			SQLRelationalPath<Foo> qf = QueryDSLTables.table(Foo.class);
+			Iterable<Foo> foo = foodao.findAll(qf.string(Foo.Field.name).eq("张三"));
+			foo.forEach(e -> System.out.println(e.getName()));
+		}
+
+		{
+			// System.out.println("=== FindByName2 ===");
+			// QFoo qf = QFoo.foo;
+			// Iterable<com.myproject.mydomain.Foo> foo =
+			// foodao.findAll(qf.nameA.eq("张三"));
+			// foo.forEach(e -> System.out.println(e.getName()));
+
+		}
+		// =============查找，带排序============
+		// {
+		// System.out.println("=== FindByAgeOrderById ===");
+		// List<Foo> fooList = foodao.findByAgeOrderById(0);
+		// System.out.println(fooList);
+		//
+		// int id = fooList.get(0).getId();
+		// // =============== 使用悲观锁更新 ==================
+		// boolean updated = foodao.lockItAndUpdate(id, new Update<Foo>() {
+		// @Override
+		// public void setValue(Foo value) {
+		// value.setName("李四");
+		// value.setRemark("悲观锁定");
+		//
+		// }
+		// });
+		// if (updated) {
+		// Foo u = foodao.getOne(id);
+		// Assert.assertEquals("悲观锁定", u.getRemark());
+		// }
+		// }
+		// // ==============使用分页，固定排序===========
+		// {
+		// System.out.println("=== FindByAge Page ===");
+		// Page<Foo> fooPage = foodao.findByAgeOrderById(0, new PageRequest(1,
+		// 4));
+		// System.out.println(fooPage.getTotalElements());
+		// System.out.println(Arrays.toString(fooPage.getContent().toArray()));
+		// }
+		// // ==============分页+传入排序参数===========
+		// {
+		// System.out.println("=== FindAll(page+sort) ===");
+		// Page<Foo> p = foodao.findAll(new PageRequest(0, 3, new Sort(new
+		// Order(Direction.DESC, "age"))));
+		// System.out.println(p.getTotalElements());
+		// System.out.println(Arrays.toString(p.getContent().toArray()));
+		// }
+		//
+		// // ===================不分页，传入排序参数===========================
+		// {
+		// System.out.println("=== FindAll(sort) ===");
+		// Iterable<Foo> iters = foodao.findAll(new Sort(new
+		// Order(Direction.DESC, "id")));
+		// System.out.println("list=" + iters);
+		// }
+		// // ===========查询多个ID的记录==============
+		// {
+		// System.out.println("=== FindAll(?,?,?) ===");
+		// List<Integer> id = Arrays.<Integer> asList(1, 3, 4, 5);
+		// Iterable<Foo> foos = foodao.findAllById(id);
+		// System.out.println("list=" + foos);
+		// }
+		// {
+		// // =========== 在方法中携带运算符 like ===========
+		// System.out.println("=== countByNameLike ===");
+		// System.out.println(foodao.countByNameLike("%四"));
+		// System.out.println("=== findByNameLike ===");
+		// List<Foo> foo = foodao.findByNameLike("%四");
+		// System.out.println(foo);
+		// }
+		//
+		// {
+		// // 在方法中携带运算符 contains，并加上另一个条件
+		// // 如果入参顺序和方法名中的一致，可以不加注解
+		// System.out.println("=== findByNameContainsAndAge ===");
+		// List<Foo> foos = foodao.findByNameContainsAndAge("李", 0);
+		// System.out.println(foos);
+		// }
+		//
+		// {
+		// // 多参数顺序测试否有问题
+		// System.out.println("=== findByNameStartsWithAndAge ===");
+		// List<Foo> foos = foodao.findByNameStartsWithAndAge(0, "李");
+		// System.out.println(foos);
+		// }
+		// {
+		// // 删除全部
+		// System.out.println("=== DeleteAll() ===");
+		// foodao.deleteAll();
+		// }
 	}
 
 	@Test
@@ -246,7 +363,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			 * 
 			 * @IgnoreIf()注解可以化不可能为可能
 			 */
-			Page<Foo> page = (Page<Foo>) foodao2.findBySql5(0, null, new PageRequest(1, 4));
+			Page<Foo> page = (Page<Foo>) foodao2.findBySql5(0, null, PageRequest.of(1, 4));
 			System.out.println(page.getTotalElements());
 			System.out.println(page.getContent());
 		}
@@ -255,7 +372,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			 * 1、like <$string$>的用法 2、顺序不能用Spring-data的方法传入并使用。 但是可以换一种方法
 			 */
 			System.out.println("=== findBySql6() ====");
-			List<Foo> result = foodao2.findBySql6(0, "张", new Sort(new Order(Direction.DESC, "id")));
+			List<Foo> result = foodao2.findBySql6(0, "张", Sort.by(new Order(Direction.DESC, "id")));
 			System.out.println(result);
 
 			System.out.println("=== findBySql6-2() ====");
@@ -266,10 +383,10 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			/**
 			 * 1、条件自动省略 2、如果条件中带有 % _等特殊符号，会自动转义
 			 */
-			Page<Foo> page = foodao2.findBySql7(0, "李%", new PageRequest(3, 5));
+			Page<Foo> page = foodao2.findBySql7(0, "李%", PageRequest.of(3, 5));
 			System.out.println(page.getContent());
 
-			page = foodao2.findBySql7(0, "", new PageRequest(3, 5));
+			page = foodao2.findBySql7(0, "", PageRequest.of(3, 5));
 			System.out.println(page.getContent());
 		}
 		{
@@ -527,12 +644,12 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	@Test
 	public void useQueryDSLPrepare() throws SQLException {
 
-//		 commonDao.getNoTransactionSession().dropTable(Account.class);
-//		 commonDao.getNoTransactionSession().dropTable(Role.class);
-//		 commonDao.getNoTransactionSession().dropTable(AccountRoleRelation.class);
-		 commonDao.getNoTransactionSession().createTable(Account.class);
-		 commonDao.getNoTransactionSession().createTable(Role.class);
-		 commonDao.getNoTransactionSession().createTable(AccountRoleRelation.class);
+		// commonDao.getNoTransactionSession().dropTable(Account.class);
+		// commonDao.getNoTransactionSession().dropTable(Role.class);
+		// commonDao.getNoTransactionSession().dropTable(AccountRoleRelation.class);
+		commonDao.getNoTransactionSession().createTable(Account.class);
+		commonDao.getNoTransactionSession().createTable(Role.class);
+		commonDao.getNoTransactionSession().createTable(AccountRoleRelation.class);
 
 		Role r1 = new Role();
 		r1.setId("admin");
@@ -579,13 +696,14 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	@Test
 	public void useQueryDSL() {
 
-		SQLRelationalPath<Account> qaccount = QueryDSLTables.relationalPathBase(Account.class);
-		SQLRelationalPath<Role> qrole = QueryDSLTables.relationalPathBase(Role.class);
-		SQLRelationalPath<AccountRoleRelation> qAccountRoleRelation = QueryDSLTables.relationalPathBase(AccountRoleRelation.class);
+		SQLRelationalPath<Account> qaccount = QueryDSLTables.table(Account.class);
+		SQLRelationalPath<Role> qrole = QueryDSLTables.table(Role.class);
+		SQLRelationalPath<AccountRoleRelation> qAccountRoleRelation = QueryDSLTables.table(AccountRoleRelation.class);
 		String[] roleCodes = new String[] { "admin", "guest", "anonymous" };
+
 		// SQLQuery<Tuple> query = commonDao.getSession().sqlFactory().query();
 
-		SQLQueryEx<Tuple> query = commonDao.getSession().sqlFactory()
+		SQLQueryEx<Tuple> query = commonDao.getSession().sqlFactoryEx()
 				.select(qaccount.column(Account.Field.accountName), qaccount.column(Account.Field.userId), qrole.column(Role.Field.roleName)).from(qaccount)
 				.join(qAccountRoleRelation).on(qaccount.string(Account.Field.accountName).eq(qAccountRoleRelation.string(AccountRoleRelation.Field.account)))
 				.join(qrole).on(qAccountRoleRelation.column(AccountRoleRelation.Field.roleId).eq(qrole.column(Role.Field.id)))
@@ -598,13 +716,13 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	}
 
 	public static class AccountRoleCodeVO {
-		@Column(name="account_name")
+		@Column(name = "account_name")
 		private String accountName;
-		
-		@Column(name="user_id")
+
+		@Column(name = "user_id")
 		private String userId;
 
-		@Column(name="role_name")
+		@Column(name = "role_name")
 		private String roleName;
 
 		public String getAccountName() {
@@ -635,8 +753,6 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 		public String toString() {
 			return ToStringBuilder.reflectionToString(this);
 		}
-		
-		
-		
+
 	}
 }

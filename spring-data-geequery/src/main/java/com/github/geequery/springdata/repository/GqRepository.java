@@ -29,6 +29,7 @@ import jef.database.query.ConditionQuery;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.QueryByExampleExecutor;
@@ -37,6 +38,7 @@ import com.github.geequery.extension.querydsl.SQLQueryFactoryEx;
 import com.github.geequery.springdata.annotation.Query;
 import com.github.geequery.springdata.repository.support.Update;
 import com.querydsl.sql.SQLQuery;
+import com.querydsl.sql.SQLQueryFactory;
 
 /**
  * GQ specific extension of
@@ -46,7 +48,7 @@ import com.querydsl.sql.SQLQuery;
  * @author Jiyi
  */
 @NoRepositoryBean
-public interface GqRepository<T, ID extends Serializable> extends PagingAndSortingRepository<T, ID>, QueryByExampleExecutor<T> {
+public interface GqRepository<T, ID extends Serializable> extends PagingAndSortingRepository<T, ID>, QueryByExampleExecutor<T>,QuerydslPredicateExecutor<T> {
     /**
      * Deletes the given entities in a batch which means it will create a single
      * {@link Query}. Assume that we will clear the
@@ -289,11 +291,18 @@ public interface GqRepository<T, ID extends Serializable> extends PagingAndSorti
     List<T> batchLoadByField(String field, List<? extends Serializable> values);
     
     /**
-     * 获得一个QueryDSL查询对象
-     * @return SQLQuery
-     * @see SQLQuery
+     * 获得一个QueryDSL查询SQLQueryFactory
+     * @return SQLQueryFactoryEx
+     * @see SQLQueryFactoryEx
      */
-    SQLQueryFactoryEx sql();
+    SQLQueryFactoryEx sqlFactoryEx();
+    
+    /**
+     * 获得一个QueryDSL查询SQLQueryFactory
+     * @return SQLQueryFactory
+     * @see SQLQueryFactory
+     */
+    SQLQueryFactory sqlFactory();
     
 
 	/**

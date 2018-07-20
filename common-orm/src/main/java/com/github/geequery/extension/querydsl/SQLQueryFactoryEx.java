@@ -17,6 +17,26 @@ import com.querydsl.sql.RelationalPath;
 import com.querydsl.sql.SQLCloseListener;
 import com.querydsl.sql.SQLTemplates;
 
+
+
+/**
+ * <H3>写在前面</H3>
+ * 这是一个试验性功能，小友夏锋的想法是利用Query作为Criteria的生成方式，转换为SQL以后再利用到GeeQuery的selectBySql()上来，使用EF进行查询执行与对象拼装。
+ * 我称之为“移花接木”法。
+ * 这种方式仅利用了GeeQuery的JDBC操作和对象拼装功能。而QueryDSL在SQL语句的处理和对象拼装上其实是有自己的套路的，因此个人感觉不是太有必要。
+ * 所以在提供原生的QueryDSL的QueryFactory的基础上，也将这种操作方式提供出来，后续看这种移花接木法是否有更充足的理由和必要。
+ * <p>
+ * <H3>功能说明</H3>
+ * 和QueryDSL标准的SQLQueryFactory的区别是，生成的是SQLQueryEx对象。
+ * 该对象额外提供两个方法
+ * <ul> 
+ * <li><code>fetchAs()</code>可以使用GeeQuery的逻辑将对象拼装成需要的格式。</li>
+ * <li><code>count()</code>使用count()语句查询结果数量. 和fetchCount()其实没什么区别...</li>
+ * </ul>
+ * 
+ * @author jiyi
+ *
+ */
 public class SQLQueryFactoryEx extends AbstractSQLQueryFactory<SQLQueryEx<?>> {
 	static class DataSourceProvider implements Provider<Connection> {
 
