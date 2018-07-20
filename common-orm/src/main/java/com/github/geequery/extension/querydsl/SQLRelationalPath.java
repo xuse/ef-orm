@@ -1,5 +1,25 @@
 package com.github.geequery.extension.querydsl;
 
+import com.querydsl.core.types.Expression;
+import com.querydsl.core.types.Path;
+import com.querydsl.core.types.PathMetadata;
+import com.querydsl.core.types.PathMetadataFactory;
+import com.querydsl.core.types.dsl.*;
+import com.querydsl.sql.ColumnMetadata;
+import com.querydsl.sql.RelationalPathBase;
+import com.querydsl.sql.types.EnumByNameType;
+import com.querydsl.sql.types.EnumByOrdinalType;
+import com.querydsl.sql.types.Type;
+import jef.database.DataObject;
+import jef.database.Field;
+import jef.database.dialect.ColumnType;
+import jef.database.dialect.SqlTypeSized;
+import jef.database.dialect.type.ColumnMapping;
+import jef.database.meta.AbstractMetadata;
+import jef.database.meta.ITableMetadata;
+import jef.database.meta.MetaHolder;
+
+import javax.persistence.Enumerated;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Types;
@@ -11,36 +31,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import jef.database.DataObject;
-import jef.database.Field;
-import jef.database.dialect.ColumnType;
-import jef.database.dialect.SqlTypeSized;
-import jef.database.dialect.type.ColumnMapping;
-import jef.database.meta.ITableMetadata;
-import jef.database.meta.MetaHolder;
-
-import com.querydsl.core.types.Expression;
-import com.querydsl.core.types.Path;
-import com.querydsl.core.types.PathMetadata;
-import com.querydsl.core.types.PathMetadataFactory;
-import com.querydsl.core.types.dsl.ArrayPath;
-import com.querydsl.core.types.dsl.BooleanPath;
-import com.querydsl.core.types.dsl.CollectionPath;
-import com.querydsl.core.types.dsl.ComparablePath;
-import com.querydsl.core.types.dsl.DatePath;
-import com.querydsl.core.types.dsl.DateTimePath;
-import com.querydsl.core.types.dsl.EnumPath;
-import com.querydsl.core.types.dsl.ListPath;
-import com.querydsl.core.types.dsl.MapPath;
-import com.querydsl.core.types.dsl.NumberPath;
-import com.querydsl.core.types.dsl.SetPath;
-import com.querydsl.core.types.dsl.SimpleExpression;
-import com.querydsl.core.types.dsl.SimplePath;
-import com.querydsl.core.types.dsl.StringPath;
-import com.querydsl.core.types.dsl.TimePath;
-import com.querydsl.sql.ColumnMetadata;
-import com.querydsl.sql.RelationalPathBase;
-
 /**
  * GeeQuery DataObject对应的QueryDSL模型.
  */
@@ -50,6 +40,10 @@ public class SQLRelationalPath<T> extends RelationalPathBase<T> implements Clone
 	 * 字段列,值为SimpleExpression
 	 */
 	private final Map<Field, Expression<?>> map = new HashMap<>();
+	/**
+	 * 自定义类型
+	 */
+	protected final Map<ColumnMapping, Type<?>> typeMap = new HashMap<>(10);
 
 	private Class<T> clz;
 
@@ -89,7 +83,7 @@ public class SQLRelationalPath<T> extends RelationalPathBase<T> implements Clone
 		this.clz = (Class<T>) tm.getThisType();
 		int i = 1;
 		for (ColumnMapping cm : tm.getColumns()) {
-			Expression<?> path = getBeanMappingType(cm.fieldName(), cm.getFieldType(), cm.getSqlType());
+			Expression<?> path = getBeanMappingType(cm);
 			addMetadata(cm, (Path<?>) path, i++);
 			map.put(cm.field(), path);
 		}
@@ -270,91 +264,171 @@ public class SQLRelationalPath<T> extends RelationalPathBase<T> implements Clone
 		}
 	}
 
-	protected Expression<?> getBeanMappingType(String columnName, Class<?> type, int sqlType) {
-		Class<?> mirror = type;
+	protected Expression<?> getBeanMappingType(ColumnMapping cm) {
+		Class<?> mirror = cm.getFieldType();
+		String fieldName = cm.fieldName();
+		int sqlType = cm.getSqlType();
 		// String and char
 		if (mirror == String.class) {
-			return createString(columnName);
+			return createString(fieldName);
 		}
 		// Boolean
 		if (mirror == Boolean.class || mirror == Boolean.TYPE) {
-			return createBoolean(columnName);
+			return createBoolean(fieldName);
 		}
 		// Byte
 		if (mirror == Byte.class || mirror == Byte.TYPE) {
-			return createNumber(columnName, Byte.class);
+			return createNumber(fieldName, Byte.class);
 		}
 		// Short
 		if (mirror == Short.class || mirror == Short.TYPE) {
-			return createNumber(columnName, Short.class);
+			return createNumber(fieldName, Short.class);
 		}
 		// Int
 		if (mirror == Integer.class || mirror == Integer.TYPE) {
-			return createNumber(columnName, Integer.class);
+			return createNumber(fieldName, Integer.class);
 		}
 		// Float
 		if (mirror == Float.class || mirror == Float.TYPE) {
-			return createNumber(columnName, Float.class);
+			return createNumber(fieldName, Float.class);
 		}
 		// Double
 		if (mirror == Double.class || mirror == Double.TYPE) {
-			return createNumber(columnName, Double.class);
+			return createNumber(fieldName, Double.class);
 		}
 		// Long
 		if (mirror == Long.class || mirror == Long.TYPE) {
-			return createNumber(columnName, Long.class);
+			return createNumber(fieldName, Long.class);
 		}
 		// BigDecimal
 		if (mirror == BigDecimal.class) {
-			return createNumber(columnName, BigDecimal.class);
+			return createNumber(fieldName, BigDecimal.class);
 		}
 		// BigInteger
 		if (mirror == BigInteger.class) {
-			return createNumber(columnName, BigInteger.class);
+			return createNumber(fieldName, BigInteger.class);
 		}
 
 		// Enum
 		if (mirror.isEnum()) {
-			return createEnum(columnName, (Class) mirror);
+			Enumerated enumerated = mirror.getAnnotation(Enumerated.class);
+			if (enumerated != null) {
+				switch (enumerated.value()) {
+				case ORDINAL:
+					typeMap.put(cm, new EnumByNameType(mirror));
+					break;
+				case STRING:
+					typeMap.put(cm, new EnumByOrdinalType(mirror));
+					break;
+				default:
+					break;
+				}
+			}
+			return createEnum(fieldName, (Class) mirror);
 		}
 		// Char
 		if (mirror == CharSequence.class || mirror == Character.TYPE) {
-			return createSimple(columnName, Character.class);
+			return createSimple(fieldName, Character.class);
 		}
 
 		// jdk8日期
 		if (mirror == LocalDate.class) {
-			return createDate(columnName, LocalDate.class);
+			return createDate(fieldName, LocalDate.class);
 		}
 		if (mirror == LocalDateTime.class) {
-			return createDateTime(columnName, LocalDateTime.class);
+			return createDateTime(fieldName, LocalDateTime.class);
 		}
 		if (mirror == LocalTime.class) {
-			return createTime(columnName, LocalTime.class);
+			return createTime(fieldName, LocalTime.class);
 		}
 		// 日期处理
 		if (Date.class.isAssignableFrom(mirror)) {
 			if (sqlType != 0) {
 				switch (sqlType) {
 				case Types.DATE:
-					return createDate(columnName, (Class<? super Comparable>) mirror);
+					return createDate(fieldName, (Class<? super Comparable>) mirror);
 				case Types.TIME:
-					return createTime(columnName, (Class<? super Comparable>) mirror);
+					return createTime(fieldName, (Class<? super Comparable>) mirror);
 				case Types.TIMESTAMP:
-					return createDateTime(columnName, (Class<? super Comparable>) mirror);
+					return createDateTime(fieldName, (Class<? super Comparable>) mirror);
 				default:
 					break;
 				}
 			}
-			return createDateTime(columnName, (Class<? super Comparable>) mirror);
+			return createDateTime(fieldName, (Class<? super Comparable>) mirror);
 		}
 
 		// byte[]
 		if (mirror.isArray()) {
-			return createArray(columnName, (Class<? super Object>) mirror);
+			return createArray(fieldName, (Class<? super Object>) mirror);
 		}
 		// 默认情况
-		return createSimple(columnName, (Class<? super Object>) mirror);
+		return createSimple(fieldName, (Class<? super Object>) mirror);
+	}
+
+	/**
+	 * 新创建,该方法可以实现将枚举值强行转换为string使用.
+	 * 
+	 * @param field
+	 * @return
+	 */
+	public StringPath stringNew(Field field) {
+		AbstractMetadata tm = MetaHolder.getMeta(this.clz);
+		ColumnMapping cm = tm.getColumnDef(field);
+		if (cm == null) {
+			throw new RuntimeException("field not found");
+		}
+		String fieldName = cm.fieldName();
+		StringPath path = createString(fieldName);
+		// addMetadata(cm, path);
+		return path;
+	}
+
+	/**
+	 * 新创建,该方法可以实现将枚举值强行转换为数字类型使用.
+	 * 
+	 * @param field
+	 * @param tClass
+	 * @param <T>
+	 * @return
+	 */
+	public <T extends Number & Comparable<?>> NumberPath<T> numberNew(Field field, Class<T> tClass) {
+		AbstractMetadata tm = MetaHolder.getMeta(this.clz);
+		ColumnMapping cm = tm.getColumnDef(field);
+		if (cm == null) {
+			throw new RuntimeException("field not found");
+		}
+		String fieldName = cm.fieldName();
+		NumberPath<T> path = createNumber(fieldName, tClass);
+		// addMetadata(cm, path);
+		return path;
+	}
+
+	/**
+	 * 新创建
+	 * 
+	 * @param field
+	 * @return
+	 */
+	public BooleanPath booleanNew(Field field) {
+		AbstractMetadata tm = MetaHolder.getMeta(this.clz);
+		ColumnMapping cm = tm.getColumnDef(field);
+		if (cm == null) {
+			throw new RuntimeException("field not found");
+		}
+		String fieldName = cm.fieldName();
+		BooleanPath path = createBoolean(fieldName);
+		// addMetadata(cm, path);
+		return path;
+	}
+
+	/**
+	 * 该方法注册自定义类型有用
+	 * 
+	 * @return
+	 */
+	public Map<ColumnMapping, Type<?>> getTypeMap() {
+		return typeMap;
 	}
 
 	public Class<T> getClz() {
