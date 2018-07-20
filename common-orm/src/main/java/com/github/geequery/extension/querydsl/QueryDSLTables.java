@@ -9,6 +9,12 @@ import jef.database.meta.AbstractMetadata;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 
+
+/**
+ * GeeQuery中的元数据到QueryDSL的表达式的转换器，可以将Class转换为QueryDSL的EntityPath对象。
+ * @author jiyi
+ *
+ */
 public class QueryDSLTables {
 	private static Map<String, SQLRelationalPath<?>> sqlRelationalPathBaseMap = new ConcurrentHashMap<>();
 

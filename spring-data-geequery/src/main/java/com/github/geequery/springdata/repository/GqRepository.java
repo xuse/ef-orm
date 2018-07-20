@@ -34,10 +34,10 @@ import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.QueryByExampleExecutor;
 
+import com.github.geequery.extension.querydsl.QueryDSLTables;
 import com.github.geequery.extension.querydsl.SQLQueryFactoryEx;
 import com.github.geequery.springdata.annotation.Query;
 import com.github.geequery.springdata.repository.support.Update;
-import com.querydsl.sql.SQLQuery;
 import com.querydsl.sql.SQLQueryFactory;
 
 /**
@@ -291,16 +291,22 @@ public interface GqRepository<T, ID extends Serializable> extends PagingAndSorti
     List<T> batchLoadByField(String field, List<? extends Serializable> values);
     
     /**
-     * 获得一个QueryDSL查询SQLQueryFactory
+     * 获得一个QueryDSL查询SQLQueryFactory。<br>
+     * 在QueryDSL中，需要使用GeeQuery的对象模型时，可以使用 {@link QueryDSLTables#table(Class)}方法
      * @return SQLQueryFactoryEx
      * @see SQLQueryFactoryEx
+     * @see QueryDSLTables
+     * 
      */
     SQLQueryFactoryEx sqlFactoryEx();
     
     /**
      * 获得一个QueryDSL查询SQLQueryFactory
+     * <br>
+     * 在QueryDSL中，需要使用GeeQuery的对象模型时，可以使用 {@link QueryDSLTables#table(Class)}方法
      * @return SQLQueryFactory
      * @see SQLQueryFactory
+     * @see QueryDSLTables
      */
     SQLQueryFactory sqlFactory();
     
