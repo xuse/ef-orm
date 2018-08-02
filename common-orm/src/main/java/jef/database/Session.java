@@ -38,6 +38,11 @@ import javax.persistence.NonUniqueResultException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+
+import com.github.geequery.extension.querydsl.SQLQueryFactoryEx;
+import com.querydsl.sql.SQLQueryFactory;
+
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.common.wrapper.Page;
@@ -95,12 +100,6 @@ import jef.tools.Assert;
 import jef.tools.JefConfiguration;
 import jef.tools.PageLimit;
 import jef.tools.StringUtils;
-
-import org.easyframe.enterprise.spring.TransactionMode;
-
-import com.github.geequery.extension.querydsl.SQLQueryEx;
-import com.github.geequery.extension.querydsl.SQLQueryFactoryEx;
-import com.querydsl.sql.SQLQueryFactory;
 
 /**
  * 描述一个事务(会话)的数据库操作句柄，提供了各种操作数据库的方法供用户使用。
@@ -1084,7 +1083,10 @@ public abstract class Session {
 	 *             必需特别注意，返回的元素必需要完成遍历，否则结果集就不会被关闭，会产生泄漏！
 	 */
 	public <T extends IQueryableEntity> Stream<T> iteratedSelect(TypedQuery<T> queryObj, long offset, int limit) throws SQLException {
-		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iteratedSelect(queryObj, limit == 0 ? null : new PageLimit(offset, limit)), 0), false);
+		final ResultIterator<T> iters=iteratedSelect(queryObj, limit == 0 ? null : new PageLimit(offset, limit));
+		Stream<T> st= StreamSupport.stream(Spliterators.spliteratorUnknownSize(iters, 0), false);
+		st.onClose(() -> iters.close());
+		return st;
 	}
 
 	/**
