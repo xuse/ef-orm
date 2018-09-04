@@ -4,7 +4,7 @@ db2/
 db3/
 target/
 
-
+.idea
 .settings
 .project
 .classpath

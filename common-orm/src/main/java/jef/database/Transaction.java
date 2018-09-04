@@ -88,9 +88,6 @@ public abstract class Transaction extends Session implements TransactionalSessio
 		return getTransactionId(null);
 	}
 
-	void releaseConnection(IConnection conn) {
-	}
-
 	@Override
 	public <T> NativeQuery<T> createNamedQuery(String name, Class<T> resultWrapper) {
 		if (parent.namedQueries == null)

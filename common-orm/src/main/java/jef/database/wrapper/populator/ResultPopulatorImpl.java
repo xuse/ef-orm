@@ -51,6 +51,7 @@ import jef.database.innerpool.NestedObjectPopulator;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.meta.AbstractRefField;
 import jef.database.meta.AliasProvider;
+import jef.database.meta.AnnotationProvider;
 import jef.database.meta.EntityType;
 import jef.database.meta.Feature;
 import jef.database.meta.IReferenceAllTable;
@@ -68,27 +69,27 @@ import jef.tools.reflect.ArrayWrapper;
 import jef.tools.reflect.BeanWrapper;
 import jef.tools.reflect.UnsafeUtils;
 
-public class ResultPopulatorImpl implements ResultSetPopulator{
-	
-	public static final ResultSetPopulator instance=new ResultPopulatorImpl();
-	
+public class ResultPopulatorImpl implements ResultSetPopulator {
+
+	public static final ResultSetPopulator instance = new ResultPopulatorImpl();
+
 	public <T> Iterator<T> iteratorSimple(IResultSet rs, Class<T> clz) {
 		return new SimpleRsIterator<T>(rs, clz);
 	}
 
-	public <T> Iterator<T> iteratorNormal(Session session, IResultSet rs,EntityMappingProvider context,Transformer transformers) {
+	public <T> Iterator<T> iteratorNormal(Session session, IResultSet rs, EntityMappingProvider context, Transformer transformers) {
 		return new NormalRsIterator<T>(rs, context, transformers, session);
 	}
 
-	public Iterator<Object[]> iteratorMultipie(IResultSet rs, EntityMappingProvider context,Transformer transformer) {
-		return new MultipleRsIterator(rs, context,transformer);
+	public Iterator<Object[]> iteratorMultipie(IResultSet rs, EntityMappingProvider context, Transformer transformer) {
+		return new MultipleRsIterator(rs, context, transformer);
 	}
 
 	public <T> Iterator<T> iteratorPlain(IResultSet rs, Transformer transformers) {
 		return new PlainRsIterator<T>(rs, transformers);
 	}
 
-	public Iterator<Map<String, Object>> iteratorMap(IResultSet rs,Transformer transformers) {
+	public Iterator<Map<String, Object>> iteratorMap(IResultSet rs, Transformer transformers) {
 		return new VarRsIterator(rs, transformers);
 	}
 
@@ -100,7 +101,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 		List<Map<String, Object>> list = new ArrayList<Map<String, Object>>(40);
 		while (rsVarIterator.hasNext()) {
 			Map<String, Object> v = rsVarIterator.next();
-//			v.remove("");
+			// v.remove("");
 			list.add((Var) v);
 		}
 		return list;
@@ -136,9 +137,9 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 	/**
 	 * 多重模式, 拼装成多个对象
 	 */
-	public List<Object[]> toDataObjectMap(IResultSet rs, EntityMappingProvider context,Transformer transformer) {
+	public List<Object[]> toDataObjectMap(IResultSet rs, EntityMappingProvider context, Transformer transformer) {
 		List<Object[]> list = new ArrayList<Object[]>();
-		for (Iterator<Object[]> iter = new MultipleRsIterator(rs, context,transformer); iter.hasNext();) {
+		for (Iterator<Object[]> iter = new MultipleRsIterator(rs, context, transformer); iter.hasNext();) {
 			list.add(iter.next());
 		}
 		return list;
@@ -161,35 +162,31 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 		private IResultSet rs;
 		private boolean hasNext;
 		private List<Mapper<?>> mappers;
-		public VarRsIterator(IResultSet rs,Transformer transformers) {
+
+		public VarRsIterator(IResultSet rs, Transformer transformers) {
 			this.rs = rs;
 			/*
-			 *  Eclipse或者findbugs或者checkStyle很有可能都对下面这句语句提出了警告。但事实上这是一个性能优化上的小技巧
-			 *  
-			 *  如果把一句话拆成两句来写
-			 *    hasNext=rs.next();
-			 *    if(hasNext){
-			 *  这样可以消除警告。但是从编译后的代码来看。两句话的编译结果为——
-			 *    35:  invokeinterface #57,  1; //InterfaceMethod jef/database/wrapper/IResultSet.next:()Z
-			 *    40:  putfield        #62; //Field hasNext:Z
-   			 *    43:  aload_0
-   			 *    44:  getfield        #62; //Field hasNext:Z
-   			 *  现在这种写法的编译结果为——
-   			 *    35:  invokeinterface #57,  1; //InterfaceMethod jef/database/wrapper/IResultSet.next:()Z
-   			 *    40:  dup_x1
-   			 *    41:  putfield        #62; //Field hasNext:Z
-   			 *  在栈内做一次 dup的开销要小于getfield的开销。（前者是栈访问后者是堆访问）
-   			 *  
-   			 *  各种代码检查工具是针对写不好代码的人起到查漏补遗的作用的，但是不能因此在有能力控制代码逻辑正确性的前提下，不去追求性能更好的写法。
-   			 *  因此，此处就是要这么写，不管各种代码检查工具如何警告，不管省下的性能多么微不足道，我坚持用性能最优的写法。
+			 * Eclipse或者findbugs或者checkStyle很有可能都对下面这句语句提出了警告。但事实上这是一个性能优化上的小技巧
+			 * 
+			 * 如果把一句话拆成两句来写 hasNext=rs.next(); if(hasNext){
+			 * 这样可以消除警告。但是从编译后的代码来看。两句话的编译结果为—— 35: invokeinterface #57, 1;
+			 * //InterfaceMethod jef/database/wrapper/IResultSet.next:()Z 40:
+			 * putfield #62; //Field hasNext:Z 43: aload_0 44: getfield #62;
+			 * //Field hasNext:Z 现在这种写法的编译结果为—— 35: invokeinterface #57, 1;
+			 * //InterfaceMethod jef/database/wrapper/IResultSet.next:()Z 40:
+			 * dup_x1 41: putfield #62; //Field hasNext:Z 在栈内做一次
+			 * dup的开销要小于getfield的开销。（前者是栈访问后者是堆访问）
+			 * 
+			 * 各种代码检查工具是针对写不好代码的人起到查漏补遗的作用的，但是不能因此在有能力控制代码逻辑正确性的前提下，不去追求性能更好的写法。
+			 * 因此，此处就是要这么写，不管各种代码检查工具如何警告，不管省下的性能多么微不足道，我坚持用性能最优的写法。
 			 */
-			if (hasNext = rs.next()) { //请忽略代码检查工具的告警
+			if (hasNext = rs.next()) { // 请忽略代码检查工具的告警
 				initColumnAccessor(transformers);
 			}
 		}
 
 		private void initColumnAccessor(Transformer transformers) {
-			this.mappers=transformers.getMapper();
+			this.mappers = transformers.getMapper();
 			ColumnMeta cnames = rs.getColumns();
 			cnames.initSchemas(transformers);
 			for (String schema : cnames.getSchemas()) {
@@ -218,7 +215,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 				}
 			}
 			BeanWrapper wapper = BeanWrapper.wrap(v);
-			for(Mapper<?> mapp:mappers){
+			for (Mapper<?> mapp : mappers) {
 				try {
 					mapp.process(wapper, rs);
 				} catch (SQLException e) {
@@ -242,12 +239,12 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 			this.rs = rs;
 			hasNext = rs.next();
 			if (hasNext) {
-				this.accessor = initColumnAccessor(clz,rs.getColumns().getN(0));
+				this.accessor = initColumnAccessor(clz, rs.getColumns().getN(0));
 			}
 		}
 
-		private ResultSetAccessor initColumnAccessor(Class<?> clz,ColumnDescription c) {
-			ResultSetAccessor accessor = ColumnMappings.getAccessor(clz, null, c, clz.isPrimitive());
+		private ResultSetAccessor initColumnAccessor(Class<?> clz, ColumnDescription c) {
+			ResultSetAccessor accessor = ColumnMappings.getAccessor(clz, c, null);
 			if (accessor == null) {
 				throw new IllegalArgumentException(clz + "is not a known simple datetype.");
 			}
@@ -284,45 +281,41 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 		private boolean skipAnnataion;
 		private ObjectPopulator populateMeta;
 		private List<Mapper<?>> extendPopulator;
-		
+
 		@SuppressWarnings("all")
 		public PlainRsIterator(IResultSet rs, Transformer transformers) {
 			this.rs = rs;
 			/*
-			 *  Eclipse或者findbugs或者checkStyle很有可能都对下面这句语句提出了警告。但事实上这是一个性能优化上的小技巧
-			 *  
-			 *  如果把一句话拆成两句来写
-			 *    hasNext=rs.next();
-			 *    if(hasNext){
-			 *  这样可以消除警告。但是从编译后的代码来看。两句话的编译结果为——
-			 *    35:  invokeinterface #57,  1; //InterfaceMethod jef/database/wrapper/IResultSet.next:()Z
-			 *    40:  putfield        #62; //Field hasNext:Z
-   			 *    43:  aload_0
-   			 *    44:  getfield        #62; //Field hasNext:Z
-   			 *  现在这种写法的编译结果为——
-   			 *    35:  invokeinterface #57,  1; //InterfaceMethod jef/database/wrapper/IResultSet.next:()Z
-   			 *    40:  dup_x1
-   			 *    41:  putfield        #62; //Field hasNext:Z
-   			 *  在栈内做一次 dup的开销要小于getfield的开销。（前者是栈访问后者是堆访问）
-   			 *  
-   			 *  各种代码检查工具是针对写不好代码的人起到查漏补遗的作用的，但是不能因此在有能力控制代码逻辑正确性的前提下，不去追求性能更好的写法。
-   			 *  因此，此处就是要这么写，不管各种代码检查工具如何警告，不管省下的性能多么微不足道，我坚持用性能最优的写法。
+			 * Eclipse或者findbugs或者checkStyle很有可能都对下面这句语句提出了警告。但事实上这是一个性能优化上的小技巧
+			 * 
+			 * 如果把一句话拆成两句来写 hasNext=rs.next(); if(hasNext){
+			 * 这样可以消除警告。但是从编译后的代码来看。两句话的编译结果为—— 35: invokeinterface #57, 1;
+			 * //InterfaceMethod jef/database/wrapper/IResultSet.next:()Z 40:
+			 * putfield #62; //Field hasNext:Z 43: aload_0 44: getfield #62;
+			 * //Field hasNext:Z 现在这种写法的编译结果为—— 35: invokeinterface #57, 1;
+			 * //InterfaceMethod jef/database/wrapper/IResultSet.next:()Z 40:
+			 * dup_x1 41: putfield #62; //Field hasNext:Z 在栈内做一次
+			 * dup的开销要小于getfield的开销。（前者是栈访问后者是堆访问）
+			 * 
+			 * 各种代码检查工具是针对写不好代码的人起到查漏补遗的作用的，但是不能因此在有能力控制代码逻辑正确性的前提下，不去追求性能更好的写法。
+			 * 因此，此处就是要这么写，不管各种代码检查工具如何警告，不管省下的性能多么微不足道，我坚持用性能最优的写法。
 			 */
-			if (hasNext = rs.next()) {//eclipse warning is not correct. here i'm attempt to set variable 'hasNext' and judge it as condition.
+			if (hasNext = rs.next()) {// eclipse warning is not correct. here
+										// i'm attempt to set variable 'hasNext'
+										// and judge it as condition.
 				this.clz = (Class<T>) transformers.getResultClazz();
 				skipAnnataion = ArrayUtils.fastContains(transformers.getStrategy(), PopulateStrategy.SKIP_COLUMN_ANNOTATION);
 				ColumnMeta columnMeta = rs.getColumns();
 				columnMeta.initSchemas(transformers);
-				populateMeta = initColumnAccessor(columnMeta,transformers);
+				populateMeta = initColumnAccessor(columnMeta, transformers);
 			}
 		}
 
-		private ObjectPopulator initColumnAccessor(ColumnMeta columnMeta,Transformer transformers) {
-			extendPopulator=transformers.getMapper();
+		private ObjectPopulator initColumnAccessor(ColumnMeta columnMeta, Transformer transformers) {
+			extendPopulator = transformers.getMapper();
 			BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(clz);
-			return fillPlain(ba,skipAnnataion,columnMeta);
+			return fillPlain(ba, skipAnnataion, columnMeta);
 		}
-
 
 		public boolean hasNext() {
 			return hasNext;
@@ -331,12 +324,12 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 		public T next() {
 			if (!hasNext)
 				throw new NoSuchElementException();
-			IResultSet rs=this.rs;
+			IResultSet rs = this.rs;
 			try {
 				T retObj = (T) UnsafeUtils.newInstance(clz);
 				BeanWrapper wrapper = BeanWrapper.wrap(retObj);
 				populateMeta.process(wrapper, rs);
-				for(Mapper<?> m:extendPopulator){
+				for (Mapper<?> m : extendPopulator) {
 					m.process(wrapper, rs);
 				}
 				endPopulate(retObj);
@@ -354,20 +347,19 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 
 		private boolean hasNext;
 	}
-	
 
-
-	
-	final static private class RawArrayMapper extends Mapper<Object[]>{
+	final static private class RawArrayMapper extends Mapper<Object[]> {
 		private ResultSetAccessor[] accessor;
+
 		public RawArrayMapper(ResultSetAccessor[] accessor) {
-			this.accessor=accessor;
+			this.accessor = accessor;
 		}
+
 		@Override
 		protected void transform(Object[] obj, IResultSet rs) throws SQLException {
-			int size=accessor.length;
-			for(int i=0;i<size;i++){
-				obj[i]=accessor[i].jdbcGet(rs, i+1);
+			int size = accessor.length;
+			for (int i = 0; i < size; i++) {
+				obj[i] = accessor[i].jdbcGet(rs, i + 1);
 			}
 		}
 	}
@@ -379,72 +371,67 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 		private Class<?> componentType;
 
 		@SuppressWarnings("all")
-		public MultipleRsIterator(IResultSet rs, EntityMappingProvider context,Transformer transformer) {
-			this.componentType=transformer.getResultClazz().getComponentType();
-			Assert.isFalse(componentType.isPrimitive(),"Please use the complex type of "+componentType);
+		public MultipleRsIterator(IResultSet rs, EntityMappingProvider context, Transformer transformer) {
+			this.componentType = transformer.getResultClazz().getComponentType();
+			Assert.isFalse(componentType.isPrimitive(), "Please use the complex type of " + componentType);
 			this.rs = rs;
 			/*
-			 *  Eclipse或者findbugs或者checkStyle很有可能都对下面这句语句提出了警告。但事实上这是一个性能优化上的小技巧
-			 *  
-			 *  如果把一句话拆成两句来写
-			 *    hasNext=rs.next();
-			 *    if(hasNext){
-			 *  这样可以消除警告。但是从编译后的代码来看。两句话的编译结果为——
-			 *    35:  invokeinterface #57,  1; //InterfaceMethod jef/database/wrapper/IResultSet.next:()Z
-			 *    40:  putfield        #62; //Field hasNext:Z
-   			 *    43:  aload_0
-   			 *    44:  getfield        #62; //Field hasNext:Z
-   			 *  现在这种写法的编译结果为——
-   			 *    35:  invokeinterface #57,  1; //InterfaceMethod jef/database/wrapper/IResultSet.next:()Z
-   			 *    40:  dup_x1
-   			 *    41:  putfield        #62; //Field hasNext:Z
-   			 *  在栈内做一次 dup的开销要小于getfield的开销。（前者是栈访问后者是堆访问）
-   			 *  
-   			 *  各种代码检查工具是针对写不好代码的人起到查漏补遗的作用的，但是不能因此在有能力控制代码逻辑正确性的前提下，不去追求性能更好的写法。
-   			 *  因此，此处就是要这么写，不管各种代码检查工具如何警告，不管省下的性能多么微不足道，我坚持用性能最优的写法。
+			 * Eclipse或者findbugs或者checkStyle很有可能都对下面这句语句提出了警告。但事实上这是一个性能优化上的小技巧
+			 * 
+			 * 如果把一句话拆成两句来写 hasNext=rs.next(); if(hasNext){
+			 * 这样可以消除警告。但是从编译后的代码来看。两句话的编译结果为—— 35: invokeinterface #57, 1;
+			 * //InterfaceMethod jef/database/wrapper/IResultSet.next:()Z 40:
+			 * putfield #62; //Field hasNext:Z 43: aload_0 44: getfield #62;
+			 * //Field hasNext:Z 现在这种写法的编译结果为—— 35: invokeinterface #57, 1;
+			 * //InterfaceMethod jef/database/wrapper/IResultSet.next:()Z 40:
+			 * dup_x1 41: putfield #62; //Field hasNext:Z 在栈内做一次
+			 * dup的开销要小于getfield的开销。（前者是栈访问后者是堆访问）
+			 * 
+			 * 各种代码检查工具是针对写不好代码的人起到查漏补遗的作用的，但是不能因此在有能力控制代码逻辑正确性的前提下，不去追求性能更好的写法。
+			 * 因此，此处就是要这么写，不管各种代码检查工具如何警告，不管省下的性能多么微不足道，我坚持用性能最优的写法。
 			 */
-			if (hasNext = rs.next()) { //Please Ignore the warning of eclipse.
-				boolean noContext=context==null || transformer.hasStrategy(PopulateStrategy.COLUMN_TO_ARRAY);
-				if(!noContext){ //为了尽可能自动，当context中参与的表只有一个时，默认认为还是Column_To_Array模式的
-					noContext=context.getReference().size()<2;	
+			if (hasNext = rs.next()) { // Please Ignore the warning of eclipse.
+				boolean noContext = context == null || transformer.hasStrategy(PopulateStrategy.COLUMN_TO_ARRAY);
+				if (!noContext) { // 为了尽可能自动，当context中参与的表只有一个时，默认认为还是Column_To_Array模式的
+					noContext = context.getReference().size() < 2;
 				}
 				if (noContext && transformer.getMapper().isEmpty()) {
 					initSimpleArrayPopulator();
-				}else{
-					initColumnAccessor(rs.getColumns(),context==null?null:context.getReference(),transformer);	
+				} else {
+					initColumnAccessor(rs.getColumns(), context == null ? null : context.getReference(), transformer);
 				}
-			}			
+			}
 		}
 
 		private void initSimpleArrayPopulator() {
-			populators=new ArrayList<Mapper<?>>(1);
-			ColumnMeta meta=rs.getColumns();
-			this.size=meta.length();
-			
-			ResultSetAccessor[] accessors=new ResultSetAccessor[size];
-			for(int i=0;i<size;i++){
-				accessors[i]=ColumnMappings.getAccessor(componentType, null, meta.getN(i), false);
+			populators = new ArrayList<Mapper<?>>(1);
+			ColumnMeta meta = rs.getColumns();
+			this.size = meta.length();
+
+			ResultSetAccessor[] accessors = new ResultSetAccessor[size];
+			for (int i = 0; i < size; i++) {
+				accessors[i] = ColumnMappings.getAccessor(componentType, meta.getN(i), null);
 			}
 			populators.add(new RawArrayMapper(accessors));
 		}
 
-		private void initColumnAccessor(ColumnMeta columnNames,List<ISelectItemProvider> queries,Transformer transformer) {
-			if(transformer.getMapper().isEmpty()){
-				populators=new ArrayList<Mapper<?>>();
-				int i=0;
+		private void initColumnAccessor(ColumnMeta columnNames, List<ISelectItemProvider> queries, Transformer transformer) {
+			if (transformer.getMapper().isEmpty()) {
+				populators = new ArrayList<Mapper<?>>();
+				int i = 0;
 				for (ISelectItemProvider prov : queries) {
 					Query<?> q = prov.getTableDef();
 					String schema = prov.getSchema();
-					Mapper<? extends IQueryableEntity> mapper=Mappers.toArrayElement(i++, q.getMeta(),schema);
+					Mapper<? extends IQueryableEntity> mapper = Mappers.toArrayElement(i++, q.getMeta(), schema);
 					mapper.prepare(columnNames.nameIndex);
 					populators.add(mapper);
 				}
 				this.size = populators.size();
-			}else{
-				this.populators=transformer.getMapper();
-				this.size=transformer.getMaxMapperIndex()+1;
+			} else {
+				this.populators = transformer.getMapper();
+				this.size = transformer.getMaxMapperIndex() + 1;
 			}
-			
+
 			columnNames.initSchemas(transformer);
 		}
 
@@ -457,7 +444,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 				throw new NoSuchElementException();
 			try {
 				Object[] map = (Object[]) Array.newInstance(componentType, size);
-				ArrayWrapper aw=new ArrayWrapper(map);
+				ArrayWrapper aw = new ArrayWrapper(map);
 				for (Mapper<?> prov : populators) {
 					prov.process(aw, rs);
 				}
@@ -493,25 +480,20 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 
 		@SuppressWarnings("all")
 		public NormalRsIterator(IResultSet rs, EntityMappingProvider context, Transformer transformers, Session session) {
-			Class<T> resultObj=(Class<T>) transformers.getResultClazz();
+			Class<T> resultObj = (Class<T>) transformers.getResultClazz();
 			this.rs = rs;
 			this.retClz = resultObj;
 			this.meta = transformers.getResultMeta();
-			this.session=session;
+			this.session = session;
 			/*
-			 *  如果把一句话拆成两句来写
-			 *    hasNext=rs.next();
-			 *    if(hasNext){
-			 *  这样可以消除警告。但是从编译后的代码来看。编译结果为——
-			 *    35:  invokeinterface #57,  1; //InterfaceMethod jef/database/wrapper/IResultSet.next:()Z
-			 *    40:  putfield        #62; //Field hasNext:Z
-   			 *    43:  aload_0
-   			 *    44:  getfield        #62; //Field hasNext:Z
-   			 *  现在这种写法的编译结果为——
-   			 *    35:  invokeinterface #57,  1; //InterfaceMethod jef/database/wrapper/IResultSet.next:()Z
-   			 *    40:  dup_x1
-   			 *    41:  putfield        #62; //Field hasNext:Z
-   			 *  在栈内做一次 dup的开销要小于getfield的开销。（前者是栈访问后者是堆访问）
+			 * 如果把一句话拆成两句来写 hasNext=rs.next(); if(hasNext){
+			 * 这样可以消除警告。但是从编译后的代码来看。编译结果为—— 35: invokeinterface #57, 1;
+			 * //InterfaceMethod jef/database/wrapper/IResultSet.next:()Z 40:
+			 * putfield #62; //Field hasNext:Z 43: aload_0 44: getfield #62;
+			 * //Field hasNext:Z 现在这种写法的编译结果为—— 35: invokeinterface #57, 1;
+			 * //InterfaceMethod jef/database/wrapper/IResultSet.next:()Z 40:
+			 * dup_x1 41: putfield #62; //Field hasNext:Z 在栈内做一次
+			 * dup的开销要小于getfield的开销。（前者是栈访问后者是堆访问）
 			 */
 			if (hasNext = rs.next()) {
 				columnNames = rs.getColumns();
@@ -522,11 +504,11 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 					Entry<String[], ISelectItemProvider[]> desc = context.getPopulationDesc();
 					schemas = desc.getKey();
 					subObjects = desc.getValue();
-					defaultField=context.isMultiTable()?AliasProvider.DEFAULT:null;
+					defaultField = context.isMultiTable() ? AliasProvider.DEFAULT : null;
 				} else {
 					schemas = new String[] { "" };// 当引用查询时的基础表Schema
 				}
-				
+
 				if (meta == null && IQueryableEntity.class.isAssignableFrom(resultObj)) {
 					this.meta = MetaHolder.getMeta(resultObj.asSubclass(IQueryableEntity.class));
 				}
@@ -538,9 +520,9 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 			boolean skipAnnataion = transformers.hasStrategy(PopulateStrategy.SKIP_COLUMN_ANNOTATION);
 			BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(retClz);
 			directPopulator = new ArrayList<ObjectPopulator>(schemas.length);
-			Set<ColumnMapping> populated=new HashSet<ColumnMapping>(meta.getColumns().size());
+			Set<ColumnMapping> populated = new HashSet<ColumnMapping>(meta.getColumns().size());
 			for (String schema : schemas) {
-				if(!transformers.hasIgnoreSchema(schema)){
+				if (!transformers.hasIgnoreSchema(schema)) {
 					directPopulator.add(fill(schema, defaultField, rs, columnNames, meta, skipAnnataion, populated));
 				}
 			}
@@ -550,10 +532,10 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 					extendPopulator.add(fillReference(columnNames, ba, rs, rp, rs.getProfile()));
 				}
 			}
-			if(!transformers.getMapper().isEmpty()){
-				if(extendPopulator==null){
+			if (!transformers.getMapper().isEmpty()) {
+				if (extendPopulator == null) {
 					extendPopulator = new ArrayList<IPopulator>(transformers.getMapper());
-				}else{
+				} else {
 					extendPopulator.addAll(transformers.getMapper());
 				}
 			}
@@ -568,17 +550,17 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 			if (!hasNext)
 				throw new NoSuchElementException();
 			try {
-				
+
 				T retObj;
 				BeanWrapper wrapper;
-				if(meta==null){
-					retObj=UnsafeUtils.newInstance(retClz);
+				if (meta == null) {
+					retObj = UnsafeUtils.newInstance(retClz);
 					wrapper = BeanWrapper.wrap(retObj, BeanWrapper.FAST);
-				}else{
-					IQueryableEntity e=meta.newInstance();
+				} else {
+					IQueryableEntity e = meta.newInstance();
 					e.stopUpdate();
-					retObj=(T) e;
-					wrapper = new FastBeanWrapperImpl(retObj,meta.getContainerAccessor());
+					retObj = (T) e;
+					wrapper = new FastBeanWrapperImpl(retObj, meta.getContainerAccessor());
 				}
 				for (ObjectPopulator op : directPopulator) {
 					op.process(wrapper, rs);
@@ -605,41 +587,40 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 		private boolean hasNext;
 
 		private IPopulator fillReference(ColumnMeta columns, BeanAccessor ba, IResultSet rs, ISelectItemProvider rp, DatabaseDialect profile) {
-			List<IPopulator> result=new ArrayList<IPopulator>();
+			List<IPopulator> result = new ArrayList<IPopulator>();
 			if (rp.getReferenceObj() != null) {
 				IReferenceAllTable allcolumns = rp.getReferenceObj();
 				String name = allcolumns.getName();
 				ITableMetadata targetType = allcolumns.getFullModeTargetType();
-				BeanAccessor targetAccessor=(name==null?ba:FastBeanWrapperImpl.getAccessorFor(targetType.getContainerType()));
-				
+				BeanAccessor targetAccessor = (name == null ? ba : FastBeanWrapperImpl.getAccessorFor(targetType.getContainerType()));
+
 				ObjectPopulator op1;
 				List<LazyLoadTask> tasks = new ArrayList<LazyLoadTask>();
-				if(targetType.getType()!=EntityType.NATIVE || targetAccessor.getType()==targetType.getThisType()){
-					op1=fill(rp.getSchema(), allcolumns, rs, columns, targetType, false, null);
+				if (targetType.getType() != EntityType.NATIVE || targetAccessor.getType() == targetType.getThisType()) {
+					op1 = fill(rp.getSchema(), allcolumns, rs, columns, targetType, false, null);
 					if (allcolumns.isLazyLob()) {
 						for (Field field : targetType.getLobFieldNames()) {
-							ColumnMapping mType=targetType.getColumnDef(field);
+							ColumnMapping mType = targetType.getColumnDef(field);
 							LobLazyLoadTask task = new LobLazyLoadTask(mType, rs.getProfile(), targetType.getTableName(true));
 							tasks.add(task);
 						}
-					}	
-				}else{
-					op1=fillPlain(targetAccessor, false, columns);
+					}
+				} else {
+					op1 = fillPlain(targetAccessor, false, columns);
 				}
-				if(rp.getStaticRef()!=null){//级联对象的级联任务作为延迟加载
-					Map<Reference, List<AbstractRefField>> map =targetType.getRefFieldsByRef();
-					
-					
+				if (rp.getStaticRef() != null) {// 级联对象的级联任务作为延迟加载
+					Map<Reference, List<AbstractRefField>> map = targetType.getRefFieldsByRef();
+
 					for (Map.Entry<Reference, List<AbstractRefField>> entry : map.entrySet()) {
-						LazyLoadTask task=DebugUtil.getLazyTaskMarker(entry, rs.getFilters(), session);
+						LazyLoadTask task = DebugUtil.getLazyTaskMarker(entry, rs.getFilters(), session);
 						tasks.add(task);
 					}
 				}
-				if(!tasks.isEmpty()){
+				if (!tasks.isEmpty()) {
 					LazyLoadProcessor lz = new LazyLoadProcessor(tasks, session);
-					op1.setProcessor(lz);	
+					op1.setProcessor(lz);
 				}
-				
+
 				if (name == null) {
 					result.add(op1);
 				} else {
@@ -648,10 +629,11 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 			}
 
 			for (IReferenceColumn field : rp.getReferenceCol()) {
-				//TODO 修复关于引用单字段的LOB的延迟加载问题。
-				result.add(new FieldPopulator(field,profile,rp.getSchema(),columns,ba));
+				// TODO 修复关于引用单字段的LOB的延迟加载问题。
+				result.add(new FieldPopulator(field, profile, rp.getSchema(), columns, ba));
 			}
-			if(result.size()==1)return result.get(0);
+			if (result.size() == 1)
+				return result.get(0);
 			return new MultiplePopulator(result.toArray(new IPopulator[result.size()]));
 		}
 	}
@@ -663,13 +645,10 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 	}
 
 	/*
-	 * @ba拼装java模型
-	 * schema schema
-	 * fullRef 引用
-	 * columns 数据库列
-	 * meta
+	 * @ba拼装java模型 schema schema fullRef 引用 columns 数据库列 meta
 	 */
-	private static ObjectPopulator fill(String schema, AliasProvider fullRef, IResultSet rs, ColumnMeta columns, ITableMetadata meta, boolean skipColumn, Set<ColumnMapping> populated) {
+	private static ObjectPopulator fill(String schema, AliasProvider fullRef, IResultSet rs, ColumnMeta columns, ITableMetadata meta, boolean skipColumn,
+			Set<ColumnMapping> populated) {
 		Map<String, ColumnDescription> data = new HashMap<String, ColumnDescription>();
 		DatabaseDialect profile = rs.getProfile();
 		// 这里要按照列名来拼装，不是默认全拼装
@@ -684,17 +663,23 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 			if (columnName != null) {
 				ColumnDescription columnDesc = columns.getByUpperName(columnName);
 				if (columnDesc == null) {
-					//没找到合适的列，可以认为是SQL语句中并未查询该列，保持该列不设置即可。
-//					if (schema == "")
-//						System.err.println("Warnning: populating object " + meta.getThisType() + " error," + schema + ":" + columnName + " not found in the selected columns");
-				}else{
-					if(populated==null || populated.add(ft)){
+					// 没找到合适的列，可以认为是SQL语句中并未查询该列，保持该列不设置即可。
+					// if (schema == "")
+					// System.err.println("Warnning: populating object " +
+					// meta.getThisType() + " error," + schema + ":" +
+					// columnName + " not found in the selected columns");
+				} else {
+					if (populated == null || populated.add(ft)) {
 						ResultSetAccessor accessor = ColumnMappings.getAccessor(ft.getFieldAccessor().getType(), ft, columnDesc, false);
 						columnDesc.setAccessor(accessor);
-						data.put(f.name(), columnDesc);	
-					}else{
-						throw new PersistenceException("Ambiguous column will set to field ["+ft+"]. Hint: you can use Object[] as a result container to receive multiple tables in this join, or remove unsed select columns in the query.");
-					};
+						data.put(f.name(), columnDesc);
+					} else {
+						throw new PersistenceException(
+								"Ambiguous column will set to field ["
+										+ ft
+										+ "]. Hint: you can use Object[] as a result container to receive multiple tables in this join, or remove unsed select columns in the query.");
+					}
+					;
 				}
 			}
 		}
@@ -710,31 +695,52 @@ public class ResultPopulatorImpl implements ResultSetPopulator{
 		}
 		return op;
 	}
-	
-	@SuppressWarnings({ "unchecked"})
+
+	@SuppressWarnings({ "unchecked" })
 	private static <A extends Annotation> A getAnnotation(BeanAccessor ba, String fieldName, Class<A> class1) {
 		Map<Class<?>, Annotation> map = ba.getAnnotationOnField(fieldName);
 		return map == null ? null : (A) map.get(class1);
 	}
-	
-	private static ObjectPopulator fillPlain(BeanAccessor ba,boolean skipAnnataion,ColumnMeta columnMeta){
+
+	static class Annotations implements AnnotationProvider {
+		private BeanAccessor ba;
+		private String fieldName;
+
+		Annotations(BeanAccessor ba, String fieldName) {
+			this.ba = ba;
+			this.fieldName = fieldName;
+		}
+
+		@Override
+		public <T extends Annotation> T getAnnotation(Class<T> type) {
+			return ResultPopulatorImpl.getAnnotation(ba, fieldName, type);
+		}
+
+		@Override
+		public String getName() {
+			return fieldName;
+		}
+
+	}
+
+	private static ObjectPopulator fillPlain(BeanAccessor ba, boolean skipAnnataion, ColumnMeta columnMeta) {
 		Map<String, ColumnDescription> matched = new HashMap<String, ColumnDescription>();
 		for (String fieldName : ba.getPropertyNames()) {
 			javax.persistence.Column columnAnnotation = skipAnnataion ? null : getAnnotation(ba, fieldName, javax.persistence.Column.class);
 			String columnName;
-			if (columnAnnotation != null && columnAnnotation.name().length()!=0) {
+			if (columnAnnotation != null && columnAnnotation.name().length() != 0) {
 				columnName = columnAnnotation.name();
 			} else {
 				columnName = fieldName;
 			}
-			ColumnDescription c = columnMeta.getByUpperName(columnName.toUpperCase());//findBySimpleName(columnName)
+			ColumnDescription c = columnMeta.getByUpperName(columnName.toUpperCase());// findBySimpleName(columnName)
 			if (c != null) {
-				c.setAccessor(ColumnMappings.getAccessor(ba.getPropertyType(fieldName), null, c, true));
+				c.setAccessor(ColumnMappings.getAccessor(ba.getPropertyType(fieldName), c, skipAnnataion ? null : new Annotations(ba, fieldName)));
 				matched.put(fieldName, c);
 			}
 		}
-		if(matched.isEmpty()){
-			throw new PersistenceException("No column match any fields in result class ["+ba.getType().getName()+"]. Columns:"+ columnMeta.toString());
+		if (matched.isEmpty()) {
+			throw new PersistenceException("No column match any fields in result class [" + ba.getType().getName() + "]. Columns:" + columnMeta.toString());
 		}
 		return new ObjectPopulator(null, matched);
 	}
