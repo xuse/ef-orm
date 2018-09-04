@@ -44,6 +44,11 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.math.NumberUtils;
+
 import jef.common.BooleanList;
 import jef.common.DoubleList;
 import jef.common.FloatList;
@@ -52,11 +57,6 @@ import jef.common.LongList;
 import jef.tools.string.RegexpUtils;
 import jef.tools.string.StringSpliter;
 import jef.tools.string.Substring;
-
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.math.NumberUtils;
 
 public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	public static final byte CR = 0x0D;
@@ -1283,6 +1283,39 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	}
 
 	/**
+	 * 得到忽略左侧空格的正式内容开始的字符号
+	 * 
+	 * @param line
+	 * @return 指向第一个有效字符
+	 */
+	public static int ignoreWhiteSpace(String line) {
+		int inLength = line.length();
+		int beginPos = 0;
+		for (; beginPos < inLength; beginPos++) {
+			if (!Character.isWhitespace(line.charAt(beginPos))) {
+				break;
+			}
+		}
+		return beginPos;
+	}
+
+	/**
+	 * 得到忽略右侧空格的正式内容开始的字符号
+	 * 
+	 * @param line
+	 * @return 指向最后一个有效字符下一位的空格。
+	 */
+	public static int ignoreRightWhiteSpace(String line) {
+		int beginPos = line.length() - 1;
+		for (; beginPos >= 0; beginPos--) {
+			if (!Character.isWhitespace(line.charAt(beginPos))) {
+				break;
+			}
+		}
+		return beginPos + 1;
+	}
+
+	/**
 	 * 计算双字节字符
 	 * 
 	 * @param s
@@ -1783,7 +1816,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * 检查一个字符串是否符合数字的格式
 	 * 
 	 * @Title: isNumericOrMinus @param isFloat 是否允许小数 @return boolean
-	 * 返回类型 @throws
+	 *         返回类型 @throws
 	 */
 	public static boolean isNumericOrMinus(String str, boolean isFloat) {
 		if (str == null)
@@ -2019,9 +2052,12 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 给定若干字符，从后向前寻找，任意一个匹配的字符。
 	 * 
-	 * @param str 需要查找的字符串
-	 * @param searchChars 需要查找的字符序列
-	 * @param startPos 开始位置
+	 * @param str
+	 *            需要查找的字符串
+	 * @param searchChars
+	 *            需要查找的字符序列
+	 * @param startPos
+	 *            开始位置
 	 * @return
 	 */
 	public static int lastIndexOfAny(String str, char[] searchChars, int startPos) {

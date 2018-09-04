@@ -28,14 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jef.codegen.support.NotModified;
-import jef.codegen.support.OverWrittenMode;
-import jef.common.log.LogUtil;
-import jef.tools.ArrayUtils;
-import jef.tools.IOUtils;
-import jef.tools.StringUtils;
-import jef.tools.reflect.BeanUtils;
-
 import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
@@ -43,6 +35,14 @@ import com.github.geequery.codegen.ast.IClass.GenericClass;
 import com.github.geequery.codegen.ast.IClass.RealClass;
 import com.github.geequery.codegen.support.ParseMode;
 import com.github.geequery.codegen.util.GenUtil;
+
+import jef.codegen.support.NotModified;
+import jef.codegen.support.OverWrittenMode;
+import jef.common.log.LogUtil;
+import jef.tools.ArrayUtils;
+import jef.tools.IOUtils;
+import jef.tools.StringUtils;
+import jef.tools.reflect.BeanUtils;
 
 /**
  * 用于生成和解析Java代码的辅助类
@@ -948,7 +948,7 @@ public class JavaUnit extends DefaultJavaElement{
 	 * @return
 	 * @throws IOException
 	 */
-	public File saveAs(File javaFile, String charset) throws IOException {
+	public File saveAs(File javaFile, Charset charset) throws IOException {
 		BufferedWriter bw = IOUtils.getWriter(javaFile, charset, false);
 		writeTo(bw);
 		bw.flush();
@@ -972,7 +972,7 @@ public class JavaUnit extends DefaultJavaElement{
 	 * @return
 	 * @throws IOException
 	 */
-	public File saveToSrcFolder(File srcFolder, String charset, OverWrittenMode mode) throws IOException {
+	public File saveToSrcFolder(File srcFolder, Charset charset, OverWrittenMode mode) throws IOException {
 		File javaFile = new File(srcFolder.getAbsolutePath(),getFilePath());
 		if (javaFile.exists()) {
 			if (mode == OverWrittenMode.NO)
@@ -984,7 +984,7 @@ public class JavaUnit extends DefaultJavaElement{
 				}
 			}
 		}
-		BufferedWriter bw = IOUtils.getWriter(javaFile, charset == null ? Charset.defaultCharset().name() : charset, false);
+		BufferedWriter bw = IOUtils.getWriter(javaFile, charset == null ? Charset.defaultCharset() : charset, false);
 		writeTo(bw);
 		bw.flush();
 		bw.close();
@@ -996,7 +996,7 @@ public class JavaUnit extends DefaultJavaElement{
 		if (!f.exists())
 			f.mkdirs();
 		try {
-			return saveToSrcFolder(f, "null", OverWrittenMode.AUTO);
+			return saveToSrcFolder(f, null, OverWrittenMode.AUTO);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

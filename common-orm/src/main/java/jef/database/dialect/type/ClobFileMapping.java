@@ -22,7 +22,7 @@ public class ClobFileMapping extends AColumnMapping{
 			st.setNull(index, session.getImplementationSqlType(Types.CLOB));
 		}else{
 			try {
-				st.setCharacterStream(index, IOUtils.getReader(file, null));//这个方法在JDBC4才支持。
+				st.setCharacterStream(index, IOUtils.getReader(file, (String)null));//这个方法在JDBC4才支持。
 			} catch (IOException e) {
 				throw new PersistenceException(e);
 			}	
@@ -73,7 +73,7 @@ public class ClobFileMapping extends AColumnMapping{
 	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
 		File file=(File)value;
 		try {
-			rs.updateCharacterStream(columnIndex, IOUtils.getReader(file, null));//这个方法在JDBC4才支持。
+			rs.updateCharacterStream(columnIndex, IOUtils.getReader(file, (String)null));//这个方法在JDBC4才支持。
 		} catch (IOException e) {
 			throw new PersistenceException(e);
 		}	

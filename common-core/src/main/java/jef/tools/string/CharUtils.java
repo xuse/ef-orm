@@ -21,32 +21,22 @@ import jef.tools.StringUtils;
 
 public final class CharUtils extends org.apache.commons.lang.CharUtils {
 	/*
-	long int char byte经常转来转去，但实际上危险性是很大的。
-	long占用8个字节，int 占用4个字节，short / char占用两个字节  byte一个字节。
-	凡是窄类型转宽类型是安全的，但是宽类型转窄类型就可能造成数据丢失,是危险的。
-	long转int会丢失高位，这个很容易引起注意,但是其他几种有很容易出问题。
-	short的范围是-32767 ~ 32768.
-	比如  InputStream.read(),得到一个int,转成char后，范围就是0~65535.(0~FFFF)，
-	如果要判断流的结束（-1），那么就必须在转成char之前，用int去判断，转成char之后判断就有错。
-	但是偏偏java语法是允许你写出 char ==-1这样的直接比较（隐式转换，从char转int）.
-	
-	byte的范围是 -128 ~ 127.而不是0 到255，这也是很容易搞错的地方，
-	byte的实际范围是 -128 ~ 127 ，即Integer的cache的范围，因此将int转换到
-	因此，将byte转int应该这样写
-	int unsignedByte = signedByte >= 0 ? signedByte : 256 + signedByte;  
-	将int转byte应该这样写（这个逻辑和(byte)的转换效果应该是等同的）
-	int byteValue;  
-	int temp = intValue % 256;  
-	if ( intValue < 0) {  
-	  byteValue =  temp < -128 ? 256 + temp : temp;  
-	}  
-	else {  
-	  byteValue =  temp > 127 ? temp - 256 : temp;  
-	}  
-	System.out.println();
-	System.out.println(byte2hex(md));
-	*/
-	
+	 * long int char byte经常转来转去，但实际上危险性是很大的。 long占用8个字节，int 占用4个字节，short /
+	 * char占用两个字节 byte一个字节。 凡是窄类型转宽类型是安全的，但是宽类型转窄类型就可能造成数据丢失,是危险的。
+	 * long转int会丢失高位，这个很容易引起注意,但是其他几种有很容易出问题。 short的范围是-32767 ~ 32768. 比如
+	 * InputStream.read(),得到一个int,转成char后，范围就是0~65535.(0~FFFF)，
+	 * 如果要判断流的结束（-1），那么就必须在转成char之前，用int去判断，转成char之后判断就有错。 但是偏偏java语法是允许你写出 char
+	 * ==-1这样的直接比较（隐式转换，从char转int）.
+	 * 
+	 * byte的范围是 -128 ~ 127.而不是0 到255，这也是很容易搞错的地方， byte的实际范围是 -128 ~ 127
+	 * ，即Integer的cache的范围，因此将int转换到 因此，将byte转int应该这样写 int unsignedByte =
+	 * signedByte >= 0 ? signedByte : 256 + signedByte;
+	 * 将int转byte应该这样写（这个逻辑和(byte)的转换效果应该是等同的） int byteValue; int temp = intValue
+	 * % 256; if ( intValue < 0) { byteValue = temp < -128 ? 256 + temp : temp;
+	 * } else { byteValue = temp > 127 ? temp - 256 : temp; }
+	 * System.out.println(); System.out.println(byte2hex(md));
+	 */
+
 	/**
 	 * 常量：所有数字字符
 	 */
@@ -80,11 +70,12 @@ public final class CharUtils extends org.apache.commons.lang.CharUtils {
 	 */
 	public static final char[] CHARS_IN_URL = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890_&?=#%;~,./-+".toCharArray();
 
-	public static final String JAP_POINT=new String(new char[]{12539,65381,40658,65378,65379,9834, 12316, 65533,8722,8810,8811,63});
-	public static final String CHN_POINT=new String(new char[]{183,  183,  40657,'『','』',    65374 ,65374,13199,'-','《','》' ,'？'});
-	
+	public static final String JAP_POINT = new String(new char[] { 12539, 65381, 40658, 65378, 65379, 9834, 12316, 65533, 8722, 8810, 8811, 63, ' ' });
+	public static final String CHN_POINT = new String(new char[] { 183, 183, 40657, '『', '』', 65374, 65374, 13199, '-', '《', '》', '？', ' ' });
+
 	/**
-	 *  是否为数字
+	 * 是否为数字
+	 * 
 	 * @param c
 	 * @return true if char is a number
 	 */
@@ -93,7 +84,8 @@ public final class CharUtils extends org.apache.commons.lang.CharUtils {
 	}
 
 	/**
-	 *  是否为空格(含中文空格)
+	 * 是否为空格(含中文空格)
+	 * 
 	 * @param c
 	 * @return true if the char is space (chinese space included)
 	 */
@@ -102,7 +94,8 @@ public final class CharUtils extends org.apache.commons.lang.CharUtils {
 	}
 
 	/**
-	 *  是否为大写字母
+	 * 是否为大写字母
+	 * 
 	 * @param c
 	 * @return true if the char is a alphabat in upper case
 	 */
@@ -111,7 +104,8 @@ public final class CharUtils extends org.apache.commons.lang.CharUtils {
 	}
 
 	/**
-	 *  是否为小写字母
+	 * 是否为小写字母
+	 * 
 	 * @param c
 	 * @return true if the char is alphabat in lower case.
 	 */
@@ -121,6 +115,7 @@ public final class CharUtils extends org.apache.commons.lang.CharUtils {
 
 	/**
 	 * 是否为各种符号
+	 * 
 	 * @param c
 	 * @return true if the char is a symbol
 	 */
@@ -130,6 +125,7 @@ public final class CharUtils extends org.apache.commons.lang.CharUtils {
 
 	/**
 	 * 是否为控制字符
+	 * 
 	 * @param c
 	 * @return true if the char is not a visible character
 	 */
@@ -138,38 +134,30 @@ public final class CharUtils extends org.apache.commons.lang.CharUtils {
 	}
 
 	public static boolean isChinese(char c) {
-		return c>=0x4e00 && c<=0x9fa5;
+		return c >= 0x4e00 && c <= 0x9fa5;
 	}
-	
+
 	/**
 	 * 是否为东亚字符(含符号)
+	 * 
 	 * @param c
-	 * @return <tt>true</tt> if char is chinese or japanese.., otherwise <tt>false</tt>
+	 * @return <tt>true</tt> if char is chinese or japanese.., otherwise
+	 *         <tt>false</tt>
 	 */
 	public static boolean isAsian(char c) {
 		return (c > 255 && c != 65279);
 	}
 
-	/**
-	 * 是否为GB18030符号或控制字符
-	 * @param c
-	 * @return <tt>true</tt> if char is a 全角符号 
-	 */
-	public static boolean isAsianSymbol(char c) {
-		if (c > 19968 && c < 40869)
-			return false;
-		if (isKatakana(c) || isNumberSBC(c) || isHiragana(c) || isSpace(c) || isAlphaSBC(c))
-			return false;
-		return true;
-	}
 	public static final IntRange SBC_ALPHA_UPPER = new IntRange(65313, 65338);
 	public static final IntRange SBC_ALPHA_LOWER = new IntRange(65345, 65370);
 	public static final IntRangeGroup SBC_ALPHA = new IntRangeGroup(SBC_ALPHA_LOWER, SBC_ALPHA_UPPER);
 	public static final IntRange SBC_NUMBER = new IntRange(65296, 65305);
-	public static final IntRange SBC_CHARS_WITHOUT_SPACE = new IntRange(65281,65374);
-	public static final char SBC_SPACE=(char) 12288;
+	public static final IntRange SBC_CHARS_WITHOUT_SPACE = new IntRange(65281, 65374);
+	public static final char SBC_SPACE = (char) 12288;
+
 	/**
 	 * 是否为GB18030全角数字
+	 * 
 	 * @param c
 	 * @return
 	 */
@@ -179,6 +167,7 @@ public final class CharUtils extends org.apache.commons.lang.CharUtils {
 
 	/**
 	 * 是否为GB18030全角字母
+	 * 
 	 * @param c
 	 * @return true if a char is a 全角中文字母
 	 */
@@ -187,8 +176,9 @@ public final class CharUtils extends org.apache.commons.lang.CharUtils {
 											// && c<=65370);
 	}
 
-	/** 
+	/**
 	 * 是否为GB18030片假名
+	 * 
 	 * @param c
 	 * @return true if the char is a 片假名
 	 */
@@ -198,6 +188,7 @@ public final class CharUtils extends org.apache.commons.lang.CharUtils {
 
 	/**
 	 * 是否为GB18030 平假名
+	 * 
 	 * @param c
 	 * @return 如果是平假名返回true，反之
 	 */
@@ -207,6 +198,7 @@ public final class CharUtils extends org.apache.commons.lang.CharUtils {
 
 	/**
 	 * 获得字符的类型
+	 * 
 	 * @param c
 	 * @return enum CharType
 	 */
@@ -221,23 +213,82 @@ public final class CharUtils extends org.apache.commons.lang.CharUtils {
 			return CharType.SPACE;
 		} else if (isCtrl(c)) {
 			return CharType.CTRL;
-		} else if (isAsianSymbol(c)) {
-			return CharType.ASIAN_SYMBOL;
+		} else if (isKatakana(c)) {
+			return CharType.KATAKANA;
+		} else if (isHiragana(c)) {
+			return CharType.HIRAGANA;
+		} else if (isAlphaSBC(c)) {
+			return CharType.ALPHA_SBC;
+		} else if (isNumberSBC(c)) {
+			return CharType.NUMBER_SBC;
+		} else if (isPunctuation(c)) {
+			return CharType.PUNCTUATION;
 		} else {
 			return CharType.ASIAN;
 		}
 	}
-	
+
+	/**
+	 * 是否为标点符号
+	 * @param c
+	 * @return
+	 */
+	public static boolean isPunctuation(char c) {
+		int type = Character.getType(c);
+		return type >= 20 && type <= 25;
+	}
+
 	public enum CharType {
-		// 字母 数字 符号 控制字符 空格
-		ALPHA, NUMBER, SYMBOL, CTRL, SPACE, ASIAN_SYMBOL, // 东亚字符中的符号（以GB18030编码为准）
+		/**
+		 * 字母
+		 */
+		ALPHA,
+		/**
+		 * 数字
+		 */
+		NUMBER,
+		/**
+		 * 标点
+		 */
+		SYMBOL,
+		/**
+		 * 控制符
+		 */
+		CTRL,
+		/**
+		 * 空格
+		 */
+		SPACE,
+		/**
+		 * 标点
+		 */
+		PUNCTUATION,
+		/**
+		 * 全角字母
+		 */
+		ALPHA_SBC,
+		/**
+		 * 片假名
+		 */
+		KATAKANA,
+		/**
+		 * 平假名
+		 */
+		HIRAGANA,
+		/**
+		 * 全角数字
+		 */
+		NUMBER_SBC,
+		/**
+		 * 汉字
+		 */
 		ASIAN, // 东亚字符（不含符号）
 	}
-	
+
 	/**
-	 * 转全角的函数(SBC case)
-	 * 全角空格为12288，半角空格为32
+	 * 转全角的函数(SBC case) 全角空格为12288，半角空格为32
 	 * 其他字符半角(33-126)与全角(65281-65374)的对应关系是：均相差65248
+	 * 
 	 * @param input
 	 * @return 全角字符的文字
 	 */
@@ -257,22 +308,23 @@ public final class CharUtils extends org.apache.commons.lang.CharUtils {
 
 	/**
 	 * 半角字符转全角
+	 * 
 	 * @param c
 	 * @return 全角字符
 	 */
 	public static char toSBC(char c) {
-		if (c == 32)return SBC_SPACE;
-		if (c < 127){
+		if (c == 32)
+			return SBC_SPACE;
+		if (c < 127) {
 			return (char) (c + 65248);
 		}
 		return c;
 	}
-	
+
 	/**
-	*全角字符转半角(DBC case)
-	*全角空格为12288，半角空格为32
-	*其他字符半角(33-126)与全角(65281-65374)的对应关系是：均相差65248
-	*/
+	 * 全角字符转半角(DBC case) 全角空格为12288，半角空格为32
+	 * 其他字符半角(33-126)与全角(65281-65374)的对应关系是：均相差65248
+	 */
 	public static String toDBC(String input) {
 		char[] c = input.toCharArray();
 		for (int i = 0; i < c.length; i++) {
@@ -285,25 +337,28 @@ public final class CharUtils extends org.apache.commons.lang.CharUtils {
 		}
 		return new String(c);
 	}
-	
+
 	/**
 	 * 全角字符转半角字符
+	 * 
 	 * @param c
 	 * @return 半角字符
 	 */
 	public static char toDBC(char c) {
-		if (c == 12288)return (char) 32;
+		if (c == 12288)
+			return (char) 32;
 		if (c > 65280 && c < 65375)
 			c = (char) (c - 65248);
 		return c;
 	}
-	
+
 	/**
 	 * 确保unicode字符串能安全的转换为GB18030，不会丢弃字符。一些GB18030不支持的字符转换到接近的字符上。
+	 * 
 	 * @param line
 	 * @return
 	 */
-	public static String toGB18030(String line){
+	public static String toGB18030(String line) {
 		line = StringUtils.replaceChars(line, JAP_POINT, CHN_POINT);
 		char[] cs = line.toCharArray();
 		boolean flag = false;

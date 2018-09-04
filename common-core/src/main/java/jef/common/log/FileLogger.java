@@ -29,6 +29,7 @@ import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.JefConfiguration.Item;
 import jef.tools.StringUtils;
+import jef.tools.io.Charsets;
 
 public class FileLogger extends AbstractLogger {
 	private static final long serialVersionUID = 1L;
@@ -55,7 +56,7 @@ public class FileLogger extends AbstractLogger {
 	private void ensureOpen() throws IOException{
 		if(out==null){
 			if(file==null)file=this.changeFile();
-			out=IOUtils.getWriter(file, "UTF-8", true);
+			out=IOUtils.getWriter(file, Charsets.UTF8, true);
 		}
 	}
 	

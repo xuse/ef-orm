@@ -26,11 +26,12 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 
+import org.slf4j.LoggerFactory;
+
 import jef.common.Configuration.ConfigItem;
 import jef.common.log.LogUtil;
+import jef.tools.io.Charsets;
 import jef.tools.resource.Resource;
-
-import org.slf4j.LoggerFactory;
 
 public class JefConfiguration {
 	private static String fileName = "jef.properties";
@@ -152,7 +153,7 @@ public class JefConfiguration {
 			Map<String, String> properties = IOUtils.loadProperties(IOUtils.getReader(file, "UTF-8"));
 			properties.put(key, value);
 
-			Writer out = IOUtils.getWriter(file,"UTF-8");
+			Writer out = IOUtils.getWriter(file,Charsets.UTF8);
 			IOUtils.storeProperties(out, properties, true);
 			return true;
 		} catch (IOException e) {

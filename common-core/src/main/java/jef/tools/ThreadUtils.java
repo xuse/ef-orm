@@ -207,4 +207,19 @@ public abstract class ThreadUtils {
 			return false;
 		}
 	}
+
+	/**
+	 * Join到指定的线程进行同步，正常结束返回true
+	 * @param thread
+	 * @return 如果被Interrupt返回false
+	 */
+	public static boolean doJoin(Thread thread) {
+		try {
+			thread.join();
+			return true;
+		} catch (InterruptedException e) {
+			return false;
+		}
+		
+	}
 }

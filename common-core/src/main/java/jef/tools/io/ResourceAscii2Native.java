@@ -25,7 +25,7 @@ public class ResourceAscii2Native {
 			return;
 		}
 		File t = new File(f.getAbsolutePath() + ".nav");
-		IOUtils.fromHexUnicodeString(f, t, "UTF-8");
+		IOUtils.fromHexUnicodeString(f, t, Charsets.UTF8);
 		File bak = IOUtils.escapeExistFile(new File(f.getAbsolutePath() + ".bak"));
 		if (f.renameTo(bak) && t.renameTo(f)) {
 			System.out.println("convert successful! the original file was backup as :" + bak.getAbsolutePath());
