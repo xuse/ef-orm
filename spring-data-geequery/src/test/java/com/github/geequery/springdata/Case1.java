@@ -12,14 +12,6 @@ import java.util.stream.Collectors;
 import javax.persistence.Column;
 import javax.persistence.OptimisticLockException;
 
-import jef.database.ORMConfig;
-import jef.database.QB;
-import jef.database.RecordsHolder;
-import jef.database.datasource.SimpleDataSource;
-import jef.database.query.Query;
-import jef.tools.DateUtils;
-import jef.tools.string.RandomData;
-
 import org.apache.commons.lang.builder.ToStringBuilder;
 import org.easyframe.enterprise.spring.CommonDao;
 import org.junit.Assert;
@@ -47,6 +39,14 @@ import com.github.geequery.springdata.test.repo.FooEntityDao;
 import com.querydsl.codegen.BeanSerializer;
 import com.querydsl.core.Tuple;
 import com.querydsl.sql.codegen.MetaDataExporter;
+
+import jef.database.ORMConfig;
+import jef.database.QB;
+import jef.database.RecordsHolder;
+import jef.database.datasource.SimpleDataSource;
+import jef.database.query.Query;
+import jef.tools.DateUtils;
+import jef.tools.string.RandomData;
 
 /**
  * 与Spring集成的示例。 本示例使用的xml作为Spring配置。参见

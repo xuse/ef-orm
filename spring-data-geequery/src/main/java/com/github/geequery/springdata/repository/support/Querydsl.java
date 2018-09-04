@@ -33,8 +33,6 @@ import com.querydsl.core.types.OrderSpecifier.NullHandling;
 import com.querydsl.core.types.Path;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.core.types.dsl.PathBuilder;
-import com.querydsl.jpa.EclipseLinkTemplates;
-import com.querydsl.jpa.HQLTemplates;
 import com.querydsl.sql.AbstractSQLQuery;
 import com.querydsl.sql.SQLQuery;
 

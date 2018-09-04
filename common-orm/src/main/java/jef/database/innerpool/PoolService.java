@@ -5,17 +5,16 @@ import java.util.Iterator;
 
 import javax.sql.DataSource;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jef.common.log.LogUtil;
 import jef.database.DbCfg;
 import jef.database.datasource.IRoutingDataSource;
 import jef.database.datasource.SimpleDataSource;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
-
-import org.easyframe.enterprise.spring.TransactionMode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 public class PoolService {
 	private static Logger log = LoggerFactory.getLogger(PoolService.class);
@@ -39,7 +38,7 @@ public class PoolService {
 		if (ds instanceof IRoutingDataSource) {
 			IRoutingDataSource rds = (IRoutingDataSource) ds;
 			result= new RoutingDummyConnectionPool(rds);
-		} else if(ds instanceof DriverManagerDataSource||ds instanceof SimpleDataSource){
+		} else if("org.springframework.jdbc.datasource.DriverManagerDataSource".equals(ds.getClass().getName())||ds instanceof SimpleDataSource){
             result= new SingleManagedConnectionPool(ds, min, max);
         } else{ 
 			result= new SingleDummyConnectionPool(ds);
