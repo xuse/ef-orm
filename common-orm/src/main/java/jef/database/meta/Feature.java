@@ -207,4 +207,9 @@ public enum Feature {
 	 * 使用系统表获得Constraint的信息
 	 */
 	GET_CONSTRAINT,
+	/**
+	 * 修改表时，忽略DEFAULT VALUE ON TIMESTAMP,DATE的缺省值(MySQL)
+	 */
+	DATE_TIME_VALUE_WITHOUT_DEFAULT_FUNC
+	
 }

@@ -194,14 +194,7 @@ public abstract class ColumnType {
 			// 检查缺省值
 			String a1 = profile.toDefaultString(oldType.defaultValue, oldType.getSqlType(), oldType.getSqlType());
 			String a2 = profile.toDefaultString(newType.defaultValue, newType.getSqlType(), newType.getSqlType());
-			// 非字符串比较情况下全部按小写处理
-			// if (a1 != null && !a1.startsWith("'")) {
-			// a1 = StringUtils.lowerCase(a1);
-			// }
-			// if (a2 != null && !a2.startsWith("'")) {
-			// a2 = StringUtils.lowerCase(a2);
-			// }
-			if (!StringUtils.equals(a1, a2)) {
+			if (!StringUtils.equals(a1, a2) && supportDefaultChange(profile)) {
 				ColumnChange chg;
 				if (StringUtils.isEmpty(a2)) {
 					chg = new ColumnChange(Change.CHG_DROP_DEFAULT);
@@ -248,6 +241,10 @@ public abstract class ColumnType {
 				result.add(cg);
 		}
 		return result;
+	}
+
+	protected boolean supportDefaultChange(DatabaseDialect profile) {
+		return true;
 	}
 
 	/**
@@ -772,6 +769,11 @@ public abstract class ColumnType {
 		public int getSqlType() {
 			return Types.DATE;
 		}
+
+		@Override
+		protected boolean supportDefaultChange(DatabaseDialect profile) {
+			return profile.notHas(Feature.DATE_TIME_VALUE_WITHOUT_DEFAULT_FUNC);
+		}
 	}
 
 	public static final class TimeStamp extends ColumnType implements SqlTypeDateTimeGenerated, SqlTypeVersioned {
@@ -838,6 +840,10 @@ public abstract class ColumnType {
 		public ColumnType setVersion(boolean flag) {
 			this.isVersion = flag;
 			return this;
+		}
+		@Override
+		protected boolean supportDefaultChange(DatabaseDialect profile) {
+			return profile.notHas(Feature.DATE_TIME_VALUE_WITHOUT_DEFAULT_FUNC);
 		}
 	}
 

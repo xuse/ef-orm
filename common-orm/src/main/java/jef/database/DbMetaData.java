@@ -1574,10 +1574,10 @@ public class DbMetaData {
 	}
 
 	private void modifyColumns(String tablename, ITableMetadata meta, MetadataEventListener event) throws SQLException {
-		DatabaseDialect profile = info.profile;
-		boolean supportsChangeDelete = profile.notHas(Feature.NOT_SUPPORT_ALTER_DROP_COLUMN);
+		DatabaseDialect dialect = info.profile;
+		boolean supportsChangeDelete = dialect.notHas(Feature.NOT_SUPPORT_ALTER_DROP_COLUMN);
 		if (!supportsChangeDelete) {
-			LogUtil.warn("Current database [{}] doesn't support alter table column.", profile.getName());
+			LogUtil.warn("Current database [{}] doesn't support alter table column.", dialect.getName());
 		}
 
 		List<Column> columns = this.getColumns(tablename, false);
