@@ -24,6 +24,8 @@ import javax.sql.DataSource;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.easyframe.enterprise.spring.TransactionMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
@@ -44,6 +46,8 @@ import jef.tools.JefConfiguration;
  * 
  */
 public class DbClientBuilder {
+	
+	private Logger log=LoggerFactory.getLogger(DbClientBuilder.class);
 	/**
 	 * 多数据源。分库分表时可以使用。 在Spring配置时，可以使用这样的格式来配置
 	 * 
@@ -607,6 +611,8 @@ public class DbClientBuilder {
 		}
 		if(enhanceScanPackages && ArrayUtils.isNotEmpty(this.packagesToScan)){
 			new EntityEnhancer().enhance(packagesToScan);
+		}else if(enhanceScanPackages) {
+			log.warn("EnhanceScanPackages flag was set to true. but property 'packagesToScan' was not assigned");
 		}
 		//不再主动增强类
 //		else if (packagesToScan != null) {

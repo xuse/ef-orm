@@ -55,13 +55,6 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import jef.common.log.LogUtil;
-import jef.tools.reflect.BeanWrapper;
-import jef.tools.reflect.BeanWrapperImpl;
-import jef.tools.reflect.Property;
-import jef.tools.reflect.UnsafeUtils;
-import jef.tools.string.CharsetName;
-
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.html.dom.HTMLDocumentImpl;
 import org.slf4j.Logger;
@@ -84,6 +77,13 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import com.alibaba.fastjson.JSONObject;
+
+import jef.common.log.LogUtil;
+import jef.tools.io.Charsets;
+import jef.tools.reflect.BeanWrapper;
+import jef.tools.reflect.BeanWrapperImpl;
+import jef.tools.reflect.Property;
+import jef.tools.reflect.UnsafeUtils;
 
 /**
  * 使用JAXP，封装了基于XML的各种基本操作
@@ -537,7 +537,7 @@ public class XMLUtils {
 			if (StringUtils.isEmpty(s)) {
 				return null;
 			}
-			s = CharsetName.getStdName(s);
+			s = Charsets.getStdName(s);
 			return s;
 		} else {
 			return null;

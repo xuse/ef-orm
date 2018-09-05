@@ -25,59 +25,69 @@ import jef.database.jsqlparser.visitor.SqlValue;
 /**
  * Every number without a point or an exponential format is a LongValue
  */
-public class LongValue implements Expression,SqlValue {
+public class LongValue implements Expression, SqlValue {
 
-    private long value;
+	private long value;
 
-    private String stringValue;
-    
-    public LongValue(){
-    }
-    
-    public LongValue(String value) {
-        if (value.charAt(0) == '+') {
-            value = value.substring(1);
-        }
-        this.value = Long.parseLong(value);
-        this.stringValue = value;
-    }
-    
-    public LongValue(long value){
-    	this.value=value;
-    	this.stringValue=String.valueOf(value);
-    }
+	private String stringValue;
 
-    public void accept(ExpressionVisitor expressionVisitor) {
-        expressionVisitor.visit(this);
-    }
+	public LongValue() {
+	}
 
-    public Long getValue() {
-        return value;
-    }
+	public LongValue(String value) {
+		if (value.charAt(0) == '+') {
+			value = value.substring(1);
+		}
+		this.value = Long.parseLong(value);
+		this.stringValue = value;
+	}
 
-    public void setValue(long d) {
-        value = d;
-    }
+	public LongValue(String valueStr, boolean inverse) {
+		long value = Long.parseLong(valueStr);
+		if (inverse) {
+			value = -value;
+		}
+		this.value = value;
+		this.stringValue = String.valueOf(value);
 
-    public String getStringValue() {
-        return stringValue;
-    }
+	}
 
-    public void setStringValue(String stringValue) {
+	public LongValue(long value) {
+		this.value = value;
+		this.stringValue = String.valueOf(value);
+	}
+
+	public void accept(ExpressionVisitor expressionVisitor) {
+		expressionVisitor.visit(this);
+	}
+
+	public Long getValue() {
+		return value;
+	}
+
+	public void setValue(long d) {
+		value = d;
+	}
+
+	public String getStringValue() {
+		return stringValue;
+	}
+
+	public void setStringValue(String stringValue) {
 		this.stringValue = stringValue;
 	}
 
 	public String toString() {
-        return stringValue;
-    }
+		return stringValue;
+	}
 
-    public static final LongValue L0=new LongValue(0);
-    public static final LongValue L1=new LongValue(1);
-    
+	public static final LongValue L0 = new LongValue(0);
+	public static final LongValue L1 = new LongValue(1);
+
 	public void appendTo(StringBuilder sb) {
 		sb.append(stringValue);
 	}
-	
+
 	public ExpressionType getType() {
 		return ExpressionType.value;
 	}
@@ -86,4 +96,3 @@ public class LongValue implements Expression,SqlValue {
 		return negate.longValue();
 	}
 }
-

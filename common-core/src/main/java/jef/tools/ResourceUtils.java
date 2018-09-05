@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import jef.common.log.LogUtil;
 import jef.tools.reflect.ClassUtils;
 import jef.tools.resource.ClassRelativeLoader;
 import jef.tools.resource.ClasspathLoader;
@@ -446,13 +445,6 @@ public class ResourceUtils {
 	 * 将本地文件转化为URL
 	 */
 	public static URL fileToURL(File f) {
-		if (f instanceof URLFile) {
-			try {
-				return ((URLFile) f).toURL();
-			} catch (MalformedURLException e) {
-				LogUtil.exception(e);
-			}
-		}
 		try {
 			return f.toURI().toURL();
 		} catch (MalformedURLException e) {

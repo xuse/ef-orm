@@ -384,8 +384,9 @@ public class GenerateMojo extends AbstractMojo {
 			g.generateSchema();
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
+		}finally {
+			db.shutdown();
 		}
-		db.close();
 	}
 
 	protected boolean isForTest() {

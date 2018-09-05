@@ -92,8 +92,9 @@ import jef.database.dialect.type.XmlStringMapping;
 import jef.database.meta.AnnotationProvider.FieldAnnotationProvider;
 import jef.database.meta.ColumnChange;
 import jef.database.meta.ColumnChange.Change;
-import jef.database.meta.object.Column;
 import jef.database.meta.Feature;
+import jef.database.meta.object.Column;
+import jef.database.query.SqlExpression;
 import jef.database.support.RDBMS;
 import jef.tools.StringUtils;
 
@@ -106,8 +107,7 @@ import jef.tools.StringUtils;
 public abstract class ColumnType {
 	protected boolean nullable = true;
 	protected boolean unique = false;
-
-	public Object defaultValue;
+	protected Object defaultValue;
 
 	public String toString() {
 		Map<String, Object> map = toJpaAnnonation();
@@ -153,17 +153,6 @@ public abstract class ColumnType {
 	}
 
 	/**
-	 * 为某个数据库字段指定缺省值
-	 * 
-	 * @param obj
-	 * @return
-	 */
-	public ColumnType defaultIs(Object obj) {
-		this.defaultValue = obj;
-		return this;
-	}
-
-	/**
 	 * 当代码生成时，转换为需要加注在属性上的Annotation
 	 * 
 	 * @return
@@ -174,13 +163,18 @@ public abstract class ColumnType {
 		return map;
 	}
 
+	public Object getDefaultValue() {
+		return defaultValue;
+	}
+
 	/**
 	 * 设置列的缺省值
 	 * 
 	 * @param obj
 	 */
-	public void setDefault(Object obj) {
-		this.defaultValue = obj;
+	public ColumnType setDefault(Object defaultValue) {
+		this.defaultValue = defaultValue;
+		return this;
 	}
 
 	/**
@@ -201,12 +195,12 @@ public abstract class ColumnType {
 			String a1 = profile.toDefaultString(oldType.defaultValue, oldType.getSqlType(), oldType.getSqlType());
 			String a2 = profile.toDefaultString(newType.defaultValue, newType.getSqlType(), newType.getSqlType());
 			// 非字符串比较情况下全部按小写处理
-//			if (a1 != null && !a1.startsWith("'")) {
-//				a1 = StringUtils.lowerCase(a1);
-//			}
-//			if (a2 != null && !a2.startsWith("'")) {
-//				a2 = StringUtils.lowerCase(a2);
-//			}
+			// if (a1 != null && !a1.startsWith("'")) {
+			// a1 = StringUtils.lowerCase(a1);
+			// }
+			// if (a2 != null && !a2.startsWith("'")) {
+			// a2 = StringUtils.lowerCase(a2);
+			// }
 			if (!StringUtils.equals(a1, a2)) {
 				ColumnChange chg;
 				if (StringUtils.isEmpty(a2)) {
@@ -293,6 +287,12 @@ public abstract class ColumnType {
 	 * @return
 	 */
 	public abstract ColumnMapping getMappingType(Class<?> fieldType);
+	
+	/**
+	 * 设置缺省值
+	 * @param defaultStr
+	 */
+	protected abstract void setDefaultByString(String defaultStr);
 
 	public final static class Char extends ColumnType implements SqlTypeSized {
 		protected int length;
@@ -313,7 +313,7 @@ public abstract class ColumnType {
 		protected void putAnnonation(Map<String, Object> map) {
 			String def = "char(" + length + ")";
 			if (defaultValue != null) {
-				def = def + " default " + quotWith(String.valueOf(defaultValue));
+				def = def + " default " + quotWith(defaultValue);
 			}
 			map.put("columnDefinition", def);
 			if (!nullable)
@@ -338,7 +338,7 @@ public abstract class ColumnType {
 			} else if (fieldType == java.util.Date.class) {
 				return new CharDateMapping();
 			} else if (fieldType == java.time.YearMonth.class) {
-			    return new LocalYearMonth_Char();
+				return new LocalYearMonth_Char();
 			} else if (fieldType == java.sql.Timestamp.class) {
 				return new CharTimestampMapping();
 			} else if (fieldType == Integer.class || fieldType == Integer.TYPE) {
@@ -365,6 +365,11 @@ public abstract class ColumnType {
 		public int getScale() {
 			return 0;
 		}
+
+		@Override
+		protected void setDefaultByString(String defaultStr) {
+			this.defaultValue=new SqlExpression(defaultStr);
+		}
 	}
 
 	public static class Varchar extends ColumnType implements SqlTypeSized {
@@ -387,7 +392,7 @@ public abstract class ColumnType {
 		protected void putAnnonation(Map<String, Object> map) {
 			String def = "varchar(" + length + ")";
 			if (defaultValue != null) {
-				def = def + " default " + quotWith(String.valueOf(defaultValue));
+				def = def + " default " + quotWith(defaultValue);
 			}
 			map.put("columnDefinition", def);
 			if (!nullable)
@@ -395,7 +400,7 @@ public abstract class ColumnType {
 			map.put("length", length);
 		}
 
-        @Override
+		@Override
 		protected boolean compare(ColumnType type, DatabaseDialect profile) {
 			if (!(type instanceof Varchar)) {
 				return false;
@@ -422,7 +427,7 @@ public abstract class ColumnType {
 				return new VarcharDateMapping();
 			} else if (fieldType == java.sql.Timestamp.class) {
 				return new VarcharTimestampMapping();
-			}else if(fieldType == YearMonth.class){
+			} else if (fieldType == YearMonth.class) {
 				return new jef.database.dialect.type.LocalYearMonth_Char();
 			}
 			throw new IllegalArgumentException("Varchar can not mapping to class " + fieldType.getName());
@@ -441,6 +446,11 @@ public abstract class ColumnType {
 		@Override
 		public int getScale() {
 			return 0;
+		}
+
+		@Override
+		protected void setDefaultByString(String defaultStr) {
+			this.defaultValue=new SqlExpression(defaultStr);
 		}
 	}
 
@@ -482,6 +492,11 @@ public abstract class ColumnType {
 		@Override
 		public int getSqlType() {
 			return Types.BOOLEAN;
+		}
+
+		@Override
+		protected void setDefaultByString(String defaultStr) {
+			this.defaultValue=new SqlExpression(defaultStr);
 		}
 	}
 
@@ -575,6 +590,11 @@ public abstract class ColumnType {
 		@Override
 		public int getScale() {
 			return scale;
+		}
+
+		@Override
+		protected void setDefaultByString(String defaultStr) {
+			this.defaultValue=new SqlExpression(defaultStr);
 		}
 	}
 
@@ -707,6 +727,11 @@ public abstract class ColumnType {
 			this.generateType = dateGenerateType;
 			return this;
 		}
+
+		@Override
+		protected void setDefaultByString(String defaultStr) {
+			this.defaultValue=new SqlExpression(defaultStr);
+		}
 	}
 
 	public static final class Date extends ColumnType implements SqlTypeDateTimeGenerated {
@@ -746,7 +771,7 @@ public abstract class ColumnType {
 			if (fieldType == java.sql.Date.class) {
 				return new DateSDateMapping();
 			} else if (fieldType == LocalDate.class) {
-			    return new LocalDate_Date();
+				return new LocalDate_Date();
 			} else if (fieldType == java.util.Date.class || fieldType == Object.class) {
 				return new DateDateMapping();
 			} else if (fieldType == String.class) {
@@ -758,6 +783,11 @@ public abstract class ColumnType {
 		@Override
 		public int getSqlType() {
 			return Types.DATE;
+		}
+
+		@Override
+		protected void setDefaultByString(String defaultStr) {
+			this.defaultValue=new SqlExpression(defaultStr);
 		}
 	}
 
@@ -799,11 +829,11 @@ public abstract class ColumnType {
 			if (fieldType == java.sql.Timestamp.class) {
 				return new TimestampTsMapping();
 			} else if (fieldType == java.time.LocalDateTime.class) {
-			    return new LocalDateTime_TimeStamp();
+				return new LocalDateTime_TimeStamp();
 			} else if (fieldType == java.time.Instant.class) {
-			    return new Instant_DateTime();
+				return new Instant_DateTime();
 			} else if (fieldType == java.time.LocalTime.class) {
-			    return new LocalTime_TimeStamp();
+				return new LocalTime_TimeStamp();
 			} else if (fieldType == java.util.Date.class || fieldType == Object.class) {
 				return new TimestampDateMapping();
 			} else if (fieldType == java.lang.Long.class || fieldType == java.lang.Long.TYPE) {
@@ -825,6 +855,11 @@ public abstract class ColumnType {
 		public ColumnType setVersion(boolean flag) {
 			this.isVersion = flag;
 			return this;
+		}
+
+		@Override
+		protected void setDefaultByString(String defaultStr) {
+			this.defaultValue=new SqlExpression(defaultStr);
 		}
 	}
 
@@ -1044,6 +1079,11 @@ public abstract class ColumnType {
 		public int getScale() {
 			return 0;
 		}
+
+		@Override
+		protected void setDefaultByString(String defaultStr) {
+			this.defaultValue=new SqlExpression(defaultStr);
+		}
 	}
 
 	/**
@@ -1105,6 +1145,11 @@ public abstract class ColumnType {
 		public int getScale() {
 			return 0;
 		}
+
+		@Override
+		protected void setDefaultByString(String defaultStr) {
+			this.defaultValue=new SqlExpression(defaultStr);
+		}
 	}
 
 	public static class XML extends ColumnType {
@@ -1134,13 +1179,24 @@ public abstract class ColumnType {
 		public int getSqlType() {
 			return Types.SQLXML;
 		}
+
+		@Override
+		protected void setDefaultByString(String defaultStr) {
+			this.defaultValue=new SqlExpression(defaultStr);
+		}
 	}
-    static String quotWith(String value) {
-        if(value.charAt(0)=='\'' && value.charAt(value.length()-1)=='\''){
-            return value;
-        }
-        return AColumnMapping.wrapSqlStr(value);
-    }
+
+	private static String quotWith(Object value) {
+		if(value instanceof String) {
+			String s=(String)value;
+			if (s.charAt(0) == '\'' && s.charAt(s.length() - 1) == '\'') {
+				return s;
+			} else {
+				return AColumnMapping.wrapSqlStr(s);
+			}
+		}
+		return String.valueOf(value); 
+	}
 
 	static ColumnChange createChange(ColumnType oldType, String rawType, ColumnType newType, DatabaseDialect profile) {
 		ColumnChange change = new ColumnChange(Change.CHG_DATATYPE);
