@@ -347,7 +347,7 @@ public class OracleDialect extends AbstractDialect {
 
 				}
 
-			}, Arrays.asList(schema, seqName));
+			}, Arrays.asList(schema, seqName), false);
 		} catch (SQLException e) {
 			DebugUtil.setSqlState(e, sql);
 			LogUtil.error("Error while getting sequence info [{}.{}].", schema, seqName, e);
@@ -657,7 +657,7 @@ public class OracleDialect extends AbstractDialect {
 				return constraints;
 			}
 			
-		}, Arrays.asList(schema, tablename, constraintName));
+		}, Arrays.asList(schema, tablename, constraintName), false);
 		
 		return constraints;
     }

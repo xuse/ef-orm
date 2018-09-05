@@ -4,7 +4,6 @@ import java.util.Map;
 
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.UnknownStringMapping;
-import jef.database.query.SqlExpression;
 import jef.tools.reflect.BeanUtils;
 
 
@@ -148,10 +147,5 @@ public class TypeDefImpl extends ColumnType implements SqlTypeSized {
 		this.precision=p;
 		this.scale=s;
 		return this;
-	}
-
-	@Override
-	protected void setDefaultByString(String defaultStr) {
-		this.defaultValue=new SqlExpression(defaultStr);
 	}
 }

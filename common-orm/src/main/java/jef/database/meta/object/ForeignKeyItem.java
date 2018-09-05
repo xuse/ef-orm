@@ -17,7 +17,7 @@ import jef.database.support.RDBMS;
  * @author Administrator
  * 
  */
-public class ForeignKey implements javax.persistence.ForeignKey{
+public class ForeignKeyItem implements javax.persistence.ForeignKey{
 	// 删除被引用的记录引发的策略，默认为禁止删除，不同数据库的返回值常量不同
 	@Column(name = "FKTABLE_SCHEM")
 	private String fromSchema;
@@ -92,10 +92,10 @@ public class ForeignKey implements javax.persistence.ForeignKey{
 	@Column(name = "DEFERRABILITY")
 	private int deferrAbility;
 
-	public ForeignKey() {
+	public ForeignKeyItem() {
 	}
 
-	public ForeignKey(String table, String column, String refTable,	String refColumn) {
+	public ForeignKeyItem(String table, String column, String refTable,	String refColumn) {
 		this.fromTable = table;
 		this.fromColumn = column;
 		this.referenceTable = refTable;

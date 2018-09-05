@@ -369,7 +369,7 @@ public final class SequenceManager {
 		}
 
 		private long queryLast(DbMetaData conn) throws SQLException {
-			long value = conn.selectBySql(select, GET_LONG_OR_TABLE_NOT_EXIST, Collections.EMPTY_LIST);
+			long value = conn.selectBySql(select, GET_LONG_OR_TABLE_NOT_EXIST, Collections.EMPTY_LIST,false);
 			if (value == -9999L) {// 没有该条记录
 				long start = super.caclStartValue(conn, null, rawTable, rawColumn, config.initialValue(), 99999999999L);
 				if (config.pkColumnName() == null) {

@@ -10,7 +10,7 @@ import jef.database.DbMetaData;
 import jef.database.DbMetaData.ObjectType;
 import jef.database.Session;
 import jef.database.meta.object.Column;
-import jef.database.meta.object.ForeignKey;
+import jef.database.meta.object.ForeignKeyItem;
 import jef.database.meta.object.Index;
 import jef.database.meta.object.TableInfo;
 import jef.database.test.DataSource;
@@ -86,8 +86,8 @@ public class MetadataTest extends org.junit.Assert{
 	@Test
 	@IgnoreOn("sqlite")
 	public void testMeta() throws SQLException {
-		List<ForeignKey> fk=db.getMetaData(null).getForeignKey("T3");
-		for(ForeignKey k: fk){
+		List<ForeignKeyItem> fk=db.getMetaData(null).getForeignKey("T3");
+		for(ForeignKeyItem k: fk){
 			System.out.println("===============");
 			System.out.println(k.toString());
 			System.out.println(k.toCreateSql(db.getProfile()));

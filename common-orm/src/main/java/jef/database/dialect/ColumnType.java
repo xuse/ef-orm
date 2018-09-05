@@ -287,12 +287,15 @@ public abstract class ColumnType {
 	 * @return
 	 */
 	public abstract ColumnMapping getMappingType(Class<?> fieldType);
-	
+
 	/**
 	 * 设置缺省值
+	 * 
 	 * @param defaultStr
 	 */
-	protected abstract void setDefaultByString(String defaultStr);
+	public void setDefaultByString(String defaultStr) {
+		this.defaultValue = new SqlExpression(defaultStr);
+	};
 
 	public final static class Char extends ColumnType implements SqlTypeSized {
 		protected int length;
@@ -367,8 +370,8 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		protected void setDefaultByString(String defaultStr) {
-			this.defaultValue=new SqlExpression(defaultStr);
+		public void setDefaultByString(String defaultStr) {
+			this.defaultValue = defaultStr;
 		}
 	}
 
@@ -449,8 +452,8 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		protected void setDefaultByString(String defaultStr) {
-			this.defaultValue=new SqlExpression(defaultStr);
+		public void setDefaultByString(String defaultStr) {
+			this.defaultValue = defaultStr;
 		}
 	}
 
@@ -492,11 +495,6 @@ public abstract class ColumnType {
 		@Override
 		public int getSqlType() {
 			return Types.BOOLEAN;
-		}
-
-		@Override
-		protected void setDefaultByString(String defaultStr) {
-			this.defaultValue=new SqlExpression(defaultStr);
 		}
 	}
 
@@ -590,11 +588,6 @@ public abstract class ColumnType {
 		@Override
 		public int getScale() {
 			return scale;
-		}
-
-		@Override
-		protected void setDefaultByString(String defaultStr) {
-			this.defaultValue=new SqlExpression(defaultStr);
 		}
 	}
 
@@ -727,11 +720,6 @@ public abstract class ColumnType {
 			this.generateType = dateGenerateType;
 			return this;
 		}
-
-		@Override
-		protected void setDefaultByString(String defaultStr) {
-			this.defaultValue=new SqlExpression(defaultStr);
-		}
 	}
 
 	public static final class Date extends ColumnType implements SqlTypeDateTimeGenerated {
@@ -783,11 +771,6 @@ public abstract class ColumnType {
 		@Override
 		public int getSqlType() {
 			return Types.DATE;
-		}
-
-		@Override
-		protected void setDefaultByString(String defaultStr) {
-			this.defaultValue=new SqlExpression(defaultStr);
 		}
 	}
 
@@ -855,11 +838,6 @@ public abstract class ColumnType {
 		public ColumnType setVersion(boolean flag) {
 			this.isVersion = flag;
 			return this;
-		}
-
-		@Override
-		protected void setDefaultByString(String defaultStr) {
-			this.defaultValue=new SqlExpression(defaultStr);
 		}
 	}
 
@@ -1079,11 +1057,6 @@ public abstract class ColumnType {
 		public int getScale() {
 			return 0;
 		}
-
-		@Override
-		protected void setDefaultByString(String defaultStr) {
-			this.defaultValue=new SqlExpression(defaultStr);
-		}
 	}
 
 	/**
@@ -1145,11 +1118,6 @@ public abstract class ColumnType {
 		public int getScale() {
 			return 0;
 		}
-
-		@Override
-		protected void setDefaultByString(String defaultStr) {
-			this.defaultValue=new SqlExpression(defaultStr);
-		}
 	}
 
 	public static class XML extends ColumnType {
@@ -1179,23 +1147,18 @@ public abstract class ColumnType {
 		public int getSqlType() {
 			return Types.SQLXML;
 		}
-
-		@Override
-		protected void setDefaultByString(String defaultStr) {
-			this.defaultValue=new SqlExpression(defaultStr);
-		}
 	}
 
 	private static String quotWith(Object value) {
-		if(value instanceof String) {
-			String s=(String)value;
+		if (value instanceof String) {
+			String s = (String) value;
 			if (s.charAt(0) == '\'' && s.charAt(s.length() - 1) == '\'') {
 				return s;
 			} else {
 				return AColumnMapping.wrapSqlStr(s);
 			}
 		}
-		return String.valueOf(value); 
+		return String.valueOf(value);
 	}
 
 	static ColumnChange createChange(ColumnType oldType, String rawType, ColumnType newType, DatabaseDialect profile) {

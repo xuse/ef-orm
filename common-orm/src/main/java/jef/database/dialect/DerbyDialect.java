@@ -317,14 +317,10 @@ public class DerbyDialect extends AbstractDialect {
 		constraintName = StringUtils.isBlank(constraintName) ? "%" : constraintName;
 		
 		List<Constraint> constraints = conn.selectBySql(sql, new AbstractResultSetTransformer<List<Constraint>>(){
-			
 			@Override
 			public List<Constraint> transformer(IResultSet rs) throws SQLException {
-				
 				List<Constraint> constraints = new ArrayList<Constraint>();
-				
 				while(rs.next()){
-
 						Constraint c = new Constraint();
 						c.setCatalog(null);
 						c.setSchema(rs.getString("schemaname"));
@@ -369,7 +365,7 @@ public class DerbyDialect extends AbstractDialect {
 				return constraints;
 			}
 			
-		}, Arrays.asList(schema, tablename, constraintName));
+		}, Arrays.asList(schema, tablename, constraintName), false);
 		
 		// 取得列信息
 		Map<String, List<Column>> tableMap = new HashMap<>();

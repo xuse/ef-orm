@@ -411,7 +411,7 @@ public class HsqlDbMemDialect extends AbstractDialect {
 					return result;
 				}
 				
-			}, Arrays.asList(schema,seqName));
+			}, Arrays.asList(schema,seqName), false);
 		} catch (SQLException e) {
 			DebugUtil.setSqlState(e, sql);
 			LogUtil.exception(e);
@@ -527,7 +527,7 @@ public class HsqlDbMemDialect extends AbstractDialect {
 				
 				return constraints;
 			}
-		}, Arrays.asList(schema, tablename, constraintName));
+		}, Arrays.asList(schema, tablename, constraintName), false);
 		
 		return constraints;
 	}

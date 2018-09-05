@@ -95,7 +95,7 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect {
 				s.setSchema(rs.getString(7));
 				return s;
 			}
-		}, Arrays.asList(seqName, schema));
+		}, Arrays.asList(seqName, schema), false);
 	}
 
 	@Override

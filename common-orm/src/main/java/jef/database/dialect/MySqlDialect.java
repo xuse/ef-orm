@@ -485,9 +485,8 @@ public class MySqlDialect extends AbstractDialect {
 	@Override
 	public List<Constraint> getConstraintInfo(DbMetaData conn, String schema, String tablename, String constraintName)
 			throws SQLException {
-		
-		String sql = "    SELECT kcu.*, tc.constraint_type, rc.update_rule, rc.delete_rule, rc.match_option"
-		            +"      FROM information_schema.key_column_usage kcu "
+		String sql = "SELECT kcu.*, tc.constraint_type, rc.update_rule, rc.delete_rule, rc.match_option"
+		            +" FROM information_schema.key_column_usage kcu "
 		            +"INNER JOIN information_schema.table_constraints tc"
 		            +"        ON tc.constraint_schema = kcu.constraint_schema"
 		            +"       AND tc.constraint_name = kcu.constraint_name"
@@ -508,14 +507,11 @@ public class MySqlDialect extends AbstractDialect {
 			
 			@Override
 			public List<Constraint> transformer(IResultSet rs) throws SQLException {
-				
 				List<Constraint> constraints = new ArrayList<Constraint>();
 				List<String> columns = new ArrayList<String>();
 				List<String> refColumns = new ArrayList<String>();
 				Constraint preCon = new Constraint(); // 上一条记录
-				
 				while(rs.next()){
-					
 					if(constraints.size() > 0){
 						preCon = constraints.get(constraints.size() - 1);
 					}
@@ -526,10 +522,8 @@ public class MySqlDialect extends AbstractDialect {
 							&& rs.getString("table_name").equals(preCon.getTableName());
 
 					if(!isSameConstraint){
-
 						columns = new ArrayList<String>();
 						refColumns = new ArrayList<String>();
-
 						Constraint c = new Constraint();
 						c.setCatalog(rs.getString("constraint_catalog"));
 						c.setSchema(rs.getString("constraint_schema"));
@@ -561,11 +555,10 @@ public class MySqlDialect extends AbstractDialect {
 						refColumns.add(rs.getString("referenced_column_name"));
 					}
 				}
-				
 				return constraints;
 			}
 			
-		}, Arrays.asList(schema, tablename, constraintName));
+		}, Arrays.asList(schema, tablename, constraintName), false);
 		
 		return constraints;
 	}

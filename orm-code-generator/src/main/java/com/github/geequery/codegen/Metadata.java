@@ -6,13 +6,13 @@ import java.util.Map;
 
 import jef.database.DbUtils;
 import jef.database.meta.object.Column;
-import jef.database.meta.object.ForeignKey;
+import jef.database.meta.object.ForeignKeyItem;
 import jef.database.meta.object.PrimaryKey;
 
 public class Metadata{
 	private PrimaryKey primaryKey;
 	private List<Column> columns;
-	private List<ForeignKey> foreignKey;
+	private List<ForeignKeyItem> foreignKey;
 	
 	private Map<String, String> custParams;
 	
@@ -22,10 +22,10 @@ public class Metadata{
 	public void setCustParams(Map<String, String> custParams) {
 		this.custParams = custParams;
 	}
-	public List<ForeignKey> getForeignKey() {
+	public List<ForeignKeyItem> getForeignKey() {
 		return foreignKey;
 	}
-	public void setForeignKey(List<ForeignKey> foreignKey) {
+	public void setForeignKey(List<ForeignKeyItem> foreignKey) {
 		this.foreignKey = foreignKey;
 	}
 	public PrimaryKey getPrimaryKey() {
@@ -94,7 +94,7 @@ public class Metadata{
 		}
 	}
 	
-	public static class ForeignKeyEx extends ForeignKey{
+	public static class ForeignKeyEx extends ForeignKeyItem{
 		private String fieldName;
 
 		public String getFieldName() {

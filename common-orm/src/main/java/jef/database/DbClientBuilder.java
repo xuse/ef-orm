@@ -483,8 +483,9 @@ public class DbClientBuilder {
 		return initData;
 	}
 
-	public void setInitData(boolean initData) {
+	public DbClientBuilder setInitData(boolean initData) {
 		this.initData = initData;
+		return this;
 	}
 
 	public void setMinPoolSize(int minPoolSize) {

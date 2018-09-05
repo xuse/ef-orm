@@ -21,7 +21,7 @@ import java.util.Collection;
 import java.util.Map.Entry;
 
 import jef.common.SimpleMap;
-import jef.database.meta.object.ForeignKey;
+import jef.database.meta.object.ForeignKeyItem;
 
 /**
  *
@@ -191,8 +191,8 @@ public class MetaReference {
 		sourceTable = aSourceTable;
 	}
 
-	public ForeignKey toJefFK(Entry<MetaColumn, MetaColumn> e) {
-		ForeignKey fk=new ForeignKey();
+	public ForeignKeyItem toJefFK(Entry<MetaColumn, MetaColumn> e) {
+		ForeignKeyItem fk=new ForeignKeyItem();
 		fk.setFromColumn(e.getKey().getCode());
 		fk.setReferenceColumn(e.getValue().getCode());
 		fk.setFromTable(this.getSourceTable().getCode());

@@ -81,7 +81,7 @@ public class Column{
 		ColumnType ct=profile.getProprtMetaFromDbType(this);
 		ct.setNullable(nullable);
 		if(StringUtils.isNotEmpty(columnDef)){
-			ct.setDefault(columnDef);
+			ct.setDefaultByString(columnDef);
 		}
 		//System.out.println(this.dataType+" -> "+ ct.toString());
 		return ct;
