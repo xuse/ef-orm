@@ -8,21 +8,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import jef.database.DbUtils;
-import jef.database.jsqlparser.expression.Function;
-import jef.database.jsqlparser.expression.JpqlParameter;
-import jef.database.jsqlparser.expression.operators.arithmetic.Concat;
-import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
-import jef.database.jsqlparser.parser.JpqlParser;
-import jef.database.jsqlparser.parser.ParseException;
-import jef.database.jsqlparser.parser.StSqlParser;
-import jef.database.jsqlparser.statement.select.Select;
-import jef.database.jsqlparser.visitor.Expression;
-import jef.database.jsqlparser.visitor.Statement;
-import jef.database.jsqlparser.visitor.VisitorAdapter;
-import jef.tools.Assert;
-import jef.tools.IOUtils;
-
 import org.apache.commons.lang.StringUtils;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -38,6 +23,22 @@ import com.alibaba.druid.sql.dialect.postgresql.visitor.PGOutputVisitor;
 import com.alibaba.druid.sql.dialect.sqlserver.parser.SQLServerSelectParser;
 import com.alibaba.druid.sql.dialect.sqlserver.parser.SQLServerStatementParser;
 import com.alibaba.druid.sql.dialect.sqlserver.visitor.SQLServerOutputVisitor;
+
+import jef.database.DbUtils;
+import jef.database.jsqlparser.expression.Function;
+import jef.database.jsqlparser.expression.JpqlParameter;
+import jef.database.jsqlparser.expression.operators.arithmetic.Concat;
+import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
+import jef.database.jsqlparser.parser.JpqlParser;
+import jef.database.jsqlparser.parser.ParseException;
+import jef.database.jsqlparser.parser.StSqlParser;
+import jef.database.jsqlparser.statement.create.CreateTable;
+import jef.database.jsqlparser.statement.select.Select;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.Statement;
+import jef.database.jsqlparser.visitor.VisitorAdapter;
+import jef.tools.Assert;
+import jef.tools.IOUtils;
 
 public class ComplexSqlParseTest extends org.junit.Assert {
 
@@ -60,8 +61,8 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 
 	@Test
 	public void parseTest() throws ParseException, IOException {
-		doParseFile("complex-jpql-test.txt",ParseType.EF_JPQL);
-		doParseFile("complex-sql-test.txt",ParseType.EF_SQL);
+		doParseFile("complex-jpql-test.txt", ParseType.EF_JPQL);
+		doParseFile("complex-sql-test.txt", ParseType.EF_SQL);
 	}
 
 	@Test
@@ -98,6 +99,16 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 		System.out.println(select);
 	}
 
+	@Test
+	public void testMinus() throws SQLException, ParseException {
+		String sql = "create table A (B NUMBER(10) DEFAULT -1.0)";
+		JpqlParser parser = new JpqlParser(new StringReader(sql));
+		// String result = "select * from ad.ca_account_rel where
+		// relationship_type = 1 AND sysdate BETWEEN valid_date AND expire_date
+		// START WITH acct_id = ?1 CONNECT BY PRIOR rel_acct_id = acct_id";
+		CreateTable select = parser.CreateTable();
+		System.out.println(select);
+	}
 
 	@Test
 	public void testMySQLDate() throws ParseException {
@@ -191,7 +202,10 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	@Test
 	public void aaa() throws ParseException {
 		// String sql =
-		// "select t.rowid from (select :col from person_table where age>:ss1<string> and name=?1<int> and nvl(aa,translate(fastbean,'abc123','ccccc'))||schoolId||'tomo'||schoolId  =:name2 order by :orderBy) t";
+		// "select t.rowid from (select :col from person_table where
+		// age>:ss1<string> and name=?1<int> and
+		// nvl(aa,translate(fastbean,'abc123','ccccc'))||schoolId||'tomo'||schoolId
+		// =:name2 order by :orderBy) t";
 
 		String sql = "select t.* from rm_camera_info t where t.treenodeindexcode=? and t.typecode=?";
 		Select st = DbUtils.parseNativeSelect(sql);
@@ -263,8 +277,7 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	@Test
 	public void aaa5() throws ParseException {
 		String sql = "update (select a.start_time astarttime,b.job_ins_start_time bstarttime,a.status astatus,b.job_ins_status bstatus"
-				+ "from sd.so_job_ins_result a, test10.rdc_job_ins b where a.status not in (2, 4, -1, -2) and a.job_ins_id = b.job_ins_id  and a.job_ins_sequence = b.job_ins_sequence) "
-				+ "set astarttime = bstarttime, astatus = bstatus";
+				+ "from sd.so_job_ins_result a, test10.rdc_job_ins b where a.status not in (2, 4, -1, -2) and a.job_ins_id = b.job_ins_id  and a.job_ins_sequence = b.job_ins_sequence) " + "set astarttime = bstarttime, astatus = bstatus";
 
 		jef.database.jsqlparser.visitor.Statement st = DbUtils.parseStatement(sql);
 		System.out.println(st.toString());
@@ -313,8 +326,7 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	 */
 	@Test
 	public void testDistinctAndStartWith() throws SQLException, ParseException {
-		String strSql = "select DISTINCT * " + "	  from xg.sys_region rs" + "	 start with rs.region_code in (:privIDs<Long>)"
-				+ "	connect by PRIOR rs.priv_id = rs.parent_id";
+		String strSql = "select DISTINCT * " + "	  from xg.sys_region rs" + "	 start with rs.region_code in (:privIDs<Long>)" + "	connect by PRIOR rs.priv_id = rs.parent_id";
 
 		jef.database.jsqlparser.statement.select.Select select = DbUtils.parseSelect(strSql);
 		select.accept(new VisitorAdapter() {
@@ -366,7 +378,7 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	private void doParseFile(String filename, ParseType eSql) throws ParseException, IOException {
 		StringBuilder sb = new StringBuilder();
 		BufferedReader reader = IOUtils.getReader(this.getClass().getResource(filename), "UTF-8");
-		if(reader==null){
+		if (reader == null) {
 			throw new FileNotFoundException(filename);
 		}
 		String line;
