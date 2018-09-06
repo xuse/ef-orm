@@ -16,7 +16,7 @@ import jef.database.annotation.PartitionTable;
 import jef.database.annotation.PartitionTableImpl;
 import jef.database.dialect.AbstractDialect;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.dialect.MySqlDialect;
+import jef.database.dialect.MySQL55Dialect;
 import jef.database.dialect.type.AutoIncrementMapping.GenerationResolution;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.jsqlparser.parser.ParseException;
@@ -76,7 +76,7 @@ public class CalculatorTest extends org.junit.Assert{
 		}
 
 		public DatabaseDialect getProfile(String dbkey) {
-			return new MySqlDialect();
+			return new MySQL55Dialect();
 		}
 
 		public void ensureTableExists(String db,String table,ITableMetadata meta) {

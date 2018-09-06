@@ -210,6 +210,10 @@ public enum Feature {
 	/**
 	 * 修改表时，忽略DEFAULT VALUE ON TIMESTAMP,DATE的缺省值(MySQL)
 	 */
-	DATE_TIME_VALUE_WITHOUT_DEFAULT_FUNC
+	DATE_TIME_VALUE_WITHOUT_DEFAULT_FUNC,
+	/**
+	 * 列定义中，Notnull和Default需要交换
+	 */
+	SWAP_DEFAULT_AND_NULL
 	
 }

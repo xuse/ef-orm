@@ -948,6 +948,29 @@ public class DbMetaData {
 		releaseConnection(conn);
 		return version;
 	}
+	
+	
+	/**
+	 * 使用databasemetadata
+	 * @param callback
+	 * @return
+	 * @throws SQLException
+	 */
+	public <T> T callDatabaseMetadata(DatabaseMetaDataCall<T> callback) throws SQLException {
+		Connection conn = getConnection(false);
+		DatabaseMetaData databaseMetaData = conn.getMetaData();
+		try {
+			return callback.apply(databaseMetaData);
+		} finally {
+			releaseConnection(conn);	
+		}
+	}
+	
+	@FunctionalInterface
+	public static interface DatabaseMetaDataCall<T>{
+		T apply(DatabaseMetaData databaseMeta) throws SQLException;
+	}
+	
 
 	/**
 	 * @return the JDBC 'DatabaseMetaData' object

@@ -10,6 +10,7 @@ import java.util.Map;
 
 import javax.sql.rowset.CachedRowSet;
 
+import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.DbMetaData;
@@ -75,6 +76,7 @@ public abstract class AbstractDelegatingDialect implements DatabaseDialect {
 	public final void accept(DbMetaData metadata) {
 		DatabaseDialect dialect = decideDialect(metadata);
 		if (dialect != null) {
+			LogUtil.info("Dialect switched to [{}]", dialect.getClass().getSimpleName());
 			this.dialect = dialect;
 		}
 		this.dialect.accept(metadata);
