@@ -141,8 +141,8 @@ public class ColumnTypeBuilder {
 
 	private void parseColumnDef(String columnDef) {
 		ColumnDefinition c;
-		c = DbUtils.parseColumnDef(columnDef.toUpperCase());
-		this.def = c.getColDataType().getDataType();
+		c = DbUtils.parseColumnDef(columnDef);
+		this.def = c.getColDataType().getDataType().toUpperCase();
 		List<String> params = c.getColDataType().getArgumentsStringList();
 		this.typeArgs = params == null ? ArrayUtils.EMPTY_STRING_ARRAY : params.toArray(new String[params.size()]);
 		// 在ColumnDef中定义的属性，优先级更高
