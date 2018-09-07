@@ -1,36 +1,44 @@
 package com.github.geequery.codegen.ast;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
 public class JavaAnnotation implements JavaElement {
-	String name;
-	Map<String, Object> properties = new HashMap<String, Object>();
+	private final String name;
+	private final List<String> checkImport = new ArrayList<>();
+	private final Map<String, Object> properties = new HashMap<String, Object>();
 
 	public JavaAnnotation(Class<? extends Annotation> clz) {
 		this.name = clz.getName();
+		checkImport.add(clz.getName());
+	}
+
+	public void addCheckImports(Collection<Class<?>> clzs) {
+		for (Class<?> clz : clzs) {
+			checkImport.add(clz.getName());
+		}
+	}
+
+	public void addCheckImport(Class<?> clz) {
+		checkImport.add(clz.getName());
 	}
 
 	public JavaAnnotation(String name) {
+		this.name = name;
 	}
 
 	public String getName() {
 		return name;
 	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
-
 	public Map<String, Object> getProperties() {
 		return properties;
-	}
-
-	public void setProperties(Map<String, Object> properties) {
-		this.properties = properties;
 	}
 
 	public void put(String key, Object value) {
@@ -38,6 +46,9 @@ public class JavaAnnotation implements JavaElement {
 	}
 
 	public String toCode(JavaUnit main) {
+		for (String importClass : this.checkImport) {
+			main.addImport(importClass);
+		}
 		StringBuilder sb = new StringBuilder();
 		sb.append("@").append(main.getJavaClassName(name));
 		boolean isSingle = properties.size() == 1;
@@ -48,17 +59,13 @@ public class JavaAnnotation implements JavaElement {
 				Object v = properties.get(key);
 				if (v == null)
 					continue;
-				if(isSingle && "value".equals(key)) {
-					sb.append("\"").append(convert((String) v)).append("\"");
-				}else {
+				if (isSingle && "value".equals(key)) {
+					appendValue(sb, v, main);
+				} else {
 					if (n > 0)
 						sb.append(",");
 					sb.append(key).append("=");
-					if (v instanceof CharSequence) {
-						sb.append("\"").append(convert((String) v)).append("\"");
-					} else {
-						sb.append(String.valueOf(v));
-					}	
+					appendValue(sb, v, main);
 				}
 				n++;
 			}
@@ -67,11 +74,21 @@ public class JavaAnnotation implements JavaElement {
 		return sb.toString();
 	}
 
-	private String convert(String v) {
-		v=StringUtils.replace(v, "\r\n", " ");
-		v=StringUtils.replace(v, "\n", " ");
-		v=StringUtils.replace(v, "\"", "\\\"");
-		return v;
+	private static final String[] FROM = { "\r\n", "\n", "\"" };
+	private static final String[] TO = { " ", " ", "\\\"" };
+
+	private void appendValue(StringBuilder sb, Object v, JavaUnit main) {
+		if (v instanceof CharSequence) {
+			String s = String.valueOf(v);
+			s = StringUtils.replaceEach(s, FROM, TO);
+			sb.append('"').append(s).append('"');
+		} else if (v instanceof Enum) {
+			Enum<?> e = (Enum<?>) v;
+			String clzName = main.getJavaClassName(e.getDeclaringClass().getName());
+			sb.append('"').append(clzName).append('.').append(e.name()).append('"');
+		} else {
+			sb.append(String.valueOf(v));
+		}
 	}
 
 	public void buildImport(JavaUnit javaUnit) {

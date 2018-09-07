@@ -1,8 +1,11 @@
 package com.github.geequery.codegen;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.github.geequery.codegen.ast.JavaAnnotation;
 
 import jef.database.DbUtils;
 import jef.database.meta.object.Column;
@@ -53,12 +56,12 @@ public class Metadata{
 		private Boolean generated; //强制描述是否为自动生成键值
 		private Class<?> javaType;
 		private String initValue;
-		private String annotation;
-		public String getAnnotation() {
+		private Collection<JavaAnnotation> annotation;
+		public Collection<JavaAnnotation> getAnnotation() {
 			return annotation;
 		}
 
-		public void setAnnotation(String annotation) {
+		public void setAnnotation(Collection<JavaAnnotation> annotation) {
 			this.annotation = annotation;
 		}
 
