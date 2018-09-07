@@ -1,4 +1,4 @@
-/*
+	/*
  * Copyright 2013 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,6 +27,8 @@ import javax.persistence.TemporalType;
 /**
  * Annotation to declare an appropriate {@code TemporalType} on query method parameters. Note that this annotation can
  * only be used on parameters of type {@link Date}.
+ * 
+ * 不同于JPA的同名注解，这是一个用在方法参数上的Temporal注解，用于描述方法参数的时间精度。
  * 
  */
 @Retention(RetentionPolicy.RUNTIME)

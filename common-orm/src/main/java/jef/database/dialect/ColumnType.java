@@ -29,6 +29,7 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.TableGenerator;
+import javax.persistence.TemporalType;
 
 import jef.database.ORMConfig;
 import jef.database.annotation.DateGenerateType;
@@ -750,6 +751,7 @@ public abstract class ColumnType {
 				def = def + " default " + String.valueOf(defaultValue);
 			}
 			column.put("columnDefinition", def);
+			list.add(new AnnotationDesc(javax.persistence.Temporal.class).put("value", TemporalType.DATE));
 		}
 
 		@Override
@@ -808,6 +810,7 @@ public abstract class ColumnType {
 				def = def + " default " + String.valueOf(defaultValue);
 			}
 			column.put("columnDefinition", def);
+			list.add(new AnnotationDesc(javax.persistence.Temporal.class).put("value", TemporalType.TIMESTAMP));
 		}
 
 		@Override
