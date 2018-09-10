@@ -930,9 +930,12 @@ public class DbMetaData {
 	 */
 	public String getDriverVersion() throws SQLException {
 		Connection conn = getConnection(false);
-		DatabaseMetaData databaseMetaData = conn.getMetaData();
-		releaseConnection(conn);
-		return databaseMetaData.getDriverVersion();
+		try {
+			DatabaseMetaData databaseMetaData = conn.getMetaData();
+			return databaseMetaData.getDriverVersion();
+		}finally {
+			releaseConnection(conn);
+		}
 	}
 
 	/**

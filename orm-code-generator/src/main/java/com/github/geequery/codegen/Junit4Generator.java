@@ -81,7 +81,7 @@ public class Junit4Generator {
 
 	private void addTestMethod(JavaUnit unit, String name) {
 		JavaMethod m=new JavaMethod("test"+ StringUtils.capitalize(name));
-		m.setAnnotation("@Test");
+		m.setAnnotations("@Test");
 		m.addContent("fail(\"Not yet implemented\");");
 		unit.addMethod(m);
 	}
@@ -92,7 +92,7 @@ public class Junit4Generator {
 		unit.addImport("org.junit.Before");
 		unit.addImport("org.junit.Test");
 		JavaMethod m=new JavaMethod("setUp");
-		m.setAnnotation("@Before");
+		m.setAnnotations("@Before");
 		unit.addMethod(m);
 		return unit;
 	}

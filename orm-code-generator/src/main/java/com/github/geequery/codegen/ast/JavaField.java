@@ -1,6 +1,7 @@
 package com.github.geequery.codegen.ast;
 
 import java.lang.reflect.Modifier;
+import java.util.List;
 
 import com.github.geequery.codegen.ast.IClass.RealClass;
 
@@ -72,8 +73,8 @@ public class JavaField extends DefaultJavaElement implements JavaElement{
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append(super.generateComments());
-		if (this.getAnnotation()!=null) {
-			for (String a : annotation) {
+		if (this.getAnnotations()!=null) {
+			for (String a : annotations) {
 				if (a != null && a.length() > 0){
 					sb.append(a).append("\r\n\t");
 				}
@@ -98,5 +99,10 @@ public class JavaField extends DefaultJavaElement implements JavaElement{
 	
 	public void clear(){
 		this.code=null;
+	}
+	
+	public void addAllAnnotation(List<String> annos) {
+		this.annotations.addAll(annos);
+		
 	}
 }

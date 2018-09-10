@@ -2,40 +2,58 @@ package jef.database.dialect;
 
 import java.sql.SQLException;
 
+import javax.persistence.PersistenceException;
+
+import jef.common.log.LogUtil;
 import jef.database.DbMetaData;
 
 public class MySqlDialect extends AbstractDelegatingDialect {
 	@Override
 	protected DatabaseDialect decideDialect(DbMetaData meta) {
 		try {
-			String s=meta.getDatabaseVersion();	
-			if(s.endsWith("MariaDB")) {
-				return maridDb(s);
-			}else {
-				return mySql(s);
+			String s = meta.getDatabaseVersion();
+			if (s.endsWith("MariaDB")) {
+				return maridDb(s, meta);
+			} else {
+				return mySql(s, meta);
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
+			LogUtil.error("Database metadata error", e);
 		}
 		return null;
 	}
 
-	private DatabaseDialect mySql(String s) {
-		if(s.startsWith("5.6")) {
+	private DatabaseDialect mySql(String dbVersion, DbMetaData meta) throws SQLException {
+		int driver = meta.callDatabaseMetadata(e -> e.getDriverMajorVersion());
+		String driverVersion = meta.getDriverVersion();
+		if (dbVersion.startsWith("5.6")) {
+			if (driver == 8) {
+				throw driverVersionException(dbVersion, driverVersion);
+			}
 			return null;
-		}else if(s.startsWith("5.7")) {
+		} else if (dbVersion.startsWith("5.7")) {
+			if (driver == 8) {
+				throw driverVersionException(dbVersion, driverVersion);
+			}
 			return new MySQL57Dialect();
-		}else if(s.startsWith("8.")) {
+		} else if (dbVersion.startsWith("8.")) {
+			if (driver < 8) {
+				throw driverVersionException(dbVersion, driverVersion);
+			}
 			return new MySQL8Dialect();
-		}else {
+		} else {
 			return null;
 		}
 	}
 
-	private DatabaseDialect maridDb(String s) {
-		if(s.startsWith("10.")) {
+	private PersistenceException driverVersionException(String dbVersion, String driverVersion) {
+		return new PersistenceException("The JDBC driver version is not match the database, database is [" + dbVersion + "], but driver is " + driverVersion);
+	}
+
+	private DatabaseDialect maridDb(String s, DbMetaData meta) {
+		if (s.startsWith("10.")) {
 			return new MariaDb10Dialect();
-		}else {
+		} else {
 			return new MariaDbDialect();
 		}
 	}

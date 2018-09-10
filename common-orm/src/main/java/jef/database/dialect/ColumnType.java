@@ -162,7 +162,7 @@ public abstract class ColumnType {
 	 * @return
 	 */
 	public List<AnnotationDesc> toJpaAnnonation(String columnName) {
-		List<AnnotationDesc> list = new ArrayList<>();
+		final List<AnnotationDesc> list = new ArrayList<>();
 		AnnotationDesc column = new AnnotationDesc(javax.persistence.Column.class);
 		column.put("name", columnName);
 		list.add(column);
@@ -913,7 +913,7 @@ public abstract class ColumnType {
 		@Override
 		protected void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column) {
 			super.putAnnonation(list, column);
-			list.add(new AnnotationDesc(Id.class));
+			list.add(0, new AnnotationDesc(Id.class));
 			list.add(new AnnotationDesc(GeneratedValue.class).put("strategy", GenerationType.AUTO));
 		}
 
@@ -996,7 +996,7 @@ public abstract class ColumnType {
 		@Override
 		protected void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column) {
 			super.putAnnonation(list, column);
-			list.add(new AnnotationDesc(Id.class));
+			list.add(0, new AnnotationDesc(Id.class));
 			list.add(new AnnotationDesc(GeneratedValue.class).put("strategy", GenerationType.IDENTITY));
 		}
 

@@ -17,6 +17,7 @@ package com.github.geequery.codegen;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -115,7 +116,7 @@ public class EntityGenerator {
 		} else {
 			comment.put("value", "");
 		}
-		java.setAnnotation("@Entity", anno.toCode(java), comment.toCode(java));
+		java.setAnnotations("@Entity", anno.toCode(java), comment.toCode(java));
 
 		Metadata meta = provider.getTableMetadata(tablename);
 		if (meta.getCustParams() != null && meta.getCustParams().get("custAnnot") != null) {
@@ -133,9 +134,6 @@ public class EntityGenerator {
 
 		java.setExtends(entityBaseClass);
 		final Map<String, String> pkColumns = meta.getPkFieldAndColumnNames();
-		if (pkColumns.size() > 0) {
-			java.addImport(javax.persistence.Id.class);
-		}
 
 		if (callback != null) {
 			callback.init(meta, tablename, provider.getSchema(), tableComment, java);
@@ -285,17 +283,15 @@ public class EntityGenerator {
 					continue;
 				}
 				isGenerated = true;
-				JavaAnnotation ja = new JavaAnnotation(ad.getAnnotationClz());
-				ja.getProperties().putAll(ad.getProprties());
-				ja.addCheckImports(ad.getImportClasses());
-				result.add(ja);
 			}
+			JavaAnnotation ja = new JavaAnnotation(ad.getAnnotationClz());
+			ja.getProperties().putAll(ad.getProprties());
+			result.add(ja);
 		}
 		// 如果强行要求generated
 		if (Boolean.TRUE.equals(b) && isGenerated == false) {
-			JavaAnnotation generateValue=new JavaAnnotation(GeneratedValue.class);
-			generateValue.addCheckImport(GenerationType.class);
-			Class<?> type=column.getDefaultJavaType();
+			JavaAnnotation generateValue = new JavaAnnotation(GeneratedValue.class);
+			Class<?> type = column.getDefaultJavaType();
 			if (type == String.class) {
 				generateValue.put("strategy", GenerationType.IDENTITY);
 			} else if (type == Long.class || type == Integer.class || type == Integer.TYPE || type == Long.TYPE) {
@@ -303,16 +299,16 @@ public class EntityGenerator {
 			}
 		}
 		if (isPk) {
-			if (!containsAnnotation(result,"Id")) {
-				result.add(new JavaAnnotation(Id.class));
+			if (!containsAnnotation(result, Id.class)) {
+				result.add(0,new JavaAnnotation(Id.class));
 			}
 		}
 		return result;
 	}
 
-	private boolean containsAnnotation(List<JavaAnnotation> result, String key) {
-		for(JavaAnnotation ja: result){
-			if(ja.getName().equals(key)){
+	private boolean containsAnnotation(List<JavaAnnotation> result, Class<? extends Annotation> key) {
+		for (JavaAnnotation ja : result) {
+			if(ja.getName().equals(key.getName())) {
 				return true;
 			}
 		}

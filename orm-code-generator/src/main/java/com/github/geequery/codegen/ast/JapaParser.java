@@ -138,7 +138,7 @@ public class JapaParser implements JavaUnitParser{
                 		annos.add(anno.toString());
                     }	
             	}
-            	jf.addAnnotation(annos.toArray(new String[annos.size()]));
+            	jf.addAllAnnotation(annos);
             	java.addField(jf);
             }else{
             	System.out.println("unknown data:" + member.getClass().getName());

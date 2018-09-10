@@ -388,14 +388,14 @@ public class JavaUnit extends DefaultJavaElement{
 	public JavaField addField(int modifier, Class<?> type, String name, String... annotation) {
 		JavaField field = new JavaField(type, name);
 		field.setModifiers(modifier);
-		field.addAnnotation(annotation);
+		field.addAllAnnotation(Arrays.asList(annotation));
 		return addField(field);
 	}
 
 	public JavaField addField(int modifier, String type, String name, String... annotation) {
 		JavaField field = new JavaField(type, name);
 		field.setModifiers(modifier);
-		field.addAnnotation(annotation);
+		field.addAllAnnotation(Arrays.asList(annotation));
 		return addField(field);
 	}
 
@@ -530,14 +530,14 @@ public class JavaUnit extends DefaultJavaElement{
 
 	public JavaField addFieldWithGetterAndSetter(int modifier, String javaType, String name, String... annotation) {
 		JavaField field = new JavaField(javaType, name);
-		field.addAnnotation(annotation);
+		field.addAllAnnotation(Arrays.asList(annotation));
 		field.setModifiers(modifier);
 		return addFieldWithGetterAndSetter(field);
 	}
 
 	public void addFieldWithGetterAndSetter(int modifier, Class<?> javaType, String name, String... annotation) {
 		JavaField field = new JavaField(javaType, name);
-		field.addAnnotation(annotation);
+		field.addAllAnnotation(Arrays.asList(annotation));
 		field.setModifiers(modifier);
 		addFieldWithGetterAndSetter(field);
 	}
@@ -742,8 +742,8 @@ public class JavaUnit extends DefaultJavaElement{
 		if (addNotModifiedTag) {
 			bw.write("@NotModified\r\n");
 		}
-		if (annotation != null) {
-			for (String s : annotation) {
+		if (annotations != null) {
+			for (String s : annotations) {
 				bw.write(s);
 				bw.write("\r\n");
 			}

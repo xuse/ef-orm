@@ -1,33 +1,28 @@
 package com.github.geequery.codegen.ast;
 
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
 public class JavaAnnotation implements JavaElement {
 	private final String name;
-	private final List<String> checkImport = new ArrayList<>();
 	private final Map<String, Object> properties = new HashMap<String, Object>();
 
 	public JavaAnnotation(Class<? extends Annotation> clz) {
 		this.name = clz.getName();
-		checkImport.add(clz.getName());
 	}
 
-	public void addCheckImports(Collection<Class<?>> clzs) {
-		for (Class<?> clz : clzs) {
-			checkImport.add(clz.getName());
-		}
-	}
-
-	public void addCheckImport(Class<?> clz) {
-		checkImport.add(clz.getName());
-	}
+//	public void addCheckImports(Collection<Class<?>> clzs) {
+//		for (Class<?> clz : clzs) {
+//			checkImport.add(clz.getName());
+//		}
+//	}
+//
+//	public void addCheckImport(Class<?> clz) {
+//		checkImport.add(clz.getName());
+//	}
 
 	public JavaAnnotation(String name) {
 		this.name = name;
@@ -46,9 +41,9 @@ public class JavaAnnotation implements JavaElement {
 	}
 
 	public String toCode(JavaUnit main) {
-		for (String importClass : this.checkImport) {
-			main.addImport(importClass);
-		}
+//		for (String importClass : this.checkImport) {
+//			main.addImport(importClass);
+//		}
 		StringBuilder sb = new StringBuilder();
 		sb.append("@").append(main.getJavaClassName(name));
 		boolean isSingle = properties.size() == 1;
@@ -85,13 +80,18 @@ public class JavaAnnotation implements JavaElement {
 		} else if (v instanceof Enum) {
 			Enum<?> e = (Enum<?>) v;
 			String clzName = main.getJavaClassName(e.getDeclaringClass().getName());
-			sb.append('"').append(clzName).append('.').append(e.name()).append('"');
+			sb.append(clzName).append('.').append(e.name());
 		} else {
 			sb.append(String.valueOf(v));
 		}
 	}
 
 	public void buildImport(JavaUnit javaUnit) {
+	}
+
+	@Override
+	public String toString() {
+		return "@"+name+properties;
 	}
 
 }
