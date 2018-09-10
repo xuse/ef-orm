@@ -1,6 +1,9 @@
 package com.github.geequery.codegen;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,53 +13,69 @@ import com.github.geequery.codegen.ast.JavaAnnotation;
 import jef.database.DbUtils;
 import jef.database.meta.object.Column;
 import jef.database.meta.object.ForeignKeyItem;
+import jef.database.meta.object.Index;
 import jef.database.meta.object.PrimaryKey;
 
-public class Metadata{
+public class Metadata {
 	private PrimaryKey primaryKey;
 	private List<Column> columns;
 	private List<ForeignKeyItem> foreignKey;
-	
+	private Collection<Index> indexes;
+
+	public Collection<Index> getIndexes() {
+		return indexes;
+	}
+
 	private Map<String, String> custParams;
-	
+
 	public Map<String, String> getCustParams() {
 		return custParams;
 	}
+
 	public void setCustParams(Map<String, String> custParams) {
 		this.custParams = custParams;
 	}
+
 	public List<ForeignKeyItem> getForeignKey() {
 		return foreignKey;
 	}
+
 	public void setForeignKey(List<ForeignKeyItem> foreignKey) {
 		this.foreignKey = foreignKey;
 	}
+
 	public PrimaryKey getPrimaryKey() {
 		return primaryKey;
 	}
+
 	public void setPrimaryKey(PrimaryKey primaryKey) {
 		this.primaryKey = primaryKey;
 	}
+
 	public List<Column> getColumns() {
 		return columns;
 	}
+
 	public void setColumns(List<Column> columns) {
 		this.columns = columns;
 	}
+
 	public Column findColumn(String columnName) {
-		for(Column c: columns){
-			if(columnName.equalsIgnoreCase(c.getColumnName())){
+		for (Column c : columns) {
+			if (columnName.equalsIgnoreCase(c.getColumnName())) {
 				return c;
 			}
 		}
 		return null;
-	} 
-	public static class ColumnEx extends Column{
+	}
+
+	public static class ColumnEx extends Column {
 		private String fieldName;
-		private Boolean generated; //强制描述是否为自动生成键值
+		private Boolean generated; // 强制描述是否为自动生成键值
 		private Class<?> javaType;
 		private String initValue;
 		private Collection<JavaAnnotation> annotation;
+
 		public Collection<JavaAnnotation> getAnnotation() {
 			return annotation;
 		}
@@ -72,6 +91,7 @@ public class Metadata{
 		public void setInitValue(String initValue) {
 			this.initValue = initValue;
 		}
+
 		public String getFieldName() {
 			return fieldName;
 		}
@@ -96,8 +116,8 @@ public class Metadata{
 			this.generated = generated;
 		}
 	}
-	
-	public static class ForeignKeyEx extends ForeignKeyItem{
+
+	public static class ForeignKeyEx extends ForeignKeyItem {
 		private String fieldName;
 
 		public String getFieldName() {
@@ -108,25 +128,47 @@ public class Metadata{
 			this.fieldName = fieldName;
 		}
 	}
+
 	/**
-	 * 将主键拆分为由字段名/列名构成的对
+	 * 将主键拆分为由字段名/列名构成的对 <fieldName,columnName>
+	 * 
 	 * @param data
 	 * @return
 	 */
-	public Map<String,String> getPkFieldAndColumnNames(){
-		Map<String,String> pkColumns=new HashMap<String,String>();
-		if(getPrimaryKey()!=null){
-			for(String columnName: getPrimaryKey().getColumns()){
-				Column column=findColumn(columnName);
+	public Map<String, String> getPkFieldAndColumnNames() {
+		Map<String, String> pkColumns = new HashMap<String, String>();
+		if (getPrimaryKey() != null) {
+			for (String columnName : getPrimaryKey().getColumns()) {
+				Column column = findColumn(columnName);
 				String fieldName;
-				if(column instanceof ColumnEx){
-					fieldName=((ColumnEx) column).getFieldName();
-				}else{
-					fieldName=DbUtils.underlineToUpper(columnName.toLowerCase(),false);	
+				if (column instanceof ColumnEx) {
+					fieldName = ((ColumnEx) column).getFieldName();
+				} else {
+					fieldName = DbUtils.underlineToUpper(columnName.toLowerCase(), false);
 				}
-				pkColumns.put(fieldName,columnName);
-			}	
+				pkColumns.put(fieldName, columnName);
+			}
 		}
 		return pkColumns;
+	}
+
+	public void setIndexes(Collection<Index> indexes) {
+		this.indexes = indexes;
+	}
+
+	public Collection<Index> getIndexesWihoutPKIndex() {
+		if (indexes == null) {
+			return Collections.emptyList();
+		}
+		List<Index> list = new ArrayList<>(indexes);
+		for (Index i : list) {
+			if (i.getColumns().size() == this.primaryKey.getColumns().length) {
+				if (Arrays.equals(i.getColumnNames(), primaryKey.getColumns())) {
+					list.remove(i);
+					break;
+				}
+			}
+		}
+		return list;
 	}
 }

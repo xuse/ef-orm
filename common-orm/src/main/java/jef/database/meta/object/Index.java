@@ -235,14 +235,11 @@ public class Index {
 	}
 
 	/**
-	 * 删除一个列
-	 * 
-	 * @param column
-	 *            列名
+	 * 得到列的长度
 	 * @return
 	 */
-	public boolean removeColumn(String column) {
-		return columns.remove(column);
+	public int columnSize() {
+		return columns == null ? 0 : columns.size();
 	}
 
 	/**
@@ -342,11 +339,24 @@ public class Index {
 		this.userDefinition = userDefinition;
 	}
 
+	/**
+	 * 描述一个索引中的单个列
+	 * @author jiyi
+	 */
 	public static class IndexItem {
+		/**
+		 * 列名
+		 */
 		public String column;
+		/**
+		 * 正序倒序。
+		 */
 		public boolean asc;
+		/**
+		 * 字段顺序
+		 */
 		public int seq;
-
+		
 		public IndexItem(String column, boolean asc, int seq) {
 			this.column = column;
 			this.asc = asc;

@@ -19,7 +19,6 @@ import java.util.Arrays;
 import java.util.Set;
 
 import jef.database.annotation.DateGenerateType;
-import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.meta.Feature;
 import jef.database.query.Func;
 import jef.tools.collection.CollectionUtils;
@@ -105,7 +104,7 @@ public class MySQL55Dialect extends MySQL57Dialect {
 	 * (id);
 	 */
 	@Override
-	public String getCreationComment(ColumnType column, boolean flag) {
+	public String getCreationComment(ColumnType column, boolean typeStrOnly) {
 		DateGenerateType generateType = null;
 		if (column instanceof SqlTypeDateTimeGenerated) {
 			generateType = ((SqlTypeDateTimeGenerated) column).getGenerateType();
@@ -128,6 +127,6 @@ public class MySQL55Dialect extends MySQL57Dialect {
 		} else if (generateType == DateGenerateType.modified) {
 			return "timestamp NOT NULL DEFAULT current_timestamp ON UPDATE current_timestamp";
 		}
-		return super.getCreationComment(column, flag);
+		return super.getCreationComment(column, typeStrOnly);
 	}
 }

@@ -1,7 +1,9 @@
 package com.github.geequery.codegen.ast;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -73,7 +75,22 @@ public class JavaAnnotation implements JavaElement {
 	private static final String[] TO = { " ", " ", "\\\"" };
 
 	private void appendValue(StringBuilder sb, Object v, JavaUnit main) {
-		if (v instanceof CharSequence) {
+		if(v instanceof Collection) {
+			Iterator<?> iter=((Collection<?>)v).iterator();
+			sb.append('{');
+			if(iter.hasNext()) {
+				Object o=iter.next();
+				appendValue(sb, o, main);
+			}
+			for(;iter.hasNext();) {
+				Object o=iter.next();
+				sb.append(", \r\n\t");
+				appendValue(sb, o, main);
+			}
+			sb.append('}');
+		}else if(v instanceof JavaAnnotation) {
+			sb.append(((JavaAnnotation) v).toCode(main));
+		}else if (v instanceof CharSequence) {
 			String s = String.valueOf(v);
 			s = StringUtils.replaceEach(s, FROM, TO);
 			sb.append('"').append(s).append('"');

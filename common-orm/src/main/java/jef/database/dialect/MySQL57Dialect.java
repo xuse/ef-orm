@@ -247,13 +247,13 @@ public class MySQL57Dialect extends AbstractDialect {
 	}
 
 	@Override
-	public String toDefaultString(Object defaultValue, int sqlType, int changeTo) {
+	public String toDefaultString(Object defaultValue, int sqlType) {
 		String def = String.valueOf(defaultValue);
 		if (sqlType == Types.BIT && def.startsWith("b'") && def.length() > 2) {
 			char c = def.charAt(2);
 			return String.valueOf(c);
 		}
-		return super.toDefaultString(defaultValue, sqlType, changeTo);
+		return super.toDefaultString(defaultValue, sqlType);
 	}
 
 	/**

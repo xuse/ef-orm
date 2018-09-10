@@ -390,13 +390,13 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	 * 产生用于建表的SQL语句
 	 * 
 	 */
-	public String getCreationComment(ColumnType column, boolean flag) {
+	public String getCreationComment(ColumnType column, boolean typeStrOnly) {
 		// 特殊情况先排除
 		if (column instanceof ColumnType.AutoIncrement) {
 			ColumnType.AutoIncrement cType = (ColumnType.AutoIncrement) column;
 			GenerationType type = cType.getGenerationType(this, true);
 			if (type == GenerationType.IDENTITY) {
-				return getComment(cType, flag);
+				return getComment(cType, typeStrOnly);
 			} else {
 				column = cType.toNormalType();
 			}
@@ -419,7 +419,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 			}
 		}
 
-		if (!flag) {
+		if (typeStrOnly) {
 			return def.getName();
 		}
 		StringBuilder sb = new StringBuilder(def.getName());
@@ -438,7 +438,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 
 	private void appendDefault(StringBuilder sb, ColumnType column, Type def) {
 		if (column.defaultValue != null)
-			sb.append(" DEFAULT ").append(toDefaultString(column.defaultValue, column.getSqlType(), def.getSqlType()));
+			sb.append(" DEFAULT ").append(toDefaultString(column.defaultValue, def.getSqlType()));
 	}
 
 	private void appendNotNULL(StringBuilder sb, ColumnType column) {
@@ -482,7 +482,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		return true;
 	}
 
-	public String toDefaultString(Object defaultValue, int sqlType, int changeTo) {
+	public String toDefaultString(Object defaultValue, int sqlType) {
 		if (defaultValue == null) {
 			return null;
 		}
@@ -493,22 +493,11 @@ public abstract class AbstractDialect implements DatabaseDialect {
 			}
 		}
 		if (defaultValue instanceof Boolean) {
-			return toBooleanSqlParam((java.lang.Boolean) defaultValue, changeTo);
+			return toBooleanSqlParam((java.lang.Boolean) defaultValue, sqlType);
 		} else if (defaultValue instanceof DbFunction) {
-			return this.getFunction((DbFunction) defaultValue);
-		} else if (defaultValue instanceof SqlExpression) {
-			return defaultValue.toString();
+			return getFunction((DbFunction) defaultValue);
 		}
-		if (defaultValue instanceof Number) {
-			return defaultValue.toString();
-		} else if (defaultValue instanceof String) {
-			String s = (String) defaultValue;
-			if (s.length() == 0)
-				return null;
-			return AColumnMapping.wrapSqlStr((String) defaultValue);
-		} else {
-			return AColumnMapping.wrapSqlStr(String.valueOf(defaultValue));
-		}
+		return AColumnMapping.quotWith(defaultValue, sqlType);
 	}
 
 	private String toBooleanSqlParam(Boolean defaultValue, int sqlType) {

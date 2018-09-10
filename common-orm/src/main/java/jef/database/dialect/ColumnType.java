@@ -199,8 +199,8 @@ public abstract class ColumnType {
 		// 对自增类型的数据不检查缺省值(兼容PG)
 		if (!(this instanceof AutoIncrement)) {
 			// 检查缺省值
-			String a1 = profile.toDefaultString(oldType.defaultValue, oldType.getSqlType(), oldType.getSqlType());
-			String a2 = profile.toDefaultString(newType.defaultValue, newType.getSqlType(), newType.getSqlType());
+			String a1 = profile.toDefaultString(oldType.defaultValue, oldType.getSqlType());
+			String a2 = profile.toDefaultString(newType.defaultValue, newType.getSqlType());
 			if (!StringUtils.equals(a1, a2) && supportDefaultChange(profile)) {
 				ColumnChange chg;
 				if (StringUtils.isEmpty(a2)) {
@@ -320,7 +320,7 @@ public abstract class ColumnType {
 		protected void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column) {
 			String def = "char(" + length + ")";
 			if (defaultValue != null) {
-				def = def + " default " + quotWith(defaultValue);
+				def = def + " default " + AColumnMapping.quotWith(defaultValue,this.getSqlType());
 			}
 			column.put("columnDefinition", def);
 			if (!nullable)
@@ -399,7 +399,7 @@ public abstract class ColumnType {
 		protected void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column) {
 			String def = "varchar(" + length + ")";
 			if (defaultValue != null) {
-				def = def + " default " + quotWith(defaultValue);
+				def = def + " default " + AColumnMapping.quotWith(defaultValue,this.getSqlType());
 			}
 			column.put("columnDefinition", def);
 			if (!nullable)
@@ -1166,17 +1166,6 @@ public abstract class ColumnType {
 		}
 	}
 
-	private static String quotWith(Object value) {
-		if (value instanceof String) {
-			String s = (String) value;
-			if (s.length() >= 2 && s.charAt(0) == '\'' && s.charAt(s.length() - 1) == '\'') {
-				return s;
-			} else {
-				return AColumnMapping.wrapSqlStr(s);
-			}
-		}
-		return String.valueOf(value);
-	}
 
 	static ColumnChange createChange(ColumnType oldType, String rawType, ColumnType newType, DatabaseDialect profile) {
 		ColumnChange change = new ColumnChange(Change.CHG_DATATYPE);

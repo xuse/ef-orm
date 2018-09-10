@@ -10,6 +10,8 @@ import java.util.Map;
 
 import javax.sql.rowset.CachedRowSet;
 
+import com.querydsl.sql.SQLTemplates;
+
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
@@ -32,8 +34,6 @@ import jef.database.meta.object.Constraint;
 import jef.database.meta.object.SequenceInfo;
 import jef.database.support.RDBMS;
 import jef.database.wrapper.clause.InsertSqlClause;
-
-import com.querydsl.sql.SQLTemplates;
 
 /**
  * 
@@ -226,8 +226,8 @@ public abstract class AbstractDelegatingDialect implements DatabaseDialect {
 	}
 
 	@Override
-	public String toDefaultString(Object defaultValue, int sqlType, int changeTo) {
-		return dialect.toDefaultString(defaultValue, sqlType, changeTo);
+	public String toDefaultString(Object defaultValue, int sqlType) {
+		return dialect.toDefaultString(defaultValue, sqlType);
 	}
 
 	@Override

@@ -736,7 +736,7 @@ public class DbMetaData {
 		column.setTableName(tableName);
 
 		if (indexes != null) {
-			// 根据索引，计算该列是否为unique
+			// 根据索引，补充计算该列是否为unique。
 			for (Index index : indexes) {
 				if (index.isUnique() && index.isOnSingleColumn(column.getColumnName())) {
 					column.setUnique(true);
