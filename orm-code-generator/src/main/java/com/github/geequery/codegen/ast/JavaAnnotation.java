@@ -58,8 +58,8 @@ public class JavaAnnotation implements JavaElement {
 					appendValue(sb, v, main);
 				} else {
 					if (n > 0)
-						sb.append(",");
-					sb.append(key).append("=");
+						sb.append(", ");
+					sb.append(key).append(" = ");
 					appendValue(sb, v, main);
 				}
 				n++;

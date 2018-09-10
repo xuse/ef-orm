@@ -29,6 +29,7 @@ import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.DbMetaData;
 import jef.database.ORMConfig;
+import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.handler.LimitHandler;
 import jef.database.dialect.handler.MySqlLimitHandler;
 import jef.database.exception.ViolatedConstraintNameExtracter;
@@ -62,15 +63,25 @@ import jef.tools.string.JefStringReader;
 public class MySQL57Dialect extends AbstractDialect {
 
 	public MySQL57Dialect() {
-		// 在MYSQL中 ||是逻辑运算符
-		initFeatures();
-		initKeywods();
-		initFunctions();
-		initTypes();
+	}
+
+	protected String getComment(AutoIncrement column, boolean flag) {
+		StringBuilder sb = new StringBuilder();
+		// sb.append("INT UNSIGNED");
+		// 2016-4-19日从 int unsigned改为int，因为当一个表主键被另一个表作为外键引用时，双方类型必须完全一样。
+		// 实际测试发现，由于一般建表时普通int字段不会处理为 int unsigned，造成外键创建失败。所以此处暂时为int
+		sb.append("INT ");
+		if (flag) {
+			if (!column.nullable)
+				sb.append(" NOT NULL");
+		}
+		sb.append(" AUTO_INCREMENT");
+		return sb.toString();
 	}
 
 	protected void initFeatures() {
 		Set<Feature> features = CollectionUtils.identityHashSet();
+		// 在MYSQL中 ||是逻辑运算符
 		features.addAll(Arrays.asList(Feature.DBNAME_AS_SCHEMA, Feature.SUPPORT_INLINE_COMMENT, Feature.ALTER_FOR_EACH_COLUMN, Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD, Feature.SUPPORT_LIMIT, Feature.COLUMN_DEF_ALLOW_NULL));
 		this.features = features;
 		setProperty(DbProperty.ADD_COLUMN, "ADD");
@@ -92,6 +103,7 @@ public class MySQL57Dialect extends AbstractDialect {
 	}
 
 	protected void initTypes() {
+		super.initTypes();
 		typeNames.put(Types.BOOLEAN, "BIT(1)", 0);
 		typeNames.put(Types.BLOB, "mediumblob", 0);
 		typeNames.put(Types.BLOB, 255, "tinyblob", 0);
@@ -99,7 +111,7 @@ public class MySQL57Dialect extends AbstractDialect {
 		typeNames.put(Types.BLOB, 1024 * 1024 * 16, "mediumblob", 0);
 		typeNames.put(Types.BLOB, 1024 * 1024 * 1024 * 4, "longblob", 0);
 		typeNames.put(Types.CLOB, "text", 0);
-
+		
 		typeNames.put(Types.VARCHAR, 21785, "varchar($l)", 0);
 		typeNames.put(Types.VARCHAR, 65535, "text", Types.CLOB);
 		typeNames.put(Types.VARCHAR, 1024 * 1024 * 16, "mediumtext", Types.CLOB);
@@ -109,6 +121,7 @@ public class MySQL57Dialect extends AbstractDialect {
 	}
 
 	protected void initFunctions() {
+		super.initFunctions();
 		registerNative(new StandardSQLFunction("ascii"));
 		registerNative(new StandardSQLFunction("bin"));
 		registerNative(new StandardSQLFunction("char_length"), "character_length");

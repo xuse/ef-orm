@@ -710,7 +710,9 @@ public class DbMetaData {
 		 * 就是将getString("COLUMN_DEF")作为第一个获取的字段， 非常神奇的就好了。叹息啊。。。
 		 */
 		String defaultVal = rs.getString("COLUMN_DEF");
-		column.setColumnDef(StringUtils.trimToNull(defaultVal));// Oracle会在后面加上换行等怪字符。
+		
+		
+		
 		column.setColumnName(rs.getString("COLUMN_NAME"));
 		column.setOrdinal(rs.getInt("ORDINAL_POSITION"));
 		column.setColumnSize(rs.getInt("COLUMN_SIZE"));
@@ -718,6 +720,18 @@ public class DbMetaData {
 		column.setDataType(rs.getString("TYPE_NAME"));
 		column.setDataTypeCode(rs.getInt("DATA_TYPE"));
 		column.setNullable(rs.getString("IS_NULLABLE").equalsIgnoreCase("YES"));
+		
+		/*
+		 * 计算defaultVal的合适值，null表示没有缺省值，""表示缺省值为空。
+		 */
+		if(this.getProfile().has(Feature.EMPTY_CHAR_IS_NULL)) {
+			// Oracle会在后面加上换行等怪字符。之前直接用了trimToNull，但这是不对的，会将default ' '这样的定义忽略掉。
+			defaultVal=StringUtils.rtrim(defaultVal, '\r','\n');
+			if(defaultVal.length()==0) {
+				defaultVal=null;
+			}
+		}
+		column.setColumnDef(defaultVal);
 		column.setRemarks(rs.getString("REMARKS"));// 这个操作容易出问题，一定要最后操作
 		column.setTableName(tableName);
 

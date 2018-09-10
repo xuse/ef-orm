@@ -130,18 +130,4 @@ public class MySQL55Dialect extends MySQL57Dialect {
 		}
 		return super.getCreationComment(column, flag);
 	}
-
-	protected String getComment(AutoIncrement column, boolean flag) {
-		StringBuilder sb = new StringBuilder();
-		// sb.append("INT UNSIGNED");
-		// 2016-4-19日从 int unsigned改为int，因为当一个表主键被另一个表作为外键引用时，双方类型必须完全一样。
-		// 实际测试发现，由于一般建表时普通int字段不会处理为 int unsigned，造成外键创建失败。所以此处暂时为int
-		sb.append("INT ");
-		if (flag) {
-			if (!column.nullable)
-				sb.append(" NOT NULL");
-		}
-		sb.append(" AUTO_INCREMENT");
-		return sb.toString();
-	}
 }

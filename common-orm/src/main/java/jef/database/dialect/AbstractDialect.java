@@ -127,12 +127,20 @@ public abstract class AbstractDialect implements DatabaseDialect {
 
 	// 缺省的函数注册掉
 	public AbstractDialect() {
-		for (FunctionMapping m : DEFAULT_FUNCTIONS) {
-			this.functions.put(m.getFunction().getName(), m);
-			this.functionsIndex.put(m.getStardard(), m);
-		}
+		initFeatures();
+		initKeywods();
+		initFunctions();
+		initTypes();
+	}
 
-		// 注册缺省的数据类型
+	protected void initFeatures() {
+	}
+
+	protected void initKeywods() {
+	}
+
+	// 注册缺省的数据类型
+	protected void initTypes() {
 		typeNames.put(Types.BLOB, "blob", 0);
 		typeNames.put(Types.CLOB, "clob", 0);
 		typeNames.put(Types.CHAR, "char($l)", 0);
@@ -152,6 +160,13 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		typeNames.put(Types.TIMESTAMP, "timestamp", 0);
 		typeNames.put(Types.DECIMAL, "decimal($p,$s)", 0);
 		typeNames.put(Types.NUMERIC, "decimal($p,$s)", 0);
+	}
+
+	protected void initFunctions() {
+		for (FunctionMapping m : DEFAULT_FUNCTIONS) {
+			this.functions.put(m.getFunction().getName(), m);
+			this.functionsIndex.put(m.getStardard(), m);
+		}
 	}
 
 	static {
@@ -409,11 +424,11 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		}
 		StringBuilder sb = new StringBuilder(def.getName());
 		if (this.has(Feature.SWAP_DEFAULT_AND_NULL)) {
-			appendDefault(sb, column,def);
+			appendDefault(sb, column, def);
 			appendNotNULL(sb, column);
 		} else {
 			appendNotNULL(sb, column);
-			appendDefault(sb, column,def);
+			appendDefault(sb, column, def);
 		}
 		if (column.unique) {
 			sb.append(" UNIQUE");
@@ -421,7 +436,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		return sb.toString();
 	}
 
-	private void appendDefault(StringBuilder sb, ColumnType column,Type def) {
+	private void appendDefault(StringBuilder sb, ColumnType column, Type def) {
 		if (column.defaultValue != null)
 			sb.append(" DEFAULT ").append(toDefaultString(column.defaultValue, column.getSqlType(), def.getSqlType()));
 	}

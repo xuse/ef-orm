@@ -28,6 +28,9 @@ import java.util.Properties;
 import javax.sql.DataSource;
 import javax.sql.rowset.CachedRowSet;
 
+import com.querydsl.sql.OracleTemplates;
+import com.querydsl.sql.SQLTemplates;
+
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.DbCfg;
@@ -85,19 +88,16 @@ import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
 
-import com.querydsl.sql.OracleTemplates;
-import com.querydsl.sql.SQLTemplates;
-
 /**
  * 修改列名Oracle：lter table bbb rename column nnnnn to hh int;
  */
 public class OracleDialect extends AbstractDialect {
-	public OracleDialect() {
+	@Override
+	protected void initFeatures() {
 		features = CollectionUtils.identityHashSet();
 		features.addAll(Arrays.asList(Feature.AUTOINCREMENT_NEED_SEQUENCE, Feature.USER_AS_SCHEMA, Feature.REMARK_META_FETCH, Feature.BRUKETS_FOR_ALTER_TABLE, Feature.SUPPORT_CONCAT, Feature.SUPPORT_CONNECT_BY, Feature.DROP_CASCADE, Feature.SUPPORT_SEQUENCE,
 				Feature.EMPTY_CHAR_IS_NULL, Feature.SUPPORT_COMMENT, Feature.COLUMN_DEF_ALLOW_NULL));
 
-		super.loadKeywords("oracle_keywords.properties");
 		if (JefConfiguration.getBoolean(DbCfg.DB_ENABLE_ROWID, false)) {
 			features.add(Feature.SELECT_ROW_NUM);
 		}
@@ -109,7 +109,37 @@ public class OracleDialect extends AbstractDialect {
 		setProperty(DbProperty.SELECT_EXPRESSION, "SELECT %s FROM DUAL");
 		setProperty(DbProperty.WRAP_FOR_KEYWORD, "\"\"");
 		setProperty(DbProperty.OTHER_VERSION_SQL, "select 'USER_LANGUAGE',userenv('language') from dual");
+	}
 
+	@Override
+	protected void initKeywods() {
+		super.loadKeywords("oracle_keywords.properties");
+	}
+
+	@Override
+	protected void initTypes() {
+		super.initTypes();
+		typeNames.put(Types.VARCHAR, 4000, "varchar2($l)", 0);
+		typeNames.put(Types.VARCHAR, 1024 * 1024 * 1024 * 4, "clob", Types.CLOB);
+
+		typeNames.put(Types.FLOAT, "number($p,$s)", 0);
+		typeNames.put(Types.DOUBLE, "number($p,$s)", 0);
+		typeNames.put(Types.NUMERIC, "number($p,$s)", 0);
+		typeNames.put(Types.TINYINT, "number($p)", 0);
+		typeNames.put(Types.SMALLINT, "number($p)", 0);
+		typeNames.put(Types.INTEGER, "number($p)", 0);
+		typeNames.put(Types.BIGINT, "number($p)", 0);
+
+		typeNames.put(Types.TIMESTAMP, "date", 0);
+		typeNames.put(Types.TIME, "date", 0);
+	}
+
+
+
+
+	@Override
+	protected void initFunctions() {
+		super.initFunctions();
 		registerNative(Scientific.sinh);
 		registerNative(Scientific.cosh);
 		registerNative(Scientific.tanh);
@@ -220,21 +250,10 @@ public class OracleDialect extends AbstractDialect {
 
 		registerCompatible(Func.datediff, new TemplateFunction("datediff", "trunc(%1$s-%2$s)"));
 		registerAlias(Func.str, "to_char");
-
-		typeNames.put(Types.VARCHAR, 4000, "varchar2($l)", 0);
-		typeNames.put(Types.VARCHAR, 1024 * 1024 * 1024 * 4, "clob", Types.CLOB);
-
-		typeNames.put(Types.FLOAT, "number($p,$s)", 0);
-		typeNames.put(Types.DOUBLE, "number($p,$s)", 0);
-		typeNames.put(Types.NUMERIC, "number($p,$s)", 0);
-		typeNames.put(Types.TINYINT, "number($p)", 0);
-		typeNames.put(Types.SMALLINT, "number($p)", 0);
-		typeNames.put(Types.INTEGER, "number($p)", 0);
-		typeNames.put(Types.BIGINT, "number($p)", 0);
-
-		typeNames.put(Types.TIMESTAMP, "date", 0);
-		typeNames.put(Types.TIME, "date", 0);
 	}
+
+
+
 
 	protected String getComment(AutoIncrement column, boolean flag) {
 		StringBuilder sb = new StringBuilder();

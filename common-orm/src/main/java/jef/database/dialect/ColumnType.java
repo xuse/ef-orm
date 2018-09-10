@@ -1169,7 +1169,7 @@ public abstract class ColumnType {
 	private static String quotWith(Object value) {
 		if (value instanceof String) {
 			String s = (String) value;
-			if (s.charAt(0) == '\'' && s.charAt(s.length() - 1) == '\'') {
+			if (s.length() >= 2 && s.charAt(0) == '\'' && s.charAt(s.length() - 1) == '\'') {
 				return s;
 			} else {
 				return AColumnMapping.wrapSqlStr(s);
