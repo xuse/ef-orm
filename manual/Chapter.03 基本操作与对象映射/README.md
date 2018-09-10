@@ -440,8 +440,7 @@ public void testSelect_Like() throws SQLException{
     Student query=new Student();
     //在Student对象中添加Like条件
     query.getQuery().addCondition(
-    Student.Field.name,Operator.MATCH_ANY, "Jhon"
-    );
+    	Student.Field.name.matchAny("Jhon");
     List<Student> sts=db.select(query);
 
     Assert.assertEquals(sts.size(), db.count(query.getQuery()));
@@ -486,14 +485,14 @@ public void testSelect_Like() throws SQLException{
 public void testUpdateAndDelete_WithLike() throws SQLException{
       Student s=new Student();
       s.setGender("F");
-      s.getQuery().addCondition(Student.Field.name,Operator.MATCH_ANY, "Mary");
+      s.getQuery().addCondition(Student.Field.name.matchAny("Mary");
 
       db.update(s);
       //相当于执行
       //update STUDENT set GENDER = 'F' where NAME like '%Mary%'
 
       s.getQuery().clearQuery();//清除查询条件
-      s.getQuery().addCondition(Student.Field.id,Operator.IN, new int[]{2,3,4});
+      s.getQuery().addCondition(Student.Field.id.in(new int[]{2,3,4}));
       db.delete(s);
       //相当于执行
       //delete from STUDENT where ID in (2, 3, 4)
@@ -529,7 +528,7 @@ public void testUpdateAndDelete_WithLike() throws SQLException{
 
 ~~~java
 Student s=new Student();’
-s.getQuery().addCondition(Student.Field.name,Operator.EQUALS, "Mary");
+s.getQuery().addCondition(Student.Field.name.eq("Mary"));
 s.setGender("F");
 db.update(s);
 ~~~
@@ -551,8 +550,8 @@ db.update(s);
 public void testSelect_LikeAndEtc() throws SQLException {
 	Student s = new Student();
 	s.getQuery()
-		.addCondition(Student.Field.name, Operator.MATCH_ANY, "Jhon")   //name like ‘%Jhon%’
-		.addCondition(Student.Field.id, Operator.LESS, 100)            // id < 100
+		.addCondition(Student.Field.name.matchAny("Jhon"))  //name like ‘%Jhon%’
+		.addCondition(Student.Field.id.lt(100))            // id < 100
 		.orderByDesc(Student.Field.grade);                             //设置Order By 
 	List<Student> sts = db.select(s);
 
@@ -575,8 +574,8 @@ select t.* from STUDENT t where t.NAME like ? escape '/'  and t.ID<? order by t.
 public void testSelect_LikeAndEtc() throws SQLException{
 	Student s=new Student();
 	s.setGrade("3"); //希望增加一个条件
-	s.getQuery().addCondition(Student.Field.name,Operator.MATCH_ANY, "Jhon"); //name like ‘%Jhon%’
-	s.getQuery().addCondition(Student.Field.id,Operator.LESS, 100); // id < 100
+	s.getQuery().addCondition(Student.Field.name.matchAny("Jhon")); //name like ‘%Jhon%’
+	s.getQuery().addCondition(Student.Field.id.lt(100)); // id < 100
 	s.getQuery().orderByDesc(Student.Field.grade);   //设置Order By 
 	List<Student> sts=db.select(s);
 		
@@ -601,8 +600,8 @@ public void testSelect_LikeAndEtc2() throws SQLException{
 	//添加 grade='3'这个条件。当运算符为 = 时，中间的运算符可以省略不写。
 	s.getQuery().addCondition(Student.Field.grade,"3"); 
 		
-	s.getQuery().addCondition(Student.Field.name,Operator.MATCH_ANY, "Jhon");
-	s.getQuery().addCondition(Student.Field.id,Operator.LESS, 100);
+	s.getQuery().addCondition(Student.Field.name.matchAny("Jhon"));
+	s.getQuery().addCondition(Student.Field.id.lt(100));
 	List<Student> sts=db.select(s);
 		
 	Assert.assertEquals(sts.size(), db.count(s.getQuery()));
@@ -622,7 +621,7 @@ public void testUpdatePrimaryKey()  throws SQLException{
 	q.setId(1);
 	q=db.load(q);
 		
-	q.getQuery().addCondition(Student.Field.id, q.getId());
+	q.getQuery().addCondition(Student.Field.id.eq(q.getId());
 	q.setId(100);
 		
 	db.update(q); //将id（主键）修改为100
@@ -702,8 +701,8 @@ allow.empty.query=true
 public void testSelect_LikeAndEtc2() throws SQLException{
 	Student s=new Student();
 	s.getQuery().addCondition(Student.Field.grade,"3"); 
-	s.getQuery().addCondition(Student.Field.name,Operator.MATCH_ANY, "Jhon");
-	s.getQuery().addCondition(Student.Field.id,Operator.LESS, 100);
+	s.getQuery().addCondition(Student.Field.name,Operator.matchAny("Jhon"));
+	s.getQuery().addCondition(Student.Field.id.lt(100));
 	s.getQuery().orderByDesc(Student.Field.grade);
 	List<Student> sts=db.select(s);
 		
