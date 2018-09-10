@@ -22,6 +22,7 @@ import jef.database.meta.MetaHolder;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
+import jef.tools.io.Charsets;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.FieldEx;
 
@@ -67,7 +68,7 @@ public class JefJUnit4DatabaseTestRunner extends BlockJUnit4ClassRunner {
 			throw new IllegalArgumentException("Please assign a @DataSourceContext on this class.");
 		}
 		this.isRouting = annotation.routing();
-		Reader reader = IOUtils.getReader(this.getClass().getClassLoader().getResource("junit4jef.properties"), "UTF-8");
+		Reader reader = IOUtils.getReader(this.getClass().getClassLoader().getResource("junit4jef.properties"),Charsets.UTF8);
 		if (reader != null) {
 			try {
 				pro.load(reader);

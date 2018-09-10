@@ -24,6 +24,7 @@ import org.junit.Test;
 
 /**
  * 批量操作，是在操作大量数据时提高性能的有效方法
+ * 
  * @author jiyi
  *
  */
@@ -39,9 +40,9 @@ public class BatchOperate extends org.junit.Assert {
 	@BeforeClass
 	public static void setup() throws SQLException {
 		db = new DbClientBuilder().setEnhancePackages("org.easyframe.tutorial").build();
-		
-		db.dropTable(Person.class,School.class,DataDict.class);
-		db.createTable(Person.class,School.class,DataDict.class);
+
+		db.dropTable(Person.class, School.class, DataDict.class);
+		db.createTable(Person.class, School.class, DataDict.class);
 	}
 
 	/**
@@ -91,20 +92,20 @@ public class BatchOperate extends org.junit.Assert {
 	}
 
 	/**
-	 * 设置多组更新数据。
-	 * 注意、后面的更新请求必须和第一个请求具有完全相同的更新字段和条件。
+	 * 设置多组更新数据。 注意、后面的更新请求必须和第一个请求具有完全相同的更新字段和条件。
+	 * 
 	 * @throws SQLException
 	 */
 	@Test
 	public void testBatchUpdate() throws SQLException {
 		doInsert(5);
 		Person p1 = new Person();
-		p1.getQuery().addCondition(QB.matchAny(Person.Field.name, "a"));
+		p1.getQuery().addCondition(Person.Field.name.matchAny("a"));
 		p1.prepareUpdate(Person.Field.created, db.func(Func.current_timestamp));
 
-		Person p2 = QB.create(Person.class).addCondition(QB.matchAny(Person.Field.name, "b")).getInstance();
+		Person p2 = QB.create(Person.class).addCondition(Person.Field.name.matchAny("b")).getInstance();
 
-		Person p3 = QB.create(Person.class).addCondition(QB.matchAny(Person.Field.name, "cc")).getInstance();
+		Person p3 = QB.create(Person.class).addCondition(Person.Field.name.matchAny("cc")).getInstance();
 
 		db.batchUpdate(Arrays.asList(p1, p2, p3));
 	}
@@ -113,8 +114,8 @@ public class BatchOperate extends org.junit.Assert {
 	public void testBatchUpdate2() throws SQLException {
 		doInsert(5);
 		Person query = new Person();
-		query.getQuery().addCondition(Person.Field.created, Operator.GREAT, DateUtils.getDate(2000, 1, 1));
-		
+		query.getQuery().addCondition(Person.Field.created.gt(DateUtils.getDate(2000, 1, 1));
+
 		List<Person> persons = db.select(query);
 		for (Person person : persons) {
 			person.setCreated(new Date());
@@ -123,9 +124,8 @@ public class BatchOperate extends org.junit.Assert {
 		batch.execute(persons);
 		persons = db.select(QB.create(Person.class));
 		batch.execute(persons);
-		
+
 	}
-	
 
 	private void doInsert(int max) throws SQLException {
 		List<Person> persons = new ArrayList<Person>(max);
@@ -137,7 +137,6 @@ public class BatchOperate extends org.junit.Assert {
 		;
 		db.batchInsert(persons);
 	}
-	
 
 	private void doExtremeInsert(int max) throws SQLException {
 		List<Person> persons = new ArrayList<Person>(max);
@@ -147,13 +146,13 @@ public class BatchOperate extends org.junit.Assert {
 			persons.add(p);
 		}
 		;
-		db.extremeInsert(persons,false);
+		db.extremeInsert(persons, false);
 	}
-	
+
 	@Test
 	public void reuseBatchObject() throws SQLException {
-		Batch<Person> batch=db.startBatchInsert(new Person(),  false);
-		
+		Batch<Person> batch = db.startBatchInsert(new Person(), false);
+
 		List<Person> persons = new ArrayList<Person>(5);
 		for (int i = 0; i < 5; i++) {
 			Person p = new Person();
@@ -161,7 +160,7 @@ public class BatchOperate extends org.junit.Assert {
 			persons.add(p);
 		}
 		batch.execute(persons);
-		//再来5个
+		// 再来5个
 		persons = new ArrayList<Person>(5);
 		for (int i = 0; i < 5; i++) {
 			Person p = new Person();

@@ -146,7 +146,7 @@ public class Case1 extends org.junit.Assert {
 	public void testFilterCondition2() throws SQLException {
 		Query<Catalogy> q = QB.create(Catalogy.class);
 		q.addCondition(QB.eq(Catalogy.Field.id, 1));
-		q.addCascadeCondition("items.itemExtInfos", QB.eq(ItemExtendInfo.Field.key, "拍摄地点"));// 作为Filter能生效
+		q.addCascadeCondition("items.itemExtInfos", ItemExtendInfo.Field.key.eq("拍摄地点"));// 作为Filter能生效
 		Catalogy c = db.load(q);
 		for (Item item : c.getItems()) {
 			System.out.println(item.getItemExtInfos());
@@ -160,7 +160,7 @@ public class Case1 extends org.junit.Assert {
 	@Test()
 	public void testFilterCondition3() throws SQLException {
 		Query<Catalogy> q = QB.create(Catalogy.class);
-		q.addCondition(QB.eq(Item.Field.id, 1));
+		q.addCondition(Item.Field.id.eq(1));
 		Catalogy c = db.load(q);
 		System.out.println(c);
 	}

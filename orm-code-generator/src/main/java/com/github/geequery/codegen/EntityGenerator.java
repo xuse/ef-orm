@@ -58,7 +58,6 @@ import jef.database.meta.object.Index;
 import jef.database.meta.object.Index.IndexItem;
 import jef.database.meta.object.TableInfo;
 import jef.database.routing.function.KeyFunction;
-import jef.http.client.support.CommentEntry;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
@@ -70,18 +69,66 @@ import jef.tools.io.Charsets;
  * @author Administrator
  */
 public class EntityGenerator {
+	/**
+	 * 生成实体的包名
+	 */
 	private String basePackage = "jef.generated.dataobject";
+	/**
+	 * 方言
+	 */
 	private DatabaseDialect profile;
+	/**
+	 * 实体基类
+	 */
 	private String entityBaseClass = DataObject.class.getName();
-
+	/**
+	 * 元数据
+	 */
 	private MetaProvider provider;
+	/**
+	 * 源代码文件夹
+	 */
 	private File srcFolder = new File("src1");
+	/**
+	 * 包含表
+	 */
 	private String includePattern;
+	/**
+	 * 不包含表
+	 */
 	private String[] excludePatter;
-	private int maxTables = 900;
+	/**
+	 * 最大生成
+	 */
+	private int maxTables = 1000;
+	/**
+	 * 进度回调
+	 */
 	private EntityProcessorCallback callback;
 
-	public File generateOne(String tablename, String entityName, String tableComment) throws SQLException {
+	/**
+	 * 仓库包名
+	 */
+	private String reposPackageName;
+
+	/**
+	 * 生成单个表对应的实体。
+	 * 
+	 * @param tablename
+	 * @param options
+	 * @return
+	 * 
+	 * @throws SQLException
+	 */
+	public File generateOne(String tablename, GenerateOption... options) throws SQLException {
+		return generateOne(tablename, null, null, options);
+	}
+
+	public File generateOne(String tablename, String entityName, String tableComment, GenerateOption... options) throws SQLException {
+		if (tableComment == null) {
+			TableInfo info = provider.getTableInfo(tablename);
+			tableComment = info != null ? info.getRemarks() : null;
+		}
 		File file = this.saveJavaSource(generateSource(tablename, entityName, tableComment));
 		LogUtil.show(file.getAbsolutePath() + " generated.");
 		return file;
@@ -95,7 +142,7 @@ public class EntityGenerator {
 		this.entityBaseClass = entityBaseClass;
 	}
 
-	public JavaUnit generateSource(String tablename, String entityName, String tableComment) throws SQLException {
+	private JavaUnit generateSource(String tablename, String entityName, String tableComment) throws SQLException {
 		if (profile == null) {
 			LogUtil.warn("Db dialect not set,default dialect set to Oracle.");
 			profile = AbstractDialect.getDialect("oracle");
@@ -349,7 +396,7 @@ public class EntityGenerator {
 		return false;
 	}
 
-	public void generateSchema() throws SQLException {
+	public void generateSchema(GenerateOption... generateOptions) throws SQLException {
 		Assert.notNull(provider);
 		RegexpNameFilter filter = new RegexpNameFilter(includePattern, excludePatter);
 		int n = 0;
@@ -362,7 +409,7 @@ public class EntityGenerator {
 			String tableName = table.getName();
 			if (filter.accept(tableName)) {
 				try {
-					generateOne(tableName, null, table.getRemarks());
+					generateOne(tableName, null, table.getRemarks(), generateOptions);
 				} catch (SQLException e) {
 					LogUtil.exception(e);
 				}
@@ -373,23 +420,6 @@ public class EntityGenerator {
 		}
 		LogUtil.info(n + " Class Mapping to Table are generated.");
 
-	}
-
-	public void generate(CommentEntry... strings) {
-		Assert.notNull(provider);
-		int limit = 500;
-		int n = 0;
-		for (CommentEntry table : strings) {
-			try {
-				generateOne(table.getKey(), null, table.getValue());
-			} catch (SQLException e) {
-				LogUtil.exception(e);
-			}
-			n++;
-			if (n >= limit)
-				break;
-		}
-		LogUtil.show(strings.length + " Class Mapping to Table are generated.");
 	}
 
 	public void setProfile(DatabaseDialect profile) {

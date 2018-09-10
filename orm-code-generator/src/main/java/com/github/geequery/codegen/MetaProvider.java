@@ -15,9 +15,10 @@ import jef.database.DbClient;
 import jef.database.DbMetaData;
 import jef.database.meta.object.TableInfo;
 
-public interface MetaProvider{
+public interface MetaProvider {
 	/**
 	 * 得到表的元数据
+	 * 
 	 * @param tablename
 	 * @return
 	 * @throws SQLException
@@ -26,23 +27,40 @@ public interface MetaProvider{
 
 	/**
 	 * 得到所有表 key=表名 value=备注
+	 * 
 	 * @return
 	 * @throws SQLException
 	 */
 	List<TableInfo> getTables() throws SQLException;
-	
+
 	String getSchema();
-	
-	public static class DbClientProvider implements MetaProvider{
-		private DbClient db;
-		
-		public DbClientProvider(DbClient db){
-			this.db=db;
+
+	/**
+	 * 得到数据库表
+	 * @param name
+	 * @return
+	 * @throws SQLException
+	 */
+	default TableInfo getTableInfo(String name) throws SQLException {
+		for (TableInfo info : getTables()) {
+			if (info.getName().equalsIgnoreCase(name)) {
+				return info;
+			}
 		}
+		return null;
+	}
+
+	public static class DbClientProvider implements MetaProvider {
+		private DbClient db;
+
+		public DbClientProvider(DbClient db) {
+			this.db = db;
+		}
+
 		public Metadata getTableMetadata(String tablename) throws SQLException {
-			Metadata data=new Metadata();
-			DbMetaData meta=db.getMetaData(null);
-			data.setColumns(meta.getColumns(tablename,true));
+			Metadata data = new Metadata();
+			DbMetaData meta = db.getMetaData(null);
+			data.setColumns(meta.getColumns(tablename, true));
 			data.setIndexes(meta.getIndexes(tablename));
 			data.setPrimaryKey(meta.getPrimaryKey(tablename));
 			data.setForeignKey(meta.getForeignKey(tablename));
@@ -52,24 +70,26 @@ public interface MetaProvider{
 		public List<TableInfo> getTables() throws SQLException {
 			return db.getMetaData(null).getTables(true);
 		}
+
 		public String getSchema() {
 			return null;
 		}
 	}
-	
-	public static class PDMProvider implements MetaProvider{
+
+	public static class PDMProvider implements MetaProvider {
 		String schema;
 		MetaModel model;
-		
+
 		public void setSchema(String schema) {
 			this.schema = schema;
 		}
 
-		public PDMProvider(String schema,MetaModel model){
-			this.schema=schema;
-			this.model=model;
+		public PDMProvider(String schema, MetaModel model) {
+			this.schema = schema;
+			this.model = model;
 		}
-		public PDMProvider(File pdmFile){
+
+		public PDMProvider(File pdmFile) {
 			IMetaLoader metaLoader = new PDMetaLoader();
 			MetaModel model;
 			try {
@@ -77,11 +97,12 @@ public interface MetaProvider{
 			} catch (JefException e) {
 				throw new RuntimeException(e.getMessage());
 			}
-			this.model=model;
+			this.model = model;
 		}
+
 		public Metadata getTableMetadata(String tablename) throws SQLException {
-			Metadata data=new Metadata();
-			MetaTable table=model.getTable(tablename);
+			Metadata data = new Metadata();
+			MetaTable table = model.getTable(tablename);
 			data.setColumns(table.getJefColumns());
 			data.setPrimaryKey(table.getJefPK());
 			data.setForeignKey(table.getJefFK());
@@ -89,9 +110,9 @@ public interface MetaProvider{
 		}
 
 		public List<TableInfo> getTables() throws SQLException {
-			List<TableInfo> result=new ArrayList<TableInfo>();
-			for(MetaTable t:model.getTables()){
-				TableInfo info=new TableInfo();
+			List<TableInfo> result = new ArrayList<TableInfo>();
+			for (MetaTable t : model.getTables()) {
+				TableInfo info = new TableInfo();
 				info.setName(t.getCode());
 				info.setRemarks(t.getComment());
 				result.add(info);
@@ -102,7 +123,6 @@ public interface MetaProvider{
 		public String getSchema() {
 			return schema;
 		}
-		
+
 	}
 }
-

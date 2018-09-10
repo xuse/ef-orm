@@ -20,15 +20,15 @@ import org.junit.Test;
 public class Case1 {
 
 	private static DbClient db;
-	
+
 	/**
 	 * 环境准备
 	 */
 	@BeforeClass
 	public static void setup() throws SQLException {
-		db=new DbClientBuilder().build();
-		db.dropTable(Student.class,StudentToLesson.class);
-		db.createTable(Student.class,StudentToLesson.class);
+		db = new DbClientBuilder().build();
+		db.dropTable(Student.class, StudentToLesson.class);
+		db.createTable(Student.class, StudentToLesson.class);
 	}
 
 	@AfterClass
@@ -39,6 +39,7 @@ public class Case1 {
 
 	/**
 	 * 删表与建表
+	 * 
 	 * @throws SQLException
 	 */
 	@Test
@@ -51,6 +52,7 @@ public class Case1 {
 	 * 自增主键的返回
 	 * 
 	 * 插入时，字段可以是自增的，操作完成后，自增值将会赋值到对象中。
+	 * 
 	 * @throws SQLException
 	 */
 	@Test
@@ -109,7 +111,7 @@ public class Case1 {
 			Student query = new Student();
 			query.setGrade("1");
 			query.setId(12);
-			 // 查询条件为 id=12。grade = 12不用作查询条件
+			// 查询条件为 id=12。grade = 12不用作查询条件
 			List<Student> sts = db.select(query);
 		}
 	}
@@ -132,25 +134,20 @@ public class Case1 {
 	/**
 	 * 带有大于、小于、Like等各种复杂的复合条件查询
 	 * 
-	 * 注意：由于有了enum类型的字段枚举，您将不会有机会拼写错误的字段名。
-	 *       而且一旦字段发生变更，编译器也能帮您判断出问题的所在。
-	 *        
+	 * 注意：由于有了enum类型的字段枚举，您将不会有机会拼写错误的字段名。 而且一旦字段发生变更，编译器也能帮您判断出问题的所在。
+	 * 
 	 * @throws SQLException
 	 */
 	@Test
 	public void testSelect_LikeAndEtc() throws SQLException {
 		Student s = new Student();
-		s.getQuery()
-			.addCondition(Student.Field.name, Operator.MATCH_ANY, "Jhon")
-			.addCondition(Student.Field.id,   Operator.LESS,      100)
-			.orderByDesc(Student.Field.grade);
+		s.getQuery().addCondition(Student.Field.name, Operator.MATCH_ANY, "Jhon").addCondition(Student.Field.id, Operator.LESS, 100).orderByDesc(Student.Field.grade);
 		List<Student> sts = db.select(s);
 		Assert.assertEquals(sts.size(), db.count(s.getQuery()));
 	}
 
 	/**
-	 * 更为复杂的查询
-	 * 增加一个条件的正确写法。如果使用了Query对象，那么在Student中直接setXxx设值，不会用作查询条件。
+	 * 更为复杂的查询 增加一个条件的正确写法。如果使用了Query对象，那么在Student中直接setXxx设值，不会用作查询条件。
 	 * 因此，您必须用一致的写法来描述查询条件。
 	 * 
 	 * @throws SQLException
@@ -161,11 +158,12 @@ public class Case1 {
 
 		// s.setGrade("3"); //在已经使用了Query对象中的情况下，此处设值不作为查询条件
 
-		s.getQuery().addCondition(Student.Field.grade, "3"); // 添加 grade='3'这个条件。
-														    //当运算符为 = 时，可以省略不写。
+		s.getQuery().addCondition(Student.Field.grade.eq("3")); // 添加
+																// grade='3'这个条件。
+		// 当运算符为 = 时，可以省略不写。
 
-		s.getQuery().addCondition(Student.Field.name, Operator.MATCH_ANY, "Jhon");
-		s.getQuery().addCondition(Student.Field.id, Operator.LESS, 100);
+		s.getQuery().addCondition(Student.Field.name.matchAny("Jhon"));
+		s.getQuery().addCondition(Student.Field.id.lt(100));
 		s.getQuery().orderByDesc(Student.Field.grade);
 		List<Student> sts = db.select(s);
 
@@ -185,7 +183,7 @@ public class Case1 {
 	public void testUpdateAndDelete_WithLike() throws SQLException {
 		Student s = new Student();
 		s.setGender("F");
-		s.getQuery().addCondition(Student.Field.name, Operator.MATCH_ANY, "Mary");
+		s.getQuery().addCondition(Student.Field.name.matchAny("Mary"));
 
 		db.update(s);
 		// 相当于执行
@@ -199,15 +197,13 @@ public class Case1 {
 	}
 
 	/**
-	 * 更新对象的主键列——
-	 * 既然我们传入的实体是一个完整的SQL的载体，那么自然也可以做一些传统ORM很难实现的功能。
-	 * 比如 —— 更新主键字段。
+	 * 更新对象的主键列—— 既然我们传入的实体是一个完整的SQL的载体，那么自然也可以做一些传统ORM很难实现的功能。 比如 —— 更新主键字段。
 	 * 
 	 */
 	@Test
 	public void testUpdatePrimaryKey() throws SQLException {
-		int id=insert();
-		
+		int id = insert();
+
 		Student q = new Student();
 		q.setId(id);
 		q = db.load(q);
@@ -219,10 +215,8 @@ public class Case1 {
 		// update STUDENT set ID = 100 where ID= 1
 	}
 
-
 	/**
-	 * 另一种风格的条件书写。
-	 * 为了满足不同偏好的小伙伴的要求，API支持好几种 条件的书写风格。这是使用QueryBuilder(QB)风格。
+	 * 另一种风格的条件书写。 为了满足不同偏好的小伙伴的要求，API支持好几种 条件的书写风格。这是使用QueryBuilder(QB)风格。
 	 * 
 	 * @throws SQLException
 	 */
@@ -230,39 +224,34 @@ public class Case1 {
 	public void testSelect_LikeAndEtc3() throws SQLException {
 		Query<Student> query = QueryBuilder.create(Student.class);
 
-		query.addCondition(QueryBuilder.eq(Student.Field.grade, "3"));
-		query.addCondition(QueryBuilder.matchAny(Student.Field.name, "Jhon"));
-		query.addCondition(QueryBuilder.lt(Student.Field.id, 100));
-		
+		query.addCondition(Student.Field.grade.eq("3"));
+		query.addCondition(Student.Field.name.matchAny("Jhon"));
+		query.addCondition(Student.Field.id.lt(100));
+
 		query.orderByDesc(Student.Field.grade);
 		List<Student> sts = db.select(query);
 
 		Assert.assertEquals(sts.size(), db.count(query));
 	}
 
-
 	/**
-	 * 另一种风格的条件书写。
-	 * 为了满足不同偏好的小伙伴的要求，API支持好几种 条件的书写风格。这是使用Terms风格。
+	 * 另一种风格的条件书写。 为了满足不同偏好的小伙伴的要求，API支持好几种 条件的书写风格。这是使用Terms风格。
 	 * 
 	 * 和上例的效果是完全一样的
+	 * 
 	 * @throws SQLException
 	 */
 	@Test
 	public void testSelect_LikeAndEtc4() throws SQLException {
 		Query<Student> query = QueryBuilder.create(Student.class);
 
-		query.terms().eq(Student.Field.grade, "3")
-			.and().matchAny(Student.Field.name, "Jhon")
-			.and().lt(Student.Field.id, 100);
-		
-		
+		query.terms().eq(Student.Field.grade, "3").and().matchAny(Student.Field.name, "Jhon").and().lt(Student.Field.id, 100);
+
 		query.orderByDesc(Student.Field.grade);
 		List<Student> sts = db.select(query);
 
 		Assert.assertEquals(sts.size(), db.count(query));
 	}
-	
 
 	private int insert() throws SQLException {
 		Student s = new Student();
