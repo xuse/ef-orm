@@ -15,13 +15,9 @@
  */
 package jef.database.dialect;
 
-import java.util.Arrays;
-import java.util.Set;
-
 import jef.database.annotation.DateGenerateType;
 import jef.database.meta.Feature;
 import jef.database.query.Func;
-import jef.tools.collection.CollectionUtils;
 
 /**
  * MySQL 特性
@@ -77,9 +73,8 @@ public class MySQL55Dialect extends MySQL57Dialect {
 
 	@Override
 	protected void initFeatures() {
-		Set<Feature> features = CollectionUtils.identityHashSet();
-		features.addAll(Arrays.asList(Feature.DBNAME_AS_SCHEMA, Feature.SUPPORT_INLINE_COMMENT, Feature.ALTER_FOR_EACH_COLUMN, Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD, Feature.SUPPORT_LIMIT, Feature.COLUMN_DEF_ALLOW_NULL, Feature.DATE_TIME_VALUE_WITHOUT_DEFAULT_FUNC));
-		this.features=features;
+		super.initFeatures();
+		this.features.add(Feature.DATE_TIME_VALUE_WITHOUT_DEFAULT_FUNC);
 	}
 
 	/*
