@@ -243,11 +243,11 @@ public class SqliteDialect extends AbstractDialect {
 	}
 
 	@Override
-	public String toDefaultString(Object defaultValue, int sqlType, int changeTo) {
+	public String toDefaultString(Object defaultValue, int sqlType) {
 		if (defaultValue instanceof DbFunction) {
 			return "("+this.getFunction((DbFunction) defaultValue)+")";
 		}
-		return super.toDefaultString(defaultValue, sqlType, changeTo);
+		return super.toDefaultString(defaultValue, sqlType);
 	}
 	
 	private final SQLTemplates queryDslDialect = new SQLiteTemplates();

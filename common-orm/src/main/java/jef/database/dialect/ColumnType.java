@@ -21,13 +21,15 @@ import java.sql.Types;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.TableGenerator;
+import javax.persistence.TemporalType;
 
 import jef.database.ORMConfig;
 import jef.database.annotation.DateGenerateType;
@@ -92,8 +94,9 @@ import jef.database.dialect.type.XmlStringMapping;
 import jef.database.meta.AnnotationProvider.FieldAnnotationProvider;
 import jef.database.meta.ColumnChange;
 import jef.database.meta.ColumnChange.Change;
-import jef.database.meta.object.Column;
 import jef.database.meta.Feature;
+import jef.database.meta.object.Column;
+import jef.database.query.SqlExpression;
 import jef.database.support.RDBMS;
 import jef.tools.StringUtils;
 
@@ -106,12 +109,13 @@ import jef.tools.StringUtils;
 public abstract class ColumnType {
 	protected boolean nullable = true;
 	protected boolean unique = false;
-
-	public Object defaultValue;
+	protected Object defaultValue;
 
 	public String toString() {
-		Map<String, Object> map = toJpaAnnonation();
-		return String.valueOf(map.get("columnDefinition"));
+		List<AnnotationDesc> list = new ArrayList<>();
+		AnnotationDesc column = new AnnotationDesc(javax.persistence.Column.class);
+		putAnnonation(list, column);
+		return String.valueOf(column.getProprties().get("columnDefinition"));
 	}
 
 	public boolean isUnique() {
@@ -153,25 +157,21 @@ public abstract class ColumnType {
 	}
 
 	/**
-	 * 为某个数据库字段指定缺省值
-	 * 
-	 * @param obj
-	 * @return
-	 */
-	public ColumnType defaultIs(Object obj) {
-		this.defaultValue = obj;
-		return this;
-	}
-
-	/**
 	 * 当代码生成时，转换为需要加注在属性上的Annotation
 	 * 
 	 * @return
 	 */
-	public Map<String, Object> toJpaAnnonation() {
-		Map<String, Object> map = new HashMap<String, Object>();
-		putAnnonation(map);
-		return map;
+	public List<AnnotationDesc> toJpaAnnonation(String columnName) {
+		final List<AnnotationDesc> list = new ArrayList<>();
+		AnnotationDesc column = new AnnotationDesc(javax.persistence.Column.class);
+		column.put("name", columnName);
+		list.add(column);
+		putAnnonation(list, column);
+		return list;
+	}
+
+	public Object getDefaultValue() {
+		return defaultValue;
 	}
 
 	/**
@@ -179,8 +179,9 @@ public abstract class ColumnType {
 	 * 
 	 * @param obj
 	 */
-	public void setDefault(Object obj) {
-		this.defaultValue = obj;
+	public ColumnType setDefault(Object defaultValue) {
+		this.defaultValue = defaultValue;
+		return this;
 	}
 
 	/**
@@ -198,16 +199,9 @@ public abstract class ColumnType {
 		// 对自增类型的数据不检查缺省值(兼容PG)
 		if (!(this instanceof AutoIncrement)) {
 			// 检查缺省值
-			String a1 = profile.toDefaultString(oldType.defaultValue, oldType.getSqlType(), oldType.getSqlType());
-			String a2 = profile.toDefaultString(newType.defaultValue, newType.getSqlType(), newType.getSqlType());
-			// 非字符串比较情况下全部按小写处理
-//			if (a1 != null && !a1.startsWith("'")) {
-//				a1 = StringUtils.lowerCase(a1);
-//			}
-//			if (a2 != null && !a2.startsWith("'")) {
-//				a2 = StringUtils.lowerCase(a2);
-//			}
-			if (!StringUtils.equals(a1, a2)) {
+			String a1 = profile.toDefaultString(oldType.defaultValue, oldType.getSqlType());
+			String a2 = profile.toDefaultString(newType.defaultValue, newType.getSqlType());
+			if (!StringUtils.equals(a1, a2) && supportDefaultChange(profile)) {
 				ColumnChange chg;
 				if (StringUtils.isEmpty(a2)) {
 					chg = new ColumnChange(Change.CHG_DROP_DEFAULT);
@@ -256,6 +250,10 @@ public abstract class ColumnType {
 		return result;
 	}
 
+	protected boolean supportDefaultChange(DatabaseDialect profile) {
+		return true;
+	}
+
 	/**
 	 * 针对几个非常规类型才进行的比较，目的是比较其长度等定义，最终返回变化
 	 * 
@@ -270,7 +268,7 @@ public abstract class ColumnType {
 	 * 
 	 * @param map
 	 */
-	protected abstract void putAnnonation(Map<String, Object> map);
+	protected abstract void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column);
 
 	/**
 	 * 返回缺省的Java数据类型
@@ -294,6 +292,15 @@ public abstract class ColumnType {
 	 */
 	public abstract ColumnMapping getMappingType(Class<?> fieldType);
 
+	/**
+	 * 设置缺省值
+	 * 
+	 * @param defaultStr
+	 */
+	public void setDefaultByString(String defaultStr) {
+		this.defaultValue = new SqlExpression(defaultStr);
+	};
+
 	public final static class Char extends ColumnType implements SqlTypeSized {
 		protected int length;
 
@@ -310,15 +317,15 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		protected void putAnnonation(Map<String, Object> map) {
+		protected void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column) {
 			String def = "char(" + length + ")";
 			if (defaultValue != null) {
-				def = def + " default " + quotWith(String.valueOf(defaultValue));
+				def = def + " default " + AColumnMapping.quotWith(defaultValue,this.getSqlType());
 			}
-			map.put("columnDefinition", def);
+			column.put("columnDefinition", def);
 			if (!nullable)
-				map.put("nullable", java.lang.Boolean.FALSE);
-			map.put("length", length);
+				column.put("nullable", java.lang.Boolean.FALSE);
+			column.put("length", length);
 		}
 
 		@Override
@@ -338,7 +345,7 @@ public abstract class ColumnType {
 			} else if (fieldType == java.util.Date.class) {
 				return new CharDateMapping();
 			} else if (fieldType == java.time.YearMonth.class) {
-			    return new LocalYearMonth_Char();
+				return new LocalYearMonth_Char();
 			} else if (fieldType == java.sql.Timestamp.class) {
 				return new CharTimestampMapping();
 			} else if (fieldType == Integer.class || fieldType == Integer.TYPE) {
@@ -365,6 +372,11 @@ public abstract class ColumnType {
 		public int getScale() {
 			return 0;
 		}
+
+		@Override
+		public void setDefaultByString(String defaultStr) {
+			this.defaultValue = defaultStr;
+		}
 	}
 
 	public static class Varchar extends ColumnType implements SqlTypeSized {
@@ -384,18 +396,18 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		protected void putAnnonation(Map<String, Object> map) {
+		protected void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column) {
 			String def = "varchar(" + length + ")";
 			if (defaultValue != null) {
-				def = def + " default " + quotWith(String.valueOf(defaultValue));
+				def = def + " default " + AColumnMapping.quotWith(defaultValue,this.getSqlType());
 			}
-			map.put("columnDefinition", def);
+			column.put("columnDefinition", def);
 			if (!nullable)
-				map.put("nullable", java.lang.Boolean.FALSE);
-			map.put("length", length);
+				column.put("nullable", java.lang.Boolean.FALSE);
+			column.put("length", length);
 		}
 
-        @Override
+		@Override
 		protected boolean compare(ColumnType type, DatabaseDialect profile) {
 			if (!(type instanceof Varchar)) {
 				return false;
@@ -422,7 +434,7 @@ public abstract class ColumnType {
 				return new VarcharDateMapping();
 			} else if (fieldType == java.sql.Timestamp.class) {
 				return new VarcharTimestampMapping();
-			}else if(fieldType == YearMonth.class){
+			} else if (fieldType == YearMonth.class) {
 				return new jef.database.dialect.type.LocalYearMonth_Char();
 			}
 			throw new IllegalArgumentException("Varchar can not mapping to class " + fieldType.getName());
@@ -442,6 +454,11 @@ public abstract class ColumnType {
 		public int getScale() {
 			return 0;
 		}
+
+		@Override
+		public void setDefaultByString(String defaultStr) {
+			this.defaultValue = defaultStr;
+		}
 	}
 
 	/**
@@ -455,14 +472,14 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		protected void putAnnonation(Map<String, Object> map) {
+		protected void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column) {
 			String def = "boolean";
 			if (defaultValue != null) {
 				def = def + " default " + String.valueOf(defaultValue);
 			}
-			map.put("columnDefinition", def);
+			column.put("columnDefinition", def);
 			if (!nullable)
-				map.put("nullable", java.lang.Boolean.FALSE);
+				column.put("nullable", java.lang.Boolean.FALSE);
 		}
 
 		@Override
@@ -505,16 +522,16 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		protected void putAnnonation(Map<String, Object> map) {
+		protected void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column) {
 			String def = "number(" + precision + "," + scale + ")";
 			if (defaultValue != null) {
 				def = def + " default " + String.valueOf(defaultValue);
 			}
-			map.put("columnDefinition", def);
+			column.put("columnDefinition", def);
 			if (!nullable)
-				map.put("nullable", java.lang.Boolean.FALSE);
-			map.put("precision", precision);
-			map.put("scale", scale);
+				column.put("nullable", java.lang.Boolean.FALSE);
+			column.put("precision", precision);
+			column.put("scale", scale);
 		}
 
 		@Override
@@ -602,15 +619,15 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		protected void putAnnonation(Map<String, Object> map) {
+		protected void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column) {
 			if (!nullable)
-				map.put("nullable", java.lang.Boolean.FALSE);
+				column.put("nullable", java.lang.Boolean.FALSE);
 			String def = "number(" + precision + ")";
 			if (defaultValue != null) {
 				def = def + " default " + String.valueOf(defaultValue);
 			}
-			map.put("columnDefinition", def);
-			map.put("precision", precision);
+			column.put("columnDefinition", def);
+			column.put("precision", precision);
 		}
 
 		public int getPrecision() {
@@ -726,14 +743,15 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		protected void putAnnonation(Map<String, Object> map) {
+		protected void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column) {
 			if (!nullable)
-				map.put("nullable", java.lang.Boolean.FALSE);
+				column.put("nullable", java.lang.Boolean.FALSE);
 			String def = "date";
 			if (defaultValue != null) {
 				def = def + " default " + String.valueOf(defaultValue);
 			}
-			map.put("columnDefinition", def);
+			column.put("columnDefinition", def);
+			list.add(new AnnotationDesc(javax.persistence.Temporal.class).put("value", TemporalType.DATE));
 		}
 
 		@Override
@@ -746,7 +764,7 @@ public abstract class ColumnType {
 			if (fieldType == java.sql.Date.class) {
 				return new DateSDateMapping();
 			} else if (fieldType == LocalDate.class) {
-			    return new LocalDate_Date();
+				return new LocalDate_Date();
 			} else if (fieldType == java.util.Date.class || fieldType == Object.class) {
 				return new DateDateMapping();
 			} else if (fieldType == String.class) {
@@ -758,6 +776,11 @@ public abstract class ColumnType {
 		@Override
 		public int getSqlType() {
 			return Types.DATE;
+		}
+
+		@Override
+		protected boolean supportDefaultChange(DatabaseDialect profile) {
+			return profile.notHas(Feature.DATE_TIME_VALUE_WITHOUT_DEFAULT_FUNC);
 		}
 	}
 
@@ -779,14 +802,15 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		protected void putAnnonation(Map<String, Object> map) {
+		protected void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column) {
 			if (!nullable)
-				map.put("nullable", java.lang.Boolean.FALSE);
+				column.put("nullable", java.lang.Boolean.FALSE);
 			String def = "timestamp";
 			if (defaultValue != null) {
 				def = def + " default " + String.valueOf(defaultValue);
 			}
-			map.put("columnDefinition", def);
+			column.put("columnDefinition", def);
+			list.add(new AnnotationDesc(javax.persistence.Temporal.class).put("value", TemporalType.TIMESTAMP));
 		}
 
 		@Override
@@ -799,11 +823,11 @@ public abstract class ColumnType {
 			if (fieldType == java.sql.Timestamp.class) {
 				return new TimestampTsMapping();
 			} else if (fieldType == java.time.LocalDateTime.class) {
-			    return new LocalDateTime_TimeStamp();
+				return new LocalDateTime_TimeStamp();
 			} else if (fieldType == java.time.Instant.class) {
-			    return new Instant_DateTime();
+				return new Instant_DateTime();
 			} else if (fieldType == java.time.LocalTime.class) {
-			    return new LocalTime_TimeStamp();
+				return new LocalTime_TimeStamp();
 			} else if (fieldType == java.util.Date.class || fieldType == Object.class) {
 				return new TimestampDateMapping();
 			} else if (fieldType == java.lang.Long.class || fieldType == java.lang.Long.TYPE) {
@@ -825,6 +849,11 @@ public abstract class ColumnType {
 		public ColumnType setVersion(boolean flag) {
 			this.isVersion = flag;
 			return this;
+		}
+
+		@Override
+		protected boolean supportDefaultChange(DatabaseDialect profile) {
+			return profile.notHas(Feature.DATE_TIME_VALUE_WITHOUT_DEFAULT_FUNC);
 		}
 	}
 
@@ -882,10 +911,10 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		protected void putAnnonation(Map<String, Object> map) {
-			super.putAnnonation(map);
-			map.put("@Id", null);
-			map.put("@GeneratedValue", "strategy=GenerationType.SEQUENCE");
+		protected void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column) {
+			super.putAnnonation(list, column);
+			list.add(0, new AnnotationDesc(Id.class));
+			list.add(new AnnotationDesc(GeneratedValue.class).put("strategy", GenerationType.AUTO));
 		}
 
 		@Override
@@ -965,10 +994,10 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		protected void putAnnonation(Map<String, Object> map) {
-			super.putAnnonation(map);
-			map.put("@Id", null);
-			map.put("@GeneratedValue", "strategy=GenerationType.IDENTITY");
+		protected void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column) {
+			super.putAnnonation(list, column);
+			list.add(0, new AnnotationDesc(Id.class));
+			list.add(new AnnotationDesc(GeneratedValue.class).put("strategy", GenerationType.IDENTITY));
 		}
 
 		@Override
@@ -999,11 +1028,11 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		protected void putAnnonation(Map<String, Object> map) {
+		protected void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column) {
 			if (!nullable)
-				map.put("nullable", java.lang.Boolean.FALSE);
-			map.put("columnDefinition", "clob");
-			map.put("@Lob", null);
+				column.put("nullable", java.lang.Boolean.FALSE);
+			column.put("columnDefinition", "clob");
+			list.add(new AnnotationDesc(Lob.class));
 		}
 
 		@Override
@@ -1060,11 +1089,11 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		protected void putAnnonation(Map<String, Object> map) {
+		protected void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column) {
 			if (!nullable)
-				map.put("nullable", java.lang.Boolean.FALSE);
-			map.put("columnDefinition", "blob");
-			map.put("@Lob", null);
+				column.put("nullable", java.lang.Boolean.FALSE);
+			column.put("columnDefinition", "blob");
+			list.add(new AnnotationDesc(Lob.class));
 		}
 
 		@Override
@@ -1114,10 +1143,11 @@ public abstract class ColumnType {
 		}
 
 		@Override
-		protected void putAnnonation(Map<String, Object> map) {
+		protected void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column) {
+
 			if (!nullable)
-				map.put("nullable", java.lang.Boolean.FALSE);
-			map.put("columnDefinition", "xml");
+				column.put("nullable", java.lang.Boolean.FALSE);
+			column.put("columnDefinition", "xml");
 		}
 
 		@Override
@@ -1135,12 +1165,7 @@ public abstract class ColumnType {
 			return Types.SQLXML;
 		}
 	}
-    static String quotWith(String value) {
-        if(value.charAt(0)=='\'' && value.charAt(value.length()-1)=='\''){
-            return value;
-        }
-        return AColumnMapping.wrapSqlStr(value);
-    }
+
 
 	static ColumnChange createChange(ColumnType oldType, String rawType, ColumnType newType, DatabaseDialect profile) {
 		ColumnChange change = new ColumnChange(Change.CHG_DATATYPE);

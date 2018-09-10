@@ -66,6 +66,7 @@ import jef.common.log.LogUtil;
 import jef.jre5support.ProcessUtil;
 import jef.tools.TextFileCallback.Dealwith;
 import jef.tools.collection.CollectionUtils;
+import jef.tools.io.Charsets;
 import jef.tools.io.UnicodeReader;
 
 public class IOUtils {
@@ -690,8 +691,8 @@ public class IOUtils {
 	 * @param charset
 	 * @throws IOException
 	 */
-	public static void fromHexUnicodeString(File source, File target, String charset) throws IOException {
-		Reader r = getReader(source, null);
+	public static void fromHexUnicodeString(File source, File target, Charset charset) throws IOException {
+		Reader r = getReader(source, (Charset) null);
 		Writer w = getWriter(target, charset, false);
 		StringUtils.fromHexUnicodeString(r, w);
 		r.close();
@@ -1571,7 +1572,7 @@ public class IOUtils {
 	 * @throws IOException
 	 */
 	public static void saveAsFile(File file, Charset charset, Reader... readers) throws IOException {
-		BufferedWriter os = getWriter(file, charset == null ? null : charset.name(), false);
+		BufferedWriter os = getWriter(file, charset == null ? null : charset, false);
 		try {
 			for (Reader reader : readers) {
 				copy(reader, os, true, false, new char[2048]);
@@ -1590,7 +1591,7 @@ public class IOUtils {
 	 * @throws IOException
 	 */
 	public static void saveAsFile(File file, Charset charset, String... texts) throws IOException {
-		BufferedWriter os = getWriter(file, charset == null ? null : charset.name(), false);
+		BufferedWriter os = getWriter(file, charset == null ? null : charset, false);
 		try {
 			for (String text : texts) {
 				os.write(text);
@@ -2052,7 +2053,7 @@ public class IOUtils {
 	 * @throws IOException
 	 */
 	public static File processFile(File f, BinaryFileCallback call) throws IOException {
-		InputStream reader = (f instanceof URLFile) ? ((URLFile) f).getInputStream() : new FileInputStream(f);
+		InputStream reader = new FileInputStream(f);
 		FileOutputStream w = null;
 		File target = call.getTarget(f);
 		if (target != null) {
@@ -2112,10 +2113,10 @@ public class IOUtils {
 		if (!call.accept(f)) {
 			return null;
 		}
-		String sourceCharset = call.sourceCharset(f);
+		Charset sourceCharset = call.sourceCharset(f);
 		BufferedReader reader = getReader(f, sourceCharset);
 		call.sourceFile = f;
-		String charSet = call.targetCharset();
+		Charset charSet = call.targetCharset();
 		BufferedWriter w = null;
 		File target = call.getTarget(f);
 		if (target != null) {
@@ -2134,9 +2135,10 @@ public class IOUtils {
 			if (w != null) {
 				if (txt != null) {
 					w.write(txt);
-					if (call.wrapLine())
-						// w.newLine();
+					int newLines = call.wrapLine();
+					for (int li = 0; li < newLines; li++) {
 						w.write("\r\n");
+					}
 				}
 			}
 			if (call.breakProcess())
@@ -2212,7 +2214,7 @@ public class IOUtils {
 		if (file == null)
 			return null;
 		try {
-			UnicodeReader isr = new UnicodeReader(file.openStream(), charSet);
+			UnicodeReader isr = new UnicodeReader(file.openStream(), Charsets.forName(charSet));
 			return new BufferedReader(isr);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -2229,9 +2231,21 @@ public class IOUtils {
 	 * @throws IOException
 	 */
 	public static BufferedReader getReader(File file, String charSet) throws IOException {
+		return getReader(file, Charsets.forName(charSet));
+	}
+
+	/**
+	 * 返回Charset
+	 * 
+	 * @param file
+	 * @param charSet
+	 * @return
+	 * @throws IOException
+	 */
+	public static BufferedReader getReader(File file, Charset charSet) throws IOException {
 		if (file == null)
 			return null;
-		InputStream is = (file instanceof URLFile) ? ((URLFile) file).getInputStream() : new FileInputStream(file);
+		InputStream is = new FileInputStream(file);
 		return new BufferedReader(new UnicodeReader(is, charSet));
 	}
 
@@ -2246,7 +2260,7 @@ public class IOUtils {
 	public static BufferedReader getReader(InputStream is, String charSet) {
 		if (is == null)
 			return null;
-		UnicodeReader isr = new UnicodeReader(is, charSet);
+		UnicodeReader isr = new UnicodeReader(is, Charsets.forName(charSet));
 		return new BufferedReader(isr);
 	}
 
@@ -2268,7 +2282,7 @@ public class IOUtils {
 		}
 		if (is == null)
 			return null;
-		UnicodeReader isr = new UnicodeReader(is, charSet);
+		UnicodeReader isr = new UnicodeReader(is, Charsets.forName(charSet));
 		return new BufferedReader(isr);
 	}
 
@@ -2354,7 +2368,7 @@ public class IOUtils {
 	 */
 	public static BufferedInputStream getInputStream(File file) {
 		try {
-			return new BufferedInputStream((file instanceof URLFile) ? ((URLFile) file).getInputStream() : new FileInputStream(file));
+			return new BufferedInputStream(new FileInputStream(file));
 		} catch (IOException e) {
 			throw new IllegalArgumentException(e);
 		}
@@ -2369,12 +2383,12 @@ public class IOUtils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static BufferedWriter getWriter(File target, String charSet, boolean append) {
+	public static BufferedWriter getWriter(File target, Charset charSet, boolean append) {
 		ensureParentFolder(target);
 		try {
 			OutputStream os = new FileOutputStream(target, append);
 			if (charSet == null)
-				charSet = Charset.defaultCharset().name();
+				charSet = Charset.defaultCharset();
 			OutputStreamWriter osw = new OutputStreamWriter(os, charSet);
 			return new BufferedWriter(osw);
 		} catch (IOException e) {
@@ -2389,9 +2403,20 @@ public class IOUtils {
 	 * @param target
 	 * @param charSet
 	 * @return
-	 * @throws IOException
 	 */
 	public static BufferedWriter getWriter(File target, String charSet) {
+		return getWriter(target, Charsets.forName(charSet));
+	}
+
+	/**
+	 * 获得文本文件写入流
+	 * 
+	 * @param target
+	 * @param charSet
+	 * @return
+	 * @throws IOException
+	 */
+	public static BufferedWriter getWriter(File target, Charset charSet) {
 		return getWriter(target, charSet, false);
 	}
 
@@ -2402,16 +2427,12 @@ public class IOUtils {
 	 * @param charSet
 	 * @return
 	 */
-	public static BufferedWriter getWriter(OutputStream out, String charSet) {
+	public static BufferedWriter getWriter(OutputStream out, Charset charSet) {
 		if (charSet == null)
-			charSet = Charset.defaultCharset().name();
+			charSet = Charset.defaultCharset();
 		OutputStreamWriter osw;
-		try {
-			osw = new OutputStreamWriter(out, charSet);
-			return new BufferedWriter(osw);
-		} catch (UnsupportedEncodingException e) {
-			throw new IllegalArgumentException(e);
-		}
+		osw = new OutputStreamWriter(out, charSet);
+		return new BufferedWriter(osw);
 	}
 
 	/**
@@ -2578,7 +2599,7 @@ public class IOUtils {
 		if (!file.exists())
 			return null;
 		try {
-			return loadObject((file instanceof URLFile) ? ((URLFile) file).getInputStream() : new FileInputStream(file));
+			return loadObject(new FileInputStream(file));
 		} catch (IOException e) {
 			return null;
 		}
@@ -2730,7 +2751,7 @@ public class IOUtils {
 		byte[] first3Bytes = new byte[3];
 		try {
 			boolean checked = false;
-			BufferedInputStream bis = new BufferedInputStream((file instanceof URLFile) ? ((URLFile) file).getInputStream() : new FileInputStream(file));
+			BufferedInputStream bis = new BufferedInputStream(new FileInputStream(file));
 			bis.mark(0);
 			int read = bis.read(first3Bytes, 0, 3);
 			if (read == -1) {
@@ -3175,5 +3196,9 @@ public class IOUtils {
 		} finally {
 			closeQuietly(in);
 		}
+	}
+
+	public static BufferedReader getReader(File file) throws IOException {
+		return getReader(file, (Charset) null);
 	}
 }

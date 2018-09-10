@@ -17,50 +17,50 @@ import jef.database.wrapper.populator.ColumnMeta;
 import jef.database.wrapper.populator.IPopulator;
 import jef.tools.reflect.BeanWrapper;
 
-public class FieldPopulator implements IPopulator{
-	
+public class FieldPopulator implements IPopulator {
+
 	private String name;
 	private String columnName;
 	private ColumnDescription desc;
-	
-	public FieldPopulator(IReferenceColumn field,DatabaseDialect profile,String schema,ColumnMeta columns,BeanAccessor ba){
-		this.columnName=field.getResultAlias(schema, profile);
+
+	public FieldPopulator(IReferenceColumn field, DatabaseDialect profile, String schema, ColumnMeta columns, BeanAccessor ba) {
+		this.columnName = field.getResultAlias(schema, profile);
 		ColumnDescription desc = columns.getByUpperName(columnName);
 		if (desc == null) {
 			throw new PersistenceException("Column not in ResultSet:" + columnName + " all:" + columns);
 		}
-		
-	//	Assert.notNull(columnName);
+
+		// Assert.notNull(columnName);
 		this.name = field.getName();
-		
-		//计算元模型类型
+
+		// 计算元模型类型
 		ColumnMapping t = field.getTargetColumnType();
-		
-		//判断计算容器类型
-		String name=this.name;
+
+		// 判断计算容器类型
+		String name = this.name;
 		int n = name.indexOf('.');
 		BeanAccessor bw = ba;
 		while (n > -1) {
 			String thisName = name.substring(0, n);
 			name = name.substring(n + 1);
 			n = name.indexOf('.');
-			Class<?> type = bw.getPropertyType(thisName); //FIXME这里没有NestedObjectPopulator健壮
+			Class<?> type = bw.getPropertyType(thisName); // FIXME这里没有NestedObjectPopulator健壮
 			bw = FastBeanWrapperImpl.getAccessorFor(type);
 		}
-		Class<?> javaContainer=bw.getPropertyType(name);
+		Class<?> javaContainer = bw.getPropertyType(name);
 		desc.setAccessor(ColumnMappings.getAccessor(javaContainer, t, desc, true));
-		this.desc=desc;
+		this.desc = desc;
 	}
-	
+
 	public void process(BeanWrapper wrapper, IResultSet rs) throws SQLException {
-		String name=this.name;
+		String name = this.name;
 		int n = name.indexOf('.');
 		BeanWrapper bw = wrapper;
 		while (n > -1) {
 			String thisName = name.substring(0, n);
 			name = name.substring(n + 1);
 			n = name.indexOf('.');
-			Object bean = bw.getPropertyValue(thisName); //FIXME这里没有NestedObjectPopulator健壮
+			Object bean = bw.getPropertyValue(thisName); // FIXME这里没有NestedObjectPopulator健壮
 			bw = BeanWrapper.wrap(bean);
 		}
 		try {
@@ -69,7 +69,7 @@ public class FieldPopulator implements IPopulator{
 			LogUtil.exception("[" + columnName + "] is not found from the resultset.", s);
 			throw s;
 		}
-		
+
 	}
 
 }

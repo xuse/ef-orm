@@ -28,6 +28,7 @@ import jef.common.log.LogUtil;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
 import jef.tools.ResourceUtils;
+import jef.tools.io.Charsets;
 import jef.tools.resource.FileResource;
 import jef.tools.resource.Resource;
 
@@ -51,7 +52,7 @@ public class Configuration extends Cfg {
 			}
 		};
 		pFile = getFile(filePath,loader);
-		pFile.setCharset("UTF-8");
+		pFile.setCharset(Charsets.UTF8);
 		Assert.notNull(pFile);
 	}
 
@@ -61,7 +62,7 @@ public class Configuration extends Cfg {
 		}
 		cache = new HashMap<String,String>();
 		pFile = new FileResource(file);
-		pFile.setCharset("UTF-8");
+		pFile.setCharset(Charsets.UTF8);
 	}
 
 	protected void setInCache(String key,String value){

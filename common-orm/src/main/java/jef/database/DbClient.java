@@ -819,10 +819,6 @@ public class DbClient extends Session implements SessionFactory {
 		return conn;
 	}
 
-	protected void releaseConnection(IConnection conn) {
-		conn.close();
-	}
-
 	protected String getDbName(String dbKey) {
 		return connPool.getInfo(dbKey).getDbname();
 	}
@@ -1004,13 +1000,15 @@ public class DbClient extends Session implements SessionFactory {
 			LogUtil.exception(e);
 		}
 		this.sequenceManager.close();
-		try {
-			connPool.close();
-			JefFacade.unregisteEmf((DbClient) this);
-		} catch (SQLException e) {
-			throw DbUtils.toRuntimeException(e);
-		} finally {
-			connPool = null;
+		if(connPool!=null) {
+			try {
+				connPool.close();
+				JefFacade.unregisteEmf((DbClient) this);
+			} catch (SQLException e) {
+				throw DbUtils.toRuntimeException(e);
+			} finally {
+				connPool = null;
+			}	
 		}
 	}
 

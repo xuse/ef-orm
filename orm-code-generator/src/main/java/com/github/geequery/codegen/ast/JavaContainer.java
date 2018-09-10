@@ -1,11 +1,10 @@
 package com.github.geequery.codegen.ast;
 
-
-public class JavaContainer extends DefaultJavaElement implements JavaElement{
-	private boolean wrap= true;
+public class JavaContainer extends DefaultJavaElement implements JavaElement {
+	private boolean wrap = true;
 	private String begin;
 	private String end;
-	
+
 	public boolean isWrap() {
 		return wrap;
 	}
@@ -13,15 +12,15 @@ public class JavaContainer extends DefaultJavaElement implements JavaElement{
 	public void setWrap(boolean wrap) {
 		this.wrap = wrap;
 	}
-	
-	public JavaContainer(){
+
+	public JavaContainer() {
 	}
 
-	public JavaContainer(String begin,String end){
-		this.begin=begin;
-		this.end=end;
+	public JavaContainer(String begin, String end) {
+		this.begin = begin;
+		this.end = end;
 	}
-	
+
 	public String getBegin() {
 		return begin;
 	}
@@ -39,20 +38,20 @@ public class JavaContainer extends DefaultJavaElement implements JavaElement{
 	}
 
 	public String toCode(JavaUnit main) {
-		StringBuilder sb=new StringBuilder();
+		StringBuilder sb = new StringBuilder();
 		sb.append(generateComments());
-		if (this.getAnnotation()!=null) {
-			for (String a : annotation) {
-				if (a != null && a.length() > 0){
-					sb.append(a).append("\r\n\t");
-				}
+		for (String a : annotations) {
+			if (a != null && a.length() > 0) {
+				sb.append(a).append("\r\n\t");
 			}
 		}
 		sb.append(begin);
-		if(wrap)sb.append("\r\n");
-		super.appendContent(sb, main,wrap);
+		if (wrap)
+			sb.append("\r\n");
+		super.appendContent(sb, main, wrap);
 		sb.append(end);
-		if(wrap)sb.append("\r\n");
+		if (wrap)
+			sb.append("\r\n");
 		return sb.toString();
 	}
 }

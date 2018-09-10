@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Map;
 
 import javax.persistence.Column;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -57,7 +59,13 @@ public class TestEntity extends jef.database.DataObject {
     private YearMonth joda5a;
     private BigDecimal superBig;
     
-
+    @Enumerated(EnumType.ORDINAL)
+    private Thread.State state1;
+    
+    @Enumerated(EnumType.STRING)
+    private Thread.State state2;
+    
+    
     @Lob
     private byte[] binaryData;
 
@@ -308,11 +316,27 @@ public class TestEntity extends jef.database.DataObject {
 		this.superBig = superBig;
 	}
 
+	public Thread.State getState1() {
+		return state1;
+	}
+
+	public void setState1(Thread.State state1) {
+		this.state1 = state1;
+	}
+
+	public Thread.State getState2() {
+		return state2;
+	}
+
+	public void setState2(Thread.State state2) {
+		this.state2 = state2;
+	}
+
 
 
 	public enum Field implements jef.database.Field {
 
         field1, field2, dateField, binaryData, boolField, boolField2, intFiled, intField2, longField, longField2, doubleField, doubleField2, floatField, folatField2, createTime, joda1, joda2, joda3, joda4, joda5,
-        joda3a,joda4a,joda5a,superBig
+        joda3a,joda4a,joda5a,superBig,state1,state2
     }
 }

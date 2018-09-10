@@ -257,7 +257,7 @@ public class DynamicExtendsTest extends org.junit.Assert{
 		meta = new TupleMetadata("电视机");
 		meta.addColumn("pixel", new ColumnType.Varchar(20));
 		meta.addColumn("brand", new ColumnType.Varchar(40));
-		meta.addColumn("color", new ColumnType.Boolean().defaultIs(true));
+		meta.addColumn("color", new ColumnType.Boolean().setDefault(true));
 		MetaHolder.putDynamicMeta(meta);
 
 		meta = new TupleMetadata("计算机");

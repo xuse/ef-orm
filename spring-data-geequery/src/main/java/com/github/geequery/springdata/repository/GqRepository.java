@@ -20,22 +20,26 @@ import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
-import javax.persistence.NonUniqueResultException;
-
-import jef.database.NamedQueryConfig;
-import jef.database.NativeQuery;
-import jef.database.query.ConditionQuery;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.query.QueryByExampleExecutor;
 
+import com.github.geequery.extension.querydsl.QueryDSLTables;
+import com.github.geequery.extension.querydsl.SQLQueryFactoryEx;
 import com.github.geequery.springdata.annotation.Query;
 import com.github.geequery.springdata.repository.support.Update;
-import com.querydsl.sql.SQLQuery;
+import com.querydsl.core.NonUniqueResultException;
+import com.querydsl.sql.SQLQueryFactory;
+
+import jef.database.NamedQueryConfig;
+import jef.database.NativeQuery;
+import jef.database.query.ConditionQuery;
 
 /**
  * GQ specific extension of
@@ -45,7 +49,7 @@ import com.querydsl.sql.SQLQuery;
  * @author Jiyi
  */
 @NoRepositoryBean
-public interface GqRepository<T, ID extends Serializable> extends PagingAndSortingRepository<T, ID>, QueryByExampleExecutor<T> {
+public interface GqRepository<T, ID extends Serializable> extends PagingAndSortingRepository<T, ID>, QueryByExampleExecutor<T>,QuerydslPredicateExecutor<T> {
     /**
      * Deletes the given entities in a batch which means it will create a single
      * {@link Query}. Assume that we will clear the
@@ -288,12 +292,25 @@ public interface GqRepository<T, ID extends Serializable> extends PagingAndSorti
     List<T> batchLoadByField(String field, List<? extends Serializable> values);
     
     /**
-     * 获得一个QueryDSL查询对象
-     * @return SQLQuery
-     * @see SQLQuery
+     * 获得一个QueryDSL查询SQLQueryFactory。<br>
+     * 在QueryDSL中，需要使用GeeQuery的对象模型时，可以使用 {@link QueryDSLTables#table(Class)}方法
+     * @return SQLQueryFactoryEx
+     * @see SQLQueryFactoryEx
+     * @see QueryDSLTables
+     * 
      */
-    SQLQuery sql();
+    SQLQueryFactoryEx sqlFactoryEx();
     
+    /**
+     * 获得一个QueryDSL查询SQLQueryFactory
+     * <br>
+     * 在QueryDSL中，需要使用GeeQuery的对象模型时，可以使用 {@link QueryDSLTables#table(Class)}方法
+     * @return SQLQueryFactory
+     * @see SQLQueryFactory
+     * @see QueryDSLTables
+     */
+    SQLQueryFactory sqlFactory();
+  
 
 	/**
 	 * Returns a single entity matching the given {@link ConditionQuery}.

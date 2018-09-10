@@ -10,7 +10,7 @@ GeeQuery使用手册——Chapter-2  入门 Getting started
 
 ## 2.1.  第一个案例
 
-### 2.1.1.  Install plug-in for Eclipse
+### 2.1.1.  Install plug-in for Eclipse (非必须)
 
 请先安装EF-ORM foreclipse插件。
 
@@ -322,7 +322,7 @@ H框架中也有增强，以前H框架总是要依赖一个CGlib，现在则是�
 
 和H框架在运行时动态执行增强不同，EF-ORM为了更好的性能，直接使用ASM(以前也用过Javassist)直接对磁盘上的静态类做增强。我们分三种情况描述EF-ORM是如何让增强操作不再困扰您的。
 
-#### 2.2.3.1.  使用Maven构建时  
+#### 2.2.3.1.  Maven构建时静态增强  
 
 可以配置Maven-Plugin，使其在编译完后自动扫描编译路径并执行增强操作。jef-maven-plugin-1.9.0.RELEASE.jar在之前的下载包中可以下载到。
 
@@ -330,7 +330,7 @@ H框架中也有增强，以前H框架总是要依赖一个CGlib，现在则是�
 <plugin>
 	<groupId>jef</groupId>
 	<artifactId>jef-maven-plugin</artifactId>
-	<version>1.9.0.RELEASE</version>
+	<version>${geequery.version}</version>
 	<executions>
 		<execution>
 			<goals>
@@ -341,7 +341,7 @@ H框架中也有增强，以前H框架总是要依赖一个CGlib，现在则是�
 </plugin>
 ~~~
 
-#### 2.2.3.2.  在开发调试时  
+#### 2.2.3.2.  Java Instrument动态增强  
 
 JEF插件可以支持在开发时动态增强实体，其原理和前面的三种方式不同，是动态的。通过使用Java-Instrument技术，在类加载时自动增强类。
 
@@ -378,9 +378,25 @@ JEF插件可以支持在开发时动态增强实体，其原理和前面的三�
 new EntityEnhancer().enhance("org.easyframe.tutorial");   //参数是要增强的类的包名。可传入多个。
 ```
 
+​    大部分情况下，应用测试会使用Spring框架来构造应用上下文，可以在扫描类文件的时候增强这些类文件。如下例所示，被扫描到的类文件同时即被增强——不过这种方式只能增强那些没有打入jar包的文件。对于已经被打包文件则无能为力，因此主要还是在单元测试场景下使用。
+
+```java
+@Bean 
+public EntityManagerFactory emf(){
+	SessionFactoryBean factoryBean = new SessionFactoryBean();
+	factoryBean.setDataSource(new SimpleDataSource(jdbcUrl, jdbcUser, jdbcPassword))
+				.setPackagesToScan(new String[] {"com.github.geequery.codegen.entity"})
+				.setEnhanceScanPackages(true)
+				.setDebug(true);
+		return factoryBean.getObject();
+}
+```
+
+> 本节方法的局限性： 本节介绍的方式，在应用程序运行开始的阶段完成增强操作，但是这种方法有局限性。如果使用IDE的调试工具，一边修改代码一边调试，此时修改后的类会被即时编译后通过虚拟机调试接口重新加载。这些被修改过的类将无法被增强。因此，如果在调试过程中修改了实体类，您最好重新启动应用程序。
+>
+> 相应的，使用 Java Instrument则没有此问题。
 
 
-**上述三种场景下，EF-ORM都提供了相应的增强操作支持。**除了Eclipse中运行单元测试外，你都无需去关注增强操作的存在。
 
 #### 2.2.3.4.  手工增强  
 
@@ -415,30 +431,95 @@ enhanced class:org.easyframe.tutorial.lesson1.entity.Foo2
 
 ### 2.3.1.  从数据库创建实体
 
-先选中我们要生成映射类的包。右键上下文菜单中有“Generate JEF Entity from Database“.
+在1.12.3.RELEASE之前，都是使用Eclipse插件从数据库中逆向生成实体的。使用Eclipse插件的方法有以下问题
 
- ![2.3.1-1](images/2.3.1-1.png)
+* 插件中需要集成各个数据库的驱动，插件体积过大。版本兼容性差。
+* 由于驱动集成在插件中，因此对于一些冷门的数据库版本没有支持。
+* 仅能在Eclipse中使用，对IntelliJ IDEA不友好。
 
- ![2.3.1-2](images/2.3.1-2.png)
 
-点确定后，出现检测到的数据库表名称，选择其中要映射的表。最后点击‘确定‘。
+因上述原因，从1.12.3.RELEASE开始，优先使用Maven插件生成实体。
 
-~~~
-jdbc:oracle:thin:@10.10.12.31:1521:pocdb
-   Generating Class for table:ACCP_STAT_MONTH_ADJUST....
-   Generating Class for table:ACCP_TOPUP_BOOK....
-   Generating Class for table:ACCP_TOPUP_FREE_RES....
-~~~
+在pom.xml中增加
 
-正常情况下EF-ORM生成的实体会自动判断数据库主键和主键生成策略。但不会对外键和多表关联操作进行生成，要使用级联功能，您需要按第四章进行操作。 
+	<plugins>
+	...
+			<plugin>
+				<groupId>com.github.geequery</groupId>
+				<artifactId>geequery-maven-plugin</artifactId>
+				<version>1.12.3.RELEASE</version>
+				<executions><execution>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+				</execution></executions>
+				<configuration>
+					<jdbcUrl>jdbc:mysql://host:3306/test</jdbcUrl>
+					<jdbcUser>my_username</jdbcUser>
+					<jdbcPassword>your_password</jdbcPassword>
+					<packageName>com.github.geequery.entity</packageName>
+					<targetFolder>${project.basedir}/target/generated-sources</targetFolder>
+				</configuration>
+				<!-- 此处配置你所用的数据库驱动，以MySQL为例-->
+				<dependencies>
+					<dependency>
+						<groupId>mysql</groupId>
+						<artifactId>mysql-connector-java</artifactId>
+						<version>5.1.42</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+当Maven构建时，会自动生成实体类。目前类型映射配置方面还很少，后续会逐渐增加类型映射配置。
 
-### 2.3.2.  从PDM文件导入实体  
+如果你需要立即生成实体类。可以使用maven命令——
 
-先选中我们要生成映射类的包。右键上下文菜单中有“Generate JEF Entity from PDM“.
+```
+mvn generate-sources
+```
 
- ![2.3.2-1](images/2.3.2-1.png)
+### 2.3.2 使用代码生成实体
 
-然后按提示步骤操作即可。
+参见下面示例。
+
+```java
+String jdbcUrl = "jdbc:mysql://host:3306/test?useUnicode=true&characterEncoding=UTF-8";
+	String jdbcUser = "user1";
+	String jdbcPassword = "password2";
+	final DbClient db = new DbClient(new SimpleDataSource(jdbcUrl, jdbcUser, jdbcPassword));
+
+	EntityGenerator g = new EntityGenerator();
+	g.setProfile(db.getProfile(null));
+	g.addExcludePatter(".*_\\d+$"); // 防止出现分表生成类
+	g.setMaxTables(999);
+	g.setSrcFolder(new File(System.getProperty("user.dir"), "target/generated-sources"));
+	g.setBasePackage("com.github.geequery.codegen.entity");
+	g.setProvider(new DbClientProvider(db));
+	g.generateSchema();
+	db.shutdown();
+```
+### 2.3.3.  从PDM文件导入实体  
+
+参见下面示例
+
+```java
+	@Test
+	public void testPDMGenerateSource() throws Exception {
+		String dbType="postgresql";
+		File file=new File("C:\\myfile.pdm");
+		
+		EntityGenerator g = new EntityGenerator();
+		g.setProfile(AbstractDialect.getDialect(dbType));
+		g.setProvider(new PDMProvider(file));
+		g.setMaxTables(999);
+		g.setSrcFolder(new File(System.getProperty("user.dir"), "target/generated-sources"));
+		g.setBasePackage("com.github.geequery.codegen.entity");
+		g.generateSchema();
+	}
+```
+
+
+
+
 
 一个自动生成的实体可能如下所示：正常情况下所有的主键、表名、字段长度定义都已经以Annotation的形式标注出来。这意味着你可以用这个实体直接进行表的操作了。
 
@@ -446,7 +527,7 @@ jdbc:oracle:thin:@10.10.12.31:1521:pocdb
 
 自动生成的实体中，关于自增主键的生成规则‘GeneratedValue’还有各种多表关系一般需要手工调整，手工修改JPA注解等介绍参见后文。
 
-### 2.3.3.  手工编辑和常用JPA Annotation
+### 2.3.3.  常用JPA Annotation
 
 #### 2.3.3.1.  注解的使用  
 
@@ -470,9 +551,6 @@ import jef.database.DataObject;
 
 @Entity
 @Table(schema = "ad", name = "ca_asset")  //这里定义表所在的schema和名称，schema可不写
-@Indexes(
-	@Index(name = "IDX_DATE_TYPE", definition = "unique", fields = { "thedate", "assetType" })
-)
 public class CaAsset extends DataObject {
 	/**
 	 * Asset ID
@@ -522,6 +600,7 @@ public class CaAsset extends DataObject {
 	//理解为整数部分最多12位的同学都去面壁！
 	private double price;
 	
+    @#
 	@Column(name = "VALID_DATE",columnDefinition="Date")
 	//注意，这里定义为Date时，精度为年月日，不含时分秒。定义为Timestamp时，精度到时分秒乃至毫秒。
 	//操作Oracle数据库也遵守相同的规律。

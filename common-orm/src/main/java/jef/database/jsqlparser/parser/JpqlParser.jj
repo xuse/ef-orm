@@ -207,9 +207,10 @@ TOKEN: /* SQL Keywords. prefixed with K_ to avoid name clashes */
 
 TOKEN : /* Numeric Constants */
 {
-	< S_DOUBLE: ((<S_INTEGER>)? "." <S_INTEGER> ( ["e","E"] ([ "-","+"])? <S_INTEGER> )? 
+	< S_DOUBLE: (
+	  			(["-","+"])? (<S_INTEGER>)? "." <S_INTEGER> ( ["e","E"] ([ "-","+"])? <S_INTEGER> )? 
 				|
-				(<S_INTEGER>)+ (".")? ["e","E"] ([ "-","+"])? (<S_INTEGER>)+
+				(["-","+"])? (<S_INTEGER>)+ (".")? ["e","E"] ([ "-","+"])? (<S_INTEGER>)+
 				)>
   | 	< S_INTEGER: ( <DIGIT> )+ >
   | 	< #DIGIT: ["0" - "9"] >
@@ -1423,7 +1424,6 @@ Expression PrimaryExpression():
 	Expression retval = null;
 	Token token = null;
 	boolean isInverse = false;
-	String tmp = "";
 }
 {
 
@@ -1437,9 +1437,9 @@ Expression PrimaryExpression():
 
 	| LOOKAHEAD([ "+" | "-"] Function()) [ "+" | "-" { isInverse = true; }] retval=Function() 
 	
-	| LOOKAHEAD([	"+" | "-"] <S_DOUBLE>) 	[	"+" | "-" { tmp = "-"; }]  token=<S_DOUBLE> { retval = new DoubleValue(tmp+token.image); }
+	| LOOKAHEAD(<S_DOUBLE>)  token=<S_DOUBLE> { retval = new DoubleValue(token.image); }
 	
-	| LOOKAHEAD([	"+" | "-"] <S_INTEGER>)  	[	"+" | "-" { tmp = "-"; }]  token=<S_INTEGER> { retval = new LongValue(tmp+token.image); }
+	| LOOKAHEAD(["+" | "-"] <S_INTEGER>)  	[	"+" | "-"  { isInverse = true; }]  token=<S_INTEGER> { retval = new LongValue(token.image,isInverse); }
 
 	| LOOKAHEAD(2) 	[ "+" | "-" { isInverse = true; }] retval=ColumnOrFunc()
 
@@ -1797,6 +1797,7 @@ String CreateParameter():
 {
 	String retval = null;
 	Token tk = null;
+	String tmp = "";
 }
 {
 		(
@@ -1810,7 +1811,8 @@ String CreateParameter():
 			|
 			tk=<S_CHAR_LITERAL> { retval = tk.image; } 
 			|
-			tk=<S_INTEGER> { retval = tk.image; } 
+			(			 ["+"|"-" { tmp="-";}] tk=<S_INTEGER> { retval = tmp + tk.image; }
+			) 
 			|
 			tk=<S_DOUBLE> { retval = tk.image; } 
 			|
@@ -1823,13 +1825,13 @@ String CreateParameter():
 
 String AList():
 {
-	StringBuffer retval = new StringBuffer("(");
+	StringBuilder retval = new StringBuilder("(");
 	Token tk = null;
 }
 {
 	 "(" 
 	 
-	 ( (tk=<S_INTEGER> | tk=<S_DOUBLE> | tk=<S_CHAR_LITERAL> | tk=<S_IDENTIFIER>) { retval.append(tk.image); } ["," {retval.append(",");}] )*    
+	 ( ((["+"|"-" {retval.append('-');}] tk=<S_INTEGER>) | tk=<S_DOUBLE> | tk=<S_CHAR_LITERAL> | tk=<S_IDENTIFIER>) { retval.append(tk.image); } ["," {retval.append(",");}] )*    
 	 
 	")"
 	{

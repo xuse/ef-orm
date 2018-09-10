@@ -17,35 +17,18 @@ package com.github.geequery.codegen;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 import javax.persistence.Table;
-
-import jef.codegen.support.OverWrittenMode;
-import jef.codegen.support.RegexpNameFilter;
-import jef.common.log.LogUtil;
-import jef.database.DataObject;
-import jef.database.DbUtils;
-import jef.database.annotation.PartitionKey;
-import jef.database.annotation.PartitionTable;
-import jef.database.dialect.AbstractDialect;
-import jef.database.dialect.ColumnType;
-import jef.database.dialect.ColumnType.AutoIncrement;
-import jef.database.dialect.ColumnType.GUID;
-import jef.database.dialect.ColumnType.Varchar;
-import jef.database.dialect.DatabaseDialect;
-import jef.database.meta.object.Column;
-import jef.database.meta.object.TableInfo;
-import jef.database.routing.function.KeyFunction;
-import jef.http.client.support.CommentEntry;
-import jef.tools.ArrayUtils;
-import jef.tools.Assert;
-import jef.tools.StringUtils;
 
 import com.github.geequery.codegen.Metadata.ColumnEx;
 import com.github.geequery.codegen.ast.JavaAnnotation;
@@ -53,6 +36,33 @@ import com.github.geequery.codegen.ast.JavaConstructor;
 import com.github.geequery.codegen.ast.JavaContainer;
 import com.github.geequery.codegen.ast.JavaField;
 import com.github.geequery.codegen.ast.JavaUnit;
+import com.github.geequery.orm.annotation.Comment;
+
+import jef.codegen.support.OverWrittenMode;
+import jef.codegen.support.RegexpNameFilter;
+import jef.common.log.LogUtil;
+import jef.database.DataObject;
+import jef.database.DbUtils;
+import jef.database.annotation.Indexed;
+import jef.database.annotation.PartitionKey;
+import jef.database.annotation.PartitionTable;
+import jef.database.dialect.AbstractDialect;
+import jef.database.dialect.AnnotationDesc;
+import jef.database.dialect.ColumnType;
+import jef.database.dialect.ColumnType.AutoIncrement;
+import jef.database.dialect.ColumnType.GUID;
+import jef.database.dialect.ColumnType.Varchar;
+import jef.database.dialect.DatabaseDialect;
+import jef.database.meta.object.Column;
+import jef.database.meta.object.Index;
+import jef.database.meta.object.Index.IndexItem;
+import jef.database.meta.object.TableInfo;
+import jef.database.routing.function.KeyFunction;
+import jef.http.client.support.CommentEntry;
+import jef.tools.ArrayUtils;
+import jef.tools.Assert;
+import jef.tools.StringUtils;
+import jef.tools.io.Charsets;
 
 /**
  * 从数据库表生成JEF的Entity类 指定数据库表，自动生成表对应的DataObject.
@@ -60,337 +70,368 @@ import com.github.geequery.codegen.ast.JavaUnit;
  * @author Administrator
  */
 public class EntityGenerator {
-    private String basePackage = "jef.generated.dataobject";
-    private DatabaseDialect profile;
-    private String entityBaseClass = DataObject.class.getName();
+	private String basePackage = "jef.generated.dataobject";
+	private DatabaseDialect profile;
+	private String entityBaseClass = DataObject.class.getName();
 
-    private MetaProvider provider;
-    private File srcFolder = new File("src1");
-    private String includePattern;
-    private String[] excludePatter;
-    private int maxTables = 900;
-    private EntityProcessorCallback callback;
+	private MetaProvider provider;
+	private File srcFolder = new File("src1");
+	private String includePattern;
+	private String[] excludePatter;
+	private int maxTables = 900;
+	private EntityProcessorCallback callback;
 
-    public File generateOne(String tablename, String entityName, String tableComment) throws SQLException {
-        File file = this.saveJavaSource(generateSource(tablename, entityName, tableComment));
-        LogUtil.show(file.getAbsolutePath() + " generated.");
-        return file;
-    }
+	public File generateOne(String tablename, String entityName, String tableComment) throws SQLException {
+		File file = this.saveJavaSource(generateSource(tablename, entityName, tableComment));
+		LogUtil.show(file.getAbsolutePath() + " generated.");
+		return file;
+	}
 
-    public String getEntityBaseClass() {
-        return entityBaseClass;
-    }
+	public String getEntityBaseClass() {
+		return entityBaseClass;
+	}
 
-    public void setEntityBaseClass(String entityBaseClass) {
-        this.entityBaseClass = entityBaseClass;
-    }
+	public void setEntityBaseClass(String entityBaseClass) {
+		this.entityBaseClass = entityBaseClass;
+	}
 
-    public JavaUnit generateSource(String tablename, String entityName, String tableComment) throws SQLException {
-        if (profile == null) {
-            LogUtil.warn("Db dialect not set,default dialect set to Oracle.");
-            profile = AbstractDialect.getDialect("oracle");
-        }
-        tablename = profile.getObjectNameToUse(tablename);
-        // System.out.println("   Generating Class for table:"+tablename+"....");
-        if (entityName == null)
-            entityName = DbUtils.underlineToUpper(tablename, true);
-        JavaUnit java = new JavaUnit(basePackage, entityName);
-        java.addComments("This class was generated by JEF according to the table in database.");
-        java.addComments("You need to modify the type of primary key field, to the strategy your own.");
-        if (StringUtils.isNotEmpty(tableComment)) {
-            java.addComments("Table:" + tableComment);
-        }
-        JavaAnnotation anno = new JavaAnnotation(Table.class);
-        anno.put("name", tablename);
-        String schema = provider.getSchema();
-        if (StringUtils.isNotEmpty(schema)) {
-            anno.put("schema", schema);
-        }
-        java.setAnnotation("@Entity", anno.toCode(java));
+	public JavaUnit generateSource(String tablename, String entityName, String tableComment) throws SQLException {
+		if (profile == null) {
+			LogUtil.warn("Db dialect not set,default dialect set to Oracle.");
+			profile = AbstractDialect.getDialect("oracle");
+		}
+		tablename = profile.getObjectNameToUse(tablename);
+		// System.out.println(" Generating Class for table:"+tablename+"....");
+		if (entityName == null)
+			entityName = DbUtils.underlineToUpper(tablename, true);
+		final JavaUnit java = new JavaUnit(basePackage, entityName);
+		java.addComments("This class was generated by JEF according to the table in database.");
+		java.addComments("You need to modify the type of primary key field, to the strategy your own.");
+		JavaAnnotation tableAnnotation = new JavaAnnotation(Table.class);
+		tableAnnotation.put("name", tablename);
+		String schema = provider.getSchema();
+		if (StringUtils.isNotEmpty(schema)) {
+			tableAnnotation.put("schema", schema);
+		}
 
-        Metadata meta = provider.getTableMetadata(tablename);
-        if (meta.getCustParams() != null && meta.getCustParams().get("custAnnot") != null) {
-            String _tmpCustAnnot = meta.getCustParams().get("custAnnot");
-            java.addAnnotation(_tmpCustAnnot);
+		JavaAnnotation comment = new JavaAnnotation(Comment.class);
+		if (StringUtils.isNotEmpty(tableComment)) {
+			comment.put("value", "Table:" + tableComment);
+		} else {
+			comment.put("value", "");
+		}
+		java.setAnnotations("@Entity", comment.toCode(java));
 
-            if (_tmpCustAnnot.indexOf("PartitionTable") >= 0) {
-                java.addImport(PartitionTable.class);
-                java.addImport(PartitionKey.class);
-            }
-            if (_tmpCustAnnot.indexOf("KeyFunction") >= 0) {
-                java.addImport(KeyFunction.class);
-            }
-        }
+		Metadata meta = provider.getTableMetadata(tablename);
+		if (meta.getCustParams() != null && meta.getCustParams().get("custAnnot") != null) {
+			String _tmpCustAnnot = meta.getCustParams().get("custAnnot");
+			java.addAnnotation(_tmpCustAnnot);
 
-        java.setExtends(entityBaseClass);
-        Map<String, String> pkColumns = meta.getPkFieldAndColumnNames();
-        if (pkColumns.size() > 0) {
-            java.addImport(javax.persistence.Id.class);
-        }
+			if (_tmpCustAnnot.indexOf("PartitionTable") >= 0) {
+				java.addImport(PartitionTable.class);
+				java.addImport(PartitionKey.class);
+			}
+			if (_tmpCustAnnot.indexOf("KeyFunction") >= 0) {
+				java.addImport(KeyFunction.class);
+			}
+		}
 
-        if (callback != null) {
-            callback.init(meta, tablename, provider.getSchema(), tableComment, java);
-        }
-        // 生成元模型
-        JavaContainer enumField = new JavaContainer("   public enum Field implements jef.database.Field{", "}");
-        enumField.setWrap(false);
-        java.addRawBlock(enumField);
+		java.setExtends(entityBaseClass);
+		final Map<String, String> pkColumns = meta.getPkFieldAndColumnNames();
 
-        // 生成用于元模型的字段配置
-        List<JavaField> pkFields = new ArrayList<JavaField>();
+		if (callback != null) {
+			callback.init(meta, tablename, provider.getSchema(), tableComment, java);
+		}
+		// 生成元模型
+		final JavaContainer enumField = new JavaContainer("   public enum Field implements jef.database.Field{", "}");
+		enumField.setWrap(false);
+		java.addRawBlock(enumField);
 
-        for (Column c : meta.getColumns()) {
-            String columnName = c.getColumnName();
-            boolean isPk = pkColumns.containsValue(columnName);
-            ColumnType columnType;
-            try {
-                columnType = c.toColumnType(profile);
-            } catch (Exception e) {
-                throw new RuntimeException("The column [" + tablename + ":" + columnName + "] 's type is error:" + e.getMessage());
-            }
+		// 生成用于元模型的字段配置
+		Collection<Index> indexes = meta.getIndexesWihoutPKIndex();
+		final List<JavaField> pkFields = new ArrayList<JavaField>();
+		for (Column c : meta.getColumns()) {
+			generateColumn(pkColumns, c, tablename, java, enumField, pkFields, indexes);
+		}
+		// 处理Index
+		List<JavaAnnotation> indexAnnos = new ArrayList<>();
+		for (Index i : indexes) {
+			JavaAnnotation anno = new JavaAnnotation(javax.persistence.Index.class);
+			anno.put("columnList", StringUtils.join(i.getColumnNamesWithOrder(), ','));
+			anno.put("unique", i.isUnique());
+			indexAnnos.add(anno);
+		}
+		if (!indexAnnos.isEmpty()) {
+			tableAnnotation.put("indexes", indexAnnos);
+		}
+		// 将@Table加上
+		java.addAnnotation(tableAnnotation.toCode(java));
 
-            if (!isPk) {// 不是主键时，错误的配置要还原
-                if (columnType.getClass() == ColumnType.AutoIncrement.class) {
-                    columnType = ((AutoIncrement) columnType).toNormalType();
-                } else if (columnType.getClass() == ColumnType.GUID.class) {
-                    columnType = ((GUID) columnType).toNormalType();
-                }
-            }
-            if (pkColumns.size() == 1 && isPk) { // 如果是单一主键，则修改为特定的JEF字段类型
-                if (columnType.getClass() == ColumnType.Int.class) {
-                    if (c.getColumnSize() == 0)
-                        c.setColumnSize(8);
-                    columnType = new ColumnType.AutoIncrement(c.getColumnSize());
-                } else if (columnType.getClass() == ColumnType.Varchar.class) {
-                    if (((Varchar) columnType).getLength() >= 32) {
-                        columnType = new ColumnType.GUID();
-                    }
-                }
-                columnType.setNullable(false); // 主键列不允许为空
-            }
-            String[] annonation = getFieldAnnotation(java, columnName, columnType, isPk, c);
-            String initValue = null;
-            Class<?> clz = null;
-            String fieldName;
-            if (c instanceof ColumnEx) {
-                fieldName = ((ColumnEx) c).getFieldName();
-                clz = ((ColumnEx) c).getJavaType();
-                initValue = ((ColumnEx) c).getInitValue();
-            } else {
-                fieldName = columnToField(columnName);
-            }
+		java.addImport(javax.persistence.Column.class);
+		java.addImport(javax.persistence.Entity.class);
 
-            if (clz == null)
-                clz = columnType.getDefaultJavaType();
-            JavaField field = new JavaField(clz, fieldName);
-            field.setModifiers(Modifier.PRIVATE);
-            field.addAnnotation(annonation);
-            field.addComments(StringUtils.trimToNull(c.getRemarks()));
-            if (initValue != null)
-                field.setInitValue(initValue);
+		// 生成默认的构造器和主键构造器
+		JavaConstructor c1 = new JavaConstructor();
+		java.addMethod(c1.getKey(), c1);
+		if (!pkFields.isEmpty()) {
+			JavaConstructor c2 = new JavaConstructor();
+			for (JavaField field : pkFields) {
+				c2.addparam(field.getType(), field.getName(), 0);
+				c2.addContent(StringUtils.concat("this.", field.getName(), " = ", field.getName(), ";"));
+			}
+			java.addMethod(c2.getKey(), c2);
+		}
+		if (callback != null) {
+			callback.finish(java);
+		}
+		return java;
+	}
 
-            java.addFieldWithGetterAndSetter(field);
-            if (isPk)
-                pkFields.add(field);
+	private void generateColumn(final Map<String, String> pkColumns, final Column c, final String tablename, final JavaUnit java, final JavaContainer enumField, final List<JavaField> pkFields, final Collection<Index> index) {
 
-            if (enumField.contentSize() > 0) {
-                enumField.addContent("," + field.getName());
-            } else {
-                enumField.addContent(field.getName());
-            }
-            if (callback != null) {
-                callback.addField(java, field, c, columnType);
-            }
-        }
-        java.addImport(javax.persistence.Column.class);
-        java.addImport(javax.persistence.Entity.class);
+		String columnName = c.getColumnName();
+		boolean isPk = pkColumns.containsValue(columnName);
+		ColumnType columnType;
+		try {
+			columnType = c.toColumnType(profile);
+		} catch (Exception e) {
+			throw new RuntimeException("The column [" + tablename + ":" + columnName + "] 's type is error:" + e.getMessage());
+		}
 
-        // 生成默认的构造器和主键构造器
-        JavaConstructor c1 = new JavaConstructor();
-        java.addMethod(c1.getKey(), c1);
-        if (!pkFields.isEmpty()) {
-            JavaConstructor c2 = new JavaConstructor();
-            for (JavaField field : pkFields) {
-                c2.addparam(field.getType(), field.getName(), 0);
-                c2.addContent(StringUtils.concat("this.", field.getName(), " = ", field.getName(), ";"));
-            }
-            java.addMethod(c2.getKey(), c2);
-        }
-        if (callback != null) {
-            callback.finish(java);
-        }
-        return java;
-    }
+		if (!isPk) {// 不是主键时，错误的配置要还原
+			if (columnType.getClass() == ColumnType.AutoIncrement.class) {
+				columnType = ((AutoIncrement) columnType).toNormalType();
+			} else if (columnType.getClass() == ColumnType.GUID.class) {
+				columnType = ((GUID) columnType).toNormalType();
+			}
+		}
+		if (pkColumns.size() == 1 && isPk) { // 如果是单一主键，则修改为特定的JEF字段类型
+			if (columnType.getClass() == ColumnType.Int.class) {
+				if (c.getColumnSize() == 0)
+					c.setColumnSize(8);
+				columnType = new ColumnType.AutoIncrement(c.getColumnSize());
+			} else if (columnType.getClass() == ColumnType.Varchar.class) {
+				if (((Varchar) columnType).getLength() >= 32) {
+					columnType = new ColumnType.GUID();
+				}
+			}
+			columnType.setNullable(false); // 主键列不允许为空
+		}
+		List<JavaAnnotation> annonations = getFieldAnnotation(java, columnName, columnType, isPk, c);
+		String initValue = null;
+		Class<?> clz = null;
+		String fieldName;
+		if (c instanceof ColumnEx) {
+			fieldName = ((ColumnEx) c).getFieldName();
+			clz = ((ColumnEx) c).getJavaType();
+			initValue = ((ColumnEx) c).getInitValue();
+		} else {
+			fieldName = columnToField(columnName);
+		}
+		if (isSingleColumnIndex(columnName, index)) {
+			annonations.add(new JavaAnnotation(Indexed.class));
+		}
 
-    private String columnToField(String columnName) {
-        if (callback == null) {
-            return DbUtils.underlineToUpper(columnName.toLowerCase(), false);
-        } else {
-            return callback.columnToField(columnName);
-        }
-    }
+		if (clz == null)
+			clz = columnType.getDefaultJavaType();
+		JavaField field = new JavaField(clz, fieldName);
+		field.setModifiers(Modifier.PRIVATE);
+		for (JavaAnnotation anno1 : annonations) {
+			field.addAnnotation(anno1.toCode(java));
+		}
+		if (StringUtils.isNotEmpty(c.getRemarks())) {
+			if (!c.getRemarks().equals(c.getColumnName()) && !c.getRemarks().equals(fieldName)) {
+				JavaAnnotation fieldComment = new JavaAnnotation(Comment.class);
+				fieldComment.put("value", c.getRemarks());
+				field.addAnnotation(fieldComment.toCode(java));
+			}
+		}
+		field.addComments(StringUtils.trimToNull(c.getRemarks()));
+		if (initValue != null)
+			field.setInitValue(initValue);
 
-    public File saveJavaSource(JavaUnit java) {
-        try {
-            if (srcFolder != null) {
-                File f = java.saveToSrcFolder(srcFolder, "UTF-8", OverWrittenMode.AUTO);
-                return f;
-            }
-        } catch (IOException e) {
-            LogUtil.exception(e);
-        }
+		java.addFieldWithGetterAndSetter(field);
+		if (isPk)
+			pkFields.add(field);
 
-        return null;
-    }
+		if (enumField.contentSize() > 0) {
+			enumField.addContent("," + field.getName());
+		} else {
+			enumField.addContent(field.getName());
+		}
+		if (callback != null) {
+			callback.addField(java, field, c, columnType);
+		}
 
-    // 生成默认的annonation
-    protected String[] getFieldAnnotation(JavaUnit java, String columnName, ColumnType column, boolean isPk, Column columnDef) {
-        List<String> result = new ArrayList<String>();
-        Map<String, Object> anno = column.toJpaAnnonation();
-        Boolean b = null;
-        if (columnDef instanceof ColumnEx) {
-            ColumnEx ex = (ColumnEx) columnDef;
-            b = ex.getGenerated();
-            String customAnno = StringUtils.trimToNull(ex.getAnnotation());
-            if (customAnno != null)
-                result.add(customAnno);
-        }
-        boolean isGenerated = false;
-        StringBuilder sb = new StringBuilder();
-        for (Iterator<String> iter = anno.keySet().iterator(); iter.hasNext();) {
-            String key = iter.next();
-            if (key.startsWith("@")) {
-                Object v = anno.get(key);
-                String annoStr = (v == null) ? key : key + "(" + v + ")";
-                if ("@GeneratedValue".equals(key)) {
-                    if (Boolean.FALSE.equals(b)) {// 强行不做generate
-                        continue;
-                    } else {
-                        java.addImport(javax.persistence.GenerationType.class);
-                        java.addImport(javax.persistence.GeneratedValue.class);
-                    }
-                    isGenerated = true;
-                } else if ("@Lob".equals(key)) {
-                    java.addImport(javax.persistence.Lob.class);
-                }
-                result.add(annoStr);
-            } else {
-                if (sb.length() > 0)
-                    sb.append(",");
-                sb.append(key).append("=");
-                Object v = anno.get(key);
-                if (Number.class.isAssignableFrom(v.getClass())) {
-                    sb.append(anno.get(key));
-                } else if (Boolean.class == v.getClass()) {
-                    sb.append(v.toString());
-                } else {
-                    sb.append("\"").append(anno.get(key)).append("\"");
-                }
-            }
-        }
-        // 如果强行要求generated
-        Class<?> type = column.getDefaultJavaType();
-        if (Boolean.TRUE.equals(b) && isGenerated == false) {
-            java.addImport(javax.persistence.GenerationType.class);
-            java.addImport(javax.persistence.GeneratedValue.class);
-            if (type == String.class) {
-                result.add("@GeneratedValue(strategy=GenerationType.IDENTITY)");
-            } else if (type == Long.class || type == Integer.class || type == Integer.TYPE || type == Long.TYPE) {
-                result.add("@GeneratedValue(strategy=GenerationType.SEQUENCE)");
-            }
-        }
-        if (isPk) {
-            if (!result.contains("@Id")) {
-                result.add("@Id");
-            }
-        }
-        result.add("@Column(name=\"" + columnName + "\"," + sb.toString() + ")");
-        return result.toArray(new String[result.size()]);
-    }
+	}
 
-    public void generateSchema() throws SQLException {
-        Assert.notNull(provider);
-        RegexpNameFilter filter = new RegexpNameFilter(includePattern, excludePatter);
-        int n = 0;
-        List<TableInfo> tables = provider.getTables();
+	private boolean isSingleColumnIndex(String columnName, Collection<Index> indexes) {
+		for (Index index : indexes) {
+			if (index.getColumns().size() == 1) {
+				IndexItem item = index.getColumns().get(0);
+				if (item.column.equals(columnName)) {
+					indexes.remove(index);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 
-        if (callback != null) {
-            callback.setTotal(tables.size());
-        }
-        for (TableInfo table : tables) {
-            String tableName = table.getName();
-            if (filter.accept(tableName)) {
-                try {
-                    generateOne(tableName, null, table.getRemarks());
-                } catch (SQLException e) {
-                    LogUtil.exception(e);
-                }
-                n++;
-            }
-            if (n >= maxTables)
-                break;
-        }
-        LogUtil.info(n + " Class Mapping to Table are generated.");
+	private String columnToField(String columnName) {
+		if (callback == null) {
+			return DbUtils.underlineToUpper(columnName.toLowerCase(), false);
+		} else {
+			return callback.columnToField(columnName);
+		}
+	}
 
-    }
+	public File saveJavaSource(JavaUnit java) {
+		try {
+			if (srcFolder != null) {
+				File f = java.saveToSrcFolder(srcFolder, Charsets.UTF8, OverWrittenMode.AUTO);
+				return f;
+			}
+		} catch (IOException e) {
+			LogUtil.exception(e);
+		}
 
-    public void generate(CommentEntry... strings) {
-        Assert.notNull(provider);
-        int limit = 500;
-        int n = 0;
-        for (CommentEntry table : strings) {
-            try {
-                generateOne(table.getKey(), null, table.getValue());
-            } catch (SQLException e) {
-                LogUtil.exception(e);
-            }
-            n++;
-            if (n >= limit)
-                break;
-        }
-        LogUtil.show(strings.length + " Class Mapping to Table are generated.");
-    }
+		return null;
+	}
 
-    public void setProfile(DatabaseDialect profile) {
-        this.profile = profile;
-    }
+	// 生成默认的annonation
+	protected List<JavaAnnotation> getFieldAnnotation(JavaUnit java, String columnName, ColumnType column, boolean isPk, Column columnDef) {
+		List<JavaAnnotation> result = new ArrayList<JavaAnnotation>();
+		Boolean b = null;
+		if (columnDef instanceof ColumnEx) {
+			ColumnEx ex = (ColumnEx) columnDef;
+			b = ex.getGenerated();
+			if (ex.getAnnotation() != null) {
+				result.addAll(ex.getAnnotation());
+			}
+		}
+		boolean isGenerated = false;
+		for (AnnotationDesc ad : column.toJpaAnnonation(columnName)) {
+			if (ad.getAnnotationClz() == GeneratedValue.class) {
+				if (Boolean.FALSE.equals(b)) {// 强行不做generate
+					continue;
+				}
+				isGenerated = true;
+			}
+			JavaAnnotation ja = new JavaAnnotation(ad.getAnnotationClz());
+			ja.getProperties().putAll(ad.getProprties());
+			result.add(ja);
+		}
+		// 如果强行要求generated
+		if (Boolean.TRUE.equals(b) && isGenerated == false) {
+			JavaAnnotation generateValue = new JavaAnnotation(GeneratedValue.class);
+			Class<?> type = column.getDefaultJavaType();
+			if (type == String.class) {
+				generateValue.put("strategy", GenerationType.IDENTITY);
+			} else if (type == Long.class || type == Integer.class || type == Integer.TYPE || type == Long.TYPE) {
+				generateValue.put("strategy", GenerationType.AUTO);
+			}
+		}
+		if (isPk) {
+			if (!containsAnnotation(result, Id.class)) {
+				result.add(0, new JavaAnnotation(Id.class));
+			}
+		}
+		return result;
+	}
 
-    public void setSrcFolder(File srcFolder) {
-        this.srcFolder = srcFolder;
-    }
+	private boolean containsAnnotation(List<JavaAnnotation> result, Class<? extends Annotation> key) {
+		for (JavaAnnotation ja : result) {
+			if (ja.getName().equals(key.getName())) {
+				return true;
+			}
+		}
+		return false;
+	}
 
-    public void setProvider(MetaProvider provider) {
-        this.provider = provider;
-    }
+	public void generateSchema() throws SQLException {
+		Assert.notNull(provider);
+		RegexpNameFilter filter = new RegexpNameFilter(includePattern, excludePatter);
+		int n = 0;
+		List<TableInfo> tables = provider.getTables();
 
-    public void setIncludePattern(String includePattern) {
-        this.includePattern = includePattern;
-    }
+		if (callback != null) {
+			callback.setTotal(tables.size());
+		}
+		for (TableInfo table : tables) {
+			String tableName = table.getName();
+			if (filter.accept(tableName)) {
+				try {
+					generateOne(tableName, null, table.getRemarks());
+				} catch (SQLException e) {
+					LogUtil.exception(e);
+				}
+				n++;
+			}
+			if (n >= maxTables)
+				break;
+		}
+		LogUtil.info(n + " Class Mapping to Table are generated.");
 
-    public void addExcludePatter(String pattern) {
-        if (pattern == null) {
-            this.excludePatter = new String[] { pattern };
-        }
-        this.excludePatter = (String[]) ArrayUtils.add(this.excludePatter, pattern);
-    }
+	}
 
-    public int getMaxTables() {
-        return maxTables;
-    }
+	public void generate(CommentEntry... strings) {
+		Assert.notNull(provider);
+		int limit = 500;
+		int n = 0;
+		for (CommentEntry table : strings) {
+			try {
+				generateOne(table.getKey(), null, table.getValue());
+			} catch (SQLException e) {
+				LogUtil.exception(e);
+			}
+			n++;
+			if (n >= limit)
+				break;
+		}
+		LogUtil.show(strings.length + " Class Mapping to Table are generated.");
+	}
 
-    public void setMaxTables(int maxTables) {
-        this.maxTables = maxTables;
-    }
+	public void setProfile(DatabaseDialect profile) {
+		this.profile = profile;
+	}
 
-    public String getBasePackage() {
-        return basePackage;
-    }
+	public void setSrcFolder(File srcFolder) {
+		this.srcFolder = srcFolder;
+	}
 
-    public void setBasePackage(String basePackage) {
-        this.basePackage = basePackage;
-    }
+	public void setProvider(MetaProvider provider) {
+		this.provider = provider;
+	}
 
-    public void setCallback(EntityProcessorCallback callback) {
-        this.callback = callback;
-    }
+	public void setIncludePattern(String includePattern) {
+		this.includePattern = includePattern;
+	}
+
+	public void addExcludePatter(String pattern) {
+		if (pattern == null) {
+			this.excludePatter = new String[] { pattern };
+		}
+		this.excludePatter = (String[]) ArrayUtils.add(this.excludePatter, pattern);
+	}
+
+	public int getMaxTables() {
+		return maxTables;
+	}
+
+	public void setMaxTables(int maxTables) {
+		this.maxTables = maxTables;
+	}
+
+	public String getBasePackage() {
+		return basePackage;
+	}
+
+	public void setBasePackage(String basePackage) {
+		this.basePackage = basePackage;
+	}
+
+	public void setCallback(EntityProcessorCallback callback) {
+		this.callback = callback;
+	}
 }

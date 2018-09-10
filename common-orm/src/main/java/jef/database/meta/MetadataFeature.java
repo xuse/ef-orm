@@ -9,12 +9,12 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang.builder.ToStringBuilder;
+
 import jef.common.log.LogUtil;
 import jef.database.DbUtils;
 import jef.database.meta.object.Case;
-
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.springframework.util.Assert;
+import jef.tools.Assert;
 
 public class MetadataFeature {
 	/**

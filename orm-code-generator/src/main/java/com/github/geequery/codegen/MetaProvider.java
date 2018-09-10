@@ -5,15 +5,15 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import jef.common.JefException;
-import jef.database.DbClient;
-import jef.database.DbMetaData;
-import jef.database.meta.object.TableInfo;
-
 import com.github.geequery.codegen.pdm.IMetaLoader;
 import com.github.geequery.codegen.pdm.PDMetaLoader;
 import com.github.geequery.codegen.pdm.model.MetaModel;
 import com.github.geequery.codegen.pdm.model.MetaTable;
+
+import jef.common.JefException;
+import jef.database.DbClient;
+import jef.database.DbMetaData;
+import jef.database.meta.object.TableInfo;
 
 public interface MetaProvider{
 	/**
@@ -43,6 +43,7 @@ public interface MetaProvider{
 			Metadata data=new Metadata();
 			DbMetaData meta=db.getMetaData(null);
 			data.setColumns(meta.getColumns(tablename,true));
+			data.setIndexes(meta.getIndexes(tablename));
 			data.setPrimaryKey(meta.getPrimaryKey(tablename));
 			data.setForeignKey(meta.getForeignKey(tablename));
 			return data;

@@ -127,12 +127,20 @@ public abstract class AbstractDialect implements DatabaseDialect {
 
 	// 缺省的函数注册掉
 	public AbstractDialect() {
-		for (FunctionMapping m : DEFAULT_FUNCTIONS) {
-			this.functions.put(m.getFunction().getName(), m);
-			this.functionsIndex.put(m.getStardard(), m);
-		}
+		initFeatures();
+		initKeywods();
+		initFunctions();
+		initTypes();
+	}
 
-		// 注册缺省的数据类型
+	protected void initFeatures() {
+	}
+
+	protected void initKeywods() {
+	}
+
+	// 注册缺省的数据类型
+	protected void initTypes() {
 		typeNames.put(Types.BLOB, "blob", 0);
 		typeNames.put(Types.CLOB, "clob", 0);
 		typeNames.put(Types.CHAR, "char($l)", 0);
@@ -152,6 +160,13 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		typeNames.put(Types.TIMESTAMP, "timestamp", 0);
 		typeNames.put(Types.DECIMAL, "decimal($p,$s)", 0);
 		typeNames.put(Types.NUMERIC, "decimal($p,$s)", 0);
+	}
+
+	protected void initFunctions() {
+		for (FunctionMapping m : DEFAULT_FUNCTIONS) {
+			this.functions.put(m.getFunction().getName(), m);
+			this.functionsIndex.put(m.getStardard(), m);
+		}
 	}
 
 	static {
@@ -239,6 +254,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	 * 注册虚拟函数，该函数名和数据库本地函数不同，但用法相似（或一样）。 实际使用时虚拟函数名将被替换为本地函数名
 	 * 
 	 * 该方法其实不一定要用，可以用registerNative的别名功能
+	 * 
 	 * @param func
 	 *            虚拟函数名
 	 * @param nativeName
@@ -257,6 +273,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	/**
 	 * 注册虚拟函数，该函数名和数据库本地函数不同，但用法相似（或一样）。 实际使用时虚拟函数名将被替换为本地函数名
 	 * 该方法其实不一定要用，可以用registerNative的别名功能
+	 * 
 	 * @param func
 	 *            虚拟函数名
 	 * @param nativeName
@@ -373,19 +390,19 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	 * 产生用于建表的SQL语句
 	 * 
 	 */
-	public String getCreationComment(ColumnType column, boolean flag) {
+	public String getCreationComment(ColumnType column, boolean typeStrOnly) {
 		// 特殊情况先排除
 		if (column instanceof ColumnType.AutoIncrement) {
 			ColumnType.AutoIncrement cType = (ColumnType.AutoIncrement) column;
 			GenerationType type = cType.getGenerationType(this, true);
 			if (type == GenerationType.IDENTITY) {
-				return getComment(cType, flag);
+				return getComment(cType, typeStrOnly);
 			} else {
 				column = cType.toNormalType();
 			}
 		}
 		Type def = null;
-		int rawSqlType = column.getSqlType();
+		final int rawSqlType = column.getSqlType();
 		if (column instanceof TypeDefImpl) {
 			String name = ((TypeDefImpl) column).getName();
 			if (name != null) {
@@ -402,12 +419,29 @@ public abstract class AbstractDialect implements DatabaseDialect {
 			}
 		}
 
-		if (!flag) {
+		if (typeStrOnly) {
 			return def.getName();
 		}
 		StringBuilder sb = new StringBuilder(def.getName());
+		if (this.has(Feature.SWAP_DEFAULT_AND_NULL)) {
+			appendDefault(sb, column, def);
+			appendNotNULL(sb, column);
+		} else {
+			appendNotNULL(sb, column);
+			appendDefault(sb, column, def);
+		}
+		if (column.unique) {
+			sb.append(" UNIQUE");
+		}
+		return sb.toString();
+	}
+
+	private void appendDefault(StringBuilder sb, ColumnType column, Type def) {
 		if (column.defaultValue != null)
-			sb.append(" default ").append(toDefaultString(column.defaultValue, rawSqlType, def.getSqlType()));
+			sb.append(" DEFAULT ").append(toDefaultString(column.defaultValue, def.getSqlType()));
+	}
+
+	private void appendNotNULL(StringBuilder sb, ColumnType column) {
 		if (column.nullable) {
 			if (has(Feature.COLUMN_DEF_ALLOW_NULL)) {
 				sb.append(" NULL");
@@ -415,10 +449,6 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		} else {
 			sb.append(" NOT NULL");
 		}
-		if (column.unique) {
-			sb.append(" UNIQUE");
-		}
-		return sb.toString();
 	}
 
 	@Override
@@ -452,7 +482,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		return true;
 	}
 
-	public String toDefaultString(Object defaultValue, int sqlType, int changeTo) {
+	public String toDefaultString(Object defaultValue, int sqlType) {
 		if (defaultValue == null) {
 			return null;
 		}
@@ -463,22 +493,11 @@ public abstract class AbstractDialect implements DatabaseDialect {
 			}
 		}
 		if (defaultValue instanceof Boolean) {
-			return toBooleanSqlParam((java.lang.Boolean) defaultValue, changeTo);
+			return toBooleanSqlParam((java.lang.Boolean) defaultValue, sqlType);
 		} else if (defaultValue instanceof DbFunction) {
-			return this.getFunction((DbFunction) defaultValue);
-		} else if (defaultValue instanceof SqlExpression) {
-			return defaultValue.toString();
+			return getFunction((DbFunction) defaultValue);
 		}
-		if (defaultValue instanceof Number) {
-			return defaultValue.toString();
-		} else if (defaultValue instanceof String) {
-			String s = (String) defaultValue;
-			if (s.length() == 0)
-				return null;
-			return AColumnMapping.wrapSqlStr((String) defaultValue);
-		} else {
-			return AColumnMapping.wrapSqlStr(String.valueOf(defaultValue));
-		}
+		return AColumnMapping.quotWith(defaultValue, sqlType);
 	}
 
 	private String toBooleanSqlParam(Boolean defaultValue, int sqlType) {
@@ -575,15 +594,15 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		case Types.CLOB:
 		case Types.NCLOB:
 			return new ColumnType.Clob();
-			//
-			// case Types.DISTINCT:
-			// case Types.NULL:
-			// case Types.ARRAY:
-			// case Types.STRUCT:
-			// case Types.DATALINK:
-			// case Types.JAVA_OBJECT:
-			// case Types.REF:
-			// case Types.ROWID:
+		//
+		// case Types.DISTINCT:
+		// case Types.NULL:
+		// case Types.ARRAY:
+		// case Types.STRUCT:
+		// case Types.DATALINK:
+		// case Types.JAVA_OBJECT:
+		// case Types.REF:
+		// case Types.ROWID:
 		default:
 			throw new RuntimeException("Unknown data type " + column.getDataType() + " " + type + "  " + column);
 		}
@@ -687,8 +706,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 	}
 
 	public long getColumnAutoIncreamentValue(AutoIncrementMapping mapping, JDBCTarget db) {
-		throw new UnsupportedOperationException(mapping.getMeta().getName() + "." + mapping.fieldName() + " is auto-increament, but the database '"
-				+ this.getName() + "' doesn't support fetching the next AutoIncreament value.");
+		throw new UnsupportedOperationException(mapping.getMeta().getName() + "." + mapping.fieldName() + " is auto-increament, but the database '" + this.getName() + "' doesn't support fetching the next AutoIncreament value.");
 	}
 
 	public Statement wrap(Statement stmt, boolean isInJpaTx) throws SQLException {

@@ -69,7 +69,6 @@ public class DdlGeneratorImpl implements DdlGenerator {
                     sqls.add(toAddColumnSql(tableName, ss));
                 }
             } else {
-                ;
                 sqls.add(toAddColumnSql(tableName, insert.entrySet()));
             }
 
@@ -174,7 +173,7 @@ public class DdlGeneratorImpl implements DdlGenerator {
                 }
             }
             sb.append(DbUtils.escapeColumn(profile, entry.getFrom().getColumnName())).append(' ');
-            sb.append(profile.getCreationComment(entry.getNewColumn(), true));
+            sb.append(profile.getCreationComment(entry.getNewColumn(), false));
             n++;
         }
         sb.append(BRUKETS_RIGHT);

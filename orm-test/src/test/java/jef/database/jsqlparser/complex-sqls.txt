@@ -31,8 +31,8 @@ rollup和cube区别：
 (C)，
 最后对全表进行GROUP BY操作。*/
 
-select decode(grouping(earnmonth),1,'所有月份',earnmonth) month,  
-       decode(grouping(area),1,'全部地区',area) area, sum(personincome) amount  
+select decode(grouping(earnmonth),-1,'所有月份',earnmonth) month,  
+       decode(grouping(area),-1,'全部地区',area) area, sum(personincome) amount  
 from earnings  
 group by cube(earnmonth,area)  
 order by earnmonth,area nulls last;

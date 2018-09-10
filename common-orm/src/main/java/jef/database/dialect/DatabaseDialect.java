@@ -24,6 +24,8 @@ import java.util.Map;
 
 import javax.sql.rowset.CachedRowSet;
 
+import com.querydsl.sql.SQLTemplates;
+
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.DbMetaData;
@@ -44,8 +46,6 @@ import jef.database.meta.object.Constraint;
 import jef.database.meta.object.SequenceInfo;
 import jef.database.support.RDBMS;
 import jef.database.wrapper.clause.InsertSqlClause;
-
-import com.querydsl.sql.SQLTemplates;
 
 /**
  * 这个类原本只用于SQL方言的转换，今后将逐渐代替dbmsprofile的作用
@@ -99,7 +99,7 @@ public interface DatabaseDialect {
 	 * @param sqlType
 	 * @return
 	 */
-	String toDefaultString(Object defaultValue, int sqlType,int changeTo);
+	String toDefaultString(Object defaultValue, int sqlType);
 
 	/**
 	 * 可以将ResultSet缓存在特定的RowSet对象中。

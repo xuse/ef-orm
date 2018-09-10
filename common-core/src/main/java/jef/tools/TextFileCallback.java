@@ -3,6 +3,7 @@ package jef.tools;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 /**
  * 总是被继承，用于描述对一个文本文件的修改处理步骤。 通过继承这个类可以形成对文本文件处理的详细控制。
@@ -15,20 +16,26 @@ public class TextFileCallback {
 	Throwable lastException;
 	protected File sourceFile;
 
-	private String sourceCharset;
-	private String tCharset;
+	private Charset sourceCharset;
+	private Charset tCharset;
 	private Dealwith dealwith = Dealwith.NONE;
 
 	public TextFileCallback() {
 	}
 
 	public TextFileCallback(String sourceCharset) {
+		this.sourceCharset = Charset.forName(sourceCharset);
+	}
+
+	public TextFileCallback(Charset sourceCharset, Charset targetCharset, Dealwith dealwith) {
 		this.sourceCharset = sourceCharset;
+		this.tCharset = targetCharset;
+		this.dealwith = dealwith;
 	}
 
 	public TextFileCallback(String sourceCharset, String targetCharset, Dealwith dealwith) {
-		this.sourceCharset = sourceCharset;
-		this.tCharset = targetCharset;
+		this.sourceCharset = Charset.forName(sourceCharset);
+		this.tCharset = Charset.forName(targetCharset);
 		this.dealwith = dealwith;
 	}
 
@@ -41,7 +48,8 @@ public class TextFileCallback {
 	 * @return 输出文件file，返回null则不输出文件，但行处理依然进行。
 	 */
 	protected File getTarget(File source) {
-		if(dealwith==Dealwith.NO_OUTPUT)return null;
+		if (dealwith == Dealwith.NO_OUTPUT)
+			return null;
 		return new File(source.getPath().concat(".tmp"));
 	}
 
@@ -53,7 +61,7 @@ public class TextFileCallback {
 	 * @param line
 	 * @return
 	 */
-	protected String processLine(String line){
+	protected String processLine(String line) {
 		return line;
 	}
 
@@ -64,8 +72,8 @@ public class TextFileCallback {
 	 * 
 	 * @return
 	 */
-	protected boolean wrapLine() {
-		return true;
+	protected int wrapLine() {
+		return 1;
 	}
 
 	/**
@@ -86,16 +94,17 @@ public class TextFileCallback {
 	 * 
 	 * @return
 	 */
-	protected String targetCharset() {
-		return tCharset==null?sourceCharset:tCharset;
+	protected Charset targetCharset() {
+		return tCharset == null ? sourceCharset : tCharset;
 	};
 
 	/**
 	 * 返回源文件读取编码，null表示默认
+	 * 
 	 * @param source
 	 * @return
 	 */
-	protected String sourceCharset(File source) {
+	protected Charset sourceCharset(File source) {
 		return sourceCharset;
 	}
 
@@ -145,25 +154,26 @@ public class TextFileCallback {
 
 	/**
 	 * 在文件开始处理前判断要不要处理
+	 * 
 	 * @param source
 	 * @return
 	 */
 	protected boolean accept(File source) {
 		return true;
 	}
-	
+
 	/**
 	 * 在文件开始处理前询是否要debug输出
+	 * 
 	 * @param source
 	 * @return
 	 */
-	protected boolean debug(File source){
+	protected boolean debug(File source) {
 		return false;
 	}
-	
-	public static enum Dealwith {
-		DELETE, REPLACE, BACKUP_REPLACE, NONE,NO_OUTPUT
-	}
 
+	public static enum Dealwith {
+		DELETE, REPLACE, BACKUP_REPLACE, NONE, NO_OUTPUT
+	}
 
 }

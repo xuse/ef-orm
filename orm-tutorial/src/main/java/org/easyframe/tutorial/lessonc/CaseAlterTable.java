@@ -112,7 +112,7 @@ public class CaseAlterTable {
 		model.addColumn("ID", new ColumnType.AutoIncrement(8));
 		model.addColumn("NAME", new ColumnType.Varchar(64));
 		model.addColumn("DATA", new ColumnType.Varchar(128));
-		model.addColumn("DOB", new ColumnType.TimeStamp().notNull().defaultIs(Func.current_timestamp));
+		model.addColumn("DOB", new ColumnType.TimeStamp().notNull().setDefault(Func.current_timestamp));
 		model.addColumn("MODIFIED", new ColumnType.TimeStamp().notNull());
 		model.addColumn("CONTANT", new ColumnType.Clob());
 		

@@ -148,8 +148,8 @@ public class JavaUnitTest {
 		
 		 //annotation
 		DefaultJavaElement  jeAnnotation=new DefaultJavaElement();
-		jeAnnotation.addAnnotation("annotation_1","annotation_2");
-		jeAnnotation.setAnnotation("annotation_set1","annotation_set2");
+		jeAnnotation.addAnnotation("annotation_1"	);
+		jeAnnotation.setAnnotations("annotation_set1","annotation_set2");
 		String annotationStr="annotation_set1"+"\r\n\t"+"annotation_set2"+"\r\n\t\r\n";
 		Assert.assertEquals(annotationStr, jeAnnotation.toCode(unit));
 		
@@ -167,8 +167,8 @@ public class JavaUnitTest {
 		DefaultJavaElement  java =new DefaultJavaElement();	
 		java.addAnnotation(new String[]{"@Transactional(rollbackFor={Exception.class})", "@Controller", "@NotModified"});
 		java.removeAnnotation("@Transactional(rollbackFor={Exception.class})");
-		String[] annos = java.getAnnotation();
-		Assert.assertEquals(2, annos.length);
+		List<String> annos = java.getAnnotations();
+		Assert.assertEquals(2, annos.size());
 		System.out.println(annos);
 	}
 	

@@ -39,6 +39,10 @@ public final class DelegatorBoolean extends AColumnMapping{
 	}
 
 	public int getSqlType() {
+		if(real==null){
+			//Workaround: When database dialect is unknown, return Boolean type as default to avoid a NPE.
+			return Types.BOOLEAN;
+		}
 		return real.getSqlType();
 	}
 

@@ -271,6 +271,23 @@ public abstract class AColumnMapping implements ColumnMapping {
 	}
 
 	/**
+	 * 如果是文本，那么用单引号包括并转义。前提是尚未用单引号包裹的。
+	 * @param value
+	 * @return
+	 */
+	public static String quotWith(Object value, int sqlType) {
+		if (value instanceof String) {
+			String s = (String) value;
+			if (s.length() >= 2 && s.charAt(0) == '\'' && s.charAt(s.length() - 1) == '\'') {
+				return s;
+			} else {
+				return wrapSqlStr(s);
+			}
+		}
+		return String.valueOf(value);
+	}
+	
+	/**
 	 * 用单引号包围字符串，并将其中的单引号按SQL转义
 	 * 
 	 * @param s

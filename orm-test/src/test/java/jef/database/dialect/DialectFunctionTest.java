@@ -54,14 +54,14 @@ public class DialectFunctionTest extends org.junit.Assert {
 		tuple = new TupleMetadata("tuple_table");
 		tuple.addColumn("id", new ColumnType.AutoIncrement(8));
 		tuple.addColumn("name", new ColumnType.Varchar(100));
-		tuple.addColumn("pname", new ColumnType.Varchar(100).notNull().defaultIs("N/A"));
-		tuple.addColumn("flag", new ColumnType.Boolean().notNull().defaultIs(true));
+		tuple.addColumn("pname", new ColumnType.Varchar(100).notNull().setDefault("N/A"));
+		tuple.addColumn("flag", new ColumnType.Boolean().notNull().setDefault(true));
 		tuple.addColumn("age", new ColumnType.Int(8));
-		tuple.addColumn("pid", new ColumnType.Int(8).defaultIs(0));
+		tuple.addColumn("pid", new ColumnType.Int(8).setDefault(0));
 		tuple.addColumn("percent", new ColumnType.Double(8, 4));
 		tuple.addColumn("photo", new ColumnType.Blob());
 		tuple.addColumn("DOB", new ColumnType.Date().notNull());
-		tuple.addColumn("DOD", new ColumnType.TimeStamp().notNull().defaultIs(Func.now));
+		tuple.addColumn("DOD", new ColumnType.TimeStamp().notNull().setDefault(Func.now));
 
 	}
 

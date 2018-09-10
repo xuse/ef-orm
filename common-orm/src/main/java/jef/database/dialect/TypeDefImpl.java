@@ -1,21 +1,20 @@
 package jef.database.dialect;
 
-import java.util.Map;
+import java.util.List;
 
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.dialect.type.UnknownStringMapping;
 import jef.tools.reflect.BeanUtils;
 
-
 /**
  * 一个数据库类型的定义，将逐渐此类代替原来ColumnType中的子类。
+ * 
  * @author jiyi
  *
  */
 public class TypeDefImpl extends ColumnType implements SqlTypeSized {
 	/**
-	 * 类型的名称  数据库中的SQL名称。可以为null。
-	 * 为null时根据sqlType从方言自动生成
+	 * 类型的名称 数据库中的SQL名称。可以为null。 为null时根据sqlType从方言自动生成
 	 */
 	private String name;
 	/**
@@ -45,6 +44,7 @@ public class TypeDefImpl extends ColumnType implements SqlTypeSized {
 
 	/**
 	 * 构造
+	 * 
 	 * @param name
 	 * @param sqlType
 	 * @param length
@@ -62,13 +62,6 @@ public class TypeDefImpl extends ColumnType implements SqlTypeSized {
 	@Override
 	protected boolean compare(ColumnType type, DatabaseDialect profile) {
 		return true;
-	}
-	
-	@Override
-	protected void putAnnonation(Map<String, Object> map) {
-		if (!nullable)
-			map.put("nullable", java.lang.Boolean.FALSE);
-		map.put("columnDefinition", name);
 	}
 
 	@Override
@@ -131,9 +124,9 @@ public class TypeDefImpl extends ColumnType implements SqlTypeSized {
 		this.scale = scale;
 		return this;
 	}
-	
+
 	public TypeDefImpl javaType(Class<?> javaType) {
-		this.javaType=javaType;
+		this.javaType = javaType;
 		return this;
 	}
 
@@ -141,11 +134,18 @@ public class TypeDefImpl extends ColumnType implements SqlTypeSized {
 		this.mappingClz = mappingClz;
 		return this;
 	}
-	
-	public TypeDefImpl spec(int length,int p,int s){
-		this.length=length;
-		this.precision=p;
-		this.scale=s;
+
+	public TypeDefImpl spec(int length, int p, int s) {
+		this.length = length;
+		this.precision = p;
+		this.scale = s;
 		return this;
+	}
+
+	@Override
+	protected void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column) {
+		if (!nullable)
+			column.put("nullable", java.lang.Boolean.FALSE);
+		column.put("columnDefinition", name);
 	}
 }

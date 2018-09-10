@@ -571,7 +571,7 @@ public class SimpleXPath {
 			StringBuilder sb = new StringBuilder();
 			if ("BR".equals(node.getNodeName()) || "TR".equals(node.getNodeName()) || "P".equals(node.getNodeName())) {
 				// if (keepEnter) {
-				sb.append("\n");
+				sb.append("\r\n");
 				// }
 			} else if ("TD".equals(node.getNodeName())) {
 				// if (keepEnter) {

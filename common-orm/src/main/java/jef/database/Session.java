@@ -38,6 +38,11 @@ import javax.persistence.NonUniqueResultException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+
+import com.github.geequery.extension.querydsl.SQLQueryFactoryEx;
+import com.querydsl.sql.SQLQueryFactory;
+
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
 import jef.common.wrapper.Page;
@@ -96,10 +101,6 @@ import jef.tools.JefConfiguration;
 import jef.tools.PageLimit;
 import jef.tools.StringUtils;
 
-import org.easyframe.enterprise.spring.TransactionMode;
-
-import com.querydsl.sql.SQLQueryFactory;
-
 /**
  * 描述一个事务(会话)的数据库操作句柄，提供了各种操作数据库的方法供用户使用。
  * <p>
@@ -152,11 +153,6 @@ public abstract class Session {
 	 * 内部使用 得到数据库连接
 	 */
 	abstract IConnection getConnection() throws SQLException;
-
-	/*
-	 * 内部使用 释放（当前线程）连接
-	 */
-	abstract void releaseConnection(IConnection conn);
 
 	/*
 	 * 内部使用 得到数据库名
@@ -1087,7 +1083,10 @@ public abstract class Session {
 	 *             必需特别注意，返回的元素必需要完成遍历，否则结果集就不会被关闭，会产生泄漏！
 	 */
 	public <T extends IQueryableEntity> Stream<T> iteratedSelect(TypedQuery<T> queryObj, long offset, int limit) throws SQLException {
-		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iteratedSelect(queryObj, limit == 0 ? null : new PageLimit(offset, limit)), 0), false);
+		final ResultIterator<T> iters=iteratedSelect(queryObj, limit == 0 ? null : new PageLimit(offset, limit));
+		Stream<T> st= StreamSupport.stream(Spliterators.spliteratorUnknownSize(iters, 0), false);
+		st.onClose(() -> iters.close());
+		return st;
 	}
 
 	/**
@@ -2078,7 +2077,7 @@ public abstract class Session {
 	 *             如果数据库操作错误，抛出。
 	 */
 	public final <T> List<T> selectBySql(String sql, Class<T> resultClz, Object... params) throws SQLException {
-		return selectBySql(sql, new Transformer(resultClz), null, params);
+		return selectTarget(null).selectBySql(sql, new Transformer(resultClz), null, params);
 	}
 
 	/**
@@ -3277,6 +3276,14 @@ public abstract class Session {
 	public SQLQueryFactory sqlFactory() {
 		return sqlFactory(null);
 	}
+	
+	/**
+	 *  QueryDSL支持，返回一个QueryDSL的查询对象
+	 * @return
+	 */
+	public SQLQueryFactoryEx sqlFactoryEx(){
+		return new SQLQueryFactoryEx(this, null, PROVIDER);
+	}
 
 	// ////////////////////以下全部都是废弃方法//////////////////////
 
@@ -3339,4 +3346,5 @@ public abstract class Session {
 		queryObj.getResultTransformer().setResultType(resultClz);
 		return iteratedSelect(queryObj, PageLimit.parse(range));
 	}
+
 }

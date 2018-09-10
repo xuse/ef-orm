@@ -25,8 +25,8 @@ public abstract class FileComparator {
 	}
 
 	protected boolean compareAll(File source, File target) {
-		byte[] buf1 = new byte[4096];
-		byte[] buf2 = new byte[4096];
+		byte[] buf1 = new byte[32768];
+		byte[] buf2 = new byte[32768];
 		InputStream in1 = IOUtils.getInputStream(source);
 		InputStream in2 = null;
 		try {
@@ -153,7 +153,7 @@ public abstract class FileComparator {
 		private long length;
 
 		public Smart() {
-			length = 1024 * 1024 * 10;
+			length = 1024 * 1024 * 100;
 		}
 
 		public Smart(long exceed) {
@@ -165,9 +165,9 @@ public abstract class FileComparator {
 				long len = source.length();
 				if (len == target.length()) {
 					if (len > length) {
-						return compareCrc(source, target);
-					} else {
 						return compareClips(source, target, len);
+					} else {
+						return compareCrc(source, target);
 					}
 				}
 			}

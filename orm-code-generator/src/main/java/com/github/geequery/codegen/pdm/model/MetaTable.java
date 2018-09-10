@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import jef.database.meta.object.Column;
-import jef.database.meta.object.ForeignKey;
+import jef.database.meta.object.ForeignKeyItem;
 import jef.database.meta.object.PrimaryKey;
 
 /**
@@ -308,8 +308,8 @@ public class MetaTable implements Iterable<MetaColumn> {
 		return key.toJefPk();
 	}
 
-	public List<ForeignKey> getJefFK() {
-		List<ForeignKey> result=new ArrayList<ForeignKey>();
+	public List<ForeignKeyItem> getJefFK() {
+		List<ForeignKeyItem> result=new ArrayList<ForeignKeyItem>();
 		for(MetaReference ref: this.getImportKeys()){
 			for(Entry<MetaColumn,MetaColumn> e: ref.getJoinColumns().entrySet()){
 				result.add(ref.toJefFK(e));

@@ -43,6 +43,8 @@ import java.util.stream.Collectors;
 import javax.persistence.PersistenceException;
 import javax.sql.DataSource;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+
 import jef.common.Entry;
 import jef.common.PairIS;
 import jef.common.SimpleMap;
@@ -75,7 +77,7 @@ import jef.database.meta.object.Column;
 import jef.database.meta.object.Constraint;
 import jef.database.meta.object.ConstraintType;
 import jef.database.meta.object.DataType;
-import jef.database.meta.object.ForeignKey;
+import jef.database.meta.object.ForeignKeyItem;
 import jef.database.meta.object.Function;
 import jef.database.meta.object.Index;
 import jef.database.meta.object.PrimaryKey;
@@ -99,8 +101,6 @@ import jef.tools.Assert;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
-
-import org.easyframe.enterprise.spring.TransactionMode;
 
 /*
  * constraint
@@ -241,8 +241,7 @@ public class DbMetaData {
 			calcTimeDelta(con, profile);
 			if (Math.abs(dbTimeDelta) > 30000) {
 				// 数据库时间和当前系统时间差距在30秒以上时，警告
-				LogUtil.warn("The time of thie machine is [{}], and database is [{}]. Please adjust date time via any NTP server.", new Date(),
-						getCurrentTime());
+				LogUtil.warn("The time of thie machine is [{}], and database is [{}]. Please adjust date time via any NTP server.", new Date(), getCurrentTime());
 			} else {
 				LogUtil.debug("The time between database and this machine is {}ms.", this.dbTimeDelta);
 			}
@@ -278,7 +277,7 @@ public class DbMetaData {
 			sql = String.format(template, exps);
 		}
 		try {
-			Date date = select0(conn, sql, ResultSetExtractor.GET_FIRST_TIMESTAMP, null);
+			Date date = select0(conn, sql, ResultSetExtractor.GET_FIRST_TIMESTAMP, null, SqlLog.DUMMY);
 			dbTimeDelta = date.getTime() - System.currentTimeMillis();
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
@@ -425,7 +424,9 @@ public class DbMetaData {
 				info.setName(rs.getString("TABLE_NAME"));
 				info.setType(rs.getString("TABLE_TYPE"));// "TABLE","VIEW",
 															// "SYSTEM TABLE",
-															// "GLOBAL TEMPORARY","LOCAL TEMPORARY",
+															// "GLOBAL
+															// TEMPORARY","LOCAL
+															// TEMPORARY",
 															// "ALIAS",
 															// "SYNONYM".
 				info.setRemarks(rs.getString("REMARKS"));
@@ -709,7 +710,9 @@ public class DbMetaData {
 		 * 就是将getString("COLUMN_DEF")作为第一个获取的字段， 非常神奇的就好了。叹息啊。。。
 		 */
 		String defaultVal = rs.getString("COLUMN_DEF");
-		column.setColumnDef(StringUtils.trimToNull(defaultVal));// Oracle会在后面加上换行等怪字符。
+		
+		
+		
 		column.setColumnName(rs.getString("COLUMN_NAME"));
 		column.setOrdinal(rs.getInt("ORDINAL_POSITION"));
 		column.setColumnSize(rs.getInt("COLUMN_SIZE"));
@@ -717,11 +720,23 @@ public class DbMetaData {
 		column.setDataType(rs.getString("TYPE_NAME"));
 		column.setDataTypeCode(rs.getInt("DATA_TYPE"));
 		column.setNullable(rs.getString("IS_NULLABLE").equalsIgnoreCase("YES"));
+		
+		/*
+		 * 计算defaultVal的合适值，null表示没有缺省值，""表示缺省值为空。
+		 */
+		if(this.getProfile().has(Feature.EMPTY_CHAR_IS_NULL)) {
+			// Oracle会在后面加上换行等怪字符。之前直接用了trimToNull，但这是不对的，会将default ' '这样的定义忽略掉。
+			defaultVal=StringUtils.rtrim(defaultVal, '\r','\n');
+			if(defaultVal.length()==0) {
+				defaultVal=null;
+			}
+		}
+		column.setColumnDef(defaultVal);
 		column.setRemarks(rs.getString("REMARKS"));// 这个操作容易出问题，一定要最后操作
 		column.setTableName(tableName);
 
 		if (indexes != null) {
-			// 根据索引，计算该列是否为unique
+			// 根据索引，补充计算该列是否为unique。
 			for (Index index : indexes) {
 				if (index.isUnique() && index.isOnSingleColumn(column.getColumnName())) {
 					column.setUnique(true);
@@ -929,9 +944,12 @@ public class DbMetaData {
 	 */
 	public String getDriverVersion() throws SQLException {
 		Connection conn = getConnection(false);
-		DatabaseMetaData databaseMetaData = conn.getMetaData();
-		releaseConnection(conn);
-		return databaseMetaData.getDriverVersion();
+		try {
+			DatabaseMetaData databaseMetaData = conn.getMetaData();
+			return databaseMetaData.getDriverVersion();
+		}finally {
+			releaseConnection(conn);
+		}
 	}
 
 	/**
@@ -947,6 +965,29 @@ public class DbMetaData {
 		releaseConnection(conn);
 		return version;
 	}
+	
+	
+	/**
+	 * 使用databasemetadata
+	 * @param callback
+	 * @return
+	 * @throws SQLException
+	 */
+	public <T> T callDatabaseMetadata(DatabaseMetaDataCall<T> callback) throws SQLException {
+		Connection conn = getConnection(false);
+		DatabaseMetaData databaseMetaData = conn.getMetaData();
+		try {
+			return callback.apply(databaseMetaData);
+		} finally {
+			releaseConnection(conn);	
+		}
+	}
+	
+	@FunctionalInterface
+	public static interface DatabaseMetaDataCall<T>{
+		T apply(DatabaseMetaData databaseMeta) throws SQLException;
+	}
+	
 
 	/**
 	 * @return the JDBC 'DatabaseMetaData' object
@@ -1040,33 +1081,33 @@ public class DbMetaData {
 		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = null;
+		PrimaryKey pk = null;
+		List<PairIS> pkColumns = new ArrayList<PairIS>();
 		try {
 			rs = databaseMetaData.getPrimaryKeys(null, schema, tableName);
-			PrimaryKey pk = null;
-			List<String> pkColumns = new ArrayList<String>();
 			while (rs.next()) {
 				String pkName = rs.getString("PK_NAME");
 				String col = rs.getString("COLUMN_NAME");
-
+				int seq = rs.getShort("KEY_SEQ");
 				if (pk == null) {
 					pk = new PrimaryKey(pkName);
-					// } else {
-					// if (!StringUtils.equals(pk.getName(), pkName)) {
-					// throw new
-					// SQLException("There is more than one primary key on table "
-					// + tableName + "?!" + pk.getName() + " vs " + pkName);
-					// }
 				}
-				pkColumns.add(col);
+				pkColumns.add(new PairIS(seq, col));
 			}
 			if (pk == null)
 				return pk;
-			pk.setColumns(pkColumns.toArray(new String[pkColumns.size()]));
-			return pk;
 		} finally {
 			DbUtils.close(rs);
 			releaseConnection(conn);
 		}
+		pkColumns.sort((a, b) -> Integer.compare(a.first, b.first));
+		String[] columns = new String[pkColumns.size()];
+		for (int i = 0; i < pkColumns.size(); i++) {
+			columns[i] = pkColumns.get(i).second;
+		}
+		pk.setColumns(columns);
+		return pk;
+
 	}
 
 	/**
@@ -1077,7 +1118,7 @@ public class DbMetaData {
 	 * @return 外键列表
 	 * @throws SQLException
 	 */
-	public List<ForeignKey> getForeignKey(String tableName) throws SQLException {
+	public List<ForeignKeyItem> getForeignKey(String tableName) throws SQLException {
 		return getForeignKey(schema, tableName);
 	}
 
@@ -1089,14 +1130,14 @@ public class DbMetaData {
 	 * @return
 	 * @throws SQLException
 	 */
-	public List<ForeignKey> getForeignKey(String schema, String tableName) throws SQLException {
+	public List<ForeignKeyItem> getForeignKey(String schema, String tableName) throws SQLException {
 		tableName = info.profile.getObjectNameToUse(tableName);
 		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = null;
 		try {
 			rs = databaseMetaData.getImportedKeys(null, schema, tableName);
-			List<ForeignKey> fks = ResultPopulatorImpl.instance.toPlainJavaObject(new ResultSetImpl(rs, this.getProfile()), FK_TRANSFORMER);
+			List<ForeignKeyItem> fks = ResultPopulatorImpl.instance.toPlainJavaObject(new ResultSetImpl(rs, this.getProfile()), FK_TRANSFORMER);
 			return fks;
 		} finally {
 			DbUtils.close(rs);
@@ -1126,7 +1167,8 @@ public class DbMetaData {
 	 * <li>{@link DatabaseMetaData#importedKeyNoAction} - 不允许被引用的记录删除或更新</li>
 	 * <li>{@link DatabaseMetaData#importedKeyCascade} - 删除引用外键的记录</li>
 	 * <li>{@link DatabaseMetaData#importedKeySetNull} - 将引用外键的列值改为null</li>
-	 * <li>{@link DatabaseMetaData#importedKeyRestrict} - 同importedKeyNoAction</li>
+	 * <li>{@link DatabaseMetaData#importedKeyRestrict} -
+	 * 同importedKeyNoAction</li>
 	 * <li>{@link DatabaseMetaData#importedKeySetDefault} - 将引用外键的列值改为其缺省值</li>
 	 * </ul>
 	 * 
@@ -1148,7 +1190,7 @@ public class DbMetaData {
 		String fromColumn = from.getColumnName(fromField, getProfile(), true);
 		String refTable = ref.getTableName(false);
 		String refColumn = ref.getColumnName(refField, getProfile(), true);
-		ForeignKey key = new ForeignKey(fromTable, fromColumn, refTable, refColumn);
+		ForeignKeyItem key = new ForeignKeyItem(fromTable, fromColumn, refTable, refColumn);
 		key.setFromSchema(from.getSchema());
 		key.setReferenceSchema(ref.getSchema());
 		key.setDeleteRule(deleteRule);
@@ -1168,9 +1210,9 @@ public class DbMetaData {
 	/*
 	 * 检查FK,如果存在则返回true，如果不存在则返回false，如果存在但不一致则Drop掉再返回false
 	 */
-	private boolean checkFK(ForeignKey key) throws SQLException {
-		List<ForeignKey> keys = getForeignKey(key.getFromSchema(), key.getFromTable());
-		for (ForeignKey old : keys) {
+	private boolean checkFK(ForeignKeyItem key) throws SQLException {
+		List<ForeignKeyItem> keys = getForeignKey(key.getFromSchema(), key.getFromTable());
+		for (ForeignKeyItem old : keys) {
 			if (old.getFromColumn().equalsIgnoreCase(key.getFromColumn())) {
 				return true;
 			}
@@ -1186,14 +1228,14 @@ public class DbMetaData {
 	 * @return 外键列表
 	 * @throws SQLException
 	 */
-	public List<ForeignKey> getForeignKeyReferenceTo(String tableName) throws SQLException {
+	public List<ForeignKeyItem> getForeignKeyReferenceTo(String tableName) throws SQLException {
 		tableName = info.profile.getObjectNameToUse(tableName);
 		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = null;
 		try {
 			rs = databaseMetaData.getExportedKeys(null, schema, tableName);
-			List<ForeignKey> fks = ResultPopulatorImpl.instance.toPlainJavaObject(new ResultSetImpl(rs, getProfile()), FK_TRANSFORMER);
+			List<ForeignKeyItem> fks = ResultPopulatorImpl.instance.toPlainJavaObject(new ResultSetImpl(rs, getProfile()), FK_TRANSFORMER);
 			return fks;
 		} catch (RuntimeException e) {
 			// JDBC驱动会抛出不当的错误。
@@ -1480,8 +1522,9 @@ public class DbMetaData {
 	}
 
 	/**
-	 * 根据基础表,查找目前数据库中已有的分表。 <h3>场景</h3>
-	 * 在金融、电信大型关系型数据领域经常会有将一张表的数据拆成多张表存储。（比如按天分表，按月分表）。 比如一张日志表，可能会创建成以下表
+	 * 根据基础表,查找目前数据库中已有的分表。
+	 * <h3>场景</h3> 在金融、电信大型关系型数据领域经常会有将一张表的数据拆成多张表存储。（比如按天分表，按月分表）。
+	 * 比如一张日志表，可能会创建成以下表
 	 * <ul>
 	 * <li>USER_LOG<br>
 	 * --基表，定义数据结构，但无实际数据</li>
@@ -1498,10 +1541,9 @@ public class DbMetaData {
 	 * <p>
 	 * 因此，根据规划，分表的名称一般都通过基表增加后缀来表示。
 	 * 
-	 * <h3>用法</h3>
-	 * 传入基表的元数据模型，查询数据库中同个schema下所有的表，检查名称是否匹配分表规则，检查字段是否和基表一致。 符合条件的表作为结果返回。
-	 * <h3>缓存</h3>
-	 * 因为表查找的开销较大，所以计算结果会缓存。在jef.properties中配置<br>
+	 * <h3>用法</h3> 传入基表的元数据模型，查询数据库中同个schema下所有的表，检查名称是否匹配分表规则，检查字段是否和基表一致。
+	 * 符合条件的表作为结果返回。
+	 * <h3>缓存</h3> 因为表查找的开销较大，所以计算结果会缓存。在jef.properties中配置<br>
 	 * {@code db.partition.refresh=n}<br>
 	 * n是刷新间隔秒数。默认3600秒，即分表查找结果默认缓存1小时。
 	 * <p>
@@ -1554,8 +1596,7 @@ public class DbMetaData {
 	 *             修改表失败时抛出
 	 * @see MetadataEventListener 变更监听器
 	 */
-	public void refreshTable(ITableMetadata meta, String tablename, MetadataEventListener event, boolean modifyConstraint, boolean modifyIndex)
-			throws SQLException {
+	public void refreshTable(ITableMetadata meta, String tablename, MetadataEventListener event, boolean modifyConstraint, boolean modifyIndex) throws SQLException {
 		tablename = info.profile.getObjectNameToUse(tablename);
 		// 列的修改
 		modifyColumns(tablename, meta, event);
@@ -1573,10 +1614,10 @@ public class DbMetaData {
 	}
 
 	private void modifyColumns(String tablename, ITableMetadata meta, MetadataEventListener event) throws SQLException {
-		DatabaseDialect profile = info.profile;
-		boolean supportsChangeDelete = profile.notHas(Feature.NOT_SUPPORT_ALTER_DROP_COLUMN);
+		DatabaseDialect dialect = info.profile;
+		boolean supportsChangeDelete = dialect.notHas(Feature.NOT_SUPPORT_ALTER_DROP_COLUMN);
 		if (!supportsChangeDelete) {
-			LogUtil.warn("Current database [{}] doesn't support alter table column.", profile.getName());
+			LogUtil.warn("Current database [{}] doesn't support alter table column.", dialect.getName());
 		}
 
 		List<Column> columns = this.getColumns(tablename, false);
@@ -1690,7 +1731,7 @@ public class DbMetaData {
 		if (!ArrayUtils.equals(pkColumnsEntity, pkColumnsDB)) {
 			// FIXME 暂不支持修改主键
 			if (currentPk != null) {
-				LogUtil.warn("Primary key of table [{}] was changed from [{}] to [{}], automatically modifying is not supported yet. Please modify your table by yourself.");
+				LogUtil.warn("Primary key of table [{}] was changed from [{}] to [{}], automatically modifying is not supported yet. Please modify your table by yourself.", tablename, pkColumnsDB, pkColumnsEntity);
 				/*
 				 * Constraint con = new Constraint(); con.setName(pk.getName());
 				 * con.setTableName(tablename); con.setType(ConstraintType.P);
@@ -1712,8 +1753,7 @@ public class DbMetaData {
 		List<Constraint> constraintsDB = info.profile.getConstraintInfo(this, meta.getSchema(), tablename, null); // DB中定义的约束
 		if (constraintsDB != null) { // 返回null则表示当前数据库不支持获取约束
 			constraintsDB = constraintsDB.stream().filter((e) -> e.getType() == ConstraintType.U).collect(Collectors.toList());
-			List<Constraint> uniquesEntity = meta.getUniqueDefinitions().stream().map((e) -> e.toConstraint(tablename, meta, info.profile))
-					.collect(Collectors.toList());
+			List<Constraint> uniquesEntity = meta.getUniqueDefinitions().stream().map((e) -> e.toConstraint(tablename, meta, info.profile)).collect(Collectors.toList());
 			sqls.addAll(this.compareConstraints(uniquesEntity, constraintsDB)); // 比较两个约束列表，返回SQL语句
 		}
 		return sqls;
@@ -1725,7 +1765,7 @@ public class DbMetaData {
 		// 该张表上全部的约束
 		List<Constraint> constraints = info.profile.getConstraintInfo(this, schema, tablename, null);
 		PrimaryKey pk = this.getPrimaryKey(tablename);
-		List<ForeignKey> referedKeys = getForeignKeyReferenceTo(tablename);
+		List<ForeignKeyItem> referedKeys = getForeignKeyReferenceTo(tablename);
 
 		// 计算要删除的索引
 		Collection<Index> indexesDB = getIndexes(tablename);
@@ -1785,7 +1825,7 @@ public class DbMetaData {
 		return result;
 	}
 
-	private boolean isConstraintIndex(Index index, List<Constraint> constraints, PrimaryKey pk, List<ForeignKey> foreignKeys) throws SQLException {
+	private boolean isConstraintIndex(Index index, List<Constraint> constraints, PrimaryKey pk, List<ForeignKeyItem> foreignKeys) throws SQLException {
 		// 主键一致，不删除
 		// if(index.getIndexName().equals(pk.getName()))return true;
 		if (ArrayUtils.equals(index.getColumnNames(), pk.getColumns())) {
@@ -1897,12 +1937,9 @@ public class DbMetaData {
 				exe.executeSql(sqls.getComments());
 				// TODO创建外键约束等
 				// exe.executeSql(sqls.getOtherContraints());
-				
+
 				// create indexes
-				exe.executeSql(meta.getIndexDefinition()
-						.stream()
-						.map(e -> Index.valueOf(e, meta, info.profile, tablename).toCreateSql(info.profile))
-						.collect(Collectors.toList()));
+				exe.executeSql(meta.getIndexDefinition().stream().map(e -> Index.valueOf(e, meta, info.profile, tablename).toCreateSql(info.profile)).collect(Collectors.toList()));
 			} finally {
 				exe.close();
 			}
@@ -1990,8 +2027,7 @@ public class DbMetaData {
 		if (schema != null) {
 			sequenceName = schema + "." + sequenceName;
 		}
-		String sequenceSql = StringUtils.concat("create sequence ", sequenceName, " minvalue ", String.valueOf(min), " maxvalue ", String.valueOf(max),
-				" start with ", String.valueOf(start), " increment by 1");
+		String sequenceSql = StringUtils.concat("create sequence ", sequenceName, " minvalue ", String.valueOf(min), " maxvalue ", String.valueOf(max), " start with ", String.valueOf(start), " increment by 1");
 		executor.executeSql(sequenceSql);
 	}
 
@@ -2082,16 +2118,17 @@ public class DbMetaData {
 	 * @return 转换后的结果集
 	 * @throws SQLException
 	 */
-	public final <T> T selectBySql(String sql, ResultSetExtractor<T> rst, List<?> objs) throws SQLException {
+	public final <T> T selectBySql(String sql, ResultSetExtractor<T> rst, List<?> objs, boolean log) throws SQLException {
 		Connection conn = getConnection(false);
 		try {
-			return select0(conn, sql, rst, objs);
+			SqlLog debug = log ? ORMConfig.getInstance().newLogger() : SqlLog.DUMMY;
+			return select0(conn, sql, rst, objs, debug);
 		} finally {
 			releaseConnection(conn);
 		}
 	}
 
-	private <T> T select0(Connection conn, String sql, ResultSetExtractor<T> rst, List<?> objs) throws SQLException {
+	private <T> T select0(Connection conn, String sql, ResultSetExtractor<T> rst, List<?> objs, SqlLog debug) throws SQLException {
 		// 这个方法是不支持使用非自动关闭的ResultSet的。
 		if (!rst.autoClose()) {
 			throw new UnsupportedOperationException();
@@ -2099,7 +2136,6 @@ public class DbMetaData {
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		DatabaseDialect profile = getProfile();
-		SqlLog debug = ORMConfig.getInstance().newLogger();
 		try {
 			debug.ensureCapacity(sql.length() + 30);
 			debug.append(sql).append(" | ", getTransactionId());
@@ -2197,11 +2233,11 @@ public class DbMetaData {
 	public boolean createIndex(Index index) throws SQLException {
 		Collection<Index> indexs = getIndexes(index.getTableWithSchem());
 		for (Index old : indexs) {
-			if(old.equals(index)){
+			if (old.equals(index)) {
 				LogUtil.warn(index + " duplicate with old index " + old.getIndexName());
 				return false;
 			}
-			//名称重复
+			// 名称重复
 			if (old.getIndexName().equalsIgnoreCase(index.getIndexName())) {
 				index.generateRandomName();
 			}
@@ -2443,8 +2479,7 @@ public class DbMetaData {
 				if (subColumns.size() == baseColumnCount) {
 					result.add(fullTableName.toUpperCase());
 				} else {
-					LogUtil.info("The table [" + fullTableName + "](" + subColumns.size() + ") seems like a subtable of [" + tableName
-							+ "], but their columns are not match.\n" + subColumns);
+					LogUtil.info("The table [" + fullTableName + "](" + subColumns.size() + ") seems like a subtable of [" + tableName + "], but their columns are not match.\n" + subColumns);
 				}
 			}
 		}
@@ -2590,13 +2625,13 @@ public class DbMetaData {
 	 */
 	private void dropAllForeignKey0(String tablename, Boolean referenceBy, StatementExecutor exe) throws SQLException {
 		if (referenceBy == null || referenceBy == Boolean.TRUE) {
-			for (ForeignKey fk : getForeignKeyReferenceTo(tablename)) {
+			for (ForeignKeyItem fk : getForeignKeyReferenceTo(tablename)) {
 
 				dropConstraint0(fk.getFromTable(), fk.getName(), exe);
 			}
 		}
 		if (referenceBy == null || referenceBy == Boolean.FALSE) {
-			for (ForeignKey fk : getForeignKey(tablename)) {
+			for (ForeignKeyItem fk : getForeignKey(tablename)) {
 				dropConstraint0(fk.getFromTable(), fk.getName(), exe);
 			}
 		}
@@ -2620,7 +2655,7 @@ public class DbMetaData {
 		return StringUtils.concat("select max(", sequenceColumnName, ") from " + tableName);
 	}
 
-	private final static Transformer FK_TRANSFORMER = new Transformer(ForeignKey.class);
+	private final static Transformer FK_TRANSFORMER = new Transformer(ForeignKeyItem.class);
 	private final static Transformer DATATYPE_TRANSFORMER = new Transformer(DataType.class);
 
 	/**
@@ -2691,7 +2726,8 @@ public class DbMetaData {
 	// 取两次操作的平均值，排除数据库查询误差
 	// long delta = date.getTime() - System.currentTimeMillis();
 	// if (Math.abs(delta) > 60000) { // 如果时间差大于1分钟则警告
-	// LogUtil.warn("Database time checked. It is far different from local machine: "
+	// LogUtil.warn("Database time checked. It is far different from local
+	// machine: "
 	// + DateUtils.formatTimePeriod(delta, TimeUnit.DAY, Locale.US));
 	// }
 	// this.dbTimeDelta = delta;

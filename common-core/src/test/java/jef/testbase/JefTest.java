@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -30,6 +31,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.junit.Ignore;
+import org.junit.Test;
+import org.w3c.dom.Document;
+
+import com.alibaba.fastjson.JSON;
+
 import jef.common.StringCacheMap;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
@@ -41,18 +48,13 @@ import jef.tools.StringUtils;
 import jef.tools.TextFileCallback;
 import jef.tools.ThreadUtils;
 import jef.tools.collection.CollectionUtils;
+import jef.tools.io.Charsets;
 import jef.tools.reflect.CloneUtils;
 import jef.tools.resource.ResourceLoader;
 import jef.tools.string.RandomData;
 import jef.tools.support.NumberText;
 import jef.tools.support.TimeIterable;
 import junit.framework.Assert;
-
-import org.junit.Ignore;
-import org.junit.Test;
-import org.w3c.dom.Document;
-
-import com.alibaba.fastjson.JSON;
 
 /**
  * @author jiyi
@@ -61,7 +63,6 @@ import com.alibaba.fastjson.JSON;
 @SuppressWarnings("rawtypes")
 public class JefTest extends Assert {
 	private static final String HEAD_HTML_RESOURCE = "--------------------7d71b526e00e4\r\n" + "Content-Location: \"%s\"\r\n" + "\r\nContent-Type: %s\r\n\r\n"; // 每个文件部分的开头
-
 
 	/**
 	 * 拷贝文件
@@ -197,13 +198,12 @@ public class JefTest extends Assert {
 		CollectionUtils.setElement(l, 4, "value4");
 		System.out.println(l);
 	}
-	
+
 	@Test
-	public void urltest() throws MalformedURLException{
-		URL url=new URL("http://fd.com/fsd/fdsfdsgfdfg/ddd.go?sdsfdsfsf=1&df=55&ddd");
+	public void urltest() throws MalformedURLException {
+		URL url = new URL("http://fd.com/fsd/fdsfdsgfdfg/ddd.go?sdsfdsfsf=1&df=55&ddd");
 		System.out.println(url.getPath());
 	}
-		
 
 	@Test
 	public void testSttinh() {
@@ -238,7 +238,6 @@ public class JefTest extends Assert {
 	public void saveDocumentAsFile(Document doc, String filepath) throws IOException {
 
 	}
-
 
 	@Test
 	public void cloneTest2() throws CloneNotSupportedException {
@@ -557,7 +556,7 @@ public class JefTest extends Assert {
 	// }
 	// }
 	// reader.close();
-	// System.out.println("count=" + count + "  length=" + length);
+	// System.out.println("count=" + count + " length=" + length);
 	// }
 
 	/**
@@ -571,8 +570,8 @@ public class JefTest extends Assert {
 		final Set<String> set = new HashSet<String>();
 		IOUtils.processFile(new File("E:/connectionUsed/sunyz1"), new TextFileCallback() {
 			@Override
-			protected String sourceCharset(File source) {
-				return "UTF-8";
+			protected Charset sourceCharset(File source) {
+				return Charsets.UTF8;
 			}
 
 			@Override
@@ -581,8 +580,8 @@ public class JefTest extends Assert {
 			}
 
 			@Override
-			protected String targetCharset() {
-				return "UTF-8";
+			protected Charset targetCharset() {
+				return Charsets.UTF8;
 			}
 
 			@Override
@@ -694,8 +693,8 @@ public class JefTest extends Assert {
 
 	@Test
 	public void testRehexp() {
-		String s = "select T1.name AS T1__name,T1.id AS T1__id,T1.parentId AS T1__parentId,T1.desc1 AS T1__desc,T2.name AS T2__name from treetable T1 LEFT JOIN leaf T2 ON T1.id=T2.id where T1.name=? and T2.childId=? order by T2.id ASC | [mysql:test@1]"
-				+ "\n(1)name:         	[a]" + "\n(2)childId:      	[12]";
+		String s = "select T1.name AS T1__name,T1.id AS T1__id,T1.parentId AS T1__parentId,T1.desc1 AS T1__desc,T2.name AS T2__name from treetable T1 LEFT JOIN leaf T2 ON T1.id=T2.id where T1.name=? and T2.childId=? order by T2.id ASC | [mysql:test@1]" + "\n(1)name:         	[a]"
+				+ "\n(2)childId:      	[12]";
 
 		Pattern p = Pattern.compile("select .* where (.+) order by (.+) \\|.+", Pattern.DOTALL);
 		Matcher m = p.matcher(s);

@@ -2,6 +2,7 @@ package jef.tools.algorithm;
 
 import java.util.Arrays;
 
+
 /**
  * 常用算法工具BFPRT
  * 线性查找算法
@@ -13,9 +14,9 @@ public class BFPRT {
 	
 	/**
 	 * 
-	 * @param a
-	 * @param id
-	 * @return
+	 * @param a a
+	 * @param id a
+	 * @return result
 	 */
 	public static <T extends Comparable<T>> T get(T[] a, int id) {
 		return get(a,0,a.length,id);
@@ -24,11 +25,11 @@ public class BFPRT {
 	/**
 	 * BFPRT算法实现—— 在传入的数组中，获得第id个序号的数值。 序号从1开始。 求数组a下标l到r中的第id个数
 	 * 
-	 * @param a
-	 * @param fromIndex
-	 * @param toIndex
-	 * @param id
-	 * @return
+	 * @param a a
+	 * @param fromIndex a
+	 * @param toIndex a
+	 * @param id a
+	 * @return a
 	 */
 	public static <T extends Comparable<T>> T get(T[] a, int fromIndex, int toIndex, int id) {
 		// 小于等于5个数，直接排序得到结果

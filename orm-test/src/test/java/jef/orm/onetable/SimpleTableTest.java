@@ -1,5 +1,6 @@
 package jef.orm.onetable;
 
+import java.lang.Thread.State;
 import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.ArrayList;
@@ -8,6 +9,8 @@ import java.util.Date;
 import java.util.List;
 
 import javax.persistence.EntityExistsException;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 
 import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
@@ -60,14 +63,14 @@ import org.junit.runners.MethodSorters;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({ 
-	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"), 
-	@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
-	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), 
-	@DataSource(name = "hsqldb", url = "${hsqldb.url}", user = "sa", password = ""),
+//	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"), 
+//	@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
+//	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), 
+//	@DataSource(name = "hsqldb", url = "${hsqldb.url}", user = "sa", password = ""),
 	@DataSource(name = "derby", url = "${derby.url}"),
-	@DataSource(name = "h2", url = "${h2.url}",password="h2.user",user="h2.user"), 
-	@DataSource(name = "sqlite", url = "${sqlite.url}"),
-	@DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}")
+//	@DataSource(name = "h2", url = "${h2.url}",password="h2.user",user="h2.user"), 
+//	@DataSource(name = "sqlite", url = "${sqlite.url}"),
+//	@DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}")
 	}
 )
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -232,6 +235,39 @@ public class SimpleTableTest extends org.junit.Assert {
 		}
 		System.out.println("===" + session.getExpressionValue(session.func(Func.current_timestamp).toString(), Object.class));
 		session.commit(true);
+	}
+	
+	public static class CCC{
+	    @Enumerated(EnumType.ORDINAL)
+	    private Thread.State state1;
+	    
+	    @Enumerated(EnumType.STRING)
+	    private Thread.State state2;
+
+		public Thread.State getState1() {
+			return state1;
+		}
+
+		public void setState1(Thread.State state1) {
+			this.state1 = state1;
+		}
+
+		public Thread.State getState2() {
+			return state2;
+		}
+
+		public void setState2(Thread.State state2) {
+			this.state2 = state2;
+		}
+	}
+	
+	@Test
+	public void testSelectBySql() throws SQLException{
+		
+		
+		this.insert3Records();
+		List<CCC> en=db.selectBySql("select * from TEST_ENTITY", CCC.class);
+		System.out.println(en.get(0));
 	}
 
 	/**
@@ -706,13 +742,19 @@ public class SimpleTableTest extends org.junit.Assert {
 	private long insert3Records() throws SQLException {
 		// ORMConfig.getInstance().setDebugMode(false);
 		TestEntity t1 = RandomData.newInstance(TestEntity.class);
+		t1.setState1(State.BLOCKED);
+		t1.setState2(State.BLOCKED);
 		t1.setLongField(1);
 		db.insert(t1);
 		TestEntity t2 = RandomData.newInstance(TestEntity.class);
-		t1.setLongField(2);
+		t2.setState1(State.NEW);
+		t2.setState2(State.NEW);
+		t2.setLongField(2);
 		db.insert(t2);
 		TestEntity t3 = RandomData.newInstance(TestEntity.class);
-		t1.setLongField(3);
+		t3.setLongField(3);
+		t3.setState1(State.RUNNABLE);
+		t3.setState2(State.RUNNABLE);
 		db.insert(t3);
 		ORMConfig.getInstance().setDebugMode(true);
 		return t3.getLongField();

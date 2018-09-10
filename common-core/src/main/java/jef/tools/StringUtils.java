@@ -44,6 +44,11 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.math.NumberUtils;
+
 import jef.common.BooleanList;
 import jef.common.DoubleList;
 import jef.common.FloatList;
@@ -52,11 +57,6 @@ import jef.common.LongList;
 import jef.tools.string.RegexpUtils;
 import jef.tools.string.StringSpliter;
 import jef.tools.string.Substring;
-
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.math.NumberUtils;
 
 public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	public static final byte CR = 0x0D;
@@ -92,7 +92,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 
 	/**
 	 * 获得文本长度，其中双字节字符按2计算。 举例： getLengthInBytes("中国") = 4
-	 * getLengthInBytes("卡拉OK") = 6 getLengthInBytes("太阳　月亮") = 10
+	 * getLengthInBytes("卡拉OK") = 6 getLengthInBytes("太阳 月亮") = 10
 	 * 
 	 * @param str
 	 * @return
@@ -135,9 +135,12 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 替换最后一个出现
 	 * 
-	 * @param text 传入字符串
-	 * @param searchString 查找字符串
-	 * @param replacement 要替换为字符串
+	 * @param text
+	 *            传入字符串
+	 * @param searchString
+	 *            查找字符串
+	 * @param replacement
+	 *            要替换为字符串
 	 * @return 替换后的字符串
 	 */
 	public static String replaceLast(String text, char searchString, char replacement) {
@@ -700,26 +703,27 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 			return a;
 		}
 	}
-	
+
 	/**
 	 * 将字符串格式化为固定大小
+	 * 
 	 * @param number
 	 * @param length
 	 * @return
 	 */
-	public static String toFixLengthString(String text, int length,boolean padOnLeft, char padChar) {
-		if(text.length()==length){
+	public static String toFixLengthString(String text, int length, boolean padOnLeft, char padChar) {
+		if (text.length() == length) {
 			return text;
-		}else if(text.length()>length){
-			return text.substring(0,length);
+		} else if (text.length() > length) {
+			return text.substring(0, length);
 		}
-		StringBuilder sb=new StringBuilder(length);
-		if(padOnLeft){
-			repeat(sb,padChar, length-text.length());
+		StringBuilder sb = new StringBuilder(length);
+		if (padOnLeft) {
+			repeat(sb, padChar, length - text.length());
 		}
 		sb.append(text);
-		if(!padOnLeft){
-			repeat(sb,padChar, length-text.length());
+		if (!padOnLeft) {
+			repeat(sb, padChar, length - text.length());
 		}
 		return sb.toString();
 	}
@@ -794,8 +798,10 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * 返回字串，如果查找的字串不存在则返回全部<br>
 	 * 和substringAfterLast方法不同，substringAfterLast方法在查找不到时返回空串
 	 * 
-	 * @param source 源字符串
-	 * @param keyword 查找字
+	 * @param source
+	 *            源字符串
+	 * @param keyword
+	 *            查找字
 	 * @return
 	 */
 	public static String substringAfterLastIfExist(String source, String keyword) {
@@ -810,9 +816,12 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 在StringBuilder或各种Appendable中重复添加某个字符串若干次
 	 * 
-	 * @param sb 源
-	 * @param str 要重复添加的字符串
-	 * @param n 重复次数
+	 * @param sb
+	 *            源
+	 * @param str
+	 *            要重复添加的字符串
+	 * @param n
+	 *            重复次数
 	 */
 	public static void repeat(Appendable sb, CharSequence str, int n) {
 		if (n <= 0)
@@ -829,9 +838,12 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 在StringBuilder或各种Appendable中重复添加某个字符串若干次
 	 * 
-	 * @param sb 源
-	 * @param str 要添加的字符
-	 * @param n 重复次数，如果传入小于等于0的值，不作处理
+	 * @param sb
+	 *            源
+	 * @param str
+	 *            要添加的字符
+	 * @param n
+	 *            重复次数，如果传入小于等于0的值，不作处理
 	 */
 	public static void repeat(Appendable sb, char str, int n) {
 		if (n <= 0)
@@ -1138,7 +1150,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 */
 	public static String getCRC(InputStream in) {
 		CRC32 crc32 = new CRC32();
-		byte[] b = new byte[8192];
+		byte[] b = new byte[65536];
 		int len = 0;
 		try {
 			while ((len = in.read(b)) != -1) {
@@ -1268,6 +1280,39 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/** 得到以当前毫秒数的字串 */
 	public static String getTimeStamp() {
 		return String.valueOf(System.currentTimeMillis());
+	}
+
+	/**
+	 * 得到忽略左侧空格的正式内容开始的字符号
+	 * 
+	 * @param line
+	 * @return 指向第一个有效字符
+	 */
+	public static int ignoreWhiteSpace(String line) {
+		int inLength = line.length();
+		int beginPos = 0;
+		for (; beginPos < inLength; beginPos++) {
+			if (!Character.isWhitespace(line.charAt(beginPos))) {
+				break;
+			}
+		}
+		return beginPos;
+	}
+
+	/**
+	 * 得到忽略右侧空格的正式内容开始的字符号
+	 * 
+	 * @param line
+	 * @return 指向最后一个有效字符下一位的空格。
+	 */
+	public static int ignoreRightWhiteSpace(String line) {
+		int beginPos = line.length() - 1;
+		for (; beginPos >= 0; beginPos--) {
+			if (!Character.isWhitespace(line.charAt(beginPos))) {
+				break;
+			}
+		}
+		return beginPos + 1;
 	}
 
 	/**
@@ -1431,8 +1476,10 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将数组或列表拼成文本
 	 * 
-     * @param array 要拼接的数组
-     * @param separator 元素间的分隔符
+	 * @param array
+	 *            要拼接的数组
+	 * @param separator
+	 *            元素间的分隔符
 	 * @return
 	 */
 	public static String join(int[] array, String separator) {
@@ -1451,8 +1498,10 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将数组或列表拼成文本
 	 * 
-     * @param array 要拼接的数组
-     * @param separator 元素间的分隔符
+	 * @param array
+	 *            要拼接的数组
+	 * @param separator
+	 *            元素间的分隔符
 	 * @return
 	 */
 	public static String join(float[] array, String separator) {
@@ -1471,8 +1520,10 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将数组或列表拼成文本
 	 * 
-     * @param array 要拼接的数组
-     * @param separator 元素间的分隔符
+	 * @param array
+	 *            要拼接的数组
+	 * @param separator
+	 *            元素间的分隔符
 	 * @return
 	 */
 	public static String join(double[] array, String separator) {
@@ -1491,8 +1542,10 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 数组转文本
 	 * 
-     * @param array 要拼接的数组
-     * @param separator 元素间的分隔符
+	 * @param array
+	 *            要拼接的数组
+	 * @param separator
+	 *            元素间的分隔符
 	 * @return
 	 */
 	public static String join(boolean[] array, String separator) {
@@ -1510,8 +1563,11 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 
 	/**
 	 * 将数组或列表拼成文本
-     * @param array 要拼接的数组
-     * @param separator 元素间的分隔符
+	 * 
+	 * @param array
+	 *            要拼接的数组
+	 * @param separator
+	 *            元素间的分隔符
 	 * @return
 	 */
 	public static String join(long[] array, String separator) {
@@ -1530,8 +1586,10 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将数组或列表拼成文本
 	 * 
-     * @param array 要拼接的数组
-     * @param separator 元素间的分隔符
+	 * @param array
+	 *            要拼接的数组
+	 * @param separator
+	 *            元素间的分隔符
 	 * @return
 	 */
 	public static String join(short[] array, String separator) {
@@ -1550,8 +1608,10 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将数组或列表拼成文本
 	 * 
-	 * @param array 要拼接的数组
-	 * @param separator 元素间的分隔符
+	 * @param array
+	 *            要拼接的数组
+	 * @param separator
+	 *            元素间的分隔符
 	 * @return
 	 */
 	public static String join(char[] array, String separator) {
@@ -1640,10 +1700,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将数组拼成文本 当知道obj isArray的情况，但是不清楚具体的类型的情况下，做Join计算
 	 * 
-	 * @Title: join
-	 * @param 参数
-	 * @return String 返回类型
-	 * @throws
+	 * @Title: join @param 参数 @return String 返回类型 @throws
 	 */
 	public static String join(Object obj, String dchar) {
 		Assert.notNull(obj);
@@ -1758,11 +1815,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 检查一个字符串是否符合数字的格式
 	 * 
-	 * @Title: isNumericOrMinus
-	 * @param isFloat
-	 *            是否允许小数
-	 * @return boolean 返回类型
-	 * @throws
+	 * @Title: isNumericOrMinus @param isFloat 是否允许小数 @return boolean
+	 *         返回类型 @throws
 	 */
 	public static boolean isNumericOrMinus(String str, boolean isFloat) {
 		if (str == null)
@@ -1892,6 +1946,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 
 	/**
 	 * 将文本拆成两个字符串
+	 * 
 	 * @param source
 	 * @param key
 	 * @return
@@ -1946,25 +2001,26 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 		}
 		return result;
 	}
-	
+
 	/**
 	 * {@link #toMap}的逆运算，将map转回到string
+	 * 
 	 * @param map
 	 * @param entrySep
 	 * @param keyValueSep
 	 * @return
 	 */
-	public static String toString(Map<String,String> map,String entrySep,String keyValueSep){
-		StringBuilder sb=new StringBuilder();
-		Iterator<Map.Entry<String, String>> iter=map.entrySet().iterator();
-		if(iter.hasNext()){
+	public static String toString(Map<String, String> map, String entrySep, String keyValueSep) {
+		StringBuilder sb = new StringBuilder();
+		Iterator<Map.Entry<String, String>> iter = map.entrySet().iterator();
+		if (iter.hasNext()) {
 			{
-				Map.Entry<String,String> e=iter.next();
-				sb.append(e.getKey()).append(keyValueSep).append(e.getValue());	
+				Map.Entry<String, String> e = iter.next();
+				sb.append(e.getKey()).append(keyValueSep).append(e.getValue());
 			}
-			for(;iter.hasNext();){
-				Map.Entry<String,String> e=iter.next();
-				sb.append(entrySep).append(e.getKey()).append(keyValueSep).append(e.getValue());	
+			for (; iter.hasNext();) {
+				Map.Entry<String, String> e = iter.next();
+				sb.append(entrySep).append(e.getKey()).append(keyValueSep).append(e.getValue());
 			}
 		}
 		return sb.toString();
@@ -1995,16 +2051,23 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 
 	/**
 	 * 给定若干字符，从后向前寻找，任意一个匹配的字符。
+	 * 
 	 * @param str
+	 *            需要查找的字符串
 	 * @param searchChars
+	 *            需要查找的字符序列
 	 * @param startPos
+	 *            开始位置
 	 * @return
 	 */
 	public static int lastIndexOfAny(String str, char[] searchChars, int startPos) {
 		if ((str == null) || (searchChars == null)) {
 			return -1;
 		}
-		for (int i = str.length() - 1; i > 0; i--) {
+		if (startPos < 0) {
+			startPos = 0;
+		}
+		for (int i = str.length() - 1; i >= startPos; i--) {
 			char c = str.charAt(i);
 			for (int j = 0; j < searchChars.length; j++) {
 				if (c == searchChars[j]) {
@@ -2270,9 +2333,10 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 		}
 		return result.toArrayUnsafe();
 	}
-	
+
 	/**
 	 * 转换为Date数组
+	 * 
 	 * @param text
 	 * @param dem
 	 * @param df
@@ -2280,7 +2344,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 */
 	public static Date[] toDateArray(String text, char dem, DateFormat df) {
 		String[] ss = StringUtils.split(text, dem);
-		List<Date> list=new ArrayList<Date>();
+		List<Date> list = new ArrayList<Date>();
 		for (int i = 0; i < ss.length; i++) {
 			String s = ss[i].trim();
 			if (s.length() > 0) {
@@ -2380,7 +2444,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 		}
 		return (String[]) collection.toArray(new String[collection.size()]);
 	}
-	
+
 	/**
 	 * Determines whether or not the sting 'searchIn' contains the string
 	 * 'searchFor', disregarding case and leading whitespace
@@ -2392,8 +2456,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * 
 	 * @return true if the string starts with 'searchFor' ignoring whitespace
 	 */
-	public static boolean startsWithIgnoreCaseAndWs(String searchIn,
-			String searchFor) {
+	public static boolean startsWithIgnoreCaseAndWs(String searchIn, String searchFor) {
 		return startsWithIgnoreCaseAndWs(searchIn, searchFor, 0);
 	}
 
@@ -2410,8 +2473,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * 
 	 * @return true if the string starts with 'searchFor' ignoring whitespace
 	 */
-	public static boolean startsWithIgnoreCaseAndWs(String searchIn,
-			String searchFor, int beginPos) {
+	public static boolean startsWithIgnoreCaseAndWs(String searchIn, String searchFor, int beginPos) {
 		if (searchIn == null) {
 			return searchFor == null;
 		}
@@ -2441,9 +2503,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * 
 	 * @return whether searchIn starts with searchFor, ignoring case
 	 */
-	public static boolean startsWithIgnoreCase(String searchIn, int startAt,
-			String searchFor) {
-		return searchIn.regionMatches(true, startAt, searchFor, 0, searchFor
-				.length());
+	public static boolean startsWithIgnoreCase(String searchIn, int startAt, String searchFor) {
+		return searchIn.regionMatches(true, startAt, searchFor, 0, searchFor.length());
 	}
 }

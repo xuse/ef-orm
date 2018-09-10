@@ -141,7 +141,7 @@ public class SQLServer2008Dialect extends SQLServer2005Dialect {
 				
 				return constraints;
 			}
-		}, Arrays.asList(schema, tablename, constraintName));
+		}, Arrays.asList(schema, tablename, constraintName), false);
 		
 		return constraints;
 	}

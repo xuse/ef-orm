@@ -19,6 +19,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import com.querydsl.sql.H2Templates;
 import com.querydsl.sql.SQLQueryFactory;
 import com.querydsl.sql.SQLTemplates;
+import com.querydsl.sql.spring.SpringConnectionProvider;
 
 @Configuration
 public class GeeQueryConfiuration {

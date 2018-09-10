@@ -21,6 +21,12 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
+import org.easyframe.enterprise.spring.TransactionMode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.database.datasource.MapDataSourceLookup;
@@ -34,16 +40,14 @@ import jef.database.support.DbInitHandler;
 import jef.database.support.QuerableEntityScanner;
 import jef.tools.JefConfiguration;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
-import org.easyframe.enterprise.spring.TransactionMode;
-
 /**
  * 提供了创建DbClient的若干工厂方法
  * 
  * 
  */
 public class DbClientBuilder {
+	
+	private Logger log=LoggerFactory.getLogger(DbClientBuilder.class);
 	/**
 	 * 多数据源。分库分表时可以使用。 在Spring配置时，可以使用这样的格式来配置
 	 * 
@@ -479,8 +483,9 @@ public class DbClientBuilder {
 		return initData;
 	}
 
-	public void setInitData(boolean initData) {
+	public DbClientBuilder setInitData(boolean initData) {
 		this.initData = initData;
+		return this;
 	}
 
 	public void setMinPoolSize(int minPoolSize) {
@@ -607,6 +612,8 @@ public class DbClientBuilder {
 		}
 		if(enhanceScanPackages && ArrayUtils.isNotEmpty(this.packagesToScan)){
 			new EntityEnhancer().enhance(packagesToScan);
+		}else if(enhanceScanPackages) {
+			log.warn("EnhanceScanPackages flag was set to true. but property 'packagesToScan' was not assigned");
 		}
 		//不再主动增强类
 //		else if (packagesToScan != null) {
@@ -795,8 +802,9 @@ public class DbClientBuilder {
 		return initDataCharset;
 	}
 
-	public void setInitDataCharset(String initDataCharset) {
+	public DbClientBuilder setInitDataCharset(String initDataCharset) {
 		this.initDataCharset = initDataCharset;
+		return this;
 	}
 
 	public String getDbInitHandler() {
@@ -811,15 +819,17 @@ public class DbClientBuilder {
 		return enhanceScanPackages;
 	}
 
-	public void setEnhanceScanPackages(boolean enhanceScanPackages) {
+	public DbClientBuilder setEnhanceScanPackages(boolean enhanceScanPackages) {
 		this.enhanceScanPackages = enhanceScanPackages;
+		return this;
 	}
 
 	public String getInitDataExtension() {
 		return initDataExtension;
 	}
 
-	public void setInitDataExtension(String initDataExtension) {
+	public DbClientBuilder setInitDataExtension(String initDataExtension) {
 		this.initDataExtension = initDataExtension;
+		return this;
 	}
 }

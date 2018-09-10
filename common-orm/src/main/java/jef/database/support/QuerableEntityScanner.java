@@ -241,15 +241,8 @@ public class QuerableEntityScanner {
 			final boolean refresh = alterTable && (ee == null || ee.refresh());
 			if (entityManagerFactory != null && (create || refresh)) {
 				boolean isCreated = doTableDDL(meta, create, refresh);
-				if (dataInitializer.isEnable()) {
-					if (isCreated && initData) {
-						dataInitializer.initData(meta, true);
-					} else if (initData) {
-						dataInitializer.initData(meta, false);
-					} else {
-						LogUtil.info("DataInitializer：table [{}] already exists and 'initDataIfTableExists' flag is off. No data will be merge into database.",
-								meta.getTableName(false));
-					}
+				if (dataInitializer.isEnable() && initData) {
+					dataInitializer.initData(meta, isCreated);
 				}
 			}
 		} catch (Throwable e) {

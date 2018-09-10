@@ -48,36 +48,39 @@ public class JavaMethod extends DefaultJavaElement implements JavaElement {
 		return returnType;
 	}
 
-	public void clearInputArgs(){
+	public void clearInputArgs() {
 		inputArgs.clear();
 	}
-	
+
 	/**
 	 * 按序号获取，从0开始
+	 * 
 	 * @param index
 	 * @return
 	 */
-	public JavaParameter getParameter(int index){
-		String key=inputArgs.keySet().toArray(new String[0])[index];
+	public JavaParameter getParameter(int index) {
+		String key = inputArgs.keySet().toArray(new String[0])[index];
 		return getParameter(key);
 	}
-	
+
 	/**
 	 * 按名称获取
+	 * 
 	 * @param name
 	 * @return
 	 */
-	public JavaParameter getParameter(String name){
+	public JavaParameter getParameter(String name) {
 		return inputArgs.get(name);
 	}
-	
+
 	/**
 	 * 获取所有参数的类型
+	 * 
 	 * @return
 	 */
 	public IClass[] getParameterTypes() {
-		List<IClass> types=new ArrayList<IClass>();
-		for(JavaParameter p:inputArgs.values()){
+		List<IClass> types = new ArrayList<IClass>();
+		for (JavaParameter p : inputArgs.values()) {
 			types.add(p.getType());
 		}
 		return types.toArray(new IClass[inputArgs.size()]);
@@ -85,6 +88,7 @@ public class JavaMethod extends DefaultJavaElement implements JavaElement {
 
 	/**
 	 * 增加一个泛型定义
+	 * 
 	 * @param typeParameter
 	 */
 	public void addTypeParameter(String typeParameter) {
@@ -150,7 +154,7 @@ public class JavaMethod extends DefaultJavaElement implements JavaElement {
 	}
 
 	public JavaParameter addparam(IClass type, String argname, int modifiers) {
-		JavaParameter p = new JavaParameter(this,argname,type, modifiers);
+		JavaParameter p = new JavaParameter(this, argname, type, modifiers);
 		inputArgs.put(argname, p);
 		return p;
 	}
@@ -160,11 +164,11 @@ public class JavaMethod extends DefaultJavaElement implements JavaElement {
 	}
 
 	public JavaParameter addparam(String javaType, String argname) {
-		return addparam( IClassUtil.getIClass(javaType), argname, 0);
+		return addparam(IClassUtil.getIClass(javaType), argname, 0);
 	}
 
 	public JavaParameter addparam(String javaType, String argname, int modifier) {
-		return addparam( IClassUtil.getIClass(javaType), argname, modifier);
+		return addparam(IClassUtil.getIClass(javaType), argname, modifier);
 	}
 
 	public void addThrows(Class<? extends Throwable> t) {
@@ -172,10 +176,10 @@ public class JavaMethod extends DefaultJavaElement implements JavaElement {
 	}
 
 	public void addThrows(String t) {
-		throws_.add( IClassUtil.getIClass(t));
+		throws_.add(IClassUtil.getIClass(t));
 	}
 
-	//private String code = null;
+	// private String code = null;
 
 	public List<IClass> getThrows() {
 		return throws_;
@@ -187,25 +191,23 @@ public class JavaMethod extends DefaultJavaElement implements JavaElement {
 		toCode(javaUnit);
 	}
 
-//	public void clear() {
-//		this.code = null;
-//	}
+	// public void clear() {
+	// this.code = null;
+	// }
 
 	public String toCode(JavaUnit main) {
-//		if (code != null)
-//			return code;
+		// if (code != null)
+		// return code;
 		StringBuilder sb = new StringBuilder();
 		// 生成注释
 		sb.append(super.generateComments());
 		// 生成Annotation
-		if (this.getAnnotation() != null) {
-			for (String s : annotation) {
-				sb.append(s);
-				sb.append("\r\n\t");
-//				line++;
-			}
+		for (String s : annotations) {
+			sb.append(s);
+			sb.append("\r\n\t");
+			// line++;
 		}
-		JavaUnit.appendModifier(sb, this.modifier,main.isInterface());
+		JavaUnit.appendModifier(sb, this.modifier, main.isInterface());
 		if (typeParameters != null && typeParameters.length > 0) {
 			sb.append("<");
 			for (int n = 0; n < typeParameters.length; n++) {
@@ -226,14 +228,14 @@ public class JavaMethod extends DefaultJavaElement implements JavaElement {
 			Iterator<String> iter = inputArgs.keySet().iterator();
 			String key = iter.next(); // key形参名
 			JavaParameter param = inputArgs.get(key);
-			param.genetateCode(this, main, sb,varArg && !iter.hasNext());
+			param.genetateCode(this, main, sb, varArg && !iter.hasNext());
 			for (; iter.hasNext();) {
 				key = iter.next();
 				sb.append(",");
 				param = inputArgs.get(key);
 				if (param == null)
 					continue;
-				param.genetateCode(this, main, sb,varArg && !iter.hasNext());
+				param.genetateCode(this, main, sb, varArg && !iter.hasNext());
 			}
 		}
 		sb.append(")");
@@ -261,7 +263,7 @@ public class JavaMethod extends DefaultJavaElement implements JavaElement {
 			}
 		}
 		if (checkReturn && returnType != null && !hasReturn) {
-			sb.append("\t\treturn "+IClassUtil.defaultValue(returnType)+";\n");
+			sb.append("\t\treturn " + IClassUtil.defaultValue(returnType) + ";\n");
 		}
 		sb.append("\t}\r\n");
 		return sb.toString();
@@ -278,7 +280,7 @@ public class JavaMethod extends DefaultJavaElement implements JavaElement {
 			sb.setLength(sb.length() - 1);
 		}
 		sb.append(')');
-		String key=sb.toString();
+		String key = sb.toString();
 		return key;
 	}
 
@@ -287,15 +289,15 @@ public class JavaMethod extends DefaultJavaElement implements JavaElement {
 	}
 
 	public String getKey() {
-		List<IClass> set=new ArrayList<IClass>();
-		for(JavaParameter jp:inputArgs.values()){
+		List<IClass> set = new ArrayList<IClass>();
+		for (JavaParameter jp : inputArgs.values()) {
 			set.add(jp.getType());
 		}
 		return toMethodKey(name, set);
 	}
-	
+
 	private ScriptEngine engine;
-	
+
 	public String getName() {
 		return name;
 	}
@@ -304,47 +306,48 @@ public class JavaMethod extends DefaultJavaElement implements JavaElement {
 		return modifier;
 	}
 
-	public void putAttribute(String key,Object value){
-		if(engine==null){
+	public void putAttribute(String key, Object value) {
+		if (engine == null) {
 			initEngine();
 		}
 		engine.put(key, value);
 	}
-	public String appendCode(String code){
-		try{
-			if(engine==null){
+
+	public String appendCode(String code) {
+		try {
+			if (engine == null) {
 				initEngine();
 			}
-			JefStringReader reader=new JefStringReader(code);
-			StringBuilder sb=new StringBuilder();
+			JefStringReader reader = new JefStringReader(code);
+			StringBuilder sb = new StringBuilder();
 			int c;
-			while((c=reader.read())>-1){
-				char ch=(char)c;
-				if(ch=='$'){
-					String varName=new String(reader.readUntillKey("$").toCharArray());
-					if(varName.length()>0){
-						reader.read();//跳过结束符
-						Object obj=engine.eval(varName);
-						obj=JavaScriptUtil.jsToJava(obj);
-						sb.append(ObjectUtils.toString(obj));	
+			while ((c = reader.read()) > -1) {
+				char ch = (char) c;
+				if (ch == '$') {
+					String varName = new String(reader.readUntillKey("$").toCharArray());
+					if (varName.length() > 0) {
+						reader.read();// 跳过结束符
+						Object obj = engine.eval(varName);
+						obj = JavaScriptUtil.jsToJava(obj);
+						sb.append(ObjectUtils.toString(obj));
 					}
-				}else if(ch=='\''){
+				} else if (ch == '\'') {
 					sb.append("\"");
-				}else{
+				} else {
 					sb.append(ch);
 				}
 			}
-			String str=sb.toString();
+			String str = sb.toString();
 			super.addContent(str);
 			return str;
-		}catch(IOException e){
+		} catch (IOException e) {
 			throw new RuntimeException(e);
-		}catch(ScriptException e){
+		} catch (ScriptException e) {
 			throw new RuntimeException(e);
 		}
 	}
 
 	private void initEngine() {
-		engine=jef.jre5support.script.JavaScriptUtil.newEngine();
+		engine = jef.jre5support.script.JavaScriptUtil.newEngine();
 	}
 }

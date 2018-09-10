@@ -40,7 +40,7 @@ abstract class AbstractTimeMapping extends AColumnMapping implements VersionSupp
 			throw new UnsupportedOperationException("the genrator 'modified_nano' only supports java datatype long <-> number in database.");
 		}
 		// 根据缺省值修复
-		Object defaultValue = type.defaultValue;
+		Object defaultValue = type.getDefaultValue();
 		if (generated == null && (defaultValue == Func.current_date || defaultValue == Func.current_time || defaultValue == Func.now)) {
 			generated = DateGenerateType.created;
 		}

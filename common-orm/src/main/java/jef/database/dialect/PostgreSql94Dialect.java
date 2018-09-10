@@ -758,7 +758,7 @@ public class PostgreSql94Dialect extends AbstractDialect {
 				
 				return constraints;
 			}
-		}, Arrays.asList(schema, tablename, constraintName));
+		}, Arrays.asList(schema, tablename, constraintName), false);
 		
 		return constraints;
 	}

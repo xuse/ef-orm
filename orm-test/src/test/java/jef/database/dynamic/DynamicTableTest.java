@@ -302,7 +302,7 @@ public class DynamicTableTest extends org.junit.Assert {
 	@IgnoreOn({"sqlite","sqlserver"})
 	public void testbAlterTable_AddColumn() throws SQLException {
 		TestUtils.URM_SERVICE.addColumn("addColumn1", new ColumnType.Date());
-		TestUtils.URM_SERVICE.addColumn("addColumn2", new ColumnType.TimeStamp().notNull().defaultIs(Func.now));
+		TestUtils.URM_SERVICE.addColumn("addColumn2", new ColumnType.TimeStamp().notNull().setDefault(Func.now));
 		try {
 			db.refreshTable(TestUtils.URM_SERVICE,ps);
 		} catch (SQLException e) {

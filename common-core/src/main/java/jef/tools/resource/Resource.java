@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.Map;
 
@@ -28,7 +29,7 @@ public abstract class Resource{
 	public abstract boolean isWritable();
 
 	protected URL url;
-	protected String charset;
+	protected Charset charset;
 
 	public Resource(URL url) {
 		this.url = url;
@@ -64,7 +65,7 @@ public abstract class Resource{
 		}
 	}
 
-	public Resource setCharset(String charset) {
+	public Resource setCharset(Charset charset) {
 		this.charset = charset;
 		return this;
 	}
@@ -94,12 +95,12 @@ public abstract class Resource{
 	}
 
 	public BufferedReader openReader() {
-		return IOUtils.getReader(openStream(), charset);
+		return IOUtils.getReader(openStream(), charset.name());
 	}
 
 	public String loadAsString() {
 		try {
-			return IOUtils.asString(openStream(), charset, true);
+			return IOUtils.asString(openStream(), charset.name(), true);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

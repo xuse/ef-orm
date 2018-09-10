@@ -17,8 +17,6 @@ package jef.database.meta.object;
 
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.query.SqlExpression;
-import jef.tools.StringUtils;
 
 
 /**
@@ -81,8 +79,8 @@ public class Column{
 	public ColumnType toColumnType(DatabaseDialect profile){
 		ColumnType ct=profile.getProprtMetaFromDbType(this);
 		ct.setNullable(nullable);
-		if(StringUtils.isNotEmpty(columnDef)){
-			ct.setDefault(new SqlExpression(profile.toDefaultString(columnDef,dataTypeCode,dataTypeCode)));
+		if(columnDef!=null){
+			ct.setDefaultByString(columnDef);
 		}
 		//System.out.println(this.dataType+" -> "+ ct.toString());
 		return ct;
