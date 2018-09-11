@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -699,6 +700,7 @@ public class DbMetaData {
 			DbUtils.close(rs);
 			releaseConnection(conn);
 		}
+		Collections.sort(list, (a, b) -> Integer.compare(a.getOrdinal(), b.getOrdinal()));
 		return list;
 	}
 
@@ -710,9 +712,7 @@ public class DbMetaData {
 		 * 就是将getString("COLUMN_DEF")作为第一个获取的字段， 非常神奇的就好了。叹息啊。。。
 		 */
 		String defaultVal = rs.getString("COLUMN_DEF");
-		
-		
-		
+
 		column.setColumnName(rs.getString("COLUMN_NAME"));
 		column.setOrdinal(rs.getInt("ORDINAL_POSITION"));
 		column.setColumnSize(rs.getInt("COLUMN_SIZE"));
@@ -720,15 +720,15 @@ public class DbMetaData {
 		column.setDataType(rs.getString("TYPE_NAME"));
 		column.setDataTypeCode(rs.getInt("DATA_TYPE"));
 		column.setNullable(rs.getString("IS_NULLABLE").equalsIgnoreCase("YES"));
-		
+
 		/*
 		 * 计算defaultVal的合适值，null表示没有缺省值，""表示缺省值为空。
 		 */
-		if(this.getProfile().has(Feature.EMPTY_CHAR_IS_NULL)) {
+		if (this.getProfile().has(Feature.EMPTY_CHAR_IS_NULL)) {
 			// Oracle会在后面加上换行等怪字符。之前直接用了trimToNull，但这是不对的，会将default ' '这样的定义忽略掉。
-			defaultVal=StringUtils.rtrim(defaultVal, '\r','\n');
-			if(defaultVal.length()==0) {
-				defaultVal=null;
+			defaultVal = StringUtils.rtrim(defaultVal, '\r', '\n');
+			if (defaultVal.length() == 0) {
+				defaultVal = null;
 			}
 		}
 		column.setColumnDef(defaultVal);
@@ -758,7 +758,7 @@ public class DbMetaData {
 	public Collection<Index> getIndexes(Class<?> type) throws SQLException {
 		ITableMetadata meta = MetaHolder.getMeta(type);
 		String tableName = meta.getTableName(true);
-		PrimaryKey pk = getPrimaryKey(tableName);
+		Optional<PrimaryKey> pk = getPrimaryKey(tableName);
 		Collection<Index> indexes = getIndexes(tableName);
 		for (Iterator<Index> iter = indexes.iterator(); iter.hasNext();) {
 			Index index = iter.next();
@@ -848,7 +848,7 @@ public class DbMetaData {
 	 */
 	public Collection<Index> getUniqueConstraint(String tableName) throws SQLException {
 		Collection<Index> indexes = getIndexes(tableName);
-		PrimaryKey pk = this.getPrimaryKey(tableName);
+		Optional<PrimaryKey> pk = this.getPrimaryKey(tableName);
 		for (Iterator<Index> iter = indexes.iterator(); iter.hasNext();) {
 			Index index = iter.next();
 			if (!index.isUnique()) {
@@ -864,8 +864,8 @@ public class DbMetaData {
 		return indexes;
 	}
 
-	private boolean isPrimaryKey(PrimaryKey pk, Index index) {
-		return ArrayUtils.equals(pk.getColumns(), index.getColumnNames());
+	private boolean isPrimaryKey(Optional<PrimaryKey> pk, Index index) {
+		return pk.isPresent() && ArrayUtils.equals(pk.get().getColumns(), index.getColumnNames());
 	}
 
 	/**
@@ -947,7 +947,7 @@ public class DbMetaData {
 		try {
 			DatabaseMetaData databaseMetaData = conn.getMetaData();
 			return databaseMetaData.getDriverVersion();
-		}finally {
+		} finally {
 			releaseConnection(conn);
 		}
 	}
@@ -965,10 +965,10 @@ public class DbMetaData {
 		releaseConnection(conn);
 		return version;
 	}
-	
-	
+
 	/**
 	 * 使用databasemetadata
+	 * 
 	 * @param callback
 	 * @return
 	 * @throws SQLException
@@ -979,15 +979,14 @@ public class DbMetaData {
 		try {
 			return callback.apply(databaseMetaData);
 		} finally {
-			releaseConnection(conn);	
+			releaseConnection(conn);
 		}
 	}
-	
+
 	@FunctionalInterface
-	public static interface DatabaseMetaDataCall<T>{
+	public static interface DatabaseMetaDataCall<T> {
 		T apply(DatabaseMetaData databaseMeta) throws SQLException;
 	}
-	
 
 	/**
 	 * @return the JDBC 'DatabaseMetaData' object
@@ -1075,7 +1074,7 @@ public class DbMetaData {
 	 *            表名
 	 * @return Map<String,String> key=列名 value=主键名
 	 */
-	public PrimaryKey getPrimaryKey(String tableName) throws SQLException {
+	public Optional<PrimaryKey> getPrimaryKey(String tableName) throws SQLException {
 		tableName = MetaHolder.toSchemaAdjustedName(tableName);
 		tableName = info.profile.getObjectNameToUse(tableName);
 		Connection conn = getConnection(false);
@@ -1095,7 +1094,7 @@ public class DbMetaData {
 				pkColumns.add(new PairIS(seq, col));
 			}
 			if (pk == null)
-				return pk;
+				return Optional.empty();
 		} finally {
 			DbUtils.close(rs);
 			releaseConnection(conn);
@@ -1106,7 +1105,7 @@ public class DbMetaData {
 			columns[i] = pkColumns.get(i).second;
 		}
 		pk.setColumns(columns);
-		return pk;
+		return Optional.of(pk);
 
 	}
 
@@ -1716,21 +1715,18 @@ public class DbMetaData {
 
 		// 计算主键变化
 		List<ColumnMapping> pkFields = meta.getPKFields();
-		PrimaryKey currentPk = getPrimaryKey(tablename);
+		Optional<PrimaryKey> currentPk = getPrimaryKey(tablename);
 
 		String[] pkColumnsEntity = new String[pkFields.size()]; // entity中定义的主键
 		for (int n = 0; n < pkFields.size(); n++) {
 			pkColumnsEntity[n] = pkFields.get(n).getColumnName(info.profile, false);
 		}
 
-		String[] pkColumnsDB = new String[0]; // DB中实际的主键
-		if (currentPk != null) {
-			pkColumnsDB = currentPk.getColumns();
-		}
+		String[] pkColumnsDB = currentPk.isPresent() ? currentPk.get().getColumns() : new String[0]; // DB中实际的主键
 
 		if (!ArrayUtils.equals(pkColumnsEntity, pkColumnsDB)) {
 			// FIXME 暂不支持修改主键
-			if (currentPk != null) {
+			if (currentPk.isPresent()) {
 				LogUtil.warn("Primary key of table [{}] was changed from [{}] to [{}], automatically modifying is not supported yet. Please modify your table by yourself.", tablename, pkColumnsDB, pkColumnsEntity);
 				/*
 				 * Constraint con = new Constraint(); con.setName(pk.getName());
@@ -1764,7 +1760,7 @@ public class DbMetaData {
 
 		// 该张表上全部的约束
 		List<Constraint> constraints = info.profile.getConstraintInfo(this, schema, tablename, null);
-		PrimaryKey pk = this.getPrimaryKey(tablename);
+		Optional<PrimaryKey> pk = this.getPrimaryKey(tablename);
 		List<ForeignKeyItem> referedKeys = getForeignKeyReferenceTo(tablename);
 
 		// 计算要删除的索引
@@ -1825,10 +1821,10 @@ public class DbMetaData {
 		return result;
 	}
 
-	private boolean isConstraintIndex(Index index, List<Constraint> constraints, PrimaryKey pk, List<ForeignKeyItem> foreignKeys) throws SQLException {
+	private boolean isConstraintIndex(Index index, List<Constraint> constraints, Optional<PrimaryKey> pk, List<ForeignKeyItem> foreignKeys) throws SQLException {
 		// 主键一致，不删除
 		// if(index.getIndexName().equals(pk.getName()))return true;
-		if (ArrayUtils.equals(index.getColumnNames(), pk.getColumns())) {
+		if (pk.isPresent() && ArrayUtils.equals(index.getColumnNames(), pk.get().getColumns())) {
 			return true;
 		}
 		// 数据库不支持取约束，保守策略：返回true不删除任何索引。
@@ -2216,9 +2212,9 @@ public class DbMetaData {
 	 * @throws SQLException
 	 */
 	public boolean dropPrimaryKey(String tablename) throws SQLException {
-		PrimaryKey pk = getPrimaryKey(tablename);
-		if (pk != null) {
-			dropConstraint(tablename, pk.getName());
+		Optional<PrimaryKey> pk = getPrimaryKey(tablename);
+		if (pk.isPresent()) {
+			dropConstraint(tablename, pk.get().getName());
 			return true;
 		}
 		return false;
@@ -2604,10 +2600,7 @@ public class DbMetaData {
 	}
 
 	private void releaseConnection(Connection con) {
-		try {
-			con.close();
-		} catch (SQLException e) {
-		}
+		DbUtils.closeConnection(con);
 	}
 
 	private void dropConstraint0(String tablename, String constraintName, StatementExecutor exe) throws SQLException {

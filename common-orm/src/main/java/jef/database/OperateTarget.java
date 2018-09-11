@@ -104,7 +104,10 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 	 */
 	public void releaseConnection() {
 		if (conn != null) {
-			conn.close();
+			if(session instanceof Transaction) {
+			}else {
+				conn.close();
+			}
 			conn = null;
 		}
 	}

@@ -145,7 +145,7 @@ public class JavaMethod extends DefaultJavaElement implements JavaElement {
 		if ("void".equals(javaType)) {
 			this.returnType = null;
 		} else {
-			this.returnType = StringUtils.isEmpty(javaType) ? null : IClassUtil.getIClass(javaType);
+			this.returnType = StringUtils.isEmpty(javaType) ? null : IClassUtil.parse(javaType);
 		}
 	}
 
@@ -164,11 +164,11 @@ public class JavaMethod extends DefaultJavaElement implements JavaElement {
 	}
 
 	public JavaParameter addparam(String javaType, String argname) {
-		return addparam(IClassUtil.getIClass(javaType), argname, 0);
+		return addparam(IClassUtil.parse(javaType), argname, 0);
 	}
 
 	public JavaParameter addparam(String javaType, String argname, int modifier) {
-		return addparam(IClassUtil.getIClass(javaType), argname, modifier);
+		return addparam(IClassUtil.parse(javaType), argname, modifier);
 	}
 
 	public void addThrows(Class<? extends Throwable> t) {
@@ -176,7 +176,7 @@ public class JavaMethod extends DefaultJavaElement implements JavaElement {
 	}
 
 	public void addThrows(String t) {
-		throws_.add(IClassUtil.getIClass(t));
+		throws_.add(IClassUtil.parse(t));
 	}
 
 	// private String code = null;

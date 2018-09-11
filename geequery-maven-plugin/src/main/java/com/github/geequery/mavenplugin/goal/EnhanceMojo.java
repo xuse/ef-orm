@@ -1,14 +1,13 @@
-package org.jef.mavenplugin.goal;
+package com.github.geequery.mavenplugin.goal;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
-import jef.codegen.EntityEnhancer;
-import jef.common.log.LogUtil;
-
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+
+import jef.codegen.EntityEnhancer;
 
 /**
  * Goal which touches a timestamp file.

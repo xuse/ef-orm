@@ -68,11 +68,11 @@ public class JavaConstructor extends DefaultJavaElement {
 	}
 
 	public void addparam(String javaType, String argname) {
-		addparam(IClassUtil.getIClass(javaType), argname, 0);
+		addparam(IClassUtil.parse(javaType), argname, 0);
 	}
 
 	public void addparam(String javaType, String argname, int modifier) {
-		addparam(IClassUtil.getIClass(javaType), argname, modifier);
+		addparam(IClassUtil.parse(javaType), argname, modifier);
 	}
 
 	public void addThrows(Class<? extends Throwable> t) {
@@ -80,7 +80,7 @@ public class JavaConstructor extends DefaultJavaElement {
 	}
 
 	public void addThrows(String t) {
-		throws_.add(IClassUtil.getIClass(t));
+		throws_.add(IClassUtil.parse(t));
 	}
 
 	private String code = null;

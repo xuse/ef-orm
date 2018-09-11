@@ -86,7 +86,7 @@ public class JavaUnit extends DefaultJavaElement{
 	public boolean createEqualsMethod(List<JavaField> idfields,boolean overwirte,String doSuperMethod){
 		JavaMethod equals = new JavaMethod("equals");
 		equals.setReturnType(boolean.class);
-		equals.addparam(IClassUtil.getIClass(Object.class), "rhs0", Modifier.FINAL);
+		equals.addparam(IClassUtil.of(Object.class), "rhs0", Modifier.FINAL);
 		if(methods.containsKey(equals.getKey())){//方法已经存在
 			if(!overwirte){
 				return false;
@@ -242,7 +242,7 @@ public class JavaUnit extends DefaultJavaElement{
 	public JavaElement getMethod(String name, String... typeArgs) {
 		IClass[] inputArgs = new IClass[typeArgs.length];
 		for (int i = 0; i < typeArgs.length; i++) {
-			inputArgs[i] = IClassUtil.getIClass(typeArgs[i]);
+			inputArgs[i] = IClassUtil.parse(typeArgs[i]);
 		}
 		String key = JavaMethod.toMethodKey(name, inputArgs);
 		return methods.get(key);
@@ -267,7 +267,7 @@ public class JavaUnit extends DefaultJavaElement{
 	public JavaConstructor getOrCreateConstructor(String... typeArgs){
 		IClass[] inputArgs = new IClass[typeArgs.length];
 		for (int i = 0; i < typeArgs.length; i++) {
-			inputArgs[i] = IClassUtil.getIClass(typeArgs[i]);
+			inputArgs[i] = IClassUtil.parse(typeArgs[i]);
 		}
 		String key = JavaConstructor.toConstratorKey(Arrays.asList(inputArgs));
 		JavaConstructor result=(JavaConstructor)methods.get(key);
@@ -293,7 +293,7 @@ public class JavaUnit extends DefaultJavaElement{
 	public JavaConstructor getConstructor(String... typeArgs){
 		IClass[] inputArgs = new IClass[typeArgs.length];
 		for (int i = 0; i < typeArgs.length; i++) {
-			inputArgs[i] = IClassUtil.getIClass(typeArgs[i]);
+			inputArgs[i] = IClassUtil.parse(typeArgs[i]);
 		}
 		String key = JavaConstructor.toConstratorKey(Arrays.asList(inputArgs));
 		return (JavaConstructor)methods.get(key);
@@ -906,6 +906,10 @@ public class JavaUnit extends DefaultJavaElement{
 	}
 
 	public void setExtends(String name) {
+		this.extendsClass = getJavaClassName(name);
+	}
+	
+	public void setExtends(IClass name) {
 		this.extendsClass = getJavaClassName(name);
 	}
 	

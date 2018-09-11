@@ -4,20 +4,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.github.geequery.codegen.ast.JavaAnnotation;
 
-import jef.database.DbUtils;
 import jef.database.meta.object.Column;
 import jef.database.meta.object.ForeignKeyItem;
 import jef.database.meta.object.Index;
 import jef.database.meta.object.PrimaryKey;
+import jef.tools.ArrayUtils;
 
 public class Metadata {
-	private PrimaryKey primaryKey;
+	private Optional<PrimaryKey> primaryKey;
 	private List<Column> columns;
 	private List<ForeignKeyItem> foreignKey;
 	private Collection<Index> indexes;
@@ -44,11 +44,11 @@ public class Metadata {
 		this.foreignKey = foreignKey;
 	}
 
-	public PrimaryKey getPrimaryKey() {
+	public Optional<PrimaryKey> getPrimaryKey() {
 		return primaryKey;
 	}
 
-	public void setPrimaryKey(PrimaryKey primaryKey) {
+	public void setPrimaryKey(Optional<PrimaryKey> primaryKey) {
 		this.primaryKey = primaryKey;
 	}
 
@@ -129,29 +129,6 @@ public class Metadata {
 		}
 	}
 
-	/**
-	 * 将主键拆分为由字段名/列名构成的对 <fieldName,columnName>
-	 * 
-	 * @param data
-	 * @return
-	 */
-	public Map<String, String> getPkFieldAndColumnNames() {
-		Map<String, String> pkColumns = new HashMap<String, String>();
-		if (getPrimaryKey() != null) {
-			for (String columnName : getPrimaryKey().getColumns()) {
-				Column column = findColumn(columnName);
-				String fieldName;
-				if (column instanceof ColumnEx) {
-					fieldName = ((ColumnEx) column).getFieldName();
-				} else {
-					fieldName = DbUtils.underlineToUpper(columnName.toLowerCase(), false);
-				}
-				pkColumns.put(fieldName, columnName);
-			}
-		}
-		return pkColumns;
-	}
-
 	public void setIndexes(Collection<Index> indexes) {
 		this.indexes = indexes;
 	}
@@ -161,14 +138,20 @@ public class Metadata {
 			return Collections.emptyList();
 		}
 		List<Index> list = new ArrayList<>(indexes);
-		for (Index i : list) {
-			if (i.getColumns().size() == this.primaryKey.getColumns().length) {
-				if (Arrays.equals(i.getColumnNames(), primaryKey.getColumns())) {
-					list.remove(i);
-					break;
+		if (primaryKey.isPresent()) {
+			for (Index i : list) {
+				if (i.getColumns().size() == this.primaryKey.get().getColumns().length) {
+					if (Arrays.equals(i.getColumnNames(), primaryKey.get().getColumns())) {
+						list.remove(i);
+						break;
+					}
 				}
 			}
 		}
 		return list;
+	}
+
+	public boolean isPk(String columnName) {
+		return primaryKey.isPresent() && ArrayUtils.contains(primaryKey.get().getColumns(), columnName);
 	}
 }

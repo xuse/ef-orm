@@ -44,7 +44,7 @@ public class JavaField extends DefaultJavaElement implements JavaElement{
 	}
 	public JavaField(String type, String name) {
 		this.name=name;
-		this.type=IClassUtil.getIClass(type);
+		this.type=IClassUtil.parse(type);
 	}
 	public JavaField(IClass type, String name) {
 		this.name=name;

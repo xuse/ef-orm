@@ -80,7 +80,7 @@ public class JefEntityManagerFactory implements EntityManagerFactory,MetaProvide
 	public void close() {
 		log.debug("[JPA DEBUG]:close.{}", this);
 		if (db.isOpen()) {
-			db.close();
+			db.shutdown();
 		}
 	}
 

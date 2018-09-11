@@ -114,7 +114,7 @@ public class BatchOperate extends org.junit.Assert {
 	public void testBatchUpdate2() throws SQLException {
 		doInsert(5);
 		Person query = new Person();
-		query.getQuery().addCondition(Person.Field.created.gt(DateUtils.getDate(2000, 1, 1));
+		query.getQuery().addCondition(Person.Field.created.gt(DateUtils.get(2000, 1, 1)));
 
 		List<Person> persons = db.select(query);
 		for (Person person : persons) {

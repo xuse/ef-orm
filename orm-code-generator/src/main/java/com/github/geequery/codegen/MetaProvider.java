@@ -4,6 +4,7 @@ import java.io.File;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import com.github.geequery.codegen.pdm.IMetaLoader;
 import com.github.geequery.codegen.pdm.PDMetaLoader;
@@ -37,6 +38,7 @@ public interface MetaProvider {
 
 	/**
 	 * 得到数据库表
+	 * 
 	 * @param name
 	 * @return
 	 * @throws SQLException
@@ -104,7 +106,7 @@ public interface MetaProvider {
 			Metadata data = new Metadata();
 			MetaTable table = model.getTable(tablename);
 			data.setColumns(table.getJefColumns());
-			data.setPrimaryKey(table.getJefPK());
+			data.setPrimaryKey(Optional.ofNullable(table.getJefPK()));
 			data.setForeignKey(table.getJefFK());
 			return data;
 		}

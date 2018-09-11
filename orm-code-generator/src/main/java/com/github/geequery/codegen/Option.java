@@ -1,7 +1,8 @@
 package com.github.geequery.codegen;
 
-public enum GenerateOption {
-	ignoreComment,
+public enum Option {
+	ignoreCommentAnnotation,
+	ignoreClassComment,
 	generateQueryClass,
 	generateEntity,
 	generateRepos,
