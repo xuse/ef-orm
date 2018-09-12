@@ -46,8 +46,8 @@ import jef.tools.JefConfiguration;
  * 
  */
 public class DbClientBuilder {
-	
-	private Logger log=LoggerFactory.getLogger(DbClientBuilder.class);
+
+	private Logger log = LoggerFactory.getLogger(DbClientBuilder.class);
 	/**
 	 * 多数据源。分库分表时可以使用。 在Spring配置时，可以使用这样的格式来配置
 	 * 
@@ -105,6 +105,7 @@ public class DbClientBuilder {
 	 * 指定对以下包内的实体做一次增强扫描。多个包名之间逗号分隔。<br>
 	 * 如果不配置此项，默认将对packagesToScan包下的类进行增强。<br>
 	 * 不过不想进行类增强扫描，可配置为"none"。
+	 * 
 	 * @deprecated
 	 */
 	private String enhancePackages = "none";
@@ -118,7 +119,7 @@ public class DbClientBuilder {
 	 * </pre></code>
 	 */
 	private String[] packagesToScan;
-	
+
 	/**
 	 * 对配置了包扫描的路径进行增强检查，方便单元测试
 	 */
@@ -180,16 +181,21 @@ public class DbClientBuilder {
 	 * 是否使用数据库初始化记录表
 	 */
 	private boolean useDataInitTable = JefConfiguration.getBoolean(DbCfg.USE_DATAINIT_FLAG_TABLE, false);;
-	
+
 	/**
 	 * 初始化数据编码
 	 */
 	private String initDataCharset = "UTF-8";
-	
+
 	/**
 	 * 初始化数据扩展名
 	 */
-	private String initDataExtension=JefConfiguration.get(DbCfg.INIT_DATA_EXTENSION, "txt");
+	private String initDataExtension = JefConfiguration.get(DbCfg.INIT_DATA_EXTENSION, "txt");
+
+	/**
+	 *  初始化数据根路径
+	 */
+	private String initDataRoot = JefConfiguration.get(DbCfg.INIT_DATA_ROOT, "/");
 
 	/**
 	 * 最终构造出来的对象实例
@@ -323,7 +329,7 @@ public class DbClientBuilder {
 	 * @see TransactionMode
 	 */
 	public DbClientBuilder setTransactionMode(TransactionMode txType) {
-		this.transactionMode =txType;
+		this.transactionMode = txType;
 		return this;
 	}
 
@@ -583,6 +589,7 @@ public class DbClientBuilder {
 
 	/**
 	 * 是否检查并增强实体。 注意，增强实体仅对目录中的class文件生效，对jar包中的class无效。
+	 * 
 	 * @deprecated 1.12开始，推荐使用instrument动态增强，不推荐这种做法
 	 * @param enhancePackages
 	 *            要扫描的包
@@ -610,23 +617,24 @@ public class DbClientBuilder {
 				new EntityEnhancer().enhance(StringUtils.split(enhancePackages, ","));
 			}
 		}
-		if(enhanceScanPackages && ArrayUtils.isNotEmpty(this.packagesToScan)){
+		if (enhanceScanPackages && ArrayUtils.isNotEmpty(this.packagesToScan)) {
 			new EntityEnhancer().enhance(packagesToScan);
-		}else if(enhanceScanPackages) {
+		} else if (enhanceScanPackages) {
 			log.warn("EnhanceScanPackages flag was set to true. but property 'packagesToScan' was not assigned");
 		}
-		//不再主动增强类
-//		else if (packagesToScan != null) {
-//			// if there is no enhances packages, try enhance 'package to Scan'
-//			new EntityEnhancer().enhance(packagesToScan);
-//		} else {
-//			if (System.currentTimeMillis() - lastEnhanceTime > 30000) {
-//				new EntityEnhancer().setExcludePatter(
-//						new String[] { "java", "javax", "org.apache", "org.eclipse", "junit", "ant", "org.codehaus" })
-//						.enhance();
-//			}
-//			lastEnhanceTime = System.currentTimeMillis();
-//		}
+		// 不再主动增强类
+		// else if (packagesToScan != null) {
+		// // if there is no enhances packages, try enhance 'package to Scan'
+		// new EntityEnhancer().enhance(packagesToScan);
+		// } else {
+		// if (System.currentTimeMillis() - lastEnhanceTime > 30000) {
+		// new EntityEnhancer().setExcludePatter(
+		// new String[] { "java", "javax", "org.apache", "org.eclipse", "junit",
+		// "ant", "org.codehaus" })
+		// .enhance();
+		// }
+		// lastEnhanceTime = System.currentTimeMillis();
+		// }
 
 		JefEntityManagerFactory sf;
 		// check data sources.
@@ -636,8 +644,7 @@ public class DbClientBuilder {
 		} else if (dataSource != null) {
 			sf = new JefEntityManagerFactory(dataSource, minPoolSize, maxPoolSize, transactionMode);
 		} else {
-			RoutingDataSource rs = new RoutingDataSource(
-					new MapDataSourceLookup(dataSources).setDefaultKey(this.defaultDatasource));
+			RoutingDataSource rs = new RoutingDataSource(new MapDataSourceLookup(dataSources).setDefaultKey(this.defaultDatasource));
 			sf = new JefEntityManagerFactory(rs, minPoolSize, maxPoolSize, transactionMode);
 		}
 		if (namedQueryFile != null) {
@@ -658,13 +665,13 @@ public class DbClientBuilder {
 			qe.setAlterTable(alterTable);
 			qe.setCreateTable(createTable);
 			qe.setInitData(this.initData);
-			qe.setEntityManagerFactory(sf, this.useDataInitTable, this.initDataCharset, this.initDataExtension);
+			qe.setEntityManagerFactory(sf, this.useDataInitTable, this.initDataCharset, this.initDataExtension, this.initDataRoot);
 			if (annotatedClasses != null)
 				qe.registeEntity(annotatedClasses);
 			if (packagesToScan != null) {
 				String joined = StringUtils.join(packagesToScan, ',');
 				qe.setPackageNames(joined);
-				LogUtil.info("Starting scan easyframe entity from package: {}" , joined);
+				LogUtil.info("Starting scan easyframe entity from package: {}", joined);
 				qe.doScan();
 			}
 			qe.finish();
@@ -689,7 +696,7 @@ public class DbClientBuilder {
 			}
 
 		}
-		//执行用户自行配制的初始化任务
+		// 执行用户自行配制的初始化任务
 		if (StringUtils.isNotBlank(this.dbInitHandler)) {
 			for (String clzName : StringUtils.split(dbInitHandler, ',')) {
 				try {
@@ -832,4 +839,15 @@ public class DbClientBuilder {
 		this.initDataExtension = initDataExtension;
 		return this;
 	}
+
+	public String getInitDataRoot() {
+		return initDataRoot;
+	}
+
+	public DbClientBuilder setInitDataRoot(String initDataRoot) {
+		this.initDataRoot = initDataRoot;
+		return this;
+	}
+	
+	
 }

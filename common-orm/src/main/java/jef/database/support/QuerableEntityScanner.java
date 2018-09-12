@@ -357,9 +357,9 @@ public class QuerableEntityScanner {
 	 * @param charset
 	 *            数据文件编码
 	 */
-	public void setEntityManagerFactory(JefEntityManagerFactory entityManagerFactory, boolean useTable, String charset, String extName) {
+	public void setEntityManagerFactory(JefEntityManagerFactory entityManagerFactory, boolean useTable, String charset, String extName, String initRoot) {
 		this.entityManagerFactory = entityManagerFactory;
-		this.dataInitializer = new DataInitializer(entityManagerFactory.getDefault(), useTable, charset, extName);
+		this.dataInitializer = new DataInitializer(entityManagerFactory.getDefault(), useTable, charset, extName, initRoot);
 	}
 
 	public boolean isCreateTable() {

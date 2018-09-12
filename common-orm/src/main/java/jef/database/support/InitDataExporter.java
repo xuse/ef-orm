@@ -29,7 +29,6 @@ import jef.accelerator.asm.Opcodes;
 import jef.common.log.LogUtil;
 import jef.database.DbCfg;
 import jef.database.DbClient;
-import jef.database.ORMConfig;
 import jef.database.QB;
 import jef.database.annotation.EasyEntity;
 import jef.database.dialect.type.ColumnMapping;
@@ -57,6 +56,7 @@ public class InitDataExporter {
 	private File target = new File(System.getProperty("user.dir"));
 	private String extension = "." + JefConfiguration.get(DbCfg.INIT_DATA_EXTENSION, "txt");
 	private String charset = "UTF-8";
+	private int maxResults = 5000;
 
 	private final List<URL> classRoot = new ArrayList<>();
 
@@ -130,7 +130,6 @@ public class InitDataExporter {
 			ClassAnnotationExtracter ae = new ClassAnnotationExtracter();
 			cl.accept(ae, ClassReader.SKIP_CODE);
 			if (ae.hasAnnotation(Entity.class) || ae.hasAnnotation(EasyEntity.class)) {
-				LogUtil.info("Class {}", cl.getJavaClassName());
 				Class<?> e;
 				try {
 					e = loader.loadClass(cl.getJavaClassName());
@@ -162,6 +161,8 @@ public class InitDataExporter {
 		@SuppressWarnings("unchecked")
 		Query<?> query = QB.create(clz);
 		query.setCascade(false);
+		query.setFetchSize(2000);
+		query.setMaxResult(this.maxResults);
 		List<?> o = session.select(query);
 		if (o.isEmpty()) {
 			if (deleteEmpty && file.exists()) {
@@ -227,5 +228,13 @@ public class InitDataExporter {
 
 	public void setTarget(File target) {
 		this.target = target;
+	}
+
+	public int getMaxResults() {
+		return maxResults;
+	}
+
+	public void setMaxResults(int maxResults) {
+		this.maxResults = maxResults;
 	}
 }

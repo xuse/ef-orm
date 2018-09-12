@@ -27,7 +27,7 @@ import jef.database.support.InitDataExporter;
 import jef.tools.StringUtils;
 
 /**
- * @goal data-export
+ * @goal export-data
  * @phase generate-resources
  */
 
@@ -76,7 +76,7 @@ public class DataExportMojo extends AbstractMojo {
 	 * @parameter default-value="src/main/resources"
 	 * @required
 	 */
-	private String targetFolder;
+	private String resourceFolder;
 
 	/**
 	 * The directory containing generated classes.
@@ -94,6 +94,13 @@ public class DataExportMojo extends AbstractMojo {
 	 */
 	private boolean skip;
 
+	/**
+	 * 每张表最多导出多少条记录
+	 * 
+	 * @parameter default-value=0
+	 */
+	private int maxResult;
+
 	public void execute() throws MojoExecutionException, MojoFailureException {
 		if (skip) {
 			return;
@@ -102,9 +109,12 @@ public class DataExportMojo extends AbstractMojo {
 		DbClient db;
 		db = new DbClientBuilder(this.jdbcUrl, this.jdbcUser, this.jdbcPassword, 2).setEnhanceScanPackages(false).build();
 		try {
-			InitDataExporter ex = new InitDataExporter(db, new File(this.targetFolder));
+			InitDataExporter ex = new InitDataExporter(db, new File(this.resourceFolder));
 			ex.addClassRoot(classesDirectory.toURI().toURL());
-			ex.setTarget(new File(targetFolder));
+			ex.setTarget(new File(resourceFolder));
+			if (maxResult > 0) {
+				ex.setMaxResults(maxResult);
+			}
 			if (StringUtils.isNotEmpty(exportPackage)) {
 				ex.exportPackage(this.exportPackage);
 			}
@@ -138,7 +148,7 @@ public class DataExportMojo extends AbstractMojo {
 	}
 
 	public void setTargetFolder(String targetFolder) {
-		this.targetFolder = targetFolder;
+		this.resourceFolder = targetFolder;
 	}
 
 	public void setExportPackage(String exportPackage) {
@@ -147,5 +157,9 @@ public class DataExportMojo extends AbstractMojo {
 
 	public void setSkip(boolean skip) {
 		this.skip = skip;
+	}
+
+	public void setMaxResult(int maxResult) {
+		this.maxResult = maxResult;
 	}
 }

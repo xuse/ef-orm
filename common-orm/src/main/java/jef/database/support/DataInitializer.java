@@ -10,6 +10,11 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.github.geequery.orm.annotation.InitializeData;
+
 import jef.common.log.LogUtil;
 import jef.database.DbClient;
 import jef.database.DbMetaData;
@@ -25,11 +30,6 @@ import jef.tools.csvreader.Codecs;
 import jef.tools.csvreader.CsvReader;
 import jef.tools.reflect.Property;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.github.geequery.orm.annotation.InitializeData;
-
 public class DataInitializer {
 	private DbClient session;
 	private volatile boolean enable = true;
@@ -40,8 +40,9 @@ public class DataInitializer {
 	private int recordInit;
 	private String extension;
 	private String globalCharset = "UTF-8";
+	private String initRoot;
 
-	public DataInitializer(DbClient session, boolean useTable, String charset, String extName) {
+	public DataInitializer(DbClient session, boolean useTable, String charset, String extName, String initRoot) {
 		this.session = session;
 		this.extension = "." + extName;
 		if (charset != null)
@@ -56,7 +57,7 @@ public class DataInitializer {
 				if (meta.existTable("allow_data_initialize")) {
 					session.refreshTable(AllowDataInitialize.class);
 					useTable = true;
-					LogUtil.info("Table [allow_data_initialize] was found, will turn [geequery.useDataInitTable=true] on.");			
+					LogUtil.info("Table [allow_data_initialize] was found, will turn [geequery.useDataInitTable=true] on.");
 					checkEnableFlag();
 				}
 			}
@@ -95,8 +96,7 @@ public class DataInitializer {
 					}
 					jef.database.Field field = meta.getField(header);
 					if (field == null) {
-						throw new IllegalArgumentException(String.format("The field [%s] in CSV file doesn't exsts in the entity [%s] metadata.", header,
-								meta.getName()));
+						throw new IllegalArgumentException(String.format("The field [%s] in CSV file doesn't exsts in the entity [%s] metadata.", header, meta.getName()));
 					}
 					props.add(meta.getColumnDef(field).getFieldAccessor());
 				}
@@ -196,7 +196,7 @@ public class DataInitializer {
 	 *            表是否刚刚创建
 	 */
 	public final void initData(ITableMetadata meta, boolean isNew) {
-		String csvResouce = "/" + meta.getThisType().getName() + extension;
+		String csvResouce = initRoot + meta.getThisType().getName() + extension;
 		boolean ensureResourceExists = false;
 		String charset = this.globalCharset;
 		String tableName = meta.getTableName(false);
@@ -245,8 +245,7 @@ public class DataInitializer {
 		}
 	}
 
-	private void initCSVData(ITableMetadata meta, boolean isNew, String resName, boolean manualSequence, boolean ensureResourceExists, String charset,
-			String[] mergeKey) {
+	private void initCSVData(ITableMetadata meta, boolean isNew, String resName, boolean manualSequence, boolean ensureResourceExists, String charset, String[] mergeKey) {
 		String tableName = meta.getTableName(false);
 		URL url = meta.getThisType().getResource(resName);
 		if (url != null) {
@@ -289,8 +288,7 @@ public class DataInitializer {
 				record.getQuery().setAllRecordsCondition();
 				record.prepareUpdate(AllowDataInitialize.Field.doInit, false);
 				record.prepareUpdate(AllowDataInitialize.Field.lastDataInitTime, new Date());
-				record.prepareUpdate(AllowDataInitialize.Field.lastDataInitUser,
-						ProcessUtil.getPid() + "@" + ProcessUtil.getHostname() + "(" + ProcessUtil.getLocalIp() + ") OS:" + ProcessUtil.getOSName());
+				record.prepareUpdate(AllowDataInitialize.Field.lastDataInitUser, ProcessUtil.getPid() + "@" + ProcessUtil.getHostname() + "(" + ProcessUtil.getLocalIp() + ") OS:" + ProcessUtil.getOSName());
 				record.prepareUpdate(AllowDataInitialize.Field.lastDataInitResult, StringUtils.truncate(message, 300));
 				session.update(record);
 			} catch (SQLException e) {
