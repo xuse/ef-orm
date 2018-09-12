@@ -278,20 +278,21 @@ public final class TableMetadata extends AbstractMetadata {
 			newPks.add(type);
 			Collections.sort(newPks, new Comparator<ColumnMapping>() {
 				public int compare(ColumnMapping o1, ColumnMapping o2) {
-					Integer i1 = -1;
-					Integer i2 = -1;
-					if (o1 instanceof Enum) {
+					int i1 = -1;
+					int i2 = -1;
+					if (o1.field() instanceof Enum) {
 						i1 = ((Enum<?>) o1.field()).ordinal();
 					}
-					if (o2 instanceof Enum) {
+					if (o1.field() instanceof Enum) {
 						i2 = ((Enum<?>) o2.field()).ordinal();
 					}
-					return i1.compareTo(i2);
+					return Integer.compare(i1, i2);
 				}
 			});
 			this.pkFields = Arrays.<ColumnMapping> asList(newPks.toArray(new ColumnMapping[newPks.size()]));
 		}
 		schemaMap.put(field, type);
+		//记录自增字段和自动更新字段
 		super.updateAutoIncrementAndUpdate(type);
 		if (type.isLob()) {
 			lobNames = ArrayUtils.addElement(lobNames, field, jef.database.Field.class);

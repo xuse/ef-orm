@@ -26,7 +26,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -74,6 +73,7 @@ import jef.database.routing.function.KeyFunction;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
+import jef.tools.algorithm.LocalMappedSorter;
 import jef.tools.io.Charsets;
 import jef.tools.reflect.BeanUtils;
 
@@ -320,16 +320,10 @@ public class EntityGenerator {
 		}
 		// 处理枚举元模型
 		if (meta.getPrimaryKey().isPresent() && meta.getPrimaryKey().get().columnSize() > 1) {
-			Collections.sort(allFields, (PairSS a, PairSS b) -> {
-				String[] pkColumns = meta.getPrimaryKey().get().getColumns();
-				int ai = ArrayUtils.indexOf(pkColumns, a.first);
-				int bi = ArrayUtils.indexOf(pkColumns, b.first);
-				if (ai < 0)
-					ai = Integer.MAX_VALUE;
-				if (bi < 0)
-					bi = Integer.MAX_VALUE;
-				return Integer.compare(ai, bi);
-			});
+			String[] pkColumns = meta.getPrimaryKey().get().getColumns();
+			LocalMappedSorter<PairSS, Integer> sorter = new LocalMappedSorter<PairSS, Integer>(allFields, e -> ArrayUtils.indexOf(pkColumns, e.first));
+			sorter.filterAfter(e -> e >= 0);
+			sorter.sort((a, b) -> a.compareTo(b));
 		}
 
 		Iterator<PairSS> iter = allFields.iterator();
@@ -618,6 +612,5 @@ public class EntityGenerator {
 	public void setReposSuffix(String reposSuffix) {
 		this.reposSuffix = reposSuffix;
 	}
-	
-	
+
 }
