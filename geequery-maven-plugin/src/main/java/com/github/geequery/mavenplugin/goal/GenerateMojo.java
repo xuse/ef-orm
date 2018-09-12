@@ -106,6 +106,15 @@ public class GenerateMojo extends AbstractMojo {
 	 * @parameter default-value=false
 	 */
 	private boolean exportRepos;
+	
+	
+	/**
+	 * serialize beans as well
+	 *
+	 * @parameter default-value=false
+	 */
+	private boolean initializeData;
+	
 
 	/**
 	 * Repository Package name
@@ -182,6 +191,7 @@ public class GenerateMojo extends AbstractMojo {
 			g.addExcludePatter(".*_\\d+$"); // 防止出现分表
 			g.addExcludePatter("AAA"); // 排除表
 		}
+		g.setInitializeDataAll(initializeData);
 		g.setMaxTables(999);
 		g.setSrcFolder(new File(targetFolder));
 		g.setBasePackage(this.packageName);
@@ -277,6 +287,10 @@ public class GenerateMojo extends AbstractMojo {
 
 	public void setSkip(boolean skip) {
 		this.skip = skip;
+	}
+
+	public void setInitializeData(boolean initializeData) {
+		this.initializeData = initializeData;
 	}
 
 	private static String emptyIfSetToBlank(String value) {

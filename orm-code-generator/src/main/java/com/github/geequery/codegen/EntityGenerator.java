@@ -26,6 +26,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -47,6 +48,7 @@ import com.github.geequery.codegen.ast.JavaContainer;
 import com.github.geequery.codegen.ast.JavaField;
 import com.github.geequery.codegen.ast.JavaUnit;
 import com.github.geequery.orm.annotation.Comment;
+import com.github.geequery.orm.annotation.InitializeData;
 
 import jef.codegen.support.OverWrittenMode;
 import jef.codegen.support.RegexpNameFilter;
@@ -72,6 +74,7 @@ import jef.database.meta.object.TableInfo;
 import jef.database.routing.function.KeyFunction;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 import jef.tools.StringUtils;
 import jef.tools.algorithm.LocalMappedSorter;
 import jef.tools.io.Charsets;
@@ -129,6 +132,10 @@ public class EntityGenerator {
 	 */
 	private String reposSuffix = "Repository";
 
+	private Collection<String> tablesInitializeData = Collections.emptyList();
+
+	private boolean initializeDataAll;
+
 	/**
 	 * 生成单个表对应的实体。
 	 * 
@@ -152,8 +159,13 @@ public class EntityGenerator {
 				TableInfo info = provider.getTableInfo(tablename);
 				tableComment = info != null ? info.getRemarks() : null;
 			}
-			File file = this.saveJavaSource(generateEntity(tablename, entityName, tableComment, optionSet));
-			LogUtil.show(file.getAbsolutePath() + " generated.");
+			JavaUnit unit = generateEntity(tablename, entityName, tableComment, optionSet);
+			File file = this.saveJavaSource(unit);
+			if (file != null) {
+				LogUtil.show(file.getAbsolutePath() + " generated.");
+			} else {
+				LogUtil.show(unit.getClassName()+" Class file was modified, will not overwrite it.");
+			}
 		}
 		if (ArrayUtils.fastContains(options, Option.generateRepos)) {
 			if (StringUtils.isEmpty(reposPackageName)) {
@@ -297,6 +309,9 @@ public class EntityGenerator {
 			if (_tmpCustAnnot.indexOf("KeyFunction") >= 0) {
 				java.addImport(KeyFunction.class);
 			}
+		}
+		if (initializeDataAll || tablesInitializeData.contains(tablename)) {
+			java.addAnnotation(new JavaAnnotation(InitializeData.class).toCode(java));
 		}
 
 		java.setExtends(entityBaseClass);
@@ -466,16 +481,13 @@ public class EntityGenerator {
 	}
 
 	public File saveJavaSource(JavaUnit java) {
+		Assert.notNull(srcFolder);
 		try {
-			if (srcFolder != null) {
-				File f = java.saveToSrcFolder(srcFolder, Charsets.UTF8, OverWrittenMode.AUTO);
-				return f;
-			}
+			File f = java.saveToSrcFolder(srcFolder, Charsets.UTF8, OverWrittenMode.AUTO);
+			return f;
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			throw Exceptions.asIllegalArgument(e);
 		}
-
-		return null;
 	}
 
 	// 生成默认的annonation
@@ -611,6 +623,14 @@ public class EntityGenerator {
 
 	public void setReposSuffix(String reposSuffix) {
 		this.reposSuffix = reposSuffix;
+	}
+
+	public void setAddInitializeData(Collection<String> addInitializeData) {
+		this.tablesInitializeData = addInitializeData;
+	}
+
+	public void setInitializeDataAll(boolean initializeDataAll) {
+		this.initializeDataAll = initializeDataAll;
 	}
 
 }

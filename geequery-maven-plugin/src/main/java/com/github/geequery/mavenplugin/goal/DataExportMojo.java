@@ -22,6 +22,7 @@ import org.apache.maven.plugin.MojoFailureException;
 
 import jef.database.DbClient;
 import jef.database.DbClientBuilder;
+import jef.database.ORMConfig;
 import jef.database.support.InitDataExporter;
 import jef.tools.StringUtils;
 
@@ -78,6 +79,15 @@ public class DataExportMojo extends AbstractMojo {
 	private String targetFolder;
 
 	/**
+	 * The directory containing generated classes.
+	 * 
+	 * @parameter expression="${project.build.outputDirectory}"
+	 * @required
+	 * 
+	 */
+	private File classesDirectory;
+
+	/**
 	 * Whether to skip the exporting execution
 	 *
 	 * @parameter default-value=false property="maven.querydsl.skip"
@@ -88,10 +98,13 @@ public class DataExportMojo extends AbstractMojo {
 		if (skip) {
 			return;
 		}
+		ORMConfig.getInstance().setCheckEnhancement(false);
 		DbClient db;
 		db = new DbClientBuilder(this.jdbcUrl, this.jdbcUser, this.jdbcPassword, 2).setEnhanceScanPackages(false).build();
 		try {
 			InitDataExporter ex = new InitDataExporter(db, new File(this.targetFolder));
+			ex.addClassRoot(classesDirectory.toURI().toURL());
+			ex.setTarget(new File(targetFolder));
 			if (StringUtils.isNotEmpty(exportPackage)) {
 				ex.exportPackage(this.exportPackage);
 			}
