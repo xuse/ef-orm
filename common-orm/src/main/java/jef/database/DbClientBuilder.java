@@ -622,20 +622,6 @@ public class DbClientBuilder {
 		} else if (enhanceScanPackages) {
 			log.warn("EnhanceScanPackages flag was set to true. but property 'packagesToScan' was not assigned");
 		}
-		// 不再主动增强类
-		// else if (packagesToScan != null) {
-		// // if there is no enhances packages, try enhance 'package to Scan'
-		// new EntityEnhancer().enhance(packagesToScan);
-		// } else {
-		// if (System.currentTimeMillis() - lastEnhanceTime > 30000) {
-		// new EntityEnhancer().setExcludePatter(
-		// new String[] { "java", "javax", "org.apache", "org.eclipse", "junit",
-		// "ant", "org.codehaus" })
-		// .enhance();
-		// }
-		// lastEnhanceTime = System.currentTimeMillis();
-		// }
-
 		JefEntityManagerFactory sf;
 		// check data sources.
 		if (dataSource == null && dataSources == null) {

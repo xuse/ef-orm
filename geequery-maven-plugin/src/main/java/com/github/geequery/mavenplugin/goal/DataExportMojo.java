@@ -90,9 +90,15 @@ public class DataExportMojo extends AbstractMojo {
 	/**
 	 * Whether to skip the exporting execution
 	 *
-	 * @parameter default-value=false property="maven.querydsl.skip"
+	 * @parameter default-value=false property="maven.geequery.skip"
 	 */
 	private boolean skip;
+	
+	/**
+	 * 设置为true时，仅当类上具有@InitializeData注解的时才会导出。
+	 * @parameter default-value=false
+	 */
+	private boolean withInitializeDataAnnotation;
 
 	/**
 	 * 每张表最多导出多少条记录
@@ -112,6 +118,7 @@ public class DataExportMojo extends AbstractMojo {
 			InitDataExporter ex = new InitDataExporter(db, new File(this.resourceFolder));
 			ex.addClassRoot(classesDirectory.toURI().toURL());
 			ex.setTarget(new File(resourceFolder));
+			ex.setExportOnlyAnnotationPresent(withInitializeDataAnnotation);
 			if (maxResult > 0) {
 				ex.setMaxResults(maxResult);
 			}
@@ -161,5 +168,17 @@ public class DataExportMojo extends AbstractMojo {
 
 	public void setMaxResult(int maxResult) {
 		this.maxResult = maxResult;
+	}
+
+	public void setResourceFolder(String resourceFolder) {
+		this.resourceFolder = resourceFolder;
+	}
+
+	public void setClassesDirectory(File classesDirectory) {
+		this.classesDirectory = classesDirectory;
+	}
+
+	public void setWithInitializeDataAnnotation(boolean withInitializeDataAnnotation) {
+		this.withInitializeDataAnnotation = withInitializeDataAnnotation;
 	}
 }

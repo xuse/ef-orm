@@ -136,6 +136,8 @@ public class EntityGenerator {
 
 	private boolean initializeDataAll;
 
+	private boolean forceOverwite;
+
 	/**
 	 * 生成单个表对应的实体。
 	 * 
@@ -159,13 +161,7 @@ public class EntityGenerator {
 				TableInfo info = provider.getTableInfo(tablename);
 				tableComment = info != null ? info.getRemarks() : null;
 			}
-			JavaUnit unit = generateEntity(tablename, entityName, tableComment, optionSet);
-			File file = this.saveJavaSource(unit);
-			if (file != null) {
-				LogUtil.show(file.getAbsolutePath() + " generated.");
-			} else {
-				LogUtil.show(unit.getClassName()+" Class file was modified, will not overwrite it.");
-			}
+			saveJavaSource(generateEntity(tablename, entityName, tableComment, optionSet));
 		}
 		if (ArrayUtils.fastContains(options, Option.generateRepos)) {
 			if (StringUtils.isEmpty(reposPackageName)) {
@@ -173,8 +169,7 @@ public class EntityGenerator {
 			}
 			Metadata meta = provider.getTableMetadata(tablename);
 			if (meta.getPrimaryKey().isPresent()) {
-				File file = this.saveJavaSource(generateRepository(entityName, meta, optionSet));
-				LogUtil.show(file.getAbsolutePath() + " generated.");
+				this.saveJavaSource(generateRepository(entityName, meta, optionSet));
 			}
 
 		}
@@ -483,7 +478,13 @@ public class EntityGenerator {
 	public File saveJavaSource(JavaUnit java) {
 		Assert.notNull(srcFolder);
 		try {
-			File f = java.saveToSrcFolder(srcFolder, Charsets.UTF8, OverWrittenMode.AUTO);
+			OverWrittenMode mode = forceOverwite ? OverWrittenMode.YES : OverWrittenMode.AUTO;
+			File f = java.saveToSrcFolder(srcFolder, Charsets.UTF8, mode);
+			if (f != null) {
+				LogUtil.show(f.getAbsolutePath() + " generated.");
+			} else {
+				LogUtil.show(java.getClassName() + " Class file was modified, will not overwrite it.");
+			}
 			return f;
 		} catch (IOException e) {
 			throw Exceptions.asIllegalArgument(e);
@@ -631,6 +632,14 @@ public class EntityGenerator {
 
 	public void setInitializeDataAll(boolean initializeDataAll) {
 		this.initializeDataAll = initializeDataAll;
+	}
+
+	public boolean isForceOverwite() {
+		return forceOverwite;
+	}
+
+	public void setForceOverwite(boolean forceOverwite) {
+		this.forceOverwite = forceOverwite;
 	}
 
 }

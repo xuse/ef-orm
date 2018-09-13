@@ -57,6 +57,7 @@ public class InitDataExporter {
 	private String extension = "." + JefConfiguration.get(DbCfg.INIT_DATA_EXTENSION, "txt");
 	private String charset = "UTF-8";
 	private int maxResults = 5000;
+	private boolean exportOnlyAnnotationPresent;
 
 	private final List<URL> classRoot = new ArrayList<>();
 
@@ -143,9 +144,13 @@ public class InitDataExporter {
 				}
 
 				InitializeData data = e.getAnnotation(InitializeData.class);
-				if (data != null)
+				if (data != null && !data.enable()) {
+					continue;
+				}
+				if (!exportOnlyAnnotationPresent || data != null) {
 					logger.info("Starting export data:{}", e.getName());
-				export(e);
+					export(e);
+				}
 			}
 		}
 	}
@@ -208,6 +213,14 @@ public class InitDataExporter {
 		public boolean hasAnnotation(Class<? extends Annotation> clzName) {
 			return annotations.contains(ASMUtils.getDesc(clzName));
 		}
+	}
+
+	public boolean isExportOnlyAnnotationPresent() {
+		return exportOnlyAnnotationPresent;
+	}
+
+	public void setExportOnlyAnnotationPresent(boolean exportOnlyAnnotationPresent) {
+		this.exportOnlyAnnotationPresent = exportOnlyAnnotationPresent;
 	}
 
 	public String getCharset() {
