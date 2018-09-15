@@ -35,7 +35,7 @@
 </plugin>
 ```
 
-###2. enhance
+### 2. enhance
 
 按上节的配置，增加了`<goal>enhance</goal>`后，在maven构建过程中会自动调用本插件对类文件进行增强。使用本功能无必须配置的参数。
 
@@ -43,7 +43,7 @@
 
 也可以直接使用命令`mvn geequery:enhance`调用，但开发期间已经提供了动态增强机制，参见手册《Chapter-2   入门 Getting started》，所以插件的功能主要还是用于编译构建过程。
 
-###3. generate
+### 3. generate
 
 此功能用于从数据库中根据表结构导出实体 。使用配置如下
 
@@ -102,7 +102,7 @@ mvn geequery:generate
 
 > 关于生成文件的覆盖问题。如果发生文件已经存在，会检查文件中的@NotModified注解。如果该注解存在，视为文件未被用户更改过，会进行覆盖。因此如果用户不希望文件被覆盖，请去除类上的该注解。
 
-###4. export-data
+### 4. export-data
 
 此功能可以将指定表中的数据导出到本地资源文件夹，这些数据是csv格式的，可以用Excel打开自行编辑。
 
@@ -127,7 +127,7 @@ export-data支持的配置项如下
 mvn geequery:export-data
 ```
 
-###5. spring-demo
+### 5. spring-demo
 
 该功能用于快速搭建一个GeeQuery的Spring-data+spring-boot的示例。其中会用到geequery-spring-boot-starter等Spring-boot模块。
 
@@ -151,7 +151,7 @@ mvn geequery:export-data
 mvn geequery:springboot-init
 ```
 
-###6. 关于m2e lifecycle报错
+### 6. 关于m2e lifecycle报错
 
 Eclipse的maven lifecycle检查特别严格。所以如果出现Eclipse的Maven报错。可以通过增加以下配置解决。
 
