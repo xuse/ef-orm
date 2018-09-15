@@ -5,19 +5,21 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.easyframe.tutorial.lesson2.entity.Student;
+import org.junit.Test;
+
 import jef.database.Condition;
 import jef.database.DbClient;
 import jef.database.DbClientBuilder;
 import jef.database.ORMConfig;
+import jef.database.QB;
 import jef.database.meta.FBIField;
 import jef.database.query.JpqlExpression;
+import jef.database.query.Query;
 import jef.database.query.QueryBuilder;
 import jef.database.query.SqlExpression;
 import jef.tools.DateUtils;
 import jef.tools.string.RandomData;
-
-import org.easyframe.tutorial.lesson2.entity.Student;
-import org.junit.Test;
 
 /**
  * 这个案例演示更多的单表查询Criteria的用法，请对照执行后控制台上的打印出的SQL语句来验证。
@@ -98,16 +100,16 @@ public class Case1 extends org.junit.Assert {
 	 */
 	@Test
 	public void testSelect_Between() throws SQLException {
-		Student st = new Student();
-		// 查询出生日期在，1999-1-1到 2003-12-31之间的学生。
-		st.getQuery().addCondition(QueryBuilder.between(Student.Field.dateOfBirth, DateUtils.getDate(1999, 1, 1), DateUtils.getDate(2003, 12, 31)));
-		// gender='M'的（男生）
-		st.getQuery().addCondition(Student.Field.gender, "M");
+		Query<Student> st = QB.create(Student.class);
+		st.addCondition(Student.Field.dateOfBirth.between(
+				DateUtils.get(1999, 1, 1), 
+				DateUtils.get(2003, 12, 31)));
+		st.addCondition(Student.Field.gender.eq("M"));
 
 		List<Student> students = db.select(st);
 		System.out.println("出生日期在范围内的男生:" + students.size());
 
-		assertEquals(db.count(st.getQuery()), students.size());
+		assertEquals(db.count(st), students.size());
 	}
 
 	/**
