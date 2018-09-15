@@ -65,7 +65,7 @@ final class SingleDummyConnectionPool implements IUserManagedPool {
 		}
 		map.clear();
 		PoolReleaseThread.getInstance().removePool(this);
-		System.out.println("pollCount:" + pollCount + " offer count:" + offerCount);
+		//System.out.println("pollCount:" + pollCount + " offer count:" + offerCount);
 	}
 
 	public DataSource getDatasource() {

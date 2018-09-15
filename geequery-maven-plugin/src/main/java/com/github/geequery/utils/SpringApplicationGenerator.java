@@ -2,6 +2,7 @@ package com.github.geequery.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Modifier;
 
 import com.github.geequery.codegen.ast.IClassUtil;
 import com.github.geequery.codegen.ast.JavaAnnotation;
@@ -11,6 +12,7 @@ import com.github.geequery.codegen.ast.JavaUnit;
 
 import jef.codegen.support.OverWrittenMode;
 import jef.common.log.LogUtil;
+import jef.database.jsqlparser.expression.operators.arithmetic.Mod;
 import jef.tools.Exceptions;
 import jef.tools.io.Charsets;
 
@@ -46,6 +48,7 @@ public class SpringApplicationGenerator {
 		{
 			JavaField field = new JavaField("org.springframework.boot.test.rule.OutputCapture", "out");
 			field.addAnnotation(new JavaAnnotation("org.junit.ClassRule"), java);
+			field.setModifiers(Modifier.STATIC | Modifier.PUBLIC);
 			field.setInitValue("new OutputCapture()");
 			java.addField(field);
 		}

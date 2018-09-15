@@ -60,20 +60,24 @@
 
 配置说明
 
-| 配置名             | 说明                                                         | 必须 |
-| ------------------ | ------------------------------------------------------------ | ---- |
-| jdbcUrl            | 数据库URL                                                    | Y    |
-| jdbcUser           | 数据库用户                                                   | Y    |
-| jdbcPassword       | 数据库密码                                                   | Y    |
-| packageName        | 导出实体的包名                                               | Y    |
-| targetFolder       | 导出路径（不含包路径）                                       | Y    |
-| tableNamePattern   | 正则表达式，用于过滤表名（不配置则导出当前schema下全部表）   | N    |
-| exportRepos        | true/false，为true时导出实体同时还会生成Spring-data的Repository | N    |
-| commentAnnotations | true/false，为true时会将数据库中的表和列注释以@Comment注解形式添加到实体。使用实体建表时可以携带这些注释信息。 | N    |
-| initializeData     | true/false，为true时会在实体上增加@InitializeData注解        | N    |
-| skip               | true/false，为true时忽略当前任务                             | N    |
-| repositoryPackage  | 导出Spring-data的Repository的包名，如不指定会在entity平级创建一个repos的包，将生成代码放入该包。 | N    |
-| repositorySuffix   | 导出Spring-data的Repository类的后缀。默认为实体名+Repository | N    |
+| 配置名                         | 说明                                                         | 必须 |
+| ------------------------------ | ------------------------------------------------------------ | ---- |
+| jdbcUrl                        | 数据库URL                                                    | Y    |
+| jdbcUser                       | 数据库用户                                                   | Y    |
+| jdbcPassword                   | 数据库密码                                                   | Y    |
+| skip                           | true/false，为true时忽略当前任务                             | N    |
+| **导出实体相关**               |                                                              |      |
+| packageName                    | 导出实体的包名                                               | Y    |
+| targetFolder                   | 导出路径（不含包路径）                                       | Y    |
+| tableNamePattern               | 正则表达式，用于过滤表名（不配置则导出当前schema下全部表）   | N    |
+| commentAnnotations             | true/false，为true时会将数据库中的表和列注释以@Comment注解形式添加到实体。使用实体建表时可以携带这些注释信息。 | N    |
+| initializeData                 | true/false，为true时会在实体上增加@InitializeData注解        | N    |
+| **Spring-data repository相关** |                                                              |      |
+| exportRepos                    | true/false，true时导出实体同时还会生成Spring-data的Repository | N    |
+| repositoryPackage              | 导出Spring-data的Repository的包名，如不指定会在entity平级创建一个repos的包，将生成代码放入该包。 | N    |
+| repositorySuffix               | 导出Spring-data的Repository类的后缀。默认为实体名+Repository | N    |
+| exportRepoTests                | true/false，true时导出Spring-data的Repository同时生成单元测试 | N    |
+| testFolder                     | 单元测试所在路径，默认src/test/java                          | N    |
 
 配置完成后，可以手工调用——
 
@@ -111,11 +115,11 @@ export-data支持的配置项如下
 | jdbcUrl                      | 数据库URL                                                   | Y    |
 | jdbcUser                     | 数据库用户                                                  | Y    |
 | jdbcPassword                 | 数据库密码                                                  | Y    |
+| skip                         | true/false，true时忽略当前任务                              | N    |
 | resourceFolder               | 导出路径，默认位于src\main\resources                        | Y    |
-| exportPackage                | 导出该包下类文件对应的表。                                  | Y    |
+| exportDataFromPackage        | 导出该包下类文件对应的表。                                  | Y    |
 | withInitializeDataAnnotation | 设置为true时，仅当类上具有@InitializeData注解的时才会导出。 | N    |
 | maxResult                    | 单张表最多导出行数。默认5000行。                            | N    |
-| skip                         | true/false，为true时忽略当前任务                            | N    |
 
 配置完成后，可以手工调用该任务
 
@@ -127,15 +131,25 @@ mvn geequery:export-data
 
 该功能用于快速搭建一个GeeQuery的Spring-data+spring-boot的示例。其中会用到geequery-spring-boot-starter等Spring-boot模块。
 
-<待补充内容>
+功能包括——
+
+* 生成可运行的SpringApplication类，生成默认的application.properties配置
+* 生成Spring-Application的单元测试。
+
+上述功能可以帮助对GeeQuery的Spring-boot集成不够熟悉的同学，快速搭建一个可运行的数据库服务程序。同时在application.properties中包含了常用的若干项geequery配置信息。
+
+| 配置名             | 说明                                                   | 必须 |
+| ------------------ | ------------------------------------------------------ | ---- |
+| skip               | true/false，true时忽略当前任务                         | N    |
+| testFolder         | 单元测试所在路径，默认src/test/java                    | N    |
+| applicationPackage | SpringApplication所在包，默认com.mycompany.application | N    |
+| applicationName    | SpringApplication类名，默认MyGeeQueryApplication       | N    |
 
 可以手工调用该任务
 
 ```
 mvn geequery:springboot-init
 ```
-
-
 
 ###6. 关于m2e lifecycle报错
 

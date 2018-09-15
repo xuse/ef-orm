@@ -67,7 +67,7 @@ public class DataExportMojo extends AbstractMojo {
 	 * @parameter
 	 * @required
 	 */
-	private String exportPackage;
+	private String exportDataFrom;
 
 	/**
 	 * target source folder to create the sources into (e.g.
@@ -122,8 +122,8 @@ public class DataExportMojo extends AbstractMojo {
 			if (maxResult > 0) {
 				ex.setMaxResults(maxResult);
 			}
-			if (StringUtils.isNotEmpty(exportPackage)) {
-				ex.exportPackage(this.exportPackage);
+			if (StringUtils.isNotEmpty(exportDataFrom)) {
+				ex.exportPackage(this.exportDataFrom);
 			}
 		} catch (ClassNotFoundException e) {
 			throw new MojoExecutionException("ClassNotFound", e);
@@ -158,8 +158,8 @@ public class DataExportMojo extends AbstractMojo {
 		this.resourceFolder = targetFolder;
 	}
 
-	public void setExportPackage(String exportPackage) {
-		this.exportPackage = exportPackage;
+	public void setExportDataFrom(String exportDataFrom) {
+		this.exportDataFrom = exportDataFrom;
 	}
 
 	public void setSkip(boolean skip) {
