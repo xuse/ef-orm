@@ -59,7 +59,7 @@ import org.apache.commons.lang.ArrayUtils;
 	public static IClass toWrappedType(String primitive){
 		int i=ArrayUtils.indexOf(IClass.PRIMITIVE_TYPES, primitive);
 		if(i<0)throw new IllegalArgumentException("The input type "+ primitive+" is not a primitive type!");
-		return IClassUtil.getIClass(IClass.WRAPPED_TYPES[i]);
+		return IClassUtil.parse(IClass.WRAPPED_TYPES[i]);
 	}
 	
 	public static boolean isMatchStart(String[] keywords, String str){

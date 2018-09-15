@@ -792,7 +792,16 @@ public class IOUtils {
 		}
 	}
 
-	public static String[] readLine(URL in, String charset, int... num) throws IOException {
+	/**
+	 * 得到资源文件的若干行
+	 * 
+	 * @param in
+	 * @param charset
+	 * @param num
+	 * @return
+	 * @throws IOException
+	 */
+	public static String[] readLine(URL in, Charset charset, int... num) throws IOException {
 		BufferedReader is = getReader(in, charset);
 		try {
 			String line = null;
@@ -825,59 +834,8 @@ public class IOUtils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static String[] readLine(File inName, String charset, int... num) throws IOException {
-		BufferedReader is = getReader(inName, charset);
-		try {
-			String line = null;
-			if (num.length == 0)
-				num = new int[] { -1 };
-			boolean isAll = num[0] == -1;
-			List<String> result = new ArrayList<String>(isAll ? 20 : num.length);
-			int n = 0;
-			while ((line = is.readLine()) != null) {
-				n++;
-				if (isAll || ArrayUtils.contains(num, n)) {
-					result.add(line);
-				}
-				if (!isAll && n >= num[num.length - 1])
-					break;
-			}
-			return result.toArray(new String[result.size()]);
-		} finally {
-			closeQuietly(is);
-		}
-	}
-
-	/**
-	 * 将文本文件的指定行拼成String返回
-	 * 
-	 * @param inName
-	 * @param charset
-	 * @param filter
-	 * @return
-	 * @throws IOException
-	 */
-	public static String readLinesAsString(File inName, String charset, LineFilter filter) throws IOException {
-		BufferedReader is = getReader(inName, charset);
-		String line = null;
-		StringBuilder sb = new StringBuilder();
-		int n = 0;
-		while ((line = is.readLine()) != null) {
-			if (filter == null) {
-				if (sb.length() > 0)
-					sb.append('\n');
-				sb.append(line);
-			} else {
-				String ll = filter.filter(line, n++);
-				if (ll != null) {
-					if (sb.length() > 0)
-						sb.append('\n');
-					sb.append(line);
-				}
-			}
-		}
-		is.close();
-		return sb.toString();
+	public static String[] readLine(File inName, Charset charset, int... num) throws IOException {
+		return readLine(inName.toURI().toURL(), charset, num);
 	}
 
 	/**
@@ -900,6 +858,33 @@ public class IOUtils {
 		String filter(String line, int num);
 	}
 
+	public static String[] readLine(URL inName, Charset charset, LineFilter filter) throws IOException {
+		if (inName == null) {
+			return new String[0];
+		}
+		BufferedReader is = getReader(inName, charset);
+		try {
+			String line = null;
+			List<String> result = new ArrayList<String>();
+			int n = 0;
+			while ((line = is.readLine()) != null) {
+				if (filter != null) {
+					String ll = filter.filter(line, n++);
+					if (ll != null) {
+						result.add(ll);
+					}
+				} else {
+					result.add(line);
+				}
+			}
+
+			return result.toArray(new String[result.size()]);
+		} finally {
+			is.close();
+		}
+
+	}
+
 	/**
 	 * 从文件中读取需要的行
 	 * 
@@ -908,26 +893,43 @@ public class IOUtils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static String[] readLines(URL inName, String charset, LineFilter filter) throws IOException {
-		if (inName == null) {
-			return new String[0];
-		}
+	public static String[] readLine(URL inName, String charset, LineFilter filter) throws IOException {
+		return readLine(inName, Charsets.forName(charset), filter);
+	}
+
+	/**
+	 * 将文本文件的指定行拼成String返回
+	 * 
+	 * @param inName
+	 * @param charset
+	 * @param filter
+	 * @return
+	 * @throws IOException
+	 */
+	public static String readLinesAsString(File inName, String charset, LineFilter filter) throws IOException {
 		BufferedReader is = getReader(inName, charset);
 		String line = null;
-		List<String> result = new ArrayList<String>();
-		int n = 0;
-		while ((line = is.readLine()) != null) {
-			if (filter != null) {
-				String ll = filter.filter(line, n++);
-				if (ll != null) {
-					result.add(line);
+		StringBuilder sb = new StringBuilder();
+		try {
+			int n = 0;
+			while ((line = is.readLine()) != null) {
+				if (filter == null) {
+					if (sb.length() > 0)
+						sb.append('\n');
+					sb.append(line);
+				} else {
+					String ll = filter.filter(line, n++);
+					if (ll != null) {
+						if (sb.length() > 0)
+							sb.append('\n');
+						sb.append(line);
+					}
 				}
-			} else {
-				result.add(line);
 			}
+			return sb.toString();
+		} finally {
+			is.close();
 		}
-		is.close();
-		return result.toArray(new String[result.size()]);
 	}
 
 	/**
@@ -2210,11 +2212,11 @@ public class IOUtils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static BufferedReader getReader(URL file, String charSet) {
+	public static BufferedReader getReader(URL file, Charset charSet) {
 		if (file == null)
 			return null;
 		try {
-			UnicodeReader isr = new UnicodeReader(file.openStream(), Charsets.forName(charSet));
+			UnicodeReader isr = new UnicodeReader(file.openStream(), charSet);
 			return new BufferedReader(isr);
 		} catch (IOException e) {
 			throw new RuntimeException(e);

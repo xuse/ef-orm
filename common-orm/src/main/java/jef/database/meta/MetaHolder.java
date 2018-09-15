@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 import javax.persistence.Column;
 import javax.persistence.JoinColumn;
@@ -39,6 +40,11 @@ import javax.persistence.OneToOne;
 import javax.persistence.OrderBy;
 import javax.persistence.PersistenceException;
 import javax.persistence.Transient;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.collect.ArrayListMultimap;
 
 import jef.accelerator.asm.Attribute;
 import jef.accelerator.asm.ClassReader;
@@ -94,11 +100,6 @@ import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.BeanUtils;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ArrayListMultimap;
 
 /**
  * 静态存放所有数据表元模型的存放类。
@@ -160,7 +161,7 @@ public final class MetaHolder {
 			String configStr = JefConfiguration.get(DbCfg.DB_DATASOURCE_MAPPING);
 			SITE_MAPPING = StringUtils.toMap(configStr, ",", ":", -1);
 			if (!SITE_MAPPING.isEmpty()) {
-				LogUtil.info("Database mapping: {}" , SITE_MAPPING);
+				LogUtil.info("Database mapping: {}", SITE_MAPPING);
 			}
 		} catch (Exception e) {
 			log.error("SCHEMA_MAPPING error", e);
@@ -228,11 +229,11 @@ public final class MetaHolder {
 		if (table.isEmpty()) {
 			throw new SQLException("The table " + tableName + " does not exit in database " + session.getNoTransactionSession().toString());
 		}
-		PrimaryKey pks = meta.getPrimaryKey(tableName);
+		Optional<PrimaryKey> pks = meta.getPrimaryKey(tableName);
 		List<jef.database.meta.object.Column> columns = meta.getColumns(tableName, false);
 		TupleMetadata m = new TupleMetadata(tableName);
 		for (jef.database.meta.object.Column c : columns) {
-			boolean isPk = (pks == null) ? false : pks.hasColumn(c.getColumnName());
+			boolean isPk = pks.isPresent() && pks.get().hasColumn(c.getColumnName());
 			// m.addColumn(c.getColumnName(), c.getColumnName(),
 			// c.toColumnType(meta.getProfile()), isPk);
 			m.addColumn(DbUtils.underlineToUpper(c.getColumnName(), false), c.getColumnName(), c.toColumnType(meta.getProfile()), isPk);
@@ -500,7 +501,7 @@ public final class MetaHolder {
 			// 将这个字段作为外部引用处理
 			processReference(meta, annos.forField(f));
 			// 还有一种情况，即定义了Column注解，但不属于元模型的一个字段，用于辅助映射的。当结果拼装时有用
-			processColumnHelper(meta, annos.forField(f));
+			meta.addColumnHelper(annos.forField(f));
 		}
 		return meta;
 	}
@@ -528,14 +529,6 @@ public final class MetaHolder {
 		}
 		metaFields.check();
 		return meta;
-	}
-
-	// 处理非元模型的Column描述字段
-	private static void processColumnHelper(TableMetadata meta, FieldAnnotationProvider field) {
-		Column column = field.getAnnotation(Column.class);
-		if (column != null) {
-			meta.addNonMetaModelFieldMapping(field.getName(), column);
-		}
 	}
 
 	/**
@@ -623,6 +616,7 @@ public final class MetaHolder {
 
 		/**
 		 * 由于用户可能在父子类中反复定义同一个Field的元模型，因此此处返回的是列表
+		 * 
 		 * @param name
 		 * @return
 		 */
@@ -651,19 +645,18 @@ public final class MetaHolder {
 			}
 			FieldAnnotationProvider fa = annos.forField(f);
 			List<Field> fieldss = metaModel.remove(f.getName());
-			if (fieldss.isEmpty() || fa.getAnnotation(Transient.class)!=null) {
+			if (fieldss.isEmpty() || fa.getAnnotation(Transient.class) != null) {
 				unprocessedField.add(f);
 				continue;
 			}
 			Field field = fieldss.get(0);
 			if (field instanceof Enum) {
-				assertFieldEnhanced(field,fieldss,processingClz);
+				assertFieldEnhanced(field, fieldss, processingClz);
 			}
 
-	
 			// 在得到了元模型的情况下
 			boolean isPK = fa.getAnnotation(javax.persistence.Id.class) != null;
-			
+
 			jef.database.annotation.Type customType = fa.getAnnotation(jef.database.annotation.Type.class);
 			ColumnMapping type = null;
 			Class<?> fieldType;
@@ -712,11 +705,10 @@ public final class MetaHolder {
 		}
 	}
 
-	private static void assertFieldEnhanced(Field field, List<Field> fieldss,Class<?> processingClz) {
+	private static void assertFieldEnhanced(Field field, List<Field> fieldss, Class<?> processingClz) {
 
 		/*
-		 * 必须至少有一个meta field的定义类==
-		 * processingClz。这样才能保证这个属性被增强过。否则不能保证该属性被增强过。
+		 * 必须至少有一个meta field的定义类== processingClz。这样才能保证这个属性被增强过。否则不能保证该属性被增强过。
 		 * 
 		 * 因为目前增强算法都只按当前类的enum Field中的枚举来增强属性。不会去增强父类中的属性。
 		 * 所以如果在父类中定义属性而在子类中定义元模型来使用。这个属性就会有未被增强的风险。
@@ -725,10 +717,8 @@ public final class MetaHolder {
 		 * 
 		 * 关于为什么不作增强父类的功能： a 父类可能在JAR包中，不能直接修改。 b
 		 * 如果在子类中通过覆盖方法来实现，也有问题，因为ASM中去解析父类并查找同名方法较为复杂
-		 * 。在增强前，不能调用类实现反射，因此相当于要自行用ASM实现父子类解析的JAVA逻辑，太麻烦了…… c
-		 * 此外，如果父类本身也定义了该元模型
-		 * ，子类覆盖父类元模型，此时也很悲剧——子类生成一个增强过的方法覆盖父类方法，而父类本身又做了增强
-		 * ，此时延迟加载和等植入代码将被执行两遍。
+		 * 。在增强前，不能调用类实现反射，因此相当于要自行用ASM实现父子类解析的JAVA逻辑，太麻烦了…… c 此外，如果父类本身也定义了该元模型
+		 * ，子类覆盖父类元模型，此时也很悲剧——子类生成一个增强过的方法覆盖父类方法，而父类本身又做了增强 ，此时延迟加载和等植入代码将被执行两遍。
 		 * 因此，我们还是要尽可能避免这种父类定义属性，子类定义元模型的方式。即元模型要定义在各自的类里，子类可以覆盖父类的。
 		 */
 		boolean isEnhancedProperty = false;
@@ -1071,7 +1061,6 @@ public final class MetaHolder {
 			return null;
 		}
 	}
-
 
 	/**
 	 * 逆向查找元模型

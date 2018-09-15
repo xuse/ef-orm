@@ -39,6 +39,7 @@ import jef.database.jsqlparser.visitor.Statement;
 import jef.database.jsqlparser.visitor.VisitorAdapter;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
+import jef.tools.io.Charsets;
 
 public class ComplexSqlParseTest extends org.junit.Assert {
 
@@ -377,7 +378,7 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 
 	private void doParseFile(String filename, ParseType eSql) throws ParseException, IOException {
 		StringBuilder sb = new StringBuilder();
-		BufferedReader reader = IOUtils.getReader(this.getClass().getResource(filename), "UTF-8");
+		BufferedReader reader = IOUtils.getReader(this.getClass().getResource(filename), Charsets.UTF8);
 		if (reader == null) {
 			throw new FileNotFoundException(filename);
 		}
@@ -450,7 +451,7 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 	public void doPerformance(String fileName, ParseType type) throws SQLException, ParseException, IOException {
 		StringBuilder sb = new StringBuilder();
 		for (int i = 0; i < 5; i++) {
-			BufferedReader reader = IOUtils.getReader(this.getClass().getResource(fileName), "UTF-8");
+			BufferedReader reader = IOUtils.getReader(this.getClass().getResource(fileName), Charsets.UTF8);
 			Assert.notNull(reader);
 			String line;
 			boolean comment = false;

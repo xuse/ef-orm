@@ -16,15 +16,15 @@ public class JavaAnnotation implements JavaElement {
 		this.name = clz.getName();
 	}
 
-//	public void addCheckImports(Collection<Class<?>> clzs) {
-//		for (Class<?> clz : clzs) {
-//			checkImport.add(clz.getName());
-//		}
-//	}
-//
-//	public void addCheckImport(Class<?> clz) {
-//		checkImport.add(clz.getName());
-//	}
+	// public void addCheckImports(Collection<Class<?>> clzs) {
+	// for (Class<?> clz : clzs) {
+	// checkImport.add(clz.getName());
+	// }
+	// }
+	//
+	// public void addCheckImport(Class<?> clz) {
+	// checkImport.add(clz.getName());
+	// }
 
 	public JavaAnnotation(String name) {
 		this.name = name;
@@ -38,14 +38,20 @@ public class JavaAnnotation implements JavaElement {
 		return properties;
 	}
 
-	public void put(String key, Object value) {
+	public JavaAnnotation put(String key, Object value) {
 		properties.put(key, value);
+		return this;
+	}
+
+	public JavaAnnotation putValue(Object value) {
+		put("value", value);
+		return this;
 	}
 
 	public String toCode(JavaUnit main) {
-//		for (String importClass : this.checkImport) {
-//			main.addImport(importClass);
-//		}
+		// for (String importClass : this.checkImport) {
+		// main.addImport(importClass);
+		// }
 		StringBuilder sb = new StringBuilder();
 		sb.append("@").append(main.getJavaClassName(name));
 		boolean isSingle = properties.size() == 1;
@@ -75,22 +81,28 @@ public class JavaAnnotation implements JavaElement {
 	private static final String[] TO = { " ", " ", "\\\"" };
 
 	private void appendValue(StringBuilder sb, Object v, JavaUnit main) {
-		if(v instanceof Collection) {
-			Iterator<?> iter=((Collection<?>)v).iterator();
+		if (v instanceof Collection) {
+			Iterator<?> iter = ((Collection<?>) v).iterator();
 			sb.append('{');
-			if(iter.hasNext()) {
-				Object o=iter.next();
+			if (iter.hasNext()) {
+				Object o = iter.next();
 				appendValue(sb, o, main);
 			}
-			for(;iter.hasNext();) {
-				Object o=iter.next();
+			for (; iter.hasNext();) {
+				Object o = iter.next();
 				sb.append(", \r\n\t");
 				appendValue(sb, o, main);
 			}
 			sb.append('}');
-		}else if(v instanceof JavaAnnotation) {
+		} else if(v instanceof Class) {
+			String name=((Class<?>) v).getName();
+			sb.append(main.getJavaClassName(name)+".class");
+		} else if(v instanceof IClass) {
+			String name=((IClass) v).getName();
+			sb.append(main.getJavaClassName(name)+".class");
+		} else if (v instanceof JavaAnnotation) {
 			sb.append(((JavaAnnotation) v).toCode(main));
-		}else if (v instanceof CharSequence) {
+		} else if (v instanceof CharSequence) {
 			String s = String.valueOf(v);
 			s = StringUtils.replaceEach(s, FROM, TO);
 			sb.append('"').append(s).append('"');
@@ -108,7 +120,7 @@ public class JavaAnnotation implements JavaElement {
 
 	@Override
 	public String toString() {
-		return "@"+name+properties;
+		return "@" + name + properties;
 	}
 
 }

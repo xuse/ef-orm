@@ -236,7 +236,7 @@ public class Case1 extends org.junit.Assert {
 	public void testUnion2() throws SQLException {
 		Query<Person> p = QB.create(Person.class);
 		p.orderByDesc(Person.Field.currentSchoolId);
-		p.addCondition(QB.notNull(Person.Field.gender));
+		p.addCondition(Person.Field.gender.isNotNull());
 		Selects select = QB.selectFrom(p);
 		select.column(Person.Field.name).as("name");
 		select.column(Person.Field.gender);

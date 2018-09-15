@@ -9,6 +9,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -432,7 +433,7 @@ public class ResourceUtils {
 	 * @param charset
 	 * @return
 	 */
-	public final static Map<String, String> loadAsProperties(String name, String charset) {
+	public final static Map<String, String> loadAsProperties(String name, Charset charset) {
 		List<URL> res = getResources(name);
 		Map<String, String> result = new LinkedHashMap<String, String>();
 		for (URL u : res) {

@@ -17,13 +17,22 @@ package com.github.geequery.codegen;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -31,15 +40,20 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import com.github.geequery.codegen.Metadata.ColumnEx;
+import com.github.geequery.codegen.ast.IClass;
+import com.github.geequery.codegen.ast.IClassUtil;
 import com.github.geequery.codegen.ast.JavaAnnotation;
 import com.github.geequery.codegen.ast.JavaConstructor;
 import com.github.geequery.codegen.ast.JavaContainer;
 import com.github.geequery.codegen.ast.JavaField;
+import com.github.geequery.codegen.ast.JavaMethod;
 import com.github.geequery.codegen.ast.JavaUnit;
 import com.github.geequery.orm.annotation.Comment;
+import com.github.geequery.orm.annotation.InitializeData;
 
 import jef.codegen.support.OverWrittenMode;
 import jef.codegen.support.RegexpNameFilter;
+import jef.common.PairSS;
 import jef.common.log.LogUtil;
 import jef.database.DataObject;
 import jef.database.DbUtils;
@@ -56,13 +70,16 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.object.Column;
 import jef.database.meta.object.Index;
 import jef.database.meta.object.Index.IndexItem;
+import jef.database.meta.object.PrimaryKey;
 import jef.database.meta.object.TableInfo;
 import jef.database.routing.function.KeyFunction;
-import jef.http.client.support.CommentEntry;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 import jef.tools.StringUtils;
+import jef.tools.algorithm.LocalMappedSorter;
 import jef.tools.io.Charsets;
+import jef.tools.reflect.BeanUtils;
 
 /**
  * 从数据库表生成JEF的Entity类 指定数据库表，自动生成表对应的DataObject.
@@ -70,21 +87,226 @@ import jef.tools.io.Charsets;
  * @author Administrator
  */
 public class EntityGenerator {
+	/**
+	 * 生成实体的包名
+	 */
 	private String basePackage = "jef.generated.dataobject";
+	/**
+	 * 方言
+	 */
 	private DatabaseDialect profile;
+	/**
+	 * 实体基类
+	 */
 	private String entityBaseClass = DataObject.class.getName();
-
+	/**
+	 * 元数据
+	 */
 	private MetaProvider provider;
+	/**
+	 * 源代码文件夹
+	 */
 	private File srcFolder = new File("src1");
+
+	/**
+	 * 源代码文件夹
+	 */
+	private File testFolder = new File("test");
+	/**
+	 * 包含表
+	 */
 	private String includePattern;
+	/**
+	 * 不包含表
+	 */
 	private String[] excludePatter;
-	private int maxTables = 900;
+	/**
+	 * 最大生成
+	 */
+	private int maxTables = 1000;
+	/**
+	 * 进度回调
+	 */
 	private EntityProcessorCallback callback;
 
-	public File generateOne(String tablename, String entityName, String tableComment) throws SQLException {
-		File file = this.saveJavaSource(generateSource(tablename, entityName, tableComment));
-		LogUtil.show(file.getAbsolutePath() + " generated.");
-		return file;
+	/**
+	 * 仓库包名
+	 */
+	private String reposPackageName;
+	/**
+	 * 仓库类后缀
+	 */
+	private String reposSuffix = "Repository";
+
+	private Collection<String> tablesInitializeData = Collections.emptyList();
+
+	private boolean initializeDataAll;
+
+	private boolean forceOverwite;
+
+	/**
+	 * 生成单个表对应的实体。
+	 * 
+	 * @param tablename
+	 * @param options
+	 * @return
+	 * 
+	 * @throws SQLException
+	 */
+	public void generateOne(String tablename, Option... options) throws SQLException {
+		generateOne(tablename, null, null, options);
+	}
+
+	public void generateOne(String tablename, String entityName, String tableComment, Option... options) throws SQLException {
+		Set<Option> optionSet = new HashSet<>(Arrays.asList(options));
+		if (entityName == null)
+			entityName = DbUtils.underlineToUpper(tablename, true);
+
+		if (optionSet.contains(Option.generateEntity)) {
+			if (tableComment == null) {
+				TableInfo info = provider.getTableInfo(tablename);
+				tableComment = info != null ? info.getRemarks() : null;
+			}
+			saveJavaSource(generateEntity(tablename, entityName, tableComment, optionSet), null);
+		}
+		if (ArrayUtils.fastContains(options, Option.generateRepos)) {
+			if (StringUtils.isEmpty(reposPackageName)) {
+				reposPackageName = StringUtils.substringBeforeLast(basePackage, ".") + ".repos";
+			}
+			Metadata meta = provider.getTableMetadata(tablename);
+			if (meta.getPrimaryKey().isPresent()) {
+				this.saveJavaSource(generateRepository(entityName, meta, optionSet), null);
+				if (ArrayUtils.fastContains(options, Option.generateRepoTestCase)) {
+					saveJavaSource(generateRepositoryTest(tablename, entityName, optionSet), testFolder);
+					File testApplication = new File(testFolder, reposPackageName.replace('.', '/') + "/RepositoryTestApplication.java");
+					if (!testApplication.exists()) {
+						saveJavaSource(generateTestApplication(reposPackageName), testFolder);
+					}
+				}
+			}
+		}
+	}
+
+	private JavaUnit generateTestApplication(String reposPackageName2) {
+		JavaUnit java = new JavaUnit(reposPackageName2, "RepositoryTestApplication");
+		java.setModifiers(Modifier.PUBLIC);
+		java.addAnnotation(new JavaAnnotation("org.springframework.boot.autoconfigure.SpringBootApplication"));
+		java.addComments("The Spring Boot Application for testing {@link GeeQueryTest @GeeQueryTest}.", "<p>");
+		java.addComments("This class has role for prevent to run the SampleAnnotationApplication.");
+		java.addComments("For more detail information, please refer <a href=\"http://stackoverflow.com/questions/42722480/jdbctest-detect-class-annotated-springbootapplication\">Here</a>.");
+		return java;
+	}
+
+	/**
+	 * 生成测试类
+	 * 
+	 * @param tablename
+	 * @param entityName
+	 * @param tableComment
+	 * @param optionSet
+	 * @return
+	 */
+	private JavaUnit generateRepositoryTest(String tablename, String entityName, Set<Option> optionSet) {
+
+		String repoTestName = entityName + reposSuffix;
+		String repoTestFullName = reposPackageName + "." + repoTestName;
+		JavaUnit java = new JavaUnit(reposPackageName, repoTestName + "Test");
+		IClassUtil.addCommonsLog(java);
+		java.addAnnotation(new JavaAnnotation("org.junit.runner.RunWith").putValue(IClassUtil.parse("org.springframework.test.context.junit4.SpringRunner")));
+		java.addAnnotation(new JavaAnnotation("com.github.geequery.springboot.test.autoconfigure.GeeQueryTest"));
+		java.addComments("Test cases for {@link " + repoTestName + "}.");
+		JavaField field = new JavaField(repoTestFullName, StringUtils.uncapitalize(repoTestName));
+		{
+			field.setModifiers(Modifier.PRIVATE);
+			field.addAnnotation(new JavaAnnotation("org.springframework.beans.factory.annotation.Autowired"), java);
+			java.addField(field);
+		}
+		{
+			JavaMethod method = new JavaMethod("test1");
+			method.addAnnotation(new JavaAnnotation("org.junit.Test"), java);
+			method.addContent("Assert.assertNotNull(" + field.getName() + ");");
+			java.addMethod(method);
+			java.addImportStatic("org.hamcrest.CoreMatchers.*");
+			java.addImport("org.junit.Assert");
+		}
+		return java;
+	}
+
+	private JavaUnit generateRepository(String entityName, Metadata meta, Set<Option> optionSet) {
+		Assert.notNull(entityName);
+		JavaUnit java = new JavaUnit(reposPackageName, entityName + reposSuffix);
+		java.setInterface(true);
+		IClass clz = IClassUtil.parse("com.github.geequery.springdata.repository.GqRepository");
+		IClass entity = IClassUtil.parse(basePackage + "." + entityName);
+		IClass PKType = getPkType(meta, entityName);
+		IClass genericClz = IClassUtil.generic(clz, entity, PKType);
+		java.setExtends(genericClz);
+		java.addImport("org.springframework.stereotype.Repository");
+		java.addAnnotation("@Repository");
+		java.addComments("This class was generated by GeeQuery.");
+		java.addComments("This is a Repository of spring-data that supports Querydsl Predicates, Query by example, paging and sorting.");
+		java.addComments("Use @FindBy @Query, or a custom method with name 'findBy<i>Fieldname</i>... to fetch data.");
+		java.addComments("@see com.github.geequery.springdata.annotation.FindBy");
+		java.addComments("@see org.springframework.data.querydsl.QuerydslPredicateExecutor");
+		return java;
+	}
+
+	private IClass getPkType(Metadata meta, String tablename) {
+		Optional<PrimaryKey> pk = meta.getPrimaryKey();
+		if (!pk.isPresent()) {
+			return IClassUtil.of(Void.class);
+		}
+		if (pk.get().columnSize() == 1) {
+			Column column = meta.findColumn(pk.get().getColumns()[0]);
+			ColumnType columnType = getColumnType(column, tablename, true, meta.getPrimaryKey());
+			return IClassUtil.of(BeanUtils.toWrapperClass(getTypeClz(column, columnType)));
+		}
+		return IClassUtil.of(judeg(meta, pk.get(), tablename));
+	}
+
+	private Type judeg(Metadata meta, PrimaryKey pk, String tablename) {
+		Class<?>[] types = new Class[pk.columnSize()];
+		int i = 0;
+		Class<?> container = null;
+		for (String name : pk.getColumns()) {
+			Column column = meta.findColumn(name);
+			ColumnType columnType = getColumnType(column, tablename, true, meta.getPrimaryKey());
+			Class<?> clz = getTypeClz(column, columnType);
+			types[i++] = BeanUtils.toWrapperClass(clz);
+			if (container == null) {
+				container = clz;
+			} else {
+				if (container != clz) {
+					container = Object.class;
+				}
+			}
+		}
+		if (container == Object.class) {
+			container = expand(types[0], types);
+		}
+		return Array.newInstance(container, 0).getClass();
+	}
+
+	private Class<?> expand(Class<?> container, Class<?>[] types) {
+		for (int i = 1; i < types.length; i++) {
+			if (!types[i].isAssignableFrom(container)) {
+				if (Number.class.isAssignableFrom(container) && Number.class.isAssignableFrom(types[i])) {
+					container = Number.class;
+				}
+				if (Date.class.isAssignableFrom(container) && Date.class.isAssignableFrom(types[i])) {
+					container = Date.class;
+				}
+				if (Serializable.class.isAssignableFrom(container) && Serializable.class.isAssignableFrom(types[i])) {
+					container = Serializable.class;
+				}
+				container = Object.class;
+			}
+		}
+		return container;
+	}
+
+	public static void main(String[] args) {
+		System.out.println(int.class.isAssignableFrom(Object.class));
 	}
 
 	public String getEntityBaseClass() {
@@ -95,18 +317,22 @@ public class EntityGenerator {
 		this.entityBaseClass = entityBaseClass;
 	}
 
-	public JavaUnit generateSource(String tablename, String entityName, String tableComment) throws SQLException {
+	private JavaUnit generateEntity(String tablename, String entityName, String tableComment, Set<Option> options) throws SQLException {
+		Assert.notNull(tablename);
+		Assert.notNull(entityName);
 		if (profile == null) {
 			LogUtil.warn("Db dialect not set,default dialect set to Oracle.");
 			profile = AbstractDialect.getDialect("oracle");
 		}
 		tablename = profile.getObjectNameToUse(tablename);
-		// System.out.println(" Generating Class for table:"+tablename+"....");
-		if (entityName == null)
-			entityName = DbUtils.underlineToUpper(tablename, true);
 		final JavaUnit java = new JavaUnit(basePackage, entityName);
-		java.addComments("This class was generated by JEF according to the table in database.");
-		java.addComments("You need to modify the type of primary key field, to the strategy your own.");
+
+		if (!options.contains(Option.ignoreClassComment)) {
+			java.addComments("This class was generated by GeeQuery according to the table in database.");
+			java.addComments("You need to modify the type of primary key field, to the strategy your own.");
+
+		}
+		java.setAnnotations("@Entity");
 		JavaAnnotation tableAnnotation = new JavaAnnotation(Table.class);
 		tableAnnotation.put("name", tablename);
 		String schema = provider.getSchema();
@@ -114,14 +340,15 @@ public class EntityGenerator {
 			tableAnnotation.put("schema", schema);
 		}
 
-		JavaAnnotation comment = new JavaAnnotation(Comment.class);
-		if (StringUtils.isNotEmpty(tableComment)) {
-			comment.put("value", "Table:" + tableComment);
-		} else {
-			comment.put("value", "");
+		if (!options.contains(Option.ignoreCommentAnnotation)) {
+			JavaAnnotation comment = new JavaAnnotation(Comment.class);
+			if (StringUtils.isNotEmpty(tableComment)) {
+				comment.put("value", "Table:" + tableComment);
+			} else {
+				comment.put("value", "");
+			}
+			java.addAnnotation(comment.toCode(java));
 		}
-		java.setAnnotations("@Entity", comment.toCode(java));
-
 		Metadata meta = provider.getTableMetadata(tablename);
 		if (meta.getCustParams() != null && meta.getCustParams().get("custAnnot") != null) {
 			String _tmpCustAnnot = meta.getCustParams().get("custAnnot");
@@ -135,9 +362,11 @@ public class EntityGenerator {
 				java.addImport(KeyFunction.class);
 			}
 		}
+		if (initializeDataAll || tablesInitializeData.contains(tablename)) {
+			java.addAnnotation(new JavaAnnotation(InitializeData.class).toCode(java));
+		}
 
 		java.setExtends(entityBaseClass);
-		final Map<String, String> pkColumns = meta.getPkFieldAndColumnNames();
 
 		if (callback != null) {
 			callback.init(meta, tablename, provider.getSchema(), tableComment, java);
@@ -150,8 +379,26 @@ public class EntityGenerator {
 		// 生成用于元模型的字段配置
 		Collection<Index> indexes = meta.getIndexesWihoutPKIndex();
 		final List<JavaField> pkFields = new ArrayList<JavaField>();
+		final List<PairSS> allFields = new ArrayList<PairSS>();
 		for (Column c : meta.getColumns()) {
-			generateColumn(pkColumns, c, tablename, java, enumField, pkFields, indexes);
+			boolean isPk = meta.isPk(c.getColumnName());
+			ColumnType columnType = getColumnType(c, tablename, isPk, meta.getPrimaryKey());
+			generateColumn(isPk, c, columnType, java, allFields, pkFields, indexes, options);
+		}
+		// 处理枚举元模型
+		if (meta.getPrimaryKey().isPresent() && meta.getPrimaryKey().get().columnSize() > 1) {
+			String[] pkColumns = meta.getPrimaryKey().get().getColumns();
+			LocalMappedSorter<PairSS, Integer> sorter = new LocalMappedSorter<PairSS, Integer>(allFields, e -> ArrayUtils.indexOf(pkColumns, e.first));
+			sorter.filterAfter(e -> e >= 0);
+			sorter.sort((a, b) -> a.compareTo(b));
+		}
+
+		Iterator<PairSS> iter = allFields.iterator();
+		if (iter.hasNext()) {
+			enumField.addContent(iter.next().second);
+		}
+		for (; iter.hasNext();) {
+			enumField.addContent(", " + iter.next().second);
 		}
 		// 处理Index
 		List<JavaAnnotation> indexAnnos = new ArrayList<>();
@@ -187,43 +434,13 @@ public class EntityGenerator {
 		return java;
 	}
 
-	private void generateColumn(final Map<String, String> pkColumns, final Column c, final String tablename, final JavaUnit java, final JavaContainer enumField, final List<JavaField> pkFields, final Collection<Index> index) {
-
+	private void generateColumn(boolean isPk, final Column c, final ColumnType columnType, final JavaUnit java, final List<PairSS> allFields, final List<JavaField> pkFields, final Collection<Index> index, final Set<Option> options) {
 		String columnName = c.getColumnName();
-		boolean isPk = pkColumns.containsValue(columnName);
-		ColumnType columnType;
-		try {
-			columnType = c.toColumnType(profile);
-		} catch (Exception e) {
-			throw new RuntimeException("The column [" + tablename + ":" + columnName + "] 's type is error:" + e.getMessage());
-		}
-
-		if (!isPk) {// 不是主键时，错误的配置要还原
-			if (columnType.getClass() == ColumnType.AutoIncrement.class) {
-				columnType = ((AutoIncrement) columnType).toNormalType();
-			} else if (columnType.getClass() == ColumnType.GUID.class) {
-				columnType = ((GUID) columnType).toNormalType();
-			}
-		}
-		if (pkColumns.size() == 1 && isPk) { // 如果是单一主键，则修改为特定的JEF字段类型
-			if (columnType.getClass() == ColumnType.Int.class) {
-				if (c.getColumnSize() == 0)
-					c.setColumnSize(8);
-				columnType = new ColumnType.AutoIncrement(c.getColumnSize());
-			} else if (columnType.getClass() == ColumnType.Varchar.class) {
-				if (((Varchar) columnType).getLength() >= 32) {
-					columnType = new ColumnType.GUID();
-				}
-			}
-			columnType.setNullable(false); // 主键列不允许为空
-		}
 		List<JavaAnnotation> annonations = getFieldAnnotation(java, columnName, columnType, isPk, c);
 		String initValue = null;
-		Class<?> clz = null;
 		String fieldName;
 		if (c instanceof ColumnEx) {
 			fieldName = ((ColumnEx) c).getFieldName();
-			clz = ((ColumnEx) c).getJavaType();
 			initValue = ((ColumnEx) c).getInitValue();
 		} else {
 			fieldName = columnToField(columnName);
@@ -232,14 +449,13 @@ public class EntityGenerator {
 			annonations.add(new JavaAnnotation(Indexed.class));
 		}
 
-		if (clz == null)
-			clz = columnType.getDefaultJavaType();
+		Class<?> clz = getTypeClz(c, columnType);
 		JavaField field = new JavaField(clz, fieldName);
 		field.setModifiers(Modifier.PRIVATE);
 		for (JavaAnnotation anno1 : annonations) {
 			field.addAnnotation(anno1.toCode(java));
 		}
-		if (StringUtils.isNotEmpty(c.getRemarks())) {
+		if (!options.contains(Option.ignoreCommentAnnotation) && StringUtils.isNotEmpty(c.getRemarks())) {
 			if (!c.getRemarks().equals(c.getColumnName()) && !c.getRemarks().equals(fieldName)) {
 				JavaAnnotation fieldComment = new JavaAnnotation(Comment.class);
 				fieldComment.put("value", c.getRemarks());
@@ -251,23 +467,60 @@ public class EntityGenerator {
 			field.setInitValue(initValue);
 
 		java.addFieldWithGetterAndSetter(field);
+		allFields.add(new PairSS(columnName, fieldName));
 		if (isPk)
 			pkFields.add(field);
 
-		if (enumField.contentSize() > 0) {
-			enumField.addContent("," + field.getName());
-		} else {
-			enumField.addContent(field.getName());
-		}
 		if (callback != null) {
 			callback.addField(java, field, c, columnType);
 		}
 
 	}
 
+	private Class<?> getTypeClz(Column c, ColumnType columnType) {
+		return (c instanceof ColumnEx) ? ((ColumnEx) c).getJavaType() : columnType.getDefaultJavaType();
+	}
+
+	private ColumnType getColumnType(Column c, final String tablename, boolean isPk, final Optional<PrimaryKey> pkColumns) {
+		ColumnType columnType;
+		try {
+			columnType = c.toColumnType(profile);
+		} catch (Exception e) {
+			throw new RuntimeException("The column [" + tablename + ":" + c.getColumnName() + "] 's type is error:" + e.getMessage());
+		}
+
+		if (!isPk) {// 不是主键时，错误的配置要还原
+			if (columnType.getClass() == ColumnType.AutoIncrement.class) {
+				columnType = ((AutoIncrement) columnType).toNormalType();
+			} else if (columnType.getClass() == ColumnType.GUID.class) {
+				columnType = ((GUID) columnType).toNormalType();
+			}
+		}
+		if (pkColumns.isPresent() && pkColumns.get().columnSize() == 1 && isPk) { // 如果是单一主键，则修改为特定的JEF字段类型
+			if (columnType instanceof ColumnType.Int) {
+				columnType = changeToAutoIncrement((ColumnType.Int) columnType);
+			} else if (columnType instanceof ColumnType.Varchar) {
+				columnType = changeToGUID((ColumnType.Varchar) columnType);
+			}
+			columnType.setNullable(false); // 主键列不允许为空
+		}
+		return columnType;
+	}
+
+	private ColumnType changeToGUID(Varchar columnType) {
+		if(columnType.getLength()< 32 || columnType.getDefaultValue()!=null) {
+			return columnType;
+		}
+		return new ColumnType.GUID(columnType.getLength());
+	}
+
+	private ColumnType changeToAutoIncrement(ColumnType.Int columnType) {
+		return new ColumnType.AutoIncrement(columnType.getPrecision());
+	}
+
 	private boolean isSingleColumnIndex(String columnName, Collection<Index> indexes) {
 		for (Index index : indexes) {
-			if (index.getColumns().size() == 1) {
+			if (index.columnSize() == 1) {
 				IndexItem item = index.getColumns().get(0);
 				if (item.column.equals(columnName)) {
 					indexes.remove(index);
@@ -286,17 +539,23 @@ public class EntityGenerator {
 		}
 	}
 
-	public File saveJavaSource(JavaUnit java) {
-		try {
-			if (srcFolder != null) {
-				File f = java.saveToSrcFolder(srcFolder, Charsets.UTF8, OverWrittenMode.AUTO);
-				return f;
-			}
-		} catch (IOException e) {
-			LogUtil.exception(e);
+	public File saveJavaSource(JavaUnit java, File src) {
+		if (src == null) {
+			src = srcFolder;
 		}
-
-		return null;
+		Assert.notNull(src);
+		try {
+			OverWrittenMode mode = forceOverwite ? OverWrittenMode.YES : OverWrittenMode.AUTO;
+			File f = java.saveToSrcFolder(src, Charsets.UTF8, mode);
+			if (f != null) {
+				LogUtil.show(f.getAbsolutePath() + " generated.");
+			} else {
+				LogUtil.show(java.getClassName() + " Class file was modified, will not overwrite it.");
+			}
+			return f;
+		} catch (IOException e) {
+			throw Exceptions.asIllegalArgument(e);
+		}
 	}
 
 	// 生成默认的annonation
@@ -349,7 +608,7 @@ public class EntityGenerator {
 		return false;
 	}
 
-	public void generateSchema() throws SQLException {
+	public void generateSchema(Option... generateOptions) throws SQLException {
 		Assert.notNull(provider);
 		RegexpNameFilter filter = new RegexpNameFilter(includePattern, excludePatter);
 		int n = 0;
@@ -362,7 +621,7 @@ public class EntityGenerator {
 			String tableName = table.getName();
 			if (filter.accept(tableName)) {
 				try {
-					generateOne(tableName, null, table.getRemarks());
+					generateOne(tableName, null, table.getRemarks(), generateOptions);
 				} catch (SQLException e) {
 					LogUtil.exception(e);
 				}
@@ -373,23 +632,6 @@ public class EntityGenerator {
 		}
 		LogUtil.info(n + " Class Mapping to Table are generated.");
 
-	}
-
-	public void generate(CommentEntry... strings) {
-		Assert.notNull(provider);
-		int limit = 500;
-		int n = 0;
-		for (CommentEntry table : strings) {
-			try {
-				generateOne(table.getKey(), null, table.getValue());
-			} catch (SQLException e) {
-				LogUtil.exception(e);
-			}
-			n++;
-			if (n >= limit)
-				break;
-		}
-		LogUtil.show(strings.length + " Class Mapping to Table are generated.");
 	}
 
 	public void setProfile(DatabaseDialect profile) {
@@ -433,5 +675,41 @@ public class EntityGenerator {
 
 	public void setCallback(EntityProcessorCallback callback) {
 		this.callback = callback;
+	}
+
+	public String getReposPackageName() {
+		return reposPackageName;
+	}
+
+	public void setReposPackageName(String reposPackageName) {
+		this.reposPackageName = reposPackageName;
+	}
+
+	public String getReposSuffix() {
+		return reposSuffix;
+	}
+
+	public void setReposSuffix(String reposSuffix) {
+		this.reposSuffix = reposSuffix;
+	}
+
+	public void setAddInitializeData(Collection<String> addInitializeData) {
+		this.tablesInitializeData = addInitializeData;
+	}
+
+	public void setInitializeDataAll(boolean initializeDataAll) {
+		this.initializeDataAll = initializeDataAll;
+	}
+
+	public boolean isForceOverwite() {
+		return forceOverwite;
+	}
+
+	public void setForceOverwite(boolean forceOverwite) {
+		this.forceOverwite = forceOverwite;
+	}
+
+	public void setTestFolder(File testFolder) {
+		this.testFolder = testFolder;
 	}
 }

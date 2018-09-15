@@ -320,7 +320,7 @@ public abstract class ColumnType {
 		protected void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column) {
 			String def = "char(" + length + ")";
 			if (defaultValue != null) {
-				def = def + " default " + AColumnMapping.quotWith(defaultValue,this.getSqlType());
+				def = def + " default " + AColumnMapping.quotWith(defaultValue, this.getSqlType());
 			}
 			column.put("columnDefinition", def);
 			if (!nullable)
@@ -399,7 +399,7 @@ public abstract class ColumnType {
 		protected void putAnnonation(List<AnnotationDesc> list, AnnotationDesc column) {
 			String def = "varchar(" + length + ")";
 			if (defaultValue != null) {
-				def = def + " default " + AColumnMapping.quotWith(defaultValue,this.getSqlType());
+				def = def + " default " + AColumnMapping.quotWith(defaultValue, this.getSqlType());
 			}
 			column.put("columnDefinition", def);
 			if (!nullable)
@@ -981,6 +981,10 @@ public abstract class ColumnType {
 	public static final class GUID extends Varchar {
 		private boolean removeDash;
 
+		public GUID(int size) {
+			super(size);
+		}
+
 		public GUID() {
 			super(36);
 		}
@@ -1165,7 +1169,6 @@ public abstract class ColumnType {
 			return Types.SQLXML;
 		}
 	}
-
 
 	static ColumnChange createChange(ColumnType oldType, String rawType, ColumnType newType, DatabaseDialect profile) {
 		ColumnChange change = new ColumnChange(Change.CHG_DATATYPE);

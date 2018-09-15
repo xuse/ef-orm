@@ -31,9 +31,9 @@ public void testSelect_AndOrNot() throws SQLException {
 		
 	//三个Like条件，或
 	Condition isLastNam_ZhaoQianSun =QueryBuilder.or(
-			QueryBuilder.matchStart(Student.Field.name, "赵"),
-			QueryBuilder.matchStart(Student.Field.name, "钱"),
-			QueryBuilder.matchStart(Student.Field.name, "孙")
+			Student.Field.name.matchStart("赵"),
+			Student.Field.name.matchStart("钱"),
+			Student.Field.name.matchStart("孙")
 	);
 		
 	//或条件前面加上 NOT。
@@ -42,7 +42,7 @@ public void testSelect_AndOrNot() throws SQLException {
 	//最终条件: 不姓'赵钱孙' 的女生。
 	st.getQuery().addCondition(QueryBuilder.and(
 			isNot_ZhaoQianSun,
-			QueryBuilder.eq(Student.Field.gender, "F")
+			Student.Field.gender.eq("F")
 		)
 	);
 		

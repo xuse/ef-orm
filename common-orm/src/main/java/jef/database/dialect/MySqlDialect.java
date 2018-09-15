@@ -50,10 +50,14 @@ public class MySqlDialect extends AbstractDelegatingDialect {
 		return new PersistenceException("The JDBC driver version is not match the database, database is [" + dbVersion + "], but driver is " + driverVersion);
 	}
 
-	private DatabaseDialect maridDb(String s, DbMetaData meta) {
-		if (s.startsWith("10.")) {
+	private DatabaseDialect maridDb(String dbVersion, DbMetaData meta) throws SQLException {
+		String driverVersion = meta.getDriverVersion();
+		if (dbVersion.startsWith("10.")) {
 			return new MariaDb10Dialect();
 		} else {
+			if(dbVersion.startsWith("5.") && driverVersion.startsWith("8.")) {
+				throw driverVersionException(dbVersion, driverVersion);
+			}
 			return new MariaDbDialect();
 		}
 	}

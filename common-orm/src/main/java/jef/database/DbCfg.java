@@ -450,5 +450,10 @@ public enum DbCfg implements ConfigItem {
 	/**
 	 * 配置初始化数据的扩展名，默认扩展名为txt
 	 */
-	INIT_DATA_EXTENSION;
+	INIT_DATA_EXTENSION,
+	/**
+	 * 初始化数据的根路径，默认为/
+	 */
+	INIT_DATA_ROOT;
+	
 }

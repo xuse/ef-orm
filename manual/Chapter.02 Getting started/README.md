@@ -145,6 +145,203 @@ public class Case1 {
 
 建表、插入记录、查出记录、按主键更新记录、按主键删除记录、查所有记录、删除表等7次数据库操作。这就是EF-ORM的“Hello,World”。希望您一切顺利。
 
+### 2.1.4 Spring-boot最简启动
+
+创建以下三个文件
+
+pom.xml
+
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.basic</groupId>
+	<artifactId>database-demo</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>war</packaging>
+	<properties>
+		<spring-boot.version>2.0.4.RELEASE</spring-boot.version>
+		<geequery.version>1.12.3.RELEASE</geequery.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<maven.compiler.testSource>1.8</maven.compiler.testSource>
+		<maven.compiler.testTarget>1.8</maven.compiler.testTarget>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>com.github.geequery</groupId>
+			<artifactId>geequery-spring-boot-starter</artifactId>
+			<version>${geequery.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jdbc</artifactId>
+			<version>${spring-boot.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+			<version>${spring-boot.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>5.1.47</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+        <dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>2.9.9</version>
+		</dependency>
+	</dependencies>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>com.github.geequery</groupId>
+				<artifactId>geequery-maven-plugin</artifactId>
+				<version>1.12.3.RELEASE</version>
+				<executions>
+					<execution>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<jdbcUrl>jdbc:mysql://host:3306/operation_account?useUnicode=true&amp;characterEncoding=UTF-8</jdbcUrl>
+					<jdbcUser>user</jdbcUser>
+					<jdbcPassword>dbpass</jdbcPassword>
+					<packageName>com.github.geequery.demo.entity</packageName>
+					<targetFolder>${project.basedir}/src/main/java</targetFolder>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>mysql</groupId>
+						<artifactId>mysql-connector-java</artifactId>
+						<version>5.1.47</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<version>${spring-boot.version}</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>repackage</goal>
+						</goals>
+						<configuration>
+							<skip>true</skip>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
+
+```
+
+src/main/java/com/github/basic/yoa/database/MyApplication.java
+
+```java
+package com.github.basic.yoa.database;
+
+import javax.persistence.EntityManagerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import com.github.geequery.demo.entity.City;
+import com.github.geequery.demo.repos.CityRepository;
+
+import jef.database.support.InitDataExporter;
+
+@SpringBootApplication
+public class MyApplication implements CommandLineRunner {
+	private Logger logger = LoggerFactory.getLogger(this.getClass());
+	@Autowired
+	private EntityManagerFactory emf;
+
+	public static void main(String[] args) {
+		SpringApplication.run(MyApplication.class, args);
+	}
+
+	@Override
+	public void run(String... args) throws Exception {
+        //using emf to access database
+	}
+}
+
+```
+
+src//main/resources/application.properties
+
+```
+#
+#    Copyright 2015-2016 the original author or authors.
+#
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#    you may not use this file except in compliance with the License.
+#    You may obtain a copy of the License at
+#
+#       http://www.apache.org/licenses/LICENSE-2.0
+#
+#    Unless required by applicable law or agreed to in writing, software
+#    distributed under the License is distributed on an "AS IS" BASIS,
+#    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#    See the License for the specific language governing permissions and
+#    limitations under the License.
+
+#日志配置
+logging.level.root=WARN
+logging.level.GeeQuery=INFO
+logging.level.jef=INFO
+logging.pattern.console=%d %t[%-5p] %c{0} - %m%n
+#logging.config
+#logging.file
+#logging.path
+#logging.pattern.file
+#logging.pattern.level
+#logging.register-shutdown-hook
+#数据库配置
+spring.datasource.url=jdbc:mysql://localhost:3306/test
+spring.datasource.username=root
+spring.datasource.password=admin
+#spring.datasource.schema=classpath:import.sql
+
+#EF-ORM配置 Entity packages
+#See com.github.geequery.spring.boot.autoconfigure.GeeQueryProperties
+geequery.packagesToScan=com.github.geequery.demo.entity
+geequery.repos=com.github.geequery.demo.repos
+geequery.useDataInitTable=true
+```
+
+然后运行代码生成，将数据库里的表导出成Entity和Spring-data的Repo
+
+```
+mvn generate-sources
+```
+
+
+
+
+
+
+
 ## 2.2.  正式开始EF-ORM之旅  
 
 ### 2.2.1.  EF-ORM的原生Entity
