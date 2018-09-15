@@ -22,9 +22,7 @@ import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.SQLException;
-import java.util.AbstractList;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -37,6 +35,19 @@ import java.util.Set;
 import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.Table;
+
+import com.alibaba.fastjson.util.IOUtils;
+import com.github.geequery.orm.annotation.Comment;
+import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParseException;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.BodyDeclaration;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.body.ModifierSet;
+import com.github.javaparser.ast.body.TypeDeclaration;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
@@ -55,6 +66,7 @@ import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.meta.AnnotationProvider.FieldAnnotationProvider;
 import jef.database.meta.def.IndexDef;
 import jef.database.meta.def.UniqueConstraintDef;
 import jef.database.routing.function.AbstractDateFunction;
@@ -68,19 +80,6 @@ import jef.tools.StringUtils;
 import jef.tools.reflect.BeanAccessorMapImpl;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.FieldEx;
-
-import com.alibaba.fastjson.util.IOUtils;
-import com.github.geequery.orm.annotation.Comment;
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ParseException;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.body.BodyDeclaration;
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.FieldDeclaration;
-import com.github.javaparser.ast.body.ModifierSet;
-import com.github.javaparser.ast.body.TypeDeclaration;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 
 @SuppressWarnings("rawtypes")
 public final class TableMetadata extends AbstractMetadata {
@@ -102,7 +101,7 @@ public final class TableMetadata extends AbstractMetadata {
 
 	private Entry<PartitionKey, PartitionFunction>[] effectPartitionKeys;
 
-	private List<ColumnMapping> pkFields;// 记录主键列
+	private List<ColumnMapping> pkFields = new ArrayList<>(2);// 记录主键列
 
 	private final Map<Field, String> fieldToColumn = new IdentityHashMap<Field, String>();// 提供Field到列名的转换
 	private final Map<String, String> lowerColumnToFieldName = new HashMap<String, String>();// 提供Column名称到Field的转换，不光包括元模型字段，也包括了非元模型字段但标注了Column的字段(key全部存小写)
@@ -117,7 +116,6 @@ public final class TableMetadata extends AbstractMetadata {
 		this.containerType = clz;
 		this.containerAccessor = FastBeanWrapperImpl.getAccessorFor(clz);
 		this.thisType = clz;
-		this.pkFields = Collections.emptyList();
 		initByAnno(clz, annos);
 	}
 
@@ -131,10 +129,9 @@ public final class TableMetadata extends AbstractMetadata {
 	TableMetadata(Class<PojoWrapper> varClz, Class<?> clz, AnnotationProvider annos) {
 		this.containerType = varClz;
 		this.containerAccessor = new BeanAccessorMapImpl(clz);
-		
+
 		this.thisType = clz;
 		this.pojoAccessor = FastBeanWrapperImpl.getAccessorFor(clz);
-		this.pkFields = Collections.emptyList();
 		initByAnno(clz, annos);
 	}
 
@@ -148,10 +145,10 @@ public final class TableMetadata extends AbstractMetadata {
 			if (table.name().length() > 0) {
 				tableName = table.name();
 			}
-			for(javax.persistence.Index index: table.indexes()){
+			for (javax.persistence.Index index : table.indexes()) {
 				this.indexes.add(IndexDef.valueOf(index));
 			}
-			for(javax.persistence.UniqueConstraint unique: table.uniqueConstraints()){
+			for (javax.persistence.UniqueConstraint unique : table.uniqueConstraints()) {
 				this.uniques.add(new UniqueConstraintDef(unique));
 			}
 		}
@@ -191,6 +188,10 @@ public final class TableMetadata extends AbstractMetadata {
 	 * @param t
 	 */
 	synchronized void setPartition(PartitionTable t) {
+		//观察发现初始化所有字段后会调用setPartition方法，因此利用这里机制将pkField锁定。
+		if(this.pkFields instanceof ArrayList) {
+			this.pkFields=Collections.unmodifiableList(this.pkFields);
+		}
 		if (t == null)
 			return;
 		effectPartitionKeys = withFunction(t.key());
@@ -238,20 +239,6 @@ public final class TableMetadata extends AbstractMetadata {
 		return indexes;
 	}
 
-	public List<Field> getPKField() {
-		return new AbstractList<Field>() {
-			@Override
-			public Field get(int index) {
-				return pkFields.get(index).field();
-			}
-
-			@Override
-			public int size() {
-				return pkFields.size();
-			}
-		};
-	}
-
 	public List<ColumnMapping> getPKFields() {
 		return pkFields;
 	}
@@ -271,33 +258,32 @@ public final class TableMetadata extends AbstractMetadata {
 		if (lastFieldName != null && !field.name().equals(lastFieldName)) {
 			throw new IllegalArgumentException(String.format("The field [%s] and [%s] in [%s] have a duplicate column name [%s].", lastFieldName, field.name(), containerType.getName(), columnName));
 		}
-
 		if (isPk) {
 			type.setPk(true);
-			List<ColumnMapping> newPks = new ArrayList<ColumnMapping>(pkFields);
-			newPks.add(type);
-			Collections.sort(newPks, new Comparator<ColumnMapping>() {
-				public int compare(ColumnMapping o1, ColumnMapping o2) {
-					int i1 = -1;
-					int i2 = -1;
-					if (o1.field() instanceof Enum) {
-						i1 = ((Enum<?>) o1.field()).ordinal();
-					}
-					if (o1.field() instanceof Enum) {
-						i2 = ((Enum<?>) o2.field()).ordinal();
-					}
-					return Integer.compare(i1, i2);
-				}
-			});
-			this.pkFields = Arrays.<ColumnMapping> asList(newPks.toArray(new ColumnMapping[newPks.size()]));
+			this.pkFields.add(type);
+			Collections.sort(pkFields, PK_COMPARE);
 		}
 		schemaMap.put(field, type);
-		//记录自增字段和自动更新字段
+		// 记录自增字段和自动更新字段
 		super.updateAutoIncrementAndUpdate(type);
 		if (type.isLob()) {
 			lobNames = ArrayUtils.addElement(lobNames, field, jef.database.Field.class);
 		}
 	}
+
+	private static final Comparator<ColumnMapping> PK_COMPARE = new Comparator<ColumnMapping>() {
+		public int compare(ColumnMapping o1, ColumnMapping o2) {
+			int i1 = -1;
+			int i2 = -1;
+			if (o1.field() instanceof Enum) {
+				i1 = ((Enum<?>) o1.field()).ordinal();
+			}
+			if (o1.field() instanceof Enum) {
+				i2 = ((Enum<?>) o2.field()).ordinal();
+			}
+			return Integer.compare(i1, i2);
+		}
+	};
 
 	/*
 	 * (non-Javadoc)
@@ -408,20 +394,6 @@ public final class TableMetadata extends AbstractMetadata {
 
 	public Multimap<String, PartitionFunction> getMinUnitFuncForEachPartitionKey() {
 		return partitionFuncs;
-	}
-
-	/**
-	 * 添加一个非元模型的 Column映射字段（一般用于分表辅助）
-	 * 
-	 * @param name
-	 * @param column
-	 */
-	public void addNonMetaModelFieldMapping(String field, Column column) {
-		String name = column.name();
-		if (StringUtils.isEmpty(name)) {
-			name = field;
-		}
-		lowerColumnToFieldName.put(name.toLowerCase(), field);
 	}
 
 	void setTableName(String tableName) {
@@ -654,5 +626,17 @@ public final class TableMetadata extends AbstractMetadata {
 				return null;
 			}
 		return null;
+	}
+
+	// 处理非元模型的Column描述字段
+	public void addColumnHelper(FieldAnnotationProvider field) {
+		Column column = field.getAnnotation(Column.class);
+		if (column != null) {
+			String name = column.name();
+			if (StringUtils.isEmpty(name)) {
+				name = field.getName();
+			}
+			lowerColumnToFieldName.put(name.toLowerCase(), field.getName());
+		}
 	}
 }

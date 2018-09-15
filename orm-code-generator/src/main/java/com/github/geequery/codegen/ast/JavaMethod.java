@@ -129,6 +129,16 @@ public class JavaMethod extends DefaultJavaElement implements JavaElement {
 		return Modifier.isAbstract(modifier);
 	}
 
+	public void setStatic(boolean isStatic) {
+		if (isStatic != isStatic()) {
+			modifier ^= Modifier.STATIC;
+		}
+	}
+
+	public boolean isStatic() {
+		return Modifier.isStatic(modifier);
+	}
+
 	public JavaMethod(String name) {
 		this.name = name;
 	}

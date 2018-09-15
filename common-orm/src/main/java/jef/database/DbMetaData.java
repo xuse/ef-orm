@@ -1655,16 +1655,7 @@ public class DbMetaData {
 				}
 				continue;
 			}
-			ColumnMapping type = defined.remove(field);// from the metadata
-														// find
-			// the column defined
-			Assert.notNull(type);// 不应该发生
-			if (supportsChangeDelete) {
-				List<ColumnChange> changes = type.get().isEqualTo(c, getProfile());
-				if (!changes.isEmpty()) {
-					changed.add(new ColumnModification(c, changes, type.get()));
-				}
-			}
+			compareColumns(defined.remove(field), supportsChangeDelete, changed, c);
 		}
 		Map<String, ColumnType> insert = new HashMap<String, ColumnType>();
 		for (Map.Entry<Field, ColumnMapping> e : defined.entrySet()) {
@@ -1676,6 +1667,16 @@ public class DbMetaData {
 			return;
 		}
 		executeDDL(ddlGenerator.toTableModifyClause(meta, tablename, insert, changed, delete), tablename, meta, event);
+	}
+
+	private void compareColumns(ColumnMapping type, boolean supportsChangeDelete, List<ColumnModification> changed, Column columnDb) {
+		Assert.notNull(type);// 不应该发生
+		if (supportsChangeDelete) {
+			List<ColumnChange> changes = type.get().isEqualTo(columnDb, getProfile());
+			if (!changes.isEmpty()) {
+				changed.add(new ColumnModification(columnDb, changes, type.get()));
+			}
+		}
 	}
 
 	private void executeDDL(List<String> alterTableSQLs, String tablename, ITableMetadata meta, MetadataEventListener event) throws SQLException {

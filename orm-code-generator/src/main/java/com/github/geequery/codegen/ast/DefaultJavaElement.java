@@ -35,6 +35,12 @@ public class DefaultJavaElement implements JavaElement {
 			this.annotations.add(a);
 		}
 	}
+	
+
+	public void addAnnotation(JavaAnnotation javaAnnotation, JavaUnit parent) {
+		this.addAnnotation(javaAnnotation.toCode(parent));
+	}
+	
 
 	public void removeAnnotation(String anno) {
 		this.annotations.remove(anno);

@@ -231,6 +231,10 @@ public class JavaUnit extends DefaultJavaElement{
 		}
 		return null;
 	}
+	
+	public void addAnnotation(JavaAnnotation javaAnnotation) {
+		super.addAnnotation(javaAnnotation.toCode(this));
+	}
 
 	/**
 	 * 根据字段名获得一个方法

@@ -43,6 +43,16 @@ public class DataInitializer {
 	private String initRoot;
 
 	public DataInitializer(DbClient session, boolean useTable, String charset, String extName, String initRoot) {
+		if (StringUtils.isEmpty(initRoot)) {
+			initRoot = "/";
+		} else {
+			if (initRoot.endsWith("/") || initRoot.endsWith("\\")) {
+			} else {
+				initRoot += "/";
+			}
+		}
+		this.initRoot=initRoot;
+
 		this.session = session;
 		this.extension = "." + extName;
 		if (charset != null)

@@ -650,6 +650,7 @@ public class DbClientBuilder {
 			qe.setAllowDropColumn(allowDropColumn);
 			qe.setAlterTable(alterTable);
 			qe.setCreateTable(createTable);
+			
 			qe.setInitData(this.initData);
 			qe.setEntityManagerFactory(sf, this.useDataInitTable, this.initDataCharset, this.initDataExtension, this.initDataRoot);
 			if (annotatedClasses != null)

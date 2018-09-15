@@ -501,7 +501,7 @@ public final class MetaHolder {
 			// 将这个字段作为外部引用处理
 			processReference(meta, annos.forField(f));
 			// 还有一种情况，即定义了Column注解，但不属于元模型的一个字段，用于辅助映射的。当结果拼装时有用
-			processColumnHelper(meta, annos.forField(f));
+			meta.addColumnHelper(annos.forField(f));
 		}
 		return meta;
 	}
@@ -529,14 +529,6 @@ public final class MetaHolder {
 		}
 		metaFields.check();
 		return meta;
-	}
-
-	// 处理非元模型的Column描述字段
-	private static void processColumnHelper(TableMetadata meta, FieldAnnotationProvider field) {
-		Column column = field.getAnnotation(Column.class);
-		if (column != null) {
-			meta.addNonMetaModelFieldMapping(field.getName(), column);
-		}
 	}
 
 	/**

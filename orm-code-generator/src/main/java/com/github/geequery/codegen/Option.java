@@ -6,5 +6,6 @@ public enum Option {
 	generateQueryClass,
 	generateEntity,
 	generateRepos,
+	generateRepoTestCase
 
 }

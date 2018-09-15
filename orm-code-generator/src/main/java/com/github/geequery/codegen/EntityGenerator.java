@@ -46,6 +46,7 @@ import com.github.geequery.codegen.ast.JavaAnnotation;
 import com.github.geequery.codegen.ast.JavaConstructor;
 import com.github.geequery.codegen.ast.JavaContainer;
 import com.github.geequery.codegen.ast.JavaField;
+import com.github.geequery.codegen.ast.JavaMethod;
 import com.github.geequery.codegen.ast.JavaUnit;
 import com.github.geequery.orm.annotation.Comment;
 import com.github.geequery.orm.annotation.InitializeData;
@@ -106,6 +107,11 @@ public class EntityGenerator {
 	 * 源代码文件夹
 	 */
 	private File srcFolder = new File("src1");
+
+	/**
+	 * 源代码文件夹
+	 */
+	private File testFolder = new File("test");
 	/**
 	 * 包含表
 	 */
@@ -161,7 +167,7 @@ public class EntityGenerator {
 				TableInfo info = provider.getTableInfo(tablename);
 				tableComment = info != null ? info.getRemarks() : null;
 			}
-			saveJavaSource(generateEntity(tablename, entityName, tableComment, optionSet));
+			saveJavaSource(generateEntity(tablename, entityName, tableComment, optionSet), null);
 		}
 		if (ArrayUtils.fastContains(options, Option.generateRepos)) {
 			if (StringUtils.isEmpty(reposPackageName)) {
@@ -169,10 +175,61 @@ public class EntityGenerator {
 			}
 			Metadata meta = provider.getTableMetadata(tablename);
 			if (meta.getPrimaryKey().isPresent()) {
-				this.saveJavaSource(generateRepository(entityName, meta, optionSet));
+				this.saveJavaSource(generateRepository(entityName, meta, optionSet), null);
+				if (ArrayUtils.fastContains(options, Option.generateRepoTestCase)) {
+					saveJavaSource(generateRepositoryTest(tablename, entityName, optionSet), testFolder);
+					File testApplication = new File(testFolder, reposPackageName.replace('.', '/') + "/RepositoryTestApplication.java");
+					if (!testApplication.exists()) {
+						saveJavaSource(generateTestApplication(reposPackageName), testFolder);
+					}
+				}
 			}
-
 		}
+	}
+
+	private JavaUnit generateTestApplication(String reposPackageName2) {
+		JavaUnit java = new JavaUnit(reposPackageName2, "RepositoryTestApplication");
+		java.setModifiers(Modifier.PUBLIC);
+		java.addAnnotation(new JavaAnnotation("org.springframework.boot.autoconfigure.SpringBootApplication"));
+		java.addComments("The Spring Boot Application for testing {@link GeeQueryTest @GeeQueryTest}.", "<p>");
+		java.addComments("This class has role for prevent to run the SampleAnnotationApplication.");
+		java.addComments("For more detail information, please refer <a href=\"http://stackoverflow.com/questions/42722480/jdbctest-detect-class-annotated-springbootapplication\">Here</a>.");
+		return java;
+	}
+
+	/**
+	 * 生成测试类
+	 * 
+	 * @param tablename
+	 * @param entityName
+	 * @param tableComment
+	 * @param optionSet
+	 * @return
+	 */
+	private JavaUnit generateRepositoryTest(String tablename, String entityName, Set<Option> optionSet) {
+
+		String repoTestName = entityName + reposSuffix;
+		String repoTestFullName = reposPackageName + "." + repoTestName;
+		JavaUnit java = new JavaUnit(reposPackageName, repoTestName + "Test");
+		IClassUtil.addCommonsLog(java);
+		java.addAnnotation(new JavaAnnotation("org.junit.runner.RunWith").putValue(IClassUtil.parse("org.springframework.test.context.junit4.SpringRunner")));
+		java.addAnnotation(new JavaAnnotation("com.github.geequery.springboot.test.autoconfigure.GeeQueryTest"));
+		java.addComments("Test cases for {@link " + repoTestName + "}.");
+		JavaField field = new JavaField(repoTestFullName, StringUtils.uncapitalize(repoTestName));
+		{
+			field.setModifiers(Modifier.PRIVATE);
+			field.addAnnotation(new JavaAnnotation("org.springframework.beans.factory.annotation.Autowired"), java);
+			java.addField(field);
+		}
+		{
+			JavaMethod method = new JavaMethod("test1");
+			method.addAnnotation(new JavaAnnotation("org.junit.Test"), java);
+			method.addContent("Assert.assertNotNull(" + field.getName() + ");");
+			java.addMethod(method);
+			java.addImportStatic("org.hamcrest.CoreMatchers.*");
+			java.addImport("org.junit.Assert");
+		}
+		return java;
 	}
 
 	private JavaUnit generateRepository(String entityName, Metadata meta, Set<Option> optionSet) {
@@ -440,18 +497,25 @@ public class EntityGenerator {
 			}
 		}
 		if (pkColumns.isPresent() && pkColumns.get().columnSize() == 1 && isPk) { // 如果是单一主键，则修改为特定的JEF字段类型
-			if (columnType.getClass() == ColumnType.Int.class) {
-				if (c.getColumnSize() == 0)
-					c.setColumnSize(8);
-				columnType = new ColumnType.AutoIncrement(c.getColumnSize());
-			} else if (columnType.getClass() == ColumnType.Varchar.class) {
-				if (((Varchar) columnType).getLength() >= 32) {
-					columnType = new ColumnType.GUID();
-				}
+			if (columnType instanceof ColumnType.Int) {
+				columnType = changeToAutoIncrement((ColumnType.Int) columnType);
+			} else if (columnType instanceof ColumnType.Varchar) {
+				columnType = changeToGUID((ColumnType.Varchar) columnType);
 			}
 			columnType.setNullable(false); // 主键列不允许为空
 		}
 		return columnType;
+	}
+
+	private ColumnType changeToGUID(Varchar columnType) {
+		if(columnType.getLength()< 32 || columnType.getDefaultValue()!=null) {
+			return columnType;
+		}
+		return new ColumnType.GUID(columnType.getLength());
+	}
+
+	private ColumnType changeToAutoIncrement(ColumnType.Int columnType) {
+		return new ColumnType.AutoIncrement(columnType.getPrecision());
 	}
 
 	private boolean isSingleColumnIndex(String columnName, Collection<Index> indexes) {
@@ -475,11 +539,14 @@ public class EntityGenerator {
 		}
 	}
 
-	public File saveJavaSource(JavaUnit java) {
-		Assert.notNull(srcFolder);
+	public File saveJavaSource(JavaUnit java, File src) {
+		if (src == null) {
+			src = srcFolder;
+		}
+		Assert.notNull(src);
 		try {
 			OverWrittenMode mode = forceOverwite ? OverWrittenMode.YES : OverWrittenMode.AUTO;
-			File f = java.saveToSrcFolder(srcFolder, Charsets.UTF8, mode);
+			File f = java.saveToSrcFolder(src, Charsets.UTF8, mode);
 			if (f != null) {
 				LogUtil.show(f.getAbsolutePath() + " generated.");
 			} else {
@@ -642,4 +709,7 @@ public class EntityGenerator {
 		this.forceOverwite = forceOverwite;
 	}
 
+	public void setTestFolder(File testFolder) {
+		this.testFolder = testFolder;
+	}
 }

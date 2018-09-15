@@ -27,7 +27,6 @@ import com.querydsl.sql.codegen.support.NumericMapping;
 import com.querydsl.sql.codegen.support.RenameMapping;
 import com.querydsl.sql.codegen.support.TypeMapping;
 
-import jef.common.log.LogUtil;
 import jef.database.DbClient;
 import jef.database.DbClientBuilder;
 import jef.database.DbUtils;
@@ -99,13 +98,25 @@ public class GenerateMojo extends AbstractMojo {
 	 * @required
 	 */
 	private String targetFolder;
+	
+	/**
+	 * @parameter default-value="src/test/java" required=true
+	 */
+	private String testFolder;
 
 	/**
-	 * serialize beans as well
+	 * 生成仓库
 	 *
 	 * @parameter default-value=false
 	 */
 	private boolean exportRepos;
+	
+	/**
+	 * 
+	 * 生成仓库的单元测试
+	 * @parameter default-value=false
+	 */
+	private boolean exportRepoTests;
 	
 	
 	/**
@@ -208,6 +219,10 @@ public class GenerateMojo extends AbstractMojo {
 					g.setReposSuffix(repositorySuffix);
 				}
 				options = ArrayUtils.addElement(options, Option.generateRepos);
+				if(exportRepoTests) {
+					options = ArrayUtils.addElement(options, Option.generateRepoTestCase);
+					g.setTestFolder(new File(testFolder));
+				}
 			}
 			g.generateSchema(options);
 		} catch (SQLException e) {
