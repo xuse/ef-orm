@@ -15,7 +15,7 @@
  */
 package jef.accelerator.cglib.core;
 
-import jef.accelerator.asm.Type;
+import com.github.geequery.asm.Type;
 
 public interface Customizer {
     void customize(CodeEmitter e, Type type);

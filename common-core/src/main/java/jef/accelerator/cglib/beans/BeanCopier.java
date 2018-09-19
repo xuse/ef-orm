@@ -20,8 +20,9 @@ import java.lang.reflect.Modifier;
 import java.util.HashMap;
 import java.util.Map;
 
-import jef.accelerator.asm.ClassVisitor;
-import jef.accelerator.asm.Type;
+import com.github.geequery.asm.ClassVisitor;
+import com.github.geequery.asm.Type;
+
 import jef.accelerator.cglib.core.AbstractClassGenerator;
 import jef.accelerator.cglib.core.ClassEmitter;
 import jef.accelerator.cglib.core.CodeEmitter;

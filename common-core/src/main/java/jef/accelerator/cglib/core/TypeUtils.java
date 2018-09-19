@@ -22,7 +22,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import jef.accelerator.asm.Type;
+import com.github.geequery.asm.Type;
+
 
 public class TypeUtils {
     private static final Map transforms = new HashMap();

@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
-import jef.accelerator.asm.ClassReader;
+import com.github.geequery.asm.ClassReader;
 
 /**
  * Abstract class for all code-generating CGLIB utilities.

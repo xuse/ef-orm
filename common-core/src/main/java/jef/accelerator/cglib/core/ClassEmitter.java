@@ -18,11 +18,11 @@ package jef.accelerator.cglib.core;
 import java.util.HashMap;
 import java.util.Map;
 
-import jef.accelerator.asm.ClassVisitor;
-import jef.accelerator.asm.FieldVisitor;
-import jef.accelerator.asm.MethodVisitor;
-import jef.accelerator.asm.Opcodes;
-import jef.accelerator.asm.Type;
+import com.github.geequery.asm.ClassVisitor;
+import com.github.geequery.asm.FieldVisitor;
+import com.github.geequery.asm.MethodVisitor;
+import com.github.geequery.asm.Opcodes;
+import com.github.geequery.asm.Type;
 
 /**
  * @author Juozas Baliuka, Chris Nokleberg
@@ -38,12 +38,12 @@ public class ClassEmitter extends ClassVisitor {
     private Signature staticHookSig;
 
     public ClassEmitter(ClassVisitor cv) {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM6);
         setTarget(cv);
     }
 
     public ClassEmitter() {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM6);
     }
 
     public void setTarget(ClassVisitor cv) {

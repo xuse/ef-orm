@@ -27,7 +27,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-package jef.accelerator.asm;
+package com.github.geequery.asm;
 
 /**
  * A dynamically extensible vector of bytes. This class is roughly equivalent to

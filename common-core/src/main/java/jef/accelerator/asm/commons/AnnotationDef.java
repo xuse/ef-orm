@@ -5,11 +5,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import jef.accelerator.asm.AnnotationVisitor;
-import jef.tools.Assert;
-
+import com.github.geequery.asm.AnnotationVisitor;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+
+import jef.tools.Assert;
 
 public class AnnotationDef extends AnnotationVisitor{
 	private boolean end=false;

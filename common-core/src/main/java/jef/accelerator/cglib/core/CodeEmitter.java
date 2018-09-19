@@ -17,10 +17,10 @@ package jef.accelerator.cglib.core;
 
 import java.util.Arrays;
 
-import jef.accelerator.asm.Attribute;
-import jef.accelerator.asm.Label;
-import jef.accelerator.asm.MethodVisitor;
-import jef.accelerator.asm.Type;
+import com.github.geequery.asm.Attribute;
+import com.github.geequery.asm.Label;
+import com.github.geequery.asm.MethodVisitor;
+import com.github.geequery.asm.Type;
 
 /**
  * @author Juozas Baliuka, Chris Nokleberg

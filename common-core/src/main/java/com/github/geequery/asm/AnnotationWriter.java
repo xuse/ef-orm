@@ -27,7 +27,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-package jef.accelerator.asm;
+package com.github.geequery.asm;
 
 /**
  * An {@link AnnotationVisitor} that generates annotations in bytecode form.
@@ -104,7 +104,7 @@ final class AnnotationWriter extends AnnotationVisitor {
      */
     AnnotationWriter(final ClassWriter cw, final boolean named,
             final ByteVector bv, final ByteVector parent, final int offset) {
-        super(Opcodes.ASM5);
+        super(Opcodes.ASM6);
         this.cw = cw;
         this.named = named;
         this.bv = bv;

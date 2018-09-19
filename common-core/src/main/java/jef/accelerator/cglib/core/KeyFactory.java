@@ -18,9 +18,9 @@ package jef.accelerator.cglib.core;
 
 import java.lang.reflect.Method;
 
-import jef.accelerator.asm.ClassVisitor;
-import jef.accelerator.asm.Label;
-import jef.accelerator.asm.Type;
+import com.github.geequery.asm.ClassVisitor;
+import com.github.geequery.asm.Label;
+import com.github.geequery.asm.Type;
 
 /**
  * Generates classes to handle multi-valued keys, for use in things such as Maps and Sets.

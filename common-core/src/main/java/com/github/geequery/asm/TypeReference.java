@@ -28,7 +28,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package jef.accelerator.asm;
+package com.github.geequery.asm;
 
 /**
  * A reference to a type appearing in a class, field or method declaration, or

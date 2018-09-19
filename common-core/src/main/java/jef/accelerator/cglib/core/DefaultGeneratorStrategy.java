@@ -15,7 +15,7 @@
  */
 package jef.accelerator.cglib.core;
 
-import jef.accelerator.asm.ClassWriter;
+import com.github.geequery.asm.ClassWriter;
 
 public class DefaultGeneratorStrategy implements GeneratorStrategy {
     public static final DefaultGeneratorStrategy INSTANCE = new DefaultGeneratorStrategy();

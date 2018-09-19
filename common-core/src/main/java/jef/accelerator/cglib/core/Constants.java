@@ -15,8 +15,9 @@
  */
 package jef.accelerator.cglib.core;
 
-import jef.accelerator.asm.Opcodes;
-import jef.accelerator.asm.Type;
+
+import com.github.geequery.asm.Opcodes;
+import com.github.geequery.asm.Type;
 
 /**
  * @author Juozas Baliuka <a href="mailto:baliuka@mwm.lt">baliuka@mwm.lt</a>

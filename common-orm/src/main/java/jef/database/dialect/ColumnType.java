@@ -1174,7 +1174,7 @@ public abstract class ColumnType {
 		ColumnChange change = new ColumnChange(Change.CHG_DATATYPE);
 		change.setFrom(rawType);// 这里要注意不要生成带有null
 								// 值的文字，即只单纯的类型
-		change.setTo(profile.getCreationComment(newType, false));
+		change.setTo(profile.getCreationComment(newType, true));
 		if (change.getFrom().equalsIgnoreCase(change.getTo()))
 			return null;
 

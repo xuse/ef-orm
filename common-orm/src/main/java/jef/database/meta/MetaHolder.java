@@ -44,12 +44,12 @@ import javax.persistence.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.geequery.asm.Attribute;
+import com.github.geequery.asm.ClassReader;
+import com.github.geequery.asm.ClassVisitor;
+import com.github.geequery.asm.Opcodes;
 import com.google.common.collect.ArrayListMultimap;
 
-import jef.accelerator.asm.Attribute;
-import jef.accelerator.asm.ClassReader;
-import jef.accelerator.asm.ClassVisitor;
-import jef.accelerator.asm.Opcodes;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.Holder;
 import jef.database.Condition.Operator;
@@ -566,7 +566,7 @@ public final class MetaHolder {
 		ClassReader cr = new ClassReader(data);
 
 		final Holder<Boolean> checkd = new Holder<Boolean>(false);
-		cr.accept(new ClassVisitor(Opcodes.ASM5) {
+		cr.accept(new ClassVisitor(Opcodes.ASM6) {
 			public void visitAttribute(Attribute attr) {
 				if ("jefd".equals(attr.type)) {
 					checkd.set(true);

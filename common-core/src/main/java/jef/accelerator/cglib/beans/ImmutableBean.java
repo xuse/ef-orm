@@ -18,8 +18,9 @@ package jef.accelerator.cglib.beans;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Method;
 
-import jef.accelerator.asm.ClassVisitor;
-import jef.accelerator.asm.Type;
+import com.github.geequery.asm.ClassVisitor;
+import com.github.geequery.asm.Type;
+
 import jef.accelerator.cglib.core.AbstractClassGenerator;
 import jef.accelerator.cglib.core.ClassEmitter;
 import jef.accelerator.cglib.core.CodeEmitter;

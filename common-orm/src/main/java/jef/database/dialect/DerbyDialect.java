@@ -72,7 +72,13 @@ public class DerbyDialect extends AbstractDialect {
 	protected void initFeatures() {
 		features = CollectionUtils.identityHashSet();
 		features.addAll(
-				Arrays.asList(Feature.USER_AS_SCHEMA, Feature.BATCH_GENERATED_KEY_ONLY_LAST, Feature.ONE_COLUMN_IN_SINGLE_DDL, Feature.SUPPORT_CONCAT, Feature.COLUMN_ALTERATION_SYNTAX, Feature.CASE_WITHOUT_SWITCH, Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD, Feature.UNION_WITH_BUCK));
+				Arrays.asList(Feature.USER_AS_SCHEMA, Feature.BATCH_GENERATED_KEY_ONLY_LAST, 
+						Feature.ONE_COLUMN_IN_SINGLE_DDL, 
+						Feature.SUPPORT_CONCAT, 
+						Feature.COLUMN_ALTERATION_SYNTAX, 
+						Feature.CASE_WITHOUT_SWITCH, 
+						Feature.NOT_FETCH_NEXT_AUTOINCREAMENTD, 
+						Feature.UNION_WITH_BUCK));
 		setProperty(DbProperty.ADD_COLUMN, "ADD COLUMN");
 		setProperty(DbProperty.MODIFY_COLUMN, "ALTER");
 		setProperty(DbProperty.DROP_COLUMN, "DROP COLUMN");

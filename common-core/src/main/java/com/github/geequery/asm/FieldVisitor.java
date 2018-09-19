@@ -27,7 +27,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-package jef.accelerator.asm;
+package com.github.geequery.asm;
 
 /**
  * A visitor to visit a Java field. The methods of this class must be called in
@@ -40,7 +40,7 @@ public abstract class FieldVisitor {
 
     /**
      * The ASM API version implemented by this visitor. The value of this field
-     * must be one of {@link Opcodes#ASM4} or {@link Opcodes#ASM5}.
+     * must be one of {@link Opcodes#ASM4}, {@link Opcodes#ASM5} or {@link Opcodes#ASM6}.
      */
     protected final int api;
 
@@ -55,7 +55,7 @@ public abstract class FieldVisitor {
      * 
      * @param api
      *            the ASM API version implemented by this visitor. Must be one
-     *            of {@link Opcodes#ASM4} or {@link Opcodes#ASM5}.
+     *            of {@link Opcodes#ASM4}, {@link Opcodes#ASM5} or {@link Opcodes#ASM6}.
      */
     public FieldVisitor(final int api) {
         this(api, null);
@@ -66,13 +66,13 @@ public abstract class FieldVisitor {
      * 
      * @param api
      *            the ASM API version implemented by this visitor. Must be one
-     *            of {@link Opcodes#ASM4} or {@link Opcodes#ASM5}.
+     *            of {@link Opcodes#ASM4}, {@link Opcodes#ASM5} or {@link Opcodes#ASM6}.
      * @param fv
      *            the field visitor to which this visitor must delegate method
      *            calls. May be null.
      */
     public FieldVisitor(final int api, final FieldVisitor fv) {
-        if (api != Opcodes.ASM4 && api != Opcodes.ASM5) {
+        if (api < Opcodes.ASM4 || api > Opcodes.ASM6) {
             throw new IllegalArgumentException();
         }
         this.api = api;
@@ -116,9 +116,11 @@ public abstract class FieldVisitor {
      */
     public AnnotationVisitor visitTypeAnnotation(int typeRef,
             TypePath typePath, String desc, boolean visible) {
+		/* SPRING PATCH: REMOVED FOR COMPATIBILITY WITH CGLIB 3.1
         if (api < Opcodes.ASM5) {
             throw new RuntimeException();
         }
+        */
         if (fv != null) {
             return fv.visitTypeAnnotation(typeRef, typePath, desc, visible);
         }
