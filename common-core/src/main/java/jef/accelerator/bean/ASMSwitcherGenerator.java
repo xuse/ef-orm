@@ -13,11 +13,12 @@ import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
-import jef.accelerator.asm.ClassWriter;
-import jef.accelerator.asm.FieldVisitor;
-import jef.accelerator.asm.Label;
-import jef.accelerator.asm.MethodVisitor;
-import jef.accelerator.asm.Type;
+import com.github.geequery.asm.ClassWriter;
+import com.github.geequery.asm.FieldVisitor;
+import com.github.geequery.asm.Label;
+import com.github.geequery.asm.MethodVisitor;
+import com.github.geequery.asm.Type;
+
 import jef.tools.reflect.BeanUtils;
 
 final class ASMSwitcherGenerator extends ClassGenerator {

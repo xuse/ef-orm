@@ -15,7 +15,7 @@
  */
 package jef.accelerator.cglib.core;
 
-import jef.accelerator.asm.Type;
+import com.github.geequery.asm.Type;
 
 public class Local
 {

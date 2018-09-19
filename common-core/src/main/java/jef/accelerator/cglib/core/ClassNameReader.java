@@ -18,9 +18,9 @@ package jef.accelerator.cglib.core;
 import java.util.ArrayList;
 import java.util.List;
 
-import jef.accelerator.asm.ClassReader;
-import jef.accelerator.asm.ClassVisitor;
-import jef.accelerator.asm.Opcodes;
+import com.github.geequery.asm.ClassReader;
+import com.github.geequery.asm.ClassVisitor;
+import com.github.geequery.asm.Opcodes;
 
 // TODO: optimize (ClassReader buffers entire class before accept)
 public class ClassNameReader {
@@ -37,9 +37,9 @@ public class ClassNameReader {
     }
     
     public static String[] getClassInfo(ClassReader r) {
-        final List array = new ArrayList();
+        final List<String> array = new ArrayList<>();
         try {
-            r.accept(new ClassVisitor(Opcodes.ASM5,null) {
+            r.accept(new ClassVisitor(Opcodes.ASM6,null) {
                 public void visit(int version,
                                   int access,
                                   String name,

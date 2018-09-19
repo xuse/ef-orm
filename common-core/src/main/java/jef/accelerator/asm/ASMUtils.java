@@ -4,8 +4,11 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
-import jef.tools.reflect.BeanUtils;
+import com.github.geequery.asm.ClassReader;
+import com.github.geequery.asm.MethodVisitor;
+import com.github.geequery.asm.Opcodes;
 
+import jef.tools.reflect.BeanUtils;
 
 public class ASMUtils {
 
@@ -107,7 +110,6 @@ public class ASMUtils {
 		return null;
 	}
 
-
 	public static boolean checkName(String name) {
 		for (int i = 0; i < name.length(); ++i) {
 			char c = name.charAt(i);
@@ -153,31 +155,31 @@ public class ASMUtils {
 		mw.visitMethodInsn(Opcodes.INVOKESTATIC, getType(wrapped), "valueOf", getMethodDesc(wrapped, type));
 	}
 
-	public static void doWrap(MethodVisitor mw, jef.accelerator.asm.Type paramType) {
+	public static void doWrap(MethodVisitor mw, com.github.geequery.asm.Type paramType) {
 		Class<?> w;
 		switch (paramType.getSort()) {
-		case jef.accelerator.asm.Type.BOOLEAN:
+		case com.github.geequery.asm.Type.BOOLEAN:
 			w = Boolean.class;
 			break;
-		case jef.accelerator.asm.Type.BYTE:
+		case com.github.geequery.asm.Type.BYTE:
 			w = Byte.class;
 			break;
-		case jef.accelerator.asm.Type.CHAR:
+		case com.github.geequery.asm.Type.CHAR:
 			w = Character.class;
 			break;
-		case jef.accelerator.asm.Type.DOUBLE:
+		case com.github.geequery.asm.Type.DOUBLE:
 			w = Double.class;
 			break;
-		case jef.accelerator.asm.Type.FLOAT:
+		case com.github.geequery.asm.Type.FLOAT:
 			w = Float.class;
 			break;
-		case jef.accelerator.asm.Type.INT:
+		case com.github.geequery.asm.Type.INT:
 			w = Integer.class;
 			break;
-		case jef.accelerator.asm.Type.LONG:
+		case com.github.geequery.asm.Type.LONG:
 			w = Long.class;
 			break;
-		case jef.accelerator.asm.Type.SHORT:
+		case com.github.geequery.asm.Type.SHORT:
 			w = Short.class;
 			break;
 		default:
@@ -186,23 +188,23 @@ public class ASMUtils {
 		mw.visitMethodInsn(Opcodes.INVOKESTATIC, getType(w), "valueOf", getMethodDesc(w, BeanUtils.toPrimitiveClass(w)));
 	}
 
-	public static int getLoadIns(jef.accelerator.asm.Type paramType) {
+	public static int getLoadIns(com.github.geequery.asm.Type paramType) {
 		switch (paramType.getSort()) {
-		case jef.accelerator.asm.Type.BOOLEAN:
+		case com.github.geequery.asm.Type.BOOLEAN:
 			return Opcodes.ILOAD;
-		case jef.accelerator.asm.Type.BYTE:
+		case com.github.geequery.asm.Type.BYTE:
 			return Opcodes.ILOAD;
-		case jef.accelerator.asm.Type.CHAR:
+		case com.github.geequery.asm.Type.CHAR:
 			return Opcodes.ILOAD;
-		case jef.accelerator.asm.Type.DOUBLE:
+		case com.github.geequery.asm.Type.DOUBLE:
 			return Opcodes.DLOAD;
-		case jef.accelerator.asm.Type.FLOAT:
+		case com.github.geequery.asm.Type.FLOAT:
 			return Opcodes.FLOAD;
-		case jef.accelerator.asm.Type.INT:
+		case com.github.geequery.asm.Type.INT:
 			return Opcodes.ILOAD;
-		case jef.accelerator.asm.Type.LONG:
+		case com.github.geequery.asm.Type.LONG:
 			return Opcodes.LLOAD;
-		case jef.accelerator.asm.Type.SHORT:
+		case com.github.geequery.asm.Type.SHORT:
 			return Opcodes.ILOAD;
 		default:
 			return Opcodes.ALOAD;
@@ -249,6 +251,24 @@ public class ASMUtils {
 		sb.append(')');
 		sb.append(getDesc(returnType));
 		return sb.toString();
+	}
+
+	/**
+	 * 获得Java类名
+	 * @param cr
+	 * @return
+	 */
+	public static String getJavaClassName(ClassReader cr) {
+		return cr.getClassName().replace('/', '.');
+	}
+
+	/**
+	 * 获得父类名	
+	 * @param cr
+	 * @return
+	 */
+	public static String getSuperClassName(ClassReader cr) {
+		return cr.getSuperName().replace('/', '.');
 	}
 
 }

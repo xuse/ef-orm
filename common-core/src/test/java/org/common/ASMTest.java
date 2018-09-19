@@ -4,17 +4,18 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
-import jef.accelerator.asm.AnnotationVisitor;
-import jef.accelerator.asm.Attribute;
-import jef.accelerator.asm.ClassReader;
-import jef.accelerator.asm.ClassVisitor;
-import jef.accelerator.asm.ClassWriter;
-import jef.accelerator.asm.FieldVisitor;
-import jef.accelerator.asm.MethodVisitor;
-import jef.accelerator.asm.Opcodes;
-import jef.tools.IOUtils;
-
 import org.junit.Test;
+
+import com.github.geequery.asm.AnnotationVisitor;
+import com.github.geequery.asm.Attribute;
+import com.github.geequery.asm.ClassReader;
+import com.github.geequery.asm.ClassVisitor;
+import com.github.geequery.asm.ClassWriter;
+import com.github.geequery.asm.FieldVisitor;
+import com.github.geequery.asm.MethodVisitor;
+import com.github.geequery.asm.Opcodes;
+
+import jef.tools.IOUtils;
 
 
 public class ASMTest extends ClassLoader implements Opcodes {
@@ -52,7 +53,7 @@ public class ASMTest extends ClassLoader implements Opcodes {
 	public void readClassTest() throws Exception{
 		
 		ClassReader reader=new ClassReader("org.common.ASMTest");
-		reader.accept(new ClassVisitor(Opcodes.ASM5){
+		reader.accept(new ClassVisitor(Opcodes.ASM6){
 
 			@Override
 			public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {

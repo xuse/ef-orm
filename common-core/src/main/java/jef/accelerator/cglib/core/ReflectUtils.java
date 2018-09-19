@@ -35,8 +35,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jef.accelerator.asm.Attribute;
-import jef.accelerator.asm.Type;
+import com.github.geequery.asm.Attribute;
+import com.github.geequery.asm.Type;
 
 /**
  * @version $Id: ReflectUtils.java,v 1.30 2009/01/11 19:47:49 herbyderby Exp $

@@ -15,7 +15,7 @@
  */
 package jef.accelerator.cglib.core;
 
-import jef.accelerator.asm.Type;
+import com.github.geequery.asm.Type;
 
 /**
  * A representation of a method signature, containing the method name,

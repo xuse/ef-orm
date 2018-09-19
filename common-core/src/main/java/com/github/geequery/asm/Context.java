@@ -28,7 +28,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package jef.accelerator.asm;
+package com.github.geequery.asm;
 
 /**
  * Information about a class being parsed in a {@link ClassReader}.

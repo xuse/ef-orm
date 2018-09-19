@@ -15,7 +15,7 @@
  */
 package jef.accelerator.cglib.core;
 
-import jef.accelerator.asm.ClassVisitor;
+import com.github.geequery.asm.ClassVisitor;
 
 public interface ClassGenerator {
     void generateClass(ClassVisitor v) throws Exception;

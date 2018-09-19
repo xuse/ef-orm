@@ -3,18 +3,17 @@ package jef.codegen;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.net.URL;
 import java.util.Date;
 
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 
-import jef.accelerator.asm.Attribute;
-import jef.accelerator.asm.ClassReader;
-import jef.accelerator.asm.ClassVisitor;
-import jef.accelerator.asm.ClassWriter;
-import jef.accelerator.asm.Opcodes;
+import org.junit.Test;
+
+import com.github.geequery.asm.ClassReader;
+import com.github.geequery.asm.ClassWriter;
+
 import jef.database.DataObject;
 import jef.database.VarObject;
 import jef.database.dialect.ColumnType;
@@ -26,8 +25,6 @@ import jef.tools.DateFormats;
 import jef.tools.IOUtils;
 import jef.tools.reflect.BeanWrapper;
 import jef.tools.string.RandomData;
-
-import org.junit.Test;
 public class EntityEnhancerTest {
 
 	@Test

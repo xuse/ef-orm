@@ -10,7 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jef.accelerator.asm.ClassReader;
+import com.github.geequery.asm.ClassReader;
+
+import jef.accelerator.asm.ASMUtils;
 import jef.common.log.LogUtil;
 import jef.database.DbClient;
 import jef.database.Field;
@@ -27,6 +29,7 @@ import jef.database.meta.object.Column;
 import jef.database.wrapper.executor.StatementExecutor;
 import jef.tools.ArrayUtils;
 import jef.tools.ClassScanner;
+import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 import jef.tools.resource.IResource;
 
@@ -148,7 +151,7 @@ public class QuerableEntityScanner {
 					continue;
 				// 根据父类判断
 				if (isEntiyClz(cl, parents, cr.getSuperName())) {
-					Class<?> clz = loadClass(cl, cr.getJavaClassName());
+					Class<?> clz = loadClass(cl, ASMUtils.getJavaClassName(cr));
 					if (clz != null) {
 						registeEntity0(clz);
 					}
@@ -184,7 +187,7 @@ public class QuerableEntityScanner {
 			LogUtil.error("The class content [" + s + "] not found!");
 			return null;
 		}
-		return new ClassReader(stream, true);
+		return new ClassReader(IOUtils.toByteArray(stream));
 	}
 
 	private ClassReader getClassInfo(ClassLoader cl, IResource s) throws IOException {
@@ -193,7 +196,7 @@ public class QuerableEntityScanner {
 			LogUtil.error("The class content [" + s + "] not found!");
 			return null;
 		}
-		return new ClassReader(stream, true);
+		return new ClassReader(IOUtils.toByteArray(stream));
 	}
 
 	private Class<?> loadClass(ClassLoader cl, String s) {

@@ -15,7 +15,7 @@
  */
 package jef.accelerator.cglib.core;
 
-import jef.accelerator.asm.Label;
+import com.github.geequery.asm.Label;
 
 public interface ObjectSwitchCallback {
     void processCase(Object key, Label end) throws Exception;

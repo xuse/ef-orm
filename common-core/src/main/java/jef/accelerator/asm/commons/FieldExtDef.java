@@ -3,14 +3,14 @@ package jef.accelerator.asm.commons;
 import java.util.Collection;
 import java.util.Map;
 
-import jef.accelerator.asm.ASMUtils;
-import jef.accelerator.asm.AnnotationVisitor;
-import jef.accelerator.asm.Attribute;
-import jef.accelerator.asm.FieldVisitor;
-import jef.tools.Assert;
-
+import com.github.geequery.asm.AnnotationVisitor;
+import com.github.geequery.asm.Attribute;
+import com.github.geequery.asm.FieldVisitor;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+
+import jef.accelerator.asm.ASMUtils;
+import jef.tools.Assert;
 
 
 public class FieldExtDef extends FieldVisitor {

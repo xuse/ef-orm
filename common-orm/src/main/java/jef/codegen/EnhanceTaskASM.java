@@ -1,6 +1,5 @@
 package jef.codegen;
 
-import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -11,16 +10,19 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
+import org.apache.commons.lang.ArrayUtils;
+
+import com.github.geequery.asm.Attribute;
+import com.github.geequery.asm.ClassReader;
+import com.github.geequery.asm.ClassVisitor;
+import com.github.geequery.asm.ClassWriter;
+import com.github.geequery.asm.FieldVisitor;
+import com.github.geequery.asm.Label;
+import com.github.geequery.asm.MethodVisitor;
+import com.github.geequery.asm.Opcodes;
+import com.github.geequery.asm.Type;
+
 import jef.accelerator.asm.ASMUtils;
-import jef.accelerator.asm.Attribute;
-import jef.accelerator.asm.ClassReader;
-import jef.accelerator.asm.ClassVisitor;
-import jef.accelerator.asm.ClassWriter;
-import jef.accelerator.asm.FieldVisitor;
-import jef.accelerator.asm.Label;
-import jef.accelerator.asm.MethodVisitor;
-import jef.accelerator.asm.Opcodes;
-import jef.accelerator.asm.Type;
 import jef.accelerator.asm.commons.AnnotationDef;
 import jef.accelerator.asm.commons.FieldExtCallback;
 import jef.accelerator.asm.commons.FieldExtDef;
@@ -28,8 +30,6 @@ import jef.tools.Assert;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 import jef.tools.resource.ResourceLoader;
-
-import org.apache.commons.lang.ArrayUtils;
 
 public class EnhanceTaskASM {
 	private ResourceLoader root;
@@ -56,14 +56,14 @@ public class EnhanceTaskASM {
 		try {
 			ClassReader reader = new ClassReader(classdata);
 			byte[] data = enhanceClass(reader, enumFields);
-			 {
-			 //DEBUG
-//			 File file = new File("c:/asm/" +
-//			 StringUtils.substringAfterLast(className, ".") + ".class");
-//			 IOUtils.saveAsFile(file, data);
-//			 System.out.println(file +
-//			 " saved -- Enhanced class"+className);
-			 }
+			{
+				// DEBUG
+				// File file = new File("c:/asm/" +
+				// StringUtils.substringAfterLast(className, ".") + ".class");
+				// IOUtils.saveAsFile(file, data);
+				// System.out.println(file +
+				// " saved -- Enhanced class"+className);
+			}
 			return data;
 		} catch (EnhancedException e) {
 			return ArrayUtils.EMPTY_BYTE_ARRAY;
@@ -75,7 +75,7 @@ public class EnhanceTaskASM {
 		final List<String> enumFields = new ArrayList<String>();
 		if (fieldEumData != null) {
 			ClassReader reader = new ClassReader(fieldEumData);
-			reader.accept(new ClassVisitor(Opcodes.ASM5) {
+			reader.accept(new ClassVisitor(Opcodes.ASM6) {
 				@Override
 				public FieldVisitor visitField(int access, String name, String desc, String sig, Object value) {
 					if ((access & Opcodes.ACC_ENUM) > 0) {
@@ -103,12 +103,12 @@ public class EnhanceTaskASM {
 			return null;// 非公有跳过
 		}
 
-		boolean isEntityInterface = isEntityClass(reader.getInterfaces(), reader.getSuperName(),!enumFields.isEmpty());
+		boolean isEntityInterface = isEntityClass(reader.getInterfaces(), reader.getSuperName(), !enumFields.isEmpty());
 		if (!isEntityInterface)
 			return null;
 
-		ClassWriter cw = new ClassWriter(0);
-		reader.accept(new ClassVisitor(Opcodes.ASM5,cw) {
+		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+		reader.accept(new ClassVisitor(Opcodes.ASM6, cw) {
 			private List<String> nonStaticFields = new ArrayList<String>();
 			private List<String> lobAndRefFields = new ArrayList<String>();
 			private String typeName;
@@ -116,9 +116,6 @@ public class EnhanceTaskASM {
 			@Override
 			public void visit(int version, int access, String name, String sig, String superName, String[] interfaces) {
 				this.typeName = name.replace('.', '/');
-//				if(version==Opcodes.V1_7){
-				version=Opcodes.V1_6;
-//				}
 				super.visit(version, access, name, sig, superName, interfaces);
 			}
 
@@ -132,7 +129,7 @@ public class EnhanceTaskASM {
 
 			@Override
 			public void visitEnd() {
-				Attribute attr = new Attribute("jefd",new byte[] { 0x1f });
+				Attribute attr = new Attribute("jefd", new byte[] { 0x1f });
 				super.visitAttribute(attr);
 			}
 
@@ -142,7 +139,7 @@ public class EnhanceTaskASM {
 				if ((access & Opcodes.ACC_STATIC) > 0)
 					return visitor;
 				nonStaticFields.add(name);
-				return new FieldExtDef(Opcodes.ASM5,new FieldExtCallback(visitor) {
+				return new FieldExtDef(Opcodes.ASM6, new FieldExtCallback(visitor) {
 					public void onFieldRead(FieldExtDef info) {
 						boolean contains = enumFields.contains(name);
 						if (contains) {
@@ -150,14 +147,14 @@ public class EnhanceTaskASM {
 								lobAndRefFields.add(name);
 							}
 						} else {
-						    Collection<AnnotationDef> o = info.getAnnotation(OneToMany.class);
+							Collection<AnnotationDef> o = info.getAnnotation(OneToMany.class);
 							if (o.isEmpty())
 								o = info.getAnnotation(ManyToOne.class);
 							if (o.isEmpty())
 								o = info.getAnnotation(ManyToMany.class);
 							if (o.isEmpty())
 								o = info.getAnnotation(OneToOne.class);
-							//判断完成
+							// 判断完成
 							if (!o.isEmpty()) {
 								lobAndRefFields.add(name);
 							}
@@ -200,14 +197,14 @@ public class EnhanceTaskASM {
 					return mv;
 				if (enumFields.contains(fieldName) && nonStaticFields.contains(fieldName)) {
 					return new SetterVisitor(mv, fieldName, typeName, types[0]);
-				}else if(lobAndRefFields.contains(fieldName)) {
+				} else if (lobAndRefFields.contains(fieldName)) {
 					return new SetterOfClearLazyload(mv, fieldName, typeName);
-				}else{
-					String altFieldName="is"+StringUtils.capitalize(fieldName);
-		//特定情况，当boolean类型并且field名称是isXXX，setter是setXXX()
-					 if(enumFields.contains(altFieldName)){
-						 return new SetterVisitor(mv, altFieldName, typeName, types[0]);
-					 }
+				} else {
+					String altFieldName = "is" + StringUtils.capitalize(fieldName);
+					// 特定情况，当boolean类型并且field名称是isXXX，setter是setXXX()
+					if (enumFields.contains(altFieldName)) {
+						return new SetterVisitor(mv, altFieldName, typeName, types[0]);
+					}
 				}
 				return mv;
 			}
@@ -216,7 +213,7 @@ public class EnhanceTaskASM {
 		return cw.toByteArray();
 	}
 
-	private boolean isEntityClass(String[] interfaces, String superName,boolean defaultValue) {
+	private boolean isEntityClass(String[] interfaces, String superName, boolean defaultValue) {
 		if ("jef/database/DataObject".equals(superName))
 			return true;// 绝大多数实体都是继承这个类的
 		if (ArrayUtils.contains(interfaces, "Ljef/database/IQueryableEntity;")) {
@@ -230,21 +227,21 @@ public class EnhanceTaskASM {
 		ClassReader cl = null;
 		try {
 			URL url = ClassLoader.getSystemResource(superName + ".class");
-			if (url == null && root!=null) {
-				if (root!=null) {
-					url=root.getResource(superName + ".class");
+			if (url == null && root != null) {
+				if (root != null) {
+					url = root.getResource(superName + ".class");
 				}
 			}
-			if(url==null){ //父类找不到，无法准确判断
+			if (url == null) { // 父类找不到，无法准确判断
 				return defaultValue;
 			}
-			byte[] parent=IOUtils.toByteArray(url);
+			byte[] parent = IOUtils.toByteArray(url);
 			cl = new ClassReader(parent);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		if (cl != null) {
-			return isEntityClass(cl.getInterfaces(), cl.getSuperName(),defaultValue);
+			return isEntityClass(cl.getInterfaces(), cl.getSuperName(), defaultValue);
 		}
 		return false;
 	}
@@ -262,15 +259,15 @@ public class EnhanceTaskASM {
 		private String typeName;
 
 		public GetterVisitor(MethodVisitor mv, String name, String typeName) {
-			super(Opcodes.ASM5,mv);
+			super(Opcodes.ASM6, mv);
 			this.name = name;
 			this.typeName = typeName;
 		}
 
 		public void visitCode() {
-			mv.visitIntInsn(ALOAD,0);
+			mv.visitIntInsn(ALOAD, 0);
 			mv.visitLdcInsn(name);
-			mv.visitMethodInsn(INVOKEVIRTUAL, typeName, "beforeGet", "(Ljava/lang/String;)V",false);
+			mv.visitMethodInsn(INVOKEVIRTUAL, typeName, "beforeGet", "(Ljava/lang/String;)V", false);
 			super.visitCode();
 		}
 
@@ -290,7 +287,7 @@ public class EnhanceTaskASM {
 		private String typeName;
 
 		public SetterOfClearLazyload(MethodVisitor mv, String name, String typeName) {
-			super(Opcodes.ASM5,mv);
+			super(Opcodes.ASM6, mv);
 			this.name = name;
 			this.typeName = typeName;
 		}
@@ -301,9 +298,9 @@ public class EnhanceTaskASM {
 		}
 
 		public void visitCode() {
-			mv.visitIntInsn(ALOAD,0);
+			mv.visitIntInsn(ALOAD, 0);
 			mv.visitLdcInsn(name);
-			mv.visitMethodInsn(INVOKEVIRTUAL, typeName, "beforeSet", "(Ljava/lang/String;)V",false);
+			mv.visitMethodInsn(INVOKEVIRTUAL, typeName, "beforeSet", "(Ljava/lang/String;)V", false);
 			super.visitCode();
 		}
 
@@ -335,7 +332,7 @@ public class EnhanceTaskASM {
 		private Type paramType;
 
 		public SetterVisitor(MethodVisitor mv, String name, String typeName, Type paramType) {
-			super(Opcodes.ASM5,mv);
+			super(Opcodes.ASM6, mv);
 			this.name = name;
 			this.typeName = typeName;
 			this.paramType = paramType;
@@ -347,21 +344,21 @@ public class EnhanceTaskASM {
 		}
 
 		public void visitCode() {
-			mv.visitIntInsn(ALOAD,0);
+			mv.visitIntInsn(ALOAD, 0);
 			mv.visitFieldInsn(GETFIELD, typeName, "_recordUpdate", "Z");
 			Label norecord = new Label();
 			mv.visitJumpInsn(IFEQ, norecord);
 
-			mv.visitIntInsn(ALOAD,0);
+			mv.visitIntInsn(ALOAD, 0);
 			mv.visitFieldInsn(GETSTATIC, typeName + "$Field", name, "L" + typeName + "$Field;");
 
 			if (paramType.isPrimitive()) {
 				mv.visitVarInsn(ASMUtils.getLoadIns(paramType), 1);
 				ASMUtils.doWrap(mv, paramType);
 			} else {
-				mv.visitIntInsn(ALOAD,1);
+				mv.visitIntInsn(ALOAD, 1);
 			}
-			mv.visitMethodInsn(INVOKEVIRTUAL, typeName, "prepareUpdate", "(Ljef/database/Field;Ljava/lang/Object;)V",false);
+			mv.visitMethodInsn(INVOKEVIRTUAL, typeName, "prepareUpdate", "(Ljef/database/Field;Ljava/lang/Object;)V", false);
 			mv.visitLabel(norecord);
 			super.visitCode();
 

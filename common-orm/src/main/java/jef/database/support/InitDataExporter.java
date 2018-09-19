@@ -19,13 +19,13 @@ import javax.persistence.EntityManagerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.geequery.asm.AnnotationVisitor;
+import com.github.geequery.asm.ClassReader;
+import com.github.geequery.asm.ClassVisitor;
+import com.github.geequery.asm.Opcodes;
 import com.github.geequery.orm.annotation.InitializeData;
 
 import jef.accelerator.asm.ASMUtils;
-import jef.accelerator.asm.AnnotationVisitor;
-import jef.accelerator.asm.ClassReader;
-import jef.accelerator.asm.ClassVisitor;
-import jef.accelerator.asm.Opcodes;
 import jef.common.log.LogUtil;
 import jef.database.DbCfg;
 import jef.database.DbClient;
@@ -37,6 +37,7 @@ import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.Query;
 import jef.tools.ClassScanner;
+import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.csvreader.Codecs;
 import jef.tools.csvreader.CsvWriter;
@@ -127,19 +128,19 @@ public class InitDataExporter {
 		IResource[] entities = ClassScanner.listClassNameInPackage(url, packageName, false);
 		LogUtil.info("Scanned {}, found {}", Arrays.toString(packageName), entities.length);
 		for (IResource clz : entities) {
-			ClassReader cl = new ClassReader(clz.getInputStream(), true);
+			ClassReader cl = new ClassReader(IOUtils.toByteArray(clz.getInputStream()));
 			ClassAnnotationExtracter ae = new ClassAnnotationExtracter();
 			cl.accept(ae, ClassReader.SKIP_CODE);
 			if (ae.hasAnnotation(Entity.class) || ae.hasAnnotation(EasyEntity.class)) {
 				Class<?> e;
 				try {
-					e = loader.loadClass(cl.getJavaClassName());
+					e = loader.loadClass(ASMUtils.getJavaClassName(cl));
 				} catch (ClassNotFoundException ex) {
 					String path = null;
 					if (loader instanceof URLClassLoader) {
 						path = Arrays.toString(((URLClassLoader) loader).getURLs());
 					}
-					LogUtil.error("Not found {} in classloader {}", cl.getJavaClassName(), path);
+					LogUtil.error("Not found {} in classloader {}", ASMUtils.getJavaClassName(cl), path);
 					throw ex;
 				}
 
@@ -201,7 +202,7 @@ public class InitDataExporter {
 		private Set<String> annotations = new HashSet<String>();
 
 		public ClassAnnotationExtracter() {
-			super(Opcodes.ASM5);
+			super(Opcodes.ASM6);
 		}
 
 		@Override

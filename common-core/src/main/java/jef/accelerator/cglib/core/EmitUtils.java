@@ -19,16 +19,13 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.BitSet;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import jef.accelerator.asm.Label;
-import jef.accelerator.asm.Type;
+import com.github.geequery.asm.Label;
+import com.github.geequery.asm.Type;
 
 public class EmitUtils {
     private static final Signature CSTRUCT_NULL =
