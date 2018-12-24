@@ -264,7 +264,7 @@ public abstract class DateUtils {
 	/**
 	 * 去除 天以后的部分，仅保留年和月，实际上就是当月的开始时间
 	 * 
-	 * @param d 时间
+	 * @param defaultUtc 时间
 	 * @return 时间的年和月部分，指向该月的开始
 	 */
 	public static final Date monthBegin(Date date) {
@@ -1315,7 +1315,7 @@ public abstract class DateUtils {
 	/**
 	 * Converts java.util.Date to LocalTime (null safety)
 	 * 
-	 * @param d
+	 * @param defaultUtc
 	 * @return
 	 */
 	public static LocalTime toLocalTime(java.util.Date date) {
