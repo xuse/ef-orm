@@ -1,7 +1,13 @@
 package jef.database;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
+
+import javax.inject.Provider;
 import javax.persistence.PersistenceException;
 
+import jef.database.datasource.DataSourceInfo;
 import jef.database.dialect.AbstractDialect;
 import jef.database.dialect.DatabaseDialect;
 import jef.tools.Assert;
@@ -176,5 +182,48 @@ public class ConnectInfo {
 		if (url.length() > 0)
 			profile.parseDbInfo(this);
 		return profile;
+	}
+	
+	
+	/**
+	 * 根据datasource解析连接信息
+	 * 
+	 * @param ds
+	 * @param updateDataSourceProperties
+	 *            在能解析出ds的情况下，向datasource的连接属性执行注入
+	 * @return
+	 * @throws SQLException
+	 */
+	public static ConnectInfo tryAnalyzeInfo(Provider<Connection> ds, boolean updateDataSourceProperties) {
+		if (ds instanceof DataSourceInfo) {
+			DataSourceInfo dsw = (DataSourceInfo) ds;
+			ConnectInfo info = new ConnectInfo();
+			DbUtils.processDataSourceOfEnCrypted(dsw);
+
+			info.url = dsw.getUrl();
+			info.user = dsw.getUser();
+			info.password = dsw.getPassword();
+			DatabaseDialect profile = info.parse();// 解析，获得profile, 解析出数据库名等信息
+			if (updateDataSourceProperties)
+				profile.processConnectProperties(dsw);
+			return info;// 理想情况
+		}
+		return null;
+	}
+	
+	/**
+	 * 根据已有的连接解析连接信息
+	 * 
+	 * @param conn
+	 * @return
+	 * @throws SQLException
+	 */
+	public static ConnectInfo tryAnalyzeInfo(Connection conn) throws SQLException {
+		DatabaseMetaData meta = conn.getMetaData();
+		ConnectInfo info = new ConnectInfo();
+		info.user = meta.getUserName();
+		info.url = meta.getURL();
+		info.parse();// 解析，获得profile, 解析出数据库名等信息
+		return info;
 	}
 }

@@ -59,7 +59,7 @@ public class PerformanceTest {
 
 		}
 
-		{// 案例0：CGLib  （原生）
+		{// 案例0：CGLib （原生）
 			PromotionPO po = new PromotionPO();
 			jef.accelerator.cglib.beans.BeanCopier bc = jef.accelerator.cglib.beans.BeanCopier.create(PromotionPO.class, PromotionPO.class, false);
 			long startTime = System.currentTimeMillis();
@@ -101,7 +101,7 @@ public class PerformanceTest {
 				org.springframework.beans.BeanWrapper bws = new org.springframework.beans.BeanWrapperImpl(source);
 				org.springframework.beans.BeanWrapper bwt = new org.springframework.beans.BeanWrapperImpl(po);
 				for (PropertyDescriptor property : bws.getPropertyDescriptors()) {
-					if(bwt.isWritableProperty(property.getName())){
+					if (bwt.isWritableProperty(property.getName())) {
 						bwt.setPropertyValue(property.getName(), bws.getPropertyValue(property.getName()));
 					}
 				}
@@ -120,7 +120,7 @@ public class PerformanceTest {
 			long endTime = System.currentTimeMillis();
 			cost.put("Jef BeanUtils(include ASM)", endTime - startTime);
 		}
-		
+
 		{// 案例5：jef.tools.reflect.BeanUtils
 			BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(PromotionPO.class);
 			PromotionPO po = new PromotionPO();
@@ -264,11 +264,11 @@ public class PerformanceTest {
 		}
 		System.out.println(bw.getPropertyNames().size());
 	}
-	
+
 	@Test
-	public void sdfsa(){
+	public void sdfsa() {
 		{
-			BeanAccessor ba=FastBeanWrapperImpl.getAccessorFor(PromotionPO.class);
+			BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(PromotionPO.class);
 			PromotionPO source = new PromotionPO();
 			Timestamp now = new Timestamp(System.currentTimeMillis());
 			source.setCode("code");
@@ -287,53 +287,57 @@ public class PerformanceTest {
 			source.setField5("cfer4344");
 			source.setField6("dssfsfdsf");
 			source.setField7("cdedfewfdsf");
-			Map map=ba.convert(source);
+			Map map = ba.convert(source);
 			ba.getAnnotationOnField("code");
 			ba.getAnnotationOnGetter("code");
 			ba.getAnnotationOnSetter("code");
-			PromotionPO source2=(PromotionPO)ba.fromMap(map);
-			System.out.println(map);	
+			PromotionPO source2 = (PromotionPO) ba.fromMap(map);
+			System.out.println(map);
 			System.out.println(ToStringBuilder.reflectionToString(source));
 			System.out.println(ToStringBuilder.reflectionToString(source2));
 		}
 		{
-			BeanAccessor ba=FastBeanWrapperImpl.getAccessorFor(Foo.class);
-			Foo foo=new Foo();
+			BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(Foo.class);
+			Foo foo = new Foo();
 			foo.setId(1);
 			foo.setName("aaa");
 			foo.setScore(123D);
 			foo.setCreated(new Date());
-			Map map=ba.convert(foo);
+			Map map = ba.convert(foo);
 			ba.getAnnotationOnField("name");
 			ba.getAnnotationOnGetter("name");
 			ba.getAnnotationOnSetter("name");
 			map.remove("score");
-			Foo foo2=(Foo)ba.fromMap(map);
+			Foo foo2 = (Foo) ba.fromMap(map);
 			System.out.println(map);
 			System.out.println(ToStringBuilder.reflectionToString(foo));
 			System.out.println(ToStringBuilder.reflectionToString(foo2));
-			
+
 			map.put("id", "3");
-			Foo foo3=BeanUtils.undescribeSafe(map, Foo.class);
+			Foo foo3 = BeanUtils.undescribeSafe(map, Foo.class);
 			System.out.println(ToStringBuilder.reflectionToString(foo3));
-			
+
 		}
-		
+
 	}
-	
-	
-	
+
 	@Test
-	public void testConcurrent() throws InterruptedException{
-		for(int i=0;i<100;i++){
-			new Thread(() -> work()).start();; 
+	public void testConcurrent() throws InterruptedException {
+		for (int i = 0; i < 100; i++) {
+			new Thread() {
+				@Override
+				public void run() {
+					work();
+				}
+			}
+			.start();
+			;
 		}
 		Thread.sleep(2000);
 	}
-	
-	
-	private void work(){
+
+	private void work() {
 		FastBeanWrapperImpl.getAccessorFor(PromotionPO.class);
 	}
-	
+
 }

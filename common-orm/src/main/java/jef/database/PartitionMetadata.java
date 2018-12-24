@@ -7,7 +7,7 @@ import java.util.List;
 
 import jef.common.log.LogUtil;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.innerpool.IUserManagedPool;
+import jef.database.innerpool.ConnectionAndMetadataProvider;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.meta.ITableMetadata;
 import jef.database.routing.PartitionResult;
@@ -19,9 +19,9 @@ import jef.database.routing.PartitionResult;
  * 
  */
 public class PartitionMetadata implements PartitionSupport{
-	private IUserManagedPool parent;
+	private ConnectionAndMetadataProvider parent;
 	
-	public PartitionMetadata(IUserManagedPool parent){
+	public PartitionMetadata(ConnectionAndMetadataProvider parent){
 		this.parent=parent;
 	}
 	
@@ -34,7 +34,7 @@ public class PartitionMetadata implements PartitionSupport{
 	}
 
 	public DatabaseDialect getProfile(String dbkey) {
-		return parent.getProfile(dbkey);
+		return parent.getMetadata(dbkey).getProfile();
 	}
 
 	public void ensureTableExists(String db,String table,ITableMetadata tmeta) throws SQLException {

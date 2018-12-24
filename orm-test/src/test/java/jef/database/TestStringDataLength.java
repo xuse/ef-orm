@@ -1,8 +1,12 @@
 package jef.database;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Date;
+
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import jef.database.dialect.ColumnType;
 import jef.database.jsqlparser.parser.ParseException;
@@ -16,9 +20,6 @@ import jef.database.test.IgnoreOn;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
 import jef.orm.onetable.model.CaAsset;
 import jef.tools.string.RandomData;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({
@@ -100,29 +101,26 @@ public class TestStringDataLength extends org.junit.Assert {
 		db.createTable(CaAsset.class);
 
 		CaAsset t1 = RandomData.newInstance(CaAsset.class);
-		try{
-			db.insert(t1);
-		}catch(SQLException e){
-			e.printStackTrace();
-		}
-		
+		db.insert(t1);
 
 		Transaction session = db.startTransaction();
 		{//故意出錯
 			CaAsset t2 = RandomData.newInstance(CaAsset.class);
 			t2.setAssetId(t1.getAssetId());
-			PreparedStatement stmt = session.selectTarget(null).prepareStatement("insert into ca_asset(normal,acct_id,asset_type,valid_date,asset_id) values(?,?,?,?,?)");
-			try {
-				stmt.setString(1, "廖丘");
-				stmt.setInt(2, 20474239);
-				stmt.setInt(3, 109);
-				stmt.setDate(4, new java.sql.Date(12333));
-				stmt.setLong(5, t1.getAssetId());
-				stmt.executeUpdate();
-			} catch (Exception e) {
-				System.out.println(e.getMessage());
-			} finally {
-				stmt.close();
+			try(Connection conn=session.selectTarget(null).get()){
+				PreparedStatement stmt = conn.prepareStatement("insert into ca_asset(normal,acct_id,asset_type,valid_date,asset_id) values(?,?,?,?,?)");
+				try {
+					stmt.setString(1, "廖丘");
+					stmt.setInt(2, 20474239);
+					stmt.setInt(3, 109);
+					stmt.setDate(4, new java.sql.Date(12333));
+					stmt.setLong(5, t1.getAssetId());
+					stmt.executeUpdate();
+				} catch (Exception e) {
+					System.out.println(e.getMessage());
+				} finally {
+					stmt.close();
+				}				
 			}
 		}
 		{

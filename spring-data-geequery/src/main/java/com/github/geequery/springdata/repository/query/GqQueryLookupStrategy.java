@@ -17,10 +17,6 @@ package com.github.geequery.springdata.repository.query;
 
 import java.lang.reflect.Method;
 
-import jef.database.NativeQuery;
-import jef.database.jpa.JefEntityManagerFactory;
-import jef.tools.StringUtils;
-
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -29,13 +25,17 @@ import org.springframework.data.repository.query.RepositoryQuery;
 
 import com.github.geequery.springdata.annotation.FindBy;
 
+import jef.database.NativeQuery;
+import jef.database.SessionFactory;
+import jef.tools.StringUtils;
+
 /**
  * Query lookup strategy to execute finders.
  */
 public final class GqQueryLookupStrategy implements QueryLookupStrategy {
-    private final JefEntityManagerFactory emf;
+    private final SessionFactory emf;
 
-    public GqQueryLookupStrategy(JefEntityManagerFactory em) {
+    public GqQueryLookupStrategy(SessionFactory em) {
         this.emf = em;
     }
 
@@ -49,17 +49,17 @@ public final class GqQueryLookupStrategy implements QueryLookupStrategy {
         } else if (StringUtils.isNotEmpty(qSql)) {
             NativeQuery<?> q;
             if (method.isNativeQuery()) {
-                q = (NativeQuery<?>) emf.getDefault().createNativeQuery(qSql, method.getReturnedObjectType());
+                q = (NativeQuery<?>) emf.asDbClient().createNativeQuery(qSql, method.getReturnedObjectType());
             } else {
-                q = (NativeQuery<?>) emf.getDefault().createQuery(qSql, method.getReturnedObjectType());
+                q = (NativeQuery<?>) emf.asDbClient().createQuery(qSql, method.getReturnedObjectType());
             }
             return new GqNativeQuery(method, emf, q);
         }
         FindBy findBy = method.getFindByAnnotation();
         if (findBy != null) {
             return new GqPartTreeQuery(method, emf, findBy);
-        } else if (emf.getDefault().hasNamedQuery(qName)) {
-            NativeQuery<?> q = (NativeQuery<?>) emf.getDefault().createNamedQuery(qName, method.getReturnedObjectType());
+        } else if (emf.asDbClient().hasNamedQuery(qName)) {
+            NativeQuery<?> q = (NativeQuery<?>) emf.asDbClient().createNamedQuery(qName, method.getReturnedObjectType());
             return new GqNativeQuery(method, emf, q);
         } else {
             if (qName.endsWith(".".concat(method.getName()))) {

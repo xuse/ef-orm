@@ -11,23 +11,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.persistence.PersistenceException;
+import com.querydsl.sql.PostgreSQLTemplates;
+import com.querydsl.sql.SQLTemplates;
 
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.DbMetaData;
-import jef.database.DbUtils;
 import jef.database.ORMConfig;
 import jef.database.dialect.ColumnType.AutoIncrement;
 import jef.database.dialect.ColumnType.Clob;
 import jef.database.dialect.ColumnType.Varchar;
 import jef.database.dialect.handler.LimitHandler;
 import jef.database.dialect.handler.LimitOffsetLimitHandler;
-import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.exception.JDBCExceptionHelper;
 import jef.database.exception.TemplatedViolatedConstraintNameExtracter;
 import jef.database.exception.ViolatedConstraintNameExtracter;
-import jef.database.jdbc.JDBCTarget;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.jdbc.statement.DelegatingPreparedStatement;
 import jef.database.jdbc.statement.DelegatingStatement;
@@ -61,9 +59,6 @@ import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
-
-import com.querydsl.sql.PostgreSQLTemplates;
-import com.querydsl.sql.SQLTemplates;
 
 /**
  * Postgres 9.4开始支持的若干类型
@@ -297,30 +292,6 @@ public class PostgreSql94Dialect extends AbstractDialect {
 	@Override
 	public void processIntervalExpression(Function func, Interval interval) {
 		interval.toPostgresMode();
-	}
-
-	@Override
-	public long getColumnAutoIncreamentValue(AutoIncrementMapping mapping, JDBCTarget db) {
-		String tableName = mapping.getMeta().getTableName(false).toLowerCase();
-		String seqname = tableName + "_" + mapping.lowerColumnName() + "_seq";
-		String sql = String.format("select nextval('%s')", seqname);
-		if (ORMConfig.getInstance().isDebugMode()) {
-			LogUtil.show(sql + " | " + db.getTransactionId());
-		}
-		try {
-			Statement st = db.createStatement();
-			ResultSet rs = null;
-			try {
-				rs = st.executeQuery(sql);
-				rs.next();
-				return rs.getLong(1);
-			} finally {
-				DbUtils.close(rs);
-				DbUtils.close(st);
-			}
-		} catch (SQLException e) {
-			throw new PersistenceException(e);
-		}
 	}
 
 	@Override

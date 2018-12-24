@@ -24,12 +24,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.github.geequery.entity.Entities;
+
 import jef.common.PairSS;
 import jef.common.log.LogUtil;
 import jef.database.cache.Cache;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.innerpool.WrapableConnection;
 import jef.database.meta.ITableMetadata;
-import jef.database.meta.MetaHolder;
+import jef.database.query.Query;
 import jef.database.routing.PartitionResult;
 import jef.database.support.DbOperatorListener;
 import jef.database.support.SqlLog;
@@ -55,7 +58,7 @@ import jef.tools.StringUtils;
  * 
  * @param <T>
  */
-public abstract class Batch<T extends IQueryableEntity> {
+public abstract class Batch<T> {
 	/**
 	 * 操作执行数据库对象
 	 */
@@ -152,7 +155,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 	 */
 	public void setForceTableName(String forceTableName) {
 		if (forceTableName != null) {
-			this.forceTableName = MetaHolder.toSchemaAdjustedName(forceTableName);
+			this.forceTableName = DbUtils.toSchemaAdjustedName(forceTableName);
 		}
 	}
 
@@ -227,8 +230,8 @@ public abstract class Batch<T extends IQueryableEntity> {
 					}
 				}
 				if (debugMode) {
-					LogUtil.info(StringUtils.concat(this.getClass().getSimpleName(), " Batch executed:", String.valueOf(objs.size()), ". affect ", String.valueOf(total), " record(s) and ", String.valueOf(data.size()), " tables. |  @",
-							String.valueOf(Thread.currentThread().getId())));
+					LogUtil.info(
+							StringUtils.concat(this.getClass().getSimpleName(), " Batch executed:", String.valueOf(objs.size()), ". affect ", String.valueOf(total), " record(s) and ", String.valueOf(data.size()), " tables. |  @", String.valueOf(Thread.currentThread().getId())));
 				}
 			} else {// 不分组
 				long start = System.currentTimeMillis();
@@ -256,16 +259,17 @@ public abstract class Batch<T extends IQueryableEntity> {
 		return executeResult;
 	}
 
-//	protected PartitionResult getTableName(T obj) {
-//		AbstractMetadata meta = MetaHolder.getMeta(obj);
-//		return meta.getBaseTable(parent.getPartitionSupport().getProfile(meta.getBindDsName())).toPartitionResult();
-//	}
+	// protected PartitionResult getTableName(T obj) {
+	// AbstractMetadata meta = MetaHolder.getMeta(obj);
+	// return
+	// meta.getBaseTable(parent.getPartitionSupport().getProfile(meta.getBindDsName())).toPartitionResult();
+	// }
 	protected PartitionResult getTableName(T obj) {
-		return DbUtils.toTableName(obj, null, obj.getQuery(), parent.getPartitionSupport());
+		return DbUtils.toTableName(obj, null, parent.getPartitionSupport());
 	}
 
 	protected long innerCommit(List<T> objs, String site, String tablename, String dbName) throws SQLException {
-		OperateTarget db = parent.selectTarget(site);
+		WrapableConnection db = parent.selectTarget(site).get();
 		String sql = toSql(DbUtils.escapeColumn(db.getProfile(), tablename));
 		if (ORMConfig.getInstance().isDebugMode())
 			LogUtil.show(sql + " | " + dbName);
@@ -274,8 +278,8 @@ public abstract class Batch<T extends IQueryableEntity> {
 		try {
 			return doCommit(p, db, objs);
 		} finally {
-			p.close();
-			db.releaseConnection();
+			DbUtils.close(p);
+			db.close();
 		}
 	}
 
@@ -305,7 +309,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 	/*
 	 * 提交每批数据，返回本次数据库完成后的时间
 	 */
-	protected long doCommit(PreparedStatement psmt, OperateTarget db, List<T> listValue) throws SQLException {
+	protected long doCommit(PreparedStatement psmt, WrapableConnection db, List<T> listValue) throws SQLException {
 		callEventListenerBefore(listValue);
 		processJdbcParams(psmt, listValue, db);
 		int[] result;
@@ -375,7 +379,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 	 */
 	protected abstract void callEventListenerAfter(List<T> listValue) throws SQLException;
 
-	protected abstract void processJdbcParams(PreparedStatement psmt, List<T> listValue, OperateTarget db) throws SQLException;
+	protected abstract void processJdbcParams(PreparedStatement psmt, List<T> listValue, WrapableConnection db) throws SQLException;
 
 	/**
 	 * 根据传入的表名，计算针对该表的SQL语句
@@ -446,14 +450,14 @@ public abstract class Batch<T extends IQueryableEntity> {
 		}
 
 		@Override
-		protected void processJdbcParams(PreparedStatement psmt, List<T> listValue, OperateTarget db) throws SQLException {
+		protected void processJdbcParams(PreparedStatement psmt, List<T> listValue, WrapableConnection db) throws SQLException {
 			List<ColumnMapping> writeFields = insertPart.getFields();
 			int len = listValue.size();
 			SqlLog log = ORMConfig.getInstance().newLogger(this.extreme);
 			int maxLog = ORMConfig.getInstance().getMaxBatchLog();
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
-				Assert.notNull(t,"Batch list must not contain null element.");
+				Assert.notNull(t, "Batch list must not contain null element.");
 				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ", i + 1).append('/').append(len));
 				context.setInsertVariables(t, writeFields);
 				psmt.addBatch();
@@ -468,7 +472,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 		}
 
 		protected long innerCommit(List<T> objs, String site, String tablename, String dbName) throws SQLException {
-			OperateTarget db = parent.selectTarget(site);
+			WrapableConnection db = parent.selectTarget(site).get();
 			if (extreme) {
 				db.getProfile().toExtremeInsert(insertPart);
 			}
@@ -480,15 +484,14 @@ public abstract class Batch<T extends IQueryableEntity> {
 				long dbAccess = doCommit(p, db, objs);
 				return dbAccess;
 			} finally {
-				p.close();
-				db.releaseConnection();
+				DbUtils.close(p);
+				db.close();
 			}
 		}
-		
 
 		@Override
 		protected PartitionResult getTableName(T obj) {
-			return DbUtils.toTableName(obj, null, null, parent.getPartitionSupport());
+			return DbUtils.toTableName(obj, null, parent.getPartitionSupport());
 		}
 
 		@Override
@@ -499,7 +502,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 		}
 	}
 
-	static final class Update<T extends IQueryableEntity> extends Batch<T> {
+	static final class Update<T> extends Batch<T> {
 		/**
 		 * SQL片段，update部分(UPDATE语句使用)
 		 */
@@ -524,7 +527,8 @@ public abstract class Batch<T extends IQueryableEntity> {
 			Session parent = this.parent;
 			DbOperatorListener listener = parent.getListener();
 			for (T t : listValue) {
-				listener.beforeUpdate(t, parent);
+				// FIXME 此处需要改进
+				listener.beforeUpdate(Entities.asQuery(t), parent);
 			}
 		}
 
@@ -533,8 +537,10 @@ public abstract class Batch<T extends IQueryableEntity> {
 			Session parent = this.parent;
 			DbOperatorListener listener = parent.getListener();
 			for (T t : listValue) {
-				t.clearUpdate();
-				listener.afterUpdate(t, 1, parent);
+				// FIXME 此处应当继续封装。要重新考虑批量update的场景和用法
+				Query<T> q = Entities.asQuery(t);
+				q.clearUpdateMap();
+				listener.afterUpdate(q, 1, parent);
 			}
 		}
 
@@ -547,16 +553,16 @@ public abstract class Batch<T extends IQueryableEntity> {
 		}
 
 		@Override
-		protected void processJdbcParams(PreparedStatement psmt, List<T> listValue, OperateTarget db) throws SQLException {
+		protected void processJdbcParams(PreparedStatement psmt, List<T> listValue, WrapableConnection db) throws SQLException {
 			List<Variable> bindVar = wherePart.getBind();
 			int len = listValue.size();
 			SqlLog log = ORMConfig.getInstance().newLogger(this.extreme);
 			int maxLog = ORMConfig.getInstance().getMaxBatchLog();
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
-				Assert.notNull(t,"Batch list must not contain null element.");
+				Assert.notNull(t, "Batch list must not contain null element.");
 				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ", i + 1).append('/').append(len));
-				List<Object> whereBind = context.setVariables(t.getQuery(), updatePart.getVariables(), bindVar);
+				List<Object> whereBind = context.setVariables(Entities.asQuery(t), updatePart.getVariables(), bindVar);
 				psmt.addBatch();
 				String baseTableName = forceTableName == null ? meta.getTableName(false) : forceTableName;
 				parent.getCache().onUpdate(baseTableName, wherePart.getSql(), whereBind);
@@ -600,7 +606,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			Session parent = this.parent;
 			DbOperatorListener listener = parent.getListener();
 			for (T t : listValue) {
-				listener.beforeDelete(t, parent);
+				listener.beforeDelete(t.getQuery(), parent);
 			}
 		}
 
@@ -609,7 +615,7 @@ public abstract class Batch<T extends IQueryableEntity> {
 			Session parent = this.parent;
 			DbOperatorListener listener = parent.getListener();
 			for (T t : listValue) {
-				listener.afterDelete(t, 1, parent);
+				listener.afterDelete(t.getQuery(), 1, parent);
 			}
 		}
 
@@ -618,13 +624,13 @@ public abstract class Batch<T extends IQueryableEntity> {
 		}
 
 		@Override
-		protected void processJdbcParams(PreparedStatement psmt, List<T> listValue, OperateTarget db) throws SQLException {
+		protected void processJdbcParams(PreparedStatement psmt, List<T> listValue, WrapableConnection db) throws SQLException {
 			int len = listValue.size();
 			SqlLog log = ORMConfig.getInstance().newLogger(this.extreme);
 			int maxLog = ORMConfig.getInstance().getMaxBatchLog();
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
-				Assert.notNull(t,"Batch list must not contain null element.");
+				Assert.notNull(t, "Batch list must not contain null element.");
 				if (t.getQuery().getConditions().isEmpty()) {
 					DbUtils.fillConditionFromField(t, t.getQuery(), null, pkMpode);
 				}

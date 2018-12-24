@@ -27,16 +27,16 @@ import javax.persistence.PersistenceException;
 import jef.database.Condition;
 import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.jdbc.JDBCTarget;
+import jef.database.innerpool.WrapableConnection;
 import jef.database.meta.Reference;
 import jef.database.wrapper.populator.ColumnMeta;
 
 public final class ResultSetHolder extends AbstractResultSet implements IResultSet {
 	private Statement st;
 	ResultSet rs;
-	private JDBCTarget db;
+	private WrapableConnection db;
 
-	public JDBCTarget getDb() {
+	public WrapableConnection getDb() {
 		return db;
 	}
 
@@ -47,7 +47,7 @@ public final class ResultSetHolder extends AbstractResultSet implements IResultS
 	 * @param st
 	 * @param rs
 	 */
-	public ResultSetHolder(JDBCTarget tx, Statement st, ResultSet rs) {
+	public ResultSetHolder(WrapableConnection tx, Statement st, ResultSet rs) {
 		this.db = tx;
 		this.st = st;
 		this.rs = rs;
@@ -68,12 +68,12 @@ public final class ResultSetHolder extends AbstractResultSet implements IResultS
 			st = null;
 		}
 		if (db != null) {
-			db.releaseConnection();
+			DbUtils.closeConnection(db);
 			// 而目前设计约束凡是用户持有游标的场景，必须嵌套到一个内部的事务中去。因此实际上不会出现非当前线程的方法来释放连接的可能。
 			// 如果是为了持有结果集专门设计的连接，那么直接就关闭掉
-			if (db.isResultSetHolderTransaction()) {
-				db.closeTx();
-			}
+//			if (db.isResultSetHolderTransaction()) {
+//				db.closeTx();
+//			}
 			db = null;
 		}
 	}

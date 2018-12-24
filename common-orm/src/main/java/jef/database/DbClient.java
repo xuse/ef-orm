@@ -15,31 +15,40 @@ named * JEF - Copyright 2009-2010 Jiyi (mr.jiyi@gmail.com)
  */
 package jef.database;
 
+import java.io.Closeable;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import javax.inject.Provider;
 import javax.persistence.PersistenceException;
 import javax.sql.DataSource;
 
-import org.easyframe.enterprise.spring.TransactionMode;
+import com.github.geequery.entity.Entities;
+import com.github.geequery.support.spring.DataSourceProvider;
+import com.github.geequery.support.spring.MultiDataSourceProvider;
+import com.github.geequery.support.spring.TransactionProvider;
 
 import jef.common.Callback;
 import jef.common.log.LogUtil;
 import jef.database.cache.Cache;
 import jef.database.cache.CacheDummy;
 import jef.database.cache.CacheImpl;
+import jef.database.datasource.RoutingDataSource;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.AbstractDialect;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AutoIncrementMapping;
+import jef.database.innerpool.ConnectionAndMetadataProvider;
+import jef.database.innerpool.DefaultMetaProvider;
 import jef.database.innerpool.IConnection;
-import jef.database.innerpool.IUserManagedPool;
 import jef.database.innerpool.PartitionSupport;
-import jef.database.innerpool.PoolService;
+import jef.database.innerpool.RoutingDataSourceWrapper;
 import jef.database.jmx.JefFacade;
+import jef.database.jpa.MetaProvider;
 import jef.database.meta.AbstractMetadata;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
@@ -50,6 +59,7 @@ import jef.database.support.DbOperatorListenerContainer;
 import jef.database.support.DefaultDbOperListener;
 import jef.database.support.MetadataEventListener;
 import jef.tools.Assert;
+import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanUtils;
@@ -61,7 +71,7 @@ import jef.tools.reflect.BeanUtils;
  * 
  * @author jiyi
  */
-public class DbClient extends Session implements SessionFactory {
+public class DbClient extends Session implements SessionFactory,MetaProvider {
 	/**
 	 * 命名查询
 	 */
@@ -76,23 +86,30 @@ public class DbClient extends Session implements SessionFactory {
 	private SequenceManager sequenceManager;
 
 	/**
-	 * 事务支持类型
-	 */
-	private TransactionMode txType = TransactionMode.JPA;
-
-	/**
 	 * 连接池和metadata服务
 	 */
-	private IUserManagedPool connPool;
+	private ConnectionAndMetadataProvider connPool;
+	
+	private TransactionProvider transactionProvider;
 
-	/**
-	 * 构造当前对象的DataSource 也可能是RoutingDataSource
-	 */
-	private DataSource ds;
 	/**
 	 * 全局缓存
 	 */
 	private Cache golbalCache;
+	
+	/*
+	 * 分区计算器
+	 */
+	private PartitionMetadata pm;
+	/*
+	 * 从配置中读取命名查询的配置位置(文件)
+	 */
+	private String namedQueryFilename = JefConfiguration.get(DbCfg.NAMED_QUERY_RESOURCE_NAME, "named-queries.xml");
+	/*
+	 * 从配置中读取命名查询的配置位置(数据库表)
+	 */
+	private String namedQueryTablename = JefConfiguration.get(DbCfg.DB_QUERY_TABLE_NAME);
+
 
 	/**
 	 * 启动一个事务。
@@ -117,20 +134,22 @@ public class DbClient extends Session implements SessionFactory {
 	 * @see Transaction
 	 */
 	public Transaction startTransaction() {
+		if(transactionProvider!=null) {
+			throw new UnsupportedOperationException("It is using a transaction manager outside of GeeQuery(Eg. DataSourceTransactionManager of Springframework.) Can not create inner transaction.");
+		}
 		return new TransactionImpl(this, null, false);
 	}
 
 	/**
-	 * @param timeout
-	 *            事务超时时间，单位秒
-	 * @param isolationLevel
-	 *            事务隔离级别 <li>TRANSACTION_READ_COMMITTED =1</li> <li>
-	 *            TRANSACTION_READ_UNCOMMITTED = 2</li> <li>
-	 *            TRANSACTION_REPEATABLE_READ = 4</li> <li>
-	 *            TRANSACTION_SERIALIZABLE =8</li> <li>ISOLATION_DEFAULT = -1</li>
+	 * @param timeout        事务超时时间，单位秒
+	 * @param isolationLevel 事务隔离级别
+	 *                       <li>TRANSACTION_READ_COMMITTED =1</li>
+	 *                       <li>TRANSACTION_READ_UNCOMMITTED = 2</li>
+	 *                       <li>TRANSACTION_REPEATABLE_READ = 4</li>
+	 *                       <li>TRANSACTION_SERIALIZABLE =8</li>
+	 *                       <li>ISOLATION_DEFAULT = -1</li>
 	 * 
-	 * @param readOnly
-	 *            是否为只读事务。部分数据库支持只读事务。可以针对只读进行优化。具体优化哪些特性取决于数据库。
+	 * @param readOnly       是否为只读事务。部分数据库支持只读事务。可以针对只读进行优化。具体优化哪些特性取决于数据库。
 	 * @return Transaction对象
 	 */
 	public Transaction startTransaction(int timeout, int isolationLevel, boolean readOnly) {
@@ -138,51 +157,38 @@ public class DbClient extends Session implements SessionFactory {
 	}
 
 	/**
+	 * 构造，会使用jef.properties中配置的信息来连接数据库。
+	 * 
+	 */
+	public DbClient() {
+		this(getDefaultDataSource());
+	}
+	
+	/**
 	 * 使用Datasource 构造DbClient
 	 * 
-	 * @param datasource
-	 *            数据源信息 如果datasource已经是一个连接池，那么不会再启动内嵌的连接池，否则会使用内建的连接池
+	 * @param datasource 数据源信息 如果datasource已经是一个连接池，那么不会再启动内嵌的连接池，否则会使用内建的连接池
 	 */
 	public DbClient(DataSource datasource) {
-		this(datasource, JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL, 3), JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50), null);
-	}
-
-	/**
-	 * 使用DataSource构造DbClient
-	 * 
-	 * @param datasource
-	 *            数据源信息
-	 * @param max
-	 *            内建连接池的最大值，如果DataSource已经是一个连接池，那么内建连接池不会启动，此参数无效。
-	 */
-	public DbClient(DataSource datasource, int min, int max, TransactionMode txType) {
-		try {
-			if (txType != null)
-				this.txType = txType;
-			if (datasource == null) {
-				datasource = getDefaultDataSource();
-			}
-			init(datasource, min, max);
-			JefFacade.registeEmf(this, null);
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
+		if(datasource instanceof RoutingDataSource) {
+			init(((RoutingDataSource)datasource).toProvider());
+		}else {
+			init(new DataSourceProvider(datasource));
 		}
 	}
 
 	/**
-	 * 构造，会使用jef.properties中配置的信息来连接数据库。
-	 * 
-	 * @deprecated use new DbClientBuilder().build() to create a new DbClient.
+	 * 使用外部托管的连接（事务）管理器进行初始化
+	 * @param provider
 	 */
-	public DbClient() {
-		this(getDefaultDataSource(), JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL, 3), JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50), null);
+	public DbClient(javax.inject.Provider<? extends Connection> provider) {
+		init(provider);
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see jef.database.Session#createNamedQuery(java.lang.String,
-	 * java.lang.Class)
+	 * @see jef.database.Session#createNamedQuery(java.lang.String, java.lang.Class)
 	 */
 	@Override
 	public <T> NativeQuery<T> createNamedQuery(String name, Class<T> resultWrapper) {
@@ -241,53 +247,6 @@ public class DbClient extends Session implements SessionFactory {
 		}
 	}
 
-	protected synchronized void initNQ() {
-		namedQueries = new NamedQueryHolder(this);
-	}
-
-	@Override
-	protected Cache getCache() {
-		return golbalCache;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 */
-	@Override
-	protected DbOperatorListener getListener() {
-		if (listener == null) {
-			String clz = JefConfiguration.get(DbCfg.DB_OPERATOR_LISTENER);
-			if (StringUtils.isNotEmpty(clz)) {
-				try {
-					listener = (DbOperatorListener) BeanUtils.newInstance(Class.forName(clz));
-				} catch (ClassNotFoundException e) {
-					LogUtil.exception(e);
-				}
-			}
-			if (listener == null) {
-				listener = DefaultDbOperListener.getInstance();
-			}
-		}
-		return listener;
-	}
-
-	protected String getTransactionId(String key) {
-		StringBuilder sb = new StringBuilder();
-		// 2016/7/8 优化，Map hash查找仅发生一次。
-		ConnectInfo info = connPool.getInfo(key);
-		sb.append('[').append(info.profile.getName()).append(':').append(info.dbname).append('@').append(Thread.currentThread().getId()).append(']');
-		return sb.toString();
-	}
-
-	@Override
-	protected OperateTarget selectTarget(String dbKey) {
-		if (connPool == null) {
-			throw new IllegalAccessError("The database client was closed!");
-		}
-		if (StringUtils.isEmpty(dbKey))
-			dbKey = null;
-		return new OperateTarget(this, dbKey);
-	}
 
 	@Override
 	public DbClient getNoTransactionSession() {
@@ -297,8 +256,7 @@ public class DbClient extends Session implements SessionFactory {
 	/**
 	 * 得到指定表的所有分表
 	 * 
-	 * @param meta
-	 *            表元模型
+	 * @param meta 表元模型
 	 * @return 从数据库扫描得到的分表
 	 */
 	public PartitionResult[] getSubTableNames(ITableMetadata meta) {
@@ -309,13 +267,6 @@ public class DbClient extends Session implements SessionFactory {
 		return connPool != null;
 	}
 
-	protected void finalize() throws Throwable {
-		if (connPool != null) {
-			LogUtil.show("Database will auto shut down at Java finalize thread. to avoid this message, you should manually close the DbClient.");
-			close();
-		}
-		super.finalize();
-	}
 
 	public SequenceManager getSequenceManager() {
 		return sequenceManager;
@@ -323,20 +274,37 @@ public class DbClient extends Session implements SessionFactory {
 
 	/*
 	 * 初始化
+	 * 四种情况
+	 * 1、单数据源，DataSource初始化。
+	 * 2、单数据源，Spring事务（传入Provider）
+	 * 3、多数据源，RoutingDataSource初始化。
+	 * 4、多数据源，Spring事务（传入Provider）
 	 */
-	protected void init(DataSource ds, int min, int max) throws SQLException {
-		DbUtils.tryAnalyzeInfo(ds, true);// 尝试解析并处理连接参数。
-		this.ds = ds;
-		this.connPool = PoolService.getPool(ds, min, max, txType);
-		Assert.notNull(connPool);
-		LogUtil.info("Init DB Connection: " + connPool.getInfo(null));
+	@SuppressWarnings("unchecked")
+	protected void init(Provider<? extends Connection> provider) {
+		Assert.notNull(provider);
+		if(provider instanceof TransactionProvider) {
+			TransactionProvider tx=(TransactionProvider)provider;
+			this.transactionProvider=tx;
+			if(tx.isRouting()) {
+				this.connPool = new RoutingDataSourceWrapper(tx.getRoudingDataSource());
+			}else {
+				this.connPool=new DefaultMetaProvider((Provider<Connection>) provider);	
+			}
+		}else if(provider instanceof MultiDataSourceProvider) {
+			RoutingDataSource datasource=((MultiDataSourceProvider)provider).getRoutingDataSource();
+			this.connPool = new RoutingDataSourceWrapper((Provider<IConnection>) provider,datasource);
+		}else {
+			this.connPool=new DefaultMetaProvider((Provider<Connection>) provider);
+		}
+		LogUtil.info("Init DB Connection: " + connPool.getMetadata(null).getInfo());
 		afterPoolReady();
 	}
 
 	/*
 	 * initlize:连接建立完成后执行初始化检查
 	 */
-	private void afterPoolReady() throws SQLException {
+	private void afterPoolReady(){
 		// 初始化处理器
 		DatabaseDialect profile = this.getProfile(null);
 		this.preProcessor = new SqlProcessor.PrepareImpl(profile, this);
@@ -369,6 +337,7 @@ public class DbClient extends Session implements SessionFactory {
 		this.connPool.registeDbInitCallback(new C(this));
 	}
 
+
 	/**
 	 * 回调对象
 	 * 
@@ -390,7 +359,7 @@ public class DbClient extends Session implements SessionFactory {
 						Class<?> c = Class.forName(tableName);
 						Object o = c.newInstance();
 						if (o instanceof IQueryableEntity) {
-							if (session.createTable((IQueryableEntity) o)) {
+							if (session.createTableByInstance(o)) {
 								LogUtil.info("JEF has created table {} automaticlly.", tableName);
 							}
 						}
@@ -408,14 +377,15 @@ public class DbClient extends Session implements SessionFactory {
 	}
 
 	/**
-	 * Get the database metadata handler of assigned datasource. if there's only
-	 * one datasource, input null is fine.
+	 * Get the database metadata handler of assigned datasource. if there's only one
+	 * datasource, input null is fine.
 	 * 
-	 * @param dbkey
-	 *            the name of datasource. input null to access the metadata of
-	 *            default datasource.
+	 * @param dbkey the name of datasource. input null to access the metadata of
+	 *              default datasource.
 	 * @return the handler of database metadata.
 	 * @throws SQLException
+	 * @{@link Deprecated} use 
+	 * 
 	 */
 	public DbMetaData getMetaData(String dbkey) {
 		return connPool.getMetadata(dbkey);
@@ -428,8 +398,7 @@ public class DbClient extends Session implements SessionFactory {
 	 * If there are multiple datasources , use {@link #getMetaData(String)} then
 	 * call {@link DbMetaData#getExistTable(String)} to check.
 	 * 
-	 * @param tableName
-	 *            支持Schema重定向
+	 * @param tableName 支持Schema重定向
 	 * @return
 	 * @throws SQLException
 	 * 
@@ -437,20 +406,19 @@ public class DbClient extends Session implements SessionFactory {
 	 */
 	public boolean existsTable(String tableName) throws SQLException {
 		Assert.notNull(tableName);
-		tableName = MetaHolder.toSchemaAdjustedName(tableName);
+		tableName = DbUtils.toSchemaAdjustedName(tableName);
 		return getMetaData(null).existTable(tableName);
 	}
 
 	/**
 	 * 给定一个对象，计算这个对象所对应的数据库表并判断这些表是否存在。（在分表分库条件下，一个查询对象可以对应多张表）
 	 * 
-	 * @param obj
-	 *            检测的查询对象
+	 * @param obj 检测的查询对象
 	 * @return 不存在的表名称
 	 * @throws SQLException
 	 */
-	public Collection<String> existsTable(IQueryableEntity obj) throws SQLException {
-		PartitionResult[] result = DbUtils.toTableNames(obj, null, null, getPartitionSupport());
+	public Collection<String> existsTable(Object obj) throws SQLException {
+		PartitionResult[] result = DbUtils.toTableNames(Entities.asQuery(obj), null, getPartitionSupport());
 		List<String> s = new ArrayList<String>();
 		for (PartitionResult pr : result) {
 			DbMetaData meta = getMetaData(pr.getDatabase());
@@ -468,8 +436,7 @@ public class DbClient extends Session implements SessionFactory {
 	/**
 	 * 删除表
 	 * 
-	 * @param meta
-	 *            要删除的表
+	 * @param meta 要删除的表
 	 * @return 删除的表数量
 	 * @throws SQLException
 	 */
@@ -481,8 +448,7 @@ public class DbClient extends Session implements SessionFactory {
 	/**
 	 * 删除表
 	 * 
-	 * @param cls
-	 *            要删除的表（对应的class）。如果是分库分表的class，会对应多张表
+	 * @param cls 要删除的表（对应的class）。如果是分库分表的class，会对应多张表
 	 * @return 删除的表数量
 	 * @throws SQLException
 	 */
@@ -498,13 +464,12 @@ public class DbClient extends Session implements SessionFactory {
 	/**
 	 * 删除表
 	 * 
-	 * @param obj
-	 *            要删除的表对应的查询对象
+	 * @param obj 要删除的表对应的查询对象
 	 * @return 删除的表数量
 	 * @throws SQLException
 	 */
-	public int dropTable(IQueryableEntity obj) throws SQLException {
-		PartitionResult[] pr = DbUtils.toTableNames(obj, null, obj.getQuery(), getPartitionSupport());
+	public int dropTableByInstance(Object obj) throws SQLException {
+		PartitionResult[] pr = DbUtils.toTableNames(Entities.asQuery(obj), null, getPartitionSupport());
 		ITableMetadata meta = MetaHolder.getMeta(obj);
 		return dropTable0(pr, meta);
 	}
@@ -512,18 +477,16 @@ public class DbClient extends Session implements SessionFactory {
 	/**
 	 * 删除表 (支持schema重定向)
 	 * 
-	 * @param tablename
-	 *            表名
-	 * @param seqNames
-	 *            要关联删除的Sequence名称
+	 * @param tablename 表名
+	 * @param seqNames  要关联删除的Sequence名称
 	 * @return
 	 * @throws SQLException
 	 */
 	public int dropTable(String tablename, String... seqNames) throws SQLException {
-		tablename = MetaHolder.toSchemaAdjustedName(tablename);
+		tablename = DbUtils.toSchemaAdjustedName(tablename);
 		if (seqNames != null) {
 			for (int i = 0; i < seqNames.length; i++) {
-				seqNames[i] = MetaHolder.toSchemaAdjustedName(seqNames[i]);
+				seqNames[i] = DbUtils.toSchemaAdjustedName(seqNames[i]);
 			}
 		}
 		PartitionResult pr = new PartitionResult(tablename);
@@ -533,8 +496,7 @@ public class DbClient extends Session implements SessionFactory {
 	/**
 	 * 删除指定表上的全部约束（主外键）
 	 * 
-	 * @param tablename
-	 *            支持schema重定向
+	 * @param tablename 支持schema重定向
 	 * @throws SQLException
 	 */
 	public void dropAllConstraint(String tablename) throws SQLException {
@@ -544,10 +506,8 @@ public class DbClient extends Session implements SessionFactory {
 	/**
 	 * 执行 truncate table XXXX 命令，快速清光表的数据
 	 * 
-	 * @param meta
-	 *            表名
-	 * @param route
-	 *            路由结果。该表对应的所有实例。
+	 * @param meta  表名
+	 * @param route 路由结果。该表对应的所有实例。
 	 * 
 	 */
 	public int truncate(ITableMetadata meta, PartitionResult[] route) throws SQLException {
@@ -572,8 +532,7 @@ public class DbClient extends Session implements SessionFactory {
 	/**
 	 * 执行 truncate table XXXX 命令，快速清光一张表的数据
 	 * 
-	 * @param meta
-	 *            表结构元数据
+	 * @param meta 表结构元数据
 	 * @throws SQLException
 	 */
 	public void truncate(ITableMetadata meta) throws SQLException {
@@ -585,8 +544,7 @@ public class DbClient extends Session implements SessionFactory {
 	/**
 	 * 执行 truncate table XXXX 命令，快速清光一张表的数据
 	 * 
-	 * @param meta
-	 *            表对应的类
+	 * @param meta 表对应的类
 	 */
 	public void truncate(Class<? extends IQueryableEntity> meta) throws SQLException {
 		truncate(MetaHolder.getMeta(meta));
@@ -595,17 +553,14 @@ public class DbClient extends Session implements SessionFactory {
 	/**
 	 * 根据传入的对象和指定的表名创建表，这个方法只会创建一张表
 	 * 
-	 * @param meta
-	 *            表结构元数据
-	 * @param tablename
-	 *            表名，支持Schema重定向.
-	 * @param dbName
-	 *            数据源名
+	 * @param meta      表结构元数据
+	 * @param tablename 表名，支持Schema重定向.
+	 * @param dbName    数据源名
 	 * @return true表示创建成功
 	 * @throws SQLException
 	 */
 	public boolean createTable(ITableMetadata meta, String tablename, String dbName) throws SQLException {
-		tablename = MetaHolder.toSchemaAdjustedName(tablename);
+		tablename = DbUtils.toSchemaAdjustedName(tablename);
 		dbName = MetaHolder.getMappingSite(dbName);
 		return createTable0(meta, new PartitionResult(tablename).setDatabase(dbName)) > 0;
 	}
@@ -613,30 +568,26 @@ public class DbClient extends Session implements SessionFactory {
 	/**
 	 * 根据传入的对象和指定的表名创建表，这个方法只会创建一张表
 	 * 
-	 * @param clz
-	 *            表实体类
-	 * @param tablename
-	 *            表名，支持Schema重定向.
-	 * @param dbName
-	 *            数据源名
+	 * @param clz       表实体类
+	 * @param tablename 表名，支持Schema重定向.
+	 * @param dbName    数据源名
 	 * @return true表示创建成功
 	 * @throws SQLException
 	 */
-	public boolean createTable(Class<? extends IQueryableEntity> clz, String tablename, String dbName) throws SQLException {
+	public boolean createTable(Class<?> clz, String tablename, String dbName) throws SQLException {
 		return createTable(MetaHolder.getMeta(clz), tablename, dbName);
 	}
 
 	/**
 	 * 根据一个对象来创建表。如果是分库分表对象，会创建这个对象对应的表。
 	 * 
-	 * @param obj
-	 *            分库对象
+	 * @param obj 分库对象
 	 * @return 创建成功返回true，表已经存在无需创建返回false
 	 * @throws SQLException
 	 */
-	public boolean createTable(IQueryableEntity obj) throws SQLException {
+	public boolean createTableByInstance(Object obj) throws SQLException {
 		AbstractMetadata meta = MetaHolder.getMeta(obj);
-		PartitionResult[] result = DbUtils.partitionUtil.toTableNames(meta, obj, obj.getQuery(), getPartitionSupport(), false);
+		PartitionResult[] result = DbUtils.partitionUtil.toTableNames(Entities.asQuery(obj), getPartitionSupport(), false);
 		if (ORMConfig.getInstance().isDebugMode()) {
 			LogUtil.info("Partitions:" + Arrays.toString(result));
 		}
@@ -647,8 +598,7 @@ public class DbClient extends Session implements SessionFactory {
 	/**
 	 * 根据传入的类创建表，如果传入的类是分库分表对象，会创建这个对象所有的表。
 	 * 
-	 * @param cs
-	 *            要创建的表对应的class
+	 * @param cs 要创建的表对应的class
 	 * @return 创建成功的表总数。
 	 * @throws SQLException
 	 */
@@ -665,25 +615,19 @@ public class DbClient extends Session implements SessionFactory {
 	/**
 	 * 根据传入的metadata创建表，如果传入的类是分库分表对象，会创建这个对象所有的表。
 	 * 
-	 * @param metas
-	 *            要创建的表的元数据
+	 * @param metas 要创建的表的元数据
 	 * @return 创建成功的表的总数
 	 * @throws SQLException
 	 */
-	public int createTable(ITableMetadata... metas) {
-		int n = 0;
-		for (ITableMetadata meta : metas) {
-			PartitionResult[] result = DbUtils.toTableNames(meta, getPartitionSupport(), 2);
-			n += createTable0(meta, result);
-		}
-		return n;
+	public int createTable(ITableMetadata meta) {
+		PartitionResult[] result = DbUtils.toTableNames(meta, getPartitionSupport(), 2);
+		return createTable0(meta, result);
 	}
 
 	/**
 	 * 检查并修改数据库中的表，使其和传入的实体模型保持一致。
 	 * 
-	 * @param clz
-	 *            要更新的表对应的类
+	 * @param clz 要更新的表对应的类
 	 * @throws SQLException
 	 */
 	public void refreshTable(Class<?> clz) throws SQLException {
@@ -693,10 +637,8 @@ public class DbClient extends Session implements SessionFactory {
 	/**
 	 * 检查并修改数据库中的表，使其和传入的实体模型保持一致。
 	 * 
-	 * @param meta
-	 *            要更新的表的元数据
-	 * @param event
-	 *            事件监听器，可以监听刷新过程的事件
+	 * @param meta  要更新的表的元数据
+	 * @param event 事件监听器，可以监听刷新过程的事件
 	 * @throws SQLException
 	 */
 	public void refreshTable(ITableMetadata meta, MetadataEventListener event) throws SQLException {
@@ -706,14 +648,10 @@ public class DbClient extends Session implements SessionFactory {
 	/**
 	 * 检查并修改数据库中的表，使其和传入的实体模型保持一致。
 	 * 
-	 * @param meta
-	 *            要更新的表的元数据
-	 * @param event
-	 *            事件监听器，可以监听刷新过程的事件
-	 * @param modifyConstraint
-	 *            更改约束
-	 * @param modifyIndexes
-	 *            更改索引
+	 * @param meta             要更新的表的元数据
+	 * @param event            事件监听器，可以监听刷新过程的事件
+	 * @param modifyConstraint 更改约束
+	 * @param modifyIndexes    更改索引
 	 * @throws SQLException
 	 * @see MetadataEventListener
 	 */
@@ -722,7 +660,7 @@ public class DbClient extends Session implements SessionFactory {
 		ensureOpen();
 		PartitionResult[] results = DbUtils.toTableNames(meta, this.getPartitionSupport(), 4);
 		for (PartitionResult result : results) {
-			DbMetaData dbmeta = getPool().getMetadata(result.getDatabase());
+			DbMetaData dbmeta = this.connPool.getMetadata(result.getDatabase());
 			for (String table : result.getTables()) {
 				if (event == null || event.beforeTableRefresh(meta, table)) {
 					dbmeta.refreshTable(meta, table, event, modifyConstraint, modifyIndexes);
@@ -734,10 +672,8 @@ public class DbClient extends Session implements SessionFactory {
 	/**
 	 * 检查并修改数据库中的表，使其和传入的实体模型保持一致。
 	 * 
-	 * @param clz
-	 *            要更新的表对应的类
-	 * @param listener
-	 *            事件监听器，可以监听刷新过程的事件
+	 * @param clz      要更新的表对应的类
+	 * @param listener 事件监听器，可以监听刷新过程的事件
 	 * @throws SQLException
 	 */
 	public void refreshTable(Class<?> clz, MetadataEventListener listener) throws SQLException {
@@ -754,12 +690,7 @@ public class DbClient extends Session implements SessionFactory {
 	 */
 	public DatabaseDialect getProfile(String key) {
 		ensureOpen();
-		return connPool.getProfile(key);
-	}
-
-	@Override
-	IUserManagedPool getPool() {
-		return connPool;
+		return connPool.getMetadata(key).getProfile();
 	}
 
 	@Override
@@ -778,28 +709,6 @@ public class DbClient extends Session implements SessionFactory {
 	}
 
 	/**
-	 * 是否启用了EF-ORM的内部连接池
-	 * 
-	 * @return true if the inner pool is enabled.
-	 */
-	public boolean isInnerPoolEnabled() {
-		return !connPool.isDummy();
-	}
-
-	/**
-	 * 获得内部连接池的统计信息
-	 * 
-	 * @return
-	 */
-	public String getInnerPoolStatics() {
-		ensureOpen();
-		if (connPool.isDummy()) {
-			return "InnerPool is Disabled.";
-		}
-		return connPool.getStatus().toString();
-	}
-
-	/**
 	 * 强制进行命名查询的更新检查
 	 */
 	public void checkNamedQueryUpdate() {
@@ -810,19 +719,157 @@ public class DbClient extends Session implements SessionFactory {
 		}
 	}
 
-	protected IConnection getConnection() throws SQLException {
-		ensureOpen();
-		IConnection conn = connPool.poll();
-		if (!conn.getAutoCommit()) {
-			conn.setAutoCommit(true);
+
+	@Override
+	PartitionSupport getPartitionSupport() {
+		return pm;
+	}
+	/**
+	 * 设置命名查询文件的名称
+	 * 
+	 * @param namedQueryFilename
+	 */
+	public void setNamedQueryFilename(String namedQueryFilename) {
+		if (namedQueries != null) {
+			throw new IllegalStateException("must set before named-query init");
 		}
+		this.namedQueryFilename = namedQueryFilename;
+	}
+
+	/**
+	 * 设置命名查询表的名称
+	 * 
+	 * @param namedQueryTablename
+	 */
+	public void setNamedQueryTablename(String namedQueryTablename) {
+		if (namedQueries != null) {
+			throw new IllegalStateException("must set before named-query init");
+		}
+		this.namedQueryTablename = namedQueryTablename;
+	}
+
+
+	@Override
+	public void shutdown() {
+		try {
+			this.getListener().onDbClientClose();
+		} catch (Exception e) {
+			LogUtil.exception(e);
+		}
+		this.sequenceManager.close();
+		if (connPool != null) {
+			if (connPool instanceof Closeable) {
+				IOUtils.closeQuietly((Closeable) connPool);
+			}
+			JefFacade.unregisteEmf((DbClient) this);
+			connPool = null;
+		}
+	}
+
+	@Override
+	public Session getSession() {
+		
+		
+		
+		
+		return this;
+	}
+
+	public void flush() {
+		getCache().evictAll();
+	}
+
+	@Override
+	public DbClient asDbClient() {
+		return this;
+	}
+	
+	public Collection<AbstractMetadata> getEntityTypes() {
+		return MetaHolder.getCachedModels();
+	}
+
+	public AbstractMetadata managedType(Class<?> type) {
+		return MetaHolder.getMeta(type);
+	}
+	
+	String getNamedQueryFile() {
+		return namedQueryFilename;
+	}
+
+	String getNamedQueryTable() {
+		return namedQueryTablename;
+	}
+
+	boolean isJpaTx() {
+		return false;
+	}
+	
+
+	protected IConnection getConnection(){
+		ensureOpen();
+		IConnection conn = connPool.get();
+//		if (!conn.getAutoCommit()) {
+//			conn.setAutoCommit(true);
+//		}
 		return conn;
 	}
 
 	protected String getDbName(String dbKey) {
-		return connPool.getInfo(dbKey).getDbname();
+		return connPool.getMetadata(dbKey).getInfo().getDbname();
 	}
 
+	protected synchronized void initNQ() {
+		namedQueries = new NamedQueryHolder(this);
+	}
+
+	@Override
+	protected Cache getCache() {
+		return golbalCache;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	protected DbOperatorListener getListener() {
+		if (listener == null) {
+			String clz = JefConfiguration.get(DbCfg.DB_OPERATOR_LISTENER);
+			if (StringUtils.isNotEmpty(clz)) {
+				try {
+					listener = (DbOperatorListener) BeanUtils.newInstance(Class.forName(clz));
+				} catch (ClassNotFoundException e) {
+					LogUtil.exception(e);
+				}
+			}
+			if (listener == null) {
+				listener = DefaultDbOperListener.getInstance();
+			}
+		}
+		return listener;
+	}
+
+	protected String getTransactionId(String key) {
+		ConnectInfo info = connPool.getMetadata(key).getInfo();
+		if(this.transactionProvider!=null) {
+			return transactionProvider.getTransactionId(info.dbname);
+		}else {
+			StringBuilder sb = new StringBuilder();
+			sb.append('[').append(info.profile.getName()).append(':').append(info.dbname).append('@').append(Thread.currentThread().getId()).append(']');
+			return sb.toString();			
+		}
+
+	}
+
+	@Override
+	protected OperateTarget selectTarget(String dbKey) {
+		if (connPool == null) {
+			throw new IllegalAccessError("The database client was closed!");
+		}
+		if (StringUtils.isEmpty(dbKey))
+			dbKey = null;
+		return new OperateTarget(this, dbKey);
+	}
+	
 	private int createTable0(ITableMetadata meta, PartitionResult... route) {
 		List<SQLException> errors = new ArrayList<>();
 		int total = 0;
@@ -903,14 +950,6 @@ public class DbClient extends Session implements SessionFactory {
 		}
 	}
 
-	public TransactionMode getTxType() {
-		return txType;
-	}
-
-	public DataSource getDataSource() {
-		return ds;
-	}
-
 	/**
 	 * 获取缺省的DataSource配置
 	 * 
@@ -936,88 +975,22 @@ public class DbClient extends Session implements SessionFactory {
 		return DbUtils.createSimpleDataSource(url, user, password);
 	}
 
-	private PartitionMetadata pm;
-
-	@Override
-	PartitionSupport getPartitionSupport() {
-		return pm;
+	ConnectionAndMetadataProvider getPool() {
+		return connPool;
 	}
+	
 
-	public void printPool() {
-		System.out.println(getPool().getStatus());
-	}
-
-	/*
-	 * 从配置中读取命名查询的配置位置(文件)
-	 */
-	private String namedQueryFilename = JefConfiguration.get(DbCfg.NAMED_QUERY_RESOURCE_NAME, "named-queries.xml");
-	/*
-	 * 从配置中读取命名查询的配置位置(数据库表)
-	 */
-	private String namedQueryTablename = JefConfiguration.get(DbCfg.DB_QUERY_TABLE_NAME);
-
-	/**
-	 * 设置命名查询文件的名称
-	 * 
-	 * @param namedQueryFilename
-	 */
-	public void setNamedQueryFilename(String namedQueryFilename) {
-		if (namedQueries != null) {
-			throw new IllegalStateException("must set before named-query init");
+	protected void finalize() throws Throwable {
+		if (connPool != null) {
+			LogUtil.show("Database will auto shut down at Java finalize thread. to avoid this message, you should manually close the DbClient.");
+			close();
 		}
-		this.namedQueryFilename = namedQueryFilename;
-	}
-
-	/**
-	 * 设置命名查询表的名称
-	 * 
-	 * @param namedQueryTablename
-	 */
-	public void setNamedQueryTablename(String namedQueryTablename) {
-		if (namedQueries != null) {
-			throw new IllegalStateException("must set before named-query init");
-		}
-		this.namedQueryTablename = namedQueryTablename;
-	}
-
-	String getNamedQueryFile() {
-		return namedQueryFilename;
-	}
-
-	String getNamedQueryTable() {
-		return namedQueryTablename;
-	}
-
-	boolean isJpaTx() {
-		return false;
+		super.finalize();
 	}
 
 	@Override
-	public void shutdown() {
-		try {
-			this.getListener().onDbClientClose();
-		} catch (Exception e) {
-			LogUtil.exception(e);
-		}
-		this.sequenceManager.close();
-		if(connPool!=null) {
-			try {
-				connPool.close();
-				JefFacade.unregisteEmf((DbClient) this);
-			} catch (SQLException e) {
-				throw DbUtils.toRuntimeException(e);
-			} finally {
-				connPool = null;
-			}	
-		}
+	public DbMetaData getDefaultDatabaseMetadata() {
+		return getMetaData(null);
 	}
 
-	@Override
-	public Session getSession() {
-		return this;
-	}
-
-	public void flush() {
-		getCache().evictAll();
-	}
 }

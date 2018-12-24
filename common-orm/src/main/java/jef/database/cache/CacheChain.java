@@ -2,7 +2,6 @@ package jef.database.cache;
 
 import java.util.List;
 
-import jef.database.IQueryableEntity;
 import jef.database.jsqlparser.statement.delete.Delete;
 import jef.database.jsqlparser.statement.insert.Insert;
 import jef.database.jsqlparser.statement.truncate.Truncate;
@@ -86,14 +85,14 @@ public final class CacheChain implements Cache{
 	}
 
 	@Override
-	public void evict(IQueryableEntity cacheKey) {
+	public void evict(Object cacheKey) {
 		for(Cache c: chains) {
 			c.evict(cacheKey);
 		}
 	}
 
 	@Override
-	public void onInsert(IQueryableEntity obj, String table) {
+	public void onInsert(Object	 obj, String table) {
 		for(Cache c: chains) {
 			c.onInsert(obj, table);
 		}

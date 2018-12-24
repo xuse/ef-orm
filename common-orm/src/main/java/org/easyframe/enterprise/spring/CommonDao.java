@@ -1,7 +1,6 @@
 package org.easyframe.enterprise.spring;
 
 import java.io.Serializable;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -12,8 +11,6 @@ import jef.database.DbClient;
 import jef.database.IQueryableEntity;
 import jef.database.NamedQueryConfig;
 import jef.database.NativeQuery;
-import jef.database.RecordHolder;
-import jef.database.RecordsHolder;
 import jef.database.Session;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.Query;
@@ -130,7 +127,7 @@ public interface CommonDao{
 	 * @return 结果
 	 * @since 1.10
 	 */
-	<T extends IQueryableEntity> List<T> find(Query<T> data);
+	<T> List<T> find(Query<T> data);
 	
 	/**
 	 * 查找对象并且返回遍历器
@@ -416,7 +413,7 @@ public interface CommonDao{
 	 * @throws NonUniqueResultException
 	 *             结果不唯一 
 	 */
-	<T extends IQueryableEntity> T loadByField(jef.database.Field field, Object value);
+	<T> T loadByField(jef.database.Field field, Object value);
 	
 	/**
 	 * 根据指定的字段查找单条记录。
@@ -427,7 +424,7 @@ public interface CommonDao{
 	 * @throws NonUniqueResultException
 	 *             结果不唯一
 	 */
-	<T extends IQueryableEntity> T loadByField(jef.database.Field field, Object value, boolean unique);
+	<T> T loadByField(jef.database.Field field, Object value, boolean unique);
 	
 	
 	/**
@@ -528,59 +525,4 @@ public interface CommonDao{
 	 * @return 影响记录行数
 	 */
 	<T>  int batchUpdate(List<T> entities,Boolean doGroup);
-	
-	/**
-	 * 返回一个可以更新操作的结果数据集合 实质对用JDBC中ResultSet的updateRow,deleteRow,insertRow等方法， <br>
-	 * 该操作模型需要持有ResultSet对象，因此注意使用完毕后要close()方法关闭结果集<br>
-	 * 
-	 * RecordsHolder可以对选择出来结果集进行更新、删除、新增三种操作，操作完成后调用commit方法<br>
-	 * 
-	 * @param obj
-	 *            查询请求
-	 * @return RecordsHolder对象，这是一个可供操作的数据库结果集句柄。注意使用完后一定要关闭。
-	 * @throws SQLException
-	 *             如果数据库操作错误，抛出。
-	 * @see RecordsHolder
-	 */
-	<T extends IQueryableEntity> RecordsHolder<T> selectForUpdate(Query<T> query);
-	
-	/**
-	 * 返回一个可以更新操作的结果数据{@link RecordHolder}<br>
-	 * 用户可以在这个RecordHolder上直接更新数据库中的数据，包括插入记录和删除记录<br>
-	 * 
-	 * <h3>实现原理</h3> RecordHolder对象，是JDBC ResultSet的封装<br>
-	 * 实质对用JDBC中ResultSet的updateRow,deleteRow,insertRow等方法，<br>
-	 * 该操作模型需要持有ResultSet对象，因此注意使用完毕后要close()方法关闭结果集。 <h3>注意事项</h3>
-	 * RecordHolder对象需要手动关闭。如果不关闭将造成数据库游标泄露。 <h3>使用示例</h3>
-	 * 
-	 * 
-	 * @param obj
-	 *            查询对象
-	 * @return 查询结果被放在RecordHolder对象中，用户可以直接在查询结果上修改数据。最后调用
-	 *         {@link RecordHolder#commit}方法提交到数据库。
-	 * @throws SQLException
-	 *             如果数据库操作错误，抛出。
-	 * @see RecordHolder
-	 */
-	<T extends IQueryableEntity> RecordHolder<T> loadForUpdate(Query<T> obj);
-	
-	/**
-	 * 返回一个可以更新操作的结果数据{@link RecordHolder}<br>
-	 * 用户可以在这个RecordHolder上直接更新数据库中的数据，包括插入记录和删除记录<br>
-	 * 
-	 * <h3>实现原理</h3> RecordHolder对象，是JDBC ResultSet的封装<br>
-	 * 实质对用JDBC中ResultSet的updateRow,deleteRow,insertRow等方法，<br>
-	 * 该操作模型需要持有ResultSet对象，因此注意使用完毕后要close()方法关闭结果集。 <h3>注意事项</h3>
-	 * RecordHolder对象需要手动关闭。如果不关闭将造成数据库游标泄露。 <h3>使用示例</h3>
-	 * 
-	 * 
-	 * @param obj
-	 *            查询对象
-	 * @return 查询结果被放在RecordHolder对象中，用户可以直接在查询结果上修改数据。最后调用
-	 *         {@link RecordHolder#commit}方法提交到数据库。
-	 * @throws SQLException
-	 *             如果数据库操作错误，抛出。
-	 * @see RecordHolder
-	 */
-	<T extends IQueryableEntity> RecordHolder<T> loadForUpdate(T query);
 }

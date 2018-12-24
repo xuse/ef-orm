@@ -10,22 +10,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import jef.common.log.LogUtil;
-import jef.database.DbCfg;
-import jef.database.DbClient;
-import jef.database.DbClientBuilder;
-import jef.database.DbUtils;
-import jef.database.datasource.MapDataSourceLookup;
-import jef.database.datasource.RoutingDataSource;
-import jef.database.datasource.SimpleDataSource;
-import jef.database.meta.MetaHolder;
-import jef.tools.IOUtils;
-import jef.tools.JefConfiguration;
-import jef.tools.StringUtils;
-import jef.tools.io.Charsets;
-import jef.tools.reflect.BeanUtils;
-import jef.tools.reflect.FieldEx;
-
 import org.apache.commons.lang.ArrayUtils;
 import org.junit.internal.runners.statements.ExpectException;
 import org.junit.runner.Description;
@@ -39,6 +23,20 @@ import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.Statement;
+
+import jef.common.log.LogUtil;
+import jef.database.DbClient;
+import jef.database.DbClientBuilder;
+import jef.database.DbUtils;
+import jef.database.datasource.DefaultRoutingDataSource;
+import jef.database.datasource.MapDataSourceLookup;
+import jef.database.datasource.SimpleDataSource;
+import jef.database.meta.MetaHolder;
+import jef.tools.IOUtils;
+import jef.tools.StringUtils;
+import jef.tools.io.Charsets;
+import jef.tools.reflect.BeanUtils;
+import jef.tools.reflect.FieldEx;
 
 /**
  * jef的单元测试工具
@@ -120,11 +118,14 @@ public class JefJUnit4DatabaseTestRunner extends BlockJUnit4ClassRunner {
 		super.filter(new Filter() {
 			@Override
 			public boolean shouldRun(Description description) {
-				String testDisplay = StringUtils.substringBefore(description.getDisplayName(), " ");
-				if (testDisplay != description.getDisplayName()) {
-					description = Description.createTestDescription(description.getTestClass(), testDisplay);
-				}
-				return raw.shouldRun(description);
+				//String testDisplay = StringUtils.substringBefore(description.getDisplayName(), " ");
+				//String last=StringUtils.substringAfter(description.getDisplayName(), "(");
+//				if (testDisplay != description.getDisplayName()) {
+//					description = Description.createTestDescription(description.getTestClass(), testDisplay);
+//				}
+				boolean flag=raw.shouldRun(description);
+			//	System.out.println(description + "--" + flag);
+				return flag;
 			}
 
 			@Override
@@ -166,7 +167,7 @@ public class JefJUnit4DatabaseTestRunner extends BlockJUnit4ClassRunner {
 						lookup.put(ds.name(), new SimpleDataSource(ds.url(),ds.user(),ds.password()));
 					}
 				}
-				RoutingDataSource rds = new RoutingDataSource(lookup);
+				DefaultRoutingDataSource rds = new DefaultRoutingDataSource(lookup);
 				routingDbClient = new DbClient(rds);
 				isNew = true;
 			}
@@ -220,8 +221,7 @@ public class JefJUnit4DatabaseTestRunner extends BlockJUnit4ClassRunner {
 
 	private DbConnectionHolder createDbClient(DataSource ds) {
 		MetaHolder.clear();
-		int max = JefConfiguration.getInt(DbCfg.DB_CONNECTION_POOL_MAX, 50);
-		DbClient db = new DbClientBuilder(apply(ds.url()), apply(ds.user()), apply(ds.password())).setMaxPoolSize(max).build();
+		DbClient db = new DbClientBuilder(apply(ds.url()), apply(ds.user()), apply(ds.password())).build();
 		DbConnectionHolder holder = new DbConnectionHolder(ds, db);
 		connections.put(ds.name(), holder);
 		return holder;

@@ -32,7 +32,7 @@ public final class KvExtensionImpl extends AbstractExtensionConfig implements Ex
 				ct = ((ColumnType.AutoIncrement) ct).toNormalType();
 			}
 			tuple.addColumn(m.fieldName(),m.rawColumnName(), ct,true);
-			joinkeys.add(new JoinKey(m.field(),tuple.getField(m.fieldName())));
+			joinkeys.add(new JoinKey(m.field(),tuple.getColumnDef(m.fieldName()).field()));
 		}
 		tuple.addColumn(config.keyColumn(),config.keyColumn(), new ColumnType.Varchar(64).setNullable(false),true);
 		tuple.addColumn(config.valueColumn(), new ColumnType.Varchar(4000));
@@ -71,7 +71,7 @@ public final class KvExtensionImpl extends AbstractExtensionConfig implements Ex
 
 
 	@Override
-	protected AbstractMetadata merge() {
+	protected TableMetadata merge() {
 		if(parent instanceof TableMetadata){
 			TableMetadata tm=(TableMetadata)parent;
 			tm.extendContainer=getContainerTuple();

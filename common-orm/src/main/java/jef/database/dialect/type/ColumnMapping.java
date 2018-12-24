@@ -199,7 +199,7 @@ public interface ColumnMapping extends ResultSetAccessor,MetadataContainer {
 	 *            是否dynamic模式插入，dynamic模式下没有设置过的字段不出现在SQL语句中，从而可以使用数据库中的默认值
 	 * @throws SQLException
 	 */
-	void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean dynamic) throws SQLException;
+	void processPreparedInsert(Object obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean dynamic) throws SQLException;
 
 	/**
 	 * （框架使用）构造后的初始化

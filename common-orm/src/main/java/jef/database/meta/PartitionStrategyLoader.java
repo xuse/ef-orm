@@ -1,6 +1,5 @@
 package jef.database.meta;
 
-import jef.database.IQueryableEntity;
 import jef.database.annotation.PartitionTable;
 
 /**
@@ -9,5 +8,5 @@ import jef.database.annotation.PartitionTable;
  *
  */
 public interface PartitionStrategyLoader {
-	PartitionTable get(Class<? extends IQueryableEntity> clz);
+	PartitionTable get(Class<?> clz);
 }

@@ -8,6 +8,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.TableGenerator;
 
+import com.github.geequery.entity.Entities;
+
 import jef.common.Entry;
 import jef.database.DbMetaData;
 import jef.database.DbUtils;
@@ -286,11 +288,11 @@ public abstract class AutoIncrementMapping extends AColumnMapping {
 	}
 
 	@Override
-	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean smart) throws SQLException {
+	public void processPreparedInsert(Object obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean smart) throws SQLException {
 		DatabaseDialect profile = result.profile;
 		Field field = this.field;
 		// 手动指定
-		if (obj.isUsed(field) && ORMConfig.getInstance().isManualSequence() && isAssignedSequence(accessor.get(obj))) {
+		if (Entities.isUsed(obj ,field) && ORMConfig.getInstance().isManualSequence() && isAssignedSequence(accessor.get(obj))) {
 			cStr.add(cachedEscapeColumnName);
 			vStr.add("?");
 			result.addField(this);

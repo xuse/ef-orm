@@ -19,7 +19,7 @@ public interface SQLExecutor {
 	 * @return
 	 * @throws SQLException
 	 */
-	public ResultSet getResultSet(int resultType,int resultConcurrency,int resultHoldability,List<ParameterContext> params) throws SQLException;
+	//public ResultSet getResultSet(int resultType,int resultConcurrency,int resultHoldability,List<ParameterContext> params) throws SQLException;
 	/**
 	 * 执行Update Delete Insert等操作
 	 * @param generateKeys

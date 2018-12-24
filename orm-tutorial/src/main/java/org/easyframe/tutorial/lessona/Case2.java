@@ -27,7 +27,7 @@ import jef.database.NativeQuery;
 import jef.database.ORMConfig;
 import jef.database.QB;
 import jef.database.datasource.MapDataSourceLookup;
-import jef.database.datasource.RoutingDataSource;
+import jef.database.datasource.DefaultRoutingDataSource;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.query.Query;
 import jef.database.query.Selects;
@@ -67,7 +67,7 @@ public class Case2 extends org.junit.Assert {
 		MapDataSourceLookup lookup = new MapDataSourceLookup(datasources);
 		lookup.setDefaultKey("datasource1");// 指定datasource1是默认的操作数据源
 		// 构造一个带数据路由功能的DbClient
-		db = new DbClient(new RoutingDataSource(lookup));
+		db = new DbClient(new DefaultRoutingDataSource(lookup));
 		
 		if (doinit) {
 			//现在删表，删表时会自动扫描目前存在的分表。
@@ -98,14 +98,14 @@ public class Case2 extends org.junit.Assert {
 		Customer customer=new Customer();
 		customer.setCustomerNo(1234);
 		customer.setCreateDate(DateUtils.getDate(2016,12,10));
-		db.createTable(customer);
-		db.dropTable(customer);
+		db.createTableByInstance(customer);
+		db.dropTableByInstance(customer);
 		
 		
 		Device d=new Device();
 		d.setIndexcode("123456");
-		db.createTable(d);
-		db.dropTable(d);
+		db.createTableByInstance(d);
+		db.dropTableByInstance(d);
 	}
 	
 	/**
@@ -117,13 +117,13 @@ public class Case2 extends org.junit.Assert {
 	public void testTableFilter() throws SQLException {
 		Device d=new Device();
 		d.setIndexcode("665565");
-		db.createTable(d);
+		db.createTableByInstance(d);
 		ThreadUtils.doSleep(1000);
 		System.out.println("第一次查询，表Device_6存在，故会查询此表");
 		Query<Device> query = QB.create(Device.class);
 		List<Device> device=db.select(query);
 		
-		db.dropTable(d);
+		db.dropTableByInstance(d);
 		ThreadUtils.doSleep(500);
 		System.out.println("第二次查询，由于表Device_6被删除，因此不会查此表");
 		device=db.select(query);

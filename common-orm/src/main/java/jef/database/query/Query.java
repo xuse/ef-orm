@@ -7,7 +7,6 @@ import jef.database.Condition;
 import jef.database.Condition.Operator;
 import jef.database.Field;
 import jef.database.IConditionField;
-import jef.database.IQueryableEntity;
 import jef.database.meta.Reference;
 
 /**
@@ -16,7 +15,7 @@ import jef.database.meta.Reference;
  * @Date 2011-6-16 
  * @param <T>
  */
-public interface Query<T extends IQueryableEntity> extends TypedQuery<T>,JoinElement{
+public interface Query<T> extends TypedQuery<T>,JoinElement{
 	/**
 	 * 添加级联对象过滤条件
 	 * 在对象中你可以创建{@link javax.persistence.OneToOne OneToOne} {@link javax.persistence.OneToMany OneToMany}
@@ -194,6 +193,14 @@ public interface Query<T extends IQueryableEntity> extends TypedQuery<T>,JoinEle
 	 */
 	boolean isAll();
 
+	Map<Field, Object> getUpdateValueMap();
+
+	boolean needUpdate();
+
+	void clearUpdateMap();
+	
+	void prepareUpdate(Field field, Object newValue);
+	
 	/**
 	 * 查询条件生成器
 	 * <strong>试验性功能。<strong>

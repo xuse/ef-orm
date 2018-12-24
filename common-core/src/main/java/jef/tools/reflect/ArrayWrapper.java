@@ -9,6 +9,12 @@ import java.util.NoSuchElementException;
 
 import jef.tools.Assert;
 
+/**
+ * 针对数组的Bean包装。
+ * 将数组看作一个对象，将数组的序号i看作是字段名。一个数组就是由从0~n个字段的对象。
+ * @author jiyi
+ *
+ */
 public final class ArrayWrapper extends BeanWrapper{
 	private Object bean;
 	private Class<?> arrayClass;
@@ -171,7 +177,6 @@ public final class ArrayWrapper extends BeanWrapper{
 			this.index=i;
 			
 		}
-		
 	}
 
 }

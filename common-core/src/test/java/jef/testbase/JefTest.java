@@ -36,10 +36,12 @@ import org.junit.Test;
 import org.w3c.dom.Document;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 
 import jef.common.StringCacheMap;
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
+import jef.json.JsonUtil;
 import jef.tools.ArrayUtils;
 import jef.tools.DateUtils;
 import jef.tools.IOUtils;
@@ -64,6 +66,38 @@ import junit.framework.Assert;
 public class JefTest extends Assert {
 	private static final String HEAD_HTML_RESOURCE = "--------------------7d71b526e00e4\r\n" + "Content-Location: \"%s\"\r\n" + "\r\nContent-Type: %s\r\n\r\n"; // 每个文件部分的开头
 
+	@Test
+	public void testCase1() throws UnsupportedEncodingException {
+		System.out.println(JSON.toJSONString(new A()));
+//		System.out.println(new String("您的短信验证码为".getBytes("UTF-8"),"ISO-8859-1"));
+		
+		A o=JSON.parseObject("{\"optime\":1577948749000}", A.class);
+		System.out.println(o);
+		System.out.println(new Date(1577948749000L));
+		
+		JsonUtil.toJson(new A());
+		
+	}
+	
+	
+	static class A{
+//		 @JSONField(format=)
+		private Date optime= new Date();
+
+		@Override
+		public String toString() {
+			return "A [optime=" + optime + "]";
+		}
+
+		public Date getOptime() {
+			return optime;
+		}
+
+		public void setOptime(Date optime) {
+			this.optime = optime;
+		}
+		
+	}
 	/**
 	 * 拷贝文件
 	 * 
@@ -99,6 +133,37 @@ public class JefTest extends Assert {
 		int[] aa = new int[] { 1, 2, 3, 4, 5 };
 		for (int x : aa) {
 			System.out.println(x);
+		}
+	}
+
+	@Test
+	public void testRange() {
+
+		String[] ss = new String[] { "int", "short", "long", "boolean", "float", "double", "char", "byte" };
+		for (int i = 0; i < 3; i++) {
+			for (int j = i + 1; j < 4; j++) {
+				System.out.println(i + "," + j);
+				Set<Integer> s = new HashSet<Integer>();
+				int min = Integer.MAX_VALUE;
+				int max = 0;
+				for (int x = 0; x < ss.length; x++) {
+					String type = ss[x];
+					int value = type.charAt(i) +type.length();
+					if (value > max) {
+						max = value;
+					}
+					if (value < min) {
+						min = value;
+					}
+					s.add(value);
+					System.out.println(type + "\t" + value);
+				}
+				if (s.size() < 8) {
+					System.out.println("有重复");
+				}
+				System.out.println("range=" + (max - min));
+
+			}
 		}
 	}
 

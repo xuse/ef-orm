@@ -143,8 +143,12 @@ public class EntityEnhancer {
 
 	private boolean processEnhance(IResource cls) throws Exception {
 		File f = cls.getFile();
-		File sub = new File(IOUtils.removeExt(f.getAbsolutePath()).concat("$Field.class"));
-		if (!f.exists()) {
+		String path=IOUtils.removeExt(f.getAbsolutePath());
+		if(path.endsWith("$Field")) {
+			return false;
+		}
+		File sub = new File(path.concat("$Field.class"));
+		if (!sub.exists()) {
 			return false;
 		}
 		byte[] result = enhancer.doEnhance(IOUtils.toByteArray(f), (sub.exists() ? IOUtils.toByteArray(sub) : null));

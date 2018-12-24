@@ -12,6 +12,15 @@ import javax.persistence.EntityExistsException;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 
+import org.easyframe.enterprise.spring.CommonDao;
+import org.easyframe.enterprise.spring.CommonDaoImpl;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
+
 import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.database.Condition;
@@ -51,15 +60,6 @@ import jef.tools.DateUtils;
 import jef.tools.PageLimit;
 import jef.tools.ThreadUtils;
 import jef.tools.string.RandomData;
-
-import org.easyframe.enterprise.spring.CommonDao;
-import org.easyframe.enterprise.spring.CommonDaoImpl;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({ 
@@ -259,6 +259,11 @@ public class SimpleTableTest extends org.junit.Assert {
 		public void setState2(Thread.State state2) {
 			this.state2 = state2;
 		}
+
+		@Override
+		public String toString() {
+			return "CCC [state1=" + state1 + ", state2=" + state2 + "]";
+		}
 	}
 	
 	@Test
@@ -283,11 +288,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		obj.setAssetId(obj.getAssetId());
 		Transaction tx = db.startTransaction();
 		try {
-			try {
-				tx.insert(obj);
-			} catch (SQLIntegrityConstraintViolationException ex) {
-				System.out.println("Pass1:" + ex.getMessage());
-			}
+			tx.insert(obj);
 			try {
 				CaAsset obj1 = new CaAsset();
 				obj1.setAcctId(12L);
@@ -421,9 +422,9 @@ public class SimpleTableTest extends org.junit.Assert {
 				t1.setField1("update!" + t1.getField1());
 				t1.setBinaryData("updated!".getBytes());// 简单的更新，直接在对象赋值
 				// 下面是集中复杂的更新赋值
-				t1.prepareUpdate(TestEntity.Field.doubleField, TestEntity.Field.doubleField2);// 更新为另外一个字段的值
-				t1.prepareUpdate(TestEntity.Field.dateField, db.func(Func.now)); // 更新为数据库的当前时间
-				t1.prepareUpdate(TestEntity.Field.intFiled, new JpqlExpression("intFiled + intField2"));// 更新为当前字段值加上另一个字段的值
+				t1.getQuery().prepareUpdate(TestEntity.Field.doubleField, TestEntity.Field.doubleField2);// 更新为另外一个字段的值
+				t1.getQuery().prepareUpdate(TestEntity.Field.dateField, db.func(Func.now)); // 更新为数据库的当前时间
+				t1.getQuery().prepareUpdate(TestEntity.Field.intFiled, new JpqlExpression("intFiled + intField2"));// 更新为当前字段值加上另一个字段的值
 
 			}
 			db.batchUpdate(list);
@@ -454,7 +455,7 @@ public class SimpleTableTest extends org.junit.Assert {
 			t1.setLongField(lastId - 2);
 			t1 = db.load(t1);
 			t1.setField2(null);
-			t1.prepareUpdate(TestEntity.Field.dateField, db.func(Func.current_timestamp));
+			t1.getQuery().prepareUpdate(TestEntity.Field.dateField, db.func(Func.current_timestamp));
 			t1.setBinaryData("人间".getBytes());
 			int i = db.update(t1);
 			assertEquals(1, i);
@@ -844,7 +845,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		List<CaAsset> list = db.selectAll(CaAsset.class);
 
 		CaAsset t1 = list.get(0);
-		t1.prepareUpdate(CaAsset.Field.assetType, 1);
+		t1.getQuery().prepareUpdate(CaAsset.Field.assetType, 1);
 
 		db.batchUpdate(list);
 
@@ -877,7 +878,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		// 开始测试
 		Query<CaAsset> q = QB.create(CaAsset.class);
 		q.addCondition(CaAsset.Field.thedate, DateUtils.dayBegin(new Date()));
-		q.getInstance().prepareUpdate(CaAsset.Field.assetType, 3);
+		q.prepareUpdate(CaAsset.Field.assetType, 3);
 		db.update(q.getInstance());
 	}
 
@@ -893,8 +894,8 @@ public class SimpleTableTest extends org.junit.Assert {
 		CaAsset t1 = new CaAsset();
 		t1.setAssetId(data.getAssetId());
 		t1 = db.load(t1);
-		t1.prepareUpdate(CaAsset.Field.assetType, 3);
-		t1.prepareUpdate(CaAsset.Field.thedate, new Date());
+		t1.getQuery().prepareUpdate(CaAsset.Field.assetType, 3);
+		t1.getQuery().prepareUpdate(CaAsset.Field.thedate, new Date());
 		t1.setNormal("dsdsdfsdf");
 		int count = db.update(t1);
 		assertEquals(1, count);
@@ -988,8 +989,8 @@ public class SimpleTableTest extends org.junit.Assert {
 	@Test
 	public void testOrderByUsingParentField() throws SQLException {
 		TestEntitySon entity = new TestEntitySon();
-		db.dropTable(entity);
-		db.createTable(entity);
+		db.dropTableByInstance(entity);
+		db.createTableByInstance(entity);
 		entity.getQuery().setAllRecordsCondition();
 		entity.getQuery().addOrderBy(true, TestEntity.Field.field1);
 		db.select(entity);

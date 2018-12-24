@@ -23,6 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import jef.database.Condition;
 import jef.database.Condition.Operator;
 import jef.database.DataObject;
@@ -30,7 +33,6 @@ import jef.database.DbUtils;
 import jef.database.DebugUtil;
 import jef.database.Field;
 import jef.database.IConditionField;
-import jef.database.IQueryableEntity;
 import jef.database.ORMConfig;
 import jef.database.Session.PopulateStrategy;
 import jef.database.annotation.JoinType;
@@ -45,15 +47,10 @@ import jef.database.meta.TupleField;
 import jef.database.wrapper.populator.Transformer;
 import jef.tools.Assert;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-
-public final class QueryImpl<T extends IQueryableEntity> extends
-		AbstractQuery<T> {
+public final class QueryImpl<T> extends AbstractQuery<T> {
 	private static final long serialVersionUID = -8921719771049568842L;
 
-	private boolean cascadeViaOuterJoin = ORMConfig.getInstance()
-			.isUseOuterJoin();
+	private boolean cascadeViaOuterJoin = ORMConfig.getInstance().isUseOuterJoin();
 
 	final List<Condition> conditions = new ArrayList<Condition>(4);
 	/**
@@ -87,7 +84,7 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 		t = new Transformer(type);
 		t.setLoadVsOne(type.isUseOuterJoin());
 		t.setLoadVsMany(true);
-		this.cacheable=type.isCacheable();
+		this.cacheable = type.isCacheable();
 	}
 
 	public QueryImpl(T p, String key) {
@@ -98,7 +95,7 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 		t = new Transformer(type);
 		t.setLoadVsOne(type.isUseOuterJoin());
 		t.setLoadVsMany(true);
-		this.cacheable=type.isCacheable();
+		this.cacheable = type.isCacheable();
 	}
 
 	public void setOrderBy(boolean asc, Field... orderbys) {
@@ -111,9 +108,7 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 			if (!(f instanceof RefField) && !(f instanceof SqlExpression)) {
 				ITableMetadata metaOfField = DbUtils.getTableMeta(f);
 				if (!this.type.containsMeta(metaOfField)) {
-					throw new IllegalArgumentException("the field [" + f.name()
-							+ "] which belongs to " + metaOfField.getName()
-							+ " is not current type:" + getType().getName());
+					throw new IllegalArgumentException("the field [" + f.name() + "] which belongs to " + metaOfField.getName() + " is not current type:" + getType().getName());
 				}
 			}
 			orderBy.add(new OrderField(f, flag));
@@ -173,12 +168,12 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 	 * @see jef.database.query.Query#addCondition(jef.database.Condition)
 	 */
 	public Query<T> addCondition(Condition condition) {
-		if(condition.getOperator()==Operator.EQUALS && condition.getField().getClass().isEnum()){
-			ColumnMapping column=type.getColumnDef(condition.getField());
-			if(column!=null && DbUtils.isInvalidValue(condition.getValue(), column, true)){
-				//无效条件，不接受
-				//注意有可能传入别的表的Field，此时Column为null
-				//实验性功能，2016-9-12添加，目的是拒绝一些由于WEB传输产生的无效条件
+		if (condition.getOperator() == Operator.EQUALS && condition.getField().getClass().isEnum()) {
+			ColumnMapping column = type.getColumnDef(condition.getField());
+			if (column != null && DbUtils.isInvalidValue(condition.getValue(), column, true)) {
+				// 无效条件，不接受
+				// 注意有可能传入别的表的Field，此时Column为null
+				// 实验性功能，2016-9-12添加，目的是拒绝一些由于WEB传输产生的无效条件
 				return this;
 			}
 		}
@@ -190,8 +185,7 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 	}
 
 	public Query<T> addCondition(Field field, Object value) {
-		return addCondition(Condition.get(field, Condition.Operator.EQUALS,
-				value));
+		return addCondition(Condition.get(field, Condition.Operator.EQUALS, value));
 	}
 
 	public Query<T> addCondition(Field field, Operator oper, Object value) {
@@ -210,9 +204,6 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 
 	public Query<T> addExtendQuery(Class<?> emptyQuery) {
 		AbstractMetadata meta = MetaHolder.getMeta(emptyQuery);
-		if (meta.getType() == EntityType.POJO) {
-			throw new IllegalArgumentException();
-		}
 		return addExtendQuery(ReadOnlyQuery.getEmptyQuery(meta));
 	}
 
@@ -241,10 +232,8 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 		ITableMetadata type = this.type;
 		Reference reference;
 		while (n > -1) {
-			AbstractRefField rField = type.getRefFieldsByName().get(
-					refName.substring(0, n));
-			Assert.notNull(rField, "the input field '" + refName
-					+ "' is not Cascade field in " + type.getName());
+			AbstractRefField rField = type.getRefFieldsByName().get(refName.substring(0, n));
+			Assert.notNull(rField, "the input field '" + refName + "' is not Cascade field in " + type.getName());
 			if (rField.isSingleColumn()) {
 				throw new IllegalArgumentException();
 			}
@@ -254,8 +243,7 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 			n = refName.indexOf('.');
 		}
 		AbstractRefField rField = type.getRefFieldsByName().get(refName);
-		Assert.notNull(rField, "the input field '" + refName
-				+ "' is not Cascade field in " + type.getName());
+		Assert.notNull(rField, "the input field '" + refName + "' is not Cascade field in " + type.getName());
 		reference = rField.getReference();
 		return addFilterCondition(reference, conds);
 	}
@@ -269,8 +257,7 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 	private void checkRefs(Field c) {
 		if (c instanceof RefField) {
 			RefField f = (RefField) c;
-			Reference ref = DbUtils.findPath(type,
-					DbUtils.getTableMeta(f.getField()));
+			Reference ref = DbUtils.findPath(type, DbUtils.getTableMeta(f.getField()));
 			ensureRef(ref);
 		} else if (c instanceof IConditionField) {
 			IConditionField ic = (IConditionField) c;
@@ -390,8 +377,7 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 				checkRefs(c.getField());
 			}
 		}
-		return otherQueryProvider == null ? EMPTY_Q : otherQueryProvider
-				.toArray(new Query<?>[otherQueryProvider.size()]);
+		return otherQueryProvider == null ? EMPTY_Q : otherQueryProvider.toArray(new Query<?>[otherQueryProvider.size()]);
 	}
 
 	public void setAttribute(String key, Object value) {
@@ -454,14 +440,14 @@ public final class QueryImpl<T extends IQueryableEntity> extends
 	}
 
 	@Override
-	public Terms terms() {
-		return new Terms(this);
+	public boolean isSelectCustomized() {
+		PopulateStrategy[] s = t.getStrategy();
+		if (s != null && s.length > 0)
+			return true;
+		return selected instanceof SelectsImpl;
 	}
 
-	@Override
-	public boolean isSelectCustomized() {
-		PopulateStrategy[] s=t.getStrategy();
-		if(s!=null && s.length>0)return true;
-		return selected instanceof SelectsImpl;
+	public Terms terms() {
+		return new Terms(this);
 	}
 }

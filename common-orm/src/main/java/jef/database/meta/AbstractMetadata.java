@@ -31,7 +31,8 @@ import jef.database.query.PKQuery;
 import jef.database.wrapper.clause.BindSql;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
-import jef.tools.reflect.ConvertUtils;
+import jef.tools.Exceptions;
+import jef.tools.Primitives;
 import jef.tools.reflect.Property;
 
 /**
@@ -50,11 +51,11 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	 */
 	protected String tableName;
 	/**
-	 * Always operate the table in the named datasource.
+	 * Always operate the table in the named data-source.
 	 */
 	protected String bindDsName;
 	/**
-	 * Metadata of the columns autoincrement.
+	 * Metadata of the columns auto-increments.
 	 */
 	private AutoIncrementMapping[] increMappings;
 	/**
@@ -67,28 +68,41 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	 */
 	private VersionSupportColumn versionColumn;
 	/**
-	 * The fields mapping to columns.
-	 */
-	protected List<ColumnMapping> metaFields;
-	/**
 	 * The field of LOB
 	 */
 	protected Field[] lobNames;
 
+
+	private final List<ColumnMapping> columnDefArray=new ArrayList<>(8);
+	
 	/**
-	 * 记录对应表的所有索引，当建表时使用可自动创建索引
+	 * 记录对应表的所有索引，当建表时使用可自动创建索引<p>
 	 * Revised 2016-8 JPA 2.1规范中增加的@Table的indexes属性和Index注解，因此删除EF原先自己设计的Index注解，改用标准的JPA注解
 	 */
-	final List<IndexDef> indexes = new ArrayList<IndexDef>(5);
+	protected final List<IndexDef> indexes = new ArrayList<IndexDef>(5);
 	
 	/**
 	 * 记录对应表所有Unqie约束.当建表时可自动创建约束
+	 * 使用JPA注解
 	 */
-	final List<UniqueConstraintDef> uniques=new ArrayList<UniqueConstraintDef>(5);
-	
-	protected final Map<Field, ColumnMapping> schemaMap = new IdentityHashMap<Field, ColumnMapping>();
-	protected Map<String, Field> fields = new HashMap<String, Field>(10, 0.6f);
-	protected Map<String, Field> lowerFields = new HashMap<String, Field>(10, 0.6f);
+	protected final List<UniqueConstraintDef> uniques=new ArrayList<UniqueConstraintDef>(5);
+	/**
+	 * The fields mapping to columns.
+	 * 经过特定排序，LOB字段被放到最后。
+	 */
+	protected List<ColumnMapping> metaFields;
+	/**
+	 * 从Field到Column的快速查找
+	 */
+	private final Map<Field, ColumnMapping> schemaMap = new IdentityHashMap<Field, ColumnMapping>();
+	/**
+	 * 从小写字符串到Field的快速查找，感觉其实可以一步到位查找到ColumnMapping
+	 */
+	protected final Map<String, ColumnMapping> fields = new HashMap<String, ColumnMapping>(10, 0.6f);
+	/**
+	 * 从小写字符串name到Field的快速查找
+	 */
+	protected final Map<String, Field> lowerFields = new HashMap<String, Field>(10, 0.6f);
 
 	// /////////引用索引/////////////////
 	protected final Map<String, AbstractRefField> refFieldsByName = new HashMap<String, AbstractRefField>();// 记录所有关联和引用字段referenceFields
@@ -97,7 +111,8 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	protected boolean useOuterJoin = true;
 
 	/**
-	 * 列排序器，用这个排序器确保列的输出顺序如下 1、LOB字段总是排在最后。(由于一些数据库驱动问题，这样做能提高操作的成功率，对性能也有少量帮助)
+	 * 列排序器，用这个排序器确保列的输出顺序如下<p> 
+	 * 1、LOB字段总是排在最后。(由于一些数据库驱动问题，这样做能提高操作的成功率，对性能也有少量帮助)
 	 * 2、按类定义中的枚举顺序排序，如果是TupleField，则直接按照字段名的ASCII顺序排列。
 	 */
 	private static final Comparator<ColumnMapping> COLUMN_COMPARATOR = new Comparator<ColumnMapping>() {
@@ -110,9 +125,8 @@ public abstract class AbstractMetadata implements ITableMetadata {
 			if (result == 0) {
 				Field f1 = field1.field();
 				Field f2 = field2.field();
-				// 在分库分表的情况下，IdentityHashMap.value的内容每一次都不一致，导致建的表的字段顺序也不一致。在select
-				// * 并使用union时会出错
-				// Advice by Nihf
+				// 在分库分表的情况下，IdentityHashMap.value的内容每一次都不一致，导致建的表的字段顺序也不一致。在select 并使用union时会出错
+				// Advice by Nihf, 2015-1
 				if (f1 instanceof Enum<?> && f2 instanceof Enum<?>) {
 					return Integer.compare(((Enum<?>) f1).ordinal(), ((Enum<?>) f2).ordinal());
 				} else {
@@ -132,12 +146,12 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	}
 
 	public ColumnMapping getColumnDef(Field field) {
-		// 2014-10-31
-		// 在重构用columnMapping代替的设计过程中，会出现两类对象的混用，引起此处作一个判断拦截field(暂时还不需要)
-
-		// if(field instanceof ColumnMapping)
-		// return (ColumnMapping)field;
 		return schemaMap.get(field);
+	}
+	
+	@Override
+	public ColumnMapping getColumnDef(int i) {
+		return this.columnDefArray.get(i);
 	}
 
 	public void setBindDsName(String bindDsName) {
@@ -146,14 +160,28 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	}
 
 	public Collection<ColumnMapping> getColumns() {
-		if (metaFields == null) {
-			Collection<ColumnMapping> map = this.getColumnSchema();
-			ColumnMapping[] fields = map.toArray(new ColumnMapping[map.size()]);
-			Arrays.sort(fields, COLUMN_COMPARATOR);
-			metaFields = Arrays.asList(fields);
-		}
 		return metaFields;
 	}
+	
+	protected void checkFields() {
+		Collection<ColumnMapping> map = this.getColumnSchema();
+		ColumnMapping[] fields = map.toArray(new ColumnMapping[map.size()]);
+		Arrays.sort(fields, COLUMN_COMPARATOR);
+		metaFields = Arrays.asList(fields);
+		
+		Collections.sort(columnDefArray, (a,b)->Integer.compare(a.field().asEnumOrdinal(),b.field().asEnumOrdinal()));
+		//检查序号
+		for(int i=0;i<columnDefArray.size();i++) {
+			ColumnMapping c=columnDefArray.get(i);
+			if(c==null) {
+				throw Exceptions.illegalState("Column sequence error. element is null at {}, index={}.", getName(), i);
+			}
+			if(c.field().asEnumOrdinal()!=i) {
+				throw Exceptions.illegalState("Column sequence error at {}, field ordinal={}, index={}.", getName(), c.field().asEnumOrdinal(),i);
+			}
+		}
+	}
+	
 
 	public String getSchema() {
 		return schema;
@@ -207,7 +235,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		if (pkDim == null) {
 			List<Serializable> pks = new ArrayList<Serializable>();
 			for (ColumnMapping mapping : this.getPKFields()) {
-				pks.add((Serializable) ConvertUtils.defaultValueForBasicType(mapping.getFieldType()));
+				pks.add((Serializable) Primitives.defaultValueForBasicType(mapping.getFieldType()));
 			}
 			PKQuery<?> query = new PKQuery<IQueryableEntity>(this, pks, newInstance());
 			BindSql sql = query.toPrepareWhereSql(null, profile);
@@ -227,7 +255,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		return null;
 	}
 
-	public Field getField(String name) {
+	public ColumnMapping getColumnDef(String name) {
 		return fields.get(name);
 	}
 
@@ -236,12 +264,12 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	}
 
 	public ColumnType getColumnType(String fieldName) {
-		Field field = fields.get(fieldName);
+		ColumnMapping field = fields.get(fieldName);
 		if (field == null) {
 			LogUtil.warn(jef.tools.StringUtils.concat("The field [", fieldName, "] does not find in ", this.getThisType().getName()));
 			return null;
 		}
-		return schemaMap.get(field).get();
+		return field.get();
 	}
 
 	public AutoIncrementMapping getFirstAutoincrementDef() {
@@ -328,7 +356,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		throw new UnsupportedOperationException();
 	}
 
-	protected Collection<ColumnMapping> getColumnSchema() {
+	public Collection<ColumnMapping> getColumnSchema() {
 		return this.schemaMap.values();
 	}
 
@@ -398,14 +426,13 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	 * 
 	 * @param path 用于连接到实体表的连接提示（如果在全局中注册了关系，则此处可以省略）
 	 */
-	protected ReferenceField addCascadeField(String fieldName, Field target, CascadeConfig config) {
+	protected ReferenceField addCascadeField(String fieldName, ColumnMapping target, CascadeConfig config) {
 		Assert.notNull(target);
 		Property pp = getContainerAccessor().getProperty(fieldName);
 		if (pp == null) {
 			throw new IllegalArgumentException(fieldName + " is not exist in " + this.getName());
 		}
-		ColumnMapping targetFld = DbUtils.toColumnMapping(target);
-		return innerAdd(pp, targetFld, config);
+		return innerAdd(pp, target, config);
 	}
 
 	public boolean isCacheable() {
@@ -431,4 +458,17 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	public VersionSupportColumn getVersionColumn() {
 		return versionColumn;
 	}
+
+	protected void putField(Field field, ColumnMapping type) {
+		schemaMap.put(field, type);
+		columnDefArray.add(type);
+	}
+	
+	
+
+	protected ColumnMapping removeField(Field field) {
+		return schemaMap.remove(field);
+	}
+
+
 }

@@ -20,8 +20,6 @@ import java.util.Optional;
 
 import javax.persistence.EntityManager;
 
-import jef.database.jpa.JefEntityManagerFactory;
-
 import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -34,6 +32,8 @@ import org.springframework.util.Assert;
 import com.github.geequery.springdata.repository.GqRepository;
 import com.github.geequery.springdata.repository.query.GqQueryLookupStrategy;
 
+import jef.database.SessionFactory;
+
 /**
  * GeeQuery specific generic repository factory.
  * 
@@ -41,7 +41,7 @@ import com.github.geequery.springdata.repository.query.GqQueryLookupStrategy;
  */
 public class GqRepositoryFactory extends RepositoryFactorySupport {
 
-	private final JefEntityManagerFactory emf;
+	private final SessionFactory emf;
 	private final CrudMethodMetadataPostProcessor crudMethodMetadataPostProcessor;
 
 	/**
@@ -50,7 +50,7 @@ public class GqRepositoryFactory extends RepositoryFactorySupport {
 	 * @param entityManager
 	 *            must not be {@literal null}
 	 */
-	public GqRepositoryFactory(JefEntityManagerFactory entityManager) {
+	public GqRepositoryFactory(SessionFactory entityManager) {
 		Assert.notNull(entityManager);
 		this.emf = entityManager;
 		this.crudMethodMetadataPostProcessor = new CrudMethodMetadataPostProcessor();
@@ -96,7 +96,7 @@ public class GqRepositoryFactory extends RepositoryFactorySupport {
 	 * @see #getTargetRepository(RepositoryMetadata)
 	 * @return
 	 */
-	protected <T, ID extends Serializable> GqRepository<T, ID> getTargetRepository(RepositoryInformation information, JefEntityManagerFactory entityManager) {
+	protected <T, ID extends Serializable> GqRepository<T, ID> getTargetRepository(RepositoryInformation information, SessionFactory entityManager) {
 		EntityInformation<?, Serializable> entityInformation = getEntityInformation(information.getDomainType());
 		return getTargetRepositoryViaReflection(information, entityInformation, entityManager);
 	}
@@ -129,7 +129,7 @@ public class GqRepositoryFactory extends RepositoryFactorySupport {
 
 	@Override
 	public <T, ID> EntityInformation<T, ID> getEntityInformation(Class<T> domainClass) {
-		return new MetamodelInformation<T, ID>(domainClass, emf);
+		return new MetamodelInformation<T, ID>(domainClass, emf.asDbClient());
 	}
 
 	// /*

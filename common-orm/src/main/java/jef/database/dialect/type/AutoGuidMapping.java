@@ -4,6 +4,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
+import com.github.geequery.entity.Entities;
+
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.database.Field;
@@ -55,11 +57,11 @@ public class AutoGuidMapping extends VarcharStringMapping {
 	}
 
 	@Override
-	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean smart) {
+	public void processPreparedInsert(Object obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean smart) {
 		String columnName = this.getColumnName(result.profile, true);
 
 		Object value = accessor.get(obj);
-		if (value != null && ORMConfig.getInstance().isManualSequence() && obj.isUsed(field)) {
+		if (value != null && ORMConfig.getInstance().isManualSequence() && Entities.isUsed(obj, field)) {
 			//DO nothing
 		} else {
 			result.getCallback().addProcessor(new GUIDGenerateCallback(accessor, removeDash));

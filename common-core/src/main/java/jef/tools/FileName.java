@@ -108,6 +108,10 @@ public interface FileName extends Supplier<String> {
 		return new AddBefore(this, text);
 	}
 
+	default FileName trim() {
+		return new Trim(this);
+	}
+	
 	/**
 	 * 在文件名的主体部分（不含扩展名）中查找替换
 	 * 
@@ -210,6 +214,28 @@ public interface FileName extends Supplier<String> {
 		}
 	}
 
+	static final class Trim implements FileName {
+		final private FileName raw;
+		
+		Trim(FileName raw) {
+			this.raw = raw;
+		}
+
+		@Override
+		public String getMainPart() {
+			return raw.getMainPart().trim();
+		}
+
+		@Override
+		public String getExtPart() {
+			return raw.getExtPart();
+		}
+
+		@Override
+		public String getPath() {
+			return raw.getPath();
+		}
+	}
 	static final class AddBefore implements FileName {
 		final private FileName raw;
 		final private String append;
@@ -332,9 +358,9 @@ public interface FileName extends Supplier<String> {
 		 * 
 		 * @param name
 		 */
-		public FN(String name) {
+		FN(String name) {
 			Assert.notNull(name, "Input file path must not null.");
-			name = name.trim();
+			//name = name.trim();
 			int x = StringUtils.lastIndexOfAny(name, SEP, 0);
 			if (x > -1) {
 				this.path = name.substring(0, x);
@@ -343,6 +369,16 @@ public interface FileName extends Supplier<String> {
 				this.path = null;
 			}
 			this.name = name;
+			int index = name.lastIndexOf('.');
+			if (index == -1)
+				index = name.length();
+			this.index = index;
+		}
+		
+		FN(File file) {
+			Assert.notNull(file, "Input file path must not null.");
+			this.path = file.getParent();
+			this.name = file.getName();
 			int index = name.lastIndexOf('.');
 			if (index == -1)
 				index = name.length();
@@ -397,6 +433,18 @@ public interface FileName extends Supplier<String> {
 	public static FileName valueOf(String name) {
 		return new FN(name);
 	}
+	
+
+	/**
+	 * 将一个文件转换为FileName对象
+	 * 
+	 * @param file
+	 * @return
+	 */
+	static FileName valueOf(File file) {
+		return new FN(file);
+	}
+	
 
 	/**
 	 * 将文件名拆成名称和扩展名两部分

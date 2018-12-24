@@ -9,6 +9,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.github.geequery.entity.Entities;
+import com.google.common.collect.ImmutableList;
+
 import jef.database.DbUtils;
 import jef.database.IQueryableEntity;
 import jef.database.ORMConfig;
@@ -26,15 +32,11 @@ import jef.database.jsqlparser.visitor.VisitorAdapter;
 import jef.database.meta.AbstractMetadata;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
+import jef.database.query.Query;
 import jef.database.query.SqlContext;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.variable.Variable;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
 
 /**
  * The default level 1 Cache implementation.
@@ -236,7 +238,7 @@ public class CacheImpl implements Cache {
 		return list;
 	}
 
-	public void onInsert(IQueryableEntity obj, String table) {
+	public void onInsert(Object obj, String table) {
 		if (obj == null)
 			return;
 
@@ -273,7 +275,7 @@ public class CacheImpl implements Cache {
 		}
 	}
 
-	public void evict(IQueryableEntity obj) {
+	public void evict(Object obj) {
 		if (obj == null)
 			return;
 		ITableMetadata meta = MetaHolder.getMeta(obj);
@@ -282,14 +284,14 @@ public class CacheImpl implements Cache {
 		Map<KeyDimension, DimCache> tableCache = cache.get(baseTableName);
 		if (tableCache == null || tableCache.isEmpty())
 			return;
-
-		if (obj.hasQuery()) {
-			QueryClause ir = selectp.toQuerySql(obj.getQuery(), null, false);
+		Query<?> query = Entities.hasQueryOrNull(obj);
+		if (query != null) {
+			QueryClause ir = selectp.toQuerySql(Entities.hasQueryOrNull(obj), null, false);
 			evict(ir.getCacheKey());
 			return;
 		}
-		BindSql sql = preparedSqlProcessor.toWhereClause(obj.getQuery(), new SqlContext(null, obj.getQuery()), null, null,false);
-		obj.clearQuery();
+		BindSql sql = preparedSqlProcessor.toWhereClause(query, new SqlContext(null, query), null, null, false);
+		Entities.clearQuery(obj);
 		DimCache dc = tableCache.get(KeyDimension.forSingleTable(baseTableName, sql.getSql(), null, profile));
 		if (dc == null)
 			return;
@@ -479,6 +481,6 @@ public class CacheImpl implements Cache {
 
 	@Override
 	public <T> T unwrap(Class<T> cls) {
-		return (T)this;
+		return (T) this;
 	}
 }

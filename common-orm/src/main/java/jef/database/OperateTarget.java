@@ -2,7 +2,7 @@ package jef.database;
 
 import java.io.StringReader;
 import java.lang.reflect.Type;
-import java.sql.CallableStatement;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -11,22 +11,22 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+import javax.inject.Provider;
+
 import jef.common.log.LogUtil;
 import jef.database.Session.PopulateStrategy;
 import jef.database.Transaction.TransactionFlag;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.innerpool.IConnection;
-import jef.database.innerpool.IManagedConnectionPool;
 import jef.database.innerpool.PartitionSupport;
+import jef.database.innerpool.WrapableConnection;
 import jef.database.jdbc.GenerateKeyReturnOper;
-import jef.database.jdbc.JDBCTarget;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.jdbc.result.ResultSetContainer;
 import jef.database.jdbc.result.ResultSetHolder;
 import jef.database.jdbc.result.ResultSetImpl;
 import jef.database.jdbc.result.ResultSetWrapper;
-import jef.database.jdbc.statement.ProcessablePreparedStatement;
 import jef.database.jdbc.statement.ProcessableStatement;
 import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.jsqlparser.SqlFunctionlocalization;
@@ -46,6 +46,7 @@ import jef.database.wrapper.populator.AbstractResultSetTransformer;
 import jef.database.wrapper.populator.ResultSetExtractor;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.variable.BindVariableContext;
+import jef.tools.Assert;
 import jef.tools.MathUtils;
 import jef.tools.PageLimit;
 import jef.tools.StringUtils;
@@ -57,11 +58,10 @@ import jef.tools.StringUtils;
  * @author jiyi
  * 
  */
-public class OperateTarget implements SqlTemplate, JDBCTarget {
+public class OperateTarget implements SqlTemplate, Provider<WrapableConnection> {
 	private Session session;
 	private String dbkey;
 	private DatabaseDialect profile;
-	private IConnection conn;
 
 	public String getDbkey() {
 		return dbkey;
@@ -99,33 +99,12 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 		return profile;
 	}
 
-	/**
-	 * 释放连接，不再持有。相当于关闭
-	 */
-	public void releaseConnection() {
-		if (conn != null) {
-			if(session instanceof Transaction) {
-			}else {
-				conn.close();
-			}
-			conn = null;
-		}
-	}
-
 	public String getTransactionId() {
 		return this.session.getTransactionId(dbkey);
 	}
-
-	public void notifyDisconnect(SQLException e) {
-		IConnection conn = getConnection(dbkey);
-		if (getProfile().isIOError(e)) {
-			LogUtil.warn("IO error on connection detected. closing current connection to refersh a new db connection.");
-			conn.closePhysical();
-			if (session.getPool() instanceof IManagedConnectionPool) {
-				((IManagedConnectionPool) session.getPool()).notifyDbDisconnect();
-			}
-
-		}
+	
+	public String toString() {
+		return getTransactionId();
 	}
 
 	public Statement createStatement() throws SQLException {
@@ -141,59 +120,6 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 			st = new ProcessableStatement(st, rslp);
 		}
 		return profile.wrap(st, isJpaTx());
-	}
-
-	/*
-	 * 准备执行SQL
-	 */
-	public PreparedStatement prepareStatement(String sql) throws SQLException {
-		return profile.wrap(getConnection(dbkey).prepareStatement(sql), isJpaTx());
-	}
-
-	/*
-	 * 准备执行SQL，插入
-	 */
-	public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException {
-		return profile.wrap(getConnection(dbkey).prepareStatement(sql, columnNames), isJpaTx());
-	}
-
-	/*
-	 * 准备执行SQL，插入
-	 */
-	public PreparedStatement prepareStatement(String sql, int generateKeys) throws SQLException {
-		return profile.wrap(getConnection(dbkey).prepareStatement(sql, generateKeys), isJpaTx());
-	}
-
-	/*
-	 * 准备执行SQL，插入
-	 */
-	public PreparedStatement prepareStatement(String sql, int[] columnIndexs) throws SQLException {
-		return profile.wrap(getConnection(dbkey).prepareStatement(sql, columnIndexs), isJpaTx());
-	}
-
-	/*
-	 * 准备执行SQL，查询
-	 */
-	public PreparedStatement prepareStatement(String sql, ResultSetLaterProcess rslp, boolean isUpdatable) throws SQLException {
-		PreparedStatement st;
-		int rsType = (isUpdatable) ? ResultSet.TYPE_SCROLL_INSENSITIVE : ResultSet.TYPE_FORWARD_ONLY;
-		int rsUpdate = isUpdatable ? ResultSet.CONCUR_UPDATABLE : ResultSet.CONCUR_READ_ONLY;
-		st = getConnection(dbkey).prepareStatement(sql, rsType, rsUpdate);
-		if (rslp != null) {
-			st = new ProcessablePreparedStatement(st, rslp);
-		}
-		return profile.wrap(st, isJpaTx());
-	}
-
-	/*
-	 * 准备执行SQL，查询
-	 */
-	public PreparedStatement prepareStatement(String sql, int rsType, int concurType, int hold) throws SQLException {
-		return profile.wrap(getConnection(dbkey).prepareStatement(sql, rsType, concurType, hold), isJpaTx());
-	}
-
-	public CallableStatement prepareCall(String sql) throws SQLException {
-		return getConnection(dbkey).prepareCall(sql);
 	}
 
 	public boolean isResultSetHolderTransaction() {
@@ -215,24 +141,20 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 		}
 	}
 
-	IConnection getRawConnection() {
-		return getConnection(dbkey);
-	}
-
 	<T> List<T> populateResultSet(IResultSet rsw, EntityMappingProvider mapping, Transformer transformer) throws SQLException {
 		return session.populateResultSet(rsw, mapping, transformer);
 	}
-
-	private IConnection getConnection(String dbkey2) {
-		if (conn == null) {
-			try {
-				conn = session.getConnection();
-			} catch (SQLException e) {
-				throw new RuntimeException(e);
-			}
-		}
+	
+	@Override
+	public WrapableConnection get() {
+		return getConnection(this.dbkey);
+	}
+	
+	private WrapableConnection getConnection(String dbkey2) {
+		IConnection	conn = session.getConnection();
+		Assert.notNull(conn);
 		conn.setKey(dbkey2);
-		return conn;
+		return new WrapableConnection(conn, profile, isJpaTx());
 	}
 
 	public String getDbName() {
@@ -246,10 +168,11 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 	final int innerExecuteSqlBatch(String sql, List<?>... params) throws SQLException {
 		SqlLog log = ORMConfig.getInstance().newLogger(sql.length() + 64);
 		log.append(sql);
+		Connection conn=get();
 		PreparedStatement st = null;
 		long start = System.currentTimeMillis();
 		try {
-			st = prepareStatement(sql);
+			st = conn.prepareStatement(sql);
 			st.setQueryTimeout(ORMConfig.getInstance().getUpdateTimeout() * 2);// 批量操作允许更多的时间。
 			int maxBatchlog = ORMConfig.getInstance().getMaxBatchLog();
 			for (int i = 0; i < params.length; i++) {
@@ -276,13 +199,9 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 				session.getListener().afterSqlExecuted(sql, i < result.length ? result[i] : 1, params[i]);
 			}
 			return total;
-		} catch (SQLException e) {
-			DbUtils.processError(e, sql, this);
-			throw e;
 		} finally {
-			if (st != null)
-				st.close();
-			releaseConnection();
+			DbUtils.close(st);
+			DbUtils.closeConnection(conn);
 		}
 	}
 
@@ -298,8 +217,9 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 		long dbAccess;
 		int total;
 		sb.append(sql).append(this);
+		Connection conn=this.get();
 		try {
-			st = keyOper.prepareStatement(this, sql);
+			st = keyOper.prepareStatement( conn, sql);
 			st.setQueryTimeout(ORMConfig.getInstance().getUpdateTimeout());
 			if (!ps.isEmpty()) {
 				BindVariableContext context = new BindVariableContext(st, getProfile(), sb);
@@ -312,13 +232,10 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 			if (total > 0) {
 				session.checkCacheUpdate(sql, ps);
 			}
-		} catch (SQLException e) {
-			DbUtils.processError(e, sql, this);
-			throw e;
 		} finally {
 			sb.output();
 			DbUtils.close(st);
-			releaseConnection();
+			DbUtils.closeConnection(conn);
 		}
 		sb.directLog(StringUtils.concat("Executed:", String.valueOf(total), "\t Time cost([DbAccess]:", String.valueOf(dbAccess - start), "ms) |",
 				getTransactionId()));
@@ -330,12 +247,13 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 		PreparedStatement st = null;
 		ResultSet rs = null;
 		SqlLog sb = ORMConfig.getInstance().newLogger();
+		WrapableConnection conn=get();
 		try {
 			sb.ensureCapacity(sql.length() + 30 + objs.size() * 20);
 			sb.append(sql).append(this);
 			long start = System.currentTimeMillis();
 			ResultSetLaterProcess isReverse = lazy == null ? null : lazy.getRsLaterProcessor();
-			st = prepareStatement(sql, isReverse, false);
+			st = conn.prepareStatement(sql, isReverse, false);
 
 			BindVariableContext context = new BindVariableContext(st, getProfile(), sb);
 			context.setVariables(objs);
@@ -343,13 +261,13 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 			rs = st.executeQuery();
 			long dbAccessed = System.currentTimeMillis();
 			if (lazy != null && lazy.hasInMemoryOperate()) {
-				rs = ResultSetContainer.toInMemoryProcessorResultSet(lazy, new ResultSetHolder(this, st, rs));
+				rs = ResultSetContainer.toInMemoryProcessorResultSet(lazy, new ResultSetHolder(conn, st, rs));
 			}
 			T t;
 			if (rst.autoClose()) {
 				t = rst.transformer(new ResultSetImpl(rs, getProfile()));
 			} else {
-				t = rst.transformer(new ResultSetWrapper(this, st, rs));
+				t = rst.transformer(new ResultSetWrapper(conn, st, rs));
 			}
 			// if(session.isRoutingDataSource()){
 			rst.appendLog(sb, t);
@@ -357,15 +275,12 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 					.append(this);
 			// }
 			return t;
-		} catch (SQLException e) {
-			DbUtils.processError(e, sql, this);
-			throw e;
 		} finally {
 			sb.output();
 			if (rst.autoClose()) {
 				DbUtils.close(rs);
 				DbUtils.close(st);
-				releaseConnection();
+				DbUtils.closeConnection(conn);
 			}
 		}
 	}
@@ -580,7 +495,7 @@ public class OperateTarget implements SqlTemplate, JDBCTarget {
 		}
 		// 进行本地语言转化
 		DatabaseDialect dialect = this.profile;
-		SqlFunctionlocalization visitor = new SqlFunctionlocalization(dialect, this);
+		SqlFunctionlocalization visitor = new SqlFunctionlocalization(dialect, session.getNoTransactionSession().getMetaData(this.dbkey));
 		for (SelectItem item : sts) {
 			item.accept(visitor);
 		}

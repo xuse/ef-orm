@@ -4,14 +4,13 @@ import java.sql.SQLException;
 
 import javax.persistence.PersistenceException;
 
+import org.omg.CORBA.SystemException;
+
 import jef.common.log.LogUtil;
 import jef.database.cache.CacheChain;
 import jef.database.cache.CacheImpl;
 import jef.database.innerpool.IConnection;
 import jef.database.support.TransactionTimedOutException;
-
-import org.easyframe.enterprise.spring.TransactionMode;
-import org.omg.CORBA.SystemException;
 
 public class TransactionImpl extends Transaction {
 	private boolean dirty;
@@ -137,8 +136,8 @@ public class TransactionImpl extends Transaction {
 		if (timeout > 0) {
 			this.deadline = System.currentTimeMillis() + timeout * 1000;
 		}
-		this.isJpa = parent.getTxType() == TransactionMode.JPA;
-		log.debug("[JPA DEBUG]:Transaction {} started ,mode is {}.", this, parent.getTxType());
+		this.isJpa = true;//parent.getTxType() == TransactionMode.JPA;
+		log.debug("[JPA DEBUG]:Transaction {} started.", this);
 	}
 
 	/**
@@ -199,7 +198,7 @@ public class TransactionImpl extends Transaction {
 	}
 
 	public Transaction setAutoCommit(boolean autoCommit) {
-		if (autoCommit == this.autoCommit || parent.getTxType() == TransactionMode.JTA) {
+		if (autoCommit == this.autoCommit) {
 			return this;
 		}
 		this.autoCommit = autoCommit;
@@ -214,7 +213,7 @@ public class TransactionImpl extends Transaction {
 	}
 
 	private void doRollback() throws SQLException {
-		if (conn != null && parent.getTxType() != TransactionMode.JTA) {
+		if (conn != null ) {
 			getListener().beforeRollback(this);
 			long start = System.currentTimeMillis();
 			conn.rollback();
@@ -225,7 +224,7 @@ public class TransactionImpl extends Transaction {
 	}
 
 	private void doCommit() throws SQLException {
-		if (conn != null && parent.getTxType() != TransactionMode.JTA) {
+		if (conn != null) {
 			getListener().beforeCommit(this);
 			long start = System.currentTimeMillis();
 			conn.commit();
@@ -241,7 +240,7 @@ public class TransactionImpl extends Transaction {
 
 		if (conn != null) {
 			try {
-				if (!autoCommit && parent.getTxType() != TransactionMode.JTA) {
+				if (!autoCommit) {
 					conn.setAutoCommit(true);
 				}
 				// 注意，readOnly必须在AutoCommit设置完成后才能设置，因为在Postgres上，autocommit=false时，认为是在事务中，而事务中不允许修改readOnly属性
@@ -251,7 +250,7 @@ public class TransactionImpl extends Transaction {
 			} catch (SQLException e) {
 				LogUtil.exception(e);
 			}
-			conn.close();
+			DbUtils.closeConnection(conn);
 			conn = null;
 		}
 		parentName = parent.getDbName(null);
@@ -274,7 +273,7 @@ public class TransactionImpl extends Transaction {
 		}
 	}
 
-	protected IConnection getConnection() throws SQLException {
+	protected IConnection getConnection() {
 		if (parent == null) {
 			throw new IllegalStateException("Current transaction is closed!|" + getTransactionId(null));
 		}
@@ -282,15 +281,17 @@ public class TransactionImpl extends Transaction {
 			checkTimeToLiveInMillis();
 		}
 		if (conn == null) {
-			IConnection conn = parent.getPool().getConnection(this);
-			if (parent.getTxType() != TransactionMode.JTA) {
-				conn.setAutoCommit(autoCommit);
-				if (readOnly) {
-					conn.setReadOnly(true);
-				}
-				if (isolationLevel >= 0 && ORMConfig.getInstance().isSetTxIsolation()) {
-					conn.setTransactionIsolation(isolationLevel);
-				}
+			try {
+				IConnection conn = parent.getPool().get();
+					conn.setAutoCommit(autoCommit);
+					if (readOnly) {
+						conn.setReadOnly(true);
+					}
+					if (isolationLevel >= 0 && ORMConfig.getInstance().isSetTxIsolation()) {
+						conn.setTransactionIsolation(isolationLevel);
+					}
+			}catch(SQLException e) {
+				throw DbUtils.toRuntimeException(e);
 			}
 			this.conn = conn;
 		}
@@ -340,12 +341,12 @@ public class TransactionImpl extends Transaction {
 	}
 
 	@Override
-	protected TransactionMode getTxType() {
-		return parent.getTxType();
+	protected boolean isJpaTx() {
+		return isJpa;
 	}
 
 	@Override
-	protected boolean isJpaTx() {
-		return isJpa;
+	protected DbMetaData getMetaData(String dataSourceName) {
+		return parent.getMetaData(dataSourceName);
 	}
 }

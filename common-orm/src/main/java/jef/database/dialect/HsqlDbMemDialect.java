@@ -1,30 +1,25 @@
 package jef.database.dialect;
 
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import javax.persistence.PersistenceException;
+import com.querydsl.sql.HSQLDBTemplates;
+import com.querydsl.sql.SQLTemplates;
 
 import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.DbCfg;
 import jef.database.DbMetaData;
-import jef.database.DbUtils;
 import jef.database.DebugUtil;
-import jef.database.ORMConfig;
 import jef.database.dialect.ColumnType.Char;
 import jef.database.dialect.handler.LimitHandler;
 import jef.database.dialect.handler.LimitOffsetLimitHandler;
-import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.exception.JDBCExceptionHelper;
 import jef.database.exception.TemplatedViolatedConstraintNameExtracter;
 import jef.database.exception.ViolatedConstraintNameExtracter;
-import jef.database.jdbc.JDBCTarget;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.meta.DbProperty;
 import jef.database.meta.Feature;
@@ -46,9 +41,6 @@ import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.ClassEx;
-
-import com.querydsl.sql.HSQLDBTemplates;
-import com.querydsl.sql.SQLTemplates;
 
 /**
  * HSQLDB的dialect
@@ -288,30 +280,6 @@ public class HsqlDbMemDialect extends AbstractDialect {
 			return new Char(column.getColumnSize());
 		}
 		return super.getProprtMetaFromDbType(column);
-	}
-
-	@Override
-	public long getColumnAutoIncreamentValue(AutoIncrementMapping mapping, JDBCTarget db) {
-		String tableName = mapping.getMeta().getTableName(false).toLowerCase();
-		String seqname = tableName + "_" + mapping.lowerColumnName() + "_seq";
-		String sql = String.format("select nextval('%s') from dual", seqname);
-		if (ORMConfig.getInstance().isDebugMode()) {
-			LogUtil.show(sql + " | " + db.getTransactionId());
-		}
-		try {
-			Statement st = db.createStatement();
-			ResultSet rs = null;
-			try {
-				rs = st.executeQuery(sql);
-				rs.next();
-				return rs.getLong(1);
-			} finally {
-				DbUtils.close(rs);
-				DbUtils.close(st);
-			}
-		} catch (SQLException e) {
-			throw new PersistenceException(e);
-		}
 	}
 
 	private final LimitHandler limit = new LimitOffsetLimitHandler();

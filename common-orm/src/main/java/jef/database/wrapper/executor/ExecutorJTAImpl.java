@@ -18,7 +18,7 @@ import jef.database.DebugUtil;
 import jef.database.ORMConfig;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.IConnection;
-import jef.database.innerpool.IUserManagedPool;
+import jef.database.innerpool.ConnectionAndMetadataProvider;
 import jef.database.jdbc.result.CloseableResultSet;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.variable.BindVariableContext;
@@ -39,7 +39,7 @@ public class ExecutorJTAImpl implements Runnable, StatementExecutor {
 	IConnection conn;
 	Statement st;
 
-	private IUserManagedPool parent;
+	private ConnectionAndMetadataProvider parent;
 	private String dbkey;
 	private String txId;
 	private DatabaseDialect profile;
@@ -51,7 +51,7 @@ public class ExecutorJTAImpl implements Runnable, StatementExecutor {
 	 * @param dbkey
 	 * @param txId
 	 */
-	public ExecutorJTAImpl(IUserManagedPool parent, String dbkey, String txId, DatabaseDialect dialect) {
+	public ExecutorJTAImpl(ConnectionAndMetadataProvider parent, String dbkey, String txId, DatabaseDialect dialect) {
 		LogUtil.debug("The sqlExecutor {} was starting.",this);
 		this.parent = parent;
 		this.dbkey = dbkey;
@@ -109,11 +109,8 @@ public class ExecutorJTAImpl implements Runnable, StatementExecutor {
 
 	private boolean init() {
 		try {
-			conn = parent.poll();
+			conn = parent.get();
 			conn.setKey(dbkey);
-//			if(!conn.get AutoCommit()){
-//				conn.set AutoCommit(true);
-//			}
 			st = conn.createStatement();
 			return true;
 		} catch (SQLException e) {

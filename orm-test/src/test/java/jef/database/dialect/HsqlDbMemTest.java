@@ -1,17 +1,20 @@
 package jef.database.dialect;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import jef.common.log.LogUtil;
 import jef.database.DbCfg;
 import jef.database.DbClient;
-import jef.database.DebugUtil;
+import jef.database.DbUtils;
 import jef.database.OperateTarget;
-import jef.database.innerpool.IConnection;
 import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
 import jef.database.test.DatabaseInit;
@@ -20,9 +23,6 @@ import jef.orm.onetable.model.TestEntity;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.string.RandomData;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * HSQLDB内存模式测试类
@@ -69,11 +69,11 @@ public class HsqlDbMemTest extends org.junit.Assert {
 	}
 
 	protected void createSchema(String schema) {
-		IConnection conn = null;
+		Connection conn = null;
 		PreparedStatement pstmt = null;
 
 		try {
-			conn = DebugUtil.getConnection(getDefaultTarget());
+			conn = getDefaultTarget().get();
 			pstmt = conn.prepareStatement("CREATE SCHEMA " + schema);
 			pstmt.execute();
 		} catch (SQLException e) {
@@ -81,14 +81,8 @@ public class HsqlDbMemTest extends org.junit.Assert {
 		} catch (Exception e) {
 			fail(e.getMessage());
 		} finally {
-			try {
-				pstmt.close();
-				// AfterClass will close conn, so need not call conn.close here.
-			} catch (SQLException e) {
-				fail(e.getMessage());
-			} catch (Exception e) {
-				fail(e.getMessage());
-			}
+			DbUtils.close(pstmt);
+			DbUtils.closeConnection(conn);
 		}
 	}
 
@@ -98,11 +92,10 @@ public class HsqlDbMemTest extends org.junit.Assert {
 	}
 
 	protected void dropTable(String table) {
-		IConnection conn = null;
+		Connection conn = null;
 		PreparedStatement pstmt = null;
-
 		try {
-			conn = DebugUtil.getConnection(getDefaultTarget());
+			conn =  getDefaultTarget().get();
 			pstmt = conn.prepareStatement("DROP TABLE " + table);
 			pstmt.execute();
 		} catch (SQLException e) {
@@ -110,14 +103,8 @@ public class HsqlDbMemTest extends org.junit.Assert {
 		} catch (Exception e) {
 			fail(e.getMessage());
 		} finally {
-			try {
-				pstmt.close();
-				// AfterClass will close conn, so need not call conn.close here.
-			} catch (SQLException e) {
-				fail(e.getMessage());
-			} catch (Exception e) {
-				fail(e.getMessage());
-			}
+			DbUtils.close(pstmt);
+			DbUtils.closeConnection(conn);
 		}
 	}
 	

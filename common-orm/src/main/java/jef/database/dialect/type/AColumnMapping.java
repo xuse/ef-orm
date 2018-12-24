@@ -10,10 +10,11 @@ import java.util.function.Predicate;
 
 import javax.persistence.Column;
 
+import com.github.geequery.entity.Entities;
+
 import jef.accelerator.bean.BeanAccessor;
 import jef.database.DbUtils;
 import jef.database.Field;
-import jef.database.IQueryableEntity;
 import jef.database.annotation.UnsavedValue;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
@@ -22,8 +23,8 @@ import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.tools.Assert;
 import jef.tools.DateUtils;
+import jef.tools.Primitives;
 import jef.tools.StringUtils;
-import jef.tools.reflect.ConvertUtils;
 import jef.tools.reflect.Property;
 
 public abstract class AColumnMapping implements ColumnMapping {
@@ -143,7 +144,7 @@ public abstract class AColumnMapping implements ColumnMapping {
 			unsavedValueDeclared = true;
 			unsavedValue = parseValue(containerType, unsaveValue.value());
 		} else if (containerType.isPrimitive()) {
-			unsavedValue = new ConstantFilter(ConvertUtils.defaultValueOfPrimitive(containerType));
+			unsavedValue = new ConstantFilter(Primitives.defaultValueOfPrimitive(containerType));
 		}
 		Column column = map == null ? null : (Column) map.get(Column.class);
 		if (column != null) {
@@ -325,9 +326,9 @@ public abstract class AColumnMapping implements ColumnMapping {
 	 */
 	protected abstract String getSqlExpression(Object value, DatabaseDialect profile);
 
-	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr,
+	public void processPreparedInsert(Object obj, List<String> cStr, List<String> vStr,
 			InsertSqlClause result, boolean dynamic) throws SQLException {
-		if (dynamic && !obj.isUsed(field)) {
+		if (dynamic && !Entities.isUsed(obj,field)) {
 			return;
 		}
 		String columnName = getColumnName(result.profile, true);
@@ -375,8 +376,8 @@ public abstract class AColumnMapping implements ColumnMapping {
      */
     @Override
     public boolean isUnsavedValue(Object object) {
-        return unsavedValue.test(object);
-    }
+		return unsavedValue.test(object);
+	}
 
 	public boolean isGenerated() {
 		return false;

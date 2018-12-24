@@ -2,13 +2,8 @@ package jef.database.datasource;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
-
-import jef.database.DbUtils;
-import jef.tools.Assert;
-import jef.tools.reflect.ClassEx;
-import jef.tools.reflect.GenericUtils;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -17,6 +12,11 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+
+import jef.database.DbUtils;
+import jef.tools.Assert;
+import jef.tools.reflect.ClassEx;
+import jef.tools.reflect.GenericUtils;
 
 /**
  * 抽象类，能从Spring中找寻指定类型的bean
@@ -52,9 +52,9 @@ public abstract class AbstractSpringBeanLookup<T> implements ApplicationContextA
 		Assert.notNull(context);
 		Map<String, T> ds = context.getBeansOfType(t);// 这是一个非常复杂的操作，因此将结果缓存起来
 		log.debug("getting type:{} from spring context, found {} beans.",t.getClass(),ds.size());
-		Map<String, T> result = new HashMap<String, T>();
+		Map<String, T> result = new LinkedHashMap<String, T>();
 		for (Map.Entry<String, T> entry : ds.entrySet()) {
-			if(entry.getValue() instanceof RoutingDataSource){
+			if(entry.getValue() instanceof DefaultRoutingDataSource){
 				continue;
 			}
 			log.debug("puting [{}] into map, bean: {}",entry.getKey(),entry.getValue());

@@ -240,7 +240,7 @@ public class EntityEnhancerTest {
 	@Test
 	public void testDataObjectAsJson(){
 		TestEntity t1=RandomData.newInstance(TestEntity.class);
-		t1.prepareUpdate(TestEntity.Field.boolField, "false");
+		t1.getQuery().prepareUpdate(TestEntity.Field.boolField, "false");
 		t1.setBinaryData(null);
 		t1.setTt1(null);
 		t1.setTt2(null);
@@ -262,6 +262,6 @@ public class EntityEnhancerTest {
 	@Test
 	public void test123(){
 		EntityEnhancer e=new EntityEnhancer();
-		e.enhance("com.hikvision");
+		e.enhance("com.vision");
 	}
 }

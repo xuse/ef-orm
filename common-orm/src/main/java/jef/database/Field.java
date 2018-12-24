@@ -230,4 +230,12 @@ public interface Field extends Serializable {
 		return Condition.get(this, Operator.MATCH_ANY, new SqlExpression(str));
 	}
 
+	default int asEnumOrdinal() {
+		if (this instanceof Enum) {
+			return ((Enum<?>) this).ordinal();
+		} else {
+			return -1;
+		}
+	}
+
 }

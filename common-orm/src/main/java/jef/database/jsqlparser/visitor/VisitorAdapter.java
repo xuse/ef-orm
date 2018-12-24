@@ -92,7 +92,7 @@ import jef.database.jsqlparser.statement.update.Update;
  * 并可以通过visitPath(一个先进后出的Deque)来访问到根节点的路径。
  * 
  * @author jiyi
- * Not thread-safe!
+ *
  */
 public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, StatementVisitor, SelectItemVisitor {
 	protected final Deque<Object> visitPath = new ArrayDeque<Object>();

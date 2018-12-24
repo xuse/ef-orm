@@ -215,6 +215,57 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 
 		return concat(left, new String(chars), right);
 	}
+	
+	/**
+	 * 字符串指定范围内进行replace
+	 * @param text
+	 * @param from
+	 * @param replacement
+	 * @param offset
+	 * @return
+	 */
+	public static String replace(String text, String from, String replacement, int offset) {
+		return replace(text,from,replacement,offset, text.length());
+	}
+
+	/**
+	 * 字符串指定范围内进行replace
+	 * @param text
+	 * @param from
+	 * @param replacement
+	 * @param offset
+	 * @param max
+	 * @return
+	 */
+	public static String replace(String text, String from, String replacement, int offset, int end) {
+		if (isEmpty(text) || offset >= text.length() || end <= 0)
+			return text;
+		if (offset < 0)
+			offset = 0;
+		if (end > text.length())
+			end = text.length();
+
+		StringBuilder sb = new StringBuilder();
+		if (offset > 0)
+			sb.append(text.substring(0, offset));
+		int compareLength = from.length();
+		boolean replaced = false;
+		int matchEnd=end - compareLength;
+		for (int x = offset; x < matchEnd;) {
+			if (text.regionMatches(x, from, 0, compareLength)) {
+				sb.append(replacement);
+				x += compareLength;
+				replaced = true;
+			} else {
+				sb.append(text.charAt(x));
+				x++;
+			}
+		}
+		if (matchEnd < text.length()) {
+			sb.append(text.substring(matchEnd));
+		}
+		return replaced ? sb.toString() : text;
+	}
 
 	/**
 	 * 将异常信息中的摘要输出到StringBuilder中
@@ -2505,5 +2556,53 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 */
 	public static boolean startsWithIgnoreCase(String searchIn, int startAt, String searchFor) {
 		return searchIn.regionMatches(true, startAt, searchFor, 0, searchFor.length());
+	}
+
+	/**
+	 * 是否为文字的重复
+	 * 
+	 * @param string
+	 * @param keyword 重复关键字
+	 * @return
+	 */
+	public static boolean isRepeatOf(String string, String keyword) {
+		return isRepeatOf(string, keyword, 0, string.length());
+	}
+
+	/**
+	 * 是否为文字的重复
+	 * 
+	 * @param string
+	 * @param ketword 关键字
+	 * @param offset 判断范围的开始位置
+	 * @param length 判断长度
+	 * @return
+	 */
+	public static boolean isRepeatOf(String string, String ketword, int offset, int length) {
+		Assert.notNull(ketword);
+		int len = ketword.length();
+		if (len == 0) {
+			return false;
+		}
+		for (int index = offset; index < length; index += len) {
+			if (!string.regionMatches(index, ketword, 0, len)) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	public static int getBeginPos(String content) {
+		return getBeginPos(content, 0);
+	}
+
+	public static int getBeginPos(String content, int begin) {
+		int len = content.length();
+		for (int i = begin; i < len; i++) {
+			if (!Character.isWhitespace(content.charAt(i))) {
+				return i;
+			}
+		}
+		return -1;
 	}
 }

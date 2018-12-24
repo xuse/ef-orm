@@ -196,10 +196,6 @@ public class JefConfiguration {
 		 * 使用标准日志输出，默认直接print到控制台。设置为true时，日志写入到slf4j，false时则直接输出到标准控制台
 		 */
 		COMMON_DEBUG_ADAPTER,
-		/**
-		 * 当启用了COMMON_DEBUG_ADAPTER后，再开启本选项，可以将System.out和System.err流也重定向
-		 */
-		SYSOUT_REDIRECT, //
 		// ////////////////其他不常用属性///////////////////
 		/**
 		 * 当使用ServletExchange返回json时，带上json头

@@ -83,7 +83,7 @@ public class QueryByExamplePredicateBuilder {
 
 			if (attributeValue == null) {
 				if (exampleAccessor.getNullHandler().equals(ExampleMatcher.NullHandler.INCLUDE)) {
-					q.addCondition(QB.isNull(type.getField(fieldName)));
+					q.addCondition(QB.isNull(type.getColumnDef(fieldName).field()));
 				}
 				continue;
 			}

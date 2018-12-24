@@ -39,6 +39,7 @@ import org.springframework.data.querydsl.QSort;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.github.geequery.entity.Entities;
 import com.github.geequery.extension.querydsl.QueryDSLTables;
 import com.github.geequery.extension.querydsl.SQLQueryFactoryEx;
 import com.github.geequery.extension.querydsl.SQLRelationalPath;
@@ -55,22 +56,15 @@ import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
 import jef.database.NativeQuery;
-import jef.database.PojoWrapper;
 import jef.database.QB;
-import jef.database.RecordHolder;
 import jef.database.Session;
+import jef.database.SessionFactory;
 import jef.database.dialect.type.ColumnMapping;
-import jef.database.jpa.JefEntityManager;
-import jef.database.jpa.JefEntityManagerFactory;
-import jef.database.meta.EntityType;
 import jef.database.meta.ITableMetadata;
-import jef.database.meta.MetaHolder;
 import jef.database.query.ConditionQuery;
-import jef.database.query.PKQuery;
 import jef.database.query.Query;
 import jef.database.query.SqlExpression;
 import jef.tools.ArrayUtils;
-import jef.tools.Assert;
 import jef.tools.PageLimit;
 
 /**
@@ -90,16 +84,16 @@ import jef.tools.PageLimit;
 public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepository<T, ID> {
 
 	private MetamodelInformation<T, ID> meta;
-	// 这是Spring的SharedEntityManager的代理，只可从中提取EMF，不可直接转换，因此这个EM上携带了基于线程的事务上下文
-	private JefEntityManagerFactory em;
+	
+	private SessionFactory em;
 
 	private final Query<?> q_all;
 
-	public GqRepositoryImpl(MetamodelInformation<T, ID> meta, JefEntityManagerFactory emf) {
+	public GqRepositoryImpl(MetamodelInformation<T, ID> meta, SessionFactory emf) {
 		this.meta = meta;
 		this.em = emf;
 		q_all = QB.create(meta.getMetadata());
-		this.querydsl= new Querydsl(new PathBuilder(meta.getJavaType(), meta.getEntityName()));
+		this.querydsl = new Querydsl(new PathBuilder(meta.getJavaType(), meta.getEntityName()));
 	}
 
 	@Override
@@ -145,17 +139,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 		if (query == null)
 			return Collections.emptyList();
 		try {
-			if (query instanceof IQueryableEntity) {
-				return (List<T>) getSession().select((IQueryableEntity) query);
-			} else {
-				ITableMetadata meta = MetaHolder.getMeta(query);
-				PojoWrapper pojo = meta.transfer(query, true);
-				if (!pojo.hasQuery() && pojo.getUpdateValueMap().isEmpty()) {
-					pojo.getQuery().setAllRecordsCondition();
-				}
-				List<PojoWrapper> result = getSession().select(pojo);
-				return PojoWrapper.unwrapList(result);
-			}
+			return (List<T>) getSession().select(Entities.asQuery(query));
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -166,19 +150,9 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 		if (query == null)
 			return Collections.emptyList();
 		try {
-			if (query instanceof IQueryableEntity) {
-				setSortToSpec(((IQueryableEntity) query).getQuery(), sort);
-				return (List<T>) getSession().select((IQueryableEntity) query);
-			} else {
-				ITableMetadata meta = MetaHolder.getMeta(query);
-				PojoWrapper pojo = meta.transfer(query, true);
-				if (!pojo.hasQuery() && pojo.getUpdateValueMap().isEmpty()) {
-					pojo.getQuery().setAllRecordsCondition();
-				}
-				setSortToSpec(pojo.getQuery(), sort);
-				List<PojoWrapper> result = getSession().select(pojo);
-				return PojoWrapper.unwrapList(result);
-			}
+			Query<T> q = Entities.asQuery(query);
+			setSortToSpec(q, sort);
+			return (List<T>) getSession().select(q);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -189,23 +163,11 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	public Page<T> find(T query, Pageable pageable) {
 		try {
 			Session session = getSession();
-			if (query instanceof IQueryableEntity) {
-				Query<?> q = ((IQueryableEntity) query).getQuery();
-				long count = session.countLong(q);
-				setSortToSpec(q, pageable.getSort());
-				List<T> result = count == 0 ? Collections.emptyList() : (List<T>) session.select(q);
-				return new PageImpl<T>(result, pageable, count);
-			} else {
-				ITableMetadata meta = MetaHolder.getMeta(query);
-				PojoWrapper pojo = meta.transfer(query, true);
-				if (!pojo.hasQuery() && pojo.getUpdateValueMap().isEmpty()) {
-					pojo.getQuery().setAllRecordsCondition();
-				}
-				long count = session.countLong(pojo.getQuery());
-				setSortToSpec(pojo.getQuery(), pageable.getSort());
-				List<PojoWrapper> result = getSession().select(pojo);
-				return new PageImpl<T>(PojoWrapper.unwrapList(result), pageable, count);
-			}
+			Query<?> q = ((IQueryableEntity) query).getQuery();
+			long count = session.countLong(q);
+			setSortToSpec(q, pageable.getSort());
+			List<T> result = count == 0 ? Collections.emptyList() : (List<T>) session.select(q);
+			return new PageImpl<T>(result, pageable, count);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -403,7 +365,11 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	@Override
 	@Transactional
 	public <S extends T> S save(S entity) {
-		return getEntityManager().merge(entity);
+		try {
+			return getSession().merge(entity);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
 	}
 
 	@Override
@@ -545,58 +511,16 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 		return QueryByExamplePredicateBuilder.getPredicate(meta.getMetadata(), example);
 	}
 
-	private Session getSession() {
-		return ((JefEntityManager) QueryUtils.getEntityManager(em)).getSession();
-	}
-
 	private DbClient getNoTransactionSession() {
-		return em.getDefault();
+		return em.asDbClient();
 	}
 
-	private EntityManager getEntityManager() {
+	private Session getSession() {
 		return QueryUtils.getEntityManager(em);
 	}
 
 	private PageLimit toRange(Pageable pageable) {
 		return new PageLimit(pageable.getOffset(), pageable.getPageSize());
-	}
-
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	@Override
-	@Transactional
-	public boolean lockItAndUpdate(ID id, Update<T> update) {
-		Assert.notNull(update);
-		ITableMetadata meta = this.meta.getMetadata();
-		try {
-			if (meta.getType() == EntityType.POJO) {
-				PKQuery<PojoWrapper> query = new PKQuery<PojoWrapper>(meta, toId(id));
-				RecordHolder<PojoWrapper> result = getSession().loadForUpdate(query.getInstance());
-				if (result == null)
-					return false;
-				try {
-					PojoWrapper pojo = result.get();
-					update.setValue((T) pojo.get());
-					pojo.refresh();
-					return result.commit();
-				} finally {
-					result.close();
-				}
-			} else {
-				PKQuery query = new PKQuery(meta, toId(id));
-				RecordHolder<?> result = getSession().loadForUpdate(query.getInstance());
-				if (result == null)
-					return false;
-				try {
-					update.setValue((T) result.get());
-					return result.commit();
-				} finally {
-					result.close();
-				}
-			}
-		} catch (SQLException e) {
-			throw DbUtils.toRuntimeException(e);
-		}
-
 	}
 
 	@Override
@@ -673,12 +597,12 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 
 	@Override
 	public T loadByField(String fieldname, Serializable value, boolean unique) {
-		Field field = meta.getMetadata().getField(fieldname);
+		ColumnMapping field = meta.getMetadata().getColumnDef(fieldname);
 		if (field == null) {
 			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getMetadata().getName());
 		}
 		Query<?> q = QB.create(meta.getMetadata());
-		q.addCondition(field, value);
+		q.addCondition(field.field(), value);
 		try {
 			return getSession().load(q, unique);
 		} catch (SQLException e) {
@@ -689,12 +613,12 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	@Override
 	public List<T> findByField(String fieldname, Serializable value) {
 		ITableMetadata meta = this.meta.getMetadata();
-		Field field = meta.getField(fieldname);
+		ColumnMapping field = meta.getColumnDef(fieldname);
 		if (field == null) {
 			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
 		}
 		try {
-			return getSession().selectByField(field, value);
+			return getSession().selectByField(field.field(), value);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -704,12 +628,12 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	@Transactional
 	public int deleteByField(String fieldName, Serializable value) {
 		ITableMetadata meta = this.meta.getMetadata();
-		Field field = meta.getField(fieldName);
+		ColumnMapping field = meta.getColumnDef(fieldName);
 		if (field == null) {
 			throw new IllegalArgumentException("There's no property named " + fieldName + " in type of " + meta.getName());
 		}
 		try {
-			return getSession().deleteByField(field, value);
+			return getSession().deleteByField(field.field(), value);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -737,12 +661,12 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	@Override
 	public List<T> batchLoadByField(String fieldname, List<? extends Serializable> values) {
 		ITableMetadata meta = this.meta.getMetadata();
-		Field field = meta.getField(fieldname);
+		ColumnMapping field = meta.getColumnDef(fieldname);
 		if (field == null) {
 			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
 		}
 		try {
-			return getSession().batchLoadByField(field, values);
+			return getSession().batchLoadByField(field.field(), values);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -757,8 +681,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	public SQLQueryFactory sqlFactory() {
 		return getSession().sqlFactory();
 	}
-	
-	
+
 	@Override
 	@Transactional
 	public T merge(T entity) {
@@ -796,25 +719,22 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	@SuppressWarnings("unchecked")
 	@Override
 	public Iterable<T> findAll(Predicate predicate) {
-		return getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata())).where(predicate)
-				.fetch();
+		return getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata())).where(predicate).fetch();
 	}
 
 	private final Querydsl querydsl;
 
 	@Override
 	public Iterable<T> findAll(Predicate predicate, Sort sort) {
-		SQLRelationalPath<T> path=(SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata());
-		SQLQuery<T> q = getSession().sqlFactory().selectFrom(path)
-				.where(predicate);
+		SQLRelationalPath<T> path = (SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata());
+		SQLQuery<T> q = getSession().sqlFactory().selectFrom(path).where(predicate);
 		querydsl.applySorting(sort, q);
 		return q.fetch();
 	}
 
 	@Override
 	public Iterable<T> findAll(Predicate predicate, OrderSpecifier<?>... orders) {
-		SQLQuery<T> q = getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata()))
-				.where(predicate);
+		SQLQuery<T> q = getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata())).where(predicate);
 		QSort sort = new QSort(orders);
 		querydsl.applySorting(sort, q);
 		return q.fetch();
@@ -822,8 +742,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 
 	@Override
 	public Iterable<T> findAll(OrderSpecifier<?>... orders) {
-		SQLQuery<T> q = getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata()))
-				.where(new Predicate[0]);
+		SQLQuery<T> q = getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata())).where(new Predicate[0]);
 		QSort sort = new QSort(orders);
 		querydsl.applySorting(sort, q);
 		return q.fetch();
@@ -831,8 +750,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 
 	@Override
 	public Page<T> findAll(Predicate predicate, Pageable pageable) {
-		SQLQuery<T> q = getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata()))
-				.where(predicate);
+		SQLQuery<T> q = getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata())).where(predicate);
 		long total = q.fetchCount();
 		q = getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata())).where(predicate);
 		querydsl.applyPagination(pageable, q);
@@ -841,15 +759,13 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 
 	@Override
 	public long count(Predicate predicate) {
-		SQLQuery<T> q = getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata()))
-				.where(predicate);
+		SQLQuery<T> q = getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata())).where(predicate);
 		return q.fetchCount();
 	}
 
 	@Override
 	public boolean exists(Predicate predicate) {
-		SQLQuery<T> q = getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata()))
-				.where(predicate);
+		SQLQuery<T> q = getSession().sqlFactory().selectFrom((SQLRelationalPath<T>) QueryDSLTables.table(this.meta.getMetadata())).where(predicate);
 		T t = q.fetchFirst();
 		return t != null;
 	}

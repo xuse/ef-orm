@@ -5,22 +5,22 @@ import java.util.UUID;
 
 import javax.persistence.PersistenceException;
 
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import jef.database.DbClient;
 import jef.database.IQueryableEntity;
 import jef.database.Sequence;
+import jef.database.SessionFactory;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AutoIncrementMapping;
-import jef.database.jpa.JefEntityManagerFactory;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.tools.Assert;
 
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-
 
 public class UniqueIdManagerImpl implements UniqueIdManager,InitializingBean{
-	private JefEntityManagerFactory entityManagerFactory;
+	private SessionFactory entityManagerFactory;
 	
 	/**
 	 * {@inheritDoc}<br>
@@ -88,7 +88,7 @@ public class UniqueIdManagerImpl implements UniqueIdManager,InitializingBean{
 	}
 	
 	@Autowired
-	public void setEntityManagerFactory(JefEntityManagerFactory entityManagerFactory) {
+	public void setEntityManagerFactory(SessionFactory entityManagerFactory) {
 		this.entityManagerFactory = entityManagerFactory;
 	}
 	
@@ -101,7 +101,7 @@ public class UniqueIdManagerImpl implements UniqueIdManager,InitializingBean{
 	}
 
 	private DbClient getDbClient() {
-		DbClient dbClient = entityManagerFactory.getDefault();
+		DbClient dbClient = entityManagerFactory.asDbClient();
 		return dbClient;
 	}
 

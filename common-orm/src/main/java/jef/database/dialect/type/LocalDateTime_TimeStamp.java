@@ -7,9 +7,10 @@ import java.time.LocalDateTime;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
+import jef.database.query.Func;
 import jef.tools.DateUtils;
 
-public class LocalDateTime_TimeStamp extends AColumnMapping{
+public class LocalDateTime_TimeStamp extends AbstractTimeMapping{
 
 	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {
 		st.setTimestamp(index, DateUtils.toSqlTimeStamp((LocalDateTime)value));
@@ -37,6 +38,16 @@ public class LocalDateTime_TimeStamp extends AColumnMapping{
 	@Override
 	public void jdbcUpdate(ResultSet rs, String columnIndex, Object value, DatabaseDialect dialect) throws SQLException {
 		rs.updateTimestamp(columnIndex, DateUtils.toSqlTimeStamp((LocalDateTime)value));
+	}
+
+	@Override
+	public String getFunctionString(DatabaseDialect dialect) {
+		 return dialect.getFunction(Func.current_timestamp);
+	}
+
+	@Override
+	public Object getCurrentValue() {
+		return LocalDateTime.now();
 	}
 
 }

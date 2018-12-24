@@ -10,29 +10,39 @@ import java.util.Map;
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 
+/**
+ * 针对Map对象封装的BeanAccessor，可以使用BeanAccessor的接口操作Map对象的值。 用于框架统一处理。
+ * 
+ * @author jiyi
+ *
+ */
 @SuppressWarnings("rawtypes")
 public final class BeanAccessorMapImpl extends BeanAccessor {
 	public static final BeanAccessorMapImpl INSTANCE = new BeanAccessorMapImpl();
 
 	private BeanAccessor pojoAccessor;
-	
+
 	private BeanAccessorMapImpl() {
 	}
-	
+
+	/**
+	 * @param pojo
+	 *            可以传入一个类，用于描述数据规格。
+	 */
 	public BeanAccessorMapImpl(Class<?> pojo) {
-		this.pojoAccessor=FastBeanWrapperImpl.getAccessorFor(pojo);
+		this.pojoAccessor = FastBeanWrapperImpl.getAccessorFor(pojo);
 	}
 
 	public Collection<String> getPropertyNames() {
-		return pojoAccessor==null?Collections.<String>emptyList():pojoAccessor.getPropertyNames();
+		return pojoAccessor == null ? Collections.<String> emptyList() : pojoAccessor.getPropertyNames();
 	}
 
 	public Class<?> getPropertyType(String name) {
-		return pojoAccessor==null?Object.class:pojoAccessor.getPropertyType(name);
+		return pojoAccessor == null ? Object.class : pojoAccessor.getPropertyType(name);
 	}
 
 	public Type getGenericType(String name) {
-		return pojoAccessor==null?Object.class:pojoAccessor.getGenericType(name);
+		return pojoAccessor == null ? Object.class : pojoAccessor.getGenericType(name);
 	}
 
 	public Object getProperty(Object bean, String name) {
@@ -58,28 +68,25 @@ public final class BeanAccessorMapImpl extends BeanAccessor {
 	}
 
 	public Collection<? extends Property> getProperties() {
-		return pojoAccessor==null?Collections.<Property>emptyList():pojoAccessor.getProperties();
+		return pojoAccessor == null ? Collections.<Property> emptyList() : pojoAccessor.getProperties();
 	}
 
 	public Map<Class<?>, Annotation> getAnnotationOnField(String name) {
-		return pojoAccessor==null?null:pojoAccessor.getAnnotationOnField(name);
+		return pojoAccessor == null ? null : pojoAccessor.getAnnotationOnField(name);
 	}
 
 	public Map<Class<?>, Annotation> getAnnotationOnGetter(String name) {
-		return pojoAccessor==null?null:pojoAccessor.getAnnotationOnGetter(name);
+		return pojoAccessor == null ? null : pojoAccessor.getAnnotationOnGetter(name);
 	}
 
 	public Map<Class<?>, Annotation> getAnnotationOnSetter(String name) {
-		return pojoAccessor==null?null:pojoAccessor.getAnnotationOnSetter(name);
+		return pojoAccessor == null ? null : pojoAccessor.getAnnotationOnSetter(name);
 	}
 
-	public void initAnnotations(Map<Class<?>, Annotation>[] field,
-			Map<Class<?>, Annotation>[] getter,
-			Map<Class<?>, Annotation>[] setter) {
+	public void initAnnotations(Map<Class<?>, Annotation>[] field, Map<Class<?>, Annotation>[] getter, Map<Class<?>, Annotation>[] setter) {
 	}
 
-	public void initNthGenericType(int index, Class<?> raw, Type type,
-			int total, String fieldName) {
+	public void initNthGenericType(int index, Class<?> raw, Type type, int total, String fieldName) {
 	}
 
 	@Override
@@ -108,6 +115,10 @@ public final class BeanAccessorMapImpl extends BeanAccessor {
 		return map;
 	}
 
+	/**
+	 * 为Map包装的Property对象
+	 *
+	 */
 	final class MapProperty implements Property {
 		private String name;
 
@@ -120,11 +131,11 @@ public final class BeanAccessorMapImpl extends BeanAccessor {
 		}
 
 		public boolean isReadable() {
-			return pojoAccessor==null?true:pojoAccessor.getProperty(name)!=null;
+			return pojoAccessor == null ? true : pojoAccessor.getProperty(name) != null;
 		}
 
 		public boolean isWriteable() {
-			return pojoAccessor==null?true:pojoAccessor.getProperty(name)!=null;
+			return pojoAccessor == null ? true : pojoAccessor.getProperty(name) != null;
 		}
 
 		public Object get(Object obj) {
@@ -137,12 +148,11 @@ public final class BeanAccessorMapImpl extends BeanAccessor {
 		}
 
 		public Class<?> getType() {
-			return pojoAccessor==null?Object.class:pojoAccessor.getPropertyType(name);
+			return pojoAccessor == null ? Object.class : pojoAccessor.getPropertyType(name);
 		}
 
 		public Type getGenericType() {
-			return pojoAccessor==null?Object.class:pojoAccessor.getGenericType(name);
+			return pojoAccessor == null ? Object.class : pojoAccessor.getGenericType(name);
 		}
 	}
 }
-

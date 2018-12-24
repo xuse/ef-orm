@@ -41,10 +41,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import javax.inject.Provider;
 import javax.persistence.PersistenceException;
-import javax.sql.DataSource;
 
-import org.easyframe.enterprise.spring.TransactionMode;
+import com.github.geequery.support.spring.CustomConnectionProvider;
 
 import jef.common.Entry;
 import jef.common.PairIS;
@@ -54,12 +54,9 @@ import jef.database.Condition.Operator;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
-import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
-import jef.database.innerpool.IConnection;
-import jef.database.innerpool.IUserManagedPool;
 import jef.database.jdbc.result.ResultSetImpl;
 import jef.database.jdbc.result.ResultSets;
 import jef.database.meta.AbstractMetadata;
@@ -90,7 +87,6 @@ import jef.database.support.MetadataEventListener;
 import jef.database.support.RDBMS;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.executor.ExecutorImpl;
-import jef.database.wrapper.executor.ExecutorJTAImpl;
 import jef.database.wrapper.executor.StatementExecutor;
 import jef.database.wrapper.populator.ResultPopulatorImpl;
 import jef.database.wrapper.populator.ResultSetExtractor;
@@ -99,6 +95,7 @@ import jef.database.wrapper.variable.BindVariableContext;
 import jef.http.client.support.CommentEntry;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
@@ -146,8 +143,6 @@ public class DbMetaData {
 
 	public final Set<String> checkedFunctions = new HashSet<String>();
 
-	private String dbkey;
-
 	private ConnectInfo info;
 	/**
 	 * 所属shema
@@ -178,24 +173,21 @@ public class DbMetaData {
 	/**
 	 * 数据源
 	 */
-	private DataSource ds;
+	private Provider<Connection> ds;
 	/**
 	 * 时间偏移量
 	 */
 	private long dbTimeDelta;
 
-	private IUserManagedPool parent;
 
-	protected Connection getConnection(boolean b) throws SQLException {
+	protected Connection getConnection(boolean remarkFeature) throws SQLException {
 		Connection conn;
-		if (b && (ds instanceof SimpleDataSource) && hasRemarkFeature()) {
+		if(remarkFeature && ds instanceof CustomConnectionProvider) {
 			Properties props = new Properties();
 			props.put("remarksReporting", "true");
-			conn = ((SimpleDataSource) ds).getConnectionFromDriver(props);
-		} else {
-			IConnection ic = parent.poll();
-			ic.setKey(dbkey);
-			conn = ic;
+			conn=((CustomConnectionProvider)ds).getConnectionFromDriver(props);
+		}else {
+			conn=ds.get();
 		}
 		return conn;
 	}
@@ -210,16 +202,12 @@ public class DbMetaData {
 	 * @param dbkey
 	 *            当前元数据所属的数据源名称
 	 */
-	public DbMetaData(DataSource ds, IUserManagedPool parent, String dbkey) {
+	public DbMetaData(Provider<Connection> ds) {
 		this.ds = ds;
-		this.parent = parent;
-		this.dbkey = dbkey;
-
 		this.subtableInterval = JefConfiguration.getInt(DbCfg.DB_PARTITION_REFRESH, 3600) * 1000;
 		this.subtableCacheExpireTime = System.currentTimeMillis() + subtableInterval;
-		this.parent = parent;
-		LogUtil.debug("init database metadata of " + ds);
-		info = DbUtils.tryAnalyzeInfo(ds, false);
+		LogUtil.debug("Init database metadata of " + ds);
+		info = ConnectInfo.tryAnalyzeInfo(ds, false);
 		Connection con = null;
 		try {
 			con = getConnection(false);
@@ -228,7 +216,7 @@ public class DbMetaData {
 		}
 		try {
 			if (info == null) {
-				info = DbUtils.tryAnalyzeInfo(con);
+				info = ConnectInfo.tryAnalyzeInfo(con);
 			}
 			DatabaseDialect profile = info.profile;
 			Assert.notNull(profile);
@@ -242,14 +230,14 @@ public class DbMetaData {
 			calcTimeDelta(con, profile);
 			if (Math.abs(dbTimeDelta) > 30000) {
 				// 数据库时间和当前系统时间差距在30秒以上时，警告
-				LogUtil.warn("The time of thie machine is [{}], and database is [{}]. Please adjust date time via any NTP server.", new Date(), getCurrentTime());
+				LogUtil.warn("The time of this server is [{}], but database is [{}]. Please adjust date time via any NTP server.", new Date(), getCurrentTime());
 			} else {
 				LogUtil.debug("The time between database and this machine is {}ms.", this.dbTimeDelta);
 			}
 		} catch (SQLException e) {
 			throw new PersistenceException(e);
 		} finally {
-			LogUtil.debug("finish init database metadata of " + ds);
+			LogUtil.debug("Finish init database metadata of " + ds);
 			releaseConnection(con);
 		}
 	}
@@ -398,7 +386,6 @@ public class DbMetaData {
 				schema = matchName.substring(0, n);
 				matchName = matchName.substring(n + 1);
 			}
-
 		}
 		if (oper != null && oper != Operator.EQUALS) {
 			if (StringUtils.isEmpty(matchName)) {
@@ -637,27 +624,34 @@ public class DbMetaData {
 	public Column getColumn(String tableName, String column) throws SQLException {
 		tableName = info.profile.getObjectNameToUse(tableName);
 		column = info.profile.getObjectNameToUse(column);
-		Connection conn = getConnection(false);
-		Collection<Index> indexes = getIndexes(tableName);
-		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		String schema = this.schema;
 		int n = tableName.indexOf('.');
 		if (n > 0) {// 尝试从表名中计算schema
 			schema = tableName.substring(0, n);
 			tableName = tableName.substring(n + 1);
 		}
+		Connection conn = getConnection(false);
+		Collection<Index> indexes = getIndexes0(schema,tableName,conn);
+		try {
+			return getColumns0(schema, tableName, column, conn, indexes);
+		} finally {
+			releaseConnection(conn);
+		}
+	}
+
+	private Column getColumns0(String schema, String tableName,String column, Connection conn,Collection<Index> indexes) throws SQLException {
+		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = null;
 		try {
-			rs = databaseMetaData.getColumns(null, schema, tableName, column);
+			rs = databaseMetaData.getColumns(info.profile.getCatlog(schema), info.profile.getSchema(schema), tableName, column);
 			Column result = null;
 			if (rs.next()) {
 				result = new Column();
 				populateColumn(result, rs, tableName, indexes);
 			}
 			return result;
-		} finally {
+		}finally {
 			DbUtils.close(rs);
-			releaseConnection(conn);
 		}
 	}
 
@@ -685,13 +679,13 @@ public class DbMetaData {
 		List<Column> list = new ArrayList<Column>();
 		Collection<Index> indexes = null;
 		try {
-			rs = databaseMetaData.getColumns(null, schema, tableName, "%");
+			rs = databaseMetaData.getColumns(info.profile.getCatlog(schema), info.profile.getSchema(schema), tableName, "%");
+			if (indexes == null) {
+				// 非常渣的Oracle驱动，如果表还不存在时，使用getIndexInfo()会报表不存在的错误（驱动尝试去分析表，不知道为啥要这么做）。
+				// 因此不确定表是否存在时，不去查询索引信息。
+				indexes = getIndexes(tableName);
+			}
 			while (rs.next()) {
-				if (indexes == null) {
-					// 非常渣的Oracle驱动，如果表还不存在时，使用getIndexInfo()会报表不存在的错误（驱动尝试去分析表，不知道为啥要这么做）。
-					// 因此不确定表是否存在时，不去查询索引信息。
-					indexes = getIndexes(tableName);
-				}
 				Column column = new Column();
 				populateColumn(column, rs, tableName, indexes);
 				list.add(column);
@@ -895,8 +889,6 @@ public class DbMetaData {
 			LogUtil.warn("Current JDBC version doesn't suppoer fetch index info.");
 			return Collections.emptyList();
 		}
-
-		tableName = info.profile.getObjectNameToUse(tableName);
 		String schema = this.schema;
 		int n = tableName.indexOf('.');
 		if (n > -1) {
@@ -904,10 +896,17 @@ public class DbMetaData {
 			tableName = tableName.substring(n + 1);
 		}
 		Connection conn = getConnection(false);
-		ResultSet rs = null;
 		try {
-			DatabaseMetaData databaseMetaData = conn.getMetaData();
-			rs = databaseMetaData.getIndexInfo(null, schema, tableName, false, false);
+			return getIndexes0(schema, tableName,conn);
+		} finally {
+			releaseConnection(conn);
+		}
+	}
+
+	private Collection<Index> getIndexes0(String schema, String tableName, Connection conn) throws SQLException {
+		tableName = info.profile.getObjectNameToUse(tableName);
+		DatabaseMetaData databaseMetaData = conn.getMetaData();
+		try (ResultSet rs = databaseMetaData.getIndexInfo(info.profile.getCatlog(schema), info.profile.getSchema(schema), tableName, false, false)){
 			Map<String, Index> map = new HashMap<String, Index>();
 			while (rs.next()) {
 				String indexName = rs.getString("INDEX_NAME");
@@ -929,10 +928,7 @@ public class DbMetaData {
 				int order = rs.getInt("ORDINAL_POSITION");
 				index.addColumn(cName, asc == null ? true : asc.startsWith("A"), order);
 			}
-			return map.values();
-		} finally {
-			DbUtils.close(rs);
-			releaseConnection(conn);
+			return map.values();	
 		}
 	}
 
@@ -1075,15 +1071,21 @@ public class DbMetaData {
 	 * @return Map<String,String> key=列名 value=主键名
 	 */
 	public Optional<PrimaryKey> getPrimaryKey(String tableName) throws SQLException {
-		tableName = MetaHolder.toSchemaAdjustedName(tableName);
+		tableName = DbUtils.toSchemaAdjustedName(tableName);
 		tableName = info.profile.getObjectNameToUse(tableName);
+		String schema=this.schema;
+		int n = tableName.indexOf('.');
+		if (n > -1) {
+			schema = tableName.substring(0, n);
+			tableName = tableName.substring(n + 1);
+		}
 		Connection conn = getConnection(false);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = null;
 		PrimaryKey pk = null;
 		List<PairIS> pkColumns = new ArrayList<PairIS>();
 		try {
-			rs = databaseMetaData.getPrimaryKeys(null, schema, tableName);
+			rs = databaseMetaData.getPrimaryKeys(info.profile.getCatlog(schema), info.profile.getSchema(schema), tableName);
 			while (rs.next()) {
 				String pkName = rs.getString("PK_NAME");
 				String col = rs.getString("COLUMN_NAME");
@@ -1118,6 +1120,12 @@ public class DbMetaData {
 	 * @throws SQLException
 	 */
 	public List<ForeignKeyItem> getForeignKey(String tableName) throws SQLException {
+		String schema=this.schema;
+		int n = tableName.indexOf('.');
+		if (n > -1) {
+			schema = tableName.substring(0, n);
+			tableName = tableName.substring(n + 1);
+		}
 		return getForeignKey(schema, tableName);
 	}
 
@@ -1135,7 +1143,7 @@ public class DbMetaData {
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = null;
 		try {
-			rs = databaseMetaData.getImportedKeys(null, schema, tableName);
+			rs = databaseMetaData.getImportedKeys(info.profile.getCatlog(schema), info.profile.getSchema(schema), tableName);
 			List<ForeignKeyItem> fks = ResultPopulatorImpl.instance.toPlainJavaObject(new ResultSetImpl(rs, this.getProfile()), FK_TRANSFORMER);
 			return fks;
 		} finally {
@@ -1186,9 +1194,9 @@ public class DbMetaData {
 		AbstractMetadata ref = DbUtils.getTableMeta(refField);
 
 		String fromTable = from.getTableName(false);
-		String fromColumn = from.getColumnName(fromField, getProfile(), true);
+		String fromColumn = from.getColumnDef(fromField).getColumnName(getProfile(), true);
 		String refTable = ref.getTableName(false);
-		String refColumn = ref.getColumnName(refField, getProfile(), true);
+		String refColumn = ref.getColumnDef(refField).getColumnName(getProfile(), true);
 		ForeignKeyItem key = new ForeignKeyItem(fromTable, fromColumn, refTable, refColumn);
 		key.setFromSchema(from.getSchema());
 		key.setReferenceSchema(ref.getSchema());
@@ -1233,7 +1241,7 @@ public class DbMetaData {
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = null;
 		try {
-			rs = databaseMetaData.getExportedKeys(null, schema, tableName);
+			rs = databaseMetaData.getExportedKeys(info.profile.getCatlog(schema), info.profile.getSchema(schema), tableName);
 			List<ForeignKeyItem> fks = ResultPopulatorImpl.instance.toPlainJavaObject(new ResultSetImpl(rs, getProfile()), FK_TRANSFORMER);
 			return fks;
 		} catch (RuntimeException e) {
@@ -1648,14 +1656,18 @@ public class DbMetaData {
 
 		// 比较差异
 		for (Column c : columns) {
-			Field field = meta.getFieldByLowerColumn(c.getColumnName().toLowerCase());
+			ColumnMapping field = meta.getFieldByLowerColumn(c.getColumnName().toLowerCase());
 			if (field == null) {
 				if (supportsChangeDelete) {
 					delete.add(c.getColumnName());
 				}
 				continue;
 			}
-			compareColumns(defined.remove(field), supportsChangeDelete, changed, c);
+			ColumnMapping definedColumn=defined.remove(field.field());
+			if(definedColumn==null) {
+				throw Exceptions.illegalArgument("Column was not found... {}", field.field());
+			}
+			compareColumns(definedColumn, supportsChangeDelete, changed, c);
 		}
 		Map<String, ColumnType> insert = new HashMap<String, ColumnType>();
 		for (Map.Entry<Field, ColumnMapping> e : defined.entrySet()) {
@@ -1889,7 +1901,7 @@ public class DbMetaData {
 	 * @return true建表成功，false表已存在
 	 * @throws SQLException
 	 */
-	public <T extends IQueryableEntity> boolean createTable(Class<T> clz) throws SQLException {
+	public <T> boolean createTable(Class<T> clz) throws SQLException {
 		ITableMetadata meta = MetaHolder.getMeta(clz);
 		return createTable(meta, meta.getTableName(true));
 	}
@@ -1950,17 +1962,8 @@ public class DbMetaData {
 		return created;
 	}
 
-	/*
-	 * 创建跨线程执行器。注意一定要在finally中关闭 DDLExecutor executor=createExecutor(); try{
-	 * createSequence0(schema,sequenceName,start,max,executor); }finally{
-	 * executor.close(); }
-	 */
 	private StatementExecutor createExecutor() {
-		if (parent.getTransactionMode() == TransactionMode.JTA) {
-			return new ExecutorJTAImpl(parent, dbkey, getTransactionId(), getProfile());
-		} else {
-			return new ExecutorImpl(parent, dbkey, getTransactionId(), getProfile());
-		}
+		return new ExecutorImpl(ds, getTransactionId(), getProfile());
 	}
 
 	/**
@@ -2165,7 +2168,7 @@ public class DbMetaData {
 	 * @throws SQLException
 	 */
 	public void dropConstraint(String tablename, String constraintName) throws SQLException {
-		tablename = MetaHolder.toSchemaAdjustedName(tablename);
+		tablename = DbUtils.toSchemaAdjustedName(tablename);
 		StatementExecutor exe = createExecutor();
 		try {
 			dropConstraint0(tablename, constraintName, exe);
@@ -2182,7 +2185,7 @@ public class DbMetaData {
 	 * @throws SQLException
 	 */
 	public void dropAllForeignKey(String tablename) throws SQLException {
-		tablename = MetaHolder.toSchemaAdjustedName(tablename);
+		tablename = DbUtils.toSchemaAdjustedName(tablename);
 		StatementExecutor exe = createExecutor();
 		try {
 			dropAllForeignKey0(tablename, null, exe);
@@ -2319,15 +2322,6 @@ public class DbMetaData {
 	public boolean dropTable(Class<?> table) throws SQLException {
 		ITableMetadata meta = MetaHolder.getMeta(table);
 		return dropTable(meta.getTableName(true));
-	}
-
-	/**
-	 * 得到当前元数据所属的数据源名称 get the datasource name of current metadata connection.
-	 * 
-	 * @return name of data source
-	 */
-	public String getDbkey() {
-		return dbkey;
 	}
 
 	/**
@@ -2664,28 +2658,7 @@ public class DbMetaData {
 	}
 
 	protected boolean hasRemarkFeature() {
-		if (JefConfiguration.getBoolean(DbCfg.DB_NO_REMARK_CONNECTION, false)) {
-			return false;
-		}
-		DatabaseDialect profile;
-		if (this.info == null) {
-			ConnectInfo info = DbUtils.tryAnalyzeInfo(ds, false);
-			if (info == null) {
-				Connection conn = null;
-				try {
-					conn = ds.getConnection();
-					info = DbUtils.tryAnalyzeInfo(conn);
-				} catch (SQLException e) {
-					return false;
-				} finally {
-					DbUtils.closeConnection(conn);
-				}
-			}
-			profile = info.getProfile();
-		} else {
-			profile = info.getProfile();
-		}
-		return profile.has(Feature.REMARK_META_FETCH);
+		return info.profile.has(Feature.REMARK_META_FETCH) && !JefConfiguration.getBoolean(DbCfg.DB_NO_REMARK_CONNECTION, false); 
 	}
 
 	public boolean supportsSequence() {

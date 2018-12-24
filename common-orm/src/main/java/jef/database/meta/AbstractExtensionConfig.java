@@ -5,7 +5,8 @@ public abstract class AbstractExtensionConfig implements ExtensionConfig {
 	protected String name;
 	protected AbstractMetadata parent;
 	private TupleMetadata extension;
-
+	private AbstractMetadata mergedMeta;
+	
 	protected AbstractExtensionConfig(String name, AbstractMetadata parent) {
 		this.name = name;
 		this.parent = parent;
@@ -31,7 +32,7 @@ public abstract class AbstractExtensionConfig implements ExtensionConfig {
 		return extension;
 	}
 
-	private AbstractMetadata mergedMeta;
+
 
 	@Override
 	public AbstractMetadata getMeta() {

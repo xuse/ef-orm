@@ -20,25 +20,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import javax.persistence.EntityManagerFactory;
-
-import jef.common.PairIO;
-import jef.database.Condition;
-import jef.database.Condition.Operator;
-import jef.database.DbUtils;
-import jef.database.Field;
-import jef.database.IConditionField.And;
-import jef.database.IConditionField.Or;
-import jef.database.QB;
-import jef.database.dialect.type.ColumnMapping;
-import jef.database.jpa.JefEntityManagerFactory;
-import jef.database.meta.ITableMetadata;
-import jef.database.meta.MetaHolder;
-import jef.database.query.ConditionQuery;
-import jef.database.query.Query;
-import jef.database.query.SqlExpression;
-import jef.tools.PageLimit;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
@@ -52,6 +33,23 @@ import com.github.geequery.springdata.repository.query.GqParameters.GqParameter;
 import com.github.geequery.springdata.repository.query.GqQueryExecution.CountExecution;
 import com.github.geequery.springdata.repository.query.GqQueryExecution.DeleteExecution;
 
+import jef.common.PairIO;
+import jef.database.Condition;
+import jef.database.Condition.Operator;
+import jef.database.DbUtils;
+import jef.database.Field;
+import jef.database.IConditionField.And;
+import jef.database.IConditionField.Or;
+import jef.database.QB;
+import jef.database.SessionFactory;
+import jef.database.dialect.type.ColumnMapping;
+import jef.database.meta.ITableMetadata;
+import jef.database.meta.MetaHolder;
+import jef.database.query.ConditionQuery;
+import jef.database.query.Query;
+import jef.database.query.SqlExpression;
+import jef.tools.PageLimit;
+
 /**
  * A {@link AbstractJpaQuery} implementation based on a {@link PartTree}.
  * 
@@ -63,7 +61,7 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 	private final ITableMetadata metadata;
 	private final GqPartTree tree;
 	private final GqParameters parameters;
-	private final EntityManagerFactory em;
+	private final SessionFactory em;
 
 	/**
 	 * Creates a new {@link PartTreeJpaQuery}.
@@ -75,7 +73,7 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 	 * @param emf
 	 *            must not be {@literal null}.
 	 */
-	public GqPartTreeQuery(GqQueryMethod method, EntityManagerFactory emf) {
+	public GqPartTreeQuery(GqQueryMethod method, SessionFactory emf) {
 		super(method, emf);
 		this.em = emf;
 		this.metadata = MetaHolder.getMeta(method.getEntityInformation()
@@ -86,7 +84,7 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 		// parameters.potentiallySortsDynamically();
 	}
 
-	public GqPartTreeQuery(GqQueryMethod method, JefEntityManagerFactory emf,FindBy findBy) {
+	public GqPartTreeQuery(GqQueryMethod method, SessionFactory emf,FindBy findBy) {
         super(method, emf);
         this.em = emf;
         this.metadata = MetaHolder.getMeta(method.getEntityInformation()

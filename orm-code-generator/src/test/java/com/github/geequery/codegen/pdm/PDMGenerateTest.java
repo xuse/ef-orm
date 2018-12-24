@@ -21,7 +21,7 @@ public class PDMGenerateTest {
 		g.setProvider(new PDMProvider(file));
 		g.setMaxTables(100);
 		g.setSrcFolder(new File("E:/Git/ef-orm/orm-code-generator/src/test/java"));
-		g.setBasePackage("com.hikvision.test");
+		g.setBasePackage("com.geequeery.test");
 		g.generateSchema();
 
 	}

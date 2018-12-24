@@ -20,6 +20,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import jef.common.log.LogUtil;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
@@ -41,9 +44,6 @@ import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
 
 /**
  * 描述一个条件对象，一个条件一般是形如 {@code name='John Smith'}这样的表达式。 一个典型的条件由
@@ -177,7 +177,7 @@ public class Condition implements Serializable {
 	}
 
 	// 产生非绑定变量下的where条件
-	public String toSqlClause(ITableMetadata meta, SqlContext context, SqlProcessor processor, IQueryableEntity instance, DatabaseDialect profile, boolean batch) {
+	public String toSqlClause(ITableMetadata meta, SqlContext context, SqlProcessor processor, Object instance, DatabaseDialect profile, boolean batch) {
 		if (field == null) {
 			throw new NullPointerException("Condition not complete!");
 		}
@@ -238,7 +238,7 @@ public class Condition implements Serializable {
 	/*
 	 * 产生用于批处理的Update语句的Where字句中的sql语句，形如 xx=? 等等 xx is null预处理若干复杂的Field类型
 	 */
-	public void toPrepareSqlClause(SqlBuilder builder, ITableMetadata meta, SqlContext context, SqlProcessor processor, IQueryableEntity instance, DatabaseDialect profile, boolean batch) {
+	public void toPrepareSqlClause(SqlBuilder builder, ITableMetadata meta, SqlContext context, SqlProcessor processor, Object instance, DatabaseDialect profile, boolean batch) {
 		// 特殊Field条件
 		if (field instanceof IConditionField) {
 			((IConditionField) field).toPrepareSql(builder, meta, processor, context, instance, profile, batch);
@@ -260,7 +260,7 @@ public class Condition implements Serializable {
 	 * 
 	 * @return
 	 */
-	private void toPrepareSqlClause(SqlBuilder builder, ITableMetadata meta, SqlContext context, SqlProcessor processor, IQueryableEntity instance, Field rawField, DatabaseDialect profile, boolean batch) {
+	private void toPrepareSqlClause(SqlBuilder builder, ITableMetadata meta, SqlContext context, SqlProcessor processor, Object instance, Field rawField, DatabaseDialect profile, boolean batch) {
 		// 当value为Field的时候……
 		if (value instanceof jef.database.Field && value.getClass().isEnum()) {// 当value为基本field时
 			value = new RefField((Field) value);
@@ -324,7 +324,7 @@ public class Condition implements Serializable {
 		}
 	}
 
-	private void processBetween(SqlBuilder builder, String columnName, Field rawField, DatabaseDialect profile, ITableMetadata meta, SqlContext context, SqlProcessor processor, IQueryableEntity instance, boolean batch) {
+	private void processBetween(SqlBuilder builder, String columnName, Field rawField, DatabaseDialect profile, ITableMetadata meta, SqlContext context, SqlProcessor processor, Object instance, boolean batch) {
 		String[] spOpers = getInBetweenOper(operator);
 		String oper = spOpers[0];
 		String div = spOpers[1];

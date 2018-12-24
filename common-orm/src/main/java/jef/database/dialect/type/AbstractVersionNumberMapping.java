@@ -3,14 +3,14 @@ package jef.database.dialect.type;
 import java.sql.SQLException;
 import java.util.List;
 
+import com.github.geequery.entity.Entities;
+
 import jef.accelerator.bean.BeanAccessor;
 import jef.database.Field;
-import jef.database.IQueryableEntity;
 import jef.database.annotation.DateGenerateType;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.ITableMetadata;
-import jef.database.query.BindVariableField;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.clause.UpdateClause;
 import jef.database.wrapper.processor.InsertStepAdapter;
@@ -42,8 +42,8 @@ public abstract class AbstractVersionNumberMapping extends AColumnMapping implem
 			Assert.notNull(dateType);
 			Assert.notNull(accessor);
 		}
-		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
-			for (IQueryableEntity q : data) {
+		public void callBefore(List<?> data) throws SQLException {
+			for (Object q : data) {
 				accessor.set(q, parent.transfer(dateType.generateLong()));
 			}
 		}
@@ -63,8 +63,8 @@ public abstract class AbstractVersionNumberMapping extends AColumnMapping implem
 			this.accessor = parent.accessor;
 			Assert.notNull(accessor);
 		}
-		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
-			for (IQueryableEntity q : data) {
+		public void callBefore(List<?> data) throws SQLException {
+			for (Object q : data) {
 				accessor.set(q, parent.transfer(1L));
 			}
 		}
@@ -93,8 +93,8 @@ public abstract class AbstractVersionNumberMapping extends AColumnMapping implem
 	}
 
 	@Override
-	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean dynamic) throws SQLException {
-		if (!obj.isUsed(field) && version) {
+	public void processPreparedInsert(Object obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean dynamic) throws SQLException {
+		if (!Entities.isUsed(obj, field) && version) {
 			result.getCallback().addProcessor(STEP);
 		}
 		super.processPreparedInsert(obj, cStr, vStr, result, dynamic);

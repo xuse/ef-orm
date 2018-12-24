@@ -19,6 +19,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -48,7 +49,6 @@ import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ParserFactory;
 import jef.database.exception.ViolatedConstraintNameExtracter;
-import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
@@ -705,7 +705,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		return AColumnMapping.wrapSqlStr(DateFormats.DATE_TIME_CS.get().format(value));
 	}
 
-	public long getColumnAutoIncreamentValue(AutoIncrementMapping mapping, JDBCTarget db) {
+	public long getColumnAutoIncreamentValue(AutoIncrementMapping mapping, Connection db) {
 		throw new UnsupportedOperationException(mapping.getMeta().getName() + "." + mapping.fieldName() + " is auto-increament, but the database '" + this.getName() + "' doesn't support fetching the next AutoIncreament value.");
 	}
 

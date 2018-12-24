@@ -16,7 +16,7 @@ import com.github.geequery.asm.Opcodes;
 import com.github.geequery.asm.Type;
 
 import jef.accelerator.asm.ASMUtils;
-import jef.tools.reflect.BeanUtils;
+import jef.tools.Primitives;
 import jef.tools.reflect.ConvertUtils;
 
 public abstract class ClassGenerator implements Opcodes {
@@ -51,7 +51,7 @@ public abstract class ClassGenerator implements Opcodes {
 				// 运行空构造方法
 				if (beanClass.getDeclaredConstructor() != null) {
 					mw.visitInsn(DUP);
-					mw.visitMethodInsn(INVOKESPECIAL, beanType, "<init>", "()V");
+					mw.visitMethodInsn(INVOKESPECIAL, beanType, "<init>", "()V", false);
 				}
 			} catch (SecurityException e) {
 				e.printStackTrace();
@@ -103,7 +103,7 @@ public abstract class ClassGenerator implements Opcodes {
 				mw.visitInsn(POP2);//S0
 				mw.visitJumpInsn(GOTO,end);
 				mw.visitLabel(notnull);
-				Class<?> wrpped=BeanUtils.toWrapperClass(fi.getRawType());
+				Class<?> wrpped=Primitives.toWrapperClass(fi.getRawType());
 				mw.visitTypeInsn(CHECKCAST, getType(wrpped));	//S2 value
 				ASMUtils.doUnwrap(mw, fi.getRawType(), wrpped);
 				this.generateInvokeMethod(mw, fi.getSetter());//S0
@@ -159,7 +159,7 @@ public abstract class ClassGenerator implements Opcodes {
 				mw.visitInsn(POP2);//S0
 				mw.visitJumpInsn(GOTO,end);
 				mw.visitLabel(notnull);
-				Class<?> wrpped=BeanUtils.toWrapperClass(fi.getRawType());
+				Class<?> wrpped=Primitives.toWrapperClass(fi.getRawType());
 				mw.visitTypeInsn(CHECKCAST, getType(wrpped));	//S2 value
 				ASMUtils.doUnwrap(mw, fi.getRawType(), wrpped);
 				this.generateInvokeMethod(mw, fi.getSetter());//S0

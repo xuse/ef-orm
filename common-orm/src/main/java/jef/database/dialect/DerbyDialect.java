@@ -271,7 +271,7 @@ public class DerbyDialect extends AbstractDialect {
 		if (reader.matchNext("//") == -1) {// 本地
 			String path = reader.readToken(';');
 			path.replace('\\', '/');
-			String dbname = StringUtils.substringAfterLast(path, "/");
+			String dbname = StringUtils.substringAfterLastIfExist(path, "/");
 			connectInfo.setDbname(dbname);
 		} else {// 网
 			reader.omitChars('/');

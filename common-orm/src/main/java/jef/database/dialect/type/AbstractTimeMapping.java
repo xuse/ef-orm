@@ -4,6 +4,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.List;
 
+import com.github.geequery.entity.Entities;
+
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.database.Field;
@@ -61,13 +63,13 @@ abstract class AbstractTimeMapping extends AColumnMapping implements VersionSupp
 			}
 		}
 		// 获得Accessor
-		BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(meta.getContainerType());
+		BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(meta.getThisType());
 		accessor = ba.getProperty(field.name());
 	}
 
 	final InsertStep STEP = new InsertStepAdapter() {
-		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
-			for (IQueryableEntity q : data) {
+		public void callBefore(List<?> data) throws SQLException {
+			for (Object q : data) {
 				accessor.set(q, getCurrentValue());
 			}
 		}
@@ -79,8 +81,8 @@ abstract class AbstractTimeMapping extends AColumnMapping implements VersionSupp
 	}
 
 	@Override
-	public void processPreparedInsert(IQueryableEntity obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean smart) throws SQLException {
-		if (!obj.isUsed(field) && generated != null) {
+	public void processPreparedInsert(Object obj, List<String> cStr, List<String> vStr, InsertSqlClause result, boolean smart) throws SQLException {
+		if (!Entities.isUsed(obj, field) && generated != null) {
 			if (isJavaSysdate()) {
 				result.getCallback().addProcessor(STEP);
 			} else {

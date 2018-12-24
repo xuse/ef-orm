@@ -19,10 +19,8 @@ import jef.database.DbMetaData;
 import jef.database.datasource.DataSourceInfo;
 import jef.database.dialect.handler.LimitHandler;
 import jef.database.dialect.type.AColumnMapping;
-import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ParserFactory;
 import jef.database.exception.ViolatedConstraintNameExtracter;
-import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
@@ -203,11 +201,6 @@ public abstract class AbstractDelegatingDialect implements DatabaseDialect {
 	@Override
 	public String getSqlTimestampExpression(Date value) {
 		return dialect.getSqlTimestampExpression(value);
-	}
-
-	@Override
-	public long getColumnAutoIncreamentValue(AutoIncrementMapping mapping, JDBCTarget db) {
-		return dialect.getColumnAutoIncreamentValue(mapping, db);
 	}
 
 	@Override

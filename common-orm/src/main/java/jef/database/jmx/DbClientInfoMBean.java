@@ -7,16 +7,6 @@ package jef.database.jmx;
  */
 public interface DbClientInfoMBean {
 	/**
-	 * 得到当前的内置连接池使用信息
-	 * @return
-	 */
-	String getInnerConnectionPoolInfo();
-	/**
-	 * 当前EMF名称
-	 * @return
-	 */
-	String getEmfName();
-	/**
 	 * 各个数据源的名称
 	 * @return
 	 */

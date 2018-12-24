@@ -8,6 +8,7 @@ import java.util.List;
 import jef.common.log.LogUtil;
 import jef.database.Session.PopulateStrategy;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.innerpool.WrapableConnection;
 import jef.database.jdbc.result.ResultSetImpl;
 import jef.database.jsqlparser.SelectToCountWrapper;
 import jef.database.jsqlparser.parser.ParseException;
@@ -93,14 +94,15 @@ final class PagingIteratorSqlImpl<T> extends PagingIterator<T> {
 		Statement st = null;
 		ResultSet rs = null;
 		List<T> list;
-		try {
-			st = db.createStatement(sql.getRsLaterProcessor(), false);
-			rs = st.executeQuery(sql.getSql());
-			list = db.populateResultSet(new ResultSetImpl(rs, db.getProfile()), null, transformer);
-		} finally {
-			DbUtils.close(rs);
-			DbUtils.close(st);
-			db.releaseConnection();
+		try (WrapableConnection conn=db.get()){
+			try {
+				st = db.createStatement(sql.getRsLaterProcessor(), false);
+				rs = st.executeQuery(sql.getSql());
+				list = db.populateResultSet(new ResultSetImpl(rs, db.getProfile()), null, transformer);
+			} finally {
+				DbUtils.close(rs);
+				DbUtils.close(st);
+			}	
 		}
 		if (debug)
 			LogUtil.show("Result Count:" + list.size());

@@ -5,6 +5,8 @@ import java.util.Map;
 
 import javax.persistence.PersistenceException;
 
+import com.github.geequery.entity.Entities;
+
 import jef.database.DataObject;
 import jef.database.DebugUtil;
 import jef.database.IQueryableEntity;
@@ -90,13 +92,13 @@ public final class ObjectPopulator implements InstancePopulator {
 		this.processor = processor;
 	}
 
-	public IQueryableEntity instance() {
-		IQueryableEntity entity = meta.newInstance();
-		entity.stopUpdate();
+	public Object instance() {
+		Object entity = meta.newInstance();
+		Entities.notTouch(entity);
 		return entity;
 	}
 
 	public Class<?> getObjectType() {
-		return meta.getContainerType();
+		return meta.getThisType();
 	}
 }

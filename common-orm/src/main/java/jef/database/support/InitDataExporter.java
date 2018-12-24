@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.persistence.Entity;
-import javax.persistence.EntityManagerFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,9 +29,9 @@ import jef.common.log.LogUtil;
 import jef.database.DbCfg;
 import jef.database.DbClient;
 import jef.database.QB;
+import jef.database.SessionFactory;
 import jef.database.annotation.EasyEntity;
 import jef.database.dialect.type.ColumnMapping;
-import jef.database.jpa.JefEntityManagerFactory;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.Query;
@@ -63,20 +62,14 @@ public class InitDataExporter {
 	private final List<URL> classRoot = new ArrayList<>();
 
 	/**
-	 * @param emf
-	 *            EntityManagerFactory 数据库客户端
+	 * @param emf EntityManagerFactory 数据库客户端
 	 */
-	public InitDataExporter(EntityManagerFactory emf) {
-		if (emf instanceof JefEntityManagerFactory) {
-			this.session = ((JefEntityManagerFactory) emf).getDefault();
-		} else {
-			throw new UnsupportedOperationException();
-		}
+	public InitDataExporter(SessionFactory emf) {
+		this.session =(DbClient) emf;
 	}
 
 	/**
-	 * @param session
-	 *            数据库客户端
+	 * @param session 数据库客户端
 	 */
 	public InitDataExporter(DbClient session) {
 		this.session = session;
@@ -84,10 +77,8 @@ public class InitDataExporter {
 
 	/**
 	 * 
-	 * @param session
-	 *            数据库客户端
-	 * @param target
-	 *            生成的资源文件路径
+	 * @param session 数据库客户端
+	 * @param target  生成的资源文件路径
 	 */
 	public InitDataExporter(DbClient session, File target) {
 		this.session = session;

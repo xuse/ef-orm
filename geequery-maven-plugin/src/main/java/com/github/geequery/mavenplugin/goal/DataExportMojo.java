@@ -113,7 +113,7 @@ public class DataExportMojo extends AbstractMojo {
 		}
 		ORMConfig.getInstance().setCheckEnhancement(false);
 		DbClient db;
-		db = new DbClientBuilder(this.jdbcUrl, this.jdbcUser, this.jdbcPassword, 2).setEnhanceScanPackages(false).build();
+		db = new DbClientBuilder(this.jdbcUrl, this.jdbcUser, this.jdbcPassword).setEnhanceScanPackages(false).build();
 		try {
 			InitDataExporter ex = new InitDataExporter(db, new File(this.resourceFolder));
 			ex.addClassRoot(classesDirectory.toURI().toURL());

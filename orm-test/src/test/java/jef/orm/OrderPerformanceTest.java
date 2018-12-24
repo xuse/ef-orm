@@ -7,12 +7,15 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 import jef.database.DbClient;
 import jef.database.DbClientBuilder;
-import jef.database.DebugUtil;
 import jef.database.ORMConfig;
 import jef.database.OperateTarget;
 import jef.database.Transaction;
+import jef.database.innerpool.WrapableConnection;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.jdbc.result.ResultSetContainer;
 import jef.database.jdbc.result.ResultSetHolder;
@@ -20,9 +23,6 @@ import jef.database.jdbc.rowset.CachedRowSetImpl;
 import jef.database.wrapper.clause.InMemoryOrderBy;
 import jef.orm.onetable.model.Foo;
 import jef.tools.string.RandomData;
-
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 public class OrderPerformanceTest {
 
@@ -55,7 +55,7 @@ public class OrderPerformanceTest {
 		CachedRowSetImpl c2 = new CachedRowSetImpl();
 		CachedRowSetImpl c3 = new CachedRowSetImpl();
 
-		Connection conn = DebugUtil.getConnection(db.getSqlTemplate(null));
+		Connection conn = ((OperateTarget)db.getSqlTemplate(null)).get()	;
 		Statement st = conn.createStatement();
 		ResultSet rs;
 		rs = st.executeQuery("select * from foo where id>0 and id<= 25000");
@@ -91,9 +91,10 @@ public class OrderPerformanceTest {
 	public void testOrder1(DbClient db, int count) throws SQLException {
 		OperateTarget tx = (OperateTarget) db.getSqlTemplate(null);
 		ResultSetContainer mrs = new ResultSetContainer(false);
-		mrs.add(new ResultSetHolder(tx, null, rs1));
-		mrs.add(new ResultSetHolder(tx, null, rs2));
-		mrs.add(new ResultSetHolder(tx, null, rs3));
+		WrapableConnection conn=tx.get();
+		mrs.add(new ResultSetHolder(conn, null, rs1));
+		mrs.add(new ResultSetHolder(conn, null, rs2));
+		mrs.add(new ResultSetHolder(conn, null, rs3));
 		mrs.setInMemoryOrder(new InMemoryOrderBy(new int[] { 1 }, new boolean[] { true }));
 		testRsPerformces(mrs, "simple", count);// 开始测试
 	}
@@ -101,9 +102,10 @@ public class OrderPerformanceTest {
 	private void testOrder1Count(DbClient db, int count) throws SQLException {
 		OperateTarget tx = (OperateTarget) db.getSqlTemplate(null);
 		ResultSetContainer mrs = new ResultSetContainer(false);
-		mrs.add(new ResultSetHolder(tx, null, rs1));
-		mrs.add(new ResultSetHolder(tx, null, rs2));
-		mrs.add(new ResultSetHolder(tx, null, rs3));
+		WrapableConnection conn=tx.get();
+		mrs.add(new ResultSetHolder(conn, null, rs1));
+		mrs.add(new ResultSetHolder(conn, null, rs2));
+		mrs.add(new ResultSetHolder(conn, null, rs3));
 		mrs.setInMemoryOrder(new InMemoryOrderBy(new int[] { 1 }, new boolean[] { true }));
 		testRsPerformcesCount(mrs, "simple", count);// 开始测试
 	}

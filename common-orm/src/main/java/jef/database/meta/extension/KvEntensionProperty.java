@@ -19,11 +19,16 @@ import jef.database.meta.ITableMetadata;
 import jef.database.meta.TupleMetadata;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.ClassEx;
+import jef.tools.reflect.ConvertUtils;
 import jef.tools.reflect.FieldAccessor;
 import jef.tools.reflect.GenericUtils;
 import jef.tools.reflect.Property;
-import jef.tools.reflect.ConvertUtils;
 
+/**
+ * 在扩展对象表的使用中快速访问扩展对象的属性字段
+ * @author jiyi
+ *
+ */
 public class KvEntensionProperty implements Property {
 	private String kColumn;
 	private String vColumn;
@@ -55,19 +60,9 @@ public class KvEntensionProperty implements Property {
 	}
 
 	@Override
-	public boolean isReadable() {
-		return true;
-	}
-
-	@Override
-	public boolean isWriteable() {
-		return true;
-	}
-
-	@Override
 	public Object get(Object obj) {
 		@SuppressWarnings("unchecked")
-		Map<String, Object> attributes = (Map<String, Object>) accessor.getObject(obj);
+		Map<String, Object> attributes = (Map<String, Object>) accessor.get(obj);
 		if (attributes == null) {
 			return Collections.EMPTY_LIST;
 		}
@@ -105,7 +100,7 @@ public class KvEntensionProperty implements Property {
 	}
 
 	private Object fixValue(String key,String text) {
-		ColumnMapping mapping=extensionMeta.getColumnDef(extensionMeta.getField(key));
+		ColumnMapping mapping=extensionMeta.getColumnDef(key);
 		if(mapping==null)return text;
 		return ConvertUtils.toProperType(text, new ClassEx(mapping.getFieldType()), null);
 	}

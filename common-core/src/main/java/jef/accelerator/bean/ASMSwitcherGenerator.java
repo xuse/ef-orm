@@ -19,7 +19,7 @@ import com.github.geequery.asm.Label;
 import com.github.geequery.asm.MethodVisitor;
 import com.github.geequery.asm.Type;
 
-import jef.tools.reflect.BeanUtils;
+import jef.tools.Primitives;
 
 final class ASMSwitcherGenerator extends ClassGenerator {
 
@@ -130,7 +130,7 @@ final class ASMSwitcherGenerator extends ClassGenerator {
 				if (type.isPrimitive()) {
 					mw.visitInsn(DUP);
 					mw.visitJumpInsn(IFNULL, ifnull);
-					Class<?> wrapped = BeanUtils.toWrapperClass(type);
+					Class<?> wrapped = Primitives.toWrapperClass(type);
 					mw.visitTypeInsn(CHECKCAST, getType(wrapped));
 					doUnwrap(mw, type, wrapped);
 				} else {

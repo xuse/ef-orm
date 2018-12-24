@@ -8,6 +8,7 @@ import java.util.List;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
+import jef.database.innerpool.WrapableConnection;
 import jef.database.meta.Feature;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
@@ -16,7 +17,6 @@ import jef.database.support.SqlLog;
 import jef.database.wrapper.clause.InsertSqlClause;
 import jef.database.wrapper.processor.InsertStep.OracleRowidKeyCallback;
 import jef.database.wrapper.variable.BindVariableContext;
-import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
 
 abstract class InsertProcessor {
@@ -36,9 +36,9 @@ abstract class InsertProcessor {
 	 * @return
 	 * @throws SQLException
 	 */
-	abstract InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName, boolean dynamic, PartitionResult pr) throws SQLException;
+	abstract InsertSqlClause toInsertSql(Object obj, String tableName, boolean dynamic, PartitionResult pr) throws SQLException;
 
-	abstract InsertSqlClause toInsertSqlBatch(IQueryableEntity obj, String tableName, boolean dynamic, boolean extreme, PartitionResult pr) throws SQLException;
+	abstract InsertSqlClause toInsertSqlBatch(Object obj, String tableName, boolean dynamic, boolean extreme, PartitionResult pr) throws SQLException;
 
 	/**
 	 * process insert operate
@@ -50,7 +50,7 @@ abstract class InsertProcessor {
 	 * @param parse
 	 * @throws SQLException
 	 */
-	abstract void processInsert(OperateTarget db, IQueryableEntity obj, InsertSqlClause sqls, long start, long parse) throws SQLException;
+	abstract void processInsert(OperateTarget db, Object obj, InsertSqlClause sqls, long start, long parse) throws SQLException;
 
 	/**
 	 * 构造
@@ -68,12 +68,12 @@ abstract class InsertProcessor {
 		}
 
 		@Override
-		InsertSqlClause toInsertSql(IQueryableEntity obj, String tableName, boolean dynamic, PartitionResult pr) throws SQLException {
+		InsertSqlClause toInsertSql(Object obj, String tableName, boolean dynamic, PartitionResult pr) throws SQLException {
 			return toInsertSqlBatch(obj, tableName, dynamic, false, pr);
 		}
 
 		@Override
-		InsertSqlClause toInsertSqlBatch(IQueryableEntity obj, String tableName, boolean dynamic, boolean extreme, PartitionResult pr) throws SQLException {
+		InsertSqlClause toInsertSqlBatch(Object obj, String tableName, boolean dynamic, boolean extreme, PartitionResult pr) throws SQLException {
 			DatabaseDialect profile = pr == null ? db.getProfile(null) : db.getProfile(pr.getDatabase());
 			List<String> cStr = new ArrayList<String>();// 字段列表
 			List<String> vStr = new ArrayList<String>();// 值列表
@@ -96,35 +96,31 @@ abstract class InsertProcessor {
 		}
 
 		@Override
-		void processInsert(OperateTarget db, IQueryableEntity obj, InsertSqlClause sqls, long start, long parse) throws SQLException {
+		void processInsert(OperateTarget provider, Object obj, InsertSqlClause sqls, long start, long parse) throws SQLException {
 			SqlLog sb = ORMConfig.getInstance().newLogger();
 			String sql = sqls.getSql();
 			sb.ensureCapacity(sql.length() + 128);
-			sb.append(sql).append(db);
+			sb.append(sql).append(provider.toString());
+			DatabaseDialect profile = provider.getProfile();
 			PreparedStatement psmt = null;
-			DatabaseDialect profile = db.getProfile();
-			try {
+			try (WrapableConnection db=provider.get()){
 				psmt = sqls.getCallback().doPrepareStatement(db, sql);
 				BindVariableContext context = new BindVariableContext(psmt, profile, sb);
 				context.setInsertVariables(obj, sqls.getFields());
 				psmt.execute();
-				sb.append("\nInsert:1\tTime cost([ParseSQL]:", parse - start).append("ms, [DbAccess]:", System.currentTimeMillis() - parse).append("ms)").append(db);
+				sb.append("\nInsert:1\tTime cost([ParseSQL]:", parse - start).append("ms, [DbAccess]:", System.currentTimeMillis() - parse).append("ms)").append(provider.toString());
 				sqls.getCallback().callAfter(obj);
-			} catch (SQLIntegrityConstraintViolationException e) {
-				throw e;
+//			} catch (SQLIntegrityConstraintViolationException e) {
+//				throw e;
 			} catch (SQLException e) {
 				String s = profile.getViolatedConstraintNameExtracter().extractConstraintName(e);
 				if (s != null) {
 					throw new SQLIntegrityConstraintViolationException(s);
-				} else {
-					DbUtils.processError(e, ArrayUtils.toString(sqls.getTable(), true), db);
-					throw e;
 				}
+				throw e;
 			} finally {
 				sb.output();
-				if (psmt != null)
-					psmt.close();
-				db.releaseConnection();
+				DbUtils.close(psmt);
 			}
 		}
 	}

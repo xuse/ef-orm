@@ -32,10 +32,8 @@ import jef.database.DbMetaData;
 import jef.database.datasource.DataSourceInfo;
 import jef.database.dialect.handler.LimitHandler;
 import jef.database.dialect.type.AColumnMapping;
-import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ParserFactory;
 import jef.database.exception.ViolatedConstraintNameExtracter;
-import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.Interval;
@@ -375,25 +373,6 @@ public interface DatabaseDialect {
      * @return 日期时间在数据库中的字符串表达
 	 */
 	String getSqlTimestampExpression(Date value);
-
-	/**
-	 * 当使用了列自增的方式时，尝试在不插入列的情况下消耗一个自增值。
-	 * 这个功能默认是不用支持的，目前仅针对一种很小众的特性而设计。
-	 * 当使用JDBC 的可写入ResultSet时，用户可以用 <code>
-     *  rs.moveToInsertRow();
-     *  rs.insertRow();
-     *   </code>
-     * 方式插入记录（上帝啊，为什么要设计这种麻烦的接口，而且我真是脑抽了才想去支持这个特性。）
-     * 现在的问题是，对于好几个数据库，此时不会去调取Sequence来获取下一个自增值。
-     * 这样一来，要么无法正常插入；要么人工赋值后、继续操作就会出现主键冲突。
-     * 所以当时针对几个麻烦的数据库，写了这个方法来计算自增值并偷偷赋值。
-     * 
-     * TODO 其实最应该做的是将入口封死，完全就不应该支持在结果集上插入记录的方法。2.0版将这个特性砍掉就好，应该也不会有人想用这个功能吧。
-	 * @param mapping 自增字段配置
-	 * @param db 数据库操作句柄 
-	 * @return 下一个自增值
-	 */
-	long getColumnAutoIncreamentValue(AutoIncrementMapping mapping, JDBCTarget db);
 
 	/**
 	 * 允许数据库方言对Statement再进行一次包装

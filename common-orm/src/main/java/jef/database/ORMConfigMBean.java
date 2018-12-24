@@ -309,17 +309,6 @@ public interface ORMConfigMBean {
 	 * @param value {@link DbCfg#DB_FORMAT_SQL}
 	 */
 	void setFormatSQL(boolean value);
-	/**
-	 * 获得配置参数 
-	 * @return {@link DbCfg#DB_HEARTBEAT}
-	 */
-	long getHeartBeatSleep();
-
-	/**
-	 * 修改配置
-	 * @param heartBeatSleep {@link DbCfg#DB_HEARTBEAT}
-	 */
-	void setHeartBeatSleep(long heartBeatSleep);
 
 	/**
 	 * 得到当前所在主机的IP地址

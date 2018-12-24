@@ -6,6 +6,7 @@ import jef.database.Condition;
 import jef.database.Condition.Operator;
 import jef.database.Field;
 import jef.database.IConditionField.Not;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.QB;
 import jef.database.meta.ITableMetadata;
 
@@ -343,8 +344,8 @@ public class Terms {
 	
 	private Field getField(String key) {
 		ITableMetadata meta=query.getMeta();
-		Field field= meta.getField(key);
-		return field;
+		ColumnMapping field= meta.getColumnDef(key);
+		return field.field();
 	}
 	
 	boolean bracket;

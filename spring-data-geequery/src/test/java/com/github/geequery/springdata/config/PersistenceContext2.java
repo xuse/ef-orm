@@ -1,20 +1,20 @@
 package com.github.geequery.springdata.config;
 
-import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
-import jef.database.datasource.SimpleDataSource;
-
-import org.easyframe.enterprise.spring.JefJpaDialect;
 import org.easyframe.enterprise.spring.SessionFactoryBean;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import com.github.geequery.springdata.repository.config.EnableGqRepositories;
+
+import jef.database.SessionFactory;
+import jef.database.datasource.SimpleDataSource;
 
 @Configuration
 @EnableTransactionManagement
@@ -27,7 +27,7 @@ public class PersistenceContext2 {
     }
 
     @Bean(name = "emf2")
-   public  EntityManagerFactory entityManagerFactory(@Qualifier("ds2")DataSource dataSource, Environment env) {
+   public  SessionFactory entityManagerFactory(@Qualifier("ds2")DataSource dataSource, Environment env) {
         SessionFactoryBean bean = new org.easyframe.enterprise.spring.SessionFactoryBean();
         bean.setDataSource(dataSource);
         bean.setPackagesToScan(new String[] { "com.github.geequery.springdata.test.entity" });
@@ -36,10 +36,7 @@ public class PersistenceContext2 {
     }
 
     @Bean(name = "tx2")
-    public  JpaTransactionManager transactionManager(@Qualifier("emf2")EntityManagerFactory entityManagerFactory) {
-        JpaTransactionManager transactionManager = new JpaTransactionManager();
-        transactionManager.setEntityManagerFactory(entityManagerFactory);
-        transactionManager.setJpaDialect(new JefJpaDialect());
-        return transactionManager;
+    public  PlatformTransactionManager transactionManager(@Qualifier("ds2")DataSource ds) {
+        return new DataSourceTransactionManager(ds);
     }
 }

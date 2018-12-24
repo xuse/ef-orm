@@ -19,6 +19,14 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.MonthDay;
+import java.time.YearMonth;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -38,6 +46,7 @@ import jef.tools.reflect.UnsafeUtils;
 
 /**
  * 生成随机数据，以及由随机数据填充的复杂bean
+ * 
  * @author jiyi
  *
  */
@@ -51,22 +60,23 @@ public class RandomData {
 	private static Class<? extends Annotation> clz_column;
 	private static Method length;
 
-	static{
-		try{
-			clz_generatred=Class.forName("javax.persistence.GeneratedValue").asSubclass(Annotation.class);
-		}catch(Exception e){
+	static {
+		try {
+			clz_generatred = Class.forName("javax.persistence.GeneratedValue").asSubclass(Annotation.class);
+		} catch (Exception e) {
 		}
-		try{
-			clz_lob=Class.forName("javax.persistence.Lob").asSubclass(Annotation.class);
-		}catch(Exception e){
+		try {
+			clz_lob = Class.forName("javax.persistence.Lob").asSubclass(Annotation.class);
+		} catch (Exception e) {
 		}
-		try{
-			clz_column=Class.forName("javax.persistence.Column").asSubclass(Annotation.class);
-			length=clz_column.getMethod("length");
-		}catch(Exception e){
+		try {
+			clz_column = Class.forName("javax.persistence.Column").asSubclass(Annotation.class);
+			length = clz_column.getMethod("length");
+		} catch (Exception e) {
 		}
-		
+
 	}
+
 	private RandomData() {
 	}
 
@@ -75,7 +85,7 @@ public class RandomData {
 	public static <T> T newInstance(Class<T> clz) {
 		return processBeanType(clz, 0); // 嵌套深度
 	}
-	
+
 	public static void fill(Object bean) {
 		fillValues(BeanWrapper.wrap(bean), 0); // 嵌套深度
 	}
@@ -87,32 +97,32 @@ public class RandomData {
 		T instance = null;
 		instance = UnsafeUtils.newInstance(clz);
 		BeanWrapper bw = BeanWrapper.wrap(instance, BeanWrapper.NORMAL);
-		fillValues(bw,level);
+		fillValues(bw, level);
 		return instance;
 	}
 
-	private static void fillValues(BeanWrapper bw,int level) {
+	private static void fillValues(BeanWrapper bw, int level) {
 		for (String name : bw.getRwPropertyNames()) {
-			if (isGeneratedVal(bw,name))
+			if (isGeneratedVal(bw, name))
 				continue;
 			java.lang.reflect.Type genericType = bw.getPropertyType(name);// 泛型类型
-			
-			Object value = newInstance(genericType, level, getEtaLength(bw,name));
+
+			Object value = newInstance(genericType, level, getEtaLength(bw, name));
 			if (value != null)
 				bw.setPropertyValue(name, value);
 		}
 	}
 
 	private static int getEtaLength(BeanWrapper bw, String name) {
-		if(clz_lob!=null){
-			if(bw.getAnnotationOnField(name, clz_lob)!=null){
+		if (clz_lob != null) {
+			if (bw.getAnnotationOnField(name, clz_lob) != null) {
 				return 85;
 			}
-			Object column=bw.getAnnotationOnField(name, clz_column);
-			if(column!=null){
+			Object column = bw.getAnnotationOnField(name, clz_column);
+			if (column != null) {
 				try {
-					Integer result=(Integer)length.invoke(column);
-					return result==null?0:result.intValue()/2;
+					Integer result = (Integer) length.invoke(column);
+					return result == null ? 0 : result.intValue() / 2;
 				} catch (IllegalArgumentException e) {
 					e.printStackTrace();
 				} catch (IllegalAccessException e) {
@@ -121,15 +131,14 @@ public class RandomData {
 					e.printStackTrace();
 				}
 			}
-			
+
 		}
 		return 0;
 	}
 
-	
 	private static boolean isGeneratedVal(BeanWrapper bw, String name) {
-		if(clz_generatred!=null){
-			return bw.getAnnotationOnField(name, clz_generatred)!=null;
+		if (clz_generatred != null) {
+			return bw.getAnnotationOnField(name, clz_generatred) != null;
 		}
 		return false;
 	}
@@ -162,6 +171,23 @@ public class RandomData {
 		} else if (type == Date.class) {
 			long cur = System.currentTimeMillis();
 			return randomDate(new Date(cur - 300000), new Date(cur + 1000000));
+		} else if (type == LocalTime.class) {
+			int time = randomInteger(0, 86400);
+			return LocalTime.ofSecondOfDay(time);
+		} else if (type == LocalDate.class) {
+			return LocalDate.ofEpochDay(randomInteger(-300, 1000) + LocalDate.now().toEpochDay());
+		} else if (type == LocalDateTime.class) {
+			long cur = System.currentTimeMillis();
+			return LocalDateTime.ofInstant(randomDate(new Date(cur - 300000), new Date(cur + 1000000)).toInstant(), ZoneId.systemDefault());
+		} else if (type == Instant.class) {
+			long cur = System.currentTimeMillis();
+			return randomDate(new Date(cur - 300000), new Date(cur + 1000000)).toInstant();
+		} else if (type == YearMonth.class) {
+			return YearMonth.from(LocalDate.ofEpochDay(randomInteger(-300, 1000) + LocalDate.now().toEpochDay()));
+		} else if (type == BigDecimal.class) {
+			return BigDecimal.valueOf(randomLong(1, 9999999999L));
+		} else if (type == MonthDay.class) {
+			return MonthDay.from(LocalDate.ofEpochDay(randomInteger(-300, 1000) + LocalDate.now().toEpochDay()));
 		}
 		Class<?> raw = GenericUtils.getRawClass(type);
 		if (raw.isArray()) {
@@ -182,7 +208,7 @@ public class RandomData {
 		if (componentType == byte.class) {
 			return randomByteArray(1024);
 		} else {
-			Object obj = newInstance(componentType, level,0);
+			Object obj = newInstance(componentType, level, 0);
 			if (obj == null)
 				return null;
 			Object array = Array.newInstance(componentType, 1);
@@ -193,7 +219,7 @@ public class RandomData {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private static Object processSetTypes(java.lang.reflect.Type collectionType, int level) {
-		Object obj = newInstance(collectionType, level,0);
+		Object obj = newInstance(collectionType, level, 0);
 		if (obj == null)
 			return null;
 		Set result = new HashSet();
@@ -203,8 +229,8 @@ public class RandomData {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private static Object processMapTypes(java.lang.reflect.Type[] mapKeyAndValueTypes, int level) {
-		Object key = newInstance(mapKeyAndValueTypes[0], level,0);
-		Object value = newInstance(mapKeyAndValueTypes[1], level,0);
+		Object key = newInstance(mapKeyAndValueTypes[0], level, 0);
+		Object value = newInstance(mapKeyAndValueTypes[1], level, 0);
 		if (key == null || value == null)
 			return null;
 		Map result = new HashMap();
@@ -214,7 +240,7 @@ public class RandomData {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	private static Object processListTypes(java.lang.reflect.Type collectionType, int level) {
-		Object obj = newInstance(collectionType, level,0);
+		Object obj = newInstance(collectionType, level, 0);
 		if (obj == null)
 			return null;
 		List result = new ArrayList();
@@ -224,9 +250,9 @@ public class RandomData {
 
 	// 生成随机的日期
 	public static Date randomDate(Date startDate, Date endDate) {
-		long start = startDate.getTime()/1000;
-		long end = endDate.getTime()/1000;
-		return new Date(randomLong(start, end)*1000);
+		long start = startDate.getTime() / 1000;
+		long end = endDate.getTime() / 1000;
+		return new Date(randomLong(start, end) * 1000);
 	}
 
 	// 生成随机的整数
@@ -236,9 +262,9 @@ public class RandomData {
 
 	public static long randomLong(long start, long end) {
 		int i = (int) (end - start);
-		if(start+i!=end){
-			i=Integer.MAX_VALUE;
-		}else if (i < 0)
+		if (start + i != end) {
+			i = Integer.MAX_VALUE;
+		} else if (i < 0)
 			i = -i;
 		return start + rnd.nextInt(i);
 	}
@@ -264,16 +290,15 @@ public class RandomData {
 	}
 
 	public static String randomString(int maxLen) {
-		IntRange range=new IntRange(1, maxLen);
+		IntRange range = new IntRange(1, maxLen);
 		return randomString(CharUtils.ALPHA_NUM_UNDERLINE, range);
 	}
-	
-	public static String randomString(int min,int maxLen) {
-		IntRange range=new IntRange(min, maxLen);
+
+	public static String randomString(int min, int maxLen) {
+		IntRange range = new IntRange(min, maxLen);
 		return randomString(CharUtils.ALPHA_NUM_UNDERLINE, range);
 	}
-	
-	
+
 	/**
 	 * 生成随机的字符串
 	 * 
@@ -326,11 +351,11 @@ public class RandomData {
 		rnd.nextBytes(b);
 		return b;
 	}
-	
-	public static String[] randomStringArray(int length,int stringLegth){
-		String[] ss=new String[length];
-		for(int i=0;i<length;i++){
-			ss[i]=randomString(stringLegth);
+
+	public static String[] randomStringArray(int length, int stringLegth) {
+		String[] ss = new String[length];
+		for (int i = 0; i < length; i++) {
+			ss[i] = randomString(stringLegth);
 		}
 		return ss;
 	}
@@ -351,7 +376,7 @@ public class RandomData {
 	/**
 	 * 创建多个实例
 	 * 
-	 * @param <T>
+	 * @param        <T>
 	 * @param class1
 	 * @param i
 	 * @return

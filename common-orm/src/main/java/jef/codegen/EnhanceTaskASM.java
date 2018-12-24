@@ -1,18 +1,15 @@
 package jef.codegen;
 
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.BitSet;
 import java.util.List;
 
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
+import javax.persistence.Entity;
 
 import org.apache.commons.lang.ArrayUtils;
 
-import com.github.geequery.asm.Attribute;
 import com.github.geequery.asm.ClassReader;
 import com.github.geequery.asm.ClassVisitor;
 import com.github.geequery.asm.ClassWriter;
@@ -21,14 +18,14 @@ import com.github.geequery.asm.Label;
 import com.github.geequery.asm.MethodVisitor;
 import com.github.geequery.asm.Opcodes;
 import com.github.geequery.asm.Type;
+import com.github.geequery.entity.Entities;
 
 import jef.accelerator.asm.ASMUtils;
-import jef.accelerator.asm.commons.AnnotationDef;
-import jef.accelerator.asm.commons.FieldExtCallback;
-import jef.accelerator.asm.commons.FieldExtDef;
+import jef.accelerator.asm.commons.AnnotationFetcher;
+import jef.common.log.LogUtil;
+import jef.database.annotation.EasyEntity;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
-import jef.tools.StringUtils;
 import jef.tools.resource.ResourceLoader;
 
 public class EnhanceTaskASM {
@@ -55,7 +52,27 @@ public class EnhanceTaskASM {
 		List<String> enumFields = parseEnumFields(fieldEumData);
 		try {
 			ClassReader reader = new ClassReader(classdata);
-			byte[] data = enhanceClass(reader, enumFields);
+			if ((reader.getAccess() & Opcodes.ACC_PUBLIC) == 0) {
+				return null;// 非公有跳过
+			}
+			boolean hasEntityAnnotation = AnnotationFetcher.findAny(reader, Entity.class.getName(), EasyEntity.class.getName()) != null;
+
+			int isEntityInterface = isEntityClass(reader.getInterfaces(), reader.getSuperName(), POJO_ENTITY);
+			if (isEntityInterface == NOT_ENTITY) {
+				return null;
+			}
+			byte[] data;
+			if (isEntityInterface == POJO_ENTITY && hasEntityAnnotation) {
+				data = enhancePojoClass(reader, enumFields);
+			} else if(isEntityInterface==ENTITY){
+				if(!hasEntityAnnotation) {
+					LogUtil.warn("The entity class {} has no @Entity annotation, this is a deprecated way, please add @Entity.",ASMUtils.getJavaClassName(reader));
+				}
+				data = enhanceClass(reader, enumFields);
+			}else{
+				LogUtil.warn("The class {} has no @Entity annotation, and will not be treated as an Entity",ASMUtils.getJavaClassName(reader));
+				return null;
+			}
 			{
 				// DEBUG
 				// File file = new File("c:/asm/" +
@@ -69,6 +86,55 @@ public class EnhanceTaskASM {
 			return ArrayUtils.EMPTY_BYTE_ARRAY;
 		}
 
+	}
+
+	public byte[] enhanceClass(ClassReader reader, List<String> enumFields) {
+		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+		reader.accept(new EnhanceVisitor(cw, enumFields, new EnhanceHandler() {
+			@Override
+			public MethodVisitor newGetterVisitor(MethodVisitor mv, String name, String typeName) {
+				return new GetterVisitor(mv, name, typeName);
+			}
+
+			@Override
+			public MethodVisitor newSetterVisitor(MethodVisitor mv, String name, String typeName, Type paramType, int index) {
+				return new SetterVisitor(mv, name, typeName, paramType, index);
+			}
+
+			@Override
+			public MethodVisitor newSetterOfClearLazyload(MethodVisitor mv, String name, String typeName) {
+				return new SetterOfClearLazyload(mv, name, typeName);
+			}
+		}), 0);
+		return cw.toByteArray();
+	}
+
+	private byte[] enhancePojoClass(ClassReader reader, List<String> enumFields) {
+		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+		reader.accept(new EnhanceVisitor(cw, enumFields, new EnhanceHandler() {
+			@Override
+			public MethodVisitor newGetterVisitor(MethodVisitor mv, String name, String type) {
+				return new POJOGetterVisitor(mv, name);
+			}
+
+			@Override
+			public MethodVisitor newSetterVisitor(MethodVisitor mv, String name, String typeName, Type type, int index) {
+				return new POJOSetterVisitor(mv, typeName, index);
+			}
+
+			@Override
+			public MethodVisitor newSetterOfClearLazyload(MethodVisitor mv, String name, String typeName) {
+				return new POJOSetterOfClearLazyload(mv, name);
+			}
+
+			@Override
+			public void beforeEnd(ClassVisitor classVisitor) {
+				classVisitor.visitField(Modifier.TRANSIENT | Modifier.PUBLIC, "___touchRecord", ASMUtils.getDesc(BitSet.class), null, null);
+				classVisitor.visitField(Modifier.TRANSIENT | Modifier.PUBLIC, "___lazy", ASMUtils.getDesc(jef.database.ILazyLoadContext.class), null, null);
+				classVisitor.visitField(Modifier.TRANSIENT | Modifier.PUBLIC, "___notTouch", ASMUtils.getDesc(boolean.class), null, false);
+			}
+		}), 0);
+		return cw.toByteArray();
 	}
 
 	public List<String> parseEnumFields(byte[] fieldEumData) {
@@ -88,139 +154,25 @@ public class EnhanceTaskASM {
 		return enumFields;
 	}
 
-	private static class EnhancedException extends RuntimeException {
-		private static final long serialVersionUID = 1L;
+	private static final int NOT_ENTITY = 0;
+	private static final int ENTITY = 1;
+	private static final int POJO_ENTITY = 2;
 
-		@Override
-		public synchronized Throwable fillInStackTrace() {
-			return this;
-		}
-	}
-
-	public byte[] enhanceClass(ClassReader reader, final List<String> enumFields) {
-
-		if ((reader.getAccess() & Opcodes.ACC_PUBLIC) == 0) {
-			return null;// 非公有跳过
-		}
-
-		boolean isEntityInterface = isEntityClass(reader.getInterfaces(), reader.getSuperName(), !enumFields.isEmpty());
-		if (!isEntityInterface)
-			return null;
-
-		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-		reader.accept(new ClassVisitor(Opcodes.ASM6, cw) {
-			private List<String> nonStaticFields = new ArrayList<String>();
-			private List<String> lobAndRefFields = new ArrayList<String>();
-			private String typeName;
-
-			@Override
-			public void visit(int version, int access, String name, String sig, String superName, String[] interfaces) {
-				this.typeName = name.replace('.', '/');
-				super.visit(version, access, name, sig, superName, interfaces);
-			}
-
-			@Override
-			public void visitAttribute(Attribute attr) {
-				if ("jefd".equals(attr.type)) {
-					throw new EnhancedException();
-				}
-				super.visitAttribute(attr);
-			}
-
-			@Override
-			public void visitEnd() {
-				Attribute attr = new Attribute("jefd", new byte[] { 0x1f });
-				super.visitAttribute(attr);
-			}
-
-			@Override
-			public FieldVisitor visitField(final int access, final String name, final String desc, String sig, final Object value) {
-				FieldVisitor visitor = super.visitField(access, name, desc, sig, value);
-				if ((access & Opcodes.ACC_STATIC) > 0)
-					return visitor;
-				nonStaticFields.add(name);
-				return new FieldExtDef(Opcodes.ASM6, new FieldExtCallback(visitor) {
-					public void onFieldRead(FieldExtDef info) {
-						boolean contains = enumFields.contains(name);
-						if (contains) {
-							if (!info.getAnnotation("Ljavax/persistence/Lob;").isEmpty()) {
-								lobAndRefFields.add(name);
-							}
-						} else {
-							Collection<AnnotationDef> o = info.getAnnotation(OneToMany.class);
-							if (o.isEmpty())
-								o = info.getAnnotation(ManyToOne.class);
-							if (o.isEmpty())
-								o = info.getAnnotation(ManyToMany.class);
-							if (o.isEmpty())
-								o = info.getAnnotation(OneToOne.class);
-							// 判断完成
-							if (!o.isEmpty()) {
-								lobAndRefFields.add(name);
-							}
-						}
-					}
-				});
-			}
-
-			@Override
-			public MethodVisitor visitMethod(int access, String name, String desc, String sig, String[] exceptions) {
-				String fieldName;
-				if (name.startsWith("get")) {
-					fieldName = StringUtils.uncapitalize(name.substring(3));
-					return asGetter(fieldName, access, name, desc, exceptions, sig);
-				} else if (name.startsWith("is")) {
-					fieldName = StringUtils.uncapitalize(name.substring(2));
-					return asGetter(fieldName, access, name, desc, exceptions, sig);
-				} else if (name.startsWith("set")) {
-					fieldName = StringUtils.uncapitalize(name.substring(3));
-					return asSetter(fieldName, access, name, desc, exceptions, sig);
-				}
-				return super.visitMethod(access, name, desc, sig, exceptions);
-			}
-
-			private MethodVisitor asGetter(String fieldName, int access, String name, String desc, String[] exceptions, String sig) {
-				MethodVisitor mv = super.visitMethod(access, name, desc, sig, exceptions);
-				Type[] types = Type.getArgumentTypes(desc);
-				if (fieldName.length() == 0 || types.length > 0)
-					return mv;
-				if (lobAndRefFields.contains(fieldName)) {
-					return new GetterVisitor(mv, fieldName, typeName);
-				}
-				return mv;
-			}
-
-			private MethodVisitor asSetter(String fieldName, int access, String name, String desc, String[] exceptions, String sig) {
-				MethodVisitor mv = super.visitMethod(access, name, desc, sig, exceptions);
-				Type[] types = Type.getArgumentTypes(desc);
-				if (fieldName.length() == 0 || types.length != 1)
-					return mv;
-				if (enumFields.contains(fieldName) && nonStaticFields.contains(fieldName)) {
-					return new SetterVisitor(mv, fieldName, typeName, types[0]);
-				} else if (lobAndRefFields.contains(fieldName)) {
-					return new SetterOfClearLazyload(mv, fieldName, typeName);
-				} else {
-					String altFieldName = "is" + StringUtils.capitalize(fieldName);
-					// 特定情况，当boolean类型并且field名称是isXXX，setter是setXXX()
-					if (enumFields.contains(altFieldName)) {
-						return new SetterVisitor(mv, altFieldName, typeName, types[0]);
-					}
-				}
-				return mv;
-			}
-
-		}, 0);
-		return cw.toByteArray();
-	}
-
-	private boolean isEntityClass(String[] interfaces, String superName, boolean defaultValue) {
+	/**
+	 * 
+	 * @param interfaces
+	 * @param superName
+	 * @param defaultValue
+	 * @return
+	 */
+	private int isEntityClass(String[] interfaces, String superName, int defaultValue) {
 		if ("jef/database/DataObject".equals(superName))
-			return true;// 绝大多数实体都是继承这个类的
+			return ENTITY;// 绝大多数实体都是继承这个类的
 		if (ArrayUtils.contains(interfaces, "Ljef/database/IQueryableEntity;")) {
-			return true;
+			return ENTITY;
 		}
 		if ("java/lang/Object".equals(superName)) {
-			return false;
+			return POJO_ENTITY;
 		}
 
 		// 递归检查父类
@@ -243,7 +195,7 @@ public class EnhanceTaskASM {
 		if (cl != null) {
 			return isEntityClass(cl.getInterfaces(), cl.getSuperName(), defaultValue);
 		}
-		return false;
+		return POJO_ENTITY;
 	}
 
 	// public byte[] getBinaryData_x();
@@ -273,7 +225,34 @@ public class EnhanceTaskASM {
 
 		@Override
 		public void visitMaxs(int maxStack, int maxLocals) {
-			mv.visitMaxs(2, maxLocals);
+			mv.visitMaxs(Math.max(maxStack, 2), maxLocals);
+		}
+
+		// 去除本地变量表。
+		@Override
+		public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
+		}
+	}
+
+	static class POJOGetterVisitor extends MethodVisitor implements Opcodes {
+		private String name;
+
+		public POJOGetterVisitor(MethodVisitor mv, String name) {
+			super(Opcodes.ASM6, mv);
+
+			this.name = name;
+		}
+
+		public void visitCode() {
+			mv.visitIntInsn(ALOAD, 0);
+			mv.visitLdcInsn(name);
+			mv.visitMethodInsn(INVOKESTATIC, ASMUtils.getDesc(Entities.class), "beforeGet", "(Ljava/lang/Object;Ljava/lang/String;)V", false);
+			super.visitCode();
+		}
+
+		@Override
+		public void visitMaxs(int maxStack, int maxLocals) {
+			mv.visitMaxs(Math.max(maxStack, 2), maxLocals);
 		}
 
 		// 去除本地变量表。
@@ -306,11 +285,41 @@ public class EnhanceTaskASM {
 
 		@Override
 		public void visitMaxs(int maxStack, int maxLocals) {
-			mv.visitMaxs(4, maxLocals);
+			mv.visitMaxs(Math.max(maxStack, 4), maxLocals);
 		}
 	}
+
+	static class POJOSetterOfClearLazyload extends MethodVisitor implements Opcodes {
+		private String name;
+
+		public POJOSetterOfClearLazyload(MethodVisitor mv, String name) {
+			super(Opcodes.ASM6, mv);
+			this.name = name;
+		}
+
+		// 0: aload_0
+		// 1: ldc #98 // String children
+		// 3: invokestatic #104 // Method
+		// com/github/geequery/entity/Entities.beforeRefSet:(Ljava/lang/Object;Ljava/lang/String;)V
+		@Override
+		public void visitCode() {
+			mv.visitIntInsn(ALOAD, 0);
+			mv.visitLdcInsn(name);
+			mv.visitMethodInsn(INVOKESTATIC, ASMUtils.getDesc(Entities.class), "beforeRefSet", "(Ljava/lang/Object;Ljava/lang/String;)V", false);
+			super.visitCode();
+		}
+
+		@Override
+		public void visitMaxs(int maxStack, int maxLocals) {
+			mv.visitMaxs(Math.max(maxStack, 2), maxLocals);
+		}
+
+		@Override
+		public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
+		}
+	}
+
 	//
-	// public void setBinaryData_x(byte[]);
 	// Code:
 	// 0: aload_0
 	// 1: getfield #125; //Field _recordUpdate:Z
@@ -330,12 +339,14 @@ public class EnhanceTaskASM {
 		private String name;
 		private String typeName;
 		private Type paramType;
+		private int index;
 
-		public SetterVisitor(MethodVisitor mv, String name, String typeName, Type paramType) {
+		public SetterVisitor(MethodVisitor mv, String name, String typeName, Type paramType, int index) {
 			super(Opcodes.ASM6, mv);
 			this.name = name;
 			this.typeName = typeName;
 			this.paramType = paramType;
+			this.index = index;
 		}
 
 		// 去除本地变量表。否则生成的类用jd-gui反编译时，添加的代码段无法正常反编译
@@ -348,17 +359,9 @@ public class EnhanceTaskASM {
 			mv.visitFieldInsn(GETFIELD, typeName, "_recordUpdate", "Z");
 			Label norecord = new Label();
 			mv.visitJumpInsn(IFEQ, norecord);
-
 			mv.visitIntInsn(ALOAD, 0);
-			mv.visitFieldInsn(GETSTATIC, typeName + "$Field", name, "L" + typeName + "$Field;");
-
-			if (paramType.isPrimitive()) {
-				mv.visitVarInsn(ASMUtils.getLoadIns(paramType), 1);
-				ASMUtils.doWrap(mv, paramType);
-			} else {
-				mv.visitIntInsn(ALOAD, 1);
-			}
-			mv.visitMethodInsn(INVOKEVIRTUAL, typeName, "prepareUpdate", "(Ljef/database/Field;Ljava/lang/Object;)V", false);
+			ASMUtils.iconst(mv, index);
+			mv.visitMethodInsn(INVOKEVIRTUAL, typeName, "_touch", "(I)V", false);
 			mv.visitLabel(norecord);
 			super.visitCode();
 
@@ -366,7 +369,49 @@ public class EnhanceTaskASM {
 
 		@Override
 		public void visitMaxs(int maxStack, int maxLocals) {
-			mv.visitMaxs(4, maxLocals);
+			mv.visitMaxs(Math.max(maxStack, 2), maxLocals);
+		}
+	}
+
+	static class POJOSetterVisitor extends MethodVisitor implements Opcodes {
+		private String typeName;
+		private int index;
+
+		// 去除本地变量表。否则生成的类用jd-gui反编译时，添加的代码段无法正常反编译
+		@Override
+		public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
+		}
+
+		public POJOSetterVisitor(MethodVisitor mv, String typeName, int index) {
+			super(Opcodes.ASM6, mv);
+			this.index = index;
+			this.typeName = typeName;
+		}
+
+		// 0: aload_0
+		// 1: getfield #92 // Field ___notTouch:Z
+		// 4: ifne 13
+		// 7: aload_0
+		// 8: bipush 6
+		// 10: invokestatic #49 // Method
+		// com/github/geequery/entity/Entities.beforeSet:(Ljava/lang/Object;I)V
+		@Override
+		public void visitCode() {
+			mv.visitIntInsn(ALOAD, 0);
+			mv.visitFieldInsn(GETFIELD, typeName, "___notTouch", "Z");
+			Label norecord = new Label();
+			mv.visitJumpInsn(IFNE, norecord);
+
+			mv.visitIntInsn(ALOAD, 0);
+			ASMUtils.iconst(mv, index);
+			mv.visitMethodInsn(INVOKESTATIC, ASMUtils.getDesc(Entities.class), "beforeSet", "(Ljava/lang/Object;I)V", false);
+			mv.visitLabel(norecord);
+			super.visitCode();
+		}
+
+		@Override
+		public void visitMaxs(int maxStack, int maxLocals) {
+			mv.visitMaxs(Math.max(maxStack, 2), maxLocals);
 		}
 	}
 

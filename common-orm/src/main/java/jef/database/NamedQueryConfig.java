@@ -188,7 +188,7 @@ public class NamedQueryConfig extends jef.database.DataObject {
 	/*
 	 * 解析SQL语句，改写
 	 */
-	private static DialectCase analy(String sql, int type, OperateTarget db) throws SQLException {
+	private static DialectCase analy(String sql, int type, DbMetaData db) throws SQLException {
 		final DatabaseDialect dialect = db.getProfile();
 		try {
 			Statement st = DbUtils.parseStatement(sql);
@@ -281,7 +281,7 @@ public class NamedQueryConfig extends jef.database.DataObject {
 	 * @return
 	 * @throws SQLException
 	 */
-	public Map<Object, ParameterMetadata> getParams(OperateTarget db) {
+	public Map<Object, ParameterMetadata> getParams(DbMetaData db) {
 		DialectCase dc;
 		try {
 			dc = getDialectCase(db);
@@ -299,14 +299,14 @@ public class NamedQueryConfig extends jef.database.DataObject {
 	 * @return 要执行的语句和绑定变量列表
 	 * @throws SQLException
 	 */
-	public SqlAndParameter getSqlAndParams(OperateTarget db, ParameterProvider prov) throws SQLException {
+	public SqlAndParameter getSqlAndParams(DbMetaData db, ParameterProvider prov) throws SQLException {
 		DialectCase dc = getDialectCase(db);
 		SqlAndParameter result = applyParam(dc.statement, prov);
 		result.setInMemoryClause(dc.delays);
 		return result;
 	}
 
-	private DialectCase getDialectCase(OperateTarget db) throws SQLException {
+	private DialectCase getDialectCase(DbMetaData db) throws SQLException {
 		DatabaseDialect profile = db.getProfile();
 		if (datas == null) {
 			// 当使用testNamedQueryConfigedInDb案例时，由于使用Unsafe方式构造对象，故构造器方法未运行造成datas为null;
@@ -332,7 +332,7 @@ public class NamedQueryConfig extends jef.database.DataObject {
 	 * @return
 	 * @throws SQLException
 	 */
-	public SqlAndParameter getCountSqlAndParams(OperateTarget db, ParameterProvider prov) throws SQLException {
+	public SqlAndParameter getCountSqlAndParams(DbMetaData db, ParameterProvider prov) throws SQLException {
 		DialectCase dc = getDialectCase(db);
 		if (dc.count == null) {
 			if (dc.statement instanceof jef.database.jsqlparser.statement.select.Select) {

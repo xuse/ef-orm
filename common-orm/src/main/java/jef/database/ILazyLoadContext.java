@@ -13,7 +13,7 @@ public interface ILazyLoadContext {
 	 *  
 	 * @return 如果全部延迟加载任务都执行完毕了，返回true
 	 */
-	boolean process(DataObject dataObject, int fieldname)throws SQLException;
+	boolean process(Object dataObject, int fieldname)throws SQLException;
 	
 	/**
 	 * 获取处理器

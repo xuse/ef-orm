@@ -27,26 +27,26 @@ import jef.tools.Assert;
  */
 public class SelectsImpl extends AbstractEntityMappingProvider implements Selects {
 	private static final long serialVersionUID = -7074691304983975019L;
-	Set<QueryAlias> touchQueries=new HashSet<QueryAlias>();
+	Set<QueryAlias> touchQueries = new HashSet<QueryAlias>();
 
 	public SelectsImpl() {
 	}
 
-//	private void add(QueryAlias config,IReferenceColumn field){
-//		if(!touchQueries.contains(config)){
-//			if(config.getReferenceObj()!=null){
-//				noColums(config.getTableDef());
-//			}
-//		}
-//		config.addField(field);
-//		touchQueries.add(config);
-//	}
-//	
-//	private void add(QueryAlias config,IReferenceAllTable field){
-//		config.addField(field);
-//		touchQueries.add(config);
-//	}
-	
+	// private void add(QueryAlias config,IReferenceColumn field){
+	// if(!touchQueries.contains(config)){
+	// if(config.getReferenceObj()!=null){
+	// noColums(config.getTableDef());
+	// }
+	// }
+	// config.addField(field);
+	// touchQueries.add(config);
+	// }
+	//
+	// private void add(QueryAlias config,IReferenceAllTable field){
+	// config.addField(field);
+	// touchQueries.add(config);
+	// }
+
 	public SelectsImpl(List<QueryAlias> context) {
 		this.queries = context;
 	}
@@ -65,8 +65,8 @@ public class SelectsImpl extends AbstractEntityMappingProvider implements Select
 		Query<?> found;
 		if (qa == null) {
 			throw new IllegalArgumentException("the " + meta.getThisType() + " not found in the query tables.");
-		}else{
-			found=qa.getTableDef();
+		} else {
+			found = qa.getTableDef();
 		}
 		return column(found, field, null, field.name());
 	}
@@ -91,9 +91,13 @@ public class SelectsImpl extends AbstractEntityMappingProvider implements Select
 		QueryAlias config = findQuery(query); // 目前其实只有QueryAlias一个实现
 		Assert.notNull(config, "the query is not contain in the join tables.");
 		ITableMetadata meta = MetaHolder.getMeta(query.getInstance());
-		Field field = meta.getField(name);
-		if (field == null)
+		Field field = null;
+		ColumnMapping column = meta.getColumnDef(name);
+		if (column == null) {
 			field = new FBIField(name, query);
+		} else {
+			field = column.field();
+		}
 		return column(query, field, null, null);
 	}
 
@@ -115,11 +119,11 @@ public class SelectsImpl extends AbstractEntityMappingProvider implements Select
 		}
 		for (ISelectItemProvider qa : this.queries) {
 			ITableMetadata meta = MetaHolder.getMeta(qa.getTableDef().getInstance());
-			Field find = meta.getField(name);
+			ColumnMapping find = meta.getColumnDef(name);
 			if (find != null && field != null) {
 				LogUtil.error("There are duplicate field named '" + name + "' in multi table columns");
 			} else if (find != null) {
-				field = find;
+				field = find.field();
 				matched = qa.getTableDef();
 			}
 		}
@@ -157,18 +161,18 @@ public class SelectsImpl extends AbstractEntityMappingProvider implements Select
 	public void columns(Query<?> q, String columns) {
 		try {
 			List<SelectItem> items = DbUtils.parseSelectItems(columns);
-			ITableMetadata meta =q.getMeta();
+			ITableMetadata meta = q.getMeta();
 			for (SelectItem item : items) {
 				if (item instanceof SelectExpressionItem) {
 					SelectExpressionItem expression = (SelectExpressionItem) item;
-					Expression column=expression.getExpression();
+					Expression column = expression.getExpression();
 					String exp = column.toString();
-					ColumnMapping mapping = (column instanceof Column)?meta.findField(exp):null;
+					ColumnMapping mapping = (column instanceof Column) ? meta.findField(exp) : null;
 					Field field;
-					if (mapping == null){
+					if (mapping == null) {
 						field = new FBIField(exp, q);
-					}else{
-						field=mapping.field();
+					} else {
+						field = mapping.field();
 					}
 					this.column(q, field, expression.getAlias(), null);
 				} else if (item instanceof jef.database.jsqlparser.statement.select.AllTableColumns) {
@@ -182,17 +186,17 @@ public class SelectsImpl extends AbstractEntityMappingProvider implements Select
 	}
 
 	public void merge(AbstractEntityMappingProvider selectItems) {
-		this.distinct=selectItems.distinct;
+		this.distinct = selectItems.distinct;
 		for (ISelectItemProvider os : this.getReference()) { // 新的
-			boolean found=false;
+			boolean found = false;
 			for (ISelectItemProvider is : selectItems.getReference()) { // 原先的
 				if (is.getTableDef() == os.getTableDef()) {
 					os.setFields(is.getReferenceObj(), is.getReferenceCol());
-					found=true;
+					found = true;
 					break;
 				}
 			}
-			if(!found){
+			if (!found) {
 				AllTableColumns ac = new AllTableColumns(os.getTableDef());
 				ac.notSelectAnyColumn();
 				ac.setName(null);
@@ -202,8 +206,7 @@ public class SelectsImpl extends AbstractEntityMappingProvider implements Select
 	}
 
 	/**
-	 * 创建查询表达式，支持方言改写。
-	 * {@inheritDoc}
+	 * 创建查询表达式，支持方言改写。 {@inheritDoc}
 	 * <p>
 	 * 如果在表达式中需要引用第一个表的别名，使用$1,$2...以此类推
 	 */

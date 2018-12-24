@@ -62,6 +62,7 @@ import jef.database.dialect.type.DelegatorBoolean;
 import jef.database.dialect.type.Instant_DateTime;
 import jef.database.dialect.type.LocalDateTime_TimeStamp;
 import jef.database.dialect.type.LocalDate_Date;
+import jef.database.dialect.type.LocalMonthDay_Char;
 import jef.database.dialect.type.LocalTime_TimeStamp;
 import jef.database.dialect.type.LocalYearMonth_Char;
 import jef.database.dialect.type.NumBigDateMapping;
@@ -346,6 +347,8 @@ public abstract class ColumnType {
 				return new CharDateMapping();
 			} else if (fieldType == java.time.YearMonth.class) {
 				return new LocalYearMonth_Char();
+			} else if (fieldType == java.time.MonthDay.class) {
+				return new LocalMonthDay_Char();
 			} else if (fieldType == java.sql.Timestamp.class) {
 				return new CharTimestampMapping();
 			} else if (fieldType == Integer.class || fieldType == Integer.TYPE) {
@@ -435,7 +438,9 @@ public abstract class ColumnType {
 			} else if (fieldType == java.sql.Timestamp.class) {
 				return new VarcharTimestampMapping();
 			} else if (fieldType == YearMonth.class) {
-				return new jef.database.dialect.type.LocalYearMonth_Char();
+				return new LocalYearMonth_Char();
+			} else if (fieldType == java.time.MonthDay.class) {
+				return new LocalMonthDay_Char();
 			}
 			throw new IllegalArgumentException("Varchar can not mapping to class " + fieldType.getName());
 		}

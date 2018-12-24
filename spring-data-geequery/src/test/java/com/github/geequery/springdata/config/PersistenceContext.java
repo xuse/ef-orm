@@ -1,23 +1,23 @@
 package com.github.geequery.springdata.config;
 
-import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
-
-import jef.database.datasource.SimpleDataSource;
 
 import org.easyframe.enterprise.spring.CommonDao;
 import org.easyframe.enterprise.spring.CommonDaoImpl;
-import org.easyframe.enterprise.spring.JefJpaDialect;
 import org.easyframe.enterprise.spring.SessionFactoryBean;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
-import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import com.github.geequery.springdata.repository.config.EnableGqRepositories;
+
+import jef.database.SessionFactory;
+import jef.database.datasource.SimpleDataSource;
 
 @Configuration
 @EnableTransactionManagement
@@ -31,7 +31,7 @@ public class PersistenceContext {
 
     @Bean(name = {"emf1"})
     @Primary
-    EntityManagerFactory entityManagerFactory(@Qualifier("ds1") DataSource dataSource, Environment env) {
+    SessionFactory entityManagerFactory(@Qualifier("ds1") DataSource dataSource, Environment env) {
         SessionFactoryBean bean = new org.easyframe.enterprise.spring.SessionFactoryBean();
         bean.setDataSource(dataSource);
         bean.setPackagesToScan(new String[] { "com.github.geequery.springdata.test.entity" });
@@ -40,15 +40,12 @@ public class PersistenceContext {
     }
 
     @Bean(name = "tx1")
-    JpaTransactionManager transactionManager(@Qualifier("emf1")EntityManagerFactory entityManagerFactory) {
-        JpaTransactionManager transactionManager = new JpaTransactionManager();
-        transactionManager.setEntityManagerFactory(entityManagerFactory);
-        transactionManager.setJpaDialect(new JefJpaDialect());
-        return transactionManager;
+    PlatformTransactionManager transactionManager(@Qualifier("ds1")DataSource ds1) {
+        return new DataSourceTransactionManager(ds1);
     }
 
     @Bean()
-    CommonDao commonDao(@Qualifier("emf1")EntityManagerFactory entityManagerFactory) {
-        return new CommonDaoImpl(entityManagerFactory);
+    CommonDao commonDao(@Qualifier("emf1")SessionFactory sf1) {
+        return new CommonDaoImpl(sf1);
     }
 }

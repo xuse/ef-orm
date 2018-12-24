@@ -101,7 +101,7 @@ public class BatchOperate extends org.junit.Assert {
 		doInsert(5);
 		Person p1 = new Person();
 		p1.getQuery().addCondition(Person.Field.name.matchAny("a"));
-		p1.prepareUpdate(Person.Field.created, db.func(Func.current_timestamp));
+		p1.getQuery().prepareUpdate(Person.Field.created, db.func(Func.current_timestamp));
 
 		Person p2 = QB.create(Person.class).addCondition(Person.Field.name.matchAny("b")).getInstance();
 
@@ -120,7 +120,7 @@ public class BatchOperate extends org.junit.Assert {
 		for (Person person : persons) {
 			person.setCreated(new Date());
 		}
-		Batch<Person> batch = db.startBatchUpdate(persons.get(0), true);
+		Batch<Person> batch = db.startBatchUpdate(persons.get(0).getQuery(), true);
 		batch.execute(persons);
 		persons = db.select(QB.create(Person.class));
 		batch.execute(persons);

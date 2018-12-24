@@ -17,10 +17,10 @@ package com.github.geequery.springdata.repository.query;
 
 import java.util.List;
 
-import javax.persistence.EntityManagerFactory;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.RepositoryQuery;
+
+import jef.database.SessionFactory;
 
 /**
  * Implementation of {@link RepositoryQuery} based on {@link javax.persistence.NamedQuery}s.
@@ -33,7 +33,7 @@ final class GqProcedureQuery extends AbstractGqQuery {
 	/**
 	 * Creates a new {@link GqProcedureQuery}.
 	 */
-	GqProcedureQuery(GqQueryMethod method, EntityManagerFactory em) {
+	GqProcedureQuery(GqQueryMethod method, SessionFactory em) {
 		super(method, em);
 
 //		this.queryName = method.getNamedQueryName();

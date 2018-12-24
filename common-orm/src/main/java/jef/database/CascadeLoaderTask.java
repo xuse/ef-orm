@@ -132,10 +132,10 @@ final class CascadeLoaderTask implements LazyLoadTask {
 				refield.getField().set(obj, value);
 			} else { // 全引用填充
 				Object value;
-				if (targetTableMeta.getContainerType() == container) {
+				if (targetTableMeta.getThisType() == container) {
 					value = subs.isEmpty() ? null : subs.get(0);
 				} else {
-					value = DbUtils.toProperContainerType(subs, container,targetTableMeta.getContainerType(),refield);
+					value = DbUtils.toProperContainerType(subs, container,targetTableMeta.getThisType(),refield);
 				}
 				refield.getField().set(obj, value);
 			}

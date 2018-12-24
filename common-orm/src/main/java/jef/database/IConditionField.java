@@ -5,6 +5,9 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import jef.database.Condition.Operator;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.ITableMetadata;
@@ -12,9 +15,6 @@ import jef.database.query.Query;
 import jef.database.query.SqlContext;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.SqlBuilder;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
 
 /**
  * 用于代替Field来描述特定的复杂条件 正常情况下这些对象都容纳了若干的条件甚至查询实例。
@@ -52,20 +52,21 @@ public interface IConditionField extends jef.database.Field {
 	 * @deprecated To be deleted
 	 */
 
-	public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance, DatabaseDialect profile, boolean batch);
+	public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, Object instance,
+			DatabaseDialect profile, boolean batch);
 
 	/**
 	 * 生成绑定变量的SQL，
 	 * 
-	 * @param fields
-	 *            输出参数，会被添加一个
+	 * @param fields    输出参数，会被添加一个
 	 * @param meta
 	 * @param processor
 	 * @param context
 	 * @param instance
 	 * @return sql
 	 */
-	public void toPrepareSql(SqlBuilder builder, ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance, DatabaseDialect profile, boolean batch);
+	public void toPrepareSql(SqlBuilder builder, ITableMetadata meta, SqlProcessor processor, SqlContext context,
+			Object instance, DatabaseDialect profile, boolean batch);
 
 	static abstract class AbstractAndOr implements IConditionField {
 		private static final long serialVersionUID = 1L;
@@ -118,7 +119,8 @@ public interface IConditionField extends jef.database.Field {
 			conditions.add(Condition.get(field, Operator.EQUALS, value));
 		}
 
-		public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance, DatabaseDialect profile, boolean batch) {
+		public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, Object instance,
+				DatabaseDialect profile, boolean batch) {
 			StringBuilder sb = new StringBuilder();
 			for (Condition c : conditions) {
 				if (sb.length() > 0)
@@ -128,7 +130,8 @@ public interface IConditionField extends jef.database.Field {
 			return conditions.size() > 1 ? "(" + sb.toString() + ")" : sb.toString();
 		}
 
-		public void toPrepareSql(SqlBuilder builder, ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance, DatabaseDialect profile, boolean batch) {
+		public void toPrepareSql(SqlBuilder builder, ITableMetadata meta, SqlProcessor processor, SqlContext context,
+				Object instance, DatabaseDialect profile, boolean batch) {
 			Iterator<Condition> cond = conditions.iterator();
 			if (conditions.size() > 1) {
 				builder.append("(");
@@ -195,12 +198,14 @@ public interface IConditionField extends jef.database.Field {
 			return new StringBuilder().append("not ").append(condition.toString()).toString();
 		}
 
-		public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance, DatabaseDialect profile, boolean batch) {
+		public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, Object instance,
+				DatabaseDialect profile, boolean batch) {
 			String sql = "not ".concat(condition.toSqlClause(meta, context, processor, instance, profile, batch));
 			return sql;
 		}
 
-		public void toPrepareSql(SqlBuilder builder, ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance, DatabaseDialect profile, boolean batch) {
+		public void toPrepareSql(SqlBuilder builder, ITableMetadata meta, SqlProcessor processor, SqlContext context,
+				Object instance, DatabaseDialect profile, boolean batch) {
 			builder.append("not ");
 			condition.toPrepareSqlClause(builder, meta, context, processor, instance, profile, batch);
 		}
@@ -275,10 +280,11 @@ public interface IConditionField extends jef.database.Field {
 			this.query = subQuery;
 		}
 
-		public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance, DatabaseDialect profile, boolean batch) {
+		public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, Object instance,
+				DatabaseDialect profile, boolean batch) {
 			StringBuilder sb = new StringBuilder();
 			sb.append(name()).append("(");
-			sb.append("select 1 from ").append(DbUtils.toTableName(query.getInstance(), null, query, processor.getPartitionSupport()));
+			sb.append("select 1 from ").append(DbUtils.toTableName(query, null, processor.getPartitionSupport()));
 			sb.append(" et ");
 
 			sb.append(processor.toWhereClause(query, new SqlContext(context, "et", query), null, profile, batch));
@@ -286,9 +292,10 @@ public interface IConditionField extends jef.database.Field {
 			return sb.toString();
 		}
 
-		public void toPrepareSql(SqlBuilder sb, ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance, DatabaseDialect profile, boolean batch) {
+		public void toPrepareSql(SqlBuilder sb, ITableMetadata meta, SqlProcessor processor, SqlContext context,
+				Object instance, DatabaseDialect profile, boolean batch) {
 			sb.append(name(), "(");
-			String table = DbUtils.toTableName(query.getInstance(), null, query, processor.getPartitionSupport()).toString();
+			String table = DbUtils.toTableName(query, null, processor.getPartitionSupport()).toString();
 			sb.append("select 1 from ", table);
 			sb.append(" et ");
 			BindSql bind = processor.toWhereClause(query, new SqlContext(context, "et", query), null, profile, batch);
@@ -339,10 +346,11 @@ public interface IConditionField extends jef.database.Field {
 			this.query = subQuery;
 		}
 
-		public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance, DatabaseDialect profile, boolean batch) {
+		public String toSql(ITableMetadata meta, SqlProcessor processor, SqlContext context, Object instance,
+				DatabaseDialect profile, boolean batch) {
 			StringBuilder sb = new StringBuilder();
 			sb.append(name()).append("(");
-			sb.append("select 1 from ").append(DbUtils.toTableName(query.getInstance(), null, query, processor.getPartitionSupport()));
+			sb.append("select 1 from ").append(DbUtils.toTableName(query, null, processor.getPartitionSupport()));
 			sb.append(" et ");
 
 			sb.append(processor.toWhereClause(query, new SqlContext(context, "et", query), null, profile, batch));
@@ -350,9 +358,10 @@ public interface IConditionField extends jef.database.Field {
 			return sb.toString();
 		}
 
-		public void toPrepareSql(SqlBuilder sb, ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance, DatabaseDialect profile, boolean batch) {
+		public void toPrepareSql(SqlBuilder sb, ITableMetadata meta, SqlProcessor processor, SqlContext context,
+				Object instance, DatabaseDialect profile, boolean batch) {
 			sb.append(name(), "(");
-			String table = DbUtils.toTableName(query.getInstance(), null, query, processor.getPartitionSupport()).toString();
+			String table = DbUtils.toTableName(query, null, processor.getPartitionSupport()).toString();
 			sb.append("select 1 from ", table);
 			sb.append(" et ");
 			BindSql bind = processor.toWhereClause(query, new SqlContext(context, "et", query), null, profile, batch);

@@ -4,6 +4,15 @@ import java.sql.SQLException;
 
 import javax.naming.NamingException;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.mock.jndi.SimpleNamingContextBuilder;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
 import jef.database.DbClient;
 import jef.database.DbClientBuilder;
 import jef.database.ORMConfig;
@@ -14,15 +23,6 @@ import jef.database.datasource.SimpleDataSource;
 import jef.database.datasource.SpringBeansDataSourceLookup;
 import jef.database.dialect.ColumnType;
 import jef.database.meta.TupleMetadata;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.mock.jndi.SimpleNamingContextBuilder;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 
 /**
@@ -122,7 +122,7 @@ public class DatasourceLookupTest extends org.junit.Assert implements Applicatio
 	}
 
 	private void mockDatabase() throws SQLException {
-		DbClient db=new DbClientBuilder("jdbc:hsqldb:mem:db1","","").setMaxPoolSize(2).build();
+		DbClient db=new DbClientBuilder("jdbc:hsqldb:mem:db1","","").build();
 		ORMConfig.getInstance().setDebugMode(false);
 		TupleMetadata t=new TupleMetadata("DATASOURCE_CONFIG");
 		t.addColumn("ENABLE", new ColumnType.Char(1));

@@ -256,7 +256,6 @@ import jef.tools.reflect.BeanWrapper;
 @SuppressWarnings({ "unchecked", "hiding" })
 public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, ParameterProvider {
 	private NamedQueryConfig config; // 查询本体、本身线程安全
-
 	private OperateTarget db;
 	private LockModeType lock = null;
 	private FlushModeType flushType = null;
@@ -316,7 +315,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 		if (StringUtils.isEmpty(sql)) {
 			throw new IllegalArgumentException("Please don't input an empty SQL.");
 		}
-		this.db = db;
+		this.db=db;
 		this.resultTransformer = t;
 		this.config = new NamedQueryConfig("", sql, isJpql, 0);
 		resultTransformer.addStrategy(PopulateStrategy.PLAIN_MODE);
@@ -326,7 +325,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 * 构造，从NamedQueryConfig构造出来
 	 */
 	NativeQuery(OperateTarget db, NamedQueryConfig config, Transformer t) {
-		this.db = db;
+		this.db=db;
 		this.resultTransformer = t;
 		this.config = config;
 		resultTransformer.addStrategy(PopulateStrategy.PLAIN_MODE);
@@ -347,7 +346,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 */
 	public long getResultCount() {
 		try {
-			SqlAndParameter paramHolder = config.getCountSqlAndParams(db, this);
+			SqlAndParameter paramHolder = config.getCountSqlAndParams(db.getMetaData(), this);
 			QueryablePlan plan = null;
 			if (routing) {
 				plan = SqlAnalyzer.getSelectExecutionPlan((Select) paramHolder.statement, paramHolder.getParamsMap(), paramHolder.params, db);
@@ -433,7 +432,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 *             数据库异常
 	 */
 	private <T> T doQuery(ResultSetExtractor<T> extractor, boolean forCount) throws SQLException {
-		SqlAndParameter sqlContext = config.getSqlAndParams(db, this);
+		SqlAndParameter sqlContext = config.getSqlAndParams(db.getMetaData(), this);
 		QueryablePlan plan = null;
 		if (routing) {
 			plan = SqlAnalyzer.getSelectExecutionPlan((Select) sqlContext.statement, sqlContext.getParamsMap(), sqlContext.params, db);
@@ -541,7 +540,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 */
 	public int executeUpdate() {
 		try {
-			SqlAndParameter parse = config.getSqlAndParams(db, this);
+			SqlAndParameter parse = config.getSqlAndParams(db.getMetaData(), this);
 			Statement sql = parse.statement;
 			ExecuteablePlan plan = null;
 			if (routing) {
@@ -729,7 +728,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 */
 	public NativeQuery<X> setParameter(String name, Object value) throws NoSuchElementException {
 		if (StringUtils.isNotEmpty(name)) {
-			ParameterMetadata p = config.getParams(db).get(name);
+			ParameterMetadata p = config.getParams(db.getMetaData()).get(name);
 			if (p == null) {
 				throw new NoSuchElementException("the parameter [" + name + "] doesn't exist in the query:" + config.getName());
 			}
@@ -751,7 +750,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 *             该参数未在查询语句中定义
 	 */
 	public NativeQuery<X> setParameter(int position, Object value) {
-		ParameterMetadata p = config.getParams(db).get(Integer.valueOf(position));
+		ParameterMetadata p = config.getParams(db.getMetaData()).get(Integer.valueOf(position));
 		if (p == null) {
 			throw new NoSuchElementException("the parameter [" + position + "] doesn't exist in the named query:" + config.getName());
 		}
@@ -773,7 +772,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 */
 	public NativeQuery<X> setParameterByString(String name, String value) {
 		if (StringUtils.isNotEmpty(name)) {
-			ParameterMetadata p = config.getParams(db).get(name);
+			ParameterMetadata p = config.getParams(db.getMetaData()).get(name);
 			if (p == null) {
 				throw new NoSuchElementException("the parameter [" + name + "] doesn't exist in the named query." + config.getName());
 			}
@@ -799,7 +798,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 */
 	public NativeQuery<X> setParameterByString(String name, String[] value) {
 		if (StringUtils.isNotEmpty(name)) {
-			ParameterMetadata p = config.getParams(db).get(name);
+			ParameterMetadata p = config.getParams(db.getMetaData()).get(name);
 			if (p == null) {
 				throw new NoSuchElementException("the parameter [" + name + "] doesn't exist in the named query.");
 			}
@@ -856,7 +855,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 *             该参数未在查询语句中定义
 	 */
 	public NativeQuery<X> setParameterByString(int position, String value) {
-		ParameterMetadata p = config.getParams(db).get(position);
+		ParameterMetadata p = config.getParams(db.getMetaData()).get(position);
 		if (p == null) {
 			throw new NoSuchElementException("the parameter [" + position + "] doesn't exist in the named query.");
 		}
@@ -880,7 +879,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 *             该参数未在查询语句中定义
 	 */
 	public NativeQuery<X> setParameterByString(int position, String[] value) {
-		ParameterMetadata p = config.getParams(db).get(position);
+		ParameterMetadata p = config.getParams(db.getMetaData()).get(position);
 		if (p == null) {
 			throw new NoSuchElementException("the parameter [" + position + "] doesn't exist in the named query.");
 		}
@@ -943,7 +942,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 */
 	public Set<Parameter<?>> getParameters() {
 		Set<Parameter<?>> result = new HashSet<Parameter<?>>();
-		for (ParameterMetadata jp : config.getParams(this.db).values()) {
+		for (ParameterMetadata jp : config.getParams(db.getMetaData()).values()) {
 			result.add(jp.param);
 		}
 		return result;
@@ -956,7 +955,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 *             该参数未在查询语句中定义
 	 */
 	public Parameter<?> getParameter(String name) {
-		ParameterMetadata param = config.getParams(db).get(name);
+		ParameterMetadata param = config.getParams(db.getMetaData()).get(name);
 		if (param == null) {
 			throw new NoSuchElementException(name);
 		}
@@ -970,7 +969,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 *             该参数未在查询语句中定义
 	 */
 	public <X> Parameter<X> getParameter(String name, Class<X> type) {
-		ParameterMetadata param = config.getParams(db).get(name);
+		ParameterMetadata param = config.getParams(db.getMetaData()).get(name);
 		if (param == null || param.param.getParameterType() != type) {
 			throw new NoSuchElementException(name);
 		}
@@ -984,7 +983,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 *             该参数未在查询语句中定义
 	 */
 	public Parameter<?> getParameter(int position) {
-		ParameterMetadata param = config.getParams(db).get(position);
+		ParameterMetadata param = config.getParams(db.getMetaData()).get(position);
 		if (param == null) {
 			throw new NoSuchElementException(String.valueOf(position));
 		}
@@ -998,7 +997,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 *             该参数未在查询语句中定义
 	 */
 	public <X> Parameter<X> getParameter(int position, Class<X> type) {
-		ParameterMetadata param = config.getParams(db).get(position);
+		ParameterMetadata param = config.getParams(db.getMetaData()).get(position);
 		if (param == null || param.param.getParameterType() != type) {
 			throw new NoSuchElementException(String.valueOf(position));
 		}
@@ -1201,7 +1200,7 @@ public class NativeQuery<X> implements javax.persistence.TypedQuery<X>, Paramete
 	 */
 	public List<String> getParameterNames() {
 		List<String> result = new ArrayList<String>();
-		for (Object o : config.getParams(db).keySet()) {
+		for (Object o : config.getParams(db.getMetaData()).keySet()) {
 			result.add(String.valueOf(o));
 		}
 		return result;

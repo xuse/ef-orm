@@ -15,14 +15,10 @@
  */
 package jef.database;
 
-import java.sql.SQLException;
-import java.util.Map;
-
 import jef.database.query.Query;
 
 public interface Queryable {
-	@SuppressWarnings("rawtypes")
-	public Query getQuery();
+	public <T> Query<T> getQuery();
 	
 
 	/**
@@ -30,29 +26,23 @@ public interface Queryable {
 	 */
 	public void clearUpdate();
 	
-	/**
-	 * 获取目前的updateMap
-	 */
-	Map<Field, Object> getUpdateValueMap();
+//	/**
+//	 * 获取目前的updateMap
+//	 */
+//	Map<Field, Object> getUpdateValueMap();
 	
-	/**
-	 * 准备更新数据(与现有值相等的不会被更新)
-	 * @param field
-	 * @param newValue
-	 * @throws SQLException
-	 */
-	public void prepareUpdate(Field field,Object newValue);
-	
-	/**
-	 * 准备更新 数据(强制)
-	 * 
-	 * @Title: prepareUpdate
-	 */
-	void prepareUpdate(Field field, Object newValue, boolean force);
+//	/**
+//	 * 准备更新数据(与现有值相等的不会被更新)
+//	 * @param field
+//	 * @param newValue
+//	 * @throws SQLException
+//	 */
+//	public void prepareUpdate(Field field,Object newValue);
 	
 	/**
 	 * 判断是否需要更新
 	 * @return
+	 * @deprecated 后续不需要此字段了。使用Query来描述update行为
 	 */
 	public boolean needUpdate();
 }

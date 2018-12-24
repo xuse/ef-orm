@@ -21,8 +21,12 @@ import java.util.concurrent.Executor;
 
 import jef.common.log.LogUtil;
 
-public abstract class AbstractJDBCConnection implements Connection{
-	protected Connection conn;
+public abstract class AbstractJDBCConnection implements Connection {
+	protected final Connection conn;
+
+	protected AbstractJDBCConnection(Connection conn) {
+		this.conn = conn;
+	}
 
 	public PreparedStatement prepareStatement(String sql) throws SQLException {
 		return conn.prepareStatement(sql);
@@ -55,7 +59,7 @@ public abstract class AbstractJDBCConnection implements Connection{
 	public CallableStatement prepareCall(String sql) throws SQLException {
 		return conn.prepareCall(sql);
 	}
-	
+
 	// 以下是为了实现JDBC规范的 Connection中其他方法，ORM本身不使用********************************
 	public <T> T unwrap(Class<T> iface) throws SQLException {
 		return conn.unwrap(iface);
@@ -200,12 +204,15 @@ public abstract class AbstractJDBCConnection implements Connection{
 	public Struct createStruct(String typeName, Object[] attributes) throws SQLException {
 		return conn.createStruct(typeName, attributes);
 	}
+
 	public DatabaseMetaData getMetaData() throws SQLException {
 		return conn.getMetaData();
 	}
+
 	public void rollback() throws SQLException {
 		conn.rollback();
 	}
+
 	public boolean isValid(int i) {
 		if (conn == null) {
 			return true;
@@ -217,7 +224,7 @@ public abstract class AbstractJDBCConnection implements Connection{
 			return false;
 		}
 	}
-	
+
 	public void setAutoCommit(boolean b) throws SQLException {
 		conn.setAutoCommit(b);
 	}

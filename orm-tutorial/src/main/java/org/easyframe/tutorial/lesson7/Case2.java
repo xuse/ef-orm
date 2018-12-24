@@ -13,7 +13,7 @@ import jef.database.DbClient;
 import jef.database.ORMConfig;
 import jef.database.SqlTemplate;
 import jef.database.datasource.MapDataSourceLookup;
-import jef.database.datasource.RoutingDataSource;
+import jef.database.datasource.DefaultRoutingDataSource;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.AbstractMetadata;
@@ -45,7 +45,7 @@ public class Case2 {
 		lookup.setDefaultKey("datasource1");//指定datasource1是默认的操作数据源
 		
 		//构造一个多数据源的DbClient
-		db=new DbClient(new RoutingDataSource(lookup));
+		db=new DbClient(new DefaultRoutingDataSource(lookup));
 		
 		ORMConfig.getInstance().setDebugMode(true);
 		db.dropTable(Person.class);

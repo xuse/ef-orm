@@ -1,43 +1,50 @@
 package jef.database.support;
 
-import jef.database.IQueryableEntity;
 import jef.database.Session;
 import jef.database.Transaction;
+import jef.database.query.Query;
 
 /**
  * 默认的，空实现
+ * 
  * @author Administrator
  *
  */
-public class DefaultDbOperListener implements DbOperatorListener{
-	private static DbOperatorListener instance=new DefaultDbOperListener();
-	
-	public static DbOperatorListener getInstance(){
+public class DefaultDbOperListener implements DbOperatorListener {
+	private static DbOperatorListener instance = new DefaultDbOperListener();
+
+	public static DbOperatorListener getInstance() {
 		return instance;
 	}
-	
-	public void beforeDelete(IQueryableEntity obj, Session db) {
+
+	@Override
+	public void beforeDelete(Query<?> obj, Session db) {
 	}
 
-	public void afterDelete(IQueryableEntity obj, int n, Session db) {
+	@Override
+	public void afterDelete(Query<?> obj, int n, Session db) {
 	}
 
-	public void beforeUpdate(IQueryableEntity obj, Session db) {
+	@Override
+	public void beforeUpdate(Query<?> obj, Session db) {
 	}
 
-	public void afterUpdate(IQueryableEntity obj, int n, Session db) {
+	@Override
+	public void afterUpdate(Query<?> obj, int n, Session db) {
+	}
+
+	@Override
+	public void beforeInseret(Object obj, Session abstractDbClient) {
+	}
+
+	@Override
+	public void afterInsert(Object obj, Session abstractDbClient) {
 	}
 
 	public void newTransaction(Transaction transaction) {
 	}
 
-	public void tracsactionClose(Transaction transaction){
-	}
-
-	public void afterInsert(IQueryableEntity obj, Session abstractDbClient) {
-	}
-
-	public void beforeInseret(IQueryableEntity obj, Session abstractDbClient) {
+	public void tracsactionClose(Transaction transaction) {
 	}
 
 	public void beforeSqlExecute(String sql, Object... params) {

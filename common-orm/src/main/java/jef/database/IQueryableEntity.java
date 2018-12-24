@@ -16,37 +16,32 @@
 package jef.database;
 
 import java.io.Serializable;
-
+import java.util.BitSet;
 
 /**
- * EasyFrame的原生实体类型，原生实体需要继承IQueryableEntity接口。
- * 从而获得集 增、删、改、查、延迟加载等等复杂操作为一体的对象。
+ * EasyFrame的原生实体类型，原生实体需要继承IQueryableEntity接口。 从而获得集 增、删、改、查、延迟加载等等复杂操作为一体的对象。
+ * 
  * @author jiyi
  *
  */
-public interface IQueryableEntity extends Queryable, Serializable,Cloneable {
+public interface IQueryableEntity extends Queryable, Serializable, Cloneable {
 	/**
-	 * 有没有带Query对象 
+	 * 有没有带Query对象
+	 * 
 	 * @return
 	 */
 	boolean hasQuery();
-	
+
 	/**
-	 * 如果是oracle得到rowid
-	 * @return
+	 * 清除对象中的Query对象，包括延迟加载的钩子等等
 	 */
-	String rowid();
-	
-	/**
-	 * 指定rowid (Oracle)
-	 * @param rowid
-	 */
-	void bindRowid(String rowid);
-	
+	void clearQuery();
+
 	/**
 	 * 打开字段更新记录开关
 	 */
 	void startUpdate();
+
 	/**
 	 * 关闭字段更新记录开关
 	 */
@@ -54,18 +49,33 @@ public interface IQueryableEntity extends Queryable, Serializable,Cloneable {
 
 	/**
 	 * 判断该字段是否被赋值过
+	 * 
 	 * @return 该字段是否赋值过
 	 */
 	boolean isUsed(Field field);
-	
+
 	/**
-	 * 将某个字段标记为是否赋值过
-	 * @param field 字段
-	 * @param flag true表示这个字段赋值过，false表示没有
+	 * 设置变更状态
+	 * 
+	 * @param field
+	 * @param value
+	 * @return
 	 */
-	void touchUsedFlag(Field field,boolean flag);
+	void touchFlag(Field field, boolean value);
+
+
+	//////////////////////////////////////////
 	/**
-	 * 清除对象中的Query对象，包括延迟加载的钩子等等
+	 * 如果是oracle得到rowid
+	 * 
+	 * @return
 	 */
-	void clearQuery();
+	String rowid();
+
+	/**
+	 * 指定rowid (Oracle)
+	 * 
+	 * @param rowid
+	 */
+	void bindRowid(String rowid);
 }

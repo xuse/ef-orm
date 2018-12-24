@@ -9,7 +9,6 @@ import jef.database.Condition;
 import jef.database.Condition.Operator;
 import jef.database.DbUtils;
 import jef.database.Field;
-import jef.database.IQueryableEntity;
 import jef.database.VariableConverter;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.FBIField;
@@ -86,7 +85,7 @@ public class QueryLookupVariable extends Variable {
 	Object jdbcSet(BindVariableContext context, int index, ConditionQuery query) {
 		try {
 			Collection<Condition> conds = null;
-			IQueryableEntity obj = null;
+			Object obj = null;
 			if (query != null) {
 				if (query instanceof JoinElement) {
 					conds = ((JoinElement) query).getConditions();
@@ -120,7 +119,7 @@ public class QueryLookupVariable extends Variable {
 	 *            要获取的具体值的匹配条件标记
 	 * @return
 	 */
-	private Object getWhereVariable(Collection<Condition> conds, IQueryableEntity obj) {
+	private Object getWhereVariable(Collection<Condition> conds, Object obj) {
 		Object result = NOT_FOUND;
 		for (Condition c : conds) {
 			if (c.getField() == getField() && c.getOperator() == getOper()) {

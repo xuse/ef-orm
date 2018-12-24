@@ -1,5 +1,8 @@
 package jef.common;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 /**
  * 轻量级容器
  * 
@@ -12,7 +15,7 @@ public class PairSO<T> {
 
 	public PairSO() {
 	}
-	
+
 	public PairSO(String f, T s) {
 		first = f;
 		second = s;
@@ -33,6 +36,7 @@ public class PairSO<T> {
 
 	/**
 	 * 将当前对象的泛型参数转换为另一泛型参数.
+	 * 
 	 * @return
 	 */
 	public <V> PairSO<V> cast() {
@@ -56,8 +60,23 @@ public class PairSO<T> {
 	public void setSecond(T second) {
 		this.second = second;
 	}
+
 	@Override
 	public String toString() {
 		return first + ":" + second;
+	}
+
+	@Override
+	public int hashCode() {
+		return new HashCodeBuilder().append(first).append(second).toHashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof PairSO) {
+			PairSO<?> rhs = (PairSO<?>) obj;
+			return new EqualsBuilder().append(first, rhs.first).append(second, rhs.second).isEquals();
+		}
+		return false;
 	}
 }

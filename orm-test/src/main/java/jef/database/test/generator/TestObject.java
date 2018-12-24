@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import jef.tools.Primitives;
 import jef.tools.reflect.ConvertUtils;
 
 public class TestObject {
@@ -62,7 +63,7 @@ public class TestObject {
 	private static Object getParam(Class<?> class1) {
 		Object obj=defaultValueMap.get(class1);
 		if(obj!=null)return obj;
-		return ConvertUtils.defaultValueForBasicType(class1);
+		return Primitives.defaultValueForBasicType(class1);
 	}
 	
 	static{

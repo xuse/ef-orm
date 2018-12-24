@@ -2,22 +2,14 @@ package com.github.geequery.springdata.repository.query;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 
-import java.util.Collections;
 import java.util.regex.Pattern;
 
-import javax.persistence.EntityManager;
-
-import jef.database.ManagedTransactionImpl;
-import jef.database.jpa.JefEntityManager;
-import jef.database.jpa.JefEntityManagerFactory;
-
-import org.easyframe.enterprise.spring.TransactionMode;
-import org.springframework.jdbc.datasource.ConnectionHolder;
-import org.springframework.orm.jpa.EntityManagerFactoryUtils;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.StringUtils;
 
 import com.github.geequery.springdata.annotation.IgnoreIf;
+
+import jef.database.Session;
+import jef.database.SessionFactory;
 
 public class QueryUtils {
     static boolean isIgnore(IgnoreIf ignoreIf, Object obj) {
@@ -58,30 +50,8 @@ public class QueryUtils {
      * 
      * @return
      */
-    public static final EntityManager getEntityManager(JefEntityManagerFactory jefEmf) {
-        TransactionMode tx = jefEmf.getDefault().getTxType();
-        EntityManager em;
-        switch (tx) {
-        case JPA:
-        case JTA:
-            em = EntityManagerFactoryUtils.doGetTransactionalEntityManager(jefEmf, null);
-            if (em == null) { // 当无事务时。Spring返回null
-                em = jefEmf.createEntityManager(null, Collections.EMPTY_MAP);
-            }
-            break;
-        case JDBC:
-            ConnectionHolder conn = (ConnectionHolder) TransactionSynchronizationManager.getResource(jefEmf.getDefault().getDataSource());
-            if (conn == null) {// 基于数据源的Spring事务
-                em = jefEmf.createEntityManager(null, Collections.EMPTY_MAP);
-            } else {
-                ManagedTransactionImpl session = new ManagedTransactionImpl(jefEmf.getDefault(), conn.getConnection());
-                em = new JefEntityManager(jefEmf, null, session);
-            }
-            break;
-        default:
-            throw new UnsupportedOperationException(tx.name());
-        }
-        return em;
+    public static final Session getEntityManager(SessionFactory jefEmf) {
+        return jefEmf.getSession();
     }
 
     private static final String IDENTIFIER = "[\\p{Lu}\\P{InBASIC_LATIN}\\p{Alnum}._$]+";

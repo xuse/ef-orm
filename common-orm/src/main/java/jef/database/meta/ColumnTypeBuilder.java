@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.MonthDay;
 import java.time.YearMonth;
 import java.util.Date;
 import java.util.List;
@@ -24,15 +25,15 @@ import jef.database.annotation.Parameter;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.TypeDefImpl;
 import jef.database.dialect.type.ColumnMapping;
-import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.create.ColumnDefinition;
 import jef.database.meta.AnnotationProvider.FieldAnnotationProvider;
 import jef.database.meta.def.GenerateTypeDef;
 import jef.database.query.SqlExpression;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
+import jef.tools.Primitives;
 import jef.tools.StringUtils;
-import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.BeanWrapper;
 
 /**
@@ -200,7 +201,7 @@ public class ColumnTypeBuilder {
 	private ColumnType createDefault() {
 		if (this.generatedValue != null && this.generatedValue.isKeyGeneration() && javaType == String.class) {
 			return new ColumnType.GUID();
-		} else if (generatedValue != null && generatedValue.isKeyGeneration() && Number.class.isAssignableFrom(BeanUtils.toWrapperClass(javaType))) {
+		} else if (generatedValue != null && generatedValue.isKeyGeneration() && Number.class.isAssignableFrom(Primitives.toWrapperClass(javaType))) {
 			return new ColumnType.AutoIncrement(precision, generatedValue.getGeType(), fieldProvider);
 		}
 
@@ -233,10 +234,10 @@ public class ColumnTypeBuilder {
 			return ColumnTypeBuilder.newDateTimeColumnDef(TemporalType.TIMESTAMP, generatedValue, version);
 		} else if (Enum.class.isAssignableFrom(javaType)) {
 			Enumerated e = fieldProvider.getAnnotation(Enumerated.class);
-			if (e.value() == EnumType.ORDINAL) {
-				return new ColumnType.Int(2);
-			} else {
+			if (e==null || e.value() == EnumType.STRING) {
 				return new ColumnType.Varchar(length > 0 ? length : 32);
+			} else {
+				return new ColumnType.Int(2);
 			}
 		} else if (javaType.isArray() && javaType.getComponentType() == Byte.TYPE) {
 			return new ColumnType.Blob();
@@ -244,8 +245,10 @@ public class ColumnTypeBuilder {
 			return new ColumnType.Blob();
 		} else if (javaType == YearMonth.class) {
 			return new ColumnType.Char(7);
+		} else if (javaType == MonthDay.class) {
+			return new ColumnType.Char(7);
 		} else {
-			throw new IllegalArgumentException("Java type " + javaType.getName() + " can't mapping to a Db column type by default");
+			throw Exceptions.illegalArgument("{}'s type is[{}], can't mapping to a Db column type by default",this.field.getName(), javaType.getName());
 		}
 	}
 

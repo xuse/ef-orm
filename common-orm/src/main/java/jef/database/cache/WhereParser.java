@@ -118,6 +118,7 @@ public abstract class WhereParser {
 		exp.accept(VA);
 	}
 
+	//2018-11-28 BUGFIX：将VisitorAdapter更换为无状态的类，从而避免多线程并发问题. 
 	private static final VisitorSimpleAdapter VA = new VisitorSimpleAdapter() {
 		public void visit(Column tableColumn) {
 			tableColumn.setTableAlias(null);

@@ -1,5 +1,6 @@
 package jef.database;
 
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,19 +11,24 @@ import java.util.Set;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import jef.database.annotation.EasyEntity;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.ITableMetadata;
 import jef.database.support.VarObjAdapter;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 
 /**
  * 用来描述动态表结构的Entity
+ * 
  * @author Joey
  *
  */
-@XmlJavaTypeAdapter(VarObjAdapter.class) //使得该类能顺利通过JAXB的序列化 
+@XmlJavaTypeAdapter(VarObjAdapter.class) // 使得该类能顺利通过JAXB的序列化
 @EasyEntity(checkEnhanced = false, refresh = false)
-public final class VarObject extends DataObject implements Map<String, Object>,MetadataContainer {
+public final class VarObject extends DataObject implements Map<String, Object>, MetadataContainer {
 	private static final long serialVersionUID = 3915258646897359358L;
+	
+	
 	private final HashMap<String, Object> map = new HashMap<String, Object>();
 
 	private ITableMetadata meta;
@@ -31,9 +37,9 @@ public final class VarObject extends DataObject implements Map<String, Object>,M
 		return meta;
 	}
 
-	protected VarObject(){
+	protected VarObject() {
 	}
-	
+
 	public VarObject(ITableMetadata meta) {
 		Assert.notNull(meta);
 		this.meta = meta;
@@ -103,6 +109,7 @@ public final class VarObject extends DataObject implements Map<String, Object>,M
 
 	/**
 	 * 得到字段值，并转换为List<T>类型
+	 * 
 	 * @param key
 	 * @param clz
 	 * @return
@@ -142,7 +149,7 @@ public final class VarObject extends DataObject implements Map<String, Object>,M
 	 * @return
 	 */
 	public VarObject set(String key, Object value) {
-		Field field = meta.getField(key);
+		ColumnMapping field = meta.getColumnDef(key);
 		if (field == null) {
 			// Check field available
 			if (!meta.getRefFieldsByName().containsKey(key)) {
@@ -150,40 +157,43 @@ public final class VarObject extends DataObject implements Map<String, Object>,M
 			}
 		} else {
 			// Check the data type
-			Class<?> expected = meta.getColumnDef(field).getFieldType();
+			Class<?> expected = field.getFieldType();
 			if (value != null && !expected.isAssignableFrom(value.getClass())) {
-				throw new IllegalArgumentException("Field value not match the column type in database. field name '" + key + "' value is a '" + value.getClass().getSimpleName() + "'. expected is " + expected.getSimpleName());
+				throw Exceptions.illegalArgument("Value of field [{}] doesn't match the type of column. input type is {}, expect {}" ,
+						key , value.getClass().getSimpleName(), expected.getSimpleName()); 
 			}
 			if (_recordUpdate) {
-				super.prepareUpdate(field, value);
+				this._touch(field.field().asEnumOrdinal());
 			}
 		}
 		map.put(key, value);
 		return this;
 	}
 
+
+	
 	/**
 	 * 设置字段的值，不作数据类型和字段值的校验
 	 */
 	public Object put(String key, Object value) {
-		Field field = meta.getField(key);
+		ColumnMapping field = meta.getColumnDef(key);
 		if (field != null) {
 			if (_recordUpdate) {
-				super.prepareUpdate(field, value);
+				this._touch(field.field().asEnumOrdinal());
 			}
 		}
 		return map.put(key, value);
 	}
 
 	public Object remove(Object key) {
-		Field field = meta.getField(String.valueOf(key));
+		ColumnMapping field = meta.getColumnDef(String.valueOf(key));
 		if (field == null) {
 			if (!meta.getRefFieldsByName().containsKey(key)) {
 				throw new IllegalArgumentException("Unknown field name" + key);
 			}
 		} else {
 			if (_recordUpdate) {
-				super.prepareUpdate(field, null);
+				super._touch(field.field().asEnumOrdinal());
 			}
 		}
 		return map.remove(key);

@@ -14,6 +14,9 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import com.github.geequery.entity.Entities;
+import com.google.common.collect.Multimap;
+
 import jef.common.log.LogUtil;
 import jef.database.Condition;
 import jef.database.Condition.Operator;
@@ -25,7 +28,6 @@ import jef.database.IConditionField.Exists;
 import jef.database.IConditionField.Not;
 import jef.database.IConditionField.NotExists;
 import jef.database.IConditionField.Or;
-import jef.database.IQueryableEntity;
 import jef.database.ORMConfig;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
@@ -43,8 +45,6 @@ import jef.database.support.MultipleDatabaseOperateException;
 import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
 
-import com.google.common.collect.Multimap;
-
 /**
  * 分表计算器的EF-ORM默认实现，能最大限度的利用JEF的Annotation功能， 对基于Criteria
  * API的Query进行充分的解析，进而进行分表维度计算。
@@ -53,11 +53,12 @@ import com.google.common.collect.Multimap;
  */
 public final class DefaultPartitionCalculator implements PartitionCalculator {
 
-	public PartitionResult[] toTableNames(AbstractMetadata meta, IQueryableEntity instance, Query<?> q, PartitionSupport processor, boolean doFileter) {
+	public PartitionResult[] toTableNames(Query<?> q, PartitionSupport processor, boolean doFileter) {
+		AbstractMetadata meta = (AbstractMetadata) q.getMeta();
 		DatabaseDialect profile = processor.getProfile(null);
 		List<DbTable> result;
-		if (meta.getPartition() != null && instance != null) {// 分区表，并且具备分区条件
-			Set<DbTable> r = getPartitionTables(meta, getPartitionFieldValues(meta, instance, q), profile);
+		if (meta.getPartition() != null) {// 分区表，并且具备分区条件
+			Set<DbTable> r = getPartitionTables(meta, getPartitionFieldValues(meta, q.getInstance(), q), profile);
 			if (r.isEmpty()) {
 				return processor.getSubTableNames(meta); // 返回一切可能
 			} else {
@@ -117,11 +118,11 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 * java.lang.String, jef.database.IQueryableEntity,
 	 * jef.database.query.Query, jef.database.meta.DbmsProfile)
 	 */
-	public PartitionResult toTableName(AbstractMetadata meta, IQueryableEntity instance, Query<?> q, PartitionSupport processor) {
+	public PartitionResult toTableName(AbstractMetadata meta, Object instance, PartitionSupport processor) {
 		DatabaseDialect profile = processor.getProfile(null);
 		DbTable result;
 		if (meta.getPartition() != null && instance != null) {// 认为是分区表的场合
-			Set<DbTable> tbs = getPartitionTables(meta, getPartitionFieldValues(meta, instance, q), profile);
+			Set<DbTable> tbs = getPartitionTables(meta, getPartitionFieldValues(meta, instance, null), profile);
 			if (tbs.isEmpty()) { // 没有返回的情况，返回基表
 				return meta.getBaseTable(profile).toPartitionResult();
 			} else if (tbs.size() != 1) {
@@ -360,7 +361,7 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static Map<String, Dimension> getPartitionFieldValues(ITableMetadata meta, IQueryableEntity instance, Query<?> q) {
+	public static Map<String, Dimension> getPartitionFieldValues(ITableMetadata meta, Object instance, Query<?> q) {
 		Entry<PartitionKey, PartitionFunction>[] keys = meta.getEffectPartitionKeys();
 		// 获取分表向量
 		Map<String, Dimension> fieldVal = new HashMap<String, Dimension>();
@@ -380,20 +381,19 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 					obj = RangeDimension.EMPTY_RANGE;
 				}
 			} else {
-				Field fld = meta.getField(field);
-				if (fld == null) {
+				ColumnMapping column = meta.getColumnDef(field);
+				if (column == null) {
 					throw new IllegalArgumentException("The field [" + field + "] not exists in " + meta.getName());
 				}
 				if (q != null && !q.isAll()) {
-					obj = findConditionValuesByName(q.getConditions(), fld, false);
+					obj = findConditionValuesByName(q.getConditions(), column.field(), false);
 				}
 				if (obj == null) {
 					Object term = null;
-					ColumnMapping column = meta.getColumnDef(fld);
 					if (instance != null) {
 						term = column.getFieldAccessor().get(instance);
 						if (term != null) { // 排除原生值的干扰
-							if (DbUtils.isInvalidValue(term, column, instance.isUsed(fld))) {
+							if (DbUtils.isInvalidValue(term, column, Entities.isUsed(instance, column.field()))) {
 								term = null;
 							}
 						}

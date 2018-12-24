@@ -11,7 +11,6 @@ import jef.database.DataObject;
 import jef.database.DebugUtil;
 import jef.database.Field;
 import jef.database.IConditionField;
-import jef.database.IQueryableEntity;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.Reference;
 import jef.database.wrapper.populator.Transformer;
@@ -22,7 +21,7 @@ import jef.database.wrapper.populator.Transformer;
  *
  * @param <T>
  */
-public final class ReadOnlyQuery<T extends IQueryableEntity> extends AbstractQuery<T> {
+public final class ReadOnlyQuery<T> extends AbstractQuery<T> {
 	private static final long serialVersionUID = 1L;
 	/**
 	 * 结果转换器

@@ -20,12 +20,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Objects;
+
 import jef.common.PairSO;
 import jef.common.log.LogUtil;
 import jef.database.DbUtils;
-import jef.database.Field;
 import jef.database.QueryAlias;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.jsqlparser.JPQLSelectConvert;
 import jef.database.jsqlparser.SqlFunctionlocalization;
 import jef.database.jsqlparser.UndoableVisitor;
@@ -40,8 +42,6 @@ import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.wrapper.variable.ConstantVariable;
 import jef.database.wrapper.variable.Variable;
-
-import com.google.common.base.Objects;
 
 public class JpqlExpression implements Expression, LazyQueryBindField {
 	protected Query<?> instance;
@@ -211,12 +211,12 @@ public class JpqlExpression implements Expression, LazyQueryBindField {
 				return;
 			}
 			ITableMetadata meta = MetaHolder.getMeta(instance.getInstance());
-			Field f = meta.getField(tableColumn.getColumnName());
+			ColumnMapping f = meta.getColumnDef(tableColumn.getColumnName());
 			String oldAlias = tableColumn.getTableAlias();
 			if (f != null) {
 				savePoint(tableColumn, new String[] { oldAlias, tableColumn.getColumnName() });
 				tableColumn.setTableAlias(alias);
-				tableColumn.setColumnName(meta.getColumnName(f, profile, true));
+				tableColumn.setColumnName(f.getColumnName(profile, true));
 			} else {
 				// FIXME 现在设计没找到列是不替换名称的
 			}

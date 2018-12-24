@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import javax.persistence.PersistenceException;
 import javax.persistence.UniqueConstraint;
 
 import jef.database.dialect.DatabaseDialect;
@@ -11,6 +12,7 @@ import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.object.Constraint;
 import jef.database.meta.object.ConstraintType;
+import jef.tools.Exceptions;
 import jef.tools.StringUtils;
 
 /**
@@ -59,5 +61,17 @@ public class UniqueConstraintDef {
 		con.setColumns(getColumnNames(meta, dialect));
 		con.setType(ConstraintType.U);
 		return con;
+	}
+
+	public static boolean check(UniqueConstraint unique, Class<?> typeName) {
+		if(unique==null || unique.columnNames().length==0) {
+			return false;
+		}
+		for(String s: unique.columnNames()) {
+			if(StringUtils.isBlank(s)) {
+				throw new PersistenceException(Exceptions.format("The {} has a invalid @UniqueConstraint defnition.", typeName)); 
+			}
+		}
+		return true;
 	}
 }

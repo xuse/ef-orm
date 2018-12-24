@@ -49,7 +49,7 @@ final class LazyLoadContext implements ILazyLoadContext {
 		loaded.set(id,true);
 	}
 
-	public boolean process(DataObject dataObject, int id) throws SQLException {
+	public boolean process(Object dataObject, int id) throws SQLException {
 		if(!loaded.get(id)){
 			processor.doTask(dataObject,id);
 			loaded.set(id,true);

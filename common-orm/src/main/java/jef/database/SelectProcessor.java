@@ -11,10 +11,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import jef.common.Entry;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.PartitionSupport;
+import jef.database.innerpool.WrapableConnection;
 import jef.database.jdbc.result.ResultSetContainer;
 import jef.database.meta.Feature;
 import jef.database.meta.ISelectProvider;
-import jef.database.meta.MetaHolder;
 import jef.database.query.ComplexQuery;
 import jef.database.query.ConditionQuery;
 import jef.database.query.ISelectItemProvider;
@@ -37,7 +37,6 @@ import jef.database.wrapper.clause.SelectPart;
 import jef.database.wrapper.executor.DbTask;
 import jef.database.wrapper.variable.BindVariableContext;
 import jef.http.client.support.CommentEntry;
-import jef.tools.ArrayUtils;
 import jef.tools.PageLimit;
 import jef.tools.StringUtils;
 
@@ -116,23 +115,23 @@ public abstract class SelectProcessor {
 
 			sb.ensureCapacity(sql.getSql().length() + 150);
 			sb.append(sql.getSql()).append(db);
-			try {
-				psmt = db.prepareStatement(sql.getSql(), sql.getRsLaterProcessor(), option.holdResult);
+			WrapableConnection conn = db.get();
+			try{
+				psmt = conn.prepareStatement(sql.getSql(), sql.getRsLaterProcessor(), option.holdResult);
 				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
 				context.setVariables(queryObj, null, sql.getBind());
 				option.setSizeFor(psmt);
 				rs = psmt.executeQuery();
-				rs2.add(rs, psmt, db);
+				rs2.add(rs, psmt, conn);
 			} catch (SQLException e) {
 				DbUtils.close(rs);
 				DbUtils.close(psmt);
-				DbUtils.processError(e, ArrayUtils.toString(sqlResult.getTables(), true), db);
-				db.releaseConnection();
+				conn.close();
 				throw e;
 			} catch (RuntimeException e) {
 				DbUtils.close(rs);
 				DbUtils.close(psmt);
-				db.releaseConnection();
+				conn.close();
 				throw e;
 			} finally {
 				sb.output();
@@ -145,9 +144,9 @@ public abstract class SelectProcessor {
 				Query<?> query = (Query<?>) obj;
 				CountClause cq = new CountClause();
 				String myTableName = (String) query.getAttribute("_table_name");
-				myTableName = MetaHolder.toSchemaAdjustedName(myTableName);
+				myTableName = DbUtils.toSchemaAdjustedName(myTableName);
 
-				PartitionResult[] sites = DbUtils.toTableNames(query.getInstance(), myTableName, query, db.getPartitionSupport());
+				PartitionResult[] sites = DbUtils.toTableNames(query,myTableName, db.getPartitionSupport());
 				DatabaseDialect profile = getProfile(sites);
 				SqlContext context = query.prepare();
 				GroupClause groupClause = toGroupAndHavingClause(query, context, profile);
@@ -236,9 +235,9 @@ public abstract class SelectProcessor {
 			ResultSet rs = null;
 			sb.append(sql).append(db);
 			long currentCount = 0;
+			WrapableConnection conn=db.get();
 			try {
-				psmt = db.prepareStatement(sql);
-
+				psmt = conn.prepareStatement(sql);
 				psmt.setQueryTimeout(ORMConfig.getInstance().getSelectTimeout());
 				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
 				context.setVariables(null, null, bsql.getBind());
@@ -248,14 +247,11 @@ public abstract class SelectProcessor {
 					sb.append("\tCount=").append(currentCount);
 					total += currentCount;
 				}
-			} catch (SQLException e) {
-				DbUtils.processError(e, sql, db);
-				throw e;
 			} finally {
 				sb.output();
 				DbUtils.close(rs);
 				DbUtils.close(psmt);
-				db.releaseConnection();
+				conn.close();
 			}
 			return total;
 		}

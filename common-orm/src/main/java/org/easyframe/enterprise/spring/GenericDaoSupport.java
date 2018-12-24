@@ -7,26 +7,26 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 
+import org.springframework.transaction.annotation.Transactional;
+
+import com.github.geequery.entity.Entities;
+
 import jef.common.wrapper.Page;
 import jef.database.DbUtils;
-import jef.database.Field;
-import jef.database.IQueryableEntity;
 import jef.database.NativeQuery;
 import jef.database.PagingIterator;
 import jef.database.PagingIteratorObjImpl;
-import jef.database.RecordHolder;
-import jef.database.RecordsHolder;
+import jef.database.QB;
+import jef.database.Session;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.AbstractMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.PKQuery;
 import jef.tools.reflect.ClassEx;
 import jef.tools.reflect.GenericUtils;
-
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 框架提供的基本数据库操作实现<br>
@@ -36,7 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @param <T>
  */
 @Transactional
-public abstract class GenericDaoSupport<T extends IQueryableEntity> extends BaseDao implements GenericDao<T> {
+public abstract class GenericDaoSupport<T> extends BaseDao implements GenericDao<T> {
 	protected Class<T> entityClass;
 	protected AbstractMetadata meta;
 
@@ -76,7 +76,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	 * @Title: updateByJPQL
 	 */
 	public int updateByJPQL(String jpql, Map<String, Object> params) {
-		EntityManager em = getEntityManager();
+		Session em = getSession();
 		Query q = em.createQuery("jpql");
 		for (String key : params.keySet()) {
 			q.setParameter(key, params.get(key));
@@ -87,17 +87,12 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * com.ailk.easyframe.web.common.dal.IDaoCrudSupport#insert(jef.database
+	 * @see com.ailk.easyframe.web.common.dal.IDaoCrudSupport#insert(jef.database
 	 * .IQueryableEntity)
 	 */
 	public T insert(T entity) {
-		try {
-			getSession().insert(entity);
-			return entity;
-		} catch (SQLException e) {
-			throw DbUtils.toRuntimeException(e);
-		}
+		getSession().insert(entity);
+		return entity;
 	}
 
 	/**
@@ -115,19 +110,21 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * com.ailk.easyframe.web.common.dal.IDaoCrudSupport#merge(jef.database.
+	 * @see com.ailk.easyframe.web.common.dal.IDaoCrudSupport#merge(jef.database.
 	 * IQueryableEntity)
 	 */
 	public T merge(T entity) {
-		return getEntityManager().merge(entity);
+		try {
+			return getSession().merge(entity);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * com.ailk.easyframe.web.common.dal.IDaoCrudSupport#update(jef.database
+	 * @see com.ailk.easyframe.web.common.dal.IDaoCrudSupport#update(jef.database
 	 * .IQueryableEntity)
 	 */
 	public int update(T entity) {
@@ -141,8 +138,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * com.ailk.easyframe.web.common.dal.IDaoCrudSupport#updateWithoutCascade
+	 * @see com.ailk.easyframe.web.common.dal.IDaoCrudSupport#updateWithoutCascade
 	 * (jef.database.IQueryableEntity)
 	 */
 	public int updateCascade(T entity) {
@@ -156,8 +152,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * com.ailk.easyframe.web.common.dal.IDaoCrudSupport#remove(jef.database
+	 * @see com.ailk.easyframe.web.common.dal.IDaoCrudSupport#remove(jef.database
 	 * .IQueryableEntity)
 	 */
 	public int remove(T entity) {
@@ -179,8 +174,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * com.ailk.easyframe.web.common.dal.IDaoCrudSupport#removeWithCascade(jef
+	 * @see com.ailk.easyframe.web.common.dal.IDaoCrudSupport#removeWithCascade(jef
 	 * .database.IQueryableEntity)
 	 */
 	public int removeCascade(T entity) {
@@ -226,22 +220,20 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	 */
 	@SuppressWarnings("unchecked")
 	public List<T> getAll() {
-		T t = (T) meta.newInstance();
-		t.getQuery().setAllRecordsCondition();
-		return find(t);
+		return find((jef.database.query.Query<T>) QB.create(meta).setAllRecordsCondition());
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * com.ailk.easyframe.web.common.dal.IDaoCrudSupport#loadWithoutCascade(
+	 * @see com.ailk.easyframe.web.common.dal.IDaoCrudSupport#loadWithoutCascade(
 	 * jef.database.IQueryableEntity)
 	 */
 	public T loadCascade(T entity, boolean unique) {
 		try {
-			entity.getQuery().setCascade(true);
-			return getSession().load(entity, unique);
+			jef.database.query.Query<T> q = Entities.asQuery(entity);
+			q.setCascade(true);
+			return getSession().load(q, unique);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -250,27 +242,12 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * com.ailk.easyframe.web.common.dal.IDaoCrudSupport#findByExample(jef.database
-	 * .IQueryableEntity)
+	 * @see com.ailk.easyframe.web.common.dal.IDaoCrudSupport#findByExample(jef.
+	 * database .IQueryableEntity)
 	 */
 	public List<T> findByExample(T entity) {
 		try {
 			return getSession().select(DbUtils.populateExampleConditions(entity), null);
-		} catch (SQLException e) {
-			throw DbUtils.toRuntimeException(e);
-		}
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.ailk.easyframe.web.common.dal.IDaoCrudSupport#find(jef.database.
-	 * IQueryableEntity)
-	 */
-	public List<T> find(T entity) {
-		try {
-			return getSession().select(entity);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -287,10 +264,20 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		}
 	}
 
+	public List<T> find(T entity) {
+		try {
+			jef.database.query.Query<T> q = Entities.asQuery(entity);
+			return getSession().select(q);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+
 	public List<T> findCascade(T entity) {
 		try {
-			entity.getQuery().setCascade(true);
-			return getSession().select(entity);
+			jef.database.query.Query<T> q = Entities.asQuery(entity);
+			q.setCascade(true);
+			return getSession().select(q);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -299,9 +286,8 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * com.ailk.easyframe.web.common.dal.IDaoCrudSupport#findAndPage(jef.database
-	 * .IQueryableEntity, int, int)
+	 * @see com.ailk.easyframe.web.common.dal.IDaoCrudSupport#findAndPage(jef.
+	 * database .IQueryableEntity, int, int)
 	 */
 	public Page<T> findAndPage(T entity, int start, int limit) {
 		Page<T> p = new Page<T>();
@@ -322,9 +308,8 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * com.ailk.easyframe.web.common.dal.IDaoCrudSupport#findAndPageWithoutCascade
-	 * (jef.database.IQueryableEntity, int, int)
+	 * @see com.ailk.easyframe.web.common.dal.IDaoCrudSupport#
+	 * findAndPageWithoutCascade (jef.database.IQueryableEntity, int, int)
 	 */
 	public Page<T> findAndPageCascade(T entity, int start, int limit) {
 		Page<T> p = new Page<T>();
@@ -345,8 +330,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * com.ailk.easyframe.web.common.dal.IDaoCrudSupport#find(java.lang.Class,
+	 * @see com.ailk.easyframe.web.common.dal.IDaoCrudSupport#find(java.lang.Class,
 	 * java.lang.String, java.lang.Object[])
 	 */
 	public List<T> find(Class<T> entity, String query, Object... params) {
@@ -360,8 +344,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * com.ailk.easyframe.web.common.dal.IDaoCrudSupport#findAndPageByNq(java
+	 * @see com.ailk.easyframe.web.common.dal.IDaoCrudSupport#findAndPageByNq(java
 	 * .lang.String, java.util.Map, int, int)
 	 */
 	public Page<T> findAndPageByNq(String nqName, Map<String, Object> params, int start, int limit) {
@@ -385,8 +368,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * com.ailk.easyframe.web.common.dal.IDaoCrudSupport#findByNq(java.lang.
+	 * @see com.ailk.easyframe.web.common.dal.IDaoCrudSupport#findByNq(java.lang.
 	 * String, java.util.Map)
 	 */
 	public List<T> findByNq(String nqName, Map<String, Object> params) {
@@ -398,8 +380,7 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see
-	 * com.ailk.easyframe.web.common.dal.IDaoCrudSupport#executeNq(java.lang
+	 * @see com.ailk.easyframe.web.common.dal.IDaoCrudSupport#executeNq(java.lang
 	 * .String, java.util.Map)
 	 */
 	public int executeNq(String nqName, Map<String, Object> param) {
@@ -475,13 +456,12 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	}
 
 	public T loadByField(String fieldname, Serializable id, boolean unique) {
-		Field field = meta.getField(fieldname);
+		ColumnMapping field = meta.getColumnDef(fieldname);
 		if (field == null) {
 			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
 		}
-		@SuppressWarnings("unchecked")
-		T q = (T) meta.newInstance();
-		q.getQuery().addCondition(field, id);
+		jef.database.query.Query<T> q = QB.create(meta);
+		q.addCondition(field.field(), id);
 		try {
 			return getSession().load(q, unique);
 		} catch (SQLException e) {
@@ -490,24 +470,24 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 	}
 
 	public List<T> findByField(String fieldname, Serializable id) {
-		Field field = meta.getField(fieldname);
+		ColumnMapping field = meta.getColumnDef(fieldname);
 		if (field == null) {
 			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
 		}
 		try {
-			return getSession().selectByField(field, id);
+			return getSession().selectByField(field.field(), id);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
 	}
 
 	public int deleteByField(String fieldname, Serializable key) {
-		Field field = meta.getField(fieldname);
+		ColumnMapping field = meta.getColumnDef(fieldname);
 		if (field == null) {
 			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
 		}
 		try {
-			return getSession().deleteByField(field, key);
+			return getSession().deleteByField(field.field(), key);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -533,12 +513,12 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 
 	@Override
 	public List<T> batchLoadByField(String fieldname, List<? extends Serializable> values) {
-		Field field = meta.getField(fieldname);
+		ColumnMapping field = meta.getColumnDef(fieldname);
 		if (field == null) {
 			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
 		}
 		try {
-			return getSession().batchLoadByField(field, values);
+			return getSession().batchLoadByField(field.field(), values);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -546,33 +526,14 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 
 	@Override
 	public int batchDeleteByField(String fieldname, List<? extends Serializable> values) {
-		Field field = meta.getField(fieldname);
+		ColumnMapping field = meta.getColumnDef(fieldname);
 		if (field == null) {
 			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
 		}
 		try {
-			return getSession().batchDeleteByField(field, values);
+			return getSession().batchDeleteByField(field.field(), values);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
 	}
-
-	@Override
-	public RecordsHolder<T> selectForUpdate(T query) {
-		try {
-			return getSession().selectForUpdate(query);
-		} catch (SQLException e) {
-			throw DbUtils.toRuntimeException(e);
-		}
-	}
-
-	@Override
-	public RecordHolder<T> loadForUpdate(T query) {
-		try {
-			return getSession().loadForUpdate(query);
-		} catch (SQLException e) {
-			throw DbUtils.toRuntimeException(e);
-		}
-	}
-
 }

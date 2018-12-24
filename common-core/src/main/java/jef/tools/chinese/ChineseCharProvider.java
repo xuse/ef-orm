@@ -4,9 +4,11 @@ import java.io.BufferedReader;
 import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
+import java.nio.charset.Charset;
 
 import jef.tools.Assert;
 import jef.tools.IOUtils;
+import jef.tools.io.Charsets;
 
 /**
  * 提供中文字符集
@@ -46,11 +48,11 @@ public class ChineseCharProvider {
 
 	private void checkAndInit() {
 		if (LAST_NAMES == null || LAST_NAMES.get() == null) {
-			LAST_NAMES = new SoftReference<char[]>(load("lastname.properties", "UTF-8", 200));
+			LAST_NAMES = new SoftReference<char[]>(load("lastname.properties", Charsets.UTF8, 200));
 		}
 	}
 
-	private static char[] load(String file, String charset, int i) {
+	private static char[] load(String file, Charset charset, int i) {
 		try {
 			BufferedReader in = IOUtils.getReader(ChineseCharProvider.class, file, charset);
 			CharArrayWriter sb = new CharArrayWriter(i);

@@ -5,19 +5,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import com.google.common.collect.Multimap;
+
 import jef.accelerator.bean.BeanAccessor;
 import jef.common.Entry;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
-import jef.database.PojoWrapper;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.AnnotationProvider.ClassAnnotationProvider;
 import jef.database.meta.def.IndexDef;
-
-import com.google.common.collect.Multimap;
+import jef.tools.reflect.BooleanProperty;
+import jef.tools.reflect.Property;
 
 @SuppressWarnings("rawtypes")
 public class TemplateMetadata extends AbstractMetadata {
@@ -34,13 +35,8 @@ public class TemplateMetadata extends AbstractMetadata {
 	}
 
 	@Override
-	public Class<? extends IQueryableEntity> getContainerType() {
-		return wrapped.getContainerType();
-	}
-
-	@Override
 	public ColumnMapping getColumnDef(Field field) {
-		ColumnMapping result = schemaMap.get(field);
+		ColumnMapping result = super.getColumnDef(field);
 		if (result != null) {
 			return result;
 		}
@@ -48,8 +44,8 @@ public class TemplateMetadata extends AbstractMetadata {
 	}
 
 	@Override
-	public Field getField(String name) {
-		Field field = super.getField(name);
+	public ColumnMapping getColumnDef(String name) {
+		ColumnMapping field = super.getColumnDef(name);
 		if (field != null) {
 			return field;
 		}
@@ -62,8 +58,8 @@ public class TemplateMetadata extends AbstractMetadata {
 	}
 
 	@Override
-	public Field getFieldByLowerColumn(String columnInLowerCase) {
-		Field field = wrapped.getFieldByLowerColumn(columnInLowerCase);
+	public ColumnMapping getFieldByLowerColumn(String columnInLowerCase) {
+		ColumnMapping field = wrapped.getFieldByLowerColumn(columnInLowerCase);
 		if (field != null) {
 			return field;
 		}
@@ -96,9 +92,7 @@ public class TemplateMetadata extends AbstractMetadata {
 	}
 
 	@Override
-	public IQueryableEntity newInstance() {
-		// throw new
-		// UnsupportedOperationException("this is a abstract metadata template.");
+	public Object newInstance() {
 		return wrapped.newInstance();
 	}
 
@@ -109,11 +103,6 @@ public class TemplateMetadata extends AbstractMetadata {
 
 	@Override
 	public String getSimpleName() {
-		throw new UnsupportedOperationException("this is a abstract metadata template.");
-	}
-
-	@Override
-	public PojoWrapper transfer(Object p, boolean isQuery) {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
 
@@ -138,7 +127,7 @@ public class TemplateMetadata extends AbstractMetadata {
 	}
 
 	@Override
-	protected Collection<ColumnMapping> getColumnSchema() {
+	public Collection<ColumnMapping> getColumnSchema() {
 		throw new UnsupportedOperationException("this is a abstract metadata template.");
 	}
 
@@ -170,5 +159,20 @@ public class TemplateMetadata extends AbstractMetadata {
 	@Override
 	public Map<String, String> getColumnComments() {
 		return wrapped.getColumnComments();
+	}
+
+	@Override
+	public Property getTouchRecord() {
+		return wrapped.getTouchRecord();
+	}
+
+	@Override
+	public BooleanProperty getTouchIgnoreFlag() {
+		return wrapped.getTouchIgnoreFlag();
+	}
+
+	@Override
+	public Property getLazyAccessor() {
+		return wrapped.getLazyAccessor();
 	}
 }

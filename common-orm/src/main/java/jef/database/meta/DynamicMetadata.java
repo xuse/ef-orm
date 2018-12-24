@@ -15,13 +15,15 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
+import com.google.common.collect.Multimap;
+
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.Entry;
 import jef.database.DbUtils;
+import jef.database.DebugUtil;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
-import jef.database.PojoWrapper;
 import jef.database.VarObject;
 import jef.database.annotation.JoinType;
 import jef.database.annotation.PartitionFunction;
@@ -37,15 +39,14 @@ import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanAccessorMapImpl;
+import jef.tools.reflect.BooleanProperty;
 import jef.tools.reflect.Property;
-
-import com.google.common.collect.Multimap;
 
 public class DynamicMetadata extends AbstractMetadata {
 
 	private Class<? extends IQueryableEntity> type = VarObject.class;
 
-	protected Map<String, Field> lowerColumnToFieldName = new HashMap<String, Field>(10, 0.6f);
+	protected Map<String, ColumnMapping> lowerColumnToFieldName = new HashMap<String, ColumnMapping>(10, 0.6f);
 
 	private List<ColumnMapping> pkFields = new ArrayList<ColumnMapping>();
 
@@ -90,7 +91,7 @@ public class DynamicMetadata extends AbstractMetadata {
 	 * 。
 	 */
 	public ColumnMapping getColumnDef(Field field) {
-		return schemaMap.get(getField(field.name()));
+		return getColumnDef(field.name());
 	}
 
 	/**
@@ -131,10 +132,10 @@ public class DynamicMetadata extends AbstractMetadata {
 	 * @return
 	 */
 	public Field f(String fieldname) {
-		Field field = fields.get(fieldname);
+		ColumnMapping field = fields.get(fieldname);
 		if (field == null)
 			throw new IllegalArgumentException("There is no field '" + fieldname + "' in table " + this.tableName);
-		return field;
+		return field.field();
 	}
 
 	public List<Field> getPKField() {
@@ -208,44 +209,43 @@ public class DynamicMetadata extends AbstractMetadata {
 		if (isPk) {
 			type.setNullable(false);
 		}
-		Field oldField = fields.get(field.name());
-		if (oldField != null) {
+		ColumnMapping columnDef = fields.get(field.name());
+		if (columnDef != null) {
 			if (!replace) {
 				throw new IllegalArgumentException("The field " + field + " already exist.");
 			}
 			// 替换的场合，先清除旧的缓存记录
-			internalRemoveField(oldField);
+			internalRemoveField(columnDef);
 		} else {
 			replace = false;// 新建的场合
-			oldField = field;
+			columnDef = ColumnMappings.getMapping(field, this, columnName, type, isPk) ;
 		}
-		ColumnMapping mType = ColumnMappings.getMapping(oldField, this, columnName, type, isPk);
-		updateAutoIncrementAndUpdate(mType);
+		updateAutoIncrementAndUpdate(columnDef);
 
 		String fieldName = field.name();
-		schemaMap.put(oldField, mType);
-		orderdColumns.add(mType);
+		super.putField(columnDef.field(), columnDef);//按序号自增
+		orderdColumns.add(columnDef);
 		
-		fields.put(fieldName, oldField);
-		lowerFields.put(fieldName.toLowerCase(), oldField);
-		lowerColumnToFieldName.put(columnName.toLowerCase(), oldField);
+		fields.put(fieldName, columnDef);
+		lowerFields.put(fieldName.toLowerCase(), columnDef.field());
+		lowerColumnToFieldName.put(columnName.toLowerCase(), columnDef);
 		if (isPk)
-			pkFields.add(mType);
-		if (mType.isLob()) {
-			lobNames = jef.tools.ArrayUtils.addElement(lobNames, oldField, jef.database.Field.class);
+			pkFields.add(columnDef);
+		if (columnDef.isLob()) {
+			lobNames = jef.tools.ArrayUtils.addElement(lobNames, columnDef.field(), jef.database.Field.class);
 		}
 		super.metaFields = null;// 清缓存
 		super.pkDim = null;
 		for (TupleModificationListener listener : listeners) {
-			listener.onUpdate(this, field);
+			listener.onUpdate(this, columnDef);
 		}
 		return replace;
 	}
 
-	private void internalRemoveField(Field field) {
+	private void internalRemoveField(ColumnMapping mType) {
 		// fields
-		ColumnMapping mType = schemaMap.remove(field);
 		orderdColumns.remove(mType);
+		Field field=mType.field();
 		if (mType != null) {
 			// columnToField
 			lowerColumnToFieldName.remove(mType.lowerColumnName());
@@ -267,11 +267,12 @@ public class DynamicMetadata extends AbstractMetadata {
 	protected boolean updateColumn(String fieldName, String columnName, ColumnType type, boolean isPk, boolean replace) {
 		fieldName = StringUtils.trimToNull(fieldName);
 		Assert.notNull(fieldName);
-		Field field = fields.get(fieldName);
-		if (field == null) {
-			field = new TupleField(this, fieldName);
+		ColumnMapping column = fields.get(fieldName);
+		if (column == null) {
+			return internalUpdateColumn(new TupleField(this, fieldName, this.getColumnSchema().size()), columnName, type, isPk, replace);
+		}else {
+			return internalUpdateColumn(column.field(), columnName, type, isPk, replace);	
 		}
-		return internalUpdateColumn(field, columnName, type, isPk, replace);
 	}
 
 	/**
@@ -282,7 +283,7 @@ public class DynamicMetadata extends AbstractMetadata {
 	 * @return false如果没找到此列
 	 */
 	public boolean removeColumnByFieldName(String fieldName) {
-		Field field = fields.remove(fieldName);
+		ColumnMapping field = fields.remove(fieldName);
 		if (field == null)
 			return false;
 		internalRemoveField(field);
@@ -292,7 +293,7 @@ public class DynamicMetadata extends AbstractMetadata {
 		return true;
 	}
 
-	public Field getFieldByLowerColumn(String fieldname) {
+	public ColumnMapping getFieldByLowerColumn(String fieldname) {
 		return lowerColumnToFieldName.get(fieldname);
 	}
 
@@ -490,10 +491,6 @@ public class DynamicMetadata extends AbstractMetadata {
 		return null;
 	}
 
-	public PojoWrapper transfer(Object p, boolean isQuery) {
-		throw new UnsupportedOperationException();
-	}
-
 	public EntityType getType() {
 		return EntityType.TUPLE;
 	}
@@ -561,12 +558,27 @@ public class DynamicMetadata extends AbstractMetadata {
 
 	@Override
 	public ColumnMapping getExtendedColumnDef(String field) {
-		return schemaMap.get(getField(field));
+		return super.getColumnDef(field);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public Map<String,String> getColumnComments() {
 		return Collections.EMPTY_MAP;
+	}
+
+	@Override
+	public Property getTouchRecord() {
+		return DebugUtil.TouchRecord;
+	}
+
+	@Override
+	public BooleanProperty getTouchIgnoreFlag() {
+		return DebugUtil.notTouchProperty;
+	}
+
+	@Override
+	public Property getLazyAccessor() {
+		return DebugUtil.LazyContext;
 	}
 }

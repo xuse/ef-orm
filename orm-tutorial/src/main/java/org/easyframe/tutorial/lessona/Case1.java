@@ -23,6 +23,8 @@ import org.easyframe.tutorial.lessona.entity.OperateLog;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.github.geequery.entity.Entities;
+
 /**
  * 分库分表相关演示案例。
  * @author jiyi
@@ -123,7 +125,7 @@ public class Case1 extends org.junit.Assert {
 
 	private PartitionResult[] toTableName(DataObject c, PartitionSupport s) {
 		long nano=System.nanoTime();
-		PartitionResult[] xx= DbUtils.toTableNames(c, null, null, s);
+		PartitionResult[] xx= DbUtils.toTableNames(Entities.asQuery(c), null,  s);
 		System.out.println((System.nanoTime()-nano)/1000+"us");
 		return xx;
 	}

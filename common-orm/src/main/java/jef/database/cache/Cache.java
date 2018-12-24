@@ -40,14 +40,14 @@ public interface Cache extends javax.persistence.Cache{
 	 * remove all cache data of the type.
 	 * @param cacheKey
 	 */
-	public void evict(IQueryableEntity cacheKey);
+	public void evict(Object cacheKey);
 
 	/**
 	 * on object insert , store the cache
 	 * @param obj
 	 * @param table 自定义表名，无特殊情况时传入null即可
 	 */
-	public void onInsert(IQueryableEntity obj,String table);
+	public void onInsert(Object obj,String table);
 
 	/**
 	 * on object delete, remove the cache

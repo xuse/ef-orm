@@ -1690,8 +1690,7 @@ public class IOUtils {
 	public static boolean combine(Collection<String> list, String path, String srcFileName) {
 		File outputFile = new File(path + "/" + srcFileName);
 		outputFile = escapeExistFile(outputFile);
-		try {
-			FileOutputStream fou = new FileOutputStream(outputFile);
+		try (FileOutputStream fou = new FileOutputStream(outputFile)){
 			FileChannel fco = fou.getChannel();
 			long position = 0;
 			for (String i : list) {// 按顺序获得各个文件名
@@ -1887,20 +1886,32 @@ public class IOUtils {
 	 *            要处理的文件或目录
 	 * @param newName
 	 *            修改后的文件名（不含路径）。
-	 * @param overwite
+	 * @param overwrite
 	 *            覆盖模式，如果目标文件已经存在，则删除目标文件后再改名
 	 * @return 如果成功改名，返回改名后的file对象，否则返回null。
 	 */
-	public static File rename(File file, String newName, boolean overwite) {
+	public static File rename(File file, String newName, boolean overwrite) {
 		File target = new File(file.getParentFile(), newName);
 		if (target.exists()) {
-			if (overwite) {
+			if (overwrite) {
 				if (!target.delete())
 					return null;
 			} else {
 				return null;
 			}
 		}
+		return file.renameTo(target) ? target : null;
+	}
+	
+	/**
+	 * 文件（目录）更名，如果目标名已经存在，将使用数字进行错开。
+	 * @param file
+	 * @param newName
+	 * @return
+	 */
+	public static File renameEscapeExists(File file, String newName) {
+		File target = new File(file.getParentFile(), newName);
+		target=IOUtils.escapeExistFile(target);
 		return file.renameTo(target) ? target : null;
 	}
 
@@ -2244,11 +2255,16 @@ public class IOUtils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static BufferedReader getReader(File file, Charset charSet) throws IOException {
+	public static BufferedReader getReader(File file, Charset charSet){
 		if (file == null)
 			return null;
-		InputStream is = new FileInputStream(file);
-		return new BufferedReader(new UnicodeReader(is, charSet));
+		try {
+			InputStream is = new FileInputStream(file);
+			return new BufferedReader(new UnicodeReader(is, charSet));	
+		}catch(IOException ioe) {
+			throw new IllegalStateException(ioe);
+		}
+		
 	}
 
 	/**
@@ -2277,14 +2293,14 @@ public class IOUtils {
 	 *            编码
 	 * @return BufferedReader 如果文件不存在，返回null
 	 */
-	public static BufferedReader getReader(Class<?> source, String fileName, String charSet) {
+	public static BufferedReader getReader(Class<?> source, String fileName, Charset charSet) {
 		InputStream is = source.getResourceAsStream(fileName);
 		if (is == null) {
 			is = source.getClassLoader().getResourceAsStream(toClassLoaderResourcePath(source, fileName));
 		}
 		if (is == null)
 			return null;
-		UnicodeReader isr = new UnicodeReader(is, Charsets.forName(charSet));
+		UnicodeReader isr = new UnicodeReader(is, charSet);
 		return new BufferedReader(isr);
 	}
 
@@ -2545,6 +2561,7 @@ public class IOUtils {
 	 */
 	public static boolean saveObject(Serializable obj, File file) {
 		try {
+			ensureParentFolder(file);
 			return saveObject(obj, new FileOutputStream(file));
 		} catch (FileNotFoundException e) {
 			LogUtil.exception(e);

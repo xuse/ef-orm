@@ -32,13 +32,7 @@ public class UserTest {
 		user.setFullname("dsdsds");
 
 		
-		try {
-			db.insert(user);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+		db.insert(user);
 		User loaded=db.load(user);
 		
 		loaded.setEmail("jiyi@sdcxdf.com");

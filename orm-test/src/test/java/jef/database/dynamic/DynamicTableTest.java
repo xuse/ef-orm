@@ -16,8 +16,6 @@ import jef.database.Condition.Operator;
 import jef.database.DbClient;
 import jef.database.NativeQuery;
 import jef.database.QB;
-import jef.database.RecordHolder;
-import jef.database.RecordsHolder;
 import jef.database.VarObject;
 import jef.database.dialect.ColumnType;
 import jef.database.meta.TupleMetadata;
@@ -223,76 +221,6 @@ public class DynamicTableTest extends org.junit.Assert {
 		System.out.println(first);
 	}
 	
-	/**
-	 * 测试选出记录，并直接在游标上修改 (单条)
-	 * @throws SQLException
-	 */
-	@Test
-//	@IgnoreOn({"sqlite","sqlserver"})
-	@IgnoreOn(allButExcept="postgresql")
-	public void test9LoadForUpdate() throws SQLException {
-		int id = doInsert();
-		VarObject var = TestUtils.URM_SERVICE.newInstance();
-		var.set("id", id);
-		RecordHolder<VarObject> holder = db.loadForUpdate(var);
-
-		holder.get().set("name", "呵呵");
-		holder.commit();
-		holder.close();
-
-		var = db.load(var);
-		assertEquals(var.get("name"), "呵呵");
-	}
-
-	/**
-	 * 测试选出记录，并直接在游标上修改 (多条)
-	 * 包括在游标上直接创建新记录， 以及删除就记录
-	 * @throws SQLException
-	 * MySQL测试去除，See #73
-	 */
-	@Test
-	@IgnoreOn({"sqlite","sqlserver","mysql"})
-	public void testaSelectForUpdate() throws SQLException {
-		doInsert();
-		doInsert();
-		int max=doInsert();
-		RecordsHolder<VarObject> holder = db.selectForUpdate(QB.create(TestUtils.URM_SERVICE), null);
-		try{
-			int n = 0;
-			//更新数据
-			for (VarObject var : holder.get()) {
-				var.set("name", "更新字段" + n++);
-			}
-			
-			//插入一条记录
-			if(holder.supportsNewRecord()){
-				VarObject insert=holder.newRecord();
-				insert.set("id", ++max);
-				insert.set("name", "新插入的记录");	
-			}
-			
-			holder.commit(); // 提交，但不关闭结果集
-			
-			// 继续修改
-			for (VarObject var : holder.get()) {
-				holder.delete(var);
-			}
-			holder.commitAndClose();
-			List<VarObject> result = db.select(QB.create(TestUtils.URM_SERVICE));
-			System.out.println("Size=" + result.size());
-			assertEquals(result.size(), holder.supportsNewRecord()?1:0); //之前查出的记录全部被删除，只剩下新插入的记录卡了
-
-			//打印出操作后的全部记录
-			for (VarObject var : result) {
-				System.out.println(var.get("name"));
-			}
-			//进一步测试：之前测试发现在Derby上，在执行完此次操作后执行insert操作，会出现主键冲突，因此加以测试
-			doInsert();	
-		}finally{
-			holder.close();
-		}
-		
-	}
 
 	/**
 	 * 测试修改表结构，在表中添加两个字段

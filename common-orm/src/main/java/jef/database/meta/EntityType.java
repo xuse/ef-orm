@@ -19,10 +19,6 @@ public enum EntityType {
 	 */
 	TUPLE,
 	/**
-	 * 没有实现IQueryableEntity接口的类和表的映射方式
-	 */
-	POJO,
-	/**
 	 * 动态表的一个模板（由若干固定属性集合组成的抽象元数据，不能直接使用）
 	 */
 	TEMPLATE

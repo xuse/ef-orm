@@ -24,30 +24,30 @@
 		p:url="${db.url}" p:username="${db.user}" p:password="${db.password}" />
 		
 	<bean id="dataSource2" class="jef.database.datasource.SimpleDataSource"
-		p:url="jdbc:mysql://localhost:3306/test2" p:username="${db.user}" p:password="${db.password}" />
+		p:url="jdbc:mysql://localhost:3307/test2" p:username="${db.user}" p:password="${db.password}" />
 
 	<bean id="dataSource3" class="jef.database.datasource.SimpleDataSource"
-		p:url="jdbc:mysql://localhost:3306/test3" p:username="${db.user}" p:password="${db.password}" />
+		p:url="jdbc:mysql://localhost:3307/test3" p:username="${db.user}" p:password="${db.password}" />
 
-	<bean id="routingDS" class="jef.database.datasource.RoutingDataSource">
+	<bean id="routingDS" class="jef.database.datasource.DefaultRoutingDataSource">
 		<property name="dataSourceLookup">
 			<bean class="jef.database.datasource.SpringBeansDataSourceLookup" />
 		</property>
+		<!-- 
+		<property name="defaultKey" value="dataSource"/>
+		 -->
 	</bean>
 	
-	<bean id="entityManagerFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean">
-		<property name="dataSource" ref="routingDS" />
+	<bean id="sessionFactory" class="org.easyframe.enterprise.spring.SessionFactoryBean">
+		<property name="SpringDataSource" ref="routingDS"  />
+		<property name="packagesToScan" value="com.github.geequery.spring.entity"/>
 		<property name="dbInitHandler" value="com.github.geequery.test.spring.JefTransactionTest.InitTableCreater" />
+	</bean>
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="routingDS" />
 	</bean>
 	
 	<bean id="commonDao" class="org.easyframe.enterprise.spring.CommonDaoImpl" />
-	
-	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager" lazy-init="true">
-		<property name="entityManagerFactory" ref="entityManagerFactory" />
-		<property name="jpaDialect">
-			<bean class="org.jef.enterprise.spring.JefJpaDialect"/>
-		</property>		
-	</bean>
 	
 	
 </beans> 

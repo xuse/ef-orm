@@ -8,11 +8,10 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.google.common.base.Objects;
+
 import jef.database.annotation.PartitionFunction;
 import jef.tools.DateUtils;
-import jef.tools.support.LangUtils;
-
-import com.google.common.base.Objects;
 
 /*
  * 对应SQL条件
@@ -41,7 +40,6 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 	// 是否左开区间
 	private boolean isRightCloseSpan = true;
 
-	
 	/**
 	 * 默认构造，左右闭区间
 	 * 
@@ -61,42 +59,45 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 	 */
 	@SuppressWarnings("unchecked")
 	public static RangeDimension createLC(Object min, Object max) {
-		return new RangeDimension((Comparable<?>)min, (Comparable<?>)max, true, false);
+		return new RangeDimension((Comparable<?>) min, (Comparable<?>) max, true, false);
 	}
 
 	/**
 	 * 创建一个左开右闭区间
+	 * 
 	 * @param min
 	 * @param max
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
 	public static RangeDimension createCL(Object min, Object max) {
-		return new RangeDimension((Comparable<?>)min, (Comparable<?>)max, false, true);
+		return new RangeDimension((Comparable<?>) min, (Comparable<?>) max, false, true);
 	}
 
 	/**
 	 * 创建一个开区间
+	 * 
 	 * @param min
 	 * @param max
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
 	public static RangeDimension createCC(Object min, Object max) {
-		return new RangeDimension((Comparable<?>)min, (Comparable<?>)max, false, false);
+		return new RangeDimension((Comparable<?>) min, (Comparable<?>) max, false, false);
 	}
-	
+
 	/**
 	 * 创建一个闭区间
+	 * 
 	 * @param min
 	 * @param max
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
 	public static RangeDimension create(Object min, Object max) {
-		return new RangeDimension((Comparable<?>)min, (Comparable<?>)max);
+		return new RangeDimension((Comparable<?>) min, (Comparable<?>) max);
 	}
-	
+
 	/**
 	 * 构造，可以指定区间开启
 	 * 
@@ -136,8 +137,8 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 		if (d instanceof RangeDimension) {
 			// 算法,两个范围的合并
 			RangeDimension<T> other = (RangeDimension<T>) d;
-			Entry<T, Boolean> eLeft = max(this.min, this.isLeftCloseSpan, other.min, other.isLeftCloseSpan, LangUtils.NULL_IS_MINIMUM, false);// 左取大;
-			Entry<T, Boolean> eRight = min(this.max, this.isRightCloseSpan, other.max, other.isRightCloseSpan, LangUtils.NULL_IS_MAXIMUM, false);// 右取小;
+			Entry<T, Boolean> eLeft = max(this.min, this.isLeftCloseSpan, other.min, other.isLeftCloseSpan, NULL_IS_MINIMUM, false);// 左取大;
+			Entry<T, Boolean> eRight = min(this.max, this.isRightCloseSpan, other.max, other.isRightCloseSpan, NULL_IS_MAXIMUM, false);// 右取小;
 			return new RangeDimension<T>(eLeft.getKey(), eRight.getKey(), eLeft.getValue(), eRight.getValue());
 		} else {
 			throw new UnsupportedOperationException("Unknown dimenssion type:" + d.getClass().getName());
@@ -153,7 +154,7 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 				return new jef.common.Entry<T, Boolean>(v1, c1 && c2);
 			}
 		} else {
-			Comparable max = LangUtils.max(v1, v2, nullSupport);
+			Comparable max = max(v1, v2, nullSupport);
 			if (max == v1) {
 				return new jef.common.Entry<T, Boolean>(v1, c1);
 			} else {
@@ -172,7 +173,7 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 			}
 
 		} else {
-			Comparable max = LangUtils.min(v1, v2, nullSupport);
+			Comparable max = min(v1, v2, nullSupport);
 			if (max == v1) {
 				return new jef.common.Entry<T, Boolean>(v1, c1);
 			} else {
@@ -218,17 +219,16 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 			return true;
 		return false;
 	}
-	
+
 	/**
-	 * 是否为全区间。
-	 * 全区间就是从负无穷到正无穷的区间，是作为无效区间处理的。但是无效区间有两种，一种是空区间，一种是全区间
+	 * 是否为全区间。 全区间就是从负无穷到正无穷的区间，是作为无效区间处理的。但是无效区间有两种，一种是空区间，一种是全区间
+	 * 
 	 * @return
 	 */
 	public boolean isAll() {
-		return min == null && max == null; 
+		return min == null && max == null;
 	}
-	
-	
+
 	public boolean isValid() {
 		if (min == null && max == null)
 			return true;
@@ -252,15 +252,13 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 			// 算法,两个范围的合并
 			// 首先检查两个区间必须有重叠
 			RangeDimension<T> other = (RangeDimension<T>) d;
-			if (isInsideLeftBorder(other.max, other.isRightCloseSpan) && isInsideRightBorder(other.max, other.isRightCloseSpan)
-					||
-				isInsideLeftBorder(other.min, other.isLeftCloseSpan) && isInsideRightBorder(other.min, other.isLeftCloseSpan)) {//最大的点落在此处
+			if (isInsideLeftBorder(other.max, other.isRightCloseSpan) && isInsideRightBorder(other.max, other.isRightCloseSpan) || isInsideLeftBorder(other.min, other.isLeftCloseSpan) && isInsideRightBorder(other.min, other.isLeftCloseSpan)) {// 最大的点落在此处
 				// 在重叠的基础上，取较小的左边界和较大的右边界
-				Entry<T, Boolean> eLeft = min(this.min, this.isLeftCloseSpan, other.min, other.isLeftCloseSpan, LangUtils.NULL_IS_MINIMUM, true);// 左取小;
-				Entry<T, Boolean> eRight = max(this.max, this.isRightCloseSpan, other.max, other.isRightCloseSpan, LangUtils.NULL_IS_MAXIMUM, true);// 右取大;
+				Entry<T, Boolean> eLeft = min(this.min, this.isLeftCloseSpan, other.min, other.isLeftCloseSpan, NULL_IS_MINIMUM, true);// 左取小;
+				Entry<T, Boolean> eRight = max(this.max, this.isRightCloseSpan, other.max, other.isRightCloseSpan, NULL_IS_MAXIMUM, true);// 右取大;
 				return new RangeDimension<T>(eLeft.getKey(), eRight.getKey(), eLeft.getValue(), eRight.getValue());
 			} else {
-				ComplexDimension result=new ComplexDimension(this);
+				ComplexDimension result = new ComplexDimension(this);
 				return result.mergeOr(d);
 			}
 		} else {
@@ -273,7 +271,7 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 		T o = isPoint();
 		if (o != null)
 			return format(o);
-		if (min == null && max == null){
+		if (min == null && max == null) {
 			return "All!";
 		}
 		if (isValid()) {
@@ -327,11 +325,11 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 		return result;
 	}
 
-	public static final List<Object> EMPTY_REGEXP=Arrays.<Object>asList(new RegexpDimension(""));
-	
+	public static final List<Object> EMPTY_REGEXP = Arrays.<Object> asList(new RegexpDimension(""));
+
 	@SuppressWarnings("unchecked")
-	public static final RangeDimension<?> EMPTY_RANGE=new RangeDimension(null);
-	
+	public static final RangeDimension<?> EMPTY_RANGE = new RangeDimension(null);
+
 	/**
 	 * 将范围值转化为枚举值
 	 */
@@ -339,23 +337,72 @@ public class RangeDimension<T extends Comparable<T>> implements Dimension {
 	public Collection<?> toEnumationValue(Collection<PartitionFunction> funcs) {
 		Object sObj = min;
 		Object eObj = max;
-		if(funcs.size()==1){
-			Collection<?> result=funcs.iterator().next().iterator(sObj, eObj, isLeftCloseSpan, isRightCloseSpan);
-			if(result.isEmpty())return EMPTY_REGEXP;
+		if (funcs.size() == 1) {
+			Collection<?> result = funcs.iterator().next().iterator(sObj, eObj, isLeftCloseSpan, isRightCloseSpan);
+			if (result.isEmpty())
+				return EMPTY_REGEXP;
 			return result;
 		}
-		Set<?> set=new TreeSet();
-		for(PartitionFunction func:funcs){
-			Collection add=func.iterator(sObj,eObj,isLeftCloseSpan,isRightCloseSpan);
-			//当有多个维度组合时且任何一个维护无法得出结论时，实际上实际上是无法判断哪个维护是最密枚举，而将稀疏枚举向上传递可能造成误报和漏报.此时当做无法枚举处理。
-			if(add.isEmpty())return add;
+		Set<?> set = new TreeSet();
+		for (PartitionFunction func : funcs) {
+			Collection add = func.iterator(sObj, eObj, isLeftCloseSpan, isRightCloseSpan);
+			// 当有多个维度组合时且任何一个维护无法得出结论时，实际上实际上是无法判断哪个维护是最密枚举，而将稀疏枚举向上传递可能造成误报和漏报.此时当做无法枚举处理。
+			if (add.isEmpty())
+				return add;
 			set.addAll(add);
-			
+
 		}
 		return set;
 	}
 
 	public void setMax(T max) {
 		this.max = max;
+	}
+
+	public static final int NULL_IS_MAXIMUM = 0;
+	public static final int NULL_IS_MINIMUM = 1;
+
+	/**
+	 * 获取两个对象中较小的
+	 * 
+	 * @param v1
+	 * @param v2
+	 * @param nullSupport
+	 *            ，取常量NULL_IS_MAXIMUM 或者 NULL_IS_MINIMUM
+	 * @return
+	 */
+	public static <T extends Comparable<T>> T min(T v1, T v2, int nullSupport) {
+		if (v1 == v2)
+			return v1;
+		if (v1 == null) {
+			return nullSupport == NULL_IS_MINIMUM ? v1 : v2;
+		}
+		if (v2 == null) {
+			return nullSupport == NULL_IS_MINIMUM ? v2 : v1;
+		}
+		int v = v1.compareTo(v2);
+		return (v > 0) ? v2 : v1;
+	}
+
+	/**
+	 * 获取两个对象中较大的
+	 * 
+	 * @param v1
+	 * @param v2
+	 * @param nullSupport
+	 *            ，取常量NULL_IS_MAXIMUM 或者 NULL_IS_MINIMUM
+	 * @return
+	 */
+	public static <T extends Comparable<T>> T max(T v1, T v2, int nullSupport) {
+		if (v1 == v2)
+			return v1;
+		if (v1 == null) {
+			return nullSupport == NULL_IS_MAXIMUM ? v1 : v2;
+		}
+		if (v2 == null) {
+			return nullSupport == NULL_IS_MAXIMUM ? v2 : v1;
+		}
+		int v = v1.compareTo(v2);
+		return (v < 0) ? v2 : v1;
 	}
 }

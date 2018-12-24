@@ -1,8 +1,10 @@
 package jef.database;
 
+import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,6 +17,9 @@ import java.util.Set;
 
 import javax.persistence.FetchType;
 
+import com.github.geequery.entity.Entities;
+import com.google.common.base.Objects;
+
 import jef.database.annotation.Cascade;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.AbstractRefField;
@@ -25,20 +30,20 @@ import jef.database.meta.JoinPath;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.Reference;
 import jef.database.meta.TupleMetadata;
+import jef.database.query.Query;
 import jef.database.query.ReferenceType;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanWrapper;
-
-import com.google.common.base.Objects;
+import jef.tools.reflect.Property;
 
 final class CascadeUtil {
-	static int deleteWithRefInTransaction(IQueryableEntity source, Session trans, int minPriority) throws SQLException {
+	static int deleteWithRefInTransaction(Query<?> source, Session trans, int minPriority) throws SQLException {
 		return deleteCascadeByQuery(source, trans, true, true, minPriority);
 	}
 
 	// 删除单个对象或请求和其所有级联引用
-	private static int deleteCascadeByQuery(IQueryableEntity source, Session trans, boolean doSelect, boolean delSubFirst, int minPriority) throws SQLException {
+	private static int deleteCascadeByQuery(Query<?> source, Session trans, boolean doSelect, boolean delSubFirst, int minPriority) throws SQLException {
 		ITableMetadata meta = MetaHolder.getMeta(source);
 		List<Reference> delrefs = new ArrayList<Reference>();
 		for (AbstractRefField f : meta.getRefFieldsByName().values()) {
@@ -53,22 +58,22 @@ final class CascadeUtil {
 			}
 		}
 		if (delrefs.isEmpty()) {
-			return trans.delete0(source.getQuery()); // 没有需级联删除的引用，当做普通删除即可
+			return trans.delete0(source); // 没有需级联删除的引用，当做普通删除即可
 		}
 		// 要不要做
-		List<IQueryableEntity> objs;
+		List objs;
 		if (doSelect) {
-			source.getQuery().setCascade(false);
+			source.setCascade(false);
 			objs = trans.select(source);
 		} else {
-			objs = Arrays.asList(source);
+			objs = Arrays.asList(source.getInstance());
 		}
 		if (delSubFirst) {
 			@SuppressWarnings("unused")
 			int n = deleteChildren(objs, trans, delrefs);
-			return trans.delete0(source.getQuery());
+			return trans.delete0(source);
 		} else {
-			int n = trans.delete0(source.getQuery()); // 先删除自身，在删除引用，防止在解析引用时出现循环引用又来删除自身
+			int n = trans.delete0(source); // 先删除自身，在删除引用，防止在解析引用时出现循环引用又来删除自身
 			deleteChildren(objs, trans, delrefs);
 			return n;
 		}
@@ -99,35 +104,36 @@ final class CascadeUtil {
 	 * @param obj
 	 * @return
 	 */
-	private static Set<String> clearLazy(DataObject obj) {
-		// return Collections.emptySet();
+	private static Set<String> clearLazy(Object obj, ITableMetadata meta) {
 		Set<String> unloaded;
-		if (obj.lazyload != null) {
+		Property lazyAccessor=meta.getLazyAccessor();	
+		ILazyLoadContext context=(ILazyLoadContext)lazyAccessor.get(obj);
+		if (context!= null) {
 			unloaded = new HashSet<String>();
-			Map<String, Integer> fields = obj.lazyload.getProcessor().getOnFields();
+			Map<String, Integer> fields = context.getProcessor().getOnFields();
 			for (String s : fields.keySet()) {
-				if (obj.lazyload.needLoad(s) > -1) {// 将尚未执行过延迟加载的字段记录下来，后续忽略更新
+				if (context.needLoad(s) > -1) {// 将尚未执行过延迟加载的字段记录下来，后续忽略更新
 					unloaded.add(s);
 				}
 			}
 		} else {
 			unloaded = Collections.emptySet();
 		}
-		obj.clearQuery();
+		Entities.clearQuery(obj);
 		return unloaded;
 	}
-
+	
 	/*
 	 * smartMode: 智能模式，当开启后自动忽略掉那些没有set过的property
 	 */
-	static void insertWithRefInTransaction(List<IQueryableEntity> list, Session trans, boolean smartMode, int minPriority) throws SQLException {
+	static void insertWithRefInTransaction(List<Object> list, Session trans, boolean smartMode, int minPriority) throws SQLException {
 		if (list.isEmpty())
 			return;
 		boolean single = list.size() == 1;
 		ITableMetadata meta = MetaHolder.getMeta(list.get(0));
-		for (IQueryableEntity obj : list) {
+		for (Object obj : list) {
 			// 在维护端操作之前
-			Set<String> lazyloadSkip = clearLazy((DataObject) obj);
+			Set<String> lazyloadSkip = clearLazy(obj, meta);
 			BeanWrapper bean = BeanWrapper.wrap(obj);
 			for (AbstractRefField f : meta.getRefFieldsByName().values()) {
 				if (lazyloadSkip.contains(f.getName()))
@@ -148,7 +154,7 @@ final class CascadeUtil {
 		} else {
 			trans.batchInsert(list, smartMode);
 		}
-		for (IQueryableEntity obj : list) {
+		for (Object obj : list) {
 			BeanWrapper bean = BeanWrapper.wrap(obj);
 			// 在维护端操作之后
 			for (AbstractRefField f : meta.getRefFieldsByName().values()) {
@@ -176,9 +182,9 @@ final class CascadeUtil {
 
 	}
 
-	static int updateWithRefInTransaction(IQueryableEntity obj, Session trans, int minPriority) throws SQLException {
-		Collection<AbstractRefField> refs = MetaHolder.getMeta(obj).getRefFieldsByName().values();
-		Set<String> lazyloadSkip = clearLazy((DataObject) obj);
+	static int updateWithRefInTransaction(Query<?> obj, Session trans, int minPriority) throws SQLException {
+		Collection<AbstractRefField> refs =obj.getMeta().getRefFieldsByName().values();
+		Set<String> lazyloadSkip = clearLazy(obj.getInstance(),obj.getMeta());
 		int result = 0;
 		// 在维护端操作之前
 		for (AbstractRefField f : refs) {
@@ -355,27 +361,29 @@ final class CascadeUtil {
 	}
 
 	private static int doDeleteRef(Session trans, BeanWrapper bean, Reference ref) throws SQLException {
-		IQueryableEntity rObj;
+		Object rObj;
 		if (ref.getHint() != null && ref.getHint().getRelationTable() != null) {
 			rObj = ref.getHint().getRelationTable().newInstance();
 		} else {
 			rObj = ref.getTargetType().newInstance();
 		}
+		Query<?> q = Entities.asQuery(rObj);
 		for (JoinKey r : ref.toJoinPath().getJoinKeys()) {
-			rObj.getQuery().addCondition(r.getRightAsField(), bean.getPropertyValue(r.getLeft().name()));
+			q.addCondition(r.getRightAsField(), bean.getPropertyValue(r.getLeft().name()));
 		}
-		return deleteCascadeByQuery(rObj, trans, true, false, 0);
+		return deleteCascadeByQuery(q, trans, true, false, 0);
 	}
 
-	private static Map<List<?>, IQueryableEntity> doSelectRef(Session trans, BeanWrapper bean, Reference ref) throws SQLException {
-		Map<List<?>, IQueryableEntity> result = new HashMap<List<?>, IQueryableEntity>();
-		IQueryableEntity rObj = ref.getTargetType().newInstance();
+	private static Map<List<?>, Object> doSelectRef(Session trans, BeanWrapper bean, Reference ref) throws SQLException {
+		Map<List<?>, Object> result = new HashMap<List<?>, Object>();
+		Object rObj = ref.getTargetType().newInstance();
+		Query<?> q=Entities.asQuery(rObj);
 		for (JoinKey r : ref.toJoinPath().getJoinKeys()) {
-			rObj.getQuery().addCondition(r.getRightAsField(), bean.getPropertyValue(r.getLeft().name()));
+			q.addCondition(r.getRightAsField(), bean.getPropertyValue(r.getLeft().name()));
 		}
-		List<? extends IQueryableEntity> list = trans.select(rObj);// 查出旧的引用对象
-		for (IQueryableEntity e : list) {
-			List<Object> key = DbUtils.getPrimaryKeyValue(e);
+		List<?> list = trans.select(q);// 查出旧的引用对象
+		for (Object e : list) {
+			List<Serializable> key = DbUtils.getPrimaryKeyValue(e);
 			Assert.notNull(key);
 			result.put(key, e);
 		}
@@ -403,38 +411,45 @@ final class CascadeUtil {
 		}
 	}
 
-	static <T extends IQueryableEntity> T compareToNewUpdateMap(T changedObj, T oldObj) {
+	/**
+	 * 
+	 * @param changedObj
+	 *            希望更新成的对象
+	 * @param oldObj
+	 *            数据库中的对象
+	 * @return
+	 */
+	static <T> Query<T> compareToNewUpdateMap(T changedObj, T oldObj) {
 		Assert.isTrue(Objects.equal(DbUtils.getPrimaryKeyValue(changedObj), DbUtils.getPKValueSafe(oldObj)), "For consistence, the two parameter must hava equally primary keys.");
 		ITableMetadata m = MetaHolder.getMeta(oldObj);
 
-		Map<Field, Object> used = null;
+		BitSet used = null;
 		boolean safeMerge = ORMConfig.getInstance().isSafeMerge();
 		if (safeMerge) {
-			used = new HashMap<Field, Object>(changedObj.getUpdateValueMap());
+			used = Entities.getTouchRecord(changedObj);
 		}
-		changedObj.getUpdateValueMap().clear();
+		Query<T> q = Entities.asQuery(changedObj);
 		for (ColumnMapping mType : m.getColumns()) {
-			Field field = mType.field();
 			if (mType.isPk()) {
 				continue;
 			}
-			boolean notUsed=!used.containsKey(field);
-			if(mType.isGenerated() && notUsed){
+			Field field = mType.field();
+			boolean notUsed = !used.get(field.asEnumOrdinal());
+			if (mType.isGenerated() && notUsed) {
 				continue;
 			}
 			if (safeMerge && notUsed) {// 智能更新下，发现字段未被设过值，就不予更新
 				continue;
 			}
 			Object valueNew = mType.getFieldAccessor().get(changedObj);
-			Object valueOld =mType.getFieldAccessor().get(oldObj);
+			Object valueOld = mType.getFieldAccessor().get(oldObj);
 			if (!Objects.equal(valueNew, valueOld)) {
-				changedObj.prepareUpdate(field, valueNew, true);
+				q.prepareUpdate(field, valueNew);
 			}
 		}
-		return changedObj;
+		used.clear();
+		return q;
 	}
-
-	
 
 	private static void doUpdateRefN(Session trans, Object value, BeanWrapper bean, AbstractRefField f, boolean doDeletion) throws SQLException {
 		// 2011-12-22:refactor logic, avoid to use delete-insert algorithm.
@@ -443,7 +458,7 @@ final class CascadeUtil {
 		// 取得新旧的引用关系List.查出旧的引用数据集合，并按主键存放
 
 		Reference ref = f.getReference();
-		Map<List<?>, IQueryableEntity> olds = doSelectRef(trans, bean, ref);
+		Map<List<?>, Object> olds = doSelectRef(trans, bean, ref);
 		// 新的引用关系
 		Collection<? extends IQueryableEntity> list = castToList(value, f);
 
@@ -456,9 +471,9 @@ final class CascadeUtil {
 			}
 		}
 
-		List<IQueryableEntity> toAdd = new ArrayList<IQueryableEntity>();
+		List<Object> toAdd = new ArrayList<Object>();
 		// 更新新的子表数据到
-		for (IQueryableEntity d : list) {
+		for (Object d : list) {
 			BeanWrapper bwSub = BeanWrapper.wrap(d);
 			// 更新内存数据(将新的引用关系中的引用键更新为何主表记录一致。)修复数据一致性。
 			for (Entry<String, Object> e : map.entrySet()) {
@@ -469,16 +484,16 @@ final class CascadeUtil {
 				}
 			}
 			// 对照旧值进行插入或更新
-			List<Object> pks = DbUtils.getPrimaryKeyValue(d);
-			IQueryableEntity old = null;
+			List<Serializable> pks = DbUtils.getPrimaryKeyValue(d);
+			Object old = null;
 
 			if (pks != null) {
 				old = olds.remove(pks);
 			}
 			if (old != null) {// 存在旧值，更新处理
-				DbUtils.compareToUpdateMap(d, old);
-				if (old.needUpdate()) {
-					updateWithRefInTransaction(old, trans, 0);
+				Query<?> q = DbUtils.compareToUpdateMap(d, old);
+				if (q.needUpdate()) {
+					updateWithRefInTransaction(q, trans, 0);
 				}
 			} else {
 				toAdd.add(d);// 无旧值，插入处理
@@ -488,8 +503,9 @@ final class CascadeUtil {
 		// 旧值中有而新值中没有，删除处理
 		if (doDeletion) {
 			// 将剩余的子表数据删掉
-			for (IQueryableEntity d : olds.values()) {
-				deleteCascadeByQuery(d, trans, false, true, 0);
+			for (Object d : olds.values()) {
+				List<Serializable> pks = DbUtils.getPKValueSafe(d);
+				deleteCascadeByQuery(Entities.asPKQuery(d, pks), trans, false, true, 0);
 			}
 		}
 	}
@@ -541,18 +557,16 @@ final class CascadeUtil {
 	private static void checkAndInsert(Session trans, Collection<? extends IQueryableEntity> subs, boolean doUpdate) throws SQLException {
 		if (subs == null)
 			return;
-		List<IQueryableEntity> toAdd = new ArrayList<IQueryableEntity>();
-		for (IQueryableEntity d : subs) {
-			if (DbUtils.getPrimaryKeyValue(d) != null) {
-				d.getQuery().clearQuery();
-				d.getQuery().setCascadeViaOuterJoin(false);
-				List<IQueryableEntity> oldValue = trans.select(d);
-				if (oldValue.size() > 0) {// 更新
+		List<Object> toAdd = new ArrayList<Object>();
+		for (Object d : subs) {
+			List<Serializable> pks = DbUtils.getPrimaryKeyValue(d);
+			if (pks != null) {
+				Object oldValue = trans.load(Entities.asPKQuery(d, pks));
+				if (oldValue != null) {// 更新
 					if (doUpdate) {
-						IQueryableEntity old = oldValue.get(0);
-						DbUtils.compareToUpdateMap(d, old);
-						if (old.needUpdate()) {
-							updateWithRefInTransaction(old, trans, 0);
+						Query<?> q = DbUtils.compareToUpdateMap(d, oldValue);
+						if (q.needUpdate()) {
+							updateWithRefInTransaction(q, trans, 0);
 						}
 					}
 					continue;
@@ -645,12 +659,13 @@ final class CascadeUtil {
 	// 每次处理一个关系： JEF中一个关系允许有多个字段被填充
 	// <T extends DataObject> is true
 	// .get(entry.getKey())
-	protected static <T> void fillOneVsManyReference(List<T> list, Map.Entry<Reference, List<AbstractRefField>> entry, Map<Reference, List<Condition>> filters, Session session) throws SQLException {
+	protected static <T> void fillOneVsManyReference(ITableMetadata meta,
+			List<T> list, Map.Entry<Reference, List<AbstractRefField>> entry, Map<Reference, List<Condition>> filters, Session session) throws SQLException {
 		if (list.isEmpty())
 			return;
 		CascadeLoaderTask task = new CascadeLoaderTask(entry, filters);
 		if (list.size() > 1000 || lazy(entry.getValue())) {// 不对超过1000个元素进行一对多填充//必须使用延迟加载
-			markTask(task, list, session);
+			markTask(meta,task, list, session);
 		} else {
 			for (T obj : list) {
 				task.process(session, obj);
@@ -658,19 +673,22 @@ final class CascadeUtil {
 		}
 	}
 
-	static void markTask(LazyLoadTask task, List<?> objs, Session session) {
+	static void markTask(ITableMetadata meta,
+			LazyLoadTask task, List<?> objs, Session session) {
 		if (objs.isEmpty())
 			return;
-		DataObject obj = (DataObject) objs.get(0);
-		if (obj.lazyload != null) {
-			obj.lazyload.getProcessor().register(task);
+		Object obj =  objs.get(0);
+		Property lazyAccessor=meta.getLazyAccessor();
+		
+		ILazyLoadContext context=(ILazyLoadContext) lazyAccessor.get(obj);
+		if (context != null) {
+			context.getProcessor().register(task);
 			return;
 		}
 
 		LazyLoadProcessor processor = new LazyLoadProcessor(task, session);
 		for (Object o : objs) {
-			DataObject dobj = (DataObject) o;
-			dobj.lazyload = new LazyLoadContext(processor);
+			lazyAccessor.set(o, new LazyLoadContext(processor));
 		}
 	}
 

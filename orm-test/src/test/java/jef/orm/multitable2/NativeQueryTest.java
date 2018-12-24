@@ -10,6 +10,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.math.RandomUtils;
+import org.apache.commons.lang.time.DateUtils;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
+
 import jef.common.log.LogUtil;
 import jef.common.wrapper.Holder;
 import jef.common.wrapper.IntRange;
@@ -23,8 +31,6 @@ import jef.database.NativeQuery;
 import jef.database.ORMConfig;
 import jef.database.PagingIterator;
 import jef.database.QB;
-import jef.database.RecordHolder;
-import jef.database.RecordsHolder;
 import jef.database.SqlTemplate;
 import jef.database.Transaction;
 import jef.database.VarObject;
@@ -63,14 +69,6 @@ import jef.orm.onetable.model.Foo;
 import jef.script.javascript.Var;
 import jef.tools.PageLimit;
 import jef.tools.string.RandomData;
-
-import org.apache.commons.lang.math.RandomUtils;
-import org.apache.commons.lang.time.DateUtils;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({
@@ -855,36 +853,9 @@ public class NativeQueryTest extends org.junit.Assert {
 	public void functionalUpdate() throws SQLException {
 		Leaf leaf = new Leaf();
 		leaf.setId(1);
-		leaf.prepareUpdate(Leaf.Field.childId, new SqlExpression("childId+:aa"));
+		leaf.getQuery().prepareUpdate(Leaf.Field.childId, new SqlExpression("childId+:aa"));
 		leaf.getQuery().setAttribute("aa", 100);
 		db.update(leaf);
-	}
-
-	/**
-	 * 直接修改结果集 案例一、load出多一条记录，并进行修改/删除
-	 * 
-	 * @throws SQLException
-	 */
-	@Test
-	@IgnoreOn({"sqlite","sqlserver"})
-	public void testLoadForUpdate() throws SQLException {
-		RecordHolder<Root> holder = db.loadForUpdate(new Root(1)); //
-		if (holder != null) {
-			holder.get().setName("更新值");
-			holder.get().setRange(2);
-			holder.commit();
-			holder.close();
-		}
-		Transaction trans=db.startTransaction();
-		RecordHolder<Root> holder2 = trans.loadForUpdate(new Root(1));
-		if (holder2 != null) {
-			LogUtil.show(holder.get());
-			holder2.delete();// 删除
-			holder.close(); //此处的Holder写错了。应该为holder2，关闭holder造成锁表泄漏。
-		}
-		trans.close();		//好在上面的ResultSet是在事务里的，此处事务关闭，顺便将之前泄漏的结果集给关闭了
-		//结论——悲观锁使用非常危险，一个小小的笔误就会引起严重的泄漏事故。
-		System.out.println("=================");
 	}
 
 	/**
@@ -902,47 +873,6 @@ public class NativeQueryTest extends org.junit.Assert {
 		q.addCondition(Root.Field.name, "123                                     ");
 		db.select(q, null);
 
-	}
-
-	/**
-	 * @ * 直接修改结果集案例二、 elect出多条记录，并进行修改/删除/插入 的测试案例
-	 * 
-	 * @throws SQLException
-	 */
-	@Test
-	@IgnoreOn({"sqlite","sqlserver"})
-	public void testSelectForUpdate() throws SQLException {
-		RecordsHolder<Root> holder = db.selectForUpdate(QB.create(Root.class).getInstance());
-		int size;
-		try{
-			int n = 0;
-			for (Root r : holder.get()) {
-				n++;
-				r.setName("更新第" + n + "条。"); // 修改对象中的值
-			}
-			size = holder.size();
-			assertTrue(size > 0);
-			System.out.println("count:" + n);
-
-			Root rootOld = holder.get().get(holder.size() - 1);
-			System.out.println("To DELTET " + rootOld.getId());
-			holder.delete(holder.size() - 1); // 删除结果集中的最后一条记录。
-			size--;
-
-			if (holder.supportsNewRecord()) {
-				Root root = holder.newRecord(); // 创建一条新纪录
-				root.setName("新插入的记录");
-				size++;
-			}
-
-			holder.commit(); // 提交上述修改（更新、删除、添加）	
-		}finally{
-			holder.close();
-		}
-		
-
-		List<Root> newResult = db.select(QB.create(Root.class));
-		assertEquals(size, newResult.size());
 	}
 
 	/**

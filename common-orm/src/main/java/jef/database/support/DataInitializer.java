@@ -19,9 +19,9 @@ import jef.common.log.LogUtil;
 import jef.database.DbClient;
 import jef.database.DbMetaData;
 import jef.database.DbUtils;
-import jef.database.IQueryableEntity;
 import jef.database.ORMConfig;
 import jef.database.QB;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.jre5support.ProcessUtil;
@@ -51,7 +51,7 @@ public class DataInitializer {
 				initRoot += "/";
 			}
 		}
-		this.initRoot=initRoot;
+		this.initRoot = initRoot;
 
 		this.session = session;
 		this.extension = "." + extName;
@@ -94,7 +94,7 @@ public class DataInitializer {
 		enable = true;
 	}
 
-	private List<IQueryableEntity> readData(ITableMetadata meta, URL url, String charset) throws UnsupportedEncodingException, IOException {
+	private List<Object> readData(ITableMetadata meta, URL url, String charset) throws UnsupportedEncodingException, IOException {
 		CsvReader reader = new CsvReader(new InputStreamReader(url.openStream(), charset));
 		try {
 			// 根据Header分析Property
@@ -104,17 +104,17 @@ public class DataInitializer {
 					if (header.charAt(0) == '[') {
 						header = header.substring(1, header.length() - 1);
 					}
-					jef.database.Field field = meta.getField(header);
+					ColumnMapping field = meta.getColumnDef(header);
 					if (field == null) {
 						throw new IllegalArgumentException(String.format("The field [%s] in CSV file doesn't exsts in the entity [%s] metadata.", header, meta.getName()));
 					}
-					props.add(meta.getColumnDef(field).getFieldAccessor());
+					props.add(field.getFieldAccessor());
 				}
 			}
 			// 根据预先分析好的Property读取属性
-			List<IQueryableEntity> result = new ArrayList<IQueryableEntity>();
+			List<Object> result = new ArrayList<Object>();
 			while (reader.readRecord()) {
-				IQueryableEntity obj = meta.newInstance();
+				Object obj = meta.newInstance();
 				// obj.stopUpdate();
 				for (int i = 0; i < props.size(); i++) {
 					Property prop = props.get(i);
@@ -131,7 +131,7 @@ public class DataInitializer {
 
 	private int initData0(ITableMetadata meta, URL url, String charset, boolean manualSequence) throws IOException {
 		int count = 0;
-		List<IQueryableEntity> data = readData(meta, url, charset);
+		List<Object> data = readData(meta, url, charset);
 		boolean value = ORMConfig.getInstance().isManualSequence();
 		if (value != manualSequence)
 			ORMConfig.getInstance().setManualSequence(manualSequence);
@@ -155,15 +155,11 @@ public class DataInitializer {
 		return count;
 	}
 
-	private int insertOnebyone(List<IQueryableEntity> data) {
+	private int insertOnebyone(List<Object> data) {
 		int count = 0;
-		for (IQueryableEntity e : data) {
-			try {
-				session.insert(e);
-				count++;
-			} catch (SQLException e1) {
-				log.error("Insert error:{}", e, e1);
-			}
+		for (Object e : data) {
+			session.insert(e);
+			count++;
 		}
 		return count;
 	}
@@ -175,9 +171,9 @@ public class DataInitializer {
 		if (valueBackup != manualSequence)
 			ORMConfig.getInstance().setManualSequence(manualSequence);
 		try {
-			for (IQueryableEntity e : readData(meta, url, charset)) {
+			for (Object e : readData(meta, url, charset)) {
 				try {
-					IQueryableEntity result = session.merge(e, mergeKey);
+					Object result = session.merge(e, mergeKey);
 					if (result == null || result != e) {
 						count++;
 					}
@@ -200,10 +196,8 @@ public class DataInitializer {
 	/**
 	 * 对外暴露。初始化制定表的数据
 	 * 
-	 * @param meta
-	 *            表结构元数据
-	 * @param isNew
-	 *            表是否刚刚创建
+	 * @param meta  表结构元数据
+	 * @param isNew 表是否刚刚创建
 	 */
 	public final void initData(ITableMetadata meta, boolean isNew) {
 		String csvResouce = initRoot + meta.getThisType().getName() + extension;
@@ -296,10 +290,10 @@ public class DataInitializer {
 			try {
 				AllowDataInitialize record = session.load(QB.create(AllowDataInitialize.class), false);
 				record.getQuery().setAllRecordsCondition();
-				record.prepareUpdate(AllowDataInitialize.Field.doInit, false);
-				record.prepareUpdate(AllowDataInitialize.Field.lastDataInitTime, new Date());
-				record.prepareUpdate(AllowDataInitialize.Field.lastDataInitUser, ProcessUtil.getPid() + "@" + ProcessUtil.getHostname() + "(" + ProcessUtil.getLocalIp() + ") OS:" + ProcessUtil.getOSName());
-				record.prepareUpdate(AllowDataInitialize.Field.lastDataInitResult, StringUtils.truncate(message, 300));
+				record.getQuery().prepareUpdate(AllowDataInitialize.Field.doInit, false);
+				record.getQuery().prepareUpdate(AllowDataInitialize.Field.lastDataInitTime, new Date());
+				record.getQuery().prepareUpdate(AllowDataInitialize.Field.lastDataInitUser, ProcessUtil.getPid() + "@" + ProcessUtil.getHostname() + "(" + ProcessUtil.getLocalIp() + ") OS:" + ProcessUtil.getOSName());
+				record.getQuery().prepareUpdate(AllowDataInitialize.Field.lastDataInitResult, StringUtils.truncate(message, 300));
 				session.update(record);
 			} catch (SQLException e) {
 				log.error("Record DataInitilizer Table failure! please check.", e);

@@ -1,25 +1,18 @@
 package jef.database;
 
-import java.io.Serializable;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.BitSet;
 
 import javax.persistence.PersistenceException;
 import javax.xml.bind.annotation.XmlTransient;
-
-import jef.accelerator.bean.BeanAccessor;
-import jef.database.meta.ITableMetadata;
-import jef.database.meta.MetaHolder;
-import jef.database.query.Query;
-import jef.database.query.QueryImpl;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import com.alibaba.fastjson.annotation.JSONField;
+
+import jef.database.query.Query;
+import jef.database.query.QueryImpl;
 
 /**
  * 抽象类，用于实现所有Entity默认的各种方法
@@ -30,24 +23,31 @@ import com.alibaba.fastjson.annotation.JSONField;
 @SuppressWarnings("serial")
 @XmlTransient
 public abstract class DataObject implements IQueryableEntity {
-	/*
-	 * 用于与条件做排序
-	 * 为什么要对条件做排序？是为了避免让条件因为HashCode变化或者加入先后顺序变化而排序。最终引起SQL硬解析。
-	 * 比如 where name = ? and index = ? 和 where index = ? and name = ? 本质上是一个SQL条件，但是因为顺序不同变成了两个SQL语句。 
-	 */
-	private static final ConditionComparator cmp = new ConditionComparator();
-	
+
 	private transient String _rowid;
-	
-	@JSONField(serialize=false)
-	private transient Map<Field, Object> updateValueMap;
-	@JSONField(serialize=false)
+	/**
+	 * 对应的查询对象
+	 */
+	@JSONField(serialize = false)
 	protected transient Query<?> query;
-	@JSONField(serialize=false)
+	/**
+	 * 是否进行Touch标记
+	 */
+	@JSONField(serialize = false)
 	protected transient boolean _recordUpdate = true;
-	@JSONField(serialize=false)
+	/**
+	 * 已经标记为Touch的字段
+	 */
+	@JSONField(serialize = false)
+	transient BitSet ___touchRecord;
+	/**
+	 * 延迟加载上下文
+	 */
+	@JSONField(serialize = false)
 	transient ILazyLoadContext lazyload;
 
+	/////////////////////////////////////////////////////////////////
+	
 	public final void startUpdate() {
 		_recordUpdate = true;
 	}
@@ -66,10 +66,10 @@ public abstract class DataObject implements IQueryableEntity {
 	 * @see jef.database.IQueryableEntity#getQuery()
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public final Query<?> getQuery() {
+	public final <T> Query<T> getQuery() {
 		if (query == null)
 			query = new QueryImpl(this);
-		return query;
+		return (Query<T>) query;
 	}
 
 	/*
@@ -88,9 +88,12 @@ public abstract class DataObject implements IQueryableEntity {
 	 * @see jef.database.IQueryableEntity#isUsed(jef.database.Field)
 	 */
 	public final boolean isUsed(Field field) {
-		if (updateValueMap == null)
+		if (___touchRecord == null) {
 			return false;
-		return updateValueMap.containsKey(field);
+		} else {
+			int index = field.asEnumOrdinal();
+			return index < 0 ? false : ___touchRecord.get(index);
+		}
 	}
 
 	/*
@@ -99,65 +102,46 @@ public abstract class DataObject implements IQueryableEntity {
 	 * @see jef.database.query.UpdateAble#clearUpdate()
 	 */
 	public final void clearUpdate() {
-		updateValueMap = null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see jef.database.query.UpdateAble#getUpdateValueMap()
-	 */
-	@SuppressWarnings("unchecked")
-	public final Map<Field, Object> getUpdateValueMap() {
-		if (updateValueMap == null)
-			return Collections.EMPTY_MAP;
-		return updateValueMap;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see jef.database.IQueryableEntity#touchUsedFlag(jef.database.Field,
-	 * boolean)
-	 */
-	public void touchUsedFlag(Field field, boolean flag) {
-		if (flag) {
-			if (updateValueMap == null)
-				updateValueMap = new TreeMap<Field, Object>(cmp);
-			if (updateValueMap.containsKey(field)) {
-				return;
-			}
-			ITableMetadata meta = MetaHolder.getMeta(this);
-			BeanAccessor ba = meta.getContainerAccessor();
-			updateValueMap.put(field, ba.getProperty(this, field.name()));
-		} else {
-			if (updateValueMap != null) {
-				updateValueMap.remove(field);
-			}
+		if (___touchRecord != null) {
+			___touchRecord.clear();
+		}
+		if (query != null) {
+			query.clearUpdateMap();
 		}
 	}
 
-	public final void prepareUpdate(Field field, Object newValue) {
-		if (updateValueMap == null)
-			updateValueMap = new TreeMap<Field, Object>(cmp);
-		updateValueMap.put(field, newValue);
+	@Override
+	public boolean needUpdate() {
+		if(query!=null && !query.getUpdateValueMap().isEmpty()){
+			return true;
+		}
+		return !this.___touchRecord.isEmpty();
 	}
 
-
-	/**
-	 * @deprecated will be removed in ths next release.
-	 */
-	public final void prepareUpdate(Field field, Object newValue, boolean force) {
-		prepareUpdate(field, newValue);	
+	//为子类提供若干方便，增强代码要用，不可删除
+	protected void _touch(int index) {
+		BitSet b = this.___touchRecord;
+		if (b == null) {
+			b = new BitSet();
+			___touchRecord = b;
+		}
+		b.set(index);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see jef.database.query.UpdateAble#needUpdate()
-	 */
-	public final boolean needUpdate() {
-		return (updateValueMap != null) && this.updateValueMap.size() > 0;
+	@Override
+	public void touchFlag(Field field, boolean value) {
+		int index = field.asEnumOrdinal();
+		if (index < 0)
+			return;
+		BitSet b = this.___touchRecord;
+		if (b == null) {
+			if (!value) {
+				return;
+			}
+			b = new BitSet();
+			___touchRecord = b;
+		}
+		b.set(index, value);
 	}
 
 	public String rowid() {
@@ -172,7 +156,7 @@ public abstract class DataObject implements IQueryableEntity {
 	 * 供子类hashCode（）方法调用，判断内嵌的hashCode方法是否可用
 	 */
 	protected final int getHashCode() {
-		return new HashCodeBuilder().append(query).append(_recordUpdate).append(updateValueMap).toHashCode();
+		return new HashCodeBuilder().append(query).append(_recordUpdate).toHashCode();
 	}
 
 	protected final void beforeSet(String fieldname) {
@@ -207,18 +191,7 @@ public abstract class DataObject implements IQueryableEntity {
 			return false;
 		}
 		DataObject rhs = (DataObject) obj;
-		return new EqualsBuilder().append(this.query, rhs.query).append(_recordUpdate, rhs._recordUpdate).append(this.updateValueMap, rhs.updateValueMap).isEquals();
+		return new EqualsBuilder().append(this.query, rhs.query).append(_recordUpdate, rhs._recordUpdate).isEquals();
 	}
 
-	private static class ConditionComparator implements Comparator<Field>, Serializable {
-		public int compare(Field o1, Field o2) {
-			if (o1 == o2)
-				return 0;
-			if (o1 == null)
-				return 1;
-			if (o2 == null)
-				return -1;
-			return o1.name().compareTo(o2.name());
-		}
-	}
 }

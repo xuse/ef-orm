@@ -6,8 +6,8 @@ import java.util.List;
 
 import jef.common.log.LogUtil;
 import jef.database.ORMConfig;
+import jef.database.OperateTarget;
 import jef.database.jdbc.GenerateKeyReturnOper;
-import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.statement.select.Limit;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.statement.select.Union;
@@ -24,14 +24,14 @@ import jef.tools.StringUtils;
 public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 	private Statement sql;
 	private List<Object> params;
-	private JDBCTarget db;
+	private OperateTarget db;
 	private String changeDataSource;
 
 	public String isChangeDatasource() {
 		return changeDataSource;
 	}
 
-	public SimpleExecutionPlan(Statement sql, List<Object> params, String bindDsName, JDBCTarget db) {
+	public SimpleExecutionPlan(Statement sql, List<Object> params, String bindDsName, OperateTarget db) {
 		this.changeDataSource = bindDsName;
 		this.sql = sql;
 		this.params = params;
@@ -45,7 +45,7 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 
 	@Override
 	public UpdateReturn processUpdate(GenerateKeyReturnOper generateKeys) throws SQLException {
-		JDBCTarget db = this.db;
+		OperateTarget db = this.db;
 		if (changeDataSource != null) {
 			db = db.getTarget(changeDataSource);
 		}
@@ -69,7 +69,7 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 
 	@Override
 	public ResultSet getResultSet(SqlAndParameter parse, int maxRows, int fetchSize) throws SQLException {
-		JDBCTarget db = this.db;
+		OperateTarget db = this.db;
 		if (changeDataSource != null) {
 			// Scenario 2: 普通查询 (变更数据源，垂直拆分场景)
 			db = db.getTarget(changeDataSource);
@@ -81,7 +81,7 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 	@Override
 	public long getCount(SqlAndParameter paramHolder, int maxSize, int fetchSize) throws SQLException {
 		boolean debug = ORMConfig.getInstance().isDebugMode();
-		JDBCTarget db = this.db;
+		OperateTarget db = this.db;
 		if (changeDataSource != null) {
 			db = db.getTarget(changeDataSource);
 		}
@@ -201,7 +201,7 @@ public class SimpleExecutionPlan implements ExecuteablePlan, QueryablePlan {
 
 	@Override
 	public <T> T doQuery(SqlAndParameter sqlContext, ResultSetExtractor<T> extractor, boolean forCount, PageLimit range) throws SQLException {
-		JDBCTarget db = this.db;
+		OperateTarget db = this.db;
 		if (changeDataSource != null) {
 			db = db.getTarget(changeDataSource);
 		}

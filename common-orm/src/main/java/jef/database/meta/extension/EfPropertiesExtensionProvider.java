@@ -5,13 +5,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import jef.database.EntityExtensionSupport;
-import jef.database.Field;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.DynamicMetadata;
 import jef.database.meta.ExtensionConfig;
 import jef.database.meta.ExtensionConfigFactory;
-import jef.database.meta.KvExtensionImpl;
 import jef.database.meta.ExtensionTemplate;
+import jef.database.meta.KvExtensionImpl;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.TupleMetadata;
 import jef.database.meta.TupleModificationListener;
@@ -51,16 +50,6 @@ public class EfPropertiesExtensionProvider implements BeanExtensionProvider {
 		@Override
 		public String getName() {
 			return name;
-		}
-
-		@Override
-		public boolean isReadable() {
-			return true;
-		}
-
-		@Override
-		public boolean isWriteable() {
-			return true;
 		}
 
 		@Override
@@ -119,12 +108,12 @@ public class EfPropertiesExtensionProvider implements BeanExtensionProvider {
 		}
 
 		@Override
-		public void onDelete(DynamicMetadata meta, Field field) {
+		public void onDelete(DynamicMetadata meta, ColumnMapping field) {
 			event(meta);
 		}
 
 		@Override
-		public void onUpdate(DynamicMetadata meta, Field field) {
+		public void onUpdate(DynamicMetadata meta, ColumnMapping field) {
 			event(meta);
 		}
 

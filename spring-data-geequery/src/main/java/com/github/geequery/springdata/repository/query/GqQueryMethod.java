@@ -23,8 +23,6 @@ import java.util.Set;
 
 import javax.persistence.NamedQuery;
 
-import jef.database.jpa.JefEntityManagerFactory;
-
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.projection.ProjectionFactory;
@@ -40,6 +38,8 @@ import com.github.geequery.springdata.annotation.Modifying;
 import com.github.geequery.springdata.annotation.Procedure;
 import com.github.geequery.springdata.annotation.Query;
 import com.github.geequery.springdata.repository.support.MetamodelInformation;
+
+import jef.database.SessionFactory;
 
 /**
  * GQ specific extension of {@link QueryMethod}.
@@ -68,7 +68,7 @@ public class GqQueryMethod extends QueryMethod {
 
 	private final Method method;
 
-	private final JefEntityManagerFactory emf;
+	private final SessionFactory emf;
 
 	/**
 	 * Creates a {@link JpaQueryMethod}.
@@ -80,7 +80,7 @@ public class GqQueryMethod extends QueryMethod {
 	 * @param metadata
 	 *            must not be {@literal null}
 	 */
-	public GqQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory factory, JefEntityManagerFactory emf) {
+	public GqQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory factory, SessionFactory emf) {
 
 		super(method, metadata, factory);
 
@@ -118,7 +118,7 @@ public class GqQueryMethod extends QueryMethod {
 	@Override
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public GqEntityMetadata<?> getEntityInformation() {
-		return new MetamodelInformation(getDomainClass(), emf);
+		return new MetamodelInformation(getDomainClass(), emf.asDbClient()	);
 	}
 
 	/**

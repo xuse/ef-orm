@@ -75,7 +75,7 @@ public class CaseUpdate {
 		st.setId(1);
 		st.setGender("M");
 
-		Map<Field, Object> updateMap = st.getUpdateValueMap();
+		Map<Field, Object> updateMap = st.getQuery().getUpdateValueMap();
 		System.out.println(updateMap);
 		updateMap.clear();
 		int updated = db.update(st); // no update here
@@ -119,8 +119,9 @@ public class CaseUpdate {
 	@Test
 	public void testUpdate_atom() throws SQLException {
 		UserBalance ub = new UserBalance();
+		//TODO 待验证
 		ub.setId(1);
-		ub.prepareUpdate(UserBalance.Field.amout, new JpqlExpression("amout-50"));
+		ub.getQuery().prepareUpdate(UserBalance.Field.amout, new JpqlExpression("amout-50"));
 		int updated = db.update(ub);
 	}
 
@@ -131,11 +132,11 @@ public class CaseUpdate {
 		ub.getQuery().setAllRecordsCondition();
 
 		// 将一个字段更新为另一个字段的值
-		ub.prepareUpdate(UserBalance.Field.todayAmount, UserBalance.Field.amout);
+		ub.getQuery().prepareUpdate(UserBalance.Field.todayAmount, UserBalance.Field.amout);
 		// 将updateTime更新为现在的值
-		ub.prepareUpdate(UserBalance.Field.updateTime, db.func(Func.now));
+		ub.getQuery().prepareUpdate(UserBalance.Field.updateTime, db.func(Func.now));
 		// 更新为另外两个字段相加
-		ub.prepareUpdate(UserBalance.Field.totalAmount, new JpqlExpression("todayAmount + amout"));
+		ub.getQuery().prepareUpdate(UserBalance.Field.totalAmount, new JpqlExpression("todayAmount + amout"));
 		
 		db.update(ub);
 	}
@@ -144,7 +145,7 @@ public class CaseUpdate {
 	@Test
 	public void testUpdate_Writeback() throws SQLException {
 		Student st = db.load(Student.class, 1);
-		st.prepareUpdate(Student.Field.id, 199);
+		st.getQuery().prepareUpdate(Student.Field.id, 199);
 		int oldId = st.getId();
 		db.update(st);
 		System.out.println("Student的id从" + oldId + " 更新为" + st.getId());

@@ -1,5 +1,6 @@
 package jef.database.wrapper.executor;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -7,32 +8,27 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.inject.Provider;
 import javax.persistence.PersistenceException;
 
 import jef.database.DbUtils;
 import jef.database.DebugUtil;
 import jef.database.ORMConfig;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.innerpool.IConnection;
-import jef.database.innerpool.IUserManagedPool;
 import jef.database.jdbc.result.CloseableResultSet;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.variable.BindVariableContext;
 import jef.tools.StringUtils;
 
-import org.springframework.util.Assert;
-
 public class ExecutorImpl implements StatementExecutor{
-	IConnection conn;
+	Connection conn;
 	Statement st;
-	private IUserManagedPool parent;
-	private String dbkey;
+	private Provider<Connection> parent;
 	private String txId;
 	private DatabaseDialect profile;
 
-	public ExecutorImpl(IUserManagedPool parent, String dbkey, String txId, DatabaseDialect dialect) {
+	public ExecutorImpl(Provider<Connection> parent, String txId, DatabaseDialect dialect) {
 		this.parent = parent;
-		this.dbkey = dbkey;
 		this.txId = txId;
 		this.profile = dialect;
 		try {
@@ -45,8 +41,7 @@ public class ExecutorImpl implements StatementExecutor{
 	
 	private boolean init() throws SQLException {
 		try {
-			conn = parent.poll();
-			conn.setKey(dbkey);
+			conn = parent.get();
 			if(!conn.getAutoCommit()){
 				conn.setAutoCommit(true);
 			}

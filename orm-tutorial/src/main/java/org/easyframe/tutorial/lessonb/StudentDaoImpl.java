@@ -20,7 +20,7 @@ public class StudentDaoImpl extends GenericDaoSupport<Student> implements Studen
 	public void gradeUp(Collection<Integer> ids) {
 		Student st=new Student();
 		st.getQuery().addCondition(Student.Field.id, Operator.IN, ids);
-		st.prepareUpdate(Student.Field.grade, new JpqlExpression("grade+1"));
+		st.getQuery().prepareUpdate(Student.Field.grade, new JpqlExpression("grade+1"));
 		try {
 			//super.getSession()可以得到EF的Session对象
 			getSession().update(st);

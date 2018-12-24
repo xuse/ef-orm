@@ -31,7 +31,7 @@ public class UpdateVairable extends Variable {
 		try {
 			ITableMetadata meta = query.getMeta();
 			ColumnMapping cType = meta.getColumnDef(field);
-			Map<Field, Object> updateMap = query.getInstance().getUpdateValueMap();
+			Map<Field, Object> updateMap = query.getUpdateValueMap();
 			if (updateMap.containsKey(field)) {
 				Object value = updateMap.get(field);
 				return context.setValueInPsmt(index, value, cType);

@@ -57,13 +57,6 @@ final public class PagingIteratorObjImpl<T> extends PagingIterator<T> {
 	}
 
 	/*
-	 * 从查询对象构造
-	 */
-	PagingIteratorObjImpl(IQueryableEntity query, int pageSize, Session db) {
-		this(query.getQuery(), pageSize, db);
-	}
-
-	/*
 	 * 从Query对象构造
 	 */
 	PagingIteratorObjImpl(ConditionQuery query, int pageSize, Session db) {

@@ -66,7 +66,7 @@ public class Like implements VariableConverter {
 
 	public void toPrepareSql(SqlBuilder builder,
 			ITableMetadata meta, DatabaseDialect dialect, SqlContext context,
-			IQueryableEntity instance,boolean batch) {
+			Object instance,boolean batch) {
 		// 只要使用了绑定变量方式获取，那么一定要做转义
 		escape = !dialect.has(
 				Feature.NOT_SUPPORT_LIKE_ESCAPE);
@@ -88,7 +88,7 @@ public class Like implements VariableConverter {
 	}
 
 	public String toSql(ITableMetadata meta, DatabaseDialect dialect,
-			SqlContext context, IQueryableEntity instance) {
+			SqlContext context, Object instance) {
 		String valueStr = StringUtils.toString(value);
 		if(!(value instanceof Expression)){
 			if (valueStr.indexOf('%') > -1 || valueStr.indexOf('_') > -1) {

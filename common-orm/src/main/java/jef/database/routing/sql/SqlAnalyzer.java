@@ -10,15 +10,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang.StringUtils;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
 import jef.common.Pair;
 import jef.common.PairSO;
 import jef.database.DbUtils;
-import jef.database.Field;
 import jef.database.ORMConfig;
+import jef.database.OperateTarget;
 import jef.database.annotation.PartitionFunction;
 import jef.database.annotation.PartitionKey;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.innerpool.PartitionSupport;
-import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.BinaryExpression;
 import jef.database.jsqlparser.expression.Column;
 import jef.database.jsqlparser.expression.JdbcParameter;
@@ -59,12 +65,6 @@ import jef.database.query.RegexpDimension;
 import jef.database.routing.PartitionResult;
 import jef.database.routing.jdbc.ParameterContext;
 
-import org.apache.commons.lang.ObjectUtils;
-import org.apache.commons.lang.StringUtils;
-
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-
 /**
  * 基于SQL语句的分库分表解析。主要逻辑部分
  * @author jiyi
@@ -78,7 +78,7 @@ public class SqlAnalyzer {
 	 * @param db  数据库Session
 	 * @return
 	 */
-	public static QueryablePlan getSelectExecutionPlan(Select sql,Map<Expression, Object>  params, List<Object> value, JDBCTarget db) {
+	public static QueryablePlan getSelectExecutionPlan(Select sql,Map<Expression, Object>  params, List<Object> value, OperateTarget db) {
 		TableMetaCollector collector = new TableMetaCollector();
 		sql.accept(collector);
 		if(collector.get()==null)return new SimpleExecutionPlan(sql, value, null, db);
@@ -123,7 +123,7 @@ public class SqlAnalyzer {
 	 * @param db
 	 * @return
 	 */
-	public static Multimap<String, List<ParameterContext>> doGroup(AbstractMetadata meta,List<List<ParameterContext>> params,Statement st,JDBCTarget db) {
+	public static Multimap<String, List<ParameterContext>> doGroup(AbstractMetadata meta,List<List<ParameterContext>> params,Statement st,OperateTarget db) {
 		Multimap<String,List<ParameterContext>> result=ArrayListMultimap.create();
 		for(List<ParameterContext> param:params){
 			List<Object> values=asValue(param);
@@ -143,7 +143,7 @@ public class SqlAnalyzer {
 	 * @param db     数据库Session
 	 * @return
 	 */
-	public static ExecuteablePlan getExecutionPlan(Statement sql,Map<Expression,Object> params, List<Object> value, JDBCTarget db) {
+	public static ExecuteablePlan getExecutionPlan(Statement sql,Map<Expression,Object> params, List<Object> value, OperateTarget db) {
 		TableMetaCollector collector = new TableMetaCollector();
 		sql.accept(collector);
 		AbstractMetadata meta=collector.get();
@@ -430,11 +430,11 @@ public class SqlAnalyzer {
 			this.meta=meta;
 			for (Map.Entry<PartitionKey, PartitionFunction> key : meta.getEffectPartitionKeys()) {
 				String field = key.getKey().field();
-				Field fld = meta.getField(field);
+				ColumnMapping fld = meta.getColumnDef(field);
 				if (fld == null) {
 					throw new IllegalArgumentException("The partition field [" + field + "] is not a database column.");
 				}
-				String columnName = meta.getColumnDef(fld).upperColumnName();
+				String columnName = fld.upperColumnName();
 				columnToPartitionKey.put(columnName, key.getKey().field());
 			}
 		}

@@ -2,19 +2,19 @@ package com.alibaba.druid;
 
 import java.io.File;
 
-import jef.database.DbClient;
-import jef.database.DbClientBuilder;
-
 import org.junit.Test;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
+import jef.database.DbClient;
+import jef.database.DbClientBuilder;
+
 public class InitTest {
 
 	@Test
 	public void buildTest() {
-		DbClient db = new DbClientBuilder("derby", new File("./db"), null, null).setMaxPoolSize(0).build();
+		DbClient db = new DbClientBuilder("derby", new File("./db"), null, null).build();
 	}
 
 	@Test

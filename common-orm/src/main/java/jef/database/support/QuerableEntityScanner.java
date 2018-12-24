@@ -16,12 +16,12 @@ import jef.accelerator.asm.ASMUtils;
 import jef.common.log.LogUtil;
 import jef.database.DbClient;
 import jef.database.Field;
+import jef.database.SessionFactory;
 import jef.database.annotation.EasyEntity;
 import jef.database.dialect.ColumnType;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.AutoIncrementMapping.GenerationResolution;
 import jef.database.dialect.type.ColumnMapping;
-import jef.database.jpa.JefEntityManagerFactory;
 import jef.database.meta.ColumnModification;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
@@ -87,7 +87,7 @@ public class QuerableEntityScanner {
 	/**
 	 * EMF
 	 */
-	private JefEntityManagerFactory entityManagerFactory;
+	private SessionFactory entityManagerFactory;
 	/**
 	 * DataInit
 	 * 
@@ -248,7 +248,7 @@ public class QuerableEntityScanner {
 					dataInitializer.initData(meta, isCreated);
 				}
 			}
-		} catch (Throwable e) {
+		} catch (Exception e) {
 			LogUtil.error("EntityScanner:[Failure]" + StringUtils.exceptionStack(e));
 		}
 	}
@@ -266,7 +266,7 @@ public class QuerableEntityScanner {
 	 */
 	private boolean doTableDDL(ITableMetadata meta, final boolean doCreateTask, final boolean refresh) throws SQLException {
 		// 不管是否存在，总之先创建一次
-		DbClient client = entityManagerFactory.getDefault();
+		DbClient client = entityManagerFactory.asDbClient();
 
 		boolean newTable = false;
 		if (doCreateTask) {
@@ -319,9 +319,9 @@ public class QuerableEntityScanner {
 			for (ColumnMapping f : meta.getColumns()) {
 				if (f instanceof AutoIncrementMapping) {
 					AutoIncrementMapping m = (AutoIncrementMapping) f;
-					GenerationResolution gt = ((AutoIncrementMapping) f).getGenerationType(entityManagerFactory.getDefault().getProfile(meta.getBindDsName()));
+					GenerationResolution gt = ((AutoIncrementMapping) f).getGenerationType(entityManagerFactory.asDbClient().getProfile(meta.getBindDsName()));
 					if (gt == GenerationResolution.SEQUENCE || gt == GenerationResolution.TABLE) {
-						entityManagerFactory.getDefault().getSequenceManager().getSequence(m, meta.getBindDsName());
+						entityManagerFactory.asDbClient().getSequenceManager().getSequence(m, meta.getBindDsName());
 					}
 
 				}
@@ -360,9 +360,9 @@ public class QuerableEntityScanner {
 	 * @param charset
 	 *            数据文件编码
 	 */
-	public void setEntityManagerFactory(JefEntityManagerFactory entityManagerFactory, boolean useTable, String charset, String extName, String initRoot) {
+	public void setEntityManagerFactory(SessionFactory entityManagerFactory, boolean useTable, String charset, String extName, String initRoot) {
 		this.entityManagerFactory = entityManagerFactory;
-		this.dataInitializer = new DataInitializer(entityManagerFactory.getDefault(), useTable, charset, extName, initRoot);
+		this.dataInitializer = new DataInitializer(entityManagerFactory.asDbClient(), useTable, charset, extName, initRoot);
 	}
 
 	public boolean isCreateTable() {

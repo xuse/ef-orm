@@ -31,6 +31,7 @@ import java.sql.SQLTimeoutException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,7 +39,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -50,15 +50,15 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Provider;
 import javax.persistence.EntityExistsException;
 import javax.persistence.FetchType;
 import javax.persistence.PersistenceException;
 import javax.persistence.QueryTimeoutException;
-import javax.sql.DataSource;
 
 import org.apache.commons.lang.ObjectUtils;
 
-import com.google.common.base.Objects;
+import com.github.geequery.entity.Entities;
 
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
@@ -67,7 +67,7 @@ import jef.database.Session.UpdateContext;
 import jef.database.annotation.Cascade;
 import jef.database.annotation.JoinType;
 import jef.database.datasource.DataSourceInfo;
-import jef.database.datasource.IRoutingDataSource;
+import jef.database.datasource.RoutingDataSource;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
@@ -184,22 +184,6 @@ public final class DbUtils {
 		}
 	}
 
-	/*
-	 * 处理SQL执行错误 <strong>注意，这个方法执行期间会调用连接，因此必须在这个方法执行完后才能释放连接</strong>
-	 * 
-	 * @param e
-	 * 
-	 * @param tablename
-	 * 
-	 * @param conn
-	 */
-	public static void processError(SQLException e, String tablename, OperateTarget conn) {
-		if (conn.getProfile().isIOError(e)) {
-			conn.notifyDisconnect(e);
-		}
-		DebugUtil.setSqlState(e, tablename);
-	}
-
 	/**
 	 * 用于查找两个表之间的外键
 	 * 
@@ -257,61 +241,7 @@ public final class DbUtils {
 		return name;
 	}
 
-	/**
-	 * 根据datasource解析连接信息
-	 * 
-	 * @param ds
-	 * @param updateDataSourceProperties
-	 *            在能解析出ds的情况下，向datasource的连接属性执行注入
-	 * @return
-	 * @throws SQLException
-	 */
-	public static ConnectInfo tryAnalyzeInfo(DataSource ds, boolean updateDataSourceProperties) {
-		if (ds instanceof IRoutingDataSource) {
-			IRoutingDataSource rds = (IRoutingDataSource) ds;
-			Entry<String, DataSource> e = rds.getDefaultDatasource();
-			if (e == null) {// 更见鬼了，没法获得缺省的DataSource。
-				Collection<String> names = rds.getDataSourceNames();
-				if (!names.isEmpty()) {
-					String name = names.iterator().next();
-					LogUtil.warn("Can not determine default datasource name. choose [" + name + "] as default datasource.");
-					return tryAnalyzeInfo(rds.getDataSource(name), updateDataSourceProperties);
-				}
-			} else {
-				return tryAnalyzeInfo(e.getValue(), updateDataSourceProperties);
-			}
-		}
-		if (ds instanceof DataSourceInfo) {
-			DataSourceInfo dsw = (DataSourceInfo) ds;
-			ConnectInfo info = new ConnectInfo();
-			DbUtils.processDataSourceOfEnCrypted(dsw);
 
-			info.url = dsw.getUrl();
-			info.user = dsw.getUser();
-			info.password = dsw.getPassword();
-			DatabaseDialect profile = info.parse();// 解析，获得profile, 解析出数据库名等信息
-			if (updateDataSourceProperties)
-				profile.processConnectProperties(dsw);
-			return info;// 理想情况
-		}
-		return null;
-	}
-
-	/**
-	 * 根据已有的连接解析连接信息
-	 * 
-	 * @param conn
-	 * @return
-	 * @throws SQLException
-	 */
-	public static ConnectInfo tryAnalyzeInfo(Connection conn) throws SQLException {
-		DatabaseMetaData meta = conn.getMetaData();
-		ConnectInfo info = new ConnectInfo();
-		info.user = meta.getUserName();
-		info.url = meta.getURL();
-		info.parse();// 解析，获得profile, 解析出数据库名等信息
-		return info;
-	}
 
 	/**
 	 * Close the given JDBC Connection and ignore any thrown exception. This is
@@ -502,7 +432,7 @@ public final class DbUtils {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T extends IQueryableEntity> JoinElement toReferenceJoinQuery(Query<T> queryObj, List<Reference> excludeRef) {
+	public static <T> JoinElement toReferenceJoinQuery(Query<T> queryObj, List<Reference> excludeRef) {
 		// 得到可以合并查询的引用关系
 		Map<Reference, List<AbstractRefField>> map = queryObj.isCascadeViaOuterJoin() ? DbUtils.getMergeAsOuterJoinRef(queryObj) : Collections.EMPTY_MAP;
 		Query<?>[] otherQuery = queryObj.getOtherQueryProvider();
@@ -670,25 +600,25 @@ public final class DbUtils {
 	/**
 	 * 提供主键的值
 	 */
-	public static List<Object> getPrimaryKeyValue(IQueryableEntity data) {
+	public static List<Serializable> getPrimaryKeyValue(Object data) {
 		ITableMetadata meta = MetaHolder.getMeta(data);
 		if (meta.getPKFields().isEmpty())
 			return null;
 
 		int len = meta.getPKFields().size();
-		Object[] result = new Object[len];
+		Serializable[] result = new Serializable[len];
 		for (int i = 0; i < len; i++) {
 			ColumnMapping field = meta.getPKFields().get(i);
 			if (!isValidPKValue(data, meta, field)) {
 				return null;
 			}
-			result[i] = field.getFieldAccessor().get(data);
+			result[i] = (Serializable) field.getFieldAccessor().get(data);
 		}
 		return Arrays.asList(result);
 	}
 
 	// 从实体中获取主键的值，这里的实体都必须是已经从数据库中选择出来的，因此无需校验主键值是否合法
-	public static List<Serializable> getPKValueSafe(IQueryableEntity data) {
+	public static List<Serializable> getPKValueSafe(Object data) {
 		ITableMetadata meta = MetaHolder.getMeta(data);
 		if (meta.getPKFields().isEmpty())
 			return null;
@@ -764,13 +694,13 @@ public final class DbUtils {
 	 */
 	public static String getColumnName(ITableMetadata meta, Field fld, String alias, DatabaseDialect profile) {
 		if (alias == null) {
-			return meta.getColumnName(fld, profile, true);
+			return meta.getColumnDef(fld).getColumnName(profile, true);
 		} else {
 			if (fld instanceof JpqlExpression) {
 				throw new UnsupportedOperationException();
 			} else {
 				StringBuilder sb = new StringBuilder();
-				sb.append(alias).append('.').append(meta.getColumnName(fld, profile, true));
+				sb.append(alias).append('.').append(meta.getColumnDef(fld).getColumnName(profile, true));
 				return sb.toString();
 			}
 		}
@@ -1024,8 +954,7 @@ public final class DbUtils {
 		if (field instanceof Enum) {
 			// FIXME 这个算法对原始功能是适用的，但当动态扩展等系列功能出现后，适用上有一定问题。
 			Class<?> c = field.getClass().getDeclaringClass();
-			Assert.isTrue(IQueryableEntity.class.isAssignableFrom(c), field + " is not a defined in a IQueryableEntity's meta-model.");
-			return MetaHolder.getMeta(c.asSubclass(IQueryableEntity.class));
+			return MetaHolder.getMeta(c);
 		} else {
 			throw new IllegalArgumentException("method 'getTableMeta' doesn't support field type of " + field.getClass());
 		}
@@ -1106,7 +1035,7 @@ public final class DbUtils {
 	 * @param force
 	 * @return
 	 */
-	protected static void fillConditionFromField(IQueryableEntity obj, Query<?> query, UpdateContext update, boolean force) {
+	protected static void fillConditionFromField(Object obj, Query<?> query, UpdateContext update, boolean force) {
 		Assert.isTrue(query.getConditions().isEmpty());
 		ITableMetadata meta = query.getMeta();
 		boolean isUpdate = update != null;
@@ -1121,15 +1050,16 @@ public final class DbUtils {
 	/*
 	 * (nojava doc)
 	 */
-	private static boolean isValidPKValue(IQueryableEntity obj, ITableMetadata meta, ColumnMapping field) {
+	private static boolean isValidPKValue(Object obj, ITableMetadata meta, ColumnMapping field) {
 		Class<?> type = field.getFieldAccessor().getType();
 		Object value = field.getFieldAccessor().get(obj);
 		if (field.isUnsavedValueDeclared()) {
 			return !field.isUnsavedValue(value);
 		} else if (type.isPrimitive()) {
 			if (field.isUnsavedValue(value)) {
-				if (!obj.isUsed(field.field()))
+				if (!Entities.isUsed(obj, field.field())) {
 					return false;
+				}
 			}
 			return true;
 		} else {
@@ -1172,7 +1102,7 @@ public final class DbUtils {
 	 * 
 	 * @return
 	 */
-	protected static boolean fillPKConditions(IQueryableEntity obj, ITableMetadata meta, Query<?> query, boolean isUpdate, boolean force) {
+	protected static boolean fillPKConditions(Object obj, ITableMetadata meta, Query<?> query, boolean isUpdate, boolean force) {
 		if (meta.getPKFields().isEmpty())
 			return false;
 		if (!force) {
@@ -1181,16 +1111,16 @@ public final class DbUtils {
 					return false;
 			}
 		}
-		Map<Field, Object> map = obj.getUpdateValueMap();
+		BitSet used = Entities.getTouchRecord(obj);
+		
 		for (ColumnMapping mapping : meta.getPKFields()) {
 			Object value = mapping.getFieldAccessor().get(obj);
 			Field field = mapping.field();
 			query.addCondition(field, value);
-			if (isUpdate && map.containsKey(field)) {//
-				Object v = map.get(field);
-				if (Objects.equal(value, v)) {
-					map.remove(field);
-				}
+			if(used!=null) {
+				if (isUpdate && used.get(field.asEnumOrdinal())) {//
+					used.set(field.asEnumOrdinal(), false);
+				}	
 			}
 		}
 		return true;
@@ -1198,24 +1128,20 @@ public final class DbUtils {
 
 	/**
 	 * 将指定对象中除了主键以外的所有字段都作为需要update的字段。（标记为'已修改的'） <br>
-	 * 这个方法实际操作时：即除了主键以外的所有字段都放置到updateMap中去
+	 * 这个方法实际操作时：即除了主键以外的所有字段都设置为touched
 	 * 
 	 * @param <T>
 	 * @param prepareObj
 	 */
-	public static <T extends IQueryableEntity> void fillUpdateMap(T... obj) {
-		if (obj == null || obj.length == 0)
+	public static <T extends IQueryableEntity> void fillUpdateMap(T obj) {
+		if (obj == null)
 			return;
-		ITableMetadata m = MetaHolder.getMeta(obj[0]);
-		for (T o : obj) {
-			BeanWrapper bean = BeanWrapper.wrap(o);
-			for (ColumnMapping mType : m.getColumns()) {
-				if (mType.isPk()) {
-					continue;
-				}
-				Field field = mType.field();
-				o.prepareUpdate(field, bean.getPropertyValue(field.name()), true);
+		ITableMetadata m = MetaHolder.getMeta(obj);
+		for (ColumnMapping mType : m.getColumns()) {
+			if (mType.isPk()) {
+				continue;
 			}
+			obj.touchFlag(mType.field(), true);
 		}
 	}
 
@@ -1225,27 +1151,25 @@ public final class DbUtils {
 	 * @param obj
 	 * @return
 	 */
-	@SuppressWarnings("unchecked")
-	public static <T extends IQueryableEntity> Query<T> populateExampleConditions(T obj, String... properties) {
-		Query<T> query = (Query<T>) obj.getQuery();
+	public static <T> Query<T> populateExampleConditions(T obj, String... properties) {
+		Query<T> query = Entities.asQuery(obj);
 		ITableMetadata meta = query.getMeta();
-		BeanWrapper bw = BeanWrapper.wrap(obj, BeanWrapper.FAST);
 		if (properties.length == 0) {
 			for (ColumnMapping mType : meta.getColumns()) {
 				Field field = mType.field();
-				if (obj.isUsed(field)) {
-					Object value = bw.getPropertyValue(field.name());
+				if (Entities.isUsed(obj, field)) {
+					Object value = mType.getFieldAccessor().get(obj);
 					query.addCondition(field, value);
 				}
 			}
 		} else {
 			for (String s : properties) {
-				Field field = meta.getField(s);
-				if (field == null) {
+				ColumnMapping columnDef = meta.getColumnDef(s);
+				if (columnDef == null) {
 					throw new IllegalArgumentException("field [" + s + "] not found in object " + meta.getName());
 				}
-				Object value = bw.getPropertyValue(field.name());
-				query.addCondition(field, value);
+				Object value = columnDef.getFieldAccessor().get(obj);
+				query.addCondition(columnDef.field(), value);
 			}
 		}
 		return query;
@@ -1271,11 +1195,12 @@ public final class DbUtils {
 	 * @param needTranslate
 	 * @return
 	 */
-	public static PartitionResult[] toTableNames(IQueryableEntity obj, String customName, Query<?> q, PartitionSupport processor) {
-		AbstractMetadata meta = q == null ? MetaHolder.getMeta(obj) : (AbstractMetadata) q.getMeta();
+	public static PartitionResult[] toTableNames(Query<?> q, String customName, PartitionSupport processor) {
+		Assert.notNull(q);
+		//AbstractMetadata meta = q == null ? MetaHolder.getMeta(obj) : (AbstractMetadata) q.getMeta();
 		if (StringUtils.isNotEmpty(customName))
-			return new PartitionResult[] { new PartitionResult(customName).setDatabase(meta.getBindDsName()) };
-		PartitionResult[] result = partitionUtil.toTableNames(meta, obj, q, processor, ORMConfig.getInstance().isFilterAbsentTables());
+			return new PartitionResult[] { new PartitionResult(customName).setDatabase(q.getMeta().getBindDsName()) };
+		PartitionResult[] result = partitionUtil.toTableNames(q, processor, ORMConfig.getInstance().isFilterAbsentTables());
 		// if(ORMConfig.getInstance().isDebugMode()){
 		// LogUtil.show("Partitions:"+Arrays.toString(result));
 		// }
@@ -1315,11 +1240,11 @@ public final class DbUtils {
 	 * @param profile
 	 * @return
 	 */
-	public static PartitionResult toTableName(IQueryableEntity obj, String customName, Query<?> q, PartitionSupport profile) {
-		AbstractMetadata meta = obj == null ? (AbstractMetadata) q.getMeta() : MetaHolder.getMeta(obj);
+	public static PartitionResult toTableName(Object obj, String customName, PartitionSupport profile) {
+		AbstractMetadata meta = MetaHolder.getMeta(obj);
 		if (StringUtils.isNotEmpty(customName))
 			return new PartitionResult(customName).setDatabase(meta.getBindDsName());
-		PartitionResult result = partitionUtil.toTableName(meta, obj, q, profile);
+		PartitionResult result = partitionUtil.toTableName(meta, obj, profile);
 		Assert.notNull(result);
 		return result;
 	}
@@ -1496,21 +1421,20 @@ public final class DbUtils {
 	 * @throws SQLException
 	 * @return the object who is able to update.
 	 */
-	public static <T extends IQueryableEntity> T compareToUpdateMap(T changedObj, T oldObj) {
+	public static <T> Query<T> compareToUpdateMap(T changedObj, T oldObj) {
 		// Assert.isTrue(Objects.equal(DbUtils.getPrimaryKeyValue(changedObj),
 		// DbUtils.getPKValueSafe(oldObj)),
 		// "For consistence, the two parameter must hava equally primary
 		// keys.");
 		ITableMetadata m = MetaHolder.getMeta(oldObj);
 		boolean safeMerge = ORMConfig.getInstance().isSafeMerge();
-
+		Query<T> q = Entities.asQuery(oldObj);
 		for (ColumnMapping mType : m.getColumns()) {
 			if (mType.isPk())
 				continue;
 			Field field = mType.field();
 			Object value = mType.getFieldAccessor().get(changedObj);
-
-			boolean used = changedObj.isUsed(field);
+			boolean used = Entities.isUsed(changedObj, field);
 			if (mType.isGenerated() && !used) {
 				continue;
 			}
@@ -1520,9 +1444,30 @@ public final class DbUtils {
 			}
 			Object oldValue = mType.getFieldAccessor().get(oldObj);
 			if (!ObjectUtils.equals(value, oldValue)) {
-				oldObj.prepareUpdate(field, value);
+				q.prepareUpdate(field, value);
 			}
 		}
-		return oldObj;
+		return q;
+	}
+
+	/**
+	 * 将一个对象名（数据表、索引等）转换为schemaMapping后的名称
+	 * 
+	 * @param objectName
+	 */
+	public static String toSchemaAdjustedName(String objectName) {
+		if (objectName == null) {
+			return null;
+		}
+
+		int n = objectName.indexOf('.');
+		if (n < 0)
+			return objectName;
+		String schema = objectName.substring(0, n);
+		String schema1 = MetaHolder.getMappingSchema(schema);
+		if (schema == schema1) {
+			return objectName;
+		}
+		return schema1 == null ? objectName.substring(n + 1) : schema1.concat(objectName.substring(n));
 	}
 }

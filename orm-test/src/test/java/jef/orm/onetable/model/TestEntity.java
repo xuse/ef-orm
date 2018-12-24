@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.MonthDay;
 import java.time.YearMonth;
 import java.util.Date;
 import java.util.List;
@@ -57,6 +58,7 @@ public class TestEntity extends jef.database.DataObject {
     private LocalDateTime joda3a;
     private Instant joda4a;
     private YearMonth joda5a;
+    private MonthDay joda5b;
     private BigDecimal superBig;
     
     @Enumerated(EnumType.ORDINAL)
@@ -332,11 +334,19 @@ public class TestEntity extends jef.database.DataObject {
 		this.state2 = state2;
 	}
 
+	public MonthDay getJoda5b() {
+		return joda5b;
+	}
+
+	public void setJoda5b(MonthDay joda5b) {
+		this.joda5b = joda5b;
+	}
+
 
 
 	public enum Field implements jef.database.Field {
 
         field1, field2, dateField, binaryData, boolField, boolField2, intFiled, intField2, longField, longField2, doubleField, doubleField2, floatField, folatField2, createTime, joda1, joda2, joda3, joda4, joda5,
-        joda3a,joda4a,joda5a,superBig,state1,state2
+        joda3a,joda4a,joda5a,joda5b,superBig,state1,state2
     }
 }

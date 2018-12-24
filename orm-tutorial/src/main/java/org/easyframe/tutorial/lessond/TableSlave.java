@@ -2,6 +2,7 @@ package org.easyframe.tutorial.lessond;
 
 import java.util.Date;
 
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -9,6 +10,7 @@ import javax.persistence.Table;
 @Table(indexes={},
 uniqueConstraints={}
 )
+@Entity
 public class TableSlave {
 	@Id
 	@GeneratedValue

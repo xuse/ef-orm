@@ -115,7 +115,7 @@ public class JndiDatasourceLookup implements DataSourceLookup{
         } catch (ClassNotFoundException e) {
             return false;
         }
-        if (c == RoutingDataSource.class) {
+        if (c == DefaultRoutingDataSource.class) {
             return false;
         }
         return DataSource.class.isAssignableFrom(c);

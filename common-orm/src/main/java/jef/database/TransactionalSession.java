@@ -19,7 +19,6 @@ import java.sql.SQLException;
 import java.sql.Savepoint;
 
 import jef.database.Transaction.TransactionFlag;
-import jef.database.jdbc.JDBCTarget;
 import jef.database.support.SavepointNotSupportedException;
 
 /**
@@ -165,6 +164,6 @@ public interface TransactionalSession{
 	 * 
 	 * @return 指定数据源为dbKey的数据库操作对象
 	 */
-	abstract JDBCTarget selectTarget(String dbKey);
+	abstract OperateTarget selectTarget(String dbKey);
 
 }

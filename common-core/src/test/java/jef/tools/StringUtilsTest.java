@@ -17,7 +17,7 @@ import jef.tools.string.StringSpliter;
 import jef.tools.string.Substring;
 
 public class StringUtilsTest extends org.junit.Assert {
-	
+
 	@Test
 	public void testIgnoree() {
 		String s = " \r\t\n　　 [1123]  　　\r\t\n";
@@ -27,7 +27,6 @@ public class StringUtilsTest extends org.junit.Assert {
 		System.out.println(s.charAt(j));
 		assertEquals("[1123]", s.substring(i, j));
 	}
-	
 
 	@Test
 	public void stringTokens() {
@@ -38,6 +37,30 @@ public class StringUtilsTest extends org.junit.Assert {
 			cmdarray[i] = st.nextToken();
 		LogUtil.show(cmdarray);
 	}
+	
+	
+	@Test
+	public void testUppercase() throws IOException {
+		String s = "HÀN ZÌ ZHUǍN PĪN YĪN";
+		System.out.println(Strings.lower(s));
+		System.out.println(Strings.upper(s));
+		
+		
+		
+		//IOUtils.saveAsFile(new File("c:/sss.txt"), Charsets.GB18030,s.toLowerCase(Locale.CHINESE)+s.toUpperCase(Locale.CHINESE));
+	}
+	
+	
+	@Test
+	public void testReplace2() throws IOException {
+		String text="    混合双打双方   ,就是反对色    ,看书打发士大夫    ";
+		int startOf=StringUtils.getBeginPos(text);
+		System.out.println(startOf);
+		String result=StringUtils.replace(text, "    ", "【】",startOf);
+		System.out.println(result);
+		
+	}
+	
 
 	@Test
 	public void testSubstring() {
@@ -178,5 +201,21 @@ public class StringUtilsTest extends org.junit.Assert {
 		List<String> list = Arrays.asList(s1, s2, s3, s4, s5, s6, s7, s8);
 		Collections.sort(list, StringComparator.INSTANCE);
 		assertEquals(list, Arrays.asList(s5, s6, s8, s7, s1, s2, s4, s3));
+	}
+
+	@Test
+	public void testIsRepeatOf() {
+		System.out.println(StringUtils.isRepeatOf("=================", "="));
+
+		System.out.println(StringUtils.isRepeatOf("123412341234", "1234"));
+
+		System.out.println(StringUtils.isRepeatOf("123412341234", "123"));
+
+		System.out.println(StringUtils.isRepeatOf("!=!", "!=!"));
+		System.out.println(StringUtils.isRepeatOf("!=!", "!="));
+
+		System.out.println(StringUtils.isRepeatOf("!=!=", "!="));
+		System.out.println(StringUtils.isRepeatOf("!=!=", "!=!"));
+
 	}
 }

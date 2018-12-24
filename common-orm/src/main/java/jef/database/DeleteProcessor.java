@@ -7,7 +7,9 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jef.database.dialect.DatabaseDialect;
+import jef.database.innerpool.WrapableConnection;
 import jef.database.query.JoinElement;
+import jef.database.query.Query;
 import jef.database.query.SqlContext;
 import jef.database.routing.PartitionResult;
 import jef.database.support.SqlLog;
@@ -21,16 +23,12 @@ import jef.database.wrapper.variable.BindVariableContext;
  * @author jiyi
  * 
  */
-public abstract class DeleteProcessor {
-	abstract int processDelete0(OperateTarget db, IQueryableEntity obj, BindSql where, PartitionResult site, SqlLog sb) throws SQLException;
-
-	abstract BindSql toWhereClause(JoinElement joinElement, SqlContext context, DatabaseDialect profile);
-
+public class DeleteProcessor {
 	static DeleteProcessor get(DatabaseDialect profile, DbClient parent) {
-		return new PreparedImpl(parent.preProcessor);
+		return new DeleteProcessor(parent.preProcessor);
 	}
 
-	final int processDelete(Session session, final IQueryableEntity obj, final BindSql where, PartitionResult[] sites, long parseCost) throws SQLException {
+	final int processDelete(Session session, final Query<?> obj, final BindSql where, PartitionResult[] sites, long parseCost) throws SQLException {
 		long parse = System.currentTimeMillis();
 		final SqlLog log = ORMConfig.getInstance().newLogger();
 		int total = 0;
@@ -62,50 +60,39 @@ public abstract class DeleteProcessor {
 		return total;
 	}
 
-	private static final class PreparedImpl extends DeleteProcessor {
-		private SqlProcessor parent;
+	private SqlProcessor parent;
 
-		public PreparedImpl(SqlProcessor parent) {
-			this.parent = parent;
-		}
+	public DeleteProcessor(SqlProcessor parent) {
+		this.parent = parent;
+	}
 
-		int processDelete0(OperateTarget db, IQueryableEntity obj, BindSql where, PartitionResult site, SqlLog sb) throws SQLException {
-			int count = 0;
-			for (String tablename : site.getTables()) {
-				String sql = "delete from " + DbUtils.escapeColumn(db.getProfile(), tablename) + where.getSql();
-				sb.ensureCapacity(sql.length() + 150);
-				sb.append(sql).append(db);
+	int processDelete0(OperateTarget provider, Query<?> query, BindSql where, PartitionResult site, SqlLog sb) throws SQLException {
+		int count = 0;
+		for (String tablename : site.getTables()) {
+			String sql = "delete from " + DbUtils.escapeColumn(provider.getProfile(), tablename) + where.getSql();
+			sb.ensureCapacity(sql.length() + 150);
+			sb.append(sql).append(provider.toString());
 
-				PreparedStatement psmt = null;
-				try {
-					psmt = db.prepareStatement(sql);
-					int deleteTimeout = ORMConfig.getInstance().getDeleteTimeout();
-					if (deleteTimeout > 0) {
-						psmt.setQueryTimeout(deleteTimeout);
-					}
-					BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
-					context.setVariables(obj.getQuery(), null, where.getBind());
-					psmt.execute();
-					count += psmt.getUpdateCount();
-				} catch (SQLException e) {
-					DbUtils.processError(e, tablename, db);
-					db.releaseConnection();// 如果在处理过程中发现异常，方法即中断，就要释放连接，这样就不用在外面再套一层finally
-					throw e;
-				} catch (RuntimeException e) {
-					db.releaseConnection();// 如果在处理过程中发现异常，方法即中断，就要释放连接，这样就不用在外面再套一层finally
-				} finally {
-					sb.output();
-					if (psmt != null)
-						psmt.close();
+			PreparedStatement psmt = null;
+			try(WrapableConnection db=provider.get()) {
+				psmt = db.prepareStatement(sql);
+				int deleteTimeout = ORMConfig.getInstance().getDeleteTimeout();
+				if (deleteTimeout > 0) {
+					psmt.setQueryTimeout(deleteTimeout);
 				}
+				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
+				context.setVariables(query, null, where.getBind());
+				psmt.execute();
+				count += psmt.getUpdateCount();
+			} finally {
+				DbUtils.close(psmt);
+				sb.output();
 			}
-			db.releaseConnection();
-			return count;
 		}
+		return count;
+	}
 
-		@Override
-		BindSql toWhereClause(JoinElement joinElement, SqlContext context, DatabaseDialect profile) {
-			return parent.toWhereClause(joinElement, context, null, profile,false);
-		}
+	BindSql toWhereClause(JoinElement joinElement, SqlContext context, DatabaseDialect profile) {
+		return parent.toWhereClause(joinElement, context, null, profile, false);
 	}
 }

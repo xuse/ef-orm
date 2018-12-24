@@ -262,7 +262,7 @@ final class JoinImpl2 extends AbstractJoinImpl {
 		if (q.getAttribute(ConditionQuery.CUSTOM_TABLE_NAME) != null) {
 			table = String.valueOf(q.getAttribute(ConditionQuery.CUSTOM_TABLE_NAME));
 		} else {
-			table = DbUtils.toTableName(q.getInstance(), null, q, processor.getPartitionSupport()).getAsOneTable();
+			table = DbUtils.toTableName(q.getInstance(), null, processor.getPartitionSupport()).getAsOneTable();
 		}
 		sb.append(DbUtils.escapeColumn(processor.getProfile(), table)).append(' ').append(alias);
 	}

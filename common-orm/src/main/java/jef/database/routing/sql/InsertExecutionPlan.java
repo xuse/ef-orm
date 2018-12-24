@@ -2,8 +2,8 @@ package jef.database.routing.sql;
 
 import java.sql.SQLException;
 
+import jef.database.OperateTarget;
 import jef.database.jdbc.GenerateKeyReturnOper;
-import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.statement.insert.Insert;
 import jef.database.routing.PartitionResult;
@@ -21,7 +21,7 @@ public class InsertExecutionPlan extends AbstractExecutionPlan implements Execut
 	// Insert操作是最简单的因为表名肯定只有一个
 	public UpdateReturn processUpdate(GenerateKeyReturnOper generateKeys) throws SQLException {
 		PartitionResult site = this.sites[0];
-		JDBCTarget session=context.db.getTarget(site.getDatabase());
+		OperateTarget session=context.db.getTarget(site.getDatabase());
 		String s=getSql(site.getAsOneTable());
 		return session.innerExecuteUpdate(s, context.params, generateKeys);
 	}

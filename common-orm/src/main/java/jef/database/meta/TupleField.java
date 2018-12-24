@@ -6,10 +6,12 @@ import jef.database.MetadataContainer;
 public class TupleField implements jef.database.Field, MetadataContainer {
 	private ITableMetadata meta;
 	private String name;
+	private int ordinal;
 
-	TupleField(ITableMetadata meta, String name) {
+	TupleField(ITableMetadata meta, String name, int ordinal) {
 		this.meta = meta;
 		this.name = name;
+		this.ordinal = ordinal;
 	}
 
 	public String name() {
@@ -23,6 +25,15 @@ public class TupleField implements jef.database.Field, MetadataContainer {
 	@Override
 	public String toString() {
 		return name;
+	}
+
+	@Override
+	public int asEnumOrdinal() {
+		return ordinal;
+	}
+
+	public int getOrdinal() {
+		return ordinal;
 	}
 
 }

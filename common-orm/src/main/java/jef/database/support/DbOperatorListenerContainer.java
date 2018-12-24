@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import jef.database.IQueryableEntity;
 import jef.database.Session;
 import jef.database.Transaction;
+import jef.database.query.Query;
 
 public final class DbOperatorListenerContainer implements DbOperatorListener{
 	private List<DbOperatorListener> listeners=new ArrayList<DbOperatorListener>();
@@ -19,26 +19,26 @@ public final class DbOperatorListenerContainer implements DbOperatorListener{
 		this.listeners.add(lis);
 	}
 	
-	public void beforeDelete(IQueryableEntity obj, Session db) {
+	public void beforeDelete(Query<?> obj,Session db) {
 		for(DbOperatorListener l:listeners){
 			l.beforeDelete(obj, db);
 		}
 	}
 
-	public void afterDelete(IQueryableEntity obj, int n, Session db) {
+	public void afterDelete(Query<?> obj, int n, Session db) {
 		for(DbOperatorListener l:listeners){
 			l.afterDelete(obj, n, db);
 		}
 		
 	}
 
-	public void beforeUpdate(IQueryableEntity obj, Session db) {
+	public void beforeUpdate(Query<?> obj,Session db) {
 		for(DbOperatorListener l:listeners){
 			l.beforeUpdate(obj, db);
 		}		
 	}
 
-	public void afterUpdate(IQueryableEntity obj, int n, Session db) {
+	public void afterUpdate(Query<?> obj,int n, Session db) {
 		for(DbOperatorListener l:listeners){
 			l.afterUpdate(obj, n, db);
 		}		
@@ -80,13 +80,13 @@ public final class DbOperatorListenerContainer implements DbOperatorListener{
 		}		
 	}
 
-	public void beforeInseret(IQueryableEntity obj, Session abstractDbClient) {
+	public void beforeInseret(Object obj, Session abstractDbClient) {
 		for(DbOperatorListener l:listeners){
 			l.beforeInseret(obj, abstractDbClient);
 		}		
 	}
 
-	public void afterInsert(IQueryableEntity obj, Session abstractDbClient) {
+	public void afterInsert(Object obj, Session abstractDbClient) {
 		for(DbOperatorListener l:listeners){
 			l.afterInsert(obj, abstractDbClient);
 		}		

@@ -13,8 +13,9 @@ import jef.common.PairSO;
 import jef.common.log.LogUtil;
 import jef.database.DbUtils;
 import jef.database.ORMConfig;
+import jef.database.OperateTarget;
 import jef.database.OperateTarget.TransformerAdapter;
-import jef.database.jdbc.JDBCTarget;
+import jef.database.innerpool.WrapableConnection;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.jdbc.result.ResultSetContainer;
 import jef.database.jdbc.statement.ResultSetLaterProcess;
@@ -223,7 +224,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 		long start = System.currentTimeMillis();
 		String rawSQL = sqlContext.statement.toString();
 		T result;
-		JDBCTarget db = context.db;
+		OperateTarget db = context.db;
 		if (isMultiDatabase()) {// 多库
 			result = executeMultiQuery(forCount, extractor, sqlContext, range);
 		} else { // 单库多表，基于Union的查询. 可以使用数据库分页
@@ -250,12 +251,12 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 	 * 执行查询动作，将查询结果放入mrs
 	 */
 	@SuppressWarnings("rawtypes")
-	private static void processQuery(JDBCTarget db, PairSO<List<Object>> sql, ResultSetExtractor rst, ResultSetContainer mrs, ResultSetLaterProcess lazyProcessor, SqlLog sb) throws SQLException {
+	private static void processQuery(OperateTarget provider, PairSO<List<Object>> sql, ResultSetExtractor rst, ResultSetContainer mrs, ResultSetLaterProcess lazyProcessor, SqlLog sb) throws SQLException {
 		PreparedStatement psmt = null;
 		ResultSet rs = null;
 		sb.ensureCapacity(sql.first.length() + 150);
-		sb.append(sql.first).append(db);
-		try {
+		sb.append(sql.first).append(provider.toString());
+		try (WrapableConnection db=provider.get()){
 			psmt = db.prepareStatement(sql.first, lazyProcessor, false);
 			BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
 			context.setVariables(sql.second);
@@ -537,12 +538,12 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 	/*
 	 * 执行查询动作，将查询结果放入mrs
 	 */
-	private void processQuery(JDBCTarget db, PairSO<List<Object>> sql, int max, int fetchSize, ResultSetContainer mrs, ResultSetLaterProcess isReverse, SqlLog sb) throws SQLException {
+	private void processQuery(OperateTarget provider, PairSO<List<Object>> sql, int max, int fetchSize, ResultSetContainer mrs, ResultSetLaterProcess isReverse, SqlLog sb) throws SQLException {
 		PreparedStatement psmt = null;
 		ResultSet rs = null;
 		sb.ensureCapacity(sql.first.length() + 150);
-		sb.append(sql.first).append(db);
-		try {
+		sb.append(sql.first).append(provider.toString());
+		try(WrapableConnection db=provider.get()) {
 			psmt = db.prepareStatement(sql.first, isReverse, false);
 			BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), sb);
 			context.setVariables(sql.second);
@@ -602,7 +603,7 @@ public class SelectExecutionPlan extends AbstractExecutionPlan implements Querya
 	}
 
 	private long getCount0(PartitionResult site, List<String> sqls) throws SQLException {
-		JDBCTarget db = context.db.getTarget(site.getDatabase());
+		OperateTarget db = context.db.getTarget(site.getDatabase());
 		long count = 0;
 		for (String sql : sqls) {
 			count += db.innerSelectBySql(sql, ResultSetExtractor.COUNT_EXTRACTER, context.params, null);

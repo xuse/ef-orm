@@ -4,6 +4,11 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
+/**
+ * 基于Method反射来实现的Property
+ * @author jiyi
+ *
+ */
 public class PropertyHolder implements Property{
 	MethodEx getter;
 	MethodEx setter;

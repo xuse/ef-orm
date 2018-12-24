@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import jef.tools.IOUtils;
 import jef.tools.TextFileCallback;
 import jef.tools.TextFileCallback.Dealwith;
+import jef.tools.io.Charsets;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -172,7 +173,7 @@ public class CFJUtil {
 		BufferedReader br = null;
 		int num = 0;
 		try {
-			br = IOUtils.getReader(CFJUtil.class, fileName, "UTF-8");
+			br = IOUtils.getReader(CFJUtil.class, fileName, Charsets.UTF8);
 			ArrayList<Mapping> list = new ArrayList<Mapping>(size);
 			while ((line = br.readLine()) != null) {
 				if (line.startsWith("#") || StringUtils.isBlank(line)) {

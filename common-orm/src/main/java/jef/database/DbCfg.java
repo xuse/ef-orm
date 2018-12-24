@@ -104,31 +104,6 @@ public enum DbCfg implements ConfigItem {
 	 */
 	DB_BLOB_RETURN_TYPE,
 	
-	//////////////////内嵌连接池相关设置/////////////////
-	
-	/**
-	 * JEF内嵌连接池额定连接数,数字，默认值3
-	 * 
-	 * 自1.12开始内嵌连接池默认不再使用，仅当以非DataSource方式启动才会使用
-	 */
-	DB_CONNECTION_POOL,
-	/**
-	 * JEF内嵌连接池最大连接数,数字，默认50
-	 */
-	DB_CONNECTION_POOL_MAX,
-	/**
-	 * JEF内嵌连接池调试开关，默认false，开启后输出连接池相关日志
-	 */
-	DB_POOL_DEBUG,
-	/**
-	 * JEF内嵌连接池心跳时间，按此间隔对连接进行扫描检查，单位毫秒。默认120秒
-	 */
-	DB_HEARTBEAT,
-	/**
-	 * 每个连接最小生存时间
-	 */
-	DB_CONNECTION_LIVE,	
-	
 	
 	/////////////////默认连接的数据库配置////////////////
 	/**

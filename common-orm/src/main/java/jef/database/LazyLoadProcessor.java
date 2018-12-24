@@ -30,7 +30,7 @@ public final class LazyLoadProcessor {
 			this.register(t);
 		}
 	}
-	public void doTask(IQueryableEntity obj,int id) throws SQLException{
+	public void doTask(Object obj,int id) throws SQLException{
 		Session s = null;
 		if(session!=null){
 			s=session.get();

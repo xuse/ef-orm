@@ -2,7 +2,6 @@ package jef.database.cache;
 
 import java.util.List;
 
-import jef.database.IQueryableEntity;
 import jef.database.jsqlparser.statement.delete.Delete;
 import jef.database.jsqlparser.statement.insert.Insert;
 import jef.database.jsqlparser.statement.truncate.Truncate;
@@ -36,13 +35,13 @@ public final class CacheDummy  implements Cache{
 
 	public <T> void onLoad(CacheKey sql, List<T> result, Class<T> clz) {
 	}
-	public void evict(IQueryableEntity cacheKey) {
+	public void evict(Object cacheKey) {
 	}
 	public List load(CacheKey sql) {
 		return null;
 	}
 
-	public void onInsert(IQueryableEntity obj,String table) {
+	public void onInsert(Object obj,String table) {
 	}
 
 	public void onDelete(String table, String where, List<Object> bind) {

@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+import com.github.geequery.entity.Entities;
+
 import jef.database.Condition;
 import jef.database.Condition.Operator;
 import jef.database.DbUtils;
@@ -15,7 +17,6 @@ import jef.database.IConditionField.Not;
 import jef.database.IConditionField.NotExists;
 import jef.database.IConditionField.Or;
 import jef.database.IQueryableEntity;
-import jef.database.PojoWrapper;
 import jef.database.QueryAlias;
 import jef.database.VarObject;
 import jef.database.annotation.JoinType;
@@ -58,22 +59,13 @@ public class QueryBuilder {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public static <T extends IQueryableEntity> Query<T> create(Class<T> clz) {
+	public static <T> Query<T> create(Class<T> clz) {
 		ITableMetadata meta = MetaHolder.getMeta(clz);
-		QueryImpl<T> query = (QueryImpl<T>) meta.newInstance().getQuery();
+		QueryImpl<T> query = (QueryImpl<T>) Entities.asQuery(meta.newInstance());
 		query.allRecords = true;
 		return query;
 	}
 
-	/**
-	 * 创建查询条件
-	 * 
-	 * @param clz
-	 * @return
-	 */
-	public static <T extends IQueryableEntity> Terms terms(Class<T> clz) {
-		return create(clz).terms();
-	}
 
 	/**
 	 * 针对动态表模板，创建指定KEY的查询
@@ -97,29 +89,16 @@ public class QueryBuilder {
 	}
 
 	/**
-	 * 创建一个非NAtive的Query.
-	 * 
-	 * @param clz
-	 * @return
-	 */
-	@SuppressWarnings("unchecked")
-	public static Query<PojoWrapper> createForPOJO(Class<?> clz) {
-		ITableMetadata meta = MetaHolder.getMeta(clz);
-		return (Query<PojoWrapper>) create(meta);
-	}
-
-	/**
 	 * 创建一个查询请求,当不赋任何条件的时候，这个查询带有一个默认条件为为 AllRecordsCondition.
 	 * 
 	 * @param clz
 	 *            要查询的表的元模型 {@linkplain ITableMetadata 什么是元模型}
 	 * @return
 	 */
-	public static Query<?> create(ITableMetadata meta) {
-		IQueryableEntity d = meta.newInstance();
-		Query<?> query = d.getQuery();
-		query.setAllRecordsCondition();
-		return query;
+	@SuppressWarnings("unchecked")
+	public static <T> Query<T> create(ITableMetadata meta) {
+		Object d = meta.newInstance();
+		return (Query<T>) Entities.asQuery(d).setAllRecordsCondition();
 	}
 
 	/**
@@ -131,7 +110,6 @@ public class QueryBuilder {
 	 */
 	public static Query<VarObject> create(TupleMetadata meta) {
 		IQueryableEntity d = meta.newInstance();
-		@SuppressWarnings("unchecked")
 		Query<VarObject> query = d.getQuery();
 		query.setAllRecordsCondition();
 		return query;
@@ -909,7 +887,7 @@ public class QueryBuilder {
 	 *            自增值
 	 */
 	public static void fieldAdd(IQueryableEntity entity, Field field, int i) {
-		entity.prepareUpdate(field, new JpqlExpression(field.name() + " + :amount_"));
+		entity.getQuery().prepareUpdate(field, new JpqlExpression(field.name() + " + :amount_"));
 		entity.getQuery().setAttribute("amount_", i);
 	}
 
@@ -930,7 +908,7 @@ public class QueryBuilder {
 	 *            自增值
 	 */
 	public static void fieldAdd(IQueryableEntity entity, Field field, double i) {
-		entity.prepareUpdate(field, new JpqlExpression(field.name() + " + :amount_"));
+		entity.getQuery().prepareUpdate(field, new JpqlExpression(field.name() + " + :amount_"));
 		entity.getQuery().setAttribute("amount_", i);
 	}
 }

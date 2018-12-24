@@ -22,6 +22,7 @@ import java.util.List;
 
 import jef.database.Field;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.DbProperty;
 import jef.database.meta.FBIField;
 import jef.database.meta.ITableMetadata;
@@ -236,6 +237,7 @@ public class Index {
 
 	/**
 	 * 得到列的长度
+	 * 
 	 * @return
 	 */
 	public int columnSize() {
@@ -341,6 +343,7 @@ public class Index {
 
 	/**
 	 * 描述一个索引中的单个列
+	 * 
 	 * @author jiyi
 	 */
 	public static class IndexItem {
@@ -356,7 +359,7 @@ public class Index {
 		 * 字段顺序
 		 */
 		public int seq;
-		
+
 		public IndexItem(String column, boolean asc, int seq) {
 			this.column = column;
 			this.asc = asc;
@@ -379,6 +382,7 @@ public class Index {
 
 	/**
 	 * 生成CREATE INDEX语句
+	 * 
 	 * @param profile
 	 * @return
 	 */
@@ -458,10 +462,15 @@ public class Index {
 
 	/**
 	 * 将IndexDef对象转换为Index对象
-	 * @param indexDef 索引定义
-	 * @param meta     所属的表
-	 * @param dialect  当前数据库方言，需要用方言转换为合适的列大小写以及是否需要加引号
-	 * @param tablename 可以传入null，如果表名不是默认的，需要传入
+	 * 
+	 * @param indexDef
+	 *            索引定义
+	 * @param meta
+	 *            所属的表
+	 * @param dialect
+	 *            当前数据库方言，需要用方言转换为合适的列大小写以及是否需要加引号
+	 * @param tablename
+	 *            可以传入null，如果表名不是默认的，需要传入
 	 * @return
 	 */
 	public static Index valueOf(IndexDef indexDef, ITableMetadata meta, DatabaseDialect dialect, String tablename) {
@@ -488,15 +497,15 @@ public class Index {
 			} else if (fieldname.toLowerCase().endsWith(" asc")) {
 				fieldname = fieldname.substring(0, fieldname.length() - 4).trim();
 			}
-
-			Field field = meta.getField(fieldname);
-			if (field == null) {
+			Field field = null;
+			ColumnMapping column = meta.getColumnDef(fieldname);
+			if (column == null) {
 				// 可能是一个函数索引
 				field = new FBIField(fieldname);
 				columns.add(new IndexItem(fieldname, asc, 0));
 			} else {
-				String columnName = meta.getColumnName(field, dialect, true);
-				columns.add(new IndexItem(columnName, asc, 0));
+				field=column.field();
+				columns.add(new IndexItem(column.getColumnName(dialect, true), asc, 0));
 			}
 			fields.add(field);
 		}
@@ -523,8 +532,7 @@ public class Index {
 	public boolean equals(Object obj) {
 		if (obj instanceof Index) {
 			Index other = (Index) obj;
-			return this.isUnique() == other.isUnique() && this.isClustered() == other.isClustered()
-					&& ArrayUtils.equals(this.getColumnNamesWithOrder(), other.getColumnNamesWithOrder());
+			return this.isUnique() == other.isUnique() && this.isClustered() == other.isClustered() && ArrayUtils.equals(this.getColumnNamesWithOrder(), other.getColumnNamesWithOrder());
 		}
 		return false;
 	}

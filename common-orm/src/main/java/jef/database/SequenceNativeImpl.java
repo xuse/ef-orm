@@ -25,6 +25,7 @@ import javax.persistence.PersistenceException;
 import jef.common.log.LogUtil;
 import jef.database.DbMetaData.ObjectType;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.innerpool.WrapableConnection;
 import jef.database.meta.AbstractSequence;
 import jef.database.meta.DbProperty;
 import jef.database.meta.object.SequenceInfo;
@@ -212,8 +213,8 @@ final class SequenceNativeImpl extends AbstractSequence {
 	long[] getSequenceStepByConsumeTwice(OperateTarget client, String sql) throws SQLException {
 		PreparedStatement st = null;
 		ResultSet rs = null;
-		try {
-			st = client.prepareStatement(sql);
+		try (WrapableConnection conn= client.get()){
+			st = conn.prepareStatement(sql);
 			st.setMaxRows(1);
 			rs = st.executeQuery();
 			long min = 0;
@@ -230,18 +231,17 @@ final class SequenceNativeImpl extends AbstractSequence {
 		} finally {
 			DbUtils.close(rs);
 			DbUtils.close(st);
-			client.releaseConnection();
 		}
 	}
 
-	protected long getFirstAndPushOthers(int size, DbClient conn, String dbKey) throws SQLException {
+	protected long getFirstAndPushOthers(int size, DbClient db, String dbKey) throws SQLException {
 		// 开始
 		long start = System.currentTimeMillis();
-		OperateTarget target = (OperateTarget) conn.getSqlTemplate(dbKey);
+		OperateTarget target = (OperateTarget) db.getSqlTemplate(dbKey);
 		PreparedStatement ps = null;
 		long result = 0;
-		try {
-			ps = target.prepareStatement(selectSql);
+		try(WrapableConnection conn= target.get()) {
+			ps = conn.prepareStatement(selectSql);
 			//SQL Server的驱动很变态，如果设置MaxRows，在查询Sequence时就会报错。
 			//ps.setMaxRows(1);
 			long value = queryOnce(ps);
@@ -257,7 +257,6 @@ final class SequenceNativeImpl extends AbstractSequence {
 			throw e;
 		} finally {
 			DbUtils.close(ps);
-			target.releaseConnection();
 		}
 		if (ORMConfig.getInstance().isDebugMode()) {
 			LogUtil.info(StringUtils.concat(selectSql, " (fetch size=", String.valueOf(size), ")\t[Cost:", String.valueOf(System.currentTimeMillis() - start),

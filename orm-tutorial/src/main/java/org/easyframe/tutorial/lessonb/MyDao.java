@@ -3,11 +3,10 @@ package org.easyframe.tutorial.lessonb;
 import java.sql.SQLException;
 import java.util.List;
 
-import jef.database.DbUtils;
-import jef.database.QB;
-
 import org.easyframe.enterprise.spring.BaseDao;
 import org.easyframe.tutorial.lesson2.entity.Student;
+
+import jef.database.DbUtils;
 
 public class MyDao extends BaseDao {
 
@@ -15,7 +14,11 @@ public class MyDao extends BaseDao {
 	 * 使用标准JPA的方法来实现DAO
 	 */
 	public Student loadStudent(int id) {
-		return getEntityManager().find(Student.class, id);
+		try {
+			return getSession().load(Student.class, id);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
 	}
 
 	/**

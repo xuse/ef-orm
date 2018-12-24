@@ -1,16 +1,18 @@
 package jef.database.query;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.TreeMap;
 
 import javax.persistence.Transient;
 
 import jef.database.DbUtils;
 import jef.database.Field;
-import jef.database.IQueryableEntity;
 import jef.database.SelectProcessor;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.ITableMetadata;
-import jef.database.meta.MetaHolder;
 import jef.database.routing.PartitionResult;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.GroupClause;
@@ -18,7 +20,7 @@ import jef.database.wrapper.clause.QueryClause;
 import jef.database.wrapper.clause.QueryClauseImpl;
 
 @SuppressWarnings("serial")
-public abstract class AbstractQuery<T extends IQueryableEntity> implements Query<T>, Serializable {
+public abstract class AbstractQuery<T> implements Query<T>, Serializable {
 
 	static final Query<?>[] EMPTY_Q = new Query[0];
 
@@ -37,6 +39,8 @@ public abstract class AbstractQuery<T extends IQueryableEntity> implements Query
 	private int fetchSize;
 	private int queryTimeout;
 	protected boolean cacheable = true;
+
+	private transient Map<Field, Object> updateValueMap;
 
 	public void setMaxResult(int size) {
 		this.maxResult = size;
@@ -89,8 +93,8 @@ public abstract class AbstractQuery<T extends IQueryableEntity> implements Query
 	public QueryClause toQuerySql(SelectProcessor processor, SqlContext context, boolean order) {
 		String tableName = (String) getAttribute(JoinElement.CUSTOM_TABLE_NAME);
 		if (tableName != null)
-			tableName = MetaHolder.toSchemaAdjustedName(tableName);
-		PartitionResult[] prs = DbUtils.toTableNames(getInstance(), tableName, this, processor.getPartitionSupport());
+			tableName = DbUtils.toSchemaAdjustedName(tableName);
+		PartitionResult[] prs = DbUtils.toTableNames(this, tableName, processor.getPartitionSupport());
 		DatabaseDialect profile = processor.getProfile(prs);
 
 		GroupClause groupClause = SelectProcessor.toGroupAndHavingClause(this, context, profile);
@@ -110,16 +114,56 @@ public abstract class AbstractQuery<T extends IQueryableEntity> implements Query
 	}
 
 	@Override
-	public Terms terms() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public void setCacheable(boolean cacheable) {
 		this.cacheable = cacheable;
 	}
 
 	public boolean isCacheable() {
 		return cacheable;
+	}
+
+	@Override
+	public Map<Field, Object> getUpdateValueMap() {
+		if (updateValueMap == null)
+			return Collections.emptyMap();
+		return updateValueMap;
+	}
+
+	public final void prepareUpdate(Field field, Object newValue) {
+		if (updateValueMap == null)
+			updateValueMap = new TreeMap<Field, Object>(cmp);
+		updateValueMap.put(field, newValue);
+	}
+
+	@Override
+	public void clearUpdateMap() {
+		updateValueMap = null;
+	}
+
+	public boolean needUpdate() {
+		return (updateValueMap != null) && this.updateValueMap.size() > 0;
+	}
+
+	/*
+	 * 用于与条件做排序 为什么要对条件做排序？是为了避免让条件因为HashCode变化或者加入先后顺序变化而排序。最终引起SQL硬解析。 比如
+	 * where name = ? and index = ? 和 where index = ? and name = ?
+	 * 本质上是一个SQL条件，但是因为顺序不同变成了两个SQL语句。
+	 */
+	private static final ConditionComparator cmp = new ConditionComparator();
+
+	private static class ConditionComparator implements Comparator<Field>, Serializable {
+		public int compare(Field o1, Field o2) {
+			if (o1 == o2)
+				return 0;
+			if (o1 == null)
+				return 1;
+			if (o2 == null)
+				return -1;
+			return o1.name().compareTo(o2.name());
+		}
+	}
+
+	public Terms terms() {
+		throw new UnsupportedOperationException();
 	}
 }

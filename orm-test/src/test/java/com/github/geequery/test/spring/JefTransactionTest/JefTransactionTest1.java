@@ -4,14 +4,15 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.googlecode.jef.spring.case2.ServiceRequired;
 import org.junit.Test;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import org.springframework.transaction.annotation.Propagation;
 
+import com.github.geequery.spring.case2.ServiceRequired;
+
 import jef.common.log.LogUtil;
-import jef.database.jpa.JefEntityManager;
+import jef.database.Session;
 import jef.database.meta.MetaHolder;
 import jef.orm.multitable2.model.Root;
 import jef.tools.ArrayUtils;
@@ -29,9 +30,9 @@ public class JefTransactionTest1 extends AbstractJUnit4SpringContextTests{
 		ServiceRequired tm = applicationContext.getBean(ServiceRequired.class);
 		List<DbCall> calls = new ArrayList<DbCall>();
 		DbCall call = new DbCall() {
-			public void call(JefEntityManager em) {
+			public void call(Session em) {
 				try {
-					em.getSession().getNoTransactionSession().getMetaData(null)
+					em.getNoTransactionSession().getMetaData(null)
 							.createTable(MetaHolder.getMeta(Root.class), "root");
 				} catch (SQLException e) {
 					e.printStackTrace();

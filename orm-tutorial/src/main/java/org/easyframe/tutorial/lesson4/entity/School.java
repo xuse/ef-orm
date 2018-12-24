@@ -1,6 +1,7 @@
 package org.easyframe.tutorial.lesson4.entity;
 
 import javax.persistence.Column;
+import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -11,7 +12,10 @@ import jef.database.DataObject;
  * 实体:学校
  * 描述一个学校的ID和名称
  */
+@Entity
 public class School extends DataObject{
+	private static final long serialVersionUID = 4617338029917153742L;
+
 	@Column
 	@Id
 	@GeneratedValue(strategy=GenerationType.AUTO)

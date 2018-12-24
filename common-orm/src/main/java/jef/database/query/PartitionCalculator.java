@@ -2,7 +2,6 @@ package jef.database.query;
 
 import java.util.Map;
 
-import jef.database.IQueryableEntity;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.meta.AbstractMetadata;
 import jef.database.routing.PartitionResult;
@@ -25,7 +24,7 @@ public interface PartitionCalculator {
 	 * @return 分表计算结果
 	 * @see PartitionResult
 	 */
-	PartitionResult[] toTableNames(AbstractMetadata meta, IQueryableEntity instance, Query<?> q, PartitionSupport context,boolean filter);
+	PartitionResult[] toTableNames(Query<?> q, PartitionSupport context,boolean filter);
 	
 	/**
 	 * 根据从SQL中分析得到的维度矢量进行路由计算
@@ -44,6 +43,13 @@ public interface PartitionCalculator {
 	 * @return
 	 */
 	PartitionResult toTableName(AbstractMetadata meta, Map<String,Dimension> val,PartitionSupport processor);
+	
+	
+	
+	
+	
+	
+	
 	
 	/**
 	 * 在无实例的情况下计算表名,将会计算出全部可能的实现
@@ -68,6 +74,6 @@ public interface PartitionCalculator {
 	 * @return 计算结果
 	 * @see PartitionResult
 	 */
-	PartitionResult toTableName(AbstractMetadata meta, IQueryableEntity instance, Query<?> q,PartitionSupport context);
+	PartitionResult toTableName(AbstractMetadata meta, Object instance, PartitionSupport context);
 	
 }

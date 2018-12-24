@@ -76,6 +76,7 @@ import jef.database.routing.function.KeyFunction;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.Exceptions;
+import jef.tools.Primitives;
 import jef.tools.StringUtils;
 import jef.tools.algorithm.LocalMappedSorter;
 import jef.tools.io.Charsets;
@@ -259,7 +260,7 @@ public class EntityGenerator {
 		if (pk.get().columnSize() == 1) {
 			Column column = meta.findColumn(pk.get().getColumns()[0]);
 			ColumnType columnType = getColumnType(column, tablename, true, meta.getPrimaryKey());
-			return IClassUtil.of(BeanUtils.toWrapperClass(getTypeClz(column, columnType)));
+			return IClassUtil.of(Primitives.toWrapperClass(getTypeClz(column, columnType)));
 		}
 		return IClassUtil.of(judeg(meta, pk.get(), tablename));
 	}
@@ -272,7 +273,7 @@ public class EntityGenerator {
 			Column column = meta.findColumn(name);
 			ColumnType columnType = getColumnType(column, tablename, true, meta.getPrimaryKey());
 			Class<?> clz = getTypeClz(column, columnType);
-			types[i++] = BeanUtils.toWrapperClass(clz);
+			types[i++] = Primitives.toWrapperClass(clz);
 			if (container == null) {
 				container = clz;
 			} else {

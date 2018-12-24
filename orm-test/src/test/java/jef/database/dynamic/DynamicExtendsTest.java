@@ -124,9 +124,9 @@ public class DynamicExtendsTest extends org.junit.Assert{
 	@Test
 	public void testRealDynmicTable() throws SQLException {
 		initResourceMetadata();
-		db.createTable(new DynaResource("桌子"));
-		db.createTable(new DynaResource("电视机"));
-		db.createTable(new DynaResource("计算机"));
+		db.createTableByInstance(new DynaResource("桌子"));
+		db.createTableByInstance(new DynaResource("电视机"));
+		db.createTableByInstance(new DynaResource("计算机"));
 		String id1;
 		String id2;
 		String id3;

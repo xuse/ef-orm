@@ -7,10 +7,9 @@ import java.time.YearMonth;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
-import jef.tools.StringUtils;
 
 /**
- * DATE <-> java.sql.Date
+ * char <-> java.time.YearMonth
  * 
  * @author jiyi
  *

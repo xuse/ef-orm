@@ -69,7 +69,7 @@ public class FieldEx {
 	}
 
 	public Object get(Object obj) {
-		return accessor.getObject(obj);
+		return accessor.get(obj);
 	}
 
 	@Override

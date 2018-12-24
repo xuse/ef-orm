@@ -7,6 +7,8 @@ import java.util.Date;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
+import org.springframework.util.StringUtils;
+
 import jef.accelerator.bean.BeanAccessor;
 import jef.common.log.LogUtil;
 import jef.database.Field;
@@ -18,9 +20,7 @@ import jef.database.meta.AnnotationProvider;
 import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.tools.DateUtils;
-import jef.tools.reflect.BeanUtils;
-
-import org.springframework.util.StringUtils;
+import jef.tools.Primitives;
 
 /**
  * Java对数据库的各种数据类型映射方式
@@ -334,7 +334,7 @@ public final class ColumnMappings {
 			}
 		}
 		if (javaType.isPrimitive() && !allowPrmitive) {
-			javaType = BeanUtils.toWrapperClass(javaType);
+			javaType = Primitives.toWrapperClass(javaType);
 		}
 		return getAccessor(javaType, c, null);
 	}

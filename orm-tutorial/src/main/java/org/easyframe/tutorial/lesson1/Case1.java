@@ -11,6 +11,8 @@ import org.easyframe.tutorial.lesson1.entity.Foo;
 import org.junit.Assert;
 import org.junit.Test;
 
+import jef.database.QB;
+
 public class Case1 {
 	/**
 	 * At the very begining. 在最初的开始——
@@ -23,6 +25,7 @@ public class Case1 {
 		// 模拟Spring的初始化
 		SessionFactoryBean sessionFactory = new SessionFactoryBean();
 		sessionFactory.setDataSource("jdbc:derby:./db;create=true", null, null);
+		sessionFactory.setPackagesToScan(new String[] {"org.easyframe.tutorial.lesson1.entity"});
 		sessionFactory.afterPropertiesSet();
 		CommonDao dao = new CommonDaoImpl(sessionFactory.getObject());
 
@@ -34,6 +37,7 @@ public class Case1 {
 		Foo foo = new Foo();
 		foo.setId(1);
 		foo.setName("Hello,World!");
+		//此处应该以设置的值为准。。。。
 		foo.setCreated(new Date());
 		dao.insert(foo); // 插入一条记录
 
@@ -41,13 +45,19 @@ public class Case1 {
 		Foo loaded = dao.loadByField(Foo.class, "id", foo.getId(), true);
 		System.out.println(loaded.getName());
 
-		// 更新这条记录
+		//FIXME  字段显示为null
 		loaded.setName("EF-ORM is very simple.");
 		dao.update(loaded);
 
 		// 删除这条记录
 		dao.removeByField(Foo.class, "id", foo.getId());
-		List<Foo> allrecords = dao.find(new Foo());
+		
+		//FIXME 查找  应该无条件
+//		List<Foo> allrecords = dao.find(new Foo());
+		
+		
+		List<Foo> allrecords = dao.find(QB.create(Foo.class));
+		
 		Assert.assertTrue(allrecords.isEmpty());
 
 		// 删除表

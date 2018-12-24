@@ -16,6 +16,7 @@ import java.util.Set;
 
 import jef.common.Entry;
 import jef.tools.Assert;
+import jef.tools.Primitives;
 
 
 /**
@@ -226,10 +227,10 @@ public final class GenericUtils{
 	 */
 	public static ParameterizedType newMapType(Type keyType,Type valueType){
 		if(keyType instanceof Class<?>){
-			keyType=BeanUtils.toWrapperClass((Class<?>)keyType);
+			keyType=Primitives.toWrapperClass((Class<?>)keyType);
 		}
 		if(valueType instanceof Class<?>){
-			valueType=BeanUtils.toWrapperClass((Class<?>)valueType);
+			valueType=Primitives.toWrapperClass((Class<?>)valueType);
 		}
 		return GqGenericResolver.newParameterizedTypeWithOwner(null, Map.class, keyType,valueType);
 	}
@@ -255,7 +256,7 @@ public final class GenericUtils{
 	 */
 	public static ParameterizedType newListType(Type elementType){
 		if(elementType instanceof Class<?>){
-			elementType=BeanUtils.toWrapperClass((Class<?>)elementType);
+			elementType=Primitives.toWrapperClass((Class<?>)elementType);
 		}
 		return GqGenericResolver.newParameterizedTypeWithOwner(null, List.class, elementType);
 	}
@@ -267,7 +268,7 @@ public final class GenericUtils{
 	 */
 	public static ParameterizedType newSetType(Type elementType){
 		if(elementType instanceof Class<?>){
-			elementType=BeanUtils.toWrapperClass((Class<?>)elementType);
+			elementType=Primitives.toWrapperClass((Class<?>)elementType);
 		}
 		return GqGenericResolver.newParameterizedTypeWithOwner(null, Set.class, elementType);
 	}

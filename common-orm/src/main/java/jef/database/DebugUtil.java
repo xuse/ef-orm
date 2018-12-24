@@ -1,25 +1,27 @@
 package jef.database;
 
+import java.lang.reflect.Type;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.persistence.PersistenceException;
-
 import jef.common.log.LogUtil;
-import jef.common.pool.PoolStatus;
 import jef.database.cache.Cache;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.PartitionSupport;
+import jef.database.innerpool.WrapableConnection;
 import jef.database.meta.AbstractRefField;
 import jef.database.meta.Feature;
 import jef.database.meta.Reference;
 import jef.database.query.Query;
 import jef.tools.StringUtils;
+import jef.tools.reflect.BooleanProperty;
+import jef.tools.reflect.Property;
 
 /**
  * 用于编写一些直接操作数据库的特殊用法，以得到最好的性能
@@ -37,18 +39,6 @@ public class DebugUtil {
 			}
 		} catch (Throwable t) {
 			LogUtil.exception(t);
-		}
-	}
-
-	public static ILazyLoadContext getLazy(DataObject o) {
-		return o.lazyload;
-	}
-
-	public static void addLazy(DataObject o, LazyLoadProcessor lazy) {
-		if (o.lazyload == null) {
-			o.lazyload = new LazyLoadContext(lazy);
-		} else {
-			throw new IllegalStateException();
 		}
 	}
 
@@ -81,31 +71,16 @@ public class DebugUtil {
 
 	}
 
-	public static PoolStatus getPoolStatus(DbClient db) {
-		return db.getPool().getStatus();
-	}
 
 	public static String getTransactionId(Session db) {
 		return db.getTransactionId(null);
 	}
 
-	public static IConnection getConnection(SqlTemplate db) {
-		return ((OperateTarget) db).getRawConnection();
-	}
-
 	public static IConnection getIConnection(TransactionalSession db) throws SQLException {
-		if(db instanceof Transaction){
+		if (db instanceof Transaction) {
 			return ((Transaction) db).getConnection();
-		}else{
+		} else {
 			throw new IllegalArgumentException(db.getClass().getName());
-		}
-	}
-
-	public static IConnection getPooledConnection(DbClient db) {
-		try {
-			return db.getPool().getConnection(Thread.currentThread());
-		} catch (SQLException e) {
-			throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 		}
 	}
 
@@ -120,8 +95,7 @@ public class DebugUtil {
 	public static Set<String> getColumnsInLowercase(OperateTarget db, String tableName) throws SQLException {
 		Set<String> set = new HashSet<String>();
 		tableName = db.getProfile().getObjectNameToUse(tableName);
-		IConnection conn = DebugUtil.getConnection(db);
-		try {
+		try (WrapableConnection conn=db.get()){
 			DatabaseMetaData databaseMetaData = conn.getMetaData();
 			String schema = null;
 			if (db.getProfile().has(Feature.USER_AS_SCHEMA)) {
@@ -144,8 +118,6 @@ public class DebugUtil {
 				rs.close();
 			}
 			return set;
-		} finally {
-			db.releaseConnection();
 		}
 	}
 
@@ -163,8 +135,7 @@ public class DebugUtil {
 			return false;
 		boolean has = false;
 		tableName = db.getProfile().getObjectNameToUse(tableName);
-		IConnection conn = DebugUtil.getConnection(db);
-		try {
+		try(WrapableConnection conn = db.get()) {
 			DatabaseMetaData databaseMetaData = conn.getMetaData();
 			String schema = null;
 			if (db.getProfile().has(Feature.USER_AS_SCHEMA)) {
@@ -190,8 +161,6 @@ public class DebugUtil {
 				rs.close();
 			}
 			return has;
-		} finally {
-			db.releaseConnection();
 		}
 	}
 
@@ -202,4 +171,136 @@ public class DebugUtil {
 	public static Cache getCache(Session session) {
 		return session.getCache();
 	}
+
+	public final static BooleanProperty notTouchProperty = new BooleanProperty() {
+		@Override
+		public String getName() {
+			return "_recordUpdate";
+		}
+
+		@Override
+		public Object get(Object obj) {
+			return getBoolean(obj);
+		}
+
+		@Override
+		public void set(Object obj, Object value) {
+			if (value != null)
+				setBoolean(obj, (Boolean) value);
+
+		}
+
+		@Override
+		public Class<?> getType() {
+			return boolean.class;
+		}
+
+		@Override
+		public Type getGenericType() {
+			return getType();
+		}
+
+		@Override
+		public boolean getBoolean(Object obj) {
+			DataObject d = (DataObject) obj;
+			return !d._recordUpdate;
+		}
+
+		@Override
+		public void setBoolean(Object obj, boolean value) {
+			DataObject d = (DataObject) obj;
+			d._recordUpdate = !value;
+		}
+	};
+	
+	public final static Property TouchRecord=new Property() {
+
+		@Override
+		public String getName() {
+			return "___touchRecord";
+		}
+
+		@Override
+		public Object get(Object obj) {
+			DataObject d = (DataObject) obj;
+			return d.___touchRecord;
+		}
+
+		@Override
+		public void set(Object obj, Object value) {
+			DataObject d = (DataObject) obj;
+			d.___touchRecord=(BitSet) value;
+			
+		}
+
+		@Override
+		public Class<?> getType() {
+			return BitSet.class;
+		}
+
+		@Override
+		public Type getGenericType() {
+			return BitSet.class;
+		}
+		
+	};
+	
+	public final static Property LazyContext=new Property() {
+
+		@Override
+		public String getName() {
+			return "lazyload";
+		}
+
+		@Override
+		public Object get(Object obj) {
+			DataObject d = (DataObject) obj;
+			return d.lazyload;
+		}
+
+		@Override
+		public void set(Object obj, Object value) {
+			DataObject d = (DataObject) obj;
+			d.lazyload=(ILazyLoadContext) value;
+			
+		}
+
+		@Override
+		public Class<?> getType() {
+			return ILazyLoadContext.class;
+		}
+
+		@Override
+		public Type getGenericType() {
+			return ILazyLoadContext.class;
+		}
+		
+	};
+
+
+	public static boolean record(DataObject o) {
+		return o._recordUpdate;
+	}
+
+
+	public static BitSet getTouchRecord(DataObject o) {
+		return o.___touchRecord;
+	}
+	
+	public static void setTouchRecord(DataObject o, BitSet bs) {
+		o.___touchRecord = bs;
+	}
+
+	public static ILazyLoadContext getLazy(DataObject o) {
+		return o.lazyload;
+	}
+
+	public static void addLazy(DataObject o, LazyLoadProcessor lazy) {
+		if (o.lazyload == null) {
+			o.lazyload = new LazyLoadContext(lazy);
+		} else {
+			throw new IllegalStateException();
+		}
+	}
+	
 }

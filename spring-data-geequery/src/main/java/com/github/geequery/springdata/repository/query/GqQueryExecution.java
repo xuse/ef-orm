@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 
 import org.springframework.core.convert.ConversionService;
@@ -32,6 +31,8 @@ import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.util.Assert;
+
+import jef.database.SessionFactory;
 
 public abstract class GqQueryExecution {
 
@@ -146,7 +147,7 @@ public abstract class GqQueryExecution {
      * Executes a modifying query such as an update, insert or delete.
      */
     static class ModifyingExecution extends GqQueryExecution {
-        private final EntityManagerFactory em;
+        private final SessionFactory em;
 
         /**
          * Creates an execution that automatically clears the given
@@ -155,7 +156,7 @@ public abstract class GqQueryExecution {
          * 
          * @param em
          */
-        public ModifyingExecution(GqQueryMethod method, EntityManagerFactory em) {
+        public ModifyingExecution(GqQueryMethod method, SessionFactory em) {
             Class<?> returnType = method.getReturnType();
 
             boolean isVoid = void.class.equals(returnType) || Void.class.equals(returnType);

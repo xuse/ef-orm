@@ -15,18 +15,10 @@
  */
 package com.github.geequery.springdata.repository.query;
 
-import java.util.Collections;
 import java.util.List;
-
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-
-import jef.database.Session;
-import jef.database.jpa.JefEntityManager;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.orm.jpa.EntityManagerFactoryUtils;
 import org.springframework.util.Assert;
 
 import com.github.geequery.springdata.repository.query.GqQueryExecution.CollectionExecution;
@@ -34,6 +26,9 @@ import com.github.geequery.springdata.repository.query.GqQueryExecution.Modifyin
 import com.github.geequery.springdata.repository.query.GqQueryExecution.PagedExecution;
 import com.github.geequery.springdata.repository.query.GqQueryExecution.SingleEntityExecution;
 import com.github.geequery.springdata.repository.query.GqQueryExecution.StreamExecution;
+
+import jef.database.Session;
+import jef.database.SessionFactory;
 
 /**
  * Abstract base class to implement {@link RepositoryQuery}s.
@@ -43,7 +38,7 @@ import com.github.geequery.springdata.repository.query.GqQueryExecution.StreamEx
 public abstract class AbstractGqQuery implements RepositoryQuery {
 
 	private final GqQueryMethod method;
-	private final EntityManagerFactory emf;
+	private final SessionFactory emf;
 
 	/**
 	 * Creates a new {@link AbstractJpaQuery} from the given
@@ -53,7 +48,7 @@ public abstract class AbstractGqQuery implements RepositoryQuery {
 	 * @param resultFactory
 	 * @param em
 	 */
-	public AbstractGqQuery(GqQueryMethod method, EntityManagerFactory emf) {
+	public AbstractGqQuery(GqQueryMethod method, SessionFactory emf) {
 		Assert.notNull(method);
 		Assert.notNull(emf);
 
@@ -97,13 +92,6 @@ public abstract class AbstractGqQuery implements RepositoryQuery {
 	protected abstract long getResultCount(Object[] values);
 
 	protected Session getSession() {
-		EntityManager em = EntityManagerFactoryUtils.doGetTransactionalEntityManager(emf, null);
-		if (em == null) { // 当无事务时。Spring返回null
-			em = emf.createEntityManager(null, Collections.EMPTY_MAP);
-		}
-		if (em instanceof JefEntityManager) {
-			return ((JefEntityManager) em).getSession();
-		}
-		throw new IllegalArgumentException(em.getClass().getName());
+		return emf.getSession();
 	}
 }

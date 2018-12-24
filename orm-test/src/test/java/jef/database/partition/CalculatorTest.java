@@ -164,7 +164,7 @@ public class CalculatorTest extends org.junit.Assert{
 	@Test
 	public void testCreaterTable() {
 		PartitionEntity pe = new PartitionEntity();
-		PartitionResult[] results = DbUtils.toTableNames(pe, null, null, supportor);
+		PartitionResult[] results = DbUtils.toTableNames(pe.getQuery(), null, supportor);
 		assertEquals(5, results.length);
 		for(PartitionResult r: results){
 			assertEquals(12, r.tableSize());
@@ -175,7 +175,7 @@ public class CalculatorTest extends org.junit.Assert{
 	@Test(expected=MultipleDatabaseOperateException.class)
 	public void testCreaterTable2() {
 		PartitionEntity pe = new PartitionEntity();
-		PartitionResult results = DbUtils.toTableName(pe, null, null, supportor);
+		PartitionResult results = DbUtils.toTableName(pe, null, supportor);
 		System.out.println(results);
 	}
 	

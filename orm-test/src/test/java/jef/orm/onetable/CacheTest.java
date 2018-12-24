@@ -128,7 +128,7 @@ public class CacheTest extends org.junit.Assert {
 
 		{
 			Query<CaAsset> q = QB.create(CaAsset.class);
-			q.getInstance().prepareUpdate(CaAsset.Field.assetType, 50);
+			q.prepareUpdate(CaAsset.Field.assetType, 50);
 			session.update(q.getInstance());
 			// 该表上所有缓存失效
 			long miss = cache.getMissCount();

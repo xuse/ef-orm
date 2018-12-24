@@ -83,8 +83,8 @@ public class PartitionTest extends org.junit.Assert {
 			PartitionEntity p = new PartitionEntity();
 			p.setDateField(DateUtils.get(2012, 3, 1));
 			p.setName("Zxa");
-			db.dropTable(p);
-			db.createTable(p);
+			db.dropTableByInstance(p);
+			db.createTableByInstance(p);
 
 			// p.setDateField(DateUtils.get(2012, 3, 2));
 			// p.setName("XX");

@@ -27,6 +27,7 @@ import javax.persistence.PersistenceException;
 
 import jef.common.log.LogUtil;
 import jef.database.Session.PopulateStrategy;
+import jef.database.innerpool.WrapableConnection;
 import jef.database.jdbc.result.ResultSetImpl;
 import jef.database.query.OutParam;
 import jef.database.wrapper.populator.Transformer;
@@ -43,7 +44,7 @@ public class NativeCall {
 	/**
 	 * 数据库
 	 */
-	private OperateTarget db;
+	private WrapableConnection db;
 	/**
 	 * 结果拼装策略
 	 */
@@ -51,6 +52,7 @@ public class NativeCall {
 	/**
 	 * 存储过程名称
 	 */
+	private Session parent;
 	private String name;
 	private CallableStatement st;
 	private String sql;
@@ -71,7 +73,9 @@ public class NativeCall {
 	 * 构造
 	 */
 	NativeCall(OperateTarget db, String name, Type[] params, boolean anonymous){
-		this.db = db;
+		this.parent=db.getSession();
+		this.db = db.get();
+		
 		this.name = name;
 		this.params = params;
 		this.anonymous = anonymous;
@@ -220,9 +224,10 @@ public class NativeCall {
 			} catch (SQLException e) {
 				LogUtil.exception(e);
 			}
-			db.releaseConnection();
+			db.close();
 			st = null;
 		}
+		parent=null;
 	}
 
 	/*
@@ -237,7 +242,7 @@ public class NativeCall {
 			Class<?> clz = outType.getType();
 			ResultSet rs = (ResultSet) value;
 			try {
-				return db.populateResultSet(new ResultSetImpl(rs, db.getProfile()), null, new Transformer(clz, strategies));
+				return parent.populateResultSet(new ResultSetImpl(rs, db.getProfile()), null, new Transformer(clz, strategies));
 			} catch (SQLException e) {
 				throw new PersistenceException(e.getMessage() + " " + e.getSQLState(), e);
 			} finally {

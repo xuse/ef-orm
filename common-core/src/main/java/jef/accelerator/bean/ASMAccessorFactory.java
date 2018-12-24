@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 import jef.accelerator.GeeField;
+import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.ClassEx;
@@ -29,20 +30,25 @@ final class ASMAccessorFactory implements BeanAccessorFactory {
 	@SuppressWarnings("rawtypes")
 	private static final Map<Class, BeanAccessor> map = new IdentityHashMap<Class, BeanAccessor>();
 
-	public BeanAccessor getBeanAccessor(Class<?> javaBean) {
-		if (javaBean.isPrimitive()) {
-			throw new IllegalArgumentException(javaBean + " invalid!");
+	public BeanAccessor getBeanAccessor(Class<?> clazz) {
+		if (clazz.isPrimitive()) {
+			throw new IllegalArgumentException(clazz + " invalid!");
 		}
-		BeanAccessor ba = map.get(javaBean);
+		BeanAccessor ba = map.get(clazz);
 		if (ba != null)
 			return ba;
-		synchronized (map) {
-			ba = map.get(javaBean);
-			if(ba==null){
-				ba = generateAccessor(javaBean);
-				map.put(javaBean, ba);	
-			}
+		try {
+			synchronized (map) {
+				ba = map.get(clazz);
+				if(ba==null){
+					ba = generateAccessor(clazz);
+					map.put(clazz, ba);	
+				}
+			}	
+		}catch(Throwable e) {
+			throw Exceptions.illegalState("Generate ASM Accessor error:{}",clazz.getName() ,e);
 		}
+		
 		return ba;
 	}
 

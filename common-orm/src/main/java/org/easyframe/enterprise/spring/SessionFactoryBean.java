@@ -1,11 +1,11 @@
 package org.easyframe.enterprise.spring;
 
-import jef.database.DbClientBuilder;
-import jef.database.DbUtils;
-import jef.database.jpa.JefEntityManagerFactory;
-
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+
+import jef.database.DbClientBuilder;
+import jef.database.DbUtils;
+import jef.database.SessionFactory;
 
 /**
  * 供Spring上下文中初始化EF-ORM Session Factory使用
@@ -13,23 +13,23 @@ import org.springframework.beans.factory.InitializingBean;
  * @author jiyi
  * 
  */
-public class SessionFactoryBean extends DbClientBuilder implements FactoryBean<JefEntityManagerFactory>, InitializingBean {
+public class SessionFactoryBean extends DbClientBuilder implements FactoryBean<SessionFactory>, InitializingBean {
 	public void afterPropertiesSet(){
 		instance = buildSessionFactory();
 	}
 
-	public JefEntityManagerFactory getObject(){
+	public SessionFactory getObject(){
 		return instance;
 	}
 
 	public void close() {
 		if (instance != null) {
-			instance.close();
+			instance.shutdown();
 		}
 	}
 
 	public Class<?> getObjectType() {
-		return JefEntityManagerFactory.class;
+		return SessionFactory.class;
 	}
 
 	public boolean isSingleton() {

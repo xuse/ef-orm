@@ -2,6 +2,8 @@ package jef.database;
 
 import java.nio.charset.Charset;
 
+import org.springframework.instrument.InstrumentationSavingAgent;
+
 import jef.common.log.LogUtil;
 import jef.database.meta.MetaHolder;
 import jef.database.meta.MetadataFacade;
@@ -10,8 +12,6 @@ import jef.database.support.SqlLog;
 import jef.jre5support.ProcessUtil;
 import jef.tools.JefConfiguration;
 import jef.tools.JefConfiguration.Item;
-
-import org.springframework.instrument.InstrumentationSavingAgent;
 
 /**
  * all configuration values of ORM.
@@ -157,11 +157,6 @@ public class ORMConfig implements ORMConfigMBean {
      */
     private int cacheLevel2;
 
-    /**
-     * 定期检查连接
-     */
-    private long heartBeatSleep;
-
     private boolean formatSQL;
 
     /**
@@ -235,7 +230,6 @@ public class ORMConfig implements ORMConfigMBean {
         cacheLevel2 = JefConfiguration.getInt(DbCfg.CACHE_GLOBAL_EXPIRE_TIME, 0);
         cacheDebug = System.getProperty("cache.debug") != null;
         setFormatSQL(JefConfiguration.getBoolean(DbCfg.DB_FORMAT_SQL, false));
-        heartBeatSleep = JefConfiguration.getLong(DbCfg.DB_HEARTBEAT, 120000);
         setTxIsolation = JefConfiguration.getBoolean(DbCfg.DB_SET_ISOLATION, true);
         checkUpdateForNamedQueries = JefConfiguration.getBoolean(DbCfg.DB_NAMED_QUERY_UPDATE, debugMode);
         checkSqlFunctions = JefConfiguration.getBoolean(DbCfg.DB_CHECK_SQL_FUNCTIONS, true);
@@ -540,14 +534,6 @@ public class ORMConfig implements ORMConfigMBean {
         this.formatSQL = value;
         this.wrap = formatSQL ? "\n" : "";
         this.wrapt = formatSQL ? "\n\t" : "";
-    }
-
-    public long getHeartBeatSleep() {
-        return heartBeatSleep;
-    }
-
-    public void setHeartBeatSleep(long heartBeatSleep) {
-        this.heartBeatSleep = heartBeatSleep;
     }
 
     public String getServerName() {

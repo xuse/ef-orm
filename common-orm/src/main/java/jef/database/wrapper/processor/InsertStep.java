@@ -15,6 +15,7 @@
  */
 package jef.database.wrapper.processor;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -24,8 +25,6 @@ import java.util.List;
 import java.util.UUID;
 
 import jef.database.DbUtils;
-import jef.database.IQueryableEntity;
-import jef.database.OperateTarget;
 import jef.database.Sequence;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.DbProperty;
@@ -47,7 +46,7 @@ public interface InsertStep {
 	 * @param data
 	 * @throws SQLException
 	 */
-	void callBefore(List<? extends IQueryableEntity> data) throws SQLException;
+	void callBefore(List<?> data) throws SQLException;
 
 	/**
 	 * 在插入Batch后执行
@@ -55,7 +54,7 @@ public interface InsertStep {
 	 * @param data
 	 * @throws SQLException
 	 */
-	void callAfterBatch(List<? extends IQueryableEntity> data) throws SQLException;
+	void callAfterBatch(List<?> data) throws SQLException;
 
 	/**
 	 * 在插入后执行
@@ -63,7 +62,7 @@ public interface InsertStep {
 	 * @param data
 	 * @throws SQLException
 	 */
-	void callAfter(IQueryableEntity data) throws SQLException;
+	void callAfter(Object data) throws SQLException;
 
 	/**
 	 * 自生成主键处理策略： 值已经预先生成，只需要要插入后调用此类更新到Bean中
@@ -89,12 +88,12 @@ public interface InsertStep {
 			this.sKey = key;
 		}
 
-		public void callAfterBatch(List<? extends IQueryableEntity> data) throws SQLException {
+		public void callAfterBatch(List<?> data) throws SQLException {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public void callAfter(IQueryableEntity data) throws SQLException {
+		public void callAfter(Object data) throws SQLException {
 			if (sKey == null) {
 				fieldName.set(data, key);
 			} else {
@@ -102,7 +101,7 @@ public interface InsertStep {
 			}
 		}
 
-		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
+		public void callBefore(List<?> data) throws SQLException {
 		}
 	}
 
@@ -122,8 +121,8 @@ public interface InsertStep {
 			this.holder = holder;
 		}
 
-		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
-			for (IQueryableEntity o : data) {
+		public void callBefore(List<?> data) throws SQLException {
+			for (Object o : data) {
 				long key = -1;
 				key = holder.next();
 				if (key > -1) {
@@ -134,11 +133,11 @@ public interface InsertStep {
 			}
 		}
 
-		public void callAfterBatch(List<? extends IQueryableEntity> data) throws SQLException {
+		public void callAfterBatch(List<?> data) throws SQLException {
 		}
 
 		@Override
-		public void callAfter(IQueryableEntity data) throws SQLException {
+		public void callAfter(Object data) throws SQLException {
 		}
 	}
 
@@ -157,8 +156,8 @@ public interface InsertStep {
 			this.removeDash = b;
 		}
 
-		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
-			for (IQueryableEntity o : data) {
+		public void callBefore(List<?> data) throws SQLException {
+			for (Object o : data) {
 				String key = UUID.randomUUID().toString();
 				if (removeDash)
 					key = StringUtils.remove(key, '-');
@@ -167,11 +166,11 @@ public interface InsertStep {
 		}
 
 		@Override
-		public void callAfterBatch(List<? extends IQueryableEntity> data) throws SQLException {
+		public void callAfterBatch(List<?> data) throws SQLException {
 		}
 
 		@Override
-		public void callAfter(IQueryableEntity data) throws SQLException {
+		public void callAfter(Object data) throws SQLException {
 
 		}
 	}
@@ -185,31 +184,32 @@ public interface InsertStep {
 	static class OracleRowidKeyCallback implements InsertStep, StatementPreparer {
 		private Statement st;
 
-		public void callAfterBatch(List<? extends IQueryableEntity> data) throws SQLException {
+		public void callAfterBatch(List<?> data) throws SQLException {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public void callAfter(IQueryableEntity entity) throws SQLException {
+		public void callAfter(Object entity) throws SQLException {
 			ResultSet rs = st.getGeneratedKeys();
 			if (rs == null)
 				throw new SQLException("getGeneratedKeys() returns null from the " + st + ".");
 			try {
 				Assert.isTrue(rs.next(), "The JDBC Driver may not support you operation.");
-				entity.bindRowid(rs.getString(1));
+				//FIXME
+//				entity.bindRowid(rs.getString(1));
 			} finally {
 				rs.close();
 			}
 
 		}
 
-		public PreparedStatement doPrepareStatement(OperateTarget conn, String sql) throws SQLException {
+		public PreparedStatement doPrepareStatement(Connection conn, String sql) throws SQLException {
 			PreparedStatement pst = conn.prepareStatement(sql, 1);
 			this.st = pst;
 			return pst;
 		}
 
-		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
+		public void callBefore(List<?> data) throws SQLException {
 		}
 	}
 
@@ -245,7 +245,7 @@ public interface InsertStep {
 			}
 		}
 
-		public void callAfterBatch(List<? extends IQueryableEntity> data) throws SQLException {
+		public void callAfterBatch(List<?> data) throws SQLException {
 			if (data.size() == 0)
 				return;
 			if (isBatchForFunction) {
@@ -260,11 +260,11 @@ public interface InsertStep {
 					Assert.isTrue(rs.next(), "The JDBC Driver may not support getGeneratedKeys() operation.");
 					long max = rs.getLong(1);
 					for (int i = data.size() - 1; i >= 0; i--) {
-						IQueryableEntity o = data.get(i);
+						Object o = data.get(i);
 						fieldName.set(o, max--);
 					}
 				} else {
-					for (IQueryableEntity o : data) {
+					for (Object o : data) {
 						if (rs.next()) {
 							fieldName.set(o, rs.getLong(1));
 						} else {
@@ -280,7 +280,7 @@ public interface InsertStep {
 			}
 		}
 
-		private void byFunction(List<? extends IQueryableEntity> data) throws SQLException {
+		private void byFunction(List<?> data) throws SQLException {
 			long generatedKey = -1;
 			Statement st2 = null;
 			ResultSet rs = null;
@@ -294,22 +294,22 @@ public interface InsertStep {
 				DbUtils.close(rs);
 			}
 			for (int i = data.size() - 1; i >= 0; i--) {
-				IQueryableEntity o = data.get(i);
+				Object o = data.get(i);
 				fieldName.set(o, generatedKey--);
 			}
 		}
 
-		public PreparedStatement doPrepareStatement(OperateTarget conn, String sql) throws SQLException {
+		public PreparedStatement doPrepareStatement(Connection conn, String sql) throws SQLException {
 			PreparedStatement pst = conn.prepareStatement(sql, columnName);
 			this.st.set(pst);
 			return pst;
 		}
 
-		public void callBefore(List<? extends IQueryableEntity> data) throws SQLException {
+		public void callBefore(List<?> data) throws SQLException {
 		}
 
 		@Override
-		public void callAfter(IQueryableEntity data) throws SQLException {
+		public void callAfter(Object data) throws SQLException {
 			callAfterBatch(Arrays.asList(data));
 		}
 	}

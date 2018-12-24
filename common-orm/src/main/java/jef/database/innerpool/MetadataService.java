@@ -4,7 +4,6 @@ import java.util.Date;
 
 import jef.database.ConnectInfo;
 import jef.database.DbMetaData;
-import jef.database.dialect.DatabaseDialect;
 
 public interface MetadataService {
 	public static final Class<?>[] SIMPLE_CLASSES = new Class<?>[] { String.class, Integer.class, Long.class, Float.class, Double.class, Boolean.class, Date.class, Object.class,
@@ -17,12 +16,6 @@ public interface MetadataService {
 	 * @return
 	 */
 	DbMetaData getMetadata(String dbkey);
-
-	/**
-	 * 得到数据简要表
-	 * @return
-	 */
-	DatabaseDialect getProfile(String dbkey);
 
 	/**
 	 * 得到基本信息

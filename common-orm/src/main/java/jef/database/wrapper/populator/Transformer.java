@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Set;
 
 import jef.database.IQueryableEntity;
-import jef.database.PojoWrapper;
 import jef.database.Session.PopulateStrategy;
 import jef.database.VarObject;
 import jef.database.meta.ITableMetadata;
@@ -410,7 +409,7 @@ public class Transformer {
 	 * @return 是否为动态对象实体
 	 */
 	public boolean isVarObject() {
-		if (resultClazz == VarObject.class || resultClazz==PojoWrapper.class) {
+		if (resultClazz == VarObject.class) {
 			Assert.notNull(meta);
 			return true;
 		}
@@ -441,7 +440,7 @@ public class Transformer {
 	public void setResultType(ITableMetadata meta) {
 		if (meta == null)
 			return;
-		this.resultClazz = meta.getContainerType();
+		this.resultClazz = meta.getThisType();
 		this.meta = meta;
 	}
 	

@@ -1,7 +1,6 @@
 package jef.common.log;
 
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.sql.ResultSet;
@@ -14,6 +13,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.LoggerFactory;
+import org.w3c.dom.Node;
+
 import jef.common.Entry;
 import jef.tools.ArrayUtils;
 import jef.tools.JefConfiguration;
@@ -21,9 +23,6 @@ import jef.tools.JefConfiguration.Item;
 import jef.tools.StringUtils;
 import jef.tools.XMLUtils;
 import jef.tools.io.StringBuilderWriter;
-
-import org.slf4j.LoggerFactory;
-import org.w3c.dom.Node;
 
 /**
  * This class provides a logging facility. Each message is logged with a
@@ -39,26 +38,6 @@ public class LogUtil {
 	//是否为调试模式
 	public static boolean debug = JefConfiguration.getBoolean(Item.DB_DEBUG, false);
 	
-	
-	//将标志输出替换，从而实现System.out.print重定向到日志。
-	static {
-		if(useSlf4j){
-			boolean redirect = JefConfiguration.getBoolean(Item.SYSOUT_REDIRECT, false);
-			try {
-				//是否使用控制台输出重定向到到Logger的功能
-				log.info("=== The System.out.redirect function is "+(redirect?"Enabled.":"Disabled."));
-				if(redirect && !(System.out instanceof LogPrintStream)){
-					org.slf4j.Logger ll=LoggerFactory.getLogger("SYSTEM");
-					PrintStream sysout=new LogPrintStream(ll,false,System.out);
-					PrintStream syserr=new LogPrintStream(ll,true,System.err);
-					System.setOut(sysout);
-					System.setErr(syserr);//将系统的标准输出替换为自己的输出
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
-			}	
-		}
-	}
 
 	/**
 	 * 

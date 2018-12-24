@@ -8,7 +8,7 @@ import com.github.geequery.asm.ClassReader;
 import com.github.geequery.asm.MethodVisitor;
 import com.github.geequery.asm.Opcodes;
 
-import jef.tools.reflect.BeanUtils;
+import jef.tools.Primitives;
 
 public class ASMUtils {
 
@@ -127,7 +127,7 @@ public class ASMUtils {
 	 * @param rawType
 	 */
 	public static void getPrimitiveType(MethodVisitor mw, Class<?> rawType) {
-		Class<?> wrapClz = BeanUtils.toWrapperClass(rawType);
+		Class<?> wrapClz = Primitives.toWrapperClass(rawType);
 		mw.visitFieldInsn(Opcodes.GETSTATIC, getType(wrapClz), "TYPE", "Ljava/lang/Class;");
 	}
 
@@ -151,8 +151,8 @@ public class ASMUtils {
 	 *            原生类型
 	 */
 	public static void doWrap(MethodVisitor mw, Class<?> type) {
-		Class<?> wrapped = BeanUtils.toWrapperClass(type);
-		mw.visitMethodInsn(Opcodes.INVOKESTATIC, getType(wrapped), "valueOf", getMethodDesc(wrapped, type));
+		Class<?> wrapped = Primitives.toWrapperClass(type);
+		mw.visitMethodInsn(Opcodes.INVOKESTATIC, getType(wrapped), "valueOf", getMethodDesc(wrapped, type),false);
 	}
 
 	public static void doWrap(MethodVisitor mw, com.github.geequery.asm.Type paramType) {
@@ -185,9 +185,14 @@ public class ASMUtils {
 		default:
 			throw new IllegalArgumentException();
 		}
-		mw.visitMethodInsn(Opcodes.INVOKESTATIC, getType(w), "valueOf", getMethodDesc(w, BeanUtils.toPrimitiveClass(w)));
+		mw.visitMethodInsn(Opcodes.INVOKESTATIC, getType(w), "valueOf", getMethodDesc(w, Primitives.toPrimitiveClass(w)),false);
 	}
 
+	/**
+	 * 获得加载指令。要注LLOAD和DLOAD都是64位操作
+	 * @param paramType
+	 * @return
+	 */
 	public static int getLoadIns(com.github.geequery.asm.Type paramType) {
 		switch (paramType.getSort()) {
 		case com.github.geequery.asm.Type.BOOLEAN:
@@ -211,8 +216,16 @@ public class ASMUtils {
 		}
 	}
 
+	/**
+	 * 插入一条常量入栈指令
+	 * @param mw
+	 * @param s
+	 */
 	public static void iconst(MethodVisitor mw, int s) {
 		switch (s) {
+		case -1:
+			mw.visitInsn(Opcodes.ICONST_M1);
+			break;
 		case 0:
 			mw.visitInsn(Opcodes.ICONST_0);
 			break;

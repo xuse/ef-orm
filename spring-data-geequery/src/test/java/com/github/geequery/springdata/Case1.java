@@ -29,7 +29,6 @@ import com.github.geequery.extension.querydsl.QueryDSLTables;
 import com.github.geequery.extension.querydsl.SQLQueryEx;
 import com.github.geequery.extension.querydsl.SQLRelationalPath;
 import com.github.geequery.springdata.Role.RoleType;
-import com.github.geequery.springdata.repository.support.Update;
 import com.github.geequery.springdata.test.entity.ComplexFoo;
 import com.github.geequery.springdata.test.entity.Foo;
 import com.github.geequery.springdata.test.entity.VersionLog;
@@ -42,7 +41,6 @@ import com.querydsl.sql.codegen.MetaDataExporter;
 
 import jef.database.ORMConfig;
 import jef.database.QB;
-import jef.database.RecordsHolder;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.query.Query;
 import jef.tools.DateUtils;
@@ -110,19 +108,6 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			System.out.println(fooList);
 
 			int id = fooList.get(0).getId();
-			// =============== 使用悲观锁更新 ==================
-			boolean updated = foodao.lockItAndUpdate(id, new Update<Foo>() {
-				@Override
-				public void setValue(Foo value) {
-					value.setName("李四");
-					value.setRemark("悲观锁定");
-
-				}
-			});
-			if (updated) {
-				Foo u = foodao.getOne(id);
-				Assert.assertEquals("悲观锁定", u.getRemark());
-			}
 		}
 		// ==============使用分页，固定排序===========
 		{
@@ -525,20 +510,6 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 			v.setName("我");
 			commonDao.insert(v);
 			id = v.getId();
-		}
-		{
-			Query<VersionLog> query = QB.create(VersionLog.class).addCondition(QB.between(VersionLog.Field.id, id - 4, id));
-			RecordsHolder<VersionLog> records = commonDao.selectForUpdate(query);
-			try {
-				for (VersionLog version : records) {
-					version.setName("此时:" + version.getName());
-					// version.setModified(System.currentTimeMillis());
-				}
-				records.commit();
-			} finally {
-				records.close();
-			}
-
 		}
 		{
 			Query<VersionLog> query = QB.create(VersionLog.class).addCondition(QB.between(VersionLog.Field.id, id - 4, id));

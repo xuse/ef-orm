@@ -1,7 +1,7 @@
 package com.github.geequery.test.spring.JefTransactionTest;
 
-import jef.database.jpa.JefEntityManager;
+import jef.database.Session;
 
 public interface DbCall {
-	void call(JefEntityManager em);
+	void call(Session em);
 }

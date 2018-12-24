@@ -153,7 +153,7 @@ public final class BindVariableContext {
 	 * @param fields
 	 * @throws SQLException
 	 */
-	public void setInsertVariables(IQueryableEntity obj, List<ColumnMapping> fields) throws SQLException {
+	public void setInsertVariables(Object obj, List<ColumnMapping> fields) throws SQLException {
 		int count = 0;
 		for (ColumnMapping field : fields) {
 			count++;

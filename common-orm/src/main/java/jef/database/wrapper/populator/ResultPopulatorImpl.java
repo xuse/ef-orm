@@ -29,6 +29,8 @@ import java.util.Set;
 
 import javax.persistence.PersistenceException;
 
+import com.github.geequery.entity.Entities;
+
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.Entry;
@@ -65,6 +67,7 @@ import jef.database.query.Query;
 import jef.script.javascript.Var;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 import jef.tools.reflect.ArrayWrapper;
 import jef.tools.reflect.BeanWrapper;
 import jef.tools.reflect.UnsafeUtils;
@@ -332,7 +335,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator {
 				for (Mapper<?> m : extendPopulator) {
 					m.process(wrapper, rs);
 				}
-				endPopulate(retObj);
+				endPopulate(retObj,null);
 				return retObj;
 			} catch (SQLException e) {
 				throw new RuntimeException(e);
@@ -556,9 +559,10 @@ public class ResultPopulatorImpl implements ResultSetPopulator {
 				if (meta == null) {
 					retObj = UnsafeUtils.newInstance(retClz);
 					wrapper = BeanWrapper.wrap(retObj, BeanWrapper.FAST);
+					throw Exceptions.unsupportedOperation("这个分支应该不再支持了才对。");
 				} else {
-					IQueryableEntity e = meta.newInstance();
-					e.stopUpdate();
+					Object e = meta.newInstance();
+					Entities.notTouch(e);
 					retObj = (T) e;
 					wrapper = new FastBeanWrapperImpl(retObj, meta.getContainerAccessor());
 				}
@@ -571,7 +575,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator {
 						rp.process(wrapper, rs);
 					}
 				}
-				endPopulate(retObj);
+				endPopulate(retObj, meta);
 				return retObj;
 			} catch (SQLException e) {
 				throw DbUtils.toRuntimeException(e);
@@ -592,7 +596,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator {
 				IReferenceAllTable allcolumns = rp.getReferenceObj();
 				String name = allcolumns.getName();
 				ITableMetadata targetType = allcolumns.getFullModeTargetType();
-				BeanAccessor targetAccessor = (name == null ? ba : FastBeanWrapperImpl.getAccessorFor(targetType.getContainerType()));
+				BeanAccessor targetAccessor = (name == null ? ba : FastBeanWrapperImpl.getAccessorFor(targetType.getThisType()));
 
 				ObjectPopulator op1;
 				List<LazyLoadTask> tasks = new ArrayList<LazyLoadTask>();
@@ -638,9 +642,9 @@ public class ResultPopulatorImpl implements ResultSetPopulator {
 		}
 	}
 
-	private static void endPopulate(Object retObj) {
-		if (retObj instanceof IQueryableEntity) {
-			((IQueryableEntity) retObj).startUpdate();
+	private static void endPopulate(Object retObj, ITableMetadata meta) {
+		if(meta!=null) {
+			meta.getTouchIgnoreFlag().set(retObj, false);
 		}
 	}
 

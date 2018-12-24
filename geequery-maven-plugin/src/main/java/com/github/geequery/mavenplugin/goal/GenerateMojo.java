@@ -193,7 +193,7 @@ public class GenerateMojo extends AbstractMojo {
 		// <targetFolder>${project.basedir}/target/generated-sources/java</targetFolder>
 		EntityGenerator g = new EntityGenerator();
 		DbClient db;
-		db = new DbClientBuilder(this.jdbcUrl, this.jdbcUser, this.jdbcPassword, 2).setEnhanceScanPackages(false).build();
+		db = new DbClientBuilder(this.jdbcUrl, this.jdbcUser, this.jdbcPassword).setEnhanceScanPackages(false).build();
 		g.setProvider(new DbClientProvider(db));
 		g.setProfile(db.getProfile(null));
 		if (StringUtils.isNotEmpty(tableNamePattern)) {

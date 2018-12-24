@@ -1,9 +1,8 @@
 package jef.database.wrapper.processor;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-
-import jef.database.OperateTarget;
 
 public interface StatementPreparer {
 	
@@ -14,5 +13,5 @@ public interface StatementPreparer {
 	 * @return
 	 * @throws SQLException
 	 */
-	PreparedStatement doPrepareStatement(OperateTarget conn,String sql) throws SQLException;
+	PreparedStatement doPrepareStatement(Connection conn,String sql) throws SQLException;
 }

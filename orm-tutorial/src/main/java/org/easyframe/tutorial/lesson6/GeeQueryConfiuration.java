@@ -3,12 +3,10 @@ package org.easyframe.tutorial.lesson6;
 import java.sql.Connection;
 
 import javax.inject.Provider;
-import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.easyframe.enterprise.spring.SessionFactoryBean;
-import org.easyframe.enterprise.spring.TransactionMode;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +18,8 @@ import com.querydsl.sql.H2Templates;
 import com.querydsl.sql.SQLQueryFactory;
 import com.querydsl.sql.SQLTemplates;
 import com.querydsl.sql.spring.SpringConnectionProvider;
+
+import jef.database.SessionFactory;
 
 @Configuration
 public class GeeQueryConfiuration {
@@ -42,12 +42,12 @@ public class GeeQueryConfiuration {
 	}
 
 	@Bean()
-	public EntityManagerFactory entityManagerFactory(DataSource dataSource, Environment env) {
+	public SessionFactory entityManagerFactory(DataSource dataSource, Environment env) {
 		SessionFactoryBean bean = new org.easyframe.enterprise.spring.SessionFactoryBean();
 		bean.setDataSource(dataSource);
 		//bean.setPackagesToScan(...) //Your packages here
 		bean.afterPropertiesSet();
-		bean.setTransactionMode(TransactionMode.JDBC);
+		//bean.setTransactionMode(TransactionMode.JDBC);
 		return bean.getObject();
 	}
 

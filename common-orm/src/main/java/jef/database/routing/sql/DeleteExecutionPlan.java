@@ -8,8 +8,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import jef.common.log.LogUtil;
 import jef.database.DbUtils;
 import jef.database.ORMConfig;
+import jef.database.OperateTarget;
 import jef.database.jdbc.GenerateKeyReturnOper;
-import jef.database.jdbc.JDBCTarget;
 import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.statement.delete.Delete;
 import jef.database.routing.PartitionResult;
@@ -62,7 +62,7 @@ public class DeleteExecutionPlan extends AbstractExecutionPlan implements Execut
 	}
 
 	private int processUpdate0(String site, List<String> sqls) throws SQLException {
-		JDBCTarget db = context.db.getTarget(site);
+		OperateTarget db = context.db.getTarget(site);
 		int count = 0;
 		for (String sql : sqls) {
 			List<Object> params = context.params;

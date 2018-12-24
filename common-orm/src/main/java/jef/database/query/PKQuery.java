@@ -15,7 +15,6 @@ import jef.database.Condition.Operator;
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.IConditionField;
-import jef.database.IQueryableEntity;
 import jef.database.ORMConfig;
 import jef.database.SelectProcessor;
 import jef.database.Session.PopulateStrategy;
@@ -24,7 +23,6 @@ import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.AbstractMetadata;
 import jef.database.meta.EntityType;
 import jef.database.meta.ITableMetadata;
-import jef.database.meta.MetaHolder;
 import jef.database.meta.Reference;
 import jef.database.routing.PartitionResult;
 import jef.database.wrapper.clause.BindSql;
@@ -37,8 +35,7 @@ import jef.database.wrapper.variable.Variable;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 
-@SuppressWarnings("serial")
-public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
+public class PKQuery<T> extends AbstractQuery<T>{
 	
 	private List<Serializable> pkValues;
 	
@@ -49,15 +46,15 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	protected final Transformer t;
 	
 	@SuppressWarnings("unchecked")
-	public PKQuery(ITableMetadata clz,Serializable... pks){
-		if(clz.getType()==EntityType.TEMPLATE){
+	public PKQuery(ITableMetadata meta,Serializable... pks){
+		if(meta.getType()==EntityType.TEMPLATE){
 			String key=String.valueOf(pks[0]);
 			pks=(Serializable[]) ArrayUtils.subarray(pks, 1, pks.length);
-			this.type=((AbstractMetadata)clz).getExtension(key).getMeta();			
+			this.type=((AbstractMetadata)meta).getExtension(key).getMeta();			
 		}else{
-			this.type=clz;
+			this.type=meta;
 		}
-		this.instance=(T) clz.newInstance();
+		this.instance=(T) meta.newInstance();
 		if(type.getPKFields().size()>pks.length){
 			throw new IllegalArgumentException("The primark key count is not match input value:"+type.getPKFields().size()+">"+pks.length);
 		}
@@ -70,7 +67,7 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	}
 
 	@SuppressWarnings("unchecked")
-	public PKQuery(ITableMetadata meta, List<Serializable> pkValueSafe, IQueryableEntity obj) {
+	public PKQuery(ITableMetadata meta, List<Serializable> pkValueSafe, Object obj) {
 		this.type=meta;
 		this.instance=(T) obj;
 		this.cacheable=type.isCacheable();
@@ -100,8 +97,8 @@ public class PKQuery<T extends IQueryableEntity> extends AbstractQuery<T>{
 	public QueryClause toQuerySql(SelectProcessor processor, SqlContext context, boolean order) {
 		String tableName = (String) getAttribute(JoinElement.CUSTOM_TABLE_NAME);
 		if (tableName != null)
-			tableName = MetaHolder.toSchemaAdjustedName(tableName);
-		PartitionResult[] prs = DbUtils.toTableNames(getInstance(), tableName, this, processor.getPartitionSupport());
+			tableName = DbUtils.toSchemaAdjustedName(tableName);
+		PartitionResult[] prs = DbUtils.toTableNames(this, tableName, processor.getPartitionSupport());
 		
 		
 		DatabaseDialect profile = processor.getProfile(prs);

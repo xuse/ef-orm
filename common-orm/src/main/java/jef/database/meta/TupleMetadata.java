@@ -41,9 +41,9 @@ public final class TupleMetadata extends DynamicMetadata {
 		return new VarObject(this);
 	}
 	
-	public ColumnMapping getColumnDef(Field field) {
-		return schemaMap.get(field);
-	}
+//	public ColumnMapping getColumnDef(Field field) {
+//		return super.getcschemaMap.get(field);
+//	}
 	
 	/**
 	 * 向动态模型中放入一个字段
@@ -77,9 +77,9 @@ public final class TupleMetadata extends DynamicMetadata {
 	public boolean removeColumn(String columnName) {
 		if (columnName == null)
 			return false;
-		Field field = lowerColumnToFieldName.get(columnName.toLowerCase());
+		ColumnMapping field = lowerColumnToFieldName.get(columnName.toLowerCase());
 		if (field != null) {
-			removeColumnByFieldName(field.name());
+			removeColumnByFieldName(field.fieldName());
 			return true;
 		}
 		return false;

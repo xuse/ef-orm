@@ -16,16 +16,6 @@ public class JavaAnnotation implements JavaElement {
 		this.name = clz.getName();
 	}
 
-	// public void addCheckImports(Collection<Class<?>> clzs) {
-	// for (Class<?> clz : clzs) {
-	// checkImport.add(clz.getName());
-	// }
-	// }
-	//
-	// public void addCheckImport(Class<?> clz) {
-	// checkImport.add(clz.getName());
-	// }
-
 	public JavaAnnotation(String name) {
 		this.name = name;
 	}
@@ -94,12 +84,12 @@ public class JavaAnnotation implements JavaElement {
 				appendValue(sb, o, main);
 			}
 			sb.append('}');
-		} else if(v instanceof Class) {
-			String name=((Class<?>) v).getName();
-			sb.append(main.getJavaClassName(name)+".class");
-		} else if(v instanceof IClass) {
-			String name=((IClass) v).getName();
-			sb.append(main.getJavaClassName(name)+".class");
+		} else if (v instanceof Class) {
+			String name = ((Class<?>) v).getName();
+			sb.append(main.getJavaClassName(name) + ".class");
+		} else if (v instanceof IClass) {
+			String name = ((IClass) v).getName();
+			sb.append(main.getJavaClassName(name) + ".class");
 		} else if (v instanceof JavaAnnotation) {
 			sb.append(((JavaAnnotation) v).toCode(main));
 		} else if (v instanceof CharSequence) {

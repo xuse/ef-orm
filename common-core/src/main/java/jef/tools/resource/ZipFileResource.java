@@ -5,9 +5,9 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.util.concurrent.TimeUnit;
 
 import jef.common.log.LogUtil;
-import jef.tools.DateUtils;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 
@@ -26,7 +26,7 @@ public class ZipFileResource extends FileResource {
 		
 		filename=StringUtils.substringAfterLast(filename, "/")+"."+StringUtils.getCRC(filename);
 		File tempFile=new File(System.getProperty("java.io.tmpdir"),filename);
-		if(tempFile.exists() && (System.currentTimeMillis()-tempFile.lastModified()<DateUtils.TimeUnit.DAY.getMs())){
+		if(tempFile.exists() && (System.currentTimeMillis()-tempFile.lastModified()<TimeUnit.DAYS.toMillis(1))){
 			this.file=tempFile;
 		}else{
 			try {

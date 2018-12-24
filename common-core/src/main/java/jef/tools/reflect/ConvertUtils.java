@@ -13,17 +13,18 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.management.ReflectionException;
 
+import org.apache.commons.lang.ObjectUtils;
+
 import jef.common.Entry;
 import jef.common.Node;
 import jef.common.log.LogUtil;
 import jef.http.client.support.CommentEntry;
 import jef.tools.ArrayUtils;
 import jef.tools.DateUtils;
+import jef.tools.Primitives;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.convert.Converter;
-
-import org.apache.commons.lang.ObjectUtils;
 
 /**
  * 数据类型转换工具类
@@ -433,7 +434,7 @@ public final class ConvertUtils {
 	public static Object toProperType(String value, ClassEx clz, Object oldValue) {
 		if (value == null) {
 			if (clz.isPrimitive()) {
-				return defaultValueOfPrimitive(clz.getWrappered());
+				return Primitives.defaultValueOfPrimitive(clz.getWrappered());
 			} else {
 				return null;
 			}
@@ -447,7 +448,7 @@ public final class ConvertUtils {
 			return value;
 		}
 		if (StringUtils.isEmpty(value)) {
-			return defaultValueForBasicType(clz.getWrappered());
+			return Primitives.defaultValueForBasicType(clz.getWrappered());
 		}
 		// 凡是在转换器池里的都是必定支持的转换
 		Node<Converter<?>> c = CACHE.get(container.getWrappered());
@@ -504,7 +505,7 @@ public final class ConvertUtils {
 	public static Object toProperType(Object value, ClassEx container, Object oldValue) {
 		if (value == null) {
 			if (container.isPrimitive()) {
-				return defaultValueOfPrimitive(container.getWrappered());
+				return Primitives.defaultValueOfPrimitive(container.getWrappered());
 			} else {
 				return null;
 			}
@@ -622,64 +623,6 @@ public final class ConvertUtils {
 		return array;
 	}
 
-	/**
-	 * 返回八个原生类型的默认数值(的装箱类型)
-	 * 
-	 * @param javaClass
-	 *            数据类型
-	 * @return 返回该种技术类型的默认数值
-	 * @throws IllegalArgumentException
-	 *             如果传入的javaClass不是八种基础类型之一抛出。
-	 */
-	public static Object defaultValueOfPrimitive(Class<?> javaClass) {
-		// int 226
-		// short 215
-		// long 221
-		// boolean 222
-		// float 219
-		// double 228
-		// char 201
-		// byte 237
-		if (javaClass.isPrimitive()) {
-			String s = javaClass.getName();
-			switch (s.charAt(1) + s.charAt(2)) {
-			case 226:
-				return 0;
-			case 215:
-				return Short.valueOf((short) 0);
-			case 221:
-				return 0L;
-			case 222:
-				return Boolean.FALSE;
-			case 219:
-				return 0f;
-			case 228:
-				return 0d;
-			case 201:
-				return (char) 0;
-			case 237:
-				return Byte.valueOf((byte) 0);
-			}
-		}
-		throw new IllegalArgumentException(javaClass + " is not Primitive Type.");
-	}
-
-	/**
-	 * 得到原生对象和String的缺省值。
-	 * 
-	 * @param cls
-	 *            类型
-	 * 
-	 * @return 指定类型数据的缺省值。如果传入类型是primitive和String之外的类型返回null。
-	 */
-	public static Object defaultValueForBasicType(Class<?> cls) {
-		if (cls == String.class) {
-			return "";
-		} else if (cls.isPrimitive()) {
-			return defaultValueOfPrimitive(cls);
-		}
-		return null;
-	}
 
 	/**
 	 * 转换为合适的集合类型

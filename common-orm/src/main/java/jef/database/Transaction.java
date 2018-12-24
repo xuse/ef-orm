@@ -21,19 +21,18 @@ import java.util.Collection;
 
 import javax.persistence.PersistenceException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jef.database.cache.Cache;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.innerpool.IConnection;
-import jef.database.innerpool.IUserManagedPool;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.support.DbOperatorListener;
 import jef.database.support.SavepointNotSupportedException;
 import jef.tools.StringUtils;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 事务状态下的数据库连接封装。
@@ -53,7 +52,7 @@ public abstract class Transaction extends Session implements TransactionalSessio
 	 * @author jiyi
 	 * 
 	 */
-	enum TransactionFlag {
+	public enum TransactionFlag {
 		/**
 		 * 因为操作悲观锁模式,为了阻止连接被释放（例如线程重入），因此使用一个事务来独占连接。
 		 */
@@ -177,12 +176,6 @@ public abstract class Transaction extends Session implements TransactionalSessio
 	@Override
 	protected String getDbName(String dbKey) {
 		return parent == null ? this.parentName : parent.getDbName(dbKey);
-	}
-
-	@Override
-	IUserManagedPool getPool() {
-		ensureOpen();
-		return parent.getPool();
 	}
 
 	@Override

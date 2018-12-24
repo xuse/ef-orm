@@ -235,7 +235,17 @@ public final class CharUtils extends org.apache.commons.lang.CharUtils {
 	 */
 	public static boolean isPunctuation(char c) {
 		int type = Character.getType(c);
-		return type >= 20 && type <= 25;
+		return (type >= 20 && type <= 25) || type==29 || type==30 ;
+	}
+	
+	/**
+	 * 是否为标点符号
+	 * @param c
+	 * @return
+	 */
+	public static boolean isQuote(char c) {
+		int type = Character.getType(c);
+		return type == 29 || type == 30;
 	}
 
 	public enum CharType {

@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.net.URL;
 
 import jef.common.log.LogUtil;
-import jef.database.IQueryableEntity;
 import jef.database.annotation.PartitionTable;
 import jef.database.annotation.PartitionTableImpl;
 import jef.json.JsonUtil;
@@ -22,7 +21,7 @@ import jef.tools.StringUtils;
  * 
  */
 public class DefaultPartitionStrategyLoader implements PartitionStrategyLoader {
-	public PartitionTable get(Class<? extends IQueryableEntity> clz) {
+	public PartitionTable get(Class<?> clz) {
 		String data=getJsonDataConfig(clz);
 		if(data!=null && data.length()>0){
 			return parseJsonConfig(data);
@@ -68,7 +67,7 @@ public class DefaultPartitionStrategyLoader implements PartitionStrategyLoader {
 		}
 	}
 
-	private PartitionTable loadFromClassAnnotation(Class<? extends IQueryableEntity> clz) {
+	private PartitionTable loadFromClassAnnotation(Class<?> clz) {
 		PartitionTable table = clz.getAnnotation(PartitionTable.class);
 		if (table != null)
 			LogUtil.info(StringUtils.concat("Loading the partition strategy from annotation.[", clz.getName(), "]", JsonUtil.toJsonWithoutQuot(PartitionTableImpl.create(table))));
@@ -90,7 +89,7 @@ public class DefaultPartitionStrategyLoader implements PartitionStrategyLoader {
 	 * @param clz
 	 * @return
 	 */
-	protected URL getResource(Class<? extends IQueryableEntity> clz){
+	protected URL getResource(Class<?> clz){
 		String fileName = "/" + clz.getName() + ".json";
 		return clz.getResource(fileName);
 	}
@@ -100,7 +99,7 @@ public class DefaultPartitionStrategyLoader implements PartitionStrategyLoader {
 	 * @param clz
 	 * @return
 	 */
-	protected String getJsonDataConfig(Class<? extends IQueryableEntity> clz) {
+	protected String getJsonDataConfig(Class<?> clz) {
 		return null;
 	}
 }

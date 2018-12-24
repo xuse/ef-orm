@@ -7,7 +7,6 @@ import java.util.Map;
 import jef.database.DbClient;
 import jef.database.ORMConfig;
 import jef.database.ORMConfigMBean;
-import jef.database.jpa.JefEntityManagerFactory;
 import jef.tools.jmx.JefMonitorRegister;
 
 /**
@@ -29,17 +28,14 @@ public class JefFacade {
 	 * @param db
 	 * @param emf
 	 */
-	public static synchronized void registeEmf(DbClient db,JefEntityManagerFactory emf){
+	public static synchronized void registeEmf(DbClient db){
 		DbClientInfo stat=emfMap.get(db);
 		if(stat==null){
 			stat=new DbClientInfo(db);
-			stat.setDbClientFactory(emf);
 			emfMap.put(db, stat);
 			if(JefMonitorRegister.isJmxEnable()){
 				JefMonitorRegister.registe("JefDbClient:key=Db@"+Integer.toHexString(db.hashCode()), stat);
 			}
-		}else{
-			stat.setDbClientFactory(emf);
 		}
 		initOrmConfig();
 	}
