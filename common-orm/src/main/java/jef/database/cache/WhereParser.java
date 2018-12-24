@@ -7,20 +7,6 @@ import java.util.List;
 
 import javax.persistence.PersistenceException;
 
-import jef.common.PairSO;
-import jef.common.log.LogUtil;
-import jef.database.dialect.DatabaseDialect;
-import jef.database.jsqlparser.expression.Column;
-import jef.database.jsqlparser.expression.Table;
-import jef.database.jsqlparser.parser.ParseException;
-import jef.database.jsqlparser.parser.StSqlParser;
-import jef.database.jsqlparser.parser.TokenMgrError;
-import jef.database.jsqlparser.statement.select.Join;
-import jef.database.jsqlparser.visitor.Expression;
-import jef.database.jsqlparser.visitor.FromItem;
-import jef.database.jsqlparser.visitor.VisitorAdapter;
-import jef.tools.StringUtils;
-
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.expr.SQLPropertyExpr;
@@ -32,6 +18,20 @@ import com.alibaba.druid.sql.parser.SQLExprParser;
 import com.alibaba.druid.sql.parser.SQLSelectParser;
 import com.alibaba.druid.sql.parser.Token;
 import com.alibaba.druid.sql.visitor.SQLASTOutputVisitor;
+
+import jef.common.PairSO;
+import jef.common.log.LogUtil;
+import jef.database.dialect.DatabaseDialect;
+import jef.database.jsqlparser.expression.Column;
+import jef.database.jsqlparser.expression.Table;
+import jef.database.jsqlparser.parser.ParseException;
+import jef.database.jsqlparser.parser.StSqlParser;
+import jef.database.jsqlparser.parser.TokenMgrError;
+import jef.database.jsqlparser.statement.select.Join;
+import jef.database.jsqlparser.visitor.Expression;
+import jef.database.jsqlparser.visitor.FromItem;
+import jef.database.jsqlparser.visitor.VisitorSimpleAdapter;
+import jef.tools.StringUtils;
 
 public abstract class WhereParser {
 	static {
@@ -118,7 +118,7 @@ public abstract class WhereParser {
 		exp.accept(VA);
 	}
 
-	private static final VisitorAdapter VA = new VisitorAdapter() {
+	private static final VisitorSimpleAdapter VA = new VisitorSimpleAdapter() {
 		public void visit(Column tableColumn) {
 			tableColumn.setTableAlias(null);
 			String s = tableColumn.getColumnName();

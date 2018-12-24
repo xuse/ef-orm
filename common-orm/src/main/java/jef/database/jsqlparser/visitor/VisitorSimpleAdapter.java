@@ -15,8 +15,6 @@
  */
 package jef.database.jsqlparser.visitor;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.Iterator;
 
 import jef.common.Pair;
@@ -88,17 +86,13 @@ import jef.database.jsqlparser.statement.truncate.Truncate;
 import jef.database.jsqlparser.statement.update.Update;
 
 /**
- * 通用的访问者，该访问者将遍历AST上的每一个元素。
- * 并可以通过visitPath(一个先进后出的Deque)来访问到根节点的路径。
- * 
+ * VisitorAdapter是有状态的，因此不能用于多线程并发的场合。
+ * 继承这个Adapter的类可以设计成无状态的。（前提是子类也必须做到无状态。）
  * @author jiyi
- * Not thread-safe!
+ *
  */
-public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, StatementVisitor, SelectItemVisitor {
-	protected final Deque<Object> visitPath = new ArrayDeque<Object>();
-
+public class VisitorSimpleAdapter implements SelectVisitor, ExpressionVisitor, StatementVisitor, SelectItemVisitor {
 	public void visit(PlainSelect plainSelect) {
-		visitPath.push(plainSelect);
 		for (SelectItem s : plainSelect.getSelectItems()) {
 			s.accept(this);
 		}
@@ -126,165 +120,119 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 		if(plainSelect.getLimit()!=null){
 			plainSelect.getLimit().accept(this);
 		}
-		visitPath.pop();
 	}
 
 	public void visit(OrderBy orderBy) {
-		visitPath.push(orderBy);
 		for (OrderByElement o : orderBy.getOrderByElements()) {
 			o.accept(this);
 		}
-		visitPath.pop();
 	}
 
 	public void visit(Union union) {
-		visitPath.push(union);
 		for (Iterator<PlainSelect> iter = union.getPlainSelects().iterator(); iter.hasNext();) {
 			PlainSelect plainSelect = iter.next();
 			visit(plainSelect);
 		}
-		visitPath.pop();
 	}
 
 	public void visit(SubSelect subSelect) {
-		visitPath.push(subSelect);
 		subSelect.getSelectBody().accept(this);
-		visitPath.pop();
 	}
 
 	public void visit(Addition addition) {
-		visitPath.push(addition);
 		visitBinaryExpression(addition);
-		visitPath.pop();
 	}
 
 	public void visit(AndExpression andExpression) {
-		visitPath.push(andExpression);
 		visitBinaryExpression(andExpression);
-		visitPath.pop();
 	}
 
 	public void visit(Between between) {
-		visitPath.push(between);
 		between.getLeftExpression().accept(this);
 		between.getBetweenExpressionStart().accept(this);
 		between.getBetweenExpressionEnd().accept(this);
-		visitPath.pop();
 	}
 
 	public void visit(Division division) {
-		visitPath.push(division);
 		visitBinaryExpression(division);
-		visitPath.pop();
 	}
 
 	public void visit(Mod mod) {
-		visitPath.push(mod);
 		visitBinaryExpression(mod);
-		visitPath.pop();
 	}
 
 	public void visit(DoubleValue doubleValue) {
 	}
 
 	public void visit(EqualsTo equalsTo) {
-		visitPath.push(equalsTo);
 		visitBinaryExpression(equalsTo);
-		visitPath.pop();
 	}
 
 	public void visit(Function function) {
-		visitPath.push(function);
 		if (function.getParameters() != null)
 			function.getParameters().accept(this);
 		if (function.getOver() != null) {
 			function.getOver().accept(this);
 		}
-		visitPath.pop();
 	}
 
 	public void visit(GreaterThan greaterThan) {
-		visitPath.push(greaterThan);
 		visitBinaryExpression(greaterThan);
-		visitPath.pop();
 	}
 
 	public void visit(GreaterThanEquals greaterThanEquals) {
-		visitPath.push(greaterThanEquals);
 		visitBinaryExpression(greaterThanEquals);
-		visitPath.pop();
 	}
 
 	public void visit(InExpression inExpression) {
-		visitPath.push(inExpression);
 		if(inExpression.getLeftExpression()!=null){
 		    for(Expression ex:inExpression.getLeftExpression()){
 	            ex.accept(this);
 	        }    
 		}
 		inExpression.getItemsList().accept(this);
-		visitPath.pop();
 	}
 
 	public void visit(InverseExpression inverseExpression) {
-		visitPath.push(inverseExpression);
 		inverseExpression.getExpression().accept(this);
-		visitPath.pop();
-
 	}
 
 	public void visit(IsNullExpression isNullExpression) {
-		visitPath.push(isNullExpression);
 		isNullExpression.getLeftExpression().accept(this);
-		visitPath.pop();
 	}
 
 	public void visit(LikeExpression likeExpression) {
-		visitPath.push(likeExpression);
 		visitBinaryExpression(likeExpression);
-		visitPath.pop();
 	}
 
 	public void visit(ExistsExpression existsExpression) {
-		visitPath.push(existsExpression);
 		existsExpression.getRightExpression().accept(this);
-		visitPath.pop();
 	}
 
 	public void visit(LongValue longValue) {
 	}
 
 	public void visit(MinorThan minorThan) {
-		visitPath.push(minorThan);
 		visitBinaryExpression(minorThan);
-		visitPath.pop();
 	}
 
 	public void visit(MinorThanEquals minorThanEquals) {
-		visitPath.push(minorThanEquals);
 		visitBinaryExpression(minorThanEquals);
-		visitPath.pop();
 	}
 
 	public void visit(Multiplication multiplication) {
-		visitPath.push(multiplication);
 		visitBinaryExpression(multiplication);
-		visitPath.pop();
 	}
 
 	public void visit(NotEqualsTo notEqualsTo) {
-		visitPath.push(notEqualsTo);
 		visitBinaryExpression(notEqualsTo);
-		visitPath.pop();
 	}
 
 	public void visit(NullValue nullValue) {
 	}
 
 	public void visit(OrExpression orExpression) {
-		visitPath.push(orExpression);
 		visitBinaryExpression(orExpression);
-		visitPath.pop();
 	}
 
 	public void visit(Parenthesis parenthesis) {
@@ -295,9 +243,7 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 	}
 
 	public void visit(Subtraction subtraction) {
-		visitPath.push(subtraction);
 		visitBinaryExpression(subtraction);
-		visitPath.pop();
 	}
 
 	private void visitBinaryExpression(BinaryExpression binaryExpression) {
@@ -306,12 +252,10 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 	}
 
 	public void visit(ExpressionList expressionList) {
-		visitPath.push(expressionList);
 		for (Iterator<Expression> iter = expressionList.getExpressions().iterator(); iter.hasNext();) {
 			Expression expression = iter.next();
 			expression.accept(this);
 		}
-		visitPath.pop();
 	}
 
 	public void visit(JdbcParameter jdbcParameter) {
@@ -327,7 +271,6 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 	}
 
 	public void visit(CaseExpression caseExpression) {
-		visitPath.push(caseExpression);
 		if (caseExpression.getSwitchExpression() != null) {
 			caseExpression.getSwitchExpression().accept(this);
 		}
@@ -339,58 +282,40 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 		if (caseExpression.getElseExpression() != null) {
 			caseExpression.getElseExpression().accept(this);
 		}
-		visitPath.pop();
 	}
 
 	public void visit(WhenClause whenClause) {
-		visitPath.push(whenClause);
 		whenClause.getWhenExpression().accept(this);
 		whenClause.getThenExpression().accept(this);
-		visitPath.pop();
 	}
 
 	public void visit(AllComparisonExpression allComparisonExpression) {
-		visitPath.push(allComparisonExpression);
 		allComparisonExpression.GetSubSelect().getSelectBody().accept(this);
-		visitPath.pop();
 	}
 
 	public void visit(AnyComparisonExpression anyComparisonExpression) {
-		visitPath.push(anyComparisonExpression);
 		anyComparisonExpression.GetSubSelect().accept((ExpressionVisitor) this);
-		visitPath.pop();
 	}
 
 	public void visit(SubJoin subjoin) {
-		visitPath.push(subjoin);
 		subjoin.getLeft().accept(this);
 		subjoin.getJoin().accept(this);
-		visitPath.pop();
 	}
 
 	public void visit(Concat concat) {
-		visitPath.push(concat);
 		visitBinaryExpression(concat);
-		visitPath.pop();
 	}
 
 	public void visit(BitwiseAnd bitwiseAnd) {
-		visitPath.push(bitwiseAnd);
 		visitBinaryExpression(bitwiseAnd);
-		visitPath.pop();
 	}
 
 	public void visit(BitwiseOr bitwiseOr) {
-		visitPath.push(bitwiseOr);
 		visitBinaryExpression(bitwiseOr);
-		visitPath.pop();
 	}
 
 	public void visit(BitwiseXor bitwiseXor) {
-		visitPath.push(bitwiseXor);
 		visitBinaryExpression(bitwiseXor);
-		visitPath.pop();
-
 	}
 
 	public void visit(Column tableColumn) {
@@ -400,13 +325,11 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 	}
 
 	public void visit(Select select) {
-		visitPath.push(select);
 		if(select.getWithItemsList()!=null){
 			select.getWithItemsList().accept(this);
 		}
 		if (select.getSelectBody() != null)
 			select.getSelectBody().accept(this);
-		visitPath.pop();
 	}
 	
 
@@ -418,16 +341,13 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 	}
 
 	public void visit(Delete delete) {
-		visitPath.push(delete);
 		delete.getTable().accept(this);
 		if (delete.getWhere() != null) {
 			delete.getWhere().accept(this);
 		}
-		visitPath.pop();
 	}
 
 	public void visit(Update update) {
-		visitPath.push(update);
 		update.getTable().accept(this);
 		for (Pair<Column,Expression> pair : update.getSets()) {
 			pair.first.accept(this);
@@ -436,11 +356,9 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 		if (update.getWhere() != null) {
 			update.getWhere().accept(this);
 		}
-		visitPath.pop();
 	}
 
 	public void visit(Insert insert) {
-		visitPath.push(insert);
 		if (insert.getColumns() != null) {
 			for (Column c : insert.getColumns()) {
 				visit(c);
@@ -448,12 +366,9 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 		}
 		insert.getTable().accept(this);
 		insert.getItemsList().accept(this);
-		visitPath.pop();
 	}
 
 	public void visit(Replace replace) {
-		visitPath.push(replace);
-
 		for (Column c : replace.getColumns()) {
 			visit(c);
 		}
@@ -462,22 +377,17 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 		}
 		replace.getTable().accept(this);
 		replace.getItemsList().accept(this);
-		visitPath.pop();
 	}
 
 	public void visit(Drop drop) {
 	}
 
 	public void visit(Truncate truncate) {
-		visitPath.push(truncate);
 		truncate.getTable().accept(this);
-		visitPath.pop();
 	}
 
 	public void visit(CreateTable createTable) {
-		visitPath.push(createTable);
 		createTable.getTable().accept(this);
-		visitPath.pop();
 	}
 
 	public void visit(AllColumns allColumns) {
@@ -487,41 +397,32 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 	}
 
 	public void visit(SelectExpressionItem selectExpressionItem) {
-		visitPath.push(selectExpressionItem);
 		selectExpressionItem.getExpression().accept(this);
-		visitPath.pop();
 	}
 
 	public void visit(JpqlParameter parameter) {
 	}
 
 	public void visit(OrderByElement orderBy) {
-		visitPath.push(orderBy);
 		orderBy.getExpression().accept(this);
-		visitPath.pop();
 	}
 
 	public void visit(Interval interval) {
-		visitPath.push(interval);
 		if(interval.getValue()!=null){
 			interval.getValue().accept(this);
 		}
-		visitPath.pop();
 	}
 
 	public void visit(StartWithExpression startWithExpression) {
-		visitPath.push(startWithExpression);
 		Expression start = startWithExpression.getStartExpression();
 		Expression connectBy = startWithExpression.getConnectExpression();
 		if (start != null)
 			start.accept(this);
 		if (connectBy != null)
 			connectBy.accept(this);
-		visitPath.pop();
 	}
 
 	public void visit(Over over) {
-		visitPath.push(over);
 		if (over.getPartition() != null) {
 			for (Expression exp : over.getPartition()) {
 				exp.accept(this);
@@ -530,11 +431,9 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 		if (over.getOrderBy() != null) {
 			over.getOrderBy().accept(this);
 		}
-		visitPath.pop();
 	}
 
 	public void visit(Join join) {
-		visitPath.push(join);
 		join.getRightItem().accept(this);
 		if (join.getOnExpression() != null) {
 			join.getOnExpression().accept(this);
@@ -544,11 +443,9 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 				c.accept(this);
 			}
 		}
-		visitPath.pop();
 	}
 
 	public void visit(WithItem with) {
-		visitPath.push(with);
 		if(with.getWithItemList()!=null){
 			for(SelectItem item:with.getWithItemList()){
 				item.accept(this);
@@ -557,18 +454,15 @@ public class VisitorAdapter implements SelectVisitor, ExpressionVisitor, Stateme
 		if(with.getSelectBody()!=null){
 			with.getSelectBody().accept(this);
 		}
-		visitPath.pop();
 	}
 
 	@Override
 	public void visit(Limit limit) {
-		visitPath.push(limit);
 		if(limit.getOffsetJdbcParameter()!=null){
 			limit.getOffsetJdbcParameter().accept(this);
 		}
 		if(limit.getRowCountJdbcParameter()!=null){
 			limit.getRowCountJdbcParameter().accept(this);
 		}
-		visitPath.pop();
 	}
 }
