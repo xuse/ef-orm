@@ -13,13 +13,13 @@ import jef.database.jdbc.result.IResultSet;
 import jef.tools.DateFormats;
 
 public class SqlTimeStringMapping extends AColumnMapping{
-	private ThreadLocal<DateFormat> format=DateFormats.TIME_ONLY;
+	private ThreadLocal<? extends DateFormat> format=DateFormats.TIME_ONLY;
 	
 	public SqlTimeStringMapping(){
 	}
 	
 	public SqlTimeStringMapping(final String pattern){
-		this.format=DateFormats.getThreadLocalDateFormat(pattern);
+		this.format=DateFormats.create(pattern);
 	}
 	
 	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {

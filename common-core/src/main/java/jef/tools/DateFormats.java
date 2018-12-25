@@ -129,7 +129,7 @@ public abstract class DateFormats {
 		}
 
 		/**
-		 * 格式化日期，如果传入null返回null
+		 * 格式化日期，如果传入null返回null(Null-safty.)
 		 * 
 		 * @param date
 		 * @return text
@@ -141,9 +141,9 @@ public abstract class DateFormats {
 		/**
 		 * 格式化日期，按指定的时区进行输出
 		 * 
-		 * @param date
+		 * @param date 如果传入null返回null(Null-safty.)
 		 * @param zone
-		 * @return text
+		 * @return text 
 		 */
 		public String format(Date date, TimeZone zone) {
 			return format(date, zone.getRawOffset() / 3600000);
@@ -152,19 +152,12 @@ public abstract class DateFormats {
 		/**
 		 * 格式化日期，按指定的时区进行输出
 		 * 
-		 * @param date
+		 * @param date 如果传入null返回null(Null-safty.)
 		 * @param utcOffset 相对国际原子时的时差，从-12到+14(中国为8)
 		 * @return 指定时区内的时间
 		 */
 		public String format(Date date, int utcOffset) {
 			return format0(date, utcOffset + 12);
-		}
-
-		/*
-		 * 支持时区的格式化
-		 */
-		private String format0(Date date, int offset) {
-			return get().get(offset).format(date);
 		}
 
 		/**
@@ -259,6 +252,13 @@ public abstract class DateFormats {
 			}
 		}
 
+		/*
+		 * 支持时区的格式化和解析
+		 */
+		private String format0(Date date, int offset) {
+			return get().get(offset).format(date);
+		}
+
 		private Date parse0(String text, int zoneOffet) throws ParseException {
 			return get().get(zoneOffet + 12).parse(text);
 		}
@@ -268,7 +268,7 @@ public abstract class DateFormats {
 	 * 支持全时区的DateFormat对象,共计27个UTC。包括 -12,0,+12 (东西十二区分为东十二区和西十二区)。 加上太平洋上的特殊时区
 	 * 菲尼克斯群岛(UTC+13) 莱恩群岛(UTF+14)
 	 */
-	private static final class SuperDataFormat extends DateFormat {
+	public static final class SuperDataFormat extends DateFormat {
 		private static final long serialVersionUID = 5040737257964931800L;
 		private final DateFormat[] f = new DateFormat[TIME_ZONES.length];
 		private final int defaultUTC = (TimeZone.getDefault().getRawOffset() / 3600000 + 12);
@@ -283,10 +283,10 @@ public abstract class DateFormats {
 		}
 
 		public DateFormat get(int offset) {
-			if (offset >= 0 && offset <= 27) {
+			if (offset >= 0 && offset <= 26) {
 				return f[offset];
 			} else {
-				throw new IllegalArgumentException("Invalid TimeZone offset " + offset);
+				throw new IllegalArgumentException("Invalid TimeZone, minimum is UTC-12, maximum is UTC+14.");
 			}
 		}
 
@@ -307,12 +307,12 @@ public abstract class DateFormats {
 	 * @param pattern
 	 * @return
 	 */
-	public static final TLDateFormat getThreadLocalDateFormat(String pattern) {
+	public static final TLDateFormat create(String pattern) {
 		return new TLDateFormat(pattern);
 	}
 
 	public static void main(String[] args) {
 		Date d=new Date();
-		System.out.println(new TLDateFormat("yyyy-MM-dd'T'HH:mm:ss X").format(new Date(), 7));
+		System.out.println(new TLDateFormat("yyyy-MM-dd'T'HH:mm:ss X").format(new Date(), -12));
 	}
 }

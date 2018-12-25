@@ -13,11 +13,11 @@ import jef.tools.DateFormats;
 import jef.tools.StringUtils;
 
 public class CharDateMapping extends AColumnMapping {
-	private ThreadLocal<DateFormat> format;
-	private ThreadLocal<DateFormat> dateOnly;
+	private ThreadLocal<? extends DateFormat> format;
+	private ThreadLocal<? extends DateFormat> dateOnly;
 
 	public CharDateMapping(String format) {
-		this.format = DateFormats.getThreadLocalDateFormat(format);
+		this.format = DateFormats.create(format);
 		this.dateOnly = DateFormats.DATE_CS;
 	}
 

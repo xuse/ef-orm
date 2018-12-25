@@ -13,10 +13,10 @@ import jef.tools.DateFormats;
 import jef.tools.StringUtils;
 
 public class CharTimestampMapping extends AColumnMapping{
-	private ThreadLocal<DateFormat> format;
+	private ThreadLocal<? extends DateFormat> format;
 	
 	public CharTimestampMapping(String format){
-		this.format=DateFormats.getThreadLocalDateFormat(format);
+		this.format=DateFormats.create(format);
 	}
 	
 	public CharTimestampMapping(){

@@ -34,6 +34,8 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
+import org.omg.CORBA.UserException;
+
 import jef.common.log.LogUtil;
 import jef.tools.support.TimeIterable;
 
@@ -91,7 +93,7 @@ public abstract class DateUtils {
 
 	/**
 	 * 格式化日期为中式格式
-	 * 
+	 * @deprecated Use @{DateFormats}
 	 * @param d
 	 * @return
 	 */
@@ -145,7 +147,7 @@ public abstract class DateUtils {
 
 	/**
 	 * 格式化为日期+时间（中式）
-	 * 
+	 * @deprecated Use @{DateFormats}
 	 * @param d
 	 * @return
 	 */
@@ -344,7 +346,7 @@ public abstract class DateUtils {
 
 	/**
 	 * 格式化时间戳
-	 * 
+	 * @deprecated Use @{DateFormats}
 	 * @throws
 	 */
 	public static String formatTimeStamp(Date d) {
@@ -380,12 +382,12 @@ public abstract class DateUtils {
 
 	/**
 	 * 用指定的模板格式化日期时间 直接传入ThreadLocal对象，确保了线程安全
-	 * 
+	 * @deprecated Use {@link jef.tools.DateFormats.TLDateFormat#format(Date)} please.
 	 * @param d
 	 * @param format
 	 * @return
 	 */
-	public static String format(Date d, ThreadLocal<DateFormat> format) {
+	public static String format(Date d, ThreadLocal<? extends DateFormat> format) {
 		if (d == null)
 			return "";
 		return format.get().format(d);
@@ -422,7 +424,7 @@ public abstract class DateUtils {
 
 	/**
 	 * 用默认的格式（中式日期）解析
-	 * 
+	 * @deprecated use {@code DateFormats.DATE_CS.parse(String)} 
 	 * @param s
 	 * @return
 	 * @throws ParseException
@@ -435,7 +437,7 @@ public abstract class DateUtils {
 
 	/**
 	 * 用默认的格式（中式日期时间）解析
-	 * 
+	 * @deprecated use {@code DateFormats.DATE_TIME_CS.parse(String)} 
 	 * @param s
 	 * @return
 	 * @throws ParseException 解析失败抛出
@@ -448,7 +450,7 @@ public abstract class DateUtils {
 
 	/**
 	 * 用默认的格式（中式日期时间）解析
-	 * 
+	 * @deprecated  use {@code DateFormats.DATE_TIME_CS.parse(String,Date)} 
 	 * @param s
 	 * @param defaultValue
 	 * @return
@@ -467,13 +469,13 @@ public abstract class DateUtils {
 
 	/**
 	 * 解析日期时间 非法则抛出异常
-	 * 
+	 * @deprecated Use @{DateFormats}
 	 * @param s
 	 * @param format
 	 * @return
 	 * @throws ParseException
 	 */
-	public static Date parse(String s, ThreadLocal<DateFormat> format) throws ParseException {
+	public static Date parse(String s, ThreadLocal<? extends DateFormat> format) throws ParseException {
 		if (StringUtils.isBlank(s))
 			return null;
 		return format.get().parse(s);
@@ -481,7 +483,7 @@ public abstract class DateUtils {
 
 	/**
 	 * 解析日期时间 非法则抛出异常
-	 * 
+	 * @deprecated Use @{DateFormats}
 	 * @Title: parse
 	 */
 	public static Date parse(String s, DateFormat format) throws ParseException {
@@ -547,7 +549,7 @@ public abstract class DateUtils {
 
 	/**
 	 * 解析日期 非法返回指定缺省值
-	 * 
+	 * @deprecated Use @{DateFormats}
 	 * @return 如果输入为空白字符串，返回defaultValue 如果解析中出现异常，返回defaultValue
 	 * @throws不会抛出ParseException
 	 */
@@ -564,11 +566,11 @@ public abstract class DateUtils {
 
 	/**
 	 * 解析日期 非法返回指定缺省值
-	 * 
+	 * @deprecated Use @{DateFormats}
 	 * @return 如果输入为空白字符串，返回defaultValue 如果解析中出现异常，返回defaultValue
 	 * @throws不会抛出ParseException
 	 */
-	public static Date parse(String s, ThreadLocal<DateFormat> format, Date defaultValue) {
+	public static Date parse(String s, ThreadLocal<? extends DateFormat> format, Date defaultValue) {
 		if (StringUtils.isBlank(s))
 			return defaultValue;
 		try {
@@ -581,7 +583,7 @@ public abstract class DateUtils {
 
 	/**
 	 * 解析日期 非法返回指定缺省值
-	 * 
+	 * @deprecated Use @{DateFormats}
 	 * @return 如果输入为空白字符串，返回defaultValue 如果解析中出现异常，返回defaultValue
 	 * @throws不会抛出ParseException
 	 */

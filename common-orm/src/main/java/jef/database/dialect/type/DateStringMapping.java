@@ -21,13 +21,13 @@ import jef.tools.DateFormats;
  */
 public class DateStringMapping extends AbstractTimeMapping{
 	
-	private ThreadLocal<DateFormat> format=DateFormats.DATE_CS;
+	private ThreadLocal<? extends DateFormat> format=DateFormats.DATE_CS;
 	
 	public DateStringMapping(){
 	}
 	
 	public DateStringMapping(final String pattern){
-		this.format=DateFormats.getThreadLocalDateFormat(pattern);
+		this.format=DateFormats.create(pattern);
 	}
 	
 	
