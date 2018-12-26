@@ -48,9 +48,6 @@ import java.util.TimeZone;
  * 
  */
 public abstract class DateFormats {
-	private static final String[] TIME_ZONES = new String[] { "Etc/GMT+12", "Pacific/Midway", "US/Hawaii", "US/Alaska", "US/Pacific", "US/Arizona", "US/Central", "America/New_York", "PRT", "America/Araguaina",
-			"Atlantic/South_Georgia", "Atlantic/Azores", "GMT", "Etc/GMT-1", "Etc/GMT-2", "Europe/Moscow", "Etc/GMT-4", "IST", "Etc/GMT-6", "Etc/GMT-7", "Asia/Shanghai", "Asia/Tokyo", "Australia/ACT", "Etc/GMT-11",
-			"Etc/GMT-12", "Pacific/Apia", "Pacific/Kiritimati" };
 
 	// 支持 yyyy-m-d 格式的
 	// 非严格模式正则
@@ -72,6 +69,8 @@ public abstract class DateFormats {
 
 	/** 日期格式：日期+时间 YYYY-MM-DD HH:MI:SS */
 	public static final TLDateFormat DATE_TIME_CS = new TLDateFormat("yyyy-MM-dd HH:mm:ss");
+	
+	public static final TLDateFormat DATE_TIME_CS_WITH_ZONE = new TLDateFormat("yyyy-MM-dd HH:mm:ss Z");
 
 	/** 日期格式：日期+时间 YYYY/MM/DD HH:MI:SS */
 	public static final TLDateFormat DATE_TIME_CS2 = new TLDateFormat("yyyy/MM/dd HH:mm:ss");
@@ -128,6 +127,15 @@ public abstract class DateFormats {
 			return new SuperDataFormat(pattern);
 		}
 
+		/**
+		 * 格式化时间
+		 * @param time
+		 * @return
+		 */
+		public String format(long time) {
+			return get().format(time);
+		}
+		
 		/**
 		 * 格式化日期，如果传入null返回null(Null-safty.)
 		 * 
@@ -270,11 +278,12 @@ public abstract class DateFormats {
 	 */
 	public static final class SuperDataFormat extends DateFormat {
 		private static final long serialVersionUID = 5040737257964931800L;
-		private final DateFormat[] f = new DateFormat[TIME_ZONES.length];
+		String [] tzs=TimeZones.TIME_ZONES;
+		private final DateFormat[] f = new DateFormat[tzs.length];
 		private final int defaultUTC = (TimeZone.getDefault().getRawOffset() / 3600000 + 12);
 		private SuperDataFormat(String pattern) {
 			SimpleDateFormat DEFAULT = new SimpleDateFormat(pattern);
-			for (String s : TIME_ZONES) {
+			for (String s : tzs) {
 				TimeZone z = TimeZone.getTimeZone(s);
 				int offset = z.getRawOffset() / 3600000 + 12;
 				f[offset] = (SimpleDateFormat) DEFAULT.clone();
@@ -313,6 +322,6 @@ public abstract class DateFormats {
 
 	public static void main(String[] args) {
 		Date d=new Date();
-		System.out.println(new TLDateFormat("yyyy-MM-dd'T'HH:mm:ss X").format(new Date(), -12));
+		System.out.println(new TLDateFormat("yyyy-MM-dd'T'HH:mm:ss X").format(System.currentTimeMillis()));
 	}
 }

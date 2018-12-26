@@ -51,11 +51,10 @@ public abstract class AbstractDateFunction implements PartitionFunction<Date> {
 		public List<Date> innerIterator(Date sDate, Date eDate, boolean leftInclude, boolean rightInclude) {
 			List<Date> ret = new ArrayList<Date>();
 			Calendar gval = Calendar.getInstance();
-			gval.setTime(sDate);
+			gval.setTime(DateUtils.truncateToYear(sDate));
 			long endSec = eDate.getTime();
 			if (!rightInclude)
 				endSec--;
-			DateUtils.truncate(gval, Calendar.YEAR);
 			while (gval.getTime().getTime() <= endSec) {
 				ret.add(gval.getTime());
 				gval.add(Calendar.YEAR, 1);
@@ -86,11 +85,10 @@ public abstract class AbstractDateFunction implements PartitionFunction<Date> {
 		public List<Date> innerIterator(Date sDate, Date eDate, boolean leftInclude, boolean rightInclude) {
 			List<Date> ret = new ArrayList<Date>();
 			Calendar gval = Calendar.getInstance();
-			gval.setTime(sDate);
+			gval.setTime(DateUtils.truncateToMonth(sDate));
 			long endSec = eDate.getTime();
 			if (!rightInclude)
 				endSec--;
-			DateUtils.truncate(gval, Calendar.MONTH);
 			while (gval.getTime().getTime() <= endSec) {
 				ret.add(gval.getTime());
 				gval.add(Calendar.MONTH, 1);
@@ -120,13 +118,11 @@ public abstract class AbstractDateFunction implements PartitionFunction<Date> {
 
 		public List<Date> innerIterator(Date sDate, Date eDate, boolean leftInclude, boolean rightInclude) {
 			List<Date> ret = new ArrayList<Date>();
-			Calendar gval = Calendar.getInstance();
-			gval.setTime(sDate);
 			long endSec = eDate.getTime();
 			if (!rightInclude)
 				endSec--;
-			DateUtils.truncate(gval, Calendar.DATE);
-			long date = gval.getTimeInMillis();
+			sDate = DateUtils.truncateToDay(sDate);
+			long date = sDate.getTime();
 			while (date <= endSec) {
 				ret.add(new Date(date));
 				date = date + 86400000L;// 直接加一天的毫秒数.直接计算性能最好，之所以+1月要借助Calendar对象是因为加一个月太复杂了。
@@ -157,11 +153,10 @@ public abstract class AbstractDateFunction implements PartitionFunction<Date> {
 		public List<Date> innerIterator(Date sDate, Date eDate, boolean leftInclude, boolean rightInclude) {
 			List<Date> ret = new ArrayList<Date>();
 			Calendar gval = Calendar.getInstance();
-			gval.setTime(sDate);
+			gval.setTime(DateUtils.truncateToMonth(sDate));
 			long endSec = eDate.getTime();
 			if (!rightInclude)
 				endSec--;
-			DateUtils.truncate(gval, Calendar.MONTH);
 			while (gval.getTime().getTime() <= endSec) {
 				ret.add(gval.getTime());
 				gval.add(Calendar.MONTH, 1);
@@ -188,13 +183,10 @@ public abstract class AbstractDateFunction implements PartitionFunction<Date> {
 
 		public List<Date> innerIterator(Date sDate, Date eDate, boolean leftInclude, boolean rightInclude) {
 			List<Date> ret = new ArrayList<Date>();
-			Calendar gval = Calendar.getInstance();
-			gval.setTime(sDate);
 			long endSec = eDate.getTime();
 			if (!rightInclude)
 				endSec--;
-			DateUtils.truncate(gval, Calendar.DATE);
-			long date = gval.getTimeInMillis();
+			long date = DateUtils.truncateToDay(sDate).getTime();
 			while (date <= endSec) {
 				ret.add(new Date(date));
 				date = date + 86400000L;// 直接加一天的毫秒数.直接计算性能最好，之所以+1月要借助Calendar对象是因为加一个月太复杂了。
@@ -224,11 +216,10 @@ public abstract class AbstractDateFunction implements PartitionFunction<Date> {
 		public List<Date> innerIterator(Date sDate, Date eDate, boolean leftInclude, boolean rightInclude) {
 			List<Date> ret = new ArrayList<Date>();
 			Calendar gval = Calendar.getInstance();
-			gval.setTime(sDate);
+			gval.setTime(DateUtils.truncateToDay(sDate));
 			long endSec = eDate.getTime();
 			if (!rightInclude)
 				endSec--;
-			DateUtils.truncate(gval, Calendar.DATE);
 			long date = gval.getTimeInMillis();
 			while (date <= endSec) {
 				ret.add(new Date(date));
@@ -258,13 +249,10 @@ public abstract class AbstractDateFunction implements PartitionFunction<Date> {
 
 		public List<Date> innerIterator(Date sDate, Date eDate, boolean leftInclude, boolean rightInclude) {
 			List<Date> ret = new ArrayList<Date>();
-			Calendar gval = Calendar.getInstance();
-			gval.setTime(sDate);
 			long endSec = eDate.getTime();
 			if (!rightInclude)
 				endSec--;
-			DateUtils.truncate(gval, Calendar.HOUR_OF_DAY);
-			long date = gval.getTimeInMillis();
+			long date = DateUtils.truncateToHour(sDate).getTime();
 			while (date <= endSec) {
 				ret.add(new Date(date));
 				date = date + 3600000L;// 直接加一小时的毫秒数
@@ -294,11 +282,10 @@ public abstract class AbstractDateFunction implements PartitionFunction<Date> {
 		public List<Date> innerIterator(Date sDate, Date eDate, boolean leftInclude, boolean rightInclude) {
 			List<Date> ret = new ArrayList<Date>();
 			Calendar gval = Calendar.getInstance();
-			gval.setTime(sDate);
+			gval.setTime(DateUtils.truncateToMonth(sDate));
 			long endSec = eDate.getTime();
 			if (!rightInclude)
 				endSec--;
-			DateUtils.truncate(gval, Calendar.MONTH);
 			while (gval.getTime().getTime() <= endSec) {
 				ret.add(gval.getTime());
 				gval.add(Calendar.MONTH, 1);

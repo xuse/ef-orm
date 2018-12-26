@@ -747,7 +747,9 @@ public abstract class AbstractDialect implements DatabaseDialect {
 			if (meta.checkedFunctions.contains(name)) {
 				continue;
 			}
-			meta.checkedFunctions.add(name);
+			synchronized (meta.checkedFunctions) {
+				meta.checkedFunctions.add(name);
+			}
 			if (!meta.existsFunction(null, name)) {
 				flag = false;
 				break;

@@ -135,7 +135,9 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 			return;
 		}
 		if (meta.existsFunction(null, funName)) {
-			meta.checkedFunctions.add(funName);
+			synchronized (meta.checkedFunctions) {
+				meta.checkedFunctions.add(funName);
+			}
 		} else {
 			throw new IllegalArgumentException("database " + profile.getName() + " doesn't support function: " + funName + ".");
 		}
@@ -181,7 +183,9 @@ public class SqlFunctionlocalization extends VisitorAdapter {
 			if (meta.checkedFunctions.contains(name)) {
 				continue;
 			}
-			meta.checkedFunctions.add(name);
+			synchronized (meta.checkedFunctions) {
+				meta.checkedFunctions.add(name);
+			}
 			if (!meta.existsFunction(null, name)) {
 				flag = false;
 				break;

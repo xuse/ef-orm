@@ -6,6 +6,7 @@ import java.sql.Types;
 import java.util.Date;
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.springframework.util.StringUtils;
 
@@ -357,7 +358,7 @@ public final class ColumnMappings {
 			return value.toString();
 		} else if (value instanceof java.util.Date) {
 			Date date = (Date) value;
-			if (DateUtils.isDayBegin(date)) {
+			if (DateUtils.isDayBegin(date, TimeZone.getDefault())) {
 				return profile.getSqlDateExpression(date);
 			} else {
 				return profile.getSqlTimestampExpression(date);
