@@ -16,7 +16,6 @@ import com.github.geequery.asm.MethodVisitor;
 
 import jef.accelerator.asm.ASMUtils;
 import jef.tools.Primitives;
-import jef.tools.reflect.UnsafeUtils;
 
 final class ASMHashGenerator extends ClassGenerator {
 	@SuppressWarnings("rawtypes")
@@ -239,7 +238,7 @@ final class ASMHashGenerator extends ClassGenerator {
 			byte[] data=generateProperty(i, fi,pname);
 			//DEBUG
 //			ASMAccessorFactory.saveClass(data, pname);
-			Class<?> clz= UnsafeUtils.defineClass(pname, data, 0, data.length, cl);
+			Class<?> clz= cl.defineClz(pname, data);
 			this.properTyClz[i]=clz;
 		}
 	}

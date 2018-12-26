@@ -24,7 +24,7 @@ public abstract class ClassGenerator implements Opcodes {
 	protected String beanType;
 	protected String accessorName;
 	protected String accessorType;
-	protected ClassLoader cl;
+	protected ClassLoaderAccessor cl;
 	protected FieldInfo[] fields;
 
 	protected ClassGenerator(Class<?> javaBean, String accessorName, FieldInfo[] fields, ClassLoader cl) {
@@ -35,7 +35,7 @@ public abstract class ClassGenerator implements Opcodes {
 		this.accessorType = accessorName.replace('.', '/');
 
 		this.fields = fields;
-		this.cl = cl;
+		this.cl = new ClassLoaderAccessor(cl);
 	}
 
 	abstract byte[] generate();
