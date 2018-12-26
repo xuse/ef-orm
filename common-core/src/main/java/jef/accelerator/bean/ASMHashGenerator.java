@@ -21,7 +21,7 @@ final class ASMHashGenerator extends ClassGenerator {
 	@SuppressWarnings("rawtypes")
 	private Class[] properTyClz;
 	
-	public ASMHashGenerator(Class<?> javaBean, String accessorName, FieldInfo[] fields,ClassLoader cl) {
+	public ASMHashGenerator(Class<?> javaBean, String accessorName, FieldInfo[] fields,ClassLoaderAccessor cl) {
 		super(javaBean,accessorName,fields,cl);
 		this.properTyClz = new Class[fields.length];
 	}

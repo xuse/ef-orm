@@ -27,7 +27,7 @@ public abstract class ClassGenerator implements Opcodes {
 	protected ClassLoaderAccessor cl;
 	protected FieldInfo[] fields;
 
-	protected ClassGenerator(Class<?> javaBean, String accessorName, FieldInfo[] fields, ClassLoader cl) {
+	protected ClassGenerator(Class<?> javaBean, String accessorName, FieldInfo[] fields, ClassLoaderAccessor cl) {
 		this.beanClass = javaBean;
 		this.beanType = getType(beanClass);
 

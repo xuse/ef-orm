@@ -23,7 +23,7 @@ import jef.tools.Primitives;
 
 final class ASMSwitcherGenerator extends ClassGenerator {
 
-	public ASMSwitcherGenerator(Class<?> beanClass, String accessorName, FieldInfo[] fields,ClassLoader cl) {
+	public ASMSwitcherGenerator(Class<?> beanClass, String accessorName, FieldInfo[] fields,ClassLoaderAccessor cl) {
 		super(beanClass,accessorName,fields,cl);
 	}
 
