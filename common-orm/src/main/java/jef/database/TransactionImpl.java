@@ -4,14 +4,13 @@ import java.sql.SQLException;
 
 import javax.persistence.PersistenceException;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+
 import jef.common.log.LogUtil;
 import jef.database.cache.CacheChain;
 import jef.database.cache.CacheImpl;
 import jef.database.innerpool.IConnection;
 import jef.database.support.TransactionTimedOutException;
-
-import org.easyframe.enterprise.spring.TransactionMode;
-import org.omg.CORBA.SystemException;
 
 public class TransactionImpl extends Transaction {
 	private boolean dirty;
@@ -311,7 +310,6 @@ public class TransactionImpl extends Transaction {
 	 * 事务的超时设置
 	 * 
 	 * @param timeout单位为秒
-	 * @throws SystemException
 	 */
 	public void setTimeout(int timeout) {
 		if (timeout > TIMEOUT_DEFAULT) {

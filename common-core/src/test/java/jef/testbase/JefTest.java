@@ -409,26 +409,6 @@ public class JefTest extends Assert {
 		// m2=Multimaps.synchronizedListMultimap(ArrayListMultimap.create());
 	}
 
-	@Test
-	@Ignore
-	public void main1() {
-		if (ThreadUtils.tryLock(this)) {
-			System.out.println("获得锁");
-			methodLocked(0);
-			// 同步快出来后，如果没有手工释放锁，那么其实没有释放，因此手工释放是必须的
-			ThreadUtils.unlock(this);
-		}
-		Thread t = new Thread() {
-			@Override
-			public void run() {
-				System.out.println(ThreadUtils.isLocked(JefTest.this));
-				methodLocked(1);
-			}
-		};
-		t.start();
-
-		ThreadUtils.doSleep(10000);
-	}
 
 	@Test
 	public void testStringCacheMap() {

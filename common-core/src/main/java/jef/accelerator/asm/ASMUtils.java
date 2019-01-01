@@ -8,7 +8,7 @@ import com.github.geequery.asm.ClassReader;
 import com.github.geequery.asm.MethodVisitor;
 import com.github.geequery.asm.Opcodes;
 
-import jef.tools.reflect.BeanUtils;
+import jef.tools.Primitives;
 
 public class ASMUtils {
 
@@ -127,7 +127,7 @@ public class ASMUtils {
 	 * @param rawType
 	 */
 	public static void getPrimitiveType(MethodVisitor mw, Class<?> rawType) {
-		Class<?> wrapClz = BeanUtils.toWrapperClass(rawType);
+		Class<?> wrapClz = Primitives.toWrapperClass(rawType);
 		mw.visitFieldInsn(Opcodes.GETSTATIC, getType(wrapClz), "TYPE", "Ljava/lang/Class;");
 	}
 
@@ -151,7 +151,7 @@ public class ASMUtils {
 	 *            原生类型
 	 */
 	public static void doWrap(MethodVisitor mw, Class<?> type) {
-		Class<?> wrapped = BeanUtils.toWrapperClass(type);
+		Class<?> wrapped = Primitives.toWrapperClass(type);
 		mw.visitMethodInsn(Opcodes.INVOKESTATIC, getType(wrapped), "valueOf", getMethodDesc(wrapped, type));
 	}
 
@@ -185,7 +185,7 @@ public class ASMUtils {
 		default:
 			throw new IllegalArgumentException();
 		}
-		mw.visitMethodInsn(Opcodes.INVOKESTATIC, getType(w), "valueOf", getMethodDesc(w, BeanUtils.toPrimitiveClass(w)));
+		mw.visitMethodInsn(Opcodes.INVOKESTATIC, getType(w), "valueOf", getMethodDesc(w, Primitives.toPrimitiveClass(w)));
 	}
 
 	public static int getLoadIns(com.github.geequery.asm.Type paramType) {

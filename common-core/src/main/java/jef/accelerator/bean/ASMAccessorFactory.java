@@ -17,7 +17,6 @@ import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.ClassEx;
 import jef.tools.reflect.FieldEx;
 import jef.tools.reflect.MethodEx;
-import jef.tools.reflect.UnsafeUtils;
 
 /**
  * 用于生成动态访问者类（Accessor）的类工厂。
@@ -28,36 +27,47 @@ import jef.tools.reflect.UnsafeUtils;
 final class ASMAccessorFactory implements BeanAccessorFactory {
 	@SuppressWarnings("rawtypes")
 	private static final Map<Class, BeanAccessor> map = new IdentityHashMap<Class, BeanAccessor>();
+	
+	private final ClassLoaderAccessor cl;
+	
+	
+	public ASMAccessorFactory() {
+		ClassLoader cl = Thread.currentThread().getContextClassLoader();
+		if (cl == null)
+			cl = BeanAccessorFactory.class.getClassLoader();
+		this.cl=new ClassLoaderAccessor(cl);
+	}
 
-	public BeanAccessor getBeanAccessor(Class<?> javaBean) {
-		if (javaBean.isPrimitive()) {
-			throw new IllegalArgumentException(javaBean + " invalid!");
+	public BeanAccessor getBeanAccessor(Class<?> clazz) {
+		if (clazz.isPrimitive()) {
+			throw new IllegalArgumentException(clazz + " invalid!");
 		}
-		BeanAccessor ba = map.get(javaBean);
+		BeanAccessor ba = map.get(clazz);
 		if (ba != null)
 			return ba;
-		synchronized (map) {
-			ba = map.get(javaBean);
-			if(ba==null){
-				ba = generateAccessor(javaBean);
-				map.put(javaBean, ba);	
-			}
+		try {
+			synchronized (map) {
+				ba = map.get(clazz);
+				if(ba==null){
+					ba = generateAccessor(clazz);
+					map.put(clazz, ba);	
+				}
+			}	
+		}catch(Throwable e) {
+			throw new IllegalStateException("Generate ASM Accessor error:"+clazz.getName() ,e);
 		}
+		
 		return ba;
 	}
 
 	private BeanAccessor generateAccessor(Class<?> javaClz) {
 		String clzName = javaClz.getName().replace('.', '_');
-		ClassLoader cl = Thread.currentThread().getContextClassLoader();
-		if (cl == null)
-			cl = BeanAccessorFactory.class.getClassLoader();
-
 		Class<?> cls = null;
 		try {
 			cls = cl.loadClass(clzName);
 		} catch (ClassNotFoundException e1) {
 		}
-
+		
 		FieldInfo[] fields = getFields(javaClz);
 		boolean isHashProperty = sortFields(fields);
 		ClassGenerator asm;
@@ -71,7 +81,7 @@ final class ASMAccessorFactory implements BeanAccessorFactory {
 			clzdata = asm.generate();
 			// DEBUG
 			//saveClass(clzdata, clzName);
-			cls = UnsafeUtils.defineClass(clzName, clzdata, 0, clzdata.length, cl);
+			cls = cl.defineClz(clzName, clzdata);
 			if (cls == null) {
 				throw new RuntimeException("Dynamic class accessor for " + javaClz + " failure!");
 			}

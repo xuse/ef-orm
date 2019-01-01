@@ -77,8 +77,8 @@ public class BeanWrapperTest {
 		System.out.println(ba.getType());
 		
 		BeanWrapper bw=BeanWrapper.wrap(new Foo());
-		bw.setPropertyValue("ab1", null);
-		System.out.println(bw.getPropertyValue("ab1"));
+		bw.setPropertyValue("name", null);
+		System.out.println(bw.getPropertyValue("name"));
 		
 		bw=BeanWrapper.wrap(new BeanForTest());
 		bw.setPropertyValue("id", null);

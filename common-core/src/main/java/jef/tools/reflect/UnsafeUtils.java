@@ -2,7 +2,6 @@ package jef.tools.reflect;
 
 import java.lang.reflect.Field;
 
-import jef.tools.Assert;
 import sun.misc.Unsafe;
 
 /**
@@ -55,29 +54,29 @@ public final class UnsafeUtils {
 	}
 	
 
-	/**
-	 * 用指定的ClassLoader加载二进制数据为class
-	 * @param className
-	 * @param data
-	 * @param i
-	 * @param length
-	 * @param classLoader
-	 * @return
-	 */
-	public final static Class<?> defineClass(String className, byte[] data, int i, int length, ClassLoader classLoader) {
-		if(data==null || data.length==0){
-			throw new IllegalArgumentException("the input class data is empty!");
-		}
-		if(length<1 || i+length<data.length){
-			throw new IllegalArgumentException("the input length is invalid!");
-		}
-		if(className==null || className.length()==0){
-			throw new IllegalArgumentException("the class name is invalid!"+className);
-		}
-		Assert.notNull(classLoader);
-//		LogUtil.debug("Unsafe load class ["+className+"] to "+classLoader);
-		return unsafe.defineClass(className, data, i, length, classLoader, null);
-	}
+//	/**
+//	 * 用指定的ClassLoader加载二进制数据为class
+//	 * @param className
+//	 * @param data
+//	 * @param i
+//	 * @param length
+//	 * @param classLoader
+//	 * @return
+//	 */
+//	public final static Class<?> defineClass(String className, byte[] data, int i, int length, ClassLoader classLoader) {
+//		if(data==null || data.length==0){
+//			throw new IllegalArgumentException("the input class data is empty!");
+//		}
+//		if(length<1 || i+length<data.length){
+//			throw new IllegalArgumentException("the input length is invalid!");
+//		}
+//		if(className==null || className.length()==0){
+//			throw new IllegalArgumentException("the class name is invalid!"+className);
+//		}
+//		Assert.notNull(classLoader);
+////		LogUtil.debug("Unsafe load class ["+className+"] to "+classLoader);
+//		return unsafe.defineClass(className, data, i, length, classLoader, null);
+//	}
 	
 	/**
 	 * 返回String对象中的char[]数组。<br>

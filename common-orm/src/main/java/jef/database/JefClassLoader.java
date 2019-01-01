@@ -22,22 +22,19 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.LoggerFactory;
+
 import jef.codegen.EnhanceTaskASM;
 import jef.common.log.LogUtil;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
-import jef.tools.reflect.UnsafeUtils;
 import jef.tools.resource.ClasspathLoader;
-
-import org.slf4j.LoggerFactory;
 
 public class JefClassLoader extends URLClassLoader {
 	private org.slf4j.Logger log=LoggerFactory.getLogger(this.getClass());
-	URLClassLoader secondary;
 
 	public JefClassLoader(URL[] urls, ClassLoader cl, URLClassLoader original) {
 		super(urls, cl);
-		this.secondary = original;
 		// ucp = new URLClassPath(urls);
 	}
 
@@ -74,11 +71,7 @@ public class JefClassLoader extends URLClassLoader {
 		}
 		
 		if(log.isDebugEnabled())log.trace("Runtime Enhance Class For Easyframe ORM:" + name);
-		if (secondary == null) {
-			return this.defineClass(name,enhanced, 0, enhanced.length);
-		} else {
-			return UnsafeUtils.defineClass(name,enhanced, 0, enhanced.length,secondary);
-		}
+		return this.defineClass(name,enhanced, 0, enhanced.length);
 	}
 
 	public static void main(String[] args) {

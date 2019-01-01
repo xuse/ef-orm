@@ -1,0 +1,677 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  
+  
+  	<artifactId>ams</artifactId>
+	<packaging>jar</packaging>	
+    <version>1.2.0-SNAPSHOT</version>
+	<name>ams</name>
+	
+	<parent>
+		<groupId>com.ailk.openbilling.ams</groupId>
+		<artifactId>ams-system</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	
+	<repositories>
+		<repository>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>always</updatePolicy>
+			</snapshots>
+			<id>central</id>
+			<url>*</url>
+		</repository>
+	</repositories>
+	<dependencies>
+		<dependency>
+			<groupId>javax</groupId>
+			<artifactId>ejb-api</artifactId>
+			<version>3.0.1</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax</groupId>
+			<artifactId>ejb-interceptor</artifactId>
+			<version>1.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.oracle</groupId>
+			<artifactId>ojdbc5</artifactId>
+			<version>1.0</version>
+		</dependency>
+		
+		<!-- 框架依赖 
+		<dependency>
+			<groupId>ailk.easyframe</groupId>
+			<artifactId>common-web</artifactId>
+			<version>${easyframe.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>ailk.easyframe</groupId>
+			<artifactId>cpf-ts-interface</artifactId>
+			<version>${easyframe.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>common-core</artifactId>
+					<groupId>ailk.easyframe</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		-->
+
+		<!-- 计费帐处sdl依赖 
+		<dependency>
+			<groupId>com.ailk.openbilling.topup_payment</groupId>
+			<artifactId>consume-sdl</artifactId>
+			<version>${consume-sdl.version}</version>
+		</dependency>
+		-->
+		<!-- 上海帐管核心ams-common-svr依赖 -->
+		<dependency>
+			<groupId>com.ailk.openbilling.ams</groupId>
+			<artifactId>ams-common-svr</artifactId>
+			<classifier>api</classifier>
+			<version>${project.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>account-common-svr</artifactId>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>account-receivable</artifactId>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>		
+		<dependency>
+			<groupId>com.ailk.openbilling.ams</groupId>
+			<artifactId>ams-common-svr</artifactId>
+			<classifier>impl</classifier>
+			<version>${project.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>account-common-svr</artifactId>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>account-receivable</artifactId>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		
+		<!-- 上海帐管核心ams-core依赖 -->
+		<dependency>
+			<groupId>com.ailk.openbilling.ams</groupId>
+			<artifactId>ams-core</artifactId>
+			<classifier>api</classifier>
+			<version>${project.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>account-common-svr</artifactId>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>account-receivable</artifactId>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>		
+		<dependency>
+			<groupId>com.ailk.openbilling.ams</groupId>
+			<artifactId>ams-core</artifactId>
+			<classifier>impl</classifier>
+			<version>${project.version}</version>
+			<exclusions>
+				<exclusion>
+					<artifactId>account-common-svr</artifactId>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+				</exclusion>
+				<exclusion>
+					<artifactId>account-receivable</artifactId>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!-- 海外核心依赖 -->
+		<dependency>
+			<groupId>com.ailk.openbilling.topup_payment</groupId>
+			<artifactId>account-receivable</artifactId>
+			<version>${account.version}</version>
+			<classifier>api</classifier>
+			<exclusions>
+				<exclusion>
+					<groupId>ailk.easyframe</groupId>
+					<artifactId>common-web</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.ims</groupId>
+					<artifactId>ims-sdl</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.ims</groupId>
+					<artifactId>interface</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>ailk.easyframe</groupId>
+					<artifactId>interface</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.ims</groupId>
+					<artifactId>interface</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.ims</groupId>
+					<artifactId>sync-client</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+					<artifactId>consume-sdl</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+					<artifactId>ams</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>com.ailk.openbilling.topup_payment</groupId>
+			<artifactId>account-receivable</artifactId>
+			<version>${account.version}</version>
+			<classifier>impl</classifier>
+			<exclusions>
+				<exclusion>
+					<groupId>ailk.easyframe</groupId>
+					<artifactId>common-web</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.ims</groupId>
+					<artifactId>ims-sdl</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.ims</groupId>
+					<artifactId>interface</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>ailk.easyframe</groupId>
+					<artifactId>interface</artifactId>
+				</exclusion>			
+				<exclusion>
+					<groupId>com.ailk.openbilling.ims</groupId>
+					<artifactId>sync-client</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+					<artifactId>consume-sdl</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+					<artifactId>ams</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.ailk.openbilling.topup_payment</groupId>
+			<artifactId>account-common-svr</artifactId>
+			<version>${account.version}</version>
+			<classifier>api</classifier>
+			<exclusions>
+				<exclusion>
+					<groupId>ailk.easyframe</groupId>
+					<artifactId>common-web</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.ims</groupId>
+					<artifactId>ims-sdl</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.ims</groupId>
+					<artifactId>interface</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>ailk.easyframe</groupId>
+					<artifactId>interface</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.ims</groupId>
+					<artifactId>interface</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.ims</groupId>
+					<artifactId>sync-client</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+					<artifactId>consume-sdl</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+					<artifactId>ams</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>		
+		
+		<!-- 信息管理的代码库
+		<dependency>
+			<groupId>com.ailk.openbilling.ims</groupId>
+			<artifactId>ims-intfsh</artifactId>
+			<version>${ims.version}</version>
+			<classifier>impl</classifier>
+			<scope>compile</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>ailk.easyframe</groupId>
+					<artifactId>common-web</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>ailk.easyframe</groupId>
+					<artifactId>common-orm</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+					<artifactId>account-receivable</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+					<artifactId>consume-sdl</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+					<artifactId>ams</artifactId>
+				</exclusion>
+				<exclusion>
+					<artifactId>common-core</artifactId>
+					<groupId>ailk.easyframe</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.ailk.openbilling.ims</groupId>
+			<artifactId>ims-intfsh</artifactId>
+			<version>${ims.version}</version>
+			<classifier>api</classifier>
+			<scope>compile</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>ailk.easyframe</groupId>
+					<artifactId>common-web</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>ailk.easyframe</groupId>
+					<artifactId>common-orm</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+					<artifactId>account-receivable</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+					<artifactId>consume-sdl</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.ailk.openbilling.topup_payment</groupId>
+					<artifactId>ams</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		 -->
+		<!-- crm单点登录的jar包
+		<dependency>
+			<groupId>com.asiainfo.shsso_client</groupId>
+			<artifactId>shsso-client</artifactId>
+			<version>1.0.0-RELEASE</version>
+		</dependency>
+		 -->
+		<!-- other: debug in eclipse JEF Web Application -->
+		<dependency>
+			<groupId>org.jef</groupId>
+			<artifactId>jef-jetty</artifactId>
+			<version>7.31</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.jef</groupId>
+			<artifactId>jef-jasper</artifactId>
+			<version>1.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.jef</groupId>
+			<artifactId>xml-apis</artifactId>
+			<version>2.0.2</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>xerces</groupId>
+			<artifactId>xerces</artifactId>
+			<version>3.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>2.5</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet.jsp</groupId>
+			<artifactId>jsp-api</artifactId>
+			<version>2.1</version>
+			<scope>provided</scope>
+		</dependency>
+		<!-- other: debug in eclipse END -->
+		
+	</dependencies>
+	<profiles>
+		<profile>
+			<id>devel</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+		</profile>
+		<profile>
+			<id>publish</id>
+			<build>
+				<plugins>					
+					<plugin>
+						<groupId>ailk.easyframe</groupId>
+						<artifactId>easybuilder_maven_plugin</artifactId>
+						<version>${easybuilder.version}</version>
+						<executions>
+							<execution>
+								<id>all_generate</id>
+								<phase>generate-sources</phase>
+								<goals>
+									<goal>generate</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>all_enhance</id>
+								<phase>process-classes</phase>
+								<goals>
+									<goal>enhance</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>api</id>
+								<phase>process-classes</phase>
+								<goals>
+									<goal>enhance</goal>
+								</goals>
+								<configuration>
+									<path>${basedir}/target/api/classes</path>
+								</configuration>
+							</execution>
+							<execution>
+								<id>impl</id>
+								<phase>process-classes</phase>
+								<goals>
+									<goal>enhance</goal>
+								</goals>
+								<configuration>
+									<path>${basedir}/target/impl/classes</path>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>build-helper-maven-plugin</artifactId>
+						<version>1.5</version>
+						<executions>
+							<execution>
+							    <!-- 告诉maven 要向服务器上传这些包 -->
+								<id>attach-artifact</id>
+								<phase>package</phase>
+								<goals>
+									<goal>attach-artifact</goal>
+								</goals>
+								<configuration>
+									<artifacts>										
+										<artifact>
+											<file>target/${project.name}-${project.version}-impl.jar</file>
+											<type>jar</type>
+											<classifier>impl</classifier>
+										</artifact>
+										<artifact>
+											<file>target/${project.name}-${project.version}-api.jar</file>
+											<type>jar</type>
+											<classifier>api</classifier>
+										</artifact>
+									</artifacts>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+										
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<version>1.6</version>
+						<dependencies>
+							<dependency>
+								<groupId>com.sun</groupId>
+								<artifactId>tools</artifactId>
+								<version>1.5.0</version>
+								<scope>system</scope>
+								<systemPath>${java.home}/../lib/tools.jar</systemPath>
+							</dependency>
+						</dependencies>
+						<executions>
+							
+							<!-- 先编译出class -->
+							<execution>
+								<id>compile_class</id>
+								<phase>compile</phase>
+								<goals>
+									<goal>run</goal>
+								</goals>
+								<configuration>
+									<tasks>
+										<property name="compile_classpath" refid="maven.compile.classpath" />
+										<!-- 编译api -->
+										<mkdir dir="target/api/classes" />
+										<javac debug="true" destdir="target/api/classes" source="1.5"
+											target="1.5">
+											<compilerarg line="-encoding UTF-8" />
+											<src path="framework" />
+											<classpath>
+												<pathelement location="target/classes" />
+												<pathelement path="${compile_classpath}" />
+											</classpath>
+										</javac>
+										<copy failonerror="false" includeEmptyDirs="false"
+											todir="target/api/classes">
+											<fileset dir="framework">
+												<exclude name="**/*.java" />
+											</fileset>
+										</copy>										
+										<mkdir dir="target/api/classes/META-INF/config" />
+										<copy failonerror="false" includeEmptyDirs="false" 
+											todir="target/api/classes/META-INF/config">
+											<fileset dir="config">
+											<include name="**/*.*" />
+											<exclude name="**/.svn" />
+										</fileset>
+										</copy>
+										<!-- 编译impl 包 -->
+										<mkdir dir="target/impl/classes" />
+										<javac debug="true" destdir="target/impl/classes"
+											source="1.5" target="1.5">
+											<compilerarg line="-encoding UTF-8" />
+											<src path="src/main/java" />
+											<classpath>
+												<pathelement location="target/classes" />
+												<pathelement path="${compile_classpath}" />
+											</classpath>
+										</javac>
+										<copy failonerror="false" includeEmptyDirs="false"
+											todir="target/impl/classes">
+											<fileset dir="src/main/resources">
+												<include name="**/*.*" />
+												<exclude name="**/client.properties" />
+												<exclude name="**/common-sdl.properties" />
+												<exclude name="**/interface_to_domain.properties" />
+												<exclude name="**/jef.properties" />
+												<exclude name="**/config-client.properties" />
+												<exclude name="**/sdltester_svr.properties" />
+												<exclude name="**/client.properties" />
+												<exclude name="**/log4j.properties" />
+												<exclude name="**/ts.xml" />
+											</fileset>
+										</copy>
+									</tasks>
+								</configuration>
+							</execution>
+							<!-- 增强由插件在process-classes阶段完成，后并打包 -->
+							<execution>
+								<id>package_class</id>
+								<phase>package</phase>
+								<goals>
+									<goal>run</goal>
+								</goals>
+								<configuration>
+									<tasks>
+										<!-- 生成单独api 包 -->
+										<jar destfile="target/${project.name}-${project.version}-api.jar">
+											<fileset dir="target/api/classes">
+												<include name="**/*.*" />
+											</fileset>
+										</jar>
+
+										<!-- 生成单独impl 包 -->
+										<jar destfile="target/${project.name}-${project.version}-impl.jar">
+											<fileset dir="target/impl/classes">
+												<include name="**/*.*" />
+											</fileset>
+										</jar>
+									</tasks>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+					
+					<!-- 覆盖率、健康度 -->			
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>findbugs-maven-plugin</artifactId>
+						<version>2.3.2</version>
+						<configuration>
+							<findbugsXmlOutput>true</findbugsXmlOutput>
+							<findbugsXmlWithMessages>true</findbugsXmlWithMessages>
+							<xmlOutput>true</xmlOutput>
+							<findbugsXmlOutputDirectory>target</findbugsXmlOutputDirectory>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>ailk.easyframe</groupId>
+				<artifactId>easybuilder_maven_plugin</artifactId>
+				<version>${easybuilder.version}</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>enhance</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3.2</version>
+				<configuration>
+					<source>1.5</source>
+					<target>1.5</target>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>1.5</version>
+				<executions>
+					<execution>
+						<id>add-source</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>add-source</goal>
+						</goals>
+						<configuration>
+							<sources>
+								<source>framework</source>
+							</sources>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			
+			<!-- 跳过Tests -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+			
+		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>ailk.easyframe</groupId>
+										<artifactId>easybuilder_maven_plugin</artifactId>
+										<versionRange>[1.0,)</versionRange>
+										<goals>
+											<goal>generate</goal>
+											<goal>enhance</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.codehaus.mojo</groupId>
+										<artifactId>build-helper-maven-plugin</artifactId>
+										<versionRange>[1.0,)</versionRange>
+										<goals>
+											<goal>add-source</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+</project>

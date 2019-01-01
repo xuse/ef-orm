@@ -28,6 +28,7 @@ import jef.common.log.LogUtil;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.Exceptions;
+import jef.tools.Primitives;
 import jef.tools.StringUtils;
 
 public class BeanUtils {
@@ -47,7 +48,8 @@ public class BeanUtils {
 
 	/**
 	 * 将bean的可读属性变为map（不递归）<br>
-	 * 使用ASM快速访问器实现。只会访问 field / getter /setter俱全的完整属性。如果要访问仅有getter的属性，请用{@link #describeByGetter(Object)}
+	 * 使用ASM快速访问器实现。只会访问 field / getter
+	 * /setter俱全的完整属性。如果要访问仅有getter的属性，请用{@link #describeByGetter(Object)}
 	 * 
 	 * @param obj
 	 * @return 对应的Map
@@ -58,45 +60,45 @@ public class BeanUtils {
 		BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(obj.getClass());
 		return ba.convert(obj);
 	}
-	
+
 	/**
-	 * 将bean的可读属性变为map（不递归）
-	 * 根据方法中所有public的getter方法来访问Bean。
+	 * 将bean的可读属性变为map（不递归） 根据方法中所有public的getter方法来访问Bean。
+	 * 
 	 * @param obj
 	 * @return
 	 */
-	public static Map<String,Object> describeByGetter(Object obj){
+	public static Map<String, Object> describeByGetter(Object obj) {
 		if (obj == null)
 			return Collections.emptyMap();
-		Map<String,Object> map=new HashMap<String,Object>();
-		for(Method method: obj.getClass().getMethods()) {
-			if(Modifier.isStatic(method.getModifiers())) {
+		Map<String, Object> map = new HashMap<String, Object>();
+		for (Method method : obj.getClass().getMethods()) {
+			if (Modifier.isStatic(method.getModifiers())) {
 				continue;
 			}
-			if(method.getParameterTypes().length>0) {
+			if (method.getParameterTypes().length > 0) {
 				continue;
 			}
-			String name=method.getName();
+			String name = method.getName();
 			String property;
-			if(name.startsWith("get") && name.length()>3) {
-				property=StringUtils.uncapitalize(name.substring(3));
-			}else if(name.startsWith("is") && name.length()>2) {
-				if(method.getReturnType()==Boolean.class ||method.getReturnType()==boolean.class) {
-					property=StringUtils.uncapitalize(name.substring(2));
-				}else {
+			if (name.startsWith("get") && name.length() > 3) {
+				property = StringUtils.uncapitalize(name.substring(3));
+			} else if (name.startsWith("is") && name.length() > 2) {
+				if (method.getReturnType() == Boolean.class || method.getReturnType() == boolean.class) {
+					property = StringUtils.uncapitalize(name.substring(2));
+				} else {
 					continue;
 				}
-			}else {
+			} else {
 				continue;
 			}
 			try {
 				map.put(property, method.invoke(obj));
 			} catch (IllegalArgumentException e) {
-				throw new SimpleException("Error accessing method "+ method.toString(),e);
+				throw new SimpleException("Error accessing method " + method.toString(), e);
 			} catch (IllegalAccessException e) {
-				throw new SimpleException("Error accessing method "+ method.toString(),e);
+				throw new SimpleException("Error accessing method " + method.toString(), e);
 			} catch (InvocationTargetException e) {
-				throw new SimpleException("Error accessing method "+ method.toString(),e.getTargetException());
+				throw new SimpleException("Error accessing method " + method.toString(), e.getTargetException());
 			}
 		}
 		return map;
@@ -120,6 +122,7 @@ public class BeanUtils {
 	 * 将Map转换回Bean，map中类型可以和Bean中数据类型不太一致，因此将花费更多的时间进行动态的类型判断和转换
 	 * 
 	 * <br>
+	 * 
 	 * @see ConvertUtils#toProperType(Object, Class) 对每个属性都将使用此方法进行类型检查和转换。
 	 * 
 	 * @param map
@@ -258,7 +261,8 @@ public class BeanUtils {
 	}
 
 	/**
-	 * 获取指定的Field <li>Class.getField不会返回受保护的和私有的方法，getDeclaredField不会返回父类中的方法。
+	 * 获取指定的Field
+	 * <li>Class.getField不会返回受保护的和私有的方法，getDeclaredField不会返回父类中的方法。
 	 * 此处可以返回受保护的和私有的方法(并可以运行)。子类中没有的也会去父类中找。</li>
 	 * 
 	 * @param cls
@@ -365,57 +369,6 @@ public class BeanUtils {
 			LogUtil.exception(e);
 			return null;
 		}
-	}
-
-	/**
-	 * 包装类转换为原生类
-	 * 
-	 * @param wrapperClass
-	 * @return
-	 */
-	public static Class<?> toPrimitiveClass(Class<?> wrapperClass) {
-		if (wrapperClass == Integer.class) {
-			return Integer.TYPE;
-		} else if (wrapperClass == Byte.class) {
-			return Byte.TYPE;
-		} else if (wrapperClass == Short.class) {
-			return Short.TYPE;
-		} else if (wrapperClass == Long.class) {
-			return Long.TYPE;
-		} else if (wrapperClass == Float.class) {
-			return Float.TYPE;
-		} else if (wrapperClass == Double.class) {
-			return Double.TYPE;
-		} else if (wrapperClass == Character.class) {
-			return Character.TYPE;
-		} else if (wrapperClass == Boolean.class) {
-			return Boolean.TYPE;
-		} else {
-			return wrapperClass;
-		}
-	}
-
-	/**
-	 * 将8原生类型的类转换为对应的包装的类型。
-	 */
-	public static Class<?> toWrapperClass(Class<?> primitiveClass) {
-		if (primitiveClass == Integer.TYPE)
-			return Integer.class;
-		if (primitiveClass == Long.TYPE)
-			return Long.class;
-		if (primitiveClass == Double.TYPE)
-			return Double.class;
-		if (primitiveClass == Short.TYPE)
-			return Short.class;
-		if (primitiveClass == Float.TYPE)
-			return Float.class;
-		if (primitiveClass == Character.TYPE)
-			return Character.class;
-		if (primitiveClass == Byte.TYPE)
-			return Byte.class;
-		if (primitiveClass == Boolean.TYPE)
-			return Boolean.class;
-		return primitiveClass;
 	}
 
 	/**
@@ -611,10 +564,10 @@ public class BeanUtils {
 			if (inputTypes[i] == null)
 				continue;
 			if (methodTypes[i].isPrimitive()) { // 如果方法的参数类型 是 原生类型，则包装
-				methodTypes[i] = BeanUtils.toWrapperClass(methodTypes[i]);
+				methodTypes[i] = Primitives.toWrapperClass(methodTypes[i]);
 			}
 			if (inputTypes[i].isPrimitive()) { // 如果输入参数类型 是 原生类型，则包装
-				inputTypes[i] = BeanUtils.toWrapperClass(inputTypes[i]);
+				inputTypes[i] = Primitives.toWrapperClass(inputTypes[i]);
 			}
 			if (!methodTypes[i].isAssignableFrom(inputTypes[i])) {
 				return false;
@@ -641,12 +594,13 @@ public class BeanUtils {
 
 	/**
 	 * 返回符合参数的方法，和jdk的Class.getMethod(String name, Class...
-	 * parameterTypes)有以下区别： <li>
-	 * Class.getMethod不会返回受保护的和私有的方法，getDeclaredMethod不会返回父类中的方法。
-	 * 此处可以返回受保护的和私有的方法(并可以运行)。子类中没有的也会去父类中找。</li> <li>
-	 * Class.getMethod要求paramTypes完全一致才会返回方法，此处只要paramTypes兼容，即可返回。
+	 * parameterTypes)有以下区别：
+	 * <li>Class.getMethod不会返回受保护的和私有的方法，getDeclaredMethod不会返回父类中的方法。
+	 * 此处可以返回受保护的和私有的方法(并可以运行)。子类中没有的也会去父类中找。</li>
+	 * <li>Class.getMethod要求paramTypes完全一致才会返回方法，此处只要paramTypes兼容，即可返回。
 	 * (例如：方法输入参数为Object,JDK默认要求你用Object.class作为参数才能得到方法，此处你可以用Object的任意子类来得到方法)
-	 * </li> <li>此处的方法允许输入参数中的某个Class为null，表示放弃对该参数的兼容性检查。</li>
+	 * </li>
+	 * <li>此处的方法允许输入参数中的某个Class为null，表示放弃对该参数的兼容性检查。</li>
 	 * 
 	 * @param c
 	 * @param method
@@ -1102,14 +1056,18 @@ public class BeanUtils {
 		// 创建代理。
 		return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type }, new AnnotationInvocationHandler(type, data));
 	}
-	
+
 	/**
 	 * 将文本转换为需要的类型
-	 * @param value 文本
+	 * 
+	 * @param value
+	 *            文本
 	 * @param c
 	 * @param oldValue
 	 * @return
-	 * @deprecated use {@link ConvertUtils#toProperType(String, ClassEx, Object)} instead.
+	 * @deprecated use
+	 *             {@link ConvertUtils#toProperType(String, ClassEx, Object)}
+	 *             instead.
 	 */
 	public static Object toProperType(String value, ClassEx c, Object oldValue) {
 		return ConvertUtils.toProperType(value, c, oldValue);

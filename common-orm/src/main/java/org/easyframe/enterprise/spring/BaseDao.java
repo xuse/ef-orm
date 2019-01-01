@@ -6,16 +6,16 @@ import javax.annotation.PostConstruct;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.datasource.ConnectionHolder;
+import org.springframework.orm.jpa.EntityManagerFactoryUtils;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+
 import jef.database.ManagedTransactionImpl;
 import jef.database.Session;
 import jef.database.jpa.JefEntityManager;
 import jef.database.jpa.JefEntityManagerFactory;
 import jef.tools.Assert;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.datasource.ConnectionHolder;
-import org.springframework.orm.jpa.EntityManagerFactoryUtils;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * 所有DAO的基类

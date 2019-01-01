@@ -1,0 +1,266 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:util="http://www.springframework.org/schema/util" xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+			http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+			http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+			http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+			http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-2.0.xsd
+			http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd">
+
+
+	<!-- 如果修改了数据源，WebService接口configUserLogin实现需要修改 -->	
+    <bean id="mysqlSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">  
+      	<property name="driverClass">  
+       	 <value>com.mysql.jdbc.Driver</value>  
+      	</property>  
+      	<property name="jdbcUrl">
+        	<value>jdbc:mysql://127.0.0.1:3306/cms?useUnicode=true&amp;characterEncoding=utf-8&amp;zeroDateTimeBehavior=convertToNull</value>  
+     	</property>  
+     	<property name="user"><value>root</value></property>  
+      	<property name="password"><value>88075998</value></property>  
+      	<property name="initialPoolSize"><value>100</value></property>  
+    	<property name="minPoolSize"><value>100</value></property>  
+     	<property name="maxPoolSize"><value>300</value></property>  
+      	<property name="acquireIncrement"><value>10</value></property>  
+     	<property name="maxIdleTime"><value>3600</value></property>  
+      	<property name="maxStatements"><value>0</value></property> 
+    </bean>
+   
+    <!-- 如果修改了数据源，WebService接口configUserLogin实现需要修改 -->    
+    <bean id="oracleSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+		<property name="driverClass">
+      		<value>oracle.jdbc.driver.OracleDriver</value>
+      	</property>		
+      	<property name="jdbcUrl">
+      		<value>jdbc:oracle:thin:@172.7.53.20:1521:orcl</value>
+      	</property>
+      	<property name="user" value="cms_szpt"/>
+      	<property name="password" value="88075998"/>
+      	<property name="initialPoolSize"><value>100</value></property>  
+      	<property name="minPoolSize"><value>100</value></property>  
+      	<property name="maxPoolSize"><value>300</value></property>  
+     	<property name="acquireIncrement"><value>10</value></property>  
+      	<property name="maxIdleTime"><value>3600</value></property>  
+      	<property name="maxStatements"><value>0</value></property>      	
+	</bean>
+	<bean id="postgresqlSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">  
+      	<property name="driverClass">  
+       	 <value>org.postgresql.Driver</value>  
+      	</property>  
+      	<property name="jdbcUrl">
+            <value>jdbc:postgresql://127.0.0.1:5432/cms525</value>
+        </property>
+        <property name="user">
+            <value>postgres</value>
+        </property>
+        <property name="password">
+            <value>88075998</value>
+        </property>  
+      	<property name="initialPoolSize"><value>10</value></property>  
+    	<property name="minPoolSize"><value>10</value></property>  
+     	<property name="maxPoolSize"><value>30</value></property>  
+      	<property name="acquireIncrement"><value>10</value></property>  
+     	<property name="maxIdleTime"><value>3600</value></property>  
+      	<property name="maxStatements"><value>0</value></property> 
+    </bean>
+    
+    <bean id="sqlserverSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">  
+      	<property name="driverClass">  
+       	 <value>com.microsoft.sqlserver.jdbc.SQLServerDriver</value>  
+      	</property>  
+      	<property name="jdbcUrl">        	
+        	<value>jdbc:sqlserver://172.7.153.131:1433;databaseName=cms_up</value>
+     	</property>       	
+     	<property name="user"><value>cms_up_user</value></property>
+      	<property name="password"><value>88075998</value></property>  
+      	<property name="initialPoolSize"><value>20</value></property>  
+    	<property name="minPoolSize"><value>20</value></property>  
+     	<property name="maxPoolSize"><value>150</value></property>  
+      	<property name="acquireIncrement"><value>10</value></property>  
+     	<property name="maxIdleTime"><value>3600</value></property>  
+      	<property name="maxStatements"><value>0</value></property> 
+    </bean>
+    <!-- 
+    <bean id="proxoolSource" class="org.logicalcobwebs.proxool.ProxoolDataSource" destroy-method="close">
+        <property name="driver">
+            <value>com.mysql.jdbc.Driver</value>
+        </property>
+        <property name="driverUrl">
+            <value>jdbc:mysql://127.0.0.1:3306/cms_dl_std?useUnicode=true&amp;characterEncoding=utf-8&amp;zeroDateTimeBehavior=convertToNull</value>  
+        </property>
+                
+        <property name="user">
+            <value>root</value>
+        </property>
+        <property name="password">
+            <value>88075998</value>
+        </property>
+        
+        <property name="alias">
+            <value>cms</value>
+        </property>
+        <property name="prototypeCount">
+            <value>5</value>
+        </property>
+        <property name="maximumConnectionCount">
+            <value>200</value>
+        </property>
+        <property name="minimumConnectionCount">
+            <value>30</value>
+        </property>
+        <property name="maximumActiveTime">
+            <value>10000</value>
+        </property>
+        <property name="trace">
+            <value>true</value>
+        </property>
+        <property name="verbose">
+            <value>true</value>
+        </property>
+    </bean>
+	-->
+	
+	<!-- sessionFactory的名称不能修改，否则WebService接口configUserLogin实现需要修改 -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		<!--<property name="dataSource" ref="mysqlSource" />-->
+		<!--<property name="dataSource" ref="oracleSource" />-->
+		<property name="dataSource" ref="postgresqlSource" />
+		<!--<property name="dataSource" ref="sqlserverSource" />-->
+				
+		<property name="mappingLocations">
+			<list>
+				<value>classpath:/com/hikvision/cms/webservice/bo/*.hbm.xml</value>
+				<value>classpath:/com/hikvision/cms/webservice/bo/*/*.hbm.xml</value>
+				<value>classpath:/com/hikvision/cms/modules/*/domain/*.hbm.xml</value>		
+				<value>classpath:/com/hikvision/cms/modules/netbar/webservice/domain/*.hbm.xml</value>	
+				<value>classpath:jbpm.execution.hbm.xml</value>	
+				<value>classpath:jbpm.repository.hbm.xml</value>
+				<value>classpath:jbpm.task.hbm.xml</value>
+				<value>classpath:jbpm.history.hbm.xml</value>
+				<value>classpath:jbpm.identity.hbm.xml</value>	
+						
+			</list>
+		</property>
+				
+		<property name="annotatedClasses">
+			<list>
+				<value>com.hikvision.cms.modules.asset.domain.AssetRepair</value>
+				<value>com.hikvision.cms.modules.asset.domain.AssetApplyBuy</value>
+				<value>com.hikvision.cms.modules.asset.domain.AssetScrap</value>
+				<value>com.hikvision.cms.modules.asset.domain.AssetInfo</value>
+				<value>com.hikvision.cms.modules.asset.domain.AssetSequences</value>
+				<value>com.hikvision.cms.modules.asset.domain.Contractors</value>
+				<value>com.hikvision.cms.modules.tree.service.TreeService</value>
+				
+				<!-- start 卡口监控相关 -->
+				<value>com.hikvision.cms.modules.bayonet.domain.BayonetInfo</value>
+				<value>com.hikvision.cms.modules.bayonet.domain.BayonetCameraInfo</value>
+				<value>com.hikvision.cms.modules.bayonet.domain.BayonetPlateAlarm</value>
+				<value>com.hikvision.cms.modules.bayonet.domain.BayonetAlarmInfo</value>
+				<value>com.hikvision.cms.modules.bayonet.domain.BayonetVehiclePassInfo</value>
+				<value>com.hikvision.cms.modules.bayonet.domain.ServerInfo</value>
+				
+				<!-- start 案件管理相关 -->				
+				<value>com.hikvision.cms.modules.cases.domain.CaseInfo</value>
+				<value>com.hikvision.cms.modules.cases.domain.CasePerson</value>
+				<value>com.hikvision.cms.modules.cases.domain.CaseRecord</value>
+				<value>com.hikvision.cms.modules.cases.domain.CaseServer</value>
+				<value>com.hikvision.cms.modules.cases.domain.CaseLog</value>
+				<value>com.hikvision.cms.modules.cases.domain.CaseShare</value>
+				
+				<!-- start 备份管理相关 -->				
+				<value>com.hikvision.cms.modules.vrb.domain.VrbRecordSchedule</value>
+				<value>com.hikvision.cms.modules.vrb.domain.VrbServer</value>
+				
+			</list>			
+		</property>			
+		
+		<property name="hibernateProperties">
+			<props>			
+				<!--<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>-->				
+				<!--<prop key="hibernate.dialect">org.hibernate.dialect.OracleDialect</prop>-->
+				<prop key="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</prop>
+				<!--<prop key="hibernate.dialect">org.hibernate.dialect.SQLServerDialect</prop>-->
+				
+				<prop key="hibernate.connection.provider_class">org.hibernate.connection.C3P0ConnectionProvider</prop>
+				<prop key="hibernate.show_sql">false</prop>
+				<prop key="hibernate.format_sql">false</prop>
+				<!-- <prop key="hibernate.hbm2ddl.auto">update</prop> -->
+				<prop key="hibernate.cache.provider_class">org.hibernate.cache.EhCacheProvider</prop>
+				<prop key="hibernate.cache.use_query_cache">true</prop>				
+	            <prop key="hibernate.autoReconnect">true</prop>	            
+	            
+	            <!-- Hibernate JDBC and Connection Properties -->
+				<prop key="hibernate.jdbc.batch_size">50</prop>				
+				<prop key="hibernate.connection.autocommit">false</prop>
+				<prop key="hibernate.connection.release_mode">auto</prop>
+				<prop key="hibernate.bytecode.use_reflection_optimizer">false</prop>
+			</props>
+		</property>		
+	</bean>
+
+	<bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor">
+	</bean>	
+	
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+	
+	<!-- 打开AOP织入功能 -->
+    <aop:aspectj-autoproxy proxy-target-class="true"/> 
+    
+	<aop:config>	
+		<aop:pointcut id="servicesPointcut"
+			expression="execution(*  com.hikvision.cms.modules.*.service.*.*(..))" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="servicesPointcut" />
+	</aop:config>
+	
+	<aop:config>	
+		<aop:pointcut id="commonImplPointcut"
+			expression="execution(*  com.hikvision.cms.modules.*.domain.impl.*.*(..))" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="commonImplPointcut" />
+	</aop:config>
+
+	<aop:config>	
+		<aop:pointcut id="webServicesPointcut"
+			expression="execution(*  com.hikvision.cms.webservice.app.*.*(..))" />
+		<aop:advisor advice-ref="txAdvice"	pointcut-ref="webServicesPointcut" />
+	</aop:config>
+	
+	<aop:config>	
+		<aop:pointcut id="netbarServicesPointcut"
+			expression="execution(*  com.hikvision.cms.modules.netbar.app.*.*(..))" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="netbarServicesPointcut" />
+	</aop:config>
+	
+	<aop:config>	
+		<aop:pointcut id="netbarWebServicesPointcut"
+			expression="execution(*  com.hikvision.cms.modules.netbar.webservice.app.*.*(..))" />
+		<aop:advisor advice-ref="txAdvice"	pointcut-ref="netbarWebServicesPointcut" />
+	</aop:config>
+
+	<tx:advice id="txAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="user*" propagation="REQUIRED"/>
+			<tx:method name="add*" propagation="REQUIRED"/>
+			<tx:method name="modify*" propagation="REQUIRED"/>
+			<tx:method name="insert*" propagation="REQUIRED"/>
+			<tx:method name="update*" propagation="REQUIRED"/>
+			<tx:method name="delete*" propagation="REQUIRED"/>
+			<tx:method name="remove*" propagation="REQUIRED"/>
+			<tx:method name="save*" propagation="REQUIRED"/>
+			<tx:method name="get*" propagation="SUPPORTS" read-only="true"/>
+			<tx:method name="find*" propagation="SUPPORTS" read-only="true"/>
+			<tx:method name="noSupport*" propagation="NOT_SUPPORTED"/>
+			<tx:method name="*" propagation="SUPPORTS"/>
+		</tx:attributes>
+	</tx:advice>
+	<!-- 方言 beans -->
+	<import resource="dialect/dialect-postgresql-beans.xml"/>
+	<!--<import resource="dialect/dialect-sqlserver-beans.xml"/>-->
+</beans>

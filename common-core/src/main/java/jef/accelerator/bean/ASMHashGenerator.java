@@ -15,14 +15,13 @@ import com.github.geequery.asm.Label;
 import com.github.geequery.asm.MethodVisitor;
 
 import jef.accelerator.asm.ASMUtils;
-import jef.tools.reflect.BeanUtils;
-import jef.tools.reflect.UnsafeUtils;
+import jef.tools.Primitives;
 
 final class ASMHashGenerator extends ClassGenerator {
 	@SuppressWarnings("rawtypes")
 	private Class[] properTyClz;
 	
-	public ASMHashGenerator(Class<?> javaBean, String accessorName, FieldInfo[] fields,ClassLoader cl) {
+	public ASMHashGenerator(Class<?> javaBean, String accessorName, FieldInfo[] fields,ClassLoaderAccessor cl) {
 		super(javaBean,accessorName,fields,cl);
 		this.properTyClz = new Class[fields.length];
 	}
@@ -239,7 +238,7 @@ final class ASMHashGenerator extends ClassGenerator {
 			byte[] data=generateProperty(i, fi,pname);
 			//DEBUG
 //			ASMAccessorFactory.saveClass(data, pname);
-			Class<?> clz= UnsafeUtils.defineClass(pname, data, 0, data.length, cl);
+			Class<?> clz= cl.defineClz(pname, data);
 			this.properTyClz[i]=clz;
 		}
 	}
@@ -276,7 +275,7 @@ final class ASMHashGenerator extends ClassGenerator {
 			mw.visitIntInsn(ALOAD,2);	//S2
 			
 			if(fi.isPrimitive()){
-				Class<?> wrpped=BeanUtils.toWrapperClass(fi.getRawType());
+				Class<?> wrpped=Primitives.toWrapperClass(fi.getRawType());
 				mw.visitTypeInsn(CHECKCAST, getType(wrpped));	//S2
 				ASMUtils.doUnwrap(mw, fi.getRawType(), wrpped);	//S2
 			}else{

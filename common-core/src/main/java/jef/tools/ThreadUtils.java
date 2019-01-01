@@ -19,7 +19,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import jef.common.log.LogUtil;
-import jef.tools.reflect.UnsafeUtils;
 
 /**
  * 用于并发编程得的若干简单小工具
@@ -136,49 +135,50 @@ public abstract class ThreadUtils {
 		}
 	}
 
-	/**
-	 * 判断当前该对象是否已锁。<br> 注意在并发场景下，这一操作只能反映瞬时的状态，仅用于检测，并不能认为本次检测该锁空闲，紧接着的代码就能得到锁。
-	 * 
-	 * @param obj
-	 * @return
-	 */
-	@SuppressWarnings("restriction")
-	public static boolean isLocked(Object obj) {
-		sun.misc.Unsafe unsafe = UnsafeUtils.getUnsafe();
-		if (unsafe.tryMonitorEnter(obj)) {
-			unsafe.monitorExit(obj);
-			return false;
-		}
-		return true;
-	}
-
-	/**
-	 * 在执行一个同步方法前，可以手工得到锁。<p>
-	 * 
-	 * 这个方法可以让你在进入同步方法或同步块之前多一个选择的机会。因为这个方法不会阻塞，如果锁无法得到，会返回false。
-	 * 如果返回true，证明你可以无阻塞的进入后面的同步方法或同步块。<p>
-	 * 
-	 * 要注意，用这个方法得到的锁不会自动释放（比如在同步块执行完毕后不会释放），必须通过调用unlock(Object)方法才能释放。 需小心使用。<p>
-	 * 
-	 * @param obj
-	 * @return 如果锁得到了，返回true，如果锁没有得到到返回false
-	 */
-	@SuppressWarnings("restriction")
-	public static boolean tryLock(Object obj) {
-		sun.misc.Unsafe unsafe = UnsafeUtils.getUnsafe();
-		return unsafe.tryMonitorEnter(obj);
-	}
-
-	/**
-	 * 释放因为lock/tryLock方法得到的锁
-	 * 
-	 * @param obj
-	 */
-	@SuppressWarnings("restriction")
-	public static void unlock(Object obj) {
-		sun.misc.Unsafe unsafe = UnsafeUtils.getUnsafe();
-		unsafe.monitorExit(obj);
-	}
+	//2018-12-28.JDK 11中不支持这些方法
+//	/**
+//	 * 判断当前该对象是否已锁。<br> 注意在并发场景下，这一操作只能反映瞬时的状态，仅用于检测，并不能认为本次检测该锁空闲，紧接着的代码就能得到锁。
+//	 * 
+//	 * @param obj
+//	 * @return
+//	 */
+//	@SuppressWarnings("restriction")
+//	public static boolean isLocked(Object obj) {
+//		sun.misc.Unsafe unsafe = UnsafeUtils.getUnsafe();
+//		if (unsafe.tryMonitorEnter(obj)) {
+//			unsafe.monitorExit(obj);
+//			return false;
+//		}
+//		return true;
+//	}
+//
+//	/**
+//	 * 在执行一个同步方法前，可以手工得到锁。<p>
+//	 * 
+//	 * 这个方法可以让你在进入同步方法或同步块之前多一个选择的机会。因为这个方法不会阻塞，如果锁无法得到，会返回false。
+//	 * 如果返回true，证明你可以无阻塞的进入后面的同步方法或同步块。<p>
+//	 * 
+//	 * 要注意，用这个方法得到的锁不会自动释放（比如在同步块执行完毕后不会释放），必须通过调用unlock(Object)方法才能释放。 需小心使用。<p>
+//	 * 
+//	 * @param obj
+//	 * @return 如果锁得到了，返回true，如果锁没有得到到返回false
+//	 */
+//	@SuppressWarnings("restriction")
+//	public static boolean tryLock(Object obj) {
+//		sun.misc.Unsafe unsafe = UnsafeUtils.getUnsafe();
+//		return unsafe.tryMonitorEnter(obj);
+//	}
+//
+//	/**
+//	 * 释放因为lock/tryLock方法得到的锁
+//	 * 
+//	 * @param obj
+//	 */
+//	@SuppressWarnings("restriction")
+//	public static void unlock(Object obj) {
+//		sun.misc.Unsafe unsafe = UnsafeUtils.getUnsafe();
+//		unsafe.monitorExit(obj);
+//	}
 
 	/**
 	 * 对CountDownLatch进行等待。如果正常退出返回true，异常退出返回false
