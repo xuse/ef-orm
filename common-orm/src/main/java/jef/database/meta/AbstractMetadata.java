@@ -213,8 +213,8 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		return escape ? DbUtils.escapeColumn(profile, name) : name;
 	}
 
-	private DbTable cachedTable;
-	private DatabaseDialect bindProfile;
+	private volatile DbTable cachedTable;
+	private volatile DatabaseDialect bindProfile;
 	protected KeyDimension pkDim;
 
 	public DbTable getBaseTable(DatabaseDialect profile) {
