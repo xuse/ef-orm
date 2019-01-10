@@ -819,9 +819,13 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		if (classname == null) {
 			throw new IllegalArgumentException("the dbms '" + dbmsName + "' is not supported yet");
 		}
+		DatabaseDialect result;
+		if((result=ITEMS.get(dbmsName))!=null) {
+			return result;
+		}
 		try {
 			Class<?> c = Class.forName(classname);
-			DatabaseDialect result = (DatabaseDialect) c.newInstance();
+			result = (DatabaseDialect) c.newInstance();
 			ITEMS.put(dbmsName, result);
 			return result;
 		} catch (RuntimeException e) {
