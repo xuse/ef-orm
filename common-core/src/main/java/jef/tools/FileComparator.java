@@ -18,11 +18,19 @@ import jef.common.log.LogUtil;
 public abstract class FileComparator {
 	public abstract boolean equals(File source, File target);
 
+	@Deprecated
 	protected boolean compareCrc(File source, File target) {
 		String a = StringUtils.getCRC(IOUtils.getInputStream(source));
 		String b = StringUtils.getCRC(IOUtils.getInputStream(target));
 		return a.equals(b);
 	}
+	
+	protected boolean compareMd5(File source, File target) {
+		String a = StringUtils.getMD5(IOUtils.getInputStream(source));
+		String b = StringUtils.getMD5(IOUtils.getInputStream(target));
+		return a.equals(b);
+	}
+
 
 	protected boolean compareAll(File source, File target) {
 		byte[] buf1 = new byte[32768];
@@ -50,12 +58,12 @@ public abstract class FileComparator {
 	}
 
 	protected boolean compareClips(File source, File target, long len) {
-		if (len < 20480) {
-			return compareCrc(source, target);
+		if (len < 1048576) {
+			return compareMd5(source, target);
 		}
-		long skipsize = (len / 10) - 1024;
-		byte[] buf1 = new byte[1024];
-		byte[] buf2 = new byte[1024];
+		long skipsize = (len / 20) - 4096;
+		byte[] buf1 = new byte[4096];
+		byte[] buf2 = new byte[4096];
 		RandomAccessFile f1 = null;
 		RandomAccessFile f2 = null;
 		try {
@@ -110,7 +118,7 @@ public abstract class FileComparator {
 		public boolean equals(File source, File target) {
 			if (source.isFile() && target.isFile()) {
 				if (source.length() == target.length()) {
-					return compareCrc(source, target);
+					return compareMd5(source, target);
 				}
 			}
 			return false;
@@ -167,7 +175,7 @@ public abstract class FileComparator {
 					if (len > length) {
 						return compareClips(source, target, len);
 					} else {
-						return compareCrc(source, target);
+						return compareMd5(source, target);
 					}
 				}
 			}

@@ -232,14 +232,14 @@ public class ZipUtils {
 						IOUtils.createFolder(fname);
 						continue;
 					}
-					byte[] doc = new byte[1024];
+					byte[] doc = new byte[8192];
 					File output = new File(fname);
 					if (!output.getParentFile().exists()) {
 						output.getParentFile().mkdirs();
 					}
 					FileOutputStream out = new FileOutputStream(fname);
 					int n;
-					while ((n = in.read(doc, 0, 1024)) != -1)
+					while ((n = in.read(doc, 0, 8192)) != -1)
 						out.write(doc, 0, n);
 					out.close();
 					out = null;
