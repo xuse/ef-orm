@@ -51,8 +51,8 @@ public abstract class AbstractResource implements IResource {
 	 * This implementation throws a FileNotFoundException, assuming that the
 	 * resource cannot be resolved to a URL.
 	 */
-	public URL getURL() throws IOException {
-		throw new FileNotFoundException(getDescription() + " cannot be resolved to URL");
+	public URL getURL(){
+		throw new UnsupportedOperationException(getDescription() + " cannot be resolved to URL");
 	}
 
 	/**

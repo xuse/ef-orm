@@ -82,6 +82,9 @@ import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
 
+import com.querydsl.sql.OracleTemplates;
+import com.querydsl.sql.SQLTemplates;
+
 /**
  * 修改列名Oracle：lter table bbb rename column nnnnn to hh int;
  */
@@ -566,4 +569,11 @@ public class OracleDialect extends AbstractDialect {
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
 		return EXTRACTER_9;
 	}
+	
+    private final SQLTemplates queryDslDialect = new OracleTemplates();
+
+    @Override
+    public SQLTemplates getQueryDslDialect() {
+        return queryDslDialect;
+    }
 }

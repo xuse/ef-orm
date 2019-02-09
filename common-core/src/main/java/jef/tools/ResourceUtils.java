@@ -465,6 +465,23 @@ public class ResourceUtils {
 			return res.openStream();
 		return null;
 	}
+	
+	/**
+	 * 查找符合Pattern的所有资源
+	 * @param locationPattern
+	 * @return
+	 * @throws IOException
+	 */
+	public static IResource[] findResources(String locationPattern) {
+		ResourcePatternResolver rl= new PathMatchingResourcePatternResolver();
+		try {
+			return rl.getResources(locationPattern);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+	
+	
 
 	/**
 	 * 查找符合Pattern的所有资源
@@ -472,9 +489,13 @@ public class ResourceUtils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static IResource[] findResources(String locationPattern) throws IOException{
-		ResourcePatternResolver rl= new PathMatchingResourcePatternResolver();
-		return rl.getResources(locationPattern);
+	public static IResource[] findResources(ClassLoader cl,String locationPattern) {
+		ResourcePatternResolver rl= new PathMatchingResourcePatternResolver(cl);
+		try {
+			return rl.getResources(locationPattern);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	

@@ -31,6 +31,8 @@ import jef.database.meta.SequenceInfo;
 import jef.database.support.RDBMS;
 import jef.database.wrapper.clause.InsertSqlClause;
 
+import com.querydsl.sql.SQLTemplates;
+
 /**
  * 
  * @author jiyi
@@ -248,4 +250,9 @@ public class AbstractDelegatingDialect implements DatabaseDialect{
 	public boolean isCaseSensitive() {
 		return dialect.isCaseSensitive();
 	}
+
+    @Override
+    public SQLTemplates getQueryDslDialect() {
+        return dialect.getQueryDslDialect();
+    }
 }

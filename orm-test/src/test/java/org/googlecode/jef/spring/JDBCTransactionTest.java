@@ -41,7 +41,7 @@ public class JDBCTransactionTest extends SpringTestBase{
 		service.addScore("tom", 20); 
 		
 		// ④.查看此时用户的分数
-		int score = jdbcTemplate.queryForInt("SELECT score FROM t_user WHERE user='tom'");
+		int score = jdbcTemplate.queryForObject("SELECT score FROM t_user WHERE user='tom'",Integer.class);
 		System.out.println("score:" + score);
 //		jdbcTemplate.execute("DELETE FROM t_user WHERE user='tom'");
 		assertEquals(30, score);

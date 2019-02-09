@@ -18,8 +18,6 @@ package jef.database.dialect;
 import java.io.File;
 import java.sql.SQLException;
 
-import org.apache.commons.lang.StringUtils;
-
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.dialect.ColumnType.AutoIncrement;
@@ -42,6 +40,11 @@ import jef.database.query.function.TransformFunction;
 import jef.database.query.function.VarArgsSQLFunction;
 import jef.database.support.RDBMS;
 import jef.tools.collection.CollectionUtils;
+
+import org.apache.commons.lang.StringUtils;
+
+import com.querydsl.sql.SQLTemplates;
+import com.querydsl.sql.SQLiteTemplates;
 
 
 /**
@@ -246,5 +249,12 @@ public class SqliteDialect extends AbstractDialect {
 		}
 		return super.toDefaultString(defaultValue, sqlType, changeTo);
 	}
+	
+	private final SQLTemplates queryDslDialect = new SQLiteTemplates();
+
+    @Override
+    public SQLTemplates getQueryDslDialect() {
+        return queryDslDialect;
+    }
 
 }

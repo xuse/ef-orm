@@ -42,7 +42,7 @@ import com.github.geequery.springdata.repository.query.GqQueryExecution.SingleEn
 public abstract class AbstractGqQuery implements RepositoryQuery {
 
 	private final GqQueryMethod method;
-	private final EntityManager em;
+	private final EntityManagerFactory emf;
 
 	/**
 	 * Creates a new {@link AbstractJpaQuery} from the given
@@ -52,12 +52,12 @@ public abstract class AbstractGqQuery implements RepositoryQuery {
 	 * @param resultFactory
 	 * @param em
 	 */
-	public AbstractGqQuery(GqQueryMethod method, EntityManager em) {
+	public AbstractGqQuery(GqQueryMethod method, EntityManagerFactory emf) {
 		Assert.notNull(method);
-		Assert.notNull(em);
+		Assert.notNull(emf);
 
 		this.method = method;
-		this.em = em;
+		this.emf = emf;
 	}
 
 	public GqQueryMethod getQueryMethod() {
@@ -72,7 +72,7 @@ public abstract class AbstractGqQuery implements RepositoryQuery {
 		} else if (method.isPageQuery()) {
 			return new PagedExecution(method.getParameters());
 		} else if (method.isModifyingQuery()) {
-			return method.getClearAutomatically() ? new ModifyingExecution(method, em) : new ModifyingExecution(method, null);
+			return method.getClearAutomatically() ? new ModifyingExecution(method, emf) : new ModifyingExecution(method, null);
 		} else {
 			return new SingleEntityExecution();
 		}
@@ -94,7 +94,6 @@ public abstract class AbstractGqQuery implements RepositoryQuery {
 	protected abstract long getResultCount(Object[] values);
 
 	protected Session getSession() {
-		EntityManagerFactory emf = em.getEntityManagerFactory();
 		EntityManager em = EntityManagerFactoryUtils.doGetTransactionalEntityManager(emf, null);
 		if (em == null) { // 当无事务时。Spring返回null
 			em = emf.createEntityManager(null, Collections.EMPTY_MAP);

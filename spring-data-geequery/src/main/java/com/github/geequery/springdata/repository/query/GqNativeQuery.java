@@ -18,6 +18,7 @@ package com.github.geequery.springdata.repository.query;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 
 import jef.database.NativeQuery;
@@ -26,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.orm.jpa.EntityManagerProxy;
 
 import com.github.geequery.springdata.repository.query.GqParameters.GqParameter;
 
@@ -41,7 +41,7 @@ final class GqNativeQuery extends AbstractGqQuery {
 	/**
 	 * Creates a new {@link GqNativeQuery}.
 	 */
-	GqNativeQuery(GqQueryMethod method, EntityManagerProxy em, NativeQuery<?> nq) {
+	GqNativeQuery(GqQueryMethod method, EntityManagerFactory em, NativeQuery<?> nq) {
 		super(method, em);
 		this.query = nq;
 	}

@@ -54,6 +54,9 @@ import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
 
+import com.querydsl.sql.PostgreSQLTemplates;
+import com.querydsl.sql.SQLTemplates;
+
 public class PostgreSqlDialect extends AbstractDialect {
 	protected static final String JDBC_URL_FORMAT = "jdbc:postgresql://%1$s:%2$s/%3$s";
 	protected static final int DEFAULT_PORT = 5432;
@@ -243,9 +246,9 @@ public class PostgreSqlDialect extends AbstractDialect {
 		// }
 		// }else{
 		if (column.getSqlType() == Types.BIGINT) {
-			return flag ? "serial8 not null" : "serial8";
+			return flag ? "bigserial not null" : "bigserial";
 		} else {
-			return flag ? "serial4 not null" : "serial4";
+			return flag ? "serial not null" : "serial";
 		}
 		// }
 	}
@@ -590,4 +593,11 @@ public class PostgreSqlDialect extends AbstractDialect {
 			}
 		}
 	};
+	
+    private final SQLTemplates queryDslDialect = new PostgreSQLTemplates();
+
+    @Override
+    public SQLTemplates getQueryDslDialect() {
+        return queryDslDialect;
+    }
 }

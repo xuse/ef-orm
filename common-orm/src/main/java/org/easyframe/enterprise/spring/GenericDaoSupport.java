@@ -18,15 +18,21 @@ import jef.database.IQueryableEntity;
 import jef.database.NativeQuery;
 import jef.database.PagingIterator;
 import jef.database.PagingIteratorObjImpl;
+import jef.database.PojoWrapper;
 import jef.database.RecordHolder;
 import jef.database.RecordsHolder;
 import jef.database.meta.AbstractMetadata;
+import jef.database.meta.EntityType;
 import jef.database.meta.MetaHolder;
 import jef.database.query.PKQuery;
+import jef.tools.Assert;
 import jef.tools.reflect.ClassEx;
 import jef.tools.reflect.GenericUtils;
 
 import org.springframework.transaction.annotation.Transactional;
+
+import com.github.geequery.springdata.repository.support.Update;
+import com.querydsl.sql.SQLQuery;
 
 /**
  * 框架提供的基本数据库操作实现<br>
@@ -489,10 +495,10 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		}
 	}
 
-	public List<T> findByField(String fieldname, Serializable id) {
-		Field field = meta.getField(fieldname);
+	public List<T> findByField(String fieldName, Serializable id) {
+		Field field = meta.getField(fieldName);
 		if (field == null) {
-			throw new IllegalArgumentException("There's no property named " + fieldname + " in type of " + meta.getName());
+			throw new IllegalArgumentException("There's no property named " + fieldName + " in type of " + meta.getName());
 		}
 		try {
 			return getSession().selectByField(field, id);
@@ -575,4 +581,42 @@ public abstract class GenericDaoSupport<T extends IQueryableEntity> extends Base
 		}
 	}
 
+    @Override
+    public SQLQuery sql() {
+        return getSession().sql();
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public boolean lockItAndUpdate(Serializable id, Update<T> update) {
+        Assert.notNull(update);
+        try{
+            if (meta.getType() == EntityType.POJO) {
+                PKQuery<PojoWrapper> query = new PKQuery<PojoWrapper>(meta, id);
+                RecordHolder<PojoWrapper> result = getSession().loadForUpdate(query.getInstance());
+                if(result ==null )return false;
+                try{
+                    PojoWrapper pojo=result.get();
+                    update.setValue((T)pojo.get());
+                    pojo.refresh();
+                    return result.commit(); 
+                }finally{
+                    result.close();
+                }
+            } else {
+                @SuppressWarnings("rawtypes")
+                PKQuery query = new PKQuery(meta,  id);
+                RecordHolder<?> result = getSession().loadForUpdate(query.getInstance());
+                if(result ==null )return false;
+                try{
+                    update.setValue((T)result.get());
+                    return result.commit(); 
+                }finally{
+                    result.close();
+                }
+            }   
+        }catch(SQLException e){
+            throw DbUtils.toRuntimeException(e);
+        }
+    }
 }

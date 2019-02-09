@@ -2,6 +2,9 @@ package jef.database.dialect;
 
 import java.sql.Types;
 
+import com.querydsl.sql.SQLServer2008Templates;
+import com.querydsl.sql.SQLTemplates;
+
 /**
  * SQL Server 2008
  * 
@@ -22,8 +25,11 @@ public class SQLServer2008Dialect extends SQLServer2005Dialect {
 		typeNames.put(Types.DATE, "date", 0);
 		typeNames.put(Types.TIME, "time", 0);
 		typeNames.put(Types.TIMESTAMP, "datetime2", 0);
-		
-		 
 	}
+	
+	 //to be override
+    protected SQLTemplates generateQueryDslTemplates() {
+        return new SQLServer2008Templates();
+    }
 
 }

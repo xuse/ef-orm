@@ -28,6 +28,9 @@ import jef.database.jdbc.statement.UnionJudgement;
 import jef.database.query.function.NoArgSQLFunction;
 import jef.tools.string.JefStringReader;
 
+import com.querydsl.sql.SQLServer2005Templates;
+import com.querydsl.sql.SQLTemplates;
+
 /**
  * 
 修改列名SQLServer：exec sp_rename't_student.name','nn','column';
@@ -108,5 +111,10 @@ public class SQLServer2005Dialect extends SQLServer2000Dialect{
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
 		return EXTRATER;
 	}
+	
+    //to be override
+    protected SQLTemplates generateQueryDslTemplates() {
+        return new SQLServer2005Templates();
+    }
 }
 

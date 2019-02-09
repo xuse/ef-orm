@@ -619,6 +619,11 @@ public final class MetaHolder {
 			}
 		}
 
+		/**
+		 * 由于用户可能在父子类中反复定义同一个Field的元模型，因此此处返回的是列表
+		 * @param name
+		 * @return
+		 */
 		List<jef.database.Field> remove(String name) {
 			if (isTuple) {
 				return Collections.<Field> singletonList(new TupleField(parent, name));
@@ -652,7 +657,8 @@ public final class MetaHolder {
 			if (field instanceof Enum) {
 				assertFieldEnhanced(field,fieldss,processingClz);
 			}
-			
+
+	
 			// 在得到了元模型的情况下
 			boolean isPK = fa.getAnnotation(javax.persistence.Id.class) != null;
 			

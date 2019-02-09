@@ -453,8 +453,8 @@ public final class DefaultPartitionCalculator implements PartitionCalculator {
 				return null;
 			}
 		}
-		String name = c.getField().name();
-		if (!field.equals(name))
+		//2017-11-21发现一个疑似很久的BUG在这里。先修改为最严格的==条件来判断Field是否相等个（对动态表分表就无效），后续再考虑放宽限制
+		if (field!=f)
 			return null;
 
 		Operator op = c.getOperator();

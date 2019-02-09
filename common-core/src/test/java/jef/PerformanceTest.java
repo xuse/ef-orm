@@ -59,7 +59,7 @@ public class PerformanceTest {
 
 		}
 
-		{// 案例0：CGLib  （原生）
+		{// 案例0：CGLib （原生）
 			PromotionPO po = new PromotionPO();
 			jef.accelerator.cglib.beans.BeanCopier bc = jef.accelerator.cglib.beans.BeanCopier.create(PromotionPO.class, PromotionPO.class, false);
 			long startTime = System.currentTimeMillis();
@@ -74,7 +74,8 @@ public class PerformanceTest {
 			PromotionPO po = new PromotionPO();
 			long startTime = System.currentTimeMillis();
 			for (int i = 0; i < LOOP_NUMBER; i++) {
-//				org.apache.commons.beanutils.PropertyUtils.copyProperties(po, source);
+				// org.apache.commons.beanutils.PropertyUtils.copyProperties(po,
+				// source);
 			}
 			long endTime = System.currentTimeMillis();
 			cost.put("Apache PropertyUtils", endTime - startTime);// (Apache
@@ -101,7 +102,7 @@ public class PerformanceTest {
 				org.springframework.beans.BeanWrapper bws = new org.springframework.beans.BeanWrapperImpl(source);
 				org.springframework.beans.BeanWrapper bwt = new org.springframework.beans.BeanWrapperImpl(po);
 				for (PropertyDescriptor property : bws.getPropertyDescriptors()) {
-					if(bwt.isWritableProperty(property.getName())){
+					if (bwt.isWritableProperty(property.getName())) {
 						bwt.setPropertyValue(property.getName(), bws.getPropertyValue(property.getName()));
 					}
 				}
@@ -120,7 +121,7 @@ public class PerformanceTest {
 			long endTime = System.currentTimeMillis();
 			cost.put("Jef BeanUtils(include ASM)", endTime - startTime);
 		}
-		
+
 		{// 案例5：jef.tools.reflect.BeanUtils
 			BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(PromotionPO.class);
 			PromotionPO po = new PromotionPO();
@@ -174,14 +175,19 @@ public class PerformanceTest {
 		{// 案例1：Apache commons
 			PromotionPO po = new PromotionPO();
 			long startTime = System.currentTimeMillis();
-//			for (int i = 0; i < LOOP_NUMBER; i++) {
-//				org.apache.commons.beanutils.PropertyUtils.getProperty(po, "code");
-//				org.apache.commons.beanutils.PropertyUtils.getProperty(po, "ID");
-//				org.apache.commons.beanutils.PropertyUtils.getProperty(po, "field1");
-//				org.apache.commons.beanutils.PropertyUtils.setProperty(po, "code", "code123456789");
-//				org.apache.commons.beanutils.PropertyUtils.setProperty(po, "ID", 100L);
-//				org.apache.commons.beanutils.PropertyUtils.setProperty(po, "field1", "field1123456789");
-//			}
+			// for (int i = 0; i < LOOP_NUMBER; i++) {
+			// org.apache.commons.beanutils.PropertyUtils.getProperty(po,
+			// "code");
+			// org.apache.commons.beanutils.PropertyUtils.getProperty(po, "ID");
+			// org.apache.commons.beanutils.PropertyUtils.getProperty(po,
+			// "field1");
+			// org.apache.commons.beanutils.PropertyUtils.setProperty(po,
+			// "code", "code123456789");
+			// org.apache.commons.beanutils.PropertyUtils.setProperty(po, "ID",
+			// 100L);
+			// org.apache.commons.beanutils.PropertyUtils.setProperty(po,
+			// "field1", "field1123456789");
+			// }
 			long endTime = System.currentTimeMillis();
 			commonsCopyPropertiesTime = endTime - startTime;
 		}
@@ -264,11 +270,11 @@ public class PerformanceTest {
 		}
 		System.out.println(bw.getPropertyNames().size());
 	}
-	
+
 	@Test
-	public void sdfsa(){
+	public void sdfsa() {
 		{
-			BeanAccessor ba=FastBeanWrapperImpl.getAccessorFor(PromotionPO.class);
+			BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(PromotionPO.class);
 			PromotionPO source = new PromotionPO();
 			Timestamp now = new Timestamp(System.currentTimeMillis());
 			source.setCode("code");
@@ -287,39 +293,54 @@ public class PerformanceTest {
 			source.setField5("cfer4344");
 			source.setField6("dssfsfdsf");
 			source.setField7("cdedfewfdsf");
-			Map map=ba.convert(source);
+			Map map = ba.convert(source);
 			ba.getAnnotationOnField("code");
 			ba.getAnnotationOnGetter("code");
 			ba.getAnnotationOnSetter("code");
-			PromotionPO source2=(PromotionPO)ba.fromMap(map);
-			System.out.println(map);	
+			PromotionPO source2 = (PromotionPO) ba.fromMap(map);
+			System.out.println(map);
 			System.out.println(ToStringBuilder.reflectionToString(source));
 			System.out.println(ToStringBuilder.reflectionToString(source2));
 		}
 		{
-			BeanAccessor ba=FastBeanWrapperImpl.getAccessorFor(Foo.class);
-			Foo foo=new Foo();
+			BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(Foo.class);
+			Foo foo = new Foo();
 			foo.setId(1);
 			foo.setName("aaa");
 			foo.setScore(123D);
 			foo.setCreated(new Date());
-			Map map=ba.convert(foo);
+			Map map = ba.convert(foo);
 			ba.getAnnotationOnField("name");
 			ba.getAnnotationOnGetter("name");
 			ba.getAnnotationOnSetter("name");
 			map.remove("score");
-			Foo foo2=(Foo)ba.fromMap(map);
+			Foo foo2 = (Foo) ba.fromMap(map);
 			System.out.println(map);
 			System.out.println(ToStringBuilder.reflectionToString(foo));
 			System.out.println(ToStringBuilder.reflectionToString(foo2));
-			
+
 			map.put("id", "3");
-			Foo foo3=BeanUtils.undescribeSafe(map, Foo.class);
+			Foo foo3 = BeanUtils.undescribeSafe(map, Foo.class);
 			System.out.println(ToStringBuilder.reflectionToString(foo3));
-			
+
 		}
-		
+
 	}
-	
-	
+
+	@Test
+	public void testConcurrent() throws InterruptedException{
+		for(int i=0;i<100;i++){
+			new Thread(){
+				public void run() {
+					work();
+				}
+			}.start();
+		}
+		Thread.sleep(1000);
+	}
+
+	private void work() {
+		FastBeanWrapperImpl.getAccessorFor(PromotionPO.class);
+	}
+
 }

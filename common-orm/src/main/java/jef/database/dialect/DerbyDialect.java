@@ -44,6 +44,9 @@ import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.string.JefStringReader;
 
+import com.querydsl.sql.DerbyTemplates;
+import com.querydsl.sql.SQLTemplates;
+
 /**
  * Derby的dialet，用于derby的嵌入式模式
  * 
@@ -256,4 +259,11 @@ public class DerbyDialect extends AbstractDialect {
 	public LimitHandler getLimitHandler() {
 		return limit;
 	}
+	
+    private final SQLTemplates queryDslDialect = new DerbyTemplates();
+
+    @Override
+    public SQLTemplates getQueryDslDialect() {
+        return queryDslDialect;
+    }
 }

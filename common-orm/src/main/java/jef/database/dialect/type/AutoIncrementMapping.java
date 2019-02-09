@@ -174,7 +174,7 @@ public abstract class AutoIncrementMapping extends AColumnMapping {
 					schema = MetaHolder.getMappingSchema(schema);
 					return new String[] { datasource, schema + "." + tg.table() };
 				} else {
-					return new String[] { datasource, tg.table() };
+					return new String[] { datasource, tg.name() };
 				}
 			}
 		}

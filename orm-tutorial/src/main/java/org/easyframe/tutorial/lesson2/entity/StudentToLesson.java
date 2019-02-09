@@ -6,6 +6,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import jef.database.annotation.UnsavedValue;
+
 /**
  * 复合主键的类
  * @author jiyi
@@ -16,6 +18,7 @@ import javax.persistence.Table;
 public class StudentToLesson extends jef.database.DataObject {
 	private static final long serialVersionUID = 1L;
 	@Id
+    @UnsavedValue("0")
     private int lessionId;
     @Id
     private int studentId;

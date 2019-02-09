@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
+import javax.annotation.Resource;
 import javax.persistence.OptimisticLockException;
 
 import jef.database.ORMConfig;
@@ -25,6 +26,8 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 
+import com.github.geequery.springdata.config.PersistenceContext;
+import com.github.geequery.springdata.config.PersistenceContext2;
 import com.github.geequery.springdata.repository.support.Update;
 import com.github.geequery.springdata.test.entity.ComplexFoo;
 import com.github.geequery.springdata.test.entity.Foo;
@@ -32,6 +35,7 @@ import com.github.geequery.springdata.test.entity.VersionLog;
 import com.github.geequery.springdata.test.repo.ComplexFooDao;
 import com.github.geequery.springdata.test.repo.FooDao;
 import com.github.geequery.springdata.test.repo.FooEntityDao;
+import com.github.geequery.springdata.test2.repo.FooDao2;
 
 /**
  * 与Spring集成的示例。 本示例使用的xml作为Spring配置。参见
@@ -41,7 +45,7 @@ import com.github.geequery.springdata.test.repo.FooEntityDao;
  * @author jiyi
  * 
  */
-@ContextConfiguration(classes={com.github.geequery.springdata.config.PersistenceContext.class})
+@ContextConfiguration(classes={PersistenceContext.class,PersistenceContext2.class})
 public class Case2 extends AbstractJUnit4SpringContextTests implements InitializingBean {
 
 	@javax.annotation.Resource
@@ -55,6 +59,9 @@ public class Case2 extends AbstractJUnit4SpringContextTests implements Initializ
 
 	@javax.annotation.Resource
 	private ComplexFooDao complex;
+	
+	@Resource
+	private FooDao2 foodaoM;
 
 	@Test
 	public void testCase1() {
@@ -62,6 +69,9 @@ public class Case2 extends AbstractJUnit4SpringContextTests implements Initializ
 		foo.setAge(1);
 		foo.setName("咋呼呼");
 		foodao.save(foo);
+		
+		foodaoM.save(foo);
+		
 	}
 
 	/**

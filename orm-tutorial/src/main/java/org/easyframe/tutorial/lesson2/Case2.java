@@ -1,14 +1,15 @@
 package org.easyframe.tutorial.lesson2;
 
 import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
 
-import jef.codegen.EntityEnhancer;
 import jef.database.DbClient;
 import jef.database.DbClientBuilder;
 import jef.database.ORMConfig;
 
 import org.easyframe.tutorial.lesson2.entity.Student;
+import org.easyframe.tutorial.lesson2.entity.StudentToLesson;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -57,8 +58,19 @@ public class Case2 {
 			e.printStackTrace();
 			throw e;
 		}
-		
 	}
+	
+    @Test
+    public void testSelectCombineKey() throws SQLException {
+        
+        StudentToLesson s=new StudentToLesson();
+        s.setLessionId(100);
+        s.setCreateTime(new Date());
+        db.select(s);
+        
+
+    }
+    
 	/**
 	 * 按顺序查出全部学生, 正确的用法
 	 * 

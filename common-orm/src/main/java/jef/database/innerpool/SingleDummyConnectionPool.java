@@ -38,7 +38,6 @@ final class SingleDummyConnectionPool implements IUserManagedPool {
 		this.metadata = new DbMetaData(ds, this, null);
 		// 反向修正
 		metadata.getProfile().accept(metadata);
-		PoolReleaseThread.getInstance().addPool(this);
 	}
 
 	public SingleConnection poll() throws SQLException {

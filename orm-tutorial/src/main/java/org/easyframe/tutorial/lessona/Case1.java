@@ -34,7 +34,7 @@ public class Case1 extends org.junit.Assert {
 
 	@BeforeClass
 	public static void setup() throws SQLException {
-		db = new DbClientBuilder().setEnhancePackages("org.easyframe.tutorial").build();
+		db = new DbClientBuilder().setEnhancePackages("org.easyframe.tutorial.lesson1").build();
 		
 		db.dropTable("OPERATELOG_20100302");
 	}

@@ -1117,11 +1117,7 @@ public final class DbUtils {
 		if (field.isUnsavedValueDeclared()) {
 			return ObjectUtils.notEqual(field.getUnsavedValue(), value);
 		} else if (type.isPrimitive()) {
-			if (field.getUnsavedValue().equals(value)) {
-				if (meta.getPKFields().size() == 1 && !obj.isUsed(field.field()))
-					return false;
-			}
-			return true;
+		    return obj.isUsed(field.field()) || !field.getUnsavedValue().equals(value);
 		} else {
 			return value != null;
 		}

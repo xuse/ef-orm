@@ -20,7 +20,6 @@ import jef.database.ORMConfig;
 import jef.database.dialect.ColumnType.Char;
 import jef.database.dialect.handler.LimitHandler;
 import jef.database.dialect.handler.LimitOffsetLimitHandler;
-import jef.database.dialect.type.AColumnMapping;
 import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.exception.JDBCExceptionHelper;
 import jef.database.exception.TemplatedViolatedConstraintNameExtracter;
@@ -43,6 +42,9 @@ import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.ClassEx;
+
+import com.querydsl.sql.HSQLDBTemplates;
+import com.querydsl.sql.SQLTemplates;
 
 /**
  * HSQLDB的dialect
@@ -411,5 +413,12 @@ public class HsqlDbMemDialect extends AbstractDialect {
 		return null;
 	}
 	
+	
+    private final SQLTemplates queryDslDialect = new HSQLDBTemplates();
+
+    @Override
+    public SQLTemplates getQueryDslDialect() {
+        return queryDslDialect;
+    }
 	
 }

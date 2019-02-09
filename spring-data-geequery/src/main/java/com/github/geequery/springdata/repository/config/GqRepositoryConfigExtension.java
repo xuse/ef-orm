@@ -100,6 +100,12 @@ public class GqRepositoryConfigExtension extends RepositoryConfigurationExtensio
 		String transactionManagerRef = source.getAttribute("transactionManagerRef");
 		builder.addPropertyValue("transactionManager",
 				transactionManagerRef == null ? DEFAULT_TRANSACTION_MANAGER_BEAN_NAME : transactionManagerRef);
+		
+//		Iterable<String> s1=source.getBasePackages();
+//		builder.addPropertyValue("transactionManagerRef",source.getAttribute("transactionManagerRef"));
+		builder.addPropertyValue("namedQueryLocation", source.getNamedQueryLocation());
+		builder.addPropertyValue("entityManagerFactoryRef",source.getAttribute("entityManagerFactoryRef"));
+		builder.addPropertyValue("repositoryImplementationPostfix", source.getAttribute("repositoryImplementationPostfix"));
 	}
 
 	/* 

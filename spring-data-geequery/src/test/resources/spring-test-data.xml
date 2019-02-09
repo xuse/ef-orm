@@ -21,8 +21,8 @@
 	<!-- 定义DataSource -->
 	<bean id="dataSource" class="jef.database.datasource.SimpleDataSource"
 		p:url="${db.url}"
-		p:user="root"
-		p:password="admin" 
+		p:user="${db.user}"
+		p:password="${db.password}" 
 		/>
 
 	<!-- 定义GeeQuery SessionFactory -->
@@ -45,7 +45,6 @@
 	<gq:repositories base-package="com.github.geequery.springdata.test.repo"
 		entity-manager-factory-ref="entityManagerFactory"
 		transaction-manager-ref="transactionManager">
-		
 	</gq:repositories>
 	<bean id="commonDao" class="org.easyframe.enterprise.spring.CommonDaoImpl" />
 </beans> 

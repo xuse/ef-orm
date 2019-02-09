@@ -8,7 +8,7 @@ public class InitDataTest {
 	@Test
 	public void testInitData() {
 		SessionFactoryBean bean = new SessionFactoryBean();
-		bean.setDataSource("jdbc:mysql://localhost:3306/test", "root", "admin");
+		bean.setDataSource("jdbc:mysql://localhost:3306/test", "root", "123");
 		bean.setAnnotatedClasses(new String[]{"jef.orm.multitable.model.Person","jef.orm.multitable.model.PersonFriends","jef.orm.multitable.model.School"});
 		bean.setInitDataAfterCreate(true);
 		bean.setInitDataIfTableExists(true);

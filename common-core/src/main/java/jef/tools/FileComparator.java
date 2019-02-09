@@ -8,6 +8,7 @@ import jef.common.log.LogUtil;
 
 /**
  * 文件比较器，用于比较两个文件是否相同
+ * 
  * @author jiyi
  * @see #LENGTH_CRC
  * @see #LENGTH_ONLY
@@ -52,7 +53,7 @@ public abstract class FileComparator {
 			}
 			return true;
 		} catch (IOException e) {
-			LogUtil.error("CompareFileError:",e);
+			LogUtil.error("CompareFileError:", e);
 			return false;
 		} finally {
 			IOUtils.closeQuietly(f1);
@@ -61,9 +62,11 @@ public abstract class FileComparator {
 	}
 
 	private boolean compareBuffer(byte[] buf1, int l1, byte[] buf2, int l2) {
-		if(l1!=l2)return false;
-		for(int i=0;i<l1;i++){
-			if(buf1[i]!=buf2[i])return false;
+		if (l1 != l2)
+			return false;
+		for (int i = 0; i < l1; i++) {
+			if (buf1[i] != buf2[i])
+				return false;
 		}
 		return true;
 	}
@@ -93,9 +96,7 @@ public abstract class FileComparator {
 		}
 	};
 	/**
-	 * 比较器：在文件大小相同的前提下
-	 * 将文件分为10个小段，每个小段比较1024字节（抽样比较文件）
-	 * 适用于大文件的快速比较
+	 * 比较器：在文件大小相同的前提下 将文件分为10个小段，每个小段比较1024字节（抽样比较文件） 适用于大文件的快速比较
 	 */
 	public static FileComparator LENGTH_SKIP = new FileComparator() {
 		public boolean equals(File source, File target) {
@@ -109,4 +110,38 @@ public abstract class FileComparator {
 		}
 
 	};
+
+	/**
+	 * 比较器，根据文件大小来选择使用哪种比较方式
+	 * 
+	 * @author Administrator
+	 *
+	 */
+	public static class Smart extends FileComparator {
+		private long length;
+
+		public Smart() {
+			length = 1024 * 1024 * 10;
+		}
+
+		public Smart(long exceed) {
+			this.length = exceed;
+		}
+
+		public boolean equals(File source, File target) {
+			if (source.isFile() && target.isFile()) {
+				long len = source.length();
+				if (len == target.length()) {
+					if (len > length) {
+						return compareFullContent(source, target);
+					} else {
+						return compareClips(source, target, len);
+					}
+				}
+			}
+			return false;
+		}
+
+	};
+
 }

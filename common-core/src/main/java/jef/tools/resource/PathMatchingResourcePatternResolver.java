@@ -212,7 +212,7 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 	 * @see org.springframework.core.io.DefaultResourceLoader
 	 */
 	public PathMatchingResourcePatternResolver() {
-		this.resourceLoader = new ClasspathLoader();
+		this.resourceLoader = new ClasspathLoader(false);
 	}
 
 	/**
@@ -226,7 +226,7 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 	 * @see org.springframework.core.io.DefaultResourceLoader
 	 */
 	public PathMatchingResourcePatternResolver(ClassLoader classLoader) {
-		this.resourceLoader = new ClasspathLoader(false,classLoader);
+		this.resourceLoader = classLoader==null? new ClasspathLoader(false):new ClasspathLoader(false,classLoader);
 	}
 
 	/**
@@ -289,7 +289,7 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 				return findPathMatchingResources(locationPattern);
 			} else {
 				// a single resource with the given name
-				URL url=getResourceLoader().getResource(locationPattern);
+				URL url=getResourceLoader().getResource(locationPattern.substring(prefixEnd));
 				if(url!=null){
 					return new IResource[] { new UrlResource(url) };
 				}else{
@@ -737,9 +737,9 @@ public class PathMatchingResourcePatternResolver implements ResourcePatternResol
 	 *             if directory contents could not be retrieved
 	 */
 	protected void doRetrieveMatchingFiles(String fullPattern, File dir, Set<File> result) throws IOException {
-		if (logger.isDebugEnabled()) {
-			logger.debug("Searching directory [" + dir.getAbsolutePath() + "] for files matching pattern [" + fullPattern + "]");
-		}
+//		if (logger.isDebugEnabled()) {
+//			logger.debug("Searching directory [" + dir.getAbsolutePath() + "] for files matching pattern [" + fullPattern + "]");
+//		}
 		File[] dirContents = dir.listFiles();
 		if (dirContents == null) {
 			if (logger.isWarnEnabled()) {

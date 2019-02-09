@@ -420,8 +420,8 @@ public class ClassReader {
      * @throws IOException
      *             if a problem occurs during reading.
      */
-    public ClassReader(final InputStream is) throws IOException {
-        this(readClass(is, false));
+    public ClassReader(final InputStream is, boolean close) throws IOException {
+        this(readClass(is, close));
     }
 
     /**

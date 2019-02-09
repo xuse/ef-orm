@@ -32,6 +32,8 @@ import jef.database.wrapper.ResultIterator;
 import jef.tools.Assert;
 import jef.tools.reflect.BeanWrapper;
 
+import com.querydsl.sql.SQLQuery;
+
 /**
  * 一个通用的DAO实现，涵盖了Session()对象中大部分数据库操作的方法。。<br>
  * 考虑到一般项目命名习惯等因素，建议有需要的同学自行继承BaseDao来编写通用的DAO，本类可当做是参考实现。
@@ -723,4 +725,10 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			throw DbUtils.toRuntimeException(e);
 		}
 	}
+	
+
+    @Override
+    public SQLQuery sql() {
+        return getSession().sql();
+    }
 }

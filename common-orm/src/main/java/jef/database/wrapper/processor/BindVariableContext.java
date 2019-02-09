@@ -237,7 +237,7 @@ public final class BindVariableContext {
 					Object obj = setWhereVariable(field, da, count);
 					actualWhereParams[n++] = obj;
 				} catch (SQLException ex) {
-					LogUtil.error("Error while setting [{}], error type={}", field.name(), ex.getClass().getName());
+					LogUtil.error("Error while setting [{}], error type={}", field.name(), ex.getClass().getName(),ex);
 					throw ex;
 				}
 			}
