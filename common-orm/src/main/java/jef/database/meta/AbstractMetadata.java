@@ -76,16 +76,16 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	protected Field[] lobNames;
 
 	/**
-	 * 记录对应表的所有索引，当建表时使用可自动创建索引
-	 * Revised 2016-8 JPA 2.1规范中增加的@Table的indexes属性和Index注解，因此删除EF原先自己设计的Index注解，改用标准的JPA注解
+	 * 记录对应表的所有索引，当建表时使用可自动创建索引 Revised 2016-8 JPA
+	 * 2.1规范中增加的@Table的indexes属性和Index注解，因此删除EF原先自己设计的Index注解，改用标准的JPA注解
 	 */
 	final List<IndexDef> indexes = new ArrayList<IndexDef>(5);
-	
+
 	/**
 	 * 记录对应表所有Unqie约束.当建表时可自动创建约束
 	 */
-	final List<UniqueConstraintDef> uniques=new ArrayList<UniqueConstraintDef>(5);
-	
+	final List<UniqueConstraintDef> uniques = new ArrayList<UniqueConstraintDef>(5);
+
 	protected final Map<Field, ColumnMapping> schemaMap = new IdentityHashMap<Field, ColumnMapping>();
 	protected Map<String, Field> fields = new HashMap<String, Field>(10, 0.6f);
 	protected Map<String, Field> lowerFields = new HashMap<String, Field>(10, 0.6f);
@@ -162,13 +162,13 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	/**
 	 * 返回表名
 	 * 
-	 * @param withSchema
-	 *            true要求带schema
+	 * @param withSchema true要求带schema
 	 * @return
 	 */
 	public String getTableName(boolean withSchema) {
 		if (withSchema && schema != null)
-			return new StringBuilder(schema.length() + tableName.length() + 1).append(schema).append('.').append(tableName).toString();
+			return new StringBuilder(schema.length() + tableName.length() + 1).append(schema).append('.')
+					.append(tableName).toString();
 		return tableName;
 	}
 
@@ -192,15 +192,17 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	public DbTable getBaseTable(DatabaseDialect profile) {
 		if (bindProfile != profile) {
 			synchronized (this) {
-				initCache(profile);
+				return initCache(profile);
 			}
 		}
 		return cachedTable;
 	}
 
-	private void initCache(DatabaseDialect profile) {
+	private DbTable initCache(DatabaseDialect profile) {
 		bindProfile = profile;
-		cachedTable = new DbTable(bindDsName, profile.getObjectNameToUse(getTableName(true)), false, false);
+		DbTable cachedTable = new DbTable(bindDsName, profile.getObjectNameToUse(getTableName(true)), false, false);
+		this.cachedTable = cachedTable;
+		return cachedTable;
 	}
 
 	public KeyDimension getPKDimension(DatabaseDialect profile) {
@@ -238,7 +240,8 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	public ColumnType getColumnType(String fieldName) {
 		Field field = fields.get(fieldName);
 		if (field == null) {
-			LogUtil.warn(jef.tools.StringUtils.concat("The field [", fieldName, "] does not find in ", this.getThisType().getName()));
+			LogUtil.warn(jef.tools.StringUtils.concat("The field [", fieldName, "] does not find in ",
+					this.getThisType().getName()));
 			return null;
 		}
 		return schemaMap.get(field).get();
@@ -291,8 +294,9 @@ public abstract class AbstractMetadata implements ITableMetadata {
 				autoUpdateColumns = ArrayUtils.addElement(autoUpdateColumns, m, VersionSupportColumn.class);
 			}
 			if (m.isVersion()) {
-				if(this.versionColumn!=null){
-					throw new IllegalArgumentException("There can be only one version column in a entity, but" + this.getName()+" has more.");
+				if (this.versionColumn != null) {
+					throw new IllegalArgumentException(
+							"There can be only one version column in a entity, but" + this.getName() + " has more.");
 				}
 				this.versionColumn = m;
 			}
@@ -423,7 +427,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	public void setUseOuterJoin(boolean useOuterJoin) {
 		this.useOuterJoin = useOuterJoin;
 	}
-	
+
 	public List<UniqueConstraintDef> getUniqueDefinitions() {
 		return uniques;
 	}
