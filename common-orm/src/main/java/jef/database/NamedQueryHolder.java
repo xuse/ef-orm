@@ -10,6 +10,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
+
 import jef.common.log.LogUtil;
 import jef.database.Condition.Operator;
 import jef.database.query.Query;
@@ -21,14 +25,10 @@ import jef.tools.StringUtils;
 import jef.tools.XMLUtils;
 import jef.tools.reflect.Enums;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
-
 final class NamedQueryHolder {
 	private DbClient parent;
 	private Map<String, NQEntry> namedQueries;
-	private Map<File, Long> loadedFiles = new HashMap<File, Long>();
+	private Map<URL, Long> loadedFiles = new HashMap<URL, Long>();
 	private long lastUpdate;// 记录上次更新文件的时间
 
 	public NamedQueryHolder(DbClient parent) {
@@ -87,11 +87,11 @@ final class NamedQueryHolder {
 	// 检查文件更新
 	public void checkUpdate(String name) {
 		// 先通过文件日期检查更新
-		for (Map.Entry<File, Long> e : loadedFiles.entrySet()) {
-			File file = e.getKey();
+		for (Map.Entry<URL, Long> e : loadedFiles.entrySet()) {
+			File file = IOUtils.urlToFile(e.getKey());
 			if (file.lastModified() > e.getValue()) {// 修改过了
 				LogUtil.info("refresh named queries in file <{}>",  file);
-				loadFile(namedQueries, file);
+				loadFile(namedQueries, e.getKey());
 			}
 		}
 		// 尝试获取
@@ -175,8 +175,7 @@ final class NamedQueryHolder {
 					if (debugMode) {
 						LogUtil.show("loading named queries from file <" + queryFile.toString() + ">");
 					}
-					File file = IOUtils.urlToFile(queryFile);
-					loadFile(result, file);
+					loadFile(result, queryFile);
 				}
 			} catch (IOException e) {
 				LogUtil.exception(e);
@@ -207,10 +206,13 @@ final class NamedQueryHolder {
 		this.namedQueries = result;
 	}
 
-	private synchronized void loadFile(Map<String, NQEntry> result, File file) {
-		loadedFiles.put(file, file.lastModified());
+	private synchronized void loadFile(Map<String, NQEntry> result, URL url) {
+		if("file".equals(url.getProtocol())) {
+			File urlFile=IOUtils.urlToFile(url);
+			loadedFiles.put(url, urlFile.lastModified());
+		}
 		try {
-			Document doc = XMLUtils.loadDocument(file);
+			Document doc = XMLUtils.loadDocument(url);
 			String namespace=doc.getDocumentElement().getAttribute("namespace");
 			for (Element e : XMLUtils.childElements(doc.getDocumentElement(), "query")) {
 				String name = XMLUtils.attrib(e, "name");
@@ -224,7 +226,7 @@ final class NamedQueryHolder {
 				NamedQueryConfig nq = new NamedQueryConfig(name, sql, "JPQL".equalsIgnoreCase(type), size);
 				nq.setTag(XMLUtils.attrib(e, "tag"));
 				RDBMS dialect = processName(nq);
-				put0(result, nq, dialect, file.getAbsolutePath());
+				put0(result, nq, dialect, url.toString());
 			}
 		} catch (SAXException e) {
 			LogUtil.exception(e);
