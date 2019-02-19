@@ -200,7 +200,8 @@ public abstract class AbstractMetadata implements ITableMetadata {
 
 	private DbTable initCache(DatabaseDialect profile) {
 		bindProfile = profile;
-		cachedTable = new DbTable(bindDsName, profile.getObjectNameToUse(getTableName(true)), false, false);
+		DbTable cachedTable = new DbTable(bindDsName, profile.getObjectNameToUse(getTableName(true)), false, false);
+		this.cachedTable=cachedTable;
 		return cachedTable;
 	}
 
