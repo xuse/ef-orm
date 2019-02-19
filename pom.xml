@@ -5,7 +5,7 @@
 
 	<groupId>org.easyframe</groupId>
 	<artifactId>ef-orm</artifactId>
-	<version>1.11.9.7</version>
+	<version>1.11.FINAL</version>
 	<packaging>pom</packaging>
 
 	<name>EasyFrame ORM</name>

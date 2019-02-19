@@ -185,22 +185,23 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		return escape ? DbUtils.escapeColumn(profile, name) : name;
 	}
 
-	private DbTable cachedTable;
-	private DatabaseDialect bindProfile;
+	private volatile DbTable cachedTable;
+	private volatile DatabaseDialect bindProfile;
 	protected KeyDimension pkDim;
 
 	public DbTable getBaseTable(DatabaseDialect profile) {
 		if (bindProfile != profile) {
 			synchronized (this) {
-				initCache(profile);
+				return initCache(profile);
 			}
 		}
 		return cachedTable;
 	}
 
-	private void initCache(DatabaseDialect profile) {
+	private DbTable initCache(DatabaseDialect profile) {
 		bindProfile = profile;
 		cachedTable = new DbTable(bindDsName, profile.getObjectNameToUse(getTableName(true)), false, false);
+		return cachedTable;
 	}
 
 	public KeyDimension getPKDimension(DatabaseDialect profile) {
