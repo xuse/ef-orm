@@ -137,16 +137,27 @@
 			</plugin>
 		</plugins>
 	</build>
-	<distributionManagement>
-		<repository>
-			<id>fsdmdept-release</id>
-			<name>Release Repository</name>
-			<url>http://192.0.0.55/nexus/content/repositories/releases/</url>
-		</repository>
-		<snapshotRepository>
-			<id>fsdmdept-snapshot</id>
-			<name>Snapshots Repository</name>
-			<url>http://192.0.0.55/nexus/content/repositories/snapshots/</url>
-		</snapshotRepository>
-	</distributionManagement>
+   <distributionManagement>
+
+         <repository>
+
+           <id>af-fsdmdept-release</id>
+
+             <name>af-fsdmdept-release</name>
+
+           <url>http://10.1.74.162/artifactory/fsdmdept-release</url>
+
+         </repository>
+
+         <snapshotRepository>
+
+           <id>af-fsdmdept-snapshot</id>
+
+             <name>af-fsdmdept-snapshot</name>
+
+             <url>http://10.1.74.162/artifactory/fsdmdept-snapshot</url>
+
+         </snapshotRepository>
+
+    </distributionManagement>
 </project>
