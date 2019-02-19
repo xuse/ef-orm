@@ -167,6 +167,7 @@
 
 	<build>
 		<plugins>
+		<!--
 			<plugin>
 				<groupId>com.querydsl</groupId>
 				<artifactId>querydsl-maven-plugin</artifactId>
@@ -195,6 +196,7 @@
 					</dependency>
 				</dependencies>
 			</plugin>
+			
 			<plugin>
 				<groupId>com.github.geequery</groupId>
 				<artifactId>geequery-maven-plugin</artifactId>
@@ -221,6 +223,7 @@
 					</dependency>
 				</dependencies>
 			</plugin>
+			-->
 		</plugins>
 		<pluginManagement>
 			<plugins>
