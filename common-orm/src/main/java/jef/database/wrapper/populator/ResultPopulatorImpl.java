@@ -317,7 +317,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator {
 		private ObjectPopulator initColumnAccessor(ColumnMeta columnMeta, Transformer transformers) {
 			extendPopulator = transformers.getMapper();
 			BeanAccessor ba = FastBeanWrapperImpl.getAccessorFor(clz);
-			return fillPlain(ba, skipAnnataion, columnMeta);
+			return fillPlain(ba, skipAnnataion, columnMeta, extendPopulator==null);
 		}
 
 		public boolean hasNext() {
@@ -610,7 +610,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator {
 						}
 					}
 				} else {
-					op1 = fillPlain(targetAccessor, false, columns);
+					op1 = fillPlain(targetAccessor, false, columns, extendPopulator==null);
 				}
 				if (rp.getStaticRef() != null) {// 级联对象的级联任务作为延迟加载
 					Map<Reference, List<AbstractRefField>> map = targetType.getRefFieldsByRef();
@@ -727,7 +727,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator {
 
 	}
 
-	private static ObjectPopulator fillPlain(BeanAccessor ba, boolean skipAnnataion, ColumnMeta columnMeta) {
+	private static ObjectPopulator fillPlain(BeanAccessor ba, boolean skipAnnataion, ColumnMeta columnMeta, boolean noExtendPopulator) {
 		Map<String, ColumnDescription> matched = new HashMap<String, ColumnDescription>();
 		for (String fieldName : ba.getPropertyNames()) {
 			javax.persistence.Column columnAnnotation = skipAnnataion ? null : getAnnotation(ba, fieldName, javax.persistence.Column.class);
@@ -743,7 +743,7 @@ public class ResultPopulatorImpl implements ResultSetPopulator {
 				matched.put(fieldName, c);
 			}
 		}
-		if (matched.isEmpty()) {
+		if (matched.isEmpty() && noExtendPopulator) {
 			throw new PersistenceException("No column match any fields in result class [" + ba.getType().getName() + "]. Columns:" + columnMeta.toString());
 		}
 		return new ObjectPopulator(null, matched);
