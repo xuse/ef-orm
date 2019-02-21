@@ -470,6 +470,29 @@ public class Case1 extends org.junit.Assert {
 		assertEquals(zhangfei.getCurrentSchool().getName(),liubei.getCurrentSchool().getName());
 	}
 	
+	static class CusMapper extends Mapper<Person>{
+		@Override
+		protected void transform(Person obj, IResultSet rs) throws SQLException {
+			obj.setName(rs.getString("ppname"));
+			obj.setId(rs.getInt("ppid"));
+		}
+	}
+	
+	@Test
+	public void testResultMapper_casexx() throws SQLException{
+		
+		//由于两张表都有id列，这里必须重命名 
+		String sql="select t1.id as ppid, t1.person_name as ppname from t_person t1";
+		NativeQuery<Person> query = db.createNativeQuery(sql,Person.class);
+		
+		
+		query.getResultTransformer().addMapper(new CusMapper());
+		List<Person> result=query.getResultList();
+		for(Person person: result){
+			System.out.println(person.toString()+" ->"+person.getCurrentSchool());
+		}
+	}
+	
 	
 	/**
 	 * 特性演示 8.2.4 自定义返回结果
