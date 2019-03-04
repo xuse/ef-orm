@@ -146,7 +146,7 @@ public class QueryBuilder {
 	 * 
 	 * @param subQuery
 	 * @param joinCondition
-	 * @return
+	 * @return 条件
 	 */
 	public static Condition notExists(Query<?> subQuery, Condition... joinCondition) {
 		NotExists ex = new NotExists(subQuery);
@@ -201,6 +201,7 @@ public class QueryBuilder {
 	 *            条件的值，一般传入String,Number,Date等基本数据，也可传入Field对象、
 	 *            或者是SqlExpression等对象。
 	 * @return 表达式为 {@code field = value} 这样的条件
+	 * @deprecated please use {@link Field#eq(Object)}方法代替。
 	 */
 	public static Condition eq(Field field, Object value) {
 		return Condition.get(field, Operator.EQUALS, value);
@@ -215,6 +216,7 @@ public class QueryBuilder {
 	 *            条件的值，一般传入String,Number,Date等基本数据，也可传入Field对象、
 	 *            或者是SqlExpression等对象。
 	 * @return 表达式为 {@code field != value} 这样的条件
+	 * @deprecated please use {@link Field#ne(Object)}方法代替。
 	 */
 	public static Condition ne(Field field, Object value) {
 		return Condition.get(field, Operator.NOT_EQUALS, value);
@@ -229,6 +231,7 @@ public class QueryBuilder {
 	 *            条件的值，一般传入String,Number,Date等基本数据，也可传入Field对象、
 	 *            或者是SqlExpression等对象。
 	 * @return 表达式为 {@code field > value} 这样的条件
+	 * @deprecated please use {@link Field#gt(Object)}方法代替。
 	 */
 	public static Condition gt(Field field, Object value) {
 		return Condition.get(field, Operator.GREAT, value);
@@ -243,6 +246,7 @@ public class QueryBuilder {
 	 *            条件的值，一般传入String,Number,Date等基本数据，也可传入Field对象、
 	 *            或者是SqlExpression等对象。
 	 * @return 表达式为 {@code field >= value} 这样的条件
+	 * @deprecated please use {@link Field#ge(Object)}方法代替。
 	 */
 	public static Condition ge(Field field, Object value) {
 		return Condition.get(field, Operator.GREAT_EQUALS, value);
@@ -257,6 +261,7 @@ public class QueryBuilder {
 	 *            条件的值，一般传入String,Number,Date等基本数据，也可传入Field对象、
 	 *            或者是SqlExpression等对象。
 	 * @return 表达式为 {@code field < value} 这样的条件
+	 * @deprecated please use {@link Field#lt(Object)}方法代替。
 	 */
 	public static Condition lt(Field field, Object value) {
 		return Condition.get(field, Operator.LESS, value);
@@ -271,6 +276,7 @@ public class QueryBuilder {
 	 *            条件的值，一般传入String,Number,Date等基本数据，也可传入Field对象、
 	 *            或者是SqlExpression等对象。
 	 * @return 表达式为 {@code field <= value} 这样的条件
+	 * @deprecated please use {@link Field#le(Object)}方法代替。
 	 */
 	public static Condition le(Field field, Object value) {
 		return Condition.get(field, Operator.LESS_EQUALS, value);
@@ -284,6 +290,7 @@ public class QueryBuilder {
 	 * @param value
 	 *            条件的值 数组
 	 * @return 表达式为 {@code field in (value,...)} 这样的条件
+	 * @deprecated please use {@link Field#in(Comparable[])}方法代替。
 	 */
 	public static Condition in(Field field, Object[] values) {
 		return Condition.get(field, Operator.IN, values);

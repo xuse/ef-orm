@@ -36,8 +36,8 @@ public interface Field extends Serializable {
 	/**
 	 * 等于
 	 * 
-	 * @param value
-	 * @return
+	 * @param value 条件值
+	 * @return 条件
 	 */
 	default Condition eq(Object value) {
 		return Condition.get(this, Operator.EQUALS, value);
@@ -46,8 +46,8 @@ public interface Field extends Serializable {
 	/**
 	 * 大于
 	 * 
-	 * @param value
-	 * @return
+	 * @param value 条件值
+	 * @return 条件
 	 */
 	default Condition gt(Object value) {
 		return Condition.get(this, Operator.GREAT, value);
@@ -56,18 +56,17 @@ public interface Field extends Serializable {
 	/**
 	 * 大于等于
 	 * 
-	 * @param value
-	 * @return
+	 * @param value 条件值
+	 * @return 条件
 	 */
 	default Condition ge(Object value) {
 		return Condition.get(this, Operator.GREAT_EQUALS, value);
 	}
 
 	/**
-	 * 小于
-	 * 
-	 * @param value
-	 * @return
+	 * 产生小于条件 （<）
+	 * @param value 条件值
+	 * @return 条件
 	 */
 	default Condition lt(Object value) {
 		return Condition.get(this, Operator.LESS, value);
@@ -76,8 +75,8 @@ public interface Field extends Serializable {
 	/**
 	 * 小于等于
 	 * 
-	 * @param value
-	 * @return
+	 * @param value 条件值
+	 * @return 条件
 	 */
 	default Condition le(Object value) {
 		return Condition.get(this, Operator.LESS_EQUALS, value);
@@ -86,8 +85,8 @@ public interface Field extends Serializable {
 	/**
 	 * 不等于
 	 * 
-	 * @param value
-	 * @return
+	 * @param value 条件值
+	 * @return 条件
 	 */
 	default Condition ne(Object value) {
 		return Condition.get(this, Operator.NOT_EQUALS, value);
@@ -96,18 +95,18 @@ public interface Field extends Serializable {
 	/**
 	 * In条件
 	 * 
-	 * @param values
-	 * @return
+	 * @param values 条件值
+	 * @return 条件
 	 */
-	default Condition in(Object[] values) {
+	default Condition in(Comparable<?>[] values) {
 		return Condition.get(this, Operator.IN, values);
 	}
 
 	/**
 	 * In条件
 	 * 
-	 * @param values
-	 * @return
+	 * @param values 条件值
+	 * @return 条件
 	 */
 	default Condition in(int[] values) {
 		return Condition.get(this, Operator.IN, values);
@@ -116,8 +115,8 @@ public interface Field extends Serializable {
 	/**
 	 * In条件
 	 * 
-	 * @param values
-	 * @return
+	 * @param values 条件值
+	 * @return 条件
 	 */
 	default Condition in(long[] values) {
 		return Condition.get(this, Operator.IN, values);
@@ -126,8 +125,8 @@ public interface Field extends Serializable {
 	/**
 	 * In条件
 	 * 
-	 * @param values
-	 * @return
+	 * @param values 条件值
+	 * @return 条件
 	 */
 	default Condition in(Collection<?> values) {
 		return Condition.get(this, Operator.IN, values);
@@ -137,17 +136,17 @@ public interface Field extends Serializable {
 	 * Not In条件
 	 * 
 	 * @param field
-	 * @param values
-	 * @return
+	 * @param values 条件值
+	 * @return 条件
 	 */
-	public static Condition notin(Field field, Object[] values) {
-		return Condition.get(field, Operator.NOT_IN, values);
+	default Condition notin(Object[] values) {
+		return Condition.get(this, Operator.NOT_IN, values);
 	}
 
 	/**
 	 * isnull条件
 	 * 
-	 * @return
+	 * @return 条件
 	 */
 	default Condition isNull() {
 		return Condition.get(this, Operator.IS_NULL, null);
@@ -156,7 +155,7 @@ public interface Field extends Serializable {
 	/**
 	 * Notnull条件
 	 * 
-	 * @return
+	 * @return  条件
 	 */
 	default Condition isNotNull() {
 		return Condition.get(this, Operator.IS_NOT_NULL, null);
@@ -165,9 +164,9 @@ public interface Field extends Serializable {
 	/**
 	 * 生成Between条件
 	 * 
-	 * @param begin
-	 * @param end
-	 * @return
+	 * @param begin 开始值
+	 * @param end   结束值
+	 * @return  条件
 	 */
 	default <T extends Comparable<T>> Condition between(T begin, T end) {
 		return Condition.get(this, Operator.BETWEEN_L_L, new Object[] { begin, end });
