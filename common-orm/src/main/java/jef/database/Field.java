@@ -99,7 +99,7 @@ public interface Field extends Serializable {
 	 * @param values
 	 * @return
 	 */
-	default Condition in(Object[] values) {
+	default Condition in(Comparable<?>[] values) {
 		return Condition.get(this, Operator.IN, values);
 	}
 

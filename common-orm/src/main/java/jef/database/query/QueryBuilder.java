@@ -301,16 +301,30 @@ public class QueryBuilder {
 	/**
 	 * 产生IN条件 (in)
 	 * 
+	 * @param fieldqq		q											
+	 *            表的字段（也可以是函数表达式）
+	 * @param value
+	 *            条件的值 数组
+	 * @return 表达式为 {@code field in (value,...)} 这样的条件
+	 * @deprecated 请使用 {@link #in(Field, Comparable[])}
+	 */
+	public static Condition in(Field field, Object[] values) {
+		return Condition.get(field, Operator.IN, values);																												
+	}
+
+	/**
+	 * 产生IN条件 (in)
+	 * 
 	 * @param field
 	 *            表的字段（也可以是函数表达式）
 	 * @param value
 	 *            条件的值 数组
 	 * @return 表达式为 {@code field in (value,...)} 这样的条件
 	 */
-	public static Condition in(Field field, Object[] values) {
+	public static Condition in(Field field, Comparable<?>[] values) {
 		return Condition.get(field, Operator.IN, values);
 	}
-
+	
 	/**
 	 * 产生IN条件
 	 * 
