@@ -3,7 +3,7 @@
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * You may obtain a cmergeopy of the License at
  *
  *      http://www.apache.org/licenses/LICENSE-2.0
  *
@@ -480,7 +480,7 @@ public abstract class Session {
 	 * 
 	 * @param entity
 	 *            要合并的记录数据
-	 * @return 如果插入返回对象本身，如果是更新则返回旧记录的值(如果插入，返回null;如果没修改，返回原对象;如果修改，返回旧对象。)
+	 * @return 如果插入返回对象本身，如果是更新则返回旧记录的值
 	 * @throws SQLException
 	 *             如果数据库操作错误，抛出。
 	 */
@@ -561,7 +561,7 @@ public abstract class Session {
 		}
 		// 如果旧数据不存在
 		insert(entity);
-		return null;
+		return entity;
 	}
 
 	/**
@@ -601,7 +601,7 @@ public abstract class Session {
 		}
 		// 如果旧数据不存在
 		insertCascade(entity);
-		return null;
+		return entity;
 	}
 
 	/**
