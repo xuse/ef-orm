@@ -227,7 +227,7 @@ public abstract class AbstractEntityMetadata extends AbstractMetadata {
 	 * @param field
 	 * @param column
 	 */
-	public void putJavaField(Field field, ColumnMapping type, String columnName, boolean isPk) {
+	public void putJavaField(Field field, ColumnMapping type, String columnName, boolean isPk, Column columnAnnotation) {
 		fields.put(field.name(), type);
 		lowerFields.put(field.name().toLowerCase(), field);
 
@@ -246,6 +246,9 @@ public abstract class AbstractEntityMetadata extends AbstractMetadata {
 		super.updateAutoIncrementAndUpdate(type);
 		if (type.isLob()) {
 			lobNames = ArrayUtils.addElement(lobNames, field, jef.database.Field.class);
+		}
+		if(columnAnnotation!=null && columnAnnotation.unique()) {
+			uniques.add(new UniqueConstraintDef("uc_"+this.tableName+"_"+columnName, columnName));
 		}
 	}
 

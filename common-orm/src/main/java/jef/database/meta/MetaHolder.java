@@ -619,7 +619,7 @@ public final class MetaHolder {
 				} else {
 					type.init(field, columnName, ct, meta);
 				}
-				meta.putJavaField(field, type, columnName, isPK);
+				meta.putJavaField(field, type, columnName, isPK,c);
 			} catch (IllegalArgumentException e) {
 				throw new PersistenceException(meta.getName() + ":" + field.name() + " can not mapping to sql type.", e);
 			}

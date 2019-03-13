@@ -214,7 +214,7 @@ public class DdlGeneratorImpl implements DdlGenerator {
                 }
             }
             sb.append(entry.getKey()).append(' ');
-            sb.append(profile.getCreationComment(entry.getValue(), true));
+            sb.append(profile.getCreationComment(entry.getValue(), false));
             n++;
         }
         sb.append(BRUKETS_RIGHT);
@@ -329,7 +329,7 @@ public class DdlGeneratorImpl implements DdlGenerator {
     		// 删除唯一键约束
 	    	if(RDBMS.mysql == profile.getName() || RDBMS.mariadb == profile.getName()){
 	    		String dropIndexTablePattern = profile.getProperty(DbProperty.DROP_INDEX_TABLE_PATTERN);
-	    		sb.append("DROP INDEX " + String.format(dropIndexTablePattern, con.getName(), con.getTableName()));
+	    		sb.append("DROP CONSTRAINT " + String.format(dropIndexTablePattern, con.getName(), con.getTableName()));
     		}else{
     			sb.append(String.format(DROP_CONSTRAINT_SQL, con.getTableName(), con.getName()));
     		}

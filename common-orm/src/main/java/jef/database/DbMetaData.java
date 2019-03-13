@@ -44,7 +44,10 @@ import java.util.stream.Collectors;
 import javax.inject.Provider;
 import javax.persistence.PersistenceException;
 
+import org.springframework.util.CollectionUtils;
+
 import com.github.geequery.support.spring.CustomConnectionProvider;
+import com.google.common.base.Objects;
 
 import jef.common.Entry;
 import jef.common.PairIS;
@@ -179,15 +182,14 @@ public class DbMetaData {
 	 */
 	private long dbTimeDelta;
 
-
 	protected Connection getConnection(boolean remarkFeature) throws SQLException {
 		Connection conn;
-		if(remarkFeature && ds instanceof CustomConnectionProvider) {
+		if (remarkFeature && ds instanceof CustomConnectionProvider) {
 			Properties props = new Properties();
 			props.put("remarksReporting", "true");
-			conn=((CustomConnectionProvider)ds).getConnectionFromDriver(props);
-		}else {
-			conn=ds.get();
+			conn = ((CustomConnectionProvider) ds).getConnectionFromDriver(props);
+		} else {
+			conn = ds.get();
 		}
 		return conn;
 	}
@@ -195,12 +197,9 @@ public class DbMetaData {
 	/**
 	 * 构造
 	 * 
-	 * @param ds
-	 *            数据连接
-	 * @param parent
-	 *            元数据服务
-	 * @param dbkey
-	 *            当前元数据所属的数据源名称
+	 * @param ds     数据连接
+	 * @param parent 元数据服务
+	 * @param dbkey  当前元数据所属的数据源名称
 	 */
 	public DbMetaData(Provider<Connection> ds) {
 		this.ds = ds;
@@ -276,8 +275,7 @@ public class DbMetaData {
 	/**
 	 * 得到数据库中的表
 	 * 
-	 * @param names
-	 *            要查找的表名，仅第一个参数有效
+	 * @param names 要查找的表名，仅第一个参数有效
 	 * @return 表的信息
 	 */
 	public List<TableInfo> getTable(String name) throws SQLException {
@@ -318,8 +316,7 @@ public class DbMetaData {
 	/**
 	 * 查询数据库中的视图
 	 * 
-	 * @param name
-	 *            视图名称
+	 * @param name 视图名称
 	 * @return 视图信息
 	 */
 	public List<TableInfo> getView(String name) throws SQLException {
@@ -329,9 +326,8 @@ public class DbMetaData {
 	/**
 	 * 得到数据库中（当前schema下）所有视图
 	 * 
-	 * @param needRemark
-	 *            while on Oracle driver, you have to set 'true' to fetch the
-	 *            comment of view.
+	 * @param needRemark while on Oracle driver, you have to set 'true' to fetch the
+	 *                   comment of view.
 	 * @return 视图信息列表。 A collection of view info.
 	 * @throws SQLException
 	 */
@@ -364,15 +360,11 @@ public class DbMetaData {
 	}
 
 	/**
-	 * @param type
-	 *            要查询的对象类型 "TABLE", "VIEW", "SYSTEM TABLE", "GLOBAL TEMPORARY",
-	 *            "LOCAL TEMPORARY", "ALIAS", "SYNONYM".
-	 * @param schema
-	 *            Schema
-	 * @param matchName
-	 *            匹配名称
-	 * @param oper
-	 *            操作符，可以为null，为null时表示等于条件
+	 * @param type      要查询的对象类型 "TABLE", "VIEW", "SYSTEM TABLE", "GLOBAL
+	 *                  TEMPORARY", "LOCAL TEMPORARY", "ALIAS", "SYNONYM".
+	 * @param schema    Schema
+	 * @param matchName 匹配名称
+	 * @param oper      操作符，可以为null，为null时表示等于条件
 	 * @return 表/视图等数据库对象的信息
 	 * @throws SQLException
 	 * @see Operator
@@ -430,8 +422,7 @@ public class DbMetaData {
 	/**
 	 * 返回当前schema下的所有数据库表名
 	 * 
-	 * @param types
-	 *            取以下参数{@link ObjectType}。可以省略，省略的情况下取Table
+	 * @param types 取以下参数{@link ObjectType}。可以省略，省略的情况下取Table
 	 * @return 所有表名
 	 * @throws SQLException
 	 */
@@ -462,8 +453,7 @@ public class DbMetaData {
 	/**
 	 * 判断一张表是否存在
 	 * 
-	 * @param tableName
-	 *            表名
+	 * @param tableName 表名
 	 * @return 表存在返回表名，表不存在返回null
 	 * @throws SQLException
 	 */
@@ -521,10 +511,8 @@ public class DbMetaData {
 	/**
 	 * 判断对象是否存在
 	 * 
-	 * @param type
-	 *            要查找的对象{@linkplain ObjectType 类型}
-	 * @param objectName
-	 *            对象名称
+	 * @param type       要查找的对象{@linkplain ObjectType 类型}
+	 * @param objectName 对象名称
 	 * @return true如果对象存在返回true
 	 * @throws SQLException
 	 * @see ObjectType
@@ -537,10 +525,8 @@ public class DbMetaData {
 	/**
 	 * 判断对象是否存在
 	 * 
-	 * @param type
-	 *            要查找的对象{@linkplain ObjectType 类型}
-	 * @param objectName
-	 *            对象名称
+	 * @param type       要查找的对象{@linkplain ObjectType 类型}
+	 * @param objectName 对象名称
 	 * @return true如果对象存在返回对象名称。否则返回null
 	 * @throws SQLException
 	 * @see ObjectType
@@ -575,12 +561,9 @@ public class DbMetaData {
 	/**
 	 * 判断对象是否存在于指定的schema下
 	 * 
-	 * @param type
-	 *            要查找的对象{@linkplain ObjectType 类型}
-	 * @param schema
-	 *            所属schema
-	 * @param objectName
-	 *            对象名称
+	 * @param type       要查找的对象{@linkplain ObjectType 类型}
+	 * @param schema     所属schema
+	 * @param objectName 对象名称
 	 * @return true如果对象存在。否则false
 	 * @throws SQLException
 	 * @see ObjectType
@@ -601,8 +584,7 @@ public class DbMetaData {
 	/**
 	 * 得到指定表的所有列
 	 * 
-	 * @param tableName
-	 *            表名
+	 * @param tableName 表名
 	 * @return 表中的列。 A collection of columns.
 	 * @throws SQLException
 	 * @see Column
@@ -614,10 +596,8 @@ public class DbMetaData {
 	/**
 	 * 返回指定的列的信息，如果没有找到该列返回null
 	 * 
-	 * @param tableName
-	 *            表名
-	 * @param column
-	 *            列名
+	 * @param tableName 表名
+	 * @param column    列名
 	 * @return 如果没有找到该列返回null
 	 * @throws SQLException
 	 */
@@ -631,7 +611,7 @@ public class DbMetaData {
 			tableName = tableName.substring(n + 1);
 		}
 		Connection conn = getConnection(false);
-		Collection<Index> indexes = getIndexes0(schema,tableName,conn);
+		Collection<Index> indexes = getIndexes0(schema, tableName, conn);
 		try {
 			return getColumns0(schema, tableName, column, conn, indexes);
 		} finally {
@@ -639,7 +619,7 @@ public class DbMetaData {
 		}
 	}
 
-	private Column getColumns0(String schema, String tableName,String column, Connection conn,Collection<Index> indexes) throws SQLException {
+	private Column getColumns0(String schema, String tableName, String column, Connection conn, Collection<Index> indexes) throws SQLException {
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
 		ResultSet rs = null;
 		try {
@@ -650,7 +630,7 @@ public class DbMetaData {
 				populateColumn(result, rs, tableName, indexes);
 			}
 			return result;
-		}finally {
+		} finally {
 			DbUtils.close(rs);
 		}
 	}
@@ -658,8 +638,7 @@ public class DbMetaData {
 	/**
 	 * 得到指定表的所有列
 	 * 
-	 * @param tableName
-	 *            表名
+	 * @param tableName 表名
 	 * @return 表中的列。 A collection of columns.
 	 * @throws SQLException
 	 * @see Column
@@ -743,8 +722,7 @@ public class DbMetaData {
 	/**
 	 * 得到指定实体的所有索引
 	 * 
-	 * @param type
-	 *            指定实体类型
+	 * @param type 指定实体类型
 	 * @return A Collection of index information.
 	 * @throws SQLException
 	 * @see Index
@@ -781,8 +759,7 @@ public class DbMetaData {
 	 * 得到所有的unique约束。过滤掉了主键和非唯一的索引。 但是进一步的区分 unique index和 constraint是比较困难的。
 	 * 此处使用Entity元数据定义中的注解来分析并加以区分，可能不一定准确。 但大部分场合下是有效的。
 	 * 
-	 * @param meta
-	 *            / Metadata
+	 * @param meta / Metadata
 	 * @return Collection of Index
 	 * @throws SQLException
 	 */
@@ -835,8 +812,7 @@ public class DbMetaData {
 	 * 得到所有的unique约束。过滤掉了主键和非唯一的索引。 但是进一步的区分 unique index和 constraint是比较困难的。
 	 * 此处返回的两种都有，对于MySQL，两者并没有本质的差别。 但对于其他数据库，两者是有差别的。目前暂时无法区分
 	 * 
-	 * @param tableName
-	 *            表名
+	 * @param tableName 表名
 	 * @return 具有唯一约束的键
 	 * @throws SQLException
 	 */
@@ -865,8 +841,7 @@ public class DbMetaData {
 	/**
 	 * 得到指定表的所有索引
 	 * 
-	 * @param meta
-	 *            表的元模型
+	 * @param meta 表的元模型
 	 * @return A Collection of index information.
 	 * @throws SQLException
 	 * @see Index
@@ -878,8 +853,7 @@ public class DbMetaData {
 	/**
 	 * 得到指定表的所有索引
 	 * 
-	 * @param tableName
-	 *            表名
+	 * @param tableName 表名
 	 * @return 索引信息
 	 * @see Index
 	 */
@@ -897,7 +871,7 @@ public class DbMetaData {
 		}
 		Connection conn = getConnection(false);
 		try {
-			return getIndexes0(schema, tableName,conn);
+			return getIndexes0(schema, tableName, conn);
 		} finally {
 			releaseConnection(conn);
 		}
@@ -906,7 +880,7 @@ public class DbMetaData {
 	private Collection<Index> getIndexes0(String schema, String tableName, Connection conn) throws SQLException {
 		tableName = info.profile.getObjectNameToUse(tableName);
 		DatabaseMetaData databaseMetaData = conn.getMetaData();
-		try (ResultSet rs = databaseMetaData.getIndexInfo(info.profile.getCatlog(schema), info.profile.getSchema(schema), tableName, false, false)){
+		try (ResultSet rs = databaseMetaData.getIndexInfo(info.profile.getCatlog(schema), info.profile.getSchema(schema), tableName, false, false)) {
 			Map<String, Index> map = new HashMap<String, Index>();
 			while (rs.next()) {
 				String indexName = rs.getString("INDEX_NAME");
@@ -928,7 +902,7 @@ public class DbMetaData {
 				int order = rs.getInt("ORDINAL_POSITION");
 				index.addColumn(cName, asc == null ? true : asc.startsWith("A"), order);
 			}
-			return map.values();	
+			return map.values();
 		}
 	}
 
@@ -1066,14 +1040,13 @@ public class DbMetaData {
 	/**
 	 * 得到表的主键
 	 * 
-	 * @param tableName
-	 *            表名
+	 * @param tableName 表名
 	 * @return Map<String,String> key=列名 value=主键名
 	 */
 	public Optional<PrimaryKey> getPrimaryKey(String tableName) throws SQLException {
 		tableName = DbUtils.toSchemaAdjustedName(tableName);
 		tableName = info.profile.getObjectNameToUse(tableName);
-		String schema=this.schema;
+		String schema = this.schema;
 		int n = tableName.indexOf('.');
 		if (n > -1) {
 			schema = tableName.substring(0, n);
@@ -1114,13 +1087,12 @@ public class DbMetaData {
 	/**
 	 * 获得外键（引用其他表的键）
 	 * 
-	 * @param tableName
-	 *            外键所在的表
+	 * @param tableName 外键所在的表
 	 * @return 外键列表
 	 * @throws SQLException
 	 */
 	public List<ForeignKeyItem> getForeignKey(String tableName) throws SQLException {
-		String schema=this.schema;
+		String schema = this.schema;
 		int n = tableName.indexOf('.');
 		if (n > -1) {
 			schema = tableName.substring(0, n);
@@ -1155,10 +1127,8 @@ public class DbMetaData {
 	/**
 	 * 创建外键
 	 * 
-	 * @param fromField
-	 *            外键位于该列上
-	 * @param refField
-	 *            引用其他表的外键
+	 * @param fromField 外键位于该列上
+	 * @param refField  引用其他表的外键
 	 * @throws SQLException
 	 */
 	public void createForeignKey(Field fromField, Field refField) throws SQLException {
@@ -1174,19 +1144,14 @@ public class DbMetaData {
 	 * <li>{@link DatabaseMetaData#importedKeyNoAction} - 不允许被引用的记录删除或更新</li>
 	 * <li>{@link DatabaseMetaData#importedKeyCascade} - 删除引用外键的记录</li>
 	 * <li>{@link DatabaseMetaData#importedKeySetNull} - 将引用外键的列值改为null</li>
-	 * <li>{@link DatabaseMetaData#importedKeyRestrict} -
-	 * 同importedKeyNoAction</li>
+	 * <li>{@link DatabaseMetaData#importedKeyRestrict} - 同importedKeyNoAction</li>
 	 * <li>{@link DatabaseMetaData#importedKeySetDefault} - 将引用外键的列值改为其缺省值</li>
 	 * </ul>
 	 * 
-	 * @param fromField
-	 *            外键位于该列上
-	 * @param refField
-	 *            引用其他表的外键
-	 * @param deleteRule
-	 *            当被引用的记录发生删除引起无法保持时，执行什么操作，参见上面的规则动作列表
-	 * @param updateRule
-	 *            当被引用的记录发生更新引起外键无法保持时，执行什么操作，参见上面的规则动作列表
+	 * @param fromField  外键位于该列上
+	 * @param refField   引用其他表的外键
+	 * @param deleteRule 当被引用的记录发生删除引起无法保持时，执行什么操作，参见上面的规则动作列表
+	 * @param updateRule 当被引用的记录发生更新引起外键无法保持时，执行什么操作，参见上面的规则动作列表
 	 * @throws SQLException
 	 */
 	public void createForeignKey(Field fromField, Field refField, int deleteRule, int updateRule) throws SQLException {
@@ -1230,8 +1195,7 @@ public class DbMetaData {
 	/**
 	 * 获取指定表中被其他表引用的外键。
 	 * 
-	 * @param tableName
-	 *            被引用外键的表
+	 * @param tableName 被引用外键的表
 	 * @return 外键列表
 	 * @throws SQLException
 	 */
@@ -1337,10 +1301,8 @@ public class DbMetaData {
 	/**
 	 * 检查是否存在指定的存储过程
 	 * 
-	 * @param schema
-	 *            所在schema
-	 * @param objectName
-	 *            存储过程名
+	 * @param schema     所在schema
+	 * @param objectName 存储过程名
 	 * @return 存储过程存在返回true，否则false
 	 * @throws SQLException
 	 */
@@ -1352,13 +1314,10 @@ public class DbMetaData {
 	/**
 	 * 返回指定名称的函数是否存在(需要支持JDBC 4.0的驱动才可执行)
 	 * 
-	 * @param schema
-	 *            所在schema
-	 * @param name
-	 *            函数名
+	 * @param schema 所在schema
+	 * @param name   函数名
 	 * @return 函数存在返回true,否则false
-	 * @throws SQLException
-	 *             检测用户函数功能在 JDBC 4.0 (JDK 6)中定义，很多旧版本驱动都不支持，会抛出此异常
+	 * @throws SQLException 检测用户函数功能在 JDBC 4.0 (JDK 6)中定义，很多旧版本驱动都不支持，会抛出此异常
 	 * @since 1.7.1
 	 * @author Jiyi
 	 */
@@ -1370,8 +1329,7 @@ public class DbMetaData {
 	/**
 	 * 得到数据库中的当前用户的存储过程
 	 * 
-	 * @param schema
-	 *            数据库schema，传入null表示当前schema
+	 * @param schema 数据库schema，传入null表示当前schema
 	 * @return 存储过程
 	 */
 	public List<Function> getProcedures(String schema) throws SQLException {
@@ -1381,8 +1339,7 @@ public class DbMetaData {
 	/**
 	 * 返回所有自定义数据库函数
 	 * 
-	 * @param schema
-	 *            数据库schema，传入null表示当前schema
+	 * @param schema 数据库schema，传入null表示当前schema
 	 * @return 自定义函数
 	 * @throws SQLException
 	 */
@@ -1409,14 +1366,10 @@ public class DbMetaData {
 	/**
 	 * 计算序列的起始值(根据表中最大的键值来计算Sequence的合理起点)
 	 * 
-	 * @param schema
-	 *            schema名称
-	 * @param tableName
-	 *            不带schema的表名
-	 * @param sequenceColumnName
-	 *            使用序列值的字段名称
-	 * @param stReuse
-	 *            可重用的{@code Statement}对象
+	 * @param schema             schema名称
+	 * @param tableName          不带schema的表名
+	 * @param sequenceColumnName 使用序列值的字段名称
+	 * @param stReuse            可重用的{@code Statement}对象
 	 * @return 计算得到的Sequence起始值，使用该起始值一般不会造成sequence和数据表中的已有记录冲突。
 	 * @throws SQLException
 	 */
@@ -1457,12 +1410,11 @@ public class DbMetaData {
 	}
 
 	/**
-	 * Return whether the JDBC 3.0 Savepoint feature was supported. Caches the
-	 * flag for the lifetime of this Metadata.
+	 * Return whether the JDBC 3.0 Savepoint feature was supported. Caches the flag
+	 * for the lifetime of this Metadata.
 	 * 
 	 * @return true if current Database and the JDBC Driver supports savepoints.
-	 * @throws SQLException
-	 *             if thrown by the JDBC driver
+	 * @throws SQLException if thrown by the JDBC driver
 	 */
 	public boolean supportsSavepoints() {
 		return feature.supportsSavepoints();
@@ -1555,8 +1507,7 @@ public class DbMetaData {
 	 * n是刷新间隔秒数。默认3600秒，即分表查找结果默认缓存1小时。
 	 * <p>
 	 * 
-	 * @param tableMetadata
-	 *            数据库表的模型
+	 * @param tableMetadata 数据库表的模型
 	 * @return 所有分表的名称(全大写)。如果这张表没有分表，那么返回空列表。
 	 * 
 	 * @throws SQLException
@@ -1593,14 +1544,10 @@ public class DbMetaData {
 	 * 此外，由于ALTER TABLE语句是DDL，因此多个DDL执行中出现错误时，已经执行过的语句将不会被回滚。所以请尽可能通过
 	 * {@linkplain MetadataEventListener 监听器} 的监听事件来把握表变更的进度情况。
 	 * 
-	 * @param meta
-	 *            元模型
-	 * @param tablename
-	 *            表名
-	 * @param event
-	 *            事件监听器，可以捕捉表对比、SQL语句执行前后等事件
-	 * @throws SQLException
-	 *             修改表失败时抛出
+	 * @param meta      元模型
+	 * @param tablename 表名
+	 * @param event     事件监听器，可以捕捉表对比、SQL语句执行前后等事件
+	 * @throws SQLException 修改表失败时抛出
 	 * @see MetadataEventListener 变更监听器
 	 */
 	public void refreshTable(ITableMetadata meta, String tablename, MetadataEventListener event, boolean modifyConstraint, boolean modifyIndex) throws SQLException {
@@ -1663,8 +1610,8 @@ public class DbMetaData {
 				}
 				continue;
 			}
-			ColumnMapping definedColumn=defined.remove(field.field());
-			if(definedColumn==null) {
+			ColumnMapping definedColumn = defined.remove(field.field());
+			if (definedColumn == null) {
 				throw Exceptions.illegalArgument("Column was not found... {}", field.field());
 			}
 			compareColumns(definedColumn, supportsChangeDelete, changed, c);
@@ -1763,7 +1710,7 @@ public class DbMetaData {
 		if (constraintsDB != null) { // 返回null则表示当前数据库不支持获取约束
 			constraintsDB = constraintsDB.stream().filter((e) -> e.getType() == ConstraintType.U).collect(Collectors.toList());
 			List<Constraint> uniquesEntity = meta.getUniqueDefinitions().stream().map((e) -> e.toConstraint(tablename, meta, info.profile)).collect(Collectors.toList());
-			sqls.addAll(this.compareConstraints(uniquesEntity, constraintsDB)); // 比较两个约束列表，返回SQL语句
+			sqls.addAll(this.compareConstraints(meta.getSchema(),uniquesEntity, constraintsDB)); // 比较两个约束列表，返回SQL语句
 		}
 		return sqls;
 	}
@@ -1798,24 +1745,18 @@ public class DbMetaData {
 	}
 
 	// 计算前后约束的增删改，返回增删SQL语句
-	private List<String> compareConstraints(List<Constraint> after, List<Constraint> before) {
+	private List<String> compareConstraints(String schema, List<Constraint> after, List<Constraint> before) {
 		List<String> result = new ArrayList<String>();
-		if (after != null && after.size() > 0) {
-
-			if (before != null && before.size() > 0) {
-
-				for (int i = after.size() - 1; i >= 0; i--) {
-					Constraint conA = after.get(i);
-
-					for (int j = 0; j < before.size(); j++) {
-						Constraint conB = before.get(j);
-						if (StringUtils.equals(conA.getSchema(), conB.getSchema()) && StringUtils.equals(conA.getName(), conB.getName())) { // 同一个约束，判断是否有变更
-							if (conA.equals(conB)) { // 如果相同则两边都移除
-								after.remove(i);
-								before.remove(j);
-							}
-							break;
-						}
+		if (!CollectionUtils.isEmpty(after) && !CollectionUtils.isEmpty(before)) {
+			for (int i = after.size() - 1; i >= 0; i--) {
+				Constraint conA = after.get(i);
+				for (int j = 0; j < before.size(); j++) {
+					Constraint conB = before.get(j);
+					boolean sameSchema=schema==null || StringUtils.equals(schema, conB.getSchema());
+					if (sameSchema && Objects.equal(conA.getColumns(),conB.getColumns())) { // 同一个约束，判断是否有变更
+						after.remove(i);
+						before.remove(j);
+						break;
 					}
 				}
 			}
@@ -1870,10 +1811,8 @@ public class DbMetaData {
 	/**
 	 * 清除表中的所有数据。truncate是DDL不能回滚。
 	 * 
-	 * @param meta
-	 *            要清除的表的元数据
-	 * @param tablename
-	 *            表名
+	 * @param meta      要清除的表的元数据
+	 * @param tablename 表名
 	 * @throws SQLException
 	 */
 	public void truncate(ITableMetadata meta, List<String> tablename) throws SQLException {
@@ -1896,8 +1835,7 @@ public class DbMetaData {
 	/**
 	 * 创建表
 	 * 
-	 * @param clz
-	 *            建表的CLass
+	 * @param clz 建表的CLass
 	 * @return true建表成功，false表已存在
 	 * @throws SQLException
 	 */
@@ -1909,8 +1847,7 @@ public class DbMetaData {
 	/**
 	 * 创建表
 	 * 
-	 * @param meta
-	 *            表结构描述。 The metadata of the table.
+	 * @param meta 表结构描述。 The metadata of the table.
 	 * @return Ture if the table created successful, or vv.
 	 * @throws SQLException
 	 */
@@ -1921,10 +1858,8 @@ public class DbMetaData {
 	/**
 	 * 创建表
 	 * 
-	 * @param meta
-	 *            表结构描述。 The metadata of the table.
-	 * @param tablename
-	 *            表名。 The name of the table.
+	 * @param meta      表结构描述。 The metadata of the table.
+	 * @param tablename 表名。 The name of the table.
 	 * @return 如果表被创建返回true，如果表已存在返回false。<br>
 	 *         Ture if the table created successful, or vv.
 	 * @throws SQLException
@@ -1969,14 +1904,10 @@ public class DbMetaData {
 	/**
 	 * 创建Sequence
 	 * 
-	 * @param schema
-	 *            数据库schema
-	 * @param sequenceName
-	 *            不含schema的Sequence名称
-	 * @param start
-	 *            Sequence起点
-	 * @param max
-	 *            Sequence最大值
+	 * @param schema       数据库schema
+	 * @param sequenceName 不含schema的Sequence名称
+	 * @param start        Sequence起点
+	 * @param max          Sequence最大值
 	 * @throws SQLException
 	 */
 	public void createSequence(String schema, String sequenceName, long start, Long max) throws SQLException {
@@ -2034,8 +1965,7 @@ public class DbMetaData {
 	/**
 	 * 指定一个SQL脚本文件运行
 	 * 
-	 * @param url
-	 *            the script file.
+	 * @param url the script file.
 	 * @throws SQLException
 	 */
 	public void executeScriptFile(URL url) throws SQLException {
@@ -2045,10 +1975,8 @@ public class DbMetaData {
 	/**
 	 * 指定一个SQL脚本文件运行
 	 * 
-	 * @param url
-	 *            the script file.
-	 * @param endChars
-	 *            命令结束字符
+	 * @param url      the script file.
+	 * @param endChars 命令结束字符
 	 * @throws SQLException
 	 */
 	public void executeScriptFile(URL url, String endChars) throws SQLException {
@@ -2088,10 +2016,8 @@ public class DbMetaData {
 	 * 执行指定的SQL语句<br>
 	 * Execute the sql
 	 * 
-	 * @param sql
-	 *            SQL语句
-	 * @param ps
-	 *            绑定变量条件
+	 * @param sql SQL语句
+	 * @param ps  绑定变量条件
 	 * @return 影响的记录条数
 	 * @throws SQLException
 	 */
@@ -2107,14 +2033,10 @@ public class DbMetaData {
 	/**
 	 * 根据指定的SQL语句查询
 	 * 
-	 * @param sql
-	 *            SQL语句
-	 * @param rst
-	 *            结果转换器
-	 * @param maxReturn
-	 *            最多返回结果数
-	 * @param objs
-	 *            查询绑定变量参数
+	 * @param sql       SQL语句
+	 * @param rst       结果转换器
+	 * @param maxReturn 最多返回结果数
+	 * @param objs      查询绑定变量参数
 	 * @return 转换后的结果集
 	 * @throws SQLException
 	 */
@@ -2161,10 +2083,8 @@ public class DbMetaData {
 	/**
 	 * 删除表中的约束:包括外键
 	 * 
-	 * @param tablename
-	 *            表名，支持Schema重定向
-	 * @param constraintName
-	 *            约束名称
+	 * @param tablename      表名，支持Schema重定向
+	 * @param constraintName 约束名称
 	 * @throws SQLException
 	 */
 	public void dropConstraint(String tablename, String constraintName) throws SQLException {
@@ -2180,8 +2100,7 @@ public class DbMetaData {
 	/**
 	 * 删除表的所有外键，无论是其他表依赖此表的，还是此表依赖其他表的
 	 * 
-	 * @param tablename
-	 *            表名(支持schema重定向)
+	 * @param tablename 表名(支持schema重定向)
 	 * @throws SQLException
 	 */
 	public void dropAllForeignKey(String tablename) throws SQLException {
@@ -2197,8 +2116,7 @@ public class DbMetaData {
 	/**
 	 * 删除表的所有约束，包括外键和主键。 FIXME 但目前不能删除UNIQUE Constraint....
 	 * 
-	 * @param tablename
-	 *            表名(支持schema重定向)
+	 * @param tablename 表名(支持schema重定向)
 	 * @throws SQLException
 	 */
 	public void dropAllConstraint(String tablename) throws SQLException {
@@ -2210,8 +2128,7 @@ public class DbMetaData {
 	/**
 	 * 删除指定的表的主键
 	 * 
-	 * @param tablename
-	 *            支持schema重定向
+	 * @param tablename 支持schema重定向
 	 * @return true if drop success.
 	 * @throws SQLException
 	 */
@@ -2283,11 +2200,9 @@ public class DbMetaData {
 	/**
 	 * 删除指定名称的表
 	 * 
-	 * @param table
-	 *            the name of table.
+	 * @param table the name of table.
 	 * @return true if table was dropped. false if the table was not exist.
-	 * @throws SQLException
-	 *             Any error while executing SQL.
+	 * @throws SQLException Any error while executing SQL.
 	 */
 	public boolean dropTable(String table) throws SQLException {
 		table = getExistTable(table);
@@ -2313,11 +2228,9 @@ public class DbMetaData {
 	/**
 	 * 删除表
 	 * 
-	 * @param table
-	 *            表的Entity
+	 * @param table 表的Entity
 	 * @return true if table was dropped. false if the table was not exist.
-	 * @throws SQLException
-	 *             Any error while executing SQL.
+	 * @throws SQLException Any error while executing SQL.
 	 */
 	public boolean dropTable(Class<?> table) throws SQLException {
 		ITableMetadata meta = MetaHolder.getMeta(table);
@@ -2327,8 +2240,7 @@ public class DbMetaData {
 	/**
 	 * Delete the assign sequence or do nothing if the sequence not exists..
 	 * 
-	 * @param sequenceName
-	 *            the name of sequence.
+	 * @param sequenceName the name of sequence.
 	 * @return true if drop success.
 	 * @throws SQLException
 	 * 
@@ -2658,7 +2570,7 @@ public class DbMetaData {
 	}
 
 	protected boolean hasRemarkFeature() {
-		return info.profile.has(Feature.REMARK_META_FETCH) && !JefConfiguration.getBoolean(DbCfg.DB_NO_REMARK_CONNECTION, false); 
+		return info.profile.has(Feature.REMARK_META_FETCH) && !JefConfiguration.getBoolean(DbCfg.DB_NO_REMARK_CONNECTION, false);
 	}
 
 	public boolean supportsSequence() {
