@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang.builder.ToStringStyle;
 
 import com.google.common.base.Objects;
 
@@ -261,7 +262,7 @@ public class Constraint {
 
 	@Override
 	public String toString() {
-		return ToStringBuilder.reflectionToString(this);
+		return ToStringBuilder.reflectionToString(this,ToStringStyle.SIMPLE_STYLE);
 	}
 
 	@Override
@@ -295,4 +296,6 @@ public class Constraint {
 		result = result * 31 + tableName.hashCode();  
 		return result; 
 	}
+	
+	
 }

@@ -88,7 +88,7 @@ public class TableCreateSQLs {
 				vType = ((AutoIncrement) vType).toNormalType();
 			}
 		}
-		sb.append(dialect.getCreationComment(vType, true));
+		sb.append(dialect.getCreationComment(vType, false));
 		if(StringUtils.isNotEmpty(comment)) {
 			if(dialect.has(Feature.SUPPORT_COMMENT)) {
 				result.ccmments.add(new PairSS(escapedColumnName,comment));
@@ -161,8 +161,9 @@ public class TableCreateSQLs {
 			sb.append(",\n");
 			String cname=unique.name();
 			if(StringUtils.isEmpty(cname)){
-				cname="UC_"+RandomStringUtils.randomAlphanumeric(8).toUpperCase();
+				cname="uc_"+RandomStringUtils.randomAlphanumeric(8).toUpperCase();
 			}
+			cname=dialect.getObjectNameToUse(cname);
 			sb.append("    CONSTRAINT ").append(cname).append(" UNIQUE (");
 			StringUtils.joinTo(columns, ",", sb);
 			sb.append(')');

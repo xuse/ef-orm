@@ -27,6 +27,16 @@ public class UniqueConstraintDef {
 		this.name=unique.name();
 		this.columnNames=unique.columnNames();
 	}
+	
+	/**
+	 * 构造单列的唯一约束
+	 * @param name
+	 * @param columnName
+	 */
+	public UniqueConstraintDef(String name, String columnName) {
+		this.name=name;
+		this.columnNames=new String[] {columnName};
+	}
 
 	public String name() {
 		return name;

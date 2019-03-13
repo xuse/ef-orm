@@ -88,7 +88,7 @@ public class TableCreateStatement {
 				vType = ((AutoIncrement) vType).toNormalType();
 			}
 		}
-		sb.append(dialect.getCreationComment(vType, true));
+		sb.append(dialect.getCreationComment(vType, false));
 		if(StringUtils.isNotEmpty(comment)) {
 			if(dialect.has(Feature.SUPPORT_COMMENT)) {
 				result.ccmments.add(new PairSS(escapedColumnName,comment));
