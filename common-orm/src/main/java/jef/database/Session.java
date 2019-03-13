@@ -41,7 +41,6 @@ import javax.persistence.PersistenceException;
 import com.github.geequery.entity.Entities;
 import com.github.geequery.extension.querydsl.SQLQueryFactoryEx;
 import com.querydsl.sql.SQLQueryFactory;
-import com.sun.tools.doclint.Entity;
 
 import jef.common.log.LogUtil;
 import jef.common.wrapper.IntRange;
@@ -434,10 +433,9 @@ public abstract class Session {
 	 * 合并记录——记录如果已经存在，则比较并更新；如果不存在则新增。（无级联操作）
 	 * 
 	 * @param entity 要合并的记录数据
-	 * @return 如果插入返回对象本身，如果是更新则返回旧记录的值(如果插入，返回null;如果没修改，返回原对象;如果修改，返回旧对象。)
+	 * @return 如果插入了数据返回新对象；如果修改Update了记录，返回旧对象。
 	 * @throws SQLException 如果数据库操作错误，抛出。
 	 */
-	@SuppressWarnings("unchecked")
 	public <T> T merge(T entity) throws SQLException {
 		return (T) merge0(entity, null);
 	}
@@ -496,17 +494,16 @@ public abstract class Session {
 		}
 		// 如果旧数据不存在
 		insert(entity);
-		return null;
+		return entity;
 	}
 
 	/**
 	 * 合并记录——记录如果已经存在，则比较并更新；如果不存在则新增。（带级联操作）
 	 * 
 	 * @param entity 要合并的记录数据
-	 * @return 如果插入返回对象本身，如果是更新则返回旧记录的值
+	 * @return 如果插入数据库则原对象，如果是更新则返回旧记录的值
 	 * @throws SQLException 如果数据库操作错误，抛出。
 	 */
-	@SuppressWarnings("unchecked")
 	public <T> T mergeCascade(T entity) throws SQLException {
 		return (T) mergeCascade0(entity);
 	}
@@ -527,7 +524,7 @@ public abstract class Session {
 		}
 		// 如果旧数据不存在
 		insertCascade(entity);
-		return null;
+		return entity;
 	}
 
 	/**
