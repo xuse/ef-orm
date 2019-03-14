@@ -35,7 +35,7 @@ public abstract class ClassGenerator implements Opcodes {
 		this.accessorType = accessorName.replace('.', '/');
 
 		this.fields = fields;
-		this.cl = new ClassLoaderAccessor(cl);
+		this.cl = cl;
 	}
 
 	abstract byte[] generate();
