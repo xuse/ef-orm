@@ -12,7 +12,7 @@
 	<version>1.0.0-SNAPSHOT</version>
 	<properties>
 		<spring-boot.version>2.0.4.RELEASE</spring-boot.version>
-		<geequery.version>1.12.4.RELEASE</geequery.version>
+		<geequery.version>1.12.6.1</geequery.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
@@ -72,7 +72,7 @@
 			<plugin>
 				<groupId>com.github.geequery</groupId>
 				<artifactId>geequery-maven-plugin</artifactId>
-				<version>1.12.3.RELEASE</version>
+				<version>1.12.6.1</version>
 				<executions>
 					<execution>
 						<goals><goal>enhance</goal></goals>
