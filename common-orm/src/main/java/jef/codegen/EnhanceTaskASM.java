@@ -141,7 +141,7 @@ public class EnhanceTaskASM {
 		final List<String> enumFields = new ArrayList<String>();
 		if (fieldEumData != null) {
 			ClassReader reader = new ClassReader(fieldEumData);
-			reader.accept(new ClassVisitor(Opcodes.ASM6) {
+			reader.accept(new ClassVisitor(Opcodes.ASM7) {
 				@Override
 				public FieldVisitor visitField(int access, String name, String desc, String sig, Object value) {
 					if ((access & Opcodes.ACC_ENUM) > 0) {
@@ -211,7 +211,7 @@ public class EnhanceTaskASM {
 		private String typeName;
 
 		public GetterVisitor(MethodVisitor mv, String name, String typeName) {
-			super(Opcodes.ASM6, mv);
+			super(Opcodes.ASM7, mv);
 			this.name = name;
 			this.typeName = typeName;
 		}
@@ -238,7 +238,7 @@ public class EnhanceTaskASM {
 		private String name;
 
 		public POJOGetterVisitor(MethodVisitor mv, String name) {
-			super(Opcodes.ASM6, mv);
+			super(Opcodes.ASM7, mv);
 
 			this.name = name;
 		}
@@ -266,7 +266,7 @@ public class EnhanceTaskASM {
 		private String typeName;
 
 		public SetterOfClearLazyload(MethodVisitor mv, String name, String typeName) {
-			super(Opcodes.ASM6, mv);
+			super(Opcodes.ASM7, mv);
 			this.name = name;
 			this.typeName = typeName;
 		}
@@ -293,7 +293,7 @@ public class EnhanceTaskASM {
 		private String name;
 
 		public POJOSetterOfClearLazyload(MethodVisitor mv, String name) {
-			super(Opcodes.ASM6, mv);
+			super(Opcodes.ASM7, mv);
 			this.name = name;
 		}
 
@@ -342,7 +342,7 @@ public class EnhanceTaskASM {
 		private int index;
 
 		public SetterVisitor(MethodVisitor mv, String name, String typeName, Type paramType, int index) {
-			super(Opcodes.ASM6, mv);
+			super(Opcodes.ASM7, mv);
 			this.name = name;
 			this.typeName = typeName;
 			this.paramType = paramType;
@@ -383,7 +383,7 @@ public class EnhanceTaskASM {
 		}
 
 		public POJOSetterVisitor(MethodVisitor mv, String typeName, int index) {
-			super(Opcodes.ASM6, mv);
+			super(Opcodes.ASM7, mv);
 			this.index = index;
 			this.typeName = typeName;
 		}

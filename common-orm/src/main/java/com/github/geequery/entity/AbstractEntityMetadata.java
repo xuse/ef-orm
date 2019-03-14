@@ -624,7 +624,7 @@ public abstract class AbstractEntityMetadata extends AbstractMetadata {
 		ClassReader cr = new ClassReader(data);
 
 		final Holder<Boolean> checkd = new Holder<Boolean>(false);
-		cr.accept(new ClassVisitor(Opcodes.ASM6) {
+		cr.accept(new ClassVisitor(Opcodes.ASM7) {
 			public void visitAttribute(Attribute attr) {
 				if ("jefd".equals(attr.type)) {
 					checkd.set(true);

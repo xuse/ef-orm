@@ -39,7 +39,7 @@ public class ClassNameReader {
     public static String[] getClassInfo(ClassReader r) {
         final List<String> array = new ArrayList<>();
         try {
-            r.accept(new ClassVisitor(Opcodes.ASM6,null) {
+            r.accept(new ClassVisitor(Opcodes.ASM7,null) {
                 public void visit(int version,
                                   int access,
                                   String name,

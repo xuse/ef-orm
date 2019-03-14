@@ -38,12 +38,12 @@ public class ClassEmitter extends ClassVisitor {
     private Signature staticHookSig;
 
     public ClassEmitter(ClassVisitor cv) {
-        super(Opcodes.ASM6);
+        super(Opcodes.ASM7);
         setTarget(cv);
     }
 
     public ClassEmitter() {
-        super(Opcodes.ASM6);
+        super(Opcodes.ASM7);
     }
 
     public void setTarget(ClassVisitor cv) {

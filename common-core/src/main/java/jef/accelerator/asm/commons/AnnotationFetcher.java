@@ -19,7 +19,7 @@ public class AnnotationFetcher extends ClassVisitor {
 	private final List<AnnotationData> typeAnnotation = new ArrayList<>();
 
 	public AnnotationFetcher() {
-		super(Opcodes.ASM6);
+		super(Opcodes.ASM7);
 	}
 
 	static final class AnnotationVisitorImpl extends AnnotationVisitor {
@@ -27,7 +27,7 @@ public class AnnotationFetcher extends ClassVisitor {
 		private Consumer<AnnotationData> callback;
 
 		AnnotationVisitorImpl(String desc, boolean visible, Consumer<AnnotationData> callback) {
-			super(Opcodes.ASM6);
+			super(Opcodes.ASM7);
 			this.data = new AnnotationData(desc, visible);
 			this.callback = callback;
 		}
@@ -64,7 +64,7 @@ public class AnnotationFetcher extends ClassVisitor {
 		private boolean visible;
 
 		public ArrayAnnotationVisitor(boolean visiable, Consumer<List<Object>> callback) {
-			super(Opcodes.ASM6);
+			super(Opcodes.ASM7);
 			this.callback = callback;
 			this.visible = visiable;
 		}

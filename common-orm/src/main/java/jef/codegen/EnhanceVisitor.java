@@ -26,7 +26,7 @@ final class EnhanceVisitor extends ClassVisitor {
 	private EnhanceHandler handler;
 
 	public EnhanceVisitor(ClassVisitor cv, List<String> enumFields, EnhanceHandler handler) {
-		super(Opcodes.ASM6, cv);
+		super(Opcodes.ASM7, cv);
 		this.enumFields = enumFields;
 		this.handler = handler;
 	}
@@ -62,7 +62,7 @@ final class EnhanceVisitor extends ClassVisitor {
 		if ((access & Opcodes.ACC_STATIC) > 0)
 			return visitor;
 		nonStaticFields.add(name);
-		return new FieldExtDef(Opcodes.ASM6, new FieldExtCallback(visitor) {
+		return new FieldExtDef(Opcodes.ASM7, new FieldExtCallback(visitor) {
 			public void onFieldRead(FieldExtDef info) {
 				boolean contains = enumFields.contains(name);
 				if (contains) {
