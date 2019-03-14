@@ -6,7 +6,7 @@ import java.util.NoSuchElementException;
 /**
  * 链表数据结构
  * 
- * 一个最简单的单项链表
+ * 一个最简单的单链表
  * 
  * @author jiyi
  *

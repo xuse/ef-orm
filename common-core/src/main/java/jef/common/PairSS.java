@@ -1,6 +1,7 @@
 package jef.common;
 
-import com.google.common.base.Objects;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 
 /**
  * 轻量级容器
@@ -37,34 +38,21 @@ public class PairSS {
 	}
 
 	@Override
+	public String toString() {
+		return first+":"+second;
+	}
+	
+	@Override
 	public int hashCode() {
-		int hash = 0;
-		if (first != null) {
-			hash += first.hashCode();
-		}
-		if (second != null) {
-			hash += second.hashCode();
-		}
-		return hash;
+		return new HashCodeBuilder().append(first).append(second).toHashCode();
 	}
 
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof PairSS) {
-			PairSS rhs = (PairSS) obj;
-			if (!Objects.equal(this.first, rhs.first)) {
-				return false;
-			}
-			if (!Objects.equal(this.second, rhs.second)) {
-				return false;
-			}
-			return true;
+		if(obj instanceof PairSS) {
+			PairSS rhs=(PairSS)obj;
+			return new EqualsBuilder().append(first, rhs.first).append(second, rhs.second).isEquals();
 		}
 		return false;
-	}
-
-	@Override
-	public String toString() {
-		return first + ":" + second;
 	}
 }

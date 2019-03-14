@@ -96,7 +96,7 @@ public class DateSpan extends ContinuedRange<Date> {
 		c1.add(Calendar.YEAR, year);
 		c1.add(Calendar.MONTH, month);
 		c1.add(Calendar.DAY_OF_YEAR, day);
-		c1.add(Calendar.HOUR, hour);
+		c1.add(Calendar.HOUR_OF_DAY, hour);
 		c1.add(Calendar.MINUTE, minute);
 		c1.add(Calendar.SECOND, second);
 		this.end+=c1.getTimeInMillis()-start;
