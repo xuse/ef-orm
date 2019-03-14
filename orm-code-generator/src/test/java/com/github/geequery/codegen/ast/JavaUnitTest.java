@@ -72,8 +72,8 @@ public class JavaUnitTest {
 		System.out.println("parammeter(0) name:"+findMethod.getParameter(0).getName());
 		System.out.println("parammeter(1) name:"+findMethod.getParameter(1).getName());	
 		// 生成方法内的代码
-		findMethod.putAttribute("attribute1", "intParameter.intValue();");  //  
-		findMethod.putAttribute("attribute2", "Integer.parseInt(strParameter);");  //
+//		findMethod.putAttribute("attribute1", "intParameter.intValue();");  //  
+//		findMethod.putAttribute("attribute2", "Integer.parseInt(strParameter);");  //
 		findMethod.appendCode("int num1= $attribute1$");
 		findMethod.appendCode("int num2= $attribute2$");  
 		findMethod.addContent("int num=num1+num2;");
@@ -96,9 +96,9 @@ public class JavaUnitTest {
 		JavaMethod updateMethod=new JavaMethod("updateObject");
 		updateMethod.addparam(java.sql.Statement.class, "arg1");
 		updateMethod.addparam(jef.database.jsqlparser.visitor.Statement.class, "arg2");
-		updateMethod.putAttribute("attribute1", "intParameter.intValue();");  //  
-		updateMethod.putAttribute("attribute2", "Integer.parseInt(strParameter);");  //
-		updateMethod.putAttribute("attribute3", "0.998");
+//		updateMethod.putAttribute("attribute1", "intParameter.intValue();");  //  
+//		updateMethod.putAttribute("attribute2", "Integer.parseInt(strParameter);");  //
+//		updateMethod.putAttribute("attribute3", "0.998");
 		
 		updateMethod.appendCode("var int = $attribute1$");
 		updateMethod.appendCode("var String = $attribute2$");

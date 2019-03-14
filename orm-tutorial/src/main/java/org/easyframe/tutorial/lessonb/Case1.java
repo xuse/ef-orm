@@ -3,14 +3,15 @@ package org.easyframe.tutorial.lessonb;
 import java.sql.SQLException;
 import java.util.Arrays;
 
-import jef.database.ORMConfig;
-
 import org.easyframe.enterprise.spring.CommonDao;
 import org.easyframe.tutorial.lessonb.entity.Foo;
 import org.easyframe.tutorial.lessonb.entity.PojoEntity;
 import org.junit.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+
+import jef.database.ORMConfig;
 
 /**
  * 与Spring集成的示例。
@@ -22,7 +23,7 @@ import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 @ContextConfiguration(locations = { "classpath:spring/spring-test-case1.xml" })
 public class Case1 extends AbstractJUnit4SpringContextTests{
 	
-	@javax.annotation.Resource
+	@Autowired
 	private CommonDao commonDao;
 	
 	@Test

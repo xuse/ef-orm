@@ -75,7 +75,7 @@ public class EnhanceTaskASM {
 		final List<String> enumFields = new ArrayList<String>();
 		if (fieldEumData != null) {
 			ClassReader reader = new ClassReader(fieldEumData);
-			reader.accept(new ClassVisitor(Opcodes.ASM6) {
+			reader.accept(new ClassVisitor(Opcodes.ASM7) {
 				@Override
 				public FieldVisitor visitField(int access, String name, String desc, String sig, Object value) {
 					if ((access & Opcodes.ACC_ENUM) > 0) {
@@ -108,7 +108,7 @@ public class EnhanceTaskASM {
 			return null;
 
 		ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-		reader.accept(new ClassVisitor(Opcodes.ASM6, cw) {
+		reader.accept(new ClassVisitor(Opcodes.ASM7, cw) {
 			private List<String> nonStaticFields = new ArrayList<String>();
 			private List<String> lobAndRefFields = new ArrayList<String>();
 			private String typeName;
@@ -139,7 +139,7 @@ public class EnhanceTaskASM {
 				if ((access & Opcodes.ACC_STATIC) > 0)
 					return visitor;
 				nonStaticFields.add(name);
-				return new FieldExtDef(Opcodes.ASM6, new FieldExtCallback(visitor) {
+				return new FieldExtDef(Opcodes.ASM7, new FieldExtCallback(visitor) {
 					public void onFieldRead(FieldExtDef info) {
 						boolean contains = enumFields.contains(name);
 						if (contains) {
@@ -259,7 +259,7 @@ public class EnhanceTaskASM {
 		private String typeName;
 
 		public GetterVisitor(MethodVisitor mv, String name, String typeName) {
-			super(Opcodes.ASM6, mv);
+			super(Opcodes.ASM7, mv);
 			this.name = name;
 			this.typeName = typeName;
 		}
@@ -287,7 +287,7 @@ public class EnhanceTaskASM {
 		private String typeName;
 
 		public SetterOfClearLazyload(MethodVisitor mv, String name, String typeName) {
-			super(Opcodes.ASM6, mv);
+			super(Opcodes.ASM7, mv);
 			this.name = name;
 			this.typeName = typeName;
 		}
@@ -332,7 +332,7 @@ public class EnhanceTaskASM {
 		private Type paramType;
 
 		public SetterVisitor(MethodVisitor mv, String name, String typeName, Type paramType) {
-			super(Opcodes.ASM6, mv);
+			super(Opcodes.ASM7, mv);
 			this.name = name;
 			this.typeName = typeName;
 			this.paramType = paramType;
@@ -352,7 +352,7 @@ public class EnhanceTaskASM {
 			mv.visitIntInsn(ALOAD, 0);
 			mv.visitFieldInsn(GETSTATIC, typeName + "$Field", name, "L" + typeName + "$Field;");
 
-			if (paramType.isPrimitive()) {
+			if (isPrimitive(paramType)) {
 				mv.visitVarInsn(ASMUtils.getLoadIns(paramType), 1);
 				ASMUtils.doWrap(mv, paramType);
 			} else {
@@ -368,6 +368,10 @@ public class EnhanceTaskASM {
 		public void visitMaxs(int maxStack, int maxLocals) {
 			mv.visitMaxs(4, maxLocals);
 		}
+		
+		private boolean isPrimitive(Type paramType) {
+			return paramType.getSort() > Type.VOID && paramType.getSort() < Type.ARRAY;
+		}
 	}
-
+	
 }

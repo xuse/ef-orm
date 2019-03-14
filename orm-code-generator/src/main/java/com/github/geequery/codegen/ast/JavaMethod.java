@@ -23,16 +23,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.script.ScriptEngine;
-import javax.script.ScriptException;
+import org.apache.commons.lang.StringUtils;
 
 import com.github.geequery.codegen.ast.IClass.RealClass;
-import jef.jre5support.script.JavaScriptUtil;
+
 import jef.tools.ArrayUtils;
 import jef.tools.string.JefStringReader;
-
-import org.apache.commons.lang.ObjectUtils;
-import org.apache.commons.lang.StringUtils;
 
 public class JavaMethod extends DefaultJavaElement implements JavaElement {
 	private String name;
@@ -306,8 +302,6 @@ public class JavaMethod extends DefaultJavaElement implements JavaElement {
 		return toMethodKey(name, set);
 	}
 
-	private ScriptEngine engine;
-
 	public String getName() {
 		return name;
 	}
@@ -316,32 +310,14 @@ public class JavaMethod extends DefaultJavaElement implements JavaElement {
 		return modifier;
 	}
 
-	public void putAttribute(String key, Object value) {
-		if (engine == null) {
-			initEngine();
-		}
-		engine.put(key, value);
-	}
-
 	public String appendCode(String code) {
-		try {
-			if (engine == null) {
-				initEngine();
-			}
-			JefStringReader reader = new JefStringReader(code);
+		try (JefStringReader reader = new JefStringReader(code)){
+			;
 			StringBuilder sb = new StringBuilder();
 			int c;
 			while ((c = reader.read()) > -1) {
 				char ch = (char) c;
-				if (ch == '$') {
-					String varName = new String(reader.readUntillKey("$").toCharArray());
-					if (varName.length() > 0) {
-						reader.read();// 跳过结束符
-						Object obj = engine.eval(varName);
-						obj = JavaScriptUtil.jsToJava(obj);
-						sb.append(ObjectUtils.toString(obj));
-					}
-				} else if (ch == '\'') {
+				if (ch == '\'') {
 					sb.append("\"");
 				} else {
 					sb.append(ch);
@@ -352,12 +328,6 @@ public class JavaMethod extends DefaultJavaElement implements JavaElement {
 			return str;
 		} catch (IOException e) {
 			throw new RuntimeException(e);
-		} catch (ScriptException e) {
-			throw new RuntimeException(e);
 		}
-	}
-
-	private void initEngine() {
-		engine = jef.jre5support.script.JavaScriptUtil.newEngine();
 	}
 }

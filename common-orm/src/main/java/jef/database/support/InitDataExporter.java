@@ -202,7 +202,7 @@ public class InitDataExporter {
 		private Set<String> annotations = new HashSet<String>();
 
 		public ClassAnnotationExtracter() {
-			super(Opcodes.ASM6);
+			super(Opcodes.ASM7);
 		}
 
 		@Override
