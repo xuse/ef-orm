@@ -315,7 +315,6 @@ public final class SequenceManager {
 		private int valueStep;
 		private String update;
 		private String select;
-		private long last = -1;
 
 		/*
 		 * @param key Sequence名称
@@ -351,9 +350,7 @@ public final class SequenceManager {
 		@Override
 		protected long getFirstAndPushOthers(int num, DbClient conn, String dbKey) throws SQLException {
 			DbMetaData meta = conn.getNoTransactionSession().getMetaData(dbKey);
-			if (last < 0) {
-				last = queryLast(meta);
-			}
+			long last = queryLast(meta);
 			long nextVal = last + valueStep;
 			int updated = conn.executeSql(update, nextVal, last);
 			while (updated == 0) { // 基于CAS操作的乐观锁,
@@ -363,7 +360,6 @@ public final class SequenceManager {
 			}
 			long result = last + 1;
 			super.pushRange(last + 2, nextVal);
-			last = nextVal;
 			LogUtil.info("Fetch Table-Sequence {} for column [{}.{}], from {} to {}.", config.name, this.rawTable, this.rawColumn, result, nextVal);
 			return result;
 		}
