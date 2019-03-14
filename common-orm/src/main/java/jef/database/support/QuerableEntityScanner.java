@@ -249,7 +249,7 @@ public class QuerableEntityScanner {
 				}
 			}
 		} catch (Throwable e) {
-			LogUtil.error("EntityScanner:[Failure]" + StringUtils.exceptionStack(e));
+			LogUtil.error("EntityScanner:[Failure]" + LogUtil.exceptionStack(e));
 		}
 	}
 

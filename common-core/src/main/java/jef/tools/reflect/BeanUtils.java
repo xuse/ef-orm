@@ -511,7 +511,7 @@ public class BeanUtils {
 					return me.newInstance(params);
 				}
 			} catch (Exception e) {
-				Exceptions.thorwAsIllegalState(e);
+				Exceptions.illegalState(e);
 			}
 		}
 		List<Class<?>> list = new ArrayList<Class<?>>();

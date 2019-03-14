@@ -154,7 +154,7 @@ public class SpringbootMojo extends AbstractMojo {
 					props.put("geequery.repos", reposPackage);
 					moveProperties(source, propertiesTarget, props);
 				} catch (IOException e) {
-					throw Exceptions.asIllegalState(e);
+					throw Exceptions.illegalState(e);
 				}
 			}else {
 				LogUtil.info("file was not found. {}", "/resource/application.properties");

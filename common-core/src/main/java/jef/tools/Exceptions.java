@@ -1,6 +1,7 @@
 package jef.tools;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.NoSuchElementException;
 import java.util.function.BiFunction;
 import java.util.function.BooleanSupplier;
 import java.util.function.Function;
@@ -9,38 +10,19 @@ import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.helpers.FormattingTuple;
+import org.slf4j.helpers.MessageFormatter;
 
 /**
- * 常见异常操作类
+ * 常见异常包装类
  * 
  * @author jiyi
  *
  */
 public class Exceptions {
 	private static final Logger log = LoggerFactory.getLogger(Exceptions.class);
-
-	/**
-	 * 【异常转封装】：转换为IllegalArgumentException并抛出。
-	 * 
-	 * @param t 异常
-	 */
-	public static void thorwAsIllegalArgument(Throwable t) {
-		if (t instanceof Error) {
-			throw (Error) t;
-		}
-		throw asIllegalArgument(t, true);
-	}
-
-	/**
-	 * 【异常转封装】：转换为IllegalStateException并抛出。
-	 * 
-	 * @param t
-	 */
-	public static void thorwAsIllegalState(Throwable t) {
-		if (t instanceof Error) {
-			throw (Error) t;
-		}
-		throw asIllegalState(t, true);
+	
+	private Exceptions() {
 	}
 
 	/**
@@ -50,8 +32,20 @@ public class Exceptions {
 	 * @return
 	 */
 	public static IllegalArgumentException asIllegalArgument(Throwable t) {
-		return asIllegalArgument(t, true);
+		return illegalArgument(t, true);
 	}
+
+	/**
+	 * 使用slf4j的机制来生成异常信息
+	 * 
+	 * @param message
+	 * @param objects
+	 * @return
+	 */
+	public static IllegalArgumentException illegalArgument(String message, Object... objects) {
+		FormattingTuple f = MessageFormatter.arrayFormat(message, objects);
+		return f.getThrowable() == null ? new IllegalArgumentException(f.getMessage()) : new IllegalArgumentException(f.getMessage(), f.getThrowable());
+	};
 
 	/**
 	 * 转封装为IllegalArgumentException
@@ -60,11 +54,11 @@ public class Exceptions {
 	 * @param allowOtherRuntime true则允许抛出其他RuntimeException.
 	 * @return IllegalArgumentException
 	 */
-	public static IllegalArgumentException asIllegalArgument(Throwable t, boolean allowOtherRuntime) {
+	public static IllegalArgumentException illegalArgument(Throwable t, boolean allowOtherRuntime) {
 		if (t instanceof IllegalArgumentException) {
 			return (IllegalArgumentException) t;
 		} else if (t instanceof InvocationTargetException) {
-			return asIllegalArgument(t.getCause(), allowOtherRuntime);
+			return illegalArgument(t.getCause(), allowOtherRuntime);
 		} else if (allowOtherRuntime && (t instanceof RuntimeException)) {
 			throw (RuntimeException) t;
 		}
@@ -77,8 +71,8 @@ public class Exceptions {
 	 * @param t 异常
 	 * @return IllegalStateException
 	 */
-	public static IllegalStateException asIllegalState(Throwable t) {
-		return asIllegalState(t, true);
+	public static IllegalStateException illegalState(Throwable t) {
+		return illegalState(t, true);
 	}
 
 	/**
@@ -88,15 +82,75 @@ public class Exceptions {
 	 * @param allowOtherRuntime true则允许抛出其他RuntimeException.
 	 * @return IllegalStateException
 	 */
-	public static IllegalStateException asIllegalState(Throwable t, boolean allowOtherRuntime) {
+	public static IllegalStateException illegalState(Throwable t, boolean allowOtherRuntime) {
 		if (t instanceof IllegalStateException) {
 			return (IllegalStateException) t;
 		} else if (t instanceof InvocationTargetException) {
-			return asIllegalState(t.getCause(), allowOtherRuntime);
+			return illegalState(t.getCause(), allowOtherRuntime);
 		} else if (allowOtherRuntime && (t instanceof RuntimeException)) {
 			throw (RuntimeException) t;
 		}
 		return new IllegalStateException(t);
+	}
+
+	/**
+	 * 使用slf4j的机制来生成异常信息
+	 * 
+	 * @param message
+	 * @param objects
+	 * @return
+	 */
+	public static IllegalStateException illegalState(String message, Object... objects) {
+		FormattingTuple f = MessageFormatter.arrayFormat(message, objects);
+		return f.getThrowable() == null ? new IllegalStateException(f.getMessage()) : new IllegalStateException(f.getMessage(), f.getThrowable());
+	};
+
+	/**
+	 * 使用slf4j的机制来生成异常信息
+	 * 
+	 * @param message
+	 * @param objects
+	 * @return NoSuchElementException
+	 */
+	public static NoSuchElementException noSuchElement(String message, Object... objects) {
+		FormattingTuple f = MessageFormatter.arrayFormat(message, objects);
+		return new NoSuchElementException(f.getMessage());
+	}
+
+	/**
+	 * 使用slf4j的机制来生成异常信息
+	 * 
+	 * @param message
+	 * @param objects
+	 * @return IndexOutOfBoundsException
+	 */
+	public static IndexOutOfBoundsException indexOutOfBounds(String message, Object... objects) {
+		FormattingTuple f = MessageFormatter.arrayFormat(message, objects);
+		return new IndexOutOfBoundsException(f.getMessage());
+	}
+
+	/**
+	 * 使用slf4j的机制来生成异常信息
+	 * 
+	 * @param message
+	 * @param objects
+	 * @return UnsupportedOperationException
+	 */
+	public static UnsupportedOperationException unsupportedOperation(String message, Object... objects) {
+		FormattingTuple f = MessageFormatter.arrayFormat(message, objects);
+		return new UnsupportedOperationException(f.getMessage());
+	}
+
+	/**
+	 * 进行消息格式化
+	 * 
+	 * @param message
+	 * @param objects
+	 * @return
+	 */
+	public static String format(String message, Object... objects) {
+		FormattingTuple f = MessageFormatter.arrayFormat(message, objects);
+		return f.getMessage();
 	}
 
 	/**
@@ -270,7 +324,7 @@ public class Exceptions {
 	 */
 	public static <T> T applyNotNull(Supplier<T> function, T defaultValue) {
 		try {
-			T t =  function.get();
+			T t = function.get();
 			return t == null ? defaultValue : t;
 		} catch (Exception e) {
 			log.error("apply {} error,", function, e);
