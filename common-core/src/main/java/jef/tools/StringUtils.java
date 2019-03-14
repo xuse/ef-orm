@@ -18,7 +18,6 @@ package jef.tools;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -216,97 +215,6 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 		return concat(left, new String(chars), right);
 	}
 
-	/**
-	 * 将异常信息中的摘要输出到StringBuilder中
-	 * 
-	 * @param e
-	 * @param sb
-	 */
-	public static void exceptionSummary(Throwable e, StringBuilder sb) {
-		String msg = e.getLocalizedMessage();
-		StackTraceElement[] stacks = e.getStackTrace();
-		if (msg == null && e.getCause() != null) {
-			exceptionSummary(e.getCause(), sb);
-		}
-		String stack = stacks.length > 0 ? stacks[0].toString() : "";
-		sb.append(e.getClass().getSimpleName()).append(':').append(msg).append('\n').append(stack);
-	}
-
-	/**
-	 * 返回异常信息的堆栈摘要
-	 * 
-	 * @param e
-	 * @return
-	 */
-	public static String exceptionSummary(Throwable e) {
-		String msg = e.getLocalizedMessage();
-		StackTraceElement[] stacks = e.getStackTrace();
-		if (msg == null && e.getCause() != null) {
-			msg = exceptionSummary(e.getCause());
-		}
-		String stack = stacks.length > 0 ? stacks[0].toString() : "";
-		return StringUtils.concat(e.getClass().getSimpleName(), ":", msg, "\r\n", stack);
-	}
-
-	/**
-	 * 將错误堆栈信息转换为String
-	 * 
-	 * @param e
-	 * @param pkgStart
-	 * @return
-	 */
-	public static String exceptionStack(Throwable e, final String... pkgStart) {
-		return exceptionStack("\r\n", e, pkgStart);
-	}
-
-	/**
-	 * 将异常堆栈信息转换为String
-	 * 
-	 * @param cr
-	 *            换行符
-	 * @param e
-	 *            异常
-	 * @param pkgStart
-	 *            包的开头描述
-	 * @return
-	 */
-	public static String exceptionStack(final String cr, Throwable e, final String... pkgStart) {
-		StringWriter w = new StringWriter();
-		e.printStackTrace(new PrintWriter(w) {
-			@Override
-			public void println() {
-			}
-
-			@Override
-			public void write(String x) {
-				x = rtrim(x, '\r', '\n', '\t');
-				if (x.length() == 0) {
-					return;
-				}
-				if (pkgStart.length == 0) {
-					super.write(x, 0, x.length());
-					super.write(cr, 0, cr.length());
-					return;
-				}
-				String y = x.trim();
-				if (!y.startsWith("at ")) {
-					super.write(x, 0, x.length());
-					super.write(cr, 0, cr.length());
-					return;
-				}
-				for (String s : pkgStart) {
-					if (matchChars(y, 3, s)) {
-						super.write(x, 0, x.length());
-						super.write(cr, 0, cr.length());
-						return;
-					}
-				}
-			}
-		});
-		w.flush();
-		IOUtils.closeQuietly(w);
-		return w.getBuffer().toString();
-	}
 
 	/**
 	 * 判断字符串的一部分是否和制定的文字匹配
@@ -2505,5 +2413,21 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 */
 	public static boolean startsWithIgnoreCase(String searchIn, int startAt, String searchFor) {
 		return searchIn.regionMatches(true, startAt, searchFor, 0, searchFor.length());
+	}
+	
+	/**
+	 * 返回第一个不为空的字符串
+	 * @param strings 字符串序列
+	 * @throws IllegalArgumentException 如果传入的字符串中找不到非空串，抛出。
+	 * @return  第一个不为空的字符串
+	 */
+	public static String firstNonEmpty(String...strings) {
+		Assert.notNull(strings);
+		for(String s: strings) {
+			if(StringUtils.isNotEmpty(s)) {
+				return s;
+			}
+		}
+		throw new IllegalArgumentException("All input strings are empty!");
 	}
 }

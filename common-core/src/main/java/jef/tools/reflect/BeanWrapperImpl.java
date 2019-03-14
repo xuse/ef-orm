@@ -231,17 +231,17 @@ public final class BeanWrapperImpl extends BeanWrapper {
 		try {
 			m.invoke(obj, new Object[] { newValue });
 		} catch (IllegalArgumentException e) {
-			String detail=StringUtils.exceptionStack(e, "jef","com");
+			String detail=LogUtil.exceptionStack(e, "jef","com");
 			String message=StringUtils.concat("IllegalArgumentException while setting property", 
 					fieldName," in bean ",obj.getClass().getName()," value:", (newValue == null ? "null" : newValue.getClass().getName()),"\ndetail:",detail);
 			LogUtil.error(message);
 		} catch (IllegalAccessException e) {
-			String detail=StringUtils.exceptionStack(e, "jef","com");
+			String detail=LogUtil.exceptionStack(e, "jef","com");
 			String message=StringUtils.concat("IllegalAccessException while setting property", 
 					fieldName," in bean ",obj.getClass().getName(),"\ndetail:",detail);
 			LogUtil.error(message);
 		} catch (InvocationTargetException e) {
-			String detail=StringUtils.exceptionStack(e.getTargetException(), "jef","com");
+			String detail=LogUtil.exceptionStack(e.getTargetException(), "jef","com");
 			String message=StringUtils.concat("InvocationTargetException while setting property", 
 					fieldName," in bean ",obj.getClass().getName(),"\ndetail:",detail);
 			LogUtil.error(message);
