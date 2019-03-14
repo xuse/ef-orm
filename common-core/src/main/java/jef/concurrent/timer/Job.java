@@ -23,7 +23,6 @@ import jef.common.DateSpan;
 import jef.common.log.LogUtil;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
-import jef.tools.StringUtils;
 
 /**
  * 由于Trigger方法中涉及重新安排任务的时间，造成需要存取TimerTask的state属性，
@@ -214,7 +213,7 @@ public abstract class Job extends TimerTask implements Serializable {
 		try{
 			execute();	
 		}catch(Throwable t){
-			exception = StringUtils.exceptionSummary(t);
+			exception = LogUtil.exceptionSummary(t);
 		}
 		//将上次运行时间保存到本地
 		if(stateSaved()){

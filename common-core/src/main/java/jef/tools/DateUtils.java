@@ -73,14 +73,14 @@ public abstract class DateUtils {
 	/**
 	 * 格式化为日期+时间（中式）
 	 * 
-	 * @deprecated Use @{DateFormats}
+	 * @deprecated Use @{DateFormats.DATE_TIME_CS}
 	 * @param d
 	 * @return
 	 */
 	public static String formatDateTime(Date d) {
 		if (d == null)
 			return "";
-		return DateFormats.DATE_TIME_CS.get().format(d);
+		return DateFormats.DATE_TIME_CS.format(d);
 	}
 
 	/**

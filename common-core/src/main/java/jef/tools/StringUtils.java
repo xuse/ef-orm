@@ -18,7 +18,6 @@ package jef.tools;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -91,8 +90,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	}
 
 	/**
-	 * 获得文本长度，其中双字节字符按2计算。 举例： getLengthInBytes("中国") = 4
-	 * getLengthInBytes("卡拉OK") = 6 getLengthInBytes("太阳 月亮") = 10
+	 * 获得文本长度，其中双字节字符按2计算。 举例： getLengthInBytes("中国") = 4 getLengthInBytes("卡拉OK") =
+	 * 6 getLengthInBytes("太阳 月亮") = 10
 	 * 
 	 * @param str
 	 * @return
@@ -135,12 +134,9 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 替换最后一个出现
 	 * 
-	 * @param text
-	 *            传入字符串
-	 * @param searchString
-	 *            查找字符串
-	 * @param replacement
-	 *            要替换为字符串
+	 * @param text         传入字符串
+	 * @param searchString 查找字符串
+	 * @param replacement  要替换为字符串
 	 * @return 替换后的字符串
 	 */
 	public static String replaceLast(String text, char searchString, char replacement) {
@@ -161,10 +157,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * 
 	 * @param text
 	 * @param replacement
-	 * @param offset
-	 *            :[0,text.length-1]
-	 * @param length
-	 *            :<=text.length
+	 * @param offset      :[0,text.length-1]
+	 * @param length      :<=text.length
 	 * @return 替换后的字符串
 	 */
 	public static String replace(String text, char replacement, int offset, int length) {
@@ -185,16 +179,11 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 把[offset,offset+length)范围内的字符替换成fixed个replacement
 	 * 
-	 * @param text
-	 *            原字符串
-	 * @param replacement
-	 *            替换符
-	 * @param fixed
-	 *            个数
-	 * @param offset
-	 *            替换起始位置
-	 * @param length
-	 *            替换长度
+	 * @param text        原字符串
+	 * @param replacement 替换符
+	 * @param fixed       个数
+	 * @param offset      替换起始位置
+	 * @param length      替换长度
 	 * @return
 	 */
 	public static String replace(String text, char replacement, int fixed, int offset, int length) {
@@ -215,9 +204,10 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 
 		return concat(left, new String(chars), right);
 	}
-	
+
 	/**
 	 * 字符串指定范围内进行replace
+	 * 
 	 * @param text
 	 * @param from
 	 * @param replacement
@@ -225,11 +215,12 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * @return
 	 */
 	public static String replace(String text, String from, String replacement, int offset) {
-		return replace(text,from,replacement,offset, text.length());
+		return replace(text, from, replacement, offset, text.length());
 	}
 
 	/**
 	 * 字符串指定范围内进行replace
+	 * 
 	 * @param text
 	 * @param from
 	 * @param replacement
@@ -250,7 +241,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 			sb.append(text.substring(0, offset));
 		int compareLength = from.length();
 		boolean replaced = false;
-		int matchEnd=end - compareLength;
+		int matchEnd = end - compareLength;
 		for (int x = offset; x < matchEnd;) {
 			if (text.regionMatches(x, from, 0, compareLength)) {
 				sb.append(replacement);
@@ -265,98 +256,6 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 			sb.append(text.substring(matchEnd));
 		}
 		return replaced ? sb.toString() : text;
-	}
-
-	/**
-	 * 将异常信息中的摘要输出到StringBuilder中
-	 * 
-	 * @param e
-	 * @param sb
-	 */
-	public static void exceptionSummary(Throwable e, StringBuilder sb) {
-		String msg = e.getLocalizedMessage();
-		StackTraceElement[] stacks = e.getStackTrace();
-		if (msg == null && e.getCause() != null) {
-			exceptionSummary(e.getCause(), sb);
-		}
-		String stack = stacks.length > 0 ? stacks[0].toString() : "";
-		sb.append(e.getClass().getSimpleName()).append(':').append(msg).append('\n').append(stack);
-	}
-
-	/**
-	 * 返回异常信息的堆栈摘要
-	 * 
-	 * @param e
-	 * @return
-	 */
-	public static String exceptionSummary(Throwable e) {
-		String msg = e.getLocalizedMessage();
-		StackTraceElement[] stacks = e.getStackTrace();
-		if (msg == null && e.getCause() != null) {
-			msg = exceptionSummary(e.getCause());
-		}
-		String stack = stacks.length > 0 ? stacks[0].toString() : "";
-		return StringUtils.concat(e.getClass().getSimpleName(), ":", msg, "\r\n", stack);
-	}
-
-	/**
-	 * 將错误堆栈信息转换为String
-	 * 
-	 * @param e
-	 * @param pkgStart
-	 * @return
-	 */
-	public static String exceptionStack(Throwable e, final String... pkgStart) {
-		return exceptionStack("\r\n", e, pkgStart);
-	}
-
-	/**
-	 * 将异常堆栈信息转换为String
-	 * 
-	 * @param cr
-	 *            换行符
-	 * @param e
-	 *            异常
-	 * @param pkgStart
-	 *            包的开头描述
-	 * @return
-	 */
-	public static String exceptionStack(final String cr, Throwable e, final String... pkgStart) {
-		StringWriter w = new StringWriter();
-		e.printStackTrace(new PrintWriter(w) {
-			@Override
-			public void println() {
-			}
-
-			@Override
-			public void write(String x) {
-				x = rtrim(x, '\r', '\n', '\t');
-				if (x.length() == 0) {
-					return;
-				}
-				if (pkgStart.length == 0) {
-					super.write(x, 0, x.length());
-					super.write(cr, 0, cr.length());
-					return;
-				}
-				String y = x.trim();
-				if (!y.startsWith("at ")) {
-					super.write(x, 0, x.length());
-					super.write(cr, 0, cr.length());
-					return;
-				}
-				for (String s : pkgStart) {
-					if (matchChars(y, 3, s)) {
-						super.write(x, 0, x.length());
-						super.write(cr, 0, cr.length());
-						return;
-					}
-				}
-			}
-		});
-		w.flush();
-		IOUtils.closeQuietly(w);
-		return w.getBuffer().toString();
 	}
 
 	/**
@@ -478,14 +377,10 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 通过增加数字后缀来避免名称的重复
 	 * 
-	 * @param base
-	 *            原值
-	 * @param exists
-	 *            已有的值
-	 * @param allowRaw
-	 *            不添加后缀也不重复的情况下返回原值
-	 * @param appendFormat
-	 *            后缀格式
+	 * @param base         原值
+	 * @param exists       已有的值
+	 * @param allowRaw     不添加后缀也不重复的情况下返回原值
+	 * @param appendFormat 后缀格式
 	 * @return
 	 */
 	public static String escapeName(String base, String[] exists, boolean allowRaw, String appendFormat, int start) {
@@ -782,12 +677,9 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 取字符串右侧的部分
 	 * 
-	 * @param source
-	 *            源字符串
-	 * @param rev
-	 *            查找
-	 * @param keepSourceIfNotFound
-	 *            为true时找不到字串时返回全部，否则返回空串
+	 * @param source               源字符串
+	 * @param rev                  查找
+	 * @param keepSourceIfNotFound 为true时找不到字串时返回全部，否则返回空串
 	 * @return
 	 */
 	public static Substring stringRight(String source, String rev, boolean keepSourceIfNotFound) {
@@ -807,12 +699,9 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 取字符串左侧的部分
 	 * 
-	 * @param source
-	 *            源字符串
-	 * @param rev
-	 *            查找
-	 * @param keepSourceIfNotFound为true时找不到字串时返回全部
-	 *            ，否则返回空串
+	 * @param source                               源字符串
+	 * @param rev                                  查找
+	 * @param keepSourceIfNotFound为true时找不到字串时返回全部 ，否则返回空串
 	 * @return
 	 */
 	public static Substring stringLeft(String source, String rev, boolean keepSourceIfNotFound) {
@@ -849,10 +738,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * 返回字串，如果查找的字串不存在则返回全部<br>
 	 * 和substringAfterLast方法不同，substringAfterLast方法在查找不到时返回空串
 	 * 
-	 * @param source
-	 *            源字符串
-	 * @param keyword
-	 *            查找字
+	 * @param source  源字符串
+	 * @param keyword 查找字
 	 * @return
 	 */
 	public static String substringAfterLastIfExist(String source, String keyword) {
@@ -867,12 +754,9 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 在StringBuilder或各种Appendable中重复添加某个字符串若干次
 	 * 
-	 * @param sb
-	 *            源
-	 * @param str
-	 *            要重复添加的字符串
-	 * @param n
-	 *            重复次数
+	 * @param sb  源
+	 * @param str 要重复添加的字符串
+	 * @param n   重复次数
 	 */
 	public static void repeat(Appendable sb, CharSequence str, int n) {
 		if (n <= 0)
@@ -889,12 +773,9 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 在StringBuilder或各种Appendable中重复添加某个字符串若干次
 	 * 
-	 * @param sb
-	 *            源
-	 * @param str
-	 *            要添加的字符
-	 * @param n
-	 *            重复次数，如果传入小于等于0的值，不作处理
+	 * @param sb  源
+	 * @param str 要添加的字符
+	 * @param n   重复次数，如果传入小于等于0的值，不作处理
 	 */
 	public static void repeat(Appendable sb, char str, int n) {
 		if (n <= 0)
@@ -911,10 +792,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 重复字符串repeat the string for n times.
 	 * 
-	 * @param str
-	 *            String to repeat
-	 * @param n
-	 *            repeat times.
+	 * @param str String to repeat
+	 * @param n   repeat times.
 	 * @return
 	 */
 	public static String repeat(CharSequence str, int n) {
@@ -1043,14 +922,10 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * 简易语法就是用*表示匹配任意字符，用?表示匹配0~1个任意字符，用+表示匹配1个或以上任意字符。 其他字符一律按照字面理解。
 	 * 这是为了和Windows用户的习惯相吻合
 	 * 
-	 * @param IgnoreCase
-	 *            忽略大小写
-	 * @param matchStart
-	 *            要求头部匹配（即源字符串在头部没有多余的字符）
-	 * @param matchEnd
-	 *            要求尾部匹配（即源字符串在尾部没有多余的字符）
-	 * @param wildcardSpace
-	 *            关键字中的空格可以匹配任意数量的（\n\t空格等）
+	 * @param IgnoreCase    忽略大小写
+	 * @param matchStart    要求头部匹配（即源字符串在头部没有多余的字符）
+	 * @param matchEnd      要求尾部匹配（即源字符串在尾部没有多余的字符）
+	 * @param wildcardSpace 关键字中的空格可以匹配任意数量的（\n\t空格等）
 	 * @return
 	 */
 	public static boolean matches(String s, String key, boolean IgnoreCase, boolean matchStart, boolean matchEnd, boolean wildcardSpace) {
@@ -1160,10 +1035,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * 左右两边做不同的trim
 	 * 
 	 * @param s
-	 * @param lTrimChars
-	 *            左侧要trim的字符
-	 * @param rTrimChars
-	 *            右侧要trim的字符
+	 * @param lTrimChars 左侧要trim的字符
+	 * @param rTrimChars 右侧要trim的字符
 	 * @return
 	 */
 	public static final String lrtrim(String s, char[] lTrimChars, char[] rTrimChars) {
@@ -1226,8 +1099,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 计算MD5摘要,
 	 * 
-	 * @param s
-	 *            输入
+	 * @param s 输入
 	 * @return 32位十六进制数的MD5值
 	 */
 	public final static String getMD5(String s) {
@@ -1285,8 +1157,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	private static final char hexDigits[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
 
 	/**
-	 * 将byte数组转换为可显示的十六进制文本串。效果等同于Integer.toHexString，但是实测发现JDK的方法慢3倍以上,
-	 * 所以还是用自己写的
+	 * 将byte数组转换为可显示的十六进制文本串。效果等同于Integer.toHexString，但是实测发现JDK的方法慢3倍以上, 所以还是用自己写的
 	 * 
 	 * @see jef.tools.ByteUtils#hex2byte(CharSequence, boolean) 其逆运算 (hex2byte)
 	 */
@@ -1527,10 +1398,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将数组或列表拼成文本
 	 * 
-	 * @param array
-	 *            要拼接的数组
-	 * @param separator
-	 *            元素间的分隔符
+	 * @param array     要拼接的数组
+	 * @param separator 元素间的分隔符
 	 * @return
 	 */
 	public static String join(int[] array, String separator) {
@@ -1549,10 +1418,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将数组或列表拼成文本
 	 * 
-	 * @param array
-	 *            要拼接的数组
-	 * @param separator
-	 *            元素间的分隔符
+	 * @param array     要拼接的数组
+	 * @param separator 元素间的分隔符
 	 * @return
 	 */
 	public static String join(float[] array, String separator) {
@@ -1571,10 +1438,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将数组或列表拼成文本
 	 * 
-	 * @param array
-	 *            要拼接的数组
-	 * @param separator
-	 *            元素间的分隔符
+	 * @param array     要拼接的数组
+	 * @param separator 元素间的分隔符
 	 * @return
 	 */
 	public static String join(double[] array, String separator) {
@@ -1593,10 +1458,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 数组转文本
 	 * 
-	 * @param array
-	 *            要拼接的数组
-	 * @param separator
-	 *            元素间的分隔符
+	 * @param array     要拼接的数组
+	 * @param separator 元素间的分隔符
 	 * @return
 	 */
 	public static String join(boolean[] array, String separator) {
@@ -1615,10 +1478,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将数组或列表拼成文本
 	 * 
-	 * @param array
-	 *            要拼接的数组
-	 * @param separator
-	 *            元素间的分隔符
+	 * @param array     要拼接的数组
+	 * @param separator 元素间的分隔符
 	 * @return
 	 */
 	public static String join(long[] array, String separator) {
@@ -1637,10 +1498,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将数组或列表拼成文本
 	 * 
-	 * @param array
-	 *            要拼接的数组
-	 * @param separator
-	 *            元素间的分隔符
+	 * @param array     要拼接的数组
+	 * @param separator 元素间的分隔符
 	 * @return
 	 */
 	public static String join(short[] array, String separator) {
@@ -1659,10 +1518,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将数组或列表拼成文本
 	 * 
-	 * @param array
-	 *            要拼接的数组
-	 * @param separator
-	 *            元素间的分隔符
+	 * @param array     要拼接的数组
+	 * @param separator 元素间的分隔符
 	 * @return
 	 */
 	public static String join(char[] array, String separator) {
@@ -1828,8 +1685,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * 
 	 * @param str
 	 * @param maxLength
-	 * @param append
-	 *            阶段后要添加的内容
+	 * @param append    阶段后要添加的内容
 	 * @return
 	 */
 	public static String truncate(String str, int maxLength, String... append) {
@@ -1866,8 +1722,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 检查一个字符串是否符合数字的格式
 	 * 
-	 * @Title: isNumericOrMinus @param isFloat 是否允许小数 @return boolean
-	 *         返回类型 @throws
+	 * @Title: isNumericOrMinus @param isFloat 是否允许小数 @return boolean 返回类型 @throws
 	 */
 	public static boolean isNumericOrMinus(String str, boolean isFloat) {
 		if (str == null)
@@ -2014,14 +1869,10 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将一串文本解析为Key/Value的若干值 对
 	 * 
-	 * @param source
-	 *            源数据
-	 * @param entrySep
-	 *            entry间的分隔符
-	 * @param keyValueSep
-	 *            key/value的分隔符
-	 * @param keyUpper
-	 *            key是否转大写，0不修改， -1转小写， 1转大写
+	 * @param source      源数据
+	 * @param entrySep    entry间的分隔符
+	 * @param keyValueSep key/value的分隔符
+	 * @param keyUpper    key是否转大写，0不修改， -1转小写， 1转大写
 	 * 
 	 * @return
 	 */
@@ -2103,12 +1954,9 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 给定若干字符，从后向前寻找，任意一个匹配的字符。
 	 * 
-	 * @param str
-	 *            需要查找的字符串
-	 * @param searchChars
-	 *            需要查找的字符序列
-	 * @param startPos
-	 *            开始位置
+	 * @param str         需要查找的字符串
+	 * @param searchChars 需要查找的字符序列
+	 * @param startPos    开始位置
 	 * @return
 	 */
 	public static int lastIndexOfAny(String str, char[] searchChars, int startPos) {
@@ -2132,12 +1980,9 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 用于字符串的拼接
 	 * 
-	 * @param data
-	 *            数据
-	 * @param sep
-	 *            分隔符
-	 * @param sb
-	 *            拼接目标
+	 * @param data 数据
+	 * @param sep  分隔符
+	 * @param sb   拼接目标
 	 */
 	public static void joinTo(Collection<?> data, String sep, StringBuilder sb) {
 		if (data == null || data.isEmpty())
@@ -2153,12 +1998,9 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 用于字符串的拼接
 	 * 
-	 * @param data
-	 *            数据
-	 * @param sep
-	 *            分隔符
-	 * @param sb
-	 *            拼接目标
+	 * @param data 数据
+	 * @param sep  分隔符
+	 * @param sb   拼接目标
 	 */
 	public static void joinTo(Object[] data, char sep, StringBuilder sb) {
 		if (data == null || data.length == 0)
@@ -2235,12 +2077,9 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将文本转换为int的列表。
 	 * 
-	 * @param text
-	 *            文本
-	 * @param dem
-	 *            分隔字符
-	 * @param defaultValue
-	 *            数值不合法时的缺省值
+	 * @param text         文本
+	 * @param dem          分隔字符
+	 * @param defaultValue 数值不合法时的缺省值
 	 * @return 数组
 	 */
 	public static int[] toIntArray(String text, char dem, int defaultValue) {
@@ -2263,10 +2102,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将文本转换为int的列表。不合法的数值将被丢弃
 	 * 
-	 * @param text
-	 *            文本
-	 * @param dem
-	 *            分隔字符
+	 * @param text 文本
+	 * @param dem  分隔字符
 	 * @return 数组
 	 */
 	public static int[] toIntArray(String text, char dem) {
@@ -2288,10 +2125,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将文本转换为float的列表。
 	 * 
-	 * @param text
-	 *            文本
-	 * @param dem
-	 *            分隔字符
+	 * @param text 文本
+	 * @param dem  分隔字符
 	 * @return 数组
 	 */
 	public static float[] toFloatArray(String text, char dem) {
@@ -2313,10 +2148,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将文本转换为long的列表。
 	 * 
-	 * @param text
-	 *            文本
-	 * @param dem
-	 *            分隔字符
+	 * @param text 文本
+	 * @param dem  分隔字符
 	 * @return 数组
 	 */
 	public static long[] toLongArray(String text, char dem) {
@@ -2338,10 +2171,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将文本转换为double的列表。
 	 * 
-	 * @param text
-	 *            文本
-	 * @param dem
-	 *            分隔字符
+	 * @param text 文本
+	 * @param dem  分隔字符
 	 * @return 数组
 	 */
 	public static double[] toDoubleArray(String text, char dem) {
@@ -2363,10 +2194,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * 将文本转换为double的列表。
 	 * 
-	 * @param text
-	 *            文本
-	 * @param dem
-	 *            分隔字符
+	 * @param text 文本
+	 * @param dem  分隔字符
 	 * @return 数组
 	 */
 	public static boolean[] toBooleanArray(String text, char dem) {
@@ -2410,19 +2239,17 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	}
 
 	/**
-	 * Tokenize the given String into a String array via a StringTokenizer.
-	 * Trims tokens and omits empty tokens.
+	 * Tokenize the given String into a String array via a StringTokenizer. Trims
+	 * tokens and omits empty tokens.
 	 * <p>
-	 * The given delimiters string is supposed to consist of any number of
-	 * delimiter characters. Each of those characters can be used to separate
-	 * tokens. A delimiter is always a single character; for multi-character
-	 * delimiters, consider using {@code delimitedListToStringArray}
+	 * The given delimiters string is supposed to consist of any number of delimiter
+	 * characters. Each of those characters can be used to separate tokens. A
+	 * delimiter is always a single character; for multi-character delimiters,
+	 * consider using {@code delimitedListToStringArray}
 	 * 
-	 * @param str
-	 *            the String to tokenize
-	 * @param delimiters
-	 *            the delimiter characters, assembled as String (each of those
-	 *            characters is individually considered as delimiter).
+	 * @param str        the String to tokenize
+	 * @param delimiters the delimiter characters, assembled as String (each of
+	 *                   those characters is individually considered as delimiter).
 	 * @return an array of the tokens
 	 * @see java.util.StringTokenizer
 	 * @see String#trim()
@@ -2435,22 +2262,20 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	/**
 	 * Tokenize the given String into a String array via a StringTokenizer.
 	 * <p>
-	 * The given delimiters string is supposed to consist of any number of
-	 * delimiter characters. Each of those characters can be used to separate
-	 * tokens. A delimiter is always a single character; for multi-character
-	 * delimiters, consider using {@code delimitedListToStringArray}
+	 * The given delimiters string is supposed to consist of any number of delimiter
+	 * characters. Each of those characters can be used to separate tokens. A
+	 * delimiter is always a single character; for multi-character delimiters,
+	 * consider using {@code delimitedListToStringArray}
 	 * 
-	 * @param str
-	 *            the String to tokenize
-	 * @param delimiters
-	 *            the delimiter characters, assembled as String (each of those
-	 *            characters is individually considered as delimiter)
-	 * @param trimTokens
-	 *            trim the tokens via String's {@code trim}
-	 * @param ignoreEmptyTokens
-	 *            omit empty tokens from the result array (only applies to
-	 *            tokens that are empty after trimming; StringTokenizer will not
-	 *            consider subsequent delimiters as token in the first place).
+	 * @param str               the String to tokenize
+	 * @param delimiters        the delimiter characters, assembled as String (each
+	 *                          of those characters is individually considered as
+	 *                          delimiter)
+	 * @param trimTokens        trim the tokens via String's {@code trim}
+	 * @param ignoreEmptyTokens omit empty tokens from the result array (only
+	 *                          applies to tokens that are empty after trimming;
+	 *                          StringTokenizer will not consider subsequent
+	 *                          delimiters as token in the first place).
 	 * @return an array of the tokens ({@code null} if the input String was
 	 *         {@code null})
 	 * @see java.util.StringTokenizer
@@ -2477,17 +2302,16 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	}
 
 	/**
-	 * Copy the given Collection into a String array. The Collection must
-	 * contain String elements only.
+	 * Copy the given Collection into a String array. The Collection must contain
+	 * String elements only.
 	 * <p/>
 	 * <p>
-	 * Copied from the Spring Framework while retaining all license, copyright
-	 * and author information.
+	 * Copied from the Spring Framework while retaining all license, copyright and
+	 * author information.
 	 * 
-	 * @param collection
-	 *            the Collection to copy
-	 * @return the String array (<code>null</code> if the passed-in Collection
-	 *         was <code>null</code>)
+	 * @param collection the Collection to copy
+	 * @return the String array (<code>null</code> if the passed-in Collection was
+	 *         <code>null</code>)
 	 */
 	public static String[] toStringArray(Collection<?> collection) {
 		if (collection == null) {
@@ -2500,10 +2324,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * Determines whether or not the sting 'searchIn' contains the string
 	 * 'searchFor', disregarding case and leading whitespace
 	 * 
-	 * @param searchIn
-	 *            the string to search in
-	 * @param searchFor
-	 *            the string to search for
+	 * @param searchIn  the string to search in
+	 * @param searchFor the string to search for
 	 * 
 	 * @return true if the string starts with 'searchFor' ignoring whitespace
 	 */
@@ -2515,12 +2337,9 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * Determines whether or not the sting 'searchIn' contains the string
 	 * 'searchFor', disregarding case and leading whitespace
 	 * 
-	 * @param searchIn
-	 *            the string to search in
-	 * @param searchFor
-	 *            the string to search for
-	 * @param beginPos
-	 *            where to start searching
+	 * @param searchIn  the string to search in
+	 * @param searchFor the string to search for
+	 * @param beginPos  where to start searching
 	 * 
 	 * @return true if the string starts with 'searchFor' ignoring whitespace
 	 */
@@ -2545,17 +2364,31 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * 'searchFor', dis-regarding case starting at 'startAt' Shorthand for a
 	 * String.regionMatch(...)
 	 * 
-	 * @param searchIn
-	 *            the string to search in
-	 * @param startAt
-	 *            the position to start at
-	 * @param searchFor
-	 *            the string to search for
+	 * @param searchIn  the string to search in
+	 * @param startAt   the position to start at
+	 * @param searchFor the string to search for
 	 * 
 	 * @return whether searchIn starts with searchFor, ignoring case
 	 */
 	public static boolean startsWithIgnoreCase(String searchIn, int startAt, String searchFor) {
 		return searchIn.regionMatches(true, startAt, searchFor, 0, searchFor.length());
+	}
+
+	/**
+	 * 返回第一个不为空的字符串
+	 * 
+	 * @param strings 字符串序列
+	 * @throws IllegalArgumentException 如果传入的字符串中找不到非空串，抛出。
+	 * @return 第一个不为空的字符串
+	 */
+	public static String firstNonEmpty(String... strings) {
+		Assert.notNull(strings);
+		for (String s : strings) {
+			if (StringUtils.isNotEmpty(s)) {
+				return s;
+			}
+		}
+		throw new IllegalArgumentException("All input strings are empty!");
 	}
 
 	/**
@@ -2574,8 +2407,8 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * 
 	 * @param string
 	 * @param ketword 关键字
-	 * @param offset 判断范围的开始位置
-	 * @param length 判断长度
+	 * @param offset  判断范围的开始位置
+	 * @param length  判断长度
 	 * @return
 	 */
 	public static boolean isRepeatOf(String string, String ketword, int offset, int length) {
@@ -2592,10 +2425,21 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 		return true;
 	}
 
+	/**
+	 * 得到内容开始的位置（跳过左侧的空格等）
+	 * @param content 字符串
+	 * @return 非空内容开始的位置
+	 */
 	public static int getBeginPos(String content) {
 		return getBeginPos(content, 0);
 	}
 
+	/**
+	 * 得到内容开始的位置（跳过左侧的空格等）
+	 * @param content 字符串
+	 * @param begin 开始位置
+	 * @return 非空内容开始的位置
+	 */
 	public static int getBeginPos(String content, int begin) {
 		int len = content.length();
 		for (int i = begin; i < len; i++) {

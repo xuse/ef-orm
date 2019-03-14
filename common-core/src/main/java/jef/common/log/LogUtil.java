@@ -1,6 +1,8 @@
 package jef.common.log;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.sql.ResultSet;
@@ -18,6 +20,7 @@ import org.w3c.dom.Node;
 
 import jef.common.Entry;
 import jef.tools.ArrayUtils;
+import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.JefConfiguration.Item;
 import jef.tools.StringUtils;
@@ -253,7 +256,7 @@ public class LogUtil {
 	public static void exception(Throwable t){
 		log.error("",t);
 		if (otherStream != null && !otherStream.isEmpty()) {
-			showToOnthers(StringUtils.exceptionStack(t), true);
+			showToOnthers(exceptionStack(t), true);
 		}
 	}
 	
@@ -265,7 +268,7 @@ public class LogUtil {
 	public static void exception(String message,Throwable t){
 		log.error(message, t);
 		if (otherStream != null && !otherStream.isEmpty()) {
-			showToOnthers(StringUtils.exceptionStack(t), true);
+			showToOnthers(exceptionStack(t), true);
 		}
 	}
 
@@ -335,7 +338,7 @@ public class LogUtil {
 			Entry<?, ?> e = (Entry<?, ?>) o;
 			sb.append(StringUtils.rightPad(StringUtils.toString(e.getKey()), 18)).append('\t').append(toString(e.getValue()));
 		} else if (o instanceof Throwable) {
-			StringUtils.exceptionSummary((Throwable) o, sb);
+			exceptionSummary((Throwable) o, sb);
 		} else {
 			sb.append(StringUtils.toString(o));
 		}
@@ -438,5 +441,94 @@ public class LogUtil {
 
 	public static boolean isDebugEnabled() {
 		return log.isDebugEnabled();
+	}
+	
+	/**
+	 * 将异常信息中的摘要输出到StringBuilder中
+	 * 
+	 * @param e
+	 * @param sb
+	 */
+	public static void exceptionSummary(Throwable e, StringBuilder sb) {
+		String msg = e.getLocalizedMessage();
+		StackTraceElement[] stacks = e.getStackTrace();
+		if (msg == null && e.getCause() != null) {
+			exceptionSummary(e.getCause(), sb);
+		}
+		String stack = stacks.length > 0 ? stacks[0].toString() : "";
+		sb.append(e.getClass().getSimpleName()).append(':').append(msg).append('\n').append(stack);
+	}
+
+	/**
+	 * 返回异常信息的堆栈摘要
+	 * 
+	 * @param e
+	 * @return
+	 */
+	public static String exceptionSummary(Throwable e) {
+		String msg = e.getLocalizedMessage();
+		StackTraceElement[] stacks = e.getStackTrace();
+		if (msg == null && e.getCause() != null) {
+			msg = exceptionSummary(e.getCause());
+		}
+		String stack = stacks.length > 0 ? stacks[0].toString() : "";
+		return StringUtils.concat(e.getClass().getSimpleName(), ":", msg, "\r\n", stack);
+	}
+
+	/**
+	 * 將错误堆栈信息转换为String
+	 * 
+	 * @param e
+	 * @param pkgStart
+	 * @return
+	 */
+	public static String exceptionStack(Throwable e, final String... pkgStart) {
+		return exceptionStack("\r\n", e, pkgStart);
+	}
+
+	/**
+	 * 将异常堆栈信息转换为String
+	 * 
+	 * @param cr       换行符
+	 * @param e        异常
+	 * @param pkgStart 包的开头描述
+	 * @return
+	 */
+	public static String exceptionStack(final String cr, Throwable e, final String... pkgStart) {
+		StringWriter w = new StringWriter();
+		e.printStackTrace(new PrintWriter(w) {
+			@Override
+			public void println() {
+			}
+
+			@Override
+			public void write(String x) {
+				x = StringUtils.rtrim(x, '\r', '\n', '\t');
+				if (x.length() == 0) {
+					return;
+				}
+				if (pkgStart.length == 0) {
+					super.write(x, 0, x.length());
+					super.write(cr, 0, cr.length());
+					return;
+				}
+				String y = x.trim();
+				if (!y.startsWith("at ")) {
+					super.write(x, 0, x.length());
+					super.write(cr, 0, cr.length());
+					return;
+				}
+				for (String s : pkgStart) {
+					if (StringUtils.matchChars(y, 3, s)) {
+						super.write(x, 0, x.length());
+						super.write(cr, 0, cr.length());
+						return;
+					}
+				}
+			}
+		});
+		w.flush();
+		IOUtils.closeQuietly(w);
+		return w.getBuffer().toString();
 	}
 }
