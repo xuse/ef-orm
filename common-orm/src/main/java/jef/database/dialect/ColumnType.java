@@ -863,8 +863,8 @@ public abstract class ColumnType {
 	}
 
 	/**
-	 * 对应Java数据类型:int/Integer 对应数据库类型：oracle:Clob mySql: text Derby: varchar2
-	 * sql server:不支持 其他：不支持 其他：自增
+	 * 对应Java数据类型:int/Integer 对应数据库类型：oracle:Clob mySql: text Derby: varchar2 sql
+	 * server:不支持 其他：不支持 其他：自增
 	 * 
 	 * @author Administrator
 	 */
@@ -984,10 +984,9 @@ public abstract class ColumnType {
 	 * server:不支持 其他：不支持 其他：第一次插入时自动生成
 	 */
 	public static final class GUID extends Varchar {
-		private boolean removeDash;
 
 		public GUID(int size) {
-			super(size);
+			super(size < 32 ? 32 : size);
 		}
 
 		public GUID() {
@@ -995,11 +994,7 @@ public abstract class ColumnType {
 		}
 
 		public boolean isRemoveDash() {
-			return removeDash;
-		}
-
-		public void setRemoveDash(boolean removeDash) {
-			this.removeDash = removeDash;
+			return this.length < 36;
 		}
 
 		@Override
@@ -1023,11 +1018,9 @@ public abstract class ColumnType {
 	}
 
 	/**
-	 * 对应Java数据类型：String/char[]/File/CharBuffer/BigDataBuffer
-	 * 对应数据库类型：oracle:Clob mySql: text Derby: varchar2 sql server:不支持 其他：不支持
-	 * 
-	 * @author Administrator
-	 * 
+	 * 对应Java数据类型：String/char[]/File/CharBuffer/BigDataBuffer.</br>
+	 * 对应数据库类型：oracle:Clob, mySql:text, Derby:varchar2, sql server:不支持
+	 * , 其他：不支持
 	 */
 	public static class Clob extends ColumnType implements SqlTypeSized {
 		private int length;
@@ -1085,10 +1078,8 @@ public abstract class ColumnType {
 	}
 
 	/**
-	 * 对应Java数据类型:String/char[]/byte[]/File/Image/BigDataBuffer
-	 * 对应数据库类型：oracle:Clob mySql: text Derby: varchar2 sql server:不支持 其他：不支持
-	 * 
-	 * @author Administrator
+	 * 对应Java数据类型:String/char[]/byte[]/File/Image/BigDataBuffer</br>
+	 * 对应数据库类型：oracle:Clob, mySql: text, Derby: varchar2, sql server,不支持,其他：不支持
 	 */
 	public static class Blob extends ColumnType implements SqlTypeSized {
 		private int length;

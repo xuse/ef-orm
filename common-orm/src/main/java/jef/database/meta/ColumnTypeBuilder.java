@@ -200,7 +200,7 @@ public class ColumnTypeBuilder {
 
 	private ColumnType createDefault() {
 		if (this.generatedValue != null && this.generatedValue.isKeyGeneration() && javaType == String.class) {
-			return new ColumnType.GUID();
+			return new ColumnType.GUID(length);
 		} else if (generatedValue != null && generatedValue.isKeyGeneration() && Number.class.isAssignableFrom(Primitives.toWrapperClass(javaType))) {
 			return new ColumnType.AutoIncrement(precision, generatedValue.getGeType(), fieldProvider);
 		}
@@ -267,7 +267,7 @@ public class ColumnTypeBuilder {
 				if (generationType == GenerationType.TABLE || generationType == GenerationType.SEQUENCE) {
 					return new ColumnType.AutoIncrement(length, generationType, fieldProvider);
 				} else {
-					return new ColumnType.GUID();
+					return new ColumnType.GUID(length);
 				}
 			}
 			length = getParamInt(0, length);
@@ -279,7 +279,7 @@ public class ColumnTypeBuilder {
 				if (generationType == GenerationType.TABLE || generationType == GenerationType.SEQUENCE) {
 					return new ColumnType.AutoIncrement(length, generationType, fieldProvider);
 				} else {
-					return new ColumnType.GUID();
+					return new ColumnType.GUID(length);
 				}
 			}
 			length = getParamInt(0, length);

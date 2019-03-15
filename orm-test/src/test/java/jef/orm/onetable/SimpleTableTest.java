@@ -53,6 +53,7 @@ import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.populator.Transformer;
 import jef.orm.multitable.model.Person;
 import jef.orm.onetable.model.CaAsset;
+import jef.orm.onetable.model.EntityOfGuid;
 import jef.orm.onetable.model.Keyword;
 import jef.orm.onetable.model.TestEntity;
 import jef.orm.onetable.model.TestEntitySon;
@@ -62,17 +63,16 @@ import jef.tools.ThreadUtils;
 import jef.tools.string.RandomData;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
-@DataSourceContext({ 
+@DataSourceContext({
 //	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"), 
 //	@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
 //	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), 
 //	@DataSource(name = "hsqldb", url = "${hsqldb.url}", user = "sa", password = ""),
-	@DataSource(name = "derby", url = "${derby.url}"),
+		@DataSource(name = "derby", url = "${derby.url}"),
 //	@DataSource(name = "h2", url = "${h2.url}",password="h2.user",user="h2.user"), 
 //	@DataSource(name = "sqlite", url = "${sqlite.url}"),
 //	@DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}")
-	}
-)
+})
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class SimpleTableTest extends org.junit.Assert {
 	private DbClient db;
@@ -134,6 +134,32 @@ public class SimpleTableTest extends org.junit.Assert {
 	@Test
 	public void testRefreshTable() throws SQLException {
 		db.refreshTable(TestEntity.class);
+	}
+
+	@Test
+	public void testGuidClass() throws SQLException {
+		db.dropTable(EntityOfGuid.class);
+		db.createTable(EntityOfGuid.class);
+		
+		EntityOfGuid t1=new EntityOfGuid();
+		db.insert(t1);
+		String id1=t1.getId();
+		
+		
+		EntityOfGuid t2=new EntityOfGuid();
+		db.insert(t2);
+		String id2=t2.getId();
+		
+		
+		t1=db.load(EntityOfGuid.class, id1);
+		t2=db.load(EntityOfGuid.class, id2);
+		
+		t1.setName("更新1");
+		t2.setName("更新2");
+		
+		db.update(t1);
+		db.update(t2);
+
 	}
 
 	@Test
@@ -233,16 +259,17 @@ public class SimpleTableTest extends org.junit.Assert {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		System.out.println("===" + session.getExpressionValue(session.func(Func.current_timestamp).toString(), Object.class));
+		System.out.println(
+				"===" + session.getExpressionValue(session.func(Func.current_timestamp).toString(), Object.class));
 		session.commit(true);
 	}
-	
-	public static class CCC{
-	    @Enumerated(EnumType.ORDINAL)
-	    private Thread.State state1;
-	    
-	    @Enumerated(EnumType.STRING)
-	    private Thread.State state2;
+
+	public static class CCC {
+		@Enumerated(EnumType.ORDINAL)
+		private Thread.State state1;
+
+		@Enumerated(EnumType.STRING)
+		private Thread.State state2;
 
 		public Thread.State getState1() {
 			return state1;
@@ -265,13 +292,12 @@ public class SimpleTableTest extends org.junit.Assert {
 			return "CCC [state1=" + state1 + ", state2=" + state2 + "]";
 		}
 	}
-	
+
 	@Test
-	public void testSelectBySql() throws SQLException{
-		
-		
+	public void testSelectBySql() throws SQLException {
+
 		this.insert3Records();
-		List<CCC> en=db.selectBySql("select * from TEST_ENTITY", CCC.class);
+		List<CCC> en = db.selectBySql("select * from TEST_ENTITY", CCC.class);
 		System.out.println(en.get(0));
 	}
 
@@ -284,7 +310,7 @@ public class SimpleTableTest extends org.junit.Assert {
 	 */
 	@Test
 	public void testConstraintViolationException() throws SQLException {
-		CaAsset obj = db.load(QB.create(CaAsset.class),false);
+		CaAsset obj = db.load(QB.create(CaAsset.class), false);
 		obj.setAssetId(obj.getAssetId());
 		Transaction tx = db.startTransaction();
 		try {
@@ -309,7 +335,7 @@ public class SimpleTableTest extends org.junit.Assert {
 	public void testConstraintViolationException2() throws SQLException {
 		ORMConfig.getInstance().setManualSequence(true);
 		CommonDao dao = new CommonDaoImpl(db);
-		CaAsset obj = db.load(QB.create(CaAsset.class),false);
+		CaAsset obj = db.load(QB.create(CaAsset.class), false);
 		obj.setAssetId(obj.getAssetId());
 		try {
 			dao.insert(obj);
@@ -491,15 +517,14 @@ public class SimpleTableTest extends org.junit.Assert {
 	/**
 	 * 在SQLServer中，如果主键列被标记为自增键值 Identity，那么将无法通过Update预计更新主键列的值。
 	 * 
-	 * @throws SQLException
-	 * 在SQLServer 2016上测试通过
+	 * @throws SQLException 在SQLServer 2016上测试通过
 	 */
 	@Test
 //	@Test(expected = SQLException.class)
 //	@IgnoreOn(allButExcept = "sqlserver")
 	public void testSqlServerUpdateId() throws SQLException {
 		insert3Records();
-		TestEntity entity = db.load(QB.create(TestEntity.class),false);
+		TestEntity entity = db.load(QB.create(TestEntity.class), false);
 		if (entity == null) {
 			return;
 		}
@@ -552,7 +577,7 @@ public class SimpleTableTest extends org.junit.Assert {
 		List<TestEntity> list = db.selectAll(TestEntity.class);
 		// 开始测试
 		int n = 0;
-		ResultIterator<TestEntity> iter = db.iteratedSelect(QB.create(TestEntity.class), (PageLimit)null);
+		ResultIterator<TestEntity> iter = db.iteratedSelect(QB.create(TestEntity.class), (PageLimit) null);
 		try {
 			for (; iter.hasNext();) {
 				iter.next();
@@ -573,7 +598,8 @@ public class SimpleTableTest extends org.junit.Assert {
 		List<TestEntity> list = db.selectAll(TestEntity.class);
 		// 开始测试
 		int n = 0;
-		ResultIterator<TestEntity> iter = db.getSqlTemplate(null).iteratorBySql("select * from test_entity", new Transformer(TestEntity.class), 0, 0);
+		ResultIterator<TestEntity> iter = db.getSqlTemplate(null).iteratorBySql("select * from test_entity",
+				new Transformer(TestEntity.class), 0, 0);
 		try {
 			for (; iter.hasNext();) {
 				iter.next();
@@ -634,8 +660,8 @@ public class SimpleTableTest extends org.junit.Assert {
 	 * @throws SQLException
 	 */
 	@Test
-	//FIXME attempt to run on SQL Server 2016
-	@IgnoreOn({"sqlserver"})
+	// FIXME attempt to run on SQL Server 2016
+	@IgnoreOn({ "sqlserver" })
 	public void testPaging() throws SQLException {
 		insert3Records();
 		insert3Records();
@@ -731,7 +757,8 @@ public class SimpleTableTest extends org.junit.Assert {
 		data.setField2("hello aa world!!");
 		db.insert(data);
 
-		NativeQuery<TestEntity> q = db.createNativeQuery("select * from test_entity where field_2 like :likestr<$string$> ", TestEntity.class);
+		NativeQuery<TestEntity> q = db.createNativeQuery(
+				"select * from test_entity where field_2 like :likestr<$string$> ", TestEntity.class);
 		q.setParameter("likestr", "aa");
 
 		// 查询并检查数据
@@ -788,13 +815,13 @@ public class SimpleTableTest extends org.junit.Assert {
 
 		t2 = db.load(t2);
 		t3 = db.load(t3);
-		
+
 		db.delete(t2);
 		db.delete(t3);
-		
+
 	}
 
-	@IgnoreOn(allButExcept="hsqldb")
+	@IgnoreOn(allButExcept = "hsqldb")
 	@Test
 	public void testAssignPK() throws SQLException {
 		System.out.println("=========== testAssignPK ========");
@@ -952,7 +979,8 @@ public class SimpleTableTest extends org.junit.Assert {
 	 */
 	@Test
 	public void testComplexPageSQL() throws SQLException {
-		String sql = "SELECT t2.*  FROM ca_asset t2, (SELECT t.field_1, MAX(t.longfield) AS wo_run_id FROM test_entity t " + "GROUP BY t.field_1) t3 WHERE t2.normal = t3.field_1  AND t2.asset_type = t3.wo_run_id";
+		String sql = "SELECT t2.*  FROM ca_asset t2, (SELECT t.field_1, MAX(t.longfield) AS wo_run_id FROM test_entity t "
+				+ "GROUP BY t.field_1) t3 WHERE t2.normal = t3.field_1  AND t2.asset_type = t3.wo_run_id";
 		PagingIterator<Person> pp = db.pageSelect(sql, Person.class, 10);
 		assertEquals(0, pp.getTotal());
 	}
@@ -1019,10 +1047,11 @@ public class SimpleTableTest extends org.junit.Assert {
 			t.setField1("value is updated!"); // 设置要更新的数据
 
 			// (int_field_2=? and boolField=?)
-			Condition and = QB.and(QB.eq(TestEntity.Field.intField2, 3), QB.eq(TestEntity.Field.boolField, Boolean.FALSE));
+			Condition and = QB.and(QB.eq(TestEntity.Field.intField2, 3),
+					QB.eq(TestEntity.Field.boolField, Boolean.FALSE));
 			// ((int_field_2=? and boolField=?) or field_2 like ? escape '/' )
 			Condition or = QB.or(and, QB.matchStart(TestEntity.Field.field2, "asa_") // 此处将自动转义
-					);
+			);
 			// ((int_field_2=? and boolField=?) or field_2 like ? escape '/' )
 			// and int_field_2=?
 			t.getQuery().addCondition(or);
