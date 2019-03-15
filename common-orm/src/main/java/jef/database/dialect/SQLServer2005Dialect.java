@@ -18,6 +18,9 @@ package jef.database.dialect;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import com.querydsl.sql.SQLServer2005Templates;
+import com.querydsl.sql.SQLTemplates;
+
 import jef.database.ConnectInfo;
 import jef.database.dialect.handler.LimitHandler;
 import jef.database.dialect.handler.SQL2005LimitHandler;
@@ -28,21 +31,19 @@ import jef.database.jdbc.statement.UnionJudgement;
 import jef.database.query.function.NoArgSQLFunction;
 import jef.tools.string.JefStringReader;
 
-import com.querydsl.sql.SQLServer2005Templates;
-import com.querydsl.sql.SQLTemplates;
-
 /**
  * 
-修改列名SQLServer：exec sp_rename't_student.name','nn','column';
-sp_rename：SQLServer 内置的存储过程，用与修改表的定义。
+ * 修改列名SQLServer：exec sp_rename't_student.name','nn','column';
+ * sp_rename：SQLServer 内置的存储过程，用与修改表的定义。
+ * 
  * @author jiyi
  * 
  * 
- * SQL Server 2005 (9.x), SQLSever 2008（10.0.x）, 2008 R2(10.5.x)可以使用此方言。
+ *         SQL Server 2005 (9.x), SQLSever 2008（10.0.x）, 2008 R2(10.5.x)可以使用此方言。
  * 
  */
-public class SQLServer2005Dialect extends SQLServer2000Dialect{
-	
+public class SQLServer2005Dialect extends SQLServer2000Dialect {
+
 	public SQLServer2005Dialect() {
 		super();
 		typeNames.put(Types.BLOB, "varbinary(MAX)", Types.VARBINARY);
@@ -51,57 +52,61 @@ public class SQLServer2005Dialect extends SQLServer2000Dialect{
 		typeNames.put(Types.LONGVARBINARY, "varbinary(MAX)", 0);
 		typeNames.put(Types.CLOB, "varchar(MAX)", Types.VARCHAR);
 		typeNames.put(Types.LONGVARCHAR, "varchar(MAX)", Types.VARCHAR);
-		typeNames.put(Types.VARCHAR, "varchar(MAX)",0);
-		typeNames.put(Types.VARCHAR, 8000, "varchar($l)",0);
-		typeNames.put(Types.BIT, "bit",0);
+		typeNames.put(Types.VARCHAR, "varchar(MAX)", 0);
+		typeNames.put(Types.VARCHAR, 8000, "varchar($l)", 0);
+		typeNames.put(Types.BIT, "bit", 0);
 		registerNative(new NoArgSQLFunction("row_number"));
 	}
 
 	public void parseDbInfo(ConnectInfo connectInfo) {
-		JefStringReader reader=new JefStringReader(connectInfo.getUrl());
+		JefStringReader reader = new JefStringReader(connectInfo.getUrl());
 		reader.setIgnoreChars(' ');
 		reader.consumeIgnoreCase("jdbc:sqlserver:");
-		reader.consumeChars('@','/');
-		String host=reader.readToken(':','/');
+		reader.consumeChars('@', '/');
+		String host = reader.readToken(':', '/');
 		connectInfo.setHost(host);
-		if(reader.omitAfterKeyIgnoreCase("databasename=", ' ')!=-1){
-			String dbname=reader.readToken(' ',';',':');
+		if (reader.omitAfterKeyIgnoreCase("databasename=", ' ') != -1) {
+			String dbname = reader.readToken(' ', ';', ':');
 			connectInfo.setDbname(dbname);
 		}
 		reader.close();
 	}
-	
+
 	@Override
 	public String generateUrl(String host, int port, String pathOrName) {
-		StringBuilder sb=new StringBuilder("jdbc:");
-		//jdbc:sqlserver:localhost:1433; DatabaseName =allandb
+		StringBuilder sb = new StringBuilder("jdbc:");
+		// jdbc:sqlserver:localhost:1433; DatabaseName =allandb
 		sb.append("sqlserver:");
-		sb.append("//").append(host).append(":").append(port<=0?1433:port);
+		sb.append("//").append(host).append(":").append(port <= 0 ? 1433 : port);
 		sb.append("; DatabaseName=").append(pathOrName);
-		String url=sb.toString();
+		String url = sb.toString();
 		return url;
 	}
-	
+
 	public String getDriverClass(String url) {
 		return "com.microsoft.sqlserver.jdbc.SQLServerDriver";
 	}
 
 	@Override
 	protected LimitHandler generateLimitHander() {
-		if(UnionJudgement.isDruid()){
+		if (UnionJudgement.isDruid()) {
 			return new SQL2005LimitHandler();
-		}else{
+		} else {
 			return new SQL2005LimitHandlerSlowImpl();
 		}
 	}
-	
-	private static ViolatedConstraintNameExtracter EXTRATER=new ViolatedConstraintNameExtracter(){
+
+	private static ViolatedConstraintNameExtracter EXTRATER = new ViolatedConstraintNameExtracter() {
 		@Override
 		public String extractConstraintName(SQLException sqle) {
-			int sqlState = Integer.valueOf(JDBCExceptionHelper.extractSqlState(sqle)).intValue();
-			switch (sqlState) {
-			case 23000:
-				return sqle.getMessage();
+			try {
+				int sqlState = Integer.valueOf(JDBCExceptionHelper.extractSqlState(sqle)).intValue();
+				switch (sqlState) {
+				case 23000:
+					return sqle.getMessage();
+				}
+			} catch (NumberFormatException e) {
+				// do nothing
 			}
 			return null;
 		}
@@ -111,10 +116,9 @@ public class SQLServer2005Dialect extends SQLServer2000Dialect{
 	public ViolatedConstraintNameExtracter getViolatedConstraintNameExtracter() {
 		return EXTRATER;
 	}
-	
-    //to be override
-    protected SQLTemplates generateQueryDslTemplates() {
-        return new SQLServer2005Templates();
-    }
-}
 
+	// to be override
+	protected SQLTemplates generateQueryDslTemplates() {
+		return new SQLServer2005Templates();
+	}
+}

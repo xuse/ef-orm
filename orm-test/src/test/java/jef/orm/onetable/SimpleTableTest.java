@@ -12,6 +12,15 @@ import javax.persistence.EntityExistsException;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 
+import org.easyframe.enterprise.spring.CommonDao;
+import org.easyframe.enterprise.spring.CommonDaoImpl;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.FixMethodOrder;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
+
 import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
 import jef.database.Condition;
@@ -44,6 +53,7 @@ import jef.database.wrapper.ResultIterator;
 import jef.database.wrapper.populator.Transformer;
 import jef.orm.multitable.model.Person;
 import jef.orm.onetable.model.CaAsset;
+import jef.orm.onetable.model.EntityOfGuid;
 import jef.orm.onetable.model.Keyword;
 import jef.orm.onetable.model.TestEntity;
 import jef.orm.onetable.model.TestEntitySon;
@@ -51,15 +61,6 @@ import jef.tools.DateUtils;
 import jef.tools.PageLimit;
 import jef.tools.ThreadUtils;
 import jef.tools.string.RandomData;
-
-import org.easyframe.enterprise.spring.CommonDao;
-import org.easyframe.enterprise.spring.CommonDaoImpl;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.FixMethodOrder;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.MethodSorters;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({ 
@@ -112,6 +113,32 @@ public class SimpleTableTest extends org.junit.Assert {
 		} catch (SQLException e) {
 			LogUtil.exception(e);
 		}
+	}
+	
+	@Test
+	public void testGuidClass() throws SQLException {
+		db.dropTable(EntityOfGuid.class);
+		db.createTable(EntityOfGuid.class);
+		
+		EntityOfGuid t1=new EntityOfGuid();
+		db.insert(t1);
+		String id1=t1.getId();
+		
+		
+		EntityOfGuid t2=new EntityOfGuid();
+		db.insert(t2);
+		String id2=t2.getId();
+		
+		
+		t1=db.load(EntityOfGuid.class, id1);
+		t2=db.load(EntityOfGuid.class, id2);
+		
+		t1.setName("更新1");
+		t2.setName("更新2");
+		
+		db.update(t1);
+		db.update(t2);
+
 	}
 
 	/**

@@ -3116,7 +3116,7 @@ public abstract class Session {
 			String tableName = myTableName == null ? query.getMeta().getTableName(false) : myTableName;
 			getCache().onUpdate(tableName, whereClause.getSql(), CacheImpl.toParamList(whereClause.getBind()));
 		} else if (context.needVersionCondition()) {// 基于版本的乐观锁并发检测，记录没有成功更新
-			throw new OptimisticLockException("The row in database has been modified by others after the entity was loaded.", null, obj);
+			throw new OptimisticLockException("The row in database has been modified by others after the entity was loaded. version-column:"+context.versionColumn.fieldName(), null, query);
 		}
 		getListener().afterUpdate(obj, count, this);
 		return count;
