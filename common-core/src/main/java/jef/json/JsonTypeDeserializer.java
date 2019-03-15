@@ -13,8 +13,10 @@ import com.alibaba.fastjson.parser.deserializer.ObjectDeserializer;
  * 
  * 
  * 首先要明确fastjson和google gson反序列化最大的不同。
+ * <ol>
  * <li>fast-json: string -> java bean</li>
  * <li>google gson: string -> json结构 -> java bean</li><br />
+ * </ol>
  * <p>
  * 在gson中，自定义反序列化器其实是指定义从json结构到java bean的拼装逻辑,而不是字符串解析逻辑。因此gson的自定义反序列化器写法要简单得多。（性能差一点）
  * 但是我认为fast-json主要是通过硬编码来解决反射开销、遍历字段开销。如果用户要扩展json序列化和反序列化逻辑而造成的算法开销是值得付出的，因此做这样的扩展是有价值的。
@@ -22,10 +24,12 @@ import com.alibaba.fastjson.parser.deserializer.ObjectDeserializer;
  * <p>
  * 由于fastJson的json结构描述不是像gson那样的单根结构，json primitive和json null都是非包装的。 因此一个Json value只能表述为Object。
  * 为了避免用户直接操作Object做反序列化，这里将反序列化逻辑拆为四个方法。
+ * <ol>
  * <li>{@link #processArray(ParserConfig, JSONArray)}</li>
  * <li>{@link #processObject(ParserConfig, JSONObject)}</li> 
  * <li>{@link #processNull(ParserConfig)}</li>
  * <li>{@link #processPrimitive(ParserConfig, Object)}</li>
+ * </ol>
  * <p>
  * <code><pre>
  * 

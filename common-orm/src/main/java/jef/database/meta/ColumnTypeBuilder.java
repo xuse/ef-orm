@@ -202,7 +202,7 @@ public class ColumnTypeBuilder {
 		if (this.generatedValue != null
 				&& this.generatedValue.isKeyGeneration()
 				&& javaType == String.class) {
-			return new ColumnType.GUID();
+			return new ColumnType.GUID(length);
 		} else if (generatedValue != null
 				&& generatedValue.isKeyGeneration()
 				&& Number.class.isAssignableFrom(BeanUtils
@@ -280,7 +280,7 @@ public class ColumnTypeBuilder {
 					return new ColumnType.AutoIncrement(length, generationType,
 							fieldProvider);
 				} else {
-					return new ColumnType.GUID();
+					return new ColumnType.GUID(length);
 				}
 			}
 			length = getParamInt(0, length);
@@ -295,7 +295,7 @@ public class ColumnTypeBuilder {
 					return new ColumnType.AutoIncrement(length, generationType,
 							fieldProvider);
 				} else {
-					return new ColumnType.GUID();
+					return new ColumnType.GUID(length);
 				}
 			}
 			length = getParamInt(0, length);

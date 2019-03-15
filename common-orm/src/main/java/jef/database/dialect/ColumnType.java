@@ -930,19 +930,19 @@ public abstract class ColumnType {
 	 * server:不支持 其他：不支持 其他：第一次插入时自动生成
 	 */
 	public static final class GUID extends Varchar {
-		private boolean removeDash;
 
+		public GUID(int size) {
+			super(size < 32 ? 32 : size > 36 ? 36 : size);
+		}
+		
 		public GUID() {
 			super(36);
 		}
 
 		public boolean isRemoveDash() {
-			return removeDash;
+			return length < 36;
 		}
 
-		public void setRemoveDash(boolean removeDash) {
-			this.removeDash = removeDash;
-		}
 
 		@Override
 		protected void putAnnonation(Map<String, Object> map) {

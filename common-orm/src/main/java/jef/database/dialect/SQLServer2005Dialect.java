@@ -98,10 +98,14 @@ public class SQLServer2005Dialect extends SQLServer2000Dialect{
 	private static ViolatedConstraintNameExtracter EXTRATER=new ViolatedConstraintNameExtracter(){
 		@Override
 		public String extractConstraintName(SQLException sqle) {
-			int sqlState = Integer.valueOf(JDBCExceptionHelper.extractSqlState(sqle)).intValue();
-			switch (sqlState) {
-			case 23000:
-				return sqle.getMessage();
+			try {
+				int sqlState = Integer.valueOf(JDBCExceptionHelper.extractSqlState(sqle)).intValue();
+				switch (sqlState) {
+				case 23000:
+					return sqle.getMessage();
+				}	
+			}catch(NumberFormatException e) {
+				//Do nothing.
 			}
 			return null;
 		}

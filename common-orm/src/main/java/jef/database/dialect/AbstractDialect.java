@@ -555,7 +555,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 				return new ColumnType.Clob();
 			} else {
 				if ("GUID".equals(column.getColumnDef())) {
-					return new ColumnType.GUID();
+					return new ColumnType.GUID(column.getColumnSize());
 				} else {
 					return new Varchar(column.getColumnSize());
 				}

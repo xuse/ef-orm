@@ -55,13 +55,6 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import jef.common.log.LogUtil;
-import jef.tools.reflect.BeanWrapper;
-import jef.tools.reflect.BeanWrapperImpl;
-import jef.tools.reflect.Property;
-import jef.tools.reflect.UnsafeUtils;
-import jef.tools.string.CharsetName;
-
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.html.dom.HTMLDocumentImpl;
 import org.slf4j.Logger;
@@ -84,6 +77,13 @@ import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
 import com.alibaba.fastjson.JSONObject;
+
+import jef.common.log.LogUtil;
+import jef.tools.reflect.BeanWrapper;
+import jef.tools.reflect.BeanWrapperImpl;
+import jef.tools.reflect.Property;
+import jef.tools.reflect.UnsafeUtils;
+import jef.tools.string.CharsetName;
 
 /**
  * 使用JAXP，封装了基于XML的各种基本操作
@@ -386,7 +386,12 @@ public class XMLUtils {
 	 * @throws IOException
 	 */
 	public static Document loadDocument(URL url) throws SAXException, IOException {
-		return loadDocument(url.openStream(), null, true, false);
+		InputStream in=url.openStream();
+		try {
+			return loadDocument(in, null, true, false);
+		}finally {
+			IOUtils.closeQuietly(in);
+		}
 	}
 
 	/**

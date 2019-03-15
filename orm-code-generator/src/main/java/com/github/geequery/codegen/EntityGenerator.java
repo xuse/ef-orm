@@ -162,8 +162,9 @@ public class EntityGenerator {
 					if(c.getColumnSize()==0)c.setColumnSize(8);
 					columnType=new ColumnType.AutoIncrement(c.getColumnSize());
 				}else if(columnType.getClass()==ColumnType.Varchar.class){
-					if(((Varchar)columnType).getLength()>=32){
-						columnType=new ColumnType.GUID();	
+					int len=((Varchar)columnType).getLength();
+					if(len>=32){
+						columnType=new ColumnType.GUID(len);	
 					}
 				}
 				columnType.setNullable(false); //主键列不允许为空
