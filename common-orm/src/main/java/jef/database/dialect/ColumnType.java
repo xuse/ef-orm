@@ -986,7 +986,7 @@ public abstract class ColumnType {
 	public static final class GUID extends Varchar {
 
 		public GUID(int size) {
-			super(size < 32 ? 32 : size);
+			super(size < 32 ? 32 : size > 36 ? 36 : size);
 		}
 
 		public GUID() {
@@ -1079,7 +1079,7 @@ public abstract class ColumnType {
 
 	/**
 	 * 对应Java数据类型:String/char[]/byte[]/File/Image/BigDataBuffer</br>
-	 * 对应数据库类型：oracle:Clob, mySql: text, Derby: varchar2, sql server,不支持,其他：不支持
+	 * 对应数据库类型：oracle:Clob, mySql: text, Derby: varchar2, sql server, 不支持,其他：不支持
 	 */
 	public static class Blob extends ColumnType implements SqlTypeSized {
 		private int length;
