@@ -2242,6 +2242,7 @@ public class IOUtils {
 	 * @param charSet
 	 * @return
 	 * @throws IOException
+	 * @deprecated
 	 */
 	public static BufferedReader getReader(File file, String charSet) throws IOException {
 		return getReader(file, Charsets.forName(charSet));
@@ -2614,11 +2615,12 @@ public class IOUtils {
 	 * @param objFile
 	 * @return
 	 */
-	public static Object loadObject(File file) {
+	@SuppressWarnings("unchecked")
+	public static <T> T loadObject(File file) {
 		if (!file.exists())
 			return null;
 		try {
-			return loadObject(new FileInputStream(file));
+			return (T)loadObject(new FileInputStream(file));
 		} catch (IOException e) {
 			return null;
 		}

@@ -15,9 +15,14 @@
  */
 package jef.ui;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 import jef.common.Configuration;
 import jef.common.Configuration.ConfigItem;
 import jef.common.log.LogUtil;
+import jef.tools.StringUtils;
 import jef.tools.ThreadUtils;
 import jef.ui.console.AbstractConsoleShell;
 import jef.ui.console.ShellResult;

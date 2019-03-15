@@ -43,7 +43,7 @@ public class TypeUtils {
         transforms.put("short", "S");
         transforms.put("boolean", "Z");
 
-        Collections3.reverse(transforms, rtransforms);
+        CollectionsX.reverse(transforms, rtransforms);
     }
 
     public static Type getType(String className) {

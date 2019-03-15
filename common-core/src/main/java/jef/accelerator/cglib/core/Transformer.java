@@ -15,6 +15,6 @@
  */
 package jef.accelerator.cglib.core;
 
-public interface Transformer {
-    Object transform(Object value);
+public interface Transformer<V,K> {
+    K transform(V value);
 }
