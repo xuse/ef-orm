@@ -970,6 +970,9 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * 把字符串左边的空格给去掉
 	 */
 	public static final String ltrim(String s) {
+		if(s==null) {
+			return s;
+		}
 		int len = s.length();
 		int st = 0;
 		int off = 0; /* avoid getfield opcode */
@@ -977,7 +980,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 		while ((st < len) && (val[off + st] <= ' ')) {
 			st++;
 		}
-		return ((st > 0) || (len < s.length())) ? s.substring(st, len) : s;
+		return (st > 0) ? s.substring(st, len) : s;
 	}
 
 	/**
@@ -988,13 +991,16 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * @return
 	 */
 	public static final String ltrim(String s, char... trimChars) {
+		if(s==null) {
+			return s;
+		}
 		int len = s.length();
 		int st = 0;
 		int off = 0;
 		while ((st < len) && (ArrayUtils.contains(trimChars, s.charAt(off + st)))) {
 			st++;
 		}
-		return ((st > 0) || (len < s.length())) ? s.substring(st, len) : s;
+		return (st > 0) ? s.substring(st, len) : s;
 	}
 
 	/**
@@ -1005,13 +1011,16 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * @return
 	 */
 	public static final String rtrim(String s, char... trimChars) {
+		if(s==null) {
+			return s;
+		}
 		int len = s.length();
 		int st = 0;
 		int off = 0; /* avoid getfield opcode */
 		while ((st < len) && ArrayUtils.contains(trimChars, s.charAt(off + len - 1))) {
 			len--;
 		}
-		return ((st > 0) || (len < s.length())) ? s.substring(st, len) : s;
+		return (len < s.length()) ? s.substring(st, len) : s;
 	}
 
 	/**
@@ -1021,6 +1030,9 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * @return
 	 */
 	public static final String rtrim(String s) {
+		if(s==null) {
+			return s;
+		}
 		int len = s.length();
 		int st = 0;
 		int off = 0; /* avoid getfield opcode */
@@ -1028,7 +1040,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 		while ((st < len) && (val[off + len - 1] <= ' ')) {
 			len--;
 		}
-		return ((st > 0) || (len < s.length())) ? s.substring(st, len) : s;
+		return (len < s.length()) ? s.substring(st, len) : s;
 	}
 
 	/**
@@ -1040,6 +1052,9 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * @return
 	 */
 	public static final String lrtrim(String s, char[] lTrimChars, char[] rTrimChars) {
+		if(s==null) {
+			return s;
+		}
 		int len = s.length();
 		int st = 0;
 		int off = 0;
