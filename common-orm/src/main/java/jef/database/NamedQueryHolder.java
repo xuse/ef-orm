@@ -26,6 +26,7 @@ import jef.tools.ResourceUtils;
 import jef.tools.StringUtils;
 import jef.tools.XMLUtils;
 import jef.tools.reflect.Enums;
+import jef.tools.resource.IResource;
 
 final class NamedQueryHolder {
 	private DbClient parent;
@@ -168,15 +169,15 @@ final class NamedQueryHolder {
 		boolean debugMode = ORMConfig.getInstance().isDebugMode();
 		String filename=parent.getNamedQueryFile();
 		if (StringUtils.isNotEmpty(filename)) {
-			List<URL> urls=ResourceUtils.getResources(filename);
+			IResource[] urls=ResourceUtils.findResources(filename);
 			// Load from files
-			for (URL queryFile:urls) {
-				if (queryFile == null)
+			for (IResource resource:urls) {
+				if (resource == null)
 					continue;
 				if (debugMode) {
-					LogUtil.show("loading named queries from file <" + queryFile.toString() + ">");
+					LogUtil.show("loading named queries from file <" + resource.toString() + ">");
 				}
-				loadFile(result, queryFile);
+				loadFile(result, resource.getURL());
 			}
 		}
 		if (StringUtils.isNotEmpty(parent.getNamedQueryTable())) {
