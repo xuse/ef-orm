@@ -17,7 +17,7 @@ import jef.tools.string.StringSpliter;
 import jef.tools.string.Substring;
 
 public class StringUtilsTest extends org.junit.Assert {
-	
+
 	@Test
 	public void testIgnoree() {
 		String s = " \r\t\n　　 [1123]  　　\r\t\n";
@@ -27,7 +27,15 @@ public class StringUtilsTest extends org.junit.Assert {
 		System.out.println(s.charAt(j));
 		assertEquals("[1123]", s.substring(i, j));
 	}
-	
+
+	@Test
+	public void testTrim() {
+		String s1="  abc   ";
+		String s2="  \n abc  \nb  \n";
+		assertEquals("  abc", StringUtils.rtrim(s1));
+		assertEquals("  \n abc  \nb", StringUtils.rtrim(s2,'\n',' '));
+
+	}
 
 	@Test
 	public void stringTokens() {

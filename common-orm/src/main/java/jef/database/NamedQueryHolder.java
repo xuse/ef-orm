@@ -6,7 +6,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.sql.SQLException;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +22,7 @@ import jef.database.support.RDBMS;
 import jef.tools.Assert;
 import jef.tools.Exceptions;
 import jef.tools.PageLimit;
+import jef.tools.ResourceUtils;
 import jef.tools.StringUtils;
 import jef.tools.XMLUtils;
 import jef.tools.reflect.Enums;
@@ -168,20 +168,15 @@ final class NamedQueryHolder {
 		boolean debugMode = ORMConfig.getInstance().isDebugMode();
 		String filename=parent.getNamedQueryFile();
 		if (StringUtils.isNotEmpty(filename)) {
-			try {
-				Enumeration<URL> urls=getClass().getClassLoader().getResources(filename);
-				// Load from files
-				for (;urls.hasMoreElements();) {
-					URL queryFile =urls.nextElement();
-					if (queryFile == null)
-						continue;
-					if (debugMode) {
-						LogUtil.show("loading named queries from file <" + queryFile.toString() + ">");
-					}
-					loadFile(result, queryFile);
+			List<URL> urls=ResourceUtils.getResources(filename);
+			// Load from files
+			for (URL queryFile:urls) {
+				if (queryFile == null)
+					continue;
+				if (debugMode) {
+					LogUtil.show("loading named queries from file <" + queryFile.toString() + ">");
 				}
-			} catch (IOException e) {
-				LogUtil.exception(e);
+				loadFile(result, queryFile);
 			}
 		}
 		if (StringUtils.isNotEmpty(parent.getNamedQueryTable())) {
