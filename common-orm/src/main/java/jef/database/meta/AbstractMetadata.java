@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jef.common.Pair;
 import jef.common.SimpleException;
 import jef.common.log.LogUtil;
 import jef.database.DbUtils;
@@ -72,23 +73,22 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	 */
 	protected Field[] lobNames;
 
+	private final List<ColumnMapping> columnDefArray = new ArrayList<>(8);
 
-	private final List<ColumnMapping> columnDefArray=new ArrayList<>(8);
-	
 	/**
-	 * 记录对应表的所有索引，当建表时使用可自动创建索引<p>
-	 * Revised 2016-8 JPA 2.1规范中增加的@Table的indexes属性和Index注解，因此删除EF原先自己设计的Index注解，改用标准的JPA注解
+	 * 记录对应表的所有索引，当建表时使用可自动创建索引
+	 * <p>
+	 * Revised 2016-8 JPA
+	 * 2.1规范中增加的@Table的indexes属性和Index注解，因此删除EF原先自己设计的Index注解，改用标准的JPA注解
 	 */
 	protected final List<IndexDef> indexes = new ArrayList<IndexDef>(5);
-	
+
 	/**
-	 * 记录对应表所有Unqie约束.当建表时可自动创建约束
-	 * 使用JPA注解
+	 * 记录对应表所有Unqie约束.当建表时可自动创建约束 使用JPA注解
 	 */
-	protected final List<UniqueConstraintDef> uniques=new ArrayList<UniqueConstraintDef>(5);
+	protected final List<UniqueConstraintDef> uniques = new ArrayList<UniqueConstraintDef>(5);
 	/**
-	 * The fields mapping to columns.
-	 * 经过特定排序，LOB字段被放到最后。
+	 * The fields mapping to columns. 经过特定排序，LOB字段被放到最后。
 	 */
 	protected List<ColumnMapping> metaFields;
 	/**
@@ -111,7 +111,8 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	protected boolean useOuterJoin = true;
 
 	/**
-	 * 列排序器，用这个排序器确保列的输出顺序如下<p> 
+	 * 列排序器，用这个排序器确保列的输出顺序如下
+	 * <p>
 	 * 1、LOB字段总是排在最后。(由于一些数据库驱动问题，这样做能提高操作的成功率，对性能也有少量帮助)
 	 * 2、按类定义中的枚举顺序排序，如果是TupleField，则直接按照字段名的ASCII顺序排列。
 	 */
@@ -148,7 +149,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	public ColumnMapping getColumnDef(Field field) {
 		return schemaMap.get(field);
 	}
-	
+
 	@Override
 	public ColumnMapping getColumnDef(int i) {
 		return this.columnDefArray.get(i);
@@ -156,32 +157,31 @@ public abstract class AbstractMetadata implements ITableMetadata {
 
 	public void setBindDsName(String bindDsName) {
 		this.bindDsName = MetaHolder.getMappingSite(bindDsName);
-		this.bindProfile = null;
+		this.cachedTable = null;
 	}
 
 	public Collection<ColumnMapping> getColumns() {
 		return metaFields;
 	}
-	
+
 	protected void checkFields() {
 		Collection<ColumnMapping> map = this.getColumnSchema();
 		ColumnMapping[] fields = map.toArray(new ColumnMapping[map.size()]);
 		Arrays.sort(fields, COLUMN_COMPARATOR);
 		metaFields = Arrays.asList(fields);
-		
-		Collections.sort(columnDefArray, (a,b)->Integer.compare(a.field().asEnumOrdinal(),b.field().asEnumOrdinal()));
-		//检查序号
-		for(int i=0;i<columnDefArray.size();i++) {
-			ColumnMapping c=columnDefArray.get(i);
-			if(c==null) {
+
+		Collections.sort(columnDefArray, (a, b) -> Integer.compare(a.field().asEnumOrdinal(), b.field().asEnumOrdinal()));
+		// 检查序号
+		for (int i = 0; i < columnDefArray.size(); i++) {
+			ColumnMapping c = columnDefArray.get(i);
+			if (c == null) {
 				throw Exceptions.illegalState("Column sequence error. element is null at {}, index={}.", getName(), i);
 			}
-			if(c.field().asEnumOrdinal()!=i) {
-				throw Exceptions.illegalState("Column sequence error at {}, field ordinal={}, index={}.", getName(), c.field().asEnumOrdinal(),i);
+			if (c.field().asEnumOrdinal() != i) {
+				throw Exceptions.illegalState("Column sequence error at {}, field ordinal={}, index={}.", getName(), c.field().asEnumOrdinal(), i);
 			}
 		}
 	}
-	
 
 	public String getSchema() {
 		return schema;
@@ -190,8 +190,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	/**
 	 * 返回表名
 	 * 
-	 * @param withSchema
-	 *            true要求带schema
+	 * @param withSchema true要求带schema
 	 * @return
 	 */
 	public String getTableName(boolean withSchema) {
@@ -213,22 +212,25 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		return escape ? DbUtils.escapeColumn(profile, name) : name;
 	}
 
-	private volatile DbTable cachedTable;
-	private volatile DatabaseDialect bindProfile;
+	private volatile Pair<DatabaseDialect, DbTable> cachedTable;
 	protected KeyDimension pkDim;
 
 	public DbTable getBaseTable(DatabaseDialect profile) {
-		if (bindProfile != profile) {
-			synchronized (this) {
-				initCache(profile);
-			}
+		Pair<DatabaseDialect, DbTable> cachedTable = this.cachedTable;
+		if (cachedTable == null) {
+			return initCache(profile);
 		}
-		return cachedTable;
+		if (cachedTable.first != profile) {
+			return initCache(profile);
+		}
+		return cachedTable.second;
 	}
 
-	private void initCache(DatabaseDialect profile) {
-		bindProfile = profile;
-		cachedTable = new DbTable(bindDsName, profile.getObjectNameToUse(getTableName(true)), false, false);
+	private synchronized DbTable initCache(DatabaseDialect profile) {
+		DbTable cachedTable = new DbTable(bindDsName, profile.getObjectNameToUse(getTableName(true)), false, false);
+		Pair<DatabaseDialect, DbTable> cache = new Pair<>(profile, cachedTable);
+		this.cachedTable = cache;
+		return cachedTable;
 	}
 
 	public KeyDimension getPKDimension(DatabaseDialect profile) {
@@ -319,8 +321,8 @@ public abstract class AbstractMetadata implements ITableMetadata {
 				autoUpdateColumns = ArrayUtils.addElement(autoUpdateColumns, m, VersionSupportColumn.class);
 			}
 			if (m.isVersion()) {
-				if(this.versionColumn!=null){
-					throw new IllegalArgumentException("There can be only one version column in a entity, but" + this.getName()+" has more.");
+				if (this.versionColumn != null) {
+					throw new IllegalArgumentException("There can be only one version column in a entity, but" + this.getName() + " has more.");
 				}
 				this.versionColumn = m;
 			}
@@ -450,7 +452,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 	public void setUseOuterJoin(boolean useOuterJoin) {
 		this.useOuterJoin = useOuterJoin;
 	}
-	
+
 	public List<UniqueConstraintDef> getUniqueDefinitions() {
 		return uniques;
 	}
@@ -463,12 +465,9 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		schemaMap.put(field, type);
 		columnDefArray.add(type);
 	}
-	
-	
 
 	protected ColumnMapping removeField(Field field) {
 		return schemaMap.remove(field);
 	}
-
 
 }
