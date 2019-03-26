@@ -143,7 +143,6 @@ public abstract class AbstractMetadata implements ITableMetadata {
 
 	public void setBindDsName(String bindDsName) {
 		this.bindDsName = MetaHolder.getMappingSite(bindDsName);
-		this.bindProfile = null;
 	}
 
 	public Collection<ColumnMapping> getColumns() {
