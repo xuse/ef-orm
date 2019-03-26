@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jef.common.Pair;
 import jef.common.SimpleException;
 import jef.common.log.LogUtil;
 import jef.database.DbUtils;
@@ -185,24 +186,25 @@ public abstract class AbstractMetadata implements ITableMetadata {
 		return escape ? DbUtils.escapeColumn(profile, name) : name;
 	}
 
-	private volatile DbTable cachedTable;
-	private volatile DatabaseDialect bindProfile;
+	private volatile Pair<DatabaseDialect, DbTable> cachedTable;
 	protected KeyDimension pkDim;
 
 	public DbTable getBaseTable(DatabaseDialect profile) {
-		if (bindProfile != profile) {
-			synchronized (this) {
-				return initCache(profile);
-			}
+		Pair<DatabaseDialect, DbTable> cachedTable = this.cachedTable;
+		if (cachedTable == null) {
+			return initCache(profile);
 		}
-		return cachedTable;
+		if (cachedTable.first != profile) {
+			return initCache(profile);
+		}
+		return cachedTable.second;
 	}
 
-	private DbTable initCache(DatabaseDialect profile) {
-		bindProfile = profile;
-		DbTable cachedTable = new DbTable(bindDsName, profile.getObjectNameToUse(getTableName(true)), false, false);
-		this.cachedTable=cachedTable;
-		return cachedTable;
+	private synchronized DbTable initCache(DatabaseDialect profile) {
+		DbTable baseTable = new DbTable(bindDsName, profile.getObjectNameToUse(getTableName(true)), false, false);
+		Pair<DatabaseDialect, DbTable> cache = new Pair<>(profile, baseTable);
+		this.cachedTable = cache;
+		return baseTable;
 	}
 
 	public KeyDimension getPKDimension(DatabaseDialect profile) {
