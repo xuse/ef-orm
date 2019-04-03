@@ -1033,6 +1033,17 @@ public class BeanUtils {
 	}
 
 	/**
+	 * 将数据封装为Annotation
+	 * @param type
+	 * @param key
+	 * @param value
+	 * @return
+	 */
+	public static final <T extends Annotation> T asAnnotation(Class<T> type, String key, Object value) {
+		return asAnnotation(type, Collections.singletonMap(key, value));
+	}
+	
+	/**
 	 * 将Map的数据封装为一个Annotation(使用代理实现)
 	 * 
 	 * @param type

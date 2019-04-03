@@ -244,7 +244,7 @@ public class JsonTest extends org.junit.Assert{
 	@Test
 	public void testJ1() throws Exception {
 		BeanForTest p = RandomData.newInstance(BeanForTest.class);
-		System.out.println(JSON.toJSONString(p));
+		System.out.println(JSON.toJSONString(p,true));
 	}
 
 	@Test

@@ -2,13 +2,32 @@ package jef.tools;
 
 import java.util.Date;
 
+import jef.tools.string.RandomValue;
+import jef.tools.string.ValueType;
+
 public class BeanForTest {
 	private int id;
+	
+	@RandomValue(ValueType.NAME)
 	private String name;
+	
 	private Date birthDay;
+	
+	@RandomValue(numberMax=80)
 	private int age;
 	private Date date;
+	@RandomValue(ignore=true)
 	private byte[] array;
+	
+	@RandomValue(ValueType.EMAIL)
+	private String email;
+	
+	@RandomValue(value=ValueType.NUMBER,numberMin=100000,numberMax=999999999)
+	private String qq;
+	
+	@RandomValue(ValueType.PHONE)
+	private String phone;
+	
 	private BeanForTest person;
 
 	private String comment;
@@ -16,7 +35,12 @@ public class BeanForTest {
 	private boolean flag; 
 	private float weight;
 	private float height;
+	
+	@RandomValue(value=ValueType.OPTIONS,options= {"http://baidu.com","http://google.com","http://sogou.com"})
 	private String fest;
+	
+	@RandomValue(count=3,length=4)
+	private String[] relations;
 	
 	public BeanForTest getPerson() {
 		return person;
@@ -41,6 +65,40 @@ public class BeanForTest {
 	public void setAlias(String alias) {
 		this.alias = alias;
 	}
+
+	public String[] getRelations() {
+		return relations;
+	}
+
+	public void setRelations(String[] relations) {
+		this.relations = relations;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public String getQq() {
+		return qq;
+	}
+
+	public void setQq(String qq) {
+		this.qq = qq;
+	}
+
+	public String getPhone() {
+		return phone;
+	}
+
+	public void setPhone(String phone) {
+		this.phone = phone;
+	}
+
+
 
 	private int cSessionId;
 	private int i;
