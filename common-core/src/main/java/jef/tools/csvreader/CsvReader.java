@@ -21,6 +21,7 @@
 package jef.tools.csvreader;
 
 import java.io.BufferedReader;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -39,7 +40,7 @@ import com.google.common.base.Charsets;
  * A stream based parser for parsing delimited text data from a file or a
  * stream.
  */
-public class CsvReader {
+public class CsvReader implements Closeable{
 	private Reader inputStream = null;
 
 	private File fileName = null;

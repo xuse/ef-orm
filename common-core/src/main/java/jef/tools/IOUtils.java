@@ -1925,7 +1925,7 @@ public class IOUtils {
 	public static boolean move(File oldFile, File newFile) {
 		Assert.notNull(oldFile, "source file is null!");
 		Assert.notNull(newFile, "target file is null!");
-		Assert.isTrue(oldFile.exists(), "source file doesn't exist.");
+		Assert.isTrue(oldFile.exists(), "source file ["+oldFile.getAbsolutePath()+"] doesn't exist.");
 		Assert.isFalse(newFile.exists(), "target file already exist!");
 		ensureParentFolder(newFile);
 		return oldFile.renameTo(newFile);

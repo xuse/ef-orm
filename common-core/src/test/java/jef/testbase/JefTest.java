@@ -65,6 +65,16 @@ import junit.framework.Assert;
 public class JefTest extends Assert {
 	private static final String HEAD_HTML_RESOURCE = "--------------------7d71b526e00e4\r\n" + "Content-Location: \"%s\"\r\n" + "\r\nContent-Type: %s\r\n\r\n"; // 每个文件部分的开头
 
+	
+	@Test
+	public void test1aaa() {
+		File root=new File("F:\\");
+		File recy = new File(root.getParent(), root.getName() + "_BAK");
+		IOUtils.createFolder(recy);
+		System.out.println(recy.exists());
+		System.out.println(recy.getAbsolutePath());
+	}
+	
 	@Test
 	public void testCase1() throws UnsupportedEncodingException {
 		System.out.println(JSON.toJSONString(new A()));
