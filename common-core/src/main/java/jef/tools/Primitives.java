@@ -2,6 +2,11 @@ package jef.tools;
 
 import java.util.Date;
 
+/**
+ * Utilities of operating Primitive types.
+ * @author jiyi
+ *
+ */
 public final class Primitives {
 	private Primitives() {
 	}
@@ -212,5 +217,30 @@ public final class Primitives {
 	 */
 	public static long unbox(Date value, long defaultValue) {
 		return value == null ? defaultValue : value.getTime();
+	}
+
+	/**
+	 * 将long安全的转换为int
+	 * @param num long value
+	 * @return int value
+	 */
+	public static int toIntSafely(long num) {
+		if(num> Integer.MAX_VALUE || num<Integer.MIN_VALUE) {
+			throw Exceptions.illegalArgument("Cann't convert {} to a int value.",num);
+		}
+		return (int)num;
+	}
+	
+	/**
+	 * 将int安全的转换比为short
+	 * @param num int value
+	 * @return short value  
+	 */
+	public static short toShortSafely(int num) {
+		if(num>Short.MAX_VALUE || num<Short.MIN_VALUE) {
+			throw Exceptions.illegalArgument("Cann't convert {} to a short value.",num);
+		}
+		return (short)num;
+		
 	}
 }
