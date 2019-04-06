@@ -22,7 +22,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<springframework.version>4.3.7.RELEASE</springframework.version>
 		<springframework.security.version>3.1.4.RELEASE</springframework.security.version>
-		<spring-data.version>2.0.9.RELEASE</spring-data.version>
+		<spring-data.version>2.1.5.RELEASE</spring-data.version>
 		<slf4j.version>1.7.21</slf4j.version>
 		<querydsl.version>4.2.1</querydsl.version>
 		<maven.compiler.source>8</maven.compiler.source>

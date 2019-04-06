@@ -8,8 +8,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import javax.persistence.EntityManagerFactory;
-
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Import;
@@ -19,6 +17,8 @@ import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import com.github.geequery.springdata.repository.support.GqRepositoryFactoryBean;
+
+import jef.database.SessionFactory;
 
 /**
  * Annotation to enable Gq repositories. Will scan the package of the annotated configuration class for Spring Data
@@ -106,12 +106,12 @@ public @interface EnableGqRepositories {
 
 
 	/**
-	 * Configures the name of the {@link EntityManagerFactory} bean definition to be used to create repositories
-	 * discovered through this annotation. Defaults to {@code entityManagerFactory}.
+	 * Configures the name of the {@link SessionFactory} bean definition to be used to create repositories
+	 * discovered through this annotation. Defaults to {@code SessionFactory}.
 	 * 
 	 * @return
 	 */
-	String entityManagerFactoryRef() default "entityManagerFactory";
+	String sessionFactoryRef() default "SessionFactory";
 
 	/**
 	 * Configures the name of the {@link PlatformTransactionManager} bean definition to be used to create repositories

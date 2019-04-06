@@ -389,7 +389,7 @@ public abstract class Batch<T> {
 	 */
 	protected abstract String toSql(String tablename);
 
-	static final class Insert<T extends IQueryableEntity> extends Batch<T> {
+	static final class Insert<T> extends Batch<T> {
 		/**
 		 * SQL片段,Insert部分(INSERT语句使用)
 		 */
@@ -443,7 +443,7 @@ public abstract class Batch<T> {
 					} catch (Exception e) {
 						LogUtil.exception(e);
 					}
-					t.clearUpdate();
+					Entities.clearUpdate(t);
 				}
 			}
 

@@ -21,7 +21,7 @@ import jef.database.datasource.SimpleDataSource;
 
 @Configuration
 @EnableTransactionManagement
-@EnableGqRepositories(basePackages = { "com.github.geequery.springdata.test.repo" }, transactionManagerRef = "tx1", entityManagerFactoryRef = "emf1")
+@EnableGqRepositories(basePackages = { "com.github.geequery.springdata.test.repo" }, transactionManagerRef = "tx1", sessionFactoryRef = "emf1")
 public class PersistenceContext {
     @Bean(name="ds1")
     DataSource dataSource(Environment env) {

@@ -10,9 +10,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.Entity;
+
 import com.github.geequery.asm.ClassReader;
+import com.github.geequery.asm.Opcodes;
 
 import jef.accelerator.asm.ASMUtils;
+import jef.accelerator.asm.commons.AnnotationFetcher;
 import jef.common.log.LogUtil;
 import jef.database.DbClient;
 import jef.database.Field;
@@ -146,37 +150,79 @@ public class QuerableEntityScanner {
 		// 循环所有扫描到的类
 		for (IResource s : classes) {
 			try {
-				ClassReader cr = getClassInfo(cl, s);
-				if (cr == null)// NOT found class
+				ClassReader reader = getClassInfo(cl, s);
+				if (reader == null)// NOT found class
 					continue;
-				// 根据父类判断
-				if (isEntiyClz(cl, parents, cr.getSuperName())) {
-					Class<?> clz = loadClass(cl, ASMUtils.getJavaClassName(cr));
+				if ((reader.getAccess() & Opcodes.ACC_PUBLIC) == 0) {
+					continue;// 非公有跳过
+				}
+				boolean hasEntityAnnotation = AnnotationFetcher.findAny(reader, Entity.class.getName(), EasyEntity.class.getName()) != null;
+				int isEntityInterface = isEntityClass(reader.getInterfaces(), reader.getSuperName(), POJO_ENTITY,cl);
+				if (isEntityInterface != NOT_ENTITY && hasEntityAnnotation) {
+					Class<?> clz = loadClass(cl, ASMUtils.getJavaClassName(reader));
 					if (clz != null) {
 						registeEntity0(clz);
 					}
 				}
-				;
 			} catch (IOException e) {
 				LogUtil.exception(e);
 			}
 		}
 	}
-
-	private boolean isEntiyClz(ClassLoader cl, String[] knownSuperNames, String superName) throws IOException {
+	
+	private static final int POJO_ENTITY = 2;
+	private static final int NOT_ENTITY = 0;
+	private static final int ENTITY = 1;
+	
+	/**
+	 * 
+	 * @param interfaces
+	 * @param superName
+	 * @param defaultValue
+	 * @return
+	 */
+	private int isEntityClass(String[] interfaces, String superName, int defaultValue,ClassLoader classLoader) {
+		if ("jef/database/DataObject".equals(superName))
+			return ENTITY;// 绝大多数实体都是继承这个类的
+		if (ArrayUtils.contains(interfaces, "Ljef/database/IQueryableEntity;")) {
+			return ENTITY;
+		}
 		if ("java/lang/Object".equals(superName)) {
-			return false;
+			return POJO_ENTITY;
 		}
-		if (ArrayUtils.contains(knownSuperNames, superName)) {// 是实体
-			return true;
+
+		// 递归检查父类
+		ClassReader cl = null;
+		try {
+			URL url = classLoader.getResource(superName + ".class");
+			if (url == null) { // 父类找不到，无法准确判断
+				return defaultValue;
+			}
+			byte[] parent = IOUtils.toByteArray(url);
+			cl = new ClassReader(parent);
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		// 读取类
-		ClassReader cr = getClassInfo(cl, superName);
-		if (cr == null) {
-			return false;
+		if (cl != null) {
+			return isEntityClass(cl.getInterfaces(), cl.getSuperName(), defaultValue,classLoader);
 		}
-		return isEntiyClz(cl, knownSuperNames, cr.getSuperName());
+		return POJO_ENTITY;
 	}
+
+//	private boolean isEntiyClz(ClassLoader cl, String[] knownSuperNames, String superName) throws IOException {
+//		if ("java/lang/Object".equals(superName)) {
+//			return false;
+//		}
+//		if (ArrayUtils.contains(knownSuperNames, superName)) {// 是实体
+//			return true;
+//		}
+//		// 读取类
+//		ClassReader cr = getClassInfo(cl, superName);
+//		if (cr == null) {
+//			return false;
+//		}
+//		return isEntiyClz(cl, knownSuperNames, cr.getSuperName());
+//	}
 
 	private ClassReader getClassInfo(ClassLoader cl, String s) throws IOException {
 		URL url = cl.getResource(s.replace('.', '/') + ".class");

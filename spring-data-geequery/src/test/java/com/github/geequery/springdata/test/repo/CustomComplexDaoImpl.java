@@ -1,13 +1,15 @@
 package com.github.geequery.springdata.test.repo;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.github.geequery.springdata.test.entity.ComplexFoo;
 
+import jef.database.SessionFactory;
+
 public class CustomComplexDaoImpl implements CustomComplexDao{
-	@PersistenceContext
-	private EntityManager em;
+//	@PersistenceContext
+	@Autowired
+	private SessionFactory em;
 	
 	@Override
 	public void someCustomMethod(ComplexFoo user) {

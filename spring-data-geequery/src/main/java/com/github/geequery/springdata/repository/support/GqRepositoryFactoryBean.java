@@ -17,7 +17,6 @@ package com.github.geequery.springdata.repository.support;
 
 import java.io.Serializable;
 
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceContext;
 
 import org.slf4j.Logger;
@@ -51,7 +50,7 @@ public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends 
 	private Class<?> repositoryInterface;
 
 	private String namedQueryLocation;
-	private String entityManagerFactoryRef;
+	private String seessionFactoryRef;
 	private String repositoryImplementationPostfix = "Impl";
 
 	private static Logger log = LoggerFactory.getLogger(GqRepositoryFactoryBean.class);
@@ -82,10 +81,10 @@ public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends 
 	@Override
 	protected RepositoryFactorySupport doCreateRepositoryFactory() {
 		SessionFactory emf;
-		if (entityManagerFactoryRef == null) {
+		if (seessionFactoryRef == null) {
 			emf = context.getBean(SessionFactory.class);
 		} else {
-			emf = context.getBean(entityManagerFactoryRef, SessionFactory.class);
+			emf = context.getBean(seessionFactoryRef, SessionFactory.class);
 		}
 		return new GqRepositoryFactory(emf);
 	}
@@ -105,7 +104,7 @@ public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends 
 	}
 
 	private Object generateCustomImplementation() {
-		EntityManagerFactory emf = context.getBean(entityManagerFactoryRef, EntityManagerFactory.class);
+		SessionFactory emf = context.getBean(seessionFactoryRef, SessionFactory.class);
 		for (Class<?> clz : repositoryInterface.getInterfaces()) {
 			if (Repository.class.isAssignableFrom(clz)) {
 				continue;
@@ -149,8 +148,8 @@ public class GqRepositoryFactoryBean<T extends Repository<S, ID>, S, ID extends 
 		this.namedQueryLocation = namedQueryLocation;
 	}
 
-	public void setEntityManagerFactoryRef(String entityManagerFactoryRef) {
-		this.entityManagerFactoryRef = entityManagerFactoryRef;
+	public void setSessionFactoryRef(String sessionFactoryRef) {
+		this.seessionFactoryRef = sessionFactoryRef;
 	}
 
 	public void setRepositoryImplementationPostfix(String repositoryImplementationPostfix) {

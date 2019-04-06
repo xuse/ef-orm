@@ -2014,7 +2014,7 @@ public abstract class Session {
 		batchInsert0((List<IQueryableEntity>) entities, doGroup, dynamic);
 	}
 
-	private final <T extends IQueryableEntity> void batchInsert0(List<T> entities, Boolean group, Boolean dynamic) throws SQLException {
+	private final <T> void batchInsert0(List<T> entities, Boolean group, Boolean dynamic) throws SQLException {
 		boolean flag = dynamic == null ? ORMConfig.getInstance().isDynamicInsert() : dynamic.booleanValue();
 		Batch<T> batch = startBatchInsert(entities.get(0), null, flag, false);
 		if (group != null)
@@ -2107,11 +2107,11 @@ public abstract class Session {
 	 * @throws SQLException 如果数据库操作错误，抛出。
 	 * @see Batch
 	 */
-	public final <T extends IQueryableEntity> Batch<T> startBatchInsert(T template, String tableName, boolean dynamic, boolean extreme) throws SQLException {
+	public final <T> Batch<T> startBatchInsert(T template, String tableName, boolean dynamic, boolean extreme) throws SQLException {
 		long start = System.nanoTime();
 		ITableMetadata meta = MetaHolder.getMeta(template);
 		Batch.Insert<T> b = new Batch.Insert<T>(this, meta);
-		InsertSqlClause insertPart = insertp.toInsertSqlBatch((IQueryableEntity) template, tableName, dynamic, extreme, null);
+		InsertSqlClause insertPart = insertp.toInsertSqlBatch(template, tableName, dynamic, extreme, null);
 		b.setInsertPart(insertPart);
 		b.setForceTableName(tableName);
 		b.extreme = extreme;

@@ -17,7 +17,7 @@
 				<xsd:extension base="repository:repositories">
 					<xsd:attributeGroup
 						ref="repository:transactional-repository-attributes" />
-					<xsd:attribute name="entity-manager-factory-ref"
+					<xsd:attribute name="session-factory-ref"
 						type="repository:entityManagerFactoryRef" />
 					<xsd:attribute name="enable-default-transactions"
 						type="xsd:boolean">

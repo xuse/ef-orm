@@ -98,7 +98,7 @@ public class GqRepositoryConfigExtension extends RepositoryConfigurationExtensio
 //		Iterable<String> s1=source.getBasePackages();
 //		builder.addPropertyValue("transactionManagerRef",source.getAttribute("transactionManagerRef"));
 		builder.addPropertyValue("namedQueryLocation", source.getNamedQueryLocation().orElse(null));
-		builder.addPropertyValue("entityManagerFactoryRef",source.getAttribute("entityManagerFactoryRef").orElse(null));
+		builder.addPropertyValue("sessionFactoryRef",source.getAttribute("sessionFactoryRef").orElse(null));
 		builder.addPropertyValue("repositoryImplementationPostfix", source.getAttribute("repositoryImplementationPostfix").orElse("Impl"));
 	}
 
