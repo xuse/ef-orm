@@ -7,7 +7,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
 @Entity
-public class ComplexFoo extends jef.database.DataObject {
+public class ComplexFoo {
 	private static final long serialVersionUID = 5239860603423609583L;
 
 	public ComplexFoo() {

@@ -3,14 +3,14 @@ package org.easyframe.tutorial.lessonb;
 import java.sql.SQLException;
 import java.util.Arrays;
 
-import jef.database.ORMConfig;
-
 import org.easyframe.enterprise.spring.CommonDao;
 import org.easyframe.tutorial.lessonb.entity.Foo;
 import org.easyframe.tutorial.lessonb.entity.PojoEntity;
 import org.junit.Test;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
+
+import jef.database.ORMConfig;
 
 /**
  * 与Spring集成的示例。
@@ -73,7 +73,7 @@ public class Case1 extends AbstractJUnit4SpringContextTests{
 		System.out.println(pojo);
 		
 		pojo.setName("35677");
-		commonDao.update(pojo);
+		commonDao.updateByPK(pojo);
 		
 		System.out.println("===========================");
 		

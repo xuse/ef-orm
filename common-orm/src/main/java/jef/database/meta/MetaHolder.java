@@ -15,9 +15,7 @@
  */
 package jef.database.meta;
 
-import java.io.IOException;
 import java.lang.reflect.Modifier;
-import java.net.URL;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,31 +42,24 @@ import javax.persistence.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.geequery.asm.Attribute;
-import com.github.geequery.asm.ClassReader;
-import com.github.geequery.asm.ClassVisitor;
-import com.github.geequery.asm.Opcodes;
 import com.github.geequery.entity.AbstractEntityMetadata;
 import com.github.geequery.entity.DefaultEntityMetadata;
 import com.google.common.collect.ArrayListMultimap;
 
 import jef.common.log.LogUtil;
-import jef.common.wrapper.Holder;
+import jef.database.Condition.Operator;
 import jef.database.DbCfg;
 import jef.database.DbMetaData;
 import jef.database.DbUtils;
 import jef.database.EntityExtensionSupport;
 import jef.database.Field;
 import jef.database.IQueryableEntity;
-import jef.database.JefClassLoader;
 import jef.database.MetadataContainer;
 import jef.database.Session;
 import jef.database.VarObject;
-import jef.database.Condition.Operator;
 import jef.database.annotation.Cascade;
 import jef.database.annotation.DynamicKeyValueExtension;
 import jef.database.annotation.DynamicTable;
-import jef.database.annotation.EasyEntity;
 import jef.database.annotation.FieldOfTargetEntity;
 import jef.database.annotation.Indexed;
 import jef.database.annotation.JoinDescription;
@@ -91,12 +82,9 @@ import jef.database.meta.object.TableInfo;
 import jef.database.query.JpqlExpression;
 import jef.database.query.Query;
 import jef.database.query.ReadOnlyQuery;
-import jef.database.support.EntityNotEnhancedException;
-import jef.database.support.QuerableEntityScanner;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.Exceptions;
-import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
@@ -837,11 +825,7 @@ public final class MetaHolder {
 	 */
 	private static ITableMetadata getTargetType(Class<?> targetEntity, FieldOfTargetEntity targetField, FieldAnnotationProvider field, boolean isMany) {
 		if (targetEntity != void.class) {
-			if (IQueryableEntity.class.isAssignableFrom(targetEntity)) {
-				return MetaHolder.getMeta(targetEntity);
-			} else {
-				throw new IllegalArgumentException("The target entity type [" + targetEntity.getName() + "] for " + field.getDeclaringClass().getSimpleName() + ":" + field.getName() + " is not subclass of DataObject.");
-			}
+			return MetaHolder.getMeta(targetEntity);
 		}
 		if (targetField != null) {
 			throw new IllegalArgumentException(field.getDeclaringClass().getSimpleName() + ":" + field.getName() + " miss its targetEntity annotation.");
@@ -853,9 +837,7 @@ public final class MetaHolder {
 			}
 		} else {
 			Class<?> compType = field.getType();
-			if (IQueryableEntity.class.isAssignableFrom(compType)) {
-				return MetaHolder.getMeta(compType);
-			}
+			return MetaHolder.getMeta(compType);
 		}
 		throw new IllegalArgumentException(field.getDeclaringClass().getSimpleName() + ":" + field.getName() + " miss its targetEntity annotation.");
 	}

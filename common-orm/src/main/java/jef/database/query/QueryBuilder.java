@@ -893,9 +893,10 @@ public class QueryBuilder {
 	 * @param i
 	 *            自增值
 	 */
-	public static void fieldAdd(IQueryableEntity entity, Field field, int i) {
-		entity.getQuery().prepareUpdate(field, new JpqlExpression(field.name() + " + :amount_"));
-		entity.getQuery().setAttribute("amount_", i);
+	public static <T> Query<T> fieldAdd(Query<T> entity, Field field, int i) {
+		entity.prepareUpdate(field, new JpqlExpression(field.name() + " + :amount_"));
+		entity.setAttribute("amount_", i);
+		return entity;
 	}
 
 	/**
@@ -914,8 +915,9 @@ public class QueryBuilder {
 	 * @param i
 	 *            自增值
 	 */
-	public static void fieldAdd(IQueryableEntity entity, Field field, double i) {
-		entity.getQuery().prepareUpdate(field, new JpqlExpression(field.name() + " + :amount_"));
-		entity.getQuery().setAttribute("amount_", i);
+	public static  <T> Query<T> fieldAdd(Query<T> entity, Field field, double i) {
+		entity.prepareUpdate(field, new JpqlExpression(field.name() + " + :amount_"));
+		entity.setAttribute("amount_", i);
+		return entity;
 	}
 }

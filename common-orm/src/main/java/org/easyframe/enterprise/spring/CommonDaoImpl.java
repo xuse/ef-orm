@@ -3,6 +3,7 @@ package org.easyframe.enterprise.spring;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +26,9 @@ import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.Query;
 import jef.database.wrapper.ResultIterator;
+import jef.tools.ArrayUtils;
 import jef.tools.Assert;
+import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.BeanWrapper;
 
 /**
@@ -111,7 +114,17 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		}
 	}
 
-	public <T extends Serializable> int updateCascade(T entity) {
+	public <T> int updateCascade(Query<T> entity) {
+		if (entity == null)
+			return 0;
+		try {
+			return getSession().updateCascade(entity);
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+	
+	public <T> int updateCascadeByPK(T entity) {
 		if (entity == null)
 			return 0;
 		try {
@@ -126,11 +139,21 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	 * 
 	 * @see org.easyframe.enterprise.spring.CommonDao#update(java.lang.Object)
 	 */
-	public <T> int update(T entity) {
+	public <T> int updateByPK(T entity) {
 		if (entity == null)
 			return 0;
 		try {
-			return getSession().update(entity);
+			return getSession().update(Entities.asUpdateQuery(entity,true));
+		} catch (SQLException e) {
+			throw DbUtils.toRuntimeException(e);
+		}
+	}
+	
+	public <T> int update(Query<T> entity) {
+		if (entity == null)
+			return 0;
+		try {
+			return getSession().update(entity,null);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}
@@ -146,25 +169,21 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		if (entity == null)
 			return 0;
 		if (property.length == 0) {
-			return update(entity);
+			return update(Entities.asUpdateQuery(entity,true));
 		}
 		try {
-			IQueryableEntity ent = (IQueryableEntity) entity;
-			if (Entities.sizeOfSetFields(ent) == 0) {
-				DbUtils.fillUpdateMap(ent);
-			}
-			BeanWrapper bw = BeanWrapper.wrap(ent);
-			Query<?> qq = ent.getQuery();
-			ITableMetadata meta = qq.getMeta();
-			for (String s : property) {
-				ColumnMapping field = meta.findField(s);
-				if (field == null) {
-					throw new IllegalArgumentException(s + " not found database field in entity " + bw.getClassName());
+			Query<T> q=Entities.asQuery(entity);
+			ITableMetadata m = q.getMeta();
+			BitSet bs = (BitSet)m.getTouchRecord().get(entity);
+			
+			for(ColumnMapping c: m.getColumns()) {
+				if(ArrayUtils.contains(property, c.fieldName())) {
+					q.addCondition(c.field().eq(c.getFieldAccessor().get(entity)));
+				}else if(bs.get(c.field().asEnumOrdinal())){
+					q.prepareUpdate(c.field(), c.getFieldAccessor().get(entity));
 				}
-				ent.getQuery().getUpdateValueMap().remove(field.field());
-				qq.addCondition(field.field(), bw.getPropertyValue(s));
 			}
-			return getSession().update(qq);
+			return getSession().update(q);
 		} catch (SQLException e) {
 			LogUtil.exception(e);
 			throw DbUtils.toRuntimeException(e);
@@ -177,33 +196,29 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	 * @see org.easyframe.enterprise.spring.CommonDao#update(java.lang.Object,
 	 * java.util.Map, java.lang.String[])
 	 */
-	public <T extends Serializable> int update(T entity, Map<String, Object> setValues, String... property) {
+	public <T> int update(T entity, Map<String, Object> setValues, String... property) {
+		if (entity == null)
+			return 0;
+		if (property.length == 0 && CollectionUtils.isEmpty(setValues)) {
+			return update(Entities.asUpdateQuery(entity,true));
+		}
 		try {
-			IQueryableEntity ent = (IQueryableEntity) entity;
-			Query<?> qq = ent.getQuery();
-			ITableMetadata meta = qq.getMeta();
-			ent.clearUpdate();
-			for (Entry<String, Object> entry : setValues.entrySet()) {
-				ColumnMapping field = meta.findField(entry.getKey());
-				if (field == null) {
-					throw new IllegalArgumentException(entry.getKey() + " not found database field in entity " + meta.getName());
+			Query<T> q=Entities.asQuery(entity);
+			ITableMetadata m = q.getMeta();
+			BitSet bs = (BitSet)m.getTouchRecord().get(entity);
+			
+			for(ColumnMapping c: m.getColumns()) {
+				if(ArrayUtils.contains(property, c.fieldName())) {
+					q.addCondition(c.field().eq(c.getFieldAccessor().get(entity)));
 				}
-				ent.getQuery().prepareUpdate(field.field(), entry.getValue());
 			}
-			if (property.length == 0) {
-				return update(entity);
+			for(Entry<String,Object> e:setValues.entrySet()) {
+				Field field=m.getColumnDef(e.getKey()).field();
+				q.prepareUpdate(field, e.getValue());
 			}
-			// 准备where条件
-			BeanWrapper bw = BeanWrapper.wrap(ent);
-			for (String s : property) {
-				ColumnMapping field = meta.findField(s);
-				if (field == null) {
-					throw new IllegalArgumentException(s + " not found database field in entity " + bw.getClassName());
-				}
-				qq.addCondition(field.field(), bw.getPropertyValue(s));
-			}
-			return getSession().update(qq);
+			return getSession().update(q);
 		} catch (SQLException e) {
+			LogUtil.exception(e);
 			throw DbUtils.toRuntimeException(e);
 		}
 	}

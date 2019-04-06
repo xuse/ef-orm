@@ -8,7 +8,7 @@ import javax.persistence.Id;
 import javax.persistence.Version;
 
 @Entity()
-public class VersionLog extends jef.database.DataObject {
+public class VersionLog{
 	private static final long serialVersionUID = 1L;
 
 	@Id

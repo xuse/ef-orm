@@ -18,18 +18,14 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import jef.database.DataObject;
-import jef.database.annotation.Indexed;
-
 import com.github.geequery.orm.annotation.Comment;
+
+import jef.database.annotation.Indexed;
 
 @Table(name = "uc_account_info")
 @Entity
 @Comment("账号信息表")
-public class Account extends DataObject {
-
-    private static final long serialVersionUID = -491389720180169475L;
-
+public class Account {
     @Id
     @Comment("账号名")
     @Column(name = "account_name", length = 32)

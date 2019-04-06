@@ -188,14 +188,28 @@ public interface CommonDao{
 	 * @param entity 要更新的对象
 	 * @return 影响的记录条数
 	 */
-	<T> int update(T entity);
+	<T> int update(Query<T> entity);
+	
+	/**
+	 * 按主键更新 （不带级联）
+	 * @param entity
+	 * @return
+	 */
+	<T> int updateByPK(T entity);
 	
 	/**
 	 * 更新记录（带级联）
 	 * @param entity
 	 * @return
 	 */
-	<T extends Serializable> int updateCascade(T entity);
+	<T> int updateCascade(Query<T> entity);
+	
+	/**
+	 * 按主键更新 （带级联）
+	 * @param entity
+	 * @return
+	 */
+	<T> int updateCascadeByPK(T entity);
 	
 	/**
 	 * 更新记录
@@ -212,7 +226,7 @@ public interface CommonDao{
 	 * @param property 哪些字段用作Where条件
 	 * @return
 	 */
-	<T extends Serializable> int update(T entity,Map<String,Object> setValues,String... property);
+	<T> int update(T entity,Map<String,Object> setValues,String... property);
 	
 	/**
 	 * 执行命名查询

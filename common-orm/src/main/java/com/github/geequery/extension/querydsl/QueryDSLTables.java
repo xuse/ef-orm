@@ -33,7 +33,7 @@ public class QueryDSLTables {
 	 * @param clz
 	 * @return
 	 */
-	public static <T extends DataObject> SQLRelationalPath<T> table(Class<T> clz) {
+	public static <T> SQLRelationalPath<T> table(Class<T> clz) {
 		AbstractMetadata tm = MetaHolder.getMeta(clz);
 		return table(tm);
 	}
@@ -67,7 +67,7 @@ public class QueryDSLTables {
 	 * @param tm
 	 * @return
 	 */
-	public static <T extends DataObject> SQLRelationalPath<T> table(ITableMetadata tm) {
+	public static <T> SQLRelationalPath<T> table(ITableMetadata tm) {
 		return table(tm, null);
 	}
 
@@ -79,7 +79,7 @@ public class QueryDSLTables {
 	 *            当有多个不同的表达式对象时
 	 * @return
 	 */
-	public static <T extends DataObject> SQLRelationalPath<T> table(ITableMetadata tm, String variable) {
+	public static <T> SQLRelationalPath<T> table(ITableMetadata tm, String variable) {
 		if (variable == null) {
 			variable = tm.getThisType().getName();
 		}

@@ -10,7 +10,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 @Entity
-public class Foo extends jef.database.DataObject {
+public class Foo{
 	private static final long serialVersionUID = 1L;
 
 	@Id

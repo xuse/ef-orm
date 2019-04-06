@@ -47,7 +47,7 @@ public class Case1 {
 
 		//FIXME  字段显示为null
 		loaded.setName("EF-ORM is very simple.");
-		dao.update(loaded);
+		dao.updateByPK(loaded);
 
 		// 删除这条记录
 		dao.removeByField(Foo.class, "id", foo.getId());

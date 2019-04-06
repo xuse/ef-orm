@@ -92,6 +92,7 @@ import jef.database.wrapper.populator.Transformer;
 import jef.script.javascript.Var;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 import jef.tools.JefConfiguration;
 import jef.tools.PageLimit;
 import jef.tools.StringUtils;
@@ -196,7 +197,7 @@ public abstract class Session {
 	 * 
 	 * @param entity 要清理的数据或查询
 	 */
-	public final void evict(IQueryableEntity entity) {
+	public final void evict(Object entity) {
 		getCache().evict(entity);
 	}
 
@@ -418,15 +419,7 @@ public abstract class Session {
 	public int deleteCascade(Object entity) throws SQLException {
 		if (entity == null)
 			return 0;
-		// IQueryableEntity obj;
-		// if (entity instanceof IQueryableEntity) {
-		// obj = (IQueryableEntity) entity;
 		return deleteCascade0(Entities.asQuery(entity), 0);
-		// } else {
-		// ITableMetadata meta = MetaHolder.getMeta(entity);
-		// obj = meta.transfer(entity, true);
-		// return delete(obj.getQuery());
-		// }
 	}
 
 	/**
@@ -554,7 +547,7 @@ public abstract class Session {
 
 	/**
 	 * 插入对象 <br>
-	 * 不处理级联关系。如果要支持级联插入，请使用{@link #insertCascade(IQueryableEntity)}
+	 * 不处理级联关系。如果要支持级联插入，请使用{@link #insertCascade(Object)}
 	 * 
 	 * @param obj 插入的对象。
 	 * @throws SQLException 如果数据库操作错误，抛出。
@@ -576,7 +569,7 @@ public abstract class Session {
 	 *                如果在实体中为null，那么会将null值插入数据库，造成数据库的缺省值无效。 为了使用dynamic模式后，
 	 *                只有手工设置为null的属性，插入数据库时才是null。如果没有设置过值，在插入数据库时将使用数据库的默认值。
 	 */
-	public void insert(IQueryableEntity obj, boolean dynamic) {
+	public void insert(Object obj, boolean dynamic) {
 		try {
 			insert(obj, null, dynamic);
 		} catch (SQLException e) {
@@ -592,7 +585,7 @@ public abstract class Session {
 	 * @throws SQLException 如果数据库操作错误，抛出。
 	 * 
 	 */
-	public void insert(IQueryableEntity obj, String myTableName) throws SQLException {
+	public void insert(Object obj, String myTableName) throws SQLException {
 		insert(obj, myTableName, ORMConfig.getInstance().isDynamicInsert());
 	}
 
@@ -678,8 +671,7 @@ public abstract class Session {
 	public int delete(Object entity) throws SQLException {
 		if (entity == null)
 			return 0;
-		IQueryableEntity obj = (IQueryableEntity) entity;
-		return delete(obj.getQuery());
+		return delete(Entities.asQuery(entity));
 	}
 
 	/**
@@ -703,7 +695,7 @@ public abstract class Session {
 	 * @param obj 被更新的对象
 	 * @return 影响的记录行数
 	 * @throws SQLException
-	 * @see {@link #updateCascade(IQueryableEntity)}
+	 * @see {@link #updateCascade(Query<?>)}
 	 */
 	public int update(Query<?> obj) throws SQLException {
 		return update(obj, null);
@@ -727,7 +719,7 @@ public abstract class Session {
 	 * @param myTableName 要操作的表名，支持Schema重定向
 	 * @return 影响的记录行数
 	 * @throws SQLException 如果数据库操作错误，抛出。
-	 * @see #update(IQueryableEntity)
+	 * @see #update(Query<?>)
 	 */
 	public int update(Query<?> entity, String myTableName) throws SQLException {
 		if (entity == null)
@@ -773,7 +765,7 @@ public abstract class Session {
 	 * </tt>
 	 * </pre>
 	 * <p>
-	 * 当需要指定结果范围（分页）时 {@link #select(IQueryableEntity, PageLimit)}
+	 * 当需要指定结果范围（分页）时 {@link #select(Object, PageLimit)}
 	 * 
 	 * 
 	 * 
@@ -921,7 +913,7 @@ public abstract class Session {
 	 * @throws SQLException 如果数据库操作错误，抛出。
 	 * @see ResultIterator
 	 */
-	public <T extends IQueryableEntity> ResultIterator<T> iteratedSelect(TypedQuery<T> queryObj, PageLimit range) throws SQLException {
+	public <T> ResultIterator<T> iteratedSelect(TypedQuery<T> queryObj, PageLimit range) throws SQLException {
 		QueryOption option;
 		ConditionQuery query;
 		if (queryObj instanceof JoinElement) {
@@ -947,7 +939,7 @@ public abstract class Session {
 	 * @return
 	 * @throws SQLException 必需特别注意，返回的元素必需要完成遍历，否则结果集就不会被关闭，会产生泄漏！
 	 */
-	public <T extends IQueryableEntity> Stream<T> iteratedSelect(TypedQuery<T> queryObj, long offset, int limit) throws SQLException {
+	public <T> Stream<T> iteratedSelect(TypedQuery<T> queryObj, long offset, int limit) throws SQLException {
 		final ResultIterator<T> iters = iteratedSelect(queryObj, limit == 0 ? null : new PageLimit(offset, limit));
 		Stream<T> st = StreamSupport.stream(Spliterators.spliteratorUnknownSize(iters, 0), false);
 		st.onClose(() -> iters.close());
@@ -1012,9 +1004,8 @@ public abstract class Session {
 	 * @throws SQLException 如果数据库操作错误，抛出。
 	 * @see {@link ResultIterator}
 	 */
-	public <T extends IQueryableEntity> ResultIterator<T> iteratedSelect(T obj, PageLimit pageinfo) throws SQLException {
-		@SuppressWarnings("unchecked")
-		Query<T> query = obj.getQuery();
+	public <T> ResultIterator<T> iteratedSelect(T obj, PageLimit pageinfo) throws SQLException {
+		Query<T> query = Entities.asQuery(obj);
 		QueryOption option = QueryOption.createFrom(query);
 
 		// 预处理
@@ -1409,7 +1400,7 @@ public abstract class Session {
 	 * @return 该类型所对应的表中的所有数据
 	 * @throws SQLException 如果数据库操作错误，抛出。
 	 */
-	public <T extends IQueryableEntity> List<T> selectAll(Class<T> cls) throws SQLException {
+	public <T> List<T> selectAll(Class<T> cls) throws SQLException {
 		return selectAll(MetaHolder.getMeta(cls));
 	}
 
@@ -1530,9 +1521,8 @@ public abstract class Session {
 	 * @return
 	 * @throws SQLException
 	 */
-	@SuppressWarnings("unchecked")
 	public <T> Page<T> selectPage(T entity, int offset, int limit) throws SQLException {
-		return (Page<T>) pageSelect((IQueryableEntity) entity, limit).setOffset(offset).getPageData();
+		return (Page<T>) pageSelect(entity, limit).setOffset(offset).getPageData();
 	}
 
 	/*
@@ -1783,8 +1773,8 @@ public abstract class Session {
 	 * @return 记录条数
 	 * @throws SQLException 如果数据库操作错误，抛出。
 	 */
-	public final int count(IQueryableEntity obj) throws SQLException {
-		return count(obj.getQuery());
+	public final int count(Object obj) throws SQLException {
+		return count(Entities.asQuery(obj));
 	}
 
 	/**
@@ -1813,10 +1803,10 @@ public abstract class Session {
 		if (entities == null || entities.isEmpty())
 			return 0;
 		// T t = entities.get(0);
-		return executeBatchDeletion0((List<IQueryableEntity>) entities, group);
+		return executeBatchDeletion0(entities, group);
 	}
 
-	private final <T extends IQueryableEntity> int executeBatchDeletion0(List<T> entities, Boolean group) throws SQLException {
+	private final <T> int executeBatchDeletion0(List<T> entities, Boolean group) throws SQLException {
 		Batch<T> batch = this.startBatchDelete(entities.get(0), null);
 		if (group != null) {
 			batch.setGroupForPartitionTable(group);
@@ -1922,11 +1912,11 @@ public abstract class Session {
 			throw new SQLException("The type " + meta.getTableName(false) + " has no primary key, can not execute batch remove by primarykey");
 		}
 
-		List<? extends IQueryableEntity> data;
-		data = (List<? extends IQueryableEntity>) entities;
+		List<?> data;
+		data = (List<?>) entities;
 		long start = System.nanoTime();
 
-		PKQuery<?> query = new PKQuery(meta, DbUtils.getPKValueSafe((IQueryableEntity) data.get(0)), meta.newInstance());
+		PKQuery<?> query = new PKQuery(meta, DbUtils.getPKValueSafe(data.get(0)), meta.newInstance());
 		BindSql wherePart = preProcessor.toWhereClause(query, new SqlContext(null, query), null, getProfile(null), true);
 		Batch.Delete batch = new Batch.Delete(this, meta, wherePart);
 		batch.parseTime = System.nanoTime() - start;
@@ -1970,11 +1960,12 @@ public abstract class Session {
 	 * @throws SQLException 如果数据库操作错误，抛出。
 	 * @see Batch
 	 */
-	public final <T extends IQueryableEntity> Batch<T> startBatchDelete(T template, String tableName) throws SQLException {
+	public final <T> Batch<T> startBatchDelete(T template, String tableName) throws SQLException {
 		// 位于批当中的绑定变量
 		long start = System.nanoTime();
-		BindSql wherePart = preProcessor.toWhereClause(template.getQuery(), new SqlContext(null, template.getQuery()), null, getProfile(null), true);
-		ITableMetadata meta = MetaHolder.getMeta(template);
+		Query<T> q = Entities.asQuery(template);
+		BindSql wherePart = preProcessor.toWhereClause(q, new SqlContext(null, q), null, getProfile(null), true);
+		ITableMetadata meta =q.getMeta();
 		Batch.Delete<T> batch = new Batch.Delete<T>(this, meta, wherePart);
 		batch.forceTableName = DbUtils.toSchemaAdjustedName(tableName);
 		batch.parseTime = System.nanoTime() - start;
@@ -2015,13 +2006,10 @@ public abstract class Session {
 	 *                 只有手工设置为null的属性，插入数据库时才是null。如果没有设置过值，在插入数据库时将使用数据库的默认值。
 	 * @throws SQLException 如果数据库操作错误，抛出。
 	 */
-	@SuppressWarnings("unchecked")
 	public final <T> void batchInsert(List<T> entities, Boolean doGroup, Boolean dynamic) throws SQLException {
 		if (entities == null || entities.isEmpty())
 			return;
-
-		// T t = entities.get(0);
-		batchInsert0((List<IQueryableEntity>) entities, doGroup, dynamic);
+		batchInsert0(entities, doGroup, dynamic);
 	}
 
 	private final <T> void batchInsert0(List<T> entities, Boolean group, Boolean dynamic) throws SQLException {
@@ -2068,7 +2056,7 @@ public abstract class Session {
 	 *                 开关开启后会对每个对象进行路由计算并重新分组操作（这一操作将损耗一定的性能）。
 	 * @throws SQLException 如果数据库操作错误，抛出。
 	 */
-	public final <T extends IQueryableEntity> void extremeUpdate(List<T> entities, Boolean group) throws SQLException {
+	public final <T> void extremeUpdate(List<T> entities, Boolean group) throws SQLException {
 		if (entities.isEmpty())
 			return;
 		Batch<T> batch = startBatchUpdate(Entities.asQuery(entities.get(0)), null, false, true);
@@ -2092,7 +2080,7 @@ public abstract class Session {
 	 * @throws SQLException 如果数据库操作错误，抛出。
 	 * @see Batch
 	 */
-	public final <T extends IQueryableEntity> Batch<T> startBatchInsert(T template, boolean dynamic) throws SQLException {
+	public final <T> Batch<T> startBatchInsert(T template, boolean dynamic) throws SQLException {
 		return startBatchInsert(template, null, dynamic, false);
 	}
 
@@ -2187,8 +2175,9 @@ public abstract class Session {
 	 * @param entities
 	 * @throws SQLException
 	 */
-	public final <T extends IQueryableEntity> void batchUpdateBy(Query<T> query, List<T> entities) throws SQLException {
-
+	public final <T> void batchUpdateBy(Query<T> query, List<T> entities) throws SQLException {
+		//TODO
+		throw Exceptions.unsupportedOperation("Method {} not finished.", "batchUpdateBy");
 	}
 
 	/**
@@ -2333,8 +2322,8 @@ public abstract class Session {
 	 *         如果你能确定本次操作只会操作一张表，可以用getAsOneTable()获得表名.
 	 * @see PartitionResult
 	 */
-	public final PartitionResult[] getPartitionResults(IQueryableEntity entity) {
-		return DbUtils.toTableNames(entity.getQuery(), null, getPartitionSupport());
+	public final PartitionResult[] getPartitionResults(Object entity) {
+		return DbUtils.toTableNames(Entities.asQuery(entity), null, getPartitionSupport());
 	}
 
 	/**
@@ -2763,28 +2752,6 @@ public abstract class Session {
 	};
 
 	// ////////////////////以下全部都是废弃方法//////////////////////
-
-	/**
-	 * 废弃，使用 {@link #iteratedSelect(TypedQuery, PageLimit)} 代替
-	 * 
-	 * @deprecated use {@link #iteratedSelect(TypedQuery, PageLimit)} instead.
-	 */
-	public <T extends IQueryableEntity> ResultIterator<T> iteratedSelect(TypedQuery<T> queryObj, IntRange range) throws SQLException {
-		return iteratedSelect(queryObj, PageLimit.parse(range));
-	}
-
-	/**
-	 * 废弃，使用{@link #select(IQueryableEntity, PageLimit)} 代替
-	 * 
-	 * @param obj
-	 * @param range
-	 * @return
-	 * @throws SQLException
-	 */
-	@Deprecated
-	public <T extends IQueryableEntity> List<T> select(T obj, IntRange range) throws SQLException {
-		return select(obj, PageLimit.parse(range));
-	}
 
 	/**
 	 * 根据拼装好的Query进行查询。并将结果转换为期望的对象。

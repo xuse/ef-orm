@@ -22,6 +22,7 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 
+import com.github.geequery.entity.Entities;
 import com.github.geequery.springdata.config.PersistenceContext;
 import com.github.geequery.springdata.config.PersistenceContext2;
 import com.github.geequery.springdata.test.entity.ComplexFoo;
@@ -318,17 +319,17 @@ public class Case2 extends AbstractJUnit4SpringContextTests implements Initializ
         {
             VersionLog v = commonDao.load(VersionLog.class, id);
             v.setName("叶问天");
-            commonDao.update(v);
+            commonDao.updateByPK(v);
         }
         {
             VersionLog v = commonDao.load(VersionLog.class, id);
 
             VersionLog v2 = commonDao.load(VersionLog.class, id);
             v2.setName("抢先更新");
-            commonDao.update(v2);
+            commonDao.updateByPK(v2);
             try {
                 v.setName("啥，已经被人更新了，那我不是写不进去了！");
-                commonDao.update(v);
+                commonDao.updateByPK(v);
             } catch (OptimisticLockException e) {
                 e.printStackTrace();
                 throw e;
@@ -357,7 +358,7 @@ public class Case2 extends AbstractJUnit4SpringContextTests implements Initializ
 
             VersionLog v_ = commonDao.load(VersionLog.class, id - 2);
             v_.setName("再次抢先更新");
-            commonDao.update(v_);
+            commonDao.updateByPK(v_);
 
             v1.setName("更新1");
             v2.setName("更新2");
@@ -406,9 +407,9 @@ public class Case2 extends AbstractJUnit4SpringContextTests implements Initializ
     @Test
     public void testUpdateWithoutLock() {
         List<Foo> foos = commonDao.find(QB.create(Foo.class));
-        Foo foo = foos.get(0);
+        Query<Foo> foo=Entities.asQuery(foos.get(0)); 
         QB.fieldAdd(foo, Foo.Field.age, 100);
-        foo.setName("姓名也更新了");
+        foo.getInstance().setName("姓名也更新了");
         commonDao.update(foo);
     }
 

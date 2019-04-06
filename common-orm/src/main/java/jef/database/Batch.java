@@ -585,7 +585,7 @@ public abstract class Batch<T> {
 		}
 	}
 
-	static final class Delete<T extends IQueryableEntity> extends Batch<T> {
+	static final class Delete<T> extends Batch<T> {
 		/**
 		 * SQL片段，where部分(UPDATE和DELETE语句使用)
 		 */
