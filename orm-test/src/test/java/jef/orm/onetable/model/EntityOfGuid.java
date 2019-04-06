@@ -1,5 +1,6 @@
 package jef.orm.onetable.model;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -9,7 +10,7 @@ import javax.persistence.Id;
 import javax.persistence.Version;
 
 @Entity
-public class EntityOfGuid {
+public class EntityOfGuid implements Serializable {
 	@Id
 	@GeneratedValue
 	@Column(length = 32)

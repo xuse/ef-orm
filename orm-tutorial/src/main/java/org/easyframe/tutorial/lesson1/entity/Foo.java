@@ -1,5 +1,6 @@
 package org.easyframe.tutorial.lesson1.entity;
 
+import java.io.Serializable;
 import java.lang.Thread.State;
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -16,7 +17,7 @@ import javax.persistence.UniqueConstraint;
 
 @Table(name = "UNKNOWN", uniqueConstraints = { @UniqueConstraint(columnNames = {  }) })
 @Entity
-public class Foo {
+public class Foo implements Serializable{
 	@Id
 	@Column
 	private int id;

@@ -1040,7 +1040,9 @@ public class BeanUtils {
 	 * @return
 	 */
 	public static final <T extends Annotation> T asAnnotation(Class<T> type, String key, Object value) {
-		return asAnnotation(type, Collections.singletonMap(key, value));
+		Map<String,Object> map=new HashMap<String,Object>();
+		map.put(key, value);
+		return asAnnotation(type, map);
 	}
 	
 	/**
@@ -1061,7 +1063,11 @@ public class BeanUtils {
 			// 如果Map中缺少数据，则用注解的默认值补上。
 			Object value = data.get(method.getName());
 			if (value == null) {
-				data.put(method.getName(), method.getDefaultValue());
+				try {
+					data.put(method.getName(), method.getDefaultValue());
+				}catch(UnsupportedOperationException e) {
+					throw Exceptions.illegalArgument("The map {} can not be written.", data.getClass().getName(),e);
+				}
 			}
 		}
 		// 创建代理。

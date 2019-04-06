@@ -326,7 +326,7 @@ public class GqPartTreeQuery extends AbstractGqQuery {
 	protected int executeUpdate(Object[] values) {
 		Query<?> q = createQuery(values, false);
 		try {
-			return getSession().update(q.getInstance());
+			return getSession().update(q);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}

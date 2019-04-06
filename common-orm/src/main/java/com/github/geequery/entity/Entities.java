@@ -167,14 +167,20 @@ public abstract class Entities {
 
 	@SuppressWarnings("unchecked")
 	public static <T> Query<T> asUpdateQuery(T entity, boolean dynamic) {
+		Query<T> q;
+		ITableMetadata meta;
 		if (entity instanceof IQueryableEntity) {
-			return (Query<T>) ((IQueryableEntity) entity).getQuery();
+			q=(Query<T>) ((IQueryableEntity) entity).getQuery();
+			if(q.needUpdate()) {
+				return q;
+			}
+			meta= q.getMeta();
+		}else {
+			meta= MetaHolder.getMeta(entity);
+			q=new QueryImpl<T>(entity);
 		}
 		
-		ITableMetadata meta = MetaHolder.getMeta(entity);
 		BitSet bs = (BitSet)meta.getTouchRecord().get(entity);
-		
-		Query<T> q=new QueryImpl<T>(entity);
 		if(bs==null) {
 			return q;
 		}

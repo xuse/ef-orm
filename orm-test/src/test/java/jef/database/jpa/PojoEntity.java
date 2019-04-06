@@ -1,5 +1,7 @@
 package jef.database.jpa;
 
+import java.io.Serializable;
+
 import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -7,7 +9,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Table(name = "Asdsad")
-public class PojoEntity {
+public class PojoEntity implements Serializable{
 	@Column(name = "name")
 	private String name;
 	

@@ -705,11 +705,21 @@ public abstract class Session {
 	 * @throws SQLException
 	 * @see {@link #updateCascade(IQueryableEntity)}
 	 */
-	public int update(Object obj) throws SQLException {
-		int n = update(obj, null);
-		return n;
+	public int update(Query<?> obj) throws SQLException {
+		return update(obj, null);
 	}
 
+	/**
+	 * 更新对象
+	 * @param obj
+	 * @return
+	 * @throws SQLException
+	 */
+	public int update(Object obj) throws SQLException {
+		return update(Entities.asUpdateQuery(obj, true), null);
+	}
+	
+	
 	/**
 	 * 更新对象，无级联操作，可以指定操作的表名
 	 * 
@@ -719,17 +729,17 @@ public abstract class Session {
 	 * @throws SQLException 如果数据库操作错误，抛出。
 	 * @see #update(IQueryableEntity)
 	 */
-	public int update(Object entity, String myTableName) throws SQLException {
+	public int update(Query<?> entity, String myTableName) throws SQLException {
 		if (entity == null)
 			return 0;
-		ITableMetadata meta = MetaHolder.getMeta(entity);
+		ITableMetadata meta = entity.getMeta();
 		if (meta.getExtendsTable() != null) {
 			if (myTableName != null) {
 				throw new UnsupportedOperationException();// 暂不支持扩展表时定制表名
 			}
-			return updateCascade0(Entities.asUpdateQuery(entity, true), 5);
+			return updateCascade0(entity, 5);
 		} else {
-			return update0(Entities.asUpdateQuery(entity, true), myTableName);
+			return update0(entity, myTableName);
 		}
 	}
 
@@ -2160,7 +2170,7 @@ public abstract class Session {
 		// 位于批当中的绑定变量
 		UpdateContext context = new UpdateContext(template.getMeta().getVersionColumn());
 		BindSql wherePart = preProcessor.toWhereClause(template, new SqlContext(null, template), context, getProfile(null), true);
-		ITableMetadata meta = MetaHolder.getMeta(template);
+		ITableMetadata meta = template.getMeta();
 		Batch.Update<T> batch = new Batch.Update<T>(this, meta);
 		batch.forceTableName = DbUtils.toSchemaAdjustedName(tableName);
 		batch.setUpdatePart(updatePart);
@@ -2225,19 +2235,16 @@ public abstract class Session {
 	 * @return 实际修改的记录行数
 	 * @throws SQLException 如果数据库操作错误，抛出。
 	 */
-	@SuppressWarnings("unchecked")
 	public final <T> int batchUpdate(List<T> entities, Boolean group, Boolean dynamic) throws SQLException {
 		if (entities == null || entities.isEmpty())
 			return 0;
-
-		// T t = entities.get(0);
-		return batchUpdate0((List<IQueryableEntity>) entities, group, null);
+		return batchUpdate0(entities, group, null);
 	}
 
-	private final <T extends IQueryableEntity> int batchUpdate0(List<T> entities, Boolean group, Boolean dynamic) throws SQLException {
+	private final <T> int batchUpdate0(List<T> entities, Boolean group, Boolean dynamic) throws SQLException {
 		if (entities.isEmpty())
 			return 0;
-		T template = null;
+		Query<T> template = null;
 		boolean dyna;
 		if (dynamic == null) {// 如果未指定时
 			dyna = ORMConfig.getInstance().isDynamicUpdate();
@@ -2245,7 +2252,7 @@ public abstract class Session {
 			dyna = dynamic.booleanValue();
 		}
 		for (int i = 0; i < 3 && i < entities.size(); i++) {
-			template = entities.get(i);
+			template = Entities.asUpdateQuery(entities.get(i),dyna);
 			if (!dyna || template.needUpdate()) {
 				break;
 			}
@@ -2257,7 +2264,7 @@ public abstract class Session {
 		if (!template.needUpdate()) {
 			dyna = false;
 		}
-		Batch<T> batch = this.startBatchUpdate(Entities.asQuery(template), null, dyna, false);
+		Batch<T> batch = this.startBatchUpdate(template, null, dyna, false);
 		if (group != null) {
 			batch.setGroupForPartitionTable(group);
 		}

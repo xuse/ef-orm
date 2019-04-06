@@ -111,7 +111,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		}
 	}
 
-	public <T> int updateCascade(T entity) {
+	public <T extends Serializable> int updateCascade(T entity) {
 		if (entity == null)
 			return 0;
 		try {
@@ -164,7 +164,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				ent.getQuery().getUpdateValueMap().remove(field.field());
 				qq.addCondition(field.field(), bw.getPropertyValue(s));
 			}
-			return getSession().update(qq.getInstance());
+			return getSession().update(qq);
 		} catch (SQLException e) {
 			LogUtil.exception(e);
 			throw DbUtils.toRuntimeException(e);
@@ -177,7 +177,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	 * @see org.easyframe.enterprise.spring.CommonDao#update(java.lang.Object,
 	 * java.util.Map, java.lang.String[])
 	 */
-	public <T> int update(T entity, Map<String, Object> setValues, String... property) {
+	public <T extends Serializable> int update(T entity, Map<String, Object> setValues, String... property) {
 		try {
 			IQueryableEntity ent = (IQueryableEntity) entity;
 			Query<?> qq = ent.getQuery();
@@ -202,7 +202,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 				}
 				qq.addCondition(field.field(), bw.getPropertyValue(s));
 			}
-			return getSession().update(qq.getInstance());
+			return getSession().update(qq);
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}

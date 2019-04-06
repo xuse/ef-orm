@@ -195,7 +195,7 @@ public interface CommonDao{
 	 * @param entity
 	 * @return
 	 */
-	<T> int updateCascade(T entity);
+	<T extends Serializable> int updateCascade(T entity);
 	
 	/**
 	 * 更新记录
@@ -212,7 +212,7 @@ public interface CommonDao{
 	 * @param property 哪些字段用作Where条件
 	 * @return
 	 */
-	<T> int update(T entity,Map<String,Object> setValues,String... property);
+	<T extends Serializable> int update(T entity,Map<String,Object> setValues,String... property);
 	
 	/**
 	 * 执行命名查询

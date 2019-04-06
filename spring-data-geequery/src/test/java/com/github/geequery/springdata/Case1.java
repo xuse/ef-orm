@@ -28,9 +28,12 @@ import org.springframework.test.context.junit4.AbstractJUnit4SpringContextTests;
 import com.github.geequery.extension.querydsl.QueryDSLTables;
 import com.github.geequery.extension.querydsl.SQLQueryEx;
 import com.github.geequery.extension.querydsl.SQLRelationalPath;
-import com.github.geequery.springdata.Role.RoleType;
+import com.github.geequery.springdata.test.entity.Account;
+import com.github.geequery.springdata.test.entity.AccountRoleRelation;
 import com.github.geequery.springdata.test.entity.ComplexFoo;
 import com.github.geequery.springdata.test.entity.Foo;
+import com.github.geequery.springdata.test.entity.Role;
+import com.github.geequery.springdata.test.entity.Role.RoleType;
 import com.github.geequery.springdata.test.entity.VersionLog;
 import com.github.geequery.springdata.test.repo.ComplexFooDao;
 import com.github.geequery.springdata.test.repo.FooDao;
@@ -615,9 +618,9 @@ public class Case1 extends AbstractJUnit4SpringContextTests implements Initializ
 	@Test
 	public void useQueryDSLPrepare() throws SQLException {
 
-		// commonDao.getNoTransactionSession().dropTable(Account.class);
-		// commonDao.getNoTransactionSession().dropTable(Role.class);
-		// commonDao.getNoTransactionSession().dropTable(AccountRoleRelation.class);
+		 commonDao.getNoTransactionSession().dropTable(Account.class);
+		 commonDao.getNoTransactionSession().dropTable(Role.class);
+		 commonDao.getNoTransactionSession().dropTable(AccountRoleRelation.class);
 		commonDao.getNoTransactionSession().createTable(Account.class);
 		commonDao.getNoTransactionSession().createTable(Role.class);
 		commonDao.getNoTransactionSession().createTable(AccountRoleRelation.class);

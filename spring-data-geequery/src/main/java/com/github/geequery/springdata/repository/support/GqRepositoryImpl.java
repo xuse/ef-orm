@@ -527,7 +527,7 @@ public class GqRepositoryImpl<T, ID extends Serializable> implements GqRepositor
 	@Transactional
 	public int update(T entity) {
 		try {
-			return getSession().update(entity);
+			return getSession().update(Entities.asUpdateQuery(entity,true));
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}

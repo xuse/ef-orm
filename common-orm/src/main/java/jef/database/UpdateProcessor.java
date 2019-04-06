@@ -138,7 +138,7 @@ public class UpdateProcessor {
 				}
 			}
 		} else {
-			fields = getAllFieldValues(meta, map, BeanWrapper.wrap(obj), profile);
+			fields = getAllFieldValues(meta, map, BeanWrapper.wrap(obj.getInstance()), profile);
 		}
 		boolean safeMerge = ORMConfig.getInstance().isSafeMerge();
 

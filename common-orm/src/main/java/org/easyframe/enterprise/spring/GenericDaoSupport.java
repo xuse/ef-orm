@@ -36,7 +36,7 @@ import jef.tools.reflect.GenericUtils;
  * @param <T>
  */
 @Transactional
-public abstract class GenericDaoSupport<T> extends BaseDao implements GenericDao<T> {
+public abstract class GenericDaoSupport<T extends Serializable> extends BaseDao implements GenericDao<T> {
 	protected Class<T> entityClass;
 	protected AbstractMetadata meta;
 

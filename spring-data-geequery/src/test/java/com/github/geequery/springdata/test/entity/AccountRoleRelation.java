@@ -1,4 +1,4 @@
-package com.github.geequery.springdata;
+package com.github.geequery.springdata.test.entity;
 
 import javax.persistence.Entity;
 import javax.persistence.OneToMany;

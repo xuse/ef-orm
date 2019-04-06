@@ -72,7 +72,7 @@ public class CustomTableNameTest extends org.junit.Assert {
 			List<Foo> foos=db.select(query,null);
 			Foo foo=foos.get(0);
 			foo.setName("Play of update!");
-			db.update(foo,MY_FOO_TABLE);
+			db.update(foo.getQuery(),MY_FOO_TABLE);
 		}
 		{//delete
 			Foo foo=new Foo();

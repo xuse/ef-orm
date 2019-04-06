@@ -77,7 +77,7 @@ public class AutoAdjustSchemaTest {
 		root.startUpdate();
 		String name = "name" + RandomStringUtils.randomNumeric(6);
 		root.setName(name);
-		db.update(root, TABLE_NAME);
+		db.update(root.getQuery(), TABLE_NAME);
 
 		root.getQuery().setCustomTableName(TABLE_NAME);
 		List roots = db.select(root.getQuery(), null);
