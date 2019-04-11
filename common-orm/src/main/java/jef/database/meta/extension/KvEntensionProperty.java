@@ -19,10 +19,10 @@ import jef.database.meta.ITableMetadata;
 import jef.database.meta.TupleMetadata;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.ClassEx;
+import jef.tools.reflect.ConvertUtils;
 import jef.tools.reflect.FieldAccessor;
 import jef.tools.reflect.GenericUtils;
 import jef.tools.reflect.Property;
-import jef.tools.reflect.ConvertUtils;
 
 public class KvEntensionProperty implements Property {
 	private String kColumn;
@@ -55,19 +55,9 @@ public class KvEntensionProperty implements Property {
 	}
 
 	@Override
-	public boolean isReadable() {
-		return true;
-	}
-
-	@Override
-	public boolean isWriteable() {
-		return true;
-	}
-
-	@Override
 	public Object get(Object obj) {
 		@SuppressWarnings("unchecked")
-		Map<String, Object> attributes = (Map<String, Object>) accessor.getObject(obj);
+		Map<String, Object> attributes = (Map<String, Object>) accessor.get(obj);
 		if (attributes == null) {
 			return Collections.EMPTY_LIST;
 		}

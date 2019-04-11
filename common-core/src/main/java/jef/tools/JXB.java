@@ -26,17 +26,16 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
-import jef.common.IntList;
-import jef.common.log.LogUtil;
-import jef.tools.reflect.BeanUtils;
-import jef.tools.reflect.BeanWrapperImpl;
-import jef.tools.reflect.ClassEx;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
+
+import jef.common.IntList;
+import jef.common.log.LogUtil;
+import jef.tools.reflect.BeanWrapperImpl;
+import jef.tools.reflect.ClassEx;
 
 /**
  * JXB与JAXB类似，是JEF中为了实现Java对象和XML绑定所编写的工具
@@ -319,7 +318,7 @@ public class JXB {
 		if (value == null)
 			return;
 		// ?bean.getFieldType(fieldName):
-		Class<?> type = BeanUtils.toWrapperClass(bean.getPropertyRawType(fieldName));
+		Class<?> type = Primitives.toWrapperClass(bean.getPropertyRawType(fieldName));
 		Class<?> c = value.getClass();
 		Element element = null;
 		if (String.class == c) {

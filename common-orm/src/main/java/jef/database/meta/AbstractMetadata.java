@@ -143,7 +143,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 
 	public void setBindDsName(String bindDsName) {
 		this.bindDsName = MetaHolder.getMappingSite(bindDsName);
-		this.bindProfile = null;
+		this.cachedTable=null;
 	}
 
 	public Collection<ColumnMapping> getColumns() {
@@ -202,7 +202,7 @@ public abstract class AbstractMetadata implements ITableMetadata {
 
 	private synchronized DbTable initCache(DatabaseDialect profile) {
 		DbTable baseTable = new DbTable(bindDsName, profile.getObjectNameToUse(getTableName(true)), false, false);
-		Pair<DatabaseDialect, DbTable> cache = new Pair<>(profile, baseTable);
+		Pair<DatabaseDialect, DbTable> cache = new Pair<DatabaseDialect, DbTable>(profile, baseTable);
 		this.cachedTable = cache;
 		return baseTable;
 	}

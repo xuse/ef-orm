@@ -74,25 +74,25 @@ public class RefectingHackDataSourceWrapper extends AbstractDataSource implement
 	}
 	public String getUrl() {
 		if(url!=null)
-			return (String) url.getObject(datasource);
+			return (String) url.get(datasource);
 		return null;
 	}
 
 	public String getUser() {
 		if(user!=null)
-			return (String) user.getObject(datasource);
+			return (String) user.get(datasource);
 		return null;
 	}
 
 	public String getPassword() {
 		if(password!=null)
-			return (String) password.getObject(datasource);
+			return (String) password.get(datasource);
 		return null;
 	}
 
 	public String getDriverClass() {
 		if(driverClass!=null)
-			return (String) driverClass.getObject(datasource);
+			return (String) driverClass.get(datasource);
 		return null;
 	}
 
@@ -139,7 +139,7 @@ public class RefectingHackDataSourceWrapper extends AbstractDataSource implement
 	}
 	public Properties getProperties() {
 		if(prop!=null){
-			Properties map=(Properties) this.prop.getObject(datasource);
+			Properties map=(Properties) this.prop.get(datasource);
 			return map;
 		}
 		return null;
@@ -148,7 +148,7 @@ public class RefectingHackDataSourceWrapper extends AbstractDataSource implement
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public void putProperty(String key, Object value) {
 		if(prop!=null){
-			Map map=(Map) this.prop.getObject(datasource);
+			Map map=(Map) this.prop.get(datasource);
 			map.put(key, value);
 		}
 	}

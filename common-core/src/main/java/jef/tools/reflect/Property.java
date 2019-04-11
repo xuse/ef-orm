@@ -14,16 +14,6 @@ public interface Property {
 	 */
 	String getName();
 	/**
-	 * 可读?
-	 * @return
-	 */
-	boolean isReadable();
-	/**
-	 * 可写?
-	 * @return
-	 */
-	boolean isWriteable();
-	/**
 	 * 得到值
 	 * @param obj
 	 * @return

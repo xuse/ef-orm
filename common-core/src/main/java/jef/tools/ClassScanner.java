@@ -76,7 +76,7 @@ public class ClassScanner {
 			}
 			result.addAll(Arrays.asList(res));
 		}
-		IOUtils.closeQuietly(cl);
+		//IOUtils.closeQuietly(cl);
 		return result.toArray(new IResource[result.size()]);
 	}
 

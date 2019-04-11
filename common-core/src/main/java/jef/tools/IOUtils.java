@@ -51,6 +51,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Function;
+import com.google.common.collect.Multimap;
+
 import jef.codegen.support.OverWrittenMode;
 import jef.common.BigDataBuffer;
 import jef.common.JefSerializable;
@@ -60,12 +66,6 @@ import jef.jre5support.ProcessUtil;
 import jef.tools.TextFileCallback.Dealwith;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.io.UnicodeReader;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.google.common.base.Function;
-import com.google.common.collect.Multimap;
 
 public class IOUtils {
 	private static final int DEFAULT_BUFFER_SIZE = 4096;

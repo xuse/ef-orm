@@ -49,7 +49,7 @@ public class ExtensionTemplate implements ExtensionConfigFactory {
 		if (q == null) {
 			throw new IllegalArgumentException();
 		}
-		String key = (String) keyAccessor.getObject(q);
+		String key = (String) keyAccessor.get(q);
 		if (key == null || key.length() == 0) {
 			if (q.hasQuery()) {
 				key = (String) q.getQuery().getAttribute(ConditionQuery.CUSTOM_TABLE_TYPE);

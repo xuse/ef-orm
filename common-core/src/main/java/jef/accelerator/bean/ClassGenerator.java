@@ -15,7 +15,7 @@ import jef.accelerator.asm.Label;
 import jef.accelerator.asm.MethodVisitor;
 import jef.accelerator.asm.Opcodes;
 import jef.accelerator.asm.Type;
-import jef.tools.reflect.BeanUtils;
+import jef.tools.Primitives;
 import jef.tools.reflect.ConvertUtils;
 
 public abstract class ClassGenerator implements Opcodes {
@@ -102,7 +102,7 @@ public abstract class ClassGenerator implements Opcodes {
 				mw.visitInsn(POP2);//S0
 				mw.visitJumpInsn(GOTO,end);
 				mw.visitLabel(notnull);
-				Class<?> wrpped=BeanUtils.toWrapperClass(fi.getRawType());
+				Class<?> wrpped=Primitives.toWrapperClass(fi.getRawType());
 				mw.visitTypeInsn(CHECKCAST, getType(wrpped));	//S2 value
 				ASMUtils.doUnwrap(mw, fi.getRawType(), wrpped);
 				this.generateInvokeMethod(mw, fi.getSetter());//S0
@@ -158,7 +158,7 @@ public abstract class ClassGenerator implements Opcodes {
 				mw.visitInsn(POP2);//S0
 				mw.visitJumpInsn(GOTO,end);
 				mw.visitLabel(notnull);
-				Class<?> wrpped=BeanUtils.toWrapperClass(fi.getRawType());
+				Class<?> wrpped=Primitives.toWrapperClass(fi.getRawType());
 				mw.visitTypeInsn(CHECKCAST, getType(wrpped));	//S2 value
 				ASMUtils.doUnwrap(mw, fi.getRawType(), wrpped);
 				this.generateInvokeMethod(mw, fi.getSetter());//S0

@@ -18,7 +18,7 @@ import jef.accelerator.asm.FieldVisitor;
 import jef.accelerator.asm.Label;
 import jef.accelerator.asm.MethodVisitor;
 import jef.accelerator.asm.Type;
-import jef.tools.reflect.BeanUtils;
+import jef.tools.Primitives;
 
 final class ASMSwitcherGenerator extends ClassGenerator {
 
@@ -129,7 +129,7 @@ final class ASMSwitcherGenerator extends ClassGenerator {
 				if (type.isPrimitive()) {
 					mw.visitInsn(DUP);
 					mw.visitJumpInsn(IFNULL, ifnull);
-					Class<?> wrapped = BeanUtils.toWrapperClass(type);
+					Class<?> wrapped = Primitives.toWrapperClass(type);
 					mw.visitTypeInsn(CHECKCAST, getType(wrapped));
 					doUnwrap(mw, type, wrapped);
 				} else {

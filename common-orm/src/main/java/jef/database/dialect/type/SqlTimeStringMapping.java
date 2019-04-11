@@ -3,7 +3,6 @@ package jef.database.dialect.type;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.DateFormat;
 import java.text.ParseException;
 
 import javax.persistence.PersistenceException;
@@ -11,15 +10,16 @@ import javax.persistence.PersistenceException;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 import jef.tools.DateFormats;
+import jef.tools.DateFormats.TLDateFormat;
 
 public class SqlTimeStringMapping extends AColumnMapping{
-	private ThreadLocal<DateFormat> format=DateFormats.TIME_ONLY;
+	private TLDateFormat format=DateFormats.TIME_ONLY;
 	
 	public SqlTimeStringMapping(){
 	}
 	
 	public SqlTimeStringMapping(final String pattern){
-		this.format=DateFormats.getThreadLocalDateFormat(pattern);
+		this.format=DateFormats.create(pattern);
 	}
 	
 	public Object jdbcSet(PreparedStatement st, Object value, int index, DatabaseDialect session) throws SQLException {

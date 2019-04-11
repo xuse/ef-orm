@@ -14,7 +14,7 @@ import jef.accelerator.asm.ClassWriter;
 import jef.accelerator.asm.FieldVisitor;
 import jef.accelerator.asm.Label;
 import jef.accelerator.asm.MethodVisitor;
-import jef.tools.reflect.BeanUtils;
+import jef.tools.Primitives;
 import jef.tools.reflect.UnsafeUtils;
 
 final class ASMHashGenerator extends ClassGenerator {
@@ -275,7 +275,7 @@ final class ASMHashGenerator extends ClassGenerator {
 			mw.visitIntInsn(ALOAD,2);	//S2
 			
 			if(fi.isPrimitive()){
-				Class<?> wrpped=BeanUtils.toWrapperClass(fi.getRawType());
+				Class<?> wrpped=Primitives.toWrapperClass(fi.getRawType());
 				mw.visitTypeInsn(CHECKCAST, getType(wrpped));	//S2
 				ASMUtils.doUnwrap(mw, fi.getRawType(), wrpped);	//S2
 			}else{

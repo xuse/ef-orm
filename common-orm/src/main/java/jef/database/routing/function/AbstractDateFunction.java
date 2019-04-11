@@ -80,7 +80,7 @@ public abstract class AbstractDateFunction implements PartitionFunction<Date> {
 
 	public static final AbstractDateFunction YEAR_MONTH = new AbstractDateFunction() {
 		public String eval(Date value) {
-			return DateUtils.format(value, DateFormats.YAER_MONTH);
+			return  DateFormats.YAER_MONTH.format(value);
 		}
 
 		public List<Date> innerIterator(Date sDate, Date eDate, boolean leftInclude, boolean rightInclude) {
@@ -115,7 +115,7 @@ public abstract class AbstractDateFunction implements PartitionFunction<Date> {
 
 	public static final AbstractDateFunction YEAR_MONTH_DAY = new AbstractDateFunction() {
 		public String eval(Date value) {
-			return DateUtils.format(value, DateFormats.DATE_SHORT);
+			return DateFormats.DATE_SHORT.format(value);
 		}
 
 		public List<Date> innerIterator(Date sDate, Date eDate, boolean leftInclude, boolean rightInclude) {

@@ -26,6 +26,7 @@ import jef.database.meta.def.GenerateTypeDef;
 import jef.database.query.SqlExpression;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
+import jef.tools.Primitives;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.BeanWrapper;
@@ -205,7 +206,7 @@ public class ColumnTypeBuilder {
 			return new ColumnType.GUID(length);
 		} else if (generatedValue != null
 				&& generatedValue.isKeyGeneration()
-				&& Number.class.isAssignableFrom(BeanUtils
+				&& Number.class.isAssignableFrom(Primitives
 						.toWrapperClass(javaType))) {
 			return new ColumnType.AutoIncrement(precision,
 					generatedValue.getGeType(), fieldProvider);

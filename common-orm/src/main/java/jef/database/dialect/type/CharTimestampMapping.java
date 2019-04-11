@@ -3,20 +3,20 @@ package jef.database.dialect.type;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 import jef.tools.DateFormats;
+import jef.tools.DateFormats.TLDateFormat;
 import jef.tools.StringUtils;
 
 public class CharTimestampMapping extends AColumnMapping{
-	private ThreadLocal<DateFormat> format;
+	private TLDateFormat format;
 	
 	public CharTimestampMapping(String format){
-		this.format=DateFormats.getThreadLocalDateFormat(format);
+		this.format=DateFormats.create(format);
 	}
 	
 	public CharTimestampMapping(){
