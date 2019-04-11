@@ -11,6 +11,7 @@ import jef.database.DbClient;
 import jef.database.IQueryableEntity;
 import jef.database.NamedQueryConfig;
 import jef.database.NativeQuery;
+import jef.database.Queryable;
 import jef.database.Session;
 import jef.database.meta.ITableMetadata;
 import jef.database.query.Query;
@@ -195,7 +196,7 @@ public interface CommonDao{
 	 * @param entity
 	 * @return
 	 */
-	<T> int updateByPK(T entity);
+	<T extends Queryable> int update(T entity);
 	
 	/**
 	 * 更新记录（带级联）
@@ -209,7 +210,7 @@ public interface CommonDao{
 	 * @param entity
 	 * @return
 	 */
-	<T> int updateCascadeByPK(T entity);
+	<T extends Queryable> int updateCascade(T entity);
 	
 	/**
 	 * 更新记录
