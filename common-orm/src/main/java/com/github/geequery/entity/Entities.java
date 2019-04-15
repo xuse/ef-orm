@@ -169,12 +169,14 @@ public abstract class Entities {
 	public static <T> Query<T> asUpdateQuery(T entity, boolean dynamic) {
 		Query<T> q;
 		ITableMetadata meta;
+		boolean emptyCondition=true;
 		if (entity instanceof IQueryableEntity) {
 			q=(Query<T>) ((IQueryableEntity) entity).getQuery();
 			if(q.needUpdate()) {
 				return q;
 			}
 			meta= q.getMeta();
+			emptyCondition=q.getConditions().isEmpty();
 		}else {
 			meta= MetaHolder.getMeta(entity);
 			q=new QueryImpl<T>(entity);
@@ -187,12 +189,13 @@ public abstract class Entities {
 		for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
 			ColumnMapping map = meta.getColumnDef(i);
 			Object value = map.getFieldAccessor().get(entity);
-			if(map.isPk()) {
+			if(map.isPk() && !emptyCondition) {
 				q.addCondition(map.field().eq(value));
 			}else {
 				q.prepareUpdate(map.field(), value);
 			}
 		}
+		bs.clear();
 		return q;
 	}
 

@@ -20,6 +20,7 @@ import jef.database.IQueryableEntity;
 import jef.database.NativeQuery;
 import jef.database.PagingIterator;
 import jef.database.QB;
+import jef.database.Queryable;
 import jef.database.SessionFactory;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.ITableMetadata;
@@ -124,7 +125,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		}
 	}
 	
-	public <T> int updateCascadeByPK(T entity) {
+	public <T extends Queryable> int updateCascade(T entity) {
 		if (entity == null)
 			return 0;
 		try {
@@ -139,7 +140,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 	 * 
 	 * @see org.easyframe.enterprise.spring.CommonDao#update(java.lang.Object)
 	 */
-	public <T> int updateByPK(T entity) {
+	public <T extends Queryable> int update(T entity) {
 		if (entity == null)
 			return 0;
 		try {

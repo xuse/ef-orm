@@ -115,10 +115,10 @@ public class RandomData {
 				Object value = newInstance(genericType, level, asFieldGenerator(bw, name));
 				if (value != null)
 					bw.setPropertyValue(name, value);
-			}catch(Exception e) {
-				throw new IllegalArgumentException("random value of field ["+bw.getClassName()+"."+name+"] error!",e);
+			} catch (Exception e) {
+				throw new IllegalArgumentException("random value of field [" + bw.getClassName() + "." + name + "] error!", e);
 			}
-			
+
 		}
 	}
 
@@ -201,6 +201,20 @@ public class RandomData {
 			return "";
 		}
 
+		@Override
+		public int minLength() {
+			return 1;
+		}
+
+		@Override
+		public String suffix() {
+			return "";
+		}
+
+		@Override
+		public String prefix() {
+			return "";
+		}
 	}
 
 	private static boolean isGeneratedVal(BeanWrapper bw, String name) {
@@ -217,17 +231,19 @@ public class RandomData {
 
 	private static Object newInstance(java.lang.reflect.Type type, int level, RandomValue anno) {
 		int len = anno.length() < 0 ? 32 : anno.length();
-		long cur = System.currentTimeMillis();
-		Date dMin = new Date(cur - 300000L);
-		Date dMax = new Date(cur + 1000000);
-		dMin = StringUtils.isEmpty(anno.dateMin()) ? dMin : DateFormats.DATE_TIME_CS.parse(anno.dateMin(), dMin);
-		dMax = StringUtils.isEmpty(anno.dateMax()) ? dMax : DateFormats.DATE_TIME_CS.parse(anno.dateMax(), dMax);
+		int minLen = anno.minLength() < 0 ? len : Math.min(len, anno.minLength());
 		long nMin = anno.numberMin();
 		long nMax = anno.numberMax();
 		if (nMax - nMin == 0) {
 			nMin = 0L;
 			nMax = 1000L;
 		}
+		long cur = System.currentTimeMillis();
+		Date dMin = new Date(cur + nMin * 1000);
+		Date dMax = new Date(cur + nMax * 1000);
+		// 如果没有配置dateMin或dateMax，就用numberMin或numberMax来作为日期的偏移量（单位秒）
+		dMin = StringUtils.isEmpty(anno.dateMin()) ? dMin : DateFormats.DATE_TIME_CS.parse(anno.dateMin(), dMin);
+		dMax = StringUtils.isEmpty(anno.dateMax()) ? dMax : DateFormats.DATE_TIME_CS.parse(anno.dateMax(), dMax);
 
 		if (type == Integer.class || type == Integer.TYPE) {
 			return randomInteger((int) nMin, (int) nMax);
@@ -248,29 +264,30 @@ public class RandomData {
 		} else if (type == String.class) {
 			switch (anno.value()) {
 			case EMAIL:
-				return randomEmail();
+				return prefix(randomEmail(), anno);
 			case OPTIONS:
-				return randomOption(anno.options());
+				return prefix(randomOption(anno.options()), anno);
 			case PHONE:
-				return randomPhone();
+				return prefix(randomPhone(), anno);
 			case AUTO:
-				return randomString(ChineseCharProvider.getInstance().get(Type.CHINESE_LAST_NAME), new IntRange(len / 2, len));
+				return prefix(randomString(ChineseCharProvider.getInstance().get(Type.CHINESE_LAST_NAME), new IntRange(minLen, len)), anno);
 			case NAME:
 				return randomChineseName();
 			case NUMBER:
-				return String.valueOf(newInstance(Long.TYPE,level,anno));
+				return prefix(String.valueOf(newInstance(Long.TYPE, level, anno)), anno);
 			case ENGLISH_LOWER:
-				return randomString(CharUtils.ALPHA_LOWERS, new IntRange(1, len));
+				return prefix(randomString(CharUtils.ALPHA_LOWERS, new IntRange(1, len)), anno);
 			case ENGLISH_MIXED:
-				return randomString(CharUtils.ALPHA_NUM_UNDERLINE, new IntRange(1, len));
+				return prefix(randomString(CharUtils.ALPHA_NUM_UNDERLINE, new IntRange(1, len)), anno);
 			case ENGLISH_UPPER:
-				return randomString(CharUtils.ALPHA_UPPERS, new IntRange(1, len));
+				return prefix(randomString(CharUtils.ALPHA_UPPERS, new IntRange(1, len)), anno);
 			case GUID:
-				return StringUtils.generateGuid();
+				return prefix(StringUtils.generateGuid(), anno);
 			case RANGED_STRING:
-				return anno.characters().isEmpty()?
-						randomString(ChineseCharProvider.getInstance().get(Type.CHINESE_LAST_NAME), new IntRange(len / 2, len))
-						:randomString(anno.characters(),new IntRange(1, len));
+				return prefix(
+						anno.characters().isEmpty() ? randomString(ChineseCharProvider.getInstance().get(Type.CHINESE_LAST_NAME), new IntRange(len / 2, len))
+								: randomString(anno.characters(), new IntRange(1, len)),
+						anno);
 			}
 		} else if (type == Date.class) {
 			return randomDate(dMin, dMax);
@@ -286,7 +303,7 @@ public class RandomData {
 		} else if (type == YearMonth.class) {
 			return YearMonth.from(LocalDate.ofEpochDay(randomInteger(-300, 1000) + LocalDate.now().toEpochDay()));
 		} else if (type == BigDecimal.class) {
-			return BigDecimal.valueOf(randomLong(1, 9999999999L));
+			return BigDecimal.valueOf(randomLong(nMin, nMax));
 		} else if (type == MonthDay.class) {
 			return MonthDay.from(LocalDate.ofEpochDay(randomInteger(-300, 1000) + LocalDate.now().toEpochDay()));
 		}
@@ -305,7 +322,15 @@ public class RandomData {
 		return null;
 	}
 
-	private static Object randomPhone() {
+	private static String prefix(String str, RandomValue anno) {
+		if (anno.prefix().length() == 0 && anno.suffix().length() == 0) {
+			return str;
+		} else {
+			return anno.prefix() + str + anno.suffix();
+		}
+	}
+
+	private static String randomPhone() {
 		return "13" + randomInteger(100000000, 999999999);
 	}
 
@@ -333,8 +358,8 @@ public class RandomData {
 				return null;
 			Object array = Array.newInstance(componentType, generator.count());
 			Array.set(array, 0, obj);
-			for(int i=1;i<generator.count();i++) {
-				Array.set(array, i, newInstance(componentType, level, generator));	
+			for (int i = 1; i < generator.count(); i++) {
+				Array.set(array, i, newInstance(componentType, level, generator));
 			}
 			return array;
 		}
