@@ -525,8 +525,8 @@ H框架中也有增强，以前H框架总是要依赖一个CGlib，现在则是�
 
 ~~~xml
 <plugin>
-	<groupId>jef</groupId>
-	<artifactId>jef-maven-plugin</artifactId>
+	<groupId>com.github.geequery</groupId>
+	<artifactId>geequery-maven-plugin</artifactId>
 	<version>${geequery.version}</version>
 	<executions>
 		<execution>
