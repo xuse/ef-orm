@@ -15,6 +15,7 @@
  */
 package jef.accelerator.cglib.core;
 
+@FunctionalInterface
 public interface Transformer<V,K> {
     K transform(V value);
 }

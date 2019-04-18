@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * @author Joey
@@ -29,6 +30,12 @@ import java.util.Map;
 public final class CollectionsX {
     private CollectionsX() { }
 
+    /**
+     * bucket function with key transformed
+     * @param c
+     * @param t
+     * @return
+     */
     public static <K,V> Map<K,List<V>> bucket(Collection<V> c, Transformer<V,K> t) {
         Map<K,List<V>> buckets = new HashMap<>();
         for (Iterator<V> it = c.iterator(); it.hasNext();) {
@@ -41,6 +48,21 @@ public final class CollectionsX {
             bucket.add(value);
         }
         return buckets;
+    }
+    
+    public static <E,K,V> Map<K,List<V>> bucket(Collection<E> c, Function<E,K> keyExt,Function<E,V> valueExt) {
+    	Map<K,List<V>> buckets = new HashMap<>();
+        for (Iterator<E> it = c.iterator(); it.hasNext();) {
+            E value = it.next();
+            K key = keyExt.apply(value);
+            List<V> bucket =buckets.get(key);
+            if (bucket == null) {
+                buckets.put(key, bucket = new LinkedList<>());
+            }
+            bucket.add(valueExt.apply(value));
+        }
+        return buckets;
+    	
     }
 
     public static <K,V> void reverse(Map<K,V> source, Map<V,K> target) {

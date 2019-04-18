@@ -2,6 +2,7 @@ package jef.common;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -573,5 +574,39 @@ public final class IntList {
     	}
     	System.out.println(System.nanoTime()-start);
 	}
+    
+    /**
+     * 将int数组转换为标准JavaList
+     * @param array
+     * @return
+     */
+    public static List<Integer> convert(int[] array){
+    	List<Integer> list=new ArrayList<>();
+    	int len=array.length;
+    	for(int index=0;index<len;index++) {
+    		list.add(array[index]);
+    	}
+    	return list;
+    }
+    
+    /**
+     * 将List<Integer>转换为IntList,并可进一步方便的转换为int[].
+     * @param array
+     * @param treatNullAsZero
+     * @return
+     */
+    public static IntList convertFrom(Collection<Integer> array,boolean treatNullAsZero){
+    	IntList result=new IntList(array.size());
+    	for(Integer i:array) {
+    		if(i==null) {
+    			if(treatNullAsZero) {
+    				result.add(0);
+    			}
+    		}else {
+    			result.add(i.intValue());
+    		}
+    	}
+    	return result;
+    }
 }
 
