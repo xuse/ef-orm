@@ -135,6 +135,13 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 		}
 	}
 
+	@Override
+	public <T> int updateByPK(T entity) {
+		if (entity == null)
+			return 0;
+		return update(Entities.asUpdateQuery(entity, true));
+	}
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -652,4 +659,6 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			throw DbUtils.toRuntimeException(e);
 		}
 	}
+
+
 }

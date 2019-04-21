@@ -32,6 +32,12 @@
 	</properties>
 	<dependencies>
 		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.6</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.12</version>
@@ -137,27 +143,16 @@
 			</plugin>
 		</plugins>
 	</build>
-   <distributionManagement>
-
-         <repository>
-
-           <id>af-fsdmdept-release</id>
-
-             <name>af-fsdmdept-release</name>
-
-           <url>http://10.1.74.162/artifactory/fsdmdept-release</url>
-
-         </repository>
-
-         <snapshotRepository>
-
-           <id>af-fsdmdept-snapshot</id>
-
-             <name>af-fsdmdept-snapshot</name>
-
-             <url>http://10.1.74.162/artifactory/fsdmdept-snapshot</url>
-
-         </snapshotRepository>
-
-    </distributionManagement>
+	<distributionManagement>
+		<repository>
+			<id>af-fsdmdept-release</id>
+			<name>af-fsdmdept-release</name>
+			<url>http://10.1.74.162/artifactory/fsdmdept-release</url>
+		</repository>
+		<snapshotRepository>
+			<id>af-fsdmdept-snapshot</id>
+			<name>af-fsdmdept-snapshot</name>
+			<url>http://10.1.74.162/artifactory/fsdmdept-snapshot</url>
+		</snapshotRepository>
+	</distributionManagement>
 </project>

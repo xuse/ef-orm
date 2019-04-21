@@ -198,6 +198,14 @@ public interface CommonDao{
 	 */
 	<T extends Queryable> int update(T entity);
 	
+	
+	/**
+	 * 按主键更新 （不带级联）
+	 * @param entity
+	 * @return
+	 */
+	<T> int updateByPK(T entity);
+	
 	/**
 	 * 更新记录（带级联）
 	 * @param entity

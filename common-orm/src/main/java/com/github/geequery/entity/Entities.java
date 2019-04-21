@@ -187,12 +187,12 @@ public abstract class Entities {
 			return q;
 		}
 		for (int i = bs.nextSetBit(0); i >= 0; i = bs.nextSetBit(i + 1)) {
-			ColumnMapping map = meta.getColumnDef(i);
-			Object value = map.getFieldAccessor().get(entity);
-			if(map.isPk() && !emptyCondition) {
-				q.addCondition(map.field().eq(value));
+			ColumnMapping columnDef = meta.getColumnDef(i);
+			Object value = columnDef.getFieldAccessor().get(entity);
+			if(columnDef.isPk() && !emptyCondition) {
+				q.addCondition(columnDef.field().eq(value));
 			}else {
-				q.prepareUpdate(map.field(), value);
+				q.prepareUpdate(columnDef.field(), value);
 			}
 		}
 		bs.clear();

@@ -17,86 +17,131 @@ package jef.accelerator.cglib.core;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 /**
  * @author Joey
  */
 public final class CollectionsX {
-    private CollectionsX() { }
+	private CollectionsX() {
+	}
 
-    /**
-     * bucket function with key transformed
-     * @param c
-     * @param t
-     * @return
-     */
-    public static <K,V> Map<K,List<V>> bucket(Collection<V> c, Transformer<V,K> t) {
-        Map<K,List<V>> buckets = new HashMap<>();
-        for (Iterator<V> it = c.iterator(); it.hasNext();) {
-            V value = it.next();
-            K key = t.transform(value);
-            List<V> bucket = (List<V>)buckets.get(key);
-            if (bucket == null) {
-                buckets.put(key, bucket = new LinkedList<>());
-            }
-            bucket.add(value);
-        }
-        return buckets;
-    }
-    
-    public static <E,K,V> Map<K,List<V>> bucket(Collection<E> c, Function<E,K> keyExt,Function<E,V> valueExt) {
-    	Map<K,List<V>> buckets = new HashMap<>();
-        for (Iterator<E> it = c.iterator(); it.hasNext();) {
-            E value = it.next();
-            K key = keyExt.apply(value);
-            List<V> bucket =buckets.get(key);
-            if (bucket == null) {
-                buckets.put(key, bucket = new LinkedList<>());
-            }
-            bucket.add(valueExt.apply(value));
-        }
-        return buckets;
-    	
-    }
+	/**
+	 * bucket function with key transformed
+	 * 
+	 * @param c
+	 * @param t
+	 * @return
+	 */
+	public static <K, V> Map<K, List<V>> bucket(Collection<V> c, Transformer<V, K> t) {
+		Map<K, List<V>> buckets = new HashMap<>();
+		for (Iterator<V> it = c.iterator(); it.hasNext();) {
+			V value = it.next();
+			K key = t.transform(value);
+			List<V> bucket = (List<V>) buckets.get(key);
+			if (bucket == null) {
+				buckets.put(key, bucket = new LinkedList<>());
+			}
+			bucket.add(value);
+		}
+		return buckets;
+	}
 
-    public static <K,V> void reverse(Map<K,V> source, Map<V,K> target) {
-        for (Iterator<K> it = source.keySet().iterator(); it.hasNext();) {
-            K key = it.next();
-            target.put(source.get(key), key);
-        }
-    }
+	/**
+	 * nullsafe的集合
+	 * 
+	 * @param value
+	 * @return
+	 */
+	public static <E> List<E> nullSafe(List<E> value) {
+		return value == null ? Collections.emptyList() : value;
+	}
 
-    public static <E> Collection<E> filter(Collection<E> c, Predicate p) {
-        Iterator<E> it = c.iterator();
-        while (it.hasNext()) {
-            if (!p.evaluate(it.next())) {
-                it.remove();
-            }
-        }
-        return c;
-    }
+	/**
+	 * nullsafe的集合
+	 * 
+	 * @param value
+	 * @return
+	 */
+	public static <E> Set<E> nullSafe(Set<E> value) {
+		return value == null ? Collections.emptySet() : value;
+	}
 
-    public static <E,T> List<T> transform(Collection<E> c, Transformer<E,T> t) {
-        List<T> result = new ArrayList<>(c.size());
-        for (Iterator<E> it = c.iterator(); it.hasNext();) {
-            result.add(t.transform(it.next()));
-        }
-        return result;
-    }
+	/**
+	 * nullsafe的集合
+	 * 
+	 * @param value
+	 * @return
+	 */
+	public static <K, V> Map<K, V> nullSafe(Map<K, V> value) {
+		return value == null ? Collections.emptyMap() : value;
+	}
 
-    public static <V> Map<V,Integer> getIndexMap(List<V> list) {
-        Map<V,Integer> indexes = new HashMap<>();
-        int index = 0;
-        for (Iterator<V> it = list.iterator(); it.hasNext();) {
-            indexes.put(it.next(), Integer.valueOf(index++));
-        }
-        return indexes;
-    }
-}    
-    
+	/**
+	 * 集合转换为Map
+	 * @param c
+	 * @param keyExt
+	 * @param valueExt
+	 * @return
+	 */
+	public static <E, K, V> Map<K, List<V>> bucket(Collection<E> c, Function<E, K> keyExt, Function<E, V> valueExt) {
+		Map<K, List<V>> buckets = new HashMap<>();
+		for (Iterator<E> it = c.iterator(); it.hasNext();) {
+			E value = it.next();
+			K key = keyExt.apply(value);
+			List<V> bucket = buckets.get(key);
+			if (bucket == null) {
+				buckets.put(key, bucket = new LinkedList<>());
+			}
+			bucket.add(valueExt.apply(value));
+		}
+		return buckets;
+
+	}
+
+	/**
+	 * K,V转换 
+	 * @param source
+	 * @param target
+	 */
+	public static <K, V> void reverse(Map<K, V> source, Map<V, K> target) {
+		for (Iterator<K> it = source.keySet().iterator(); it.hasNext();) {
+			K key = it.next();
+			target.put(source.get(key), key);
+		}
+	}
+
+	public static <E> Collection<E> filter(Collection<E> c, Predicate p) {
+		Iterator<E> it = c.iterator();
+		while (it.hasNext()) {
+			if (!p.evaluate(it.next())) {
+				it.remove();
+			}
+		}
+		return c;
+	}
+
+	public static <E, T> List<T> transform(Collection<E> c, Transformer<E, T> t) {
+		List<T> result = new ArrayList<>(c.size());
+		for (Iterator<E> it = c.iterator(); it.hasNext();) {
+			result.add(t.transform(it.next()));
+		}
+		return result;
+	}
+
+	public static <V> Map<V, Integer> getIndexMap(List<V> list) {
+		Map<V, Integer> indexes = new HashMap<>();
+		int index = 0;
+		for (Iterator<V> it = list.iterator(); it.hasNext();) {
+			indexes.put(it.next(), Integer.valueOf(index++));
+		}
+		return indexes;
+	}
+}
