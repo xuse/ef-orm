@@ -55,6 +55,7 @@ final class JoinImpl2 extends AbstractJoinImpl {
 		qs.add(rightTableDef);
 
 		SqlContext context = new SqlContext(-1, qs, null);
+		context.attribute=super.attribute;
 		this.context = context;
 		this.conditions.add(joinCondition);
 
