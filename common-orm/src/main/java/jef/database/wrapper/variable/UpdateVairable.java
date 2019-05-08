@@ -22,7 +22,7 @@ public class UpdateVairable extends Variable {
 
 	@Override
 	String name() {
-		return null;
+		return field.name();
 	}
 
 	@Override
