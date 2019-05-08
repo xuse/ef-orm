@@ -976,4 +976,29 @@ public class CollectionUtils {
 			list.set(index, value);
 		}
 	}
+	
+	/**
+	 * 将null更换为空集合对象
+	 * @param list
+	 * @return
+	 */
+	public static <T> List<T> nullSafe(List<T> list) {
+		return list==null? Collections.emptyList(): list;
+	}
+	/**
+	 * 将null更换为空集合对象
+	 * @param list
+	 * @return
+	 */
+	public static <T> Set<T> nullSafe(Set<T> set) {
+		return set==null? Collections.emptySet(): set;
+	}
+	/**
+	 * 将null更换为空集合对象
+	 * @param list
+	 * @return
+	 */
+	public static <K,V> Map<K,V> nullSafe(Map<K,V> map) {
+		return map==null? Collections.emptyMap(): map;
+	}
 }
