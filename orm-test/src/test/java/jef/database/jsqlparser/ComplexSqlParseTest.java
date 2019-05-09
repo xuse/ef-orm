@@ -68,7 +68,7 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 
 	@Test
 	public void parseSelect() throws ParseException {
-		Select ex = DbUtils.parseSelect("select * from D where not 1=2");
+		Select ex = DbUtils.parseSelect("select * from D where not -1=2 and id=-1 and tid=+3");
 		System.out.println(ex);
 	}
 
