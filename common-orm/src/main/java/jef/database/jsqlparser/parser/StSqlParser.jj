@@ -1360,6 +1360,7 @@ Expression PrimaryExpression():
 	Expression retval = null;
 	Token token = null;
 	boolean isInverse = false;
+	boolean intReverse = false;
 }
 {
 
@@ -1374,7 +1375,7 @@ Expression PrimaryExpression():
 	
 	| LOOKAHEAD(<S_DOUBLE>)   token=<S_DOUBLE> { retval = new DoubleValue(token.image); }
 	
-	| LOOKAHEAD(["+"|"-"] <S_INTEGER>)  ["+"|"-"  {isInverse=true; }] token=<S_INTEGER> { retval = new LongValue(token.image,isInverse); }
+	| LOOKAHEAD(["+"|"-"] <S_INTEGER>)  ["+"|"-"  {intReverse=true; }] token=<S_INTEGER> { retval = new LongValue(token.image,intReverse); }
 
 	| LOOKAHEAD(2) 	[ "+" | "-" { isInverse = true; }] retval=ColumnOrFunc() 
 
