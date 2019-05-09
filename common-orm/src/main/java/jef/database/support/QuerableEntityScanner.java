@@ -64,6 +64,8 @@ public class QuerableEntityScanner {
 	 * 当alterTable=true时，如果修改表时需要删除列，是否允许删除列
 	 */
 	private boolean allowDropColumn;
+	
+	
 
 	/**
 	 * 是否检查序列
@@ -312,7 +314,7 @@ public class QuerableEntityScanner {
 
 				public void beforeAlterTable(String tablename, ITableMetadata meta, StatementExecutor conn, List<String> sql) {
 				}
-			});
+			},checkIndex,checkIndex);
 		}
 		// 检查Sequence
 		if (checkSequence) {

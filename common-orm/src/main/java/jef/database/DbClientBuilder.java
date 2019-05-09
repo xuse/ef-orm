@@ -649,6 +649,7 @@ public class DbClientBuilder {
 			qe.setImplClasses(DataObject.class);
 			qe.setAllowDropColumn(allowDropColumn);
 			qe.setAlterTable(alterTable);
+			qe.setCheckIndex(alterTable);
 			qe.setCreateTable(createTable);
 			
 			qe.setInitData(this.initData);
