@@ -1,5 +1,8 @@
 package jef.tools.reflect;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import jef.tools.Exceptions;
 
 /**
@@ -85,4 +88,21 @@ public final class Enums {
 			throw Exceptions.illegalArgument(exceptionMessage, params);
 		}
 	}
+	
+	/**
+	 * 将枚举常量转换为Map，便于快速检索
+	 * @param clz
+	 * @return
+	 */
+	public static <T extends Enum<T>> Map<String,T> valuesMap(Class<T> clz){
+		T[] values=clz.getEnumConstants();
+		Map<String,T> result=new HashMap<String,T>(values.length);
+		for(T t: values) {
+			result.put(t.name(), t);
+		}
+		return result;
+	}
+	
+	
+	
 }
