@@ -15,7 +15,7 @@
  */
 package jef.accelerator.cglib.core;
 
-public interface Predicate {
+interface Predicate {
     boolean evaluate(Object arg);
 }
 

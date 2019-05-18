@@ -26,8 +26,8 @@ import com.github.geequery.asm.Type;
 
 
 public class TypeUtils {
-    private static final Map transforms = new HashMap();
-    private static final Map rtransforms = new HashMap();
+    private static final Map<String,String> transforms = new HashMap<>();
+    private static final Map<String,String> rtransforms = new HashMap<>();
 
     private TypeUtils() {
     }
@@ -43,8 +43,22 @@ public class TypeUtils {
         transforms.put("short", "S");
         transforms.put("boolean", "Z");
 
-        CollectionsX.reverse(transforms, rtransforms);
+        reverse(transforms, rtransforms);
     }
+    
+
+	 /**
+	 * 形成K,V互相调换的Map
+	 *
+	 * @param source
+	 * @param target
+	 */
+	 public static <K, V> void reverse(Map<K, V> source, Map<V, K> target) {
+	 for (Iterator<K> it = source.keySet().iterator(); it.hasNext();) {
+	 K key = it.next();
+	 target.put(source.get(key), key);
+	 }
+	 }
 
     public static Type getType(String className) {
         return Type.getType("L" + className.replace('.', '/') + ";");
@@ -117,7 +131,7 @@ public class TypeUtils {
         if (types == null) {
             return new Type[]{ extra };
         } else {
-            List list = Arrays.asList(types);
+            List<Type> list = Arrays.asList(types);
             if (list.contains(extra)) {
                 return types;
             }
@@ -179,7 +193,7 @@ public class TypeUtils {
         String methodName = s.substring(space + 1, lparen);
         StringBuffer sb = new StringBuffer();
         sb.append('(');
-        for (Iterator it = parseTypes(s, lparen + 1, rparen).iterator(); it.hasNext();) {
+        for (Iterator<String> it = parseTypes(s, lparen + 1, rparen).iterator(); it.hasNext();) {
             sb.append(it.next());
         }
         sb.append(')');
@@ -192,7 +206,7 @@ public class TypeUtils {
     }
 
     public static Type[] parseTypes(String s) {
-        List names = parseTypes(s, 0, s.length());
+        List<String> names = parseTypes(s, 0, s.length());
         Type[] types = new Type[names.size()];
         for (int i = 0; i < types.length; i++) {
             types[i] = Type.getType((String)names.get(i));
@@ -215,8 +229,8 @@ public class TypeUtils {
         return parseSignature("void <init>(" + sig + ")"); // TODO
     }
 
-    private static List parseTypes(String s, int mark, int end) {
-        List types = new ArrayList(5);
+    private static List<String> parseTypes(String s, int mark, int end) {
+        List<String> types = new ArrayList<>(5);
         for (;;) {
             int next = s.indexOf(',', mark);
             if (next < 0) {
@@ -328,7 +342,7 @@ public class TypeUtils {
         return method.getSignature().getName().equals(Constants.CONSTRUCTOR_NAME);
     }
 
-    public static Type[] getTypes(Class[] classes) {
+    public static Type[] getTypes(Class<?>[] classes) {
         if (classes == null) {
             return null;
         }

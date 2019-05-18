@@ -87,6 +87,7 @@ import jef.tools.Assert;
 import jef.tools.Exceptions;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
+import jef.tools.collection.CollectionRefelect;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.BeanUtils;
 
@@ -831,7 +832,7 @@ public final class MetaHolder {
 			throw new IllegalArgumentException(field.getDeclaringClass().getSimpleName() + ":" + field.getName() + " miss its targetEntity annotation.");
 		}
 		if (isMany) {
-			Class<?> compType = CollectionUtils.getSimpleComponentType(field.getGenericType());
+			Class<?> compType = CollectionRefelect.getSimpleComponentType(field.getGenericType());
 			if (compType != null ) {
 				return MetaHolder.getMeta(compType);
 			}

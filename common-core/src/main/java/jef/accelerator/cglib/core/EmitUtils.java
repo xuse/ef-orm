@@ -27,6 +27,8 @@ import java.util.Map;
 import com.github.geequery.asm.Label;
 import com.github.geequery.asm.Type;
 
+import jef.tools.collection.CollectionsX;
+
 public class EmitUtils {
     private static final Signature CSTRUCT_NULL =
       TypeUtils.parseConstructor("");

@@ -94,12 +94,13 @@
 			<scope>test</scope>
 		</dependency>
 		<!-- 各种连接池的识别 常用的三种第三方连接池 -->
-		<dependency>
+		<!-- <dependency>
 			<groupId>com.cloudhopper.proxool</groupId>
 			<artifactId>proxool</artifactId>
 			<version>0.9.1</version>
 			<scope>provided</scope>
 		</dependency>
+		 -->
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>druid</artifactId>

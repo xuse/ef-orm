@@ -35,7 +35,7 @@ import javax.management.ReflectionException;
 import jef.common.log.LogUtil;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
-import jef.tools.collection.CollectionUtils;
+import jef.tools.collection.CollectionRefelect;
 import jef.tools.reflect.BeanUtils.SearchMode;
 
 /**
@@ -685,7 +685,7 @@ public class ClassEx {
 	}
 
 	public boolean isCollection() {
-		return CollectionUtils.isCollection(genericType);
+		return CollectionRefelect.isCollection(genericType);
 	}
 
 	public boolean isMap() {
@@ -693,7 +693,7 @@ public class ClassEx {
 	}
 
 	public Type getComponentType() {
-		return CollectionUtils.getComponentType(genericType);
+		return CollectionRefelect.getComponentType(genericType);
 	}
 
 	/**

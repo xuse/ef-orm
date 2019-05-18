@@ -276,7 +276,7 @@ public class IOUtils {
 		try {
 
 			if (sectionSupport) {
-				Multimap<String, Map.Entry<String, String>> sections = CollectionUtils.group(map.entrySet(), new Function<Map.Entry<String, String>, String>() {
+				Multimap<String, Map.Entry<String, String>> sections = CollectionUtils.bucket(map.entrySet(), new Function<Map.Entry<String, String>, String>() {
 					public String apply(Entry<String, String> input) {
 						int sectionLen = input.getKey().indexOf('|');
 						return sectionLen == -1 ? "" : input.getKey().substring(0, sectionLen);

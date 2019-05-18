@@ -23,7 +23,7 @@ import jef.tools.ArrayUtils;
 import jef.tools.DateUtils;
 import jef.tools.Primitives;
 import jef.tools.StringUtils;
-import jef.tools.collection.CollectionUtils;
+import jef.tools.collection.CollectionRefelect;
 import jef.tools.reflect.convert.Converter;
 
 /**
@@ -520,8 +520,8 @@ public final class ConvertUtils {
 			} else {
 				return value;
 			}
-		} else if (CollectionUtils.isArrayOrCollection(clz)) {
-			Collection<Object> accessor = CollectionUtils.toCollection(value, Object.class);
+		} else if (CollectionRefelect.isArrayOrCollection(clz)) {
+			Collection<Object> accessor = CollectionRefelect.toCollection(value, Object.class);
 			if (container.isArray()) {
 				return toProperArrayType(accessor, container, oldValue);
 			} else if (container.isCollection()) {
@@ -636,7 +636,7 @@ public final class ConvertUtils {
 	private static Object toProperCollectionType(Collection<?> values, ClassEx c, Object oldValue) {
 		ClassEx cType = new ClassEx(c.getComponentType());
 		try {
-			Collection l = (Collection) CollectionUtils.createContainerInstance(c, 0);
+			Collection l = (Collection) CollectionRefelect.createContainerInstance(c, 0);
 			for (Object o : values) {
 				l.add(ConvertUtils.toProperType(StringUtils.toString(o), cType, findElementInstance(oldValue)));
 			}
@@ -693,7 +693,7 @@ public final class ConvertUtils {
 		String[] values = StringUtils.split(value, ',');
 		Entry<Type, Type> types = GenericUtils.getMapTypes(c.getGenericType());
 		try {
-			Map l = (Map) CollectionUtils.createContainerInstance(c, 0);
+			Map l = (Map) CollectionRefelect.createContainerInstance(c, 0);
 			Object hintKey = null;
 			Object hintValue = null;
 			if (oldValue != null) {
