@@ -453,7 +453,30 @@ public class CollectionUtils {
 	 * @param collection
 	 *            集合
 	 * @param filter
+<<<<<<< HEAD
 	 *            过滤器
+=======
+	 *            Function，用于指定哪些元素要保留
+	 * @throws UnsupportedOperationException
+	 */
+	public static <K, V> void filter(Map<K, V> map, Function<Map.Entry<K, V>, Boolean> filter) {
+		if(map==null || map.isEmpty()) {
+			return;
+		}
+		for (Iterator<Map.Entry<K, V>> iter = map.entrySet().iterator(); iter.hasNext();) {
+			Map.Entry<K, V> e = iter.next();
+			if (!Boolean.TRUE.equals(filter.apply(e))) {
+				iter.remove();
+			}
+		}
+	}
+
+	/**
+	 * 将数组或Enumation转换为Collection
+	 * 
+	 * @param data
+	 * @param type
+>>>>>>> refectors
 	 * @return
 	 */
 	public static <T> void refine(Collection<T> collection, Predicate<T> filter) {
