@@ -482,6 +482,9 @@ public class CollectionUtils {
 	 * @throws UnsupportedOperationException
 	 */
 	public static <K, V> void filter(Map<K, V> map, Function<Map.Entry<K, V>, Boolean> filter) {
+		if(map==null || map.isEmpty()) {
+			return;
+		}
 		for (Iterator<Map.Entry<K, V>> iter = map.entrySet().iterator(); iter.hasNext();) {
 			Map.Entry<K, V> e = iter.next();
 			if (!Boolean.TRUE.equals(filter.apply(e))) {
