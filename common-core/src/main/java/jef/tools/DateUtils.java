@@ -31,10 +31,13 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
-import jef.common.log.LogUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jef.tools.support.TimeIterable;
 
 /**
@@ -43,6 +46,8 @@ import jef.tools.support.TimeIterable;
  * Revised 2018-12-26，全面支持多时区运算.
  */
 public abstract class DateUtils {
+	private static final Logger log=LoggerFactory.getLogger(DateUtils.class);
+	
 	public static final int SECONDS_IN_DAY = 86400;
 	public static final int SECONDS_IN_HOUR = 3600;
 	public static final int SECONDS_IN_MINITE = 60;
@@ -73,14 +78,11 @@ public abstract class DateUtils {
 	/**
 	 * 格式化为日期+时间（中式）
 	 * 
-	 * @deprecated Use @{DateFormats.DATE_TIME_CS}
 	 * @param d
 	 * @return
 	 */
-	public static String formatDateTime(Date d) {
-		if (d == null)
-			return "";
-		return DateFormats.DATE_TIME_CS.format(d);
+	public static Optional<String> formatDateTime(Date d) {
+		return DateFormats.DATE_TIME_CS.format2(d);
 	}
 
 	/**
@@ -706,7 +708,7 @@ public abstract class DateUtils {
 		try {
 			return format.parse(s);
 		} catch (ParseException e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 			return defaultValue;
 		}
 	}
@@ -724,7 +726,7 @@ public abstract class DateUtils {
 		try {
 			return format.get().parse(s);
 		} catch (ParseException e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 			return defaultValue;
 		}
 	}
@@ -1486,9 +1488,8 @@ public abstract class DateUtils {
 	 * @param millseconds
 	 * @return
 	 */
-	public static String format(long millseconds) {
-		Date d = new Date(millseconds);
-		return formatDateTime(d);
+	public static Optional<String> format(long millseconds) {
+		return DateFormats.DATE_TIME_CS.format2(new Date(millseconds));
 	}
 
 	/**

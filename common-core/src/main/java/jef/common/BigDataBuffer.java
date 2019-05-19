@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
 import jef.common.log.LogUtil;
+import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 
 /**
@@ -204,9 +205,9 @@ public class BigDataBuffer extends OutputStream {
 			memCache.clear();//不再使用的内存区域
 			state=RECEIVE_FILE;
 		} catch (FileNotFoundException e) {
-			LogUtil.exception(e);
+			throw Exceptions.asIllegalArgument(e);
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			throw Exceptions.asIllegalArgument(e);
 		}
 	}
 	

@@ -28,6 +28,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jef.common.log.LogUtil;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
@@ -54,7 +57,7 @@ import jef.tools.ResourceUtils;
  * @author Jiyi
  */
 public class ClassLoaderUtil {
-
+	protected static final Logger log=LoggerFactory.getLogger(ClassLoaderUtil.class);
 	/**
 	 * URLClassLoader本来是支持动态增加url(addUrl)，并且可以访问其classes字段的，但是这两个都是受保护的(
 	 * protected)， 因此初始化要先破除这两个东西的保护。

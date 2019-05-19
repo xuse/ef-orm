@@ -58,6 +58,11 @@ import javax.crypto.spec.DESedeKeySpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jef.common.log.LogUtil;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
@@ -66,10 +71,8 @@ import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.MethodEx;
 import jef.tools.support.JefBase64;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
-
 public class EncrypterUtil {
+	private static final Logger log=LoggerFactory.getLogger(EncrypterUtil.class);
 	// static{
 	// Security.addProvider(new
 	// org.bouncycastle.jce.provider.BouncyCastleProvider());//添加PKCS7Padding支持
@@ -480,7 +483,6 @@ public class EncrypterUtil {
 			out.write(c1.doFinal());
 			return out.toByteArray();
 		} catch (GeneralSecurityException e) {
-			LogUtil.exception(e);
 			throw new RuntimeException(e);
 		} catch (IOException e) {
 			throw new RuntimeException(e);
@@ -757,7 +759,7 @@ public class EncrypterUtil {
 			p = (Provider) BeanUtils
 					.newInstance("com.ibm.crypto.provider.IBMJCE");
 			if (p == null) {
-				LogUtil.show("Current JDK is not IBM JDK compatible...");
+				log.warn("Current JDK is not IBM JDK compatible...");
 			} else {
 				Security.addProvider(p);
 			}	
@@ -862,7 +864,7 @@ public class EncrypterUtil {
 			defaultPolicy.add((Permission) instance.get(null));
 			return true;
 		} catch (final Exception e) {
-			LogUtil.error("Failed to remove cryptography restrictions", e);
+			log.error("Failed to remove cryptography restrictions", e);
 			return false;
 		}
 	}

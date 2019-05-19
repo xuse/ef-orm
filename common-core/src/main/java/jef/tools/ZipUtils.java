@@ -26,6 +26,9 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.ZipEntry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jef.common.BigDataBuffer;
 import jef.common.log.LogUtil;
 import jef.tools.support.ArchiveSummary;
@@ -47,6 +50,7 @@ import jef.tools.zip.ZipOutputStream;
  * </ul>
  */
 public class ZipUtils {
+	private static final Logger log=LoggerFactory.getLogger(ZipUtils.class);
 	static {
 		ZipOutputStream.DEFAULT_NAME_ENCODING = "GB18030";
 		TarEntry.DEFAULT_NAME_ENCODING="GB18030";
@@ -172,7 +176,7 @@ public class ZipUtils {
 			unzip(in, unzipPath, charset, cd);
 			return true;
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			log.error("",e);
 			return false;
 		} finally {
 			IOUtils.closeQuietly(in);
@@ -456,7 +460,7 @@ public class ZipUtils {
 			InputStream in = new BufferedInputStream(new VolumnChangeableInputStream(file));
 			return unTarGz(in, unzipPath, cd);
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			log.error("",e);
 			return false;
 		}
 	}
@@ -474,7 +478,7 @@ public class ZipUtils {
 			untar(new GZIPInputStream(in), unzipPath, cd);
 			return true;
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			log.error("",e);
 			return false;
 		}
 	}
@@ -503,7 +507,7 @@ public class ZipUtils {
 			untar(new BufferedInputStream(new VolumnChangeableInputStream(file)), unzipPath, cd);
 			return true;
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			log.error("",e);
 			return false;
 		}
 	}

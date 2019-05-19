@@ -29,7 +29,6 @@ import java.util.TimeZone;
 import org.slf4j.LoggerFactory;
 
 import jef.common.Configuration.ConfigItem;
-import jef.common.log.LogUtil;
 import jef.tools.io.Charsets;
 import jef.tools.resource.Resource;
 
@@ -50,7 +49,7 @@ public class JefConfiguration {
 		try {
 			return Long.parseLong(s);
 		} catch (Exception e) {
-			LogUtil.warn("the jef config [" + itemkey.name() + "] has invalid value:" + s);
+			log.warn("the jef config [" + itemkey.name() + "] has invalid value:" + s);
 			return defaultValue;
 		}
 	}
@@ -63,7 +62,7 @@ public class JefConfiguration {
 			int n = Integer.parseInt(s);
 			return n;
 		} catch (Exception e) {
-			LogUtil.warn("the jef config [" + itemkey.name() + "] has invalid value:" + s);
+			log.warn("the jef config [" + itemkey.name() + "] has invalid value:" + s);
 			return defaultValue;
 		}
 	}
@@ -76,7 +75,7 @@ public class JefConfiguration {
 			double n = Double.parseDouble(s);
 			return n;
 		} catch (Exception e) {
-			LogUtil.warn("the jef config [" + itemkey.name() + "] has invalid value:" + s);
+			log.warn("the jef config [" + itemkey.name() + "] has invalid value:" + s);
 			return defaultValue;
 		}
 	}
@@ -86,29 +85,24 @@ public class JefConfiguration {
 		String value = System.getProperty(key);
 		if (value != null)
 			return value;
-		try {
-			if ("schema.mapping".equals(key)) {
-				value = System.getenv(key);
-				if (value != null)
-					return value;
-			}
-			if (cache.containsKey(key)) {
-				value = cache.get(key);
-			} else {
-				if (file == null) {
-					getFile();
-				}
-				if (file != DUMMY_FILE) {
-					Map<String, String> map = IOUtils.loadProperties(IOUtils.getReader(file, "UTF-8"));
-					cache.putAll(map);
-					value = cache.get(key);
-				}
-			}
-			return value == null ? defaultValue : value;
-		} catch (IOException e) {
-			LogUtil.exception(e);
+		if ("schema.mapping".equals(key)) {
+			value = System.getenv(key);
+			if (value != null)
+				return value;
 		}
-		return defaultValue;
+		if (cache.containsKey(key)) {
+			value = cache.get(key);
+		} else {
+			if (file == null) {
+				getFile();
+			}
+			if (file != DUMMY_FILE) {
+				Map<String, String> map = IOUtils.loadProperties(IOUtils.getReader(file, Charsets.UTF8));
+				cache.putAll(map);
+				value = cache.get(key);
+			}
+		}
+		return value == null ? defaultValue : value;
 	}
 
 	private static final File DUMMY_FILE = new File("");
@@ -122,8 +116,7 @@ public class JefConfiguration {
 				filename = fileName;
 			List<URL> urls = ResourceUtils.getResources(filename);
 			if (urls.size() > 1) {
-				log.warn("Found " + urls.size() + " 'jef.properties' files...");
-				LogUtil.warn(urls);
+				log.warn("Found {} 'jef.properties' files...\n{}", urls.size(), urls);
 			}
 			if (urls.isEmpty()) {
 				file = DUMMY_FILE;
@@ -131,13 +124,14 @@ public class JefConfiguration {
 				file = Resource.getFileResource(urls.get(0)).getFile();
 			}
 		} catch (Exception e) {
-			LogUtil.exception(e);
+			log.error("", e);
 			file = DUMMY_FILE;
 		}
 		log.info("JEF is using config file:" + (DUMMY_FILE == file ? "Default" : file.getAbsolutePath()));
 		int timeZone = TimeZone.getDefault().getRawOffset() / 3600000;
 		if (getBoolean(Item.DB_DEBUG, true))
-			log.info("Current Locale:" + Locale.getDefault().toString() + "\tTimeZone:" + (timeZone < 0 ? String.valueOf(timeZone) : "+" + String.valueOf(timeZone)) + "\tEncoding:" + Charset.defaultCharset());
+			log.info("Current Locale:" + Locale.getDefault().toString() + "\tTimeZone:"
+					+ (timeZone < 0 ? String.valueOf(timeZone) : "+" + String.valueOf(timeZone)) + "\tEncoding:" + Charset.defaultCharset());
 	}
 
 	public static boolean getBoolean(ConfigItem itemkey, boolean defaultValue) {
@@ -148,18 +142,13 @@ public class JefConfiguration {
 	public static boolean update(Item itemkey, String value) {
 		if (file == DUMMY_FILE)
 			return false;
-		try {
-			String key = itemkey.toString().replaceAll("_", ".").toLowerCase();
-			Map<String, String> properties = IOUtils.loadProperties(IOUtils.getReader(file, "UTF-8"));
-			properties.put(key, value);
+		String key = itemkey.toString().replaceAll("_", ".").toLowerCase();
+		Map<String, String> properties = IOUtils.loadProperties(IOUtils.getReader(file, Charsets.UTF8));
+		properties.put(key, value);
 
-			Writer out = IOUtils.getWriter(file,Charsets.UTF8);
-			IOUtils.storeProperties(out, properties, true);
-			return true;
-		} catch (IOException e) {
-			LogUtil.exception(e);
-			return false;
-		}
+		Writer out = IOUtils.getWriter(file, Charsets.UTF8);
+		IOUtils.storeProperties(out, properties, true);
+		return true;
 	}
 
 	public enum Item implements ConfigItem {

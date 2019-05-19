@@ -19,7 +19,9 @@ import java.lang.reflect.InvocationTargetException;
 
 import javax.management.ReflectionException;
 
-import jef.common.log.LogUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.MethodEx;
 
@@ -35,6 +37,7 @@ import jef.tools.reflect.MethodEx;
  * @param <T>
  */
 public class ThreadLocal<T> extends java.lang.ThreadLocal<T>{
+	private Logger log=LoggerFactory.getLogger(ThreadLocal.class);	
 	private static final Class<?> superClass=java.lang.ThreadLocal.class;
 	private static boolean isForJDK6=System.getProperty("java.specification.version").startsWith("1.6");
 	private MethodEx getMethod;
@@ -69,13 +72,13 @@ s	 * @param 参数
 				createMap.invoke(this, t,value);
 			}
 		} catch (ReflectionException e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 		} catch (IllegalArgumentException e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 		} catch (IllegalAccessException e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 		} catch (InvocationTargetException e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 		}
 	}
 	

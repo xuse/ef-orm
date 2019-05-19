@@ -10,10 +10,13 @@ import java.lang.reflect.WildcardType;
 import java.util.Arrays;
 import java.util.NoSuchElementException;
 
-import jef.common.log.LogUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jef.tools.Assert;
 
 final class GqGenericResolver {
+	private static final Logger log=LoggerFactory.getLogger(GqGenericResolver.class);
 	static final Type[] EMPTY_TYPE_ARRAY = new Type[] {};
 
 	/**
@@ -333,9 +336,9 @@ final class GqGenericResolver {
 					// [ERROR][2011-09-27 21:08:14,573] [ORM._log]
 					// getEnclosingClass:interface java.util.Map
 
-					LogUtil.error("ownerType:" + ownerType);
-					LogUtil.error("rawTypeAsClass:" + rawTypeAsClass);
-					LogUtil.error("getEnclosingClass:" + rawTypeAsClass.getEnclosingClass());
+					log.error("ownerType:" + ownerType);
+					log.error("rawTypeAsClass:" + rawTypeAsClass);
+					log.error("getEnclosingClass:" + rawTypeAsClass.getEnclosingClass());
 					throw e;
 				}
 

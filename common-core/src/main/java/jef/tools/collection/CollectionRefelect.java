@@ -27,7 +27,14 @@ import jef.tools.collection.CollectionUtils.EnumerationIterator;
 import jef.tools.reflect.ClassEx;
 import jef.tools.reflect.GenericUtils;
 
+/**
+ * 集合相关的反射工具类
+ * @author Administrator
+ *
+ */
 public class CollectionRefelect {
+	private CollectionRefelect() {
+	}
 
 	/**
 	 * 检查传入的对象类型，并尝试获取其遍历器句柄

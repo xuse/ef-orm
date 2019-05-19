@@ -66,7 +66,6 @@ import jef.codegen.support.OverWrittenMode;
 import jef.common.BigDataBuffer;
 import jef.common.JefSerializable;
 import jef.common.SimpleException;
-import jef.common.log.LogUtil;
 import jef.jre5support.ProcessUtil;
 import jef.tools.TextFileCallback.Dealwith;
 import jef.tools.collection.CollectionUtils;
@@ -98,7 +97,7 @@ public class IOUtils {
 			try {
 				input.close();
 			} catch (IOException e) {
-				LogUtil.exception(e);
+				log.error("IO error",e);
 			}
 		}
 	}
@@ -303,8 +302,8 @@ public class IOUtils {
 				}
 			}
 			writer.flush();
-		} catch (IOException e1) {
-			LogUtil.exception(e1);
+		} catch (IOException ex) {
+			log.error("error",ex);
 		} finally {
 			if (closeWriter)
 				closeQuietly(writer);
@@ -1606,7 +1605,7 @@ public class IOUtils {
 			fc1.close();
 			return nth - 1;
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			log.error("IO error",e);
 			return -1;
 		}
 	}
@@ -1640,8 +1639,8 @@ public class IOUtils {
 			closeQuietly(fou);
 			closeQuietly(fco);
 			return true;
-		} catch (Exception ee) {
-			LogUtil.exception(ee);
+		} catch (Exception ex) {
+			log.error("error",ex);
 			return false;
 		}
 	}
@@ -1732,7 +1731,7 @@ public class IOUtils {
 					in.transferTo(0, source.length(), out);
 					flag = true;
 				} catch (IOException e) {
-					LogUtil.exception(e);
+					log.error("IO error",e);
 				} finally {
 					closeQuietly(out);
 					closeQuietly(in);
@@ -2076,7 +2075,7 @@ public class IOUtils {
 			try {
 				txt = call.processLine(line);
 			} catch (Throwable e) {
-				LogUtil.exception(e);
+				log.error("IO error",e);
 				call.lastException = e;
 			}
 			if (w != null) {
@@ -2415,7 +2414,7 @@ public class IOUtils {
 		try {
 			return new BufferedOutputStream(new FileOutputStream(file));
 		} catch (FileNotFoundException e) {
-			LogUtil.exception(e);
+			log.error("IO error",e);
 			throw new RuntimeException(e.getMessage());
 		}
 	}
@@ -2456,7 +2455,7 @@ public class IOUtils {
 			out.writeObject(obj);
 			return true;
 		} catch (IOException ex) {
-			LogUtil.exception(ex);
+			log.error("error",ex);
 			return false;
 		} finally {
 			closeQuietly(out);
@@ -2476,9 +2475,8 @@ public class IOUtils {
 			out.writeObject(obj);
 			closeQuietly(out);
 			return bytes.toByteArray();
-		} catch (IOException ex) {
-			LogUtil.exception(ex);
-			throw new RuntimeException(ex.getMessage());
+		} catch (IOException e) {
+			throw Exceptions.illegalState("IO error", e);
 		}
 	}
 
@@ -2495,7 +2493,7 @@ public class IOUtils {
 			ensureParentFolder(file);
 			return saveObject(obj, new FileOutputStream(file));
 		} catch (FileNotFoundException e) {
-			LogUtil.exception(e);
+			log.error("IO error",e);
 			return false;
 		}
 	}
@@ -2525,10 +2523,8 @@ public class IOUtils {
 				((JefSerializable) obj).init();
 			}
 			return obj;
-		} catch (ClassNotFoundException ex) {
-			LogUtil.exception(ex);
-		} catch (IOException ex) {
-			LogUtil.exception(ex);
+		} catch (ClassNotFoundException|IOException e) {
+			log.error("IO error",e);
 		} finally {
 			IOUtils.closeQuietly(inn);
 		}
@@ -2748,7 +2744,7 @@ public class IOUtils {
 			}
 			bis.close();
 		} catch (Exception e) {
-			LogUtil.exception(e);
+			log.error("IO error",e);
 		}
 		return charset;
 	}
@@ -3133,8 +3129,8 @@ public class IOUtils {
 			return;
 		try {
 			load0(new LineReader(in), map, supportSecion);
-		} catch (Exception e1) {
-			LogUtil.exception(e1);
+		} catch (Exception e) {
+			log.error("load error",e);
 		} finally {
 			closeQuietly(in);
 		}

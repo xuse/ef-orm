@@ -14,10 +14,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.management.ReflectionException;
 
 import org.apache.commons.lang.ObjectUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jef.common.Entry;
 import jef.common.Node;
-import jef.common.log.LogUtil;
 import jef.http.client.support.CommentEntry;
 import jef.tools.ArrayUtils;
 import jef.tools.DateUtils;
@@ -32,6 +33,8 @@ import jef.tools.reflect.convert.Converter;
  *
  */
 public final class ConvertUtils {
+	
+	private static final Logger log=LoggerFactory.getLogger(ConvertUtils.class);
 	private static final Converter<Long> N2J = new Converter<Long>() {
 		public Long apply(Object input) {
 			return ((Number) input).longValue();
@@ -683,7 +686,7 @@ public final class ConvertUtils {
 				return BeanUtils.newInstanceAnyway(o.getClass());
 			}
 		} catch (ReflectionException e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 		}
 		return null;
 	}

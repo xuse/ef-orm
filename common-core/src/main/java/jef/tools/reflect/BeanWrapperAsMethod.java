@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import jef.common.log.LogUtil;
 import jef.tools.StringUtils;
 
 public final class BeanWrapperAsMethod extends BeanWrapper{
@@ -105,13 +104,13 @@ public final class BeanWrapperAsMethod extends BeanWrapper{
 		try {
 			return m.invoke(obj, new Object[]{});
 		} catch (IllegalArgumentException e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 			return null; 
 		} catch (IllegalAccessException e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 			return null;
 		} catch (InvocationTargetException e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 			return null;
 		}
 	}

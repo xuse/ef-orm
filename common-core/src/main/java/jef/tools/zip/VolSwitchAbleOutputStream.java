@@ -5,12 +5,16 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
+import org.slf4j.Logger;
+
 import jef.common.log.LogUtil;
 import jef.tools.Assert;
 import jef.tools.FileName;
 import jef.tools.IOUtils;
 
 public class VolSwitchAbleOutputStream extends SwitchAbleOutputStream {
+	private static final Logger log=LogUtil.log;
+	
 	private File templateFile;
 	private File firstFile;
 
@@ -31,11 +35,11 @@ public class VolSwitchAbleOutputStream extends SwitchAbleOutputStream {
 			if (firstFile == null) {
 				throw new IllegalAccessError("Can not rename file " + templateFile.getAbsolutePath() + " to " + first);
 			}
-			LogUtil.debug(templateFile.getPath() + " rename to " + firstFile.getPath());
+			log.debug(templateFile.getPath() + " rename to " + firstFile.getPath());
 		}
 		try {
 			File newFile = names.append(".part" + (currentIndex + 1)).asFileInDirectory(parent);
-			LogUtil.debug("Create new Volumn File:" + newFile.getPath());
+			log.debug("Create new Volumn File:" + newFile.getPath());
 			return new FileOutputStream(newFile);
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);

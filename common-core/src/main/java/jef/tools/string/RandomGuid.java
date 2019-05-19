@@ -41,7 +41,9 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Random;
 
-import jef.common.log.LogUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * <pre>
@@ -122,7 +124,7 @@ public class RandomGuid extends Object {
 	public String valueAfterMD5 = "";
 	private static Random myRand;
 	private static SecureRandom mySecureRand;
-
+	private static final Logger log=LoggerFactory.getLogger(RandomGuid.class);
 	private static String s_id;
 	private static final int PAD_BELOW = 0x10;
 	private static final int TWO_BYTES = 0xFF;
@@ -141,7 +143,7 @@ public class RandomGuid extends Object {
 		try {
 			s_id = InetAddress.getLocalHost().toString();
 		} catch (UnknownHostException e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 		}
 
 	}
@@ -174,7 +176,7 @@ public class RandomGuid extends Object {
 		try {
 			md5 = MessageDigest.getInstance("MD5");
 		} catch (NoSuchAlgorithmException e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 			throw new IllegalStateException(e);
 		}
 
@@ -215,7 +217,7 @@ public class RandomGuid extends Object {
 			valueAfterMD5 = sb.toString();
 
 		} catch (Exception e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 		}
 	}
 

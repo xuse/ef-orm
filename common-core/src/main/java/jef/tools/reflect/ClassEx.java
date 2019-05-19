@@ -32,6 +32,9 @@ import java.util.Map;
 
 import javax.management.ReflectionException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jef.common.log.LogUtil;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
@@ -44,6 +47,8 @@ import jef.tools.reflect.BeanUtils.SearchMode;
  * @author jiyi
  */
 public class ClassEx {
+	protected static final Logger log=LoggerFactory.getLogger(ClassEx.class);
+	
 	/**
 	 * Class对象
 	 */

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +41,7 @@ import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.csvreader.Codecs;
 import jef.tools.csvreader.CsvWriter;
+import jef.tools.io.Charsets;
 import jef.tools.reflect.Property;
 import jef.tools.resource.IResource;
 
@@ -55,7 +57,7 @@ public class InitDataExporter {
 	private boolean deleteEmpty;
 	private File target = new File(System.getProperty("user.dir"));
 	private String extension = "." + JefConfiguration.get(DbCfg.INIT_DATA_EXTENSION, "txt");
-	private String charset = "UTF-8";
+	private Charset charset = Charsets.UTF8;
 	private int maxResults = 5000;
 	private boolean exportOnlyAnnotationPresent;
 
@@ -168,7 +170,7 @@ public class InitDataExporter {
 			return;
 		}
 
-		CsvWriter cw = new CsvWriter(file, ',', charset);
+		CsvWriter cw = new CsvWriter(file, charset);
 		try {
 			Collection<ColumnMapping> columns = meta.getColumns();
 			for (ColumnMapping column : columns) {
@@ -215,17 +217,19 @@ public class InitDataExporter {
 		this.exportOnlyAnnotationPresent = exportOnlyAnnotationPresent;
 	}
 
-	public String getCharset() {
+	public Charset getCharset() {
 		return charset;
+	}
+
+	public void setCharset(Charset charset) {
+		this.charset = charset;
 	}
 
 	public void addClassRoot(URL classRoot) {
 		this.classRoot.add(classRoot);
 	}
 
-	public void setCharset(String charset) {
-		this.charset = charset;
-	}
+	
 
 	public File getTarget() {
 		return target;

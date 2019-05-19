@@ -207,13 +207,13 @@ public final class BeanWrapperImpl extends BeanWrapper {
 		try {
 			return m.invoke(obj, new Object[] {});
 		} catch (IllegalArgumentException e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 			return null;
 		} catch (IllegalAccessException e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 			return null;
 		} catch (InvocationTargetException e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 			return null;
 		}
 	}
@@ -336,7 +336,7 @@ public final class BeanWrapperImpl extends BeanWrapper {
 			try {
 				tmp = getIndexedObject(field, false);
 			} catch (ReflectionException e) {
-				LogUtil.exception(e);
+				log.error("error",e);
 			}
 			if (tmp == null)
 				return null;
@@ -417,7 +417,7 @@ public final class BeanWrapperImpl extends BeanWrapper {
 		try {
 			return getIndexedObject(field, false);
 		} catch (ReflectionException e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 			return null;
 		}
 	}

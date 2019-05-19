@@ -78,7 +78,6 @@ import org.xml.sax.SAXParseException;
 
 import com.alibaba.fastjson.JSONObject;
 
-import jef.common.log.LogUtil;
 import jef.tools.io.Charsets;
 import jef.tools.reflect.BeanWrapper;
 import jef.tools.reflect.BeanWrapperImpl;
@@ -129,11 +128,11 @@ public class XMLUtils {
 				}
 			} catch (Exception e) {
 				// 没有将common-net包依赖进来，无法使用HTML解析功能
-				LogUtil.warn("The EF-HTML parser engine not found, HTMLParser feature will be disabled. Import easyframe 'common-misc' library to the classpath to activate this feature.");
+				log.warn("The EF-HTML parser engine not found, HTMLParser feature will be disabled. Import easyframe 'common-misc' library to the classpath to activate this feature.");
 			}
 		} catch (Exception e) {
 			// xerces版本过旧，不支持进行HTML解析
-			LogUtil.warn("The Apache xerces implemention not avaliable, HTMLParser feature will be disabled. you must import library 'xercesImpl'(version >= 2.7.1) into classpath.");
+			log.warn("The Apache xerces implemention not avaliable, HTMLParser feature will be disabled. you must import library 'xercesImpl'(version >= 2.7.1) into classpath.");
 		}
 		try {
 			domFactoryTT = initFactory(true, true);
@@ -1465,7 +1464,7 @@ public class XMLUtils {
 			document.setXmlStandalone(true);
 			return document;
 		} catch (ParserConfigurationException e) {
-			LogUtil.exception(e);
+			log.error("",e);
 			return null;
 		}
 	}
@@ -2269,7 +2268,7 @@ public class XMLUtils {
 		try {
 			output(node, sr, charset, 4, xmlHeader);
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			log.error("",e);
 		}
 		return sw.toString();
 	}
@@ -2443,9 +2442,9 @@ public class XMLUtils {
 			}
 		} else if (Date.class.isAssignableFrom(type)) {
 			if (Boolean.FALSE.equals(asAttrib)) {
-				addElement(parent, tagName, DateUtils.formatDateTime((Date) bean));
+				addElement(parent, tagName, DateUtils.formatDateTime((Date) bean).orElse(""));
 			} else {
-				((Element) parent).setAttribute(tagName, DateUtils.formatDateTime((Date) bean));
+				((Element) parent).setAttribute(tagName, DateUtils.formatDateTime((Date) bean).orElse(""));
 			}
 		} else if (Number.class.isAssignableFrom(type) || type.isPrimitive() || type == Boolean.class) {
 			if (Boolean.FALSE.equals(asAttrib)) {
