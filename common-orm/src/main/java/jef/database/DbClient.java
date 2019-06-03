@@ -26,6 +26,8 @@ import java.util.Map.Entry;
 
 import javax.sql.DataSource;
 
+import org.easyframe.enterprise.spring.TransactionMode;
+
 import jef.common.Callback;
 import jef.common.log.LogUtil;
 import jef.common.pool.PoolStatus;
@@ -56,8 +58,6 @@ import jef.tools.Assert;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanUtils;
-
-import org.easyframe.enterprise.spring.TransactionMode;
 
 /**
  * 数据库操作句柄
@@ -842,7 +842,7 @@ public class DbClient extends Session implements SessionFactory {
 	protected IConnection getConnection() throws SQLException {
 		ensureOpen();
 		IConnection conn = connPool.poll();
-		if (!conn.getAutoCommit()) {
+		if (this.getTxType()!=TransactionMode.JTA && !conn.getAutoCommit()) {
 			conn.setAutoCommit(true);
 		}
 		return conn;
