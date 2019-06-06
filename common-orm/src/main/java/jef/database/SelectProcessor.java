@@ -252,7 +252,6 @@ public abstract class SelectProcessor {
 				DbUtils.processError(e, sql, db);
 				throw e;
 			} finally {
-				sb.output();
 				DbUtils.close(rs);
 				DbUtils.close(psmt);
 				db.releaseConnection();
@@ -360,24 +359,33 @@ public abstract class SelectProcessor {
 				tasks.add(new DbTask() {
 					@Override
 					public void execute() throws SQLException {
-						for (BindSql bs : sql.getValue()) {
-							total.addAndGet(processCount0(target, bs, debug));
+						try {
+							for (BindSql bs : sql.getValue()) {
+								total.addAndGet(processCount0(target, bs, debug));
+							}	
+						}finally {
+							debug.output();	
 						}
 					}
 				});
 			}
+			
 			DbUtils.parallelExecute(tasks);
 			return total.get();
 		} else {
 			long total = 0;
 			final SqlLog debug = ORMConfig.getInstance().newLogger();
-			for (Map.Entry<String, List<BindSql>> sql : sqls.getSqls().entrySet()) {
-				OperateTarget target = session.selectTarget(sql.getKey());
-				for (BindSql bs : sql.getValue()) {
-					total += processCount0(target, bs, debug);
-				}
+			try {
+				for (Map.Entry<String, List<BindSql>> sql : sqls.getSqls().entrySet()) {
+					OperateTarget target = session.selectTarget(sql.getKey());
+					for (BindSql bs : sql.getValue()) {
+						total += processCount0(target, bs, debug);
+					}
+				}	
+			}finally {
+//				debug.append(csq)
+				debug.output();	
 			}
-			debug.output();
 			return total;
 		}
 

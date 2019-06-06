@@ -69,6 +69,7 @@ import jef.database.jsqlparser.expression.operators.relational.GreaterThanEquals
 import jef.database.jsqlparser.expression.operators.relational.InExpression;
 import jef.database.jsqlparser.expression.operators.relational.IsNullExpression;
 import jef.database.jsqlparser.expression.operators.relational.LikeExpression;
+import jef.database.jsqlparser.expression.operators.relational.ILikeExpression;
 import jef.database.jsqlparser.expression.operators.relational.ExistsExpression;
 import jef.database.jsqlparser.expression.operators.relational.MinorThan;
 import jef.database.jsqlparser.expression.operators.relational.MinorThanEquals;
@@ -149,6 +150,7 @@ TOKEN: /* SQL Keywords. prefixed with K_ to avoid name clashes */
 |   <K_INTO:"INTO">
 |   <K_NULL:"NULL">
 |   <K_LIKE:"LIKE">
+|   <K_ILIKE:"ILIKE">
 |   <K_DROP:"DROP">
 |   <K_JOIN:"JOIN">
 |   <K_LEFT:"LEFT">
@@ -1019,6 +1021,7 @@ Expression SQLCondition():
 	| LOOKAHEAD(Between()) result=Between()
 	| LOOKAHEAD(IsNullExpression()) result=IsNullExpression()
 	| LOOKAHEAD(ExistsExpression()) result=ExistsExpression()
+	| LOOKAHEAD(ILikeExpression()) result=ILikeExpression()
 	|  result=LikeExpression()
 	)
 	{ return result; }
@@ -1073,6 +1076,23 @@ Expression LikeExpression() :
 {
 	leftExpression=SimpleExpression()
     [<K_NOT> { result.setNot(true); } ] <K_LIKE> rightExpression=SimpleExpression()
+    [<K_ESCAPE> token=<S_CHAR_LITERAL> { result.setEscape((new StringValue(token.image)).getValue()); }]
+	{ 
+		result.setLeftExpression(leftExpression);
+		result.setRightExpression(rightExpression);
+		return result; 
+	}
+}
+
+Expression ILikeExpression() :
+{
+	LikeExpression result = new ILikeExpression();
+	Expression leftExpression = null;
+	Expression rightExpression = null;
+}
+{
+	leftExpression=SimpleExpression()
+    [<K_NOT> { result.setNot(true); } ] <K_ILIKE> rightExpression=SimpleExpression()
     [<K_ESCAPE> token=<S_CHAR_LITERAL> { result.setEscape((new StringValue(token.image)).getValue()); }]
 	{ 
 		result.setLeftExpression(leftExpression);
@@ -1369,8 +1389,8 @@ Expression PrimaryExpression():
 	<K_NULL> { retval = NullValue.getInstance(); }
 	|   retval = Interval()
 	|	retval=CaseWhenExpression()
-	| "?" { retval = new JdbcParameter(); }
-
+	| "?" [token=<S_INTEGER>] { retval = new JdbcParameter(token); }
+	
 	| LOOKAHEAD([ "+" | "-"] Function()) [ "+" | "-" { isInverse = true; }] retval=Function() 
 	
 	| LOOKAHEAD(<S_DOUBLE>)   token=<S_DOUBLE> { retval = new DoubleValue(token.image); }

@@ -15,22 +15,35 @@
  */
 package jef.database.jsqlparser.expression;
 
+import jef.database.jsqlparser.parser.Token;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.tools.StringUtils;
 
 /**
  * A '?' in a statement
  */
 public class JdbcParameter implements Expression {
 
-    public void accept(ExpressionVisitor expressionVisitor) {
-        expressionVisitor.visit(this);
-    }
+	public JdbcParameter() {
+	}
 
-    public String toString() {
-        return "?";
-    }
+	public JdbcParameter(Token name) {
+		if (name != null) {
+			this.id = StringUtils.toInt(name.image, -1);
+		}
+	}
+
+	private int id = -1;
+
+	public void accept(ExpressionVisitor expressionVisitor) {
+		expressionVisitor.visit(this);
+	}
+
+	public String toString() {
+		return "?";
+	}
 
 	public void appendTo(StringBuilder sb) {
 		sb.append('?');
@@ -38,5 +51,13 @@ public class JdbcParameter implements Expression {
 
 	public ExpressionType getType() {
 		return ExpressionType.param;
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
 	}
 }
