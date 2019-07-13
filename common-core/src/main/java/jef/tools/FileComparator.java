@@ -5,7 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
 
-import jef.common.log.LogUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 文件比较器，用于比较两个文件是否相同
@@ -16,6 +17,8 @@ import jef.common.log.LogUtil;
  * @see #LENGTH_SKIP
  */
 public abstract class FileComparator {
+	private static final Logger log = LoggerFactory.getLogger(FileComparator.class);
+	
 	public abstract boolean equals(File source, File target);
 
 	@Deprecated
@@ -82,7 +85,7 @@ public abstract class FileComparator {
 			}
 			return true;
 		} catch (IOException e) {
-			LogUtil.error("CompareFileError:", e);
+			log.error("CompareFileError:", e);
 			return false;
 		} finally {
 			IOUtils.closeQuietly(f1);

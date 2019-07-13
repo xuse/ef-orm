@@ -47,10 +47,14 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Spliterators;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +66,6 @@ import jef.codegen.support.OverWrittenMode;
 import jef.common.BigDataBuffer;
 import jef.common.JefSerializable;
 import jef.common.SimpleException;
-import jef.common.log.LogUtil;
 import jef.jre5support.ProcessUtil;
 import jef.tools.TextFileCallback.Dealwith;
 import jef.tools.collection.CollectionUtils;
@@ -77,8 +80,7 @@ public class IOUtils {
 	/**
 	 * 关闭指定的对象，不会抛出异常
 	 * 
-	 * @param input
-	 *            需要关闭的资源
+	 * @param input 需要关闭的资源
 	 * @deprecated 请使用{@link #closeQuietly}，该方法和Apache commons-io中的工具类同名，更适合代码复用
 	 */
 	public static void close(Closeable input) {
@@ -88,15 +90,14 @@ public class IOUtils {
 	/**
 	 * 关闭指定的对象，不会抛出异常
 	 * 
-	 * @param input
-	 *            需要关闭的资源
+	 * @param input 需要关闭的资源
 	 */
 	public static void closeQuietly(Closeable input) {
 		if (input != null) {
 			try {
 				input.close();
 			} catch (IOException e) {
-				LogUtil.exception(e);
+				log.error("IO error",e);
 			}
 		}
 	}
@@ -104,8 +105,7 @@ public class IOUtils {
 	/**
 	 * 获得制定文件/目录的大小
 	 * 
-	 * @param file
-	 *            传入File，如果是文件直接返回文件大小，如果是目录返回目录中所有文件的大小。
+	 * @param file 传入File，如果是文件直接返回文件大小，如果是目录返回目录中所有文件的大小。
 	 * @return size of the directory
 	 */
 	public static long getLength(File file) {
@@ -163,8 +163,7 @@ public class IOUtils {
 	 * 因此，建议在加载.properties文件时，不要使用JDK中的{@link java.util.Properties}。
 	 * <s>彻底淘汰落后的java.util.Properties</s>
 	 * 
-	 * @param in
-	 *            要读取的资源
+	 * @param in 要读取的资源
 	 * @return 文件中的键值对信息。
 	 */
 	public static Map<String, String> loadProperties(URL in) {
@@ -190,8 +189,7 @@ public class IOUtils {
 	 * 因此，建议在加载.properties文件时，不要使用JDK中的{@link java.util.Properties}。
 	 * <s>彻底淘汰落后的java.util.Properties</s>
 	 * 
-	 * @param in
-	 *            要读取的数据流。注意读取完成后流会被关闭。
+	 * @param in 要读取的数据流。注意读取完成后流会被关闭。
 	 * @return 文件中的键值对信息。
 	 */
 	public static Map<String, String> loadProperties(Reader in) {
@@ -211,11 +209,10 @@ public class IOUtils {
 	 * 因此，建议在加载.properties文件时，不要使用JDK中的{@link java.util.Properties}。
 	 * <s>彻底淘汰落后的java.util.Properties</s>
 	 * 
-	 * @param in
-	 *            要读取的数据流。注意读取完成后流会被关闭。
-	 * @param supportSection
-	 *            支持分节。window下有一种很类似properties格式的配置文件INI。INI文件中可以使用[section]
-	 *            对配置划分小节。开启此开关后，解析时会将当前节名称和配置名拼在一起。 形成 {@code 节名|配置名}的格式。
+	 * @param in             要读取的数据流。注意读取完成后流会被关闭。
+	 * @param supportSection 支持分节。window下有一种很类似properties格式的配置文件INI。INI文件中可以使用[section]
+	 *                       对配置划分小节。开启此开关后，解析时会将当前节名称和配置名拼在一起。 形成
+	 *                       {@code 节名|配置名}的格式。
 	 * 
 	 * 
 	 * @return 文件中的键值对信息。
@@ -229,12 +226,9 @@ public class IOUtils {
 	/**
 	 * 将Map内的数据保存成properties文件
 	 * 
-	 * @param writer
-	 *            要输出的流
-	 * @param map
-	 *            要保存的键值对信息
-	 * @param closeWriter
-	 *            true表示保存完后关闭输出流，false则保持不变
+	 * @param writer      要输出的流
+	 * @param map         要保存的键值对信息
+	 * @param closeWriter true表示保存完后关闭输出流，false则保持不变
 	 */
 	public static void storeProperties(Writer writer, Map<String, String> map, boolean closeWriter) {
 		storeProperties(writer, map, closeWriter, false, 0);
@@ -244,16 +238,11 @@ public class IOUtils {
 	/**
 	 * 将Map内的数据保存成properties文件
 	 * 
-	 * @param writer
-	 *            要输出的流
-	 * @param map
-	 *            要保存的键值对信息
-	 * @param closeWriter
-	 *            true表示保存完后关闭输出流，false则保持不变
-	 * @param sectionSupport
-	 *            支持分节写入
-	 * @param 转义处理：1，正常KV均转义处理
-	 *            0。KEY处理value不处理。 -1 KV均不处理
+	 * @param writer         要输出的流
+	 * @param map            要保存的键值对信息
+	 * @param closeWriter    true表示保存完后关闭输出流，false则保持不变
+	 * @param sectionSupport 支持分节写入
+	 * @param                转义处理：1，正常KV均转义处理 0。KEY处理value不处理。 -1 KV均不处理
 	 * 
 	 */
 	public static void storeProperties(Writer writer, Map<String, String> map, boolean closeWriter, Boolean sectionSupport, int saveConvert) {
@@ -313,8 +302,8 @@ public class IOUtils {
 				}
 			}
 			writer.flush();
-		} catch (IOException e1) {
-			LogUtil.exception(e1);
+		} catch (IOException ex) {
+			log.error("error",ex);
 		} finally {
 			if (closeWriter)
 				closeQuietly(writer);
@@ -325,8 +314,7 @@ public class IOUtils {
 	 * 清空指定目录<br>
 	 * 删除文件夹下的所有内容，文件夹本身不删除。 如果输入一个file，那么总是返回true
 	 * 
-	 * @param f
-	 *            要清空的目录
+	 * @param f 要清空的目录
 	 * @return true表示操作成功，如果某些文件不能正常删除返回false.
 	 */
 	public static boolean deleteAllChildren(File f) {
@@ -349,10 +337,8 @@ public class IOUtils {
 	/**
 	 * 删除整个文件夹树
 	 * 
-	 * @param f
-	 *            要删除的文件或文件夹
-	 * @param includeSub
-	 *            如果为false,那么如果目录非空，将不删除。返回false
+	 * @param f          要删除的文件或文件夹
+	 * @param includeSub 如果为false,那么如果目录非空，将不删除。返回false
 	 * @return 成功删除返回true,没成功删除返回false。 如果文件夹一开始就不存在，也返回true。
 	 */
 	public static boolean deleteTree(File f, boolean includeSub) {
@@ -375,10 +361,8 @@ public class IOUtils {
 	/**
 	 * 递归列出(所有层级的)目录
 	 * 
-	 * @param root
-	 *            要搜索的目录
-	 * @param folderFilter
-	 *            自定义过滤器，可过滤掉不需要的文件夹
+	 * @param root         要搜索的目录
+	 * @param folderFilter 自定义过滤器，可过滤掉不需要的文件夹
 	 * @return 所有未被过滤的文件夹
 	 */
 	public static File[] listFoldersRecursive(File root, final FileFilter folderFilter) {
@@ -396,10 +380,8 @@ public class IOUtils {
 	 * 递归列出目录下(所有层级的)文件。可以指定哪些扩展名，如果不指定扩展名则所有文件都被列出， <br>
 	 * 不会列出目录
 	 * 
-	 * @param root
-	 *            要搜索的目录
-	 * @param extnames
-	 *            允许列出的扩展名，必须小写，不含.号。可以指定多种扩展名
+	 * @param root     要搜索的目录
+	 * @param extnames 允许列出的扩展名，必须小写，不含.号。可以指定多种扩展名
 	 * @return 所有指定扩展名的文件。
 	 */
 	public static File[] listFilesRecursive(File root, final String... extnames) {
@@ -415,12 +397,9 @@ public class IOUtils {
 	 * 递归列出目录下(所有层级的)文件。可以指定过滤器，过滤掉不需要的文件 <br>
 	 * 不会列出目录
 	 * 
-	 * @param root
-	 *            要搜索的目录
-	 * @param filter
-	 *            指定的过滤器
-	 * @param folderFilter
-	 *            文件夹过滤器，可以用此过滤器来防止搜索不需要的目录
+	 * @param root         要搜索的目录
+	 * @param filter       指定的过滤器
+	 * @param folderFilter 文件夹过滤器，可以用此过滤器来防止搜索不需要的目录
 	 * @return 所有未被过滤的文件
 	 */
 	public static File[] listFilesRecursive(File root, final FileFilter fileFilter, final FileFilter folderFilter) {
@@ -448,10 +427,8 @@ public class IOUtils {
 	 * <p>
 	 * 匹配字符串。该字符串中可以用*表示任意字符，用?表示单个字符。 这个函数的功能类似于windows的文件搜索。
 	 * 
-	 * @param root
-	 *            要搜索的目录
-	 * @param pattern
-	 *            指定的匹配字符串。该字符串中可以用*表示任意字符，用?表示单个字符。
+	 * @param root    要搜索的目录
+	 * @param pattern 指定的匹配字符串。该字符串中可以用*表示任意字符，用?表示单个字符。
 	 * @return 所有符合条件的文件
 	 */
 	public static File[] listFilesRecursiveLike(File root, final String pattern) {
@@ -468,10 +445,8 @@ public class IOUtils {
 	/**
 	 * 递归列出目录下文件。可以指定扩展名。
 	 * 
-	 * @param file
-	 *            要搜索的目录
-	 * @param extnames
-	 *            需要的文件类型（扩展名）。要求小写，无需带'.'符号。
+	 * @param file     要搜索的目录
+	 * @param extnames 需要的文件类型（扩展名）。要求小写，无需带'.'符号。
 	 * @return 该目录下符合指定类型的所有文件(只搜索一层，不会递归搜索)。<strong>仅列出文件，不会返回目录</strong>
 	 */
 	public static File[] listFiles(File file, final String... extnames) {
@@ -490,10 +465,8 @@ public class IOUtils {
 	/**
 	 * 列出指定目录下的文件。可以指定文件名的模板进行匹配。
 	 * 
-	 * @param root
-	 *            要搜索的目录
-	 * @param pattern
-	 *            搜索字符串，可以用*,?,+表示匹配任意字符。
+	 * @param root    要搜索的目录
+	 * @param pattern 搜索字符串，可以用*,?,+表示匹配任意字符。
 	 * @return 该目录下，文件名符合指定搜索字符串的文件(只搜索一层，不会递归搜索)。仅列出文件，不会返回目录
 	 */
 	public static File[] listFilesLike(File root, final String pattern) {
@@ -511,8 +484,7 @@ public class IOUtils {
 	/**
 	 * 列出指定目录下的文件夹
 	 * 
-	 * @param root
-	 *            指定目录
+	 * @param root 指定目录
 	 * @return 该目录下的所有文件夹
 	 */
 	public static File[] listFolders(File root) {
@@ -530,10 +502,8 @@ public class IOUtils {
 	/**
 	 * 列出指定目录下文件夹，匹配指定的字符串
 	 * 
-	 * @param root
-	 *            要搜索的目录
-	 * @param pattern
-	 *            搜索字符串，可以用*,?,+表示匹配任意字符。
+	 * @param root    要搜索的目录
+	 * @param pattern 搜索字符串，可以用*,?,+表示匹配任意字符。
 	 * @return 该目录下符合搜索字符串的所有文件夹。(只搜索一层，不会递归搜索)。仅列出文件夹，不会返回文件
 	 */
 	public static File[] listFoldersLike(File root, final String pattern) {
@@ -551,10 +521,8 @@ public class IOUtils {
 	/**
 	 * 列出指定目录下的文件和文件夹，其中文件只列出符合扩展名的文件。
 	 * 
-	 * @param root
-	 *            要搜索的目录
-	 * @param extnames
-	 *            允许列出的扩展名，必须小写。不含.号
+	 * @param root     要搜索的目录
+	 * @param extnames 允许列出的扩展名，必须小写。不含.号
 	 * @return 该目录下的所有文件夹（不管名称中有没有.xxx）以及符合类型的文件。
 	 */
 	public static File[] listFilesAndFolders(File root, final String... extnames) {
@@ -576,10 +544,8 @@ public class IOUtils {
 	/**
 	 * 列出指定目录下的文件和文件夹，可以指定搜索字符串
 	 * 
-	 * @param root
-	 *            要搜索的目录
-	 * @param pattern
-	 *            搜索字符串
+	 * @param root    要搜索的目录
+	 * @param pattern 搜索字符串
 	 * @return 该目录下所有符合搜索串的 文件和目录。(只搜索一层，不会递归搜索)
 	 */
 	public static File[] listFilesAndFoldersLike(File root, final String pattern) {
@@ -597,8 +563,7 @@ public class IOUtils {
 	 * 比如输出名为 report.txt时，如果发现上一次的report.txt还在那么就会返回 "report(1).txt"。
 	 * 如果"report(1).txt"也存在就会返回"report(2).txt"。 以此类推。
 	 * 
-	 * @param file
-	 *            目标文件
+	 * @param file 目标文件
 	 * @return 如果目标文件不存在，返回本身。如果目标文件已存在，就返回一个带后缀而磁盘上不存在的文件。
 	 */
 	public static File escapeExistFile(File file) {
@@ -734,8 +699,7 @@ public class IOUtils {
 	/**
 	 * 检查/创建文件在所的文件夹。 如果该文件所在的文件夹已存在，什么也不做。 如果该文件所在的文件夹不存在，则创建
 	 * 
-	 * @param file
-	 *            要检查的路径
+	 * @param file 要检查的路径
 	 */
 	public static void ensureParentFolder(File file) {
 		File f = file.getParentFile();
@@ -827,10 +791,8 @@ public class IOUtils {
 	/**
 	 * 得到文本文件的某几行，使用后文件会关闭 。
 	 * 
-	 * @param inName
-	 *            要读的文本文件
-	 * @param num
-	 *            指定的行号,可以指定多行，必须按顺序(如果不指定则表示读取全部行；如果指定的行号小于1，会返回第一行)
+	 * @param inName 要读的文本文件
+	 * @param num    指定的行号,可以指定多行，必须按顺序(如果不指定则表示读取全部行；如果指定的行号小于1，会返回第一行)
 	 * @return
 	 * @throws IOException
 	 */
@@ -849,10 +811,8 @@ public class IOUtils {
 		/**
 		 * 过滤行
 		 * 
-		 * @param line
-		 *            传入：行的内容
-		 * @param num
-		 *            传入：行号
+		 * @param line 传入：行的内容
+		 * @param num  传入：行号
 		 * @return 过滤后的行的内容，如果传出null表示不需要这一行
 		 */
 		String filter(String line, int num);
@@ -962,9 +922,9 @@ public class IOUtils {
 	 * 
 	 * @param pOut 输出流，可以为null,此时输入流中的相应数据将丢弃
 	 * 
-	 * @param pClose True guarantees, that {@link OutputStream#close()} is
-	 * called on the stream. False indicates, that only {@link
-	 * OutputStream#flush()} should be called finally.
+	 * @param pClose True guarantees, that {@link OutputStream#close()} is called on
+	 * the stream. False indicates, that only {@link OutputStream#flush()} should be
+	 * called finally.
 	 * 
 	 * @param pBuffer Temporary buffer, which is to be used for copying data.
 	 * 
@@ -1024,14 +984,10 @@ public class IOUtils {
 	/**
 	 * 流之间拷贝
 	 * 
-	 * @param in
-	 *            输入
-	 * @param out
-	 *            输出
-	 * @param inClose
-	 *            关闭输入流？
-	 * @param outClose
-	 *            关闭输出流?
+	 * @param in       输入
+	 * @param out      输出
+	 * @param inClose  关闭输入流？
+	 * @param outClose 关闭输出流?
 	 * @return
 	 * @throws IOException
 	 */
@@ -1042,14 +998,10 @@ public class IOUtils {
 	/**
 	 * 流之间拷贝
 	 * 
-	 * @param in
-	 *            输入
-	 * @param out
-	 *            输出
-	 * @param inClose
-	 *            关闭输入流
-	 * @param outClose
-	 *            关闭输出流
+	 * @param in       输入
+	 * @param out      输出
+	 * @param inClose  关闭输入流
+	 * @param outClose 关闭输出流
 	 * @return
 	 * @throws IOException
 	 */
@@ -1060,12 +1012,9 @@ public class IOUtils {
 	/**
 	 * 流之间拷贝
 	 * 
-	 * @param in
-	 *            输入
-	 * @param out
-	 *            输出
-	 * @param pClose
-	 *            关闭输出流?
+	 * @param in     输入
+	 * @param out    输出
+	 * @param pClose 关闭输出流?
 	 * @return 拷贝长度
 	 * @throws IOException
 	 */
@@ -1076,12 +1025,9 @@ public class IOUtils {
 	/**
 	 * 流之间拷贝
 	 * 
-	 * @param in
-	 *            输入
-	 * @param out
-	 *            输出
-	 * @param closeOutStream
-	 *            关闭输出流? (输入流默认关闭)
+	 * @param in             输入
+	 * @param out            输出
+	 * @param closeOutStream 关闭输出流? (输入流默认关闭)
 	 * @return
 	 * @throws IOException
 	 */
@@ -1092,8 +1038,7 @@ public class IOUtils {
 	/**
 	 * 将Reader内容读取到内存中的charArray
 	 * 
-	 * @param reader
-	 *            输入
+	 * @param reader 输入
 	 * @return
 	 * @throws IOException
 	 */
@@ -1126,8 +1071,7 @@ public class IOUtils {
 	 * 将Reader内容读取为字符串
 	 * 
 	 * @param reader
-	 * @param close
-	 *            关闭reader
+	 * @param close  关闭reader
 	 * @return
 	 * @throws IOException
 	 */
@@ -1155,13 +1099,10 @@ public class IOUtils {
 	/**
 	 * 将指定位置的数据读出成为文本
 	 * 
-	 * @param url
-	 *            资源位置
-	 * @param charset
-	 *            字符编码，可以传入null
+	 * @param url     资源位置
+	 * @param charset 字符编码，可以传入null
 	 * @return 读到的文本
-	 * @throws IOException
-	 *             IO操作异常
+	 * @throws IOException IO操作异常
 	 **/
 	public static String asString(URL url, String charset) throws IOException {
 		if (url == null)
@@ -1183,12 +1124,9 @@ public class IOUtils {
 	/**
 	 * 将输入流转化为String
 	 * 
-	 * @param pStream
-	 *            The input stream to read.
-	 * @param pEncoding
-	 *            The character encoding, typically "UTF-8".
-	 * @param close
-	 *            close the in stream?
+	 * @param pStream   The input stream to read.
+	 * @param pEncoding The character encoding, typically "UTF-8".
+	 * @param close     close the in stream?
 	 */
 	public static String asString(InputStream pStream, String pEncoding, boolean close) throws IOException {
 		if (pStream == null)
@@ -1205,11 +1143,9 @@ public class IOUtils {
 	/**
 	 * 将制定的URL中的数据读出成byte[]
 	 * 
-	 * @param url
-	 *            资源目标位置
+	 * @param url 资源目标位置
 	 * @return 字节数组
-	 * @throws IOException
-	 *             IO操作异常
+	 * @throws IOException IO操作异常
 	 */
 	public static byte[] toByteArray(URL url) throws IOException {
 		return toByteArray(url.openStream());
@@ -1218,11 +1154,9 @@ public class IOUtils {
 	/**
 	 * 读取文件到内存(不可用于大文件)
 	 * 
-	 * @param file
-	 *            本地文件
+	 * @param file 本地文件
 	 * @return 字节数组
-	 * @throws IOException
-	 *             IO操作异常
+	 * @throws IOException IO操作异常
 	 */
 	public static byte[] toByteArray(File file) throws IOException {
 		InputStream in = new FileInputStream(file);
@@ -1408,8 +1342,7 @@ public class IOUtils {
 	 * 从流中读取指定的字节，第三个版本，性能再度提升 参考数据，从120M文件中读取前60M，此方法耗时125ms,v2耗时156ms
 	 * 
 	 * @param in
-	 * @param length
-	 *            要读取的字节数，-1表示不限制。（注意实际处理中-1的情况下最多读取2G数据，超过2G不会读取）
+	 * @param length 要读取的字节数，-1表示不限制。（注意实际处理中-1的情况下最多读取2G数据，超过2G不会读取）
 	 * @return
 	 * @throws IOException
 	 */
@@ -1459,10 +1392,8 @@ public class IOUtils {
 	/**
 	 * 将流中的数据读入到BigDataBuffer对象中去。
 	 * 
-	 * @param in
-	 *            输入流
-	 * @param limit
-	 *            限制长度
+	 * @param in    输入流
+	 * @param limit 限制长度
 	 * @return
 	 * @throws IOException
 	 */
@@ -1674,7 +1605,7 @@ public class IOUtils {
 			fc1.close();
 			return nth - 1;
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			log.error("IO error",e);
 			return -1;
 		}
 	}
@@ -1690,7 +1621,7 @@ public class IOUtils {
 	public static boolean combine(Collection<String> list, String path, String srcFileName) {
 		File outputFile = new File(path + "/" + srcFileName);
 		outputFile = escapeExistFile(outputFile);
-		try (FileOutputStream fou = new FileOutputStream(outputFile)){
+		try (FileOutputStream fou = new FileOutputStream(outputFile)) {
 			FileChannel fco = fou.getChannel();
 			long position = 0;
 			for (String i : list) {// 按顺序获得各个文件名
@@ -1708,8 +1639,8 @@ public class IOUtils {
 			closeQuietly(fou);
 			closeQuietly(fco);
 			return true;
-		} catch (Exception ee) {
-			LogUtil.exception(ee);
+		} catch (Exception ex) {
+			log.error("error",ex);
 			return false;
 		}
 	}
@@ -1719,10 +1650,8 @@ public class IOUtils {
 	 * 支持目录拷贝，指定目录下的目录结构会被保留，并复制到新的路径上<br>
 	 * 如果有同名文件或文件夹，会自动覆盖。
 	 * 
-	 * @param file
-	 *            源文件或文件夹
-	 * @param newFile
-	 *            目标文件或文件夹
+	 * @param file    源文件或文件夹
+	 * @param newFile 目标文件或文件夹
 	 * @return true拷贝成功，false表示拷贝过程出现失败
 	 */
 	public static boolean copyFile(File file, File newFile) {
@@ -1742,12 +1671,9 @@ public class IOUtils {
 	 * copyFile(new File("c:\temp\io.sys"),new File("d:\temproot"));
 	 * 如果d:\temproot不存在，那么拷贝后d:\temproot是一个文件。
 	 * 
-	 * @param source
-	 *            源文件或目录
-	 * @param newFile
-	 *            目标文件或目录。
-	 * @param strategy
-	 *            拷贝策略，拷贝策略可以用于指定拷贝中的各种行为
+	 * @param source   源文件或目录
+	 * @param newFile  目标文件或目录。
+	 * @param strategy 拷贝策略，拷贝策略可以用于指定拷贝中的各种行为
 	 * @return true拷贝成功，false表示拷贝过程出现失败
 	 * @see CopyStrategy
 	 */
@@ -1805,7 +1731,7 @@ public class IOUtils {
 					in.transferTo(0, source.length(), out);
 					flag = true;
 				} catch (IOException e) {
-					LogUtil.exception(e);
+					log.error("IO error",e);
 				} finally {
 					closeQuietly(out);
 					closeQuietly(in);
@@ -1818,13 +1744,10 @@ public class IOUtils {
 	/**
 	 * 将文件拷贝到指定目录下，文件名保持不变<br>
 	 * 
-	 * @param tmpFile
-	 *            需要复制的文件或目录
-	 * @param path
-	 *            文本，要复制的目标路径(必须是一个文件夹)，如果目标不存在会自动创建为文件夹。
+	 * @param tmpFile 需要复制的文件或目录
+	 * @param path    文本，要复制的目标路径(必须是一个文件夹)，如果目标不存在会自动创建为文件夹。
 	 * @return 拷贝后的文件
-	 * @throws IOException
-	 *             磁盘操作异常时抛出
+	 * @throws IOException 磁盘操作异常时抛出
 	 * @deprecated Please use {@link #copyIntoFolder(File, File)};
 	 */
 	public static File copyToFolder(File file, String path) throws IOException {
@@ -1834,13 +1757,10 @@ public class IOUtils {
 	/**
 	 * 将文件拷贝到指定目录下，文件名保持不变<br>
 	 * 
-	 * @param tmpFile
-	 *            需要复制的文件或目录
-	 * @param path
-	 *            文本，要复制的目标路径(必须是一个文件夹)，如果目标不存在会自动创建为文件夹。
+	 * @param tmpFile 需要复制的文件或目录
+	 * @param path    文本，要复制的目标路径(必须是一个文件夹)，如果目标不存在会自动创建为文件夹。
 	 * @return 拷贝后的文件
-	 * @throws IOException
-	 *             磁盘操作异常时抛出
+	 * @throws IOException 磁盘操作异常时抛出
 	 */
 	public static File copyIntoFolder(File source, File dir) {
 		File target = new File(dir, source.getName());
@@ -1851,12 +1771,9 @@ public class IOUtils {
 	/**
 	 * 将文件移动到指定目录下
 	 * 
-	 * @param file
-	 *            文件
-	 * @param folder
-	 *            目标文件夹
-	 * @param autoEscape
-	 *            如果存在同名文件，则自动改名
+	 * @param file       文件
+	 * @param folder     目标文件夹
+	 * @param autoEscape 如果存在同名文件，则自动改名
 	 * @return
 	 */
 	public static boolean moveToFolder(File file, File folder, boolean autoEscape) {
@@ -1882,12 +1799,9 @@ public class IOUtils {
 	/**
 	 * 文件(目录)重新命名
 	 * 
-	 * @param file
-	 *            要处理的文件或目录
-	 * @param newName
-	 *            修改后的文件名（不含路径）。
-	 * @param overwrite
-	 *            覆盖模式，如果目标文件已经存在，则删除目标文件后再改名
+	 * @param file      要处理的文件或目录
+	 * @param newName   修改后的文件名（不含路径）。
+	 * @param overwrite 覆盖模式，如果目标文件已经存在，则删除目标文件后再改名
 	 * @return 如果成功改名，返回改名后的file对象，否则返回null。
 	 */
 	public static File rename(File file, String newName, boolean overwrite) {
@@ -1902,16 +1816,17 @@ public class IOUtils {
 		}
 		return file.renameTo(target) ? target : null;
 	}
-	
+
 	/**
 	 * 文件（目录）更名，如果目标名已经存在，将使用数字进行错开。
+	 * 
 	 * @param file
 	 * @param newName
 	 * @return
 	 */
 	public static File renameEscapeExists(File file, String newName) {
 		File target = new File(file.getParentFile(), newName);
-		target=IOUtils.escapeExistFile(target);
+		target = IOUtils.escapeExistFile(target);
 		return file.renameTo(target) ? target : null;
 	}
 
@@ -1925,7 +1840,7 @@ public class IOUtils {
 	public static boolean move(File oldFile, File newFile) {
 		Assert.notNull(oldFile, "source file is null!");
 		Assert.notNull(newFile, "target file is null!");
-		Assert.isTrue(oldFile.exists(), "source file ["+oldFile.getAbsolutePath()+"] doesn't exist.");
+		Assert.isTrue(oldFile.exists(), "source file [" + oldFile.getAbsolutePath() + "] doesn't exist.");
 		Assert.isFalse(newFile.exists(), "target file already exist!");
 		ensureParentFolder(newFile);
 		return oldFile.renameTo(newFile);
@@ -2006,17 +1921,38 @@ public class IOUtils {
 		return n;
 	}
 
+	public Stream<String> asStream(File f, Charset charset) throws IOException {
+		final BufferedReader reader = IOUtils.getReader(f, charset);
+		Iterator<String> iter = new Iterator<String>() {
+			private String next = reader.readLine();
+			@Override
+			public boolean hasNext() {
+				return next != null;
+			}
+
+			@Override
+			public String next() {
+				String next = this.next;
+				try {
+					if((this.next = reader.readLine())==null) {
+						IOUtils.closeQuietly(reader);
+					}
+					return next;
+				} catch (IOException e) {
+					throw Exceptions.illegalState(e);
+				}
+			}
+		};
+		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iter, 0), false);
+	}
+
 	/**
 	 * 用指定的回调方法处理文本文件(可指定目录并批量处理目录下所有该类型文件)
 	 * 
-	 * @param f
-	 *            文件夹
-	 * @param sourceCharset
-	 *            源文件编码
-	 * @param call
-	 *            处理器
-	 * @param extPatterns
-	 *            扩展名过滤
+	 * @param f             文件夹
+	 * @param sourceCharset 源文件编码
+	 * @param call          处理器
+	 * @param extPatterns   扩展名过滤
 	 * @throws IOException
 	 */
 	public static int processFiles(File f, TextFileCallback call, String... extPatterns) throws IOException {
@@ -2114,12 +2050,9 @@ public class IOUtils {
 	/**
 	 * 用指定的回调方法处理文本文件
 	 * 
-	 * @param f
-	 *            文件
-	 * @param sourceCharset
-	 *            文件编码
-	 * @param call
-	 *            处理器
+	 * @param f             文件
+	 * @param sourceCharset 文件编码
+	 * @param call          处理器
 	 * @throws IOException
 	 */
 	public static File processFile(File f, TextFileCallback call) throws IOException {
@@ -2142,7 +2075,7 @@ public class IOUtils {
 			try {
 				txt = call.processLine(line);
 			} catch (Throwable e) {
-				LogUtil.exception(e);
+				log.error("IO error",e);
 				call.lastException = e;
 			}
 			if (w != null) {
@@ -2256,16 +2189,16 @@ public class IOUtils {
 	 * @return
 	 * @throws IOException
 	 */
-	public static BufferedReader getReader(File file, Charset charSet){
+	public static BufferedReader getReader(File file, Charset charSet) {
 		if (file == null)
 			return null;
 		try {
 			InputStream is = new FileInputStream(file);
-			return new BufferedReader(new UnicodeReader(is, charSet));	
-		}catch(IOException ioe) {
+			return new BufferedReader(new UnicodeReader(is, charSet));
+		} catch (IOException ioe) {
 			throw new IllegalStateException(ioe);
 		}
-		
+
 	}
 
 	/**
@@ -2286,12 +2219,9 @@ public class IOUtils {
 	/**
 	 * 获得相对于一个class的所在路径的相对路径的文件资源
 	 * 
-	 * @param source
-	 *            class
-	 * @param fileName
-	 *            文件相对路径
-	 * @param charSet
-	 *            编码
+	 * @param source   class
+	 * @param fileName 文件相对路径
+	 * @param charSet  编码
 	 * @return BufferedReader 如果文件不存在，返回null
 	 */
 	public static BufferedReader getReader(Class<?> source, String fileName, Charset charSet) {
@@ -2349,8 +2279,7 @@ public class IOUtils {
 	/**
 	 * 将URL转化为文件
 	 * 
-	 * @param url
-	 *            要转换的URL，必须是file://协议，否则抛出异常。
+	 * @param url 要转换的URL，必须是file://协议，否则抛出异常。
 	 */
 	public static File urlToFile(URL url) {
 		Assert.notNull(url);
@@ -2485,7 +2414,7 @@ public class IOUtils {
 		try {
 			return new BufferedOutputStream(new FileOutputStream(file));
 		} catch (FileNotFoundException e) {
-			LogUtil.exception(e);
+			log.error("IO error",e);
 			throw new RuntimeException(e.getMessage());
 		}
 	}
@@ -2526,7 +2455,7 @@ public class IOUtils {
 			out.writeObject(obj);
 			return true;
 		} catch (IOException ex) {
-			LogUtil.exception(ex);
+			log.error("error",ex);
 			return false;
 		} finally {
 			closeQuietly(out);
@@ -2546,9 +2475,8 @@ public class IOUtils {
 			out.writeObject(obj);
 			closeQuietly(out);
 			return bytes.toByteArray();
-		} catch (IOException ex) {
-			LogUtil.exception(ex);
-			throw new RuntimeException(ex.getMessage());
+		} catch (IOException e) {
+			throw Exceptions.illegalState("IO error", e);
 		}
 	}
 
@@ -2565,7 +2493,7 @@ public class IOUtils {
 			ensureParentFolder(file);
 			return saveObject(obj, new FileOutputStream(file));
 		} catch (FileNotFoundException e) {
-			LogUtil.exception(e);
+			log.error("IO error",e);
 			return false;
 		}
 	}
@@ -2595,10 +2523,8 @@ public class IOUtils {
 				((JefSerializable) obj).init();
 			}
 			return obj;
-		} catch (ClassNotFoundException ex) {
-			LogUtil.exception(ex);
-		} catch (IOException ex) {
-			LogUtil.exception(ex);
+		} catch (ClassNotFoundException|IOException e) {
+			log.error("IO error",e);
 		} finally {
 			IOUtils.closeQuietly(inn);
 		}
@@ -2620,7 +2546,7 @@ public class IOUtils {
 		if (!file.exists())
 			return null;
 		try {
-			return (T)loadObject(new FileInputStream(file));
+			return (T) loadObject(new FileInputStream(file));
 		} catch (IOException e) {
 			return null;
 		}
@@ -2671,8 +2597,7 @@ public class IOUtils {
 	/**
 	 * 将ByteBuffer对象脱壳，得到byte[]
 	 * 
-	 * @param bf
-	 *            ByteBuffer对象
+	 * @param bf ByteBuffer对象
 	 * @return 字节数组
 	 */
 	public static byte[] toByteArray(ByteBuffer bf) {
@@ -2692,8 +2617,7 @@ public class IOUtils {
 	 * 
 	 * @Title: findFile
 	 * @param root
-	 * @param filter
-	 *            过滤条件
+	 * @param filter 过滤条件
 	 * @return File 返回文件
 	 */
 	public static File findFile(File root, FileFilterEx filter) {
@@ -2719,10 +2643,8 @@ public class IOUtils {
 	/**
 	 * 在指定目录下搜索文件
 	 * 
-	 * @param root
-	 *            要搜索的目录
-	 * @param filter
-	 *            文件过滤器
+	 * @param root   要搜索的目录
+	 * @param filter 文件过滤器
 	 * @return 搜索到的所有文件
 	 */
 	public static Collection<File> findFiles(File root, FileFilterEx filter) {
@@ -2747,12 +2669,9 @@ public class IOUtils {
 	/**
 	 * 在指定目录下搜索单个文件
 	 * 
-	 * @param root
-	 *            要搜索的目录
-	 * @param name
-	 *            搜索的文件名称（完全匹配）
-	 * @param acceptFolder
-	 *            是否搜索文件夹
+	 * @param root         要搜索的目录
+	 * @param name         搜索的文件名称（完全匹配）
+	 * @param acceptFolder 是否搜索文件夹
 	 * @return File 返回文件
 	 */
 	public static File findFile(File root, final String name, final boolean acceptFolder) {
@@ -2825,7 +2744,7 @@ public class IOUtils {
 			}
 			bis.close();
 		} catch (Exception e) {
-			LogUtil.exception(e);
+			log.error("IO error",e);
 		}
 		return charset;
 	}
@@ -2834,10 +2753,8 @@ public class IOUtils {
 	 * 比较两个文件/目录是否内容一致。 <br>
 	 * 作为传入参数的文件/目录的名称不会被比较。
 	 * 
-	 * @param origin
-	 *            源文件。可传入文件或目录
-	 * @param target
-	 *            目标文件。可传入文件或目录
+	 * @param origin 源文件。可传入文件或目录
+	 * @param target 目标文件。可传入文件或目录
 	 * @return
 	 */
 	public static boolean equals(File origin, File target) {
@@ -2870,9 +2787,9 @@ public class IOUtils {
 
 	/*
 	 * Read in a "logical line" from an InputStream/Reader, skip all comment and
-	 * blank lines and filter out those leading whitespace characters ( , and )
-	 * from the beginning of a "natural line". Method returns the char length of
-	 * the "logical line" and stores the line in "lineBuf".
+	 * blank lines and filter out those leading whitespace characters ( , and ) from
+	 * the beginning of a "natural line". Method returns the char length of the
+	 * "logical line" and stores the line in "lineBuf".
 	 */
 	static final class LineReader {
 		private char[] inCharBuf;
@@ -3065,8 +2982,8 @@ public class IOUtils {
 	}
 
 	/*
-	 * Converts encoded &#92;uxxxx to unicode chars and changes special saved
-	 * chars to their original forms
+	 * Converts encoded &#92;uxxxx to unicode chars and changes special saved chars
+	 * to their original forms
 	 */
 	private static String loadConvert(char[] in, int off, int len, char[] convtBuf) {
 		if (convtBuf.length < len) {
@@ -3212,8 +3129,8 @@ public class IOUtils {
 			return;
 		try {
 			load0(new LineReader(in), map, supportSecion);
-		} catch (Exception e1) {
-			LogUtil.exception(e1);
+		} catch (Exception e) {
+			log.error("load error",e);
 		} finally {
 			closeQuietly(in);
 		}

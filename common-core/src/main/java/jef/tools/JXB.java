@@ -324,7 +324,7 @@ public class JXB {
 		if (String.class == c) {
 			element = XMLUtils.addElement(current, fieldName, (String) value);
 		} else if (Date.class == c) {
-			element = XMLUtils.addElement(current, fieldName, DateUtils.formatDateTime((Date) value));
+			element = XMLUtils.addElement(current, fieldName, DateUtils.formatDateTime((Date) value).orElse(""));
 		} else if (Integer.class == c || Integer.TYPE == c) {
 			element = XMLUtils.addElement(current, fieldName, String.valueOf(value));
 		} else if (Boolean.class == c || Boolean.TYPE == c) {

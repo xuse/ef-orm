@@ -21,9 +21,11 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
-import jef.common.log.LogUtil;
 
 /**
  * 抽象类，用于实现对java bean的反射操作
@@ -31,6 +33,8 @@ import jef.common.log.LogUtil;
  *
  */
 public abstract class BeanWrapper {
+	protected static final Logger log=LoggerFactory.getLogger(BeanWrapper.class);
+	
 	public static final int NORMAL = 0;
 	public static final int METHOD = 1;
 	public static final int FAST = 2;
@@ -144,7 +148,7 @@ public abstract class BeanWrapper {
 		try{
 			v=ConvertUtils.toProperType(value, new ClassEx(c),oldValue);
 		}catch(Exception e){
-			LogUtil.error("Error at setting property to "+this.getClassName()+":"+fieldName+" whith value ["+value+"]");
+			log.error("Error at setting property to "+this.getClassName()+":"+fieldName+" whith value ["+value+"]");
 			throw new IllegalArgumentException(e.getMessage());
 		}
 		this.setPropertyValue(fieldName, v);

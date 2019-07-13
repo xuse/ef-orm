@@ -34,7 +34,7 @@ import jef.tools.io.StringBuilderWriter;
  */
 public class LogUtil {
 	public static List<Writer> otherStream;
-	private static org.slf4j.Logger log = LoggerFactory.getLogger("GeeQuery");
+	public static final org.slf4j.Logger log = LoggerFactory.getLogger("GeeQuery");
 	
 	//是否将输出改为日志形式输出
 	public static boolean useSlf4j = JefConfiguration.getBoolean(Item.COMMON_DEBUG_ADAPTER, true);
@@ -252,6 +252,7 @@ public class LogUtil {
 	 * 将异常异常堆栈打入日志
 	 * 改起来影响比较大，所以就不改了。
 	 * @param t
+	 * @deprecated
 	 */
 	public static void exception(Throwable t){
 		log.error("",t);
@@ -263,6 +264,7 @@ public class LogUtil {
 	/**
 	 * 将异常信息输入日志
 	 * @param message
+	 * @deprecated
 	 * @param t
 	 */
 	public static void exception(String message,Throwable t){

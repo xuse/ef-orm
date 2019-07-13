@@ -21,10 +21,12 @@ import java.util.NoSuchElementException;
 
 import javax.management.ReflectionException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.common.SimpleException;
-import jef.common.log.LogUtil;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.Exceptions;
@@ -32,6 +34,8 @@ import jef.tools.Primitives;
 import jef.tools.StringUtils;
 
 public class BeanUtils {
+	private static final Logger log=LoggerFactory.getLogger(BeanUtils.class);
+	
 	private static Map<Class<?>, ClassFieldAccessor> ACCESSOR_CACHE = new IdentityHashMap<Class<?>, ClassFieldAccessor>(256);
 
 	/**
@@ -288,7 +292,7 @@ public class BeanUtils {
 			try {
 				f = cls.getDeclaredField(name);
 			} catch (SecurityException e) {
-				LogUtil.exception(e);
+				log.error("error",e);
 			} catch (NoSuchFieldException e) {
 				// do nothing
 			}
@@ -323,9 +327,7 @@ public class BeanUtils {
 			Object objV = ConvertUtils.toProperType(value, new ClassEx(c), oldValue);
 			f.set(obj, objV);
 		} catch (IllegalArgumentException e) {
-			LogUtil.error("Error processing:" + fieldName);
-			LogUtil.exception(e);
-			throw new ReflectionException(e, e.getMessage());
+			throw new ReflectionException(e, "Error processing:" + fieldName);
 		}
 		return true;
 	}
@@ -354,7 +356,7 @@ public class BeanUtils {
 			try {
 				c.setAccessible(true);
 			} catch (SecurityException e) {
-				LogUtil.exception(c.getName(), e);
+				log.error(c.getName(), e);
 			}
 		}
 		Class<?>[] types = c.getParameterTypes();
@@ -366,7 +368,7 @@ public class BeanUtils {
 		try {
 			return c.newInstance(p);
 		} catch (Exception e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 			return null;
 		}
 	}
@@ -532,13 +534,13 @@ public class BeanUtils {
 					try {
 						return (T) ct.newInstance(params);
 					} catch (IllegalArgumentException e) {
-						LogUtil.exception(e);
+						log.error("error",e);
 					} catch (InstantiationException e) {
-						LogUtil.exception(e);
+						log.error("error",e);
 					} catch (IllegalAccessException e) {
-						LogUtil.exception(e);
+						log.error("error",e);
 					} catch (InvocationTargetException e) {
-						LogUtil.exception(e);
+						log.error("error",e);
 					}
 				}
 			}
@@ -652,7 +654,7 @@ public class BeanUtils {
 					return m;
 			}
 		} catch (SecurityException e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 		}
 		return null;
 	}
@@ -858,7 +860,7 @@ public class BeanUtils {
 			}
 			return method;
 		} catch (SecurityException e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 		} catch (NoSuchMethodException e) {
 		}
 		return null;
@@ -887,7 +889,7 @@ public class BeanUtils {
 			}
 			return method;
 		} catch (SecurityException e) {
-			LogUtil.exception(e);
+			log.error("error",e);
 		} catch (NoSuchMethodException e) {
 		}
 		return null;

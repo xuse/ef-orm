@@ -18,7 +18,9 @@ package jef.tools;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import jef.common.log.LogUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * 用于并发编程得的若干简单小工具
@@ -27,6 +29,8 @@ import jef.common.log.LogUtil;
  * 
  */
 public abstract class ThreadUtils {
+	private final static Logger log=LoggerFactory.getLogger(ThreadUtils.class);
+	
 	public static final int WAIT_INTERRUPTED = 0;
 	public static final int WAIT_TIMEOUT = -1;
 	public static final int WAIT_NOTIFIED = 1;
@@ -45,7 +49,7 @@ public abstract class ThreadUtils {
 				obj.wait();
 				return true;
 			} catch (InterruptedException e) {
-				LogUtil.exception(e);
+				log.error("",e);
 				return false;
 			}
 		}

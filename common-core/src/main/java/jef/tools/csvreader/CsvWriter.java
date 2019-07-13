@@ -21,6 +21,7 @@
 package jef.tools.csvreader;
 
 import java.io.BufferedWriter;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -30,11 +31,12 @@ import java.io.Writer;
 import java.nio.charset.Charset;
 
 import jef.tools.IOUtils;
+import jef.tools.io.Charsets;
 
 /**
  * A stream based writer for writing delimited text data to a file or a stream.
  */
-public class CsvWriter {
+public class CsvWriter implements Closeable{
 	private Writer outputStream = null;
 	
 	private File fileName = null;
@@ -78,7 +80,7 @@ public class CsvWriter {
 	 *            The {@link java.nio.charset.Charset Charset} to use while
 	 *            writing the data.
 	 */
-	public CsvWriter(File fileName, char delimiter, String charset) {
+	public CsvWriter(File fileName, Charset charset) {
 		if (fileName == null) {
 			throw new IllegalArgumentException("Parameter fileName can not be null.");
 		}
@@ -88,8 +90,8 @@ public class CsvWriter {
 		}
 
 		this.fileName = fileName;
-		userSettings.Delimiter = delimiter;
-		this.charset = Charset.forName(charset);
+		userSettings.Delimiter = Letters.COMMA;
+		this.charset = charset;
 	}
 
 	/**
@@ -101,7 +103,7 @@ public class CsvWriter {
 	 *            The path to the file to output the data.
 	 */
 	public CsvWriter(String fileName) {
-		this(new File(fileName), Letters.COMMA, "ISO-8859-1");
+		this(new File(fileName), Charsets.UTF8);
 	}
 
 	/**
@@ -110,16 +112,14 @@ public class CsvWriter {
 	 * 
 	 * @param outputStream
 	 *            The stream to write the column delimited data to.
-	 * @param delimiter
-	 *            The character to use as the column delimiter.
 	 */
-	public CsvWriter(Writer outputStream, char delimiter) {
+	public CsvWriter(Writer outputStream) {
 		if (outputStream == null) {
 			throw new IllegalArgumentException("Parameter outputStream can not be null.");
 		}
 
 		this.outputStream = outputStream;
-		userSettings.Delimiter = delimiter;
+		userSettings.Delimiter = Letters.COMMA;
 		initialized = true;
 	}
 
@@ -129,14 +129,12 @@ public class CsvWriter {
 	 * 
 	 * @param outputStream
 	 *            The stream to write the column delimited data to.
-	 * @param delimiter
-	 *            The character to use as the column delimiter.
 	 * @param charset
 	 *            The {@link java.nio.charset.Charset Charset} to use while
 	 *            writing the data.
 	 */
-	public CsvWriter(OutputStream outputStream, char delimiter, Charset charset) {
-		this(new OutputStreamWriter(outputStream, charset), delimiter);
+	public CsvWriter(OutputStream outputStream, Charset charset) {
+		this(new OutputStreamWriter(outputStream, charset));
 	}
 
 	/**
