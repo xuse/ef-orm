@@ -58,6 +58,7 @@ import jef.orm.onetable.model.Keyword;
 import jef.orm.onetable.model.TestEntity;
 import jef.orm.onetable.model.TestEntitySon;
 import jef.tools.DateUtils;
+import jef.tools.Exceptions;
 import jef.tools.PageLimit;
 import jef.tools.ThreadUtils;
 import jef.tools.string.RandomData;
@@ -110,7 +111,7 @@ public class SimpleTableTest extends org.junit.Assert {
 			db.insert(t1);
 			ThreadUtils.doSleep(500);
 		} catch (SQLException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 	}
 

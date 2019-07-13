@@ -11,7 +11,6 @@ import java.util.Map.Entry;
 
 import com.github.geequery.entity.Entities;
 
-import jef.common.log.LogUtil;
 import jef.common.wrapper.Page;
 import jef.database.DbClient;
 import jef.database.DbUtils;
@@ -29,6 +28,7 @@ import jef.database.query.Query;
 import jef.database.wrapper.ResultIterator;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.BeanWrapper;
 
@@ -193,7 +193,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			}
 			return getSession().update(q);
 		} catch (SQLException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 			throw DbUtils.toRuntimeException(e);
 		}
 	}
@@ -226,7 +226,7 @@ public class CommonDaoImpl extends BaseDao implements CommonDao {
 			}
 			return getSession().update(q);
 		} catch (SQLException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 			throw DbUtils.toRuntimeException(e);
 		}
 	}

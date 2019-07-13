@@ -11,8 +11,13 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
+
 import jef.common.log.LogUtil;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 import jef.tools.SimpleXPath;
 import jef.tools.StringUtils;
 import jef.tools.X;
@@ -20,10 +25,6 @@ import jef.tools.XMLUtils;
 import jef.tools.maven.jaxb.Dependency;
 import jef.tools.maven.jaxb.Dependency.Exclusions;
 import jef.tools.maven.jaxb.Exclusion;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
 
 public class MavenDependencyParser {
 	public static boolean debug = false;
@@ -34,9 +35,9 @@ public class MavenDependencyParser {
 		try {
 			parseDependency(new Pom(pomFile, true), set, null, m2);
 		} catch (SAXException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 		List<File> result = new ArrayList<File>(set.size());
 		for (Dependency d : set.values()) {

@@ -19,14 +19,15 @@ import java.util.StringTokenizer;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
+import com.google.common.base.Function;
+
 import jef.common.log.LogUtil;
 import jef.jre5support.ProcessUtil;
+import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.ClassEx;
-
-import com.google.common.base.Function;
 
 /**
  * 这个Bean封装了JDK的OperatingSystemMXBean,可以根据SUN JDK(及其兼容)，IBM JDK等 提供与JDK平台无关的扩展接口
@@ -120,7 +121,7 @@ public class OperatingSystemMXBean implements java.lang.management.OperatingSyst
 			propertyMap.put(Attribute.TotalPhysicalMemorySize, cw.getMethod("getTotalPhysicalMemorySize").getJavaMethod());
 			propertyMap.put(Attribute.TotalSwapSpaceSize, cw.getMethod("getTotalSwapSpaceSize").getJavaMethod());
 		} catch (NoSuchMethodException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 	}
 
@@ -128,7 +129,7 @@ public class OperatingSystemMXBean implements java.lang.management.OperatingSyst
 		try {
 			propertyMap.put(Attribute.TotalPhysicalMemorySize, cw.getMethod("getTotalPhysicalMemory").getJavaMethod());
 		} catch (NoSuchMethodException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 	}
 
@@ -392,7 +393,7 @@ public class OperatingSystemMXBean implements java.lang.management.OperatingSyst
 				return (1 - usage.floatValue() / 100);
 			}
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 			return -1.0;
 		} finally {
 			if (process != null)
@@ -428,7 +429,7 @@ public class OperatingSystemMXBean implements java.lang.management.OperatingSyst
 			}
 			return -1.0;
 		} catch (IOException ioe) {
-			LogUtil.exception(ioe);
+			Exceptions.log(ioe);
 			return -1.0;
 		} finally {
 			if (process != null)
@@ -513,7 +514,7 @@ public class OperatingSystemMXBean implements java.lang.management.OperatingSyst
 			retn[1] = kneltime + usertime;
 			return retn;
 		} catch (Exception ex) {
-			LogUtil.exception(ex);
+			Exceptions.log(ex);
 		} finally {
 			IOUtils.closeQuietly(proc.getErrorStream());
 		}

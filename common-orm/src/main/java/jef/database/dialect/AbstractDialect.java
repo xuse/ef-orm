@@ -70,6 +70,7 @@ import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.DateFormats;
 import jef.tools.DateUtils;
+import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
@@ -831,7 +832,7 @@ public abstract class AbstractDialect implements DatabaseDialect {
 		} catch (RuntimeException e) {
 			throw e;
 		} catch (Exception e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 			throw new IllegalArgumentException("the Dialect class can't be created:" + classname);
 		}
 	}

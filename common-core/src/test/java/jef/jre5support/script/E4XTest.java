@@ -21,14 +21,14 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 
-import jef.common.log.LogUtil;
-import jef.tools.ResourceUtils;
-
 import org.junit.Test;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.ContextAction;
 import org.mozilla.javascript.ContextFactory;
 import org.mozilla.javascript.tools.shell.Global;
+
+import jef.tools.Exceptions;
+import jef.tools.ResourceUtils;
 
 public class E4XTest {
 
@@ -55,7 +55,7 @@ public class E4XTest {
 				Object result = context.evaluateReader(global, reader, file.getName(), 1, null);
 				return Context.toString(result);
 			} catch (Exception e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 			return "!!!ERROR!!!";
 		}

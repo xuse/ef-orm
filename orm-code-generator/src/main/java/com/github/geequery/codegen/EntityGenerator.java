@@ -80,7 +80,6 @@ import jef.tools.Primitives;
 import jef.tools.StringUtils;
 import jef.tools.algorithm.LocalMappedSorter;
 import jef.tools.io.Charsets;
-import jef.tools.reflect.BeanUtils;
 
 /**
  * 从数据库表生成JEF的Entity类 指定数据库表，自动生成表对应的DataObject.
@@ -624,7 +623,7 @@ public class EntityGenerator {
 				try {
 					generateOne(tableName, null, table.getRemarks(), generateOptions);
 				} catch (SQLException e) {
-					LogUtil.exception(e);
+					Exceptions.log(e);
 				}
 				n++;
 			}

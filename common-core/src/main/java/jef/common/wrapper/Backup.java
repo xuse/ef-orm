@@ -18,7 +18,7 @@ package jef.common.wrapper;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 
-import jef.common.log.LogUtil;
+import jef.tools.Exceptions;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.CloneUtils;
 import jef.tools.reflect.FieldEx;
@@ -71,7 +71,7 @@ public class Backup<T> {
 					fields.put(f.getJavaField(), f.get(obj));
 				}
 			} catch (IllegalArgumentException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 		}
 	}
@@ -99,9 +99,9 @@ public class Backup<T> {
 			try {
 				f.set(obj, fields.get(f));
 			} catch (IllegalArgumentException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			} catch (IllegalAccessException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 		}
 	}

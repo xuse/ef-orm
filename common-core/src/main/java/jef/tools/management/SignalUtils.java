@@ -1,6 +1,7 @@
 package jef.tools.management;
 
 import jef.common.log.LogUtil;
+import jef.tools.Exceptions;
 import jef.tools.reflect.ClassUtils;
 
 /**
@@ -29,7 +30,7 @@ public class SignalUtils {
 				TERM=(TermHandler)clz.newInstance();
 				TERM.activate();
 			} catch (Exception e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 		}
 		return TERM;

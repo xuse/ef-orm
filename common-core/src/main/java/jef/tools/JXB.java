@@ -33,7 +33,6 @@ import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
 
 import jef.common.IntList;
-import jef.common.log.LogUtil;
 import jef.tools.reflect.BeanWrapperImpl;
 import jef.tools.reflect.ClassEx;
 
@@ -374,7 +373,7 @@ public class JXB {
 				Date d = DateUtils.parseDateTime(value);
 				bean.setPropertyValue(fieldName, d);
 			} catch (ParseException ex) {
-				LogUtil.exception(ex);
+				Exceptions.log(ex);
 			}
 		} else if (c.getWrappered() == Integer.class || "int".equals(c.getName())) {
 			bean.setPropertyValue(fieldName, StringUtils.toInt(value, 0));
@@ -538,7 +537,7 @@ public class JXB {
 			XMLUtils.saveDocument(doc, file, "UTF-8");
 			return true;
 		} catch (Exception e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 			return false;
 		}
 	}

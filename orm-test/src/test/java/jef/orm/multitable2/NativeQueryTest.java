@@ -67,6 +67,7 @@ import jef.orm.multitable2.model.Root;
 import jef.orm.multitable2.model.TreeTable;
 import jef.orm.onetable.model.Foo;
 import jef.script.javascript.Var;
+import jef.tools.Exceptions;
 import jef.tools.PageLimit;
 import jef.tools.string.RandomData;
 
@@ -98,7 +99,7 @@ public class NativeQueryTest extends org.junit.Assert {
 			createtable();
 			prepareData();
 		} catch (Exception e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 		JefFacade.getOrmConfig().setDebugMode(true);
 	}
@@ -783,7 +784,7 @@ public class NativeQueryTest extends org.junit.Assert {
 		try {
 			query.setParameter("orderBy", new SqlExpression("id1"));
 		} catch (Exception ex) {
-			LogUtil.exception(ex);
+			Exceptions.log(ex);
 		}
 
 		List<TextValuePair> result = query.getResultList();

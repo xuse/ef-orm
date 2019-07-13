@@ -31,6 +31,7 @@ import jef.database.innerpool.WrapableConnection;
 import jef.database.jdbc.result.ResultSetImpl;
 import jef.database.query.OutParam;
 import jef.database.wrapper.populator.Transformer;
+import jef.tools.Exceptions;
 
 /**
  * 存储过程调用对象
@@ -222,7 +223,7 @@ public class NativeCall {
 			try {
 				st.close();
 			} catch (SQLException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 			db.close();
 			st = null;
@@ -249,7 +250,7 @@ public class NativeCall {
 				try {
 					rs.close();
 				} catch (Exception e) {
-					LogUtil.exception(e);
+					Exceptions.log(e);
 				}
 			}
 		} else {//FIXME 非列表的场合没有返回值啊

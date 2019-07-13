@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import jef.common.log.LogUtil;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.ResourceUtils;
@@ -183,7 +184,7 @@ public class ClassLoaderUtil {
 					result.add(IOUtils.urlToFile(u));
 				}
 			} catch (IOException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 			fs = result.toArray(new File[result.size()]);
 		}
@@ -243,7 +244,7 @@ public class ClassLoaderUtil {
 			addURL.invoke(loader, new Object[] { url });
 			return true;
 		} catch (Exception e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 			return false;
 		}
 	}

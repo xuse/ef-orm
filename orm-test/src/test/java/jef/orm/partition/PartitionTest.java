@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import jef.common.log.LogUtil;
 import jef.database.Condition.Operator;
 import jef.database.DbClient;
@@ -29,10 +32,8 @@ import jef.database.test.IgnoreOn;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
 import jef.json.JsonUtil;
 import jef.tools.DateUtils;
+import jef.tools.Exceptions;
 import jef.tools.IOUtils;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * 这个测试案例描述各种单表操作的分表计算办法 1、目前实现的： 使用
@@ -111,7 +112,7 @@ public class PartitionTest extends org.junit.Assert {
 			// db.dropTable(p);
 			// db.createTable(p);
 		} catch (Exception e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 	}
 

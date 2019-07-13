@@ -20,10 +20,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-import jef.common.log.LogUtil;
-import jef.tools.StringUtils;
-
 import org.w3c.dom.Document;
+
+import jef.tools.Exceptions;
+import jef.tools.StringUtils;
 
 public class RssParser {
 	/**
@@ -45,7 +45,7 @@ public class RssParser {
 					return sd.parse(pDate);
 				}
 			} catch (ParseException e1) {
-				LogUtil.exception(e1);
+				Exceptions.log(e1);
 			}
 		}
 		return null;

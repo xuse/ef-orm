@@ -4,10 +4,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import jef.common.log.LogUtil;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import jef.tools.Exceptions;
 
 /**
  * 对注册进来的池进行定期释放的线程
@@ -66,7 +66,7 @@ public class ReleaseThread extends Thread {
 			try{
 				Thread.sleep(sleep);
 			}catch(InterruptedException e){
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 		}
 	}

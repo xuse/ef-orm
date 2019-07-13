@@ -6,11 +6,11 @@ import javax.persistence.PersistenceException;
 
 import org.omg.CORBA.SystemException;
 
-import jef.common.log.LogUtil;
 import jef.database.cache.CacheChain;
 import jef.database.cache.CacheImpl;
 import jef.database.innerpool.IConnection;
 import jef.database.support.TransactionTimedOutException;
+import jef.tools.Exceptions;
 
 public class TransactionImpl extends Transaction {
 	private boolean dirty;
@@ -54,7 +54,7 @@ public class TransactionImpl extends Transaction {
 			try {
 				conn.setReadOnly(flag);
 			} catch (SQLException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 	}
 
@@ -248,7 +248,7 @@ public class TransactionImpl extends Transaction {
 					conn.setReadOnly(false);
 				}
 			} catch (SQLException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 			DbUtils.closeConnection(conn);
 			conn = null;

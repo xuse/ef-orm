@@ -4,12 +4,12 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 
-import jef.common.log.LogUtil;
+import  org.apache.commons.lang3.StringUtils;
+
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 import jef.tools.TextFileCallback;
-
-import  org.apache.commons.lang3.StringUtils;
 
 
 //用于为每个Java文件处理顶部的声明的小工具
@@ -27,7 +27,7 @@ public class JavaTopCommentCallback extends TextFileCallback{
 			try {
 				comments=IOUtils.asString(f, null);
 			} catch (IOException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}	
 		}
 	}

@@ -11,6 +11,7 @@ import jef.database.innerpool.ConnectionAndMetadataProvider;
 import jef.database.innerpool.PartitionSupport;
 import jef.database.meta.ITableMetadata;
 import jef.database.routing.PartitionResult;
+import jef.tools.Exceptions;
 
 /**
  * 描述分表后的实际存在表的情况
@@ -73,7 +74,7 @@ public class PartitionMetadata implements PartitionSupport{
 					ps.add(p);
 				}
 			} catch (SQLException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 		} else {
 			for (String s : dbs) {
@@ -84,7 +85,7 @@ public class PartitionMetadata implements PartitionSupport{
 						ps.add(p);
 					}
 				} catch (SQLException e) {
-					LogUtil.exception(e);
+					Exceptions.log(e);
 				}
 			}
 		}

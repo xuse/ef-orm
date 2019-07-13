@@ -23,6 +23,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import jef.common.log.LogUtil;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 import jef.tools.StringUtils;
 import jef.tools.ThreadUtils;
 import jef.ui.ConsoleConversation;
@@ -203,7 +204,7 @@ public abstract class AbstractConsoleShell implements ConsoleShell {
 					str = "q";
 				return str;
 			} catch (IOException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 				return null;
 			}
 		}

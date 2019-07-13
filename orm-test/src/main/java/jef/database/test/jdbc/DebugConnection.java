@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
-import jef.common.log.LogUtil;
+import jef.tools.Exceptions;
 
 public class DebugConnection implements Connection {
 	private DebugDataSource parent;
@@ -231,7 +231,7 @@ public class DebugConnection implements Connection {
 		try {
 			return conn.isValid(i);
 		} catch (SQLException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 			return false;
 		}
 	}

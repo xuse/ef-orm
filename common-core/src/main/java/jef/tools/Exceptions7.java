@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
 
+import jef.common.log.LogUtil;
+
 /**
  * Java7兼容的异常处理类
  * 
@@ -16,6 +18,18 @@ import org.slf4j.helpers.MessageFormatter;
  */
 public class Exceptions7 {
 	protected static final Logger log = LoggerFactory.getLogger(Exceptions7.class);
+	
+	public static final class WrapException extends RuntimeException{
+		private static final long serialVersionUID = -9058355728108119655L;
+		WrapException(Throwable t){
+			super(t);
+		}
+		@Override
+		public synchronized Throwable fillInStackTrace() {
+			return this;
+		}
+		
+	}
 	
 	protected Exceptions7() {
 	}
@@ -29,7 +43,22 @@ public class Exceptions7 {
 	public static IllegalArgumentException asIllegalArgument(Throwable t) {
 		return illegalArgument(t, true);
 	}
-
+	
+	/**
+	 * 将异常转换为RuntimeException
+	 * @param t
+	 * @return
+	 */
+	public static RuntimeException toRuntime(Throwable t) {
+		if (t instanceof RuntimeException) {
+			return (RuntimeException) t;
+		} else if (t instanceof InvocationTargetException) {
+			return toRuntime(t.getCause());
+		}else {
+			return new WrapException(t);
+		}
+	}
+	
 	/**
 	 * 使用slf4j的机制来生成异常信息
 	 * 
@@ -148,4 +177,14 @@ public class Exceptions7 {
 		return f.getMessage();
 	}
 
+	/**
+	 * 记录异常日志
+	 * @param t
+	 */
+	public static void  log(Throwable e) {
+		if (e instanceof InvocationTargetException) {
+			e = e.getCause();
+		}
+		LogUtil.error("", e);
+	}
 }

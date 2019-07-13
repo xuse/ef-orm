@@ -18,10 +18,6 @@ package com.github.geequery.codegen;
 import java.io.File;
 import java.io.IOException;
 
-import jef.common.log.LogUtil;
-import jef.common.wrapper.Holder;
-import jef.tools.IOUtils;
-
 import  org.apache.commons.lang3.StringUtils;
 
 import com.github.javaparser.JavaParser;
@@ -32,6 +28,11 @@ import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
+
+import jef.common.log.LogUtil;
+import jef.common.wrapper.Holder;
+import jef.tools.Exceptions;
+import jef.tools.IOUtils;
 
 /**
  * 对指定源文件夹下的Java文件的包名进行替换。 将package定义替换，将import替换，将内部代码中对类的引用的全称替换。
@@ -79,11 +80,11 @@ public class PackageReplacer {
 				}
 			} catch (ParseException e) {
 				LogUtil.error("Analyzing " + java.getPath() + " error!");
-				LogUtil.exception(e);
+				Exceptions.log(e);
 				continue;
 			} catch (IOException e) {
 				LogUtil.error("Analyzing " + java.getPath() + " error!");
-				LogUtil.exception(e);
+				Exceptions.log(e);
 				continue;
 			}
 		}

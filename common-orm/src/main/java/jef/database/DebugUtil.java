@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jef.common.log.LogUtil;
 import jef.database.cache.Cache;
 import jef.database.innerpool.IConnection;
 import jef.database.innerpool.PartitionSupport;
@@ -19,6 +18,7 @@ import jef.database.meta.AbstractRefField;
 import jef.database.meta.Feature;
 import jef.database.meta.Reference;
 import jef.database.query.Query;
+import jef.tools.Exceptions;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BooleanProperty;
 import jef.tools.reflect.Property;
@@ -38,7 +38,7 @@ public class DebugUtil {
 				sqlState.setAccessible(true);
 			}
 		} catch (Throwable t) {
-			LogUtil.exception(t);
+			Exceptions.log(t);
 		}
 	}
 
@@ -61,7 +61,7 @@ public class DebugUtil {
 			try {
 				sqlState.set(e, sql);
 			} catch (Exception e1) {
-				LogUtil.exception(e1);
+				Exceptions.log(e1);
 			}
 		}
 	}

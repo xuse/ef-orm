@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Properties;
 
 import jef.common.log.LogUtil;
+import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 import jef.tools.management.OperatingSystemMXBean;
@@ -123,7 +124,7 @@ public class ProcessUtil {
 			try {
 				return StringUtils.join(net.getHardwareAddress(),'-');
 			} catch (SocketException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 				return null;
 			}
 		}
@@ -135,7 +136,7 @@ public class ProcessUtil {
 			try {
 				return net.getMTU();
 			} catch (SocketException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 				return 0;
 			}
 		}
@@ -172,7 +173,7 @@ public class ProcessUtil {
 		try{
 			nets=NetworkInterface.getNetworkInterfaces();
 		}catch(IOException e){
-			throw new RuntimeException(e);
+			throw Exceptions.asIllegalArgument(e);
 		}
 		List<NetworkInfo> n=new ArrayList<NetworkInfo>();
 		while(nets.hasMoreElements()){
@@ -183,7 +184,7 @@ public class ProcessUtil {
 					n.add(new NetworkInfo(t));
 				}	
 			}catch(IOException e){
-				LogUtil.exception("Error while getting network interface "+ t.getName(), e);
+				throw Exceptions.illegalState(e);
 			}
 		}	
 		return n.toArray(new NetworkInfo[n.size()]);
@@ -262,7 +263,7 @@ public class ProcessUtil {
 		try {
 			localIp = InetAddress.getLocalHost().getHostAddress();
 		} catch (UnknownHostException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 		return localIp;
 	}
@@ -313,7 +314,7 @@ public class ProcessUtil {
 				}
 			}
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		} finally {
 			if(process!=null){
 				process.destroy();
@@ -349,7 +350,7 @@ public class ProcessUtil {
 				}
 			}
 		} catch (IOException ex) {
-			LogUtil.exception(ex);
+			Exceptions.log(ex);
 		} finally {
 			if(process!=null)process.destroy();
 			IOUtils.closeQuietly(reader);

@@ -25,7 +25,7 @@ import java.util.List;
 import org.slf4j.LoggerFactory;
 
 import jef.codegen.EnhanceTaskASM;
-import jef.common.log.LogUtil;
+import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 import jef.tools.resource.ClasspathLoader;
@@ -59,7 +59,7 @@ public class JefClassLoader extends URLClassLoader {
 		try{
 			enhanced=task.doEnhance(IOUtils.toByteArray(u1), u2==null?null:IOUtils.toByteArray(u2));
 		} catch (Exception e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 			throw new ClassNotFoundException(name);
 		}
 		if(enhanced==null){
@@ -93,7 +93,7 @@ public class JefClassLoader extends URLClassLoader {
 				Thread.currentThread().setContextClassLoader(loader);
 				main.invoke(null, new Object[] { pargs });
 			} catch (Exception e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 		} else {
 			System.out.println("Usage: JefClassLoader main-class args...");

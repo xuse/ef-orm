@@ -17,6 +17,7 @@ package jef.ui;
 
 import jef.common.Callback;
 import jef.common.log.LogUtil;
+import jef.tools.Exceptions;
 import jef.tools.StringUtils;
 
 
@@ -103,7 +104,7 @@ public abstract class ConsoleConversation<T> extends Thread{
 			try {
 				callback.call(result);
 			} catch (Throwable e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 		}
 	}

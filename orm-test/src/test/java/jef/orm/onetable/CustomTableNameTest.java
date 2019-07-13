@@ -4,8 +4,9 @@ import java.sql.SQLException;
 import java.util.Date;
 import java.util.List;
 
-import jef.codegen.EntityEnhancer;
-import jef.common.log.LogUtil;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import jef.database.DbClient;
 import jef.database.QB;
 import jef.database.query.Query;
@@ -14,10 +15,7 @@ import jef.database.test.DataSourceContext;
 import jef.database.test.DatabaseInit;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
 import jef.orm.onetable.model.Foo;
-
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import jef.tools.Exceptions;
 
 /**
  * 自定义表名测试
@@ -51,7 +49,7 @@ public class CustomTableNameTest extends org.junit.Assert {
 			db.dropTable(MY_FOO_TABLE);
 			db.createTable(Foo.class, MY_FOO_TABLE,null);
 		} catch (Exception e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 	}
 

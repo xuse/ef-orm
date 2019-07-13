@@ -45,13 +45,13 @@ import java.util.Map;
 import javax.persistence.PersistenceException;
 import javax.sql.rowset.CachedRowSet;
 
-import jef.common.log.LogUtil;
 import jef.database.Condition;
 import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.Reference;
 import jef.database.wrapper.populator.ColumnDescription;
 import jef.database.wrapper.populator.ColumnMeta;
+import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 
@@ -77,7 +77,7 @@ public class ResultSetImpl implements IResultSet {
 		try {
 			rs.beforeFirst();
 		} catch (SQLException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 	}
 	
@@ -212,9 +212,9 @@ public class ResultSetImpl implements IResultSet {
 				}
 			}
 		} catch (SQLException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 		if (total == -1)
 			total = count;
@@ -239,7 +239,7 @@ public class ResultSetImpl implements IResultSet {
 					}
 				}
 			} catch (SQLException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 				total=-2;//不再计算
 			}
 		}

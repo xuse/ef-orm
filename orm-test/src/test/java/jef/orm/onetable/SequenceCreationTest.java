@@ -2,28 +2,23 @@ package jef.orm.onetable;
 
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.List;
 
-import jef.common.log.LogUtil;
-import jef.database.Condition.Operator;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import jef.database.DbClient;
-import jef.database.DbMetaData;
 import jef.database.IQueryableEntity;
-import jef.database.jdbc.result.ResultSets;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-import jef.database.meta.object.TableInfo;
 import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
 import jef.database.test.DatabaseInit;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
 import jef.orm.onetable.model.TestEntity;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 import jef.tools.ThreadUtils;
 import jef.tools.string.RandomData;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * 自动创建的序列的起始值取值问题(Trac #56111)单元测试类
@@ -51,7 +46,7 @@ public class SequenceCreationTest extends org.junit.Assert{
 			db.createTable(TestEntity.class);
 			ThreadUtils.doSleep(500);
 		} catch (SQLException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 	}
 

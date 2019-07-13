@@ -8,17 +8,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 
-import jef.common.log.LogUtil;
-import jef.tools.string.StringSpliterEx;
-import jef.tools.string.Substring;
-import jef.tools.string.SubstringIterator;
-
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import jef.common.log.LogUtil;
+import jef.tools.string.StringSpliterEx;
+import jef.tools.string.Substring;
+import jef.tools.string.SubstringIterator;
 
 /**
  * 自行实现的Xpath计算
@@ -512,7 +512,7 @@ public class SimpleXPath {
 				LogUtil.show("Xpath error, dump file is:" + file.getAbsolutePath());
 				IOUtils.closeQuietly(out);
 			} catch (Exception e1) {
-				LogUtil.exception(e1);
+				Exceptions.log(e1);
 			}
 			throw new IllegalArgumentException(e);
 		}

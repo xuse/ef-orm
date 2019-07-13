@@ -12,8 +12,8 @@ import com.github.geequery.codegen.ast.IClass.GenericClass;
 import com.github.geequery.codegen.ast.IClass.RealClass;
 import com.github.geequery.codegen.ast.IClass.VirtualClass;
 
-import jef.common.log.LogUtil;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 import jef.tools.StringUtils;
 import jef.tools.reflect.GenericUtils;
 import jef.tools.string.JefStringReader;
@@ -118,7 +118,7 @@ public class IClassUtil {
 						types.add(parse(clz));
 					}
 				} catch (IOException e) {
-					LogUtil.exception(e);
+					Exceptions.log(e);
 				}
 			}
 			return new GenericClass(raw, types.toArray(new IClass[types.size()]));

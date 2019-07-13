@@ -4,6 +4,9 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import jef.common.log.LogUtil;
 import jef.database.DbClient;
 import jef.database.NativeQuery;
@@ -21,10 +24,8 @@ import jef.database.test.JefJUnit4DatabaseTestRunner;
 import jef.orm.onetable.model.Foo;
 import jef.orm.onetable.model.TestEntity;
 import jef.script.javascript.Var;
+import jef.tools.Exceptions;
 import jef.tools.string.RandomData;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * 测试一些复杂的场景下的行为
@@ -52,7 +53,7 @@ public class ComplexQuerysTest {
 			db.dropTable(TestEntity.class, Foo.class);
 			db.createTable(TestEntity.class, Foo.class);
 		} catch (Exception e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 	}
 

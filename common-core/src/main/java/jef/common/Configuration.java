@@ -26,6 +26,7 @@ import java.util.Map.Entry;
 
 import jef.common.log.LogUtil;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 import jef.tools.ResourceUtils;
 import jef.tools.io.Charsets;
@@ -107,7 +108,7 @@ public class Configuration extends Cfg {
 		try {
 			return pFile.loadAsProperties();
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 			return Collections.emptyMap();
 		}
 	}
@@ -169,7 +170,7 @@ public class Configuration extends Cfg {
 			properties.put(key, value);
 			IOUtils.storeProperties(pFile.getWriter(), properties, true);
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 	}
 	
@@ -191,7 +192,7 @@ public class Configuration extends Cfg {
 			}
 			IOUtils.storeProperties(pFile.getWriter(), properties, true);
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 	}
 
@@ -213,7 +214,7 @@ public class Configuration extends Cfg {
 				cache.put(key, value);//取过一次就存下来
 			}
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 		return (String) cache.get(key);
 	}

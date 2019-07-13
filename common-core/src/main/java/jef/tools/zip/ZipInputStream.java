@@ -31,7 +31,7 @@ import java.util.zip.Inflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 
-import jef.common.log.LogUtil;
+import jef.tools.Exceptions;
 
 /**
  * This class implements an input stream filter for reading files in the ZIP
@@ -300,7 +300,7 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
 				e = createZipEntry(new String(b, 0, len, this.encoding));
 			;
 		} catch (Exception byteE) {
-			LogUtil.exception(byteE);
+			Exceptions.log(byteE);
 			e = createZipEntry(getUTF8String(b, 0, len));
 		}
 		// now get the remaining fields for the entry

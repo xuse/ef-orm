@@ -19,7 +19,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
 
-import jef.common.log.LogUtil;
+import jef.tools.Exceptions;
 
 public abstract class AbstractJDBCConnection implements Connection {
 	protected final Connection conn;
@@ -220,7 +220,7 @@ public abstract class AbstractJDBCConnection implements Connection {
 		try {
 			return conn.isValid(i);
 		} catch (SQLException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 			return false;
 		}
 	}

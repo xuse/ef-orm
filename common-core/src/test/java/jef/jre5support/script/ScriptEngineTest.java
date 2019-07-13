@@ -28,10 +28,11 @@ import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
-import jef.common.log.LogUtil;
-
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import jef.common.log.LogUtil;
+import jef.tools.Exceptions;
 
 /**
  *  9个例子掌握脚本引擎的用法
@@ -47,7 +48,7 @@ public class ScriptEngineTest {
 		try{
 			engine =JavaScriptUtil.newEngine();
 		} catch (Exception e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 	}
 

@@ -8,9 +8,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import jef.common.log.LogUtil;
-import jef.tools.IOUtils;
-
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.CompilationUnit;
@@ -20,6 +17,10 @@ import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.ModifierSet;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.comments.Comment;
+
+import jef.common.log.LogUtil;
+import jef.tools.Exceptions;
+import jef.tools.IOUtils;
 
 public class Test1 {
 	public static void main(String[] args) {
@@ -71,9 +72,9 @@ public class Test1 {
 				IOUtils.close(in);
 			}
 		} catch (ParseException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 		return result;
 	}
@@ -105,7 +106,7 @@ public class Test1 {
 			try {
 				return java.toURI().toURL();
 			} catch (MalformedURLException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 				return null;
 			}
 		return null;

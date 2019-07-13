@@ -69,6 +69,7 @@ import jef.database.routing.function.RawFunc;
 import jef.database.support.EntityNotEnhancedException;
 import jef.database.support.QuerableEntityScanner;
 import jef.tools.ArrayUtils;
+import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
@@ -527,9 +528,9 @@ public abstract class AbstractEntityMetadata extends AbstractMetadata {
 				IOUtils.closeQuietly(in);
 			}
 		} catch (ParseException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 		return result;
 	}
@@ -567,7 +568,7 @@ public abstract class AbstractEntityMetadata extends AbstractMetadata {
 			try {
 				return java.toURI().toURL();
 			} catch (MalformedURLException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 				return null;
 			}
 		return null;

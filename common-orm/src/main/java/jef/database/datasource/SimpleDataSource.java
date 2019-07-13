@@ -9,9 +9,9 @@ import javax.sql.DataSource;
 
 import org.springframework.jdbc.datasource.AbstractDriverBasedDataSource;
 
-import jef.common.log.LogUtil;
 import jef.database.dialect.AbstractDialect;
 import jef.database.dialect.DatabaseDialect;
+import jef.tools.Exceptions;
 import jef.tools.StringUtils;
 
 /**
@@ -127,7 +127,7 @@ public final class SimpleDataSource extends AbstractDriverBasedDataSource implem
 		try {
 			Class.forName(driverClass);
 		} catch (ClassNotFoundException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 	}
 

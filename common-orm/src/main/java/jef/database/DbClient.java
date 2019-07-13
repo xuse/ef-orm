@@ -59,6 +59,7 @@ import jef.database.support.DbOperatorListenerContainer;
 import jef.database.support.DefaultDbOperListener;
 import jef.database.support.MetadataEventListener;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
@@ -365,7 +366,7 @@ public class DbClient extends Session implements SessionFactory,MetaProvider {
 						}
 					}
 				} catch (Exception e) {
-					LogUtil.exception(e);
+					Exceptions.log(e);
 				}
 			}
 			DbMetaData meta = session.getMetaData(key);
@@ -754,7 +755,7 @@ public class DbClient extends Session implements SessionFactory,MetaProvider {
 		try {
 			this.getListener().onDbClientClose();
 		} catch (Exception e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 		this.sequenceManager.close();
 		if (connPool != null) {
@@ -838,7 +839,7 @@ public class DbClient extends Session implements SessionFactory,MetaProvider {
 				try {
 					listener = (DbOperatorListener) BeanUtils.newInstance(Class.forName(clz));
 				} catch (ClassNotFoundException e) {
-					LogUtil.exception(e);
+					Exceptions.log(e);
 				}
 			}
 			if (listener == null) {
@@ -892,7 +893,7 @@ public class DbClient extends Session implements SessionFactory,MetaProvider {
 			}
 		}
 		for (Exception e : errors) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 		if (!errors.isEmpty()) {
 			throw new PersistenceException(DbUtils.wrapExceptions(errors));
@@ -936,7 +937,7 @@ public class DbClient extends Session implements SessionFactory,MetaProvider {
 			}
 		}
 		for (Exception e : errors) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 		if (!errors.isEmpty()) {
 			throw DbUtils.wrapExceptions(errors);

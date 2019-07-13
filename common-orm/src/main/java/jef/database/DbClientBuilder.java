@@ -41,6 +41,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.MetaHolder;
 import jef.database.support.DbInitHandler;
 import jef.database.support.QuerableEntityScanner;
+import jef.tools.Exceptions;
 import jef.tools.JefConfiguration;
 
 /**
@@ -588,7 +589,7 @@ public class DbClientBuilder {
 					}
 				}
 			} catch (SQLException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 
 		}
@@ -618,7 +619,7 @@ public class DbClientBuilder {
 				MetaHolder.initMetadata(client, table);
 				LogUtil.show("DynamicEntity: [" + table + "] registed.");
 			} catch (SQLException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 		}
 	}
@@ -666,11 +667,6 @@ public class DbClientBuilder {
 	 */
 	public DbClientBuilder setGlobalCacheLiveTime(int second) {
 		ORMConfig.getInstance().setCacheLevel2(second);
-		return this;
-	}
-
-	public DbClientBuilder setUseSystemOut(boolean flag) {
-		LogUtil.useSlf4j = !flag;
 		return this;
 	}
 

@@ -42,6 +42,7 @@ import jef.database.wrapper.clause.InMemoryPaging;
 import jef.database.wrapper.clause.InMemoryProcessor;
 import jef.database.wrapper.clause.InMemoryStartWithConnectBy;
 import jef.database.wrapper.populator.ColumnMeta;
+import jef.tools.Exceptions;
 
 /**
  * 查询时记录的结果集
@@ -112,7 +113,7 @@ public final class ResultSetContainer extends AbstractResultSet implements IResu
 			}
 			return n;
 		} catch (SQLException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 			return false;
 		}
 
@@ -175,7 +176,7 @@ public final class ResultSetContainer extends AbstractResultSet implements IResu
 				return;
 			} catch (SQLException e) {
 				// 缓存失败
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 		}
 	}
@@ -205,7 +206,7 @@ public final class ResultSetContainer extends AbstractResultSet implements IResu
 				return;
 			} catch (SQLException e) {
 				// 缓存失败
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 		}
 		// rsh.rs = rs;

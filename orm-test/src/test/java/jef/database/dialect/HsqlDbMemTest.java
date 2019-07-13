@@ -10,7 +10,6 @@ import java.util.List;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import jef.common.log.LogUtil;
 import jef.database.DbCfg;
 import jef.database.DbClient;
 import jef.database.DbUtils;
@@ -20,6 +19,7 @@ import jef.database.test.DataSourceContext;
 import jef.database.test.DatabaseInit;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
 import jef.orm.onetable.model.TestEntity;
+import jef.tools.Exceptions;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.string.RandomData;
@@ -47,7 +47,7 @@ public class HsqlDbMemTest extends org.junit.Assert {
 			createSchema("ad");
 			createTable();
 		} catch (Exception e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 	}
 

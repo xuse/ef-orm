@@ -18,6 +18,7 @@ import jef.database.Condition.Operator;
 import jef.database.query.Query;
 import jef.database.support.RDBMS;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 import jef.tools.PageLimit;
 import jef.tools.ResourceUtils;
@@ -117,7 +118,7 @@ final class NamedQueryHolder {
 						put0(namedQueries, qc, type, "database");
 					}
 				} catch (SQLException ex) {
-					LogUtil.exception(ex);
+					Exceptions.log(ex);
 				}
 			} else { // 单刷
 				NamedQueryConfig config = e.config;
@@ -130,7 +131,7 @@ final class NamedQueryHolder {
 							put0(namedQueries, q, type, "database");
 						}
 					} catch (SQLException e1) {
-						LogUtil.exception(e1);
+						Exceptions.log(e1);
 					}
 				}
 			}
@@ -196,7 +197,7 @@ final class NamedQueryHolder {
 					put0(result, qc, type, "database");
 				}
 			} catch (SQLException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 		}
 		this.namedQueries = result;
@@ -225,9 +226,9 @@ final class NamedQueryHolder {
 				put0(result, nq, dialect, url.toString());
 			}
 		} catch (SAXException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 	}
 }

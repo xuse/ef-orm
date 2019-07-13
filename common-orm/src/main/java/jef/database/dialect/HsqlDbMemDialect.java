@@ -9,7 +9,6 @@ import java.util.List;
 import com.querydsl.sql.HSQLDBTemplates;
 import com.querydsl.sql.SQLTemplates;
 
-import jef.common.log.LogUtil;
 import jef.database.ConnectInfo;
 import jef.database.DbCfg;
 import jef.database.DbMetaData;
@@ -37,6 +36,7 @@ import jef.database.query.function.StandardSQLFunction;
 import jef.database.query.function.TemplateFunction;
 import jef.database.support.RDBMS;
 import jef.database.wrapper.populator.AbstractResultSetTransformer;
+import jef.tools.Exceptions;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
@@ -382,7 +382,7 @@ public class HsqlDbMemDialect extends AbstractDialect {
 			}, Arrays.asList(schema,seqName), false);
 		} catch (SQLException e) {
 			DebugUtil.setSqlState(e, sql);
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 		return null;
 	}

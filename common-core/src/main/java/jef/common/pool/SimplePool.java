@@ -6,8 +6,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import jef.common.log.LogUtil;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 
 
 /**
@@ -93,7 +93,7 @@ public class SimplePool<T> implements ObjectPool<T>, Releasable {
 				try {
 					factory.release(conn);
 				} catch (Exception e) {
-					LogUtil.exception(e);
+					Exceptions.log(e);
 				}
 			}
 		}

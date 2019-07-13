@@ -42,6 +42,7 @@ import jef.database.wrapper.clause.UpdateClause;
 import jef.database.wrapper.variable.BindVariableContext;
 import jef.database.wrapper.variable.Variable;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 import jef.tools.StringUtils;
 
 /**
@@ -415,7 +416,7 @@ public abstract class Batch<T> {
 				try {
 					listener.beforeInseret(t, parent);
 				} catch (Exception e) {
-					LogUtil.exception(e);
+					Exceptions.log(e);
 				}
 			}
 		}
@@ -432,7 +433,7 @@ public abstract class Batch<T> {
 					try {
 						listener.afterInsert(t, parent);
 					} catch (Exception e) {
-						LogUtil.exception(e);
+						Exceptions.log(e);
 					}
 				}
 			} else {
@@ -441,7 +442,7 @@ public abstract class Batch<T> {
 						cache.onInsert(t, forceTableName);
 						listener.afterInsert(t, parent);
 					} catch (Exception e) {
-						LogUtil.exception(e);
+						Exceptions.log(e);
 					}
 					Entities.clearUpdate(t);
 				}

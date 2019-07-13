@@ -2,6 +2,7 @@ package jef.tools.management;
 
 import jef.common.Callback;
 import jef.common.log.LogUtil;
+import jef.tools.Exceptions;
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
 
@@ -17,7 +18,7 @@ abstract class AbstractSunJdkSignalHandler extends SignalEvents implements Signa
 			try {
 				c.call(arg0.getNumber());
 			} catch (Exception e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 		}
 		processAfter();
@@ -32,7 +33,7 @@ abstract class AbstractSunJdkSignalHandler extends SignalEvents implements Signa
 			Signal.handle(sig, this);
 			LogUtil.info("Registe {} signal success!", signalName);
 		} catch (Throwable t) {
-			LogUtil.exception("Registe " + signalName + " Signal error!", t);
+			Exceptions.illegalState("Registe " + signalName + " Signal error!", t);
 		}
 	}
 }

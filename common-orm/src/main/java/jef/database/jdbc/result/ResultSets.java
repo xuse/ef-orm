@@ -31,6 +31,7 @@ import jef.common.log.LogUtil;
 import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.wrapper.populator.ColumnDescription;
+import jef.tools.Exceptions;
 import jef.tools.JefConfiguration;
 import jef.tools.StringUtils;
 
@@ -99,7 +100,7 @@ public class ResultSets {
 			try {
 				rs.close();
 			} catch (SQLException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 		}
 	}

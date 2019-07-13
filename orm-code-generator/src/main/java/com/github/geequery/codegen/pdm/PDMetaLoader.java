@@ -31,20 +31,22 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 
+import org.xml.sax.Attributes;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
+
 import com.github.geequery.codegen.pdm.model.MetaColumn;
 import com.github.geequery.codegen.pdm.model.MetaKey;
 import com.github.geequery.codegen.pdm.model.MetaModel;
 import com.github.geequery.codegen.pdm.model.MetaReference;
 import com.github.geequery.codegen.pdm.model.MetaTable;
+
 import jef.common.JefException;
 import jef.common.log.LogUtil;
+import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 import jef.tools.XMLUtils.XmlFixedReader;
-
-import org.xml.sax.Attributes;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-import org.xml.sax.helpers.DefaultHandler;
 
 public class PDMetaLoader implements IMetaLoader {
 
@@ -239,7 +241,7 @@ public class PDMetaLoader implements IMetaLoader {
 					PDMTable pdmTable = (PDMTable) aIdResources.get(crntTableId);
 					retVal.addTable(pdmTable.createMetaTable(aIdResources));
 				} catch (Exception e) {
-					LogUtil.exception(e);
+					Exceptions.log(e);
 					LogUtil.error("Can't create MetaTable from id: " + crntTableId + ". " + e.getMessage());
 					throw new SAXException("PDML: " + e.getMessage());
 				}

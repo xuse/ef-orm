@@ -33,6 +33,7 @@ import jef.database.meta.object.Column;
 import jef.database.wrapper.executor.StatementExecutor;
 import jef.tools.ArrayUtils;
 import jef.tools.ClassScanner;
+import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 import jef.tools.resource.IResource;
@@ -165,7 +166,7 @@ public class QuerableEntityScanner {
 					}
 				}
 			} catch (IOException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 		}
 	}
@@ -295,7 +296,7 @@ public class QuerableEntityScanner {
 				}
 			}
 		} catch (Exception e) {
-			LogUtil.error("EntityScanner:[Failure]" + LogUtil.exceptionStack(e));
+			LogUtil.error("EntityScanner:[Failure]" ,e);
 		}
 	}
 

@@ -11,10 +11,10 @@ import java.util.List;
 
 import  org.apache.commons.lang3.builder.ToStringBuilder;
 
-import jef.common.log.LogUtil;
 import jef.database.DbUtils;
 import jef.database.meta.object.Case;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 
 public class MetadataFeature {
 	/**
@@ -126,7 +126,7 @@ public class MetadataFeature {
 				return 2;
 			return 1;
 		} catch (Exception e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 		return -1;
 	}
@@ -136,7 +136,7 @@ public class MetadataFeature {
 			Statement st = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
 			DbUtils.close(st);
 		} catch (SQLException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		} catch (AbstractMethodError e) {
 			return false;
 		}

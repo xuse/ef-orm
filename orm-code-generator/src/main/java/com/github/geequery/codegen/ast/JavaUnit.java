@@ -38,8 +38,8 @@ import com.github.geequery.codegen.util.GenUtil;
 
 import jef.codegen.support.NotModified;
 import jef.codegen.support.OverWrittenMode;
-import jef.common.log.LogUtil;
 import jef.tools.ArrayUtils;
+import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 import jef.tools.reflect.BeanUtils;
@@ -838,7 +838,7 @@ public class JavaUnit extends DefaultJavaElement{
 		try {
 			this.writeTo(bw);
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 		return sw.toString();
 	}

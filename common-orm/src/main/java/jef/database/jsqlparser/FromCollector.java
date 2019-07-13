@@ -23,6 +23,7 @@ import jef.database.jsqlparser.visitor.FromItem;
 import jef.database.jsqlparser.visitor.SelectItemVisitor;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
+import jef.tools.Exceptions;
 
 public final class FromCollector implements SelectItemVisitor {
 	// 转换缓存
@@ -101,7 +102,7 @@ public final class FromCollector implements SelectItemVisitor {
 			FromItem item = p.FromItem();
 			item.accept(this);
 		} catch (ParseException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 	}
 

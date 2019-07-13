@@ -1210,7 +1210,7 @@ public class DbMetaData {
 			return fks;
 		} catch (RuntimeException e) {
 			// JDBC驱动会抛出不当的错误。
-			LogUtil.exception(e);
+			Exceptions.log(e);
 			return Collections.emptyList();
 		} finally {
 			DbUtils.close(rs);
@@ -2006,7 +2006,7 @@ public class DbMetaData {
 				exe.executeSql(sb.toString());
 			}
 		} catch (IOException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		} finally {
 			exe.close();
 		}

@@ -8,10 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import jef.common.log.LogUtil;
-import jef.tools.ArrayUtils;
-import jef.tools.IOUtils;
-
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;
 import com.github.javaparser.ast.CompilationUnit;
@@ -27,6 +23,11 @@ import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.PrimitiveType;
+
+import jef.common.log.LogUtil;
+import jef.tools.ArrayUtils;
+import jef.tools.Exceptions;
+import jef.tools.IOUtils;
 
 /**
  * 将一个非JEF的POJO快速转化为JEF的Entity
@@ -72,10 +73,10 @@ public class EntityCastor {
 			}
 		} catch (ParseException e) {
 			LogUtil.error("Analyzing " + java.getPath() + " error!");
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		} catch (IOException e) {
 			LogUtil.error("Analyzing " + java.getPath() + " error!");
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 		return false;
 	}

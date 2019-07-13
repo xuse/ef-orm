@@ -2,8 +2,10 @@ package jef.orm.exists;
 
 import java.util.List;
 
-import jef.codegen.EntityEnhancer;
-import jef.common.log.LogUtil;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import jef.database.DbClient;
 import jef.database.IConditionField.Exists;
 import jef.database.IConditionField.NotExists;
@@ -16,10 +18,7 @@ import jef.database.test.DatabaseInit;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
 import jef.orm.exists.model.TableA;
 import jef.orm.exists.model.TableB;
-
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import jef.tools.Exceptions;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({
@@ -55,7 +54,7 @@ public class ExistsTest extends org.junit.Assert{
 			b=new TableB(4);
 			db.insert(b);
 		} catch (Exception e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 	}
 

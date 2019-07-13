@@ -17,11 +17,12 @@ import jef.database.DbUtils;
 import jef.database.DebugUtil;
 import jef.database.ORMConfig;
 import jef.database.dialect.DatabaseDialect;
-import jef.database.innerpool.IConnection;
 import jef.database.innerpool.ConnectionAndMetadataProvider;
+import jef.database.innerpool.IConnection;
 import jef.database.jdbc.result.CloseableResultSet;
 import jef.database.support.SqlLog;
 import jef.database.wrapper.variable.BindVariableContext;
+import jef.tools.Exceptions;
 import jef.tools.StringUtils;
 import jef.tools.ThreadUtils;
 
@@ -103,7 +104,7 @@ public class ExecutorJTAImpl implements Runnable, StatementExecutor {
 				}
 			}
 		} catch (Throwable e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 	}
 
@@ -135,7 +136,7 @@ public class ExecutorJTAImpl implements Runnable, StatementExecutor {
 					doSql(st, txId, sql);
 				}
 			} catch (InterruptedException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}finally{
 				if(cl!=null){
 					cl.countDown();

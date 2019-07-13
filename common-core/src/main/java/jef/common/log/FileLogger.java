@@ -25,6 +25,7 @@ import java.util.Date;
 import jef.common.MessageCollector;
 import jef.tools.DateFormats;
 import jef.tools.DateUtils;
+import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.JefConfiguration.Item;
@@ -95,7 +96,7 @@ public class FileLogger extends AbstractLogger {
 				this.file=changeFile();
 			}
 		}catch(Exception e){
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 		
 		
@@ -156,7 +157,7 @@ public class FileLogger extends AbstractLogger {
 			}
 			out.close();
 		}catch(Exception e){
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 	}
 	

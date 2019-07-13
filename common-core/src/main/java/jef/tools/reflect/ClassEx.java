@@ -35,8 +35,8 @@ import javax.management.ReflectionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jef.common.log.LogUtil;
 import jef.tools.Assert;
+import jef.tools.Exceptions;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionRefelect;
 import jef.tools.reflect.BeanUtils.SearchMode;
@@ -265,9 +265,9 @@ public class ClassEx {
 			try {
 				return cls.getSuperclass().getMethod(method.getName(), method.getParameterTypes());
 			} catch (SecurityException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			} catch (NoSuchMethodException e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 		}
 		return method;
@@ -533,9 +533,9 @@ public class ClassEx {
 			Method method = cls.getMethod(name, paramTypes);
 			return new MethodEx(method, this);
 		} catch (SecurityException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		} catch (NoSuchMethodException e) {
-			LogUtil.exception(e);
+			Exceptions.log(e);
 		}
 		return null;
 	}

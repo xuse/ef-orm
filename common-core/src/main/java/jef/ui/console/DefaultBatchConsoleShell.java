@@ -18,10 +18,10 @@ package jef.ui.console;
 import java.util.ArrayList;
 import java.util.List;
 
-import jef.common.log.LogUtil;
-import jef.ui.ConsoleShell;
-
 import  org.apache.commons.lang3.ArrayUtils;
+
+import jef.tools.Exceptions;
+import jef.ui.ConsoleShell;
 
 public abstract class DefaultBatchConsoleShell extends AbstractConsoleShell {
 	public DefaultBatchConsoleShell(ConsoleShell parent) {
@@ -41,7 +41,7 @@ public abstract class DefaultBatchConsoleShell extends AbstractConsoleShell {
 				executeEnd(commandPool.toArray(ArrayUtils.EMPTY_STRING_ARRAY),str);
 				commandPool.clear();
 			} catch (Throwable e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 			if (isMultiBatch())
 				return ShellResult.CONTINUE;

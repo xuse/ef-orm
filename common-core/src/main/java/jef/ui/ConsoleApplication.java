@@ -15,14 +15,10 @@
  */
 package jef.ui;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
 import jef.common.Configuration;
 import jef.common.Configuration.ConfigItem;
 import jef.common.log.LogUtil;
-import jef.tools.StringUtils;
+import jef.tools.Exceptions;
 import jef.tools.ThreadUtils;
 import jef.ui.console.AbstractConsoleShell;
 import jef.ui.console.ShellResult;
@@ -48,7 +44,7 @@ public abstract class ConsoleApplication extends AbstractConsoleShell{
 		try {
 			initApplication(args);
 		} catch (Exception e1) {
-			LogUtil.exception(e1);
+			Exceptions.log(e1);
 			return;
 		}
 		System.out.print(getPrompt());
@@ -71,7 +67,7 @@ public abstract class ConsoleApplication extends AbstractConsoleShell{
 		try {
 			closeApplication();
 		} catch (Exception e1) {
-			LogUtil.exception(e1);
+			Exceptions.log(e1);
 		}
 	}
 	
@@ -105,7 +101,7 @@ public abstract class ConsoleApplication extends AbstractConsoleShell{
 			try {
 				result=performMyCommand(str,source);
 			} catch (Exception e) {
-				LogUtil.exception(e);
+				Exceptions.log(e);
 			}
 		}
 		return result;

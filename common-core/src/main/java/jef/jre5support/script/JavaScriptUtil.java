@@ -21,15 +21,6 @@ import javax.script.Bindings;
 import javax.script.ScriptEngine;
 import javax.script.ScriptException;
 
-import jef.common.log.LogUtil;
-import jef.script.javascript.RhinoScriptEngineFactory;
-import jef.tools.ArrayUtils;
-import jef.tools.IOUtils;
-import jef.tools.StringUtils;
-import jef.tools.XMLUtils;
-import jef.tools.ZipUtils;
-
-import  org.apache.commons.lang3.ObjectUtils;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Decompiler;
 import org.mozilla.javascript.NativeArray;
@@ -40,6 +31,15 @@ import org.mozilla.javascript.UintMap;
 import org.mozilla.javascript.Undefined;
 import org.mozilla.javascript.UniqueTag;
 import org.mozilla.javascript.Wrapper;
+
+import jef.common.log.LogUtil;
+import jef.script.javascript.RhinoScriptEngineFactory;
+import jef.tools.ArrayUtils;
+import jef.tools.Exceptions;
+import jef.tools.IOUtils;
+import jef.tools.StringUtils;
+import jef.tools.XMLUtils;
+import jef.tools.ZipUtils;
 
 public class JavaScriptUtil {
 	private static RhinoScriptEngineFactory fac = new RhinoScriptEngineFactory();
@@ -72,7 +72,7 @@ public class JavaScriptUtil {
 				e.eval(printSource);
 			}
 		} catch (ScriptException ex) {
-			LogUtil.exception(ex);
+			Exceptions.log(ex);
 		}
 	}
 
