@@ -183,7 +183,7 @@ public final class CollectionsX extends CollectionUtils {
 	 * @param filter     过滤器
 	 * @return
 	 */
-	public static <T> List<T> filter(Collection<T> collection, Predicate<T> filter) {
+	public static <T> List<T> filterx(Collection<T> collection, Predicate<T> filter) {
 		List<T> list = new ArrayList<T>();
 		if (collection == null || collection.isEmpty())
 			return list;

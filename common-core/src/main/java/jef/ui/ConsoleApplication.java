@@ -57,10 +57,8 @@ public abstract class ConsoleApplication extends AbstractConsoleShell{
 		while (keepgoing) {
 			ThreadUtils.doWait(lock); //waiting for cmd
 			if(cmd!=null){
-//				if(debug)System.out.println("为命令"+cmd+"加锁");
 				lock.lock();
 				ShellResult result=perform(cmd, true);
-//				if(debug)System.out.println("为命令"+cmd+"解锁");
 				cmd=null;
 				lock.unlock();
 				if(result.needProcess()){

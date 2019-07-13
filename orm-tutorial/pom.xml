@@ -66,12 +66,12 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-orm</artifactId>
-			<version>3.2.5.RELEASE</version>
+			<version>4.3.2.RELEASE</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-test</artifactId>
-			<version>3.2.5.RELEASE</version>
+			<version>4.3.2.RELEASE</version>
 		</dependency>
 		<dependency>
 			<groupId>com.hynnet</groupId>

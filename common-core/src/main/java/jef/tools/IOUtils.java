@@ -97,7 +97,7 @@ public class IOUtils {
 			try {
 				input.close();
 			} catch (IOException e) {
-				log.error("IO error",e);
+				log.error("IO error", e);
 			}
 		}
 	}
@@ -265,12 +265,13 @@ public class IOUtils {
 		try {
 
 			if (sectionSupport) {
-				Multimap<String, Map.Entry<String, String>> sections = CollectionUtils.bucket(map.entrySet(), new Function<Map.Entry<String, String>, String>() {
-					public String apply(Entry<String, String> input) {
-						int sectionLen = input.getKey().indexOf('|');
-						return sectionLen == -1 ? "" : input.getKey().substring(0, sectionLen);
-					}
-				});
+				Multimap<String, Map.Entry<String, String>> sections = CollectionUtils.bucket(map.entrySet(),
+						new Function<Map.Entry<String, String>, String>() {
+							public String apply(Entry<String, String> input) {
+								int sectionLen = input.getKey().indexOf('|');
+								return sectionLen == -1 ? "" : input.getKey().substring(0, sectionLen);
+							}
+						});
 				boolean hasNoSecLine = false;
 				for (Map.Entry<String, String> entry : sections.removeAll("")) {
 					writer.write(saveConvert(entry.getKey(), true, saveConvert));
@@ -303,7 +304,7 @@ public class IOUtils {
 			}
 			writer.flush();
 		} catch (IOException ex) {
-			log.error("error",ex);
+			log.error("error", ex);
 		} finally {
 			if (closeWriter)
 				closeQuietly(writer);
@@ -820,9 +821,12 @@ public class IOUtils {
 
 	public static String[] readLine(URL inName, Charset charset, LineFilter filter) throws IOException {
 		if (inName == null) {
-			return new String[0];
+			return ArrayUtils.EMPTY_STRING_ARRAY;
 		}
-		BufferedReader is = getReader(inName, charset);
+		return readLine0(getReader(inName, charset), filter);
+	}
+
+	private static String[] readLine0(BufferedReader is, LineFilter filter) throws IOException {
 		try {
 			String line = null;
 			List<String> result = new ArrayList<String>();
@@ -842,7 +846,6 @@ public class IOUtils {
 		} finally {
 			is.close();
 		}
-
 	}
 
 	/**
@@ -855,6 +858,10 @@ public class IOUtils {
 	 */
 	public static String[] readLine(URL inName, String charset, LineFilter filter) throws IOException {
 		return readLine(inName, Charsets.forName(charset), filter);
+	}
+
+	public static String[] readLine(File inName, String charset, LineFilter filter) throws IOException {
+		return readLine0(getReader(inName, charset), filter);
 	}
 
 	/**
@@ -1605,7 +1612,7 @@ public class IOUtils {
 			fc1.close();
 			return nth - 1;
 		} catch (IOException e) {
-			log.error("IO error",e);
+			log.error("IO error", e);
 			return -1;
 		}
 	}
@@ -1640,7 +1647,7 @@ public class IOUtils {
 			closeQuietly(fco);
 			return true;
 		} catch (Exception ex) {
-			log.error("error",ex);
+			log.error("error", ex);
 			return false;
 		}
 	}
@@ -1731,7 +1738,7 @@ public class IOUtils {
 					in.transferTo(0, source.length(), out);
 					flag = true;
 				} catch (IOException e) {
-					log.error("IO error",e);
+					log.error("IO error", e);
 				} finally {
 					closeQuietly(out);
 					closeQuietly(in);
@@ -1925,6 +1932,7 @@ public class IOUtils {
 		final BufferedReader reader = IOUtils.getReader(f, charset);
 		Iterator<String> iter = new Iterator<String>() {
 			private String next = reader.readLine();
+
 			@Override
 			public boolean hasNext() {
 				return next != null;
@@ -1934,7 +1942,7 @@ public class IOUtils {
 			public String next() {
 				String next = this.next;
 				try {
-					if((this.next = reader.readLine())==null) {
+					if ((this.next = reader.readLine()) == null) {
 						IOUtils.closeQuietly(reader);
 					}
 					return next;
@@ -2075,7 +2083,7 @@ public class IOUtils {
 			try {
 				txt = call.processLine(line);
 			} catch (Throwable e) {
-				log.error("IO error",e);
+				log.error("IO error", e);
 				call.lastException = e;
 			}
 			if (w != null) {
@@ -2175,7 +2183,6 @@ public class IOUtils {
 	 * @param charSet
 	 * @return
 	 * @throws IOException
-	 * @deprecated
 	 */
 	public static BufferedReader getReader(File file, String charSet) throws IOException {
 		return getReader(file, Charsets.forName(charSet));
@@ -2414,7 +2421,7 @@ public class IOUtils {
 		try {
 			return new BufferedOutputStream(new FileOutputStream(file));
 		} catch (FileNotFoundException e) {
-			log.error("IO error",e);
+			log.error("IO error", e);
 			throw new RuntimeException(e.getMessage());
 		}
 	}
@@ -2455,7 +2462,7 @@ public class IOUtils {
 			out.writeObject(obj);
 			return true;
 		} catch (IOException ex) {
-			log.error("error",ex);
+			log.error("error", ex);
 			return false;
 		} finally {
 			closeQuietly(out);
@@ -2493,7 +2500,7 @@ public class IOUtils {
 			ensureParentFolder(file);
 			return saveObject(obj, new FileOutputStream(file));
 		} catch (FileNotFoundException e) {
-			log.error("IO error",e);
+			log.error("IO error", e);
 			return false;
 		}
 	}
@@ -2523,8 +2530,8 @@ public class IOUtils {
 				((JefSerializable) obj).init();
 			}
 			return obj;
-		} catch (ClassNotFoundException|IOException e) {
-			log.error("IO error",e);
+		} catch (ClassNotFoundException | IOException e) {
+			log.error("IO error", e);
 		} finally {
 			IOUtils.closeQuietly(inn);
 		}
@@ -2744,7 +2751,7 @@ public class IOUtils {
 			}
 			bis.close();
 		} catch (Exception e) {
-			log.error("IO error",e);
+			log.error("IO error", e);
 		}
 		return charset;
 	}
@@ -3130,7 +3137,7 @@ public class IOUtils {
 		try {
 			load0(new LineReader(in), map, supportSecion);
 		} catch (Exception e) {
-			log.error("load error",e);
+			log.error("load error", e);
 		} finally {
 			closeQuietly(in);
 		}

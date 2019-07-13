@@ -698,7 +698,7 @@ public class XMLUtils {
 	 * @throws IOException
 	 *             读写错误
 	 */
-	public static void output(Node node, OutputStream os) throws IOException {
+	public static void output(Node node, OutputStream os) {
 		output(node, os, null, 4, null);
 	}
 
