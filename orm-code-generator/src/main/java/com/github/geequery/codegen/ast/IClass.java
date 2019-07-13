@@ -9,7 +9,7 @@ import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.GenericUtils;
 
-import org.apache.commons.lang.ArrayUtils;
+import  org.apache.commons.lang3.ArrayUtils;
 
 public interface IClass {
 	static final String[] PRIMITIVE_TYPES= {"int","short","long","float","double","boolean","char","byte"};

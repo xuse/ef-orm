@@ -19,7 +19,7 @@ import jef.database.test.IgnoreOn;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
 import jef.tools.StringUtils;
 
-import org.apache.commons.lang.ArrayUtils;
+import  org.apache.commons.lang3.ArrayUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;

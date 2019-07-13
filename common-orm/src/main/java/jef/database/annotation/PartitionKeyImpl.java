@@ -6,8 +6,8 @@ import jef.database.routing.function.KeyFunction;
 import jef.json.JSONCustom;
 import jef.json.JsonTypeSerializer;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.builder.ToStringBuilder;
+import  org.apache.commons.lang3.ArrayUtils;
+import  org.apache.commons.lang3.builder.ToStringBuilder;
 
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.ObjectSerializer;

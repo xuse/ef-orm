@@ -27,7 +27,7 @@ import jef.database.query.JoinElement;
 import jef.database.query.Query;
 import jef.tools.ArrayUtils;
 
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import  org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import com.google.common.base.Objects;
 

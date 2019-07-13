@@ -11,7 +11,7 @@ import javax.persistence.NonUniqueResultException;
 import jef.database.DbUtils;
 import jef.database.dialect.DatabaseDialect;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 /**
  * 描述分表计算后的结果

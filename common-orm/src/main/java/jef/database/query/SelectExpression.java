@@ -9,8 +9,8 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.wrapper.clause.HavingEle;
 
-import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.RandomStringUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 /**
  * 原生查询表达式，无需解析和改写

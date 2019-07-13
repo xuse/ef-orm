@@ -15,7 +15,7 @@ import jef.database.jdbc.rowset.CachedRowSetImpl;
 import jef.database.jdbc.rowset.Row;
 import jef.tools.StringUtils;
 
-import org.apache.commons.lang.ObjectUtils;
+import  org.apache.commons.lang3.ObjectUtils;
 
 import com.google.common.base.Objects;
 

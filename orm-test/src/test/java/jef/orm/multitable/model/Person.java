@@ -28,8 +28,8 @@ import jef.database.annotation.Indexed;
 import jef.database.annotation.JoinDescription;
 import jef.database.annotation.JoinType;
 
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
+import  org.apache.commons.lang3.builder.HashCodeBuilder;
+import  org.apache.commons.lang3.builder.ToStringBuilder;
 
 
 /**

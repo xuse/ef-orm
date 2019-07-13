@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 import javax.persistence.Column;
 import javax.persistence.OptimisticLockException;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
+import  org.apache.commons.lang3.builder.ToStringBuilder;
 import org.easyframe.enterprise.spring.CommonDao;
 import org.junit.Assert;
 import org.junit.Test;

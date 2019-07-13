@@ -9,7 +9,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
+import  org.apache.commons.lang3.builder.ToStringBuilder;
 
 import jef.database.annotation.PartitionKey;
 import jef.database.annotation.PartitionTable;

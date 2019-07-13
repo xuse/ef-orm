@@ -5,7 +5,7 @@ import java.util.List;
 
 import javax.persistence.Index;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 /**
  * Index描述。 注意：内部的colums都是Java中的字段名

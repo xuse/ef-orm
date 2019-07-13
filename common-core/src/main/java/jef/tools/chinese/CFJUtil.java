@@ -26,7 +26,7 @@ import jef.tools.TextFileCallback;
 import jef.tools.TextFileCallback.Dealwith;
 import jef.tools.io.Charsets;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 /**
  * 繁简体转换工具

@@ -10,7 +10,7 @@ import jef.common.ContinuedRange;
 import jef.database.annotation.PartitionFunction;
 import jef.database.query.RegexpDimension;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 public class MapFunction implements PartitionFunction<String>{
 	private final List<StringRange> ranges = new ArrayList<StringRange>();

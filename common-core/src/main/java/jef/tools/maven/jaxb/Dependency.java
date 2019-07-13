@@ -17,8 +17,8 @@ import javax.xml.bind.annotation.XmlType;
 
 import jef.tools.maven.MavenDependencyParser;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import  org.apache.commons.lang3.StringUtils;
+import  org.apache.commons.lang3.builder.HashCodeBuilder;
 
 
 /**

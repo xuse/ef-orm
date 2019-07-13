@@ -17,7 +17,7 @@ import jef.tools.Foo;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.BeanWrapper;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
+import  org.apache.commons.lang3.builder.ToStringBuilder;
 import org.junit.Test;
 
 public class PerformanceTest {

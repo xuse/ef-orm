@@ -29,7 +29,7 @@ import jef.tools.StringUtils;
 import jef.tools.XMLUtils;
 import jef.tools.ZipUtils;
 
-import org.apache.commons.lang.ObjectUtils;
+import  org.apache.commons.lang3.ObjectUtils;
 import org.mozilla.javascript.Context;
 import org.mozilla.javascript.Decompiler;
 import org.mozilla.javascript.NativeArray;

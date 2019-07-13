@@ -22,7 +22,7 @@ import jef.common.log.LogUtil;
 import jef.common.wrapper.Holder;
 import jef.tools.IOUtils;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseException;

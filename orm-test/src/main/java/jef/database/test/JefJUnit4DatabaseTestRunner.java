@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import org.apache.commons.lang.ArrayUtils;
+import  org.apache.commons.lang3.ArrayUtils;
 import org.junit.internal.runners.statements.ExpectException;
 import org.junit.runner.Description;
 import org.junit.runner.Result;

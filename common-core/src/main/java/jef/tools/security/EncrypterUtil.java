@@ -66,8 +66,8 @@ import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.MethodEx;
 import jef.tools.support.JefBase64;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.ArrayUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 public class EncrypterUtil {
 	// static{

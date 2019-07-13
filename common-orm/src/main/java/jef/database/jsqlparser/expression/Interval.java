@@ -10,8 +10,8 @@ import jef.database.jsqlparser.visitor.ExpressionVisitor;
 import jef.database.jsqlparser.visitor.SqlValue;
 import jef.database.query.SqlExpression;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.ArrayUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 /**
  * 这个是专门为了解析MYSQL日期时间操作中的INTERVAL关键字的

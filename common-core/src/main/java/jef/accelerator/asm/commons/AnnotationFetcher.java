@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.apache.commons.lang.ArrayUtils;
+import  org.apache.commons.lang3.ArrayUtils;
 
 import com.github.geequery.asm.AnnotationVisitor;
 import com.github.geequery.asm.ClassReader;

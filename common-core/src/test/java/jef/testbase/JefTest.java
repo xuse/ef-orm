@@ -643,7 +643,7 @@ public class JefTest extends Assert {
 				if (!line.startsWith("24537"))
 					return null;
 				if (line.indexOf("(service_name = shzw)") > -1) {
-					String threadId = org.apache.commons.lang.StringUtils.substringBetween(line, "(service_name = shzw):OB60@", "]");
+					String threadId =  org.apache.commons.lang3.StringUtils.substringBetween(line, "(service_name = shzw):OB60@", "]");
 					set.add(threadId);
 					return threadId + " " + line;
 				}

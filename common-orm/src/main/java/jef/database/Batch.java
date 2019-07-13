@@ -605,18 +605,20 @@ public abstract class Batch<T> {
 		protected void callEventListenerBefore(List<T> listValue) {
 			Session parent = this.parent;
 			DbOperatorListener listener = parent.getListener();
-			for (T t : listValue) {
-				listener.beforeDelete(t.getQuery(), parent);
-			}
+			//TODO
+//			for (T t : listValue) {
+//				listener.beforeDelete(t.getQuery(), parent);
+//			}
 		}
 
 		@Override
 		protected void callEventListenerAfter(List<T> listValue) {
 			Session parent = this.parent;
 			DbOperatorListener listener = parent.getListener();
-			for (T t : listValue) {
-				listener.afterDelete(t.getQuery(), 1, parent);
-			}
+			//TODO
+//			for (T t : listValue) {
+//				listener.afterDelete(t.getQuery(), 1, parent);
+//			}
 		}
 
 		public void setWherePart(BindSql wherePart) {
@@ -631,11 +633,12 @@ public abstract class Batch<T> {
 			for (int i = 0; i < len; i++) {
 				T t = listValue.get(i);
 				Assert.notNull(t, "Batch list must not contain null element.");
-				if (t.getQuery().getConditions().isEmpty()) {
-					DbUtils.fillConditionFromField(t, t.getQuery(), null, pkMpode);
+				Query<T> query=Entities.asQuery(t);
+				if (query.getConditions().isEmpty()) {
+					DbUtils.fillConditionFromField(t, query, null, pkMpode);
 				}
 				BindVariableContext context = new BindVariableContext(psmt, db.getProfile(), log.append("Batch Parameters: ", i + 1).append('/').append(len));
-				List<Object> whereBind = context.setVariables(t.getQuery(), null, wherePart.getBind());
+				List<Object> whereBind = context.setVariables(query, null, wherePart.getBind());
 				String baseTableName = (forceTableName == null ? meta.getTableName(false) : forceTableName);
 				parent.getCache().onDelete(baseTableName, wherePart.getSql(), whereBind);
 

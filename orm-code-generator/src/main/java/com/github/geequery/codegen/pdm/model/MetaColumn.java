@@ -7,7 +7,7 @@ import java.util.Set;
 
 import jef.database.meta.object.Column;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 /**
  * PDM元数据的列

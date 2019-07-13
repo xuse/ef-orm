@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.management.ReflectionException;
 
-import org.apache.commons.lang.ObjectUtils;
+import  org.apache.commons.lang3.ObjectUtils;
 
 import jef.common.Entry;
 import jef.common.Node;

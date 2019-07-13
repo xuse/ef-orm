@@ -32,7 +32,7 @@ import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
 import jef.database.jsqlparser.visitor.Expression;
 
-import org.apache.commons.lang.ArrayUtils;
+import  org.apache.commons.lang3.ArrayUtils;
 
 /**
  * A function which takes no arguments

@@ -1,7 +1,7 @@
 package jef.database.meta.object;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.ArrayUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 /**
  * 描述数据库主键的信息

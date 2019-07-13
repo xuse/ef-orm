@@ -6,8 +6,8 @@ import java.util.BitSet;
 import javax.persistence.PersistenceException;
 import javax.xml.bind.annotation.XmlTransient;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import  org.apache.commons.lang3.builder.EqualsBuilder;
+import  org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import com.alibaba.fastjson.annotation.JSONField;
 

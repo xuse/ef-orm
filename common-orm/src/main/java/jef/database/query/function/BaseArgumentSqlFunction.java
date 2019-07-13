@@ -4,7 +4,7 @@ import java.util.List;
 
 import jef.database.jsqlparser.visitor.Expression;
 
-import org.apache.commons.lang.ArrayUtils;
+import  org.apache.commons.lang3.ArrayUtils;
 
 public abstract class BaseArgumentSqlFunction implements SQLFunction {
 

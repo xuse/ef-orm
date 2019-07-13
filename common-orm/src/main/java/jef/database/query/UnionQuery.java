@@ -21,7 +21,7 @@ import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.variable.Variable;
 import jef.tools.StringUtils;
 
-import org.apache.commons.lang.RandomStringUtils;
+import  org.apache.commons.lang3.RandomStringUtils;
 
 /**
  * 描述union的查询请求

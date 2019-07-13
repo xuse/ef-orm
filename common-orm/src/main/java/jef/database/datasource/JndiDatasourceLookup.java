@@ -12,7 +12,7 @@ import javax.sql.DataSource;
 
 import jef.common.log.LogUtil;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 /**
  * 通过JNDI查找Datasource

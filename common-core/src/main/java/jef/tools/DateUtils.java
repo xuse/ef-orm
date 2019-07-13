@@ -380,7 +380,7 @@ public abstract class DateUtils {
 	 * @return 时间的年和月部分，指向该月的开始
 	 */
 	public static final Date monthBegin(Date date) {
-		return org.apache.commons.lang.time.DateUtils.truncate(date, Calendar.MONTH);
+		return  org.apache.commons.lang3.time.DateUtils.truncate(date, Calendar.MONTH);
 	}
 
 	/**
@@ -1521,7 +1521,7 @@ public abstract class DateUtils {
 	 * @return the begin of today.
 	 */
 	public static Date today() {
-		return org.apache.commons.lang.time.DateUtils.truncate(new Date(), Calendar.DATE);
+		return  org.apache.commons.lang3.time.DateUtils.truncate(new Date(), Calendar.DATE);
 	}
 
 	/**
@@ -1530,7 +1530,7 @@ public abstract class DateUtils {
 	 * @return
 	 */
 	public static java.sql.Date sqlToday() {
-		return new java.sql.Date(org.apache.commons.lang.time.DateUtils.truncate(new Date(), Calendar.DATE).getTime());
+		return new java.sql.Date( org.apache.commons.lang3.time.DateUtils.truncate(new Date(), Calendar.DATE).getTime());
 	}
 
 	/**

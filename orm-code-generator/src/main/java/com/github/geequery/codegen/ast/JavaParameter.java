@@ -45,7 +45,7 @@ public class JavaParameter {
 	}
 
 	public String[] getAnnotation() {
-		if(annotation==null)return org.apache.commons.lang.ArrayUtils.EMPTY_STRING_ARRAY;
+		if(annotation==null)return  org.apache.commons.lang3.ArrayUtils.EMPTY_STRING_ARRAY;
 		return annotation;
 	}
 
@@ -59,7 +59,7 @@ public class JavaParameter {
 	}
 
 	public String[] getComment() {
-		if(comment==null)return org.apache.commons.lang.ArrayUtils.EMPTY_STRING_ARRAY;
+		if(comment==null)return  org.apache.commons.lang3.ArrayUtils.EMPTY_STRING_ARRAY;
 		return comment;
 	}
 

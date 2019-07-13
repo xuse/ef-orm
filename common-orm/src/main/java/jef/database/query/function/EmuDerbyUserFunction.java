@@ -9,7 +9,7 @@ import jef.database.jsqlparser.visitor.Expression;
 /**
  * 可以直接将apache commons-lang中的一个函数定义为replace存储过程
  * CREATE FUNCTION REPLACE(STR VARCHAR(255), OLD VARCHAR(100), NEW VARCHAR(100)) RETURNS 
-   VARCHAR(255) PARAMETER STYLE JAVA NO SQL LANGUAGE JAVA EXTERNAL NAME 'org.apache.commons.lang.StringUtils.replace' 
+   VARCHAR(255) PARAMETER STYLE JAVA NO SQL LANGUAGE JAVA EXTERNAL NAME ' org.apache.commons.lang3.StringUtils.replace' 
  * @author jiyi
  */
 public class EmuDerbyUserFunction extends BaseArgumentSqlFunction{

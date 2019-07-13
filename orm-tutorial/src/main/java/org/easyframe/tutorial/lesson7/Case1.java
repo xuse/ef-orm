@@ -21,7 +21,7 @@ import jef.database.wrapper.populator.Transformer;
 import jef.tools.PageLimit;
 import jef.tools.string.RandomData;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
+import  org.apache.commons.lang3.builder.ToStringBuilder;
 import org.easyframe.tutorial.lesson2.entity.Student;
 import org.easyframe.tutorial.lesson4.entity.Person;
 import org.easyframe.tutorial.lesson4.entity.School;

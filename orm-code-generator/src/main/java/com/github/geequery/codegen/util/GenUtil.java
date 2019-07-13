@@ -24,7 +24,7 @@ import jef.common.wrapper.Holder;
 import jef.tools.IOUtils;
 import jef.tools.TextFileCallback;
 
-import org.apache.commons.lang.ArrayUtils;
+import  org.apache.commons.lang3.ArrayUtils;
 
  public class GenUtil {
 	 //判断一个类是否具有 未修改 标签

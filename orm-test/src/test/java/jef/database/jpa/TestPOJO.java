@@ -6,7 +6,7 @@ import java.util.List;
 
 import javax.persistence.Id;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
+import  org.apache.commons.lang3.builder.ToStringBuilder;
 import org.easyframe.enterprise.spring.CommonDao;
 import org.easyframe.enterprise.spring.CommonDaoImpl;
 import org.junit.Assert;

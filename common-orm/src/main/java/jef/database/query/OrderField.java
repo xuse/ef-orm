@@ -25,8 +25,8 @@ import jef.database.meta.ITableMetadata;
 import jef.database.meta.TupleField;
 import jef.tools.Assert;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import  org.apache.commons.lang3.builder.EqualsBuilder;
+import  org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  * 描述一个排序字段

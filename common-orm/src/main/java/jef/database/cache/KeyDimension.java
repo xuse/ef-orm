@@ -10,7 +10,7 @@ import jef.database.jdbc.statement.UnionJudgement;
 import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.visitor.Expression;
 
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import  org.apache.commons.lang3.builder.HashCodeBuilder;
 
 public class KeyDimension {
 	protected String where;

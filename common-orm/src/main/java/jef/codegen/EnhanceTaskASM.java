@@ -8,7 +8,7 @@ import java.util.List;
 
 import javax.persistence.Entity;
 
-import org.apache.commons.lang.ArrayUtils;
+import  org.apache.commons.lang3.ArrayUtils;
 
 import com.github.geequery.asm.ClassReader;
 import com.github.geequery.asm.ClassVisitor;

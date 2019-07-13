@@ -17,7 +17,7 @@ import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.def.UniqueConstraintDef;
 import jef.tools.StringUtils;
 
-import org.apache.commons.lang.RandomStringUtils;
+import  org.apache.commons.lang3.RandomStringUtils;
 
 /**
  * 建表任务操作

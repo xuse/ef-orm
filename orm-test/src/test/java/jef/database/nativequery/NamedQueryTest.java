@@ -22,7 +22,7 @@ import jef.orm.multitable2.model.Leaf;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.string.RandomData;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;

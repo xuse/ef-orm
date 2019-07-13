@@ -4,7 +4,7 @@ import java.util.Iterator;
 
 import jef.tools.StringUtils;
 
-import org.apache.commons.lang.ArrayUtils;
+import  org.apache.commons.lang3.ArrayUtils;
 
 /**
  * 字符串枚举器

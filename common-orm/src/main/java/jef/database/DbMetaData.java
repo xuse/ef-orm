@@ -1357,7 +1357,7 @@ public class DbMetaData {
 		Connection conn = getConnection(false);
 		try {
 			DatabaseMetaData databaseMetaData = conn.getMetaData();
-			return org.apache.commons.lang.StringUtils.split(databaseMetaData.getSQLKeywords(), ',');
+			return  org.apache.commons.lang3.StringUtils.split(databaseMetaData.getSQLKeywords(), ',');
 		} finally {
 			releaseConnection(conn);
 		}

@@ -8,7 +8,7 @@ import java.util.List;
 
 import javax.persistence.Column;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
+import  org.apache.commons.lang3.builder.ToStringBuilder;
 import org.easyframe.tutorial.lesson2.entity.Student;
 import org.easyframe.tutorial.lesson4.entity.DataDict;
 import org.easyframe.tutorial.lesson4.entity.Person;

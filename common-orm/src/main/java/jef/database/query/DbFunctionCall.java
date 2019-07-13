@@ -3,8 +3,8 @@ package jef.database.query;
 import jef.database.DbFunction;
 import jef.database.dialect.DatabaseDialect;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.ArrayUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 final class DbFunctionCall {
 	private DbFunction func;

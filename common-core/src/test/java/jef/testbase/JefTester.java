@@ -26,7 +26,7 @@ import jef.common.Entry;
 import jef.tools.StringUtils;
 import jef.tools.reflect.ClassLoaderUtil;
 
-import org.apache.commons.lang.CharUtils;
+import  org.apache.commons.lang3.CharUtils;
 import org.junit.Test;
 
 @SuppressWarnings("unused")

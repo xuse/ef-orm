@@ -20,8 +20,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.ArrayUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 /**
  * 用于生成正則表达式相关计算的工具

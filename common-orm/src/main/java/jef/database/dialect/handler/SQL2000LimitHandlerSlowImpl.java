@@ -14,7 +14,7 @@ import jef.database.jsqlparser.statement.select.Union;
 import jef.database.wrapper.clause.BindSql;
 import jef.tools.PageLimit;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 public class SQL2000LimitHandlerSlowImpl implements LimitHandler {
 	public BindSql toPageSQL(String sql, PageLimit offsetLimit) {

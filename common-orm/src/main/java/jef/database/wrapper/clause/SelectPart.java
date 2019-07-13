@@ -24,7 +24,7 @@ import java.util.Set;
 import jef.database.ORMConfig;
 import jef.http.client.support.CommentEntry;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 public class SelectPart {
 	private boolean distinct;

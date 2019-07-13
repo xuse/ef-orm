@@ -56,7 +56,7 @@ import javax.persistence.FetchType;
 import javax.persistence.PersistenceException;
 import javax.persistence.QueryTimeoutException;
 
-import org.apache.commons.lang.ObjectUtils;
+import  org.apache.commons.lang3.ObjectUtils;
 
 import com.github.geequery.entity.Entities;
 

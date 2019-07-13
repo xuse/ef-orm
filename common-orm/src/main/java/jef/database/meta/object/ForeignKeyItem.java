@@ -6,7 +6,7 @@ import java.sql.DatabaseMetaData;
 import javax.persistence.Column;
 import javax.persistence.ConstraintMode;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.support.RDBMS;

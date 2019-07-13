@@ -14,7 +14,7 @@
 //import jef.database.wrapper.ResultIterator;
 //import jef.tools.Assert;
 //
-//import org.apache.commons.lang.ObjectUtils;
+//import  org.apache.commons.lang3.ObjectUtils;
 //
 ///**
 // * @deprecated 新的方案不再需要此类

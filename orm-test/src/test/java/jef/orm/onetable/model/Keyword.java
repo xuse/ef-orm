@@ -2,7 +2,7 @@ package jef.orm.onetable.model;
 
 import javax.persistence.Entity;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
+import  org.apache.commons.lang3.builder.ToStringBuilder;
 
 @Entity
 public class Keyword extends jef.database.DataObject {

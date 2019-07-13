@@ -13,7 +13,7 @@ import java.util.Set;
 
 import jef.tools.reflect.ClassLoaderUtil;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 public class UrlResourceLoader extends AResourceLoader {
 	/**

@@ -154,7 +154,7 @@ public class XmlJsonSerializer implements ObjectSerializer {
 			String s=String.valueOf(value);
 			if("true".equals(s)||"false".equals(s)){
 				writer.write(s);
-			}else if(s.length()<14 && org.apache.commons.lang.StringUtils.isNumeric(s)){
+			}else if(s.length()<14 &&  org.apache.commons.lang3.StringUtils.isNumeric(s)){
 				writer.write(s);	
 			}else{
 				writer.writeString(s);	

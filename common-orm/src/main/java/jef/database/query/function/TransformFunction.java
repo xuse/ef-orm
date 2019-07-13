@@ -6,7 +6,7 @@ import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.NullValue;
 import jef.database.jsqlparser.visitor.Expression;
 
-import org.apache.commons.lang.ArrayUtils;
+import  org.apache.commons.lang3.ArrayUtils;
 
 /**
  * 在函数的名称和参数顺序上稍作变化实现兼容的数据库函数渲染器

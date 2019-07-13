@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.RandomStringUtils;
+import  org.apache.commons.lang3.RandomStringUtils;
 
 import jef.common.PairIS;
 import jef.common.PairSS;

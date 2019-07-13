@@ -7,7 +7,7 @@ import jef.database.jsqlparser.expression.operators.arithmetic.Concat;
 import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
 import jef.database.jsqlparser.visitor.Expression;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 //TODO Derby居然是没有format date函数的，本来想自己模拟一个。
 public class DerbyDateFormatFunction extends BaseArgumentSqlFunction {

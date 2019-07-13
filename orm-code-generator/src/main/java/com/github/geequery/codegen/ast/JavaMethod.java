@@ -31,8 +31,8 @@ import jef.jre5support.script.JavaScriptUtil;
 import jef.tools.ArrayUtils;
 import jef.tools.string.JefStringReader;
 
-import org.apache.commons.lang.ObjectUtils;
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.ObjectUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 public class JavaMethod extends DefaultJavaElement implements JavaElement {
 	private String name;

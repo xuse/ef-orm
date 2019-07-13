@@ -9,7 +9,7 @@ import jef.tools.Assert;
 import jef.tools.IOUtils;
 import jef.tools.TextFileCallback;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 
 //用于为每个Java文件处理顶部的声明的小工具

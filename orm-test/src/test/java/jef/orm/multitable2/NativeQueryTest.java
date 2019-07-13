@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.math.RandomUtils;
-import org.apache.commons.lang.time.DateUtils;
+import org.apache.commons.lang3.RandomUtils;
+import  org.apache.commons.lang3.time.DateUtils;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -1042,7 +1042,7 @@ public class NativeQueryTest extends org.junit.Assert {
 		for (String rowid : rowids) {
 			list = new ArrayList<Object>();
 			list.add(rowid);
-			list.add(RandomUtils.nextInt(9999999));
+			list.add(RandomUtils.nextInt(0,9999999));
 
 			rowArray[i++] = list;
 		}

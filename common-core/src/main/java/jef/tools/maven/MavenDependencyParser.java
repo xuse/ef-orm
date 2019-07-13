@@ -245,7 +245,7 @@ public class MavenDependencyParser {
 			return version;
 		}
 
-		String paramName = org.apache.commons.lang.StringUtils.substringBetween(version, "${", "}");
+		String paramName =  org.apache.commons.lang3.StringUtils.substringBetween(version, "${", "}");
 		String paramValue = null;
 		Document doc = pom.getDocument();
 		if ("project.version".equals(paramName)) {

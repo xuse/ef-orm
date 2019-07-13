@@ -41,7 +41,7 @@ import jef.database.query.function.VarArgsSQLFunction;
 import jef.database.support.RDBMS;
 import jef.tools.collection.CollectionUtils;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 import com.querydsl.sql.SQLTemplates;
 import com.querydsl.sql.SQLiteTemplates;

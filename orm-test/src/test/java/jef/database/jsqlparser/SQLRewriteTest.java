@@ -11,7 +11,7 @@ import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.support.RDBMS;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 import org.junit.Test;
 
 /**

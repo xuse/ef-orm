@@ -1,6 +1,6 @@
 package jef.database.jmx;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 import jef.database.DbClient;
 

@@ -8,7 +8,7 @@ import java.util.TreeSet;
 
 import jef.database.annotation.PartitionFunction;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 /**
  * 描述一个非连续区间

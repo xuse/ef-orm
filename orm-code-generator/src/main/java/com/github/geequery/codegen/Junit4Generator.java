@@ -20,7 +20,7 @@ import java.io.File;
 import com.github.geequery.codegen.ast.JavaMethod;
 import com.github.geequery.codegen.ast.JavaUnit;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 /**
  * 用于批量生成Junit4测试框架的代码

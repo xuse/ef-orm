@@ -9,7 +9,7 @@ import jef.database.dialect.type.AColumnMapping;
 import jef.database.jdbc.result.IResultSet;
 import jef.tools.ArrayUtils;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 import org.hsqldb.types.Types;
 
 public class JSONVarcharMapping extends AColumnMapping{

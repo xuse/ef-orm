@@ -9,7 +9,7 @@ import jef.database.jdbc.statement.ResultSetLaterProcess;
 import jef.database.wrapper.clause.BindSql;
 import jef.tools.PageLimit;
 
-import org.apache.commons.lang.StringUtils;
+import  org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLOrderBy;
