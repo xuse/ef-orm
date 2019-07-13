@@ -21,8 +21,6 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
 import org.easyframe.enterprise.spring.TransactionMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +36,9 @@ import jef.database.jpa.JefEntityManagerFactory;
 import jef.database.meta.MetaHolder;
 import jef.database.support.DbInitHandler;
 import jef.database.support.QuerableEntityScanner;
+import jef.tools.ArrayUtils;
 import jef.tools.JefConfiguration;
+import jef.tools.StringUtils;
 
 /**
  * 提供了创建DbClient的若干工厂方法

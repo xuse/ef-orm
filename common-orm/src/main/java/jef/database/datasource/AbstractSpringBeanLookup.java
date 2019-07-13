@@ -5,18 +5,18 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
-import jef.database.DbUtils;
-import jef.tools.Assert;
-import jef.tools.reflect.ClassEx;
-import jef.tools.reflect.GenericUtils;
-
-import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+
+import jef.database.DbUtils;
+import jef.tools.Assert;
+import jef.tools.StringUtils;
+import jef.tools.reflect.ClassEx;
+import jef.tools.reflect.GenericUtils;
 
 /**
  * 抽象类，能从Spring中找寻指定类型的bean

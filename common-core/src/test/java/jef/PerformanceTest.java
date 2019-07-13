@@ -9,6 +9,9 @@ import java.util.Map;
 
 import javax.management.ReflectionException;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.junit.Test;
+
 import jef.accelerator.bean.BeanAccessor;
 import jef.accelerator.bean.FastBeanWrapperImpl;
 import jef.accelerator.cglib.beans.BeanCopier;
@@ -16,9 +19,6 @@ import jef.common.log.LogUtil;
 import jef.tools.Foo;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.BeanWrapper;
-
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.junit.Test;
 
 public class PerformanceTest {
 	private static final int LOOP_NUMBER = 200000;

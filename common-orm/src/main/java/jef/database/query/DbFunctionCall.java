@@ -2,9 +2,8 @@ package jef.database.query;
 
 import jef.database.DbFunction;
 import jef.database.dialect.DatabaseDialect;
-
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
+import jef.tools.ArrayUtils;
+import jef.tools.StringUtils;
 
 final class DbFunctionCall {
 	private DbFunction func;

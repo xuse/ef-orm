@@ -11,8 +11,7 @@ import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 import jef.common.log.LogUtil;
-
-import org.apache.commons.lang.StringUtils;
+import jef.tools.StringUtils;
 
 /**
  * 通过JNDI查找Datasource

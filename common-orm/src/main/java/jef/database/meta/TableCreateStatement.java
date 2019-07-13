@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.RandomStringUtils;
+
 import jef.common.PairIS;
 import jef.common.PairSS;
 import jef.database.DbUtils;
@@ -16,8 +18,6 @@ import jef.database.dialect.type.AutoIncrementMapping;
 import jef.database.dialect.type.ColumnMapping;
 import jef.database.meta.def.UniqueConstraintDef;
 import jef.tools.StringUtils;
-
-import org.apache.commons.lang.RandomStringUtils;
 
 /**
  * 建表任务操作

@@ -10,6 +10,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.ObjectUtils;
+
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+
 import jef.common.Pair;
 import jef.common.PairSO;
 import jef.database.DbUtils;
@@ -58,12 +63,7 @@ import jef.database.query.RangeDimension;
 import jef.database.query.RegexpDimension;
 import jef.database.routing.PartitionResult;
 import jef.database.routing.jdbc.ParameterContext;
-
-import org.apache.commons.lang.ObjectUtils;
-import org.apache.commons.lang.StringUtils;
-
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
+import jef.tools.StringUtils;
 
 /**
  * 基于SQL语句的分库分表解析。主要逻辑部分

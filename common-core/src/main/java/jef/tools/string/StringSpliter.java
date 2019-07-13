@@ -15,7 +15,7 @@
  */
 package jef.tools.string;
 
-import org.apache.commons.lang.ArrayUtils;
+import jef.tools.ArrayUtils;
 
 public class StringSpliter {
 	/**

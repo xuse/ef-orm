@@ -59,15 +59,14 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import jef.common.log.LogUtil;
+import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
+import jef.tools.StringUtils;
 import jef.tools.io.ReaderInputStream;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.reflect.MethodEx;
 import jef.tools.support.JefBase64;
-
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.StringUtils;
 
 public class EncrypterUtil {
 	// static{

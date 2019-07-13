@@ -13,6 +13,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.management.ReflectionException;
 
+import org.apache.commons.lang3.ObjectUtils;
+
 import jef.common.Entry;
 import jef.common.Node;
 import jef.common.log.LogUtil;
@@ -22,8 +24,6 @@ import jef.tools.DateUtils;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.convert.Converter;
-
-import org.apache.commons.lang.ObjectUtils;
 
 /**
  * 数据类型转换工具类

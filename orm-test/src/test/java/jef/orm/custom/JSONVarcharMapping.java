@@ -4,13 +4,13 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 
+import org.hsqldb.types.Types;
+
 import jef.database.dialect.DatabaseDialect;
 import jef.database.dialect.type.AColumnMapping;
 import jef.database.jdbc.result.IResultSet;
 import jef.tools.ArrayUtils;
-
-import org.apache.commons.lang.StringUtils;
-import org.hsqldb.types.Types;
+import jef.tools.StringUtils;
 
 public class JSONVarcharMapping extends AColumnMapping{
 

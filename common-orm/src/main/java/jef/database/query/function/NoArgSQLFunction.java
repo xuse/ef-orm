@@ -31,8 +31,7 @@ import javax.persistence.PersistenceException;
 import jef.database.jsqlparser.expression.Function;
 import jef.database.jsqlparser.expression.operators.relational.ExpressionList;
 import jef.database.jsqlparser.visitor.Expression;
-
-import org.apache.commons.lang.ArrayUtils;
+import jef.tools.ArrayUtils;
 
 /**
  * A function which takes no arguments

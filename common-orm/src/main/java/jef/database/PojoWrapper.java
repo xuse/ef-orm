@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.ObjectUtils;
+
 import jef.accelerator.bean.BeanAccessor;
 import jef.common.wrapper.Page;
 import jef.database.meta.ITableMetadata;
@@ -13,8 +15,6 @@ import jef.database.meta.MetaHolder;
 import jef.database.meta.TableMetadata;
 import jef.database.wrapper.ResultIterator;
 import jef.tools.Assert;
-
-import org.apache.commons.lang.ObjectUtils;
 
 @SuppressWarnings("serial")
 public final class PojoWrapper extends DataObject implements Map<String, Object>, MetadataContainer {

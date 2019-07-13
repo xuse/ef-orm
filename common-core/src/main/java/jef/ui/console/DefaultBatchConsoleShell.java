@@ -19,9 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jef.common.log.LogUtil;
+import jef.tools.ArrayUtils;
 import jef.ui.ConsoleShell;
-
-import org.apache.commons.lang.ArrayUtils;
 
 public abstract class DefaultBatchConsoleShell extends AbstractConsoleShell {
 	public DefaultBatchConsoleShell(ConsoleShell parent) {

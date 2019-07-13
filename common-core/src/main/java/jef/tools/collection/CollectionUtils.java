@@ -43,8 +43,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.apache.commons.lang.ObjectUtils;
-
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.collect.ArrayListMultimap;
@@ -758,7 +756,6 @@ public class CollectionUtils {
 	 * @param source
 	 *            the (potentially primitive) array
 	 * @return the converted List result
-	 * @see ObjectUtils#toObjectArray(Object)
 	 */
 	public static List<?> arrayToList(Object source) {
 		return Arrays.asList(ArrayUtils.toObject(source));

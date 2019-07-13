@@ -5,6 +5,10 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import jef.database.DbClient;
 import jef.database.DbMetaData;
 import jef.database.DbMetaData.ObjectType;
@@ -17,12 +21,8 @@ import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
 import jef.database.test.IgnoreOn;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
+import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
-
-import org.apache.commons.lang.ArrayUtils;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 @RunWith(JefJUnit4DatabaseTestRunner.class)
 @DataSourceContext({

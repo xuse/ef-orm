@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.RandomStringUtils;
+
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.SelectProcessor;
@@ -20,8 +22,6 @@ import jef.database.wrapper.clause.QueryClauseSqlImpl;
 import jef.database.wrapper.populator.Transformer;
 import jef.database.wrapper.variable.Variable;
 import jef.tools.StringUtils;
-
-import org.apache.commons.lang.RandomStringUtils;
 
 /**
  * 描述union的查询请求

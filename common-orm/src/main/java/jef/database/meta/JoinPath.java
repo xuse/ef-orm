@@ -20,16 +20,16 @@ import java.util.List;
 
 import javax.persistence.OrderBy;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import com.google.common.base.Objects;
+
 import jef.database.annotation.JoinDescription;
 import jef.database.annotation.JoinType;
 import jef.database.query.Join;
 import jef.database.query.JoinElement;
 import jef.database.query.Query;
 import jef.tools.ArrayUtils;
-
-import org.apache.commons.lang.builder.HashCodeBuilder;
-
-import com.google.common.base.Objects;
 
 /**
  * 描述两表间的一组关系

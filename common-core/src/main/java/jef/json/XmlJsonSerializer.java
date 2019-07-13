@@ -7,9 +7,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import jef.tools.StringUtils;
-import jef.tools.XMLUtils;
-
 import org.w3c.dom.Attr;
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Document;
@@ -19,6 +16,9 @@ import org.w3c.dom.Node;
 import com.alibaba.fastjson.serializer.JSONSerializer;
 import com.alibaba.fastjson.serializer.ObjectSerializer;
 import com.alibaba.fastjson.serializer.SerializeWriter;
+
+import jef.tools.StringUtils;
+import jef.tools.XMLUtils;
 
 public class XmlJsonSerializer implements ObjectSerializer {
 	public static final String ARRAY_NODE_ATTR_NAME = "_type";
@@ -154,7 +154,7 @@ public class XmlJsonSerializer implements ObjectSerializer {
 			String s=String.valueOf(value);
 			if("true".equals(s)||"false".equals(s)){
 				writer.write(s);
-			}else if(s.length()<14 && org.apache.commons.lang.StringUtils.isNumeric(s)){
+			}else if(s.length()<14 && org.apache.commons.lang3.StringUtils.isNumeric(s)){
 				writer.write(s);	
 			}else{
 				writer.writeString(s);	

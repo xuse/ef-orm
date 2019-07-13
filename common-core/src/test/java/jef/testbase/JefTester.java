@@ -22,12 +22,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.junit.Test;
+
 import jef.common.Entry;
 import jef.tools.StringUtils;
 import jef.tools.reflect.ClassLoaderUtil;
-
-import org.apache.commons.lang.CharUtils;
-import org.junit.Test;
+import jef.tools.string.CharUtils;
 
 @SuppressWarnings("unused")
 public class JefTester {

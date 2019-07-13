@@ -5,6 +5,9 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import jef.database.Condition.Operator;
 import jef.database.dialect.DatabaseDialect;
 import jef.database.meta.ITableMetadata;
@@ -12,9 +15,6 @@ import jef.database.query.Query;
 import jef.database.query.SqlContext;
 import jef.database.wrapper.clause.BindSql;
 import jef.database.wrapper.clause.SqlBuilder;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
 
 /**
  * 用于代替Field来描述特定的复杂条件 正常情况下这些对象都容纳了若干的条件甚至查询实例。

@@ -1,6 +1,6 @@
 package jef.common;
 
-import org.apache.commons.lang.ArrayUtils;
+import jef.tools.ArrayUtils;
 
 /**
  * 

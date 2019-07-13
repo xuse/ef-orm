@@ -55,7 +55,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.html.dom.HTMLDocumentImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1276,7 +1276,7 @@ public class XMLUtils {
 		} else {
 			sb.append(first.getTextContent());
 		}
-		return StringUtils.trimToNull(StringEscapeUtils.unescapeHtml(sb.toString()));
+		return StringUtils.trimToNull(StringEscapeUtils.unescapeHtml4(sb.toString()));
 	}
 
 	/**
@@ -1333,7 +1333,7 @@ public class XMLUtils {
 		List<String> _list = new ArrayList<String>();
 		if (e.hasAttribute(attributeName)) {
 			String text = e.getAttribute(attributeName);
-			_list.add((text == null) ? null : StringEscapeUtils.unescapeHtml(text.trim()));
+			_list.add((text == null) ? null : StringEscapeUtils.unescapeHtml4(text.trim()));
 		}
 		if (e.hasChildNodes()) {
 			NodeList nds = e.getChildNodes();
@@ -1627,7 +1627,7 @@ public class XMLUtils {
 		NamedNodeMap nmp = e.getAttributes();
 		for (int i = 0; i < nmp.getLength(); i++) {
 			Attr child = (Attr) nmp.item(i);
-			attribs.put(StringEscapeUtils.unescapeHtml(child.getName()), StringEscapeUtils.unescapeHtml(child.getValue()));
+			attribs.put(StringEscapeUtils.unescapeHtml4(child.getName()), StringEscapeUtils.unescapeHtml4(child.getValue()));
 		}
 		if (subElementAsAttr) {
 			NodeList nds = e.getChildNodes();
@@ -2341,11 +2341,11 @@ public class XMLUtils {
 		case Node.ELEMENT_NODE:
 			return nodeText((Element) node);
 		case Node.TEXT_NODE:
-			return StringUtils.trimToNull(StringEscapeUtils.unescapeHtml(node.getTextContent()));
+			return StringUtils.trimToNull(StringEscapeUtils.unescapeHtml4(node.getTextContent()));
 		case Node.CDATA_SECTION_NODE:
 			return ((CDATASection) node).getTextContent();
 		default:
-			return StringEscapeUtils.unescapeHtml(node.getNodeValue());
+			return StringEscapeUtils.unescapeHtml4(node.getNodeValue());
 		}
 	}
 

@@ -2,8 +2,7 @@ package jef.database.jmx;
 
 import jef.database.DbClient;
 import jef.database.jpa.JefEntityManagerFactory;
-
-import org.apache.commons.lang.StringUtils;
+import jef.tools.StringUtils;
 
 public class DbClientInfo implements DbClientInfoMBean {
 	private DbClient db;

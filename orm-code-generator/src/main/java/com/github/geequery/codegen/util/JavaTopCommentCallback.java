@@ -7,9 +7,8 @@ import java.io.IOException;
 import jef.common.log.LogUtil;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
+import jef.tools.StringUtils;
 import jef.tools.TextFileCallback;
-
-import org.apache.commons.lang.StringUtils;
 
 
 //用于为每个Java文件处理顶部的声明的小工具

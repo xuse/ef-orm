@@ -5,6 +5,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Queue;
 
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import jef.database.DbMetaData.ObjectType;
 import jef.database.innerpool.IConnection;
 import jef.database.support.RDBMS;
@@ -12,13 +16,9 @@ import jef.database.test.DataSource;
 import jef.database.test.DataSourceContext;
 import jef.database.test.DatabaseInit;
 import jef.database.test.JefJUnit4DatabaseTestRunner;
+import jef.tools.ArrayUtils;
 import jef.tools.JefConfiguration;
 import jef.tools.reflect.BeanUtils;
-
-import org.apache.commons.lang.ArrayUtils;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * {@code SequenceKeyHolder}单元测试类

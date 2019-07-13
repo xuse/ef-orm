@@ -31,6 +31,9 @@ import java.util.zip.Inflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jef.common.log.LogUtil;
 
 /**
@@ -49,7 +52,7 @@ public class ZipInputStream extends InflaterInputStream implements ZipConstants 
 
 	private static final int STORED = ZipEntry.STORED;
 	private static final int DEFLATED = ZipEntry.DEFLATED;
-
+	private static final Logger log=LoggerFactory.getLogger(ZipInputStream.class);
 	private boolean closed = false;
 	// this flag is set to true after EOF has reached for
 	// one entry

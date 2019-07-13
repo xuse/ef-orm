@@ -6,18 +6,18 @@ import java.util.List;
 
 import javax.persistence.Id;
 
-import jef.common.wrapper.Page;
-import jef.database.DbClient;
-import jef.database.DbClientBuilder;
-import jef.database.meta.MetaHolder;
-
-import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.easyframe.enterprise.spring.CommonDao;
 import org.easyframe.enterprise.spring.CommonDaoImpl;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
+
+import jef.common.wrapper.Page;
+import jef.database.DbClient;
+import jef.database.DbClientBuilder;
+import jef.database.meta.MetaHolder;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestPOJO {

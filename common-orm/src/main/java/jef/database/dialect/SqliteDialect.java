@@ -18,6 +18,9 @@ package jef.database.dialect;
 import java.io.File;
 import java.sql.SQLException;
 
+import com.querydsl.sql.SQLTemplates;
+import com.querydsl.sql.SQLiteTemplates;
+
 import jef.database.ConnectInfo;
 import jef.database.DbFunction;
 import jef.database.dialect.ColumnType.AutoIncrement;
@@ -39,12 +42,8 @@ import jef.database.query.function.TemplateFunction;
 import jef.database.query.function.TransformFunction;
 import jef.database.query.function.VarArgsSQLFunction;
 import jef.database.support.RDBMS;
+import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
-
-import org.apache.commons.lang.StringUtils;
-
-import com.querydsl.sql.SQLTemplates;
-import com.querydsl.sql.SQLiteTemplates;
 
 
 /**

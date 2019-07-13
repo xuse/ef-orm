@@ -3,7 +3,10 @@ package jef.database.nativequery;
 import java.sql.SQLException;
 import java.util.List;
 
-import jef.codegen.EntityEnhancer;
+import org.junit.Assert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
 import jef.common.log.LogUtil;
 import jef.database.DbClient;
 import jef.database.NamedQueryConfig;
@@ -19,13 +22,9 @@ import jef.orm.multitable2.TextValuePair;
 import jef.orm.multitable2.model.Child;
 import jef.orm.multitable2.model.EnumationTable;
 import jef.orm.multitable2.model.Leaf;
+import jef.tools.StringUtils;
 import jef.tools.reflect.BeanUtils;
 import jef.tools.string.RandomData;
-
-import org.apache.commons.lang.StringUtils;
-import org.junit.Assert;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 /**
  * NamedQuery测试类

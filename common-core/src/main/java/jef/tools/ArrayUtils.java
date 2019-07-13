@@ -27,8 +27,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import org.apache.commons.lang.builder.ToStringBuilder;
-import org.apache.commons.lang.builder.ToStringStyle;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
@@ -47,7 +47,7 @@ import jef.common.LongList;
  * @author Administrator
  * 
  */
-public class ArrayUtils extends org.apache.commons.lang.ArrayUtils {
+public class ArrayUtils extends org.apache.commons.lang3.ArrayUtils {
 	/**
 	 * 数组对象遍历执行toString方法，获得String数组对象。
 	 * 
@@ -1073,7 +1073,7 @@ public class ArrayUtils extends org.apache.commons.lang.ArrayUtils {
 		if (trimStartAndEnd) {
 			return new ToStringBuilder(array, ARRAY_SIMPLE_STYLE).append(array).toString();
 		}
-		return org.apache.commons.lang.ArrayUtils.toString(array);
+		return org.apache.commons.lang3.ArrayUtils.toString(array);
 	}
 
 }

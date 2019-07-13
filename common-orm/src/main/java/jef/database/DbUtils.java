@@ -56,7 +56,7 @@ import javax.persistence.PersistenceException;
 import javax.persistence.QueryTimeoutException;
 import javax.sql.DataSource;
 
-import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang3.ObjectUtils;
 
 import com.google.common.base.Objects;
 

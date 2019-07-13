@@ -11,13 +11,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.ObjectUtils;
+
+import com.google.common.base.Objects;
+
 import jef.database.jdbc.rowset.CachedRowSetImpl;
 import jef.database.jdbc.rowset.Row;
 import jef.tools.StringUtils;
-
-import org.apache.commons.lang.ObjectUtils;
-
-import com.google.common.base.Objects;
 
 public class InMemoryGroupByHaving implements InMemoryProcessor {
 	GroupByItem[] keys;

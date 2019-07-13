@@ -23,11 +23,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
-
 import com.github.geequery.codegen.ast.IClass.RealClass;
 
 import jef.tools.ArrayUtils;
+import jef.tools.StringUtils;
 import jef.tools.string.JefStringReader;
 
 public class JavaMethod extends DefaultJavaElement implements JavaElement {

@@ -1,5 +1,9 @@
 package jef.database.query;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import com.google.common.base.Objects;
+
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.QueryAlias;
@@ -8,10 +12,6 @@ import jef.database.meta.AbstractMetadata;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.Reference;
 import jef.tools.Assert;
-
-import org.apache.commons.lang.builder.HashCodeBuilder;
-
-import com.google.common.base.Objects;
 
 /**
  * 能绑定到一个SQL中查询表上的Field描述。

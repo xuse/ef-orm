@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -39,6 +38,7 @@ import jef.database.jsqlparser.visitor.Statement;
 import jef.database.jsqlparser.visitor.VisitorAdapter;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
+import jef.tools.StringUtils;
 import jef.tools.io.Charsets;
 
 public class ComplexSqlParseTest extends org.junit.Assert {

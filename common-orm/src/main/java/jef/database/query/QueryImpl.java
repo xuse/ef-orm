@@ -23,6 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import jef.database.Condition;
 import jef.database.Condition.Operator;
 import jef.database.DataObject;
@@ -44,9 +47,6 @@ import jef.database.meta.Reference;
 import jef.database.meta.TupleField;
 import jef.database.wrapper.populator.Transformer;
 import jef.tools.Assert;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
 
 public final class QueryImpl<T extends IQueryableEntity> extends
 		AbstractQuery<T> {

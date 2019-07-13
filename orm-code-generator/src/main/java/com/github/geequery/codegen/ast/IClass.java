@@ -5,11 +5,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.StringUtils;
 import jef.tools.reflect.GenericUtils;
-
-import org.apache.commons.lang.ArrayUtils;
 
 public interface IClass {
 	static final String[] PRIMITIVE_TYPES= {"int","short","long","float","double","boolean","char","byte"};

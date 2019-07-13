@@ -23,8 +23,6 @@ import java.util.NoSuchElementException;
 
 import com.google.common.base.Objects;
 
-import jef.tools.collection.CollectionUtils;
-
 /**
  * 断言工具类，用于检查
  * @author Administrator
@@ -496,7 +494,7 @@ public class Assert {
 	 *             if the collection is <code>null</code> or has no elements
 	 */
 	public static void notEmpty(Collection collection, String message) {
-		if (CollectionUtils.isEmpty(collection)) {
+		if (collection == null || collection.isEmpty()) {
 			throw new IllegalArgumentException(message);
 		}
 	}
@@ -541,7 +539,7 @@ public class Assert {
 	 *             if the map is <code>null</code> or has no entries
 	 */
 	public static void notEmpty(Map map, String message) {
-		if (CollectionUtils.isEmpty(map)) {
+		if (map==null || map.isEmpty()) {
 			throw new IllegalArgumentException(message);
 		}
 	}

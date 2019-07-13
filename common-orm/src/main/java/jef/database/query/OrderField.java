@@ -17,6 +17,9 @@ package jef.database.query;
 
 import java.io.Serializable;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.dialect.DatabaseDialect;
@@ -24,9 +27,6 @@ import jef.database.meta.FBIField;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.TupleField;
 import jef.tools.Assert;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
 
 /**
  * 描述一个排序字段

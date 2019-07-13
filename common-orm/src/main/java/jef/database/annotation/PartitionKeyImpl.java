@@ -2,15 +2,15 @@ package jef.database.annotation;
 
 import java.lang.annotation.Annotation;
 
-import jef.database.routing.function.KeyFunction;
-import jef.json.JSONCustom;
-import jef.json.JsonTypeSerializer;
-
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.ObjectSerializer;
+
+import jef.database.routing.function.KeyFunction;
+import jef.json.JSONCustom;
+import jef.json.JsonTypeSerializer;
+import jef.tools.ArrayUtils;
 
 /**
  * 默认的PartitionKey实现，用于非Annotation场合下使用。

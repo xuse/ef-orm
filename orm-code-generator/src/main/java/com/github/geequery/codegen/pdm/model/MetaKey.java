@@ -5,8 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import jef.database.meta.object.PrimaryKey;
-
-import org.apache.commons.lang.StringUtils;
+import jef.tools.StringUtils;
 
 /**
  *
