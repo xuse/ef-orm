@@ -7,8 +7,9 @@
 	<parent>
 		<groupId>org.easyframe</groupId>
 		<artifactId>ef-orm</artifactId>
-		<version>1.12.7.2</version>
+		<version>1.12.8.1</version>
 	</parent>
+	
 	<artifactId>common-orm</artifactId>
 	<name>common-orm</name>
 	<packaging>jar</packaging>
@@ -30,6 +31,7 @@
 			<artifactId>common-core</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		
 		<dependency>
 			<groupId>com.github.javaparser</groupId>
 			<artifactId>javaparser-core</artifactId>
@@ -105,13 +107,14 @@
 			<version>1.7.10</version>
 			<scope>test</scope>
 		</dependency>
-		<!-- 各种连接池的识别 常用的三种第三方连接池 -->
+		<!-- 各种连接池的识别 常用的三种第三方连接池 
 		<dependency>
 			<groupId>com.cloudhopper.proxool</groupId>
 			<artifactId>proxool</artifactId>
 			<version>0.9.1</version>
 			<scope>provided</scope>
 		</dependency>
+		-->
 		<dependency>
 			<groupId>com.alibaba</groupId>
 			<artifactId>druid</artifactId>
@@ -123,12 +126,6 @@
 			<artifactId>querydsl-sql</artifactId>
 			<version>${querydsl.version}</version>
 		</dependency>
-
-		<!-- <dependency> <groupId>com.querydsl</groupId> <artifactId>querydsl-jpa</artifactId> 
-			<version>${querydsl.version}</version> </dependency> <dependency> <groupId>com.querydsl</groupId> 
-			<artifactId>querydsl-apt</artifactId> <version>${querydsl.version}</version> 
-			</dependency> <dependency> <groupId>com.querydsl</groupId> <artifactId>querydsl-sql-codegen</artifactId> 
-			<version>${querydsl.version}</version> </dependency> -->
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-instrument</artifactId>

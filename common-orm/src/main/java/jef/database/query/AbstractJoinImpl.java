@@ -16,7 +16,7 @@ import jef.database.wrapper.populator.Transformer;
 
 public abstract class AbstractJoinImpl implements Join{
 	//额外的数据属性
-	protected Map<String,Object> attribute;
+	protected final Map<String,Object> attribute = new HashMap<>();
 	private int maxResult;
 	private int fetchSize;
 	private int timeout;
@@ -40,7 +40,9 @@ public abstract class AbstractJoinImpl implements Join{
 	}
 
 	public void fillAttribute(Query<?> q){
-		this.attribute=q.getAttributes();
+		if(q.getAttributes()!=null) {
+			this.attribute.putAll(q.getAttributes());
+		}
 		this.t=q.getResultTransformer();
 	}
 	
@@ -109,9 +111,6 @@ public abstract class AbstractJoinImpl implements Join{
 		return result;
 	}
 	public void setAttribute(String key, Object value) {
-		if(attribute==null){
-			attribute=new HashMap<String,Object>();
-		}
 		attribute.put(key, value);
 	}
 

@@ -3,6 +3,8 @@ package jef.database.jsqlparser;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Test;
+
 import jef.database.DbUtils;
 import jef.database.dialect.AbstractDialect;
 import jef.database.dialect.DatabaseDialect;
@@ -10,9 +12,7 @@ import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.statement.select.Select;
 import jef.database.jsqlparser.visitor.Statement;
 import jef.database.support.RDBMS;
-
-import org.apache.commons.lang.StringUtils;
-import org.junit.Test;
+import jef.tools.StringUtils;
 
 /**
  * 测试在不同数据库下的兼容性

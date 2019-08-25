@@ -2,6 +2,8 @@ package jef.database.cache;
 
 import java.util.List;
 
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import jef.common.PairSO;
 import jef.database.cache.WhereParser.DruidImpl;
 import jef.database.cache.WhereParser.NativeImpl;
@@ -9,8 +11,6 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.statement.UnionJudgement;
 import jef.database.jsqlparser.expression.Table;
 import jef.database.jsqlparser.visitor.Expression;
-
-import org.apache.commons.lang.builder.HashCodeBuilder;
 
 public class KeyDimension {
 	protected String where;

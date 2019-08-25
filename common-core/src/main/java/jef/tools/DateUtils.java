@@ -214,7 +214,7 @@ public abstract class DateUtils {
      * @return 截断后的时间
      */
     public final static void truncate(Date d, int field) {
-        d.setTime(org.apache.commons.lang.time.DateUtils.truncate(d, field).getTime());
+        d.setTime(org.apache.commons.lang3.time.DateUtils.truncate(d, field).getTime());
     }
 
     /**
@@ -227,7 +227,7 @@ public abstract class DateUtils {
      * @return 截断后的时间
      */
     public final static Date getTruncated(Date d, int field) {
-        return org.apache.commons.lang.time.DateUtils.truncate(d, field);
+        return org.apache.commons.lang3.time.DateUtils.truncate(d, field);
     }
 
     /**
@@ -240,7 +240,7 @@ public abstract class DateUtils {
      * @return 截断后的时间
      */
     public final static void truncate(Calendar date, int field) {
-        date.setTimeInMillis(org.apache.commons.lang.time.DateUtils.truncate(date, field).getTimeInMillis());
+        date.setTimeInMillis(org.apache.commons.lang3.time.DateUtils.truncate(date, field).getTimeInMillis());
     }
 
     /**
@@ -253,7 +253,7 @@ public abstract class DateUtils {
      * @return 截断后的时间
      */
     public final static Calendar getTruncated(Calendar date, int field) {
-        return org.apache.commons.lang.time.DateUtils.truncate(date, field);
+        return org.apache.commons.lang3.time.DateUtils.truncate(date, field);
     }
 
     /**
@@ -265,7 +265,7 @@ public abstract class DateUtils {
      * @see #dayBegin(Date)
      */
     public final static void truncate(Date d) {
-        d.setTime(org.apache.commons.lang.time.DateUtils.truncate(d, Calendar.DATE).getTime());
+        d.setTime(org.apache.commons.lang3.time.DateUtils.truncate(d, Calendar.DATE).getTime());
     }
 
     /**
@@ -277,7 +277,7 @@ public abstract class DateUtils {
      * @see #dayBegin(Date)
      */
     public final static Date getTruncated(Date d) {
-        return org.apache.commons.lang.time.DateUtils.truncate(d, Calendar.DATE);
+        return org.apache.commons.lang3.time.DateUtils.truncate(d, Calendar.DATE);
     }
 
     /**
@@ -289,14 +289,14 @@ public abstract class DateUtils {
      * @see #truncate(Date)
      */
     public static Date dayBegin(Date d) {
-        return org.apache.commons.lang.time.DateUtils.truncate(d, Calendar.DATE);
+        return org.apache.commons.lang3.time.DateUtils.truncate(d, Calendar.DATE);
     }
 
     /**
      * 获得当天结束前最后一毫秒的时间点
      */
     public static Date dayEnd(Date d) {
-        d = org.apache.commons.lang.time.DateUtils.truncate(d, Calendar.DATE);
+        d = org.apache.commons.lang3.time.DateUtils.truncate(d, Calendar.DATE);
         return new Date(d.getTime() + MILLISECONDS_IN_DAY - 1);
     }
 
@@ -308,7 +308,7 @@ public abstract class DateUtils {
      * @return 时间的年和月部分，指向该月的开始
      */
     public static final Date monthBegin(Date date) {
-        return org.apache.commons.lang.time.DateUtils.truncate(date, Calendar.MONTH);
+        return org.apache.commons.lang3.time.DateUtils.truncate(date, Calendar.MONTH);
     }
 
     /**
@@ -323,7 +323,7 @@ public abstract class DateUtils {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.set(Calendar.DATE, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));// 设置为当月的最后一天
-        calendar = org.apache.commons.lang.time.DateUtils.truncate(calendar, Calendar.DATE);// 去除时分秒
+        calendar = org.apache.commons.lang3.time.DateUtils.truncate(calendar, Calendar.DATE);// 去除时分秒
         Date d = calendar.getTime();
         d.setTime(d.getTime() + MILLISECONDS_IN_DAY - 1); // 调整到当天的最后1毫秒
         return d;
@@ -341,7 +341,7 @@ public abstract class DateUtils {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.set(Calendar.DATE, calendar.getActualMaximum(Calendar.DAY_OF_MONTH));// 设置为当月的最后一天
-        calendar = org.apache.commons.lang.time.DateUtils.truncate(calendar, Calendar.DATE);// 去除时分秒
+        calendar = org.apache.commons.lang3.time.DateUtils.truncate(calendar, Calendar.DATE);// 去除时分秒
         return calendar.getTime();
     }
 
@@ -639,7 +639,7 @@ public abstract class DateUtils {
             return true;
         if (d1 == null || d2 == null)
             return false;
-        return org.apache.commons.lang.time.DateUtils.isSameDay(d1, d2);
+        return org.apache.commons.lang3.time.DateUtils.isSameDay(d1, d2);
     }
 
     /**
@@ -1256,7 +1256,7 @@ public abstract class DateUtils {
      * @return the begin of today.
      */
     public static Date today() {
-        return org.apache.commons.lang.time.DateUtils.truncate(new Date(), Calendar.DATE);
+        return org.apache.commons.lang3.time.DateUtils.truncate(new Date(), Calendar.DATE);
     }
 
     /**
@@ -1265,7 +1265,7 @@ public abstract class DateUtils {
      * @return
      */
     public static java.sql.Date sqlToday() {
-        return new java.sql.Date(org.apache.commons.lang.time.DateUtils.truncate(new Date(), Calendar.DATE).getTime());
+        return new java.sql.Date(org.apache.commons.lang3.time.DateUtils.truncate(new Date(), Calendar.DATE).getTime());
     }
 
     /**
@@ -1293,7 +1293,7 @@ public abstract class DateUtils {
      * @return true if the date is the begin of day.
      */
     public static boolean isDayBegin(Date date) {
-        Date d1 = org.apache.commons.lang.time.DateUtils.truncate(date, Calendar.DATE);
+        Date d1 = org.apache.commons.lang3.time.DateUtils.truncate(date, Calendar.DATE);
         return d1.getTime() == date.getTime();
     }
     

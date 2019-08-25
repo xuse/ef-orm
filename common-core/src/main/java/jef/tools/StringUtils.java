@@ -43,10 +43,9 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 
-import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.lang.RandomStringUtils;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import jef.common.BooleanList;
 import jef.common.DoubleList;
@@ -57,7 +56,7 @@ import jef.tools.string.RegexpUtils;
 import jef.tools.string.StringSpliter;
 import jef.tools.string.Substring;
 
-public final class StringUtils extends org.apache.commons.lang.StringUtils {
+public final class StringUtils extends org.apache.commons.lang3.StringUtils {
 	public static final byte CR = 0x0D;
 	public static final byte LF = 0x0A;
 	public static final byte[] CRLF = { CR, LF };
@@ -496,7 +495,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 		if (isBlank(o))
 			return defaultValue;// 空白则返回默认值，即便默认值为null也返回null
 		try {
-			return Integer.valueOf(o);
+			return Integer.parseInt(o);
 		} catch (NumberFormatException e) {
 			if (defaultValue == null)// 默认值为null，且数值非法的情况下抛出异常
 				throw e;
@@ -810,7 +809,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 */
 	public static CharSequence escapeHtml(CharSequence s, boolean unicode) {
 		if (unicode)
-			return StringEscapeUtils.escapeHtml(s.toString());
+			return StringEscapeUtils.escapeHtml4(s.toString());
 		StringBuilder sb = new StringBuilder(s.length() + 16);
 		for (int i = 0; i < s.length(); i++) {
 			char c = s.charAt(i);
@@ -841,7 +840,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	 * @return
 	 */
 	public static String unescapeHtml(String s) {
-		return StringEscapeUtils.unescapeHtml(s);
+		return StringEscapeUtils.unescapeHtml4(s);
 	}
 
 	/**
@@ -851,7 +850,7 @@ public final class StringUtils extends org.apache.commons.lang.StringUtils {
 	public static String unescapeHtmlToSql(String s) {
 		if (s == null)
 			return null;
-		return StringEscapeUtils.escapeSql(StringEscapeUtils.unescapeHtml(s));
+		return StringEscapeUtils.unescapeHtml4(s).replace("'", "''");
 	}
 
 	/**

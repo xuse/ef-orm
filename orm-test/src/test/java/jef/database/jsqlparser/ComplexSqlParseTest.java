@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -39,6 +38,7 @@ import jef.database.jsqlparser.visitor.Statement;
 import jef.database.jsqlparser.visitor.VisitorAdapter;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
+import jef.tools.StringUtils;
 import jef.tools.io.Charsets;
 
 public class ComplexSqlParseTest extends org.junit.Assert {
@@ -68,7 +68,7 @@ public class ComplexSqlParseTest extends org.junit.Assert {
 
 	@Test
 	public void parseSelect() throws ParseException {
-		Select ex = DbUtils.parseSelect("select * from D where not 1=2");
+		Select ex = DbUtils.parseSelect("select * from D where not -1=2 and id=-1 and tid=+3");
 		System.out.println(ex);
 	}
 

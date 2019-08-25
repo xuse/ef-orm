@@ -5,7 +5,7 @@ import java.util.Collections;
 
 import javax.sql.DataSource;
 
-import org.apache.commons.lang.StringUtils;
+import jef.tools.StringUtils;
 
 /**
  * 在Spring的配置中找寻Bean的DataSoruceLookup

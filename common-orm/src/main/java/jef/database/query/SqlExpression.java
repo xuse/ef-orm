@@ -15,19 +15,25 @@
  */
 package jef.database.query;
 
+import java.io.StringReader;
 import java.util.Arrays;
 import java.util.List;
 
+import jef.common.IntList;
 import jef.database.Condition;
 import jef.database.IConditionField;
 import jef.database.IQueryableEntity;
 import jef.database.SqlProcessor;
 import jef.database.dialect.DatabaseDialect;
+import jef.database.jsqlparser.parser.StSqlParser;
 import jef.database.jsqlparser.visitor.Expression;
 import jef.database.jsqlparser.visitor.ExpressionType;
 import jef.database.jsqlparser.visitor.ExpressionVisitor;
+import jef.database.jsqlparser.visitor.VisitorSimpleAdapter;
 import jef.database.meta.ITableMetadata;
 import jef.database.wrapper.clause.SqlBuilder;
+import jef.database.wrapper.variable.ConstantVariable;
+import jef.tools.Exceptions;
 
 /**
  * A SQL Expression.
@@ -38,9 +44,31 @@ public final class SqlExpression implements Expression,IConditionField{
 	
 	private String sql;
 	
+	private final IntList params = new IntList();
+	
 	public SqlExpression(String text){
-		this.sql=text;
+		this(text,false);
 	}
+	
+	public SqlExpression(String text,boolean parse){
+		if(parse) {
+			StSqlParser parser = new StSqlParser(new StringReader(text));
+			try {
+				Expression exp=parser.Condition();
+				exp.accept(new VisitorSimpleAdapter() {
+					public void visit(jef.database.jsqlparser.expression.JdbcParameter jdbcParameter) {
+						params.add(jdbcParameter.getId());
+					}
+				});
+				this.sql=exp.toString();
+			} catch (Throwable e) {
+				throw Exceptions.illegalState("解析错误:{}",text,e);
+			}
+		}else {
+			this.sql=text;
+		}
+	}
+	
 	public String getText() {
 		return sql;
 	}
@@ -63,8 +91,16 @@ public final class SqlExpression implements Expression,IConditionField{
 	}
 	public void toPrepareSql(SqlBuilder fields, ITableMetadata meta, SqlProcessor processor, SqlContext context, IQueryableEntity instance,DatabaseDialect profile,boolean batch) {
 		fields.append(sql);
+		for(int i: params.toArrayUnsafe()) {
+			Object o=context.attribute.get(String.valueOf(i));
+			fields.addBind(new ConstantVariable(o));
+		}
 	}
+	
 	public void appendTo(StringBuilder sb) {
+		if(!params.isEmpty()) {
+			throw new IllegalArgumentException("不支持的参数用法");
+		}
 		sb.append(sql);
 	}
 	public ExpressionType getType() {

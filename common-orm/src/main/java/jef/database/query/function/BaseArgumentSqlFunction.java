@@ -3,8 +3,7 @@ package jef.database.query.function;
 import java.util.List;
 
 import jef.database.jsqlparser.visitor.Expression;
-
-import org.apache.commons.lang.ArrayUtils;
+import jef.tools.ArrayUtils;
 
 public abstract class BaseArgumentSqlFunction implements SQLFunction {
 

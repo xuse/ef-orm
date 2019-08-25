@@ -10,15 +10,15 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jef.database.DbUtils;
 import jef.database.innerpool.JConnection;
 import jef.database.jdbc.GenerateKeyReturnOper;
 import jef.database.jsqlparser.parser.ParseException;
 import jef.database.jsqlparser.parser.StSqlParser;
-
-import org.apache.commons.lang.ArrayUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import jef.tools.ArrayUtils;
 
 @SuppressWarnings("unchecked")
 public class JStatement implements java.sql.Statement {

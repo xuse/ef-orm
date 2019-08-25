@@ -3,6 +3,8 @@ package jef.database.query;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.RandomStringUtils;
+
 import jef.database.DbUtils;
 import jef.database.Field;
 import jef.database.ORMConfig;
@@ -13,8 +15,6 @@ import jef.database.meta.IReferenceAllTable;
 import jef.database.meta.ISelectProvider;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
-
-import org.apache.commons.lang.RandomStringUtils;
 
 public final class AllTableColumns implements IReferenceAllTable {
 

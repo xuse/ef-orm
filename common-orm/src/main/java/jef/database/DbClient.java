@@ -813,7 +813,7 @@ public class DbClient extends Session implements SessionFactory {
 	protected IConnection getConnection() throws SQLException {
 		ensureOpen();
 		IConnection conn = connPool.poll();
-		if (!conn.getAutoCommit()) {
+		if (this.getTxType()!=TransactionMode.JTA && !conn.getAutoCommit()) {
 			conn.setAutoCommit(true);
 		}
 		return conn;

@@ -47,6 +47,7 @@ final class JoinImpl2 extends AbstractJoinImpl {
 	};
 
 	JoinImpl2(Query<?> left, Query<?> right, JoinCondition joinCondition, Reference ref) {
+		super();
 		List<QueryAlias> qs = new ArrayList<QueryAlias>(6);
 		qs.add(new QueryAlias(null, left));
 
@@ -55,6 +56,7 @@ final class JoinImpl2 extends AbstractJoinImpl {
 		qs.add(rightTableDef);
 
 		SqlContext context = new SqlContext(-1, qs, null);
+		context.attribute=super.attribute;
 		this.context = context;
 		this.conditions.add(joinCondition);
 

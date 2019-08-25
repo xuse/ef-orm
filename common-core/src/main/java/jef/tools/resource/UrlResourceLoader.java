@@ -11,9 +11,8 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
 
+import jef.tools.StringUtils;
 import jef.tools.reflect.ClassLoaderUtil;
-
-import org.apache.commons.lang.StringUtils;
 
 public class UrlResourceLoader extends AResourceLoader {
 	/**

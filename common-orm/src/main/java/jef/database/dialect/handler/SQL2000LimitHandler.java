@@ -4,13 +4,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
-import jef.common.log.LogUtil;
-import jef.database.jdbc.statement.ResultSetLaterProcess;
-import jef.database.wrapper.clause.BindSql;
-import jef.tools.PageLimit;
-
-import org.apache.commons.lang.StringUtils;
-
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLOrderBy;
 import com.alibaba.druid.sql.ast.SQLOrderingSpecification;
@@ -27,6 +20,12 @@ import com.alibaba.druid.sql.dialect.sqlserver.ast.SQLServerTop;
 import com.alibaba.druid.sql.dialect.sqlserver.parser.SQLServerSelectParser;
 import com.alibaba.druid.sql.dialect.sqlserver.visitor.SQLServerOutputVisitor;
 import com.alibaba.druid.sql.parser.ParserException;
+
+import jef.common.log.LogUtil;
+import jef.database.jdbc.statement.ResultSetLaterProcess;
+import jef.database.wrapper.clause.BindSql;
+import jef.tools.PageLimit;
+import jef.tools.StringUtils;
 
 public class SQL2000LimitHandler implements LimitHandler {
 	public BindSql toPageSQL(String sql, PageLimit offsetLimit) {

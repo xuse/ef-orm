@@ -11,6 +11,10 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
+
 import jef.common.log.LogUtil;
 import jef.tools.Assert;
 import jef.tools.SimpleXPath;
@@ -20,10 +24,6 @@ import jef.tools.XMLUtils;
 import jef.tools.maven.jaxb.Dependency;
 import jef.tools.maven.jaxb.Dependency.Exclusions;
 import jef.tools.maven.jaxb.Exclusion;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
 
 public class MavenDependencyParser {
 	public static boolean debug = false;
@@ -245,7 +245,7 @@ public class MavenDependencyParser {
 			return version;
 		}
 
-		String paramName = org.apache.commons.lang.StringUtils.substringBetween(version, "${", "}");
+		String paramName = StringUtils.substringBetween(version, "${", "}");
 		String paramValue = null;
 		Document doc = pom.getDocument();
 		if ("project.version".equals(paramName)) {

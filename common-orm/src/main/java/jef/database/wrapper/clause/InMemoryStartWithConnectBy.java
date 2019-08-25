@@ -8,16 +8,16 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import jef.database.Condition.Operator;
-import jef.database.jdbc.rowset.CachedRowSetImpl;
-import jef.database.jdbc.rowset.Row;
-import jef.tools.StringUtils;
-
-import org.apache.commons.lang.ObjectUtils;
+import org.apache.commons.lang3.ObjectUtils;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+
+import jef.database.Condition.Operator;
+import jef.database.jdbc.rowset.CachedRowSetImpl;
+import jef.database.jdbc.rowset.Row;
+import jef.tools.StringUtils;
 
 /**
  * 在内存中实现结果集的递归查询

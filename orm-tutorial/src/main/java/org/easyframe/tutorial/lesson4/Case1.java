@@ -4,17 +4,19 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 
-import jef.database.DbClient;
-import jef.database.DbClientBuilder;
-import jef.database.ORMConfig;
-import jef.database.QB;
-import jef.database.query.Query;
-
 import org.easyframe.tutorial.lesson4.entity.DataDict;
 import org.easyframe.tutorial.lesson4.entity.Person;
 import org.easyframe.tutorial.lesson4.entity.School;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import com.alibaba.fastjson.JSON;
+
+import jef.database.DbClient;
+import jef.database.DbClientBuilder;
+import jef.database.ORMConfig;
+import jef.database.QB;
+import jef.database.query.Query;
 
 public class Case1 extends org.junit.Assert{
 	private static DbClient db ;
@@ -27,7 +29,7 @@ public class Case1 extends org.junit.Assert{
 	public static void setup() throws SQLException {
 //		ORMConfig.getInstance().setCacheLevel2(500);
 //		ORMConfig.getInstance().setDebugMode(true);
-		db = new DbClientBuilder().build();
+		db = new DbClientBuilder().setPackagesToScan(new String[] {"org.easyframe.tutorial"}).build();
 		db.dropTable(Person.class, School.class,DataDict.class);
 		db.createTable(Person.class, School.class,DataDict.class);
 
@@ -65,15 +67,18 @@ public class Case1 extends org.junit.Assert{
 		{
 			p.setName("玄德");
 			p.setCurrentSchoolId(1);
+			p.setGender('F');
 
 			// 虽然Person对象中配置了级联关系。
 			// 但在EF-ORM中，级联关系是在保证了单表模型完整可用的基础上,补充上去的一种附属描述
 			// 因此非级联操作一样可用。
 			db.insert(p);
 		}
+		p.getQuery().setAttribute("dict_type", "USER.GENDER");
 		//查出记录
 		p = db.load(p);
 
+		System.out.println(JSON.toJSONString(p,true));
 		//单表更新
 		p.setCurrentSchoolId(2);
 		p.setName("云长");
@@ -174,12 +179,12 @@ public class Case1 extends org.junit.Assert{
 		Person p1=new Person();
 		p1.setName("孟德");
 		p1.setGender('M'); //男性为M 女性为F
-		p1.setDictType("USER");
+	//	p1.setDictType("USER");
 		
 		Person p2=new Person();
 		p2.setName("貂蝉");
 		p2.setGender('F');
-		p2.setDictType("USER");
+	//	p2.setDictType("USER");
 		
 		db.insert(p1);
 		db.insert(p2);

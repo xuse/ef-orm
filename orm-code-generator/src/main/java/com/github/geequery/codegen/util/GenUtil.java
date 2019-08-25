@@ -20,11 +20,11 @@ import java.io.IOException;
 
 import com.github.geequery.codegen.ast.IClass;
 import com.github.geequery.codegen.ast.IClassUtil;
+
 import jef.common.wrapper.Holder;
+import jef.tools.ArrayUtils;
 import jef.tools.IOUtils;
 import jef.tools.TextFileCallback;
-
-import org.apache.commons.lang.ArrayUtils;
 
  public class GenUtil {
 	 //判断一个类是否具有 未修改 标签

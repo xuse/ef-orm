@@ -43,8 +43,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.apache.commons.lang.ObjectUtils;
-
 import com.google.common.base.Function;
 import com.google.common.base.Objects;
 import com.google.common.collect.ArrayListMultimap;
@@ -758,7 +756,6 @@ public class CollectionUtils {
 	 * @param source
 	 *            the (potentially primitive) array
 	 * @return the converted List result
-	 * @see ObjectUtils#toObjectArray(Object)
 	 */
 	public static List<?> arrayToList(Object source) {
 		return Arrays.asList(ArrayUtils.toObject(source));
@@ -975,5 +972,30 @@ public class CollectionUtils {
 		} else {
 			list.set(index, value);
 		}
+	}
+	
+	/**
+	 * 将null更换为空集合对象
+	 * @param list
+	 * @return
+	 */
+	public static <T> List<T> nullSafe(List<T> list) {
+		return list==null? Collections.emptyList(): list;
+	}
+	/**
+	 * 将null更换为空集合对象
+	 * @param list
+	 * @return
+	 */
+	public static <T> Set<T> nullSafe(Set<T> set) {
+		return set==null? Collections.emptySet(): set;
+	}
+	/**
+	 * 将null更换为空集合对象
+	 * @param list
+	 * @return
+	 */
+	public static <K,V> Map<K,V> nullSafe(Map<K,V> map) {
+		return map==null? Collections.emptyMap(): map;
 	}
 }

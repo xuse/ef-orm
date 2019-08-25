@@ -15,7 +15,7 @@
  */
 package jef.tools.string;
 
-import org.apache.commons.lang.ArrayUtils;
+import jef.tools.ArrayUtils;
 
 /**
  * 用于描述将一个Substring，用两个keyword分割成为五个部分的情形，

@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>org.easyframe</groupId>
 		<artifactId>ef-orm</artifactId>
-		<version>1.12.7.2</version>
+		<version>1.12.8.1</version>
 	</parent>
 	<artifactId>spring-data-geequery</artifactId>
 	<name>spring-data-geequery</name>
@@ -94,6 +94,7 @@
 					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
+<!-- 
 			<plugin>
 				<groupId>com.mysema.maven</groupId>
 				<artifactId>apt-maven-plugin</artifactId>
@@ -113,7 +114,7 @@
 					</execution>
 				</executions>
 			</plugin>
-			<!-- 不知道为什么没有导出成功，已使用代码手工导出，后续再研究 <plugin> <groupId>com.querydsl</groupId> 
+			 不知道为什么没有导出成功，已使用代码手工导出，后续再研究 <plugin> <groupId>com.querydsl</groupId> 
 				<artifactId>querydsl-maven-plugin</artifactId> <version>${querydsl.version}</version> 
 				<executions> <execution> <goals> <goal>export</goal> </goals> </execution> 
 				</executions> <configuration> <jdbcDriver>org.apache.derby.jdbc.EmbeddedDriver</jdbcDriver> 
@@ -121,8 +122,8 @@
 				<targetFolder>${project.basedir}/target/generated-sources</targetFolder> 
 				</configuration> <dependencies> <dependency> <groupId>org.apache.derby</groupId> 
 				<artifactId>derby</artifactId> <version>10.10.2.0</version> </dependency> 
-				</dependencies> </plugin> -->
-
+				</dependencies> </plugin> 
+ -->
 		</plugins>
 
 	</build>

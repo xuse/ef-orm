@@ -22,10 +22,9 @@ import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 
 import jef.tools.IOUtils;
+import jef.tools.StringUtils;
 import jef.tools.TextFileCallback;
 import jef.tools.TextFileCallback.Dealwith;
-
-import org.apache.commons.lang.StringUtils;
 
 /**
  * 繁简体转换工具

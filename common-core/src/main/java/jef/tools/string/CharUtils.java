@@ -19,7 +19,7 @@ import jef.common.wrapper.IntRange;
 import jef.common.wrapper.IntRangeGroup;
 import jef.tools.StringUtils;
 
-public final class CharUtils extends org.apache.commons.lang.CharUtils {
+public final class CharUtils extends org.apache.commons.lang3.CharUtils {
 	/*
 	 * long int char byte经常转来转去，但实际上危险性是很大的。 long占用8个字节，int 占用4个字节，short /
 	 * char占用两个字节 byte一个字节。 凡是窄类型转宽类型是安全的，但是宽类型转窄类型就可能造成数据丢失,是危险的。

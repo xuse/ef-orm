@@ -10,8 +10,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
-import org.apache.commons.lang.ArrayUtils;
-
 import com.github.geequery.asm.Attribute;
 import com.github.geequery.asm.ClassReader;
 import com.github.geequery.asm.ClassVisitor;
@@ -26,6 +24,7 @@ import jef.accelerator.asm.ASMUtils;
 import jef.accelerator.asm.commons.AnnotationDef;
 import jef.accelerator.asm.commons.FieldExtCallback;
 import jef.accelerator.asm.commons.FieldExtDef;
+import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;

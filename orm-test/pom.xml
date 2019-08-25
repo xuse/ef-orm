@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>org.easyframe</groupId>
 		<artifactId>ef-orm</artifactId>
-		<version>1.12.7.2</version>
+		<version>1.12.8.1</version>
 	</parent>
 	<artifactId>orm-test</artifactId>
 	<name>orm-test</name>
@@ -200,7 +200,7 @@
 			<plugin>
 				<groupId>com.github.geequery</groupId>
 				<artifactId>geequery-maven-plugin</artifactId>
-				<version>1.12.7.2</version>
+				<version>1.12.8.1</version>
 				<executions>
 					<execution>
 						<goals>

@@ -2,9 +2,8 @@ package jef.tools.string;
 
 import java.util.Iterator;
 
+import jef.tools.ArrayUtils;
 import jef.tools.StringUtils;
-
-import org.apache.commons.lang.ArrayUtils;
 
 /**
  * 字符串枚举器

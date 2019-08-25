@@ -2,14 +2,14 @@ package jef.database.annotation;
 
 import java.lang.annotation.Annotation;
 
-import jef.json.JSONCustom;
-import jef.json.JsonTypeSerializer;
-import jef.tools.StringUtils;
-
-import org.apache.commons.lang.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.serializer.ObjectSerializer;
+
+import jef.json.JSONCustom;
+import jef.json.JsonTypeSerializer;
+import jef.tools.StringUtils;
 
 @JSONCustom(serializer=PartitionTableImpl.class)//,fieldAccess=true
 @SuppressWarnings("all")

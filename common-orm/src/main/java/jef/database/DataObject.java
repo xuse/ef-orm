@@ -10,16 +10,16 @@ import java.util.TreeMap;
 import javax.persistence.PersistenceException;
 import javax.xml.bind.annotation.XmlTransient;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import com.alibaba.fastjson.annotation.JSONField;
+
 import jef.accelerator.bean.BeanAccessor;
 import jef.database.meta.ITableMetadata;
 import jef.database.meta.MetaHolder;
 import jef.database.query.Query;
 import jef.database.query.QueryImpl;
-
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-
-import com.alibaba.fastjson.annotation.JSONField;
 
 /**
  * 抽象类，用于实现所有Entity默认的各种方法

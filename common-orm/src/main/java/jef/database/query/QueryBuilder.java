@@ -145,8 +145,19 @@ public class QueryBuilder {
 	 * @return
 	 */
 	public static Condition sqlExpression(String sql) {
-		return Condition.get(new SqlExpression(sql), Operator.EQUALS, null);
+		return Condition.get(new SqlExpression(sql,true), Operator.EQUALS, null);
 	}
+	
+	/**
+	 * 将传入的SQLExpression作为条件，支持传入绑定变量
+	 * 
+	 * @param sql
+	 * @return
+	 */
+	public static Condition sqlExpressionWithoutParse(String sql) {
+		return Condition.get(new SqlExpression(sql,false), Operator.EQUALS, null);
+	}
+	
 
 	/**
 	 * 创建一个Exists条件

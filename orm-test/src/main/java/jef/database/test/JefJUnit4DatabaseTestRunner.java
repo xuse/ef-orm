@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.junit.internal.runners.statements.ExpectException;
 import org.junit.runner.Description;
 import org.junit.runner.Result;
@@ -32,6 +31,7 @@ import jef.database.datasource.MapDataSourceLookup;
 import jef.database.datasource.RoutingDataSource;
 import jef.database.datasource.SimpleDataSource;
 import jef.database.meta.MetaHolder;
+import jef.tools.ArrayUtils;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 import jef.tools.io.Charsets;
