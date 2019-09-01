@@ -16,30 +16,39 @@
 package jef.ui.console;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-
-import  org.apache.commons.lang3.ArrayUtils;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import jef.tools.Exceptions;
 import jef.ui.ConsoleShell;
 
 public abstract class DefaultBatchConsoleShell extends AbstractConsoleShell {
+	protected static final ScheduledExecutorService pool=Executors.newScheduledThreadPool(3);
+	
+	
 	public DefaultBatchConsoleShell(ConsoleShell parent) {
 		super(parent);
 	}
+	
+	protected int lazyMinutes=0;
+	
 
-	protected List<String> commandPool = new ArrayList<String>();
+	protected List<String> commandQueue = new ArrayList<String>();
 
-	protected int poolSize() {
-		return commandPool.size();
+	protected int size() {
+		return commandQueue.size();
 	}
 
 	public final ShellResult performCommand(String str, String... params) {
 		int type=appendCommand(str);
 		if (type==RETURN_READY) {
 			try {
-				executeEnd(commandPool.toArray(ArrayUtils.EMPTY_STRING_ARRAY),str);
-				commandPool.clear();
+				executeCmds(commandQueue,str);
+				commandQueue.clear();
 			} catch (Throwable e) {
 				Exceptions.log(e);
 			}
@@ -49,10 +58,10 @@ public abstract class DefaultBatchConsoleShell extends AbstractConsoleShell {
 		} else if (type==RETURN_CONTINUE){
 			return ShellResult.CONTINUE;	
 		} else if (type==RETURN_TERMINATE){
-			commandPool.clear();
+			commandQueue.clear();
 			return ShellResult.TERMINATE;
 		}else{
-			commandPool.clear();
+			commandQueue.clear();
 			if (isMultiBatch())
 				return ShellResult.CONTINUE;
 			return ShellResult.TERMINATE;
@@ -84,5 +93,20 @@ public abstract class DefaultBatchConsoleShell extends AbstractConsoleShell {
 	 */
 	protected abstract int appendCommand(String str);
 	
-	protected abstract void executeEnd(String[] strings, String str);
+	protected final void executeCmds(Collection<String> commandQueue, String str) {
+		if(lazyMinutes==0) {
+			executeEnd(commandQueue, str);
+		}else {
+			final List<String> backCmds=new ArrayList<>(commandQueue);
+			pool.schedule(new Callable<Void>() {
+				@Override
+				public Void call() throws Exception {
+					executeEnd(backCmds,str);
+					return null;
+				}
+			},lazyMinutes,TimeUnit.MINUTES);
+		}
+	};
+	
+	protected abstract void executeEnd(Collection<String> commandQueue, String str);
 }

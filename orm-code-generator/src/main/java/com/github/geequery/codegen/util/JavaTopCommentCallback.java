@@ -6,10 +6,12 @@ import java.io.IOException;
 
 import  org.apache.commons.lang3.StringUtils;
 
+import com.github.geequery.core.util.Dealwith;
+import com.github.geequery.core.util.TextFileCallback;
+
 import jef.tools.Assert;
 import jef.tools.Exceptions;
 import jef.tools.IOUtils;
-import jef.tools.TextFileCallback;
 
 
 //用于为每个Java文件处理顶部的声明的小工具
@@ -54,12 +56,6 @@ public class JavaTopCommentCallback extends TextFileCallback{
 		 isPkgDeclare=0;
 	}
 	
-
-	@Override
-	protected Dealwith dealwithSourceOnSuccess(File source) {
-		return Dealwith.REPLACE;
-	}
-
 	@Override
 	public boolean isSuccess() {
 		return isPkgDeclare>0;
@@ -72,7 +68,7 @@ public class JavaTopCommentCallback extends TextFileCallback{
 	
 	public static void main(String[] args) throws IOException {
 		File target=new File("E:/Git/cxf-plus/src/main/java/jef/com/sun");
-		IOUtils.processFiles(target, new JavaTopCommentCallback("d:/oracle.txt"), "java");
+		IOUtils.processFiles(target,Dealwith.REPLACE, new JavaTopCommentCallback("d:/oracle.txt"), "java");
 		
 		
 	}

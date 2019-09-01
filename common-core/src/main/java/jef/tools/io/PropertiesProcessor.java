@@ -5,10 +5,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
+import com.github.geequery.core.util.TextFileCallback;
+
 import jef.http.client.support.CommentEntry;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
-import jef.tools.TextFileCallback;
 
 /**
  * 辅助对properties进行修改
@@ -28,12 +29,7 @@ public abstract class PropertiesProcessor extends TextFileCallback{
 	}
 
 	@Override
-	protected Dealwith dealwithSourceOnSuccess(File source) {
-		return Dealwith.REPLACE;
-	}
-
-	@Override
-	protected final String processLine(String s) {
+	public final String processLine(String s) {
 		if (StringUtils.isBlank(s) || s.startsWith("#")){
 			return s;
 		}
@@ -69,7 +65,7 @@ public abstract class PropertiesProcessor extends TextFileCallback{
 
 
 	@Override
-	protected void afterProcess(File source,File target,BufferedWriter w) throws IOException {
+	public void afterProcess(File source,File target,BufferedWriter w) throws IOException {
 		Map<String,String> map=getAddingEntries();
 		if(map!=null){
 			IOUtils.storeProperties(w,map,false);	
