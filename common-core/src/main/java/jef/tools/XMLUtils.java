@@ -104,7 +104,7 @@ import jef.tools.reflect.UnsafeUtils;
  * 
  */
 public class XMLUtils {
-	private static final Logger log = LoggerFactory.getLogger("XMLUtils");
+	protected static final Logger log = LoggerFactory.getLogger("XMLUtils");
 
 	/**
 	 * 缓存的DocumentBuilderFactory<br>

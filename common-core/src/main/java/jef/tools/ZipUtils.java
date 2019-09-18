@@ -30,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jef.common.BigDataBuffer;
-import jef.common.log.LogUtil;
 import jef.tools.support.ArchiveSummary;
 import jef.tools.zip.TarEntry;
 import jef.tools.zip.TarInputStream;
@@ -138,7 +137,7 @@ public class ZipUtils {
 			String entryName = StringUtils.toString(base) + f.getName();
 			entryName = ep == null ? entryName : ep.getZippedPath(f, entryName);
 			if (entryName != null) {
-				LogUtil.debug("adding to Zip:" + entryName);
+				log.debug("adding to Zip:" + entryName);
 				out.putNextEntry(new ZipEntry(entryName)); // 生成下一个压缩节点
 				FileInputStream in = new FileInputStream(f); // 读取文件内容
 				IOUtils.copy(in, out, false);
@@ -408,7 +407,6 @@ public class ZipUtils {
 			base = StringUtils.toString(base) + f.getName() + "/";
 			base = (ep == null) ? base : ep.getZippedPath(f, base);
 			if (base != null) {
-//				LogUtil.debug("folder to Tar:" +  base);
 				out.putNextEntry(new TarEntry(base));
 				for (File file : f.listFiles()) {
 					tar(out, file, base, ep);
@@ -423,7 +421,6 @@ public class ZipUtils {
 			if (entryName != null) {
 				TarEntry entry=new TarEntry(entryName);
 				entry.setSize(f.length());
-//				LogUtil.debug("adding to Tar:" + entryName+" "+f.length());
 				out.putNextEntry(entry); // 生成下一个压缩节点
 				FileInputStream in = new FileInputStream(f); // 
 				IOUtils.copy(in, out, false);
@@ -527,7 +524,6 @@ public class ZipUtils {
 			TarEntry fEntry = null;
 			while ((fEntry = in.getNextEntry()) != null) {
 				String entryName = fEntry.getName();
-//				LogUtil.debug("untar:"+ entryName+" "+ fEntry.getSize());
 				if (cd != null) {
 					entryName = cd.getExtractName(entryName, fEntry.getSize(), fEntry.getSize());
 				}
@@ -540,11 +536,10 @@ public class ZipUtils {
 						OutputStream out = IOUtils.getOutputStream(new File(fname));
 						@SuppressWarnings("unused")
 						long size=IOUtils.copy(in, out, false,true);
-//						LogUtil.debug("size="+size);
 					}
 				}else{
 					long size=in.skip(fEntry.getSize());
-					if(size>0)LogUtil.debug("left:" + size);
+					if(size>0)log.debug("left:" + size);
 				}
 				if (cd != null && cd.breakProcess())
 					break;
@@ -642,7 +637,7 @@ public class ZipUtils {
 			if (currentPosition >= nextPromptSize) {
 				nextPromptSize += step;
 				String percent = count + "/" + summary.getItemCount() + " " + StringUtils.toPercent(currentPosition, summary.getPackedSize());
-				LogUtil.debug(name.replace("%%", percent).replace("$$", input));
+				log.debug(name.replace("%%", percent).replace("$$", input));
 			}
 			currentPosition += ps;
 			return input.replace('?', '_');

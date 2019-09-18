@@ -1,6 +1,5 @@
 package jef.tools;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.NoSuchElementException;
 
@@ -8,8 +7,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.helpers.FormattingTuple;
 import org.slf4j.helpers.MessageFormatter;
-
-import jef.common.log.LogUtil;
 
 /**
  * Java7兼容的异常处理类
@@ -216,6 +213,6 @@ public class Exceptions7 {
 		if (e instanceof InvocationTargetException) {
 			e = e.getCause();
 		}
-		LogUtil.error("", e);
+		log.error("", e);
 	}
 }

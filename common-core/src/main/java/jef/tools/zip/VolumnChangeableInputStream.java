@@ -4,11 +4,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import jef.common.log.LogUtil;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 import jef.tools.string.RegexpUtils;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public final class VolumnChangeableInputStream extends AbstractVolchgInoputStream{
 	private File file;
 	
@@ -50,7 +51,7 @@ public final class VolumnChangeableInputStream extends AbstractVolchgInoputStrea
 			IOUtils.closeQuietly(in);
 			in=new FileInputStream(next);
 			index++;
-			LogUtil.debug("Change volumn to "+ next.getName());
+			log.debug("Change volumn to "+ next.getName());
 			return true;
 		}
 		return false;

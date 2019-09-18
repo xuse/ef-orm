@@ -5,15 +5,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 
-import org.slf4j.Logger;
-
-import jef.common.log.LogUtil;
 import jef.tools.Assert;
 import jef.tools.FileName;
 import jef.tools.IOUtils;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class VolSwitchAbleOutputStream extends SwitchAbleOutputStream {
-	private static final Logger log=LogUtil.log;
 	
 	private File templateFile;
 	private File firstFile;

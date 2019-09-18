@@ -61,7 +61,6 @@ import javax.crypto.spec.SecretKeySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jef.common.log.LogUtil;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
@@ -752,7 +751,7 @@ public class EncrypterUtil {
 		Provider p = (Provider) BeanUtils
 				.newInstance("com.sun.crypto.provider.SunJCE");
 		if (p == null) {
-			LogUtil.show("Current JDK is not sun JDK compatible...");
+			log.warn("Current JDK is not sun JDK compatible...");
 		} else {
 			Security.addProvider(p);
 		}

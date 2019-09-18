@@ -1,10 +1,9 @@
 package jef.tools;
 
-import java.io.IOException;
+import static jef.tools.XMLUtils.log;
+
 import java.util.Collections;
 import java.util.List;
-
-import jef.common.log.LogUtil;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -65,7 +64,7 @@ public final class X extends XMLUtils {
 			NodeList result = SimpleXPath.getNodeListByXPath(node, xpath);
 			return toElementList(result);
 		} catch (Exception e) {
-			LogUtil.show(e.getMessage());
+			log.error("",e);
 		}
 		return Collections.emptyList();
 	}

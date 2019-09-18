@@ -20,9 +20,10 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import jef.common.log.LogUtil;
 import jef.tools.DateUtils;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class RssItem {
 	private String title;
 	private String link;
@@ -114,7 +115,7 @@ public class RssItem {
 		try {
 			this.pubDate = DateUtils.parse(pubDate,myDf);
 		} catch (ParseException e) {
-			LogUtil.exception(pubDate+" format="+DateUtils.format(new Date(), myDf),e);
+			log.error(pubDate+" format="+DateUtils.format(new Date(), myDf),e);
 		}
 	}
 	public String getTitle() {
