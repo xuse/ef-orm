@@ -1581,43 +1581,55 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 	}
 
 	/**
-	 * 解析字符串中的$[key}，将其用properties中的值替代
-	 * 
-	 * @param s
-	 * @param prop
+	 * 从输入字符串中删除表情符(UTF8MB4)
+	 * @param objectName
 	 * @return
 	 */
-	public static String convertProperty(String s, Properties prop) {
-		int i = s.indexOf("${");
-		if (i > -1) {
-			StringBuilder sb = new StringBuilder();
-			int j = -1;
-			while (i > -1) {
-				sb.append(s.subSequence(j + 1, i));
-				j = s.indexOf('}', i + 1);
-				String key = "";
-				if (j > 0) {// Invalid block
-					key = s.substring(i + 2, j);
-				} else {
-					j = s.indexOf("${", i + 2) - 1;// 下一处的起点作为本次的终点
-					if (j < 0) {
-						j = s.length() - 1;
-					}
-				}
-				if (StringUtils.isEmpty(key)) {
-					sb.append(s.subSequence(i, j + 1));// 将J也包进去
-				} else {
-					String value = prop.getProperty(key);
-					if (value != null)
-						sb.append(value);
-				}
-				i = s.indexOf("${", j);
-			}
-			sb.append(s.substring(j + 1));
-			return sb.toString();
+	public static String removeEmoji(String objectName) {
+		if (StringUtils.isEmpty(objectName)) {
+			return objectName;
 		}
-		return s;
-
+		int len1 = objectName.length();
+		int len = objectName.codePointCount(0, objectName.length());
+		if (len1 != len) {
+			StringBuilder sb = new StringBuilder(len);
+			for (int i = 0; i < len1; i++) {
+				int codePoint = objectName.codePointAt(i);
+				if (Character.isBmpCodePoint(codePoint)) {
+					sb.append((char) codePoint);
+				} else {
+					//为了避免循环到codePoint的低位。
+					i++;
+					//sb.appendCodePoint(codePoint);
+				}
+			}
+			return sb.toString();
+		} else {
+			return objectName;
+		}
+	}
+	
+	/**
+	 * 从指定字符串中提取表情符
+	 * @param objectName
+	 * @return
+	 */
+	public static IntList extractEmoji(String objectName) {
+		IntList list=new IntList();
+		if (StringUtils.isEmpty(objectName)) {
+			return list;
+		}
+		int len1 = objectName.length();
+		for (int i = 0; i < len1; i++) {
+			int codePoint = objectName.codePointAt(i);
+			if (Character.isBmpCodePoint(codePoint)) {
+			} else {
+				//为了避免循环到codePoint的低位。
+				i++;
+				list.add(codePoint);
+			}
+		}
+		return list;
 	}
 
 	/**
@@ -2026,9 +2038,52 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 		}
 	}
 
+
+
+
+	/**
+	 * 解析字符串中的$[key}，将其用properties中的值替代
+	 * @deprecated  use Spring PropertiesHelper
+	 * @param s
+	 * @param prop
+	 * @return
+	 */
+	public static String convertProperty(String s, Properties prop) {
+		int i = s.indexOf("${");
+		if (i > -1) {
+			StringBuilder sb = new StringBuilder();
+			int j = -1;
+			while (i > -1) {
+				sb.append(s.subSequence(j + 1, i));
+				j = s.indexOf('}', i + 1);
+				String key = "";
+				if (j > 0) {// Invalid block
+					key = s.substring(i + 2, j);
+				} else {
+					j = s.indexOf("${", i + 2) - 1;// 下一处的起点作为本次的终点
+					if (j < 0) {
+						j = s.length() - 1;
+					}
+				}
+				if (StringUtils.isEmpty(key)) {
+					sb.append(s.subSequence(i, j + 1));// 将J也包进去
+				} else {
+					String value = prop.getProperty(key);
+					if (value != null)
+						sb.append(value);
+				}
+				i = s.indexOf("${", j);
+			}
+			sb.append(s.substring(j + 1));
+			return sb.toString();
+		}
+		return s;
+
+	}
+	
 	/**
 	 * 替换环境变量
-	 * 
+	 * @deprecated use Spring PropertiesHelper
 	 * @param content
 	 * @return
 	 */
@@ -2463,5 +2518,38 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 			}
 		}
 		return -1;
+	}
+	
+	/**
+	 * 快速判断一个字符串是不是Base64后的字符串，注意这里只是规则校验。某些消息尾巴上有非法字符，可能被识别为非base64
+	 * @param str
+	 * @return
+	 */
+	public static boolean isProbableBase64(String str) {
+		if (str == null || str.length() == 0) {
+			return false;
+		}
+		int len = str.length();
+		// 不能被4整除肯定不是
+		if (len % 4 != 0) {
+			return false;
+		}
+		// 最多检查512个字符
+		int MAX_CHECK = Math.min(str.length(), 512);
+		for (int i = 0; i < MAX_CHECK; i++) {
+			char c = str.charAt(i);
+			if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '+' || c == '/') {
+				// 通常字符，可能是，继续检查
+				continue;
+			} else if (c == '=') {
+				// 等号只能出现在末尾2个字符。而且等号后面只能是等号
+				if (i + 2 < len) {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		}
+		return true;
 	}
 }
