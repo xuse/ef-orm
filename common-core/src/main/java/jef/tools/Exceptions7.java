@@ -1,5 +1,6 @@
 package jef.tools;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.NoSuchElementException;
 
@@ -21,8 +22,14 @@ public class Exceptions7 {
 	
 	public static final class WrapException extends RuntimeException{
 		private static final long serialVersionUID = -9058355728108119655L;
+		WrapException(String message){
+			super(message);
+		}
+		WrapException(String message,Throwable t){
+			super(message,(t instanceof InvocationTargetException)? t.getCause():t);
+		}
 		WrapException(Throwable t){
-			super(t);
+			super((t instanceof InvocationTargetException)? t.getCause():t);
 		}
 		@Override
 		public synchronized Throwable fillInStackTrace() {
@@ -36,18 +43,28 @@ public class Exceptions7 {
 
 	/**
 	 * 将指定的异常封装为IllegalArgumentException
-	 * 
+	 * @deprecated use {@link #toIllegalArgument(Throwable)} please.
 	 * @param t
-	 * @return
+	 * @return IllegalArgumentException
 	 */
 	public static IllegalArgumentException asIllegalArgument(Throwable t) {
-		return illegalArgument(t, true);
+		return toIllegalArgument(t);
+	}
+	
+	/**
+	 * 将指定的异常封装为IllegalArgumentException
+	 * 
+	 * @param t
+	 * @return IllegalArgumentException
+	 */
+	public static IllegalArgumentException toIllegalArgument(Throwable t) {
+		return toIllegalArgument(t, true);
 	}
 	
 	/**
 	 * 将异常转换为RuntimeException
 	 * @param t
-	 * @return
+	 * @return RuntimeException
 	 */
 	public static RuntimeException toRuntime(Throwable t) {
 		if (t instanceof RuntimeException) {
@@ -60,29 +77,17 @@ public class Exceptions7 {
 	}
 	
 	/**
-	 * 使用slf4j的机制来生成异常信息
-	 * 
-	 * @param message
-	 * @param objects
-	 * @return
-	 */
-	public static IllegalArgumentException illegalArgument(String message, Object... objects) {
-		FormattingTuple f = MessageFormatter.arrayFormat(message, objects);
-		return f.getThrowable() == null ? new IllegalArgumentException(f.getMessage()) : new IllegalArgumentException(f.getMessage(), f.getThrowable());
-	};
-
-	/**
 	 * 转封装为IllegalArgumentException
 	 * 
 	 * @param t                 异常
 	 * @param allowOtherRuntime true则允许抛出其他RuntimeException.
 	 * @return IllegalArgumentException
 	 */
-	public static IllegalArgumentException illegalArgument(Throwable t, boolean allowOtherRuntime) {
+	public static IllegalArgumentException toIllegalArgument(Throwable t, boolean allowOtherRuntime) {
 		if (t instanceof IllegalArgumentException) {
 			return (IllegalArgumentException) t;
 		} else if (t instanceof InvocationTargetException) {
-			return illegalArgument(t.getCause(), allowOtherRuntime);
+			return toIllegalArgument(t.getCause(), allowOtherRuntime);
 		} else if (allowOtherRuntime && (t instanceof RuntimeException)) {
 			throw (RuntimeException) t;
 		}
@@ -95,8 +100,8 @@ public class Exceptions7 {
 	 * @param t 异常
 	 * @return IllegalStateException
 	 */
-	public static IllegalStateException illegalState(Throwable t) {
-		return illegalState(t, true);
+	public static IllegalStateException toIllegalState(Throwable t) {
+		return toIllegalState(t, true);
 	}
 
 	/**
@@ -106,11 +111,11 @@ public class Exceptions7 {
 	 * @param allowOtherRuntime true则允许抛出其他RuntimeException.
 	 * @return IllegalStateException
 	 */
-	public static IllegalStateException illegalState(Throwable t, boolean allowOtherRuntime) {
+	public static IllegalStateException toIllegalState(Throwable t, boolean allowOtherRuntime) {
 		if (t instanceof IllegalStateException) {
 			return (IllegalStateException) t;
 		} else if (t instanceof InvocationTargetException) {
-			return illegalState(t.getCause(), allowOtherRuntime);
+			return toIllegalState(t.getCause(), allowOtherRuntime);
 		} else if (allowOtherRuntime && (t instanceof RuntimeException)) {
 			throw (RuntimeException) t;
 		}
@@ -122,7 +127,20 @@ public class Exceptions7 {
 	 * 
 	 * @param message
 	 * @param objects
-	 * @return
+	 * @return IllegalArgumentException
+	 */
+	public static IllegalArgumentException illegalArgument(String message, Object... objects) {
+		FormattingTuple f = MessageFormatter.arrayFormat(message, objects);
+		return f.getThrowable() == null ? new IllegalArgumentException(f.getMessage()) : new IllegalArgumentException(f.getMessage(), f.getThrowable());
+	};
+
+	
+	/**
+	 * 使用slf4j的机制来生成异常信息
+	 * 
+	 * @param message
+	 * @param objects
+	 * @return IllegalStateException
 	 */
 	public static IllegalStateException illegalState(String message, Object... objects) {
 		FormattingTuple f = MessageFormatter.arrayFormat(message, objects);
@@ -162,15 +180,28 @@ public class Exceptions7 {
 	 */
 	public static UnsupportedOperationException unsupportedOperation(String message, Object... objects) {
 		FormattingTuple f = MessageFormatter.arrayFormat(message, objects);
-		return new UnsupportedOperationException(f.getMessage());
+		return f.getThrowable()==null? new UnsupportedOperationException(f.getMessage()):new UnsupportedOperationException(f.getMessage(),f.getThrowable());
 	}
+	
+	/**
+	 * 使用slf4j的机制来生成异常信息
+	 * @param message
+	 * @param objects
+	 * @return RuntimeException
+	 */
+	public static RuntimeException runtime(String message, Object... objects) {
+		FormattingTuple f = MessageFormatter.arrayFormat(message, objects);
+		return f.getThrowable()==null? new WrapException(f.getMessage()):new WrapException(f.getMessage(),f.getThrowable());
+		
+	}
+	
 
 	/**
 	 * 进行消息格式化
 	 * 
 	 * @param message
 	 * @param objects
-	 * @return
+	 * @return formated string
 	 */
 	public static String format(String message, Object... objects) {
 		FormattingTuple f = MessageFormatter.arrayFormat(message, objects);

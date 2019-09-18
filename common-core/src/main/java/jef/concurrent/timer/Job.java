@@ -20,15 +20,16 @@ import java.io.Serializable;
 import java.util.Date;
 
 import jef.common.DateSpan;
-import jef.common.log.LogUtil;
 import jef.tools.Assert;
 import jef.tools.IOUtils;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 由于Trigger方法中涉及重新安排任务的时间，造成需要存取TimerTask的state属性，
  * 为此不得不将JDK的Timer和TimerTask抄了一份到这里来。
  * @author jiyi
  */
+@Slf4j
 public abstract class Job extends TimerTask implements Serializable {
 	
 	/**
@@ -40,7 +41,7 @@ public abstract class Job extends TimerTask implements Serializable {
 		private static final long serialVersionUID = -346868877252111768L;
 		private boolean force;
 		private DateSpan firetime;
-		private String exception;
+		private Throwable exception;
 		public ExecuteInfo(DateSpan loadObject) {
 			this.firetime=loadObject;
 		}
@@ -52,7 +53,7 @@ public abstract class Job extends TimerTask implements Serializable {
 			return firetime;
 		}
 		
-		public String getException() {
+		public Throwable getException() {
 			return exception;
 		}
 		public boolean isForce() {
@@ -187,7 +188,7 @@ public abstract class Job extends TimerTask implements Serializable {
 	 */
 	public void trigger(){
 		if(timer==null){
-			LogUtil.show(this.getName()+" no timer, will execute in current thread directly.");
+			log.info(this.getName()+" no timer, will execute in current thread directly.");
 			isForceFire=true;
 			this.run();
 			isForceFire=false;
@@ -209,11 +210,11 @@ public abstract class Job extends TimerTask implements Serializable {
 	public synchronized void run() {
 		state=JobState.RUNNING;
 		currentStartTime=new Date();
-		String exception=null;
+		Throwable exception=null;
 		try{
 			execute();	
 		}catch(Throwable t){
-			exception = LogUtil.exceptionSummary(t);
+			exception = t;
 		}
 		//将上次运行时间保存到本地
 		if(stateSaved()){

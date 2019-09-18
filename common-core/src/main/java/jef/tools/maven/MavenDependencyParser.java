@@ -15,7 +15,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
-import jef.common.log.LogUtil;
 import jef.tools.Assert;
 import jef.tools.Exceptions;
 import jef.tools.SimpleXPath;
@@ -25,7 +24,9 @@ import jef.tools.XMLUtils;
 import jef.tools.maven.jaxb.Dependency;
 import jef.tools.maven.jaxb.Dependency.Exclusions;
 import jef.tools.maven.jaxb.Exclusion;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class MavenDependencyParser {
 	public static boolean debug = false;
 
@@ -107,7 +108,7 @@ public class MavenDependencyParser {
 			}
 			if (jarFile.exists()) {
 				if (debug) {
-					LogUtil.debug("loading " + jarFile.getAbsolutePath() + " ..");
+					log.debug("loading " + jarFile.getAbsolutePath() + " ..");
 				}
 				Dependency old = result.put(getKey(d), d);
 				if (old != null) {
@@ -115,13 +116,13 @@ public class MavenDependencyParser {
 						result.put(getKey(d), old);// replaced with old dep,
 													// so no need calc...
 						if (debug) {
-							LogUtil.debug("skip:" + d);
+							log.debug("skip:" + d);
 
 						}
 						continue;
 					}
 					if (debug) {
-						LogUtil.debug("skip:" + old);
+						log.debug("skip:" + old);
 					}
 				}
 			} else {

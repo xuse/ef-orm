@@ -8,6 +8,15 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.Assert;
+import org.junit.Test;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.serializer.SerializerFeature;
+
 import jef.tools.BeanForTest;
 import jef.tools.DateFormats;
 import jef.tools.Foo;
@@ -16,18 +25,6 @@ import jef.tools.XMLFastJsonParser;
 import jef.tools.XMLUtils;
 import jef.tools.reflect.GenericUtils;
 import jef.tools.string.RandomData;
-
-import org.junit.Assert;
-import org.junit.Test;
-import org.w3c.dom.Document;
-import org.xml.sax.SAXException;
-
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import com.alibaba.fastjson.serializer.JSONSerializer;
-import com.alibaba.fastjson.serializer.ObjectSerializer;
-import com.alibaba.fastjson.serializer.SerializeConfig;
-import com.alibaba.fastjson.serializer.SerializerFeature;
 
 public class JsonTest extends org.junit.Assert{
 	@Test

@@ -25,7 +25,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 
-import jef.common.log.LogUtil;
 import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 

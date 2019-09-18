@@ -21,13 +21,13 @@ import javax.management.ObjectName;
 
 import com.google.common.base.Function;
 
-import jef.common.log.LogUtil;
 import jef.jre5support.ProcessUtil;
 import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.reflect.ClassEx;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 这个Bean封装了JDK的OperatingSystemMXBean,可以根据SUN JDK(及其兼容)，IBM JDK等 提供与JDK平台无关的扩展接口
@@ -35,6 +35,7 @@ import jef.tools.reflect.ClassEx;
  * @author Administrator
  * 
  */
+@Slf4j
 public class OperatingSystemMXBean implements java.lang.management.OperatingSystemMXBean {
 	private static OperatingSystemMXBean instance;
 	final static boolean isWindows = System.getProperty("os.name").toLowerCase().startsWith("windows");
@@ -458,7 +459,7 @@ public class OperatingSystemMXBean implements java.lang.management.OperatingSyst
 				return 0.0;
 			}
 		} catch (Exception ex) {
-			LogUtil.error(ex.getMessage());
+			log.error("",ex);
 			return 0.0;
 		}
 	}

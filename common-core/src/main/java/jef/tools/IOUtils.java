@@ -1949,7 +1949,7 @@ public class IOUtils {
 					}
 					return next;
 				} catch (IOException e) {
-					throw Exceptions.illegalState(e);
+					throw Exceptions.toIllegalState(e);
 				}
 			}
 		};

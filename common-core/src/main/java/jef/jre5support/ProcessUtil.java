@@ -173,7 +173,7 @@ public class ProcessUtil {
 		try{
 			nets=NetworkInterface.getNetworkInterfaces();
 		}catch(IOException e){
-			throw Exceptions.asIllegalArgument(e);
+			throw Exceptions.toIllegalArgument(e);
 		}
 		List<NetworkInfo> n=new ArrayList<NetworkInfo>();
 		while(nets.hasMoreElements()){
@@ -184,7 +184,7 @@ public class ProcessUtil {
 					n.add(new NetworkInfo(t));
 				}	
 			}catch(IOException e){
-				throw Exceptions.illegalState(e);
+				throw Exceptions.toIllegalState(e);
 			}
 		}	
 		return n.toArray(new NetworkInfo[n.size()]);

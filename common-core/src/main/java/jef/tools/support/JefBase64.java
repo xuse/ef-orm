@@ -434,7 +434,7 @@ public final class JefBase64 {
 	 * @param encoded
 	 * @return
 	 */
-	public String decodeUTF8(CharSequence encoded) {
+	public static String decodeUTF8(CharSequence encoded) {
 		return new String(decodeFast(encoded),StandardCharsets.UTF_8);
 	}
 	
@@ -443,7 +443,7 @@ public final class JefBase64 {
 	 * @param s
 	 * @return
 	 */
-	public String encodeUTF8(String s) {
+	public static String encodeUTF8(String s) {
 		return encode(s.getBytes(StandardCharsets.UTF_8));
 	}
 

@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.easyframe</groupId>
 	<artifactId>orm-tutorial</artifactId>
-	<version>1.13.0-SNAPSHOT</version>
+	<version>1.13.0-M0</version>
 	<name>orm-tutorial</name>
 	<url>http://maven.apache.org</url>
 	<properties>

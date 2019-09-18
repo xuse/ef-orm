@@ -73,7 +73,7 @@ final class ProcessHandlerImpl implements ProcessHandler {
 		try {
 			this.proc = pb.start();
 		} catch (IOException e) {
-			throw Exceptions.asIllegalArgument(e);
+			throw Exceptions.toIllegalArgument(e);
 		}
 		this.bw = new BufferedWriter(new OutputStreamWriter(proc.getOutputStream()));
 		this.stdOut = proc.getInputStream();
