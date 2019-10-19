@@ -54,11 +54,10 @@ public class ASMUtils {
 		if (parameterType.isArray()) {
 			return "[" + getDesc(parameterType.getComponentType());
 		} else {
-			if (!parameterType.isPrimitive()) {
-				String clsName = parameterType.getName();
-				return clsName.replace('.', '/');
-			} else {
+			if (parameterType.isPrimitive()) {
 				return getPrimitiveLetter(parameterType);
+			} else {
+				return parameterType.getName().replace('.', '/');
 			}
 		}
 	}
