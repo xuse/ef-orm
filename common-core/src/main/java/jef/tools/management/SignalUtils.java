@@ -1,14 +1,15 @@
 package jef.tools.management;
 
-import jef.common.log.LogUtil;
 import jef.tools.Exceptions;
 import jef.tools.reflect.ClassUtils;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 信号量处理工具
  * @author Administrator
  *
  */
+@Slf4j
 public class SignalUtils {
 	private static TermHandler TERM=null;
 
@@ -22,7 +23,7 @@ public class SignalUtils {
 			if(ClassUtils.isPresent("sun.misc.Signal.Signal", null)){
 				clzName="jef.tools.management.SunJdkTERMHandler";
 			}else{
-				LogUtil.error("Can not operate signals: Unknown JDK"+System.getProperty("java.vm.vendor"));
+				log.error("Can not operate signals: Unknown JDK"+System.getProperty("java.vm.vendor"));
 				return null;
 			}
 			try {

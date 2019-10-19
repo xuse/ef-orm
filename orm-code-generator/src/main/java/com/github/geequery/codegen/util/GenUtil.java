@@ -18,13 +18,14 @@ package com.github.geequery.codegen.util;
 import java.io.File;
 import java.io.IOException;
 
+import  org.apache.commons.lang3.ArrayUtils;
+
 import com.github.geequery.codegen.ast.IClass;
 import com.github.geequery.codegen.ast.IClassUtil;
+import com.github.geequery.core.util.TextFileCallback;
+
 import jef.common.wrapper.Holder;
 import jef.tools.IOUtils;
-import jef.tools.TextFileCallback;
-
-import  org.apache.commons.lang3.ArrayUtils;
 
  public class GenUtil {
 	 //判断一个类是否具有 未修改 标签
@@ -35,11 +36,6 @@ import  org.apache.commons.lang3.ArrayUtils;
 		final Holder<Integer> result=new Holder<Integer>(-1);
 		IOUtils.processFile(java, new TextFileCallback(){
 			@Override
-			public File getTarget(File source) {
-				return null;
-			}
-
-			@Override
 			public String processLine(String line) {
 				if(line.trim().equals("@NotModified")){
 					result.set(0);
@@ -49,7 +45,7 @@ import  org.apache.commons.lang3.ArrayUtils;
 				return null;
 			}
 			@Override
-			protected boolean breakProcess() {
+			public boolean breakProcess() {
 				return result.get()!=-1;
 			}
 		});

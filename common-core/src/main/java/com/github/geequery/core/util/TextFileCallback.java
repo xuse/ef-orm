@@ -1,4 +1,4 @@
-package jef.tools;
+package com.github.geequery.core.util;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -14,11 +14,9 @@ import java.nio.charset.Charset;
  */
 public class TextFileCallback {
 	Throwable lastException;
-	protected File sourceFile;
+	public File sourceFile;
 
 	private Charset sourceCharset;
-	private Charset tCharset;
-	private Dealwith dealwith = Dealwith.NONE;
 
 	public TextFileCallback() {
 	}
@@ -27,30 +25,8 @@ public class TextFileCallback {
 		this.sourceCharset = Charset.forName(sourceCharset);
 	}
 
-	public TextFileCallback(Charset sourceCharset, Charset targetCharset, Dealwith dealwith) {
+	public TextFileCallback(Charset sourceCharset) {
 		this.sourceCharset = sourceCharset;
-		this.tCharset = targetCharset;
-		this.dealwith = dealwith;
-	}
-
-	public TextFileCallback(String sourceCharset, String targetCharset, Dealwith dealwith) {
-		this.sourceCharset = Charset.forName(sourceCharset);
-		this.tCharset = Charset.forName(targetCharset);
-		this.dealwith = dealwith;
-	}
-
-	/**
-	 * 指定输出文件，如果返回null，将不产生输出文件<br>
-	 * 阶段：在一个文件处理开始前<br>
-	 * 影响：控制输出文件路径，也可以不输出文件<br>
-	 * 
-	 * @param source
-	 * @return 输出文件file，返回null则不输出文件，但行处理依然进行。
-	 */
-	protected File getTarget(File source) {
-		if (dealwith == Dealwith.NO_OUTPUT)
-			return null;
-		return new File(source.getPath().concat(".tmp"));
 	}
 
 	/**
@@ -88,17 +64,6 @@ public class TextFileCallback {
 	}
 
 	/**
-	 * 指定输出文件的字符集，默认和输入文件相同<br>
-	 * 阶段：在文件处理开始前，getTarget方法之前执行。<br>
-	 * 影响：控制输出文件的编码，输出null表示输出文件和输入文件编码一致<br>
-	 * 
-	 * @return
-	 */
-	protected Charset targetCharset() {
-		return tCharset == null ? sourceCharset : tCharset;
-	};
-
-	/**
 	 * 返回源文件读取编码，null表示默认
 	 * 
 	 * @param source
@@ -127,7 +92,7 @@ public class TextFileCallback {
 	 * @param w
 	 * @throws IOException
 	 */
-	protected void afterProcess(File source, File target, BufferedWriter w) throws IOException {
+	public void afterProcess(File source, File target, BufferedWriter w) throws IOException {
 	}
 
 	/**
@@ -139,17 +104,6 @@ public class TextFileCallback {
 	 */
 	public boolean isSuccess() {
 		return true;
-	}
-
-	/**
-	 * 是否替换源文件<br>
-	 * 阶段: 操作成功后(参见 {@link #isSuccess})<br>
-	 * 影响：控制是否替换源文件
-	 * 
-	 * @return
-	 */
-	protected Dealwith dealwithSourceOnSuccess(File source) {
-		return dealwith;
 	}
 
 	/**
@@ -170,10 +124,6 @@ public class TextFileCallback {
 	 */
 	protected boolean debug(File source) {
 		return false;
-	}
-
-	public static enum Dealwith {
-		DELETE, REPLACE, BACKUP_REPLACE, NONE, NO_OUTPUT
 	}
 
 }

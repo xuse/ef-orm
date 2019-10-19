@@ -1,7 +1,9 @@
 package jef.common;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import jef.common.Configuration.ConfigItem;
-import jef.common.log.LogUtil;
 import jef.tools.StringUtils;
 
 /**
@@ -10,6 +12,9 @@ import jef.tools.StringUtils;
  *
  */
 public abstract class Cfg {
+	
+	protected static Logger log = LoggerFactory.getLogger(Cfg.class);
+	
 	static class Config implements ConfigItem{
 		String key;
 		public Config(String key){
@@ -55,7 +60,7 @@ public abstract class Cfg {
 			double n = Double.parseDouble(s);
 			return n;
 		} catch (Exception e) {
-			LogUtil.warn("the jef config ["+itemkey+"] has invalid value:"+ s);
+			log.warn("the jef config ["+itemkey+"] has invalid value:"+ s);
 			return defaultValue;
 		}
 	}
@@ -73,7 +78,7 @@ public abstract class Cfg {
 			int n = Integer.parseInt(s);
 			return n;
 		} catch (Exception e) {
-			LogUtil.warn("the jef config ["+itemkey+"] has invalid value:"+ s);
+			log.warn("the jef config ["+itemkey+"] has invalid value:"+ s);
 			return defaultValue;
 		}
 	}

@@ -20,14 +20,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import jef.tools.StringUtils;
-
 import com.google.common.base.Objects;
+
+import jef.tools.StringUtils;
 
 /**
  * 描述由两个值构成的值对
- * @author Administrator
- *
  * @param <K>
  * @param <V>
  */
@@ -59,6 +57,7 @@ public class Entry<K,V> implements Serializable,java.util.Map.Entry<K,V>{
 	}
 
 	public Entry(){};
+	
 	public Entry(K k,V v){
 		this.key=k;
 		this.value=v;
@@ -84,11 +83,9 @@ public class Entry<K,V> implements Serializable,java.util.Map.Entry<K,V>{
 	@Override
 	public boolean equals(Object obj) {
 		if(obj instanceof Entry){
-			if(!Objects.equal(((Entry) obj).getKey(), key))return false;
-			if(!Objects.equal(((Entry) obj).getValue(), value))return false;
-			return true;
-		}else{
-			return false;
+			Entry e=(Entry)obj;
+			return Objects.equal(e.key, this.key) && Objects.equal(e.value, this.value);
 		}
+		return false;
 	}
 }

@@ -21,12 +21,14 @@ import java.io.IOException;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 
-import jef.tools.IOUtils;
-import jef.tools.TextFileCallback;
-import jef.tools.TextFileCallback.Dealwith;
-import jef.tools.io.Charsets;
-
 import  org.apache.commons.lang3.StringUtils;
+
+import com.github.geequery.core.util.Dealwith;
+import com.github.geequery.core.util.FileProcessors;
+import com.github.geequery.core.util.TextFileCallback;
+
+import jef.tools.IOUtils;
+import jef.tools.io.Charsets;
 
 /**
  * 繁简体转换工具
@@ -201,15 +203,10 @@ public class CFJUtil {
 	 * @throws IOException
 	 */
 	public void fan2Jan(File from, String fromCharset, final File to, String toCharset) throws IOException {
-		IOUtils.processFile(from, new TextFileCallback(fromCharset,toCharset,Dealwith.NONE) {
+		FileProcessors.processFile(from, Dealwith.output(e-> to).charset(toCharset),new TextFileCallback(fromCharset) {
 			@Override
-			protected String processLine(String line) {
+			public String processLine(String line) {
 				return fan2jan(line);
-			}
-
-			@Override
-			protected File getTarget(File source) {
-				return to;
 			}
 		});
 	}

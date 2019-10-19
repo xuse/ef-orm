@@ -7,10 +7,11 @@ import java.net.URL;
 import java.net.URLDecoder;
 import java.util.concurrent.TimeUnit;
 
-import jef.common.log.LogUtil;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class ZipFileResource extends FileResource {
 	private File zipFile;
 	
@@ -35,7 +36,7 @@ public class ZipFileResource extends FileResource {
 				throw new IllegalStateException(e);
 			}
 			this.file=tempFile;
-			LogUtil.info("The zipped resource is saved as: {}", tempFile.getAbsolutePath());
+			log.info("The zipped resource is saved as: {}", tempFile.getAbsolutePath());
 		}
 	}
 

@@ -15,7 +15,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
-import jef.common.log.LogUtil;
 import jef.tools.Assert;
 import jef.tools.Exceptions;
 import jef.tools.SimpleXPath;
@@ -25,7 +24,9 @@ import jef.tools.XMLUtils;
 import jef.tools.maven.jaxb.Dependency;
 import jef.tools.maven.jaxb.Dependency.Exclusions;
 import jef.tools.maven.jaxb.Exclusion;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class MavenDependencyParser {
 	public static boolean debug = false;
 
@@ -87,7 +88,8 @@ public class MavenDependencyParser {
 		}
 	}
 
-	private static void parseDependency(Pom pomFile, Map<String, Dependency> result, Set<String> exclusions, File m2) throws SAXException, IOException {
+	private static void parseDependency(Pom pomFile, Map<String, Dependency> result, Set<String> exclusions, File m2)
+			throws SAXException, IOException {
 		if (exclusions == null)
 			exclusions = new HashSet<String>();
 
@@ -107,7 +109,7 @@ public class MavenDependencyParser {
 			}
 			if (jarFile.exists()) {
 				if (debug) {
-					LogUtil.debug("loading " + jarFile.getAbsolutePath() + " ..");
+					log.debug("loading " + jarFile.getAbsolutePath() + " ..");
 				}
 				Dependency old = result.put(getKey(d), d);
 				if (old != null) {
@@ -115,19 +117,16 @@ public class MavenDependencyParser {
 						result.put(getKey(d), old);// replaced with old dep,
 													// so no need calc...
 						if (debug) {
-							LogUtil.debug("skip:" + d);
+							log.debug("skip:" + d);
 
 						}
 						continue;
 					}
 					if (debug) {
-						LogUtil.debug("skip:" + old);
+						log.debug("skip:" + old);
 					}
 				}
 			} else {
-				// if(debug){
-				// LogUtil.warn(" NOT EXIST: " + jarFile.getAbsolutePath());
-				// }
 				continue;
 			}
 
@@ -142,8 +141,7 @@ public class MavenDependencyParser {
 			if (childPomFile.exists()) {
 				parseDependency(new Pom(childPomFile), result, newExclusion, m2);
 			} else {
-				// LogUtil.warn("POM NOT EXIST: " +
-				// childPomFile.getAbsolutePath());
+				log.warn("POM NOT EXIST: " + childPomFile.getAbsolutePath());
 			}
 		}
 	}
@@ -185,7 +183,7 @@ public class MavenDependencyParser {
 			// pPomFile=new File(doc.pomFile.getParentFile(),relativePath);
 			// }
 			if (pPomFile.exists())
-				return new Pom(pPomFile,doc.isNative);
+				return new Pom(pPomFile, doc.isNative);
 		}
 		return null;
 	}
@@ -193,7 +191,8 @@ public class MavenDependencyParser {
 	private static void parseExtends(ExtendsAsset parentContext, Pom doc) throws SAXException, IOException {
 		List<Pom> parents = getParents(doc);
 		for (Pom parent : parents) {
-			Map<String, String> map = XMLUtils.getAttributesMap((Element) SimpleXPath.getNodeByXPath(parent.getDocument(), "/project/properties"), true);
+			Map<String, String> map = XMLUtils.getAttributesMap(
+					(Element) SimpleXPath.getNodeByXPath(parent.getDocument(), "/project/properties"), true);
 			parentContext.properties.putAll(map);
 			parseDependency(parentContext, parent);
 		}
@@ -235,18 +234,20 @@ public class MavenDependencyParser {
 				home = System.getenv("HOME");
 			}
 			m2 = new File(home, ".m2/repository");
-			Assert.isTrue(m2.exists(), "Can not locate .m2/repository folder!" + m2.getAbsolutePath() + ". if you have a custom repository path, set it into the env-variable 'M2_REPOSITORY'.");
+			Assert.isTrue(m2.exists(), "Can not locate .m2/repository folder!" + m2.getAbsolutePath()
+					+ ". if you have a custom repository path, set it into the env-variable 'M2_REPOSITORY'.");
 		}
 		return m2;
 	}
 
-	private static String processVersion(String version, Pom pom, Map<String, String> assets) throws SAXException, IOException {
+	private static String processVersion(String version, Pom pom, Map<String, String> assets)
+			throws SAXException, IOException {
 		Assert.notNull(version);
 		if (version.indexOf("${") == -1) {
 			return version;
 		}
 
-		String paramName =  org.apache.commons.lang3.StringUtils.substringBetween(version, "${", "}");
+		String paramName = org.apache.commons.lang3.StringUtils.substringBetween(version, "${", "}");
 		String paramValue = null;
 		Document doc = pom.getDocument();
 		if ("project.version".equals(paramName)) {
@@ -265,7 +266,8 @@ public class MavenDependencyParser {
 			if (paramValue == null) {
 				Pom currentDoc = pom;
 				while (currentDoc != null) {
-					Element propertiesNode = (Element) SimpleXPath.getNodeByXPath(currentDoc.getDocument(), "/project/properties");
+					Element propertiesNode = (Element) SimpleXPath.getNodeByXPath(currentDoc.getDocument(),
+							"/project/properties");
 					paramValue = XMLUtils.nodeText(propertiesNode, paramName);
 					if (paramValue != null)
 						break;

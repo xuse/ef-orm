@@ -36,6 +36,9 @@ import org.junit.Test;
 import org.w3c.dom.Document;
 
 import com.alibaba.fastjson.JSON;
+import com.github.geequery.core.util.Dealwith;
+import com.github.geequery.core.util.FileProcessors;
+import com.github.geequery.core.util.TextFileCallback;
 
 import jef.common.StringCacheMap;
 import jef.common.log.LogUtil;
@@ -46,7 +49,6 @@ import jef.tools.DateUtils;
 import jef.tools.IOUtils;
 import jef.tools.ResourceUtils;
 import jef.tools.StringUtils;
-import jef.tools.TextFileCallback;
 import jef.tools.ThreadUtils;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.io.Charsets;
@@ -187,9 +189,9 @@ public class JefTest extends Assert {
 	@Test
 	public void processjavaFile() throws IOException {
 
-		IOUtils.processFiles(new File("E:\\MyWork\\jef\\support-lib\\"), new TextFileCallback("UTF-8") {
+		IOUtils.processFiles(new File("E:\\MyWork\\jef\\support-lib\\"), Dealwith.REPLACE,new TextFileCallback("UTF-8") {
 			@Override
-			protected String processLine(String line) {
+			public String processLine(String line) {
 				if (line.startsWith("/* $Id:")) {
 					System.out.println(this.sourceFile.getPath());
 					return null;
@@ -197,12 +199,6 @@ public class JefTest extends Assert {
 				return line;
 
 			}
-
-			@Override
-			protected Dealwith dealwithSourceOnSuccess(File source) {
-				return Dealwith.REPLACE;
-			}
-
 		}, "java");
 	}
 
@@ -519,9 +515,9 @@ public class JefTest extends Assert {
 	public void count1() throws IOException {
 		final Map<String, String> trans = new HashMap<String, String>();
 
-		IOUtils.processFile(new File("E:/ims/ims_war_101.log"), new TextFileCallback("UTF-8") {
+		FileProcessors.processFile(new File("E:/ims/ims_war_101.log"), Dealwith.NO_OUTPUT,new TextFileCallback("UTF-8") {
 			@Override
-			protected String processLine(String line) {
+			public String processLine(String line) {
 				// [JPA DEBUG]:Transaction [Tx472720354@(service_name =
 				// shzw):OB60@112] started at
 				// jef.database.JefEntityManager@4da8a55
@@ -546,11 +542,6 @@ public class JefTest extends Assert {
 						System.out.println("Warn:" + tx + "commit, but no start.");
 					}
 				}
-				return null;
-			}
-
-			@Override
-			protected File getTarget(File source) {
 				return null;
 			}
 		});
@@ -622,24 +613,14 @@ public class JefTest extends Assert {
 	@Test
 	public void ana3() throws IOException {
 		final Set<String> set = new HashSet<String>();
-		IOUtils.processFile(new File("E:/connectionUsed/sunyz1"), new TextFileCallback() {
+		FileProcessors.processFile(new File("E:/connectionUsed/sunyz1"),Dealwith.output(source->new File(source.getAbsolutePath() + ".txt")), new TextFileCallback() {
 			@Override
 			protected Charset sourceCharset(File source) {
 				return Charsets.UTF8;
 			}
 
 			@Override
-			protected File getTarget(File source) {
-				return new File(source.getAbsolutePath() + ".txt");
-			}
-
-			@Override
-			protected Charset targetCharset() {
-				return Charsets.UTF8;
-			}
-
-			@Override
-			protected String processLine(String line) {
+			public String processLine(String line) {
 				if (!line.startsWith("24537"))
 					return null;
 				if (line.indexOf("(service_name = shzw)") > -1) {

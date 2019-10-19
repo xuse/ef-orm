@@ -17,6 +17,7 @@ package jef.tools.support;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 /**
@@ -426,6 +427,24 @@ public final class JefBase64 {
 		}
 
 		return dArr;
+	}
+	
+	/**
+	 * 解码为UTF8的字符串
+	 * @param encoded
+	 * @return
+	 */
+	public static String decodeUTF8(CharSequence encoded) {
+		return new String(decodeFast(encoded),StandardCharsets.UTF_8);
+	}
+	
+	/**
+	 * 编码为UTF8的字符串
+	 * @param s
+	 * @return
+	 */
+	public static String encodeUTF8(String s) {
+		return encode(s.getBytes(StandardCharsets.UTF_8));
 	}
 
 	private JefBase64() {

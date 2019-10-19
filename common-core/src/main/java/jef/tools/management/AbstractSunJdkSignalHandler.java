@@ -1,8 +1,8 @@
 package jef.tools.management;
 
 import jef.common.Callback;
-import jef.common.log.LogUtil;
 import jef.tools.Exceptions;
+import lombok.extern.slf4j.Slf4j;
 import sun.misc.Signal;
 import sun.misc.SignalHandler;
 
@@ -12,6 +12,7 @@ import sun.misc.SignalHandler;
  * @author Administrator
  *
  */
+@Slf4j
 abstract class AbstractSunJdkSignalHandler extends SignalEvents implements SignalHandler {
 	public void handle(Signal arg0) {
 		for (Callback<Integer, Exception> c : events) {
@@ -31,7 +32,7 @@ abstract class AbstractSunJdkSignalHandler extends SignalEvents implements Signa
 		Signal sig = new Signal(signalName);
 		try {
 			Signal.handle(sig, this);
-			LogUtil.info("Registe {} signal success!", signalName);
+			log.info("Registe {} signal success!", signalName);
 		} catch (Throwable t) {
 			Exceptions.illegalState("Registe " + signalName + " Signal error!", t);
 		}

@@ -15,10 +15,10 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import jef.common.log.LogUtil;
 import jef.tools.string.StringSpliterEx;
 import jef.tools.string.Substring;
 import jef.tools.string.SubstringIterator;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 自行实现的Xpath计算
@@ -27,6 +27,7 @@ import jef.tools.string.SubstringIterator;
  * @author jiyi
  * 
  */
+@Slf4j
 public class SimpleXPath {
 	/**
 	 * 控制台打印出节点和其下属的内容，在解析和调试DOM时很有用。
@@ -64,17 +65,17 @@ public class SimpleXPath {
 				if (node.getChildNodes().getLength() == 1 && node.getFirstChild().getNodeType() == Node.TEXT_NODE) {
 					sb.append(node.getFirstChild().getNodeValue().trim());
 					sb.append("</" + node.getNodeName() + ">");
-					LogUtil.show(sb.toString());
+					log.info(sb.toString());
 				} else {
-					LogUtil.show(sb.toString());
+					log.info(sb.toString());
 					if (maxLevel > level) {
 						printChilrenNodes(node, level + 1, maxLevel, attFlag);
 					}
-					LogUtil.show(span + "</" + node.getNodeName() + ">");
+					log.info(span + "</" + node.getNodeName() + ">");
 				}
 			} else {
 				sb.append("/>");
-				LogUtil.show(sb.toString());
+				log.info(sb.toString());
 			}
 		}
 	}
@@ -509,7 +510,7 @@ public class SimpleXPath {
 				FileOutputStream out = new FileOutputStream(file);
 				XMLUtils.printNode(node, out);
 				out.write(("======\nXPATH:" + xPath).getBytes());
-				LogUtil.show("Xpath error, dump file is:" + file.getAbsolutePath());
+				log.error("Xpath error, dump file is:" + file.getAbsolutePath());
 				IOUtils.closeQuietly(out);
 			} catch (Exception e1) {
 				Exceptions.log(e1);

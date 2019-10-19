@@ -59,6 +59,9 @@ import java.util.stream.StreamSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.geequery.core.util.Dealwith;
+import com.github.geequery.core.util.FileProcessors;
+import com.github.geequery.core.util.TextFileCallback;
 import com.google.common.base.Function;
 import com.google.common.collect.Multimap;
 
@@ -67,7 +70,6 @@ import jef.common.BigDataBuffer;
 import jef.common.JefSerializable;
 import jef.common.SimpleException;
 import jef.jre5support.ProcessUtil;
-import jef.tools.TextFileCallback.Dealwith;
 import jef.tools.collection.CollectionUtils;
 import jef.tools.io.Charsets;
 import jef.tools.io.UnicodeReader;
@@ -1862,7 +1864,7 @@ public class IOUtils {
 	 * @throws IOException
 	 */
 	public static int converFileEncode(File f, final String from, final String to, String... extPatterns) throws IOException {
-		TextFileCallback c = new TextFileCallback(from, to, Dealwith.REPLACE);
+		TextFileCallback c = new TextFileCallback(from);
 		int n = 0;
 		if (f.isDirectory()) {
 			for (File sub : f.listFiles()) {
@@ -1870,7 +1872,7 @@ public class IOUtils {
 			}
 		} else {
 			if (extPatterns.length == 0 || ArrayUtils.contains(extPatterns, getExtName(f.getName()))) {
-				processFile(f, c);
+				FileProcessors.processFile(f, Dealwith.replace(to), c);
 				n++;
 			}
 		}
@@ -1947,7 +1949,7 @@ public class IOUtils {
 					}
 					return next;
 				} catch (IOException e) {
-					throw Exceptions.illegalState(e);
+					throw Exceptions.toIllegalState(e);
 				}
 			}
 		};
@@ -1963,15 +1965,15 @@ public class IOUtils {
 	 * @param extPatterns   扩展名过滤
 	 * @throws IOException
 	 */
-	public static int processFiles(File f, TextFileCallback call, String... extPatterns) throws IOException {
+	public static int processFiles(File f, Dealwith dealwith,TextFileCallback call, String... extPatterns) throws IOException {
 		int n = 0;
 		if (f.isDirectory()) {
 			for (File sub : f.listFiles()) {
-				n += processFiles(sub, call, extPatterns);
+				n += processFiles(sub, dealwith, call, extPatterns);
 			}
 		} else {
 			if (extPatterns.length == 0 || ArrayUtils.contains(extPatterns, getExtName(f.getName()))) {
-				processFile(f, call);
+				FileProcessors.processFile(f,dealwith, call);
 				n++;
 			}
 		}
@@ -2054,7 +2056,7 @@ public class IOUtils {
 			return null;
 		}
 	}
-
+	
 	/**
 	 * 用指定的回调方法处理文本文件
 	 * 
@@ -2063,73 +2065,14 @@ public class IOUtils {
 	 * @param call          处理器
 	 * @throws IOException
 	 */
-	public static File processFile(File f, TextFileCallback call) throws IOException {
-		if (!call.accept(f)) {
-			return null;
-		}
-		Charset sourceCharset = call.sourceCharset(f);
-		BufferedReader reader = getReader(f, sourceCharset);
-		call.sourceFile = f;
-		Charset charSet = call.targetCharset();
-		BufferedWriter w = null;
-		File target = call.getTarget(f);
-		if (target != null) {
-			w = getWriter(target, charSet == null ? sourceCharset : charSet, false);
-		}
-		String line;
-		call.beforeProcess(f, target, w);
-		while ((line = reader.readLine()) != null) {
-			String txt = null;
-			try {
-				txt = call.processLine(line);
-			} catch (Throwable e) {
-				log.error("IO error", e);
-				call.lastException = e;
-			}
-			if (w != null) {
-				if (txt != null) {
-					w.write(txt);
-					int newLines = call.wrapLine();
-					for (int li = 0; li < newLines; li++) {
-						w.write("\r\n");
-					}
-				}
-			}
-			if (call.breakProcess())
-				break;
-		}
-		reader.close();
-		call.afterProcess(f, target, w);
-		if (w != null)
-			w.close();
-
-		if (call.isSuccess() && target != null) {
-			Dealwith deal = call.dealwithSourceOnSuccess(f);
-			if (deal == Dealwith.REPLACE) {
-				if (f.delete()) {
-					File n = new File(f.getPath());
-					target.renameTo(n);
-					return n;
-				}
-			} else if (deal == Dealwith.DELETE) {
-				f.delete();
-			} else if (deal == Dealwith.BACKUP_REPLACE) {
-				File backupfile = new File(f.getParentFile(), f.getName() + ".bak");
-				backupfile = escapeExistFile(backupfile);
-				if (f.renameTo(backupfile)) {
-					File n = new File(f.getPath());
-					target.renameTo(n);
-					return n;
-				}
-			}
-			return target;
-		} else {
-			if (target != null) {
-				target.delete();
-			}
-			return null;
-		}
+	public static File processFile(File f,TextFileCallback call) throws IOException {
+		return FileProcessors.processFile(f,Dealwith.NO_OUTPUT,call);
 	}
+	
+	public static File processFile(File file, Dealwith replace, TextFileCallback textFileCallback) throws IOException {
+		return FileProcessors.processFile(file,replace,textFileCallback);
+	}
+	
 
 	/**
 	 * 追加行到已有的文本文件
@@ -3146,4 +3089,6 @@ public class IOUtils {
 	public static BufferedReader getReader(File file) throws IOException {
 		return getReader(file, (Charset) null);
 	}
+
+
 }

@@ -31,7 +31,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jef.common.log.LogUtil;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
 import jef.tools.Exceptions;
@@ -70,13 +69,13 @@ public class ClassLoaderUtil {
 			addURL = URLClassLoader.class.getDeclaredMethod("addURL", new Class[] { URL.class });
 			addURL.setAccessible(true);
 		} catch (Exception e) {
-			LogUtil.show(e.getMessage());
+			log.info(e.getMessage());
 		}
 		try {
 			classes = ClassLoader.class.getDeclaredField("classes");
 			classes.setAccessible(true);
 		} catch (Exception e) {
-			LogUtil.show(e.getMessage());
+			log.info(e.getMessage());
 		}
 	}
 

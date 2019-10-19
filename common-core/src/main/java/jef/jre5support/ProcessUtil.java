@@ -16,11 +16,11 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Properties;
 
-import jef.common.log.LogUtil;
 import jef.tools.Exceptions;
 import jef.tools.IOUtils;
 import jef.tools.StringUtils;
 import jef.tools.management.OperatingSystemMXBean;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -31,6 +31,7 @@ import jef.tools.management.OperatingSystemMXBean;
  * 部分功能使用了JDK 1.6中的方法，因此本类的使用范围要求JDK 1.6
  * @since 1.6 
  */
+@Slf4j
 public class ProcessUtil {
 	private static final int processId;
 	private static final String hostname;
@@ -65,7 +66,7 @@ public class ProcessUtil {
 			Enumeration<InetAddress> addrs=net.getInetAddresses();
 			addr=addrs.nextElement();
 			if(addrs.hasMoreElements()){
-				LogUtil.warn("The network " + net.getDisplayName()+" has more than one address");
+				log.warn("The network " + net.getDisplayName()+" has more than one address");
 			}
 		}
 		/**
@@ -173,7 +174,7 @@ public class ProcessUtil {
 		try{
 			nets=NetworkInterface.getNetworkInterfaces();
 		}catch(IOException e){
-			throw Exceptions.asIllegalArgument(e);
+			throw Exceptions.toIllegalArgument(e);
 		}
 		List<NetworkInfo> n=new ArrayList<NetworkInfo>();
 		while(nets.hasMoreElements()){
@@ -184,7 +185,7 @@ public class ProcessUtil {
 					n.add(new NetworkInfo(t));
 				}	
 			}catch(IOException e){
-				throw Exceptions.illegalState(e);
+				throw Exceptions.toIllegalState(e);
 			}
 		}	
 		return n.toArray(new NetworkInfo[n.size()]);

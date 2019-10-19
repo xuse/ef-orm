@@ -33,10 +33,9 @@ import java.util.NoSuchElementException;
 
 import javax.management.ReflectionException;
 
-import jef.common.log.LogUtil;
 import jef.tools.ArrayUtils;
 import jef.tools.Assert;
-import jef.tools.StringUtils;
+import jef.tools.Exceptions;
 import jef.tools.collection.CollectionUtils;
 
 public final class BeanWrapperImpl extends BeanWrapper {
@@ -230,21 +229,9 @@ public final class BeanWrapperImpl extends BeanWrapper {
 			throw new NullPointerException("Can not find set method '" + fieldName + "' in bean " + obj.getClass().getName());
 		try {
 			m.invoke(obj, new Object[] { newValue });
-		} catch (IllegalArgumentException e) {
-			String detail=LogUtil.exceptionStack(e, "jef","com");
-			String message=StringUtils.concat("IllegalArgumentException while setting property", 
-					fieldName," in bean ",obj.getClass().getName()," value:", (newValue == null ? "null" : newValue.getClass().getName()),"\ndetail:",detail);
-			LogUtil.error(message);
-		} catch (IllegalAccessException e) {
-			String detail=LogUtil.exceptionStack(e, "jef","com");
-			String message=StringUtils.concat("IllegalAccessException while setting property", 
-					fieldName," in bean ",obj.getClass().getName(),"\ndetail:",detail);
-			LogUtil.error(message);
-		} catch (InvocationTargetException e) {
-			String detail=LogUtil.exceptionStack(e.getTargetException(), "jef","com");
-			String message=StringUtils.concat("InvocationTargetException while setting property", 
-					fieldName," in bean ",obj.getClass().getName(),"\ndetail:",detail);
-			LogUtil.error(message);
+		} catch (Exception e) {
+			String valueType=newValue==null? "null": newValue.getClass().getName();
+			throw Exceptions.runtime("setting value of {} to field {} error.",valueType,fieldName,e);
 		}
 	}
 

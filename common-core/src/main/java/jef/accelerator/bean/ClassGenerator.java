@@ -93,7 +93,7 @@ public abstract class ClassGenerator implements Opcodes {
 			
 			mw.visitVarInsn(ALOAD, 1);// S2 the map
 			mw.visitLdcInsn(fi.getName());// S3 key
-			mw.visitMethodInsn(INVOKEINTERFACE, getType(Map.class), "get", "(Ljava/lang/Object;)Ljava/lang/Object;"); //S2 value
+			mw.visitMethodInsn(INVOKEINTERFACE, getType(Map.class), "get", "(Ljava/lang/Object;)Ljava/lang/Object;",true); //S2 value
 			
 			if (fi.isPrimitive()) {
 				Label notnull=new Label();

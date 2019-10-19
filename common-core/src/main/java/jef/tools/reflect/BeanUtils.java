@@ -513,7 +513,7 @@ public class BeanUtils {
 					return me.newInstance(params);
 				}
 			} catch (Exception e) {
-				throw Exceptions.illegalState(e);
+				throw Exceptions.toIllegalState(e);
 			}
 		}
 		List<Class<?>> list = new ArrayList<Class<?>>();

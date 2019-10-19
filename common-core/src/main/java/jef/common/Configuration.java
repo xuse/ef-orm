@@ -24,7 +24,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import jef.common.log.LogUtil;
 import jef.tools.Assert;
 import jef.tools.Exceptions;
 import jef.tools.IOUtils;
@@ -95,7 +94,7 @@ public class Configuration extends Cfg {
 	public void setFileName(String filepath) {
 		pFile = getFile(filepath);
 		if(pFile==null || !pFile.isReadable()){
-			LogUtil.error("The configuration file:"+filepath+" is not found.");
+			log.error("The configuration file:"+filepath+" is not found.");
 			new Throwable().printStackTrace();
 		}
 	}
@@ -147,7 +146,7 @@ public class Configuration extends Cfg {
 	 */
 	public static Resource getFile(String fileName, ClassLoader... loaders) {
 		URL url=ResourceUtils.getResource(fileName, false, loaders);
-		LogUtil.debug("Locate Resource "+url);
+		log.debug("Locate Resource "+url);
 		if(url==null){
 			return Resource.DUMMY;
 		}
@@ -161,7 +160,7 @@ public class Configuration extends Cfg {
 	 */
 	public synchronized void update(ConfigItem itemkey, String value) {
 		if(!pFile.isWritable()){
-			LogUtil.warn("Attempt to update a readonly properties: "+pFile.toString());
+			log.warn("Attempt to update a readonly properties: "+pFile.toString());
 			return;
 		}
 		try {
@@ -180,7 +179,7 @@ public class Configuration extends Cfg {
 	 */
 	public synchronized void update(Map<? extends ConfigItem,String> entries) {
 		if(!pFile.isWritable()){
-			LogUtil.warn("Attempt to update a readonly properties: "+pFile.toString());
+			log.warn("Attempt to update a readonly properties: "+pFile.toString());
 			return;
 		}
 		try {
