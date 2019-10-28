@@ -43,10 +43,10 @@ import java.util.UUID;
 import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 
-import  org.apache.commons.lang3.ArrayUtils;
-import  org.apache.commons.lang3.RandomStringUtils;
-import  org.apache.commons.lang3.StringEscapeUtils;
-import  org.apache.commons.lang3.math.NumberUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 
 import jef.common.BooleanList;
 import jef.common.DoubleList;
@@ -57,7 +57,7 @@ import jef.tools.string.RegexpUtils;
 import jef.tools.string.StringSpliter;
 import jef.tools.string.Substring;
 
-public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
+public final class StringUtils extends org.apache.commons.lang3.StringUtils {
 	public static final byte CR = 0x0D;
 	public static final byte LF = 0x0A;
 	public static final byte[] CRLF = { CR, LF };
@@ -599,10 +599,12 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 	 * @return
 	 */
 	public static final boolean toBoolean(String s, Boolean defaultValue) {
-		if ("true".equalsIgnoreCase(s) || "Y".equalsIgnoreCase(s) || "1".equals(s) || "ON".equalsIgnoreCase(s) || "yes".equalsIgnoreCase(s) || "T".equalsIgnoreCase(s)) {
+		if ("true".equalsIgnoreCase(s) || "Y".equalsIgnoreCase(s) || "1".equals(s) || "ON".equalsIgnoreCase(s)
+				|| "yes".equalsIgnoreCase(s) || "T".equalsIgnoreCase(s)) {
 			return true;
 		}
-		if ("false".equalsIgnoreCase(s) || "N".equalsIgnoreCase(s) || "0".equals(s) || "OFF".equalsIgnoreCase(s) || "no".equalsIgnoreCase(s) || "F".equalsIgnoreCase(s)) {
+		if ("false".equalsIgnoreCase(s) || "N".equalsIgnoreCase(s) || "0".equals(s) || "OFF".equalsIgnoreCase(s)
+				|| "no".equalsIgnoreCase(s) || "F".equalsIgnoreCase(s)) {
 			return false;
 		}
 		if (defaultValue == null) {// 特别的用法，不希望有缺省值，如果字符串不能转换成布尔，则抛出异常。
@@ -825,7 +827,8 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 
 	// //////////HTML处理
 	private static final String htmlEscEntities = " <>&\"'\u00A9\u00AE";
-	private static final String htmlEscapeSequence[] = { "&nbsp;", "&lt;", "&gt;", "&amp;", "&quot;", "&acute;", "&copy;", "&reg;" };
+	private static final String htmlEscapeSequence[] = { "&nbsp;", "&lt;", "&gt;", "&amp;", "&quot;", "&acute;",
+			"&copy;", "&reg;" };
 
 	/**
 	 * HTML转义
@@ -928,7 +931,8 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 	 * @param wildcardSpace 关键字中的空格可以匹配任意数量的（\n\t空格等）
 	 * @return
 	 */
-	public static boolean matches(String s, String key, boolean IgnoreCase, boolean matchStart, boolean matchEnd, boolean wildcardSpace) {
+	public static boolean matches(String s, String key, boolean IgnoreCase, boolean matchStart, boolean matchEnd,
+			boolean wildcardSpace) {
 		if (s == null && key == null)
 			throw new NullPointerException();
 		if (s == null)
@@ -970,7 +974,7 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 	 * 把字符串左边的空格给去掉
 	 */
 	public static final String ltrim(String s) {
-		if(s==null) {
+		if (s == null) {
 			return s;
 		}
 		int len = s.length();
@@ -991,7 +995,7 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 	 * @return
 	 */
 	public static final String ltrim(String s, char... trimChars) {
-		if(s==null) {
+		if (s == null) {
 			return s;
 		}
 		int len = s.length();
@@ -1011,7 +1015,7 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 	 * @return
 	 */
 	public static final String rtrim(String s, char... trimChars) {
-		if(s==null) {
+		if (s == null) {
 			return s;
 		}
 		int len = s.length();
@@ -1030,7 +1034,7 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 	 * @return
 	 */
 	public static final String rtrim(String s) {
-		if(s==null) {
+		if (s == null) {
 			return s;
 		}
 		int len = s.length();
@@ -1052,7 +1056,7 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 	 * @return
 	 */
 	public static final String lrtrim(String s, char[] lTrimChars, char[] rTrimChars) {
-		if(s==null) {
+		if (s == null) {
 			return s;
 		}
 		int len = s.length();
@@ -1169,7 +1173,10 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 		return join(md, (char) 0, 0, md.length);
 	}
 
-	private static final char hexDigits[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+	private static final char hexDigitsU[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E',
+			'F' };
+	private static final char hexDigitsL[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
+			'e', 'f' };
 
 	/**
 	 * 将byte数组转换为可显示的十六进制文本串。效果等同于Integer.toHexString，但是实测发现JDK的方法慢3倍以上, 所以还是用自己写的
@@ -1390,24 +1397,66 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 	public static String join(byte[] b, char dchar, int offset, int len) {
 		if (b == null || b.length == 0)
 			return "";
-		boolean appendSpace = (dchar != 0);
+		return dchar == 0 ? toHex0(b, offset, len, hexDigitsU) : toHex0(b, offset, len, dchar, hexDigitsU);
+	}
+	
+	/**
+	 * 转换为连续的16进制数据 
+	 * @param b
+	 * @param offset
+	 * @param len
+	 * @return
+	 */
+	public static String toHexUpper(byte[] b, int offset, int len) {
+		return toHex0(b,offset,len,hexDigitsU);
+	}
+	
+	/**
+	 * 转换为连续的16进制数据 
+	 * @param b
+	 * @param offset
+	 * @param len
+	 * @return
+	 */
+	public static String toHexLower(byte[] b, int offset, int len) {
+		return toHex0(b,offset,len,hexDigitsL);
+	}
+
+	/*
+	 * 有分隔符时的编码处理
+	 * 
+	 * @return
+	 */
+	private static String toHex0(byte[] b, int offset, int len, char dchar, char[] hexDigits) {
 		int j = offset + len;
 		if (j > b.length)
 			j = b.length; // 上限
-		char str[] = new char[j * ((appendSpace) ? 3 : 2)];
+		char str[] = new char[j * (3)];
 		int k = 0;
 		for (int i = offset; i < j; i++) {
 			byte byte0 = b[i];
 			str[k++] = hexDigits[byte0 >>> 4 & 0xf]; // >>是带符号移位， >>>是无符号移位
 			str[k++] = hexDigits[byte0 & 0xf];
-			if (appendSpace)
-				str[k++] = dchar;
+			str[k++] = dchar;
 		}
-		if (appendSpace) {
-			return new String(str, 0, k - 1);
-		} else {
-			return new String(str);
+		return new String(str, 0, k - 1);
+	}
+
+	/*
+	 * 无分隔符时的编码处理
+	 */
+	private static String toHex0(byte[] b, int offset, int len, char[] hexDigits) {
+		int j = offset + len;
+		if (j > b.length)
+			j = b.length; // 上限
+		char str[] = new char[j * 2];
+		int k = 0;
+		for (int i = offset; i < j; i++) {
+			byte byte0 = b[i];
+			str[k++] = hexDigits[byte0 >>> 4 & 0xf]; // >>是带符号移位， >>>是无符号移位
+			str[k++] = hexDigits[byte0 & 0xf];
 		}
+		return new String(str);
 	}
 
 	/**
@@ -1582,6 +1631,7 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 
 	/**
 	 * 从输入字符串中删除表情符(UTF8MB4)
+	 * 
 	 * @param objectName
 	 * @return
 	 */
@@ -1598,9 +1648,9 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 				if (Character.isBmpCodePoint(codePoint)) {
 					sb.append((char) codePoint);
 				} else {
-					//为了避免循环到codePoint的低位。
+					// 为了避免循环到codePoint的低位。
 					i++;
-					//sb.appendCodePoint(codePoint);
+					// sb.appendCodePoint(codePoint);
 				}
 			}
 			return sb.toString();
@@ -1608,14 +1658,15 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 			return objectName;
 		}
 	}
-	
+
 	/**
 	 * 从指定字符串中提取表情符
+	 * 
 	 * @param objectName
 	 * @return
 	 */
 	public static IntList extractEmoji(String objectName) {
-		IntList list=new IntList();
+		IntList list = new IntList();
 		if (StringUtils.isEmpty(objectName)) {
 			return list;
 		}
@@ -1624,7 +1675,7 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 			int codePoint = objectName.codePointAt(i);
 			if (Character.isBmpCodePoint(codePoint)) {
 			} else {
-				//为了避免循环到codePoint的低位。
+				// 为了避免循环到codePoint的低位。
 				i++;
 				list.add(codePoint);
 			}
@@ -2038,12 +2089,10 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 		}
 	}
 
-
-
-
 	/**
 	 * 解析字符串中的$[key}，将其用properties中的值替代
-	 * @deprecated  use Spring PropertiesHelper
+	 * 
+	 * @deprecated use Spring PropertiesHelper
 	 * @param s
 	 * @param prop
 	 * @return
@@ -2080,9 +2129,10 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 		return s;
 
 	}
-	
+
 	/**
 	 * 替换环境变量
+	 * 
 	 * @deprecated use Spring PropertiesHelper
 	 * @param content
 	 * @return
@@ -2100,7 +2150,8 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 			if (indexStart > 0) {
 				indexEnd = content.indexOf("}");
 				if (indexEnd < 0)
-					throw new IllegalArgumentException("tag ${ and }  should appear in pair, ${ existed, but } can't find");
+					throw new IllegalArgumentException(
+							"tag ${ and }  should appear in pair, ${ existed, but } can't find");
 			} else {
 				indexEnd = -1;
 			}
@@ -2352,7 +2403,8 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 	 * @see String#trim()
 	 * @see #delimitedListToStringArray
 	 */
-	public static String[] tokenizeToStringArray(String str, String delimiters, boolean trimTokens, boolean ignoreEmptyTokens) {
+	public static String[] tokenizeToStringArray(String str, String delimiters, boolean trimTokens,
+			boolean ignoreEmptyTokens) {
 
 		if (str == null) {
 			return null;
@@ -2497,6 +2549,7 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 
 	/**
 	 * 得到内容开始的位置（跳过左侧的空格等）
+	 * 
 	 * @param content 字符串
 	 * @return 非空内容开始的位置
 	 */
@@ -2506,8 +2559,9 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 
 	/**
 	 * 得到内容开始的位置（跳过左侧的空格等）
+	 * 
 	 * @param content 字符串
-	 * @param begin 开始位置
+	 * @param begin   开始位置
 	 * @return 非空内容开始的位置
 	 */
 	public static int getBeginPos(String content, int begin) {
@@ -2519,9 +2573,10 @@ public final class StringUtils extends  org.apache.commons.lang3.StringUtils {
 		}
 		return -1;
 	}
-	
+
 	/**
 	 * 快速判断一个字符串是不是Base64后的字符串，注意这里只是规则校验。某些消息尾巴上有非法字符，可能被识别为非base64
+	 * 
 	 * @param str
 	 * @return
 	 */
