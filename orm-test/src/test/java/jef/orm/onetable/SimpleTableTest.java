@@ -189,6 +189,18 @@ public class SimpleTableTest extends org.junit.Assert {
 		System.out.println(page.next());
 	}
 
+	@Test
+	public void testForLoad() throws SQLException {
+	
+
+		TestEntity t1 = new TestEntity();
+		t1.setField1("aaaa");
+		db.load(t1);
+		t1.clearQuery();
+		t1.setField1("bbbb");
+		db.load(t1);
+		
+	}
 	/**
 	 * 使用普通方式插入
 	 * 

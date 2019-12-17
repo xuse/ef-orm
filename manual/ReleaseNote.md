@@ -1,3 +1,22 @@
+
+
+### v1.12.9.RELEASE
+
+2019-12-17 
+
+1. 修复JTA事务下提交会报错的问题。
+2. 支持Postgresql中ilike表达式。（SQL解析器修改）
+3. 默认的named-query.xml路径改为classpath*:named-query.xml
+
+### v1.12.8.RELEASE
+
+2019-04-06
+
+1. 升级到Spring-data v2.1.5。更改Spring-data变更的API
+2. 修复Join注解中部分自定义属性无效问题。
+3. alaterTable属性现在可以控制index和约束的创建
+4. 修复解析器中数字前的负号被处理两遍的问题
+
 ### v.1.12.7.FINAL
 
 2019-05-09
@@ -5,6 +24,19 @@
 1. 修复update场合下SQL日志中未显示出字段名的问题。
 2. 修复关联查询时在Query中设置的attribute无效的问题。
 3. 修复Sql词法解析器会将整数前面的负号解析两次造成SQL失效的问题。(该问题在v 1.12.4.RELEASE的第11项改动点中引入)
+
+### v1.12.7.2
+
+2019-03-26
+
+1. 修复计算表名并发场景下一处问题。
+
+## v1.12.7.1
+
+2019-03-19
+
+1. 修改命名查询资源文件获取方式，支持使用通配符方式查找命名查询文件。（classpath*:resourcename）
+2. Oracle兼容问题修复
 
 ### v1.12.7.RELEASE
 

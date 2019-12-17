@@ -86,7 +86,9 @@ public abstract class AbstractSequence implements Sequence {
 					throw new PersistenceException("Sequence/Table ["+this.getName()+"] is not exist, and there will be no attemp to create it.");	
 				}
 			}
-			return getFirstAndPushOthers(cacheSize, session, dbKey);
+			synchronized (this) {
+				return getFirstAndPushOthers(cacheSize, session, dbKey);	
+			}
 		} catch (SQLException e) {
 			throw DbUtils.toRuntimeException(e);
 		}

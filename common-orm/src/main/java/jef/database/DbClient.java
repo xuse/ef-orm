@@ -950,7 +950,7 @@ public class DbClient extends Session implements SessionFactory {
 	/*
 	 * 从配置中读取命名查询的配置位置(文件)
 	 */
-	private String namedQueryFilename = JefConfiguration.get(DbCfg.NAMED_QUERY_RESOURCE_NAME, "named-queries.xml");
+	private String namedQueryFilename = JefConfiguration.get(DbCfg.NAMED_QUERY_RESOURCE_NAME, "classpath*:named-queries.xml");
 	/*
 	 * 从配置中读取命名查询的配置位置(数据库表)
 	 */

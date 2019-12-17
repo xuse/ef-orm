@@ -199,7 +199,7 @@ public enum DbCfg implements ConfigItem {
 	 */
 	DB_NAMED_QUERY_UPDATE,
 	/**
-	 * 用于存放明明查询的资源文件名，默认名称为named-queries.xml
+	 * 用于存放明明查询的资源文件名，默认名称为classpath*:named-queries.xml
 	 */
 	NAMED_QUERY_RESOURCE_NAME,
 	/**
