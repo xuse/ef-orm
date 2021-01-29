@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>org.easyframe</groupId>
 		<artifactId>ef-orm</artifactId>
-		<version>1.12.9.RELEASE</version>
+		<version>1.12.10.RELEASE</version>
 	</parent>
 	
 	<artifactId>common-orm</artifactId>

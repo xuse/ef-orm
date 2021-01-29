@@ -69,10 +69,10 @@ public class SQLServerDialect extends AbstractDelegatingDialect {
 				return new SQLServer2008Dialect();
 			case 11:
 				// version 11= SQLServer 2012
+				return new SQLServer2012Dialect();
 			case 12:
 				// version 12= SQLServer 2014
 			case 13:
-				return new SQLServer2012Dialect();
 			case 14:
 				// version 14= SQLServer 2016
 			case 15:

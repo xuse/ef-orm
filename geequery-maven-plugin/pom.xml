@@ -6,7 +6,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.github.geequery</groupId>
 	<artifactId>geequery-maven-plugin</artifactId>
-	<version>1.12.9.RELEASE</version>
+	<version>1.12.10.RELEASE</version>
 	<packaging>maven-plugin</packaging>
 	<name>GeeQuery Maven Build Helper</name>
 

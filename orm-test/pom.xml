@@ -7,7 +7,7 @@
 	<parent>
 		<groupId>org.easyframe</groupId>
 		<artifactId>ef-orm</artifactId>
-		<version>1.12.9.RELEASE</version>
+		<version>1.12.10.RELEASE</version>
 	</parent>
 	<artifactId>orm-test</artifactId>
 	<name>orm-test</name>
@@ -143,7 +143,7 @@
 		<dependency>
 			<groupId>com.microsoft.sqlserver</groupId>
 			<artifactId>mssql-jdbc</artifactId>
-			<version>6.2.1.jre8</version>
+			<version>8.2.2.jre8</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hsqldb</groupId>
@@ -167,63 +167,21 @@
 
 	<build>
 		<plugins>
-		<!--
-			<plugin>
-				<groupId>com.querydsl</groupId>
-				<artifactId>querydsl-maven-plugin</artifactId>
-				<version>${querydsl.version}</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>export</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<jdbcDriver>com.mysql.jdbc.Driver</jdbcDriver>
-					<jdbcUrl>jdbc:mysql://10.81.0.204:3306/operation_account?useUnicode=true&amp;characterEncoding=UTF-8</jdbcUrl>
-					<jdbcUser>app4</jdbcUser>
-					<jdbcPassword>h******8</jdbcPassword>
-					<exportBeans>true</exportBeans>
-					<packageName>com.querydsl.domain</packageName>
-					<targetFolder>${project.basedir}/target/generated-sources</targetFolder>
-				</configuration>
-				<dependencies>
-					<dependency>
-						<groupId>mysql</groupId>
-						<artifactId>mysql-connector-java</artifactId>
-						<version>5.1.42</version>
-					</dependency>
-				</dependencies>
-			</plugin>
-			
-			<plugin>
-				<groupId>com.github.geequery</groupId>
-				<artifactId>geequery-maven-plugin</artifactId>
-				<version>1.12.9.RELEASE</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>generate</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<jdbcUrl>jdbc:mysql://10.81.0.204:3306/operation_account?useUnicode=true&amp;characterEncoding=UTF-8</jdbcUrl>
-					<jdbcUser>app4</jdbcUser>
-					<jdbcPassword>h******8</jdbcPassword>
-					<packageName>com.github.geequery.entity</packageName>
-					<targetFolder>${project.basedir}/target/generated-sources</targetFolder>
-				</configuration>
-				<dependencies>
-					<dependency>
-						<groupId>mysql</groupId>
-						<artifactId>mysql-connector-java</artifactId>
-						<version>5.1.42</version>
-					</dependency>
-				</dependencies>
-			</plugin>
-			-->
+			<!-- <plugin> <groupId>com.querydsl</groupId> <artifactId>querydsl-maven-plugin</artifactId> 
+				<version>${querydsl.version}</version> <executions> <execution> <goals> <goal>export</goal> 
+				</goals> </execution> </executions> <configuration> <jdbcDriver>com.mysql.jdbc.Driver</jdbcDriver> 
+				<jdbcUrl>jdbc:mysql://10.81.0.204:3306/operation_account?useUnicode=true&amp;characterEncoding=UTF-8</jdbcUrl> 
+				<jdbcUser>app4</jdbcUser> <jdbcPassword>h******8</jdbcPassword> <exportBeans>true</exportBeans> 
+				<packageName>com.querydsl.domain</packageName> <targetFolder>${project.basedir}/target/generated-sources</targetFolder> 
+				</configuration> <dependencies> <dependency> <groupId>mysql</groupId> <artifactId>mysql-connector-java</artifactId> 
+				<version>5.1.42</version> </dependency> </dependencies> </plugin> <plugin> 
+				<groupId>com.github.geequery</groupId> <artifactId>geequery-maven-plugin</artifactId> 
+				<version>1.12.10.RELEASE</version> <executions> <execution> <goals> <goal>generate</goal> 
+				</goals> </execution> </executions> <configuration> <jdbcUrl>jdbc:mysql://10.81.0.204:3306/operation_account?useUnicode=true&amp;characterEncoding=UTF-8</jdbcUrl> 
+				<jdbcUser>app4</jdbcUser> <jdbcPassword>h******8</jdbcPassword> <packageName>com.github.geequery.entity</packageName> 
+				<targetFolder>${project.basedir}/target/generated-sources</targetFolder> 
+				</configuration> <dependencies> <dependency> <groupId>mysql</groupId> <artifactId>mysql-connector-java</artifactId> 
+				<version>5.1.42</version> </dependency> </dependencies> </plugin> -->
 		</plugins>
 		<pluginManagement>
 			<plugins>

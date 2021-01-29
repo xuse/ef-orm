@@ -67,12 +67,12 @@ import jef.tools.string.RandomData;
 @DataSourceContext({ 
 //	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"), 
 //	@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
-	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), 
+//	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), 
 //	@DataSource(name = "hsqldb", url = "${hsqldb.url}", user = "sa", password = ""),
 //	@DataSource(name = "derby", url = "${derby.url}"),
 //	@DataSource(name = "h2", url = "${h2.url}",password="h2.user",user="h2.user"), 
 //	@DataSource(name = "sqlite", url = "${sqlite.url}"),
-//	@DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}")
+	@DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}")
 	}
 )
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -88,7 +88,7 @@ public class SimpleTableTest extends org.junit.Assert {
 	}
 
 	@DatabaseInit
-	public void cleanRecords() {
+	public void cleanRecords() throws SQLException {
 		try {
 			// 清除缓存，否则测试案例清理不完整
 			if (db.getProfile(null).getName() == RDBMS.oracle) {
@@ -118,17 +118,20 @@ public class SimpleTableTest extends org.junit.Assert {
 		}
 	}
 	
+	
 	@Test
 	public void testInit() throws SQLException {
-		BackupDocEntity r=new BackupDocEntity();
-		r.setActionResultDetail("123");
-		r.setAgentNo("test");
-		r.setBeginTime(new Date());
-		r.setComponentId("1234");
-		r.setRuleId(12);
-		r.setDocName("asdsds");
-		r.setPath("sss");
-		db.insert(r);
+//		BackupDocEntity r=new BackupDocEntity();
+//		r.setActionResultDetail("123");
+//		r.setAgentNo("test");
+//		r.setBeginTime(new Date());
+//		r.setComponentId("1234");
+//		r.setRuleId(12);
+//		r.setDocName("asdsds");
+//		r.setPath("sss");
+//		db.insert(r);
+		
+		db.select(QB.create(BackupDocEntity.class), new PageLimit(10,1));
 	}
 	
 	@Test
