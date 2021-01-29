@@ -1,6 +1,5 @@
 package jef.database.dialect;
 
-import jef.database.dialect.handler.DerbyLimitHandler;
 import jef.database.dialect.handler.LimitHandler;
 import jef.database.dialect.handler.SQL2005LimitHandler;
 import jef.database.dialect.handler.SQL2005LimitHandlerSlowImpl;

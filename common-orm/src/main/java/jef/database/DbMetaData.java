@@ -627,7 +627,7 @@ public class DbMetaData {
 		}
 		ResultSet rs = null;
 		try {
-			rs = databaseMetaData.getColumns(null, schema, tableName, column);
+			rs = databaseMetaData.getColumns(null, null, tableName, column);
 			Column result = null;
 			if (rs.next()) {
 				result = new Column();

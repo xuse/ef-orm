@@ -232,7 +232,13 @@ public class ASMUtils {
 			mw.visitInsn(Opcodes.ICONST_5);
 			break;
 		default:
-			mw.visitIntInsn(Opcodes.BIPUSH, s);
+			if(s>=-128 && s<=127) {
+				mw.visitIntInsn(Opcodes.BIPUSH, s);
+			}else if(s>=-32768 && s<=32767) {
+				mw.visitIntInsn(Opcodes.SIPUSH, s);
+			}else {
+				mw.visitIntInsn(Opcodes.LDC, s);
+			}
 		}
 	}
 

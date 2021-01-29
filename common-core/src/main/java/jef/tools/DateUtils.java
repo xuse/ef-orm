@@ -1429,4 +1429,104 @@ public abstract class DateUtils {
     public static Timestamp toSqlTimeStamp(LocalTime localTime) {
         return localTime == null ? null : java.sql.Timestamp.valueOf(LocalDateTime.of(LocalDate.now(), localTime));
     }
+    
+	/**
+	 * 返回两个日期中较大的那个 如果有null值，返回非null值
+	 * 
+	 * @param d1
+	 * @param d2
+	 * @return
+	 */
+	public static Date max(Date d1, Date d2) {
+		if (d1 == null && d2 == null) {
+			return null;
+		} else if (d1 == null) {
+			return d2;
+		} else if (d2 == null) {
+			return d1;
+		}
+		return d1.getTime() > d2.getTime() ? d1 : d2;
+	}
+
+	/**
+	 * 返回两个日期中较小的哪个 如果有null值，返回非null值
+	 * 
+	 * @param d1
+	 * @param d2
+	 * @return
+	 */
+	public static Date min(Date d1, Date d2) {
+		if (d1 == null && d2 == null) {
+			return null;
+		} else if (d1 == null) {
+			return d2;
+		} else if (d2 == null) {
+			return d1;
+		}
+		return d1.getTime() > d2.getTime() ? d2 : d1;
+	}
+
+	/**
+	 * 返回两个日期中较大的那个 如果有null值，返回非null值
+	 * 
+	 * @param d1
+	 * @param d2
+	 * @return
+	 */
+	public static Date maxOrNull(Date d1, Date d2) {
+		if (d1 == null && d2 == null) {
+			return null;
+		} else if (d1 == null) {
+			return d1;
+		} else if (d2 == null) {
+			return d2;
+		}
+		return d1.getTime() > d2.getTime() ? d1 : d2;
+	}
+
+	/**
+	 * 返回两个日期中较小的哪个 如果有null值，返回非null值
+	 * 
+	 * @param d1
+	 * @param d2
+	 * @return
+	 */
+	public static Date minOrNull(Date d1, Date d2) {
+		if (d1 == null && d2 == null) {
+			return null;
+		} else if (d1 == null) {
+			return d1;
+		} else if (d2 == null) {
+			return d2;
+		}
+		return d1.getTime() > d2.getTime() ? d2 : d1;
+	}
+	
+
+	public static Date adjustDay(Date date, int day) {
+		if(date==null) {
+			return null;
+		}
+		return new Date(date.getTime()+MILLISECONDS_IN_DAY * day);
+	}
+	
+
+	/**
+	 * 计算得到指定时区下一天的开始时间
+	 * 
+	 * @param d
+	 * @param utcOffset
+	 * @return
+	 */
+	public final static long truncateX(Date d, int utcOffset) {
+		if (d == null) {
+			return 0;
+		}
+		long time = d.getTime();
+		if(time>=0) {
+			time -= time % MILLISECONDS_IN_DAY;
+			return time - utcOffset * MILLISECONDS_IN_HOUR;
+		}
+		return org.apache.commons.lang3.time.DateUtils.truncate(d, Calendar.DATE).getTime();
+	}
 }

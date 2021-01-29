@@ -23,6 +23,7 @@ import org.junit.runners.MethodSorters;
 
 import jef.codegen.EntityEnhancer;
 import jef.common.log.LogUtil;
+import jef.database.BackupDocEntity;
 import jef.database.Condition;
 import jef.database.Condition.Operator;
 import jef.database.DbClient;
@@ -66,9 +67,9 @@ import jef.tools.string.RandomData;
 @DataSourceContext({ 
 //	@DataSource(name = "mysql", url = "${mysql.url}", user = "${mysql.user}", password = "${mysql.password}"), 
 //	@DataSource(name = "oracle", url = "${oracle.url}", user = "${oracle.user}", password = "${oracle.password}"),
-//	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), 
+	@DataSource(name = "postgresql", url = "${postgresql.url}", user = "${postgresql.user}", password = "${postgresql.password}"), 
 //	@DataSource(name = "hsqldb", url = "${hsqldb.url}", user = "sa", password = ""),
-	@DataSource(name = "derby", url = "${derby.url}"),
+//	@DataSource(name = "derby", url = "${derby.url}"),
 //	@DataSource(name = "h2", url = "${h2.url}",password="h2.user",user="h2.user"), 
 //	@DataSource(name = "sqlite", url = "${sqlite.url}"),
 //	@DataSource(name = "sqlserver", url = "${sqlserver.url}", user = "${sqlserver.user}", password = "${sqlserver.password}")
@@ -102,9 +103,11 @@ public class SimpleTableTest extends org.junit.Assert {
 				}
 			}
 			db.dropTable(TestEntity.class, CaAsset.class, Keyword.class); // 删除表
+			db.dropTable(BackupDocEntity.class);
 			db.createTable(Keyword.class);
 			db.refreshTable(TestEntity.class); // 创建表
 			db.refreshTable(CaAsset.class);
+			db.refreshTable(BackupDocEntity.class);
 			CaAsset t1 = new CaAsset();
 			t1.setNormal("asfc");
 			t1.setAssetType(1);
@@ -113,6 +116,19 @@ public class SimpleTableTest extends org.junit.Assert {
 		} catch (SQLException e) {
 			LogUtil.exception(e);
 		}
+	}
+	
+	@Test
+	public void testInit() throws SQLException {
+		BackupDocEntity r=new BackupDocEntity();
+		r.setActionResultDetail("123");
+		r.setAgentNo("test");
+		r.setBeginTime(new Date());
+		r.setComponentId("1234");
+		r.setRuleId(12);
+		r.setDocName("asdsds");
+		r.setPath("sss");
+		db.insert(r);
 	}
 	
 	@Test

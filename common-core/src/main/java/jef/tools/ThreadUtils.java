@@ -16,7 +16,9 @@
 package jef.tools;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import jef.common.log.LogUtil;
 
@@ -221,5 +223,30 @@ public abstract class ThreadUtils {
 			return false;
 		}
 		
+	}
+	
+	/**
+	 * 创建ThreadFactory对象
+	 * @param name
+	 * @return
+	 */
+	public static ThreadFactory threadFactory(String name) {
+		return new DefaultThreadFactory(name);
+	}
+
+	static final class DefaultThreadFactory implements ThreadFactory {
+		private final ThreadGroup group;
+		private final String namePrefix;
+		private final AtomicInteger threadNumber = new AtomicInteger(1);
+
+		public DefaultThreadFactory(String namePrefix) {
+			SecurityManager s = System.getSecurityManager();
+			group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
+			this.namePrefix = namePrefix + "-";
+		}
+
+		public Thread newThread(Runnable r) {
+			return new Thread(group, r, namePrefix + threadNumber.getAndIncrement(), 0L);
+		}
 	}
 }

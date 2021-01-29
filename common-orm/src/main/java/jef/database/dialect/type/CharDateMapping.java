@@ -3,21 +3,21 @@ package jef.database.dialect.type;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
 
 import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 import jef.tools.DateFormats;
+import jef.tools.DateFormats.TLDateFormat;
 import jef.tools.StringUtils;
 
 public class CharDateMapping extends AColumnMapping {
-	private ThreadLocal<DateFormat> format;
-	private ThreadLocal<DateFormat> dateOnly;
+	private TLDateFormat format;
+	private TLDateFormat dateOnly;
 
 	public CharDateMapping(String format) {
-		this.format = DateFormats.getThreadLocalDateFormat(format);
+		this.format = DateFormats.create(format);
 		this.dateOnly = DateFormats.DATE_CS;
 	}
 

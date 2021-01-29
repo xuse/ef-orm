@@ -3,7 +3,6 @@ package jef.database.dialect.type;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.Date;
 
@@ -13,6 +12,7 @@ import jef.database.dialect.DatabaseDialect;
 import jef.database.jdbc.result.IResultSet;
 import jef.database.query.Func;
 import jef.tools.DateFormats;
+import jef.tools.DateFormats.TLDateFormat;
 
 /**
  * DATE <-> java.lang.String
@@ -21,13 +21,13 @@ import jef.tools.DateFormats;
  */
 public class DateStringMapping extends AbstractTimeMapping{
 	
-	private ThreadLocal<DateFormat> format=DateFormats.DATE_CS;
+	private TLDateFormat format=DateFormats.DATE_CS;
 	
 	public DateStringMapping(){
 	}
 	
 	public DateStringMapping(final String pattern){
-		this.format=DateFormats.getThreadLocalDateFormat(pattern);
+		this.format=DateFormats.create(pattern);
 	}
 	
 	

@@ -102,7 +102,7 @@ public class FileLogger extends AbstractLogger {
 	}
 	//切换文件
 	private File changeFile() {
-		String sufix=DateUtils.format(new Date(),DateFormats.DATE_TIME_SHORT_12);
+		String sufix=DateFormats.DATE_TIME_SHORT_12 .format(new Date());
 		if(file==null){
 			String log=JefConfiguration.get(Item.LOG_PATH);
 			return new File(log,this.rollingBase+sufix+extName);

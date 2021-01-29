@@ -133,7 +133,7 @@
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>42.1.4.jre7</version>
+			<version>42.2.9</version>
 			<scope>test</scope>
 		</dependency>
 		<!-- <dependency> <groupId>com.microsoft.sqlserver</groupId> <artifactId>sqljdbc4</artifactId> 
