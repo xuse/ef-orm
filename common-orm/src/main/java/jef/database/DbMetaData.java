@@ -1000,7 +1000,7 @@ public class DbMetaData {
 	 * 
 	 * @return Username
 	 */
-	public String getUserName() throws SQLException {
+	public String getUserName(){
 		return info.user;
 	}
 
@@ -2555,8 +2555,11 @@ public class DbMetaData {
 	}
 
 	public void init() {
-		// TODO Auto-generated method stub
+	}
 
+	public void setSchema(String newSchema) {
+		this.schema=newSchema;
+		
 	}
 
 	// @Override

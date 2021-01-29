@@ -6,7 +6,6 @@ import java.lang.reflect.Type;
 
 import jef.tools.Primitives;
 
-
 public class ASMUtils {
 
 	public static boolean isAndroid(String vmName) {
@@ -107,7 +106,6 @@ public class ASMUtils {
 		return null;
 	}
 
-
 	public static boolean checkName(String name) {
 		for (int i = 0; i < name.length(); ++i) {
 			char c = name.charAt(i);
@@ -133,8 +131,7 @@ public class ASMUtils {
 	 * 生成拆箱方法
 	 * 
 	 * @param mw
-	 * @param primitive
-	 *            原生类型
+	 * @param primitive 原生类型
 	 */
 	public static void doUnwrap(MethodVisitor mw, Class<?> primitive, Class<?> wrapped) {
 		String name = primitive.getName() + "Value";
@@ -145,8 +142,7 @@ public class ASMUtils {
 	 * 生成装箱方法
 	 * 
 	 * @param mw
-	 * @param type
-	 *            原生类型
+	 * @param type 原生类型
 	 */
 	public static void doWrap(MethodVisitor mw, Class<?> type) {
 		Class<?> wrapped = Primitives.toWrapperClass(type);
@@ -183,7 +179,8 @@ public class ASMUtils {
 		default:
 			throw new IllegalArgumentException();
 		}
-		mw.visitMethodInsn(Opcodes.INVOKESTATIC, getType(w), "valueOf", getMethodDesc(w, Primitives.toPrimitiveClass(w)));
+		mw.visitMethodInsn(Opcodes.INVOKESTATIC, getType(w), "valueOf",
+				getMethodDesc(w, Primitives.toPrimitiveClass(w)));
 	}
 
 	public static int getLoadIns(jef.accelerator.asm.Type paramType) {
@@ -230,7 +227,13 @@ public class ASMUtils {
 			mw.visitInsn(Opcodes.ICONST_5);
 			break;
 		default:
-			mw.visitIntInsn(Opcodes.BIPUSH, s);
+			if (s >= -128 && s <= 127) {
+				mw.visitIntInsn(Opcodes.BIPUSH, s);
+			} else if (s >= -32768 && s <= 32767) {
+				mw.visitIntInsn(Opcodes.SIPUSH, s);
+			} else {
+				mw.visitIntInsn(Opcodes.LDC, s);
+			}
 		}
 	}
 

@@ -4,7 +4,7 @@
 	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.easyframe</groupId>
-	<version>1.11.10</version>
+	<version>1.11.11</version>
 	<artifactId>jef-maven-plugin</artifactId>
 	<packaging>maven-plugin</packaging>
 	<name>EasyFrame Maven Build Helper</name>
